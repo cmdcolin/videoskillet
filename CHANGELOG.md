@@ -7,6 +7,8 @@ All notable changes to ntsc.js are documented here.
 ### Features
 - *(ui)* [`82e1971`](https://github.com/cmdcolin/ntsc.js/commit/82e1971b9a0b8382524d8f5a3e692bff7931eb59) trim the loop's geometry in hundredths, off a card the row hands up
 
+### Other Changes
+- [`ccbc38d`](https://github.com/cmdcolin/ntsc.js/commit/ccbc38d5b075e147877af22aa4e8f36e28f4da96) Format
 ## [0.29.1](https://github.com/cmdcolin/ntsc.js/compare/v0.29.0...v0.29.1) - 2026-08-21
 
 ### Features
