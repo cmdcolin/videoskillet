@@ -2,6 +2,17 @@
 
 All notable changes to ntsc.js are documented here.
 
+## [0.29.4](https://github.com/cmdcolin/ntsc.js/compare/v0.29.3...v0.29.4) - 2026-08-23
+
+### Features
+- *(ui)* [`b0b0579`](https://github.com/cmdcolin/ntsc.js/commit/b0b057974053a34f4ce7007e990e4dd768400832) put the minor-adjustment card behind a button instead of a hover
+
+### Fixes
+- *(ui)* [`a54e9a0`](https://github.com/cmdcolin/ntsc.js/commit/a54e9a0773b4dede3b81f73f9b3296aa682dd48d) the two generator groups leave the panel when nothing is running them
+
+### Other Changes
+- [`184bcb7`](https://github.com/cmdcolin/ntsc.js/commit/184bcb76c890eb2fad9a7d52410975f6ac8fa99c) Some more demos
+
 ## [0.29.3](https://github.com/cmdcolin/ntsc.js/compare/v0.29.1...v0.29.3) - 2026-08-23
 
 ### Features
