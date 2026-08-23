@@ -70,6 +70,7 @@ export function Rack(props: {
 function IconButton(props: {
   title: string
   className: string
+  expanded?: boolean
   onClick: () => void
   onMouseEnter?: () => void
   onMouseLeave?: () => void
@@ -80,6 +81,7 @@ function IconButton(props: {
       type="button"
       title={props.title}
       className={props.className}
+      aria-expanded={props.expanded}
       onMouseEnter={props.onMouseEnter}
       onMouseLeave={props.onMouseLeave}
       onClick={() => props.onClick()}
@@ -234,14 +236,14 @@ const centFill = (cents: number) => ({
 
 // The minor-adjustment card: the last two digits of the same number.
 //
-// Revealed under the row on hover rather than given a row of its own, because
-// it is not a second control. There is one value; this is a magnified view of
-// where it sits between two notches of its own step grid, and a permanent row
-// would double the height of the group while giving one number two readouts and
-// two ↺ to disagree over. What it costs instead is the space under the row
-// while the pointer is there, which is why it waits a beat before appearing
-// (see .vernier) — travelling down a stack of rows should not deal a card at
-// every one on the way past.
+// Opened from the row's `minor` button rather than given a row of its own,
+// because it is not a second control. There is one value; this is a magnified
+// view of where it sits between two notches of its own step grid, and a
+// permanent row would double the height of the group while giving one number
+// two readouts and two ↺ to disagree over. What it costs instead is the space
+// under the row for as long as it is asked for — a hover-revealed card dealt
+// itself to every row travelled past on the way somewhere else, and covered the
+// row below while the pointer was nowhere near either.
 //
 // Its whole width is one step of the control above, so a pixel here is worth
 // about a third of a cent where a pixel up there is worth a whole step.
@@ -349,6 +351,11 @@ export function Slider(props: {
   // Hovering the ? shows the text in place, so the help column can be skimmed
   // slider to slider; clicking still opens the dialog (range info, touch).
   const [hoverHelp, setHoverHelp] = useState(false)
+  // The minor-adjustment card is asked for, not offered. It used to appear on
+  // its own after a beat of hover, which put a card under the pointer while it
+  // was on its way somewhere else and covered the row below it uninvited — for
+  // a control most passes over a row never need.
+  const [showVernier, setShowVernier] = useState(false)
   const midi = props.midi
   const sync = props.sync
   const needs = props.needs
@@ -408,6 +415,26 @@ export function Slider(props: {
             onMouseLeave={() => setHoverHelp(false)}
           >
             ?
+          </IconButton>
+        )}
+        {/* Beside the ? rather than out at the reading, because the label
+            column is fr-sized: a word added here costs the track no width, and
+            a group's tracks still start at one x whether or not a row offers
+            this. It reads "minor", not "fine" — a group's own ▸ fine tweaks
+            disclosure already owns that word, and three of the rows that carry
+            this card live inside one. */}
+        {props.vernier !== true || choices !== undefined ? null : (
+          <IconButton
+            title={
+              showVernier
+                ? 'hide the minor adjustment'
+                : `minor adjustment — trim ${props.label} in hundredths of a step`
+            }
+            className={cx(styles.what, showVernier && styles.whatOn)}
+            expanded={showVernier}
+            onClick={() => setShowVernier(!showVernier)}
+          >
+            minor
           </IconButton>
         )}
       </span>
@@ -667,10 +694,7 @@ export function Slider(props: {
       ) : null}
       {/* Not while the ? card is up: both hang off the same edge of the same
           row, and the one the pointer asked for wins. */}
-      {props.vernier !== true ||
-      choices !== undefined ||
-      hoverHelp ||
-      showHelp ? null : (
+      {!showVernier || hoverHelp || showHelp ? null : (
         <Vernier
           label={props.label}
           min={props.min}

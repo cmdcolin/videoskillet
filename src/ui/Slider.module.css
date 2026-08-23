@@ -286,6 +286,10 @@ button.badge {
 .what:hover {
   color: var(--accent);
 }
+/* the card this opens is up — the row says which of its two hangs below it */
+.whatOn {
+  color: var(--accent);
+}
 /* An 11px glyph is a target for a very steady hand. Grown with a pseudo-element
    rather than padding, because padding here is inside a wrapping label and would
    push the text it sits after — this adds hit area and no layout at all. The
@@ -368,21 +372,12 @@ button.badge {
   right: 0;
   top: 100%;
   margin-top: 2px;
-  visibility: hidden;
   max-width: 34rem;
   background: #1a1a22;
   border: 1px solid var(--border);
   border-radius: 4px;
   padding: 5px 8px 6px;
   box-shadow: 0 4px 14px rgb(0 0 0 / 0.5);
-}
-.slider:hover .vernier {
-  visibility: visible;
-  transition: visibility 0s linear 260ms;
-}
-.slider:focus-within .vernier,
-.slider:has(:active) .vernier {
-  visibility: visible;
 }
 .vernierHead {
   display: flex;
