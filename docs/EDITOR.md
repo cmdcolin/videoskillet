@@ -39,9 +39,9 @@ simulator. Against twenty-four shaders sit `src/core/signal/`'s per-frame CPU
 state (`LineState`, `MixState`, `TapeState`, `RfState`, `SynthState`,
 `AudioState`, and the FIR bank, redesigned CPU-side whenever one of the filter
 five moves) and `src/core/gpu/`'s pass graph, uniform packing and buffer
-management. `PARAM_DEFS` is 228 fields, `DEFAULT_CONTROLS` 234 keys, and several buffers are _state_ rather
-than scratch — `timingBuf[525..532]`, `persistBufs`, `tapeBuf`, `storePrev`.
-Lifting the shaders alone lifts nothing that runs.
+management. `PARAM_DEFS` is 228 fields, `DEFAULT_CONTROLS` 234 keys, and several
+buffers are _state_ rather than scratch — `timingBuf[525..532]`, `persistBufs`,
+`tapeBuf`, `storePrev`. Lifting the shaders alone lifts nothing that runs.
 
 - **No plugin API speaks WebGPU.** OFX 1.5's GPU rendering suite is CUDA, OpenCL
   and Metal; there is no Vulkan and no WebGPU, and Adobe's SDK is the same
