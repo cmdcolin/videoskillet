@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { CONTROL_KEYS, STOCK_HOLD } from '../core/controls'
+import { CONTROL_KEYS, DEFAULT_CONTROLS, STOCK_HOLD } from '../core/controls'
 import {
   ALL_SLIDERS,
   AUDIO_GROUPS,
@@ -12,6 +12,7 @@ import {
   FEED_A_GROUP,
   FEED_B_CABLE_GROUP,
   FEED_B_GROUP,
+  generatorsLive,
   GROUPS,
   DELAY_LOOP_GROUP,
   DELAY_LOOP_STAGE,
@@ -28,7 +29,6 @@ import {
   SOUND_STAGE,
   SOURCE_B_STAGE,
   stageGroups,
-  SYNTH_GROUP,
   VIEW_GROUPS,
   VIEW_KEYS,
   VIEW_STAGE,
@@ -36,7 +36,8 @@ import {
 import { formatValue } from './format'
 import { TRAVEL_STEP } from './travel'
 
-import type { ControlKey } from '../core/controls'
+import type { Controls, ControlKey } from '../core/controls'
+import type { SourceBMode, SourceMode } from '../sources/modes'
 
 describe('control tables', () => {
   // sliderFor is total because of this: every control reaches the panel, and
@@ -138,12 +139,13 @@ describe('control tables', () => {
   it('gives A and B the same three groups', () => {
     // The two generator groups are the exception, and they are an exception in
     // the same way: neither belongs to input A, they describe whichever slot is
-    // showing a generated source. Named rather than pattern-matched so a third
-    // generator has to be admitted here deliberately.
+    // showing a generated source — which is the flag they carry to be listed
+    // only while one is (panelChain.ts), so a third generator declares itself
+    // here rather than being pattern-matched out by name.
     const shape = (name: string) =>
       stageGroups(name)
+        .filter(g => g.generator === undefined)
         .map(g => g.name)
-        .filter(n => !n.startsWith('Noise source') && n !== SYNTH_GROUP)
     expect(stageGroups('Source A').length).toBeGreaterThan(0)
     expect(shape('Source A')).toEqual([
       'Signal (source A)',
@@ -334,5 +336,34 @@ describe('fine tier', () => {
       'timeScale',
       'frameLock',
     ])
+  })
+})
+
+// Which generator is running decides whether its group is listed at all, so a
+// mode that stops answering here takes a whole group off the panel silently.
+describe('the generators', () => {
+  const live = (a: SourceMode, b: SourceBMode, over: Partial<Controls> = {}) =>
+    generatorsLive(a, b, { ...DEFAULT_CONTROLS, ...over })
+
+  it('reads both slots', () => {
+    expect(live('bars', 'none')).toEqual({ noise: false, synth: false })
+    expect(live('tv static', 'none').noise).toBe(true)
+    expect(live('bars', 'vhs static').noise).toBe(true)
+    expect(live('synth', 'none').synth).toBe(true)
+    expect(live('bars', 'synth').synth).toBe(true)
+  })
+
+  // The synth patched *over* a picture is live with no picker anywhere on it —
+  // the arrangement `synthFm` needs, and the one the contour-lines preset is.
+  it('counts the synth laid over slot A', () => {
+    expect(live('webcam', 'none', { synthOver: 0.6 }).synth).toBe(true)
+    expect(live('webcam', 'none', { synthOver: 0 }).synth).toBe(false)
+  })
+
+  // Static and synth come off the same selector in the shader but not the same
+  // generator: the synth branch reads none of the noise statistics.
+  it('keeps the two apart', () => {
+    expect(live('synth', 'none').noise).toBe(false)
+    expect(live('tv static', 'none').synth).toBe(false)
   })
 })

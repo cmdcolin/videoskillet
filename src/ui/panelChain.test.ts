@@ -10,17 +10,21 @@ import { DEFAULT_CONTROLS } from '../core/controls'
 import {
   CAMERA_LOOP_STAGE,
   DECK_STAGE,
+  FEED_A_GROUP,
   MIX_STAGE,
   MOD_KEYWORDS,
   MOD_STAGE,
   PHASE_ORDER,
   SOUND_STAGE,
+  SOURCE_A_STAGE,
   SOURCE_B_STAGE,
+  SYNTH_GROUP,
   VIEW_STAGE,
 } from './controls'
 import { panelChain } from './panelChain'
 
 import type { Controls } from '../core/controls'
+import type { GeneratorsLive } from './controls'
 import type { FreeStage } from './panelChain'
 
 const free: FreeStage[] = [
@@ -51,6 +55,7 @@ const chain = (
     soundOn?: boolean
     controls?: Controls
     patched?: Record<string, string | undefined>
+    generators?: GeneratorsLive
   } = {},
 ) =>
   panelChain({
@@ -61,6 +66,7 @@ const chain = (
     soundOn: over.soundOn ?? true,
     onOpenGroup: () => {},
     patched: over.patched ?? {},
+    generators: over.generators ?? { noise: true, synth: true },
     free,
   })
 
@@ -272,5 +278,63 @@ describe('a query that reaches nothing on the trunk', () => {
     const c = chain({ query: 'hue', bOn: false })
     expect(c.anyStage).toBe(true)
     expect(c.blocked).toEqual([])
+  })
+})
+
+// The two generator groups are the app's one case of a group that does not
+// belong to the stage it is filed under: they describe whichever slot is
+// showing that generator, and the Source A stage is only where they live.
+describe('the generator groups', () => {
+  const sourceA = (over: Parameters<typeof chain>[0]) =>
+    chain(over).nodes.find(n => n.name === SOURCE_A_STAGE)
+
+  const groupsOn = (over: Parameters<typeof chain>[0]) =>
+    sourceA(over)?.groups.map(g => g.name) ?? []
+
+  it('offers neither while nothing is running one', () => {
+    const offered = groupsOn({ generators: { noise: false, synth: false } })
+    expect(offered).not.toContain(SYNTH_GROUP)
+    expect(offered.some(n => n.startsWith('Noise source'))).toBe(false)
+    // The stage keeps everything that is actually input A's.
+    expect(offered).toContain(FEED_A_GROUP)
+  })
+
+  it('offers each one on its own', () => {
+    expect(groupsOn({ generators: { noise: true, synth: false } })).toContain(
+      'Noise source (static)',
+    )
+    expect(groupsOn({ generators: { noise: false, synth: true } })).toContain(
+      SYNTH_GROUP,
+    )
+  })
+
+  // A hidden group must not take its off-stock controls' amber with it — that
+  // would be the count disagreeing with the rows behind it.
+  it('drops what it hides from the stage count', () => {
+    const moved: Controls = { ...DEFAULT_CONTROLS, synthLevel: 3 }
+    const off = sourceA({
+      controls: moved,
+      generators: { noise: false, synth: false },
+    })
+    const on = sourceA({
+      controls: moved,
+      generators: { noise: false, synth: true },
+    })
+    expect(on?.touched).toBe((off?.touched ?? 0) + 1)
+  })
+
+  // The one exemption, and the reason the gate is not simply a placement rule:
+  // under a query the panel is a result set rather than a drawing of the rig,
+  // and `synthOver` — the way the synth is patched over a picture in the first
+  // place — would otherwise be unfindable until the synth was already running.
+  it('is still reachable by name while nothing is running it', () => {
+    const c = chain({
+      query: 'oscillator',
+      generators: { noise: false, synth: false },
+    })
+    expect(lit(c.nodes)).toContain(SOURCE_A_STAGE)
+    expect(
+      c.nodes.find(n => n.name === SOURCE_A_STAGE)?.groups.map(g => g.name),
+    ).toContain(SYNTH_GROUP)
   })
 })

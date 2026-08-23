@@ -1,4 +1,5 @@
-import type { ControlKey } from '../core/controls'
+import type { Controls, ControlKey } from '../core/controls'
+import type { SourceBMode, SourceMode } from '../sources/modes'
 import type { CurveName } from './travel'
 
 export interface SliderDef {
@@ -126,7 +127,17 @@ export interface Group {
   name: string
   place: Placement
   sliders: SliderDef[]
+  // A group that describes a generator rather than the stage it is filed under.
+  // Listed only while something is actually running that generator — see
+  // `generatorsLive` below and the gate in panelChain.ts.
+  generator?: GeneratorKind
 }
+
+// The two generators either slot can be showing. They are not sources in the
+// picker's sense: one pair of oscillators and one noise generator on the bench,
+// patched into whichever slot is calling for them.
+export type GeneratorKind = 'noise' | 'synth'
+export type GeneratorsLive = Record<GeneratorKind, boolean>
 
 // The two per-source feeds, named here because the full diagram draws each as a
 // box of its own and opens the panel at it. One mechanism (feed.wgsl bound to
@@ -151,6 +162,27 @@ export const FEED_B_CABLE_GROUP = 'Feed B · cable'
 // rather than belonging to input A, so the test that holds A and B to the same
 // three groups has to be able to say so by name instead of guessing at a prefix.
 export const SYNTH_GROUP = 'Video synth (source)'
+
+// Which generators are running, which is what decides whether their groups are
+// listed at all. Either slot can be the one showing one, so both modes are read.
+//
+// The synth has a third way of being live and it is the one worth having this
+// function for: `synthOver` patches it *over* slot A's picture rather than
+// instead of it (compose.wgsl), so with a video in A and that control up the
+// synth is a module in the chain while no picker anywhere says 'synth'. Gating
+// on the two modes alone would take the group off screen while it was drawing
+// half the picture.
+const runsNoise = (m: SourceMode | SourceBMode) =>
+  m === 'tv static' || m === 'vhs static'
+
+export const generatorsLive = (
+  a: SourceMode,
+  b: SourceBMode,
+  controls: Controls,
+): GeneratorsLive => ({
+  noise: runsNoise(a) || runsNoise(b),
+  synth: a === 'synth' || b === 'synth' || controls.synthOver > 0,
+})
 
 // Each carries its stage's name plus the physics that closes it, which is the
 // one thing that tells the three apart once more than one is running.
@@ -381,6 +413,7 @@ export const GROUPS: Group[] = [
   {
     name: 'Noise source (static)',
     place: 'Source A',
+    generator: 'noise',
     sliders: [
       {
         key: 'srcNoiseBwMHz',
@@ -427,6 +460,7 @@ export const GROUPS: Group[] = [
   {
     name: SYNTH_GROUP,
     place: 'Source A',
+    generator: 'synth',
     sliders: [
       {
         key: 'synthAHz',

@@ -263,6 +263,20 @@ knob-count-bound controller lands on look-makers first. Demotion criteria and
 the vetoes that protect mode switches, preset-heavy keys and the
 miniature-backed keys are pinned by `controls.test.ts`.
 
+The **generator gate** is the third, and it hides a whole group rather than rows
+inside one. Two groups in `src/ui/controls.ts` describe a generator instead of
+the stage they are filed under — the noise source behind TV and VHS static, and
+the video synth — because a group has to live somewhere and both are patched
+into whichever slot is calling for them. Each carries `generator:` on its
+`Group`, `generatorsLive` says which are actually running, and `panelChain.ts`
+leaves a group off the Source A stage while nothing is running it, so a stage
+headed by a picker reading `Webcam` no longer offers `Video synth (source)`
+under it. Same contract as the fine tier: a live filter lifts the gate, so
+search and ⌘K still reach every row, and the synth's liveness includes
+`synthOver > 0` — patched _over_ slot A's picture it is a module in the chain
+with no picker anywhere saying `synth`, and gating on the two source modes alone
+would take the group off screen while it was drawing half the picture.
+
 Two things to respect when adding another:
 
 - **The frame is the shader's UV space** — 0..1 across the active picture, y

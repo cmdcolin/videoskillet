@@ -25,6 +25,7 @@ import {
   MUTATE_SLIDERS,
   DECK_BLURB,
   DECK_STAGE,
+  generatorsLive,
   LOOP_STAGE_NAMES,
   MIX_STAGE,
   MOD_BLURB,
@@ -907,6 +908,9 @@ export function App() {
     bOn,
     soundOn,
     patched,
+    // Which of the two bench generators is running, so neither one's group is
+    // offered under a stage that is showing a webcam.
+    generators: generatorsLive(eng.a.mode, eng.b.mode, controls),
     onOpenGroup: nav.openAt,
     free: [
       {

@@ -20,7 +20,7 @@ import {
 import { filterActive, freeMatches, groupMatches } from './filter'
 
 import type { Controls } from '../core/controls'
-import type { Group } from './controls'
+import type { GeneratorsLive, Group } from './controls'
 import type { Filter, IsRouted } from './filter'
 import type { BranchNode, LoopNode, PathNode } from './SignalPath'
 import type { ReactNode } from 'react'
@@ -196,8 +196,30 @@ export function panelChain(o: {
   // filter was hiding the only copy of them — and hiding it hardest for the word
   // most people search this app for, since "strobe" is what the gate is.
   free: readonly FreeStage[]
+  // Which generators are running (controls.ts). The two groups that describe one
+  // are filed on the Source A stage because a group has to live somewhere, but
+  // neither belongs to input A — they describe whichever slot is showing that
+  // generator, and both used to be listed whatever was patched in, so a stage
+  // headed by a picker reading 'Webcam' still offered 'Video synth (source)'
+  // under it.
+  generators: GeneratorsLive
 }): PanelChain {
   const { controls } = o
+  // The groups a stage offers, which is all of them except a generator nothing
+  // is running.
+  //
+  // Not while a query is up. Everything below the filter box is the result set
+  // rather than a drawing of the rig, and a control you cannot find by name is
+  // worse than a group you did not need: `synthOver` is the doorway to patching
+  // the synth over a picture, and gating it on the synth already running would
+  // leave the whole arrangement reachable only by loading a preset that used it.
+  // The free boxes take the same shape further down, for the same reason.
+  const listed = (groups: readonly Group[]): Group[] =>
+    filterActive(o.filter)
+      ? [...groups]
+      : groups.filter(
+          g => g.generator === undefined || o.generators[g.generator],
+        )
   const matching = (groups: readonly Group[]) =>
     groups.filter(g => groupMatches(g, o.filter, o.isRouted))
 
@@ -232,12 +254,13 @@ export function panelChain(o: {
   // and it used to be re-laid-out around whatever a query left standing. A stage
   // the query missed is dimmed in place instead.
   const nodes = PHASES.map((phase): PathNode => {
-    const groups = matching(phase.groups)
+    const all = listed(phase.groups)
+    const groups = matching(all)
     const miss = groups.length === 0
     // Built off the full set when it is a miss, so the count on the box is the
     // stage's own rather than the matched subset's zero.
     const n = {
-      ...node(phase.name, phase.blurb, miss ? [...phase.groups] : groups),
+      ...node(phase.name, phase.blurb, miss ? all : groups),
       patched: o.patched[phase.name],
     }
     const shown = miss ? dimmed(n) : n
@@ -251,7 +274,7 @@ export function panelChain(o: {
   // and a map that says two is wrong about the machine rather than quiet about
   // the search.
   const loops = LOOP_STAGES.map((l): LoopNode => {
-    const all = loopGroups(l.loop)
+    const all = listed(loopGroups(l.loop))
     const groups = matching(all)
     const miss = groups.length === 0
     const n = node(l.name, l.blurb, miss ? all : groups)
@@ -261,10 +284,11 @@ export function panelChain(o: {
   const fed = { b: o.bOn, sound: o.soundOn }
   const branches: BranchNode[] = [
     ...BRANCHES.map((b): BranchNode => {
-      const groups = matching(b.groups)
+      const all = listed(b.groups)
+      const groups = matching(all)
       const miss = groups.length === 0
       const n = {
-        ...node(b.name, b.blurb, miss ? [...b.groups] : groups),
+        ...node(b.name, b.blurb, miss ? all : groups),
         patched: o.patched[b.name],
       }
       const shown = miss ? dimmed(n) : n
