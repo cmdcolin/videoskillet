@@ -5,10 +5,12 @@ import { ALL_SLIDERS, VIEW_KEYS } from '../ui/controls'
 import { PRESETS } from '../ui/presets'
 import {
   ANCHOR_PRESETS,
+  anchorName,
   anchorRecipe,
   recipeControls,
   recipeId,
   recipeMod,
+  sampleOne,
   samplePair,
   sampleRecipe,
 } from './candidates'
@@ -185,5 +187,33 @@ describe('recipeId', () => {
     const a = { seed: 1, weights: { vhs: 1 }, kind: 'mix' as const }
     const b = { seed: 1, weights: { vhs: 0.5 }, kind: 'mix' as const }
     expect(recipeId(a)).not.toBe(recipeId(b))
+  })
+})
+
+describe('sampleOne', () => {
+  it('reproduces from its seed and carries the seed', () => {
+    for (const seed of [1, 7, 42, 1000, 123456]) {
+      const a = sampleOne(seed)
+      expect(sampleOne(seed)).toEqual(a)
+      expect(a.seed).toBe(seed)
+    }
+  })
+
+  it('mixes anchors in at roughly the pair rate', () => {
+    let anchors = 0
+    for (let seed = 0; seed < 2000; seed++) {
+      if (sampleOne(seed).kind === 'anchor') anchors++
+    }
+    expect(anchors).toBeGreaterThan(200)
+    expect(anchors).toBeLessThan(400)
+  })
+})
+
+describe('anchorName', () => {
+  it('names an anchor and nothing else', () => {
+    expect(anchorName(anchorRecipe(3))).toBe(
+      Object.keys(anchorRecipe(3).weights)[0],
+    )
+    expect(anchorName(sampleRecipe(3))).toBeNull()
   })
 })

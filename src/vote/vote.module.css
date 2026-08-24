@@ -145,3 +145,72 @@
   line-height: var(--prose-lh);
   max-width: 60ch;
 }
+
+/* The stream: one canvas, a row of five ratings under it, the tags under that. */
+.stage {
+  position: relative;
+  width: 100%;
+  max-width: 640px;
+}
+
+.idle {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  background: rgba(11, 11, 14, 0.85);
+  color: var(--fg2);
+  border-radius: var(--ctl-radius);
+}
+
+.rating {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.rating .pick {
+  min-width: 6rem;
+}
+
+.tags {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 640px;
+}
+
+.tag,
+.tagOn {
+  height: var(--ctl-h);
+  padding: 0 0.5rem;
+  border: 1px solid var(--border-quiet);
+  border-radius: var(--ctl-radius);
+  background: var(--ctl-face);
+  color: var(--fg2);
+  font: inherit;
+  cursor: pointer;
+}
+
+.tagOn {
+  background: var(--ctl-on-bg);
+  color: var(--ctl-on-fg);
+  border-color: var(--ctl-on-bg);
+}
+
+.tag:disabled,
+.tagOn:disabled,
+.pick:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.link {
+  color: var(--fg3);
+  text-decoration: underline;
+}

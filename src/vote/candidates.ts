@@ -120,6 +120,19 @@ export function samplePair(seed: number): [Recipe, Recipe] {
   return [sampleRecipe(a), sampleRecipe(b)]
 }
 
+// One candidate on its own, for the stream: an anchor at the same rate a pair
+// carries one, so the 1-5 scale gets the same hand-authored calibration points
+// the comparisons do, and the rest of the time a roll.
+export function sampleOne(seed: number): Recipe {
+  return rngFor(seed)() < ANCHOR_RATE ? anchorRecipe(seed) : sampleRecipe(seed)
+}
+
+// The authored preset a recipe is, when it is one whole and nothing else.
+export function anchorName(recipe: Recipe): string | null {
+  const entries = Object.entries(recipe.weights)
+  return recipe.kind === 'anchor' && entries.length === 1 ? entries[0][0] : null
+}
+
 const asWeights = (recipe: Recipe): PresetWeights =>
   new Map(Object.entries(recipe.weights))
 

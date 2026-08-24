@@ -72,6 +72,36 @@ offline and needs nothing from collection time: `weights` and `query` are both
 stored, so a row whose query is what those weights serialize to _is_ an
 untouched recipe, whatever the hint says.
 
+## The stream — the volume collector
+
+`/stream.html` (`src/vote/StreamPage.tsx`, `useStream.ts`): one look on one
+engine, the app's own `z`–`b` 1-5 keys, the next one. It writes the same
+`ratings` rows the tags menu does, with `provenance: 'stream'`, so a fit reads
+both collectors as one dataset and can slice either back out. The tags sit on
+`1`–`0` and are optional; a candidate is `sampleOne`, which mixes authored
+anchors in at the pair page's 15% so the scale gets the same calibration
+points. `→` skips, `space` holds the current look.
+
+It exists because the rate is what the dataset was short of: the pair page
+yields one comparison per ~4 s of two engines, the app only collects from
+someone already making looks, and `affinity.mjs simulate` puts `cool` at ~200
+rows. At a key every few seconds that is a quarter of an hour.
+
+Two rules keep the rows honest:
+
+- **Silence is never a label.** A ready look waits `HOLD_MS` (5 s) and moves on
+  unanswered; after `IDLE_AFTER` (3) of those in a row the stream stops and
+  says so. A row is a claim somebody looked, and a page left running over
+  lunch would otherwise file a hundred 1s. The implicit-negative idea was
+  considered — it is free data — and declined for this reason; the negatives
+  come from the next rule instead.
+- **Rating is cheaper than moving on.** A key advances the stream at once and
+  waiting advances it in 5 s, so the fastest way through is to rate everything,
+  and a 1 costs exactly what a 5 costs. That is the shape the doc above says a
+  preference model cannot be fitted without.
+
+The blindness rule is the pair page's: nothing on screen names the recipe.
+
 ## The comparison page — the clean holdout
 
 `/vote.html`, a separate vite entry (`src/vote/main.tsx`) so a visitor to

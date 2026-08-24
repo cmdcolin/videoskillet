@@ -40,7 +40,7 @@ export type VoteSource = (typeof VOTE_SOURCE_NAMES)[number]
 // their own content into the comparison, and a moving source would mean the two
 // candidates saw different input frames — precisely the confound this page exists
 // to avoid.
-const VOTE_SOURCES: Record<VoteSource, () => OffscreenCanvas> = {
+export const VOTE_SOURCES: Record<VoteSource, () => OffscreenCanvas> = {
   bars: smpteBars,
   sweep,
 }
@@ -92,7 +92,7 @@ export function flushEngines(engines: readonly EngineApi[]) {
 }
 
 // Put one recipe on one engine.
-function show(engine: EngineApi, recipe: Recipe) {
+export function show(engine: EngineApi, recipe: Recipe) {
   engine.applyControls(recipeControls(recipe))
   // Motion goes through the same conversion the panel uses, rather than a second
   // reading of what a routing means: `routingsToSlots` pads and caps the bay

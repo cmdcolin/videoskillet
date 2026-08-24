@@ -89,7 +89,14 @@ const isCool = (v: unknown): boolean =>
 // Best-effort classification, which is why the raw facts (`weights`, `preset`,
 // `query`) are all stored beside it — a disagreement between this label and those
 // is resolvable after the fact rather than lost.
-const PROVENANCES = ['surprise', 'preset', 'mutate', 'hand', 'compare'] as const
+const PROVENANCES = [
+  'surprise',
+  'preset',
+  'mutate',
+  'hand',
+  'compare',
+  'stream',
+] as const
 export type Provenance = (typeof PROVENANCES)[number]
 const isProvenance = (v: unknown): v is Provenance =>
   typeof v === 'string' && PROVENANCES.some(p => p === v)

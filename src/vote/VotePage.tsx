@@ -1,13 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 
-import { signIn, signOut, wasSignedIn, watchAuth } from '../ui/cloud'
 import { VOTE_SOURCE_NAMES } from './prepare'
+import { useVoteAuth } from './useVoteAuth'
 import { useVoteEngines } from './useVoteEngines'
 import { useVoting } from './useVoting'
 import styles from './vote.module.css'
 
 import type { EngineApi } from '../core/gpu/engineapi'
-import type { CloudUser } from '../ui/cloud'
 import type { VoteSource } from './prepare'
 import type { Choice } from './votes'
 
@@ -22,47 +21,6 @@ import type { Choice } from './votes'
 // The other half of the same rule is in the stylesheet: the two canvases are
 // identical as boxes, because anything that makes one side prettier to look *at*
 // becomes a bias the dataset carries.
-
-// Reading the sign-in state without making every visitor pay for the Firebase SDK.
-// Same trade cloud.ts describes: the ~110kB is fetched on a load that already
-// knows this browser has signed in before, or on a press of the button, and a
-// session that does neither downloads none of it.
-function useVoteAuth() {
-  const [user, setUser] = useState<CloudUser | null>(null)
-  const [busy, setBusy] = useState(false)
-
-  useEffect(() => {
-    if (!wasSignedIn()) return undefined
-    let live = true
-    const stop = watchAuth(u => {
-      if (live) setUser(u)
-    })
-    return () => {
-      live = false
-      void stop.then(off => off())
-    }
-  }, [])
-
-  return {
-    user,
-    busy,
-    start: async () => {
-      setBusy(true)
-      try {
-        setUser(await signIn())
-      } catch {
-        // A dismissed popup is not an error worth a banner — the page keeps
-        // working, votes keep queueing, and the button is still there.
-      } finally {
-        setBusy(false)
-      }
-    },
-    stop: async () => {
-      await signOut()
-      setUser(null)
-    },
-  }
-}
 
 // What each engine is actually presenting, as a health readout rather than a
 // performance toy: a pair judged at 8 fps is a pair whose motion the labeller
@@ -144,6 +102,9 @@ export function VotePage() {
     <div className={styles.page}>
       <div className={styles.bar}>
         <h1 className={styles.title}>which look is cooler?</h1>
+        <a className={styles.link} href="stream.html">
+          one at a time instead
+        </a>
         <div className={styles.spacer} />
         <span className={styles.count}>{cast} voted</span>
         {pending > 0 && (

@@ -174,7 +174,7 @@ service cloud.firestore {
              && (request.resource.data.preset == null
                  || request.resource.data.preset is string)
              && request.resource.data.provenance in
-                  ['surprise', 'preset', 'mutate', 'hand', 'compare']
+                  ['surprise', 'preset', 'mutate', 'hand', 'compare', 'stream']
              && request.resource.data.tags is list
              && request.resource.data.tags.size() <= 32
              && request.resource.data.cool is int
