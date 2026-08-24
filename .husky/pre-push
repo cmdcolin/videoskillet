@@ -1,0 +1,27 @@
+# Refuse to push a tag that isn't on main. A rebase rewrites the release commit
+# and leaves the tag behind on the orphaned one, so `git push --follow-tags`
+# would publish a tag pointing at a commit nothing else can reach.
+
+if ! git rev-parse --verify --quiet main >/dev/null; then
+  exit 0
+fi
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+  case "$remote_ref" in
+    refs/tags/*) ;;
+    *) continue ;;
+  esac
+  case "$local_sha" in
+    *[!0]*) ;;
+    *) continue ;;
+  esac
+
+  commit=$(git rev-parse --verify --quiet "$local_sha^{commit}") || continue
+  if ! git merge-base --is-ancestor "$commit" main; then
+    tag=${remote_ref#refs/tags/}
+    echo "pre-push: tag $tag points at $(git rev-parse --short "$commit"), which is not on main."
+    echo "  A rebase likely orphaned it. Move it and retry:"
+    echo "    git tag -f $tag <the release commit on main>"
+    exit 1
+  fi
+done
