@@ -60,8 +60,6 @@ These read like naked periodic waves but are physically correct — don't
   defects on _position on the tape_ so they recur every lap; the same idea on
   the main deck still wants doing — it has no tape-position coordinate to hang a
   defect off, which is exactly what the ring gave the loop.
-- **Servo hunting.** `trackPos` is a static knob; a real auto-tracking deck
-  searches and settles after a scene change or on exiting shuttle.
 - **Luma FM beating the 629 kHz color-under carrier.** The fine crawling chroma
   noise in saturated reds. Modelling the luma FM properly is expensive; the
   honest cheap version is the beat product alone.

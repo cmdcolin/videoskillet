@@ -41,7 +41,11 @@ export function deckLoad(c: Controls): DeckLoad {
     c.pipMix > 0 ? 'the inset up' : '',
     c.shuttleX !== 1 ? 'the tape off play' : '',
     c.tapeMix > 0 ? 'the loop threaded' : '',
-    c.trackAmt > 0 ? 'the head off track' : '',
+    c.trackHunt > 0
+      ? 'the servo hunting'
+      : c.trackAmt > 0
+        ? 'the head off track'
+        : '',
     c.timeScale === 0
       ? 'the picture held'
       : c.timeScale !== 1

@@ -222,6 +222,26 @@ export const PRESETS: PresetDef[] = [
     mod: [{ target: 'trackPos', source: 'smooth', rateHz: 0.08, depth: 0.25 }],
   },
   {
+    name: 'servoHunt',
+    displayName: 'servo hunt',
+    group: 'Tape wear',
+    blurb:
+      'An auto-tracking deck that cannot find the track. The servo sweeps the noise band up the picture, overshoots, rings back, settles for a breath and loses it again as the tape stretches; every scene change, shuttle exit, splice and thump from the music throws it off the peak, and the top of the frame flags on the tension each time. Nothing here is drawn — it is a loop with too little damping.',
+    patch: {
+      trackHunt: 0.85,
+      trackKick: 0.9,
+      trackPos: 0.7,
+      colorUnderMix: 1,
+      chromaNoiseIre: 14,
+      lumaMHz: 2.9,
+      noiseIre: 2.5,
+      tbJitterNs: 200,
+      tbWowNs: 400,
+      hHold: 0.3,
+      syncBendUs: 1.5,
+    },
+  },
+  {
     name: 'fmFold',
     displayName: 'fm fold',
     group: 'Tape wear',

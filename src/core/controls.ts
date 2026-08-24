@@ -294,6 +294,8 @@ export const DEFAULT_CONTROLS = {
   // VHS tracking error
   trackAmt: 0,
   trackPos: 0.85,
+  trackHunt: 0, // the auto-tracking servo: 0 parked, 1 hunting and never settling
+  trackKick: 0.6, // how hard a scene change, shuttle exit, splice or bass hit unseats it
   shuttleX: 1, // transport speed as multiple of play: 0 pause, <0 review, 1 clean
   // display
   // beam blanking held on: flashes of scanning beam separated by dark the

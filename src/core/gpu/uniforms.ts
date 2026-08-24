@@ -75,6 +75,11 @@ export interface UniformEnv {
   impulseTrainPos: number
   impulseTrainStep: number
   shuttlePhase: number
+  // Where the tracking servo has the band this frame, and how badly.
+  trackPos: number
+  trackAmt: number
+  // Retrace flag from tape tension, µs, over the hand's syncBendUs.
+  flagUs: number
   dbgView: number
 }
 
@@ -128,7 +133,7 @@ export function uniformValues(c: Controls, env: UniformEnv) {
     // slower oscillator retraces late, so the raster start creeps down the
     // source and the picture climbs
     vRollRate: LINES * (60 / (c.vFreqHz - c.audioRoll * env.audioHit) - 1),
-    syncBend: c.syncBendUs * 1e-6 * SAMPLE_RATE,
+    syncBend: (c.syncBendUs + env.flagUs) * 1e-6 * SAMPLE_RATE,
     bendAmt: c.bendUs * 1e-6 * SAMPLE_RATE,
     bendShape: c.bendShape,
     bendPeriod: c.bendPeriod,
@@ -256,8 +261,8 @@ export function uniformValues(c: Controls, env: UniformEnv) {
     bKeyMatteY: c.bKeyMatteY,
     bKeyMatteHue: (c.bKeyMatteHueDeg * Math.PI) / 180,
     bKeyMatteSat: c.bKeyMatteSat,
-    trackAmt: c.trackAmt,
-    trackPos: c.trackPos,
+    trackAmt: env.trackAmt,
+    trackPos: env.trackPos,
     shuttleBars: c.shuttleX - 1,
     shuttlePhase: env.shuttlePhase,
     cfbMix: c.cfbMix,

@@ -96,6 +96,8 @@ export class TapeState {
   // head. It reaches a play head when it draws level with that head, so this
   // one number serves however many heads are in the path — see tape_play.wgsl.
   private splicePast = 0
+  // The splice ran past the record head this frame — once a lap.
+  spliceCrossed = false
   // The stretch of tape the heads are running over. While the record head is
   // down this is simply the tape being laid down now; once it lifts, the window
   // stays where it was and `holdPhase` walks the heads round it.
@@ -146,7 +148,9 @@ export class TapeState {
     const transport = transportSpeed(c)
     this.splicePast = wrap(this.splicePast, delay)
     const past = this.splicePast
-    this.splicePast = wrap(past + transport * N, delay)
+    const next = past + transport * N
+    this.spliceCrossed = next >= delay || next < 0
+    this.splicePast = wrap(next, delay)
 
     // Lifting the record head does not stop the tape — it keeps circulating
     // over the same loop-length of oxide, so the heads have to wrap inside that

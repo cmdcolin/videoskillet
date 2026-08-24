@@ -21,6 +21,7 @@ import { MixState } from '../signal/mixstate'
 import { driveAt, driveSlots, ModState } from '../signal/modstate'
 import { valueNoise } from '../signal/noise'
 import { RfState } from '../signal/rfstate'
+import { TrackingServo } from '../signal/servo'
 import { StabGate } from '../signal/stab'
 import { StrobeGate } from '../signal/strobe'
 import { SynthState } from '../signal/synthstate'
@@ -293,6 +294,12 @@ export class Engine implements EngineApi {
   private scPhase = 0
   // picture-search crossing pattern phase, accumulated per frame (crossings)
   private shuttlePhase = 0
+  // The auto-tracking servo (signal/servo.ts), and what it settled on this
+  // frame: both the line-state tear and the channel's noise band read the
+  // servo's position rather than the slider's, so the two stay one band.
+  private servo = new TrackingServo(this.rand)
+  private track = { pos: 0.85, amt: 0, flagUs: 0 }
+  private lastShuttleX = 1
   // Tape time per deck: everything recorded on a deck's own medium crawls on
   // these instead of the frame counter, so a paused deck freezes it — the crawl
   // was on the tape, and a held frame re-reads one track. A's drives its snow
@@ -1250,12 +1257,15 @@ export class Engine implements EngineApi {
   // (useEngine and the window.vf harness both drive it), but none of the
   // staging, capping, or aspect handling lives here any more.
   setImageSource(source: OffscreenCanvas | ImageBitmap, aspect = 4 / 3): void {
+    // A new picture on the tape is a scene change as far as the servo knows.
+    this.servo.kick(0.6)
     this.pump.setA(null)
     this.sources.setImageSource(source, aspect)
   }
 
   setVideoSource(el: HTMLVideoElement | null): void {
     if (el !== null) this.sources.setNoiseSource(0)
+    this.servo.kick(0.6)
     this.pump.setA(el)
   }
 
@@ -1569,6 +1579,9 @@ export class Engine implements EngineApi {
       impulseTrainPos: this.impulseTrainPos,
       impulseTrainStep: this.impulseTrainStep,
       shuttlePhase: this.shuttlePhase,
+      trackPos: this.track.pos,
+      trackAmt: this.track.amt,
+      flagUs: this.track.flagUs,
       dbgView: this.dbgView,
     })
   }
@@ -1713,6 +1726,13 @@ export class Engine implements EngineApi {
     this.fault.stop()
     this.scPhase = 0
     this.shuttlePhase = 0
+    this.servo = new TrackingServo(this.rand)
+    this.track = {
+      pos: this.controls.trackPos,
+      amt: this.controls.trackAmt,
+      flagUs: 0,
+    }
+    this.lastShuttleX = this.controls.shuttleX
     this.tapeFrame = { a: 0, b: 0 }
     this.impulseTrainPos = 0
     this.impulseTrainStep = 0
@@ -1810,7 +1830,14 @@ export class Engine implements EngineApi {
   // a millisecond — here it is frame-clocked, so it is already right under a
   // take's virtual clock with no second code path.
   startFault(plan: FaultPlan): void {
-    this.fault.start(plan)
+    // The cut is an edit on the tape; the servo re-finds the track after it.
+    this.fault.start({
+      ...plan,
+      onCut: () => {
+        this.servo.kick(1)
+        plan.onCut()
+      },
+    })
   }
 
   setDbgView(view: number): void {
@@ -1987,6 +2014,17 @@ export class Engine implements EngineApi {
   // constants are shared with the delay loop's own transport — see
   // signal/crossings.ts — and what is this deck's own is only that its speed
   // arrives as a multiple of play, so the crossing count is one less.
+  // What unseated the tracking this frame: the transport changing speed, the
+  // loop's splice going past, and a bass hit through the cabinet. Scene changes
+  // and transition cuts kick from where they happen.
+  private kickServo(c: Controls): void {
+    const dShuttle = Math.abs(c.shuttleX - this.lastShuttleX)
+    this.lastShuttleX = c.shuttleX
+    if (dShuttle > 0) this.servo.kick(Math.min(dShuttle, 1))
+    if (c.tapeMix > 0 && this.tapeState.spliceCrossed) this.servo.kick(0.8)
+    if (this.audioState.hit > 0.9) this.servo.kick(this.audioState.hit * 0.5)
+  }
+
   private advanceShuttle(shuttleX: number): void {
     this.shuttlePhase = advanceCrossings(this.shuttlePhase, shuttleX - 1)
   }
@@ -2142,6 +2180,13 @@ export class Engine implements EngineApi {
       },
       this.frame,
     )
+    this.kickServo(c)
+    this.track = this.servo.update({
+      target: c.trackPos,
+      amt: c.trackAmt,
+      hunt: c.trackHunt,
+      kick: c.trackKick,
+    })
     const vals = {
       ...this.uniformValues(),
       ...mixU,
@@ -2174,8 +2219,8 @@ export class Engine implements EngineApi {
       tbStickNs: c.tbStickNs,
       underJitterDeg: c.underJitterDeg,
       headSwitchShiftUs: c.headSwitchShiftUs,
-      trackAmt: c.trackAmt,
-      trackPos: c.trackPos,
+      trackAmt: this.track.amt,
+      trackPos: this.track.pos,
       shuttleBars: c.shuttleX - 1,
       shuttlePhase: this.shuttlePhase,
     }

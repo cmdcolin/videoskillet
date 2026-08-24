@@ -84,6 +84,14 @@ The one worth knowing: noise out of an FM discriminator rises toward the top of
 the band, which lands it in the chroma passband, so tape noise arrives as
 crawling coloured speckle rather than grey grain.
 
+The tracking band is a servo, not a position. With **servo hunt** up the deck
+searches for the track the way an auto-tracking machine does — a second-order
+loop with a dead band, and less damping the higher the control — so it sweeps,
+overshoots and rings, settles for a breath, and drifts back off as the tape
+stretches. A scene change, coming out of shuttle, the loop's splice, a
+transition cut or a thump from the music all knock it off the peak, and the top
+of the frame flags on the tape tension each time (`signal/servo.ts`).
+
 ## Enhancer
 
 A consumer enhancer between the deck and the set, with its jumpers moved. The
