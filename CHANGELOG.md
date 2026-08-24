@@ -2,6 +2,11 @@
 
 All notable changes to ntsc.js are documented here.
 
+## [0.30.0](https://github.com/cmdcolin/ntsc.js/compare/v0.29.4...v0.30.0) - 2026-08-24
+
+### Features
+- *(ui)* [`ea3240f`](https://github.com/cmdcolin/ntsc.js/commit/ea3240f16ca5608316bfc17a05113b846dc79849) the stream — rate one rolled look at a time, on the app's 1-5 keys
+
 ## [0.29.4](https://github.com/cmdcolin/ntsc.js/compare/v0.29.3...v0.29.4) - 2026-08-23
 
 ### Features
