@@ -44,9 +44,9 @@ const FAILURES = new Set(['CompileError', 'PipelineError'])
 //     app.tsx's `{ engine, engineRef }` comment warns about;
 //   - TeletypePaint writes locals after render, which is the paint surface
 //     accumulating strokes outside React;
-//   - Meter trips an internal invariant, and VotePage uses `try/finally`, which
-//     the compiler does not lower yet. Both are upstream, so re-check them on a
-//     compiler upgrade rather than trying to satisfy them.
+//   - Meter trips an internal invariant, and useVoteAuth uses `try/finally`,
+//     which the compiler does not lower yet. Both are upstream, so re-check
+//     them on a compiler upgrade rather than trying to satisfy them.
 //
 // Delete a line the moment its component compiles — the check says so when a
 // recorded bailout stops happening.
@@ -56,7 +56,7 @@ const KNOWN = [
   ['src/ui/TeletypePaint.tsx', 'Cannot modify local variables after render'],
   ['src/ui/TeletypePaint.tsx', 'Cannot modify local variables after render'],
   ['src/ui/useShortcuts.ts', 'Cannot access refs during render'],
-  ['src/vote/VotePage.tsx', 'Handle TryStatement with a finalizer'],
+  ['src/vote/useVoteAuth.ts', 'Handle TryStatement with a finalizer'],
   ['src/vote/VotePage.tsx', 'This value cannot be modified'],
 ]
 
