@@ -23,17 +23,31 @@ import { writeMp4 } from './mp4'
 
 import type { Sample } from './mp4'
 
-// H.264 baseline — the profile every editor and phone decodes. Not chosen for
-// quality: what makes this file worth opening is its timing, and the bitrate
-// below is what carries the picture.
+// H.264, and neither half of the codec string is a constant.
 //
-// The *level* cannot be pinned, which is what a fixed `avc1.42002a` got wrong.
-// A level caps the coded picture area, and Chrome enforces it at `configure`
-// with a hard rejection — a 2560x1592 window codes as 2560x1600 = 4096000
-// samples against level 4.2's 2228224 and the recording never starts. So the
-// level is picked from the frame instead, in macroblocks, and the codec string
-// carries it in its last byte.
-const PROFILE = '4200'
+// **The level.** A level caps the coded picture area, and Chrome enforces it at
+// `configure` with a hard rejection — a 2560x1592 retina window codes as
+// 2560x1600 = 4096000 samples against the old fixed `avc1.42002a`'s level 4.2
+// budget of 2228224, and the recording never started. So the level comes from
+// the frame, in macroblocks.
+//
+// **The profile.** Baseline was picked as "the profile every editor and phone
+// decodes", which was an argument from 2010 and cost real picture. Measured on
+// Chrome 141 / macOS against 16 frames of grain and one-pixel detail at
+// 2560x1600, an I420 source encoded and decoded back:
+//
+//   baseline 5.0   175 Mbps   24.52 dB
+//   main     5.0   143 Mbps   24.63 dB
+//   high     5.0   143 Mbps   24.63 dB
+//
+// Same picture for 18% fewer bits — CABAC and the 8x8 transform, both of which
+// baseline forbids and both of which are worth most on exactly this content.
+// Nothing that has shipped this decade fails to decode High.
+//
+// Ordered best-first and probed rather than assumed: `isConfigSupported`
+// discriminates here (it declines High 4:2:2 and High 10 on this machine), so a
+// platform without High falls back rather than failing the take.
+const PROFILES = ['6400', '4d00', '4200']
 
 // `maxFS` from Table A-1, in 16x16 macroblocks, against the byte the codec
 // string spells the level with. Ordered, and read as "the first one that fits".
@@ -48,16 +62,18 @@ const LEVELS: { code: number; maxMacroblocks: number }[] = [
   { code: 0x3c, maxMacroblocks: 139264 },
 ]
 
-export const codecFor = (code: number): string =>
-  `avc1.${PROFILE}${code.toString(16).padStart(2, '0')}`
+export const codecFor = (profile: string, level: number): string =>
+  `avc1.${profile}${level.toString(16).padStart(2, '0')}`
 
-// Every level that could carry this picture, smallest first. Smallest is the
-// honest label — a decoder reads the level as a promise about what it will be
-// asked for — but an encoder may decline a level it does not implement, so the
-// larger ones stay available as fallbacks.
-export const levelsFor = (width: number, height: number): number[] => {
+// Every codec string worth trying for this picture, best first: profile
+// outermost because a lesser profile costs picture on every frame, where a
+// larger level than the frame needs costs nothing at all. Within a profile the
+// smallest level that fits comes first — that is the honest label, since a
+// decoder reads the level as a promise about what it will be asked for.
+export const candidatesFor = (width: number, height: number): string[] => {
   const macroblocks = Math.ceil(width / 16) * Math.ceil(height / 16)
-  return LEVELS.filter(l => macroblocks <= l.maxMacroblocks).map(l => l.code)
+  const levels = LEVELS.filter(l => macroblocks <= l.maxMacroblocks)
+  return PROFILES.flatMap(p => levels.map(l => codecFor(p, l.code)))
 }
 
 // Bits per pixel per frame. This content is worst-case for a codec — snow,
@@ -149,8 +165,7 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
   // throwing — which would surface as a failed recording rather than as a
   // choice this function could have made differently.
   let codec = ''
-  for (const code of levelsFor(width, height)) {
-    const candidate = codecFor(code)
+  for (const candidate of candidatesFor(width, height)) {
     const { supported } = await VideoEncoder.isConfigSupported(
       configFor(candidate),
     )

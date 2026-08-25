@@ -123,8 +123,8 @@ const MATRIX = join([
 // So the sets are read out by their declared lengths, un-doubled, and re-emitted
 // with the reserved bits on. Detecting the duplicate rather than always
 // dropping a byte is what keeps this correct on a browser without the bug: a
-// real SPS's second byte is `profile_idc` (0x42 here) and can never equal its
-// own NAL header, so the two being identical is unambiguous.
+// real SPS's second byte is `profile_idc` (0x64 for the High profile
+// `record.ts` now asks for) and can never equal its own NAL header, so the two being identical is unambiguous.
 export function normaliseAvcc(raw: Uint8Array): Uint8Array {
   // Too short to be a record at all — hand it back and let the file fail
   // visibly rather than inventing parameter sets nothing came from.
