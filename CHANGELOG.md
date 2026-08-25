@@ -2,6 +2,19 @@
 
 All notable changes to ntsc.js are documented here.
 
+## [0.30.1](https://github.com/cmdcolin/ntsc.js/compare/v0.30.0...v0.30.1) - 2026-08-25
+
+### Fixes
+- *(ui)* [`48a7738`](https://github.com/cmdcolin/ntsc.js/commit/48a77388758e236823b7e69e119f16b47a677a70) satisfy oxlint's react rules at the cause
+- *(ui)* [`8494b10`](https://github.com/cmdcolin/ntsc.js/commit/8494b1014f934cc945dae0ca9c00d2953826636f) pick the H.264 level from the frame instead of pinning 4.2
+
+### Documentation
+- [`5cbecde`](https://github.com/cmdcolin/ntsc.js/commit/5cbecde63bd2b3b6e2264b7a101aa02add031574) fix formatting in VOTING.md
+
+### Chores
+- [`f64bbbd`](https://github.com/cmdcolin/ntsc.js/commit/f64bbbd19cdaec0b3a7461e10b03cdc317a75d95) pre-push hook refuses a tag that isn't on main
+- *(deps)* [`7820da2`](https://github.com/cmdcolin/ntsc.js/commit/7820da2a5ed4b4ee5d3dd84f1fd320f5fb6d7d78) update dependencies
+
 ## [0.30.0](https://github.com/cmdcolin/ntsc.js/compare/v0.29.4...v0.30.0) - 2026-08-24
 
 ### Features
@@ -18,13 +31,15 @@ All notable changes to ntsc.js are documented here.
 ### Other Changes
 - [`184bcb7`](https://github.com/cmdcolin/ntsc.js/commit/184bcb76c890eb2fad9a7d52410975f6ac8fa99c) Some more demos
 
-## [0.29.3](https://github.com/cmdcolin/ntsc.js/compare/v0.29.1...v0.29.3) - 2026-08-23
-
-### Features
-- *(ui)* [`82e1971`](https://github.com/cmdcolin/ntsc.js/commit/82e1971b9a0b8382524d8f5a3e692bff7931eb59) trim the loop's geometry in hundredths, off a card the row hands up
+## [0.29.3](https://github.com/cmdcolin/ntsc.js/compare/v0.29.2...v0.29.3) - 2026-08-23
 
 ### Other Changes
 - [`59c572f`](https://github.com/cmdcolin/ntsc.js/commit/59c572f480ff96509221cd70bb4b7d694a09588e) Format
+
+## [0.29.2](https://github.com/cmdcolin/ntsc.js/compare/v0.29.1...v0.29.2) - 2026-08-22
+
+### Features
+- *(ui)* [`82e1971`](https://github.com/cmdcolin/ntsc.js/commit/82e1971b9a0b8382524d8f5a3e692bff7931eb59) trim the loop's geometry in hundredths, off a card the row hands up
 
 ## [0.29.1](https://github.com/cmdcolin/ntsc.js/compare/v0.29.0...v0.29.1) - 2026-08-21
 
