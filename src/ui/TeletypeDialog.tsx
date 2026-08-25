@@ -58,7 +58,9 @@ export function TeletypeDialog(props: {
   // Read through a ref so the listener below is attached once per mode rather
   // than re-attached on every stroke, and still sees the current text.
   const latest = useRef(undoStroke)
-  latest.current = undoStroke
+  useEffect(() => {
+    latest.current = undoStroke
+  })
 
   // ⌘/ctrl+Z while drawing. On the window and in the capture phase, ahead of
   // the app's own undo (useShortcuts), which is bound the same way and means

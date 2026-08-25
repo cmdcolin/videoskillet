@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 
 import { VOTE_SOURCE_NAMES } from './prepare'
 import { useVoteAuth } from './useVoteAuth'
@@ -6,6 +6,7 @@ import { useVoteEngines } from './useVoteEngines'
 import { useVoting } from './useVoting'
 import styles from './vote.module.css'
 
+import type { FrameStats } from '../core/controls'
 import type { EngineApi } from '../core/gpu/engineapi'
 import type { VoteSource } from './prepare'
 import type { Choice } from './votes'
@@ -27,29 +28,30 @@ import type { Choice } from './votes'
 // never really saw, and since two engines share one device it is worth being able
 // to see whether they are keeping up with each other.
 //
-// Read from the engines' own `onStats` rather than by counting rAF callbacks on
+// Read from the engines' own stats rather than by counting rAF callbacks on
 // the page, and the difference matters. The render loop has a fallback timer for
 // exactly the case where a browser stops delivering rAF at full rate — an occluded
 // or unfocused window — so a page-side rAF counter reads near zero while the engine
 // is still stepping and the picture is still developing. It measures how often
 // *this document* is painted, not how fast the signal path is running, and it
 // reported 1 fps on a page whose canvases were visibly blooming.
+//
+// Taken from each engine's stats store rather than by hanging a handler on its
+// `onStats` field: the store is the engine's own subscription, so a pair that
+// goes away unsubscribes instead of leaving a field pointing at a dead setState,
+// and neither engine's report can overwrite the other's rate on its way in.
+const STILL: FrameStats = { fps: 0, lock: 1 }
+const NEVER_STATS = () => () => undefined
+
+function useFps(engine: EngineApi | undefined) {
+  return useSyncExternalStore(
+    engine === undefined ? NEVER_STATS : engine.subscribeStats,
+    engine === undefined ? () => STILL : engine.getStats,
+  ).fps
+}
+
 function useEngineFps(engines: readonly [EngineApi, EngineApi] | null) {
-  const [rates, setRates] = useState<readonly [number, number]>([0, 0])
-  useEffect(() => {
-    if (engines === null) return undefined
-    engines[0].onStats = s => {
-      setRates(prev => [s.fps, prev[1]])
-    }
-    engines[1].onStats = s => {
-      setRates(prev => [prev[0], s.fps])
-    }
-    return () => {
-      // Handed back to a no-op rather than left pointing at a dead setState.
-      for (const engine of engines) engine.onStats = () => undefined
-    }
-  }, [engines])
-  return rates
+  return [useFps(engines?.[0]), useFps(engines?.[1])]
 }
 
 export function VotePage() {

@@ -154,7 +154,9 @@ interface Handlers {
 // case-insensitively so the hints work whether or not Shift/Caps is down.
 export function useShortcuts(popout: Window | null, handlers: Handlers) {
   const ref = useRef(handlers)
-  ref.current = handlers
+  useEffect(() => {
+    ref.current = handlers
+  })
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

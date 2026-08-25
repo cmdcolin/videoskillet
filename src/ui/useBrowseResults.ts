@@ -36,25 +36,40 @@ type Browsing =
   | { status: 'failed'; error: string }
 
 const IDLE: Browsing = { status: 'idle' }
+const BUSY: Browsing = { status: 'busy' }
+
+// What a search came back with, stamped with what was asked. Kept together so
+// "is this the answer to the question on screen?" is a comparison rather than a
+// second piece of state to keep in step: anything else is still in flight, which
+// is the whole of `busy`.
+interface Answered {
+  origin: PoolOrigin
+  query: string
+  result: Browsing
+}
 
 export function useBrowseResults(origin: PoolOrigin, query: string): Browsing {
-  const [state, setState] = useState<Browsing>(IDLE)
+  const [answered, setAnswered] = useState<Answered>()
 
   useEffect(() => {
-    // The whole of the race fix, and the reason this is a hook. Set false on
-    // the way out, checked before every write: a reply that arrives after the
-    // query moved on updates nothing.
+    // Set false on the way out and checked before every write: a reply that
+    // arrives after the query moved on updates nothing.
     let live = true
-    if (query === '') {
-      setState(IDLE)
-    } else {
-      setState({ status: 'busy' })
+    if (query !== '') {
       browsePool(origin, query).then(
         hits => {
-          if (live) setState({ status: 'done', hits })
+          if (live) {
+            setAnswered({ origin, query, result: { status: 'done', hits } })
+          }
         },
         (e: unknown) => {
-          if (live) setState({ status: 'failed', error: reason(e) })
+          if (live) {
+            setAnswered({
+              origin,
+              query,
+              result: { status: 'failed', error: reason(e) },
+            })
+          }
         },
       )
     }
@@ -63,5 +78,11 @@ export function useBrowseResults(origin: PoolOrigin, query: string): Browsing {
     }
   }, [origin, query])
 
-  return state
+  return query === ''
+    ? IDLE
+    : answered !== undefined &&
+        answered.origin === origin &&
+        answered.query === query
+      ? answered.result
+      : BUSY
 }

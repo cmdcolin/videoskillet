@@ -1198,10 +1198,11 @@ export class Engine implements EngineApi {
   // exists to measure. Subscribed by nobody when it is closed, and then the
   // notify below is a walk over an empty set.
   //
-  // `onStats` survives alongside this and is not superseded by it: the vote page
-  // drives two engines from its own handler, and panelcheck.mjs reads the field
-  // off `window.vf`. A store answers "what is the rate now", a callback answers
-  // "tell me when" — the two pages want different ones.
+  // `onStats` survives alongside this and is not superseded by it: panelcheck.mjs
+  // reads the field off `window.vf` to prove the readout is not on it. A store
+  // answers "what is the rate now", a callback answers "tell me when"; the vote
+  // page reads both engines through the store for the same reason the masthead
+  // does.
   readonly subscribeStats = this.statsListeners.subscribe
 
   readonly getStats = (): FrameStats => this.statsSnapshot
