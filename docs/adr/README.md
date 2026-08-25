@@ -23,12 +23,13 @@ renumbered. Keep the shape:
 Where the working-out lives, when it is long: `docs/handoffs/`. An ADR should be
 readable without it.
 
-| #                                                 | decision                                                                |
-| ------------------------------------------------- | ----------------------------------------------------------------------- |
-| [0001](0001-hang-rebuilds-not-ends.md)            | A GPU hang rebuilds the device instead of ending the session            |
-| [0002](0002-webgpu-sessions-are-scarce.md)        | Treat per-tab WebGPU sessions as a scarce budget _(superseded by 0004)_ |
-| [0003](0003-delete-the-worker-engine.md)          | Delete the worker-hosted engine                                         |
-| [0004](0004-never-destroy-a-presenting-device.md) | Never destroy a GPUDevice that has been presenting                      |
-| [0005](0005-saved-profiles-need-an-account.md)    | Saved profiles live in Firestore, and need an account                   |
-| [0006](0006-a-take-is-a-seed-and-its-picks.md)    | A take is a seed plus its resolved picks, and never `Math.random`       |
-| [0007](0007-the-fir-passes-are-not-alu-bound.md)  | The FIR passes are not ALU-bound, so ablate before optimizing           |
+| #                                                    | decision                                                                         |
+| ---------------------------------------------------- | -------------------------------------------------------------------------------- |
+| [0001](0001-hang-rebuilds-not-ends.md)               | A GPU hang rebuilds the device instead of ending the session                     |
+| [0002](0002-webgpu-sessions-are-scarce.md)           | Treat per-tab WebGPU sessions as a scarce budget _(superseded by 0004)_          |
+| [0003](0003-delete-the-worker-engine.md)             | Delete the worker-hosted engine                                                  |
+| [0004](0004-never-destroy-a-presenting-device.md)    | Never destroy a GPUDevice that has been presenting                               |
+| [0005](0005-saved-profiles-need-an-account.md)       | Saved profiles live in Firestore, and need an account                            |
+| [0006](0006-a-take-is-a-seed-and-its-picks.md)       | A take is a seed plus its resolved picks, and never `Math.random`                |
+| [0007](0007-the-fir-passes-are-not-alu-bound.md)     | The FIR passes are not ALU-bound, so ablate before optimizing                    |
+| [0008](0008-record-h264-high-and-mind-the-chroma.md) | Record H.264 High, pick the level from the frame, and know where the chroma went |

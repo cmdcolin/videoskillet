@@ -1241,7 +1241,6 @@ So "render frame N" is nearly a pure function already. Four things are not.
   50x on a sparse one.
 
   Three things worth having here rather than only in those files.
-
   - **Edit lists had to be honoured, not declined.** The demuxer was going to
     report one and let the caller refuse, on the reasoning that honouring one
     half way is worse than not at all. Both clips in `public/` have one — every
@@ -1286,7 +1285,6 @@ So "render frame N" is nearly a pure function already. Four things are not.
   them to move the tape ring, the phosphor and the element's own playhead on.
 
   Four things worth knowing about the shape it landed in.
-
   - **The pull is where the take's clock finally reaches the picture**, and it
     belongs in `startTake` for the reason that switch exists at all: three of
     four leaves a take that looks deterministic and is not. The clock, the dice
@@ -1352,7 +1350,6 @@ So "render frame N" is nearly a pure function already. Four things are not.
   that is an argument for the file rather than a detail of it.
 
   Four things worth having here rather than only in those files.
-
   - **Frames, not milliseconds**, and the trade is visible: a take performed in
     a tab running at 40fps renders at two thirds of the wall time it was
     performed in. That is not new — the strip's holds are already measured in
@@ -1403,7 +1400,6 @@ So "render frame N" is nearly a pure function already. Four things are not.
   asserts it against the real app.
 
   **Three things this paragraph got wrong**, all found by measuring:
-
   - **No `copyTextureToBuffer` is needed, and no offscreen target.**
     `new VideoFrame(webgpuCanvas)` reads the canvas directly and comes back BGRA
     and full of picture. The blank `toBlob` and the silent `captureStream()` are
@@ -1417,8 +1413,7 @@ So "render frame N" is nearly a pure function already. Four things are not.
     at all and Premiere needs a plugin, so the container is the part that
     decides whether "an editor will conform it" is true.
 
-  And two browser faults worth knowing before anyone touches this:
-
+  And three browser faults worth knowing before anyone touches this:
   - **H.264 needs even dimensions**, and an ordinary window gives an odd one
     (measured: 440x573). Firefox accepts the `configure` _and_ the `encode`,
     then fails the whole encoder asynchronously on its error callback with
@@ -1429,6 +1424,12 @@ So "render frame N" is nearly a pure function already. Four things are not.
     duplicate of its own NAL header byte. ffmpeg decoded the picture anyway but
     reported `sps_id out of range` on every frame; `normaliseAvcc` rebuilds the
     record, and afterwards ffmpeg is silent.
+  - **Chrome enforces the AVC level's coded-area cap at `configure`**, and a
+    pinned codec string is therefore a bug waiting for a bigger display: level
+    4.2 allows 2228224 samples and a 2560x1592 retina window codes as 4096000,
+    so recording did not degrade there, it refused to start. `record.ts` now
+    computes profile and level per recording — see
+    [`adr/0008`](adr/0008-record-h264-high-and-mind-the-chroma.md).
 
 ### Take state
 
@@ -1550,7 +1551,13 @@ earns its keep is the boundary on either side:
   Chromium-only — and the browser this project develops and measures against is
   Firefox. This is the strongest single argument.
 - **Codecs.** A bundled ffmpeg gets ProRes / DNxHR and audio mux. WebCodecs gets
-  H.264/VP9/AV1 — delivery codecs, not the intermediates an editor wants.
+  H.264/VP9/AV1 — delivery codecs, not the intermediates an editor wants. The
+  sharpest form of that cost is chroma: the H.264 WebCodecs offers is 4:2:0
+  only, which scores 15.54 dB against a one-pixel chroma source where AV1 4:4:4
+  scores 43.38 for fewer bits, and dot crawl _is_ one-pixel chroma. That is
+  measured in [`adr/0008`](adr/0008-record-h264-high-and-mind-the-chroma.md),
+  and it is reachable in the browser today — what is missing is `av01` sample
+  entries in `ui/mp4.ts`, not an encoder.
 - **A pinned Chromium.** Most of `gpu/renderloop.ts` is Firefox/Linux rAF-stall
   archaeology; owning the runtime deletes that whole class of problem, and would
   restore `importExternalTexture` above. Against it: per `CLAUDE.md`, Chrome's
@@ -1720,7 +1727,6 @@ entries were on neither list until somebody sat down with the thing.
    which is the claim the whole of step 6 was for.
 
    Three predictions this list made, and how they came out.
-
    - **"A puller per slot, in `ui/videoSlot.ts`."** Wrong place. The url is all
      a puller needs, so the opener is one callback on the engine rather than a
      thing each slot holds — the same shape `setVideoRelay` has, minus the part
@@ -1786,7 +1792,6 @@ entries were on neither list until somebody sat down with the thing.
 8. **The filmstrip, and trimming.** Where the tray goes next, and the first
    entry on either list that is about how the strip _reads_ rather than what it
    can do.
-
    - **Cards that show their clip and are as wide as their screen time.** The
      width has a number to come from now — see _Seeing the shape_ — and the open
      question it leaves is the one that entry always named: what the tray is

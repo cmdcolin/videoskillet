@@ -626,12 +626,15 @@ and what it cost_.
 node scripts/reccheck.mjs [port]     # the encoder and the muxer
 node scripts/clockcheck.mjs [port]   # time counted in frames
 node scripts/rendercheck.mjs [port]  # a whole take, twice
+node scripts/enccheck.mjs            # what the encoder costs — a measurement
 ```
 
 Three harnesses over the export half of [`EDITOR.md`](EDITOR.md), in the order
-the pieces landed. All three want `ffprobe` and `ffmpeg` on the path; the first
-and third write an MP4 to a temp dir and read it back with them, because a claim
-about a file is worth what a decoder says about it and nothing more.
+the pieces landed, and a fourth that is a measurement rather than a check. The
+three checks want `ffprobe` and `ffmpeg` on the path; the first and third write
+an MP4 to a temp dir and read it back with them, because a claim about a file is
+worth what a decoder says about it and nothing more. `enccheck` wants neither —
+it decodes what it encoded in the browser that encoded it.
 
 **`rendercheck.mjs` is the one to run after touching anything in the signal
 path.** Its headline check is that two renders of one take come back with the
@@ -656,6 +659,25 @@ path.
 One thing it still deliberately does not claim, and it is a property of the
 world rather than a gap: **byte-identity is within one browser build.** The
 H.264 encoder is Firefox's, and nothing here asserts across versions of it.
+
+**`enccheck` is the working-out behind
+[`adr/0008`](adr/0008-record-h264-high-and-mind-the-chroma.md)**, and is not in
+`sweep.mjs` — it prints numbers rather than passing. It never touches the app:
+every frame it encodes is synthetic and handed over as raw planar YUV, so no arm
+depends on a canvas, a device, or an RGB->YUV conversion on the way in. Run it
+before believing anything in that record against a new browser, and read three
+things off it. Which profiles and levels `configure` will admit, which is what
+says the probe in `ui/record.ts` discriminates at all. What the requested
+bitrate actually buys — on VideoToolbox it is close to advisory, 60M asked and
+143 written. And the chroma arm, which is the one that changed a design: 4:2:0
+scores 15.54 dB against a one-pixel chroma source where AV1 4:4:4 scores 43.38
+for fewer bits, and no bitrate closes that.
+
+Its source is deliberately harder to compress than the app's picture — grain at
+46/255 with one-pixel structure over it — so the Mbps figures are an upper bound
+and the dB a lower one. **The ordering between arms is what transfers**, not the
+absolute numbers. On macOS it launches Chrome; `--browser=firefox --path=…`
+points it elsewhere.
 
 ### Frame-exact pull, and the four harnesses that decided it
 
