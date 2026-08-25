@@ -23,10 +23,42 @@ import { writeMp4 } from './mp4'
 
 import type { Sample } from './mp4'
 
-// H.264 baseline at level 4.0 — the profile every editor and phone decodes.
-// Not chosen for quality: what makes this file worth opening is its timing, and
-// the bitrate below is what carries the picture.
-const CODEC = 'avc1.42002a'
+// H.264 baseline — the profile every editor and phone decodes. Not chosen for
+// quality: what makes this file worth opening is its timing, and the bitrate
+// below is what carries the picture.
+//
+// The *level* cannot be pinned, which is what a fixed `avc1.42002a` got wrong.
+// A level caps the coded picture area, and Chrome enforces it at `configure`
+// with a hard rejection — a 2560x1592 window codes as 2560x1600 = 4096000
+// samples against level 4.2's 2228224 and the recording never starts. So the
+// level is picked from the frame instead, in macroblocks, and the codec string
+// carries it in its last byte.
+const PROFILE = '4200'
+
+// `maxFS` from Table A-1, in 16x16 macroblocks, against the byte the codec
+// string spells the level with. Ordered, and read as "the first one that fits".
+const LEVELS: { code: number; maxMacroblocks: number }[] = [
+  { code: 0x1e, maxMacroblocks: 1620 },
+  { code: 0x1f, maxMacroblocks: 3600 },
+  { code: 0x20, maxMacroblocks: 5120 },
+  { code: 0x28, maxMacroblocks: 8192 },
+  { code: 0x2a, maxMacroblocks: 8704 },
+  { code: 0x32, maxMacroblocks: 22080 },
+  { code: 0x33, maxMacroblocks: 36864 },
+  { code: 0x3c, maxMacroblocks: 139264 },
+]
+
+export const codecFor = (code: number): string =>
+  `avc1.${PROFILE}${code.toString(16).padStart(2, '0')}`
+
+// Every level that could carry this picture, smallest first. Smallest is the
+// honest label — a decoder reads the level as a promise about what it will be
+// asked for — but an encoder may decline a level it does not implement, so the
+// larger ones stay available as fallbacks.
+export const levelsFor = (width: number, height: number): number[] => {
+  const macroblocks = Math.ceil(width / 16) * Math.ceil(height / 16)
+  return LEVELS.filter(l => macroblocks <= l.maxMacroblocks).map(l => l.code)
+}
 
 // Bits per pixel per frame. This content is worst-case for a codec — snow,
 // grain and dot crawl, a new noise field every frame — and the same 0.4 the
@@ -96,6 +128,43 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
   let failure = ''
   let closed = false
 
+  const configFor = (codec: string): VideoEncoderConfig => ({
+    codec,
+    width,
+    height,
+    bitrate: bitrateFor(width, height, rate),
+    framerate: rate,
+    // Length-prefixed NAL units with the parameter sets out of band, which is
+    // what an MP4 sample table wants; 'annexb' would inline them and the file
+    // would need a different `stsd` entry.
+    avc: { format: 'avc' },
+    // The picture is a new noise field every frame, so there is little for a
+    // realtime rate controller to work with and no reason to ask it to hit a
+    // deadline: this is a file, not a stream.
+    latencyMode: 'quality',
+  })
+
+  // Asked rather than assumed. The level that fits the picture is not always
+  // one the platform encoder implements, and `configure` reports that by
+  // throwing — which would surface as a failed recording rather than as a
+  // choice this function could have made differently.
+  let codec = ''
+  for (const code of levelsFor(width, height)) {
+    const candidate = codecFor(code)
+    const { supported } = await VideoEncoder.isConfigSupported(
+      configFor(candidate),
+    )
+    if (supported === true) {
+      codec = candidate
+      break
+    }
+  }
+  if (codec === '') {
+    throw new Error(
+      `no supported H.264 level for ${width}x${height} at ${Math.round(rate)}fps`,
+    )
+  }
+
   const encoder = new VideoEncoder({
     output: (chunk, meta) => {
       // The parameter sets arrive once, on the first chunk. Kept rather than
@@ -125,21 +194,7 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
     },
   })
 
-  encoder.configure({
-    codec: CODEC,
-    width,
-    height,
-    bitrate: bitrateFor(width, height, rate),
-    framerate: rate,
-    // Length-prefixed NAL units with the parameter sets out of band, which is
-    // what an MP4 sample table wants; 'annexb' would inline them and the file
-    // would need a different `stsd` entry.
-    avc: { format: 'avc' },
-    // The picture is a new noise field every frame, so there is little for a
-    // realtime rate controller to work with and no reason to ask it to hit a
-    // deadline: this is a file, not a stream.
-    latencyMode: 'quality',
-  })
+  encoder.configure(configFor(codec))
 
   return {
     frames: () => count,
