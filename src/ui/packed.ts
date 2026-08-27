@@ -4,22 +4,21 @@ import { SLIDER_BY_KEY, snapToStep } from './controls'
 import type { ControlKey, Controls } from '../core/controls'
 
 // The short form of a link's look: the same controls `?set=` names, written as
-// bytes instead of words. A rolled look is a 321-character query written by
-// name and 82 packed, and `wornTape` is 310 against 62 — four to five times
-// shorter, which is the difference between a link that survives a chat window
-// and one that arrives in three pieces. Part of that is the words and part is
-// the encoding: the browser spends three characters on each `:` and `,` of the
-// named form, and none on any character of this one.
+// bytes instead of words. A rolled look is a 252-character query written by
+// name and 82 packed; `wornTape` is 248 against 65. Three times shorter, and
+// four times shorter than the same look as the address bar used to carry it,
+// which is the difference between a link that survives a chat window and one
+// that arrives in three pieces.
 //
-// Compressing the names does not get you there. That 253-character look comes
-// out of deflate at 256 and brotli at 239 once base64 has charged a third of
-// the payload back — there is not enough text in a two-hundred-character string
-// for a dictionary coder to earn its overhead. What pays is dropping the words:
-// a control is a position in a frozen list, and its value is which notch of its
-// own travel it sits on.
+// Compressing the names does not get you there. A 253-character look comes out
+// of deflate at 256 and brotli at 239 once base64 has charged a third of the
+// payload back — there is not enough text in a two-hundred-character string for
+// a dictionary coder to earn its overhead. What pays is dropping the words: a
+// control is a position in a frozen list, and its value is a count of its own
+// steps.
 //
 // Nothing is lost doing that. `?set=` already writes six decimals because that
-// is what `snapToStep` rounds to; the notch index says the same thing in one
+// is what `snapToStep` rounds to; the step count says the same thing in one
 // varint. See urlParams.ts for which form goes in the query.
 
 // The wire order, and the reason this list is written out rather than taken
@@ -282,35 +281,62 @@ export const URL_KEY_ORDER: readonly ControlKey[] = [
 
 const INDEX = new Map(URL_KEY_ORDER.map((k, i) => [k, i]))
 
-// A value between the notches of its own grid — what the vernier card leaves
-// behind (vernier.ts moves a control in hundredths of `step`), and what a
-// preset written in physical units can hold anyway. The wire tells the two
-// apart by the low bit rather than by which control it is, so the reader never
-// has to know which controls carry a vernier card: an even number is notches,
-// an odd one is hundredths of a notch. Reading that off the live schema instead
-// would put every existing link for a control a hundred-fold wrong the day that
-// control gained a card.
+// A value is counted from zero rather than from the control's `min`, and that
+// is the whole of what makes a packed link keep meaning what it meant.
+//
+// Counting from `min` would have been a byte or two shorter (6% measured over
+// every preset and twenty rolls), and it ties the link to a number this
+// codebase demonstrably edits: `redline` exists precisely because controls have
+// had their ranges widened, and every one of those retunes would have slid
+// every existing link for that control by the distance `min` moved — silently,
+// because a packed link has nothing in it a reader could check. From zero, a
+// widened range is what it should be: the same values, with more of them now
+// reachable. `?set=noiseIre:9` means 9 IRE forever, and so does this.
+//
+// Two things are still part of the wire. The order of URL_KEY_ORDER is the
+// dangerous one — reorder it and every link ever made decodes to a different
+// control — and the golden vectors at the foot of packed.test.ts fail the
+// moment it moves, which is the check the "append, never insert" comment above
+// only asks for politely. The other is `step`, the unit the count is in:
+// changing one moves every existing link for that control, but by less than a
+// step, since the value is re-snapped to whatever grid the control now has.
+// That is worth knowing before retuning a step and is not worth a 247-entry
+// table to guard.
 const CENTS = 100
+
+// Signed, because a count from zero goes both ways on a control whose travel
+// crosses it (`cfbGain`, `tintDeg`, every detune). Zigzag rather than a sign
+// bit so that small departures either side of zero stay one byte.
+const zig = (n: number) => (n < 0 ? -2 * n - 1 : 2 * n)
+const zag = (n: number) => (n % 2 === 1 ? -(n + 1) / 2 : n / 2)
 
 const near = (a: number, b: number) => Math.abs(a - b) < 1e-9
 
+// The wire's grid, told by the low bit rather than by which control it is, so
+// the reader never has to know which controls carry a vernier card: even counts
+// whole steps, odd counts hundredths of one (what the card leaves behind —
+// vernier.ts). Reading that off the live schema instead would have put every
+// existing link for a control a hundred-fold wrong the day it gained a card.
+//
+// A hundredth of a step is therefore the format's floor. Nothing in the app
+// writes finer — the tests round-trip every preset and twenty rolls exactly —
+// and anything that did would land on the nearest hundredth without saying so.
 function toInt(key: ControlKey, v: number): number {
   const def = SLIDER_BY_KEY.get(key)
   if (def === undefined) return 0
-  const notch = Math.max(0, Math.round((v - def.min) / def.step))
-  if (near(def.min + notch * def.step, v)) return notch * 2
-  return Math.max(0, Math.round(((v - def.min) * CENTS) / def.step)) * 2 + 1
+  const notch = Math.round(v / def.step)
+  if (near(notch * def.step, v)) return zig(notch) * 2
+  return zig(Math.round((v * CENTS) / def.step)) * 2 + 1
 }
 
 function fromInt(key: ControlKey, n: number): number | undefined {
   const def = SLIDER_BY_KEY.get(key)
   if (def === undefined) return undefined
-  // Through the same snap `?set=` goes through, so a control whose range has
-  // moved since the link was made lands where the named form would land — and
-  // a hand-edited link cannot put a value past the rails, which is the safety
-  // property `parseSet` documents at length.
+  // Through the same snap `?set=` goes through, so the value lands where the
+  // named form would land — and a hand-edited link cannot put one past the
+  // rails, which is the safety property `parseSet` documents at length.
   const grid = (n & 1) === 1 ? { ...def, step: def.step / CENTS } : def
-  return snapToStep(grid, def.min + (n >>> 1) * grid.step)
+  return snapToStep(grid, zag(n >>> 1) * grid.step)
 }
 
 function putVarint(out: number[], n: number) {

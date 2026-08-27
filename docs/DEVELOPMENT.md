@@ -1163,9 +1163,16 @@ actually download, so the size comes from the metadata read at pick time instead
 
 A link specifies a look — **copy link** in the app writes one. It writes the
 look as `?p=`, which is the same controls packed into bytes (`src/ui/packed.ts`)
-and four times shorter; `?set=` is the readable form, and a query that arrives
+and three times shorter; `?set=` is the readable form, and a query that arrives
 carrying one keeps being written that way, so a harness driving the app by name
 gets an address bar it can still read.
+
+A packed value is a count of the control's own `step` from zero, which is what
+keeps an old link honest: widening a range — and `redline` is the record of this
+codebase doing exactly that — leaves every link that names the control reading
+as it always did. What the wire does depend on is the order of `URL_KEY_ORDER`,
+pinned by golden vectors in `packed.test.ts`, and each control's `step`, which
+is not pinned because changing one moves a link by less than a step.
 
 | Param                | Meaning                                               |
 | -------------------- | ----------------------------------------------------- |

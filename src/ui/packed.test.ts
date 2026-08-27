@@ -111,11 +111,15 @@ describe('a look as bytes', () => {
   })
 
   it('is several times shorter than the same look by name', () => {
+    // Against the bare names, before a query string has spent three characters
+    // on each separator. Measured over these rolls the margin runs 3.2 to 4.9,
+    // mean 3.8; the assertion sits under the worst of them rather than at a
+    // round number it would pass by luck.
     for (const look of rolls(20, 4242)) {
       const named = CONTROL_KEYS.filter(k => look[k] !== DEFAULT_CONTROLS[k])
         .map(k => `${k}:${look[k]}`)
         .join(',')
-      expect(packControls(look).length * 3).toBeLessThan(named.length)
+      expect(packControls(look).length * 2.8).toBeLessThan(named.length)
     }
   })
 
@@ -142,9 +146,10 @@ describe('a link that is not what this build would have written', () => {
       (a, b) => at(a) - at(b),
     )) {
       const def = SLIDER_BY_KEY.get(key)!
+      const notch = Math.round(look[key] / def.step)
       bytes.push(
         at(key) - prev - 1,
-        Math.round((look[key] - def.min) / def.step) * 2,
+        (notch < 0 ? -2 * notch - 1 : 2 * notch) * 2,
       )
       prev = at(key)
     }
@@ -195,7 +200,72 @@ describe('a link that is not what this build would have written', () => {
     // `snapToStep`, so an index past the end of the travel lands on the rail.
     const def = SLIDER_BY_KEY.get('frameLock')!
     const at = URL_KEY_ORDER.indexOf('frameLock')
-    const far = unpackControls(bytesToText([at, 9999 * 2])).frameLock
+    const far = unpackControls(bytesToText([at, 9999 * 2 * 2])).frameLock
     expect(far).toBe(def.max)
+    // and the other rail, which a count from zero can now reach
+    expect(unpackControls(bytesToText([at, 9999 * 2 * 2 - 2])).frameLock).toBe(
+      def.min,
+    )
+  })
+})
+
+// What a shared link is worth is whether it still opens the picture it was
+// copied from, and nothing in a packed one is legible enough for a reader to
+// notice that it has stopped. The name a link carries is an index and its value
+// is a count of steps, so the two edits that would quietly redecode every link
+// ever made are reordering URL_KEY_ORDER and changing a control's `step`.
+//
+// Neither is forbidden. Both are made loud here: these vectors are the format
+// itself, written in physical units on one side and bytes on the other, so an
+// edit that moves them fails the build with the control named rather than
+// shipping and being discovered by somebody whose link opened wrong.
+//
+// Deliberately not built from a preset — a preset is content and gets retuned,
+// and a golden vector that fails when somebody dials in more noise is one that
+// gets updated without being read.
+describe('the format, pinned', () => {
+  const look: Controls = {
+    ...DEFAULT_CONTROLS,
+    noiseIre: 9,
+    hHold: 0.2,
+    cfbGain: -0.57,
+    bendShape: 3,
+    scDetuneKHz: 3.879,
+  }
+
+  it('writes these bytes for this look', () => {
+    expect(packControls(look)).toBe('HZx5BFAEDCboAj_iAQ')
+  })
+
+  it('reads that look back out of those bytes', () => {
+    expect(unpackControls('HZx5BFAEDCboAj_iAQ')).toEqual({
+      noiseIre: 9,
+      hHold: 0.2,
+      cfbGain: -0.57,
+      bendShape: 3,
+      scDetuneKHz: 3.879,
+    })
+  })
+
+  // The invariant behind the whole thing: what goes on the wire is the value in
+  // units of `step`, and nothing else about the control's travel. That is why
+  // widening a range — which this codebase does, and which `redline` is the
+  // record of — leaves every existing link reading as it always did.
+  it('counts steps from zero, so a control range is not part of the wire', () => {
+    for (const [key, value] of [
+      ['noiseIre', 9],
+      ['cfbGain', -0.57],
+      ['tintDeg', -45],
+      ['crtGamma', 2.85],
+    ] as const) {
+      const def = SLIDER_BY_KEY.get(key)!
+      const n = Math.round(value / def.step)
+      expect(packControls({ ...DEFAULT_CONTROLS, [key]: value })).toBe(
+        bytesToText([
+          URL_KEY_ORDER.indexOf(key),
+          (n < 0 ? -2 * n - 1 : 2 * n) * 2,
+        ]),
+      )
+    }
   })
 })

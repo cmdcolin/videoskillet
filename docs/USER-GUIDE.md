@@ -183,7 +183,7 @@ button and reloading keeps what you had.
 It comes out short. Here is **worn tape**, whole:
 
 ```
-https://cmdcolin.github.io/ntsc.js/?p=FVAlTBE4AIwBDXgArgMCyAEAtAEAyAEAMgAgAaABAPAJBqABALQBAQI&mod=
+https://cmdcolin.github.io/ntsc.js/?p=FbQBJbABEXAAmAIN8AEAPAKQAwDoAgCQAwBkAEgBwAIAgAEGwAIA6AIBCA&mod=
 ```
 
 That is the look written as bytes. `?set=` says the same thing by name, and the
@@ -193,9 +193,9 @@ app both reads and writes it:
 https://cmdcolin.github.io/ntsc.js/?set=noiseIre:9,hHold:0.2,chromaGain:1.79
 ```
 
-Four times the characters once the browser has spent three on each `:` and `,`,
-which is why the bar carries the short one — the difference between a link that
-survives a chat window and one that arrives in three pieces.
+Three times the characters for the same look, which is why the bar carries the
+short one — the difference between a link that survives a chat window and one
+that arrives in three pieces. Written out, worn tape runs to 248.
 
 What the long form buys is a look you can program by hand: a control name from
 [EFFECTS.md](EFFECTS.md), a colon, a number, commas between. Anything left out

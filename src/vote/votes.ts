@@ -4,6 +4,7 @@ import {
   DRY_DEFAULT,
   REVERB_DEFAULT,
   SPEED_DEFAULT,
+  queryString,
   writeSessionParams,
 } from '../ui/urlParams'
 import { recipeControls, recipeId, recipeMod } from './candidates'
@@ -145,7 +146,7 @@ export function candidateRecord(recipe: Recipe): CandidateRecord {
     seed: recipe.seed,
     kind: recipe.kind,
     weights: recipe.weights,
-    query: query.toString(),
+    query: queryString(query),
   }
 }
 

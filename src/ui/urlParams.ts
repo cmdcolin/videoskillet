@@ -85,9 +85,8 @@ const SRCB_MODES = LINKABLE(SOURCE_B_MODES)
 // The look, in two params that say the same thing.
 //
 // `?p=` is the look as bytes and is what a link carries by default (packed.ts).
-// A rolled look is a 321-character query written by name, once the browser has
-// spent three characters on each of its `:` and `,` — a link that arrives in a
-// chat window in pieces. Packed it is 82, and survives whole.
+// A rolled look is a 252-character query written by name — a link that arrives
+// in a chat window in pieces. Packed it is 82, and survives whole.
 //
 // `?set=` names every control that is off default. It costs the characters and
 // buys two things back. A stale link still decodes to the look it meant when
@@ -458,6 +457,19 @@ export function writeProfileParams(
   }
   return writeSessionParams(base, state)
 }
+
+// A query string as it should reach a person: `URLSearchParams.toString` escapes
+// `:` and `,` even though a query may carry both as themselves, and it is the
+// separator of every readable param this app has — a look, a routing, a cue. It
+// spends three characters where one will do, which cost the four demo links in
+// the README about 150 characters each and made a hand-typed `?set=` unreadable
+// the moment the app rewrote the bar under the cursor.
+//
+// Everything that reads these takes either form: `URLSearchParams` unescapes on
+// the way in, so a link written before this still opens, and one written after
+// it survives being pasted somewhere that escapes it again.
+export const queryString = (q: URLSearchParams): string =>
+  q.toString().replaceAll('%3A', ':').replaceAll('%2C', ',')
 
 // Last path segment of a URL, for labeling ?iurl/?vurl sources by name.
 //

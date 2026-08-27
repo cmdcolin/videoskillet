@@ -13,7 +13,7 @@ on Linux). There's nothing to install.
   poster="img/clip-hero-poster.jpg"
   src="https://cmdcolinphotos.s3.amazonaws.com/phosphene/clip-hero.mp4"></video>
 
-<sub>[Open this patch ↗](https://cmdcolin.github.io/ntsc.js/?src=cat&srcb=cat&set=chromaGain%3A2.4%2CsvideoBleed%3A0.8%2CchromaTail%3A0.4%2CencChromaMHz%3A1.85%2CdemodMHz%3A1.23%2ChHold%3A0.35%2CvHold%3A0.4%2CvFreqHz%3A59.6%2CsyncBendUs%3A6%2CbendUs%3A22%2CbendShape%3A2%2ChvSagUs%3A12%2ChvRing%3A0.8%2ChDetuneHz%3A24%2Cscramble%3A0.4%2Cagc%3A0.5%2CnoiseIre%3A7%2CenhPeakMHz%3A0.35%2CenhPeakQ%3A0.7%2CenhPeakBoost%3A0.06%2CfbMix%3A0.5%2CfbZoom%3A1.03%2CfbRotateDeg%3A2%2CfbGain%3A0.96%2CfbFocus%3A1.1%2CfbVign%3A0.4%2CfbBlack%3A0.02%2CfbKnee%3A0.6%2CcfbMix%3A0.35%2CcfbGain%3A0.8%2CcfbDelayUs%3A0.25%2CcfbLines%3A3%2CcfbKey%3A0.7%2CcfbKeyLevel%3A45%2CcfbKeySoft%3A10%2CbGain%3A0.35%2CbLineHz%3A0.71%2CbDetuneHz%3A107%2CbRollLps%3A0.17%2Cphosphor%3A0.45)</sub>
+<sub>[Open this patch ↗](https://cmdcolin.github.io/ntsc.js/?p=E-QFAewDAKABAcAHB8ACAqABAKAlAOADAPAGAAgC4AMAwAIBYBOgAQYcAJgCAAwDmAIMyAEWyAEAmCAAoAYCgB4BWACgAQAQAPABEIwBAMACAOgHAAwAmAIBUCuMAQGcAgCwzgIARCfQjAE&src=cat&srcb=cat&mod=)</sub>
 
 ## Four steps
 
