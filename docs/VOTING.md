@@ -63,7 +63,7 @@ early.
 
 `look` is a hash of the **resolved board**, not of a preset recipe — a look
 dialled in by hand has no recipe behind it, and both collectors have to land in
-one key space. `query` is the app's own `?set=` string, so prefix the origin and
+one key space. `query` is the app's own query string, so prefix the origin and
 the link _is_ the look.
 
 `provenance` (`surprise` / `preset` / `mutate` / `hand`) is a best-effort hint.
@@ -180,9 +180,12 @@ rolling the same look write one document. Immutable by rule.
 { v, id, seed, kind: 'mix' | 'anchor', weights: {presetName: weight}, query, by, sat }
 ```
 
-`query` is the resolved board as a `?set=` string from the app's own serializer:
-prefix the app's origin and the link **is** the look, so any row in the training
-set can be opened in the instrument. It is source-agnostic on purpose.
+`query` is the resolved board as a query string from the app's own serializer —
+`?p=`, the packed form (`src/ui/packed.ts`), which is also what makes a row
+cheap to store. Prefix the app's origin and the link **is** the look, so any row
+in the training set can be opened in the instrument. Rows written before the
+packed form carry `?set=` and still open; the reader takes either. It is
+source-agnostic on purpose.
 
 `/votes/{auto}` — one per comparison. Immutable and undeletable by rule.
 
