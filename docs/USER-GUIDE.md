@@ -174,6 +174,36 @@ A recall brings back the controls and the motion and leaves your input alone.
 **⧉** copies a link carrying both, source clip included. `s` saves a still, `r`
 records a clip.
 
+### The link is the look
+
+The address bar carries the whole look at all times — every control off stock,
+what is moving in the bay, the source and its cue — so copying it is the share
+button and reloading keeps what you had.
+
+It comes out short. Here is **worn tape**, whole:
+
+```
+https://cmdcolin.github.io/ntsc.js/?p=FVAlTBE4AIwBDXgArgMCyAEAtAEAyAEAMgAgAaABAPAJBqABALQBAQI&mod=
+```
+
+That is the look written as bytes. `?set=` says the same thing by name, and the
+app both reads and writes it:
+
+```
+https://cmdcolin.github.io/ntsc.js/?set=noiseIre:9,hHold:0.2,chromaGain:1.79
+```
+
+Four times the characters once the browser has spent three on each `:` and `,`,
+which is why the bar carries the short one — the difference between a link that
+survives a chat window and one that arrives in three pieces.
+
+What the long form buys is a look you can program by hand: a control name from
+[EFFECTS.md](EFFECTS.md), a colon, a number, commas between. Anything left out
+is at stock, anything out of range is pulled back onto the panel, and a name the
+app no longer has is dropped. A bar already carrying `?set=` keeps carrying it,
+so the look stays readable while you are working that way rather than turning to
+bytes under the cursor — type a bare `?set=` to switch a tab over.
+
 ## Looking closer
 
 Drag a box on the picture to zoom, double-click to reset. The magnifier is part

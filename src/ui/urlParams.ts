@@ -19,6 +19,7 @@ import {
   modTarget,
   syncDivision,
 } from './modSlots'
+import { packControls, unpackControls } from './packed'
 import { PRESETS, presetControls } from './presets'
 
 import type { Controls } from '../core/controls'
@@ -81,9 +82,26 @@ const LINKABLE = <T extends string>(modes: readonly T[]) =>
 const SRC_MODES = LINKABLE(SOURCE_MODES)
 const SRCB_MODES = LINKABLE(SOURCE_B_MODES)
 
+// The look, in two params that say the same thing.
+//
+// `?p=` is the look as bytes and is what a link carries by default (packed.ts).
+// A rolled look is a 321-character query written by name, once the browser has
+// spent three characters on each of its `:` and `,` — a link that arrives in a
+// chat window in pieces. Packed it is 82, and survives whole.
+//
+// `?set=` names every control that is off default. It costs the characters and
+// buys two things back. A stale link still decodes to the look it meant when
+// the schema grows or its order changes, and — the reason it is still written
+// rather than only read — you can program the picture by typing at the address
+// bar: `?set=noiseIre:9,hHold:0.2` is a look someone wrote by hand. Every
+// harness in scripts/ drives the app that way too.
+const PACKED = 'p'
+const NAMED = 'set'
+
 export interface SessionParams {
   // Every control the link asks for, already layered: the landing look or the
-  // named preset, then ?set on top. One patch, so the caller makes one write.
+  // named preset, then the link's own look on top. One patch, so the caller
+  // makes one write.
   controls: Partial<Controls>
   src: SourceMode | null
   srcb: SourceBMode | null
@@ -219,20 +237,30 @@ export function parseSessionParams(search: string): SessionParams {
     }
   }
 
-  const setParam = q.get('set')
+  const setParam = q.get(NAMED)
+  const packedParam = q.get(PACKED)
   const modParam = q.get('mod')
   const presetName = q.get('preset')
   // Gated on the *params*, not on the lookup: a link naming a preset that has
   // since been retired asked for that preset and got nothing, which is not the
   // same as asking for nothing and getting the landing look.
-  const bare = setParam === null && presetName === null && !q.has('surprise')
+  const bare =
+    setParam === null &&
+    packedParam === null &&
+    presetName === null &&
+    !q.has('surprise')
   const preset = PRESETS.find(p => p.name === presetName)
   return {
     controls: {
       ...(bare ? LANDING_LOOK : {}),
       // A preset is a full control set, not a patch — it resets what it does
-      // not name — so ?set has to layer on top of it, in that order.
+      // not name — so the look has to layer on top of it, in that order.
       ...(preset === undefined ? {} : presetControls(preset.patch)),
+      // Both forms of the look, packed first, so a hand-edited `?set=` still
+      // wins on a bar that is carrying both. That is the same order
+      // `writeSessionParams` picks the sticky form in: what a mangled query
+      // shows is what the next write keeps.
+      ...(packedParam === null ? {} : unpackControls(packedParam)),
       ...(setParam === null ? {} : parseSet(setParam)),
     },
     src: one('src', SRC_MODES),
@@ -320,15 +348,28 @@ export function writeSessionParams(
   const q = new URLSearchParams(existing)
   const put = (key: string, on: boolean, value: string) =>
     on ? q.set(key, value) : q.delete(key)
+  // Which form the query is already in, and so which one this write uses. A
+  // `?set=` someone typed is one they mean to keep typing into, so the long
+  // form is sticky: arrive on one and the look stays readable for as long as
+  // you are working that way. Everything else — a fresh load, a short link, a
+  // saved look — comes out packed.
+  const long = q.has(NAMED)
   const set = CONTROL_KEYS.filter(
     k => state.controls[k] !== DEFAULT_CONTROLS[k],
   ).map(k => `${k}:${short(state.controls[k])}`)
-  // Always emitted, even empty. A link is a statement about a session, so
-  // `?set=` — this look is stock — has to stay distinguishable from no query at
-  // all, which is someone arriving for the first time and getting the landing
-  // look. Without the marker, copying a link while on `clean` handed the reader
-  // source B mixed in rather than the clean picture on screen.
-  q.set('set', set.join(','))
+  // Always emitted, even empty. A link is a statement about a session, so "this
+  // look is stock" has to stay distinguishable from no query at all, which is
+  // someone arriving for the first time and getting the landing look. Without
+  // the marker, copying a link while on `clean` handed the reader source B
+  // mixed in rather than the clean picture on screen.
+  //
+  // Under one name at a time, so no staler copy of the look rides along beside
+  // the live one.
+  q.delete(long ? PACKED : NAMED)
+  q.set(
+    long ? NAMED : PACKED,
+    long ? set.join(',') : packControls(state.controls),
+  )
   // Always emitted too, and for the same reason: a link is a statement about a
   // session, so "nothing is moving" has to be sayable. Without the marker,
   // copying a link while the bay is empty would hand the reader whatever their

@@ -1161,11 +1161,16 @@ actually download, so the size comes from the metadata read at pick time instead
 
 ## URL parameters
 
-A link specifies a look — **copy link** in the app writes one.
+A link specifies a look — **copy link** in the app writes one. It writes the
+look as `?p=`, which is the same controls packed into bytes (`src/ui/packed.ts`)
+and four times shorter; `?set=` is the readable form, and a query that arrives
+carrying one keeps being written that way, so a harness driving the app by name
+gets an address bar it can still read.
 
 | Param                | Meaning                                               |
 | -------------------- | ----------------------------------------------------- |
 | `?preset=`           | load a built-in preset by name                        |
+| `?p=`                | the same controls packed into bytes — what a link has |
 | `?set=key:value,…`   | override individual controls                          |
 | `?mod=t:src:hz:d,…`  | modulation routings (target, source, rate, depth)     |
 | `?iurl=` / `?iurlb=` | image source A / B                                    |
