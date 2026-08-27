@@ -2,6 +2,14 @@
 
 All notable changes to ntsc.js are documented here.
 
+## [0.31.0](https://github.com/cmdcolin/ntsc.js/compare/v0.30.2...v0.31.0) - 2026-08-27
+
+### Features
+- *(ui)* [`79e8aff`](https://github.com/cmdcolin/ntsc.js/commit/79e8aff2749dedd263579dec85a971cddf15db6e) count a packed link from zero, and shorten the published ones
+
+### Documentation
+- *(ui)* [`9fca670`](https://github.com/cmdcolin/ntsc.js/commit/9fca6703e31730293082d15b6daaede4d19739d9) the vote rows carry the packed query now, not `?set=`
+
 ## [0.30.2](https://github.com/cmdcolin/ntsc.js/compare/v0.30.0...v0.30.2) - 2026-08-27
 
 ### Features
