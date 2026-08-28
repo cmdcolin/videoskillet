@@ -235,4 +235,27 @@ describe('the diagram card stays inside its own drawing', () => {
     for (let i = 1; i < ys.length; i++)
       expect(ys[i] - ys[i - 1]).toBeGreaterThanOrEqual(22)
   })
+
+  // Spacing the bands is only half of it. Two names at the same x on adjacent
+  // bands read as one two-line caption however far apart the wires are, and
+  // that is what the mixer loop and the tape loop did: both land on the mixer,
+  // so both took nameX(2), and neither wire owned either line.
+  it('gives each run its own column of text', () => {
+    const xs = RETURNS.map(r => r.lx).toSorted((a, b) => a - b)
+    for (let i = 1; i < xs.length; i++)
+      expect(xs[i] - xs[i - 1], 'two run labels in one column').toBeGreaterThan(
+        20,
+      )
+  })
+
+  // And a name belongs to the wire it names: it starts (or ends) within reach
+  // of its own run rather than somewhere past the end of it. The tape loop's
+  // sat 30 units beyond the right end of a 52-unit run.
+  it('keeps each run’s name against its own run', () => {
+    for (const r of RETURNS) {
+      const [lo, hi] = [Math.min(r.from, r.to), Math.max(r.from, r.to)]
+      const reach = r.anchor === 'end' ? lo - r.lx : r.lx - hi
+      expect(reach, r.name).toBeLessThanOrEqual(12)
+    }
+  })
 })

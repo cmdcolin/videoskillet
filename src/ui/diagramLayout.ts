@@ -243,16 +243,21 @@ interface LoopRun {
   to: number
   y: number
   turn: number
-  // Where the name starts: just clear of the right edge of the box the run
-  // lands on, so a name sits beside its own arrowhead rather than somewhere
-  // along a span it shares with the other two.
+  // Where the name sits, and which end of itself it sits by — so a label can
+  // hang off the left of a run as well as the right.
   lx: number
+  anchor: 'start' | 'end'
   optical: boolean
 }
-// Just past the right edge of a landing column, which is where all three names
-// begin. They no longer share one column of text, because they no longer share
-// one box to land on.
+// Just past the right edge of a landing column: where a run that reaches back
+// across the drawing puts its name, beside its own arrowhead.
 const nameX = (col: number) => colX(col) + BOX_W / 2 + 10
+
+// How far past the mixer's own edges the tape loop's two ends sit. It leaves
+// the bus and returns to it at the same node, so it straddles that box rather
+// than landing on it twice — a machine patched across one point, which is what
+// a tape loop is.
+const STRADDLE = 26
 const LOOP_RUN: Record<(typeof LOOP_STAGES)[number]['loop'], LoopRun> = {
   // The one run that reaches back past the decoder: it shoots the glass, so it
   // taps after the Screen, and what it returns is a picture rather than a
@@ -266,6 +271,7 @@ const LOOP_RUN: Record<(typeof LOOP_STAGES)[number]['loop'], LoopRun> = {
     y: 16,
     turn: 6,
     lx: nameX(0),
+    anchor: 'start',
     optical: true,
   },
   // Off the bus and back onto it one pass later, so it taps at the Receiver —
@@ -276,17 +282,30 @@ const LOOP_RUN: Record<(typeof LOOP_STAGES)[number]['loop'], LoopRun> = {
     y: 38,
     turn: 5,
     lx: nameX(2),
+    anchor: 'start',
     optical: false,
   },
   // Both ends on the mixer's own box top, wide enough to clear the mixer loop's
   // single arrowhead at its centre — so three verticals on one box top still
   // read as a pair and a single.
+  //
+  // Its name goes off the *left* end of that straddle, and the side is the
+  // whole point. It used to start at nameX(2) like the mixer's: 30 units past
+  // the right end of the run it names, and at the identical x, 22 units under
+  // another loop's name. Two captions in one column over two different wires
+  // read as one two-line block, and neither wire owned either line.
+  //
+  // The miniature had this right — its three names each ride or abut their own
+  // run — and this drawing said it did ("they no longer share one column of
+  // text") while both of these landed on col 2, because both loops land on the
+  // mixer. Sharing a box is exactly why they must not share a column.
   tape: {
-    from: colX(2) + 26,
-    to: colX(2) - 26,
+    from: colX(2) + STRADDLE,
+    to: colX(2) - STRADDLE,
     y: 60,
     turn: 5,
-    lx: nameX(2),
+    lx: colX(2) - STRADDLE - 6,
+    anchor: 'end',
     optical: false,
   },
 }

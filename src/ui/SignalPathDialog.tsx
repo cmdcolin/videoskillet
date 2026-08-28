@@ -242,7 +242,12 @@ export function SignalPathDialog(props: {
                 className={styles.arrow}
                 d={head(returnPts(r.from, r.to, r.y))}
               />
-              <text className={styles.loopLabel} x={r.lx} y={r.y - 5}>
+              <text
+                className={styles.loopLabel}
+                x={r.lx}
+                y={r.y - 5}
+                textAnchor={r.anchor}
+              >
                 {r.name}
                 {live ? ' — running' : ''}
                 {n > 0 ? ` • ${n}` : ''}
