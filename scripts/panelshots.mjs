@@ -156,6 +156,23 @@ const STATES = [
       },
     ],
   },
+  {
+    name: 'signal-path-dialog',
+    dialog: true,
+    what: 'the diagram: its boxes, the three runs, the state key and the blurbs',
+    // The card the ⤢ beside the map opens, and the drawing the miniature is
+    // learnt from — so the one surface in the app where a colour is explained
+    // rather than hovered. Nothing covered it before the key went in, which
+    // made a three-row legend of live boxes the least-watched CSS on screen.
+    steps: [
+      () => {
+        const b = [...document.querySelectorAll('button')].find(b =>
+          /^diagram/.test(b.textContent ?? ''),
+        )
+        b?.click()
+      },
+    ],
+  },
 ]
 
 let vite = null
