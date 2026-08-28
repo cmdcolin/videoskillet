@@ -30,7 +30,7 @@ describe('the open stage, across a reload', () => {
   })
 
   it('reopens whatever stage was left open', () => {
-    for (const name of [SOURCE_A_STAGE, 'Tape', 'Source B', 'Sound']) {
+    for (const name of [SOURCE_A_STAGE, 'Channel', 'Source B', 'Sound']) {
       expect(openStageFrom(name)).toBe(name)
     }
   })

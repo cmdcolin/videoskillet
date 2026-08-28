@@ -88,7 +88,7 @@ export interface SliderDef {
 export const PHASE_ORDER = [
   'Source A',
   'Mix',
-  'Tape',
+  'Channel',
   'Receiver',
   'Screen',
 ] as const
@@ -244,29 +244,14 @@ interface LoopStage {
 // visit is looking for. Nobody arrives wondering where the loops are; they
 // arrive wanting the camera pointed at the screen.
 //
-// The third is 'Tape loop', which is what the machine is, and it is a name this
-// file has argued itself out of twice before. Both times the objection was the
-// same and it was about the drawing rather than the words: 'Tape' is a stage of
-// the trunk two columns along — the deck this signal was played back on,
-// dropouts and timebase wander — so 'tape loop' written near the TAPE box put
-// one word over two machines.
-//
-// That is a placement problem, and it is fixed where placement lives. The run's
-// name sits to the left of the loop it straddles (chainLayout), over the gap
-// between the head of the chain and the mixer, with the whole width of the
-// drawing between it and the box it used to be read against. The two names are
-// set apart as well as spaced apart: TAPE is upper-cased inside a box on the
-// chain, this is lower-case on a wire above it.
-//
-// The two names it took in the meantime were both worse. 'Loop bin' is borrowed
-// from the wrong trade — a loop bin is duplication gear, a spliced master
-// spilled loose into an open bin to feed a bank of slave recorders, with no
-// record head and no feedback at all. 'Delay loop' named the effect instead of
-// the machine: accurate, and it left the drawing saying what a knob does where
-// every other box says what a thing is.
+// The third is 'Tape loop', which is what the machine is. It spent three
+// renames fighting the trunk's own TAPE box two columns along, and the fight is
+// over because that box is CHANNEL now: the deck is one of the things the
+// recording came through, alongside the tuner and the cable, and naming the
+// stage after all three leaves 'tape' meaning the loop machine and nothing else.
 //
 // `loop` and every control key stay `tape` (LOOP_PLACES, `tapeMix`,
-// signal/tapeloop.ts), which they would have done under any of these.
+// signal/tapeloop.ts).
 export const CAMERA_LOOP_STAGE = 'Camera feedback'
 export const MIXER_LOOP_STAGE = 'Mixer feedback'
 export const DELAY_LOOP_STAGE = 'Tape loop'
@@ -296,10 +281,7 @@ export const LOOP_STAGES: readonly LoopStage[] = [
   {
     loop: 'tape',
     name: DELAY_LOOP_STAGE,
-    // The one that does not cut down to its first word, because that word is a
-    // box on the chain two columns along. It keeps both, which is also why the
-    // layout has a side to choose for it — see DELAY_LOOP_STAGE.
-    short: 'Tape loop',
+    short: 'Tape',
     blurb:
       'mechanical — a second deck threaded with a loop of tape, patched across the bus: what goes round is re-recorded and ages a generation a lap',
     what: 'a second machine threaded with a loop of tape, patched across the bus rather than round the chain: a play head returns what was laid down a lap ago, a record head lays the sum back down, and whatever keeps circulating ages a generation every time round',
@@ -1769,7 +1751,7 @@ export const GROUPS: Group[] = [
     // bandwidth it passed, the sharpener that faked it back, the amplifier's two
     // brightness-dependent errors, and the FM fold.
     name: 'Recording (luma & FM)',
-    place: 'Tape',
+    place: 'Channel',
     sliders: [
       {
         key: 'lumaMHz',
@@ -1840,7 +1822,7 @@ export const GROUPS: Group[] = [
     // broadband noise floor, and the impulsive interference that comes in bursts
     // — arcing contacts, ignition, lightning, a dimmer chopping the mains.
     name: 'Noise & interference',
-    place: 'Tape',
+    place: 'Channel',
     sliders: [
       {
         key: 'noiseIre',
@@ -1920,7 +1902,7 @@ export const GROUPS: Group[] = [
     // against the vision one. All three put structure on the picture that came
     // from somewhere else in the same building.
     name: 'Ghosting & leakage',
-    place: 'Tape',
+    place: 'Channel',
     sliders: [
       {
         key: 'ghostDelayUs',
@@ -1991,7 +1973,7 @@ export const GROUPS: Group[] = [
     // folded: the compensator's two modes are the interesting part of a dropout
     // and the length is what decides whether you see a speck or a streak.
     name: 'Dropouts & dubs',
-    place: 'Tape',
+    place: 'Channel',
     sliders: [
       {
         key: 'dropoutRate',
@@ -2036,7 +2018,7 @@ export const GROUPS: Group[] = [
   },
   {
     name: 'RF / Tuner',
-    place: 'Tape',
+    place: 'Channel',
     sliders: [
       {
         key: 'rfAdjacent',
@@ -2086,7 +2068,7 @@ export const GROUPS: Group[] = [
   // Feed groups, which really are ahead of the mixer.
   {
     name: 'Cable / Wiring',
-    place: 'Tape',
+    place: 'Channel',
     sliders: [
       {
         key: 'polarityFlip',
@@ -2201,7 +2183,7 @@ export const GROUPS: Group[] = [
     // track it recorded. They were two four-row groups in a row, and 'VHS Chroma'
     // / 'VHS Tracking' are the same deck.
     name: 'VHS colour & tracking',
-    place: 'Tape',
+    place: 'Channel',
     sliders: [
       {
         key: 'colorUnderMix',
@@ -2312,7 +2294,7 @@ export const GROUPS: Group[] = [
   },
   {
     name: 'Timebase',
-    place: 'Tape',
+    place: 'Channel',
     sliders: [
       {
         key: 'tbJitterNs',
@@ -2367,7 +2349,7 @@ export const GROUPS: Group[] = [
   },
   {
     name: 'Enhancer (bent)',
-    place: 'Tape',
+    place: 'Channel',
     sliders: [
       {
         key: 'enhClampUs',
@@ -3529,7 +3511,8 @@ const PHASE_BLURBS: Record<Phase, string> = {
   'Source A':
     'input A becoming a composite waveform — the encoder, the static generator, and the deck and cable this one signal arrives on',
   Mix: 'where the two signals meet — the mixer that beats them together, the wipe and the PiP inset. Needs a source B to do anything',
-  Tape: 'the recording and the wire it came down — VHS color-under, dropouts, timebase wander, the tuner and the program cable',
+  Channel:
+    'everything between the encoder and the aerial socket — the tape it was recorded on, the tuner it came through, and the cable it came down',
   Receiver:
     'a TV hunting for sync and decoding color from whatever arrives — hold, deflection, the decoder',
   Screen: 'the tube itself — beam profile, phosphor persistence, shadow mask',
@@ -3561,6 +3544,20 @@ export const SOURCE_A_STAGE = 'Source A' satisfies Phase
 // it by identity — the map, which draws it inert while there is no B to mix,
 // and the diagram, which opens the panel at it.
 export const MIX_STAGE = 'Mix'
+
+// The stretch between the encoder and the aerial socket, and the widest stage
+// on the map: nine groups, where no other trunk stage has more than five. It
+// was called 'Tape' until the count made the case against it — the tape is one
+// of the things a recording came through, and RF / Tuner, Cable / Wiring and
+// Ghosting & leakage are three of the others, so a box marked TAPE was a stage
+// named after a third of itself and the reason a hunt for 'snow' or 'ghosting'
+// went to the search box instead of the map.
+//
+// 'Channel' is the word docs/graphviz/pipeline-simple.dot already teaches for
+// this block, so the diagram a reader meets first and the box they press now
+// agree. Named here as well as in PHASE_ORDER because the stored-state
+// migration in usePanelNav asks for it by identity.
+export const CHANNEL_STAGE = 'Channel' satisfies Phase
 
 // Input B, which is a stage of the panel without being a Phase: the second
 // signal joins the trunk rather than dividing it, so it hangs *below* the trunk

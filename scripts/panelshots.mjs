@@ -105,7 +105,7 @@ const STATES = [
     // than buttons, so `textContent` on one runs its <title> into its label and
     // the name has to be read off the <text> child. Uppercased in CSS and not
     // in the DOM, which is why this names "Tape" rather than "TAPE".
-    stage: 'Tape',
+    stage: 'Channel',
   },
   {
     name: 'help-dialog',

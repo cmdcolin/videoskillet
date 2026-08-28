@@ -1,5 +1,11 @@
-// ntsc.js — the big idea in five blocks. Block names match the stage names in
-// pipeline.dot and the table in docs/HOW-IT-WORKS.md; keep them in step.
+// ntsc.js — the big idea in five blocks, and the same five the app draws.
+//
+// Block names are the app's trunk stages (PHASE_ORDER in src/ui/controls.ts) and
+// the three loops are its three returns (LOOP_STAGES), so a reader who meets
+// this picture and then opens the app is looking at one chain rather than two.
+// Keep them in step. The pass-level view, with the code's own cluster names, is
+// pipeline.dot.
+//
 // Colours are placeholder tokens — render with `pnpm run docs`.
 digraph ntsc_js_simple {
   rankdir=LR;
@@ -9,16 +15,21 @@ digraph ntsc_js_simple {
         fontsize=12 color="@STROKE@" fontcolor="@FG@" penwidth=1 margin="0.22,0.14"];
   edge [fontname="Helvetica,Arial,sans-serif" fontsize=10 color="@EDGE@" fontcolor="@EDGE@"];
 
-  src    [label="Source\nbars · video · webcam" fillcolor="@SRC@"];
-  encode [label="Encoder\nbuild the NTSC\ncomposite waveform" fillcolor="@ENC1@"];
-  damage [label="Channel\ndamage the signal\ntape · RF · VHS" fillcolor="@CH1@"];
-  decode [label="Receiver\nimperfect TV\ndecodes it → RGB" fillcolor="@RX1@"];
-  screen [label="Display\nscanline beam\non a lit tube" fillcolor="@DSP@"];
+  src    [label="Source A\nyour input, and the encoder\nthat makes it a waveform" fillcolor="@SRC@"];
+  mix    [label="Mix\na second input beaten\nagainst the first" fillcolor="@ENC1@"];
+  chan   [label="Channel\ndamage the signal\ntape · RF · cable" fillcolor="@CH1@"];
+  rx     [label="Receiver\nimperfect TV\ndecodes it → RGB" fillcolor="@RX1@"];
+  screen [label="Screen\nscanline beam\non a lit tube" fillcolor="@DSP@"];
 
-  src -> encode -> damage -> decode -> screen;
+  src -> mix -> chan -> rx -> screen;
 
-  damage -> encode [label="  composite feedback\l  hardware mixer\l" style=dashed
-                    color="@GOLD@" fontcolor="@GOLD@" constraint=false];
-  screen -> src    [label="  image feedback\l  camera-at-monitor\l" style=dashed
-                    color="@GREEN@" fontcolor="@GREEN@" constraint=false];
+  // The three loops, drawn where the app draws them. Each leaves the trunk at
+  // one stage and re-enters at another — except the tape, which leaves the bus
+  // and returns to it one pass later at the same node.
+  screen -> src [label="  camera feedback\l  a lens on the tube face\l" style=dashed
+                 color="@GREEN@" fontcolor="@GREEN@" constraint=false];
+  rx -> mix     [label="  mixer feedback\l  composite off the bus\l" style=dashed
+                 color="@GOLD@" fontcolor="@GOLD@" constraint=false];
+  mix -> mix    [label="  tape loop\l  a deck across the bus\l" style=dashed
+                 color="@GOLD@" fontcolor="@GOLD@" constraint=false];
 }

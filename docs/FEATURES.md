@@ -8,9 +8,12 @@ This page is the tour: what each stage is, and the one thing about it worth
 knowing before you turn anything. [Effects](EFFECTS.md) is the full list of
 controls, generated from the app's own control table.
 
+The five blocks below are the five boxes on the app's own chain map, in the same
+order and under the same names, so the picture here is the thing you click.
+
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="img/pipeline-simple-dark.svg">
-  <img alt="Signal path — overview: Source → Encoder → Channel → Receiver → Display, with a composite feedback loop from Channel back to Encoder and an image feedback loop from Display back to Source" src="img/pipeline-simple-light.svg">
+  <img alt="Signal path — overview: Source A → Mix → Channel → Receiver → Screen, with the tape loop straddling Mix, a mixer feedback loop from Receiver back to Mix, and a camera feedback loop from Screen back to Source A" src="img/pipeline-simple-light.svg">
 </picture>
 
 ## Sources and wiring
@@ -61,9 +64,10 @@ generation every time round.
 
 <!-- /generated:loops -->
 
-The tape loop is the one to keep straight: it is not the Tape stage below, which
-is the deck this signal was played back on. Its return gets recorded again, so
-repeats decay by generation loss rather than by a fader, and chroma dies first.
+The tape loop is a machine patched across the chain, not a stage of it — the
+deck this signal was played back on is one part of **Channel** below. Its return
+gets recorded again, so repeats decay by generation loss rather than by a fader,
+and chroma dies first.
 
 ## A/B mix
 
@@ -74,7 +78,7 @@ The keyer cuts the chroma the encoder made, and that filter has no vertical term
 — so mattes come out soft across and razor sharp down, the way every composite
 key was.
 
-## Tape and channel
+## Channel
 
 Everything between the recorder and the set: bandwidth, nonlinearity, noise, the
 tuner, colour-under, and the tape and heads themselves. The whole stage runs up

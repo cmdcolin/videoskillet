@@ -73,7 +73,7 @@ describe('what a stage has to show', () => {
   })
 
   it('offers no picker to a stage that has none', () => {
-    const body = stageBody(stage({ name: 'Tape' }), TOP, true)
+    const body = stageBody(stage({ name: 'Channel' }), TOP, true)
     expect(body.picker).toBeUndefined()
     expect(hasBody(body)).toBe(true)
   })

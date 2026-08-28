@@ -1,5 +1,6 @@
 import {
   CAMERA_LOOP_STAGE,
+  CHANNEL_STAGE,
   DELAY_LOOP_STAGE,
   MIXER_LOOP_STAGE,
   stageGroups,
@@ -45,6 +46,9 @@ const GONE: Readonly<Record<string, string>> = {
   'Camera loop': CAMERA_LOOP_STAGE,
   'Mixer loop': MIXER_LOOP_STAGE,
   'Delay loop': DELAY_LOOP_STAGE,
+  // The trunk stage that held the tape, the tuner and the cable, under the name
+  // of one of the three. See PHASE_ORDER.
+  Tape: CHANNEL_STAGE,
 }
 
 export const openStageFrom = (stored: string | null): string | null =>

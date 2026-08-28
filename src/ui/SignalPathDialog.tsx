@@ -1,5 +1,6 @@
 import { atRest } from '../core/controls'
 import {
+  CHANNEL_STAGE,
   DECK_BLURB,
   DECK_STAGE,
   FEED_A_GROUP,
@@ -158,11 +159,11 @@ const BOXES: Box[] = [
     what: phaseBlurb(MIX_STAGE),
   },
   {
-    label: 'Tape',
-    stage: 'Tape',
+    label: CHANNEL_STAGE,
+    stage: CHANNEL_STAGE,
     col: 3,
     row: 'trunk',
-    what: phaseBlurb('Tape'),
+    what: phaseBlurb(CHANNEL_STAGE),
   },
   {
     label: 'Receiver',

@@ -162,7 +162,7 @@ Source A additionally takes Webcam / USB device; source B does not.
 | **matte hue**        | 0–360 deg                          | The matte colour, as a phase on the subcarrier — the same wheel the backing hue above is read off. Setting it near the backing hue is the self-defeating case worth knowing about: the fill lands inside the acceptance wedge, so anything that keys the matte away keys it again next generation through a loop.                                                                                                                                                                                                                                                                                                                                                                                               |
 | **matte saturation** | 0–0.6                              | How much chroma the matte generator puts on the carrier. At 0 it is a flat grey field with no subcarrier at all, which is the honest way to get a black or white fill; opened up it approaches the amplitude of a fully saturated primary.                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 
-## Tape
+## Channel
 
 ### Recording (luma & FM)
 

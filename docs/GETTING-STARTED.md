@@ -1,11 +1,11 @@
 # Getting started
 
-ntsc.js simulates composite video signal using WebGPU shaders, and as a result, all the video effects are just natural consequences of real signal-level glitches, not pseudo-effects that are drawn on top of the image
+ntsc.js simulates composite video signal using WebGPU shaders, and as a result,
+all the video effects are just natural consequences of real signal-level
+glitches, not pseudo-effects that are drawn on top of the image
 
-
-
-It does require WebGPU which requires a fairly recent browser, try Firefox Nightly or Chrome Canary if you have trouble with your default browser
-
+It does require WebGPU which requires a fairly recent browser, try Firefox
+Nightly or Chrome Canary if you have trouble with your default browser
 
 Visit https://cmdcolin.github.io/ntsc.js/
 
