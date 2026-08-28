@@ -76,6 +76,12 @@ jobs:
           path: ~/.cache/firebase/emulators
           key: firebase-emulators-${{ hashFiles('pnpm-lock.yaml') }}
       - run: pnpm test:rules
+      # The guide's screenshots carry the app's own masthead, version and all,
+      # so one taken two releases ago is a picture of a different program. They
+      # cannot be regenerated here — that needs Firefox Nightly and a GPU — so
+      # this reads the version each was stamped with and says which are behind.
+      # Retake them locally with `pnpm docshots <name>`.
+      - run: pnpm docshots:check
 
   build:
     needs: check
