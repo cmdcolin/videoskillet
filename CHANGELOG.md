@@ -2,6 +2,29 @@
 
 All notable changes to ntsc.js are documented here.
 
+## [0.31.1](https://github.com/cmdcolin/ntsc.js/compare/v0.31.0...v0.31.1) - 2026-08-28
+
+### Features
+- *(ui)* [`f3f61c7`](https://github.com/cmdcolin/ntsc.js/commit/f3f61c7b9c9c1aca3983ebc7ea00f30cf1f4ffe9) the widest stage on the map is Channel, not Tape
+
+### Fixes
+- *(ui)* [`ee77a8e`](https://github.com/cmdcolin/ntsc.js/commit/ee77a8e12963bdfe7a61fcf97088a80891f7aabc) the tape loop's name goes on the tape loop's wire
+
+### Refactor
+- *(ui)* [`8c19b09`](https://github.com/cmdcolin/ntsc.js/commit/8c19b09b9f784f32de8c8768c12289c545ad5845) split the diagram card into its layout and its drawing
+- *(ui)* [`f05f1e7`](https://github.com/cmdcolin/ntsc.js/commit/f05f1e7fea61b189a2d6226e02c9b2917f3dfe32) both maps route their wires instead of spelling them
+
+### Documentation
+- [`4ce0512`](https://github.com/cmdcolin/ntsc.js/commit/4ce05128d5615f6c3798fa473a697adea09bf0ac) retake the panel screenshots, and know when they go stale
+
+### Tests
+- *(ui)* [`f07e64e`](https://github.com/cmdcolin/ntsc.js/commit/f07e64e2fb710032b7b0c7f5b3f7920fe031bdb5) shoot the diagram card, which nothing covered
+- *(ui)* [`da13722`](https://github.com/cmdcolin/ntsc.js/commit/da1372252bf699e5f96fc8c54543f2a740ae72b9) re-baseline the panel shots for CHANNEL
+- *(ui)* [`b6f8237`](https://github.com/cmdcolin/ntsc.js/commit/b6f8237fdff8b96dd2cd0b5e2441b9ee2454ec55) guard the diagram card's geometry, which nothing did
+
+### Other Changes
+- [`86f41a8`](https://github.com/cmdcolin/ntsc.js/commit/86f41a80a552d8b4d8bcb11a4c50ab81f38eafb5) update getting started...too ai
+
 ## [0.31.0](https://github.com/cmdcolin/ntsc.js/compare/v0.30.2...v0.31.0) - 2026-08-27
 
 ### Features
