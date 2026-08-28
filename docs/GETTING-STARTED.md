@@ -1,36 +1,13 @@
 # Getting started
 
-ntsc.js is a TV you can break on purpose. It encodes the picture into a real
-NTSC waveform, damages it the way tape, cable and a tired receiver do, then
-decodes it with the mistakes still in. You don't draw artifacts here. You break
-something upstream and watch what falls out.
+ntsc.js simulates composite video signal using WebGPU shaders, and as a result, all the video effects are just natural consequences of real signal-level glitches, not pseudo-effects that are drawn on top of the image
 
-It runs in a browser with WebGPU (Chrome, Edge, Safari 26+, or Firefox Nightly
-on Linux). There's nothing to install.
 
-<video
-  controls muted loop playsinline
-  poster="img/clip-hero-poster.jpg"
-  src="https://cmdcolinphotos.s3.amazonaws.com/phosphene/clip-hero.mp4"></video>
 
-<sub>[Open this patch ↗](https://cmdcolin.github.io/ntsc.js/?p=E-QFAewDAKABAcAHB8ACAqABAKAlAOADAPAGAAgC4AMAwAIBYBOgAQYcAJgCAAwDmAIMyAEWyAEAmCAAoAYCgB4BWACgAQAQAPABEIwBAMACAOgHAAwAmAIBUCuMAQGcAgCwzgIARCfQjAE&src=cat&srcb=cat&mod=)</sub>
+It does require WebGPU which requires a fairly recent browser, try Firefox Nightly or Chrome Canary if you have trouble with your default browser
 
-## Four steps
 
-1. **[Open the app ↗](https://cmdcolin.github.io/ntsc.js/)**. It starts on a
-   bundled photo.
-2. **Click a preset.** The board jumps to that look. Drag one sideways instead
-   and it only goes in part of the way.
-3. **Give it your own footage.** Open Source A at the head of the signal path
-   and pick a file, a webcam, a screen share, or a random clip out of Wikimedia
-   Commons or archive.org.
-4. **Hit random nudge** a few times. It keeps the look you have and jogs it —
-   everything already doing something, plus a few controls that weren't — which
-   is where most of the good accidents come from. `ctrl+z` takes any of it back,
-   and **more…** beside it holds three other shapes of roll.
-
-When you find something worth keeping, hit **⧉ copy link**. The whole board
-lives in the URL, so a link is a patch.
+Visit https://cmdcolin.github.io/ntsc.js/
 
 ## What's on screen
 
