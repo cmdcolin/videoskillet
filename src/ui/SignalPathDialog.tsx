@@ -10,26 +10,31 @@ import {
 } from './controls'
 import { cx } from './cx'
 import {
+  bJoin,
   BOX_H,
   BOX_W,
   BOXES,
   BRANCH_Y,
+  EXIT_RUN,
+  exitHead,
+  head,
   colX,
   deadHint,
   H,
-  HEAD,
   KEYS,
   LAST_COL,
   MID_Y,
   RETURNS,
   returnPath,
+  returnPts,
+  SOUND_RISER,
   rowY,
   SOUND_COL,
   SUB_CHAR,
   SUB_PAD,
-  TOP,
-  TURN,
+  VIEW_RISER,
   W,
+  wire,
 } from './diagramLayout'
 import { Dialog } from './Dialog'
 import { MapBox, MapRun } from './MapBox'
@@ -92,9 +97,6 @@ export function SignalPathDialog(props: {
     onClose()
   }
   const open = (box: Box) => openStage(box.stage, box.group)
-  // B's feed joins the run between Feed A and the mixer, which is where mixB
-  // sits in the pass order.
-  const join = (colX(1) + colX(2)) / 2
   // A branch with no input patched into it, and — for B — the mixer it arrives
   // at, have nothing to act on. The rest of the chain is carrying A regardless.
   const dead = (box: Box) =>
@@ -135,46 +137,50 @@ export function SignalPathDialog(props: {
         role="group"
         aria-label="signal path"
       >
-        {/* the runs, drawn before the boxes so a box sits on its wire */}
+        {/* the runs, drawn before the boxes so a box sits on its wire.
+            Every one of them is a list of the corners it turns — `wire` rounds
+            them and `head` puts the arrow on the end of that same list, so a
+            run that moves takes its head with it (wire.ts). */}
         <path
           className={styles.wire}
-          d={`M10 ${MID_Y}H${colX(0) - BOX_W / 2}`}
+          d={wire([
+            [10, MID_Y],
+            [colX(0) - BOX_W / 2, MID_Y],
+          ])}
         />
         {Array.from({ length: LAST_COL }, (_, i) => (
           <path
             key={i}
             className={styles.wire}
-            d={`M${colX(i) + BOX_W / 2} ${MID_Y}H${colX(i + 1) - BOX_W / 2}`}
+            d={wire([
+              [colX(i) + BOX_W / 2, MID_Y],
+              [colX(i + 1) - BOX_W / 2, MID_Y],
+            ])}
           />
         ))}
-        <path
-          className={styles.wire}
-          d={`M${colX(LAST_COL) + BOX_W / 2} ${MID_Y}H${W - 8}`}
-        />
-        <path
-          className={styles.arrow}
-          d={`M${W - 8} ${MID_Y - HEAD}L${W} ${MID_Y}L${W - 8} ${MID_Y + HEAD}Z`}
-        />
+        {/* Out of the drawing, and the one head that lands on nothing. */}
+        <path className={styles.wire} d={wire(EXIT_RUN)} />
+        <path className={styles.arrow} d={exitHead(EXIT_RUN)} />
         {/* B's run: in, through its own two boxes, and up into the trunk — the
             same two columns A gets on the row above, because it is the same
             rig. */}
         <g className={cx(!props.bOn && styles.dim)}>
           <path
             className={styles.wire}
-            d={`M10 ${BRANCH_Y}H${colX(0) - BOX_W / 2}`}
+            d={wire([
+              [10, BRANCH_Y],
+              [colX(0) - BOX_W / 2, BRANCH_Y],
+            ])}
           />
           <path
             className={styles.wire}
-            d={`M${colX(0) + BOX_W / 2} ${BRANCH_Y}H${colX(1) - BOX_W / 2}`}
+            d={wire([
+              [colX(0) + BOX_W / 2, BRANCH_Y],
+              [colX(1) - BOX_W / 2, BRANCH_Y],
+            ])}
           />
-          <path
-            className={styles.wire}
-            d={`M${colX(1) + BOX_W / 2} ${BRANCH_Y}H${join - TURN}Q${join} ${BRANCH_Y} ${join} ${BRANCH_Y - TURN}V${MID_Y + HEAD}`}
-          />
-          <path
-            className={styles.arrow}
-            d={`M${join - HEAD} ${MID_Y + HEAD * 1.6}L${join} ${MID_Y}L${join + HEAD} ${MID_Y + HEAD * 1.6}Z`}
-          />
+          <path className={styles.wire} d={wire(bJoin)} />
+          <path className={styles.arrow} d={head(bJoin)} />
         </g>
         {/* The sound's run: a lead of its own and a short riser into the
             receiver. Deliberately not fed from the left edge like the two
@@ -183,29 +189,21 @@ export function SignalPathDialog(props: {
         <g className={cx(!props.soundOn && styles.dim)}>
           <path
             className={styles.wire}
-            d={`M${colX(SOUND_COL) - BOX_W / 2 - 12} ${BRANCH_Y}H${colX(SOUND_COL) - BOX_W / 2}`}
+            d={wire([
+              [colX(SOUND_COL) - BOX_W / 2 - 12, BRANCH_Y],
+              [colX(SOUND_COL) - BOX_W / 2, BRANCH_Y],
+            ])}
           />
-          <path
-            className={styles.wire}
-            d={`M${colX(SOUND_COL)} ${BRANCH_Y - BOX_H / 2}V${TOP + BOX_H}`}
-          />
-          <path
-            className={styles.arrow}
-            d={`M${colX(SOUND_COL) - HEAD} ${TOP + BOX_H + HEAD * 1.6}L${colX(SOUND_COL)} ${TOP + BOX_H}L${colX(SOUND_COL) + HEAD} ${TOP + BOX_H + HEAD * 1.6}Z`}
-          />
+          <path className={styles.wire} d={wire(SOUND_RISER)} />
+          <path className={styles.arrow} d={head(SOUND_RISER)} />
         </g>
-        {/* The view's run: the same riser under Screen, with the arrowhead at
-            the other end. That one difference is the statement — everything
-            else on this row is patched into the chain, and this is the only
-            thing the chain is delivered to. */}
-        <path
-          className={styles.wire}
-          d={`M${colX(LAST_COL)} ${TOP + BOX_H}V${BRANCH_Y - BOX_H / 2}`}
-        />
-        <path
-          className={styles.arrow}
-          d={`M${colX(LAST_COL) - HEAD} ${BRANCH_Y - BOX_H / 2 - HEAD * 1.6}L${colX(LAST_COL)} ${BRANCH_Y - BOX_H / 2}L${colX(LAST_COL) + HEAD} ${BRANCH_Y - BOX_H / 2 - HEAD * 1.6}Z`}
-        />
+        {/* The view's run: the same riser under Screen, read the other way.
+            That one difference is the statement — everything else on this row
+            is patched into the chain, and this is the only thing the chain is
+            delivered to. The same two points reversed, which is what makes the
+            two rows impossible to draw backwards. */}
+        <path className={styles.wire} d={wire(VIEW_RISER)} />
+        <path className={styles.arrow} d={head(VIEW_RISER)} />
         {RETURNS.map(r => {
           const d = returnPath(r.from, r.to, r.y, r.turn)
           const n = touchedInLoop(r.name)
@@ -242,7 +240,7 @@ export function SignalPathDialog(props: {
               <path className={styles.wire} d={d} />
               <path
                 className={styles.arrow}
-                d={`M${r.to - HEAD} ${TOP - HEAD * 1.6}L${r.to} ${TOP}L${r.to + HEAD} ${TOP - HEAD * 1.6}Z`}
+                d={head(returnPts(r.from, r.to, r.y))}
               />
               <text className={styles.loopLabel} x={r.lx} y={r.y - 5}>
                 {r.name}

@@ -1,7 +1,7 @@
 import {
   BOX_H,
   BRANCH_Y,
-  branchArrow,
+  branchHead,
   branchPath,
   chainLayout,
   fitSub,
@@ -10,12 +10,15 @@ import {
   H,
   HEAD,
   MID_Y,
+  OUT,
   returnPath,
+  returnPts,
   W,
 } from './chainLayout'
 import styles from './ChainMap.module.css'
 import { cx } from './cx'
 import { MapBox, MapRun } from './MapBox'
+import { arrowhead } from './wire'
 
 import type { WiredBranch } from './chainLayout'
 import type { LoopPlace, LoopsLive } from './controls'
@@ -168,7 +171,14 @@ export function ChainMap(props: {
           drawn this one (SignalPathDialog); the miniature now agrees. */}
       <path
         className={styles.mapArrow}
-        d={`M${W - HEAD} ${MID_Y - HEAD}L${W} ${MID_Y}L${W - HEAD} ${MID_Y + HEAD}Z`}
+        d={arrowhead(
+          [
+            [W - OUT, MID_Y],
+            [W, MID_Y],
+          ],
+          HEAD,
+          HEAD,
+        )}
       />
       {returns.map(r => {
         const node = props.loops.find(l => l.loop === r.loop)
@@ -237,7 +247,7 @@ export function ChainMap(props: {
             <path className={styles.mapWire} d={d} />
             <path
               className={styles.mapArrow}
-              d={`M${r.to - HEAD} ${top - HEAD * 1.5}L${r.to} ${top}L${r.to + HEAD} ${top - HEAD * 1.5}Z`}
+              d={arrowhead(returnPts(r.from, r.to, top, r.y), HEAD * 1.5, HEAD)}
             />
             {/* The run's own name, riding the wire rather than sitting above
                 it — there is no above at this size. It is painted after the
@@ -279,7 +289,7 @@ export function ChainMap(props: {
             y2={BRANCH_Y}
           />
           <path className={styles.mapWire} d={branchPath(branch)} />
-          <Arrow at={branchArrow(branch)} />
+          <path className={styles.mapArrow} d={branchHead(branch)} />
           <Node
             stage={props.branches[i]}
             x={branch.x}
@@ -321,26 +331,6 @@ export function ChainMap(props: {
         </g>
       ))}
     </svg>
-  )
-}
-
-// A branch's arrowhead, from the anchor and unit direction the layout worked
-// out. Built off the direction rather than written out per case, so a wire that
-// arrives sideways gets a head that points sideways without a fourth copy of
-// this triangle.
-function Arrow(props: {
-  at: { x: number; y: number; dx: number; dy: number }
-}) {
-  const { x, y, dx, dy } = props.at
-  // The two base corners sit HEAD*1.5 back along the wire and HEAD to either
-  // side of it — the perpendicular being (-dy, dx).
-  const bx = x - dx * HEAD * 1.5
-  const by = y - dy * HEAD * 1.5
-  return (
-    <path
-      className={styles.mapArrow}
-      d={`M${bx - dy * HEAD} ${by + dx * HEAD}L${x} ${y}L${bx + dy * HEAD} ${by - dx * HEAD}Z`}
-    />
   )
 }
 

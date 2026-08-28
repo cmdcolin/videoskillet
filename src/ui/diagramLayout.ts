@@ -18,6 +18,9 @@ import {
   VIEW_BLURB,
   VIEW_STAGE,
 } from './controls'
+import { arrowhead, route } from './wire'
+
+import type { Point } from './wire'
 
 // Where every part of the diagram card sits, and what each box is — the card's
 // half of the split ChainMap and chainLayout already make on the miniature:
@@ -338,6 +341,66 @@ export const KEYS: readonly {
   { state: 'nodeFree', say: 'patched into the controls, not the signal' },
 ]
 
-export function returnPath(from: number, to: number, y: number, turn: number) {
-  return `M${from} ${TOP}V${y + turn}Q${from} ${y} ${from - turn} ${y}H${to + turn}Q${to} ${y} ${to} ${y + turn}V${TOP}`
-}
+// Up off the trunk, along its own band, and back down onto it.
+export const returnPts = (from: number, to: number, y: number): Point[] => [
+  [from, TOP],
+  [from, y],
+  [to, y],
+  [to, TOP],
+]
+
+export const returnPath = (from: number, to: number, y: number, turn: number) =>
+  route(returnPts(from, to, y), turn)
+
+// A wire on this drawing, and the head on the end of one. Every path the card
+// draws goes through these, so the corner radius and the head belong to the
+// drawing rather than to each call site.
+export const wire = (pts: Point[]) => route(pts, TURN)
+
+// Two head lengths, and the difference between them is deliberate rather than
+// left over. LAND is what a wire arriving at a box wears; EXIT is the signal
+// leaving the drawing at the right-hand edge — the one head with no box under
+// it, which wants the extra reach to read as an ending. Both were written out
+// per call site, which is how each drawing ended up with two ratios and a name
+// for neither.
+const LAND = HEAD * 1.6
+const EXIT = 8
+
+export const head = (pts: Point[]) => arrowhead(pts, LAND, HEAD)
+export const exitHead = (pts: Point[]) => arrowhead(pts, EXIT, HEAD)
+
+// The four runs that are the same points every render, named once so the
+// drawing and the head on it cannot be given different ones.
+//
+// Each ends where its head's tip goes: the wire runs the last few units under
+// the arrow rather than stopping short of it, which is what the miniature's
+// branches already did and what lets one list serve both.
+
+// B's feed up into the trunk. Where it joins is not a choice — feedA / feedB →
+// mixB — so it meets the run between Feed A and the mixer.
+export const B_JOIN_X = (colX(1) + colX(2)) / 2
+export const bJoin: Point[] = [
+  [colX(1) + BOX_W / 2, BRANCH_Y],
+  [B_JOIN_X, BRANCH_Y],
+  [B_JOIN_X, MID_Y],
+]
+
+// Up into the receiver, which is the one stage the sound is patched into.
+export const SOUND_RISER: Point[] = [
+  [colX(SOUND_COL), BRANCH_Y - BOX_H / 2],
+  [colX(SOUND_COL), TOP + BOX_H],
+]
+
+// The same riser under Screen, read the other way — the chain is delivered to
+// the view rather than fed from it. Reversing SOUND_RISER's shape is the whole
+// difference, and writing it as a reversal is what says so.
+export const VIEW_RISER: Point[] = [
+  [colX(LAST_COL), TOP + BOX_H],
+  [colX(LAST_COL), BRANCH_Y - BOX_H / 2],
+]
+
+// Off the right-hand edge: the picture leaving the drawing.
+export const EXIT_RUN: Point[] = [
+  [colX(LAST_COL) + BOX_W / 2, MID_Y],
+  [W, MID_Y],
+]

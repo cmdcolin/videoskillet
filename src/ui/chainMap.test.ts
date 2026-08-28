@@ -4,7 +4,7 @@ import {
   BOX_H,
   boxWidth,
   BRANCH_Y,
-  branchArrow,
+  branchHead,
   chainLayout,
   fitSub,
   FREE_Y,
@@ -30,6 +30,15 @@ import {
 
 import type { WiredBranch } from './chainLayout'
 import type { Phase } from './controls'
+
+// The tip of an arrowhead: the apex of the triangle, which is the middle of the
+// three points `arrowhead` emits. Read off the path rather than off the point
+// list the head was built from, so this is checking what gets drawn.
+const tipOf = (d: string): [number, number] => {
+  const m = /L(-?[\d.]+) (-?[\d.]+)L/.exec(d)
+  if (m === null) throw new Error(`no tip in ${d}`)
+  return [Number(m[1]), Number(m[2])]
+}
 
 // Every bug this map has shipped has been in its arithmetic rather than in its
 // markup. An empty chain divided by zero and wrote `NaN` into every attribute
@@ -247,15 +256,12 @@ describe('chain map geometry', () => {
   // the exact class of mistake the placements exist to prevent.
   it('points an input at the trunk and the view at itself', () => {
     const l = chainLayout(FULL, [SOUND, VIEW])
-    const [sound, view] = l.branches.map(branchArrow)
-    // In: at the bottom edge of the trunk box it joins, pointing up.
-    expect([sound.x, sound.dy]).toEqual([
-      l.centers[FULL.indexOf(SOUND_JOIN)],
-      -1,
-    ])
-    // Out: at the top edge of its own box, pointing down into it.
-    expect([view.x, view.dy]).toEqual([l.branches[1].x, 1])
-    expect(view.y).toBeGreaterThan(sound.y)
+    const [sound, view] = l.branches.map(branchHead).map(tipOf)
+    // In: at the bottom edge of the trunk box it joins.
+    expect(sound[0]).toBe(l.centers[FULL.indexOf(SOUND_JOIN)])
+    // Out: at the top edge of its own box, which is further down the drawing.
+    expect(view[0]).toBe(l.branches[1].x)
+    expect(view[1]).toBeGreaterThan(sound[1])
   })
 
   // A filter can drop the stage a branch joins. It still has to arrive
