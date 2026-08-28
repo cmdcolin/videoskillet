@@ -137,3 +137,7 @@ composite video cables together in my basement and posting tumblr gifs.
 
 - Dark camera feedback
   https://cmdcolin.github.io/ntsc.js/?p=CqCsBQEEAcwDAHABXAC8aQLoAgLMBQCsAgOceQR0GPwBCzgAGADYAQAIAjgAuAIImAIAUALIAQCAAQAkArACAXgAFAJ4ADAGXABcApADAKAhAIgBCKwCAOQBAJgRApACAAAAAADwCAdIALAJAAAABAlUJOYDAKgBBcgBAQQ&mod=tapeLoopMm:smooth:0.05:0.0151&srcb=tv+static&src=tv+static
+
+- Fuzzy color bars feedback https://cmdcolin.github.io/ntsc.js/?p=cqQCAKAfAHoAOgAoAKggACwAYABEABAAmAEQ0AIA1AIwsAEIBA&mod=&srcb=vhs+static
+
+- Fuzzy color bars feedback+dissolver https://cmdcolin.github.io/ntsc.js/?p=BrAEAMgCAKAGPahOAdACAJADAZwCAHolpAIAoB8AegA6ACgAqCAALABgAEQAEACYARDQAgDUAhsEA0oQsAEIBA&mod=&srcb=vhs+static
