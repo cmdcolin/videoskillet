@@ -155,6 +155,32 @@
    svg: svg text does not wrap, and these are sentences. Each row opens the same
    place its box does, which also makes the diagram reachable by keyboard in
    reading order rather than only as eight tab stops on a picture. */
+/* The state key, between the drawing and the blurbs: a row of the drawing's own
+   boxes at reading size, each with the sentence that box's colour is making.
+   Wraps rather than scrolls — at the card's narrowest it goes to two lines and
+   the three chips stay whole, which a horizontal scroller would not. */
+.key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+  color: var(--fg3);
+}
+.key li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.keyChip {
+  flex: none;
+  width: 28px;
+  height: 14px;
+  overflow: visible;
+}
+
 .legend {
   list-style: none;
   margin: 0;
