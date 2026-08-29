@@ -191,8 +191,11 @@ export const candidates: Candidate[] = [
       chromaGain: 1.4,
       phosphor: 0.7,
     },
+    // Depth 0.5 around a base of 180, which is the whole 0..360 and not a
+    // degree more: bipolar swing means depth is measured each way, so depth 1
+    // here would spend half the run clamped even based at mid travel.
     mod: [
-      { target: 'synthHueDeg', source: 'triangle', rateHz: 0.06, depth: 1 },
+      { target: 'synthHueDeg', source: 'triangle', rateHz: 0.12, depth: 0.5 },
     ],
   },
   {
