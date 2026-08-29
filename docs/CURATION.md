@@ -200,3 +200,32 @@ modulation). Do not propose looks whose content is texture — a blur, a ring, a
 grain, a stutter. Two sources disagreeing is a reason to look at the frame; the
 eye disagreeing with the numbers means the numbers were measuring the wrong
 thing.
+
+## Ring modulation does not make rainbows
+
+Worth writing down because the name promises otherwise, and because six
+candidates were built on the assumption before anything was rendered.
+
+`cfbRing` multiplies the loop bus against the live program. Both signals carry
+their subcarrier on the **same crystal**, so the products land at the sum
+(7.16 MHz, above the chroma passband) and at the difference (DC, which is luma).
+The chroma filter discards the first, and the second is brightness rather than
+colour. Six candidates varying the detune, the line offset, the chroma trap, the
+demodulator axis and the comb around a strong `cfbRing` rendered within a point
+of each other on every measure, as the same desaturated grey-blue wash — and
+pulling the crystal 60 kHz did not change it, because 60 kHz off 3.58 MHz is
+still DC as far as the passband is concerned.
+
+Two routes do make colour by multiplication, both by putting the terms at
+genuinely different frequencies so the difference lands back inside the chroma
+band:
+
+- **`bRing` with `bDetuneHz`** — B's subcarrier against A's, kilohertz apart.
+  Saturated bands, and at `bGain` 0.55 it also renders at mean 209, which is
+  blown out. The level wants pulling well back before this is a look.
+- **the synth oscillator near 3.58 MHz over the picture** — `synthOver` with
+  `synthColor`, which translates luma up into the chroma band, so brightness
+  arrives as hue. Strong, but one hue at a time; the colorizer needs sweeping
+  for a spectrum rather than an olive wash.
+
+`scripts/gpuprof/candidates.rainbow.ts` holds the set and the finding.
