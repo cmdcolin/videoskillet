@@ -52,29 +52,44 @@ Four blind spots, each of which makes a real preset score like a dead one:
 
 ## Presets that barely leave clean
 
-From `survey presets --frames=200` on bars, lowest first, trigger-driven
-entries removed. Everything else in the table scores dep > 15.
+`survey presets --frames=200`, run twice — once on flat bars, once on
+`--source=detail`. A preset is only weak if it is weak on both; anything that
+moves one and not the other is telling you which kind of picture it needs.
 
-| preset | group | dep | p99 | motion |
-| --- | --- | ---: | ---: | ---: |
-| fmFold | Tape wear | 2.95 | 22.9 | 1.79 |
-| vhs | Tape wear | 4.17 | 32.3 | 2.79 |
-| tapeCapture | Tape wear | 8.68 | 33.8 | 6.91 |
-| adjacentChannel | RF / Broadcast | 8.87 | 64.8 | 1.99 |
-| stickyShed | Tape wear | 9.52 | 62.9 | 6.93 |
-| colourLate | Tape wear | 12.50 | 156.9 | 1.96 |
-| broadcast | RF / Broadcast | 12.53 | 36.9 | 0.86 |
-| cbBreakthrough | RF / Broadcast | 12.81 | 76.4 | 4.54 |
-| mixerLoop | Feedback loops | 12.86 | 83.3 | 3.55 |
+| preset | group | dep bars | dep detail | p99 detail | motion |
+| --- | --- | ---: | ---: | ---: | ---: |
+| vhs | Tape wear | 4.2 | 2.0 | 10.1 | 2.5 |
+| punchIn | Circuit bent | 4.3 | 3.1 | 11.0 | 1.0 |
+| fmFold | Tape wear | 3.0 | 7.0 | 60.3 | 2.2 |
+| adjacentChannel | RF / Broadcast | 8.9 | 3.4 | 13.3 | 1.9 |
+| stickyShed | Tape wear | 9.5 | 4.5 | 18.0 | 6.3 |
+| tapeCapture | Tape wear | 8.7 | 6.8 | 27.5 | 8.1 |
 
-Two of those are not candidates. `broadcast` is a near-clean baseline on
-purpose, and `mixerLoop` is the README's hero shot — it scores low because a
-loop over a frozen frame converges, which is the still-source blind spot above,
-not the preset. The tape-wear cluster needs re-reading on `--source=detail`
-before anyone judges it; that run was still going when this was written.
+Those six are the whole of it: every other preset in the table clears dep 12 on
+at least one of the two sources. Four sit just over the line on bars alone and
+are worth a second look — `tiredAmplifier` (16.7 / 4.1), `cbBreakthrough`
+(12.8 / 6.4), `colourLate` (12.5 / 9.1) and `broadcast` (12.5 / 11.2).
 
-`colourLate` is the interesting row: dep 12 with p99 157 says it does something
-violent to a narrow part of the picture and nothing to the rest.
+Not all of those are candidates. `punchIn` is *designed* to sit still until you hit
+⚡, and the harness never fires it. `broadcast` is a near-clean baseline on
+purpose. `mixerLoop` (8.4 on detail) is not in the list but would be on a third
+source: it is the README's hero shot, and it scores low only because a loop over
+a frozen frame converges — the still-source blind spot, not the preset.
+
+What is left is one cluster: **the quiet end of Tape wear**. Four of the twelve
+entries in that family — `vhs` itself among them — move the picture less than
+anything else in the table.
+
+`fmFold` and `colourLate` are the two to look at rather than cut. Both carry a
+p99 far above their dep — they do something violent to a narrow part of the
+picture and nothing to the rest, which is the signature of an effect that is
+working and is scoped too small, not one that is absent.
+
+One caution on the detail source: the clean NTSC path already turns its
+multiburst and text bands to cross-colour mush, so a preset whose whole job is
+softening has less left to soften. Detail under-reports the tape family too,
+differently from bars. Neither source is the arbiter; two disagreeing sources
+are a reason to look at the frame.
 
 ## Presets that depart into nothing
 
@@ -83,8 +98,10 @@ at a blank frame:
 
 | preset | dep | mean | sd | what it renders |
 | --- | ---: | ---: | ---: | --- |
-| chromaOnly | 101.1 | 0.0 | 0.0 | pure black |
-| reversePolarity | 100.8 | 1.1 | 5.5 | all but black |
+| chromaOnly | 98.9 | 0.1 | 0.3 | pure black |
+| reversePolarity | 98.0 | 1.1 | 5.5 | all but black |
+
+Both render black on bars *and* on the detail chart, so it is not the source.
 
 `chromaOnly` promises "burst-locked color glowing on black" and renders black
 with no colour in it at all. `reversePolarity` sits next to `negative`, which
