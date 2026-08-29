@@ -166,7 +166,8 @@ that. Rough payoff order:
 The card can be received badly (`sources/teletype.ts` › `garbleRows`): holes
 where parity caught a bit, wrong characters where it didn't, blocks for the rest
 of a row whose control code took the hit, and the odd line delivered to the
-wrong address. What is left is a dial and two attributes.
+wrong address. What is left is a dial, two attributes, and the other way a
+character generator goes wrong.
 
 - **A strength, not a switch.** The rate is one constant picked by eye.
   `?garble=0.8` would carry a strength without breaking the flag — `q.has` is
@@ -178,7 +179,127 @@ wrong address. What is left is a dial and two attributes.
   ate the line under it. Both are famous garbles and neither is reachable here:
   this card is one bit deep and white on black, and rendering them means
   carrying attributes per row through `dotGrid`. Double height is the cheaper of
-  the two and the one you saw more often.
+  the two and the one you saw more often. A chyron has both and is coloured, so
+  the keyer section below is what would pay for them.
+- **Bending the ROM, which `garble` is not.** `garbleRows` models a bad
+  _transmission_: random hits on bytes in flight. Shorting a line on the
+  character generator's own font ROM is the other failure and it is
+  deterministic — an address line held maps every glyph to its neighbour a fixed
+  distance away in the ROM, so the text keeps its length and its rhythm and
+  comes out systematically wrong; a data line held lights or kills the same dot
+  row in _every_ glyph, so the whole font grows a slit through it. Both are a
+  mask in `dotGrid` rather than a hash, and they read nothing like noise: a bend
+  is a wrong machine, not a bad wire. Holding a line on the page-address counter
+  instead walks the entire page diagonally through itself a few cells a field.
+
+## The caption channel — line 21 is already on the wire
+
+`encode_composite.wgsl` stamps line 21 every frame: a clock run-in, a start bit,
+and nineteen cells of data at the 503 kHz caption clock. The bits come out of
+`pcg()`, so the dashes change and mean nothing — which the `vbi` help text is
+honest about ("dashes that change every frame, because captions are live").
+
+Carry real characters there and decode them at the receiver, and the app gets a
+data channel running the whole length of the signal path.
+
+**Encoding** costs nothing new. Two seven-bit odd-parity characters is what line
+21 carries per field, and at 60 progressive frames the rate reads correctly even
+without fields. The text can come off the source A card or out of a caption
+field of its own.
+
+**Decoding** wants a pass shaped like `line_analyze`: one row, sliced off the
+_degraded_ composite at the caption clock, writing a small buffer the passes
+after it read. That is the argument `line_analyze` already makes for the burst
+gate — give the decoder what a real gate sees and the failures are emergent
+rather than drawn.
+
+**Painting** belongs at the end of `decode`, indexed by screen position, before
+`crt_face` reads the texture. Both halves of that matter.
+
+Indexing by screen rather than by signal row is what makes the caption a
+function of the _set_ instead of the signal. A real decoder recovers bytes,
+holds them in a display buffer and repaints on the set's own timing, so the
+picture rolls, tears and spins hue underneath while the caption sits nailed to
+the glass. Nothing here can do that today — every pixel in the app shares one
+sync. It would still ride deflection bend and still bloom, which is right,
+because the caption is light off the same tube.
+
+Ahead of `crt_face` is what makes it light rather than an overlay. Painted after
+that pass, a caption is a sticker on a photograph of a screen.
+
+What falls out, none of it drawn:
+
+- Snow, a low `chanBw`, tape noise and generation loss arrive as
+  **misspellings** — dropped characters, substituted ones, a caption that stops
+  updating. Damage as wrong words is a register this app has never had.
+- Line 21 sits near the top of the field, so a tracking band reaches it while
+  the picture is still readable. Tape ate captions first, and the relationship
+  would be the real one rather than two controls that happen to move together.
+- `dropoutComp` patches a line from 1H away. On line 21 that hands the decoder
+  the previous line's caption data: a byte with valid parity and the wrong
+  value.
+- A parity failure is what a real decoder drew a solid block for — which is
+  `garbleRows`' "holes where parity caught a bit", except earned off the
+  waveform instead of rolled from a hash. The teletype card garbles a
+  transmission; this _is_ one.
+- Hits on the control codes (RCL, EDM, EOC) give stuck captions, captions that
+  never clear, and roll-up rows painting over each other. Those are the failures
+  anyone who watched captioned television remembers.
+
+The display buffer wants the ping-pong `held`/`heldNext` already carries for
+persistence, for the same reason: a caption decoder is a memory, and what it
+shows this frame arrived some frames ago.
+
+The cost is a glyph set. Painting type in WGSL wants a small font atlas rather
+than `dotGrid`'s CPU raster, and baking one at engine construction is the move
+`grain_bake.wgsl` already makes for the phosphor mottle.
+
+Interlace changes this one, so it is worth building after that rather than
+before: real line 21 carries CC1 on field 1 and CC2 on field 2, and with fields
+the two caption channels separate — a field-rate fault then hits one and leaves
+the other alone.
+
+## The character generator as a keyer, not a source
+
+`sources/teletype.ts` is a card: full frame, one bit deep, in a source slot,
+encoded along with everything else. A character generator in a rack is a
+different animal. It stands at the switcher and puts out **two wires, fill and
+key**, and every bent-chyron artifact is those two coming apart.
+
+Most of the key processing is already written. `mix_b.wgsl` has the slicer,
+`bKeyClip` and `bKeySoft` are its threshold and its edge, a negative `bKey`
+inverts it, `keyIdx`/`bKeyDelay` is the key-timing trim ("a real keyer trims
+this because the key path and the video path are different lengths of circuit"),
+and `keyFill` already chooses what shows through the hole — program A, a matte
+generator, or the mixer loop bus. What is missing is a key arriving from a
+**generator** rather than sliced out of the fill's own chroma.
+
+That changes what those knobs do, because type is not a photograph:
+
+- **Key timing** slides a soft matte a few samples across a picture. Across a
+  glyph it puts background through one side of every stem and a hard shadow down
+  the other, and far enough out it leaves an outline with no letter in it.
+- **Clip** becomes stroke weight. Down, and thin strokes fuse and the line grows
+  a halo; up, and stems drop out of the middle of words.
+- **Invert** cuts letter-shaped holes, and `keyFill`'s loop-bus option is
+  already behind them: feedback that regenerates only inside the shape of what
+  somebody typed.
+
+The new mechanism is the **edge generator**. A CG made its border and drop
+shadow by delaying the key a sample and a line and OR-ing it back in — one extra
+tap, and bending the two delays apart detaches the shadow and walks it in front
+of the type.
+
+Keyed onto the program bus, the caption is _signal_, which is the payoff for
+building it here rather than in a source slot. Full-swing white against black
+overmodulates, so `buzz_tap` hands back the text as a whine that changes with
+what it says, the receiver's AGC pumps on it, and the enhancer's sync
+regenerator can mint pulses off a bright lower third. All of that already
+exists, and none of it needs to know a chyron does.
+
+One trap, already paid for once by the chroma keyer: key at the fill's own
+raster index, not at the output sample, or the caption slides out from under its
+own matte on the dirty path.
 
 ## Chroma key follow-ons
 
