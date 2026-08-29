@@ -707,6 +707,80 @@ export const PRESETS: PresetDef[] = [
     mod: [{ target: 'fbZoom', source: 'smooth', rateHz: 0.05, depth: 0.03 }],
   },
   {
+    name: 'runaway',
+    group: 'Feedback loops',
+    blurb:
+      'A camera loop wound past unity with the beam limiter left to argue with it. The picture blooms toward white, the limiter senses the beam current and pulls the drive down, and the loop climbs again — a cycle set by two servos disagreeing rather than by anything on screen. The auto-iris is in the loop too, hunting, so the bloom never arrives at the same brightness twice.',
+    patch: {
+      fbMix: 0.8,
+      fbGain: 1.2,
+      fbZoom: 1.03,
+      fbIris: 0.7,
+      abl: 0.8,
+      chromaGain: 1.2,
+      phosphor: 0.75,
+    },
+    // Slow, and through the region where the loop crosses unity: above it the
+    // structure breeds, below it decays, and the look is the crossing.
+    mod: [{ target: 'fbGain', source: 'sine', rateHz: 0.08, depth: 0.12 }],
+  },
+  {
+    name: 'syncInTheLoop',
+    displayName: 'sync in the loop',
+    group: 'Feedback loops',
+    blurb:
+      'The picture already coming apart before the camera gets to it: the vertical hold is marginal, so what the loop photographs is a frame mid-roll, and it feeds the roll back in to be photographed again. The seam accumulates instead of passing through, and the loop ends up holding several rolls at once at different ages.',
+    patch: {
+      fbMix: 0.75,
+      fbGain: 1.08,
+      fbZoom: 1.02,
+      vHold: 0.06,
+      vFreqHz: 59.85,
+      hHold: 0.4,
+      chromaGain: 1.3,
+      phosphor: 0.7,
+    },
+    // A hold this marginal does not drift steadily — it wanders, and the roll
+    // rate wanders with it, which is what keeps the stack of seams uneven.
+    mod: [{ target: 'vFreqHz', source: 'smooth', rateHz: 0.06, depth: 0.02 }],
+  },
+  {
+    name: 'lorenzLoop',
+    displayName: 'lorenz loop',
+    group: 'Feedback loops',
+    blurb:
+      "The mixer loop's delay driven by a Lorenz attractor rather than an oscillator. The echo spacing never repeats and never settles, so the structure the loop builds never lands twice in the same place — aperiodic without being random, which is the difference between this and shaking the control.",
+    patch: {
+      cfbMix: 0.82,
+      cfbGain: 1.02,
+      cfbDelayUs: 2,
+      cfbLines: 1,
+      chromaGain: 1.4,
+      phosphor: 0.6,
+    },
+    mod: [{ target: 'cfbDelayUs', source: 'lorenz', rateHz: 0.5, depth: 0.06 }],
+  },
+  {
+    name: 'strobeBloom',
+    displayName: 'strobe bloom',
+    group: 'Feedback loops',
+    blurb:
+      'The beam cut for most of each cycle and let through in flashes, inside a loop running above unity. The loop photographs the dark frames as well as the lit ones, so instead of running steady it pumps at the strobe rate — and the phosphor is long enough that each flash is still on the glass when the next one lands.',
+    patch: {
+      strobeHz: 6,
+      strobeMs: 40,
+      fbMix: 0.78,
+      fbGain: 1.16,
+      fbZoom: 1.025,
+      phosphor: 0.92,
+      chromaGain: 1.3,
+    },
+    // Sample and hold rather than an LFO: the rate should jump to a new value
+    // and sit there, because a strobe sliding continuously through its rates
+    // reads as a broken strobe rather than as one being played.
+    mod: [{ target: 'strobeHz', source: 'hold', rateHz: 0.4, depth: 0.3 }],
+  },
+  {
     name: 'cleanDissolve',
     displayName: 'clean dissolve',
     group: 'A/B mixing',

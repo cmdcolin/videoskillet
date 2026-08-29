@@ -48,6 +48,9 @@ export class Runner {
   // Deterministic, so two runs of the same sheet are the same sheet — the walk
   // and sample-and-hold sources both draw from it.
   private readonly rand = rngFor(7)
+  // 0 texture, 1 TV static, 2 VHS blank tape — set by `Runner.create`.
+  srcNoise = 0
+  srcNoiseB = 0
   private spans = new Map<
     ControlKey,
     { min: number; max: number; travel: number }
@@ -167,6 +170,8 @@ export class Runner {
     const modState = new ModState()
     const g = await Graph.create(this.device, {
       controls: live,
+      srcNoise: this.srcNoise,
+      srcNoiseB: this.srcNoiseB,
       bEnabled: true,
       sourceA: this.srcA,
       sourceB: this.srcB,

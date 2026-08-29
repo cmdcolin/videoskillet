@@ -78,6 +78,12 @@ export interface GraphOptions {
   controls: Controls
   bEnabled: boolean
   dbgView?: number
+  // GPU-generated source A instead of the uploaded texture: 0 texture,
+  // 1 TV static, 2 VHS blank-tape static. The published demos are mostly built
+  // on these rather than on a picture, so a harness that only ever renders a
+  // texture is not rendering the thing being judged.
+  srcNoise?: number
+  srcNoiseB?: number
   sourceA: Uint8Array<ArrayBuffer>
   sourceB: Uint8Array<ArrayBuffer>
 }
@@ -131,6 +137,8 @@ export class Graph {
   private impulseTrainStep = 0
   private readonly bEnabled: boolean
   private readonly dbgView: number
+  private readonly srcNoise: number
+  private readonly srcNoiseB: number
 
   private prePasses: Pass[] = []
   private loopPasses: Pass[] = []
@@ -141,6 +149,8 @@ export class Graph {
     this.c = opts.controls
     this.bEnabled = opts.bEnabled
     this.dbgView = opts.dbgView ?? 0
+    this.srcNoise = opts.srcNoise ?? 0
+    this.srcNoiseB = opts.srcNoiseB ?? 0
     const d = device
     const uniform = () =>
       d.createBuffer({
@@ -676,8 +686,8 @@ export class Graph {
         canvasW: 1508,
         canvasH: 1131,
         srcAspect: 4 / 3,
-        srcNoise: 0,
-        srcNoiseB: 0,
+        srcNoise: this.srcNoise,
+        srcNoiseB: this.srcNoiseB,
         srcFrame: this.tapeFrame.a,
         beamBlank: this.strobeGate.step(
           { hz: c.strobeHz, ms: c.strobeMs },

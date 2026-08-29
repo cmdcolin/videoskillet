@@ -229,3 +229,35 @@ band:
   for a spectrum rather than an olive wash.
 
 `scripts/gpuprof/candidates.rainbow.ts` holds the set and the finding.
+
+## Chaotic is not the same as wild
+
+The correction that cost the most to learn, and it was learned by getting it
+wrong. Three rounds of candidates came back "very subtle", so the next round
+stacked everything: both ring modulators, both loops run hard, sync marginal,
+deflection past the supply. Those scored `motion` 105 — five times anything
+kept before — and the verdict was **"too chaotic ... they need work"**.
+
+What survived that round instead:
+
+| kept | motion |
+| --- | ---: |
+| runaway | 33 |
+| sync in the loop | 14 |
+| lorenz loop | 14 |
+| strobe bloom | 14 |
+
+Everything at motion 55 or above was cut. So the axis is not amount of movement
+and it is certainly not entropy: what reads as wild here is **large, coherent
+structure that evolves** — a loop crossing unity and bleeding back, a stack of
+roll seams at different ages, an echo whose spacing never repeats. What reads
+as noise is high-entropy hash, however energetic the numbers say it is.
+
+`motion` is worth watching from both ends. Under about 5 a look is a still;
+above about 50 it is probably hash. The band that has produced every keeper so
+far is 10–40.
+
+One more thing that number cannot see: it is measured between *adjacent* frames,
+so a slow sweep reports as motionless. A hue rotation at 0.2 Hz moves 1.2° a
+frame and scores under 3 while cycling the whole wheel in five seconds. Read it
+alongside a clip, never instead of one.

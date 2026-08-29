@@ -8,6 +8,9 @@
 //     presets --only=vhs,fmFold   a named shortlist
 //     candidates --spec=scripts/gpuprof/candidates.feedback.ts
 //
+// `--srcnoise=1` renders over TV static instead of a test chart (2 = VHS blank
+// tape), which is what most of the published demos are built on.
+//
 // `--source=bars` swaps the detail chart back for flat colour bars.
 //
 // The counterpart to `scripts/contact.mjs`, which does the same job through a
@@ -223,7 +226,16 @@ async function main(): Promise<void> {
   // A loop eating a frozen frame converges and stops, so every feedback look
   // would render as the source slightly soft. Panning the picture is the
   // cheapest honest stand-in for live video.
-  const move = arg('still') === undefined ? panner(runner.srcA) : undefined
+  // `--srcnoise=1` is TV static, `2` is VHS blank tape — the generated sources
+  // most of the published demos are built on. Panning a generated source does
+  // nothing (it is made on the GPU, not uploaded), so motion comes off the
+  // generator itself and `--still` is implied.
+  runner.srcNoise = Number(arg('srcnoise') ?? 0)
+  runner.srcNoiseB = Number(arg('srcnoiseb') ?? 0)
+  const move =
+    arg('still') === undefined && runner.srcNoise === 0
+      ? panner(runner.srcA)
+      : undefined
   const ref = await runner.run(
     { ...DEFAULT_CONTROLS },
     FRAMES,
