@@ -168,7 +168,6 @@ export const TRANSITIONS: readonly Transition[] = [
     // one pass at triple the damage.
     peak: {
       dubGens: 4,
-      tapeNoiseIre: 6,
       dropoutRate: 40,
       tbJitterNs: 500,
     },

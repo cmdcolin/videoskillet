@@ -19,7 +19,6 @@ import {
   LINES,
   SAMPLES_PER_LINE,
   SYNC_LEN,
-  TAPE_FRAMES,
   VSYNC_FIRST,
   VSYNC_LAST,
 } from '../signal/constants'
@@ -331,27 +330,6 @@ export const PARAM_DEFS = [
   ['cfbFilterBoost', 'f32'], // added in-band loop gain (self-oscillates past unity round trip)
   ['cfbServo', 'f32'], // varactor on the loop delay: samples of pull per 100 IRE of its own video
   ['cfbRing', 'f32'], // loop bus ring-modulated against the live program
-  // tape loop: a loop of tape threaded record head -> play head, seconds long
-  ['tapeMix', 'f32'], // crossfader position toward the play head, 0 = loop out of circuit
-  ['tapeGain', 'f32'], // playback proc-amp trim, negative inverts
-  ['tapeHfLoss', 'f32'], // head/tape band loss per pass (takes chroma first)
-  ['tapeNoise', 'f32'], // medium noise, IRE rms — fixed to the tape, not the frame
-  ['tapeWear', 'f32'], // fraction of the loop's lines with the oxide worn off
-  ['tapeSplice', 'f32'], // severity of the joint crossing a head, 0 = no splice
-  ['tapeHeads', 'f32'], // playback heads in the path: one lap returns once per head
-  ['tapeHeadSpread', 'f32'], // head layout along the path: 1 = even subdivisions
-  ['tapeColourFrame', 'f32'], // 1 = hold every head on a whole subcarrier cycle
-  ['tapeSpliceFrames', 'u32'], // how far the splice has run from the record head...
-  ['tapeSpliceRem', 'f32'], // ...in whole frames plus this remainder
-  ['tapeSlot', 'u32'], // ring frame the record head is laying down
-  ['tapeScrub', 'f32'], // 1 = drum stalled: read in tape order, so backwards reverses the waveform
-  ['tapeShuttleBars', 'f32'], // loop track crossings per sweep (speed - 1): the pause/cue bars
-  ['tapeShuttlePhase', 'f32'], // crossing pattern phase, in crossings
-  ['tapeHoldSlot', 'u32'], // ring frame the loop window sits on (= tapeSlot while recording)
-  ['tapeHoldFrames', 'u32'], // how far the heads have walked round a held loop...
-  ['tapeHoldRem', 'f32'], // ...in whole frames plus this remainder (0 while recording)
-  ['tapeDelayFrames', 'u32'], // the far head trails the record head by this many whole frames...
-  ['tapeDelaySamples', 'f32'], // ...plus this remainder (the total overruns f32's integers)
   // display
   // Beam blanking, held on: the guns cut for most of a cycle and let through in
   // flashes. Applied in decode, upstream of the persistence layer, which is the
@@ -451,7 +429,6 @@ const CC_CR = ${CC_CR}u;
 const GLYPH_W = ${GLYPH_W}u;
 const GLYPH_H = ${GLYPH_H}u;
 const GLYPH_COUNT = ${GLYPH_COUNT}u;
-const TAPE_LEN = ${TAPE_FRAMES * SAMPLES_PER_LINE * LINES}u; // delay loop capacity, samples
 const IRE_SYNC = ${IRE_SYNC}.0;
 const IRE_BLANK = ${IRE_BLANK}.0;
 const IRE_BLACK = ${IRE_BLACK};

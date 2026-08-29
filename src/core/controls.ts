@@ -234,21 +234,6 @@ export const DEFAULT_CONTROLS = {
   cfbFilterBoost: 2, // added in-band loop gain once a center is set
   cfbServoUs: 0, // varactor on the loop delay: us of pull per 100 IRE of its own video
   cfbRing: 0, // loop bus ring-modulated against the live program
-  // tape loop (a loop of tape threaded record head -> play head)
-  tapeMix: 0,
-  tapeLoopMm: 20, // record head to play head; delay = length / 33.35 mm/s
-  tapeGain: 1,
-  tapeHfLoss: 0.25, // band lost per pass: generation loss, colour first
-  tapeNoiseIre: 1.5, // the medium's own noise floor
-  tapeWear: 0, // fraction of the loop with the oxide worn off
-  tapeSplice: 0, // the joint crossing a head, once per lap
-  tapeRecord: 1, // record head down; lift it and the loop holds what it has
-  tapeTransport: 2, // 0 reverse, 1 stopped, 2 forward, 3 scrub — only means anything held
-  tapeShuttle: 1, // loop speed as a multiple of play; the transport gives the sign
-  tapeHeads: 1, // playback heads in the path: a lap returns once per head
-  tapeHeadSpread: 1, // where they sit along it; 1 = even subdivisions
-  tapeWowPct: 0, // capstan wander: moves the delay time, not just the picture
-  tapeColourFrame: 1, // hold the delay on a subcarrier cycle (0 = hue spins with it)
   // per-source feeds: each input's own cable and head-end, ahead of the mix —
   // a fault here damages one signal alone, unlike the program-bus channel
   // controls above which damage the mixed output

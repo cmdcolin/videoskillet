@@ -40,7 +40,6 @@ export function deckLoad(c: Controls): DeckLoad {
     wipeEngaged(c.wipeMode) ? 'a wipe armed' : '',
     c.pipMix > 0 ? 'the inset up' : '',
     c.shuttleX !== 1 ? 'the tape off play' : '',
-    c.tapeMix > 0 ? 'the loop threaded' : '',
     c.trackHunt > 0
       ? 'the servo hunting'
       : c.trackAmt > 0
@@ -141,7 +140,6 @@ export const SHUTTLE_STOPS = [
 // The delay loop's own deck: which way a held loop runs past the heads. Index is
 // the value tapeTransport takes, so these are the same numbers the slider's
 // `choices` are indexed by.
-export const LOOP_TRANSPORT = ['◀◀', '❚❚', '▶', '≋']
 
 // How long an auto-take runs, in seconds. Cycled rather than typed: a take is a
 // performance gesture and these are the four durations a switcher's rate

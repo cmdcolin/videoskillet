@@ -82,7 +82,7 @@ describe('the boxes on the map', () => {
   it('draws the whole chain with nothing filtered', () => {
     const c = chain()
     expect(names(c.nodes)).toEqual([...PHASE_ORDER])
-    expect(c.loops).toHaveLength(3)
+    expect(c.loops).toHaveLength(2)
     // The three wired branches, then the two boxes wired to nothing — the order
     // the map reads in from the top, branch row before free row.
     expect(names(c.branches)).toEqual([

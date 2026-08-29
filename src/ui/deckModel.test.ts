@@ -120,12 +120,12 @@ describe('what the deck is holding', () => {
   })
 
   it('reads as a sentence when more than one is live', () => {
-    expect(deckLoad(at({ tapeMix: 0.5, trackAmt: 0.3 }))).toEqual({
-      n: 2,
-      say: 'the loop threaded and the head off track',
+    expect(deckLoad(at({ trackAmt: 0.3 }))).toEqual({
+      n: 1,
+      say: 'the head off track',
     })
-    expect(deckLoad(at({ pipMix: 1, tapeMix: 0.5, timeScale: 0 })).say).toBe(
-      'the inset up, the loop threaded and the picture held',
+    expect(deckLoad(at({ pipMix: 1, timeScale: 0 })).say).toBe(
+      'the inset up and the picture held',
     )
   })
 })

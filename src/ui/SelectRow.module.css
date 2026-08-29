@@ -57,7 +57,7 @@
 
 /* The caption, and whatever belongs to the file it names (FileName.tsx). The row
    carries the caption's own offsets so the caption itself can be a flex child
-   that ellipsises while the glyphs after it keep their width — a Commons
+   that ellipsis while the glyphs after it keep their width — a Commons
    filename is long, and it is the name that has to give. */
 .fileRow {
   display: flex;

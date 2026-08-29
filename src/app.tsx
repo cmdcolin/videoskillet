@@ -883,7 +883,6 @@ export function App() {
   const loopsLive = {
     camera: controls.fbMix > 0,
     mixer: controls.cfbMix > 0,
-    tape: controls.tapeMix > 0,
   }
   // What is standing in each of the three boxes with a picker, for the caption
   // under its name on the map (patched.ts). Keyed by `PickerStage`, the same

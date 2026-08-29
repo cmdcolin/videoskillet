@@ -254,7 +254,7 @@ export function PresetsSection(props: {
           // every hover teaches by itself.
           // Short enough to hold one line at the panel's docked width, which is
           // the whole point of the rewrite: at two lines it saved nothing.
-          'a bundle of controls, not one switch — click one'
+          'each preset edits a bundle of controls simultaneously, not one switch — click one'
         : `modified from "${presetLabelFor(props.lastPreset)}"`
   // The count rides the caption whenever the caption is describing a particular
   // preset, so browsing the chips teaches the thing the chips cannot say: this

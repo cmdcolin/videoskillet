@@ -4,7 +4,7 @@ Why the render path looks the way it does. [`ARCHITECTURE.md`](ARCHITECTURE.md)
 draws the path itself, and [`HOW-IT-WORKS.md`](HOW-IT-WORKS.md) is the one-page
 version of what a pass is.
 
-One frame is 477,750 f32 samples (910 × 525) through up to twenty-six compute
+One frame is 477,750 f32 samples (910 × 525) through up to twenty-four compute
 dispatches, sixty times a second, and six of those passes are FIR filters 33 to
 55 taps wide. That budget is the reason for everything below. On the dev box's
 WX 3200 every built-in preset lands **3.3–5.4 ms** against a 3.3 ms always-on
@@ -84,7 +84,6 @@ below is bit-exact except where it says otherwise.
 | colour-under tile staged behind the Y/C delay (was 55 storage taps, a deviate each) | colourLate + chroma noise | channel  | 2.99   | 0.62  |
 | FM fold's decay tabled per workgroup                                                | fmFold                    | channel  | 1.43   | 1.23  |
 | flywheel and HV sag walked in two waves                                             | fullCollapse              | sync     | 0.31   | 0.14  |
-| head layout designed once per workgroup                                             | eightHeadLap              | tapePlay | 1.44   | 1.29  |
 | gun cutoff + gamma applied where decode writes the screen (not exact)               | lightThatStays            | crtFace  | 1.75   | 0.74  |
 |                                                                                     | misconverged              | crtFace  | 1.43   | 0.67  |
 |                                                                                     | nightMonitor              | crtFace  | 1.39   | 0.59  |
@@ -211,7 +210,7 @@ accumulator to scratch for the sake of up to three iterations.
 
 ## Workgroup memory does four different jobs here
 
-Ten shaders stage something in `var<workgroup>` before they barrier, and it is
+Nine shaders stage something in `var<workgroup>` before they barrier, and it is
 worth knowing which of four things each one is doing, because the reason decides
 what may change.
 
@@ -259,9 +258,7 @@ rather than a performance one: **the predicate sits ahead of the bounds
 return**, since every invocation in the workgroup has to reach the barrier and
 910 samples do not divide by 64.
 
-`tape_play` tables its head layout the same way — where each head sits is a
-`pow` and a modulo per head, and it was paying them at every sample — and
-`channel` tables the FM fold's 31-tap decay.
+`channel` tables the FM fold's 31-tap decay the same way.
 
 `crt_face`'s disk taps are the same move made at compile time: golden-angle
 direction × radius plus the beam gaussian weight, tabulated as constants.
@@ -353,18 +350,6 @@ thing in this buffer that would not move if `LINES` did.
 **`persistBufs`** ping-pong on frame parity. `decode`'s lateral scatter reads
 neighbouring pixels, so a single buffer would hand it values the same dispatch
 is part way through overwriting.
-
-**The tape loop** is the one that needed arithmetic care. It stores composite as
-f16 pairs packed into `u32`, which puts a frame of tape at 933 KiB and a
-two-second 120-frame loop at 109 MiB — inside the 128 MiB a storage binding is
-guaranteed. f16 resolves about 0.05 IRE, three orders finer than the medium's
-own noise floor, so nothing about the storage shows up in the picture and every
-artifact is one the transport actually causes. The ring holds 57 million
-samples, well past the 2²⁴ where an f32 stops counting integers one at a time,
-so position arithmetic is `u32` throughout and the delay arrives split into
-whole frames plus a remainder. `tape_rec` writes two samples per thread because
-a packed word is written whole; 910 is even, so a line never straddles a word
-and no two threads contend for one.
 
 ## Tiering, because tap count is the only lever
 

@@ -11,7 +11,6 @@ import {
   LINES,
   SAMPLES_PER_LINE,
   SAMPLE_RATE,
-  TAPE_FRAMES,
 } from '../signal/constants'
 import { advanceCrossings } from '../signal/crossings'
 import { Fault } from '../signal/fault'
@@ -26,7 +25,6 @@ import { TrackingServo } from '../signal/servo'
 import { StabGate } from '../signal/stab'
 import { StrobeGate } from '../signal/strobe'
 import { SynthState } from '../signal/synthstate'
-import { TapeState, tapeRecording } from '../signal/tapeloop'
 import { BuzzRead } from './buzzread'
 import { buildCaptionRom, buildPage, CC_BUF_LEN, CC_PAGE } from './captionrom'
 import { gpuPowerFromSearch, initGpu, releaseGpu } from './context'
@@ -66,8 +64,6 @@ import presentSrc from './shaders/present.wgsl?raw'
 import storePrevSrc from './shaders/store_prev.wgsl?raw'
 import syncSrc from './shaders/sync.wgsl?raw'
 import syncMeasureSrc from './shaders/sync_measure.wgsl?raw'
-import tapePlaySrc from './shaders/tape_play.wgsl?raw'
-import tapeRecSrc from './shaders/tape_rec.wgsl?raw'
 import timebaseSrc from './shaders/timebase.wgsl?raw'
 import underDownSrc from './shaders/under_down.wgsl?raw'
 import virSrc from './shaders/vir.wgsl?raw'
@@ -238,7 +234,6 @@ export class Engine implements EngineApi {
   // which is half the point of watching a morph, and the cost is a tenth of what
   // notifying per frame would be.
   private glideNotify = 0
-  private tapeState = new TapeState(this.rand)
   private rfState = new RfState()
   private synthState = new SynthState()
   // The blanking gate. Unlike the stab gate beside it this is a plain control
@@ -359,8 +354,6 @@ export class Engine implements EngineApi {
   private compPrev: GPUBuffer
   // The delay loop: a ring of composite frames the record head writes and the
   // play head reads a couple of seconds behind. Unlike compPrev this is a
-  // medium, not a frame store — see tape_play.wgsl.
-  private tapeBuf: GPUBuffer
   private chromaBuf: GPUBuffer
   private underBuf: GPUBuffer
   private lineInfoBuf: GPUBuffer
@@ -477,10 +470,6 @@ export class Engine implements EngineApi {
     this.compB = storage(N * 4)
     this.bCompBuf = storage(N * 4)
     this.compPrev = storage(N * 4)
-    // Two bytes a sample, not four: the loop is the one buffer here big enough
-    // for its precision to be a VRAM decision, and f16 buys twice the tape for
-    // a resolution still far under the noise the medium has anyway.
-    this.tapeBuf = storage(TAPE_FRAMES * N * 2)
     this.chromaBuf = storage(N * 4)
     this.underBuf = storage(N * 4)
     this.lineInfoBuf = storage(LINES * 16)
@@ -573,8 +562,6 @@ export class Engine implements EngineApi {
     const mixBPl = compute(mixBSrc)
     const fbCompositePl = compute(fbCompositeSrc)
     const storePrevPl = compute(storePrevSrc)
-    const tapePlayPl = compute(tapePlaySrc)
-    const tapeRecPl = compute(tapeRecSrc)
     const chromaExtractPl = compute(chromaExtractSrc)
     const underDownPl = compute(underDownSrc)
     const channelPl = compute(channelSrc)
@@ -644,8 +631,6 @@ export class Engine implements EngineApi {
       when,
     })
     const perLine = [Math.ceil(SAMPLES_PER_LINE / 64), LINES] as const
-    // the record head writes a packed f16 pair per thread (see tape_rec)
-    const perLineW = [Math.ceil(SAMPLES_PER_LINE / 2 / 64), LINES] as const
     // the tiled-FIR passes run TILE_WG-wide workgroups (see prelude)
     const perLineT = [Math.ceil(SAMPLES_PER_LINE / TILE_WG), LINES] as const
     const perPixelT = [
@@ -810,28 +795,6 @@ export class Engine implements EngineApi {
       // a generation older each time. Both heads sit ahead of the channel block,
       // because that block is the *deck's* playback damage and the loop is a
       // second machine with damage of its own.
-      pass(
-        'tapePlay',
-        tapePlayPl,
-        [
-          { buffer: this.paramsBuf },
-          { buffer: this.tapeBuf },
-          { buffer: this.compA },
-        ],
-        perLine,
-        () => c.tapeMix !== 0,
-      ),
-      pass(
-        'tapeRec',
-        tapeRecPl,
-        [
-          { buffer: this.paramsBuf },
-          { buffer: this.compA },
-          { buffer: this.tapeBuf },
-        ],
-        perLineW,
-        () => tapeRecording(c),
-      ),
     ]
     // The two encoders keep their in-array bind groups (straight to their real
     // destination) as slot 0; slot 1 targets the compB scratch for the frames
@@ -1794,7 +1757,6 @@ export class Engine implements EngineApi {
 
     this.lineState = new LineState(this.rand)
     this.mixState = new MixState(this.rand)
-    this.tapeState = new TapeState(this.rand)
     this.modState = new ModState()
     this.bayDrive.clear()
     this.rfState = new RfState()
@@ -2107,7 +2069,6 @@ export class Engine implements EngineApi {
     const dShuttle = Math.abs(c.shuttleX - this.lastShuttleX)
     this.lastShuttleX = c.shuttleX
     if (dShuttle > 0) this.servo.kick(Math.min(dShuttle, 1))
-    if (c.tapeMix > 0 && this.tapeState.spliceCrossed) this.servo.kick(0.8)
     if (this.audioState.hit > 0.9) this.servo.kick(this.audioState.hit * 0.5)
   }
 
@@ -2250,22 +2211,6 @@ export class Engine implements EngineApi {
       wipePos: c.wipePos,
       wipeRateHz: c.wipeRate,
     })
-    // The transport runs whether or not the loop is faded up — a tape machine
-    // left threaded keeps moving, so the splice does not stall at the head and
-    // the loop still has whatever was last recorded on it when the fader comes
-    // back up.
-    const tapeU = this.tapeState.update(
-      {
-        tapeLoopMm: c.tapeLoopMm,
-        tapeWowPct: c.tapeWowPct,
-        tapeColourFrame: c.tapeColourFrame,
-        tapeMix: c.tapeMix,
-        tapeRecord: c.tapeRecord,
-        tapeTransport: c.tapeTransport,
-        tapeShuttle: c.tapeShuttle,
-      },
-      this.frame,
-    )
     this.kickServo(c)
     this.track = this.servo.update({
       target: c.trackPos,
@@ -2276,7 +2221,6 @@ export class Engine implements EngineApi {
     const vals = {
       ...this.uniformValues(),
       ...mixU,
-      ...tapeU,
       // the adjacent channel's raster slip and beat phases, walked per frame
       ...this.rfState.update(this.frame),
       // the two characters line 21 carries this frame; nulls on most of them,

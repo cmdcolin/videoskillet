@@ -56,12 +56,15 @@ describe('the wire order', () => {
     // Append here when a control is added — never insert and never reorder, or
     // every link ever made decodes to a different look. This is the check that
     // makes the rule the build's rather than someone's memory.
-    expect([...URL_KEY_ORDER].toSorted()).toEqual([...CONTROL_KEYS].toSorted())
-    expect(new Set(URL_KEY_ORDER).size).toBe(URL_KEY_ORDER.length)
+    const live = URL_KEY_ORDER.filter(k => k !== null)
+    expect([...live].toSorted()).toEqual([...CONTROL_KEYS].toSorted())
+    expect(new Set(live).size).toBe(live.length)
   })
 
   it('has a slider behind every name, which is what carries the value', () => {
-    expect(URL_KEY_ORDER.filter(k => !SLIDER_BY_KEY.has(k))).toEqual([])
+    expect(
+      URL_KEY_ORDER.filter(k => k !== null && !SLIDER_BY_KEY.has(k)),
+    ).toEqual([])
   })
 })
 

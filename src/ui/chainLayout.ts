@@ -1,6 +1,5 @@
 import {
   CAMERA_LOOP_STAGE,
-  DELAY_LOOP_STAGE,
   LOOP_STAGES,
   MIX_STAGE,
   MIXER_LOOP_STAGE,
@@ -250,19 +249,6 @@ const RETURNS: readonly ReturnSpec[] = [
     y: 18,
     turn: 4,
     self: false,
-  },
-  {
-    // Straddling the mixer's box rather than landing on it twice. It is the
-    // shortest run on the map because it is the shortest loop in the rig: it
-    // leaves the bus and returns to it at the same node, one pass apart.
-    tap: MIX_STAGE,
-    into: MIX_STAGE,
-    loop: 'tape',
-    stage: DELAY_LOOP_STAGE,
-    optical: false,
-    y: 29,
-    turn: 3,
-    self: true,
   },
 ]
 

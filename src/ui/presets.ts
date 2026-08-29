@@ -426,33 +426,6 @@ export const PRESETS: PresetDef[] = [
     mod: [{ target: 'cfbDelayUs', source: 'sine', rateHz: 0.12, depth: 0.01 }],
   },
   {
-    // `name` is the MIDI-binding storage key and stays what it was written as:
-    // renaming it would drop the bindings and saved boards already keyed to it.
-    name: 'loopBin',
-    displayName: 'tape loop',
-    group: 'Feedback loops',
-    blurb:
-      'A loop of tape past three heads: the picture comes back on a beat, a generation older each lap.',
-    patch: {
-      tapeMix: 0.6,
-      tapeLoopMm: 30,
-      tapeHeads: 3,
-      tapeHfLoss: 0.4,
-      tapeNoiseIre: 2,
-      tapeSplice: 0.7,
-      tapeWear: 0.015,
-      tapeWowPct: 0.25,
-      colorUnderMix: 0.5,
-      phosphor: 0.75,
-    },
-    // The loop length is the delay, so walking it walks the echo spacing — and
-    // because nothing time-base corrects the return, each new length hands back
-    // a picture at a different height. Slow, because a transport has mass.
-    mod: [
-      { target: 'tapeLoopMm', source: 'smooth', rateHz: 0.05, depth: 0.06 },
-    ],
-  },
-  {
     name: 'strobeTrails',
     displayName: 'strobe trails',
     group: 'Feedback loops',
@@ -1324,30 +1297,6 @@ export const PRESETS: PresetDef[] = [
       tbStickNs: 8000,
       tbJitterNs: 2200,
       phosphor: 0.88,
-    },
-  },
-  {
-    name: 'eightHeadLap',
-    displayName: 'eight-head lap',
-    group: 'Past the redline',
-    blurb:
-      'Eight heads crowded toward the record end of a six-millimetre loop, running five times play speed. A lap returns eight times at uneven spacing, so the echoes interfere across the frame instead of ticking.',
-    patch: {
-      tapeMix: 0.85,
-      // Unity, not above it. Eight taps summing into a loop that only clips
-      // (the play path rails at 140 IRE) means any spare gain is spent whiting
-      // the whole frame out inside a second — the taps stop being separable,
-      // which is the one thing this patch is for. The wear and the HF loss are
-      // what keep it moving instead.
-      tapeGain: 1,
-      tapeHeads: 8,
-      tapeHeadSpread: 2.4,
-      tapeLoopMm: 6,
-      tapeWear: 0.35,
-      tapeSplice: 0.8,
-      tapeHfLoss: 0.5,
-      colorUnderMix: 0.6,
-      phosphor: 0.78,
     },
   },
   {

@@ -47,7 +47,6 @@ describe('choicesFitTrack', () => {
     expect(inline).toEqual([
       'deinterlace',
       'vbi test signals',
-      'record head',
       'caption decoder',
     ])
   })

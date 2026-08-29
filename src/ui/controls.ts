@@ -97,7 +97,7 @@ export type Phase = (typeof PHASE_ORDER)[number]
 // The three loops, as placements. A loop is not a division of the trunk — it is
 // a machine patched across it — so it is off the spine for the same reason the
 // two branches are, and its groups say which loop rather than which stage.
-const LOOP_PLACES = ['camera', 'mixer', 'tape'] as const
+const LOOP_PLACES = ['camera', 'mixer'] as const
 export type LoopPlace = (typeof LOOP_PLACES)[number]
 
 // Where a group lives in the panel — its single source of placement truth, so
@@ -188,7 +188,6 @@ export const generatorsLive = (
 // one thing that tells the three apart once more than one is running.
 export const CAMERA_LOOP_GROUP = 'Camera feedback (optical)'
 export const MIXER_LOOP_GROUP = 'Mixer feedback (electrical)'
-export const DELAY_LOOP_GROUP = 'Tape loop (mechanical)'
 
 // Which of the three are actually carrying signal, so a drawing can show a
 // running loop rather than only the three that exist in principle. One shape
@@ -254,7 +253,6 @@ interface LoopStage {
 // signal/tapeloop.ts).
 export const CAMERA_LOOP_STAGE = 'Camera feedback'
 export const MIXER_LOOP_STAGE = 'Mixer feedback'
-export const DELAY_LOOP_STAGE = 'Tape loop'
 
 export const LOOP_STAGES: readonly LoopStage[] = [
   {
@@ -277,15 +275,6 @@ export const LOOP_STAGES: readonly LoopStage[] = [
       'electrical — the composite off the bus, crossfaded back against the live signal, subcarrier and all',
     what: 'the composite itself, patched off the bus into an input and crossfaded against the live signal. The subcarrier rides round with it, so each sample of cable delay spins fed-back hue 90° a generation and colour does things optics cannot',
     mix: 'cfbMix',
-  },
-  {
-    loop: 'tape',
-    name: DELAY_LOOP_STAGE,
-    short: 'Tape',
-    blurb:
-      'mechanical — a second deck threaded with a loop of tape, patched across the bus: what goes round is re-recorded and ages a generation a lap',
-    what: 'a second machine threaded with a loop of tape, patched across the bus rather than round the chain: a play head returns what was laid down a lap ago, a record head lays the sum back down, and whatever keeps circulating ages a generation every time round',
-    mix: 'tapeMix',
   },
 ]
 
@@ -1031,203 +1020,6 @@ export const GROUPS: Group[] = [
         step: 0.01,
         unit: '',
         help: "The loop bus multiplied against the live program instead of just summed with it — a ring modulator with one input patched to the machine's own past. Subcarrier against subcarrier lands colour at sum and difference phases neither frame contained; sync against picture mints pulses mid-line; and every product goes round again and is re-multiplied a frame later, so the spectrum folds over itself generation after generation.",
-      },
-    ],
-  },
-  {
-    name: DELAY_LOOP_GROUP,
-    place: 'tape',
-    sliders: [
-      {
-        key: 'tapeMix',
-        label: 'loop mix',
-        min: 0,
-        max: 1,
-        step: 0.01,
-        redline: [0, 0.95],
-        unit: '',
-        help: 'A second machine threaded with a loop of tape: the mixer feeds a record head, and a play head further round the loop returns what was laid down a second or two ago. This is the crossfader toward that return. Because the return gets recorded again, whatever keeps circulating goes round the medium once per lap and ages a generation each time.',
-      },
-      {
-        key: 'tapeLoopMm',
-        label: 'loop length',
-        min: 0.2,
-        max: 66,
-        step: 0.1,
-        redline: [0.6, 66],
-        unit: 'mm',
-        help: 'Millimetres of tape between the record head and the play head. Tape runs at 33.35 mm/s, so this is the delay: 0.6 mm is a single frame, 33 mm a second, 66 mm the whole bin. Length is the physical setting rather than a time, which is why speed wander below moves the delay itself.',
-      },
-      {
-        key: 'tapeGain',
-        label: 'playback gain',
-        min: -3,
-        max: 3,
-        step: 0.01,
-        redline: [-1.2, 1.2],
-        unit: 'x',
-        help: 'Proc-amp trim on the playback. Past ±1 each lap comes back louder than it went out and the loop builds until it clips. Negative inverts every pass, so repeats alternate polarity down the tail.',
-      },
-      {
-        key: 'tapeHfLoss',
-        label: 'generation loss',
-        min: 0,
-        max: 1,
-        step: 0.01,
-        unit: '',
-        help: 'How much of the top of the band the head and tape lose on each pass. The colour subcarrier sits at the very top, so it goes several times faster than the picture under it — repeats fade to grey well before they go soft, and a long tail ends up monochrome. This is the knob that makes the echo sound like tape instead of a delay line.',
-      },
-      {
-        key: 'tapeNoiseIre',
-        label: 'tape noise',
-        min: 0,
-        max: 40,
-        step: 0.1,
-        redline: [0, 8],
-        unit: 'IRE',
-        help: "The medium's own noise floor. It belongs to the oxide, not to the moment, so the same grain is on the same stretch of tape every lap and gets re-recorded rather than averaging away like snow — it builds into standing streaks, and slides bodily through the picture when the speed wanders.",
-      },
-    ],
-  },
-  {
-    // The mechanics of the loop, split off from what the loop sounds like above.
-    // Together they were fourteen controls under one header showing eleven rows —
-    // the longest visible group left in the panel after the Tape and Screen
-    // stages were split, and for the same reason: one header was covering the
-    // loop's mix and length, the deck driving it, the heads reading it, and the
-    // oxide wearing out, which are four different questions.
-    name: 'Loop transport & heads',
-    place: 'tape',
-    sliders: [
-      {
-        key: 'tapeRecord',
-        label: 'record head',
-        min: 0,
-        max: 1,
-        step: 1,
-        unit: '',
-        // `rec` rather than `record`, which is three characters and 4px too wide
-        // to sit beside the label: the two words together come to 92px against
-        // the track column's 88px floor, and the row would stack for the sake of
-        // them (choicesFitTrack in format.ts). It is the word the transport's own
-        // button already uses, so the panel is not learning a second one for it.
-        choices: ['hold', 'rec'],
-        help: `Whether the record head is down on the loop.
-
-          - **hold** — the head lifts and the tape keeps circulating with
-            whatever is already on it: the loop repeats indefinitely and stops
-            taking in the live picture. Playing over a held loop is what makes
-            this a looper rather than an echo.
-          - **rec** — the head drops again and records over what it has.
-
-          A held loop does not fade. Playback loss is what the head does on the
-          way past, not damage to the oxide, so it comes back identical every
-          lap, down to the same grain in the same places.`,
-      },
-      {
-        key: 'tapeTransport',
-        label: 'transport',
-        min: 0,
-        max: 3,
-        step: 1,
-        unit: '',
-        choices: ['reverse', 'stopped', 'forward', 'scrub'],
-        help: `Which way a held loop runs past the heads, and whether the drum
-          is still turning. Only means anything with the record head up.
-
-          - **reverse** — plays the frames back in the order they were laid
-            down, each one whole. The scanner still sweeps the same way, so
-            motion runs backwards while the picture stays a picture.
-          - **stopped** — parks the tape while the drum re-reads one sweep: a
-            still frame you can play live over.
-          - **forward** — the loop as it was recorded.
-          - **scrub** — stalls the drum and keeps pulling backwards, so the head
-            recovers the tape in the order it drags past rather than in sweep
-            order. The waveform itself comes back reversed: sync tips at the
-            wrong end of every line, a burst that reads phase-flipped, a raster
-            arriving end-first. None of that is drawn — it is what a receiver
-            does with a signal running the wrong way.`,
-      },
-      {
-        key: 'tapeShuttle',
-        label: 'shuttle (1 = play)',
-        min: 0,
-        max: 32,
-        step: 0.05,
-        // Forward-only, so pause sits on the left stop and the whole track is
-        // one direction out of it. The deck's strip for this control drew the
-        // same curve privately; it reads the row's now.
-        curve: 'shuttle',
-        redline: [0, 8],
-        unit: 'x',
-        help: 'How fast a held loop runs, as a multiple of play — the transport switch above gives the direction, this gives the speed. Off play speed the head no longer follows a single recorded track: each sweep crosses several, the RF nulls at every crossing, and that many noise bars sweep the picture. It is the same mechanism the deck shuttle uses, but running over your own captured loop instead of the incoming signal — cue and review through two seconds you recorded, with the picture skipping frames as it goes. Note this is why a paused loop has a bar across it and a reversed one has two: at a standstill the head still crosses one track per sweep, and backwards it crosses two.',
-      },
-      {
-        key: 'tapeHeads',
-        label: 'playback heads',
-        min: 1,
-        max: 8,
-        step: 1,
-        redline: [1, 4],
-        unit: '',
-        help: "How many playback heads are in the tape path. Each one is at its own distance from the record head, so a single lap hands the picture back once per head — the heads are a rhythm and the loop is the bar line. A piece of tape is written once and read by all of them on the way past, so a lap's taps are the same generation: the pattern repeats intact and goes a generation darker each time round, rather than fading across the taps.",
-      },
-      {
-        key: 'tapeHeadSpread',
-        label: 'head spacing',
-        min: 0.35,
-        max: 3,
-        step: 0.05,
-        unit: '',
-        fine: true,
-        help: 'Where the heads sit along the path. At 1 they are at even subdivisions of the loop — a straight pattern. Below 1 they crowd toward the far head, so the taps rush and then hold; above 1 they crowd toward the record head, so the taps come quickly and leave a long gap before the lap turns over.',
-      },
-      {
-        key: 'tapeSplice',
-        label: 'splice',
-        min: 0,
-        max: 1,
-        step: 0.01,
-        unit: '',
-        help: 'A loop is a loop because someone joined the ends, and the joint runs the path once per lap, drawing level with each head in turn — the head lifts for the three lines it takes to cross. Since a loop is rarely a whole number of frames long, the bump walks down the picture lap by lap: a metronome you can see, ticking out the tap pattern.',
-      },
-      {
-        key: 'tapeWowPct',
-        label: 'capstan wander',
-        min: 0,
-        max: 20,
-        step: 0.01,
-        redline: [0, 2],
-        unit: '%',
-        help: 'Speed error in the transport. The loop is a fixed length of tape, so a capstan running slow is a longer delay — the echo breathes in and out of time instead of merely wobbling. A percent goes a long way: nothing time-base corrects the return, so a delay that grows by half a frame hands back a picture displaced half a screen, and the repeats slide vertically. This is why mixing a delayed feed needed a frame synchronizer. With colour framing off it drags hue round too.',
-      },
-      {
-        key: 'tapeColourFrame',
-        label: 'colour framing',
-        min: 0,
-        max: 1,
-        step: 1,
-        unit: '',
-        choices: ['hue spins', 'framed'],
-        help: `The subcarrier rides the same tape, so a delay is also a hue
-          rotation — 90° per sample, and a frame of delay lands on 180°.
-
-          - **hue spins** — every change of delay repaints the repeats a
-            different colour.
-          - **framed** — rounds the delay onto a whole subcarrier cycle, costing
-            140 ns of picture shift. Exactly what an edit controller insisting
-            on colour framing is doing.`,
-      },
-      {
-        key: 'tapeWear',
-        label: 'oxide wear',
-        min: 0,
-        max: 1,
-        step: 0.005,
-        redline: [0, 0.2],
-        unit: '',
-        fine: true,
-        help: 'Fraction of the loop with the oxide worn off it. The bad patches are fixed to the tape, so the same lines drop to noise every lap — which is what tells a loop apart from a deck playing a long recording, where a dropout never comes back.',
       },
     ],
   },
@@ -3499,12 +3291,6 @@ const cfbKeyed: SliderNeed = {
   fix: 0.6,
   hint: 'luma key nonzero',
 }
-const tape: SliderNeed = {
-  key: 'tapeMix',
-  ok: above0,
-  fix: 0.5,
-  hint: 'loop mix above 0',
-}
 const dirtyPath: SliderNeed = {
   key: 'bGenlock',
   ok: below1,
@@ -3647,34 +3433,6 @@ export const NEEDS: Partial<Record<ControlKey, SliderNeed>> = {
     fix: 3.58,
     hint: 'resonance freq above 0',
   },
-  tapeLoopMm: tape,
-  tapeRecord: tape,
-  tapeTransport: {
-    key: 'tapeRecord',
-    ok: (v: number) => v < 0.5,
-    fix: 0,
-    hint: 'the record head lifted',
-  },
-  tapeShuttle: {
-    key: 'tapeRecord',
-    ok: (v: number) => v < 0.5,
-    fix: 0,
-    hint: 'the record head lifted',
-  },
-  tapeHeads: tape,
-  tapeHeadSpread: {
-    key: 'tapeHeads',
-    ok: (v: number) => v > 1,
-    fix: 3,
-    hint: 'more than one head',
-  },
-  tapeGain: tape,
-  tapeHfLoss: tape,
-  tapeNoiseIre: tape,
-  tapeWear: tape,
-  tapeSplice: tape,
-  tapeWowPct: tape,
-  tapeColourFrame: tape,
   enhPeakQ: enhPeaking,
   enhPeakBoost: enhPeaking,
   enhSliceIre: {

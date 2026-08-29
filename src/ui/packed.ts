@@ -29,7 +29,7 @@ import type { ControlKey, Controls } from '../core/controls'
 // appending here, never inserting and never reordering. packed.test.ts fails if
 // the two lists stop holding the same names, which turns "append" from a rule
 // someone remembers into one the build checks.
-export const URL_KEY_ORDER: readonly ControlKey[] = [
+export const URL_KEY_ORDER: readonly (ControlKey | null)[] = [
   'deint',
   'capLumaMHz',
   'capChromaMHz',
@@ -185,20 +185,25 @@ export const URL_KEY_ORDER: readonly ControlKey[] = [
   'cfbFilterBoost',
   'cfbServoUs',
   'cfbRing',
-  'tapeMix',
-  'tapeLoopMm',
-  'tapeGain',
-  'tapeHfLoss',
-  'tapeNoiseIre',
-  'tapeWear',
-  'tapeSplice',
-  'tapeRecord',
-  'tapeTransport',
-  'tapeShuttle',
-  'tapeHeads',
-  'tapeHeadSpread',
-  'tapeWowPct',
-  'tapeColourFrame',
+  // Fourteen retired slots: the tape delay loop, cut in full. They stay as
+  // holes rather than closing up because a packed link says "control 84" — take
+  // a name out of the middle and every control after it shifts, so every link
+  // ever published, and every look anyone saved, would decode to a different
+  // one. A hole costs a byte in the reader and nothing on the wire.
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
   'aScramble',
   'aScrambleMode',
   'aTermination',
@@ -298,7 +303,9 @@ export const URL_KEY_ORDER: readonly ControlKey[] = [
   'virLag',
 ]
 
-const INDEX = new Map(URL_KEY_ORDER.map((k, i) => [k, i]))
+const INDEX = new Map(
+  URL_KEY_ORDER.flatMap((k, i) => (k === null ? [] : [[k, i] as const])),
+)
 
 // A value is counted from zero rather than from the control's `min`, and that
 // is the whole of what makes a packed link keep meaning what it meant.
@@ -413,6 +420,7 @@ export function packControls(c: Partial<Controls>): string {
   const bytes: number[] = []
   let prev = -1
   for (const key of URL_KEY_ORDER) {
+    if (key === null) continue
     const v = c[key]
     if (v === undefined || v === DEFAULT_CONTROLS[key] || !Number.isFinite(v)) {
       continue
@@ -454,12 +462,11 @@ export function unpackControls(text: string): Partial<Controls> {
     if (gap === null || value === null) break
     const i = prev + 1 + gap
     prev = i
-    // A control this build has never heard of is a link from a newer app. The
-    // order only grows at the end, so an unknown control is off the end of this
-    // build's list — and because every field is a varint the reader steps over
-    // it and keeps the rest, rather than the whole link opening as default.
+    // A hole (a retired control) or a name off the end of this build's list —
+    // a link from a newer app. Either way every field is a varint, so the
+    // reader steps over it and keeps the rest of the look.
     const key = URL_KEY_ORDER[i]
-    if (key === undefined) continue
+    if (key === undefined || key === null) continue
     const v = fromInt(key, value)
     if (v !== undefined) out[key] = v
   }

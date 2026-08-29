@@ -57,11 +57,6 @@ crossfaded against the live signal. The subcarrier rides round with it, so each
 sample of cable delay spins fed-back hue 90° a generation and colour does things
 optics cannot.
 
-**Tape loop**: a second machine threaded with a loop of tape, patched across the
-bus rather than round the chain: a play head returns what was laid down a lap
-ago, a record head lays the sum back down, and whatever keeps circulating ages a
-generation every time round.
-
 <!-- /generated:loops -->
 
 The tape loop is a machine patched across the chain, not a stage of it — the

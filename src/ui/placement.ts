@@ -1,7 +1,6 @@
 import {
   CAMERA_LOOP_STAGE,
   GROUPS,
-  DELAY_LOOP_STAGE,
   MIXER_LOOP_STAGE,
   SOUND_STAGE,
   SOURCE_B_STAGE,
@@ -45,7 +44,6 @@ const OFF_SPINE_STAGE: Partial<Record<Group['place'], string>> = {
   view: VIEW_STAGE,
   camera: CAMERA_LOOP_STAGE,
   mixer: MIXER_LOOP_STAGE,
-  tape: DELAY_LOOP_STAGE,
 }
 
 // The off-spine placements are named for what they hold; the stage each opens

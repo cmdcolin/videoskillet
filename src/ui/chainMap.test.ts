@@ -17,7 +17,6 @@ import {
   W,
 } from './chainLayout'
 import {
-  DELAY_LOOP_STAGE,
   LOOP_STAGES,
   MIX_STAGE,
   PHASE_ORDER,
@@ -124,27 +123,10 @@ describe('the row the app draws', () => {
     ])
   })
 
-  // All three, every render — the map says three loops because the rig has
-  // three, and a query dims a run rather than stranding it.
-  it('draws all three returns', () => {
-    expect(live().returns.map(r => r.loop)).toEqual(['camera', 'mixer', 'tape'])
-  })
-
-  // The tape loop's label takes the left side, and the clearance is what says
-  // how much slack the map has: 18.3 units between the label and the camera
-  // return's drop into the head of the chain. It used to be 1.6 — the tightest
-  // measurement on the drawing — because the run was labelled 'tape loop' to
-  // keep it off a trunk box marked TAPE. That box is CHANNEL now, so the run
-  // carries one word like the other two and the margin came back with it.
-  it('holds the tape loop’s label on the left', () => {
-    const tape = live().returns.find(r => r.self)
-    if (tape === undefined) throw new Error('no tape run')
-    expect(tape.nameAt.anchor).toBe('end')
-    const want = runLabelWidth(tape.name)
-    expect(want).toBeCloseTo(16.6, 1)
-    // The wall is the camera return's drop into the head of the chain.
-    const drop = live().returns.find(r => r.loop === 'camera')?.to ?? 0
-    expect(tape.nameAt.x - drop - want).toBeCloseTo(18.3, 1)
+  // Both, every render — the map says two loops because the rig has two, and a
+  // query dims a run rather than stranding it.
+  it('draws both returns', () => {
+    expect(live().returns.map(r => r.loop)).toEqual(['camera', 'mixer'])
   })
 
   // The branch cursor never has to push on this row: each of the three takes
@@ -306,7 +288,6 @@ describe('chain map geometry', () => {
     expect(chainLayout(FULL).returns.map(r => r.loop)).toEqual([
       'camera',
       'mixer',
-      'tape',
     ])
     // The camera re-enters at the head of the chain (`compose`, ahead of the
     // encoder) and the other two on the bus out of the mixer, so a filter that
@@ -316,17 +297,15 @@ describe('chain map geometry', () => {
     expect(
       chainLayout([SOURCE_A_STAGE, 'Screen']).returns.map(r => r.loop),
     ).toEqual(['camera'])
-    // The delay loop comes with Mix, because Mix is both of its ends — it is the
-    // one return no filter can strand by dropping the stage it taps.
-    expect(chainLayout([MIX_STAGE]).returns.map(r => r.loop)).toEqual(['tape'])
-    // A tap upstream of the re-entry is not a loop. The delay loop survives: it
-    // taps the box it returns to, so there is no downstream for it to be on the
-    // wrong side of.
+    // Mix alone strands both: the camera re-enters ahead of the encoder and the
+    // mixer loop needs the bus it returns to as well as the box it taps.
+    expect(chainLayout([MIX_STAGE]).returns).toEqual([])
+    // A tap upstream of the re-entry is not a loop.
     expect(
       chainLayout(['Screen', SOURCE_A_STAGE, MIX_STAGE]).returns.map(
         r => r.loop,
       ),
-    ).toEqual(['tape'])
+    ).toEqual([])
   })
 
   // A long return lands on the centre of the box it re-enters and leaves from
@@ -403,33 +382,6 @@ describe('chain map geometry', () => {
         expect(r.name, r.loop).not.toBe('')
       }
   })
-
-  // The tape loop's name is the one with a side to pick. Left is the gap
-  // between the head of the chain and the mixer, and it is the side that keeps
-  // the label clear of the trunk's own boxes — so left whenever it fits, and
-  // the right-hand place is the fallback for a row too short to hold it.
-  it('sets the tape loop’s name over the gap, not over a box', () => {
-    const { boxes, returns } = chainLayout(FULL)
-    const tape = returns.find(r => r.self)
-    const box = boxes.find(b => b.name === 'Channel')
-    if (tape === undefined || box === undefined) throw new Error('no tape run')
-    // The run carries the machine's short name, which is one word for all
-    // three now that no trunk box is called after one of them.
-    expect(tape.name).toBe(
-      LOOP_STAGES.find(l => l.name === DELAY_LOOP_STAGE)?.short,
-    )
-    expect(tape.nameAt.anchor).toBe('end') // set leftwards, clear of the boxes
-    expect(tape.nameAt.x).toBeLessThan(box.x - box.w / 2)
-
-    // …and to the other side when a filter leaves no room on that one, rather
-    // than off the left edge of the drawing. TAPE is not on that row to be
-    // confused with, which is what makes the second choice the safe one.
-    const tight = chainLayout([MIX_STAGE, 'Receiver', 'Screen'])
-    const moved = tight.returns.find(r => r.self)
-    expect(moved?.nameAt.anchor).toBe('start')
-    expect(moved?.nameAt.x).toBeGreaterThan(0)
-  })
-
   // Whichever side it lands on, a label has to clear the wires that cross its
   // band. The runs drop their verticals from the trunk up to their own height,
   // so a label can only ever collide with a run drawn *above* it — and the tape
