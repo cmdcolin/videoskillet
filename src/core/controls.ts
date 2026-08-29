@@ -104,6 +104,9 @@ export const DEFAULT_CONTROLS = {
   // The set's caption decoder, reading line 21 off the signal it actually got
   cc: 0, // 0 the decoder is off, 1 it is running
   ccBox: 0.7, // black box behind the characters
+  // A pin held on the character generator's font ROM
+  ccRomAddr: 0, // address line held high, 1-based (0 = the chip is intact)
+  ccRomData: 0, // data line held, 1-based; negative holds it low
   // bent video enhancer, patched inline between the deck and the set
   enhClampUs: 0, // clamp gate slid off the back porch (0 = correct)
   enhDroopUs: 0, // coupling-capacitor time constant (0 = DC coupled, no droop)

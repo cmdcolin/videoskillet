@@ -41,6 +41,7 @@ import {
   CC_PAGE,
   CC_ROWS,
   CC_SET,
+  GLYPH_COUNT,
   GLYPH_H,
   GLYPH_W,
 } from './captionrom'
@@ -253,6 +254,11 @@ export const PARAM_DEFS = [
   ['ccChar1', 'u32'],
   ['cc', 'f32'], // the set's caption decoder: 0 off, 1 decoding line 21
   ['ccBox', 'f32'], // opacity of the black box behind the caption
+  // A pin held on the font ROM. Which pin is the whole effect: the address bus
+  // carries the character code in its high lines and the row within the cell in
+  // its low ones, and the data bus is the eight dots across one row.
+  ['ccRomAddr', 'f32'], // address line held high, 1-based (0 = none)
+  ['ccRomData', 'f32'], // data line held, 1-based; negative holds it low (0 = none)
   // bent video enhancer, inline between the deck and the set
   ['enhClampOff', 'f32'], // clamp gate displaced off the back porch, samples
   ['enhDroop', 'f32'], // coupling-capacitor leak per sample (0 = DC coupled)
@@ -419,6 +425,7 @@ const CC_SET = ${CC_SET}u;
 const CC_CR = ${CC_CR}u;
 const GLYPH_W = ${GLYPH_W}u;
 const GLYPH_H = ${GLYPH_H}u;
+const GLYPH_COUNT = ${GLYPH_COUNT}u;
 const TAPE_LEN = ${TAPE_FRAMES * SAMPLES_PER_LINE * LINES}u; // delay loop capacity, samples
 const IRE_SYNC = ${IRE_SYNC}.0;
 const IRE_BLANK = ${IRE_BLANK}.0;

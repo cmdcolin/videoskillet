@@ -279,6 +279,8 @@ export const URL_KEY_ORDER: readonly ControlKey[] = [
   'frameLock',
   'cc',
   'ccBox',
+  'ccRomAddr',
+  'ccRomData',
 ]
 
 const INDEX = new Map(URL_KEY_ORDER.map((k, i) => [k, i]))

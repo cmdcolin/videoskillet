@@ -449,7 +449,27 @@ and generate their own cross-colour. |
 | **caption box** | 0–1 | How black the box behind the characters is. Broadcast
 captions sat in a solid one because type keyed straight over picture is
 unreadable the moment the picture is bright — wind it out and you get exactly
-that problem, which is the one every set-top caption box had. |
+that problem, which is the one every set-top caption box had. | | **rom address
+line** | 0–11 | A pin held high on the character generator's font ROM — the
+literal circuit bend, and a different thing from a bad feed.
+
+          Which line decides everything, because of how the chip is addressed.
+          The **low** lines carry the row inside the cell, so holding one makes
+          every glyph repeat a scan line through itself and the whole font grows
+          a seam. The **high** lines carry the character code, so holding one
+          substitutes the entire font for its neighbour a fixed distance away in
+          the ROM — text that keeps its length and its rhythm and comes out
+          systematically wrong.
+
+          Held rather than switched, the way a jumper does it, so a glyph whose
+          bit was already set comes back untouched and the damage is uneven.
+          Nothing here is random: the same text bends the same way every time,
+          which is what tells a bent machine from a noisy wire. |
+
+| **rom data line** | -8–8 | The other bus. A font ROM's data lines are the
+eight dots across one row, so holding one lights or kills the same column of
+every character on the page — a stripe straight down the font rather than a
+fault in any one letter. Positive holds the line high, negative holds it low. |
 
 ## Screen
 

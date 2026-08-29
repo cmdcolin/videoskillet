@@ -181,16 +181,24 @@ character generator goes wrong.
   carrying attributes per row through `dotGrid`. Double height is the cheaper of
   the two and the one you saw more often. A chyron has both and is coloured, so
   the keyer section below is what would pay for them.
-- **Bending the ROM, which `garble` is not.** `garbleRows` models a bad
-  _transmission_: random hits on bytes in flight. Shorting a line on the
-  character generator's own font ROM is the other failure and it is
-  deterministic — an address line held maps every glyph to its neighbour a fixed
-  distance away in the ROM, so the text keeps its length and its rhythm and
-  comes out systematically wrong; a data line held lights or kills the same dot
-  row in _every_ glyph, so the whole font grows a slit through it. Both are a
-  mask in `dotGrid` rather than a hash, and they read nothing like noise: a bend
-  is a wrong machine, not a bad wire. Holding a line on the page-address counter
-  instead walks the entire page diagonally through itself a few cells a field.
+- **Bending the card's own ROM.** Shipped for the caption generator (`ccRomAddr`
+  / `ccRomData`, `romRead` in `decode.wgsl`) and not for the card, because the
+  caption's font is a ROM in a buffer where the card's is a canvas raster — the
+  bend is two lines there and a rebuild of `dotGrid` here. What the shipped one
+  taught, for whoever does the card: holding a pin is not one effect but a range
+  of them, and the range comes out of the wiring rather than being authored. The
+  address bus carries the character code in its high lines and the row inside
+  the cell in its low ones, so one knob sweeps from every glyph growing a seam
+  to the whole font substituting. And the pin is held _high_ rather than
+  switched, so a glyph whose bit was already set is untouched and the damage is
+  uneven the way a jumper's is.
+
+  This is what separates a bend from `garbleRows`, which models a bad
+  _transmission_ — random hits on bytes in flight. A bend is deterministic: the
+  same text comes out wrong the same way every time, because the machine is
+  wrong rather than the wire. Holding a line on the page-address counter is the
+  third one and is unbuilt in both places: it walks the entire page diagonally
+  through itself a few cells a field.
 
 ## The caption channel — shipped
 

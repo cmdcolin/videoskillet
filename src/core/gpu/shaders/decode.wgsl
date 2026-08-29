@@ -260,6 +260,35 @@ const CC_CELL_H = GLYPH_H * CC_SCALE;
 const CC_X0 = (ACTIVE_W - CC_COLS * CC_CELL_W) / 2u;
 const CC_Y0 = ACTIVE_H - CC_ROWS * CC_CELL_H - ACTIVE_H / 8u;
 
+// One row of one glyph, off a font ROM with a pin held on it.
+//
+// Which pin is the entire effect, and it falls out of how the chip is wired
+// rather than being three effects in a list. The address bus carries the
+// character code in its high lines and the row inside the cell in its low ones:
+// hold a low line and every glyph repeats a scan line through itself, hold a
+// high one and the whole font substitutes to its neighbour a fixed distance
+// away. The data bus is the eight dots across one row, so holding one of those
+// lights or kills the same column of every character on the page.
+//
+// Held *high* rather than switched, which is what a jumper does — so a glyph
+// whose bit was already set comes back untouched, and the damage is uneven in
+// the way a real bend's is. Deterministic either way, and that is what makes
+// this a different thing from `garble`: the machine is wrong, not the wire.
+fn romRead(glyph: u32, row: u32) -> u32 {
+  var addr = glyph * GLYPH_H + row;
+  if (P.ccRomAddr > 0.5) {
+    addr = addr | (1u << u32(P.ccRomAddr - 1.0));
+  }
+  var bits = cc[addr % (GLYPH_COUNT * GLYPH_H)];
+  let d = i32(P.ccRomData);
+  if (d > 0) {
+    bits = bits | (1u << u32(d - 1));
+  } else if (d < 0) {
+    bits = bits & ~(1u << u32(-d - 1));
+  }
+  return bits;
+}
+
 // (ink, covered) for one screen pixel: whether a glyph lights it, and whether a
 // cell the decoder actually wrote covers it at all. The second is what the black
 // box keys off — a real caption boxed the characters it had received, not the
@@ -285,7 +314,7 @@ fn captionAt(x: u32, y: u32) -> vec2f {
     let solid = gx > 0u && gx + 1u < GLYPH_W && gy > 0u && gy + 1u < GLYPH_H;
     return vec2f(select(0.0, 1.0, solid), 1.0);
   }
-  return vec2f(f32((cc[(cell & 0xffu) * GLYPH_H + gy] >> gx) & 1u), 1.0);
+  return vec2f(f32((romRead(cell & 0xffu, gy) >> gx) & 1u), 1.0);
 }
 
 @compute @workgroup_size(TILE_WG, 1, 1)

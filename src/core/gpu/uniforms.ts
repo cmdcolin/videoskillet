@@ -188,6 +188,8 @@ export function uniformValues(c: Controls, env: UniformEnv) {
     vbi: c.vbi,
     cc: c.cc,
     ccBox: c.ccBox,
+    ccRomAddr: c.ccRomAddr,
+    ccRomData: c.ccRomData,
     enhClampOff: c.enhClampUs * 1e-6 * SAMPLE_RATE,
     // RC leak per sample from the coupling time constant; 0 us is the
     // DC-coupled box, which never lets the level move at all.
