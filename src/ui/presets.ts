@@ -75,21 +75,6 @@ export const PRESETS: PresetDef[] = [
     },
   },
   {
-    name: 'tapeCapture',
-    displayName: 'tape capture',
-    group: 'Tape wear',
-    blurb:
-      'A file digitised off a home deck, played through a clean chain: the softness, smeared colour and blotchy chroma were in the source before anything here touched it.',
-    patch: {
-      deint: 1,
-      capLumaMHz: 3,
-      capChromaMHz: 0.5,
-      capYcDelayNs: 150,
-      capNoiseIre: 2.5,
-      capChromaNoiseIre: 10,
-    },
-  },
-  {
     name: 'protectedTape',
     displayName: 'protected tape',
     group: 'Tape wear',
@@ -132,28 +117,6 @@ export const PRESETS: PresetDef[] = [
       dropoutLenUs: 9,
       ghostDelayUs: 3,
       ghostGain: 0.15,
-      demodMHz: 0.45,
-    },
-  },
-  {
-    name: 'stickyShed',
-    displayName: 'sticky shed',
-    group: 'Tape wear',
-    blurb:
-      'A tape whose binder has gone hygroscopic, played unbaked: it grabs the drum, tension builds, breaks free, re-sticks — the relaxation oscillator behind squealing tapes. Bands of shear lean line by line, snap back, and hang where a strong patch holds, and because it is real timebase error the color-under phase rainbows at every slip boundary. Shedding oxide takes the RF down with it: heavy grain and a rash of dropouts where the coating let go.',
-    patch: {
-      tbStickNs: 1800,
-      tbJitterNs: 100,
-      lumaMHz: 2.5,
-      lumaPeak: 1,
-      noiseIre: 5,
-      colorUnderMix: 1,
-      chromaNoiseIre: 6,
-      underJitterDeg: 6,
-      headSwitchShiftUs: 1,
-      headSwitchNoise: 0.5,
-      dropoutRate: 18,
-      dropoutLenUs: 7,
       demodMHz: 0.45,
     },
   },
@@ -242,51 +205,6 @@ export const PRESETS: PresetDef[] = [
     },
   },
   {
-    name: 'fmFold',
-    displayName: 'fm fold',
-    group: 'Tape wear',
-    blurb:
-      'The white clip set too hot: every hard dark-to-bright edge overshoots past the FM response cliff and the discriminator folds back, trailing a black comet that boils frame to frame. Colour is recorded separately, so it rides straight through the fold — saturated hue smeared over black.',
-    patch: {
-      fmOverdev: 0.72,
-      fmStreakUs: 0.45,
-      lumaPeak: 2.4,
-      lumaMHz: 3.2,
-      colorUnderMix: 1,
-      chromaGain: 1.3,
-      noiseIre: 2.5,
-    },
-  },
-  {
-    name: 'colourLate',
-    displayName: 'colour late',
-    group: 'Tape wear',
-    blurb:
-      'Chroma group delay mistrimmed against luma: every coloured area sits bodily sideways off the edge it belongs to, bleeding out of one side of things and falling short of the other. The burst travels the same wrong path, so hue stays correct — displaced colour, not rotated, which is what tells it from a timebase fault.',
-    patch: {
-      ycDelayNs: 1120,
-      colorUnderMix: 1,
-      chromaGain: 1.4,
-      lumaMHz: 3,
-      noiseIre: 2,
-    },
-  },
-  {
-    name: 'tiredAmplifier',
-    displayName: 'tired amplifier',
-    group: 'Tape wear',
-    blurb:
-      'Both of the video amp’s brightness-dependent errors at once: saturation drains out of the highlights while the shadows keep theirs, and hue swings with the luma underneath it — so a face turns one way in the light and the other in the shadow. Measured on every VTR spec sheet ever printed as DG% and DP°.',
-    patch: {
-      diffGain: 0.8,
-      diffPhaseDeg: 34,
-      lumaPeak: 1.6,
-      chromaGain: 1.2,
-      agc: 0.3,
-      noiseIre: 2,
-    },
-  },
-  {
     name: 'broadcast',
     group: 'RF / Broadcast',
     blurb:
@@ -306,20 +224,6 @@ export const PRESETS: PresetDef[] = [
       ghostGain: 0.18,
       agc: 0.4,
       tbJitterNs: 80,
-    },
-  },
-  {
-    name: 'adjacentChannel',
-    displayName: 'adjacent channel',
-    group: 'RF / Broadcast',
-    blurb:
-      'The next channel up the cable through a worn-out trap: not their picture — their carriers. Their sound lays a fine 1.5 MHz weave, their blanking crosses as slanted dark bars with the broad windshield-wiper band sweeping at its own drifting rate, and where their content beats into our chroma band the decoder invents confetti colour no camera ever shot.',
-    patch: {
-      rfAdjacent: 0.7,
-      rfMistuneMHz: 0.2,
-      noiseIre: 2,
-      agc: 0.5,
-      demodMHz: 0.8,
     },
   },
   {
@@ -392,25 +296,6 @@ export const PRESETS: PresetDef[] = [
       noiseIre: 3,
       phosphor: 0.8,
     },
-  },
-  {
-    name: 'cbBreakthrough',
-    displayName: 'cb breakthrough',
-    group: 'RF / Broadcast',
-    blurb:
-      'An illegal linear two streets over pushing into the front end: a slow herringbone crawling over a weak picture, with the sound carrier leaking past its trap on top. The 1970s in one look.',
-    patch: {
-      ingress: 0.6,
-      soundIre: 7,
-      rfSnow: 0.3,
-      rfAdjacent: 0.25,
-      noiseIre: 6,
-      agc: 0.5,
-      lumaMHz: 3.4,
-    },
-    // A neighbour keying a microphone is not a steady tone — it comes and goes
-    // in bursts, which is what makes it read as somebody talking.
-    mod: [{ target: 'ingress', source: 'hold', rateHz: 0.6, depth: 0.4 }],
   },
   {
     name: 'scrambledChannel',
@@ -950,14 +835,6 @@ export const PRESETS: PresetDef[] = [
     },
   },
   {
-    name: 'reversePolarity',
-    displayName: 'reverse polarity',
-    group: 'Bad cables',
-    blurb:
-      'Signal and ground fully swapped: sync inverts too, so the picture tears and rolls as colors flip.',
-    patch: { polarityFlip: 1 },
-  },
-  {
     name: 'noTerminator',
     displayName: 'no terminator',
     group: 'Bad cables',
@@ -975,14 +852,6 @@ export const PRESETS: PresetDef[] = [
     // strong AGC would quietly rescue this fault; a weak one keeps the look
     // the blurb promises while still breathing the way a real set's would.
     patch: { termination: -1.0, agc: 0.2, hHold: 0.5, noiseIre: 2 },
-  },
-  {
-    name: 'chromaOnly',
-    displayName: 'chroma only',
-    group: 'Bad cables',
-    blurb:
-      'Only the chroma pin reaches the input — burst-locked color glowing on black, no luma to hold sync. The s-video miswire preset is this same patch at partial contact.',
-    patch: { chromaPinOnly: 1, chromaGain: 1.4 },
   },
   {
     name: 'looseConnector',
