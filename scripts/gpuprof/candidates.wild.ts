@@ -178,6 +178,12 @@ export const candidates: Candidate[] = [
       synthAHz: 3579545,
       synthColor: 0.9,
       synthLevel: 1,
+      // Mid travel, not the 0 it defaults to. The colorizer phase runs 0..360
+      // and the routing below is bipolar, so based at the floor it spends the
+      // clip clamped and the picture holds one hue — which is exactly what the
+      // first render of this candidate showed and got diagnosed as a blown-out
+      // field. `Runner.run` now warns when a routing pins against an end.
+      synthHueDeg: 180,
       fbMix: 0.72,
       fbGain: 1.1,
       fbZoom: 1.018,

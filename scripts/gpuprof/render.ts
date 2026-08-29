@@ -176,6 +176,14 @@ export class Runner {
       sourceA: this.srcA,
       sourceB: this.srcB,
     })
+    // How many frames each routing spent pinned against a slider end. A
+    // bipolar LFO on a control that rests at its own min or max loses half its
+    // travel, and a slow one loses all of it: a triangle starts at -1 and takes
+    // most of a 4-second clip to climb back to zero, so a routing based at the
+    // floor renders as its resting frame and reports as a look that does
+    // nothing. That fault cost a round of candidates and a wrong diagnosis, and
+    // it is invisible in every column a sheet prints.
+    const pinned = (mod ?? []).map(() => 0)
     const wanted = new Map(cap.tail.map((t, i) => [frames - 1 - t, i]))
     const shots: Float32Array[] = cap.tail.map(
       () => new Float32Array(cap.w * cap.h * 3),
@@ -185,13 +193,9 @@ export class Runner {
         const values = modState.update(waves, 0, 0, this.rand)
         for (const [i, r] of mod.entries()) {
           const def = this.span(r.target)
-          live[r.target] = Math.min(
-            def.max,
-            Math.max(
-              def.min,
-              rest[r.target] + values[i] * r.depth * def.travel,
-            ),
-          )
+          const want = rest[r.target] + values[i] * r.depth * def.travel
+          live[r.target] = Math.min(def.max, Math.max(def.min, want))
+          if (want < def.min || want > def.max) pinned[i]++
         }
       }
       const px = animate?.(f)
@@ -210,6 +214,13 @@ export class Runner {
       this.device.queue.submit([enc.finish()])
       const slot = wanted.get(f)
       if (slot !== undefined) shots[slot] = await this.grab(g, cap.w, cap.h)
+    }
+    for (const [i, r] of (mod ?? []).entries()) {
+      if (pinned[i] > frames / 4) {
+        console.warn(
+          `  mod ${r.source} on ${r.target}: clamped ${Math.round((100 * pinned[i]) / frames)}% of the run — base ${rest[r.target]} sits near an end of ${this.span(r.target).min}..${this.span(r.target).max}`,
+        )
+      }
     }
     return { shots }
   }

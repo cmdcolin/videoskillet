@@ -8,6 +8,9 @@
 //     presets --only=vhs,fmFold   a named shortlist
 //     candidates --spec=scripts/gpuprof/candidates.feedback.ts
 //
+// `--nomod` renders every look at its resting frame instead of driving its
+// routings, which is the ablation for whether a look is its patch or its LFO.
+//
 // `--srcnoise=1` renders over TV static instead of a test chart (2 = VHS blank
 // tape), which is what most of the published demos are built on.
 //
@@ -17,7 +20,8 @@
 // headed Firefox and the real app. This one never opens a window, so it can run
 // while someone is using the machine — the trade is that it drives the graph
 // rather than the app, so what it cannot show is anything the UI layer adds: a
-// modulation routing, a video source, a transition.
+// video source, a transition, or a routing that needs audio or a finger on the
+// key. The oscillator shapes it does drive, both a preset's and a candidate's.
 //
 // Each tile is a strip of frames rather than one still, because half of what is
 // worth keeping here is motion — a roll, a boil, a loop still winding up — and
@@ -36,6 +40,36 @@ interface Preset {
   group: string
   blurb: string
   patch: Partial<Controls>
+  mod?: readonly {
+    target: string
+    source: string
+    rateHz: number
+    depth: number
+  }[]
+}
+
+// The six shapes `Runner` can generate. A preset may also route `level`, `hit`
+// or `trig`, which need audio or a finger on the key — the harness has neither,
+// so those are dropped here and counted, rather than handed over to be silently
+// ignored downstream.
+const DRIVABLE = new Set([
+  'sine',
+  'triangle',
+  'walk',
+  'smooth',
+  'hold',
+  'lorenz',
+])
+const undrivable: string[] = []
+
+function drivable(
+  name: string,
+  mod: Preset['mod'],
+): readonly Routing[] | undefined {
+  if (mod === undefined) return undefined
+  const out = mod.filter(r => DRIVABLE.has(r.source)) as readonly Routing[]
+  if (out.length < mod.length) undrivable.push(name)
+  return out.length > 0 ? out : undefined
 }
 interface PresetsModule {
   PRESETS: Preset[]
@@ -73,6 +107,11 @@ const STRIP = [20, 16, 12, 8, 4, 0]
 // the reason it is opt-in.
 const VIDEO = Deno.args.includes('--video')
 const VIDEO_FRAMES = Number(arg('vframes') ?? 150)
+// Drop every routing, so a look renders at the resting frame its patch alone
+// describes. The ablation that answers "is this the patch or is it the LFO?" —
+// and the one that reproduces any sheet rendered before the routings were
+// plumbed through at all.
+const NOMOD = Deno.args.includes('--nomod')
 
 interface Item {
   name: string
@@ -184,14 +223,25 @@ async function main(): Promise<void> {
   if (mode === 'candidates') {
     const spec = arg('spec')
     if (spec === undefined) throw new Error('candidates needs --spec=<file.ts>')
-    const mod = (await import(new URL(spec, `file://${Deno.cwd()}/`).href)) as {
-      candidates: { name: string; blurb: string; patch: Partial<Controls> }[]
+    // Named `loaded`, not `mod`: the shadow is how the routings came to be
+    // dropped here for a whole round of candidates while every other part of
+    // the plumbing was in place.
+    const loaded = (await import(
+      new URL(spec, `file://${Deno.cwd()}/`).href
+    )) as {
+      candidates: {
+        name: string
+        blurb: string
+        patch: Partial<Controls>
+        mod?: readonly Routing[]
+      }[]
     }
-    for (const c of mod.candidates) {
+    for (const c of loaded.candidates) {
       items.push({
         name: c.name,
         blurb: c.blurb,
         controls: presetControls(c.patch),
+        mod: c.mod,
       })
     }
   } else if (mode === 'presets') {
@@ -205,6 +255,7 @@ async function main(): Promise<void> {
         name: p.displayName ?? p.name,
         blurb: `${p.group} — ${p.blurb}`,
         controls: presetControls(p.patch),
+        mod: drivable(p.displayName ?? p.name, p.mod),
       })
     }
   } else {
@@ -252,7 +303,7 @@ async function main(): Promise<void> {
       FRAMES,
       { tail, w: TW, h: TH },
       move,
-      it.mod,
+      NOMOD ? undefined : it.mod,
     )
     const slug = `${String(i).padStart(3, '0')}-${it.name.replaceAll(/[^a-z0-9]+/gi, '-').toLowerCase()}`
     const files: string[] = []
@@ -296,6 +347,11 @@ async function main(): Promise<void> {
     ),
   )
   console.log(`\n${items.length} tiles → ${outDir}/manifest.json`)
+  if (undrivable.length > 0) {
+    console.log(
+      `note: routings the harness cannot drive (audio or trigger) dropped from: ${undrivable.join(', ')}`,
+    )
+  }
 }
 
 await main()

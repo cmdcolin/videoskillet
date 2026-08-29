@@ -253,11 +253,82 @@ structure that evolves** — a loop crossing unity and bleeding back, a stack of
 roll seams at different ages, an echo whose spacing never repeats. What reads as
 noise is high-entropy hash, however energetic the numbers say it is.
 
-`motion` is worth watching from both ends. Under about 5 a look is a still;
-above about 50 it is probably hash. The band that has produced every keeper so
-far is 10–40.
+`motion` is worth watching from both ends, but **only within one sheet** — see
+the section below. The absolute figures in the table above are not reproducible
+from any invocation this repo records, and motion scales with the frame spacing
+(`--video` reads adjacent frames, a stills strip reads every fourth) and with
+the source. What survives re-measurement is the _ordering_: on the same sheet,
+every look kept sat below every look cut, by a factor of three or more. Read it
+as a rank, never as a threshold.
 
 One more thing that number cannot see: it is measured between _adjacent_ frames,
 so a slow sweep reports as motionless. A hue rotation at 0.2 Hz moves 1.2° a
 frame and scores under 3 while cycling the whole wheel in five seconds. Read it
 alongside a clip, never instead of one.
+
+## The routings were never applied
+
+The largest correction in this file, and it invalidates numbers in the tables
+above rather than adding to them.
+
+`sheet.ts` grew the ability to drive the modulation bay, and every part of the
+plumbing landed except one line: the candidate loader built its items without
+copying `mod` off the spec, and its inline cast did not mention the field, so
+`tsc` had nothing to object to. `Item.mod` was declared, `runner.run` was handed
+it, and it was `undefined` for every tile ever rendered. The local name for the
+imported spec module was `mod`, which is how it went unseen.
+
+Presets went the same way, and that is the more expensive half: 23 of the 84
+carry a routing, including every feedback look in the table above.
+
+What it changes, measured on the same sheet with the routings off and on:
+
+| preset             | dep off | dep on | motion off | motion on |
+| ------------------ | ------: | -----: | ---------: | --------: |
+| vertical hold gone |    60.6 |   30.3 |       72.2 |      70.7 |
+| runaway            |    46.0 |   38.1 |       37.7 |       4.9 |
+| spiral             |    29.4 |   44.9 |       12.7 |      12.1 |
+| sync in the loop   |    53.2 |   56.7 |       12.4 |      26.1 |
+| chroma rails       |    86.8 |   99.0 |       58.5 |      70.7 |
+| zoom bloom         |    21.3 |   29.8 |       15.4 |      13.1 |
+| both loops         |    25.1 |   33.4 |       11.4 |      10.0 |
+| lorenz loop        |    41.5 |   31.7 |       13.3 |      18.9 |
+
+`both loops` is the one to notice: the note above keeps it "at dep 26, the
+lowest departure in its sheet", and with its LFO running it is 33.4. `runaway`
+is the other direction — its whole description is a gain walked past unity by an
+LFO, and driving that LFO drops its motion from 37.7 to 4.9, because the sweep
+spends half its time below unity where the constant setting never did. Neither
+look was judged as itself.
+
+`--nomod` renders any sheet at its resting frame, which is both the ablation for
+"is this the patch or the LFO" and the way to reproduce anything measured before
+the fix.
+
+## A routing based at a slider end is a routing that does nothing
+
+The other half of the same afternoon, and the reason `synth in the loop` came
+back locked to one hue.
+
+The bay's LFOs are **bipolar**: a routing swings `±depth × travel` around
+wherever the control rests. So a control resting at its own minimum loses half
+its excursion to the clamp, and a slow routing loses all of it — the triangle is
+`1 - 4|ph - 0.5|`, which starts at −1 and takes most of a four-second clip to
+climb back to zero.
+
+`synthHueDeg` runs 0–360 and defaults to 0. The candidate routed a 0.06 Hz
+triangle onto it at full depth and rendered identically, to two decimal places,
+with the routing driven and with it off: the control sat clamped at 0 for 96% of
+the run. Sampling the frame mean per clip says it plainly — as shipped the
+picture holds R170 G199 B15 from the first frame to the last, and based at 180
+the same patch walks green → cyan → blue.
+
+This was previously written up here as a level problem: the field was blown to
+near-white, and rotating the hue of near-white does nothing. That was wrong. The
+hue was not rotating at all, and the three routings that "produced dep 88.61 /
+88.64 / 88.68, essentially identical" were identical because none of them ran.
+
+`Runner.run` now warns when a routing spends more than a quarter of the run
+against an end, naming the base and the range. It catches `bDetuneHz` based at
+1500 in a ±3000 span as well, at 28%. None of the 23 presets trip it — those
+were authored with the bipolar swing in mind, and the candidate was not.
