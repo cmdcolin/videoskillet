@@ -2,6 +2,47 @@
 
 All notable changes to ntsc.js are documented here.
 
+## [0.32.0](https://github.com/cmdcolin/ntsc.js/compare/v0.31.1...v0.32.0) - 2026-08-29
+
+### Features
+- *(ui)* [`0ea5069`](https://github.com/cmdcolin/ntsc.js/commit/0ea506993f67264a190dbf86fd3e593247830c33) text buttons for randomize and reset, plus a hold-to-stab
+- *(signal)* [`713da42`](https://github.com/cmdcolin/ntsc.js/commit/713da42c28df18c926481930eec1060b231eecb9) decode line 21, so a caption is data the chain can misspell
+- *(ui)* [`579861f`](https://github.com/cmdcolin/ntsc.js/commit/579861f2775e62187eb692cb72309ad35074691d) hold a pin on the caption generator's font ROM
+- *(signal)* [`dd1c3a5`](https://github.com/cmdcolin/ntsc.js/commit/dd1c3a56c67d47134ca05ac3d8658a8c9052511d) a character generator at the switcher, keyed onto the program bus
+- *(ui)* [`4a27088`](https://github.com/cmdcolin/ntsc.js/commit/4a270880b540f1fddea890ae7753c3b81232e02a) give the modulation badge a chip and a labeled confirm
+- *(gpu)* [`ae30033`](https://github.com/cmdcolin/ntsc.js/commit/ae30033126bf07dad48481371c1cc57f55dbb0c2) a headless survey for which knobs and which presets earn their place
+- *(gpu)* [`4c7b6e6`](https://github.com/cmdcolin/ntsc.js/commit/4c7b6e6a5e38510d361018001a33dee792ea87ac) let the contact sheet pick its source and its shortlist
+- *(signal)* [`fa6aa80`](https://github.com/cmdcolin/ntsc.js/commit/fa6aa802d1dfa089aa75b96ec9c2d061ef8765b0) a VIR corrector, servoed off the reference the chain just damaged
+- *(ui)* [`c168230`](https://github.com/cmdcolin/ntsc.js/commit/c168230cf7b78dbd294f72c760bae734f5c9998e) cut nine presets that were not worth clicking
+- [`ecec59e`](https://github.com/cmdcolin/ntsc.js/commit/ecec59e5ca6129b7afac509d274054ef29ca50ea) cut the tape delay loop
+- *(gpu)* [`6f11664`](https://github.com/cmdcolin/ntsc.js/commit/6f11664b3eb2a1eac87df30694ddb5528fad74d4) give the harness a moving picture, and fourteen loops to judge
+- *(ui)* [`bad6469`](https://github.com/cmdcolin/ntsc.js/commit/bad64698b2f6684f480bb6cfba8031fe87371f6a) seven feedback presets, picked by eye rather than by departure
+- *(ui)* [`4fe83c3`](https://github.com/cmdcolin/ntsc.js/commit/4fe83c33fe0fcf41be0717bd85628f728f8f834c) per-card presets — a row of chips over each card's rows
+- *(gpu)* [`4f1efb7`](https://github.com/cmdcolin/ntsc.js/commit/4f1efb72004a570facb2450efb305f6a62421317) the two colour-by-arithmetic routes that survive, and what they cost
+- *(gpu)* [`0f35e72`](https://github.com/cmdcolin/ntsc.js/commit/0f35e7295aae0b1cdb2fa0577476e0922864f5c9) drive the modulation bay and capture video, then use both
+- *(ui)* [`de917a2`](https://github.com/cmdcolin/ntsc.js/commit/de917a22f3e9efc9472cd752d9fe5b83b0868b7b) four looks that go somewhere without coming apart
+
+### Fixes
+- *(ui)* [`24d9527`](https://github.com/cmdcolin/ntsc.js/commit/24d9527fc91de9d6c1db5c5a53e1bfc110cb75e2) give the minor-adjustment card click-away and a close button
+- *(gpu)* [`b7af466`](https://github.com/cmdcolin/ntsc.js/commit/b7af466fd78f45dcda1f91339385cefc69780a85) the headless profiler decoded every frame black
+- *(ui)* [`4cab2e8`](https://github.com/cmdcolin/ntsc.js/commit/4cab2e8dfa4515de646bad4e255afed639a06df7) a stab is one nudge; hold it a beat before it becomes a train
+
+### Refactor
+- *(ui)* [`6281d3a`](https://github.com/cmdcolin/ntsc.js/commit/6281d3a428af1cb6bfa947dc4508c79f52cda8fb) put a link's control number on the control, not in a list beside it
+
+### Documentation
+- [`50dccfa`](https://github.com/cmdcolin/ntsc.js/commit/50dccfa7f245268619c5b8fe5eab76e2cb6924e8) three character-generator ideas, and where each one belongs
+- [`6fb1bf1`](https://github.com/cmdcolin/ntsc.js/commit/6fb1bf141455b36fdbf3804e6b9fa7ae45fc335f) record what building the caption channel taught, and what it left
+- [`53aef06`](https://github.com/cmdcolin/ntsc.js/commit/53aef06ed41a1d2ad4459956639c5f28fef198d9) read the preset survey on two sources, not one
+- [`05c76f0`](https://github.com/cmdcolin/ntsc.js/commit/05c76f056fd481fe3c654edc0d35d228dd01c605) two rails the VBI already pays for, in the backlog
+- [`405498d`](https://github.com/cmdcolin/ntsc.js/commit/405498dd0eca6a1b12d4ca5cfa7dacd5463070b2) ring modulation takes colour away rather than making it
+
+### Tests
+- [`a83ad9e`](https://github.com/cmdcolin/ntsc.js/commit/a83ad9e707d215a23131d398b0a2a488ba6ba6a6) pin the published links to re-packing, not to a size floor
+
+### Other Changes
+- [`2c729da`](https://github.com/cmdcolin/ntsc.js/commit/2c729da8e80c22ca3a072b9d827606a7008d157c) Bump deps
+
 ## [0.31.1](https://github.com/cmdcolin/ntsc.js/compare/v0.31.0...v0.31.1) - 2026-08-28
 
 ### Features
