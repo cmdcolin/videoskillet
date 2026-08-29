@@ -294,6 +294,8 @@ export const URL_KEY_ORDER: readonly ControlKey[] = [
   'cgInvert',
   'cgRomAddr',
   'cgRomData',
+  'vir',
+  'virLag',
 ]
 
 const INDEX = new Map(URL_KEY_ORDER.map((k, i) => [k, i]))

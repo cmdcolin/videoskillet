@@ -186,6 +186,10 @@ export const PARAM_DEFS = [
   ['scDetunePhase', 'f32'], // bent-crystal demod LO phase error at frame start, radians (accumulated)
   ['scDetunePerSample', 'f32'], // LO phase error growth per sample, radians
   ['killThresh', 'f32'], // IRE of burst amplitude below which color killer engages
+  // The VIR corrector: a set trimming its own hue and saturation off the
+  // reference on line 19, and getting it wrong when the reference is damaged.
+  ['vir', 'f32'], // how far the set trusts the reference, 0 = not a VIR set
+  ['virLag', 'f32'], // the corrector's time constant, frames
   ['accLines', 'f32'], // chroma AGC time constant, lines of burst memory (0 = instantaneous)
   ['svideoBleed', 'f32'], // Y/C cross-wire: chroma bled into luma (0.5 defeats the trap)
   ['chromaCoarse', 'f32'], // chroma demod decimation factor; >1 lerps between lattice points (CUE rainbows)
@@ -424,6 +428,11 @@ const IRIS_VEL = ${LINES + 6}u;
 // H-osc's phase noise grows with it, so lock decays instead of coasting.
 const LOCK_AGE = ${LINES + 7}u;
 const SAG_BASE = ${LINES + 8}u; // deflection sag region of the timing buffer
+// The VIR corrector's two integrators, past the sag region. Persistent across
+// frames like the sync scalars: they are a servo's state, and a servo that
+// restarted every frame would have no time constant to speak of.
+const VIR_HUE = ${LINES * 2 + 8}u;
+const VIR_GAIN = ${LINES * 2 + 9}u;
 const VSYNC_FIRST = ${VSYNC_FIRST}u;
 const VSYNC_LAST = ${VSYNC_LAST}u;
 const HEAD_SWITCH_LINE = ${HEAD_SWITCH_LINE}u;

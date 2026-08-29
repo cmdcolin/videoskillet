@@ -72,7 +72,7 @@ One frame, driven by `Engine.render()` in `src/core/gpu/pipeline.ts`:
 ```
 prePasses    compose → encodeComposite → [feedA] → [composeB → encodeChromaB → encodeCompositeB → feedB → mixB] → [chyron] → [fbComposite] → [tapePlay → tapeRec]
 loopPasses   chromaExtract → [underDown] → channel → timebase     (× dubGens, ≤ 4)
-postPasses   [enhancer] → [buzzTap] → syncMeasure → sync → lineAnalyze → [caption] → decode → crtFace → [storePrev]
+postPasses   [enhancer] → [buzzTap] → syncMeasure → sync → lineAnalyze → [vir] → [caption] → decode → crtFace → [storePrev]
 present      render pass to the swap chain
 ```
 
@@ -83,7 +83,7 @@ with the buffers on the arrows and is held to the same list:
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="img/pipeline-dark.svg">
-  <img alt="Signal path pass by pass. Source A and B feed the encoder (compose, encodeComposite, composeB, encodeChromaB, encodeCompositeB, mixB), then fbComposite, then the channel block (chromaExtract, underDown, channel, timebase) which repeats once per tape dub, then the outboard enhancer, then the receiver (syncMeasure, sync, lineAnalyze, caption, decode), then crtFace and present. storePrev feeds the composite loop back into fbComposite one frame later; crtFace feeds the camera loop back into compose." src="img/pipeline-light.svg">
+  <img alt="Signal path pass by pass. Source A and B feed the encoder (compose, encodeComposite, composeB, encodeChromaB, encodeCompositeB, mixB), then fbComposite, then the channel block (chromaExtract, underDown, channel, timebase) which repeats once per tape dub, then the outboard enhancer, then the receiver (syncMeasure, sync, lineAnalyze, vir, caption, decode), then crtFace and present. storePrev feeds the composite loop back into fbComposite one frame later; crtFace feeds the camera loop back into compose." src="img/pipeline-light.svg">
 </picture>
 
 Bracketed passes are gated by a `when()` predicate on the controls, so an idle
@@ -162,15 +162,20 @@ fault through `timing[]` will spin hue that should have stayed put.
 
 ## Buffer layouts worth knowing
 
-- **`timingBuf`** (`(LINES * 2 + 8)` floats) — `[0..524]` per-line horizontal
+- **`timingBuf`** (`(LINES * 2 + 10)` floats) — `[0..524]` per-line horizontal
   offset; `[525]` vertical oscillator phase, signed and fractional; `[526]` PLL
   state; `[527]` AGC gain; `[528..531]` the two second-order gain servos (beam
   limiter and camera auto-iris, gain + velocity each — `sync` updates them,
   `decode` applies the ABL drive, `compose` applies the iris a frame late);
   `[532]` the sync separator's lock age, lines since the last real edge, which
   scales the free-running H-osc's phase noise so lock decays instead of
-  coasting; `[SAG_BASE..]` normalized deflection sag per raster line. Indices
-  525–532 are persistent across frames; treat them as state.
+  coasting; `[SAG_BASE..]` normalized deflection sag per raster line;
+  `[VIR_HUE]` and `[VIR_GAIN]`, past the sag region, the VIR corrector's two
+  integrators — `vir` writes them, `decode` adds them to the demodulator's
+  reference and to its chroma gain. Indices 525–532 and the two VIR slots are
+  persistent across frames; treat them as state. A zeroed `VIR_GAIN` means the
+  servo has never run, which is what lets `resetSignal` clear the whole buffer
+  and still hand the loop a sane start.
 - **`lineParamsBuf`** — one `vec4f` per line from `LineState`:
   `(tbOffsetSamples, underBasePhase, underJitterPhase, seed)`. All four slots
   are taken; a new per-line CPU quantity needs its own buffer.

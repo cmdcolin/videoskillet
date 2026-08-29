@@ -3000,6 +3000,26 @@ export const GROUPS: Group[] = [
         help: "The time constant of the chroma AGC's control voltage, in scan lines of burst memory. At 0 the set corrects colour gain instantly per line, which no real ACC can; raised, gain and the colour killer answer burst damage tens of lines late, so colour blooms back after a dropout band instead of snapping, overshoots on a scene change, and a marginal burst makes the killer chatter in and out down the frame. With fed-back burst circulating in the mixer loop the lag turns into colour that pumps.",
       },
       {
+        key: 'vir',
+        label: 'VIR correction',
+        min: 0,
+        max: 1,
+        step: 0.01,
+        unit: '',
+        help: 'How far the set trusts the reference stamped on line 19 of the vertical interval. A VIR receiver decoded that line, compared it against what it knew was sent, and trimmed its own hue and saturation until the two agreed — a closed loop around the demodulator, and one that is only ever as right as the reference arriving. Damage the signal above line 21 and the correction goes with it: the whole picture rotates toward whatever the reference was bent into, and a dub whose chroma the tape path has been eating a generation at a time comes back garish rather than washed out, because a weak reference is a set turning colour up. Needs the VBI test signals on to have anything to read.',
+      },
+      {
+        key: 'virLag',
+        label: 'VIR lag',
+        min: 1,
+        max: 240,
+        step: 1,
+        redline: [8, 120],
+        unit: 'frames',
+        fine: true,
+        help: 'The corrector’s time constant, in frames. Short and it chases the reference line by line, so damage that comes and goes makes the picture flicker; long is what a real corrector did — it answers over a second or more, which is why a reference that has been bent drags the whole frame somewhere wrong and leaves it there, and only walks back as slowly once the signal recovers.',
+      },
+      {
         key: 'matrixClip',
         label: 'output stage clip',
         min: 0,
@@ -3570,6 +3590,18 @@ const magnified: SliderNeed = {
 
 export const NEEDS: Partial<Record<ControlKey, SliderNeed>> = {
   cc: carrying,
+  vir: {
+    key: 'vbi',
+    ok: above0,
+    fix: 1,
+    hint: 'vbi test signals on, which is what stamps the reference on line 19',
+  },
+  virLag: {
+    key: 'vir',
+    ok: above0,
+    fix: 1,
+    hint: 'the corrector trusting the reference',
+  },
   ccBox: captioned,
   ccRomAddr: captioned,
   ccRomData: captioned,

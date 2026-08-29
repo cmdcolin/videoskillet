@@ -48,6 +48,10 @@ export const DEFAULT_CONTROLS = {
   demodAxisDeg: 90, // angle between the two synchronous demod axes (90 = quadrature)
   matrixClip: 0, // RGB output stage: 0 hue-preserving fit, 1 hard per-gun rails
   scDetuneKHz: 0, // bent 3.58 MHz crystal: demod LO pulled off-frequency
+  // The VIR corrector: the set trimming its own hue and saturation off the
+  // reference on line 19, and getting it wrong when that reference is damaged
+  vir: 0, // how far the set trusts it (0 = not a VIR set)
+  virLag: 45, // the corrector's time constant, frames
   killThresh: 2, // IRE
   accLagLines: 0, // chroma AGC time constant, lines of burst memory (0 = instantaneous)
   svideoBleed: 0, // Y/C miswire: bleed chroma into luma (S-video pins into composite)

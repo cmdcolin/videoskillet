@@ -123,6 +123,8 @@ export function uniformValues(c: Controls, env: UniformEnv) {
     matrixClip: c.matrixClip,
     scDetunePhase: env.scPhase,
     scDetunePerSample: loRadPerSample(c.scDetuneKHz),
+    vir: c.vir,
+    virLag: c.virLag,
     killThresh: c.killThresh,
     accLines: c.accLagLines,
     svideoBleed: c.svideoBleed,

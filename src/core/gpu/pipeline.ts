@@ -70,6 +70,7 @@ import tapePlaySrc from './shaders/tape_play.wgsl?raw'
 import tapeRecSrc from './shaders/tape_rec.wgsl?raw'
 import timebaseSrc from './shaders/timebase.wgsl?raw'
 import underDownSrc from './shaders/under_down.wgsl?raw'
+import virSrc from './shaders/vir.wgsl?raw'
 import { Sources } from './sources'
 import { loRadPerSample, uniformValues } from './uniforms'
 import { VideoPump } from './videopump'
@@ -486,8 +487,9 @@ export class Engine implements EngineApi {
     this.lineParamsBuf = storage(LINE_PARAM_BYTES)
     // per-line hoff + 8 persistent scalars (v-osc, PLL, AGC, the two
     // second-order gain servos — beam limiter and camera iris, gain + velocity
-    // each — and the sync separator's lock age) + a per-raster-line sag
-    this.timingBuf = storage((LINES * 2 + 8) * 4)
+    // each — and the sync separator's lock age) + a per-raster-line sag + the
+    // VIR corrector's two integrators
+    this.timingBuf = storage((LINES * 2 + 10) * 4)
     this.syncMeasureBuf = storage(LINES * 16)
     // one audio sample per line, uploaded each frame
     this.audioBuf = storage(LINES * 4)
@@ -582,6 +584,7 @@ export class Engine implements EngineApi {
     const buzzTapPl = compute(buzzTapSrc)
     const syncPl = compute(syncSrc)
     const lineAnalyzePl = compute(lineAnalyzeSrc)
+    const virPl = compute(virSrc)
     const decodePl = compute(decodeSrc)
     const captionPl = compute(captionSrc)
     const chyronPl = compute(chyronSrc)
@@ -989,6 +992,23 @@ export class Engine implements EngineApi {
           { buffer: this.lineInfoBuf },
         ],
         perRow,
+      ),
+      // The VIR corrector, reading the reference on line 19 that lineAnalyze
+      // has just measured the burst of. It runs after that measurement because
+      // what it wants is the *residual* — whatever burst lock could not
+      // account for — and before decode because decode is what it corrects.
+      // One invocation: it produces two numbers, and they are a servo's state.
+      pass(
+        'vir',
+        virPl,
+        [
+          { buffer: this.paramsBuf },
+          { buffer: this.compA },
+          { buffer: this.lineInfoBuf },
+          { buffer: this.timingBuf },
+        ],
+        [1, 1],
+        () => c.vir > 0,
       ),
       // The set's caption decoder, between the PLL it gates off and the pass
       // that paints what it recovered. One invocation: a page is a serial

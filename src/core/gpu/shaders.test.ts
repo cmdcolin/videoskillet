@@ -35,6 +35,7 @@ import tapePlay from './shaders/tape_play.wgsl?raw'
 import tapeRec from './shaders/tape_rec.wgsl?raw'
 import timebase from './shaders/timebase.wgsl?raw'
 import underDown from './shaders/under_down.wgsl?raw'
+import vir from './shaders/vir.wgsl?raw'
 
 import { execFileSync } from 'node:child_process'
 import { mkdtempSync, readdirSync, writeFileSync } from 'node:fs'
@@ -69,6 +70,7 @@ const SHADERS: Record<string, string> = {
   tape_rec: tapeRec,
   timebase,
   under_down: underDown,
+  vir,
 }
 
 const hasNaga = ((): boolean => {

@@ -129,6 +129,10 @@ digraph ntsc_js {
                  label="syncMeasure → sync\nrecover H/V timing\n525 lines each, then 1 thread total"];
     lineAnalyze [passes="lineAnalyze" fillcolor="@RX2@"
                  label="lineAnalyze\nper-line burst phase & lock\n525 lines, one thread each"];
+    // The VIR corrector: line 19's reference measured against what burst
+    // already took out, servoed into the hue and gain decode demodulates with.
+    vir         [passes="vir" fillcolor="@RX2@" style="rounded,filled,dashed"
+                 label="vir\nline 19 reference servo\n1 thread total"];
     // The caption decoder: line 21 sliced off the same damaged waveform, held
     // in a page decode paints on the set's own raster.
     caption     [passes="caption" fillcolor="@RX2@" style="rounded,filled,dashed"
@@ -181,6 +185,8 @@ digraph ntsc_js {
   enhancer -> sync [label="  compA" lhead=cluster_rx];
   sync -> lineAnalyze [label="  timing[]"];
   lineAnalyze -> decode [label="  lineInfo[]"];
+  lineAnalyze -> vir [label="  lineInfo[]"];
+  vir -> decode [label="  timing[] hue & gain trim\l"];
   sync -> caption [label="  timing[]"];
   caption -> decode [label="  ccBuf[]"];
   decode -> crtFace [label="  outTex"];

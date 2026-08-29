@@ -394,7 +394,11 @@ fn main(
   // scales a continuous error instead of jumping a 2*pi branch on noise
   let e = select(0.0, atan2(-li.y, -li.x), locked) * P.burstLock;
   let acc = select(0.0, clamp(BURST_AMP / max(li.w, 0.5), 0.0, 4.0), locked);
-  let g = mix(1.0, acc, P.burstLock) * P.chromaGain;
+  // The VIR corrector's saturation trim, on top of the burst-derived ACC. It is
+  // a second loop with a much longer memory, so it answers what the reference
+  // has been doing for the last second rather than what this line did.
+  let g = mix(1.0, acc, P.burstLock) * P.chromaGain
+    * mix(1.0, timing[VIR_GAIN], P.vir);
 
   let ev = loPhaseErr(n, row);
   // Where the demodulator's reference sits. Burst error, the bent crystal's
@@ -402,7 +406,10 @@ fn main(
   // network all move one phase, because in a receiver they are one oscillator
   // — which is why a tint knob and a detuned crystal are indistinguishable
   // until the burst tries to correct one of them and not the other.
-  let th = e + ev + P.tint + P.audioHue * audio[ry];
+  // ...and its hue trim joins the same reference network, because in a set that
+  // is where it was wired: the corrector drove the tint control rather than
+  // sitting beside it.
+  let th = e + ev + P.tint + P.audioHue * audio[ry] + P.vir * timing[VIR_HUE];
   let ce = cos(th);
   let se = sin(th);
   // The two synchronous demods sit 90 degrees apart only because the reference
