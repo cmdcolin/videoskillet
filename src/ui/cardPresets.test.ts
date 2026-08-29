@@ -31,7 +31,7 @@ describe('the card presets', () => {
   // next press, so the chips would stack instead of compose.
   it('only move controls that are on their own card', () => {
     for (const p of CARD_PRESETS) {
-      const own = new Set(groupNamed(p.group).sliders.map(s => s.key))
+      const own = new Set<string>(groupNamed(p.group).sliders.map(s => s.key))
       expect({
         chip: p.name,
         strays: Object.keys(p.patch).filter(k => !own.has(k)),
