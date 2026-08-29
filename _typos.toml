@@ -1,0 +1,36 @@
+# Suppressions for crate-ci/typos (see .github/workflows/push.yml).
+#
+# These lived in a root `.ignore` until 2026-08-22. That worked — typos reads
+# ignore files, because it uses the same `ignore` crate ripgrep does — and that
+# was the problem: it also hid 17 tracked SOURCE files from every `rg` in the
+# repo, so "this symbol appears nowhere" came back clean for files that do
+# contain it. One such absence claim had already reached agent-docs. Scoping the
+# suppression to the tool that wanted it also showed that most of the list was
+# stale: of those 17, only five still trip the checker.
+#
+# Prefer, in this order: a regex for a whole class of false positive, a word for
+# a domain term, a file exclude only for generated output, fixture data, vendored
+# code, or a file whose typos are deliberate.
+
+[default]
+extend-ignore-re = [
+  # a backticked git sha is this repo's citation convention, and its hex letters
+  # read as words: `ca6637afe4` reported `afe` -> `safe` four times in one doc
+  "`[0-9a-f]{7,40}`",
+  # UCSC assembly ids: turTru2 (dolphin), oryAfe1 (aardvark), haeCon2. The
+  # capitalized middle is a genus/species abbreviation, never a word
+  "\\b[a-z]{3}[A-Z][a-z]{2}\\d+\\b",
+]
+[default.extend-words]
+seeked = "seeked"
+trak = "trak"
+abl = "abl"
+unparseable = "unparseable"
+mis = "mis"
+PN = "PN"
+aspected = "aspected"
+rebuil = "rebuil"
+iy = "iy"
+ba = "ba"
+grat = "grat"
+Fo = "Fo"
