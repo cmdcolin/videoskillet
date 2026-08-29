@@ -192,72 +192,57 @@ character generator goes wrong.
   is a wrong machine, not a bad wire. Holding a line on the page-address counter
   instead walks the entire page diagonally through itself a few cells a field.
 
-## The caption channel — line 21 is already on the wire
+## The caption channel — shipped
 
-`encode_composite.wgsl` stamps line 21 every frame: a clock run-in, a start bit,
-and nineteen cells of data at the 503 kHz caption clock. The bits come out of
-`pcg()`, so the dashes change and mean nothing — which the `vbi` help text is
-honest about ("dashes that change every frame, because captions are live").
+`encode_composite.wgsl` carries real characters on line 21 now
+(`signal/captionstate.ts` feeds them), `caption.wgsl` is the set's decoder, and
+`decode` paints the page it recovers. The two things it was built for both
+arrived: damage lands as **wrong words** rather than as smearing, and the
+caption is painted on the set's raster, so the picture rolls, tears and spins
+hue underneath one that does not move.
 
-Carry real characters there and decode them at the receiver, and the app gets a
-data channel running the whole length of the signal path.
+Five things learned, for whoever touches it.
 
-**Encoding** costs nothing new. Two seven-bit odd-parity characters is what line
-21 carries per field, and at 60 progressive frames the rate reads correctly even
-without fields. The text can come off the source A card or out of a caption
-field of its own.
+**The cell grid is fitted to the active window, not to 503 kHz.** Real line 21
+clocks at the true rate and spills into the blanking either side to fit its
+twenty-eight cells — which here would write over the burst that this very line's
+hue lock is measured from. Fitted to `ACTIVE_W` the clock is 532 kHz, six
+percent fast, and nothing downstream measures it. `CC_CELLS` is what both ends
+index off, and that is the only thing that has to agree.
 
-**Decoding** wants a pass shaped like `line_analyze`: one row, sliced off the
-_degraded_ composite at the caption clock, writing a small buffer the passes
-after it read. That is the argument `line_analyze` already makes for the burst
-gate — give the decoder what a real gate sees and the failures are emergent
-rather than drawn.
+**The run-in cannot be read at cell centres.** It is a sine at the cell rate, so
+every one of its centres sits exactly on the midpoint the slicer is trying to
+measure _around_ — sampled there, a perfect signal comes back flat and the
+threshold never arms. It is scanned sample by sample instead. This cost a build.
 
-**Painting** belongs at the end of `decode`, indexed by screen position, before
-`crt_face` reads the texture. Both halves of that matter.
+**The font ROM and the page RAM share one binding** (`captionrom.ts`). `decode`
+was already carrying seven storage buffers and eight is the floor WebGPU
+guarantees, so a ninth would be a device that works here and refuses elsewhere.
+They are one memory on the chip being modelled anyway.
 
-Indexing by screen rather than by signal row is what makes the caption a
-function of the _set_ instead of the signal. A real decoder recovers bytes,
-holds them in a display buffer and repaints on the set's own timing, so the
-picture rolls, tears and spins hue underneath while the caption sits nailed to
-the glass. Nothing here can do that today — every pixel in the app shares one
-sync. It would still ride deflection bend and still bloom, which is right,
-because the caption is light off the same tube.
+**A pair that runs out mid-way sends a null**, not the first character of the
+next time round. The gap after a caption is what leaves it on screen to be read,
+and a pair reaching across it puts one stray character on the page a beat ahead
+of its line.
 
-Ahead of `crt_face` is what makes it light rather than an overlay. Painted after
-that pass, a caption is a sticker on a photograph of a screen.
+**Painting goes before `crt_face` and is indexed by screen position.** Before
+the face pass because a caption is light off the same glass — after it, it would
+be a sticker on a photograph of a screen. By screen position because that is the
+physical claim: a decoder holds bytes and repaints on the set's own timing.
 
-What falls out, none of it drawn:
+What it does not do:
 
-- Snow, a low `chanBw`, tape noise and generation loss arrive as
-  **misspellings** — dropped characters, substituted ones, a caption that stops
-  updating. Damage as wrong words is a register this app has never had.
-- Line 21 sits near the top of the field, so a tracking band reaches it while
-  the picture is still readable. Tape ate captions first, and the relationship
-  would be the real one rather than two controls that happen to move together.
-- `dropoutComp` patches a line from 1H away. On line 21 that hands the decoder
-  the previous line's caption data: a byte with valid parity and the wrong
-  value.
-- A parity failure is what a real decoder drew a solid block for — which is
-  `garbleRows`' "holes where parity caught a bit", except earned off the
-  waveform instead of rolled from a hash. The teletype card garbles a
-  transmission; this _is_ one.
-- Hits on the control codes (RCL, EDM, EOC) give stuck captions, captions that
-  never clear, and roll-up rows painting over each other. Those are the failures
-  anyone who watched captioned television remembers.
-
-The display buffer wants the ping-pong `held`/`heldNext` already carries for
-persistence, for the same reason: a caption decoder is a memory, and what it
-shows this frame arrived some frames ago.
-
-The cost is a glyph set. Painting type in WGSL wants a small font atlas rather
-than `dotGrid`'s CPU raster, and baking one at engine construction is the move
-`grain_bake.wgsl` already makes for the phosphor mottle.
-
-Interlace changes this one, so it is worth building after that rather than
-before: real line 21 carries CC1 on field 1 and CC2 on field 2, and with fields
-the two caption channels separate — a field-rate fault then hits one and leaves
-the other alone.
+- **Roll-up is the only mode.** Pop-on and paint-on are the other two, and both
+  are control-code state machines over the same page rather than new mechanism.
+- **No squelch.** A real decoder muted its display after a run of parity
+  failures; this one paints every block it catches, so heavy snow fills a row
+  with them. Dramatic, and not quite what the box did.
+- **Attributes are ignored.** Line 21 carries colour, italics and the PAC codes
+  that position a caption; this page is white, upright and where it was put.
+  Same shape of gap as the teletype card's two attributes above, and the same
+  fix would serve both.
+- **CC1 only.** The second caption channel lives on field 2, so it needs
+  interlace before it means anything — see the section below.
 
 ## The character generator as a keyer, not a source
 

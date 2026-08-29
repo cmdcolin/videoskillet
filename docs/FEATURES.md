@@ -113,6 +113,14 @@ Deflection bend happens after decoding, so it warps geometry but must not touch
 hue. That distinction — whether a wobble takes the colour with it — is the one
 worth having in front of the app.
 
+The set also has a **caption decoder**, and it is the one thing here that reads
+the signal as _data_. Line 21 carries whatever you type, so noise, a narrow
+channel and generation loss arrive as misspellings — dropped characters, wrong
+ones, and the solid block a real decoder drew wherever parity caught an error
+and it refused to guess. The page is repainted on the set's own timing, which is
+where a real one painted it, so the picture can roll and tear underneath a
+caption sitting perfectly still.
+
 ## Screen
 
 The beam, and the phosphor it lands on.
