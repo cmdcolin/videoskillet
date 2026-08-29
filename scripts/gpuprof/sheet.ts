@@ -25,6 +25,7 @@ import { rngFor } from '../../src/core/rng'
 import { Runner, meanAbs, panner, spread } from './render'
 
 import type { Controls } from '../../src/core/controls'
+import type { Routing } from './render'
 
 interface Preset {
   name: string
@@ -64,11 +65,17 @@ const FRAMES = Number(arg('frames') ?? 260)
 // long enough to read a roll's direction, short enough that a fast boil does
 // not alias into a stutter.
 const STRIP = [20, 16, 12, 8, 4, 0]
+// `--video` captures the last N frames as an mp4 instead of six stills. Every
+// frame read back is a 1.4 MB copy off the GPU, so this is the slow path and
+// the reason it is opt-in.
+const VIDEO = Deno.args.includes('--video')
+const VIDEO_FRAMES = Number(arg('vframes') ?? 150)
 
 interface Item {
   name: string
   blurb: string
   controls: Controls
+  mod?: readonly Routing[]
 }
 
 // Raw RGB out to a JPEG. ffmpeg rather than a hand-rolled encoder: it is
@@ -108,6 +115,58 @@ async function writeJpeg(
   const w2 = cmd.stdin.getWriter()
   await w2.write(bytes)
   await w2.close()
+  await cmd.status
+}
+
+// A run of frames straight into an mp4. Six stills cannot show a look that is
+// mostly motion, and a strip long enough to read as motion is bigger as JPEGs
+// than the same seconds are as video.
+async function writeVideo(
+  shots: Float32Array[],
+  w: number,
+  h: number,
+  path: string,
+): Promise<void> {
+  const cmd = new Deno.Command('ffmpeg', {
+    args: [
+      '-y',
+      '-loglevel',
+      'error',
+      '-f',
+      'rawvideo',
+      '-pix_fmt',
+      'rgb24',
+      '-s',
+      `${w}x${h}`,
+      '-r',
+      '30',
+      '-i',
+      'pipe:0',
+      '-c:v',
+      'libx264',
+      '-preset',
+      'slow',
+      '-crf',
+      '30',
+      // yuv420p and an even frame size, or the file plays in ffmpeg and
+      // nowhere else.
+      '-pix_fmt',
+      'yuv420p',
+      '-movflags',
+      '+faststart',
+      path,
+    ],
+    stdin: 'piped',
+    stdout: 'null',
+    stderr: 'inherit',
+  }).spawn()
+  const writer = cmd.stdin.getWriter()
+  const bytes = new Uint8Array(w * h * 3)
+  for (const s of shots) {
+    for (let i = 0; i < bytes.length; i++) bytes[i] = Math.round(s[i])
+    await writer.write(bytes)
+  }
+  await writer.close()
   await cmd.status
 }
 
@@ -173,18 +232,28 @@ async function main(): Promise<void> {
   )
   const manifest: Record<string, unknown>[] = []
   for (const [i, it] of items.entries()) {
+    const tail = VIDEO
+      ? Array.from({ length: VIDEO_FRAMES }, (_, k) => VIDEO_FRAMES - 1 - k)
+      : STRIP
     const { shots } = await runner.run(
       it.controls,
       FRAMES,
-      { tail: STRIP, w: TW, h: TH },
+      { tail, w: TW, h: TH },
       move,
+      it.mod,
     )
     const slug = `${String(i).padStart(3, '0')}-${it.name.replaceAll(/[^a-z0-9]+/gi, '-').toLowerCase()}`
     const files: string[] = []
-    for (const [k, s] of shots.entries()) {
-      const file = `${slug}-${k}.jpg`
-      await writeJpeg(s, TW, TH, `${outDir}/${file}`)
+    if (VIDEO) {
+      const file = `${slug}.mp4`
+      await writeVideo(shots, TW, TH, `${outDir}/${file}`)
       files.push(file)
+    } else {
+      for (const [k, s] of shots.entries()) {
+        const file = `${slug}-${k}.jpg`
+        await writeJpeg(s, TW, TH, `${outDir}/${file}`)
+        files.push(file)
+      }
     }
     const { mean, sd } = spread(shots.at(-1)!)
     // Motion across the whole strip rather than between the last two frames: a
@@ -208,7 +277,11 @@ async function main(): Promise<void> {
   }
   await Deno.writeTextFile(
     `${outDir}/manifest.json`,
-    JSON.stringify({ mode, tw: TW, th: TH, items: manifest }, null, 2),
+    JSON.stringify(
+      { mode, tw: TW, th: TH, video: VIDEO, items: manifest },
+      null,
+      2,
+    ),
   )
   console.log(`\n${items.length} tiles → ${outDir}/manifest.json`)
 }

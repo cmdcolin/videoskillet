@@ -3,11 +3,13 @@
 // patch look like?), both of which want the same thing: a device, a graph per
 // arm, and pixels out without a browser in the room.
 
+import { rngFor } from '../../src/core/rng'
 import { ACTIVE_HEIGHT, ACTIVE_WIDTH } from '../../src/core/signal/constants'
+import { ModState } from '../../src/core/signal/modstate'
 import { Graph } from './graph'
 import { barsA, detailA, gradientB } from './sources'
 
-import type { Controls } from '../../src/core/controls'
+import type { ControlKey, Controls } from '../../src/core/controls'
 
 // A frame's worth of source, or nothing to leave the picture where it is.
 export type Animate = (frame: number) => Uint8Array<ArrayBuffer> | undefined
@@ -23,12 +25,40 @@ export interface Capture {
   h: number
 }
 
+// One routing off the modulation bay, as the harness can drive it: a target, a
+// shape, a rate, and a depth in fractions of the control's own travel — the
+// same `depth * (max - min)` the engine applies (gpu/pipeline.ts › applyMod).
+//
+// Worth having because half of what reads as wild here is not in any patch: the
+// published demos are a loop with an LFO on it, and a sheet that cannot drive
+// one renders every such look as its resting frame.
+export interface Routing {
+  target: ControlKey
+  source: 'sine' | 'triangle' | 'walk' | 'smooth' | 'hold' | 'lorenz'
+  rateHz: number
+  depth: number
+}
+
 export interface Frames {
   // One entry per `tail` index, in the order asked for, each `w*h*3` floats.
   shots: Float32Array[]
 }
 
 export class Runner {
+  // Deterministic, so two runs of the same sheet are the same sheet — the walk
+  // and sample-and-hold sources both draw from it.
+  private readonly rand = rngFor(7)
+  private spans = new Map<
+    ControlKey,
+    { min: number; max: number; travel: number }
+  >()
+
+  private span(key: ControlKey): { min: number; max: number; travel: number } {
+    const hit = this.spans.get(key)
+    if (hit !== undefined) return hit
+    throw new Error(`no slider for ${key}`)
+  }
+
   private constructor(
     readonly device: GPUDevice,
     readonly srcA: Uint8Array<ArrayBuffer>,
@@ -54,13 +84,20 @@ export class Runner {
       size: bytesPerRow * ACTIVE_HEIGHT,
       usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
     })
-    return new Runner(
+    const ui = (await import(
+      new URL('../../src/ui/controls.ts', import.meta.url).href
+    )) as { ALL_SLIDERS: { key: ControlKey; min: number; max: number }[] }
+    const r = new Runner(
       device,
       source === 'detail' ? detailA() : barsA(),
       gradientB(),
       read,
       bytesPerRow,
     )
+    for (const d of ui.ALL_SLIDERS) {
+      r.spans.set(d.key, { min: d.min, max: d.max, travel: d.max - d.min })
+    }
+    return r
   }
 
   // The tube's face, not the decoder's output: mask, bloom and glass are what
@@ -115,9 +152,21 @@ export class Runner {
     frames: number,
     cap: Capture,
     animate?: Animate,
+    mod?: readonly Routing[],
   ): Promise<Frames> {
+    // The graph reads its controls object every frame, so a routing is applied
+    // by writing the object it was handed — no rebuild, and no way to modulate
+    // the five filter controls, which are designed once at construction.
+    const live: Controls = { ...controls }
+    const rest = { ...controls }
+    const waves = (mod ?? []).map((r, i) => ({
+      id: i,
+      source: r.source,
+      rateHz: r.rateHz,
+    }))
+    const modState = new ModState()
     const g = await Graph.create(this.device, {
-      controls,
+      controls: live,
       bEnabled: true,
       sourceA: this.srcA,
       sourceB: this.srcB,
@@ -127,6 +176,19 @@ export class Runner {
       () => new Float32Array(cap.w * cap.h * 3),
     )
     for (let f = 0; f < frames; f++) {
+      if (mod !== undefined && mod.length > 0) {
+        const values = modState.update(waves, 0, 0, this.rand)
+        for (const [i, r] of mod.entries()) {
+          const def = this.span(r.target)
+          live[r.target] = Math.min(
+            def.max,
+            Math.max(
+              def.min,
+              rest[r.target] + values[i] * r.depth * def.travel,
+            ),
+          )
+        }
+      }
       const px = animate?.(f)
       if (px !== undefined) {
         this.device.queue.writeTexture(
