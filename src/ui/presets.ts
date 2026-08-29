@@ -587,6 +587,126 @@ export const PRESETS: PresetDef[] = [
     },
   },
   {
+    name: 'zoomBloom',
+    displayName: 'zoom bloom',
+    group: 'Feedback loops',
+    blurb:
+      'The camera pushed in two percent a pass, with the loop above unity so the geometry accumulates instead of dimming out. A highlight breeds inward toward the middle and never quite arrives, because every generation is a little larger than the one it grew from.',
+    patch: {
+      fbMix: 0.62,
+      fbGain: 1.07,
+      fbZoom: 1.02,
+      fbBlack: 0.05,
+      phosphor: 0.6,
+    },
+    // The gain is the one thing standing between this and a white field, so
+    // walking it is walking how close to the edge the loop runs — slow, and
+    // narrow enough that the bottom of the sweep still accumulates.
+    mod: [{ target: 'fbGain', source: 'smooth', rateHz: 0.06, depth: 0.05 }],
+  },
+  {
+    name: 'tunnelOut',
+    displayName: 'tunnel out',
+    group: 'Feedback loops',
+    blurb:
+      'The same loop pulled the other way: each pass a shade smaller than the last, so the picture falls away from itself down a corridor rather than growing out of the frame. The vignette is what gives the corridor walls.',
+    patch: {
+      fbMix: 0.66,
+      fbGain: 1.06,
+      fbZoom: 0.975,
+      fbVign: 0.45,
+      phosphor: 0.5,
+    },
+    mod: [{ target: 'fbZoom', source: 'sine', rateHz: 0.04, depth: 0.04 }],
+  },
+  {
+    name: 'spiral',
+    group: 'Feedback loops',
+    blurb:
+      'Three degrees of rotation a pass on top of a slight zoom. Either alone gives a ring or a corridor; the two together are what makes the picture wind, because a generation lands rotated *and* displaced from the one under it.',
+    patch: {
+      fbMix: 0.7,
+      fbGain: 1.05,
+      fbZoom: 1.012,
+      fbRotateDeg: 3.2,
+      phosphor: 0.55,
+    },
+    // Through zero, so the wind reverses: the arms unwind, stall, and go back
+    // the other way, which a fixed rotation never does.
+    mod: [{ target: 'fbRotateDeg', source: 'sine', rateHz: 0.03, depth: 0.35 }],
+  },
+  {
+    name: 'subcarrierComb',
+    displayName: 'subcarrier comb',
+    group: 'Feedback loops',
+    blurb:
+      'A mixer loop delayed by about a quarter of a subcarrier cycle, so what comes back is ninety degrees out and the hue steps round the wheel one generation at a time. Nothing here touches a colour control: the rotation is the delay, arriving as colour because the subcarrier rode round the loop with the picture.',
+    patch: {
+      cfbMix: 0.82,
+      cfbGain: 0.98,
+      cfbDelayUs: 0.14,
+      chromaGain: 1.3,
+    },
+    // A hundred and forty nanoseconds is one sample; sweeping a fraction of one
+    // walks the whole wheel, so the picture cycles hue without a tint knob
+    // moving.
+    mod: [
+      { target: 'cfbDelayUs', source: 'triangle', rateHz: 0.05, depth: 0.1 },
+    ],
+  },
+  {
+    name: 'ringLoop',
+    displayName: 'ring loop',
+    group: 'Feedback loops',
+    blurb:
+      'The loop bus multiplied against the live picture instead of summed with it. Subcarrier against subcarrier lands colour at sum and difference phases neither frame contained, and every product goes round to be multiplied again — so the spectrum folds over itself generation after generation rather than settling.',
+    patch: {
+      cfbMix: 0.62,
+      cfbGain: 1,
+      cfbDelayUs: 0.4,
+      cfbRing: 0.65,
+      chromaGain: 1.2,
+    },
+    mod: [{ target: 'cfbRing', source: 'smooth', rateHz: 0.08, depth: 0.25 }],
+  },
+  {
+    name: 'servoWarp',
+    displayName: 'servo warp',
+    group: 'Feedback loops',
+    blurb:
+      "A varactor on the loop's own delay, driven by the video going through it: bright picture pulls its own timebase, so the frame that comes back is bent where it was lit. The bend is a map of the last generation's brightness, which is why it moves with the picture instead of across it.",
+    patch: {
+      cfbMix: 0.74,
+      cfbGain: 1.02,
+      cfbDelayUs: 1.2,
+      cfbServoUs: 34,
+      phosphor: 0.45,
+    },
+    // Through zero again: the pull reverses, so the warp leans one way, flattens
+    // and leans back.
+    mod: [{ target: 'cfbServoUs', source: 'sine', rateHz: 0.05, depth: 0.3 }],
+  },
+  {
+    name: 'bothLoops',
+    displayName: 'both loops',
+    group: 'Feedback loops',
+    blurb:
+      'Camera and mixer running at once, each modest. The optical loop can only do what a lens can — zoom, rotate, cut a black level — and the electrical one carries the subcarrier round with it, so the two disagree about what the picture is and the disagreement is the look.',
+    patch: {
+      fbMix: 0.5,
+      fbGain: 1.05,
+      fbZoom: 1.014,
+      fbRotateDeg: -1.5,
+      cfbMix: 0.55,
+      cfbGain: 1,
+      cfbDelayUs: 0.18,
+      phosphor: 0.5,
+    },
+    // One routing, on the optical half only. Walking both at once makes a look
+    // that never holds still long enough to read as either machine.
+    mod: [{ target: 'fbZoom', source: 'smooth', rateHz: 0.05, depth: 0.03 }],
+  },
+  {
     name: 'cleanDissolve',
     displayName: 'clean dissolve',
     group: 'A/B mixing',

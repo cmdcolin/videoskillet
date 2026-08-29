@@ -4,7 +4,7 @@
 //
 //   deno run -A --config scripts/gpuprof/deno.json scripts/gpuprof/survey.ts \
 //     sliders [--base=vhs] [--source=detail] [--only=a,b] [--frames=N]
-//     presets [--source=detail]
+//     presets [--source=detail] [--move]
 //
 // Two modes:
 //
@@ -32,7 +32,7 @@
 // from this base", and re-run with `--base=` a preset that opens the path
 // before concluding anything about the control itself.
 
-import { Runner, meanAbs, p99Abs, spread } from './render'
+import { Runner, meanAbs, p99Abs, panner, spread } from './render'
 
 import type { ControlKey, Controls } from '../../src/core/controls'
 
@@ -112,12 +112,17 @@ async function main(): Promise<void> {
     arg('source') === 'detail' ? 'detail' : 'bars',
   )
 
+  // Off by default, unlike the sheet's: the numbers in docs/CURATION.md were
+  // taken on a still source, and a survey that silently moved the picture would
+  // not be comparable with them. Pass `--move` to judge a loop honestly.
+  const move = Deno.args.includes('--move') ? panner(runner.srcA) : undefined
+
   const baseName = arg('base')
   const found = PRESETS.find(p => p.name === baseName)
   if (baseName !== undefined && found === undefined)
     throw new Error(`no preset ${baseName}`)
   const base = presetControls(found?.patch ?? {})
-  const ref = await runner.run(base, FRAMES, CAP)
+  const ref = await runner.run(base, FRAMES, CAP, move)
   const refSpread = spread(ref.shots[0])
   console.log(
     `# ${mode}, ${FRAMES} frames, source ${arg('source') ?? 'bars'}, base ${baseName ?? 'stock'} (motion ${meanAbs(ref.shots[0], ref.shots[1]).toFixed(2)}, mean ${refSpread.mean.toFixed(1)}, sd ${refSpread.sd.toFixed(1)})`,
@@ -140,7 +145,12 @@ async function main(): Promise<void> {
   if (mode === 'presets') {
     for (const p of PRESETS) {
       if (p.name === 'clean') continue
-      const { shots } = await runner.run(presetControls(p.patch), FRAMES, CAP)
+      const { shots } = await runner.run(
+        presetControls(p.patch),
+        FRAMES,
+        CAP,
+        move,
+      )
       rows.push(row(p.name, p.group.slice(0, 11), shots))
       console.error(`  ${rows.length}/${PRESETS.length} ${p.name}`)
     }
@@ -156,7 +166,12 @@ async function main(): Promise<void> {
       let best: Row | undefined
       for (const v of [s.min, s.max, mid]) {
         if (v === at) continue
-        const { shots } = await runner.run({ ...base, [s.key]: v }, FRAMES, CAP)
+        const { shots } = await runner.run(
+          { ...base, [s.key]: v },
+          FRAMES,
+          CAP,
+          move,
+        )
         const r = row(
           `${s.key}${s.fine === true ? ' *' : ''}`,
           `@${Number(v.toPrecision(3))}`,

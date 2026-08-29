@@ -152,3 +152,51 @@ of them dependency-gated rather than weak — nothing in the camera loop moves
 until `fbGain` is up, and `fmStreakUs` cannot smear a fold `fmOverdev` is not
 making. That is what `--base=` is for, and the gated ones need re-running from a
 base that opens their path before any of them is called a trim.
+
+## What the eye said that the numbers did not
+
+Two rounds of screening went in front of Colin as contact sheets — twelve
+flagged presets with two controls, then fourteen feedback patches, each rendered
+as a playable strip rather than a still. The verdicts are worth more than the
+measurements, because they are the only signal here that is about quality rather
+than about movement.
+
+### Round one, the cut list
+
+Cut outright: `chromaOnly` and `reversePolarity`, the two that render black, and
+the quiet end of Tape wear — with the note that "many of the vhs settings are
+quite similar" and "I don't want so many subtle things". Nine presets went.
+`vhs` stayed: it is the canonical one, and reading subtle is an argument for
+making it less subtle rather than for cutting it.
+
+Six of fourteen random rolls were rejected as well, and the composition of the
+rejects says something the preset table alone does not: **`pastTheYoke` is in
+three of the six and in none of the fourteen keepers**, `transmissionFault` in
+two. Neither is subtle — they are the opposite, patches that flatten whatever
+they are blended with. That is a roll-blending problem rather than a preset
+problem, and it is still open.
+
+### Round two, the loops
+
+Seven of fourteen feedback candidates kept: `zoom bloom`, `tunnel out`,
+`spiral`, `subcarrier comb`, `ring loop`, `servo warp`, `both loops`.
+
+The pattern in what survived is sharper than any number here produced.
+**Geometry that accumulates and colour arithmetic were kept; ringing, blur,
+texture and stutter were not.** Both keyed resonators went, and they were the
+strongest prior going in — the previous round's own note says keying is what
+puts the ringing back *on* the picture rather than over it, which is true and
+turned out not to be the point. So did `defocus blobs`, `drift smear`, `line
+ladder` and `strobed trail`.
+
+`both loops` was kept at dep 26, the lowest departure in its sheet, while
+`iris hunt` was cut at 106. Departure did not order these at all.
+
+### What this means for a future round
+
+Propose looks that **change where the picture is** (zoom, rotation, timebase
+pull) or **what colour it is by arithmetic** (subcarrier delay, ring
+modulation). Do not propose looks whose content is texture — a blur, a ring, a
+grain, a stutter. Two sources disagreeing is a reason to look at the frame; the
+eye disagreeing with the numbers means the numbers were measuring the wrong
+thing.
