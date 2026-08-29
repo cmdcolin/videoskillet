@@ -39,6 +39,44 @@ export interface Routing {
   depth: number
 }
 
+// The six shapes `Runner` can generate. A routing may also name `level`, `hit`
+// or `trig`, which need audio or a finger on the key — the harness has neither.
+// Dropped here and counted, rather than handed over to be ignored downstream.
+const DRIVABLE = new Set<string>([
+  'sine',
+  'triangle',
+  'walk',
+  'smooth',
+  'hold',
+  'lorenz',
+])
+
+// Names of the looks that carried a routing this harness had to drop. Read it
+// after a run and say so: silently under-reporting a look is how a preset ends
+// up on a cut list for doing nothing.
+export const undrivable: string[] = []
+
+// The shape a preset or a candidate declares: everything `Routing` has, except
+// that `source` is still the bay's full set rather than the six below.
+export interface LooseRouting {
+  target: string
+  source: string
+  rateHz: number
+  depth: number
+}
+
+export function drivable(
+  name: string,
+  mod: readonly LooseRouting[] | undefined,
+): readonly Routing[] | undefined {
+  if (mod === undefined) return undefined
+  const out = mod.filter(m =>
+    DRIVABLE.has(m.source),
+  ) as unknown as readonly Routing[]
+  if (out.length < mod.length) undrivable.push(name)
+  return out.length > 0 ? out : undefined
+}
+
 export interface Frames {
   // One entry per `tail` index, in the order asked for, each `w*h*3` floats.
   shots: Float32Array[]

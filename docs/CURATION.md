@@ -301,6 +301,28 @@ LFO, and driving that LFO drops its motion from 37.7 to 4.9, because the sweep
 spends half its time below unity where the constant setting never did. Neither
 look was judged as itself.
 
+`survey.ts` had the same hole and is now wired the same way, which matters more:
+it is the script the cut lists on this page were drawn from. Driving the
+routings moves 21 of the 84 presets, and it moves them in the direction that was
+quietly costing feedback looks their place:
+
+| preset           | dep resting | dep driven |
+| ---------------- | ----------: | ---------: |
+| sync in the loop |       22.15 |      67.24 |
+| spiral           |       25.47 |      68.24 |
+| subcarrier comb  |       13.20 |      43.21 |
+| both loops       |       11.03 |      29.05 |
+
+`both loops` at 11.03 sits _below_ the dep 12 line this page uses to call a
+preset weak, and `subcarrier comb` at 13.20 sits just over it. Both are in the
+thirties and forties with the LFO they ship with running. A resting-frame survey
+systematically under-reports exactly the family whose movement lives in the
+routing, and that is the family the last two rounds were curating.
+
+The cut list already applied is not affected: the six presets on it — `vhs`,
+`punchIn`, `broadcast`, `mixerLoop` and the two that render black — carry no
+routing, and re-measuring with the bay driven leaves them where they were.
+
 `--nomod` renders any sheet at its resting frame, which is both the ablation for
 "is this the patch or the LFO" and the way to reproduce anything measured before
 the fix.

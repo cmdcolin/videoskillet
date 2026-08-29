@@ -4,14 +4,16 @@
 //
 //   deno run -A --config scripts/gpuprof/deno.json scripts/gpuprof/survey.ts \
 //     sliders [--base=vhs] [--source=detail] [--only=a,b] [--frames=N]
-//     presets [--source=detail] [--move]
+//     presets [--source=detail] [--move] [--nomod]
 //
 // Two modes:
 //
 //   sliders  every control, both ends and a midpoint
 //            (--base= starts from a preset that opens the path; --source=detail
 //            swaps flat bars for fine structure)
-//   presets  every preset, against clean
+//   presets  every preset, against clean, with its routings driven
+//            (--nomod for the resting frame, which is what the tables in
+//            docs/CURATION.md were measured at)
 //
 // Four numbers per arm, on a 64x48 downscale of the tube face:
 //
@@ -22,7 +24,9 @@
 //           low dep is a detail, not a look.
 //   motion  mean channel difference between the last two frames. What the look
 //           does over time — a roll, a boil, a loop still developing. A patch
-//           can be worth having at dep 3 if motion is 20.
+//           can be worth having at dep 3 if motion is 20. Adjacent frames only,
+//           so anything slow is invisible to it: a hue routed at 0.06 Hz cycles
+//           the whole wheel and scores under 3. Read it beside a clip.
 //   mean/sd luma level and spread, for the arms that "departed" by collapsing
 //           to black or walling out to white.
 //
@@ -32,9 +36,18 @@
 // from this base", and re-run with `--base=` a preset that opens the path
 // before concluding anything about the control itself.
 
-import { Runner, meanAbs, p99Abs, panner, spread } from './render'
+import {
+  Runner,
+  drivable,
+  meanAbs,
+  p99Abs,
+  panner,
+  spread,
+  undrivable,
+} from './render'
 
 import type { ControlKey, Controls } from '../../src/core/controls'
+import type { LooseRouting } from './render'
 
 interface Slider {
   key: ControlKey
@@ -47,6 +60,7 @@ interface Preset {
   name: string
   group: string
   patch: Partial<Controls>
+  mod?: readonly LooseRouting[]
 }
 interface UiModules {
   ALL_SLIDERS: Slider[]
@@ -72,6 +86,11 @@ function arg(name: string): string | undefined {
 
 const CAP = { tail: [0, 1], w: 64, h: 48 }
 const FRAMES = Number(arg('frames') ?? 150)
+// `--nomod` renders every preset at its resting frame. On by default because a
+// routing is part of the look, and 23 of the presets carry one — but the tables
+// in docs/CURATION.md predate the harness driving them, so this is how those
+// numbers are reproduced.
+const NOMOD = Deno.args.includes('--nomod')
 
 interface Row {
   name: string
@@ -150,6 +169,7 @@ async function main(): Promise<void> {
         FRAMES,
         CAP,
         move,
+        NOMOD ? undefined : drivable(p.name, p.mod),
       )
       rows.push(row(p.name, p.group.slice(0, 11), shots))
       console.error(`  ${rows.length}/${PRESETS.length} ${p.name}`)
@@ -187,6 +207,10 @@ async function main(): Promise<void> {
   fmt(rows, mode === 'presets' ? 'group' : 'worst at')
   if (mode !== 'presets')
     console.log('\n* = already flagged `fine: true` in the control table')
+  if (undrivable.length > 0)
+    console.log(
+      `\nrouting needs audio or a trigger, dropped from: ${undrivable.join(', ')}`,
+    )
 }
 
 await main()

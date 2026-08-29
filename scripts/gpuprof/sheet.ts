@@ -29,10 +29,10 @@
 
 import { DEFAULT_CONTROLS } from '../../src/core/controls'
 import { rngFor } from '../../src/core/rng'
-import { Runner, meanAbs, panner, spread } from './render'
+import { Runner, drivable, meanAbs, panner, spread, undrivable } from './render'
 
 import type { Controls } from '../../src/core/controls'
-import type { Routing } from './render'
+import type { LooseRouting, Routing } from './render'
 
 interface Preset {
   name: string
@@ -40,37 +40,9 @@ interface Preset {
   group: string
   blurb: string
   patch: Partial<Controls>
-  mod?: readonly {
-    target: string
-    source: string
-    rateHz: number
-    depth: number
-  }[]
+  mod?: readonly LooseRouting[]
 }
 
-// The six shapes `Runner` can generate. A preset may also route `level`, `hit`
-// or `trig`, which need audio or a finger on the key — the harness has neither,
-// so those are dropped here and counted, rather than handed over to be silently
-// ignored downstream.
-const DRIVABLE = new Set([
-  'sine',
-  'triangle',
-  'walk',
-  'smooth',
-  'hold',
-  'lorenz',
-])
-const undrivable: string[] = []
-
-function drivable(
-  name: string,
-  mod: Preset['mod'],
-): readonly Routing[] | undefined {
-  if (mod === undefined) return undefined
-  const out = mod.filter(r => DRIVABLE.has(r.source)) as readonly Routing[]
-  if (out.length < mod.length) undrivable.push(name)
-  return out.length > 0 ? out : undefined
-}
 interface PresetsModule {
   PRESETS: Preset[]
   presetControls: (patch: Partial<Controls>) => Controls
