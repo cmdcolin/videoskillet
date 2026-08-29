@@ -26,6 +26,11 @@ if (dirty) {
   process.exit(1)
 }
 
+// Catch what CI would catch, before it's a remote failure blocking the release.
+for (const check of ['pnpm lint', 'pnpm format:check', 'pnpm test']) {
+  run(check)
+}
+
 // `pnpm version` bumps package.json, commits it, and creates a `v<x.y.z>` tag.
 run(`pnpm version ${bump} -m "Release v%s"`)
 run('git push --follow-tags')
