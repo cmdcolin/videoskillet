@@ -369,22 +369,38 @@ function gatesBehind(
   return [...gates.values()]
 }
 
+// How long a stab button has to stay down before the press becomes a train, and
+// how far apart the train's nudges land. Both are long by UI standards on
+// purpose: at the 180ms it used to repeat at, a press was a shuffle nobody could
+// stop on the look they liked.
+const STAB_HOLD_MS = 500
+const STAB_TRAIN_MS = 800
+
 export function ControlGroup(props: { group: Group; defaultOpen?: boolean }) {
   const { group } = props
   const { writeControl, mutateGroup, resetGroup } = useControlsApi()
   const mod = useModSlotsApi()
   const filter = useFilter()
-  // The stab button's repeat, while it is held. A ref rather than state: the
-  // interval only ever gets started and stopped, never read to render anything,
-  // so state here would just be re-renders this group never needs.
-  const stabInterval = useRef<ReturnType<typeof setInterval> | undefined>(
+  // The stab button's timers, while it is held: the wait before a hold becomes a
+  // train, and the train itself. Refs rather than state — they only ever get
+  // started and stopped, never read to render anything.
+  const stabDelay = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const stabTrain = useRef<ReturnType<typeof setInterval> | undefined>(
     undefined,
   )
   const stopStab = () => {
-    clearInterval(stabInterval.current)
-    stabInterval.current = undefined
+    clearTimeout(stabDelay.current)
+    clearInterval(stabTrain.current)
+    stabDelay.current = undefined
+    stabTrain.current = undefined
   }
-  useEffect(() => () => clearInterval(stabInterval.current), [])
+  useEffect(
+    () => () => {
+      clearTimeout(stabDelay.current)
+      clearInterval(stabTrain.current)
+    },
+    [],
+  )
   // A live filter drops the miniature, so a search can reach the sliders it
   // stands in for.
   const [showFramed, setShowFramed] = useState(false)
@@ -494,24 +510,27 @@ export function ControlGroup(props: { group: Group; defaultOpen?: boolean }) {
           >
             randomize
           </button>
-          {/* Held, not clicked: it keeps re-nudging this stage at the same
-              amount for as long as it is down, and stops the instant it is
-              not — a pointer that slips off the button (or a window that
-              loses focus mid-hold) has to stop it exactly as a release
-              would, which is why both onPointerLeave and onBlur clear it
-              alongside onPointerUp. */}
+          {/* One stab on press; a hold turns into a train of them only after
+              STAB_HOLD_MS, so a press is a single nudge you can look at and
+              the train runs slowly enough to let go on the look you wanted.
+              It stops the instant the button is not down — a pointer that
+              slips off it (or a window that loses focus mid-hold) has to stop
+              it exactly as a release would, which is why both onPointerLeave
+              and onBlur clear it alongside onPointerUp. */}
           <button
             className={styles.stab}
-            title={`stab: hold to keep nudging this stage's controls randomly for as long as you hold it, at the same amount a click on randomize would use (${group.name})`}
-            aria-label={`stab ${group.name} — hold to randomize repeatedly`}
+            title={`stab: one random nudge to this stage's controls, at the amount a click on randomize would use — hold it down and it keeps stabbing, slowly, until you let go (${group.name})`}
+            aria-label={`stab ${group.name} — press to nudge once, hold to repeat`}
             onPointerDown={e => {
               const amount = mutateAmountFor(e)
               stopStab()
               mutateGroup(group.sliders, amount)
-              stabInterval.current = setInterval(
-                () => mutateGroup(group.sliders, amount),
-                180,
-              )
+              stabDelay.current = setTimeout(() => {
+                stabTrain.current = setInterval(
+                  () => mutateGroup(group.sliders, amount),
+                  STAB_TRAIN_MS,
+                )
+              }, STAB_HOLD_MS)
             }}
             onPointerUp={stopStab}
             onPointerLeave={stopStab}
