@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { DEFAULT_CONTROLS, atRest } from '../core/controls'
 import styles from './ControlGroup.module.css'
@@ -10,7 +10,6 @@ import {
   useControlValue,
 } from './ControlsContext'
 import { filterActive, matchedSliders, useFilter } from './filter'
-import { DiceIcon } from './icons'
 import { MagnifierFrame } from './MagnifierFrame'
 import { SYNCABLE_KEYS } from './midi'
 import { ModRowEditor } from './ModRowEditor'
@@ -344,6 +343,17 @@ export function ControlGroup(props: { group: Group; defaultOpen?: boolean }) {
   const { writeControl, mutateGroup, resetGroup } = useControlsApi()
   const mod = useModSlotsApi()
   const filter = useFilter()
+  // The stab button's repeat, while it is held. A ref rather than state: the
+  // interval only ever gets started and stopped, never read to render anything,
+  // so state here would just be re-renders this group never needs.
+  const stabInterval = useRef<ReturnType<typeof setInterval> | undefined>(
+    undefined,
+  )
+  const stopStab = () => {
+    clearInterval(stabInterval.current)
+    stabInterval.current = undefined
+  }
+  useEffect(() => () => clearInterval(stabInterval.current), [])
   // A live filter drops the miniature, so a search can reach the sliders it
   // stands in for.
   const [showFramed, setShowFramed] = useState(false)
@@ -432,8 +442,9 @@ export function ControlGroup(props: { group: Group; defaultOpen?: boolean }) {
         <>
           {/* Only on a group that has something to put back — the same rule the
               row's own ↺ follows, and the reason neither costs anything on the
-              majority of headers that are still at stock. It sits before the
-              dice because the pair reads as "back / further" in that order. */}
+              majority of headers that are still at stock. It sits before
+              randomize because the three read as "back / further / further,
+              held" in that order. */}
           {touched > 0 ? (
             <button
               className={styles.revert}
@@ -441,7 +452,7 @@ export function ControlGroup(props: { group: Group; defaultOpen?: boolean }) {
               aria-label={`reset ${group.name} to defaults`}
               onClick={() => resetGroup(group.sliders)}
             >
-              ↺
+              reset defaults
             </button>
           ) : null}
           <button
@@ -450,7 +461,32 @@ export function ControlGroup(props: { group: Group; defaultOpen?: boolean }) {
             aria-label={`nudge ${group.name} randomly`}
             onClick={e => mutateGroup(group.sliders, mutateAmountFor(e))}
           >
-            <DiceIcon />
+            randomize
+          </button>
+          {/* Held, not clicked: it keeps re-nudging this stage at the same
+              amount for as long as it is down, and stops the instant it is
+              not — a pointer that slips off the button (or a window that
+              loses focus mid-hold) has to stop it exactly as a release
+              would, which is why both onPointerLeave and onBlur clear it
+              alongside onPointerUp. */}
+          <button
+            className={styles.stab}
+            title={`stab: hold to keep nudging this stage's controls randomly for as long as you hold it, at the same amount a click on randomize would use (${group.name})`}
+            aria-label={`stab ${group.name} — hold to randomize repeatedly`}
+            onPointerDown={e => {
+              const amount = mutateAmountFor(e)
+              stopStab()
+              mutateGroup(group.sliders, amount)
+              stabInterval.current = setInterval(
+                () => mutateGroup(group.sliders, amount),
+                180,
+              )
+            }}
+            onPointerUp={stopStab}
+            onPointerLeave={stopStab}
+            onBlur={stopStab}
+          >
+            stab
           </button>
         </>
       }
