@@ -259,18 +259,34 @@ button.badge {
 .iconSyncSet {
   color: var(--edit);
 }
-/* something is driving this control. A static tint and nothing else: the mark
-   says the lever is wired, and animating it would put a second moving thing on
-   screen competing with the picture, which is the thing meant to move. */
+/* something is driving this control, and it is running. A chip, not bare text:
+   a coloured glyph alone read as a stray character rather than a control, so
+   this is the one badge that is *always* a button and needs to look like one
+   at rest, not only on hover. The tint carries the state; the pill is what
+   says "click this" before the pointer ever finds it. */
 .iconModSet {
   color: var(--mod);
+  background: color-mix(in srgb, var(--mod) 16%, transparent);
+  border-radius: 3px;
+  padding: 1px 5px;
+}
+.iconModSet:hover {
+  background: color-mix(in srgb, var(--mod) 30%, transparent);
 }
 /* the same routing, held still. Struck through rather than merely dimmed: at
    --fg4 alone it reads as an unset badge, and this row has to say "there is a
-   wobble patched here and it is not running" in one glyph. */
+   wobble patched here and it is not running" in one glyph. Same chip as above,
+   at the quiet colour, so "click to resume" reads as clearly as "click to
+   pause" did. */
 .iconModOff {
   color: var(--fg4);
   text-decoration: line-through;
+  background: color-mix(in srgb, var(--fg4) 14%, transparent);
+  border-radius: 3px;
+  padding: 1px 5px;
+}
+.iconModOff:hover {
+  background: color-mix(in srgb, var(--fg4) 26%, transparent);
 }
 .iconMidiSet {
   color: var(--midi);

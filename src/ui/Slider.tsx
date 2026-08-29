@@ -538,20 +538,40 @@ export function Slider(props: {
           comparison, so it moved to the ⋮ beside this, which is where the row
           keeps its wiring. */}
       {props.mod?.routed !== true ? null : (
-        <IconButton
-          title={
-            props.mod.on
-              ? 'wobbling — click to hold this one still (⋮ to change what drives it)'
-              : 'held still — click to start it wobbling again, as you set it'
-          }
-          className={cx(
-            styles.badge,
-            props.mod.on ? styles.iconModSet : styles.iconModOff,
+        <Popover
+          trigger={attrs => (
+            <button
+              type="button"
+              popoverTarget={attrs.popoverTarget}
+              style={attrs.style}
+              title={
+                props.mod!.on
+                  ? 'wobbling — click to hold this one still'
+                  : 'held still — click to start it wobbling again'
+              }
+              className={cx(
+                styles.badge,
+                props.mod!.on ? styles.iconModSet : styles.iconModOff,
+              )}
+            >
+              ∿
+            </button>
           )}
-          onClick={props.mod.onToggleOn}
         >
-          ∿
-        </IconButton>
+          {id => (
+            <MenuItem
+              icon={props.mod!.on ? '❚❚' : '▶'}
+              label={
+                props.mod!.on
+                  ? 'hold this one still'
+                  : 'start it wobbling again'
+              }
+              hint=""
+              closes={id}
+              onClick={props.mod!.onToggleOn}
+            />
+          )}
+        </Popover>
       )}
       {favorite?.on !== true ? null : (
         <span
