@@ -39,10 +39,10 @@ Four blind spots, each of which makes a real preset score like a dead one:
 
 - **A trigger nobody pulls.** `punchIn` rests just short of trouble and is
   supposed to sit still until you hit ⚡. It scores dep 4.3 because the harness
-  never fires it. Anything with a `trig` routing is exempt from the low-dep
-  list by construction.
+  never fires it. Anything with a `trig` routing is exempt from the low-dep list
+  by construction.
 - **A still source.** The three feedback loops eat their own output, so over a
-  frozen frame they converge and stop. What they do to *moving* picture is the
+  frozen frame they converge and stop. What they do to _moving_ picture is the
   whole point of them and is not in these numbers.
 - **A source with no detail.** SMPTE bars are flat fields, so the entire
   tape-wear family — soft luma, chroma noise, dropouts — moves them by almost
@@ -56,22 +56,22 @@ Four blind spots, each of which makes a real preset score like a dead one:
 `--source=detail`. A preset is only weak if it is weak on both; anything that
 moves one and not the other is telling you which kind of picture it needs.
 
-| preset | group | dep bars | dep detail | p99 detail | motion |
-| --- | --- | ---: | ---: | ---: | ---: |
-| vhs | Tape wear | 4.2 | 2.0 | 10.1 | 2.5 |
-| punchIn | Circuit bent | 4.3 | 3.1 | 11.0 | 1.0 |
-| fmFold | Tape wear | 3.0 | 7.0 | 60.3 | 2.2 |
-| adjacentChannel | RF / Broadcast | 8.9 | 3.4 | 13.3 | 1.9 |
-| stickyShed | Tape wear | 9.5 | 4.5 | 18.0 | 6.3 |
-| tapeCapture | Tape wear | 8.7 | 6.8 | 27.5 | 8.1 |
+| preset          | group          | dep bars | dep detail | p99 detail | motion |
+| --------------- | -------------- | -------: | ---------: | ---------: | -----: |
+| vhs             | Tape wear      |      4.2 |        2.0 |       10.1 |    2.5 |
+| punchIn         | Circuit bent   |      4.3 |        3.1 |       11.0 |    1.0 |
+| fmFold          | Tape wear      |      3.0 |        7.0 |       60.3 |    2.2 |
+| adjacentChannel | RF / Broadcast |      8.9 |        3.4 |       13.3 |    1.9 |
+| stickyShed      | Tape wear      |      9.5 |        4.5 |       18.0 |    6.3 |
+| tapeCapture     | Tape wear      |      8.7 |        6.8 |       27.5 |    8.1 |
 
 Those six are the whole of it: every other preset in the table clears dep 12 on
 at least one of the two sources. Four sit just over the line on bars alone and
-are worth a second look — `tiredAmplifier` (16.7 / 4.1), `cbBreakthrough`
-(12.8 / 6.4), `colourLate` (12.5 / 9.1) and `broadcast` (12.5 / 11.2).
+are worth a second look — `tiredAmplifier` (16.7 / 4.1), `cbBreakthrough` (12.8
+/ 6.4), `colourLate` (12.5 / 9.1) and `broadcast` (12.5 / 11.2).
 
-Not all of those are candidates. `punchIn` is *designed* to sit still until you hit
-⚡, and the harness never fires it. `broadcast` is a near-clean baseline on
+Not all of those are candidates. `punchIn` is _designed_ to sit still until you
+hit ⚡, and the harness never fires it. `broadcast` is a near-clean baseline on
 purpose. `mixerLoop` (8.4 on detail) is not in the list but would be on a third
 source: it is the README's hero shot, and it scores low only because a loop over
 a frozen frame converges — the still-source blind spot, not the preset.
@@ -96,12 +96,12 @@ are a reason to look at the frame.
 Caught by mean/sd rather than by dep — these leave clean decisively and arrive
 at a blank frame:
 
-| preset | dep | mean | sd | what it renders |
-| --- | ---: | ---: | ---: | --- |
-| chromaOnly | 98.9 | 0.1 | 0.3 | pure black |
-| reversePolarity | 98.0 | 1.1 | 5.5 | all but black |
+| preset          |  dep | mean |  sd | what it renders |
+| --------------- | ---: | ---: | --: | --------------- |
+| chromaOnly      | 98.9 |  0.1 | 0.3 | pure black      |
+| reversePolarity | 98.0 |  1.1 | 5.5 | all but black   |
 
-Both render black on bars *and* on the detail chart, so it is not the source.
+Both render black on bars _and_ on the detail chart, so it is not the source.
 
 `chromaOnly` promises "burst-locked color glowing on black" and renders black
 with no colour in it at all. `reversePolarity` sits next to `negative`, which
@@ -114,13 +114,13 @@ is a bad idea.
 Control-space distance (`scripts/gpuprof/list.ts`), normalized per slider
 travel. Closest pairs:
 
-| pair | distance |
-| --- | ---: |
-| vhs / pictureSearch | 0.076 |
-| dirtyMix / dirtyDissolve | 0.090 |
-| strobeTrails / ladderClimb | 0.123 |
-| fbBloom / woundSpiral | 0.133 |
-| neonTube / blackRestore | 0.139 |
+| pair                       | distance |
+| -------------------------- | -------: |
+| vhs / pictureSearch        |    0.076 |
+| dirtyMix / dirtyDissolve   |    0.090 |
+| strobeTrails / ladderClimb |    0.123 |
+| fbBloom / woundSpiral      |    0.133 |
+| neonTube / blackRestore    |    0.139 |
 
 `keyLoop` and `shadowLadder` move the same five controls exactly (Jaccard 1.00)
 at different values, and render 3 dep apart. Distance in control space
@@ -131,11 +131,11 @@ look at side by side, not as a similarity score to sort by.
 
 `fmOverdev` — the question that started this — measures dep 1.55, p99 71.2 at
 full travel on bars, which puts its mean departure below `lumaMHz` and its 99th
-percentile above most of the table. Looking at the frame says the same thing:
-at maximum it is a hairline of noisy black on the leading edge of a bright bar,
-a few pixels wide. The help text promises "a black comet" that "smears rightward
+percentile above most of the table. Looking at the frame says the same thing: at
+maximum it is a hairline of noisy black on the leading edge of a bright bar, a
+few pixels wide. The help text promises "a black comet" that "smears rightward
 for about a microsecond" and the streak's decay is ~10 samples, so the mechanism
-is doing roughly what it says — it is the *scale* the prose oversells, not the
+is doing roughly what it says — it is the _scale_ the prose oversells, not the
 direction.
 
 So it is a trim, and it is not flagged as one. Two ways to go, and they are
@@ -185,9 +185,9 @@ The pattern in what survived is sharper than any number here produced.
 **Geometry that accumulates and colour arithmetic were kept; ringing, blur,
 texture and stutter were not.** Both keyed resonators went, and they were the
 strongest prior going in — the previous round's own note says keying is what
-puts the ringing back *on* the picture rather than over it, which is true and
-turned out not to be the point. So did `defocus blobs`, `drift smear`, `line
-ladder` and `strobed trail`.
+puts the ringing back _on_ the picture rather than over it, which is true and
+turned out not to be the point. So did `defocus blobs`, `drift smear`,
+`line ladder` and `strobed trail`.
 
 `both loops` was kept at dep 26, the lowest departure in its sheet, while
 `iris hunt` was cut at 106. Departure did not order these at all.
@@ -207,9 +207,9 @@ Worth writing down because the name promises otherwise, and because six
 candidates were built on the assumption before anything was rendered.
 
 `cfbRing` multiplies the loop bus against the live program. Both signals carry
-their subcarrier on the **same crystal**, so the products land at the sum
-(7.16 MHz, above the chroma passband) and at the difference (DC, which is luma).
-The chroma filter discards the first, and the second is brightness rather than
+their subcarrier on the **same crystal**, so the products land at the sum (7.16
+MHz, above the chroma passband) and at the difference (DC, which is luma). The
+chroma filter discards the first, and the second is brightness rather than
 colour. Six candidates varying the detune, the line offset, the chroma trap, the
 demodulator axis and the comb around a strong `cfbRing` rendered within a point
 of each other on every measure, as the same desaturated grey-blue wash — and
@@ -235,29 +235,29 @@ band:
 The correction that cost the most to learn, and it was learned by getting it
 wrong. Three rounds of candidates came back "very subtle", so the next round
 stacked everything: both ring modulators, both loops run hard, sync marginal,
-deflection past the supply. Those scored `motion` 105 — five times anything
-kept before — and the verdict was **"too chaotic ... they need work"**.
+deflection past the supply. Those scored `motion` 105 — five times anything kept
+before — and the verdict was **"too chaotic ... they need work"**.
 
 What survived that round instead:
 
-| kept | motion |
-| --- | ---: |
-| runaway | 33 |
-| sync in the loop | 14 |
-| lorenz loop | 14 |
-| strobe bloom | 14 |
+| kept             | motion |
+| ---------------- | -----: |
+| runaway          |     33 |
+| sync in the loop |     14 |
+| lorenz loop      |     14 |
+| strobe bloom     |     14 |
 
 Everything at motion 55 or above was cut. So the axis is not amount of movement
 and it is certainly not entropy: what reads as wild here is **large, coherent
 structure that evolves** — a loop crossing unity and bleeding back, a stack of
-roll seams at different ages, an echo whose spacing never repeats. What reads
-as noise is high-entropy hash, however energetic the numbers say it is.
+roll seams at different ages, an echo whose spacing never repeats. What reads as
+noise is high-entropy hash, however energetic the numbers say it is.
 
 `motion` is worth watching from both ends. Under about 5 a look is a still;
 above about 50 it is probably hash. The band that has produced every keeper so
 far is 10–40.
 
-One more thing that number cannot see: it is measured between *adjacent* frames,
+One more thing that number cannot see: it is measured between _adjacent_ frames,
 so a slow sweep reports as motionless. A hue rotation at 0.2 Hz moves 1.2° a
 frame and scores under 3 while cycling the whole wheel in five seconds. Read it
 alongside a clip, never instead of one.

@@ -78,16 +78,16 @@ A second pass, the same day, went after the looks rather than the floor. A sweep
 of every preset (`gpuprof --preset=` in a loop) ranked the hot passes; each fix
 below is bit-exact except where it says otherwise.
 
-| change                                                                              | look                      | pass     | before | after |
-| ----------------------------------------------------------------------------------- | ------------------------- | -------- | ------ | ----- |
-| B's three encoders read its texel; `encode_yuv.wgsl` deleted                        | dirtyMix + PiP            | frame    | 2.80   | 2.32  |
-| colour-under tile staged behind the Y/C delay (was 55 storage taps, a deviate each) | colourLate + chroma noise | channel  | 2.99   | 0.62  |
-| FM fold's decay tabled per workgroup                                                | fmFold                    | channel  | 1.43   | 1.23  |
-| flywheel and HV sag walked in two waves                                             | fullCollapse              | sync     | 0.31   | 0.14  |
-| gun cutoff + gamma applied where decode writes the screen (not exact)               | lightThatStays            | crtFace  | 1.75   | 0.74  |
-|                                                                                     | misconverged              | crtFace  | 1.43   | 0.67  |
-|                                                                                     | nightMonitor              | crtFace  | 1.39   | 0.59  |
-| saturation applied to each gather's result, not each tap                            | stock                     | crtFace  | 0.36   | 0.32  |
+| change                                                                              | look                      | pass    | before | after |
+| ----------------------------------------------------------------------------------- | ------------------------- | ------- | ------ | ----- |
+| B's three encoders read its texel; `encode_yuv.wgsl` deleted                        | dirtyMix + PiP            | frame   | 2.80   | 2.32  |
+| colour-under tile staged behind the Y/C delay (was 55 storage taps, a deviate each) | colourLate + chroma noise | channel | 2.99   | 0.62  |
+| FM fold's decay tabled per workgroup                                                | fmFold                    | channel | 1.43   | 1.23  |
+| flywheel and HV sag walked in two waves                                             | fullCollapse              | sync    | 0.31   | 0.14  |
+| gun cutoff + gamma applied where decode writes the screen (not exact)               | lightThatStays            | crtFace | 1.75   | 0.74  |
+|                                                                                     | misconverged              | crtFace | 1.43   | 0.67  |
+|                                                                                     | nightMonitor              | crtFace | 1.39   | 0.59  |
+| saturation applied to each gather's result, not each tap                            | stock                     | crtFace | 0.36   | 0.32  |
 
 The gamma one is the trade. `crt_face` was running the beam transfer per tap —
 three `pow` a tap across spot, bloom and halation, a millisecond a frame on a
