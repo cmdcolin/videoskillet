@@ -29,10 +29,12 @@ import { SelectRow } from './SelectRow'
 import { Slider } from './Slider'
 import { TempoRow } from './TempoRow'
 import ui from './ui.module.css'
+import { arrowhead, route } from './wire'
 
 import type { BayField, ModTarget } from '../core/controls'
 import type { UiSlot } from './modSlots'
 import type { Tempo } from './useTempo'
+import type { Point } from './wire'
 
 // The stab gate: the one thing in this section that is not a slot. It drives the
 // whole board rather than one control, so there is nothing to point at a target —
@@ -179,36 +181,32 @@ function FarEnd(props: {
   )
 }
 
+// The straight run a slot's wire draws: one leg, head included, off the same
+// two points every other wire in the panel is built from (`./wire`, ported
+// from bender) — not a fourth hand-written arrowhead.
+const WIRE_PTS: readonly Point[] = [
+  [0, 5],
+  [16, 5],
+]
+const WIRE_D = route(WIRE_PTS, 0)
+const WIRE_HEAD_D = arrowhead(WIRE_PTS, 5, 3)
+
 // The short line between a slot's two chips, drawn rather than left to a verb:
 // a wire reads as a connection before either label does, which "driving" never
 // did on its own. Solid and tinted while the slot is actually running, dashed
 // and dim while held — the same split `iconModOff` draws on a control row's
 // own ∿, so a reader who already knows that badge reads this at a glance too.
 function Wire(props: { live: boolean }) {
-  const stroke = props.live ? 'var(--mod)' : 'var(--fg4)'
   return (
     <svg
-      className={styles.wire}
+      className={cx(styles.wire, !props.live && styles.wireOff)}
       width="16"
       height="10"
       viewBox="0 0 16 10"
       aria-hidden="true"
     >
-      <line
-        x1="0"
-        y1="5"
-        x2="10"
-        y2="5"
-        stroke={stroke}
-        strokeWidth={1.5}
-        strokeDasharray={props.live ? undefined : '2 2'}
-      />
-      <path
-        d="M 10 2 L 15 5 L 10 8"
-        fill="none"
-        stroke={stroke}
-        strokeWidth={1.5}
-      />
+      <path className={styles.wireLine} d={WIRE_D} />
+      <path className={styles.wireHead} d={WIRE_HEAD_D} />
     </svg>
   )
 }

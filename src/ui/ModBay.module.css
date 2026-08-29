@@ -17,9 +17,27 @@
   font-weight: 700;
 }
 
-/* The connecting line between the two chips below — see ModBay.tsx's `Wire`. */
+/* The connecting line between the two chips below — see ModBay.tsx's `Wire`,
+   built on the same route()/arrowhead() the chain map's own wires use
+   (ChainMap.module.css's .mapWire/.mapArrow), so a third drawing agrees with
+   the first two on how a line becomes a wire instead of inventing its own. */
 .wire {
   flex-shrink: 0;
+  color: var(--mod);
+}
+.wireLine {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+}
+.wireHead {
+  fill: currentColor;
+}
+.wireOff {
+  color: var(--fg4);
+}
+.wireOff .wireLine {
+  stroke-dasharray: 2 2;
 }
 
 /* A slot's two endpoints, drawn as boxes a wire runs between rather than as
