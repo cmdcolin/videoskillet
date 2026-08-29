@@ -9,6 +9,9 @@ import { barsA, detailA, gradientB } from './sources'
 
 import type { Controls } from '../../src/core/controls'
 
+// A frame's worth of source, or nothing to leave the picture where it is.
+export type Animate = (frame: number) => Uint8Array<ArrayBuffer> | undefined
+
 export interface Capture {
   // Which frames to keep, counted from the end: 0 is the last frame. A survey
   // wants [0, 1] (departure and motion); a contact sheet wants a spread, so the
@@ -28,7 +31,7 @@ export interface Frames {
 export class Runner {
   private constructor(
     readonly device: GPUDevice,
-    private readonly srcA: Uint8Array<ArrayBuffer>,
+    readonly srcA: Uint8Array<ArrayBuffer>,
     private readonly srcB: Uint8Array<ArrayBuffer>,
     private readonly read: GPUBuffer,
     private readonly bytesPerRow: number,
@@ -107,7 +110,12 @@ export class Runner {
     return out
   }
 
-  async run(controls: Controls, frames: number, cap: Capture): Promise<Frames> {
+  async run(
+    controls: Controls,
+    frames: number,
+    cap: Capture,
+    animate?: Animate,
+  ): Promise<Frames> {
     const g = await Graph.create(this.device, {
       controls,
       bEnabled: true,
@@ -119,6 +127,15 @@ export class Runner {
       () => new Float32Array(cap.w * cap.h * 3),
     )
     for (let f = 0; f < frames; f++) {
+      const px = animate?.(f)
+      if (px !== undefined) {
+        this.device.queue.writeTexture(
+          { texture: g.srcTexA },
+          px,
+          { bytesPerRow: ACTIVE_WIDTH * 4 },
+          [ACTIVE_WIDTH, ACTIVE_HEIGHT],
+        )
+      }
       const enc = this.device.createCommandEncoder()
       g.encode(enc, (_p, run) => {
         run()
@@ -128,6 +145,29 @@ export class Runner {
       if (slot !== undefined) shots[slot] = await this.grab(g, cap.w, cap.h)
     }
     return { shots }
+  }
+}
+
+// The source, panned. Cheap motion for judging a loop: a feedback rig fed a
+// frozen frame settles into a still image and reports as doing nothing, which
+// is the opposite of what it does on live picture.
+export function panner(base: Uint8Array<ArrayBuffer>): Animate {
+  const out = new Uint8Array(base.length)
+  return (frame: number) => {
+    const dx = Math.round(frame * 1.7) % ACTIVE_WIDTH
+    const dy = Math.round(frame * 0.4) % ACTIVE_HEIGHT
+    for (let y = 0; y < ACTIVE_HEIGHT; y++) {
+      const sy = (y + dy) % ACTIVE_HEIGHT
+      for (let x = 0; x < ACTIVE_WIDTH; x++) {
+        const s = (sy * ACTIVE_WIDTH + ((x + dx) % ACTIVE_WIDTH)) * 4
+        const d = (y * ACTIVE_WIDTH + x) * 4
+        out[d] = base[s]
+        out[d + 1] = base[s + 1]
+        out[d + 2] = base[s + 2]
+        out[d + 3] = 255
+      }
+    }
+    return out
   }
 }
 

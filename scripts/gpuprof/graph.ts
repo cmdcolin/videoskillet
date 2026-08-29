@@ -32,7 +32,6 @@ import {
   LINES,
   SAMPLE_RATE,
   SAMPLES_PER_LINE,
-  TAPE_FRAMES,
 } from '../../src/core/signal/constants'
 import { advanceCrossings } from '../../src/core/signal/crossings'
 import { FILTER_STRIDE, NUM_SECTIONS } from '../../src/core/signal/filters'
@@ -43,7 +42,6 @@ import { RfState } from '../../src/core/signal/rfstate'
 import { TrackingServo } from '../../src/core/signal/servo'
 import { StrobeGate } from '../../src/core/signal/strobe'
 import { SynthState } from '../../src/core/signal/synthstate'
-import { TapeState, tapeRecording } from '../../src/core/signal/tapeloop'
 
 import type { Controls } from '../../src/core/controls'
 import type { FeedSource } from '../../src/core/gpu/feedgates'
@@ -97,6 +95,10 @@ export class Graph {
   frame = 0
 
   readonly compA: GPUBuffer
+  // Source A's texture, so a caller can move the picture between frames. A
+  // loop over a frozen frame converges and stops, which makes every feedback
+  // look score as though it does nothing.
+  readonly srcTexA: GPUTexture
   readonly outTex: GPUTexture
   readonly faceTex: GPUTexture
   readonly timingBuf: GPUBuffer
@@ -114,7 +116,6 @@ export class Graph {
   private readonly rand = rngFor(1)
   private readonly lineState = new LineState(this.rand)
   private readonly mixState = new MixState(this.rand)
-  private readonly tapeState = new TapeState(this.rand)
   private readonly rfState = new RfState()
   private readonly synthState = new SynthState()
   private readonly strobeGate = new StrobeGate()
@@ -197,6 +198,7 @@ export class Graph {
           GPUTextureUsage.COPY_DST,
       })
     const srcTexA = tex()
+    this.srcTexA = srcTexA
     const srcTexB = tex()
     const inputTex = tex()
     this.outTex = tex(['rgba8unorm-srgb'])
@@ -240,9 +242,6 @@ export class Graph {
     const lineParams = this.lineParamsBuf
     const audio = this.audioBuf
     const one = (res: Record<string, Res>) => ({ main: res })
-
-    const tapeOn = c.tapeMix !== 0 || tapeRecording(c)
-    const tape = tapeOn ? storage(TAPE_FRAMES * N * 2) : null
 
     this.setup = [
       {
@@ -355,24 +354,6 @@ export class Graph {
         dispatch: perLine,
         when: () => c.cfbMix !== 0,
       },
-      ...(tape === null
-        ? []
-        : [
-            {
-              label: 'tapePlay',
-              shader: 'tape_play',
-              variants: one({ P, tape, comp: this.compA }),
-              dispatch: perLine,
-              when: () => c.tapeMix !== 0,
-            },
-            {
-              label: 'tapeRec',
-              shader: 'tape_rec',
-              variants: one({ P, comp: this.compA, tape }),
-              dispatch: perLineW,
-              when: () => tapeRecording(c),
-            },
-          ]),
     ]
     this.loop = [
       {
@@ -680,18 +661,6 @@ export class Graph {
       wipePos: c.wipePos,
       wipeRateHz: c.wipeRate,
     })
-    const tapeU = this.tapeState.update(
-      {
-        tapeLoopMm: c.tapeLoopMm,
-        tapeWowPct: c.tapeWowPct,
-        tapeColourFrame: c.tapeColourFrame,
-        tapeMix: c.tapeMix,
-        tapeRecord: c.tapeRecord,
-        tapeTransport: c.tapeTransport,
-        tapeShuttle: c.tapeShuttle,
-      },
-      this.frame,
-    )
     const track = this.servo.update({
       target: c.trackPos,
       amt: c.trackAmt,
@@ -723,7 +692,6 @@ export class Graph {
         dbgView: this.dbgView,
       }),
       ...mixU,
-      ...tapeU,
       ...this.rfState.update(this.frame),
       ...this.synthState.update({ synthAHz: c.synthAHz, synthBHz: c.synthBHz }),
     }

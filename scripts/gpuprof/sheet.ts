@@ -6,6 +6,7 @@
 //     presets                    every built-in preset
 //     presets --group='Tape wear'
 //     presets --only=vhs,fmFold   a named shortlist
+//     candidates --spec=scripts/gpuprof/candidates.feedback.ts
 //
 // `--source=bars` swaps the detail chart back for flat colour bars.
 //
@@ -21,7 +22,7 @@
 
 import { DEFAULT_CONTROLS } from '../../src/core/controls'
 import { rngFor } from '../../src/core/rng'
-import { Runner, meanAbs, spread } from './render'
+import { Runner, meanAbs, panner, spread } from './render'
 
 import type { Controls } from '../../src/core/controls'
 
@@ -118,7 +119,20 @@ async function main(): Promise<void> {
   await Deno.mkdir(outDir, { recursive: true })
 
   const items: Item[] = []
-  if (mode === 'presets') {
+  if (mode === 'candidates') {
+    const spec = arg('spec')
+    if (spec === undefined) throw new Error('candidates needs --spec=<file.ts>')
+    const mod = (await import(new URL(spec, `file://${Deno.cwd()}/`).href)) as {
+      candidates: { name: string; blurb: string; patch: Partial<Controls> }[]
+    }
+    for (const c of mod.candidates) {
+      items.push({
+        name: c.name,
+        blurb: c.blurb,
+        controls: presetControls(c.patch),
+      })
+    }
+  } else if (mode === 'presets') {
     const group = arg('group')
     const only = arg('only')?.split(',')
     for (const p of PRESETS) {
@@ -147,18 +161,24 @@ async function main(): Promise<void> {
   const runner = await Runner.create(
     arg('source') === 'bars' ? 'bars' : 'detail',
   )
-  const ref = await runner.run({ ...DEFAULT_CONTROLS }, FRAMES, {
-    tail: [0],
-    w: TW,
-    h: TH,
-  })
+  // A loop eating a frozen frame converges and stops, so every feedback look
+  // would render as the source slightly soft. Panning the picture is the
+  // cheapest honest stand-in for live video.
+  const move = arg('still') === undefined ? panner(runner.srcA) : undefined
+  const ref = await runner.run(
+    { ...DEFAULT_CONTROLS },
+    FRAMES,
+    { tail: [0], w: TW, h: TH },
+    move,
+  )
   const manifest: Record<string, unknown>[] = []
   for (const [i, it] of items.entries()) {
-    const { shots } = await runner.run(it.controls, FRAMES, {
-      tail: STRIP,
-      w: TW,
-      h: TH,
-    })
+    const { shots } = await runner.run(
+      it.controls,
+      FRAMES,
+      { tail: STRIP, w: TW, h: TH },
+      move,
+    )
     const slug = `${String(i).padStart(3, '0')}-${it.name.replaceAll(/[^a-z0-9]+/gi, '-').toLowerCase()}`
     const files: string[] = []
     for (const [k, s] of shots.entries()) {
