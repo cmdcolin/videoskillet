@@ -5,6 +5,9 @@
 //     rolls --n=16 --seed=7      random rolls, the app's own draw
 //     presets                    every built-in preset
 //     presets --group='Tape wear'
+//     presets --only=vhs,fmFold   a named shortlist
+//
+// `--source=bars` swaps the detail chart back for flat colour bars.
 //
 // The counterpart to `scripts/contact.mjs`, which does the same job through a
 // headed Firefox and the real app. This one never opens a window, so it can run
@@ -117,9 +120,11 @@ async function main(): Promise<void> {
   const items: Item[] = []
   if (mode === 'presets') {
     const group = arg('group')
+    const only = arg('only')?.split(',')
     for (const p of PRESETS) {
       if (p.name === 'clean') continue
       if (group !== undefined && p.group !== group) continue
+      if (only !== undefined && !only.includes(p.name)) continue
       items.push({
         name: p.displayName ?? p.name,
         blurb: `${p.group} — ${p.blurb}`,
@@ -139,7 +144,9 @@ async function main(): Promise<void> {
     }
   }
 
-  const runner = await Runner.create()
+  const runner = await Runner.create(
+    arg('source') === 'bars' ? 'bars' : 'detail',
+  )
   const ref = await runner.run({ ...DEFAULT_CONTROLS }, FRAMES, {
     tail: [0],
     w: TW,
