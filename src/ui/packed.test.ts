@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
 import { CONTROL_KEYS, DEFAULT_CONTROLS } from '../core/controls'
-import { SLIDER_BY_KEY } from './controls'
-import { URL_KEY_ORDER, packControls, unpackControls } from './packed'
+import { ALL_SLIDERS, SLIDER_BY_KEY } from './controls'
+import { packControls, unpackControls } from './packed'
 import {
   PRESETS,
   blendPresets,
@@ -51,20 +51,25 @@ const bytesToText = (bytes: number[]): string => {
   return out
 }
 
-describe('the wire order', () => {
-  it('names every control and no other', () => {
-    // Append here when a control is added — never insert and never reorder, or
-    // every link ever made decodes to a different look. This is the check that
-    // makes the rule the build's rather than someone's memory.
-    const live = URL_KEY_ORDER.filter(k => k !== null)
-    expect([...live].toSorted()).toEqual([...CONTROL_KEYS].toSorted())
-    expect(new Set(live).size).toBe(live.length)
+describe('the wire numbers', () => {
+  it('gives every control exactly one, and no two the same', () => {
+    expect(ALL_SLIDERS.map(s => s.key).toSorted()).toEqual(
+      [...CONTROL_KEYS].toSorted(),
+    )
+    const ids = ALL_SLIDERS.map(s => s.id)
+    expect(new Set(ids).size).toBe(ids.length)
+    expect(ids.filter(n => !Number.isInteger(n) || n < 0)).toEqual([])
   })
 
-  it('has a slider behind every name, which is what carries the value', () => {
-    expect(
-      URL_KEY_ORDER.filter(k => k !== null && !SLIDER_BY_KEY.has(k)),
-    ).toEqual([])
+  // What this cannot check is the rule that matters — that a number already
+  // published never changes — because the only record of what was published is
+  // the links themselves. The golden vectors at the foot of this file are that
+  // record: they are literal bytes, so renumbering any control they name fails
+  // here rather than in someone's bookmark.
+  it('leaves the retired numbers unused rather than filling them in', () => {
+    const ids = new Set(ALL_SLIDERS.map(s => s.id))
+    // The fourteen the tape delay loop had, and the gap it left behind.
+    for (let n = 155; n <= 168; n++) expect(ids.has(n)).toBe(false)
   })
 })
 
@@ -142,7 +147,7 @@ describe('a link that is not what this build would have written', () => {
     // because every field is a varint the reader steps over it and keeps the
     // rest, rather than the link opening as the default look.
     const look: Controls = { ...DEFAULT_CONTROLS, hHold: 0.2, noiseIre: 7.5 }
-    const at = (key: ControlKey) => URL_KEY_ORDER.indexOf(key)
+    const at = (key: ControlKey) => SLIDER_BY_KEY.get(key)!.id
     const bytes: number[] = []
     let prev = -1
     for (const key of (['hHold', 'noiseIre'] as ControlKey[]).toSorted(
@@ -158,7 +163,8 @@ describe('a link that is not what this build would have written', () => {
     }
     // the forged wire is the encoder's, or the rest of this proves nothing
     expect(bytesToText(bytes)).toBe(packControls(look))
-    bytes.push(URL_KEY_ORDER.length - prev + 3, 9)
+    const past = Math.max(...ALL_SLIDERS.map(d => d.id)) + 1
+    bytes.push(past - prev + 2, 9)
     expect(unpackControls(bytesToText(bytes))).toEqual({
       hHold: 0.2,
       noiseIre: 7.5,
@@ -202,7 +208,7 @@ describe('a link that is not what this build would have written', () => {
     // the lost rendering step in ADR 0004. Every value comes back through
     // `snapToStep`, so an index past the end of the travel lands on the rail.
     const def = SLIDER_BY_KEY.get('frameLock')!
-    const at = URL_KEY_ORDER.indexOf('frameLock')
+    const at = SLIDER_BY_KEY.get('frameLock')!.id
     const far = unpackControls(bytesToText([at, 9999 * 2 * 2])).frameLock
     expect(far).toBe(def.max)
     // and the other rail, which a count from zero can now reach
@@ -265,7 +271,7 @@ describe('the format, pinned', () => {
       const n = Math.round(value / def.step)
       expect(packControls({ ...DEFAULT_CONTROLS, [key]: value })).toBe(
         bytesToText([
-          URL_KEY_ORDER.indexOf(key),
+          SLIDER_BY_KEY.get(key)!.id,
           (n < 0 ? -2 * n - 1 : 2 * n) * 2,
         ]),
       )

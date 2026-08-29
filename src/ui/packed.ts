@@ -1,7 +1,8 @@
 import { DEFAULT_CONTROLS } from '../core/controls'
-import { SLIDER_BY_KEY, snapToStep } from './controls'
+import { ALL_SLIDERS, SLIDER_BY_KEY, snapToStep } from './controls'
 
 import type { ControlKey, Controls } from '../core/controls'
+import type { SliderDef } from './controls'
 
 // The short form of a link's look: the same controls `?set=` names, written as
 // bytes instead of words. A rolled look is a 252-character query written by
@@ -21,290 +22,17 @@ import type { ControlKey, Controls } from '../core/controls'
 // is what `snapToStep` rounds to; the step count says the same thing in one
 // varint. See urlParams.ts for which form goes in the query.
 
-// The wire order, and the reason this list is written out rather than taken
-// from CONTROL_KEYS: a packed link says "control 84", so the day someone
-// reorders DEFAULT_CONTROLS — moving a control into the group it belongs to is
-// a tidy, and the panel already reads its own order from GROUPS — every link
-// ever made would quietly decode to a different look. Adding a control means
-// appending here, never inserting and never reordering. packed.test.ts fails if
-// the two lists stop holding the same names, which turns "append" from a rule
-// someone remembers into one the build checks.
-export const URL_KEY_ORDER: readonly (ControlKey | null)[] = [
-  'deint',
-  'capLumaMHz',
-  'capChromaMHz',
-  'capYcDelayNs',
-  'capNoiseIre',
-  'capChromaNoiseIre',
-  'srcNoiseBwMHz',
-  'srcNoiseLine',
-  'srcNoiseLevel',
-  'srcNoiseHz',
-  'synthAHz',
-  'synthBHz',
-  'synthShape',
-  'synthMix',
-  'synthLevel',
-  'synthColor',
-  'synthHueDeg',
-  'synthOver',
-  'synthFm',
-  'encChromaMHz',
-  'invert',
-  'demodMHz',
-  'chromaTail',
-  'chromaCoarse',
-  'chromaGain',
-  'burstLock',
-  'tintDeg',
-  'demodAxisDeg',
-  'matrixClip',
-  'scDetuneKHz',
-  'killThresh',
-  'accLagLines',
-  'svideoBleed',
-  'combMode',
-  'hHold',
-  'vHold',
-  'vFreqHz',
-  'syncBendUs',
-  'bendUs',
-  'bendShape',
-  'bendPeriod',
-  'vSize',
-  'hvSagUs',
-  'hvRing',
-  'abl',
-  'hDetuneHz',
-  'clipHz',
-  'clipPoint',
-  'clipBite',
-  'clipDwellMs',
-  'clipChatter',
-  'audioGain',
-  'audioBendUs',
-  'audioLoad',
-  'audioIre',
-  'audioHueDeg',
-  'audioSagUs',
-  'audioRoll',
-  'audioTear',
-  'lumaMHz',
-  'polarityFlip',
-  'termination',
-  'chromaPinOnly',
-  'connectorGlitch',
-  'connectorMode',
-  'scramble',
-  'scrambleMode',
-  'macrovision',
-  'mvStripeDeg',
-  'vbi',
-  'enhClampUs',
-  'enhDroopUs',
-  'enhPeakMHz',
-  'enhPeakQ',
-  'enhPeakBoost',
-  'enhSync',
-  'enhSliceIre',
-  'lumaPeak',
-  'noiseIre',
-  'noiseTilt',
-  'impulseRate',
-  'impulseIre',
-  'impulseHz',
-  'impulseMains',
-  'strikeRate',
-  'soundIre',
-  'buzzLevel',
-  'rfAdjacent',
-  'rfMistuneMHz',
-  'rfSnow',
-  'ingress',
-  'agc',
-  'ghostDelayUs',
-  'ghostGain',
-  'humAmp',
-  'humMod',
-  'colorUnderMix',
-  'chromaNoiseIre',
-  'underJitterDeg',
-  'dropoutRate',
-  'dropoutLenUs',
-  'dropoutComp',
-  'headSwitchNoise',
-  'headSwitchShiftUs',
-  'headClog',
-  'ycDelayNs',
-  'diffGain',
-  'diffPhaseDeg',
-  'fmOverdev',
-  'fmStreakUs',
-  'tbJitterNs',
-  'tbWowNs',
-  'tbStickNs',
-  'dubGens',
-  'fbMix',
-  'fbZoom',
-  'fbRotateDeg',
-  'fbShiftX',
-  'fbShiftY',
-  'fbGain',
-  'fbIris',
-  'fbFocus',
-  'fbVign',
-  'fbBlack',
-  'fbKnee',
-  'crtCutoff',
-  'crtGamma',
-  'crtSat',
-  'crtSpot',
-  'crtGrain',
-  'crtBloom',
-  'crtHalation',
-  'crtGlow',
-  'crtHaloKey',
-  'crtSvm',
-  'crtSvmWidth',
-  'crtConverge',
-  'crtPurity',
-  'crtPurityX',
-  'crtPurityY',
-  'crtPuritySize',
-  'cfbMix',
-  'cfbGain',
-  'cfbDelayUs',
-  'cfbLines',
-  'cfbKey',
-  'cfbKeyLevel',
-  'cfbKeySoft',
-  'cfbHold',
-  'cfbTrail',
-  'cfbFilterMHz',
-  'cfbFilterQ',
-  'cfbFilterBoost',
-  'cfbServoUs',
-  'cfbRing',
-  // Fourteen retired slots: the tape delay loop, cut in full. They stay as
-  // holes rather than closing up because a packed link says "control 84" — take
-  // a name out of the middle and every control after it shifts, so every link
-  // ever published, and every look anyone saved, would decode to a different
-  // one. A hole costs a byte in the reader and nothing on the wire.
-  null,
-  null,
-  null,
-  null,
-  null,
-  null,
-  null,
-  null,
-  null,
-  null,
-  null,
-  null,
-  null,
-  null,
-  'aScramble',
-  'aScrambleMode',
-  'aTermination',
-  'aNoiseIre',
-  'aPolarity',
-  'aHumIre',
-  'aConnector',
-  'aConnectorMode',
-  'aPause',
-  'aDropoutRate',
-  'aDropoutLenUs',
-  'bScramble',
-  'bScrambleMode',
-  'bTermination',
-  'bNoiseIre',
-  'bPolarity',
-  'bHumIre',
-  'bConnector',
-  'bConnectorMode',
-  'bDropoutRate',
-  'bDropoutLenUs',
-  'aGain',
-  'bGain',
-  'bRing',
-  'bLineHz',
-  'bDetuneHz',
-  'bRollLps',
-  'bHueDeg',
-  'bVidGain',
-  'bInv',
-  'bPause',
-  'bGenlock',
-  'wipeMode',
-  'wipePos',
-  'wipeSoft',
-  'wipeRate',
-  'pipMix',
-  'pipX',
-  'pipY',
-  'pipW',
-  'pipH',
-  'pipBorder',
-  'pipSoft',
-  'pipKey',
-  'pipKeyLevel',
-  'pipKeySoft',
-  'bKey',
-  'bKeyHueDeg',
-  'bKeyAcceptDeg',
-  'bKeyClip',
-  'bKeySoft',
-  'bKeySpill',
-  'bKeyDelayUs',
-  'bKeyFill',
-  'bKeyMatteY',
-  'bKeyMatteHueDeg',
-  'bKeyMatteSat',
-  'trackAmt',
-  'trackPos',
-  'trackHunt',
-  'trackKick',
-  'shuttleX',
-  'strobeHz',
-  'strobeMs',
-  'scanBeam',
-  'scanBloom',
-  'phosphor',
-  'phosphorMode',
-  'phosphorSkew',
-  'phosphorBleed',
-  'crtSharp',
-  'maskAmt',
-  'maskPitch',
-  'crtZoom',
-  'crtZoomX',
-  'crtZoomY',
-  'timeScale',
-  'frameLock',
-  'cc',
-  'ccBox',
-  'ccRomAddr',
-  'ccRomData',
-  'cgMix',
-  'cgX',
-  'cgY',
-  'cgScale',
-  'cgKeyDelayNs',
-  'cgClip',
-  'cgKeyMHz',
-  'cgEdgeX',
-  'cgEdgeY',
-  'cgFill',
-  'cgInvert',
-  'cgRomAddr',
-  'cgRomData',
-  'vir',
-  'virLag',
-]
-
-const INDEX = new Map(
-  URL_KEY_ORDER.flatMap((k, i) => (k === null ? [] : [[k, i] as const])),
+// The wire is numbered by the `id` each control carries in the control table
+// (ui/controls.ts), not by where it sits in any list here. That is the whole
+// difference: there is no order to keep, so moving a slider into the group it
+// belongs in cannot silently repoint every link ever made at a different
+// control. A number is assigned once and never changes or comes back — a
+// deleted control just leaves a gap, and the reader steps over it.
+const BY_ID = new Map<number, ControlKey>(ALL_SLIDERS.map(s => [s.id, s.key]))
+// Ascending, because the encoder writes the *gap* since the last control it
+// wrote and a gap has to be positive.
+const IN_ORDER: readonly SliderDef[] = ALL_SLIDERS.toSorted(
+  (x, y) => x.id - y.id,
 )
 
 // A value is counted from zero rather than from the control's `min`, and that
@@ -319,11 +47,10 @@ const INDEX = new Map(
 // widened range is what it should be: the same values, with more of them now
 // reachable. `?set=noiseIre:9` means 9 IRE forever, and so does this.
 //
-// Two things are still part of the wire. The order of URL_KEY_ORDER is the
-// dangerous one — reorder it and every link ever made decodes to a different
-// control — and the golden vectors at the foot of packed.test.ts fail the
-// moment it moves, which is the check the "append, never insert" comment above
-// only asks for politely. The other is `step`, the unit the count is in:
+// Two things are still part of the wire. Every control's `id` is the dangerous
+// one — change one and every link carrying that control decodes to a different
+// one — and the golden vectors at the foot of packed.test.ts fail the moment
+// any of them moves. The other is `step`, the unit the count is in:
 // changing one moves every existing link for that control, but by less than a
 // step, since the value is re-snapped to whatever grid the control now has.
 // That is worth knowing before retuning a step and is not worth a 247-entry
@@ -415,17 +142,16 @@ function fromBase64Url(text: string): number[] | null {
   return bytes
 }
 
-/** A look as bytes: every control off default, by position in URL_KEY_ORDER. */
+/** A look as bytes: every control off default, by its `id` in the table. */
 export function packControls(c: Partial<Controls>): string {
   const bytes: number[] = []
   let prev = -1
-  for (const key of URL_KEY_ORDER) {
-    if (key === null) continue
+  for (const { key, id } of IN_ORDER) {
     const v = c[key]
     if (v === undefined || v === DEFAULT_CONTROLS[key] || !Number.isFinite(v)) {
       continue
     }
-    const i = INDEX.get(key) ?? 0
+    const i = id
     // The gap since the last control written rather than the index itself: what
     // a look holds arrives in runs — a preset moves a whole group of the panel
     // at once — so a run costs one byte a control instead of two.
@@ -462,11 +188,11 @@ export function unpackControls(text: string): Partial<Controls> {
     if (gap === null || value === null) break
     const i = prev + 1 + gap
     prev = i
-    // A hole (a retired control) or a name off the end of this build's list —
-    // a link from a newer app. Either way every field is a varint, so the
-    // reader steps over it and keeps the rest of the look.
-    const key = URL_KEY_ORDER[i]
-    if (key === undefined || key === null) continue
+    // A number this build has no control for: a retired one, or one from a
+    // newer app. Either way every field is a varint, so the reader steps over
+    // it and keeps the rest of the look rather than opening on the default.
+    const key = BY_ID.get(i)
+    if (key === undefined) continue
     const v = fromInt(key, value)
     if (v !== undefined) out[key] = v
   }

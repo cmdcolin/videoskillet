@@ -4,6 +4,17 @@ import type { CurveName } from './travel'
 
 export interface SliderDef {
   key: ControlKey
+  // This control's number on the wire (ui/packed.ts). Assigned once, at birth,
+  // and never changed or reused: a packed link says "control 84", so a control
+  // that renumbers turns every link and every saved look carrying it into a
+  // different look. A new control takes one past the highest here; a deleted
+  // one leaves its number behind unspoken, which is all a hole needs to be.
+  //
+  // It lives on the control rather than in a list beside the table because the
+  // list version was an invariant somebody had to remember — never insert,
+  // never reorder — and this one cannot be got wrong by moving a slider into
+  // the group it belongs in.
+  id: number
   label: string
   min: number
   max: number
@@ -287,6 +298,7 @@ export const GROUPS: Group[] = [
     sliders: [
       {
         key: 'invert',
+        id: 20,
         label: 'invert (polarity swap)',
         min: 0,
         max: 1,
@@ -296,6 +308,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'deint',
+        id: 0,
         label: 'deinterlace',
         min: 0,
         max: 1,
@@ -306,6 +319,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'capLumaMHz',
+        id: 1,
         label: 'capture luma band (0 off)',
         min: 0,
         max: 4.2,
@@ -315,6 +329,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'capChromaMHz',
+        id: 2,
         label: 'capture chroma band (0 off)',
         min: 0,
         max: 1.5,
@@ -324,6 +339,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'capNoiseIre',
+        id: 4,
         label: 'capture grain',
         min: 0,
         max: 30,
@@ -333,6 +349,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'capChromaNoiseIre',
+        id: 5,
         label: 'capture chroma noise',
         min: 0,
         max: 60,
@@ -343,6 +360,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'capYcDelayNs',
+        id: 3,
         label: 'capture y/c delay',
         min: -500,
         max: 500,
@@ -353,6 +371,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'vbi',
+        id: 69,
         label: 'vbi test signals',
         min: 0,
         max: 1,
@@ -388,6 +407,7 @@ export const GROUPS: Group[] = [
     sliders: [
       {
         key: 'srcNoiseBwMHz',
+        id: 6,
         label: 'noise bandwidth',
         min: 0.2,
         max: 7,
@@ -397,6 +417,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'srcNoiseLevel',
+        id: 8,
         label: 'noise power',
         min: 0,
         max: 2,
@@ -406,6 +427,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'srcNoiseLine',
+        id: 7,
         label: 'per-sweep level error',
         min: 0,
         max: 1,
@@ -415,6 +437,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'srcNoiseHz',
+        id: 9,
         label: 'field refresh',
         min: 1,
         max: 60,
@@ -435,6 +458,7 @@ export const GROUPS: Group[] = [
     sliders: [
       {
         key: 'synthAHz',
+        id: 10,
         label: 'osc A',
         min: 0,
         max: 8000000,
@@ -445,6 +469,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'synthBHz',
+        id: 11,
         label: 'osc B',
         min: 0,
         max: 8000000,
@@ -455,6 +480,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'synthShape',
+        id: 12,
         label: 'waveform',
         min: 0,
         max: 3,
@@ -465,6 +491,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'synthMix',
+        id: 13,
         label: 'combiner',
         min: 0,
         max: 3,
@@ -475,6 +502,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'synthLevel',
+        id: 14,
         label: 'level',
         min: 0,
         max: 4,
@@ -486,6 +514,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'synthColor',
+        id: 15,
         label: 'colorizer',
         min: 0,
         max: 1,
@@ -495,6 +524,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'synthHueDeg',
+        id: 16,
         label: 'colorizer phase',
         min: 0,
         max: 360,
@@ -505,6 +535,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'synthOver',
+        id: 17,
         label: 'over picture (A)',
         min: 0,
         max: 1,
@@ -514,6 +545,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'synthFm',
+        id: 18,
         label: 'luma → osc A',
         min: 0,
         max: 200000,
@@ -541,6 +573,7 @@ export const GROUPS: Group[] = [
     sliders: [
       {
         key: 'aPause',
+        id: 177,
         label: 'A pause (deck held)',
         min: 0,
         max: 1,
@@ -550,6 +583,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'aDropoutRate',
+        id: 178,
         label: 'A dropouts',
         min: 0,
         max: 400,
@@ -560,6 +594,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'aDropoutLenUs',
+        id: 179,
         label: 'A dropout len',
         min: 1,
         max: 60,
@@ -570,6 +605,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'aScramble',
+        id: 169,
         label: 'A sync suppression',
         min: 0,
         max: 1,
@@ -579,6 +615,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'aScrambleMode',
+        id: 170,
         label: 'A system',
         min: 0,
         max: 2,
@@ -599,6 +636,7 @@ export const GROUPS: Group[] = [
     sliders: [
       {
         key: 'aConnector',
+        id: 175,
         label: 'A loose connector',
         min: 0,
         max: 1,
@@ -608,6 +646,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'aConnectorMode',
+        id: 176,
         label: 'A bad contact',
         min: 0,
         max: 2,
@@ -618,6 +657,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'aHumIre',
+        id: 174,
         label: 'A ground loop',
         min: -40,
         max: 40,
@@ -628,6 +668,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'aNoiseIre',
+        id: 172,
         label: 'A noise',
         min: 0,
         max: 150,
@@ -638,6 +679,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'aTermination',
+        id: 171,
         label: 'A termination (-1 daisy, +1 open)',
         min: -1,
         max: 1,
@@ -647,6 +689,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'aPolarity',
+        id: 173,
         label: 'A polarity (flips sync)',
         min: 0,
         max: 1,
@@ -670,6 +713,7 @@ export const GROUPS: Group[] = [
     sliders: [
       {
         key: 'fbMix',
+        id: 114,
         label: 'mix',
         min: 0,
         max: 1,
@@ -679,6 +723,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'fbZoom',
+        id: 115,
         label: 'zoom',
         min: 0.2,
         max: 4,
@@ -691,6 +736,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'fbRotateDeg',
+        id: 116,
         label: 'rotate',
         min: -180,
         max: 180,
@@ -703,6 +749,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'fbShiftX',
+        id: 117,
         label: 'shift x',
         min: -1,
         max: 1,
@@ -716,6 +763,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'fbShiftY',
+        id: 118,
         label: 'shift y',
         min: -1,
         max: 1,
@@ -729,6 +777,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'fbGain',
+        id: 119,
         label: 'gain',
         min: 0,
         max: 3,
@@ -742,6 +791,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'fbIris',
+        id: 120,
         label: 'auto-iris hunt',
         min: 0,
         max: 1,
@@ -751,6 +801,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'fbFocus',
+        id: 121,
         label: 'defocus',
         min: 0,
         max: 12,
@@ -762,6 +813,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'fbVign',
+        id: 122,
         label: 'vignette',
         min: 0,
         max: 1,
@@ -772,6 +824,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'fbBlack',
+        id: 123,
         label: 'black cut',
         min: 0,
         max: 0.2,
@@ -782,6 +835,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'fbKnee',
+        id: 124,
         label: 'cam s-curve',
         min: 0,
         max: 1,
@@ -807,6 +861,7 @@ export const GROUPS: Group[] = [
     sliders: [
       {
         key: 'crtCutoff',
+        id: 125,
         label: 'beam cutoff',
         min: 0,
         max: 0.95,
@@ -817,6 +872,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'crtGamma',
+        id: 126,
         label: 'beam gamma',
         min: 0.2,
         max: 6,
@@ -827,6 +883,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'crtSat',
+        id: 127,
         label: 'beam saturation',
         min: 0,
         max: 6,
@@ -837,6 +894,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'crtBloom',
+        id: 130,
         label: 'screen bloom',
         min: 0,
         max: 6,
@@ -847,6 +905,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'crtHalation',
+        id: 131,
         label: 'halation (warm halo)',
         min: 0,
         max: 6,
@@ -857,6 +916,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'crtHaloKey',
+        id: 133,
         label: 'halation ∝ beam current',
         min: 0,
         max: 4,
@@ -867,6 +927,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'crtGlow',
+        id: 132,
         label: 'phosphor glow',
         min: 0,
         max: 4,
@@ -883,6 +944,7 @@ export const GROUPS: Group[] = [
     sliders: [
       {
         key: 'cfbMix',
+        id: 141,
         label: 'loop mix',
         min: 0,
         max: 1,
@@ -893,6 +955,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'cfbGain',
+        id: 142,
         label: 'loop gain',
         min: -3,
         max: 3,
@@ -903,6 +966,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'cfbDelayUs',
+        id: 143,
         label: 'loop delay',
         min: 0,
         max: 63,
@@ -913,6 +977,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'cfbServoUs',
+        id: 153,
         label: 'loop timebase pull',
         min: -60,
         max: 60,
@@ -924,6 +989,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'cfbLines',
+        id: 144,
         label: 'v offset',
         min: -240,
         max: 240,
@@ -934,6 +1000,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'cfbKey',
+        id: 145,
         label: 'luma key',
         min: -1,
         max: 1,
@@ -943,6 +1010,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'cfbKeyLevel',
+        id: 146,
         label: 'key level',
         min: 0,
         max: 100,
@@ -953,6 +1021,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'cfbKeySoft',
+        id: 147,
         label: 'key soft',
         min: 1,
         max: 30,
@@ -963,6 +1032,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'cfbHold',
+        id: 148,
         label: 'strobe hold',
         min: 0,
         max: 60,
@@ -973,6 +1043,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'cfbTrail',
+        id: 149,
         label: 'trails',
         min: 0,
         max: 1,
@@ -983,6 +1054,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'cfbFilterMHz',
+        id: 150,
         label: 'loop resonance freq (0 off)',
         min: 0,
         max: 5,
@@ -993,6 +1065,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'cfbFilterQ',
+        id: 151,
         label: 'loop resonance Q (broad→ringing)',
         min: 0,
         max: 1,
@@ -1003,6 +1076,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'cfbFilterBoost',
+        id: 152,
         label: 'loop resonance boost',
         min: 0,
         max: 16,
@@ -1014,6 +1088,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'cfbRing',
+        id: 154,
         label: 'loop ring mod',
         min: 0,
         max: 1,
@@ -1029,6 +1104,7 @@ export const GROUPS: Group[] = [
     sliders: [
       {
         key: 'bGenlock',
+        id: 200,
         label: 'genlock',
         min: 0,
         max: 1,
@@ -1039,6 +1115,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'aGain',
+        id: 190,
         label: 'A gain',
         min: -3,
         max: 3,
@@ -1051,6 +1128,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'bGain',
+        id: 191,
         label: 'B gain',
         min: -3,
         max: 3,
@@ -1061,6 +1139,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'bRing',
+        id: 192,
         label: 'ring mod',
         min: 0,
         max: 1,
@@ -1070,6 +1149,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'bLineHz',
+        id: 193,
         label: 'line offset',
         min: -60,
         max: 60,
@@ -1081,6 +1161,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'bDetuneHz',
+        id: 194,
         label: 'sc detune',
         min: -3000,
         max: 3000,
@@ -1092,6 +1173,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'bRollLps',
+        id: 195,
         label: 'frame roll',
         min: -30,
         max: 30,
@@ -1119,6 +1201,7 @@ export const GROUPS: Group[] = [
     sliders: [
       {
         key: 'bHueDeg',
+        id: 196,
         label: 'B hue',
         min: -180,
         max: 180,
@@ -1128,6 +1211,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'bVidGain',
+        id: 197,
         label: 'B video gain',
         min: 0,
         max: 6,
@@ -1138,6 +1222,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'bInv',
+        id: 198,
         label: 'B invert',
         min: 0,
         max: 1,
@@ -1158,6 +1243,7 @@ export const GROUPS: Group[] = [
     sliders: [
       {
         key: 'bPause',
+        id: 199,
         label: 'B pause (deck held)',
         min: 0,
         max: 1,
@@ -1167,6 +1253,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'bDropoutRate',
+        id: 188,
         label: 'B dropouts',
         min: 0,
         max: 400,
@@ -1177,6 +1264,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'bDropoutLenUs',
+        id: 189,
         label: 'B dropout len',
         min: 1,
         max: 60,
@@ -1187,6 +1275,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'bScramble',
+        id: 180,
         label: 'B sync suppression',
         min: 0,
         max: 1,
@@ -1196,6 +1285,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'bScrambleMode',
+        id: 181,
         label: 'B system',
         min: 0,
         max: 2,
@@ -1212,6 +1302,7 @@ export const GROUPS: Group[] = [
     sliders: [
       {
         key: 'bConnector',
+        id: 186,
         label: 'B loose connector',
         min: 0,
         max: 1,
@@ -1221,6 +1312,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'bConnectorMode',
+        id: 187,
         label: 'B bad contact',
         min: 0,
         max: 2,
@@ -1231,6 +1323,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'bHumIre',
+        id: 185,
         label: 'B ground loop',
         min: -40,
         max: 40,
@@ -1241,6 +1334,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'bNoiseIre',
+        id: 183,
         label: 'B noise',
         min: 0,
         max: 150,
@@ -1251,6 +1345,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'bTermination',
+        id: 182,
         label: 'B termination (-1 daisy, +1 open)',
         min: -1,
         max: 1,
@@ -1260,6 +1355,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'bPolarity',
+        id: 184,
         label: 'B polarity (flips sync)',
         min: 0,
         max: 1,
@@ -1285,6 +1381,7 @@ export const GROUPS: Group[] = [
     sliders: [
       {
         key: 'cgMix',
+        id: 251,
         label: 'cg over program',
         min: 0,
         max: 1,
@@ -1307,6 +1404,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'cgKeyDelayNs',
+        id: 255,
         label: 'key timing',
         min: -600,
         max: 600,
@@ -1316,6 +1414,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'cgClip',
+        id: 256,
         label: 'key clip',
         min: 0,
         max: 1,
@@ -1325,6 +1424,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'cgKeyMHz',
+        id: 257,
         label: 'key bandwidth',
         min: 0.3,
         max: 8,
@@ -1334,6 +1434,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'cgInvert',
+        id: 261,
         label: 'key invert',
         min: 0,
         max: 1,
@@ -1344,6 +1445,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'cgEdgeX',
+        id: 258,
         label: 'edge offset x',
         min: -24,
         max: 24,
@@ -1354,6 +1456,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'cgEdgeY',
+        id: 259,
         label: 'edge offset y',
         min: -24,
         max: 24,
@@ -1364,6 +1467,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'cgFill',
+        id: 260,
         label: 'fill level',
         min: 0,
         max: 120,
@@ -1374,6 +1478,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'cgX',
+        id: 252,
         label: 'cg x',
         min: 0,
         max: 1,
@@ -1384,6 +1489,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'cgY',
+        id: 253,
         label: 'cg y',
         min: 0,
         max: 1,
@@ -1394,6 +1500,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'cgScale',
+        id: 254,
         label: 'cg size',
         min: 1,
         max: 6,
@@ -1404,6 +1511,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'cgRomAddr',
+        id: 262,
         label: 'cg rom address line',
         min: 0,
         max: 11,
@@ -1414,6 +1522,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'cgRomData',
+        id: 263,
         label: 'cg rom data line',
         min: -8,
         max: 8,
@@ -1430,6 +1539,7 @@ export const GROUPS: Group[] = [
     sliders: [
       {
         key: 'wipeMode',
+        id: 201,
         label: 'pattern',
         min: 0,
         max: 4,
@@ -1440,6 +1550,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'wipePos',
+        id: 202,
         label: 'position',
         min: 0,
         max: 1,
@@ -1449,6 +1560,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'wipeSoft',
+        id: 203,
         label: 'softness',
         min: 0,
         max: 0.5,
@@ -1458,6 +1570,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'wipeRate',
+        id: 204,
         label: 'sweep',
         min: 0,
         max: 2,
@@ -1473,6 +1586,7 @@ export const GROUPS: Group[] = [
     sliders: [
       {
         key: 'pipMix',
+        id: 205,
         label: 'inset key',
         min: 0,
         max: 1,
@@ -1482,6 +1596,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'pipX',
+        id: 206,
         label: 'center x',
         min: 0,
         max: 1,
@@ -1491,6 +1606,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'pipY',
+        id: 207,
         label: 'center y',
         min: 0,
         max: 1,
@@ -1500,6 +1616,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'pipW',
+        id: 208,
         label: 'width',
         min: 0.1,
         max: 1,
@@ -1509,6 +1626,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'pipH',
+        id: 209,
         label: 'height',
         min: 0.1,
         max: 1,
@@ -1518,6 +1636,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'pipBorder',
+        id: 210,
         label: 'border',
         min: 0,
         max: 0.03,
@@ -1528,6 +1647,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'pipSoft',
+        id: 211,
         label: 'edge soft',
         min: 0,
         max: 0.05,
@@ -1538,6 +1658,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'pipKey',
+        id: 212,
         label: 'luma key (- inverts)',
         min: -1,
         max: 1,
@@ -1547,6 +1668,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'pipKeyLevel',
+        id: 213,
         label: 'key level',
         min: 0,
         max: 1,
@@ -1557,6 +1679,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'pipKeySoft',
+        id: 214,
         label: 'key soft',
         min: 0.01,
         max: 0.4,
@@ -1578,6 +1701,7 @@ export const GROUPS: Group[] = [
     sliders: [
       {
         key: 'bKey',
+        id: 215,
         label: 'key (- inverts)',
         min: -1,
         max: 1,
@@ -1587,6 +1711,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'bKeyHueDeg',
+        id: 216,
         label: 'backing hue',
         min: 0,
         max: 360,
@@ -1596,6 +1721,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'bKeyAcceptDeg',
+        id: 217,
         label: 'acceptance',
         min: 0,
         max: 180,
@@ -1605,6 +1731,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'bKeyClip',
+        id: 218,
         label: 'clip',
         min: 0,
         max: 0.3,
@@ -1615,6 +1742,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'bKeySoft',
+        id: 219,
         label: 'gain (edge)',
         min: 0,
         max: 0.4,
@@ -1624,6 +1752,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'bKeySpill',
+        id: 220,
         label: 'spill kill',
         min: 0,
         max: 1,
@@ -1633,6 +1762,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'bKeyDelayUs',
+        id: 221,
         label: 'key delay',
         min: -1.5,
         max: 1.5,
@@ -1643,6 +1773,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'bKeyFill',
+        id: 222,
         label: 'fill',
         min: 0,
         max: 2,
@@ -1653,6 +1784,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'bKeyMatteY',
+        id: 223,
         label: 'matte level',
         min: 0,
         max: 1,
@@ -1663,6 +1795,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'bKeyMatteHueDeg',
+        id: 224,
         label: 'matte hue',
         min: 0,
         max: 360,
@@ -1673,6 +1806,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'bKeyMatteSat',
+        id: 225,
         label: 'matte saturation',
         min: 0,
         max: 0.6,
@@ -1702,6 +1836,7 @@ export const GROUPS: Group[] = [
     sliders: [
       {
         key: 'lumaMHz',
+        id: 59,
         label: 'luma bandwidth',
         min: 0.3,
         max: 6,
@@ -1712,6 +1847,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'lumaPeak',
+        id: 77,
         label: 'peaking',
         min: 0,
         max: 12,
@@ -1722,6 +1858,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'diffGain',
+        id: 106,
         label: 'differential gain',
         min: -0.5,
         max: 1,
@@ -1735,6 +1872,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'diffPhaseDeg',
+        id: 107,
         label: 'differential phase',
         min: -60,
         max: 60,
@@ -1745,6 +1883,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'fmOverdev',
+        id: 108,
         label: 'FM over-deviation',
         min: 0,
         max: 1,
@@ -1754,6 +1893,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'fmStreakUs',
+        id: 109,
         label: 'inversion streak',
         min: 0.1,
         max: 0.7,
@@ -1773,6 +1913,7 @@ export const GROUPS: Group[] = [
     sliders: [
       {
         key: 'noiseIre',
+        id: 78,
         label: 'noise',
         min: 0,
         max: 150,
@@ -1783,6 +1924,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'noiseTilt',
+        id: 79,
         label: 'noise spectrum (RF ↔ FM)',
         min: 0,
         max: 1,
@@ -1793,6 +1935,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'impulseRate',
+        id: 80,
         label: 'impulse noise (arcs)',
         min: 0,
         max: 24,
@@ -1803,6 +1946,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'impulseHz',
+        id: 82,
         label: 'ignition train',
         min: 0,
         max: 2000,
@@ -1812,6 +1956,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'strikeRate',
+        id: 84,
         label: 'big strikes',
         min: 0,
         max: 20,
@@ -1822,6 +1967,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'impulseIre',
+        id: 81,
         label: 'impulse strength',
         min: 20,
         max: 400,
@@ -1833,6 +1979,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'impulseMains',
+        id: 83,
         label: 'dimmer lock',
         min: 0,
         max: 1,
@@ -1853,6 +2000,7 @@ export const GROUPS: Group[] = [
     sliders: [
       {
         key: 'ghostDelayUs',
+        id: 92,
         label: 'ghost delay',
         min: 0,
         max: 50,
@@ -1863,6 +2011,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'ghostGain',
+        id: 93,
         label: 'ghost gain',
         min: -2,
         max: 2,
@@ -1873,6 +2022,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'humAmp',
+        id: 94,
         label: 'hum',
         min: 0,
         max: 120,
@@ -1883,6 +2033,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'humMod',
+        id: 95,
         label: 'hum modulation',
         min: 0,
         max: 1,
@@ -1893,6 +2044,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'soundIre',
+        id: 85,
         label: 'sound carrier',
         min: 0,
         max: 40,
@@ -1904,6 +2056,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'buzzLevel',
+        id: 86,
         label: 'sound buzz',
         min: 0,
         max: 1,
@@ -1924,6 +2077,7 @@ export const GROUPS: Group[] = [
     sliders: [
       {
         key: 'dropoutRate',
+        id: 99,
         label: 'dropouts',
         min: 0,
         max: 400,
@@ -1934,6 +2088,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'dropoutComp',
+        id: 101,
         label: 'dropout compensator',
         min: 0,
         max: 2,
@@ -1944,6 +2099,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'dropoutLenUs',
+        id: 100,
         label: 'dropout len',
         min: 1,
         max: 60,
@@ -1954,6 +2110,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'dubGens',
+        id: 113,
         label: 'dub generations',
         min: 1,
         max: 4,
@@ -1969,6 +2126,7 @@ export const GROUPS: Group[] = [
     sliders: [
       {
         key: 'rfAdjacent',
+        id: 87,
         label: 'adjacent channel',
         min: 0,
         max: 1,
@@ -1978,6 +2136,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'rfMistuneMHz',
+        id: 88,
         label: 'fine tuning',
         min: -1,
         max: 4,
@@ -1988,6 +2147,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'rfSnow',
+        id: 89,
         label: 'weak signal (snow)',
         min: 0,
         max: 1,
@@ -1997,6 +2157,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'ingress',
+        id: 90,
         label: 'CB ingress',
         min: 0,
         max: 1,
@@ -2019,6 +2180,7 @@ export const GROUPS: Group[] = [
     sliders: [
       {
         key: 'polarityFlip',
+        id: 60,
         label: 'hard polarity (flips sync)',
         min: 0,
         max: 1,
@@ -2028,6 +2190,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'termination',
+        id: 61,
         label: 'termination (-1 daisy, +1 open)',
         min: -1,
         max: 1,
@@ -2037,6 +2200,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'chromaPinOnly',
+        id: 62,
         label: 'chroma-pin only',
         min: 0,
         max: 1,
@@ -2049,6 +2213,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'connectorGlitch',
+        id: 63,
         label: 'loose connector',
         min: 0,
         max: 1,
@@ -2058,6 +2223,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'connectorMode',
+        id: 64,
         label: 'bad contact',
         min: 0,
         max: 2,
@@ -2084,6 +2250,7 @@ export const GROUPS: Group[] = [
       // same fact from the head-end's side and the stamper's.
       {
         key: 'scramble',
+        id: 65,
         label: 'sync suppression',
         min: 0,
         max: 1,
@@ -2093,6 +2260,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'scrambleMode',
+        id: 66,
         label: 'system',
         min: 0,
         max: 2,
@@ -2103,6 +2271,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'macrovision',
+        id: 67,
         label: 'agc pulses (macrovision)',
         min: 0,
         max: 1,
@@ -2112,6 +2281,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'mvStripeDeg',
+        id: 68,
         label: 'colorstripe',
         min: 0,
         max: 180,
@@ -2134,6 +2304,7 @@ export const GROUPS: Group[] = [
     sliders: [
       {
         key: 'colorUnderMix',
+        id: 96,
         label: 'color-under',
         min: 0,
         max: 1,
@@ -2143,6 +2314,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'chromaNoiseIre',
+        id: 97,
         label: 'chroma noise',
         min: 0,
         max: 120,
@@ -2153,6 +2325,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'underJitterDeg',
+        id: 98,
         label: 'phase jitter',
         min: 0,
         max: 180,
@@ -2168,6 +2341,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'ycDelayNs',
+        id: 105,
         label: 'Y/C delay',
         min: -3360,
         max: 3360,
@@ -2178,6 +2352,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'trackAmt',
+        id: 226,
         label: 'tracking error',
         min: 0,
         max: 1,
@@ -2187,6 +2362,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'trackPos',
+        id: 227,
         label: 'band position',
         min: 0,
         max: 1,
@@ -2197,6 +2373,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'trackHunt',
+        id: 228,
         label: 'servo hunt',
         min: 0,
         max: 1,
@@ -2206,6 +2383,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'trackKick',
+        id: 229,
         label: 'servo kick',
         min: 0,
         max: 1,
@@ -2216,6 +2394,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'headClog',
+        id: 104,
         label: 'head clog',
         min: 0,
         max: 1,
@@ -2225,6 +2404,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'shuttleX',
+        id: 230,
         label: 'shuttle (1 = play)',
         min: -32,
         max: 32,
@@ -2245,6 +2425,7 @@ export const GROUPS: Group[] = [
     sliders: [
       {
         key: 'tbJitterNs',
+        id: 110,
         label: 'flutter',
         min: 0,
         max: 4000,
@@ -2255,6 +2436,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'tbWowNs',
+        id: 111,
         label: 'wow',
         min: 0,
         max: 10000,
@@ -2265,6 +2447,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'tbStickNs',
+        id: 112,
         label: 'sticky shed',
         min: 0,
         max: 15000,
@@ -2275,6 +2458,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'headSwitchShiftUs',
+        id: 103,
         label: 'head switch',
         min: -30,
         max: 30,
@@ -2285,6 +2469,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'headSwitchNoise',
+        id: 102,
         label: 'switch noise',
         min: 0,
         max: 1,
@@ -2300,6 +2485,7 @@ export const GROUPS: Group[] = [
     sliders: [
       {
         key: 'enhClampUs',
+        id: 70,
         label: 'clamp gate',
         min: -60,
         max: 600,
@@ -2311,6 +2497,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'enhDroopUs',
+        id: 71,
         label: 'clamp droop',
         min: 0,
         max: 2000,
@@ -2322,6 +2509,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'enhPeakMHz',
+        id: 72,
         label: 'detail freq (0 off)',
         min: 0,
         max: 5,
@@ -2331,6 +2519,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'enhPeakQ',
+        id: 73,
         label: 'detail regen (0.75+ howls)',
         min: 0,
         max: 1,
@@ -2340,6 +2529,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'enhPeakBoost',
+        id: 74,
         label: 'detail boost',
         min: 0,
         max: 16,
@@ -2351,6 +2541,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'enhSync',
+        id: 75,
         label: 'sync regen',
         min: 0,
         max: 1,
@@ -2360,6 +2551,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'enhSliceIre',
+        id: 76,
         label: 'sync slice',
         min: -40,
         max: 60,
@@ -2376,6 +2568,7 @@ export const GROUPS: Group[] = [
     sliders: [
       {
         key: 'hHold',
+        id: 34,
         label: 'horizontal hold',
         min: 0.02,
         max: 2,
@@ -2386,6 +2579,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'vHold',
+        id: 35,
         label: 'vertical hold',
         min: 0,
         max: 1,
@@ -2395,6 +2589,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'vFreqHz',
+        id: 36,
         label: 'vertical osc (60 = locked)',
         min: 10,
         max: 180,
@@ -2405,6 +2600,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'syncBendUs',
+        id: 37,
         label: 'retrace flag',
         min: 0,
         max: 60,
@@ -2415,6 +2611,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'hDetuneHz',
+        id: 45,
         label: 'horizontal osc detune',
         min: -3000,
         max: 3000,
@@ -2436,6 +2633,7 @@ export const GROUPS: Group[] = [
     sliders: [
       {
         key: 'clipHz',
+        id: 46,
         label: 'contacts',
         min: 0,
         max: 12,
@@ -2446,6 +2644,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'clipPoint',
+        id: 47,
         label: 'contact point',
         min: 0,
         max: 4,
@@ -2462,6 +2661,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'clipBite',
+        id: 48,
         label: 'bite',
         min: 0,
         max: 1,
@@ -2471,6 +2671,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'clipDwellMs',
+        id: 49,
         label: 'dwell',
         min: 8,
         max: 800,
@@ -2481,6 +2682,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'clipChatter',
+        id: 50,
         label: 'chatter',
         min: 0,
         max: 1,
@@ -2499,6 +2701,7 @@ export const GROUPS: Group[] = [
     sliders: [
       {
         key: 'audioRoll',
+        id: 57,
         label: 'bass → vertical hold',
         min: 0,
         max: 32,
@@ -2509,6 +2712,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'audioTear',
+        id: 58,
         label: 'level → horizontal hold',
         min: -3000,
         max: 3000,
@@ -2520,6 +2724,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'audioSagUs',
+        id: 56,
         label: 'bass → HV sag',
         min: 0,
         max: 160,
@@ -2531,6 +2736,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'audioBendUs',
+        id: 52,
         label: 'waveform into deflection',
         min: -80,
         max: 80,
@@ -2542,6 +2748,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'audioLoad',
+        id: 53,
         label: 'audio into HV tank',
         min: 0,
         max: 12,
@@ -2553,6 +2760,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'audioIre',
+        id: 54,
         label: 'audio into video in',
         min: 0,
         max: 150,
@@ -2563,6 +2771,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'audioHueDeg',
+        id: 55,
         label: 'waveform into hue',
         min: -180,
         max: 180,
@@ -2572,6 +2781,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'audioGain',
+        id: 51,
         label: 'input trim',
         min: 0,
         max: 16,
@@ -2589,6 +2799,7 @@ export const GROUPS: Group[] = [
     sliders: [
       {
         key: 'bendUs',
+        id: 38,
         label: 'bend amount',
         min: -120,
         max: 120,
@@ -2600,6 +2811,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'bendShape',
+        id: 39,
         label: 'shape',
         min: 0,
         max: 3,
@@ -2610,6 +2822,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'bendPeriod',
+        id: 40,
         label: 'decay / ripple period',
         min: 1,
         max: 480,
@@ -2620,6 +2833,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'vSize',
+        id: 41,
         label: 'v size (underscan)',
         min: 0.2,
         max: 4,
@@ -2630,6 +2844,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'hvSagUs',
+        id: 42,
         label: 'HV sag',
         min: -100,
         max: 100,
@@ -2641,6 +2856,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'hvRing',
+        id: 43,
         label: 'supply ring (0 droop, 1 chaos)',
         min: 0,
         max: 1,
@@ -2650,6 +2866,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'abl',
+        id: 44,
         label: 'beam limiter',
         min: 0,
         max: 1,
@@ -2665,6 +2882,7 @@ export const GROUPS: Group[] = [
     sliders: [
       {
         key: 'combMode',
+        id: 33,
         label: 'Y/C comb',
         min: 0,
         max: 2,
@@ -2683,6 +2901,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'svideoBleed',
+        id: 32,
         label: 'S-video bleed',
         min: 0,
         max: 1,
@@ -2693,6 +2912,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'demodMHz',
+        id: 21,
         label: 'chroma bandwidth',
         min: 0.05,
         max: 6,
@@ -2703,6 +2923,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'chromaTail',
+        id: 22,
         label: 'chroma trail',
         min: 0,
         max: 1,
@@ -2713,6 +2934,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'chromaCoarse',
+        id: 23,
         label: 'chroma upsample error',
         min: 1,
         max: 8,
@@ -2723,6 +2945,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'chromaGain',
+        id: 24,
         label: 'chroma gain',
         min: 0,
         max: 16,
@@ -2733,6 +2956,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'tintDeg',
+        id: 26,
         label: 'tint',
         min: -180,
         max: 180,
@@ -2742,6 +2966,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'burstLock',
+        id: 25,
         label: 'burst lock',
         min: 0,
         max: 1,
@@ -2751,6 +2976,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'demodAxisDeg',
+        id: 27,
         label: 'demod axis',
         min: 0,
         max: 180,
@@ -2760,6 +2986,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'scDetuneKHz',
+        id: 29,
         label: 'subcarrier detune',
         min: -200,
         max: 200,
@@ -2771,6 +2998,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'killThresh',
+        id: 30,
         label: 'color killer',
         min: 0,
         max: 100,
@@ -2782,6 +3010,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'accLagLines',
+        id: 31,
         label: 'chroma AGC lag',
         min: 0,
         max: 240,
@@ -2793,6 +3022,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'vir',
+        id: 264,
         label: 'VIR correction',
         min: 0,
         max: 1,
@@ -2802,6 +3032,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'virLag',
+        id: 265,
         label: 'VIR lag',
         min: 1,
         max: 240,
@@ -2813,6 +3044,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'matrixClip',
+        id: 28,
         label: 'output stage clip',
         min: 0,
         max: 1,
@@ -2823,6 +3055,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'agc',
+        id: 91,
         label: 'agc',
         min: 0,
         max: 1,
@@ -2832,6 +3065,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'encChromaMHz',
+        id: 19,
         label: 'encoder chroma bw',
         min: 0.1,
         max: 4,
@@ -2857,6 +3091,7 @@ export const GROUPS: Group[] = [
     sliders: [
       {
         key: 'cc',
+        id: 247,
         label: 'caption decoder',
         min: 0,
         max: 1,
@@ -2885,6 +3120,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'ccBox',
+        id: 248,
         label: 'caption box',
         min: 0,
         max: 1,
@@ -2894,6 +3130,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'ccRomAddr',
+        id: 249,
         label: 'rom address line',
         min: 0,
         max: 11,
@@ -2917,6 +3154,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'ccRomData',
+        id: 250,
         label: 'rom data line',
         min: -8,
         max: 8,
@@ -2939,6 +3177,7 @@ export const GROUPS: Group[] = [
     sliders: [
       {
         key: 'strobeHz',
+        id: 231,
         label: 'blanking strobe',
         min: 0,
         max: 20,
@@ -2948,6 +3187,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'strobeMs',
+        id: 232,
         label: 'flash length',
         min: 1,
         max: 200,
@@ -2957,6 +3197,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'scanBeam',
+        id: 233,
         label: 'beam profile',
         min: 0,
         max: 1,
@@ -2966,6 +3207,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'scanBloom',
+        id: 234,
         label: 'beam bloom',
         min: 0,
         max: 1,
@@ -2975,6 +3217,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'crtSpot',
+        id: 128,
         label: 'beam spot',
         min: 0,
         max: 12,
@@ -2985,6 +3228,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'crtGrain',
+        id: 129,
         label: 'phosphor grain',
         min: 0,
         max: 1,
@@ -2994,6 +3238,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'crtSharp',
+        id: 239,
         label: 'reconstruction (bilinear→cubic)',
         min: 0,
         max: 1,
@@ -3008,6 +3253,7 @@ export const GROUPS: Group[] = [
       // it has nothing to do with.
       {
         key: 'crtSvm',
+        id: 134,
         label: 'scan velocity mod',
         min: -4,
         max: 4,
@@ -3018,6 +3264,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'crtSvmWidth',
+        id: 135,
         label: 'svm aperture',
         min: 0.25,
         max: 24,
@@ -3035,6 +3282,7 @@ export const GROUPS: Group[] = [
     sliders: [
       {
         key: 'phosphorMode',
+        id: 236,
         label: 'phosphors',
         min: 0,
         max: 3,
@@ -3051,6 +3299,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'phosphor',
+        id: 235,
         label: 'phosphor persistence',
         min: 0,
         max: 0.9995,
@@ -3075,6 +3324,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'phosphorSkew',
+        id: 237,
         label: 'trail tint',
         min: 0,
         max: 6,
@@ -3085,6 +3335,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'phosphorBleed',
+        id: 238,
         label: 'trail scatter',
         min: 0,
         max: 1,
@@ -3109,6 +3360,7 @@ export const GROUPS: Group[] = [
     sliders: [
       {
         key: 'maskAmt',
+        id: 240,
         label: 'aperture grille',
         min: 0,
         max: 1,
@@ -3118,6 +3370,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'maskPitch',
+        id: 241,
         label: 'grille pitch',
         min: 1,
         max: 48,
@@ -3128,6 +3381,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'crtConverge',
+        id: 136,
         label: 'convergence error',
         min: -12,
         max: 12,
@@ -3138,6 +3392,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'crtPurity',
+        id: 137,
         label: 'purity (magnetised patch)',
         min: -3,
         max: 3,
@@ -3148,6 +3403,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'crtPurityX',
+        id: 138,
         label: 'patch x',
         min: 0,
         max: 1,
@@ -3157,6 +3413,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'crtPurityY',
+        id: 139,
         label: 'patch y',
         min: 0,
         max: 1,
@@ -3166,6 +3423,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'crtPuritySize',
+        id: 140,
         label: 'patch size',
         min: 0.02,
         max: 2,
@@ -3190,6 +3448,7 @@ export const GROUPS: Group[] = [
     sliders: [
       {
         key: 'crtZoom',
+        id: 242,
         label: 'magnifier',
         min: 0.25,
         max: 12,
@@ -3202,6 +3461,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'crtZoomX',
+        id: 243,
         label: 'magnifier x',
         min: 0,
         max: 1,
@@ -3211,6 +3471,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'crtZoomY',
+        id: 244,
         label: 'magnifier y',
         min: 0,
         max: 1,
@@ -3220,6 +3481,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'timeScale',
+        id: 245,
         label: 'slow motion (1 = realtime)',
         min: 0,
         max: 1,
@@ -3229,6 +3491,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'frameLock',
+        id: 246,
         label: 'frame rate lock',
         min: 0,
         max: 4,
