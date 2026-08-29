@@ -365,12 +365,24 @@ button.badge {
    :has(:active) is for: a pointer that slips a few px off the row mid-drag
    drops :hover, and a card that vanished under the thumb would end the drag it
    was holding. */
+/* A native popover: the browser handles light-dismiss and Escape, so there is
+   no document-level listener here and no close callback threaded through
+   props — see Popover.module.css for the fuller version of this comment.
+   position-anchor (set per instance in Slider.tsx, on the row rather than the
+   "minor" trigger) hangs it under the row, sized to the row's own width via
+   anchor-size rather than shrinking to content — the position:absolute;
+   left:0;right:0 it replaces did the same against the row as its offset
+   parent.
+
+   left and width only, no `right`: Firefox 151 parses the end-side insets
+   but honours neither (see the fuller note in Popover.module.css), so an
+   anchored `right` silently loses to the content's shrink-to-fit width. */
 .vernier {
-  position: absolute;
-  z-index: 6;
-  left: 0;
-  right: 0;
-  top: 100%;
+  position: fixed;
+  inset: auto;
+  top: anchor(bottom);
+  left: anchor(left);
+  width: anchor-size(width);
   margin-top: 2px;
   max-width: 34rem;
   background: #1a1a22;
@@ -379,14 +391,36 @@ button.badge {
   padding: 5px 8px 6px;
   box-shadow: 0 4px 14px rgb(0 0 0 / 0.5);
 }
+.vernier:popover-open {
+  display: block;
+}
+/* Chrome 113–124 and Safari < 26 run WebGPU but not anchor positioning; pin
+   the card near the trigger's row rather than let the UA centre it. */
+@supports not (top: anchor(bottom)) {
+  .vernier {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+  }
+}
 .vernierHead {
   display: flex;
-  justify-content: space-between;
   align-items: baseline;
   gap: 8px;
   font-size: var(--fs-xs);
   color: var(--muted);
   margin-bottom: 3px;
+}
+.vernierHead > :first-child {
+  margin-right: auto;
+}
+.vernierClose {
+  composes: bare from './ui.module.css';
+  color: var(--muted);
+}
+.vernierClose:hover {
+  color: var(--fg);
 }
 /* The one place the value is printed to the cent. Its own colour, because it is
    the same number the row above is showing and the digits that differ are the

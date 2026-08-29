@@ -1,4 +1,4 @@
-import { createContext, use, useId, useState } from 'react'
+import { createContext, use, useEffect, useId, useState } from 'react'
 
 import { snapToStep } from './controls'
 import { cx } from './cx'
@@ -248,6 +248,8 @@ const centFill = (cents: number) => ({
 // Its whole width is one step of the control above, so a pixel here is worth
 // about a third of a cent where a pixel up there is worth a whole step.
 function Vernier(props: {
+  id: string
+  anchorName: string
   label: string
   min: number
   max: number
@@ -256,12 +258,19 @@ function Vernier(props: {
   value: number
   disabled: boolean
   onChange: (v: number) => void
+  onOpenChange: (open: boolean) => void
 }) {
   const cents = centsOf(props, props.value)
   const fill: CSSProperties & Record<'--lo' | '--hi' | '--def', string> =
     centFill(cents)
   return (
-    <div className={styles.vernier}>
+    <div
+      id={props.id}
+      popover="auto"
+      className={styles.vernier}
+      style={{ positionAnchor: props.anchorName }}
+      onToggle={e => props.onOpenChange(e.newState === 'open')}
+    >
       <span className={styles.vernierHead}>
         <span>minor adjustment</span>
         {/* The reading the row cannot give: two places further in, which is
@@ -269,6 +278,15 @@ function Vernier(props: {
         <span className={styles.vernierExact}>
           {`${formatFine(props.value, props.step)}${props.unit}`}
         </span>
+        <button
+          type="button"
+          className={styles.vernierClose}
+          title="close"
+          popoverTarget={props.id}
+          popoverTargetAction="hide"
+        >
+          close
+        </button>
       </span>
       <span className={styles.vernierBody}>
         <input
@@ -356,6 +374,17 @@ export function Slider(props: {
   // was on its way somewhere else and covered the row below it uninvited — for
   // a control most passes over a row never need.
   const [showVernier, setShowVernier] = useState(false)
+  const vernierId = useId()
+  const vernierAnchor = `--vernier-${vernierId.replaceAll(/\W/g, '')}`
+  // Both hang off the same edge of the same row; the ? card wins because it is
+  // asked for after the vernier already was and there is only room for one.
+  // The vernier is a native popover now, so closing it from here means asking
+  // the element itself rather than an unmount.
+  useEffect(() => {
+    if (showVernier && (hoverHelp || showHelp)) {
+      document.getElementById(vernierId)?.hidePopover()
+    }
+  }, [showVernier, hoverHelp, showHelp, vernierId])
   const midi = props.midi
   const sync = props.sync
   const needs = props.needs
@@ -424,18 +453,19 @@ export function Slider(props: {
             disclosure already owns that word, and three of the rows that carry
             this card live inside one. */}
         {props.vernier !== true || choices !== undefined ? null : (
-          <IconButton
+          <button
+            type="button"
             title={
               showVernier
                 ? 'hide the minor adjustment'
                 : `minor adjustment — trim ${props.label} in hundredths of a step`
             }
             className={cx(styles.what, showVernier && styles.whatOn)}
-            expanded={showVernier}
-            onClick={() => setShowVernier(!showVernier)}
+            aria-expanded={showVernier}
+            popoverTarget={vernierId}
           >
             minor
-          </IconButton>
+          </button>
         )}
       </span>
     </span>
@@ -653,7 +683,7 @@ export function Slider(props: {
   )
 
   return (
-    <div className={styles.slider}>
+    <div className={styles.slider} style={{ anchorName: vernierAnchor }}>
       {/* One line for a plain slider — name, track, readout — and two for a
           mode switch whose options are words ("alternate", "ssavi") and cannot
           be squeezed into a third of a sidebar. A switch that *does* fit there
@@ -692,10 +722,10 @@ export function Slider(props: {
           inert — needs {needs.hint} · click to set
         </button>
       ) : null}
-      {/* Not while the ? card is up: both hang off the same edge of the same
-          row, and the one the pointer asked for wins. */}
-      {!showVernier || hoverHelp || showHelp ? null : (
+      {props.vernier !== true || choices !== undefined ? null : (
         <Vernier
+          id={vernierId}
+          anchorName={vernierAnchor}
           label={props.label}
           min={props.min}
           max={props.max}
@@ -704,6 +734,7 @@ export function Slider(props: {
           value={props.value}
           disabled={locked}
           onChange={props.onChange}
+          onOpenChange={setShowVernier}
         />
       )}
       {props.modEditor}
