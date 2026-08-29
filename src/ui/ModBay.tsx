@@ -179,32 +179,66 @@ function FarEnd(props: {
   )
 }
 
-// The head of a patched slot: its number, what it is driving, and the way to
-// hand it back.
+// The short line between a slot's two chips, drawn rather than left to a verb:
+// a wire reads as a connection before either label does, which "driving" never
+// did on its own. Solid and tinted while the slot is actually running, dashed
+// and dim while held — the same split `iconModOff` draws on a control row's
+// own ∿, so a reader who already knows that badge reads this at a glance too.
+function Wire(props: { live: boolean }) {
+  const stroke = props.live ? 'var(--mod)' : 'var(--fg4)'
+  return (
+    <svg
+      className={styles.wire}
+      width="16"
+      height="10"
+      viewBox="0 0 16 10"
+      aria-hidden="true"
+    >
+      <line
+        x1="0"
+        y1="5"
+        x2="10"
+        y2="5"
+        stroke={stroke}
+        strokeWidth={1.5}
+        strokeDasharray={props.live ? undefined : '2 2'}
+      />
+      <path
+        d="M 10 2 L 15 5 L 10 8"
+        fill="none"
+        stroke={stroke}
+        strokeWidth={1.5}
+      />
+    </svg>
+  )
+}
+
+// The head of a patched slot: its number, what is driving it and what it is
+// driving, drawn as a cable rather than said in a sentence — bender's patch
+// bay (bender/src/ui/PatchBay.tsx), adapted: a source chip, a wire, a
+// destination chip read as "this connects to that" before either label does,
+// where "driving bend amount — Deflection" asked a reader to parse a sentence
+// for the same fact.
 //
-// This replaced a dropdown of every slider in the app — 273 options in one
-// flat `<select>`, labelled "control — module" because nothing else could tell
-// two `gain`s apart. It was the panel's one surface that flattened the chain
-// into an alphabetical list, and it was a second route to a choice the chain
-// already makes better: a control row's own ∿ claims a free slot, so the target
-// is picked at the control it drives, where you are already looking at it.
+// The picker underneath this row is still not here — that stays a dropdown of
+// every slider in the app, 273 options flattened into one alphabetical list,
+// and this bay replaced exactly that: a control row's own ∿ claims a free
+// slot, so the target is picked at the control it drives, where you are
+// already looking at it. The source chip below is a readout of the SelectRow
+// one row down, the same redundancy bender's own SVG carries over its
+// sliders — a cable you can read without opening anything, over a value you
+// can only change by opening it.
 //
-// So the name here is a readout and a way back rather than a picker. It opens
-// the module the control lives in, which is the same jump "This look"'s captions
-// make and for the same reason — a routing you cannot find the row for is a
-// wobble with no way to tune what it is wobbling.
-//
-// "driving" is in front of the name because the name alone does not say what
-// kind of thing it is. `bend amount — Deflection` reads as a slot caption unless
-// you already know the panel well enough to recognise a slider by name, which is
-// exactly the reader who most needs the bay to explain itself — and the row gave
-// them a bare noun phrase with no verb and no chrome. One dim word fixes the
-// half the styling cannot: the name is now the object of a sentence rather than
-// a heading over the rows below it.
+// The destination chip is still a way back, not just a label: it opens the
+// module the control lives in, the same jump "This look"'s captions make and
+// for the same reason — a routing you cannot find the row for is a wobble
+// with no way to tune what it is wobbling.
 function SlotHead(props: {
   // 1-based, as the bay numbers its slots.
   n: number
   target: ModTarget
+  source: string
+  live: boolean
   // The stages that will actually open right now. A branch with nothing patched
   // into it opens onto nothing, and a look carried in from a preset or a link
   // can hold a routing into one — so this is a live question, not a property of
@@ -228,21 +262,38 @@ function SlotHead(props: {
       <span className={styles.tag} title={`mod slot ${props.n}`}>
         {props.n}
       </span>
-      {/* Not a label for the row — a verb, so the name after it reads as the
-          control it names. Quiet enough (fg4, like every other word in the panel
-          that is grammar rather than a value) that a reader who already knows
-          what a slot head says skips straight over it to the name. */}
-      <span className={styles.driving}>driving</span>
+      <span
+        className={cx(
+          styles.chip,
+          styles.srcChip,
+          !props.live && styles.chipOff,
+        )}
+        title={props.live ? props.source : `${props.source}, held`}
+      >
+        {props.source}
+      </span>
+      <Wire live={props.live} />
       {group !== undefined && stage !== null && props.openStages.has(stage) ? (
         <button
-          className={styles.target}
+          className={cx(
+            styles.chip,
+            styles.destChip,
+            !props.live && styles.chipOff,
+          )}
           title={`open ${group.name} in the ${stage} stage — the row this slot is driving`}
           onClick={() => props.onOpenGroup(stage, group.name)}
         >
           {label}
         </button>
       ) : (
-        <span className={styles.target} title={label}>
+        <span
+          className={cx(
+            styles.chip,
+            styles.destChip,
+            !props.live && styles.chipOff,
+          )}
+          title={label}
+        >
           {label}
         </span>
       )}
@@ -420,6 +471,10 @@ export function ModBay(props: {
           <SlotHead
             n={n}
             target={target}
+            source={
+              MOD_SOURCES.find(o => o.value === s.source)?.label ?? s.source
+            }
+            live={s.on}
             openStages={props.openStages}
             onOpenGroup={props.onOpenGroup}
             // The same call the row's own "remove" makes, rather than a second
