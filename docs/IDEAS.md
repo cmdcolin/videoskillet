@@ -537,6 +537,30 @@ tunes that control's look.
   the fine-tuning cliff; any deterministic `?set=` look plus a probe is one more
   pinned fact. Candidates: burst-lock hue rotation, the killer threshold,
   scramble's wash-out level.
+- **Read VITS back as the app's own frequency response.** Lines 17 and 18 are
+  already stamped with the real instruments — multiburst stepping 0.5 to 4.2
+  MHz, and the modulated staircase that differential gain and phase were
+  measured off. They are then eaten by the chain like everything else, so
+  demodulating them at the receiver end and reading the packet levels back
+  answers what the whole path is doing to frequency, and what it is doing to
+  chroma amplitude and phase against luma level. That is not an approximation of
+  the broadcaster's number, it is the same measurement on the same signal. Two
+  things fall out: an instrument worth drawing (a response curve, next to the
+  waveform monitor above), and a rail — a `?set=` look plus a response is a
+  pinned fact about the chain that no pixel probe reaches, because a filter
+  regression moves the curve long before it moves a hue. `vir.wgsl` is the
+  worked example of the gate-and-demodulate half, and `buzzBuf` is the worked
+  example of getting a per-frame measurement back to the CPU cheaply.
+- **Count the caption channel's errors.** The caption channel's whole premise is
+  that damage arrives as wrong words, and a wrong word is _countable_ in a way a
+  wrong pixel is not — feed a known string, read the page `caption.wgsl`
+  recovered, and the character error rate is one scalar per look. That makes a
+  regression rail out of a thing already built: a noise level and a dub count
+  either still cost the same characters or they do not, with no tolerance to
+  tune and no screenshot to eyeball. It also fails in the right direction. The
+  slicer sits at the far end of sync, timing and the whole channel block, so a
+  regression anywhere upstream shows up as a misspelling, and the number says
+  how bad rather than only that something moved.
 
 ## Digital cable tier
 
