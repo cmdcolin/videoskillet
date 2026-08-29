@@ -190,6 +190,21 @@ export function uniformValues(c: Controls, env: UniformEnv) {
     ccBox: c.ccBox,
     ccRomAddr: c.ccRomAddr,
     ccRomData: c.ccRomData,
+    cgMix: c.cgMix,
+    cgX: c.cgX,
+    cgY: c.cgY,
+    cgScale: c.cgScale,
+    cgKeyDelay: c.cgKeyDelayNs * 1e-9 * SAMPLE_RATE,
+    cgClip: c.cgClip,
+    // A bandwidth as the half-cycle it cannot change faster than, in samples —
+    // the same conversion noiseGrainPx makes, in the units this pass reads.
+    cgSoft: SAMPLE_RATE / (2 * Math.max(c.cgKeyMHz, 0.05) * 1e6),
+    cgEdgeX: c.cgEdgeX,
+    cgEdgeY: c.cgEdgeY,
+    cgFill: c.cgFill,
+    cgInvert: c.cgInvert,
+    cgRomAddr: c.cgRomAddr,
+    cgRomData: c.cgRomData,
     enhClampOff: c.enhClampUs * 1e-6 * SAMPLE_RATE,
     // RC leak per sample from the coupling time constant; 0 us is the
     // DC-coupled box, which never lets the level move at all.

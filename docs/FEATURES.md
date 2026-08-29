@@ -78,6 +78,15 @@ The keyer cuts the chroma the encoder made, and that filter has no vertical term
 — so mattes come out soft across and razor sharp down, the way every composite
 key was.
 
+A **character generator** stands here too, keying the caption text into the
+picture the way every lower third and station ident was made. What makes it a CG
+rather than an overlay is that it puts out two wires — a fill, which is the
+characters as video, and a key, which is their matte — so trimming the timing
+between them puts program through one side of every stem and the box's own black
+down the other. It is the open caption to line 21's closed one: the same
+sentence, one keyed into the picture and aged by everything downstream, one sent
+as data and misspelled instead.
+
 ## Channel
 
 Everything between the recorder and the set: bandwidth, nonlinearity, noise, the

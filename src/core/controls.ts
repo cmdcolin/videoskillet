@@ -107,6 +107,23 @@ export const DEFAULT_CONTROLS = {
   // A pin held on the character generator's font ROM
   ccRomAddr: 0, // address line held high, 1-based (0 = the chip is intact)
   ccRomData: 0, // data line held, 1-based; negative holds it low
+  // The character generator at the switcher, keying the same words into picture
+  cgMix: 0, // the box's output over program (0 = bypassed)
+  cgX: 0.08, // block's left edge, active-picture UV
+  // A lower third, but clear of the caption decoder's own block further down —
+  // the two boxes are meant to be run together and compared, and stacked on top
+  // of each other they cannot be.
+  cgY: 0.52,
+  cgScale: 2, // picture samples per font dot
+  cgKeyDelayNs: 0, // key against fill (0 = the box is trimmed)
+  cgClip: 0.5, // where the slicer cuts the processed key
+  cgKeyMHz: 3, // key-processing bandwidth, which is what softens the edge
+  cgEdgeX: 0, // edge generator's horizontal delay, samples (0 = no edge)
+  cgEdgeY: 0, // edge generator's vertical delay, lines
+  cgFill: 100, // fill level, IRE
+  cgInvert: 0, // cut the other way: letter-shaped holes in a full-frame fill
+  cgRomAddr: 0, // a pin held on this box's font ROM, address bus
+  cgRomData: 0, // and on its data bus
   // bent video enhancer, patched inline between the deck and the set
   enhClampUs: 0, // clamp gate slid off the back porch (0 = correct)
   enhDroopUs: 0, // coupling-capacitor time constant (0 = DC coupled, no droop)

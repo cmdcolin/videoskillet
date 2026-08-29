@@ -1478,6 +1478,161 @@ export const GROUPS: Group[] = [
     ],
   },
   {
+    // The other end of the caption's own words, and the reason it takes no text
+    // of its own: an open caption and a closed one were the same sentence down
+    // two paths. This box keys it into the picture at the plant, so it is
+    // torn, smeared and rainbowed by everything downstream and never
+    // misspelled; line 21 carries it as data, so it is spelled wrong and never
+    // moves. Running both is what makes the difference legible.
+    //
+    // It stands in the Mix stage because that is where the box stood — after the
+    // switcher, ahead of the loop and the tape, so what it keys in ages with the
+    // picture instead of being laid over a finished frame.
+    name: 'Character generator (chyron)',
+    place: 'Mix',
+    sliders: [
+      {
+        key: 'cgMix',
+        label: 'cg over program',
+        min: 0,
+        max: 1,
+        step: 0.01,
+        unit: '',
+        help: `A character generator at the switcher, keying the caption text
+          into the picture — the box every lower third, score bug and station
+          ident came out of.
+
+          What makes it a CG rather than an overlay is that it puts out **two
+          wires**: a fill, which is video, and a key, which is a matte cut at
+          the characters' own edges. Everything below bends the relationship
+          between those two, which is what every bent chyron is doing.
+
+          Because it keys onto the composite bus ahead of the loops and the
+          deck, what it writes is signal from here on: full-swing type is the
+          harshest thing a composite path carries, so the AGC pumps on it, the
+          sound detector hands it back as a whine that changes with what it
+          says, and the tape ages it along with the picture.`,
+      },
+      {
+        key: 'cgKeyDelayNs',
+        label: 'key timing',
+        min: -600,
+        max: 600,
+        step: 10,
+        unit: 'ns',
+        help: 'The trim every real keyer has, because the key path and the video path are different lengths of circuit. Mis-set on a photograph it slides a soft matte a few samples and nobody notices. Mis-set on a glyph it puts background through one side of every stem and a hard shadow down the other — and far enough out it leaves an outline with no letter inside it. One sample is 70 ns.',
+      },
+      {
+        key: 'cgClip',
+        label: 'key clip',
+        min: 0,
+        max: 1,
+        step: 0.01,
+        unit: '',
+        help: 'Where the slicer cuts the processed key. On type this is stroke weight rather than an edge position: down, and thin strokes fuse and the whole line grows a halo; up, and stems drop out of the middle of words. How much range it has depends on the key bandwidth below — a key with no soft edge has nothing for a clip to slide along.',
+      },
+      {
+        key: 'cgKeyMHz',
+        label: 'key bandwidth',
+        min: 0.3,
+        max: 8,
+        step: 0.1,
+        unit: 'MHz',
+        help: 'The key-processing amplifier ahead of the slicer, which is narrower than the video path and is the only reason a key has a soft edge at all. Horizontal only — the same lopsided edge the chroma keyer has, and for the same reason: this is a line of signal, not a picture, so there is no vertical neighbour on the wire.',
+      },
+      {
+        key: 'cgInvert',
+        label: 'key invert',
+        min: 0,
+        max: 1,
+        step: 1,
+        unit: '',
+        choices: ['normal', 'inverted'],
+        help: "Which side of the key is cut. Inverted, the box fills the whole raster and the letters are holes in it showing the picture — which is what a downstream keyer inverted actually does, since the key's domain is the picture rather than the block of type.",
+      },
+      {
+        key: 'cgEdgeX',
+        label: 'edge offset x',
+        min: -24,
+        max: 24,
+        step: 1,
+        unit: 'smp',
+        fine: true,
+        help: 'A CG drew its border and drop shadow by delaying the key a sample and a line and OR-ing it back in underneath the fill. This is that delay, and pulling it far past the sample it was meant to be detaches the shadow from the type and walks it across the frame.',
+      },
+      {
+        key: 'cgEdgeY',
+        label: 'edge offset y',
+        min: -24,
+        max: 24,
+        step: 1,
+        unit: 'ln',
+        fine: true,
+        help: 'The other half of the drop shadow, in lines. Bending the two apart is what puts a shadow in front of the letters it belongs to instead of behind them.',
+      },
+      {
+        key: 'cgFill',
+        label: 'fill level',
+        min: 0,
+        max: 120,
+        step: 1,
+        unit: 'IRE',
+        fine: true,
+        help: 'How bright the characters are laid in, in IRE on the composite. 100 is peak white; past that the box is overmodulating, and everything downstream that reacts to level reacts to it — the receiver AGC, the tape, and the sound detector, which starts buzzing in time with what the caption says.',
+      },
+      {
+        key: 'cgX',
+        label: 'cg x',
+        min: 0,
+        max: 1,
+        step: 0.01,
+        unit: '',
+        fine: true,
+        help: "The block's left edge across the picture.",
+      },
+      {
+        key: 'cgY',
+        label: 'cg y',
+        min: 0,
+        max: 1,
+        step: 0.01,
+        unit: '',
+        fine: true,
+        help: "The block's top edge down the picture. The stock value is a lower third, sat clear of the caption decoder's own block below it — the two are meant to be run together and read against each other.",
+      },
+      {
+        key: 'cgScale',
+        label: 'cg size',
+        min: 1,
+        max: 6,
+        step: 0.25,
+        unit: '',
+        fine: true,
+        help: 'Picture samples per font dot. The glyphs are dots on a grid, so this scales in whole dots and the type stays as crunchy as the ROM made it.',
+      },
+      {
+        key: 'cgRomAddr',
+        label: 'cg rom address line',
+        min: 0,
+        max: 11,
+        step: 1,
+        unit: '',
+        fine: true,
+        help: "A pin held high on this box's font ROM — the same bend as the caption decoder's, on a different chip, because these are two boxes and shorting one says nothing about the other. Low lines carry the row inside the cell, so every glyph grows a seam; high lines carry the character code, so the whole font substitutes.",
+      },
+      {
+        key: 'cgRomData',
+        label: 'cg rom data line',
+        min: -8,
+        max: 8,
+        step: 1,
+        unit: '',
+        fine: true,
+        help: 'The data bus of the same chip: eight dots across one row, so holding one stripes a column down every character on the page. Positive holds it high, negative holds it low.',
+      },
+    ],
+  },
+  {
     name: 'Wipe (A/B)',
     place: 'Mix',
     sliders: [
@@ -3338,6 +3493,12 @@ const dirtyPath: SliderNeed = {
 }
 // Line 21 is only on the wire while the broadcast furniture is, so the decoder
 // with `vbi` off is a box wired to nothing.
+const chyroning: SliderNeed = {
+  key: 'cgMix',
+  ok: above0,
+  fix: 0.9,
+  hint: 'the cg faded up',
+}
 const carrying: SliderNeed = {
   key: 'vbi',
   ok: above0,
@@ -3412,6 +3573,18 @@ export const NEEDS: Partial<Record<ControlKey, SliderNeed>> = {
   ccBox: captioned,
   ccRomAddr: captioned,
   ccRomData: captioned,
+  cgX: chyroning,
+  cgY: chyroning,
+  cgScale: chyroning,
+  cgKeyDelayNs: chyroning,
+  cgClip: chyroning,
+  cgKeyMHz: chyroning,
+  cgEdgeX: chyroning,
+  cgEdgeY: chyroning,
+  cgFill: chyroning,
+  cgInvert: chyroning,
+  cgRomAddr: chyroning,
+  cgRomData: chyroning,
   fbZoom: fb,
   fbRotateDeg: fb,
   fbShiftX: fb,

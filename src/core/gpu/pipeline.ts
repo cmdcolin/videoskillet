@@ -28,7 +28,7 @@ import { StrobeGate } from '../signal/strobe'
 import { SynthState } from '../signal/synthstate'
 import { TapeState, tapeRecording } from '../signal/tapeloop'
 import { BuzzRead } from './buzzread'
-import { buildCaptionRom, CC_BUF_LEN } from './captionrom'
+import { buildCaptionRom, buildPage, CC_BUF_LEN, CC_PAGE } from './captionrom'
 import { gpuPowerFromSearch, initGpu, releaseGpu } from './context'
 import { debugOn, pageSearch } from './env'
 import { aFeedOn, bFeedOn, bOn, bWaveOn, FEEDS } from './feedgates'
@@ -48,6 +48,7 @@ import buzzTapSrc from './shaders/buzz_tap.wgsl?raw'
 import captionSrc from './shaders/caption.wgsl?raw'
 import channelSrc from './shaders/channel.wgsl?raw'
 import chromaExtractSrc from './shaders/chroma_extract.wgsl?raw'
+import chyronSrc from './shaders/chyron.wgsl?raw'
 import composeSrc from './shaders/compose.wgsl?raw'
 import composeBSrc from './shaders/compose_b.wgsl?raw'
 import crtFaceSrc from './shaders/crt_face.wgsl?raw'
@@ -367,6 +368,7 @@ export class Engine implements EngineApi {
   private syncMeasureBuf: GPUBuffer
   private audioBuf: GPUBuffer
   private ccBuf: GPUBuffer
+  private cgBuf: GPUBuffer
   private buzzBuf: GPUBuffer
   private buzzRead: BuzzRead
   // Phosphor state, ping-ponged: decode reads the light the screen is holding
@@ -492,7 +494,13 @@ export class Engine implements EngineApi {
     // The caption decoder's font ROM and page RAM in one buffer, the ROM half
     // written once here (see captionrom.ts for why they share a binding).
     this.ccBuf = storage(CC_BUF_LEN * 4, GPUBufferUsage.COPY_DST)
-    d.queue.writeBuffer(this.ccBuf, 0, buildCaptionRom())
+    const rom = buildCaptionRom()
+    d.queue.writeBuffer(this.ccBuf, 0, rom)
+    // The switcher's character generator has a chip of its own: same ROM, its
+    // own page, and its own pin to hold. Two boxes, so bending one says nothing
+    // about the other.
+    this.cgBuf = storage(CC_BUF_LEN * 4, GPUBufferUsage.COPY_DST)
+    d.queue.writeBuffer(this.cgBuf, 0, rom)
     // and the traffic in the other direction: one (mean, deviation) pair per
     // line, read back to the sound detector (buzz_tap.wgsl, signal/buzz.ts)
     this.buzzBuf = storage(LINES * 8, GPUBufferUsage.COPY_SRC)
@@ -576,6 +584,7 @@ export class Engine implements EngineApi {
     const lineAnalyzePl = compute(lineAnalyzeSrc)
     const decodePl = compute(decodeSrc)
     const captionPl = compute(captionSrc)
+    const chyronPl = compute(chyronSrc)
     const crtFacePl = compute(crtFaceSrc)
 
     // Zero-copy video: where the device can import the decoder's own frame
@@ -765,6 +774,21 @@ export class Engine implements EngineApi {
         ],
         perLine,
         bChainOn,
+      ),
+      // The switcher's character generator, keyed onto the program bus. After
+      // the mixer and before the loop, which is where a head-end box stands: what
+      // it keys in goes round the feedback loop and onto the tape with the
+      // picture, rather than being laid over the finished frame.
+      pass(
+        'chyron',
+        chyronPl,
+        [
+          { buffer: this.paramsBuf },
+          { buffer: this.compA },
+          { buffer: this.cgBuf },
+        ],
+        perLine,
+        () => c.cgMix > 0,
       ),
       pass(
         'fbComposite',
@@ -1332,8 +1356,13 @@ export class Engine implements EngineApi {
   // What the caption encoder has to say. Text rather than a control because it
   // is not a quantity — it rides line 21 as characters, and the board carries
   // the decoder's switch, not its words.
+  // One text, two boxes. The encoder sends it as data on line 21 and the
+  // switcher's generator keys the same words into the picture, which is exactly
+  // the closed/open caption pair — and running both is what makes the
+  // difference between them legible as the chain degrades.
   setCaption(text: string): void {
     this.captionState.setText(text)
+    this.gpu.device.queue.writeBuffer(this.cgBuf, CC_PAGE * 4, buildPage(text))
   }
 
   getCaption(): string {

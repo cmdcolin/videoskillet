@@ -281,6 +281,19 @@ export const URL_KEY_ORDER: readonly ControlKey[] = [
   'ccBox',
   'ccRomAddr',
   'ccRomData',
+  'cgMix',
+  'cgX',
+  'cgY',
+  'cgScale',
+  'cgKeyDelayNs',
+  'cgClip',
+  'cgKeyMHz',
+  'cgEdgeX',
+  'cgEdgeY',
+  'cgFill',
+  'cgInvert',
+  'cgRomAddr',
+  'cgRomData',
 ]
 
 const INDEX = new Map(URL_KEY_ORDER.map((k, i) => [k, i]))

@@ -259,6 +259,22 @@ export const PARAM_DEFS = [
   // its low ones, and the data bus is the eight dots across one row.
   ['ccRomAddr', 'f32'], // address line held high, 1-based (0 = none)
   ['ccRomData', 'f32'], // data line held, 1-based; negative holds it low (0 = none)
+  // The character generator at the switcher: the same words keyed into the
+  // picture rather than sent as data, which is what an open caption was. Two
+  // wires, fill and key, and every artifact is those two coming apart.
+  ['cgMix', 'f32'], // the box's output over program, 0 bypassed
+  ['cgX', 'f32'], // block's left edge, active-picture UV
+  ['cgY', 'f32'], // block's top edge, active-picture UV
+  ['cgScale', 'f32'], // picture samples per font dot
+  ['cgKeyDelay', 'f32'], // key-vs-fill registration, samples
+  ['cgClip', 'f32'], // where the slicer cuts the processed key, 0..1
+  ['cgSoft', 'f32'], // key-path bandwidth as a half-cycle in samples
+  ['cgEdgeX', 'f32'], // edge generator's horizontal delay, samples
+  ['cgEdgeY', 'f32'], // edge generator's vertical delay, lines
+  ['cgFill', 'f32'], // fill level, IRE (past 100 it overmodulates)
+  ['cgInvert', 'f32'], // cut the other way: letter-shaped holes in a full fill
+  ['cgRomAddr', 'f32'], // this box's own font ROM, address line held high
+  ['cgRomData', 'f32'], // and its data line; negative holds it low
   // bent video enhancer, inline between the deck and the set
   ['enhClampOff', 'f32'], // clamp gate displaced off the back porch, samples
   ['enhDroop', 'f32'], // coupling-capacitor leak per sample (0 = DC coupled)

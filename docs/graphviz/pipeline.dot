@@ -76,6 +76,10 @@ digraph ntsc_js {
                 label="mixB\ndirty resample · ring · wipe · PiP\n525 lines × 910 samples"];
   }
 
+  // The switcher's character generator, keying text into the program bus ahead
+  // of the loop and the deck, so what it writes ages with the picture.
+  chyron [passes="chyron" fillcolor="@ENC2@" style="rounded,filled,dashed"
+          label="chyron\ncharacter generator · fill + key\n525 lines × 910 samples"];
   fbComposite [passes="fbComposite" fillcolor="@STORE@" style="rounded,filled,dashed"
                label="fbComposite\nhardware mixer loop\nkey · trails\n525 lines × 910 samples"];
 
@@ -156,7 +160,8 @@ digraph ntsc_js {
   encodeCompB -> mixB [label="  bComp"];
   encodeCompB -> feedB [label="  compB — feed engaged\l"];
   feedB -> mixB [label="  bComp"];
-  mixB -> fbComposite [label="  compA"];
+  mixB -> chyron [label="  compA"];
+  chyron -> fbComposite [label="  compA"];
 
   fbComposite -> tapePlay [label="  compA"];
   tapePlay -> tapeRec [label="  compA — the sum goes\l  back onto the loop\l"];

@@ -77,3 +77,44 @@ export function buildCaptionRom(): Uint32Array {
   }
   return rom
 }
+
+// The same memory laid out for a character generator that is *not* decoding
+// anything: the page written straight from the text, because a box standing at
+// the switcher has the words in hand rather than recovering them off a wire.
+//
+// Wrapped rather than truncated, and wrapped here rather than borrowed from the
+// teletype card's `wrapText`, because core cannot import the app. Eight lines is
+// cheaper than the indirection that would avoid them.
+export function buildPage(text: string): Uint32Array {
+  const page = new Uint32Array(CC_ROWS * CC_COLS)
+  const lines: string[] = []
+  for (const para of text.split('\n')) {
+    let line = ''
+    for (const word of para.split(' ')) {
+      if (line === '') {
+        line = word.slice(0, CC_COLS)
+      } else if (line.length + 1 + word.length <= CC_COLS) {
+        line += ` ${word}`
+      } else {
+        lines.push(line)
+        line = word.slice(0, CC_COLS)
+      }
+    }
+    lines.push(line)
+  }
+  // The last rows rather than the first: a lower third that overran should show
+  // where the text got to, the same way the roll-up page does.
+  const shown = lines.slice(-CC_ROWS)
+  shown.forEach((line, r) => {
+    const row = r + CC_ROWS - shown.length
+    Array.from(line).forEach((ch, c) => {
+      const code = ch.codePointAt(0) ?? 0x20
+      const glyph =
+        code >= GLYPH_FIRST && code < GLYPH_FIRST + GLYPH_COUNT
+          ? code - GLYPH_FIRST
+          : 0
+      page[row * CC_COLS + c] = glyph | CC_SET
+    })
+  })
+  return page
+}

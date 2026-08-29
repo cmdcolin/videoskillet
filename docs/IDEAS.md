@@ -252,47 +252,50 @@ What it does not do:
 - **CC1 only.** The second caption channel lives on field 2, so it needs
   interlace before it means anything — see the section below.
 
-## The character generator as a keyer, not a source
+## The character generator as a keyer — shipped
 
-`sources/teletype.ts` is a card: full frame, one bit deep, in a source slot,
-encoded along with everything else. A character generator in a rack is a
-different animal. It stands at the switcher and puts out **two wires, fill and
-key**, and every bent-chyron artifact is those two coming apart.
+`chyron.wgsl` stands where the box stood: after the mixer, ahead of the loop and
+the deck, so what it keys in ages with the picture instead of being laid over a
+finished frame. It takes no text of its own — it says what the caption says, and
+that is not a shortcut. An open caption and a closed one were the same sentence
+down two paths, and running both is what makes the difference legible: this one
+is picture, so it is torn and smeared and rainbowed and never misspelled; line
+21 is data, so it is spelled wrong and never moves.
 
-Most of the key processing is already written. `mix_b.wgsl` has the slicer,
-`bKeyClip` and `bKeySoft` are its threshold and its edge, a negative `bKey`
-inverts it, `keyIdx`/`bKeyDelay` is the key-timing trim ("a real keyer trims
-this because the key path and the video path are different lengths of circuit"),
-and `keyFill` already chooses what shows through the hole — program A, a matte
-generator, or the mixer loop bus. What is missing is a key arriving from a
-**generator** rather than sliced out of the fill's own chroma.
+Three things learned.
 
-That changes what those knobs do, because type is not a photograph:
+**The fill has to be video, or the timing trim does nothing.** The first cut
+keyed a flat IRE level through the glyph matte, and with a constant fill,
+delaying the key only translates the type — the control did nothing its help
+text claimed. A real CG puts out the characters _as video_ on one wire and their
+matte on the other, so where the key is open and the fill has not arrived the
+box hands over its own black, and where the fill is lit and the key has closed
+the program shows straight through the letter. That is the artifact, and it only
+exists because the two wires carry the same shapes separately.
 
-- **Key timing** slides a soft matte a few samples across a picture. Across a
-  glyph it puts background through one side of every stem and a hard shadow down
-  the other, and far enough out it leaves an outline with no letter in it.
-- **Clip** becomes stroke weight. Down, and thin strokes fuse and the line grows
-  a halo; up, and stems drop out of the middle of words.
-- **Invert** cuts letter-shaped holes, and `keyFill`'s loop-bus option is
-  already behind them: feedback that regenerates only inside the shape of what
-  somebody typed.
+**The edge generator is OR-ed into the key, not drawn.** Widening the matte to
+the shadow's shape puts the fill's own black out there for free, which is how
+one extra tap bought a border. Drawing the shadow as a third element would have
+been the same picture by a worse mechanism, and bending the delays apart would
+not have detached it.
 
-The new mechanism is the **edge generator**. A CG made its border and drop
-shadow by delaying the key a sample and a line and OR-ing it back in — one extra
-tap, and bending the two delays apart detaches the shadow and walks it in front
-of the type.
+**Two boxes means two chips.** The generator has its own font ROM and its own
+pin to hold (`cgRomAddr`/`cgRomData`), separate from the caption decoder's in
+the set. They share the baked ROM bytes and nothing else, so bending one says
+nothing about the other — which is the physically honest answer and also why
+`cgRom` is a near-copy of `decode.wgsl`'s `romRead` rather than something shared
+through a pointer.
 
-Keyed onto the program bus, the caption is _signal_, which is the payoff for
-building it here rather than in a source slot. Full-swing white against black
-overmodulates, so `buzz_tap` hands back the text as a whine that changes with
-what it says, the receiver's AGC pumps on it, and the enhancer's sync
-regenerator can mint pulses off a bright lower third. All of that already
-exists, and none of it needs to know a chyron does.
+What it does not do:
 
-One trap, already paid for once by the chroma keyer: key at the fill's own
-raster index, not at the output sample, or the caption slides out from under its
-own matte on the dirty path.
+- **The fill is the box's own characters and nothing else.** `keyFill`'s trick
+  on the chroma keyer — program A, a matte generator, or the mixer loop bus —
+  would make an inverted key a window onto the feedback bus rather than onto
+  program, which is the one obviously good thing left here.
+- **Monochrome.** A CG with a colour matte generator is `bKeyMatte*` pointed at
+  this instead, and the same attribute work the teletype card wants above.
+- **No page-address bend.** The third of the three bends, unbuilt in both
+  places: it walks the whole page diagonally through itself a few cells a field.
 
 ## Chroma key follow-ons
 

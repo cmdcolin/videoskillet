@@ -13,6 +13,7 @@ import buzzTap from './shaders/buzz_tap.wgsl?raw'
 import caption from './shaders/caption.wgsl?raw'
 import channel from './shaders/channel.wgsl?raw'
 import chromaExtract from './shaders/chroma_extract.wgsl?raw'
+import chyron from './shaders/chyron.wgsl?raw'
 import compose from './shaders/compose.wgsl?raw'
 import composeB from './shaders/compose_b.wgsl?raw'
 import crtFace from './shaders/crt_face.wgsl?raw'
@@ -46,6 +47,7 @@ const SHADERS: Record<string, string> = {
   caption,
   channel,
   chroma_extract: chromaExtract,
+  chyron,
   compose,
   compose_b: composeB,
   crt_face: crtFace,
