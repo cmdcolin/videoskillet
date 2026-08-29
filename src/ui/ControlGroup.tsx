@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 
 import { DEFAULT_CONTROLS, atRest } from '../core/controls'
+import { clampCardText } from '../sources/teletype'
+import { useCaptionApi } from './CaptionContext'
 import styles from './ControlGroup.module.css'
 import { GROUPS, NEEDS, sliderFor } from './controls'
 import {
@@ -270,6 +272,35 @@ function SignalTapControl() {
   )
 }
 
+// The caption's own group, found by its control the way the tap's host is.
+const CAPTION_HOST_GROUP = GROUPS.find(g =>
+  g.sliders.some(s => s.key === 'cc'),
+)?.name
+
+// What the encoder is sending on line 21. Not a control — it is words, not a
+// quantity, so it reads its own context and no preset or random nudge touches
+// it. A textarea because a caption is lines: each one rolls the page as it
+// lands, and the wrap is a preview of how thirty-two columns will break.
+function CaptionControl() {
+  const { caption, onCaption } = useCaptionApi()
+  return (
+    <>
+      <textarea
+        className={styles.captionField}
+        rows={2}
+        value={caption}
+        placeholder="what line 21 is carrying"
+        spellCheck={false}
+        onChange={e => onCaption(clampCardText(e.target.value))}
+      />
+      <p className={styles.captionNote}>
+        Sent as data, a character at a time. What arrives is whatever survived
+        the chain.
+      </p>
+    </>
+  )
+}
+
 const FRAMES: {
   group: string
   keys: ReadonlySet<ControlKey>
@@ -518,6 +549,7 @@ export function ControlGroup(props: { group: Group; defaultOpen?: boolean }) {
       <Rack sliders={group.sliders}>
         <ControlRows sliders={shown} muted={muted} />
         {group.name === TAP_HOST_GROUP ? <SignalTapControl /> : null}
+        {group.name === CAPTION_HOST_GROUP ? <CaptionControl /> : null}
         {fine.length === 0 ? null : (
           <>
             <button

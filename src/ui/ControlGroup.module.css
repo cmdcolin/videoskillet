@@ -88,3 +88,31 @@
 .sliderToggle:hover {
   color: var(--fg);
 }
+
+/* What line 21 is carrying. A textarea rather than an input because a caption
+   is lines — each one rolls the page when it lands — and the wrap is what says
+   how the 32 columns will break. Skinned for the same reason dialog.module.css
+   skins its own: the UA still draws a textarea as a 1998 widget. */
+.captionField {
+  box-sizing: border-box;
+  width: 100%;
+  margin: 4px 0 8px;
+  padding: 6px 8px;
+  background: var(--panel-bg);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font: inherit;
+  font-family: var(--mono-blocks);
+  font-size: var(--fs-sm);
+  resize: vertical;
+}
+.captionField:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+.captionNote {
+  margin: 0 0 8px;
+  color: var(--fg4);
+  font-size: var(--fs-sm);
+}

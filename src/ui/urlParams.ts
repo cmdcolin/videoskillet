@@ -118,6 +118,11 @@ export interface SessionParams {
   // the stock words, moving.
   card: TeletypeCard | null
   cardb: TeletypeCard | null
+  // What the caption encoder is sending on line 21. Not a slot's card — this
+  // one is not a picture at all, it is data riding the vertical interval, so it
+  // travels with the board rather than with a source. Clamped like a card for
+  // the same reason: a link is untrusted input.
+  caption: string
   vapor: { speedA: number; speedB: number; reverb: number; dry: number }
   // Each slot's cue point, and the loop on it if there was one. Carried because
   // the loop is half of what a link of a clip is *of* — "this two seconds of this
@@ -271,6 +276,7 @@ export function parseSessionParams(search: string): SessionParams {
     ytb: q.get('ytb'),
     card: card('text', 'crawl', 'boil', 'garble'),
     cardb: card('textb', 'crawlb', 'boilb', 'garbleb'),
+    caption: clampCardText(q.get('caption') ?? ''),
     vapor: {
       speedA: num('speeda', SPEED_DEFAULT),
       speedB: num('speedb', SPEED_DEFAULT),
@@ -315,6 +321,8 @@ export interface SessionState {
   // as well as the mode.
   teletypeA: TeletypeCard
   teletypeB: TeletypeCard
+  // What line 21 is carrying, so a shared link says what the captions said.
+  caption: string
   // The vaporwave look: each deck slowed down, the room it plays in, and how
   // much of the clip itself is heard in front of that room.
   speedA: number
@@ -419,6 +427,7 @@ export function writeSessionParams(
   put('boilb', cardB && state.teletypeB.boil, '1')
   put('garble', cardA && state.teletypeA.garble, '1')
   put('garbleb', cardB && state.teletypeB.garble, '1')
+  put('caption', state.caption !== '', state.caption)
   put('speeda', state.speedA !== SPEED_DEFAULT, short(state.speedA))
   put('speedb', state.speedB !== SPEED_DEFAULT, short(state.speedB))
   put('cuea', state.cueA !== null, formatCue(state.cueA))

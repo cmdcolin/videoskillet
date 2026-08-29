@@ -2877,6 +2877,57 @@ export const GROUPS: Group[] = [
     ],
   },
   {
+    // The caption decoder is a box inside the set, which is why it sits here and
+    // not beside `vbi` in the source stage. That control puts characters on line
+    // 21; this one is the thing at the far end trying to read them back, and
+    // everything the chain does in between happens to the words.
+    //
+    // The text itself is not a control — it is words, not a quantity, so a
+    // preset or a random nudge has no business rewriting it. The box that types
+    // it is rendered over these rows (CaptionContext, ControlGroup's FRAMES).
+    name: 'Captions',
+    place: 'Receiver',
+    sliders: [
+      {
+        key: 'cc',
+        label: 'caption decoder',
+        min: 0,
+        max: 1,
+        step: 1,
+        unit: '',
+        choices: ['off', 'on'],
+        help: `The set's own caption decoder, slicing line 21 off the signal it
+          actually received.
+
+          What makes this different from putting words on a card: the caption
+          is *data*, and it has been through everything the picture has. Snow,
+          a narrow channel, tape noise and generation loss arrive as
+          misspellings — dropped characters, wrong ones, a solid block wherever
+          parity caught an error and the decoder refused to guess. Wind the
+          tracking off and the caption dies before the picture does, because
+          line 21 is at the top of the field where the band lands first.
+
+          And it is painted on the set's raster rather than the signal's, which
+          is where a real decoder paints: the page is redrawn on the set's own
+          timing. So the picture can roll, tear and spin hue underneath a
+          caption sitting perfectly still. It still bends with the tube and
+          still blooms, because both of those happen after it.
+
+          Needs vbi test signals on — that is the switch that puts line 21 on
+          the wire at all.`,
+      },
+      {
+        key: 'ccBox',
+        label: 'caption box',
+        min: 0,
+        max: 1,
+        step: 0.05,
+        unit: '',
+        help: 'How black the box behind the characters is. Broadcast captions sat in a solid one because type keyed straight over picture is unreadable the moment the picture is bright — wind it out and you get exactly that problem, which is the one every set-top caption box had.',
+      },
+    ],
+  },
+  {
     // The tube split into the three things you look *at* — how the beam is
     // written, what the coating does with it, and what the glass in front of it
     // is made of — plus where your eye is, which is not the tube at all. It was
@@ -3253,6 +3304,20 @@ const dirtyPath: SliderNeed = {
   fix: 0,
   hint: 'genlock on "dirty sum"',
 }
+// Line 21 is only on the wire while the broadcast furniture is, so the decoder
+// with `vbi` off is a box wired to nothing.
+const carrying: SliderNeed = {
+  key: 'vbi',
+  ok: above0,
+  fix: 1,
+  hint: 'vbi test signals on, which is what puts line 21 on the wire',
+}
+const captioned: SliderNeed = {
+  key: 'cc',
+  ok: above0,
+  fix: 1,
+  hint: 'the caption decoder on',
+}
 const wiping: SliderNeed = {
   key: 'wipeMode',
   ok: above0,
@@ -3311,6 +3376,8 @@ const magnified: SliderNeed = {
 }
 
 export const NEEDS: Partial<Record<ControlKey, SliderNeed>> = {
+  cc: carrying,
+  ccBox: captioned,
   fbZoom: fb,
   fbRotateDeg: fb,
   fbShiftX: fb,

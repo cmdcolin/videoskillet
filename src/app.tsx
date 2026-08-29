@@ -16,6 +16,7 @@ import { AboutDialog } from './ui/AboutDialog'
 import { AdvancedDialog } from './ui/AdvancedDialog'
 import { AppMenu, ShowMenuButton } from './ui/AppMenu'
 import { AudioHint, AudioInput } from './ui/AudioInput'
+import { CaptionContext } from './ui/CaptionContext'
 import { ClipLibraryDialog } from './ui/ClipLibraryDialog'
 import { ClipPicker } from './ui/ClipPicker'
 import { CommandPalette } from './ui/CommandPalette'
@@ -525,6 +526,7 @@ export function App() {
     ytUrlB: eng.b.ytUrl,
     teletypeA: eng.a.teletype,
     teletypeB: eng.b.teletype,
+    caption: eng.caption,
     speedA: eng.a.speed,
     speedB: eng.b.speed,
     reverb: eng.reverb,
@@ -1436,7 +1438,11 @@ export function App() {
                 Controls, so the View group's tap row needs its own way down to
                 eng.tap/eng.changeTap. */}
             <SignalTapContext value={{ tap: eng.tap, onTap: eng.changeTap }}>
-              {panelBody}
+              <CaptionContext
+                value={{ caption: eng.caption, onCaption: eng.changeCaption }}
+              >
+                {panelBody}
+              </CaptionContext>
             </SignalTapContext>
           </ModSlotsContext>
         </ControlsContext>

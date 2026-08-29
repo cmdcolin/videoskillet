@@ -44,7 +44,12 @@ describe('choicesFitTrack', () => {
     const inline = ALL_SLIDERS.filter(
       s => s.choices !== undefined && choicesFitTrack(s.choices),
     ).map(s => s.label)
-    expect(inline).toEqual(['deinterlace', 'vbi test signals', 'record head'])
+    expect(inline).toEqual([
+      'deinterlace',
+      'vbi test signals',
+      'record head',
+      'caption decoder',
+    ])
   })
 
   // An inline switch pays into its group's shared readout width (Rack in

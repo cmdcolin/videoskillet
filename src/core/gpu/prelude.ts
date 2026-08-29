@@ -2,6 +2,7 @@
 // packer. PARAM_DEFS is the single source of truth for the Params struct:
 // field order here IS the GPU memory layout.
 
+import { CC_CR } from '../signal/captionstate'
 import {
   ACTIVE_HEIGHT,
   ACTIVE_START,
@@ -32,6 +33,17 @@ import {
   TAPS,
 } from '../signal/filters'
 import { DOWN_PER_SAMPLE } from '../signal/linestate'
+import {
+  CC_BLOCK,
+  CC_CELLS,
+  CC_COLS,
+  CC_CURSOR,
+  CC_PAGE,
+  CC_ROWS,
+  CC_SET,
+  GLYPH_H,
+  GLYPH_W,
+} from './captionrom'
 
 export const PARAM_DEFS = [
   ['frame', 'u32'],
@@ -234,6 +246,13 @@ export const PARAM_DEFS = [
   ['mvAgcIre', 'f32'], // Macrovision AGC-pulse level at full cycle, IRE (0 = unprotected)
   ['mvStripe', 'f32'], // colorstripe burst rotation on walking line bands, radians
   ['vbi', 'f32'], // VBI test signals: VITS on 17-18, VIR on 19, line-21 captions (1 = broadcast furniture on)
+  // The two characters line 21 carries this frame, straight off the encoder's
+  // shift register (signal/captionstate.ts). 0 is the null a real encoder sends
+  // between characters, which is most frames.
+  ['ccChar0', 'u32'],
+  ['ccChar1', 'u32'],
+  ['cc', 'f32'], // the set's caption decoder: 0 off, 1 decoding line 21
+  ['ccBox', 'f32'], // opacity of the black box behind the caption
   // bent video enhancer, inline between the deck and the set
   ['enhClampOff', 'f32'], // clamp gate displaced off the back porch, samples
   ['enhDroop', 'f32'], // coupling-capacitor leak per sample (0 = DC coupled)
@@ -386,6 +405,20 @@ const SAG_BASE = ${LINES + 8}u; // deflection sag region of the timing buffer
 const VSYNC_FIRST = ${VSYNC_FIRST}u;
 const VSYNC_LAST = ${VSYNC_LAST}u;
 const HEAD_SWITCH_LINE = ${HEAD_SWITCH_LINE}u;
+// The caption channel. Layout comes from captionrom.ts, which is also what
+// bakes the font, so the ROM the CPU writes and the page the shaders index
+// cannot drift apart.
+const CC_LINE = 21u;
+const CC_CELLS = ${CC_CELLS}u;
+const CC_COLS = ${CC_COLS}u;
+const CC_ROWS = ${CC_ROWS}u;
+const CC_PAGE = ${CC_PAGE}u;
+const CC_CURSOR = ${CC_CURSOR}u;
+const CC_BLOCK = ${CC_BLOCK}u;
+const CC_SET = ${CC_SET}u;
+const CC_CR = ${CC_CR}u;
+const GLYPH_W = ${GLYPH_W}u;
+const GLYPH_H = ${GLYPH_H}u;
 const TAPE_LEN = ${TAPE_FRAMES * SAMPLES_PER_LINE * LINES}u; // delay loop capacity, samples
 const IRE_SYNC = ${IRE_SYNC}.0;
 const IRE_BLANK = ${IRE_BLANK}.0;
@@ -417,6 +450,24 @@ const TILE = ${TILE_WG + 64}u;
 const HALO = 32u;
 
 ${paramStruct}
+
+// Odd parity, the way line 21 protects each character: the seven data bits and
+// the parity bit together carry an odd number of ones, so any single bit
+// flipped in transit is caught. A decoder that caught one drew a solid block
+// rather than a plausible wrong letter, which is why the failure has to travel
+// as a flag on the cell and not as a substituted character.
+fn ccParity(code: u32) -> u32 {
+  return 1u - (countOneBits(code & 0x7fu) & 1u);
+}
+
+// Cell b of a character's eight on the wire: seven data bits, least
+// significant first, then the parity bit.
+fn ccBit(b: u32, code: u32) -> u32 {
+  if (b < 7u) {
+    return (code >> b) & 1u;
+  }
+  return ccParity(code);
+}
 
 // Subcarrier (sin, cos) at global sample index n. Sampling at exactly 4x fsc
 // puts every sample on a 4-phase lattice, so the carrier is exact — no trig,

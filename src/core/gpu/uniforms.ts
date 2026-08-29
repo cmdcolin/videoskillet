@@ -186,6 +186,8 @@ export function uniformValues(c: Controls, env: UniformEnv) {
     mvAgcIre: 160 * c.macrovision,
     mvStripe: (c.mvStripeDeg * Math.PI) / 180,
     vbi: c.vbi,
+    cc: c.cc,
+    ccBox: c.ccBox,
     enhClampOff: c.enhClampUs * 1e-6 * SAMPLE_RATE,
     // RC leak per sample from the coupling time constant; 0 us is the
     // DC-coupled box, which never lets the level move at all.

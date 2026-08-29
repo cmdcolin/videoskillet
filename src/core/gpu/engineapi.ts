@@ -195,6 +195,11 @@ export interface EngineApi {
   // `?dbg=` at construction), so React mirrors it rather than the reverse.
   setDbgView: (view: number) => void
   getDbgView: () => number
+  // What the caption encoder puts on line 21. Words rather than a control, so
+  // the engine holds them and React mirrors them the same way — and a rebuilt
+  // engine is handed them back rather than coming up mute.
+  setCaption: (text: string) => void
+  getCaption: () => string
   // Re-arm the render loop after a transition (fullscreen exit, tab re-shown)
   // that can leave the browser having stopped delivering rAF callbacks. A no-op
   // on a healthy loop.

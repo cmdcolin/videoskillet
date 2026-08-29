@@ -421,6 +421,36 @@ end, before the signal is ever transmitted — the camera's own limit, as oppose
 to the decoder's. Wide enough and the chroma sidebands spill into the luma band
 and generate their own cross-colour. |
 
+### Captions
+
+| Control             | Range        | The fault it models                                              |
+| ------------------- | ------------ | ---------------------------------------------------------------- |
+| **caption decoder** | `off` · `on` | The set's own caption decoder, slicing line 21 off the signal it |
+
+          actually received.
+
+          What makes this different from putting words on a card: the caption
+          is *data*, and it has been through everything the picture has. Snow,
+          a narrow channel, tape noise and generation loss arrive as
+          misspellings — dropped characters, wrong ones, a solid block wherever
+          parity caught an error and the decoder refused to guess. Wind the
+          tracking off and the caption dies before the picture does, because
+          line 21 is at the top of the field where the band lands first.
+
+          And it is painted on the set's raster rather than the signal's, which
+          is where a real decoder paints: the page is redrawn on the set's own
+          timing. So the picture can roll, tear and spin hue underneath a
+          caption sitting perfectly still. It still bends with the tube and
+          still blooms, because both of those happen after it.
+
+          Needs vbi test signals on — that is the switch that puts line 21 on
+          the wire at all. |
+
+| **caption box** | 0–1 | How black the box behind the characters is. Broadcast
+captions sat in a solid one because type keyed straight over picture is
+unreadable the moment the picture is bright — wind it out and you get exactly
+that problem, which is the one every set-top caption box had. |
+
 ## Screen
 
 ### Beam

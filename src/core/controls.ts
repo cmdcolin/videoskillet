@@ -101,6 +101,9 @@ export const DEFAULT_CONTROLS = {
   macrovision: 0, // Macrovision pseudo-sync/AGC pulse depth on VBI lines 12-19
   mvStripeDeg: 0, // colorstripe: burst rotation on walking line bands, degrees
   vbi: 1, // VBI test signals: VITS multiburst/staircase, VIR, line-21 captions (broadcast furniture)
+  // The set's caption decoder, reading line 21 off the signal it actually got
+  cc: 0, // 0 the decoder is off, 1 it is running
+  ccBox: 0.7, // black box behind the characters
   // bent video enhancer, patched inline between the deck and the set
   enhClampUs: 0, // clamp gate slid off the back porch (0 = correct)
   enhDroopUs: 0, // coupling-capacitor time constant (0 = DC coupled, no droop)

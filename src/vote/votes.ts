@@ -135,6 +135,8 @@ export function candidateRecord(recipe: Recipe): CandidateRecord {
     cueB: null,
     teletypeA: TELETYPE_DEFAULT,
     teletypeB: TELETYPE_DEFAULT,
+    // A candidate is a look, and a caption is words: nothing to compare.
+    caption: '',
     speedA: SPEED_DEFAULT,
     speedB: SPEED_DEFAULT,
     reverb: REVERB_DEFAULT,

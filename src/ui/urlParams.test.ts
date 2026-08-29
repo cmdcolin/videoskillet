@@ -217,6 +217,7 @@ const state = (over: Partial<SessionState> = {}): SessionState => ({
   ytUrlB: '',
   teletypeA: { text: '', crawl: false, boil: false, garble: false },
   teletypeB: { text: '', crawl: false, boil: false, garble: false },
+  caption: '',
   speedA: SPEED_DEFAULT,
   speedB: SPEED_DEFAULT,
   reverb: REVERB_DEFAULT,

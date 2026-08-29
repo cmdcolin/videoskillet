@@ -34,6 +34,7 @@ describe('reflectBindings', () => {
       'held:storage',
       'heldNext:storage_rw',
       'audio:storage',
+      'cc:storage',
     ])
     expect(reflectBindings(feed).map(b => b.name)).toEqual(['P', 'src', 'dst'])
   })

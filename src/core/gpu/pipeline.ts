@@ -3,6 +3,7 @@ import { Listeners } from '../listeners'
 import { clamp, wrap } from '../math'
 import { rngFor } from '../rng'
 import { AudioState } from '../signal/audiostate'
+import { CaptionState } from '../signal/captionstate'
 import { ClipContact, clipPointAt } from '../signal/clip'
 import {
   ACTIVE_HEIGHT,
@@ -27,6 +28,7 @@ import { StrobeGate } from '../signal/strobe'
 import { SynthState } from '../signal/synthstate'
 import { TapeState, tapeRecording } from '../signal/tapeloop'
 import { BuzzRead } from './buzzread'
+import { buildCaptionRom, CC_BUF_LEN } from './captionrom'
 import { gpuPowerFromSearch, initGpu, releaseGpu } from './context'
 import { debugOn, pageSearch } from './env'
 import { aFeedOn, bFeedOn, bOn, bWaveOn, FEEDS } from './feedgates'
@@ -43,6 +45,7 @@ import { RenderLoop } from './renderloop'
 import { Overlay } from './savedBoard'
 import blitExtSrc from './shaders/blit_ext.wgsl?raw'
 import buzzTapSrc from './shaders/buzz_tap.wgsl?raw'
+import captionSrc from './shaders/caption.wgsl?raw'
 import channelSrc from './shaders/channel.wgsl?raw'
 import chromaExtractSrc from './shaders/chroma_extract.wgsl?raw'
 import composeSrc from './shaders/compose.wgsl?raw'
@@ -223,6 +226,7 @@ export class Engine implements EngineApi {
   // graph, so ownership arrives through the constructor. See EngineOptions.
   readonly audioState: AudioState
   private mixState = new MixState(this.rand)
+  private captionState = new CaptionState()
   private modState = new ModState()
   private glide = new Glide(FILTER_KEYS)
   // Frames since React was last told where a morph has got to. A morph writes
@@ -362,6 +366,7 @@ export class Engine implements EngineApi {
   private timingBuf: GPUBuffer
   private syncMeasureBuf: GPUBuffer
   private audioBuf: GPUBuffer
+  private ccBuf: GPUBuffer
   private buzzBuf: GPUBuffer
   private buzzRead: BuzzRead
   // Phosphor state, ping-ponged: decode reads the light the screen is holding
@@ -484,6 +489,10 @@ export class Engine implements EngineApi {
     this.syncMeasureBuf = storage(LINES * 16)
     // one audio sample per line, uploaded each frame
     this.audioBuf = storage(LINES * 4)
+    // The caption decoder's font ROM and page RAM in one buffer, the ROM half
+    // written once here (see captionrom.ts for why they share a binding).
+    this.ccBuf = storage(CC_BUF_LEN * 4, GPUBufferUsage.COPY_DST)
+    d.queue.writeBuffer(this.ccBuf, 0, buildCaptionRom())
     // and the traffic in the other direction: one (mean, deviation) pair per
     // line, read back to the sound detector (buzz_tap.wgsl, signal/buzz.ts)
     this.buzzBuf = storage(LINES * 8, GPUBufferUsage.COPY_SRC)
@@ -566,6 +575,7 @@ export class Engine implements EngineApi {
     const syncPl = compute(syncSrc)
     const lineAnalyzePl = compute(lineAnalyzeSrc)
     const decodePl = compute(decodeSrc)
+    const captionPl = compute(captionSrc)
     const crtFacePl = compute(crtFaceSrc)
 
     // Zero-copy video: where the device can import the decoder's own frame
@@ -884,6 +894,7 @@ export class Engine implements EngineApi {
       { buffer: read },
       { buffer: write },
       { buffer: this.audioBuf },
+      { buffer: this.ccBuf },
     ]
     const [pA, pB] = this.persistBufs
     this.decodeBgs = [
@@ -954,6 +965,21 @@ export class Engine implements EngineApi {
           { buffer: this.lineInfoBuf },
         ],
         perRow,
+      ),
+      // The set's caption decoder, between the PLL it gates off and the pass
+      // that paints what it recovered. One invocation: a page is a serial
+      // machine, and a cursor is not something threads can share.
+      pass(
+        'caption',
+        captionPl,
+        [
+          { buffer: this.paramsBuf },
+          { buffer: this.compA },
+          { buffer: this.timingBuf },
+          { buffer: this.ccBuf },
+        ],
+        [1, 1],
+        () => c.cc > 0,
       ),
       this.decodePass,
       // Photograph the decoded signal as a glowing CRT face; both the display
@@ -1301,6 +1327,17 @@ export class Engine implements EngineApi {
       return
     }
     this.sources.pushB(f)
+  }
+
+  // What the caption encoder has to say. Text rather than a control because it
+  // is not a quantity — it rides line 21 as characters, and the board carries
+  // the decoder's switch, not its words.
+  setCaption(text: string): void {
+    this.captionState.setText(text)
+  }
+
+  getCaption(): string {
+    return this.captionState.text()
   }
 
   setNoiseSource(kind: number): void {
@@ -2193,6 +2230,9 @@ export class Engine implements EngineApi {
       ...tapeU,
       // the adjacent channel's raster slip and beat phases, walked per frame
       ...this.rfState.update(this.frame),
+      // the two characters line 21 carries this frame; nulls on most of them,
+      // because a caption is written far faster than it is read
+      ...this.captionState.update({ vbi: c.vbi }),
       // the video synth's two oscillators, advanced a frame's worth of samples
       // whether or not a slot is showing them — a bench generator left switched
       // on does not wait to be patched in, so cutting to it lands wherever it

@@ -125,6 +125,10 @@ digraph ntsc_js {
                  label="syncMeasure → sync\nrecover H/V timing\n525 lines each, then 1 thread total"];
     lineAnalyze [passes="lineAnalyze" fillcolor="@RX2@"
                  label="lineAnalyze\nper-line burst phase & lock\n525 lines, one thread each"];
+    // The caption decoder: line 21 sliced off the same damaged waveform, held
+    // in a page decode paints on the set's own raster.
+    caption     [passes="caption" fillcolor="@RX2@" style="rounded,filled,dashed"
+                 label="caption\nline 21 data slicer\n1 thread total"];
     decode      [passes="decode" fillcolor="@RX1@"
                  label="decode\ncomb filter · chroma demod · color-kill\ndeflection bend · sag → RGB\n754 × 480 px"];
   }
@@ -172,6 +176,8 @@ digraph ntsc_js {
   enhancer -> sync [label="  compA" lhead=cluster_rx];
   sync -> lineAnalyze [label="  timing[]"];
   lineAnalyze -> decode [label="  lineInfo[]"];
+  sync -> caption [label="  timing[]"];
+  caption -> decode [label="  ccBuf[]"];
   decode -> crtFace [label="  outTex"];
   crtFace -> present [label="  faceTex"];
   enhancer -> storePrev [label="  compA — the same waveform\l  the receiver locked to\l"];

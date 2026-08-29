@@ -27,6 +27,11 @@
 @group(0) @binding(6) var<storage, read> held: array<u32>;
 @group(0) @binding(7) var<storage, read_write> heldNext: array<u32>;
 @group(0) @binding(8) var<storage, read> audio: array<f32>;
+// The caption decoder's font ROM and page RAM (captionrom.ts). Read here rather
+// than composited later because a caption is light off the same glass as the
+// picture: crt_face has to bloom it, and the gun transfer at the bottom of this
+// pass has to put it at the level the phosphor would.
+@group(0) @binding(9) var<storage, read> cc: array<u32>;
 
 fn heldLight(x: i32, y: i32) -> vec3f {
   let xc = u32(clamp(x, 0, i32(ACTIVE_W) - 1));
@@ -242,6 +247,45 @@ const SCOPE_BOT_IRE = -55.0;
 fn scopeIre(y: f32) -> f32 {
   let t = (y - f32(ACTIVE_H - SCOPE_H)) / f32(SCOPE_H);
   return mix(SCOPE_TOP_IRE, SCOPE_BOT_IRE, t);
+}
+
+// Where the caption sits on the glass. Indexed by output pixel, and that is the
+// point of the whole channel rather than a shortcut: a decoder holds characters
+// in a page and repaints them on the set's own timing, so the picture can roll,
+// tear and spin hue underneath a caption that does not move. It still bends
+// with the tube and still blooms, because both of those happen after this pass.
+const CC_SCALE = 2u;
+const CC_CELL_W = GLYPH_W * CC_SCALE;
+const CC_CELL_H = GLYPH_H * CC_SCALE;
+const CC_X0 = (ACTIVE_W - CC_COLS * CC_CELL_W) / 2u;
+const CC_Y0 = ACTIVE_H - CC_ROWS * CC_CELL_H - ACTIVE_H / 8u;
+
+// (ink, covered) for one screen pixel: whether a glyph lights it, and whether a
+// cell the decoder actually wrote covers it at all. The second is what the black
+// box keys off — a real caption boxed the characters it had received, not the
+// whole row.
+fn captionAt(x: u32, y: u32) -> vec2f {
+  if (x < CC_X0 || y < CC_Y0) {
+    return vec2f(0.0);
+  }
+  let col = (x - CC_X0) / CC_CELL_W;
+  let row = (y - CC_Y0) / CC_CELL_H;
+  if (col >= CC_COLS || row >= CC_ROWS) {
+    return vec2f(0.0);
+  }
+  let cell = cc[CC_PAGE + row * CC_COLS + col];
+  if ((cell & CC_SET) == 0u) {
+    return vec2f(0.0);
+  }
+  let gx = ((x - CC_X0) % CC_CELL_W) / CC_SCALE;
+  let gy = ((y - CC_Y0) % CC_CELL_H) / CC_SCALE;
+  if ((cell & CC_BLOCK) != 0u) {
+    // What a decoder drew when parity failed: the cell solid, inset a dot so a
+    // run of them reads as separate losses rather than one bar.
+    let solid = gx > 0u && gx + 1u < GLYPH_W && gy > 0u && gy + 1u < GLYPH_H;
+    return vec2f(select(0.0, 1.0, solid), 1.0);
+  }
+  return vec2f(f32((cc[(cell & 0xffu) * GLYPH_H + gy] >> gx) & 1u), 1.0);
 }
 
 @compute @workgroup_size(TILE_WG, 1, 1)
@@ -572,6 +616,14 @@ fn main(
         v = vec3f(0.88, 1.0, 0.92);
       }
       shown = v;
+    }
+  }
+  // The caption, over whatever the receiver made of the picture.
+  if (P.cc != 0.0) {
+    let cap = captionAt(gid.x, gid.y);
+    if (cap.y > 0.0) {
+      shown = mix(shown, vec3f(0.0), P.ccBox * (1.0 - cap.x));
+      shown = mix(shown, vec3f(1.0), cap.x);
     }
   }
   // The gun's cutoff and gamma, applied as the screen is written (prelude):
