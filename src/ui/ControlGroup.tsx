@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { DEFAULT_CONTROLS, atRest } from '../core/controls'
 import { clampCardText } from '../sources/teletype'
 import { useCaptionApi } from './CaptionContext'
+import { activeCardPreset, cardPresetsFor } from './cardPresets'
 import styles from './ControlGroup.module.css'
 import { GROUPS, NEEDS, sliderFor } from './controls'
 import {
@@ -11,6 +12,7 @@ import {
   useControlsApi,
   useControlValue,
 } from './ControlsContext'
+import { cx } from './cx'
 import { filterActive, matchedSliders, useFilter } from './filter'
 import { MagnifierFrame } from './MagnifierFrame'
 import { SYNCABLE_KEYS } from './midi'
@@ -28,6 +30,7 @@ import { Rack, Slider } from './Slider'
 import { WipeFrame } from './WipeFrame'
 
 import type { ControlKey } from '../core/controls'
+import type { CardPreset } from './cardPresets'
 import type { Group, SliderDef, SliderNeed } from './controls'
 import type { ControlsApi } from './ControlsContext'
 import type { ReactElement } from 'react'
@@ -376,6 +379,38 @@ function gatesBehind(
 const STAB_HOLD_MS = 500
 const STAB_TRAIN_MS = 800
 
+// The row of chips over a card's rows. A component rather than inline JSX
+// because it subscribes to the whole board to know which chip is lit, and the
+// card around it is memoized on its rows — reading the controls inline would
+// rebuild every row on every write.
+function CardChips(props: { group: Group; chips: CardPreset[] }) {
+  const { group, chips } = props
+  const { landCard } = useControlsApi()
+  const controls = useControls()
+  const active = activeCardPreset(group, controls)
+  return (
+    <div className={styles.cardChips}>
+      {chips.map(chip => (
+        <button
+          key={chip.name}
+          type="button"
+          className={cx(
+            styles.cardChip,
+            active?.name === chip.name ? styles.cardChipOn : undefined,
+          )}
+          aria-pressed={active?.name === chip.name}
+          title={`${chip.blurb} — puts this card back to stock first, and leaves the rest of the look alone`}
+          onClick={() => {
+            landCard(chip, group)
+          }}
+        >
+          {chip.name}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 export function ControlGroup(props: { group: Group; defaultOpen?: boolean }) {
   const { group } = props
   const { writeControl, mutateGroup, resetGroup } = useControlsApi()
@@ -409,6 +444,9 @@ export function ControlGroup(props: { group: Group; defaultOpen?: boolean }) {
     ? undefined
     : FRAMES.find(f => f.group === group.name)
 
+  // The card's own chips. Hidden under a live filter for the same reason the
+  // miniature is: a search is asking for rows, and a chip is not one.
+  const chips = filterActive(filter) ? [] : cardPresetsFor(group.name)
   const matched = matchedSliders(group, filter, key => mod.modFor(key) !== null)
   const unframed =
     frame === undefined || showFramed
@@ -541,6 +579,7 @@ export function ControlGroup(props: { group: Group; defaultOpen?: boolean }) {
         </>
       }
     >
+      {chips.length === 0 ? null : <CardChips group={group} chips={chips} />}
       {frame === undefined ? null : (
         <>
           <frame.Frame />

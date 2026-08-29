@@ -765,6 +765,7 @@ export function App() {
     cycleSync,
     mutateGroup: mix.mutateGroup,
     resetGroup: mix.resetGroup,
+    landCard: mix.landCard,
     // Through the ref, like every other engine verb here: the deck holds this
     // across a render, and the engine object is a different one after a
     // device-loss rebuild.

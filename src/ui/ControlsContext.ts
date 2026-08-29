@@ -5,7 +5,8 @@ import { DEFAULT_CONTROLS } from '../core/controls'
 import type { ControlKey, Controls } from '../core/controls'
 import type { Store } from '../core/listeners'
 import type { FaultPlan } from '../core/signal/fault'
-import type { SliderDef } from './controls'
+import type { CardPreset } from './cardPresets'
+import type { Group, SliderDef } from './controls'
 import type { BindTarget } from './midi'
 import type { MutateAmount } from './mutate'
 
@@ -99,6 +100,10 @@ export interface ControlsApi {
   mutateGroup: (sliders: readonly SliderDef[], amount?: MutateAmount) => void
   // Put one group back to stock, for the same reason and by the same route.
   resetGroup: (sliders: readonly SliderDef[]) => void
+  // One card's chip: the card back to stock, then the chip's values into it.
+  // Scoped like resetGroup and one step on the walk for the same reason — a
+  // gesture that moves ten controls has to be one ctrl+z to take back.
+  landCard: (preset: CardPreset, group: Group) => void
   // Run a transition: break what a recipe names, swap the source on the frame
   // the picture is least legible, and heal (signal/fault.ts).
   //

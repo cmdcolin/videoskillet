@@ -116,3 +116,38 @@
   color: var(--fg4);
   font-size: var(--fs-sm);
 }
+
+/* The card's own chips, over its rows. Quieter than the preset table's, on
+   purpose: those name a whole rig and these name a setting of one card, so a
+   row of loud buttons above every heading would read as the panel's main event
+   rather than as a way into the rows under it. Smaller than .btn and without
+   its margins, because these sit as a wrapped row rather than in a flowing
+   line of actions. */
+.cardChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 2px 0 8px;
+}
+
+.cardChip {
+  background: var(--ctl-face);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 2px 7px;
+  font: inherit;
+  font-size: var(--fs-sm);
+  cursor: pointer;
+}
+
+.cardChip:hover {
+  border-color: var(--border-hover);
+}
+
+/* Lit when the card is standing exactly on this chip. Border and text rather
+   than a fill, the same way .active reads elsewhere. */
+.cardChipOn {
+  border-color: var(--accent);
+  color: var(--accent);
+}

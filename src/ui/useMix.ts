@@ -1,6 +1,7 @@
 import { useState } from 'react'
 
 import { DEFAULT_CONTROLS } from '../core/controls'
+import { applyCardPreset } from './cardPresets'
 import { MUTATE_CIRCUITS, MUTATE_SLIDERS } from './controls'
 import { EMPTY_HISTORY, record, stepBack, stepForward } from './history'
 import { DEFAULT_STAB, sameBay, sameGate } from './modSlots'
@@ -25,7 +26,8 @@ import { rollBay } from './rollMod'
 import type { Controls } from '../core/controls'
 import type { GlidePlan } from '../core/signal/glide'
 import type { Provenance } from '../labels'
-import type { SliderDef } from './controls'
+import type { CardPreset } from './cardPresets'
+import type { Group, SliderDef } from './controls'
 import type { History } from './history'
 import type { Stab, UiSlot } from './modSlots'
 import type { ModSlotsApi } from './ModSlotsContext'
@@ -502,6 +504,12 @@ export function useMix(args: {
       const next = { ...getControls() }
       for (const s of sliders) next[s.key] = DEFAULT_CONTROLS[s.key]
       apply(next, 'hand')
+    },
+    // A chip on one card. Through `apply` and labelled 'hand' like the reset
+    // above, because that is what it is: a gesture that moves this stage and
+    // nothing else, and one ctrl+z takes it back.
+    landCard: (preset: CardPreset, group: Group) => {
+      apply(applyCardPreset(preset, group, getControls()), 'hand')
     },
     // The same roll aimed at one group, from its header. Jittering all ~120
     // controls answers "give me something else"; this answers "keep this look
