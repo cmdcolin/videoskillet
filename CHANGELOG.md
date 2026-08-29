@@ -2,6 +2,13 @@
 
 All notable changes to ntsc.js are documented here.
 
+## [0.32.3](https://github.com/cmdcolin/ntsc.js/compare/v0.32.2...v0.32.3) - 2026-08-29
+
+### Fixes
+- *(gpu)* [`cdf2441`](https://github.com/cmdcolin/ntsc.js/commit/cdf2441aa62f8fd0d406c5b112ea599f3b6962be) the routings were declared, plumbed and never copied
+- *(gpu)* [`3e5b050`](https://github.com/cmdcolin/ntsc.js/commit/3e5b0506532d5a8f8366def4324553d2906852c2) a hue sweep based at mid travel, at half the depth
+- *(gpu)* [`7640f36`](https://github.com/cmdcolin/ntsc.js/commit/7640f363448adc1d64aa80afac213b3dd98a8e81) wire the survey for modulation too, and share the filter
+
 ## [0.32.2](https://github.com/cmdcolin/ntsc.js/compare/v0.32.1...v0.32.2) - 2026-08-29
 
 ### Fixes
