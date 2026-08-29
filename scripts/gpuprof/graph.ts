@@ -6,6 +6,7 @@
 // that this file does not supply throws at construction.
 
 import { DEFAULT_CONTROLS } from '../../src/core/controls'
+import { buildCaptionRom, CC_BUF_LEN } from '../../src/core/gpu/captionrom'
 import {
   aFeedOn,
   bFeedOn,
@@ -39,6 +40,7 @@ import { LineState } from '../../src/core/signal/linestate'
 import { MixState } from '../../src/core/signal/mixstate'
 import { valueNoise } from '../../src/core/signal/noise'
 import { RfState } from '../../src/core/signal/rfstate'
+import { TrackingServo } from '../../src/core/signal/servo'
 import { StrobeGate } from '../../src/core/signal/strobe'
 import { SynthState } from '../../src/core/signal/synthstate'
 import { TapeState, tapeRecording } from '../../src/core/signal/tapeloop'
@@ -77,6 +79,7 @@ interface Pass {
 export interface GraphOptions {
   controls: Controls
   bEnabled: boolean
+  dbgView?: number
   sourceA: Uint8Array<ArrayBuffer>
   sourceB: Uint8Array<ArrayBuffer>
 }
@@ -96,6 +99,7 @@ export class Graph {
   readonly compA: GPUBuffer
   readonly outTex: GPUTexture
   readonly faceTex: GPUTexture
+  readonly timingBuf: GPUBuffer
   private readonly paramsBuf: GPUBuffer
   private readonly genParamsBuf: GPUBuffer
   private readonly genLineParamsBuf: GPUBuffer
@@ -114,12 +118,18 @@ export class Graph {
   private readonly rfState = new RfState()
   private readonly synthState = new SynthState()
   private readonly strobeGate = new StrobeGate()
+  // The tracking servo the app runs (signal/servo.ts). Not an ornament here:
+  // `uniformValues` reads `flagUs` off it, and leaving the three fields out
+  // packed `syncBend` as NaN — which walks into the PLL at the top of active
+  // video, makes every `timing[row]` NaN, and decodes the whole frame black.
+  private readonly servo = new TrackingServo(this.rand)
   private scPhase = 0
   private shuttlePhase = 0
   private tapeFrame = { a: 0, b: 0 }
   private impulseTrainPos = 0
   private impulseTrainStep = 0
   private readonly bEnabled: boolean
+  private readonly dbgView: number
 
   private prePasses: Pass[] = []
   private loopPasses: Pass[] = []
@@ -129,6 +139,7 @@ export class Graph {
     this.device = device
     this.c = opts.controls
     this.bEnabled = opts.bEnabled
+    this.dbgView = opts.dbgView ?? 0
     const d = device
     const uniform = () =>
       d.createBuffer({
@@ -162,8 +173,13 @@ export class Graph {
     const chromaBuf = storage(N * 4)
     const underBuf = storage(N * 4)
     const lineInfoBuf = storage(LINES * 16)
-    const timingBuf = storage((LINES * 2 + 8) * 4)
+    const timingBuf = storage((LINES * 2 + 8) * 4, GPUBufferUsage.COPY_SRC)
+    this.timingBuf = timingBuf
     const syncMeasureBuf = storage(LINES * 16)
+    // The caption decoder's font ROM and page RAM (captionrom.ts), which
+    // `decode` reads whether or not a caption is switched on.
+    const ccBuf = storage(CC_BUF_LEN * 4)
+    d.queue.writeBuffer(ccBuf, 0, buildCaptionRom())
     const buzzBuf = storage(LINES * 8, GPUBufferUsage.COPY_SRC)
     const persist = [
       storage(ACTIVE_WIDTH * ACTIVE_HEIGHT * 8),
@@ -457,6 +473,7 @@ export class Graph {
             lineInfo: lineInfoBuf,
             timing: timingBuf,
             outTex: this.outTex.createView(),
+            cc: ccBuf,
             held: persist[0],
             heldNext: persist[1],
             audio,
@@ -468,6 +485,7 @@ export class Graph {
             lineInfo: lineInfoBuf,
             timing: timingBuf,
             outTex: this.outTex.createView(),
+            cc: ccBuf,
             held: persist[1],
             heldNext: persist[0],
             audio,
@@ -674,8 +692,17 @@ export class Graph {
       },
       this.frame,
     )
+    const track = this.servo.update({
+      target: c.trackPos,
+      amt: c.trackAmt,
+      hunt: c.trackHunt,
+      kick: c.trackKick,
+    })
     const vals = {
       ...uniformValues(c, {
+        trackPos: track.pos,
+        trackAmt: track.amt,
+        flagUs: track.flagUs,
         frame: this.frame,
         canvasW: 1508,
         canvasH: 1131,
@@ -693,7 +720,7 @@ export class Graph {
         impulseTrainPos: this.impulseTrainPos,
         impulseTrainStep: this.impulseTrainStep,
         shuttlePhase: this.shuttlePhase,
-        dbgView: 0,
+        dbgView: this.dbgView,
       }),
       ...mixU,
       ...tapeU,
@@ -714,8 +741,8 @@ export class Graph {
       tbStickNs: c.tbStickNs,
       underJitterDeg: c.underJitterDeg,
       headSwitchShiftUs: c.headSwitchShiftUs,
-      trackAmt: c.trackAmt,
-      trackPos: c.trackPos,
+      trackAmt: track.amt,
+      trackPos: track.pos,
       shuttleBars: c.shuttleX - 1,
       shuttlePhase: this.shuttlePhase,
     }
