@@ -2,6 +2,39 @@
 
 All notable changes to ntsc.js are documented here.
 
+## [0.33.0](https://github.com/cmdcolin/ntsc.js/compare/v0.32.4...v0.33.0) - 2026-08-30
+
+### Features
+- *(ui)* [`beed62d`](https://github.com/cmdcolin/ntsc.js/commit/beed62dc521cac2384522e7ee33899d524a6129f) drift — the nudge with nobody pressing it
+- *(ui)* [`4c7a228`](https://github.com/cmdcolin/ntsc.js/commit/4c7a2283128c717fee0fd0f4594dad04ad6dbd48) the panel gives the track the row, and the working set the top
+- *(ui)* [`ad31594`](https://github.com/cmdcolin/ntsc.js/commit/ad31594aaf2e9a1b3e93abcff82f607a6c1788ba) a stage drifts on its own, beside its randomize
+
+### Fixes
+- [`1666d18`](https://github.com/cmdcolin/ntsc.js/commit/1666d18ec27676d170dbdf72f8f0716cd6db2e87) a release must be above the highest tag, and docs shots stop blocking deploys
+- *(ui)* [`f67bfbc`](https://github.com/cmdcolin/ntsc.js/commit/f67bfbcd49fd82ef3a8ce686910ec8db0035d200) a long group name wraps instead of painting over its own buttons
+- *(ui)* [`4bb5540`](https://github.com/cmdcolin/ntsc.js/commit/4bb55402627397c435d0daa979373bfc96ef55c3) the two text fields that had no name have one
+- *(ui)* [`c786b5a`](https://github.com/cmdcolin/ntsc.js/commit/c786b5a5c224aa91a8d14c0f88e7083eeafc01ff) the lit face is measured against the ink it carries
+- *(ui)* [`f1caa06`](https://github.com/cmdcolin/ntsc.js/commit/f1caa06138833f3f579f9904f8800e75b408121b) panelshots can reach the teletype editor again
+- *(ui)* [`9de4646`](https://github.com/cmdcolin/ntsc.js/commit/9de4646410706cb4397c628025027c3bb3ec3dbe) panelshots can open a group inside a stage, and says so when it cannot
+
+### Documentation
+- [`4da0fc4`](https://github.com/cmdcolin/ntsc.js/commit/4da0fc49b86dc4416eef080a722bd8d3f4f51209) the tape loop is gone, and the docs stop drawing it
+- [`5b7b8b4`](https://github.com/cmdcolin/ntsc.js/commit/5b7b8b4b99f60b819769c0b0502cb59ffbb736bb) retake the four stale shots, and put the diagrams on one graphviz
+- [`eacd31b`](https://github.com/cmdcolin/ntsc.js/commit/eacd31b4d4281dd4e4d75cb7e5fe404299ffa437) the delay loop stops being described by the code that outlived it
+- *(ui)* [`b3bb987`](https://github.com/cmdcolin/ntsc.js/commit/b3bb987e77673f5445584b269e87abd8a91b56fb) finish the delay-loop sweep in the two files that were open
+
+### Style
+- [`90677fb`](https://github.com/cmdcolin/ntsc.js/commit/90677fb9e1ecb88117f952531889ee21137d9f81) reflow the writing note to 80 columns
+
+### Tests
+- *(ui)* [`4d45120`](https://github.com/cmdcolin/ntsc.js/commit/4d45120f5c97107358b50a12f01e5c72905f5dbb) a harness that walks the panel looking for ink on ink
+
+### Chores
+- *(ui)* [`8d91800`](https://github.com/cmdcolin/ntsc.js/commit/8d91800d0ee0727e0c5991773ff2a32ff13bec5c) the panel baselines take the drift switch
+
+### Other Changes
+- [`e92e1ac`](https://github.com/cmdcolin/ntsc.js/commit/e92e1ac0c2e706d7342d699ad23426967b3bb031) the sidebar pass, onto a main that had gone 68 commits stale
+
 ## [0.32.4](https://github.com/cmdcolin/ntsc.js/compare/v0.32.3...v0.32.4) - 2026-08-30
 
 ### Features
@@ -106,39 +139,52 @@ All notable changes to ntsc.js are documented here.
 ### Documentation
 - *(ui)* [`9fca670`](https://github.com/cmdcolin/ntsc.js/commit/9fca6703e31730293082d15b6daaede4d19739d9) the vote rows carry the packed query now, not `?set=`
 
-## [0.30.2](https://github.com/cmdcolin/ntsc.js/compare/v0.30.0...v0.30.2) - 2026-08-27
+## [0.30.2](https://github.com/cmdcolin/ntsc.js/compare/v0.30.1...v0.30.2) - 2026-08-27
 
 ### Features
 - *(signal)* [`3931e7b`](https://github.com/cmdcolin/ntsc.js/commit/3931e7bee6323297cb14f0e571b4afe3cfb35938) the tracking servo — a band that hunts, kicked by what unseats it
 - *(ui)* [`0755da5`](https://github.com/cmdcolin/ntsc.js/commit/0755da52fea92917b1eb273abcf9fa2b05008876) pack the look into the link, and keep the readable one
 
-### Fixes
-- *(ui)* [`48a7738`](https://github.com/cmdcolin/ntsc.js/commit/48a77388758e236823b7e69e119f16b47a677a70) satisfy oxlint's react rules at the cause
-- *(ui)* [`8494b10`](https://github.com/cmdcolin/ntsc.js/commit/8494b1014f934cc945dae0ca9c00d2953826636f) pick the H.264 level from the frame instead of pinning 4.2
-
 ### Performance
 - *(ui)* [`72e4b96`](https://github.com/cmdcolin/ntsc.js/commit/72e4b96e5d535575a8b74b6ca38541e6c159d311) encode recordings as H.264 High rather than Baseline
 
 ### Documentation
-- [`5cbecde`](https://github.com/cmdcolin/ntsc.js/commit/5cbecde63bd2b3b6e2264b7a101aa02add031574) fix formatting in VOTING.md
 - *(ui)* [`fbe05f9`](https://github.com/cmdcolin/ntsc.js/commit/fbe05f99acf3039a1bf77015da455206e928ac2e) record why recordings are H.264 High, and where the chroma goes
+- *(ui)* [`f46f45c`](https://github.com/cmdcolin/ntsc.js/commit/f46f45c7ba78ea4f6179a2f75fe73aadb76ce435) write the app's own copy in the positive
+
+## [0.30.1](https://github.com/cmdcolin/ntsc.js/compare/v0.30.0...v0.30.1) - 2026-08-25
+
+### Fixes
+- *(ui)* [`48a7738`](https://github.com/cmdcolin/ntsc.js/commit/48a77388758e236823b7e69e119f16b47a677a70) satisfy oxlint's react rules at the cause
+- *(ui)* [`8494b10`](https://github.com/cmdcolin/ntsc.js/commit/8494b1014f934cc945dae0ca9c00d2953826636f) pick the H.264 level from the frame instead of pinning 4.2
+
+### Documentation
+- [`5cbecde`](https://github.com/cmdcolin/ntsc.js/commit/5cbecde63bd2b3b6e2264b7a101aa02add031574) fix formatting in VOTING.md
 
 ### Chores
 - [`f64bbbd`](https://github.com/cmdcolin/ntsc.js/commit/f64bbbd19cdaec0b3a7461e10b03cdc317a75d95) pre-push hook refuses a tag that isn't on main
 - *(deps)* [`7820da2`](https://github.com/cmdcolin/ntsc.js/commit/7820da2a5ed4b4ee5d3dd84f1fd320f5fb6d7d78) update dependencies
 
-## [0.30.0](https://github.com/cmdcolin/ntsc.js/compare/v0.29.2...v0.30.0) - 2026-08-24
+## [0.30.0](https://github.com/cmdcolin/ntsc.js/compare/v0.29.4...v0.30.0) - 2026-08-24
+
+### Features
+- *(ui)* [`ea3240f`](https://github.com/cmdcolin/ntsc.js/commit/ea3240f16ca5608316bfc17a05113b846dc79849) the stream — rate one rolled look at a time, on the app's 1-5 keys
+
+## [0.29.4](https://github.com/cmdcolin/ntsc.js/compare/v0.29.3...v0.29.4) - 2026-08-23
 
 ### Features
 - *(ui)* [`b0b0579`](https://github.com/cmdcolin/ntsc.js/commit/b0b057974053a34f4ce7007e990e4dd768400832) put the minor-adjustment card behind a button instead of a hover
-- *(ui)* [`ea3240f`](https://github.com/cmdcolin/ntsc.js/commit/ea3240f16ca5608316bfc17a05113b846dc79849) the stream — rate one rolled look at a time, on the app's 1-5 keys
 
 ### Fixes
 - *(ui)* [`a54e9a0`](https://github.com/cmdcolin/ntsc.js/commit/a54e9a0773b4dede3b81f73f9b3296aa682dd48d) the two generator groups leave the panel when nothing is running them
 
 ### Other Changes
-- [`59c572f`](https://github.com/cmdcolin/ntsc.js/commit/59c572f480ff96509221cd70bb4b7d694a09588e) Format
 - [`184bcb7`](https://github.com/cmdcolin/ntsc.js/commit/184bcb76c890eb2fad9a7d52410975f6ac8fa99c) Some more demos
+
+## [0.29.3](https://github.com/cmdcolin/ntsc.js/compare/v0.29.2...v0.29.3) - 2026-08-23
+
+### Other Changes
+- [`59c572f`](https://github.com/cmdcolin/ntsc.js/commit/59c572f480ff96509221cd70bb4b7d694a09588e) Format
 
 ## [0.29.2](https://github.com/cmdcolin/ntsc.js/compare/v0.29.1...v0.29.2) - 2026-08-22
 
