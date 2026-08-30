@@ -2,6 +2,21 @@
 
 All notable changes to ntsc.js are documented here.
 
+## [0.32.4](https://github.com/cmdcolin/ntsc.js/compare/v0.32.3...v0.32.4) - 2026-08-30
+
+### Features
+- *(ui)* [`99fb797`](https://github.com/cmdcolin/ntsc.js/commit/99fb797666d0d2b1820f60effc2e9883063f072d) the panel says "mod", instead of a wiggle you have to decode
+
+### Fixes
+- *(ui)* [`9df4949`](https://github.com/cmdcolin/ntsc.js/commit/9df4949d597bcf7b9a3785738d12de8543f23cb9) draw modulation routing as a cable, not a sentence
+- [`492a958`](https://github.com/cmdcolin/ntsc.js/commit/492a958856d3c2c1115ec2079af9ad66292d5f79) run lint, format check, and test locally before release
+- *(ui)* [`cf37779`](https://github.com/cmdcolin/ntsc.js/commit/cf37779f280f4fe13e62c119a961e14b4e5f6348) build the mod-slot wire on the shared route()/arrowhead()
+- *(ui)* [`a4652b1`](https://github.com/cmdcolin/ntsc.js/commit/a4652b1c62f2fb28f522146d2b65b06ec51ba7e4) the mod badge toggles, and a filtered-out map box is still a door
+- *(ui)* [`b8b1dcf`](https://github.com/cmdcolin/ntsc.js/commit/b8b1dcf9acd3db3526259f7c6946b305eed1e3f4) the two chips that are buttons say so at rest
+
+### Other Changes
+- [`0937180`](https://github.com/cmdcolin/ntsc.js/commit/093718059f1f1daf342a42af788e2c5b0b06c34c) Reword
+
 ## [0.32.3](https://github.com/cmdcolin/ntsc.js/compare/v0.32.2...v0.32.3) - 2026-08-29
 
 ### Fixes
