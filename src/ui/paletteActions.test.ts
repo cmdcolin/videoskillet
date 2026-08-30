@@ -27,6 +27,8 @@ const actions = () => {
     onSurpriseOne: noop,
     onSpike: noop,
     onCross: noop,
+    drifting: false,
+    onToggleDrift: noop,
     onReset: noop,
     onUndo: noop,
     onRedo: noop,

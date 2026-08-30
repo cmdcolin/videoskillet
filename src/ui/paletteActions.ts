@@ -1,4 +1,5 @@
 import { DECK_STAGE, MOD_STAGE } from './controls'
+import { DRIFT_SECONDS } from './drift'
 
 import type { PaletteAction } from './CommandPalette'
 import type { MutateAmount } from './mutate'
@@ -76,6 +77,12 @@ export function paletteActions(o: {
   onSurpriseOne: () => void
   onSpike: (amount: MutateAmount) => void
   onCross: () => void
+  // The nudge on a timer, and which way pressing it goes. The state is here
+  // rather than left to the row's own wording because a palette row is read
+  // before it is run: "drift" on a board that is already drifting would be a
+  // command whose effect is the opposite of its name.
+  drifting: boolean
+  onToggleDrift: () => void
   onReset: () => void
   onUndo: () => void
   onRedo: () => void
@@ -223,6 +230,17 @@ export function paletteActions(o: {
       name: 'random motion, wild',
       blurb: 'three routings, faster and deeper — the board visibly hunting',
       run: () => o.onRollMotion('wild'),
+    },
+    // The only row in this list that is a switch. It sits at the foot of the
+    // rolls because that is what it is one of — the gentlest nudge, fired by
+    // nobody — and the words a session types looking for it are about being
+    // left alone rather than about randomness.
+    {
+      name: o.drifting ? 'stop drifting' : 'drift',
+      blurb: o.drifting
+        ? 'stop the wander and keep the look wherever it has got to'
+        : `let the look wander on its own, unattended: a gentle nudge every ${DRIFT_SECONDS} seconds, travelling most of the way there so nothing cuts`,
+      run: o.onToggleDrift,
     },
     {
       name: 'vaporwave',

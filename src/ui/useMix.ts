@@ -329,10 +329,32 @@ export function useMix(args: {
     // library are where a live set actually does it from. It records nothing: a recall
     // already banks its own step through `snapshotForUndo`.
     landLook: land,
+    // One leg of a drift (ui/drift.ts). Three things separate it from every
+    // other landing here, and each is the mode rather than an exception to it:
+    // it banks nothing, since a walk of a thousand looks nobody chose is not a
+    // walk anybody can step back through; it travels for a span the drift names
+    // rather than the one the look bar does, since the setting is about what
+    // your hands do and a drift at `morph: cut` would be a slideshow; and it
+    // files as `mutate`, because that is what a leg is — the recipe goes with
+    // it for the same reason a nudge clears it.
+    landDrift: (to: Controls, seconds: number) => {
+      setGesture({ kind: 'mutate', look: to })
+      args.startGlide(morphTo(to, seconds))
+      setLastPreset(null)
+    },
     canUndo: history.past.length > 0,
     canRedo: history.future.length > 0,
     // Bank the look on the board before overwriting it, so undo can restore it.
-    snapshotForUndo: () => setHistory(h => record(h, banked(), sameLook)),
+    //
+    // The look is read here rather than inside the updater, and that is the
+    // whole of what "before" means: both callers hand the board over to a glide
+    // in the next statement, so an updater that asked `banked()` when React got
+    // round to running it would be told the answer for the look now arriving —
+    // and bank the destination as the step to go back to.
+    snapshotForUndo: () => {
+      const look = banked()
+      setHistory(h => record(h, look, sameLook))
+    },
     undo: () => goto(stepBack(history, banked())),
     redo: () => goto(stepForward(history, banked())),
     applyPreset: (name: string, patch: Partial<Controls>) => {

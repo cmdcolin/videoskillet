@@ -173,6 +173,9 @@ the receiver's vertical oscillator, downstream of anything the sound can reach.
   See [MIDI.md](MIDI.md).
 - **Presets** — also faders you can drag partway in. Morph, random nudge, full
   undo, and saved profiles behind a sign-in.
+- **Drift** — one switch and the look wanders on its own, unattended: a gentle
+  nudge every fifteen seconds, travelling most of the way there so nothing cuts,
+  and staying around the look you set drifting rather than running off.
 - **Sharing** — the whole board mirrors to the URL, so a link is a patch.
 - **Capture** — stills, webm recording, or pop the controls into a second window
   and point OBS at the picture.

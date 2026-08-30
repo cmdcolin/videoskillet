@@ -3,6 +3,7 @@ import { expect, test } from 'vitest'
 import { CONTROL_KEYS, DEFAULT_CONTROLS } from '../core/controls'
 import { SHIPPED_MODES } from '../sources/modes'
 import { LOOP_STAGES } from './controls'
+import { DRIFT_SECONDS } from './drift'
 import { DEFAULT_STAB, STAB_MS_MAX, STAB_MS_MIN } from './modSlots'
 import { MORPH_LABELS, MORPH_SECONDS } from './morph'
 import { mutateAmountFor } from './mutate'
@@ -66,6 +67,14 @@ test('the guide names every modifier the roll resolver honours', () => {
   // before the bullet that says "same modifiers".
   expect(doc).toContain('`shift` for wilder, `alt` for gentler, `ctrl`/`cmd`')
   expect(doc).toContain('Same modifiers')
+})
+
+// The one number in the page nobody can check by eye: a drift fires on a clock,
+// so a guide quoting the wrong period describes a mode that behaves differently
+// from the one that ships, and the button's own tooltip is built from the
+// constant and would silently disagree with it.
+test('the guide quotes how often a drift nudges the board', () => {
+  expect(doc).toContain(`every ${DRIFT_SECONDS} seconds`)
 })
 
 test('the guide walks every signal tap the View group steps through', () => {

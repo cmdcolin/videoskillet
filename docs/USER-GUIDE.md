@@ -24,6 +24,15 @@ Click a preset to jump to it; drag it sideways to blend it part-way in.
   long way and leaves the rest alone, so the accident is one thing you can name
   and take back. **random cross** keeps some circuits of your look — tape, tube,
   sync — and rerolls the rest.
+- **drift** is the random nudge with nobody pressing it: press once (or `d`) and
+  the look wanders on its own — a gentle nudge every 15 seconds, travelling most
+  of the way there, so the picture keeps moving and never cuts. It stays around
+  the look you set drifting rather than running off, however long you leave it.
+  Press again to stop where it has got to; `ctrl+z` then puts back the look you
+  started it on, because none of the legs in between lands in the walk. For a
+  wander that is part of a piece, use the strip's shake row instead — a rundown
+  holds in bars, is seeded and is yours to keep, where a drift is a switch you
+  flip and forget.
 - **morph** sets how long a new look takes to arrive — cut, 1s, 4s, 8s or 30s.
   Rolls chain, so rolling every few seconds wanders continuously.
 - **undo** (`ctrl+z`) steps back through all of it.

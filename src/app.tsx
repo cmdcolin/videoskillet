@@ -93,6 +93,7 @@ import { useAutomation } from './ui/useAutomation'
 import { useCapture } from './ui/useCapture'
 import { useClipLibrary } from './ui/useClipLibrary'
 import { useClockSync } from './ui/useClockSync'
+import { useDrift } from './ui/useDrift'
 import { useEngine } from './ui/useEngine'
 import { useFavorites } from './ui/useFavorites'
 import { useLookLabels } from './ui/useLookLabels'
@@ -374,6 +375,30 @@ export function App() {
     sourceBOn: eng.b.mode !== 'none',
     mod: modApi,
   })
+
+  // The board wandering by itself (ui/drift.ts). One switch, and everything it
+  // needs is handed over at the press rather than held by the hook — see the
+  // note there.
+  const drift = useDrift()
+  const toggleDrift = () => {
+    if (drift.drifting) {
+      drift.stop()
+      // The leg in flight goes with the timer: this promises the board stays
+      // wherever it has got to, and the half-way look is a look like any other
+      // (the same thing the morph readout's own "stop here" does).
+      stopMorph()
+      return
+    }
+    // The one step the whole mode banks, before the first leg moves anything.
+    // A drift left running for an hour is 240 looks nobody chose; what a hand
+    // reaching for ctrl+z wants back is the look it set drifting.
+    mix.snapshotForUndo()
+    drift.start({
+      getSettled: () => getGlideTarget() ?? controlStore.get(),
+      land: mix.landDrift,
+      sliders: MUTATE_SLIDERS,
+    })
+  }
 
   // Either slot, by the key something outside handed over. Five surfaces are
   // told which slot to act on rather than choosing — the keyboard, a bound MIDI
@@ -724,6 +749,7 @@ export function App() {
     // inventing a level for it would make the same gesture mean two things
     // depending on which surface it came from. A pad has one and passes it.
     onFire: () => modApi.fire(),
+    onToggleDrift: toggleDrift,
     onSaveSlot: saveSlot,
     onRecallSlot: recallSlot,
     // ctrl+S keeps the board under the name the menu would have offered. The
@@ -778,6 +804,8 @@ export function App() {
     onMutate: mix.mutateLook,
     onSpike: mix.spikeLook,
     onCross: mix.crossLook,
+    drifting: drift.drifting,
+    onToggleDrift: toggleDrift,
     onRollMotion: amount => mix.rollMotion(amount, { audioLive: audio.active }),
     onReset: mix.reset,
     onUndo: mix.undo,
@@ -1224,6 +1252,8 @@ export function App() {
         onSurpriseOne={mix.surpriseOne}
         onSpike={mix.spikeLook}
         onCross={mix.crossLook}
+        drifting={drift.drifting}
+        onToggleDrift={toggleDrift}
         // Whether the two audio followers are worth rolling: with nothing on
         // the wire they are slots that will never move, which is the one way a
         // roll can look like it did nothing. App is where that is known — the
