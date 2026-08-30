@@ -449,7 +449,7 @@ export const GROUPS: Group[] = [
         max: 60,
         step: 0.5,
         unit: 'Hz',
-        help: 'How often the noise field re-rolls. At 60 it boils at display rate, which is what a live signal does; below it the source is handing over fields more slowly than the set is drawing them, so each one is held for several frames and the boil goes chunky. Non-integer ratios hold fields unevenly — the same cadence 3:2 pulldown has, out of the same arithmetic. A held field is not frozen noise so much as noise you can see the frame rate of, and everything downstream then carries it: the mixer loop breeds structure out of a field that stays still long enough to feed back.',
+        help: 'How often the noise field re-rolls. At 60 it boils at display rate, which is what a live signal does; below it the source is handing over fields more slowly than the set is drawing them, so each one is held for several frames and the boil goes chunky. Non-integer ratios hold fields unevenly — the same cadence 3:2 pulldown has, out of the same arithmetic. A held field is noise you can see the frame rate of, and everything downstream then carries it: the mixer loop breeds structure out of a field that stays still long enough to feed back.',
       },
     ],
   },
@@ -539,7 +539,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: "Patches the synth over slot A's picture instead of instead of it, so it becomes a module in the chain rather than a source. Source A only — slot B's pass writes its texture rather than reading one, so there is no picture on that side to lay anything over. Does nothing while A is already showing the synth, since then the synth is what the picture is.",
+        help: "Lays the synth over slot A's picture rather than replacing it, so it becomes a module in the chain instead of a source. Source A only — slot B's pass writes its texture rather than reading one, so there is no picture on that side to lay anything over. Does nothing while A is already showing the synth, since then the synth is what the picture is.",
       },
       {
         key: 'synthFm',
@@ -1850,7 +1850,7 @@ export const GROUPS: Group[] = [
         step: 0.1,
         redline: [0, 40],
         unit: 'IRE',
-        help: 'Additive noise on the waveform, in IRE: tape grain and RF snow. Because it lands on the whole signal, enough of it will also disturb sync and confuse the colour burst — noise degrades everything downstream, not just the picture.',
+        help: 'Additive noise on the waveform, in IRE: tape grain and RF snow. Because it lands on the whole signal, enough of it will also disturb sync and confuse the colour burst — noise degrades everything downstream.',
       },
       {
         key: 'noiseTilt',
@@ -2045,7 +2045,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: "How much of the next channel up the cable gets through the IF trap. What leaks is not a picture but the neighbour's carriers, so the detector turns them into beats: their sound carrier lays a 1.5 MHz weave over everything, and their vision carrier's beat is amplitude-modulated by their raster — their blanking is peak power, so it crosses the screen as slanted dark bars, and their vertical interval as the broad sweeping band (the windshield wiper). Their line rate is not ours and wanders, so the bars slant, sweep, hang and reverse; where their content beats into our chroma band the decoder makes colour out of it — colour from carrier arithmetic, not from any picture.",
+        help: "How much of the next channel up the cable gets through the IF trap. What leaks is the neighbour's carriers, so the detector turns them into beats: their sound carrier lays a 1.5 MHz weave over everything, and their vision carrier's beat is amplitude-modulated by their raster — their blanking is peak power, so it crosses the screen as slanted dark bars, and their vertical interval as the broad sweeping band (the windshield wiper). Their line rate is not ours and wanders, so the bars slant, sweep, hang and reverse; where their content beats into our chroma band the decoder makes colour out of it — colour out of carrier arithmetic alone.",
       },
       {
         key: 'rfMistuneMHz',
@@ -2370,7 +2370,7 @@ export const GROUPS: Group[] = [
         redline: [0, 400],
         unit: 'us',
         fine: true,
-        help: 'Time constant of the coupling capacitor between the gates, in microseconds. Short enough and the level sags back toward blanking within the line: bright content drags a dark streak behind it all the way to the right edge, and a lit area leaves the rest of its line depressed. This is the low-frequency smear of a box with an undersized cap, not a blur — vertical edges stay sharp.',
+        help: 'Time constant of the coupling capacitor between the gates, in microseconds. Short enough and the level sags back toward blanking within the line: bright content drags a dark streak behind it all the way to the right edge, and a lit area leaves the rest of its line depressed. This is the low-frequency smear of a box with an undersized cap — vertical edges stay sharp.',
       },
       {
         key: 'enhPeakMHz',
@@ -2893,7 +2893,7 @@ export const GROUPS: Group[] = [
         max: 20,
         step: 0.1,
         unit: 'Hz',
-        help: 'Holds the beam-blanking gate on, so the guns are cut for most of each cycle and let through in flashes. It is not a strobe drawn over the picture: the gate sits one line above the phosphor, so the light already on the glass keeps decaying through the dark — set persistence long and the picture fades between flashes instead of cutting to black, cooling toward green as it goes. Everything downstream with memory sees the dark frames too, so the beam limiter opens up and surges on the first field back, and a feedback loop pumps at the strobe rate. Lock it to the beat with ♩.',
+        help: 'Holds the beam-blanking gate on, so the guns are cut for most of each cycle and let through in flashes. The gate sits one line above the phosphor, so the light already on the glass keeps decaying through the dark — set persistence long and the picture fades between flashes instead of cutting to black, cooling toward green as it goes. Everything downstream with memory sees the dark frames too, so the beam limiter opens up and surges on the first field back, and a feedback loop pumps at the strobe rate. Lock it to the beat with ♩.',
       },
       {
         key: 'strobeMs',
@@ -3582,7 +3582,7 @@ export const VIEW_STAGE = 'View'
 // picture the glass makes is what feeds it.
 export const VIEW_JOIN: Phase = 'Screen'
 export const VIEW_BLURB =
-  'not the rig — where the picture is watched from: the magnifier and where it is pointed, how fast the whole simulation is stepped, and the frame-rate lock. Nothing in here changes the signal, and a mutate is forbidden to touch any of it'
+  'where the picture is watched from: the magnifier and where it is pointed, how fast the whole simulation is stepped, and the frame-rate lock. Nothing in here changes the signal, and a mutate is forbidden to touch any of it'
 
 // The modulation bay, which is a stage of the panel and not a piece of the rig
 // at all. Everything else on the map is somewhere the signal goes; this is a
@@ -3601,7 +3601,7 @@ export const VIEW_BLURB =
 // whole reason it moved: the map is where you go looking for a thing to open.
 export const MOD_STAGE = 'Modulation'
 export const MOD_BLURB =
-  'not the rig — the hand on the knobs: LFOs, drift, sample-and-hold and the audio envelope wiggling any control around wherever you left its slider, the beat they lock to, and the stab gate, which cuts the whole board between the look you are dialing and a second one — stock, or a look you held there. A slot is patched at the control it drives (press ∿ on any row); this is where the eight read as a bay'
+  'the hand on the knobs: LFOs, drift, sample-and-hold and the audio envelope wiggling any control around wherever you left its slider, the beat they lock to, and the stab gate, which cuts the whole board between the look you are dialing and a second one — stock, or a look you held there. A slot is patched at the control it drives (press ∿ on any row); this is where the eight read as a bay'
 
 // What the bay answers to beyond its name and its blurb. Only the words a
 // searcher would actually type that the prose above does not already carry —
@@ -3647,7 +3647,7 @@ export const MOD_KEYWORDS: readonly string[] = [
 // and sits where you already look for something to open.
 export const DECK_STAGE = 'Deck'
 export const DECK_BLURB =
-  'not the rig — the hand on it now: the transition lever and its wipe patterns, the DVE inset, both tape transports, the tracking knob and the hold that stops the frame dead. Every row here is the real row from the stage that owns it, with its MIDI bind and its help — gathered by the gesture that moves it rather than by where the fault happens'
+  'the hand on it now: the transition lever and its wipe patterns, the DVE inset, both tape transports, the tracking knob and the hold that stops the frame dead. Every row here is the real row from the stage that owns it, with its MIDI bind and its help — gathered by the gesture that moves it rather than by where the fault happens'
 
 // The stages headed by a picker — the three things that can be patched in, and
 // so the three that decide what everything downstream of them is working on.

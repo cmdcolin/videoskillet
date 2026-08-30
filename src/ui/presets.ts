@@ -1130,7 +1130,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'radar tube',
     group: 'Phosphor / CRT',
     blurb:
-      'A P7 cascade — the two-layer phosphor radar and scope tubes were coated with. The beam lands on a fast blue layer and dumps most of its light there at once, but what it excites underneath is a slow yellow-green that keeps emitting long after the blue has gone. So the tail is not one colour fading: the fresh edge is white, a few tenths of a second back it is amber, and what is still glowing seconds later is green. Nothing here tints anything — the three channels are just given the decay rates the two layers have, and the colour walk falls out of them dying at different speeds.',
+      'A P7 cascade — the two-layer phosphor radar and scope tubes were coated with. The beam lands on a fast blue layer and dumps most of its light there at once, but what it excites underneath is a slow yellow-green that keeps emitting long after the blue has gone. So the tail walks in colour as it fades: the fresh edge is white, a few tenths of a second back it is amber, and what is still glowing seconds later is green. The three channels are simply given the decay rates the two layers have, and the colour walk falls out of them dying at different speeds.',
     patch: {
       // Green holds ~2.5s; the skew puts red at a quarter of that and blue at a
       // seventh, which is the cascade. Bleed is high because the long layer is
@@ -1348,7 +1348,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'deep end',
     group: 'Full board',
     blurb:
-      'Every stage at once — scrambled sync, a bent enhancer, both feedback loops and the phosphor left long. Nothing here is drawn: each fault is one circuit misbehaving, and they interfere with each other for free.',
+      'Every stage at once — scrambled sync, a bent enhancer, both feedback loops and the phosphor left long. Each fault here is one circuit misbehaving, and they interfere with each other for free.',
     patch: {
       chromaGain: 2.4,
       svideoBleed: 0.8,

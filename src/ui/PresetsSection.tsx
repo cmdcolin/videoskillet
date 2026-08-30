@@ -70,12 +70,12 @@ function PresetsHelpDialog(props: { onClose: () => void }) {
   return (
     <Dialog title="Presets" size="prose" onClose={props.onClose}>
       <p className={ui.helpText}>
-        A preset is not one switch. Each one is a named look that sets a whole
-        bank of controls at once — five for a simple fault, thirty-odd for “deep
-        end” — spread across every stage of the chain, because that is what it
-        takes to recreate a particular signal fault or device. Hover one for
-        what it does and how many controls it moves; “This look”, right below
-        this section, then lists every one of them as a live row you can drag.
+        Each preset is a named look that sets a whole bank of controls at once —
+        five for a simple fault, thirty-odd for “deep end” — spread across every
+        stage of the chain, because that is what it takes to recreate a
+        particular signal fault or device. Hover one for what it does and how
+        many controls it moves; “This look”, right below this section, then
+        lists every one of them as a live row you can drag.
       </p>
       <p className={ui.helpText}>
         Every preset but “clean” is also a fader: click to dial it fully in, or
@@ -254,7 +254,7 @@ export function PresetsSection(props: {
           // every hover teaches by itself.
           // Short enough to hold one line at the panel's docked width, which is
           // the whole point of the rewrite: at two lines it saved nothing.
-          'a bundle of controls, not one switch — click one'
+          'a bank of controls at once — click one'
         : `modified from "${presetLabelFor(props.lastPreset)}"`
   // The count rides the caption whenever the caption is describing a particular
   // preset, so browsing the chips teaches the thing the chips cannot say: this

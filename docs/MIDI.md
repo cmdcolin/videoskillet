@@ -62,8 +62,8 @@ What can go on one:
 - **⚡ fire all**, and **⚡ fire slot 1–8** — the buttons in the MODULATION box.
   Velocity carries, so a soft hit is a small envelope.
 - **cue source A/B** and **back to the cue · A/B** — the same two gestures `i`
-  and `o` are on the keyboard. The stab back is the one worth a pad; it is a
-  drum hit, not a knob.
+  and `o` are on the keyboard. The stab back is the one worth a pad; it lands
+  like a drum hit.
 
 **With nothing bound, any note fires the whole bay.** That is what the app has
 always done with a note, and it is the right answer for a keyboard you haven't

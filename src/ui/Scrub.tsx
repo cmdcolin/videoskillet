@@ -143,7 +143,7 @@ export function CueRow(props: {
           title={
             'What the jump back to the in-point costs, measured. The decoder has to ' +
             'start at the last keyframe before your in-point and decode forward to it, ' +
-            'so this is set by how the file was encoded, not by the loop.\n\n' +
+            'so this is set by how the file was encoded.\n\n' +
             'Under about 0.1s nothing is visible. Higher than that the picture catches ' +
             'on every lap: mark the loop somewhere else and watch this number — some ' +
             'in-points land near a keyframe and are cheap — or re-export the file with ' +

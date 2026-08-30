@@ -81,6 +81,14 @@ edits are HMR** — an `src/` write mid-run reloads the page and resets the engi
 under whatever you were measuring. See the traps list in `docs/DEVELOPMENT.md`;
 every one of them cost real time.
 
+## Writing
+
+Prose in the docs and in the app says what a thing is. Definition by negation —
+"not the rig — the hand on it now" — reads as filler, since the positive half
+carries the sentence on its own. Keep a negation only where the alternative is
+one a reader would otherwise pick: an ADR naming what it turned down, or a
+fault told apart from the one it resembles.
+
 ## Commits
 
 Use Conventional Commits (`type(scope): description`) — `cliff.toml` groups the

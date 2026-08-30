@@ -61,9 +61,10 @@ generation every time round.
 
 <!-- /generated:loops -->
 
-The tape loop is the one to keep straight: it is not the Tape stage below, which
-is the deck this signal was played back on. Its return gets recorded again, so
-repeats decay by generation loss rather than by a fader, and chroma dies first.
+The tape loop is the one to keep straight: it is a second machine threaded
+across the bus, where the Tape stage below is the deck this signal was played
+back on. Its return gets recorded again, so repeats decay by generation loss
+rather than by a fader, and chroma dies first.
 
 ## A/B mix
 

@@ -400,14 +400,14 @@ export function SignalPathDialog(props: {
       <p className={ui.helpText}>
         Two inputs, each with a feed of its own, meeting at the mixer — then one
         chain to the glass, with the sound patched into the receiver along the
-        way and your own view at the end of it. Nothing here is a filter: every
-        box is a piece of hardware misbehaving, and the artifacts come out of
-        how they interfere. Click one to open its controls — and the three loops
-        over the top are pressable too, each one its own way back into the
-        chain. The two boxes on the bottom row have no wire on them: the
-        modulation bay and the deck are patched into the controls rather than
-        into the signal — one setting them moving on its own, the other
-        gathering the ones a hand moves during a take — which is why they float.
+        way and your own view at the end of it. Every box is a piece of hardware
+        misbehaving, and the artifacts come out of how they interfere. Click one
+        to open its controls — and the three loops over the top are pressable
+        too, each one its own way back into the chain. The two boxes on the
+        bottom row have no wire on them: the modulation bay and the deck are
+        patched into the controls rather than into the signal — one setting them
+        moving on its own, the other gathering the ones a hand moves during a
+        take — which is why they float.
       </p>
       <svg
         className={styles.diagram}

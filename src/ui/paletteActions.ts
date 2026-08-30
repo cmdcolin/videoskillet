@@ -176,7 +176,7 @@ export function paletteActions(o: {
     {
       name: 'randomize everything, hard',
       blurb:
-        'turbo: throw most controls past anything a real set would do — the wreck, not a variation',
+        'turbo: throw most controls past anything a real set would do — the full wreck',
       run: () => o.onMutate('turbo'),
     },
     // The sparse roll, next to the dense one it is the opposite of. Its blurb

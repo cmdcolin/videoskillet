@@ -99,7 +99,7 @@ export function TapeTransport() {
     <div className={styles.deckRow}>
       <div
         className={styles.deckLabel}
-        title="the deck playing the incoming tape — how fast its head sweeps, not the clip’s playhead. At 1x the head follows one recorded track and the picture is clean"
+        title="the deck playing the incoming tape — the speed its head sweeps at, while the clip plays on underneath at its own rate. At 1x the head follows one recorded track and the picture is clean"
       >
         tape deck
       </div>
@@ -146,7 +146,7 @@ export function LoopTransport() {
     <div className={styles.deckRow}>
       <div
         className={styles.deckLabel}
-        title="the loop of tape threaded through the feedback path — not the deck above it, which is what the incoming tape is played back on"
+        title="the loop of tape threaded through the feedback path — the deck above it is what the incoming tape is played back on"
       >
         tape loop
       </div>

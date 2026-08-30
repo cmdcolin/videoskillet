@@ -340,16 +340,16 @@ export function ClipLibraryDialog(props: {
         <div className={ui.hint}>
           {props.canRemember
             ? 'a folder is one permission covering everything in it, so the next session asks once and the whole shelf opens. Only files directly inside the folder count — add each folder you want.'
-            : 'this browser can’t hold a file open past a reload, so the shelf keeps the list and not the footage: next session, re-pick the folder once and every row comes back. Only files directly inside it count.'}
+            : 'this browser can’t hold a file open past a reload, so the shelf keeps the list without the footage: next session, re-pick the folder once and every row comes back. Only files directly inside it count.'}
         </div>
       )}
 
       {kept === 0 ? null : (
         <div className={ui.hint}>
-          a kept roll is the file’s name and not the picture, so it costs
-          nothing on disk and comes back on its own next session — playing one
-          asks the archive for it again, at whatever size this app wants today.
-          Kept in this browser: a shared link carries the look, not the shelf.
+          a kept roll is the file’s name alone, so it costs nothing on disk and
+          comes back on its own next session — playing one asks the archive for
+          it again, at whatever size this app wants today. Kept in this browser:
+          a shared link carries only the look.
         </div>
       )}
 

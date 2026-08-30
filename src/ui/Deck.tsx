@@ -198,7 +198,7 @@ function Hold() {
           title={
             hold.frozen
               ? 'let the picture run again, at the rate it was on'
-              : 'stop the frame dead — every mechanism together, not a still image of one'
+              : 'stop the frame dead — every mechanism halted where it stands'
           }
           onClick={hold.toggle}
         >
