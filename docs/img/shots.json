@@ -5,8 +5,8 @@
     "mp4": null,
     "live": "https://cmdcolin.github.io/ntsc.js/?src=cat&set=demodMHz:0.5,hvSagUs:2.7,hvRing:0.61,lumaMHz:2.8,lumaPeak:0.8,noiseIre:4,agc:0.19,ghostDelayUs:1.15,ghostGain:0.08,colorUnderMix:1,underJitterDeg:4,dropoutRate:6,headSwitchNoise:0.4,headSwitchShiftUs:0.8,tbJitterNs:190,tbWowNs:300,phosphor:0.19&mod=",
     "captured": {
-      "version": "0.31.0",
-      "sha": "b6f8237"
+      "version": "0.32.4",
+      "sha": "4da0fc4"
     }
   },
   {
@@ -15,8 +15,8 @@
     "mp4": null,
     "live": "https://cmdcolin.github.io/ntsc.js/?src=cat&set=demodMHz:0.5,hvSagUs:2.7,hvRing:0.61,lumaMHz:2.8,lumaPeak:0.8,noiseIre:4,agc:0.19,ghostDelayUs:1.15,ghostGain:0.08,colorUnderMix:1,underJitterDeg:4,dropoutRate:6,headSwitchNoise:0.4,headSwitchShiftUs:0.8,tbJitterNs:190,tbWowNs:300,phosphor:0.19&mod=",
     "captured": {
-      "version": "0.31.0",
-      "sha": "b6f8237"
+      "version": "0.32.4",
+      "sha": "4da0fc4"
     }
   },
   {
@@ -25,8 +25,8 @@
     "mp4": null,
     "live": "https://cmdcolin.github.io/ntsc.js/?src=cat&set=demodMHz:0.5,hvSagUs:2.7,hvRing:0.61,lumaMHz:2.8,lumaPeak:0.8,noiseIre:4,agc:0.19,ghostDelayUs:1.15,ghostGain:0.08,colorUnderMix:1,underJitterDeg:4,dropoutRate:6,headSwitchNoise:0.4,headSwitchShiftUs:0.8,tbJitterNs:190,tbWowNs:300,phosphor:0.19&mod=",
     "captured": {
-      "version": "0.31.0",
-      "sha": "b6f8237"
+      "version": "0.32.4",
+      "sha": "4da0fc4"
     }
   },
   {
@@ -35,8 +35,8 @@
     "mp4": null,
     "live": "https://cmdcolin.github.io/ntsc.js/?src=cat&set=demodMHz:0.5,hvSagUs:2.7,hvRing:0.61,lumaMHz:2.8,lumaPeak:0.8,noiseIre:4,agc:0.19,ghostDelayUs:1.15,ghostGain:0.08,colorUnderMix:1,underJitterDeg:4,dropoutRate:6,headSwitchNoise:0.4,headSwitchShiftUs:0.8,tbJitterNs:190,tbWowNs:300,phosphor:0.19&mod=",
     "captured": {
-      "version": "0.31.0",
-      "sha": "b6f8237"
+      "version": "0.32.4",
+      "sha": "4da0fc4"
     }
   },
   {
