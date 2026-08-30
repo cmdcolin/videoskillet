@@ -20,7 +20,7 @@
   color: var(--edit);
 }
 
-/* one of the hidden trims is being driven — the same green the row's own ∿
+/* one of the hidden trims is being driven — the same green the row's own `mod`
    uses, because the touched count next to it cannot say this: modulation never
    moves the resting value it compares against */
 .fineMod {

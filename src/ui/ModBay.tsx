@@ -195,7 +195,7 @@ const WIRE_HEAD_D = arrowhead(WIRE_PTS, 5, 3)
 // a wire reads as a connection before either label does, which "driving" never
 // did on its own. Solid and tinted while the slot is actually running, dashed
 // and dim while held — the same split `iconModOff` draws on a control row's
-// own ∿, so a reader who already knows that badge reads this at a glance too.
+// own `held` badge, so a reader who already knows that badge reads this too.
 function Wire(props: { live: boolean }) {
   return (
     <svg
@@ -220,7 +220,7 @@ function Wire(props: { live: boolean }) {
 //
 // The picker underneath this row is still not here — that stays a dropdown of
 // every slider in the app, 273 options flattened into one alphabetical list,
-// and this bay replaced exactly that: a control row's own ∿ claims a free
+// and this bay replaced exactly that: a control row's own ⋮ claims a free
 // slot, so the target is picked at the control it drives, where you are
 // already looking at it. The source chip below is a readout of the SelectRow
 // one row down, the same redundancy bender's own SVG carries over its
@@ -310,13 +310,13 @@ function SlotHead(props: {
 // One of a routing's own two knobs, wired so a second routing can be clipped
 // onto it (modSlots.ts › BAY_TARGETS).
 //
-// The same row a control gets, with the same ⋮ ∿ and the same editor under it —
+// The same row a control gets, with the same ⋮ and badge and the same editor —
 // which is the whole argument for the bay's knobs living in the control key
 // space. A wire onto a wire is not a second kind of patch to learn: it is
 // claimed where it lands, exactly like every other one, and the routing that
 // results appears as its own numbered slot in this list with rows of its own.
 //
-// Both ends read the same way. This row wears ∿ because something is driving
+// Both ends read the same way. This row wears `mod` because something is driving
 // it; the driver's own head, a few lines up or down, says `driving slot 3
 // depth`.
 function BayKnob(props: { i: number; slot: UiSlot; field: BayField }) {
@@ -341,8 +341,8 @@ function BayKnob(props: { i: number; slot: UiSlot; field: BayField }) {
       defaultValue={rate ? EMPTY_SLOT.rateHz : EMPTY_SLOT.depth}
       help={
         rate
-          ? "How fast this slot's LFO cycles, in Hz. Slow rates drift the target control the way a warming-up circuit does; fast ones buzz it per-frame. Lock it to the beat with ♩ in the ⋮ menu, or clip another slot onto it with ∿ — a rate being walked by a second LFO is an oscillator that speeds up and slows down instead of keeping time."
-          : 'How far the modulation swings the target, as a fraction of that control’s own slider range. The resting slider position stays the centre, so presets and saved looks still hold the look. Clip another slot onto this with ∿ and the wobble comes and goes on its own: leave this at 0 and the second one brings it in from nothing, which is the difference between a fault that is running and one that keeps happening.'
+          ? "How fast this slot's LFO cycles, in Hz. Slow rates drift the target control the way a warming-up circuit does; fast ones buzz it per-frame. Lock it to the beat with ♩ in the ⋮ menu, or clip another slot onto it with ∿ from that same menu — a rate being walked by a second LFO is an oscillator that speeds up and slows down instead of keeping time."
+          : 'How far the modulation swings the target, as a fraction of that control’s own slider range. The resting slider position stays the centre, so presets and saved looks still hold the look. Clip another slot onto this with ∿ in the ⋮ menu and the wobble comes and goes on its own: leave this at 0 and the second one brings it in from nothing, which is the difference between a fault that is running and one that keeps happening.'
       }
       sync={
         rate
@@ -395,7 +395,7 @@ const DRIVER_ROUTING = {
 // The whole bay, one entry per patched slot. State, persistence and the push to
 // the render loop all moved to useModSlots when motion stopped being this
 // section's private business — presets carry it, links carry it, and any control
-// row can claim a slot from its own ∿. What is left here is the view that shows
+// row can claim a slot from its own ⋮. What is left here is the view that shows
 // the bay as a bay, which is still the only place the eight read as a set: a
 // routing's own row can say what drives that control and cannot say what else
 // is moving, or how much of the bay is left.
@@ -432,7 +432,7 @@ export function ModBay(props: {
     <>
       {/* What the stage's own heading does not already say. It used to open on
           "LFOs, drift and the audio envelope wiggling any control", which is
-          now the blurb one line above it, and to explain the ∿, which the free
+          now the blurb one line above it, and to explain the claim, which the free
           count at the foot of the bay explains again — three sentences of the
           same instruction on a bay holding nothing. What is left is the one
           thing in here that is not a routing. */}
@@ -515,7 +515,7 @@ export function ModBay(props: {
           {/* Per slot, because the master amount above is all of them at once
               and "off, except that one" is the shape a set actually wants.
               Everything the slot is patched with survives it — the same switch
-              the control row's ∿ throws. */}
+              the control row's own badge throws. */}
           <button
             className={cx(ui.btn, !s.on && ui.slotEmpty)}
             title={
@@ -530,8 +530,8 @@ export function ModBay(props: {
         </div>
       ))}
       {/* What is left of the eight empty rows: the count, and the one gesture
-          that fills one. Both states are worth a line — with the bay full, a ∿
-          press has nowhere to go, and the row that gets pressed says so from
+          that fills one. Both states are worth a line — with the bay full, a
+          claim has nowhere to go, and the row that gets pressed says so from
           inside its own editor but only after you have pressed it. */}
       <div className={ui.hint}>
         {free === 0

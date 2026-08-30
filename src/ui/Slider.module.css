@@ -220,7 +220,7 @@
    binding, a clock lock, a pin. Only rendered when set, so a row that has none
    of them spends nothing on the slot; the colour is the whole message, and the
    ⋮ next to it is where the changing happens. Two of them are buttons rather
-   than marks (a routed ∿, an armed ⚟) and take the same box either way. */
+   than marks (a routed row's `mod`, an armed ⚟) and take the same box. */
 .badge {
   composes: bare from './ui.module.css';
   /* a mark on most rows and a button on two, so the hand comes from the tag */
@@ -260,10 +260,11 @@ button.badge {
   color: var(--edit);
 }
 /* something is driving this control, and it is running. A chip, not bare text:
-   a coloured glyph alone read as a stray character rather than a control, so
-   this is the one badge that is *always* a button and needs to look like one
-   at rest, not only on hover. The tint carries the state; the pill is what
-   says "click this" before the pointer ever finds it. */
+   this is the one badge that is *always* a button and needs to look like one at
+   rest, not only on hover — the tint carries the state and the pill is what says
+   "click this" before the pointer ever finds it. Both halves were needed when it
+   was a bare coloured ∿, which read as a stray character; with a word in it the
+   pill is what keeps `mod` from reading as one more unit beside the number. */
 .iconModSet {
   color: var(--mod);
   background: color-mix(in srgb, var(--mod) 16%, transparent);
@@ -273,14 +274,13 @@ button.badge {
 .iconModSet:hover {
   background: color-mix(in srgb, var(--mod) 30%, transparent);
 }
-/* the same routing, held still. Struck through rather than merely dimmed: at
-   --fg4 alone it reads as an unset badge, and this row has to say "there is a
-   wobble patched here and it is not running" in one glyph. Same chip as above,
-   at the quiet colour, so "click to resume" reads as clearly as "click to
-   pause" did. */
+/* the same routing, held still. Same chip as above at the quiet colour, so
+   "click to resume" reads as clearly as "click to pause" did. It used to be the
+   ∿ struck through, which was the only way one glyph could say "there is a
+   wobble patched here and it is not running"; the badge says `held` now, and a
+   struck-through word is harder to read than the word. */
 .iconModOff {
   color: var(--fg4);
-  text-decoration: line-through;
   background: color-mix(in srgb, var(--fg4) 14%, transparent);
   border-radius: 3px;
   padding: 1px 5px;

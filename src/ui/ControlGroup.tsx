@@ -106,7 +106,7 @@ export function ControlSlider(props: {
       // stepping a mode enum with an LFO picks tubes nobody asked for.
       //
       // Unless it is already routed — a preset, a link or a since-closed gate
-      // can all leave one there, and hiding the ∿ on those rows hid the only
+      // can all leave one there, and hiding the badge on those rows hid the only
       // way to see what is driving the control or to hand the slot back. The
       // rule is about what may be *claimed*, not about what may be shown.
       mod={
@@ -626,7 +626,7 @@ export function ControlGroup(props: { group: Group; defaultOpen?: boolean }) {
                     </span>
                   )}
                   {fineMod ? (
-                    <span className={styles.fineMod}> · ∿</span>
+                    <span className={styles.fineMod}> · mod</span>
                   ) : null}
                 </>
               )}

@@ -66,7 +66,7 @@ export function Rack(props: {
   return <RackContext value={ch}>{props.children}</RackContext>
 }
 
-// The readout's little accessory buttons (help, and the ∿ on a routed row).
+// The readout's little accessory buttons (help, and the badge on a routed row).
 function IconButton(props: {
   title: string
   className: string
@@ -353,7 +353,7 @@ export function Slider(props: {
     routed: boolean
     on: boolean
     open: boolean
-    // Park/restart — what the ∿ badge does.
+    // Park/restart — what the `mod`/`held` badge does.
     onToggleOn: () => void
     // Show/hide the editor — what the ⋮ does.
     onToggle: () => void
@@ -498,8 +498,8 @@ export function Slider(props: {
   // *set*: an unset affordance has nothing to say and its slot is the width the
   // label wanted. All of them are marks rather than buttons — the menu is the
   // one way to change any of this — except the two that are live states you
-  // have to be able to get out of from the row you are looking at: a routed ∿
-  // opens and closes its editor, and an armed ⚟ cancels the learn.
+  // have to be able to get out of from the row you are looking at: a routed
+  // row's `mod` holds the wobble still, and an armed ⚟ cancels the learn.
   const badges = (
     <>
       {sync?.label == null ? null : (
@@ -536,7 +536,15 @@ export function Slider(props: {
           `remove` throws the routing away, and dragging depth to zero throws away
           the depth. Changing *what* is driving the control is set-up by
           comparison, so it moved to the ⋮ beside this, which is where the row
-          keeps its wiring. */}
+          keeps its wiring.
+
+          A word rather than a ∿, and that is what stopped it being pressed by
+          mistake: the strip's filter count wore the same glyph, so one mark said
+          "this control is driven" in one place and "show me only driven rows" in
+          another, and a session that meant the first got the second. Both say
+          what they are now. `mod` and not `modulated` because this box is in the
+          column that holds every track in a group at one x — see Rack — and the
+          badges already standing in it are `CC42` and `♩1/4`. */}
       {props.mod?.routed !== true ? null : (
         <button
           type="button"
@@ -549,7 +557,7 @@ export function Slider(props: {
           aria-pressed={props.mod.on}
           title={
             props.mod.on
-              ? 'wobbling — click to hold this one still'
+              ? 'modulated — click to hold this one still'
               : 'held still — click to start it wobbling again'
           }
           className={cx(
@@ -558,7 +566,7 @@ export function Slider(props: {
           )}
           onClick={props.mod.onToggleOn}
         >
-          ∿
+          {props.mod.on ? 'mod' : 'held'}
         </button>
       )}
       {favorite?.on !== true ? null : (

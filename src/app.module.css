@@ -226,7 +226,8 @@
 }
 /* The motion filter, sitting in the box as a token rather than as text. It
    wears the mod green because that is the system it belongs to — the same green
-   the strip's count and every row's ∿ wear — and it carries its own × because a
+   the strip's count and every routed row's badge wear — and it carries its own
+   × because a
    filter set by a button somewhere else has to be removable from where it shows
    up. Held to its own width so the text beside it keeps the rest of the row. */
 .filterChip {

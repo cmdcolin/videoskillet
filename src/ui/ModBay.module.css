@@ -83,7 +83,7 @@ button.destChip:hover {
   border-color: var(--mod);
 }
 /* Held rather than running — the same split `iconModOff` draws on a control
-   row's own ∿. The source chip strikes through (it is the thing that is not
+   row's own badge. The source chip strikes through (it is the thing that is not
    moving); the destination chip only dims, since the control it names is still
    exactly what it was, just not being wobbled right now. */
 .chipOff {

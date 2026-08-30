@@ -476,7 +476,7 @@ export function useMix(args: {
           audioLive: opts.audioLive === true,
         }),
       )
-      // The same rule a claim from a control row's ∿ follows, and this button
+      // The same rule a claim from a control row's ⋮ follows, and this button
       // needs it most: rolling motion onto a frozen bay would cable five slots,
       // light five rows up as driven, and move nothing whatsoever. Asking for
       // motion is unambiguous; the freeze is a gesture within a set.

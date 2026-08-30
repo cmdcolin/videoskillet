@@ -4,7 +4,7 @@ import type { ModSlot, ModTarget } from '../core/controls'
 import type { ModRouting, Stab, UiSlot } from './modSlots'
 
 // The modulation bay, read by anything that needs to know what is moving: the
-// Modulation section, the ∿ on every control row, the motion strip.
+// Modulation section, the badge on every routed control row, the motion strip.
 //
 // A separate context from ControlsContext on purpose. Both change identity when
 // their state changes, and the two move on completely different clocks — a
@@ -62,7 +62,7 @@ export interface ModSlotsApi {
   setRoutings: (mod: readonly ModRouting[]) => void
   // The slot driving this control, if one is. Duplicate targets are possible
   // (the section can point two slots at one control) — this addresses the
-  // first, which is the one the row's ∿ then edits.
+  // first, which is the one the row's own editor then edits.
   modFor: (key: ModTarget) => UiSlot | null
   // Patch the slot driving `key` in place (so its phase carries), or claim the
   // first free one. With every slot busy and none of them this control's, it is

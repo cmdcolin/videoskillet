@@ -123,11 +123,12 @@ The filter box narrows the panel — `/` opens it and puts the caret in it;
 `ctrl+k` opens a palette over presets, controls and actions at once. Both search
 the help text, so you can hunt an artifact without knowing which knob makes it.
 
-The **∿** on the modulation strip is the second half of the filter and a switch
-rather than a word: it narrows the panel to the controls the bay is driving,
-which nothing else marks, since a routing leaves the resting value alone. It
-stays pressed until you press it again, it shows in the box as a **∿ moving**
-token, and it narrows whatever text is already up rather than replacing it.
+The count on the modulation strip — **2 mod** — is the second half of the filter
+as well as a readout: press it and the panel narrows to the controls the bay is
+driving, which nothing else marks, since a routing leaves the resting value
+alone. It stays pressed until you press it again, it shows in the box as a **mod
+only** token, and it narrows whatever text is already up rather than replacing
+it.
 
 Either half fades the map boxes it did not reach rather than dropping them, so
 the chain still reads as a chain while the panel is narrow. A faded box is still
@@ -142,13 +143,13 @@ one-shot envelope you strike by hand or from a MIDI note. Depth is a fraction of
 the control's range, and the slider stays put as the centre the motion happens
 around, which is why a preset or a link still holds the look.
 
-A patched row then wears its own **∿** beside the reading, and that one is a
-switch: press it to hold that wobble still, press it again to start it back up
-exactly as you dialed it. It is the row's mark as well as its button — a row
-showing no ∿ has nothing driving it.
+A patched row then wears **mod** beside the reading, and that badge is a switch:
+press it to hold that wobble still — it reads **held** — and press it again to
+start it back up exactly as you dialed it. It is the row's mark as well as its
+button, so a row showing neither has nothing driving it.
 
 Once anything moves, a **modulation** strip appears with one amount over every
-routing, a freeze, and the **∿** count that filters the panel down to what is
+routing, a freeze, and the **mod** count that filters the panel down to what is
 running. The top of **MODULATION** is the tempo: type or tap a BPM, then lock
 any rate to it. MIDI clock takes over whenever something sends it — see
 [MIDI.md](MIDI.md).

@@ -50,7 +50,6 @@ import { FatalScreen } from './ui/FatalScreen'
 import {
   FilterContext,
   filterActive,
-  isMovingMark,
   readFilter,
   sliderMatches,
 } from './ui/filter'
@@ -284,9 +283,9 @@ export function App() {
   // The other half of the filter, and a mode rather than a word: which controls
   // the bay is driving is a question the box cannot hold, because a routing
   // leaves the resting value alone and there is nothing to type. It rode in the
-  // box as `∿` until now, which made the two alternatives — you could ask for
-  // moving rows or for "ghost", never both — and left the ✕ clearing a mode it
-  // could not tell from a search.
+  // box as a pasted `∿` once, which made the two alternatives — you could ask
+  // for moving rows or for "ghost", never both — and left the ✕ clearing a mode
+  // it could not tell from a search.
   const [movingOnly, setMovingOnly] = useState(false)
   // Whether the masthead is showing the filter box rather than the wordmark.
   // Held open by a live query as well as by the ⌕, so the box can't disappear
@@ -316,14 +315,9 @@ export function App() {
     setFilter(text)
     setMovingOnly(false)
   }
-  // One switch wherever it is pressed, and taking a pasted ∿ back out of the box
-  // is part of switching off: with the mark still in it the mode reads straight
-  // back off the text, and the button that just released it looks broken.
-  const toggleMoving = () => {
-    const marked = isMovingMark(filter.trim())
-    if (marked) setFilter('')
-    setMovingOnly(!(movingOnly || marked))
-  }
+  // One switch wherever it is pressed — the strip's count, the palette, the chip
+  // in the box. Nothing typed can reach the mode, so this is the whole of it.
+  const toggleMoving = () => setMovingOnly(!movingOnly)
   const nav = usePanelNav()
   const { favorites, toggleFavorite } = useFavorites()
   // The modulation bay, owned here so the panel, the rows and the mix all see
@@ -823,12 +817,12 @@ export function App() {
 
   const query = readFilter(filter, movingOnly)
   const filtering = filterActive(query)
-  // A query set from anywhere else — the ∿ reveal, a palette jump — opens the
-  // box too, so the panel is never filtered by something with nothing on screen
-  // saying so and no way to clear it.
+  // A query set from anywhere else — the strip's count, a palette jump — opens
+  // the box too, so the panel is never filtered by something with nothing on
+  // screen saying so and no way to clear it.
   const searching = searchOpen || filtering
-  // What the filter needs from the bay: which controls are being driven. `∿`
-  // asks exactly this and nothing else, so the whole panel — pinned rows,
+  // What the filter needs from the bay: which controls are being driven. The
+  // mode asks exactly this and nothing else, so the whole panel — pinned rows,
   // contextual sections, the spine — has to be able to answer it.
   const isRouted = (key: ControlKey) => modApi.modFor(key) !== null
   const pinned = sameList(
@@ -1125,7 +1119,7 @@ export function App() {
           <div className={styles.filterBox}>
             {/* The mode, standing in the box beside the words rather than
                 pretending to be one of them. It is where a filter you did not
-                type has to appear: pressing ∿ on the strip narrows the whole
+                type has to appear: pressing the strip's count narrows the whole
                 panel, and before this the only trace of it was a glyph in the
                 text — which said something had happened without saying that the
                 button was what said it, and could not be taken off without
@@ -1136,7 +1130,7 @@ export function App() {
                 title="showing only what the bay is driving — click to drop it"
                 onClick={toggleMoving}
               >
-                ∿ moving ×
+                mod only ×
               </button>
             ) : null}
             <input
@@ -1151,7 +1145,7 @@ export function App() {
               // whatever you had just clicked, four times a second.
               autoFocus
               placeholder="rainbow, ghost, tear…"
-              title="matches names and descriptions, so artifact words work: rainbow, ghost, dot crawl, tear, roll… — the ∿ on the modulation row narrows whatever is up here to the controls the bay is driving"
+              title="matches names and descriptions, so artifact words work: rainbow, ghost, dot crawl, tear, roll… — the count on the modulation row narrows whatever is up here to the controls the bay is driving"
               value={filter}
               onChange={e => setFilter(e.target.value)}
             />
@@ -1387,7 +1381,7 @@ export function App() {
           {query.moving
             ? query.text === ''
               ? 'nothing is moving — open any control row’s ⋮ and press ∿ to set it wobbling'
-              : `nothing moving matches “${query.text}” — drop the ∿ to search the whole panel`
+              : `nothing moving matches “${query.text}” — drop “mod only” to search the whole panel`
             : // A query can land on controls that exist and cannot act, which is
               // not the same answer as no match at all: "bass" is seven routings
               // in Sound, and what is missing is the input, not the control.
