@@ -47,6 +47,7 @@ function harness({
   let visibility = 'visible'
   const rafCbs = new Map<number, FrameRequestCallback>()
   const workDone: (() => void)[] = []
+  let workArmed = 0
   let hangs = 0
   let recoveries = 0
   const frozenEdges: (FrozenKind | null)[] = []
@@ -155,8 +156,9 @@ function harness({
   const loop = new RenderLoop({
     device: {
       queue: {
-        onSubmittedWorkDone: () =>
-          new Promise<undefined>(resolve => {
+        onSubmittedWorkDone: () => {
+          workArmed += 1
+          return new Promise<undefined>(resolve => {
             if (pollMs > 0) {
               setTimeout(() => {
                 resolve(undefined)
@@ -166,7 +168,8 @@ function harness({
                 resolve(undefined)
               })
             }
-          }),
+          })
+        },
       },
     },
     render: () => {
@@ -205,6 +208,10 @@ function harness({
     // Completion promises the loop is waiting on. The gate keeps exactly one,
     // so this is how a probe that outlived its own run shows up.
     outstandingWork: () => workDone.length,
+    // Every completion promise the loop has ever asked for. `outstandingWork`
+    // cannot see a gate that arms and settles repeatedly between two readings,
+    // which is exactly the shape the drain probe had on Chrome.
+    workArmed: () => workArmed,
     // Deliver every rAF callback the loop has outstanding.
     deliverRaf: (time: number) => {
       const cbs = [...rafCbs.values()]
@@ -685,6 +692,49 @@ describe('RenderLoop', () => {
     expect(h.frames()).toBe(1)
   })
 
+  // The gate's rate has to come from the refresh, because it does not come from
+  // the browser. Firefox resolves onSubmittedWorkDone off a main-thread timer
+  // with a ~17ms floor, so a probe that re-armed itself the moment it settled
+  // could not outrun the display and read as one probe a frame for the life of
+  // the gate. Chrome resolves in ~0.1ms: the same code armed **135 probes per
+  // rendered frame**, 8.3kHz, costing 0.55ms/frame of JS and 3.1ms/frame in the
+  // browser's own C++ — 3.6ms of a 16.6ms budget, four fifths of everything the
+  // main thread spent on a frame.
+  //
+  // Nothing about frame rate could have caught it. Both browsers held 60fps
+  // throughout, because the loop is vsync-capped and a fifth of the budget goes
+  // before the first frame is missed.
+  it('arms the drain probe from the refresh, not from the settle', async () => {
+    const h = harness()
+    h.loop.start()
+    expect(h.outstandingWork()).toBe(1)
+
+    // Settling frees the slot and arms nothing.
+    h.completeGpu()
+    await vi.advanceTimersByTimeAsync(0)
+    expect(h.outstandingWork()).toBe(0)
+
+    // However many times completion lands between two refreshes.
+    for (let i = 0; i < 10; i++) {
+      h.completeGpu()
+      await vi.advanceTimersByTimeAsync(0)
+    }
+    expect(h.outstandingWork()).toBe(0)
+
+    // A refresh arms one, and the count over a run is the refresh count —
+    // which is the bound the whole gate rests on, since `queueLate` is read
+    // once per refresh and nowhere else.
+    const armed = h.workArmed()
+    for (let t = 0; t < 10; t++) {
+      h.deliverRaf(100 + t * 16)
+      for (let k = 0; k < 5; k++) {
+        h.completeGpu()
+        await vi.advanceTimersByTimeAsync(0)
+      }
+    }
+    expect(h.workArmed() - armed).toBe(10)
+  })
+
   it('retires a probe left outstanding across a restart', async () => {
     const h = harness()
     h.loop.start()
@@ -694,11 +744,17 @@ describe('RenderLoop', () => {
     // promise cannot be cancelled, only ignored when it lands.
     expect(h.outstandingWork()).toBe(2)
 
-    // Both settle. Only the live one may re-arm: re-arming off the orphan too
-    // would leave two in flight and let the stale one reset the arm time the
-    // gate reads, doubling again on every restart.
+    // Both settle, and settling arms nothing — the refresh does that.
     h.completeGpu()
     await vi.advanceTimersByTimeAsync(0)
+    expect(h.outstandingWork()).toBe(0)
+
+    // The next refresh arms exactly one. The orphan freeing the live probe's
+    // slot as it landed would show up here as two: this refresh's, plus the one
+    // the next refresh would arm into a slot that was never really free.
+    h.deliverRaf(16)
+    expect(h.outstandingWork()).toBe(1)
+    h.deliverRaf(32)
     expect(h.outstandingWork()).toBe(1)
   })
 

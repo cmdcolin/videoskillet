@@ -359,10 +359,20 @@ export class RenderLoop {
       // the signal path has outgrown the device.
       if (this.queueLate()) {
         this.setThrottled(true)
-        return
+      } else {
+        this.setThrottled(false)
+        this.runFrame(time)
       }
-      this.setThrottled(false)
-      this.runFrame(time)
+      // The gate's one arm per refresh, and the only one on a live rAF loop.
+      // Idempotent, so a probe still outstanding from an earlier refresh is
+      // left alone — which is what keeps a slow device's wait accumulating.
+      //
+      // After the frame rather than before it: arming ahead of `queueLate`
+      // would reset the wait this refresh is meant to read, and the gate would
+      // never trip. On the throttled branch too, because a throttled loop
+      // submits nothing, so a probe armed only where frames are rendered would
+      // never come back and the gate would hold the picture off for good.
+      this.startDrainProbe()
     })
   }
 
@@ -383,11 +393,24 @@ export class RenderLoop {
     return this.framesSinceProbe > 0 && this.queueWait() > MAX_QUEUE_WAIT_MS
   }
 
-  // One completion probe outstanding at a time, re-armed the moment it settles,
-  // so the gate always has a live reading. Re-arming on settle rather than on
-  // submission matters more than it looks: once the loop is throttling it stops
-  // submitting, so a probe armed only by a submission would never come back and
-  // the loop would gate itself off permanently.
+  // One completion probe outstanding at a time, armed once per refresh from the
+  // render chain, so the gate always has a reading no older than a frame.
+  //
+  // **It settles at whatever rate the browser resolves completion, and that is
+  // not a frame rate.** The probe used to re-arm itself the instant it settled,
+  // which reads as one probe a frame on Firefox and is an accident of Firefox's
+  // implementation: it resolves `onSubmittedWorkDone` off a main-thread timer
+  // whose floor is ~17ms, so the re-arm could not outrun the display. Chrome
+  // resolves in ~0.1ms. Measured there on a stock frame: **135 arms per
+  // rendered frame, 8.3kHz**, costing 0.55ms/frame of JS and 3.1ms/frame in the
+  // browser's own C++ — 3.6ms of a 16.6ms budget, four fifths of the main
+  // thread's per-frame cost, spent asking a question the gate reads once. It
+  // cost no frame rate on either browser, which is why it survived: the loop is
+  // vsync-capped, so a fifth of the budget goes before fps moves at all.
+  //
+  // The rate now comes from the caller. `queueLate` is consulted once per
+  // refresh and nowhere else, so a reading per refresh is every reading the
+  // gate can use.
   //
   // Idempotent, and called from the watchdog too, so a device that refuses the
   // probe outright gets asked again every beat rather than leaving the gate
@@ -398,11 +421,11 @@ export class RenderLoop {
       this.probeArmedAt = performance.now()
       this.framesSinceProbe = 0
       const gen = (this.drainGen += 1)
+      // Settling only frees the slot; the next refresh arms the replacement.
+      // The generation check is what stops an orphan from an earlier run
+      // freeing the live probe's slot.
       const settle = () => {
-        if (gen === this.drainGen) {
-          this.drainProbe = false
-          this.startDrainProbe()
-        }
+        if (gen === this.drainGen) this.drainProbe = false
       }
       try {
         void this.host.device.queue.onSubmittedWorkDone().then(settle, settle)
