@@ -15,7 +15,7 @@ import {
   rollControls,
 } from './presets'
 
-import type { ControlKey } from '../core/controls'
+import type { ControlKey, Controls } from '../core/controls'
 
 // `useMix.applyPreset` reads an empty patch as "this click is the reset" and
 // wipes the bay and the stab gate on it. A second preset written with an empty
@@ -24,6 +24,67 @@ describe('the empty patch', () => {
   it('belongs to "clean" and to nothing else', () => {
     const empty = PRESETS.filter(p => Object.keys(p.patch).length === 0)
     expect(empty.map(p => p.name)).toEqual(['clean'])
+  })
+})
+
+// `matchPreset` no longer compares the board against each preset in full — it
+// decides from the keys the board holds off stock, because the full comparison
+// was 85 × 252 reads in a render body and cost 612 us against the live board.
+// The rewrite is only worth having if it is the same question, so this holds it
+// to the definition it replaced rather than to a handful of examples.
+describe('matchPreset', () => {
+  const byDefinition = (values: Controls) =>
+    PRESETS.find(p => controlsEqual(presetControls(p.patch), values))
+
+  const agree = (values: Controls, what: string) =>
+    expect(matchPreset(values)?.name ?? null, what).toBe(
+      byDefinition(values)?.name ?? null,
+    )
+
+  it('agrees on stock, on every preset, and on every preset nudged', () => {
+    agree(DEFAULT_CONTROLS, 'stock')
+    for (const p of PRESETS) {
+      const full = presetControls(p.patch)
+      agree(full, p.name)
+      // One key off stock that the preset does not move: a superset, which
+      // must match nothing. The size check is what has to catch this.
+      const spare = CONTROL_KEYS.find(
+        k => full[k] === DEFAULT_CONTROLS[k] && typeof full[k] === 'number',
+      )
+      if (spare !== undefined)
+        agree({ ...full, [spare]: full[spare] + 1.5 }, `${p.name} + ${spare}`)
+      // One key the preset does move, put back to stock: a subset, which must
+      // also match nothing unless another preset happens to be exactly that.
+      const moved = CONTROL_KEYS.find(k => full[k] !== DEFAULT_CONTROLS[k])
+      if (moved !== undefined)
+        agree(
+          { ...full, [moved]: DEFAULT_CONTROLS[moved] },
+          `${p.name} − ${moved}`,
+        )
+      // And moved somewhere else entirely: same key set, different value.
+      if (moved !== undefined && typeof full[moved] === 'number')
+        agree({ ...full, [moved]: full[moved] + 0.5 }, `${p.name} ~ ${moved}`)
+    }
+  })
+
+  it('agrees on boards rolled out of the presets themselves', () => {
+    let seed = 7
+    const rand = () => {
+      seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0
+      return seed / 4294967296
+    }
+    for (let i = 0; i < 200; i++) {
+      const a = PRESETS[Math.floor(rand() * PRESETS.length)]
+      const b = PRESETS[Math.floor(rand() * PRESETS.length)]
+      agree(blendPresets(DEFAULT_CONTROLS, new Map([[a.name, rand()]])), 'one')
+      agree(
+        blendPresets(
+          presetControls(a.patch),
+          new Map([[b.name, rand() < 0.5 ? 1 : rand()]]),
+        ),
+        'two',
+      )
+    }
   })
 })
 

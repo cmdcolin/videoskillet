@@ -1654,17 +1654,13 @@ function fullControls(p: PresetDef): Controls {
   return PRESET_FULL.get(p) ?? presetControls(p.patch)
 }
 
-// The preset whose full control-set exactly matches `values`, if any.
-export function matchPreset(values: Controls): PresetDef | undefined {
-  return PRESETS.find(p => controlsEqual(fullControls(p), values))
-}
-
 // How much of each preset is dialed in, by preset name. Absent or 0 is off.
 export type PresetWeights = ReadonlyMap<string, number>
 
 // Which controls a preset moves off stock. Derived once per preset from the
-// same PRESET_FULL the blender reads, because the roll now has to know what a
-// candidate would tread on before it picks it.
+// same PRESET_FULL the blender reads, because the roll has to know what a
+// candidate would tread on before it picks it — and because `matchPreset`
+// below decides a whole preset from the size of one of these.
 const PRESET_KEYS: ReadonlyMap<string, ReadonlySet<ControlKey>> = new Map(
   PRESETS.map(p => {
     const full = fullControls(p)
@@ -1674,6 +1670,39 @@ const PRESET_KEYS: ReadonlyMap<string, ReadonlySet<ControlKey>> = new Map(
     ]
   }),
 )
+
+// The preset whose full control-set exactly matches `values`, if any.
+//
+// Decided from the keys the board holds off stock rather than by comparing it
+// against each preset in full. The two are the same question: every key where
+// the board and a preset both sit at stock agrees for free, so a preset matches
+// exactly when it moves the same keys the board does and agrees on those. One
+// pass over the board answers it for all of them, and each preset is then a
+// size comparison and a handful of reads.
+//
+// It is worth the restatement because of what the old spelling cost in place.
+// `PRESETS.find(p => controlsEqual(fullControls(p), values))` is 85 presets ×
+// 252 keys, and a board that matches nothing — anyone who has touched a knob —
+// scans all of them: 21,420 reads. Against a fresh object that is 149 us;
+// against the **live** board it is 612 us, because a `Controls` that has been
+// spread and then written to by the glide, the bay and every drag reads about
+// three times slower than the module literal it came from, and this had 21,420
+// of those to do. It runs in a render body, so a panel update wore it.
+export function matchPreset(values: Controls): PresetDef | undefined {
+  const off = CONTROL_KEYS.filter(k => values[k] !== DEFAULT_CONTROLS[k])
+  return PRESETS.find(p => {
+    const moved = PRESET_KEYS.get(p.name)
+    // Size, then values, and nothing checks membership: a key in `off` whose
+    // value agrees with the preset's is a key the preset moved too, so `off`
+    // is already a subset and matching sizes make it the same set.
+    const full = fullControls(p)
+    return (
+      moved !== undefined &&
+      moved.size === off.length &&
+      off.every(k => values[k] === full[k])
+    )
+  })
+}
 
 // Fisher-Yates. `toSorted(() => rand() - 0.5)` is the idiom this used to use and
 // it is not a shuffle: a comparator that ignores its arguments biases toward the
