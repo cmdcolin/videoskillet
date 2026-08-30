@@ -76,16 +76,16 @@ digraph ntsc_js {
                 label="mixB\ndirty resample · ring · wipe · PiP\n525 lines × 910 samples"];
   }
 
+  // The switcher's character generator, keying text into the program bus ahead
+  // of the loop and the deck, so what it writes ages with the picture.
+  chyron [passes="chyron" fillcolor="@ENC2@" style="rounded,filled,dashed"
+          label="chyron\ncharacter generator · fill + key\n525 lines × 910 samples"];
   fbComposite [passes="fbComposite" fillcolor="@STORE@" style="rounded,filled,dashed"
                label="fbComposite\nhardware mixer loop\nkey · trails\n525 lines × 910 samples"];
 
   // The delay loop is a second machine across the mixer, not a frame store: the
   // return is recorded again, so material still circulating ages one tape
   // generation per lap.
-  tapePlay [passes="tapePlay" fillcolor="@STORE@" style="rounded,filled,dashed"
-            label="tapePlay\nplay head — up to 2 s behind\ngeneration loss · wear · splice\n525 lines × 910 samples"];
-  tapeRec  [passes="tapeRec" fillcolor="@STORE@" style="rounded,filled,dashed"
-            label="tapeRec\nrecord head\n525 lines × 455 packed words"];
 
   // ---- channel (repeats per dub generation) --------------------------------
   subgraph cluster_ch {
@@ -125,6 +125,14 @@ digraph ntsc_js {
                  label="syncMeasure → sync\nrecover H/V timing\n525 lines each, then 1 thread total"];
     lineAnalyze [passes="lineAnalyze" fillcolor="@RX2@"
                  label="lineAnalyze\nper-line burst phase & lock\n525 lines, one thread each"];
+    // The VIR corrector: line 19's reference measured against what burst
+    // already took out, servoed into the hue and gain decode demodulates with.
+    vir         [passes="vir" fillcolor="@RX2@" style="rounded,filled,dashed"
+                 label="vir\nline 19 reference servo\n1 thread total"];
+    // The caption decoder: line 21 sliced off the same damaged waveform, held
+    // in a page decode paints on the set's own raster.
+    caption     [passes="caption" fillcolor="@RX2@" style="rounded,filled,dashed"
+                 label="caption\nline 21 data slicer\n1 thread total"];
     decode      [passes="decode" fillcolor="@RX1@"
                  label="decode\ncomb filter · chroma demod · color-kill\ndeflection bend · sag → RGB\n754 × 480 px"];
   }
@@ -152,15 +160,13 @@ digraph ntsc_js {
   encodeCompB -> mixB [label="  bComp"];
   encodeCompB -> feedB [label="  compB — feed engaged\l"];
   feedB -> mixB [label="  bComp"];
-  mixB -> fbComposite [label="  compA"];
-
-  fbComposite -> tapePlay [label="  compA"];
-  tapePlay -> tapeRec [label="  compA — the sum goes\l  back onto the loop\l"];
+  mixB -> chyron [label="  compA"];
+  chyron -> fbComposite [label="  compA"];
 
   // compA feeds the channel directly; chroma is a side branch that rejoins it,
   // it is not in line with the luma.
-  tapePlay -> channel [label="  compA"];
-  tapePlay -> chromaExtract [label="  compA"];
+  fbComposite -> channel [label="  compA"];
+  fbComposite -> chromaExtract [label="  compA"];
   chromaExtract -> underDown [label="  chroma"];
   chromaExtract -> channel [label="  chroma"];
   underDown -> channel [label="  under"];
@@ -172,6 +178,10 @@ digraph ntsc_js {
   enhancer -> sync [label="  compA" lhead=cluster_rx];
   sync -> lineAnalyze [label="  timing[]"];
   lineAnalyze -> decode [label="  lineInfo[]"];
+  lineAnalyze -> vir [label="  lineInfo[]"];
+  vir -> decode [label="  timing[] hue & gain trim\l"];
+  sync -> caption [label="  timing[]"];
+  caption -> decode [label="  ccBuf[]"];
   decode -> crtFace [label="  outTex"];
   crtFace -> present [label="  faceTex"];
   enhancer -> storePrev [label="  compA — the same waveform\l  the receiver locked to\l"];
@@ -180,8 +190,6 @@ digraph ntsc_js {
   // ---- feedback loops (one frame of delay) ---------------------------------
   storePrev -> fbComposite [label="  compPrev\l  next frame\l" style=dashed
                             color="@GOLD@" fontcolor="@GOLD@" constraint=false];
-  tapeRec -> tapePlay [label="  tapeBuf\l  up to 120 frames later\l" style=dashed
-                       color="@GOLD@" fontcolor="@GOLD@" constraint=false];
   crtFace -> compose [label="  faceTex\l  camera-at-monitor\l" style=dashed
                       color="@GREEN@" fontcolor="@GREEN@" constraint=false];
   sync -> compose [label="  timing[] auto-iris\l  next frame\l" style=dashed

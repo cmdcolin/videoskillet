@@ -5,6 +5,7 @@ import { SOURCE_B_MODES, SOURCE_MODES } from '../sources/modes'
 import { TELETYPE_DEFAULT, TELETYPE_MAX } from '../sources/teletype'
 import { ALL_SLIDERS, sliderFor } from './controls'
 import { mutate } from './mutate'
+import { packControls } from './packed'
 import { PRESETS, presetControls } from './presets'
 import {
   DRY_DEFAULT,
@@ -216,6 +217,7 @@ const state = (over: Partial<SessionState> = {}): SessionState => ({
   ytUrlB: '',
   teletypeA: { text: '', crawl: false, boil: false, garble: false },
   teletypeB: { text: '', crawl: false, boil: false, garble: false },
+  caption: '',
   speedA: SPEED_DEFAULT,
   speedB: SPEED_DEFAULT,
   reverb: REVERB_DEFAULT,
@@ -362,7 +364,7 @@ describe('session round trip', () => {
       state({ controls: { ...DEFAULT_CONTROLS, noiseIre: 4 } }),
     )
     expect(q.has('surprise')).toBe(false)
-    expect(q.get('set')).toBe('noiseIre:4')
+    expect(parseSessionParams(`?${q.toString()}`).controls.noiseIre).toBe(4)
   })
 
   it('drops a managed key once its value returns to stock', () => {
@@ -372,11 +374,54 @@ describe('session round trip', () => {
     )
     expect(q.get('speeda')).toBe(null)
     expect(q.get('src')).toBe(null)
-    // ...except `set`, which stays as an empty marker: a stock look is a look
-    // the link is asserting, and no query at all means a first arrival instead.
+    // ...except the look itself, which stays as an empty marker: a stock look
+    // is a look the link is asserting, and no query at all means a first
+    // arrival instead.
     expect(q.get('set')).toBe('')
+    expect(writeSessionParams(new URLSearchParams(), state()).get('p')).toBe('')
     expect(parseSessionParams('?set=').controls).toEqual({})
+    expect(parseSessionParams('?p=').controls).toEqual({})
     expect(parseSessionParams('').controls).toEqual(LANDING_LOOK)
+  })
+})
+
+describe('the two forms of the look', () => {
+  const look = state({ controls: { ...DEFAULT_CONTROLS, noiseIre: 4 } })
+
+  it('writes the packed form by default, and only that one', () => {
+    const q = writeSessionParams(new URLSearchParams(), look)
+    expect(q.get('p')).toBe(packControls(look.controls))
+    expect(q.has('set')).toBe(false)
+    expect(parseSessionParams(`?${q.toString()}`).controls.noiseIre).toBe(4)
+  })
+
+  it('keeps writing names to a query that arrived carrying them', () => {
+    // A `?set=` someone typed is one they mean to keep typing into: turning it
+    // to bytes under the cursor would take the address bar away as an
+    // instrument mid-session.
+    const q = writeSessionParams(new URLSearchParams('?set=hHold:0.2'), look)
+    expect(q.get('set')).toBe('noiseIre:4')
+    expect(q.has('p')).toBe(false)
+  })
+
+  it('reads a hand-edited name over the packed look beside it', () => {
+    // Which is the same one the writer would keep, so what a query carrying
+    // both shows is what the next write settles on.
+    const packed = packControls({ ...DEFAULT_CONTROLS, noiseIre: 9 })
+    const both = `?p=${packed}&set=noiseIre:4`
+    expect(parseSessionParams(both).controls.noiseIre).toBe(4)
+    expect(writeSessionParams(new URLSearchParams(both), look).has('p')).toBe(
+      false,
+    )
+  })
+
+  it('is a shorter query than the same look by name', () => {
+    const packed = writeSessionParams(new URLSearchParams(), look).toString()
+    const named = writeSessionParams(
+      new URLSearchParams('?set='),
+      look,
+    ).toString()
+    expect(packed.length).toBeLessThan(named.length)
   })
 })
 
@@ -395,7 +440,7 @@ describe('a saved look', () => {
     // them), and ?debug= is a state of this session, not of the look.
     expect(q.has('preset')).toBe(false)
     expect(q.has('debug')).toBe(false)
-    expect(q.get('set')).toBe('noiseIre:4')
+    expect(parseSessionParams(`?${q.toString()}`).controls.noiseIre).toBe(4)
   })
 
   it('reads back the look that was saved, over a preset in the live query', () => {

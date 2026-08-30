@@ -84,11 +84,11 @@ export function ModRowEditor(props: {
       <div className={styles.editor}>
         <div className={ui.hint}>
           all {slots.length} modulation slots are busy — free one in the
-          MODULATION box on the map, or press ∿ on{' '}
+          MODULATION box on the map, or hand one back from{' '}
           {slots
             .flatMap(s => (s.target === '' ? [] : [targetLabel(s.target)]))
-            .join(', ')}{' '}
-          to take it back.
+            .join(', ')}
+          .
         </div>
       </div>
     )
@@ -157,9 +157,10 @@ export function ModRowEditor(props: {
       )}
       {/* The two kinds of off, side by side, which is the only place they are
           legible as a pair: hold it still and it comes back exactly as it is set
-          here, remove it and the slot goes back to the bay. The ∿ on the row
-          above is the same switch — this one is here because a reader who opened
-          the editor to turn the wobble off should find it where they looked. */}
+          here, remove it and the slot goes back to the bay. The `mod` badge on
+          the row above is the same switch — this one is here because a reader who
+          opened the editor to turn the wobble off should find it where they
+          looked. */}
       <div className={styles.actions}>
         <button
           className={styles.action}

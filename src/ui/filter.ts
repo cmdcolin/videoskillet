@@ -30,27 +30,21 @@ export const FilterContext = createContext<Filter>(NO_FILTER)
 
 export const useFilter = () => use(FilterContext)
 
-// The mark every routed row wears, and the one string in the box that means the
-// mode rather than a search. It stays because it can be pasted and because a
-// link or a note can carry it; nothing types it.
+// What the box and the toggle read as together — two fields, and nothing typed
+// into the box can reach the second one.
 //
-// "moving", "modulated", "motion" and "lfo" used to mean it too, and now mean
-// themselves again. They were standing in for a control that did not exist —
-// there was no other way to ask — and each of them cost the prose that uses the
-// word: typing "lfo" stopped finding the help text explaining what an LFO does
-// here. The strip's ∿ button and the palette's "show what is moving" are the
-// mode now, so the words go back to being words.
-const MOVING_MARK = '∿'
-
-export const isMovingMark = (text: string) => text === MOVING_MARK
-
-// What the box and the toggle read as together. A pasted ∿ empties the text
-// rather than riding alongside it: left in both it would narrow to routed rows
-// *and* to rows whose prose contains the glyph, which is none of them.
-export const readFilter = (raw: string, moving: boolean): Filter => {
-  const text = raw.trim().toLowerCase()
-  return isMovingMark(text) ? { text: '', moving: true } : { text, moving }
-}
+// A bare `∿` in the text used to mean the mode, so a pasted glyph or a note
+// could carry it. That went with the glyph: nothing in the panel wears ∿ as a
+// state any more (the row's badge says `mod`, the strip's count says `N mod`),
+// so a mark meaning "modulated" would have been a key to a legend that no
+// longer exists. "moving", "modulated", "motion" and "lfo" mean themselves here
+// for the same reason they always have — typing "lfo" has to find the help text
+// explaining what an LFO does. The strip's count and the palette's "show what is
+// moving" are the mode, and both are buttons.
+export const readFilter = (raw: string, moving: boolean): Filter => ({
+  text: raw.trim().toLowerCase(),
+  moving,
+})
 
 // Whether a control is driven by the bay. Passed in rather than read from a
 // context here: this module is pure, and the bay lives in a context of its own

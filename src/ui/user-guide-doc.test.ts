@@ -1,11 +1,16 @@
 import { expect, test } from 'vitest'
 
+import { CONTROL_KEYS, DEFAULT_CONTROLS } from '../core/controls'
 import { SHIPPED_MODES } from '../sources/modes'
 import { LOOP_STAGES } from './controls'
+import { DRIFT_SECONDS } from './drift'
 import { DEFAULT_STAB, STAB_MS_MAX, STAB_MS_MIN } from './modSlots'
 import { MORPH_LABELS, MORPH_SECONDS } from './morph'
 import { mutateAmountFor } from './mutate'
+import { unpackControls } from './packed'
+import { PRESETS, presetControls } from './presets'
 import { SIGNAL_TAPS } from './signalTap'
+import { parseSessionParams } from './urlParams'
 
 import { readFileSync } from 'node:fs'
 
@@ -64,6 +69,14 @@ test('the guide names every modifier the roll resolver honours', () => {
   expect(doc).toContain('Same modifiers')
 })
 
+// The one number in the page nobody can check by eye: a drift fires on a clock,
+// so a guide quoting the wrong period describes a mode that behaves differently
+// from the one that ships, and the button's own tooltip is built from the
+// constant and would silently disagree with it.
+test('the guide quotes how often a drift nudges the board', () => {
+  expect(doc).toContain(`every ${DRIFT_SECONDS} seconds`)
+})
+
 test('the guide walks every signal tap the View group steps through', () => {
   for (const tap of SIGNAL_TAPS.filter(t => t.value !== 0)) {
     expect(doc).toContain(tap.short)
@@ -84,4 +97,30 @@ test('the guide offers the devices source A actually ships', () => {
 
   expect(doc).toContain('a shared screen')
   expect(doc).toContain('a webcam')
+})
+
+// Both links under "The link is the look" are quoted rather than generated, and
+// a quoted link is a claim that rots. The packed one is bytes nobody can read
+// by eye, so a wire order edited without it would go on looking right on the
+// page while opening on a different picture.
+test('the guide quotes two links that open the look it says they do', () => {
+  const worn = presetControls(PRESETS.find(p => p.name === 'wornTape')!.patch)
+  const quoted = doc.slice(doc.indexOf('?p=')).split(/\s|`/)[0]
+  const packed = new URLSearchParams(quoted.slice(1)).get('p')
+
+  expect(unpackControls(packed ?? '')).toEqual(
+    Object.fromEntries(
+      CONTROL_KEYS.filter(k => worn[k] !== DEFAULT_CONTROLS[k]).map(k => [
+        k,
+        worn[k],
+      ]),
+    ),
+  )
+  const named = '?set=noiseIre:9,hHold:0.2,chromaGain:1.79'
+  expect(doc).toContain(named)
+  expect(parseSessionParams(named).controls).toEqual({
+    noiseIre: 9,
+    hHold: 0.2,
+    chromaGain: 1.79,
+  })
 })

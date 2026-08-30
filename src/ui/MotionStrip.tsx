@@ -46,10 +46,10 @@ export function MotionStrip(props: {
   // parked rows again.
   //
   // Both numbers are drawn, and that is the fix for a button that used to lie
-  // about its own result set: `N∿` counts what is moving, because that is the
+  // about its own result set: `N mod` counts what is moving, because that is the
   // question it is answering, but pressing it narrows the panel to everything
   // *patched* (`isRouted` in App, which matches a slot's target and asks nothing
-  // about whether it is running) — so a strip reading `2∿` opened a list of
+  // about whether it is running) — so a strip reading `2 mod` opened a list of
   // four. The parked ones ride along as a dim `+M` rather than being folded into
   // the count, since "two things are moving" and "four rows are about to appear"
   // are both true and neither is the other.
@@ -143,11 +143,17 @@ export function MotionStrip(props: {
           .join(' — ')}
         onClick={props.onToggleMoving}
       >
-        {/* The gate's rate rather than a glyph for it. `N∿` reads as a count
-            because ∿ is the mark every routed row wears, and there is no second
-            glyph in this panel that would say "the whole board, cut in and out"
-            to someone who had not already been told. "2/s" needs no key. */}
-        {`${driven.length}∿`}
+        {/* The gate's rate rather than a glyph for it: "2/s" needs no key, and
+            there is no glyph that would say "the whole board, cut in and out" to
+            someone who had not already been told.
+
+            The count says `mod` for the same reason the row's badge does. It
+            used to read `2∿`, which borrowed the mark every routed row wore —
+            so the one glyph meant "this control is driven" beside a reading and
+            "show me only driven rows" up here, and pressing the wrong one
+            narrowed the whole panel when all that was wanted was one wobble
+            held still. */}
+        {`${driven.length} mod`}
         {stilled.length === 0 ? null : (
           <span className={styles.parked}>{`+${stilled.length}`}</span>
         )}

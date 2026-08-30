@@ -12,11 +12,19 @@ export function ToggleButtonGroup(props: {
   // where the group's own vertical margin would make the row taller than the
   // sliders it lines up with.
   dense?: boolean
+  // The cell a control row wants this in. A row is a grid and the switch is one
+  // of its three items, so which area it lands in is the row's to say — see
+  // Slider.module.css, where the narrow panel moves that area under the label.
+  className?: string
   onChange: (v: number) => void
 }) {
   return (
     <div
-      className={cx(styles.group, props.dense === true && styles.dense)}
+      className={cx(
+        styles.group,
+        props.dense === true && styles.dense,
+        props.className,
+      )}
       role="radiogroup"
       aria-label={props.label}
     >

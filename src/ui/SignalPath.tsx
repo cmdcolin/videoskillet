@@ -225,6 +225,10 @@ export function SignalPath(props: {
   // Which feedback returns are carrying signal, for the map to mark.
   live: LoopsLive
   onOpen: (name: string) => void
+  // Takes the whole query off — both the text and the motion mode. The map
+  // calls it for a box the query missed, which is the only press here that has
+  // to change the filter as well as the stage.
+  onDropFilter: () => void
   // Which group inside the open stage is unfolded — one at a time.
   openGroup: string | null
   onOpenGroup: (name: string) => void
@@ -251,16 +255,16 @@ export function SignalPath(props: {
   // Asked as "is there a picker" rather than "is there a key": a key present
   // with nothing behind it would open a box onto the empty stage it is drawn
   // inert for, which is the one outcome this is here to make impossible.
-  // `dim` is checked first and on its own. A stage the query missed has no
-  // groups left to show, but it can still have a picker keyed on its name — so
-  // without this, searching for "ghost" would leave SOURCE A pressable and open
-  // it onto its input picker alone, which is the stage answering a question
-  // nobody asked.
+  //
+  // `dim` is deliberately *not* asked here. A box the query missed used to be
+  // drawn faint and made unpressable, and a filter narrow enough to miss most
+  // of the chain — the strip's `N mod` count does exactly that — left
+  // a map of ten ghosts that nothing could open, which reads as a broken app
+  // rather than as a narrowed panel. Every box on the map is a door now, and a
+  // dimmed one drops the query on the way through (see `openStage`).
   const opensOn = <T extends PathNode>(n: T): MapNode<T> => ({
     ...n,
-    opens:
-      n.dim !== true &&
-      (n.off !== true || props.stageTop[n.name] !== undefined),
+    opens: n.off !== true || props.stageTop[n.name] !== undefined,
   })
   const nodes = props.nodes.map(opensOn)
   const branches = props.branches.map(opensOn)
@@ -276,7 +280,27 @@ export function SignalPath(props: {
   // Trunk, then loops, then branches — the order the panel lists them in, and
   // the order the drawing reads in from the top: the returns ride over the
   // chain and the branches hang under it.
-  const openable = [...nodes, ...loops, ...branches].filter(n => n.opens)
+  //
+  // What renders *under* the map, which is a narrower question than what the
+  // map can open: a dimmed stage lists nothing, and the two free boxes keep
+  // their body when they dim (panelChain sets the flag on its own for them), so
+  // this has to ask rather than leave it to `stageBody` finding nothing.
+  const openable = [...nodes, ...loops, ...branches].filter(
+    n => n.opens && n.dim !== true,
+  )
+  // Pressing a box the query missed goes there, and takes the query off on the
+  // way: the stage is about to be listed and the filter would leave it blank.
+  // This is also the map's job as the way *out* of a filter nobody meant to
+  // apply — the strip's count is one press from anywhere.
+  const missed = new Set(
+    [...nodes, ...loops, ...branches].flatMap(n =>
+      n.dim === true ? [n.name] : [],
+    ),
+  )
+  const openStage = (name: string) => {
+    if (missed.has(name)) props.onDropFilter()
+    props.onOpen(name)
+  }
   if (props.bench) {
     return (
       <Bench
@@ -287,7 +311,7 @@ export function SignalPath(props: {
         loops={loops}
         open={props.open}
         live={props.live}
-        onOpen={props.onOpen}
+        onOpen={openStage}
         onShowDiagram={props.onShowDiagram}
         stageTop={props.stageTop}
       />
@@ -325,7 +349,7 @@ export function SignalPath(props: {
         // off again.
         folds={!props.expandAll}
         live={props.live}
-        onOpen={name => props.onOpen(name)}
+        onOpen={openStage}
       />
       {/* No empty state under the map. It used to carry a count of everything
           behind the boxes and a line about the order the picture travels in,
@@ -409,7 +433,10 @@ function Bench(props: {
       ?.scrollIntoView({ block: 'start', behavior: 'smooth' })
   const jump = (name: string) => {
     props.onOpen(name)
-    scrollTo(name)
+    // A stage the query had dimmed is not mounted until the press that drops
+    // the query lands, so the scroll waits for the commit rather than missing.
+    if (heads.current.has(name)) scrollTo(name)
+    else requestAnimationFrame(() => scrollTo(name))
   }
   return (
     <>

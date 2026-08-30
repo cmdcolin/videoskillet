@@ -75,6 +75,11 @@ export interface UniformEnv {
   impulseTrainPos: number
   impulseTrainStep: number
   shuttlePhase: number
+  // Where the tracking servo has the band this frame, and how badly.
+  trackPos: number
+  trackAmt: number
+  // Retrace flag from tape tension, µs, over the hand's syncBendUs.
+  flagUs: number
   dbgView: number
 }
 
@@ -118,6 +123,8 @@ export function uniformValues(c: Controls, env: UniformEnv) {
     matrixClip: c.matrixClip,
     scDetunePhase: env.scPhase,
     scDetunePerSample: loRadPerSample(c.scDetuneKHz),
+    vir: c.vir,
+    virLag: c.virLag,
     killThresh: c.killThresh,
     accLines: c.accLagLines,
     svideoBleed: c.svideoBleed,
@@ -128,7 +135,7 @@ export function uniformValues(c: Controls, env: UniformEnv) {
     // slower oscillator retraces late, so the raster start creeps down the
     // source and the picture climbs
     vRollRate: LINES * (60 / (c.vFreqHz - c.audioRoll * env.audioHit) - 1),
-    syncBend: c.syncBendUs * 1e-6 * SAMPLE_RATE,
+    syncBend: (c.syncBendUs + env.flagUs) * 1e-6 * SAMPLE_RATE,
     bendAmt: c.bendUs * 1e-6 * SAMPLE_RATE,
     bendShape: c.bendShape,
     bendPeriod: c.bendPeriod,
@@ -181,6 +188,25 @@ export function uniformValues(c: Controls, env: UniformEnv) {
     mvAgcIre: 160 * c.macrovision,
     mvStripe: (c.mvStripeDeg * Math.PI) / 180,
     vbi: c.vbi,
+    cc: c.cc,
+    ccBox: c.ccBox,
+    ccRomAddr: c.ccRomAddr,
+    ccRomData: c.ccRomData,
+    cgMix: c.cgMix,
+    cgX: c.cgX,
+    cgY: c.cgY,
+    cgScale: c.cgScale,
+    cgKeyDelay: c.cgKeyDelayNs * 1e-9 * SAMPLE_RATE,
+    cgClip: c.cgClip,
+    // A bandwidth as the half-cycle it cannot change faster than, in samples —
+    // the same conversion noiseGrainPx makes, in the units this pass reads.
+    cgSoft: SAMPLE_RATE / (2 * Math.max(c.cgKeyMHz, 0.05) * 1e6),
+    cgEdgeX: c.cgEdgeX,
+    cgEdgeY: c.cgEdgeY,
+    cgFill: c.cgFill,
+    cgInvert: c.cgInvert,
+    cgRomAddr: c.cgRomAddr,
+    cgRomData: c.cgRomData,
     enhClampOff: c.enhClampUs * 1e-6 * SAMPLE_RATE,
     // RC leak per sample from the coupling time constant; 0 us is the
     // DC-coupled box, which never lets the level move at all.
@@ -256,8 +282,8 @@ export function uniformValues(c: Controls, env: UniformEnv) {
     bKeyMatteY: c.bKeyMatteY,
     bKeyMatteHue: (c.bKeyMatteHueDeg * Math.PI) / 180,
     bKeyMatteSat: c.bKeyMatteSat,
-    trackAmt: c.trackAmt,
-    trackPos: c.trackPos,
+    trackAmt: env.trackAmt,
+    trackPos: env.trackPos,
     shuttleBars: c.shuttleX - 1,
     shuttlePhase: env.shuttlePhase,
     cfbMix: c.cfbMix,
@@ -273,15 +299,6 @@ export function uniformValues(c: Controls, env: UniformEnv) {
     cfbFilterBoost: c.cfbFilterBoost,
     cfbServo: c.cfbServoUs * 1e-6 * SAMPLE_RATE,
     cfbRing: c.cfbRing,
-    tapeMix: c.tapeMix,
-    tapeGain: c.tapeGain,
-    tapeHfLoss: c.tapeHfLoss,
-    tapeNoise: c.tapeNoiseIre,
-    tapeWear: c.tapeWear,
-    tapeSplice: c.tapeSplice,
-    tapeHeads: c.tapeHeads,
-    tapeHeadSpread: c.tapeHeadSpread,
-    tapeColourFrame: c.tapeColourFrame,
     // Mistuning frees the sound carrier from its trap, so the buzz the
     // soundIre knob dials in deliberately arrives uninvited — same term,
     // two causes on one wire.

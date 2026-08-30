@@ -20,6 +20,7 @@ import {
   SAMPLES_PER_LINE,
 } from '../../src/core/signal/constants'
 import { Graph } from './graph'
+import { barsA, gradientB } from './sources'
 
 import type { ControlKey, Controls } from '../../src/core/controls'
 
@@ -56,66 +57,6 @@ async function controlsFromArgs(): Promise<Controls> {
     }
   }
   return c
-}
-
-// SMPTE bars for A, a gradient with a disc for B: enough picture for every
-// path to have edges, colour and a highlight to work on.
-function barsA(): Uint8Array<ArrayBuffer> {
-  const px = new Uint8Array(ACTIVE_WIDTH * ACTIVE_HEIGHT * 4)
-  const bars = [
-    [191, 191, 191],
-    [191, 191, 0],
-    [0, 191, 191],
-    [0, 191, 0],
-    [191, 0, 191],
-    [191, 0, 0],
-    [0, 0, 191],
-  ]
-  for (let y = 0; y < ACTIVE_HEIGHT; y++) {
-    for (let x = 0; x < ACTIVE_WIDTH; x++) {
-      const i = (y * ACTIVE_WIDTH + x) * 4
-      const t = y / ACTIVE_HEIGHT
-      const b = Math.floor((x / ACTIVE_WIDTH) * 7)
-      let rgb: number[]
-      if (t < 0.67) rgb = bars[b]
-      else if (t < 0.75) rgb = b % 2 === 0 ? bars[6 - b] : [19, 19, 19]
-      else {
-        const k = Math.floor((x / ACTIVE_WIDTH) * 6)
-        rgb =
-          k === 0
-            ? [0, 33, 76]
-            : k === 1
-              ? [255, 255, 255]
-              : k === 2
-                ? [50, 0, 106]
-                : k === 4
-                  ? [26, 26, 26]
-                  : [19, 19, 19]
-      }
-      px[i] = rgb[0]
-      px[i + 1] = rgb[1]
-      px[i + 2] = rgb[2]
-      px[i + 3] = 255
-    }
-  }
-  return px
-}
-
-function gradientB(): Uint8Array<ArrayBuffer> {
-  const px = new Uint8Array(ACTIVE_WIDTH * ACTIVE_HEIGHT * 4)
-  for (let y = 0; y < ACTIVE_HEIGHT; y++) {
-    for (let x = 0; x < ACTIVE_WIDTH; x++) {
-      const i = (y * ACTIVE_WIDTH + x) * 4
-      const dx = x - ACTIVE_WIDTH * 0.5
-      const dy = y - ACTIVE_HEIGHT * 0.5
-      const disc = dx * dx + dy * dy < 120 * 120
-      px[i] = disc ? 240 : (x / ACTIVE_WIDTH) * 255
-      px[i + 1] = disc ? 240 : (y / ACTIVE_HEIGHT) * 255
-      px[i + 2] = disc ? 200 : 128
-      px[i + 3] = 255
-    }
-  }
-  return px
 }
 
 function median(a: number[]): number {
@@ -197,6 +138,7 @@ async function main(): Promise<void> {
   const g = await Graph.create(device, {
     controls,
     bEnabled: !flag('nob'),
+    dbgView: Number(arg('dbg') ?? 0),
     sourceA: barsA(),
     sourceB: gradientB(),
   })

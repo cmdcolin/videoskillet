@@ -24,6 +24,15 @@ Click a preset to jump to it; drag it sideways to blend it part-way in.
   long way and leaves the rest alone, so the accident is one thing you can name
   and take back. **random cross** keeps some circuits of your look — tape, tube,
   sync — and rerolls the rest.
+- **drift** is the random nudge with nobody pressing it: press once (or `d`) and
+  the look wanders on its own — a gentle nudge every 15 seconds, travelling most
+  of the way there, so the picture keeps moving and never cuts. It stays around
+  the look you set drifting rather than running off, however long you leave it.
+  Press again to stop where it has got to; `ctrl+z` then puts back the look you
+  started it on, because none of the legs in between lands in the walk. For a
+  wander that is part of a piece, use the strip's shake row instead — a rundown
+  holds in bars, is seeded and is yours to keep, where a drift is a switch you
+  flip and forget.
 - **morph** sets how long a new look takes to arrive — cut, 1s, 4s, 8s or 30s.
   Rolls chain, so rolling every few seconds wanders continuously.
 - **undo** (`ctrl+z`) steps back through all of it.
@@ -123,22 +132,33 @@ The filter box narrows the panel — `/` opens it and puts the caret in it;
 `ctrl+k` opens a palette over presets, controls and actions at once. Both search
 the help text, so you can hunt an artifact without knowing which knob makes it.
 
-The **∿** on the modulation strip is the second half of the filter and a switch
-rather than a word: it narrows the panel to the controls the bay is driving,
-which nothing else marks, since a routing leaves the resting value alone. It
-stays pressed until you press it again, it shows in the box as a **∿ moving**
-token, and it narrows whatever text is already up rather than replacing it.
+The count on the modulation strip — **2 mod** — is the second half of the filter
+as well as a readout: press it and the panel narrows to the controls the bay is
+driving, which nothing else marks, since a routing leaves the resting value
+alone. It stays pressed until you press it again, it shows in the box as a **mod
+only** token, and it narrows whatever text is already up rather than replacing
+it.
+
+Either half fades the map boxes it did not reach rather than dropping them, so
+the chain still reads as a chain while the panel is narrow. A faded box is still
+a door: pressing one drops the filter and opens that stage, which is the
+quickest way out of a filter you did not mean to apply.
 
 ## Making it move
 
-**∿ on any control row** sets that control wobbling — LFO, random walk, noise,
-sample-and-hold, a Lorenz attractor, audio level or its hits, or a one-shot
-envelope you strike by hand or from a MIDI note. Depth is a fraction of the
-control's range, and the slider stays put as the centre the motion happens
+**∿ in any control row's ⋮ menu** sets that control wobbling — LFO, random walk,
+noise, sample-and-hold, a Lorenz attractor, audio level or its hits, or a
+one-shot envelope you strike by hand or from a MIDI note. Depth is a fraction of
+the control's range, and the slider stays put as the centre the motion happens
 around, which is why a preset or a link still holds the look.
 
+A patched row then wears **mod** beside the reading, and that badge is a switch:
+press it to hold that wobble still — it reads **held** — and press it again to
+start it back up exactly as you dialed it. It is the row's mark as well as its
+button, so a row showing neither has nothing driving it.
+
 Once anything moves, a **modulation** strip appears with one amount over every
-routing, a freeze, and the **∿** count that filters the panel down to what is
+routing, a freeze, and the **mod** count that filters the panel down to what is
 running. The top of **MODULATION** is the tempo: type or tap a BPM, then lock
 any rate to it. MIDI clock takes over whenever something sends it — see
 [MIDI.md](MIDI.md).
@@ -173,6 +193,36 @@ nothing.
 A recall brings back the controls and the motion and leaves your input alone.
 **⧉** copies a link carrying both, source clip included. `s` saves a still, `r`
 records a clip.
+
+### The link is the look
+
+The address bar carries the whole look at all times — every control off stock,
+what is moving in the bay, the source and its cue — so copying it is the share
+button and reloading keeps what you had.
+
+It comes out short. Here is **worn tape**, whole:
+
+```
+https://cmdcolin.github.io/ntsc.js/?p=FbQBJbABEXAAmAIN8AEAPAKQAwDoAgCQAwBkAEgBwAIAgAEGwAIA6AIBCA&mod=
+```
+
+That is the look written as bytes. `?set=` says the same thing by name, and the
+app both reads and writes it:
+
+```
+https://cmdcolin.github.io/ntsc.js/?set=noiseIre:9,hHold:0.2,chromaGain:1.79
+```
+
+Three times the characters for the same look, which is why the bar carries the
+short one — the difference between a link that survives a chat window and one
+that arrives in three pieces. Written out, worn tape runs to 248.
+
+What the long form buys is a look you can program by hand: a control name from
+[EFFECTS.md](EFFECTS.md), a colon, a number, commas between. Anything left out
+is at stock, anything out of range is pulled back onto the panel, and a name the
+app no longer has is dropped. A bar already carrying `?set=` keeps carrying it,
+so the look stays readable while you are working that way rather than turning to
+bytes under the cursor — type a bare `?set=` to switch a tab over.
 
 ## Looking closer
 

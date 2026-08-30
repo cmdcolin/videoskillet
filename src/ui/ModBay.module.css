@@ -17,52 +17,86 @@
   font-weight: 700;
 }
 
-/* The verb in front of the name. Never shrinks and never wraps: the whole job
-   is to be read before the name, so an ellipsis lands on the name's own tail
-   (which the module half can afford to lose) rather than on the word that says
-   what kind of thing the name is. */
-.driving {
+/* The connecting line between the two chips below — see ModBay.tsx's `Wire`,
+   built on the same route()/arrowhead() the chain map's own wires use
+   (ChainMap.module.css's .mapWire/.mapArrow), so a third drawing agrees with
+   the first two on how a line becomes a wire instead of inventing its own. */
+.wire {
   flex-shrink: 0;
+  color: var(--mod);
+}
+.wireLine {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+}
+.wireHead {
+  fill: currentColor;
+}
+.wireOff {
   color: var(--fg4);
-  font-size: var(--fs-sm);
-  white-space: nowrap;
+}
+.wireOff .wireLine {
+  stroke-dasharray: 2 2;
 }
 
-/* What the slot drives, as "control — module". The name is the whole of the
-   answer to "what is slot 3 doing", so it takes the width and the × beside it
-   keeps its own: a long pair like "head switch noise — Tape heads" has to
-   ellipsise rather than push the button off the row. */
-.target {
+/* A slot's two endpoints, drawn as boxes a wire runs between rather than as
+   plain words in a sentence — bender's patch bay, adapted. Shared metrics so
+   the two read as a pair; the colour and the border are what tell them apart. */
+.chip {
   composes: bare from './ui.module.css';
-  flex: 1;
   min-width: 0;
-  text-align: left;
-  color: var(--fg2);
+  padding: 1px 6px;
+  border-radius: 3px;
+  border: 1px solid transparent;
   font-size: var(--fs-sm);
+  text-align: left;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-/* Pressable at rest, not on hover. The name is a jump to the row it names, and
-   a jump nobody can see is a jump nobody takes — which is the same reason the
-   verb is there: both halves of "this is a control, and it is over there" were
-   being withheld until the pointer happened to cross the text.
-
-   Dotted rather than solid, and one step off the accent: it sits under prose in
-   a bay that already carries two real buttons per slot, so it has to read as a
-   name you can follow rather than as a third thing to press. `underline` on the
-   text-decoration line is what `bare` clears, so it is restated here. */
-button.target {
-  cursor: pointer;
-  color: var(--accent);
-  text-decoration: underline dotted;
-  text-underline-offset: 2px;
-  text-decoration-color: color-mix(in srgb, var(--accent) 45%, transparent);
+/* What is driving the slot — a readout of the ∿ SelectRow one row down, not a
+   second way to change it. Capped so a long destination name still has most of
+   the row: the source vocabulary is short ("sine LFO", "audio hit"), where a
+   target name can run to "head switch noise — Tape heads". */
+.srcChip {
+  flex: 0 1 auto;
+  max-width: 42%;
+  color: var(--mod);
+  background: color-mix(in srgb, var(--mod) 16%, transparent);
 }
-/* The shorthand resets text-decoration-color to currentcolor, which is the whole
-   change under the pointer: the dotted hint fills in to a solid accent rule. */
-button.target:hover {
-  text-decoration: underline solid;
+/* What the slot drives. Takes the rest of the row, the same as the old `.target`
+   did, and stays a button when there is a module to jump to — pressable at
+   rest, not on hover, since the whole point is a jump nobody has to discover
+   by pointing at it first. */
+.destChip {
+  flex: 1;
+  color: var(--mod);
+  background: color-mix(in srgb, var(--mod) 10%, transparent);
+  border-color: color-mix(in srgb, var(--mod) 45%, transparent);
+}
+button.destChip {
+  cursor: pointer;
+}
+button.destChip:hover {
+  background: color-mix(in srgb, var(--mod) 22%, transparent);
+  border-color: var(--mod);
+}
+/* Held rather than running — the same split `iconModOff` draws on a control
+   row's own badge. The source chip strikes through (it is the thing that is not
+   moving); the destination chip only dims, since the control it names is still
+   exactly what it was, just not being wobbled right now. */
+.chipOff {
+  color: var(--fg4);
+  background: color-mix(in srgb, var(--fg4) 14%, transparent);
+  border-color: color-mix(in srgb, var(--fg4) 30%, transparent);
+}
+.srcChip.chipOff {
+  text-decoration: line-through;
+}
+button.destChip.chipOff:hover {
+  background: color-mix(in srgb, var(--fg4) 26%, transparent);
+  border-color: var(--fg4);
 }
 
 /* Hand the slot back. Quiet until pointed at, like every other destructive

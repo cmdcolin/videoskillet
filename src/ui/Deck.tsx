@@ -10,7 +10,7 @@ import { Rack } from './Slider'
 import { TBar } from './TBar'
 import { ToggleButtonGroup } from './ToggleButtonGroup'
 import { TrackingPad } from './TrackingPad'
-import { LoopTransport, TapeTransport } from './Transport'
+import { TapeTransport } from './Transport'
 import { useHold } from './useHold'
 
 import type { ControlKey } from '../core/controls'
@@ -59,7 +59,6 @@ export function Deck() {
         hint="two machines, and the tape in each was written by a different head"
       >
         <TapeTransport />
-        <LoopTransport />
       </Block>
       <Block label="tracking" hint="the knob on the front of the VCR">
         <div className={styles.pad}>

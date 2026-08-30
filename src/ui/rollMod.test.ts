@@ -179,7 +179,7 @@ describe('rollBay', () => {
     expect(hits).toBeGreaterThan(flat)
   })
 
-  // The rule the ∿ on every control row already follows: a gate shut means the
+  // The rule every control row already follows: a gate shut means the
   // control addresses nothing, so a slot spent there is patched, named, and
   // invisible.
   it('never cables a control whose gate is shut', () => {

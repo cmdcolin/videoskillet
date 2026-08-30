@@ -48,10 +48,11 @@ describe('text matching', () => {
 
 describe('the motion mode', () => {
   it('is a mode, not a word — so the words stay searchable', () => {
-    // The strip's button sets it with nothing typed, and a pasted ∿ is the same
-    // state arriving through the box.
+    // Only a button sets it. A bare ∿ in the box used to mean it too, and went
+    // with the glyph: the row's badge says `mod` and the strip's count says
+    // `N mod`, so nothing on screen would have taught the mark.
     expect(readFilter('', true)).toEqual(MOVING)
-    expect(readFilter('∿', false)).toEqual(MOVING)
+    expect(readFilter('∿', false)).toEqual(text('∿'))
     // These used to mean the mode, which cost the prose that uses them: 'lfo'
     // is in the help text of the controls that explain what one does here, and
     // typing it stopped finding them.

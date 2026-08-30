@@ -2,6 +2,7 @@
 // packer. PARAM_DEFS is the single source of truth for the Params struct:
 // field order here IS the GPU memory layout.
 
+import { CC_CR } from '../signal/captionstate'
 import {
   ACTIVE_HEIGHT,
   ACTIVE_START,
@@ -18,7 +19,6 @@ import {
   LINES,
   SAMPLES_PER_LINE,
   SYNC_LEN,
-  TAPE_FRAMES,
   VSYNC_FIRST,
   VSYNC_LAST,
 } from '../signal/constants'
@@ -32,6 +32,18 @@ import {
   TAPS,
 } from '../signal/filters'
 import { DOWN_PER_SAMPLE } from '../signal/linestate'
+import {
+  CC_BLOCK,
+  CC_CELLS,
+  CC_COLS,
+  CC_CURSOR,
+  CC_PAGE,
+  CC_ROWS,
+  CC_SET,
+  GLYPH_COUNT,
+  GLYPH_H,
+  GLYPH_W,
+} from './captionrom'
 
 export const PARAM_DEFS = [
   ['frame', 'u32'],
@@ -173,6 +185,10 @@ export const PARAM_DEFS = [
   ['scDetunePhase', 'f32'], // bent-crystal demod LO phase error at frame start, radians (accumulated)
   ['scDetunePerSample', 'f32'], // LO phase error growth per sample, radians
   ['killThresh', 'f32'], // IRE of burst amplitude below which color killer engages
+  // The VIR corrector: a set trimming its own hue and saturation off the
+  // reference on line 19, and getting it wrong when the reference is damaged.
+  ['vir', 'f32'], // how far the set trusts the reference, 0 = not a VIR set
+  ['virLag', 'f32'], // the corrector's time constant, frames
   ['accLines', 'f32'], // chroma AGC time constant, lines of burst memory (0 = instantaneous)
   ['svideoBleed', 'f32'], // Y/C cross-wire: chroma bled into luma (0.5 defeats the trap)
   ['chromaCoarse', 'f32'], // chroma demod decimation factor; >1 lerps between lattice points (CUE rainbows)
@@ -234,6 +250,34 @@ export const PARAM_DEFS = [
   ['mvAgcIre', 'f32'], // Macrovision AGC-pulse level at full cycle, IRE (0 = unprotected)
   ['mvStripe', 'f32'], // colorstripe burst rotation on walking line bands, radians
   ['vbi', 'f32'], // VBI test signals: VITS on 17-18, VIR on 19, line-21 captions (1 = broadcast furniture on)
+  // The two characters line 21 carries this frame, straight off the encoder's
+  // shift register (signal/captionstate.ts). 0 is the null a real encoder sends
+  // between characters, which is most frames.
+  ['ccChar0', 'u32'],
+  ['ccChar1', 'u32'],
+  ['cc', 'f32'], // the set's caption decoder: 0 off, 1 decoding line 21
+  ['ccBox', 'f32'], // opacity of the black box behind the caption
+  // A pin held on the font ROM. Which pin is the whole effect: the address bus
+  // carries the character code in its high lines and the row within the cell in
+  // its low ones, and the data bus is the eight dots across one row.
+  ['ccRomAddr', 'f32'], // address line held high, 1-based (0 = none)
+  ['ccRomData', 'f32'], // data line held, 1-based; negative holds it low (0 = none)
+  // The character generator at the switcher: the same words keyed into the
+  // picture rather than sent as data, which is what an open caption was. Two
+  // wires, fill and key, and every artifact is those two coming apart.
+  ['cgMix', 'f32'], // the box's output over program, 0 bypassed
+  ['cgX', 'f32'], // block's left edge, active-picture UV
+  ['cgY', 'f32'], // block's top edge, active-picture UV
+  ['cgScale', 'f32'], // picture samples per font dot
+  ['cgKeyDelay', 'f32'], // key-vs-fill registration, samples
+  ['cgClip', 'f32'], // where the slicer cuts the processed key, 0..1
+  ['cgSoft', 'f32'], // key-path bandwidth as a half-cycle in samples
+  ['cgEdgeX', 'f32'], // edge generator's horizontal delay, samples
+  ['cgEdgeY', 'f32'], // edge generator's vertical delay, lines
+  ['cgFill', 'f32'], // fill level, IRE (past 100 it overmodulates)
+  ['cgInvert', 'f32'], // cut the other way: letter-shaped holes in a full fill
+  ['cgRomAddr', 'f32'], // this box's own font ROM, address line held high
+  ['cgRomData', 'f32'], // and its data line; negative holds it low
   // bent video enhancer, inline between the deck and the set
   ['enhClampOff', 'f32'], // clamp gate displaced off the back porch, samples
   ['enhDroop', 'f32'], // coupling-capacitor leak per sample (0 = DC coupled)
@@ -286,27 +330,6 @@ export const PARAM_DEFS = [
   ['cfbFilterBoost', 'f32'], // added in-band loop gain (self-oscillates past unity round trip)
   ['cfbServo', 'f32'], // varactor on the loop delay: samples of pull per 100 IRE of its own video
   ['cfbRing', 'f32'], // loop bus ring-modulated against the live program
-  // tape loop: a loop of tape threaded record head -> play head, seconds long
-  ['tapeMix', 'f32'], // crossfader position toward the play head, 0 = loop out of circuit
-  ['tapeGain', 'f32'], // playback proc-amp trim, negative inverts
-  ['tapeHfLoss', 'f32'], // head/tape band loss per pass (takes chroma first)
-  ['tapeNoise', 'f32'], // medium noise, IRE rms — fixed to the tape, not the frame
-  ['tapeWear', 'f32'], // fraction of the loop's lines with the oxide worn off
-  ['tapeSplice', 'f32'], // severity of the joint crossing a head, 0 = no splice
-  ['tapeHeads', 'f32'], // playback heads in the path: one lap returns once per head
-  ['tapeHeadSpread', 'f32'], // head layout along the path: 1 = even subdivisions
-  ['tapeColourFrame', 'f32'], // 1 = hold every head on a whole subcarrier cycle
-  ['tapeSpliceFrames', 'u32'], // how far the splice has run from the record head...
-  ['tapeSpliceRem', 'f32'], // ...in whole frames plus this remainder
-  ['tapeSlot', 'u32'], // ring frame the record head is laying down
-  ['tapeScrub', 'f32'], // 1 = drum stalled: read in tape order, so backwards reverses the waveform
-  ['tapeShuttleBars', 'f32'], // loop track crossings per sweep (speed - 1): the pause/cue bars
-  ['tapeShuttlePhase', 'f32'], // crossing pattern phase, in crossings
-  ['tapeHoldSlot', 'u32'], // ring frame the loop window sits on (= tapeSlot while recording)
-  ['tapeHoldFrames', 'u32'], // how far the heads have walked round a held loop...
-  ['tapeHoldRem', 'f32'], // ...in whole frames plus this remainder (0 while recording)
-  ['tapeDelayFrames', 'u32'], // the far head trails the record head by this many whole frames...
-  ['tapeDelaySamples', 'f32'], // ...plus this remainder (the total overruns f32's integers)
   // display
   // Beam blanking, held on: the guns cut for most of a cycle and let through in
   // flashes. Applied in decode, upstream of the persistence layer, which is the
@@ -383,10 +406,29 @@ const IRIS_VEL = ${LINES + 6}u;
 // H-osc's phase noise grows with it, so lock decays instead of coasting.
 const LOCK_AGE = ${LINES + 7}u;
 const SAG_BASE = ${LINES + 8}u; // deflection sag region of the timing buffer
+// The VIR corrector's two integrators, past the sag region. Persistent across
+// frames like the sync scalars: they are a servo's state, and a servo that
+// restarted every frame would have no time constant to speak of.
+const VIR_HUE = ${LINES * 2 + 8}u;
+const VIR_GAIN = ${LINES * 2 + 9}u;
 const VSYNC_FIRST = ${VSYNC_FIRST}u;
 const VSYNC_LAST = ${VSYNC_LAST}u;
 const HEAD_SWITCH_LINE = ${HEAD_SWITCH_LINE}u;
-const TAPE_LEN = ${TAPE_FRAMES * SAMPLES_PER_LINE * LINES}u; // delay loop capacity, samples
+// The caption channel. Layout comes from captionrom.ts, which is also what
+// bakes the font, so the ROM the CPU writes and the page the shaders index
+// cannot drift apart.
+const CC_LINE = 21u;
+const CC_CELLS = ${CC_CELLS}u;
+const CC_COLS = ${CC_COLS}u;
+const CC_ROWS = ${CC_ROWS}u;
+const CC_PAGE = ${CC_PAGE}u;
+const CC_CURSOR = ${CC_CURSOR}u;
+const CC_BLOCK = ${CC_BLOCK}u;
+const CC_SET = ${CC_SET}u;
+const CC_CR = ${CC_CR}u;
+const GLYPH_W = ${GLYPH_W}u;
+const GLYPH_H = ${GLYPH_H}u;
+const GLYPH_COUNT = ${GLYPH_COUNT}u;
 const IRE_SYNC = ${IRE_SYNC}.0;
 const IRE_BLANK = ${IRE_BLANK}.0;
 const IRE_BLACK = ${IRE_BLACK};
@@ -417,6 +459,24 @@ const TILE = ${TILE_WG + 64}u;
 const HALO = 32u;
 
 ${paramStruct}
+
+// Odd parity, the way line 21 protects each character: the seven data bits and
+// the parity bit together carry an odd number of ones, so any single bit
+// flipped in transit is caught. A decoder that caught one drew a solid block
+// rather than a plausible wrong letter, which is why the failure has to travel
+// as a flag on the cell and not as a substituted character.
+fn ccParity(code: u32) -> u32 {
+  return 1u - (countOneBits(code & 0x7fu) & 1u);
+}
+
+// Cell b of a character's eight on the wire: seven data bits, least
+// significant first, then the parity bit.
+fn ccBit(b: u32, code: u32) -> u32 {
+  if (b < 7u) {
+    return (code >> b) & 1u;
+  }
+  return ccParity(code);
+}
 
 // Subcarrier (sin, cos) at global sample index n. Sampling at exactly 4x fsc
 // puts every sample on a 4-phase lattice, so the carrier is exact — no trig,

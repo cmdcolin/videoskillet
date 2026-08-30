@@ -64,8 +64,8 @@ fn main(
   // framing and then real content in the roll bar or an underscanned raster.
   // Multiburst's fifth packet sits on the subcarrier itself, so the decoder
   // colours it; the modulated staircase on 18 is the DG/DP instrument line;
-  // 19 is a VIR-shaped reference; 21 is a clock run-in and dashes that
-  // re-roll per frame, because captions are live data.
+  // 19 is a VIR-shaped reference; 21 is the caption channel, carrying real
+  // characters for the receiver's decoder to get wrong.
   if (P.vbi > 0.5 && row >= 17u && row <= 21u && row != 20u
       && s >= ACTIVE_START && s < ACTIVE_START + ACTIVE_W) {
     let x = s - ACTIVE_START;
@@ -102,17 +102,38 @@ fn main(
         out = 7.5;
       }
     } else {
-      // line 21: caption clock run-in, a start bit, and two characters of
-      // data at 32 cycles per line (the 503 kHz caption clock)
-      let cellW = f32(SPL) / 32.0;
+      // line 21: seven cycles of run-in, three start bits, then two seven-bit
+      // characters each followed by its odd parity bit.
+      //
+      // The characters are real ones — captionstate.ts is feeding them — which
+      // is what makes this a channel rather than furniture. Everything the
+      // chain does to this line between here and the receiver's slicer lands
+      // on the words, so a caption is misspelled by the same noise that
+      // speckles the picture.
+      //
+      // The twenty-eight cells spread across the active window rather than
+      // across the whole line. Real line 21 clocks at 503 kHz and spills into
+      // the blanking either side to fit, which here would write over the burst
+      // this line's own hue lock is measured from. Fitting the same cells to
+      // the active window puts the clock at 532 kHz — six percent fast, and
+      // nothing downstream measures it. What the decoder needs is the grid this
+      // wrote on, and CC_CELLS is what both ends read it from.
+      let cellW = f32(ACTIVE_W) / f32(CC_CELLS);
       let cell = u32(f32(x) / cellW);
       if (cell < 7u) {
+        // The run-in is a known amplitude ahead of unknown data, which is
+        // exactly what the decoder sets its slicer and its clock from.
         out = 25.0 + 25.0 * sin(2.0 * PI * f32(x) / cellW);
-      } else if (cell >= 8u && cell < 27u) {
-        let bit = (pcg((P.frame * 40503u) ^ 0x2101u) >> (cell - 8u)) & 1u;
-        out = select(0.0, 50.0, bit == 1u || cell == 8u);
       } else {
-        out = 0.0;
+        var bit = 0u;
+        if (cell == 11u) {
+          bit = 1u;
+        } else if (cell >= 12u && cell < 20u) {
+          bit = ccBit(cell - 12u, P.ccChar0);
+        } else if (cell >= 20u && cell < 28u) {
+          bit = ccBit(cell - 20u, P.ccChar1);
+        }
+        out = select(0.0, 50.0, bit == 1u);
       }
     }
   }

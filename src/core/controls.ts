@@ -48,6 +48,10 @@ export const DEFAULT_CONTROLS = {
   demodAxisDeg: 90, // angle between the two synchronous demod axes (90 = quadrature)
   matrixClip: 0, // RGB output stage: 0 hue-preserving fit, 1 hard per-gun rails
   scDetuneKHz: 0, // bent 3.58 MHz crystal: demod LO pulled off-frequency
+  // The VIR corrector: the set trimming its own hue and saturation off the
+  // reference on line 19, and getting it wrong when that reference is damaged
+  vir: 0, // how far the set trusts it (0 = not a VIR set)
+  virLag: 45, // the corrector's time constant, frames
   killThresh: 2, // IRE
   accLagLines: 0, // chroma AGC time constant, lines of burst memory (0 = instantaneous)
   svideoBleed: 0, // Y/C miswire: bleed chroma into luma (S-video pins into composite)
@@ -101,6 +105,29 @@ export const DEFAULT_CONTROLS = {
   macrovision: 0, // Macrovision pseudo-sync/AGC pulse depth on VBI lines 12-19
   mvStripeDeg: 0, // colorstripe: burst rotation on walking line bands, degrees
   vbi: 1, // VBI test signals: VITS multiburst/staircase, VIR, line-21 captions (broadcast furniture)
+  // The set's caption decoder, reading line 21 off the signal it actually got
+  cc: 0, // 0 the decoder is off, 1 it is running
+  ccBox: 0.7, // black box behind the characters
+  // A pin held on the character generator's font ROM
+  ccRomAddr: 0, // address line held high, 1-based (0 = the chip is intact)
+  ccRomData: 0, // data line held, 1-based; negative holds it low
+  // The character generator at the switcher, keying the same words into picture
+  cgMix: 0, // the box's output over program (0 = bypassed)
+  cgX: 0.08, // block's left edge, active-picture UV
+  // A lower third, but clear of the caption decoder's own block further down —
+  // the two boxes are meant to be run together and compared, and stacked on top
+  // of each other they cannot be.
+  cgY: 0.52,
+  cgScale: 2, // picture samples per font dot
+  cgKeyDelayNs: 0, // key against fill (0 = the box is trimmed)
+  cgClip: 0.5, // where the slicer cuts the processed key
+  cgKeyMHz: 3, // key-processing bandwidth, which is what softens the edge
+  cgEdgeX: 0, // edge generator's horizontal delay, samples (0 = no edge)
+  cgEdgeY: 0, // edge generator's vertical delay, lines
+  cgFill: 100, // fill level, IRE
+  cgInvert: 0, // cut the other way: letter-shaped holes in a full-frame fill
+  cgRomAddr: 0, // a pin held on this box's font ROM, address bus
+  cgRomData: 0, // and on its data bus
   // bent video enhancer, patched inline between the deck and the set
   enhClampUs: 0, // clamp gate slid off the back porch (0 = correct)
   enhDroopUs: 0, // coupling-capacitor time constant (0 = DC coupled, no droop)
@@ -207,21 +234,6 @@ export const DEFAULT_CONTROLS = {
   cfbFilterBoost: 2, // added in-band loop gain once a center is set
   cfbServoUs: 0, // varactor on the loop delay: us of pull per 100 IRE of its own video
   cfbRing: 0, // loop bus ring-modulated against the live program
-  // tape loop (a loop of tape threaded record head -> play head)
-  tapeMix: 0,
-  tapeLoopMm: 20, // record head to play head; delay = length / 33.35 mm/s
-  tapeGain: 1,
-  tapeHfLoss: 0.25, // band lost per pass: generation loss, colour first
-  tapeNoiseIre: 1.5, // the medium's own noise floor
-  tapeWear: 0, // fraction of the loop with the oxide worn off
-  tapeSplice: 0, // the joint crossing a head, once per lap
-  tapeRecord: 1, // record head down; lift it and the loop holds what it has
-  tapeTransport: 2, // 0 reverse, 1 stopped, 2 forward, 3 scrub — only means anything held
-  tapeShuttle: 1, // loop speed as a multiple of play; the transport gives the sign
-  tapeHeads: 1, // playback heads in the path: a lap returns once per head
-  tapeHeadSpread: 1, // where they sit along it; 1 = even subdivisions
-  tapeWowPct: 0, // capstan wander: moves the delay time, not just the picture
-  tapeColourFrame: 1, // hold the delay on a subcarrier cycle (0 = hue spins with it)
   // per-source feeds: each input's own cable and head-end, ahead of the mix —
   // a fault here damages one signal alone, unlike the program-bus channel
   // controls above which damage the mixed output
@@ -294,6 +306,8 @@ export const DEFAULT_CONTROLS = {
   // VHS tracking error
   trackAmt: 0,
   trackPos: 0.85,
+  trackHunt: 0, // the auto-tracking servo: 0 parked, 1 hunting and never settling
+  trackKick: 0.6, // how hard a scene change, shuttle exit, splice or bass hit unseats it
   shuttleX: 1, // transport speed as multiple of play: 0 pause, <0 review, 1 clean
   // display
   // beam blanking held on: flashes of scanning beam separated by dark the

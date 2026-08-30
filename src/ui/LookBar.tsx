@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react'
 
 import { cx } from './cx'
+import { DRIFT_SECONDS } from './drift'
 import styles from './LookBar.module.css'
 import { MORPH_LABELS, MORPH_SECONDS } from './morph'
 import { mutateAmountFor } from './mutate'
@@ -50,6 +51,14 @@ export function LookBar(props: {
   onSurpriseOne: () => void
   onSpike: (amount: MutateAmount) => void
   onCross: () => void
+  // The nudge with nobody pressing it (ui/drift.ts). Outside the segmented set
+  // rather than a fourth member of it, because it is not another roll: each of
+  // the three in the set answers one press, and this is a mode the board stays
+  // in until you say otherwise. It says which of its two states it is in in
+  // words for the same reason — a switch whose only tell is a lit border is one
+  // you have to press to find out about.
+  drifting: boolean
+  onToggleDrift: () => void
   // How long the verbs in this row take to arrive, and the button that cycles
   // it. It belongs here rather than in a settings dialog because it changes what
   // every other button in the row *does*, and because the duration you want is a
@@ -139,6 +148,19 @@ export function LookBar(props: {
           onCross={props.onCross}
         />
       </div>
+      {/* Next to the rolls, because that is what it is: the gentlest of them,
+          on a timer, forever. Nothing else in the app plays itself. */}
+      <button
+        className={cx(styles.btn, props.drifting && styles.btnOn)}
+        onClick={props.onToggleDrift}
+        title={
+          props.drifting
+            ? 'stop here and keep the look wherever it has got to. One ctrl+z then puts back the look you set drifting — none of the legs is in the walk (d)'
+            : `let the look wander with nobody at the keyboard: every ${DRIFT_SECONDS} seconds it nudges itself somewhere near where it stands and travels most of the way there, so the picture never cuts. It stays around the look you set drifting rather than wandering off, and one ctrl+z after you stop puts that look back (d)`
+        }
+      >
+        {props.drifting ? 'drifting…' : 'drift'}
+      </button>
       <MorphControl
         morphSeconds={props.morphSeconds}
         onSetMorph={props.onSetMorph}

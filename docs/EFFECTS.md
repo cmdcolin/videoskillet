@@ -122,6 +122,69 @@ Source A additionally takes Webcam / USB device; source B does not.
 | **sc detune**   | -3000–3000 Hz                  | How far B's colour subcarrier sits from A's 3.579545 MHz. The decoder locks to A's burst, so B's colour beats against it and its hue cycles continuously — the rainbow crawl of a non-genlocked source.                                                                                                                                                                                                                                                                           |
 | **frame roll**  | -30–30 l/f                     | B's vertical drift in lines per frame, from its field rate not matching A's. B creeps up or down through the frame independently of the picture A is painting.                                                                                                                                                                                                                                                                                                                    |
 
+### Character generator (chyron)
+
+| Control             | Range | The fault it models                                            |
+| ------------------- | ----- | -------------------------------------------------------------- |
+| **cg over program** | 0–1   | A character generator at the switcher, keying the caption text |
+
+          into the picture — the box every lower third, score bug and station
+          ident came out of.
+
+          What makes it a CG rather than an overlay is that it puts out **two
+          wires**: a fill, which is video, and a key, which is a matte cut at
+          the characters' own edges. Everything below bends the relationship
+          between those two, which is what every bent chyron is doing.
+
+          Because it keys onto the composite bus ahead of the loops and the
+          deck, what it writes is signal from here on: full-swing type is the
+          harshest thing a composite path carries, so the AGC pumps on it, the
+          sound detector hands it back as a whine that changes with what it
+          says, and the tape ages it along with the picture. |
+
+| **key timing** | -600–600 ns | The trim every real keyer has, because the key
+path and the video path are different lengths of circuit. Mis-set on a
+photograph it slides a soft matte a few samples and nobody notices. Mis-set on a
+glyph it puts background through one side of every stem and a hard shadow down
+the other — and far enough out it leaves an outline with no letter inside it.
+One sample is 70 ns. | | **key clip** | 0–1 | Where the slicer cuts the
+processed key. On type this is stroke weight rather than an edge position: down,
+and thin strokes fuse and the whole line grows a halo; up, and stems drop out of
+the middle of words. How much range it has depends on the key bandwidth below —
+a key with no soft edge has nothing for a clip to slide along. | | **key
+bandwidth** | 0.3–8 MHz | The key-processing amplifier ahead of the slicer,
+which is narrower than the video path and is the only reason a key has a soft
+edge at all. Horizontal only — the same lopsided edge the chroma keyer has, and
+for the same reason: this is a line of signal, not a picture, so there is no
+vertical neighbour on the wire. | | **key invert** | `normal` · `inverted` |
+Which side of the key is cut. Inverted, the box fills the whole raster and the
+letters are holes in it showing the picture — which is what a downstream keyer
+inverted actually does, since the key's domain is the picture rather than the
+block of type. | | **edge offset x** | -24–24 smp | A CG drew its border and
+drop shadow by delaying the key a sample and a line and OR-ing it back in
+underneath the fill. This is that delay, and pulling it far past the sample it
+was meant to be detaches the shadow from the type and walks it across the frame.
+| | **edge offset y** | -24–24 ln | The other half of the drop shadow, in lines.
+Bending the two apart is what puts a shadow in front of the letters it belongs
+to instead of behind them. | | **fill level** | 0–120 IRE | How bright the
+characters are laid in, in IRE on the composite. 100 is peak white; past that
+the box is overmodulating, and everything downstream that reacts to level reacts
+to it — the receiver AGC, the tape, and the sound detector, which starts buzzing
+in time with what the caption says. | | **cg x** | 0–1 | The block's left edge
+across the picture. | | **cg y** | 0–1 | The block's top edge down the picture.
+The stock value is a lower third, sat clear of the caption decoder's own block
+below it — the two are meant to be run together and read against each other. | |
+**cg size** | 1–6 | Picture samples per font dot. The glyphs are dots on a grid,
+so this scales in whole dots and the type stays as crunchy as the ROM made it. |
+| **cg rom address line** | 0–11 | A pin held high on this box's font ROM — the
+same bend as the caption decoder's, on a different chip, because these are two
+boxes and shorting one says nothing about the other. Low lines carry the row
+inside the cell, so every glyph grows a seam; high lines carry the character
+code, so the whole font substitutes. | | **cg rom data line** | -8–8 | The data
+bus of the same chip: eight dots across one row, so holding one stripes a column
+down every character on the page. Positive holds it high, negative holds it low.
+|
+
 ### Wipe (A/B)
 
 | Control      | Range                                 | The fault it models                                                                                                                                                                                                                                                                                                                                                               |
@@ -162,7 +225,7 @@ Source A additionally takes Webcam / USB device; source B does not.
 | **matte hue**        | 0–360 deg                          | The matte colour, as a phase on the subcarrier — the same wheel the backing hue above is read off. Setting it near the backing hue is the self-defeating case worth knowing about: the fill lands inside the acceptance wedge, so anything that keys the matte away keys it again next generation through a loop.                                                                                                                                                                                                                                                                                                                                                                                               |
 | **matte saturation** | 0–0.6                              | How much chroma the matte generator puts on the carrier. At 0 it is a flat grey field with no subcarrier at all, which is the honest way to get a black or white fill; opened up it approaches the amplitude of a fully saturated primary.                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 
-## Tape
+## Channel
 
 ### Recording (luma & FM)
 
@@ -280,7 +343,9 @@ this was invisible on and the VCR it was aimed at. |
 | **phase jitter**       | 0–180 deg/line | Per-line phase error in that down/up conversion. The colour-under path has to reinsert phase exactly; when it does not, hue wanders line to line and the picture picks up a coloured venetian-blind texture. Needs colour-under raised to do anything.                                                                                                                                                                                                                                                                                                                                                                       |
 | **Y/C delay**          | -3360–3360 ns  | The chroma path through a deck or proc amp runs its own filters and delay lines, and when their group delay is mistrimmed against the luma path the colour arrives late (or early): every coloured area sits bodily sideways off the edge it belongs to, colour bleeding out of one side of objects and falling short of the other. The burst travels the same mistrimmed path, so the decoder's reference moves with the picture's chroma and hue stays correct — displaced colour, not rotated, which is what tells this from a timebase error. Steps are whole samples, about 70 ns each.                                 |
 | **tracking error**     | 0–1            | The head is not following the recorded track. It reads partly off-track, so a band of noise appears where the signal is weakest and the picture tears and bends through it — the thing the tracking knob on a VCR was for.                                                                                                                                                                                                                                                                                                                                                                                                   |
-| **band position**      | 0–1            | Where that mistracked band sits vertically, 0 top to 1 bottom. On a real deck it drifts as the tape stretches; here you park it.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| **band position**      | 0–1            | Where that mistracked band sits vertically, 0 top to 1 bottom. With the servo parked you park it; with the servo hunting it is where the servo is trying to sit.                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| **servo hunt**         | 0–1            | The deck's auto-tracking servo, searching for the track instead of holding it. It reads the RF envelope and steps until the envelope peaks; a stretched tape drifts it back off, and it corrects with less damping the higher this goes, so every correction overshoots and rings. A scene change, coming out of shuttle, the loop's splice passing, a transition cut or a thump through the cabinet from the music all knock it off the peak — the band sweeps, the picture bends through it, and the top of the frame flags on the tape tension. Draws the band by itself; tracking error above adds a floor to it.        |
+| **servo kick**         | 0–1            | How hard each of those events unseats the servo. Needs servo hunt above 0.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | **head clog**          | 0–1            | Oxide packed into the gap of one of the two spinning heads, so that head reads weak or nothing. The heads take turns — one sweep each — which is why a clogged head never shows as a steady veil: picture and snow alternate at field rate, a hard 30 Hz flicker between the good head’s sweep and the dead one’s. The head switch near the bottom of the picture is where the other head is already reading, so a few last lines always belong to the opposite head: they survive the snowed sweeps and die on the clean ones. Sync goes down with the sweep, so the receiver tears through the snow instead of framing it. |
 | **shuttle (1 = play)** | -32–32 x       | Tape speed as a multiple of play — cue past 1, pause at 0, review negative. Off play speed the spinning head no longer follows a single recorded track: each sweep crosses several, the RF nulls at every crossing, and that many noise bars sweep the frame. Each strip between bars is a different track with its own timing and color-under phase, so the picture tears and rainbows at the boundaries. At 1 the head tracks and the picture is clean.                                                                                                                                                                    |
 
@@ -404,20 +469,85 @@ instantly per line, which no real ACC can; raised, gain and the colour killer
 answer burst damage tens of lines late, so colour blooms back after a dropout
 band instead of snapping, overshoots on a scene change, and a marginal burst
 makes the killer chatter in and out down the frame. With fed-back burst
-circulating in the mixer loop the lag turns into colour that pumps. | | **output
-stage clip** | 0–1 | How the RGB output amplifiers run out of headroom. At 0 the
-matrix is fitted back into gamut without moving the hue, which keeps overdriven
-colour vivid; at 1 the three guns simply hit their rails, and since they hit
-them one at a time the first to clip drags the hue toward the two still in
-range. Turn it up with chroma gain past 1 and saturated areas migrate toward the
-primaries as they blow out instead of holding their colour. | | **agc** | 0–1 |
-How aggressively the receiver normalizes signal level off the sync tip. At 1 it
-corrects for weak or hot signals and holds contrast steady; at 0 the gain is
-fixed, so anything that changes signal amplitude changes picture brightness
-directly. | | **encoder chroma bw** | 0.1–4 MHz | Colour bandwidth at the encode
-end, before the signal is ever transmitted — the camera's own limit, as opposed
-to the decoder's. Wide enough and the chroma sidebands spill into the luma band
-and generate their own cross-colour. |
+circulating in the mixer loop the lag turns into colour that pumps. | | **VIR
+correction** | 0–1 | How far the set trusts the reference stamped on line 19 of
+the vertical interval. A VIR receiver decoded that line, compared it against
+what it knew was sent, and trimmed its own hue and saturation until the two
+agreed — a closed loop around the demodulator, and one that is only ever as
+right as the reference arriving. Damage the signal above line 21 and the
+correction goes with it: the whole picture rotates toward whatever the reference
+was bent into, and a dub whose chroma the tape path has been eating a generation
+at a time comes back garish rather than washed out, because a weak reference is
+a set turning colour up. Needs the VBI test signals on to have anything to read.
+| | **VIR lag** | 1–240 frames | The corrector’s time constant, in frames. Short
+and it chases the reference line by line, so damage that comes and goes makes
+the picture flicker; long is what a real corrector did — it answers over a
+second or more, which is why a reference that has been bent drags the whole
+frame somewhere wrong and leaves it there, and only walks back as slowly once
+the signal recovers. | | **output stage clip** | 0–1 | How the RGB output
+amplifiers run out of headroom. At 0 the matrix is fitted back into gamut
+without moving the hue, which keeps overdriven colour vivid; at 1 the three guns
+simply hit their rails, and since they hit them one at a time the first to clip
+drags the hue toward the two still in range. Turn it up with chroma gain past 1
+and saturated areas migrate toward the primaries as they blow out instead of
+holding their colour. | | **agc** | 0–1 | How aggressively the receiver
+normalizes signal level off the sync tip. At 1 it corrects for weak or hot
+signals and holds contrast steady; at 0 the gain is fixed, so anything that
+changes signal amplitude changes picture brightness directly. | | **encoder
+chroma bw** | 0.1–4 MHz | Colour bandwidth at the encode end, before the signal
+is ever transmitted — the camera's own limit, as opposed to the decoder's. Wide
+enough and the chroma sidebands spill into the luma band and generate their own
+cross-colour. |
+
+### Captions
+
+| Control             | Range        | The fault it models                                              |
+| ------------------- | ------------ | ---------------------------------------------------------------- |
+| **caption decoder** | `off` · `on` | The set's own caption decoder, slicing line 21 off the signal it |
+
+          actually received.
+
+          What makes this different from putting words on a card: the caption
+          is *data*, and it has been through everything the picture has. Snow,
+          a narrow channel, tape noise and generation loss arrive as
+          misspellings — dropped characters, wrong ones, a solid block wherever
+          parity caught an error and the decoder refused to guess. Wind the
+          tracking off and the caption dies before the picture does, because
+          line 21 is at the top of the field where the band lands first.
+
+          And it is painted on the set's raster rather than the signal's, which
+          is where a real decoder paints: the page is redrawn on the set's own
+          timing. So the picture can roll, tear and spin hue underneath a
+          caption sitting perfectly still. It still bends with the tube and
+          still blooms, because both of those happen after it.
+
+          Needs vbi test signals on — that is the switch that puts line 21 on
+          the wire at all. |
+
+| **caption box** | 0–1 | How black the box behind the characters is. Broadcast
+captions sat in a solid one because type keyed straight over picture is
+unreadable the moment the picture is bright — wind it out and you get exactly
+that problem, which is the one every set-top caption box had. | | **rom address
+line** | 0–11 | A pin held high on the character generator's font ROM — the
+literal circuit bend, and a different thing from a bad feed.
+
+          Which line decides everything, because of how the chip is addressed.
+          The **low** lines carry the row inside the cell, so holding one makes
+          every glyph repeat a scan line through itself and the whole font grows
+          a seam. The **high** lines carry the character code, so holding one
+          substitutes the entire font for its neighbour a fixed distance away in
+          the ROM — text that keeps its length and its rhythm and comes out
+          systematically wrong.
+
+          Held rather than switched, the way a jumper does it, so a glyph whose
+          bit was already set comes back untouched and the damage is uneven.
+          Nothing here is random: the same text bends the same way every time,
+          which is what tells a bent machine from a noisy wire. |
+
+| **rom data line** | -8–8 | The other bus. A font ROM's data lines are the
+eight dots across one row, so holding one lights or kills the same column of
+every character on the page — a stripe straight down the font rather than a
+fault in any one letter. Positive holds the line high, negative holds it low. |
 
 ## Screen
 
@@ -575,101 +705,6 @@ delay spins fed-back hue 90° a generation and colour does things optics cannot.
 | **loop resonance Q (broad→ringing)** | 0–1            | How selective that resonance is. Broad gives the loop a gentle tonal tilt; narrow makes it ring for a long time after every edge, laying a fixed-frequency pattern across the line.                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | **loop resonance boost**             | 0–16 x         | In-band gain added by the resonance. Push it far enough that the round trip exceeds unity at that frequency and the loop self-oscillates: the filter starts generating its own pattern out of nothing.                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | **loop ring mod**                    | 0–1            | The loop bus multiplied against the live program instead of just summed with it — a ring modulator with one input patched to the machine's own past. Subcarrier against subcarrier lands colour at sum and difference phases neither frame contained; sync against picture mints pulses mid-line; and every product goes round again and is re-multiplied a frame later, so the spectrum folds over itself generation after generation.                                                                                                                                                                                                                 |
-
-## Tape loop — feedback loop
-
-a second machine threaded with a loop of tape, patched across the bus rather
-than round the chain: a play head returns what was laid down a lap ago, a record
-head lays the sum back down, and whatever keeps circulating ages a generation
-every time round.
-
-### Tape loop (mechanical)
-
-| Control             | Range     | The fault it models                                                                                                                                                                                                                                                                                                                                    |
-| ------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **loop mix**        | 0–1       | A second machine threaded with a loop of tape: the mixer feeds a record head, and a play head further round the loop returns what was laid down a second or two ago. This is the crossfader toward that return. Because the return gets recorded again, whatever keeps circulating goes round the medium once per lap and ages a generation each time. |
-| **loop length**     | 0.2–66 mm | Millimetres of tape between the record head and the play head. Tape runs at 33.35 mm/s, so this is the delay: 0.6 mm is a single frame, 33 mm a second, 66 mm the whole bin. Length is the physical setting rather than a time, which is why speed wander below moves the delay itself.                                                                |
-| **playback gain**   | -3–3 x    | Proc-amp trim on the playback. Past ±1 each lap comes back louder than it went out and the loop builds until it clips. Negative inverts every pass, so repeats alternate polarity down the tail.                                                                                                                                                       |
-| **generation loss** | 0–1       | How much of the top of the band the head and tape lose on each pass. The colour subcarrier sits at the very top, so it goes several times faster than the picture under it — repeats fade to grey well before they go soft, and a long tail ends up monochrome. This is the knob that makes the echo sound like tape instead of a delay line.          |
-| **tape noise**      | 0–40 IRE  | The medium's own noise floor. It belongs to the oxide, not to the moment, so the same grain is on the same stretch of tape every lap and gets re-recorded rather than averaging away like snow — it builds into standing streaks, and slides bodily through the picture when the speed wanders.                                                        |
-
-### Loop transport & heads
-
-| Control         | Range          | The fault it models                          |
-| --------------- | -------------- | -------------------------------------------- |
-| **record head** | `hold` · `rec` | Whether the record head is down on the loop. |
-
-          - **hold** — the head lifts and the tape keeps circulating with
-            whatever is already on it: the loop repeats indefinitely and stops
-            taking in the live picture. Playing over a held loop is what makes
-            this a looper rather than an echo.
-          - **rec** — the head drops again and records over what it has.
-
-          A held loop does not fade. Playback loss is what the head does on the
-          way past, not damage to the oxide, so it comes back identical every
-          lap, down to the same grain in the same places. |
-
-| **transport** | `reverse` · `stopped` · `forward` · `scrub` | Which way a held
-loop runs past the heads, and whether the drum is still turning. Only means
-anything with the record head up.
-
-          - **reverse** — plays the frames back in the order they were laid
-            down, each one whole. The scanner still sweeps the same way, so
-            motion runs backwards while the picture stays a picture.
-          - **stopped** — parks the tape while the drum re-reads one sweep: a
-            still frame you can play live over.
-          - **forward** — the loop as it was recorded.
-          - **scrub** — stalls the drum and keeps pulling backwards, so the head
-            recovers the tape in the order it drags past rather than in sweep
-            order. The waveform itself comes back reversed: sync tips at the
-            wrong end of every line, a burst that reads phase-flipped, a raster
-            arriving end-first. None of that is drawn — it is what a receiver
-            does with a signal running the wrong way. |
-
-| **shuttle (1 = play)** | 0–32 x | How fast a held loop runs, as a multiple of
-play — the transport switch above gives the direction, this gives the speed. Off
-play speed the head no longer follows a single recorded track: each sweep
-crosses several, the RF nulls at every crossing, and that many noise bars sweep
-the picture. It is the same mechanism the deck shuttle uses, but running over
-your own captured loop instead of the incoming signal — cue and review through
-two seconds you recorded, with the picture skipping frames as it goes. Note this
-is why a paused loop has a bar across it and a reversed one has two: at a
-standstill the head still crosses one track per sweep, and backwards it crosses
-two. | | **playback heads** | 1–8 | How many playback heads are in the tape
-path. Each one is at its own distance from the record head, so a single lap
-hands the picture back once per head — the heads are a rhythm and the loop is
-the bar line. A piece of tape is written once and read by all of them on the way
-past, so a lap's taps are the same generation: the pattern repeats intact and
-goes a generation darker each time round, rather than fading across the taps. |
-| **head spacing** | 0.35–3 | Where the heads sit along the path. At 1 they are
-at even subdivisions of the loop — a straight pattern. Below 1 they crowd toward
-the far head, so the taps rush and then hold; above 1 they crowd toward the
-record head, so the taps come quickly and leave a long gap before the lap turns
-over. | | **splice** | 0–1 | A loop is a loop because someone joined the ends,
-and the joint runs the path once per lap, drawing level with each head in turn —
-the head lifts for the three lines it takes to cross. Since a loop is rarely a
-whole number of frames long, the bump walks down the picture lap by lap: a
-metronome you can see, ticking out the tap pattern. | | **capstan wander** |
-0–20 % | Speed error in the transport. The loop is a fixed length of tape, so a
-capstan running slow is a longer delay — the echo breathes in and out of time
-instead of merely wobbling. A percent goes a long way: nothing time-base
-corrects the return, so a delay that grows by half a frame hands back a picture
-displaced half a screen, and the repeats slide vertically. This is why mixing a
-delayed feed needed a frame synchronizer. With colour framing off it drags hue
-round too. | | **colour framing** | `hue spins` · `framed` | The subcarrier
-rides the same tape, so a delay is also a hue rotation — 90° per sample, and a
-frame of delay lands on 180°.
-
-          - **hue spins** — every change of delay repaints the repeats a
-            different colour.
-          - **framed** — rounds the delay onto a whole subcarrier cycle, costing
-            140 ns of picture shift. Exactly what an edit controller insisting
-            on colour framing is doing. |
-
-| **oxide wear** | 0–1 | Fraction of the loop with the oxide worn off it. The
-bad patches are fixed to the tape, so the same lines drop to noise every lap —
-which is what tells a loop apart from a deck playing a long recording, where a
-dropout never comes back. |
 
 ## Sound
 

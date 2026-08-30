@@ -29,10 +29,12 @@ import { SelectRow } from './SelectRow'
 import { Slider } from './Slider'
 import { TempoRow } from './TempoRow'
 import ui from './ui.module.css'
+import { arrowhead, route } from './wire'
 
 import type { BayField, ModTarget } from '../core/controls'
 import type { UiSlot } from './modSlots'
 import type { Tempo } from './useTempo'
+import type { Point } from './wire'
 
 // The stab gate: the one thing in this section that is not a slot. It drives the
 // whole board rather than one control, so there is nothing to point at a target —
@@ -179,32 +181,62 @@ function FarEnd(props: {
   )
 }
 
-// The head of a patched slot: its number, what it is driving, and the way to
-// hand it back.
+// The straight run a slot's wire draws: one leg, head included, off the same
+// two points every other wire in the panel is built from (`./wire`, ported
+// from bender) — not a fourth hand-written arrowhead.
+const WIRE_PTS: readonly Point[] = [
+  [0, 5],
+  [16, 5],
+]
+const WIRE_D = route(WIRE_PTS, 0)
+const WIRE_HEAD_D = arrowhead(WIRE_PTS, 5, 3)
+
+// The short line between a slot's two chips, drawn rather than left to a verb:
+// a wire reads as a connection before either label does, which "driving" never
+// did on its own. Solid and tinted while the slot is actually running, dashed
+// and dim while held — the same split `iconModOff` draws on a control row's
+// own `held` badge, so a reader who already knows that badge reads this too.
+function Wire(props: { live: boolean }) {
+  return (
+    <svg
+      className={cx(styles.wire, !props.live && styles.wireOff)}
+      width="16"
+      height="10"
+      viewBox="0 0 16 10"
+      aria-hidden="true"
+    >
+      <path className={styles.wireLine} d={WIRE_D} />
+      <path className={styles.wireHead} d={WIRE_HEAD_D} />
+    </svg>
+  )
+}
+
+// The head of a patched slot: its number, what is driving it and what it is
+// driving, drawn as a cable rather than said in a sentence — bender's patch
+// bay (bender/src/ui/PatchBay.tsx), adapted: a source chip, a wire, a
+// destination chip read as "this connects to that" before either label does,
+// where "driving bend amount — Deflection" asked a reader to parse a sentence
+// for the same fact.
 //
-// This replaced a dropdown of every slider in the app — 273 options in one
-// flat `<select>`, labelled "control — module" because nothing else could tell
-// two `gain`s apart. It was the panel's one surface that flattened the chain
-// into an alphabetical list, and it was a second route to a choice the chain
-// already makes better: a control row's own ∿ claims a free slot, so the target
-// is picked at the control it drives, where you are already looking at it.
+// The picker underneath this row is still not here — that stays a dropdown of
+// every slider in the app, 273 options flattened into one alphabetical list,
+// and this bay replaced exactly that: a control row's own ⋮ claims a free
+// slot, so the target is picked at the control it drives, where you are
+// already looking at it. The source chip below is a readout of the SelectRow
+// one row down, the same redundancy bender's own SVG carries over its
+// sliders — a cable you can read without opening anything, over a value you
+// can only change by opening it.
 //
-// So the name here is a readout and a way back rather than a picker. It opens
-// the module the control lives in, which is the same jump "This look"'s captions
-// make and for the same reason — a routing you cannot find the row for is a
-// wobble with no way to tune what it is wobbling.
-//
-// "driving" is in front of the name because the name alone does not say what
-// kind of thing it is. `bend amount — Deflection` reads as a slot caption unless
-// you already know the panel well enough to recognise a slider by name, which is
-// exactly the reader who most needs the bay to explain itself — and the row gave
-// them a bare noun phrase with no verb and no chrome. One dim word fixes the
-// half the styling cannot: the name is now the object of a sentence rather than
-// a heading over the rows below it.
+// The destination chip is still a way back, not just a label: it opens the
+// module the control lives in, the same jump "This look"'s captions make and
+// for the same reason — a routing you cannot find the row for is a wobble
+// with no way to tune what it is wobbling.
 function SlotHead(props: {
   // 1-based, as the bay numbers its slots.
   n: number
   target: ModTarget
+  source: string
+  live: boolean
   // The stages that will actually open right now. A branch with nothing patched
   // into it opens onto nothing, and a look carried in from a preset or a link
   // can hold a routing into one — so this is a live question, not a property of
@@ -228,21 +260,38 @@ function SlotHead(props: {
       <span className={styles.tag} title={`mod slot ${props.n}`}>
         {props.n}
       </span>
-      {/* Not a label for the row — a verb, so the name after it reads as the
-          control it names. Quiet enough (fg4, like every other word in the panel
-          that is grammar rather than a value) that a reader who already knows
-          what a slot head says skips straight over it to the name. */}
-      <span className={styles.driving}>driving</span>
+      <span
+        className={cx(
+          styles.chip,
+          styles.srcChip,
+          !props.live && styles.chipOff,
+        )}
+        title={props.live ? props.source : `${props.source}, held`}
+      >
+        {props.source}
+      </span>
+      <Wire live={props.live} />
       {group !== undefined && stage !== null && props.openStages.has(stage) ? (
         <button
-          className={styles.target}
+          className={cx(
+            styles.chip,
+            styles.destChip,
+            !props.live && styles.chipOff,
+          )}
           title={`open ${group.name} in the ${stage} stage — the row this slot is driving`}
           onClick={() => props.onOpenGroup(stage, group.name)}
         >
           {label}
         </button>
       ) : (
-        <span className={styles.target} title={label}>
+        <span
+          className={cx(
+            styles.chip,
+            styles.destChip,
+            !props.live && styles.chipOff,
+          )}
+          title={label}
+        >
           {label}
         </span>
       )}
@@ -261,13 +310,13 @@ function SlotHead(props: {
 // One of a routing's own two knobs, wired so a second routing can be clipped
 // onto it (modSlots.ts › BAY_TARGETS).
 //
-// The same row a control gets, with the same ⋮ ∿ and the same editor under it —
+// The same row a control gets, with the same ⋮ and badge and the same editor —
 // which is the whole argument for the bay's knobs living in the control key
 // space. A wire onto a wire is not a second kind of patch to learn: it is
 // claimed where it lands, exactly like every other one, and the routing that
 // results appears as its own numbered slot in this list with rows of its own.
 //
-// Both ends read the same way. This row wears ∿ because something is driving
+// Both ends read the same way. This row wears `mod` because something is driving
 // it; the driver's own head, a few lines up or down, says `driving slot 3
 // depth`.
 function BayKnob(props: { i: number; slot: UiSlot; field: BayField }) {
@@ -292,8 +341,8 @@ function BayKnob(props: { i: number; slot: UiSlot; field: BayField }) {
       defaultValue={rate ? EMPTY_SLOT.rateHz : EMPTY_SLOT.depth}
       help={
         rate
-          ? "How fast this slot's LFO cycles, in Hz. Slow rates drift the target control the way a warming-up circuit does; fast ones buzz it per-frame. Lock it to the beat with ♩ in the ⋮ menu, or clip another slot onto it with ∿ — a rate being walked by a second LFO is an oscillator that speeds up and slows down instead of keeping time."
-          : 'How far the modulation swings the target, as a fraction of that control’s own slider range. The resting slider position stays the centre, so presets and saved looks still hold the look. Clip another slot onto this with ∿ and the wobble comes and goes on its own: leave this at 0 and the second one brings it in from nothing, which is the difference between a fault that is running and one that keeps happening.'
+          ? "How fast this slot's LFO cycles, in Hz. Slow rates drift the target control the way a warming-up circuit does; fast ones buzz it per-frame. Lock it to the beat with ♩ in the ⋮ menu, or clip another slot onto it with ∿ from that same menu — a rate being walked by a second LFO is an oscillator that speeds up and slows down instead of keeping time."
+          : 'How far the modulation swings the target, as a fraction of that control’s own slider range. The resting slider position stays the centre, so presets and saved looks still hold the look. Clip another slot onto this with ∿ in the ⋮ menu and the wobble comes and goes on its own: leave this at 0 and the second one brings it in from nothing, which is the difference between a fault that is running and one that keeps happening.'
       }
       sync={
         rate
@@ -346,7 +395,7 @@ const DRIVER_ROUTING = {
 // The whole bay, one entry per patched slot. State, persistence and the push to
 // the render loop all moved to useModSlots when motion stopped being this
 // section's private business — presets carry it, links carry it, and any control
-// row can claim a slot from its own ∿. What is left here is the view that shows
+// row can claim a slot from its own ⋮. What is left here is the view that shows
 // the bay as a bay, which is still the only place the eight read as a set: a
 // routing's own row can say what drives that control and cannot say what else
 // is moving, or how much of the bay is left.
@@ -383,7 +432,7 @@ export function ModBay(props: {
     <>
       {/* What the stage's own heading does not already say. It used to open on
           "LFOs, drift and the audio envelope wiggling any control", which is
-          now the blurb one line above it, and to explain the ∿, which the free
+          now the blurb one line above it, and to explain the claim, which the free
           count at the foot of the bay explains again — three sentences of the
           same instruction on a bay holding nothing. What is left is the one
           thing in here that is not a routing. */}
@@ -420,6 +469,10 @@ export function ModBay(props: {
           <SlotHead
             n={n}
             target={target}
+            source={
+              MOD_SOURCES.find(o => o.value === s.source)?.label ?? s.source
+            }
+            live={s.on}
             openStages={props.openStages}
             onOpenGroup={props.onOpenGroup}
             // The same call the row's own "remove" makes, rather than a second
@@ -462,7 +515,7 @@ export function ModBay(props: {
           {/* Per slot, because the master amount above is all of them at once
               and "off, except that one" is the shape a set actually wants.
               Everything the slot is patched with survives it — the same switch
-              the control row's ∿ throws. */}
+              the control row's own badge throws. */}
           <button
             className={cx(ui.btn, !s.on && ui.slotEmpty)}
             title={
@@ -477,13 +530,13 @@ export function ModBay(props: {
         </div>
       ))}
       {/* What is left of the eight empty rows: the count, and the one gesture
-          that fills one. Both states are worth a line — with the bay full, a ∿
-          press has nowhere to go, and the row that gets pressed says so from
+          that fills one. Both states are worth a line — with the bay full, a
+          claim has nowhere to go, and the row that gets pressed says so from
           inside its own editor but only after you have pressed it. */}
       <div className={ui.hint}>
         {free === 0
           ? `all ${slots.length} slots are patched — hand one back with its × to free it.`
-          : `${free} of ${slots.length} slots free — press ∿ on any control row to patch one.`}
+          : `${free} of ${slots.length} slots free — open any control row’s ⋮ and press ∿ to patch one.`}
       </div>
     </>
   )

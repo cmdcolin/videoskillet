@@ -495,6 +495,10 @@ export function useEngine() {
   // answer now, and nothing this hook renders asks. The mirror below is what the
   // re-routing on a source change reads, and it is a ref for the same reason the
   // rest of the vapor config is.
+  // What the caption encoder is sending on line 21. Held here rather than in
+  // Controls because it is words, not a quantity — a preset or a random nudge
+  // has nothing to say about it.
+  const [caption, setCaption] = useState('')
   const [reverb, setReverb] = useState(REVERB_DEFAULT)
   const [dry, setDry] = useState(DRY_DEFAULT)
   const [live, setLiveState] = useState<{ a: SlotKind; b: SlotKind }>({
@@ -593,6 +597,11 @@ export function useEngine() {
   const changeTap = (v: number) => {
     engineRef.current?.setDbgView(v)
     setTap(v)
+  }
+
+  const changeCaption = (v: string) => {
+    engineRef.current?.setCaption(v)
+    setCaption(v)
   }
 
   // Adopt the live video slots into the audio graph (or none, muting them all,
@@ -2087,6 +2096,7 @@ export function useEngine() {
     setSpeed(restored)
     setReverb(params.vapor.reverb)
     setDry(params.vapor.dry)
+    if (params.caption !== '') changeCaption(params.caption)
     if (params.yt !== null) loadYouTubeOn('a', params.yt, WHOLE_CLIP)
     if (params.ytb !== null) loadYouTubeOn('b', params.ytb, WHOLE_CLIP)
     // Boot only, and the reason `opts` exists at all. What follows is a question
@@ -2409,6 +2419,7 @@ export function useEngine() {
             // the user's look rather than the defaults.
             created.applyControls(dead.getControls())
             created.setDbgView(dead.getDbgView())
+            created.setCaption(dead.getCaption())
             created.setSourceBEnabled(dead.sourceBOn)
             wire(created)
             // Sources last: they write through engineRef, which `wire` just
@@ -2690,6 +2701,8 @@ export function useEngine() {
     // list is not a pool. The palette row says so rather than going quiet, since
     // a row that does nothing has to admit it.
     rollable: isPoolMode(sourceMode.a) || isPoolMode(sourceMode.b),
+    caption,
+    changeCaption,
     reverb,
     dry,
     setVideoAudio,

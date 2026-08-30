@@ -1,7 +1,7 @@
 import {
   BOX_H,
   BRANCH_Y,
-  branchArrow,
+  branchHead,
   branchPath,
   chainLayout,
   fitSub,
@@ -10,12 +10,15 @@ import {
   H,
   HEAD,
   MID_Y,
+  OUT,
   returnPath,
+  returnPts,
   W,
 } from './chainLayout'
 import styles from './ChainMap.module.css'
 import { cx } from './cx'
 import { MapBox, MapRun } from './MapBox'
+import { arrowhead } from './wire'
 
 import type { WiredBranch } from './chainLayout'
 import type { LoopPlace, LoopsLive } from './controls'
@@ -65,11 +68,12 @@ export interface ChainStage {
   off?: boolean
   // What to say instead of the blurb while it is off.
   offHint?: string
-  // A live filter did not reach this stage. Drawn faint and pressing it does
-  // nothing — it is on the map as context, so the chain still reads as a chain
-  // while a query narrows what is listed under it. Different from `off`, which
-  // is about the rig: an inert stage has nothing patched into it whatever is in
-  // the search box, and a dimmed one is a statement about the search box alone.
+  // A live filter did not reach this stage. Drawn faint, and still a door: it is
+  // on the map as context, so the chain reads as a chain while a query narrows
+  // what is listed under it, and pressing it drops the query and goes there.
+  // Different from `off`, which is about the rig: an inert stage has nothing
+  // patched into it whatever is in the search box, and a dimmed one is a
+  // statement about the search box alone.
   dim?: boolean
   // Whether pressing the box opens the stage. Not the negation of `off`: a
   // source branch with nothing patched in is drawn inert and still opens,
@@ -168,7 +172,14 @@ export function ChainMap(props: {
           drawn this one (SignalPathDialog); the miniature now agrees. */}
       <path
         className={styles.mapArrow}
-        d={`M${W - HEAD} ${MID_Y - HEAD}L${W} ${MID_Y}L${W - HEAD} ${MID_Y + HEAD}Z`}
+        d={arrowhead(
+          [
+            [W - OUT, MID_Y],
+            [W, MID_Y],
+          ],
+          HEAD,
+          HEAD,
+        )}
       />
       {returns.map(r => {
         const node = props.loops.find(l => l.loop === r.loop)
@@ -209,10 +220,10 @@ export function ChainMap(props: {
             blurb={node.blurb}
             live={live}
             touched={node.touched}
-            opens={!dim}
+            opens={node.opens}
             pressHint={
               dim
-                ? ''
+                ? ' — outside the filter: click to drop it and open this'
                 : !props.folds
                   ? ' — click for its controls'
                   : open
@@ -221,9 +232,7 @@ export function ChainMap(props: {
             }
             className={cx(
               styles.mapReturn,
-              // Not a button while it is dim, so it takes neither the pointer
-              // nor the hover that would promise one.
-              !dim && styles.mapLoopBtn,
+              styles.mapLoopBtn,
               r.optical && styles.mapReturnOptical,
               state,
             )}
@@ -237,7 +246,7 @@ export function ChainMap(props: {
             <path className={styles.mapWire} d={d} />
             <path
               className={styles.mapArrow}
-              d={`M${r.to - HEAD} ${top - HEAD * 1.5}L${r.to} ${top}L${r.to + HEAD} ${top - HEAD * 1.5}Z`}
+              d={arrowhead(returnPts(r.from, r.to, top, r.y), HEAD * 1.5, HEAD)}
             />
             {/* The run's own name, riding the wire rather than sitting above
                 it — there is no above at this size. It is painted after the
@@ -279,7 +288,7 @@ export function ChainMap(props: {
             y2={BRANCH_Y}
           />
           <path className={styles.mapWire} d={branchPath(branch)} />
-          <Arrow at={branchArrow(branch)} />
+          <path className={styles.mapArrow} d={branchHead(branch)} />
           <Node
             stage={props.branches[i]}
             x={branch.x}
@@ -324,26 +333,6 @@ export function ChainMap(props: {
   )
 }
 
-// A branch's arrowhead, from the anchor and unit direction the layout worked
-// out. Built off the direction rather than written out per case, so a wire that
-// arrives sideways gets a head that points sideways without a fourth copy of
-// this triangle.
-function Arrow(props: {
-  at: { x: number; y: number; dx: number; dy: number }
-}) {
-  const { x, y, dx, dy } = props.at
-  // The two base corners sit HEAD*1.5 back along the wire and HEAD to either
-  // side of it — the perpendicular being (-dy, dx).
-  const bx = x - dx * HEAD * 1.5
-  const by = y - dy * HEAD * 1.5
-  return (
-    <path
-      className={styles.mapArrow}
-      d={`M${bx - dy * HEAD} ${by + dx * HEAD}L${x} ${y}L${bx + dy * HEAD} ${by - dx * HEAD}Z`}
-    />
-  )
-}
-
 // One box: its outline, its label, and the whole state of the stage as one
 // colour. Shared by the trunk and the branch so the two can't drift apart in
 // how they answer a hover, a keyboard focus or an edit.
@@ -369,7 +358,9 @@ function Node(props: {
       ? undefined
       : fitSub(stage.patched, props.boxW)
   // Only where a click can close a stage is this box a disclosure — see `folds`.
-  const fold = props.folds && stage.opens
+  // Never while it is dim: that press drops the query and lists the stage, which
+  // is an open in one direction only.
+  const fold = props.folds && stage.opens && !dim
   return (
     <MapBox
       name={stage.name}
@@ -385,11 +376,13 @@ function Node(props: {
       // the card has no equivalent for: whether pressing again folds the stage
       // back up.
       foldHint={
-        fold
-          ? props.open
-            ? ' — click to close'
-            : ' — click to open'
-          : undefined
+        dim
+          ? ' — outside the filter: click to drop it and open this stage'
+          : fold
+            ? props.open
+              ? ' — click to close'
+              : ' — click to open'
+            : undefined
       }
       className={cx(
         // Dim replaces the idle rule rather than layering over it: it is not a

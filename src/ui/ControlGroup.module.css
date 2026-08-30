@@ -20,20 +20,23 @@
   color: var(--edit);
 }
 
-/* one of the hidden trims is being driven — the same green the row's own ∿
+/* one of the hidden trims is being driven — the same green the row's own `mod`
    uses, because the touched count next to it cannot say this: modulation never
    moves the resting value it compares against */
 .fineMod {
   color: var(--mod);
 }
 
-/* Put the whole group back, beside the dice. Amber rather than the dice's dim
-   grey, because unlike the dice it is only rendered on a group that is off
-   stock — it is a statement about this group's state as much as an affordance,
-   and it is the same amber the dot in the heading beside it already wears. */
+/* Put the whole group back, beside randomize. Amber rather than randomize's
+   dim grey, because unlike randomize it is only rendered on a group that is
+   off stock — it is a statement about this group's state as much as an
+   affordance, and it is the same amber the dot in the heading beside it
+   already wears. Text rather than the ↺ glyph it used to carry: the glyph
+   read as a refresh icon rather than a reset, so it traded a legible word for
+   space this row can spare — the header has room above and below it that
+   nothing else is claiming. */
 .revert {
   composes: bare from './ui.module.css';
-  position: relative;
   padding: 0 2px;
   font-size: var(--fs-sm);
   line-height: 1;
@@ -45,16 +48,11 @@
 
 /* Per-stage jitter, in the header's accessory slot. Dim by default and lit on
    hover: it sits on every group heading, so at full contrast thirty of them
-   would read as a column of decoration down the panel.
-
-   A drawn die (icons.tsx) rather than the ⚄ glyph it used to carry: at the
-   heading's --fs-sm a die face is five specks a pixel across, which read as
-   dirt rather than as a die. */
+   would read as a column of decoration down the panel. Text rather than the
+   drawn die (icons.tsx) it used to carry, for the same legibility trade as
+   `.revert` above. */
 .dice {
   composes: bare from './ui.module.css';
-  position: relative;
-  display: inline-flex;
-  align-items: center;
   padding: 0 2px;
   line-height: 1;
   color: var(--fg4);
@@ -63,23 +61,19 @@
   color: var(--edit-hi);
 }
 
-/* The ↺ comes out around 13x12 — a glyph at --fs-sm with two pixels of padding.
-   Reached with a pseudo-element rather than real padding, which would space the
-   pair apart and push them off the heading's line. The header has room above and
-   below it that nothing else is claiming, so this can be generous where the
-   row's own ⋮ (Slider.module.css) has to stay inside a row's pitch. */
-.revert::after {
-  content: '';
-  position: absolute;
-  inset: -7px -6px;
+/* The held cousin of `.dice`: same look at rest, but it stays lit while
+   pressed so the row shows which stage a held stab is nudging. */
+.stab {
+  composes: bare from './ui.module.css';
+  padding: 0 2px;
+  line-height: 1;
+  color: var(--fg4);
 }
-/* The die is already 20x16, so it needs less help sideways — and taking less
-   keeps its box from eating into the ↺'s, which reaches 6px this way across a
-   6px gap. */
-.dice::after {
-  content: '';
-  position: absolute;
-  inset: -6px -3px;
+.stab:hover {
+  color: var(--edit-hi);
+}
+.stab:active {
+  color: var(--edit);
 }
 
 /* reveals the sliders a direct-manipulation miniature stands in for, and the
@@ -93,4 +87,67 @@
 }
 .sliderToggle:hover {
   color: var(--fg);
+}
+
+/* What line 21 is carrying. A textarea rather than an input because a caption
+   is lines — each one rolls the page when it lands — and the wrap is what says
+   how the 32 columns will break. Skinned for the same reason dialog.module.css
+   skins its own: the UA still draws a textarea as a 1998 widget. */
+.captionField {
+  box-sizing: border-box;
+  width: 100%;
+  margin: 4px 0 8px;
+  padding: 6px 8px;
+  background: var(--panel-bg);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font: inherit;
+  font-family: var(--mono-blocks);
+  font-size: var(--fs-sm);
+  resize: vertical;
+}
+.captionField:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+.captionNote {
+  margin: 0 0 8px;
+  color: var(--fg4);
+  font-size: var(--fs-sm);
+}
+
+/* The card's own chips, over its rows. Quieter than the preset table's, on
+   purpose: those name a whole rig and these name a setting of one card, so a
+   row of loud buttons above every heading would read as the panel's main event
+   rather than as a way into the rows under it. Smaller than .btn and without
+   its margins, because these sit as a wrapped row rather than in a flowing
+   line of actions. */
+.cardChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 2px 0 8px;
+}
+
+.cardChip {
+  background: var(--ctl-face);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 2px 7px;
+  font: inherit;
+  font-size: var(--fs-sm);
+  cursor: pointer;
+}
+
+.cardChip:hover {
+  border-color: var(--border-hover);
+}
+
+/* Lit when the card is standing exactly on this chip. Border and text rather
+   than a fill, the same way .active reads elsewhere. */
+.cardChipOn {
+  border-color: var(--accent);
+  color: var(--accent);
 }

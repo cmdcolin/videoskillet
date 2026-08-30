@@ -31,6 +31,7 @@ type Shortcut =
   | { do: 'tapCue'; slot: 'a' | 'b' }
   | { do: 'retrigger'; slot: 'a' | 'b' }
   | { do: 'fire' }
+  | { do: 'drift' }
   | { do: 'saveSlot'; n: number }
   | { do: 'recallSlot'; n: number }
 
@@ -106,6 +107,10 @@ export function resolveShortcut(e: Keystroke): Shortcut | null {
   // ⚡ buttons are, which were mouse-only — the wrong input for something whose
   // whole point is when it lands.
   if (key === 't') return e.repeat ? null : { do: 'fire' }
+  // `d` for the mode that plays itself. Guarded against repeat because it is a
+  // switch: a held key would toggle it at the OS rate and leave whether the
+  // board is drifting down to how long the finger stayed on.
+  if (key === 'd') return e.repeat ? null : { do: 'drift' }
   // The saved library's first nine, by position in the list. Read from `code`
   // rather than `key` so shift+1 is still slot 1 and not `!`.
   const m = /^(?:Digit|Numpad)([1-9])$/.exec(e.code)
@@ -145,6 +150,11 @@ interface Handlers {
   // cue gestures are, and it is the one the argument fits best: the whole bay
   // fired together is a gesture you land on a beat.
   onFire: () => void
+  // Start or stop the wander (ui/drift.ts). On the keyboard because the mode is
+  // for when nobody is at the panel — the picture is fullscreen or the controls
+  // are in a window on another screen — and a mode you can only reach by finding
+  // a button in the sidebar is one that has to be armed before you need it.
+  onToggleDrift: () => void
 }
 
 // Global keyboard shortcuts, bound wherever the panel lives (main window and the
@@ -217,6 +227,9 @@ export function useShortcuts(popout: Window | null, handlers: Handlers) {
           break
         case 'fire':
           h.onFire()
+          break
+        case 'drift':
+          h.onToggleDrift()
           break
         case 'saveSlot':
           h.onSaveSlot(hit.n)

@@ -188,7 +188,7 @@ export function depthBudget(def: SliderDef): number {
 //   whatever else it has going for it. The 3× above says a control off its
 //   resting value is probably in circuit, which is a guess; a gate is the app's
 //   own statement that this control addresses nothing until another one opens
-//   its path, and the ∿ on every row already refuses to claim a slot on one for
+//   its path, and every row already refuses to claim a slot on one for
 //   exactly this reason. Without it a roll spent slots on tape wow with the tape
 //   path bypassed — patched, named on its row, and moving nothing — and spent
 //   them *first*, since a hand-tuned depth is worth six draws whether or not the

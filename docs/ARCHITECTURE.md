@@ -70,9 +70,9 @@ authenticity gap.
 One frame, driven by `Engine.render()` in `src/core/gpu/pipeline.ts`:
 
 ```
-prePasses    compose → encodeComposite → [feedA] → [composeB → encodeChromaB → encodeCompositeB → feedB → mixB] → [fbComposite] → [tapePlay → tapeRec]
+prePasses    compose → encodeComposite → [feedA] → [composeB → encodeChromaB → encodeCompositeB → feedB → mixB] → [chyron] → [fbComposite]
 loopPasses   chromaExtract → [underDown] → channel → timebase     (× dubGens, ≤ 4)
-postPasses   [enhancer] → [buzzTap] → syncMeasure → sync → lineAnalyze → decode → crtFace → [storePrev]
+postPasses   [enhancer] → [buzzTap] → syncMeasure → sync → lineAnalyze → [vir] → [caption] → decode → crtFace → [storePrev]
 present      render pass to the swap chain
 ```
 
@@ -83,7 +83,7 @@ with the buffers on the arrows and is held to the same list:
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="img/pipeline-dark.svg">
-  <img alt="Signal path pass by pass. Source A and B feed the encoder (compose, encodeComposite, composeB, encodeChromaB, encodeCompositeB, mixB), then fbComposite, then the channel block (chromaExtract, underDown, channel, timebase) which repeats once per tape dub, then the outboard enhancer, then the receiver (syncMeasure, sync, lineAnalyze, decode), then crtFace and present. storePrev feeds the composite loop back into fbComposite one frame later; crtFace feeds the camera loop back into compose." src="img/pipeline-light.svg">
+  <img alt="Signal path pass by pass. Source A and B feed the encoder (compose, encodeComposite, composeB, encodeChromaB, encodeCompositeB, mixB), then fbComposite, then the channel block (chromaExtract, underDown, channel, timebase) which repeats once per tape dub, then the outboard enhancer, then the receiver (syncMeasure, sync, lineAnalyze, vir, caption, decode), then crtFace and present. storePrev feeds the composite loop back into fbComposite one frame later; crtFace feeds the camera loop back into compose." src="img/pipeline-light.svg">
 </picture>
 
 Bracketed passes are gated by a `when()` predicate on the controls, so an idle
@@ -162,15 +162,20 @@ fault through `timing[]` will spin hue that should have stayed put.
 
 ## Buffer layouts worth knowing
 
-- **`timingBuf`** (`(LINES * 2 + 8)` floats) — `[0..524]` per-line horizontal
+- **`timingBuf`** (`(LINES * 2 + 10)` floats) — `[0..524]` per-line horizontal
   offset; `[525]` vertical oscillator phase, signed and fractional; `[526]` PLL
   state; `[527]` AGC gain; `[528..531]` the two second-order gain servos (beam
   limiter and camera auto-iris, gain + velocity each — `sync` updates them,
   `decode` applies the ABL drive, `compose` applies the iris a frame late);
   `[532]` the sync separator's lock age, lines since the last real edge, which
   scales the free-running H-osc's phase noise so lock decays instead of
-  coasting; `[SAG_BASE..]` normalized deflection sag per raster line. Indices
-  525–532 are persistent across frames; treat them as state.
+  coasting; `[SAG_BASE..]` normalized deflection sag per raster line;
+  `[VIR_HUE]` and `[VIR_GAIN]`, past the sag region, the VIR corrector's two
+  integrators — `vir` writes them, `decode` adds them to the demodulator's
+  reference and to its chroma gain. Indices 525–532 and the two VIR slots are
+  persistent across frames; treat them as state. A zeroed `VIR_GAIN` means the
+  servo has never run, which is what lets `resetSignal` clear the whole buffer
+  and still hand the loop a sane start.
 - **`lineParamsBuf`** — one `vec4f` per line from `LineState`:
   `(tbOffsetSamples, underBasePhase, underJitterPhase, seed)`. All four slots
   are taken; a new per-line CPU quantity needs its own buffer.
@@ -184,21 +189,6 @@ fault through `timing[]` will spin hue that should have stayed put.
   three staging buffers and skips the frame when none is free, because the sound
   side can glide over a gap and the render loop cannot afford to wait. Gated on
   the buzz being audible at all, so an idle listener pays nothing.
-- **`tapeBuf`** — the delay loop, `TAPE_FRAMES` (120) composite frames as f16
-  pairs packed into `u32`, two seconds at 60 fps for 109 MiB. It is a _medium_,
-  not a frame store: `tapeRec` writes the slot `frame % TAPE_FRAMES` and
-  `tapePlay` reads it back through up to four heads at their own distances
-  behind, so the same stretch of tape carries the same grain, the same worn
-  patches and the same splice round after round. Two consequences to respect.
-  **The delay arrives split** — `tapeDelayFrames` (whole frames) plus
-  `tapeDelaySamples` (the remainder) — because the ring holds 57 M samples and
-  an f32 stops counting integers singly at 2²⁴; position arithmetic in
-  `tape_play.wgsl` is `u32` for the same reason. And **`tapePlay` must run
-  before `tapeRec`**, which is what makes the maximum delay a full ring rather
-  than one frame short of it — and is the thing to hold in mind when touching
-  the hold window, because while recording frame _f_ the newest tape on the loop
-  is _f−1_, so the window has to step on once more as the record head lifts or
-  the last frame recorded is the one frame that never plays back.
 - **`persistBufs`** — phosphor state (the light still on the glass), packed
   `rgba8`, ping-ponged by frame parity: `decode` reads one and writes the other,
   because its lateral scatter reads neighbouring pixels and a single buffer

@@ -26,17 +26,17 @@ const board = () => ({ ...DEFAULT_CONTROLS })
 describe('SavedBoard', () => {
   it('hands back what one pass over distinct controls overwrote', () => {
     const c = board()
-    const before = { fbMix: c.fbMix, tapeMix: c.tapeMix }
+    const before = { fbMix: c.fbMix, cfbMix: c.cfbMix }
     const saved = new SavedBoard()
     saved.begin()
-    for (const k of ['fbMix', 'tapeMix'] as const) {
+    for (const k of ['fbMix', 'cfbMix'] as const) {
       saved.save(c, k)
       c[k] = 0.9
     }
     expect(c.fbMix).toBe(0.9)
     saved.restore(c)
     expect(c.fbMix).toBe(before.fbMix)
-    expect(c.tapeMix).toBe(before.tapeMix)
+    expect(c.cfbMix).toBe(before.cfbMix)
   })
 
   it('round-trips a control two routings both drive, saved as it goes', () => {
@@ -70,22 +70,22 @@ describe('SavedBoard', () => {
     // The arrays are reused, so a shrinking bay must not leave a stale key
     // behind for the next restore to write back.
     const c = board()
-    const restTape = c.tapeMix
+    const restCfb = c.cfbMix
     const saved = new SavedBoard()
     saved.begin()
     saved.save(c, 'fbMix')
-    saved.save(c, 'tapeMix')
+    saved.save(c, 'cfbMix')
     c.fbMix = 0.9
-    c.tapeMix = 0.9
+    c.cfbMix = 0.9
     saved.restore(c)
 
     saved.begin()
     saved.save(c, 'fbMix')
     c.fbMix = 0.5
-    c.tapeMix = 0.42 // set by something else this frame; not the bay's to undo
+    c.cfbMix = 0.42 // set by something else this frame; not the bay's to undo
     saved.restore(c)
-    expect(c.tapeMix).toBe(0.42)
-    expect(c.tapeMix).not.toBe(restTape)
+    expect(c.cfbMix).toBe(0.42)
+    expect(c.cfbMix).not.toBe(restCfb)
   })
 
   it('restores nothing after a begin with no saves', () => {

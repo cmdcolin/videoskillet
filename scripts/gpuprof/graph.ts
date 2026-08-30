@@ -6,6 +6,7 @@
 // that this file does not supply throws at construction.
 
 import { DEFAULT_CONTROLS } from '../../src/core/controls'
+import { buildCaptionRom, CC_BUF_LEN } from '../../src/core/gpu/captionrom'
 import {
   aFeedOn,
   bFeedOn,
@@ -31,7 +32,6 @@ import {
   LINES,
   SAMPLE_RATE,
   SAMPLES_PER_LINE,
-  TAPE_FRAMES,
 } from '../../src/core/signal/constants'
 import { advanceCrossings } from '../../src/core/signal/crossings'
 import { FILTER_STRIDE, NUM_SECTIONS } from '../../src/core/signal/filters'
@@ -39,9 +39,9 @@ import { LineState } from '../../src/core/signal/linestate'
 import { MixState } from '../../src/core/signal/mixstate'
 import { valueNoise } from '../../src/core/signal/noise'
 import { RfState } from '../../src/core/signal/rfstate'
+import { TrackingServo } from '../../src/core/signal/servo'
 import { StrobeGate } from '../../src/core/signal/strobe'
 import { SynthState } from '../../src/core/signal/synthstate'
-import { TapeState, tapeRecording } from '../../src/core/signal/tapeloop'
 
 import type { Controls } from '../../src/core/controls'
 import type { FeedSource } from '../../src/core/gpu/feedgates'
@@ -77,6 +77,13 @@ interface Pass {
 export interface GraphOptions {
   controls: Controls
   bEnabled: boolean
+  dbgView?: number
+  // GPU-generated source A instead of the uploaded texture: 0 texture,
+  // 1 TV static, 2 VHS blank-tape static. The published demos are mostly built
+  // on these rather than on a picture, so a harness that only ever renders a
+  // texture is not rendering the thing being judged.
+  srcNoise?: number
+  srcNoiseB?: number
   sourceA: Uint8Array<ArrayBuffer>
   sourceB: Uint8Array<ArrayBuffer>
 }
@@ -94,8 +101,13 @@ export class Graph {
   frame = 0
 
   readonly compA: GPUBuffer
+  // Source A's texture, so a caller can move the picture between frames. A
+  // loop over a frozen frame converges and stops, which makes every feedback
+  // look score as though it does nothing.
+  readonly srcTexA: GPUTexture
   readonly outTex: GPUTexture
   readonly faceTex: GPUTexture
+  readonly timingBuf: GPUBuffer
   private readonly paramsBuf: GPUBuffer
   private readonly genParamsBuf: GPUBuffer
   private readonly genLineParamsBuf: GPUBuffer
@@ -110,16 +122,23 @@ export class Graph {
   private readonly rand = rngFor(1)
   private readonly lineState = new LineState(this.rand)
   private readonly mixState = new MixState(this.rand)
-  private readonly tapeState = new TapeState(this.rand)
   private readonly rfState = new RfState()
   private readonly synthState = new SynthState()
   private readonly strobeGate = new StrobeGate()
+  // The tracking servo the app runs (signal/servo.ts). Not an ornament here:
+  // `uniformValues` reads `flagUs` off it, and leaving the three fields out
+  // packed `syncBend` as NaN — which walks into the PLL at the top of active
+  // video, makes every `timing[row]` NaN, and decodes the whole frame black.
+  private readonly servo = new TrackingServo(this.rand)
   private scPhase = 0
   private shuttlePhase = 0
   private tapeFrame = { a: 0, b: 0 }
   private impulseTrainPos = 0
   private impulseTrainStep = 0
   private readonly bEnabled: boolean
+  private readonly dbgView: number
+  private readonly srcNoise: number
+  private readonly srcNoiseB: number
 
   private prePasses: Pass[] = []
   private loopPasses: Pass[] = []
@@ -129,6 +148,9 @@ export class Graph {
     this.device = device
     this.c = opts.controls
     this.bEnabled = opts.bEnabled
+    this.dbgView = opts.dbgView ?? 0
+    this.srcNoise = opts.srcNoise ?? 0
+    this.srcNoiseB = opts.srcNoiseB ?? 0
     const d = device
     const uniform = () =>
       d.createBuffer({
@@ -162,8 +184,13 @@ export class Graph {
     const chromaBuf = storage(N * 4)
     const underBuf = storage(N * 4)
     const lineInfoBuf = storage(LINES * 16)
-    const timingBuf = storage((LINES * 2 + 8) * 4)
+    const timingBuf = storage((LINES * 2 + 8) * 4, GPUBufferUsage.COPY_SRC)
+    this.timingBuf = timingBuf
     const syncMeasureBuf = storage(LINES * 16)
+    // The caption decoder's font ROM and page RAM (captionrom.ts), which
+    // `decode` reads whether or not a caption is switched on.
+    const ccBuf = storage(CC_BUF_LEN * 4)
+    d.queue.writeBuffer(ccBuf, 0, buildCaptionRom())
     const buzzBuf = storage(LINES * 8, GPUBufferUsage.COPY_SRC)
     const persist = [
       storage(ACTIVE_WIDTH * ACTIVE_HEIGHT * 8),
@@ -181,6 +208,7 @@ export class Graph {
           GPUTextureUsage.COPY_DST,
       })
     const srcTexA = tex()
+    this.srcTexA = srcTexA
     const srcTexB = tex()
     const inputTex = tex()
     this.outTex = tex(['rgba8unorm-srgb'])
@@ -224,9 +252,6 @@ export class Graph {
     const lineParams = this.lineParamsBuf
     const audio = this.audioBuf
     const one = (res: Record<string, Res>) => ({ main: res })
-
-    const tapeOn = c.tapeMix !== 0 || tapeRecording(c)
-    const tape = tapeOn ? storage(TAPE_FRAMES * N * 2) : null
 
     this.setup = [
       {
@@ -339,24 +364,6 @@ export class Graph {
         dispatch: perLine,
         when: () => c.cfbMix !== 0,
       },
-      ...(tape === null
-        ? []
-        : [
-            {
-              label: 'tapePlay',
-              shader: 'tape_play',
-              variants: one({ P, tape, comp: this.compA }),
-              dispatch: perLine,
-              when: () => c.tapeMix !== 0,
-            },
-            {
-              label: 'tapeRec',
-              shader: 'tape_rec',
-              variants: one({ P, comp: this.compA, tape }),
-              dispatch: perLineW,
-              when: () => tapeRecording(c),
-            },
-          ]),
     ]
     this.loop = [
       {
@@ -457,6 +464,7 @@ export class Graph {
             lineInfo: lineInfoBuf,
             timing: timingBuf,
             outTex: this.outTex.createView(),
+            cc: ccBuf,
             held: persist[0],
             heldNext: persist[1],
             audio,
@@ -468,6 +476,7 @@ export class Graph {
             lineInfo: lineInfoBuf,
             timing: timingBuf,
             outTex: this.outTex.createView(),
+            cc: ccBuf,
             held: persist[1],
             heldNext: persist[0],
             audio,
@@ -662,26 +671,23 @@ export class Graph {
       wipePos: c.wipePos,
       wipeRateHz: c.wipeRate,
     })
-    const tapeU = this.tapeState.update(
-      {
-        tapeLoopMm: c.tapeLoopMm,
-        tapeWowPct: c.tapeWowPct,
-        tapeColourFrame: c.tapeColourFrame,
-        tapeMix: c.tapeMix,
-        tapeRecord: c.tapeRecord,
-        tapeTransport: c.tapeTransport,
-        tapeShuttle: c.tapeShuttle,
-      },
-      this.frame,
-    )
+    const track = this.servo.update({
+      target: c.trackPos,
+      amt: c.trackAmt,
+      hunt: c.trackHunt,
+      kick: c.trackKick,
+    })
     const vals = {
       ...uniformValues(c, {
+        trackPos: track.pos,
+        trackAmt: track.amt,
+        flagUs: track.flagUs,
         frame: this.frame,
         canvasW: 1508,
         canvasH: 1131,
         srcAspect: 4 / 3,
-        srcNoise: 0,
-        srcNoiseB: 0,
+        srcNoise: this.srcNoise,
+        srcNoiseB: this.srcNoiseB,
         srcFrame: this.tapeFrame.a,
         beamBlank: this.strobeGate.step(
           { hz: c.strobeHz, ms: c.strobeMs },
@@ -693,10 +699,9 @@ export class Graph {
         impulseTrainPos: this.impulseTrainPos,
         impulseTrainStep: this.impulseTrainStep,
         shuttlePhase: this.shuttlePhase,
-        dbgView: 0,
+        dbgView: this.dbgView,
       }),
       ...mixU,
-      ...tapeU,
       ...this.rfState.update(this.frame),
       ...this.synthState.update({ synthAHz: c.synthAHz, synthBHz: c.synthBHz }),
     }
@@ -714,8 +719,8 @@ export class Graph {
       tbStickNs: c.tbStickNs,
       underJitterDeg: c.underJitterDeg,
       headSwitchShiftUs: c.headSwitchShiftUs,
-      trackAmt: c.trackAmt,
-      trackPos: c.trackPos,
+      trackAmt: track.amt,
+      trackPos: track.pos,
       shuttleBars: c.shuttleX - 1,
       shuttlePhase: this.shuttlePhase,
     }

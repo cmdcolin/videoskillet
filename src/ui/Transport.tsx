@@ -4,7 +4,7 @@ import { sliderFor } from './controls'
 import { useControlValue, useControlsApi } from './ControlsContext'
 import { cx } from './cx'
 import styles from './Deck.module.css'
-import { LOOP_TRANSPORT, SHUTTLE_STOPS } from './deckModel'
+import { SHUTTLE_STOPS } from './deckModel'
 import { fromTravel, toTravel, TRAVEL_STEP } from './travel'
 
 import type { SliderDef } from './controls'
@@ -16,7 +16,6 @@ import type { CSSProperties } from 'react'
 // row for the same control to disagree about where play sits — which is exactly
 // what they did while the ring's geometry lived in the deck alone.
 const TAPE_SPAN: SliderDef = sliderFor('shuttleX')
-const LOOP_SPAN: SliderDef = sliderFor('tapeShuttle')
 
 // The shuttle ring, flattened into a strip.
 //
@@ -129,79 +128,3 @@ export function TapeTransport() {
     </div>
   )
 }
-
-// The delay loop's own deck. Everything here needs the record head lifted — a
-// loop that is still being written over has nothing to shuttle through — so the
-// gate is stated once, on the head, and the rest goes quiet behind it rather
-// than each button repeating the note.
-export function LoopTransport() {
-  const tapeMix = useControlValue('tapeMix')
-  const tapeRecord = useControlValue('tapeRecord')
-  const tapeTransport = useControlValue('tapeTransport')
-  const tapeShuttle = useControlValue('tapeShuttle')
-  const { writeControl } = useControlsApi()
-  const held = tapeRecord < 0.5
-  const threaded = tapeMix > 0
-  return (
-    <div className={styles.deckRow}>
-      <div
-        className={styles.deckLabel}
-        title="the loop of tape threaded through the feedback path — the deck above it is what the incoming tape is played back on"
-      >
-        tape loop
-      </div>
-      <div className={styles.stops}>
-        <button
-          className={cx(styles.deckBtn, !held && styles.deckBtnRec)}
-          title={
-            held
-              ? 'the record head is lifted — the loop repeats what it has. Drop it to start recording over.'
-              : 'the record head is down, taking in the live picture. Lift it to hold the loop.'
-          }
-          onClick={() => writeControl('tapeRecord', held ? 1 : 0)}
-        >
-          ●
-        </button>
-        {LOOP_TRANSPORT.map((glyph, i) => (
-          <button
-            key={glyph}
-            className={cx(
-              styles.deckBtn,
-              held && Math.round(tapeTransport) === i && styles.deckBtnOn,
-            )}
-            disabled={!held}
-            title={loopTitle(i)}
-            onClick={() => writeControl('tapeTransport', i)}
-          >
-            {glyph}
-          </button>
-        ))}
-        <ShuttleStrip
-          span={LOOP_SPAN}
-          value={tapeShuttle}
-          disabled={!held}
-          title="how fast the held loop runs past the heads — the transport buttons give the direction"
-          onChange={v => writeControl('tapeShuttle', Math.abs(v))}
-        />
-        <span className={styles.nums}>{`${tapeShuttle}x`}</span>
-      </div>
-      {threaded ? null : (
-        <button
-          className={styles.fix}
-          title="nothing is threaded through the heads yet"
-          onClick={() => writeControl('tapeMix', 0.5)}
-        >
-          no tape in the path — click to thread the loop
-        </button>
-      )}
-    </div>
-  )
-}
-
-const loopTitle = (i: number) =>
-  [
-    'reverse — the frames play back in the order they were laid down',
-    'stopped — the tape parks and the drum re-reads one sweep',
-    'forward — play',
-    'scrub — the drum stalls and the head drags the waveform back end-first',
-  ][i]

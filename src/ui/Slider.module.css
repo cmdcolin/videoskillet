@@ -2,6 +2,14 @@
 .slider {
   display: block;
   position: relative;
+  /* The row is its own size container, so the form below is decided by the
+     width this row actually got rather than by how wide the panel is. Those are
+     not the same question and keying off the panel gets the bench wrong: at
+     664px the stage's groups pair off into two columns (SignalPath.module.css),
+     so every row on the bench is ~322px — the same width as the docked sidebar,
+     inside a panel twice as wide. Measured: 88px of track on a 692px panel.
+     A wide popout is the same story one column further out. */
+  container: row / inline-size;
   /* Half the old 9px rather than none of it: one-line rows pack tightly enough
      that at 4px two wrapped labels in a row read as one paragraph, and the
      saving from the last 2px is not worth a group you have to parse. */
@@ -42,6 +50,11 @@
   grid-template-columns:
     minmax(0, 1.2fr) minmax(5.5rem, 0.85fr)
     minmax(3.6rem, auto);
+  /* Placed rather than flowed, because the source order is the stacked one —
+     name, reading, track — and this form wants the track in the middle. See the
+     comment on the row in Slider.tsx for which of the two orders is worth
+     having agree with the DOM. */
+  grid-template-areas: 'name track value';
   align-items: center;
   column-gap: 10px;
   /* A row is one measure wide however wide its container is. The docked panel
@@ -53,6 +66,52 @@
      the row, which is the thing that has a measure. */
   max-width: 34rem;
 }
+/* The row's control, whichever of the two it is — a fader's track or an inline
+   mode switch. Named because the row places its three items by area rather than
+   flowing them, and without a handle on this one they could only be addressed
+   by child index. */
+.trackCell {
+  min-width: 0;
+  grid-area: track;
+}
+
+/* At the widths this app's rows actually get, the three columns are a fiction.
+   The `1.2fr : 0.85fr` split resolves to a 90px track in the docked sidebar —
+   two pixels off the `minmax(5.5rem, …)` floor — so every fader sits at its
+   minimum and the weighting above never gets to act. Stacked, the track takes
+   the whole measure: 322px against 90, which is 3.6x the travel on a control
+   like tint, and the label has the width to itself, so none of the 38 labels
+   past ~18 characters wraps any more.
+
+   It is a trade and not a free win: a stacked row is a flat 45px against a
+   mixture of 30 and 47, so a column of them costs about a third more height per
+   row. That is paid for out of the header stack the panel reclaims above it,
+   not out of nothing.
+
+   Mode switches stack here too, inline ones included. `choicesFitTrack` is a
+   question about a track column that does not exist in this form, and one row
+   carrying a 59px `off|on` where its neighbours run the full measure is the
+   thing that makes a column hard to read down.
+
+   The threshold is where the three-column form stops being able to pay for
+   itself: at 520px the track solves to about 170px, and below that it is losing
+   width faster than the label is gaining any. Past it — a single-column popout
+   somebody has dragged wide — the row stays on one line, which it can, because
+   `max-width: 34rem` above already stops it running so far that the label is at
+   one end of the screen and the value at the other. */
+@container row (max-width: 520px) {
+  .row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'name value'
+      'track track';
+    /* the label and the reading are two texts on one line now, so they are set
+       against each other's baseline rather than boxed centres */
+    align-items: baseline;
+    row-gap: 1px;
+  }
+}
+
 /* A mode switch keeps the full width: its options are words, not a track. */
 .rowStack {
   display: block;
@@ -64,6 +123,7 @@
 .naming {
   min-width: 0;
   line-height: 1.25;
+  grid-area: name;
 }
 /* the label's last word plus its ?, kept on one line together */
 .tail {
@@ -100,6 +160,7 @@
   font-family: var(--mono);
   white-space: nowrap;
   justify-self: end;
+  grid-area: value;
 }
 /* Track fills from the *default* position (--def) out to the thumb (--lo/--hi
    from Slider.tsx), with a faint tick marking the default. That paint is
@@ -220,7 +281,7 @@
    binding, a clock lock, a pin. Only rendered when set, so a row that has none
    of them spends nothing on the slot; the colour is the whole message, and the
    ⋮ next to it is where the changing happens. Two of them are buttons rather
-   than marks (a routed ∿, an armed ⚟) and take the same box either way. */
+   than marks (a routed row's `mod`, an armed ⚟) and take the same box. */
 .badge {
   composes: bare from './ui.module.css';
   /* a mark on most rows and a button on two, so the hand comes from the tag */
@@ -259,18 +320,44 @@ button.badge {
 .iconSyncSet {
   color: var(--edit);
 }
-/* something is driving this control. A static tint and nothing else: the mark
-   says the lever is wired, and animating it would put a second moving thing on
-   screen competing with the picture, which is the thing meant to move. */
+/* something is driving this control, and it is running. A chip with an outline,
+   not bare text, and the outline is the load-bearing part: this is the one badge
+   in the row that is a *button*, and it stands in a line of badges that are not
+   — CC42, ♩1/4 and ★ are marks, and a reader who has to press one to find out
+   which is which has been given a puzzle. A fill alone did not separate them
+   once the glyph became a word: `mod` in a tinted pill reads as a tag, and a tag
+   is what the three beside it are. A hairline reads as a control at rest, which
+   is where it has to read as one — hover is an answer that arrives after the
+   question. Padding is one less than the border it gained, so the box is the
+   size it was. */
 .iconModSet {
   color: var(--mod);
+  background: color-mix(in srgb, var(--mod) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--mod) 40%, transparent);
+  border-radius: 3px;
+  padding: 0 4px;
 }
-/* the same routing, held still. Struck through rather than merely dimmed: at
-   --fg4 alone it reads as an unset badge, and this row has to say "there is a
-   wobble patched here and it is not running" in one glyph. */
+.iconModSet:hover {
+  background: color-mix(in srgb, var(--mod) 30%, transparent);
+  border-color: var(--mod);
+}
+/* the same routing, held still. Same chip and same outline at the quiet colour,
+   so "click to resume" reads as clearly as "click to pause" did — a held routing
+   is the state you most need a way out of, so it must not be the state that
+   stops looking pressable. It used to be the ∿ struck through, which was the
+   only way one glyph could say "there is a wobble patched here and it is not
+   running"; the badge says `held` now, and a struck-through word is harder to
+   read than the word. */
 .iconModOff {
   color: var(--fg4);
-  text-decoration: line-through;
+  background: color-mix(in srgb, var(--fg4) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--fg4) 35%, transparent);
+  border-radius: 3px;
+  padding: 0 4px;
+}
+.iconModOff:hover {
+  background: color-mix(in srgb, var(--fg4) 26%, transparent);
+  border-color: var(--fg3);
 }
 .iconMidiSet {
   color: var(--midi);
@@ -324,6 +411,16 @@ button.badge {
   .what {
     padding: 4px 0 4px 10px;
   }
+  /* …except the one badge that is a button. The rule above grows a *mark* into
+     a fingertip's target by padding the side it is read from, which on a chip
+     takes the right-hand padding off the pill and leaves the outline sitting on
+     the last letter. It keeps a symmetric box and buys the same target with
+     height and a margin instead. */
+  .iconModSet,
+  .iconModOff {
+    margin-left: 6px;
+    padding: 4px 6px;
+  }
   /* the reading doubles as the reset, so it needs a fingertip's height — and
      no side padding, which would push the column off the row's right edge */
   .revert {
@@ -365,12 +462,24 @@ button.badge {
    :has(:active) is for: a pointer that slips a few px off the row mid-drag
    drops :hover, and a card that vanished under the thumb would end the drag it
    was holding. */
+/* A native popover: the browser handles light-dismiss and Escape, so there is
+   no document-level listener here and no close callback threaded through
+   props — see Popover.module.css for the fuller version of this comment.
+   position-anchor (set per instance in Slider.tsx, on the row rather than the
+   "minor" trigger) hangs it under the row, sized to the row's own width via
+   anchor-size rather than shrinking to content — the position:absolute;
+   left:0;right:0 it replaces did the same against the row as its offset
+   parent.
+
+   left and width only, no `right`: Firefox 151 parses the end-side insets
+   but honours neither (see the fuller note in Popover.module.css), so an
+   anchored `right` silently loses to the content's shrink-to-fit width. */
 .vernier {
-  position: absolute;
-  z-index: 6;
-  left: 0;
-  right: 0;
-  top: 100%;
+  position: fixed;
+  inset: auto;
+  top: anchor(bottom);
+  left: anchor(left);
+  width: anchor-size(width);
   margin-top: 2px;
   max-width: 34rem;
   background: #1a1a22;
@@ -379,14 +488,36 @@ button.badge {
   padding: 5px 8px 6px;
   box-shadow: 0 4px 14px rgb(0 0 0 / 0.5);
 }
+.vernier:popover-open {
+  display: block;
+}
+/* Chrome 113–124 and Safari < 26 run WebGPU but not anchor positioning; pin
+   the card near the trigger's row rather than let the UA centre it. */
+@supports not (top: anchor(bottom)) {
+  .vernier {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+  }
+}
 .vernierHead {
   display: flex;
-  justify-content: space-between;
   align-items: baseline;
   gap: 8px;
   font-size: var(--fs-xs);
   color: var(--muted);
   margin-bottom: 3px;
+}
+.vernierHead > :first-child {
+  margin-right: auto;
+}
+.vernierClose {
+  composes: bare from './ui.module.css';
+  color: var(--muted);
+}
+.vernierClose:hover {
+  color: var(--fg);
 }
 /* The one place the value is printed to the cent. Its own colour, because it is
    the same number the row above is showing and the digits that differ are the

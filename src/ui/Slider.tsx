@@ -1,4 +1,4 @@
-import { createContext, use, useId, useState } from 'react'
+import { createContext, use, useEffect, useId, useState } from 'react'
 
 import { snapToStep } from './controls'
 import { cx } from './cx'
@@ -66,7 +66,7 @@ export function Rack(props: {
   return <RackContext value={ch}>{props.children}</RackContext>
 }
 
-// The readout's little accessory buttons (help, and the ∿ on a routed row).
+// The readout's little accessory buttons (help, and the badge on a routed row).
 function IconButton(props: {
   title: string
   className: string
@@ -248,6 +248,8 @@ const centFill = (cents: number) => ({
 // Its whole width is one step of the control above, so a pixel here is worth
 // about a third of a cent where a pixel up there is worth a whole step.
 function Vernier(props: {
+  id: string
+  anchorName: string
   label: string
   min: number
   max: number
@@ -256,12 +258,19 @@ function Vernier(props: {
   value: number
   disabled: boolean
   onChange: (v: number) => void
+  onOpenChange: (open: boolean) => void
 }) {
   const cents = centsOf(props, props.value)
   const fill: CSSProperties & Record<'--lo' | '--hi' | '--def', string> =
     centFill(cents)
   return (
-    <div className={styles.vernier}>
+    <div
+      id={props.id}
+      popover="auto"
+      className={styles.vernier}
+      style={{ positionAnchor: props.anchorName }}
+      onToggle={e => props.onOpenChange(e.newState === 'open')}
+    >
       <span className={styles.vernierHead}>
         <span>minor adjustment</span>
         {/* The reading the row cannot give: two places further in, which is
@@ -269,6 +278,15 @@ function Vernier(props: {
         <span className={styles.vernierExact}>
           {`${formatFine(props.value, props.step)}${props.unit}`}
         </span>
+        <button
+          type="button"
+          className={styles.vernierClose}
+          title="close"
+          popoverTarget={props.id}
+          popoverTargetAction="hide"
+        >
+          close
+        </button>
       </span>
       <span className={styles.vernierBody}>
         <input
@@ -335,7 +353,7 @@ export function Slider(props: {
     routed: boolean
     on: boolean
     open: boolean
-    // Park/restart — what the ∿ badge does.
+    // Park/restart — what the `mod`/`held` badge does.
     onToggleOn: () => void
     // Show/hide the editor — what the ⋮ does.
     onToggle: () => void
@@ -356,6 +374,17 @@ export function Slider(props: {
   // was on its way somewhere else and covered the row below it uninvited — for
   // a control most passes over a row never need.
   const [showVernier, setShowVernier] = useState(false)
+  const vernierId = useId()
+  const vernierAnchor = `--vernier-${vernierId.replaceAll(/\W/g, '')}`
+  // Both hang off the same edge of the same row; the ? card wins because it is
+  // asked for after the vernier already was and there is only room for one.
+  // The vernier is a native popover now, so closing it from here means asking
+  // the element itself rather than an unmount.
+  useEffect(() => {
+    if (showVernier && (hoverHelp || showHelp)) {
+      document.getElementById(vernierId)?.hidePopover()
+    }
+  }, [showVernier, hoverHelp, showHelp, vernierId])
   const midi = props.midi
   const sync = props.sync
   const needs = props.needs
@@ -424,18 +453,19 @@ export function Slider(props: {
             disclosure already owns that word, and three of the rows that carry
             this card live inside one. */}
         {props.vernier !== true || choices !== undefined ? null : (
-          <IconButton
+          <button
+            type="button"
             title={
               showVernier
                 ? 'hide the minor adjustment'
                 : `minor adjustment — trim ${props.label} in hundredths of a step`
             }
             className={cx(styles.what, showVernier && styles.whatOn)}
-            expanded={showVernier}
-            onClick={() => setShowVernier(!showVernier)}
+            aria-expanded={showVernier}
+            popoverTarget={vernierId}
           >
             minor
-          </IconButton>
+          </button>
         )}
       </span>
     </span>
@@ -468,8 +498,8 @@ export function Slider(props: {
   // *set*: an unset affordance has nothing to say and its slot is the width the
   // label wanted. All of them are marks rather than buttons — the menu is the
   // one way to change any of this — except the two that are live states you
-  // have to be able to get out of from the row you are looking at: a routed ∿
-  // opens and closes its editor, and an armed ⚟ cancels the learn.
+  // have to be able to get out of from the row you are looking at: a routed
+  // row's `mod` holds the wobble still, and an armed ⚟ cancels the learn.
   const badges = (
     <>
       {sync?.label == null ? null : (
@@ -506,13 +536,29 @@ export function Slider(props: {
           `remove` throws the routing away, and dragging depth to zero throws away
           the depth. Changing *what* is driving the control is set-up by
           comparison, so it moved to the ⋮ beside this, which is where the row
-          keeps its wiring. */}
+          keeps its wiring.
+
+          A word rather than a ∿, and that is what stopped it being pressed by
+          mistake: the strip's filter count wore the same glyph, so one mark said
+          "this control is driven" in one place and "show me only driven rows" in
+          another, and a session that meant the first got the second. Both say
+          what they are now. `mod` and not `modulated` because this box is in the
+          column that holds every track in a group at one x — see Rack — and the
+          badges already standing in it are `CC42` and `♩1/4`. */}
       {props.mod?.routed !== true ? null : (
-        <IconButton
+        <button
+          type="button"
+          // A switch, so it says which of the two states it is in rather than
+          // making a reader infer one from a tint. It briefly opened a one-row
+          // menu to confirm instead of toggling, which put a second click in
+          // front of a gesture that is already its own undo — press it again
+          // and the wobble is back exactly as it was dialed — and made the
+          // hover text a lie about what the press would do.
+          aria-pressed={props.mod.on}
           title={
             props.mod.on
-              ? 'wobbling — click to hold this one still (⋮ to change what drives it)'
-              : 'held still — click to start it wobbling again, as you set it'
+              ? 'modulated — click to hold this one still'
+              : 'held still — click to start it wobbling again'
           }
           className={cx(
             styles.badge,
@@ -520,8 +566,8 @@ export function Slider(props: {
           )}
           onClick={props.mod.onToggleOn}
         >
-          ∿
-        </IconButton>
+          {props.mod.on ? 'mod' : 'held'}
+        </button>
       )}
       {favorite?.on !== true ? null : (
         <span
@@ -593,10 +639,11 @@ export function Slider(props: {
       value={props.value}
       disabled={locked}
       dense={inline}
+      className={styles.trackCell}
       onChange={props.onChange}
     />
   ) : (
-    <span className={styles.rangeWrap}>
+    <span className={cx(styles.rangeWrap, styles.trackCell)}>
       <input
         id={inputId}
         type="range"
@@ -653,7 +700,7 @@ export function Slider(props: {
   )
 
   return (
-    <div className={styles.slider}>
+    <div className={styles.slider} style={{ anchorName: vernierAnchor }}>
       {/* One line for a plain slider — name, track, readout — and two for a
           mode switch whose options are words ("alternate", "ssavi") and cannot
           be squeezed into a third of a sidebar. A switch that *does* fit there
@@ -666,7 +713,16 @@ export function Slider(props: {
           the two of them together overflowed on any label carrying a
           parenthetical, and a fifth of the controls carry one — the label broke
           mid-phrase and the ? and ↺ scattered onto a line of their own. Split
-          out, only the label wraps, and it wraps where a label should. */}
+          out, only the label wraps, and it wraps where a label should.
+
+          The reading is written before the track and placed after it, by grid
+          area (Slider.module.css). Same source order as the stacked branch
+          above, and it is the order the narrow panel actually draws — where the
+          row is two lines, the reading rides the label and the track is the one
+          below. So the docked sidebar, which is where most of these rows are
+          read, has its focus order and its layout agreeing; the wide form
+          disagrees about two adjacent things on one line, which is the cheaper
+          half of the trade. */}
       {choices && !inline ? (
         <div className={styles.rowStack}>
           <span className={styles.sliderTop}>
@@ -678,8 +734,8 @@ export function Slider(props: {
       ) : (
         <div className={styles.row}>
           {naming}
-          {track}
           {readout}
+          {track}
         </div>
       )}
       {needs ? (
@@ -692,10 +748,10 @@ export function Slider(props: {
           inert — needs {needs.hint} · click to set
         </button>
       ) : null}
-      {/* Not while the ? card is up: both hang off the same edge of the same
-          row, and the one the pointer asked for wins. */}
-      {!showVernier || hoverHelp || showHelp ? null : (
+      {props.vernier !== true || choices !== undefined ? null : (
         <Vernier
+          id={vernierId}
+          anchorName={vernierAnchor}
           label={props.label}
           min={props.min}
           max={props.max}
@@ -704,6 +760,7 @@ export function Slider(props: {
           value={props.value}
           disabled={locked}
           onChange={props.onChange}
+          onOpenChange={setShowVernier}
         />
       )}
       {props.modEditor}

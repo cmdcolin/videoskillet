@@ -10,8 +10,10 @@ import { describe, expect, it } from 'vitest'
 import { PRELUDE } from './prelude'
 import blitExt from './shaders/blit_ext.wgsl?raw'
 import buzzTap from './shaders/buzz_tap.wgsl?raw'
+import caption from './shaders/caption.wgsl?raw'
 import channel from './shaders/channel.wgsl?raw'
 import chromaExtract from './shaders/chroma_extract.wgsl?raw'
+import chyron from './shaders/chyron.wgsl?raw'
 import compose from './shaders/compose.wgsl?raw'
 import composeB from './shaders/compose_b.wgsl?raw'
 import crtFace from './shaders/crt_face.wgsl?raw'
@@ -29,10 +31,9 @@ import present from './shaders/present.wgsl?raw'
 import storePrev from './shaders/store_prev.wgsl?raw'
 import sync from './shaders/sync.wgsl?raw'
 import syncMeasure from './shaders/sync_measure.wgsl?raw'
-import tapePlay from './shaders/tape_play.wgsl?raw'
-import tapeRec from './shaders/tape_rec.wgsl?raw'
 import timebase from './shaders/timebase.wgsl?raw'
 import underDown from './shaders/under_down.wgsl?raw'
+import vir from './shaders/vir.wgsl?raw'
 
 import { execFileSync } from 'node:child_process'
 import { mkdtempSync, readdirSync, writeFileSync } from 'node:fs'
@@ -42,8 +43,10 @@ import { join } from 'node:path'
 const SHADERS: Record<string, string> = {
   blit_ext: blitExt,
   buzz_tap: buzzTap,
+  caption,
   channel,
   chroma_extract: chromaExtract,
+  chyron,
   compose,
   compose_b: composeB,
   crt_face: crtFace,
@@ -61,10 +64,9 @@ const SHADERS: Record<string, string> = {
   store_prev: storePrev,
   sync,
   sync_measure: syncMeasure,
-  tape_play: tapePlay,
-  tape_rec: tapeRec,
   timebase,
   under_down: underDown,
+  vir,
 }
 
 const hasNaga = ((): boolean => {

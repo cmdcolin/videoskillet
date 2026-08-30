@@ -22,7 +22,15 @@
    `mutate` took 63 + 59 across a 4px gap — and what it costs is that the morph
    select moves down to join them: line one is compare + the pair at 261 of 332,
    line two morph + tags + undo at 185. Two lines either way, so the row is the
-   same 52px tall it was, and the words are what the space bought.) */
+   same 52px tall it was, and the words are what the space bought.)
+
+   Measured again with the drift switch in (LookBar.tsx), because it is the
+   first word added to this row since: three lines and 81px tall, redo up or
+   down. Compare has line one to itself at 67, the rolls' set takes line two
+   whole at 321, and the tail is 328 of 332 with redo showing — drift 42, morph
+   90, tags 41, reset 46, undo 46, redo 43, and five gaps. So the switch cost the
+   row nothing, and the 4px left over is the whole of what the next word added
+   here has to fit in. */
 .btn {
   padding: 2px 7px;
   border: 1px solid var(--border-quiet);

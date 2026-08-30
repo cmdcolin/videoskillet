@@ -14,8 +14,6 @@ import {
   FEED_B_GROUP,
   generatorsLive,
   GROUPS,
-  DELAY_LOOP_GROUP,
-  DELAY_LOOP_STAGE,
   LOOP_STAGE_NAMES,
   LOOP_STAGES,
   MIXER_LOOP_GROUP,
@@ -197,10 +195,6 @@ describe('control tables', () => {
     expect(stageGroups(MIXER_LOOP_STAGE).map(g => g.name)).toEqual([
       MIXER_LOOP_GROUP,
     ])
-    expect(stageGroups(DELAY_LOOP_STAGE).map(g => g.name)).toEqual([
-      DELAY_LOOP_GROUP,
-      'Loop transport & heads',
-    ])
   })
 
   // No loop may be a Phase. That is the mistake the split undid: 'Feedback' sat
@@ -218,7 +212,7 @@ describe('control tables', () => {
   // stopped being the gate — or stopped being a control at all — a lit wire and
   // a dispatched pass would part company.
   it('gives every loop a mix to be judged running by', () => {
-    expect(LOOP_STAGES.map(l => l.mix)).toEqual(['fbMix', 'cfbMix', 'tapeMix'])
+    expect(LOOP_STAGES.map(l => l.mix)).toEqual(['fbMix', 'cfbMix'])
     for (const l of LOOP_STAGES) {
       const keys = stageGroups(l.name).flatMap(g => g.sliders.map(s => s.key))
       expect(keys, l.mix).toContain(l.mix)

@@ -4,6 +4,7 @@ import {
   DRY_DEFAULT,
   REVERB_DEFAULT,
   SPEED_DEFAULT,
+  queryString,
   writeSessionParams,
 } from '../ui/urlParams'
 import { recipeControls, recipeId, recipeMod } from './candidates'
@@ -134,6 +135,8 @@ export function candidateRecord(recipe: Recipe): CandidateRecord {
     cueB: null,
     teletypeA: TELETYPE_DEFAULT,
     teletypeB: TELETYPE_DEFAULT,
+    // A candidate is a look, and a caption is words: nothing to compare.
+    caption: '',
     speedA: SPEED_DEFAULT,
     speedB: SPEED_DEFAULT,
     reverb: REVERB_DEFAULT,
@@ -145,7 +148,7 @@ export function candidateRecord(recipe: Recipe): CandidateRecord {
     seed: recipe.seed,
     kind: recipe.kind,
     weights: recipe.weights,
-    query: query.toString(),
+    query: queryString(query),
   }
 }
 

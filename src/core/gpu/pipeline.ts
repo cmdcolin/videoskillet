@@ -3,6 +3,7 @@ import { Listeners } from '../listeners'
 import { clamp, wrap } from '../math'
 import { rngFor } from '../rng'
 import { AudioState } from '../signal/audiostate'
+import { CaptionState } from '../signal/captionstate'
 import { ClipContact, clipPointAt } from '../signal/clip'
 import {
   ACTIVE_HEIGHT,
@@ -10,7 +11,6 @@ import {
   LINES,
   SAMPLES_PER_LINE,
   SAMPLE_RATE,
-  TAPE_FRAMES,
 } from '../signal/constants'
 import { advanceCrossings } from '../signal/crossings'
 import { Fault } from '../signal/fault'
@@ -21,11 +21,12 @@ import { MixState } from '../signal/mixstate'
 import { driveAt, driveSlots, ModState } from '../signal/modstate'
 import { valueNoise } from '../signal/noise'
 import { RfState } from '../signal/rfstate'
+import { TrackingServo } from '../signal/servo'
 import { StabGate } from '../signal/stab'
 import { StrobeGate } from '../signal/strobe'
 import { SynthState } from '../signal/synthstate'
-import { TapeState, tapeRecording } from '../signal/tapeloop'
 import { BuzzRead } from './buzzread'
+import { buildCaptionRom, buildPage, CC_BUF_LEN, CC_PAGE } from './captionrom'
 import { gpuPowerFromSearch, initGpu, releaseGpu } from './context'
 import { debugOn, pageSearch } from './env'
 import { aFeedOn, bFeedOn, bOn, bWaveOn, FEEDS } from './feedgates'
@@ -42,8 +43,10 @@ import { RenderLoop } from './renderloop'
 import { Overlay } from './savedBoard'
 import blitExtSrc from './shaders/blit_ext.wgsl?raw'
 import buzzTapSrc from './shaders/buzz_tap.wgsl?raw'
+import captionSrc from './shaders/caption.wgsl?raw'
 import channelSrc from './shaders/channel.wgsl?raw'
 import chromaExtractSrc from './shaders/chroma_extract.wgsl?raw'
+import chyronSrc from './shaders/chyron.wgsl?raw'
 import composeSrc from './shaders/compose.wgsl?raw'
 import composeBSrc from './shaders/compose_b.wgsl?raw'
 import crtFaceSrc from './shaders/crt_face.wgsl?raw'
@@ -61,10 +64,9 @@ import presentSrc from './shaders/present.wgsl?raw'
 import storePrevSrc from './shaders/store_prev.wgsl?raw'
 import syncSrc from './shaders/sync.wgsl?raw'
 import syncMeasureSrc from './shaders/sync_measure.wgsl?raw'
-import tapePlaySrc from './shaders/tape_play.wgsl?raw'
-import tapeRecSrc from './shaders/tape_rec.wgsl?raw'
 import timebaseSrc from './shaders/timebase.wgsl?raw'
 import underDownSrc from './shaders/under_down.wgsl?raw'
+import virSrc from './shaders/vir.wgsl?raw'
 import { Sources } from './sources'
 import { loRadPerSample, uniformValues } from './uniforms'
 import { VideoPump } from './videopump'
@@ -222,6 +224,7 @@ export class Engine implements EngineApi {
   // graph, so ownership arrives through the constructor. See EngineOptions.
   readonly audioState: AudioState
   private mixState = new MixState(this.rand)
+  private captionState = new CaptionState()
   private modState = new ModState()
   private glide = new Glide(FILTER_KEYS)
   // Frames since React was last told where a morph has got to. A morph writes
@@ -231,7 +234,6 @@ export class Engine implements EngineApi {
   // which is half the point of watching a morph, and the cost is a tenth of what
   // notifying per frame would be.
   private glideNotify = 0
-  private tapeState = new TapeState(this.rand)
   private rfState = new RfState()
   private synthState = new SynthState()
   // The blanking gate. Unlike the stab gate beside it this is a plain control
@@ -293,6 +295,12 @@ export class Engine implements EngineApi {
   private scPhase = 0
   // picture-search crossing pattern phase, accumulated per frame (crossings)
   private shuttlePhase = 0
+  // The auto-tracking servo (signal/servo.ts), and what it settled on this
+  // frame: both the line-state tear and the channel's noise band read the
+  // servo's position rather than the slider's, so the two stay one band.
+  private servo = new TrackingServo(this.rand)
+  private track = { pos: 0.85, amt: 0, flagUs: 0 }
+  private lastShuttleX = 1
   // Tape time per deck: everything recorded on a deck's own medium crawls on
   // these instead of the frame counter, so a paused deck freezes it — the crawl
   // was on the tape, and a held frame re-reads one track. A's drives its snow
@@ -346,8 +354,6 @@ export class Engine implements EngineApi {
   private compPrev: GPUBuffer
   // The delay loop: a ring of composite frames the record head writes and the
   // play head reads a couple of seconds behind. Unlike compPrev this is a
-  // medium, not a frame store — see tape_play.wgsl.
-  private tapeBuf: GPUBuffer
   private chromaBuf: GPUBuffer
   private underBuf: GPUBuffer
   private lineInfoBuf: GPUBuffer
@@ -355,6 +361,8 @@ export class Engine implements EngineApi {
   private timingBuf: GPUBuffer
   private syncMeasureBuf: GPUBuffer
   private audioBuf: GPUBuffer
+  private ccBuf: GPUBuffer
+  private cgBuf: GPUBuffer
   private buzzBuf: GPUBuffer
   private buzzRead: BuzzRead
   // Phosphor state, ping-ponged: decode reads the light the screen is holding
@@ -462,21 +470,28 @@ export class Engine implements EngineApi {
     this.compB = storage(N * 4)
     this.bCompBuf = storage(N * 4)
     this.compPrev = storage(N * 4)
-    // Two bytes a sample, not four: the loop is the one buffer here big enough
-    // for its precision to be a VRAM decision, and f16 buys twice the tape for
-    // a resolution still far under the noise the medium has anyway.
-    this.tapeBuf = storage(TAPE_FRAMES * N * 2)
     this.chromaBuf = storage(N * 4)
     this.underBuf = storage(N * 4)
     this.lineInfoBuf = storage(LINES * 16)
     this.lineParamsBuf = storage(LINE_PARAM_BYTES)
     // per-line hoff + 8 persistent scalars (v-osc, PLL, AGC, the two
     // second-order gain servos — beam limiter and camera iris, gain + velocity
-    // each — and the sync separator's lock age) + a per-raster-line sag
-    this.timingBuf = storage((LINES * 2 + 8) * 4)
+    // each — and the sync separator's lock age) + a per-raster-line sag + the
+    // VIR corrector's two integrators
+    this.timingBuf = storage((LINES * 2 + 10) * 4)
     this.syncMeasureBuf = storage(LINES * 16)
     // one audio sample per line, uploaded each frame
     this.audioBuf = storage(LINES * 4)
+    // The caption decoder's font ROM and page RAM in one buffer, the ROM half
+    // written once here (see captionrom.ts for why they share a binding).
+    this.ccBuf = storage(CC_BUF_LEN * 4, GPUBufferUsage.COPY_DST)
+    const rom = buildCaptionRom()
+    d.queue.writeBuffer(this.ccBuf, 0, rom)
+    // The switcher's character generator has a chip of its own: same ROM, its
+    // own page, and its own pin to hold. Two boxes, so bending one says nothing
+    // about the other.
+    this.cgBuf = storage(CC_BUF_LEN * 4, GPUBufferUsage.COPY_DST)
+    d.queue.writeBuffer(this.cgBuf, 0, rom)
     // and the traffic in the other direction: one (mean, deviation) pair per
     // line, read back to the sound detector (buzz_tap.wgsl, signal/buzz.ts)
     this.buzzBuf = storage(LINES * 8, GPUBufferUsage.COPY_SRC)
@@ -547,8 +562,6 @@ export class Engine implements EngineApi {
     const mixBPl = compute(mixBSrc)
     const fbCompositePl = compute(fbCompositeSrc)
     const storePrevPl = compute(storePrevSrc)
-    const tapePlayPl = compute(tapePlaySrc)
-    const tapeRecPl = compute(tapeRecSrc)
     const chromaExtractPl = compute(chromaExtractSrc)
     const underDownPl = compute(underDownSrc)
     const channelPl = compute(channelSrc)
@@ -558,7 +571,10 @@ export class Engine implements EngineApi {
     const buzzTapPl = compute(buzzTapSrc)
     const syncPl = compute(syncSrc)
     const lineAnalyzePl = compute(lineAnalyzeSrc)
+    const virPl = compute(virSrc)
     const decodePl = compute(decodeSrc)
+    const captionPl = compute(captionSrc)
+    const chyronPl = compute(chyronSrc)
     const crtFacePl = compute(crtFaceSrc)
 
     // Zero-copy video: where the device can import the decoder's own frame
@@ -615,8 +631,6 @@ export class Engine implements EngineApi {
       when,
     })
     const perLine = [Math.ceil(SAMPLES_PER_LINE / 64), LINES] as const
-    // the record head writes a packed f16 pair per thread (see tape_rec)
-    const perLineW = [Math.ceil(SAMPLES_PER_LINE / 2 / 64), LINES] as const
     // the tiled-FIR passes run TILE_WG-wide workgroups (see prelude)
     const perLineT = [Math.ceil(SAMPLES_PER_LINE / TILE_WG), LINES] as const
     const perPixelT = [
@@ -749,6 +763,21 @@ export class Engine implements EngineApi {
         perLine,
         bChainOn,
       ),
+      // The switcher's character generator, keyed onto the program bus. After
+      // the mixer and before the loop, which is where a head-end box stands: what
+      // it keys in goes round the feedback loop and onto the tape with the
+      // picture, rather than being laid over the finished frame.
+      pass(
+        'chyron',
+        chyronPl,
+        [
+          { buffer: this.paramsBuf },
+          { buffer: this.compA },
+          { buffer: this.cgBuf },
+        ],
+        perLine,
+        () => c.cgMix > 0,
+      ),
       pass(
         'fbComposite',
         fbCompositePl,
@@ -766,28 +795,6 @@ export class Engine implements EngineApi {
       // a generation older each time. Both heads sit ahead of the channel block,
       // because that block is the *deck's* playback damage and the loop is a
       // second machine with damage of its own.
-      pass(
-        'tapePlay',
-        tapePlayPl,
-        [
-          { buffer: this.paramsBuf },
-          { buffer: this.tapeBuf },
-          { buffer: this.compA },
-        ],
-        perLine,
-        () => c.tapeMix !== 0,
-      ),
-      pass(
-        'tapeRec',
-        tapeRecPl,
-        [
-          { buffer: this.paramsBuf },
-          { buffer: this.compA },
-          { buffer: this.tapeBuf },
-        ],
-        perLineW,
-        () => tapeRecording(c),
-      ),
     ]
     // The two encoders keep their in-array bind groups (straight to their real
     // destination) as slot 0; slot 1 targets the compB scratch for the frames
@@ -877,6 +884,7 @@ export class Engine implements EngineApi {
       { buffer: read },
       { buffer: write },
       { buffer: this.audioBuf },
+      { buffer: this.ccBuf },
     ]
     const [pA, pB] = this.persistBufs
     this.decodeBgs = [
@@ -947,6 +955,38 @@ export class Engine implements EngineApi {
           { buffer: this.lineInfoBuf },
         ],
         perRow,
+      ),
+      // The VIR corrector, reading the reference on line 19 that lineAnalyze
+      // has just measured the burst of. It runs after that measurement because
+      // what it wants is the *residual* — whatever burst lock could not
+      // account for — and before decode because decode is what it corrects.
+      // One invocation: it produces two numbers, and they are a servo's state.
+      pass(
+        'vir',
+        virPl,
+        [
+          { buffer: this.paramsBuf },
+          { buffer: this.compA },
+          { buffer: this.lineInfoBuf },
+          { buffer: this.timingBuf },
+        ],
+        [1, 1],
+        () => c.vir > 0,
+      ),
+      // The set's caption decoder, between the PLL it gates off and the pass
+      // that paints what it recovered. One invocation: a page is a serial
+      // machine, and a cursor is not something threads can share.
+      pass(
+        'caption',
+        captionPl,
+        [
+          { buffer: this.paramsBuf },
+          { buffer: this.compA },
+          { buffer: this.timingBuf },
+          { buffer: this.ccBuf },
+        ],
+        [1, 1],
+        () => c.cc > 0,
       ),
       this.decodePass,
       // Photograph the decoded signal as a glowing CRT face; both the display
@@ -1250,12 +1290,15 @@ export class Engine implements EngineApi {
   // (useEngine and the window.vf harness both drive it), but none of the
   // staging, capping, or aspect handling lives here any more.
   setImageSource(source: OffscreenCanvas | ImageBitmap, aspect = 4 / 3): void {
+    // A new picture on the tape is a scene change as far as the servo knows.
+    this.servo.kick(0.6)
     this.pump.setA(null)
     this.sources.setImageSource(source, aspect)
   }
 
   setVideoSource(el: HTMLVideoElement | null): void {
     if (el !== null) this.sources.setNoiseSource(0)
+    this.servo.kick(0.6)
     this.pump.setA(el)
   }
 
@@ -1291,6 +1334,22 @@ export class Engine implements EngineApi {
       return
     }
     this.sources.pushB(f)
+  }
+
+  // What the caption encoder has to say. Text rather than a control because it
+  // is not a quantity — it rides line 21 as characters, and the board carries
+  // the decoder's switch, not its words.
+  // One text, two boxes. The encoder sends it as data on line 21 and the
+  // switcher's generator keys the same words into the picture, which is exactly
+  // the closed/open caption pair — and running both is what makes the
+  // difference between them legible as the chain degrades.
+  setCaption(text: string): void {
+    this.captionState.setText(text)
+    this.gpu.device.queue.writeBuffer(this.cgBuf, CC_PAGE * 4, buildPage(text))
+  }
+
+  getCaption(): string {
+    return this.captionState.text()
   }
 
   setNoiseSource(kind: number): void {
@@ -1569,6 +1628,9 @@ export class Engine implements EngineApi {
       impulseTrainPos: this.impulseTrainPos,
       impulseTrainStep: this.impulseTrainStep,
       shuttlePhase: this.shuttlePhase,
+      trackPos: this.track.pos,
+      trackAmt: this.track.amt,
+      flagUs: this.track.flagUs,
       dbgView: this.dbgView,
     })
   }
@@ -1695,7 +1757,6 @@ export class Engine implements EngineApi {
 
     this.lineState = new LineState(this.rand)
     this.mixState = new MixState(this.rand)
-    this.tapeState = new TapeState(this.rand)
     this.modState = new ModState()
     this.bayDrive.clear()
     this.rfState = new RfState()
@@ -1713,6 +1774,13 @@ export class Engine implements EngineApi {
     this.fault.stop()
     this.scPhase = 0
     this.shuttlePhase = 0
+    this.servo = new TrackingServo(this.rand)
+    this.track = {
+      pos: this.controls.trackPos,
+      amt: this.controls.trackAmt,
+      flagUs: 0,
+    }
+    this.lastShuttleX = this.controls.shuttleX
     this.tapeFrame = { a: 0, b: 0 }
     this.impulseTrainPos = 0
     this.impulseTrainStep = 0
@@ -1810,7 +1878,14 @@ export class Engine implements EngineApi {
   // a millisecond — here it is frame-clocked, so it is already right under a
   // take's virtual clock with no second code path.
   startFault(plan: FaultPlan): void {
-    this.fault.start(plan)
+    // The cut is an edit on the tape; the servo re-finds the track after it.
+    this.fault.start({
+      ...plan,
+      onCut: () => {
+        this.servo.kick(1)
+        plan.onCut()
+      },
+    })
   }
 
   setDbgView(view: number): void {
@@ -1987,6 +2062,16 @@ export class Engine implements EngineApi {
   // constants are shared with the delay loop's own transport — see
   // signal/crossings.ts — and what is this deck's own is only that its speed
   // arrives as a multiple of play, so the crossing count is one less.
+  // What unseated the tracking this frame: the transport changing speed, the
+  // loop's splice going past, and a bass hit through the cabinet. Scene changes
+  // and transition cuts kick from where they happen.
+  private kickServo(c: Controls): void {
+    const dShuttle = Math.abs(c.shuttleX - this.lastShuttleX)
+    this.lastShuttleX = c.shuttleX
+    if (dShuttle > 0) this.servo.kick(Math.min(dShuttle, 1))
+    if (this.audioState.hit > 0.9) this.servo.kick(this.audioState.hit * 0.5)
+  }
+
   private advanceShuttle(shuttleX: number): void {
     this.shuttlePhase = advanceCrossings(this.shuttlePhase, shuttleX - 1)
   }
@@ -2126,28 +2211,21 @@ export class Engine implements EngineApi {
       wipePos: c.wipePos,
       wipeRateHz: c.wipeRate,
     })
-    // The transport runs whether or not the loop is faded up — a tape machine
-    // left threaded keeps moving, so the splice does not stall at the head and
-    // the loop still has whatever was last recorded on it when the fader comes
-    // back up.
-    const tapeU = this.tapeState.update(
-      {
-        tapeLoopMm: c.tapeLoopMm,
-        tapeWowPct: c.tapeWowPct,
-        tapeColourFrame: c.tapeColourFrame,
-        tapeMix: c.tapeMix,
-        tapeRecord: c.tapeRecord,
-        tapeTransport: c.tapeTransport,
-        tapeShuttle: c.tapeShuttle,
-      },
-      this.frame,
-    )
+    this.kickServo(c)
+    this.track = this.servo.update({
+      target: c.trackPos,
+      amt: c.trackAmt,
+      hunt: c.trackHunt,
+      kick: c.trackKick,
+    })
     const vals = {
       ...this.uniformValues(),
       ...mixU,
-      ...tapeU,
       // the adjacent channel's raster slip and beat phases, walked per frame
       ...this.rfState.update(this.frame),
+      // the two characters line 21 carries this frame; nulls on most of them,
+      // because a caption is written far faster than it is read
+      ...this.captionState.update({ vbi: c.vbi }),
       // the video synth's two oscillators, advanced a frame's worth of samples
       // whether or not a slot is showing them — a bench generator left switched
       // on does not wait to be patched in, so cutting to it lands wherever it
@@ -2174,8 +2252,8 @@ export class Engine implements EngineApi {
       tbStickNs: c.tbStickNs,
       underJitterDeg: c.underJitterDeg,
       headSwitchShiftUs: c.headSwitchShiftUs,
-      trackAmt: c.trackAmt,
-      trackPos: c.trackPos,
+      trackAmt: this.track.amt,
+      trackPos: this.track.pos,
       shuttleBars: c.shuttleX - 1,
       shuttlePhase: this.shuttlePhase,
     }

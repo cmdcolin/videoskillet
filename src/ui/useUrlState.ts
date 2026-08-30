@@ -1,7 +1,11 @@
 import { useEffect } from 'react'
 
 import { reason } from './format'
-import { writeProfileParams, writeSessionParams } from './urlParams'
+import {
+  queryString,
+  writeProfileParams,
+  writeSessionParams,
+} from './urlParams'
 
 import type { Controls } from '../core/controls'
 import type { SessionState } from './urlParams'
@@ -53,10 +57,9 @@ export function useUrlState(args: UrlStateArgs) {
   // to read it back; what is left here is the browser half — which params are
   // already on the address bar, and where the link points.
   const stateUrl = linkFor(
-    writeSessionParams(
-      new URLSearchParams(location.search),
-      session,
-    ).toString(),
+    queryString(
+      writeSessionParams(new URLSearchParams(location.search), session),
+    ),
   )
 
   // Keep the address bar current on every change (replaceState, so it doesn't
@@ -107,11 +110,13 @@ export function useUrlState(args: UrlStateArgs) {
   // What a saved look records — the same serialization, minus the params that
   // only make sense for the session that is running (see writeProfileParams).
   const profileQuery = () =>
-    writeProfileParams(new URLSearchParams(location.search), {
-      ...session,
-      // The destination when a morph is running, per `getGlideTarget` above.
-      controls: getGlideTarget() ?? session.controls,
-    }).toString()
+    queryString(
+      writeProfileParams(new URLSearchParams(location.search), {
+        ...session,
+        // The destination when a morph is running, per `getGlideTarget` above.
+        controls: getGlideTarget() ?? session.controls,
+      }),
+    )
 
   const copyQuery = (query: string) => writeClip(linkFor(query))
 

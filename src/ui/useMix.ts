@@ -1,6 +1,7 @@
 import { useState } from 'react'
 
 import { DEFAULT_CONTROLS } from '../core/controls'
+import { applyCardPreset } from './cardPresets'
 import { MUTATE_CIRCUITS, MUTATE_SLIDERS } from './controls'
 import { EMPTY_HISTORY, record, stepBack, stepForward } from './history'
 import { DEFAULT_STAB, sameBay, sameGate } from './modSlots'
@@ -25,7 +26,8 @@ import { rollBay } from './rollMod'
 import type { Controls } from '../core/controls'
 import type { GlidePlan } from '../core/signal/glide'
 import type { Provenance } from '../labels'
-import type { SliderDef } from './controls'
+import type { CardPreset } from './cardPresets'
+import type { Group, SliderDef } from './controls'
 import type { History } from './history'
 import type { Stab, UiSlot } from './modSlots'
 import type { ModSlotsApi } from './ModSlotsContext'
@@ -327,10 +329,32 @@ export function useMix(args: {
     // library are where a live set actually does it from. It records nothing: a recall
     // already banks its own step through `snapshotForUndo`.
     landLook: land,
+    // One leg of a drift (ui/drift.ts). Three things separate it from every
+    // other landing here, and each is the mode rather than an exception to it:
+    // it banks nothing, since a walk of a thousand looks nobody chose is not a
+    // walk anybody can step back through; it travels for a span the drift names
+    // rather than the one the look bar does, since the setting is about what
+    // your hands do and a drift at `morph: cut` would be a slideshow; and it
+    // files as `mutate`, because that is what a leg is — the recipe goes with
+    // it for the same reason a nudge clears it.
+    landDrift: (to: Controls, seconds: number) => {
+      setGesture({ kind: 'mutate', look: to })
+      args.startGlide(morphTo(to, seconds))
+      setLastPreset(null)
+    },
     canUndo: history.past.length > 0,
     canRedo: history.future.length > 0,
     // Bank the look on the board before overwriting it, so undo can restore it.
-    snapshotForUndo: () => setHistory(h => record(h, banked(), sameLook)),
+    //
+    // The look is read here rather than inside the updater, and that is the
+    // whole of what "before" means: both callers hand the board over to a glide
+    // in the next statement, so an updater that asked `banked()` when React got
+    // round to running it would be told the answer for the look now arriving —
+    // and bank the destination as the step to go back to.
+    snapshotForUndo: () => {
+      const look = banked()
+      setHistory(h => record(h, look, sameLook))
+    },
     undo: () => goto(stepBack(history, banked())),
     redo: () => goto(stepForward(history, banked())),
     applyPreset: (name: string, patch: Partial<Controls>) => {
@@ -474,7 +498,7 @@ export function useMix(args: {
           audioLive: opts.audioLive === true,
         }),
       )
-      // The same rule a claim from a control row's ∿ follows, and this button
+      // The same rule a claim from a control row's ⋮ follows, and this button
       // needs it most: rolling motion onto a frozen bay would cable five slots,
       // light five rows up as driven, and move nothing whatsoever. Asking for
       // motion is unambiguous; the freeze is a gesture within a set.
@@ -502,6 +526,12 @@ export function useMix(args: {
       const next = { ...getControls() }
       for (const s of sliders) next[s.key] = DEFAULT_CONTROLS[s.key]
       apply(next, 'hand')
+    },
+    // A chip on one card. Through `apply` and labelled 'hand' like the reset
+    // above, because that is what it is: a gesture that moves this stage and
+    // nothing else, and one ctrl+z takes it back.
+    landCard: (preset: CardPreset, group: Group) => {
+      apply(applyCardPreset(preset, group, getControls()), 'hand')
     },
     // The same roll aimed at one group, from its header. Jittering all ~120
     // controls answers "give me something else"; this answers "keep this look

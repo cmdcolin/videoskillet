@@ -22,7 +22,7 @@ import type {
 import type { ModSource } from '../core/signal/modstate'
 import type { StabPlan } from '../core/signal/stab'
 
-// Eight rather than four: with a ∿ on every control row, a slot is claimed by
+// Eight rather than four: with a claim in every control row's ⋮, a slot is taken by
 // asking rather than by opening a dedicated panel, and four ran out in about a
 // minute of that.
 export const N_SLOTS = 8

@@ -110,10 +110,11 @@ const HELPERS = `
   // the button reads its driven count, then a "+N" for anything held still, then
   // the gate's rate if one is running — so an exact match found it only on a
   // board where neither had happened, and every check that held a routing then
-  // read the count off a button it could no longer find. The digits before the
-  // ∿ are what separate it from the badge every routed row wears.
+  // read the count off a button it could no longer find. The digits in front of
+  // "mod" are what separate it from the badge a routed row wears, which is the
+  // bare word.
   const strip = () => [...document.querySelectorAll('button')]
-    .find(b => /^\\d+∿/.test(b.textContent ?? ''))
+    .find(b => /^\\d+ mod/.test(b.textContent ?? ''))
   // What the strip reads, whole — the count, anything held, the gate's rate —
   // for the checks that assert on the sentence rather than on the count at the
   // head of it.
@@ -166,7 +167,7 @@ await phase('filter', { seed: OLD_BAY }, async page => {
   check(start.panel, 'no scrolling panel rendered at all')
   check(start.chain, 'the chain map is missing from a resting panel')
   check(
-    start.strip === '1∿',
+    start.strip === '1 mod',
     `a bay stored without the run switch should load running, strip read ${start.strip}`,
   )
 
@@ -323,24 +324,26 @@ await phase('filter', { seed: OLD_BAY }, async page => {
 // --- a routing can be held still from its own row ---------------------------
 await phase('hold', { seed: OLD_BAY }, async page => {
   const { run, settle } = runner(page)
-  await run(`press(strip()); return 0`) // the ∿ count filters to the driven rows
+  await run(`press(strip()); return 0`) // the mod count filters to driven rows
   await settle(500)
-  await run(`press(byText('∿')); return 0`)
+  await run(`press(byText('mod')); return 0`)
   await settle(500)
   const parked = await run(`
-    const badge = byText('∿')
     return {
       strip: strip()?.textContent ?? null,
-      struck: badge === undefined ? null
-        : getComputedStyle(badge).textDecorationLine.includes('line-through'),
+      // The badge says which of its two states it is in, rather than tinting or
+      // striking one glyph and leaving the reader to infer the other.
+      said: byText('held') !== undefined,
+      stillRunning: byText('mod') !== undefined,
     }`)
   check(
-    parked.strip?.startsWith('0∿') === true,
+    parked.strip?.startsWith('0 mod') === true,
     `holding one routing left the count at ${parked.strip}`,
   )
+  check(parked.said, 'a held routing does not say “held” on its row')
   check(
-    parked.struck === true,
-    'a held routing is not marked as held on its row',
+    !parked.stillRunning,
+    'the row still reads “mod” after the routing was held still',
   )
 
   // The switch is coalesced to localStorage like the rest of the bay.
@@ -359,19 +362,19 @@ await phase(
     const { run, settle } = runner(page)
     const back = await run(`return { strip: strip()?.textContent ?? null }`)
     check(
-      back.strip?.startsWith('0∿') === true,
+      back.strip?.startsWith('0 mod') === true,
       `?mod= cleared the hold on load — strip read ${back.strip}`,
     )
 
     await run(`press(strip()); return 0`)
     await settle(500)
-    await run(`press(byText('∿')); return 0`)
+    await run(`press(byText('held')); return 0`)
     await settle(500)
     const restarted = await run(
       `return { strip: strip()?.textContent ?? null }`,
     )
     check(
-      restarted.strip?.startsWith('1∿') === true,
+      restarted.strip?.startsWith('1 mod') === true,
       `restarting a held routing left the count at ${restarted.strip}`,
     )
 
@@ -507,7 +510,7 @@ await phase('stab', {}, async page => {
   check(on.reads === '4', `the stabs row read ${on.reads} after being set to 4`)
   check(on.engine === 4, `the engine's gate is at ${on.engine}, not 4`)
   check(
-    on.strip === '0∿ 4/s',
+    on.strip === '0 mod 4/s',
     `the motion strip read "${on.strip}" with the gate at 4/s`,
   )
 
@@ -522,7 +525,7 @@ await phase('stab', {}, async page => {
     `a frozen bay left the gate running at ${held.engine}`,
   )
   check(
-    held.strip === '0∿',
+    held.strip === '0 mod',
     `the strip claimed "${held.strip}" while the freeze held the gate at 0`,
   )
 
@@ -569,7 +572,7 @@ await phase('motion roll', {}, async page => {
   }`)
   check(rolled === true, 'no "random motion" button in the look bar')
   check(
-    after.strip === '2∿',
+    after.strip === '2 mod',
     `a normal motion roll should cable two routings, the strip read ${after.strip}`,
   )
   // The promise on the button, and the reason it is a third roll rather than a
@@ -589,21 +592,21 @@ await phase('motion roll', {}, async page => {
   await settle(500)
   const second = await run(`return stripText()`)
   check(
-    second === '2∿',
+    second === '2 mod',
     `a second roll should leave two routings patched, the strip read ${second}`,
   )
   await run(`press(byText('undo')); return 0`)
   await settle(500)
   const back = await run(`return stripText()`)
   check(
-    back === '2∿',
+    back === '2 mod',
     `one undo should land on the first roll's bay, the strip read ${back}`,
   )
   await run(`press(byText('undo')); return 0`)
   await settle(500)
   const empty = await run(`return stripText()`)
   check(
-    empty === null || empty === '0∿',
+    empty === null || empty === '0 mod',
     `undoing both rolls should leave the bay as it started, the strip read ${empty}`,
   )
 })
@@ -658,7 +661,7 @@ await phase('reset', {}, async page => {
     gate: window.vf?.stab?.hz ?? null,
   }`)
   check(
-    wrecked.strip === '2∿ 4/s',
+    wrecked.strip === '2 mod 4/s',
     `the board should be rolled and stabbing before the reset, the strip read "${wrecked.strip}"`,
   )
   check(wrecked.gate === 4, `the gate is at ${wrecked.gate}, not 4`)
@@ -681,7 +684,7 @@ await phase('reset', {}, async page => {
   }`)
   check(pressed === true, 'no "reset" button in the look bar')
   check(
-    after.strip === null || after.strip === '0∿',
+    after.strip === null || after.strip === '0 mod',
     `the reset left the bay reading "${after.strip}"`,
   )
   check(after.gate === 0, `the reset left the gate running at ${after.gate}`)
@@ -716,7 +719,7 @@ await phase('reset', {}, async page => {
     gate: window.vf?.stab?.hz ?? null,
   }`)
   check(
-    back.strip === '2∿ 4/s',
+    back.strip === '2 mod 4/s',
     `one undo should bring the whole look back, the strip read "${back.strip}"`,
   )
   check(back.gate === 4, `undo left the gate at ${back.gate} rather than 4`)

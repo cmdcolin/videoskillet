@@ -160,12 +160,6 @@
 /* The record head down is the one state on the deck that is destructive — it is
    writing over the loop — so it is the one key that lights in the edit colour
    rather than the on colour. */
-.deckBtnRec,
-.deckBtnRec:hover:not(:disabled) {
-  color: #101014;
-  background: var(--edit-hi);
-  border-color: var(--edit-hi);
-}
 /* the take's duration: a value you cycle, so it reads as a reading rather than
    as another key */
 .rate {

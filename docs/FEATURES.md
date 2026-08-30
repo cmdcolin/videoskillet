@@ -8,9 +8,12 @@ This page is the tour: what each stage is, and the one thing about it worth
 knowing before you turn anything. [Effects](EFFECTS.md) is the full list of
 controls, generated from the app's own control table.
 
+The five blocks below are the five boxes on the app's own chain map, in the same
+order and under the same names, so the picture here is the thing you click.
+
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="img/pipeline-simple-dark.svg">
-  <img alt="Signal path — overview: Source → Encoder → Channel → Receiver → Display, with a composite feedback loop from Channel back to Encoder and an image feedback loop from Display back to Source" src="img/pipeline-simple-light.svg">
+  <img alt="Signal path — overview: Source A → Mix → Channel → Receiver → Screen, with the tape loop straddling Mix, a mixer feedback loop from Receiver back to Mix, and a camera feedback loop from Screen back to Source A" src="img/pipeline-simple-light.svg">
 </picture>
 
 ## Sources and wiring
@@ -54,16 +57,11 @@ crossfaded against the live signal. The subcarrier rides round with it, so each
 sample of cable delay spins fed-back hue 90° a generation and colour does things
 optics cannot.
 
-**Tape loop**: a second machine threaded with a loop of tape, patched across the
-bus rather than round the chain: a play head returns what was laid down a lap
-ago, a record head lays the sum back down, and whatever keeps circulating ages a
-generation every time round.
-
 <!-- /generated:loops -->
 
-The tape loop is the one to keep straight: it is a second machine threaded
-across the bus, where the Tape stage below is the deck this signal was played
-back on. Its return gets recorded again, so repeats decay by generation loss
+The tape loop is the one to keep straight: it is a machine patched across the
+chain, where the deck this signal was played back on is one part of **Channel**
+below. Its return gets recorded again, so repeats decay by generation loss
 rather than by a fader, and chroma dies first.
 
 ## A/B mix
@@ -75,7 +73,16 @@ The keyer cuts the chroma the encoder made, and that filter has no vertical term
 — so mattes come out soft across and razor sharp down, the way every composite
 key was.
 
-## Tape and channel
+A **character generator** stands here too, keying the caption text into the
+picture the way every lower third and station ident was made. What makes it a CG
+rather than an overlay is that it puts out two wires — a fill, which is the
+characters as video, and a key, which is their matte — so trimming the timing
+between them puts program through one side of every stem and the box's own black
+down the other. It is the open caption to line 21's closed one: the same
+sentence, one keyed into the picture and aged by everything downstream, one sent
+as data and misspelled instead.
+
+## Channel
 
 Everything between the recorder and the set: bandwidth, nonlinearity, noise, the
 tuner, colour-under, and the tape and heads themselves. The whole stage runs up
@@ -84,6 +91,14 @@ to four times, one per dub generation.
 The one worth knowing: noise out of an FM discriminator rises toward the top of
 the band, which lands it in the chroma passband, so tape noise arrives as
 crawling coloured speckle rather than grey grain.
+
+The tracking band is a servo, not a position. With **servo hunt** up the deck
+searches for the track the way an auto-tracking machine does — a second-order
+loop with a dead band, and less damping the higher the control — so it sweeps,
+overshoots and rings, settles for a breath, and drifts back off as the tape
+stretches. A scene change, coming out of shuttle, the loop's splice, a
+transition cut or a thump from the music all knock it off the peak, and the top
+of the frame flags on the tape tension each time (`signal/servo.ts`).
 
 ## Enhancer
 
@@ -101,6 +116,14 @@ decoding faults move its colour.
 Deflection bend happens after decoding, so it warps geometry but must not touch
 hue. That distinction — whether a wobble takes the colour with it — is the one
 worth having in front of the app.
+
+The set also has a **caption decoder**, and it is the one thing here that reads
+the signal as _data_. Line 21 carries whatever you type, so noise, a narrow
+channel and generation loss arrive as misspellings — dropped characters, wrong
+ones, and the solid block a real decoder drew wherever parity caught an error
+and it refused to guess. The page is repainted on the set's own timing, which is
+where a real one painted it, so the picture can roll and tear underneath a
+caption sitting perfectly still.
 
 ## Screen
 
@@ -150,6 +173,9 @@ the receiver's vertical oscillator, downstream of anything the sound can reach.
   See [MIDI.md](MIDI.md).
 - **Presets** — also faders you can drag partway in. Morph, random nudge, full
   undo, and saved profiles behind a sign-in.
+- **Drift** — one switch and the look wanders on its own, unattended: a gentle
+  nudge every fifteen seconds, travelling most of the way there so nothing cuts,
+  and staying around the look you set drifting rather than running off.
 - **Sharing** — the whole board mirrors to the URL, so a link is a patch.
 - **Capture** — stills, webm recording, or pop the controls into a second window
   and point OBS at the picture.

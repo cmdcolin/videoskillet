@@ -75,21 +75,6 @@ export const PRESETS: PresetDef[] = [
     },
   },
   {
-    name: 'tapeCapture',
-    displayName: 'tape capture',
-    group: 'Tape wear',
-    blurb:
-      'A file digitised off a home deck, played through a clean chain: the softness, smeared colour and blotchy chroma were in the source before anything here touched it.',
-    patch: {
-      deint: 1,
-      capLumaMHz: 3,
-      capChromaMHz: 0.5,
-      capYcDelayNs: 150,
-      capNoiseIre: 2.5,
-      capChromaNoiseIre: 10,
-    },
-  },
-  {
     name: 'protectedTape',
     displayName: 'protected tape',
     group: 'Tape wear',
@@ -132,28 +117,6 @@ export const PRESETS: PresetDef[] = [
       dropoutLenUs: 9,
       ghostDelayUs: 3,
       ghostGain: 0.15,
-      demodMHz: 0.45,
-    },
-  },
-  {
-    name: 'stickyShed',
-    displayName: 'sticky shed',
-    group: 'Tape wear',
-    blurb:
-      'A tape whose binder has gone hygroscopic, played unbaked: it grabs the drum, tension builds, breaks free, re-sticks — the relaxation oscillator behind squealing tapes. Bands of shear lean line by line, snap back, and hang where a strong patch holds, and because it is real timebase error the color-under phase rainbows at every slip boundary. Shedding oxide takes the RF down with it: heavy grain and a rash of dropouts where the coating let go.',
-    patch: {
-      tbStickNs: 1800,
-      tbJitterNs: 100,
-      lumaMHz: 2.5,
-      lumaPeak: 1,
-      noiseIre: 5,
-      colorUnderMix: 1,
-      chromaNoiseIre: 6,
-      underJitterDeg: 6,
-      headSwitchShiftUs: 1,
-      headSwitchNoise: 0.5,
-      dropoutRate: 18,
-      dropoutLenUs: 7,
       demodMHz: 0.45,
     },
   },
@@ -222,48 +185,23 @@ export const PRESETS: PresetDef[] = [
     mod: [{ target: 'trackPos', source: 'smooth', rateHz: 0.08, depth: 0.25 }],
   },
   {
-    name: 'fmFold',
-    displayName: 'fm fold',
+    name: 'servoHunt',
+    displayName: 'servo hunt',
     group: 'Tape wear',
     blurb:
-      'The white clip set too hot: every hard dark-to-bright edge overshoots past the FM response cliff and the discriminator folds back, trailing a black comet that boils frame to frame. Colour is recorded separately, so it rides straight through the fold — saturated hue smeared over black.',
+      'An auto-tracking deck that cannot find the track. The servo sweeps the noise band up the picture, overshoots, rings back, settles for a breath and loses it again as the tape stretches; every scene change, shuttle exit, splice and thump from the music throws it off the peak, and the top of the frame flags on the tension each time. Nothing here is drawn — it is a loop with too little damping.',
     patch: {
-      fmOverdev: 0.72,
-      fmStreakUs: 0.45,
-      lumaPeak: 2.4,
-      lumaMHz: 3.2,
+      trackHunt: 0.85,
+      trackKick: 0.9,
+      trackPos: 0.7,
       colorUnderMix: 1,
-      chromaGain: 1.3,
+      chromaNoiseIre: 14,
+      lumaMHz: 2.9,
       noiseIre: 2.5,
-    },
-  },
-  {
-    name: 'colourLate',
-    displayName: 'colour late',
-    group: 'Tape wear',
-    blurb:
-      'Chroma group delay mistrimmed against luma: every coloured area sits bodily sideways off the edge it belongs to, bleeding out of one side of things and falling short of the other. The burst travels the same wrong path, so hue stays correct — displaced colour, not rotated, which is what tells it from a timebase fault.',
-    patch: {
-      ycDelayNs: 1120,
-      colorUnderMix: 1,
-      chromaGain: 1.4,
-      lumaMHz: 3,
-      noiseIre: 2,
-    },
-  },
-  {
-    name: 'tiredAmplifier',
-    displayName: 'tired amplifier',
-    group: 'Tape wear',
-    blurb:
-      'Both of the video amp’s brightness-dependent errors at once: saturation drains out of the highlights while the shadows keep theirs, and hue swings with the luma underneath it — so a face turns one way in the light and the other in the shadow. Measured on every VTR spec sheet ever printed as DG% and DP°.',
-    patch: {
-      diffGain: 0.8,
-      diffPhaseDeg: 34,
-      lumaPeak: 1.6,
-      chromaGain: 1.2,
-      agc: 0.3,
-      noiseIre: 2,
+      tbJitterNs: 200,
+      tbWowNs: 400,
+      hHold: 0.3,
+      syncBendUs: 1.5,
     },
   },
   {
@@ -286,20 +224,6 @@ export const PRESETS: PresetDef[] = [
       ghostGain: 0.18,
       agc: 0.4,
       tbJitterNs: 80,
-    },
-  },
-  {
-    name: 'adjacentChannel',
-    displayName: 'adjacent channel',
-    group: 'RF / Broadcast',
-    blurb:
-      'The next channel up the cable through a worn-out trap: not their picture — their carriers. Their sound lays a fine 1.5 MHz weave, their blanking crosses as slanted dark bars with the broad windshield-wiper band sweeping at its own drifting rate, and where their content beats into our chroma band the decoder invents confetti colour no camera ever shot.',
-    patch: {
-      rfAdjacent: 0.7,
-      rfMistuneMHz: 0.2,
-      noiseIre: 2,
-      agc: 0.5,
-      demodMHz: 0.8,
     },
   },
   {
@@ -372,25 +296,6 @@ export const PRESETS: PresetDef[] = [
       noiseIre: 3,
       phosphor: 0.8,
     },
-  },
-  {
-    name: 'cbBreakthrough',
-    displayName: 'cb breakthrough',
-    group: 'RF / Broadcast',
-    blurb:
-      'An illegal linear two streets over pushing into the front end: a slow herringbone crawling over a weak picture, with the sound carrier leaking past its trap on top. The 1970s in one look.',
-    patch: {
-      ingress: 0.6,
-      soundIre: 7,
-      rfSnow: 0.3,
-      rfAdjacent: 0.25,
-      noiseIre: 6,
-      agc: 0.5,
-      lumaMHz: 3.4,
-    },
-    // A neighbour keying a microphone is not a steady tone — it comes and goes
-    // in bursts, which is what makes it read as somebody talking.
-    mod: [{ target: 'ingress', source: 'hold', rateHz: 0.6, depth: 0.4 }],
   },
   {
     name: 'scrambledChannel',
@@ -519,33 +424,6 @@ export const PRESETS: PresetDef[] = [
     // microsecond walks the colour of every generation around the wheel while
     // the geometry stays put.
     mod: [{ target: 'cfbDelayUs', source: 'sine', rateHz: 0.12, depth: 0.01 }],
-  },
-  {
-    // `name` is the MIDI-binding storage key and stays what it was written as:
-    // renaming it would drop the bindings and saved boards already keyed to it.
-    name: 'loopBin',
-    displayName: 'tape loop',
-    group: 'Feedback loops',
-    blurb:
-      'A loop of tape past three heads: the picture comes back on a beat, a generation older each lap.',
-    patch: {
-      tapeMix: 0.6,
-      tapeLoopMm: 30,
-      tapeHeads: 3,
-      tapeHfLoss: 0.4,
-      tapeNoiseIre: 2,
-      tapeSplice: 0.7,
-      tapeWear: 0.015,
-      tapeWowPct: 0.25,
-      colorUnderMix: 0.5,
-      phosphor: 0.75,
-    },
-    // The loop length is the delay, so walking it walks the echo spacing — and
-    // because nothing time-base corrects the return, each new length hands back
-    // a picture at a different height. Slow, because a transport has mass.
-    mod: [
-      { target: 'tapeLoopMm', source: 'smooth', rateHz: 0.05, depth: 0.06 },
-    ],
   },
   {
     name: 'strobeTrails',
@@ -707,6 +585,200 @@ export const PRESETS: PresetDef[] = [
       chromaGain: 1.8,
       crtSat: 1.3,
     },
+  },
+  {
+    name: 'zoomBloom',
+    displayName: 'zoom bloom',
+    group: 'Feedback loops',
+    blurb:
+      'The camera pushed in two percent a pass, with the loop above unity so the geometry accumulates instead of dimming out. A highlight breeds inward toward the middle and never quite arrives, because every generation is a little larger than the one it grew from.',
+    patch: {
+      fbMix: 0.62,
+      fbGain: 1.07,
+      fbZoom: 1.02,
+      fbBlack: 0.05,
+      phosphor: 0.6,
+    },
+    // The gain is the one thing standing between this and a white field, so
+    // walking it is walking how close to the edge the loop runs — slow, and
+    // narrow enough that the bottom of the sweep still accumulates.
+    mod: [{ target: 'fbGain', source: 'smooth', rateHz: 0.06, depth: 0.05 }],
+  },
+  {
+    name: 'tunnelOut',
+    displayName: 'tunnel out',
+    group: 'Feedback loops',
+    blurb:
+      'The same loop pulled the other way: each pass a shade smaller than the last, so the picture falls away from itself down a corridor rather than growing out of the frame. The vignette is what gives the corridor walls.',
+    patch: {
+      fbMix: 0.66,
+      fbGain: 1.06,
+      fbZoom: 0.975,
+      fbVign: 0.45,
+      phosphor: 0.5,
+    },
+    mod: [{ target: 'fbZoom', source: 'sine', rateHz: 0.04, depth: 0.04 }],
+  },
+  {
+    name: 'spiral',
+    group: 'Feedback loops',
+    blurb:
+      'Three degrees of rotation a pass on top of a slight zoom. Either alone gives a ring or a corridor; the two together are what makes the picture wind, because a generation lands rotated *and* displaced from the one under it.',
+    patch: {
+      fbMix: 0.7,
+      fbGain: 1.05,
+      fbZoom: 1.012,
+      fbRotateDeg: 3.2,
+      phosphor: 0.55,
+    },
+    // Through zero, so the wind reverses: the arms unwind, stall, and go back
+    // the other way, which a fixed rotation never does.
+    mod: [{ target: 'fbRotateDeg', source: 'sine', rateHz: 0.03, depth: 0.35 }],
+  },
+  {
+    name: 'subcarrierComb',
+    displayName: 'subcarrier comb',
+    group: 'Feedback loops',
+    blurb:
+      'A mixer loop delayed by about a quarter of a subcarrier cycle, so what comes back is ninety degrees out and the hue steps round the wheel one generation at a time. Nothing here touches a colour control: the rotation is the delay, arriving as colour because the subcarrier rode round the loop with the picture.',
+    patch: {
+      cfbMix: 0.82,
+      cfbGain: 0.98,
+      cfbDelayUs: 0.14,
+      chromaGain: 1.3,
+    },
+    // A hundred and forty nanoseconds is one sample; sweeping a fraction of one
+    // walks the whole wheel, so the picture cycles hue without a tint knob
+    // moving.
+    mod: [
+      { target: 'cfbDelayUs', source: 'triangle', rateHz: 0.05, depth: 0.1 },
+    ],
+  },
+  {
+    name: 'ringLoop',
+    displayName: 'ring loop',
+    group: 'Feedback loops',
+    blurb:
+      'The loop bus multiplied against the live picture instead of summed with it. Subcarrier against subcarrier lands colour at sum and difference phases neither frame contained, and every product goes round to be multiplied again — so the spectrum folds over itself generation after generation rather than settling.',
+    patch: {
+      cfbMix: 0.62,
+      cfbGain: 1,
+      cfbDelayUs: 0.4,
+      cfbRing: 0.65,
+      chromaGain: 1.2,
+    },
+    mod: [{ target: 'cfbRing', source: 'smooth', rateHz: 0.08, depth: 0.25 }],
+  },
+  {
+    name: 'servoWarp',
+    displayName: 'servo warp',
+    group: 'Feedback loops',
+    blurb:
+      "A varactor on the loop's own delay, driven by the video going through it: bright picture pulls its own timebase, so the frame that comes back is bent where it was lit. The bend is a map of the last generation's brightness, which is why it moves with the picture instead of across it.",
+    patch: {
+      cfbMix: 0.74,
+      cfbGain: 1.02,
+      cfbDelayUs: 1.2,
+      cfbServoUs: 34,
+      phosphor: 0.45,
+    },
+    // Through zero again: the pull reverses, so the warp leans one way, flattens
+    // and leans back.
+    mod: [{ target: 'cfbServoUs', source: 'sine', rateHz: 0.05, depth: 0.3 }],
+  },
+  {
+    name: 'bothLoops',
+    displayName: 'both loops',
+    group: 'Feedback loops',
+    blurb:
+      'Camera and mixer running at once, each modest. The optical loop can only do what a lens can — zoom, rotate, cut a black level — and the electrical one carries the subcarrier round with it, so the two disagree about what the picture is and the disagreement is the look.',
+    patch: {
+      fbMix: 0.5,
+      fbGain: 1.05,
+      fbZoom: 1.014,
+      fbRotateDeg: -1.5,
+      cfbMix: 0.55,
+      cfbGain: 1,
+      cfbDelayUs: 0.18,
+      phosphor: 0.5,
+    },
+    // One routing, on the optical half only. Walking both at once makes a look
+    // that never holds still long enough to read as either machine.
+    mod: [{ target: 'fbZoom', source: 'smooth', rateHz: 0.05, depth: 0.03 }],
+  },
+  {
+    name: 'runaway',
+    group: 'Feedback loops',
+    blurb:
+      'A camera loop wound past unity with the beam limiter left to argue with it. The picture blooms toward white, the limiter senses the beam current and pulls the drive down, and the loop climbs again — a cycle set by two servos disagreeing rather than by anything on screen. The auto-iris is in the loop too, hunting, so the bloom never arrives at the same brightness twice.',
+    patch: {
+      fbMix: 0.8,
+      fbGain: 1.2,
+      fbZoom: 1.03,
+      fbIris: 0.7,
+      abl: 0.8,
+      chromaGain: 1.2,
+      phosphor: 0.75,
+    },
+    // Slow, and through the region where the loop crosses unity: above it the
+    // structure breeds, below it decays, and the look is the crossing.
+    mod: [{ target: 'fbGain', source: 'sine', rateHz: 0.08, depth: 0.12 }],
+  },
+  {
+    name: 'syncInTheLoop',
+    displayName: 'sync in the loop',
+    group: 'Feedback loops',
+    blurb:
+      'The picture already coming apart before the camera gets to it: the vertical hold is marginal, so what the loop photographs is a frame mid-roll, and it feeds the roll back in to be photographed again. The seam accumulates instead of passing through, and the loop ends up holding several rolls at once at different ages.',
+    patch: {
+      fbMix: 0.75,
+      fbGain: 1.08,
+      fbZoom: 1.02,
+      vHold: 0.06,
+      vFreqHz: 59.85,
+      hHold: 0.4,
+      chromaGain: 1.3,
+      phosphor: 0.7,
+    },
+    // A hold this marginal does not drift steadily — it wanders, and the roll
+    // rate wanders with it, which is what keeps the stack of seams uneven.
+    mod: [{ target: 'vFreqHz', source: 'smooth', rateHz: 0.06, depth: 0.02 }],
+  },
+  {
+    name: 'lorenzLoop',
+    displayName: 'lorenz loop',
+    group: 'Feedback loops',
+    blurb:
+      "The mixer loop's delay driven by a Lorenz attractor rather than an oscillator. The echo spacing never repeats and never settles, so the structure the loop builds never lands twice in the same place — aperiodic without being random, which is the difference between this and shaking the control.",
+    patch: {
+      cfbMix: 0.82,
+      cfbGain: 1.02,
+      cfbDelayUs: 2,
+      cfbLines: 1,
+      chromaGain: 1.4,
+      phosphor: 0.6,
+    },
+    mod: [{ target: 'cfbDelayUs', source: 'lorenz', rateHz: 0.5, depth: 0.06 }],
+  },
+  {
+    name: 'strobeBloom',
+    displayName: 'strobe bloom',
+    group: 'Feedback loops',
+    blurb:
+      'The beam cut for most of each cycle and let through in flashes, inside a loop running above unity. The loop photographs the dark frames as well as the lit ones, so instead of running steady it pumps at the strobe rate — and the phosphor is long enough that each flash is still on the glass when the next one lands.',
+    patch: {
+      strobeHz: 6,
+      strobeMs: 40,
+      fbMix: 0.78,
+      fbGain: 1.16,
+      fbZoom: 1.025,
+      phosphor: 0.92,
+      chromaGain: 1.3,
+    },
+    // Sample and hold rather than an LFO: the rate should jump to a new value
+    // and sit there, because a strobe sliding continuously through its rates
+    // reads as a broken strobe rather than as one being played.
+    mod: [{ target: 'strobeHz', source: 'hold', rateHz: 0.4, depth: 0.3 }],
   },
   {
     name: 'cleanDissolve',
@@ -930,14 +1002,6 @@ export const PRESETS: PresetDef[] = [
     },
   },
   {
-    name: 'reversePolarity',
-    displayName: 'reverse polarity',
-    group: 'Bad cables',
-    blurb:
-      'Signal and ground fully swapped: sync inverts too, so the picture tears and rolls as colors flip.',
-    patch: { polarityFlip: 1 },
-  },
-  {
     name: 'noTerminator',
     displayName: 'no terminator',
     group: 'Bad cables',
@@ -955,14 +1019,6 @@ export const PRESETS: PresetDef[] = [
     // strong AGC would quietly rescue this fault; a weak one keeps the look
     // the blurb promises while still breathing the way a real set's would.
     patch: { termination: -1.0, agc: 0.2, hHold: 0.5, noiseIre: 2 },
-  },
-  {
-    name: 'chromaOnly',
-    displayName: 'chroma only',
-    group: 'Bad cables',
-    blurb:
-      'Only the chroma pin reaches the input — burst-locked color glowing on black, no luma to hold sync. The s-video miswire preset is this same patch at partial contact.',
-    patch: { chromaPinOnly: 1, chromaGain: 1.4 },
   },
   {
     name: 'looseConnector',
@@ -1435,30 +1491,6 @@ export const PRESETS: PresetDef[] = [
       tbStickNs: 8000,
       tbJitterNs: 2200,
       phosphor: 0.88,
-    },
-  },
-  {
-    name: 'eightHeadLap',
-    displayName: 'eight-head lap',
-    group: 'Past the redline',
-    blurb:
-      'Eight heads crowded toward the record end of a six-millimetre loop, running five times play speed. A lap returns eight times at uneven spacing, so the echoes interfere across the frame instead of ticking.',
-    patch: {
-      tapeMix: 0.85,
-      // Unity, not above it. Eight taps summing into a loop that only clips
-      // (the play path rails at 140 IRE) means any spare gain is spent whiting
-      // the whole frame out inside a second — the taps stop being separable,
-      // which is the one thing this patch is for. The wear and the HF loss are
-      // what keep it moving instead.
-      tapeGain: 1,
-      tapeHeads: 8,
-      tapeHeadSpread: 2.4,
-      tapeLoopMm: 6,
-      tapeWear: 0.35,
-      tapeSplice: 0.8,
-      tapeHfLoss: 0.5,
-      colorUnderMix: 0.6,
-      phosphor: 0.78,
     },
   },
   {

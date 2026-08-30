@@ -60,8 +60,6 @@ These read like naked periodic waves but are physically correct — don't
   defects on _position on the tape_ so they recur every lap; the same idea on
   the main deck still wants doing — it has no tape-position coordinate to hang a
   defect off, which is exactly what the ring gave the loop.
-- **Servo hunting.** `trackPos` is a static knob; a real auto-tracking deck
-  searches and settles after a scene change or on exiting shuttle.
 - **Luma FM beating the 629 kHz color-under carrier.** The fine crawling chroma
   noise in saturated reds. Modelling the luma FM properly is expensive; the
   honest cheap version is the beat product alone.
@@ -168,7 +166,8 @@ that. Rough payoff order:
 The card can be received badly (`sources/teletype.ts` › `garbleRows`): holes
 where parity caught a bit, wrong characters where it didn't, blocks for the rest
 of a row whose control code took the hit, and the odd line delivered to the
-wrong address. What is left is a dial and two attributes.
+wrong address. What is left is a dial, two attributes, and the other way a
+character generator goes wrong.
 
 - **A strength, not a switch.** The rate is one constant picked by eye.
   `?garble=0.8` would carry a strength without breaking the flag — `q.has` is
@@ -180,7 +179,123 @@ wrong address. What is left is a dial and two attributes.
   ate the line under it. Both are famous garbles and neither is reachable here:
   this card is one bit deep and white on black, and rendering them means
   carrying attributes per row through `dotGrid`. Double height is the cheaper of
-  the two and the one you saw more often.
+  the two and the one you saw more often. A chyron has both and is coloured, so
+  the keyer section below is what would pay for them.
+- **Bending the card's own ROM.** Shipped for the caption generator (`ccRomAddr`
+  / `ccRomData`, `romRead` in `decode.wgsl`) and not for the card, because the
+  caption's font is a ROM in a buffer where the card's is a canvas raster — the
+  bend is two lines there and a rebuild of `dotGrid` here. What the shipped one
+  taught, for whoever does the card: holding a pin is not one effect but a range
+  of them, and the range comes out of the wiring rather than being authored. The
+  address bus carries the character code in its high lines and the row inside
+  the cell in its low ones, so one knob sweeps from every glyph growing a seam
+  to the whole font substituting. And the pin is held _high_ rather than
+  switched, so a glyph whose bit was already set is untouched and the damage is
+  uneven the way a jumper's is.
+
+  This is what separates a bend from `garbleRows`, which models a bad
+  _transmission_ — random hits on bytes in flight. A bend is deterministic: the
+  same text comes out wrong the same way every time, because the machine is
+  wrong rather than the wire. Holding a line on the page-address counter is the
+  third one and is unbuilt in both places: it walks the entire page diagonally
+  through itself a few cells a field.
+
+## The caption channel — shipped
+
+`encode_composite.wgsl` carries real characters on line 21 now
+(`signal/captionstate.ts` feeds them), `caption.wgsl` is the set's decoder, and
+`decode` paints the page it recovers. The two things it was built for both
+arrived: damage lands as **wrong words** rather than as smearing, and the
+caption is painted on the set's raster, so the picture rolls, tears and spins
+hue underneath one that does not move.
+
+Five things learned, for whoever touches it.
+
+**The cell grid is fitted to the active window, not to 503 kHz.** Real line 21
+clocks at the true rate and spills into the blanking either side to fit its
+twenty-eight cells — which here would write over the burst that this very line's
+hue lock is measured from. Fitted to `ACTIVE_W` the clock is 532 kHz, six
+percent fast, and nothing downstream measures it. `CC_CELLS` is what both ends
+index off, and that is the only thing that has to agree.
+
+**The run-in cannot be read at cell centres.** It is a sine at the cell rate, so
+every one of its centres sits exactly on the midpoint the slicer is trying to
+measure _around_ — sampled there, a perfect signal comes back flat and the
+threshold never arms. It is scanned sample by sample instead. This cost a build.
+
+**The font ROM and the page RAM share one binding** (`captionrom.ts`). `decode`
+was already carrying seven storage buffers and eight is the floor WebGPU
+guarantees, so a ninth would be a device that works here and refuses elsewhere.
+They are one memory on the chip being modelled anyway.
+
+**A pair that runs out mid-way sends a null**, not the first character of the
+next time round. The gap after a caption is what leaves it on screen to be read,
+and a pair reaching across it puts one stray character on the page a beat ahead
+of its line.
+
+**Painting goes before `crt_face` and is indexed by screen position.** Before
+the face pass because a caption is light off the same glass — after it, it would
+be a sticker on a photograph of a screen. By screen position because that is the
+physical claim: a decoder holds bytes and repaints on the set's own timing.
+
+What it does not do:
+
+- **Roll-up is the only mode.** Pop-on and paint-on are the other two, and both
+  are control-code state machines over the same page rather than new mechanism.
+- **No squelch.** A real decoder muted its display after a run of parity
+  failures; this one paints every block it catches, so heavy snow fills a row
+  with them. Dramatic, and not quite what the box did.
+- **Attributes are ignored.** Line 21 carries colour, italics and the PAC codes
+  that position a caption; this page is white, upright and where it was put.
+  Same shape of gap as the teletype card's two attributes above, and the same
+  fix would serve both.
+- **CC1 only.** The second caption channel lives on field 2, so it needs
+  interlace before it means anything — see the section below.
+
+## The character generator as a keyer — shipped
+
+`chyron.wgsl` stands where the box stood: after the mixer, ahead of the loop and
+the deck, so what it keys in ages with the picture instead of being laid over a
+finished frame. It takes no text of its own — it says what the caption says, and
+that is not a shortcut. An open caption and a closed one were the same sentence
+down two paths, and running both is what makes the difference legible: this one
+is picture, so it is torn and smeared and rainbowed and never misspelled; line
+21 is data, so it is spelled wrong and never moves.
+
+Three things learned.
+
+**The fill has to be video, or the timing trim does nothing.** The first cut
+keyed a flat IRE level through the glyph matte, and with a constant fill,
+delaying the key only translates the type — the control did nothing its help
+text claimed. A real CG puts out the characters _as video_ on one wire and their
+matte on the other, so where the key is open and the fill has not arrived the
+box hands over its own black, and where the fill is lit and the key has closed
+the program shows straight through the letter. That is the artifact, and it only
+exists because the two wires carry the same shapes separately.
+
+**The edge generator is OR-ed into the key, not drawn.** Widening the matte to
+the shadow's shape puts the fill's own black out there for free, which is how
+one extra tap bought a border. Drawing the shadow as a third element would have
+been the same picture by a worse mechanism, and bending the delays apart would
+not have detached it.
+
+**Two boxes means two chips.** The generator has its own font ROM and its own
+pin to hold (`cgRomAddr`/`cgRomData`), separate from the caption decoder's in
+the set. They share the baked ROM bytes and nothing else, so bending one says
+nothing about the other — which is the physically honest answer and also why
+`cgRom` is a near-copy of `decode.wgsl`'s `romRead` rather than something shared
+through a pointer.
+
+What it does not do:
+
+- **The fill is the box's own characters and nothing else.** `keyFill`'s trick
+  on the chroma keyer — program A, a matte generator, or the mixer loop bus —
+  would make an inverted key a window onto the feedback bus rather than onto
+  program, which is the one obviously good thing left here.
+- **Monochrome.** A CG with a colour matte generator is `bKeyMatte*` pointed at
+  this instead, and the same attribute work the teletype card wants above.
+- **No page-address bend.** The third of the three bends, unbuilt in both
+  places: it walks the whole page diagonally through itself a few cells a field.
 
 ## Chroma key follow-ons
 
@@ -422,6 +537,30 @@ tunes that control's look.
   the fine-tuning cliff; any deterministic `?set=` look plus a probe is one more
   pinned fact. Candidates: burst-lock hue rotation, the killer threshold,
   scramble's wash-out level.
+- **Read VITS back as the app's own frequency response.** Lines 17 and 18 are
+  already stamped with the real instruments — multiburst stepping 0.5 to 4.2
+  MHz, and the modulated staircase that differential gain and phase were
+  measured off. They are then eaten by the chain like everything else, so
+  demodulating them at the receiver end and reading the packet levels back
+  answers what the whole path is doing to frequency, and what it is doing to
+  chroma amplitude and phase against luma level. That is not an approximation of
+  the broadcaster's number, it is the same measurement on the same signal. Two
+  things fall out: an instrument worth drawing (a response curve, next to the
+  waveform monitor above), and a rail — a `?set=` look plus a response is a
+  pinned fact about the chain that no pixel probe reaches, because a filter
+  regression moves the curve long before it moves a hue. `vir.wgsl` is the
+  worked example of the gate-and-demodulate half, and `buzzBuf` is the worked
+  example of getting a per-frame measurement back to the CPU cheaply.
+- **Count the caption channel's errors.** The caption channel's whole premise is
+  that damage arrives as wrong words, and a wrong word is _countable_ in a way a
+  wrong pixel is not — feed a known string, read the page `caption.wgsl`
+  recovered, and the character error rate is one scalar per look. That makes a
+  regression rail out of a thing already built: a noise level and a dub count
+  either still cost the same characters or they do not, with no tolerance to
+  tune and no screenshot to eyeball. It also fails in the right direction. The
+  slicer sits at the far end of sync, timing and the whole channel block, so a
+  regression anywhere upstream shows up as a misspelling, and the number says
+  how bad rather than only that something moved.
 
 ## Digital cable tier
 

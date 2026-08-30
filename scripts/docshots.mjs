@@ -9,6 +9,7 @@
 //
 // Usage: node scripts/docshots.mjs [--force] [--base=URL] [--out=DIR]
 //                                  [--videos=DIR] [--upload] [name...]
+//        node scripts/docshots.mjs --check   which shots are behind the app
 //   needs the dev server (pnpm dev), Firefox Nightly, ImageMagick and ffmpeg,
 //   optionally pngquant. Names filter the run: `node scripts/docshots.mjs
 //   overview presets`.
@@ -46,6 +47,7 @@ const flag = (name, fallback) => {
 const force = argv.includes('--force')
 const upload = argv.includes('--upload')
 const freeze = argv.includes('--freeze')
+const check = argv.includes('--check')
 const base = flag('base', 'http://localhost:5199/')
 const outDir = flag('out', 'docs/img')
 const videoDir = flag('videos', 'clips')
@@ -701,16 +703,107 @@ async function capture(browser, spec) {
 // look ("surprise me") still links to the exact patch behind the picture.
 const liveUrls = new Map()
 
+// What a shot was taken against. These pictures carry the app's own masthead,
+// version string and all, so a shot from two releases ago is visibly a shot of
+// a different program — which is exactly how docs/img went stale showing a
+// stage that had been renamed, at v0.28.7, with nothing to say so.
+//
+// Keyed on the version, so it fires once per release rather than once per
+// commit — which is the cadence that gets read. It is also the honest cadence:
+// the masthead in these pictures prints the version, so a release dates them
+// whether or not the panel moved, and a release is when they ship anyway. The
+// count of src/ commits beside it says how much of a retake it is — nought
+// means the masthead string and nothing else.
+//
+// diagrams and docgen both have a --check that regenerates and compares. A
+// screenshot cannot: comparing means recapturing, which needs a browser, a dev
+// server and a minute. So this records what the app was when the shutter went,
+// and --check reads it back. Cheap, headless, and it catches the failure that
+// actually happens — nobody reruns a harness they have no reason to suspect.
+const capturedAt = () => ({
+  version: JSON.parse(readFileSync('package.json', 'utf8')).version,
+  sha: execFileSync('git', ['rev-parse', '--short', 'HEAD'], {
+    encoding: 'utf8',
+  }).trim(),
+})
+
+const readManifest = () => {
+  const file = join(outDir, 'shots.json')
+  if (!existsSync(file)) return new Map()
+  return new Map(JSON.parse(readFileSync(file, 'utf8')).map(s => [s.name, s]))
+}
+
+// How far the app has moved since a shot was taken, counted in commits that
+// touched src/. A docs-only commit does not make a screenshot of the UI stale,
+// and counting it would make this cry wolf until nobody reads it.
+const movedSince = sha => {
+  try {
+    return Number(
+      execFileSync(
+        'git',
+        ['rev-list', '--count', `${sha}..HEAD`, '--', 'src/'],
+        {
+          encoding: 'utf8',
+        },
+      ).trim(),
+    )
+  } catch {
+    return null
+  }
+}
+
+// Only the shots with the app's chrome in them. A clip and a `look-` tile are
+// the canvas alone — renaming a stage does not date a picture of the picture —
+// and flagging all eleven every release is how a check stops being read. Read
+// off the spec rather than listed here, so a new picture-only shot is covered
+// by the same rule.
+const showsPanel = spec => spec.video === undefined && spec.crop !== 'canvas'
+
+function reportStaleness() {
+  const now = capturedAt()
+  const manifest = readManifest()
+  const rows = SPECS.filter(showsPanel)
+    .map(spec => {
+      const was = manifest.get(spec.name)?.captured
+      if (was === undefined) return { name: spec.name, why: 'never recorded' }
+      if (was.version !== now.version) {
+        const n = movedSince(was.sha)
+        const moved =
+          n === null ? '' : `, ${n} src commit${n === 1 ? '' : 's'} since`
+        return { name: spec.name, why: `taken at v${was.version}${moved}` }
+      }
+      return null
+    })
+    .filter(row => row !== null)
+
+  if (rows.length === 0) {
+    console.log(`docshots current at v${now.version}`)
+    return 0
+  }
+  for (const row of rows) console.log(`  ${row.name.padEnd(16)} ${row.why}`)
+  console.log(
+    `\n${rows.length} shot(s) behind v${now.version} — retake with:\n` +
+      `  node scripts/docshots.mjs ${rows.map(r => r.name).join(' ')}`,
+  )
+  return 1
+}
+
+if (check) process.exit(reportStaleness())
+
 // Every shot's live URL against the hosted app, so a figure in the docs can be
 // opened and played with rather than only looked at. Merged into whatever is
 // already on disk, so a filtered run doesn't drop the shots it skipped.
 function writeManifest() {
   const file = join(outDir, 'shots.json')
-  const previous = new Map(
-    (existsSync(file) ? JSON.parse(readFileSync(file, 'utf8')) : []).map(s => [
-      s.name,
-      s.live,
-    ]),
+  const onDisk = existsSync(file) ? JSON.parse(readFileSync(file, 'utf8')) : []
+  const previous = new Map(onDisk.map(s => [s.name, s.live]))
+  const previousCaptured = new Map(onDisk.map(s => [s.name, s.captured]))
+  const now = capturedAt()
+  // Stamped for the shots this run actually took, including the ones the pixel
+  // gate left alone: an unchanged shot was still checked against this build, so
+  // it is current, not stale.
+  const took = new Set(
+    shots.filter(s => !failed.includes(s.name)).map(s => s.name),
   )
   const manifest = SPECS.map(spec => ({
     name: spec.name,
@@ -723,6 +816,9 @@ function writeManifest() {
       liveUrls.get(spec.name) ??
       previous.get(spec.name) ??
       `${LIVE_BASE}?${new URLSearchParams(spec.params ?? {})}`,
+    captured: took.has(spec.name)
+      ? now
+      : (previousCaptured.get(spec.name) ?? null),
   }))
   writeFileSync(file, `${JSON.stringify(manifest, null, 2)}\n`)
 }

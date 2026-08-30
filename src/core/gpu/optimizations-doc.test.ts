@@ -1,6 +1,5 @@
 import { expect, test } from 'vitest'
 
-import { TAPE_FRAMES } from '../signal/constants'
 import { TAPS } from '../signal/filters'
 import { PRELUDE, TILE_WG } from './prelude'
 
@@ -133,10 +132,9 @@ test('the doc quotes the readback pool depth', () => {
   expect(doc).toContain(`a pool of ${word(pool)}`)
 })
 
-test('the doc quotes the morph step count and the tape ring depth', () => {
+test('the doc quotes the morph step count', () => {
   const steps = privateConst('src/core/signal/glide.ts', 'COARSE_STEPS')
   expect(doc).toContain(`\`COARSE_STEPS\` (${steps})`)
-  expect(doc).toContain(`${TAPE_FRAMES}-frame loop`)
 })
 
 test('the doc quotes how many dispatches a frame can run', () => {

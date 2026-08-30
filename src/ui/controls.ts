@@ -4,6 +4,17 @@ import type { CurveName } from './travel'
 
 export interface SliderDef {
   key: ControlKey
+  // This control's number on the wire (ui/packed.ts). Assigned once, at birth,
+  // and never changed or reused: a packed link says "control 84", so a control
+  // that renumbers turns every link and every saved look carrying it into a
+  // different look. A new control takes one past the highest here; a deleted
+  // one leaves its number behind unspoken, which is all a hole needs to be.
+  //
+  // It lives on the control rather than in a list beside the table because the
+  // list version was an invariant somebody had to remember — never insert,
+  // never reorder — and this one cannot be got wrong by moving a slider into
+  // the group it belongs in.
+  id: number
   label: string
   min: number
   max: number
@@ -88,7 +99,7 @@ export interface SliderDef {
 export const PHASE_ORDER = [
   'Source A',
   'Mix',
-  'Tape',
+  'Channel',
   'Receiver',
   'Screen',
 ] as const
@@ -97,7 +108,7 @@ export type Phase = (typeof PHASE_ORDER)[number]
 // The three loops, as placements. A loop is not a division of the trunk — it is
 // a machine patched across it — so it is off the spine for the same reason the
 // two branches are, and its groups say which loop rather than which stage.
-const LOOP_PLACES = ['camera', 'mixer', 'tape'] as const
+const LOOP_PLACES = ['camera', 'mixer'] as const
 export type LoopPlace = (typeof LOOP_PLACES)[number]
 
 // Where a group lives in the panel — its single source of placement truth, so
@@ -188,7 +199,6 @@ export const generatorsLive = (
 // one thing that tells the three apart once more than one is running.
 export const CAMERA_LOOP_GROUP = 'Camera feedback (optical)'
 export const MIXER_LOOP_GROUP = 'Mixer feedback (electrical)'
-export const DELAY_LOOP_GROUP = 'Tape loop (mechanical)'
 
 // Which of the three are actually carrying signal, so a drawing can show a
 // running loop rather than only the three that exist in principle. One shape
@@ -244,32 +254,16 @@ interface LoopStage {
 // visit is looking for. Nobody arrives wondering where the loops are; they
 // arrive wanting the camera pointed at the screen.
 //
-// The third is 'Tape loop', which is what the machine is, and it is a name this
-// file has argued itself out of twice before. Both times the objection was the
-// same and it was about the drawing rather than the words: 'Tape' is a stage of
-// the trunk two columns along — the deck this signal was played back on,
-// dropouts and timebase wander — so 'tape loop' written near the TAPE box put
-// one word over two machines.
-//
-// That is a placement problem, and it is fixed where placement lives. The run's
-// name sits to the left of the loop it straddles (chainLayout), over the gap
-// between the head of the chain and the mixer, with the whole width of the
-// drawing between it and the box it used to be read against. The two names are
-// set apart as well as spaced apart: TAPE is upper-cased inside a box on the
-// chain, this is lower-case on a wire above it.
-//
-// The two names it took in the meantime were both worse. 'Loop bin' is borrowed
-// from the wrong trade — a loop bin is duplication gear, a spliced master
-// spilled loose into an open bin to feed a bank of slave recorders, with no
-// record head and no feedback at all. 'Delay loop' named the effect instead of
-// the machine: accurate, and it left the drawing saying what a knob does where
-// every other box says what a thing is.
+// The third is 'Tape loop', which is what the machine is. It spent three
+// renames fighting the trunk's own TAPE box two columns along, and the fight is
+// over because that box is CHANNEL now: the deck is one of the things the
+// recording came through, alongside the tuner and the cable, and naming the
+// stage after all three leaves 'tape' meaning the loop machine and nothing else.
 //
 // `loop` and every control key stay `tape` (LOOP_PLACES, `tapeMix`,
-// signal/tapeloop.ts), which they would have done under any of these.
+// signal/tapeloop.ts).
 export const CAMERA_LOOP_STAGE = 'Camera feedback'
 export const MIXER_LOOP_STAGE = 'Mixer feedback'
-export const DELAY_LOOP_STAGE = 'Tape loop'
 
 export const LOOP_STAGES: readonly LoopStage[] = [
   {
@@ -293,18 +287,6 @@ export const LOOP_STAGES: readonly LoopStage[] = [
     what: 'the composite itself, patched off the bus into an input and crossfaded against the live signal. The subcarrier rides round with it, so each sample of cable delay spins fed-back hue 90° a generation and colour does things optics cannot',
     mix: 'cfbMix',
   },
-  {
-    loop: 'tape',
-    name: DELAY_LOOP_STAGE,
-    // The one that does not cut down to its first word, because that word is a
-    // box on the chain two columns along. It keeps both, which is also why the
-    // layout has a side to choose for it — see DELAY_LOOP_STAGE.
-    short: 'Tape loop',
-    blurb:
-      'mechanical — a second deck threaded with a loop of tape, patched across the bus: what goes round is re-recorded and ages a generation a lap',
-    what: 'a second machine threaded with a loop of tape, patched across the bus rather than round the chain: a play head returns what was laid down a lap ago, a record head lays the sum back down, and whatever keeps circulating ages a generation every time round',
-    mix: 'tapeMix',
-  },
 ]
 
 export const LOOP_STAGE_NAMES: readonly string[] = LOOP_STAGES.map(l => l.name)
@@ -316,6 +298,7 @@ export const GROUPS: Group[] = [
     sliders: [
       {
         key: 'invert',
+        id: 20,
         label: 'invert (polarity swap)',
         min: 0,
         max: 1,
@@ -325,6 +308,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'deint',
+        id: 0,
         label: 'deinterlace',
         min: 0,
         max: 1,
@@ -335,6 +319,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'capLumaMHz',
+        id: 1,
         label: 'capture luma band (0 off)',
         min: 0,
         max: 4.2,
@@ -344,6 +329,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'capChromaMHz',
+        id: 2,
         label: 'capture chroma band (0 off)',
         min: 0,
         max: 1.5,
@@ -353,6 +339,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'capNoiseIre',
+        id: 4,
         label: 'capture grain',
         min: 0,
         max: 30,
@@ -362,6 +349,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'capChromaNoiseIre',
+        id: 5,
         label: 'capture chroma noise',
         min: 0,
         max: 60,
@@ -372,6 +360,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'capYcDelayNs',
+        id: 3,
         label: 'capture y/c delay',
         min: -500,
         max: 500,
@@ -382,6 +371,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'vbi',
+        id: 69,
         label: 'vbi test signals',
         min: 0,
         max: 1,
@@ -417,6 +407,7 @@ export const GROUPS: Group[] = [
     sliders: [
       {
         key: 'srcNoiseBwMHz',
+        id: 6,
         label: 'noise bandwidth',
         min: 0.2,
         max: 7,
@@ -426,6 +417,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'srcNoiseLevel',
+        id: 8,
         label: 'noise power',
         min: 0,
         max: 2,
@@ -435,6 +427,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'srcNoiseLine',
+        id: 7,
         label: 'per-sweep level error',
         min: 0,
         max: 1,
@@ -444,6 +437,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'srcNoiseHz',
+        id: 9,
         label: 'field refresh',
         min: 1,
         max: 60,
@@ -464,6 +458,7 @@ export const GROUPS: Group[] = [
     sliders: [
       {
         key: 'synthAHz',
+        id: 10,
         label: 'osc A',
         min: 0,
         max: 8000000,
@@ -474,6 +469,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'synthBHz',
+        id: 11,
         label: 'osc B',
         min: 0,
         max: 8000000,
@@ -484,6 +480,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'synthShape',
+        id: 12,
         label: 'waveform',
         min: 0,
         max: 3,
@@ -494,6 +491,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'synthMix',
+        id: 13,
         label: 'combiner',
         min: 0,
         max: 3,
@@ -504,6 +502,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'synthLevel',
+        id: 14,
         label: 'level',
         min: 0,
         max: 4,
@@ -515,6 +514,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'synthColor',
+        id: 15,
         label: 'colorizer',
         min: 0,
         max: 1,
@@ -524,6 +524,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'synthHueDeg',
+        id: 16,
         label: 'colorizer phase',
         min: 0,
         max: 360,
@@ -534,6 +535,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'synthOver',
+        id: 17,
         label: 'over picture (A)',
         min: 0,
         max: 1,
@@ -543,6 +545,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'synthFm',
+        id: 18,
         label: 'luma → osc A',
         min: 0,
         max: 200000,
@@ -570,6 +573,7 @@ export const GROUPS: Group[] = [
     sliders: [
       {
         key: 'aPause',
+        id: 177,
         label: 'A pause (deck held)',
         min: 0,
         max: 1,
@@ -579,6 +583,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'aDropoutRate',
+        id: 178,
         label: 'A dropouts',
         min: 0,
         max: 400,
@@ -589,6 +594,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'aDropoutLenUs',
+        id: 179,
         label: 'A dropout len',
         min: 1,
         max: 60,
@@ -599,6 +605,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'aScramble',
+        id: 169,
         label: 'A sync suppression',
         min: 0,
         max: 1,
@@ -608,6 +615,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'aScrambleMode',
+        id: 170,
         label: 'A system',
         min: 0,
         max: 2,
@@ -628,6 +636,7 @@ export const GROUPS: Group[] = [
     sliders: [
       {
         key: 'aConnector',
+        id: 175,
         label: 'A loose connector',
         min: 0,
         max: 1,
@@ -637,6 +646,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'aConnectorMode',
+        id: 176,
         label: 'A bad contact',
         min: 0,
         max: 2,
@@ -647,6 +657,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'aHumIre',
+        id: 174,
         label: 'A ground loop',
         min: -40,
         max: 40,
@@ -657,6 +668,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'aNoiseIre',
+        id: 172,
         label: 'A noise',
         min: 0,
         max: 150,
@@ -667,6 +679,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'aTermination',
+        id: 171,
         label: 'A termination (-1 daisy, +1 open)',
         min: -1,
         max: 1,
@@ -676,6 +689,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'aPolarity',
+        id: 173,
         label: 'A polarity (flips sync)',
         min: 0,
         max: 1,
@@ -699,6 +713,7 @@ export const GROUPS: Group[] = [
     sliders: [
       {
         key: 'fbMix',
+        id: 114,
         label: 'mix',
         min: 0,
         max: 1,
@@ -708,6 +723,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'fbZoom',
+        id: 115,
         label: 'zoom',
         min: 0.2,
         max: 4,
@@ -720,6 +736,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'fbRotateDeg',
+        id: 116,
         label: 'rotate',
         min: -180,
         max: 180,
@@ -732,6 +749,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'fbShiftX',
+        id: 117,
         label: 'shift x',
         min: -1,
         max: 1,
@@ -745,6 +763,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'fbShiftY',
+        id: 118,
         label: 'shift y',
         min: -1,
         max: 1,
@@ -758,6 +777,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'fbGain',
+        id: 119,
         label: 'gain',
         min: 0,
         max: 3,
@@ -771,6 +791,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'fbIris',
+        id: 120,
         label: 'auto-iris hunt',
         min: 0,
         max: 1,
@@ -780,6 +801,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'fbFocus',
+        id: 121,
         label: 'defocus',
         min: 0,
         max: 12,
@@ -791,6 +813,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'fbVign',
+        id: 122,
         label: 'vignette',
         min: 0,
         max: 1,
@@ -801,6 +824,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'fbBlack',
+        id: 123,
         label: 'black cut',
         min: 0,
         max: 0.2,
@@ -811,6 +835,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'fbKnee',
+        id: 124,
         label: 'cam s-curve',
         min: 0,
         max: 1,
@@ -836,6 +861,7 @@ export const GROUPS: Group[] = [
     sliders: [
       {
         key: 'crtCutoff',
+        id: 125,
         label: 'beam cutoff',
         min: 0,
         max: 0.95,
@@ -846,6 +872,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'crtGamma',
+        id: 126,
         label: 'beam gamma',
         min: 0.2,
         max: 6,
@@ -856,6 +883,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'crtSat',
+        id: 127,
         label: 'beam saturation',
         min: 0,
         max: 6,
@@ -866,6 +894,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'crtBloom',
+        id: 130,
         label: 'screen bloom',
         min: 0,
         max: 6,
@@ -876,6 +905,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'crtHalation',
+        id: 131,
         label: 'halation (warm halo)',
         min: 0,
         max: 6,
@@ -886,6 +916,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'crtHaloKey',
+        id: 133,
         label: 'halation ∝ beam current',
         min: 0,
         max: 4,
@@ -896,6 +927,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'crtGlow',
+        id: 132,
         label: 'phosphor glow',
         min: 0,
         max: 4,
@@ -912,6 +944,7 @@ export const GROUPS: Group[] = [
     sliders: [
       {
         key: 'cfbMix',
+        id: 141,
         label: 'loop mix',
         min: 0,
         max: 1,
@@ -922,6 +955,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'cfbGain',
+        id: 142,
         label: 'loop gain',
         min: -3,
         max: 3,
@@ -932,6 +966,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'cfbDelayUs',
+        id: 143,
         label: 'loop delay',
         min: 0,
         max: 63,
@@ -942,6 +977,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'cfbServoUs',
+        id: 153,
         label: 'loop timebase pull',
         min: -60,
         max: 60,
@@ -953,6 +989,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'cfbLines',
+        id: 144,
         label: 'v offset',
         min: -240,
         max: 240,
@@ -963,6 +1000,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'cfbKey',
+        id: 145,
         label: 'luma key',
         min: -1,
         max: 1,
@@ -972,6 +1010,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'cfbKeyLevel',
+        id: 146,
         label: 'key level',
         min: 0,
         max: 100,
@@ -982,6 +1021,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'cfbKeySoft',
+        id: 147,
         label: 'key soft',
         min: 1,
         max: 30,
@@ -992,6 +1032,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'cfbHold',
+        id: 148,
         label: 'strobe hold',
         min: 0,
         max: 60,
@@ -1002,6 +1043,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'cfbTrail',
+        id: 149,
         label: 'trails',
         min: 0,
         max: 1,
@@ -1012,6 +1054,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'cfbFilterMHz',
+        id: 150,
         label: 'loop resonance freq (0 off)',
         min: 0,
         max: 5,
@@ -1022,6 +1065,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'cfbFilterQ',
+        id: 151,
         label: 'loop resonance Q (broad→ringing)',
         min: 0,
         max: 1,
@@ -1032,6 +1076,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'cfbFilterBoost',
+        id: 152,
         label: 'loop resonance boost',
         min: 0,
         max: 16,
@@ -1043,6 +1088,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'cfbRing',
+        id: 154,
         label: 'loop ring mod',
         min: 0,
         max: 1,
@@ -1053,208 +1099,12 @@ export const GROUPS: Group[] = [
     ],
   },
   {
-    name: DELAY_LOOP_GROUP,
-    place: 'tape',
-    sliders: [
-      {
-        key: 'tapeMix',
-        label: 'loop mix',
-        min: 0,
-        max: 1,
-        step: 0.01,
-        redline: [0, 0.95],
-        unit: '',
-        help: 'A second machine threaded with a loop of tape: the mixer feeds a record head, and a play head further round the loop returns what was laid down a second or two ago. This is the crossfader toward that return. Because the return gets recorded again, whatever keeps circulating goes round the medium once per lap and ages a generation each time.',
-      },
-      {
-        key: 'tapeLoopMm',
-        label: 'loop length',
-        min: 0.2,
-        max: 66,
-        step: 0.1,
-        redline: [0.6, 66],
-        unit: 'mm',
-        help: 'Millimetres of tape between the record head and the play head. Tape runs at 33.35 mm/s, so this is the delay: 0.6 mm is a single frame, 33 mm a second, 66 mm the whole bin. Length is the physical setting rather than a time, which is why speed wander below moves the delay itself.',
-      },
-      {
-        key: 'tapeGain',
-        label: 'playback gain',
-        min: -3,
-        max: 3,
-        step: 0.01,
-        redline: [-1.2, 1.2],
-        unit: 'x',
-        help: 'Proc-amp trim on the playback. Past ±1 each lap comes back louder than it went out and the loop builds until it clips. Negative inverts every pass, so repeats alternate polarity down the tail.',
-      },
-      {
-        key: 'tapeHfLoss',
-        label: 'generation loss',
-        min: 0,
-        max: 1,
-        step: 0.01,
-        unit: '',
-        help: 'How much of the top of the band the head and tape lose on each pass. The colour subcarrier sits at the very top, so it goes several times faster than the picture under it — repeats fade to grey well before they go soft, and a long tail ends up monochrome. This is the knob that makes the echo sound like tape instead of a delay line.',
-      },
-      {
-        key: 'tapeNoiseIre',
-        label: 'tape noise',
-        min: 0,
-        max: 40,
-        step: 0.1,
-        redline: [0, 8],
-        unit: 'IRE',
-        help: "The medium's own noise floor. It belongs to the oxide, not to the moment, so the same grain is on the same stretch of tape every lap and gets re-recorded rather than averaging away like snow — it builds into standing streaks, and slides bodily through the picture when the speed wanders.",
-      },
-    ],
-  },
-  {
-    // The mechanics of the loop, split off from what the loop sounds like above.
-    // Together they were fourteen controls under one header showing eleven rows —
-    // the longest visible group left in the panel after the Tape and Screen
-    // stages were split, and for the same reason: one header was covering the
-    // loop's mix and length, the deck driving it, the heads reading it, and the
-    // oxide wearing out, which are four different questions.
-    name: 'Loop transport & heads',
-    place: 'tape',
-    sliders: [
-      {
-        key: 'tapeRecord',
-        label: 'record head',
-        min: 0,
-        max: 1,
-        step: 1,
-        unit: '',
-        // `rec` rather than `record`, which is three characters and 4px too wide
-        // to sit beside the label: the two words together come to 92px against
-        // the track column's 88px floor, and the row would stack for the sake of
-        // them (choicesFitTrack in format.ts). It is the word the transport's own
-        // button already uses, so the panel is not learning a second one for it.
-        choices: ['hold', 'rec'],
-        help: `Whether the record head is down on the loop.
-
-          - **hold** — the head lifts and the tape keeps circulating with
-            whatever is already on it: the loop repeats indefinitely and stops
-            taking in the live picture. Playing over a held loop is what makes
-            this a looper rather than an echo.
-          - **rec** — the head drops again and records over what it has.
-
-          A held loop does not fade. Playback loss is what the head does on the
-          way past, not damage to the oxide, so it comes back identical every
-          lap, down to the same grain in the same places.`,
-      },
-      {
-        key: 'tapeTransport',
-        label: 'transport',
-        min: 0,
-        max: 3,
-        step: 1,
-        unit: '',
-        choices: ['reverse', 'stopped', 'forward', 'scrub'],
-        help: `Which way a held loop runs past the heads, and whether the drum
-          is still turning. Only means anything with the record head up.
-
-          - **reverse** — plays the frames back in the order they were laid
-            down, each one whole. The scanner still sweeps the same way, so
-            motion runs backwards while the picture stays a picture.
-          - **stopped** — parks the tape while the drum re-reads one sweep: a
-            still frame you can play live over.
-          - **forward** — the loop as it was recorded.
-          - **scrub** — stalls the drum and keeps pulling backwards, so the head
-            recovers the tape in the order it drags past rather than in sweep
-            order. The waveform itself comes back reversed: sync tips at the
-            wrong end of every line, a burst that reads phase-flipped, a raster
-            arriving end-first. None of that is drawn — it is what a receiver
-            does with a signal running the wrong way.`,
-      },
-      {
-        key: 'tapeShuttle',
-        label: 'shuttle (1 = play)',
-        min: 0,
-        max: 32,
-        step: 0.05,
-        // Forward-only, so pause sits on the left stop and the whole track is
-        // one direction out of it. The deck's strip for this control drew the
-        // same curve privately; it reads the row's now.
-        curve: 'shuttle',
-        redline: [0, 8],
-        unit: 'x',
-        help: 'How fast a held loop runs, as a multiple of play — the transport switch above gives the direction, this gives the speed. Off play speed the head no longer follows a single recorded track: each sweep crosses several, the RF nulls at every crossing, and that many noise bars sweep the picture. It is the same mechanism the deck shuttle uses, but running over your own captured loop instead of the incoming signal — cue and review through two seconds you recorded, with the picture skipping frames as it goes. Note this is why a paused loop has a bar across it and a reversed one has two: at a standstill the head still crosses one track per sweep, and backwards it crosses two.',
-      },
-      {
-        key: 'tapeHeads',
-        label: 'playback heads',
-        min: 1,
-        max: 8,
-        step: 1,
-        redline: [1, 4],
-        unit: '',
-        help: "How many playback heads are in the tape path. Each one is at its own distance from the record head, so a single lap hands the picture back once per head — the heads are a rhythm and the loop is the bar line. A piece of tape is written once and read by all of them on the way past, so a lap's taps are the same generation: the pattern repeats intact and goes a generation darker each time round, rather than fading across the taps.",
-      },
-      {
-        key: 'tapeHeadSpread',
-        label: 'head spacing',
-        min: 0.35,
-        max: 3,
-        step: 0.05,
-        unit: '',
-        fine: true,
-        help: 'Where the heads sit along the path. At 1 they are at even subdivisions of the loop — a straight pattern. Below 1 they crowd toward the far head, so the taps rush and then hold; above 1 they crowd toward the record head, so the taps come quickly and leave a long gap before the lap turns over.',
-      },
-      {
-        key: 'tapeSplice',
-        label: 'splice',
-        min: 0,
-        max: 1,
-        step: 0.01,
-        unit: '',
-        help: 'A loop is a loop because someone joined the ends, and the joint runs the path once per lap, drawing level with each head in turn — the head lifts for the three lines it takes to cross. Since a loop is rarely a whole number of frames long, the bump walks down the picture lap by lap: a metronome you can see, ticking out the tap pattern.',
-      },
-      {
-        key: 'tapeWowPct',
-        label: 'capstan wander',
-        min: 0,
-        max: 20,
-        step: 0.01,
-        redline: [0, 2],
-        unit: '%',
-        help: 'Speed error in the transport. The loop is a fixed length of tape, so a capstan running slow is a longer delay — the echo breathes in and out of time instead of merely wobbling. A percent goes a long way: nothing time-base corrects the return, so a delay that grows by half a frame hands back a picture displaced half a screen, and the repeats slide vertically. This is why mixing a delayed feed needed a frame synchronizer. With colour framing off it drags hue round too.',
-      },
-      {
-        key: 'tapeColourFrame',
-        label: 'colour framing',
-        min: 0,
-        max: 1,
-        step: 1,
-        unit: '',
-        choices: ['hue spins', 'framed'],
-        help: `The subcarrier rides the same tape, so a delay is also a hue
-          rotation — 90° per sample, and a frame of delay lands on 180°.
-
-          - **hue spins** — every change of delay repaints the repeats a
-            different colour.
-          - **framed** — rounds the delay onto a whole subcarrier cycle, costing
-            140 ns of picture shift. Exactly what an edit controller insisting
-            on colour framing is doing.`,
-      },
-      {
-        key: 'tapeWear',
-        label: 'oxide wear',
-        min: 0,
-        max: 1,
-        step: 0.005,
-        redline: [0, 0.2],
-        unit: '',
-        fine: true,
-        help: 'Fraction of the loop with the oxide worn off it. The bad patches are fixed to the tape, so the same lines drop to noise every lap — which is what tells a loop apart from a deck playing a long recording, where a dropout never comes back.',
-      },
-    ],
-  },
-  {
     name: 'A/B Mixer',
     place: 'Mix',
     sliders: [
       {
         key: 'bGenlock',
+        id: 200,
         label: 'genlock',
         min: 0,
         max: 1,
@@ -1265,6 +1115,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'aGain',
+        id: 190,
         label: 'A gain',
         min: -3,
         max: 3,
@@ -1277,6 +1128,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'bGain',
+        id: 191,
         label: 'B gain',
         min: -3,
         max: 3,
@@ -1287,6 +1139,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'bRing',
+        id: 192,
         label: 'ring mod',
         min: 0,
         max: 1,
@@ -1296,6 +1149,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'bLineHz',
+        id: 193,
         label: 'line offset',
         min: -60,
         max: 60,
@@ -1307,6 +1161,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'bDetuneHz',
+        id: 194,
         label: 'sc detune',
         min: -3000,
         max: 3000,
@@ -1318,6 +1173,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'bRollLps',
+        id: 195,
         label: 'frame roll',
         min: -30,
         max: 30,
@@ -1345,6 +1201,7 @@ export const GROUPS: Group[] = [
     sliders: [
       {
         key: 'bHueDeg',
+        id: 196,
         label: 'B hue',
         min: -180,
         max: 180,
@@ -1354,6 +1211,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'bVidGain',
+        id: 197,
         label: 'B video gain',
         min: 0,
         max: 6,
@@ -1364,6 +1222,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'bInv',
+        id: 198,
         label: 'B invert',
         min: 0,
         max: 1,
@@ -1384,6 +1243,7 @@ export const GROUPS: Group[] = [
     sliders: [
       {
         key: 'bPause',
+        id: 199,
         label: 'B pause (deck held)',
         min: 0,
         max: 1,
@@ -1393,6 +1253,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'bDropoutRate',
+        id: 188,
         label: 'B dropouts',
         min: 0,
         max: 400,
@@ -1403,6 +1264,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'bDropoutLenUs',
+        id: 189,
         label: 'B dropout len',
         min: 1,
         max: 60,
@@ -1413,6 +1275,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'bScramble',
+        id: 180,
         label: 'B sync suppression',
         min: 0,
         max: 1,
@@ -1422,6 +1285,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'bScrambleMode',
+        id: 181,
         label: 'B system',
         min: 0,
         max: 2,
@@ -1438,6 +1302,7 @@ export const GROUPS: Group[] = [
     sliders: [
       {
         key: 'bConnector',
+        id: 186,
         label: 'B loose connector',
         min: 0,
         max: 1,
@@ -1447,6 +1312,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'bConnectorMode',
+        id: 187,
         label: 'B bad contact',
         min: 0,
         max: 2,
@@ -1457,6 +1323,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'bHumIre',
+        id: 185,
         label: 'B ground loop',
         min: -40,
         max: 40,
@@ -1467,6 +1334,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'bNoiseIre',
+        id: 183,
         label: 'B noise',
         min: 0,
         max: 150,
@@ -1477,6 +1345,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'bTermination',
+        id: 182,
         label: 'B termination (-1 daisy, +1 open)',
         min: -1,
         max: 1,
@@ -1486,6 +1355,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'bPolarity',
+        id: 184,
         label: 'B polarity (flips sync)',
         min: 0,
         max: 1,
@@ -1496,11 +1366,180 @@ export const GROUPS: Group[] = [
     ],
   },
   {
+    // The other end of the caption's own words, and the reason it takes no text
+    // of its own: an open caption and a closed one were the same sentence down
+    // two paths. This box keys it into the picture at the plant, so it is
+    // torn, smeared and rainbowed by everything downstream and never
+    // misspelled; line 21 carries it as data, so it is spelled wrong and never
+    // moves. Running both is what makes the difference legible.
+    //
+    // It stands in the Mix stage because that is where the box stood — after the
+    // switcher, ahead of the loop and the tape, so what it keys in ages with the
+    // picture instead of being laid over a finished frame.
+    name: 'Character generator (chyron)',
+    place: 'Mix',
+    sliders: [
+      {
+        key: 'cgMix',
+        id: 251,
+        label: 'cg over program',
+        min: 0,
+        max: 1,
+        step: 0.01,
+        unit: '',
+        help: `A character generator at the switcher, keying the caption text
+          into the picture — the box every lower third, score bug and station
+          ident came out of.
+
+          What makes it a CG rather than an overlay is that it puts out **two
+          wires**: a fill, which is video, and a key, which is a matte cut at
+          the characters' own edges. Everything below bends the relationship
+          between those two, which is what every bent chyron is doing.
+
+          Because it keys onto the composite bus ahead of the loops and the
+          deck, what it writes is signal from here on: full-swing type is the
+          harshest thing a composite path carries, so the AGC pumps on it, the
+          sound detector hands it back as a whine that changes with what it
+          says, and the tape ages it along with the picture.`,
+      },
+      {
+        key: 'cgKeyDelayNs',
+        id: 255,
+        label: 'key timing',
+        min: -600,
+        max: 600,
+        step: 10,
+        unit: 'ns',
+        help: 'The trim every real keyer has, because the key path and the video path are different lengths of circuit. Mis-set on a photograph it slides a soft matte a few samples and nobody notices. Mis-set on a glyph it puts background through one side of every stem and a hard shadow down the other — and far enough out it leaves an outline with no letter inside it. One sample is 70 ns.',
+      },
+      {
+        key: 'cgClip',
+        id: 256,
+        label: 'key clip',
+        min: 0,
+        max: 1,
+        step: 0.01,
+        unit: '',
+        help: 'Where the slicer cuts the processed key. On type this is stroke weight rather than an edge position: down, and thin strokes fuse and the whole line grows a halo; up, and stems drop out of the middle of words. How much range it has depends on the key bandwidth below — a key with no soft edge has nothing for a clip to slide along.',
+      },
+      {
+        key: 'cgKeyMHz',
+        id: 257,
+        label: 'key bandwidth',
+        min: 0.3,
+        max: 8,
+        step: 0.1,
+        unit: 'MHz',
+        help: 'The key-processing amplifier ahead of the slicer, which is narrower than the video path and is the only reason a key has a soft edge at all. Horizontal only — the same lopsided edge the chroma keyer has, and for the same reason: this is a line of signal, not a picture, so there is no vertical neighbour on the wire.',
+      },
+      {
+        key: 'cgInvert',
+        id: 261,
+        label: 'key invert',
+        min: 0,
+        max: 1,
+        step: 1,
+        unit: '',
+        choices: ['normal', 'inverted'],
+        help: "Which side of the key is cut. Inverted, the box fills the whole raster and the letters are holes in it showing the picture — which is what a downstream keyer inverted actually does, since the key's domain is the picture rather than the block of type.",
+      },
+      {
+        key: 'cgEdgeX',
+        id: 258,
+        label: 'edge offset x',
+        min: -24,
+        max: 24,
+        step: 1,
+        unit: 'smp',
+        fine: true,
+        help: 'A CG drew its border and drop shadow by delaying the key a sample and a line and OR-ing it back in underneath the fill. This is that delay, and pulling it far past the sample it was meant to be detaches the shadow from the type and walks it across the frame.',
+      },
+      {
+        key: 'cgEdgeY',
+        id: 259,
+        label: 'edge offset y',
+        min: -24,
+        max: 24,
+        step: 1,
+        unit: 'ln',
+        fine: true,
+        help: 'The other half of the drop shadow, in lines. Bending the two apart is what puts a shadow in front of the letters it belongs to instead of behind them.',
+      },
+      {
+        key: 'cgFill',
+        id: 260,
+        label: 'fill level',
+        min: 0,
+        max: 120,
+        step: 1,
+        unit: 'IRE',
+        fine: true,
+        help: 'How bright the characters are laid in, in IRE on the composite. 100 is peak white; past that the box is overmodulating, and everything downstream that reacts to level reacts to it — the receiver AGC, the tape, and the sound detector, which starts buzzing in time with what the caption says.',
+      },
+      {
+        key: 'cgX',
+        id: 252,
+        label: 'cg x',
+        min: 0,
+        max: 1,
+        step: 0.01,
+        unit: '',
+        fine: true,
+        help: "The block's left edge across the picture.",
+      },
+      {
+        key: 'cgY',
+        id: 253,
+        label: 'cg y',
+        min: 0,
+        max: 1,
+        step: 0.01,
+        unit: '',
+        fine: true,
+        help: "The block's top edge down the picture. The stock value is a lower third, sat clear of the caption decoder's own block below it — the two are meant to be run together and read against each other.",
+      },
+      {
+        key: 'cgScale',
+        id: 254,
+        label: 'cg size',
+        min: 1,
+        max: 6,
+        step: 0.25,
+        unit: '',
+        fine: true,
+        help: 'Picture samples per font dot. The glyphs are dots on a grid, so this scales in whole dots and the type stays as crunchy as the ROM made it.',
+      },
+      {
+        key: 'cgRomAddr',
+        id: 262,
+        label: 'cg rom address line',
+        min: 0,
+        max: 11,
+        step: 1,
+        unit: '',
+        fine: true,
+        help: "A pin held high on this box's font ROM — the same bend as the caption decoder's, on a different chip, because these are two boxes and shorting one says nothing about the other. Low lines carry the row inside the cell, so every glyph grows a seam; high lines carry the character code, so the whole font substitutes.",
+      },
+      {
+        key: 'cgRomData',
+        id: 263,
+        label: 'cg rom data line',
+        min: -8,
+        max: 8,
+        step: 1,
+        unit: '',
+        fine: true,
+        help: 'The data bus of the same chip: eight dots across one row, so holding one stripes a column down every character on the page. Positive holds it high, negative holds it low.',
+      },
+    ],
+  },
+  {
     name: 'Wipe (A/B)',
     place: 'Mix',
     sliders: [
       {
         key: 'wipeMode',
+        id: 201,
         label: 'pattern',
         min: 0,
         max: 4,
@@ -1511,6 +1550,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'wipePos',
+        id: 202,
         label: 'position',
         min: 0,
         max: 1,
@@ -1520,6 +1560,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'wipeSoft',
+        id: 203,
         label: 'softness',
         min: 0,
         max: 0.5,
@@ -1529,6 +1570,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'wipeRate',
+        id: 204,
         label: 'sweep',
         min: 0,
         max: 2,
@@ -1544,6 +1586,7 @@ export const GROUPS: Group[] = [
     sliders: [
       {
         key: 'pipMix',
+        id: 205,
         label: 'inset key',
         min: 0,
         max: 1,
@@ -1553,6 +1596,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'pipX',
+        id: 206,
         label: 'center x',
         min: 0,
         max: 1,
@@ -1562,6 +1606,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'pipY',
+        id: 207,
         label: 'center y',
         min: 0,
         max: 1,
@@ -1571,6 +1616,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'pipW',
+        id: 208,
         label: 'width',
         min: 0.1,
         max: 1,
@@ -1580,6 +1626,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'pipH',
+        id: 209,
         label: 'height',
         min: 0.1,
         max: 1,
@@ -1589,6 +1636,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'pipBorder',
+        id: 210,
         label: 'border',
         min: 0,
         max: 0.03,
@@ -1599,6 +1647,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'pipSoft',
+        id: 211,
         label: 'edge soft',
         min: 0,
         max: 0.05,
@@ -1609,6 +1658,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'pipKey',
+        id: 212,
         label: 'luma key (- inverts)',
         min: -1,
         max: 1,
@@ -1618,6 +1668,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'pipKeyLevel',
+        id: 213,
         label: 'key level',
         min: 0,
         max: 1,
@@ -1628,6 +1679,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'pipKeySoft',
+        id: 214,
         label: 'key soft',
         min: 0.01,
         max: 0.4,
@@ -1649,6 +1701,7 @@ export const GROUPS: Group[] = [
     sliders: [
       {
         key: 'bKey',
+        id: 215,
         label: 'key (- inverts)',
         min: -1,
         max: 1,
@@ -1658,6 +1711,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'bKeyHueDeg',
+        id: 216,
         label: 'backing hue',
         min: 0,
         max: 360,
@@ -1667,6 +1721,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'bKeyAcceptDeg',
+        id: 217,
         label: 'acceptance',
         min: 0,
         max: 180,
@@ -1676,6 +1731,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'bKeyClip',
+        id: 218,
         label: 'clip',
         min: 0,
         max: 0.3,
@@ -1686,6 +1742,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'bKeySoft',
+        id: 219,
         label: 'gain (edge)',
         min: 0,
         max: 0.4,
@@ -1695,6 +1752,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'bKeySpill',
+        id: 220,
         label: 'spill kill',
         min: 0,
         max: 1,
@@ -1704,6 +1762,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'bKeyDelayUs',
+        id: 221,
         label: 'key delay',
         min: -1.5,
         max: 1.5,
@@ -1714,6 +1773,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'bKeyFill',
+        id: 222,
         label: 'fill',
         min: 0,
         max: 2,
@@ -1724,6 +1784,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'bKeyMatteY',
+        id: 223,
         label: 'matte level',
         min: 0,
         max: 1,
@@ -1734,6 +1795,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'bKeyMatteHueDeg',
+        id: 224,
         label: 'matte hue',
         min: 0,
         max: 360,
@@ -1744,6 +1806,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'bKeyMatteSat',
+        id: 225,
         label: 'matte saturation',
         min: 0,
         max: 0.6,
@@ -1769,10 +1832,11 @@ export const GROUPS: Group[] = [
     // bandwidth it passed, the sharpener that faked it back, the amplifier's two
     // brightness-dependent errors, and the FM fold.
     name: 'Recording (luma & FM)',
-    place: 'Tape',
+    place: 'Channel',
     sliders: [
       {
         key: 'lumaMHz',
+        id: 59,
         label: 'luma bandwidth',
         min: 0.3,
         max: 6,
@@ -1783,6 +1847,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'lumaPeak',
+        id: 77,
         label: 'peaking',
         min: 0,
         max: 12,
@@ -1793,6 +1858,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'diffGain',
+        id: 106,
         label: 'differential gain',
         min: -0.5,
         max: 1,
@@ -1806,6 +1872,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'diffPhaseDeg',
+        id: 107,
         label: 'differential phase',
         min: -60,
         max: 60,
@@ -1816,6 +1883,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'fmOverdev',
+        id: 108,
         label: 'FM over-deviation',
         min: 0,
         max: 1,
@@ -1825,6 +1893,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'fmStreakUs',
+        id: 109,
         label: 'inversion streak',
         min: 0.1,
         max: 0.7,
@@ -1840,10 +1909,11 @@ export const GROUPS: Group[] = [
     // broadband noise floor, and the impulsive interference that comes in bursts
     // — arcing contacts, ignition, lightning, a dimmer chopping the mains.
     name: 'Noise & interference',
-    place: 'Tape',
+    place: 'Channel',
     sliders: [
       {
         key: 'noiseIre',
+        id: 78,
         label: 'noise',
         min: 0,
         max: 150,
@@ -1854,6 +1924,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'noiseTilt',
+        id: 79,
         label: 'noise spectrum (RF ↔ FM)',
         min: 0,
         max: 1,
@@ -1864,6 +1935,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'impulseRate',
+        id: 80,
         label: 'impulse noise (arcs)',
         min: 0,
         max: 24,
@@ -1874,6 +1946,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'impulseHz',
+        id: 82,
         label: 'ignition train',
         min: 0,
         max: 2000,
@@ -1883,6 +1956,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'strikeRate',
+        id: 84,
         label: 'big strikes',
         min: 0,
         max: 20,
@@ -1893,6 +1967,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'impulseIre',
+        id: 81,
         label: 'impulse strength',
         min: 20,
         max: 400,
@@ -1904,6 +1979,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'impulseMains',
+        id: 83,
         label: 'dimmer lock',
         min: 0,
         max: 1,
@@ -1920,10 +1996,11 @@ export const GROUPS: Group[] = [
     // against the vision one. All three put structure on the picture that came
     // from somewhere else in the same building.
     name: 'Ghosting & leakage',
-    place: 'Tape',
+    place: 'Channel',
     sliders: [
       {
         key: 'ghostDelayUs',
+        id: 92,
         label: 'ghost delay',
         min: 0,
         max: 50,
@@ -1934,6 +2011,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'ghostGain',
+        id: 93,
         label: 'ghost gain',
         min: -2,
         max: 2,
@@ -1944,6 +2022,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'humAmp',
+        id: 94,
         label: 'hum',
         min: 0,
         max: 120,
@@ -1954,6 +2033,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'humMod',
+        id: 95,
         label: 'hum modulation',
         min: 0,
         max: 1,
@@ -1964,6 +2044,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'soundIre',
+        id: 85,
         label: 'sound carrier',
         min: 0,
         max: 40,
@@ -1975,6 +2056,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'buzzLevel',
+        id: 86,
         label: 'sound buzz',
         min: 0,
         max: 1,
@@ -1991,10 +2073,11 @@ export const GROUPS: Group[] = [
     // folded: the compensator's two modes are the interesting part of a dropout
     // and the length is what decides whether you see a speck or a streak.
     name: 'Dropouts & dubs',
-    place: 'Tape',
+    place: 'Channel',
     sliders: [
       {
         key: 'dropoutRate',
+        id: 99,
         label: 'dropouts',
         min: 0,
         max: 400,
@@ -2005,6 +2088,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'dropoutComp',
+        id: 101,
         label: 'dropout compensator',
         min: 0,
         max: 2,
@@ -2015,6 +2099,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'dropoutLenUs',
+        id: 100,
         label: 'dropout len',
         min: 1,
         max: 60,
@@ -2025,6 +2110,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'dubGens',
+        id: 113,
         label: 'dub generations',
         min: 1,
         max: 4,
@@ -2036,10 +2122,11 @@ export const GROUPS: Group[] = [
   },
   {
     name: 'RF / Tuner',
-    place: 'Tape',
+    place: 'Channel',
     sliders: [
       {
         key: 'rfAdjacent',
+        id: 87,
         label: 'adjacent channel',
         min: 0,
         max: 1,
@@ -2049,6 +2136,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'rfMistuneMHz',
+        id: 88,
         label: 'fine tuning',
         min: -1,
         max: 4,
@@ -2059,6 +2147,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'rfSnow',
+        id: 89,
         label: 'weak signal (snow)',
         min: 0,
         max: 1,
@@ -2068,6 +2157,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'ingress',
+        id: 90,
         label: 'CB ingress',
         min: 0,
         max: 1,
@@ -2086,10 +2176,11 @@ export const GROUPS: Group[] = [
   // Feed groups, which really are ahead of the mixer.
   {
     name: 'Cable / Wiring',
-    place: 'Tape',
+    place: 'Channel',
     sliders: [
       {
         key: 'polarityFlip',
+        id: 60,
         label: 'hard polarity (flips sync)',
         min: 0,
         max: 1,
@@ -2099,6 +2190,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'termination',
+        id: 61,
         label: 'termination (-1 daisy, +1 open)',
         min: -1,
         max: 1,
@@ -2108,6 +2200,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'chromaPinOnly',
+        id: 62,
         label: 'chroma-pin only',
         min: 0,
         max: 1,
@@ -2120,6 +2213,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'connectorGlitch',
+        id: 63,
         label: 'loose connector',
         min: 0,
         max: 1,
@@ -2129,6 +2223,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'connectorMode',
+        id: 64,
         label: 'bad contact',
         min: 0,
         max: 2,
@@ -2155,6 +2250,7 @@ export const GROUPS: Group[] = [
       // same fact from the head-end's side and the stamper's.
       {
         key: 'scramble',
+        id: 65,
         label: 'sync suppression',
         min: 0,
         max: 1,
@@ -2164,6 +2260,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'scrambleMode',
+        id: 66,
         label: 'system',
         min: 0,
         max: 2,
@@ -2174,6 +2271,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'macrovision',
+        id: 67,
         label: 'agc pulses (macrovision)',
         min: 0,
         max: 1,
@@ -2183,6 +2281,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'mvStripeDeg',
+        id: 68,
         label: 'colorstripe',
         min: 0,
         max: 180,
@@ -2201,10 +2300,11 @@ export const GROUPS: Group[] = [
     // track it recorded. They were two four-row groups in a row, and 'VHS Chroma'
     // / 'VHS Tracking' are the same deck.
     name: 'VHS colour & tracking',
-    place: 'Tape',
+    place: 'Channel',
     sliders: [
       {
         key: 'colorUnderMix',
+        id: 96,
         label: 'color-under',
         min: 0,
         max: 1,
@@ -2214,6 +2314,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'chromaNoiseIre',
+        id: 97,
         label: 'chroma noise',
         min: 0,
         max: 120,
@@ -2224,6 +2325,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'underJitterDeg',
+        id: 98,
         label: 'phase jitter',
         min: 0,
         max: 180,
@@ -2239,6 +2341,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'ycDelayNs',
+        id: 105,
         label: 'Y/C delay',
         min: -3360,
         max: 3360,
@@ -2249,6 +2352,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'trackAmt',
+        id: 226,
         label: 'tracking error',
         min: 0,
         max: 1,
@@ -2258,16 +2362,39 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'trackPos',
+        id: 227,
         label: 'band position',
         min: 0,
         max: 1,
         step: 0.005,
         unit: '',
         fine: true,
-        help: 'Where that mistracked band sits vertically, 0 top to 1 bottom. On a real deck it drifts as the tape stretches; here you park it.',
+        help: 'Where that mistracked band sits vertically, 0 top to 1 bottom. With the servo parked you park it; with the servo hunting it is where the servo is trying to sit.',
+      },
+      {
+        key: 'trackHunt',
+        id: 228,
+        label: 'servo hunt',
+        min: 0,
+        max: 1,
+        step: 0.01,
+        unit: '',
+        help: "The deck's auto-tracking servo, searching for the track instead of holding it. It reads the RF envelope and steps until the envelope peaks; a stretched tape drifts it back off, and it corrects with less damping the higher this goes, so every correction overshoots and rings. A scene change, coming out of shuttle, the loop's splice passing, a transition cut or a thump through the cabinet from the music all knock it off the peak — the band sweeps, the picture bends through it, and the top of the frame flags on the tape tension. Draws the band by itself; tracking error above adds a floor to it.",
+      },
+      {
+        key: 'trackKick',
+        id: 229,
+        label: 'servo kick',
+        min: 0,
+        max: 1,
+        step: 0.01,
+        unit: '',
+        fine: true,
+        help: 'How hard each of those events unseats the servo. Needs servo hunt above 0.',
       },
       {
         key: 'headClog',
+        id: 104,
         label: 'head clog',
         min: 0,
         max: 1,
@@ -2277,6 +2404,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'shuttleX',
+        id: 230,
         label: 'shuttle (1 = play)',
         min: -32,
         max: 32,
@@ -2293,10 +2421,11 @@ export const GROUPS: Group[] = [
   },
   {
     name: 'Timebase',
-    place: 'Tape',
+    place: 'Channel',
     sliders: [
       {
         key: 'tbJitterNs',
+        id: 110,
         label: 'flutter',
         min: 0,
         max: 4000,
@@ -2307,6 +2436,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'tbWowNs',
+        id: 111,
         label: 'wow',
         min: 0,
         max: 10000,
@@ -2317,6 +2447,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'tbStickNs',
+        id: 112,
         label: 'sticky shed',
         min: 0,
         max: 15000,
@@ -2327,6 +2458,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'headSwitchShiftUs',
+        id: 103,
         label: 'head switch',
         min: -30,
         max: 30,
@@ -2337,6 +2469,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'headSwitchNoise',
+        id: 102,
         label: 'switch noise',
         min: 0,
         max: 1,
@@ -2348,10 +2481,11 @@ export const GROUPS: Group[] = [
   },
   {
     name: 'Enhancer (bent)',
-    place: 'Tape',
+    place: 'Channel',
     sliders: [
       {
         key: 'enhClampUs',
+        id: 70,
         label: 'clamp gate',
         min: -60,
         max: 600,
@@ -2363,6 +2497,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'enhDroopUs',
+        id: 71,
         label: 'clamp droop',
         min: 0,
         max: 2000,
@@ -2374,6 +2509,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'enhPeakMHz',
+        id: 72,
         label: 'detail freq (0 off)',
         min: 0,
         max: 5,
@@ -2383,6 +2519,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'enhPeakQ',
+        id: 73,
         label: 'detail regen (0.75+ howls)',
         min: 0,
         max: 1,
@@ -2392,6 +2529,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'enhPeakBoost',
+        id: 74,
         label: 'detail boost',
         min: 0,
         max: 16,
@@ -2403,6 +2541,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'enhSync',
+        id: 75,
         label: 'sync regen',
         min: 0,
         max: 1,
@@ -2412,6 +2551,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'enhSliceIre',
+        id: 76,
         label: 'sync slice',
         min: -40,
         max: 60,
@@ -2428,6 +2568,7 @@ export const GROUPS: Group[] = [
     sliders: [
       {
         key: 'hHold',
+        id: 34,
         label: 'horizontal hold',
         min: 0.02,
         max: 2,
@@ -2438,6 +2579,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'vHold',
+        id: 35,
         label: 'vertical hold',
         min: 0,
         max: 1,
@@ -2447,6 +2589,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'vFreqHz',
+        id: 36,
         label: 'vertical osc (60 = locked)',
         min: 10,
         max: 180,
@@ -2457,6 +2600,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'syncBendUs',
+        id: 37,
         label: 'retrace flag',
         min: 0,
         max: 60,
@@ -2467,6 +2611,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'hDetuneHz',
+        id: 45,
         label: 'horizontal osc detune',
         min: -3000,
         max: 3000,
@@ -2488,6 +2633,7 @@ export const GROUPS: Group[] = [
     sliders: [
       {
         key: 'clipHz',
+        id: 46,
         label: 'contacts',
         min: 0,
         max: 12,
@@ -2498,6 +2644,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'clipPoint',
+        id: 47,
         label: 'contact point',
         min: 0,
         max: 4,
@@ -2514,6 +2661,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'clipBite',
+        id: 48,
         label: 'bite',
         min: 0,
         max: 1,
@@ -2523,6 +2671,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'clipDwellMs',
+        id: 49,
         label: 'dwell',
         min: 8,
         max: 800,
@@ -2533,6 +2682,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'clipChatter',
+        id: 50,
         label: 'chatter',
         min: 0,
         max: 1,
@@ -2551,6 +2701,7 @@ export const GROUPS: Group[] = [
     sliders: [
       {
         key: 'audioRoll',
+        id: 57,
         label: 'bass → vertical hold',
         min: 0,
         max: 32,
@@ -2561,6 +2712,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'audioTear',
+        id: 58,
         label: 'level → horizontal hold',
         min: -3000,
         max: 3000,
@@ -2572,6 +2724,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'audioSagUs',
+        id: 56,
         label: 'bass → HV sag',
         min: 0,
         max: 160,
@@ -2583,6 +2736,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'audioBendUs',
+        id: 52,
         label: 'waveform into deflection',
         min: -80,
         max: 80,
@@ -2594,6 +2748,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'audioLoad',
+        id: 53,
         label: 'audio into HV tank',
         min: 0,
         max: 12,
@@ -2605,6 +2760,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'audioIre',
+        id: 54,
         label: 'audio into video in',
         min: 0,
         max: 150,
@@ -2615,6 +2771,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'audioHueDeg',
+        id: 55,
         label: 'waveform into hue',
         min: -180,
         max: 180,
@@ -2624,6 +2781,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'audioGain',
+        id: 51,
         label: 'input trim',
         min: 0,
         max: 16,
@@ -2641,6 +2799,7 @@ export const GROUPS: Group[] = [
     sliders: [
       {
         key: 'bendUs',
+        id: 38,
         label: 'bend amount',
         min: -120,
         max: 120,
@@ -2652,6 +2811,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'bendShape',
+        id: 39,
         label: 'shape',
         min: 0,
         max: 3,
@@ -2662,6 +2822,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'bendPeriod',
+        id: 40,
         label: 'decay / ripple period',
         min: 1,
         max: 480,
@@ -2672,6 +2833,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'vSize',
+        id: 41,
         label: 'v size (underscan)',
         min: 0.2,
         max: 4,
@@ -2682,6 +2844,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'hvSagUs',
+        id: 42,
         label: 'HV sag',
         min: -100,
         max: 100,
@@ -2693,6 +2856,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'hvRing',
+        id: 43,
         label: 'supply ring (0 droop, 1 chaos)',
         min: 0,
         max: 1,
@@ -2702,6 +2866,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'abl',
+        id: 44,
         label: 'beam limiter',
         min: 0,
         max: 1,
@@ -2717,6 +2882,7 @@ export const GROUPS: Group[] = [
     sliders: [
       {
         key: 'combMode',
+        id: 33,
         label: 'Y/C comb',
         min: 0,
         max: 2,
@@ -2735,6 +2901,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'svideoBleed',
+        id: 32,
         label: 'S-video bleed',
         min: 0,
         max: 1,
@@ -2745,6 +2912,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'demodMHz',
+        id: 21,
         label: 'chroma bandwidth',
         min: 0.05,
         max: 6,
@@ -2755,6 +2923,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'chromaTail',
+        id: 22,
         label: 'chroma trail',
         min: 0,
         max: 1,
@@ -2765,6 +2934,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'chromaCoarse',
+        id: 23,
         label: 'chroma upsample error',
         min: 1,
         max: 8,
@@ -2775,6 +2945,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'chromaGain',
+        id: 24,
         label: 'chroma gain',
         min: 0,
         max: 16,
@@ -2785,6 +2956,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'tintDeg',
+        id: 26,
         label: 'tint',
         min: -180,
         max: 180,
@@ -2794,6 +2966,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'burstLock',
+        id: 25,
         label: 'burst lock',
         min: 0,
         max: 1,
@@ -2803,6 +2976,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'demodAxisDeg',
+        id: 27,
         label: 'demod axis',
         min: 0,
         max: 180,
@@ -2812,6 +2986,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'scDetuneKHz',
+        id: 29,
         label: 'subcarrier detune',
         min: -200,
         max: 200,
@@ -2823,6 +2998,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'killThresh',
+        id: 30,
         label: 'color killer',
         min: 0,
         max: 100,
@@ -2834,6 +3010,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'accLagLines',
+        id: 31,
         label: 'chroma AGC lag',
         min: 0,
         max: 240,
@@ -2844,7 +3021,30 @@ export const GROUPS: Group[] = [
         help: "The time constant of the chroma AGC's control voltage, in scan lines of burst memory. At 0 the set corrects colour gain instantly per line, which no real ACC can; raised, gain and the colour killer answer burst damage tens of lines late, so colour blooms back after a dropout band instead of snapping, overshoots on a scene change, and a marginal burst makes the killer chatter in and out down the frame. With fed-back burst circulating in the mixer loop the lag turns into colour that pumps.",
       },
       {
+        key: 'vir',
+        id: 264,
+        label: 'VIR correction',
+        min: 0,
+        max: 1,
+        step: 0.01,
+        unit: '',
+        help: 'How far the set trusts the reference stamped on line 19 of the vertical interval. A VIR receiver decoded that line, compared it against what it knew was sent, and trimmed its own hue and saturation until the two agreed — a closed loop around the demodulator, and one that is only ever as right as the reference arriving. Damage the signal above line 21 and the correction goes with it: the whole picture rotates toward whatever the reference was bent into, and a dub whose chroma the tape path has been eating a generation at a time comes back garish rather than washed out, because a weak reference is a set turning colour up. Needs the VBI test signals on to have anything to read.',
+      },
+      {
+        key: 'virLag',
+        id: 265,
+        label: 'VIR lag',
+        min: 1,
+        max: 240,
+        step: 1,
+        redline: [8, 120],
+        unit: 'frames',
+        fine: true,
+        help: 'The corrector’s time constant, in frames. Short and it chases the reference line by line, so damage that comes and goes makes the picture flicker; long is what a real corrector did — it answers over a second or more, which is why a reference that has been bent drags the whole frame somewhere wrong and leaves it there, and only walks back as slowly once the signal recovers.',
+      },
+      {
         key: 'matrixClip',
+        id: 28,
         label: 'output stage clip',
         min: 0,
         max: 1,
@@ -2855,6 +3055,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'agc',
+        id: 91,
         label: 'agc',
         min: 0,
         max: 1,
@@ -2864,6 +3065,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'encChromaMHz',
+        id: 19,
         label: 'encoder chroma bw',
         min: 0.1,
         max: 4,
@@ -2872,6 +3074,93 @@ export const GROUPS: Group[] = [
         unit: 'MHz',
         fine: true,
         help: "Colour bandwidth at the encode end, before the signal is ever transmitted — the camera's own limit, as opposed to the decoder's. Wide enough and the chroma sidebands spill into the luma band and generate their own cross-colour.",
+      },
+    ],
+  },
+  {
+    // The caption decoder is a box inside the set, which is why it sits here and
+    // not beside `vbi` in the source stage. That control puts characters on line
+    // 21; this one is the thing at the far end trying to read them back, and
+    // everything the chain does in between happens to the words.
+    //
+    // The text itself is not a control — it is words, not a quantity, so a
+    // preset or a random nudge has no business rewriting it. The box that types
+    // it is rendered over these rows (CaptionContext, ControlGroup's FRAMES).
+    name: 'Captions',
+    place: 'Receiver',
+    sliders: [
+      {
+        key: 'cc',
+        id: 247,
+        label: 'caption decoder',
+        min: 0,
+        max: 1,
+        step: 1,
+        unit: '',
+        choices: ['off', 'on'],
+        help: `The set's own caption decoder, slicing line 21 off the signal it
+          actually received.
+
+          What makes this different from putting words on a card: the caption
+          is *data*, and it has been through everything the picture has. Snow,
+          a narrow channel, tape noise and generation loss arrive as
+          misspellings — dropped characters, wrong ones, a solid block wherever
+          parity caught an error and the decoder refused to guess. Wind the
+          tracking off and the caption dies before the picture does, because
+          line 21 is at the top of the field where the band lands first.
+
+          And it is painted on the set's raster rather than the signal's, which
+          is where a real decoder paints: the page is redrawn on the set's own
+          timing. So the picture can roll, tear and spin hue underneath a
+          caption sitting perfectly still. It still bends with the tube and
+          still blooms, because both of those happen after it.
+
+          Needs vbi test signals on — that is the switch that puts line 21 on
+          the wire at all.`,
+      },
+      {
+        key: 'ccBox',
+        id: 248,
+        label: 'caption box',
+        min: 0,
+        max: 1,
+        step: 0.05,
+        unit: '',
+        help: 'How black the box behind the characters is. Broadcast captions sat in a solid one because type keyed straight over picture is unreadable the moment the picture is bright — wind it out and you get exactly that problem, which is the one every set-top caption box had.',
+      },
+      {
+        key: 'ccRomAddr',
+        id: 249,
+        label: 'rom address line',
+        min: 0,
+        max: 11,
+        step: 1,
+        unit: '',
+        help: `A pin held high on the character generator's font ROM — the
+          literal circuit bend, and a different thing from a bad feed.
+
+          Which line decides everything, because of how the chip is addressed.
+          The **low** lines carry the row inside the cell, so holding one makes
+          every glyph repeat a scan line through itself and the whole font grows
+          a seam. The **high** lines carry the character code, so holding one
+          substitutes the entire font for its neighbour a fixed distance away in
+          the ROM — text that keeps its length and its rhythm and comes out
+          systematically wrong.
+
+          Held rather than switched, the way a jumper does it, so a glyph whose
+          bit was already set comes back untouched and the damage is uneven.
+          Nothing here is random: the same text bends the same way every time,
+          which is what tells a bent machine from a noisy wire.`,
+      },
+      {
+        key: 'ccRomData',
+        id: 250,
+        label: 'rom data line',
+        min: -8,
+        max: 8,
+        step: 1,
+        unit: '',
+        help: "The other bus. A font ROM's data lines are the eight dots across one row, so holding one lights or kills the same column of every character on the page — a stripe straight down the font rather than a fault in any one letter. Positive holds the line high, negative holds it low.",
       },
     ],
   },
@@ -2888,6 +3177,7 @@ export const GROUPS: Group[] = [
     sliders: [
       {
         key: 'strobeHz',
+        id: 231,
         label: 'blanking strobe',
         min: 0,
         max: 20,
@@ -2897,6 +3187,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'strobeMs',
+        id: 232,
         label: 'flash length',
         min: 1,
         max: 200,
@@ -2906,6 +3197,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'scanBeam',
+        id: 233,
         label: 'beam profile',
         min: 0,
         max: 1,
@@ -2915,6 +3207,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'scanBloom',
+        id: 234,
         label: 'beam bloom',
         min: 0,
         max: 1,
@@ -2924,6 +3217,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'crtSpot',
+        id: 128,
         label: 'beam spot',
         min: 0,
         max: 12,
@@ -2934,6 +3228,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'crtGrain',
+        id: 129,
         label: 'phosphor grain',
         min: 0,
         max: 1,
@@ -2943,6 +3238,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'crtSharp',
+        id: 239,
         label: 'reconstruction (bilinear→cubic)',
         min: 0,
         max: 1,
@@ -2957,6 +3253,7 @@ export const GROUPS: Group[] = [
       // it has nothing to do with.
       {
         key: 'crtSvm',
+        id: 134,
         label: 'scan velocity mod',
         min: -4,
         max: 4,
@@ -2967,6 +3264,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'crtSvmWidth',
+        id: 135,
         label: 'svm aperture',
         min: 0.25,
         max: 24,
@@ -2984,6 +3282,7 @@ export const GROUPS: Group[] = [
     sliders: [
       {
         key: 'phosphorMode',
+        id: 236,
         label: 'phosphors',
         min: 0,
         max: 3,
@@ -3000,6 +3299,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'phosphor',
+        id: 235,
         label: 'phosphor persistence',
         min: 0,
         max: 0.9995,
@@ -3024,6 +3324,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'phosphorSkew',
+        id: 237,
         label: 'trail tint',
         min: 0,
         max: 6,
@@ -3034,6 +3335,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'phosphorBleed',
+        id: 238,
         label: 'trail scatter',
         min: 0,
         max: 1,
@@ -3058,6 +3360,7 @@ export const GROUPS: Group[] = [
     sliders: [
       {
         key: 'maskAmt',
+        id: 240,
         label: 'aperture grille',
         min: 0,
         max: 1,
@@ -3067,6 +3370,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'maskPitch',
+        id: 241,
         label: 'grille pitch',
         min: 1,
         max: 48,
@@ -3077,6 +3381,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'crtConverge',
+        id: 136,
         label: 'convergence error',
         min: -12,
         max: 12,
@@ -3087,6 +3392,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'crtPurity',
+        id: 137,
         label: 'purity (magnetised patch)',
         min: -3,
         max: 3,
@@ -3097,6 +3403,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'crtPurityX',
+        id: 138,
         label: 'patch x',
         min: 0,
         max: 1,
@@ -3106,6 +3413,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'crtPurityY',
+        id: 139,
         label: 'patch y',
         min: 0,
         max: 1,
@@ -3115,6 +3423,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'crtPuritySize',
+        id: 140,
         label: 'patch size',
         min: 0.02,
         max: 2,
@@ -3139,6 +3448,7 @@ export const GROUPS: Group[] = [
     sliders: [
       {
         key: 'crtZoom',
+        id: 242,
         label: 'magnifier',
         min: 0.25,
         max: 12,
@@ -3151,6 +3461,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'crtZoomX',
+        id: 243,
         label: 'magnifier x',
         min: 0,
         max: 1,
@@ -3160,6 +3471,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'crtZoomY',
+        id: 244,
         label: 'magnifier y',
         min: 0,
         max: 1,
@@ -3169,6 +3481,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'timeScale',
+        id: 245,
         label: 'slow motion (1 = realtime)',
         min: 0,
         max: 1,
@@ -3178,6 +3491,7 @@ export const GROUPS: Group[] = [
       },
       {
         key: 'frameLock',
+        id: 246,
         label: 'frame rate lock',
         min: 0,
         max: 4,
@@ -3240,17 +3554,31 @@ const cfbKeyed: SliderNeed = {
   fix: 0.6,
   hint: 'luma key nonzero',
 }
-const tape: SliderNeed = {
-  key: 'tapeMix',
-  ok: above0,
-  fix: 0.5,
-  hint: 'loop mix above 0',
-}
 const dirtyPath: SliderNeed = {
   key: 'bGenlock',
   ok: below1,
   fix: 0,
   hint: 'genlock on "dirty sum"',
+}
+// Line 21 is only on the wire while the broadcast furniture is, so the decoder
+// with `vbi` off is a box wired to nothing.
+const chyroning: SliderNeed = {
+  key: 'cgMix',
+  ok: above0,
+  fix: 0.9,
+  hint: 'the cg faded up',
+}
+const carrying: SliderNeed = {
+  key: 'vbi',
+  ok: above0,
+  fix: 1,
+  hint: 'vbi test signals on, which is what puts line 21 on the wire',
+}
+const captioned: SliderNeed = {
+  key: 'cc',
+  ok: above0,
+  fix: 1,
+  hint: 'the caption decoder on',
 }
 const wiping: SliderNeed = {
   key: 'wipeMode',
@@ -3310,6 +3638,34 @@ const magnified: SliderNeed = {
 }
 
 export const NEEDS: Partial<Record<ControlKey, SliderNeed>> = {
+  cc: carrying,
+  vir: {
+    key: 'vbi',
+    ok: above0,
+    fix: 1,
+    hint: 'vbi test signals on, which is what stamps the reference on line 19',
+  },
+  virLag: {
+    key: 'vir',
+    ok: above0,
+    fix: 1,
+    hint: 'the corrector trusting the reference',
+  },
+  ccBox: captioned,
+  ccRomAddr: captioned,
+  ccRomData: captioned,
+  cgX: chyroning,
+  cgY: chyroning,
+  cgScale: chyroning,
+  cgKeyDelayNs: chyroning,
+  cgClip: chyroning,
+  cgKeyMHz: chyroning,
+  cgEdgeX: chyroning,
+  cgEdgeY: chyroning,
+  cgFill: chyroning,
+  cgInvert: chyroning,
+  cgRomAddr: chyroning,
+  cgRomData: chyroning,
   fbZoom: fb,
   fbRotateDeg: fb,
   fbShiftX: fb,
@@ -3340,34 +3696,6 @@ export const NEEDS: Partial<Record<ControlKey, SliderNeed>> = {
     fix: 3.58,
     hint: 'resonance freq above 0',
   },
-  tapeLoopMm: tape,
-  tapeRecord: tape,
-  tapeTransport: {
-    key: 'tapeRecord',
-    ok: (v: number) => v < 0.5,
-    fix: 0,
-    hint: 'the record head lifted',
-  },
-  tapeShuttle: {
-    key: 'tapeRecord',
-    ok: (v: number) => v < 0.5,
-    fix: 0,
-    hint: 'the record head lifted',
-  },
-  tapeHeads: tape,
-  tapeHeadSpread: {
-    key: 'tapeHeads',
-    ok: (v: number) => v > 1,
-    fix: 3,
-    hint: 'more than one head',
-  },
-  tapeGain: tape,
-  tapeHfLoss: tape,
-  tapeNoiseIre: tape,
-  tapeWear: tape,
-  tapeSplice: tape,
-  tapeWowPct: tape,
-  tapeColourFrame: tape,
   enhPeakQ: enhPeaking,
   enhPeakBoost: enhPeaking,
   enhSliceIre: {
@@ -3510,7 +3838,8 @@ const PHASE_BLURBS: Record<Phase, string> = {
   'Source A':
     'input A becoming a composite waveform — the encoder, the static generator, and the deck and cable this one signal arrives on',
   Mix: 'where the two signals meet — the mixer that beats them together, the wipe and the PiP inset. Needs a source B to do anything',
-  Tape: 'the recording and the wire it came down — VHS color-under, dropouts, timebase wander, the tuner and the program cable',
+  Channel:
+    'everything between the encoder and the aerial socket — the tape it was recorded on, the tuner it came through, and the cable it came down',
   Receiver:
     'a TV hunting for sync and decoding color from whatever arrives — hold, deflection, the decoder',
   Screen: 'the tube itself — beam profile, phosphor persistence, shadow mask',
@@ -3542,6 +3871,20 @@ export const SOURCE_A_STAGE = 'Source A' satisfies Phase
 // it by identity — the map, which draws it inert while there is no B to mix,
 // and the diagram, which opens the panel at it.
 export const MIX_STAGE = 'Mix'
+
+// The stretch between the encoder and the aerial socket, and the widest stage
+// on the map: nine groups, where no other trunk stage has more than five. It
+// was called 'Tape' until the count made the case against it — the tape is one
+// of the things a recording came through, and RF / Tuner, Cable / Wiring and
+// Ghosting & leakage are three of the others, so a box marked TAPE was a stage
+// named after a third of itself and the reason a hunt for 'snow' or 'ghosting'
+// went to the search box instead of the map.
+//
+// 'Channel' is the word docs/graphviz/pipeline-simple.dot already teaches for
+// this block, so the diagram a reader meets first and the box they press now
+// agree. Named here as well as in PHASE_ORDER because the stored-state
+// migration in usePanelNav asks for it by identity.
+export const CHANNEL_STAGE = 'Channel' satisfies Phase
 
 // Input B, which is a stage of the panel without being a Phase: the second
 // signal joins the trunk rather than dividing it, so it hangs *below* the trunk
@@ -3601,7 +3944,7 @@ export const VIEW_BLURB =
 // whole reason it moved: the map is where you go looking for a thing to open.
 export const MOD_STAGE = 'Modulation'
 export const MOD_BLURB =
-  'the hand on the knobs: LFOs, drift, sample-and-hold and the audio envelope wiggling any control around wherever you left its slider, the beat they lock to, and the stab gate, which cuts the whole board between the look you are dialing and a second one — stock, or a look you held there. A slot is patched at the control it drives (press ∿ on any row); this is where the eight read as a bay'
+  'the hand on the knobs: LFOs, drift, sample-and-hold and the audio envelope wiggling any control around wherever you left its slider, the beat they lock to, and the stab gate, which cuts the whole board between the look you are dialing and a second one — stock, or a look you held there. A slot is patched at the control it drives (the ∿ in any control row’s ⋮ menu); this is where the eight read as a bay'
 
 // What the bay answers to beyond its name and its blurb. Only the words a
 // searcher would actually type that the prose above does not already carry —

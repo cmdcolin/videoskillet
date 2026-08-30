@@ -143,8 +143,8 @@ export const SPECS = [
   boxed('dialog', {
     name: 'slider-help',
     seed: {
-      video_feedback_open_phase: 'Tape',
-      video_feedback_open_group: 'VHS Tracking',
+      video_feedback_open_phase: 'Channel',
+      video_feedback_open_group: 'VHS colour & tracking',
     },
     // The first ? in the panel belongs to the one group left open above.
     actions: [{ click: { selector: 'button[title="what does this do?"]' } }],

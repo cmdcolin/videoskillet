@@ -847,10 +847,38 @@ drift from the UI:
 pnpm docshots                    # all of them, into docs/img/
 pnpm docshots chain look-loop    # just these
 pnpm docshots --force            # rewrite even unchanged shots
+pnpm docshots:check              # which ones are behind the app
 ```
 
 It runs against `localhost:5199` and starts a dev server itself if nothing is
 serving there, so a regen is one command from a cold checkout.
+
+### Knowing when they have gone stale
+
+`docs:check` and `docgen:check` regenerate and compare. A screenshot cannot:
+comparing means recapturing, which needs Firefox Nightly, a GPU and a minute —
+so nobody reruns the harness without a reason to suspect it, and that is how
+`chain.jpg` spent two releases showing a stage that had been renamed.
+
+So every capture stamps the app version and commit into `docs/img/shots.json`,
+and `pnpm docshots:check` reads it back. Headless, instant, and it runs in CI.
+
+It fires **once per release**, not once per commit. That is the cadence the
+pictures actually have — each one prints the masthead, version string included,
+so a release dates them whether or not the panel moved, and a release is when
+they ship. The src-commit count beside each name says how much of a retake it
+is: nought means the version string and nothing else.
+
+Only the shots with the app's chrome in them are checked. A clip and a `look-`
+tile are the canvas alone, and renaming a stage does not date a picture of the
+picture — flagging all eleven every release is how a check stops being read.
+That is read off the spec (`crop: 'canvas'`, or a `video`), so a new
+picture-only shot is covered without a list to maintain.
+
+One thing the pixel gate cannot do for you: a shot with the live canvas in it
+(`overview`, `chain`, `slider-help`) differs every run, because the picture
+under the panel is noise and dropouts in motion. Those always rewrite. Only a
+chrome-only crop like `signal-path` reports `unchanged`.
 
 Shots are declared in
 [`../scripts/docshot-specs.mjs`](../scripts/docshot-specs.mjs) — a URL, the
@@ -1161,11 +1189,23 @@ actually download, so the size comes from the metadata read at pick time instead
 
 ## URL parameters
 
-A link specifies a look — **copy link** in the app writes one.
+A link specifies a look — **copy link** in the app writes one. It writes the
+look as `?p=`, which is the same controls packed into bytes (`src/ui/packed.ts`)
+and three times shorter; `?set=` is the readable form, and a query that arrives
+carrying one keeps being written that way, so a harness driving the app by name
+gets an address bar it can still read.
+
+A packed value is a count of the control's own `step` from zero, which is what
+keeps an old link honest: widening a range — and `redline` is the record of this
+codebase doing exactly that — leaves every link that names the control reading
+as it always did. What the wire does depend on is the order of `URL_KEY_ORDER`,
+pinned by golden vectors in `packed.test.ts`, and each control's `step`, which
+is not pinned because changing one moves a link by less than a step.
 
 | Param                | Meaning                                               |
 | -------------------- | ----------------------------------------------------- |
 | `?preset=`           | load a built-in preset by name                        |
+| `?p=`                | the same controls packed into bytes — what a link has |
 | `?set=key:value,…`   | override individual controls                          |
 | `?mod=t:src:hz:d,…`  | modulation routings (target, source, rate, depth)     |
 | `?iurl=` / `?iurlb=` | image source A / B                                    |

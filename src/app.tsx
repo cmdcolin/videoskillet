@@ -16,6 +16,7 @@ import { AboutDialog } from './ui/AboutDialog'
 import { AdvancedDialog } from './ui/AdvancedDialog'
 import { AppMenu, ShowMenuButton } from './ui/AppMenu'
 import { AudioHint, AudioInput } from './ui/AudioInput'
+import { CaptionContext } from './ui/CaptionContext'
 import { ClipLibraryDialog } from './ui/ClipLibraryDialog'
 import { ClipPicker } from './ui/ClipPicker'
 import { CommandPalette } from './ui/CommandPalette'
@@ -49,7 +50,6 @@ import { FatalScreen } from './ui/FatalScreen'
 import {
   FilterContext,
   filterActive,
-  isMovingMark,
   readFilter,
   sliderMatches,
 } from './ui/filter'
@@ -93,6 +93,7 @@ import { useAutomation } from './ui/useAutomation'
 import { useCapture } from './ui/useCapture'
 import { useClipLibrary } from './ui/useClipLibrary'
 import { useClockSync } from './ui/useClockSync'
+import { useDrift } from './ui/useDrift'
 import { useEngine } from './ui/useEngine'
 import { useFavorites } from './ui/useFavorites'
 import { useLookLabels } from './ui/useLookLabels'
@@ -283,9 +284,9 @@ export function App() {
   // The other half of the filter, and a mode rather than a word: which controls
   // the bay is driving is a question the box cannot hold, because a routing
   // leaves the resting value alone and there is nothing to type. It rode in the
-  // box as `∿` until now, which made the two alternatives — you could ask for
-  // moving rows or for "ghost", never both — and left the ✕ clearing a mode it
-  // could not tell from a search.
+  // box as a pasted `∿` once, which made the two alternatives — you could ask
+  // for moving rows or for "ghost", never both — and left the ✕ clearing a mode
+  // it could not tell from a search.
   const [movingOnly, setMovingOnly] = useState(false)
   // Whether the masthead is showing the filter box rather than the wordmark.
   // Held open by a live query as well as by the ⌕, so the box can't disappear
@@ -315,14 +316,9 @@ export function App() {
     setFilter(text)
     setMovingOnly(false)
   }
-  // One switch wherever it is pressed, and taking a pasted ∿ back out of the box
-  // is part of switching off: with the mark still in it the mode reads straight
-  // back off the text, and the button that just released it looks broken.
-  const toggleMoving = () => {
-    const marked = isMovingMark(filter.trim())
-    if (marked) setFilter('')
-    setMovingOnly(!(movingOnly || marked))
-  }
+  // One switch wherever it is pressed — the strip's count, the palette, the chip
+  // in the box. Nothing typed can reach the mode, so this is the whole of it.
+  const toggleMoving = () => setMovingOnly(!movingOnly)
   const nav = usePanelNav()
   const { favorites, toggleFavorite } = useFavorites()
   // The modulation bay, owned here so the panel, the rows and the mix all see
@@ -379,6 +375,30 @@ export function App() {
     sourceBOn: eng.b.mode !== 'none',
     mod: modApi,
   })
+
+  // The board wandering by itself (ui/drift.ts). One switch, and everything it
+  // needs is handed over at the press rather than held by the hook — see the
+  // note there.
+  const drift = useDrift()
+  const toggleDrift = () => {
+    if (drift.drifting) {
+      drift.stop()
+      // The leg in flight goes with the timer: this promises the board stays
+      // wherever it has got to, and the half-way look is a look like any other
+      // (the same thing the morph readout's own "stop here" does).
+      stopMorph()
+      return
+    }
+    // The one step the whole mode banks, before the first leg moves anything.
+    // A drift left running for an hour is 240 looks nobody chose; what a hand
+    // reaching for ctrl+z wants back is the look it set drifting.
+    mix.snapshotForUndo()
+    drift.start({
+      getSettled: () => getGlideTarget() ?? controlStore.get(),
+      land: mix.landDrift,
+      sliders: MUTATE_SLIDERS,
+    })
+  }
 
   // Either slot, by the key something outside handed over. Five surfaces are
   // told which slot to act on rather than choosing — the keyboard, a bound MIDI
@@ -525,6 +545,7 @@ export function App() {
     ytUrlB: eng.b.ytUrl,
     teletypeA: eng.a.teletype,
     teletypeB: eng.b.teletype,
+    caption: eng.caption,
     speedA: eng.a.speed,
     speedB: eng.b.speed,
     reverb: eng.reverb,
@@ -728,6 +749,7 @@ export function App() {
     // inventing a level for it would make the same gesture mean two things
     // depending on which surface it came from. A pad has one and passes it.
     onFire: () => modApi.fire(),
+    onToggleDrift: toggleDrift,
     onSaveSlot: saveSlot,
     onRecallSlot: recallSlot,
     // ctrl+S keeps the board under the name the menu would have offered. The
@@ -763,6 +785,7 @@ export function App() {
     cycleSync,
     mutateGroup: mix.mutateGroup,
     resetGroup: mix.resetGroup,
+    landCard: mix.landCard,
     // Through the ref, like every other engine verb here: the deck holds this
     // across a render, and the engine object is a different one after a
     // device-loss rebuild.
@@ -781,6 +804,8 @@ export function App() {
     onMutate: mix.mutateLook,
     onSpike: mix.spikeLook,
     onCross: mix.crossLook,
+    drifting: drift.drifting,
+    onToggleDrift: toggleDrift,
     onRollMotion: amount => mix.rollMotion(amount, { audioLive: audio.active }),
     onReset: mix.reset,
     onUndo: mix.undo,
@@ -820,12 +845,12 @@ export function App() {
 
   const query = readFilter(filter, movingOnly)
   const filtering = filterActive(query)
-  // A query set from anywhere else — the ∿ reveal, a palette jump — opens the
-  // box too, so the panel is never filtered by something with nothing on screen
-  // saying so and no way to clear it.
+  // A query set from anywhere else — the strip's count, a palette jump — opens
+  // the box too, so the panel is never filtered by something with nothing on
+  // screen saying so and no way to clear it.
   const searching = searchOpen || filtering
-  // What the filter needs from the bay: which controls are being driven. `∿`
-  // asks exactly this and nothing else, so the whole panel — pinned rows,
+  // What the filter needs from the bay: which controls are being driven. The
+  // mode asks exactly this and nothing else, so the whole panel — pinned rows,
   // contextual sections, the spine — has to be able to answer it.
   const isRouted = (key: ControlKey) => modApi.modFor(key) !== null
   const pinned = sameList(
@@ -881,7 +906,6 @@ export function App() {
   const loopsLive = {
     camera: controls.fbMix > 0,
     mixer: controls.cfbMix > 0,
-    tape: controls.tapeMix > 0,
   }
   // What is standing in each of the three boxes with a picker, for the caption
   // under its name on the map (patched.ts). Keyed by `PickerStage`, the same
@@ -1123,7 +1147,7 @@ export function App() {
           <div className={styles.filterBox}>
             {/* The mode, standing in the box beside the words rather than
                 pretending to be one of them. It is where a filter you did not
-                type has to appear: pressing ∿ on the strip narrows the whole
+                type has to appear: pressing the strip's count narrows the whole
                 panel, and before this the only trace of it was a glyph in the
                 text — which said something had happened without saying that the
                 button was what said it, and could not be taken off without
@@ -1134,7 +1158,7 @@ export function App() {
                 title="showing only what the bay is driving — click to drop it"
                 onClick={toggleMoving}
               >
-                ∿ moving ×
+                mod only ×
               </button>
             ) : null}
             <input
@@ -1149,7 +1173,7 @@ export function App() {
               // whatever you had just clicked, four times a second.
               autoFocus
               placeholder="rainbow, ghost, tear…"
-              title="matches names and descriptions, so artifact words work: rainbow, ghost, dot crawl, tear, roll… — the ∿ on the modulation row narrows whatever is up here to the controls the bay is driving"
+              title="matches names and descriptions, so artifact words work: rainbow, ghost, dot crawl, tear, roll… — the count on the modulation row narrows whatever is up here to the controls the bay is driving"
               value={filter}
               onChange={e => setFilter(e.target.value)}
             />
@@ -1228,6 +1252,8 @@ export function App() {
         onSurpriseOne={mix.surpriseOne}
         onSpike={mix.spikeLook}
         onCross={mix.crossLook}
+        drifting={drift.drifting}
+        onToggleDrift={toggleDrift}
         // Whether the two audio followers are worth rolling: with nothing on
         // the wire they are slots that will never move, which is the one way a
         // roll can look like it did nothing. App is where that is known — the
@@ -1261,32 +1287,23 @@ export function App() {
         onRedo={mix.redo}
       />
 
-      {/* The front door goes first: a look is one click, and everything below
-          is for adjusting the look you picked. Input is a set-once control and
-          reads fine in second place.
+      {/* The working set goes above the catalog, not under it.
 
-          Both drop out under a live filter, for the same reason Modulation
-          below already does: neither holds a control the query can
-          match, and the panel below the box is meant to be the result set. They
-          are the two largest things in it — the catalog alone is 180px of chips
-          and caption — and with them up the first row that actually matched
-          landed halfway down the panel. */}
-      {filtering ? null : (
-        <PresetsSection
-          controls={controls}
-          lastPreset={mix.lastPreset}
-          weights={mix.weights}
-          onApplyPreset={mix.applyPreset}
-          onMixStart={mix.startMix}
-          onMix={mix.setPresetWeight}
-        />
-      )}
+          "This look" is the only surface in the panel holding the controls that
+          are actually making the picture, gathered out of the six stages they
+          are scattered across — and it was sitting under 162px of chips that
+          had already done their job by the time it had anything in it. The
+          chips are not gone: they are one section down, and the way to a
+          different look is where it always was.
 
-      {/* Directly under the chips, because it is the answer to them: click a
-          preset and the controls it moved are right there to drag, rather than
-          five folds down the chain map. Unlike them it stays under a filter:
-          its rows are real control rows, so the query narrows them like any
-          other result. */}
+          It sits here unconditionally rather than swapping places with the
+          catalog once something is off stock. A swap reads better and cannot be
+          built: the two orders are two positions in this children array, so
+          crossing over unmounts the section and takes its held list, its ▸ more
+          fold and its scroll anchor with it — at the exact moment of the first
+          edit, which is when all three matter. Rendered at zero rows it is one
+          35px header saying so, which is the price of the first edit not being
+          a layout change (see LookSection). */}
       <div ref={lookRef} className={styles.lookAnchor}>
         <LookSection
           sliders={edited}
@@ -1294,6 +1311,24 @@ export function App() {
           onOpenGroup={nav.openAt}
         />
       </div>
+
+      {/* Under it, because it is what you came in through rather than what you
+          work on. It drops out under a live filter, for the same reason
+          Modulation below already does: it holds no control the query can
+          match, the panel below the box is meant to be the result set, and at
+          180px of chips and caption it is the largest thing in it — with it up,
+          the first row that actually matched landed halfway down the panel. */}
+      {filtering ? null : (
+        <PresetsSection
+          controls={controls}
+          lastPreset={mix.lastPreset}
+          weights={mix.weights}
+          openStage={nav.openPhase}
+          onApplyPreset={mix.applyPreset}
+          onMixStart={mix.startMix}
+          onMix={mix.setPresetWeight}
+        />
+      )}
 
       {/* The three source pickers used to be a section here, under "This look"
           and above the map — which drew a box for each of the same three
@@ -1369,6 +1404,13 @@ export function App() {
         // On the bench nothing is folded, so the map marks a stage and scrolls
         // to it rather than unfolding one and closing another.
         onOpen={bench ? nav.jumpPhase : nav.togglePhase}
+        // Pressing a box the query missed. The box goes to its stage either
+        // way, so the query has to come off with it — the stage is about to be
+        // listed and a filter that missed it would list nothing.
+        onDropFilter={() => {
+          clearFilter()
+          setSearchOpen(false)
+        }}
         openGroup={nav.openGroup}
         onOpenGroup={nav.toggleGroup}
         stageTop={stageTop}
@@ -1377,8 +1419,8 @@ export function App() {
         <div className={ui.hint}>
           {query.moving
             ? query.text === ''
-              ? 'nothing is moving — press ∿ on any control row to set it wobbling'
-              : `nothing moving matches “${query.text}” — drop the ∿ to search the whole panel`
+              ? 'nothing is moving — open any control row’s ⋮ and press ∿ to set it wobbling'
+              : `nothing moving matches “${query.text}” — drop “mod only” to search the whole panel`
             : // A query can land on controls that exist and cannot act, which is
               // not the same answer as no match at all: "bass" is seven routings
               // in Sound, and what is missing is the input, not the control.
@@ -1436,7 +1478,11 @@ export function App() {
                 Controls, so the View group's tap row needs its own way down to
                 eng.tap/eng.changeTap. */}
             <SignalTapContext value={{ tap: eng.tap, onTap: eng.changeTap }}>
-              {panelBody}
+              <CaptionContext
+                value={{ caption: eng.caption, onCaption: eng.changeCaption }}
+              >
+                {panelBody}
+              </CaptionContext>
             </SignalTapContext>
           </ModSlotsContext>
         </ControlsContext>

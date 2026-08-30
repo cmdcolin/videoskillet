@@ -1,6 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { DEFAULT_CONTROLS, atRest } from '../core/controls'
+import { clampCardText } from '../sources/teletype'
+import { useCaptionApi } from './CaptionContext'
+import { activeCardPreset, cardPresetsFor } from './cardPresets'
 import styles from './ControlGroup.module.css'
 import { GROUPS, NEEDS, sliderFor } from './controls'
 import {
@@ -9,8 +12,8 @@ import {
   useControlsApi,
   useControlValue,
 } from './ControlsContext'
+import { cx } from './cx'
 import { filterActive, matchedSliders, useFilter } from './filter'
-import { DiceIcon } from './icons'
 import { MagnifierFrame } from './MagnifierFrame'
 import { SYNCABLE_KEYS } from './midi'
 import { ModRowEditor } from './ModRowEditor'
@@ -27,6 +30,7 @@ import { Rack, Slider } from './Slider'
 import { WipeFrame } from './WipeFrame'
 
 import type { ControlKey } from '../core/controls'
+import type { CardPreset } from './cardPresets'
 import type { Group, SliderDef, SliderNeed } from './controls'
 import type { ControlsApi } from './ControlsContext'
 import type { ReactElement } from 'react'
@@ -102,7 +106,7 @@ export function ControlSlider(props: {
       // stepping a mode enum with an LFO picks tubes nobody asked for.
       //
       // Unless it is already routed — a preset, a link or a since-closed gate
-      // can all leave one there, and hiding the ∿ on those rows hid the only
+      // can all leave one there, and hiding the badge on those rows hid the only
       // way to see what is driving the control or to hand the slot back. The
       // rule is about what may be *claimed*, not about what may be shown.
       mod={
@@ -271,6 +275,41 @@ function SignalTapControl() {
   )
 }
 
+// The caption's own group, found by its control the way the tap's host is.
+const CAPTION_HOST_GROUP = GROUPS.find(g =>
+  g.sliders.some(s => s.key === 'cc'),
+)?.name
+
+// What the encoder is sending on line 21. Not a control — it is words, not a
+// quantity, so it reads its own context and no preset or random nudge touches
+// it. A textarea because a caption is lines: each one rolls the page as it
+// lands, and the wrap is a preview of how thirty-two columns will break.
+function CaptionControl() {
+  const { caption, onCaption } = useCaptionApi()
+  return (
+    <>
+      <textarea
+        className={styles.captionField}
+        rows={2}
+        value={caption}
+        placeholder="what line 21 is carrying"
+        // The same words as the placeholder, because a placeholder is not a
+        // name: it is the weakest thing an assistive technology will fall back
+        // to, and it is gone the moment there is a caption to read. Every other
+        // field in the panel says what it is (TeletypeRow's carries a title);
+        // this one and the editor's were the two that said nothing.
+        aria-label="what line 21 is carrying"
+        spellCheck={false}
+        onChange={e => onCaption(clampCardText(e.target.value))}
+      />
+      <p className={styles.captionNote}>
+        Sent as data, a character at a time. What arrives is whatever survived
+        the chain.
+      </p>
+    </>
+  )
+}
+
 const FRAMES: {
   group: string
   keys: ReadonlySet<ControlKey>
@@ -339,11 +378,70 @@ function gatesBehind(
   return [...gates.values()]
 }
 
+// How long a stab button has to stay down before the press becomes a train, and
+// how far apart the train's nudges land. Both are long by UI standards on
+// purpose: at the 180ms it used to repeat at, a press was a shuffle nobody could
+// stop on the look they liked.
+const STAB_HOLD_MS = 500
+const STAB_TRAIN_MS = 800
+
+// The row of chips over a card's rows. A component rather than inline JSX
+// because it subscribes to the whole board to know which chip is lit, and the
+// card around it is memoized on its rows — reading the controls inline would
+// rebuild every row on every write.
+function CardChips(props: { group: Group; chips: CardPreset[] }) {
+  const { group, chips } = props
+  const { landCard } = useControlsApi()
+  const controls = useControls()
+  const active = activeCardPreset(group, controls)
+  return (
+    <div className={styles.cardChips}>
+      {chips.map(chip => (
+        <button
+          key={chip.name}
+          type="button"
+          className={cx(
+            styles.cardChip,
+            active?.name === chip.name ? styles.cardChipOn : undefined,
+          )}
+          aria-pressed={active?.name === chip.name}
+          title={`${chip.blurb} — puts this card back to stock first, and leaves the rest of the look alone`}
+          onClick={() => {
+            landCard(chip, group)
+          }}
+        >
+          {chip.name}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 export function ControlGroup(props: { group: Group; defaultOpen?: boolean }) {
   const { group } = props
   const { writeControl, mutateGroup, resetGroup } = useControlsApi()
   const mod = useModSlotsApi()
   const filter = useFilter()
+  // The stab button's timers, while it is held: the wait before a hold becomes a
+  // train, and the train itself. Refs rather than state — they only ever get
+  // started and stopped, never read to render anything.
+  const stabDelay = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const stabTrain = useRef<ReturnType<typeof setInterval> | undefined>(
+    undefined,
+  )
+  const stopStab = () => {
+    clearTimeout(stabDelay.current)
+    clearInterval(stabTrain.current)
+    stabDelay.current = undefined
+    stabTrain.current = undefined
+  }
+  useEffect(
+    () => () => {
+      clearTimeout(stabDelay.current)
+      clearInterval(stabTrain.current)
+    },
+    [],
+  )
   // A live filter drops the miniature, so a search can reach the sliders it
   // stands in for.
   const [showFramed, setShowFramed] = useState(false)
@@ -352,6 +450,9 @@ export function ControlGroup(props: { group: Group; defaultOpen?: boolean }) {
     ? undefined
     : FRAMES.find(f => f.group === group.name)
 
+  // The card's own chips. Hidden under a live filter for the same reason the
+  // miniature is: a search is asking for rows, and a chip is not one.
+  const chips = filterActive(filter) ? [] : cardPresetsFor(group.name)
   const matched = matchedSliders(group, filter, key => mod.modFor(key) !== null)
   const unframed =
     frame === undefined || showFramed
@@ -432,8 +533,9 @@ export function ControlGroup(props: { group: Group; defaultOpen?: boolean }) {
         <>
           {/* Only on a group that has something to put back — the same rule the
               row's own ↺ follows, and the reason neither costs anything on the
-              majority of headers that are still at stock. It sits before the
-              dice because the pair reads as "back / further" in that order. */}
+              majority of headers that are still at stock. It sits before
+              randomize because the three read as "back / further / further,
+              held" in that order. */}
           {touched > 0 ? (
             <button
               className={styles.revert}
@@ -441,7 +543,7 @@ export function ControlGroup(props: { group: Group; defaultOpen?: boolean }) {
               aria-label={`reset ${group.name} to defaults`}
               onClick={() => resetGroup(group.sliders)}
             >
-              ↺
+              reset defaults
             </button>
           ) : null}
           <button
@@ -450,11 +552,40 @@ export function ControlGroup(props: { group: Group; defaultOpen?: boolean }) {
             aria-label={`nudge ${group.name} randomly`}
             onClick={e => mutateGroup(group.sliders, mutateAmountFor(e))}
           >
-            <DiceIcon />
+            randomize
+          </button>
+          {/* One stab on press; a hold turns into a train of them only after
+              STAB_HOLD_MS, so a press is a single nudge you can look at and
+              the train runs slowly enough to let go on the look you wanted.
+              It stops the instant the button is not down — a pointer that
+              slips off it (or a window that loses focus mid-hold) has to stop
+              it exactly as a release would, which is why both onPointerLeave
+              and onBlur clear it alongside onPointerUp. */}
+          <button
+            className={styles.stab}
+            title={`stab: one random nudge to this stage's controls, at the amount a click on randomize would use — hold it down and it keeps stabbing, slowly, until you let go (${group.name})`}
+            aria-label={`stab ${group.name} — press to nudge once, hold to repeat`}
+            onPointerDown={e => {
+              const amount = mutateAmountFor(e)
+              stopStab()
+              mutateGroup(group.sliders, amount)
+              stabDelay.current = setTimeout(() => {
+                stabTrain.current = setInterval(
+                  () => mutateGroup(group.sliders, amount),
+                  STAB_TRAIN_MS,
+                )
+              }, STAB_HOLD_MS)
+            }}
+            onPointerUp={stopStab}
+            onPointerLeave={stopStab}
+            onBlur={stopStab}
+          >
+            stab
           </button>
         </>
       }
     >
+      {chips.length === 0 ? null : <CardChips group={group} chips={chips} />}
       {frame === undefined ? null : (
         <>
           <frame.Frame />
@@ -482,6 +613,7 @@ export function ControlGroup(props: { group: Group; defaultOpen?: boolean }) {
       <Rack sliders={group.sliders}>
         <ControlRows sliders={shown} muted={muted} />
         {group.name === TAP_HOST_GROUP ? <SignalTapControl /> : null}
+        {group.name === CAPTION_HOST_GROUP ? <CaptionControl /> : null}
         {fine.length === 0 ? null : (
           <>
             <button
@@ -500,7 +632,7 @@ export function ControlGroup(props: { group: Group; defaultOpen?: boolean }) {
                     </span>
                   )}
                   {fineMod ? (
-                    <span className={styles.fineMod}> · ∿</span>
+                    <span className={styles.fineMod}> · mod</span>
                   ) : null}
                 </>
               )}

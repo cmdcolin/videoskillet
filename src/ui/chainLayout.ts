@@ -1,14 +1,15 @@
 import {
   CAMERA_LOOP_STAGE,
-  DELAY_LOOP_STAGE,
   LOOP_STAGES,
   MIX_STAGE,
   MIXER_LOOP_STAGE,
   SOURCE_A_STAGE,
 } from './controls'
 import { fitCaption } from './patched'
+import { arrowhead, route } from './wire'
 
 import type { LoopPlace } from './controls'
+import type { Point } from './wire'
 
 // The chain map's arithmetic, with none of its markup (see ChainMap.tsx for the
 // drawing). Its own module because every bug it has shipped has been in this
@@ -249,19 +250,6 @@ const RETURNS: readonly ReturnSpec[] = [
     turn: 4,
     self: false,
   },
-  {
-    // Straddling the mixer's box rather than landing on it twice. It is the
-    // shortest run on the map because it is the shortest loop in the rig: it
-    // leaves the bus and returns to it at the same node, one pass apart.
-    tap: MIX_STAGE,
-    into: MIX_STAGE,
-    loop: 'tape',
-    stage: DELAY_LOOP_STAGE,
-    optical: false,
-    y: 29,
-    turn: 3,
-    self: true,
-  },
 ]
 
 // What each run carries, off the one loop table, so the map cannot name a loop
@@ -280,15 +268,28 @@ const RETURNS: readonly ReturnSpec[] = [
 const shortOf = (loop: LoopPlace): string =>
   LOOP_STAGES.find(l => l.loop === loop)?.short ?? loop
 
-export function returnPath(
+// Up off the trunk, along its own band, and back down. `turn` is the corner
+// radius, which differs per run: the tape loop's band is the tightest and it
+// rounds to 3 where the two long returns round to 4.
+export const returnPts = (
+  from: number,
+  to: number,
+  top: number,
+  y: number,
+): Point[] => [
+  [from, top],
+  [from, y],
+  [to, y],
+  [to, top],
+]
+
+export const returnPath = (
   from: number,
   to: number,
   top: number,
   y: number,
   turn: number,
-) {
-  return `M${from} ${top}V${y + turn}Q${from} ${y} ${from - turn} ${y}H${to + turn}Q${to} ${y} ${to} ${y + turn}V${top}`
-}
+) => route(returnPts(from, to, top, y), turn)
 
 // A box on the map: where it sits and how wide its own name made it.
 interface ChainBox {
@@ -388,24 +389,18 @@ interface ChainBranch extends ChainBox {
   y: number
 }
 
-// Where a branch's arrowhead sits and which way it points, as a unit vector, so
-// the drawing does not have to re-derive which of branchPath's three routings it
-// got. An 'in' branch points at the trunk box it joins; an 'out' branch points
-// back at its own box, at whichever edge the wire actually meets it on.
-export function branchArrow(b: ChainBranch): {
-  x: number
-  y: number
-  dx: number
-  dy: number
-} {
-  const right = b.x + b.w / 2
-  const left = b.x - b.w / 2
-  if (b.dir === 'in') {
-    return { x: b.join, y: MID_Y + BOX_H / 2, dx: 0, dy: -1 }
-  }
-  if (b.join > right + TURN) return { x: right, y: BRANCH_Y, dx: -1, dy: 0 }
-  if (b.join < left - TURN) return { x: left, y: BRANCH_Y, dx: 1, dy: 0 }
-  return { x: b.join, y: BRANCH_Y - BOX_H / 2, dx: 0, dy: 1 }
+// The head on a branch's wire, off the wire's own points — so it cannot end up
+// pointing along a routing the wire did not take. It used to re-derive which of
+// branchPts' three cases applied, from the same three conditions, in a second
+// place.
+//
+// Direction is the whole statement on this row: an 'in' branch is fed into the
+// chain and points at the trunk box it joins, an 'out' branch is fed from it
+// and points back at its own box. Which is the wire read backwards, and nothing
+// more than that.
+export const branchHead = (b: ChainBranch): string => {
+  const pts = branchPts(b)
+  return arrowhead(b.dir === 'in' ? pts : pts.toReversed(), HEAD * 1.5, HEAD)
 }
 
 // A branch's run: out of its box, along its own row, then up into the box above
@@ -414,18 +409,31 @@ export function branchArrow(b: ChainBranch): {
 // both take it. Routes left as well as right because a crowded row can push a
 // box past the stage it feeds; on the full trunk nothing is that crowded, and B
 // is the only branch that takes the routed arm at all.
-export function branchPath(b: ChainBranch) {
+export function branchPts(b: ChainBranch): Point[] {
   const top = MID_Y + BOX_H / 2
   const right = b.x + b.w / 2
   const left = b.x - b.w / 2
-  if (b.join > right + TURN) {
-    return `M${right} ${BRANCH_Y}H${b.join - TURN}Q${b.join} ${BRANCH_Y} ${b.join} ${BRANCH_Y - TURN}V${top}`
-  }
-  if (b.join < left - TURN) {
-    return `M${left} ${BRANCH_Y}H${b.join + TURN}Q${b.join} ${BRANCH_Y} ${b.join} ${BRANCH_Y - TURN}V${top}`
-  }
-  return `M${b.join} ${BRANCH_Y - BOX_H / 2}V${top}`
+  // Out of the side the join is on, along the branch row, then up. The riser is
+  // the common case and the only one the full trunk ever draws — see above.
+  if (b.join > right + TURN)
+    return [
+      [right, BRANCH_Y],
+      [b.join, BRANCH_Y],
+      [b.join, top],
+    ]
+  if (b.join < left - TURN)
+    return [
+      [left, BRANCH_Y],
+      [b.join, BRANCH_Y],
+      [b.join, top],
+    ]
+  return [
+    [b.join, BRANCH_Y - BOX_H / 2],
+    [b.join, top],
+  ]
 }
+
+export const branchPath = (b: ChainBranch) => route(branchPts(b), TURN)
 
 // Every coordinate the map draws, worked out from the stage names alone.
 export function chainLayout(names: string[], specs: WiredBranch[] = []) {

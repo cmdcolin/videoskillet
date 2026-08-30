@@ -80,8 +80,20 @@
   --panel-bg: #16161a;
   /* the face of a filled control — a preset chip, a segmented toggle, a tab */
   --ctl-face: #26262e;
-  /* and its lit state, the one place the panel inverts its text */
-  --ctl-on-bg: #4a7a62;
+  /* And its lit state, the one place the panel inverts its text — which is why
+     this one is measured rather than picked. The ink is already all but black,
+     so the ratio is the green's to give: at #4a7a62 the pair came out at
+     3.84:1, under the 4.5 WCAG asks of 11px text and well under the 5:1 the
+     four text tiers above hold themselves to. It is also the *selected*
+     option's label, which is the word in a mode switch you most need to read.
+     #5a9075 is the smallest lift that clears the 5:1 line, and it is a sixth of
+     a channel — the panel looks the same and the word is legible.
+
+     `ui.module.css`'s track fill borrows this too, so a fill is a touch
+     brighter with it. That is a face's colour used as a fill rather than the
+     other way round; if the two ever want separating, this is the one that is
+     defined by the text it carries. */
+  --ctl-on-bg: #5a9075;
   --ctl-on-fg: #101014;
   /* The panel's word for "this has been moved off stock", as the resting/hover
      pair every revert, dot and touched-count wears. */

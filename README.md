@@ -30,8 +30,8 @@ Details in [How it works](docs/HOW-IT-WORKS.md), fault by fault in
 - True composite signal emulation in WebGPU compute shaders. This is the
   headline feature!
 - Dirty video mix or genlocked (clean) video mixing of two sources
-- Video feedback effects including hardware mixer, camera style, and vhs tape
-  loop
+- Video feedback effects including hardware mixer, camera-pointed-at-tv style
+  feedback
 - Lots of 'faults' like loose cable, bad receiver, inverted polarity, bad
   ground, etc.
 - Audio-reactive: feed it music and bass shakes vertical hold of the image, etc.
@@ -41,7 +41,7 @@ Details in [How it works](docs/HOW-IT-WORKS.md), fault by fault in
   interest
 - Easy-to-use "randomize" buttons that morph between settings over multiple
   seconds
-- Bleeds video into the audio channel, so you can hear the picture
+- Bleeds video into the audio channel, so you can hear that static-y hum
 - ...[much more](docs/FEATURES.md)
 
 ## Video sources
@@ -127,13 +127,19 @@ composite video cables together in my basement and posting tumblr gifs.
 ## Cool demos
 
 - Camera feedback + static
-  https://cmdcolin.github.io/ntsc.js/?set=chromaGain%3A1.3%2ChvSagUs%3A2.1%2ChvRing%3A0.61%2Cabl%3A0.24%2ClumaMHz%3A3.2%2ClumaPeak%3A2.4%2CnoiseIre%3A2.5%2Cagc%3A0.18%2CcolorUnderMix%3A1%2CfmOverdev%3A0.72%2CfmStreakUs%3A0.45%2CfbMix%3A0.9%2CfbGain%3A1.059%2CfbFocus%3A0%2CfbVign%3A0.73%2CfbBlack%3A0%2CfbKnee%3A0.42%2CcrtBloom%3A0.23%2CcrtZoomX%3A0.7143%2CcrtZoomY%3A0.314&mod=vFreqHz%3Asmooth%3A0.08%3A0.0049%2CfbGain%3Asmooth%3A0.24%3A0.06&src=vhs+static
+  https://cmdcolin.github.io/ntsc.js/?p=GIgEEVQA9AEAYA6AAhHAAQBkDEgEkAMLoAIAtAEE6AIEjCEBAACkAgAAAKgBBVxwub4DAKHEAQ&mod=vFreqHz:smooth:0.08:0.0049,fbGain:smooth:0.24:0.06&src=vhs+static
 
 - Chaos black and white feedback
-  https://cmdcolin.github.io/ntsc.js/?set=invert%3A1%2CdemodMHz%3A0.8%2CchromaGain%3A1.21%2CnoiseIre%3A2%2CrfAdjacent%3A0.7%2CrfMistuneMHz%3A0.2%2Cagc%3A0.5%2CfbMix%3A1%2CcrtCutoff%3A0.05%2CcrtGamma%3A1.6%2CcrtSat%3A1.17%2CcrtBloom%3A0.37%2CcrtHalation%3A0.3%2CcrtGlow%3A0.17%2CcfbGain%3A-0.57%2CcfbLines%3A-1%2CcfbRing%3A0.21%2CbGain%3A-1.22%2CbRing%3A0.42%2CbLineHz%3A2.02%2CbDetuneHz%3A3000%2CbInv%3A0.5&mod=tapeLoopMm%3Asmooth%3A0.05%3A0.0151&srcb=tv+static
+  https://cmdcolin.github.io/ntsc.js/?p=FJADAMACAuQDNVAImAIAUALIARaQAwoUAIABANQDApQBAHgARAniAQECCVQk5gMAqAEAqAYAgJ9JA8gB&mod=tapeLoopMm:smooth:0.05:0.0151&srcb=tv+static
 
 - Dull color feedback
-  https://cmdcolin.github.io/ntsc.js/?set=synthAHz%3A21896%2CsynthShape%3A1%2CsynthLevel%3A1.15%2CsynthColor%3A0.28%2CsynthOver%3A0.23%2CsynthFm%3A33750%2Cinvert%3A1%2CdemodMHz%3A0.9%2CchromaGain%3A1.79%2CburstLock%3A0.75%2CscDetuneKHz%3A3.879%2ChHold%3A0.29%2ClumaMHz%3A3.15%2CenhDroopUs%3A14%2CenhPeakMHz%3A0.3%2CenhPeakQ%3A0.54%2CenhPeakBoost%3A0.04%2ClumaPeak%3A1%2CnoiseIre%3A7.8%2CrfAdjacent%3A0.7%2CrfMistuneMHz%3A0.2%2Cagc%3A0.5%2CghostDelayUs%3A1.6%2CghostGain%3A0.09%2CcolorUnderMix%3A0.76%2CunderJitterDeg%3A3%2CdropoutRate%3A5%2CheadSwitchNoise%3A0.3%2CheadSwitchShiftUs%3A0.6%2CtbJitterNs%3A115%2CtbWowNs%3A230%2CfbMix%3A1%2CcrtCutoff%3A0.15%2CcrtGamma%3A2.85%2CcrtSat%3A1.48%2CcrtBloom%3A0.68%2CcrtHalation%3A0.58%2CcrtGlow%3A0.34%2CcfbMix%3A0.52%2CcfbGain%3A-0.57%2CcfbDelayUs%3A0.126%2CcfbLines%3A1%2CcfbRing%3A0.21%2CbGain%3A-1.22%2CbRing%3A0.42%2CbInv%3A0.5&mod=tapeLoopMm%3Asmooth%3A0.05%3A0.0151&srcb=tv+static
+  https://cmdcolin.github.io/ntsc.js/?p=CqCsBQEEAcwDAHABXAC8aQGQAwDoAgLMBQCsAgOceQR0GPwBCzgAGADYAQAIAlAAuAIImAIAUALIAQCAAQAkArACAXgAFAJ4ADAGXABcApADCjwA5AEA0AQCkAIA6AEAiAEI0AEA4gEA-AMABAlUJOYDAKgBBcgB&mod=tapeLoopMm:smooth:0.05:0.0151&srcb=tv+static
 
 - Dark camera feedback
-  https://cmdcolin.github.io/ntsc.js/?set=synthAHz%3A21896%2CsynthShape%3A1%2CsynthLevel%3A1.15%2CsynthColor%3A0.28%2CsynthOver%3A0.23%2CsynthFm%3A33750%2CdemodMHz%3A0.9%2CchromaGain%3A1.79%2CburstLock%3A0.75%2CscDetuneKHz%3A3.879%2ChHold%3A0.29%2ClumaMHz%3A3.15%2CenhDroopUs%3A14%2CenhPeakMHz%3A0.3%2CenhPeakQ%3A0.54%2CenhPeakBoost%3A0.04%2ClumaPeak%3A0.7%2CnoiseIre%3A7.8%2CrfAdjacent%3A0.7%2CrfMistuneMHz%3A0.2%2Cagc%3A0.5%2CghostDelayUs%3A1.6%2CghostGain%3A0.09%2CcolorUnderMix%3A0.76%2CunderJitterDeg%3A3%2CdropoutRate%3A5%2CheadSwitchNoise%3A0.3%2CheadSwitchShiftUs%3A0.6%2CtbJitterNs%3A115%2CtbWowNs%3A230%2CfbMix%3A1%2CfbZoom%3A1.064%2CfbRotateDeg%3A0.34%2CcrtCutoff%3A0.75%2CcrtGamma%3A2.85%2CcrtSat%3A5.5%2CcrtBloom%3A0.68%2CcrtHalation%3A0%2CcrtGlow%3A0%2CcrtHaloKey%3A2.84%2CcfbMix%3A0.18%2CcfbGain%3A3%2CcfbDelayUs%3A0%2CcfbLines%3A1%2CcfbRing%3A0.21%2CbGain%3A-1.22%2CbRing%3A0.42%2CbInv%3A0.5%2CbGenlock%3A1&mod=tapeLoopMm%3Asmooth%3A0.05%3A0.0151&srcb=tv+static&src=tv+static
+  https://cmdcolin.github.io/ntsc.js/?p=CqCsBQEEAcwDAHABXAC8aQLoAgLMBQCsAgOceQR0GPwBCzgAGADYAQAIAjgAuAIImAIAUALIAQCAAQAkArACAXgAFAJ4ADAGXABcApADAKAhAIgBCKwCAOQBAJgRApACAAAAAADwCAdIALAJAAAABAlUJOYDAKgBBcgBAQQ&mod=tapeLoopMm:smooth:0.05:0.0151&srcb=tv+static&src=tv+static
+
+- Fuzzy color bars feedback
+  https://cmdcolin.github.io/ntsc.js/?p=cqQCAKAfAHoAOgAoAKggACwAYABEABAAmAEQ0AIA1AIwsAEIBA&mod=&srcb=vhs+static
+
+- Fuzzy color bars feedback+dissolver
+  https://cmdcolin.github.io/ntsc.js/?p=BrAEAMgCAKAGPahOAdACAJADAZwCAHolpAIAoB8AegA6ACgAqCAALABgAEQAEACYARDQAgDUAhsEA0oQsAEIBA&mod=&srcb=vhs+static

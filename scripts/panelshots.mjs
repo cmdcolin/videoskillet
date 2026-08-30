@@ -95,6 +95,38 @@ const STATES = [
     open: ['Sound into'],
   },
   {
+    name: 'modulated',
+    height: 640,
+    what: 'the mod badge and the strip’s count — the panel’s two toggle chips',
+    // The one hole this suite had, and the reason a badge could stop reading as
+    // a button without anything noticing: both of these render only while the
+    // bay holds a routing, so every state above is shot on a board that has
+    // none. The badge is the row's `mod`/`held` switch and the strip's `1 mod`
+    // is the panel filter — two chips that have to look pressable at rest,
+    // sitting among badges (CC42, ♩1/4, ★) that are marks and must not.
+    //
+    // Seeded rather than clicked. The routing has to exist before first paint
+    // for the strip to be in the frame at all, and a bay reached by pressing
+    // through the ⋮ would put an open editor under the row and a menu's ghost
+    // over it. `fbMix` is the same routing panelcheck seeds.
+    seed: [{ target: 'fbMix', source: 'sine', rateHz: 0.5, depth: 0.4 }],
+    // Pressing the count is what brings the two together: it narrows the panel
+    // to the rows the bay is driving, so the routed row and its badge come up
+    // directly under the strip that filtered to it. One frame then holds all
+    // four surfaces this shot is for — the lit count, the `mod only` chip the
+    // mode puts in the search box, the row's own badge, and the map with the
+    // stages the query missed faded but still drawn.
+    steps: [
+      () => {
+        const b = [...document.querySelectorAll('button')].find(b =>
+          /^\d+ mod/.test(b.textContent ?? ''),
+        )
+        if (b === undefined) throw new Error('no mod count on the strip')
+        b.click()
+      },
+    ],
+  },
+  {
     name: 'stage',
     height: 700,
     what: 'an open stage — its rail, the lid across the head, and a group below',
@@ -105,7 +137,7 @@ const STATES = [
     // than buttons, so `textContent` on one runs its <title> into its label and
     // the name has to be read off the <text> child. Uppercased in CSS and not
     // in the DOM, which is why this names "Tape" rather than "TAPE".
-    stage: 'Tape',
+    stage: 'Channel',
   },
   {
     name: 'help-dialog',
@@ -156,6 +188,23 @@ const STATES = [
       },
     ],
   },
+  {
+    name: 'signal-path-dialog',
+    dialog: true,
+    what: 'the diagram: its boxes, the three runs, the state key and the blurbs',
+    // The card the ⤢ beside the map opens, and the drawing the miniature is
+    // learnt from — so the one surface in the app where a colour is explained
+    // rather than hovered. Nothing covered it before the key went in, which
+    // made a three-row legend of live boxes the least-watched CSS on screen.
+    steps: [
+      () => {
+        const b = [...document.querySelectorAll('button')].find(b =>
+          /^diagram/.test(b.textContent ?? ''),
+        )
+        b?.click()
+      },
+    ],
+  },
 ]
 
 let vite = null
@@ -199,8 +248,22 @@ try {
   for (const state of STATES) {
     if (ONLY !== null && !ONLY.has(state.name)) continue
     // A fresh page per state. Sections remember whether they were open, so
-    // reusing one would make each shot depend on the order of the ones before.
+    // reusing one would make each shot depend on the order of the ones before —
+    // and a seeded bay outlives its own state for the same reason, so it is
+    // cleared on the way in rather than on the way out, where a state that
+    // failed early would skip it.
     await page.goto(base, { waitUntil: 'load' })
+    // A bay the state wants standing before first paint. localStorage is per
+    // origin and not per document, so the first load is what makes the origin
+    // writable and the second is the one under test.
+    await page.evaluate(
+      v =>
+        v === null
+          ? localStorage.removeItem('video_feedback_mod')
+          : localStorage.setItem('video_feedback_mod', v),
+      state.seed === undefined ? null : JSON.stringify(state.seed),
+    )
+    if (state.seed !== undefined) await page.goto(base, { waitUntil: 'load' })
     await appUp(page, 3500)
     // Park the pointer clear of the panel. Headed Firefox puts the real cursor
     // wherever the WM left it, and over a preset chip that swaps the caption
