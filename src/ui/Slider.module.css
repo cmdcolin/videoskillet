@@ -259,34 +259,44 @@ button.badge {
 .iconSyncSet {
   color: var(--edit);
 }
-/* something is driving this control, and it is running. A chip, not bare text:
-   this is the one badge that is *always* a button and needs to look like one at
-   rest, not only on hover — the tint carries the state and the pill is what says
-   "click this" before the pointer ever finds it. Both halves were needed when it
-   was a bare coloured ∿, which read as a stray character; with a word in it the
-   pill is what keeps `mod` from reading as one more unit beside the number. */
+/* something is driving this control, and it is running. A chip with an outline,
+   not bare text, and the outline is the load-bearing part: this is the one badge
+   in the row that is a *button*, and it stands in a line of badges that are not
+   — CC42, ♩1/4 and ★ are marks, and a reader who has to press one to find out
+   which is which has been given a puzzle. A fill alone did not separate them
+   once the glyph became a word: `mod` in a tinted pill reads as a tag, and a tag
+   is what the three beside it are. A hairline reads as a control at rest, which
+   is where it has to read as one — hover is an answer that arrives after the
+   question. Padding is one less than the border it gained, so the box is the
+   size it was. */
 .iconModSet {
   color: var(--mod);
   background: color-mix(in srgb, var(--mod) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--mod) 40%, transparent);
   border-radius: 3px;
-  padding: 1px 5px;
+  padding: 0 4px;
 }
 .iconModSet:hover {
   background: color-mix(in srgb, var(--mod) 30%, transparent);
+  border-color: var(--mod);
 }
-/* the same routing, held still. Same chip as above at the quiet colour, so
-   "click to resume" reads as clearly as "click to pause" did. It used to be the
-   ∿ struck through, which was the only way one glyph could say "there is a
-   wobble patched here and it is not running"; the badge says `held` now, and a
-   struck-through word is harder to read than the word. */
+/* the same routing, held still. Same chip and same outline at the quiet colour,
+   so "click to resume" reads as clearly as "click to pause" did — a held routing
+   is the state you most need a way out of, so it must not be the state that
+   stops looking pressable. It used to be the ∿ struck through, which was the
+   only way one glyph could say "there is a wobble patched here and it is not
+   running"; the badge says `held` now, and a struck-through word is harder to
+   read than the word. */
 .iconModOff {
   color: var(--fg4);
   background: color-mix(in srgb, var(--fg4) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--fg4) 35%, transparent);
   border-radius: 3px;
-  padding: 1px 5px;
+  padding: 0 4px;
 }
 .iconModOff:hover {
   background: color-mix(in srgb, var(--fg4) 26%, transparent);
+  border-color: var(--fg3);
 }
 .iconMidiSet {
   color: var(--midi);
@@ -339,6 +349,16 @@ button.badge {
   .badge,
   .what {
     padding: 4px 0 4px 10px;
+  }
+  /* …except the one badge that is a button. The rule above grows a *mark* into
+     a fingertip's target by padding the side it is read from, which on a chip
+     takes the right-hand padding off the pill and leaves the outline sitting on
+     the last letter. It keeps a symmetric box and buys the same target with
+     height and a margin instead. */
+  .iconModSet,
+  .iconModOff {
+    margin-left: 6px;
+    padding: 4px 6px;
   }
   /* the reading doubles as the reset, so it needs a fingertip's height — and
      no side padding, which would push the column off the row's right edge */

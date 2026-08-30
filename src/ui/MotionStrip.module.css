@@ -63,16 +63,24 @@
 }
 
 /* also the way in: it filters the panel down to the rows it is counting, so it
-   is a button rather than a readout — hover lifts it to the strip's own green
-   to say so, since a count that looks inert is one nobody presses */
+   is a button rather than a readout. It said so on hover alone, which is an
+   answer that arrives after the question and never arrives at all on a touch
+   screen — and a number in a strip of numbers is the last thing a reader expects
+   to be pressable, so it was pressed by accident more often than on purpose. The
+   outline is what says it at rest. The box is the same in all three states, so
+   narrowing the panel does not shift the fader beside it. */
 .count {
   composes: bare from './ui.module.css';
   font-family: var(--mono);
   font-size: var(--fs-xs);
   color: var(--fg3);
+  padding: 0 4px;
+  border: 1px solid var(--border-quiet);
+  border-radius: 3px;
 }
 .count:hover {
   color: var(--mod);
+  border-color: color-mix(in srgb, var(--mod) 45%, transparent);
 }
 /* The routings that are patched but parked, riding along behind the count of
    the ones that are running. Its own colour rather than an inherited one, so it
@@ -86,13 +94,13 @@
    lit, and the count is the only thing on screen that says which of the two
    things narrowing it did — the box beside it holds the words. Hover included,
    or the `:hover` above (one class more specific) would give the lit state back
-   its resting weight under the very pointer about to release it. */
+   its resting weight under the very pointer about to release it. Colours only:
+   the box is declared once above and every state keeps it. */
 .countOn,
 .countOn:hover {
   color: var(--mod);
   background: color-mix(in srgb, var(--mod) 16%, transparent);
-  border-radius: 3px;
-  padding: 0 4px;
+  border-color: color-mix(in srgb, var(--mod) 45%, transparent);
 }
 
 /* the ⚟ that puts this fader on a knob — same three states as a control row's,
@@ -120,7 +128,9 @@
   .freeze {
     padding: 4px 6px;
   }
-  .count,
+  .count {
+    padding: 4px 5px;
+  }
   .bind {
     padding: 4px 2px;
   }

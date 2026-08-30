@@ -30,7 +30,8 @@ Details in [How it works](docs/HOW-IT-WORKS.md), fault by fault in
 - True composite signal emulation in WebGPU compute shaders. This is the
   headline feature!
 - Dirty video mix or genlocked (clean) video mixing of two sources
-- Video feedback effects including hardware mixer, camera-pointed-at-tv style feedback
+- Video feedback effects including hardware mixer, camera-pointed-at-tv style
+  feedback
 - Lots of 'faults' like loose cable, bad receiver, inverted polarity, bad
   ground, etc.
 - Audio-reactive: feed it music and bass shakes vertical hold of the image, etc.
