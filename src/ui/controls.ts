@@ -55,8 +55,8 @@ export interface SliderDef {
   //
   // Past a notch the mechanism is still the modelled one and still numerically
   // safe — every extended path is railed, clamped, or normalized downstream, and
-  // the ones that were not (the decode tile halo on chromaCoarse, the tape ring
-  // on tapeLoopMm, the dub-generation buffers) were left where they are — but
+  // the ones that were not (the decode tile halo on chromaCoarse, the
+  // dub-generation buffers) were left where they are — but
   // the value is beyond anything the hardware would have done. That is the
   // point; it is also worth being able to see, since `min`/`max` are the span
   // mutate jitters by and mod depth is a fraction of, so a widened control makes
@@ -90,12 +90,13 @@ export interface SliderDef {
 // 'Feedback' was here, between Mix and Tape, and it was not a stage. It was
 // three machines filed under one word: a camera looking at the tube, the mixer
 // bus patched into itself, and a second deck threaded with a loop of tape. They
-// do not even re-enter at the same place — `compose` for the camera, ahead of
-// the encoder, and `fbComposite`/`tapePlay` for the other two, straight after
-// the A/B sum (gpu/pipeline.ts) — so the box was standing on the wire between
-// two different re-entry points and claiming to be both. Each is now a stage of
-// its own, hung off the trunk on the loop band, and each is reached by pressing
-// its own return. See LOOP_STAGES.
+// did not even re-enter at the same place — `compose` for the camera, ahead of
+// the encoder, and `fbComposite` for the mixer bus, straight after the A/B sum
+// (gpu/pipeline.ts) — so the box was standing on the wire between two different
+// re-entry points and claiming to be both. The two that are left are each a
+// stage of their own, hung off the trunk on the loop band, and each is reached
+// by pressing its own return; the tape deck went with the loop it was. See
+// LOOP_STAGES.
 export const PHASE_ORDER = [
   'Source A',
   'Mix',
@@ -105,7 +106,7 @@ export const PHASE_ORDER = [
 ] as const
 export type Phase = (typeof PHASE_ORDER)[number]
 
-// The three loops, as placements. A loop is not a division of the trunk — it is
+// The loops, as placements. A loop is not a division of the trunk — it is
 // a machine patched across it — so it is off the spine for the same reason the
 // two branches are, and its groups say which loop rather than which stage.
 const LOOP_PLACES = ['camera', 'mixer'] as const
@@ -213,14 +214,12 @@ export type LoopsLive = Record<LoopPlace, boolean>
 // five of their groups under one 'Feedback' header, and the test that holds a
 // lit run to a dispatched pass named the three mixes a fourth time.
 //
-// They are three because three passes close three different paths (see
+// They are two because two passes close two different paths (see
 // gpu/pipeline.ts), and the paths are what the names are for — the physics that
 // closes a loop is the only thing that tells one from another once more than
 // one is running. The camera loop is optical: it points at the tube's face, so
 // it can only do what a lens can. The mixer loop is electrical: it carries the
-// subcarrier round with it, so it does things optics cannot. The tape loop is
-// mechanical: it re-records what it returns, so what circulates ages a
-// generation a lap.
+// subcarrier round with it, so it does things optics cannot.
 interface LoopStage {
   loop: LoopPlace
   // What the panel calls the stage, what the map opens by name, and what the
@@ -3965,14 +3964,14 @@ export const MOD_KEYWORDS: readonly string[] = [
 // the gesture that moves them instead of by the mechanism that breaks. See
 // Deck.tsx for the case — the short version is that the signal path is the right
 // axis for almost everything and the wrong one for the twenty controls a hand
-// moves *during* a take, which are scattered across four stages (Mix, Tape, the
-// delay loop and the view) and want to be under one hand.
+// moves *during* a take, which are scattered across three stages (Mix, Channel
+// and the view) and want to be under one hand.
 //
 // So it is the second free box on the map, beside the bay, and for a reason that
 // rhymes with the bay's: both are the hand rather than the rig. The bay is the
 // hand you set running and leave; the deck is the hand that is on it now. Wiring
 // either into the chain would be a lie of the same kind — what the deck is
-// patched into is Mix, Tape, the loop and the view at once, which is four wires
+// patched into is Mix, Channel and the view at once, which is three wires
 // saying less than none.
 //
 // It was a section immediately above the map, folded shut by default, which put
@@ -3981,7 +3980,7 @@ export const MOD_KEYWORDS: readonly string[] = [
 // and sits where you already look for something to open.
 export const DECK_STAGE = 'Deck'
 export const DECK_BLURB =
-  'the hand on it now: the transition lever and its wipe patterns, the DVE inset, both tape transports, the tracking knob and the hold that stops the frame dead. Every row here is the real row from the stage that owns it, with its MIDI bind and its help — gathered by the gesture that moves it rather than by where the fault happens'
+  'the hand on it now: the transition lever and its wipe patterns, the DVE inset, the tape transport, the tracking knob and the hold that stops the frame dead. Every row here is the real row from the stage that owns it, with its MIDI bind and its help — gathered by the gesture that moves it rather than by where the fault happens'
 
 // The stages headed by a picker — the three things that can be patched in, and
 // so the three that decide what everything downstream of them is working on.

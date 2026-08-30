@@ -923,12 +923,11 @@ export function App() {
   const bay = bayLoad(modApi.slots, modApi.stab)
   // And what the deck is holding, for the same two drawings and the same reason.
   const deck = deckLoad(controls)
-  // Which of the three returns is actually carrying signal. Read off each
-  // loop's own mix rather than the whole stage: a loop with its mix at zero is
-  // patched but silent, and both drawings are answering "is it running". The
-  // same three predicates gate the passes that close them (compose, fbComposite
-  // and tapePlay in gpu/pipeline.ts), so a lit run and a dispatched pass mean
-  // the same thing.
+  // Which of the returns is actually carrying signal. Read off each loop's own
+  // mix rather than the whole stage: a loop with its mix at zero is patched but
+  // silent, and both drawings are answering "is it running". The same two
+  // predicates gate the passes that close them (compose and fbComposite in
+  // gpu/pipeline.ts), so a lit run and a dispatched pass mean the same thing.
   const loopsLive = {
     camera: controls.fbMix > 0,
     mixer: controls.cfbMix > 0,
