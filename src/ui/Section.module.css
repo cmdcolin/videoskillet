@@ -33,6 +33,12 @@
 .headBtn {
   composes: bare from './ui.module.css';
   flex: 1;
+  /* A flex item's floor is its content, and this one's content is a heading
+     that can be 33 characters long. Without the floor lifted the button kept a
+     box wide enough for the whole name and drew it straight over the buttons
+     beside it — "TUBE FACE (WHAT THE CAMERA SHOOTS)" through "randomize",
+     measured at 54px of overlap. */
+  min-width: 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -46,10 +52,26 @@
   color: var(--fg3);
   font-size: var(--fs-md);
 }
-/* The title holds its width; the summary beside it is what gives way, so a long
-   setting truncates rather than pushing the caret off the end of the row. */
+/* The title, and the order the parts of a cramped header give way in: the
+   summary first, then the name wraps, and the count and the caret never move.
+
+   The summary goes first for free — its `flex: 1` puts its basis at 0, so it
+   absorbs none of the shrink and is simply squeezed out, which is what the note
+   on it below has always described. What is new is the second step. The title
+   used to be `flex-shrink: 0`, which meant that once the summary was gone there
+   was nothing left to give, and a name too long for what was left drew straight
+   over the buttons beside it — "Tube face (what the camera shoots)" through
+   "randomize", measured at 54px of overlap, and the caret through it at 6.
+
+   A flex item's floor is its min-content, so lifting that is the whole fix: the
+   name wraps inside its own box instead of overflowing it. Wrapped rather than
+   truncated, because every name long enough to need this carries a parenthetical
+   gloss and the gloss is the half an ellipsis eats — "(what the camera shoots)"
+   is the part that says what the group is. Measured at the docked width: the
+   heading gets 197px, four of the panel's thirty-four take a second line for it
+   (14px each), and only while their own stage is open. */
 .headTitle {
-  flex-shrink: 0;
+  min-width: 0;
 }
 /* A folded section's current setting, in the header. Quiet and in the panel's
    ordinary weight — it is a reading, not part of the heading, and at the
@@ -74,4 +96,7 @@
 .dot {
   color: var(--edit);
   letter-spacing: normal;
+  /* the count rides the end of the name and must not break away from it: on a
+     heading that wraps, " • 3" alone on a third line reads as a row */
+  white-space: nowrap;
 }
