@@ -18,6 +18,11 @@ const F_UNDER = (40 * FSC) / 227.5 // 629.37 kHz color-under carrier
 const F_DOWN = FSC - F_UNDER // heterodyne frequency
 const DOWN_PER_SAMPLE = F_DOWN / SAMPLE_RATE
 
+// Picture search: what one recorded track's timing differs from its neighbour's,
+// and how far a line hooks into a crossing bar as the RF fades out.
+const STRIP_OFFSET = usToSamples(2.5)
+const BAR_HOOK = usToSamples(4)
+
 export interface LineStateControls {
   tbJitterNs: number // flutter: rms of per-line random walk step
   tbWowNs: number // wow: slow sinusoidal wander amplitude
@@ -81,29 +86,45 @@ export class LineState {
     // what a freshly threaded tape would do anyway.
     const slip = c.tbStickNs > 0 ? this.slipFor(this.gen) : null
     const stickAmp = usToSamples(c.tbStickNs * 1e-3)
+    // Everything below is a function of the controls alone, and the loop runs
+    // 525 times. Each is grouped exactly as the expression that used to sit
+    // inside — `a * b * c` hoisted as `a` and left as `x * a * c` rather than
+    // folded into `a * c`, because float multiplication does not associate and
+    // this table has to stay bit-identical to the one it replaces.
+    const flutterAmp = usToSamples(c.tbJitterNs * 1e-3)
+    const wowAmp = usToSamples(c.tbWowNs * 1e-3)
+    const headShift = usToSamples(c.headSwitchShiftUs)
+    const underStep = (c.underJitterDeg * Math.PI) / 180
+    const trackCenter = c.trackPos * LINES
+    const trackHalf = 3 + 18 * c.trackAmt
+    const trackAmp = usToSamples(6 * c.trackAmt)
+    const bars = Math.abs(c.shuttleBars)
+    const frameLine = frame * LINES
     for (let row = 0; row < LINES; row++) {
+      const rowFrac = row / LINES
       // flutter: random walk with a restoring pull, advanced per line
-      this.flutter +=
-        (this.rand() - 0.5) * usToSamples(c.tbJitterNs * 1e-3) * 0.7
+      this.flutter += (this.rand() - 0.5) * flutterAmp * 0.7
       this.flutter *= 0.995
-      // wow: quasi-periodic wander of the rotating parts, never a naked sine
-      const wander = usToSamples(c.tbWowNs * 1e-3) * wow.at(this.t, row / LINES)
+      // wow: quasi-periodic wander of the rotating parts, never a naked sine.
+      //
+      // Gated on the amplitude, which is what makes the rest of this loop cheap
+      // at rest: `Wow.at` is four `Math.sin` a row, 2100 a frame, and with the
+      // slider down every one of them was drawn to be multiplied by zero. It
+      // reads no random stream, so declining to call it moves nothing — 86 us a
+      // frame with the whole deck at rest, and that was most of it.
+      const wander = wowAmp === 0 ? 0 : wowAmp * wow.at(this.t, rowFrac)
       // sticky shed: stick-slip against the drum, stepped per line so the
       // ramps and snaps land as bands of shear down the raster
       const stick = slip ? stickAmp * slip.step() : 0
       const headSwitched = row >= HEAD_SWITCH_LINE
-      const hs = headSwitched ? usToSamples(c.headSwitchShiftUs) : 0
+      const hs = headSwitched ? headShift : 0
 
       // tracking band tear: lines near the mistracked band hook sideways,
       // strongest at the band center, with a little per-line jitter
-      const trackCenter = c.trackPos * LINES
-      const trackHalf = 3 + 18 * c.trackAmt
       const trackDist = Math.abs(row - trackCenter)
       const track =
         c.trackAmt > 0 && trackDist < trackHalf
-          ? usToSamples(6 * c.trackAmt) *
-            (1 - trackDist / trackHalf) *
-            (0.6 + 0.8 * this.rand())
+          ? trackAmp * (1 - trackDist / trackHalf) * (0.6 + 0.8 * this.rand())
           : 0
 
       // picture search: each strip between crossing bars is a different
@@ -112,26 +133,24 @@ export class LineState {
       let shuttle = 0
       let shuttleHue = 0
       if (c.shuttleBars !== 0) {
-        const ab = Math.abs(c.shuttleBars)
-        const x = (row / LINES) * ab + c.shuttlePhase
+        const x = rowFrac * bars + c.shuttlePhase
         const k = Math.floor(x)
         const f = x - k
-        const dLines = (Math.min(f, 1 - f) / ab) * LINES
+        const dLines = (Math.min(f, 1 - f) / bars) * LINES
         const half = 8
         shuttle =
-          usToSamples(2.5) * (hash01(k) - 0.5) +
+          STRIP_OFFSET * (hash01(k) - 0.5) +
           (dLines < half
-            ? usToSamples(4) * (1 - dLines / half) * (0.5 + this.rand())
+            ? BAR_HOOK * (1 - dLines / half) * (0.5 + this.rand())
             : 0)
         shuttleHue = 2.5 * (hash01(k ^ 0x3ac1) - 0.5)
       }
 
       // color-under playback carrier phase for this line: exact base phase
       // (computed in f64 — f32 cannot hold it) plus accumulated jitter walk
-      const globalSample = (frame * LINES + row) * SAMPLES_PER_LINE
+      const globalSample = (frameLine + row) * SAMPLES_PER_LINE
       const base = (DOWN_PER_SAMPLE * globalSample) % 1
-      this.underWalk +=
-        (this.rand() - 0.5) * ((c.underJitterDeg * Math.PI) / 180)
+      this.underWalk += (this.rand() - 0.5) * underStep
       this.underWalk *= 0.99
 
       const o = row * 4
