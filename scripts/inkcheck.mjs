@@ -9,10 +9,10 @@
 // might be editing the tree — an HMR reload mid-run remounts the panel under the
 // walk and every later stage is read from a different app.
 //
-// **Why this exists, next to panelshots.** panelshots diffs eight fixed states
-// against committed baselines, and that is the right tool for "did this rule
-// change what the masthead looks like". It is structurally blind to this class,
-// because the fault is never in the eight states: it is in the ninth stage
+// **Why this exists, next to panelshots.** panelshots diffs a fixed handful of
+// states against committed baselines, and that is the right tool for "did this
+// rule change what the masthead looks like". It is structurally blind to this
+// class, because the fault is never in the states it holds: it is in the stage
 // nobody had open, on the one heading long enough to need the whole row. The
 // panel is ~1000 CSS declarations, 34 headings and 245 control rows, and no
 // human opens all of them to look.

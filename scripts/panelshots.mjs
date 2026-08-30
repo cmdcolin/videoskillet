@@ -53,8 +53,9 @@ const CHANNEL_TOLERANCE = 6
 const MAX_MOVED = 0.002
 
 // Each state names what it is for, so a failure says which surface broke rather
-// than which number changed. `open` names sections to unfold, `stage` names a
-// box on the map to open, and `steps` is a list of functions run in the page,
+// than which number changed. `stage` names a box on the map to open, `open`
+// names sections to unfold once it is (the order they are applied in, and the
+// reason for it, is below), and `steps` is a list of functions run in the page,
 // in order, with a settle between each — for anything neither of those reaches.
 //
 // A list rather than the `reach`/`then` pair it grew out of, because the number
@@ -276,19 +277,6 @@ try {
     await page.mouse.move(400, 900)
     await new Promise(r => setTimeout(r, 800))
 
-    if (state.open !== undefined) {
-      await page.evaluate(titles => {
-        for (const t of titles) {
-          const b = [...document.querySelectorAll('button')].find(
-            b =>
-              b.textContent.trim().startsWith(t) &&
-              b.getAttribute('aria-expanded') === 'false',
-          )
-          b?.click()
-        }
-      }, state.open)
-      await new Promise(r => setTimeout(r, 900))
-    }
     // The map's boxes are SVG groups rather than buttons, so `textContent` on
     // one runs its <title> into its label and the name has to come off the
     // <text> child. Thrown rather than shrugged off, because a state that names
@@ -304,6 +292,39 @@ try {
         }, state.stage)
       } catch (e) {
         fails.push(`${state.name}: ${e.message}`)
+        continue
+      }
+      await new Promise(r => setTimeout(r, 900))
+    }
+    // Sections to unfold, after the stage rather than before it: a stage's own
+    // groups are not on the page until its box has been pressed, so an `open`
+    // that ran first could only ever reach the headers standing at rest — and a
+    // state wanting a stage *and* a group inside it had no way to say so. The
+    // groups are an accordion (usePanelNav keeps one open), so naming two of one
+    // stage's groups here folds the first again; it is the stage's own header
+    // and its neighbours that this reaches.
+    //
+    // A title matching no button at all is this state failing, rather than a
+    // shot of whatever happened to be on screen instead. It was `b?.click()`,
+    // which is the silence that let `teletype-dialog` sit dead for months (see
+    // f1caa06). A title whose section is already unfolded is not a miss: a
+    // section remembers across loads, so arriving open is one of the ways this
+    // succeeds.
+    if (state.open !== undefined) {
+      const missed = await page.evaluate(titles => {
+        const missed = []
+        for (const t of titles) {
+          const all = [...document.querySelectorAll('button')].filter(b =>
+            b.textContent.trim().startsWith(t),
+          )
+          if (all.length === 0) missed.push(t)
+          else
+            all.find(b => b.getAttribute('aria-expanded') === 'false')?.click()
+        }
+        return missed
+      }, state.open)
+      if (missed.length > 0) {
+        fails.push(`${state.name}: no section named ${missed.join(', ')}`)
         continue
       }
       await new Promise(r => setTimeout(r, 900))
