@@ -13,7 +13,7 @@ order and under the same names, so the picture here is the thing you click.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="img/pipeline-simple-dark.svg">
-  <img alt="Signal path — overview: Source A → Mix → Channel → Receiver → Screen, with the tape loop straddling Mix, a mixer feedback loop from Receiver back to Mix, and a camera feedback loop from Screen back to Source A" src="img/pipeline-simple-light.svg">
+  <img alt="Signal path — overview: Source A → Mix → Channel → Receiver → Screen, with a mixer feedback loop from Receiver back to Mix and a camera feedback loop from Screen back to Source A" src="img/pipeline-simple-light.svg">
 </picture>
 
 ## Sources and wiring
@@ -41,8 +41,8 @@ other, and the geometry snaps between two pictures.
 
 ## Feedback loops
 
-Three, and they differ in what goes round — each in the app's own words, since
-the chain map opens every one of them with the same description:
+Two, and they differ in what goes round — each in the app's own words, since the
+chain map opens both of them with the same description:
 
 <!-- generated:loops — from LOOP_STAGES in src/ui/controls.ts, via scripts/docgen.mjs -->
 
@@ -58,11 +58,6 @@ sample of cable delay spins fed-back hue 90° a generation and colour does thing
 optics cannot.
 
 <!-- /generated:loops -->
-
-The tape loop is the one to keep straight: it is a machine patched across the
-chain, where the deck this signal was played back on is one part of **Channel**
-below. Its return gets recorded again, so repeats decay by generation loss
-rather than by a fader, and chroma dies first.
 
 ## A/B mix
 

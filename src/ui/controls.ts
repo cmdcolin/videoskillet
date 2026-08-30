@@ -231,7 +231,7 @@ interface LoopStage {
   // rule there (ChainMap.module.css) rather than a second spelling here.
   //
   // The full name is right on the card and wordy on a 304-unit strip, where the
-  // run is one of three stacked over the chain and the band it rides has
+  // run is one of two stacked over the chain and the band it rides has
   // already said 'loop' by being the loop band. The word that is left is the
   // machine, which is the thing being pointed at. A hover carries the whole
   // name, and so does the heading you land on.
@@ -242,26 +242,17 @@ interface LoopStage {
   what: string
   // The mix that decides whether this loop is running. The pass closing the
   // loop is gated on the same control, so a lit run and a dispatched pass mean
-  // the same thing (controls.test.ts holds the three to real controls).
+  // the same thing (controls.test.ts holds both to real controls).
   mix: ControlKey
 }
 
-// The three by name, for the surfaces that address one of them by identity —
+// Both by name, for the surfaces that address one of them by identity —
 // written above the table and read out of it, so a rename lands in one place.
 //
-// Two of them say 'feedback' rather than 'loop', because 'loop' is the half of
-// the name the band they ride already says and 'feedback' is the thing a first
+// Each says 'feedback' rather than 'loop', because 'loop' is the half of the
+// name the band they ride already says and 'feedback' is the thing a first
 // visit is looking for. Nobody arrives wondering where the loops are; they
 // arrive wanting the camera pointed at the screen.
-//
-// The third is 'Tape loop', which is what the machine is. It spent three
-// renames fighting the trunk's own TAPE box two columns along, and the fight is
-// over because that box is CHANNEL now: the deck is one of the things the
-// recording came through, alongside the tuner and the cable, and naming the
-// stage after all three leaves 'tape' meaning the loop machine and nothing else.
-//
-// `loop` and every control key stay `tape` (LOOP_PLACES, `tapeMix`,
-// signal/tapeloop.ts).
 export const CAMERA_LOOP_STAGE = 'Camera feedback'
 export const MIXER_LOOP_STAGE = 'Mixer feedback'
 

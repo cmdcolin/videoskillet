@@ -23,13 +23,10 @@ digraph ntsc_js_simple {
 
   src -> mix -> chan -> rx -> screen;
 
-  // The three loops, drawn where the app draws them. Each leaves the trunk at
-  // one stage and re-enters at another — except the tape, which leaves the bus
-  // and returns to it one pass later at the same node.
+  // Both loops, drawn where the app draws them: each leaves the trunk at one
+  // stage and re-enters at another.
   screen -> src [label="  camera feedback\l  a lens on the tube face\l" style=dashed
                  color="@GREEN@" fontcolor="@GREEN@" constraint=false];
   rx -> mix     [label="  mixer feedback\l  composite off the bus\l" style=dashed
-                 color="@GOLD@" fontcolor="@GOLD@" constraint=false];
-  mix -> mix    [label="  tape loop\l  a deck across the bus\l" style=dashed
                  color="@GOLD@" fontcolor="@GOLD@" constraint=false];
 }
