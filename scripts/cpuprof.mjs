@@ -4,6 +4,7 @@
 //   node scripts/cpuprof.mjs http://localhost:4173/ stock 10 --scenario=allrows
 //   node scripts/cpuprof.mjs http://localhost:4173/ drag 10 --scenario=drag
 //   …--scenario=drag --control=bloom     # hold a different knob down
+//   …--scenario=drag --filter=saturation # …with only its own rows mounted
 //
 // The other two measurement harnesses are both GPU-side: `gpuprof` times each
 // pass on the GPU's own counter, and `perf.mjs` is wall clock around batched
@@ -71,6 +72,11 @@ const scenario = flag('--scenario=', 'idle')
 // two arms drag the same control; a cheap uniform knob by default, so what is
 // measured is the panel and not one control's own simulation cost.
 const control = flag('--control=', 'saturation').toLowerCase()
+// What goes in the filter box, which is what decides how much of the panel is
+// mounted. 'e' matches every slider; a control's own name mounts a handful.
+// Worth varying: the panel's cost under a drag scales with what is on screen,
+// and so does what the presets rail below it is doing.
+const filter = flag('--filter=', 'e')
 const [vw, vh] = flag('--vp=', '1600x1000').split('x').map(Number)
 const seconds = Number(secsArg ?? 10)
 
@@ -125,8 +131,7 @@ try {
     const box = await page.$('input[placeholder*="rainbow"]')
     if (box) {
       await box.click()
-      // A letter every slider name has, so the result set is the whole panel.
-      await box.type('e')
+      await box.type(filter)
       await new Promise(r => setTimeout(r, 1500))
     } else {
       console.log('  ! filter box not found; profiling the panel as it rests')
@@ -229,7 +234,7 @@ try {
   const per = us => (frames > 0 ? `${(us / frames).toFixed(0)}us/f` : '—')
 
   console.log(
-    `\n=== ${label} [${scenario}]  ${(wall / 1000).toFixed(0)}ms  ${vw}x${vh}  ${mounted.nodes} nodes, ${mounted.sliders} sliders`,
+    `\n=== ${label} [${scenario}${scenario === 'idle' ? '' : ` "${filter}"`}]  ${(wall / 1000).toFixed(0)}ms  ${vw}x${vh}  ${mounted.nodes} nodes, ${mounted.sliders} sliders`,
   )
   if (note) console.log(note)
   console.log(

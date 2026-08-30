@@ -446,6 +446,15 @@ stable, convincing, wrong number:
   ~0.6/255 with `max 108` at one fixed pixel, never anything between. The script
   cancels it by grabbing two consecutive frames per arm and taking the better
   alignment.
+- **A flipped polarity, which no protocol fixes.** `aPolarity` or `bPolarity` up
+  makes the picture differ between two sessions of the **same build**, on a
+  seeded `startTake` — measured over 45 stepped frames, two runs in three
+  differing at nearly every frame and the third matching. An inverted composite
+  denies the sync separator its lock, and the free-running flywheel amplifies
+  whatever the two sessions did not already share. Pick a board without one, or
+  read nothing into the diff. It is worth knowing that this is a real gap in
+  what a take promises, and not only a harness problem: two renders of a look
+  with a polarity flip in it are not the same file.
 
 Two ALU micro-optimizations were implemented, measured dead flat, and reverted
 ([ADR 0007](adr/0007-the-fir-passes-are-not-alu-bound.md)) — the FIR passes are

@@ -618,6 +618,50 @@ told the opposite story about every one of these: the same drag fell to 24 fps
 at a quarter the pointer rate and spent 43% of the thread in `jsxDEV`,
 `validateProperty` and `logComponentRender`, none of which ship.
 
+A second pass went after the scenarios rather than the resting frame, since the
+resting frame was down to 0.84 ms and nothing in it was above 45 µs. Both of the
+two things it found were the same shape, and it is the shape to look for here:
+**a large multiple of 252**.
+
+| what                            | when               | before | after |
+| ------------------------------- | ------------------ | ------ | ----- |
+| `matchPreset`, per call in situ | any panel render   | 612 µs | 24 µs |
+| `packFeed`, per frame           | both feeds engaged | 200 µs | 10 µs |
+
+Both were spending a control-board scan where they did not need one, and both
+were made worse by the same property of the board. **A `Controls` object cannot
+be fast.** V8 keeps a literal's hidden class, but 252 properties is far past the
+limit for either cloning one or building one a key at a time, so every
+`{...controls}` in this codebase lands in dictionary mode and reads about three
+times slower than `DEFAULT_CONTROLS` does — measured at 3.1 µs against 9.9 for
+one pass over the keys. Nothing is going to change that short of making the
+board an array, which the other 250 sites that read it by name would not
+survive. What is worth changing is how many of those reads a hot path does.
+
+`matchPreset` was 85 presets × 252 keys, and a board matching nothing — anyone
+who has touched a knob — scanned all of them: 21,420 reads, in a render body, on
+the live board, at 612 µs a call. It runs 10 times a second with a clip playing
+and 21 during a drag. Asking instead which keys the board holds off stock
+answers all 85 in one pass, because a preset matches exactly when it moves the
+same keys and agrees on them. `packFeed` was `{...vals, …seventeen overrides}`:
+a 222-field copy into dictionary mode, then 234 names read back out of it, twice
+a frame. `patchParams` writes the seventeen onto the packed block instead.
+
+The residue is measured and left alone. `stateUrl` is rebuilt in a render body,
+which is another 252-key scan plus `packControls`, at about 48 µs a render — the
+`replaceState` behind it is debounced but the string is not, because the effect
+depends on it. And the frame encodes ~20 compute passes one `beginComputePass`
+at a time, whose upper bound is around 40 µs. Neither is worth what changing it
+would risk.
+
+Two things it looked for and did not find. **It does not degrade**: four minutes
+on `vhs`, sampled every 30 s, held 60.0 fps at 831-864 µs/frame with no trend,
+heap oscillating between 5.6 and 7.1 MB, node and listener counts flat. And the
+layered control machinery is cheap — eight modulation routings, the paperclip
+and the stab gate all running at once cost 756 µs/frame, with `applyMod` not
+appearing in the profile at all, because those loops are gated on there being
+something to do.
+
 ## Devices are created freely and never destroyed
 
 The expensive resource is not the `GPUDevice`. Four created and four held open,
