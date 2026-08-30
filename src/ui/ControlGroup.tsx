@@ -5,7 +5,7 @@ import { clampCardText } from '../sources/teletype'
 import { useCaptionApi } from './CaptionContext'
 import { activeCardPreset, cardPresetsFor } from './cardPresets'
 import styles from './ControlGroup.module.css'
-import { GROUPS, NEEDS, sliderFor } from './controls'
+import { GROUPS, MUTATE_CIRCUIT_BY_GROUP, NEEDS, sliderFor } from './controls'
 import {
   useControlReading,
   useControls,
@@ -13,6 +13,7 @@ import {
   useControlValue,
 } from './ControlsContext'
 import { cx } from './cx'
+import { DRIFT_SECONDS } from './drift'
 import { filterActive, matchedSliders, useFilter } from './filter'
 import { MagnifierFrame } from './MagnifierFrame'
 import { SYNCABLE_KEYS } from './midi'
@@ -378,12 +379,13 @@ function gatesBehind(
   return [...gates.values()]
 }
 
-// How long a stab button has to stay down before the press becomes a train, and
-// how far apart the train's nudges land. Both are long by UI standards on
-// purpose: at the 180ms it used to repeat at, a press was a shuffle nobody could
-// stop on the look they liked.
-const STAB_HOLD_MS = 500
-const STAB_TRAIN_MS = 800
+// How long randomize has to stay down before the press becomes a train, and how
+// far apart the train's nudges land. Both are long by UI standards on purpose:
+// at the 180ms it first repeated at, a hold was a shuffle nobody could stop on
+// the look they liked. The delay is also what keeps a click a click — no
+// ordinary press is on the button for half a second.
+const ROLL_HOLD_MS = 500
+const ROLL_TRAIN_MS = 800
 
 // The row of chips over a card's rows. A component rather than inline JSX
 // because it subscribes to the whole board to know which chip is lit, and the
@@ -419,26 +421,34 @@ function CardChips(props: { group: Group; chips: CardPreset[] }) {
 
 export function ControlGroup(props: { group: Group; defaultOpen?: boolean }) {
   const { group } = props
-  const { writeControl, mutateGroup, resetGroup } = useControlsApi()
+  const {
+    writeControl,
+    mutateGroup,
+    resetGroup,
+    driftingGroups,
+    toggleGroupDrift,
+  } = useControlsApi()
+  const driftable = MUTATE_CIRCUIT_BY_GROUP.has(group.name)
+  const drifting = driftingGroups.has(group.name)
   const mod = useModSlotsApi()
   const filter = useFilter()
-  // The stab button's timers, while it is held: the wait before a hold becomes a
+  // Randomize's timers, while it is held: the wait before a hold becomes a
   // train, and the train itself. Refs rather than state — they only ever get
   // started and stopped, never read to render anything.
-  const stabDelay = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
-  const stabTrain = useRef<ReturnType<typeof setInterval> | undefined>(
+  const rollDelay = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const rollTrain = useRef<ReturnType<typeof setInterval> | undefined>(
     undefined,
   )
-  const stopStab = () => {
-    clearTimeout(stabDelay.current)
-    clearInterval(stabTrain.current)
-    stabDelay.current = undefined
-    stabTrain.current = undefined
+  const stopRoll = () => {
+    clearTimeout(rollDelay.current)
+    clearInterval(rollTrain.current)
+    rollDelay.current = undefined
+    rollTrain.current = undefined
   }
   useEffect(
     () => () => {
-      clearTimeout(stabDelay.current)
-      clearInterval(stabTrain.current)
+      clearTimeout(rollDelay.current)
+      clearInterval(rollTrain.current)
     },
     [],
   )
@@ -533,9 +543,9 @@ export function ControlGroup(props: { group: Group; defaultOpen?: boolean }) {
         <>
           {/* Only on a group that has something to put back — the same rule the
               row's own ↺ follows, and the reason neither costs anything on the
-              majority of headers that are still at stock. It sits before
-              randomize because the three read as "back / further / further,
-              held" in that order. */}
+              majority of headers that are still at stock. It sits before the
+              other two because the three read as "back / further / further, on
+              its own" in that order. */}
           {touched > 0 ? (
             <button
               className={styles.revert}
@@ -546,42 +556,66 @@ export function ControlGroup(props: { group: Group; defaultOpen?: boolean }) {
               reset defaults
             </button>
           ) : null}
+          {/* One nudge on press; a hold turns into a train of them only after
+              ROLL_HOLD_MS, so a click is a single roll you can look at and the
+              train runs slowly enough to let go on the look you wanted. It
+              stops the instant the button is not down — a pointer that slips
+              off it (or a window that loses focus mid-hold) has to stop it
+              exactly as a release would, which is why both onPointerLeave and
+              onBlur clear it alongside onPointerUp.
+
+              The roll is on the pointer rather than on the click because the
+              hold has to start with it, and the click is then only for the
+              press that sends no pointer event at all: `detail` is 0 on a
+              keyboard activation and never on a mouse one, which is what keeps
+              the button reachable from the keyboard without rolling twice for
+              every press of it. */}
           <button
             className={styles.dice}
-            title={`nudge only this stage's controls randomly around where they sit — shift for a wilder roll, alt for a gentler one, ctrl (or cmd) for turbo (${group.name})`}
-            aria-label={`nudge ${group.name} randomly`}
-            onClick={e => mutateGroup(group.sliders, mutateAmountFor(e))}
+            title={`nudge only this stage's controls randomly around where they sit, and keep nudging while you hold it down — shift for a wilder roll, alt for a gentler one, ctrl (or cmd) for turbo (${group.name})`}
+            aria-label={`nudge ${group.name} randomly — press for one, hold to keep going`}
+            onPointerDown={e => {
+              const amount = mutateAmountFor(e)
+              stopRoll()
+              mutateGroup(group.sliders, amount)
+              rollDelay.current = setTimeout(() => {
+                rollTrain.current = setInterval(
+                  () => mutateGroup(group.sliders, amount),
+                  ROLL_TRAIN_MS,
+                )
+              }, ROLL_HOLD_MS)
+            }}
+            onPointerUp={stopRoll}
+            onPointerLeave={stopRoll}
+            onBlur={stopRoll}
+            onClick={e => {
+              if (e.detail === 0) mutateGroup(group.sliders, mutateAmountFor(e))
+            }}
           >
             randomize
           </button>
-          {/* One stab on press; a hold turns into a train of them only after
-              STAB_HOLD_MS, so a press is a single nudge you can look at and
-              the train runs slowly enough to let go on the look you wanted.
-              It stops the instant the button is not down — a pointer that
-              slips off it (or a window that loses focus mid-hold) has to stop
-              it exactly as a release would, which is why both onPointerLeave
-              and onBlur clear it alongside onPointerUp. */}
-          <button
-            className={styles.stab}
-            title={`stab: one random nudge to this stage's controls, at the amount a click on randomize would use — hold it down and it keeps stabbing, slowly, until you let go (${group.name})`}
-            aria-label={`stab ${group.name} — press to nudge once, hold to repeat`}
-            onPointerDown={e => {
-              const amount = mutateAmountFor(e)
-              stopStab()
-              mutateGroup(group.sliders, amount)
-              stabDelay.current = setTimeout(() => {
-                stabTrain.current = setInterval(
-                  () => mutateGroup(group.sliders, amount),
-                  STAB_TRAIN_MS,
-                )
-              }, STAB_HOLD_MS)
-            }}
-            onPointerUp={stopStab}
-            onPointerLeave={stopStab}
-            onBlur={stopStab}
-          >
-            stab
-          </button>
+          {/* The same nudge with nobody pressing it, aimed at this stage alone
+              (ui/drift.ts). Lit rather than reworded while it runs: the look
+              bar's switch has a row to itself and can afford "drifting…", where
+              a heading has one line to share with a stage name that can be 33
+              characters long.
+
+              Absent from a stage the drift may not touch — the view group is
+              nothing but the magnifier, which no roll and no drift moves. */}
+          {driftable ? (
+            <button
+              className={cx(styles.drift, drifting && styles.driftOn)}
+              aria-pressed={drifting}
+              title={
+                drifting
+                  ? `stop here and keep ${group.name} wherever it has got to (the rest of the board carries on)`
+                  : `let this stage wander on its own: a gentle nudge to its controls every ${DRIFT_SECONDS} seconds, travelling most of the way there so nothing cuts, staying around the look it set off from. The rest of the board holds still (${group.name})`
+              }
+              onClick={() => toggleGroupDrift(group)}
+            >
+              drift
+            </button>
+          ) : null}
         </>
       }
     >

@@ -4112,16 +4112,32 @@ export const VIEW_KEYS = new Set<ControlKey>([
 // said at once when it was up there.
 export const MUTATE_SLIDERS = ALL_SLIDERS.filter(s => !VIEW_KEYS.has(s.key))
 
-// The same set again, kept in its circuits rather than flattened.
+// The same set again, kept in its circuits rather than flattened, and under the
+// name of the circuit it came out of.
 //
-// For the roll that crosses two looks (ui/mutate.ts › `crossover`): it decides
-// per circuit which look answers for that stage, so what it needs is the
-// grouping, and the flat list above throws exactly that away. Empty groups drop
-// out — the view group is nothing but view keys, so filtering leaves it with no
-// sliders and a circuit with nothing in it is a coin flipped over nothing.
-export const MUTATE_CIRCUITS: readonly (readonly SliderDef[])[] = GROUPS.map(
-  g => g.sliders.filter(s => !VIEW_KEYS.has(s.key)),
-).filter(sliders => sliders.length > 0)
+// Two callers want the grouping and one of them wants the name with it. The
+// roll that crosses two looks (ui/mutate.ts › `crossover`) decides per circuit
+// which look answers for that stage, so what it needs is the grouping, and the
+// flat list above throws exactly that away. A stage's drift switch
+// (ui/drift.ts) needs the same list for one named group, and a second copy of
+// this filter is how the roll and the switch would come to disagree about what
+// a stage is.
+//
+// Empty groups drop out — the view group is nothing but view keys, so filtering
+// leaves it with no sliders, and a circuit with nothing in it is a coin flipped
+// over nothing and a switch that would set nothing wandering.
+export const MUTATE_CIRCUIT_BY_GROUP: ReadonlyMap<
+  string,
+  readonly SliderDef[]
+> = new Map(
+  GROUPS.map(
+    g => [g.name, g.sliders.filter(s => !VIEW_KEYS.has(s.key))] as const,
+  ).filter(([, sliders]) => sliders.length > 0),
+)
+
+export const MUTATE_CIRCUITS: readonly (readonly SliderDef[])[] = [
+  ...MUTATE_CIRCUIT_BY_GROUP.values(),
+]
 
 // The two branches' groups — off the spine, but on the map: each hangs under
 // the trunk and joins the stage it actually feeds. The mixer is no longer among

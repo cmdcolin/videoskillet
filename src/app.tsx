@@ -23,6 +23,7 @@ import { CommandPalette } from './ui/CommandPalette'
 import { ControlRows } from './ui/ControlGroup'
 import {
   ALL_SLIDERS,
+  MUTATE_CIRCUIT_BY_GROUP,
   MUTATE_SLIDERS,
   DECK_BLURB,
   DECK_STAGE,
@@ -46,6 +47,7 @@ import {
 import { cx } from './ui/cx'
 import { Deck } from './ui/Deck'
 import { barCut, deckLoad } from './ui/deckModel'
+import { DRIFT_BOARD, DRIFT_WAKE } from './ui/drift'
 import { FatalScreen } from './ui/FatalScreen'
 import {
   FilterContext,
@@ -118,8 +120,9 @@ import { gitSha, versionLabel } from './version'
 import type { ControlKey, Controls } from './core/controls'
 import type { FaultPlan } from './core/signal/fault'
 import type { GlidePlan } from './core/signal/glide'
-import type { PickerStage } from './ui/controls'
+import type { Group, PickerStage } from './ui/controls'
 import type { ControlsApi, ControlStore } from './ui/ControlsContext'
+import type { DriftScope } from './ui/drift'
 import type { StashSlot } from './ui/fileStash'
 import type { Lens } from './ui/lens'
 import type { SavedProfile } from './ui/profileModel'
@@ -376,28 +379,49 @@ export function App() {
     mod: modApi,
   })
 
-  // The board wandering by itself (ui/drift.ts). One switch, and everything it
-  // needs is handed over at the press rather than held by the hook — see the
-  // note there.
+  // The board — or one stage of it — wandering by itself (ui/drift.ts). The
+  // switches, and everything a leg needs, handed over at the press rather than
+  // held by the hook: see the note there.
   const drift = useDrift()
-  const toggleDrift = () => {
-    if (drift.drifting) {
-      drift.stop()
-      // The leg in flight goes with the timer: this promises the board stays
-      // wherever it has got to, and the half-way look is a look like any other
-      // (the same thing the morph readout's own "stop here" does).
-      stopMorph()
-      return
+  const toggleDriftScope = (scope: DriftScope) => {
+    if (drift.scopes.has(scope.name)) {
+      drift.stop(scope.name)
+      // The leg in flight goes with the last switch out: this promises the
+      // board stays wherever it has got to, and the half-way look is a look
+      // like any other (the same thing the morph readout's own "stop here"
+      // does). While something else is still wandering the leg is *its* leg,
+      // and stopping it would strand the board mid-travel.
+      if (drift.scopes.size === 1) stopMorph()
+    } else {
+      // The one step the whole mode banks, and only on the way in from nothing
+      // wandering. A drift left running for an hour is 240 looks nobody chose;
+      // what a hand reaching for ctrl+z wants back is the look it set drifting,
+      // and a second switch flipped ten minutes in would bank a look the mode
+      // itself had made.
+      if (drift.scopes.size === 0) mix.snapshotForUndo()
+      drift.start(
+        {
+          getSettled: () => getGlideTarget() ?? controlStore.get(),
+          land: mix.landDrift,
+        },
+        scope,
+      )
     }
-    // The one step the whole mode banks, before the first leg moves anything.
-    // A drift left running for an hour is 240 looks nobody chose; what a hand
-    // reaching for ctrl+z wants back is the look it set drifting.
-    mix.snapshotForUndo()
-    drift.start({
-      getSettled: () => getGlideTarget() ?? controlStore.get(),
-      land: mix.landDrift,
+  }
+  const toggleDrift = () =>
+    toggleDriftScope({
+      name: DRIFT_BOARD,
       sliders: MUTATE_SLIDERS,
+      wake: DRIFT_WAKE,
     })
+  // A stage's own switch, off the same list its randomize rolls — minus the
+  // view, which no roll and no drift may touch.
+  const toggleGroupDrift = (group: Group) => {
+    const sliders = MUTATE_CIRCUIT_BY_GROUP.get(group.name)
+    // `wake: 1`, the same answer `mutateGroup` gives to the same question: you
+    // named the stage, so the stage has to move on the press.
+    if (sliders !== undefined)
+      toggleDriftScope({ name: group.name, sliders, wake: 1 })
   }
 
   // Either slot, by the key something outside handed over. Five surfaces are
@@ -783,6 +807,8 @@ export function App() {
     clockLive: tempo.bpm !== null,
     syncLabel,
     cycleSync,
+    driftingGroups: drift.scopes,
+    toggleGroupDrift,
     mutateGroup: mix.mutateGroup,
     resetGroup: mix.resetGroup,
     landCard: mix.landCard,
@@ -804,7 +830,7 @@ export function App() {
     onMutate: mix.mutateLook,
     onSpike: mix.spikeLook,
     onCross: mix.crossLook,
-    drifting: drift.drifting,
+    drifting: drift.scopes.has(DRIFT_BOARD),
     onToggleDrift: toggleDrift,
     onRollMotion: amount => mix.rollMotion(amount, { audioLive: audio.active }),
     onReset: mix.reset,
@@ -1252,7 +1278,7 @@ export function App() {
         onSurpriseOne={mix.surpriseOne}
         onSpike={mix.spikeLook}
         onCross={mix.crossLook}
-        drifting={drift.drifting}
+        drifting={drift.scopes.has(DRIFT_BOARD)}
         onToggleDrift={toggleDrift}
         // Whether the two audio followers are worth rolling: with nothing on
         // the wire they are slots that will never move, which is the one way a

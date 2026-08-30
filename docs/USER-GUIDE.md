@@ -29,10 +29,13 @@ Click a preset to jump to it; drag it sideways to blend it part-way in.
   of the way there, so the picture keeps moving and never cuts. It stays around
   the look you set drifting rather than running off, however long you leave it.
   Press again to stop where it has got to; `ctrl+z` then puts back the look you
-  started it on, because none of the legs in between lands in the walk. For a
-  wander that is part of a piece, use the strip's shake row instead — a rundown
-  holds in bars, is seeded and is yours to keep, where a drift is a switch you
-  flip and forget.
+  started it on, because none of the legs in between lands in the walk. Each
+  stage heading has the same switch for its own controls alone, so you can set
+  the tape path wandering and go on dialing the sync card by hand — this one is
+  that switch aimed at everything. Pressing one takes over from the other, since
+  a control only ever wanders around one look at a time. For a wander that is
+  part of a piece, use the strip's shake row instead — a rundown holds in bars,
+  is seeded and is yours to keep, where a drift is a switch you flip and forget.
 - **morph** sets how long a new look takes to arrive — cut, 1s, 4s, 8s or 30s.
   Rolls chain, so rolling every few seconds wanders continuously.
 - **undo** (`ctrl+z`) steps back through all of it.
@@ -101,6 +104,13 @@ surface for a take instead of four stages.
 Inside a stage: **• 10** counts what you've moved, amber means off stock, **↺**
 reverts, **⋮** is the wiring (pin, start an LFO, learn a MIDI knob), and
 **"inert — needs …"** means another control gates this one.
+
+Every stage heading carries its own verbs, aimed at that stage and nothing else.
+**randomize** nudges its controls around where they sit — the same modifiers the
+whole-board rolls take, and holding it down keeps nudging, slowly, until you let
+go. **drift** sets the stage wandering on its own, so one circuit breathes while
+the rest of the board holds still; press it again to stop it where it got to.
+**reset defaults** appears once there is something to put back.
 
 ![The app window with a slider's help card open, boxed in red](img/slider-help.jpg)
 

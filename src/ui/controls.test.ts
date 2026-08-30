@@ -14,6 +14,8 @@ import {
   FEED_B_GROUP,
   generatorsLive,
   GROUPS,
+  MUTATE_CIRCUIT_BY_GROUP,
+  MUTATE_CIRCUITS,
   LOOP_STAGE_NAMES,
   LOOP_STAGES,
   MIXER_LOOP_GROUP,
@@ -359,5 +361,29 @@ describe('the generators', () => {
   it('keeps the two apart', () => {
     expect(live('synth', 'none').noise).toBe(false)
     expect(live('tv static', 'none').synth).toBe(false)
+  })
+})
+
+// A group's name is its identity in three places that never meet: the fold map
+// Section persists, the circuits a cross-roll picks between, and the switch a
+// stage's drift is turned off by. Two groups sharing one would silently be one
+// group to all three.
+describe('the circuits, by the name they answer to', () => {
+  it('gives every group a name of its own', () => {
+    expect(new Set(GROUPS.map(g => g.name)).size).toBe(GROUPS.length)
+  })
+
+  // The view group is nothing but the magnifier, which no roll and no drift
+  // touches, so it is the one group with no circuit — and a stage heading with
+  // no drift switch on it.
+  it('drops the group a roll may not touch, and keeps the rest', () => {
+    expect(MUTATE_CIRCUIT_BY_GROUP.size).toBe(MUTATE_CIRCUITS.length)
+    expect(GROUPS.length - MUTATE_CIRCUIT_BY_GROUP.size).toBe(
+      VIEW_GROUPS.length,
+    )
+    for (const [name, sliders] of MUTATE_CIRCUIT_BY_GROUP) {
+      expect(sliders.length, name).toBeGreaterThan(0)
+      for (const s of sliders) expect(VIEW_KEYS.has(s.key), s.key).toBe(false)
+    }
   })
 })

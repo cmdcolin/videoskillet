@@ -126,7 +126,7 @@ export function LookBar(props: {
         <button
           className={cx(styles.btn, styles.pairMid)}
           onClick={e => props.onMutate(mutateAmountFor(e))}
-          title="keep this look and nudge every control randomly around where it sits, for a related variation (also happy accidents) — shift for a wilder roll, alt for a gentler one, ctrl (or cmd) for turbo, which throws most controls past anything a real set would do. The die on a stage heading nudges that stage alone"
+          title="keep this look and nudge every control randomly around where it sits, for a related variation (also happy accidents) — shift for a wilder roll, alt for a gentler one, ctrl (or cmd) for turbo, which throws most controls past anything a real set would do. A stage heading's own randomize nudges that stage alone"
         >
           random nudge
         </button>

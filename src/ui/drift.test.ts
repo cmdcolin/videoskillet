@@ -11,10 +11,12 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { DEFAULT_CONTROLS } from '../core/controls'
 import { rngFor } from '../core/rng'
-import { MUTATE_SLIDERS } from './controls'
+import { MUTATE_CIRCUIT_BY_GROUP, MUTATE_SLIDERS } from './controls'
 import {
   DRIFT_AMOUNT,
+  DRIFT_BOARD,
   DRIFT_SECONDS,
+  DRIFT_WAKE,
   driftLeg,
   driftLegSeconds,
   makeDrift,
@@ -69,6 +71,23 @@ describe('a leg', () => {
       live = driftLeg(live, strobing, SLIDERS, rngFor(i + 1))
       expect(live.strobeHz).toBe(0)
       expect(live.clipHz).toBe(0)
+    }
+  })
+
+  // And not on the one leg that wakes everything, which is the leg a stage's
+  // switch fires on the press: waking a control is how a roll starts something
+  // that was off, and these two are the pair no roll may start.
+  it('never starts one on the leg that wakes the whole scope either', () => {
+    for (let i = 0; i < 200; i++) {
+      const woke = driftLeg(
+        DEFAULT_CONTROLS,
+        DEFAULT_CONTROLS,
+        SLIDERS,
+        rngFor(i + 1),
+        1,
+      )
+      expect(woke.strobeHz).toBe(0)
+      expect(woke.clipHz).toBe(0)
     }
   })
 
@@ -147,6 +166,17 @@ describe('what a look is measured against', () => {
   })
 })
 
+// The whole board, as the look bar's switch sets it going.
+const BOARD = { name: DRIFT_BOARD, sliders: SLIDERS, wake: DRIFT_WAKE }
+
+// Two stages that share no control, as two stage switches set them going.
+const stage = (name: string) => ({
+  name,
+  sliders: MUTATE_CIRCUIT_BY_GROUP.get(name) ?? [],
+  wake: 1,
+})
+const [FIRST, SECOND] = [...MUTATE_CIRCUIT_BY_GROUP.keys()].map(stage)
+
 describe('the walk', () => {
   // A board the drift is the only thing writing to: `land` records where it was
   // told to go, and `getSettled` answers with it, which is what the app does
@@ -165,7 +195,6 @@ describe('the walk', () => {
           legs.push({ to, seconds })
           settled = to
         },
-        sliders: SLIDERS,
         rand: rngFor(9),
       },
     }
@@ -175,7 +204,7 @@ describe('the walk', () => {
     vi.useFakeTimers()
     const b = board()
     const drift = makeDrift(b.deps)
-    drift.start()
+    drift.add(BOARD)
 
     expect(b.legs).toHaveLength(1)
     vi.advanceTimersByTime(DRIFT_SECONDS * 1000 * 3)
@@ -196,7 +225,7 @@ describe('the walk', () => {
 
     vi.useFakeTimers()
     const b = board()
-    makeDrift(b.deps).start()
+    makeDrift(b.deps).add(BOARD)
 
     expect(b.legs[0].seconds).toBe(driftLegSeconds(DRIFT_SECONDS))
     vi.useRealTimers()
@@ -206,7 +235,7 @@ describe('the walk', () => {
     vi.useFakeTimers()
     const b = board()
     const drift = makeDrift(b.deps)
-    drift.start()
+    drift.add(BOARD)
     vi.advanceTimersByTime(DRIFT_SECONDS * 1000)
     drift.stop()
 
@@ -227,7 +256,7 @@ describe('the walk', () => {
     vi.useFakeTimers()
     const b = board()
     const drift = makeDrift(b.deps)
-    drift.start()
+    drift.add(BOARD)
 
     const elsewhere = mutate(DEFAULT_CONTROLS, SLIDERS, 0.4, rngFor(2), 1)
     b.put(elsewhere)
@@ -245,12 +274,151 @@ describe('the walk', () => {
     vi.useFakeTimers()
     const b = board()
     const drift = makeDrift(b.deps)
-    drift.start()
-    drift.start()
+    drift.add(BOARD)
+    drift.add(BOARD)
     vi.advanceTimersByTime(DRIFT_SECONDS * 1000)
 
     expect(b.legs).toHaveLength(2)
     drift.stop()
+    vi.useRealTimers()
+  })
+})
+
+// What a stage's own switch has to be right about, and all of it is about the
+// scopes not being one drift wearing several switches.
+describe('a scope', () => {
+  const board = () => {
+    const legs: Controls[] = []
+    let settled: Controls = DEFAULT_CONTROLS
+    return {
+      legs,
+      deps: {
+        getSettled: () => settled,
+        land: (to: Controls) => {
+          legs.push(to)
+          settled = to
+        },
+        rand: rngFor(5),
+      },
+    }
+  }
+
+  // The claim a stage switch is for: the rest of the rig is exactly where you
+  // left it, however long the one stage has been wandering.
+  it('moves its own stage and leaves every other control alone', () => {
+    vi.useFakeTimers()
+    const b = board()
+    const drift = makeDrift(b.deps)
+    drift.add(FIRST)
+    for (let i = 0; i < 20; i++) vi.advanceTimersByTime(DRIFT_SECONDS * 1000)
+    drift.stop()
+
+    const landed = b.legs.at(-1)!
+    const moved = FIRST.sliders.filter(
+      s => landed[s.key] !== DEFAULT_CONTROLS[s.key],
+    )
+    expect(moved.length).toBeGreaterThan(0)
+    for (const s of SLIDERS) {
+      if (!FIRST.sliders.includes(s))
+        expect(landed[s.key], s.key).toBe(DEFAULT_CONTROLS[s.key])
+    }
+    vi.useRealTimers()
+  })
+
+  // The press has to be visible, and a stage sitting at stock is the case that
+  // makes it hard: a leg wakes 2% of what rests, so a ten-control card left at
+  // stock would answer the switch by doing nothing for a minute and a half. The
+  // first leg wakes the whole scope instead — `mutateGroup`'s rule, for
+  // `mutateGroup`'s reason — and only the first.
+  it('moves a stage sitting at stock on the press, not a minute later', () => {
+    vi.useFakeTimers()
+    const b = board()
+    const drift = makeDrift(b.deps)
+    drift.add(FIRST)
+
+    // Most of it rather than all of it: a mode select steps by 1, so a gentle
+    // jitter on one snaps back to the mode it was already on.
+    const woke = (from: Controls, to: Controls) =>
+      FIRST.sliders.filter(s => to[s.key] !== from[s.key]).length
+    const first = b.legs[0]
+    expect(woke(DEFAULT_CONTROLS, first)).toBeGreaterThan(
+      FIRST.sliders.length / 2,
+    )
+
+    // The second leg is a wander again, and leaves alone most of what the first
+    // one has not already moved.
+    vi.advanceTimersByTime(DRIFT_SECONDS * 1000)
+    expect(woke(first, b.legs[1])).toBeLessThan(woke(DEFAULT_CONTROLS, first))
+
+    drift.stop()
+    vi.useRealTimers()
+  })
+
+  // One clock, not one per switch. Two timers would land two morphs a few
+  // seconds apart and each would cut the other short, which is the thing
+  // DRIFT_ARRIVE is under 1 to prevent.
+  it('fires one leg for however many stages are wandering', () => {
+    vi.useFakeTimers()
+    const b = board()
+    const drift = makeDrift(b.deps)
+    drift.add(FIRST)
+    drift.add(SECOND)
+    expect(b.legs).toHaveLength(2)
+
+    vi.advanceTimersByTime(DRIFT_SECONDS * 1000)
+    expect(b.legs).toHaveLength(3)
+
+    const landed = b.legs.at(-1)!
+    for (const scope of [FIRST, SECOND]) {
+      expect(
+        scope.sliders.some(s => landed[s.key] !== DEFAULT_CONTROLS[s.key]),
+        scope.name,
+      ).toBe(true)
+    }
+    drift.stop()
+    vi.useRealTimers()
+  })
+
+  // One control, one anchor. The board's switch takes over from every stage
+  // switch, and a stage switch narrows a board drift down to that stage.
+  it('takes over from every scope it overlaps', () => {
+    vi.useFakeTimers()
+    const b = board()
+    const drift = makeDrift(b.deps)
+    drift.add(FIRST)
+    drift.add(SECOND)
+    drift.add(BOARD)
+    expect(drift.running()).toEqual([DRIFT_BOARD])
+
+    drift.add(FIRST)
+    expect(drift.running()).toEqual([FIRST.name])
+    drift.stop()
+    vi.useRealTimers()
+  })
+
+  // A stage switched off stays where it got to while the others carry on, and
+  // the clock only goes with the last one out.
+  it('stops one stage without stopping the rest', () => {
+    vi.useFakeTimers()
+    const b = board()
+    const drift = makeDrift(b.deps)
+    drift.add(FIRST)
+    drift.add(SECOND)
+    drift.remove(FIRST.name)
+    expect(drift.running()).toEqual([SECOND.name])
+
+    const before = b.legs.length
+    vi.advanceTimersByTime(DRIFT_SECONDS * 1000)
+    expect(b.legs).toHaveLength(before + 1)
+
+    const landed = b.legs.at(-1)!
+    const parked = b.legs[before - 1]
+    for (const s of FIRST.sliders)
+      expect(landed[s.key], s.key).toBe(parked[s.key])
+
+    drift.remove(SECOND.name)
+    vi.advanceTimersByTime(DRIFT_SECONDS * 1000 * 3)
+    expect(b.legs).toHaveLength(before + 1)
     vi.useRealTimers()
   })
 })

@@ -8,6 +8,13 @@
 // with no one at the keyboard — and the shape of it is one switch you flip and
 // forget rather than a rundown you author.
 //
+// **What wanders is a scope.** The look bar's switch sets the whole board
+// going; a stage heading's switch sets that stage going and leaves the rest of
+// the rig standing still, which is the version a session with somebody in the
+// room actually wants — the tape path breathing under a look you are still
+// dialing in on the sync card. Same clock, same leg, same tether: a scope is a
+// slider list and a name, and everything below reads the list it was handed.
+//
 // **The strip is the other answer to this, and they are not the same tool.**
 // A shake row on loop (`strip.ts`, the tray's ＋ shake) jitters the live look
 // every few bars and is the right thing when the wander is part of a piece:
@@ -53,6 +60,11 @@ export const DRIFT_ARRIVE = 0.85
 // only roll in the app that fires again without being asked — so the step size
 // here is a statement about the hundredth press, not the first.
 export const DRIFT_AMOUNT = MUTATE_AMOUNTS.gentle
+
+// How much of a scope resting at stock a leg wakes, which is `mutate`'s own
+// default for the amount above — named here because a scope has to say what its
+// first leg wakes, and the board's switch says this.
+export const DRIFT_WAKE = DRIFT_AMOUNT / 2
 
 // How far each leg falls back toward the look you set drifting, as a share of
 // the distance.
@@ -101,8 +113,9 @@ export function driftLeg(
   anchor: Controls,
   sliders: readonly SliderDef[],
   rand: Rand = Math.random,
+  wake: number = DRIFT_WAKE,
 ): Controls {
-  const next = mutate(from, sliders, DRIFT_AMOUNT, rand)
+  const next = mutate(from, sliders, DRIFT_AMOUNT, rand, wake)
   for (const s of sliders) {
     if (ROLL_NEVER_STARTS.has(s.key) && from[s.key] === 0) continue
     const t = toTravel(s, next[s.key])
@@ -124,59 +137,149 @@ export interface DriftDeps {
   // slideshow of accidents rather than a wander, and the setting is about what
   // your hands do.
   land: (to: Controls, seconds: number) => void
-  sliders: readonly SliderDef[]
   rand?: Rand
   everyS?: number
+}
+
+// What one switch set wandering. The look bar's switch names the whole board;
+// a stage heading's names that stage, so a card can wander while the rest of
+// the rig holds still — which is the shape a session actually reaches for, one
+// circuit breathing under a look you are still dialing in.
+//
+// Named rather than anonymous because the name is what turns the switch off
+// again, and what the heading reads to know it is lit.
+export interface DriftScope {
+  name: string
+  sliders: readonly SliderDef[]
+  // How much of the scope the *first* leg wakes — the share of its controls
+  // sitting at stock that get moved off it, on the press rather than every
+  // fifteen seconds after.
+  //
+  // It is the split `mutateGroup` and `mutateLook` already make, arriving here
+  // for the reason it arrives there. A stage's switch names that stage, and a
+  // stage sitting at stock that answers the press by doing nothing for a minute
+  // reads as a switch that did not work — so it wakes all of it (`1`). The
+  // board's switch names everything, where waking all of it is a fresh
+  // randomize with the old look showing through (`mutate`'s own note on
+  // `wake`), so it wakes `DRIFT_WAKE` and the wander finds the rest in its own
+  // time.
+  wake: number
+}
+
+// The whole board's own scope name. Every other scope is named for the group it
+// covers, so this one is spelled the way a group never is and the look bar's
+// switch keeps its own tether.
+export const DRIFT_BOARD = 'the board'
+
+// One scope as the walk holds it: what it moves, and the pair of looks that
+// tells it whether it is still the only thing moving them.
+interface Tether {
+  sliders: readonly SliderDef[]
+  wake: number
+  // Where this scope's wander is tethered, and where its last leg was headed.
+  // The pair is what lets a drift notice it is no longer the only thing moving
+  // the board: a leg that finds a control somewhere other than where it aimed
+  // takes that as the new anchor, so a preset clicked or a slider dragged
+  // mid-drift becomes the look the wander is now around instead of being slowly
+  // undone by a pull toward a look you left ten minutes ago.
+  anchor: Controls | null
+  aim: Controls | null
 }
 
 // The walk itself, with no React in it — the same split `useStrip` makes, and
 // for the same reason: what is worth pinning down is when a leg fires and what
 // it rolls off, and a plain object is testable with fake timers where a hook is
 // not testable at all in this repo.
+//
+// One clock for every scope, and that is the constraint rather than a
+// convenience: the app has a single glide (`useMix.landDrift` hands the whole
+// look to `startGlide`), so two scopes on two timers would land two morphs a
+// few seconds apart and each would cut the other short — which is exactly what
+// `DRIFT_ARRIVE` is under 1 to prevent. So a leg is every drifting scope's leg,
+// composed into the one look that travels.
 export function makeDrift(deps: DriftDeps) {
   const everyS = deps.everyS ?? DRIFT_SECONDS
   let timer: ReturnType<typeof setInterval> | undefined
-  // Where the wander is tethered, and where the last leg was headed. The pair
-  // is what lets a drift notice it is no longer the only thing moving the
-  // board: a leg that finds the board somewhere other than where it aimed takes
-  // that as the new anchor, so a preset clicked or a slider dragged mid-drift
-  // becomes the look the wander is now around instead of being slowly undone by
-  // a pull toward a look you left ten minutes ago.
-  let anchor: Controls | null = null
-  let aim: Controls | null = null
+  const tethers = new Map<string, Tether>()
 
   const leg = () => {
     const from = deps.getSettled()
-    // The board is where the last leg aimed it, or somebody else has been at
-    // it. Only the first of those keeps the tether.
-    const home =
-      anchor !== null && aim !== null && sameDrift(deps.sliders, from, aim)
-        ? anchor
-        : from
-    anchor = home
-    const next = driftLeg(from, home, deps.sliders, deps.rand)
-    aim = next
+    let next = from
+    for (const t of tethers.values()) {
+      // The board is where the last leg aimed it, or somebody else has been at
+      // it. Only the first of those keeps the tether — and it is asked per
+      // scope, so a hand on the tape controls re-tethers the tape's drift and
+      // leaves the sync card's wander tethered where it was.
+      const home =
+        t.anchor !== null && t.aim !== null && sameDrift(t.sliders, from, t.aim)
+          ? t.anchor
+          : from
+      // A tether with no anchor yet has never travelled: this is the leg that
+      // fired on its press, and the one that has to be seen.
+      const wake = t.anchor === null ? t.wake : DRIFT_WAKE
+      t.anchor = home
+      next = driftLeg(next, home, t.sliders, deps.rand, wake)
+    }
+    // After the loop, so every scope aims at the look that actually travels.
+    // Scopes never share a control (`add` sees to it), so each still reads its
+    // own keys out of this and ignores what the others did to theirs.
+    for (const t of tethers.values()) t.aim = next
     deps.land(next, driftLegSeconds(everyS))
   }
 
+  const tick = () => {
+    if (timer !== undefined) clearInterval(timer)
+    timer = setInterval(leg, everyS * 1000)
+  }
+
+  const stopAll = () => {
+    if (timer !== undefined) clearInterval(timer)
+    timer = undefined
+    tethers.clear()
+  }
+
   return {
-    // The first leg fires on the press. A mode whose first fifteen seconds look
-    // exactly like the mode being off is one you press twice.
-    start() {
-      if (timer !== undefined) return
-      leg()
-      timer = setInterval(leg, everyS * 1000)
+    // Which scopes are wandering, for the switches that turned them on.
+    running: (): string[] => [...tethers.keys()],
+    // Set one scope going. The first leg fires on the press — a switch whose
+    // first fifteen seconds look exactly like the switch being off is one you
+    // press twice — and the clock restarts with it, so the leg in flight is
+    // always the only one and always has its full travel.
+    //
+    // **One control, one anchor.** A scope takes over from every scope it
+    // overlaps rather than layering on it: two pulls toward two different homes
+    // on one control is a tug of war rather than a wander, and it would read as
+    // the drift having stopped working on exactly the controls you aimed two
+    // switches at. So the board's switch takes the cards over, and a card's
+    // switch narrows a board drift down to that stage.
+    add(scope: DriftScope) {
+      if (!tethers.has(scope.name)) {
+        const keys = new Set(scope.sliders.map(s => s.key))
+        for (const [name, t] of tethers) {
+          if (t.sliders.some(s => keys.has(s.key))) tethers.delete(name)
+        }
+        tethers.set(scope.name, {
+          sliders: scope.sliders,
+          wake: scope.wake,
+          anchor: null,
+          aim: null,
+        })
+        leg()
+        tick()
+      }
     },
-    // The leg in flight is the caller's to stop (`stopGlide`), and it stops it:
-    // this promises to keep the board wherever it has got to, and a leg left
-    // travelling would spend another twelve seconds carrying it somewhere
-    // nobody asked for — which is the drift still running under another name.
-    stop() {
-      if (timer !== undefined) clearInterval(timer)
-      timer = undefined
-      anchor = null
-      aim = null
+    // One switch off, the rest left wandering. No leg fires: this promises the
+    // stage stays wherever it has got to, and the others are mid-leg.
+    remove(name: string) {
+      tethers.delete(name)
+      if (tethers.size === 0) stopAll()
     },
+    // Everything off. The leg in flight is the caller's to stop (`stopGlide`),
+    // and it stops it: this promises to keep the board wherever it has got to,
+    // and a leg left travelling would spend another twelve seconds carrying it
+    // somewhere nobody asked for — which is the drift still running under
+    // another name.
+    stop: stopAll,
   }
 }
 

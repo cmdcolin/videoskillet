@@ -100,6 +100,13 @@ export interface ControlsApi {
   mutateGroup: (sliders: readonly SliderDef[], amount?: MutateAmount) => void
   // Put one group back to stock, for the same reason and by the same route.
   resetGroup: (sliders: readonly SliderDef[]) => void
+  // Which stages are wandering on their own (ui/drift.ts), and the switch that
+  // sets one going. A set rather than a per-group boolean prop for the same
+  // reason `favorites` is one: the headings are rendered from a static table,
+  // and the identity of this changes on a press rather than on a control write,
+  // which is the only thing this object is not allowed to do.
+  driftingGroups: ReadonlySet<string>
+  toggleGroupDrift: (group: Group) => void
   // One card's chip: the card back to stock, then the chip's values into it.
   // Scoped like resetGroup and one step on the walk for the same reason — a
   // gesture that moves ten controls has to be one ctrl+z to take back.

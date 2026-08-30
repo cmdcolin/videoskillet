@@ -50,7 +50,14 @@
    hover: it sits on every group heading, so at full contrast thirty of them
    would read as a column of decoration down the panel. Text rather than the
    drawn die (icons.tsx) it used to carry, for the same legibility trade as
-   `.revert` above. */
+   `.revert` above.
+
+   Three words is the ceiling for this slot, and the reason the hold lives on
+   this button rather than on one of its own. `.head` wraps, so a fourth verb
+   overlaps nothing — it drops the accessories onto a second line, which at the
+   332px sidebar takes the headings that wrap from 3 of 44 to 7 (measured on a
+   board at stock; a stage you have touched carries "reset defaults" as well).
+   A row of panel height, spent to say twice what one button already says. */
 .dice {
   composes: bare from './ui.module.css';
   padding: 0 2px;
@@ -61,18 +68,21 @@
   color: var(--edit-hi);
 }
 
-/* The held cousin of `.dice`: same look at rest, but it stays lit while
-   pressed so the row shows which stage a held stab is nudging. */
-.stab {
+/* The latched cousin of `.dice`: same face at rest, and it stays lit for as
+   long as the stage is wandering on its own. The lit colour is `--edit`, the
+   same "moved off stock" amber a touched row wears, because that is what a
+   drifting stage is — something is moving its controls and it was not you. */
+.drift {
   composes: bare from './ui.module.css';
   padding: 0 2px;
   line-height: 1;
   color: var(--fg4);
 }
-.stab:hover {
+.drift:hover {
   color: var(--edit-hi);
 }
-.stab:active {
+.driftOn,
+.driftOn:hover {
   color: var(--edit);
 }
 

@@ -170,7 +170,9 @@ the receiver's vertical oscillator, downstream of anything the sound can reach.
   undo, and saved profiles behind a sign-in.
 - **Drift** — one switch and the look wanders on its own, unattended: a gentle
   nudge every fifteen seconds, travelling most of the way there so nothing cuts,
-  and staying around the look you set drifting rather than running off.
+  and staying around the look you set drifting rather than running off. Every
+  stage has the same switch for its own controls, so one circuit can breathe
+  while you work on another.
 - **Sharing** — the whole board mirrors to the URL, so a link is a patch.
 - **Capture** — stills, webm recording, or pop the controls into a second window
   and point OBS at the picture.

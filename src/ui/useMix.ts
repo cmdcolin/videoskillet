@@ -540,7 +540,7 @@ export function useMix(args: {
     // Every slider in the circuit, resting or not (`wake: 1`) — the opposite of
     // what the bar's nudge does, and for the reason it does it: the bar is
     // rolling the whole rig and has to leave most of it alone to stay a nudge,
-    // where pressing the die on a stage names that stage. One sitting at stock
+    // where pressing randomize on a stage names that stage. One sitting at stock
     // would otherwise take the press and do nothing at all.
     mutateGroup: (
       sliders: readonly SliderDef[],
