@@ -593,9 +593,9 @@ fn main(
     }
   }
 
-  // VHS picture search (prelude `shuttleNull`, shared with the delay loop's own
-  // drum). The strips between bars are different tracks; their timing and
-  // color-under phase offsets ride in via lineParams like the tracking tear.
+  // VHS picture search (prelude `shuttleNull`). The strips between bars are
+  // different tracks; their timing and color-under phase offsets ride in via
+  // lineParams like the tracking tear.
   out = shuttleNull(out, row, P.shuttleBars, P.shuttlePhase,
     n ^ pcg(P.frame * 24593u + row * 3u + P.gen * 389u));
 

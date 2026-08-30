@@ -137,10 +137,6 @@ export const SHUTTLE_STOPS = [
   { value: 4, label: '4x', title: 'cue — four times play speed, forwards' },
 ]
 
-// The delay loop's own deck: which way a held loop runs past the heads. Index is
-// the value tapeTransport takes, so these are the same numbers the slider's
-// `choices` are indexed by.
-
 // How long an auto-take runs, in seconds. Cycled rather than typed: a take is a
 // performance gesture and these are the four durations a switcher's rate
 // thumbwheel actually gets left on.

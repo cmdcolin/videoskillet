@@ -1,5 +1,5 @@
-// Visual regression for the control panel: eight states — six of the panel and
-// two dialogs — screenshotted and diffed against committed baselines.
+// Visual regression for the control panel: ten states — seven of the panel and
+// three dialogs — screenshotted and diffed against committed baselines.
 //
 //   node scripts/panelshots.mjs            compare, exit 1 on drift
 //   node scripts/panelshots.mjs --update   rewrite the baselines
@@ -62,7 +62,7 @@ const MAX_MOVED = 0.002
 // not of this harness: the teletype editor is three now that its picker lives
 // inside a stage, and a state that needed a third step could not say so.
 //
-// The last two are dialogs, and they are not an afterthought: the regression
+// The last three are dialogs, and they are not an afterthought: the regression
 // that prompted all of this was a textarea inside one, and a suite of panel
 // states would have sailed straight past it. A dialog is exactly the surface
 // that is never open while you are editing the CSS.

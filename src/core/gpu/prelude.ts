@@ -698,9 +698,10 @@ fn dropoutNull(v: f32, amt: f32, seed: u32) -> f32 {
 
 // Off play speed the spinning head no longer follows a single recorded track:
 // each sweep crosses |speed - 1| of them and the RF envelope nulls at every
-// crossing, so that many noise bars sweep the frame. One definition for the
-// deck (channel) and the delay loop (tape_play) — it is the same drum losing the
-// same signal, and the two reading differently would say it was not.
+// crossing, so that many noise bars sweep the frame. One definition, in the
+// prelude rather than in the channel block, because it is the drum losing the
+// signal — anything else reading it back would have to agree with this or say
+// it was a different machine.
 fn shuttleNull(v: f32, row: u32, bars: f32, phase: f32, seed: u32) -> f32 {
   if (bars == 0.0) {
     return v;

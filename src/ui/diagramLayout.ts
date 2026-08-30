@@ -30,7 +30,7 @@ import type { Point } from './wire'
 // keeps a constant out of a module fast refresh wants to hold components only.
 //
 // The path drawn at a size that can carry it. The sidebar's miniature has room
-// for the trunk, its branches and the three runs over the top, and nothing
+// for the trunk, its branches and the runs over the top, and nothing
 // else, so what it cannot say is exactly what the second input made worth
 // saying: that each source has a feed of its own before the mixer, and what
 // each loop actually does rather than only which is which.
@@ -40,8 +40,9 @@ import type { Point } from './wire'
 // controls are, which is what keeps it a diagram of *this app* rather than an
 // illustration of NTSC.
 export const W = 660
-// The trunk sits low enough for three loop runs to stack above it at the 22
-// units apart their labels need. A box each would have been the obvious way to
+// The trunk sits low enough for loop runs to stack above it at the 22 units
+// apart their labels need — cut for the three there were, carrying the two
+// left. A box each would have been the obvious way to
 // give the loops their own targets and it costs a column apiece; the loops earn
 // their room vertically, where there was nothing but wire, rather than
 // horizontally, where there is none — and dropping the box they used to share
@@ -86,9 +87,9 @@ export const TURN = 5
 // the trunk — and the arrowheads say which way each of them goes.
 //
 // It was seven while a FEEDBACK box stood between Mix and Tape. Nothing was
-// removed from the drawing when it went — the three loops it stood for are
-// still here, drawn where they actually re-enter — and every remaining box got
-// 15% wider for it.
+// removed from the drawing when it went — the loops it stood for are still
+// here, drawn where they actually re-enter — and every remaining box got 15%
+// wider for it.
 const COLS = 6
 const STEP = (W - GUTTER - 10) / COLS
 export const BOX_W = STEP - GAP
@@ -253,10 +254,9 @@ interface LoopRun {
 // across the drawing puts its name, beside its own arrowhead.
 const nameX = (col: number) => colX(col) + BOX_W / 2 + 10
 
-// How far past the mixer's own edges the tape loop's two ends sit. It leaves
-// the bus and returns to it at the same node, so it straddles that box rather
-// than landing on it twice — a machine patched across one point, which is what
-// a tape loop is.
+// Which band each run rides, and where on it the name sits. Keyed off the loop
+// table, so a loop added there with no run here fails to compile rather than
+// drawing nothing.
 const LOOP_RUN: Record<(typeof LOOP_STAGES)[number]['loop'], LoopRun> = {
   // The one run that reaches back past the decoder: it shoots the glass, so it
   // taps after the Screen, and what it returns is a picture rather than a
@@ -286,13 +286,13 @@ const LOOP_RUN: Record<(typeof LOOP_STAGES)[number]['loop'], LoopRun> = {
   },
 }
 
-// The three loops, each one its own button and its own stage. They were one box
+// The loops, each one its own button and its own stage. They were one box
 // before — 'Feedback', standing on the trunk between Mix and Tape — and that
-// box was the drawing's one lie: the three do not re-enter at the same place,
-// so no single node could be where they land. The pass graph is what settled
-// it (gpu/pipeline.ts): the camera comes back at `compose`, ahead of the
-// encoder, which is inside Source A; the mixer at `fbComposite` and the loop
-// bin at `tapePlay`/`tapeRec`, both straight after the A/B sum, which is Mix.
+// box was the drawing's one lie: they do not re-enter at the same place, so no
+// single node could be where they land. The pass graph is what settled it
+// (gpu/pipeline.ts): the camera comes back at `compose`, ahead of the encoder,
+// which is inside Source A, and the mixer at `fbComposite`, straight after the
+// A/B sum, which is Mix.
 //
 // So the wires are the whole of it now, which is what they had already become:
 // dashed for light and solid for a wire, each with its own name, each lighting
@@ -305,10 +305,11 @@ const LOOP_RUN: Record<(typeof LOOP_STAGES)[number]['loop'], LoopRun> = {
 // as one paragraph with a wire through it. `lx` is measured from the box the
 // run lands on, so a name sits beside its own arrowhead.
 //
-// `from` and `to` are absolute, not column indices, because the delay loop is not
-// a run around the chain at all: it leaves and re-enters the same box top, a
-// second machine patched across one node, while the other two reach back from
-// the stage they actually tap.
+// `from` and `to` are absolute rather than column indices, which is room the
+// delay loop needed: it left and re-entered one box top instead of reaching
+// back from the stage it tapped, so its ends sat either side of a column centre
+// rather than on one. Both runs left land on centres, so this is spare width
+// now rather than something in use.
 export const RETURNS = LOOP_STAGES.map(l => ({ ...l, ...LOOP_RUN[l.loop] }))
 
 // What an inert box says instead of its blurb, off the one table both drawings

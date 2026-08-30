@@ -3,7 +3,7 @@
 // What this guards against is a *loop* — a device that dies, comes back, and
 // dies again — because silently rebuilding through that hides the fault behind a
 // picture that detonates every few seconds, and each rebuild costs the user
-// everything VRAM was holding (phosphor trails, the frame store, the tape loop).
+// everything VRAM was holding (phosphor trails, the frame store).
 //
 // It is deliberately **not** a lifetime budget, and that is the whole subtlety:
 // a laptop that sleeps four times across a day-long session has suffered four

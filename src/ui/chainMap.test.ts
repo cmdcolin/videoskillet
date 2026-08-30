@@ -348,8 +348,9 @@ describe('chain map geometry', () => {
   // Each run carries its own name, and where the name sits is the half of that
   // which can go wrong silently: a name off the end of its run reads as a word
   // floating over the chain. Each long return starts its name just clear of the
-  // box it lands on and has run left to cover it; the tape loop sets its name
-  // outside its own little loop, clear of the knot of wires at the box top.
+  // box it lands on and has run left to cover it; a self loop sets its name
+  // outside its own little loop, clear of the knot of wires at the box top —
+  // the branch below, which nothing drawn today reaches (see chainLayout.ts).
   it('puts each loop’s name on its own run', () => {
     const { boxes, returns } = chainLayout(FULL)
     for (const r of returns) {
@@ -384,15 +385,15 @@ describe('chain map geometry', () => {
   })
   // Whichever side it lands on, a label has to clear the wires that cross its
   // band. The runs drop their verticals from the trunk up to their own height,
-  // so a label can only ever collide with a run drawn *above* it — and the tape
-  // loop, whose name hangs off the end of a 30-unit run rather than riding a
-  // 200-unit one, is the one with nothing but that clearance between it and the
-  // next wire. It comes closest on the full row, where 'tape loop' takes 37 of
-  // the 39 units between the mixer and the camera return's drop.
+  // so a label can only ever collide with a run drawn *above* it. The delay
+  // loop was what made that tight: its name hung off the end of a 30-unit run
+  // rather than riding a 200-unit one, and on the full row 'tape loop' took 37
+  // of the 39 units between the mixer and the camera return's drop. Both runs
+  // left write along a span of their own and clear the drops with room.
   //
-  // Over every subset rather than a few by hand. The tightest row turned out to
-  // be the full one — the rest of them are 5 units clear or better — which is
-  // the opposite of where hand-picked rows would have looked.
+  // Over every subset rather than a few by hand — the tightest row turned out
+  // to be the full one, which is the opposite of where hand-picked rows would
+  // have looked.
   it('keeps every run’s label clear of the wires over it', () => {
     for (const names of subsets(FULL)) {
       const { returns } = chainLayout(names)

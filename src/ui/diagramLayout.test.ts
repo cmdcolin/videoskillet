@@ -227,19 +227,20 @@ describe('the diagram card stays inside its own drawing', () => {
     }
   })
 
-  // Three bands stacked over the trunk, each far enough from the next to carry
+  // The bands stacked over the trunk, each far enough from the next to carry
   // its own sentence. At the 18 they started on, two of them read as one
   // paragraph with a wire through it.
-  it('keeps the three bands apart', () => {
+  it('keeps the bands apart', () => {
     const ys = RETURNS.map(r => r.y).toSorted((a, b) => a - b)
     for (let i = 1; i < ys.length; i++)
       expect(ys[i] - ys[i - 1]).toBeGreaterThanOrEqual(22)
   })
 
   // Spacing the bands is only half of it. Two names at the same x on adjacent
-  // bands read as one two-line caption however far apart the wires are, and
-  // that is what the mixer loop and the tape loop did: both land on the mixer,
-  // so both took nameX(2), and neither wire owned either line.
+  // bands read as one two-line caption however far apart the wires are, which
+  // is what the mixer loop and the delay loop did while both were drawn: both
+  // landed on the mixer, so both took nameX(2), and neither wire owned either
+  // line.
   it('gives each run its own column of text', () => {
     const xs = RETURNS.map(r => r.lx).toSorted((a, b) => a - b)
     for (let i = 1; i < xs.length; i++)
@@ -249,8 +250,9 @@ describe('the diagram card stays inside its own drawing', () => {
   })
 
   // And a name belongs to the wire it names: it starts (or ends) within reach
-  // of its own run rather than somewhere past the end of it. The tape loop's
-  // sat 30 units beyond the right end of a 52-unit run.
+  // of its own run rather than somewhere past the end of it. What this was
+  // written for: the delay loop's sat 30 units beyond the right end of a
+  // 52-unit run.
   it('keeps each run’s name against its own run', () => {
     for (const r of RETURNS) {
       const [lo, hi] = [Math.min(r.from, r.to), Math.max(r.from, r.to)]

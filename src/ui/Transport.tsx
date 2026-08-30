@@ -21,9 +21,9 @@ const TAPE_SPAN: SliderDef = sliderFor('shuttleX')
 //
 // Geometric in speed (the 'shuttle' curve — see curve.ts), because the
 // interesting half of a shuttle is between pause and double and a linear track
-// hands that four pixels. Bipolar or not according to the span it is given: the
-// delay loop's transport carries its own direction switch, so its ring runs
-// forwards only, and the tape deck's does not, so its ring is signed.
+// hands that four pixels. Bipolar or not according to the span it is given, so
+// a transport with a direction switch of its own would get a forwards-only ring
+// off the same component; the deck has none, so its ring is signed.
 //
 // A range input, not a div with pointer handlers. That was ~50 lines of
 // capture, a DOMRect frozen at the press, and a hand-drawn fill and thumb — and
@@ -83,10 +83,7 @@ function ShuttleStrip(props: {
 }
 
 // The deck playing the incoming tape: one speed control, signed, with the four
-// speeds that are worth a button. Its own transport, and deliberately not the
-// delay loop's below — they are two machines, and the tape in each was written at
-// a different time by a different head. Folding them into one set of buttons
-// would be the tidier panel and the wrong signal path.
+// speeds that are worth a button.
 //
 // Head speed, and only that. It is not the clip's playhead and never was: that
 // lives under the source picker, where the timeline it addresses is. See

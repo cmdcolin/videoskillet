@@ -2315,10 +2315,10 @@ export function useEngine() {
       // slot's source. The audio graph moves over rather than being rebuilt, so
       // the music does not stop and the clips stay adoptable.
       //
-      // What cannot come back is the content of VRAM. The phosphor state, the
-      // frame store and the tape loop all start empty, so a feedback look takes
-      // a second or two to build back up — which is what a real set does after
-      // the power blinks.
+      // What cannot come back is the content of VRAM. The phosphor state and
+      // the frame store start empty, so a feedback look takes a second or two
+      // to build back up — which is what a real set does after the power
+      // blinks.
       const rebuild = (
         dead: Engine,
         fault: GpuFault,

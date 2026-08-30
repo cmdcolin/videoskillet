@@ -25,8 +25,8 @@ import type { Point } from './wire'
 // a query dims the boxes it did not reach now and removes none of them
 // (panelChain), and `PHASES.map` is the only thing that builds the list. So
 // every subset branch below — `fit` under 1, the gap clamps, the `at() < 0`
-// fallbacks, the cursor that pushes one branch off another, the tape loop's
-// choice of side — computes the same answer on every render today.
+// fallbacks, the cursor that pushes one branch off another — computes the same
+// answer on every render today.
 //
 // It is kept general anyway, and that is a decision rather than an oversight:
 // the arithmetic is a few lines, the subset tests are what pin the live row's
@@ -34,6 +34,14 @@ import type { Point } from './wire'
 // including this one), and the shape that made those bugs possible is a design
 // choice one commit could take back. What is not kept is a comment claiming the
 // filter still does it — see each of them below for which case is live.
+//
+// The self-return branches are a step further out than that. `RETURNS` has held
+// two long returns and no self loop since the delay loop was cut, so `r.self`
+// is false everywhere: the straddle, the two-sided label choice and the `W`
+// wall are unreached rather than merely constant, and the subset tests that pin
+// the rest of this file walk straight past them. They stay because a machine
+// patched across one node is a shape this map should be able to draw, and they
+// are marked below so nobody reads them as a description of what is on screen.
 //
 // The svg stretches to its container, so every size here is really a ratio — but
 // the units are px at the sidebar's width, so the labels come out at the size
@@ -79,8 +87,8 @@ export const FREE_Y = 115
 // BRANCH_Y moved with it. See ChainMap.module.css for the other half.
 //
 // MID_Y moved by exactly the growth, so `MID_Y - BOX_H / 2` is still 36 and the
-// three runs above the chain are untouched: they still ride at 7/18/29 and
-// still drop 7 units onto the trunk. The band over the chain was never the part
+// runs above the chain are untouched: they still ride at 7 and 18 and still
+// drop 7 units onto the trunk. The band over the chain was never the part
 // short of room, and re-tuning it would have been change for its own sake.
 export const BOX_H = 22
 // Half-width of a wire's arrowhead.
@@ -90,10 +98,9 @@ export const TURN = 4
 
 // What a label costs, per uppercase character. Still measured at 8px while the
 // labels are set at 9 (.mapLabel), and deliberately: raising it widens every
-// box, which walks the head of the chain to the right, which is the wall the
-// tape loop's label measures its lane against — so a purely typographic change
-// would have flipped that label onto the side with the TAPE box on it. The
-// estimate has room to absorb this. The widest real label runs 5.07 units a
+// box, which walks the head of the chain to the right and moves the gaps a run
+// label is fitted into — so a purely typographic change would move type the
+// layout had already placed. The estimate has room to absorb this. The widest real label runs 5.07 units a
 // character at 8px, so 5.70 at 9px, and 'RECEIVER' is 45.6 of the 51.2 its box
 // asks for — less breathing room than PAD promises and still not a squeeze.
 //
@@ -116,16 +123,16 @@ const MIN_BOX = 20
 // A flat average per character will not do here, where CHAR gets away with one.
 // A box is *sized* from its estimate, so being 20% over on one name only buys
 // that box padding; a run's label is sized by nothing and measured against a
-// gap it has to fit in, so the same 20% is the difference between a label
-// beside the head of the chain and the same label over the TAPE box. Measured
+// gap it has to fit in, so the same 20% is the difference between a label that
+// clears the drop of the run above it and one written across that wire. Measured
 // in Firefox, the labels run 3.78 to 4.51 units a character, and the whole of
 // that spread is one letter: 'm' is about twice the width of the average glyph
 // and 'camera' is a sixth m.
 //
 // So count those two twice and the spread closes to 3.47-4.08, which 4.15
 // clears by the margin CHAR keeps over its own measurement. Still deliberately
-// over rather than under: over moves a label to the other side of its loop one
-// layout earlier than it had to, under writes it across a wire.
+// over rather than under: an over-estimate spends clearance a label did not
+// need, an under-estimate writes it across a wire.
 const RUN_CHAR = 4.15
 const WIDE = /[mw]/g
 // Exported for the test that holds a label clear of the wires over it: it has
@@ -161,12 +168,12 @@ const SUB_CHAR = 3.6
 export const fitSub = (text: string, boxW: number) =>
   fitCaption(text, boxW - PAD, SUB_CHAR)
 
-// The three feedback returns, which are different loops around different parts
-// of the chain — not one arrow drawn three times, and not three arrows landing
-// on one box either. That is what the drawing used to say, because a 'Feedback'
-// stage sat on the trunk and all three re-entered *it*; the pass graph says
-// otherwise (gpu/pipeline.ts), and the difference is the whole reason the three
-// are worth telling apart:
+// The two feedback returns, which are different loops around different parts of
+// the chain — not one arrow drawn twice, and not two arrows landing on one box
+// either. That is what the drawing used to say, because a 'Feedback' stage sat
+// on the trunk and both re-entered *it*; the pass graph says otherwise
+// (gpu/pipeline.ts), and the difference is the whole reason the two are worth
+// telling apart:
 //
 //   camera — optical, and the only one that reaches back past the decoder: it
 //     shoots the tube's face, so it taps after the Screen, and `compose` mixes
@@ -175,20 +182,17 @@ export const fitSub = (text: string, boxW: number) =>
 //   mixer — electrical: `fbComposite` crossfades the bus against itself
 //     straight after the A/B sum, so it re-enters at Mix, and it taps at the
 //     Receiver because what goes round is the composite the decoder saw.
-//   tape loop — mechanical, and the one that taps nowhere: `tapePlay` returns
-//     onto the bus and `tapeRec` lays the sum back down at that same point, one
-//     pass later. So it is a tight loop *across* the mixer's output rather than
-//     a run around anything, which is why `self` is a field and not a special
-//     case — the filter rules below are different for a return whose two ends
-//     are one box. Named after its tape, and kept clear of the Tape box two
-//     along by where its label is set rather than by what it is called — see
-//     DELAY_LOOP_STAGE, and the choice of side below.
 //
 // Each is routed rather than swooped — up, back along its run, then straight
 // down into the stage it feeds, so the wire is vertical where the arrowhead
-// sits, which is the only way the three agree.
+// sits, which is the only way the two agree.
 //
-// The camera return is drawn dashed and the other two solid, the way a
+// `self` is a field rather than a special case because a return can also tap
+// the box it re-enters — a machine patched *across* one node, which the delay
+// loop was until it was cut. Nothing sets it now, so the filter and label rules
+// it selects are the unreached ones the header marks.
+//
+// The camera return is drawn dashed and the mixer's solid, the way a
 // schematic separates a light path from a wire. That was once the *whole*
 // difference between them here, which is why the map used to be the one place
 // both were visible and still could not say which was which: a hover carried
@@ -196,7 +200,7 @@ export const fitSub = (text: string, boxW: number) =>
 // of. Each now carries its own name on its own run — the stage's own name off
 // LOOP_STAGES, cut down to `short` on a run too narrow to hold it — and lights
 // up while its own loop is actually running, so "which loop is on" is answered
-// here rather than by opening a stage and reading three mixes.
+// here rather than by opening a stage and reading two mixes.
 //
 // And each is the way into its own stage: a run is the box for a machine that
 // has no place on the trunk to draw one.
@@ -220,12 +224,13 @@ interface ReturnSpec {
   self: boolean
 }
 
-// How far outside its box a self loop's two ends sit. MIX is the narrowest box
-// on the row, and stacking a self loop's pair on its top edge beside the mixer
-// loop's single arrowhead put three verticals inside 16 units of a 24-unit box:
-// a knot rather than three wires. Straddling the box says the same thing better
-// — a machine patched *across* one node, which is what a tape loop is — and it
-// leaves the mixer loop alone on the box top. Comfortably inside GAP, so the
+// How far outside its box a self loop's two ends sit — unreached while RETURNS
+// holds none, and kept for the reason the header gives. MIX is the narrowest
+// box on the row, and stacking a self loop's pair on its top edge beside the
+// mixer loop's single arrowhead put three verticals inside 16 units of a
+// 24-unit box: a knot rather than three wires. Straddling the box says the same
+// thing better — a machine patched *across* one node — and it leaves the mixer
+// loop alone on the box top. Comfortably inside GAP, so the
 // ends stay on the runs either side and never reach the next box.
 const SELF_STRADDLE = 5
 
@@ -254,10 +259,9 @@ const RETURNS: readonly ReturnSpec[] = [
 
 // What each run carries, off the one loop table, so the map cannot name a loop
 // something the panel does not call it. `short` rather than the stage's whole
-// name: the miniature is 304 units wide with three runs stacked over the chain,
-// and each of the three is named for its own machine — so the machine is the
-// word that tells them apart and the rest is what the band they ride already
-// says. The card has room for the whole name and uses it.
+// name: the miniature is 304 units wide with the runs stacked over the chain,
+// and each is named for its own machine — so the machine is the word that tells
+// them apart and the rest is what the band they ride already says. The card has room for the whole name and uses it.
 //
 // Drawn in lowercase, which is a CSS rule (.mapLoopLabel) rather than a second
 // spelling here — the boxes have upper-cased their names the same way since the
@@ -269,8 +273,8 @@ const shortOf = (loop: LoopPlace): string =>
   LOOP_STAGES.find(l => l.loop === loop)?.short ?? loop
 
 // Up off the trunk, along its own band, and back down. `turn` is the corner
-// radius, which differs per run: the tape loop's band is the tightest and it
-// rounds to 3 where the two long returns round to 4.
+// radius, carried per run rather than shared: a tighter band wants a smaller
+// one than the 4 both of the long returns take.
 export const returnPts = (
   from: number,
   to: number,
@@ -485,10 +489,10 @@ export function chainLayout(names: string[], specs: WiredBranch[] = []) {
       : [{ key: 'out', x0: boxes[last].x + boxes[last].w / 2, x1: W }]),
   ]
   // A return only reads as a return if it comes back from somewhere downstream
-  // of where it re-enters — except the tape loop, which taps the box it returns
-  // to and so is the one return whose two ends are the same. Both cases need
-  // both of their stages on the row. On the trunk the app asks for, all three
-  // always have them; the guard is for the shorter rows only the tests build.
+  // of where it re-enters — except a self loop, which taps the box it returns
+  // to, so its two ends are one box rather than an ordered pair. Both cases need
+  // their stages on the row. On the trunk the app asks for, both returns always
+  // have them; the guard is for the shorter rows only the tests build.
   //
   // A self loop's two ends are taken off the box's own edges rather than from a
   // fixed offset: a squeezed row narrows every box, and a pair pinned at ±8
@@ -505,22 +509,16 @@ export function chainLayout(names: string[], specs: WiredBranch[] = []) {
     // end of it — just clear of the box it lands on, so a name sits beside its
     // own arrowhead rather than somewhere along a span shared with two others.
     //
-    // The tape loop's goes beside the box it straddles. Centred on its own run
-    // is the obvious place and the wrong one: that span is the box itself, so
-    // the word comes down on top of the stage name and the two arrowheads
-    // either side of it.
+    // A self loop's goes beside the box it straddles. Centred on its own run is
+    // the obvious place and the wrong one: that span is the box itself, so the
+    // word comes down on top of the stage name and the two arrowheads either
+    // side of it.
     //
-    // Which side is not a matter of taste. To the right, over the run between
-    // the mixer and the deck, the label lands squarely above the TAPE box — and
-    // 'tape loop' over a box marked TAPE is two machines under one word, which
-    // is the collision this loop has been renamed twice to avoid. To the left
-    // it sits over the gap between the head of the chain and the mixer, with
-    // the width of the drawing between it and that box. So: left where there is
-    // room for the name, right when a filter has pushed the mixer up against
-    // the left edge and left none — and on that row TAPE has usually gone too.
     // Where it *could* go, in order of preference. A long return has one place
-    // and no choice; the tape loop has a side to pick, and the loop below picks
-    // the first that holds the name.
+    // and no choice; a self loop has a side to pick — left first, where the gap
+    // before the box is the wider of the two on a full row, and right when a
+    // squeezed row has left no room there — and `room` below takes the first
+    // that holds the name.
     const edge = boxes[back].x + boxes[back].w / 2
     const places = r.self
       ? [
@@ -539,22 +537,18 @@ export function chainLayout(names: string[], specs: WiredBranch[] = []) {
   // the corner where its own run turns down. Nothing else on the drawing is up
   // here; the boxes start 7 units under the lowest band.
   //
-  // Only the tape loop is ever offered a choice, and it is the one that needs
-  // one: its label hangs off the end of a 30-unit run rather than riding a
-  // 200-unit one, and the side it hangs off decides whether 'tape loop' lands
-  // over the gap at the head of the chain or over the TAPE box. On the full
-  // trunk the left side is the 39 units between the mixer and the camera
-  // return's drop, and the label takes 37.4 of them — so left is what it picks,
-  // every render, with 1.6 units to spare. A shorter trunk moves that drop in
-  // and it would go to the other side rather than write across it; nothing in
-  // the app builds one, so in practice this picks left and stops.
+  // Only a self loop is ever offered a choice, and it is the one that would
+  // need it: its label hangs off the end of a short run rather than riding a
+  // 200-unit one, so it has no span of its own to write along and the side it
+  // takes is the whole of where it lands. Both returns drawn today are long
+  // ones with a single place each, so the comparison decides nothing and the
+  // fallback below is what picks.
   //
-  // Worth knowing what those 1.6 units do and do not buy. `want` is the estimate
-  // (RUN_CHAR), not the rendered text, so a platform whose system font runs wider
-  // than the estimate does not trip this and move the label — it overflows into
-  // the drop. The margin is against the *layout* being wrong, not the metrics.
-  // Widening RUN_CHAR is what guards the metrics, and it costs this label its
-  // left side the moment the estimate clears 39 units.
+  // What the clearance does and does not buy, wherever it is measured. `want`
+  // is the estimate (RUN_CHAR), not the rendered text, so a platform whose
+  // system font runs wider than the estimate does not trip this and move a
+  // label — it overflows into the drop. The margin is against the *layout*
+  // being wrong, not the metrics; widening RUN_CHAR is what guards those.
   const room = (r: (typeof drawn)[number], spot: (typeof r.places)[number]) => {
     const drops = drawn.filter(o => o.y < r.y).flatMap(o => [o.from, o.to])
     if (spot.anchor === 'end')

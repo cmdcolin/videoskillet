@@ -58,8 +58,9 @@ class PauseDeck {
     if (pause <= 0) return { pause: 0, shift: 0, bar: this.bar, row: 0 }
     this.t += 1 / 60
     this.wow.advance(1 / 60)
-    // the defeated capstan: the same wander machinery the tape loop uses,
-    // but with nothing correcting it the excursion is samples, not ns
+    // the defeated capstan: the same wander machinery the timebase uses (Wow,
+    // in noise.ts), but with nothing correcting it the excursion is samples,
+    // not ns
     const shift = this.wow.at(this.t, 0) * pause * 30
     // the parked tape creeps and settles, so the mistrack stripe walks
     this.bar = wrap(

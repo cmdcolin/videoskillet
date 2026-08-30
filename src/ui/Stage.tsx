@@ -196,8 +196,8 @@ export function Stage(props: {
           </b>
           <span>
             Your look, the modulation and the sources are all being put back.
-            Anything the picture had built up — phosphor trails, the frame
-            store, the tape loop — starts over.
+            Anything the picture had built up — phosphor trails and the frame
+            store — starts over.
           </span>
         </div>
       ) : props.frozen !== null ? (
@@ -289,9 +289,9 @@ export function Stage(props: {
               <b>this page keeps rebuilding its GPU engine</b> (
               {props.budget.builds} devices built for this page). The device has
               gone away and been replaced that many times, and each replacement
-              starts the phosphor, the frame store and the tape loop empty. The
-              session carries on; if it keeps happening the fault is below the
-              app — a driver, or a card suspending — rather than in the look.
+              starts the phosphor and the frame store empty. The session carries
+              on; if it keeps happening the fault is below the app — a driver,
+              or a card suspending — rather than in the look.
             </span>
           )}
           <button

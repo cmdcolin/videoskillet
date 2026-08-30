@@ -352,8 +352,6 @@ export class Engine implements EngineApi {
   // path resamples this rather than synthesizing B analytically.
   private bCompBuf: GPUBuffer
   private compPrev: GPUBuffer
-  // The delay loop: a ring of composite frames the record head writes and the
-  // play head reads a couple of seconds behind. Unlike compPrev this is a
   private chromaBuf: GPUBuffer
   private underBuf: GPUBuffer
   private lineInfoBuf: GPUBuffer
@@ -789,12 +787,6 @@ export class Engine implements EngineApi {
         perLine,
         () => c.cfbMix !== 0,
       ),
-      // The delay loop, patched across the mixer the way an outboard unit is: the
-      // play head returns onto the bus, and the record head lays down the sum —
-      // so anything still circulating is re-recorded once per lap and comes back
-      // a generation older each time. Both heads sit ahead of the channel block,
-      // because that block is the *deck's* playback damage and the loop is a
-      // second machine with damage of its own.
     ]
     // The two encoders keep their in-array bind groups (straight to their real
     // destination) as slot 0; slot 1 targets the compB scratch for the frames
@@ -2058,13 +2050,9 @@ export class Engine implements EngineApi {
       (this.scPhase + loRadPerSample(detuneKHz) * N) % (2 * Math.PI)
   }
 
-  // Crossing-pattern precession for the program deck. The mechanism and its
-  // constants are shared with the delay loop's own transport — see
-  // signal/crossings.ts — and what is this deck's own is only that its speed
-  // arrives as a multiple of play, so the crossing count is one less.
-  // What unseated the tracking this frame: the transport changing speed, the
-  // loop's splice going past, and a bass hit through the cabinet. Scene changes
-  // and transition cuts kick from where they happen.
+  // What unseated the tracking this frame: the transport changing speed, and a
+  // bass hit through the cabinet. Scene changes and transition cuts kick from
+  // where they happen.
   private kickServo(c: Controls): void {
     const dShuttle = Math.abs(c.shuttleX - this.lastShuttleX)
     this.lastShuttleX = c.shuttleX
@@ -2072,6 +2060,10 @@ export class Engine implements EngineApi {
     if (this.audioState.hit > 0.9) this.servo.kick(this.audioState.hit * 0.5)
   }
 
+  // Crossing-pattern precession for the program deck. The mechanism and its
+  // constants live in signal/crossings.ts, and what is this deck's own is only
+  // that its speed arrives as a multiple of play, so the crossing count is one
+  // less.
   private advanceShuttle(shuttleX: number): void {
     this.shuttlePhase = advanceCrossings(this.shuttlePhase, shuttleX - 1)
   }

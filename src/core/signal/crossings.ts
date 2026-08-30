@@ -7,12 +7,13 @@
 // out of the arithmetic that a loop running backwards crosses two per sweep, so
 // reverse is not clean either, and never was on a two-head machine.
 //
-// Here rather than in either caller because there are two decks in this app —
-// the shuttle on the program path (Engine.advanceShuttle) and the delay loop's own
-// transport (signal/tapeloop.ts) — and they are the same mechanism, feeding the
-// same `shuttleNull` in gpu/prelude.ts. The constants were written twice and
-// stayed byte-identical by luck rather than by construction. Same reason
-// pulsegate.ts exists.
+// Here rather than inside its caller because two decks ran it once — the shuttle
+// on the program path (Engine.advanceShuttle) and the delay loop's own transport
+// — and the constants had been written twice, staying byte-identical by luck
+// rather than by construction. The loop is gone and the program deck is the one
+// caller left, so what keeps this a module is the other half of that argument:
+// these constants have to agree with `shuttleNull` in gpu/prelude.ts, and they
+// are pinned by a spec of their own here rather than buried in a frame step.
 //
 // The wrap is far out (1024, not 1) on purpose: `shuttleNull` takes `fract` of
 // this, so any integer would do for the pattern, but the shader also seeds strip
