@@ -1287,32 +1287,23 @@ export function App() {
         onRedo={mix.redo}
       />
 
-      {/* The front door goes first: a look is one click, and everything below
-          is for adjusting the look you picked. Input is a set-once control and
-          reads fine in second place.
+      {/* The working set goes above the catalog, not under it.
 
-          Both drop out under a live filter, for the same reason Modulation
-          below already does: neither holds a control the query can
-          match, and the panel below the box is meant to be the result set. They
-          are the two largest things in it — the catalog alone is 180px of chips
-          and caption — and with them up the first row that actually matched
-          landed halfway down the panel. */}
-      {filtering ? null : (
-        <PresetsSection
-          controls={controls}
-          lastPreset={mix.lastPreset}
-          weights={mix.weights}
-          onApplyPreset={mix.applyPreset}
-          onMixStart={mix.startMix}
-          onMix={mix.setPresetWeight}
-        />
-      )}
+          "This look" is the only surface in the panel holding the controls that
+          are actually making the picture, gathered out of the six stages they
+          are scattered across — and it was sitting under 162px of chips that
+          had already done their job by the time it had anything in it. The
+          chips are not gone: they are one section down, and the way to a
+          different look is where it always was.
 
-      {/* Directly under the chips, because it is the answer to them: click a
-          preset and the controls it moved are right there to drag, rather than
-          five folds down the chain map. Unlike them it stays under a filter:
-          its rows are real control rows, so the query narrows them like any
-          other result. */}
+          It sits here unconditionally rather than swapping places with the
+          catalog once something is off stock. A swap reads better and cannot be
+          built: the two orders are two positions in this children array, so
+          crossing over unmounts the section and takes its held list, its ▸ more
+          fold and its scroll anchor with it — at the exact moment of the first
+          edit, which is when all three matter. Rendered at zero rows it is one
+          35px header saying so, which is the price of the first edit not being
+          a layout change (see LookSection). */}
       <div ref={lookRef} className={styles.lookAnchor}>
         <LookSection
           sliders={edited}
@@ -1320,6 +1311,24 @@ export function App() {
           onOpenGroup={nav.openAt}
         />
       </div>
+
+      {/* Under it, because it is what you came in through rather than what you
+          work on. It drops out under a live filter, for the same reason
+          Modulation below already does: it holds no control the query can
+          match, the panel below the box is meant to be the result set, and at
+          180px of chips and caption it is the largest thing in it — with it up,
+          the first row that actually matched landed halfway down the panel. */}
+      {filtering ? null : (
+        <PresetsSection
+          controls={controls}
+          lastPreset={mix.lastPreset}
+          weights={mix.weights}
+          openStage={nav.openPhase}
+          onApplyPreset={mix.applyPreset}
+          onMixStart={mix.startMix}
+          onMix={mix.setPresetWeight}
+        />
+      )}
 
       {/* The three source pickers used to be a section here, under "This look"
           and above the map — which drew a box for each of the same three

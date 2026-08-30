@@ -2,6 +2,14 @@
 .slider {
   display: block;
   position: relative;
+  /* The row is its own size container, so the form below is decided by the
+     width this row actually got rather than by how wide the panel is. Those are
+     not the same question and keying off the panel gets the bench wrong: at
+     664px the stage's groups pair off into two columns (SignalPath.module.css),
+     so every row on the bench is ~322px — the same width as the docked sidebar,
+     inside a panel twice as wide. Measured: 88px of track on a 692px panel.
+     A wide popout is the same story one column further out. */
+  container: row / inline-size;
   /* Half the old 9px rather than none of it: one-line rows pack tightly enough
      that at 4px two wrapped labels in a row read as one paragraph, and the
      saving from the last 2px is not worth a group you have to parse. */
@@ -42,6 +50,11 @@
   grid-template-columns:
     minmax(0, 1.2fr) minmax(5.5rem, 0.85fr)
     minmax(3.6rem, auto);
+  /* Placed rather than flowed, because the source order is the stacked one —
+     name, reading, track — and this form wants the track in the middle. See the
+     comment on the row in Slider.tsx for which of the two orders is worth
+     having agree with the DOM. */
+  grid-template-areas: 'name track value';
   align-items: center;
   column-gap: 10px;
   /* A row is one measure wide however wide its container is. The docked panel
@@ -53,6 +66,52 @@
      the row, which is the thing that has a measure. */
   max-width: 34rem;
 }
+/* The row's control, whichever of the two it is — a fader's track or an inline
+   mode switch. Named because the row places its three items by area rather than
+   flowing them, and without a handle on this one they could only be addressed
+   by child index. */
+.trackCell {
+  min-width: 0;
+  grid-area: track;
+}
+
+/* At the widths this app's rows actually get, the three columns are a fiction.
+   The `1.2fr : 0.85fr` split resolves to a 90px track in the docked sidebar —
+   two pixels off the `minmax(5.5rem, …)` floor — so every fader sits at its
+   minimum and the weighting above never gets to act. Stacked, the track takes
+   the whole measure: 322px against 90, which is 3.6x the travel on a control
+   like tint, and the label has the width to itself, so none of the 38 labels
+   past ~18 characters wraps any more.
+
+   It is a trade and not a free win: a stacked row is a flat 45px against a
+   mixture of 30 and 47, so a column of them costs about a third more height per
+   row. That is paid for out of the header stack the panel reclaims above it,
+   not out of nothing.
+
+   Mode switches stack here too, inline ones included. `choicesFitTrack` is a
+   question about a track column that does not exist in this form, and one row
+   carrying a 59px `off|on` where its neighbours run the full measure is the
+   thing that makes a column hard to read down.
+
+   The threshold is where the three-column form stops being able to pay for
+   itself: at 520px the track solves to about 170px, and below that it is losing
+   width faster than the label is gaining any. Past it — a single-column popout
+   somebody has dragged wide — the row stays on one line, which it can, because
+   `max-width: 34rem` above already stops it running so far that the label is at
+   one end of the screen and the value at the other. */
+@container row (max-width: 520px) {
+  .row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'name value'
+      'track track';
+    /* the label and the reading are two texts on one line now, so they are set
+       against each other's baseline rather than boxed centres */
+    align-items: baseline;
+    row-gap: 1px;
+  }
+}
+
 /* A mode switch keeps the full width: its options are words, not a track. */
 .rowStack {
   display: block;
@@ -64,6 +123,7 @@
 .naming {
   min-width: 0;
   line-height: 1.25;
+  grid-area: name;
 }
 /* the label's last word plus its ?, kept on one line together */
 .tail {
@@ -100,6 +160,7 @@
   font-family: var(--mono);
   white-space: nowrap;
   justify-self: end;
+  grid-area: value;
 }
 /* Track fills from the *default* position (--def) out to the thumb (--lo/--hi
    from Slider.tsx), with a faint tick marking the default. That paint is

@@ -87,6 +87,23 @@ export function Section(props: {
   // something in the body — Presets' "all" — otherwise reads as a dead button
   // while the section is folded, since its whole effect is out of sight.
   help?: ReactNode | ((api: SectionHelpApi) => ReactNode)
+  // A token that changes at the moment this section has finished its job, so it
+  // can fold itself and hand the height back. Presets is the case, and the
+  // moment is opening a stage rather than picking a preset: the catalog is
+  // 162px of the panel's most contested space, and a click on the map is the
+  // one that says you have stopped choosing a look and started shaping one.
+  // Folding on the pick instead would take the chips out from under a pointer
+  // that is still browsing them, which is the same click at the wrong end.
+  //
+  // Compared during render rather than watched in an effect — the same shape
+  // LookSection uses to re-sync its held list — so the fold lands in the render
+  // that carries the new look rather than one paint later. Initialised from the
+  // mount value, so a session that restores a look from a link is not folded on
+  // arrival by a token that has not actually changed.
+  //
+  // Only ever folds. Reopening is a click, and a section reopened stays open
+  // until the next such moment.
+  foldOn?: string | number | null
 }) {
   const nested = use(NestedContext)
   const accordion = use(AccordionContext)
@@ -94,6 +111,14 @@ export function Section(props: {
   const [selfOpen, setSelfOpen] = useState(
     () => getOpenMap()[props.title] ?? props.defaultOpen ?? true,
   )
+  const [foldMark, setFoldMark] = useState(props.foldOn)
+  if (props.foldOn !== foldMark) {
+    setFoldMark(props.foldOn)
+    if (selfOpen) {
+      setSelfOpen(false)
+      persistOpen(props.title, false)
+    }
+  }
   const open = accordion === null ? selfOpen : accordion.openId === props.title
   const shown = (props.openOnFilter === true && filterActive(filter)) || open
   const toggle = () => {

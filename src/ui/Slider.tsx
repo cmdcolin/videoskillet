@@ -639,10 +639,11 @@ export function Slider(props: {
       value={props.value}
       disabled={locked}
       dense={inline}
+      className={styles.trackCell}
       onChange={props.onChange}
     />
   ) : (
-    <span className={styles.rangeWrap}>
+    <span className={cx(styles.rangeWrap, styles.trackCell)}>
       <input
         id={inputId}
         type="range"
@@ -712,7 +713,16 @@ export function Slider(props: {
           the two of them together overflowed on any label carrying a
           parenthetical, and a fifth of the controls carry one — the label broke
           mid-phrase and the ? and ↺ scattered onto a line of their own. Split
-          out, only the label wraps, and it wraps where a label should. */}
+          out, only the label wraps, and it wraps where a label should.
+
+          The reading is written before the track and placed after it, by grid
+          area (Slider.module.css). Same source order as the stacked branch
+          above, and it is the order the narrow panel actually draws — where the
+          row is two lines, the reading rides the label and the track is the one
+          below. So the docked sidebar, which is where most of these rows are
+          read, has its focus order and its layout agreeing; the wide form
+          disagrees about two adjacent things on one line, which is the cheaper
+          half of the trade. */}
       {choices && !inline ? (
         <div className={styles.rowStack}>
           <span className={styles.sliderTop}>
@@ -724,8 +734,8 @@ export function Slider(props: {
       ) : (
         <div className={styles.row}>
           {naming}
-          {track}
           {readout}
+          {track}
         </div>
       )}
       {needs ? (

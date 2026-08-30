@@ -229,6 +229,10 @@ export function PresetsSection(props: {
   controls: Controls
   lastPreset: string | null
   weights: PresetWeights
+  // The stage the panel has open, as a token for "browsing is over" — see
+  // Section's `foldOn`. The catalog hands its 162px to the stage that was just
+  // opened over it, and is a click away for the rest of the session.
+  openStage: string | null
   onApplyPreset: (name: string, patch: Partial<Controls>) => void
   onMixStart: () => void
   onMix: (name: string, w: number) => void
@@ -301,6 +305,17 @@ export function PresetsSection(props: {
   return (
     <Section
       title="Presets"
+      foldOn={props.openStage}
+      // What the fold above costs you: the chips are gone and this is the line
+      // that says which of them you are on, so folding the catalog is free in
+      // the same way folding any other section is.
+      summary={
+        active
+          ? presetLabel(active)
+          : props.lastPreset === null
+            ? undefined
+            : `from "${presetLabelFor(props.lastPreset)}"`
+      }
       help={({ openSection }) => (
         <>
           <button
