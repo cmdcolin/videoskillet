@@ -140,6 +140,10 @@ export function TeletypeDialog(props: {
               // folding somewhere the card itself would not fold it.
               wrap="off"
               placeholder="PLEASE STAND BY"
+              // Focus lands here when the dialog opens, so this is the first
+              // thing announced after the dialog's own name — and a placeholder
+              // is not a name. See the caption field in ControlGroup.
+              aria-label="the card's text"
               value={text}
               onChange={e => edit({ text: clampCardText(e.target.value) })}
               onKeyDown={e => {

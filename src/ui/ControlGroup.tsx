@@ -293,6 +293,12 @@ function CaptionControl() {
         rows={2}
         value={caption}
         placeholder="what line 21 is carrying"
+        // The same words as the placeholder, because a placeholder is not a
+        // name: it is the weakest thing an assistive technology will fall back
+        // to, and it is gone the moment there is a caption to read. Every other
+        // field in the panel says what it is (TeletypeRow's carries a title);
+        // this one and the editor's were the two that said nothing.
+        aria-label="what line 21 is carrying"
         spellCheck={false}
         onChange={e => onCaption(clampCardText(e.target.value))}
       />
