@@ -489,6 +489,35 @@ minute.
 
 ## React never renders a frame
 
+**Does React cost this app frame rate? No, and that is measured rather than
+assumed.** On the built app with the panel at its heaviest — every stage
+unfolded behind a live filter query, 230 sliders and 4,434 DOM nodes — a
+ten-second idle profile attributes **0 ms** to React, with six style recalcs and
+five layouts in the whole ten seconds. Holding a slider down in that same panel
+at 60 pointer moves a second, which is the one thing in the app that asks React
+for work at anything like frame rate, holds **59 fps at 82% idle**, and React's
+share of the frame is about **0.45 ms of 16.6** — `Slider`, `renderWithHooks`,
+`ControlSlider`, `reconcileChildrenArray`. `scripts/cpuprof.mjs --scenario=drag`
+is that measurement; re-run it rather than citing this paragraph.
+
+Two things will tell you otherwise, and both have:
+
+- **A dev build measures React's development machinery.** The same drag falls to
+  24 fps at a quarter the pointer rate, with 43% of the thread in `jsxDEV`,
+  `validateProperty` and `logComponentRender`, none of which ship. Build and
+  preview before profiling; `cpuprof` says so when it is pointed at a dev
+  server.
+- **Frame rate is the last thing to move.** The loop is vsync-capped, so a fifth
+  of the budget can go before fps reports anything — the largest cost ever found
+  on this thread was 3.6 ms a frame, and it moved fps on neither browser. Read
+  `TaskDuration` per frame.
+
+Everything that has cost frame rate here has been other work on the same thread:
+a render-loop probe spinning at 8 kHz, a per-frame object copy, and a
+21,420-read preset scan that ran inside a render body and was this app's code
+rather than React's. React is a tenant of that thread and pays its rent. The
+rest of this section is the design that keeps it that way.
+
 React only ever configures the engine. The render loop lives in `useEngine` and
 writes to the canvas directly, so live per-frame state reaches the overlays as
 **mutable refs read during render** rather than as sixty state updates a second.
@@ -597,26 +626,17 @@ canvas per frame — identical throughout. The hoists keep each expression's
 grouping (`a * b * c` hoisted as `a`, left as `x * a * c` rather than folded
 into `a * c`), because float multiplication does not associate.
 
-**What the profile said about React is that it costs nothing until something
-drags.** With the filter box holding every stage open — 230 sliders, 4434 nodes
-— a ten-second idle profile of the production build attributes **0 ms** to
-React, and 6 style recalcs and 5 layouts in the whole ten seconds. The claims at
-the top of this section hold up.
+This is also where the page's oldest claim was finally measured. React costs 0
+ms at rest and about 0.45 ms a frame under a drag — the numbers, and the two
+ways to get the wrong ones, are at the top of _React never renders a frame_,
+because that is where somebody asking about React will look.
 
-Holding a slider down in that panel is the other end, and it is the only thing
-in the app that asks React for work at anything like frame rate. At 60 pointer
-moves a second, `saturation` held down with all 230 rows mounted: **59 fps, 3.2
-ms/frame, 82% idle**, of which React is ~0.45 ms — `Slider`, `renderWithHooks`,
-`ControlSlider`, `reconcileChildrenArray`. Comfortable, and it is comfortable
-_because_ of the fix above rather than beside it: the same drag on the parent
-build ran 6.4 ms/frame and gave up frame rate as the box got busier (59.4, 54.1,
-51.4 fps over three rounds where the patched arm held 59.3, 58.1, 57.9). The
-drag was always affordable; there was 3.6 ms of probe sitting in front of it.
-
-**Profile the built app**, with `scripts/cpuprof.mjs`, which does the above. Dev
-told the opposite story about every one of these: the same drag fell to 24 fps
-at a quarter the pointer rate and spent 43% of the thread in `jsxDEV`,
-`validateProperty` and `logComponentRender`, none of which ship.
+One half of it belongs here rather than there. The drag is comfortable
+**because** of the probe fix above rather than beside it: the same drag on the
+parent build ran 6.4 ms/frame and gave up frame rate as the box got busier —
+59.4, 54.1, 51.4 fps over three rounds, where the patched arm held 59.3, 58.1,
+57.9. The drag was always affordable. There was 3.6 ms of probe sitting in front
+of it, and the first thing headroom buys is tolerance of a busy machine.
 
 A second pass went after the scenarios rather than the resting frame, since the
 resting frame was down to 0.84 ms and nothing in it was above 45 µs. Both of the
@@ -636,7 +656,13 @@ limit for either cloning one or building one a key at a time, so every
 times slower than `DEFAULT_CONTROLS` does — measured at 3.1 µs against 9.9 for
 one pass over the keys. Nothing is going to change that short of making the
 board an array, which the other 250 sites that read it by name would not
-survive. What is worth changing is how many of those reads a hot path does.
+survive.
+
+**So 9.9 µs a pass is the floor, and it is a settled one.** It is what a board
+of 252 named knobs costs to read, it has been looked at, and the lever that
+remains is how many passes a hot path makes rather than how fast one is. Both
+fixes above are that lever: neither made a read cheaper, and both went from tens
+of passes to one.
 
 `matchPreset` was 85 presets × 252 keys, and a board matching nothing — anyone
 who has touched a knob — scanned all of them: 21,420 reads, in a render body, on
