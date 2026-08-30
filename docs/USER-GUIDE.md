@@ -129,13 +129,23 @@ which nothing else marks, since a routing leaves the resting value alone. It
 stays pressed until you press it again, it shows in the box as a **∿ moving**
 token, and it narrows whatever text is already up rather than replacing it.
 
+Either half fades the map boxes it did not reach rather than dropping them, so
+the chain still reads as a chain while the panel is narrow. A faded box is still
+a door: pressing one drops the filter and opens that stage, which is the
+quickest way out of a filter you did not mean to apply.
+
 ## Making it move
 
-**∿ on any control row** sets that control wobbling — LFO, random walk, noise,
-sample-and-hold, a Lorenz attractor, audio level or its hits, or a one-shot
-envelope you strike by hand or from a MIDI note. Depth is a fraction of the
-control's range, and the slider stays put as the centre the motion happens
+**∿ in any control row's ⋮ menu** sets that control wobbling — LFO, random walk,
+noise, sample-and-hold, a Lorenz attractor, audio level or its hits, or a
+one-shot envelope you strike by hand or from a MIDI note. Depth is a fraction of
+the control's range, and the slider stays put as the centre the motion happens
 around, which is why a preset or a link still holds the look.
+
+A patched row then wears its own **∿** beside the reading, and that one is a
+switch: press it to hold that wobble still, press it again to start it back up
+exactly as you dialed it. It is the row's mark as well as its button — a row
+showing no ∿ has nothing driving it.
 
 Once anything moves, a **modulation** strip appears with one amount over every
 routing, a freeze, and the **∿** count that filters the panel down to what is

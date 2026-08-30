@@ -69,11 +69,16 @@
 }
 /* A run the live query did not reach — the same statement .mapNodeDim makes,
    on the three stages that have a wire instead of a box. Its label goes with
-   it: at --fg3 under a 0.3 fade the word is still the loudest thing left on an
-   otherwise faint run. */
+   it: at --fg3 under the fade the word is still the loudest thing left on an
+   otherwise faint run. Pressable like the boxes, and it comes back to full
+   under the pointer for the same reason. */
 .mapReturnDim {
   color: var(--border);
-  opacity: 0.3;
+  opacity: 0.45;
+}
+.mapReturnDim:hover,
+.mapReturnDim:focus-visible {
+  opacity: 1;
 }
 .mapReturnDim .mapLoopLabel {
   fill: var(--fg3);
@@ -157,11 +162,24 @@
    Faint rather than restyled, and it replaces the idle rule instead of layering
    over it (see ChainMap's className): the four states below are about the rig
    and the look, and this one is about the search box, so a dimmed box says that
-   and nothing else. No pointer and no hover, because there is nothing behind it
-   to open while the query stands. */
+   and nothing else.
+
+   Still a door, though, and that is what the pointer and the hover are for. It
+   used to sit at 0.3 with neither, which was right for a typed query that misses
+   two boxes and wrong for one that misses ten: the ∿ on the modulation strip
+   narrows the panel to whatever the bay is driving, and the map answered by
+   greying out the whole chain — including the MODULATION box you would press to
+   undo it. A box that comes back to full under the pointer reads as out of
+   scope; one that cannot be pressed at all reads as broken. */
 .mapNodeDim {
   color: var(--fg2);
-  opacity: 0.3;
+  opacity: 0.45;
+  cursor: pointer;
+}
+.mapNodeDim:hover,
+.mapNodeDim:focus-visible {
+  color: var(--fg);
+  opacity: 1;
 }
 .mapNode {
   color: var(--fg2);
@@ -224,12 +242,17 @@
    so without this its wire stays at full strength and the box reads as
    disconnected rather than as out of scope. */
 .mapBranchDim {
-  opacity: 0.3;
+  opacity: 0.45;
 }
 /* The group above carries the fade for the whole run, box included, so the box
-   must not fade a second time inside it — 0.3 of 0.3 is not a dim box, it is a
-   box that has left the drawing. */
+   must not fade a second time inside it — 0.45 of 0.45 is not a dim box, it is
+   a box that has left the drawing. The hover has to be restated for the same
+   reason: the group is what the pointer brings back, so the box inside it has
+   nothing left of its own to raise. */
 .mapBranchDim .mapNodeDim {
+  opacity: 1;
+}
+.mapBranchDim:hover {
   opacity: 1;
 }
 .mapNode:hover .mapBox,

@@ -68,11 +68,12 @@ export interface ChainStage {
   off?: boolean
   // What to say instead of the blurb while it is off.
   offHint?: string
-  // A live filter did not reach this stage. Drawn faint and pressing it does
-  // nothing — it is on the map as context, so the chain still reads as a chain
-  // while a query narrows what is listed under it. Different from `off`, which
-  // is about the rig: an inert stage has nothing patched into it whatever is in
-  // the search box, and a dimmed one is a statement about the search box alone.
+  // A live filter did not reach this stage. Drawn faint, and still a door: it is
+  // on the map as context, so the chain reads as a chain while a query narrows
+  // what is listed under it, and pressing it drops the query and goes there.
+  // Different from `off`, which is about the rig: an inert stage has nothing
+  // patched into it whatever is in the search box, and a dimmed one is a
+  // statement about the search box alone.
   dim?: boolean
   // Whether pressing the box opens the stage. Not the negation of `off`: a
   // source branch with nothing patched in is drawn inert and still opens,
@@ -219,10 +220,10 @@ export function ChainMap(props: {
             blurb={node.blurb}
             live={live}
             touched={node.touched}
-            opens={!dim}
+            opens={node.opens}
             pressHint={
               dim
-                ? ''
+                ? ' — outside the filter: click to drop it and open this'
                 : !props.folds
                   ? ' — click for its controls'
                   : open
@@ -231,9 +232,7 @@ export function ChainMap(props: {
             }
             className={cx(
               styles.mapReturn,
-              // Not a button while it is dim, so it takes neither the pointer
-              // nor the hover that would promise one.
-              !dim && styles.mapLoopBtn,
+              styles.mapLoopBtn,
               r.optical && styles.mapReturnOptical,
               state,
             )}
@@ -359,7 +358,9 @@ function Node(props: {
       ? undefined
       : fitSub(stage.patched, props.boxW)
   // Only where a click can close a stage is this box a disclosure — see `folds`.
-  const fold = props.folds && stage.opens
+  // Never while it is dim: that press drops the query and lists the stage, which
+  // is an open in one direction only.
+  const fold = props.folds && stage.opens && !dim
   return (
     <MapBox
       name={stage.name}
@@ -375,11 +376,13 @@ function Node(props: {
       // the card has no equivalent for: whether pressing again folds the stage
       // back up.
       foldHint={
-        fold
-          ? props.open
-            ? ' — click to close'
-            : ' — click to open'
-          : undefined
+        dim
+          ? ' — outside the filter: click to drop it and open this stage'
+          : fold
+            ? props.open
+              ? ' — click to close'
+              : ' — click to open'
+            : undefined
       }
       className={cx(
         // Dim replaces the idle rule rather than layering over it: it is not a

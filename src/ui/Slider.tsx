@@ -538,40 +538,28 @@ export function Slider(props: {
           comparison, so it moved to the ⋮ beside this, which is where the row
           keeps its wiring. */}
       {props.mod?.routed !== true ? null : (
-        <Popover
-          trigger={attrs => (
-            <button
-              type="button"
-              popoverTarget={attrs.popoverTarget}
-              style={attrs.style}
-              title={
-                props.mod!.on
-                  ? 'wobbling — click to hold this one still'
-                  : 'held still — click to start it wobbling again'
-              }
-              className={cx(
-                styles.badge,
-                props.mod!.on ? styles.iconModSet : styles.iconModOff,
-              )}
-            >
-              ∿
-            </button>
+        <button
+          type="button"
+          // A switch, so it says which of the two states it is in rather than
+          // making a reader infer one from a tint. It briefly opened a one-row
+          // menu to confirm instead of toggling, which put a second click in
+          // front of a gesture that is already its own undo — press it again
+          // and the wobble is back exactly as it was dialed — and made the
+          // hover text a lie about what the press would do.
+          aria-pressed={props.mod.on}
+          title={
+            props.mod.on
+              ? 'wobbling — click to hold this one still'
+              : 'held still — click to start it wobbling again'
+          }
+          className={cx(
+            styles.badge,
+            props.mod.on ? styles.iconModSet : styles.iconModOff,
           )}
+          onClick={props.mod.onToggleOn}
         >
-          {id => (
-            <MenuItem
-              icon={props.mod!.on ? '❚❚' : '▶'}
-              label={
-                props.mod!.on
-                  ? 'hold this one still'
-                  : 'start it wobbling again'
-              }
-              hint=""
-              closes={id}
-              onClick={props.mod!.onToggleOn}
-            />
-          )}
-        </Popover>
+          ∿
+        </button>
       )}
       {favorite?.on !== true ? null : (
         <span

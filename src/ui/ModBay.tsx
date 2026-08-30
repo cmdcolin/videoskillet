@@ -536,7 +536,7 @@ export function ModBay(props: {
       <div className={ui.hint}>
         {free === 0
           ? `all ${slots.length} slots are patched — hand one back with its × to free it.`
-          : `${free} of ${slots.length} slots free — press ∿ on any control row to patch one.`}
+          : `${free} of ${slots.length} slots free — open any control row’s ⋮ and press ∿ to patch one.`}
       </div>
     </>
   )

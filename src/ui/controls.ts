@@ -3944,7 +3944,7 @@ export const VIEW_BLURB =
 // whole reason it moved: the map is where you go looking for a thing to open.
 export const MOD_STAGE = 'Modulation'
 export const MOD_BLURB =
-  'not the rig — the hand on the knobs: LFOs, drift, sample-and-hold and the audio envelope wiggling any control around wherever you left its slider, the beat they lock to, and the stab gate, which cuts the whole board between the look you are dialing and a second one — stock, or a look you held there. A slot is patched at the control it drives (press ∿ on any row); this is where the eight read as a bay'
+  'not the rig — the hand on the knobs: LFOs, drift, sample-and-hold and the audio envelope wiggling any control around wherever you left its slider, the beat they lock to, and the stab gate, which cuts the whole board between the look you are dialing and a second one — stock, or a look you held there. A slot is patched at the control it drives (the ∿ in any control row’s ⋮ menu); this is where the eight read as a bay'
 
 // What the bay answers to beyond its name and its blurb. Only the words a
 // searcher would actually type that the prose above does not already carry —

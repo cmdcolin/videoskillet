@@ -1371,6 +1371,13 @@ export function App() {
         // On the bench nothing is folded, so the map marks a stage and scrolls
         // to it rather than unfolding one and closing another.
         onOpen={bench ? nav.jumpPhase : nav.togglePhase}
+        // Pressing a box the query missed. The box goes to its stage either
+        // way, so the query has to come off with it — the stage is about to be
+        // listed and a filter that missed it would list nothing.
+        onDropFilter={() => {
+          clearFilter()
+          setSearchOpen(false)
+        }}
         openGroup={nav.openGroup}
         onOpenGroup={nav.toggleGroup}
         stageTop={stageTop}
@@ -1379,7 +1386,7 @@ export function App() {
         <div className={ui.hint}>
           {query.moving
             ? query.text === ''
-              ? 'nothing is moving — press ∿ on any control row to set it wobbling'
+              ? 'nothing is moving — open any control row’s ⋮ and press ∿ to set it wobbling'
               : `nothing moving matches “${query.text}” — drop the ∿ to search the whole panel`
             : // A query can land on controls that exist and cannot act, which is
               // not the same answer as no match at all: "bass" is seven routings
