@@ -86,8 +86,8 @@ every one of them cost real time.
 Prose in the docs and in the app says what a thing is. Definition by negation —
 "not the rig — the hand on it now" — reads as filler, since the positive half
 carries the sentence on its own. Keep a negation only where the alternative is
-one a reader would otherwise pick: an ADR naming what it turned down, or a
-fault told apart from the one it resembles.
+one a reader would otherwise pick: an ADR naming what it turned down, or a fault
+told apart from the one it resembles.
 
 ## Commits
 
