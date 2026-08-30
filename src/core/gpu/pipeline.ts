@@ -38,6 +38,7 @@ import {
   PRELUDE,
   TILE_WG,
   packParams,
+  patchParams,
 } from './prelude'
 import { RenderLoop } from './renderloop'
 import { Overlay } from './savedBoard'
@@ -1569,32 +1570,34 @@ export class Engine implements EngineApi {
   ): void {
     const c = this.controls
     const f = FEEDS[src]
-    packParams(
-      {
-        ...vals,
-        gen: f.gen,
-        // this deck's tape time, so its dropouts freeze when it is paused
-        srcFrame: this.tapeFrame[src],
-        scramble: c[f.scramble],
-        scrambleMode: c[f.scrambleMode],
-        termination: c[f.termination],
-        noiseSigma: c[f.noise],
-        polarityFlip: c[f.polarity],
-        // These two override a program-bus knob that feed.wgsl also reads, so
-        // leaving either out would put the bus's ground loop and the bus's bad
-        // plug onto both feeds as well as the output.
-        humAmp: c[f.hum],
-        connectorGlitch: c[f.connector],
-        connectorMode: c[f.connectorMode],
-        dropoutRate: c[f.dropoutRate],
-        dropoutLen: c[f.dropoutLen] * 1e-6 * SAMPLE_RATE,
-        bPause: deck.pause,
-        bPauseBar: deck.bar,
-        bShift0: deck.shift,
-        bRowOff: deck.row,
-      },
-      this.feedScratch,
-    )
+    // The bus's own values, then this feed's on top of them — rather than a
+    // merged object to pack from. `{...vals, …}` copied 222 fields into a
+    // fresh object, landed it in dictionary mode and then read 234 names back
+    // out: 100 us a feed, 200 us a frame with both engaged, for seventeen
+    // fields' worth of difference. The bytes are the same either way.
+    packParams(vals, this.feedScratch)
+    patchParams(this.feedScratch, {
+      gen: f.gen,
+      // this deck's tape time, so its dropouts freeze when it is paused
+      srcFrame: this.tapeFrame[src],
+      scramble: c[f.scramble],
+      scrambleMode: c[f.scrambleMode],
+      termination: c[f.termination],
+      noiseSigma: c[f.noise],
+      polarityFlip: c[f.polarity],
+      // These two override a program-bus knob that feed.wgsl also reads, so
+      // leaving either out would put the bus's ground loop and the bus's bad
+      // plug onto both feeds as well as the output.
+      humAmp: c[f.hum],
+      connectorGlitch: c[f.connector],
+      connectorMode: c[f.connectorMode],
+      dropoutRate: c[f.dropoutRate],
+      dropoutLen: c[f.dropoutLen] * 1e-6 * SAMPLE_RATE,
+      bPause: deck.pause,
+      bPauseBar: deck.bar,
+      bShift0: deck.shift,
+      bRowOff: deck.row,
+    })
     this.gpu.device.queue.writeBuffer(buf, 0, this.feedScratch)
   }
 

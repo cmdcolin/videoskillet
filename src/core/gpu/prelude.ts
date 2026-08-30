@@ -375,6 +375,38 @@ export function packParams(
   })
 }
 
+// Where each field sits and how it is written. `GEN_OFFSET` is this for one
+// name, and `patchParams` is the general case.
+const PARAM_SLOT: ReadonlyMap<string, { offset: number; u32: boolean }> =
+  new Map(
+    PARAM_DEFS.map(([name, type], i) => [
+      name,
+      { offset: i * 4, u32: type === 'u32' },
+    ]),
+  )
+
+// Overwrite named fields of a block that is already packed.
+//
+// For a caller that wants the program bus's values with a handful replaced —
+// which is what a per-source feed is. Building that as `{...vals, ...overrides}`
+// and packing the result copies 222 fields into a fresh object, lands it in
+// dictionary mode, and then reads 234 names back out of it: 100 us a feed,
+// 200 us a frame with both engaged. Packing the bus's own object and writing
+// the overridden fields on top is the same bytes for seventeen stores.
+export function patchParams(
+  out: ArrayBuffer,
+  over: Partial<Record<ParamName, number>>,
+): void {
+  const dv = new DataView(out)
+  for (const [name, v] of Object.entries(over)) {
+    const slot = PARAM_SLOT.get(name)
+    if (slot !== undefined && v !== undefined) {
+      if (slot.u32) dv.setUint32(slot.offset, v >>> 0, true)
+      else dv.setFloat32(slot.offset, v, true)
+    }
+  }
+}
+
 const paramStruct = `struct Params {\n${PARAM_DEFS.map(([n, t]) => `  ${n}: ${t},`).join('\n')}\n}\n`
 
 export const PRELUDE = /* wgsl */ `
