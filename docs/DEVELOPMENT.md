@@ -288,7 +288,26 @@ pnpm gpuprof --ablate=<pass>                   # the ablation upper bound
 pnpm gpuprof --dump=<path> ; pnpm gpuprof:cmp <a> <b>   # is an arm pixel-exact?
 node scripts/perf.mjs <url> <label> [batches] [framesPerBatch]
 node scripts/perf.mjs <url> <label> --ablate   # per-pass cost attribution
+node scripts/cpuprof.mjs <url> <label> [s] --scenario=idle|allrows|drag
 ```
+
+**The main thread is the third measurement, and the two above cannot see it.**
+`gpuprof` times the GPU's own counters and `perf.mjs` stops the loop and times
+`vf.step()`; neither covers the thread that feeds them, where React, the uniform
+pack, the per-line CPU state and the render loop's own bookkeeping land.
+`scripts/cpuprof.mjs` samples it under Chrome — the one browser harness here
+that is deliberately not Firefox, because the largest thing it has found so far
+was a browser difference that would have read as zero on Firefox (see
+`OPTIMIZATIONS.md` › _What a CPU profile of the live app found_).
+
+Two rules come with it. **Point it at a built app**, because a dev-build profile
+of this app is mostly React's development machinery. And **read `TaskDuration`
+per frame, never fps**: the loop is vsync-capped, so a fifth of the budget goes
+before a frame is missed — the 3.6 ms/frame spin it found cost no frame rate on
+either browser, which is exactly why it lasted. `--scenario=drag` names its
+control (`--control=`) so that two arms drag the same one; taking whichever
+slider sits in some position drags a different control in each arm, and they are
+not interchangeable.
 
 **Per-pass GPU time first, headless.** `scripts/gpuprof` stands the compute
 graph up under Deno, whose WebGPU is wgpu — the implementation under Firefox

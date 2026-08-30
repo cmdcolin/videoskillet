@@ -18,7 +18,10 @@ the measurements decided.
 Every millisecond quoted below was taken on the dev box — a WX 3200 under
 Firefox Nightly / Linux — best-of over interleaved runs, in August 2026. They
 are one machine on one day: read them for their ratios and their signs, not
-their third digit, and re-derive rather than cite one before building on it.
+their third digit, and re-derive rather than cite one before building on it. The
+one exception is _What a CPU profile of the live app found_, which is main
+thread rather than GPU and says its own box and browser, because the largest
+thing in it is a browser difference and would have read as zero on the other.
 
 ## The rule: ablate before you optimize
 
@@ -533,6 +536,87 @@ per-frame path avoids allocating and the drag paths coalesce their writes:
   `replaceState` once the value settles (the browser rate-limits the history API
   anyway), and the modulation bay defers its `localStorage` write — a
   synchronous one per frame of a drag is paid on the thread feeding the GPU.
+
+### What a CPU profile of the live app found
+
+The page above was written from GPU-side measurement, and the main thread had
+never been profiled the same way. Sampling it under Chrome's CDP profiler
+(`Profiler.setSamplingInterval` at 100 µs, `Performance.getMetrics` for the
+style and layout halves) on the production build, macOS, August 2026:
+
+| what                         | before  | after   |
+| ---------------------------- | ------- | ------- |
+| main thread per frame (task) | 4.26 ms | 0.83 ms |
+| of which the drain probe     | 3.6 ms  | 0.02 ms |
+| `LineState.update` at rest   | 86 µs   | 23 µs   |
+| `renderFrame`'s own time     | 96 µs   | 19 µs   |
+| idle, all 230 rows mounted   | 72%     | 94%     |
+
+**Frame rate said none of this.** Every arm held 60 fps on both browsers before
+and after, which is the trap `DEVELOPMENT.md` states in one line and this page
+had never had a case for: the loop is vsync-capped, so a fifth of the budget
+goes before the first frame is missed. Read `TaskDuration` per frame.
+
+Three findings, in the order they were worth:
+
+- **The drain probe was re-arming at 8.3 kHz.** `renderloop.ts`'s backpressure
+  gate kept one completion probe outstanding and re-armed it the moment it
+  settled. On Firefox that reads as one probe a frame, and it is an accident of
+  Firefox's implementation: it resolves `onSubmittedWorkDone` off a main-thread
+  timer with a ~17 ms floor, measured here at a 17 ms median, so the re-arm
+  could not outrun the display. Chrome resolves in ~0.1 ms and the same code
+  armed **135 probes per rendered frame** — 0.55 ms/frame of JS and 3.1 ms/frame
+  in the browser's own C++, which is where it hid: nearly all of it landed in
+  the profiler's `(program)` bucket, attributable to no JS frame at all. The
+  rate now comes from the caller, one arm per refresh, which is every reading
+  `queueLate` can use since it is consulted once per refresh and nowhere else.
+  Worth **3.2 ms/frame** on Chrome and nothing on Firefox, where it was already
+  one a frame.
+- **The per-frame uniform object was spread into dictionary mode.**
+  `uniformValues` returns a literal of 222 fields, so it arrives with a hidden
+  class; `renderFrame` then spread it and four per-frame state updates into a
+  fresh object, which copies every field one at a time and lands in dictionary
+  mode. That cost twice — 49 µs to build against 12 for `Object.assign` onto the
+  object that already existed, and then 8.9 µs rather than 4.0 for `packParams`
+  to read 234 names back out of it. **51 µs a frame**, bit-exact.
+- **`Wow.at` was drawing 2100 sines a frame to multiply them by zero.**
+  `LineState.update` walks 525 lines and sampled the wow oscillator — four
+  `Math.sin` a row — on every one, then scaled it by an amplitude that is zero
+  in the default look and in 80 of the 85 authored presets. It reads no random
+  stream, so gating it on the amplitude moves nothing. That, plus hoisting the
+  eight other control-derived constants the loop was recomputing 525 times,
+  takes an at-rest frame **86 µs → 23 µs** and leaves a look with wow up paying
+  the same as before, which is the right shape.
+
+The last two are bit-exact by construction and checked as such rather than
+argued: `LineState`'s two implementations were run side by side over 240 frames
+of four control configurations against a seeded `rand` and compared float by
+float, and the built app was compared against the parent build over 60 stepped
+frames of a seeded take on the default look and three presets, hashing the
+canvas per frame — identical throughout. The hoists keep each expression's
+grouping (`a * b * c` hoisted as `a`, left as `x * a * c` rather than folded
+into `a * c`), because float multiplication does not associate.
+
+**What the profile said about React is that it costs nothing until something
+drags.** With the filter box holding every stage open — 230 sliders, 4434 nodes
+— a ten-second idle profile of the production build attributes **0 ms** to
+React, and 6 style recalcs and 5 layouts in the whole ten seconds. The claims at
+the top of this section hold up.
+
+Holding a slider down in that panel is the other end, and it is the only thing
+in the app that asks React for work at anything like frame rate. At 60 pointer
+moves a second, `saturation` held down with all 230 rows mounted: **59 fps, 3.2
+ms/frame, 82% idle**, of which React is ~0.45 ms — `Slider`, `renderWithHooks`,
+`ControlSlider`, `reconcileChildrenArray`. Comfortable, and it is comfortable
+_because_ of the fix above rather than beside it: the same drag on the parent
+build ran 6.4 ms/frame and gave up frame rate as the box got busier (59.4, 54.1,
+51.4 fps over three rounds where the patched arm held 59.3, 58.1, 57.9). The
+drag was always affordable; there was 3.6 ms of probe sitting in front of it.
+
+**Profile the built app**, with `scripts/cpuprof.mjs`, which does the above. Dev
+told the opposite story about every one of these: the same drag fell to 24 fps
+at a quarter the pointer rate and spent 43% of the thread in `jsxDEV`,
+`validateProperty` and `logComponentRender`, none of which ship.
 
 ## Devices are created freely and never destroyed
 
