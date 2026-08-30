@@ -154,31 +154,35 @@ const STATES = [
     name: 'teletype-dialog',
     dialog: true,
     what: 'the skinned textarea, the tab pair, the mosaic chips and the tools',
-    // Three doors: the stage the picker lives in, the picker, then the editor.
+    // Four doors: the stage the picker lives in, the picker's trigger, the
+    // option, then the editor.
     //
-    // It was two, and the missing one is why this state stopped working. The
-    // source pickers moved inside the stages when the map became the way to
-    // everything, so the <select> below is not on the page until Source A is
-    // open — before that this reached for `s.options` on undefined, which took
-    // the whole run down with it rather than failing one state.
+    // It was two, then three, and each time the state broke it broke silently —
+    // this suite is a generator, so `sweep.mjs` never runs it, and a state that
+    // cannot reach its own subject reports one line among nine. The picker
+    // stopped being a `<select>` in `9970075 feat(ui): pick, hold and eject a
+    // source from the slot's own row`: half of what it offers is a *door*
+    // (File…, Clips…, Browse…) and a native select cannot re-fire on the option
+    // already chosen. It is a trigger button and a popover of buttons now, so
+    // the prototype-setter trick below went with it — a click is a click again.
     stage: 'Source A',
     steps: [
-      // React tracks the value on the node itself, so assigning through the
-      // prototype setter is what makes it see a real change — a plain
-      // `select.value = x` fires the event and changes nothing.
+      // The trigger carries the row's title as its accessible name (MenuRow),
+      // which is what tells A's picker from B's and from the sound's.
       () => {
-        // Not the first select on the page: the masthead's morph-duration
-        // picker is one too, and sits earlier in the DOM.
-        const s = [...document.querySelectorAll('select')].find(sel =>
-          [...sel.options].some(o => /teletype/i.test(o.textContent)),
+        const b = [...document.querySelectorAll('button')].find(
+          b => b.getAttribute('aria-label') === 'main source',
         )
-        const opt = [...s.options].find(o => /teletype/i.test(o.textContent))
-        const set = Object.getOwnPropertyDescriptor(
-          HTMLSelectElement.prototype,
-          'value',
-        ).set
-        set.call(s, opt.value)
-        s.dispatchEvent(new Event('change', { bubbles: true }))
+        b?.click()
+      },
+      // Then the option, out of the popover the trigger opened. Every row fires
+      // onChange whether or not it is the one already lit, which is the whole
+      // reason this is no longer a select.
+      () => {
+        const b = [...document.querySelectorAll('[popover] button')].find(b =>
+          /teletype/i.test(b.textContent ?? ''),
+        )
+        b?.click()
       },
       () => {
         const b = [...document.querySelectorAll('button')].find(b =>
