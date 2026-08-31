@@ -2,6 +2,18 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [0.33.2](https://github.com/cmdcolin/videoskillet.js/compare/v0.33.1...v0.33.2) - 2026-08-31
+
+### Features
+- *(ui)* [`3d6712d`](https://github.com/cmdcolin/videoskillet.js/commit/3d6712d634556b520e347d60c4e3fc65054b6cb4) a door out of the preset shortlist
+
+### Fixes
+- *(ui)* [`d23099c`](https://github.com/cmdcolin/videoskillet.js/commit/d23099c449226bce0643c67d7e3407557405064f) the preset "moved since" mark stops moving the row
+- *(ui)* [`10bba1c`](https://github.com/cmdcolin/videoskillet.js/commit/10bba1ca8895a4097a49b9f09073b8ad84e8921e) stale hover caption survives switching preset views
+
+### Tests
+- *(ui)* [`38b5bfe`](https://github.com/cmdcolin/videoskillet.js/commit/38b5bfe782827f3646e20f41300733ef715a79a4) two stale pins, and room for the walk that needs it
+
 ## [0.33.1](https://github.com/cmdcolin/videoskillet.js/compare/v0.33.0...v0.33.1) - 2026-08-31
 
 ### Features
