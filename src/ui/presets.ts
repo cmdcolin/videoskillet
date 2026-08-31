@@ -728,6 +728,41 @@ export const PRESETS: PresetDef[] = [
     mod: [{ target: 'cfbRing', source: 'hit', rateHz: 1, depth: 0.7 }],
   },
   {
+    name: 'invertedRungs',
+    displayName: 'inverted rungs',
+    group: 'Feedback loops',
+    blurb:
+      'The loop returning below zero, so every lap comes back as the polarity of the one before it, and dropped sixty lines while it does — the frame fills with a stack of generations alternating positive and negative down the screen. The multiplier is what holds them apart: summed, the alternating laps cancel into vertical smear and the copies stop being legible; multiplied, each rung lands hard-edged and in a palette the rung above it did not have.',
+    patch: {
+      cfbMix: 0.78,
+      cfbGain: -1.1,
+      cfbDelayUs: 1.2,
+      cfbLines: 60,
+      cfbRing: 0.9,
+      chromaGain: 1.6,
+      phosphor: 0.3,
+    },
+  },
+  {
+    name: 'ringInTheHighlights',
+    displayName: 'ring in the highlights',
+    group: 'Feedback loops',
+    blurb:
+      'The loop return keyed on brightness, so the multiply can only happen where the picture is already lit. Highlights grow scalloped trails sideways and everything under the slice — a dark subject, a saturated backing — stays photographic, which is the difference between feedback that follows the subject and feedback that floods the frame. Keyed and summed, that trail is a grey smear of the highlight itself; keyed and multiplied, the same trail comes back through the spectrum, because the loop against the live picture lands at sums and differences the highlight never carried.',
+    patch: {
+      cfbMix: 0.82,
+      cfbGain: 0.92,
+      cfbDelayUs: 1.1,
+      cfbLines: 1,
+      cfbRing: 1,
+      cfbKey: 1,
+      cfbKeyLevel: 50,
+      cfbKeySoft: 10,
+      chromaGain: 1.8,
+      phosphor: 0.5,
+    },
+  },
+  {
     name: 'servoWarp',
     displayName: 'servo warp',
     group: 'Feedback loops',
