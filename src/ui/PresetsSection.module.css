@@ -111,3 +111,21 @@
 .presetGroup {
   margin: 2px 0 4px;
 }
+
+/* The chip carries its "moved since" mark in its own top-right corner, so the
+   mark costs no width. As a " •" appended to the label it widened the chip the
+   moment a drag set lastPreset — on the first pointer step of the gesture, with
+   the pointer already down — and every chip after it on the row shifted, often
+   rewrapping the row under the hand that was dragging. */
+.chip {
+  position: relative;
+}
+.editedDot {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--edit);
+}

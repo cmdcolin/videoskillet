@@ -135,12 +135,13 @@ function PresetButton(props: {
     <button
       title={
         mixable
-          ? `sets ${touches} controls at once — ${props.def.blurb} Drag sideways to mix it in partially.`
+          ? `sets ${touches} controls at once — ${props.def.blurb} Drag sideways to mix it in partially.${props.edited ? ' The look has moved since.' : ''}`
           : props.def.blurb
       }
       style={mixable ? fill : undefined}
       className={cx(
         ui.btn,
+        styles.chip,
         mixable && ui.presetBtn,
         props.active && ui.active,
         props.edited && ui.edited,
@@ -211,7 +212,7 @@ function PresetButton(props: {
       }}
     >
       {presetLabel(props.def)}
-      {props.edited ? ' •' : ''}
+      {props.edited ? <span className={styles.editedDot} /> : null}
     </button>
   )
 }
