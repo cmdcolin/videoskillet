@@ -163,12 +163,14 @@
   grid-area: value;
 }
 /* Track fills from the *default* position (--def) out to the thumb (--lo/--hi
-   from Slider.tsx), with a faint tick marking the default. That paint is
-   `ui.track`'s, shared with the deck's shuttle strips; the per-engine track and
-   thumb rules are `ui.range`'s underneath it. All this sets is the box a
-   control row wants to put it in. */
+   from Slider.tsx). That paint is `ui.track`'s, shared with the deck's shuttle
+   strips; the per-engine track and thumb rules are `ui.range`'s underneath it.
+   All this sets is the box a control row wants to put it in, and the one thing
+   the row takes over: the default mark, which it draws as .defmark below. */
 .range {
   composes: track from './ui.module.css';
+  /* the row draws its own default mark (.defmark) over the track */
+  --def-tick: transparent;
   width: 100%;
   height: 14px;
   display: block;
@@ -181,6 +183,30 @@
 .rangeWrap {
   display: block;
   position: relative;
+}
+/* Where the control rests at stock, ruled through the track. It was a 2px line
+   inside the 4px trough, painted by the shared track gradient — legible on an
+   empty track and not on a row that had a fill, a swing band and a thumb near
+   it, which is every row anyone is looking at while they wonder how far they
+   have come. Drawn as a mark now, standing clear of the trough at both edges,
+   so the two things a track says about itself — here is stock, here is where
+   the tuned range ended — are told in one language.
+
+   Taller than .redline and in the panel's neutral grey. It is the mark the
+   track is read against, and a red half-tick beside it is a scale marking on
+   the way out; the height is what says which is which without a second colour,
+   and grey is what keeps both of them properties of the track rather than of
+   the value (amber is the panel's word for "you moved this"). */
+.defmark {
+  position: absolute;
+  top: 3px;
+  width: 2px;
+  height: 10px;
+  margin-left: -1px;
+  border-radius: 1px;
+  background: #8a8a9c;
+  opacity: 0.7;
+  pointer-events: none;
 }
 /* Where the tuned range used to end. Past this notch the control is beyond
    anything the hardware being modelled would do — every path that takes one is
@@ -418,6 +444,10 @@ button.badge {
   }
   .pickup {
     top: 7px;
+    height: 16px;
+  }
+  .defmark {
+    top: 5px;
     height: 16px;
   }
   .redline {

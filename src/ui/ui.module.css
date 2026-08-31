@@ -134,12 +134,16 @@
      that filled from an end and read as engaged while sitting at stock. */
   .track {
     composes: range;
+    /* A caller that draws its own default mark over the track sets this to
+       `transparent` rather than reimplementing the fill without it — two marks
+       at one x in two greys read as a seam, not as one tick. */
+    --def-tick: #55555f;
     --track-bg:
       linear-gradient(
         to right,
         transparent calc(var(--def) - 1px),
-        #55555f calc(var(--def) - 1px),
-        #55555f calc(var(--def) + 1px),
+        var(--def-tick) calc(var(--def) - 1px),
+        var(--def-tick) calc(var(--def) + 1px),
         transparent calc(var(--def) + 1px)
       ),
       linear-gradient(

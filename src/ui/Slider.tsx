@@ -718,6 +718,19 @@ export function Slider(props: {
           )
         }
       />
+      {/* Where the control rests at stock — the point the fill is measured
+          from, and the one that says at a glance whether a row has been moved
+          and which way. It was a 2px line inside the trough, painted by the
+          shared track gradient, and on a row with a fill and a thumb near it
+          there was nothing left to see.
+
+          Not when stock is a stop, for the reason the redline below skips one:
+          the end of the track already says it, and a mark half-overhanging the
+          rounded cap is noise. Most rows here rest at their minimum, so this is
+          the common case, not an edge one. */}
+      {props.defaultValue > props.min && props.defaultValue < props.max ? (
+        <span className={styles.defmark} style={{ left: `${defPct}%` }} />
+      ) : null}
       {/* How far the routing on this row is swinging the value, drawn on the
           stretch of track it is swinging along. The reading cannot show it: it
           holds the *resting* value on purpose, because that is what a preset, a
