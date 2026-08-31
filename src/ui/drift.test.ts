@@ -137,8 +137,19 @@ describe('a leg', () => {
 
         expect(spread(tethered, DEFAULT_CONTROLS)).toBeLessThan(0.08)
         expect(widest(tethered, DEFAULT_CONTROLS)).toBeLessThan(0.8)
-        expect(spread(free, DEFAULT_CONTROLS)).toBeGreaterThan(0.15)
         expect(widest(free, DEFAULT_CONTROLS)).toBeGreaterThan(0.85)
+        // The free walk against the tethered one rather than against a level of
+        // its own. Its absolute spread moves with how many sliders are in the
+        // set, because the set is what the seeded rolls are drawn over: three
+        // throwaway controls added to this revision reproduce seed 3 at 0.1379
+        // exactly, where the pin here was 0.15 — the same two failures, the same
+        // digits, for controls that do nothing. What the walk is here to show
+        // survives that, since it is a comparison and not a level: across these
+        // seeds the free spread is 0.138 to 0.181 against a tethered 0.038 to
+        // 0.052, which is the ratio the paragraph above claims.
+        expect(spread(free, DEFAULT_CONTROLS)).toBeGreaterThan(
+          3 * spread(tethered, DEFAULT_CONTROLS),
+        )
       }
     },
     LONG_WALK_MS,
@@ -247,14 +258,23 @@ describe('the walk', () => {
     const b = board()
     const drift = makeDrift(b.deps)
     drift.add(BOARD)
-    vi.advanceTimersByTime(DRIFT_SECONDS * 1000)
+    vi.advanceTimersByTime(DRIFT_SECONDS * 1000 * 7)
     drift.stop()
 
-    // Nothing between the two legs moved the board, so the second is a nudge to
-    // the first rather than to the look the mode started on.
-    expect(b.legs[1].to).not.toEqual(b.legs[0].to)
-    expect(spread(b.legs[1].to, b.legs[0].to)).toBeLessThan(
-      spread(b.legs[1].to, DEFAULT_CONTROLS),
+    // Nothing between the legs moved the board, so each is a nudge to the last
+    // rather than to the look the mode started on.
+    //
+    // Read over eight legs and not two, because the difference the claim is
+    // about only opens up with distance: two legs stand one nudge from each
+    // other and two nudges from stock, and at 0.00068 against 0.00064 which of
+    // those is larger is decided by the seeded draw rather than by the tether —
+    // three throwaway controls added to this revision flip it, since the set of
+    // sliders is what the rolls are drawn over. Eight legs are seven nudges from
+    // stock and still one from the leg before.
+    const last = b.legs.length - 1
+    expect(b.legs[last].to).not.toEqual(b.legs[last - 1].to)
+    expect(spread(b.legs[last].to, b.legs[last - 1].to)).toBeLessThan(
+      spread(b.legs[last].to, DEFAULT_CONTROLS),
     )
     vi.useRealTimers()
   })
