@@ -227,6 +227,9 @@ export const DEFAULT_CONTROLS = {
   cfbKey: 0,
   cfbKeyLevel: 45,
   cfbKeySoft: 8,
+  cfbKeyExt: 0, // the keyer's key input: 0 the loop return itself, 1 program
+  cfbKeyHueDeg: 180, // which chroma phase the keyer slices, when it is slicing hue
+  cfbKeyAcceptDeg: 0, // hue wedge either side of it (0 = the box is a luma keyer)
   cfbHold: 0,
   cfbTrail: 0,
   cfbFilterMHz: 0, // loop resonance center, 0 = flat loop

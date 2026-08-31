@@ -348,6 +348,7 @@ export class Engine implements EngineApi {
   private filterBuf: GPUBuffer
   private uvfBBuf: GPUBuffer
   private compA: GPUBuffer
+  private progSnap: GPUBuffer
   private compB: GPUBuffer
   // B materialized as a composite on its own raster (post-feed); mix_b's dirty
   // path resamples this rather than synthesizing B analytically.
@@ -372,6 +373,7 @@ export class Engine implements EngineApi {
   // the compB scratch so an engaged feed pass can damage the waveform into its
   // real destination. renderFrame swaps them off the same predicates that gate
   // the feed passes, so the routing and the gating cannot disagree.
+  private fbCompositePass: Pass
   private encodeCompositePass: Pass
   private encodeCompositeBgs: [GPUBindGroup, GPUBindGroup]
   private encodeCompositeBPass: Pass
@@ -469,6 +471,13 @@ export class Engine implements EngineApi {
     this.compB = storage(N * 4)
     this.bCompBuf = storage(N * 4)
     this.compPrev = storage(N * 4)
+    // Program as it stood before the loop's crossfade touched it, for the
+    // loop keyer's external key input. fbComposite writes compA in place, so
+    // a keyer reading its 4-sample aperture straight off compA would read
+    // some taps pre-crossfade and some post, depending on where the
+    // workgroup boundary fell. Copied rather than recomputed, and only on
+    // the frames the external key is patched in.
+    this.progSnap = storage(N * 4)
     this.chromaBuf = storage(N * 4)
     this.underBuf = storage(N * 4)
     this.lineInfoBuf = storage(LINES * 16)
@@ -785,6 +794,7 @@ export class Engine implements EngineApi {
           { buffer: this.paramsBuf },
           { buffer: this.compPrev },
           { buffer: this.compA },
+          { buffer: this.progSnap },
         ],
         perLine,
         () => c.cfbMix !== 0,
@@ -794,6 +804,7 @@ export class Engine implements EngineApi {
     // destination) as slot 0; slot 1 targets the compB scratch for the frames
     // where the feed pass sits in between. renderFrame swaps by the same
     // predicates that gate the feeds.
+    this.fbCompositePass = byLabel(this.prePasses, 'fbComposite')
     this.encodeCompositePass = byLabel(this.prePasses, 'encodeComposite')
     this.encodeCompositeBgs = [
       this.encodeCompositePass.bg,
@@ -2323,7 +2334,15 @@ export class Engine implements EngineApi {
       this.encodeCompositeBgs[this.aFeedOn() ? 1 : 0]
     this.encodeCompositeBPass.bg =
       this.encodeCompositeBBgs[this.bFeedOn() ? 1 : 0]
-    for (const p of this.prePasses) run(p)
+    for (const p of this.prePasses) {
+      // The keyer's external key input is program as the mixer had it, so the
+      // snapshot is taken here — after the switcher's own boxes, before the
+      // loop crossfades over the top of them.
+      if (p === this.fbCompositePass && c.cfbKey !== 0 && c.cfbKeyExt > 0) {
+        enc.copyBufferToBuffer(this.compA, 0, this.progSnap, 0, N * 4)
+      }
+      run(p)
+    }
     for (let g = 0; g < gens; g++) {
       if (g > 0) {
         enc.copyBufferToBuffer(

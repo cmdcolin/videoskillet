@@ -7,13 +7,21 @@
 // part of live burst, so ACC pumping and color killer dropout at high mix are
 // emergent. The output stage compresses into its rails rather than clipping.
 
-// The luma keyer gates the crossfade with a sliced level of the fed-back
-// signal itself (self-key): the loop only regenerates where its own picture
-// crosses the key level. Negative key amount inverts polarity.
+// The keyer gates the crossfade with a slice of the signal it is watching, so
+// the loop only regenerates on one side of that slice. Negative key amount
+// inverts polarity. Two connectors decide what it is watching and what it
+// slices: the key input is the loop return itself (self-key, the loop's own
+// past drawing its own boundary) or program (the live picture carving the
+// accumulation), and the acceptance angle takes the box off level and puts it
+// on hue.
 
 @group(0) @binding(0) var<uniform> P: Params;
 @group(0) @binding(1) var<storage, read> prev: array<f32>;
 @group(0) @binding(2) var<storage, read_write> comp: array<f32>;
+// Program as the mixer had it, before this pass crossfades over it. Only the
+// keyer's external key input reads it, and the pipeline only refreshes it on
+// the frames that input is patched in.
+@group(0) @binding(3) var<storage, read> prog: array<f32>;
 
 // The loop amplifier's output stage. A hard rail pins runaway energy into
 // flat white; a real stage compresses into its rails, so past the knee the
@@ -34,14 +42,65 @@ fn rails(v: f32) -> f32 {
   return v;
 }
 
-// keyer's luma lowpass: a 4-sample boxcar spans one subcarrier cycle exactly
-fn keyLuma(pos: f32) -> f32 {
-  let i0 = i32(floor(pos)) - 1;
-  var acc = 0.0;
-  for (var k = 0; k < 4; k = k + 1) {
-    acc = acc + prev[clampIdx(i0 + k)];
+// The keyer's key aperture: a 4-sample boxcar, which at 4x fsc spans one
+// subcarrier cycle exactly. Summed, that nulls the chroma and leaves the
+// luma; the same four taps dotted against the carrier lattice they arrived on
+// are the U and V of the same sample. One aperture, both things the box can
+// slice on, and no trig either way — the lattice is four unit vectors.
+//
+// `ext` is the key-input connector. Self reads the loop return at the delayed
+// position, so the boundary is a generation old and moves with the delay;
+// program reads what the mixer handed the loop this frame, so the boundary is
+// now and a subject moving through the frame carves it. Both are referenced to
+// the output lattice, which is what makes the delay a hue rotation the keyer
+// can see rather than one it is blind to.
+//
+// Branched rather than selected between: `select` evaluates both arms, and the
+// arm this one does not want is a read of `comp` at the neighbours of a sample
+// every other invocation is about to write. `ext` is one uniform for the whole
+// dispatch, so the branch is coherent and costs nothing.
+struct KeyTap {
+  luma: f32,
+  uv: vec2f,
+}
+
+fn keyTap(pos: f32, n: u32, ext: bool) -> KeyTap {
+  let i0 = select(i32(floor(pos)) - 1, i32(n) - 1, ext);
+  var y = 0.0;
+  var uv = vec2f(0.0);
+  for (var k = 0u; k < 4u; k = k + 1u) {
+    var v = 0.0;
+    if (ext) {
+      v = prog[clampIdx(i0 + i32(k))];
+    } else {
+      v = prev[clampIdx(i0 + i32(k))];
+    }
+    y = y + v;
+    uv = uv + v * carrier(n + k + 3u, P.frame);
   }
-  return acc * 0.25;
+  return KeyTap(y * 0.25, uv * 0.5);
+}
+
+// Below this much chroma amplitude there is no phase to slice: a demodulator
+// handed an unsaturated sample reports an essentially arbitrary angle, and a
+// loop keyed on that would flicker its own territory out of noise. 3 IRE
+// against a saturated primary's ~30 on this bus.
+const KEY_CLIP = 3.0;
+
+fn keyGate(tap: KeyTap) -> f32 {
+  if (P.cfbKeyAccept <= 0.0) {
+    return smoothstep(P.cfbKeyLevel - P.cfbKeySoft, P.cfbKeyLevel + P.cfbKeySoft, tap.luma);
+  }
+  // A chroma keyer in the loop return instead of a luma one. Self-limiting on
+  // the self-key, because the loop delay is a hue rotation: a region
+  // regenerates until its own return has spun out of the wedge, stops, and
+  // whatever has spun in takes the territory over. The softness knob is in IRE
+  // of a 100 IRE slice, so it carries over as the same fraction of PI.
+  var w = atan2(tap.uv.y, tap.uv.x) - P.cfbKeyHue;
+  w = w - 2.0 * PI * round(w / (2.0 * PI));
+  let soft = P.cfbKeySoft * 0.01 * PI;
+  let ang = 1.0 - smoothstep(P.cfbKeyAccept - soft, P.cfbKeyAccept + soft, abs(w));
+  return ang * smoothstep(KEY_CLIP, 2.0 * KEY_CLIP, length(tap.uv));
 }
 
 // Bent-enhancer resonance: the bend bridges a frequency-selective network
@@ -153,7 +212,7 @@ fn main(
   }
   var m = P.cfbMix;
   if (P.cfbKey != 0.0) {
-    var gate = smoothstep(P.cfbKeyLevel - P.cfbKeySoft, P.cfbKeyLevel + P.cfbKeySoft, keyLuma(pos));
+    var gate = keyGate(keyTap(pos, n, P.cfbKeyExt > 0.5));
     if (P.cfbKey < 0.0) {
       gate = 1.0 - gate;
     }

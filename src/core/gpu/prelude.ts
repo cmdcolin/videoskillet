@@ -331,6 +331,9 @@ export const PARAM_DEFS = [
   ['cfbFilterBoost', 'f32'], // added in-band loop gain (self-oscillates past unity round trip)
   ['cfbServo', 'f32'], // varactor on the loop delay: samples of pull per 100 IRE of its own video
   ['cfbRing', 'f32'], // loop bus ring-modulated against the live program
+  ['cfbKeyExt', 'f32'], // keyer's key input: 0 the loop return (self), 1 program
+  ['cfbKeyHue', 'f32'], // chroma-key backing phase, radians
+  ['cfbKeyAccept', 'f32'], // chroma-key acceptance wedge, radians (0 = the box slices luma)
   // display
   // Beam blanking, held on: the guns cut for most of a cycle and let through in
   // flashes. Applied in decode, upstream of the persistence layer, which is the

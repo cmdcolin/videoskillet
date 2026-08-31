@@ -300,6 +300,9 @@ export function uniformValues(c: Controls, env: UniformEnv) {
     cfbFilterBoost: c.cfbFilterBoost,
     cfbServo: c.cfbServoUs * 1e-6 * SAMPLE_RATE,
     cfbRing: c.cfbRing,
+    cfbKeyExt: c.cfbKeyExt,
+    cfbKeyHue: (c.cfbKeyHueDeg * Math.PI) / 180,
+    cfbKeyAccept: (c.cfbKeyAcceptDeg * Math.PI) / 180,
     // Mistuning frees the sound carrier from its trap, so the buzz the
     // soundIre knob dials in deliberately arrives uninvited — same term,
     // two causes on one wire.
