@@ -140,6 +140,12 @@ That last one turns the tint 15,734 times a second. The reference lives in the
 receiver, so the colour bands stay on the glass while a rolling picture slides
 through them.
 
+The sound can be the mic, a file, the clip's own track, or whatever the machine
+itself is playing, that last through a share of the tab or app it comes out of.
+It is worth knowing which you are on: the mic route puts the room, the speakers
+and the microphone's own colouring between the track and the envelope detector,
+and a share hands over the track itself.
+
 ## Intercarrier buzz — the traffic the other way
 
 **Sound buzz** is the only effect here you listen to. The sound detector

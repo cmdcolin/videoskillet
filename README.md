@@ -29,6 +29,8 @@ Details in [How it works](docs/HOW-IT-WORKS.md), fault by fault in
 - Lots of 'faults' like loose cable, bad receiver, inverted polarity, bad
   ground, etc.
 - Audio-reactive: feed it music and bass shakes vertical hold of the image, etc.
+  Music can come from the mic, a file you pick, the clip on screen, or straight
+  off whatever this machine is playing — no loopback device to install
 - All settings can be modulated (e.g. with LFO, random walk, sample and hold,
   etc)
 - Allows using MIDI controller via WebMIDI, map different knobs to settings of
@@ -92,10 +94,11 @@ render.
 
 ### Can I patch it into Max/MSP, Jitter or TouchDesigner?
 
-Most of it works now with no code: MIDI CC and clock over a virtual port, audio
-in through a loopback device picked as the microphone, a Jitter render in as a
-webcam through Syphon, and the picture back out through an OBS browser source.
-OSC is the piece that is missing.
+Most of it works now with no code: MIDI CC and clock over a virtual port, a
+patch's audio in by sharing the tab or app it is playing out of (a loopback
+device still works, and is the way in on browsers that cannot share audio), a
+Jitter render in as a webcam through Syphon, and the picture back out through an
+OBS browser source. OSC is the piece that is missing.
 
 ## Docs
 

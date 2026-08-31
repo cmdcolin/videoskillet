@@ -58,9 +58,11 @@ Most of this works now, with no code on either side:
 
 - **Control in** — MIDI CC and MIDI clock over a virtual port (IAC bus,
   loopMIDI). Every slider learns a CC; see [MIDI.md](MIDI.md).
-- **Audio in** — a loopback device (BlackHole, or your OS's equivalent) picked
-  as the microphone under **Audio**, which reaches the audio-driven bend, load
-  and level controls. A patch's output then bends the signal directly.
+- **Audio in** — pick **System audio** under **♪** and share the tab or app the
+  patch is playing out of; it reaches the audio-driven bend, load and level
+  controls, so a patch's output bends the signal directly. A loopback device
+  (BlackHole, or your OS's equivalent) picked as the microphone does the same
+  thing, and is the way in on a browser that cannot share audio.
 - **Video in** — a Jitter or TouchDesigner render arrives as a webcam source
   through a Syphon → virtual-camera bridge.
 - **Video out** — point an OBS browser source at the page.

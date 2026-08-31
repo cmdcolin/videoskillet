@@ -68,7 +68,10 @@ file.
   enough to keep misspelling it.
 - **B** is a second source, deliberately not genlocked, so it beats and tears
   against A. Its controls are in **Mix**.
-- **♪** is audio in, and does nothing until you turn up a knob in **Sound**.
+- **♪** is audio in, and does nothing until you turn up a knob in **Sound**. It
+  takes the mic, a file you pick, the clip already on screen, or **system
+  audio** — a share of the tab or app this machine is playing out of, which is
+  how you drive the picture off a track without the room in between.
 
 Anything with a timeline gets a **cue** button: press to mark, again to loop, a
 third time to drop it. **⇤** stabs back to the cue without waiting for the lap.
@@ -196,6 +199,12 @@ cycle.
 **Sound** hangs off Receiver, where audio patches in. Bass lurches the frame,
 level tears line hold. Pick something under **♪** first or the box opens onto
 nothing.
+
+**System audio** asks for a share, because a page can only hear the machine that
+way: pick a tab and tick *Also share tab audio*, or the share arrives silent and
+the picker tells you it did. Not every browser can send audio through a share —
+Chrome can. Ending the share from the browser's own bar puts the picker back to
+off, since a dead capture and a quiet room sound the same from here.
 
 ## Keeping what you find
 

@@ -574,10 +574,12 @@ rather than artifact drawing. Not worth starting until something needs it.
 ## Patching into other apps (Max/MSP, Jitter, TouchDesigner, VJ software)
 
 Already works with no code: MIDI CC + MIDI clock in (`src/ui/midi.ts`) via a
-virtual port (IAC bus / loopMIDI); audio in via a loopback device (BlackHole),
-which reaches `audioBendUs` / `audioLoad` / `audioIre`; Jitter output in as a
-webcam through a Syphon→virtual-camera bridge; and output back out by pointing
-an OBS browser source at the page. The gaps below are what would make it feel
+virtual port (IAC bus / loopMIDI); audio in by sharing the tab or app it plays
+out of (`AudioState.enableSystem`), or via a loopback device (BlackHole) on a
+browser that cannot share audio, either of which reaches `audioBendUs` /
+`audioLoad` / `audioIre`; Jitter output in as a webcam through a
+Syphon→virtual-camera bridge; and output back out by pointing an OBS browser
+source at the page. The gaps below are what would make it feel
 like a patchable module rather than a coincidence.
 
 - **OSC control, via a local WebSocket bridge.** Browsers can't speak UDP, so

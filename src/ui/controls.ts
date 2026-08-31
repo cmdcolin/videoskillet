@@ -3911,7 +3911,7 @@ export const SOURCE_B_BLURB =
 export const SOUND_STAGE = 'Sound'
 export const SOUND_JOIN: Phase = 'Receiver'
 export const SOUND_BLURB =
-  'the sound — a mic, a track, or a clip’s own audio — patched into the receiver: it detunes both hold oscillators, loads the HV supply, drives the deflection and turns the colour reference, so the picture moves because the set is being disturbed rather than because anything is animated'
+  'the sound — a mic, a track, a clip’s own audio, or whatever this machine is playing — patched into the receiver: it detunes both hold oscillators, loads the HV supply, drives the deflection and turns the colour reference, so the picture moves because the set is being disturbed rather than because anything is animated'
 
 // Where the picture is watched from, which is the one box on the map that is not
 // a piece of the rig. It sits at the end because that is where it is: the signal
