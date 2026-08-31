@@ -1,11 +1,8 @@
 # videoskillet.js
 
-Real-time analog video — composite, VHS and CRT — simulated down to the signal
-and rendered entirely in WebGPU compute shaders.
-
 ### Live app!
 
-https://cmdcolin.github.io/videoskillet.js/
+https://cmdcolin.github.io/videoskillet/
 
 ## Screenshot
 
@@ -18,11 +15,6 @@ nearly every control in the app is behind one of its boxes — click a stage and
 that stage's controls open underneath it.
 
 ![The app window with the signal path map boxed in red at the head of the sidebar and enlarged over the picture: SOURCE A and SOURCE B into MIX, then CHANNEL, RECEIVER and SCREEN, with camera and mixer returns arching back over the trunk, SOUND and VIEW hanging below, and MODULATION and DECK on a row of their own with no wire reaching them](docs/img/signal-path-callout.jpg)
-
-So all the rainbows, video tearing and chaos are a result of the video signal
-mechanism rather than being painted on. The dashed returns are the two feedback
-loops: **camera** is a lens pointed at the tube, and **mixer** patches the
-composite waveform back in electrically.
 
 Details in [How it works](docs/HOW-IT-WORKS.md), fault by fault in
 [Features](docs/FEATURES.md).
@@ -107,7 +99,7 @@ OSC is the piece that is missing.
 
 ## Docs
 
-- [Main docs website](https://cmdcolin.github.io/videoskillet.js/guide/)
+- [Main docs website](https://cmdcolin.github.io/videoskillet/guide/)
 - [Getting started](docs/GETTING-STARTED.md)
 - [User guide](docs/USER-GUIDE.md)
 - [Features](docs/FEATURES.md)
@@ -123,25 +115,28 @@ Note: this project is extensively vibecoded. The initial signal-path design was
 one-shotted by [Fable](https://claude.com/), which nailed the "signal level"
 idea behind the glitches.
 
-This app is inspired by my old 2010s era experiments alligator clipping yellow
-composite video cables together in my basement and posting tumblr gifs.
+I also had a hard time coming up with a name for this project. I hope you enjoy.
+This app is inspired by my old 2010s-era experiments alligator clipping
+composite video cables together and posting tumblr gifs.
 
 ## Cool demos
 
 - Camera feedback + static
-  https://cmdcolin.github.io/videoskillet.js/?p=GIgEEVQA9AEAYA6AAhHAAQBkDEgEkAMLoAIAtAEE6AIEjCEBAACkAgAAAKgBBVxwub4DAKHEAQ&mod=vFreqHz:smooth:0.08:0.0049,fbGain:smooth:0.24:0.06&src=vhs+static
+  https://cmdcolin.github.io/videoskillet/?p=GIgEEVQA9AEAYA6AAhHAAQBkDEgEkAMLoAIAtAEE6AIEjCEBAACkAgAAAKgBBVxwub4DAKHEAQ&mod=vFreqHz:smooth:0.08:0.0049,fbGain:smooth:0.24:0.06&src=vhs+static
 
 - Chaos black and white feedback
-  https://cmdcolin.github.io/videoskillet.js/?p=FJADAMACAuQDNVAImAIAUALIARaQAwoUAIABANQDApQBAHgARAniAQECCVQk5gMAqAEAqAYAgJ9JA8gB&mod=tapeLoopMm:smooth:0.05:0.0151&srcb=tv+static
+  https://cmdcolin.github.io/videoskillet/?p=FJADAMACAuQDNVAImAIAUALIARaQAwoUAIABANQDApQBAHgARAniAQECCVQk5gMAqAEAqAYAgJ9JA8gB&mod=tapeLoopMm:smooth:0.05:0.0151&srcb=tv+static
 
 - Dull color feedback
-  https://cmdcolin.github.io/videoskillet.js/?p=CqCsBQEEAcwDAHABXAC8aQGQAwDoAgLMBQCsAgOceQR0GPwBCzgAGADYAQAIAlAAuAIImAIAUALIAQCAAQAkArACAXgAFAJ4ADAGXABcApADCjwA5AEA0AQCkAIA6AEAiAEI0AEA4gEA-AMABAlUJOYDAKgBBcgB&mod=tapeLoopMm:smooth:0.05:0.0151&srcb=tv+static
+  https://cmdcolin.github.io/videoskillet/?p=CqCsBQEEAcwDAHABXAC8aQGQAwDoAgLMBQCsAgOceQR0GPwBCzgAGADYAQAIAlAAuAIImAIAUALIAQCAAQAkArACAXgAFAJ4ADAGXABcApADCjwA5AEA0AQCkAIA6AEAiAEI0AEA4gEA-AMABAlUJOYDAKgBBcgB&mod=tapeLoopMm:smooth:0.05:0.0151&srcb=tv+static
 
 - Dark camera feedback
-  https://cmdcolin.github.io/videoskillet.js/?p=CqCsBQEEAcwDAHABXAC8aQLoAgLMBQCsAgOceQR0GPwBCzgAGADYAQAIAjgAuAIImAIAUALIAQCAAQAkArACAXgAFAJ4ADAGXABcApADAKAhAIgBCKwCAOQBAJgRApACAAAAAADwCAdIALAJAAAABAlUJOYDAKgBBcgBAQQ&mod=tapeLoopMm:smooth:0.05:0.0151&srcb=tv+static&src=tv+static
+  https://cmdcolin.github.io/videoskillet/?p=CqCsBQEEAcwDAHABXAC8aQLoAgLMBQCsAgOceQR0GPwBCzgAGADYAQAIAjgAuAIImAIAUALIAQCAAQAkArACAXgAFAJ4ADAGXABcApADAKAhAIgBCKwCAOQBAJgRApACAAAAAADwCAdIALAJAAAABAlUJOYDAKgBBcgBAQQ&mod=tapeLoopMm:smooth:0.05:0.0151&srcb=tv+static&src=tv+static
 
 - Fuzzy color bars feedback
-  https://cmdcolin.github.io/videoskillet.js/?p=cqQCAKAfAHoAOgAoAKggACwAYABEABAAmAEQ0AIA1AIwsAEIBA&mod=&srcb=vhs+static
+  https://cmdcolin.github.io/videoskillet/?p=cqQCAKAfAHoAOgAoAKggACwAYABEABAAmAEQ0AIA1AIwsAEIBA&mod=&srcb=vhs+static
 
 - Fuzzy color bars feedback+dissolver
-  https://cmdcolin.github.io/videoskillet.js/?p=BrAEAMgCAKAGPahOAdACAJADAZwCAHolpAIAoB8AegA6ACgAqCAALABgAEQAEACYARDQAgDUAhsEA0oQsAEIBA&mod=&srcb=vhs+static
+  https://cmdcolin.github.io/videoskillet/?p=BrAEAMgCAKAGPahOAdACAJADAZwCAHolpAIAoB8AegA6ACgAqCAALABgAEQAEACYARDQAgDUAhsEA0oQsAEIBA&mod=&srcb=vhs+static
+
+Send me more stuff you come up with

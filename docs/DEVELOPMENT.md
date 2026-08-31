@@ -980,9 +980,9 @@ Needs Firefox Nightly, ImageMagick, ffmpeg (clips) and pngquant (optional).
 ## Docs site
 
 `pnpm guide` (also run by `pnpm build`) renders the reader-facing markdown into
-`dist/guide/`, which Pages serves at `/videoskillet.js/guide/`. Markdown stays the
-source of truth and stays readable on GitHub; the builder only adds the nav, the
-live links, and styling. To add a page, add it to `PAGES` in
+`dist/guide/`, which Pages serves at `/videoskillet.js/guide/`. Markdown stays
+the source of truth and stays readable on GitHub; the builder only adds the nav,
+the live links, and styling. To add a page, add it to `PAGES` in
 [`../scripts/build-guide.mjs`](../scripts/build-guide.mjs).
 
 Everything else the site chrome shows is **derived from the markdown, never
@@ -1045,10 +1045,10 @@ a merge. On Big Buck Bunny that is 38 MB and one merge, against 102 MB and a
 merge for the 720p this used to pull; where a progressive format still exists it
 is one file and no ffmpeg pass at all.
 
-Downloads are cached in `$TMPDIR/videoskillet.js-yt`, keyed by URL, format selector
-_and_ range, so a reload replays instantly and changing any of the three
-refetches rather than serving back what the last one settled on. The first load
-takes as long as the download; failures come back as the yt-dlp error.
+Downloads are cached in `$TMPDIR/videoskillet.js-yt`, keyed by URL, format
+selector _and_ range, so a reload replays instantly and changing any of the
+three refetches rather than serving back what the last one settled on. The first
+load takes as long as the download; failures come back as the yt-dlp error.
 
 ### The wait says how it is going
 

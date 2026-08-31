@@ -32,14 +32,15 @@ crawl and ringing are each an effect with its own slider, and the sync faults
 are drawn on top, line by line. Nothing has to be a signal for that to look
 right, which is what lets the stages reorder freely.
 
-videoskillet.js has no dot-crawl slider, because it builds the signal instead. A picture
-becomes an actual composite waveform — sync pulses, colour burst, colour carried
-on the subcarrier the way a real encoder carries it. The model damages that
-waveform, and a model of a TV has to lock to it and decode it back. Dot crawl
-and rainbow fringing are then leftovers of a decoder that could not separate
-colour from brightness cleanly: nobody draws them, and they change whenever
-anything upstream does. That is the trade — far narrower, and every fault lands
-on the same signal, so they affect each other without being wired together.
+videoskillet.js has no dot-crawl slider, because it builds the signal instead. A
+picture becomes an actual composite waveform — sync pulses, colour burst, colour
+carried on the subcarrier the way a real encoder carries it. The model damages
+that waveform, and a model of a TV has to lock to it and decode it back. Dot
+crawl and rainbow fringing are then leftovers of a decoder that could not
+separate colour from brightness cleanly: nobody draws them, and they change
+whenever anything upstream does. That is the trade — far narrower, and every
+fault lands on the same signal, so they affect each other without being wired
+together.
 
 ### ntscQT
 
@@ -78,10 +79,10 @@ from the other side.
 
 ## Where videoskillet.js fits
 
-videoskillet.js works best as a **live instrument** rather than an offline signal
-processor, and that follows from how it is built: the signal path stays resident
-on the GPU as compute shaders, so a control change is a uniform-buffer write,
-not a re-render. That buys:
+videoskillet.js works best as a **live instrument** rather than an offline
+signal processor, and that follows from how it is built: the signal path stays
+resident on the GPU as compute shaders, so a control change is a uniform-buffer
+write, not a re-render. That buys:
 
 - **A control for every stage** of the path — wiring, tape, RF, the receiver and
   the screen

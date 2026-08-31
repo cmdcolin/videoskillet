@@ -172,7 +172,7 @@ const forceDarkDiagrams = html =>
     (_whole, dark, before, after) => `<img ${before}src="${dark}"${after}>`,
   )
 
-const SITE = 'https://cmdcolin.github.io/videoskillet.js/'
+const SITE = 'https://cmdcolin.github.io/videoskillet/'
 
 const esc = s =>
   s.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('"', '&quot;')

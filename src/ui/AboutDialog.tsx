@@ -30,7 +30,7 @@ export function AboutDialog({ onClose }: { onClose: () => void }) {
       <p className={ui.helpText}>
         <a
           className={ui.link}
-          href="https://cmdcolin.github.io/videoskillet.js/"
+          href="https://cmdcolin.github.io/videoskillet/"
           target="_blank"
           rel="noreferrer"
         >

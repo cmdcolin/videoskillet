@@ -1,13 +1,13 @@
 # Getting started
 
-videoskillet.js simulates composite video signal using WebGPU shaders, and as a result,
-all the video effects are just natural consequences of real signal-level
+videoskillet.js simulates composite video signal using WebGPU shaders, and as a
+result, all the video effects are just natural consequences of real signal-level
 glitches, not pseudo-effects that are drawn on top of the image
 
 It does require WebGPU which requires a fairly recent browser, try Firefox
 Nightly or Chrome Canary if you have trouble with your default browser
 
-Visit https://cmdcolin.github.io/videoskillet.js/
+Visit https://cmdcolin.github.io/videoskillet/
 
 ## What's on screen
 

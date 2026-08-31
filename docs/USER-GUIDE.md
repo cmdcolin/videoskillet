@@ -215,14 +215,14 @@ button and reloading keeps what you had.
 It comes out short. Here is **worn tape**, whole:
 
 ```
-https://cmdcolin.github.io/videoskillet.js/?p=FbQBJbABEXAAmAIN8AEAPAKQAwDoAgCQAwBkAEgBwAIAgAEGwAIA6AIBCA&mod=
+https://cmdcolin.github.io/videoskillet/?p=FbQBJbABEXAAmAIN8AEAPAKQAwDoAgCQAwBkAEgBwAIAgAEGwAIA6AIBCA&mod=
 ```
 
 That is the look written as bytes. `?set=` says the same thing by name, and the
 app both reads and writes it:
 
 ```
-https://cmdcolin.github.io/videoskillet.js/?set=noiseIre:9,hHold:0.2,chromaGain:1.79
+https://cmdcolin.github.io/videoskillet/?set=noiseIre:9,hHold:0.2,chromaGain:1.79
 ```
 
 Three times the characters for the same look, which is why the bar carries the
