@@ -130,6 +130,27 @@ try {
           [...document.querySelectorAll('button')]
             .find(b => (b.title ?? '').startsWith('a look you have not seen'))
             ?.click(),
+        // Somewhere in the chip row with no chip under it, for the press that
+        // has to *not* count as a press on a chip. It has to come from inside
+        // the row: the obvious empty space is the picture, and pressing and
+        // dragging on the picture moves controls of its own, which reads as the
+        // chip having applied itself.
+        blankInRow: () => {
+          const first = window.T.chips()[0]
+          if (first === undefined) return null
+          const row = first.parentElement.getBoundingClientRect()
+          for (let y = Math.round(row.bottom) - 2; y > row.top; y -= 4) {
+            for (const x of [
+              Math.round(row.right) - 6,
+              Math.round(row.left) + 6,
+              Math.round((row.left + row.right) / 2),
+            ]) {
+              const el = document.elementFromPoint(x, y)
+              if (el !== null && el.closest('button') === null) return { x, y }
+            }
+          }
+          return null
+        },
         // One move with no button down, which is what the OS sends once
         // something else has taken the release.
         emptyHandMove: (x, y) =>
@@ -201,6 +222,36 @@ try {
     )
   }
 
+  // And a sweep that runs off the end of the chip still tracks. DRAG_FULL is
+  // 120px against chips 40-120px wide, so a full sweep is *meant* to leave the
+  // chip — the pointer is captured for exactly that. Worth its own check
+  // because leaving is also how a chip lets go of a gesture whose release it
+  // never saw, and the two must not be the same event.
+  // Leftwards, and from a chip already dialed in: the panel is docked at the
+  // right, so a rightward sweep long enough to leave the chip runs out of
+  // viewport, and a sweep that starts at zero has nowhere to go but back to
+  // zero — which would pass whether or not the drag tracked at all.
+  {
+    const c = await chipNamed(/vertical hold/i)
+    await page.mouse.move(c.cx, c.cy)
+    await page.mouse.down()
+    await page.mouse.up()
+    await settle(1800)
+    const full = (await T('row')).find(x => x.name === c.name)
+    check(
+      full?.w === '100%',
+      `"${c.name}" would not fill, so the sweep proves nothing`,
+    )
+    await page.mouse.down()
+    for (let i = 1; i <= 15; i++) await page.mouse.move(c.cx - i * 10, c.cy)
+    await page.mouse.up()
+    await settle(700)
+    const after = (await T('row')).find(x => x.name === c.name)
+    check(
+      after?.w === '0%',
+      `a 150px sweep off the end of "${c.name}" stopped at ${after?.w}`,
+    )
+  }
   // A press whose release goes missing must not leave the chip scrubbing on
   // hover for the rest of the session.
   {
@@ -221,6 +272,28 @@ try {
     )
     await page.mouse.up().catch(() => {})
     await settle(400)
+  }
+
+  // A release only applies the preset it started on. The press that arms a chip
+  // is the only thing that may hand it a click, so a drag that begins on the
+  // panel and happens to end over a chip has to leave the look alone.
+  {
+    const from = await T('blankInRow')
+    if (from === null) {
+      console.warn('  (skipped: no empty spot in the chip row to press on)')
+    } else {
+      const c = await chipNamed(/neon tube/i)
+      await page.mouse.move(from.x, from.y)
+      const before = await T('look')
+      await page.mouse.down()
+      await page.mouse.move(c.cx, c.cy)
+      await page.mouse.up()
+      await settle(1200)
+      check(
+        before === (await T('look')),
+        `a release that started on no chip applied "${c.name}"`,
+      )
+    }
   }
 
   // The row is a thing you aim at, so it may not rearrange under a still hand.

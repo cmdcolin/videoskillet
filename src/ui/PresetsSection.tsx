@@ -148,7 +148,16 @@ function PresetButton(props: {
         props.edited && ui.edited,
       )}
       onPointerEnter={() => props.onHover(props.def.name)}
-      onPointerLeave={() => props.onHover(null)}
+      onPointerLeave={e => {
+        props.onHover(null)
+        // Leaving with the button up ends any gesture this chip still thinks it
+        // has, and it is the one closer that is guaranteed to fire: to press
+        // anywhere else you have to leave here first, so a chip cannot be left
+        // armed for a release that starts somewhere else. During a real drag
+        // the pointer is captured and this does not fire at all until the
+        // release has already been dealt with.
+        if (e.buttons === 0) dragRef.current = null
+      }}
       onPointerDown={
         !mixable
           ? undefined
@@ -228,17 +237,19 @@ function PresetButton(props: {
               dragRef.current = null
             }
       }
-      // Capture is released after pointerup fires, per spec and as measured in
-      // both browsers, so this never lands between a press and the apply it
-      // owes. What it catches is capture lost some other way — the element
-      // taken out from under a live gesture, the browser ending the sequence
-      // itself — which otherwise leaves a chip that applies on the next stray
-      // release to land on it.
+      // A drag that loses its capture is over: nothing more is coming that the
+      // weight should follow. A press that has not moved yet is deliberately
+      // left alone, because that is the one this must not touch — spec has
+      // capture released immediately *after* pointerup, and both browsers
+      // measure that way, but an engine that fired it a moment earlier would
+      // otherwise take the apply out of every click on a chip. Reading `lastX`
+      // costs nothing and means the ordering no longer has to be true.
       onLostPointerCapture={
         !mixable
           ? undefined
           : () => {
-              dragRef.current = null
+              const d = dragRef.current
+              if (d !== null && d.lastX !== null) dragRef.current = null
             }
       }
       // On a mixable chip, pointerup is what applies a press, so the click that
