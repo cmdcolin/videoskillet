@@ -279,6 +279,7 @@ export function PresetsSection(props: {
   ]) {
     if (picked.size < SHORTLIST_MAX) picked.add(name)
   }
+  const shortlist = PRESETS.filter(p => picked.has(p.name))
   const renderButton = (p: PresetDef) => (
     <PresetButton
       key={p.name}
@@ -361,7 +362,16 @@ export function PresetsSection(props: {
         </div>
       )}
       {showAll ? null : (
-        <div>{PRESETS.filter(p => picked.has(p.name)).map(renderButton)}</div>
+        <div>
+          {shortlist.map(renderButton)}
+          <button
+            className={styles.moreChip}
+            title="every preset, grouped by the kind of fault it models"
+            onClick={() => setShowAll(true)}
+          >
+            + {PRESETS.length - shortlist.length} more…
+          </button>
+        </div>
       )}
       {showAll
         ? PRESET_GROUPS.map(grp => (

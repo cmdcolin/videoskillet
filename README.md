@@ -145,4 +145,7 @@ composite video cables together and posting tumblr gifs.
 - Wiggity
   http://localhost:5200/?p=CoDoBwEEAbAEAKwCAfABAKCZAgXgAw2IIwSIAyFYBrAKEjwGmAEEuB4ZVADsBgr4OiSMCQDEAQDgAgAkAUQEBAAQA9wCAMXBAgCJngIAlf4DAI3tAw&mod=bendUs:lorenz:0.390279:0.27759,hvRing:sine:0.037599:0.090209&srcb=synth&src=sweep
 
+- Woggity
+  https://cmdcolin.github.io/videoskillet/?p=GIgECaABABwAtCUpNCOQAwCsHACACgKUJQK0ARLEAQGcBwAEAIQCAJQDAEwCbACkAgCkAVKA2QE&mod=
+
 Send me more stuff you come up with

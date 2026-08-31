@@ -129,3 +129,18 @@
   border-radius: 50%;
   background: var(--edit);
 }
+
+.moreChip {
+  margin: 2px 3px 2px 0;
+  padding: 4px 8px;
+  border: 1px dashed var(--border-hover);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--fg3);
+  font: inherit;
+  cursor: pointer;
+}
+.moreChip:hover {
+  border-color: var(--fg4);
+  color: var(--fg);
+}
