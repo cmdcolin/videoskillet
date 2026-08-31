@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from 'react'
+import { useState, useSyncExternalStore } from 'react'
 
 import { cx } from './cx'
 import { DRIFT_SECONDS } from './drift'
@@ -102,52 +102,14 @@ export function LookBar(props: {
       >
         {props.comparing ? 'showing clean…' : 'compare'}
       </button>
-      {/* The two rolls, joined into one segmented control. They were `surprise`
-          and `mutate`, sat apart in a line of six unrelated verbs, and nothing
-          about either word said they were a pair or which way they differed —
-          you had to already know the mechanism to guess it from the label.
-          Two fixes: sharing a border says "one thing, two modes", and sharing
-          the word `random` leaves the second word carrying the whole
-          difference — a whole look, or a nudge to the one you have.
-          Deliberately no jargon in either. The mechanism is presets against
-          per-control jitter, and naming it that way ("shuffle presets") asks
-          you to already know what a preset is, which is exactly the knowledge
-          somebody reaching for a random button has not got yet. `look` and
-          `nudge` say what you get instead, and the chips below fill in where a
-          look came from once you have pressed it. */}
-      <div className={styles.pair}>
-        <button
-          className={cx(styles.btn, styles.pairLeft)}
-          onClick={props.onSurprise}
-          title="a look you have not seen: a few random presets from different groups, stacked over stock — the preset chips light up to show what went in. This replaces the look you have; random nudge keeps it"
-        >
-          random look
-        </button>
-        <button
-          className={cx(styles.btn, styles.pairMid)}
-          onClick={e => props.onMutate(mutateAmountFor(e))}
-          title="keep this look and nudge every control randomly around where it sits, for a related variation (also happy accidents) — shift for a wilder roll, alt for a gentler one, ctrl (or cmd) for turbo, which throws most controls past anything a real set would do. A stage heading's own randomize nudges that stage alone"
-        >
-          random nudge
-        </button>
-        {/* Third rather than second, because the pair reads left to right by how
-            much of the look it disturbs — a whole new one, then a nudge to it —
-            and this one disturbs none of it: every slider stays exactly where it
-            is and what changes is what is moving them. Same modifier ladder as
-            its neighbour, so the keys mean one thing across the set. */}
-        <button
-          className={cx(styles.btn, styles.pairMid)}
-          onClick={e => props.onRollMotion(mutateAmountFor(e))}
-          title="keep every slider where it is and re-cable what is moving them: a fresh patch of LFOs, drift and sample-and-hold onto controls this look is actually using. It replaces what is in the modulation bay, and undo puts it back — shift for more and deeper, alt for a single slow one, ctrl (or cmd) for turbo"
-        >
-          random motion
-        </button>
-        <RollsMenu
-          onSurpriseOne={props.onSurpriseOne}
-          onSpike={props.onSpike}
-          onCross={props.onCross}
-        />
-      </div>
+      <Rolls
+        onSurprise={props.onSurprise}
+        onMutate={props.onMutate}
+        onRollMotion={props.onRollMotion}
+        onSurpriseOne={props.onSurpriseOne}
+        onSpike={props.onSpike}
+        onCross={props.onCross}
+      />
       {/* Next to the rolls, because that is what it is: the gentlest of them,
           on a timer, forever. Nothing else in the app plays itself. */}
       <button
@@ -199,71 +161,143 @@ export function LookBar(props: {
   )
 }
 
-// The rolls that did not fit the row, in the row's own segmented set.
+// Every way this row has of handing you a look you did not ask for, behind one
+// button.
 //
-// A menu rather than three more modifiers on the buttons beside it, because the
-// ladder those carry (shift, alt, ctrl) says *how hard* and none of these is a
-// harder or softer version of anything. A preset drawn whole, two controls
-// thrown a long way, and this look crossed with a fresh one are three different
-// answers to "give me something else", and which one is wanted depends on how
-// attached you are to what is on screen — which is what the order here is: the
-// roll that keeps least of your look at the top, the one that keeps most at the
-// foot.
+// They were six: three words joined into a segmented set — `random look`,
+// `random nudge`, `random motion` — and three more behind a `⋯` because the row
+// had no width for a fourth. That spelled the word `random` three times across
+// 190px of a 332px row, and it put the two that a session reaches for least in
+// the place nothing is ever found. Worse than the width: six labels read as six
+// things to understand before you are allowed to press one, when the honest
+// summary is that every one of them hands you a look and they differ only in
+// how much of yours they keep.
 //
-// A glyph rather than a fourth word, and the row's width is the whole reason:
-// the three labels next to it come to 190px of a 332px row, and `more…` on the
-// end took it past 332 — which `.pair` cannot wrap, so instead every one of the
-// four squeezed and broke its label over two lines. `⋯` costs 26px, keeps the
-// set on one line, and is the glyph the masthead's own menu already wears.
-function RollsMenu(props: {
+// So: press it and get a look. The caret is where that is chosen, and choosing
+// rolls at once rather than arming something to press after — the menu is a way
+// of rolling. What you chose stays on the face, so going again on one you like
+// is the same single press it was when each had its own button.
+//
+// Ordered by how much of your look survives, which is the one axis they vary
+// on: a fresh look, a preset drawn whole, this look crossed with a fresh one, a
+// nudge to every control, two controls thrown hard, and the bay re-cabled with
+// every slider left where it stands.
+type RollName = 'look' | 'preset' | 'cross' | 'nudge' | 'fault' | 'motion'
+
+const ROLL_ORDER: RollName[] = [
+  'look',
+  'preset',
+  'cross',
+  'nudge',
+  'fault',
+  'motion',
+]
+
+interface Roll {
+  label: string
+  icon: string
+  title: string
+  run: (amount: MutateAmount) => void
+}
+
+function Rolls(props: {
+  onSurprise: () => void
+  onMutate: (amount: MutateAmount) => void
+  onRollMotion: (amount: MutateAmount) => void
   onSurpriseOne: () => void
   onSpike: (amount: MutateAmount) => void
   onCross: () => void
 }) {
+  const [held, setHeld] = useState<RollName>('look')
+  // A record rather than a list the face searches, so the held name always
+  // names a roll and there is no missing one to fall back from.
+  const rolls: Record<RollName, Roll> = {
+    look: {
+      label: 'random look',
+      icon: '✳',
+      title:
+        'a look you have not seen: a few random presets from different groups, stacked over stock — the preset chips light up to show what went in. This replaces the look you have; random nudge keeps it',
+      run: () => props.onSurprise(),
+    },
+    preset: {
+      label: 'random preset',
+      icon: '◆',
+      title:
+        'one of the authored looks, whole and at full strength — no stacking and no jitter, so what you get is what somebody tuned. The chip lights up to say which',
+      run: () => props.onSurpriseOne(),
+    },
+    cross: {
+      label: 'random cross',
+      icon: '⤫',
+      title:
+        'keep some circuits of this look — the tape, the tube, whichever way it falls — and let a fresh roll answer for the rest',
+      run: () => props.onCross(),
+    },
+    nudge: {
+      label: 'random nudge',
+      icon: '≈',
+      title:
+        'keep this look and nudge every control randomly around where it sits, for a related variation (also happy accidents) — shift for a wilder roll, alt for a gentler one, ctrl (or cmd) for turbo, which throws most controls past anything a real set would do. A stage heading\u2019s own randomize nudges that stage alone',
+      run: amount => props.onMutate(amount),
+    },
+    fault: {
+      label: 'random fault',
+      icon: '↯',
+      title:
+        'throw a couple of controls a long way and touch nothing else: one fault you can see, name and take back, on a look otherwise exactly as you left it',
+      run: amount => props.onSpike(amount),
+    },
+    motion: {
+      label: 'random motion',
+      icon: '∿',
+      title:
+        'keep every slider where it is and re-cable what is moving them: a fresh patch of LFOs, drift and sample-and-hold onto controls this look is actually using. It replaces what is in the modulation bay, and undo puts it back — shift for more and deeper, alt for a single slow one, ctrl (or cmd) for turbo',
+      run: amount => props.onRollMotion(amount),
+    },
+  }
+  const face = rolls[held]
+  const roll = (name: RollName, amount: MutateAmount) => {
+    setHeld(name)
+    rolls[name].run(amount)
+  }
   return (
-    <Popover
-      trigger={attrs => (
-        <button
-          {...attrs}
-          className={cx(styles.btn, styles.pairRight)}
-          // The label is a glyph, so the name a screen reader reads has to come
-          // from here — the same pairing the masthead's ⋮ carries.
-          aria-label="more rolls"
-          title="three more rolls: one authored preset whole, a couple of controls thrown hard, or this look crossed with a fresh one"
-        >
-          ⋯
-        </button>
-      )}
-    >
-      {id => (
-        <>
-          <MenuItem
-            icon="◆"
-            label="random preset"
-            hint=""
-            title="one of the authored looks, whole and at full strength — no stacking and no jitter, so what you get is what somebody tuned. The chip lights up to say which"
-            closes={id}
-            onClick={props.onSurpriseOne}
-          />
-          <MenuItem
-            icon="↯"
-            label="random fault"
-            hint=""
-            title="throw a couple of controls a long way and touch nothing else: one fault you can see, name and take back, on a look otherwise exactly as you left it"
-            closes={id}
-            onClick={() => props.onSpike('normal')}
-          />
-          <MenuItem
-            icon="⤫"
-            label="random cross"
-            hint=""
-            title="keep some circuits of this look — the tape, the tube, whichever way it falls — and let a fresh roll answer for the rest"
-            closes={id}
-            onClick={props.onCross}
-          />
-        </>
-      )}
-    </Popover>
+    <div className={styles.pair}>
+      <button
+        className={cx(styles.btn, styles.pairLeft)}
+        onClick={e => roll(held, mutateAmountFor(e))}
+        title={face.title}
+      >
+        {face.label}
+      </button>
+      <Popover
+        trigger={attrs => (
+          <button
+            {...attrs}
+            className={cx(styles.btn, styles.pairRight, styles.caret)}
+            aria-label="pick a kind of roll"
+            title="the other ways this row has of rolling you one. Picking one rolls it, and it stays on the button, so going again is one press"
+          >
+            ▾
+          </button>
+        )}
+      >
+        {id => (
+          <>
+            {ROLL_ORDER.map(name => (
+              <MenuItem
+                key={name}
+                icon={rolls[name].icon}
+                label={rolls[name].label}
+                hint=""
+                title={rolls[name].title}
+                closes={id}
+                onClick={() => roll(name, 'normal')}
+              />
+            ))}
+          </>
+        )}
+      </Popover>
+    </div>
   )
 }
 

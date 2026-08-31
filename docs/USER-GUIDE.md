@@ -19,11 +19,13 @@ Click a preset to jump to it; drag it sideways to blend it part-way in.
   modulation bay instead — LFOs, drift and sample-and-hold onto controls this
   look uses. Same modifiers, `ctrl`/`cmd` cabling a bay that hunts. `ctrl+z`
   restores what it replaced.
-- **more…** holds three other rolls. **random preset** draws one authored look
-  whole, at its tuned strength. **random fault** throws a couple of controls a
-  long way and leaves the rest alone, so the accident is one thing you can name
-  and take back. **random cross** keeps some circuits of your look — tape, tube,
-  sync — and rerolls the rest.
+- The **▾** beside the roll button holds all six, ordered by how much of your
+  look survives. Picking one rolls it and leaves it on the button, so going
+  again is a single press. **random preset** draws one authored look whole, at
+  its tuned strength. **random fault** throws a couple of controls a long way
+  and leaves the rest alone, so the accident is one thing you can name and take
+  back. **random cross** keeps some circuits of your look — tape, tube, sync —
+  and rerolls the rest.
 - **drift** is the random nudge with nobody pressing it: press once (or `d`) and
   the look wanders on its own — a gentle nudge every 15 seconds, travelling most
   of the way there, so the picture keeps moving and never cuts. It stays around
