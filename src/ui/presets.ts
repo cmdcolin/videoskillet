@@ -1680,10 +1680,18 @@ function shuffled<T>(items: readonly T[], rand: () => number): T[] {
   return out
 }
 
-// How much overlap a follower may have with the controls already claimed. Not
-// zero: a couple of shared controls is two faults meeting, which is the point.
-// Past that they are arguing about the same knob rather than stacking.
-const MAX_TREAD = 2
+// A follower must move controls no other preset in the roll has moved. Sharing
+// even one is what puts a roll somewhere no author stood: `blendPresets` sums
+// departures, so two presets that both reach for a knob land past whichever of
+// them reached furthest.
+//
+// This was 2 — a couple of shared controls read as two faults meeting. Measured
+// over 8000 rolls, that allowance put an overshot control in **24.6%** of them,
+// and 21.5 points of the 24.6 were `noiseIre` alone: two presets that each add
+// snow sum their snow, and the picture washes out to speckle. Disjoint
+// followers cost 0.01 presets and 0.5 controls per roll and take overshoot to
+// zero, because a control moved by exactly one preset cannot exceed it.
+const MAX_TREAD = 0
 
 // A fresh recipe: one full preset plus one or two partial ones from other
 // groups, so a roll crosses families instead of deepening one. Shared by the
@@ -1696,9 +1704,9 @@ const MAX_TREAD = 2
 // it. Over 4000 simulated rolls that was 1.6 controls fought over and 1.0
 // pushed past every contributing preset, per roll — the arithmetic, not a look
 // anybody designed, and the readiest explanation for a roll coming out mush.
-// Picking the least-treading candidate in each group and skipping a group whose
-// best still collides takes that to 0.4 fought over and 0.3 overshot, and costs
-// about 1.5 of the ~10.8 controls a roll's followers used to add.
+// Picking the least-treading candidate in each group takes that to 0.4 fought
+// over, and requiring the winner to tread on nothing at all (MAX_TREAD, below)
+// takes the overshoot to zero.
 //
 // Summing stays as it is. It is what dragging two chips by hand means, and the
 // roll has no business redefining that for the mixer — this fixes the roll by
@@ -1723,7 +1731,23 @@ export function randomPresetMix(
     if (weights.size >= wanted) break
     // 'Full board' presets are complete looks in themselves — as a lead that is
     // the point of them, on top of one it is a second whole board.
-    const opts = pool.filter(p => p.group === g && p.group !== 'Full board')
+    //
+    // 'Feedback loops' are held back for a different reason: a loop is a gain
+    // and the limiter that bounds it, and a follower's weight scales the pair
+    // together. The round-trip gain stays above unity while the knee, the iris
+    // and the black clamp that were holding it come down with the weight, so
+    // the loop grows every pass and the picture walls out to a flat white field
+    // over the frames a feedback look needs to develop. Measured over 8000
+    // rolls, 18.8% engaged a loop above unity; on 24 rolls against a clip that
+    // showed up as 3 of 24 blown out, and none once loops arrive as leads only.
+    // A lead comes in at weight 1 with its limiter intact, which is the look
+    // somebody tuned.
+    const opts = pool.filter(
+      p =>
+        p.group === g &&
+        p.group !== 'Full board' &&
+        p.group !== 'Feedback loops',
+    )
     if (opts.length === 0) continue
     const best = opts
       .map(p => ({
