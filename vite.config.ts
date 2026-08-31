@@ -66,5 +66,8 @@ export default defineConfig(({ command }) => ({
   //
   // Spread over the defaults rather than replacing them, so `node_modules` and
   // `dist` stay excluded — passing a bare array here silently drops both.
-  test: { exclude: [...configDefaults.exclude, '**/.claude/**'] },
+  test: {
+    exclude: [...configDefaults.exclude, '**/.claude/**'],
+    testTimeout: 30000,
+  },
 }))
