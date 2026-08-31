@@ -201,7 +201,7 @@ level tears line hold. Pick something under **♪** first or the box opens onto
 nothing.
 
 **System audio** asks for a share, because a page can only hear the machine that
-way: pick a tab and tick *Also share tab audio*, or the share arrives silent and
+way: pick a tab and tick _Also share tab audio_, or the share arrives silent and
 the picker tells you it did. Not every browser can send audio through a share —
 Chrome can. Ending the share from the browser's own bar puts the picker back to
 off, since a dead capture and a quiet room sound the same from here.

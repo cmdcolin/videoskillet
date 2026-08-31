@@ -579,8 +579,8 @@ out of (`AudioState.enableSystem`), or via a loopback device (BlackHole) on a
 browser that cannot share audio, either of which reaches `audioBendUs` /
 `audioLoad` / `audioIre`; Jitter output in as a webcam through a
 Syphon→virtual-camera bridge; and output back out by pointing an OBS browser
-source at the page. The gaps below are what would make it feel
-like a patchable module rather than a coincidence.
+source at the page. The gaps below are what would make it feel like a patchable
+module rather than a coincidence.
 
 - **OSC control, via a local WebSocket bridge.** Browsers can't speak UDP, so
   this needs a small node process doing OSC↔WebSocket. Worth it because

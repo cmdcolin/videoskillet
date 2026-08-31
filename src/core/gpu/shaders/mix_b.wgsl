@@ -248,8 +248,26 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
         fill = fill - suppress(k.along, clampIdx(np), P.bHue + P.bPhase0 + P.bPhaseLine * f32(srow));
       }
     }
-    // sum at the composite level; A rides its own bus fader (signed, so a
-    // negative aGain inverts A into a difference key), ring mod multiplies
+    // Sum at the composite level; A rides its own bus fader (signed, so a
+    // negative aGain inverts A into a difference key), and the ring mod
+    // multiplies.
+    //
+    // Single-quadrant, unlike the loop's ring (fb_composite.wgsl) and the
+    // synth's combiner, which are both balanced about mid-video. This product
+    // keeps the DC of both inputs, so what it adds is the two pictures'
+    // carriers riding a pedestal as well as their sum and difference — a diode
+    // mixer rather than a doubly-balanced bridge, and the reason this knob
+    // brightens as it is opened.
+    //
+    // Measured against the balanced form, (a - 40) * (fill - 40): the two part
+    // company at the ends of the travel rather than across it. Balanced is
+    // darker everywhere, since half its product falls below black and clips;
+    // at bRing 1 with B's fader shut, this one floods to white where balanced
+    // holds its colour; through the middle, with both faders up, they are hard
+    // to tell apart. Left as it is because the pedestal is in the looks built
+    // on it — switching costs a retune of `ringMix` and `supplyChaos` and moves
+    // every saved board carrying bRing — and not because a mixer's ring mod is
+    // unbalanced anywhere but here.
     comp[n] = P.aGain * a + g * (P.bGain * fill + P.bRing * a * fill * 0.01);
   }
 
