@@ -2,6 +2,48 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [0.33.1](https://github.com/cmdcolin/videoskillet.js/compare/v0.33.0...v0.33.1) - 2026-08-31
+
+### Features
+- [`b1a7dd8`](https://github.com/cmdcolin/videoskillet.js/commit/b1a7dd8561371150a91e285c78b90c8d8e775a18) cpuprof measures the thread that feeds the GPU
+- *(ui)* [`91f6056`](https://github.com/cmdcolin/videoskillet.js/commit/91f605681442166798d59b40bea918bae2d20323) the about card wears the app's mark
+- *(ui)* [`8f9744f`](https://github.com/cmdcolin/videoskillet.js/commit/8f9744f0fb2d1a101d596b7d4da75266472ca36e) the six rolls go behind one button and a caret
+- *(ui)* [`ed24226`](https://github.com/cmdcolin/videoskillet.js/commit/ed242262aad03319c6ec1147cf1921777a9c2d9c) a group is a block, and the open one wears a lid
+- *(ui)* [`8660fd0`](https://github.com/cmdcolin/videoskillet.js/commit/8660fd0ab58af6675970d6465f8e88cbe161c624) a group's header becomes the door it always was
+- *(ui)* [`96e57b2`](https://github.com/cmdcolin/videoskillet.js/commit/96e57b2b18753d1c3eafcb6bc70b0ae24679fa7b) six presets built on the ring modulators
+- *(ui)* [`2ae866c`](https://github.com/cmdcolin/videoskillet.js/commit/2ae866c828e8ade618939abf8d33e8ecea458476) the camera is a source either deck takes
+- *(ui)* [`a604fcd`](https://github.com/cmdcolin/videoskillet.js/commit/a604fcd2d8be699e9ae9ae811a5e57cf29bc57cb) a driven row says what is driving it, how fast and how far
+- *(ui)* [`8a6b670`](https://github.com/cmdcolin/videoskillet.js/commit/8a6b6706bd1b5a964695a6ab7398ae0aeae3a7b6) two more presets where the multiply is the mechanism
+- *(audio)* [`308d159`](https://github.com/cmdcolin/videoskillet.js/commit/308d1598018a75214f24618b9091ab542eb83313) system audio as an input
+
+### Fixes
+- *(gpu)* [`835f4bc`](https://github.com/cmdcolin/videoskillet.js/commit/835f4bcec71f0cc6541d8356512ed510e0ed4216) the harnesses find a browser on the box they are running on
+- *(ui)* [`f8d9901`](https://github.com/cmdcolin/videoskillet.js/commit/f8d9901d34f25db30ee8f0754e4b86ecc1ece86e) a roll stops handing the blender a fight it cannot win
+- *(docs)* [`8547fae`](https://github.com/cmdcolin/videoskillet.js/commit/8547faeb20a96748c177d537f5b09ecd513d253e) match a section header with its caret leading
+
+### Performance
+- *(gpu)* [`2ffe44c`](https://github.com/cmdcolin/videoskillet.js/commit/2ffe44c704890e9da8f500d80973a3b5e10373c8) the drain probe is armed by the refresh, not by its own settle
+- *(gpu)* [`1f59363`](https://github.com/cmdcolin/videoskillet.js/commit/1f59363087a9683275db4a3b46a446523307bc0b) the frame's uniform values are assigned, not spread into a copy
+- *(signal)* [`4908d55`](https://github.com/cmdcolin/videoskillet.js/commit/4908d5563c37bb1ecb5d171f18aaa374597fcd08) the per-line table stops drawing 2100 sines to scale them by zero
+- *(ui)* [`55a9bc7`](https://github.com/cmdcolin/videoskillet.js/commit/55a9bc730758a12a20f3124698061b9eab622592) matchPreset decides from the keys the board holds off stock
+- *(gpu)* [`7d9b4af`](https://github.com/cmdcolin/videoskillet.js/commit/7d9b4af9d431ede2a40fe5168f9facca3a7e1f04) a feed patches the packed block rather than packing a merged copy
+
+### Refactor
+- *(ui)* [`7130c4f`](https://github.com/cmdcolin/videoskillet.js/commit/7130c4fd895c50a7afab0f04b82bd9ba29fc65e9) the board's every-stage preset comes out
+
+### Documentation
+- [`6223dcd`](https://github.com/cmdcolin/videoskillet.js/commit/6223dcd8b53e65f4697ef4f069e27056765ded62) what a CPU profile of the live app found
+- [`5e12e68`](https://github.com/cmdcolin/videoskillet.js/commit/5e12e68ccfbe2029d4c27b501b86c796dc2a1aa7) the second CPU pass, and the shape it was looking for
+- [`f38a533`](https://github.com/cmdcolin/videoskillet.js/commit/f38a533e3696d8c94b953b2d3dcd6e21492fa855) answer the React question where somebody would ask it
+- [`71b0a38`](https://github.com/cmdcolin/videoskillet.js/commit/71b0a38c4899c3d5698a82f3e12c14829ef17e70) say where the sound comes from
+- *(signal)* [`06aa925`](https://github.com/cmdcolin/videoskillet.js/commit/06aa9257ffcdc4e3679f746e1d7bb9475fcc7c2b) what the mixer's ring mod actually is
+
+### Chores
+- [`bf504e9`](https://github.com/cmdcolin/videoskillet.js/commit/bf504e9a00c997bddbfd3b8204d45ea27315a618) the app is videoskillet.js, and its mark is a skillet
+
+### Other Changes
+- [`f38d302`](https://github.com/cmdcolin/videoskillet.js/commit/f38d302b1804783e5b64455a03427cef1662dcc7) Just remove text
+
 ## [0.33.0](https://github.com/cmdcolin/videoskillet.js/compare/v0.32.4...v0.33.0) - 2026-08-30
 
 ### Features
@@ -1197,7 +1239,7 @@ All notable changes to videoskillet.js are documented here.
 ## [0.7.1](https://github.com/cmdcolin/videoskillet.js/compare/v0.7.0...v0.7.1) - 2026-08-02
 
 ### Other Changes
-- [`63f728d`](https://github.com/cmdcolin/videoskillet.js/commit/63f728d85013cc08a9fcbb2a0115e401a1c72d06) Rename videoskillet.js
+- [`63f728d`](https://github.com/cmdcolin/videoskillet.js/commit/63f728d85013cc08a9fcbb2a0115e401a1c72d06) Rename ntsc.js
 
 ## [0.7.0](https://github.com/cmdcolin/videoskillet.js/compare/v0.6.2...v0.7.0) - 2026-08-02
 
