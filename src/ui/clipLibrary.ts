@@ -660,7 +660,7 @@ export function readLibrary(raw: unknown): Library {
 
 // ── the store ────────────────────────────────────────────────────────────────
 
-const KEY = 'ntsc.js.clips'
+const KEY = 'videoskillet.js.clips'
 const clipRecord = (id: string) => `clip:${id}`
 const folderRecord = (id: string) => `folder:${id}`
 

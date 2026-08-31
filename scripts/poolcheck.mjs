@@ -132,7 +132,9 @@ const state = () =>
     const shades = new Set()
     for (let i = 0; i < row.length; i += 4)
       shades.add(`${row[i] >> 5}.${row[i + 1] >> 5}.${row[i + 2] >> 5}`)
-    const shelf = JSON.parse(localStorage.getItem('ntsc.js.clips') ?? '{}')
+    const shelf = JSON.parse(
+      localStorage.getItem('videoskillet.js.clips') ?? '{}',
+    )
     return {
       mode: sel?.value ?? null,
       // The shelf's trigger reads the clip's name and nothing else; FileName's

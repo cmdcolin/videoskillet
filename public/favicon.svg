@@ -1,10 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
   <rect width="32" height="32" rx="6" fill="#0a0b0d"/>
-  <rect x="9.7" y="2.49" width="2.97" height="11.98" fill="#c7c71f"/><rect x="9.7" y="8.03" width="2.97" height="0.9" fill="#f2f5f8" opacity="0.9"/>
-  <rect x="12.67" y="2.51" width="2.97" height="16.91" fill="#1fc7c7"/><rect x="12.67" y="10.52" width="2.97" height="0.9" fill="#f2f5f8" opacity="0.9"/>
-  <rect x="15.63" y="4.59" width="2.97" height="15.79" fill="#1fc71f"/><rect x="15.63" y="12.04" width="2.97" height="0.9" fill="#f2f5f8" opacity="0.9"/>
-  <rect x="18.6" y="6.91" width="2.97" height="15.8" fill="#c71fc7"/><rect x="18.6" y="14.35" width="2.97" height="0.9" fill="#f2f5f8" opacity="0.9"/>
-  <rect x="21.57" y="7.89" width="2.97" height="16.91" fill="#c71f1f"/><rect x="21.57" y="15.9" width="2.97" height="0.9" fill="#f2f5f8" opacity="0.9"/>
-  <rect x="24.53" y="12.83" width="2.97" height="11.98" fill="#1f1fc7"/><rect x="24.53" y="18.37" width="2.97" height="0.9" fill="#f2f5f8" opacity="0.9"/>
-  <path d="M2.5 21.79V29.5H5.3V21.79H6L6.36 17.93L7.09 25.64L7.81 17.93L8.54 25.64L8.9 21.79H9.7M27.5 21.79H29.5V29.5" fill="none" stroke="#f2f5f8" stroke-width="1.2" stroke-linejoin="round" stroke-linecap="round"/>
+  <g fill="none" stroke-width="2.4" stroke-linecap="round">
+    <path d="M8 15.8 C6.1 13.7 9.1 12.1 7.6 9.7" stroke="#c7c71f"/>
+    <path d="M12.6 15.6 C10.3 13.1 14.3 11.1 12.4 8.3 C11.3 6.7 12.4 5.5 12.9 4.5" stroke="#1fc7c7"/>
+    <path d="M17.3 15.8 C15.8 14 18.7 12.6 17.4 10.4" stroke="#c71fc7"/>
+  </g>
+  <g transform="rotate(-7 13 22)">
+    <path d="M21.6 19.6 29.2 15.6" fill="none" stroke="#767d85" stroke-width="3.2" stroke-linecap="round"/>
+    <ellipse cx="13" cy="22.6" rx="10" ry="6.2" fill="#767d85"/>
+    <ellipse cx="13" cy="20.8" rx="10" ry="4.8" fill="#22262b"/>
+  </g>
 </svg>

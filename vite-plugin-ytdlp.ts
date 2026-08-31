@@ -18,7 +18,7 @@ import { extname, join } from 'node:path'
 // temp dir, and serves it back for the app's <video> path to play. yt-dlp
 // reaches well past YouTube, so the guard below is the scheme rather than a
 // host list — anything it has an extractor for is a source here.
-const CACHE_DIR = join(tmpdir(), 'ntsc.js-yt')
+const CACHE_DIR = join(tmpdir(), 'videoskillet.js-yt')
 
 // The chain downscales to 480 lines, so height above that is bytes fetched to
 // be thrown away, and the picture is decoded every frame, so h264 — hardware
@@ -254,7 +254,7 @@ const fetchClip = (url: string, secs: number): Promise<string> => {
 
 export function ytdlp(): Plugin {
   return {
-    name: 'ntsc.js-ytdlp',
+    name: 'videoskillet.js-ytdlp',
     apply: 'serve',
     configureServer(server) {
       // Connect strips the '/yt' mount, so req.url here is '/?url=...' for the

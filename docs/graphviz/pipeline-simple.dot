@@ -1,4 +1,4 @@
-// ntsc.js — the big idea in five blocks, and the same five the app draws.
+// videoskillet.js — the big idea in five blocks, and the same five the app draws.
 //
 // Block names are the app's trunk stages (PHASE_ORDER in src/ui/controls.ts) and
 // the three loops are its three returns (LOOP_STAGES), so a reader who meets

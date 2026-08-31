@@ -1,8 +1,11 @@
-# ntsc.js
+# videoskillet.js
+
+Real-time analog video — composite, VHS and CRT — simulated down to the signal
+and rendered entirely in WebGPU compute shaders.
 
 ### Live app!
 
-https://cmdcolin.github.io/ntsc.js/
+https://cmdcolin.github.io/videoskillet.js/
 
 ## Screenshot
 
@@ -104,7 +107,7 @@ OSC is the piece that is missing.
 
 ## Docs
 
-- [Main docs website](https://cmdcolin.github.io/ntsc.js/guide/)
+- [Main docs website](https://cmdcolin.github.io/videoskillet.js/guide/)
 - [Getting started](docs/GETTING-STARTED.md)
 - [User guide](docs/USER-GUIDE.md)
 - [Features](docs/FEATURES.md)
@@ -126,19 +129,19 @@ composite video cables together in my basement and posting tumblr gifs.
 ## Cool demos
 
 - Camera feedback + static
-  https://cmdcolin.github.io/ntsc.js/?p=GIgEEVQA9AEAYA6AAhHAAQBkDEgEkAMLoAIAtAEE6AIEjCEBAACkAgAAAKgBBVxwub4DAKHEAQ&mod=vFreqHz:smooth:0.08:0.0049,fbGain:smooth:0.24:0.06&src=vhs+static
+  https://cmdcolin.github.io/videoskillet.js/?p=GIgEEVQA9AEAYA6AAhHAAQBkDEgEkAMLoAIAtAEE6AIEjCEBAACkAgAAAKgBBVxwub4DAKHEAQ&mod=vFreqHz:smooth:0.08:0.0049,fbGain:smooth:0.24:0.06&src=vhs+static
 
 - Chaos black and white feedback
-  https://cmdcolin.github.io/ntsc.js/?p=FJADAMACAuQDNVAImAIAUALIARaQAwoUAIABANQDApQBAHgARAniAQECCVQk5gMAqAEAqAYAgJ9JA8gB&mod=tapeLoopMm:smooth:0.05:0.0151&srcb=tv+static
+  https://cmdcolin.github.io/videoskillet.js/?p=FJADAMACAuQDNVAImAIAUALIARaQAwoUAIABANQDApQBAHgARAniAQECCVQk5gMAqAEAqAYAgJ9JA8gB&mod=tapeLoopMm:smooth:0.05:0.0151&srcb=tv+static
 
 - Dull color feedback
-  https://cmdcolin.github.io/ntsc.js/?p=CqCsBQEEAcwDAHABXAC8aQGQAwDoAgLMBQCsAgOceQR0GPwBCzgAGADYAQAIAlAAuAIImAIAUALIAQCAAQAkArACAXgAFAJ4ADAGXABcApADCjwA5AEA0AQCkAIA6AEAiAEI0AEA4gEA-AMABAlUJOYDAKgBBcgB&mod=tapeLoopMm:smooth:0.05:0.0151&srcb=tv+static
+  https://cmdcolin.github.io/videoskillet.js/?p=CqCsBQEEAcwDAHABXAC8aQGQAwDoAgLMBQCsAgOceQR0GPwBCzgAGADYAQAIAlAAuAIImAIAUALIAQCAAQAkArACAXgAFAJ4ADAGXABcApADCjwA5AEA0AQCkAIA6AEAiAEI0AEA4gEA-AMABAlUJOYDAKgBBcgB&mod=tapeLoopMm:smooth:0.05:0.0151&srcb=tv+static
 
 - Dark camera feedback
-  https://cmdcolin.github.io/ntsc.js/?p=CqCsBQEEAcwDAHABXAC8aQLoAgLMBQCsAgOceQR0GPwBCzgAGADYAQAIAjgAuAIImAIAUALIAQCAAQAkArACAXgAFAJ4ADAGXABcApADAKAhAIgBCKwCAOQBAJgRApACAAAAAADwCAdIALAJAAAABAlUJOYDAKgBBcgBAQQ&mod=tapeLoopMm:smooth:0.05:0.0151&srcb=tv+static&src=tv+static
+  https://cmdcolin.github.io/videoskillet.js/?p=CqCsBQEEAcwDAHABXAC8aQLoAgLMBQCsAgOceQR0GPwBCzgAGADYAQAIAjgAuAIImAIAUALIAQCAAQAkArACAXgAFAJ4ADAGXABcApADAKAhAIgBCKwCAOQBAJgRApACAAAAAADwCAdIALAJAAAABAlUJOYDAKgBBcgBAQQ&mod=tapeLoopMm:smooth:0.05:0.0151&srcb=tv+static&src=tv+static
 
 - Fuzzy color bars feedback
-  https://cmdcolin.github.io/ntsc.js/?p=cqQCAKAfAHoAOgAoAKggACwAYABEABAAmAEQ0AIA1AIwsAEIBA&mod=&srcb=vhs+static
+  https://cmdcolin.github.io/videoskillet.js/?p=cqQCAKAfAHoAOgAoAKggACwAYABEABAAmAEQ0AIA1AIwsAEIBA&mod=&srcb=vhs+static
 
 - Fuzzy color bars feedback+dissolver
-  https://cmdcolin.github.io/ntsc.js/?p=BrAEAMgCAKAGPahOAdACAJADAZwCAHolpAIAoB8AegA6ACgAqCAALABgAEQAEACYARDQAgDUAhsEA0oQsAEIBA&mod=&srcb=vhs+static
+  https://cmdcolin.github.io/videoskillet.js/?p=BrAEAMgCAKAGPahOAdACAJADAZwCAHolpAIAoB8AegA6ACgAqCAALABgAEQAEACYARDQAgDUAhsEA0oQsAEIBA&mod=&srcb=vhs+static

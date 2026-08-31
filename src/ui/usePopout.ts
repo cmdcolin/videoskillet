@@ -23,11 +23,11 @@ export function usePopout() {
     } else {
       const w = window.open(
         '',
-        'ntsc.js_controls',
+        'videoskillet.js_controls',
         `width=${wide ? WIDE : NARROW},height=900`,
       )
       if (w !== null) {
-        w.document.title = 'ntsc.js — controls'
+        w.document.title = 'videoskillet.js — controls'
         w.document.body.style.margin = '0'
         // Mirror the app's styles (Vite dev injects <style>; prod links CSS).
         for (const el of document.querySelectorAll('style')) {

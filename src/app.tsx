@@ -137,7 +137,7 @@ import type { ReactNode } from 'react'
 // reloads so a collapse sticks — it only ever applies where the masthead is off
 // screen (fullscreen, the popout), which is where somebody clearing the picture
 // off for a projector is likely to be.
-const BAR_HIDDEN_STORE = 'ntsc.js_overlay_bar_hidden'
+const BAR_HIDDEN_STORE = 'videoskillet.js_overlay_bar_hidden'
 
 // useSyncExternalStore fallbacks for the window before the async engine exists.
 const subscribeNever = () => () => {}
@@ -259,7 +259,7 @@ export function App() {
   // but inert unless there is room for it — the docked panel needs a wide
   // screen, while the popout is the user's own window to size, so there the
   // panel's container query has the last word.
-  const [benchOn, setBenchOn] = usePersistedFlag('ntsc.js_panel_bench')
+  const [benchOn, setBenchOn] = usePersistedFlag('videoskillet.js_panel_bench')
   const roomy = useMediaQuery('(min-width: 1280px)')
   const bench = benchOn && (popout !== null || roomy)
   // Switching it on asks the popout for the room the two columns need; the
@@ -366,7 +366,9 @@ export function App() {
   // the store is the engine's, so the readout goes down when the engine says a
   // morph is over, however it ended.
   const stopMorph = () => engineRef.current?.stopGlide()
-  const [morphStored, setMorphStored] = usePersistedString('ntsc.js_morph')
+  const [morphStored, setMorphStored] = usePersistedString(
+    'videoskillet.js_morph',
+  )
   const morphSeconds = parseMorph(morphStored)
   const mix = useMix({
     controls,
@@ -1147,15 +1149,15 @@ export function App() {
           <button
             className={styles.brand}
             onClick={() => setShowAbout(true)}
-            title={`ntsc.js ${versionLabel} (${gitSha}) — what is this?`}
-            aria-label="ntsc.js — what is this?"
+            title={`videoskillet.js ${versionLabel} (${gitSha}) — what is this?`}
+            aria-label="videoskillet.js — what is this?"
           >
             <img
               className={styles.brandMark}
               src={`${import.meta.env.BASE_URL}favicon.svg`}
               alt=""
             />
-            <span className={styles.wordmark}>ntsc.js</span>
+            <span className={styles.wordmark}>videoskillet.js</span>
             <span className={styles.version}>{versionLabel}</span>
           </button>
         )}

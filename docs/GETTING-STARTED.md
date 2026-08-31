@@ -1,17 +1,17 @@
 # Getting started
 
-ntsc.js simulates composite video signal using WebGPU shaders, and as a result,
+videoskillet.js simulates composite video signal using WebGPU shaders, and as a result,
 all the video effects are just natural consequences of real signal-level
 glitches, not pseudo-effects that are drawn on top of the image
 
 It does require WebGPU which requires a fairly recent browser, try Firefox
 Nightly or Chrome Canary if you have trouble with your default browser
 
-Visit https://cmdcolin.github.io/ntsc.js/
+Visit https://cmdcolin.github.io/videoskillet.js/
 
 ## What's on screen
 
-![The ntsc.js window: the picture on the left, the control panel on the right](img/overview.jpg)
+![The videoskillet.js window: the picture on the left, the control panel on the right](img/overview.jpg)
 
 **1** the picture, where a drag boxes a region to magnify and a double-click
 pulls back · **2** the ☰ menu, for stills, recording, fullscreen and settings ·

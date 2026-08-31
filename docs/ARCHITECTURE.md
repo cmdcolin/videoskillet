@@ -1,4 +1,4 @@
-# ntsc.js architecture
+# videoskillet.js architecture
 
 Orientation for someone (or something) about to change this codebase. It covers
 the shape of the system and the invariants that are easy to violate, not an
@@ -6,7 +6,7 @@ inventory of every file.
 
 ## The premise
 
-ntsc.js simulates the NTSC signal path, not the _look_ of one. There is no "VHS
+videoskillet.js simulates the NTSC signal path, not the _look_ of one. There is no "VHS
 filter". A picture is encoded to a real composite waveform on a fixed raster,
 damaged in the ways real hardware damages a waveform, then decoded by a model of
 a TV that has to find sync in whatever it is handed. Dot crawl, rainbow

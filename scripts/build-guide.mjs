@@ -58,7 +58,7 @@ const PAGES = [
 
 // Markdown link -> where it goes on the site. Anything else that ends in .md is
 // a contributor doc with no page here, so it goes to the repo.
-const REPO = 'https://github.com/cmdcolin/ntsc.js/blob/main/'
+const REPO = 'https://github.com/cmdcolin/videoskillet.js/blob/main/'
 const LINKS = new Map([
   ['GETTING-STARTED.md', 'index.html'],
   ['USER-GUIDE.md', 'guide.html'],
@@ -172,7 +172,7 @@ const forceDarkDiagrams = html =>
     (_whole, dark, before, after) => `<img ${before}src="${dark}"${after}>`,
   )
 
-const SITE = 'https://cmdcolin.github.io/ntsc.js/'
+const SITE = 'https://cmdcolin.github.io/videoskillet.js/'
 
 const esc = s =>
   s.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('"', '&quot;')
@@ -237,7 +237,7 @@ const page = (body, title, current, headings) => `<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>${title} — ntsc.js</title>
+<title>${title} — videoskillet.js</title>
 <meta name="description" content="${esc(summarise(body))}">
 <link rel="canonical" href="${url(current)}">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
@@ -245,9 +245,9 @@ const page = (body, title, current, headings) => `<!doctype html>
 <meta name="color-scheme" content="dark">
 <!-- A guide page shared on its own unfurls as itself, not as a bare filename. -->
 <meta property="og:type" content="article">
-<meta property="og:site_name" content="ntsc.js">
+<meta property="og:site_name" content="videoskillet.js">
 <meta property="og:url" content="${url(current)}">
-<meta property="og:title" content="${esc(title)} — ntsc.js">
+<meta property="og:title" content="${esc(title)} — videoskillet.js">
 <meta property="og:description" content="${esc(summarise(body))}">
 <meta property="og:image" content="${SITE}og.jpg">
 <meta name="twitter:card" content="summary_large_image">
@@ -514,7 +514,7 @@ footer { border-top: 1px solid var(--border); background: var(--card); }
 <a class="skip" href="#content">Skip to content</a>
 <header>
   <div class="bar">
-    <a class="brand" href="index.html">ntsc.js<span>guide</span></a>
+    <a class="brand" href="index.html">videoskillet.js<span>guide</span></a>
     <nav class="pages" aria-label="Guide pages">
       ${PAGES.map(p => `<a${p.out === current ? ' class="on" aria-current="page"' : ''} href="${p.out}">${p.nav}</a>`).join('\n      ')}
     </nav>
@@ -531,8 +531,8 @@ ${pagerFor(current)}
 <footer>
   <div class="foot">
     <a href="../">Live demo ↗</a>
-    <a href="https://github.com/cmdcolin/ntsc.js">Source ↗</a>
-    <a href="https://github.com/cmdcolin/ntsc.js/issues">Issues ↗</a>
+    <a href="https://github.com/cmdcolin/videoskillet.js">Source ↗</a>
+    <a href="https://github.com/cmdcolin/videoskillet.js/issues">Issues ↗</a>
     <a href="#top">Back to top ↑</a>
     <span class="sep"></span>
     <small>MIT. Needs a WebGPU browser — Chrome, Edge, Safari 26+, or Firefox Nightly on Linux.</small>

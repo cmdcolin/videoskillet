@@ -8,7 +8,7 @@ import ui from './ui.module.css'
 // keep in step with the app that nobody remembered to edit.
 export function AboutDialog({ onClose }: { onClose: () => void }) {
   return (
-    <Dialog title="ntsc.js" size="form" onClose={onClose}>
+    <Dialog title="videoskillet.js" size="form" onClose={onClose}>
       <p className={ui.helpText}>
         A real-time simulator of the analog NTSC signal path — camera, tape, RF,
         and CRT — rendered entirely in WebGPU compute shaders.
@@ -16,7 +16,7 @@ export function AboutDialog({ onClose }: { onClose: () => void }) {
       <p className={ui.helpText}>
         <a
           className={ui.link}
-          href="https://cmdcolin.github.io/ntsc.js/"
+          href="https://cmdcolin.github.io/videoskillet.js/"
           target="_blank"
           rel="noreferrer"
         >
@@ -25,7 +25,7 @@ export function AboutDialog({ onClose }: { onClose: () => void }) {
         ·{' '}
         <a
           className={ui.link}
-          href="https://github.com/cmdcolin/ntsc.js"
+          href="https://github.com/cmdcolin/videoskillet.js"
           target="_blank"
           rel="noreferrer"
         >

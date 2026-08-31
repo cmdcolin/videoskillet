@@ -82,7 +82,7 @@ interface Meta {
 
 const NONE: Meta = { name: '', type: '', kind: 'copy', id: '' }
 
-const metaKey = (slot: StashSlot) => `ntsc.js.stash.${slot}`
+const metaKey = (slot: StashSlot) => `videoskillet.js.stash.${slot}`
 const copyName = (slot: StashSlot) => `source-${slot}`
 
 // Whether a reload puts each deck back on what it was holding, which is a
@@ -100,7 +100,7 @@ const copyName = (slot: StashSlot) => `source-${slot}`
 // both go through `storedFlag`: with two spellings of "absent means yes" the two
 // files could drift into an app that reopens clips under a switch reading "start
 // empty", and nothing would fail.
-export const REOPEN_KEY = 'ntsc.js.reopen'
+export const REOPEN_KEY = 'videoskillet.js.reopen'
 
 export const reopensOnLoad = (): boolean => storedFlag(REOPEN_KEY, true)
 

@@ -225,7 +225,7 @@ export function readVote(raw: unknown): VoteRecord | undefined {
 // for, and a labeller who votes fifty pairs and then signs in should keep all
 // fifty. Nothing here is a substitute for the server: it is a buffer, and every
 // flush empties it.
-const PENDING_STORE = 'ntsc.js_pending_votes'
+const PENDING_STORE = 'videoskillet.js_pending_votes'
 
 // Past this the queue is someone who has never signed in and never will, and the
 // oldest records go rather than the newest — a 5MB localStorage quota is shared

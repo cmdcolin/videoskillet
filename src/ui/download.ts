@@ -14,7 +14,7 @@ function stamp(): string {
 
 export function fileName(name: string, ext: string): string {
   const slug = name.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '')
-  return `ntsc.js-${slug}-${stamp()}.${ext}`
+  return `videoskillet-${slug}-${stamp()}.${ext}`
 }
 
 export function save(blob: Blob, name: string) {

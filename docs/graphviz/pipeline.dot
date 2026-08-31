@@ -1,4 +1,4 @@
-// ntsc.js signal path — mirrors the pass order in docs/ARCHITECTURE.md
+// videoskillet.js signal path — mirrors the pass order in docs/ARCHITECTURE.md
 // ("Pass order") and src/core/gpu/pipeline.ts: prePasses -> loopPasses x dubGens
 // -> postPasses -> present.
 //

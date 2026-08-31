@@ -45,7 +45,7 @@ const CONFIG = {
 // store, and this is only the hint that tells a fresh page load whether it is
 // worth fetching the SDK to go and look. Wrong in the harmless direction either
 // way: stale-true costs one wasted fetch, stale-false costs one click.
-const SIGNED_IN_HINT = 'ntsc.js_signed_in'
+const SIGNED_IN_HINT = 'videoskillet.js_signed_in'
 export const wasSignedIn = () => readStored(SIGNED_IN_HINT) === '1'
 
 // What the panel needs to know about who is signed in. Deliberately not the

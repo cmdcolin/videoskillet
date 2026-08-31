@@ -7,7 +7,7 @@ right one quickly, including when that is not this one.
 - That look on a clip in your edit → **ntsc-rs**
 - Four sources, a mixer, and every kind of glitch → **BENDR**
 - Games on a period TV → **Blargg's filters and the RetroArch CRT shaders**
-- One signal, bent live, its faults interacting → **ntsc.js**, this one
+- One signal, bent live, its faults interacting → **videoskillet.js**, this one
 - A real tape, decoded rather than simulated → **vhs-decode**
 
 ## The tools
@@ -20,7 +20,7 @@ as AE / Premiere / OpenFX plugins, so Resolve, Vegas, HitFilm and Natron all
 reach it. Multithreaded, SIMD-accelerated Rust on the CPU, and it runs in real
 time well above NTSC resolution — two advantages this project does not have. If
 what you want is this look on a clip in an edit, that is the one to reach for:
-ntsc.js has no plugin and is not going to have one ([FAQ.md](FAQ.md)).
+videoskillet.js has no plugin and is not going to have one ([FAQ.md](FAQ.md)).
 
 ### BENDR
 
@@ -32,7 +32,7 @@ crawl and ringing are each an effect with its own slider, and the sync faults
 are drawn on top, line by line. Nothing has to be a signal for that to look
 right, which is what lets the stages reorder freely.
 
-ntsc.js has no dot-crawl slider, because it builds the signal instead. A picture
+videoskillet.js has no dot-crawl slider, because it builds the signal instead. A picture
 becomes an actual composite waveform — sync pulses, colour burst, colour carried
 on the subcarrier the way a real encoder carries it. The model damages that
 waveform, and a model of a TV has to lock to it and decode it back. Dot crawl
@@ -76,9 +76,9 @@ LZX Industries and the Eurorack video scene make the real thing, priced like
 hardware. Nothing in software substitutes for it; this project reaches toward it
 from the other side.
 
-## Where ntsc.js fits
+## Where videoskillet.js fits
 
-ntsc.js works best as a **live instrument** rather than an offline signal
+videoskillet.js works best as a **live instrument** rather than an offline signal
 processor, and that follows from how it is built: the signal path stays resident
 on the GPU as compute shaders, so a control change is a uniform-buffer write,
 not a re-render. That buys:

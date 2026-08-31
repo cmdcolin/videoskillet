@@ -3,7 +3,7 @@
     "name": "overview",
     "file": "overview.jpg",
     "mp4": null,
-    "live": "https://cmdcolin.github.io/ntsc.js/?src=cat&set=demodMHz:0.5,hvSagUs:2.7,hvRing:0.61,lumaMHz:2.8,lumaPeak:0.8,noiseIre:4,agc:0.19,ghostDelayUs:1.15,ghostGain:0.08,colorUnderMix:1,underJitterDeg:4,dropoutRate:6,headSwitchNoise:0.4,headSwitchShiftUs:0.8,tbJitterNs:190,tbWowNs:300,phosphor:0.19&mod=",
+    "live": "https://cmdcolin.github.io/videoskillet.js/?src=cat&set=demodMHz:0.5,hvSagUs:2.7,hvRing:0.61,lumaMHz:2.8,lumaPeak:0.8,noiseIre:4,agc:0.19,ghostDelayUs:1.15,ghostGain:0.08,colorUnderMix:1,underJitterDeg:4,dropoutRate:6,headSwitchNoise:0.4,headSwitchShiftUs:0.8,tbJitterNs:190,tbWowNs:300,phosphor:0.19&mod=",
     "captured": {
       "version": "0.32.4",
       "sha": "4da0fc4"
@@ -13,7 +13,7 @@
     "name": "slider-help",
     "file": "slider-help.jpg",
     "mp4": null,
-    "live": "https://cmdcolin.github.io/ntsc.js/?src=cat&set=demodMHz:0.5,hvSagUs:2.7,hvRing:0.61,lumaMHz:2.8,lumaPeak:0.8,noiseIre:4,agc:0.19,ghostDelayUs:1.15,ghostGain:0.08,colorUnderMix:1,underJitterDeg:4,dropoutRate:6,headSwitchNoise:0.4,headSwitchShiftUs:0.8,tbJitterNs:190,tbWowNs:300,phosphor:0.19&mod=",
+    "live": "https://cmdcolin.github.io/videoskillet.js/?src=cat&set=demodMHz:0.5,hvSagUs:2.7,hvRing:0.61,lumaMHz:2.8,lumaPeak:0.8,noiseIre:4,agc:0.19,ghostDelayUs:1.15,ghostGain:0.08,colorUnderMix:1,underJitterDeg:4,dropoutRate:6,headSwitchNoise:0.4,headSwitchShiftUs:0.8,tbJitterNs:190,tbWowNs:300,phosphor:0.19&mod=",
     "captured": {
       "version": "0.32.4",
       "sha": "4da0fc4"
@@ -23,7 +23,7 @@
     "name": "chain",
     "file": "chain.jpg",
     "mp4": null,
-    "live": "https://cmdcolin.github.io/ntsc.js/?src=cat&set=demodMHz:0.5,hvSagUs:2.7,hvRing:0.61,lumaMHz:2.8,lumaPeak:0.8,noiseIre:4,agc:0.19,ghostDelayUs:1.15,ghostGain:0.08,colorUnderMix:1,underJitterDeg:4,dropoutRate:6,headSwitchNoise:0.4,headSwitchShiftUs:0.8,tbJitterNs:190,tbWowNs:300,phosphor:0.19&mod=",
+    "live": "https://cmdcolin.github.io/videoskillet.js/?src=cat&set=demodMHz:0.5,hvSagUs:2.7,hvRing:0.61,lumaMHz:2.8,lumaPeak:0.8,noiseIre:4,agc:0.19,ghostDelayUs:1.15,ghostGain:0.08,colorUnderMix:1,underJitterDeg:4,dropoutRate:6,headSwitchNoise:0.4,headSwitchShiftUs:0.8,tbJitterNs:190,tbWowNs:300,phosphor:0.19&mod=",
     "captured": {
       "version": "0.32.4",
       "sha": "4da0fc4"
@@ -33,7 +33,7 @@
     "name": "signal-path",
     "file": "signal-path.png",
     "mp4": null,
-    "live": "https://cmdcolin.github.io/ntsc.js/?src=cat&set=demodMHz:0.5,hvSagUs:2.7,hvRing:0.61,lumaMHz:2.8,lumaPeak:0.8,noiseIre:4,agc:0.19,ghostDelayUs:1.15,ghostGain:0.08,colorUnderMix:1,underJitterDeg:4,dropoutRate:6,headSwitchNoise:0.4,headSwitchShiftUs:0.8,tbJitterNs:190,tbWowNs:300,phosphor:0.19&mod=",
+    "live": "https://cmdcolin.github.io/videoskillet.js/?src=cat&set=demodMHz:0.5,hvSagUs:2.7,hvRing:0.61,lumaMHz:2.8,lumaPeak:0.8,noiseIre:4,agc:0.19,ghostDelayUs:1.15,ghostGain:0.08,colorUnderMix:1,underJitterDeg:4,dropoutRate:6,headSwitchNoise:0.4,headSwitchShiftUs:0.8,tbJitterNs:190,tbWowNs:300,phosphor:0.19&mod=",
     "captured": {
       "version": "0.32.4",
       "sha": "4da0fc4"
@@ -43,49 +43,49 @@
     "name": "look-loop",
     "file": "look-loop.jpg",
     "mp4": null,
-    "live": "https://cmdcolin.github.io/ntsc.js/?src=cat&preset=mixer+loop&set=chromaGain%3A2.6%2CnoiseIre%3A2%2CcrtGamma%3A1.3%2CcrtSat%3A1.6%2CcfbMix%3A0.8%2CcfbGain%3A1.01%2CcfbDelayUs%3A1.4%2CcfbLines%3A-9%2CcfbTrail%3A0.6%2CcfbServoUs%3A1.6%2CcfbRing%3A0.45%2Cphosphor%3A0.45&mod=",
+    "live": "https://cmdcolin.github.io/videoskillet.js/?src=cat&preset=mixer+loop&set=chromaGain%3A2.6%2CnoiseIre%3A2%2CcrtGamma%3A1.3%2CcrtSat%3A1.6%2CcfbMix%3A0.8%2CcfbGain%3A1.01%2CcfbDelayUs%3A1.4%2CcfbLines%3A-9%2CcfbTrail%3A0.6%2CcfbServoUs%3A1.6%2CcfbRing%3A0.45%2Cphosphor%3A0.45&mod=",
     "captured": null
   },
   {
     "name": "look-negative",
     "file": "look-negative.jpg",
     "mp4": null,
-    "live": "https://cmdcolin.github.io/ntsc.js/?src=cat&preset=negative&set=invert%3A1%2CchromaGain%3A2.4%2CsvideoBleed%3A0.7%2ChHold%3A0.5%2CbendUs%3A16%2CbendShape%3A2%2ChDetuneHz%3A34%2Cscramble%3A0.45%2CnoiseIre%3A5%2Cagc%3A0.3%2CcrtGamma%3A2.4%2CcrtBloom%3A0.7%2Cphosphor%3A0.55&mod=",
+    "live": "https://cmdcolin.github.io/videoskillet.js/?src=cat&preset=negative&set=invert%3A1%2CchromaGain%3A2.4%2CsvideoBleed%3A0.7%2ChHold%3A0.5%2CbendUs%3A16%2CbendShape%3A2%2ChDetuneHz%3A34%2Cscramble%3A0.45%2CnoiseIre%3A5%2Cagc%3A0.3%2CcrtGamma%3A2.4%2CcrtBloom%3A0.7%2Cphosphor%3A0.55&mod=",
     "captured": null
   },
   {
     "name": "look-key",
     "file": "look-key.jpg",
     "mp4": null,
-    "live": "https://cmdcolin.github.io/ntsc.js/?src=synth&preset=key+sweep&set=synthAHz%3A15797%2CsynthBHz%3A47%2CsynthShape%3A3%2CsynthMix%3A2%2CsynthLevel%3A1.7%2CsynthColor%3A1%2CdemodMHz%3A0.9%2CchromaCoarse%3A3%2CchromaGain%3A3%2CburstLock%3A0.3%2CscDetuneKHz%3A0.4%2CsvideoBleed%3A0.8%2CcrtGamma%3A1.9%2CcrtSat%3A1.6%2CbKeyHueDeg%3A196%2CbKeyAcceptDeg%3A52%2CbKeySoft%3A0.06%2CbKeySpill%3A0.4%2Cphosphor%3A0.35&mod=",
+    "live": "https://cmdcolin.github.io/videoskillet.js/?src=synth&preset=key+sweep&set=synthAHz%3A15797%2CsynthBHz%3A47%2CsynthShape%3A3%2CsynthMix%3A2%2CsynthLevel%3A1.7%2CsynthColor%3A1%2CdemodMHz%3A0.9%2CchromaCoarse%3A3%2CchromaGain%3A3%2CburstLock%3A0.3%2CscDetuneKHz%3A0.4%2CsvideoBleed%3A0.8%2CcrtGamma%3A1.9%2CcrtSat%3A1.6%2CbKeyHueDeg%3A196%2CbKeyAcceptDeg%3A52%2CbKeySoft%3A0.06%2CbKeySpill%3A0.4%2Cphosphor%3A0.35&mod=",
     "captured": null
   },
   {
     "name": "clip-feedback",
     "file": "clip-feedback-poster.jpg",
     "mp4": "https://cmdcolinphotos.s3.amazonaws.com/phosphene/clip-feedback.mp4",
-    "live": "https://cmdcolin.github.io/ntsc.js/?src=cat&set=noiseIre%3A2.5%2CcolorUnderMix%3A0.5%2CunderJitterDeg%3A3%2CdropoutRate%3A8%2CheadSwitchNoise%3A0.35%2CheadSwitchShiftUs%3A0.9%2CtbJitterNs%3A150%2CtbWowNs%3A300%2CfbMix%3A0.88%2CfbZoom%3A1.014%2CfbRotateDeg%3A0.6%2CfbGain%3A1.08%2CfbFocus%3A1.2%2CfbVign%3A0.28%2CfbKnee%3A0.55%2Cphosphor%3A0.4",
+    "live": "https://cmdcolin.github.io/videoskillet.js/?src=cat&set=noiseIre%3A2.5%2CcolorUnderMix%3A0.5%2CunderJitterDeg%3A3%2CdropoutRate%3A8%2CheadSwitchNoise%3A0.35%2CheadSwitchShiftUs%3A0.9%2CtbJitterNs%3A150%2CtbWowNs%3A300%2CfbMix%3A0.88%2CfbZoom%3A1.014%2CfbRotateDeg%3A0.6%2CfbGain%3A1.08%2CfbFocus%3A1.2%2CfbVign%3A0.28%2CfbKnee%3A0.55%2Cphosphor%3A0.4",
     "captured": null
   },
   {
     "name": "clip-sync",
     "file": "clip-sync-poster.jpg",
     "mp4": "https://cmdcolinphotos.s3.amazonaws.com/phosphene/clip-sync.mp4",
-    "live": "https://cmdcolin.github.io/ntsc.js/?src=cat&preset=worn+tape&set=demodMHz%3A0.45%2ChHold%3A0.62%2ClumaMHz%3A2.2%2ClumaPeak%3A1.4%2CnoiseIre%3A6%2CghostDelayUs%3A3%2CghostGain%3A0.15%2CcolorUnderMix%3A1%2CchromaNoiseIre%3A9%2CunderJitterDeg%3A10%2CdropoutRate%3A25%2CdropoutLenUs%3A9%2CheadSwitchNoise%3A0.8%2CheadSwitchShiftUs%3A2%2CtbJitterNs%3A700%2CtbWowNs%3A1400%2CdubGens%3A2%2CtrackAmt%3A0.6%2CtrackPos%3A0.6",
+    "live": "https://cmdcolin.github.io/videoskillet.js/?src=cat&preset=worn+tape&set=demodMHz%3A0.45%2ChHold%3A0.62%2ClumaMHz%3A2.2%2ClumaPeak%3A1.4%2CnoiseIre%3A6%2CghostDelayUs%3A3%2CghostGain%3A0.15%2CcolorUnderMix%3A1%2CchromaNoiseIre%3A9%2CunderJitterDeg%3A10%2CdropoutRate%3A25%2CdropoutLenUs%3A9%2CheadSwitchNoise%3A0.8%2CheadSwitchShiftUs%3A2%2CtbJitterNs%3A700%2CtbWowNs%3A1400%2CdubGens%3A2%2CtrackAmt%3A0.6%2CtrackPos%3A0.6",
     "captured": null
   },
   {
     "name": "clip-hero",
     "file": "clip-hero-poster.jpg",
     "mp4": "https://cmdcolinphotos.s3.amazonaws.com/phosphene/clip-hero.mp4",
-    "live": "https://cmdcolin.github.io/ntsc.js/?src=cat&srcb=cat&set=encChromaMHz%3A1.85%2CdemodMHz%3A1.23%2CchromaTail%3A0.4%2CchromaGain%3A2.4%2CsvideoBleed%3A0.8%2CvHold%3A0.4%2CvFreqHz%3A59.6%2CsyncBendUs%3A6%2CbendUs%3A22%2CbendShape%3A2%2ChvSagUs%3A12%2ChvRing%3A0.8%2ChDetuneHz%3A24%2Cscramble%3A0.4%2CenhPeakMHz%3A0.35%2CenhPeakQ%3A0.7%2CenhPeakBoost%3A0.06%2CnoiseIre%3A7%2Cagc%3A0.5%2CfbMix%3A0.5%2CfbZoom%3A1.03%2CfbRotateDeg%3A2%2CfbGain%3A0.96%2CfbFocus%3A1.1%2CfbVign%3A0.4%2CfbBlack%3A0.02%2CfbKnee%3A0.6%2CcfbMix%3A0.35%2CcfbGain%3A0.8%2CcfbDelayUs%3A0.25%2CcfbLines%3A3%2CcfbKey%3A0.7%2CcfbKeySoft%3A10%2CbGain%3A0.35%2CbLineHz%3A0.71%2CbDetuneHz%3A107%2CbRollLps%3A0.17%2Cphosphor%3A0.45",
+    "live": "https://cmdcolin.github.io/videoskillet.js/?src=cat&srcb=cat&set=encChromaMHz%3A1.85%2CdemodMHz%3A1.23%2CchromaTail%3A0.4%2CchromaGain%3A2.4%2CsvideoBleed%3A0.8%2CvHold%3A0.4%2CvFreqHz%3A59.6%2CsyncBendUs%3A6%2CbendUs%3A22%2CbendShape%3A2%2ChvSagUs%3A12%2ChvRing%3A0.8%2ChDetuneHz%3A24%2Cscramble%3A0.4%2CenhPeakMHz%3A0.35%2CenhPeakQ%3A0.7%2CenhPeakBoost%3A0.06%2CnoiseIre%3A7%2Cagc%3A0.5%2CfbMix%3A0.5%2CfbZoom%3A1.03%2CfbRotateDeg%3A2%2CfbGain%3A0.96%2CfbFocus%3A1.1%2CfbVign%3A0.4%2CfbBlack%3A0.02%2CfbKnee%3A0.6%2CcfbMix%3A0.35%2CcfbGain%3A0.8%2CcfbDelayUs%3A0.25%2CcfbLines%3A3%2CcfbKey%3A0.7%2CcfbKeySoft%3A10%2CbGain%3A0.35%2CbLineHz%3A0.71%2CbDetuneHz%3A107%2CbRollLps%3A0.17%2Cphosphor%3A0.45",
     "captured": null
   },
   {
     "name": "clip-modulation",
     "file": "clip-modulation-poster.jpg",
     "mp4": "https://cmdcolinphotos.s3.amazonaws.com/phosphene/clip-modulation.mp4",
-    "live": "https://cmdcolin.github.io/ntsc.js/?src=cat&set=demodMHz%3A0.53%2CchromaGain%3A1.8%2CsyncBendUs%3A4%2CbendUs%3A24%2CbendShape%3A2%2ClumaMHz%3A3.3%2ClumaPeak%3A0.55%2CnoiseIre%3A4%2CcolorUnderMix%3A0.66%2CunderJitterDeg%3A2.6%2CdropoutRate%3A4%2CheadSwitchNoise%3A0.26%2CheadSwitchShiftUs%3A0.55%2CtbJitterNs%3A100%2CtbWowNs%3A200",
+    "live": "https://cmdcolin.github.io/videoskillet.js/?src=cat&set=demodMHz%3A0.53%2CchromaGain%3A1.8%2CsyncBendUs%3A4%2CbendUs%3A24%2CbendShape%3A2%2ClumaMHz%3A3.3%2ClumaPeak%3A0.55%2CnoiseIre%3A4%2CcolorUnderMix%3A0.66%2CunderJitterDeg%3A2.6%2CdropoutRate%3A4%2CheadSwitchNoise%3A0.26%2CheadSwitchShiftUs%3A0.55%2CtbJitterNs%3A100%2CtbWowNs%3A200",
     "captured": null
   }
 ]

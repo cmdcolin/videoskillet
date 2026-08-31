@@ -591,7 +591,7 @@ reloads the page and tears the engine down, and the mount-once effect in
 ### The crash pile is our own harnesses
 
 `~/.mozilla/firefox/Crash Reports/pending/*.extra` is JSON, and looked at first
-glance like the whole answer: thirteen crashes carrying ntsc.js URLs. **Check
+glance like the whole answer: thirteen crashes carrying videoskillet.js URLs. **Check
 `ProfileDirectory` before reading any of them.** Every one came from
 `/tmp/puppeteer_dev_firefox_profile-*`. None is interactive browsing, so none of
 it is the reported freeze.

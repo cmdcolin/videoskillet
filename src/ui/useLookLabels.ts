@@ -41,7 +41,7 @@ import type { Provenance, RatingRecord, TagName } from '../labels'
 // identified for, and exists to survive a failed write rather than a missing
 // account.
 
-const PENDING_STORE = 'ntsc.js_pending_ratings'
+const PENDING_STORE = 'videoskillet.js_pending_ratings'
 const PENDING_MAX = 1000
 
 const stamp = (r: RatingRecord) => `${r.look}:${r.at}`

@@ -539,7 +539,7 @@ const DISK_BYTES = 256_000_000
 
 // Bumped when what is written changes shape, so a stale entry is never read
 // back under new rules — the old cache is simply never opened again.
-const DISK_CACHE = 'ntsc.js.archive.v1'
+const DISK_CACHE = 'videoskillet.js.archive.v1'
 
 // The size of an entry, recorded on the way in. `cache.keys()` hands back
 // requests and nothing else, so without this, totting up what is stored would

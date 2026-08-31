@@ -167,16 +167,16 @@ describe('the pending queue', () => {
   })
 
   it('survives a corrupt store rather than throwing at load', () => {
-    localStorage.setItem('ntsc.js_pending_votes', '{not json')
+    localStorage.setItem('videoskillet.js_pending_votes', '{not json')
     expect(readPendingVotes()).toEqual([])
-    localStorage.setItem('ntsc.js_pending_votes', '{"nope":1}')
+    localStorage.setItem('videoskillet.js_pending_votes', '{"nope":1}')
     expect(readPendingVotes()).toEqual([])
   })
 
   it('drops stale-schema entries and keeps the good ones beside them', () => {
     const good = aVote()
     localStorage.setItem(
-      'ntsc.js_pending_votes',
+      'videoskillet.js_pending_votes',
       JSON.stringify([{ old: 'shape' }, good, 42]),
     )
     expect(readPendingVotes()).toEqual([good])
@@ -212,7 +212,7 @@ describe('the pending queue', () => {
   // full queue is what the cap is about anyway.
   it('caps the queue at the newest votes', () => {
     localStorage.setItem(
-      'ntsc.js_pending_votes',
+      'videoskillet.js_pending_votes',
       JSON.stringify(Array.from({ length: 1004 }, (_, i) => aVote({ at: i }))),
     )
     queueVote(aVote({ at: 1004 }))

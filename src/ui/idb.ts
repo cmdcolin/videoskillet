@@ -10,7 +10,7 @@
 // the same kind of thing kept for the same reason, and a second store would
 // mean a version bump and a migration for nothing.
 
-const DB = 'ntsc.js'
+const DB = 'videoskillet.js'
 const VERSION = 1
 const STORE = 'handles'
 

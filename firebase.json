@@ -6,7 +6,7 @@
   "auth": {
     "providers": {
       "googleSignIn": {
-        "oAuthBrandDisplayName": "ntsc.js",
+        "oAuthBrandDisplayName": "videoskillet.js",
         "supportEmail": "colin.diesh@gmail.com"
       }
     }
