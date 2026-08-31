@@ -112,6 +112,7 @@ function PresetButton(props: {
     pressX: number
     lastX: number | null
     w: number
+    pointerId: number
   } | null>(null)
   const fill: CSSProperties & Record<'--w', string> = {
     '--w': `${Math.round(props.weight * 100)}%`,
@@ -152,17 +153,24 @@ function PresetButton(props: {
         !mixable
           ? undefined
           : e => {
-              e.currentTarget.setPointerCapture(e.pointerId)
-              // onMixStart rebaselines the mix onto whatever is live, which
-              // zeroes the weights when the look has drifted — and props.weight
-              // already reads 0 in exactly that case, so this stays the right
-              // starting point either way.
-              dragRef.current = {
-                pressX: e.clientX,
-                lastX: null,
-                w: props.weight,
+              // The primary button only. Any press at all used to arm the
+              // fader, and a right-click's release then ran the same path a
+              // click does — so right-clicking a chip to read its tooltip
+              // applied the preset, in both browsers, measured.
+              if (e.button === 0 && e.isPrimary) {
+                e.currentTarget.setPointerCapture(e.pointerId)
+                // onMixStart rebaselines the mix onto whatever is live, which
+                // zeroes the weights when the look has drifted — and
+                // props.weight already reads 0 in exactly that case, so this
+                // stays the right starting point either way.
+                dragRef.current = {
+                  pressX: e.clientX,
+                  lastX: null,
+                  w: props.weight,
+                  pointerId: e.pointerId,
+                }
+                props.onMixStart()
               }
-              props.onMixStart()
             }
       }
       onPointerMove={
@@ -171,17 +179,33 @@ function PresetButton(props: {
           : e => {
               const d = dragRef.current
               if (d !== null) {
-                // The slop is spent getting here, so the sweep starts from this
-                // point rather than jumping by however far the press had
-                // already drifted.
-                const from =
-                  d.lastX === null && Math.abs(e.clientX - d.pressX) > DRAG_SLOP
-                    ? e.clientX
-                    : d.lastX
-                if (from !== null) {
-                  d.w = clamp01(d.w + (e.clientX - from) / DRAG_FULL)
-                  d.lastX = e.clientX
-                  props.onMix(props.def.name, d.w)
+                if (e.buttons === 0 || e.pointerId !== d.pointerId) {
+                  // A release this chip never saw — a context menu ate it, the
+                  // tab lost focus mid-drag, the gesture was cancelled. The
+                  // gesture used to be disarmed only by pointerup on this same
+                  // chip, so one missed release left the chip armed for the
+                  // rest of the session and plain hover scrubbed its weight
+                  // with no button down. Whatever swallowed the release, the
+                  // next move says the hand is empty, and that is enough.
+                  dragRef.current = null
+                  if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+                    // Held capture also pins :hover to this chip in Firefox.
+                    e.currentTarget.releasePointerCapture(e.pointerId)
+                  }
+                } else {
+                  // The slop is spent getting here, so the sweep starts from
+                  // this point rather than jumping by however far the press had
+                  // already drifted.
+                  const from =
+                    d.lastX === null &&
+                    Math.abs(e.clientX - d.pressX) > DRAG_SLOP
+                      ? e.clientX
+                      : d.lastX
+                  if (from !== null) {
+                    d.w = clamp01(d.w + (e.clientX - from) / DRAG_FULL)
+                    d.lastX = e.clientX
+                    props.onMix(props.def.name, d.w)
+                  }
                 }
               }
             }
@@ -189,13 +213,28 @@ function PresetButton(props: {
       onPointerUp={
         !mixable
           ? undefined
-          : () => {
+          : e => {
               const d = dragRef.current
-              dragRef.current = null
-              if (d !== null && d.lastX === null) apply()
+              if (d !== null && d.pointerId === e.pointerId) {
+                dragRef.current = null
+                if (d.lastX === null) apply()
+              }
             }
       }
       onPointerCancel={
+        !mixable
+          ? undefined
+          : () => {
+              dragRef.current = null
+            }
+      }
+      // Capture is released after pointerup fires, per spec and as measured in
+      // both browsers, so this never lands between a press and the apply it
+      // owes. What it catches is capture lost some other way — the element
+      // taken out from under a live gesture, the browser ending the sequence
+      // itself — which otherwise leaves a chip that applies on the next stray
+      // release to land on it.
+      onLostPointerCapture={
         !mixable
           ? undefined
           : () => {
@@ -243,7 +282,47 @@ function PresetCatalog(props: {
   // The hovered preset's blurb takes over the caption line: faster to browse
   // than the tooltip delay, and the only way touch users ever see the blurbs.
   const [hovered, setHovered] = useState<string | null>(null)
-  const hoveredDef = PRESETS.find(p => p.name === hovered)
+
+  // The shortlist: the reset, whatever is currently dialed into the mix (so a
+  // "surprise me" recipe stays legible with the catalog folded), then recents,
+  // topped up from the starters. Rendered in table order rather than pick
+  // order, so a chip doesn't move under the pointer as habits shift.
+  const live = new Set<string>()
+  for (const name of [
+    'clean',
+    ...[...props.weights].filter(([, w]) => w > 0).map(([n]) => n),
+    ...recent,
+    ...STARTERS,
+  ]) {
+    if (live.size < SHORTLIST_MAX) live.add(name)
+  }
+  // What the row keeps while a pointer is inside it. Membership moves on its own
+  // clock — a roll's recipe arrives as weights, and weights only count once the
+  // morph has landed, about a second after the gesture that started it — so the
+  // row used to rearrange itself under a resting hand: park on "rainbow storm",
+  // roll, and a second later that spot is "mixer loop", which is what the click
+  // then applies.
+  //
+  // Only membership is pinned. Every chip's fill still tracks the mix live, so a
+  // roll lights up whatever of its recipe is already on the row; the rest of the
+  // recipe arrives when the hand leaves, which is the price of a row that holds
+  // still. Letting newcomers ride at the end instead reads as the better deal
+  // and is not: an appended chip is on the row without being pinned to it, so
+  // the next roll drops it out from under the pointer — the same bug, one turn
+  // further on. Holding it too would mean accumulating a high-water mark across
+  // renders, and a row that grows for as long as a hand rests on it.
+  const [pinned, setPinned] = useState<Set<string> | null>(null)
+  const picked = pinned === null ? live : pinned
+  const shortlist = PRESETS.filter(p => picked.has(p.name))
+
+  // The caption describes the chip under the pointer, so it may only name a
+  // chip that is on screen. A chip can still go out from under a pointer that
+  // never moved — the catalog opening, the section folding — and one that
+  // vanishes fires no pointerleave, which left the caption describing a preset
+  // nobody was on.
+  const hoveredDef = PRESETS.find(
+    p => p.name === hovered && (props.showAll || picked.has(p.name)),
+  )
   const presetCaption = hoveredDef
     ? hoveredDef.blurb
     : props.active
@@ -267,20 +346,6 @@ function PresetCatalog(props: {
   const captionTouches =
     captionDef === undefined ? 0 : Object.keys(captionDef.patch).length
 
-  // The shortlist: the reset, whatever is currently dialed into the mix (so a
-  // "surprise me" recipe stays legible with the catalog folded), then recents,
-  // topped up from the starters. Rendered in table order rather than pick
-  // order, so a chip doesn't move under the pointer as habits shift.
-  const picked = new Set<string>()
-  for (const name of [
-    'clean',
-    ...[...props.weights].filter(([, w]) => w > 0).map(([n]) => n),
-    ...recent,
-    ...STARTERS,
-  ]) {
-    if (picked.size < SHORTLIST_MAX) picked.add(name)
-  }
-  const shortlist = PRESETS.filter(p => picked.has(p.name))
   const renderButton = (p: PresetDef) => (
     <PresetButton
       key={p.name}
@@ -320,7 +385,16 @@ function PresetCatalog(props: {
         </div>
       )}
       {props.showAll ? null : (
-        <div>
+        // The pin goes on the row rather than on each chip: enter and leave
+        // don't fire for a move between two chips inside it, so this is one
+        // pair of events per visit to the row, and it covers the gap between
+        // two chips as well as the chips themselves. The full catalog needs
+        // none of it — it renders every preset in table order, so there is
+        // nothing there for membership to change.
+        <div
+          onPointerEnter={() => setPinned(live)}
+          onPointerLeave={() => setPinned(null)}
+        >
           {shortlist.map(renderButton)}
           <button
             className={styles.moreChip}
