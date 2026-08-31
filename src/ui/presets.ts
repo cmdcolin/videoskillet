@@ -205,6 +205,21 @@ export const PRESETS: PresetDef[] = [
     },
   },
   {
+    name: 'hueRidesTheLight',
+    displayName: 'hue rides the light',
+    group: 'Tape wear',
+    blurb:
+      "The video amplifier's gain and its delay are both bent against the brightness they are working on, which is what every VTR spec sheet called DG and DP. Subcarrier riding bright picture comes through smaller and later than the same colour on dark picture, so saturation drains out of the highlights while hue swings with the luma underneath it. Burst sits at blanking where the error is zero, so the decoder's reference never moves and no tint knob takes this back out: a face turns one way in the light and the other in the shadow, and it tracks the picture because the picture is what sets it.",
+    patch: {
+      diffPhaseDeg: 52,
+      diffGain: 0.75,
+      lumaMHz: 3.2,
+      lumaPeak: 1.1,
+      chromaGain: 1.5,
+      noiseIre: 1.5,
+    },
+  },
+  {
     name: 'broadcast',
     group: 'RF / Broadcast',
     blurb:
@@ -413,6 +428,27 @@ export const PRESETS: PresetDef[] = [
       phosphor: 0.8,
       noiseIre: 2,
     },
+  },
+  {
+    name: 'lineNineteen',
+    displayName: 'line nineteen',
+    group: 'Decoder',
+    blurb:
+      'A VIR set trimming itself off the reference stamped on line 19, fed a signal whose amplifier is bent against brightness. The reference sits at burst phase on a 70 IRE pedestal, so the set rotates and re-gains the whole picture until that one level decodes right — and a correction that is exact at 70 IRE is a correction that is wrong everywhere else. What was already near the pedestal comes back true while everything under it leans the other way instead: greens and skin recover as a red goes magenta, which is the picture telling you where the reference sat. The saturation half makes the same trade, since a reference the amplifier compressed reads as a weak one and a weak reference is a set turning colour up. The loop answers over a second and a half, so the trimmer drifts and the whole frame follows it that far behind.',
+    patch: {
+      vir: 1,
+      virLag: 90,
+      diffPhaseDeg: 34,
+      diffGain: 0.5,
+      chromaGain: 1.2,
+      noiseIre: 1.2,
+    },
+    // The error the corrector is measuring, walked slowly. What this shows that
+    // a still frame cannot is the lag: the hue on the glass is where the
+    // reference was a second and a half ago, never where it is now.
+    mod: [
+      { target: 'diffPhaseDeg', source: 'smooth', rateHz: 0.04, depth: 0.2 },
+    ],
   },
   {
     name: 'mixerLoop',
@@ -761,6 +797,28 @@ export const PRESETS: PresetDef[] = [
       chromaGain: 1.8,
       phosphor: 0.5,
     },
+  },
+  {
+    name: 'ringInTheShadows',
+    displayName: 'ring in the shadows',
+    group: 'Feedback loops',
+    blurb:
+      "The same key wired the other way up: the return is gated where the signal is low, so the multiply happens everywhere the picture is not lit. What that turns out to mean is the whole difference from keying the highlights, because the key is watching a composite line and the darkest thing on a composite line is not a shadow — it is blanking and the sync tip. So the strongest return of every lap lands on the receiver's own timing reference: the frame shears and rolls while the shadows fill with product, and a lit subject sits through it photographic. The slice walks, so the boundary climbs the picture's own gradient instead of sitting where it was put.",
+    patch: {
+      cfbMix: 0.85,
+      cfbGain: 1.02,
+      cfbDelayUs: 0.8,
+      cfbLines: 2,
+      cfbRing: 1,
+      cfbKey: -1,
+      cfbKeyLevel: 32,
+      cfbKeySoft: 14,
+      chromaGain: 1.6,
+      phosphor: 0.45,
+    },
+    mod: [
+      { target: 'cfbKeyLevel', source: 'smooth', rateHz: 0.06, depth: 0.18 },
+    ],
   },
   {
     name: 'servoWarp',
@@ -1452,6 +1510,24 @@ export const PRESETS: PresetDef[] = [
       enhClampUs: 6,
       hHold: 0.6,
       noiseIre: 2,
+    },
+  },
+  {
+    name: 'paperclipChroma',
+    displayName: 'paperclip on the chroma',
+    group: 'Circuit bent',
+    blurb:
+      "Metal held across the chroma reference network a couple of times a second. While the short is down the set stops trusting the burst and its two demodulators stop sitting 90° apart, so hue shears rather than rotating: some colours come through the bite and their opposites do not. The colour AGC has tens of lines of burst memory here, so its gain answers each short a good part of a frame late and colour blooms down the picture instead of snapping at either edge of the contact — and a bite the set takes two or three frames to show it takes five or six to let go of, so every one arrives quicker than it leaves. The gaps between contacts are drawn rather than counted off a clock, so two land together and then nothing happens for a second, which is what makes this read as somebody's hand instead of a machine.",
+    patch: {
+      clipHz: 2.2,
+      clipPoint: 3,
+      clipBite: 0.85,
+      clipDwellMs: 140,
+      clipChatter: 0.45,
+      accLagLines: 36,
+      lumaMHz: 3.4,
+      noiseIre: 2,
+      phosphor: 0.35,
     },
   },
   {
