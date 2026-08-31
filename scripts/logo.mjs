@@ -2,9 +2,11 @@
 // waveform monitor — sync, burst, then the descending luma staircase with the
 // chroma subcarrier riding on each pedestal.
 //
-// Emits the wide banner (docs/img/logo.svg) plus a square mark of the same line,
-// small enough to read as a favicon and as the sidebar glyph
-// (public/favicon.svg, used for both).
+// Emits the wide banner (docs/img/logo.svg) plus a square mark of the same line.
+//
+// The mark no longer ships: public/favicon.svg is the hand-drawn skillet the app
+// is named for, so this script stops short of writing it. The square is built
+// below and printed nowhere, kept because it is the banner's own icon crop.
 //
 // Neither SVG carries role/aria-label: every consumer renders it through an
 // <img> with its own alt, which wins over anything inside the file.
@@ -217,7 +219,6 @@ const markSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${S} ${S}"
 `
 
 writeFileSync('docs/img/logo.svg', svg)
-writeFileSync('public/favicon.svg', markSvg)
 console.log(
-  `docs/img/logo.svg — ${(svg.length / 1024).toFixed(1)} kB · public/favicon.svg — ${(markSvg.length / 1024).toFixed(1)} kB`,
+  `docs/img/logo.svg — ${(svg.length / 1024).toFixed(1)} kB · mark held back (${(markSvg.length / 1024).toFixed(1)} kB)`,
 )

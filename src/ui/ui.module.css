@@ -305,6 +305,24 @@
   line-height: var(--prose-lh);
 }
 
+/* The favicon worn as the app's mark: the panel header and the about card show
+   the same square, sized by whoever composes this. */
+.appMark {
+  display: block;
+  border-radius: 4px;
+  box-shadow: 0 0 0 1px #ffffff1a;
+}
+.aboutTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.aboutMark {
+  composes: appMark;
+  width: 26px;
+  height: 26px;
+}
+
 /* text colour, by meaning rather than by hue */
 .muted {
   color: var(--fg2);

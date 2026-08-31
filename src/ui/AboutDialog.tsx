@@ -8,10 +8,24 @@ import ui from './ui.module.css'
 // keep in step with the app that nobody remembered to edit.
 export function AboutDialog({ onClose }: { onClose: () => void }) {
   return (
-    <Dialog title="videoskillet.js" size="form" onClose={onClose}>
+    <Dialog
+      title={
+        <span className={ui.aboutTitle}>
+          <img
+            className={ui.aboutMark}
+            src={`${import.meta.env.BASE_URL}favicon.svg`}
+            alt=""
+          />
+          videoskillet.js
+        </span>
+      }
+      size="form"
+      onClose={onClose}
+    >
       <p className={ui.helpText}>
-        A real-time simulator of the analog NTSC signal path — camera, tape, RF,
-        and CRT — rendered entirely in WebGPU compute shaders.
+        A real-time simulator of NTSC composite video rendered entirely in
+        WebGPU compute shaders, with mixer feedback, camera-pointed-at-tv
+        feedback, and many other effects
       </p>
       <p className={ui.helpText}>
         <a
