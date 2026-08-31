@@ -209,11 +209,17 @@ export const PRESETS: PresetDef[] = [
     displayName: 'hue rides the light',
     group: 'Tape wear',
     blurb:
-      "The video amplifier's gain and its delay are both bent against the brightness they are working on, which is what every VTR spec sheet called DG and DP — and this is the third copy through it, so each generation rotates the last one's hue again by the light it is carrying. Subcarrier riding bright picture comes through smaller and later than the same colour on dark picture, so saturation drains out of the highlights while hue swings with the luma underneath it, and three passes take that from a wrongness to a palette: a red chair lit from above turns gold at the top and holds brown underneath. Burst sits at blanking where the error is zero, so the decoder's reference never moves and no tint knob takes any of it back out.",
+      "The video amplifier's gain and its delay are both bent against the brightness they are working on, which is what every VTR spec sheet called DG and DP — and this is the third copy through it, so each generation rotates the last one's hue again by the light it is carrying. Subcarrier riding bright picture comes through smaller and later than the same colour on dark picture, so saturation drains out of the highlights while hue swings with the luma underneath it, and three passes take that from a wrongness to a palette: a red chair lit from above turns gold at the top and holds brown underneath. Burst sits at blanking where the error is zero, so the decoder's reference never moves and no tint knob takes any of it back out. And the line amp it is all passing through has a failing supply, which scales the brightness the errors are reading rather than adding to it — so the hum bar comes through as a band of different colour, rolling up the picture and taking the palette with it.",
     patch: {
       diffPhaseDeg: 52,
       diffGain: 0.75,
       dubGens: 3,
+      // The one thing this fault could not do on its own is move. A failing
+      // line amp scales the very luma the two errors are keyed to, so the hum
+      // bar arrives as a *hue* bar and rolls up the picture at the beat
+      // between mains and the field rate.
+      humMod: 0.32,
+      humAmp: 0.1,
       lumaMHz: 3.2,
       lumaPeak: 1.1,
       chromaGain: 1.5,
@@ -1584,12 +1590,16 @@ export const PRESETS: PresetDef[] = [
     displayName: 'paperclip on the chroma',
     group: 'Circuit bent',
     blurb:
-      "Metal held across the chroma reference network a couple of times a second. While the short is down the set stops trusting the burst and its two demodulators stop sitting 90° apart, so hue shears rather than rotating: some colours come through the bite and their opposites do not. The colour AGC has tens of lines of burst memory here, so its gain answers each short a good part of a frame late and colour blooms down the picture instead of snapping at either edge of the contact — and a bite the set takes two or three frames to show it takes five or six to let go of, so every one arrives quicker than it leaves. The gaps between contacts are drawn rather than counted off a clock, so two land together and then nothing happens for a second, which is what makes this read as somebody's hand instead of a machine.",
+      "Metal held across the chroma reference network three times a second, a fifth of a second at a time. While the short is down the set stops trusting the burst and its two demodulators stop sitting 90° apart, so hue shears rather than rotating: some colours come through the bite and their opposites do not. The colour AGC has tens of lines of burst memory here, so its gain answers each short a good part of a frame late and colour blooms down the picture instead of snapping at either edge of the contact — and a bite the set takes two or three frames to show it takes five or six to let go of, so every one arrives quicker than it leaves. The gaps between contacts are drawn rather than counted off a clock, so two land together and then a stretch of nothing, which is what makes this read as somebody's hand instead of a machine.",
     patch: {
-      clipHz: 2.2,
+      // Three contacts a second at a fifth of a second each: the board is
+      // shorted about half the time counting the tails, which is what makes
+      // this a look rather than a clean picture with an occasional event in it.
+      // The gaps still read, and they are what the rate is for.
+      clipHz: 3.2,
       clipPoint: 3,
       clipBite: 0.85,
-      clipDwellMs: 140,
+      clipDwellMs: 200,
       clipChatter: 0.45,
       accLagLines: 36,
       lumaMHz: 3.4,
