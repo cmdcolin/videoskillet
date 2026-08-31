@@ -13,18 +13,59 @@
 .head:hover {
   color: #fff;
 }
-/* a group inside a section: same shape, one step quieter and less separated */
+/* A group inside a stage, as an object of its own. The panel paints no ground —
+   it is the app's black — so a --panel-bg fill is an enclosure that costs no
+   width at all, which is the module card the bench gives every group
+   (SignalPath.module.css .groupCard) at a price the 332px sidebar can pay.
+
+   It replaces the hairline the header used to draw under its name. That rule
+   said where a group began and left where one *ended* to be read off the next
+   group's name, so an open group's rows were bracketed by its own rule above
+   and by somebody else's heading below — five headers in a stack of headers,
+   with the stage rail as the only box around any of them. Folded, the block is
+   the header alone and five of them read as five doors; open, the header is the
+   lid over its own rows and the rows end where the fill does. */
+.sec {
+  margin: 3px 0;
+  border-radius: 3px;
+  background: var(--panel-bg);
+}
+/* The open block's rows sit inside the fill, and the header spans back out over
+   that padding — the same negative margin the stage's head uses to reach its
+   rail. */
+.sec.secOpen {
+  padding: 0 6px 6px;
+}
+
+/* a group inside a section: same shape, one step quieter, and the block's own
+   top row rather than a heading with a rule under it */
 .headSub {
   font-weight: 600;
   color: var(--fg2);
-  margin: 7px 0 2px;
-  border-bottom-color: var(--border-faint);
+  margin: 0;
+  padding: 4px 6px;
+  border-bottom: 0;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   font-size: var(--fs-sm);
 }
 .headSub:hover {
   color: var(--fg);
+  background: color-mix(in srgb, var(--ctl-face) 55%, var(--panel-bg));
+}
+/* The lid. Tinted off --accent the way the stage's own strip is
+   (SignalPath.module.css .stageRow .stageHead), at 6% against that one's 9% and
+   with the name left at --fg: level with it, a group would outrank the stage
+   holding it. */
+.sec.secOpen .headSub {
+  margin: 0 -6px;
+  color: var(--fg);
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
+  border-bottom: 1px solid var(--border-faint);
+  border-radius: 3px 3px 0 0;
+}
+.sec.secOpen .headSub:hover {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
 }
 /* The header's own toggle: a real button, so a section collapses from the
    keyboard and reports aria-expanded. It carries the heading's type rather than

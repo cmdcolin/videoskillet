@@ -108,7 +108,10 @@
   width: 100%;
   margin: 4px 0 8px;
   padding: 6px 8px;
-  background: var(--panel-bg);
+  /* The app's ground rather than the panel's, because the group around it is
+     the panel's now (Section.module.css .sec): a field filled to match the
+     block it sits in is a border and nothing else. */
+  background: var(--app-bg);
   color: var(--fg);
   border: 1px solid var(--border);
   border-radius: 4px;

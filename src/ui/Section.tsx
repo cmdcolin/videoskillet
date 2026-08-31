@@ -130,7 +130,7 @@ export function Section(props: {
     }
   }
   return (
-    <div>
+    <div className={cx(nested && styles.sec, shown && styles.secOpen)}>
       <h3 className={cx(styles.head, nested && styles.headSub)}>
         <button
           className={styles.headBtn}

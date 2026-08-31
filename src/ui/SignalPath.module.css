@@ -261,15 +261,13 @@
      its top edge rather than flush against it */
   scroll-margin-top: 8px;
 }
-/* A module on a device front panel: a hairline box around the group, no fill
-   beyond the panel's own, and the group's existing header strip as its title.
-   min-width because a grid item floors at min-content — one long slider label
-   would otherwise push its column past its share of the width. */
+/* One group's place in the bench's grid. The box it used to draw for itself is
+   Section's now (Section.module.css .sec), which the spine wears too, so a group
+   is one object drawn by one rule wherever it is mounted. What is left here is
+   the column: min-width because a grid item floors at min-content — one long
+   slider label would otherwise push its column past its share of the width —
+   and the margin that spaces the cards down it. */
 .groupCard {
   min-width: 0;
   margin: 6px 0;
-  padding: 0 10px 8px;
-  border: 1px solid var(--border-faint);
-  border-radius: 4px;
-  background: var(--panel-bg);
 }
