@@ -1,12 +1,39 @@
+import { useState } from 'react'
+
 import { gitSha, versionLabel } from '../version'
 import { Dialog } from './Dialog'
 import ui from './ui.module.css'
+
+const MESSAGES_OF_THE_DAY = [
+  'These signals are hot!',
+  'Cook up some tasty video',
+  'Now with 100% more chroma',
+  'Sync or swim',
+  'Ringing in the new frame',
+  'Warning: contents may be composite',
+  'Best served at 3.58 MHz',
+  'A little noise never hurt anybody',
+  'Freshly deflected',
+  'Keep your feedback loops al dente',
+  'Certified NTSC-adjacent',
+  'Ghosts included at no extra charge',
+  'Deflecting responsibly',
+  'Sync is a suggestion',
+  'Vertical hold not included',
+  'Rolling with the punches',
+]
 
 // Deliberately three lines: what this is, where to read about it, and which
 // build you are looking at. Everything the old help dialog carried — the tour,
 // the keyboard list — is on the guide, and a copy here was a second place to
 // keep in step with the app that nobody remembered to edit.
 export function AboutDialog({ onClose }: { onClose: () => void }) {
+  const [motd] = useState(
+    () =>
+      MESSAGES_OF_THE_DAY[
+        Math.floor(Math.random() * MESSAGES_OF_THE_DAY.length)
+      ],
+  )
   return (
     <Dialog
       title={
@@ -50,6 +77,9 @@ export function AboutDialog({ onClose }: { onClose: () => void }) {
           which of the day's builds it was. */}
       <p className={ui.muted} style={{ margin: 0 }}>
         {versionLabel} ({gitSha})
+      </p>
+      <p className={ui.muted} style={{ margin: 0 }}>
+        {motd}
       </p>
     </Dialog>
   )
