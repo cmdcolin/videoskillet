@@ -31,7 +31,7 @@
 fn lumaBAt(idx: u32) -> f32 {
   let x = i32(idx % SPL) - i32(ACTIVE_START);
   let y = i32(idx / SPL) - i32(ACTIVE_TOP);
-  return luma(textureLoad(inputTexB, vec2i(x, y), 0).rgb);
+  return luma(srcTexelB(inputTexB, x, y, P.deintB));
 }
 
 // B re-encoded on the house carrier: chroma at bIdx modulated onto the

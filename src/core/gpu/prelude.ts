@@ -113,6 +113,7 @@ export const PARAM_DEFS = [
   ['bHue', 'f32'], // B proc-amp hue trim, radians
   ['bVidGain', 'f32'], // B proc-amp video gain
   ['bInv', 'f32'], // B video inversion amount (0.5 = solarized midpoint)
+  ['deintB', 'f32'], // bob-deinterlace source B: the same field rebuild `deint` does for A
   ['bPause', 'f32'], // B deck's pause button: 0 play, >0 held frame with servo damage
   ['bPauseBar', 'f32'], // head-mistrack stripe centre, source rows (walks on its own)
   ['bGenlock', 'f32'], // 0 dirty sum, 1 clean genlocked crossfade (dissolve/wipe)
@@ -803,6 +804,28 @@ fn gunTransfer(c: vec3f, cutoff: f32, gamma: f32) -> vec3f {
 fn yuvOf(rgb: vec3f) -> vec3f {
   let y = luma(rgb);
   return vec3f(y, 0.492 * (rgb.b - y), 0.877 * (rgb.r - y));
+}
+
+// Source B's texel, bob-deinterlaced when B's toggle is on: the same field
+// rebuild compose's pick() does for A, so an interlaced grabber combs on neither
+// deck. Off texel loads rather than a sampler tap, because B's texture *is* the
+// raster — there is no compose stage on this side to resample through.
+//
+// A prelude function taking the texture rather than three copies of the
+// arithmetic, and that is the point of it: three passes read srcTexB (the two
+// encoders and the mixer's genlocked path), and a copy that drifted would take
+// luma off one field and chroma off the other — a picture whose colour sits one
+// line above its edges, on motion only, which is not a thing anyone would think
+// to look for.
+fn srcTexelB(tex: texture_2d<f32>, x: i32, y: i32, deint: f32) -> vec3f {
+  if (deint < 0.5) {
+    return textureLoad(tex, vec2i(x, y), 0).rgb;
+  }
+  let e = y - (y & 1);
+  let n = min(e + 2, i32(ACTIVE_H) - 1);
+  let a = textureLoad(tex, vec2i(x, e), 0).rgb;
+  let b = textureLoad(tex, vec2i(x, n), 0).rgb;
+  return mix(a, b, f32(y - e) * 0.5);
 }
 
 // Gamut limit by desaturation. A hard per-channel clamp on an out-of-gamut

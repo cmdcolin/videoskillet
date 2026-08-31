@@ -713,6 +713,7 @@ export class Engine implements EngineApi {
         'encodeChromaB',
         encodeChromaBPl,
         [
+          { buffer: this.paramsBuf },
           { buffer: this.filterBuf },
           this.sources.viewB(),
           { buffer: this.uvfBBuf },

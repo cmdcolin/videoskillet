@@ -311,8 +311,8 @@ const downloading =
 // every paired write in this file goes through it.
 //
 // Not usable for the source *modes*, which are the one pair whose two halves
-// have genuinely different types (only B can be 'none', only A can be 'webcam' —
-// see slotView.ts). Those are written out long-hand, in the same functional form.
+// have genuinely different types (only B can be 'none' — see slotView.ts). Those
+// are written out long-hand, in the same functional form.
 const onDeck =
   <T>(key: StashSlot, value: T) =>
   (rec: { a: T; b: T }): { a: T; b: T } =>
@@ -424,9 +424,9 @@ export function useEngine() {
   // (slotView.ts). Written through the functional form only — see `onDeck`.
   //
   // Typed as one record with two *different* modes rather than
-  // `Record<StashSlot, …>`: only B can be 'none' and only A can be 'webcam', and
-  // a shared union would let each deck be given the other's mode — which is
-  // precisely the mistake the pairing exists to stop the compiler from allowing.
+  // `Record<StashSlot, …>`: only B can be 'none', and a shared union would let A
+  // be given it — which is precisely the mistake the pairing exists to stop the
+  // compiler from allowing.
   const [sourceMode, setSourceMode] = useState<{
     a: SourceMode
     b: SourceBMode
@@ -552,8 +552,12 @@ export function useEngine() {
     a: { kind: 'none' },
     b: { kind: 'none' },
   })
+  // The machine's cameras, shared: one list of what is plugged in, whoever is
+  // asking. Which of them each deck is on is per-deck, because both decks can be
+  // on a camera and they need not be the same one — a camera in A and a grabber
+  // in B is the rig this exists for.
   const [videoDevices, setVideoDevices] = useState<MediaDeviceInfo[]>([])
-  const [webcamDeviceId, setWebcamDeviceId] = useState('')
+  const [webcamDeviceId, setWebcamDeviceId] = useState({ a: '', b: '' })
   const [renderScale, setRenderScale] = useState(1)
   const renderScaleRef = useRef(1)
   const [res, setRes] = useState('')
@@ -1054,10 +1058,9 @@ export function useEngine() {
   // forget.
   //
   // Two functions rather than one taking a key, because the mode unions are the
-  // one place A and B genuinely differ — only B can be 'none', only A can be
-  // 'webcam' — and a shared signature could only take them by widening to a
-  // union neither setter accepts. The shared half is three lines and is not
-  // worth a cast to reach.
+  // one place A and B genuinely differ — only B can be 'none' — and a shared
+  // signature could only take them by widening to a union neither setter
+  // accepts. The shared half is three lines and is not worth a cast to reach.
   // What is on a deck now, for `+ row` to record. One writer, so the clearing
   // in `commitDeck` and the four settings after it cannot spell it differently.
   const markClip = (key: StashSlot, clip: RowClip | null) => {
@@ -1113,8 +1116,7 @@ export function useEngine() {
   }
 
   // A commit on whichever deck, for a mode both decks offer — which is every
-  // mode but A's `webcam` and B's `none`, and `SharedMode` is exactly that
-  // intersection. The two above stay separate because the mode is the one pair
+  // mode but B's `none`, and `SharedMode` is exactly that intersection. The two above stay separate because the mode is the one pair
   // whose halves are genuinely different types (see the note on `onDeck`), so
   // the branch cannot be lifted into a keyed setter; what it *can* be is written
   // once here rather than at each of the six call sites that had it inline.
@@ -1770,10 +1772,9 @@ export function useEngine() {
   // step by hand and nothing caught a rung added to one and not the other —
   // which is a mode that silently does nothing on B.
   //
-  // What genuinely differs is which modes each deck offers, and the unions
-  // already say it: `webcam` is A's alone and `none` is B's alone, so the two
-  // rungs that name them cannot fire on the wrong deck even though the key does
-  // not narrow.
+  // What genuinely differs is which modes each deck offers, and the union
+  // already says it: `none` is B's alone, so the rung that names it cannot fire
+  // on A even though the key does not narrow.
   const selectOn = (key: StashSlot, mode: SourceMode | SourceBMode) => {
     if (engineRef.current) {
       // Every source change starts here (file picks too — the file dialog is
@@ -1872,19 +1873,21 @@ export function useEngine() {
   // and the permission prompt is a second gate the user may never connect to
   // the click — a site already blocked rejects with no prompt at all, and
   // silence would read as the Continue button doing nothing.
-  const startWebcam = (deviceId: string) => {
+  const startWebcam = (key: StashSlot, deviceId: string) => {
     const current = engineRef.current
     if (current) {
       const video = deviceId === '' ? true : { deviceId: { exact: deviceId } }
       navigator.mediaDevices.getUserMedia({ video }).then(
         stream => {
-          commitA('webcam')
-          playStream(slotA, stream)
+          commitOn(key, 'webcam')
+          playStream(slotOf(key), stream)
           // Capture cards weave interlaced fields, so combing shows on motion;
-          // bob-deinterlace on by default for this source (toggle in Signal A).
-          current.setControl('deint', 1)
+          // bob-deinterlace on by default for this source (toggle in the deck's
+          // own Signal group). Each deck has its own, because each deck can be
+          // on a different grabber and only one of them need be interlaced.
+          current.setControl(key === 'a' ? 'deint' : 'deintB', 1)
           const active = stream.getVideoTracks()[0]?.getSettings().deviceId
-          setWebcamDeviceId(active ?? '')
+          setWebcamDeviceId(onDeck(key, active ?? ''))
           // Labels populate only after this grant, so enumerate now.
           navigator.mediaDevices
             .enumerateDevices()
@@ -2037,7 +2040,20 @@ export function useEngine() {
       setSourceMode(m => ({ ...m, a: src }))
     }
     const srcb = params.srcb
-    if (srcb !== null) {
+    // The same rung A gets, and it has to be here rather than left to
+    // `showGenerated`: a camera is not generated, so a link naming one on B
+    // without this would silently leave B on whatever it booted with, under a
+    // picker that had been told to read 'webcam'.
+    //
+    // A link can now name a camera on both decks, and one dialog can be open at
+    // a time (useSourcePrompt.ts) — so A is the deck it opens for, because A is
+    // the picture. Without the guard the two asks would race in source order and
+    // B would quietly win. B is left on its default rather than opened
+    // unasked: the second camera is one more pick, against a permission the
+    // first one has already spent.
+    if (srcb === 'webcam') {
+      if (src !== 'webcam') selectOn('b', 'webcam')
+    } else if (srcb !== null) {
       eng.setSourceBEnabled(srcb !== 'none')
       showGenerated(slotB, srcb, beginLoad('b'))
       setSourceMode(m => ({ ...m, b: srcb }))
@@ -2543,7 +2559,7 @@ export function useEngine() {
       }
     }
     // Mount-once: creates the single engine and reads URL params. selectOn is
-    // stable enough for the one-shot ?src=webcam path; re-running on its
+    // stable enough for the one-shot ?src=/?srcb=webcam path; re-running on its
     // identity would tear down and rebuild the engine.
     // oxlint-disable-next-line react/exhaustive-deps
   }, [])

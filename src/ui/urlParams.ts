@@ -53,8 +53,9 @@ export const VAPORWAVE_DRY = 0.7
 // `screen` is left out for a different reason than `file` is: a share is not a
 // thing a link can name at all. The grant dies with the page, the picker needs
 // a gesture the loader does not have, and which window was shared is the
-// browser's business, not the app's. Webcam still round-trips — ?src=webcam
-// names a device class, and its dialog supplies the gesture on the far end.
+// browser's business, not the app's. Webcam still round-trips on either deck —
+// ?src=webcam names a device class, and its dialog supplies the gesture on the
+// far end.
 //
 // `library` is out on the same grounds as `file`, one step further along: the
 // shelf is this browser's, so an id from it would name nothing in the reader's

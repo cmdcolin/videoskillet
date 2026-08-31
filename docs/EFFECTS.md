@@ -32,9 +32,8 @@ What either deck can be fed:
 - Teletype… — type your own text card
 - File… — open an image or video
 - Clips… — your own shelf, kept between sessions
+- Webcam / USB device — camera or RCA capture
 - Screen / window… — share a window or a tab
-
-Source A additionally takes Webcam / USB device; source B does not.
 
 ## Source A
 
@@ -619,11 +618,12 @@ source alone.
 
 ### Signal (source B)
 
-| Control          | Range        | The fault it models                                                                                                                                                  |
-| ---------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **B hue**        | -180–180 deg | Proc-amp hue trim on B before it is mixed — a static phase offset on its subcarrier. Unlike sc detune this does not drift; it just parks B's colours somewhere else. |
-| **B video gain** | 0–6 x        | Proc-amp video gain on B: contrast of the B picture before mixing, without changing how much of B is patched in.                                                     |
-| **B invert**     | 0–1          | Inverts B's picture. Mixed against A this reads as a difference key — where the two agree they cancel toward flat grey, where they differ the mix lights up.         |
+| Control           | Range        | The fault it models                                                                                                                                                                                                                                                                                                                                                   |
+| ----------------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **B hue**         | -180–180 deg | Proc-amp hue trim on B before it is mixed — a static phase offset on its subcarrier. Unlike sc detune this does not drift; it just parks B's colours somewhere else.                                                                                                                                                                                                  |
+| **B video gain**  | 0–6 x        | Proc-amp video gain on B: contrast of the B picture before mixing, without changing how much of B is patched in.                                                                                                                                                                                                                                                      |
+| **B invert**      | 0–1          | Inverts B's picture. Mixed against A this reads as a difference key — where the two agree they cancel toward flat grey, where they differ the mix lights up.                                                                                                                                                                                                          |
+| **B deinterlace** | `off` · `on` | The same bob deinterlacer source A has, on B's own picture: each frame rebuilt from one field instead of both, at half the vertical detail. B is where the second grabber goes, and a deck's combing is its own — a progressive camera in A and an interlaced dongle in B want opposite answers, which is why this is a switch per source rather than one on the bus. |
 
 ### Feed B · deck
 

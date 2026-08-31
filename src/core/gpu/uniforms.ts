@@ -254,6 +254,7 @@ export function uniformValues(c: Controls, env: UniformEnv) {
     bHue: (c.bHueDeg * Math.PI) / 180,
     bVidGain: c.bVidGain,
     bInv: c.bInv,
+    deintB: c.deintB,
     // No deck is paused on the program bus — a held deck is a fault on one
     // source's feed, and packFeed overwrites these with that deck's state.
     bPause: 0,

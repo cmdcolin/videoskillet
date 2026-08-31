@@ -18,11 +18,12 @@ order and under the same names, so the picture here is the thing you click.
 
 ## Sources and wiring
 
-Two decks. Either takes a still, a video file, a shared screen, colour bars, TV
-or VHS static, a video synth, or a teletype card you type on — plus your own
-clip shelf and a roll out of Wikimedia Commons and archive.org. Source A also
-takes a webcam, which is how an RCA capture dongle gets real gear in; source B
-does not.
+Two decks, and they offer the same list: a still, a video file, a webcam, a
+shared screen, colour bars, TV or VHS static, a video synth, or a teletype card
+you type on — plus your own clip shelf and a roll out of Wikimedia Commons and
+archive.org. The webcam is how an RCA capture dongle gets real gear in, and both
+decks take one, so two grabbers can be mixed against each other. Only B can be
+switched off, which is the one thing the two lists still differ by.
 
 Then the faults, starting at the connector: snow, a loose plug, a ground loop, a
 termination fault, polarity flips, S-video miswired into composite. Cable

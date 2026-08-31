@@ -19,8 +19,8 @@
 // downstream is A/B-free: it takes *a slot* and cannot ask which.
 //
 // Generic over the mode union because that is where the two genuinely differ —
-// only B can be 'none', only A can be 'webcam' — so neither slot will accept the
-// other's mode even though everything else about them is the same shape.
+// only B can be 'none' — so A will not accept B's mode even though everything
+// else about them is the same shape.
 
 import type { SourceBMode, SourceMode } from '../sources/modes'
 import type { PoolPick } from '../sources/pools'

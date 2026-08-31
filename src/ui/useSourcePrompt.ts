@@ -46,8 +46,8 @@ export type SourcePrompt = (typeof SOURCE_PROMPTS)[number]
 
 // Whether picking this mode opens one of the dialogs above rather than putting a
 // picture up. Takes any mode either deck offers, because the answer is the same
-// on both: `webcam` is in A's union alone, and that is the whole of the
-// difference — B simply never asks the question.
+// on both — and `asking` carries which deck asked, so the answer lands where the
+// question came from.
 export const isPrompt = (mode: string): mode is SourcePrompt =>
   (SOURCE_PROMPTS as readonly string[]).includes(mode)
 

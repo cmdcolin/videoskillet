@@ -13,7 +13,7 @@ import {
 } from './modes'
 import { MODE_ORIGIN, POOL_MODE_FOR, POOL_MODES } from './pools'
 
-import type { SourceKind } from './modes'
+import type { SourceBMode, SourceKind, SourceMode } from './modes'
 
 describe('source pickers', () => {
   // The kinds are a Record, so a mode with no kind cannot compile. What this
@@ -73,14 +73,19 @@ describe('source pickers', () => {
     expect(groups).toContain(SOURCE_KIND_LABEL.pattern)
   })
 
-  // B's only live input is the screen share. That is a real asymmetry — a webcam
-  // is an A-only input — and the band heading is what says so in passing, so it
-  // has to survive rather than collapse into the band above it.
-  it('leaves B a live band holding the screen share alone', () => {
-    const live = sourceOptions(SOURCE_B_MODES).filter(
-      o => o.group === SOURCE_KIND_LABEL.live,
-    )
-    expect(live.map(o => o.value)).toEqual(['screen'])
+  // Both decks offer both live inputs. B's live band used to hold the screen
+  // share alone, and nothing about the signal path was making it so — the camera
+  // was A's from the first commit and stayed that way because the picker, the
+  // device state and the deinterlace had all been written to one deck. Pinned in
+  // both directions, since "B has a camera too" is exactly the kind of fact a
+  // deck-specific path added later would take back without anything noticing.
+  it('offers both decks the same live band', () => {
+    const live = (modes: readonly (SourceMode | SourceBMode)[]) =>
+      sourceOptions(modes)
+        .filter(o => o.group === SOURCE_KIND_LABEL.live)
+        .map(o => o.value)
+    expect(live(SOURCE_B_MODES)).toEqual(['webcam', 'screen'])
+    expect(live(SOURCE_MODES)).toEqual(live(SOURCE_B_MODES))
   })
 
   it('puts B’s off switch above every band, unheaded', () => {
@@ -124,11 +129,11 @@ describe('the shipped mode lists', () => {
   // member in common at the type level, so `includes` on either rejects the
   // other's entries outright — which is the answer to a question nobody asked
   // here, since the point is to compare them as data.
-  it('differ by the camera on A and the off switch on B', () => {
+  it('differ by the off switch on B, and nothing else', () => {
     const a: string[] = [...SHIPPED_MODES]
     const b: string[] = [...SHIPPED_B_MODES]
 
-    expect(a.filter(m => !b.includes(m))).toEqual(['webcam'])
+    expect(a.filter(m => !b.includes(m))).toEqual([])
     expect(b.filter(m => !a.includes(m))).toEqual(['none'])
   })
 

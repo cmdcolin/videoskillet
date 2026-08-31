@@ -34,7 +34,7 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
   var b = slot.value;
   if (slot.picture) {
     let uv = uvfB[n];
-    let rgb = textureLoad(inputTex, vec2i(i32(s - ACTIVE_START), i32(row - ACTIVE_TOP)), 0).rgb;
+    let rgb = srcTexelB(inputTex, i32(s - ACTIVE_START), i32(row - ACTIVE_TOP), P.deintB);
     b = activeComposite(luma(rgb), uv.x, uv.y, carrierRot(n, P.frame, delta), P.bVidGain, P.bInv);
   }
   outB[n] = b;

@@ -51,7 +51,8 @@ swap one video for another, and a public archive a second time rolls another
 file.
 
 - **A** takes bars, sweep, snow, the bundled photo, a file, a shared screen, or
-  a webcam — an RCA capture dongle is how real gear gets in.
+  a webcam — an RCA capture dongle is how real gear gets in. B takes the same
+  list, and adds **Off**.
 - **Clips…** is a shelf of files you've opened before, folders included.
   **Public archives** rolls one from Wikimedia Commons or archive.org;
   **Browse…** searches both in a thumbnail grid.

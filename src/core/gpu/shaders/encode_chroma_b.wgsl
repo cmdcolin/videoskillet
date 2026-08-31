@@ -6,17 +6,19 @@
 // vec2f. The fold below matches bChroma's old summation order exactly, so the
 // consumers see bit-identical values.
 
-@group(0) @binding(0) var<storage, read> filters: array<f32>;
-@group(0) @binding(1) var inputTex: texture_2d<f32>;
-@group(0) @binding(2) var<storage, read_write> uvfB: array<vec2f>;
+@group(0) @binding(0) var<uniform> P: Params;
+@group(0) @binding(1) var<storage, read> filters: array<f32>;
+@group(0) @binding(2) var inputTex: texture_2d<f32>;
+@group(0) @binding(3) var<storage, read_write> uvfB: array<vec2f>;
 
-// B's picture read straight off its texel, as encode_composite does for A;
-// zero outside the active picture, where the old yuv buffer held zeros.
+// B's picture read through the deinterlace, as encode_composite_b and mix_b's
+// genlocked path both do; zero outside the active picture, where the old yuv
+// buffer held zeros.
 fn uvAt(x: i32, y: u32) -> vec2f {
   if (x < 0 || x >= i32(ACTIVE_W)) {
     return vec2f(0.0);
   }
-  return yuvOf(textureLoad(inputTex, vec2i(x, i32(y)), 0).rgb).yz;
+  return yuvOf(srcTexelB(inputTex, x, i32(y), P.deintB)).yz;
 }
 
 var<workgroup> tileUV: array<vec2f, TILE>;

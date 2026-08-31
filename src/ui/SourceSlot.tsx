@@ -114,8 +114,8 @@ export function HiddenFilePicker(props: {
 // the engine genuinely does not own: the option list for this slot's mode union,
 // and the shelf menu, which is the app's state.
 //
-// Generic over the mode type so each slot keeps its own union: B can be 'none' and
-// A can be 'webcam', and neither can be handed the other's value.
+// Generic over the mode type so each slot keeps its own union: B can be 'none',
+// and A cannot be handed it.
 export function SourceSlot<T extends SourceMode | SourceBMode>(props: {
   slot: SlotView<T>
   title: string
@@ -128,8 +128,9 @@ export function SourceSlot<T extends SourceMode | SourceBMode>(props: {
   // The ★ and credit line for a pick off one of the public archives, likewise
   // assembled by the app.
   pick: PickSlot
-  // The capture-device picker, which only A can have — a trailing row rather than
-  // a prop this component understands, so the slot stays the same shape for both.
+  // The capture-device picker each deck gets while it is on a camera — a trailing
+  // row rather than a prop this component understands, so the slot stays the same
+  // shape whether or not one is there.
   children?: ReactNode
 }) {
   const { slot, pick } = props

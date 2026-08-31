@@ -1220,6 +1220,17 @@ export const GROUPS: Group[] = [
         unit: '',
         help: "Inverts B's picture. Mixed against A this reads as a difference key — where the two agree they cancel toward flat grey, where they differ the mix lights up.",
       },
+      {
+        key: 'deintB',
+        id: 266,
+        label: 'B deinterlace',
+        min: 0,
+        max: 1,
+        step: 1,
+        unit: '',
+        choices: ['off', 'on'],
+        help: "The same bob deinterlacer source A has, on B's own picture: each frame rebuilt from one field instead of both, at half the vertical detail. B is where the second grabber goes, and a deck's combing is its own — a progressive camera in A and an interlaced dongle in B want opposite answers, which is why this is a switch per source rather than one on the bus.",
+      },
     ],
   },
   // B's own deck and cable, ahead of the mix — the mirror of the Feed A pair

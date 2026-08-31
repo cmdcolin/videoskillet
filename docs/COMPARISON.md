@@ -94,7 +94,7 @@ write, not a re-render. That buys:
 - **Audio into the signal** — bass into the field oscillator, level into line
   hold, the waveform into the deflection coils
 - **Live input** — webcam (so an RCA capture dongle works), or a shared window,
-  tab or display
+  tab or display, on either deck
 - **A file out** — a take renders offline, faster than real time, to
   constant-framerate H.264 an editor will conform
 - **No install, and a link carries the look**

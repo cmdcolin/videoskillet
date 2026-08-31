@@ -33,19 +33,21 @@ export const SOURCE_B_MODES = [
   'file',
   'library',
   'youtube',
+  'webcam',
   'screen',
 ] as const
 export type SourceMode = (typeof SOURCE_MODES)[number]
 export type SourceBMode = (typeof SOURCE_B_MODES)[number]
 
-// A mode both decks offer: everything except A's `webcam` and B's `none`. The
-// two lists above stay the source of truth — this is their intersection, so
-// moving an entry into or out of one of them moves this with it rather than
-// leaving a third list to keep in step.
+// A mode both decks offer: everything except B's `none`. The two lists above
+// stay the source of truth — this is their intersection, so moving an entry into
+// or out of one of them moves this with it rather than leaving a third list to
+// keep in step.
 //
 // It is what lets a source path take the deck as an argument instead of being
 // written out twice. A path that names a mode only one deck has cannot use it,
-// which is the right answer: those two really are per-deck.
+// which is the right answer: `none` really is B's alone, since B is the deck
+// that can be off.
 export type SharedMode = SourceMode & SourceBMode
 
 // Full labels shown inside the dropdowns so each option explains what it is.
@@ -152,10 +154,8 @@ export const SOURCE_KIND_ORDER: readonly SourceKind[] = [
 ]
 
 // Options for a picker, banded by kind. Built from the mode list the caller is
-// allowed to offer (A and B differ, and the production build drops YouTube), so
-// a band with nothing left in it simply does not appear — which is how B's "Live"
-// band comes out holding only the screen share, saying in passing that a webcam
-// is an A-only input.
+// allowed to offer (B adds "Off", and the production build drops YouTube), so a
+// band with nothing left in it simply does not appear.
 export function sourceOptions<T extends SourceMode | SourceBMode>(
   modes: readonly T[],
 ): { value: T; label: string; group: string | null }[] {

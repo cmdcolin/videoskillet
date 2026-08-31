@@ -533,6 +533,7 @@ export function App() {
   // deck a plain click plays into.
   const libraryFor = eng.prompt.slotFor('library')
   const browseFor = eng.prompt.slotFor('browse')
+  const webcamFor = eng.prompt.slotFor('webcam')
 
   // Which pick the palette's two rows act on: A's if it has one, else B's, the
   // same precedence `rollAgain` uses — A is the picture.
@@ -1008,6 +1009,26 @@ export function App() {
       />
     )
 
+  // The capture-device picker under a deck that is on a camera. Both decks get
+  // one, and it is the same row twice rather than A's row plus a B that quietly
+  // has none: a camera in one deck and an RCA grabber in the other is the rig
+  // this source exists for, and each deck has to be able to say which of the two
+  // it is on. Absent below two devices, where the menu would list the only
+  // answer.
+  const captureRow = (slot: AnySlotView): ReactNode =>
+    slot.mode === 'webcam' && eng.videoDevices.length > 1 ? (
+      <MenuRow
+        tag="◉"
+        title="capture device"
+        value={eng.webcamDeviceId[slot.key]}
+        options={eng.videoDevices.map((d, i) => ({
+          value: d.deviceId,
+          label: d.label === '' ? `Device ${i + 1}` : d.label,
+        }))}
+        onChange={id => eng.startWebcam(slot.key, id)}
+      />
+    ) : null
+
   // What heads a stage, above the groups that shape what it brings in: the
   // picker that decides what feeds it. Exactly three stages have one, and they
   // are the three the map already draws boxes for — which is the whole reason
@@ -1037,18 +1058,7 @@ export function App() {
         clipPicker={clipPicker(eng.a)}
         pick={pickCaption(eng.a)}
       >
-        {eng.a.mode === 'webcam' && eng.videoDevices.length > 1 ? (
-          <MenuRow
-            tag="◉"
-            title="capture device"
-            value={eng.webcamDeviceId}
-            options={eng.videoDevices.map((d, i) => ({
-              value: d.deviceId,
-              label: d.label === '' ? `Device ${i + 1}` : d.label,
-            }))}
-            onChange={eng.startWebcam}
-          />
-        ) : null}
+        {captureRow(eng.a)}
       </SourceSlot>
     ),
     [SOURCE_B_STAGE]: () => (
@@ -1058,7 +1068,9 @@ export function App() {
         options={B_OPTIONS}
         clipPicker={clipPicker(eng.b)}
         pick={pickCaption(eng.b)}
-      />
+      >
+        {captureRow(eng.b)}
+      </SourceSlot>
     ),
     [SOUND_STAGE]: () => (
       <>
@@ -1708,9 +1720,9 @@ export function App() {
           source is what dismisses the question, from `beginLoad` in useEngine
           (useSourcePrompt.ts says why that is the only place it can go). What
           is left here is Escape and the × — the ways out that pick nothing. */}
-      {eng.prompt.slotFor('webcam') === null ? null : (
+      {webcamFor === null ? null : (
         <WebcamDialog
-          onContinue={() => eng.startWebcam('')}
+          onContinue={() => eng.startWebcam(webcamFor, '')}
           onClose={eng.prompt.dismiss}
         />
       )}

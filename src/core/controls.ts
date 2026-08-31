@@ -268,6 +268,7 @@ export const DEFAULT_CONTROLS = {
   bHueDeg: 0,
   bVidGain: 1,
   bInv: 0,
+  deintB: 0, // bob-deinterlace source B, the same rebuild `deint` does for A
   bPause: 0, // B deck's pause button: held frame, defeated servo, mistrack stripe
   bGenlock: 0, // 0 dirty sum .. 1 clean genlocked crossfade (dissolve/wipe)
   wipeMode: 0,
