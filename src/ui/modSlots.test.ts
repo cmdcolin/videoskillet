@@ -16,6 +16,9 @@ import {
   gateFlips,
   gatePlan,
   gateRate,
+  modDetail,
+  modPatch,
+  modReading,
   normalizeSlots,
   readBoard,
   readStab,
@@ -490,5 +493,69 @@ describe('gateRate', () => {
     const dialed = { hz: 7.5, ms: 60 }
     expect(gateRate(dialed, 0, null)).toBe(0)
     expect(gateRate(dialed, 1, null)).toBe(7.5)
+  })
+})
+
+describe('what a routed row says about its routing', () => {
+  const routing = { ...EMPTY_SLOT, target: 'bendAmount' as const, rateHz: 0.5 }
+
+  it('names the source and the rate it is running at', () => {
+    expect(modReading(routing, null)).toBe('sine 0.5Hz')
+    // No trailing zeros at the buzz end, two decimals at the drift end — one
+    // badge has to hold both ends of a 0.02..10Hz range.
+    expect(modReading({ ...routing, rateHz: 2 }, null)).toBe('sine 2Hz')
+    expect(modReading({ ...routing, rateHz: 0.03 }, null)).toBe('sine 0.03Hz')
+  })
+
+  it('says the division rather than the Hz it works out to, once it is locked', () => {
+    // The division is what was set; the Hz is arithmetic the reader would have
+    // to undo to get back to it.
+    expect(modReading({ ...routing, syncDiv: 2 }, 120)).toBe('sine ♩1/4')
+    // A lock with no tempo behind it is not running, so the dialed rate is the
+    // honest number — same rule routingRate follows.
+    expect(modReading({ ...routing, syncDiv: 2 }, null)).toBe('sine 0.5Hz')
+  })
+
+  it('quotes no rate for a follower, which has none', () => {
+    expect(modReading({ ...routing, source: 'level' }, null)).toBe(
+      'audio level',
+    )
+    expect(modDetail({ ...routing, source: 'hit' }, null)).toBe(
+      'audio hit, swinging 20% of the row’s range',
+    )
+  })
+
+  it('spells the source out at tooltip length, with the depth a badge has no room for', () => {
+    expect(modDetail(routing, null)).toBe(
+      'sine LFO at 0.5Hz, swinging 20% of the row’s range',
+    )
+    expect(modDetail({ ...routing, syncDiv: 3 }, 120)).toBe(
+      'sine LFO at ♩1/8 of 120.0 BPM (4Hz), swinging 20% of the row’s range',
+    )
+  })
+})
+
+describe('the band a routed row draws on its track', () => {
+  const routing = { ...EMPTY_SLOT, target: 'bendAmount' as const, depth: 0.3 }
+
+  it('hands over the depth the engine will use, not the one that was dialed', () => {
+    // applyMod swings by `depth * master`, so a fader at half draws a band at
+    // half — and the freeze collapses every band on the board rather than
+    // leaving them drawn over a picture that has stopped moving.
+    expect(modPatch(routing, null, 1).depth).toBeCloseTo(0.3)
+    expect(modPatch(routing, null, 0.5).depth).toBeCloseTo(0.15)
+    expect(modPatch(routing, null, 0).depth).toBe(0)
+  })
+
+  it('says which way the swing goes from the resting value', () => {
+    // The six that wobble cover both sides of where the slider rests.
+    expect(modPatch(routing, null, 1).bipolar).toBe(true)
+    expect(modPatch({ ...routing, source: 'lorenz' }, null, 1).bipolar).toBe(
+      true,
+    )
+    // The three that push: a follower and a struck envelope lift the control
+    // off its setting and let it back, so the band starts at the value.
+    for (const source of ['level', 'hit', 'trig'] as const)
+      expect(modPatch({ ...routing, source }, null, 1).bipolar).toBe(false)
   })
 })

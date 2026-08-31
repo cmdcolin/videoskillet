@@ -139,4 +139,7 @@ composite video cables together and posting tumblr gifs.
 - Fuzzy color bars feedback+dissolver
   https://cmdcolin.github.io/videoskillet/?p=BrAEAMgCAKAGPahOAdACAJADAZwCAHolpAIAoB8AegA6ACgAqCAALABgAEQAEACYARDQAgDUAhsEA0oQsAEIBA&mod=&srcb=vhs+static
 
+- Wiggity
+  http://localhost:5200/?p=CoDoBwEEAbAEAKwCAfABAKCZAgXgAw2IIwSIAyFYBrAKEjwGmAEEuB4ZVADsBgr4OiSMCQDEAQDgAgAkAUQEBAAQA9wCAMXBAgCJngIAlf4DAI3tAw&mod=bendUs:lorenz:0.390279:0.27759,hvRing:sine:0.037599:0.090209&srcb=synth&src=sweep
+
 Send me more stuff you come up with

@@ -29,6 +29,19 @@ export const PASS_THROUGH: ReadonlySet<ModSource> = new Set<ModSource>([
   'hit',
 ])
 
+// Sources that only ever push one way. `update` below returns [-1, 1] for the
+// six that wobble around the resting value and [0, 1] for these three, so what
+// a depth means differs: a bipolar routing swings the control either side of
+// where the slider rests, and one of these lifts it off that setting and lets
+// it back. Written down here because it is a property of the wave and the UI
+// keeps having to ask — a band drawn on the track, a note about a control
+// parked at one end of its range.
+export const UNIPOLAR: ReadonlySet<ModSource> = new Set<ModSource>([
+  'level',
+  'hit',
+  'trig',
+])
+
 export interface ModWave {
   // Stable identity of the routing this wave belongs to. The caller compacts
   // its slot list before handing it over (an off or zero-depth slot is dropped),

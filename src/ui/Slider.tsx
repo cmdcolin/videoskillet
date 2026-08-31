@@ -18,6 +18,7 @@ import { fromTravel, toTravel, TRAVEL_STEP } from './travel'
 import { atCents, CENT_MAX, CENT_MIN, centsOf, notchOf } from './vernier'
 
 import type { SliderDef } from './controls'
+import type { ModPatch } from './modSlots'
 import type { CurveName } from './travel'
 import type { CSSProperties, ReactNode } from 'react'
 
@@ -110,7 +111,12 @@ function IconButton(props: {
 function RowMenu(props: {
   label: string
   favorite?: { on: boolean; onToggle: () => void }
-  mod?: { routed: boolean; on: boolean; open: boolean; onToggle: () => void }
+  mod?: {
+    patch: ModPatch | null
+    on: boolean
+    open: boolean
+    onToggle: () => void
+  }
   midi?: { label: string | null; armed: boolean; onArm: () => void }
   sync?: { label: string | null; live: boolean; onCycle: () => void }
 }) {
@@ -168,16 +174,24 @@ function RowMenu(props: {
                 <MenuItem
                   icon="∿"
                   label={
-                    !mod.routed
+                    mod.patch === null
                       ? 'wobble it with an LFO'
                       : mod.open
                         ? 'hide what is driving it'
                         : 'change what is driving it'
                   }
-                  // The badge beside the reading is the on/off; this says which
-                  // way it is set, so the menu doesn't have to be opened to find
-                  // out whether a patched row is running.
-                  hint={mod.routed ? (mod.on ? 'on' : 'held') : ''}
+                  // What is driving it and how fast, which is the answer to the
+                  // question the menu is being opened to ask. It read `on` /
+                  // `held` and left the source and the rate to the editor —
+                  // a state nobody was in doubt about, in the one line that had
+                  // room for the two facts they were.
+                  hint={
+                    mod.patch === null
+                      ? ''
+                      : mod.on
+                        ? mod.patch.reading
+                        : `${mod.patch.reading}, held`
+                  }
                   closes={id}
                   onClick={mod.onToggle}
                 />
@@ -350,7 +364,10 @@ export function Slider(props: {
   // showing where the slider rests, because that is what presets, links and
   // saved looks store, and because a number that moves every frame is unreadable.
   mod?: {
-    routed: boolean
+    // What is patched here, or null on a row that could take a routing and
+    // hasn't got one — the badges and the menu both read this, so a row cannot
+    // be marked as driven while having nothing to say about what by.
+    patch: ModPatch | null
     on: boolean
     open: boolean
     // Park/restart — what the `mod`/`held` badge does.
@@ -415,6 +432,20 @@ export function Slider(props: {
     '--hi': `${Math.max(valuePct, defPct)}%`,
     '--def': `${defPct}%`,
   }
+  // The two ends of the wobble, in the same travel the thumb sits on — so on a
+  // curved control the band is as bunched as the scale under it. Only while it
+  // is actually running: a held routing swings nothing, and a band drawn under
+  // `held` would be the row claiming motion its own badge has just denied.
+  const patch =
+    props.mod === undefined || !props.mod.on ? null : props.mod.patch
+  const reach = patch === null ? 0 : patch.depth * (props.max - props.min)
+  const swing =
+    patch === null || reach === 0
+      ? null
+      : {
+          lo: pct(patch.bipolar ? props.value - reach : props.value),
+          hi: pct(props.value + reach),
+        }
   // The row's three parts, built once and then arranged two ways below. The
   // label names the input beside it rather than wrapping it: with the accessory
   // buttons inside a wrapping <label>, every one of their clicks forwarded to
@@ -538,14 +569,15 @@ export function Slider(props: {
           comparison, so it moved to the ⋮ beside this, which is where the row
           keeps its wiring.
 
-          A word rather than a ∿, and that is what stopped it being pressed by
+          Words rather than a ∿, and that is what stopped it being pressed by
           mistake: the strip's filter count wore the same glyph, so one mark said
           "this control is driven" in one place and "show me only driven rows" in
           another, and a session that meant the first got the second. Both say
-          what they are now. `mod` and not `modulated` because this box is in the
-          column that holds every track in a group at one x — see Rack — and the
-          badges already standing in it are `CC42` and `♩1/4`. */}
-      {props.mod?.routed !== true ? null : (
+          what they are now — this one in the shortest form of the routing it
+          switches, because the box sits in the column that holds every track in
+          a group at one x (see Rack), next to `CC42` and `♩1/4`, and those are
+          the length a badge here gets. */}
+      {props.mod === undefined || props.mod.patch === null ? null : (
         <button
           type="button"
           // A switch, so it says which of the two states it is in rather than
@@ -557,8 +589,8 @@ export function Slider(props: {
           aria-pressed={props.mod.on}
           title={
             props.mod.on
-              ? 'modulated — click to hold this one still'
-              : 'held still — click to start it wobbling again'
+              ? `${props.mod.patch.detail} — click to hold this one still`
+              : `${props.mod.patch.detail}, held still — click to start it wobbling again`
           }
           className={cx(
             styles.badge,
@@ -566,7 +598,21 @@ export function Slider(props: {
           )}
           onClick={props.mod.onToggleOn}
         >
-          {props.mod.on ? 'mod' : 'held'}
+          {/* What is driving the row and how fast, in place of the word `mod`.
+              Those are the two facts that decide what a wobble looks like and
+              the row carried neither: a slow walk and a 6Hz buzz wore the same
+              badge, and the only way to tell them apart was to open the editor
+              — a click spent on a question the row was already the right place
+              to answer. `mod` is not missed. A rate in the routing's own colour
+              says the row is driven at least as plainly as the word did, and
+              this chip is the one badge in the line a reader ever presses.
+
+              `held` still trails it, because the two states are what the button
+              is for and a tint is not a state. Trailing rather than leading so
+              the routing reads first in both of them. */}
+          {props.mod.on
+            ? props.mod.patch.reading
+            : `${props.mod.patch.reading} held`}
         </button>
       )}
       {favorite?.on !== true ? null : (
@@ -672,6 +718,31 @@ export function Slider(props: {
           )
         }
       />
+      {/* How far the routing on this row is swinging the value, drawn on the
+          stretch of track it is swinging along. The reading cannot show it: it
+          holds the *resting* value on purpose, because that is what a preset, a
+          link and a saved look store, and a number rewritten every frame is
+          unreadable. So depth was the one number in a routing with nowhere to
+          appear outside its editor — and it is the one that decides whether a
+          patch is a drift or a wreck.
+
+          Not animated. A band standing still says the same thing every frame
+          and costs no render, where a thumb tracking the wave would put every
+          patched row through React at 60Hz to say what the band says by sitting
+          there. It is the engine's own arithmetic — depth × the row's range,
+          around the resting value, clamped to the ends (pipeline.ts › applyMod)
+          — so a control parked at one end shows a band with nowhere to go on
+          that side, which is the fault the editor's note spells out in words.
+
+          Scaled by the motion fader, so the strip's ❚❚ collapses every band on
+          the board: what the row draws is what the engine is about to do, not
+          what the slot was dialed to. */}
+      {swing === null ? null : (
+        <span
+          className={styles.swing}
+          style={{ left: `${swing.lo}%`, right: `${100 - swing.hi}%` }}
+        />
+      )}
       {/* Soft takeover: the knob is here, the value is at the thumb, and
           nothing moves until one sweeps past the other. Without the mark
           the control just looks dead. */}

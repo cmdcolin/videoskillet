@@ -1,7 +1,7 @@
 import { useControlsApi } from './ControlsContext'
 import { cx } from './cx'
 import { MOTION } from './midi'
-import { gateFlips, targetLabel } from './modSlots'
+import { gateFlips, modReading, targetLabel } from './modSlots'
 import { useModSlotsApi } from './ModSlotsContext'
 import styles from './MotionStrip.module.css'
 import { useHold } from './useHold'
@@ -32,7 +32,7 @@ export function MotionStrip(props: {
   moving: boolean
   onToggleMoving: () => void
 }) {
-  const { slots, master, setMaster, stab, stabHz } = useModSlotsApi()
+  const { slots, master, setMaster, stab, stabHz, bpm } = useModSlotsApi()
   const api = useControlsApi()
   // The park, and the memory of where the fader was — see useHold, which the
   // deck's own ❚❚ shares. What each holds is deliberately different: this one
@@ -57,7 +57,11 @@ export function MotionStrip(props: {
   const stilled: string[] = []
   for (const s of slots) {
     if (s.target === '' || s.depth === 0) continue
-    const label = targetLabel(s.target)
+    // What is moving and what is moving it, which is the question this button's
+    // hover is being asked: a list of eight control names says the panel is
+    // busy without saying what any of it is doing, and the rows that would
+    // answer are scattered down six stages.
+    const label = `${targetLabel(s.target)} (${modReading(s, bpm)})`
     if (s.on) driven.push(label)
     else stilled.push(label)
   }
@@ -147,12 +151,12 @@ export function MotionStrip(props: {
             there is no glyph that would say "the whole board, cut in and out" to
             someone who had not already been told.
 
-            The count says `mod` for the same reason the row's badge does. It
-            used to read `2∿`, which borrowed the mark every routed row wore —
-            so the one glyph meant "this control is driven" beside a reading and
-            "show me only driven rows" up here, and pressing the wrong one
-            narrowed the whole panel when all that was wanted was one wobble
-            held still. */}
+            The count says `mod` in words for the same reason a routed row names
+            its source in words. It used to read `2∿`, which borrowed the mark
+            every routed row wore — so the one glyph meant "this control is
+            driven" beside a reading and "show me only driven rows" up here, and
+            pressing the wrong one narrowed the whole panel when all that was
+            wanted was one wobble held still. */}
         {`${driven.length} mod`}
         {stilled.length === 0 ? null : (
           <span className={styles.parked}>{`+${stilled.length}`}</span>

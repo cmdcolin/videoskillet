@@ -9,6 +9,7 @@
 
 import { CONTROL_KEYS, DEFAULT_CONTROLS } from '../core/controls'
 import { clamp } from '../core/math'
+import { PASS_THROUGH, UNIPOLAR } from '../core/signal/modstate'
 import { SLIDER_BY_KEY, sliderFor } from './controls'
 import { SYNC_DIVISIONS } from './midi'
 
@@ -81,20 +82,43 @@ export const EMPTY_SLOT: UiSlot = {
   on: true,
 }
 
-export const MOD_SOURCES: { value: ModSource; label: string }[] = [
-  { value: 'sine', label: 'sine LFO' },
-  { value: 'triangle', label: 'triangle LFO' },
-  { value: 'walk', label: 'random walk' },
-  { value: 'smooth', label: 'smooth noise' },
-  { value: 'hold', label: 'sample & hold' },
-  { value: 'lorenz', label: 'lorenz chaos' },
-  { value: 'level', label: 'audio level' },
-  { value: 'hit', label: 'audio hit' },
-  // The one you play. Everything above answers "what is this knob doing"
-  // continuously; this answers "what did you just do", which is why it is last —
-  // it is a different kind of thing from the seven drifts above it.
-  { value: 'trig', label: 'one-shot (fire)' },
+// Every source, with the name a picker gives it and the name it wears in the
+// two characters a badge has. A record rather than a list, so a source cannot
+// be looked up and come back missing — the old `find(...)?.label ?? value`
+// left every readout carrying a fallback to the raw key.
+const SOURCES: Record<ModSource, { label: string; short: string }> = {
+  sine: { label: 'sine LFO', short: 'sine' },
+  triangle: { label: 'triangle LFO', short: 'triangle' },
+  walk: { label: 'random walk', short: 'walk' },
+  smooth: { label: 'smooth noise', short: 'smooth' },
+  hold: { label: 'sample & hold', short: 'S&H' },
+  lorenz: { label: 'lorenz chaos', short: 'lorenz' },
+  level: { label: 'audio level', short: 'audio level' },
+  hit: { label: 'audio hit', short: 'audio hit' },
+  trig: { label: 'one-shot (fire)', short: 'one-shot' },
+}
+
+// The order the picker offers them in. `trig` last: everything above it answers
+// "what is this knob doing" continuously, and it answers "what did you just do"
+// — a different kind of thing from the eight drifts above it.
+const SOURCE_ORDER: ModSource[] = [
+  'sine',
+  'triangle',
+  'walk',
+  'smooth',
+  'hold',
+  'lorenz',
+  'level',
+  'hit',
+  'trig',
 ]
+
+export const MOD_SOURCES = SOURCE_ORDER.map(value => ({
+  value,
+  label: SOURCES[value].label,
+}))
+
+export const sourceLabel = (source: ModSource) => SOURCES[source].label
 
 export const RATE_MIN = 0.02
 export const RATE_MAX = 10
@@ -485,6 +509,77 @@ export function slotRate(slot: UiSlot, bpm: number | null): number {
 }
 
 export const withNextSync = (slot: UiSlot): UiSlot => withNextDivision(slot)
+
+// One rate, as a row says it: two decimals at the drift end of the range, no
+// trailing zeros at the buzz end.
+const hzText = (hz: number) => `${Number(hz.toFixed(2))}Hz`
+
+// Everything a routed row shows about the routing on it, built in one place for
+// the two kinds of row that can hold one — a control, and one of the bay's own
+// knobs. They are driven by the same kind of thing and must not describe it in
+// two voices.
+export interface ModPatch {
+  // Beside the value, in the width a badge gets.
+  reading: string
+  // The same routing at tooltip length.
+  detail: string
+  // What the engine will swing the target by, as the fraction of the row's own
+  // range it works in (pipeline.ts › applyMod): the dialed depth scaled by the
+  // motion amount, so the freeze collapses every band on the board at once and
+  // the fader narrows them together.
+  depth: number
+  // Which way that swing goes from where the slider rests — see modstate's
+  // UNIPOLAR. A wobble covers both sides of the resting value; a follower or a
+  // struck envelope lifts it off that setting and lets it back.
+  bipolar: boolean
+}
+
+export const modPatch = (
+  slot: UiSlot,
+  bpm: number | null,
+  master: number,
+): ModPatch => ({
+  reading: modReading(slot, bpm),
+  detail: modDetail(slot, bpm),
+  depth: slot.depth * master,
+  bipolar: !UNIPOLAR.has(slot.source),
+})
+
+// What a routing is, in the width of a badge: what is driving the control and
+// how fast it is running. A patched row used to read the same whether a slow
+// walk or a 6Hz buzz was on it — `mod` said that something was moving and the
+// only way to find out what was to open the editor, which is a click to answer
+// a question the row could have answered by standing there.
+//
+// The rate is the one that is running, so a beat lock reads as the beat: `♩1/4`
+// is what the slot is doing, where the Hz it works out to is arithmetic the
+// reader would have to undo to get back to the division they set. With no tempo
+// yet the lock isn't running, so the dialed Hz is the honest number.
+//
+// A follower has no rate at all (modstate.ts › PASS_THROUGH), so it says its
+// name and stops rather than quoting a number that addresses nothing.
+export function modReading(slot: UiSlot, bpm: number | null) {
+  const div = slot.syncDiv
+  const short = SOURCES[slot.source].short
+  return PASS_THROUGH.has(slot.source)
+    ? short
+    : div !== undefined && bpm !== null
+      ? `${short} ♩${SYNC_DIVISIONS[div].label}`
+      : `${short} ${hzText(slot.rateHz)}`
+}
+
+// The same routing at tooltip length, where there is room for the source's full
+// name, the tempo behind a lock, and the depth — the third number of the three
+// that decide what a wobble looks like, and the one a badge has no width for.
+export function modDetail(slot: UiSlot, bpm: number | null) {
+  const div = slot.syncDiv
+  const rate = PASS_THROUGH.has(slot.source)
+    ? ''
+    : div !== undefined && bpm !== null
+      ? ` at ♩${SYNC_DIVISIONS[div].label} of ${bpm.toFixed(1)} BPM (${hzText(slotRate(slot, bpm))})`
+      : ` at ${hzText(slot.rateHz)}`
+  return `${SOURCES[slot.source].label}${rate}, swinging ${Math.round(slot.depth * 100)}% of the row’s range`
+}
 
 // One stored/pasted entry, or null if it isn't one. Field-checked rather than
 // trusted: `readArray` guards the parse, not the shape, and a stored `[null]`

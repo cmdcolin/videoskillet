@@ -18,7 +18,7 @@ import { filterActive, matchedSliders, useFilter } from './filter'
 import { MagnifierFrame } from './MagnifierFrame'
 import { SYNCABLE_KEYS } from './midi'
 import { ModRowEditor } from './ModRowEditor'
-import { EMPTY_SLOT } from './modSlots'
+import { EMPTY_SLOT, modPatch } from './modSlots'
 import { useModSlotsApi } from './ModSlotsContext'
 import { mutateAmountFor } from './mutate'
 import { PipControl } from './PipControl'
@@ -63,7 +63,6 @@ export function ControlSlider(props: {
   const inert = need !== undefined && !need.ok(gate)
   const unmet = inert && props.muted?.has(need.key) !== true
   const slot = mod.modFor(s.key)
-  const routed = slot !== null
   return (
     <Slider
       label={s.label}
@@ -111,9 +110,9 @@ export function ControlSlider(props: {
       // way to see what is driving the control or to hand the slot back. The
       // rule is about what may be *claimed*, not about what may be shown.
       mod={
-        routed || (!inert && s.choices === undefined)
+        slot !== null || (!inert && s.choices === undefined)
           ? {
-              routed,
+              patch: slot === null ? null : modPatch(slot, mod.bpm, mod.master),
               // Running, as opposed to merely patched. The badge is the switch
               // and this is what it reads.
               on: slot?.on === true,
@@ -129,7 +128,7 @@ export function ControlSlider(props: {
                 // rather than handing over an editor with nothing patched into
                 // it. Handing the slot back is the remove button, one click
                 // away — a claim you can see and undo beats a form to fill in.
-                if (!routed) mod.setSlotForKey(s.key, DEFAULT_ROUTING)
+                if (slot === null) mod.setSlotForKey(s.key, DEFAULT_ROUTING)
                 setModOpen(!modOpen)
               },
             }

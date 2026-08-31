@@ -21,7 +21,9 @@ import {
   STAB_MS_MAX,
   STAB_MS_MIN,
   gateFlips,
+  modPatch,
   slotRate,
+  sourceLabel,
 } from './modSlots'
 import { useModSlotsApi } from './ModSlotsContext'
 import { groupOf, stageOf } from './placement'
@@ -320,12 +322,18 @@ function SlotHead(props: {
 // it; the driver's own head, a few lines up or down, says `driving slot 3
 // depth`.
 function BayKnob(props: { i: number; slot: UiSlot; field: BayField }) {
-  const { bpm, setSlot, cycleSlotSync, modFor, setSlotForKey, setSlotOn } =
-    useModSlotsApi()
+  const {
+    bpm,
+    master,
+    setSlot,
+    cycleSlotSync,
+    modFor,
+    setSlotForKey,
+    setSlotOn,
+  } = useModSlotsApi()
   const [modOpen, setModOpen] = useState(false)
   const key = bayKeyFor(props.i, props.field)
   const driver = modFor(key)
-  const routed = driver !== null
   const s = props.slot
   const rate = props.field === 'rate'
   return (
@@ -357,7 +365,7 @@ function BayKnob(props: { i: number; slot: UiSlot; field: BayField }) {
           : undefined
       }
       mod={{
-        routed,
+        patch: driver === null ? null : modPatch(driver, bpm, master),
         on: driver?.on === true,
         open: modOpen,
         onToggleOn: () => {
@@ -366,7 +374,7 @@ function BayKnob(props: { i: number; slot: UiSlot; field: BayField }) {
         onToggle: () => {
           // Claim on open, the same as a control row: the first press moves
           // something rather than handing over an empty form.
-          if (!routed) setSlotForKey(key, DRIVER_ROUTING)
+          if (driver === null) setSlotForKey(key, DRIVER_ROUTING)
           setModOpen(!modOpen)
         },
       }}
@@ -469,9 +477,7 @@ export function ModBay(props: {
           <SlotHead
             n={n}
             target={target}
-            source={
-              MOD_SOURCES.find(o => o.value === s.source)?.label ?? s.source
-            }
+            source={sourceLabel(s.source)}
             live={s.on}
             openStages={props.openStages}
             onOpenGroup={props.onOpenGroup}

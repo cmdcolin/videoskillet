@@ -1,4 +1,4 @@
-import { PASS_THROUGH } from '../core/signal/modstate'
+import { PASS_THROUGH, UNIPOLAR } from '../core/signal/modstate'
 import { sliderFor } from './controls'
 import { useControlValue } from './ControlsContext'
 import { cx } from './cx'
@@ -28,14 +28,24 @@ import type { ControlKey, ModTarget } from '../core/controls'
 // against it. That reads as "the wobble is broken" unless something says
 // otherwise; the fix is to move the slider, so the note says which way.
 //
+// Which end can pin depends on which way the wave goes. A one-shot struck at
+// the bottom of a range is not clipped at all — it only ever pushes up, so the
+// bottom is exactly where it has the most room, and the note used to tell the
+// one source you play to move away from the only rest that gives it a full
+// stroke. See modstate's UNIPOLAR.
+//
 // Its own component because it is the one thing in this editor that reads the
 // board: a bay knob has no resting value in the control store, and a hook must
 // not be the thing that decides whether the subject is a control at all.
-function ClippedNote(props: { controlKey: ControlKey; swing: number }) {
+function ClippedNote(props: {
+  controlKey: ControlKey
+  swing: number
+  bipolar: boolean
+}) {
   const rest = useControlValue(props.controlKey)
   const def = sliderFor(props.controlKey)
   const clipped =
-    rest - props.swing < def.min
+    props.bipolar && rest - props.swing < def.min
       ? 'bottom'
       : rest + props.swing > def.max
         ? 'top'
@@ -149,11 +159,15 @@ export function ModRowEditor(props: {
         step={0.01}
         value={slot.depth}
         defaultValue={EMPTY_SLOT.depth}
-        help="How far the wobble swings this control, as a fraction of its own slider range. The slider itself stays put — it is the centre the motion happens around, which is why a preset or a link still holds the look."
+        help="How far the wobble swings this control, as a fraction of its own slider range. The slider itself stays put — it is the centre the motion happens around, which is why a preset or a link still holds the look. The rule under the control’s own track is this number: the stretch of travel the wobble is covering, clamped where it runs into an end."
         onChange={depth => setSlotForKey(key, { ...slot, depth })}
       />
       {isBayKey(key) || PASS_THROUGH.has(slot.source) || swing === 0 ? null : (
-        <ClippedNote controlKey={key} swing={swing} />
+        <ClippedNote
+          controlKey={key}
+          swing={swing}
+          bipolar={!UNIPOLAR.has(slot.source)}
+        />
       )}
       {/* The two kinds of off, side by side, which is the only place they are
           legible as a pair: hold it still and it comes back exactly as it is set

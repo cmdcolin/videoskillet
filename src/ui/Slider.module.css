@@ -200,6 +200,23 @@
   opacity: 0.85;
   pointer-events: none;
 }
+/* the stretch of track a routing is swinging the value along, ruled under the
+   track rather than painted onto it. On the track it was the wrong shape: the
+   fill is already a coloured length reading "this is how far from stock the
+   control sits", in a green a shade off this one, so a band drawn the same way
+   in the same place read as more of that — and a routing at depth 0.6 on a
+   control resting at stock drew what looked like a control dragged 60% up.
+   A rule underneath is a second mark about the same span, which is what it is,
+   and 2px against the track's 4px keeps it the quieter of the two. */
+.swing {
+  position: absolute;
+  top: 10px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--mod);
+  opacity: 0.85;
+  pointer-events: none;
+}
 /* where the physical knob sits while it hasn't caught the value yet */
 .pickup {
   position: absolute;
@@ -320,13 +337,13 @@ button.badge {
 .iconSyncSet {
   color: var(--edit);
 }
-/* something is driving this control, and it is running. A chip with an outline,
-   not bare text, and the outline is the load-bearing part: this is the one badge
+/* what is driving this control, at the rate it is running — a chip with an
+   outline, not bare text, and the outline is the load-bearing part: this is the one badge
    in the row that is a *button*, and it stands in a line of badges that are not
    — CC42, ♩1/4 and ★ are marks, and a reader who has to press one to find out
    which is which has been given a puzzle. A fill alone did not separate them
-   once the glyph became a word: `mod` in a tinted pill reads as a tag, and a tag
-   is what the three beside it are. A hairline reads as a control at rest, which
+   once the glyph became words: `sine 0.5Hz` in a tinted pill reads as a tag, and
+   a tag is what the three beside it are. A hairline reads as a control at rest, which
    is where it has to read as one — hover is an answer that arrives after the
    question. Padding is one less than the border it gained, so the box is the
    size it was. */
@@ -346,8 +363,8 @@ button.badge {
    is the state you most need a way out of, so it must not be the state that
    stops looking pressable. It used to be the ∿ struck through, which was the
    only way one glyph could say "there is a wobble patched here and it is not
-   running"; the badge says `held` now, and a struck-through word is harder to
-   read than the word. */
+   running"; the badge trails the routing with `held` now, and a struck-through
+   word is harder to read than the word. */
 .iconModOff {
   color: var(--fg4);
   background: color-mix(in srgb, var(--fg4) 14%, transparent);
