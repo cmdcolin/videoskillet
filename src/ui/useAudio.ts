@@ -2,15 +2,30 @@ import { useEffect, useRef, useState } from 'react'
 
 import type { EngineApi } from '../core/gpu/engineapi'
 
-export const AUDIO_MODES = ['off', 'mic', 'file', 'video'] as const
+export const AUDIO_MODES = ['off', 'mic', 'system', 'file', 'video'] as const
 export type AudioMode = (typeof AUDIO_MODES)[number]
 
 export const AUDIO_DESC: Record<AudioMode, string> = {
   off: 'Off — no audio in',
   mic: 'Microphone — live room sound',
+  system: 'System audio — a tab or screen this machine is playing',
   file: 'File… — play a music or video file',
   video: 'Video — the clip on screen, its own sound',
 }
+
+// What a share with no sound in it needs said. The browser gives no way to ask
+// for audio and be told in advance whether this surface can carry it, so the
+// picker is the only place the answer arrives, and by then the share is made.
+const NO_SHARE_AUDIO =
+  'no sound in that share — pick a tab and tick “Also share tab audio”. Not every browser can capture audio this way.'
+
+// Backing out of the share picker rejects exactly like a failure does. The
+// screen *source* draws the same distinction for the same reason (useEngine's
+// startScreen): a picker the user closed is a decision, not a fault, and a
+// banner over the picture is the wrong answer to it.
+const isAbort = (e: unknown): boolean =>
+  e instanceof DOMException &&
+  (e.name === 'AbortError' || e.name === 'NotAllowedError')
 
 // Audio input state for the UI. The per-line waveform goes straight to the GPU
 // each frame without touching React, and so does the level: the meter reads
@@ -59,7 +74,7 @@ export function useAudio(
       URL.revokeObjectURL(el.src)
       elRef.current = null
     }
-    // Mutes and unroutes the clips too: they are one of the four things this
+    // Mutes and unroutes the clips too: they are one of the things this
     // picker picks between, so leaving them on the analyser while something
     // else is selected would put two sources on one wire.
     routeVideo(false)
@@ -76,6 +91,24 @@ export function useAudio(
         () => setMode('mic'),
         (e: unknown) => setError(`microphone unavailable: ${String(e)}`),
       )
+    }
+  }
+
+  // Like the mic, this gives up the current input before asking rather than
+  // after: the picker is the browser's, and what it hands back is a whole new
+  // input either way. Backing out of it therefore leaves the sound off, which
+  // is one click from wherever it was.
+  const enableSystem = () => {
+    if (engine !== null) {
+      stop()
+      engine.audioState
+        .enableSystem(() => stop())
+        .then(
+          got => (got === 'ok' ? setMode('system') : setError(NO_SHARE_AUDIO)),
+          (e: unknown) => {
+            if (!isAbort(e)) setError(`system audio unavailable: ${String(e)}`)
+          },
+        )
     }
   }
 
@@ -155,6 +188,8 @@ export function useAudio(
         stop()
       } else if (next === 'mic') {
         enableMic()
+      } else if (next === 'system') {
+        enableSystem()
       } else if (next === 'video') {
         // Nothing to adopt here: the clips are already elements the engine
         // owns, and it routes whichever slots are live — including ones picked

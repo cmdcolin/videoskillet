@@ -199,6 +199,67 @@ export class AudioState {
     this.stream = stream
   }
 
+  // What the machine itself is playing. A page can only hear that by asking for
+  // a screen share — there is no audio-only getDisplayMedia — so a video track
+  // is part of the price, and it is stopped the moment the stream lands.
+  // Measured on Chrome/macOS (scripts/displayaudio.mjs): the audio track stays
+  // `live` when the video track ends and its level does not move, so the share
+  // costs a picker and nothing after it.
+  //
+  // Which shares carry sound is the browser's business and differs between
+  // them: Chrome offers it per tab, behind the picker's "Also share tab audio",
+  // and for a whole screen only on some platforms. A share arriving with no
+  // audio track is that answer rather than a failure, so it comes back as
+  // 'no-audio' for the picker to explain, and the stream is dropped whole.
+  //
+  // `onEnded` fires when the share stops on its own — the browser's own "stop
+  // sharing" bar — which nothing downstream could otherwise notice, since the
+  // analyser goes on handing back silence and silence is also what a quiet room
+  // sounds like. Not called when this object stops the track itself: `stop()`
+  // does not fire the event, which is the same thing playStream relies on for a
+  // shared screen.
+  async enableSystem(onEnded?: () => void): Promise<'ok' | 'no-audio'> {
+    const stream = await navigator.mediaDevices.getDisplayMedia({
+      video: true,
+      // All three off. Chrome hands display audio through the voice-call chain
+      // by default, and that chain is built for speech: measured against the
+      // same tone, it arrives mono at 48 kHz and a third of the level, and the
+      // level wanders as its gain control works — which is the one artifact
+      // this app must not have on its input, since a wandering level is exactly
+      // what the onset detector reads as a kick. Off, it arrives stereo at the
+      // native rate and sits still.
+      audio: {
+        echoCancellation: false,
+        noiseSuppression: false,
+        autoGainControl: false,
+      },
+    })
+    const heard = stream.getAudioTracks().length > 0
+    for (const t of stream.getVideoTracks()) t.stop()
+    if (heard) {
+      const g = this.ensureGraph()
+      this.releaseInput()
+      // Analysed and not heard, like the mic: this sound is already coming out
+      // of the speakers, and a second copy of it would be both an echo and, if
+      // the share is a tab playing this page, a loop.
+      const src = g.ctx.createMediaStreamSource(stream)
+      src.connect(g.analyser)
+      this.input = src
+      this.stream = stream
+      for (const t of stream.getAudioTracks()) {
+        // The input may have moved on since; only the stream still on it
+        // speaks — the guard playStream keeps, for the same reason.
+        t.addEventListener('ended', () => {
+          if (this.stream === stream) onEnded?.()
+        })
+      }
+      return 'ok'
+    } else {
+      for (const t of stream.getTracks()) t.stop()
+      return 'no-audio'
+    }
+  }
+
   // A picked audio/video file: heard through the speakers and analysed, so a
   // track drives the same sync and deflection knobs the mic does.
   enableElement(el: HTMLMediaElement): void {
