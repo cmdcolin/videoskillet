@@ -17,6 +17,8 @@
 
 import puppeteer from 'puppeteer-core'
 
+import { FIREFOX } from './browser.mjs'
+
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
@@ -225,7 +227,7 @@ const items = spec.items.map(it => ({
 const launch = () =>
   puppeteer.launch({
     browser: 'firefox',
-    executablePath: '/usr/bin/firefox-nightly',
+    executablePath: FIREFOX,
     headless: false,
     // Stepping a thousand frames of a heavy patch outruns the default.
     protocolTimeout: 600_000,
@@ -400,7 +402,7 @@ const ref = results.find(r => r.item.name === refItem && r.file !== null)
 
 const shooter = await puppeteer.launch({
   browser: 'firefox',
-  executablePath: '/usr/bin/firefox-nightly',
+  executablePath: FIREFOX,
   headless: true,
 })
 const sp = await shooter.newPage()

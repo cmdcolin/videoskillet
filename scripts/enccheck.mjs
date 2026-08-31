@@ -39,6 +39,8 @@
 
 import puppeteer from 'puppeteer-core'
 
+import { CHROME, FIREFOX } from './browser.mjs'
+
 import { createServer } from 'node:http'
 import process from 'node:process'
 
@@ -47,15 +49,11 @@ const arg = (name, fallback) => {
   return hit === undefined ? fallback : hit.slice(name.length + 3)
 }
 
-const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
 const which = arg(
   'browser',
   process.platform === 'darwin' ? 'chrome' : 'firefox',
 )
-const path = arg(
-  'path',
-  which === 'chrome' ? CHROME : '/usr/bin/firefox-nightly',
-)
+const path = arg('path', which === 'chrome' ? CHROME : FIREFOX)
 
 // WebCodecs is secure-context only and `about:blank` is not one, so this serves
 // an empty page over http://localhost rather than probing somewhere the app

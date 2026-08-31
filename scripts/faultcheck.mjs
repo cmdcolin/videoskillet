@@ -44,6 +44,7 @@
 
 import puppeteer from 'puppeteer-core'
 
+import { FIREFOX } from './browser.mjs'
 // Boot waited for rather than slept through — see until.mjs.
 import { appUp } from './until.mjs'
 
@@ -61,7 +62,7 @@ const check = (name, ok, detail = '') => {
 
 const browser = await puppeteer.launch({
   browser: 'firefox',
-  executablePath: '/usr/bin/firefox-nightly',
+  executablePath: FIREFOX,
   headless: false,
   // 480s, matching `rendercheck.mjs` and for the same reason: a run that takes
   // two minutes with the window in front takes far longer behind another one,

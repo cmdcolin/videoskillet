@@ -58,6 +58,7 @@
 
 import puppeteer from 'puppeteer-core'
 
+import { FIREFOX } from './browser.mjs'
 import { appUp, until } from './until.mjs'
 
 import { execFileSync } from 'node:child_process'
@@ -213,7 +214,7 @@ const fixtures = `http://127.0.0.1:${server.address().port}`
 const launch = () =>
   puppeteer.launch({
     browser: 'firefox',
-    executablePath: '/usr/bin/firefox-nightly',
+    executablePath: FIREFOX,
     headless: false,
     extraPrefsFirefox: {
       'dom.webgpu.enabled': true,

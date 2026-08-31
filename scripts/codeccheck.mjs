@@ -66,6 +66,8 @@
 
 import puppeteer from 'puppeteer-core'
 
+import { FIREFOX } from './browser.mjs'
+
 import { createServer } from 'node:http'
 import process from 'node:process'
 
@@ -88,7 +90,7 @@ const port = server.address().port
 
 const browser = await puppeteer.launch({
   browser: 'firefox',
-  executablePath: '/usr/bin/firefox-nightly',
+  executablePath: FIREFOX,
   headless: false,
   protocolTimeout: 300_000,
   extraPrefsFirefox: {

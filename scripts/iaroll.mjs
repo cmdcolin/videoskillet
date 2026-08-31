@@ -18,6 +18,8 @@
 // this reports per-roll and judges a channel on whether *any* roll landed.
 import puppeteer from 'puppeteer-core'
 
+import { FIREFOX } from './browser.mjs'
+
 const base = (process.argv[2] ?? 'http://localhost:5199').replace(/\/$/, '')
 const wait = ms => new Promise(r => setTimeout(r, ms))
 const failures = []
@@ -32,7 +34,7 @@ const check = (ok, what, saw = '') => {
 
 const browser = await puppeteer.launch({
   browser: 'firefox',
-  executablePath: '/usr/bin/firefox-nightly',
+  executablePath: FIREFOX,
   headless: false,
   extraPrefsFirefox: {
     'dom.webgpu.enabled': true,

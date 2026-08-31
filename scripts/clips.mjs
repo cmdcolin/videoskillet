@@ -1,5 +1,7 @@
 import puppeteer from 'puppeteer-core'
 
+import { FIREFOX } from './browser.mjs'
+
 // Capture the README's motion clips. Each shot is fully declarative: the URL
 // alone (?iurl / ?iurlb / ?preset / ?set) specifies the source image(s), preset,
 // and param overrides, so nothing here uploads files or clicks the UI.
@@ -85,7 +87,7 @@ const SHOTS = [
 async function record(shot) {
   const browser = await puppeteer.launch({
     browser: 'firefox',
-    executablePath: '/usr/bin/firefox-nightly',
+    executablePath: FIREFOX,
     headless: false,
     extraPrefsFirefox: {
       'dom.webgpu.enabled': true,

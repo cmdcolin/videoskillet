@@ -25,6 +25,7 @@
 
 import puppeteer from 'puppeteer-core'
 
+import { FIREFOX } from './browser.mjs'
 import { appUp } from './until.mjs'
 
 import process from 'node:process'
@@ -34,7 +35,7 @@ const url = `http://localhost:${port}/`
 
 const browser = await puppeteer.launch({
   browser: 'firefox',
-  executablePath: '/usr/bin/firefox-nightly',
+  executablePath: FIREFOX,
   headless: false,
   extraPrefsFirefox: {
     'dom.webgpu.enabled': true,

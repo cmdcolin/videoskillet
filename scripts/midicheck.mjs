@@ -19,6 +19,7 @@
 
 import puppeteer from 'puppeteer-core'
 
+import { FIREFOX } from './browser.mjs'
 // A headed window that gets covered stops being drawn — see frames.mjs.
 import { watchFrames } from './frames.mjs'
 // Boot waited for rather than slept through — see until.mjs.
@@ -28,7 +29,7 @@ const url = process.argv[2] ?? 'http://localhost:5199/'
 
 const browser = await puppeteer.launch({
   browser: 'firefox',
-  executablePath: '/usr/bin/firefox-nightly',
+  executablePath: FIREFOX,
   headless: false,
   extraPrefsFirefox: {
     'dom.webgpu.enabled': true,

@@ -51,6 +51,8 @@
 
 import puppeteer from 'puppeteer-core'
 
+import { FIREFOX } from './browser.mjs'
+
 const args = process.argv.slice(2)
 const ablate = args.includes('--ablate')
 const vpArg = args.find(a => a.startsWith('--vp='))
@@ -79,7 +81,7 @@ const disturbed = ts => spread(ts) > SPREAD_LIMIT
 
 const browser = await puppeteer.launch({
   browser: 'firefox',
-  executablePath: '/usr/bin/firefox-nightly',
+  executablePath: FIREFOX,
   headless: false,
   extraPrefsFirefox: {
     'dom.webgpu.enabled': true,

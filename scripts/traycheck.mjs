@@ -29,6 +29,7 @@
 
 import puppeteer from 'puppeteer-core'
 
+import { FIREFOX } from './browser.mjs'
 // A headed window that gets covered stops being drawn — see frames.mjs.
 import { watchFrames } from './frames.mjs'
 // Waiting for an answer rather than for a duration — `until.mjs` says which of
@@ -43,7 +44,7 @@ const url = `http://localhost:${port}/`
 
 const browser = await puppeteer.launch({
   browser: 'firefox',
-  executablePath: '/usr/bin/firefox-nightly',
+  executablePath: FIREFOX,
   headless: false,
   extraPrefsFirefox: {
     'dom.webgpu.enabled': true,

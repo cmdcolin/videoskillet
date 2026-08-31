@@ -21,6 +21,8 @@
 
 import puppeteer from 'puppeteer-core'
 
+import { FIREFOX } from './browser.mjs'
+
 const [base, mode = 'restore', outDir] = process.argv.slice(2)
 if (!base) {
   console.error('usage: node scripts/deviceloss.mjs <baseUrl> [mode] [outDir]')
@@ -30,7 +32,7 @@ if (!base) {
 const fails = []
 const browser = await puppeteer.launch({
   browser: 'firefox',
-  executablePath: '/usr/bin/firefox-nightly',
+  executablePath: FIREFOX,
   headless: false,
   extraPrefsFirefox: {
     'dom.webgpu.enabled': true,

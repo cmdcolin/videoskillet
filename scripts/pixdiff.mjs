@@ -57,6 +57,8 @@
 
 import puppeteer from 'puppeteer-core'
 
+import { FIREFOX } from './browser.mjs'
+
 const [urlA, urlB, framesArg] = process.argv.slice(2)
 const frames = Number(framesArg ?? 300)
 
@@ -68,7 +70,7 @@ if (!urlA || !urlB) {
 const grab = async url => {
   const browser = await puppeteer.launch({
     browser: 'firefox',
-    executablePath: '/usr/bin/firefox-nightly',
+    executablePath: FIREFOX,
     headless: false,
     extraPrefsFirefox: {
       'dom.webgpu.enabled': true,

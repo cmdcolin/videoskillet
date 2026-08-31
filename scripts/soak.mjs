@@ -46,6 +46,8 @@
 
 import puppeteer from 'puppeteer-core'
 
+import { FIREFOX } from './browser.mjs'
+
 import {
   copyFileSync,
   mkdirSync,
@@ -90,7 +92,7 @@ const target = `${url}?src=${src}&set=${LOOK}`
 
 const browser = await puppeteer.launch({
   browser: 'firefox',
-  executablePath: '/usr/bin/firefox-nightly',
+  executablePath: FIREFOX,
   headless: false,
   extraPrefsFirefox: {
     'dom.webgpu.enabled': true,

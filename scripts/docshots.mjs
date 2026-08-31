@@ -23,6 +23,7 @@
 
 import puppeteer from 'puppeteer-core'
 
+import { FIREFOX } from './browser.mjs'
 import { SPECS } from './docshot-specs.mjs'
 
 import { execFileSync, spawn } from 'node:child_process'
@@ -826,7 +827,7 @@ function writeManifest() {
 const launchBrowser = () =>
   puppeteer.launch({
     browser: 'firefox',
-    executablePath: '/usr/bin/firefox-nightly',
+    executablePath: FIREFOX,
     headless: false,
     // A clip that hangs page-side should fail its shot and retry rather than
     // sit forever; the ceiling has to clear the time a finished recording takes

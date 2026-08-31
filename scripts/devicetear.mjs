@@ -29,6 +29,8 @@
 
 import puppeteer from 'puppeteer-core'
 
+import { FIREFOX } from './browser.mjs'
+
 import { createServer } from 'node:http'
 
 const flags = process.argv.slice(2)
@@ -128,7 +130,7 @@ const verdicts = []
 const launch = () =>
   puppeteer.launch({
     browser: 'firefox',
-    executablePath: '/usr/bin/firefox-nightly',
+    executablePath: FIREFOX,
     headless: false,
     extraPrefsFirefox: {
       'dom.webgpu.enabled': true,

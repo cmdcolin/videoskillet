@@ -93,6 +93,8 @@
 
 import puppeteer from 'puppeteer-core'
 
+import { FIREFOX } from './browser.mjs'
+
 import { execFileSync } from 'node:child_process'
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { createServer } from 'node:http'
@@ -375,7 +377,7 @@ const ms = x => (Number.isNaN(x) ? '   --' : `${x.toFixed(0).padStart(4)}ms`)
 
 const browser = await puppeteer.launch({
   browser: 'firefox',
-  executablePath: '/usr/bin/firefox-nightly',
+  executablePath: FIREFOX,
   headless: false,
   protocolTimeout: 600_000,
 })

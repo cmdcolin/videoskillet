@@ -42,23 +42,7 @@
 
 import puppeteer from 'puppeteer-core'
 
-import { existsSync } from 'node:fs'
-import { platform } from 'node:process'
-
-// Chrome, wherever this box keeps it. CHROME= overrides.
-const CHROMES =
-  platform === 'darwin'
-    ? [
-        '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
-        '/Applications/Chromium.app/Contents/MacOS/Chromium',
-      ]
-    : [
-        '/usr/bin/google-chrome',
-        '/usr/bin/chromium',
-        '/usr/bin/chromium-browser',
-      ]
-const chrome =
-  process.env.CHROME ?? CHROMES.find(p => existsSync(p)) ?? CHROMES[0]
+import { CHROME as chrome } from './browser.mjs'
 
 const args = process.argv.slice(2)
 const flag = (p, d) => args.find(a => a.startsWith(p))?.slice(p.length) ?? d
