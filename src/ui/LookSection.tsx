@@ -12,9 +12,9 @@ import type { Group, SliderDef } from './controls'
 
 // How many of the off-stock rows stand in the open before the rest go behind a
 // count. Six is about where the section stops being a summary and starts being
-// a second copy of the panel: "deep end" moves thirty-four controls, and
-// unfolded that is 700px of sidebar above the chain map — the exact reserve the
-// last two passes went to the trouble of taking out.
+// a second copy of the panel: "howlround loom" moves nineteen controls, and
+// unfolded that is 400px of sidebar above the chain map — the reserve the last
+// two passes went to the trouble of taking out.
 const CAP = 6
 
 // What the look on screen is actually made of: every control sitting off stock,

@@ -56,10 +56,6 @@ const STARTERS = [
   'mixerLoop',
   'rainbowStorm',
   'neonTube',
-  // The one that is not a single mechanism. It sits last because the others
-  // teach what the board does one fault at a time, and this one is the argument
-  // for why that is worth doing — every stage at once, interfering.
-  'deepEnd',
 ]
 const SHORTLIST_MAX = 8
 
@@ -71,8 +67,8 @@ function PresetsHelpDialog(props: { onClose: () => void }) {
     <Dialog title="Presets" size="prose" onClose={props.onClose}>
       <p className={ui.helpText}>
         Each preset is a named look that sets a whole bank of controls at once —
-        five for a simple fault, thirty-odd for “deep end” — spread across every
-        stage of the chain, because that is what it takes to recreate a
+        five for a simple fault, twenty for a whole-board look — spread across
+        every stage of the chain, because that is what it takes to recreate a
         particular signal fault or device. Hover one for what it does and how
         many controls it moves; “This look”, right below this section, then
         lists every one of them as a live row you can drag.
