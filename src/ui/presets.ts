@@ -894,6 +894,173 @@ export const PRESETS: PresetDef[] = [
     ],
   },
   {
+    name: 'warpInTheHighlights',
+    displayName: 'warp in the highlights',
+    group: 'Feedback loops',
+    blurb:
+      "The same key on the varactor instead of the multiplier. What comes back is not a colour the highlight never had — it is the highlight in the wrong place: the varactor pulls the loop's own delay by the brightness riding through it, and the key only lets the pulled return land where the picture was already lit. So a lit subject tears sideways into ribbons that repaint as they go, every 70 ns of pull being another 90 degrees of hue, and a dark subject or a saturated backing sits through it in register. Feedback that displaces geometry rather than manufacturing colour, and keyed so it displaces only what it was pointed at.",
+    patch: {
+      cfbMix: 0.8,
+      cfbGain: 0.98,
+      cfbDelayUs: 1,
+      cfbLines: 1,
+      cfbServoUs: 44,
+      cfbKey: 1,
+      cfbKeyLevel: 50,
+      cfbKeySoft: 12,
+      chromaGain: 1.3,
+      phosphor: 0.45,
+    },
+  },
+  {
+    name: 'warpInTheShadows',
+    displayName: 'warp in the shadows',
+    group: 'Feedback loops',
+    blurb:
+      "The varactor keyed the other way up, which lands it on the one thing a composite line keeps below every shadow: blanking, and the sync tip under that. The deepest part of the wire is what pulls the delay hardest, and now it is also the only part the key lets through — so the pull walks each line's sync into its neighbour's territory and the receiver's problems compound on their own. The frame shears into bands and rolls; a lit subject rides it photographic. The slice drifts, so which shadows are doing the pulling changes without anyone moving it.",
+    patch: {
+      cfbMix: 0.85,
+      cfbGain: 1,
+      cfbDelayUs: 0.8,
+      cfbLines: 2,
+      cfbServoUs: 36,
+      cfbKey: -1,
+      cfbKeyLevel: 30,
+      cfbKeySoft: 14,
+      chromaGain: 1.5,
+      phosphor: 0.45,
+    },
+    mod: [
+      { target: 'cfbKeyLevel', source: 'smooth', rateHz: 0.05, depth: 0.16 },
+    ],
+  },
+  {
+    name: 'rungsInTheLight',
+    displayName: 'rungs in the light',
+    group: 'Feedback loops',
+    blurb:
+      'The inverted loop and its sixty-line drop, but keyed — so the ladder of alternating-polarity generations is only built where the picture is lit, and the shadows underneath it never join in. What that does to the rungs is make them hard: with the whole frame feeding back the positive and negative laps overlap into vertical smear, and with only the lit areas feeding back each rung stands against unfed picture and keeps its edge. A subject comes back as a stack of plates in polarities the plate above it did not have.',
+    patch: {
+      cfbMix: 0.8,
+      cfbGain: -1.08,
+      cfbDelayUs: 1.2,
+      cfbLines: 60,
+      cfbRing: 0.9,
+      cfbKey: 1,
+      cfbKeyLevel: 48,
+      cfbKeySoft: 8,
+      chromaGain: 1.6,
+      phosphor: 0.3,
+    },
+  },
+  {
+    name: 'ringingInTheHighlights',
+    displayName: 'ringing in the highlights',
+    group: 'Feedback loops',
+    blurb:
+      "A resonant network bridged across the loop instead of a multiplier, brought just far enough that the round trip passes unity inside its band and the loop starts generating a pattern out of nothing. Unkeyed that pattern is the whole frame and the picture is gone. Keyed, the oscillation can only stand where the picture is bright — so a fine mesh grows on a white shirt and a lit window and stops at the edge of them, and the mesh is at the network's own frequency rather than at anything in the scene. The rest of the picture never learns the loop is oscillating.",
+    patch: {
+      cfbMix: 0.7,
+      cfbGain: 0.95,
+      cfbDelayUs: 0.3,
+      cfbLines: 1,
+      cfbFilterMHz: 2.6,
+      cfbFilterQ: 0.55,
+      cfbFilterBoost: 1.1,
+      cfbKey: 1,
+      cfbKeyLevel: 58,
+      cfbKeySoft: 8,
+      chromaGain: 1.4,
+      phosphor: 0.45,
+    },
+    // The slice, not the network: the mesh keeps its pitch and changes how much
+    // of the picture is allowed to carry it.
+    mod: [
+      { target: 'cfbKeyLevel', source: 'smooth', rateHz: 0.05, depth: 0.12 },
+    ],
+  },
+  {
+    name: 'chasingItsOwnColour',
+    displayName: 'chasing its own colour',
+    group: 'Feedback loops',
+    blurb:
+      'A chroma keyer in the loop return where the luma one was: the box slices the phase of the signal instead of its level, so what decides whether a region may carry on regenerating is the colour it came back as. That makes it self-limiting, because the loop delay is a hue rotation — a region regenerates, its own return spins a little further round the wheel every lap, and at some lap it leaves the wedge and gives up. The territory is then whatever has spun in behind it. Nothing draws the boundary, nothing holds it still, and the frame ends up shredded along its own colour edges rather than its brightness ones.',
+    patch: {
+      cfbMix: 0.8,
+      cfbGain: 0.95,
+      cfbDelayUs: 1.1,
+      cfbLines: 1,
+      cfbRing: 0.9,
+      cfbKey: 1,
+      cfbKeyAcceptDeg: 60,
+      cfbKeyHueDeg: 180,
+      cfbKeySoft: 10,
+      chromaGain: 1.6,
+      phosphor: 0.5,
+    },
+  },
+  {
+    name: 'carvedByTheLivePicture',
+    displayName: 'carved by the live picture',
+    group: 'Feedback loops',
+    blurb:
+      "The keyer's key input moved off the loop return and onto program, so the boundary is drawn by what is in front of the camera now rather than by what the loop was doing a generation ago. The trails still grow and still come back through the spectrum, and they are cut off crisply at the live subject's edge instead of smearing across it — the accumulation cannot follow a subject that moves, so a hand crossing the frame carves its own shape out of everything the loop has built. Compare it against the self-keyed version: same product, same delay, and the difference is only which cable the key is on.",
+    patch: {
+      cfbMix: 0.82,
+      cfbGain: 0.92,
+      cfbDelayUs: 1.1,
+      cfbLines: 1,
+      cfbRing: 1,
+      cfbKey: 1,
+      cfbKeyExt: 1,
+      cfbKeyLevel: 50,
+      cfbKeySoft: 10,
+      chromaGain: 1.8,
+      phosphor: 0.5,
+    },
+  },
+  {
+    name: 'theHoleTheSubjectKeeps',
+    displayName: 'the hole the subject keeps',
+    group: 'Feedback loops',
+    blurb:
+      'The live key inverted, so the loop is allowed everywhere the picture is not lit and the subject holds a clean hole in it. What fills the rest is generations of product beating against generations of product, which drains most of the colour out of itself and churns far faster than anything in the scene — fast enough that no two frames of it hold the same palette. The hole does not churn: it is redrawn from live picture every frame, so it stays photographic and stays wherever the subject went, and the boundary between the two is the only still thing on the screen.',
+    patch: {
+      cfbMix: 0.85,
+      cfbGain: 1,
+      cfbDelayUs: 0.8,
+      cfbLines: 2,
+      cfbRing: 1,
+      cfbKey: -1,
+      cfbKeyExt: 1,
+      cfbKeyLevel: 42,
+      cfbKeySoft: 12,
+      chromaGain: 1.6,
+      phosphor: 0.45,
+    },
+  },
+  {
+    name: 'itOnlyEatsTheRed',
+    displayName: 'it only eats the red',
+    group: 'Feedback loops',
+    blurb:
+      "Both of the keyer's connectors at once: it slices hue rather than level, and it slices the live picture rather than the loop's own past. So the loop is confined to a colour — 103 degrees is where red actually lands on the wheel the subcarrier carries — and confined to wherever that colour is right now. A red chair goes to rainbow striping and everything green or neutral beside it stays a photograph, with no mask anywhere and nothing tracking anything. Move the key hue and the loop changes its mind about which part of the room it is eating.",
+    patch: {
+      cfbMix: 0.86,
+      cfbGain: 1,
+      cfbDelayUs: 1.1,
+      cfbLines: 1,
+      cfbRing: 1,
+      cfbKey: 1,
+      cfbKeyExt: 1,
+      cfbKeyAcceptDeg: 40,
+      cfbKeyHueDeg: 103,
+      cfbKeySoft: 10,
+      chromaGain: 1.7,
+      phosphor: 0.5,
+    },
+  },
+  {
     name: 'servoWarp',
     displayName: 'servo warp',
     group: 'Feedback loops',
@@ -1721,6 +1888,32 @@ export const PRESETS: PresetDef[] = [
   // no longer a broken television. They are aimed at disagreeing across the
   // frame rather than pumping all of it together — eight heads at uneven
   // spacing, arcs that cluster, a loop ringing against its own rails.
+  {
+    name: 'everyColourButOne',
+    displayName: 'every colour but one',
+    group: 'Past the redline',
+    blurb:
+      "The loop's chroma keyer inverted, and that is not a small move: a wedge a hundred and forty degrees wide inverted leaves everything outside it regenerating, which is very nearly a loop with no key on it. What survives is one narrow band of hue and the rest of the frame goes over to product — including blanking and the sync tip, which no longer have a key holding them out, so the receiver loses the top of the picture to one timing and the bottom to another and a hard seam sits between them. The surviving hue walks, so which band of the picture is still a picture travels.",
+    patch: {
+      cfbMix: 0.62,
+      cfbGain: 0.95,
+      cfbDelayUs: 1.1,
+      cfbLines: 1,
+      cfbRing: 0.8,
+      cfbKey: -1,
+      cfbKeyAcceptDeg: 140,
+      cfbKeyHueDeg: 180,
+      cfbKeySoft: 12,
+      chromaGain: 1.5,
+      phosphor: 0.5,
+    },
+    // Parked mid-wheel so a quarter-span walk has room either side: the control
+    // clamps at 0 and 360, and a sweep into a clamp parks the surviving band
+    // off the end of the picture for most of its cycle.
+    mod: [
+      { target: 'cfbKeyHueDeg', source: 'smooth', rateHz: 0.04, depth: 0.25 },
+    ],
+  },
   {
     name: 'pastTheYoke',
     displayName: 'past the yoke',
