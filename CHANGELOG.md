@@ -2,6 +2,32 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [0.34.0](https://github.com/cmdcolin/videoskillet.js/compare/v0.33.2...v0.34.0) - 2026-08-31
+
+### Features
+- *(ui)* [`1ffd2a2`](https://github.com/cmdcolin/videoskillet.js/commit/1ffd2a263dacbeacc2b5b2f9b5f623c08c962cde) four presets where the picture is the control signal
+- *(ui)* [`92a857c`](https://github.com/cmdcolin/videoskillet.js/commit/92a857c4526cb7c10b05c80baaad49afc4386d02) three more content-driven presets, and push the first two harder
+- *(ui)* [`8071ba0`](https://github.com/cmdcolin/videoskillet.js/commit/8071ba0c31c69909547f34d3a5d829f2c250e1c6) give the two quiet presets something to do
+- *(ui)* [`15314eb`](https://github.com/cmdcolin/videoskillet.js/commit/15314eb3718012a604972c2dc003837edac84d7c) draw the default as a mark, beside the redline notches
+- *(signal)* [`8aad58a`](https://github.com/cmdcolin/videoskillet.js/commit/8aad58a31ccb9e9ea2695ae4a70b51023cd836f3) two connectors on the mixer loop's keyer
+- *(ui)* [`a189ee2`](https://github.com/cmdcolin/videoskillet.js/commit/a189ee260b674192099d31a981215886841064e8) nine looks from keying something other than the ring
+- *(ui)* [`19ba2d0`](https://github.com/cmdcolin/videoskillet.js/commit/19ba2d062238c5f2d721fd8507c251e811ff8e56) random message of the day in the about dialog
+
+### Fixes
+- *(ui)* [`e31ffec`](https://github.com/cmdcolin/videoskillet.js/commit/e31ffecd533382e2923612e9faaf129face974b8) a preset chip answers only the hand that is on it
+- *(ui)* [`03c545d`](https://github.com/cmdcolin/videoskillet.js/commit/03c545dfdb581c06f3d8fca6cee7cb44822a7c77) a preset chip lets go of a gesture it can no longer see
+- [`1e93347`](https://github.com/cmdcolin/videoskillet.js/commit/1e93347275d05e2328476144bfc1443d20685add) raise vitest global test timeout to 30s
+
+### Documentation
+- [`593c24a`](https://github.com/cmdcolin/videoskillet.js/commit/593c24a8a54bf9b8e7ccfd41ca59a9a88676cd99) retake doc screenshots for v0.33.2
+
+### Tests
+- *(ui)* [`25fe37c`](https://github.com/cmdcolin/videoskillet.js/commit/25fe37ca64aec34f1393b81b41ff63274006f8d7) pin the drift walk to a comparison, not a level
+
+### Other Changes
+- [`2f9ccf9`](https://github.com/cmdcolin/videoskillet.js/commit/2f9ccf98e40547cb3b843918da40221ac9671945) Bump deps
+- [`ab7d023`](https://github.com/cmdcolin/videoskillet.js/commit/ab7d0235ed84d31f5e7194ff0dfee6d2c6619961) Add motd
+
 ## [0.33.2](https://github.com/cmdcolin/videoskillet.js/compare/v0.33.1...v0.33.2) - 2026-08-31
 
 ### Features
