@@ -539,6 +539,14 @@ export function ControlGroup(props: { group: Group; defaultOpen?: boolean }) {
       defaultOpen={props.defaultOpen}
       openOnFilter
       dot={touched}
+      // A folded door keeps its accessories out of the way, and a stage left
+      // wandering has to say so from the outside: the count beside it cannot,
+      // since a hand on a slider moves it the same way drift does.
+      mark={
+        drifting ? (
+          <span className={styles.driftMark}>drifting</span>
+        ) : undefined
+      }
       help={
         <>
           {/* Only on a group that has something to put back — the same rule the

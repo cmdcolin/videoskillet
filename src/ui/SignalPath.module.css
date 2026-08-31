@@ -135,7 +135,10 @@
   border-top: 2px solid var(--rail);
   border-left: 2px solid var(--rail);
   border-bottom: 1px solid var(--border-faint);
-  background: color-mix(in srgb, var(--accent) 9%, var(--panel-bg));
+  /* Lit further than it was, because the groups under it are title bars in the
+     control face now (Section.module.css .headSub): at 9% over the panel's own
+     ground the stage read as the quietest thing inside itself. */
+  background: color-mix(in srgb, var(--accent) 22%, var(--ctl-face));
   /* And the panel's own ground painted above the strip, because a pinned one
      does not sit flush with the top of the panel. Measured on Firefox Nightly:
      `top: 0` lands the strip below the scroller's top *padding* rather than at

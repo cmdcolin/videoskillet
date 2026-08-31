@@ -81,6 +81,11 @@ export function Section(props: {
   // words — shown only while it is folded, where it is the reason folding is
   // free rather than a thing you have to open the section to check.
   summary?: string
+  // A state mark that rides with the title, so it survives a folded section
+  // hiding its accessories: a group left drifting is the case, and the count
+  // beside it cannot say so — drift moves controls off stock, and so does a
+  // hand on a slider.
+  mark?: ReactNode
   // Optional accessory (e.g. a ? explainer) beside the title, outside the
   // toggle button so its clicks are its own. Given as a function it also gets
   // the section's open state and a way to open it: an accessory that reveals
@@ -137,6 +142,10 @@ export function Section(props: {
           aria-expanded={shown}
           onClick={() => toggle()}
         >
+          {/* The disclosure mark leads the row. At the end of one it read as
+              punctuation on a heading — the panel's headers announced no fold
+              at all, and the three verbs beside them made the row a toolbar. */}
+          <span className={styles.caret}>{shown ? '▾' : '▸'}</span>
           <span className={styles.headTitle}>
             {props.title}
             {props.dot === undefined || props.dot === 0 ? null : (
@@ -148,16 +157,24 @@ export function Section(props: {
               {props.summary}
             </span>
           )}
-          <span className={styles.caret}>{shown ? '▾' : '▸'}</span>
         </button>
-        {typeof props.help === 'function'
-          ? props.help({
-              open: shown,
-              openSection: () => {
-                if (!shown) toggle()
-              },
-            })
-          : props.help}
+        {/* Beside the title rather than in it: a folded name gives up its tail
+            to the pointer (.headTitle), and the mark is the half that has to
+            survive that. Dropped while the section is open, where the accessory
+            it stands in for is on screen saying the same thing. */}
+        {props.mark === undefined ? null : (
+          <span className={styles.mark}>{props.mark}</span>
+        )}
+        <span className={styles.helpSlot}>
+          {typeof props.help === 'function'
+            ? props.help({
+                open: shown,
+                openSection: () => {
+                  if (!shown) toggle()
+                },
+              })
+            : props.help}
+        </span>
       </h3>
       {shown ? <NestedSections>{props.children}</NestedSections> : null}
     </div>

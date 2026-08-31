@@ -26,46 +26,88 @@
    the header alone and five of them read as five doors; open, the header is the
    lid over its own rows and the rows end where the fill does. */
 .sec {
-  margin: 3px 0;
-  border-radius: 3px;
+  margin: 4px 0;
+  border-radius: 4px;
   background: var(--panel-bg);
 }
 /* The open block's rows sit inside the fill, and the header spans back out over
    that padding — the same negative margin the stage's head uses to reach its
-   rail. */
+   rail. Its ground lifts off the folded ones, so the block you are working in
+   is the lit thing in the column. */
 .sec.secOpen {
   padding: 0 6px 6px;
+  background: color-mix(in srgb, var(--ctl-face) 35%, var(--panel-bg));
 }
 
-/* a group inside a section: same shape, one step quieter, and the block's own
-   top row rather than a heading with a rule under it */
+/* A group's header, as the door it is: the block's own title bar, in the same
+   face a filled control wears, so it reads as a thing to press from across the
+   panel. It was the panel's type on the panel's ground with a hairline under
+   it, which is a heading — nothing about it said it opened. */
 .headSub {
   font-weight: 600;
   color: var(--fg2);
   margin: 0;
-  padding: 4px 6px;
+  padding: 5px 8px;
   border-bottom: 0;
+  border-radius: 4px;
+  background: var(--ctl-face);
   letter-spacing: 0.04em;
   text-transform: uppercase;
   font-size: var(--fs-sm);
 }
 .headSub:hover {
   color: var(--fg);
-  background: color-mix(in srgb, var(--ctl-face) 55%, var(--panel-bg));
+  background: color-mix(in srgb, var(--fg4) 18%, var(--ctl-face));
 }
-/* The lid. Tinted off --accent the way the stage's own strip is
-   (SignalPath.module.css .stageRow .stageHead), at 6% against that one's 9% and
-   with the name left at --fg: level with it, a group would outrank the stage
-   holding it. */
+/* The lid: the same bar, two steps lighter and in white type. It lifts by value
+   and not by hue on purpose — the stage's own strip
+   (SignalPath.module.css .stageRow .stageHead) is the green band in this
+   picture, and a group tinted the same green read as a second stage rather than
+   as something inside one. */
 .sec.secOpen .headSub {
   margin: 0 -6px;
   color: var(--fg);
-  background: color-mix(in srgb, var(--accent) 6%, transparent);
-  border-bottom: 1px solid var(--border-faint);
-  border-radius: 3px 3px 0 0;
+  background: color-mix(in srgb, var(--fg4) 36%, var(--ctl-face));
+  border-radius: 4px 4px 0 0;
 }
 .sec.secOpen .headSub:hover {
-  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  background: color-mix(in srgb, var(--fg4) 46%, var(--ctl-face));
+}
+
+/* What a folded group says, and what it leaves out. The three verbs are for the
+   group you are working in: on five folded doors they were fifteen words of
+   chrome, they crowded every name into three wrapped lines, and they read as a
+   toolbar rather than as a row that opens. Folded, the door carries its name,
+   its count and whatever state mark it has; the verbs come back under the
+   pointer, and with them the name gives up its tail rather than the row growing
+   — which keeps a column of doors from jumping about as you run down it. */
+.helpSlot {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+.sec:not(.secOpen) .helpSlot {
+  display: none;
+}
+.sec:not(.secOpen):hover .helpSlot,
+.sec:not(.secOpen):focus-within .helpSlot {
+  display: flex;
+}
+.sec:not(.secOpen) .headTitle {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* The state mark, at the end of a folded door's row. */
+.mark {
+  margin-left: auto;
+  flex-shrink: 0;
+  letter-spacing: normal;
+  text-transform: none;
+}
+.sec.secOpen .mark {
+  display: none;
 }
 /* The header's own toggle: a real button, so a section collapses from the
    keyboard and reports aria-expanded. It carries the heading's type rather than
@@ -81,17 +123,25 @@
      measured at 54px of overlap. */
   min-width: 0;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
   color: inherit;
   letter-spacing: inherit;
   text-transform: inherit;
   text-align: left;
 }
+/* The disclosure mark, in a column of its own at the head of the row: a fixed
+   width so every name in a stack of doors starts at the same x, and the mark is
+   the first thing the eye lands on rather than a glyph trailing a heading. */
 .caret {
+  flex-shrink: 0;
+  width: 11px;
+  text-align: center;
   color: var(--fg3);
   font-size: var(--fs-md);
+}
+.headSub:hover .caret {
+  color: var(--fg);
 }
 /* The title, and the order the parts of a cramped header give way in: the
    summary first, then the name wraps, and the count and the caret never move.

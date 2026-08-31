@@ -62,7 +62,7 @@
   composes: bare from './ui.module.css';
   padding: 0 2px;
   line-height: 1;
-  color: var(--fg4);
+  color: var(--fg3);
 }
 .dice:hover {
   color: var(--edit-hi);
@@ -76,7 +76,7 @@
   composes: bare from './ui.module.css';
   padding: 0 2px;
   line-height: 1;
-  color: var(--fg4);
+  color: var(--fg3);
 }
 .drift:hover {
   color: var(--edit-hi);
@@ -84,6 +84,14 @@
 .driftOn,
 .driftOn:hover {
   color: var(--edit);
+}
+
+/* The same fact on a folded door, where the button itself is out of sight
+   (Section.module.css .mark). A word rather than the lit button, because
+   nothing here is pressable: stopping it is one click away, on the door. */
+.driftMark {
+  color: var(--edit);
+  font-size: var(--fs-sm);
 }
 
 /* reveals the sliders a direct-manipulation miniature stands in for, and the
