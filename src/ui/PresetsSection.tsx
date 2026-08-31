@@ -222,31 +222,32 @@ function PresetButton(props: {
 // board rather than on presets, and they moved to the LookBar under the
 // masthead; this section had grown to a quarter of the sidebar, and they were
 // the part of it that was not presets.
-export function PresetsSection(props: {
-  controls: Controls
+// The chips, and the line that describes whichever one is under the pointer.
+// Its own component so the hover dies with the row it names. Section unmounts
+// its children when it folds, and a chip that vanishes from under a resting
+// pointer fires no pointerleave — so a `hovered` held a level up outlived the
+// chips it was naming: Escape closes the open stage, which folds this section,
+// and reopening it found the caption still describing a chip nobody was on.
+function PresetCatalog(props: {
+  active: PresetDef | undefined
   lastPreset: string | null
   weights: PresetWeights
-  // The stage the panel has open, as a token for "browsing is over" — see
-  // Section's `foldOn`. The catalog hands its 162px to the stage that was just
-  // opened over it, and is a click away for the rest of the session.
-  openStage: string | null
+  showAll: boolean
+  onShowAll: () => void
   onApplyPreset: (name: string, patch: Partial<Controls>) => void
   onMixStart: () => void
   onMix: (name: string, w: number) => void
 }) {
-  const [showHelp, setShowHelp] = useState(false)
   const [hintDismissed, setHintDismissed] = usePersistedFlag(HINT_STORE)
-  const [showAll, setShowAll] = usePersistedFlag(ALL_STORE)
   const { recent, noteUse } = useRecentPresets()
   // The hovered preset's blurb takes over the caption line: faster to browse
   // than the tooltip delay, and the only way touch users ever see the blurbs.
   const [hovered, setHovered] = useState<string | null>(null)
   const hoveredDef = PRESETS.find(p => p.name === hovered)
-  const active = matchPreset(props.controls)
   const presetCaption = hoveredDef
     ? hoveredDef.blurb
-    : active
-      ? active.blurb
+    : props.active
+      ? props.active.blurb
       : props.lastPreset === null
         ? // One line, not two. The caption's job is describing the chip under the
           // pointer; this is only what it says when there is no chip to describe,
@@ -262,7 +263,7 @@ export function PresetsSection(props: {
   // is not a switch, it is N controls moving together. "clean" has an empty
   // patch and gets no badge — it is the reset, and "0 controls" would read as
   // broken rather than as "puts everything back".
-  const captionDef = hoveredDef ?? active
+  const captionDef = hoveredDef ?? props.active
   const captionTouches =
     captionDef === undefined ? 0 : Object.keys(captionDef.patch).length
 
@@ -285,8 +286,8 @@ export function PresetsSection(props: {
       key={p.name}
       def={p}
       weight={props.weights.get(p.name) ?? 0}
-      active={active?.name === p.name}
-      edited={active === undefined && props.lastPreset === p.name}
+      active={props.active?.name === p.name}
+      edited={props.active === undefined && props.lastPreset === p.name}
       onApply={(name, patch) => {
         noteUse(name)
         props.onApplyPreset(name, patch)
@@ -301,50 +302,7 @@ export function PresetsSection(props: {
   )
 
   return (
-    <Section
-      title="Presets"
-      foldOn={props.openStage}
-      // What the fold above costs you: the chips are gone and this is the line
-      // that says which of them you are on, so folding the catalog is free in
-      // the same way folding any other section is.
-      summary={
-        active
-          ? presetLabel(active)
-          : props.lastPreset === null
-            ? undefined
-            : `from "${presetLabelFor(props.lastPreset)}"`
-      }
-      help={({ openSection }) => (
-        <>
-          <button
-            className={cx(styles.allBtn, showAll && styles.allBtnOn)}
-            aria-pressed={showAll}
-            title={
-              showAll
-                ? 'fold the catalog back to your shortlist'
-                : 'every preset, grouped by the kind of fault it models'
-            }
-            // Unfolding the catalog with the section itself folded put 74 chips
-            // somewhere you can't see, so the button read as broken. Asking for
-            // the catalog is asking to see it.
-            onClick={() => {
-              if (!showAll) openSection()
-              setShowAll(!showAll)
-            }}
-          >
-            all
-            <span className={styles.allCount}>{PRESETS.length}</span>
-          </button>
-          <button
-            className={styles.helpBtn}
-            title="what are presets?"
-            onClick={() => setShowHelp(true)}
-          >
-            ?
-          </button>
-        </>
-      )}
-    >
+    <>
       {hintDismissed ? null : (
         <div className={cx(ui.hint, ui.dismissHint)}>
           <span className={ui.hintIcon}>
@@ -361,19 +319,19 @@ export function PresetsSection(props: {
           </button>
         </div>
       )}
-      {showAll ? null : (
+      {props.showAll ? null : (
         <div>
           {shortlist.map(renderButton)}
           <button
             className={styles.moreChip}
             title="every preset, grouped by the kind of fault it models"
-            onClick={() => setShowAll(true)}
+            onClick={() => props.onShowAll()}
           >
             + {PRESETS.length - shortlist.length} more…
           </button>
         </div>
       )}
-      {showAll
+      {props.showAll
         ? PRESET_GROUPS.map(grp => (
             <div key={grp.name} className={styles.presetGroup}>
               <div className={styles.grpLabel}>{grp.name}</div>
@@ -393,9 +351,98 @@ export function PresetsSection(props: {
         )}
         {presetCaption}
       </div>
+    </>
+  )
+}
+
+export function PresetsSection(props: {
+  controls: Controls
+  lastPreset: string | null
+  weights: PresetWeights
+  // The stage the panel has open, as a token for "browsing is over" — see
+  // Section's `foldOn`. The catalog hands its 162px to the stage that was just
+  // opened over it, and is a click away for the rest of the session.
+  openStage: string | null
+  onApplyPreset: (name: string, patch: Partial<Controls>) => void
+  onMixStart: () => void
+  onMix: (name: string, w: number) => void
+}) {
+  const [showHelp, setShowHelp] = useState(false)
+  const [showAll, setShowAll] = usePersistedFlag(ALL_STORE)
+  const active = matchPreset(props.controls)
+
+  return (
+    <>
+      <Section
+        title="Presets"
+        foldOn={props.openStage}
+        // What the fold above costs you: the chips are gone and this is the line
+        // that says which of them you are on, so folding the catalog is free in
+        // the same way folding any other section is.
+        summary={
+          active
+            ? presetLabel(active)
+            : props.lastPreset === null
+              ? undefined
+              : `from "${presetLabelFor(props.lastPreset)}"`
+        }
+        help={({ openSection }) => (
+          <>
+            <button
+              className={cx(styles.allBtn, showAll && styles.allBtnOn)}
+              aria-pressed={showAll}
+              title={
+                showAll
+                  ? 'fold the catalog back to your shortlist'
+                  : 'every preset, grouped by the kind of fault it models'
+              }
+              // Unfolding the catalog with the section itself folded put 74 chips
+              // somewhere you can't see, so the button read as broken. Asking for
+              // the catalog is asking to see it.
+              onClick={() => {
+                if (!showAll) openSection()
+                setShowAll(!showAll)
+              }}
+            >
+              all
+              <span className={styles.allCount}>{PRESETS.length}</span>
+            </button>
+            <button
+              className={styles.helpBtn}
+              title="what are presets?"
+              onClick={() => setShowHelp(true)}
+            >
+              ?
+            </button>
+          </>
+        )}
+      >
+        {/* Keyed on the switch, so the hover is rebuilt along with the row it
+            names: `all` destroys every chip in the shortlist and mounts the
+            grouped catalog in its place, the chip under the pointer among them,
+            and a destroyed chip fires no pointerleave. Chrome then held the
+            stale name for the rest of the session; Firefox re-hit-tested its
+            way out. */}
+        <PresetCatalog
+          key={showAll ? 'catalog' : 'shortlist'}
+          active={active}
+          lastPreset={props.lastPreset}
+          weights={props.weights}
+          showAll={showAll}
+          onShowAll={() => setShowAll(true)}
+          onApplyPreset={props.onApplyPreset}
+          onMixStart={props.onMixStart}
+          onMix={props.onMix}
+        />
+      </Section>
+      {/* Outside the Section rather than among its children: the ? that opens
+          this rides the header, which is on screen whether or not the section is
+          folded, so a dialog held in the body had nowhere to open from — the
+          button did nothing until the section was unfolded, and then the dialog
+          appeared on its own. */}
       {showHelp ? (
         <PresetsHelpDialog onClose={() => setShowHelp(false)} />
       ) : null}
-    </Section>
+    </>
   )
 }
