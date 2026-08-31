@@ -209,15 +209,61 @@ export const PRESETS: PresetDef[] = [
     displayName: 'hue rides the light',
     group: 'Tape wear',
     blurb:
-      "The video amplifier's gain and its delay are both bent against the brightness they are working on, which is what every VTR spec sheet called DG and DP. Subcarrier riding bright picture comes through smaller and later than the same colour on dark picture, so saturation drains out of the highlights while hue swings with the luma underneath it. Burst sits at blanking where the error is zero, so the decoder's reference never moves and no tint knob takes this back out: a face turns one way in the light and the other in the shadow, and it tracks the picture because the picture is what sets it.",
+      "The video amplifier's gain and its delay are both bent against the brightness they are working on, which is what every VTR spec sheet called DG and DP — and this is the third copy through it, so each generation rotates the last one's hue again by the light it is carrying. Subcarrier riding bright picture comes through smaller and later than the same colour on dark picture, so saturation drains out of the highlights while hue swings with the luma underneath it, and three passes take that from a wrongness to a palette: a red chair lit from above turns gold at the top and holds brown underneath. Burst sits at blanking where the error is zero, so the decoder's reference never moves and no tint knob takes any of it back out.",
     patch: {
       diffPhaseDeg: 52,
       diffGain: 0.75,
+      dubGens: 3,
       lumaMHz: 3.2,
       lumaPeak: 1.1,
       chromaGain: 1.5,
       noiseIre: 1.5,
     },
+  },
+  {
+    name: 'overDeviatedWhite',
+    displayName: 'over-deviated white',
+    group: 'Tape wear',
+    blurb:
+      "A deck whose white clip is set too hot, with its own sharpener making the edges that undo it. Brightness is recorded as FM with the video pre-emphasized, so a hard dark-to-bright edge overshoots the deviation the head and tape can carry, and past the response cliff the discriminator folds back: more frequency out as less video, which is a black streak trailing every bright edge and smearing a microsecond rightward as the deemphasis recovers. Colour is a separate recording on its own carrier, so it rides straight through the fold and the streaks come out saturated over black. The threshold is re-decided per sample per frame off the demod's own noise, so the comets boil where the picture has detail and hold still where it does not.",
+    patch: {
+      fmOverdev: 0.92,
+      fmStreakUs: 0.7,
+      colorUnderMix: 1,
+      dubGens: 2,
+      lumaMHz: 3,
+      // Past the redline, and it is the sharpener that feeds the fold: the
+      // overshoot it lays on every edge is what runs past the deviation the
+      // tape can carry, so the two mechanisms are one fault at two stages.
+      lumaPeak: 4,
+      chromaGain: 1.7,
+      chromaNoiseIre: 14,
+      noiseIre: 2,
+    },
+  },
+  {
+    name: 'oneLineBack',
+    displayName: 'one line back',
+    group: 'Tape wear',
+    blurb:
+      'Binder hydrolysis, and the circuit that is supposed to hide half of it. The same failure does two things at once: the oxide sheds, so the head reads nothing several times a line, and the tape grabs the drum until the tension breaks it free — a relaxation oscillator, which is bands of shear leaning further line by line and then snapping back. Where the head read nothing the compensator patches the gap from a delay line holding the line above, and a line of NTSC is 227.5 subcarrier cycles, so the patch arrives exactly half a cycle out of phase: invisible in brightness, and in the complementary hue. That is why a shedding tape on a cheap deck streaks in colours the scene never had rather than in white. The chroma AGC lags a whole frame-part behind, so colour blooms back through each scarred band instead of snapping, and where two dropouts stack the delay line is holding a line that lost the same samples — there the raw dropout shows through.',
+    patch: {
+      dropoutRate: 120,
+      dropoutLenUs: 30,
+      dropoutComp: 1,
+      tbStickNs: 2500,
+      colorUnderMix: 1,
+      accLagLines: 90,
+      chromaNoiseIre: 14,
+      lumaMHz: 2.9,
+      noiseIre: 2.5,
+      tbJitterNs: 120,
+    },
+    // Oxide sheds in patches rather than evenly, so the rate walks: stretches
+    // the compensator keeps up with, stretches where it cannot.
+    mod: [
+      { target: 'dropoutRate', source: 'smooth', rateHz: 0.05, depth: 0.12 },
+    ],
   },
   {
     name: 'broadcast',
@@ -434,12 +480,14 @@ export const PRESETS: PresetDef[] = [
     displayName: 'line nineteen',
     group: 'Decoder',
     blurb:
-      'A VIR set trimming itself off the reference stamped on line 19, fed a signal whose amplifier is bent against brightness. The reference sits at burst phase on a 70 IRE pedestal, so the set rotates and re-gains the whole picture until that one level decodes right — and a correction that is exact at 70 IRE is a correction that is wrong everywhere else. What was already near the pedestal comes back true while everything under it leans the other way instead: greens and skin recover as a red goes magenta, which is the picture telling you where the reference sat. The saturation half makes the same trade, since a reference the amplifier compressed reads as a weak one and a weak reference is a set turning colour up. The loop answers over a second and a half, so the trimmer drifts and the whole frame follows it that far behind.',
+      'A VIR set trimming itself off the reference stamped on line 19, handed a third-generation dub whose amplifier is bent against brightness. The reference sits at burst phase on a 70 IRE pedestal, so the set rotates and re-gains the whole picture until that one level decodes right — and a correction that is exact at 70 IRE is a correction that is wrong everywhere else. What was already near the pedestal comes back true while everything under it leans the other way instead: the window returns to green as the red chair goes electric magenta, which is the picture telling you where the reference sat. The saturation half is the reason none of it is subtle. Three generations of colour-under have eaten the reference as well as the picture, and a weak reference reads to the corrector as a set that needs more colour — so a worn dub arrives garish rather than washed out, which is the opposite of what the tape did to it.',
     patch: {
       vir: 1,
       virLag: 90,
-      diffPhaseDeg: 34,
+      diffPhaseDeg: 45,
       diffGain: 0.5,
+      dubGens: 3,
+      colorUnderMix: 1,
       chromaGain: 1.2,
       noiseIre: 1.2,
     },
@@ -448,6 +496,25 @@ export const PRESETS: PresetDef[] = [
     // reference was a second and a half ago, never where it is now.
     mod: [
       { target: 'diffPhaseDeg', source: 'smooth', rateHz: 0.04, depth: 0.2 },
+    ],
+  },
+  {
+    name: 'collapsedAxes',
+    displayName: 'collapsed axes',
+    group: 'Decoder',
+    blurb:
+      'A cheap decoder with its whole colour reference out. The two demodulators sit 90° apart only because that network says so, and here they have drifted toward reading the same phase twice, which squashes the colour plane onto a single line: this shears the wheel rather than rotating it, so hues that were opposite stop being opposite, some come through at full strength and their neighbours land somewhere nothing in the scene was. The crystal is pulled a few kilohertz off with it, so hue also ramps along every line, and the reconstruction lattice is sampling the result four samples coarse, which lays the whole squashed palette down in blocks. The guns are left to hit their own rails, so what survives arrives fluorescent. And the drift walks: down to both axes reading as one, up through quadrature and out the far side where the plane stretches and folds, so green comes back gold while nothing in the picture has moved.',
+    patch: {
+      demodAxisDeg: 30,
+      scDetuneKHz: 6,
+      chromaCoarse: 4,
+      chromaGain: 2.6,
+      matrixClip: 1,
+      phosphor: 0.5,
+      noiseIre: 1.2,
+    },
+    mod: [
+      { target: 'demodAxisDeg', source: 'sine', rateHz: 0.025, depth: 0.42 },
     ],
   },
   {
