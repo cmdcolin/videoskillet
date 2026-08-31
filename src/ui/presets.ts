@@ -670,6 +670,64 @@ export const PRESETS: PresetDef[] = [
     mod: [{ target: 'cfbRing', source: 'smooth', rateHz: 0.08, depth: 0.25 }],
   },
   {
+    name: 'ringLadder',
+    displayName: 'ring ladder',
+    group: 'Feedback loops',
+    blurb:
+      'The loop offset two dozen lines a lap, with the return multiplied against the live program rather than summed into it. The offset is what stacks generations down the frame; the multiplier is what makes each one a product of the band above it and whatever the picture is doing there now, so instead of a ladder of copies the frame fills with blocks of colour at frequencies nothing in the chain is carrying.',
+    patch: {
+      cfbMix: 0.8,
+      cfbGain: 1.02,
+      cfbDelayUs: 1.4,
+      cfbLines: 24,
+      cfbRing: 0.7,
+      chromaGain: 1.4,
+      phosphor: 0.5,
+    },
+    // Walking the offset walks the rung spacing, so the mosaic re-lays itself
+    // at a new pitch rather than sitting where the first lap put it.
+    mod: [
+      { target: 'cfbLines', source: 'triangle', rateHz: 0.03, depth: 0.04 },
+    ],
+  },
+  {
+    name: 'ringStorm',
+    displayName: 'ring storm',
+    group: 'Feedback loops',
+    blurb:
+      'Feedback and a multiplier, with the depth of the multiply on a Lorenz attractor. Summed, a loop hands back what it was given; multiplied, every lap beats the last generation against the live one and folds frequencies in that neither carried, then sends the products round to be multiplied again. The knob deciding between those two is being walked by something that never returns to where it was, so the loop is never in the same regime twice — and the peak hold keeps each state on the glass long enough for the next one to multiply it.',
+    patch: {
+      cfbMix: 0.78,
+      cfbGain: 1,
+      cfbDelayUs: 0.9,
+      cfbLines: 2,
+      cfbRing: 0.55,
+      cfbTrail: 0.8,
+      chromaGain: 1.5,
+      phosphor: 0.6,
+    },
+    mod: [{ target: 'cfbRing', source: 'lorenz', rateHz: 0.6, depth: 0.45 }],
+  },
+  {
+    name: 'ringOnTheBeat',
+    displayName: 'ring on the beat',
+    group: 'Feedback loops',
+    blurb:
+      'The same two mechanisms with the bass deciding between them. The loop rests as a plain echo — delayed, offset, summed — and every kick throws the multiplier in for as long as the envelope lasts, so the trails that were accumulating are suddenly beating against the live frame and come back in sum-and-difference colour. It settles between hits, which is what makes the hits read: patch something with a low end into the audio input.',
+    patch: {
+      cfbMix: 0.72,
+      cfbGain: 1.02,
+      cfbDelayUs: 0.5,
+      cfbLines: 3,
+      cfbTrail: 0.6,
+      chromaGain: 1.4,
+      phosphor: 0.55,
+    },
+    // The bass-onset follower rather than an LFO: this is the one control here
+    // that should move on the music instead of on a clock.
+    mod: [{ target: 'cfbRing', source: 'hit', rateHz: 1, depth: 0.7 }],
+  },
+  {
     name: 'servoWarp',
     displayName: 'servo warp',
     group: 'Feedback loops',
@@ -803,6 +861,24 @@ export const PRESETS: PresetDef[] = [
       bDetuneHz: 120,
       bRollLps: 0.2,
       hHold: 0.22,
+      noiseIre: 2,
+    },
+  },
+  {
+    name: 'ringMix',
+    displayName: 'ring mix',
+    group: 'A/B mixing',
+    blurb:
+      'Both faders nearly shut and the ring mod up, so the two composite signals barely meet in the summing amplifier and meet properly only in the multiplier. Two subcarriers multiplied land colour at their sum and their difference, so the screen comes back in hues neither source is carrying — and the product of two sync tips is a bright spike rather than a sync tip, so the receiver is left hunting for an edge wherever the two decks happen to agree.',
+    patch: {
+      aGain: 0.3,
+      bGain: 0.15,
+      bRing: 0.8,
+      bDetuneHz: 25,
+      bLineHz: 0.4,
+      bRollLps: 0.05,
+      hHold: 0.3,
+      chromaGain: 1.4,
       noiseIre: 2,
     },
   },
@@ -1063,6 +1139,53 @@ export const PRESETS: PresetDef[] = [
       synthLevel: 1.4,
       lumaPeak: 1.1,
       chromaGain: 1.2,
+    },
+  },
+  {
+    name: 'ringPlaid',
+    displayName: 'ring plaid',
+    group: 'Circuit bent',
+    blurb:
+      "Both synth oscillators into the balanced multiplier and the result laid over the picture — one fitting eight cycles across a line, the other twenty-one down the frame, so what comes out is a weave neither of them contains. The picture's own brightness is on oscillator A's frequency input, which pulls the bars running across the line tighter through the highlights and lets them out through the shadows, so the fabric is woven at the image's own contours with nothing anywhere drawing an edge.",
+    patch: {
+      synthOver: 0.7,
+      synthMix: 2,
+      synthShape: 2,
+      // Eight cycles across a line and twenty-one down the frame, both a little
+      // off the exact multiple: the weave leans and creeps instead of standing
+      // still like something drawn.
+      synthAHz: 125800,
+      synthBHz: 1260,
+      synthFm: 80000,
+      synthLevel: 1.8,
+      synthColor: 0.8,
+      chromaGain: 1.3,
+    },
+    // How hard the picture pulls the oscillator, walked slowly: the weave
+    // tightens and loosens over the image while the image holds still.
+    mod: [{ target: 'synthFm', source: 'smooth', rateHz: 0.05, depth: 0.12 }],
+  },
+  {
+    name: 'twoMultipliers',
+    displayName: 'two multipliers',
+    group: 'Circuit bent',
+    blurb:
+      "A ring modulator in the synth feeding a ring modulator in the loop. The first one beats two oscillators against each other and lays the product over the picture; the second beats that against the machine's own last frame, so every product is an input to the next multiply. Two balanced bridges in series is where a spectrum stops being a list of frequencies — nothing on screen is at a frequency either oscillator is set to, and the pattern reorganises itself every few seconds without a single control moving.",
+    patch: {
+      synthOver: 0.6,
+      synthMix: 2,
+      synthShape: 0,
+      synthAHz: 15754,
+      synthBHz: 900,
+      synthLevel: 1.5,
+      synthColor: 0.6,
+      cfbMix: 0.6,
+      cfbGain: 0.98,
+      cfbDelayUs: 0.28,
+      cfbLines: 1,
+      cfbRing: 0.8,
+      chromaGain: 1.3,
+      phosphor: 0.45,
     },
   },
   {
