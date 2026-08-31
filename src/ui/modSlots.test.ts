@@ -497,7 +497,7 @@ describe('gateRate', () => {
 })
 
 describe('what a routed row says about its routing', () => {
-  const routing = { ...EMPTY_SLOT, target: 'bendAmount' as const, rateHz: 0.5 }
+  const routing = { ...EMPTY_SLOT, target: 'bendUs' as const, rateHz: 0.5 }
 
   it('names the source and the rate it is running at', () => {
     expect(modReading(routing, null)).toBe('sine 0.5Hz')
@@ -536,7 +536,7 @@ describe('what a routed row says about its routing', () => {
 })
 
 describe('the band a routed row draws on its track', () => {
-  const routing = { ...EMPTY_SLOT, target: 'bendAmount' as const, depth: 0.3 }
+  const routing = { ...EMPTY_SLOT, target: 'bendUs' as const, depth: 0.3 }
 
   it('hands over the depth the engine will use, not the one that was dialed', () => {
     // applyMod swings by `depth * master`, so a fader at half draws a band at

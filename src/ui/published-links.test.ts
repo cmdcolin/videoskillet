@@ -8,7 +8,7 @@ import type { ControlKey } from '../core/controls'
 
 import { readFileSync } from 'node:fs'
 
-// The links the project hands strangers: six demos in the README. The
+// The links the project hands strangers: seven demos in the README. The
 // getting-started page carried the hero patch until it was rewritten and now
 // carries none, but it is still read here so that one added back is covered.
 // They are packed, which is what took them from 400-950 characters to 130-230 —
@@ -35,7 +35,7 @@ const published = [
 ]
 
 test('the project publishes the links it means to', () => {
-  expect(published.length).toBe(6)
+  expect(published.length).toBe(7)
 })
 
 test.each(published)('%s: %s', (_page, query) => {

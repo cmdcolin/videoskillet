@@ -48,6 +48,13 @@ const widest = (look: Controls, anchor: Controls): number =>
     ),
   )
 
+// Room for the two 960-leg walks below. They are 5760 rolls over the panel's
+// whole 248 controls, and a roll costs a `toFixed` per control on its way back
+// through `snapToStep` — about eleven seconds of arithmetic, against a default
+// timeout of five. The number is the claim's, not the machine's: shortening the
+// walk is what the walk is here to refuse.
+const LONG_WALK_MS = 60_000
+
 describe('a leg', () => {
   it('keeps every control in range and every mode on a whole value', () => {
     for (const rand of [() => 0, () => 1, () => 0.5, rngFor(3)]) {
@@ -116,22 +123,26 @@ describe('a leg', () => {
   // not a tolerance: the free walk drags a control the entire width of its
   // track and averages four times the spread, which is a board with every fault
   // in the rig switched on rather than the look somebody left running.
-  it('settles into a neighbourhood where a free nudge runs away', () => {
-    for (let seed = 1; seed <= 3; seed++) {
-      const rand = rngFor(seed)
-      let tethered: Controls = DEFAULT_CONTROLS
-      let free: Controls = DEFAULT_CONTROLS
-      for (let i = 0; i < 960; i++) {
-        tethered = driftLeg(tethered, DEFAULT_CONTROLS, SLIDERS, rand)
-        free = mutate(free, SLIDERS, DRIFT_AMOUNT, rand)
-      }
+  it(
+    'settles into a neighbourhood where a free nudge runs away',
+    () => {
+      for (let seed = 1; seed <= 3; seed++) {
+        const rand = rngFor(seed)
+        let tethered: Controls = DEFAULT_CONTROLS
+        let free: Controls = DEFAULT_CONTROLS
+        for (let i = 0; i < 960; i++) {
+          tethered = driftLeg(tethered, DEFAULT_CONTROLS, SLIDERS, rand)
+          free = mutate(free, SLIDERS, DRIFT_AMOUNT, rand)
+        }
 
-      expect(spread(tethered, DEFAULT_CONTROLS)).toBeLessThan(0.08)
-      expect(widest(tethered, DEFAULT_CONTROLS)).toBeLessThan(0.8)
-      expect(spread(free, DEFAULT_CONTROLS)).toBeGreaterThan(0.15)
-      expect(widest(free, DEFAULT_CONTROLS)).toBeGreaterThan(0.85)
-    }
-  })
+        expect(spread(tethered, DEFAULT_CONTROLS)).toBeLessThan(0.08)
+        expect(widest(tethered, DEFAULT_CONTROLS)).toBeLessThan(0.8)
+        expect(spread(free, DEFAULT_CONTROLS)).toBeGreaterThan(0.15)
+        expect(widest(free, DEFAULT_CONTROLS)).toBeGreaterThan(0.85)
+      }
+    },
+    LONG_WALK_MS,
+  )
 
   // Not so tethered that the mode does nothing: an hour in, something on the
   // board has to have gone somewhere you would notice.
