@@ -4,7 +4,7 @@
 // `dist/guide/` by scripts/build-guide.mjs at build time, so `./guide/` is a
 // 404 under `pnpm dev` — which is where these links get clicked while anyone is
 // working on them.
-const SITE = 'https://cmdcolin.github.io/videoskillet/'
+const SITE = 'https://videoskillet.com/'
 
 export const GUIDE_URL = `${SITE}guide/`
 export const REPO_URL = 'https://github.com/cmdcolin/videoskillet'

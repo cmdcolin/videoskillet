@@ -7,7 +7,7 @@ glitches, not pseudo-effects that are drawn on top of the image
 It does require WebGPU which requires a fairly recent browser, try Firefox
 Nightly or Chrome Canary if you have trouble with your default browser
 
-Visit https://cmdcolin.github.io/videoskillet/
+Visit https://videoskillet.com/
 
 ## What's on screen
 

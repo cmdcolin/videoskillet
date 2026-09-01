@@ -60,7 +60,7 @@ const S3_PREFIX = 's3://cmdcolinphotos/phosphene/'
 const CLIP_BASE = 'https://cmdcolinphotos.s3.amazonaws.com/phosphene/'
 // Where a figure's "open this in the app" link points: the same params this
 // shot was captured with, against the deployed build.
-const LIVE_BASE = 'https://cmdcolin.github.io/videoskillet/'
+const LIVE_BASE = 'https://videoskillet.com/'
 
 // Captured at 2x so the images stay sharp on a HiDPI screen; JPEG shots are
 // then fit to this width, which is still ~2x the column any doc renders them in.
