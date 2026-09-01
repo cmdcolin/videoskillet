@@ -163,6 +163,7 @@
 /* the take's duration: a value you cycle, so it reads as a reading rather than
    as another key */
 .rate {
+  composes: tap from './ui.module.css';
   composes: bare from './ui.module.css';
   margin-left: auto;
   padding: 4px 2px;

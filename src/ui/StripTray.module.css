@@ -38,6 +38,7 @@
 }
 
 .disclose {
+  composes: tap from './ui.module.css';
   display: flex;
   align-items: center;
   gap: 5px;
@@ -94,6 +95,7 @@
    whether ▶ is going to start any music — so it wears the panel's prose grey
    and only lifts under the pointer, where it is the picker. */
 .track {
+  composes: tap from './ui.module.css';
   font-size: var(--fs-sm);
   color: var(--fg3);
   padding: 3px 6px;
@@ -117,6 +119,7 @@
 }
 
 .step {
+  composes: tap from './ui.module.css';
   color: var(--fg3);
   font-size: var(--fs);
   line-height: 1;
@@ -136,6 +139,7 @@
    it, so it wears the prose grey the track name does and lifts under the
    pointer — the accent is reserved for the ● that is actually rolling. */
 .tape {
+  composes: tap from './ui.module.css';
   display: flex;
   align-items: center;
   gap: 3px;
@@ -167,6 +171,7 @@
 /* Quiet, and last: the seed is a thing to read off and write down rather than a
    control, right up until the moment it is the one button that matters. */
 .seed {
+  composes: tap from './ui.module.css';
   font-family: var(--mono);
   font-size: var(--fs-xs);
   color: var(--fg4);

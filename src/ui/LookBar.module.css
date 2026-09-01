@@ -148,6 +148,7 @@
    carries one: what it opens says what it is, and a caret this size beside a
    word reads as belonging to the word. */
 .caret {
+  composes: tap from './ui.module.css';
   padding-left: 5px;
   padding-right: 5px;
 }

@@ -39,3 +39,15 @@
 .on:hover:not(:disabled) {
   color: var(--ctl-on-fg);
 }
+
+/* Touch: 23px tall is a segment for a cursor. Grown rather than reached into
+   with a .tap pseudo-element, which is the panel's answer for chrome that has
+   to stay small — a segment already reads as a button, so what it is worth here
+   is the button actually being the size it looks. Padding rather than a height:
+   these carry one word and a <button> is border-box in every UA stylesheet, so
+   a height would have to carry the border with it. */
+@media (pointer: coarse) {
+  .button {
+    padding: 8px 5px;
+  }
+}

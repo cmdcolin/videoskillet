@@ -156,7 +156,7 @@
    well as color — at 10px it was the smallest thing on screen while naming the
    largest division in the panel. */
 .stageName {
-  composes: bare from './ui.module.css';
+  composes: bare tap from './ui.module.css';
   font-size: var(--fs-md);
   font-weight: 700;
   letter-spacing: 0.14em;
@@ -210,7 +210,7 @@
    that one sits inside a field that already draws its own box, while this one
    stands alone on a heading row with nothing around it to say where it ends. */
 .stageClose {
-  composes: bare from './ui.module.css';
+  composes: bare tap from './ui.module.css';
   margin-left: auto;
   flex-shrink: 0;
   /* square, and the row centres it — a glyph sitting on the name's baseline is

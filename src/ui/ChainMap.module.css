@@ -32,6 +32,13 @@
   fill: var(--ctl-face);
   stroke: var(--border);
   stroke-width: 1;
+  /* SVG hit-tests what is painted, and the two states below paint no fill —
+     which left an unfilled box pressable on its 1px outline and its label and
+     nowhere else. Measured at 390px: the SOUND box is 42x26 and answered a
+     press over 43x13 of that, the height of the word inside it. This says the
+     rect is the target whatever it is filled with, which is what every other
+     box on the drawing already was. */
+  pointer-events: all;
 }
 .mapArrow {
   fill: var(--border);

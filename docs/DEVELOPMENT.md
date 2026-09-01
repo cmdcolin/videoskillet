@@ -127,6 +127,36 @@ broken on purpose that reads 0.00 where a healthy one reads 2.58 at its tightest
 — the header records how the two arms were separated, and why the default
 `?srcb=none&set=bGain:1` is load-bearing rather than cosmetic.
 
+```
+node scripts/fatfinger.mjs [http://localhost:5199/] [minPx]
+```
+
+What a fingertip gets, on every control the panel shows at 390px with the
+pointer reported coarse. It walks `elementFromPoint` outward from each control's
+centre and reports the hit area that comes back, smallest first — which is the
+only measurement worth taking here, because `getBoundingClientRect` is wrong in
+both directions: it misses the `::after` expanders that are how this panel grows
+a target without moving its neighbours (an 11px ⋮ whose press gets 23), and it
+counts area a neighbour is painted over (a door under the sticky stage head,
+which measures whole and answers nothing).
+
+**The one harness here that drives Chrome**, and it has to: what it measures
+only exists under `pointer: coarse`, and CDP's `Emulation.setEmulatedMedia` is
+the only way to turn that on from a driver. Firefox's
+`ui.primaryPointerCapabilities` does not reach the content process through
+puppeteer's BiDi — with the pref set, `matchMedia('(pointer: coarse)')` still
+answers false. It reads layout, not the picture, so which engine draws is
+incidental.
+
+The floor is WCAG 2.2's 24px rather than Apple's 44 or Material's 48: this panel
+is 245 control rows in a 332px column, at 44 every one of them fails, and a
+report that names everything names nothing. `ui.module.css`'s `.tap` reaches to
+30 wherever the gaps between controls allow it.
+
+It reports rather than passes, which is why `pnpm harnesses` leaves it out. The
+run that prompted the touch pass read **112 of 242 controls under 24px**; after
+it, 24. What is left is mostly one class — a caption that doubles as a button.
+
 ### What every browser harness here has learned the hard way
 
 Every script below shares one browser story, and each of these cost real time to

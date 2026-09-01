@@ -59,7 +59,7 @@
    board at stock; a stage you have touched carries "reset defaults" as well).
    A row of panel height, spent to say twice what one button already says. */
 .dice {
-  composes: bare from './ui.module.css';
+  composes: bare tap from './ui.module.css';
   padding: 0 2px;
   line-height: 1;
   color: var(--fg3);
@@ -73,7 +73,7 @@
    same "moved off stock" amber a touched row wears, because that is what a
    drifting stage is — something is moving its controls and it was not you. */
 .drift {
-  composes: bare from './ui.module.css';
+  composes: bare tap from './ui.module.css';
   padding: 0 2px;
   line-height: 1;
   color: var(--fg3);

@@ -154,6 +154,40 @@
         #31313c var(--hi)
       );
   }
+
+  /* Touch: a fingertip's worth of target on a control that is drawn as chrome.
+     The reach is a pseudo-element rather than padding, so the box stays exactly
+     where it is and nothing beside it moves — the trick Slider.module.css plays
+     on the ? and the ⋮, hoisted here because six files were about to write it
+     out again. `max(100%, 30px)` only ever grows the *small* dimension: a 336px
+     door keeps its width and gains height, a 22px × keeps its width and gains
+     both.
+
+     30px rather than the 44 a platform guideline asks for. This panel puts its
+     chrome in rows of two and three — the masthead's ⌕ and ⋮, a group header's
+     randomize and drift — with 5 and 6px between them, and a 44px reach on
+     either row is a target that overlaps its neighbour. That trades a press
+     that lands short for a press that lands on the wrong control, which is the
+     worse of the two: one is a press you repeat, the other is a change you did
+     not ask for. 30 clears WCAG 2.2's 24px floor and stays inside the gaps.
+
+     Measured at 390px with the pointer reported coarse (scripts/fatfinger.mjs):
+     it is what takes the panel's 34 group doors from 17px of a 27px door to the
+     whole of it, and the stage × from 22 to 30. */
+  .tap {
+    position: relative;
+  }
+  @media (pointer: coarse) {
+    .tap::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: max(100%, 30px);
+      height: max(100%, 30px);
+      transform: translate(-50%, -50%);
+    }
+  }
 }
 
 /* buttons */
@@ -240,6 +274,16 @@
 .chromeBtn svg {
   vertical-align: middle;
 }
+/* Touch: 22px square is a glyph, not a button. These three sit in the masthead
+   with 5px between them and the wordmark taking the rest of the row, so the
+   reach has to come from the box rather than from a .tap pseudo-element that
+   would overlap its neighbours — at 390px the row has the 24px this spends. */
+@media (pointer: coarse) {
+  .chromeBtn {
+    width: 30px;
+    padding: 5px 0;
+  }
+}
 /* Lit in the accent rather than filled the way a segmented toggle is: this is
    masthead chrome, and a solid block would be the loudest thing in the row. */
 .chromeBtnOn {
@@ -293,7 +337,7 @@
   margin-top: 1px;
 }
 .hintX {
-  composes: bare;
+  composes: bare tap;
   flex-shrink: 0;
   padding: 0 2px;
   color: var(--fg3);

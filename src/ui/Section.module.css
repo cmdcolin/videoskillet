@@ -113,8 +113,13 @@
    keyboard and reports aria-expanded. It carries the heading's type rather than
    setting its own, and any accessory (the ? explainer) sits beside it in .head
    so its clicks are its own. */
+/* The whole bar is the door under a fingertip, not the line of type across the
+   middle of it. The header carries the padding (.head 2px, .headSub 5px) and
+   the button is a flex item inside it, so that padding belonged to nothing that
+   could be pressed: measured at 390px with the pointer coarse, a press had 17px
+   of a 27px door to land in, thirty-four times down the panel. */
 .headBtn {
-  composes: bare from './ui.module.css';
+  composes: bare tap from './ui.module.css';
   flex: 1;
   /* A flex item's floor is its content, and this one's content is a heading
      that can be 33 characters long. Without the floor lifted the button kept a
