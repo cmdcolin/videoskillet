@@ -172,7 +172,24 @@ fn main(
     return;
   }
   let n = row * SPL + s;
-  let pos0 = f32(n) - P.cfbDelay - P.cfbLines * f32(SPL);
+  // The frame store's read clock against the clock it was written at. A store
+  // re-triggers its readout on the output's own line sync, so the error does
+  // not accumulate down the raster — it accumulates along each line and starts
+  // again at the next one, which is why this scales the sample within the line
+  // and leaves the line count to the offset below.
+  //
+  // What makes it worth a knob is that the subcarrier is in the samples being
+  // re-clocked. Read a line's samples at a rate a thousandth off and the
+  // carrier comes back a thousandth off the lattice the decoder demodulates
+  // against, so the phase error grows with distance from the line start: about
+  // 80 degrees by the end of a line at one part in a thousand. The picture is
+  // stretched and repainted at once, further round the wheel the further out it
+  // sits — and the next lap re-clocks what this one wrote, so the fan of hue
+  // opens further every generation. A lens cannot do this; only a clock can.
+  // Run past the end of the line the read walks into the store's next line,
+  // which is what a store read too slowly actually hands back.
+  let pos0 = f32(row * SPL) + f32(s) * (1.0 + P.cfbClock)
+    - P.cfbDelay - P.cfbLines * f32(SPL);
   var pos = pos0;
   if (P.cfbServo != 0.0) {
     // The loop's delay trimmer replaced by a varactor hanging off the video

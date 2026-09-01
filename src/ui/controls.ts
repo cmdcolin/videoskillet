@@ -1118,6 +1118,19 @@ export const GROUPS: Group[] = [
         help: "The loop bus multiplied instead of just summed with what it meets — a ring modulator with one input patched to the machine's own past. Every product goes round again and is re-multiplied a frame later, so the spectrum folds over itself generation after generation. What is on the other input is the row below, and it decides whether any of that arrives as colour.",
       },
       {
+        key: 'cfbClockPct',
+        id: 273,
+        label: 'read clock error',
+        min: -2,
+        max: 2,
+        step: 0.001,
+        curve: 'zero',
+        redline: [-0.3, 0.3],
+        vernier: true,
+        unit: '%',
+        help: "The loop's frame store read out at a clock this far off the one it was written at. A store re-triggers its readout on the output's line sync, so the error starts again every line rather than accumulating down the frame: the picture is stretched or squeezed sideways from the line start, and past the end of a line the read walks into the store's next one. What makes it a colour control is that the subcarrier is in the samples being re-clocked — a thousandth off, and the carrier comes back a thousandth off the lattice the decoder measures against, so hue turns further the further a sample sits from where the line began: eighty degrees by the right-hand edge. Each lap re-clocks what the last one wrote, so the fan opens wider every generation. No lens can do it and no delay can either; both of those move a picture without rewriting where its carrier sits.",
+      },
+      {
         key: 'cfbReturn',
         id: 272,
         label: 'return (Y/C split)',
@@ -3759,6 +3772,7 @@ export const NEEDS: Partial<Record<ControlKey, SliderNeed>> = {
     hint: 'key acceptance above 0',
   },
   cfbReturn: cfb,
+  cfbClockPct: cfb,
   cfbRingSrc: {
     key: 'cfbRing',
     ok: above0,

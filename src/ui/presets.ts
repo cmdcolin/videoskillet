@@ -1066,6 +1066,26 @@ export const PRESETS: PresetDef[] = [
     },
   },
   {
+    name: 'theWrongClock',
+    displayName: 'the wrong clock',
+    group: 'Feedback loops',
+    blurb:
+      "The loop's frame store read out three thousandths fast. Every line is stretched from where it started, which on its own is a squeeze nobody would cross a room for — but the subcarrier is in the samples being re-clocked, so the carrier comes back off the lattice the decoder measures against and hue turns further the further a sample sits from the line start. One pass is a rainbow fanning left to right across the picture. The next pass re-clocks the picture that came out of the first, so the fan opens again, and again, until the right-hand side has been round the wheel several times while the left edge is still the colour it started. Neither loop's geometry knobs do this and no lens could: a camera moves a picture, and a clock rewrites where its colour sits while it moves it.",
+    patch: {
+      cfbMix: 0.85,
+      cfbGain: 1.02,
+      cfbClockPct: 0.3,
+      cfbDelayUs: 0.2,
+      cfbLines: 1,
+      chromaGain: 1.9,
+      phosphor: 0.5,
+      noiseIre: 1.2,
+    },
+    mod: [
+      { target: 'cfbClockPct', source: 'smooth', rateHz: 0.04, depth: 0.06 },
+    ],
+  },
+  {
     name: 'colourInTheDark',
     displayName: 'colour in the dark',
     group: 'Feedback loops',

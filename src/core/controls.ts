@@ -240,6 +240,7 @@ export const DEFAULT_CONTROLS = {
   cfbRingSrc: 0, // what is on the ring mod's other input: 0 the program, 1 a subcarrier oscillator
   cfbCarrierKHz: 0, // that oscillator's detune off 3.579545 MHz, kHz
   cfbReturn: 0, // Y/C separator on the return: 0 composite, 1 chroma only, 2 luma only
+  cfbClockPct: 0, // frame store read clock against the write clock, percent
   // per-source feeds: each input's own cable and head-end, ahead of the mix —
   // a fault here damages one signal alone, unlike the program-bus channel
   // controls above which damage the mixed output
