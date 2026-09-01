@@ -1,7 +1,7 @@
 import { CONTROL_KEYS, DEFAULT_CONTROLS } from '../core/controls'
 import { randomIndex } from '../core/rng'
 import { SLIDER_BY_KEY, VIEW_KEYS, snapToStep } from './controls'
-import { ROLL_NEVER_STARTS } from './mutate'
+import { ROLL_NEVER_LANDS, ROLL_NEVER_STARTS } from './mutate'
 
 import type { ControlKey, Controls } from '../core/controls'
 import type { ModRouting } from './modSlots'
@@ -1919,12 +1919,11 @@ export const PRESETS: PresetDef[] = [
     displayName: 'past the yoke',
     group: 'Past the redline',
     blurb:
-      'The scan magnified far past anything the tube would frame, then rippled: a narrow band of raster standing in for a picture, bending against its own beam current.',
+      'The scan magnified far past anything the tube would frame, and bowed with it: a narrow band of raster standing in for a picture, barrelling against its own beam current.',
     patch: {
       vSize: 3.4,
       bendUs: 70,
-      bendShape: 3,
-      bendPeriod: 9,
+      bendShape: 2,
       hvSagUs: 60,
       hvRing: 0.9,
       abl: 0.5,
@@ -2444,5 +2443,16 @@ export function rollControls(weights: PresetWeights, view: Controls): Controls {
   // back a full-field flash at 0.9 to 3.5 Hz over whatever else it had rolled.
   // The chip is still there to click, which is a choice somebody made.
   for (const key of ROLL_NEVER_STARTS) if (view[key] === 0) out[key] = 0
+  // And the same rule again, about a value rather than about zero: a roll hands
+  // back no barred shape the board was not already holding. `pastTheYoke` bows
+  // rather than ripples now, so nothing shipped reaches this — it is what keeps
+  // a future preset from putting a ripple back into every roll that blends it,
+  // at full strength whatever weight the rest of that look came in at, since
+  // `bendShape` is an enum key and enum keys do not scale.
+  for (const [key, rule] of ROLL_NEVER_LANDS) {
+    if (out[key] === rule.barred && view[key] !== rule.barred) {
+      out[key] = rule.instead
+    }
+  }
   return out
 }

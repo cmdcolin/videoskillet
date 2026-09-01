@@ -78,6 +78,34 @@ export function mutateAmountFor(e: {
 // board at all.
 export const ROLL_NEVER_STARTS = new Set<ControlKey>(['strobeHz', 'clipHz'])
 
+// Values a roll may not land a control on, and what it lands on instead.
+//
+// `bendShape` on ripple is an undamped sine down the whole frame at a
+// wavelength nothing in the picture sets, where the other three shapes are each
+// a fault with a cause behind it — a hook that decays out of the top lines, a
+// yoke leaning, a barrel bulging at the middle. It reads as a grating laid over
+// the raster rather than as a scan going wrong, which is the one thing this rig
+// is for. So it stays on the control for a hand to pick, and a roll off a look
+// already rippling treats it as a control like any other; what a press will not
+// do is hand it to you unasked.
+//
+// Bow rather than stock, so a roll that was building a look around a bent yoke
+// still comes back with one. Read by the same three rolls `ROLL_NEVER_STARTS`
+// is: the jitter and the throw below, and the preset roll in `rollControls`.
+export const ROLL_NEVER_LANDS: ReadonlyMap<
+  ControlKey,
+  { barred: number; instead: number }
+> = new Map([['bendShape', { barred: 3, instead: 2 }]])
+
+// Where a roll actually leaves a control, given where it was and where the roll
+// put it. Everything not named above lands where it rolled.
+export const rollLanding = (key: ControlKey, rolled: number, from: number) => {
+  const rule = ROLL_NEVER_LANDS.get(key)
+  return rule === undefined || from === rule.barred || rolled !== rule.barred
+    ? rolled
+    : rule.instead
+}
+
 // Nudge every control by a random fraction of its own slider *travel* — the
 // bender's hand brushing all the pots at once. Jittering *around* the current
 // look rather than picking fresh-random values keeps sync, colour, and geometry
@@ -125,9 +153,10 @@ export function mutate(
     // snapToStep lands mode-select controls (step 1) on whole integers rather
     // than a fractional index no shader branch expects, and clamps a jitter
     // that ran off either end of the track.
-    next[s.key] = snapToStep(
-      s,
-      fromTravel(s, toTravel(s, controls[s.key]) + jitter),
+    next[s.key] = rollLanding(
+      s.key,
+      snapToStep(s, fromTravel(s, toTravel(s, controls[s.key]) + jitter)),
+      controls[s.key],
     )
   }
   return next
@@ -196,7 +225,11 @@ export function spike(
     const above = Math.max(0, 1 - from - SPIKE_THROW)
     const draw = rand() * (below + above)
     const t = draw < below ? draw : from + SPIKE_THROW + (draw - below)
-    next[s.key] = snapToStep(s, fromTravel(s, t))
+    next[s.key] = rollLanding(
+      s.key,
+      snapToStep(s, fromTravel(s, t)),
+      controls[s.key],
+    )
   }
   return next
 }

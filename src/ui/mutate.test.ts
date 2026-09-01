@@ -52,6 +52,34 @@ describe('mutate', () => {
     }
   })
 
+  // A sine down the whole frame at a wavelength nothing sets is the one shape
+  // here that reads as a grating over the raster rather than as a scan going
+  // wrong, so no roll hands it over. See ROLL_NEVER_LANDS.
+  it('never lands the bend on a ripple the look had not already', () => {
+    for (const shape of [0, 1, 2]) {
+      for (let seed = 1; seed < 40; seed++) {
+        const out = mutate(
+          { ...DEFAULT_CONTROLS, bendUs: 20, bendShape: shape },
+          SLIDERS,
+          0.6,
+          rngFor(seed),
+          ALL_AWAKE,
+        )
+        expect(out.bendShape, `shape ${shape} seed ${seed}`).not.toBe(3)
+      }
+    }
+  })
+
+  it('still jitters a bend that is already rippling', () => {
+    const rippling = { ...DEFAULT_CONTROLS, bendUs: 20, bendShape: 3 }
+    const shapes = new Set(
+      Array.from({ length: 40 }, (_, i) =>
+        mutate(rippling, SLIDERS, 0.6, rngFor(i + 1), ALL_AWAKE),
+      ).map(o => o.bendShape),
+    )
+    expect(shapes.has(3)).toBe(true)
+  })
+
   it('still jitters a strobe that is already running', () => {
     const on = { ...DEFAULT_CONTROLS, strobeHz: 3.5 }
     expect(mutate(on, SLIDERS, 0.12, () => 1).strobeHz).toBeGreaterThan(3.5)
@@ -202,6 +230,15 @@ describe('spike', () => {
       expect(spike(DEFAULT_CONTROLS, SLIDERS, 12, rngFor(seed)).strobeHz).toBe(
         0,
       )
+    }
+  })
+
+  it('never lands the bend on a ripple either', () => {
+    for (let seed = 1; seed < 60; seed++) {
+      expect(
+        spike({ ...DEFAULT_CONTROLS, bendUs: 20 }, SLIDERS, 12, rngFor(seed))
+          .bendShape,
+      ).not.toBe(3)
     }
   })
 

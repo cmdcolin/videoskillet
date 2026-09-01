@@ -173,6 +173,22 @@ describe('blendPresets', () => {
     }
   })
 
+  // `bendShape` is an enum key, so a preset holding ripple would hand it over at
+  // full strength however light the weight that brought the rest of that look
+  // in. See ROLL_NEVER_LANDS.
+  it('hands back no bend ripple on a board that has none', () => {
+    for (const p of PRESETS) {
+      for (const w of [1, 0.5, 0.25]) {
+        const rolled = rollControls(new Map([[p.name, w]]), DEFAULT_CONTROLS)
+        expect(rolled.bendShape, `${p.name} at ${w}`).not.toBe(3)
+      }
+    }
+    // The rest of the yoke is a look, and it still arrives bent.
+    const yoke = rollControls(new Map([['pastTheYoke', 1]]), DEFAULT_CONTROLS)
+    expect(yoke.bendUs).toBe(70)
+    expect(yoke.vSize).toBe(3.4)
+  })
+
   it('leaves a strobe alone on a board that is already running one', () => {
     const strobing = presetControls({ strobeHz: 2 })
     expect(rollControls(new Map([['strobedTube', 1]]), strobing).strobeHz).toBe(

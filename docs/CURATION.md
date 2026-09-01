@@ -176,6 +176,16 @@ two. Neither is subtle — they are the opposite, patches that flatten whatever
 they are blended with. That is a roll-blending problem rather than a preset
 problem, and it is still open.
 
+One piece of it closed later, from the other end: `pastTheYoke` was the only
+preset holding `bendShape` on ripple — a sine down the whole frame at a
+wavelength nothing in the picture sets, which reads as a grating laid over the
+raster rather than as a scan going wrong. It bows now, and `ROLL_NEVER_LANDS`
+(`mutate.ts`) keeps every roll — jitter, throw and preset blend — off that shape
+unless the board is already on it. The shape stays on the control for a hand to
+pick. What made the blend worse than the preset was: `bendShape` is an enum key,
+so a follower at weight 0.25 handed the shape over whole while the amplitude
+around it scaled down.
+
 ### Round two, the loops
 
 Seven of fourteen feedback candidates kept: `zoom bloom`, `tunnel out`,
