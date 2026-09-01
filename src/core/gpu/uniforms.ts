@@ -252,6 +252,7 @@ export function uniformValues(c: Controls, env: UniformEnv) {
     aGain: c.aGain,
     bGain: c.bGain,
     bRing: c.bRing,
+    busClip: c.busClip,
     bHue: (c.bHueDeg * Math.PI) / 180,
     bVidGain: c.bVidGain,
     bInv: c.bInv,

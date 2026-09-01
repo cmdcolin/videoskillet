@@ -1384,6 +1384,25 @@ export const PRESETS: PresetDef[] = [
     },
   },
   {
+    name: 'outOfVolts',
+    displayName: 'out of volts',
+    group: 'A/B mixing',
+    blurb:
+      "Both faders wide open into a summing amplifier with no headroom left. Two full composites added is twice what one stage was built to carry, so it spends most of every line against its supply — and a stage against its supply is not a limiter, it is a multiplier: its gain falls away as the sum rises, and a falling gain multiplies the two signals sharing the bus by each other. B's subcarrier is running thirty hertz off A's, so the beat between them lands inside the chroma band and comes back as colour, which is the ring mod's trick arriving because the box ran out of volts rather than because anybody patched a multiplier. The sync tips are squashed along with the picture, so neither deck's pulse wins the line start by as much as it should and the frame hunts between two geometries while the colour churns.",
+    patch: {
+      aGain: 1,
+      bGain: 1,
+      busClip: 0.75,
+      bDetuneHz: 30,
+      bLineHz: 0.6,
+      bRollLps: 0.04,
+      hHold: 0.4,
+      chromaGain: 1.6,
+      noiseIre: 1.5,
+    },
+    mod: [{ target: 'busClip', source: 'smooth', rateHz: 0.05, depth: 0.12 }],
+  },
+  {
     name: 'pauseFight',
     displayName: 'pause fight',
     group: 'A/B mixing',

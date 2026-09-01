@@ -31,15 +31,7 @@
 // more sidebands for the next lap to chew on. Identity below the knee, so a
 // loop that never runs away never notices the stage is there.
 fn rails(v: f32) -> f32 {
-  if (v > 110.0) {
-    let t = (v - 110.0) / 30.0;
-    return 110.0 + 30.0 * t / (1.0 + t);
-  }
-  if (v < -50.0) {
-    let t = (-50.0 - v) / 10.0;
-    return -50.0 - 10.0 * t / (1.0 + t);
-  }
-  return v;
+  return softRail(v, 110.0, 30.0, -50.0, 10.0);
 }
 
 // The keyer's key aperture: a 4-sample boxcar, which at 4x fsc spans one

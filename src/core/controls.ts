@@ -269,6 +269,7 @@ export const DEFAULT_CONTROLS = {
   aGain: 1, // A level on the summing bus, signed (negative inverts A)
   bGain: 0, // defaults are the clean baseline; the landing look adds B on top
   bRing: 0,
+  busClip: 0, // headroom of the mixer's summing amplifier (0 = it never sees its rails)
   bLineHz: 0.15,
   bDetuneHz: 40,
   bRollLps: 0.1,

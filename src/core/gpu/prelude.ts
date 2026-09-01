@@ -105,6 +105,7 @@ export const PARAM_DEFS = [
   ['aGain', 'f32'], // A level on the summing bus, signed (negative inverts A)
   ['bGain', 'f32'], // additive mix gain
   ['bRing', 'f32'], // ring modulation amount
+  ['busClip', 'f32'], // how little headroom the summing amplifier has, 0 = plenty
   ['bRowOff', 'f32'], // vertical slip, lines (accumulated)
   ['bShift0', 'f32'], // horizontal slip, samples (accumulated)
   ['bShiftLine', 'f32'], // horizontal skew per line (line-frequency offset)
@@ -865,6 +866,27 @@ fn gamutLimit(c: vec3f, slack: f32) -> vec3f {
   let reach = select(vec3f(1.0), room / max(abs(d), vec3f(1e-5)), moves);
   let s = clamp(min(reach.x, min(reach.y, reach.z)), 0.0, 1.0);
   return clamp(vec3f(l) + mix(s, 1.0, slack) * d, vec3f(0.0), vec3f(1.0));
+}
+
+// An amplifier running out of supply. A hard clamp is a knife edge that mints a
+// step wherever the signal touches it; a real stage's gain falls away as it
+// approaches the rail, so what comes back is compressed instead of flattened
+// and keeps its structure. That falling gain is also a nonlinearity, which is
+// the whole reason a stage past its headroom manufactures sum and difference
+// products out of whatever carriers are sharing the bus with it.
+//
+// Shared by the loop's output stage and the mixer's summing bus, which is two
+// amplifiers of the same kind at two points on the board.
+fn softRail(v: f32, hi: f32, hiSoft: f32, lo: f32, loSoft: f32) -> f32 {
+  var out = v;
+  if (v > hi) {
+    let t = (v - hi) / hiSoft;
+    out = hi + hiSoft * t / (1.0 + t);
+  } else if (v < lo) {
+    let t = (lo - v) / loSoft;
+    out = lo - loSoft * t / (1.0 + t);
+  }
+  return out;
 }
 
 fn gamutFit(c: vec3f) -> vec3f {

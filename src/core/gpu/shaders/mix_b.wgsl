@@ -268,7 +268,31 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
     // on it — switching costs a retune of `ringMix` and `supplyChaos` and moves
     // every saved board carrying bRing — and not because a mixer's ring mod is
     // unbalanced anywhere but here.
-    comp[n] = P.aGain * a + g * (P.bGain * fill + P.bRing * a * fill * 0.01);
+    var summed = P.aGain * a + g * (P.bGain * fill + P.bRing * a * fill * 0.01);
+    // The summing amplifier's own supply. Two full composites added is twice
+    // the amplitude a single one was designed to carry, and until this the sum
+    // went into the channel unclipped — arithmetic where the board has a
+    // stage. What the stage adds is not a limit but a nonlinearity: as it runs
+    // out of headroom its gain falls away, and a falling gain multiplies the
+    // two signals sharing the bus by each other. So a detuned B beats against
+    // A and lands products at their difference, which sits inside the chroma
+    // band and comes back as colour neither source is carrying — the same
+    // thing the ring mod beside it does with an explicit multiply, arriving
+    // here because the box ran out of volts.
+    //
+    // It squashes the sum's sync tips with everything else, so the fight for
+    // the line start changes character too: the deeper tip stops winning by
+    // as much once both are against the rail.
+    if (P.busClip > 0.0) {
+      summed = softRail(
+        summed,
+        mix(220.0, 105.0, P.busClip),
+        30.0,
+        mix(-120.0, -45.0, P.busClip),
+        15.0,
+      );
+    }
+    comp[n] = summed;
   }
 
   // Picture-in-picture: source B squeezed into a positionable window and keyed
