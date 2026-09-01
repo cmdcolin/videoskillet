@@ -1173,7 +1173,7 @@ export const PRESETS: PresetDef[] = [
       cfbGain: 1.01,
       cfbDelayUs: 0.55,
       cfbLines: 3,
-      diffPhaseDeg: 55,
+      diffPhaseDeg: 42,
       diffGain: 0.4,
       chromaGain: 1.7,
       phosphor: 0.45,
@@ -1182,8 +1182,12 @@ export const PRESETS: PresetDef[] = [
     // The bend walked slowly, because what this look is about only shows as the
     // layer spacing changes: the trail restacks itself while nothing in front
     // of the camera has moved.
+    // Base and depth both inside the control: 55 with a depth of 0.3 swings
+    // 36 degrees on a span that ends at 60, so it would spend much of its run
+    // pinned there — a routing against a clamp is a routing that is not
+    // running (docs/CURATION.md).
     mod: [
-      { target: 'diffPhaseDeg', source: 'smooth', rateHz: 0.05, depth: 0.3 },
+      { target: 'diffPhaseDeg', source: 'smooth', rateHz: 0.05, depth: 0.15 },
     ],
   },
   {
@@ -1230,8 +1234,10 @@ export const PRESETS: PresetDef[] = [
       phosphor: 0.5,
       noiseIre: 1.2,
     },
+    // 0.38 of a 180-degree span is 68 degrees either way, which from a base of
+    // 34 spends a third of the sine below zero and clamped there.
     mod: [
-      { target: 'demodAxisDeg', source: 'sine', rateHz: 0.03, depth: 0.38 },
+      { target: 'demodAxisDeg', source: 'sine', rateHz: 0.03, depth: 0.15 },
     ],
   },
   {
