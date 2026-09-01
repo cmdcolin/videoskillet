@@ -1218,9 +1218,15 @@ export const PRESETS: PresetDef[] = [
       cfbDelayUs: 1.2,
       cfbLines: 2,
       cfbRing: 0.85,
+      // The multiplier on its oscillator, not on the program. Against the
+      // program both sides share one crystal and the products land where the
+      // chroma filter throws them away — measured at sat 0.032 on a
+      // monochrome source, which is a sheared demodulator handed nothing to
+      // shear. On the oscillator the same patch reads 0.318.
+      cfbRingSrc: 1,
       demodAxisDeg: 34,
       matrixClip: 1,
-      chromaGain: 2.2,
+      chromaGain: 1.8,
       phosphor: 0.5,
       noiseIre: 1.2,
     },
@@ -1660,6 +1666,59 @@ export const PRESETS: PresetDef[] = [
       lumaPeak: 1.1,
       chromaGain: 1.2,
     },
+  },
+  {
+    name: 'pouredColour',
+    displayName: 'poured colour',
+    group: 'Circuit bent',
+    blurb:
+      "Both synth oscillators run down at frame rate rather than across at line rate — ninety hertz against thirty-seven, so one fits a cycle and a half down the picture and the other under half of one — and their product is a slow beat with no fine structure in it anywhere. The colorizer then turns level into hue, which on a signal that only changes over hundreds of lines means the whole screen is a few enormous fields of saturated colour rather than the fringing that arrives whenever colour is carried on detail. The set's chroma bandwidth is wound down to keep it that way: a narrow colour filter cannot follow an edge, so it holds the fields flat and soft where a wide one would put a rainbow on every line of the picture underneath. What is left of the picture reads through the colour as brightness alone.",
+    patch: {
+      synthOver: 0.8,
+      synthAHz: 90,
+      synthBHz: 37,
+      synthMix: 2,
+      synthShape: 1,
+      synthColor: 1,
+      synthLevel: 1.8,
+      // Mid-range so the routing below has room both ways: the bay's LFOs are
+      // bipolar and a control resting at its own end loses half its swing.
+      synthHueDeg: 180,
+      demodMHz: 0.4,
+      chromaGain: 4,
+      crtSat: 1.6,
+    },
+    // The palette turns while the fields stay where they are, which is the
+    // colorizer's whole trick: rotating all three phase shifts together slides
+    // the wheel without moving the pattern that is being coloured.
+    mod: [
+      { target: 'synthHueDeg', source: 'smooth', rateHz: 0.04, depth: 0.4 },
+    ],
+  },
+  {
+    name: 'litAtTheEdges',
+    displayName: 'lit at the edges',
+    group: 'Feedback loops',
+    blurb:
+      "The carrier making hue out of brightness, with the loop left well under unity so it colours the picture instead of breeding structure out of it. Where the colour lands is the thing to know, and it is not where you would guess: translating brightness onto the subcarrier puts the *fast* part of the brightness into the chroma band, so the flats of the picture come back nearly neutral and everything the light changes across arrives saturated. A subject is drawn in colour along its own edges — bones, a rim, the line where a shadow starts — with the fields between them left grey, and the loop's delay turns each of those edges a little further round the wheel than the one beside it. The beam is opened to a wide spot so it is laid down as light on glass rather than as pixels.",
+    patch: {
+      cfbMix: 0.6,
+      cfbGain: 0.65,
+      cfbDelayUs: 0.9,
+      cfbRing: 1,
+      cfbRingSrc: 1,
+      cfbCarrierKHz: 10,
+      demodMHz: 0.15,
+      combMode: 2,
+      chromaGain: 9,
+      crtSat: 2.2,
+      crtSpot: 5,
+      crtBloom: 0.8,
+      phosphor: 0.4,
+    },
+    mod: [
+      { target: 'cfbCarrierKHz', source: 'smooth', rateHz: 0.04, depth: 0.05 },
+    ],
   },
   {
     name: 'contoursOnContours',

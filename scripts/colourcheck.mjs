@@ -24,6 +24,13 @@
 //   luma     mean level, which is what catches an arm that "made colour" by
 //            going black. That is not hypothetical: the loop's chroma-only
 //            return was a dead frame at luma 0.007 until it got a recombiner.
+//   fringe   mean colour difference between neighbouring pixels, in an opponent
+//            space, x1000. Two patches can hold the same `sat` and look nothing
+//            alike: cross-colour on detail puts its colour on edges and scores
+//            high here, while a narrow chroma band pools the same energy into
+//            large soft fields and scores low. Read it as "splashes or
+//            speckle" — it is the column to watch when the ask is big flat
+//            colour rather than rainbow edging.
 //
 // One page load drives every arm through `window.vf.applyControls`, so a sheet
 // of ten costs one WebGPU session rather than ten. Every key any arm sets is
@@ -69,22 +76,83 @@ const ARMS =
   custom === undefined
     ? [
         ['clean', {}, {}],
-        ['loop, no ring', LOOP, {}],
-        ['ring on program', LOOP, { cfbRing: 1 }],
-        ['ring on oscillator', LOOP, { cfbRing: 1, cfbRingSrc: 1 }],
         [
-          'oscillator +12kHz',
-          LOOP,
-          { cfbRing: 1, cfbRingSrc: 1, cfbCarrierKHz: 12 },
+          'A poured colour',
+          {},
+          {
+            synthOver: 0.8,
+            synthAHz: 90,
+            synthBHz: 37,
+            synthMix: 2,
+            synthShape: 1,
+            synthColor: 1,
+            synthLevel: 1.8,
+            chromaGain: 4,
+            demodMHz: 0.4,
+            crtSat: 1.6,
+          },
         ],
         [
-          'oscillator +120kHz',
-          LOOP,
-          { cfbRing: 1, cfbRingSrc: 1, cfbCarrierKHz: 120 },
+          'B splash mix .45',
+          {
+            cfbMix: 0.45,
+            cfbGain: 0.6,
+            cfbDelayUs: 0.9,
+            cfbRing: 1,
+            cfbRingSrc: 1,
+            cfbCarrierKHz: 10,
+          },
+          {
+            demodMHz: 0.15,
+            combMode: 3,
+            chromaGain: 9,
+            crtSat: 2.2,
+            crtSpot: 5,
+            crtBloom: 0.8,
+          },
         ],
-        ['return: chroma', LOOP, { cfbReturn: 1 }],
-        ['return: luma', LOOP, { cfbReturn: 2 }],
-        ['read clock +0.3%', LOOP, { cfbClockPct: 0.3 }],
+        [
+          'C splash mix .6 g.55',
+          {
+            cfbMix: 0.6,
+            cfbGain: 0.55,
+            cfbDelayUs: 0.9,
+            cfbRing: 1,
+            cfbRingSrc: 1,
+            cfbCarrierKHz: 10,
+          },
+          {
+            demodMHz: 0.15,
+            combMode: 3,
+            chromaGain: 9,
+            crtSat: 2.2,
+            crtSpot: 5,
+            crtBloom: 0.8,
+          },
+        ],
+        [
+          'D products, old',
+          {
+            cfbMix: 0.84,
+            cfbGain: 1,
+            cfbDelayUs: 1.2,
+            cfbLines: 2,
+            cfbRing: 0.85,
+          },
+          { demodAxisDeg: 34, matrixClip: 1, chromaGain: 2.2, phosphor: 0.5 },
+        ],
+        [
+          'D products, carrier',
+          {
+            cfbMix: 0.84,
+            cfbGain: 1,
+            cfbDelayUs: 1.2,
+            cfbLines: 2,
+            cfbRing: 0.85,
+            cfbRingSrc: 1,
+          },
+          { demodAxisDeg: 34, matrixClip: 1, chromaGain: 1.8, phosphor: 0.5 },
+        ],
       ]
     : [
         ['clean', {}, {}],
@@ -104,6 +172,26 @@ const STOCK = {
   cfbReturn: 0,
   cfbClockPct: 0,
   chromaGain: 1,
+  demodMHz: 0.6,
+  combMode: 0,
+  chromaTail: 0,
+  accLagLines: 0,
+  matrixClip: 0,
+  crtSat: 1,
+  crtSpot: 0.6,
+  crtBloom: 0.2,
+  colorUnderMix: 0,
+  chromaNoiseIre: 0,
+  synthOver: 0,
+  synthAHz: 15834,
+  synthBHz: 60,
+  synthMix: 0,
+  demodAxisDeg: 90,
+  phosphor: 0,
+  synthShape: 2,
+  synthColor: 0,
+  synthLevel: 1,
+  synthFm: 0,
   aGain: 1,
   bGain: 0,
   bRing: 0,
@@ -156,7 +244,11 @@ const measure = (board, patch) =>
       let sat = 0
       let lum = 0
       let coloured = 0
+      let fringe = 0
       const n = 256 * 192
+      // Opponent axes, so a brightness edge with no colour change costs
+      // nothing here and only a *colour* edge scores.
+      const opp = i => [d[i * 4] - d[i * 4 + 1], d[i * 4 + 1] - d[i * 4 + 2]]
       for (let i = 0; i < n; i++) {
         const r = d[i * 4] / 255
         const gr = d[i * 4 + 1] / 255
@@ -177,11 +269,17 @@ const measure = (board, patch) =>
           sect[Math.min(11, Math.floor((h / 6) * 12))]++
           coloured++
         }
+        if (i % 256 !== 255) {
+          const [a0, b0] = opp(i)
+          const [a1, b1] = opp(i + 1)
+          fringe += (Math.abs(a1 - a0) + Math.abs(b1 - b0)) / 2
+        }
       }
       return {
         sat: sat / n,
         lum: lum / n,
         frac: coloured / n,
+        fringe: (1000 * fringe) / (255 * n),
         hues:
           coloured > n * 0.01
             ? sect.filter(c => c > coloured * 0.02).length
@@ -194,13 +292,13 @@ const measure = (board, patch) =>
 
 mkdirSync(outDir, { recursive: true })
 console.log(`source: ${src}\n`)
-console.log('arm                       sat    hues   colour%    luma')
+console.log('arm                       sat    hues   colour%    luma   fringe')
 const rows = []
 for (const [name, board, patch] of ARMS) {
   const s = await measure({ ...STOCK, ...board }, patch)
   rows.push([name, s])
   console.log(
-    `${name.padEnd(22)} ${s.sat.toFixed(3).padStart(7)} ${String(s.hues).padStart(6)} ${(100 * s.frac).toFixed(1).padStart(9)} ${s.lum.toFixed(3).padStart(7)}`,
+    `${name.padEnd(22)} ${s.sat.toFixed(3).padStart(7)} ${String(s.hues).padStart(6)} ${(100 * s.frac).toFixed(1).padStart(9)} ${s.lum.toFixed(3).padStart(7)} ${s.fringe.toFixed(1).padStart(8)}`,
   )
   await page.screenshot({
     path: join(outDir, `${name.replace(/[^a-z0-9]+/gi, '-')}.png`),
