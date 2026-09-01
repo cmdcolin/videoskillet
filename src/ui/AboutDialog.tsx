@@ -1,5 +1,6 @@
 import { gitSha, versionLabel } from '../version'
 import { Dialog } from './Dialog'
+import { GUIDE_URL, REPO_URL } from './links'
 import ui from './ui.module.css'
 
 // Deliberately three lines: what this is, where to read about it, and which
@@ -30,19 +31,14 @@ export function AboutDialog({ onClose }: { onClose: () => void }) {
       <p className={ui.helpText}>
         <a
           className={ui.link}
-          href="https://cmdcolin.github.io/videoskillet/"
+          href={GUIDE_URL}
           target="_blank"
           rel="noreferrer"
         >
           user guide ↗
         </a>{' '}
         ·{' '}
-        <a
-          className={ui.link}
-          href="https://github.com/cmdcolin/videoskillet.js"
-          target="_blank"
-          rel="noreferrer"
-        >
+        <a className={ui.link} href={REPO_URL} target="_blank" rel="noreferrer">
           source on GitHub ↗
         </a>
       </p>

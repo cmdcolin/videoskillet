@@ -7,6 +7,7 @@ import {
 } from './frameLock'
 import { CameraIcon, GearIcon, GraphIcon, MenuIcon } from './icons'
 import { clampZoom, zoomAtTravel, zoomTravel } from './lens'
+import { openGuide } from './links'
 import { MenuItem, Popover } from './Popover'
 import popoverStyles from './Popover.module.css'
 import { tapFor } from './signalTap'
@@ -190,6 +191,17 @@ export function AppMenu(props: {
             hint=""
             closes={id}
             onClick={() => props.onShowAdvanced()}
+          />
+          {/* The docs, one press from the masthead. They were reachable only
+              through About, whose own link pointed at the app rather than at
+              the guide, so nothing in here led to them at all. */}
+          <MenuItem
+            icon="▤"
+            label="user guide ↗"
+            hint=""
+            title="sources, feedback, modulation, saving, scopes, and every control"
+            closes={id}
+            onClick={() => openGuide()}
           />
           <MenuItem
             icon="?"

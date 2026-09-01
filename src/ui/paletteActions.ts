@@ -1,5 +1,6 @@
 import { DECK_STAGE, MOD_STAGE } from './controls'
 import { DRIFT_SECONDS } from './drift'
+import { openGuide } from './links'
 
 import type { PaletteAction } from './CommandPalette'
 import type { MutateAmount } from './mutate'
@@ -370,6 +371,12 @@ export function paletteActions(o: {
       name: 'advanced settings',
       blurb: 'render scale and MIDI setup',
       run: o.onAdvanced,
+    },
+    {
+      name: 'user guide',
+      blurb:
+        'the docs, in a new tab: help, sources, feedback, modulation, saving, scopes, and every control',
+      run: () => openGuide(),
     },
     {
       name: 'about',
