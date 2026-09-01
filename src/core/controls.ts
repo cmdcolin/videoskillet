@@ -38,6 +38,7 @@ export const DEFAULT_CONTROLS = {
   synthFmSrc: 0, // which picture that input is on: 0 the slot, 1 the camera loop's return
   synthColorSrc: 0, // what the colorizer slices: 0 its own oscillator, 1 the picture
   synthColorMode: 0, // how it slices: 0 three phase shifts, 1 three comparators
+  synthColorSoftPx: 0, // the colorizer's own input filter, output pixels of blur
   // encoder
   encChromaMHz: 1.3,
   invert: 0, // polarity flip on the composite line (alligator-pin swap)

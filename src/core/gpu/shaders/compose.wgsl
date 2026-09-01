@@ -100,6 +100,32 @@ fn capture(suv: vec2f, sx: f32, xy: vec2u) -> vec3f {
   return vec3f(y / wy + grain) + c / wc + (n.x * I_DIR + n.y * Q_DIR) * P.capChromaNoise;
 }
 
+// The colorizer's own input filter — the lowpass a colorizer box has ahead of
+// its slicers, and the control that decides how large the colour fields are.
+// A slicer handed a sharp picture finds a threshold crossing on every piece of
+// detail and posterizes into confetti; handed a soft one it finds a few long
+// boundaries and the picture arrives in slabs. Two rings and a centre tap, at
+// half and full radius, which is enough of a gaussian for something whose
+// output is about to be reduced to on or off anyway.
+//
+// It reads the slot's picture through `pick` rather than the composed `src`,
+// because a filter needs neighbours and `src` is one pixel's worth of work. So
+// it sees the picture the deck is showing, ahead of the capture band and the
+// generators — which is where a box patched to the deck's output would sit.
+fn colorInput(suv: vec2f, sharp: f32, step: vec2f) -> f32 {
+  if (P.synthColorSoft <= 0.0) {
+    return sharp;
+  }
+  var acc = sharp * 0.2;
+  for (var i = 0u; i < 6u; i = i + 1u) {
+    let a = f32(i) * PI / 3.0;
+    let d = vec2f(cos(a), sin(a));
+    acc = acc + luma(pick(suv + d * step * 0.5)) * (0.5 / 6.0);
+    acc = acc + luma(pick(suv + d * step)) * (0.3 / 6.0);
+  }
+  return acc;
+}
+
 // lens defocus: center tap + 6-point ring at the focus radius
 fn cam(uv: vec2f) -> vec3f {
   let r = vec2f(P.fbFocus / f32(ACTIVE_W), P.fbFocus / f32(ACTIVE_H));
@@ -125,12 +151,17 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
   } else {
     suv.y = 0.5 + (uv.y - 0.5) * (P.srcAspect / disp);
   }
+  // Source uv per output pixel, on each axis, after the cover fit above: the
+  // capture band and the colorizer's input filter both step in these.
+  let sxy = vec2f(
+    select(1.0, disp / P.srcAspect, P.srcAspect > disp) / f32(ACTIVE_W),
+    select(P.srcAspect / disp, 1.0, P.srcAspect > disp) / f32(ACTIVE_H),
+  );
   let captured = P.capLumaSigma > 0.0 || P.capChromaSigma > 0.0 || P.capYcDelay != 0.0
     || P.capNoise > 0.0 || P.capChromaNoise > 0.0;
   var src: vec3f;
   if (P.srcNoise < 0.5 && captured) {
-    let sx = select(1.0, disp / P.srcAspect, P.srcAspect > disp) / f32(ACTIVE_W);
-    src = capture(suv, sx, gid.xy);
+    src = capture(suv, sxy.x, gid.xy);
   } else {
     src = pick(suv);
   }
@@ -140,7 +171,7 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
     // srcFrame. Its phase comes in already advanced for this frame. Patched
     // instead of a picture there is nothing to FM it with, so the modulation
     // input is grounded.
-    src = videoSynth(gid.xy, synthPatch(P), 0.0);
+    src = videoSynth(gid.xy, synthPatch(P), 0.0, 0.0);
   } else if (P.srcNoise > 0.5) {
     // srcFrame rather than frame: a paused A deck holds its picture, and the
     // crawl was on the tape — composeB freezes the same way by skipping, but
@@ -163,8 +194,19 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
   // showing, so the contours it draws land on the source and are redrawn from
   // scratch every frame. The other connector is below, after the camera.
   let synthOn = P.srcNoise < 2.5 && P.synthOver > 0.0;
+  // The colorizer's picture connector, through the box's input filter. One
+  // value for both branches below: the filter is on the colorizer's own input,
+  // so which picture the *frequency* input is patched to does not move it.
+  var colorPic = 0.0;
+  if (synthOn && P.synthColorSrc > 0.5) {
+    colorPic = colorInput(suv, luma(src), sxy * P.synthColorSoft);
+  }
   if (synthOn && P.synthFmSrc < 0.5) {
-    src = mix(src, videoSynth(gid.xy, synthPatch(P), luma(src)), P.synthOver);
+    src = mix(
+      src,
+      videoSynth(gid.xy, synthPatch(P), luma(src), colorPic),
+      P.synthOver,
+    );
   }
 
   // transform in 4:3 aspect space so rotation doesn't shear
@@ -218,7 +260,11 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
   // the return exists. With the camera out, the mix is an identity and this
   // reads the slot, which is the same picture the connector above reads.
   if (synthOn && P.synthFmSrc >= 0.5) {
-    outc = mix(outc, videoSynth(gid.xy, synthPatch(P), luma(outc)), P.synthOver);
+    outc = mix(
+      outc,
+      videoSynth(gid.xy, synthPatch(P), luma(outc), colorPic),
+      P.synthOver,
+    );
   }
   textureStore(inputTex, vec2i(gid.xy), vec4f(outc, 1.0));
 }

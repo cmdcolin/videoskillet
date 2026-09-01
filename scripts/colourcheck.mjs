@@ -6,6 +6,13 @@
 //
 //   node scripts/colourcheck.mjs [url] [outDir] [--src=] [--srcb=]
 //   node scripts/colourcheck.mjs --arms=cfbRing:1,cfbRingSrc:1
+//   node scripts/colourcheck.mjs --arms-file=sheet.json
+//
+// `--arms-file=` is how to run a sheet of your own without editing this file:
+// a JSON array of [name, board, patch] triples, board and patch both plain
+// control objects. Worth knowing because this repo is worked in by more than
+// one agent at a time and an uncommitted edit here does not reliably survive
+// somebody else's commit — keep the sheet in a scratch directory instead.
 //
 // Pick the source to suit the claim. A monochrome one settles the strong form
 // of the question outright: `clip-haunted-house` is a 1929 film, so any hue on
@@ -44,7 +51,7 @@ import puppeteer from 'puppeteer-core'
 
 import { FIREFOX } from './browser.mjs'
 
-import { mkdirSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 const args = process.argv.slice(2)
@@ -70,6 +77,7 @@ const parse = s =>
 // The shipped sheet: a loop with one thing changed per arm. `--arms=` replaces
 // it with a single patch of your own.
 const custom = flag('arms')
+const sheet = flag('arms-file')
 const LOOP = {
   cfbMix: 0.85,
   cfbGain: 1.02,
@@ -77,8 +85,17 @@ const LOOP = {
   cfbLines: 2,
   chromaGain: 1.6,
 }
+const fromFile =
+  sheet === undefined
+    ? undefined
+    : JSON.parse(readFileSync(sheet, 'utf8')).map(([n, b, p]) => [
+        n,
+        b ?? {},
+        p ?? {},
+      ])
 const ARMS =
-  custom === undefined
+  fromFile ??
+  (custom === undefined
     ? [
         ['clean', {}, {}],
         [
@@ -199,7 +216,7 @@ const ARMS =
     : [
         ['clean', {}, {}],
         ['patch', {}, parse(custom)],
-      ]
+      ])
 
 // Every key any arm above sets, at its stock value. An arm is a fresh board
 // plus its own patch, never the last arm plus a difference.

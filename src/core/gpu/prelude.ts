@@ -103,6 +103,7 @@ export const PARAM_DEFS = [
   ['synthFmSrc', 'f32'], // which picture the FM input is on: 0 the slot, 1 the camera's return
   ['synthColorSrc', 'f32'], // what the colorizer slices: 0 its oscillator, 1 the picture
   ['synthColorMode', 'f32'], // how: 0 three phase shifts, 1 three comparators
+  ['synthColorSoft', 'f32'], // the box's own lowpass ahead of the slicer, output pixels
   // dirty mixer: source B is a second, non-genlocked composite signal
   ['srcNoiseB', 'f32'], // GPU-generated source B: 0 texture, 1 TV static, 2 VHS blank-tape static
   ['aGain', 'f32'], // A level on the summing bus, signed (negative inverts A)
@@ -1063,7 +1064,7 @@ fn synthWave(cyc: f32, shape: f32) -> f32 {
 // oscillator does not stop for the retrace — the picture is a window onto a
 // wave that was already running, and that offset is part of where the pattern
 // lands.
-fn videoSynth(xy: vec2u, sp: SynthPatch, pic: f32) -> vec3f {
+fn videoSynth(xy: vec2u, sp: SynthPatch, pic: f32, colorPic: f32) -> vec3f {
   let row = f32(ACTIVE_TOP + xy.y);
   let s = f32(ACTIVE_START + xy.x);
   // The FM term multiplies the sample index, not the phase, because pulling an
@@ -1102,7 +1103,7 @@ fn videoSynth(xy: vec2u, sp: SynthPatch, pic: f32) -> vec3f {
   // so equal-brightness areas come back the same colour however far apart they
   // are on screen — which is what makes it lay colour down in large fields
   // instead of on the detail an encoder puts colour on.
-  let cin = select(lvl, clamp(pic, 0.0, 1.0), sp.colorSrc > 0.5);
+  let cin = select(lvl, clamp(colorPic, 0.0, 1.0), sp.colorSrc > 0.5);
   var tint: vec3f;
   if (sp.colorMode > 0.5) {
     // Three comparators at three thresholds, which is how the cheap boxes did

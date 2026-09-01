@@ -14,7 +14,7 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
   if (P.srcNoiseB > 2.5) {
     // No picture on this side to modulate with: compose_b writes srcTexB, it
     // does not read one, so B gets the synth as a source and nothing else.
-    v = videoSynth(gid.xy, synthPatch(P), 0.0);
+    v = videoSynth(gid.xy, synthPatch(P), 0.0, 0.0);
   } else {
     v = snowSource(
       P.srcNoiseB,

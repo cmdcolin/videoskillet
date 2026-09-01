@@ -119,6 +119,7 @@ export function uniformValues(c: Controls, env: UniformEnv) {
     synthFmSrc: c.synthFmSrc,
     synthColorSrc: c.synthColorSrc,
     synthColorMode: c.synthColorMode,
+    synthColorSoft: c.synthColorSoftPx,
     beamBlank: env.beamBlank,
     chromaGain: c.chromaGain,
     burstLock: c.burstLock,

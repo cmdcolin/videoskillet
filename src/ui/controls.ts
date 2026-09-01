@@ -524,6 +524,17 @@ export const GROUPS: Group[] = [
         help: 'Rotates all three phase shifts together, which slides the whole palette round the wheel without changing how the pattern is coloured. Modulate it and the picture cycles colour while the geometry holds still.',
       },
       {
+        key: 'synthColorSoftPx',
+        id: 278,
+        label: 'colorizer input filter',
+        min: 0,
+        max: 24,
+        step: 0.1,
+        redline: [0, 12],
+        unit: 'px',
+        help: "The lowpass a colorizer box has ahead of its slicers, and the control that decides how large the colour fields are. A slicer handed a sharp picture finds a threshold crossing on every piece of detail and posterizes into confetti; handed a soft one it finds a few long boundaries and the picture arrives in slabs. It filters the colorizer's input alone — the picture that reaches the screen keeps every bit of its own detail, so what comes back is a sharp image wearing flat colour. Both axes, unlike the capture band above it, which is a tape loss and so is horizontal only.",
+      },
+      {
         key: 'synthColorSrc',
         id: 276,
         label: 'colorizer input',
@@ -3888,6 +3899,12 @@ export const NEEDS: Partial<Record<ControlKey, SliderNeed>> = {
     ok: above0,
     fix: 1,
     hint: 'the synth over the picture',
+  },
+  synthColorSoftPx: {
+    key: 'synthColorSrc',
+    ok: above0,
+    fix: 1,
+    hint: 'the colorizer input on "picture"',
   },
   synthColorSrc: {
     key: 'synthColor',
