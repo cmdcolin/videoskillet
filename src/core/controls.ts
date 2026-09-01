@@ -239,7 +239,7 @@ export const DEFAULT_CONTROLS = {
   cfbRing: 0, // loop bus ring-modulated against the live program
   cfbRingSrc: 0, // what is on the ring mod's other input: 0 the program, 1 a subcarrier oscillator
   cfbCarrierKHz: 0, // that oscillator's detune off 3.579545 MHz, kHz
-  cfbReturn: 0, // Y/C separator on the return: 0 composite, 1 chroma only, 2 luma only
+  cfbReturn: 0, // Y/C split on the return: 0 composite, 1 the loop's chroma, 2 its luma
   cfbClockPct: 0, // frame store read clock against the write clock, percent
   // per-source feeds: each input's own cable and head-end, ahead of the mix —
   // a fault here damages one signal alone, unlike the program-bus channel

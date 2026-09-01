@@ -213,28 +213,42 @@ fn main(
   let i0 = i32(floor(pos));
   var fb = catmull(prev[clampIdx(i0 - 1)], prev[clampIdx(i0)], prev[clampIdx(i0 + 1)], prev[clampIdx(i0 + 2)], fract(pos));
   if (P.cfbReturn > 0.5) {
-    // A Y/C separator in the loop return, and one wire out of it patched on.
-    // Four consecutive samples at 4x fsc span exactly one subcarrier cycle, so
+    // A Y/C separator on the return and a recombiner after it, so one wire
+    // comes from the loop and the other from the live picture. Four
+    // consecutive samples at 4x fsc span exactly one subcarrier cycle, so
     // their sum nulls chroma however the span happens to land — the same
-    // aperture the keyer below slices with, doing the same job a trap does in
-    // a set. What is left when that mean is taken off is the chroma.
+    // aperture the keyer below slices with, doing the job a trap does in a
+    // set. What is left when that mean comes off is the chroma.
     //
-    // Which wire is carried decides what the loop can do to the picture.
-    // Luma only puts the sync tip and the brightness round the loop and no
-    // colour at all, so trails accumulate in grey underneath a live picture
-    // that keeps its own hue. Chroma only is the opposite and is the stronger
-    // of the two: a chroma line rides about blanking, so the return carries no
-    // brightness and no sync — the fader pulls the picture toward black as it
-    // opens, and what piles up in the dark is colour with nothing underneath
-    // it. It also means this loop cannot fight the receiver for the line
-    // start, which is the one thing a full-composite return always does.
-    var mean = 0.0;
+    // The recombiner is what makes this a patch rather than a mute. One wire
+    // alone cannot go into a crossfader: a chroma line rides about blanking,
+    // so a fader opening onto it takes the picture to black and the arm is a
+    // dead frame rather than a look — measured, and it is why the other wire
+    // is taken from the program here instead.
+    //
+    // So: chroma carries the loop's colour over the live brightness, and
+    // colour accumulates and spins through the delay's rotation while the
+    // picture underneath stays sharp and current. Luma is the reverse — the
+    // loop's brightness and its sync tip go round under the live colour, so
+    // trails stack up in grey and still drag at where the receiver thinks each
+    // line starts.
+    //
+    // The program's half is read from the snapshot rather than from `comp`,
+    // because a boxcar reads neighbours and `comp` is a buffer this same
+    // dispatch is part way through overwriting. The keyer's external input
+    // takes it from there for the same reason; the pipeline refreshes it
+    // whenever either of them is patched in.
+    var ry = 0.0;
+    var py = 0.0;
     let c0 = i32(round(pos)) - 2;
+    let p0 = i32(n) - 2;
     for (var k = 0; k < 4; k = k + 1) {
-      mean = mean + prev[clampIdx(c0 + k)];
+      ry = ry + prev[clampIdx(c0 + k)];
+      py = py + prog[clampIdx(p0 + k)];
     }
-    mean = mean * 0.25;
-    fb = select(mean, fb - mean, P.cfbReturn < 1.5);
+    ry = ry * 0.25;
+    py = py * 0.25;
+    fb = select(ry + (prog[n] - py), py + (fb - ry), P.cfbReturn < 1.5);
   }
   if (resonating) {
     fb = fb + P.cfbFilterBoost * loopResonance(pos);

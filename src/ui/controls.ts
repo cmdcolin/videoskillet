@@ -1139,7 +1139,7 @@ export const GROUPS: Group[] = [
         step: 1,
         choices: ['composite', 'chroma', 'luma'],
         unit: '',
-        help: 'A Y/C separator in the loop return, with one wire out of it patched on. Composite carries the whole waveform, which is what a loop normally is. Chroma carries the colour alone: a chroma line rides about blanking, so the return has no brightness and no sync in it — the fader pulls the picture toward black as it opens, colour piles up in the dark with nothing underneath, and this loop cannot fight the receiver for where a line starts. Luma is the other wire, so brightness and the sync tip go round while the live picture keeps its own colour and the trails behind it come back grey.',
+        help: "A Y/C separator on the loop return and a recombiner after it, so one wire comes round the loop and the other comes from the live picture. Composite is the whole waveform going round, which is what a loop normally is. Chroma sends the loop's colour over the live brightness: hue accumulates and keeps turning through the delay's rotation while the picture under it stays sharp and current, so what builds up is colour that has come loose from the thing that cast it. Luma is the reverse — brightness and the sync tip go round underneath the live colour, so trails stack up in grey and still drag at where the receiver thinks each line starts.",
       },
       {
         key: 'cfbRingSrc',

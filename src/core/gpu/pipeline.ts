@@ -2344,10 +2344,14 @@ export class Engine implements EngineApi {
     this.encodeCompositeBPass.bg =
       this.encodeCompositeBBgs[this.bFeedOn() ? 1 : 0]
     for (const p of this.prePasses) {
-      // The keyer's external key input is program as the mixer had it, so the
-      // snapshot is taken here — after the switcher's own boxes, before the
-      // loop crossfades over the top of them.
-      if (p === this.fbCompositePass && c.cfbKey !== 0 && c.cfbKeyExt > 0) {
+      // Program as the mixer had it — after the switcher's own boxes, before
+      // the loop crossfades over the top of them. Two things in the loop read
+      // it: the keyer's external key input, and the Y/C recombiner, which
+      // takes whichever wire the return is not carrying from the live picture.
+      if (
+        p === this.fbCompositePass &&
+        ((c.cfbKey !== 0 && c.cfbKeyExt > 0) || c.cfbReturn > 0)
+      ) {
         enc.copyBufferToBuffer(this.compA, 0, this.progSnap, 0, N * 4)
       }
       run(p)

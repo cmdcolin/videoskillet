@@ -341,7 +341,7 @@ export const PARAM_DEFS = [
   ['cfbRingSrc', 'f32'], // 0 the live program, 1 the box's own subcarrier oscillator
   ['cfbCarrierPhase', 'f32'], // that oscillator's phase off the house carrier at frame start, radians
   ['cfbCarrierPerSample', 'f32'], // its phase growth per sample, radians (the detune)
-  ['cfbReturn', 'f32'], // Y/C separator on the return: 0 composite, 1 chroma only, 2 luma only
+  ['cfbReturn', 'f32'], // Y/C split on the return: 0 composite, 1 loop's chroma, 2 loop's luma
   ['cfbClock', 'f32'], // frame store read-clock error, as a fraction of the write clock
   // display
   // Beam blanking, held on: the guns cut for most of a cycle and let through in

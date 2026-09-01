@@ -1090,16 +1090,16 @@ export const PRESETS: PresetDef[] = [
     displayName: 'colour in the dark',
     group: 'Feedback loops',
     blurb:
-      "Only the chroma wire out of the loop's separator patched back to the fader. A chroma line rides about blanking, so the return is carrying no brightness at all: as the fader opens the picture is pulled toward black, and what accumulates in that black is colour with nothing underneath it. The delay is a hue rotation, so each lap the surviving colour arrives turned again and the dark fills with bands that keep spinning through the wheel long after the thing that put them there has gone. It also takes the loop out of the fight for the line start — a full-composite return is pushing sync tips at the receiver every lap, and this one has none to push, so the frame stays where it is while the colour comes apart on top of it.",
+      "The separator's chroma wire round the loop and the live brightness taken from the picture, so only the colour is fed back. Hue accumulates lap after lap and keeps turning through the delay's rotation, while the picture under it stays sharp and current — so what builds up is colour that has come loose from the thing that cast it, drifting across a subject that is still exactly where it is. Nothing is smeared, because brightness never enters the loop: the edges are as crisp as the source and the colour on them is minutes old. The slice is on nothing here and the key is out; what decides where colour survives is only how far round the wheel it has already turned.",
     patch: {
       cfbMix: 0.88,
-      cfbGain: 1.06,
+      cfbGain: 1.02,
       cfbDelayUs: 0.35,
       cfbLines: 2,
       cfbReturn: 1,
-      chromaGain: 2.4,
-      phosphor: 0.55,
-      crtSat: 1.4,
+      chromaGain: 2.2,
+      phosphor: 0.5,
+      crtSat: 1.3,
       noiseIre: 1.2,
     },
   },
@@ -1108,7 +1108,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'grey under the colour',
     group: 'Feedback loops',
     blurb:
-      'The other wire off the same separator. Luma alone goes round, so the trails a moving subject leaves are brightness and nothing else, stacking four lines up a lap into grey rungs — while the live picture over the top of them keeps every bit of its own colour, because no colour ever entered the loop to compete with it. The sync tip is on the luma wire too, so this return still pushes the receiver about: the accumulation drags at where the lines start, and the grey ladder tears along with the picture it is under rather than sitting behind it.',
+      "The other wire off the same separator, with the live colour recombined over it. Brightness alone goes round, so the trails a moving subject leaves are grey rungs stacking four lines up a lap — and the colour laid over them is the picture's own, current and in the wrong place, because it belongs to where the subject is now rather than to the ladder of where it was. The sync tip is on the luma wire too, so this return still pushes the receiver about: the accumulation drags at where each line starts, and the ladder tears along with the picture instead of sitting behind it.",
     patch: {
       cfbMix: 0.8,
       cfbGain: 1.03,
