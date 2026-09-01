@@ -765,6 +765,46 @@ await phase('popout', {}, async page => {
     docked.panelW === docked.win,
     `the stacked panel is ${docked.panelW}px in a ${docked.win}px window`,
   )
+
+  // Stacked, the screen is shared by height and there is no third thing to give
+  // it to: whatever the picture's column does not use, the panel gets. `flex: 1`
+  // on that column gave it half the screen whether or not it had half a screen
+  // in it, and both ends of that were wrong — 91px of black under a shut tray on
+  // a 390x844 phone, and an open one hanging 11px over the panel's top border.
+  // So the column has to measure exactly what is in it, and meet the panel.
+  const column = await page.evaluate(() => {
+    const box = sel => {
+      const e = document.querySelector(sel)
+      return e === null ? null : e.getBoundingClientRect()
+    }
+    const left = box('[class*=left_]')
+    const panel = box('[class*=panel_]')
+    const stage = box('[class*=stage_]')
+    const tray = box('[class*=tray_]')
+    if (left === null || panel === null || stage === null || tray === null)
+      return null
+    return {
+      slack: Math.round(left.bottom - tray.bottom),
+      seam: Math.round(panel.top - left.bottom),
+      floor: Math.round(innerHeight - panel.bottom),
+    }
+  })
+  check(column !== null, 'the stacked shell is missing a stage, tray or panel')
+  if (column !== null) {
+    check(
+      Math.abs(column.slack) <= 1,
+      `the picture's column is ${column.slack}px taller than the picture and the tray in it — ${column.slack > 0 ? 'that much of the screen is black' : 'the tray hangs over the panel by that much'}`,
+    )
+    check(
+      Math.abs(column.seam) <= 1,
+      `a ${column.seam}px gap between the picture's column and the panel under it`,
+    )
+    check(
+      Math.abs(column.floor) <= 1,
+      `the panel stops ${column.floor}px short of the bottom of the screen`,
+    )
+  }
+
   await page.setViewport({ width: 1352, height: 900 })
   await settle(700)
 

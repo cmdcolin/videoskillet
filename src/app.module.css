@@ -77,6 +77,17 @@
   .app {
     flex-direction: column;
   }
+  /* The picture's column takes what the stage and the tray measure, and the
+     panel takes the rest. Stretching it handed the column half the screen
+     whatever was in it, which is the wrong half twice over: shut, a 4:3 stage
+     and a 28px tray came to 321px of a 390x844 phone's 412, so 91px of screen
+     was black and the panel was 433px when it could have been 524. Open, the
+     tray went the other way and ran 11px past the column — `min-height: 0`
+     lets it overflow rather than push — so its scrollbar sat on the panel's
+     top border. */
+  .app .left {
+    flex: none;
+  }
   .app .panel {
     width: auto;
     flex: 1;
