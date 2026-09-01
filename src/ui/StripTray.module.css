@@ -25,6 +25,16 @@
   gap: 6px;
   padding: 4px 8px;
   flex: none;
+  /* The bar is ten controls and it does not fit a phone. Measured at 390px with
+     the pointer coarse: 641px of content, so everything from ⎙ render rightwards
+     — the render, the track, the undo pair and the seed — sat off the right edge
+     with no way to reach it. Worse than unreachable, it took the document with
+     it: a flex row that overflows makes the page wider than the viewport, the
+     layout viewport grows to the content, and the whole app is then side-
+     scrolling and drawn small. Wrapping costs a second line on a phone and
+     nothing at all on a desktop, where the row fits and there is nothing to
+     wrap. */
+  flex-wrap: wrap;
 }
 
 .disclose {

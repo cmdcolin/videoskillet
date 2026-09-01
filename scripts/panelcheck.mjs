@@ -805,6 +805,39 @@ await phase('popout', {}, async page => {
     )
   }
 
+  // Nothing may be wider than the phone, with the rundown's shelf shut and with
+  // it open — the shelf is where this went wrong. Its bar is ten controls in a
+  // flex row, which came to 641px on a 390px screen, and a flex row that
+  // overflows does not merely hide its right-hand end: the document grows with
+  // it, the layout viewport grows to the document, and the whole app is drawn
+  // small and side-scrolling. So the reading is the document's width, not the
+  // bar's.
+  const wideAs = () =>
+    page.evaluate(() => ({
+      doc: Math.round(document.documentElement.scrollWidth),
+      view: Math.round(window.innerWidth),
+    }))
+  const shut = await wideAs()
+  check(
+    shut.doc <= shut.view + 1,
+    `the stacked shell is ${shut.doc}px wide in a ${shut.view}px window with the strip shut`,
+  )
+  const toggleStrip = () =>
+    page.evaluate(`(() => {
+      const b = [...document.querySelectorAll('button[aria-expanded]')]
+        .find(b => /strip/.test(b.textContent ?? ''))
+      if (b !== undefined) b.click()
+      return 0
+    })()`)
+  await toggleStrip()
+  await settle(600)
+  const open = await wideAs()
+  check(
+    open.doc <= open.view + 1,
+    `opening the strip took the stacked shell to ${open.doc}px in a ${open.view}px window — something in the tray does not wrap`,
+  )
+  await toggleStrip()
+  await settle(400)
   await page.setViewport({ width: 1352, height: 900 })
   await settle(700)
 
