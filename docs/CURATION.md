@@ -186,6 +186,18 @@ pick. What made the blend worse than the preset was: `bendShape` is an enum key,
 so a follower at weight 0.25 handed the shape over whole while the amplitude
 around it scaled down.
 
+The same session turned up the neighbouring one. Every preset that used the HV
+tank was authored between 0.8 and 0.9 on `hvRing`, and the dial is steep up
+there: damping ratio 0.66 at 0.5, where a bright edge overshoots once and has
+settled within seven lines, against 0.32 at 0.9, where the wobble is still going
+half a cycle later and the next line of content kicks it again. Stacked under a
+roll it stopped reading as a supply under load and started reading as the
+picture sliding about. The four presets carrying it as texture under something
+else — `ignitionStorm`, `bassSmack`, `huntingServos`, `meltdown` — came down to
+a light application; the three it is _about_ (`supplyChaos`, `fullCollapse`,
+`pastTheYoke`) kept what they were tuned at, and `ROLL_STAYS_UNDER` holds a roll
+to 0.6 ring and 12us sag instead.
+
 ### Round two, the loops
 
 Seven of fourteen feedback candidates kept: `zoom bloom`, `tunnel out`,

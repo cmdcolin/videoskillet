@@ -97,13 +97,41 @@ export const ROLL_NEVER_LANDS: ReadonlyMap<
   { barred: number; instead: number }
 > = new Map([['bendShape', { barred: 3, instead: 2 }]])
 
+// How far a roll may push a control that is loud out of proportion to the dial
+// it sits on, unless the board is already past it.
+//
+// The HV tank (`sync.wgsl`) is a damped resonator the picture excites: beam
+// current loads the supply, the scan widens, and the loop rings on its way
+// back. How long it rings is `hvRing`, and the dial is steep at the top —
+// damping ratio 0.66 at 0.5, where a bright edge overshoots once and is settled
+// within seven lines, against 0.32 at 0.9, where the wobble is still going half
+// a cycle later and content kicks it again before it ever arrives. Every preset
+// that used the tank was authored at 0.8 to 0.9, and stacked under a roll that
+// is a picture sliding side to side rather than a supply under load.
+//
+// `hvSagUs` is the same argument about depth. The line is 63.5us and the tank
+// clamps at three times the amplitude, so 12us is already most of a picture
+// width at full swing; a throw could reach 100.
+//
+// Both are still yours to dial, and the chips that are *about* the tank —
+// `supplyChaos`, `fullCollapse`, `pastTheYoke` — still click through at what
+// they were tuned at. What a roll hands back is a supply that droops and
+// recovers.
+export const ROLL_STAYS_UNDER: ReadonlyMap<ControlKey, number> = new Map([
+  ['hvSagUs', 12],
+  ['hvRing', 0.6],
+])
+
 // Where a roll actually leaves a control, given where it was and where the roll
 // put it. Everything not named above lands where it rolled.
 export const rollLanding = (key: ControlKey, rolled: number, from: number) => {
   const rule = ROLL_NEVER_LANDS.get(key)
-  return rule === undefined || from === rule.barred || rolled !== rule.barred
-    ? rolled
-    : rule.instead
+  const cap = ROLL_STAYS_UNDER.get(key)
+  return rule !== undefined && from !== rule.barred && rolled === rule.barred
+    ? rule.instead
+    : cap !== undefined && Math.abs(rolled) > cap && Math.abs(from) <= cap
+      ? Math.sign(rolled) * cap
+      : rolled
 }
 
 // Nudge every control by a random fraction of its own slider *travel* — the

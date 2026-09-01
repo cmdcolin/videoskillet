@@ -80,6 +80,33 @@ describe('mutate', () => {
     expect(shapes.has(3)).toBe(true)
   })
 
+  // The HV tank's dial is steep at the top: it rings for seven lines at 0.5 and
+  // for twenty-nine at 0.9, which under content never settles. See
+  // ROLL_STAYS_UNDER.
+  it('keeps the supply ring and the sag under their ceilings', () => {
+    for (let seed = 1; seed < 40; seed++) {
+      const out = mutate(
+        { ...DEFAULT_CONTROLS, hvSagUs: 5, hvRing: 0.5 },
+        SLIDERS,
+        0.6,
+        rngFor(seed),
+        ALL_AWAKE,
+      )
+      expect(out.hvRing, `seed ${seed}`).toBeLessThanOrEqual(0.6)
+      expect(Math.abs(out.hvSagUs), `seed ${seed}`).toBeLessThanOrEqual(12)
+    }
+  })
+
+  it('still jitters a supply the board is already ringing past the ceiling', () => {
+    const chaos = { ...DEFAULT_CONTROLS, hvSagUs: 20, hvRing: 0.9 }
+    const rings = new Set(
+      Array.from({ length: 40 }, (_, i) =>
+        mutate(chaos, SLIDERS, 0.3, rngFor(i + 1), ALL_AWAKE),
+      ).map(o => o.hvRing),
+    )
+    expect([...rings].some(r => r > 0.6)).toBe(true)
+  })
+
   it('still jitters a strobe that is already running', () => {
     const on = { ...DEFAULT_CONTROLS, strobeHz: 3.5 }
     expect(mutate(on, SLIDERS, 0.12, () => 1).strobeHz).toBeGreaterThan(3.5)
@@ -239,6 +266,16 @@ describe('spike', () => {
         spike({ ...DEFAULT_CONTROLS, bendUs: 20 }, SLIDERS, 12, rngFor(seed))
           .bendShape,
       ).not.toBe(3)
+    }
+  })
+
+  // A throw reaches further than a nudge: hvSagUs runs to 100 and the tank
+  // clamps at three times it, so an uncapped throw is the whole picture sliding.
+  it('keeps the supply ring and the sag under their ceilings too', () => {
+    for (let seed = 1; seed < 60; seed++) {
+      const out = spike(DEFAULT_CONTROLS, SLIDERS, 12, rngFor(seed))
+      expect(out.hvRing, `seed ${seed}`).toBeLessThanOrEqual(0.6)
+      expect(Math.abs(out.hvSagUs), `seed ${seed}`).toBeLessThanOrEqual(12)
     }
   })
 

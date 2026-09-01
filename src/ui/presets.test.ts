@@ -189,6 +189,30 @@ describe('blendPresets', () => {
     expect(yoke.vSize).toBe(3.4)
   })
 
+  it('keeps the HV tank light on a board that is not already ringing', () => {
+    for (const p of PRESETS) {
+      for (const w of [1, 0.5, 0.25]) {
+        const rolled = rollControls(new Map([[p.name, w]]), DEFAULT_CONTROLS)
+        expect(rolled.hvRing, `${p.name} at ${w}`).toBeLessThanOrEqual(0.6)
+        expect(
+          Math.abs(rolled.hvSagUs),
+          `${p.name} at ${w}`,
+        ).toBeLessThanOrEqual(12)
+      }
+    }
+  })
+
+  // The cap is a rule about rolls, not about the presets: a chip is a hand
+  // choosing the look somebody tuned, and supply chaos is named for the tank.
+  it('leaves the chip itself at what it was tuned at', () => {
+    const clicked = blendPresets(
+      DEFAULT_CONTROLS,
+      new Map([['supplyChaos', 1]]),
+    )
+    expect(clicked.hvRing).toBe(0.85)
+    expect(clicked.hvSagUs).toBe(16)
+  })
+
   it('leaves a strobe alone on a board that is already running one', () => {
     const strobing = presetControls({ strobeHz: 2 })
     expect(rollControls(new Map([['strobedTube', 1]]), strobing).strobeHz).toBe(

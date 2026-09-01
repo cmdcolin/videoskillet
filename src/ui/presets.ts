@@ -1,7 +1,12 @@
 import { CONTROL_KEYS, DEFAULT_CONTROLS } from '../core/controls'
 import { randomIndex } from '../core/rng'
 import { SLIDER_BY_KEY, VIEW_KEYS, snapToStep } from './controls'
-import { ROLL_NEVER_LANDS, ROLL_NEVER_STARTS } from './mutate'
+import {
+  ROLL_NEVER_LANDS,
+  ROLL_NEVER_STARTS,
+  ROLL_STAYS_UNDER,
+  rollLanding,
+} from './mutate'
 
 import type { ControlKey, Controls } from '../core/controls'
 import type { ModRouting } from './modSlots'
@@ -320,8 +325,8 @@ export const PRESETS: PresetDef[] = [
       strikeRate: 1.5,
       aGain: 0.3,
       agc: 0.6,
-      hvSagUs: 8,
-      hvRing: 0.8,
+      hvSagUs: 5,
+      hvRing: 0.5,
       crtCutoff: 0.1,
       phosphor: 0.88,
     },
@@ -472,9 +477,9 @@ export const PRESETS: PresetDef[] = [
       audioLoad: 2.2,
       // a little standing sag for character, most of it on the onset so the
       // tube sits nearly still between hits and the kick actually lands
-      hvSagUs: 7,
+      hvSagUs: 4,
       audioSagUs: 24,
-      hvRing: 0.8,
+      hvRing: 0.5,
       vHold: 0.45,
       hHold: 0.3,
       phosphor: 0.8,
@@ -666,8 +671,8 @@ export const PRESETS: PresetDef[] = [
       fbMix: 0.5,
       fbZoom: 1.04,
       agc: 0.6,
-      hvSagUs: 7,
-      hvRing: 0.85,
+      hvSagUs: 4,
+      hvRing: 0.45,
       crtBloom: 0.3,
     },
   },
@@ -687,8 +692,8 @@ export const PRESETS: PresetDef[] = [
       fbIris: 0.85,
       fbMix: 0.45,
       fbZoom: 1.03,
-      hvSagUs: 9,
-      hvRing: 0.9,
+      hvSagUs: 5,
+      hvRing: 0.5,
       accLagLines: 18,
       agc: 0.6,
       chromaGain: 1.8,
@@ -2443,16 +2448,18 @@ export function rollControls(weights: PresetWeights, view: Controls): Controls {
   // back a full-field flash at 0.9 to 3.5 Hz over whatever else it had rolled.
   // The chip is still there to click, which is a choice somebody made.
   for (const key of ROLL_NEVER_STARTS) if (view[key] === 0) out[key] = 0
-  // And the same rule again, about a value rather than about zero: a roll hands
-  // back no barred shape the board was not already holding. `pastTheYoke` bows
-  // rather than ripples now, so nothing shipped reaches this — it is what keeps
-  // a future preset from putting a ripple back into every roll that blends it,
-  // at full strength whatever weight the rest of that look came in at, since
-  // `bendShape` is an enum key and enum keys do not scale.
-  for (const [key, rule] of ROLL_NEVER_LANDS) {
-    if (out[key] === rule.barred && view[key] !== rule.barred) {
-      out[key] = rule.instead
-    }
+  // And the two rules about where a control lands rather than about zero: no
+  // barred shape and no ringing supply the board was not already holding.
+  // Through `rollLanding` so the three rolls cannot disagree — the jitter and
+  // the throw read the same function.
+  //
+  // A roll is where these bite hardest. `bendShape` is an enum key, so a
+  // follower at weight 0.25 hands its shape over whole while the amplitude
+  // around it scales down, and the HV tank arrives stacked under whatever else
+  // the roll drew rather than as the look somebody tuned it inside. Both chips
+  // still click through at full strength, which is a choice somebody made.
+  for (const key of [...ROLL_NEVER_LANDS.keys(), ...ROLL_STAYS_UNDER.keys()]) {
+    out[key] = rollLanding(key, out[key], view[key])
   }
   return out
 }
