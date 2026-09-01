@@ -116,6 +116,7 @@ export function uniformValues(c: Controls, env: UniformEnv) {
     // the oscillator's own walk is in — the FM input adds to that walk, so the
     // two have to arrive in the same units.
     synthFm: c.synthFm / SAMPLE_RATE,
+    synthFmSrc: c.synthFmSrc,
     beamBlank: env.beamBlank,
     chromaGain: c.chromaGain,
     burstLock: c.burstLock,

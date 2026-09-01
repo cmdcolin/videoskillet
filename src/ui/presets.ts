@@ -1662,6 +1662,36 @@ export const PRESETS: PresetDef[] = [
     },
   },
   {
+    name: 'contoursOnContours',
+    displayName: 'contours on contours',
+    group: 'Circuit bent',
+    blurb:
+      "The same patch with the oscillator's frequency input moved off the deck and onto the camera loop's return, which is this stage's own output one frame ago with the synth already drawn into it. So the contours are not traced on the picture — they are traced on last frame's contours, and the frequency at any point is set by how bright the oscillator's own drawing was there the time before. A little defocus in the lens is what keeps that from collapsing into single-pixel noise, and a lens turned slightly means each generation lands rotated off the one it grew from. What comes out is banding that reorganises continuously and never arrives anywhere, over a subject you can still recognise, with the colorizer turning the whole thing through hue.",
+    patch: {
+      synthOver: 0.55,
+      synthShape: 1,
+      synthAHz: 26000,
+      synthFm: 110000,
+      synthFmSrc: 1,
+      synthColor: 0.8,
+      synthLevel: 1.3,
+      // Mid-range, not at the 0 the control rests at: the bay's LFOs are
+      // bipolar, so a routing based at an end spends its run against the clamp
+      // (docs/CURATION.md). Based here the palette walks the whole wheel.
+      synthHueDeg: 180,
+      fbMix: 0.55,
+      fbGain: 1.02,
+      fbRotateDeg: 0.6,
+      fbFocus: 2.5,
+      fbBlack: 0.04,
+      chromaGain: 1.3,
+      phosphor: 0.35,
+    },
+    mod: [
+      { target: 'synthHueDeg', source: 'smooth', rateHz: 0.05, depth: 0.35 },
+    ],
+  },
+  {
     name: 'ringPlaid',
     displayName: 'ring plaid',
     group: 'Circuit bent',

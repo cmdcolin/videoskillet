@@ -544,6 +544,17 @@ export const GROUPS: Group[] = [
         unit: 'Hz',
         help: "The picture's own brightness into oscillator A's frequency input — the patch every video synth was bought for. It pulls the frequency rather than offsetting the phase, so the wave genuinely runs faster through bright picture and slower through dark: the spacing of the bars becomes the brightness, and equal-brightness regions fall into step, so the image draws itself as contour lines nobody traced. Needs something over the picture to read, so it does nothing until the control above is up.",
       },
+      {
+        key: 'synthFmSrc',
+        id: 275,
+        label: 'that input, patched to',
+        min: 0,
+        max: 1,
+        step: 1,
+        choices: ['the deck', 'the loop'],
+        unit: '',
+        help: "Which picture the frequency input is reading. The deck is the slot's own, so the contours land on the source and are drawn again from scratch every frame. The loop is the camera's return — the picture this stage wrote a frame ago with the synth already in it — so the contours are traced on the last generation's contours and the result goes round again: the frequency at a point is set by how bright the oscillator's own drawing was there last time. Nothing in the patch decides what that settles into, and it does not settle. With the camera loop out it reads the same picture the deck does, since there is no return to read.",
+      },
     ],
   },
   // Input A's own deck, cable and head-end, ahead of the mixer. The same faults
@@ -3855,6 +3866,12 @@ export const NEEDS: Partial<Record<ControlKey, SliderNeed>> = {
     ok: above0,
     fix: 1,
     hint: 'the synth over the picture',
+  },
+  synthFmSrc: {
+    key: 'synthFm',
+    ok: above0,
+    fix: 40000,
+    hint: 'luma into osc A above 0',
   },
   strobeMs: {
     key: 'strobeHz',

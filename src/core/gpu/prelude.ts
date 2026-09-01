@@ -100,6 +100,7 @@ export const PARAM_DEFS = [
   // texture rather than reading it, so B keeps the source mode alone.
   ['synthOver', 'f32'], // synth crossfaded over the slot's picture
   ['synthFm', 'f32'], // that picture's luma into osc A's frequency, cycles/sample
+  ['synthFmSrc', 'f32'], // which picture the FM input is on: 0 the slot, 1 the camera's return
   // dirty mixer: source B is a second, non-genlocked composite signal
   ['srcNoiseB', 'f32'], // GPU-generated source B: 0 texture, 1 TV static, 2 VHS blank-tape static
   ['aGain', 'f32'], // A level on the summing bus, signed (negative inverts A)

@@ -35,6 +35,7 @@ export const DEFAULT_CONTROLS = {
   synthHueDeg: 0,
   synthOver: 0, // synth over slot A's picture rather than instead of it
   synthFm: 0, // that picture's luma into osc A's frequency, Hz per unit luma
+  synthFmSrc: 0, // which picture that input is on: 0 the slot, 1 the camera loop's return
   // encoder
   encChromaMHz: 1.3,
   invert: 0, // polarity flip on the composite line (alligator-pin swap)

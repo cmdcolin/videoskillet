@@ -158,7 +158,12 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
   // the arrangement the frequency-modulation input needs: something has to be
   // on the slot for its luma to drive anything. Slot A only — compose_b writes
   // its texture rather than reading one, so B has no picture in hand here.
-  if (P.srcNoise < 2.5 && P.synthOver > 0.0) {
+  //
+  // On the deck, the modulation input is reading the picture the slot is
+  // showing, so the contours it draws land on the source and are redrawn from
+  // scratch every frame. The other connector is below, after the camera.
+  let synthOn = P.srcNoise < 2.5 && P.synthOver > 0.0;
+  if (synthOn && P.synthFmSrc < 0.5) {
     src = mix(src, videoSynth(gid.xy, synthPatch(P), luma(src)), P.synthOver);
   }
 
@@ -199,6 +204,21 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
     let over = max(fb - vec3f(knee), vec3f(0.0));
     fb = min(fb, vec3f(knee)) + (1.0 - knee) * over / (1.0 - knee + over);
   }
-  let outc = mix(src, fb, P.fbMix);
+  var outc = mix(src, fb, P.fbMix);
+  // The modulation input on the loop return instead of on the deck: the synth
+  // is reading the picture the camera just handed back, which is the picture
+  // this pass wrote a frame ago with the synth already in it. So the contours
+  // are traced on the last generation's contours rather than on the source,
+  // and the result goes round again — the oscillator's frequency at a point is
+  // set by how bright its own drawing was there last time. Nothing in the
+  // patch says what shape that settles into, and it does not settle: the
+  // spacing of the bars is a picture of where the bars were.
+  //
+  // After the camera mix rather than before it, because that is the only place
+  // the return exists. With the camera out, the mix is an identity and this
+  // reads the slot, which is the same picture the connector above reads.
+  if (synthOn && P.synthFmSrc >= 0.5) {
+    outc = mix(outc, videoSynth(gid.xy, synthPatch(P), luma(outc)), P.synthOver);
+  }
   textureStore(inputTex, vec2i(gid.xy), vec4f(outc, 1.0));
 }
