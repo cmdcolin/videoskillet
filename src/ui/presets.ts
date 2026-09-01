@@ -1511,6 +1511,33 @@ export const PRESETS: PresetDef[] = [
     },
   },
   {
+    name: 'matteFlood',
+    displayName: 'matte flood',
+    group: 'A/B mixing',
+    blurb:
+      "The keyer's own matte generator poured through an inverted key, so what floods the picture is a single flat encoded colour and what survives is one hue. Inverted, the wedge is the only thing the box keeps: everything more than eighty degrees off the backing is cut, the fill comes up behind it, and the fill is not an RGB value pasted on — it is a flat field on the house carrier, so it dot-crawls and demodulates like any other colour the chain is carrying. What that gives is enormous areas of one hue with a hard organic boundary shaped by where the picture's own colour happens to sit, and the subject still legible inside it as brightness. The backing hue sweeps, so the boundary migrates through the picture's colours and the flood takes over a different part of the room as it goes. The most saturated look in the table, and among the flattest: three hues holding more than half the frame.",
+    patch: {
+      bGenlock: 1,
+      bGain: 1,
+      bKey: -1,
+      bKeyHueDeg: 40,
+      bKeyAcceptDeg: 80,
+      bKeyClip: 0.02,
+      bKeyFill: 1,
+      bKeyMatteY: 0.6,
+      bKeyMatteSat: 0.6,
+      bKeyMatteHueDeg: 200,
+      chromaGain: 2.5,
+      demodMHz: 0.4,
+    },
+    mod: [
+      // Depth kept inside the base: the bay's LFOs are bipolar, and 0.15 of a
+      // 360-degree span swings past 0 from a base of 40, which is a routing
+      // spending part of its run against the clamp (docs/CURATION.md).
+      { target: 'bKeyHueDeg', source: 'smooth', rateHz: 0.03, depth: 0.08 },
+    ],
+  },
+  {
     name: 'keySweep',
     displayName: 'key sweep',
     group: 'A/B mixing',
@@ -1691,6 +1718,29 @@ export const PRESETS: PresetDef[] = [
     // The palette turns while the fields stay where they are, which is the
     // colorizer's whole trick: rotating all three phase shifts together slides
     // the wheel without moving the pattern that is being coloured.
+    mod: [
+      { target: 'synthHueDeg', source: 'smooth', rateHz: 0.04, depth: 0.4 },
+    ],
+  },
+  {
+    name: 'blockColour',
+    displayName: 'block colour',
+    group: 'Circuit bent',
+    blurb:
+      'The same two slow oscillators as the poured look, into the comparator instead of the multiplier. A comparator has two output levels and nothing in between, so the second oscillator on its reference input decides only where the boundary falls — and with both of them running down the frame at a few cycles, that boundary is a handful of horizontal edges that drift. The colorizer maps level to hue, and a signal with two levels lands on two opposite hues: the screen becomes slabs of red and cyan, hard-edged, with the picture reading through each slab as brightness alone. Measured the flattest thing in the table — the fewest hues of any coloured look and less colour edging than a clean signal has.',
+    patch: {
+      synthOver: 0.8,
+      synthAHz: 90,
+      synthBHz: 37,
+      synthMix: 3,
+      synthShape: 1,
+      synthColor: 1,
+      synthLevel: 1.8,
+      synthHueDeg: 180,
+      demodMHz: 0.4,
+      chromaGain: 4,
+      crtSat: 1.6,
+    },
     mod: [
       { target: 'synthHueDeg', source: 'smooth', rateHz: 0.04, depth: 0.4 },
     ],

@@ -4,7 +4,7 @@
 // the one a contact sheet is bad at, because a saturated source hides colour
 // that was manufactured and a still frame hides colour that is turning.
 //
-//   node scripts/colourcheck.mjs [url] [outDir] [--src=clip-haunted-house]
+//   node scripts/colourcheck.mjs [url] [outDir] [--src=] [--srcb=]
 //   node scripts/colourcheck.mjs --arms=cfbRing:1,cfbRingSrc:1
 //
 // Pick the source to suit the claim. A monochrome one settles the strong form
@@ -49,6 +49,7 @@ const positional = args.filter(a => !a.startsWith('--'))
 const url = positional[0] ?? 'http://localhost:5199/'
 const outDir = positional[1] ?? 'colourcheck'
 const src = flag('src') ?? 'clip-haunted-house'
+const srcb = flag('srcb') ?? 'none'
 
 // A patch as `key:value,key:value`, the same spelling `?set=` takes.
 const parse = s =>
@@ -77,81 +78,113 @@ const ARMS =
     ? [
         ['clean', {}, {}],
         [
-          'A poured colour',
+          'comparator (ref)',
           {},
           {
             synthOver: 0.8,
             synthAHz: 90,
             synthBHz: 37,
-            synthMix: 2,
             synthShape: 1,
             synthColor: 1,
             synthLevel: 1.8,
-            chromaGain: 4,
+            synthHueDeg: 180,
             demodMHz: 0.4,
+            chromaGain: 4,
             crtSat: 1.6,
+            synthMix: 3,
           },
         ],
         [
-          'B splash mix .45',
+          'matte, accept 40',
+          {},
           {
-            cfbMix: 0.45,
-            cfbGain: 0.6,
-            cfbDelayUs: 0.9,
-            cfbRing: 1,
-            cfbRingSrc: 1,
-            cfbCarrierKHz: 10,
-          },
-          {
-            demodMHz: 0.15,
-            combMode: 3,
-            chromaGain: 9,
-            crtSat: 2.2,
-            crtSpot: 5,
-            crtBloom: 0.8,
-          },
-        ],
-        [
-          'C splash mix .6 g.55',
-          {
-            cfbMix: 0.6,
-            cfbGain: 0.55,
-            cfbDelayUs: 0.9,
-            cfbRing: 1,
-            cfbRingSrc: 1,
-            cfbCarrierKHz: 10,
-          },
-          {
-            demodMHz: 0.15,
-            combMode: 3,
-            chromaGain: 9,
-            crtSat: 2.2,
-            crtSpot: 5,
-            crtBloom: 0.8,
+            bGenlock: 1,
+            bGain: 1,
+            bKey: 1,
+            bKeyFill: 1,
+            bKeyMatteY: 0.6,
+            bKeyMatteSat: 0.6,
+            bKeyClip: 0.02,
+            chromaGain: 2.5,
+            demodMHz: 0.4,
+            bKeyAcceptDeg: 40,
+            bKeyHueDeg: 40,
+            bKeyMatteHueDeg: 200,
           },
         ],
         [
-          'D products, old',
+          'matte, accept 80',
+          {},
           {
-            cfbMix: 0.84,
-            cfbGain: 1,
-            cfbDelayUs: 1.2,
-            cfbLines: 2,
-            cfbRing: 0.85,
+            bGenlock: 1,
+            bGain: 1,
+            bKey: 1,
+            bKeyFill: 1,
+            bKeyMatteY: 0.6,
+            bKeyMatteSat: 0.6,
+            bKeyClip: 0.02,
+            chromaGain: 2.5,
+            demodMHz: 0.4,
+            bKeyAcceptDeg: 80,
+            bKeyHueDeg: 40,
+            bKeyMatteHueDeg: 200,
           },
-          { demodAxisDeg: 34, matrixClip: 1, chromaGain: 2.2, phosphor: 0.5 },
         ],
         [
-          'D products, carrier',
+          'matte, accept 120',
+          {},
           {
-            cfbMix: 0.84,
-            cfbGain: 1,
-            cfbDelayUs: 1.2,
-            cfbLines: 2,
-            cfbRing: 0.85,
-            cfbRingSrc: 1,
+            bGenlock: 1,
+            bGain: 1,
+            bKey: 1,
+            bKeyFill: 1,
+            bKeyMatteY: 0.6,
+            bKeyMatteSat: 0.6,
+            bKeyClip: 0.02,
+            chromaGain: 2.5,
+            demodMHz: 0.4,
+            bKeyAcceptDeg: 120,
+            bKeyHueDeg: 40,
+            bKeyMatteHueDeg: 200,
           },
-          { demodAxisDeg: 34, matrixClip: 1, chromaGain: 1.8, phosphor: 0.5 },
+        ],
+        [
+          'matte, soft edge',
+          {},
+          {
+            bGenlock: 1,
+            bGain: 1,
+            bKey: 1,
+            bKeyFill: 1,
+            bKeyMatteY: 0.6,
+            bKeyMatteSat: 0.6,
+            bKeyClip: 0.02,
+            chromaGain: 2.5,
+            demodMHz: 0.4,
+            bKeyAcceptDeg: 80,
+            bKeyHueDeg: 40,
+            bKeyMatteHueDeg: 200,
+            bKeySoft: 0.25,
+          },
+        ],
+        [
+          'matte + inverted key',
+          {},
+          {
+            bGenlock: 1,
+            bGain: 1,
+            bKey: 1,
+            bKeyFill: 1,
+            bKeyMatteY: 0.6,
+            bKeyMatteSat: 0.6,
+            bKeyClip: 0.02,
+            chromaGain: 2.5,
+            demodMHz: 0.4,
+            bKeyAcceptDeg: 80,
+            bKeyHueDeg: 40,
+            bKeyMatteHueDeg: 200,
+            bKey: -1,
+          },
         ],
       ]
     : [
@@ -188,6 +221,29 @@ const STOCK = {
   synthMix: 0,
   demodAxisDeg: 90,
   phosphor: 0,
+  phosphorBleed: 0.15,
+  phosphorSkew: 0,
+  crtPurity: 0,
+  crtPuritySize: 0.3,
+  crtPurityX: 0.3,
+  crtPurityY: 0.35,
+  chromaTail: 0,
+  vir: 0,
+  virLag: 45,
+  diffGain: 0,
+  diffPhaseDeg: 0,
+  dubGens: 1,
+  synthHueDeg: 0,
+  bGenlock: 0,
+  bKey: 0,
+  bKeyFill: 0,
+  bKeyAcceptDeg: 0,
+  bKeyHueDeg: 241,
+  bKeySoft: 0.08,
+  bKeyClip: 0.06,
+  bKeyMatteY: 0.5,
+  bKeyMatteSat: 0.3,
+  bKeyMatteHueDeg: 0,
   synthShape: 2,
   synthColor: 0,
   synthLevel: 1,
@@ -222,7 +278,7 @@ page.on('pageerror', err => {
 })
 // A moving picture: a loop fed a frozen frame converges and reports as doing
 // nothing, which is the opposite of what it does on live video.
-await page.goto(`${url}?src=${src}&srcb=none`, { waitUntil: 'networkidle0' })
+await page.goto(`${url}?src=${src}&srcb=${srcb}`, { waitUntil: 'networkidle0' })
 await new Promise(r => setTimeout(r, 8000))
 
 const measure = (board, patch) =>
