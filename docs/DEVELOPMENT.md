@@ -383,11 +383,24 @@ frame period against wall time and prints it on its second line; `--tick=` pins
 it. And it is a model of the engine's graph rather than the engine:
 `pipeline.ts` stays the authority, `gpuprof/graph.ts` mirrors it by the binding
 names each shader declares (`core/gpu/reflect.ts`), and a binding left
-unsupplied throws at construction. Four stock-frame wins came out of its first
-afternoon (`OPTIMIZATIONS.md` › _What per-pass timestamps found_), one of them
-on a change the batch harness had measured as flat. Live frame rate is still
-what the user sees, so confirm a win in Firefox with `perf.mjs` once — and only
-once, it takes the screen.
+unsupplied throws at construction.
+
+**Which means the mirror drifts, and the throw is the good half of that.** It
+had drifted three ways by the time anyone next ran it: a uniform block missing
+from one pass, the mixer loop's program snapshot never added after the keyer's
+external input shipped, and a timing buffer two floats short of the VIR
+corrector's integrators. The first two threw at construction and cost a minute
+each. The third did not throw at all — the sag region ended where the buffer
+did, so `vir` wrote out of bounds, a storage buffer discards that silently, and
+the corrector simply did nothing here while doing something in the app. So: add
+a binding to a shader and this graph needs the same entry, and **when a pass
+grows a buffer, check the size against the index constants in the prelude** —
+nothing catches that one for you. Run it after any pass-graph change, not only
+when you want a number. Four stock-frame wins came out of its first afternoon
+(`OPTIMIZATIONS.md` › _What per-pass timestamps found_), one of them on a change
+the batch harness had measured as flat. Live frame rate is still what the user
+sees, so confirm a win in Firefox with `perf.mjs` once — and only once, it takes
+the screen.
 
 Best-of wall-clock over batched `vf.step()` runs — the methodology that replaced
 the `?prof` timestamp profiler, which mis-attributed queue backlog to whichever

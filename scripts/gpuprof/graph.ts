@@ -108,6 +108,7 @@ export class Graph {
   readonly outTex: GPUTexture
   readonly faceTex: GPUTexture
   readonly timingBuf: GPUBuffer
+  private readonly progSnap: GPUBuffer
   private readonly paramsBuf: GPUBuffer
   private readonly genParamsBuf: GPUBuffer
   private readonly genLineParamsBuf: GPUBuffer
@@ -181,10 +182,20 @@ export class Graph {
     const compB = storage(N * 4)
     const bCompBuf = storage(N * 4)
     const compPrev = storage(N * 4)
+    // Program as the mixer had it, which two things in the loop read: the
+    // keyer's external key input and the Y/C recombiner. Filled by a copy in
+    // `encode` on the frames either is patched in, exactly as the app does it.
+    const progSnap = storage(N * 4, GPUBufferUsage.COPY_DST)
+    this.progSnap = progSnap
     const chromaBuf = storage(N * 4)
     const underBuf = storage(N * 4)
     const lineInfoBuf = storage(LINES * 16)
-    const timingBuf = storage((LINES * 2 + 8) * 4, GPUBufferUsage.COPY_SRC)
+    // LINES*2 + 10: the sag region runs to LINES*2 + 7 and the VIR corrector's
+    // two integrators sit past it (VIR_HUE, VIR_GAIN in the prelude). Two
+    // floats short and `vir` writes out of bounds, which a storage buffer
+    // discards silently — the corrector then does nothing here and everything
+    // in the app.
+    const timingBuf = storage((LINES * 2 + 10) * 4, GPUBufferUsage.COPY_SRC)
     this.timingBuf = timingBuf
     const syncMeasureBuf = storage(LINES * 16)
     // The caption decoder's font ROM and page RAM (captionrom.ts), which
@@ -308,6 +319,7 @@ export class Graph {
         label: 'encodeChromaB',
         shader: 'encode_chroma_b',
         variants: one({
+          P,
           filters,
           inputTex: srcTexB.createView(),
           uvfB: uvfBBuf,
@@ -360,7 +372,7 @@ export class Graph {
       {
         label: 'fbComposite',
         shader: 'fb_composite',
-        variants: one({ P, prev: compPrev, comp: this.compA }),
+        variants: one({ P, prev: compPrev, comp: this.compA, prog: progSnap }),
         dispatch: perLine,
         when: () => c.cfbMix !== 0,
       },
@@ -764,7 +776,15 @@ export class Graph {
         cp.end()
       })
     }
-    for (const p of this.prePasses) run(p)
+    for (const p of this.prePasses) {
+      if (
+        p.label === 'fbComposite' &&
+        ((this.c.cfbKey !== 0 && this.c.cfbKeyExt > 0) || this.c.cfbReturn > 0)
+      ) {
+        enc.copyBufferToBuffer(this.compA, 0, this.progSnap, 0, N * 4)
+      }
+      run(p)
+    }
     for (let g = 0; g < gens; g++) {
       if (g > 0) {
         enc.copyBufferToBuffer(

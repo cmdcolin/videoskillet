@@ -4,10 +4,10 @@
   "version": "0.34.2",
   "description": "Real-time NTSC / VHS / composite-video glitch simulator in WebGPU compute shaders.",
   "license": "MIT",
-  "homepage": "https://cmdcolin.github.io/videoskillet/",
+  "homepage": "https://videoskillet.com/",
   "repository": {
     "type": "git",
-    "url": "https://github.com/cmdcolin/videoskillet.js.git"
+    "url": "https://github.com/cmdcolin/videoskillet.git"
   },
   "keywords": [
     "webgpu",
