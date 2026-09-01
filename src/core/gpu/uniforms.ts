@@ -70,6 +70,7 @@ export interface UniformEnv {
   srcFrame: number
   beamBlank: number
   scPhase: number
+  cfbCarrierPhase: number
   audioHit: number
   audioLevel: number
   impulseTrainPos: number
@@ -303,6 +304,9 @@ export function uniformValues(c: Controls, env: UniformEnv) {
     cfbKeyExt: c.cfbKeyExt,
     cfbKeyHue: (c.cfbKeyHueDeg * Math.PI) / 180,
     cfbKeyAccept: (c.cfbKeyAcceptDeg * Math.PI) / 180,
+    cfbRingSrc: c.cfbRingSrc,
+    cfbCarrierPhase: env.cfbCarrierPhase,
+    cfbCarrierPerSample: loRadPerSample(c.cfbCarrierKHz),
     // Mistuning frees the sound carrier from its trap, so the buzz the
     // soundIre knob dials in deliberately arrives uninvited — same term,
     // two causes on one wire.

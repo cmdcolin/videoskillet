@@ -237,6 +237,8 @@ export const DEFAULT_CONTROLS = {
   cfbFilterBoost: 2, // added in-band loop gain once a center is set
   cfbServoUs: 0, // varactor on the loop delay: us of pull per 100 IRE of its own video
   cfbRing: 0, // loop bus ring-modulated against the live program
+  cfbRingSrc: 0, // what is on the ring mod's other input: 0 the program, 1 a subcarrier oscillator
+  cfbCarrierKHz: 0, // that oscillator's detune off 3.579545 MHz, kHz
   // per-source feeds: each input's own cable and head-end, ahead of the mix —
   // a fault here damages one signal alone, unlike the program-bus channel
   // controls above which damage the mixed output

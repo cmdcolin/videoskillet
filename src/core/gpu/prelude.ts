@@ -334,6 +334,13 @@ export const PARAM_DEFS = [
   ['cfbKeyExt', 'f32'], // keyer's key input: 0 the loop return (self), 1 program
   ['cfbKeyHue', 'f32'], // chroma-key backing phase, radians
   ['cfbKeyAccept', 'f32'], // chroma-key acceptance wedge, radians (0 = the box slices luma)
+  // The ring modulator's other input. On the program the two sides share one
+  // crystal, so their products land at DC and 7.16 MHz and the chroma filter
+  // keeps neither; on the oscillator the bridge is an encoder's chroma
+  // modulator, which is what puts the products back inside the chroma band.
+  ['cfbRingSrc', 'f32'], // 0 the live program, 1 the box's own subcarrier oscillator
+  ['cfbCarrierPhase', 'f32'], // that oscillator's phase off the house carrier at frame start, radians
+  ['cfbCarrierPerSample', 'f32'], // its phase growth per sample, radians (the detune)
   // display
   // Beam blanking, held on: the guns cut for most of a cycle and let through in
   // flashes. Applied in decode, upstream of the persistence layer, which is the

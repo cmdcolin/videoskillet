@@ -1066,6 +1066,112 @@ export const PRESETS: PresetDef[] = [
     },
   },
   {
+    name: 'lightBecomesHue',
+    displayName: 'light becomes hue',
+    group: 'Feedback loops',
+    blurb:
+      "The ring modulator's other input taken off the program and put on the box's own subcarrier oscillator, which turns the bridge into the thing an encoder's chroma modulator is. Against a carrier sitting on 3.58 MHz the return's brightness is translated up into the chroma band, where the decoder has no way to read it as anything but colour, and the return's own colour is translated down to where it is read as brightness. So each lap trades the two: a lit face comes back as a saturated field, that field comes back as light, and the light is translated again. What settles out is a picture drawn entirely in colours nothing in the room is, arranged exactly where the brightness was. Multiplied against the program instead, this same knob makes none of it — both sides are on one crystal there, and their products land where the chroma filter throws them away.",
+    patch: {
+      cfbMix: 0.8,
+      cfbGain: 1,
+      cfbDelayUs: 0.4,
+      cfbLines: 1,
+      cfbRing: 0.9,
+      cfbRingSrc: 1,
+      chromaGain: 1.5,
+      phosphor: 0.45,
+      noiseIre: 1.2,
+    },
+  },
+  {
+    name: 'theSecondCrystal',
+    displayName: 'the second crystal',
+    group: 'Feedback loops',
+    blurb:
+      'The same modulator with its oscillator pulled twelve kilohertz off the house crystal. On frequency the colour it invents out of brightness lands on one phase, so the loop comes back monochrome in a hue you picked; off frequency the phase it writes with ramps continuously through the frame, so the invented colour turns along every line and further down every line after it, and the whole picture barber-poles through the wheel at a rate the detune sets. It is a crystal in another box, so nothing hauls it back into step — and because the loop re-modulates its own output, the hue a region arrives at is the hue it was given a lap ago turned again by however far the two crystals have drifted since. The detune walks, so the pitch of the barber pole leans while it runs.',
+    patch: {
+      cfbMix: 0.84,
+      cfbGain: 1.02,
+      cfbDelayUs: 0.9,
+      cfbLines: -3,
+      cfbRing: 1,
+      cfbRingSrc: 1,
+      cfbCarrierKHz: 12,
+      chromaGain: 1.8,
+      phosphor: 0.5,
+      noiseIre: 1.5,
+    },
+    mod: [
+      { target: 'cfbCarrierKHz', source: 'smooth', rateHz: 0.05, depth: 0.06 },
+    ],
+  },
+  {
+    name: 'layeredByBrightness',
+    displayName: 'layered by brightness',
+    group: 'Feedback loops',
+    blurb:
+      "The loop's frame store taps the bus after the tape, so the amplifier bent against brightness is inside the loop and every lap goes through it again. A delay at 3.58 MHz is a phase shift, so the hue rotation the loop delay applies stops being one number and becomes a function of the light each part of the trail is carrying: a lit edge turns further per generation than the shadow beside it, and after four or five laps one trail has separated into layers ordered by how bright each layer started. The differential gain alongside it drains the highlights' saturation as they go, so the layers differ in how much colour they have as well as which — the far end of a bright trail arrives pale and rotated where the dark end is still deep and near where it began.",
+    patch: {
+      cfbMix: 0.8,
+      cfbGain: 1.01,
+      cfbDelayUs: 0.55,
+      cfbLines: 3,
+      diffPhaseDeg: 55,
+      diffGain: 0.4,
+      chromaGain: 1.7,
+      phosphor: 0.45,
+      noiseIre: 1.5,
+    },
+    // The bend walked slowly, because what this look is about only shows as the
+    // layer spacing changes: the trail restacks itself while nothing in front
+    // of the camera has moved.
+    mod: [
+      { target: 'diffPhaseDeg', source: 'smooth', rateHz: 0.05, depth: 0.3 },
+    ],
+  },
+  {
+    name: 'intermodLoop',
+    displayName: 'intermod loop',
+    group: 'Feedback loops',
+    blurb:
+      "A tuner off channel feeding a loop that taps the bus behind it. With the sound carrier out of its trap the video detector multiplies it against everything else on the wire, so chroma comes back at 920 kHz and 920 kHz picture detail comes back at 3.58 MHz, where the decoder reads it as colour. That much is a mistuned set. What the loop does with it is the look: the manufactured colour is on the bus when the frame store captures, so next lap it is picture, and the detector multiplies it again — each generation folding the last one's invented chroma back through the same arithmetic. Fine detail rainbows, the rainbow becomes detail, and the herringbone the loose carrier lays over everything is riding round with it.",
+    patch: {
+      cfbMix: 0.78,
+      cfbGain: 1,
+      cfbDelayUs: 0.9,
+      cfbLines: -2,
+      rfMistuneMHz: 1.4,
+      chromaGain: 1.8,
+      phosphor: 0.4,
+      noiseIre: 2,
+    },
+    mod: [
+      { target: 'rfMistuneMHz', source: 'smooth', rateHz: 0.04, depth: 0.15 },
+    ],
+  },
+  {
+    name: 'whereTheProductsLand',
+    displayName: 'where the products land',
+    group: 'Feedback loops',
+    blurb:
+      'A ring loop read by a decoder whose colour reference has drifted. The multiplier fills the bus with products at phases neither frame was carrying, and the two demodulators that have to make colour out of them are no longer 90 degrees apart — so the plane those products land on is sheared rather than turned. Hues that were opposite stop being opposite: some of what the loop makes arrives at full strength, its neighbour a few degrees round arrives somewhere nothing in the room is, and the pair that would have cancelled reinforce instead. The guns are left to hit their own rails, so whatever survives the shear arrives fluorescent. The axis walks through quadrature and out the far side where the plane folds through itself, which is the same loop being read two incompatible ways while nothing about the loop changes.',
+    patch: {
+      cfbMix: 0.84,
+      cfbGain: 1,
+      cfbDelayUs: 1.2,
+      cfbLines: 2,
+      cfbRing: 0.85,
+      demodAxisDeg: 34,
+      matrixClip: 1,
+      chromaGain: 2.2,
+      phosphor: 0.5,
+      noiseIre: 1.2,
+    },
+    mod: [
+      { target: 'demodAxisDeg', source: 'sine', rateHz: 0.03, depth: 0.38 },
+    ],
+  },
+  {
     name: 'servoWarp',
     displayName: 'servo warp',
     group: 'Feedback loops',

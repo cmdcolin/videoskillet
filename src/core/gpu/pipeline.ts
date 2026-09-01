@@ -87,6 +87,8 @@ import type { FrozenKind } from './renderloop'
 import type { PullOpener, PumpedFrame, Relay, WrapHealth } from './videopump'
 
 const N = SAMPLES_PER_LINE * LINES
+const driftPhase = (phase: number, detuneKHz: number) =>
+  (phase + loRadPerSample(detuneKHz) * N) % (2 * Math.PI)
 const LINE_PARAM_BYTES = LINES * 16
 const MAX_GENS = 4
 
@@ -294,6 +296,8 @@ export class Engine implements EngineApi {
   })
   // bent-crystal demod LO phase error, accumulated per frame (radians)
   private scPhase = 0
+  // the loop ring modulator's own oscillator, the same way (radians)
+  private cfbCarrierPhase = 0
   // picture-search crossing pattern phase, accumulated per frame (crossings)
   private shuttlePhase = 0
   // The auto-tracking servo (signal/servo.ts), and what it settled on this
@@ -1630,6 +1634,7 @@ export class Engine implements EngineApi {
         this.now(),
       ),
       scPhase: this.scPhase,
+      cfbCarrierPhase: this.cfbCarrierPhase,
       audioHit: this.audioState.hit,
       audioLevel: this.audioState.level,
       impulseTrainPos: this.impulseTrainPos,
@@ -1780,6 +1785,7 @@ export class Engine implements EngineApi {
     // counter is about to go back to zero underneath it.
     this.fault.stop()
     this.scPhase = 0
+    this.cfbCarrierPhase = 0
     this.shuttlePhase = 0
     this.servo = new TrackingServo(this.rand)
     this.track = {
@@ -2057,12 +2063,15 @@ export class Engine implements EngineApi {
     return this.clipLayer.seal()
   }
 
-  // Bent-crystal LO phase error keeps growing frame over frame; advance by
-  // exactly one raster of samples so the shader's per-sample ramp is
-  // continuous across the frame boundary.
-  private advanceScPhase(detuneKHz: number): void {
-    this.scPhase =
-      (this.scPhase + loRadPerSample(detuneKHz) * N) % (2 * Math.PI)
+  // A detuned oscillator's phase error against the house carrier keeps growing
+  // frame over frame; advance by exactly one raster of samples so the shader's
+  // per-sample ramp is continuous across the frame boundary. Two oscillators
+  // are on this footing — the receiver's bent crystal and the loop ring
+  // modulator's own carrier — and they drift independently, because they are
+  // two crystals in two boxes.
+  private advancePhases(c: Controls): void {
+    this.scPhase = driftPhase(this.scPhase, c.scDetuneKHz)
+    this.cfbCarrierPhase = driftPhase(this.cfbCarrierPhase, c.cfbCarrierKHz)
   }
 
   // What unseated the tracking this frame: the transport changing speed, and a
@@ -2204,7 +2213,7 @@ export class Engine implements EngineApi {
     }
     if (this.filtersDirty) this.rebuildFilters()
     const c = this.controls
-    this.advanceScPhase(c.scDetuneKHz)
+    this.advancePhases(c)
     this.advanceShuttle(c.shuttleX)
     if (c.aPause === 0) this.tapeFrame.a += 1
     if (c.bPause === 0) this.tapeFrame.b += 1

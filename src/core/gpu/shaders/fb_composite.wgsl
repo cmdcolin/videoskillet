@@ -199,16 +199,40 @@ fn main(
     fb = fb + P.cfbFilterBoost * loopResonance(pos);
   }
   if (P.cfbRing != 0.0) {
-    // The loop bus multiplied against the live program in a doubly-balanced
-    // bridge: both inputs referenced to mid-video, so both carriers are
-    // suppressed and the product straddles zero. (Single-quadrant — raw
-    // fb * live — has the DC of both inputs in it, and a loop integrates that
-    // bias into a white-out within a few laps.) Every component of each beats
-    // against every component of the other — subcarrier against subcarrier
-    // lands chroma at sum and difference phases, sync against picture mints
-    // pulses where none belong — and because one input is the loop's own
-    // past, the products it makes are re-multiplied next frame.
-    fb = fb + P.cfbRing * (fb - 40.0) * (comp[n] - 40.0) * 0.01;
+    // The loop bus into a doubly-balanced bridge: both inputs referenced to
+    // mid-video, so both carriers are suppressed and the product straddles
+    // zero. (Single-quadrant — raw fb * live — has the DC of both inputs in
+    // it, and a loop integrates that bias into a white-out within a few laps.)
+    // Because one input is the loop's own past, every product it makes is
+    // re-multiplied next frame.
+    //
+    // What is on the other input decides whether any of that reaches the
+    // screen as colour, and the two connectors are genuinely different boxes.
+    //
+    // On the program, both sides carry their subcarrier on the *same crystal*,
+    // so chroma against chroma lands at DC and at 7.16 MHz: the chroma filter
+    // discards the sum, and the difference is brightness. What that patch
+    // makes is luma structure and minted sync — measured, and written up in
+    // docs/CURATION.md, where six candidates built on the opposite assumption
+    // all rendered the same grey-blue wash.
+    //
+    // On the oscillator the bridge is an encoder's chroma modulator, which is
+    // the one arrangement that puts the products back inside the chroma band.
+    // Against a carrier at the subcarrier, the return's baseband — its
+    // brightness — is translated up onto 3.58 MHz where the decoder reads it
+    // as colour, and the return's own chroma is translated down to DC where it
+    // is read as brightness. So one lap swaps what the picture carries: light
+    // becomes hue and hue becomes light, and the next lap swaps what that
+    // made. Detuning the oscillator off the house crystal ramps the phase it
+    // writes with, so the manufactured hue turns along the line and down the
+    // frame instead of landing on one colour — and since the two crystals are
+    // in two boxes, nothing pulls them back together.
+    var other = comp[n] - 40.0;
+    if (P.cfbRingSrc > 0.5) {
+      let ph = P.cfbCarrierPhase + P.cfbCarrierPerSample * f32(n);
+      other = VIDEO_RANGE * carrierRot(n, P.frame, ph).x;
+    }
+    fb = fb + P.cfbRing * (fb - 40.0) * other * 0.01;
   }
   var m = P.cfbMix;
   if (P.cfbKey != 0.0) {
