@@ -41,7 +41,16 @@
 //            and not edge count, so read it beside the screenshot: a
 //            posterizer with a handful of enormous hard-edged fields scores
 //            like speckle and looks nothing like it. Low fringe proves
-//            flatness; high fringe does not prove fringing.
+//            flatness; high fringe does not prove fringing — read `edge%`
+//            beside it, which is the same question asked as a count.
+//   edge%    share of pixels sitting on a colour boundary at all. This is the
+//            column that separates four enormous fields from confetti, because
+//            a few huge regions cross very few pixels however hard their edges
+//            are. Flat colour is high `sat` with low `edge%`.
+//   motion   mean channel difference over four frames, 0-255. A still picture
+//            reads zero; a loop still developing, or an LFO turning a palette,
+//            does not. Everything else here is one frame, and a one-frame sheet
+//            calls an evolving look and a frozen one the same thing.
 //
 // One page load drives every arm through `window.vf.applyControls`, so a sheet
 // of ten costs one WebGPU session rather than ten. Every key any arm sets is
@@ -78,13 +87,6 @@ const parse = s =>
 // it with a single patch of your own.
 const custom = flag('arms')
 const sheet = flag('arms-file')
-const LOOP = {
-  cfbMix: 0.85,
-  cfbGain: 1.02,
-  cfbDelayUs: 0.9,
-  cfbLines: 2,
-  chromaGain: 1.6,
-}
 const fromFile =
   sheet === undefined
     ? undefined
@@ -93,126 +95,36 @@ const fromFile =
         b ?? {},
         p ?? {},
       ])
+const LOOP = {
+  cfbMix: 0.85,
+  cfbGain: 1.02,
+  cfbDelayUs: 0.9,
+  cfbLines: 2,
+  chromaGain: 1.6,
+}
+// The default sheet is the one docs/CURATION.md's ring-modulation section
+// carries: what the loop's multiplier does against the program, against its
+// own oscillator, and detuned. Run it on the monochrome default source and the
+// first three rows are that section's claim reproduced.
+const DEFAULT_ARMS = [
+  ['clean', {}, {}],
+  ['loop, no ring', LOOP, {}],
+  ['ring on program', LOOP, { cfbRing: 1 }],
+  ['ring on oscillator', LOOP, { cfbRing: 1, cfbRingSrc: 1 }],
+  ['oscillator +12kHz', LOOP, { cfbRing: 1, cfbRingSrc: 1, cfbCarrierKHz: 12 }],
+  [
+    'oscillator +120kHz',
+    LOOP,
+    { cfbRing: 1, cfbRingSrc: 1, cfbCarrierKHz: 120 },
+  ],
+  ['return: chroma', LOOP, { cfbReturn: 1 }],
+  ['return: luma', LOOP, { cfbReturn: 2 }],
+  ['read clock +0.3%', LOOP, { cfbClockPct: 0.3 }],
+]
 const ARMS =
   fromFile ??
   (custom === undefined
-    ? [
-        ['clean', {}, {}],
-        [
-          'block colour (ref)',
-          {},
-          {
-            synthOver: 0.8,
-            synthAHz: 90,
-            synthBHz: 37,
-            synthMix: 3,
-            synthShape: 1,
-            synthColor: 1,
-            synthLevel: 1.8,
-            synthHueDeg: 180,
-            demodMHz: 0.4,
-            chromaGain: 4,
-            crtSat: 1.6,
-          },
-        ],
-        [
-          'comparators, sharp',
-          {},
-          {
-            synthOver: 0.9,
-            synthColor: 1,
-            synthLevel: 1,
-            demodMHz: 0.4,
-            chromaGain: 3,
-            crtSat: 1.6,
-            synthColorSrc: 1,
-            synthHueDeg: 180,
-            synthColorMode: 1,
-          },
-        ],
-        [
-          'comparators, cap 1.2',
-          {},
-          {
-            synthOver: 0.9,
-            synthColor: 1,
-            synthLevel: 1,
-            demodMHz: 0.4,
-            chromaGain: 3,
-            crtSat: 1.6,
-            synthColorSrc: 1,
-            synthHueDeg: 180,
-            synthColorMode: 1,
-            capLumaMHz: 1.2,
-          },
-        ],
-        [
-          'comparators, cap 0.6',
-          {},
-          {
-            synthOver: 0.9,
-            synthColor: 1,
-            synthLevel: 1,
-            demodMHz: 0.4,
-            chromaGain: 3,
-            crtSat: 1.6,
-            synthColorSrc: 1,
-            synthHueDeg: 180,
-            synthColorMode: 1,
-            capLumaMHz: 0.6,
-          },
-        ],
-        [
-          'comparators, cap 0.3',
-          {},
-          {
-            synthOver: 0.9,
-            synthColor: 1,
-            synthLevel: 1,
-            demodMHz: 0.4,
-            chromaGain: 3,
-            crtSat: 1.6,
-            synthColorSrc: 1,
-            synthHueDeg: 180,
-            synthColorMode: 1,
-            capLumaMHz: 0.3,
-          },
-        ],
-        [
-          'phase, cap 0.3',
-          {},
-          {
-            synthOver: 0.9,
-            synthColor: 1,
-            synthLevel: 1,
-            demodMHz: 0.4,
-            chromaGain: 3,
-            crtSat: 1.6,
-            synthColorSrc: 1,
-            synthHueDeg: 180,
-            synthColorMode: 0,
-            capLumaMHz: 0.3,
-          },
-        ],
-        [
-          'phase, cap 0.3, spot',
-          {},
-          {
-            synthOver: 0.9,
-            synthColor: 1,
-            synthLevel: 1,
-            demodMHz: 0.4,
-            chromaGain: 3,
-            crtSat: 1.6,
-            synthColorSrc: 1,
-            synthHueDeg: 180,
-            synthColorMode: 0,
-            capLumaMHz: 0.3,
-            crtSpot: 4,
-            crtBloom: 0.6,
-          },
-        ],
-      ]
+    ? DEFAULT_ARMS
     : [
         ['clean', {}, {}],
         ['patch', {}, parse(custom)],
@@ -313,23 +225,36 @@ await new Promise(r => setTimeout(r, 8000))
 const measure = (board, patch) =>
   page.evaluate(
     async (board, patch) => {
+      const grab = () => {
+        const cv = document.querySelector('canvas')
+        const oc = new OffscreenCanvas(256, 192)
+        const g = oc.getContext('2d')
+        g.drawImage(cv, 0, 0, 256, 192)
+        return g.getImageData(0, 0, 256, 192).data
+      }
+      const run = async n => {
+        for (let i = 0; i < n; i++) {
+          window.vf.step()
+          if (i % 15 === 0) await new Promise(r => setTimeout(r, 12))
+        }
+      }
       window.vf.applyControls({ ...board, ...patch })
       // Long enough for a loop to reach whatever it reaches: the ones worth
       // measuring are still developing after a second.
-      for (let i = 0; i < 150; i++) {
-        window.vf.step()
-        if (i % 15 === 0) await new Promise(r => setTimeout(r, 12))
-      }
-      const cv = document.querySelector('canvas')
-      const oc = new OffscreenCanvas(256, 192)
-      const g = oc.getContext('2d')
-      g.drawImage(cv, 0, 0, 256, 192)
-      const d = g.getImageData(0, 0, 256, 192).data
+      await run(150)
+      const d = grab()
+      // Four more frames, then a second look. Adjacent frames would report a
+      // slow sweep as motionless; four is short enough that a still picture
+      // still reads zero.
+      await run(4)
+      const e = grab()
       const sect = new Array(12).fill(0)
       let sat = 0
       let lum = 0
       let coloured = 0
       let fringe = 0
+      let edges = 0
+      let motion = 0
       const n = 256 * 192
       // Opponent axes, so a brightness edge with no colour change costs
       // nothing here and only a *colour* edge scores.
@@ -343,6 +268,11 @@ const measure = (board, patch) =>
         const s = mx > 0.02 ? (mx - mn) / mx : 0
         sat += s
         lum += 0.299 * r + 0.587 * gr + 0.114 * b
+        motion +=
+          (Math.abs(d[i * 4] - e[i * 4]) +
+            Math.abs(d[i * 4 + 1] - e[i * 4 + 1]) +
+            Math.abs(d[i * 4 + 2] - e[i * 4 + 2])) /
+          3
         // A demodulator handed an unsaturated sample reports an essentially
         // arbitrary phase, so a hue is only counted where there is one.
         if (s > 0.25 && mx > 0.06) {
@@ -357,7 +287,12 @@ const measure = (board, patch) =>
         if (i % 256 !== 255) {
           const [a0, b0] = opp(i)
           const [a1, b1] = opp(i + 1)
-          fringe += (Math.abs(a1 - a0) + Math.abs(b1 - b0)) / 2
+          const step = (Math.abs(a1 - a0) + Math.abs(b1 - b0)) / 2
+          fringe += step
+          // How many pixels sit on a colour boundary at all, as against how
+          // hard those boundaries are. Four enormous fields cross a handful of
+          // pixels; speckle crosses most of them.
+          if (step > 24) edges++
         }
       }
       return {
@@ -365,6 +300,8 @@ const measure = (board, patch) =>
         lum: lum / n,
         frac: coloured / n,
         fringe: (1000 * fringe) / (255 * n),
+        edges: edges / n,
+        motion: motion / n,
         hues:
           coloured > n * 0.01
             ? sect.filter(c => c > coloured * 0.02).length
@@ -377,13 +314,15 @@ const measure = (board, patch) =>
 
 mkdirSync(outDir, { recursive: true })
 console.log(`source: ${src}\n`)
-console.log('arm                       sat    hues   colour%    luma   fringe')
+console.log(
+  'arm                       sat    hues   colour%    luma   fringe    edge%  motion',
+)
 const rows = []
 for (const [name, board, patch] of ARMS) {
   const s = await measure({ ...STOCK, ...board }, patch)
   rows.push([name, s])
   console.log(
-    `${name.padEnd(22)} ${s.sat.toFixed(3).padStart(7)} ${String(s.hues).padStart(6)} ${(100 * s.frac).toFixed(1).padStart(9)} ${s.lum.toFixed(3).padStart(7)} ${s.fringe.toFixed(1).padStart(8)}`,
+    `${name.padEnd(22)} ${s.sat.toFixed(3).padStart(7)} ${String(s.hues).padStart(6)} ${(100 * s.frac).toFixed(1).padStart(9)} ${s.lum.toFixed(3).padStart(7)} ${s.fringe.toFixed(1).padStart(8)} ${(100 * s.edges).toFixed(1).padStart(8)} ${s.motion.toFixed(2).padStart(7)}`,
   )
   await page.screenshot({
     path: join(outDir, `${name.replace(/[^a-z0-9]+/gi, '-')}.png`),

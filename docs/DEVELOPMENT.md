@@ -95,19 +95,34 @@ and saves a screenshot. Headless Chrome can't present WebGPU swap chains here,
 which is why it's Firefox.
 
 ```
-node scripts/colourcheck.mjs [url] [outDir] [--src=clip-haunted-house]
+node scripts/colourcheck.mjs [url] [outDir] [--src=] [--srcb=]
 node scripts/colourcheck.mjs --arms=cfbRing:1,cfbRingSrc:1
+node scripts/colourcheck.mjs --arms-file=sheet.json
 ```
 
-Does a patch make colour, and how much — one sheet of arms through one page
-load, with a screenshot each. It answers the question `docs/CURATION.md` keeps
-having to settle by eye, and its default source is the point: on the bundled
-1929 film a clean arm reads sat 0.018, so any hue on screen was manufactured by
-the chain. Run a colour claim against a saturated source and the mechanism that
-makes colour out of nothing reads as one that slightly reduces it — that is a
-mistake this repo has made once already, and CURATION.md carries the numbers.
-Read `hues` beside `sat`: one hue everywhere and a whole wheel score the same on
-the second column and are not the same look.
+Does a patch make colour, how much, and in what shape — one sheet of arms
+through one page load, with a screenshot each. It answers the question
+`docs/CURATION.md` keeps having to settle by eye, and its default source is the
+point: on the bundled 1929 film a clean arm reads sat 0.018, so any hue on
+screen was manufactured by the chain. Run a colour claim against a saturated
+source and the mechanism that makes colour out of nothing reads as one that
+slightly reduces it — a mistake this repo has made once already, and
+CURATION.md carries the numbers.
+
+Read the columns against each other. `hues` beside `sat`, because one hue
+everywhere and a whole wheel score the same on saturation alone. `edge%` beside
+`fringe`, because the first counts pixels sitting on a colour boundary and the
+second says how hard those boundaries are — a posterizer holding four enormous
+flat fields scores like speckle on `fringe` and nothing like it on `edge%`.
+Flat colour is high `sat` with low `edge%`: the three flat looks measure 0.0 to
+3.9 where two speckled ones measure 11.7 and 28.3. And `motion`, because every
+other column is one frame, and one frame calls an evolving look and a frozen one
+the same thing.
+
+Keep your own sheets in a scratch directory and pass `--arms-file=`. Editing the
+arm list in the script is what that option exists to avoid: this repo is worked
+in by more than one agent at a time, and an uncommitted edit to a tracked file
+does not reliably survive somebody else's commit.
 
 ```
 node scripts/sourcecheck.mjs [http://localhost:5199/]
