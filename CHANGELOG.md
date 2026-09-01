@@ -2,6 +2,15 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [0.34.2](https://github.com/cmdcolin/videoskillet.js/compare/v0.34.1...v0.34.2) - 2026-09-01
+
+### Fixes
+- [`e10214e`](https://github.com/cmdcolin/videoskillet.js/commit/e10214e84b042e2cae8e07db396353e9b309e836) catch build/docgen drift in pnpm pat/min/maj before push
+- [`68379b6`](https://github.com/cmdcolin/videoskillet.js/commit/68379b6ecac461066eed5a1dd6dca7e0eb4a41a0) don't let docshots:check block pnpm pat/min/maj
+
+### Documentation
+- [`4c62726`](https://github.com/cmdcolin/videoskillet.js/commit/4c6272623a6d51725c48ba8069d2d4a29bda9bad) regenerate EFFECTS.md for loop key/chroma keyer controls
+
 ## [0.34.1](https://github.com/cmdcolin/videoskillet.js/compare/v0.34.0...v0.34.1) - 2026-09-01
 
 ### Features
