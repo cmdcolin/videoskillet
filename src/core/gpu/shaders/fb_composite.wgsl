@@ -195,6 +195,30 @@ fn main(
   }
   let i0 = i32(floor(pos));
   var fb = catmull(prev[clampIdx(i0 - 1)], prev[clampIdx(i0)], prev[clampIdx(i0 + 1)], prev[clampIdx(i0 + 2)], fract(pos));
+  if (P.cfbReturn > 0.5) {
+    // A Y/C separator in the loop return, and one wire out of it patched on.
+    // Four consecutive samples at 4x fsc span exactly one subcarrier cycle, so
+    // their sum nulls chroma however the span happens to land — the same
+    // aperture the keyer below slices with, doing the same job a trap does in
+    // a set. What is left when that mean is taken off is the chroma.
+    //
+    // Which wire is carried decides what the loop can do to the picture.
+    // Luma only puts the sync tip and the brightness round the loop and no
+    // colour at all, so trails accumulate in grey underneath a live picture
+    // that keeps its own hue. Chroma only is the opposite and is the stronger
+    // of the two: a chroma line rides about blanking, so the return carries no
+    // brightness and no sync — the fader pulls the picture toward black as it
+    // opens, and what piles up in the dark is colour with nothing underneath
+    // it. It also means this loop cannot fight the receiver for the line
+    // start, which is the one thing a full-composite return always does.
+    var mean = 0.0;
+    let c0 = i32(round(pos)) - 2;
+    for (var k = 0; k < 4; k = k + 1) {
+      mean = mean + prev[clampIdx(c0 + k)];
+    }
+    mean = mean * 0.25;
+    fb = select(mean, fb - mean, P.cfbReturn < 1.5);
+  }
   if (resonating) {
     fb = fb + P.cfbFilterBoost * loopResonance(pos);
   }

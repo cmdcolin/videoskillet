@@ -1118,6 +1118,17 @@ export const GROUPS: Group[] = [
         help: "The loop bus multiplied instead of just summed with what it meets — a ring modulator with one input patched to the machine's own past. Every product goes round again and is re-multiplied a frame later, so the spectrum folds over itself generation after generation. What is on the other input is the row below, and it decides whether any of that arrives as colour.",
       },
       {
+        key: 'cfbReturn',
+        id: 272,
+        label: 'return (Y/C split)',
+        min: 0,
+        max: 2,
+        step: 1,
+        choices: ['composite', 'chroma', 'luma'],
+        unit: '',
+        help: 'A Y/C separator in the loop return, with one wire out of it patched on. Composite carries the whole waveform, which is what a loop normally is. Chroma carries the colour alone: a chroma line rides about blanking, so the return has no brightness and no sync in it — the fader pulls the picture toward black as it opens, colour piles up in the dark with nothing underneath, and this loop cannot fight the receiver for where a line starts. Luma is the other wire, so brightness and the sync tip go round while the live picture keeps its own colour and the trails behind it come back grey.',
+      },
+      {
         key: 'cfbRingSrc',
         id: 270,
         label: 'ring carrier',
@@ -3747,6 +3758,7 @@ export const NEEDS: Partial<Record<ControlKey, SliderNeed>> = {
     fix: 40,
     hint: 'key acceptance above 0',
   },
+  cfbReturn: cfb,
   cfbRingSrc: {
     key: 'cfbRing',
     ok: above0,

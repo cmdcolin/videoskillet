@@ -307,6 +307,7 @@ export function uniformValues(c: Controls, env: UniformEnv) {
     cfbRingSrc: c.cfbRingSrc,
     cfbCarrierPhase: env.cfbCarrierPhase,
     cfbCarrierPerSample: loRadPerSample(c.cfbCarrierKHz),
+    cfbReturn: c.cfbReturn,
     // Mistuning frees the sound carrier from its trap, so the buzz the
     // soundIre knob dials in deliberately arrives uninvited — same term,
     // two causes on one wire.

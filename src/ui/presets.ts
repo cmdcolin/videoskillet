@@ -1066,6 +1066,43 @@ export const PRESETS: PresetDef[] = [
     },
   },
   {
+    name: 'colourInTheDark',
+    displayName: 'colour in the dark',
+    group: 'Feedback loops',
+    blurb:
+      "Only the chroma wire out of the loop's separator patched back to the fader. A chroma line rides about blanking, so the return is carrying no brightness at all: as the fader opens the picture is pulled toward black, and what accumulates in that black is colour with nothing underneath it. The delay is a hue rotation, so each lap the surviving colour arrives turned again and the dark fills with bands that keep spinning through the wheel long after the thing that put them there has gone. It also takes the loop out of the fight for the line start — a full-composite return is pushing sync tips at the receiver every lap, and this one has none to push, so the frame stays where it is while the colour comes apart on top of it.",
+    patch: {
+      cfbMix: 0.88,
+      cfbGain: 1.06,
+      cfbDelayUs: 0.35,
+      cfbLines: 2,
+      cfbReturn: 1,
+      chromaGain: 2.4,
+      phosphor: 0.55,
+      crtSat: 1.4,
+      noiseIre: 1.2,
+    },
+  },
+  {
+    name: 'greyUnderTheColour',
+    displayName: 'grey under the colour',
+    group: 'Feedback loops',
+    blurb:
+      'The other wire off the same separator. Luma alone goes round, so the trails a moving subject leaves are brightness and nothing else, stacking four lines up a lap into grey rungs — while the live picture over the top of them keeps every bit of its own colour, because no colour ever entered the loop to compete with it. The sync tip is on the luma wire too, so this return still pushes the receiver about: the accumulation drags at where the lines start, and the grey ladder tears along with the picture it is under rather than sitting behind it.',
+    patch: {
+      cfbMix: 0.8,
+      cfbGain: 1.03,
+      cfbDelayUs: 0.2,
+      cfbLines: -4,
+      cfbReturn: 2,
+      cfbTrail: 0.45,
+      hHold: 0.5,
+      chromaGain: 1.3,
+      phosphor: 0.4,
+      noiseIre: 1.5,
+    },
+  },
+  {
     name: 'lightBecomesHue',
     displayName: 'light becomes hue',
     group: 'Feedback loops',

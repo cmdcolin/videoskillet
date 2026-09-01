@@ -341,6 +341,7 @@ export const PARAM_DEFS = [
   ['cfbRingSrc', 'f32'], // 0 the live program, 1 the box's own subcarrier oscillator
   ['cfbCarrierPhase', 'f32'], // that oscillator's phase off the house carrier at frame start, radians
   ['cfbCarrierPerSample', 'f32'], // its phase growth per sample, radians (the detune)
+  ['cfbReturn', 'f32'], // Y/C separator on the return: 0 composite, 1 chroma only, 2 luma only
   // display
   // Beam blanking, held on: the guns cut for most of a cycle and let through in
   // flashes. Applied in decode, upstream of the persistence layer, which is the
