@@ -192,7 +192,7 @@ try {
 
   // A press still works, and is still the thing that applies a preset.
   {
-    const c = await chipNamed(/broadcast/i)
+    const c = await chipNamed(/rainbow storm/i)
     await page.mouse.move(c.cx, c.cy)
     const before = await T('look')
     await page.mouse.down()
@@ -208,7 +208,7 @@ try {
 
   // A sideways drag is still a partial mix rather than a press.
   {
-    const c = await chipNamed(/mixer loop/i)
+    const c = await chipNamed(/tunnel out/i)
     await page.mouse.move(c.cx, c.cy)
     await page.mouse.down()
     for (let i = 1; i <= 4; i++) await page.mouse.move(c.cx + i * 10, c.cy)
@@ -255,7 +255,7 @@ try {
   // A press whose release goes missing must not leave the chip scrubbing on
   // hover for the rest of the session.
   {
-    const c = await chipNamed(/rainbow/i)
+    const c = await chipNamed(/spiral/i)
     await page.mouse.move(c.cx, c.cy)
     await settle(300)
     await page.mouse.down()
@@ -282,7 +282,7 @@ try {
     if (from === null) {
       console.warn('  (skipped: no empty spot in the chip row to press on)')
     } else {
-      const c = await chipNamed(/neon tube/i)
+      const c = await chipNamed(/ring in the highlights/i)
       await page.mouse.move(from.x, from.y)
       const before = await T('look')
       await page.mouse.down()

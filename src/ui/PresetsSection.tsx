@@ -46,16 +46,36 @@ const HINT_STORE = 'video_feedback_preset_hint_dismissed'
 // Whether the full grouped catalog is unfolded below the shortlist.
 const ALL_STORE = 'video_feedback_presets_expanded'
 
-// The shortlist a first visit opens on: one memorable look per family, so the
-// row spans the range of the thing before you've used it enough to have
-// habits. Recents displace these as they accumulate.
+// The shortlist a first visit opens on. Recents displace these as they
+// accumulate, and `useRecentPresets` keeps eight — so this row is what a
+// stranger sees and almost nobody sees twice. It is picked as a first
+// impression rather than as a map of the catalog: the `+ N more…` chip and the
+// grouped catalog behind it are what span the families.
+//
+// Chosen off contact sheets of the whole shortlist question rendered on both
+// the source the app boots on and a photograph (scripts/contact.mjs, the
+// method docs/CURATION.md's two screening rounds used). What that says:
+//
+// - Feedback is a third of the table and gets half the row. It is also where
+//   the looks that read hardest live — `ringInTheHighlights` scored the highest
+//   saturation of anything screened and is the only loud one that leaves the
+//   subject photographic, since the key means the trails can only grow where
+//   the picture is already lit.
+// - `spiral` earns its place on the landing screen specifically. Bars are
+//   full-height vertical bands, so a loop that only scales them gives bands
+//   back and `tunnelOut` renders as very nearly nothing there; rotation breaks
+//   that symmetry, so `spiral` is the one loop whose geometry shows before
+//   anyone has loaded a clip.
+// - `broadcast` came off. It is a near-clean baseline by design, and with
+//   `clean` pinned at the head of the row it was the second chip that looks
+//   like nothing happened.
 const STARTERS = [
   'vhs',
-  'broadcast',
-  'verticalHoldGone',
-  'mixerLoop',
+  'ringInTheHighlights',
   'rainbowStorm',
-  'neonTube',
+  'spiral',
+  'verticalHoldGone',
+  'tunnelOut',
 ]
 const SHORTLIST_MAX = 8
 
