@@ -95,6 +95,7 @@ for (const check of [
   'pnpm lint',
   'pnpm format:check',
   'pnpm test',
+  'pnpm build',
   'pnpm docshots:check',
 ]) {
   run(check)
