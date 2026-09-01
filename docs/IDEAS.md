@@ -380,12 +380,15 @@ of them cheap:
   else on this wire", which is not drawable. Note it interacts with the gates: a
   non-zero crosstalk floor has to appear in `bWaveOn`/`bOn` or B's chain is
   switched off underneath it.
-- **Summing-bus rails.** Two full composites summed is 2× amplitude going into
-  `channel` unclipped. `rails()` in `fb_composite.wgsl` is the model already
-  written. It squashes the sum's sync tips, changing the character of the fight,
-  and the compression manufactures sum/difference products between A's and B's
-  subcarriers — the honest version of what `bRing` fakes with an explicit
-  multiply.
+- ~~**Summing-bus rails.**~~ Shipped as `busClip`. `rails()` moved to the
+  prelude as `softRail` and the mixer takes it with knees the control moves, so
+  the loop's output stage and the summing bus are one amplifier model at two
+  points. It does what this entry predicted — a detuned B beats against A
+  through the falling gain and lands products inside the chroma band — and the
+  size is worth writing down, because it is smaller than the entry implies: sat
+  0.073 → 0.109 on a monochrome A against a detuned B, peaking in the middle of
+  the travel and falling back at the top, where the compression is flattening
+  the subcarrier along with everything else.
 - **Genlock that can lose lock.** `bGenlock` is an absolute TBC today. Real
   genlock has a capture range: push B's pause wander or wow past it and lock
   drops, B rips for a few lines, and it re-hunts. That makes the corrective
@@ -400,6 +403,39 @@ of them cheap:
 Considered and left: **a house-reference selector** (letting B be the raster
 instead of A) would double the expressive range of all of the above, but B _is_
 the second raster — it is a restructure, not a knob.
+
+### The loop bus into the B input — sized, not built
+
+The one item from the loop-hardware pass that was started and put down. What it
+buys is real and nothing else on the board gives it: B's dirty path resamples a
+signal, so patching the mixer's own loop bus in there makes the machine's past
+arrive **non-genlocked**. `bLineHz` becomes a shear that compounds a lap,
+`bRollLps` a drift per lap, and `bDetuneHz` a continuous hue _rate_ where
+`cfbDelayUs` is a fixed rotation. Every feed-B fault then lands on the return —
+pause scatter, ground loop, dropouts, an SSAVI negative — and the return's own
+sync tips fight A's, so the receiver locks to the machine's past for bands of
+lines.
+
+The shader half is nearly free: `mix_b` already binds `loopBus` for the keyer's
+fill, so the dirty-path resample is a choice of which buffer it reads.
+
+What stops it being cheap is everything around that:
+
+- **It wants to be a source-B mode, not a knob.** The gates (`bOn`, `bWaveOn`,
+  `bFeedOn`) all require `bEnabled`, so as a control it would need a B source
+  picked in order to patch the loop in _instead of_ a source, which is the wrong
+  shape. As a mode it is `SOURCE_B_MODES`, `SOURCE_DESC`, `SOURCE_KIND`, the
+  picker, and the docgen source list.
+- **The B encoders have to stay off in that mode**, which is a fourth condition
+  in gates whose containment (`bFeedOn ⊆ bWaveOn ⊆ bOn`) is under test.
+- **The chroma keyer reads `uvfB`**, which is B's encoder chroma and does not
+  exist for the loop bus. Either the keyer is gated off in the mode or the
+  loop's chroma is materialized, and the first is the honest cheap answer.
+- **`SlotSource` has to carry it** or a device loss drops the patch, per the
+  three-setters rule in `ARCHITECTURE.md`.
+
+None of that is hard; it is just a different size from the rest of that pass,
+and it crosses the source layer, which none of the others did.
 
 ## Capture / deinterlace (grown out of the RCA-input work)
 

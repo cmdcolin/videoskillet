@@ -252,6 +252,46 @@ band:
 
 `scripts/gpuprof/candidates.rainbow.ts` holds the set and the finding.
 
+### The third route, and the finding above as the reason for it
+
+The two routes above are both "put the terms at different frequencies". Said
+that way it names the missing piece: the loop's ring modulator had one input on
+the loop and the other wired permanently to the program, and the program is the
+one signal on the board guaranteed to be on the same crystal as the return. So
+the box could only ever make the products the chroma filter throws away.
+
+`cfbRingSrc` puts an oscillator on that input instead, and `cfbCarrierKHz`
+detunes it. With the carrier at the subcarrier the bridge is an encoder's chroma
+modulator: the return's brightness translates up into the chroma band and its
+colour translates down into brightness, so a lap swaps the two.
+
+Measured with `scripts/colourcheck.mjs`, which was written for this question —
+`clip-haunted-house` is a 1929 film, so a clean arm reads sat 0.018 and any hue
+on screen was manufactured by the chain:
+
+| arm                |   sat | hues | colour% |
+| ------------------ | ----: | ---: | ------: |
+| clean              | 0.018 |    0 |     0.0 |
+| loop, no ring      | 0.020 |    0 |     0.1 |
+| ring on program    | 0.008 |    0 |     0.4 |
+| ring on oscillator | 0.265 |    3 |    51.6 |
+| oscillator +12kHz  | 0.377 |   10 |    49.7 |
+| oscillator +120kHz | 0.282 |   12 |    46.1 |
+
+Read the first three rows as this section's own claim, reproduced: against the
+program the ring mod does not merely fail to add colour, it takes away the
+little the chain had (0.020 down to 0.008). Read the last three as the fix, and
+note that `sat` and `hues` disagree on which is best — the +12 kHz arm is the
+most saturated, the +120 kHz arm spreads across every sector at lower
+saturation. On frequency the invented colour lands on one phase, which is why
+three sectors hold it; the detune is what turns it into a wheel.
+
+**A colour claim measured on a saturated source is not measured.** The same
+sheet on `clip-test` puts every one of those arms between 0.29 and 0.39 against
+a clean 0.487, so the mechanism that makes colour out of nothing reads as a
+mechanism that slightly reduces it. That is the trap this whole section fell
+into once already.
+
 ## Chaotic is not the same as wild
 
 The correction that cost the most to learn, and it was learned by getting it

@@ -95,6 +95,21 @@ and saves a screenshot. Headless Chrome can't present WebGPU swap chains here,
 which is why it's Firefox.
 
 ```
+node scripts/colourcheck.mjs [url] [outDir] [--src=clip-haunted-house]
+node scripts/colourcheck.mjs --arms=cfbRing:1,cfbRingSrc:1
+```
+
+Does a patch make colour, and how much — one sheet of arms through one page
+load, with a screenshot each. It answers the question `docs/CURATION.md` keeps
+having to settle by eye, and its default source is the point: on the bundled
+1929 film a clean arm reads sat 0.018, so any hue on screen was manufactured by
+the chain. Run a colour claim against a saturated source and the mechanism that
+makes colour out of nothing reads as one that slightly reduces it — that is a
+mistake this repo has made once already, and CURATION.md carries the numbers.
+Read `hues` beside `sat`: one hue everywhere and a whole wheel score the same on
+the second column and are not the same look.
+
+```
 node scripts/sourcecheck.mjs [http://localhost:5199/]
 ```
 
