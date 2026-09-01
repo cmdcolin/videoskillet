@@ -6,6 +6,8 @@ Everything past [Getting started](GETTING-STARTED.md).
 
 Click a preset to jump to it; drag it sideways to blend it part-way in.
 
+![The head of the panel: a row of whole-board verbs — compare, random look and its ▾, drift, morph — over tags, reset and undo, then This look with its off-stock count, then the Presets shortlist of chips and the dashed handle to the other 101](img/presets.png)
+
 - **This look** lists every control you're off stock on, as sliders. Drag to
   edit, **↺** to revert one.
 - **reset** puts everything back to stock — controls, modulation bay, stab gate
@@ -100,6 +102,8 @@ last session's clips up again.
 The map at the top of the sidebar is the signal path, and every box is a button.
 Amber marks a stage you've moved something in. The three wires arcing over the
 trunk are the feedback loops — camera, mixer, tape — each its own button.
+
+![The same map at readable size, its header reading Signal path · click a stage: SOURCE A and SOURCE B into MIX, then CHANNEL, RECEIVER and SCREEN in amber, the camera and mixer returns arching back over the trunk, SOUND dashed and inert under RECEIVER, VIEW under SCREEN, and MODULATION and DECK on a row of their own with no wire reaching them](img/signal-path.png)
 
 **DECK** and **MODULATION** sit below the chain because they patch into the
 controls, not the signal. MODULATION is the hand you set running and leave. DECK

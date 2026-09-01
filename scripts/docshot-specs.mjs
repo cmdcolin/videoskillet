@@ -165,6 +165,24 @@ export const SPECS = [
     params: WILD,
     crop: { union: [{ selector: 'div[class*="pathHead"]' }, MAP], pad: 14 },
   },
+  // The top of the panel cropped the same way: the whole-board verbs, the
+  // shortlist under them and the handle to the other hundred. The guide opens
+  // on a page of prose about chips, rolls and a ▾ that holds three more of
+  // them, and none of those shapes is guessable from the words — where the
+  // catalog stops and the board begins least of all. Bounded by `compare`
+  // rather than by the row it starts, because CSS modules hash the row's class
+  // to `_bar_…` and the strip tray at the foot of the window answers to that
+  // too — from the panel's first button down to the foot of Presets is the
+  // same rectangle and cannot land on the wrong one. No pad, unlike the map
+  // below: the masthead sits a few pixels over `compare`, and any margin at all
+  // takes a sliced-off row of `sign in` and the menu glyph with the crop.
+  {
+    ...WINDOW,
+    format: 'png',
+    name: 'presets',
+    params: WILD,
+    crop: { union: [{ text: 'compare' }, { section: 'Presets' }], pad: 0 },
+  },
   // Ten boxed-UI shots stood here: presets, preset-mix, input, signal-path,
   // filter, palette, motion, audio, menu, magnifier, scope, advanced. They went
   // together, and for one reason rather than twelve — a full 1320x900 window
@@ -178,7 +196,8 @@ export const SPECS = [
   // `chain` shows a map you would not guess the shape of, and `slider-help` is
   // the doc's own argument for why there is no per-control reference here.
   // Anything re-added should clear the same bar, and a tight crop of the panel
-  // region is the shape to reach for rather than another boxed window.
+  // region is the shape to reach for rather than another boxed window — which
+  // is how `presets` came back above, and `signal-path` beside it.
 
   // The showcase gallery: three mechanisms, one per tile, each starting from
   // the preset that names it and pushed well past where that preset stops.
