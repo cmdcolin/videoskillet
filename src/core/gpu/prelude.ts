@@ -101,6 +101,8 @@ export const PARAM_DEFS = [
   ['synthOver', 'f32'], // synth crossfaded over the slot's picture
   ['synthFm', 'f32'], // that picture's luma into osc A's frequency, cycles/sample
   ['synthFmSrc', 'f32'], // which picture the FM input is on: 0 the slot, 1 the camera's return
+  ['synthColorSrc', 'f32'], // what the colorizer slices: 0 its oscillator, 1 the picture
+  ['synthColorMode', 'f32'], // how: 0 three phase shifts, 1 three comparators
   // dirty mixer: source B is a second, non-genlocked composite signal
   ['srcNoiseB', 'f32'], // GPU-generated source B: 0 texture, 1 TV static, 2 VHS blank-tape static
   ['aGain', 'f32'], // A level on the summing bus, signed (negative inverts A)
@@ -1002,6 +1004,10 @@ struct SynthPatch {
   // arrives at each of them in a different place, so the image draws itself as
   // contour lines nobody traced.
   fm: f32,
+  // The colorizer's two connectors: what it slices (0 the oscillator, 1 the
+  // picture) and how (0 the phase rotator, 1 three comparators).
+  colorSrc: f32,
+  colorMode: f32,
 }
 
 // Gathering the patch off the uniform block, once. The prelude may not name a
@@ -1014,7 +1020,7 @@ fn synthPatch(p: Params) -> SynthPatch {
     p.synthPhaseA, p.synthPerLineA, p.synthPerSampleA,
     p.synthPhaseB, p.synthPerLineB, p.synthPerSampleB,
     p.synthShape, p.synthMix, p.synthLevel, p.synthColor, p.synthHue,
-    p.synthFm,
+    p.synthFm, p.synthColorSrc, p.synthColorMode,
   );
 }
 
@@ -1089,17 +1095,38 @@ fn videoSynth(xy: vec2u, sp: SynthPatch, pic: f32) -> vec3f {
     g = select(0.0, 1.0, a > b);
   }
   let lvl = clamp(0.5 + sp.level * (g - 0.5), 0.0, 1.0);
-  // The colorizer: one signal into three guns through three phase shifts 120
-  // degrees apart, which is all a colorizer ever was. At depth 0 the three
-  // agree and the signal comes out as the grey it is; opened up, level becomes
-  // hue and a ramp turns through the wheel.
-  //
-  // Half a turn across the level range, not a whole one. A full turn brings the
-  // top of the range back to the colour the bottom started on, which is fine on
-  // a ramp and useless on anything two-level: a pulse would put both its states
-  // on the same hue and come out a flat field. Half a turn keeps black and
-  // white opposite, which is what a level-to-hue converter is for.
-  let tint = 0.5 + 0.5 * cos(PI * lvl + sp.hue + vec3f(0.0, -2.0943951, 2.0943951));
+  // What the colorizer is slicing. Its own oscillator is one connector and the
+  // picture is the other, and the second is the arrangement a colorizer was
+  // actually sold as: video in, colour out, the oscillators out of circuit.
+  // Pointed at the picture the box turns the image's own brightness into hue,
+  // so equal-brightness areas come back the same colour however far apart they
+  // are on screen — which is what makes it lay colour down in large fields
+  // instead of on the detail an encoder puts colour on.
+  let cin = select(lvl, clamp(pic, 0.0, 1.0), sp.colorSrc > 0.5);
+  var tint: vec3f;
+  if (sp.colorMode > 0.5) {
+    // Three comparators at three thresholds, which is how the cheap boxes did
+    // it before anyone put a phase shifter in one. Each gun is switched full on
+    // or full off at its own level, so the output can only be one of eight
+    // corners of the cube and the picture arrives posterized into flat areas of
+    // saturated primary with hard edges between them. The hue knob slides all
+    // three thresholds together, which walks the boundaries through the
+    // picture's tonal range rather than turning the colours.
+    let thr = vec3f(0.3, 0.5, 0.7) + sp.hue * (0.5 / PI) - 0.25;
+    tint = step(thr, vec3f(cin));
+  } else {
+    // The phase rotator: one signal into three guns through three phase shifts
+    // 120 degrees apart. At depth 0 the three agree and the signal comes out
+    // the grey it is; opened up, level becomes hue and a ramp turns through the
+    // wheel.
+    //
+    // Half a turn across the level range, not a whole one. A full turn brings
+    // the top of the range back to the colour the bottom started on, which is
+    // fine on a ramp and useless on anything two-level: a pulse would put both
+    // its states on the same hue and come out a flat field. Half a turn keeps
+    // black and white opposite, which is what a level-to-hue converter is for.
+    tint = 0.5 + 0.5 * cos(PI * cin + sp.hue + vec3f(0.0, -2.0943951, 2.0943951));
+  }
   return clamp(mix(vec3f(lvl), tint, sp.color), vec3f(0.0), vec3f(1.0));
 }
 `

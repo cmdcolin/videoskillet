@@ -362,9 +362,29 @@ texture. Left as an asymmetry rather than plumbed around.
   be at drive rate, so it is only ever as steady as the number typed in. Exact
   is reachable (`synthAHz` = 15734 lands within a hertz), but a genuine
   drive-locked mode would give a gradient that cannot creep at all.
-- **The colorizer is a phase rotator, not three comparators.** Cheap colorizers
-  sliced the signal at three different thresholds, which bands by level instead
-  of turning through hue — a different and more brutal look, and one more mode.
+- ~~**The colorizer is a phase rotator, not three comparators.**~~ Shipped as
+  `synthColorMode`, and with it the connector that turned out to matter more:
+  `synthColorSrc` puts the _picture_ on the colorizer's input instead of the
+  oscillator, which is how a colorizer box was actually sold — video in, colour
+  out, the oscillators out of circuit behind it. Pointed at the picture, the
+  phase rotator maps the whole tonal range onto the wheel (a heat map nobody
+  computed) and the comparators posterize it into flat areas of saturated
+  primary.
+
+  What that pass established, for whoever chases flat colour next. **The
+  colorizer is the only reliable way to get colour into large fields**, because
+  it maps _level_ to hue, and level varies over hundreds of lines where an
+  encoder puts colour on detail. Everything measured against it coloured detail
+  instead: phosphor scatter (17.5 fringe — it spreads only the light the layer
+  already holds and leaves the fresh edge sharp by design), a magnetised purity
+  patch (17.9), collapsed demod axes (20.2), colour-under smear (35.1, and that
+  one is worse than doing nothing, since its per-line jitter is speckle).
+
+  And the limit of the measurement, since it will mislead the next person:
+  `colourcheck`'s `fringe` column reads edge _contrast_, not edge count, so a
+  posterizer holding four enormous hard-edged fields scores like speckle. Low
+  fringe proves flatness; high fringe does not prove fringing, and the
+  screenshot settles it.
 
 ## The mixer has no hardware model
 

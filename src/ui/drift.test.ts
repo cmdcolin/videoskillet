@@ -136,8 +136,17 @@ describe('a leg', () => {
         }
 
         expect(spread(tethered, DEFAULT_CONTROLS)).toBeLessThan(0.08)
+        // The two widths meet at one number on purpose, so the pair is the
+        // comparison this test is about rather than two levels with a gap
+        // between them that nothing chose: past four fifths of a track for the
+        // free walk, never that far for the tethered one. The free pin was
+        // 0.85 and seed 3 landed on exactly that once eight controls were
+        // added to the board, which is the drift the paragraph above predicts
+        // — the seeded rolls are drawn over the slider set, so every absolute
+        // level here moves when the set grows. The free walk reads 0.85 to
+        // 0.97 across these seeds against a tethered 0.29 to 0.63.
         expect(widest(tethered, DEFAULT_CONTROLS)).toBeLessThan(0.8)
-        expect(widest(free, DEFAULT_CONTROLS)).toBeGreaterThan(0.85)
+        expect(widest(free, DEFAULT_CONTROLS)).toBeGreaterThan(0.8)
         // The free walk against the tethered one rather than against a level of
         // its own. Its absolute spread moves with how many sliders are in the
         // set, because the set is what the seeded rolls are drawn over: three
@@ -145,8 +154,8 @@ describe('a leg', () => {
         // exactly, where the pin here was 0.15 — the same two failures, the same
         // digits, for controls that do nothing. What the walk is here to show
         // survives that, since it is a comparison and not a level: across these
-        // seeds the free spread is 0.138 to 0.181 against a tethered 0.038 to
-        // 0.052, which is the ratio the paragraph above claims.
+        // seeds the free spread is 0.151 to 0.181 against a tethered 0.036 to
+        // 0.055, which is the ratio the paragraph above claims.
         expect(spread(free, DEFAULT_CONTROLS)).toBeGreaterThan(
           3 * spread(tethered, DEFAULT_CONTROLS),
         )

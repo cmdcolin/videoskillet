@@ -1723,6 +1723,48 @@ export const PRESETS: PresetDef[] = [
     ],
   },
   {
+    name: 'silkscreen',
+    group: 'Circuit bent',
+    blurb:
+      "A colorizer wired the way one was actually sold — video in, colour out, its oscillators out of circuit behind it — and slicing rather than phase-shifting. Three comparators sit at three levels and each gun is switched fully on or fully off at its own threshold, so the output can only be one of eight corners of the colour cube: the cat comes back as a flat yellow shape inside a red outline on a dark green ground, with every area of equal brightness taking the same colour however far apart the two are on screen. The capture band ahead of it is wound down to a soft megahertz, which is what keeps the regions large — a slicer handed a sharp picture finds a threshold crossing on every piece of detail, and handed a soft one it finds a few long boundaries. The hue knob slides all three thresholds together, so the colours hold still and the boundaries walk through the picture's tonal range.",
+    patch: {
+      synthOver: 0.9,
+      synthColor: 1,
+      synthColorSrc: 1,
+      synthColorMode: 1,
+      synthHueDeg: 180,
+      capLumaMHz: 0.3,
+      demodMHz: 0.4,
+      chromaGain: 3,
+      crtSat: 1.6,
+    },
+    mod: [
+      { target: 'synthHueDeg', source: 'smooth', rateHz: 0.03, depth: 0.25 },
+    ],
+  },
+  {
+    name: 'falseColour',
+    displayName: 'false colour',
+    group: 'Circuit bent',
+    blurb:
+      "The same box with the phase shifter back in it, so level turns continuously through the wheel instead of being sliced into corners. Pointed at the picture that maps the whole tonal range onto the whole colour wheel: shadows land at one hue, mid tones a third of the way round, highlights two thirds, and every area of equal brightness comes back the same colour wherever it sits. What it looks like is the picture reprinted as a heat map nobody computed — the tones are the image's own, and the only thing added is the decision to read them as hue. Turning the phase rotates the entire palette while the boundaries between the fields stay exactly where the picture's brightness put them.",
+    patch: {
+      synthOver: 0.9,
+      synthColor: 1,
+      synthColorSrc: 1,
+      synthHueDeg: 180,
+      capLumaMHz: 0.3,
+      demodMHz: 0.4,
+      chromaGain: 3,
+      crtSat: 1.6,
+      crtSpot: 4,
+      crtBloom: 0.6,
+    },
+    mod: [
+      { target: 'synthHueDeg', source: 'smooth', rateHz: 0.03, depth: 0.4 },
+    ],
+  },
+  {
     name: 'blockColour',
     displayName: 'block colour',
     group: 'Circuit bent',

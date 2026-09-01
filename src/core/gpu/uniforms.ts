@@ -117,6 +117,8 @@ export function uniformValues(c: Controls, env: UniformEnv) {
     // two have to arrive in the same units.
     synthFm: c.synthFm / SAMPLE_RATE,
     synthFmSrc: c.synthFmSrc,
+    synthColorSrc: c.synthColorSrc,
+    synthColorMode: c.synthColorMode,
     beamBlank: env.beamBlank,
     chromaGain: c.chromaGain,
     burstLock: c.burstLock,
