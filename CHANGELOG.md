@@ -2,6 +2,16 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [0.34.1](https://github.com/cmdcolin/videoskillet.js/compare/v0.34.0...v0.34.1) - 2026-09-01
+
+### Features
+- *(ui)* [`c701ea6`](https://github.com/cmdcolin/videoskillet.js/commit/c701ea6fe8aa317eb929f61f73412fb80e7af0da) no roll hands back a bend ripple
+- *(deflection)* [`911bd7c`](https://github.com/cmdcolin/videoskillet.js/commit/911bd7c0d4168094224af181b3d2a6dc9d24ce8e) a roll keeps the HV tank light
+- *(ui)* [`cd0344a`](https://github.com/cmdcolin/videoskillet.js/commit/cd0344aaf217c12fb0796af7c60890c3b07d583a) a way from the app to the docs
+
+### Documentation
+- [`94b5538`](https://github.com/cmdcolin/videoskillet.js/commit/94b5538ab06121eeefe39447b2b2ce856b9a6f61) the guide shows the map you click, and the presets
+
 ## [0.34.0](https://github.com/cmdcolin/videoskillet.js/compare/v0.33.2...v0.34.0) - 2026-08-31
 
 ### Features
