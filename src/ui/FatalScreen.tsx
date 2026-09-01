@@ -49,11 +49,11 @@ export function FatalScreen({ fatal }: { fatal: Fatal }) {
             <p className={ui.muted} style={{ margin: 0 }}>
               <a
                 className={ui.link}
-                href="https://github.com/cmdcolin/videoskillet.js"
+                href="https://github.com/cmdcolin/videoskillet"
                 target="_blank"
                 rel="noreferrer"
               >
-                github.com/cmdcolin/videoskillet.js
+                github.com/cmdcolin/videoskillet
               </a>
               {' · '}
               <a

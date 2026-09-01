@@ -17,9 +17,9 @@ body = """
 
 {% if version %}\
     {% if previous.version %}\
-        ## [{{ version | trim_start_matches(pat="v") }}](https://github.com/cmdcolin/videoskillet.js/compare/{{ previous.version }}...{{ version }}) - {{ timestamp | date(format="%Y-%m-%d") }}
+        ## [{{ version | trim_start_matches(pat="v") }}](https://github.com/cmdcolin/videoskillet/compare/{{ previous.version }}...{{ version }}) - {{ timestamp | date(format="%Y-%m-%d") }}
     {% else %}\
-        ## [{{ version | trim_start_matches(pat="v") }}](https://github.com/cmdcolin/videoskillet.js/releases/tag/{{ version }}) - {{ timestamp | date(format="%Y-%m-%d") }}
+        ## [{{ version | trim_start_matches(pat="v") }}](https://github.com/cmdcolin/videoskillet/releases/tag/{{ version }}) - {{ timestamp | date(format="%Y-%m-%d") }}
     {% endif %}\
 {% else %}\
     ## [Unreleased]
@@ -28,7 +28,7 @@ body = """
 ### {{ group | striptags | trim }}
 {% for commit in commits %}\
 - {% if commit.scope %}*({{ commit.scope }})* {% endif %}\
-[`{{ commit.id | truncate(length=7, end="") }}`](https://github.com/cmdcolin/videoskillet.js/commit/{{ commit.id }}) \
+[`{{ commit.id | truncate(length=7, end="") }}`](https://github.com/cmdcolin/videoskillet/commit/{{ commit.id }}) \
 {% if commit.breaking %}[**breaking**] {% endif %}\
 {{ commit.message | split(pat="\n") | first | trim }}
 {% endfor %}\

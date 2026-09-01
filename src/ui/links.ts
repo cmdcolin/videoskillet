@@ -7,7 +7,7 @@
 const SITE = 'https://cmdcolin.github.io/videoskillet/'
 
 export const GUIDE_URL = `${SITE}guide/`
-export const REPO_URL = 'https://github.com/cmdcolin/videoskillet.js'
+export const REPO_URL = 'https://github.com/cmdcolin/videoskillet'
 
 export const openGuide = () => {
   window.open(GUIDE_URL, '_blank', 'noopener,noreferrer')

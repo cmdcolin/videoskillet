@@ -58,7 +58,7 @@ const PAGES = [
 
 // Markdown link -> where it goes on the site. Anything else that ends in .md is
 // a contributor doc with no page here, so it goes to the repo.
-const REPO = 'https://github.com/cmdcolin/videoskillet.js/blob/main/'
+const REPO = 'https://github.com/cmdcolin/videoskillet/blob/main/'
 const LINKS = new Map([
   ['GETTING-STARTED.md', 'index.html'],
   ['USER-GUIDE.md', 'guide.html'],
@@ -531,8 +531,8 @@ ${pagerFor(current)}
 <footer>
   <div class="foot">
     <a href="../">Live demo ↗</a>
-    <a href="https://github.com/cmdcolin/videoskillet.js">Source ↗</a>
-    <a href="https://github.com/cmdcolin/videoskillet.js/issues">Issues ↗</a>
+    <a href="https://github.com/cmdcolin/videoskillet">Source ↗</a>
+    <a href="https://github.com/cmdcolin/videoskillet/issues">Issues ↗</a>
     <a href="#top">Back to top ↑</a>
     <span class="sep"></span>
     <small>MIT. Needs a WebGPU browser — Chrome, Edge, Safari 26+, or Firefox Nightly on Linux.</small>
