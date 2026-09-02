@@ -32,6 +32,7 @@ What either deck can be fed:
 - Teletype… — type your own text card
 - File… — open an image or video
 - Clips… — your own shelf, kept between sessions
+- Video file URL… — play an .mp4 or .webm straight from its address
 - Webcam / USB device — camera or RCA capture
 - Screen / window… — share a window or a tab
 

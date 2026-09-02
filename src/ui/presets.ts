@@ -1402,8 +1402,14 @@ export const PRESETS: PresetDef[] = [
     blurb:
       "Both faders wide open into a summing amplifier with no headroom left. Two full composites added is twice what one stage was built to carry, so it spends most of every line against its supply — and a stage against its supply is not a limiter, it is a multiplier: its gain falls away as the sum rises, and a falling gain multiplies the two signals sharing the bus by each other. B's subcarrier is running thirty hertz off A's, so the beat between them lands inside the chroma band and comes back as colour, which is the ring mod's trick arriving because the box ran out of volts rather than because anybody patched a multiplier. The sync tips are squashed along with the picture, so neither deck's pulse wins the line start by as much as it should and the frame hunts between two geometries while the colour churns.",
     patch: {
-      aGain: 1,
-      bGain: 1,
+      // Eight tenths each rather than wide open. Two composites at full sum to
+      // twice what the stage carries and the survey put the driven look at mean
+      // 225 with the spread collapsing — which is the blown-out reading
+      // docs/CURATION.md already flags on the other multiplier. At 0.8 the sum
+      // is still well over the stage's headroom, so the mechanism is untouched,
+      // and the picture keeps its contrast: mean 166, spread 77.
+      aGain: 0.8,
+      bGain: 0.8,
       busClip: 0.75,
       bDetuneHz: 30,
       bLineHz: 0.6,

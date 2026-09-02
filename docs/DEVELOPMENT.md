@@ -386,17 +386,31 @@ names each shader declares (`core/gpu/reflect.ts`), and a binding left
 unsupplied throws at construction.
 
 **Which means the mirror drifts, and the throw is the good half of that.** It
-had drifted three ways by the time anyone next ran it: a uniform block missing
-from one pass, the mixer loop's program snapshot never added after the keyer's
-external input shipped, and a timing buffer two floats short of the VIR
-corrector's integrators. The first two threw at construction and cost a minute
-each. The third did not throw at all — the sag region ended where the buffer
-did, so `vir` wrote out of bounds, a storage buffer discards that silently, and
-the corrector simply did nothing here while doing something in the app. So: add
-a binding to a shader and this graph needs the same entry, and **when a pass
-grows a buffer, check the size against the index constants in the prelude** —
-nothing catches that one for you. Run it after any pass-graph change, not only
-when you want a number. Four stock-frame wins came out of its first afternoon
+had drifted five ways by the time anyone next ran it, in three classes:
+
+- **A binding a pass never supplied** — the uniform block on one, the mixer
+  loop's program snapshot on another after the keyer's external input shipped.
+  These throw at construction, which is what the binding reflection is for, and
+  cost a minute each.
+- **A buffer sized short of what a shader indexes.** The timing buffer stopped
+  two floats below the VIR corrector's integrators, so `vir` wrote out of bounds
+  — and a storage buffer discards that silently, so the corrector did nothing
+  here and something in the app, with no error anywhere. Nothing catches this
+  class: **when a pass grows a buffer, check the size against the index
+  constants in the prelude yourself.**
+- **A uniform the graph never filled in.** A field of `UniformEnv` this second
+  consumer does not supply reads `undefined`, packs as NaN, and a NaN in the
+  composite covers the whole raster within a pass or two. The symptom is a black
+  frame, and it is not distinguishable from a look that renders black on
+  purpose: four presets sat in a survey at `mean 0.0, sd 0.0` looking exactly
+  like the `chromaOnly` row this repo has cut a preset over. `packParams` now
+  names a non-finite field on the console once, which found two more the same
+  afternoon (the line-21 caption pair, NaN in every run this harness had ever
+  done). Type checking does not help: `deno check` reports nothing here, because
+  the modules it imports fail to resolve first and the call degrades to `any`.
+
+So run it after any pass-graph change, not only when you want a number, and read
+the console. Four stock-frame wins came out of its first afternoon
 (`OPTIMIZATIONS.md` › _What per-pass timestamps found_), one of them on a change
 the batch harness had measured as flat. Live frame rate is still what the user
 sees, so confirm a win in Firefox with `perf.mjs` once — and only once, it takes
@@ -1303,21 +1317,32 @@ as it always did. What the wire does depend on is the order of `URL_KEY_ORDER`,
 pinned by golden vectors in `packed.test.ts`, and each control's `step`, which
 is not pinned because changing one moves a link by less than a step.
 
-| Param                | Meaning                                               |
-| -------------------- | ----------------------------------------------------- |
-| `?preset=`           | load a built-in preset by name                        |
-| `?p=`                | the same controls packed into bytes — what a link has |
-| `?set=key:value,…`   | override individual controls                          |
-| `?mod=t:src:hz:d,…`  | modulation routings (target, source, rate, depth)     |
-| `?iurl=` / `?iurlb=` | image source A / B                                    |
-| `?vurl=`             | video source                                          |
-| `?src=` / `?srcb=`   | source kind for A / B (a `wiki-*` channel rolls)      |
-| `?dbg=1..6`          | signal taps (composite, luma, chroma, burst, scope)   |
-| `?surprise`          | roll a random preset stack on load                    |
-| `?gpu=low-power`     | run on the integrated GPU instead of the discrete one |
-| `?vidbitmap`         | force the bitmap video path where zero-copy exists    |
+| Param                 | Meaning                                               |
+| --------------------- | ----------------------------------------------------- |
+| `?preset=`            | load a built-in preset by name                        |
+| `?p=`                 | the same controls packed into bytes — what a link has |
+| `?set=key:value,…`    | override individual controls                          |
+| `?mod=t:src:hz:d,…`   | modulation routings (target, source, rate, depth)     |
+| `?iurl=` / `?iurlb=`  | image source A / B                                    |
+| `?vurl=` / `?vurlb=`  | video file address for A / B, played as-is            |
+| `?picka=` / `?pickb=` | one archive file: `origin:kind:title`                 |
+| `?src=` / `?srcb=`    | source kind for A / B (a `wiki-*` channel rolls)      |
+| `?dbg=1..6`           | signal taps (composite, luma, chroma, burst, scope)   |
+| `?surprise`           | roll a random preset stack on load                    |
+| `?gpu=low-power`      | run on the integrated GPU instead of the discrete one |
+| `?vidbitmap`          | force the bitmap video path where zero-copy exists    |
 
 Example: `?iurl=/sample.jpg&preset=dirty%20mix`
+
+`?picka=` is what stops a shared link handing the reader a _different_ clip.
+`?src=ia-random` names the pool, so a link carrying it alone rolls again on the
+far end — which is what that picker entry means, and not what someone sharing
+the picture in front of them is saying. The pick names the file itself and
+re-resolves through the same request a roll makes, so the two travel together:
+`?src=ia-random&picka=archive:video:dusty-trailer-1983` opens on that clip with
+the caption still offering another roll out of the same pool. A saved look and a
+strip row deliberately carry the pool without the pick — a row that says
+`?src=ia-random` means _roll one_.
 
 `?gpu=low-power` is the exception to "a link specifies a look" — it changes
 nothing about the picture, only which chip draws it. The app asks for the

@@ -4,7 +4,7 @@
 //
 //   deno run -A --config scripts/gpuprof/deno.json scripts/gpuprof/survey.ts \
 //     sliders [--base=vhs] [--source=detail] [--only=a,b] [--frames=N]
-//     presets [--source=detail] [--move] [--nomod]
+//     presets [--source=detail] [--move] [--nomod] [--only=a,b]
 //
 // Two modes:
 //
@@ -162,8 +162,13 @@ async function main(): Promise<void> {
   }
 
   if (mode === 'presets') {
+    // Same filter the slider sweep has. A batch of new looks is the usual
+    // reason to run this mode, and screening six of them should not cost the
+    // other hundred and eighteen.
+    const only = arg('only')?.split(',')
     for (const p of PRESETS) {
       if (p.name === 'clean') continue
+      if (only !== undefined && !only.includes(p.name)) continue
       const { shots } = await runner.run(
         presetControls(p.patch),
         FRAMES,
@@ -172,7 +177,9 @@ async function main(): Promise<void> {
         NOMOD ? undefined : drivable(p.name, p.mod),
       )
       rows.push(row(p.name, p.group.slice(0, 11), shots))
-      console.error(`  ${rows.length}/${PRESETS.length} ${p.name}`)
+      console.error(
+        `  ${rows.length}/${only?.length ?? PRESETS.length} ${p.name}`,
+      )
     }
   } else {
     const only = arg('only')?.split(',')

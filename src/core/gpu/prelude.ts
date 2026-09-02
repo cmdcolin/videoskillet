@@ -381,6 +381,10 @@ export const GEN_OFFSET = PARAM_DEFS.findIndex(([n]) => n === 'gen') * 4
 // `missing param` throw.
 export type ParamName = (typeof PARAM_DEFS)[number][0]
 
+// Names already reported as non-finite, so a bad field says so once rather
+// than sixty times a second.
+const badParams = new Set<string>()
+
 export function packParams(
   values: Record<ParamName, number>,
   out: ArrayBuffer,
@@ -388,6 +392,19 @@ export function packParams(
   const dv = new DataView(out)
   PARAM_DEFS.forEach(([name, type], i) => {
     const v = values[name]
+    // A field its supplier forgot arrives here as `undefined` and lands in the
+    // uniform as NaN, and a NaN in the composite spreads over the whole raster
+    // within a pass or two — so the symptom is a black frame with no error
+    // anywhere, and nothing upstream catches it: the field is required by
+    // `UniformEnv`'s type, but a second consumer of that type (the headless
+    // graph in `scripts/gpuprof`) is not typechecked against it in practice.
+    // That cost four presets a silent black frame in a survey. Reported rather
+    // than thrown, because the render loop is the wrong place to die and the
+    // picture says the rest.
+    if (!Number.isFinite(v) && !badParams.has(name)) {
+      badParams.add(name)
+      console.error(`packParams: ${name} is ${String(v)} — uniform will be NaN`)
+    }
     if (type === 'u32') dv.setUint32(i * 4, v >>> 0, true)
     else dv.setFloat32(i * 4, v, true)
   })

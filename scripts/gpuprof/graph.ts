@@ -26,6 +26,7 @@ import { reflectBindings } from '../../src/core/gpu/reflect'
 import { loRadPerSample, uniformValues } from '../../src/core/gpu/uniforms'
 import { wrap } from '../../src/core/math'
 import { rngFor } from '../../src/core/rng'
+import { CaptionState } from '../../src/core/signal/captionstate'
 import {
   ACTIVE_HEIGHT,
   ACTIVE_WIDTH,
@@ -132,6 +133,11 @@ export class Graph {
   // video, makes every `timing[row]` NaN, and decodes the whole frame black.
   private readonly servo = new TrackingServo(this.rand)
   private scPhase = 0
+  private cfbCarrierPhase = 0
+  // The two characters line 21 carries this frame. Without it `ccChar0/1`
+  // reach the uniform as NaN, and line 21 is inside the raster the whole
+  // measurement is taken over.
+  private readonly captionState = new CaptionState()
   private shuttlePhase = 0
   private tapeFrame = { a: 0, b: 0 }
   private impulseTrainPos = 0
@@ -658,8 +664,15 @@ export class Graph {
   private stage(): number {
     const c = this.c
     const d = this.device
+    // Both detuned oscillators, the way Engine.advancePhases walks them. A
+    // field of UniformEnv this graph does not supply reaches packParams as
+    // undefined and lands in the uniform as NaN, which the composite then
+    // spreads over the whole raster — a black frame with no error anywhere.
     this.scPhase =
       (this.scPhase + loRadPerSample(c.scDetuneKHz) * N) % (2 * Math.PI)
+    this.cfbCarrierPhase =
+      (this.cfbCarrierPhase + loRadPerSample(c.cfbCarrierKHz) * N) %
+      (2 * Math.PI)
     this.shuttlePhase = advanceCrossings(this.shuttlePhase, c.shuttleX - 1)
     if (c.aPause === 0) this.tapeFrame.a += 1
     if (c.bPause === 0) this.tapeFrame.b += 1
@@ -706,6 +719,7 @@ export class Graph {
           (this.frame * 1000) / 60,
         ),
         scPhase: this.scPhase,
+        cfbCarrierPhase: this.cfbCarrierPhase,
         audioHit: 0,
         audioLevel: 0,
         impulseTrainPos: this.impulseTrainPos,
@@ -715,6 +729,9 @@ export class Graph {
       }),
       ...mixU,
       ...this.rfState.update(this.frame),
+      // A sibling of uniformValues, not one of its env fields: these two are
+      // packed uniforms in their own right, the way the app assembles them.
+      ...this.captionState.update({ vbi: c.vbi }),
       ...this.synthState.update({ synthAHz: c.synthAHz, synthBHz: c.synthBHz }),
     }
     packParams(vals, this.paramScratch)
