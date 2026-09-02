@@ -31,9 +31,22 @@
 //   hjit   sd of the per-line horizontal offsets the deflection actually used,
 //          in samples. Line-to-line tearing, whether or not lock survived.
 //   vroll  |vertical phase error|, in lines. Past a couple the frame is rolling.
+//   mean/sd luma level and its spread, as survey.ts reports them.
+//   csd    mean distance from grey. `sd` is luma alone, so a look that has put
+//          everything it has into chroma — bands of pure hue at one brightness
+//          — reads there as though it were a flat grey field. Read the two
+//          together or a colour look gets cut for being flat.
 
 import { LINES } from '../../src/core/signal/constants'
-import { Runner, drivable, meanAbs, panner, spread, undrivable } from './render'
+import {
+  Runner,
+  chromaSpread,
+  drivable,
+  meanAbs,
+  panner,
+  spread,
+  undrivable,
+} from './render'
 
 import type { ControlKey, Controls } from '../../src/core/controls'
 import type { LooseRouting } from './render'
@@ -78,6 +91,7 @@ interface Row {
   vroll: number
   mean: number
   sd: number
+  csd: number
 }
 
 // The graph's timing buffer, frame by frame. Copied to a mapped buffer per
@@ -196,6 +210,7 @@ async function main(): Promise<void> {
       vroll: avg(lock.vrolls),
       mean: s.mean,
       sd: s.sd,
+      csd: chromaSpread(on.shots[0]),
     })
   }
   const n = (x: number, w: number, d = 2) => x.toFixed(d).padStart(w)
@@ -203,11 +218,11 @@ async function main(): Promise<void> {
     `\n# ${items.length} looks, ${FRAMES} frames, panned source${NOMOD ? ', no routings' : ''}`,
   )
   console.log(
-    'name                    loop    grow  motion    lock     age    hjit   vroll    mean      sd',
+    'name                    loop    grow  motion    lock     age    hjit   vroll    mean      sd     csd',
   )
   for (const r of rows) {
     console.log(
-      `${r.name.padEnd(22)}${n(r.loop, 6)}${n(r.grow, 8)}${n(r.motion, 8)}${n(r.lock, 8, 1)}${n(r.age, 8, 1)}${n(r.hjit, 8)}${n(r.vroll, 8)}${n(r.mean, 8, 1)}${n(r.sd, 8, 1)}`,
+      `${r.name.padEnd(22)}${n(r.loop, 6)}${n(r.grow, 8)}${n(r.motion, 8)}${n(r.lock, 8, 1)}${n(r.age, 8, 1)}${n(r.hjit, 8)}${n(r.vroll, 8)}${n(r.mean, 8, 1)}${n(r.sd, 8, 1)}${n(r.csd, 8, 1)}`,
     )
   }
   if (undrivable.length > 0) {

@@ -683,7 +683,7 @@ export const PRESETS: PresetDef[] = [
     patch: {
       abl: 0.8,
       fbIris: 0.9,
-      fbMix: 0.78,
+      fbMix: 0.6,
       fbZoom: 1.04,
       agc: 0.6,
       hvSagUs: 4,
@@ -1943,6 +1943,7 @@ export const PRESETS: PresetDef[] = [
       cfbRing: 0.8,
       chromaGain: 1.3,
       phosphor: 0.45,
+      cfbGenlock: 1,
     },
   },
   {

@@ -496,3 +496,48 @@ gain on those until the number matches walks the highlight-keyed ones to white
 at `cfbGain` 1.22 — measured — so they carry the round trip the gate takes off
 them and nothing more. Read `p99` from `survey.ts` beside it, the way the
 `motion` section above says to read a rank rather than a threshold.
+
+### Confirming it off the bars chart
+
+Everything above was measured on the panned SMPTE-bars chart, which this page
+elsewhere says is not a measurement on its own. Re-run with `--source=detail`,
+the whole group holds: `lock` 99.8 and `vroll` 0 on 43 of 44, `meltdown` the one
+exception, no white-outs. The sync result is source-independent, as it should be
+— the separator hunts in the blanking interval and never sees the picture.
+
+What does move is the drama column. Loop contributions fall across the board on
+a source that carries its own structure — `mixerLoop` 66 → 41, `subcarrierComb`
+52 → 22 — because `loop` is a departure from the same patch with the loops out,
+and there is more underneath for the loop to be a departure _from_. Read it as a
+rank within one source, never as a figure that carries between two.
+
+### `sd` is a luma number and half this group is not
+
+`subcarrierSiren` renders as saturated magenta and blue bands with the picture
+gone, and reads `sd` 9.2 — the same spread a flat grey field reads, because
+`spread()` in `render.ts` measures luma alone and those bands sit at one
+brightness. It was nearly cut for being flat. `looplock` now prints `csd` beside
+it, mean distance from grey, where the same frame reads 46.4, the highest in the
+group. Any look whose subject is colour needs both columns or it will be judged
+on the one that cannot see it.
+
+### The group boundary is not where the loops are
+
+The two findings above were fixed across the `Feedback loops` group, and the
+data test written to hold the line then caught six more presets running the same
+displacing mixer loop from other groups. Measured, three of them keep the raster
+without help — `keyIntoTheLoop` at lock 100, `bentEnhancer` 99.8,
+`howlroundLoom` 99.1, all at modest mixes with nothing multiplying or holding in
+the return. Three do not, and two of those say so: `everyColourButOne`'s blurb
+is about the sync tip going over to product, and `railSlam` is in
+`Past the redline` with 22 us of delay, a third of a line. The sixth,
+`twoMultipliers`, was not — its blurb is about two balanced bridges in series
+and a spectrum reorganising itself, and it was running at lock 0, `motion` 82,
+deep in the band this page cut as chaos. Genlocked it holds the raster at
+`motion` 8.8 with the highest chroma spread of anything measured that afternoon,
+which is the look its blurb describes.
+
+The list of presets allowed to run a bare cable is now explicit in
+`presets.test.ts`, split into the ones that tear on purpose and the ones
+measured to hold without it, so a change to any of them has to be re-measured
+rather than inheriting a verdict about a patch it is no longer.

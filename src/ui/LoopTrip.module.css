@@ -1,0 +1,10 @@
+/* The product of the two sliders above it, in the same dim grey the group's
+   other asides use — a reading, not a warning, since which side of unity a
+   look wants is the look's business. */
+.trip {
+  padding: 2px 0;
+  margin: 2px 0;
+  font-size: var(--fs-sm);
+  color: var(--gate);
+  font-variant-numeric: tabular-nums;
+}

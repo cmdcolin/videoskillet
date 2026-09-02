@@ -317,6 +317,20 @@ export const p99Abs = (a: Float32Array, b: Float32Array): number => {
 // collapsed to black departs hugely from the reference and is still nothing to
 // look at, so departure alone cannot rank a candidate — this is the column
 // that catches it.
+// How far the frame departs from grey, mean over the tile. `spread` is a luma
+// measure and says nothing about a look that lives in chroma: a raster of
+// saturated magenta and blue bands at one brightness reads sd 9 there, which
+// is the same number a flat grey field reads, and the two are not alike.
+export const chromaSpread = (s: Float32Array): number => {
+  let acc = 0
+  for (let i = 0; i < s.length; i += 3) {
+    const y = 0.299 * s[i] + 0.587 * s[i + 1] + 0.114 * s[i + 2]
+    acc +=
+      (Math.abs(s[i] - y) + Math.abs(s[i + 1] - y) + Math.abs(s[i + 2] - y)) / 3
+  }
+  return acc / (s.length / 3)
+}
+
 export function spread(s: Float32Array): { mean: number; sd: number } {
   const luma = (i: number): number =>
     0.299 * s[i] + 0.587 * s[i + 1] + 0.114 * s[i + 2]

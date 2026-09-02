@@ -530,3 +530,97 @@ describe('rollControls', () => {
     expect(out).toEqual(blendPresets(DEFAULT_CONTROLS, weights))
   })
 })
+
+// A mixer loop displaces its return inside the line — the delay, the varactor
+// and the read clock all do — and the crossfade covers the whole waveform, so
+// past a certain mix the sync tip that comes back lands mid-line and the
+// separator downstream stops finding a line start. What the picture does then
+// is not the loop: the flywheel free-runs and throws the loop's structure
+// across a raster that is no longer under it. `cfbGenlock` is the frame
+// synchronizer that keeps the return off the blanking interval.
+//
+// Measured before it existed, 16 of the 44 feedback looks were running with the
+// separator finding an edge on under 30% of lines, none of them authored to.
+// `scripts/gpuprof/looplock.ts` is what reads that, and it needs a GPU; this
+// holds the same line from the patch data alone, which is where a new preset
+// will trip it.
+describe('the mixer loop and the sync tip', () => {
+  // Looks whose subject is the receiver losing the line start. The bare cable
+  // is the patch, and the tearing is what they are for — each measured at
+  // lock 0, and each saying so in its own blurb or its group.
+  //
+  //   meltdown           the loop rewrites its own timing every lap
+  //   everyColourButOne  names the sync tip going over to product, and the two
+  //                      timings either side of the seam that follows
+  //   railSlam           Past the redline, 22 us of delay, a third of a line
+  const tearsOnPurpose = new Set(['meltdown', 'everyColourButOne', 'railSlam'])
+
+  // Loops that displace inside the line and keep the raster anyway, measured
+  // rather than assumed: a modest mix, a sub-microsecond delay, and nothing
+  // multiplying or holding in the return. Named so a change to any of them has
+  // to be re-measured instead of inheriting a verdict about a patch it no
+  // longer is.
+  //
+  //   keyIntoTheLoop   lock 100.0
+  //   bentEnhancer     lock  99.8
+  //   howlroundLoom    lock  99.1
+  const holdsWithoutIt = new Set([
+    'keyIntoTheLoop',
+    'bentEnhancer',
+    'howlroundLoom',
+  ])
+
+  it('leaves the cable bare only where that was measured or meant', () => {
+    const displacing = PRESETS.filter(p => {
+      const c = presetControls(p.patch)
+      return (
+        c.cfbMix > 0.5 &&
+        (c.cfbDelayUs > 0.05 || c.cfbServoUs !== 0 || c.cfbClockPct !== 0)
+      )
+    })
+    expect(displacing.length).toBeGreaterThan(20)
+    const bare = displacing
+      .filter(p => presetControls(p.patch).cfbGenlock === 0)
+      .map(p => p.name)
+    expect(new Set(bare)).toEqual(
+      new Set([...tearsOnPurpose, ...holdsWithoutIt]),
+    )
+  })
+})
+
+// The camera loop crossfades too, so what decides whether it does anything is
+// `fbMix * fbGain` and never the gain alone. Every camera preset in the library
+// was once authored against the gain, and ran round trips of 0.53 to 0.97 while
+// reading as though it were above unity.
+describe('the camera loop round trip', () => {
+  const cameraLoops = PRESETS.filter(p => presetControls(p.patch).fbMix > 0)
+
+  // Elsewhere in the library a camera loop is seasoning on a look that is about
+  // something else, and a lap that gives back a third is a fair way to season.
+  // In this group the loop is the subject, and a round trip of 0.66 there was
+  // a preset describing a tunnel over a picture three frames deep.
+  it('leaves no loop-group camera loop so far under unity that it is a smear', () => {
+    const weak = cameraLoops
+      .filter(p => p.group === 'Feedback loops' && p.name !== 'meltdown')
+      .map(p => {
+        const c = presetControls(p.patch)
+        return { name: p.name, trip: c.fbMix * c.fbGain }
+      })
+      .filter(x => x.trip < 0.6)
+    expect(weak).toEqual([])
+  })
+
+  // Above unity the transport decides whether there is a picture: a loop that
+  // expands spreads what it gains over the whole raster and walks to white
+  // within a second, while one that collapses concentrates it into a shrinking
+  // core and holds contrast well past it. Measured in docs/CURATION.md.
+  it('only runs past unity where the transport collapses inward', () => {
+    const hot = cameraLoops
+      .map(p => {
+        const c = presetControls(p.patch)
+        return { name: p.name, trip: c.fbMix * c.fbGain, zoom: c.fbZoom }
+      })
+      .filter(x => x.trip > 1 && x.zoom >= 1)
+    expect(hot).toEqual([])
+  })
+})

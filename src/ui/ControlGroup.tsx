@@ -15,6 +15,7 @@ import {
 import { cx } from './cx'
 import { DRIFT_SECONDS } from './drift'
 import { filterActive, matchedSliders, useFilter } from './filter'
+import { LoopTrip } from './LoopTrip'
 import { MagnifierFrame } from './MagnifierFrame'
 import { SYNCABLE_KEYS } from './midi'
 import { ModRowEditor } from './ModRowEditor'
@@ -655,6 +656,7 @@ export function ControlGroup(props: { group: Group; defaultOpen?: boolean }) {
         <ControlRows sliders={shown} muted={muted} />
         {group.name === TAP_HOST_GROUP ? <SignalTapControl /> : null}
         {group.name === CAPTION_HOST_GROUP ? <CaptionControl /> : null}
+        <LoopTrip group={group.name} />
         {fine.length === 0 ? null : (
           <>
             <button
