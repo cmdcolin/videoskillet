@@ -81,6 +81,7 @@ import type { Rand } from '../core/rng'
 import type { SharedMode, SourceBMode, SourceMode } from '../sources/modes'
 import type {
   OnProgress,
+  PickKind,
   PoolMode,
   PoolOrigin,
   PoolPick,
@@ -508,6 +509,17 @@ export function useEngine() {
   // The loaded YouTube URL per slot, kept so the source round-trips through the
   // query string (a refresh or shared link restores the clip).
   const [ytUrl, setYtUrlState] = useState({ a: '', b: '' })
+  // The address each slot was handed by hand, while it is on `url`. Kept for the
+  // same reason and read back the same way — except that this one needs no
+  // bridge and no download on the far end, since what the link carries is the
+  // file's own public address.
+  const [srcUrl, setSrcUrl] = useState({ a: '', b: '' })
+  // The still each slot is showing by address rather than by file — a `?iurl`
+  // the link arrived on, or a photo rolled off Commons, which is the same thing:
+  // a public url the reader's own <img> can fetch. State rather than a reading
+  // off the mode, because the mode lags the picture by however long the image
+  // takes to decode and the address bar is rewritten in the meantime.
+  const [imgUrl, setImgUrl] = useState({ a: '', b: '' })
   // Where each slot's playhead is, for the seek bars. Polled rather than driven
   // off `timeupdate` for the same reason the audio file's is: the readout ticks
   // in tenths, and a slot slowed to 0.25× fires timeupdate on its own schedule
@@ -1086,6 +1098,11 @@ export function useEngine() {
     // must not go on offering to replace it.
     if (stash === 'drop') dropFile(key)
     else setPending(onDeck<Stashed | null>(key, null))
+    // The addresses this deck was showing, which the next source is not. Cleared
+    // here for the reason `markClip` is, and the paths that put one back set it
+    // straight after this returns.
+    setSrcUrl(onDeck(key, ''))
+    setImgUrl(onDeck(key, ''))
     return fresh
   }
 
@@ -1184,6 +1201,14 @@ export function useEngine() {
     stopSlot(slot)
     slot.setName(poolCaption(picked))
     setPick(slot.id, picked)
+    // What a link can say about this pick, which is the file's own address or
+    // nothing. Commons serves it to anyone off upload.wikimedia.org, with ranges
+    // and CORS; an archive.org url is a `blob:` of this tab's own and names
+    // nothing on the far end (sources/archive.ts), so that deck's link carries
+    // its pool and the reader rolls their own.
+    const shareable = picked.origin === 'commons' ? picked.url : ''
+    setSrcUrl(onDeck(slot.id, picked.kind === 'video' ? shareable : ''))
+    setImgUrl(onDeck(slot.id, picked.kind === 'photo' ? shareable : ''))
     if (picked.kind === 'video') playUrl(slot, picked.url)
     else
       loadImage(picked.url).then(
@@ -1228,7 +1253,14 @@ export function useEngine() {
   // roll (the picker, the palette, a MIDI pad), and the take's own generator
   // when a row fires. See rng.ts — and note what a seed does not buy, since the
   // candidate list is upstream's choice either way.
-  const rollFrom = (slot: VideoSlot, mode: PoolMode, rand?: Rand) => {
+  // `kind` is the deck's own roll buttons asking for a still or for a clip;
+  // undefined is the mixed roll every other caller wants.
+  const rollFrom = (
+    slot: VideoSlot,
+    mode: PoolMode,
+    rand?: Rand,
+    kind?: PickKind,
+  ) => {
     const origin = MODE_ORIGIN[mode]
     // Read before `beginLoad` clears it: what is on the slot right now is what a
     // re-roll of the *same* source should try not to hand back. A roll on the
@@ -1238,7 +1270,12 @@ export function useEngine() {
     const avoid = showing?.origin === origin ? showing.title : ''
     const fresh = beginLoad(slot.id)
     slot.setName('rolling…')
-    rollPool(origin, avoid, downloading(slot, fresh), rand).then(
+    rollPool(origin, {
+      avoid,
+      onProgress: downloading(slot, fresh),
+      rand,
+      kind,
+    }).then(
       picked => landPick(slot, picked, fresh),
       (e: unknown) => {
         if (fresh()) {
@@ -1256,6 +1293,19 @@ export function useEngine() {
   const rollAgain = (rand?: Rand) => {
     if (isPoolMode(sourceMode.a)) rollFrom(slotA, sourceMode.a, rand)
     else if (isPoolMode(sourceMode.b)) rollFrom(slotB, sourceMode.b, rand)
+  }
+
+  // The roll buttons under one deck's caption. Named per deck rather than
+  // reading whichever is on a pool the way `rollAgain` does: these buttons are
+  // drawn under the deck they belong to, and with both decks on a channel the
+  // one you clicked is the one that has to move.
+  //
+  // Silently nothing when that deck is elsewhere, which is unreachable from the
+  // panel — the row is only drawn on a pool mode — and is the honest answer for
+  // a stale click that arrives after the picker moved on.
+  const rollKindOn = (key: StashSlot, kind?: PickKind) => {
+    const mode = key === 'a' ? sourceMode.a : sourceMode.b
+    if (isPoolMode(mode)) rollFrom(slotOf(key), mode, undefined, kind)
   }
 
   // A strip row's roll, which differs from `rollAgain` in naming the pool rather
@@ -1945,6 +1995,30 @@ export function useEngine() {
     }
   }
 
+  // An address typed into the URL box, or read back off a link's `?vurl`. The
+  // whole of it is a `<video>` pointed at someone else's server: no bridge, no
+  // download step and nothing kept, which is what separates this from the
+  // yt-dlp path above and what lets it ship in a production build.
+  //
+  // Whether the far end allows it is the far end's to say, and two answers come
+  // back differently. A server that refuses the range request or the origin
+  // fails the element, which raises the banner every other clip failure does.
+  // One that serves the bytes but sends no `Access-Control-Allow-Origin` plays
+  // the clip and taints the texture upload, so the picture never leaves the
+  // element — the hint under the box is where that is said, since nothing in the
+  // failure itself names CORS.
+  const loadUrlOn = (key: StashSlot, url: string) => {
+    const trimmed = url.trim()
+    if (engineRef.current && trimmed !== '') {
+      setError('')
+      const slot = slotOf(key)
+      commitOn(key, 'url', urlName(trimmed))
+      setSrcUrl(onDeck(key, trimmed))
+      stopTyping(slot)
+      playUrl(slot, trimmed)
+    }
+  }
+
   // Put a parsed link on an engine. The parsing itself is pure and tested
   // (urlParams.ts); what is left here is only the applying, in the one order
   // that matters: the vaporwave settings land before any clip loads, since a
@@ -1997,6 +2071,15 @@ export function useEngine() {
     if (opts.boot && params.surprise) {
       eng.applyControls(rollControls(randomPresetMix(false), DEFAULT_CONTROLS))
     }
+    // The packed look failed its seal (packed.ts), so `params.controls` has none
+    // of it. Said on the banner rather than opened on a prefix of the look: a
+    // link that arrives short is one that was cut in a chat window, and the
+    // sender's picture is the one thing the reader cannot check for themselves.
+    if (params.damaged) {
+      setError(
+        'link: the look in ?p= is damaged (a character lost or changed on the way), so the picture is stock',
+      )
+    }
     // A cut, or a walk to the look over the row's arrival. `startGlide` takes
     // its origin from the engine's live controls, so a row arriving over a
     // morph that lands on top of another sets off from where the picture
@@ -2036,6 +2119,7 @@ export function useEngine() {
       // says about the stash is decided below, once every param has been read
       // (`linkNamesA`), and committing here would answer that question early —
       // for `?src=` alone, and before `?vurl=` had been looked at.
+      //
       showGenerated(slotA, src, beginLoad('a'))
       setSourceMode(m => ({ ...m, a: src }))
     }
@@ -2067,6 +2151,10 @@ export function useEngine() {
     if (params.iurl !== null) {
       const url = params.iurl
       const fresh = beginLoad('a')
+      // Recorded before the decode rather than after it: the address bar is
+      // rewritten a quarter-second in, and a still that takes longer than that
+      // would otherwise be dropped from the link it arrived on.
+      setImgUrl(onDeck('a', url))
       loadImage(url).then(bmp => {
         if (!fresh()) return
         // A link naming both ?src=teletype and a still means the still: stop
@@ -2080,6 +2168,7 @@ export function useEngine() {
     if (params.iurlb !== null) {
       const url = params.iurlb
       const fresh = beginLoad('b')
+      setImgUrl(onDeck('b', url))
       loadImage(url).then(bmp => {
         if (!fresh()) return
         stopTyping(slotB)
@@ -2089,13 +2178,11 @@ export function useEngine() {
         setSourceName(onDeck('b', urlName(url)))
       }, imageError)
     }
-    if (params.vurl !== null) {
-      beginLoad('a')
-      stopTyping(slotA)
-      playUrl(slotA, params.vurl)
-      setSourceMode(m => ({ ...m, a: 'file' }))
-      setSourceName(onDeck('a', urlName(params.vurl)))
-    }
+    // Both go through the same verb the URL box does, which is what puts B back
+    // on as well: `commitB` reads the enable off the mode it is given, so no
+    // caller has to remember it.
+    if (params.vurl !== null) loadUrlOn('a', params.vurl)
+    if (params.vurlb !== null) loadUrlOn('b', params.vurlb)
     // Audio is left off however the link arrived: browsers block unmuted
     // autoplay without a gesture, so a restored clip must load muted and the
     // user re-enables sound with one click on the panel toggle.
@@ -2132,7 +2219,10 @@ export function useEngine() {
       params.vurl !== null ||
       params.yt !== null
     const linkNamesB =
-      params.srcb !== null || params.iurlb !== null || params.ytb !== null
+      params.srcb !== null ||
+      params.iurlb !== null ||
+      params.vurlb !== null ||
+      params.ytb !== null
     // …unless the user has said not to (Advanced › on reload). Off, neither
     // branch runs: the deck stays on whatever the link or the defaults put
     // there, and the stash entry is left alone so switching back on picks it up
@@ -2612,12 +2702,16 @@ export function useEngine() {
       loadTeletype: p => loadTeletypeOn('a', p),
       ytUrl: ytUrl.a,
       loadYouTube: (u, secs, onLoaded) => loadYouTubeOn('a', u, secs, onLoaded),
+      srcUrl: srcUrl.a,
+      imgUrl: imgUrl.a,
+      loadUrl: u => loadUrlOn('a', u),
       pendingFile: pending.a === null ? '' : pending.a.name,
       reopenFile: reopenFileA,
       onFile: f => takeFileOn('a', f),
       speed: speed.a,
       changeSpeed: r => changeSpeed('a', r),
       pick: pick.a,
+      roll: kind => rollKindOn('a', kind),
     } satisfies SlotView<SourceMode>,
     b: {
       key: 'b',
@@ -2642,12 +2736,16 @@ export function useEngine() {
       loadTeletype: p => loadTeletypeOn('b', p),
       ytUrl: ytUrl.b,
       loadYouTube: (u, secs, onLoaded) => loadYouTubeOn('b', u, secs, onLoaded),
+      srcUrl: srcUrl.b,
+      imgUrl: imgUrl.b,
+      loadUrl: u => loadUrlOn('b', u),
       pendingFile: pending.b === null ? '' : pending.b.name,
       reopenFile: reopenFileB,
       onFile: f => takeFileOn('b', f),
       speed: speed.b,
       changeSpeed: r => changeSpeed('b', r),
       pick: pick.b,
+      roll: kind => rollKindOn('b', kind),
     } satisfies SlotView<SourceBMode>,
     // Which source dialog is open, for which deck, and the two verbs that move
     // it (useSourcePrompt.ts). One object rather than five ask/setAsk pairs, and

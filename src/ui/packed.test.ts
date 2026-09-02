@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 
 import { CONTROL_KEYS, DEFAULT_CONTROLS } from '../core/controls'
 import { ALL_SLIDERS, SLIDER_BY_KEY } from './controls'
+import { SYNC_DIVISIONS } from './midi'
+import { MOD_SOURCES } from './modSlots'
 import { packControls, unpackControls } from './packed'
 import {
   PRESETS,
@@ -17,6 +19,10 @@ const round = (c: Controls): Controls => ({
   ...DEFAULT_CONTROLS,
   ...unpackControls(packControls(c)),
 })
+
+// The bytes without the two characters of seal and the '.' in front of them:
+// what a link from before the seal carried, and what the vectors below pin.
+const unsealed = (packed: string): string => packed.slice(3)
 
 const rolls = (n: number, seed = 12345): Controls[] => {
   let s = seed
@@ -114,6 +120,7 @@ describe('a look as bytes', () => {
   })
 
   it('only carries what is off default', () => {
+    // and a stock look has no bytes to seal, so it is the bare marker
     expect(packControls(DEFAULT_CONTROLS)).toBe('')
     expect(unpackControls('')).toEqual({})
   })
@@ -134,7 +141,7 @@ describe('a look as bytes', () => {
   it('spends only characters a query string carries as themselves', () => {
     for (const look of rolls(20, 999)) {
       const packed = packControls(look)
-      expect(packed).toMatch(/^[A-Za-z0-9\-_]*$/)
+      expect(packed).toMatch(/^[A-Za-z0-9\-_.]*$/)
       expect(new URLSearchParams({ p: packed }).toString()).toBe(`p=${packed}`)
     }
   })
@@ -162,7 +169,7 @@ describe('a link that is not what this build would have written', () => {
       prev = at(key)
     }
     // the forged wire is the encoder's, or the rest of this proves nothing
-    expect(bytesToText(bytes)).toBe(packControls(look))
+    expect(bytesToText(bytes)).toBe(unsealed(packControls(look)))
     const past = Math.max(...ALL_SLIDERS.map(d => d.id)) + 1
     bytes.push(past - prev + 2, 9)
     expect(unpackControls(bytesToText(bytes))).toEqual({
@@ -173,12 +180,16 @@ describe('a link that is not what this build would have written', () => {
 
   it('decodes junk to nothing rather than to a look', () => {
     expect(unpackControls('!!!!')).toEqual({})
-    expect(unpackControls('....')).toEqual({})
+    // a '.' third is the shape of a seal, and junk under one is a bad seal
+    expect(unpackControls('....')).toBe(null)
+    expect(unpackControls('a.a.')).toEqual({})
     // a varint whose last byte never arrives stops the read where it is
     expect(unpackControls('gA')).toEqual({})
   })
 
-  it('keeps most of a look out of a link that lost its tail', () => {
+  it('keeps most of an unsealed look out of a link that lost its tail', () => {
+    // What a link from before the seal does when cut: the prefix it still has,
+    // and every value in it the one that was written.
     const look: Controls = {
       ...DEFAULT_CONTROLS,
       hHold: 0.2,
@@ -186,11 +197,46 @@ describe('a link that is not what this build would have written', () => {
       chromaGain: 1.79,
       crtBloom: 0.68,
     }
-    const cut = unpackControls(packControls(look).slice(0, 4))
-    expect(Object.keys(cut).length).toBeGreaterThan(0)
-    for (const [key, v] of Object.entries(cut)) {
+    const cut = unpackControls(unsealed(packControls(look)).slice(0, 4))
+    expect(cut).not.toBe(null)
+    expect(Object.keys(cut ?? {}).length).toBeGreaterThan(0)
+    for (const [key, v] of Object.entries(cut ?? {})) {
       expect(v).toBe(look[key as ControlKey])
     }
+  })
+
+  it('refuses a sealed look that lost its tail or had a character turned', () => {
+    const look: Controls = {
+      ...DEFAULT_CONTROLS,
+      hHold: 0.2,
+      noiseIre: 7.5,
+      chromaGain: 1.79,
+      crtBloom: 0.68,
+    }
+    const packed = packControls(look)
+    expect(unpackControls(packed)).toEqual(unpackControls(unsealed(packed)))
+    // Every cut short of the whole, not one: a cut landing on a byte boundary
+    // and a field boundary at once decodes to a shorter look that re-packs
+    // cleanly, which was the one damage nothing could see before the seal.
+    for (let n = 3; n < packed.length; n++) {
+      expect({ n, look: unpackControls(packed.slice(0, n)) }).toEqual({
+        n,
+        look: null,
+      })
+    }
+    const body = unsealed(packed)
+    const turned = body.replace(/[A-Za-z]/, ch =>
+      ch === ch.toUpperCase() ? ch.toLowerCase() : ch.toUpperCase(),
+    )
+    expect(unpackControls(`${packed.slice(0, 3)}${turned}`)).toBe(null)
+    // and a seal that is not the one over these bytes is a mismatch too
+    expect(unpackControls(`AA.${body}`)).toBe(null)
+  })
+
+  it('reads a sealed link that picked up a full stop', () => {
+    const look: Controls = { ...DEFAULT_CONTROLS, hHold: 0.2, noiseIre: 7.5 }
+    const packed = packControls(look)
+    expect(unpackControls(`${packed}.`)).toEqual(unpackControls(packed))
   })
 
   it('reads a link padded the way another encoder would pad it', () => {
@@ -209,12 +255,13 @@ describe('a link that is not what this build would have written', () => {
     // `snapToStep`, so an index past the end of the travel lands on the rail.
     const def = SLIDER_BY_KEY.get('frameLock')!
     const at = SLIDER_BY_KEY.get('frameLock')!.id
-    const far = unpackControls(bytesToText([at, 9999 * 2 * 2])).frameLock
-    expect(far).toBe(def.max)
+    expect(unpackControls(bytesToText([at, 9999 * 2 * 2]))).toEqual({
+      frameLock: def.max,
+    })
     // and the other rail, which a count from zero can now reach
-    expect(unpackControls(bytesToText([at, 9999 * 2 * 2 - 2])).frameLock).toBe(
-      def.min,
-    )
+    expect(unpackControls(bytesToText([at, 9999 * 2 * 2 - 2]))).toEqual({
+      frameLock: def.min,
+    })
   })
 })
 
@@ -243,10 +290,13 @@ describe('the format, pinned', () => {
   }
 
   it('writes these bytes for this look', () => {
-    expect(packControls(look)).toBe('HZx5BFAEDCboAj_iAQ')
+    expect(packControls(look)).toBe('9K.HZx5BFAEDCboAj_iAQ')
   })
 
-  it('reads that look back out of those bytes', () => {
+  it('reads that look back out of those bytes, sealed or not', () => {
+    expect(unpackControls('9K.HZx5BFAEDCboAj_iAQ')).toEqual(
+      unpackControls('HZx5BFAEDCboAj_iAQ'),
+    )
     expect(unpackControls('HZx5BFAEDCboAj_iAQ')).toEqual({
       noiseIre: 9,
       hHold: 0.2,
@@ -269,12 +319,50 @@ describe('the format, pinned', () => {
     ] as const) {
       const def = SLIDER_BY_KEY.get(key)!
       const n = Math.round(value / def.step)
-      expect(packControls({ ...DEFAULT_CONTROLS, [key]: value })).toBe(
+      expect(
+        unsealed(packControls({ ...DEFAULT_CONTROLS, [key]: value })),
+      ).toBe(
         bytesToText([
           SLIDER_BY_KEY.get(key)!.id,
           (n < 0 ? -2 * n - 1 : 2 * n) * 2,
         ]),
       )
     }
+  })
+})
+
+// Everything a link's meaning rests on that is not in the link, written down
+// once where a change to it has to be made by hand. The vectors above pin five
+// controls; this pins all of them, and the two lists `?mod=` reads by position.
+//
+// Each column is a way an existing link redecodes without a word: a moved
+// wire number sends the value to another control, a changed step rescales it,
+// a changed default is what every link that left the control at stock now
+// gets, a reordered choices list renames the mode an index picks, and a
+// division inserted ahead of another moves every routing locked to a beat.
+// None of these edits is forbidden. Updating the file is how one is admitted,
+// and the diff names the control and says what the links carrying it will do.
+//
+//   npx vitest run src/ui/packed.test.ts -u
+describe('the wire schema', () => {
+  it('is the one on file', async () => {
+    const controls = ALL_SLIDERS.toSorted((x, y) => x.id - y.id).map(
+      s =>
+        `${s.id} ${s.key} step=${s.step} default=${DEFAULT_CONTROLS[s.key]}${
+          s.choices === undefined ? '' : ` choices=${s.choices.join('|')}`
+        }`,
+    )
+    const text = [
+      '# wire number, control, step, default, choices — see packed.test.ts',
+      ...controls,
+      '',
+      `# ?mod= sources, by name`,
+      ...MOD_SOURCES.map(s => s.value),
+      '',
+      `# ?mod= beat divisions, by index`,
+      ...SYNC_DIVISIONS.map((d, i) => `${i} ${d.label} beats=${d.beats}`),
+      '',
+    ].join('\n')
+    await expect(text).toMatchFileSnapshot('./packed.golden.txt')
   })
 })

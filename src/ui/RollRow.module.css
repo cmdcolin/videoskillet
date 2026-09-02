@@ -1,0 +1,27 @@
+/* The roll buttons under a deck on a public archive (RollRow.tsx). Indented to
+   the 19px the caption above it uses — the tag's 13px plus the row's 6px gap —
+   so the name of the file and the buttons that replace it read as one block. */
+.rollRow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0 0 5px 19px;
+}
+/* The deck's button, at the deck's size, matching the cue row in Scrub.module.css
+   and the transport stops in Deck.module.css: three rows of buttons under one
+   picker, and a fourth shape among them would mean nothing. */
+.rollBtn {
+  padding: 2px 6px;
+  font-family: inherit;
+  font-size: var(--fs-xs);
+  line-height: 1.2;
+  color: var(--fg2);
+  background: var(--ctl-face);
+  border: 1px solid var(--border);
+  border-radius: var(--ctl-radius);
+  cursor: pointer;
+}
+.rollBtn:hover {
+  color: var(--accent);
+  border-color: var(--border-hover);
+}

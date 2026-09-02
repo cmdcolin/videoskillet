@@ -348,8 +348,12 @@ export const rollPlan = <T>(pools: readonly T[], start: number): T[] =>
 // between.
 //
 // A roll can hand back a still or a clip, since the pools hold both and this is
-// one entry in the picker rather than seven. `rollFromPool` below is what a
-// browser preset uses to stay inside one of them.
+// one entry in the picker rather than seven. `kind` narrows it to one of the
+// two, which is what the deck's own roll buttons ask for: a still and a clip are
+// different material to reach for mid-set, and every pool below already declares
+// which it holds, so narrowing is a filter over that list rather than a second
+// query shape. `rollFromPool` below is what a browser preset uses to stay inside
+// one of them.
 // **A seed does not pin which file comes back, and cannot.** `gsrsort=random`
 // below hands the choice of candidates to Commons, so what a seeded roll
 // reproduces is which pools this app tried and which of the twelve it took —
@@ -360,9 +364,14 @@ export const rollPlan = <T>(pools: readonly T[], start: number): T[] =>
 export async function rollCommons(
   avoid = '',
   rand: Rand = Math.random,
+  kind?: PickKind,
 ): Promise<PoolPick> {
-  const start = randomIndex(COMMONS_POOLS.length, rand)
-  for (const pool of rollPlan(COMMONS_POOLS, start)) {
+  const pools =
+    kind === undefined
+      ? COMMONS_POOLS
+      : COMMONS_POOLS.filter(pool => pool.kind === kind)
+  const start = randomIndex(pools.length, rand)
+  for (const pool of rollPlan(pools, start)) {
     const found = await rollFromPool(pool, avoid, rand)
     if (found !== null) return found
   }

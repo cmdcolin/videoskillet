@@ -113,6 +113,7 @@ import { useShortcuts } from './ui/useShortcuts'
 import { useStrip } from './ui/useStrip'
 import { useTempo } from './ui/useTempo'
 import { useUrlState } from './ui/useUrlState'
+import { VideoUrlDialog } from './ui/VideoUrlDialog'
 import { WebcamDialog } from './ui/WebcamDialog'
 import { YouTubeDialog } from './ui/YouTubeDialog'
 import { gitSha, versionLabel } from './version'
@@ -528,6 +529,7 @@ export function App() {
   }
   const teletypeSlot = asked('teletype')
   const youTubeSlot = asked('youtube')
+  const urlSlot = asked('url')
   // The other two take a key rather than a slot view: the shelf and the browser
   // are lists of media, not verbs on a deck, and what they need to know is which
   // deck a plain click plays into.
@@ -570,6 +572,10 @@ export function App() {
     sourceBMode: eng.b.mode,
     ytUrlA: eng.a.ytUrl,
     ytUrlB: eng.b.ytUrl,
+    urlA: eng.a.srcUrl,
+    urlB: eng.b.srcUrl,
+    imgUrlA: eng.a.imgUrl,
+    imgUrlB: eng.b.imgUrl,
     teletypeA: eng.a.teletype,
     teletypeB: eng.b.teletype,
     caption: eng.caption,
@@ -1716,7 +1722,7 @@ export function App() {
           onClose={() => setShowAdvanced(false)}
         />
       ) : null}
-      {/* None of these five closes itself on a successful pick: committing a
+      {/* None of these six closes itself on a successful pick: committing a
           source is what dismisses the question, from `beginLoad` in useEngine
           (useSourcePrompt.ts says why that is the only place it can go). What
           is left here is Escape and the × — the ways out that pick nothing. */}
@@ -1732,6 +1738,16 @@ export function App() {
           onSubmit={(url, secs) =>
             youTubeSlot.loadYouTube(url, secs, () => clips.fetched(url, secs))
           }
+          onClose={eng.prompt.dismiss}
+        />
+      )}
+      {urlSlot === null ? null : (
+        <VideoUrlDialog
+          slot={urlSlot.key}
+          // Opens on the address this deck is already playing, so re-picking the
+          // entry is a way to edit one rather than to retype it.
+          url={urlSlot.srcUrl}
+          onSubmit={url => urlSlot.loadUrl(url)}
           onClose={eng.prompt.dismiss}
         />
       )}

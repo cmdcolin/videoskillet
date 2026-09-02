@@ -130,6 +130,12 @@ export function candidateRecord(recipe: Recipe): CandidateRecord {
     sourceBMode: 'none',
     ytUrlA: '',
     ytUrlB: '',
+    urlA: '',
+    urlB: '',
+    // …and no address behind it either: bars is generated, so there is no file
+    // for the link to name.
+    imgUrlA: '',
+    imgUrlB: '',
     // A candidate is a look on bars: no clip, so nothing to cue on one.
     cueA: null,
     cueB: null,

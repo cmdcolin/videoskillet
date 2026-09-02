@@ -49,8 +49,7 @@ Click a preset to jump to it; drag it sideways to blend it part-way in.
 Pick each source at the head of its stage: **A** on SOURCE A, **B** on SOURCE B,
 sound on SOUND. Each picker is a menu rather than a dropdown, so picking the
 entry you are already on opens it again — **File…** a second time is how you
-swap one video for another, and a public archive a second time rolls another
-file.
+swap one video for another.
 
 - **A** takes bars, sweep, snow, the bundled photo, a file, a shared screen, or
   a webcam — an RCA capture dongle is how real gear gets in. B takes the same
@@ -58,6 +57,16 @@ file.
 - **Clips…** is a shelf of files you've opened before, folders included.
   **Public archives** rolls one from Wikimedia Commons or archive.org;
   **Browse…** searches both in a thumbnail grid.
+- On an archive, the deck grows its own **roll photo** / **roll clip** buttons
+  under the file's name — Commons holds both and they behave differently under
+  the chain, since a still gives still artifacts and a clip gives moving ones.
+  archive.org holds footage, so it gets **roll clip** alone. The **☆** beside
+  the name keeps that file on your clip shelf; the next roll takes it off the
+  deck either way, and **↗** opens its page upstream, which is where the licence
+  and the photographer are.
+- **Video file URL…** plays an `.mp4` or `.webm` straight off its address —
+  paste the link, no download step. The server has to allow cross-origin reads;
+  one that does not plays the clip and leaves the picture black.
 - **Video synth** is two oscillators and a colorizer, no input. Frequency is the
   whole knob: on a multiple of line rate you get standing bars, a few hertz off
   they lean and creep, at 3.58 MHz it lands on the subcarrier and comes back as
@@ -226,14 +235,23 @@ The address bar carries the whole look at all times — every control off stock,
 what is moving in the bay, the source and its cue — so copying it is the share
 button and reloading keeps what you had.
 
+The source travels as far as a string can carry it. A pattern, a text card and a
+pasted video address go whole; an archive clip goes as its own identity, so a
+link sent while a Commons or archive.org file is on screen opens on _that_ file
+rather than on the reader's own roll. A clip off your disk or off your shelf
+cannot travel at all — the reader has neither — so a link made on one opens on
+whatever else it names.
+
 It comes out short. Here is **worn tape**, whole:
 
 ```
-https://videoskillet.com/?p=FbQBJbABEXAAmAIN8AEAPAKQAwDoAgCQAwBkAEgBwAIAgAEGwAIA6AIBCA&mod=
+https://videoskillet.com/?p=mD.FbQBJbABEXAAmAIN8AEAPAKQAwDoAgCQAwBkAEgBwAIAgAEGwAIA6AIBCA&mod=
 ```
 
-That is the look written as bytes. `?set=` says the same thing by name, and the
-app both reads and writes it:
+That is the look written as bytes, behind two characters of seal: a link that
+arrives with its tail cut off or a character turned is refused with a notice
+rather than opened on a picture nobody made. `?set=` says the same thing by
+name, and the app both reads and writes it:
 
 ```
 https://videoskillet.com/?set=noiseIre:9,hHold:0.2,chromaGain:1.79

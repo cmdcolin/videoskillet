@@ -23,7 +23,7 @@
 // else about them is the same shape.
 
 import type { SourceBMode, SourceMode } from '../sources/modes'
-import type { PoolPick } from '../sources/pools'
+import type { PickKind, PoolPick } from '../sources/pools'
 import type { TeletypeCard } from '../sources/teletype'
 import type { Cue } from './cue'
 import type { StashSlot } from './fileStash'
@@ -52,6 +52,17 @@ export interface SlotView<T extends SourceMode | SourceBMode> {
   teletype: TeletypeCard
   retype: (patch: Partial<TeletypeCard>) => void
   loadTeletype: (patch: Partial<TeletypeCard>) => void
+
+  // The address this slot was handed by hand, while it is on `url`, and the box
+  // that hands it one. A `<video>` pointed straight at it — no bridge, nothing
+  // downloaded first — which is why this one ships where `loadYouTube` does not.
+  srcUrl: string
+  loadUrl: (url: string) => void
+  // The still this slot is showing by address — a `?iurl` the link arrived on,
+  // or a photo rolled off Commons. Nothing draws it; it is here so the link
+  // writer can read a deck's address off the deck (ui/urlParams.ts), which is
+  // the same reason `srcUrl` is on this object rather than only in the dialog.
+  imgUrl: string
 
   ytUrl: string
   // Fetch a URL with yt-dlp onto this slot. `secs` is `WHOLE_CLIP` or the front
@@ -116,6 +127,13 @@ export interface SlotView<T extends SourceMode | SourceBMode> {
   // engine two of every state slot and the caption a branch, to record a
   // difference the UI no longer has.
   pick: PoolPick | null
+  // Roll the next file out of whichever pool this slot's picker names, narrowed
+  // to stills or to clips, or left mixed. Here rather than left to re-firing the
+  // picker because a roll is not a change of source: the deck stays on the same
+  // channel and the picture under it is what moves, which is the one gesture
+  // this panel had no button for — it was hidden on the caption, where clicking
+  // the name of a photograph is not a thing anyone would try.
+  roll: (kind?: PickKind) => void
 }
 
 // Either slot, whichever mode union it carries. What to write when a caller

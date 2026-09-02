@@ -32,6 +32,7 @@ import type { Rand } from '../core/rng'
 import type {
   BrowseHit,
   OnProgress,
+  PickKind,
   PoolOrigin,
   PoolPick,
   PoolRef,
@@ -105,13 +106,19 @@ export const ORIGIN_LABEL: Record<PoolOrigin, string> = {
 // funnel, so it is the one place a seeded caller has to reach.
 export const rollPool = (
   origin: PoolOrigin,
-  avoid = '',
-  onProgress?: OnProgress,
-  rand?: Rand,
+  opts: {
+    avoid?: string
+    onProgress?: OnProgress
+    rand?: Rand
+    // Narrow the roll to stills or to clips. Reaches Commons and nowhere else:
+    // archive.org, as this app reads it, holds footage, so there is nothing
+    // there for a kind to pick between.
+    kind?: PickKind
+  } = {},
 ): Promise<PoolPick> =>
   origin === 'commons'
-    ? rollCommons(avoid, rand)
-    : rollArchive(avoid, onProgress, rand)
+    ? rollCommons(opts.avoid, opts.rand, opts.kind)
+    : rollArchive(opts.avoid, opts.onProgress, opts.rand)
 
 // One named file, resolved back into something playable. This is what a shelf
 // entry is worth: both sources keep an identity rather than a url, and both can

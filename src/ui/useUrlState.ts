@@ -111,7 +111,7 @@ export function useUrlState(args: UrlStateArgs) {
   // only make sense for the session that is running (see writeProfileParams).
   const profileQuery = () =>
     queryString(
-      writeProfileParams(new URLSearchParams(location.search), {
+      writeProfileParams({
         ...session,
         // The destination when a morph is running, per `getGlideTarget` above.
         controls: getGlideTarget() ?? session.controls,

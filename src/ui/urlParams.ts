@@ -8,6 +8,7 @@
 
 import { CONTROL_KEYS, DEFAULT_CONTROLS, LANDING_LOOK } from '../core/controls'
 import { SOURCE_B_MODES, SOURCE_MODES } from '../sources/modes'
+import { isPoolMode } from '../sources/pools'
 import { TELETYPE_DEFAULT, clampCardText } from '../sources/teletype'
 import { SLIDER_BY_KEY } from './controls'
 import { formatCue, parseCue } from './cue'
@@ -45,10 +46,10 @@ export const DRY_DEFAULT = 1
 export const VAPORWAVE_SPEED = 0.66
 export const VAPORWAVE_DRY = 0.7
 
-// The generated sources a link can name. `bars` is the default and `file` /
-// `youtube` carry their own url params, so neither ever appears as ?src=.
-// `teletype` does appear — the mode is the source, and ?text= alongside it
-// carries what is on the card.
+// The generated sources a link can name. `bars` is the default, and `file`,
+// `url` and `youtube` carry their own url params, so none of them ever appears
+// as ?src=. `teletype` does appear — the mode is the source, and ?text=
+// alongside it carries what is on the card.
 //
 // `screen` is left out for a different reason than `file` is: a share is not a
 // thing a link can name at all. The grant dies with the page, the picker needs
@@ -65,11 +66,11 @@ export const VAPORWAVE_DRY = 0.7
 //
 // `browse` is out for a third reason: it is a dialog with a search field, and
 // what it was showing is neither a source nor a thing a link can put back. What
-// came *out* of it is a public file that would load for anyone, but a link that
-// reopened someone else's app on an empty search box would be worse than one
-// that opened on bars. The two random archives do round-trip —
-// `?src=wiki-random` hands the reader their own roll out of the same pool, which
-// is exactly what that option means.
+// came *out* of it is a public file that would load for anyone, and it travels
+// as its own address under `?iurl` / `?vurl` — the file rather than the search.
+// The two random archives do round-trip as modes, and a deck showing a Commons
+// roll sends the address instead: `?src=wiki-random` means *roll one*, which is
+// the wrong thing to say about the picture on screen (see `pinsAddress`).
 const LINKABLE = <T extends string>(modes: readonly T[]) =>
   modes.filter(
     m =>
@@ -77,6 +78,7 @@ const LINKABLE = <T extends string>(modes: readonly T[]) =>
       m !== 'file' &&
       m !== 'library' &&
       m !== 'browse' &&
+      m !== 'url' &&
       m !== 'youtube' &&
       m !== 'screen',
   )
@@ -109,6 +111,7 @@ export interface SessionParams {
   iurl: string | null
   iurlb: string | null
   vurl: string | null
+  vurlb: string | null
   yt: string | null
   ytb: string | null
   // Each slot's teletype card: what it reads, whether it rolls, whether an
@@ -141,6 +144,10 @@ export interface SessionParams {
   // nothing", which leaves whatever the browser already had patched. A link
   // written by this app always says something, so null means an old link.
   mod: ModRouting[] | null
+  // The packed look arrived sealed and the seal did not match (packed.ts): a
+  // character lost or changed somewhere between the copy and here. The look is
+  // left out rather than opened on a prefix of itself, and the caller says so.
+  damaged: boolean
 }
 
 // `key:value` pairs against the control schema. Anything unrecognised or
@@ -255,6 +262,7 @@ export function parseSessionParams(search: string): SessionParams {
     presetName === null &&
     !q.has('surprise')
   const preset = PRESETS.find(p => p.name === presetName)
+  const packed = packedParam === null ? {} : unpackControls(packedParam)
   return {
     controls: {
       ...(bare ? LANDING_LOOK : {}),
@@ -265,14 +273,16 @@ export function parseSessionParams(search: string): SessionParams {
       // wins on a bar that is carrying both. That is the same order
       // `writeSessionParams` picks the sticky form in: what a mangled query
       // shows is what the next write keeps.
-      ...(packedParam === null ? {} : unpackControls(packedParam)),
+      ...(packed === null ? {} : packed),
       ...(setParam === null ? {} : parseSet(setParam)),
     },
+    damaged: packed === null,
     src: one('src', SRC_MODES),
     srcb: one('srcb', SRCB_MODES),
     iurl: q.get('iurl'),
     iurlb: q.get('iurlb'),
     vurl: q.get('vurl'),
+    vurlb: q.get('vurlb'),
     yt: q.get('yt'),
     ytb: q.get('ytb'),
     card: card('text', 'crawl', 'boil', 'garble'),
@@ -318,6 +328,17 @@ export interface SessionState {
   // clip must start muted and be un-muted by a click.
   ytUrlA: string
   ytUrlB: string
+  // The address each deck was given by hand, while it is on `url`. The one
+  // source a link can carry whole rather than by identity: it is already a
+  // public address, and the reader's <video> fetches it exactly as this one did.
+  urlA: string
+  urlB: string
+  // The still each deck is showing by address: a `?iurl` the link arrived on, or
+  // a photo rolled off Commons. Read off the deck rather than off the query for
+  // the reason the clip address above is — the bar is rewritten a quarter-second
+  // into the session, well before a large still has decoded.
+  imgUrlA: string
+  imgUrlB: string
   // Each slot's teletype card, so a shared link carries the words and the roll
   // as well as the mode.
   teletypeA: TeletypeCard
@@ -345,6 +366,27 @@ export interface SessionState {
 // different picture. Nothing else grows: `+v.toFixed(6)` drops the trailing
 // zeros, so every value that fitted in 4 places still writes as itself.
 const short = (v: number): string => String(+v.toFixed(6))
+
+// Whether this deck's own address is the whole of what a link says about it, so
+// that the channel above it is left out.
+//
+// Only ever true of a pool: `?src=wiki-random` means *roll one*, and a roll on
+// the far end would spend a request and then land on top of the very picture the
+// address named. Every other mode keeps its `?src=` — a card with a still over
+// it is still a card, and the mode is what says so.
+//
+// A file rolled off Commons goes in a link as its own url and under no format of
+// this app's own: upload.wikimedia.org serves it to anyone, honours `Range` and
+// answers with CORS, so the reader's <img> or <video> treats it exactly as this
+// one did. An archive.org pick never reaches here — its bytes arrived as a
+// whole-file download behind a `blob:` and its one browser-reachable path
+// ignores `Range` (sources/archive.ts), so that deck leaves no address behind
+// and the link carries the pool instead.
+const pinsAddress = (
+  mode: SourceMode | SourceBMode,
+  img: string,
+  clip: string,
+): boolean => isPoolMode(mode) && (img !== '' || clip !== '')
 
 // Rewrite the managed keys from live state, leaving every other param alone —
 // the loader also reads iurl, iurlb, vurl, preset and debug, and a URL-loaded
@@ -397,18 +439,37 @@ export function writeSessionParams(
   // `?set=` above IS what it rolled. Leaving it on would make the link reroll
   // over its own recorded look every time someone opened it.
   q.delete('surprise')
+  // Dropped for the reason `writeProfileParams` gives below, which turned out to
+  // apply to the address bar as much as to a saved look. The look above omits
+  // every control at stock, so a `?preset=` left underneath it fills those in
+  // from the preset: a knob dragged back to stock after picking vhs read back
+  // as vhs, and every such link changed meaning whenever vhs was retuned. Once
+  // the look has been written the preset has been said, and the link is
+  // shorter without it.
+  q.delete('preset')
   // A mode is worth recording when the reader would accept it back; youtube
-  // carries its own yt=/ytb= key (the URL, not just the mode name).
+  // carries its own yt=/ytb= key (the URL, not just the mode name), and a deck
+  // pinned to an address carries that instead — see `pinsAddress`.
   put(
     'src',
-    SRC_MODES.some(m => m === state.sourceMode),
+    SRC_MODES.some(m => m === state.sourceMode) &&
+      !pinsAddress(state.sourceMode, state.imgUrlA, state.urlA),
     state.sourceMode,
   )
   put(
     'srcb',
-    SRCB_MODES.some(m => m === state.sourceBMode),
+    SRCB_MODES.some(m => m === state.sourceBMode) &&
+      !pinsAddress(state.sourceBMode, state.imgUrlB, state.urlB),
     state.sourceBMode,
   )
+  // Every address a deck can be showing, written from the deck rather than
+  // merged with whatever the bar was carrying: the deck is what knows the
+  // address is still up, and `commitDeck` clears it the moment the source
+  // changes, so a still or a clip cannot outlive the picture it was.
+  put('iurl', state.imgUrlA !== '', state.imgUrlA)
+  put('iurlb', state.imgUrlB !== '', state.imgUrlB)
+  put('vurl', state.urlA !== '', state.urlA)
+  put('vurlb', state.urlB !== '', state.urlB)
   put('yt', state.sourceMode === 'youtube' && state.ytUrlA !== '', state.ytUrlA)
   put(
     'ytb',
@@ -442,30 +503,35 @@ export function writeSessionParams(
 // a saved look is a query string, which is the point of it — but it starts from
 // a filtered copy of the live URL rather than from all of it.
 //
-// `preset=` is what forces the distinction. writeSessionParams leaves unmanaged
-// params alone because the loader reads them, and a live address bar that says
-// `?preset=vhs` is telling the truth about how this session started. A saved
-// look is read back weeks later, and by then it is a lie in a specific way: the
-// look records resolved controls in `?set=`, which omits every control resting
-// at its default — so a knob the user dragged back to stock after picking vhs is
-// absent from `?set=` and supplied again by the preset underneath it. The saved
-// look would come back with a value the board did not have when it was saved.
+// `debug=` and the rest of the live query is what forces the distinction.
+// writeSessionParams leaves unmanaged params alone because the loader reads
+// them, and a saved look is read back weeks later on a session that never asked
+// for them. `?preset=` was the original reason and is now dropped by both
+// writers: the look records resolved controls and omits every control resting
+// at its default, so a knob the user dragged back to stock after picking vhs
+// would be absent from the look and supplied again by the preset underneath it.
 //
 // What survives is the addresses: a still, a clip or a YouTube url is the one
 // thing about a source that a string can carry, and dropping them would make a
-// saved look's link open on bars.
-const CARRIED_KEYS = ['iurl', 'iurlb', 'vurl'] as const
-
-export function writeProfileParams(
-  existing: URLSearchParams,
-  state: SessionState,
-): URLSearchParams {
-  const base = new URLSearchParams()
-  for (const key of CARRIED_KEYS) {
-    const value = existing.get(key)
-    if (value !== null) base.set(key, value)
+// saved look's link open on bars. None of them is carried off the live query any
+// more — every address is written from the deck that is showing it, so `existing`
+// is read for nothing here and the base starts empty.
+export function writeProfileParams(state: SessionState): URLSearchParams {
+  // A roll is a fact about a link and not about a saved look, so the address it
+  // left on the deck is dropped on the way in: with it gone the writer above
+  // records the deck's channel instead, which is what a row wants. A strip row
+  // is the case that decides it — `?src=wiki-random` in a row means *roll one*,
+  // `rowFill` reads it as a roll and that is the whole of what the row is for,
+  // and an address riding beside it would pin every firing to whichever file
+  // happened to be up when the row was captured. A roll worth keeping goes on
+  // the shelf, where a row names it by id and gets it back exactly.
+  const rolled = {
+    imgUrlA: isPoolMode(state.sourceMode) ? '' : state.imgUrlA,
+    imgUrlB: isPoolMode(state.sourceBMode) ? '' : state.imgUrlB,
+    urlA: isPoolMode(state.sourceMode) ? '' : state.urlA,
+    urlB: isPoolMode(state.sourceBMode) ? '' : state.urlB,
   }
-  return writeSessionParams(base, state)
+  return writeSessionParams(new URLSearchParams(), { ...state, ...rolled })
 }
 
 // A query string as it should reach a person: `URLSearchParams.toString` escapes

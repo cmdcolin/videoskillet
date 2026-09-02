@@ -4,10 +4,10 @@ import type { StashSlot } from './fileStash'
 
 // Which source dialog is open, and which deck it was opened for.
 //
-// Five of the picker's entries do not change a source when you choose them —
+// Six of the picker's entries do not change a source when you choose them —
 // they ask a question first. "Clips…" opens the shelf, "Browse…" opens the
-// media browser, "File…"'s siblings open a URL box, a text card or a browser
-// permission. Backing out of any of them has to leave the deck exactly as it
+// media browser, "File…"'s siblings open one of two URL boxes, a text card or a
+// browser permission. Backing out of any of them has to leave the deck exactly as it
 // was, which is why none of them touches the engine until something is picked.
 //
 // This was five useStates and five setters, and the cost was not the five lines.
@@ -20,7 +20,7 @@ import type { StashSlot } from './fileStash'
 //
 // One state closes the hole two ways:
 //
-//   Only one can be open. Five independent slots can represent "the shelf is
+//   Only one can be open. Six independent slots can represent "the shelf is
 //     open for A and the browser is open for B", which is not a state this app
 //     has — picking a source mode is what opens these, and a slot has one mode.
 //
@@ -30,14 +30,15 @@ import type { StashSlot } from './fileStash'
 //     there, and a new source path cannot forget because forgetting would mean
 //     not calling the thing that also cancels its stale replies.
 
-// The five picker entries that ask before they change anything. A list rather
+// The six picker entries that ask before they change anything. A list rather
 // than a bare union, so the picker's own ladder can test membership instead of
-// naming all five a second time — the same shape SOURCE_MODES has in
-// sources/modes.ts, and for the same reason: one place to add the sixth.
+// naming all six a second time — the same shape SOURCE_MODES has in
+// sources/modes.ts, and for the same reason: one place to add the seventh.
 const SOURCE_PROMPTS = [
   'library',
   'browse',
   'webcam',
+  'url',
   'youtube',
   'teletype',
 ] as const

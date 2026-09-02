@@ -44,7 +44,11 @@ export function ReopenFile({
 // component's memoization, and only `pnpm compiler` says so.
 export function FileName(props: {
   name: string
-  onReopen: () => void
+  // Null where the name is only a name. That is a pool pick: the roll lives on
+  // its own buttons under this line (RollRow.tsx), and a caption that quietly
+  // rolled when clicked was asking a reader to guess that the name of a
+  // photograph is the way to a different photograph.
+  onReopen: (() => void) | null
   action?: string
   // Anything that belongs to the file this caption names rather than to the
   // choice of source above it — the ★ that keeps a Commons roll, and the way
@@ -56,14 +60,20 @@ export function FileName(props: {
   const action = props.action ?? 'change'
   return name === '' ? null : (
     <div className={styles.fileRow}>
-      <button
-        type="button"
-        className={styles.fileCaption}
-        title={`${name} — click to ${action}`}
-        onClick={() => onReopen()}
-      >
-        {name}
-      </button>
+      {onReopen === null ? (
+        <span className={styles.fileCaptionPlain} title={name}>
+          {name}
+        </span>
+      ) : (
+        <button
+          type="button"
+          className={styles.fileCaption}
+          title={`${name} — click to ${action}`}
+          onClick={() => onReopen()}
+        >
+          {name}
+        </button>
+      )}
       {props.extra}
     </div>
   )
@@ -73,10 +83,11 @@ export function FileName(props: {
 // both of them things the picker cannot say — whether this one has been kept,
 // and where the credit is.
 //
-// The ★ is the whole answer to what a random source *is*: the caption beside it
-// rolls the next file and this one is gone. So it sits where the picture is
+// The ★ is the whole answer to what a random source *is*: the buttons under this
+// line roll the next file and this one is gone. So it sits where the picture is
 // named rather than in the dialog that lists the kept ones, which is a place you
-// go after the moment has passed.
+// go after the moment has passed — and it is drawn a size up from the ↗ beside
+// it, because it is the one glyph on the row you have a second or two to hit.
 //
 // It is no longer optional. Both sources used to be here but only Commons had a
 // shelf, so an archive.org roll drew the credit link alone — a clip you liked
@@ -95,7 +106,11 @@ export function PickCaption(props: {
     <>
       <button
         type="button"
-        className={cx(styles.captionBtn, props.kept && styles.captionOn)}
+        className={cx(
+          styles.captionBtn,
+          styles.captionStar,
+          props.kept && styles.captionOn,
+        )}
         title={
           props.kept
             ? 'kept — click to take it off your clip shelf'

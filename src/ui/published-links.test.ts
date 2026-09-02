@@ -40,7 +40,10 @@ test('the project publishes the links it means to', () => {
 
 test.each(published)('%s: %s', (_page, query) => {
   const packed = new URLSearchParams(query).get('p') ?? ''
-  const look = unpackControls(packed)
+  const decoded = unpackControls(packed)
+  // Sealed, so a mistyped one is refused outright rather than read short.
+  expect(decoded).not.toBe(null)
+  const look = decoded === null ? {} : decoded
 
   // Re-packing what it decoded has to give the link back. The decoder is
   // deliberately lenient — it stops at the first short read and keeps what it

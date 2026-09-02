@@ -102,6 +102,32 @@ function putVarint(out: number[], n: number) {
 
 const B64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_'
 
+// Two characters of checksum, a '.', then the bytes: `?p=9K.HZx5BFAEDCboAj_iAQ`.
+//
+// A packed link that loses its tail decodes to a shorter look, and one with a
+// character changed decodes to a different one — neither is an error, and
+// nothing in the bytes is legible enough for a reader to notice. The seal is
+// what makes either loud: twelve bits of FNV-1a over the bytes, so a damaged
+// link is refused with a notice rather than opened on a picture nobody made.
+//
+// In front rather than behind, because behind is exactly what a cut takes: a
+// link truncated ahead of a trailing seal has no seal, and reads as an honest
+// unsigned link. Ahead of the body it survives any cut the body does not.
+//
+// The '.' is outside the alphabet and is not one `URLSearchParams` escapes, so
+// a link written before the seal existed has none anywhere in it and reads as
+// unsigned, and a link written after it survives a paste that escapes it.
+const SEAL = '.'
+const SEAL_LEN = 2
+
+function seal(bytes: readonly number[]): string {
+  let h = 0x811c9dc5
+  for (const b of bytes) h = Math.imul(h ^ b, 0x01000193)
+  h >>>= 0
+  const n = (h ^ (h >>> 12) ^ (h >>> 24)) & 0xfff
+  return `${B64[n >> 6]}${B64[n & 63]}`
+}
+
 // Written out rather than handed to btoa, which wants a binary string and then
 // wants three characters swapped out of its answer to be url-safe. The alphabet
 // above is already the one a query string carries as itself, which is half of
@@ -127,9 +153,10 @@ function fromBase64Url(text: string): number[] | null {
   const bytes: number[] = []
   let acc = 0
   let bits = 0
-  // '=' because a link may have been through something that pads, and the other
-  // two because the plain alphabet is what most encoders reach for.
-  for (const ch of text.replace(/=+$/, '')) {
+  // '=' because a link may have been through something that pads, '.' because a
+  // link pasted at the end of a sentence picks one up, and the other two
+  // because the plain alphabet is what most encoders reach for.
+  for (const ch of text.replace(/[=.]+$/, '')) {
     const v = B64.indexOf(ch === '+' ? '-' : ch === '/' ? '_' : ch)
     if (v < 0) return null
     acc = (acc << 6) | v
@@ -159,15 +186,21 @@ export function packControls(c: Partial<Controls>): string {
     prev = i
     putVarint(bytes, toInt(key, v))
   }
-  return toBase64Url(bytes)
+  return bytes.length === 0 ? '' : `${seal(bytes)}${SEAL}${toBase64Url(bytes)}`
 }
 
 // Whatever look the bytes carry. Junk decodes to an empty patch rather than
 // throwing: a link is untrusted input, and a mangled one opening on the default
 // look is the failure `?set=` already has for a name it cannot place.
-export function unpackControls(text: string): Partial<Controls> {
-  const bytes = fromBase64Url(text)
+//
+// Null is the one answer that is not a look: the link was sealed and the seal
+// does not match what arrived, so the bytes are not the ones that were written
+// and no prefix of them is the picture either. The caller says so.
+export function unpackControls(text: string): Partial<Controls> | null {
+  const sealed = text[SEAL_LEN] === SEAL
+  const bytes = fromBase64Url(sealed ? text.slice(SEAL_LEN + 1) : text)
   if (bytes === null) return {}
+  if (sealed && seal(bytes) !== text.slice(0, SEAL_LEN)) return null
   const out: Partial<Controls> = {}
   let at = 0
   let prev = -1

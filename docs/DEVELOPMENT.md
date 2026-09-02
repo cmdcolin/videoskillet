@@ -1219,12 +1219,13 @@ contract has its own harness:
 node scripts/poolcheck.mjs http://localhost:5199
 ```
 
-Seventeen checks over one browser session and a handful of live requests: a
+Eighteen checks over one browser session and a handful of live requests: a
 random source rolls and captions what it rolled, the ★ puts it on the clip shelf
-as a title, the shelf plays it back, the browser answers with thumbnails from
-both archives, and — the one thing no screenshot shows — a roll that lands after
-the user has moved that deck on is dropped rather than pushed onto whatever they
-went to. It exits non-zero with a line per failure, so it can be run as a gate.
+as a title, the deck's own **roll photo** button hands back a different file,
+the shelf plays it back, the browser answers with thumbnails from both archives,
+and — the one thing no screenshot shows — a roll that lands after the user has
+moved that deck on is dropped rather than pushed onto whatever they went to. It
+exits non-zero with a line per failure, so it can be run as a gate.
 
 Run it when touching either source module, or when a pick starts coming back
 empty. Four things it watches are outside this project entirely and invisible to
@@ -1310,6 +1311,20 @@ and three times shorter; `?set=` is the readable form, and a query that arrives
 carrying one keeps being written that way, so a harness driving the app by name
 gets an address bar it can still read.
 
+A packed look opens with two characters of seal and a `.` — twelve bits over the
+bytes — so a link cut short in a chat window or pasted with a character turned
+is refused with a banner rather than decoded to a prefix of itself. A link with
+no seal is one from before it existed and is read as it always was. The loader
+never keeps `?preset=` on the bar once the look has been written: the look omits
+every control at stock, and a preset left underneath it would fill those back
+in.
+
+Everything a packed link's meaning rests on outside the link — each control's
+wire number, step, default and choices, and the two lists `?mod=` reads by
+position — is pinned in `src/ui/packed.golden.txt`. Retuning any of them fails
+the build with the control named; `npx vitest run src/ui/packed.test.ts -u`
+admits the change, and the diff is the record of what existing links will do.
+
 A packed value is a count of the control's own `step` from zero, which is what
 keeps an old link honest: widening a range — and `redline` is the record of this
 codebase doing exactly that — leaves every link that names the control reading
@@ -1317,32 +1332,41 @@ as it always did. What the wire does depend on is the order of `URL_KEY_ORDER`,
 pinned by golden vectors in `packed.test.ts`, and each control's `step`, which
 is not pinned because changing one moves a link by less than a step.
 
-| Param                 | Meaning                                               |
-| --------------------- | ----------------------------------------------------- |
-| `?preset=`            | load a built-in preset by name                        |
-| `?p=`                 | the same controls packed into bytes — what a link has |
-| `?set=key:value,…`    | override individual controls                          |
-| `?mod=t:src:hz:d,…`   | modulation routings (target, source, rate, depth)     |
-| `?iurl=` / `?iurlb=`  | image source A / B                                    |
-| `?vurl=` / `?vurlb=`  | video file address for A / B, played as-is            |
-| `?picka=` / `?pickb=` | one archive file: `origin:kind:title`                 |
-| `?src=` / `?srcb=`    | source kind for A / B (a `wiki-*` channel rolls)      |
-| `?dbg=1..6`           | signal taps (composite, luma, chroma, burst, scope)   |
-| `?surprise`           | roll a random preset stack on load                    |
-| `?gpu=low-power`      | run on the integrated GPU instead of the discrete one |
-| `?vidbitmap`          | force the bitmap video path where zero-copy exists    |
+| Param                | Meaning                                               |
+| -------------------- | ----------------------------------------------------- |
+| `?preset=`           | load a built-in preset by name                        |
+| `?p=`                | the same controls packed into bytes — what a link has |
+| `?set=key:value,…`   | override individual controls                          |
+| `?mod=t:src:hz:d,…`  | modulation routings (target, source, rate, depth)     |
+| `?iurl=` / `?iurlb=` | image source A / B                                    |
+| `?vurl=` / `?vurlb=` | video file address for A / B, played as-is            |
+| `?src=` / `?srcb=`   | source kind for A / B (a `wiki-*` channel rolls)      |
+| `?dbg=1..6`          | signal taps (composite, luma, chroma, burst, scope)   |
+| `?surprise`          | roll a random preset stack on load                    |
+| `?gpu=low-power`     | run on the integrated GPU instead of the discrete one |
+| `?vidbitmap`         | force the bitmap video path where zero-copy exists    |
 
 Example: `?iurl=/sample.jpg&preset=dirty%20mix`
 
-`?picka=` is what stops a shared link handing the reader a _different_ clip.
-`?src=ia-random` names the pool, so a link carrying it alone rolls again on the
-far end — which is what that picker entry means, and not what someone sharing
-the picture in front of them is saying. The pick names the file itself and
-re-resolves through the same request a roll makes, so the two travel together:
-`?src=ia-random&picka=archive:video:dusty-trailer-1983` opens on that clip with
-the caption still offering another roll out of the same pool. A saved look and a
-strip row deliberately carry the pool without the pick — a row that says
-`?src=ia-random` means _roll one_.
+`?iurl=` is what stops a shared link handing the reader a _different_ picture.
+`?src=wiki-random` names the pool, so a link carrying it alone rolls again on
+the far end — which is what that picker entry means, and not what someone
+sharing the picture in front of them is saying. A Commons file is already a
+public address, so the link carries that and leaves the channel out:
+`?iurl=https://upload.wikimedia.org/…/1024px-Bust_of_Antinous.jpg` opens on that
+photo, and a rolled clip travels the same way under `?vurl=`. There is no format
+of this app's own in it — a public url goes in a link as a url.
+
+An archive.org roll is the exception and deliberately carries no address. Its
+bytes reach the tab as a whole-file download behind a `blob:`, and the one path
+a browser can read it from ignores `Range` (`src/sources/archive.ts`), so a
+reader handed that url would get a clip whose scrub bar silently clamps. That
+deck sends `?src=ia-random` and the reader rolls their own.
+
+A saved look and a strip row carry the pool without the address — a row that
+says `?src=wiki-random` means _roll one_ — which is why `writeProfileParams`
+blanks a pool deck's address before it writes. A roll worth keeping goes on the
+clip shelf, where a row names it by id and gets it back exactly.
 
 `?gpu=low-power` is the exception to "a link specifies a look" — it changes
 nothing about the picture, only which chip draws it. The app asks for the

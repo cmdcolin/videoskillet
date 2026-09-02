@@ -215,6 +215,10 @@ const state = (over: Partial<SessionState> = {}): SessionState => ({
   sourceBMode: 'bars',
   ytUrlA: '',
   ytUrlB: '',
+  urlA: '',
+  urlB: '',
+  imgUrlA: '',
+  imgUrlB: '',
   teletypeA: { text: '', crawl: false, boil: false, garble: false },
   teletypeB: { text: '', crawl: false, boil: false, garble: false },
   caption: '',
@@ -227,8 +231,8 @@ const state = (over: Partial<SessionState> = {}): SessionState => ({
   ...over,
 })
 
-const roundTrip = (s: SessionState) =>
-  parseSessionParams(`?${writeSessionParams(new URLSearchParams(), s)}`)
+const roundTrip = (s: SessionState, existing = '') =>
+  parseSessionParams(`?${writeSessionParams(new URLSearchParams(existing), s)}`)
 
 describe('session round trip', () => {
   it('returns every look it was given, exactly', () => {
@@ -264,6 +268,8 @@ describe('session round trip', () => {
       } else if (sourceMode === 'youtube') {
         expect(back.src).toBe(null)
         expect(back.yt).toBe('https://y/?v=1')
+      } else if (sourceMode === 'url') {
+        expect(back.src).toBe(null)
       } else {
         expect(back.src).toBe(sourceMode)
       }
@@ -284,6 +290,8 @@ describe('session round trip', () => {
       } else if (sourceBMode === 'youtube') {
         expect(back.srcb).toBe(null)
         expect(back.ytb).toBe('https://y/?v=2')
+      } else if (sourceBMode === 'url') {
+        expect(back.srcb).toBe(null)
       } else {
         expect(back.srcb).toBe(sourceBMode)
       }
@@ -316,6 +324,101 @@ describe('session round trip', () => {
     expect(back.card).toBe(null)
   })
 
+  // What `?src=` cannot say. A pool mode names the pool, so a link carrying it
+  // alone hands the reader their own roll — which is the whole point of the
+  // entry and the wrong answer for a link about the picture on screen. The file
+  // goes in as its own address, under the same two keys a hand-written link
+  // uses, and under no format of this app's own.
+  it("returns a rolled still as the file's own address", () => {
+    const back = roundTrip(
+      state({
+        sourceMode: 'wiki-random',
+        imgUrlA: 'https://upload.wikimedia.org/a/b/Antinous.jpg',
+      }),
+    )
+    expect(back.iurl).toBe('https://upload.wikimedia.org/a/b/Antinous.jpg')
+    // The channel is left out beside it: `?src=wiki-random` means *roll one*,
+    // and a roll fired on the far end would land on top of the picture this
+    // link is about.
+    expect(back.src).toBe(null)
+  })
+
+  it('returns a rolled clip under the video key', () => {
+    const back = roundTrip(
+      state({
+        sourceMode: 'wiki-random',
+        urlA: 'https://upload.wikimedia.org/a/b/Sunset.480p.vp9.webm',
+      }),
+    )
+    expect(back.vurl).toBe(
+      'https://upload.wikimedia.org/a/b/Sunset.480p.vp9.webm',
+    )
+    expect(back.iurl).toBe(null)
+    expect(back.src).toBe(null)
+  })
+
+  // An archive.org clip reaches the tab as a whole-file download behind a
+  // `blob:`, so that deck records no address at all (ui/useEngine.ts) and the
+  // link falls back to naming the pool.
+  it('sends a deck with no address as its pool', () => {
+    const back = roundTrip(state({ sourceMode: 'ia-random' }))
+    expect(back.src).toBe('ia-random')
+    expect(back.vurl).toBe(null)
+    expect(back.iurl).toBe(null)
+  })
+
+  // An address is the deck's own state and `commitDeck` clears it on every
+  // source change, so a deck reporting none writes none — and a stale one on the
+  // address bar has nothing to get in on. That is what replaced the writer's old
+  // gate on the mode, which could not be kept: a `?iurl` link records its
+  // address the moment it is read and the mode only once the still has decoded,
+  // and the bar is rewritten a quarter-second in.
+  it('writes no address for a deck that reports none', () => {
+    const back = roundTrip(
+      state({ sourceMode: 'bars' }),
+      '?iurl=http://x/stale.png&vurl=http://x/stale.mp4',
+    )
+    expect(back.iurl).toBe(null)
+    expect(back.vurl).toBe(null)
+  })
+
+  // A still over a card is still a card: the mode is what says so, and only a
+  // pool mode is replaced by the address under it.
+  it('keeps a mode that the address does not replace', () => {
+    const back = roundTrip(
+      state({ sourceMode: 'teletype', imgUrlA: 'http://x/a.png' }),
+    )
+    expect(back.src).toBe('teletype')
+    expect(back.iurl).toBe('http://x/a.png')
+  })
+
+  // A saved look and a strip row are the same serializer minus this. A row that
+  // says `?src=wiki-random` means *roll one* — pinning it to the file that was
+  // up when the row was captured would be a different row.
+  it('keeps a rolled address out of a saved look', () => {
+    const q = writeProfileParams(
+      state({
+        sourceMode: 'wiki-random',
+        imgUrlA: 'https://upload.wikimedia.org/a/b/Antinous.jpg',
+      }),
+    )
+    expect(q.get('src')).toBe('wiki-random')
+    expect(q.get('iurl')).toBe(null)
+  })
+
+  it('returns a video address typed into either deck', () => {
+    const back = roundTrip(
+      state({
+        sourceMode: 'url',
+        urlA: 'https://x.test/a.mp4',
+        sourceBMode: 'url',
+        urlB: 'https://x.test/b.webm',
+      }),
+    )
+    expect(back.vurl).toBe('https://x.test/a.mp4')
+    expect(back.vurlb).toBe('https://x.test/b.webm')
+  })
+
   it('returns the playback settings', () => {
     const back = roundTrip(
       state({ speedA: 0.66, speedB: 1.5, reverb: 0.8, dry: 0.4 }),
@@ -345,12 +448,11 @@ describe('session round trip', () => {
   })
 
   it('leaves the params it does not manage alone', () => {
-    // A link-loaded source has to survive the user then touching a slider.
+    // A flag the loader reads has to survive the user then touching a slider.
     const q = writeSessionParams(
-      new URLSearchParams('?iurl=http://x/a.png&debug=1&set=humAmp:9'),
+      new URLSearchParams('?debug=1&set=humAmp:9'),
       state({ controls: { ...DEFAULT_CONTROLS, noiseIre: 4 } }),
     )
-    expect(q.get('iurl')).toBe('http://x/a.png')
     expect(q.get('debug')).toBe('1')
     // ...but a managed key is rewritten from live state, not merged with it
     expect(q.get('set')).toBe('noiseIre:4')
@@ -365,6 +467,46 @@ describe('session round trip', () => {
     )
     expect(q.has('surprise')).toBe(false)
     expect(parseSessionParams(`?${q.toString()}`).controls.noiseIre).toBe(4)
+  })
+
+  it('drops ?preset once the look it seeded has been written', () => {
+    // The look omits every control at stock, so a preset left underneath it
+    // would fill those in again: a knob dragged back to stock after picking vhs
+    // read back as vhs, and the link changed meaning whenever vhs was retuned.
+    const opened = parseSessionParams('?preset=vhs')
+    expect(opened.controls.lumaMHz).toBe(2.8)
+    const q = writeSessionParams(
+      new URLSearchParams('?preset=vhs'),
+      state({
+        controls: {
+          ...DEFAULT_CONTROLS,
+          ...opened.controls,
+          lumaMHz: DEFAULT_CONTROLS.lumaMHz,
+        },
+      }),
+    )
+    expect(q.has('preset')).toBe(false)
+    const back = presetControls(parseSessionParams(`?${q.toString()}`).controls)
+    expect(back.lumaMHz).toBe(DEFAULT_CONTROLS.lumaMHz)
+    expect(back.noiseIre).toBe(3)
+  })
+
+  it('reports a packed look that arrived damaged and applies none of it', () => {
+    const packed = packControls({
+      ...DEFAULT_CONTROLS,
+      noiseIre: 4,
+      hHold: 0.2,
+    })
+    const whole = parseSessionParams(`?p=${packed}`)
+    expect(whole.damaged).toBe(false)
+    expect(whole.controls).toEqual({ noiseIre: 4, hHold: 0.2 })
+    const cut = parseSessionParams(`?p=${packed.slice(0, -1)}`)
+    expect(cut.damaged).toBe(true)
+    expect(cut.controls).toEqual({})
+    // a hand-written ?set= beside it still lands, since that half was legible
+    const both = parseSessionParams(`?p=${packed.slice(0, -1)}&set=noiseIre:9`)
+    expect(both.damaged).toBe(true)
+    expect(both.controls).toEqual({ noiseIre: 9 })
   })
 
   it('drops a managed key once its value returns to stock', () => {
@@ -426,15 +568,19 @@ describe('the two forms of the look', () => {
 })
 
 describe('a saved look', () => {
-  it('carries the source addresses and drops the rest of the live query', () => {
+  it('carries the source addresses and nothing of the live query', () => {
     const q = writeProfileParams(
-      new URLSearchParams(
-        '?iurl=http://x/a.png&vurl=http://x/b.mp4&preset=vhs&debug=1',
-      ),
-      state({ controls: { ...DEFAULT_CONTROLS, noiseIre: 4 } }),
+      state({
+        controls: { ...DEFAULT_CONTROLS, noiseIre: 4 },
+        sourceMode: 'url',
+        urlA: 'http://x/b.mp4',
+        imgUrlB: 'http://x/a.png',
+      }),
     )
-    expect(q.get('iurl')).toBe('http://x/a.png')
+    // Both addresses come off the decks that are showing them, so a stale one
+    // left on the address bar has nothing to get in on.
     expect(q.get('vurl')).toBe('http://x/b.mp4')
+    expect(q.get('iurlb')).toBe('http://x/a.png')
     // The two a kept look must not inherit: ?preset= would re-apply an authored
     // patch under controls this look has since edited back to stock (?set= omits
     // them), and ?debug= is a state of this session, not of the look.
@@ -452,7 +598,7 @@ describe('a saved look', () => {
     const controls = presetControls(vhs?.patch ?? {})
     if (key !== undefined) controls[key] = DEFAULT_CONTROLS[key]
     const back = parseSessionParams(
-      `?${writeProfileParams(new URLSearchParams('?preset=vhs'), state({ controls }))}`,
+      `?${writeProfileParams(state({ controls }))}`,
     )
     expect(presetControls(back.controls)).toEqual(controls)
   })

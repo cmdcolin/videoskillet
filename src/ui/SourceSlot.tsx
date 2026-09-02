@@ -1,6 +1,7 @@
-import { isPoolMode } from '../sources/pools'
+import { MODE_ORIGIN, isPoolMode } from '../sources/pools'
 import { FileName, PickCaption, ReopenFile } from './FileName'
 import { MenuRow } from './MenuRow'
+import { RollRow } from './RollRow'
 import { CueRow, PlayRow, Scrub } from './Scrub'
 import { Slider } from './Slider'
 import { TeletypeRow } from './TeletypeRow'
@@ -21,32 +22,27 @@ const CUE_KEYS = {
   b: { tap: 'shift+I', retrigger: 'shift+O' },
 } as const
 
-// The source-name caption shows for loaded file/YouTube sources, and for a
-// screen share — where it names the shared surface and, clicked, reopens the
+// The source-name caption shows for loaded file, URL and YouTube sources, and
+// for a screen share — where it names the shared surface and, clicked, reopens the
 // browser's picker, which is the only way back to a different window. Teletype
 // carries something the picker can't say too, but its words are editable, so
 // it gets a row of its own rather than a caption.
 //
 // The two random-archive entries join them for a different reason: the picker
 // names a pool rather than a picture, so the caption is the only thing saying
-// which file came back — and clicking it rolls another out of the same pool. The
-// clip shelf and the browser are that shape once more, the option naming a way
-// in and the caption naming what came through it. `library` draws its own
-// caption instead (a menu — ClipPicker.tsx).
+// which file came back. It is a name and nothing more there — the roll is on the
+// buttons under it (RollRow.tsx). The clip shelf and the browser are the first
+// shape once more, the option naming a way in and the caption naming what came
+// through it. `library` draws its own caption instead (a menu —
+// ClipPicker.tsx).
 const namedMode = (m: SourceMode | SourceBMode): boolean =>
   m === 'file' ||
   m === 'library' ||
   m === 'browse' ||
+  m === 'url' ||
   m === 'youtube' ||
   m === 'screen' ||
   isPoolMode(m)
-
-// What clicking the caption does, which is the one thing the named modes do not
-// share: a random archive rolls the next file out of the same source, the
-// browser reopens where you left it, and a file or a share goes back out to the
-// browser's own picker.
-const captionAction = (m: SourceMode | SourceBMode): string =>
-  isPoolMode(m) ? 'roll another' : m === 'browse' ? 'search again' : 'change'
 
 // The credit link a pick carries, and the ★ that keeps it, or null when the slot
 // is on anything else. Built by the caller from the slot's own pick, because it
@@ -174,12 +170,23 @@ export function SourceSlot<T extends SourceMode | SourceBMode>(props: {
       {slot.mode === 'library' ? (
         props.clipPicker(extra)
       ) : namedMode(slot.mode) ? (
+        /* `action` names what the click does, because it is not always
+           "change": the browser reopens where you left it. A pool pick takes no
+           click at all — its caption is the name of the file and the roll is
+           the row below. */
         <FileName
           name={slot.name}
-          action={captionAction(slot.mode)}
+          action={slot.mode === 'browse' ? 'search again' : 'change'}
           extra={extra}
-          onReopen={() => slot.select(slot.mode)}
+          onReopen={isPoolMode(slot.mode) ? null : () => slot.select(slot.mode)}
         />
+      ) : null}
+      {/* The roll, in words, under the name of what is on the deck now. This is
+          the gesture a channel is *for*, and until it had a button it was
+          reachable only by clicking that name or by finding the lit option in
+          the picker and picking it again. */}
+      {isPoolMode(slot.mode) ? (
+        <RollRow origin={MODE_ORIGIN[slot.mode]} onRoll={k => slot.roll(k)} />
       ) : null}
       <ReopenFile name={slot.pendingFile} onReopen={() => slot.reopenFile()} />
       {/* Whether either button has anything to do is the slot's own answer, not

@@ -179,10 +179,13 @@ row state is added to `urlParams` rather than beside it.
 > and false of the sentence it implies. `writeSessionParams` writes `?src` only
 > for modes that pass `LINKABLE`, which filters out `file`, `library`, `browse`
 > and `screen`; `?vurl` and `?iurl` are _carried from the address bar_ and
-> nothing in the app ever writes one. So a clip picked from disk, taken off the
-> shelf, or found in the media browser — which is every ordinary way of loading
-> one — round-trips as nothing at all, and "everything the strip needs is
-> already serialisable" was wrong about the half that mattered.
+> nothing in the app ever writes one. (`?vurl` has since become a written key:
+> the `url` source mode holds the address the deck was given, so a link and a
+> saved look both put it back. `?iurl` is still carried.) So a clip picked from
+> disk, taken off the shelf, or found in the media browser — which is every
+> ordinary way of loading one — round-trips as nothing at all, and "everything
+> the strip needs is already serialisable" was wrong about the half that
+> mattered.
 >
 > The fix is _Landed_ below. What is worth keeping here is the shape of the
 > error: the claim was checked against the _writer's_ key list and not against

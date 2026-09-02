@@ -108,18 +108,21 @@ const state = () =>
       [...s.options].some(o => o.value === 'wiki-random'),
     )
     const buttons = [...document.querySelectorAll('button')]
-    // The caption under the picker, whichever of the two draws it: a rolled or
-    // browsed source gets FileName's, a slot on the shelf gets the ClipPicker
-    // menu's trigger. Both name the picture that is up, which is all this wants.
-    const caption = buttons.find(
-      b =>
-        b.title.includes('roll another') ||
-        b.title.includes('search again') ||
-        b.title.includes('the rest of the shelf'),
-    )
     const star = buttons.find(
       b => b.textContent === '☆' || b.textContent === '★',
     )
+    // The caption under the picker, whichever of the three draws it. A rolled
+    // file's is a plain <span> — the roll is on its own buttons now, so the name
+    // takes no click — and is found through the ★ beside it, which is the one
+    // thing in that row with a stable text. A browsed source and a shelf clip
+    // still name themselves on a button's title.
+    const caption =
+      star?.parentElement?.querySelector('span[title]') ??
+      buttons.find(
+        b =>
+          b.title.includes('search again') ||
+          b.title.includes('the rest of the shelf'),
+      )
     const link = [...document.querySelectorAll('a')].find(
       a => a.textContent === '↗',
     )
@@ -238,7 +241,9 @@ check(
   JSON.stringify(now.kept[0]),
 )
 
-await clickTitled('roll another')
+// The deck's own roll button, which is where a re-roll lives: the caption above
+// it is the name of the file and takes no click.
+check(await clickTitled('roll another still'), 'the deck offers a still roll')
 // A *different* file, settled — which is also the assertion below, so waiting
 // for it is waiting for the roll to finish rather than for it to succeed: a
 // pool that hands back the same file twice still fails, 15s later, saying so.
@@ -247,7 +252,7 @@ await until(caption, c => settled(c) && c !== kept, {
   every: 250,
 })
 now = await state()
-check(now.caption !== kept, 'clicking the caption rolls a different file', kept)
+check(now.caption !== kept, 'the roll button rolls a different file', kept)
 check(now.star === '☆', 'the new roll is not kept', now.star)
 check(
   now.kept.length === 1,
