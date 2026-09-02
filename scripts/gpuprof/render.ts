@@ -77,6 +77,12 @@ export function drivable(
   return out.length > 0 ? out : undefined
 }
 
+// Read the graph's own buffers as the run goes, for the questions a picture
+// cannot answer: whether the sync separator still finds an edge, how far the
+// flywheel is being dragged. Called after the frame is submitted, so what it
+// reads is that frame's state.
+export type Probe = (frame: number, g: Graph) => Promise<void>
+
 export interface Frames {
   // One entry per `tail` index, in the order asked for, each `w*h*3` floats.
   shots: Float32Array[]
@@ -194,6 +200,7 @@ export class Runner {
     cap: Capture,
     animate?: Animate,
     mod?: readonly Routing[],
+    probe?: Probe,
   ): Promise<Frames> {
     // The graph reads its controls object every frame, so a routing is applied
     // by writing the object it was handed — no rebuild, and no way to modulate
@@ -250,6 +257,7 @@ export class Runner {
         run()
       })
       this.device.queue.submit([enc.finish()])
+      if (probe !== undefined) await probe(f, g)
       const slot = wanted.get(f)
       if (slot !== undefined) shots[slot] = await this.grab(g, cap.w, cap.h)
     }

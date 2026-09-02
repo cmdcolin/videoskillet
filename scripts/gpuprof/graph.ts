@@ -109,6 +109,10 @@ export class Graph {
   readonly outTex: GPUTexture
   readonly faceTex: GPUTexture
   readonly timingBuf: GPUBuffer
+  // Per line: (sync edge or -1000 if the separator found none, tip depth,
+  // beam load, broad-pulse flag). Read by a harness asking how much of the
+  // raster still has a line start on it.
+  readonly syncMeasureBuf: GPUBuffer
   private readonly progSnap: GPUBuffer
   private readonly paramsBuf: GPUBuffer
   private readonly genParamsBuf: GPUBuffer
@@ -203,7 +207,8 @@ export class Graph {
     // in the app.
     const timingBuf = storage((LINES * 2 + 10) * 4, GPUBufferUsage.COPY_SRC)
     this.timingBuf = timingBuf
-    const syncMeasureBuf = storage(LINES * 16)
+    const syncMeasureBuf = storage(LINES * 16, GPUBufferUsage.COPY_SRC)
+    this.syncMeasureBuf = syncMeasureBuf
     // The caption decoder's font ROM and page RAM (captionrom.ts), which
     // `decode` reads whether or not a caption is switched on.
     const ccBuf = storage(CC_BUF_LEN * 4)

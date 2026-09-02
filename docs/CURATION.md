@@ -416,3 +416,83 @@ hue was not rotating at all, and the three routings that "produced dep 88.61 /
 against an end, naming the base and the range. It catches `bDetuneHz` based at
 1500 in a ±3000 span as well, at 28%. None of the 23 presets trip it — those
 were authored with the bipolar swing in mind, and the candidate was not.
+
+## The two failures a feedback look actually has
+
+"Not dramatic enough" and "too chaotic" were reported about the same family
+within a minute of each other, and they turned out to be one setting apart in
+opposite directions with almost nothing in between. Measured with
+`scripts/gpuprof/looplock.ts`, which reads the sync separator's own per-line
+verdict beside the picture — the number a contact sheet cannot show, because a
+frame torn into displaced slabs and a frame full of coherent structure both
+score high on departure.
+
+Across the 44 looks in the group, as they stood:
+
+| band                                 | count | shape                                   |
+| ------------------------------------ | ----: | --------------------------------------- |
+| separator finding under 30% of lines |    16 | `motion` 35–112, raster rolling         |
+| loop contributing under 32           |    15 | `motion` 5–11, the source slightly soft |
+| between the two                      |    13 |                                         |
+
+Neither band is a tuning accident. Each has a mechanism behind it.
+
+### The mixer loop crossfaded the sync tip
+
+`fb_composite` faded the loop return over every sample of the raster, blanking
+interval included. So a delay of a microsecond put the previous frame's sync tip
+a dozen samples inside the line, the live tip was faded 85% toward whatever
+active video the return happened to carry there, and `sync_measure` stopped
+finding a falling edge in its hunt window. The flywheel free-ran, its phase
+noise grew with the age of the last real edge, and the structure the loop had
+spent a second building was thrown across a raster that was no longer under it.
+Nothing about that came from the loop's own settings — `strobeTrails` at
+`cfbMix` 0.6 was as unlocked as `meltdown`.
+
+The rack's answer is a frame synchronizer: a store genlocked to house reference
+writes its own sync and burst on the way out, so a re-entry loop carries picture
+and lands on this frame's raster. That is `cfbGenlock`, and with it at 1 every
+look in the table above returns `lock` 99.8, `age` 0, `vroll` 0 — which is what
+then allows `cfbMix` 0.9+ and multi-microsecond delays that used to be
+unreachable. `meltdown` keeps the bare cable, because losing the raster is what
+it is for.
+
+### The camera loop's round trip is the mix times the gain
+
+`fbGain`'s help called unity "the knife edge where patterns persist
+indefinitely". It is not: `compose` crossfades, so the round trip is
+`fbMix × fbGain`, and every camera-loop preset was authored against the wrong
+number. `zoomBloom` at mix 0.62 and gain 1.07 ran a round trip of **0.66** — a
+three-frame smear, not a loop. Swept at fixed mix, its loop contribution goes 22
+→ 35 → 89 as the product crosses 1, with `lock` untouched at 99.8 the whole way.
+The camera loop sits ahead of the encoder and cannot reach the sync path at all,
+which makes it the half of this family that was free to be pushed.
+
+**But only inward.** Above unity the direction of the transport decides whether
+there is a picture:
+
+| zoom  | round trip | result                    |
+| ----- | ---------: | ------------------------- |
+| 1.02  |       1.08 | white-out, mean 242 sd 8  |
+| 1.08  |       1.08 | white-out, mean 243 sd 8  |
+| 1.045 |       1.00 | white-out, mean 224 sd 22 |
+| 0.93  |       1.13 | tunnel, mean 66 sd 71     |
+| 0.955 |       1.10 | spiral, mean 81 sd 80     |
+
+An expanding loop spreads what it gains over the whole raster and pins it; a
+collapsing one concentrates it into a shrinking core while the surround is
+refreshed from the live picture every lap, so it holds a high-contrast frame
+well past unity. `tunnelOut` and `spiral` are now that, at the highest spatial
+spread anything in the library measures. Everything else that expands stays
+under unity, and `crtCutoff` in a camera loop is not an option at all — 0.22 of
+it takes the loop to black in under a second.
+
+### What a keyed loop cannot be judged by
+
+`loop` is a whole-frame mean, and a loop the keyer confines to the shadows moves
+a small part of the frame by design. `ringInTheShadows` reads 11 where
+`ringLoop` reads 77 on settings that look comparable on the glass. Raising the
+gain on those until the number matches walks the highlight-keyed ones to white
+at `cfbGain` 1.22 — measured — so they carry the round trip the gate takes off
+them and nothing more. Read `p99` from `survey.ts` beside it, the way the
+`motion` section above says to read a rank rather than a threshold.

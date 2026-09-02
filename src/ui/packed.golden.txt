@@ -264,6 +264,7 @@
 276 synthColorSrc step=1 default=0 choices=oscillator|picture
 277 synthColorMode step=1 default=0 choices=phase shifts|comparators
 278 synthColorSoftPx step=0.1 default=0
+279 cfbGenlock step=0.01 default=0
 
 # ?mod= sources, by name
 sine

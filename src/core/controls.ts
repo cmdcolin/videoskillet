@@ -245,6 +245,7 @@ export const DEFAULT_CONTROLS = {
   cfbCarrierKHz: 0, // that oscillator's detune off 3.579545 MHz, kHz
   cfbReturn: 0, // Y/C split on the return: 0 composite, 1 the loop's chroma, 2 its luma
   cfbClockPct: 0, // frame store read clock against the write clock, percent
+  cfbGenlock: 0, // frame sync on the return: 0 a bare cable, 1 house sync and burst rewritten
   // per-source feeds: each input's own cable and head-end, ahead of the mix —
   // a fault here damages one signal alone, unlike the program-bus channel
   // controls above which damage the mixed output

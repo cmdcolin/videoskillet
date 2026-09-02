@@ -753,7 +753,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: 'How much of the camera-pointed-at-the-monitor image is fed back into the input. This is the classic video feedback loop: raise it until loop gain passes unity and the picture starts breeding structure on its own. Everything below shapes what the loop does on each trip around.',
+        help: 'How much of the camera-pointed-at-the-monitor image is fed back into the input. This is the classic video feedback loop, and it is half of the round trip: the fader and the exposure below multiply, so a mix of 0.6 costs the loop 40 percent a lap that no exposure under 1.67 makes back. Raise the two together until the product passes unity and the picture starts breeding structure on its own. Everything below shapes what the loop does on each trip around.',
       },
       {
         key: 'fbZoom',
@@ -821,7 +821,7 @@ export const GROUPS: Group[] = [
         unit: 'x',
         fine: true,
         vernier: true,
-        help: 'Camera exposure on the loop. Below 1 each pass is dimmer than the last and structures fade out; above 1 they build until they clip. Unity is the knife edge where patterns persist indefinitely.',
+        help: 'Camera exposure on the loop. The round trip is this times the mix above, not this alone — at a mix of 0.6 the knife edge where patterns persist is an exposure of 1.67, and everything under it is a smear a few frames deep however far past 1 the exposure reads. Which side of that edge is safe depends on the zoom: a loop collapsing inward concentrates what it gains into a shrinking core and holds a picture well above unity, while one expanding outward spreads it over the whole raster and walks to white within a second of crossing.',
       },
       {
         key: 'fbIris',
@@ -1173,6 +1173,16 @@ export const GROUPS: Group[] = [
         vernier: true,
         unit: '%',
         help: "The loop's frame store read out at a clock this far off the one it was written at. A store re-triggers its readout on the output's line sync, so the error starts again every line rather than accumulating down the frame: the picture is stretched or squeezed sideways from the line start, and past the end of a line the read walks into the store's next one. What makes it a colour control is that the subcarrier is in the samples being re-clocked — a thousandth off, and the carrier comes back a thousandth off the lattice the decoder measures against, so hue turns further the further a sample sits from where the line began: eighty degrees by the right-hand edge. Each lap re-clocks what the last one wrote, so the fan opens wider every generation. No lens can do it and no delay can either; both of those move a picture without rewriting where its carrier sits.",
+      },
+      {
+        key: 'cfbGenlock',
+        id: 279,
+        label: 'frame sync on the return',
+        min: 0,
+        max: 1,
+        step: 0.01,
+        unit: '',
+        help: "Whether the return comes back through a frame synchronizer or down a bare cable. A store genlocked to house reference writes its own sync and burst on the way out, so what circulates is picture: the delay, the offsets and the varactor can be run as far as they go and the receiver still finds every line start, which is what lets a loop be pushed hard and stay a picture. On the cable the loop's own sync tip goes round with the video, one delay late, and lands somewhere inside a line — the separator loses the edge it was hunting for, the flywheel free-runs, and a second's worth of accumulated structure is thrown across a raster that is no longer under it. Both are things a rack does; this is which one is patched.",
       },
       {
         key: 'cfbReturn',
@@ -3827,6 +3837,7 @@ export const NEEDS: Partial<Record<ControlKey, SliderNeed>> = {
   },
   cfbReturn: cfb,
   cfbClockPct: cfb,
+  cfbGenlock: cfb,
   cfbRingSrc: {
     key: 'cfbRing',
     ok: above0,

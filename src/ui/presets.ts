@@ -533,7 +533,14 @@ export const PRESETS: PresetDef[] = [
     displayName: 'mixer loop',
     group: 'Feedback loops',
     blurb: 'Composite fed back into itself — each line echoes into the next.',
-    patch: { cfbMix: 0.65, cfbDelayUs: 0.12, cfbLines: 3, noiseIre: 1.5 },
+    patch: {
+      cfbMix: 0.85,
+      cfbDelayUs: 1.2,
+      cfbLines: 3,
+      noiseIre: 1.5,
+      cfbGenlock: 1,
+      cfbGain: 1.04,
+    },
     // The loop delay is also a hue rotation, so drifting it by a fraction of a
     // microsecond walks the colour of every generation around the wheel while
     // the geometry stays put.
@@ -545,11 +552,13 @@ export const PRESETS: PresetDef[] = [
     group: 'Feedback loops',
     blurb: 'Held frames blended forward, smearing motion into long trails.',
     patch: {
-      cfbMix: 0.6,
+      cfbMix: 0.9,
       cfbTrail: 0.9,
       cfbHold: 3,
-      cfbDelayUs: 0.1,
+      cfbDelayUs: 1.6,
       noiseIre: 2,
+      cfbGenlock: 1,
+      cfbGain: 1.06,
     },
   },
   {
@@ -559,13 +568,15 @@ export const PRESETS: PresetDef[] = [
     blurb:
       'Luma-keyed feedback — only bright areas re-enter the loop and tunnel.',
     patch: {
-      cfbMix: 0.8,
+      cfbMix: 0.92,
       cfbKey: 0.85,
       cfbKeyLevel: 45,
       cfbKeySoft: 8,
-      cfbDelayUs: 0.25,
+      cfbDelayUs: 1.5,
       cfbLines: 2,
       noiseIre: 1.5,
+      cfbGenlock: 1,
+      cfbGain: 1.05,
     },
   },
   {
@@ -616,11 +627,13 @@ export const PRESETS: PresetDef[] = [
     blurb:
       'Loop key inverted so only the dark areas re-enter, stepped four lines every trip — the shadows climb the frame in rungs while the highlights stay put.',
     patch: {
-      cfbMix: 0.75,
+      cfbMix: 0.9,
       cfbKey: -0.7,
       cfbLines: 4,
       cfbDelayUs: 0.2,
       noiseIre: 1.5,
+      cfbGenlock: 1,
+      cfbGain: 1.05,
     },
   },
   {
@@ -630,12 +643,13 @@ export const PRESETS: PresetDef[] = [
     blurb:
       'Frame store walking six lines up per pass with its peak-hold left on: trails stack into a bleached ladder and tear the picture off its own edges.',
     patch: {
-      cfbMix: 0.7,
-      cfbGain: 0.95,
+      cfbMix: 0.9,
+      cfbGain: 1.05,
       cfbLines: -6,
       cfbTrail: 0.85,
       cfbDelayUs: 0.06,
       noiseIre: 1.5,
+      cfbGenlock: 1,
     },
   },
   {
@@ -650,6 +664,7 @@ export const PRESETS: PresetDef[] = [
       cfbFilterQ: 0.85,
       cfbFilterBoost: 2.6,
       noiseIre: 1.5,
+      cfbGenlock: 1,
     },
     // What makes it a siren rather than a drone: an oscillator this close to
     // unity walks its own centre frequency as the loop warms, and the bands
@@ -668,12 +683,13 @@ export const PRESETS: PresetDef[] = [
     patch: {
       abl: 0.8,
       fbIris: 0.9,
-      fbMix: 0.5,
+      fbMix: 0.78,
       fbZoom: 1.04,
       agc: 0.6,
       hvSagUs: 4,
       hvRing: 0.45,
       crtBloom: 0.3,
+      fbGain: 1.1,
     },
   },
   {
@@ -707,8 +723,8 @@ export const PRESETS: PresetDef[] = [
     blurb:
       'The camera pushed in two percent a pass, with the loop above unity so the geometry accumulates instead of dimming out. A highlight breeds inward toward the middle and never quite arrives, because every generation is a little larger than the one it grew from.',
     patch: {
-      fbMix: 0.62,
-      fbGain: 1.07,
+      fbMix: 0.82,
+      fbGain: 1.13,
       fbZoom: 1.02,
       fbBlack: 0.05,
       phosphor: 0.6,
@@ -716,7 +732,7 @@ export const PRESETS: PresetDef[] = [
     // The gain is the one thing standing between this and a white field, so
     // walking it is walking how close to the edge the loop runs — slow, and
     // narrow enough that the bottom of the sweep still accumulates.
-    mod: [{ target: 'fbGain', source: 'smooth', rateHz: 0.06, depth: 0.05 }],
+    mod: [{ target: 'fbGain', source: 'smooth', rateHz: 0.06, depth: 0.03 }],
   },
   {
     name: 'tunnelOut',
@@ -725,13 +741,13 @@ export const PRESETS: PresetDef[] = [
     blurb:
       'The same loop pulled the other way: each pass a shade smaller than the last, so the picture falls away from itself down a corridor rather than growing out of the frame. The vignette is what gives the corridor walls.',
     patch: {
-      fbMix: 0.66,
-      fbGain: 1.06,
-      fbZoom: 0.975,
+      fbMix: 0.9,
+      fbGain: 1.25,
+      fbZoom: 0.95,
       fbVign: 0.45,
       phosphor: 0.5,
     },
-    mod: [{ target: 'fbZoom', source: 'sine', rateHz: 0.04, depth: 0.04 }],
+    mod: [{ target: 'fbZoom', source: 'sine', rateHz: 0.04, depth: 0.008 }],
   },
   {
     name: 'spiral',
@@ -739,15 +755,15 @@ export const PRESETS: PresetDef[] = [
     blurb:
       'Three degrees of rotation a pass on top of a slight zoom. Either alone gives a ring or a corridor; the two together are what makes the picture wind, because a generation lands rotated *and* displaced from the one under it.',
     patch: {
-      fbMix: 0.7,
-      fbGain: 1.05,
-      fbZoom: 1.012,
-      fbRotateDeg: 3.2,
+      fbMix: 0.9,
+      fbGain: 1.22,
+      fbZoom: 0.955,
+      fbRotateDeg: 5,
       phosphor: 0.55,
     },
     // Through zero, so the wind reverses: the arms unwind, stall, and go back
     // the other way, which a fixed rotation never does.
-    mod: [{ target: 'fbRotateDeg', source: 'sine', rateHz: 0.03, depth: 0.35 }],
+    mod: [{ target: 'fbRotateDeg', source: 'sine', rateHz: 0.03, depth: 0.02 }],
   },
   {
     name: 'subcarrierComb',
@@ -760,6 +776,7 @@ export const PRESETS: PresetDef[] = [
       cfbGain: 0.98,
       cfbDelayUs: 0.14,
       chromaGain: 1.3,
+      cfbGenlock: 1,
     },
     // A hundred and forty nanoseconds is one sample; sweeping a fraction of one
     // walks the whole wheel, so the picture cycles hue without a tint knob
@@ -775,11 +792,12 @@ export const PRESETS: PresetDef[] = [
     blurb:
       'The loop bus multiplied against the live picture instead of summed with it. Subcarrier against subcarrier lands colour at sum and difference phases neither frame contained, and every product goes round to be multiplied again — so the spectrum folds over itself generation after generation rather than settling.',
     patch: {
-      cfbMix: 0.62,
-      cfbGain: 1,
-      cfbDelayUs: 0.4,
+      cfbMix: 0.9,
+      cfbGain: 1.06,
+      cfbDelayUs: 2.2,
       cfbRing: 0.65,
       chromaGain: 1.2,
+      cfbGenlock: 1,
     },
     mod: [{ target: 'cfbRing', source: 'smooth', rateHz: 0.08, depth: 0.25 }],
   },
@@ -797,6 +815,7 @@ export const PRESETS: PresetDef[] = [
       cfbRing: 0.7,
       chromaGain: 1.4,
       phosphor: 0.5,
+      cfbGenlock: 1,
     },
     // Walking the offset walks the rung spacing, so the mosaic re-lays itself
     // at a new pitch rather than sitting where the first lap put it.
@@ -811,7 +830,7 @@ export const PRESETS: PresetDef[] = [
     blurb:
       'Feedback and a multiplier, with the depth of the multiply on a Lorenz attractor. Summed, a loop hands back what it was given; multiplied, every lap beats the last generation against the live one and folds frequencies in that neither carried, then sends the products round to be multiplied again. The knob deciding between those two is being walked by something that never returns to where it was, so the loop is never in the same regime twice — and the peak hold keeps each state on the glass long enough for the next one to multiply it.',
     patch: {
-      cfbMix: 0.78,
+      cfbMix: 0.9,
       cfbGain: 1,
       cfbDelayUs: 0.9,
       cfbLines: 2,
@@ -819,6 +838,7 @@ export const PRESETS: PresetDef[] = [
       cfbTrail: 0.8,
       chromaGain: 1.5,
       phosphor: 0.6,
+      cfbGenlock: 1,
     },
     mod: [{ target: 'cfbRing', source: 'lorenz', rateHz: 0.6, depth: 0.45 }],
   },
@@ -836,6 +856,7 @@ export const PRESETS: PresetDef[] = [
       cfbTrail: 0.6,
       chromaGain: 1.4,
       phosphor: 0.55,
+      cfbGenlock: 1,
     },
     // The bass-onset follower rather than an LFO: this is the one control here
     // that should move on the music instead of on a clock.
@@ -855,6 +876,7 @@ export const PRESETS: PresetDef[] = [
       cfbRing: 0.9,
       chromaGain: 1.6,
       phosphor: 0.3,
+      cfbGenlock: 1,
     },
   },
   {
@@ -864,8 +886,8 @@ export const PRESETS: PresetDef[] = [
     blurb:
       'The loop return keyed on brightness, so the multiply can only happen where the picture is already lit. Highlights grow scalloped trails sideways and everything under the slice — a dark subject, a saturated backing — stays photographic, which is the difference between feedback that follows the subject and feedback that floods the frame. Keyed and summed, that trail is a grey smear of the highlight itself; keyed and multiplied, the same trail comes back through the spectrum, because the loop against the live picture lands at sums and differences the highlight never carried.',
     patch: {
-      cfbMix: 0.82,
-      cfbGain: 0.92,
+      cfbMix: 0.92,
+      cfbGain: 1.02,
       cfbDelayUs: 1.1,
       cfbLines: 1,
       cfbRing: 1,
@@ -874,6 +896,7 @@ export const PRESETS: PresetDef[] = [
       cfbKeySoft: 10,
       chromaGain: 1.8,
       phosphor: 0.5,
+      cfbGenlock: 1,
     },
   },
   {
@@ -883,8 +906,8 @@ export const PRESETS: PresetDef[] = [
     blurb:
       "The same key wired the other way up: the return is gated where the signal is low, so the multiply happens everywhere the picture is not lit. What that turns out to mean is the whole difference from keying the highlights, because the key is watching a composite line and the darkest thing on a composite line is not a shadow — it is blanking and the sync tip. So the strongest return of every lap lands on the receiver's own timing reference: the frame shears and rolls while the shadows fill with product, and a lit subject sits through it photographic. The slice walks, so the boundary climbs the picture's own gradient instead of sitting where it was put.",
     patch: {
-      cfbMix: 0.85,
-      cfbGain: 1.02,
+      cfbMix: 0.92,
+      cfbGain: 1.14,
       cfbDelayUs: 0.8,
       cfbLines: 2,
       cfbRing: 1,
@@ -893,6 +916,7 @@ export const PRESETS: PresetDef[] = [
       cfbKeySoft: 14,
       chromaGain: 1.6,
       phosphor: 0.45,
+      cfbGenlock: 1,
     },
     mod: [
       { target: 'cfbKeyLevel', source: 'smooth', rateHz: 0.06, depth: 0.18 },
@@ -906,7 +930,7 @@ export const PRESETS: PresetDef[] = [
       "The same key on the varactor instead of the multiplier. What comes back is not a colour the highlight never had — it is the highlight in the wrong place: the varactor pulls the loop's own delay by the brightness riding through it, and the key only lets the pulled return land where the picture was already lit. So a lit subject tears sideways into ribbons that repaint as they go, every 70 ns of pull being another 90 degrees of hue, and a dark subject or a saturated backing sits through it in register. Feedback that displaces geometry rather than manufacturing colour, and keyed so it displaces only what it was pointed at.",
     patch: {
       cfbMix: 0.8,
-      cfbGain: 0.98,
+      cfbGain: 1.06,
       cfbDelayUs: 1,
       cfbLines: 1,
       cfbServoUs: 44,
@@ -915,6 +939,7 @@ export const PRESETS: PresetDef[] = [
       cfbKeySoft: 12,
       chromaGain: 1.3,
       phosphor: 0.45,
+      cfbGenlock: 1,
     },
   },
   {
@@ -924,8 +949,8 @@ export const PRESETS: PresetDef[] = [
     blurb:
       "The varactor keyed the other way up, which lands it on the one thing a composite line keeps below every shadow: blanking, and the sync tip under that. The deepest part of the wire is what pulls the delay hardest, and now it is also the only part the key lets through — so the pull walks each line's sync into its neighbour's territory and the receiver's problems compound on their own. The frame shears into bands and rolls; a lit subject rides it photographic. The slice drifts, so which shadows are doing the pulling changes without anyone moving it.",
     patch: {
-      cfbMix: 0.85,
-      cfbGain: 1,
+      cfbMix: 0.92,
+      cfbGain: 1.12,
       cfbDelayUs: 0.8,
       cfbLines: 2,
       cfbServoUs: 36,
@@ -934,6 +959,7 @@ export const PRESETS: PresetDef[] = [
       cfbKeySoft: 14,
       chromaGain: 1.5,
       phosphor: 0.45,
+      cfbGenlock: 1,
     },
     mod: [
       { target: 'cfbKeyLevel', source: 'smooth', rateHz: 0.05, depth: 0.16 },
@@ -947,7 +973,7 @@ export const PRESETS: PresetDef[] = [
       'The inverted loop and its sixty-line drop, but keyed — so the ladder of alternating-polarity generations is only built where the picture is lit, and the shadows underneath it never join in. What that does to the rungs is make them hard: with the whole frame feeding back the positive and negative laps overlap into vertical smear, and with only the lit areas feeding back each rung stands against unfed picture and keeps its edge. A subject comes back as a stack of plates in polarities the plate above it did not have.',
     patch: {
       cfbMix: 0.8,
-      cfbGain: -1.08,
+      cfbGain: -1.14,
       cfbDelayUs: 1.2,
       cfbLines: 60,
       cfbRing: 0.9,
@@ -956,6 +982,7 @@ export const PRESETS: PresetDef[] = [
       cfbKeySoft: 8,
       chromaGain: 1.6,
       phosphor: 0.3,
+      cfbGenlock: 1,
     },
   },
   {
@@ -966,7 +993,7 @@ export const PRESETS: PresetDef[] = [
       "A resonant network bridged across the loop instead of a multiplier, brought just far enough that the round trip passes unity inside its band and the loop starts generating a pattern out of nothing. Unkeyed that pattern is the whole frame and the picture is gone. Keyed, the oscillation can only stand where the picture is bright — so a fine mesh grows on a white shirt and a lit window and stops at the edge of them, and the mesh is at the network's own frequency rather than at anything in the scene. The rest of the picture never learns the loop is oscillating.",
     patch: {
       cfbMix: 0.7,
-      cfbGain: 0.95,
+      cfbGain: 1.08,
       cfbDelayUs: 0.3,
       cfbLines: 1,
       cfbFilterMHz: 2.6,
@@ -977,6 +1004,7 @@ export const PRESETS: PresetDef[] = [
       cfbKeySoft: 8,
       chromaGain: 1.4,
       phosphor: 0.45,
+      cfbGenlock: 1,
     },
     // The slice, not the network: the mesh keeps its pitch and changes how much
     // of the picture is allowed to carry it.
@@ -991,8 +1019,8 @@ export const PRESETS: PresetDef[] = [
     blurb:
       'A chroma keyer in the loop return where the luma one was: the box slices the phase of the signal instead of its level, so what decides whether a region may carry on regenerating is the colour it came back as. That makes it self-limiting, because the loop delay is a hue rotation — a region regenerates, its own return spins a little further round the wheel every lap, and at some lap it leaves the wedge and gives up. The territory is then whatever has spun in behind it. Nothing draws the boundary, nothing holds it still, and the frame ends up shredded along its own colour edges rather than its brightness ones.',
     patch: {
-      cfbMix: 0.8,
-      cfbGain: 0.95,
+      cfbMix: 0.9,
+      cfbGain: 1.14,
       cfbDelayUs: 1.1,
       cfbLines: 1,
       cfbRing: 0.9,
@@ -1002,6 +1030,7 @@ export const PRESETS: PresetDef[] = [
       cfbKeySoft: 10,
       chromaGain: 1.6,
       phosphor: 0.5,
+      cfbGenlock: 1,
     },
   },
   {
@@ -1011,7 +1040,7 @@ export const PRESETS: PresetDef[] = [
     blurb:
       "The keyer's key input moved off the loop return and onto program, so the boundary is drawn by what is in front of the camera now rather than by what the loop was doing a generation ago. The trails still grow and still come back through the spectrum, and they are cut off crisply at the live subject's edge instead of smearing across it — the accumulation cannot follow a subject that moves, so a hand crossing the frame carves its own shape out of everything the loop has built. Compare it against the self-keyed version: same product, same delay, and the difference is only which cable the key is on.",
     patch: {
-      cfbMix: 0.82,
+      cfbMix: 0.92,
       cfbGain: 0.92,
       cfbDelayUs: 1.1,
       cfbLines: 1,
@@ -1022,6 +1051,7 @@ export const PRESETS: PresetDef[] = [
       cfbKeySoft: 10,
       chromaGain: 1.8,
       phosphor: 0.5,
+      cfbGenlock: 1,
     },
   },
   {
@@ -1031,8 +1061,8 @@ export const PRESETS: PresetDef[] = [
     blurb:
       'The live key inverted, so the loop is allowed everywhere the picture is not lit and the subject holds a clean hole in it. What fills the rest is generations of product beating against generations of product, which drains most of the colour out of itself and churns far faster than anything in the scene — fast enough that no two frames of it hold the same palette. The hole does not churn: it is redrawn from live picture every frame, so it stays photographic and stays wherever the subject went, and the boundary between the two is the only still thing on the screen.',
     patch: {
-      cfbMix: 0.85,
-      cfbGain: 1,
+      cfbMix: 0.93,
+      cfbGain: 1.06,
       cfbDelayUs: 0.8,
       cfbLines: 2,
       cfbRing: 1,
@@ -1042,6 +1072,7 @@ export const PRESETS: PresetDef[] = [
       cfbKeySoft: 12,
       chromaGain: 1.6,
       phosphor: 0.45,
+      cfbGenlock: 1,
     },
   },
   {
@@ -1051,8 +1082,8 @@ export const PRESETS: PresetDef[] = [
     blurb:
       "Both of the keyer's connectors at once: it slices hue rather than level, and it slices the live picture rather than the loop's own past. So the loop is confined to a colour — 103 degrees is where red actually lands on the wheel the subcarrier carries — and confined to wherever that colour is right now. A red chair goes to rainbow striping and everything green or neutral beside it stays a photograph, with no mask anywhere and nothing tracking anything. Move the key hue and the loop changes its mind about which part of the room it is eating.",
     patch: {
-      cfbMix: 0.86,
-      cfbGain: 1,
+      cfbMix: 0.94,
+      cfbGain: 1.16,
       cfbDelayUs: 1.1,
       cfbLines: 1,
       cfbRing: 1,
@@ -1063,6 +1094,7 @@ export const PRESETS: PresetDef[] = [
       cfbKeySoft: 10,
       chromaGain: 1.7,
       phosphor: 0.5,
+      cfbGenlock: 1,
     },
   },
   {
@@ -1080,6 +1112,7 @@ export const PRESETS: PresetDef[] = [
       chromaGain: 1.9,
       phosphor: 0.5,
       noiseIre: 1.2,
+      cfbGenlock: 1,
     },
     mod: [
       { target: 'cfbClockPct', source: 'smooth', rateHz: 0.04, depth: 0.06 },
@@ -1101,6 +1134,7 @@ export const PRESETS: PresetDef[] = [
       phosphor: 0.5,
       crtSat: 1.3,
       noiseIre: 1.2,
+      cfbGenlock: 1,
     },
   },
   {
@@ -1110,8 +1144,8 @@ export const PRESETS: PresetDef[] = [
     blurb:
       "The other wire off the same separator, with the live colour recombined over it. Brightness alone goes round, so the trails a moving subject leaves are grey rungs stacking four lines up a lap — and the colour laid over them is the picture's own, current and in the wrong place, because it belongs to where the subject is now rather than to the ladder of where it was. The sync tip is on the luma wire too, so this return still pushes the receiver about: the accumulation drags at where each line starts, and the ladder tears along with the picture instead of sitting behind it.",
     patch: {
-      cfbMix: 0.8,
-      cfbGain: 1.03,
+      cfbMix: 0.9,
+      cfbGain: 1.06,
       cfbDelayUs: 0.2,
       cfbLines: -4,
       cfbReturn: 2,
@@ -1120,6 +1154,7 @@ export const PRESETS: PresetDef[] = [
       chromaGain: 1.3,
       phosphor: 0.4,
       noiseIre: 1.5,
+      cfbGenlock: 0.6,
     },
   },
   {
@@ -1129,7 +1164,7 @@ export const PRESETS: PresetDef[] = [
     blurb:
       "The ring modulator's other input taken off the program and put on the box's own subcarrier oscillator, which turns the bridge into the thing an encoder's chroma modulator is. Against a carrier sitting on 3.58 MHz the return's brightness is translated up into the chroma band, where the decoder has no way to read it as anything but colour, and the return's own colour is translated down to where it is read as brightness. So each lap trades the two: a lit face comes back as a saturated field, that field comes back as light, and the light is translated again. What settles out is a picture drawn entirely in colours nothing in the room is, arranged exactly where the brightness was. Multiplied against the program instead, this same knob makes none of it — both sides are on one crystal there, and their products land where the chroma filter throws them away.",
     patch: {
-      cfbMix: 0.8,
+      cfbMix: 0.9,
       cfbGain: 1,
       cfbDelayUs: 0.4,
       cfbLines: 1,
@@ -1138,6 +1173,7 @@ export const PRESETS: PresetDef[] = [
       chromaGain: 1.5,
       phosphor: 0.45,
       noiseIre: 1.2,
+      cfbGenlock: 1,
     },
   },
   {
@@ -1157,6 +1193,7 @@ export const PRESETS: PresetDef[] = [
       chromaGain: 1.8,
       phosphor: 0.5,
       noiseIre: 1.5,
+      cfbGenlock: 1,
     },
     mod: [
       { target: 'cfbCarrierKHz', source: 'smooth', rateHz: 0.05, depth: 0.06 },
@@ -1178,6 +1215,7 @@ export const PRESETS: PresetDef[] = [
       chromaGain: 1.7,
       phosphor: 0.45,
       noiseIre: 1.5,
+      cfbGenlock: 1,
     },
     // The bend walked slowly, because what this look is about only shows as the
     // layer spacing changes: the trail restacks itself while nothing in front
@@ -1197,7 +1235,7 @@ export const PRESETS: PresetDef[] = [
     blurb:
       "A tuner off channel feeding a loop that taps the bus behind it. With the sound carrier out of its trap the video detector multiplies it against everything else on the wire, so chroma comes back at 920 kHz and 920 kHz picture detail comes back at 3.58 MHz, where the decoder reads it as colour. That much is a mistuned set. What the loop does with it is the look: the manufactured colour is on the bus when the frame store captures, so next lap it is picture, and the detector multiplies it again — each generation folding the last one's invented chroma back through the same arithmetic. Fine detail rainbows, the rainbow becomes detail, and the herringbone the loose carrier lays over everything is riding round with it.",
     patch: {
-      cfbMix: 0.78,
+      cfbMix: 0.88,
       cfbGain: 1,
       cfbDelayUs: 0.9,
       cfbLines: -2,
@@ -1205,6 +1243,7 @@ export const PRESETS: PresetDef[] = [
       chromaGain: 1.8,
       phosphor: 0.4,
       noiseIre: 2,
+      cfbGenlock: 1,
     },
     mod: [
       { target: 'rfMistuneMHz', source: 'smooth', rateHz: 0.04, depth: 0.15 },
@@ -1233,6 +1272,7 @@ export const PRESETS: PresetDef[] = [
       chromaGain: 1.8,
       phosphor: 0.5,
       noiseIre: 1.2,
+      cfbGenlock: 1,
     },
     // 0.38 of a 180-degree span is 68 degrees either way, which from a base of
     // 34 spends a third of the sine below zero and clamped there.
@@ -1252,6 +1292,7 @@ export const PRESETS: PresetDef[] = [
       cfbDelayUs: 1.2,
       cfbServoUs: 34,
       phosphor: 0.45,
+      cfbGenlock: 0.85,
     },
     // Through zero again: the pull reverses, so the warp leans one way, flattens
     // and leans back.
@@ -1264,14 +1305,15 @@ export const PRESETS: PresetDef[] = [
     blurb:
       'Camera and mixer running at once, each modest. The optical loop can only do what a lens can — zoom, rotate, cut a black level — and the electrical one carries the subcarrier round with it, so the two disagree about what the picture is and the disagreement is the look.',
     patch: {
-      fbMix: 0.5,
-      fbGain: 1.05,
+      fbMix: 0.8,
+      fbGain: 1.15,
       fbZoom: 1.014,
       fbRotateDeg: -1.5,
-      cfbMix: 0.55,
-      cfbGain: 1,
-      cfbDelayUs: 0.18,
+      cfbMix: 0.8,
+      cfbGain: 1.04,
+      cfbDelayUs: 1.6,
       phosphor: 0.5,
+      cfbGenlock: 1,
     },
     // One routing, on the optical half only. Walking both at once makes a look
     // that never holds still long enough to read as either machine.
@@ -1302,8 +1344,8 @@ export const PRESETS: PresetDef[] = [
     blurb:
       'The picture already coming apart before the camera gets to it: the vertical hold is marginal, so what the loop photographs is a frame mid-roll, and it feeds the roll back in to be photographed again. The seam accumulates instead of passing through, and the loop ends up holding several rolls at once at different ages.',
     patch: {
-      fbMix: 0.75,
-      fbGain: 1.08,
+      fbMix: 0.85,
+      fbGain: 1.12,
       fbZoom: 1.02,
       vHold: 0.06,
       vFreqHz: 59.85,
@@ -1328,6 +1370,7 @@ export const PRESETS: PresetDef[] = [
       cfbLines: 1,
       chromaGain: 1.4,
       phosphor: 0.6,
+      cfbGenlock: 1,
     },
     mod: [{ target: 'cfbDelayUs', source: 'lorenz', rateHz: 0.5, depth: 0.06 }],
   },
@@ -1340,7 +1383,7 @@ export const PRESETS: PresetDef[] = [
     patch: {
       strobeHz: 6,
       strobeMs: 40,
-      fbMix: 0.78,
+      fbMix: 0.82,
       fbGain: 1.16,
       fbZoom: 1.025,
       phosphor: 0.92,
@@ -1819,6 +1862,7 @@ export const PRESETS: PresetDef[] = [
       crtSpot: 5,
       crtBloom: 0.8,
       phosphor: 0.4,
+      cfbGenlock: 1,
     },
     mod: [
       { target: 'cfbCarrierKHz', source: 'smooth', rateHz: 0.04, depth: 0.05 },

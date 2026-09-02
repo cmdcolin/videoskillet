@@ -282,6 +282,22 @@ fn main(
     fb = fb + P.cfbRing * (fb - 40.0) * other * 0.01;
   }
   var m = P.cfbMix;
+  // The frame synchronizer, if the return came through one. A store genlocked
+  // to house reference regenerates sync and burst on its output, so the loop
+  // hands back picture and nothing else: the separator downstream still finds
+  // every line start however far the delay, the offsets and the varactor have
+  // moved what is inside the line. Down a bare cable the loop's own sync tip
+  // comes round with the picture, one delay late, and lands mid-line — the
+  // separator loses the edge it was hunting for, the flywheel free-runs, and
+  // the structure the loop spent a second building is thrown across a raster
+  // that is no longer there. Both are real; this is which one is patched.
+  if (P.cfbGenlock > 0.0) {
+    let picture = s >= ACTIVE_START && s < ACTIVE_START + ACTIVE_W
+      && row >= ACTIVE_TOP && row < ACTIVE_TOP + ACTIVE_H;
+    if (!picture) {
+      m = m * (1.0 - P.cfbGenlock);
+    }
+  }
   if (P.cfbKey != 0.0) {
     var gate = keyGate(keyTap(pos, n, P.cfbKeyExt > 0.5));
     if (P.cfbKey < 0.0) {
