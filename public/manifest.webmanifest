@@ -29,6 +29,19 @@
       "purpose": "maskable"
     }
   ],
+  "share_target": {
+    "action": "app/share",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "files": [
+        {
+          "name": "media",
+          "accept": ["video/*", "image/*"]
+        }
+      ]
+    }
+  },
   "screenshots": [
     {
       "src": "og.jpg",

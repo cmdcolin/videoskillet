@@ -9,6 +9,11 @@
 // on videoskillet.com.
 
 const CACHE = 'videoskillet-v1'
+// Where a file arriving from the OS share sheet is parked. Its own cache rather
+// than a key in the one above, so clearing the app's assets on an upgrade never
+// takes a file someone is in the middle of sending with it.
+const SHARE = 'videoskillet-share'
+const SHARE_KEY = 'shared-media'
 
 // The cold-start floor: enough for the instrument to open offline before the
 // hashed bundle has been seen once. The bundle itself lands in the same cache
@@ -34,11 +39,42 @@ self.addEventListener('activate', event => {
     caches
       .keys()
       .then(keys =>
-        Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))),
+        Promise.all(
+          keys
+            .filter(k => k !== CACHE && k !== SHARE)
+            .map(k => caches.delete(k)),
+        ),
       )
       .then(() => self.clients.claim()),
   )
 })
+
+// Android hands a shared file over as a POST, and a page cannot read its own
+// POST body — so the worker takes delivery, parks the file where the app can
+// fetch it, and sends the browser on to a page that knows to look.
+//
+// 303 and not 302: the redirect has to turn the POST into a GET, or the app
+// would be asked for at an address the server has never been POSTed at.
+const receiveShare = async request => {
+  const form = await request.formData()
+  const file = form.get('media')
+  if (file instanceof File) {
+    const cache = await caches.open(SHARE)
+    await cache.put(
+      shellUrl(SHARE_KEY),
+      new Response(file, {
+        headers: {
+          'content-type':
+            file.type === '' ? 'application/octet-stream' : file.type,
+          // Header values are latin-1, and a shared file is named by whatever
+          // wrote it — a phone camera's date stamp, someone's kanji.
+          'x-share-name': encodeURIComponent(file.name),
+        },
+      }),
+    )
+  }
+  return Response.redirect(shellUrl('app/?shared=1'), 303)
+}
 
 const putIfOk = (request, response) => {
   if (response.ok && response.type === 'basic') {
@@ -90,7 +126,10 @@ self.addEventListener('fetch', event => {
   // kindness to anyone's storage quota.
   const media =
     request.headers.has('range') || /\.(mp4|webm)$/.test(url.pathname)
-  if (request.method === 'GET' && sameOrigin && !media) {
+  const share = url.pathname.endsWith('/app/share')
+  if (request.method === 'POST' && sameOrigin && share) {
+    event.respondWith(receiveShare(request))
+  } else if (request.method === 'GET' && sameOrigin && !media) {
     if (request.mode === 'navigate') {
       event.respondWith(navigate(request))
     } else if (url.pathname.includes('/assets/')) {
