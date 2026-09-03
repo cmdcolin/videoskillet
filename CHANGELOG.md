@@ -2,6 +2,17 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [0.36.0](https://github.com/cmdcolin/videoskillet/compare/v0.35.1...v0.36.0) - 2026-09-03
+
+### Features
+- *(ui)* [`ef72f4c`](https://github.com/cmdcolin/videoskillet/commit/ef72f4ccf3506e3d74759e2d5d8f613f9a76ea7a) the app installs to a home screen and opens with no network
+- *(ui)* [`8e532d1`](https://github.com/cmdcolin/videoskillet/commit/8e532d140a92edabc74ede9639327089d5b4286b) the screen stays awake while the instrument is live
+- *(ui)* [`4fbd3a3`](https://github.com/cmdcolin/videoskillet/commit/4fbd3a34a51b64006318ede5e2267dc481c2bdc4) a clip shared from the phone's share sheet opens on deck A
+- *(ui)* [`66b01f5`](https://github.com/cmdcolin/videoskillet/commit/66b01f5ec275ea960a99e847e584a5bce5324bc3) the instrument gets its own address, and the root becomes a page you arrive on
+
+### Fixes
+- *(ui)* [`9b2c01a`](https://github.com/cmdcolin/videoskillet/commit/9b2c01a8c70cf406cbdbe160029209b44a0d0370) the landing page's shot is the shape it was taken at, and says it all
+
 ## [0.35.1](https://github.com/cmdcolin/videoskillet/compare/v0.35.0...v0.35.1) - 2026-09-03
 
 ### Features
