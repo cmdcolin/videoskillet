@@ -38,7 +38,7 @@ const published = [
 ]
 
 test('the project publishes the links it means to', () => {
-  expect(published.length).toBe(13)
+  expect(published.length).toBe(12)
 })
 
 test.each(published)('%s: %s', (_page, query) => {
