@@ -122,8 +122,9 @@ tape transports, the tracking knob, the hold that stops the frame dead — one
 surface for a take instead of four stages.
 
 Inside a stage: **• 10** counts what you've moved, amber means off stock, **↺**
-reverts, **⋮** is the wiring (pin, start an LFO, learn a MIDI knob), and
-**"inert — needs …"** means another control gates this one.
+reverts, **+ mod** sets the control moving, **⋮** holds the rest of the wiring
+(pin, learn a MIDI knob, lock to the beat), and **"inert — needs …"** means
+another control gates this one.
 
 Every stage heading carries its own verbs, aimed at that stage and nothing else.
 **randomize** nudges its controls around where they sit — the same modifiers the
@@ -176,21 +177,26 @@ quickest way out of a filter you did not mean to apply.
 
 ## Making it move
 
-**∿ in any control row's ⋮ menu** sets that control wobbling — LFO, random walk,
-noise, sample-and-hold, a Lorenz attractor, audio level or its hits, or a
-one-shot envelope you strike by hand or from a MIDI note. Depth is a fraction of
-the control's range, and the slider stays put as the centre the motion happens
-around, which is why a preset or a link still holds the look.
+**+ mod**, beside the reading on any control row, sets that control moving: it
+patches a slow sine wobble and unfolds an editor under the row where you pick
+the source — LFO, random walk, noise, sample-and-hold, a Lorenz attractor, audio
+level or its hits, or a one-shot envelope you strike by hand or from a MIDI note
+— and dial the rate and depth. Depth is a fraction of the control's range, and
+the slider stays put as the centre the motion happens around, which is why a
+preset or a link still holds the look. The rate's **♩ lock to beat** button in
+the editor ties it to the tempo instead of Hz.
 
-A patched row then wears **mod** beside the reading, and that badge is a switch:
-press it to hold that wobble still — it reads **held** — and press it again to
-start it back up exactly as you dialed it. It is the row's mark as well as its
-button, so a row showing neither has nothing driving it.
+A patched row then carries two buttons in place of **+ mod**: a chip naming the
+routing — **sine 0.5Hz** — that opens and closes its editor, and a **❚❚** that
+holds the wobble still without unpatching it. Held, the chip dims and the button
+reads **▶**; press it and the motion is back exactly as you dialed it.
+**remove** in the editor, or in the row's **⋮**, hands the slot back.
 
-Once anything moves, a **modulation** strip appears with one amount over every
+Once anything moves, a **mod amount** strip appears with one amount over every
 routing, a freeze, and the **mod** count that filters the panel down to what is
-running. The top of **MODULATION** is the tempo: type or tap a BPM, then lock
-any rate to it. MIDI clock takes over whenever something sends it — see
+running. The **MODULATION** box on the map lists every routing with the same
+editor under each, and its top is the tempo: type or tap a BPM, then lock any
+rate to it. MIDI clock takes over whenever something sends it — see
 [MIDI.md](MIDI.md).
 
 **stabs** flip the board back to clean in bursts — 60ms by default, and anywhere

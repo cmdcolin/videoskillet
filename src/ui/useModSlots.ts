@@ -73,6 +73,9 @@ export function useModSlots(
   const [slots, setSlotsState] = useState<readonly UiSlot[]>(loadSlots)
   const [master, setMasterState] = useState<number>(loadMaster)
   const [stab, setStabState] = useState<Stab>(loadStab)
+  const [editing, setEditingKeys] = useState<ReadonlySet<ModTarget>>(
+    () => new Set(),
+  )
 
   // A locked slot's rate is resolved here, per render, rather than written into
   // the bay: the tempo is what moves, and the effect below already pushes the
@@ -215,6 +218,12 @@ export function useModSlots(
         // identity, and shuffling the bay to close a gap would restart every
         // routing below it.
         if (at !== -1) commit(slots.map((s, j) => (j === at ? EMPTY_SLOT : s)))
+        setEditingKeys(prev => {
+          if (!prev.has(key)) return prev
+          const next = new Set(prev)
+          next.delete(key)
+          return next
+        })
         return
       }
       const claiming = at === -1
@@ -245,5 +254,14 @@ export function useModSlots(
       // nothing at all.
       if (on && master === 0) writeMaster(1)
     },
+    editing,
+    setEditing: (key, open) =>
+      setEditingKeys(prev => {
+        if (prev.has(key) === open) return prev
+        const next = new Set(prev)
+        if (open) next.add(key)
+        else next.delete(key)
+        return next
+      }),
   }
 }

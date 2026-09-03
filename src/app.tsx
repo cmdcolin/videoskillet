@@ -999,6 +999,11 @@ export function App() {
             // every slider in the app.
             openStages={openStages}
             onOpenGroup={nav.openAt}
+            // The one-press start for an empty bay: the gentle motion roll,
+            // which patches one slow routing onto a control this look uses.
+            onStart={() =>
+              mix.rollMotion('gentle', { audioLive: audio.active })
+            }
           />
         ),
       },
@@ -1475,7 +1480,7 @@ export function App() {
         <div className={ui.hint}>
           {query.moving
             ? query.text === ''
-              ? 'nothing is moving — open any control row’s ⋮ and press ∿ to set it wobbling'
+              ? 'nothing is moving — press + mod on any control row to set it wobbling'
               : `nothing moving matches “${query.text}” — drop “mod only” to search the whole panel`
             : // A query can land on controls that exist and cannot act, which is
               // not the same answer as no match at all: "bass" is seven routings

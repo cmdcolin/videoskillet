@@ -83,6 +83,11 @@ export interface ModSlotsApi {
   // kind of off — it hands the slot back and the patch with it. A no-op when
   // nothing is driving the control.
   setSlotOn: (key: ModTarget, on: boolean) => void
+  // Which rows have their modulation editor unfolded. Held here rather than in
+  // each row, so the bay can open the editor on the row a slot drives and a
+  // hand-back from either side folds it.
+  editing: ReadonlySet<ModTarget>
+  setEditing: (key: ModTarget, open: boolean) => void
 }
 
 export const ModSlotsContext = createContext<ModSlotsApi | null>(null)

@@ -114,8 +114,8 @@ function RowMenu(props: {
   mod?: {
     patch: ModPatch | null
     on: boolean
-    open: boolean
-    onToggle: () => void
+    onOpenChange: (open: boolean) => void
+    onRemove: () => void
   }
   midi?: { label: string | null; armed: boolean; onArm: () => void }
   sync?: { label: string | null; live: boolean; onCycle: () => void }
@@ -170,31 +170,39 @@ function RowMenu(props: {
                 sync === undefined) ? null : (
                 <div className={popoverStyles.menuSep} />
               )}
-              {mod === undefined ? null : (
+              {/* The same doors the row's own buttons are, said in words: the
+                  `+ mod` button and the routing chip beside the reading are the
+                  primary way in, and the menu repeats them for anyone who came
+                  here first. Remove is the one verb that lives only here and in
+                  the open editor, so the menu is where a routing can be thrown
+                  away without unfolding it. */}
+              {mod === undefined ? null : mod.patch === null ? (
                 <MenuItem
                   icon="∿"
-                  label={
-                    mod.patch === null
-                      ? 'wobble it with an LFO'
-                      : mod.open
-                        ? 'hide what is driving it'
-                        : 'change what is driving it'
-                  }
-                  // What is driving it and how fast, which is the answer to the
-                  // question the menu is being opened to ask. It read `on` /
-                  // `held` and left the source and the rate to the editor —
-                  // a state nobody was in doubt about, in the one line that had
-                  // room for the two facts they were.
-                  hint={
-                    mod.patch === null
-                      ? ''
-                      : mod.on
-                        ? mod.patch.reading
-                        : `${mod.patch.reading}, held`
-                  }
+                  label="add modulation"
+                  hint=""
                   closes={id}
-                  onClick={mod.onToggle}
+                  onClick={() => mod.onOpenChange(true)}
                 />
+              ) : (
+                <>
+                  <MenuItem
+                    icon="∿"
+                    label="edit modulation"
+                    hint={
+                      mod.on ? mod.patch.reading : `${mod.patch.reading}, held`
+                    }
+                    closes={id}
+                    onClick={() => mod.onOpenChange(true)}
+                  />
+                  <MenuItem
+                    icon="×"
+                    label="remove modulation"
+                    hint=""
+                    closes={id}
+                    onClick={() => mod.onRemove()}
+                  />
+                </>
               )}
               {midi === undefined ? null : (
                 <MenuItem
@@ -365,15 +373,18 @@ export function Slider(props: {
   // saved looks store, and because a number that moves every frame is unreadable.
   mod?: {
     // What is patched here, or null on a row that could take a routing and
-    // hasn't got one — the badges and the menu both read this, so a row cannot
+    // hasn't got one — the buttons and the menu both read this, so a row cannot
     // be marked as driven while having nothing to say about what by.
     patch: ModPatch | null
     on: boolean
     open: boolean
-    // Park/restart — what the `mod`/`held` badge does.
+    // Park/restart — what the ❚❚/▶ button beside the routing chip does.
     onToggleOn: () => void
-    // Show/hide the editor — what the ⋮ does.
-    onToggle: () => void
+    // Unfold/fold the editor under the row. Opening a row with nothing patched
+    // claims a routing first, so the first press already moves the picture.
+    onOpenChange: (open: boolean) => void
+    // Hand the slot back and fold the editor.
+    onRemove: () => void
   }
   // The editor itself, rendered by the caller under the row.
   modEditor?: ReactNode
@@ -531,6 +542,7 @@ export function Slider(props: {
   // one way to change any of this — except the two that are live states you
   // have to be able to get out of from the row you are looking at: a routed
   // row's `mod` holds the wobble still, and an armed ⚟ cancels the learn.
+  const modProp = props.mod
   const badges = (
     <>
       {sync?.label == null ? null : (
@@ -560,60 +572,65 @@ export function Slider(props: {
           CC{midi.label}
         </span>
       )}
-      {/* The one badge that is a switch rather than a way into a form. Turning a
-          wobble off and back on is what a session reaches for — you patch one to
-          hear what it does, then want the picture without it, then want it back —
-          and until this it was the one modulation verb with no button at all:
-          `remove` throws the routing away, and dragging depth to zero throws away
-          the depth. Changing *what* is driving the control is set-up by
-          comparison, so it moved to the ⋮ beside this, which is where the row
-          keeps its wiring.
+      {/* Modulation, in the open on every row that can take it. It used to be
+          a ⋮ menu item, and the row showed nothing until something was patched
+          — so the app's signature feature had no visible way in. Now an
+          unpatched row carries a small `+ mod` button, and a patched one
+          carries two: a ❚❚/▶ that holds the routing still and starts it again,
+          and the routing itself, which unfolds the editor under the row.
 
-          Words rather than a ∿, and that is what stopped it being pressed by
-          mistake: the strip's filter count wore the same glyph, so one mark said
-          "this control is driven" in one place and "show me only driven rows" in
-          another, and a session that meant the first got the second. Both say
-          what they are now — this one in the shortest form of the routing it
-          switches, because the box sits in the column that holds every track in
-          a group at one x (see Rack), next to `CC42` and `♩1/4`, and those are
-          the length a badge here gets. */}
-      {props.mod === undefined || props.mod.patch === null ? null : (
+          Words rather than a glyph, because a ∿ on its own says nothing to
+          someone who has not been told, and both of these are buttons a reader
+          should be able to tell are buttons before pointing at them. The chip
+          says what is driving the row and how fast, in the routing's own
+          colour, and trails a caret so it reads as a thing that opens. The
+          hold button is separate because the two gestures used to share one
+          chip: pressing the routing to change it held it still instead, which
+          read as modulation being broken. */}
+      {modProp === undefined ? null : modProp.patch === null ? (
         <button
           type="button"
-          // A switch, so it says which of the two states it is in rather than
-          // making a reader infer one from a tint. It briefly opened a one-row
-          // menu to confirm instead of toggling, which put a second click in
-          // front of a gesture that is already its own undo — press it again
-          // and the wobble is back exactly as it was dialed — and made the
-          // hover text a lie about what the press would do.
-          aria-pressed={props.mod.on}
-          title={
-            props.mod.on
-              ? `${props.mod.patch.detail} — click to hold this one still`
-              : `${props.mod.patch.detail}, held still — click to start it wobbling again`
-          }
-          className={cx(
-            styles.badge,
-            props.mod.on ? styles.iconModSet : styles.iconModOff,
-          )}
-          onClick={props.mod.onToggleOn}
+          className={cx(styles.badge, styles.modAdd)}
+          title={`add modulation — starts a slow sine wobble on ${props.label}, which you can then change`}
+          aria-label={`add modulation to ${props.label}`}
+          onClick={() => modProp.onOpenChange(true)}
         >
-          {/* What is driving the row and how fast, in place of the word `mod`.
-              Those are the two facts that decide what a wobble looks like and
-              the row carried neither: a slow walk and a 6Hz buzz wore the same
-              badge, and the only way to tell them apart was to open the editor
-              — a click spent on a question the row was already the right place
-              to answer. `mod` is not missed. A rate in the routing's own colour
-              says the row is driven at least as plainly as the word did, and
-              this chip is the one badge in the line a reader ever presses.
-
-              `held` still trails it, because the two states are what the button
-              is for and a tint is not a state. Trailing rather than leading so
-              the routing reads first in both of them. */}
-          {props.mod.on
-            ? props.mod.patch.reading
-            : `${props.mod.patch.reading} held`}
+          + mod
         </button>
+      ) : (
+        <>
+          <button
+            type="button"
+            aria-pressed={!modProp.on}
+            className={cx(
+              styles.badge,
+              styles.modRun,
+              !modProp.on && styles.modRunOff,
+            )}
+            title={
+              modProp.on
+                ? `hold ${props.label} still — the routing stays patched`
+                : `start ${props.label} moving again, as it was dialed`
+            }
+            onClick={modProp.onToggleOn}
+          >
+            {modProp.on ? '❚❚' : '▶'}
+          </button>
+          <button
+            type="button"
+            aria-expanded={modProp.open}
+            className={cx(
+              styles.badge,
+              styles.modChip,
+              modProp.on ? styles.iconModSet : styles.iconModOff,
+            )}
+            title={`${modProp.patch.detail}${modProp.on ? '' : ', held still'} — click to ${modProp.open ? 'fold the editor away' : 'edit it'}`}
+            onClick={() => modProp.onOpenChange(!modProp.open)}
+          >
+            {modProp.patch.reading}
+            <span className={styles.modCaret}>{modProp.open ? '▴' : '▾'}</span>
+          </button>
+        </>
       )}
       {favorite?.on !== true ? null : (
         <span
@@ -672,7 +689,7 @@ export function Slider(props: {
       <RowMenu
         label={props.label}
         favorite={favorite}
-        mod={props.mod}
+        mod={modProp}
         midi={midi}
         sync={sync}
       />

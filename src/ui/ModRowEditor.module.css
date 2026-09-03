@@ -12,20 +12,31 @@
   border-left: 2px solid var(--rail);
 }
 
-/* The editor's two verbs, on one line: hold still, and remove. */
+/* The editor's verbs, on one line: hold still, lock to the beat, and remove.
+   Bordered, so each reads as a button before it is pointed at. */
 .actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
-  gap: 12px;
-  margin-top: 2px;
+  gap: 6px;
+  margin-top: 4px;
 }
 .action {
   composes: bare from './ui.module.css';
   font-size: var(--fs-sm);
   color: var(--fg3);
+  border: 1px solid var(--border-quiet);
+  border-radius: 3px;
+  padding: 1px 6px;
 }
 .action:hover {
   color: var(--fg);
+  border-color: var(--border-hover);
+}
+/* a lock that is thrown: the amber a clock lock wears on a control row */
+.actionOn {
+  color: var(--edit);
+  border-color: color-mix(in srgb, var(--edit) 45%, transparent);
 }
 /* the destructive one of the pair, and the only one that reads red on hover */
 .remove:hover {

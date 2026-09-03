@@ -50,8 +50,8 @@ export function ControlSlider(props: {
 }) {
   const api = useControlsApi()
   const mod = useModSlotsApi()
-  const [modOpen, setModOpen] = useState(false)
   const s = props.slider
+  const modOpen = mod.editing.has(s.key)
   const need = NEEDS[s.key]
   // Two subscriptions, and the row re-renders when either number moves and at
   // no other time. The gate falls back to this row's own key so the hook count
@@ -124,22 +124,21 @@ export function ControlSlider(props: {
               onToggleOn: () => {
                 if (slot !== null) mod.setSlotOn(s.key, !slot.on)
               },
-              onToggle: () => {
+              onOpenChange: open => {
                 // Claim on open, so the first press already moves the picture
                 // rather than handing over an editor with nothing patched into
                 // it. Handing the slot back is the remove button, one click
                 // away — a claim you can see and undo beats a form to fill in.
-                if (slot === null) mod.setSlotForKey(s.key, DEFAULT_ROUTING)
-                setModOpen(!modOpen)
+                if (open && slot === null) {
+                  mod.setSlotForKey(s.key, DEFAULT_ROUTING)
+                }
+                mod.setEditing(s.key, open)
               },
+              onRemove: () => mod.setSlotForKey(s.key, null),
             }
           : undefined
       }
-      modEditor={
-        modOpen ? (
-          <ModRowEditor controlKey={s.key} onDone={() => setModOpen(false)} />
-        ) : undefined
-      }
+      modEditor={modOpen ? <ModRowEditor controlKey={s.key} /> : undefined}
     />
   )
 }

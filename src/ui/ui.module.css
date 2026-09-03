@@ -218,10 +218,6 @@
 .danger {
   border-color: #a05050;
 }
-.slotEmpty {
-  color: var(--fg4);
-  border-color: var(--border-faint);
-}
 
 /* Preset buttons double as weight sliders: drag one sideways to dial the preset
    in partially, and the fill shows how much of it is in the mix. The fill can't

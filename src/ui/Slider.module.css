@@ -402,6 +402,54 @@ button.badge {
   background: color-mix(in srgb, var(--fg4) 26%, transparent);
   border-color: var(--fg3);
 }
+/* The way in on a row nothing drives yet: a bordered button that says what it
+   adds, at the panel's quiet weight so 121 of them do not shout, lighting to
+   the routing colour under the pointer so the press promises what it delivers. */
+.modAdd {
+  color: var(--fg3);
+  border: 1px solid var(--border-quiet);
+  border-radius: 3px;
+  padding: 0 4px;
+  white-space: nowrap;
+}
+.modAdd:hover {
+  color: var(--mod);
+  border-color: color-mix(in srgb, var(--mod) 45%, transparent);
+  background: color-mix(in srgb, var(--mod) 12%, transparent);
+}
+/* The routing's transport, beside the chip that names it. Bordered like the
+   chip so the two read as a pair of buttons, and the glyph is the state: ❚❚
+   while it runs, ▶ while it is held. */
+.modRun {
+  color: var(--mod);
+  border: 1px solid color-mix(in srgb, var(--mod) 40%, transparent);
+  border-radius: 3px;
+  padding: 0 3px;
+  margin-left: 6px;
+  font-size: 8px;
+  line-height: 14px;
+}
+.modRun:hover {
+  background: color-mix(in srgb, var(--mod) 30%, transparent);
+  border-color: var(--mod);
+}
+.modRunOff {
+  color: var(--fg3);
+  border-color: color-mix(in srgb, var(--fg4) 35%, transparent);
+}
+.modRunOff:hover {
+  color: var(--mod);
+}
+/* The chip and its transport sit flush, one gap in from the reading. */
+.modChip {
+  margin-left: 2px;
+  padding-left: 6px;
+}
+.modCaret {
+  padding-left: 3px;
+  font-size: 8px;
+  opacity: 0.8;
+}
 .iconMidiSet {
   color: var(--midi);
 }
@@ -464,9 +512,16 @@ button.badge {
      the last letter. It keeps a symmetric box and buys the same target with
      height and a margin instead. */
   .iconModSet,
-  .iconModOff {
+  .iconModOff,
+  .modAdd {
     margin-left: 6px;
     padding: 4px 6px;
+  }
+  .modRun {
+    padding: 4px 6px;
+  }
+  .modChip {
+    margin-left: 2px;
   }
   /* the reading doubles as the reset, so it needs a fingertip's height — and
      no side padding, which would push the column off the row's right edge */

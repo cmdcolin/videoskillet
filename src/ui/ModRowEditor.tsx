@@ -6,12 +6,14 @@ import { SYNC_DIVISIONS } from './midi'
 import styles from './ModRowEditor.module.css'
 import {
   bayDef,
+  bayKeyFor,
   isBayKey,
   targetLabel,
   EMPTY_SLOT,
   MOD_SOURCES,
   RATE_MAX,
   RATE_MIN,
+  modPatch,
   slotRate,
 } from './modSlots'
 import { useModSlotsApi } from './ModSlotsContext'
@@ -19,7 +21,8 @@ import { SelectRow } from './SelectRow'
 import { Slider } from './Slider'
 import ui from './ui.module.css'
 
-import type { ControlKey, ModTarget } from '../core/controls'
+import type { BayField, ControlKey, ModTarget } from '../core/controls'
+import type { UiSlot } from './modSlots'
 
 // Whether the wobble is running into the end of the control's own range.
 //
@@ -58,33 +61,105 @@ function ClippedNote(props: {
   )
 }
 
-// What is driving one control, edited under its own row. An inline expansion
-// rather than a popover: it has no positioning to get wrong, it works in the
-// popout's own document, and it fits the ~300px column the wide bench gives a
-// panel. The `needs` note under a gated row is the same shape, so the panel
-// already reads this way.
+// What a wire onto another wire patches in when it is first claimed, and it is
+// deliberately not what a control row claims. This one is not moving the
+// picture — it is deciding how much the routing under it moves — so it wants a
+// slow aimless drift rather than a legible cycle: at 0.08 Hz a walk takes about
+// twelve seconds to change its mind, which is the rate at which a fault reads
+// as coming and going rather than as stuttering.
+const DRIVER_ROUTING = {
+  source: 'walk' as const,
+  rateHz: 0.08,
+  depth: 0.5,
+}
+
+// One of a routing's own two knobs, wired so a second routing can be clipped
+// onto it (modSlots.ts › BAY_TARGETS).
+//
+// The same row a control gets, with the same `+ mod` button and the same
+// editor — which is the whole argument for the bay's knobs living in the
+// control key space. A wire onto a wire is not a second kind of patch to
+// learn: it is claimed where it lands, exactly like every other one, and the
+// routing that results appears as its own numbered slot in the bay.
+function KnobRow(props: { i: number; slot: UiSlot; field: BayField }) {
+  const mod = useModSlotsApi()
+  const key = bayKeyFor(props.i, props.field)
+  const driver = mod.modFor(key)
+  const open = mod.editing.has(key)
+  const s = props.slot
+  const rate = props.field === 'rate'
+  return (
+    <Slider
+      label={rate ? 'rate' : 'depth (of slider range)'}
+      unit={rate ? 'Hz' : ''}
+      min={rate ? RATE_MIN : 0}
+      max={rate ? RATE_MAX : 1}
+      step={rate ? 0.02 : 0.01}
+      // Tempo's business while ♩ is set; the dialed Hz stays put underneath and
+      // comes back when the lock cycles off.
+      value={rate ? slotRate(s, mod.bpm) : s.depth}
+      defaultValue={rate ? EMPTY_SLOT.rateHz : EMPTY_SLOT.depth}
+      help={
+        rate
+          ? 'How fast this wobble cycles, in Hz. Slow rates drift the control the way a warming-up circuit does; fast ones buzz it per frame. The ♩ button below locks it to the tempo instead. Press + mod on this row and a second routing walks the rate itself — an oscillator that speeds up and slows down instead of keeping time.'
+          : 'How far the wobble swings the control, as a fraction of its own slider range. The slider itself stays put — it is the centre the motion happens around, which is why a preset or a link still holds the look. The rule under the control’s own track is this number. Press + mod on this row and a second routing brings the wobble in and out on its own: leave this at 0 and it comes in from nothing, which is the difference between a fault that is running and one that keeps happening.'
+      }
+      sync={
+        rate
+          ? {
+              label:
+                s.syncDiv === undefined
+                  ? null
+                  : SYNC_DIVISIONS[s.syncDiv].label,
+              live: mod.bpm !== null,
+              onCycle: () => mod.cycleSlotSync(props.i),
+            }
+          : undefined
+      }
+      mod={{
+        patch: driver === null ? null : modPatch(driver, mod.bpm, mod.master),
+        on: driver?.on === true,
+        open,
+        onToggleOn: () => {
+          if (driver !== null) mod.setSlotOn(key, !driver.on)
+        },
+        onOpenChange: next => {
+          if (next && driver === null) mod.setSlotForKey(key, DRIVER_ROUTING)
+          mod.setEditing(key, next)
+        },
+        onRemove: () => mod.setSlotForKey(key, null),
+      }}
+      modEditor={open ? <ModRowEditor controlKey={key} /> : undefined}
+      onChange={v => mod.setSlot(props.i, rate ? { rateHz: v } : { depth: v })}
+    />
+  )
+}
+
+// One routing, edited where it is read: under the control row it drives, and
+// under its slot head in the bay. The same rows in both places, so learning
+// one is learning the other — the bay used to draw its own set, and a reader
+// who found one had no way to know the other existed.
+//
+// An inline expansion rather than a popover: it has no positioning to get
+// wrong, it works in the popout's own document, and it fits the ~300px column
+// the wide bench gives a panel.
 export function ModRowEditor(props: {
   // A control's key, or one of the bay's own knobs — a wire clipped onto
   // another wire (modSlots.ts › BAY_TARGETS). The editor is the same either
-  // way, which is the point of the bay knobs being in the same key space: what
-  // drives a routing is set up where what drives a control is.
+  // way, which is the point of the bay knobs being in the same key space.
   controlKey: ModTarget
-  // Folds the editor away once there is nothing left to edit — the row owns
-  // that flag, and remove is the one action here that ends the editor's subject.
-  onDone: () => void
 }) {
-  const { slots, bpm, modFor, setSlotForKey, setSlotOn, cycleSyncForKey } =
-    useModSlotsApi()
+  const mod = useModSlotsApi()
   const key = props.controlKey
-  const slot = modFor(key)
+  const i = mod.slots.findIndex(s => s.target === key)
   const def = isBayKey(key) ? bayDef(key) : sliderFor(key)
 
-  if (slot === null) {
+  if (i === -1) {
     // Nothing drives this control and the bay has room, so the claim was never
-    // made or has since been handed back — e.g. the Modulation section switched
-    // this slot off from the other side. There is nothing to say and nothing to
-    // edit; the busy note below would be a flat lie about a bay with free slots.
-    if (slots.some(s => s.target === '')) {
+    // made or has since been handed back — e.g. the bay switched this slot off
+    // from the other side. There is nothing to say and nothing to edit; the
+    // busy note below would be a flat lie about a bay with free slots.
+    if (mod.slots.some(s => s.target === '')) {
       return null
     }
     // Every slot busy, and none of them this control's. Naming the holders
@@ -93,9 +168,9 @@ export function ModRowEditor(props: {
     return (
       <div className={styles.editor}>
         <div className={ui.hint}>
-          all {slots.length} modulation slots are busy — free one in the
-          MODULATION box on the map, or hand one back from{' '}
-          {slots
+          all {mod.slots.length} modulation slots are busy — remove one in the
+          MODULATION box on the map, or from{' '}
+          {mod.slots
             .flatMap(s => (s.target === '' ? [] : [targetLabel(s.target)]))
             .join(', ')}
           .
@@ -104,77 +179,61 @@ export function ModRowEditor(props: {
     )
   }
 
+  const slot = mod.slots[i]
   const swing = slot.depth * (def.max - def.min)
+  const timed = !PASS_THROUGH.has(slot.source)
 
   return (
     <div className={styles.editor}>
       <SelectRow
         tag="∿"
-        title="what drives this control"
+        title="modulation source"
         value={slot.source}
         options={MOD_SOURCES}
-        onChange={source => setSlotForKey(key, { ...slot, source })}
+        onChange={source => mod.setSlot(i, { source })}
       />
-      {PASS_THROUGH.has(slot.source) ? null : (
-        <Slider
-          label="rate"
-          unit="Hz"
-          min={RATE_MIN}
-          max={RATE_MAX}
-          step={0.02}
-          // What it is running at, which is the tempo's business while the ♩ is
-          // set. The dialed Hz underneath is untouched and comes back when the
-          // lock does off — same as a clock-locked control row.
-          value={slotRate(slot, bpm)}
-          defaultValue={EMPTY_SLOT.rateHz}
-          help="How fast this wobble cycles, in Hz. Slow rates drift the control the way a warming-up circuit does; fast ones buzz it per frame. Lock it to the beat with ♩ in the ⋮ menu."
-          sync={{
-            label:
-              slot.syncDiv === undefined
-                ? null
-                : SYNC_DIVISIONS[slot.syncDiv].label,
-            live: bpm !== null,
-            onCycle: () => cycleSyncForKey(key),
-          }}
-          onChange={rateHz => setSlotForKey(key, { ...slot, rateHz })}
-        />
-      )}
-      {/* Where the beat is coming from, said once, at the only place a lock can
-          be thrown from without the tempo being on screen: the ♩ in this editor
-          is a stage away from the modulation bay that holds the number it reads,
-          so a rate locked from here would otherwise show a division and a Hz
-          with nothing to say what put them together. */}
-      {slot.syncDiv === undefined ? null : (
-        <div className={ui.hint}>
-          ♩{SYNC_DIVISIONS[slot.syncDiv].label} of{' '}
-          {bpm === null ? 'a tempo not set yet' : `${bpm.toFixed(1)} BPM`} — the
-          tempo is at the top of the MODULATION box on the map.
-        </div>
-      )}
-      <Slider
-        label="depth"
-        unit=""
-        min={0}
-        max={1}
-        step={0.01}
-        value={slot.depth}
-        defaultValue={EMPTY_SLOT.depth}
-        help="How far the wobble swings this control, as a fraction of its own slider range. The slider itself stays put — it is the centre the motion happens around, which is why a preset or a link still holds the look. The rule under the control’s own track is this number: the stretch of travel the wobble is covering, clamped where it runs into an end."
-        onChange={depth => setSlotForKey(key, { ...slot, depth })}
-      />
-      {isBayKey(key) || PASS_THROUGH.has(slot.source) || swing === 0 ? null : (
+      {timed ? <KnobRow i={i} slot={slot} field="rate" /> : null}
+      {/* The only control in the bay you play rather than set. It has to be
+          next to the rate, because the rate is this envelope's decay and the
+          two are read together — press, watch it fall, adjust, press again.
+
+          Gone while the slot is parked, because ❚❚ means it: a parked
+          routing is not on the engine's list, so the strike would land on
+          nothing. */}
+      {slot.source === 'trig' && slot.on ? (
+        <button
+          className={ui.btn}
+          title={`strike slot ${i + 1}'s envelope — or press t to strike every one`}
+          onClick={() => mod.fire(i)}
+        >
+          ⚡ fire
+        </button>
+      ) : null}
+      <KnobRow i={i} slot={slot} field="depth" />
+      {isBayKey(key) || !timed || swing === 0 ? null : (
         <ClippedNote
           controlKey={key}
           swing={swing}
           bipolar={!UNIPOLAR.has(slot.source)}
         />
       )}
-      {/* The two kinds of off, side by side, which is the only place they are
-          legible as a pair: hold it still and it comes back exactly as it is set
-          here, remove it and the slot goes back to the bay. The `mod` badge on
-          the row above is the same switch — this one is here because a reader who
-          opened the editor to turn the wobble off should find it where they
-          looked. */}
+      {/* Where the beat is coming from, said once, at the only place a lock can
+          be thrown from without the tempo being on screen: the tempo lives at
+          the top of the MODULATION box, a stage away from most of these rows. */}
+      {slot.syncDiv === undefined ? null : (
+        <div className={ui.hint}>
+          ♩{SYNC_DIVISIONS[slot.syncDiv].label} of{' '}
+          {mod.bpm === null
+            ? 'a tempo not set yet'
+            : `${mod.bpm.toFixed(1)} BPM`}{' '}
+          — the tempo is at the top of the MODULATION box on the map.
+        </div>
+      )}
+      {/* The routing's verbs, on one line and all of them words: hold it still
+          and it comes back exactly as it is set here, lock its rate to the beat,
+          remove it and the slot goes back to the bay. Hold is the same switch as
+          the ❚❚ on the row above — here as well, because a reader who opened the
+          editor to stop the wobble should find the stop where they looked. */}
       <div className={styles.actions}>
         <button
           className={styles.action}
@@ -183,19 +242,34 @@ export function ModRowEditor(props: {
               ? `hold ${def.label} still, keeping this patch`
               : `start ${def.label} wobbling again`
           }
-          onClick={() => setSlotOn(key, !slot.on)}
+          onClick={() => mod.setSlotOn(key, !slot.on)}
         >
           {slot.on ? '❚❚ hold still' : '▶ start again'}
         </button>
+        {!timed ? null : (
+          <button
+            className={cx(
+              styles.action,
+              slot.syncDiv !== undefined && styles.actionOn,
+            )}
+            title={
+              slot.syncDiv === undefined
+                ? 'lock the rate to the tempo — each press steps through 1/1, 1/2, 1/4, 1/8, 1/16 and back to free-running'
+                : `locked to ♩${SYNC_DIVISIONS[slot.syncDiv].label} — press for the next division, or on past 1/16 to run free again`
+            }
+            onClick={() => mod.cycleSlotSync(i)}
+          >
+            {slot.syncDiv === undefined
+              ? '♩ lock to beat'
+              : `♩ ${SYNC_DIVISIONS[slot.syncDiv].label} of the beat`}
+          </button>
+        )}
         <button
           className={cx(styles.action, styles.remove)}
           title={`stop modulating ${def.label} and hand the slot back`}
-          onClick={() => {
-            setSlotForKey(key, null)
-            props.onDone()
-          }}
+          onClick={() => mod.setSlotForKey(key, null)}
         >
-          remove
+          × remove
         </button>
       </div>
     </div>

@@ -1,40 +1,28 @@
-import { useState } from 'react'
-
-import { PASS_THROUGH } from '../core/signal/modstate'
 import { cx } from './cx'
 import { SYNC_DIVISIONS } from './midi'
 import styles from './ModBay.module.css'
 import { ModRowEditor } from './ModRowEditor'
 import {
-  bayKeyFor,
   isBayKey,
   targetLabel,
   DEFAULT_DUTY,
   DEFAULT_STAB,
   DUTY_MAX,
   DUTY_MIN,
-  MOD_SOURCES,
-  RATE_MAX,
-  RATE_MIN,
-  EMPTY_SLOT,
   STAB_HZ_MAX,
   STAB_MS_MAX,
   STAB_MS_MIN,
   gateFlips,
-  modPatch,
-  slotRate,
   sourceLabel,
 } from './modSlots'
 import { useModSlotsApi } from './ModSlotsContext'
 import { groupOf, stageOf } from './placement'
-import { SelectRow } from './SelectRow'
 import { Slider } from './Slider'
 import { TempoRow } from './TempoRow'
 import ui from './ui.module.css'
 import { arrowhead, route } from './wire'
 
-import type { BayField, ModTarget } from '../core/controls'
-import type { UiSlot } from './modSlots'
+import type { ModTarget } from '../core/controls'
 import type { Tempo } from './useTempo'
 import type { Point } from './wire'
 
@@ -245,6 +233,9 @@ function SlotHead(props: {
   // the table. Same guard as LookSection's captions.
   openStages: ReadonlySet<string>
   onOpenGroup: (stage: string, group: string) => void
+  // Unfold the editor under the row this slot drives, so the jump lands on
+  // the routing and not just on the module it is somewhere inside.
+  onEditRow: () => void
   onRemove: () => void
 }) {
   // A wire onto another wire names a knob in this same bay, so there is no
@@ -280,8 +271,11 @@ function SlotHead(props: {
             styles.destChip,
             !props.live && styles.chipOff,
           )}
-          title={`open ${group.name} in the ${stage} stage — the row this slot is driving`}
-          onClick={() => props.onOpenGroup(stage, group.name)}
+          title={`open ${group.name} in the ${stage} stage, with this routing's editor unfolded under ${name}`}
+          onClick={() => {
+            props.onOpenGroup(stage, group.name)
+            props.onEditRow()
+          }}
         >
           {label}
         </button>
@@ -309,97 +303,6 @@ function SlotHead(props: {
   )
 }
 
-// One of a routing's own two knobs, wired so a second routing can be clipped
-// onto it (modSlots.ts › BAY_TARGETS).
-//
-// The same row a control gets, with the same ⋮ and badge and the same editor —
-// which is the whole argument for the bay's knobs living in the control key
-// space. A wire onto a wire is not a second kind of patch to learn: it is
-// claimed where it lands, exactly like every other one, and the routing that
-// results appears as its own numbered slot in this list with rows of its own.
-//
-// Both ends read the same way. This row wears `mod` because something is driving
-// it; the driver's own head, a few lines up or down, says `driving slot 3
-// depth`.
-function BayKnob(props: { i: number; slot: UiSlot; field: BayField }) {
-  const {
-    bpm,
-    master,
-    setSlot,
-    cycleSlotSync,
-    modFor,
-    setSlotForKey,
-    setSlotOn,
-  } = useModSlotsApi()
-  const [modOpen, setModOpen] = useState(false)
-  const key = bayKeyFor(props.i, props.field)
-  const driver = modFor(key)
-  const s = props.slot
-  const rate = props.field === 'rate'
-  return (
-    <Slider
-      label={rate ? 'rate' : 'depth (of slider range)'}
-      unit={rate ? 'Hz' : ''}
-      min={rate ? RATE_MIN : 0}
-      max={rate ? RATE_MAX : 1}
-      step={rate ? 0.02 : 0.01}
-      // Tempo's business while ♩ is set; the dialed Hz stays put underneath and
-      // comes back when the lock cycles off.
-      value={rate ? slotRate(s, bpm) : s.depth}
-      defaultValue={rate ? EMPTY_SLOT.rateHz : EMPTY_SLOT.depth}
-      help={
-        rate
-          ? "How fast this slot's LFO cycles, in Hz. Slow rates drift the target control the way a warming-up circuit does; fast ones buzz it per-frame. Lock it to the beat with ♩ in the ⋮ menu, or clip another slot onto it with ∿ from that same menu — a rate being walked by a second LFO is an oscillator that speeds up and slows down instead of keeping time."
-          : 'How far the modulation swings the target, as a fraction of that control’s own slider range. The resting slider position stays the centre, so presets and saved looks still hold the look. Clip another slot onto this with ∿ in the ⋮ menu and the wobble comes and goes on its own: leave this at 0 and the second one brings it in from nothing, which is the difference between a fault that is running and one that keeps happening.'
-      }
-      sync={
-        rate
-          ? {
-              label:
-                s.syncDiv === undefined
-                  ? null
-                  : SYNC_DIVISIONS[s.syncDiv].label,
-              live: bpm !== null,
-              onCycle: () => cycleSlotSync(props.i),
-            }
-          : undefined
-      }
-      mod={{
-        patch: driver === null ? null : modPatch(driver, bpm, master),
-        on: driver?.on === true,
-        open: modOpen,
-        onToggleOn: () => {
-          if (driver !== null) setSlotOn(key, !driver.on)
-        },
-        onToggle: () => {
-          // Claim on open, the same as a control row: the first press moves
-          // something rather than handing over an empty form.
-          if (driver === null) setSlotForKey(key, DRIVER_ROUTING)
-          setModOpen(!modOpen)
-        },
-      }}
-      modEditor={
-        modOpen ? (
-          <ModRowEditor controlKey={key} onDone={() => setModOpen(false)} />
-        ) : undefined
-      }
-      onChange={v => setSlot(props.i, rate ? { rateHz: v } : { depth: v })}
-    />
-  )
-}
-
-// What a wire onto another wire patches in when it is first claimed, and it is
-// deliberately not what a control row claims. This one is not moving the
-// picture — it is deciding how much the routing under it moves — so it wants a
-// slow aimless drift rather than a legible cycle: at 0.08 Hz a walk takes about
-// twelve seconds to change its mind, which is the rate at which a fault reads
-// as coming and going rather than as stuttering.
-const DRIVER_ROUTING = {
-  source: 'walk' as const,
-  rateHz: 0.08,
-  depth: 0.5,
-}
-
 // The whole bay, one entry per patched slot. State, persistence and the push to
 // the render loop all moved to useModSlots when motion stopped being this
 // section's private business — presets carry it, links carry it, and any control
@@ -424,8 +327,10 @@ export function ModBay(props: {
   tempo: Tempo
   openStages: ReadonlySet<string>
   onOpenGroup: (stage: string, group: string) => void
+  // Patch one routing from nothing, for a bay with nothing in it yet.
+  onStart: () => void
 }) {
-  const { slots, setSlot, setSlotForKey, fire } = useModSlotsApi()
+  const { slots, setSlotForKey, setEditing, fire } = useModSlotsApi()
   // Slot number and slot in one, because the number is the slot's identity —
   // the engine's phase is keyed by position, so filtering the empties out must
   // not renumber the ones that are left.
@@ -470,6 +375,9 @@ export function ModBay(props: {
         </button>
       ) : null}
       <StabRows />
+      {/* Every patched slot: its head, and under it the same editor the
+          control row unfolds — one set of rows to learn, wherever a routing
+          is found. */}
       {patchedSlots.map(({ slot: s, target, n, i }) => (
         // Slots are positional identities (slot 1..8), so the index IS the key.
         // oxlint-disable-next-line react/no-array-index-key
@@ -481,6 +389,7 @@ export function ModBay(props: {
             live={s.on}
             openStages={props.openStages}
             onOpenGroup={props.onOpenGroup}
+            onEditRow={() => setEditing(target, true)}
             // The same call the row's own "remove" makes, rather than a second
             // way to blank a slot: it hands the slot back with its run switch
             // restored, which matters because the switch belongs to a routing —
@@ -489,50 +398,7 @@ export function ModBay(props: {
             // isn't moving.
             onRemove={() => setSlotForKey(target, null)}
           />
-          <SelectRow
-            tag="∿"
-            title="modulation source"
-            value={s.source}
-            options={MOD_SOURCES}
-            onChange={source => setSlot(i, { source })}
-          />
-          {PASS_THROUGH.has(s.source) ? null : (
-            <BayKnob i={i} slot={s} field="rate" />
-          )}
-          {/* The only control in the bay you play rather than set. It has to be
-              next to the rate, because the rate is this envelope's decay and the
-              two are read together — press, watch it fall, adjust, press again.
-
-              Gone while the slot is parked, because ❚❚ means it: a parked
-              routing is not on the engine's list, so the strike would land on
-              nothing. The button going with the switch says that, where a live
-              button that quietly does nothing would read as the envelope being
-              broken. */}
-          {s.source === 'trig' && s.on ? (
-            <button
-              className={ui.btn}
-              title={`strike slot ${n}'s envelope`}
-              onClick={() => fire(i)}
-            >
-              ⚡ fire
-            </button>
-          ) : null}
-          <BayKnob i={i} slot={s} field="depth" />
-          {/* Per slot, because the master amount above is all of them at once
-              and "off, except that one" is the shape a set actually wants.
-              Everything the slot is patched with survives it — the same switch
-              the control row's own badge throws. */}
-          <button
-            className={cx(ui.btn, !s.on && ui.slotEmpty)}
-            title={
-              s.on
-                ? `hold slot ${n} still, keeping what it is patched with`
-                : `start slot ${n} again, as it is set`
-            }
-            onClick={() => setSlot(i, { on: !s.on })}
-          >
-            {s.on ? '❚❚ hold still' : '▶ start again'}
-          </button>
+          <ModRowEditor controlKey={target} />
         </div>
       ))}
       {/* What is left of the eight empty rows: the count, and the one gesture
@@ -542,8 +408,22 @@ export function ModBay(props: {
       <div className={ui.hint}>
         {free === 0
           ? `all ${slots.length} slots are patched — hand one back with its × to free it.`
-          : `${free} of ${slots.length} slots free — open any control row’s ⋮ and press ∿ to patch one.`}
+          : `${free} of ${slots.length} slots free — press + mod on any control row to patch one.`}
       </div>
+      {/* An empty bay's one press: rather than a paragraph telling a reader
+          where the buttons are, a button. It patches one slow routing onto a
+          control the look is using, and that routing arrives here as a slot
+          with its editor open under its row, which teaches the shape of the
+          thing better than any sentence about it. */}
+      {patchedSlots.length > 0 ? null : (
+        <button
+          className={ui.btn}
+          title="patch one slow wobble onto a control this look is using — the same as “random motion, gentle” in the palette"
+          onClick={() => props.onStart()}
+        >
+          ∿ start something moving
+        </button>
+      )}
     </>
   )
 }
