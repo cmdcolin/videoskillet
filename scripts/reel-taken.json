@@ -1,0 +1,14 @@
+{
+  "control": {
+    "version": "0.37.1",
+    "sha": "7603ce7"
+  },
+  "window": {
+    "version": "0.37.1",
+    "sha": "7603ce7"
+  },
+  "signal-path": {
+    "version": "0.37.1",
+    "sha": "7603ce7"
+  }
+}

@@ -1,13 +1,18 @@
-// The demo list, rendered into the two places that show it.
+// The demo list and the reel, rendered into the places that show them.
 //
-// `demos.json` is the source; this writes the README's "Cool demos" bullets,
-// the landing page's hero clip, its carousel and its gallery. Nobody edits
-// those four blocks — a demo is added by adding it to `demos.json`, recording
-// it with `demoreel.mjs`, and running this.
+// `demos.json` is the source of the looks; this writes the README's "Cool
+// demos" bullets, the landing page's hero clip and its gallery. `reel.mjs` is
+// the source of the carousel — recordings of the app's own window — and this
+// writes the stage, the tabs' slides and the captions under them. Nobody edits
+// those four blocks: a demo is added by adding it to `demos.json`, recording it
+// with `demoreel.mjs`, and running this; a carousel slide by adding it to
+// `reel.mjs`, recording it with `appreel.mjs`, and running this.
 //
 // Run: pnpm demos, or `--check` to fail when a checked-in copy is stale, which
-// is what `pnpm build` runs. See `demos.mjs` for what a demo is.
-import { demos, hero, showcase } from './demos.mjs'
+// is what `pnpm build` runs. See `demos.mjs` for what a demo is, and `reel.mjs`
+// for what a slide is.
+import { demos, hero } from './demos.mjs'
+import { FRAME, slides } from './reel.mjs'
 
 import { execFileSync } from 'node:child_process'
 import { readFileSync, rmSync, writeFileSync } from 'node:fs'
@@ -77,24 +82,33 @@ const heroBlock = `<video
   tabindex="-1"
 ></video>`
 
-// The carousel's slides. The app's own window is a slide too, written into the
-// page under this block by hand — it is not a demo and has no entry to be
-// generated from — and the tabs are built from whatever slides the stage ends
-// up holding, so the two kinds need nothing said about each other here.
+// The carousel: the stage, the bar under it and the captions under that, all
+// three from the same list. The tabs are the one part not written here — the
+// page builds them from whatever slides the stage ends up holding, so a slide
+// arrives with its own way in.
+//
+// `alt` is real prose rather than the gallery's `alt=""`, because these stills
+// are not decoration standing in for a clip of the same thing: they are the
+// only account of what the window looks like that reaches a reader who cannot
+// see it, or who asked for no motion.
+//
+// `data-secs` is how long the slide's own recording runs, summed off its
+// timeline rather than measured off the file — the page advances on it, and a
+// stage on a fixed clock cuts a drag off halfway.
 const slide = (
-  demo,
+  s,
   first,
-) => `<figure class="slide${first ? ' on' : ''}" data-name="${demo.name}">
+) => `<figure class="slide${first ? ' on' : ''}" data-name="${s.name}" data-secs="${s.secs}">
   <img
     class="still"
-    src="${demo.poster}"
-    alt=""
-    width="640"
-    height="512"
-    decoding="async"
+    src="${s.poster}"
+    alt="${s.alt.replaceAll('"', '&quot;')}"
+    width="${FRAME.width}"
+    height="${FRAME.height}"
+    ${first ? 'decoding="async"' : 'loading="lazy" decoding="async"'}
   />
   <video
-    data-src="${demo.clip}"
+    data-src="${s.clip}"
     muted
     loop
     playsinline
@@ -103,11 +117,22 @@ const slide = (
   ></video>
 </figure>`
 
-const showcaseBlock = showcase.map((demo, i) => slide(demo, i === 0)).join('\n')
+const carouselBlock = `<div class="stage">
+${slides.map((s, i) => slide(s, i === 0)).join('\n')}
+</div>
+<div class="slideBar">
+  <div class="slideTabs" role="group" aria-label="what the stage shows"></div>
+  <button class="chip slideToggle" type="button">Play</button>
+</div>
+<div class="slideNotes">
+${slides
+  .map((s, i) => `<p class="slideNote${i === 0 ? ' on' : ''}">${s.caption}</p>`)
+  .join('\n')}
+</div>`
 
 const landing = [
   ['hero', heroBlock],
-  ['showcase', showcaseBlock],
+  ['carousel', carouselBlock],
   ['gallery', demos.map(card).join('\n')],
 ].reduce(
   (text, [name, body]) => fillBlock(LANDING, text, name, body),
@@ -166,5 +191,5 @@ if (process.argv.includes('--check')) {
   for (const page of pages) {
     writeFileSync(page.path, page.text)
   }
-  console.log(`${demos.length} demos, ${showcase.length} in the carousel`)
+  console.log(`${demos.length} demos, ${slides.length} slides in the carousel`)
 }

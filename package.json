@@ -53,6 +53,8 @@
     "demos": "node scripts/demogen.mjs",
     "demos:check": "node scripts/demogen.mjs --check",
     "demoreel": "node scripts/demoreel.mjs",
+    "reel": "node scripts/appreel.mjs",
+    "reel:check": "node scripts/appreel.mjs --check",
     "guide:check": "node scripts/build-guide.mjs && node scripts/guidecheck.mjs",
     "firebase-deploy": "firebase deploy --only firestore:rules",
     "test:rules": "firebase emulators:exec --only firestore --project ntscjs-rules-test \"vitest run firestoreRules\"",

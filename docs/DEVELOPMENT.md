@@ -1064,6 +1064,76 @@ spec.
 
 Needs Firefox Nightly, ImageMagick, ffmpeg (clips) and pngquant (optional).
 
+## The landing page
+
+Nothing on `index.html` between its generated markers is written by hand:
+
+```
+pnpm demos                       # rewrite the generated blocks
+pnpm demos:check                 # fail if a checked-in copy is stale (pnpm build runs this)
+```
+
+Two lists feed it. [`../demos.json`](../demos.json) is the looks — the README's
+"Cool demos" bullets, the hero's clip and the gallery of cards, each opening the
+exact board its clip is a recording of. [`../scripts/reel.mjs`](../scripts/reel.mjs)
+is the carousel under the hero, which is a different thing: recordings of the
+**app's own window**, with the panel, the map and a pointer moving over them.
+
+That split is the point of the page. The picture is what the program makes, and
+the gallery and the hero are full of it; the window is what the program *is*,
+and until the carousel held it the one thing a stranger could not work out from
+the page was what using this looks like.
+
+```
+pnpm demoreel                    # the gallery's clips (the canvas alone)
+pnpm reel                        # the carousel's clips (the whole window)
+pnpm reel one-control            # just this slide
+pnpm reel:check                  # which slides show an older app
+```
+
+Both want the dev server, Firefox Nightly, ffmpeg and cwebp, and both are slow
+enough to run per-slide while you are working on one.
+
+**They capture by different routes, and the reason matters if you write another
+one.** `demoreel.mjs` records the canvas through `captureStream`, which samples
+on paint — so its window has to be the only one on screen, because an occluded
+one paints at about 1Hz (see the traps above). Nothing can stream a whole
+window: `getDisplayMedia` wants a permission nobody is there to answer, and
+nothing inside the page can see the panel beside the canvas. So `appreel.mjs`
+takes a **screenshot per output frame** after stepping the engine a fixed number
+of frames, and gets a clip of exactly 24 frames a second whatever the box was
+doing — deterministic, and indifferent to whether the window is in front. JPEG
+intermediates, at 96ms a frame against PNG's 314ms.
+
+A slide is a look, the panel state to open, and a timeline of beats — hold,
+scroll, move the pointer, press, drag a slider. Three things about writing one:
+
+- **The pointer is drawn into the page, and the clicks under it are real.** A
+  screenshot never contains the OS cursor, so a clip of a hand dragging a
+  slider would otherwise show a slider moving itself.
+- **A timeline has to end where it began**, because these loop. A stage left
+  open or a pointer left mid-frame reads as a cut, which is why the signal-path
+  slide presses its last box twice and the control slide scrolls back to the
+  masthead.
+- **The sidebar scrolls as one column**, so a control row below the fold is
+  reached with a `scrollTo` beat rather than by `scrollIntoView` — whose jump
+  between two stepped frames is the one cut a recording cannot hide. Reaching
+  the decoder takes the masthead off the top of the frame; that is the app, not
+  the harness.
+
+Staleness works the way the docshots' does and for the same reason: these
+recordings carry the app's own masthead with the version printed in it, so a
+clip from two releases ago is visibly a clip of a different program and only a
+rerun can notice. Each run stamps the version and commit into
+`scripts/reel-taken.json`, and `pnpm reel:check` reads it back without a browser
+or a server.
+
+Element resolution, seeding and the actions are shared with the documentation
+screenshots ([`../scripts/drive.mjs`](../scripts/drive.mjs)): both harnesses
+open the same stages, drag the same sliders and have to know that a range input
+React owns cannot be written to directly, and neither of them is the place to
+keep that.
+
 ## Docs site
 
 `pnpm guide` (also run by `pnpm build`) renders the reader-facing markdown into

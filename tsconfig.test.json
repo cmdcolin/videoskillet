@@ -17,11 +17,12 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "types": ["@webgpu/types", "vite/client", "node"],
-    // `scripts/demos.mjs` is the demo list, and the two tests that read it are
-    // the only things in `src/` that import out of `scripts/`. Inferring its
-    // shape from the module itself is what keeps that shape in one place — a
-    // hand-written `.d.mts` beside it would be a second declaration of the same
-    // six fields, free to drift from them and silent when it did.
+    // `scripts/demos.mjs` is the demo list and `scripts/reel.mjs` the carousel's
+    // slides, and the landing-page tests that read them are the only things in
+    // `src/` that import out of `scripts/`. Inferring their shape from the
+    // modules themselves is what keeps that shape in one place — a hand-written
+    // `.d.mts` beside each would be a second declaration of the same fields,
+    // free to drift from them and silent when it did.
     "allowJs": true
   },
   "include": ["src/**/*.test.ts", "src/**/*.spec.ts"],

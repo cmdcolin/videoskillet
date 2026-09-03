@@ -159,11 +159,13 @@
         color: var(--accent);
       }
 
-      /* The carousel. One box, one slide showing, and the slides are of two
-         kinds — a recorded look and the app's own window — so the stage holds a
-         3:2 frame and everything fills it. The screenshot was taken at that
-         shape; a 5:4 clip loses a band off the top and bottom, which on a
-         picture that is all field and noise is nothing to see. */
+      /* The carousel. One box, one slide showing, and every slide is a
+         recording of the app's own window — chrome, panel, picture and a hand
+         on it (scripts/reel.mjs). The stage is a 3:2 frame because that is the
+         shape the window is recorded at, and the recording is 1112px wide
+         because that is what this measure gives it: the app's type lands on the
+         page at the size the app renders it, rather than as a shrunken picture
+         of a program. */
       .stage {
         position: relative;
         aspect-ratio: 3 / 2;
@@ -182,6 +184,9 @@
       .slide.on {
         opacity: 1;
       }
+      /* `contain`, not `cover`: what is in frame here is a window with a
+         360px panel down one edge, and a crop takes the panel rather than a
+         band of noise nobody was reading. */
       .slide img,
       .slide video {
         position: absolute;
@@ -189,7 +194,7 @@
         width: 100%;
         height: 100%;
         display: block;
-        object-fit: cover;
+        object-fit: contain;
         border: 0;
         border-radius: 0;
       }
@@ -217,6 +222,34 @@
       }
       .slideToggle {
         margin-left: auto;
+      }
+      /* What the slide showing is of. Every line is in the markup and the one
+         belonging to the slide showing is the one painted, so a reader with no
+         script gets the first slide's own line rather than three of them or
+         none. Held at the page's measure: a caption run to the full width of
+         the stage is a 1100px line of prose.
+
+         Stacked in one grid cell rather than shown and hidden, which is what
+         keeps the section under it still. These lines are of different
+         lengths, so `display: none` on the others would make the box as tall
+         as whichever one was showing and move the page every time the stage
+         advanced — at any width, since which of them wraps longest changes
+         with the measure. One cell is as tall as the tallest of them and the
+         rest sit in it invisibly. */
+      .slideNotes {
+        display: grid;
+        max-width: var(--measure);
+        margin-top: 0.85rem;
+      }
+      .slideNote {
+        grid-area: 1 / 1;
+        margin: 0;
+        color: var(--fg3);
+        font-size: 0.95rem;
+        visibility: hidden;
+      }
+      .slideNote.on {
+        visibility: visible;
       }
 
       .brand {
@@ -440,21 +473,27 @@
       </div>
     </header>
 
+    <!-- The app being used, which is the one thing about this program a
+         stranger cannot work out from a picture of what it makes. Three
+         recordings of the window: what it is, one control moving and the
+         picture answering, and the map the controls hang off. The stage, the
+         tabs and the captions are all generated from `scripts/reel.mjs` — see
+         `demogen.mjs`. -->
     <section>
       <div class="wrap wide">
+        <!-- generated:carousel -->
         <div class="stage">
-          <!-- generated:showcase -->
-          <figure class="slide on" data-name="Ridiculous rainbow">
+          <figure class="slide on" data-name="The window" data-secs="7">
             <img
               class="still"
-              src="/demos/ridiculous-rainbow.webp"
-              alt=""
-              width="640"
-              height="512"
+              src="/reel/window.webp"
+              alt="The videoskillet.js window: a rainbow-ringed synth pattern filling the picture area, and on the right the signal path map with the CHANNEL stage open on its recording controls"
+              width="1112"
+              height="742"
               decoding="async"
             />
             <video
-              data-src="demos/ridiculous-rainbow.mp4"
+              data-src="reel/window.mp4"
               muted
               loop
               playsinline
@@ -462,22 +501,71 @@
               aria-hidden="true"
             ></video>
           </figure>
-          <!-- /generated:showcase -->
-          <figure class="slide" data-name="The app window">
+          <figure class="slide" data-name="One control" data-secs="7.5">
             <img
-              src="/app-shot.jpg"
-              alt="The videoskillet.js window: colour bars fed through a feedback loop into a rainbow-fringed orb on the left, and on the right the signal-path map with the CHANNEL stage open on its recording controls"
-              width="1600"
-              height="1066"
+              class="still"
+              src="/reel/control.webp"
+              alt="The window with the RECEIVER stage open on its decoder controls, chroma gain dragged to 12.8x, and the photograph's colour blooming and clipping into flat cyan and orange"
+              width="1112"
+              height="742"
               loading="lazy"
               decoding="async"
             />
+            <video
+              data-src="reel/control.mp4"
+              muted
+              loop
+              playsinline
+              preload="none"
+              aria-hidden="true"
+            ></video>
+          </figure>
+          <figure class="slide" data-name="The signal path" data-secs="8.7">
+            <img
+              class="still"
+              src="/reel/signal-path.webp"
+              alt="The window with the signal path map at the head of the panel, the RECEIVER box pressed, and its stage unfolded underneath on the sync and decoder groups"
+              width="1112"
+              height="742"
+              loading="lazy"
+              decoding="async"
+            />
+            <video
+              data-src="reel/signal-path.mp4"
+              muted
+              loop
+              playsinline
+              preload="none"
+              aria-hidden="true"
+            ></video>
           </figure>
         </div>
         <div class="slideBar">
-          <div class="slideTabs"></div>
+          <div
+            class="slideTabs"
+            role="group"
+            aria-label="what the stage shows"
+          ></div>
           <button class="chip slideToggle" type="button">Play</button>
         </div>
+        <div class="slideNotes">
+          <p class="slideNote on">
+            The picture fills the window. The panel holds the whole board — the
+            look, the signal path, and the stage you have open on it.
+          </p>
+          <p class="slideNote">
+            Chroma gain is the colour control on the set: how hard the
+            demodulated chroma is amplified before the picture is drawn. Past 1
+            the saturation blooms and clips against the edge of the gamut — and
+            it is the decoder doing that, not a filter over the photograph.
+          </p>
+          <p class="slideNote">
+            The map is the rig: two sources into a mixer, then the channel it is
+            recorded and broadcast over, the receiver that decodes it and the
+            screen it lands on. Click a stage and its controls open under it.
+          </p>
+        </div>
+        <!-- /generated:carousel -->
       </div>
     </section>
 
@@ -866,7 +954,7 @@
           <li>
             <a
               class="demo"
-              href="/app/https://videoskillet.com/app/?p=3t.GKwxE4gDRYQDAMQfANADAqwiFZADALgDAJg1AAwAkAMAtAQAfAXQbwC0AiRACAQirGwroAE&amp;mod=&amp;srcb=none"
+              href="/app/?p=3t.GKwxE4gDRYQDAMQfANADAqwiFZADALgDAJg1AAwAkAMAtAQAfAXQbwC0AiRACAQirGwroAE&amp;mod=&amp;srcb=none"
             >
               <span class="shot">
                 <img
@@ -1008,20 +1096,25 @@
 
       // ---- the carousel ----
       //
-      // A look and the app's own window, in one frame, on the same terms as the
-      // hero: nothing is fetched until the slide holding it is the one showing,
-      // and a reader who asked for reduced motion is handed the stills and the
-      // buttons rather than a stage that changes under them.
+      // Three recordings of the app's own window, one showing at a time, on the
+      // same terms as the hero: nothing is fetched until the slide holding it is
+      // the one showing, and a reader who asked for reduced motion is handed the
+      // stills, the tabs and a Play button rather than a stage that changes
+      // under them.
       //
-      // The tabs are built from the slides rather than written beside them, so
-      // a slide added to the stage — generated from `demos.json`, or written in
-      // by hand the way the app's window is — arrives with its own way in.
+      // The tabs and the captions are read off the slides rather than written
+      // beside them, so a slide added to the reel arrives with its own way in
+      // and its own line — and each slide carries how long its own recording
+      // runs, because they are timelines of different lengths and a stage that
+      // advances on a fixed clock cuts one of them off mid-drag.
       {
         const stage = document.querySelector('.stage')
         const slides = [...stage.querySelectorAll('.slide')]
+        const notes = [...document.querySelectorAll('.slideNote')]
         const tabs = document.querySelector('.slideTabs')
         const toggle = document.querySelector('.slideToggle')
-        const DWELL = 9000
+        // Long enough after the clip has run once to read the line under it.
+        const READING = 2500
 
         let at = 0
         let wanted = !motion.matches
@@ -1057,15 +1150,21 @@
           at = index
           for (const [i, slide] of slides.entries()) {
             slide.classList.toggle('on', i === at)
+            notes[i].classList.toggle('on', i === at)
             buttons[i].setAttribute('aria-current', String(i === at))
           }
-          cue()
         }
 
         const sync = () => {
-          clearInterval(advance)
+          clearTimeout(advance)
           if (running() && slides.length > 1) {
-            advance = setInterval(() => show((at + 1) % slides.length), DWELL)
+            advance = setTimeout(
+              () => {
+                show((at + 1) % slides.length)
+                sync()
+              },
+              Number(slides[at].dataset.secs) * 1000 + READING,
+            )
           }
           cue()
           toggle.textContent = wanted ? 'Pause' : 'Play'

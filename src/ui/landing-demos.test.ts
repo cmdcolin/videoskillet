@@ -5,9 +5,9 @@ import { demos, hero, showcase } from '../../scripts/demos.mjs'
 import { readFileSync } from 'node:fs'
 
 // The demo list is `demos.json`, and both places that show it — the README's
-// "Cool demos" and the landing page's carousel and gallery — are generated
-// from it by `scripts/demogen.mjs`. So the drift this used to hunt for is gone
-// by construction, and what is left to check is narrower and worth more:
+// "Cool demos" and the landing page's gallery — are generated from it by
+// `scripts/demogen.mjs`. So the drift this used to hunt for is gone by
+// construction, and what is left to check is narrower and worth more:
 //
 //  - that the generated blocks in the checked-in files are the ones the current
 //    `demos.json` produces, which `pnpm demos:check` decides and `pnpm build`
@@ -28,7 +28,9 @@ test('the demo list is not empty', () => {
   expect(demos.length).toBeGreaterThan(3)
 })
 
-test('the carousel has a look to play', () => {
+test('the carousel has a look to sit on', () => {
+  // `showcase` is what a reel slide resolves a look through (scripts/reel.mjs),
+  // so an empty list is a carousel whose first slide cannot be recorded.
   expect(showcase.length).toBeGreaterThan(0)
 })
 
@@ -57,24 +59,4 @@ test('the hero plays the first demo listed', () => {
   expect(/class="heroVid"\s+data-clip="([^"]+)"/.exec(landing)?.[1]).toBe(
     hero.clip,
   )
-})
-
-test('the carousel opens on its first slide, and the app window is one', () => {
-  // The stage holds two kinds of slide: the generated ones and the app's own
-  // window, written in by hand under them. Only the first slide carries `on`,
-  // and losing the hand-written one is a silent edit nothing else would catch.
-  const stage = landing.slice(
-    landing.indexOf('<div class="stage">'),
-    landing.indexOf('<div class="slideBar">'),
-  )
-  const first = showcase[0]
-  expect({
-    opensOn: /class="slide on" data-name="([^"]+)"/.exec(stage)?.[1],
-    slides: [...stage.matchAll(/class="slide[^"]*" data-name=/g)].length,
-    appWindow: stage.includes('src="/app-shot.jpg"'),
-  }).toEqual({
-    opensOn: first.name,
-    slides: showcase.length + 1,
-    appWindow: true,
-  })
 })
