@@ -46,6 +46,7 @@
     "docshots": "node scripts/docshots.mjs",
     "docshots:check": "node scripts/docshots.mjs --check",
     "callout": "node scripts/callout.mjs",
+    "og": "node scripts/ogimage.mjs",
     "guide": "node scripts/build-guide.mjs",
     "docgen": "node scripts/docgen.mjs",
     "docgen:check": "node scripts/docgen.mjs --check",
