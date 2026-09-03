@@ -2,6 +2,12 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [0.35.1](https://github.com/cmdcolin/videoskillet/compare/v0.35.0...v0.35.1) - 2026-09-03
+
+### Features
+- *(signal)* [`db5615d`](https://github.com/cmdcolin/videoskillet/commit/db5615dbf6affe389f86c64a710e3f47ab22e072) a loop can be pushed once it stops eating its own sync tip
+- *(ui)* [`a8d09c7`](https://github.com/cmdcolin/videoskillet/commit/a8d09c75f02893935f3248fd602f3404b330848f) the round trip a loop is actually running, said where it is set
+
 ## [0.35.0](https://github.com/cmdcolin/videoskillet/compare/v0.34.2...v0.35.0) - 2026-09-02
 
 ### Features
