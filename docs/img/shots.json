@@ -25,8 +25,8 @@
     "mp4": null,
     "live": "https://videoskillet.com/app/?src=cat&set=demodMHz:0.5,hvSagUs:2.7,hvRing:0.61,lumaMHz:2.8,lumaPeak:0.8,noiseIre:4,agc:0.19,ghostDelayUs:1.15,ghostGain:0.08,colorUnderMix:1,underJitterDeg:4,dropoutRate:6,headSwitchNoise:0.4,headSwitchShiftUs:0.8,tbJitterNs:190,tbWowNs:300,phosphor:0.19&mod=",
     "captured": {
-      "version": "0.34.0",
-      "sha": "cd0344a"
+      "version": "0.37.0",
+      "sha": "bf3e485"
     }
   },
   {
@@ -35,8 +35,8 @@
     "mp4": null,
     "live": "https://videoskillet.com/app/?src=cat&set=demodMHz:0.5,hvSagUs:2.7,hvRing:0.61,lumaMHz:2.8,lumaPeak:0.8,noiseIre:4,agc:0.19,ghostDelayUs:1.15,ghostGain:0.08,colorUnderMix:1,underJitterDeg:4,dropoutRate:6,headSwitchNoise:0.4,headSwitchShiftUs:0.8,tbJitterNs:190,tbWowNs:300,phosphor:0.19&mod=",
     "captured": {
-      "version": "0.34.0",
-      "sha": "cd0344a"
+      "version": "0.37.0",
+      "sha": "bf3e485"
     }
   },
   {
