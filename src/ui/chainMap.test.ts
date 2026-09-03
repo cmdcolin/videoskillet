@@ -356,16 +356,16 @@ describe('chain map geometry', () => {
     for (const r of returns) {
       const box = boxes.find(b => b.name === r.into)
       if (box === undefined) throw new Error(`${r.loop}: no ${r.into} box`)
+      const [lo, hi] = [Math.min(r.from, r.to), Math.max(r.from, r.to)]
       if (r.self) {
         // set outside its own loop, and still on the map
-        expect(r.nameAt.x, r.loop).toBeLessThan(Math.min(r.from, r.to))
-        expect(r.nameAt.x, r.loop).toBeGreaterThan(0)
+        expect(r.chip.x + r.chip.w, r.loop).toBeLessThanOrEqual(lo)
+        expect(r.chip.x, r.loop).toBeGreaterThan(0)
       } else {
-        // on its own horizontal span, and clear of the box it lands on
-        const [lo, hi] = [Math.min(r.from, r.to), Math.max(r.from, r.to)]
-        expect(r.nameAt.x, r.loop).toBeGreaterThanOrEqual(lo)
-        expect(r.nameAt.x, r.loop).toBeLessThanOrEqual(hi)
-        expect(r.nameAt.x, r.loop).toBeGreaterThan(box.x + box.w / 2)
+        // standing on its own horizontal span, clear of the box it lands on
+        expect(r.chip.x, r.loop).toBeGreaterThanOrEqual(lo)
+        expect(r.chip.x + r.chip.w, r.loop).toBeLessThanOrEqual(hi)
+        expect(r.chip.x, r.loop).toBeGreaterThan(box.x + box.w / 2)
       }
     }
   })
@@ -383,8 +383,8 @@ describe('chain map geometry', () => {
         expect(r.name, r.loop).not.toBe('')
       }
   })
-  // Whichever side it lands on, a label has to clear the wires that cross its
-  // band. The runs drop their verticals from the trunk up to their own height,
+  // Whichever side it lands on, a label — and the chip it rides — has to clear
+  // the wires that cross its band. The runs drop their verticals from the trunk up to their own height,
   // so a label can only ever collide with a run drawn *above* it. The delay
   // loop was what made that tight: its name hung off the end of a 30-unit run
   // rather than riding a 200-unit one, and on the full row 'tape loop' took 37
@@ -398,14 +398,14 @@ describe('chain map geometry', () => {
     for (const names of subsets(FULL)) {
       const { returns } = chainLayout(names)
       for (const r of returns) {
-        const w = runLabelWidth(r.name)
-        const [lo, hi] =
-          r.nameAt.anchor === 'end'
-            ? [r.nameAt.x - w, r.nameAt.x]
-            : [r.nameAt.x, r.nameAt.x + w]
+        const [lo, hi] = [r.chip.x, r.chip.x + r.chip.w]
         const where = `${r.loop} on a ${names.length}-box row`
         expect(lo, where).toBeGreaterThanOrEqual(0)
         expect(hi, where).toBeLessThanOrEqual(W)
+        // And it holds the name it was sized around, with padding to spare —
+        // the word is centred in the chip, so a chip narrower than its own name
+        // would spill the name off both ends at once.
+        expect(r.chip.w, where).toBeGreaterThan(runLabelWidth(r.name))
         for (const above of returns.filter(o => o.y < r.y))
           for (const x of [above.from, above.to])
             expect(x < lo || x > hi, `${where}: crosses a wire at ${x}`).toBe(

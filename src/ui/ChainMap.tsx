@@ -13,6 +13,7 @@ import {
   OUT,
   returnPath,
   returnPts,
+  RUN_H,
   W,
 } from './chainLayout'
 import styles from './ChainMap.module.css'
@@ -239,24 +240,34 @@ export function ChainMap(props: {
             expanded={props.folds && !dim ? open : undefined}
             onOpen={() => props.onOpen(node.name)}
           >
-            {/* The run is a 1px hairline and the target. 8 units of transparent
-                stroke is what makes it pressable without moving it, and it
-                stays inside the 10 between one run and the next. */}
+            {/* The run is a 1px hairline and the whole of it is the target,
+                chip or no chip. 8 units of transparent stroke is what makes it
+                pressable without moving it, and it stays inside the 10 between
+                one run and the next. */}
             <path className={styles.mapLoopHit} d={d} />
             <path className={styles.mapWire} d={d} />
             <path
               className={styles.mapArrow}
               d={arrowhead(returnPts(r.from, r.to, top, r.y), HEAD * 1.5, HEAD)}
             />
-            {/* The run's own name, riding the wire rather than sitting above
-                it — there is no above at this size. It is painted after the
-                wire and carries a stroke of the panel behind it, so the run
-                breaks around the word instead of running through it. */}
+            {/* The run's own name, on a chip riding the wire — the box of a
+                machine that has no place on the trunk to stand one. The run
+                used to carry the word alone, which on a map where every other
+                target is a filled chip left the two loops looking like the
+                labels on the drawing rather than the doors into it. */}
+            <rect
+              className={styles.mapLoopChip}
+              x={r.chip.x}
+              y={r.y - RUN_H / 2}
+              width={r.chip.w}
+              height={RUN_H}
+              rx={RUN_H / 2}
+            />
             <text
               className={styles.mapLoopLabel}
-              x={r.nameAt.x}
+              x={r.chip.x + r.chip.w / 2}
               y={r.y}
-              textAnchor={r.nameAt.anchor}
+              textAnchor="middle"
               dominantBaseline="central"
             >
               {r.name}

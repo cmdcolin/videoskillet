@@ -30,24 +30,41 @@
 .optical .wire {
   stroke-dasharray: 3 3;
 }
+/* The chip a run's name rides — the box of a machine that has no place on the
+   trunk to stand one. Same face, same edge and same size as a stage's box, so
+   the two kinds of door on this card are one kind of thing to a hand; rounded
+   to its full height, so which of them is patched *across* the chain rather
+   than standing in it is still visible at a glance.
+
+   Its fill is what carries the wire behind the word: a name in the band over a
+   hairline needed a stroke of the surface knocked out around every glyph to
+   survive the verticals crossing it, and a chip is that same knockout with an
+   edge on it. */
+.loopChip {
+  fill: var(--ctl-face);
+  stroke: currentColor;
+  stroke-width: 1.25;
+}
 /* Same lift as the miniature's names, for the same reason: --fg4 is the floor
    theme.css allows text at, and these are the only labels on the drawing. */
 .loopLabel {
   fill: var(--fg3);
   font-size: 10.5px;
-  /* the run and its name are one button, and dragging across it should press
-     the loop rather than select the sentence */
+  /* the chip and its name are one button, and dragging across it should press
+     the loop rather than select the word */
   user-select: none;
-  /* Each name reaches across the runs below it, and the two returns drop their
-     verticals at the far end of the row — so a wire lands in the gaps between
-     glyphs and the sentence comes apart, worse the more loops there are. The
-     label carries a stroke of the surface behind it, painted first, which
-     knocks the wire out around the letters instead of over them. Cheaper than
-     shortening three sentences to fit between two verticals. */
-  paint-order: stroke;
-  stroke: var(--panel-bg);
-  stroke-width: 3;
-  stroke-linejoin: round;
+}
+/* What the chip says under its name — that this machine is running, and how
+   much of it has been moved. The register a box captions what is standing in it
+   with (.sub), and it follows the run's own colour rather than sitting at --fg3
+   the way that caption does: a note is only ever written on a loop that is lit
+   for one of those two reasons, so currentColor here is amber or accent and
+   never the border grey a caption would be unreadable in. */
+.loopNote {
+  fill: currentColor;
+  font-size: 8.5px;
+  letter-spacing: 0.01em;
+  user-select: none;
 }
 /* Each loop is its own button — the three of them were one box before, and a
    run is what already told them apart. Colour is the whole hover state, the
@@ -88,8 +105,16 @@
 .loopBtn:focus-visible {
   outline: none;
 }
-.loopBtn:focus-visible .wire {
+/* The wire heavies and the chip's edge with it, so a run keeps its focus ring
+   on both halves of itself. */
+.loopBtn:focus-visible .wire,
+.loopBtn:focus-visible .loopChip {
   stroke-width: 2.5;
+}
+/* And the face lifts under the pointer, the way every other chip in the panel
+   does. */
+.loopBtn:hover .loopChip {
+  fill: var(--ctl-bg-hover);
 }
 /* The grab band on a 1.25-unit wire. Transparent rather than absent so it takes
    pointer events; 14 units wide keeps it inside the 22 between neighbouring
@@ -113,14 +138,23 @@
 .node:hover {
   color: var(--accent);
 }
+/* A box is a chip on the wire, filled with the face every other control in the
+   panel wears — the miniature's own rule (ChainMap.module.css .mapBox), arrived
+   at there because a target drawn as an outline in the wires' own colour reads
+   as part of the wiring. This card had kept the outline: on it the boxes were
+   the ground with an edge, which is what left the loops' names looking like the
+   only thing here that was not a button. Both are chips now. */
 .box {
-  fill: var(--panel-bg);
+  fill: var(--ctl-face);
   stroke: var(--border);
   stroke-width: 1.25;
 }
 .node:hover .box,
 .nodeTouched .box {
   stroke: currentColor;
+}
+.node:hover .box {
+  fill: var(--ctl-bg-hover);
 }
 /* the box holds something off stock — the same amber the panel marks one with */
 .nodeTouched {
@@ -141,6 +175,9 @@
   cursor: default;
 }
 .nodeOff .box {
+  /* and unfilled: the dashes say the stage is drawn absent, and a face under
+     them would say it is standing there ready to be pressed */
+  fill: none;
   stroke: currentColor;
   stroke-dasharray: 3 3;
 }

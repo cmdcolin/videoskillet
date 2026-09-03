@@ -93,6 +93,12 @@ export const TURN = 5
 const COLS = 6
 const STEP = (W - GUTTER - 10) / COLS
 export const BOX_W = STEP - GAP
+// The chip a loop's name rides, which is a box's width plus a cap. A pill
+// spends the ends of its width on the curve, and the two loops carry the two
+// longest names on the drawing — 'Camera feedback' is fifteen characters where
+// MODULATION, the longest label in a box, is ten. Same height and same face, so
+// it still reads as the same kind of chip rather than as a bigger one.
+export const CHIP_W = BOX_W + BOX_H / 2
 export const colX = (i: number) => GUTTER + STEP * (i + 0.5)
 export const TOP = MID_Y - BOX_H / 2
 
@@ -244,15 +250,13 @@ interface LoopRun {
   to: number
   y: number
   turn: number
-  // Where the name sits, and which end of itself it sits by — so a label can
-  // hang off the left of a run as well as the right.
-  lx: number
-  anchor: 'start' | 'end'
+  // Which column the chip that carries the name is centred on. A column index
+  // rather than a free x: a chip lines up with the trunk boxes below it, which
+  // is what makes a run read as a machine standing on the drawing's own grid
+  // rather than as a caption that happens to be near a wire.
+  chipCol: number
   optical: boolean
 }
-// Just past the right edge of a landing column: where a run that reaches back
-// across the drawing puts its name, beside its own arrowhead.
-const nameX = (col: number) => colX(col) + BOX_W / 2 + 10
 
 // Which band each run rides, and where on it the name sits. Keyed off the loop
 // table, so a loop added there with no run here fails to compile rather than
@@ -265,12 +269,11 @@ const LOOP_RUN: Record<(typeof LOOP_STAGES)[number]['loop'], LoopRun> = {
   camera: {
     from: colX(LAST_COL),
     to: colX(0),
-    // The top run's name sits 5 above it and rises 7 more; below 16 the
-    // ascenders are cut off by the top of the viewBox.
+    // The top band. A chip is BOX_H tall and centred on its band, so 16 is the
+    // least this can be without the chip's own top edge leaving the viewBox.
     y: 16,
     turn: 6,
-    lx: nameX(0),
-    anchor: 'start',
+    chipCol: 1,
     optical: true,
   },
   // Off the bus and back onto it one pass later, so it taps at the Receiver —
@@ -280,8 +283,7 @@ const LOOP_RUN: Record<(typeof LOOP_STAGES)[number]['loop'], LoopRun> = {
     to: colX(2),
     y: 38,
     turn: 5,
-    lx: nameX(2),
-    anchor: 'start',
+    chipCol: 3,
     optical: false,
   },
 }
@@ -294,16 +296,20 @@ const LOOP_RUN: Record<(typeof LOOP_STAGES)[number]['loop'], LoopRun> = {
 // which is inside Source A, and the mixer at `fbComposite`, straight after the
 // A/B sum, which is Mix.
 //
-// So the wires are the whole of it now, which is what they had already become:
-// dashed for light and solid for a wire, each with its own name, each lighting
-// up while its loop runs. Making them the door as well costs the drawing no
-// width — a box for each would have cost three columns — and it is what let the
-// trunk drop from five boxes to four.
+// So the wires are the whole of the topology now: dashed for light and solid
+// for a wire, each lighting up while its loop runs. What they are not is the
+// whole of the *door*. A run carried its name in the band above it and nothing
+// else, which is a caption near a wire — on a card where everything else you
+// can press is a labelled chip, the two loops were the only targets drawn as
+// decoration. Each name rides a chip on its own run now: the drawing's own box,
+// filled and outlined the same way, standing where the wire passes rather than
+// hovering over it, and rounded to its full height because a machine patched
+// across the chain is not a stage of it.
 //
-// Each label sits in the band above its own run, so the runs are what separate
-// them — 22 units apart, because at the 18 they started on, two sentences read
-// as one paragraph with a wire through it. `lx` is measured from the box the
-// run lands on, so a name sits beside its own arrowhead.
+// A chip is CHIP_W by BOX_H and centred on `chipCol`, so it costs the drawing no
+// width — a box for each on the trunk would have cost three columns — and the
+// bands stay 22 apart, which is exactly a chip's height: at the 18 they started
+// on, two of them read as one paragraph with a wire through it.
 //
 // `from` and `to` are absolute rather than column indices, which is room the
 // delay loop needed: it left and re-entered one box top instead of reaching

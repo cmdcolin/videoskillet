@@ -15,6 +15,7 @@ import {
   BOX_W,
   BOXES,
   BRANCH_Y,
+  CHIP_W,
   EXIT_RUN,
   exitHead,
   head,
@@ -124,12 +125,12 @@ export function SignalPathDialog(props: {
         chain to the glass, with the sound patched into the receiver along the
         way and your own view at the end of it. Every box is a piece of hardware
         misbehaving, and the artifacts come out of how they interfere. Click one
-        to open its controls — and the three loops over the top are pressable
-        too, each one its own way back into the chain. The two boxes on the
-        bottom row have no wire on them: the modulation bay and the deck are
-        patched into the controls rather than into the signal — one setting them
-        moving on its own, the other gathering the ones a hand moves during a
-        take — which is why they float.
+        to open its controls — the two chips riding the loops over the top open
+        theirs the same way, each one its own way back into the chain. The two
+        boxes on the bottom row have no wire on them: the modulation bay and the
+        deck are patched into the controls rather than into the signal — one
+        setting them moving on its own, the other gathering the ones a hand
+        moves during a take — which is why they float.
       </p>
       <svg
         className={styles.diagram}
@@ -208,6 +209,13 @@ export function SignalPathDialog(props: {
           const d = returnPath(r.from, r.to, r.y, r.turn)
           const n = touchedInLoop(r.name)
           const live = props.live[r.loop]
+          // What the chip says under its name: whether this machine is actually
+          // running, and how much of it has been moved. The same two facts the
+          // run used to write beside itself, in the register a box captions
+          // what is standing in it.
+          const note = [live ? 'running' : '', n > 0 ? `• ${n}` : '']
+            .filter(part => part !== '')
+            .join(' ')
           return (
             // Same press, same sentence and same keys as the miniature's runs —
             // see MapRun, which is where both drawings' copy of that rule lives
@@ -242,16 +250,44 @@ export function SignalPathDialog(props: {
                 className={styles.arrow}
                 d={head(returnPts(r.from, r.to, r.y))}
               />
+              {/* The chip its name rides, standing on the run the way a box
+                  stands on the trunk: same height, same face, the wire
+                  disappearing behind it rather than through the word, and a
+                  cap's more width because the two loops carry the two longest
+                  names here. It is what makes a loop look like the door it has
+                  been since the FEEDBACK box went — a name in the band over a
+                  hairline was the only target on this card drawn as a
+                  caption. */}
+              <rect
+                className={styles.loopChip}
+                x={colX(r.chipCol) - CHIP_W / 2}
+                y={r.y - BOX_H / 2}
+                width={CHIP_W}
+                height={BOX_H}
+                rx={BOX_H / 2}
+              />
               <text
                 className={styles.loopLabel}
-                x={r.lx}
-                y={r.y - 5}
-                textAnchor={r.anchor}
+                x={colX(r.chipCol)}
+                // Set off centre only when there is a note under it, exactly as
+                // a captioned box is.
+                y={note === '' ? r.y : r.y - 4.5}
+                textAnchor="middle"
+                dominantBaseline="central"
               >
                 {r.name}
-                {live ? ' — running' : ''}
-                {n > 0 ? ` • ${n}` : ''}
               </text>
+              {note === '' ? null : (
+                <text
+                  className={styles.loopNote}
+                  x={colX(r.chipCol)}
+                  y={r.y + 6.5}
+                  textAnchor="middle"
+                  dominantBaseline="central"
+                >
+                  {note}
+                </text>
+              )}
             </MapRun>
           )
         })}

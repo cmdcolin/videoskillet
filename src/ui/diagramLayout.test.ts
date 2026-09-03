@@ -20,6 +20,7 @@ import {
   BOX_W,
   BOXES,
   BRANCH_Y,
+  CHIP_W,
   colX,
   EXIT_RUN,
   exitHead,
@@ -236,28 +237,36 @@ describe('the diagram card stays inside its own drawing', () => {
       expect(ys[i] - ys[i - 1]).toBeGreaterThanOrEqual(22)
   })
 
-  // Spacing the bands is only half of it. Two names at the same x on adjacent
-  // bands read as one two-line caption however far apart the wires are, which
-  // is what the mixer loop and the delay loop did while both were drawn: both
-  // landed on the mixer, so both took nameX(2), and neither wire owned either
-  // line.
-  it('gives each run its own column of text', () => {
-    const xs = RETURNS.map(r => r.lx).toSorted((a, b) => a - b)
-    for (let i = 1; i < xs.length; i++)
-      expect(xs[i] - xs[i - 1], 'two run labels in one column').toBeGreaterThan(
-        20,
-      )
+  // Spacing the bands is only half of it. A chip is exactly as tall as the gap
+  // between two bands, so two of them in one column would meet edge to edge and
+  // read as one two-line caption however far apart the wires are — which is
+  // what the mixer loop and the delay loop did while both were drawn: both
+  // landed on the mixer, so both took the same column, and neither wire owned
+  // either line.
+  it('gives each run its own column', () => {
+    const cols = RETURNS.map(r => r.chipCol).toSorted((a, b) => a - b)
+    for (let i = 1; i < cols.length; i++)
+      expect(
+        cols[i] - cols[i - 1],
+        'two run chips in one column',
+      ).toBeGreaterThan(0)
   })
 
-  // And a name belongs to the wire it names: it starts (or ends) within reach
-  // of its own run rather than somewhere past the end of it. What this was
-  // written for: the delay loop's sat 30 units beyond the right end of a
-  // 52-unit run.
-  it('keeps each run’s name against its own run', () => {
+  // And a chip belongs to the wire it names: it stands *on* its own run rather
+  // than somewhere past the end of it. What this was written for: the delay
+  // loop's name sat 30 units beyond the right end of a 52-unit run.
+  it('stands each run’s chip on its own run', () => {
     for (const r of RETURNS) {
       const [lo, hi] = [Math.min(r.from, r.to), Math.max(r.from, r.to)]
-      const reach = r.anchor === 'end' ? lo - r.lx : r.lx - hi
-      expect(reach, r.name).toBeLessThanOrEqual(12)
+      expect(colX(r.chipCol) - CHIP_W / 2, r.name).toBeGreaterThanOrEqual(lo)
+      expect(colX(r.chipCol) + CHIP_W / 2, r.name).toBeLessThanOrEqual(hi)
     }
+  })
+
+  // And it fits in the drawing: a chip is centred on its band, so a band too
+  // near the top edge crops the chip rather than the label it used to carry.
+  it('keeps every chip inside the drawing', () => {
+    for (const r of RETURNS)
+      expect(r.y - BOX_H / 2, r.name).toBeGreaterThanOrEqual(0)
   })
 })

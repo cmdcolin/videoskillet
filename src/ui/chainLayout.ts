@@ -140,6 +140,16 @@ const WIDE = /[mw]/g
 export const runLabelWidth = (s: string) =>
   (s.length + (s.toLowerCase().match(WIDE)?.length ?? 0)) * RUN_CHAR
 
+// The chip a run's name rides, which is the whole of the run's own box: a loop
+// has no place on the trunk to stand one, so this is what makes it look like
+// the door it is rather than a word laid over a hairline. Padding either side
+// of the name, as PAD is to a box's, and a height that is what the band can
+// spare — the runs ride 11 apart, so two chips on neighbouring bands meet edge
+// to edge at 11 and would overlap at anything more.
+export const RUN_PAD = 7
+export const RUN_H = 11
+export const runChipWidth = (s: string) => runLabelWidth(s) + RUN_PAD
+
 // Boxes are sized to what they say rather than to an equal share of the width.
 // That is what let a sixth box onto the row back when the trunk had six: at
 // equal columns RECEIVER got 38 units for 37 units of text while TAPE sat in
@@ -560,7 +570,9 @@ export function chainLayout(names: string[], specs: WiredBranch[] = []) {
   }
   const returns = drawn.map(r => {
     const name = shortOf(r.loop)
-    const want = runLabelWidth(name)
+    // The chip and not the name inside it: what has to clear the drops of the
+    // runs above is the box the word is standing in.
+    const want = runChipWidth(name)
     // The first place that holds the label, or the roomiest when none does.
     // Never just the preferred one: on a row that has squeezed the mixer
     // against the left edge, the left place is off the map rather than tight.
@@ -569,7 +581,22 @@ export function chainLayout(names: string[], specs: WiredBranch[] = []) {
       r.places.reduce((best, spot) =>
         room(r, spot) > room(r, best) ? spot : best,
       )
-    return { ...r, nameAt, name }
+    // The chip is the whole of where the name goes: it takes the spot the name
+    // was offered, padded, and the word is then centred *in the chip* rather
+    // than set against the spot itself. That last part is not a detail. The
+    // width here is the estimate (RUN_CHAR), which is deliberately over — so a
+    // name anchored to one edge sits as far off centre as the estimate is
+    // generous, which on 'mixer' was two units in a thirty-two unit chip and
+    // read as a word that had slipped. Centred, the same slack falls evenly on
+    // both sides and cannot be seen at all.
+    const chip = {
+      x:
+        nameAt.anchor === 'start'
+          ? nameAt.x - RUN_PAD / 2
+          : nameAt.x - want + RUN_PAD / 2,
+      w: want,
+    }
+    return { ...r, chip, name }
   })
   // The branch row, laid out left to right with a cursor: each box takes the
   // place its anchor asks for, and is pushed right if that would land it on the
