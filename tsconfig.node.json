@@ -15,5 +15,10 @@
     "outDir": "./node_modules/.tmp/node",
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo"
   },
-  "include": ["vite.config.ts", "vite-plugin-ytdlp.ts", "package.json"]
+  "include": [
+    "vite.config.ts",
+    "vite-plugin-wgsl.ts",
+    "vite-plugin-ytdlp.ts",
+    "package.json"
+  ]
 }

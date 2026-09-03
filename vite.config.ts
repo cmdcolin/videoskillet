@@ -3,6 +3,7 @@ import react, { reactCompilerPreset } from '@vitejs/plugin-react'
 import { configDefaults, defineConfig } from 'vitest/config'
 
 import pkg from './package.json' with { type: 'json' }
+import { wgsl } from './vite-plugin-wgsl.ts'
 import { ytdlp } from './vite-plugin-ytdlp.ts'
 
 import { execSync } from 'node:child_process'
@@ -21,7 +22,12 @@ export default defineConfig(({ command }) => ({
   base: command === 'build' ? './' : '/',
   // React Compiler memoizes components and hook results itself, so the UI
   // doesn't hand-maintain useMemo/useCallback around the engine handoffs.
-  plugins: [react(), babel({ presets: [reactCompilerPreset()] }), ytdlp()],
+  plugins: [
+    react(),
+    babel({ presets: [reactCompilerPreset()] }),
+    ytdlp(),
+    wgsl(),
+  ],
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
     __GIT_SHA__: JSON.stringify(gitSha()),

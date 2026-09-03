@@ -534,3 +534,16 @@ they have hit and the performance protocol are all in
 
 `CLAUDE.md` is the source; the one that shapes this codebase most is that
 comments explain _why_ — the physical mechanism being modelled — not _what_.
+
+**Comment the shaders as freely as the TypeScript.** A `.wgsl` file arrives in
+the bundle as a string, so its prose used to ship — a quarter of the chunk every
+page loads, 62.5 kB gzipped of it. `vite-plugin-wgsl.ts` now blanks those
+comments on the way in, leaving the line in place so `createShaderModule`'s
+error rows still name the line you would count to in the file. It runs in dev
+too, so what the browser compiles is the same text either way.
+
+The one thing that has to survive is the `/* wgsl */` tag on `PRELUDE` — the
+prelude is WGSL living in a `.ts` file, so the tag is how the plugin finds it,
+and a literal that loses the tag quietly keeps its comments. The plugin throws
+if `prelude.ts` has no tagged literal in it, and `vite-plugin-wgsl.test.ts`
+asserts the same.
