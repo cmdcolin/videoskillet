@@ -7,9 +7,7 @@
       content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <title>
-      videoskillet.js — real-time NTSC / VHS glitch simulator in WebGPU
-    </title>
+    <title>videoskillet.js — WebGPU composite video emulation</title>
     <meta
       name="description"
       content="Real-time NTSC / VHS / composite-video glitch simulator in WebGPU — dot crawl, dropouts, head-switch wobble and video feedback emerge from a simulated analog signal, not filters painted on top."
@@ -24,7 +22,7 @@
     <meta property="og:url" content="https://videoskillet.com/" />
     <meta
       property="og:title"
-      content="videoskillet.js — real-time NTSC / VHS glitch simulator in WebGPU"
+      content="videoskillet.js — WebGPU composite video emulation"
     />
     <meta
       property="og:description"
@@ -36,7 +34,7 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta
       name="twitter:title"
-      content="videoskillet.js — real-time NTSC / VHS glitch simulator in WebGPU"
+      content="videoskillet.js — WebGPU composite video emulation"
     />
     <meta
       name="twitter:description"
@@ -96,20 +94,24 @@
         overflow: hidden;
         border-bottom: 1px solid var(--border);
       }
+      /* Two of them, stacked: one showing, one holding whatever comes next, so
+         a change of look is a crossfade rather than a black frame while a
+         second file opens. Only the front one is playing — the back one is
+         paused on its first frame the moment the fade is over. */
       .heroVid {
         position: absolute;
         inset: 0;
         width: 100%;
         height: 100%;
         object-fit: cover;
-        /* Held back just far enough that display type stays readable over a
-           picture whose whole job is to be violent.
-           The clip is one of the recorded demos rather than the older
-           demo-v2.mp4 the fatal screen uses: that one is a dark tape transfer,
-           and behind a page this colour it read as an empty black band however
-           little scrim was put over it. */
-        opacity: 0.55;
+        opacity: 0;
+        transition: opacity 0.9s ease;
         filter: saturate(1.1) contrast(1.05);
+      }
+      /* Held back just far enough that display type stays readable over a
+         picture whose whole job is to be violent. */
+      .heroVid.on {
+        opacity: 0.55;
       }
       /* One wash, not two. Stacked scrims multiply: a 82% layer under a 62%
          layer leaves 7% of the video, which is why the hero read as an empty
@@ -128,7 +130,80 @@
       }
       .heroBody {
         position: relative;
-        padding: 5.5rem 0 4.5rem;
+        padding: 5.5rem 0 3rem;
+      }
+
+      /* The reel's controls. They are the only way in to the hero for a reader
+         whose system asks for reduced motion — nothing starts by itself there,
+         so the ▶ has to be visible rather than a hover secret. The roster the
+         dots carry is the bright half of the gallery: three of the recorded
+         demos are dark tape transfers, and behind a scrim this heavy they read
+         as an empty black band whatever is done to the wash over them. */
+      .reel {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 0.75rem;
+        padding-bottom: 1.5rem;
+        font-family: var(--mono);
+        font-size: 0.8rem;
+        color: var(--fg4);
+      }
+      .reelName {
+        margin: 0;
+        letter-spacing: 0.02em;
+      }
+      .reelDots {
+        display: flex;
+        gap: 0.15rem;
+      }
+      /* The dot is drawn small and the button is not: a 0.5rem target is one
+         nobody hits on a phone, so the button keeps a finger-sized box and only
+         the mark inside it is small. */
+      .dot {
+        width: 1.5rem;
+        height: 1.5rem;
+        padding: 0;
+        border: 0;
+        background: none;
+        cursor: pointer;
+        display: grid;
+        place-items: center;
+      }
+      .dot::before {
+        content: '';
+        width: 0.5rem;
+        height: 0.5rem;
+        border-radius: 50%;
+        background: var(--fg4);
+        opacity: 0.5;
+        transition:
+          background 0.2s,
+          opacity 0.2s;
+      }
+      .dot:hover::before {
+        opacity: 1;
+      }
+      .dot[aria-current='true']::before {
+        background: var(--accent);
+        opacity: 1;
+      }
+      .reelToggle {
+        width: 1.9rem;
+        height: 1.9rem;
+        padding: 0;
+        border: 1px solid var(--border);
+        border-radius: 50%;
+        background: var(--card);
+        color: var(--fg3);
+        font-size: 0.7rem;
+        line-height: 1;
+        cursor: pointer;
+      }
+      .reelToggle:hover {
+        border-color: var(--fg4);
+        color: var(--fg);
       }
       .brand {
         display: flex;
@@ -187,6 +262,23 @@
       section {
         padding: 3.5rem 0;
       }
+      h2 {
+        font-size: 1.5rem;
+        letter-spacing: -0.01em;
+        margin: 0 0 1rem;
+      }
+      .tech p {
+        margin: 0 0 1rem;
+        color: var(--fg2);
+      }
+      .tech figure {
+        margin: 2rem 0 0;
+      }
+      .tech figcaption {
+        margin-top: 0.6rem;
+        font-size: 0.9rem;
+        color: var(--fg4);
+      }
       .sub {
         color: var(--fg4);
         font-size: 0.95rem;
@@ -240,12 +332,28 @@
         position: relative;
         aspect-ratio: 5 / 4;
         background: #000;
+        display: block;
       }
-      .demo video {
+      /* A still under a clip, rather than the clip's own `poster`. A poster is
+         fetched as soon as its <video> is laid out, so eleven of them were a
+         three-quarter-megabyte page nobody had scrolled yet; an <img> takes
+         `loading="lazy"` and costs nothing until the card is near. The clip
+         fades in over the still it matches, so the swap has nothing to see. */
+      .demo .shot img,
+      .demo .shot video {
+        position: absolute;
+        inset: 0;
         width: 100%;
         height: 100%;
         display: block;
         object-fit: cover;
+      }
+      .demo .shot video {
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+      .demo.live .shot video {
+        opacity: 1;
       }
       .demo .name {
         display: flex;
@@ -281,24 +389,35 @@
   </head>
   <body>
     <header class="hero">
+      <!-- generated:hero -->
       <video
-        class="heroVid"
-        src="/demos/wiggity.mp4"
-        poster="/demos/wiggity.jpg"
-        autoplay
+        class="heroVid on"
+        data-clip="demos/wiggity.mp4"
+        poster="/demos/wiggity.webp"
         muted
         loop
         playsinline
+        preload="none"
         aria-hidden="true"
         tabindex="-1"
       ></video>
+      <video
+        class="heroVid"
+        muted
+        loop
+        playsinline
+        preload="none"
+        aria-hidden="true"
+        tabindex="-1"
+      ></video>
+      <!-- /generated:hero -->
       <div class="heroScrim"></div>
       <div class="wrap heroBody">
         <p class="brand">
           <img src="/favicon.svg" alt="" />
           videoskillet.js
         </p>
-        <h1>Analog video that breaks the way analog video broke.</h1>
+        <h1>WebGPU composite video emulation.</h1>
         <p class="cta">
           <a class="btn primary" href="/app/">Open the app →</a>
           <a class="btn" href="/guide/">Guide</a>
@@ -307,10 +426,59 @@
           >
         </p>
         <p class="req">
-          Uses WebGPU compute shaders to emulate real composite video signal, so
-          all the video effects are real consequences of this rather than
-          painted-on effects
+          Every fault is a consequence of the signal, not an effect drawn on the
+          picture.
         </p>
+      </div>
+      <div class="wrap reel">
+        <!-- generated:reel -->
+        <p class="reelName">Wiggity</p>
+        <div class="reelDots">
+          <button
+            class="dot"
+            type="button"
+            data-clip="demos/wiggity.mp4"
+            data-still="demos/wiggity.webp"
+            data-name="Wiggity"
+            aria-label="Show Wiggity"
+          ></button>
+          <button
+            class="dot"
+            type="button"
+            data-clip="demos/ridiculous-rainbow.mp4"
+            data-still="demos/ridiculous-rainbow.webp"
+            data-name="Ridiculous rainbow"
+            aria-label="Show Ridiculous rainbow"
+          ></button>
+          <button
+            class="dot"
+            type="button"
+            data-clip="demos/rainborb.mp4"
+            data-still="demos/rainborb.webp"
+            data-name="Rainborb"
+            aria-label="Show Rainborb"
+          ></button>
+          <button
+            class="dot"
+            type="button"
+            data-clip="demos/wonkitize-me.mp4"
+            data-still="demos/wonkitize-me.webp"
+            data-name="Wonkitize me"
+            aria-label="Show Wonkitize me"
+          ></button>
+          <button
+            class="dot"
+            type="button"
+            data-clip="demos/chaos-black-and-white-feedback.mp4"
+            data-still="demos/chaos-black-and-white-feedback.webp"
+            data-name="Chaos black and white feedback"
+            aria-label="Show Chaos black and white feedback"
+          ></button>
+        </div>
+        <!-- /generated:reel -->
+        <button class="reelToggle" type="button" aria-label="Play the reel">
+          ▶
+        </button>
       </div>
     </header>
 
@@ -331,15 +499,107 @@
       <div class="wrap wide">
         <p class="sub">Open one and you land on that exact board.</p>
         <ul class="grid">
+          <!-- generated:gallery -->
+          <li>
+            <a
+              class="demo"
+              href="/app/?p=je.CoDoBwEEAbAEAKwCAfABAKCZAgXgAw2IIwSIAyFYBrAKEjwGmAEEuB4ZVADsBgr4OiSMCQDEAQDgAgAkAUQEBAAQA9wCAMXBAgCJngIAlf4DAI3tAw&amp;mod=bendUs:lorenz:0.390279:0.27759,hvRing:sine:0.037599:0.090209&amp;srcb=synth&amp;src=sweep"
+            >
+              <span class="shot">
+                <img
+                  class="still"
+                  src="/demos/wiggity.webp"
+                  alt=""
+                  width="640"
+                  height="512"
+                  loading="lazy"
+                  decoding="async"
+                />
+                <video
+                  data-src="demos/wiggity.mp4"
+                  muted
+                  loop
+                  playsinline
+                  preload="none"
+                  aria-hidden="true"
+                ></video>
+              </span>
+              <span class="name">Wiggity<span class="open">open →</span></span>
+            </a>
+          </li>
+          <li>
+            <a
+              class="demo"
+              href="/app/?p=T2.GKAEE4QCRYQDAMQfAJ8FAowfFYwDAfAMAWAA8AIARAZgJEAIBCKcvgErYA&amp;mod=&amp;srcb=none"
+            >
+              <span class="shot">
+                <img
+                  class="still"
+                  src="/demos/ridiculous-rainbow.webp"
+                  alt=""
+                  width="640"
+                  height="512"
+                  loading="lazy"
+                  decoding="async"
+                />
+                <video
+                  data-src="demos/ridiculous-rainbow.mp4"
+                  muted
+                  loop
+                  playsinline
+                  preload="none"
+                  aria-hidden="true"
+                ></video>
+              </span>
+              <span class="name"
+                >Ridiculous rainbow<span class="open">open →</span></span
+              >
+            </a>
+          </li>
+          <li>
+            <a
+              class="demo"
+              href="/app/?p=zD.GNADE4QCRYQDAJgfANYEAvAlAOQBFNwBAdAFL0AIBCKcvgE&amp;mod=&amp;srcb=none"
+            >
+              <span class="shot">
+                <img
+                  class="still"
+                  src="/demos/rainborb.webp"
+                  alt=""
+                  width="640"
+                  height="512"
+                  loading="lazy"
+                  decoding="async"
+                />
+                <video
+                  data-src="demos/rainborb.mp4"
+                  muted
+                  loop
+                  playsinline
+                  preload="none"
+                  aria-hidden="true"
+                ></video>
+              </span>
+              <span class="name">Rainborb<span class="open">open →</span></span>
+            </a>
+          </li>
           <li>
             <a
               class="demo"
               href="/app/?p=A7.BGgTjAk1NCPEAQCQIACkBgBMAZwhAVwAkAEAHADMARCQAwDQAwDAWwAMAJADANgDAIABAkAA0AEAiAEAwIkBAJADJEAIBCKgnAEfBACgAwCcAQmQAw&amp;mod=&amp;src=ia-random&amp;srcb=tv+static&amp;speeda=0.39"
             >
               <span class="shot">
+                <img
+                  class="still"
+                  src="/demos/wonkitize-me.webp"
+                  alt=""
+                  width="640"
+                  height="512"
+                  loading="lazy"
+                  decoding="async"
+                />
                 <video
                   data-src="demos/wonkitize-me.mp4"
-                  poster="/demos/wonkitize-me.jpg"
                   muted
                   loop
                   playsinline
@@ -358,9 +618,17 @@
               href="/app/?p=Nj.FJADAMACAuQDNVAImAIAUALIARaQAwoUAIABANQDApQBAHgARAniAQECCVQk5gMAqAEAqAYAgJ9JA8gB&amp;mod=tapeLoopMm:smooth:0.05:0.0151&amp;srcb=tv+static"
             >
               <span class="shot">
+                <img
+                  class="still"
+                  src="/demos/chaos-black-and-white-feedback.webp"
+                  alt=""
+                  width="640"
+                  height="512"
+                  loading="lazy"
+                  decoding="async"
+                />
                 <video
                   data-src="demos/chaos-black-and-white-feedback.mp4"
-                  poster="/demos/chaos-black-and-white-feedback.jpg"
                   muted
                   loop
                   playsinline
@@ -381,9 +649,17 @@
               href="/app/?p=qQ.BrAEAMgCAKAGPahOAdACAJADAZwCAHolpAIAoB8AegA6ACgAqCAALABgAEQAEACYARDQAgDUAhsEA0oQsAEIBA&amp;mod=&amp;srcb=vhs+static"
             >
               <span class="shot">
+                <img
+                  class="still"
+                  src="/demos/fuzzy-color-bars-feedback-dissolver.webp"
+                  alt=""
+                  width="640"
+                  height="512"
+                  loading="lazy"
+                  decoding="async"
+                />
                 <video
                   data-src="demos/fuzzy-color-bars-feedback-dissolver.mp4"
-                  poster="/demos/fuzzy-color-bars-feedback-dissolver.jpg"
                   muted
                   loop
                   playsinline
@@ -401,94 +677,20 @@
           <li>
             <a
               class="demo"
-              href="/app/?p=DM.CqCsBQEEAcwDAHABXAC8aQGQAwDoAgLMBQCsAgOceQR0GPwBCzgAGADYAQAIAlAAuAIImAIAUALIAQCAAQAkArACAXgAFAJ4ADAGXABcApADCjwA5AEA0AQCkAIA6AEAiAEI0AEA4gEA-AMABAlUJOYDAKgBBcgB&amp;mod=tapeLoopMm:smooth:0.05:0.0151&amp;srcb=tv+static"
-            >
-              <span class="shot">
-                <video
-                  data-src="demos/dull-color-feedback.mp4"
-                  poster="/demos/dull-color-feedback.jpg"
-                  muted
-                  loop
-                  playsinline
-                  preload="none"
-                  aria-hidden="true"
-                ></video>
-              </span>
-              <span class="name"
-                >Dull color feedback<span class="open">open →</span></span
-              >
-            </a>
-          </li>
-          <li>
-            <a
-              class="demo"
-              href="/app/?p=1T.GIgEEVQA9AEAYA6AAhHAAQBkDEgEkAMLoAIAtAEE6AIEjCEBAACkAgAAAKgBBVxwub4DAKHEAQ&amp;mod=vFreqHz:smooth:0.08:0.0049,fbGain:smooth:0.24:0.06&amp;src=vhs+static"
-            >
-              <span class="shot">
-                <video
-                  data-src="demos/camera-feedback-static.mp4"
-                  poster="/demos/camera-feedback-static.jpg"
-                  muted
-                  loop
-                  playsinline
-                  preload="none"
-                  aria-hidden="true"
-                ></video>
-              </span>
-              <span class="name"
-                >Camera feedback + static<span class="open">open →</span></span
-              >
-            </a>
-          </li>
-          <li>
-            <a
-              class="demo"
-              href="/app/?p=zD.GNADE4QCRYQDAJgfANYEAvAlAOQBFNwBAdAFL0AIBCKcvgE&amp;mod=&amp;srcb=none"
-            >
-              <span class="shot">
-                <video
-                  data-src="demos/rainborb.mp4"
-                  poster="/demos/rainborb.jpg"
-                  muted
-                  loop
-                  playsinline
-                  preload="none"
-                  aria-hidden="true"
-                ></video>
-              </span>
-              <span class="name">Rainborb<span class="open">open →</span></span>
-            </a>
-          </li>
-          <li>
-            <a
-              class="demo"
-              href="/app/?p=CU.CqCsBQEEAcwDAHABXAC8aQLoAgLMBQCsAgOceQR0GPwBCzgAGADYAQAIAjgAuAIImAIAUALIAQCAAQAkArACAXgAFAJ4ADAGXABcApADAKAhAIgBCKwCAOQBAJgRApACAAAAAADwCAdIALAJAAAABAlUJOYDAKgBBcgBAQQ&amp;mod=tapeLoopMm:smooth:0.05:0.0151&amp;srcb=tv+static&amp;src=tv+static"
-            >
-              <span class="shot">
-                <video
-                  data-src="demos/dark-camera-feedback.mp4"
-                  poster="/demos/dark-camera-feedback.jpg"
-                  muted
-                  loop
-                  playsinline
-                  preload="none"
-                  aria-hidden="true"
-                ></video>
-              </span>
-              <span class="name"
-                >Dark camera feedback<span class="open">open →</span></span
-              >
-            </a>
-          </li>
-          <li>
-            <a
-              class="demo"
               href="/app/?p=1w.cqQCAKAfAHoAOgAoAKggACwAYABEABAAmAEQ0AIA1AIwsAEIBA&amp;mod=&amp;srcb=vhs+static"
             >
               <span class="shot">
+                <img
+                  class="still"
+                  src="/demos/fuzzy-color-bars-feedback.webp"
+                  alt=""
+                  width="640"
+                  height="512"
+                  loading="lazy"
+                  decoding="async"
+                />
                 <video
                   data-src="demos/fuzzy-color-bars-feedback.mp4"
-                  poster="/demos/fuzzy-color-bars-feedback.jpg"
                   muted
                   loop
                   playsinline
@@ -504,12 +706,107 @@
           <li>
             <a
               class="demo"
+              href="/app/?p=DM.CqCsBQEEAcwDAHABXAC8aQGQAwDoAgLMBQCsAgOceQR0GPwBCzgAGADYAQAIAlAAuAIImAIAUALIAQCAAQAkArACAXgAFAJ4ADAGXABcApADCjwA5AEA0AQCkAIA6AEAiAEI0AEA4gEA-AMABAlUJOYDAKgBBcgB&amp;mod=tapeLoopMm:smooth:0.05:0.0151&amp;srcb=tv+static"
+            >
+              <span class="shot">
+                <img
+                  class="still"
+                  src="/demos/dull-color-feedback.webp"
+                  alt=""
+                  width="640"
+                  height="512"
+                  loading="lazy"
+                  decoding="async"
+                />
+                <video
+                  data-src="demos/dull-color-feedback.mp4"
+                  muted
+                  loop
+                  playsinline
+                  preload="none"
+                  aria-hidden="true"
+                ></video>
+              </span>
+              <span class="name"
+                >Dull color feedback<span class="open">open →</span></span
+              >
+            </a>
+          </li>
+          <li>
+            <a
+              class="demo"
+              href="/app/?p=IK.GIgEEVQA9AEAYA6AAhHAAQBkDEgEkAMLoAIAtAEE6AICnAEB-CEBKACMAQAgAJADBVxwub4DAKHEAQ&amp;mod=vFreqHz:smooth:0.08:0.0049,fbGain:smooth:0.24:0.06&amp;src=vhs+static"
+            >
+              <span class="shot">
+                <img
+                  class="still"
+                  src="/demos/camera-feedback-static.webp"
+                  alt=""
+                  width="640"
+                  height="512"
+                  loading="lazy"
+                  decoding="async"
+                />
+                <video
+                  data-src="demos/camera-feedback-static.mp4"
+                  muted
+                  loop
+                  playsinline
+                  preload="none"
+                  aria-hidden="true"
+                ></video>
+              </span>
+              <span class="name"
+                >Camera feedback + static<span class="open">open →</span></span
+              >
+            </a>
+          </li>
+          <li>
+            <a
+              class="demo"
+              href="/app/?p=CU.CqCsBQEEAcwDAHABXAC8aQLoAgLMBQCsAgOceQR0GPwBCzgAGADYAQAIAjgAuAIImAIAUALIAQCAAQAkArACAXgAFAJ4ADAGXABcApADAKAhAIgBCKwCAOQBAJgRApACAAAAAADwCAdIALAJAAAABAlUJOYDAKgBBcgBAQQ&amp;mod=tapeLoopMm:smooth:0.05:0.0151&amp;srcb=tv+static&amp;src=tv+static"
+            >
+              <span class="shot">
+                <img
+                  class="still"
+                  src="/demos/dark-camera-feedback.webp"
+                  alt=""
+                  width="640"
+                  height="512"
+                  loading="lazy"
+                  decoding="async"
+                />
+                <video
+                  data-src="demos/dark-camera-feedback.mp4"
+                  muted
+                  loop
+                  playsinline
+                  preload="none"
+                  aria-hidden="true"
+                ></video>
+              </span>
+              <span class="name"
+                >Dark camera feedback<span class="open">open →</span></span
+              >
+            </a>
+          </li>
+          <li>
+            <a
+              class="demo"
               href="/app/?p=8A.GIgECaABABwAtCUpNCOQAwCsHACACgKUJQK0ARLEAQGcBwAEAIQCAJQDAEwCbACkAgCkAVKA2QE&amp;mod="
             >
               <span class="shot">
+                <img
+                  class="still"
+                  src="/demos/ponderorb.webp"
+                  alt=""
+                  width="640"
+                  height="512"
+                  loading="lazy"
+                  decoding="async"
+                />
                 <video
-                  data-src="demos/woggity.mp4"
-                  poster="/demos/woggity.jpg"
+                  data-src="demos/ponderorb.mp4"
                   muted
                   loop
                   playsinline
@@ -522,7 +819,74 @@
               >
             </a>
           </li>
+          <li>
+            <a
+              class="demo"
+              href="/app/?p=R2.cqQCAKAfAHoAOgAoAKggACwAYABEABAAmAEQ0AIAoAMw-AIArAICjBAEBEjgLgCoAQ&amp;mod=&amp;srcb=vhs+static"
+            >
+              <span class="shot">
+                <img
+                  class="still"
+                  src="/demos/collecting-dust.webp"
+                  alt=""
+                  width="640"
+                  height="512"
+                  loading="lazy"
+                  decoding="async"
+                />
+                <video
+                  data-src="demos/collecting-dust.mp4"
+                  muted
+                  loop
+                  playsinline
+                  preload="none"
+                  aria-hidden="true"
+                ></video>
+              </span>
+              <span class="name"
+                >Collecting dust<span class="open">open →</span></span
+              >
+            </a>
+          </li>
+          <!-- /generated:gallery -->
         </ul>
+      </div>
+    </section>
+
+    <section class="tech">
+      <div class="wrap">
+        <h2>How it works</h2>
+        <p>
+          A frame of NTSC is 525 lines of 910 voltage samples. That array lives
+          on the GPU, and a chain of compute shaders rewrites it sixty times a
+          second: encode the picture into the waveform, damage it, decode it
+          back.
+        </p>
+        <p>
+          The faults act on the waveform. A loose cable, a bad ground or a
+          slipping vertical hold change the voltages, and the dot crawl, tearing
+          and hue shifts come out of the decoder on their own.
+        </p>
+        <p>
+          The screen can be fed back into the mixer, or looked at by a camera,
+          so feedback runs through the whole chain too.
+        </p>
+        <p>
+          <a href="/guide/how-it-works.html">Read the full explanation</a>
+        </p>
+        <figure>
+          <img
+            src="/guide/img/signal-path-callout.jpg"
+            alt="The app window with the signal path map at the head of the sidebar and enlarged over the picture: SOURCE A and SOURCE B into MIX, then CHANNEL, RECEIVER and SCREEN, with camera and mixer returns arching back over the trunk"
+            width="1800"
+            height="1227"
+            loading="lazy"
+          />
+          <figcaption>
+            The signal path, as the app draws it. Click a stage and its controls
+            open under it.
+          </figcaption>
+        </figure>
       </div>
     </section>
 
@@ -542,53 +906,173 @@
     </footer>
 
     <script>
-      // `data-src` is page-relative on purpose. Vite rewrites the asset
-      // attributes it knows — `poster` becomes `./demos/…` under this project's
-      // relative base — but it has never heard of `data-src`, so a root-absolute
-      // one would survive the build unchanged and, on a deploy under a sub-path,
-      // give a card a working poster over a clip that 404s. The landing page is
-      // the root, so `demos/…` is the same URL here and right everywhere.
+      // Two rules hold everything below together. One clip moves at a time —
+      // the hero's, or a card's, never eleven of them at once — and nothing is
+      // fetched until it is about to be looked at. `data-src`/`data-clip` are
+      // page-relative on purpose: vite rewrites the asset attributes it knows,
+      // and it has never heard of a data attribute, so a root-absolute one
+      // would survive the build unchanged and, under a sub-path base, give a
+      // card a working still over a clip that 404s. The landing page is the
+      // root, so `demos/…` is the same URL here and right everywhere.
       //
-      // The demo cards carry no video until they are looked at. Seven clips is
-      // about ten megabytes, and a landing page that spends that before anyone
-      // has scrolled is a landing page nobody on a phone reaches the bottom of —
-      // so each card ships as its poster, and the <source> is attached only when
-      // the card comes into view. Scrolling past detaches nothing: a clip that
-      // has been fetched keeps playing when it comes back.
-      //
-      // Everything below degrades to the posters if it does not run, which is
-      // also exactly what a reduced-motion reader gets.
-      const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches
+      // Everything degrades to the stills if it does not run.
+      const motion = matchMedia('(prefers-reduced-motion: reduce)')
 
-      // Reduced motion stops the hero on a frame; it does not blank it. The
-      // rule that used to do this in CSS was `display: none`, which takes the
-      // poster with it and leaves an empty black band — and, since an automated
-      // browser reports `reduce` by default, that is also what every screenshot
-      // of this page showed until it was measured.
-      if (reduced) {
-        document.querySelector('.heroVid').pause()
+      // ---- the hero reel ----
+      //
+      // A reader who asks for reduced motion gets the still and the ▶, and the
+      // clip is never fetched — which is also why the hero carries no `src` and
+      // no `autoplay` in the markup. `wanted` is what the reader asked for;
+      // `showing` is whether the hero is somewhere it can be seen. Both have to
+      // hold, so the reel does not play to a scrolled-past page or a background
+      // tab, and neither one has to know about the other.
+      const layers = [...document.querySelectorAll('.heroVid')]
+      const dots = [...document.querySelectorAll('.dot')]
+      const looks = dots.map(dot => dot.dataset)
+      const reelName = document.querySelector('.reelName')
+      const toggle = document.querySelector('.reelToggle')
+      const DWELL = 9000
+
+      let front = 0
+      let at = 0
+      let wanted = !motion.matches
+      let showing = true
+      let advance = 0
+
+      // The layer showing at load declares its look in the markup and carries
+      // no `src`, so that a reader who asked for reduced motion is never sent a
+      // clip they did not ask to see — which means "already holding this look"
+      // is not on its own enough to skip the load.
+      const arm = (layer, look) => {
+        if (!layer.src || layer.dataset.clip !== look.clip) {
+          layer.dataset.clip = look.clip
+          layer.poster = look.still
+          layer.src = look.clip
+        }
       }
 
-      const cards = document.querySelectorAll('.demo video[data-src]')
-      if (!reduced && 'IntersectionObserver' in window) {
-        const seen = new IntersectionObserver(
+      const running = () => wanted && showing
+
+      const show = index => {
+        const behind = layers[front]
+        const next = layers[1 - front]
+        arm(next, looks[index])
+        next.currentTime = 0
+        if (running()) {
+          next.play().catch(() => {})
+        }
+        next.classList.add('on')
+        behind.classList.remove('on')
+        front = 1 - front
+        at = index
+        reelName.textContent = looks[at].name
+        for (const [i, dot] of dots.entries()) {
+          dot.setAttribute('aria-current', String(i === at))
+        }
+        // Once the fade is over, the layer left behind stops costing a decoder
+        // and becomes the one holding the look after this one — nine seconds of
+        // lead on a file that has to open before it can be faded to.
+        setTimeout(() => {
+          behind.pause()
+          arm(behind, looks[(at + 1) % looks.length])
+        }, 1000)
+      }
+
+      const sync = () => {
+        clearInterval(advance)
+        if (running()) {
+          arm(layers[front], looks[at])
+          layers[front].play().catch(() => {})
+          advance = setInterval(() => show((at + 1) % looks.length), DWELL)
+        } else {
+          for (const layer of layers) {
+            layer.pause()
+          }
+        }
+        toggle.textContent = wanted ? '❚❚' : '▶'
+        toggle.setAttribute(
+          'aria-label',
+          wanted ? 'Pause the reel' : 'Play the reel',
+        )
+      }
+
+      toggle.addEventListener('click', () => {
+        wanted = !wanted
+        sync()
+      })
+      for (const [i, dot] of dots.entries()) {
+        dot.addEventListener('click', () => {
+          show(i)
+          sync()
+        })
+      }
+      document.addEventListener('visibilitychange', () => {
+        showing = !document.hidden
+        sync()
+      })
+      new IntersectionObserver(entries => {
+        showing = entries[0].isIntersecting && !document.hidden
+        sync()
+      }).observe(document.querySelector('.hero'))
+      dots[0].setAttribute('aria-current', 'true')
+      sync()
+
+      // ---- the gallery ----
+      //
+      // One card plays, and it is the one being looked at: the card under the
+      // pointer or holding focus, and on a touchscreen the card crossing the
+      // middle of the screen. Hover and focus start a clip whatever the motion
+      // preference says, because both of them are something the reader did.
+      const cards = [...document.querySelectorAll('.demo')]
+      let live
+
+      const activate = card => {
+        if (live !== card) {
+          if (live) {
+            live.classList.remove('live')
+            live.querySelector('video').pause()
+          }
+          live = card
+          if (card) {
+            const clip = card.querySelector('video')
+            if (!clip.src) {
+              clip.src = clip.dataset.src
+            }
+            // The class lands on the promise rather than beside it, so a clip
+            // that is still opening never gets faded up over the still it is
+            // there to replace.
+            clip
+              .play()
+              .then(() => card.classList.add('live'))
+              .catch(() => {})
+          }
+        }
+      }
+
+      for (const card of cards) {
+        card.addEventListener('pointerenter', () => activate(card))
+        card.addEventListener('pointerleave', () => activate(undefined))
+        card.addEventListener('focus', () => activate(card))
+        card.addEventListener('blur', () => activate(undefined))
+      }
+
+      if (!motion.matches && matchMedia('(hover: none)').matches) {
+        const band = new Set()
+        const crossing = new IntersectionObserver(
           entries => {
             for (const entry of entries) {
-              const video = entry.target
               if (entry.isIntersecting) {
-                if (!video.src) {
-                  video.src = video.dataset.src
-                }
-                video.play().catch(() => {})
+                band.add(entry.target)
               } else {
-                video.pause()
+                band.delete(entry.target)
               }
             }
+            activate([...band][0])
           },
-          { rootMargin: '200px' },
+          { rootMargin: '-40% 0px -40% 0px' },
         )
         for (const card of cards) {
-          seen.observe(card)
+          crossing.observe(card)
         }
       }
     </script>

@@ -1,54 +1,29 @@
 import puppeteer from 'puppeteer-core'
 
 import { FIREFOX } from './browser.mjs'
+import { demos } from './demos.mjs'
 
-// Record the README's "Cool demos" as short mp4 loops for the landing page.
+// Record the demos as short mp4 loops for the landing page.
 //
-// The demos are the one set of looks anybody actually vouched for, and they are
-// already written down as links — so this reads them rather than keeping a
-// second list that would drift from the first. A link is fully declarative
-// (?p= packs the whole board, ?mod= the modulation, ?src=/?srcb= the sources),
-// which is why nothing here clicks the UI or uploads a file.
+// `demos.json` is the list, and a demo in it is fully declarative — `?p=` packs
+// the whole board, `?mod=` the modulation, `?src=`/`?srcb=` the sources — which
+// is why nothing here clicks the UI or uploads a file. Only the query is used:
+// the origin is always this run's base, which is what lets the list be recorded
+// against a worktree's server on another port.
 //
 // Usage: node scripts/demoreel.mjs [outDir=public/demos] [base=http://localhost:5199/app/] [name...]
-//   (needs dev server + Firefox Nightly + ffmpeg on PATH). Writes <slug>.mp4 and
-//   <slug>.jpg — the poster, so the page can show every demo without fetching
-//   ten videos. Name demos to record a subset.
+//   (needs dev server + Firefox Nightly + ffmpeg and cwebp on PATH). Writes
+//   <slug>.mp4 and <slug>.webp — the still, so the page can show every demo
+//   without fetching a dozen videos. Name demos to record a subset, which is
+//   the usual run: one new look, not the reel.
 import { execFileSync } from 'node:child_process'
-import {
-  mkdirSync,
-  readFileSync,
-  rmSync,
-  statSync,
-  writeFileSync,
-} from 'node:fs'
+import { mkdirSync, rmSync, statSync, writeFileSync } from 'node:fs'
 
 const outDir = process.argv[2] ?? 'public/demos'
 const base = process.argv[3] ?? 'http://localhost:5199/app/'
 const only = process.argv.slice(4)
 
 const sleep = ms => new Promise(r => setTimeout(r, ms))
-
-const slug = name =>
-  name
-    .toLowerCase()
-    .replaceAll(/[^a-z0-9]+/g, '-')
-    .replaceAll(/^-|-$/g, '')
-
-// The README lists each demo as a bullet holding the name and, on the line
-// under it, the link. Two of the ten point at a dev server (they were written
-// from one and never republished), so what is kept is the query alone and the
-// origin is always this run's base — which is also what lets the whole list be
-// recorded against a worktree's server on another port.
-const demosFromReadme = () => {
-  const readme = readFileSync('README.md', 'utf8')
-  const section = readme.slice(readme.indexOf('## Cool demos'))
-  return [...section.matchAll(/^- (.+)\n\s+(https?:\/\/\S+)$/gm)].map(m => ({
-    name: m[1].trim(),
-    file: slug(m[1]),
-    query: new URL(m[2]).search,
-  }))
-}
 
 // A feedback look is mostly *history*: the frame store has to fill before the
 // picture is the one the link promises, and a clip that starts at the first
@@ -63,8 +38,18 @@ const demosFromReadme = () => {
 const WARM = 500
 const SECS = 8
 
-// Wide enough that the 4:3 picture fills a landing-page card at 2x, small
-// enough that ten of them are a few megabytes rather than fifty.
+// What the landing page is served. The recordings were 960-wide 30fps crf 30
+// and the ten of them came to 11.7 MB, which is a page that costs more than the
+// app it advertises. 640 wide at 24fps and crf 33 is 2.6 MB for the set, and on
+// this material the difference is not visible at card size or behind the hero's
+// scrim: what these clips are made of is noise and scanlines, and the noise
+// survives — it is the flat fields between them that a codec spends bits on.
+// 5:4 is the canvas's own shape and the card's, so nothing is cropped.
+const CLIP = { w: 640, h: 512 }
+const FPS = 24
+
+// Recorded well above what is shipped: the clip is scaled down afterwards, and
+// a downscale is what hides the compression the capture itself put in.
 const VIEWPORT = { width: 1100, height: 620 }
 
 async function record(demo) {
@@ -154,13 +139,17 @@ async function record(demo) {
   }
 }
 
-const demos = demosFromReadme().filter(
-  d => !only.length || only.includes(d.file),
-)
-mkdirSync(outDir, { recursive: true })
-console.log(`${demos.length} demos → ${outDir}/`)
+// Both encoders are wanted at the end of a run that takes a browser recording
+// per demo to reach it, so they are checked at the start of it.
+for (const bin of ['ffmpeg', 'cwebp']) {
+  execFileSync('sh', ['-c', `command -v ${bin}`], { stdio: 'ignore' })
+}
 
-for (const demo of demos) {
+const wanted = demos.filter(d => !only.length || only.includes(d.file))
+mkdirSync(outDir, { recursive: true })
+console.log(`${wanted.length} demos → ${outDir}/`)
+
+for (const demo of wanted) {
   const webm = `${outDir}/${demo.file}.webm`
   let ok = false
   for (let attempt = 0; attempt < 3 && !ok; attempt++) {
@@ -173,24 +162,36 @@ for (const demo of demos) {
     console.log('SKIP', demo.file, '— no usable capture')
     continue
   }
-  // 960 wide keeps a 4:3 picture crisp on a card at 2x; the even height is
-  // what yuv420p needs. faststart so the page can start it without the whole
-  // file.
   // prettier-ignore
   execFileSync('ffmpeg', ['-y', '-v', 'error', '-i', webm, '-an',
-    '-vf', 'scale=960:-2', '-c:v', 'libx264', '-crf', '30', '-preset', 'slow',
-    '-pix_fmt', 'yuv420p', '-movflags', '+faststart', `${outDir}/${demo.file}.mp4`])
-  // The poster is the frame ffmpeg judges most representative of the whole
+    '-vf', `fps=${FPS},scale=${CLIP.w}:${CLIP.h}:flags=lanczos`,
+    '-c:v', 'libx264', '-crf', '33', '-preset', 'veryslow',
+    '-profile:v', 'main', '-pix_fmt', 'yuv420p',
+    '-movflags', '+faststart', `${outDir}/${demo.file}.mp4`])
+  // The still is the frame ffmpeg judges most representative of the whole
   // clip, not one at a fixed timestamp. These looks are not evenly interesting
   // over their length — a tape wow drags the picture through a dark trough and
   // back — so a fixed seek lands on whatever the look happened to be doing at
   // that second, and landed on black for three of them.
   // prettier-ignore
   execFileSync('ffmpeg', ['-y', '-v', 'error', '-i', `${outDir}/${demo.file}.mp4`,
-    '-vf', `thumbnail=${SECS * 30}`, '-frames:v', '1', '-q:v', '4',
-    `${outDir}/${demo.file}.jpg`])
+    '-vf', `thumbnail=${SECS * FPS}`, '-frames:v', '1',
+    `${outDir}/${demo.file}.png`])
+  // WebP rather than JPEG for the still, which is the one asset every card
+  // pays for whether or not anybody looks at it: on this material it lands at
+  // 30% of the JPEG at a quality nobody can pick out of a lineup — noise this
+  // dense hides ringing that a photograph would show.
+  execFileSync('cwebp', [
+    '-quiet',
+    '-q',
+    '72',
+    `${outDir}/${demo.file}.png`,
+    '-o',
+    `${outDir}/${demo.file}.webp`,
+  ])
+  rmSync(`${outDir}/${demo.file}.png`)
   rmSync(webm)
   const kb = n =>
     Math.round(statSync(`${outDir}/${demo.file}.${n}`).size / 1024)
-  console.log('clip', demo.file, `${kb('mp4')}K mp4`, `${kb('jpg')}K poster`)
+  console.log('clip', demo.file, `${kb('mp4')}K mp4`, `${kb('webp')}K still`)
 }

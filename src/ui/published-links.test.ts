@@ -8,9 +8,12 @@ import type { ControlKey } from '../core/controls'
 
 import { readFileSync } from 'node:fs'
 
-// The links the project hands strangers: eight demos in the README. The
-// getting-started page carried the hero patch until it was rewritten and now
-// carries none, but it is still read here so that one added back is covered.
+// The links the project hands strangers: every demo in the README, which is
+// generated from `demos.json` and so is all of them — two used to be published
+// pointing at a dev server, which is the sort of thing that stops happening
+// when the origin is not stored per demo. The getting-started page carried the
+// hero patch until it was rewritten and now carries none, but it is still read
+// here so that one added back is covered.
 // They are packed, which is what took them from 400-950 characters to 130-230 —
 // and packed means nobody proofreads them again. A typo in one, or a paste that
 // lost its tail, decodes to a shorter look rather than to an error, so the demo
@@ -35,7 +38,7 @@ const published = [
 ]
 
 test('the project publishes the links it means to', () => {
-  expect(published.length).toBe(8)
+  expect(published.length).toBe(12)
 })
 
 test.each(published)('%s: %s', (_page, query) => {
