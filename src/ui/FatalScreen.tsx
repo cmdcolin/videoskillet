@@ -1,3 +1,4 @@
+import { publicUrl } from '../publicUrl'
 import { cx } from './cx'
 import styles from './FatalScreen.module.css'
 import ui from './ui.module.css'
@@ -28,41 +29,52 @@ export function FatalScreen({ fatal }: { fatal: Fatal }) {
   return (
     <div className={styles.fatalWrap}>
       <div className={styles.fatalCard}>
-        <h1 className={styles.fatalTitle}>{fatal.title}</h1>
-        <p style={{ margin: '0 0 14px' }}>{fatal.body}</p>
+        {fatal.kind === 'unavailable' ? null : (
+          <>
+            <h1 className={styles.fatalTitle}>{fatal.title}</h1>
+            <p style={{ margin: '0 0 14px' }}>{fatal.body}</p>
+          </>
+        )}
         {fatal.kind === 'unavailable' ? (
           <>
+            {/* Whoever is reading this did not come here to be told a fact
+                about their browser. They followed a link to see the thing, so
+                what they get is the one move that fixes it, the thing moving,
+                and the page where the rest of it is. */}
+            <h1 className={styles.fatalHeadline}>
+              This browser can’t run videoskillet.
+            </h1>
+            <p className={styles.fatalLead}>
+              This app requires WebGPU. Try another browser or even nightly
+              build like Chrome Canary or Firefox Nightly.
+            </p>
+            {/* One of the recorded demos rather than demo-v2.mp4, which this
+                screen used to show: that one is a dark tape transfer, and in a
+                card this colour it reads as a black band. It stays in public/
+                as the fixture cue.ts and mp4demux.ts are measured against. */}
             <video
               className={styles.fatalVideo}
-              src={`${import.meta.env.BASE_URL}demo-v2.mp4`}
-              poster={`${import.meta.env.BASE_URL}demo-poster-v2.jpg`}
+              src={publicUrl('demos/wonkitize-me.mp4')}
+              poster={publicUrl('demos/wonkitize-me.jpg')}
               autoPlay
               muted
               loop
               playsInline
             />
-            <p className={ui.muted} style={{ margin: '0 0 14px' }}>
-              The entire NTSC signal path runs in WebGPU compute shaders, so a
-              WebGPU-capable browser with working hardware acceleration is
-              required — there is no fallback rendering path.
-            </p>
-            <p className={ui.muted} style={{ margin: 0 }}>
+            {/* `publicUrl('')` is the deploy root, which is the landing page and
+                its gallery — relative, so it is right on videoskillet.com and
+                from any sub-path the build is served from. */}
+            <a className={styles.fatalHome} href={publicUrl('')}>
+              See what it does →
+            </a>
+            <p className={styles.fatalWhy}>
               <a
-                className={ui.link}
+                className={styles.fatalLink}
                 href="https://github.com/cmdcolin/videoskillet"
                 target="_blank"
                 rel="noreferrer"
               >
-                github.com/cmdcolin/videoskillet
-              </a>
-              {' · '}
-              <a
-                className={ui.link}
-                href="https://caniuse.com/webgpu"
-                target="_blank"
-                rel="noreferrer"
-              >
-                caniuse.com/webgpu
+                Source on GitHub
               </a>
             </p>
           </>

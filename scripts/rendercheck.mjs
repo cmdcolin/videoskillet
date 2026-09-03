@@ -98,7 +98,7 @@ await page.setViewport({ width: 1352, height: 900 })
 const errors = []
 page.on('pageerror', e => errors.push(String(e).slice(0, 200)))
 await page.goto(
-  `http://localhost:${port}/?preset=vhs&set=strobeHz:7,strobeMs:50`,
+  `http://localhost:${port}/app/?preset=vhs&set=strobeHz:7,strobeMs:50`,
   {
     waitUntil: 'domcontentloaded',
   },

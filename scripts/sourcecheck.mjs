@@ -43,7 +43,7 @@ import { FIREFOX } from './browser.mjs'
 // Boot waited for rather than slept through — see until.mjs.
 import { appUp } from './until.mjs'
 
-const origin = process.argv[2] ?? 'http://localhost:5199/'
+const origin = process.argv[2] ?? 'http://localhost:5199/app/'
 const base = `${origin}?srcb=none&set=bGain:1`
 
 // What counts as the picture having actually changed. The fault this catches

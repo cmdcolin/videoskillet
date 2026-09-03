@@ -65,7 +65,7 @@ await page.setViewport({
   hasTouch: true,
   isMobile: true,
 })
-await page.goto('http://localhost:5381/', { waitUntil: 'load' })
+await page.goto('http://localhost:5381/app/', { waitUntil: 'load' })
 const settle = ms => new Promise(r => setTimeout(r, ms))
 await settle(6000)
 

@@ -30,7 +30,7 @@ import puppeteer from 'puppeteer-core'
 
 import { FIREFOX } from './browser.mjs'
 
-const base = process.argv[2] ?? 'http://localhost:5199/'
+const base = process.argv[2] ?? 'http://localhost:5199/app/'
 
 const browser = await puppeteer.launch({
   browser: 'firefox',

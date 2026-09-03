@@ -63,7 +63,7 @@ export function StreamPage() {
     <div className={styles.page}>
       <div className={styles.bar}>
         <h1 className={styles.title}>cool or not?</h1>
-        <a className={styles.link} href="vote.html">
+        <a className={styles.link} href="../vote/">
           pairs instead
         </a>
         <div className={styles.spacer} />

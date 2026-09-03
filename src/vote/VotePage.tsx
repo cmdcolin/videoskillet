@@ -104,7 +104,7 @@ export function VotePage() {
     <div className={styles.page}>
       <div className={styles.bar}>
         <h1 className={styles.title}>which look is cooler?</h1>
-        <a className={styles.link} href="stream.html">
+        <a className={styles.link} href="../stream/">
           one at a time instead
         </a>
         <div className={styles.spacer} />

@@ -40,7 +40,7 @@ import { appUp, until } from './until.mjs'
 import process from 'node:process'
 
 const port = process.argv[2] ?? '5199'
-const url = `http://localhost:${port}/`
+const url = `http://localhost:${port}/app/`
 
 const browser = await puppeteer.launch({
   browser: 'firefox',

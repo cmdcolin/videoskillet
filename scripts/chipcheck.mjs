@@ -41,7 +41,7 @@ import { FIREFOX } from './browser.mjs'
 import { watchFrames } from './frames.mjs'
 import { appUp } from './until.mjs'
 
-const url = new URL(process.argv[2] ?? 'http://localhost:5401/')
+const url = new URL(process.argv[2] ?? 'http://localhost:5401/app/')
 const fails = []
 const check = (ok, msg) => {
   if (!ok) fails.push(msg)

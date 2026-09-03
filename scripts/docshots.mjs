@@ -49,7 +49,7 @@ const force = argv.includes('--force')
 const upload = argv.includes('--upload')
 const freeze = argv.includes('--freeze')
 const check = argv.includes('--check')
-const base = flag('base', 'http://localhost:5199/')
+const base = flag('base', 'http://localhost:5199/app/')
 const outDir = flag('out', 'docs/img')
 const videoDir = flag('videos', 'clips')
 const only = argv.filter(a => !a.startsWith('--'))
@@ -60,7 +60,7 @@ const S3_PREFIX = 's3://cmdcolinphotos/phosphene/'
 const CLIP_BASE = 'https://cmdcolinphotos.s3.amazonaws.com/phosphene/'
 // Where a figure's "open this in the app" link points: the same params this
 // shot was captured with, against the deployed build.
-const LIVE_BASE = 'https://videoskillet.com/'
+const LIVE_BASE = 'https://videoskillet.com/app/'
 
 // Captured at 2x so the images stay sharp on a HiDPI screen; JPEG shots are
 // then fit to this width, which is still ~2x the column any doc renders them in.

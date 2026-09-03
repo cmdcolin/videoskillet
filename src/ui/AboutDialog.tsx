@@ -1,3 +1,4 @@
+import { publicUrl } from '../publicUrl'
 import { gitSha, versionLabel } from '../version'
 import { Dialog } from './Dialog'
 import { GUIDE_URL, REPO_URL } from './links'
@@ -12,11 +13,7 @@ export function AboutDialog({ onClose }: { onClose: () => void }) {
     <Dialog
       title={
         <span className={ui.aboutTitle}>
-          <img
-            className={ui.aboutMark}
-            src={`${import.meta.env.BASE_URL}favicon.svg`}
-            alt=""
-          />
+          <img className={ui.aboutMark} src={publicUrl('favicon.svg')} alt="" />
           videoskillet.js
         </span>
       }

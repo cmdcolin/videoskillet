@@ -1,9 +1,8 @@
 # Teaching the app which looks are good
 
 Two ways of collecting labels, feeding one dataset: a `tags` menu inside the
-app, and a pairwise comparison page at `/vote.html`. The goal is to answer
-"which settings are cool" with a model rather than with `surprise`'s uniform
-roll.
+app, and a pairwise comparison page at `/vote/`. The goal is to answer "which
+settings are cool" with a model rather than with `surprise`'s uniform roll.
 
 ## The app's tags menu — the main collector
 
@@ -74,13 +73,13 @@ untouched recipe, whatever the hint says.
 
 ## The stream — the volume collector
 
-`/stream.html` (`src/vote/StreamPage.tsx`, `useStream.ts`): one look on one
-engine, the app's own `z`–`b` 1-5 keys, the next one. It writes the same
-`ratings` rows the tags menu does, with `provenance: 'stream'`, so a fit reads
-both collectors as one dataset and can slice either back out. The tags sit on
-`1`–`0` and are optional; a candidate is `sampleOne`, which mixes authored
-anchors in at the pair page's 15% so the scale gets the same calibration points.
-`→` skips, `space` holds the current look.
+`/stream/` (`src/vote/StreamPage.tsx`, `useStream.ts`): one look on one engine,
+the app's own `z`–`b` 1-5 keys, the next one. It writes the same `ratings` rows
+the tags menu does, with `provenance: 'stream'`, so a fit reads both collectors
+as one dataset and can slice either back out. The tags sit on `1`–`0` and are
+optional; a candidate is `sampleOne`, which mixes authored anchors in at the
+pair page's 15% so the scale gets the same calibration points. `→` skips,
+`space` holds the current look.
 
 It exists because the rate is what the dataset was short of: the pair page
 yields one comparison per ~4 s of two engines, the app only collects from
@@ -104,7 +103,7 @@ The blindness rule is the pair page's: nothing on screen names the recipe.
 
 ## The comparison page — the clean holdout
 
-`/vote.html`, a separate vite entry (`src/vote/main.tsx`) so a visitor to
+`/vote/`, a separate vite entry (`src/vote/main.tsx`) so a visitor to
 `index.html` never downloads a byte of it. It is no longer the main collector —
 the app's tags menu is — but it keeps a job the app cannot do: absolute ratings
 drift between sessions (what you called a 4 today is a 3 next week), while

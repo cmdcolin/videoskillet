@@ -12,7 +12,7 @@ import { FIREFOX } from './browser.mjs'
 // Boot waited for rather than slept through — see until.mjs.
 import { appUp } from './until.mjs'
 
-const url = process.argv[2] ?? 'http://localhost:5381/'
+const url = process.argv[2] ?? 'http://localhost:5381/app/'
 const fails = []
 
 const browser = await puppeteer.launch({

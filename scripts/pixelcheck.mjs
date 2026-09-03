@@ -18,7 +18,7 @@
 // scrambler missed the sync tip on a third of the lines under a paused deck.
 //
 // Deliberately not part of `pnpm test` — it needs a GPU, a display and ~40 s.
-// Usage: node scripts/pixelcheck.mjs [--url http://localhost:5173]
+// Usage: node scripts/pixelcheck.mjs [--url http://localhost:5173/app]
 
 import puppeteer from 'puppeteer-core'
 
@@ -42,7 +42,7 @@ if (!base) {
       stdio: 'ignore',
     },
   )
-  base = `http://localhost:${PORT}`
+  base = `http://localhost:${PORT}/app`
   for (let i = 0; ; i++) {
     try {
       await fetch(base)

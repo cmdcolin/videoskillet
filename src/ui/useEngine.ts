@@ -11,6 +11,7 @@ import { debugLog } from '../core/gpu/env'
 import { Engine } from '../core/gpu/pipeline'
 import { MAX_SRC_EDGE } from '../core/gpu/sources'
 import { reportPreviousTrace, trace } from '../core/gpu/trace'
+import { publicUrl } from '../publicUrl'
 import { clipUrl, isClipId } from '../sources/clips'
 import { clipLabel } from '../sources/clipUrl'
 import { smpteBars, sweep } from '../sources/pattern'
@@ -120,7 +121,7 @@ const decodeImage = (src: Blob | File): Promise<ImageBitmap> =>
 // The one photograph the app ships with, offered as a source in its own right:
 // the patterns show what a mechanism does to a known signal, a real picture
 // shows what the look does to a face-sized subject — and it needs no file pick.
-const CAT_URL = `${import.meta.env.BASE_URL}sample.jpg`
+const CAT_URL = publicUrl('sample.jpg')
 
 // Load an image source from a URL, for the ?iurl / ?iurlb query params and the
 // bundled cat.

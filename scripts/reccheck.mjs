@@ -61,7 +61,9 @@ const page = await browser.newPage()
 await page.setViewport({ width: 1352, height: 900 })
 const errors = []
 page.on('pageerror', e => errors.push(String(e).slice(0, 200)))
-await page.goto(`http://localhost:${port}/`, { waitUntil: 'domcontentloaded' })
+await page.goto(`http://localhost:${port}/app/`, {
+  waitUntil: 'domcontentloaded',
+})
 await appUp(page, 6000)
 await page.bringToFront()
 

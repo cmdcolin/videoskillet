@@ -245,7 +245,7 @@ whatever else it names.
 It comes out short. Here is **worn tape**, whole:
 
 ```
-https://videoskillet.com/?p=mD.FbQBJbABEXAAmAIN8AEAPAKQAwDoAgCQAwBkAEgBwAIAgAEGwAIA6AIBCA&mod=
+https://videoskillet.com/app/?p=mD.FbQBJbABEXAAmAIN8AEAPAKQAwDoAgCQAwBkAEgBwAIAgAEGwAIA6AIBCA&mod=
 ```
 
 That is the look written as bytes, behind two characters of seal: a link that
@@ -254,7 +254,7 @@ rather than opened on a picture nobody made. `?set=` says the same thing by
 name, and the app both reads and writes it:
 
 ```
-https://videoskillet.com/?set=noiseIre:9,hHold:0.2,chromaGain:1.79
+https://videoskillet.com/app/?set=noiseIre:9,hHold:0.2,chromaGain:1.79
 ```
 
 Three times the characters for the same look, which is why the bar carries the

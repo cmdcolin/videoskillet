@@ -4,7 +4,7 @@
 // test suite would notice archive.org changing its derivative ladder, retiring
 // a collection, or stopping serving /cors/.
 //
-// Usage: node scripts/iaroll.mjs [http://localhost:5199] [rolls-per-channel=2]
+// Usage: node scripts/iaroll.mjs [http://localhost:5199/app] [rolls-per-channel=2]
 //
 // What it checks that a unit test cannot: the clip arrives as a `blob:` and is
 // therefore *seekable end to end*, which is the whole reason the module
@@ -20,7 +20,7 @@ import puppeteer from 'puppeteer-core'
 
 import { FIREFOX } from './browser.mjs'
 
-const base = (process.argv[2] ?? 'http://localhost:5199').replace(/\/$/, '')
+const base = (process.argv[2] ?? 'http://localhost:5199/app').replace(/\/$/, '')
 const wait = ms => new Promise(r => setTimeout(r, ms))
 const failures = []
 // A roll that came back empty is not a broken channel — the pools are sparse

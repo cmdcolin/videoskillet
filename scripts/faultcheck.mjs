@@ -81,7 +81,7 @@ const errors = []
 page.on('pageerror', e => errors.push(String(e).slice(0, 200)))
 // Bars, and B on air at half — a still source so nothing but the fault moves,
 // and both decks live so the cut has somewhere to throw to.
-await page.goto(`http://localhost:${port}/?set=bGain:0.5,bGenlock:1`, {
+await page.goto(`http://localhost:${port}/app/?set=bGain:0.5,bGenlock:1`, {
   waitUntil: 'domcontentloaded',
 })
 await appUp(page, 6000)

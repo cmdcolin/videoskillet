@@ -16,7 +16,7 @@ import type { CloudStatus } from './useSavedProfiles'
 // because the two are the same moment from different angles — saving keeps a look
 // for yourself, this describes it for the model.
 //
-// Why the app at all, rather than the labelling page at /vote.html: that page is a
+// Why the app at all, rather than the labelling page at /vote/: that page is a
 // cleaner experiment but only collects from someone who set out to label. This
 // collects from anyone rolling looks, which is the whole difference between a few
 // hundred rows and a few thousand. See useLookLabels for why the methodological

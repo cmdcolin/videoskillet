@@ -72,7 +72,7 @@ const controlUrl = `http://127.0.0.1:${server.address().port}/`
 const url =
   which === 'control'
     ? controlUrl
-    : `http://localhost:${devPort}/?gpubudget=ignore&set=fbMix:0.3,phosphor:0.5`
+    : `http://localhost:${devPort}/app/?gpubudget=ignore&set=fbMix:0.3,phosphor:0.5`
 
 const t0 = Date.now()
 const at = () => ((Date.now() - t0) / 1000).toFixed(0).padStart(4)

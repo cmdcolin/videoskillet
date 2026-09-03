@@ -13,6 +13,8 @@
 // - "Minnie the Moocher" (Fleischer Studios, 1932) — public domain via
 //   non-renewal.
 
+import { publicUrl } from '../publicUrl'
+
 const S3_BASE = 'https://cmdcolinphotos.s3.amazonaws.com/phosphene/sources/'
 
 export const CLIP_IDS = [
@@ -30,7 +32,7 @@ interface BundledClip {
 export const CLIPS: Record<ClipId, BundledClip> = {
   'clip-test': {
     label: 'Test pattern — bars, timecode, motion',
-    url: `${import.meta.env.BASE_URL}test.mp4`,
+    url: publicUrl('test.mp4'),
   },
   'clip-haunted-house': {
     label: 'The Haunted House (1929, public domain)',

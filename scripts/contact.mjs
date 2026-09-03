@@ -31,7 +31,7 @@ if (specPath === undefined) {
   process.exit(1)
 }
 const outDir = outArg ?? 'docs/contact'
-const base = baseArg ?? 'http://localhost:5199/'
+const base = baseArg ?? 'http://localhost:5199/app/'
 const spec = (await import(pathToFileURL(resolve(specPath)).href)).default
 
 const DEFAULTS = {

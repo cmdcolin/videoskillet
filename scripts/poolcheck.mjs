@@ -3,7 +3,7 @@
 // the browser dialog come back with thumbnails from both, and is a roll that
 // lands late dropped rather than pushed onto a slot the user has moved on from.
 //
-// Usage: node scripts/poolcheck.mjs [http://localhost:5199]
+// Usage: node scripts/poolcheck.mjs [http://localhost:5199/app]
 //
 // Unlike every other harness here this one talks to third parties. That is the
 // point of it: `src/sources/commons.test.ts` and `archive.test.ts` hold the
@@ -26,7 +26,7 @@ import { watchFrames } from './frames.mjs'
 // Waiting on the archives rather than on a duration — see until.mjs.
 import { appUp, until } from './until.mjs'
 
-const base = (process.argv[2] ?? 'http://localhost:5199').replace(/\/$/, '')
+const base = (process.argv[2] ?? 'http://localhost:5199/app').replace(/\/$/, '')
 const wait = ms => new Promise(r => setTimeout(r, ms))
 const failures = []
 const check = (ok, what, saw) => {

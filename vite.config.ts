@@ -26,21 +26,30 @@ export default defineConfig(({ command }) => ({
     __APP_VERSION__: JSON.stringify(pkg.version),
     __GIT_SHA__: JSON.stringify(gitSha()),
   },
-  // Three pages: the instrument, and the two labelling tools that build a
-  // preference dataset out of it (src/vote) — pairs, and the stream. Each is
-  // its own entry rather than a dialog because it wants the whole screen and
-  // its own engine, and because nothing in it should cost the app a byte — a
-  // visitor to index.html never downloads it.
+  // Four pages: the landing page a stranger arrives on, the instrument, and the
+  // two labelling tools that build a preference dataset out of it (src/vote) —
+  // pairs, and the stream. Each is its own entry rather than a dialog because it
+  // wants the whole screen and its own engine, and because nothing in it should
+  // cost the app a byte — a visitor to the landing page downloads none of them,
+  // and it ships no script of its own either.
   //
   // Naming any input at all means naming index.html too: rollupOptions.input
   // replaces vite's default entry rather than adding to it, so leaving it out
   // would build a project whose main page is the vote page.
+  //
+  // **Every page is a directory one level below the root, and that is load-
+  // bearing.** `public/` lands at the root, the base is relative (above), so a
+  // page reaches a bundled asset as `../name` — see src/publicUrl.ts, which is
+  // the one place that spells it. Flattening any of these back to a root-level
+  // `foo.html` would take that page a level up and leave the rule true for its
+  // siblings and false for it.
   build: {
     rollupOptions: {
       input: {
-        main: 'index.html',
-        vote: 'vote.html',
-        stream: 'stream.html',
+        landing: 'index.html',
+        app: 'app/index.html',
+        vote: 'vote/index.html',
+        stream: 'stream/index.html',
       },
     },
   },

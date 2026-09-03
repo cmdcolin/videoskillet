@@ -4,7 +4,7 @@
 //   node scripts/panelshots.mjs            compare, exit 1 on drift
 //   node scripts/panelshots.mjs --update   rewrite the baselines
 //   node scripts/panelshots.mjs --only stage,input   just those states
-//   node scripts/panelshots.mjs --url http://localhost:5173
+//   node scripts/panelshots.mjs --url http://localhost:5173/app/
 //
 // Why this exists. The panel is ~1000 CSS declarations across 27 modules, and
 // the refactors it invites — hoist a rule, drop one the UA already draws, share
@@ -221,7 +221,7 @@ if (base === null) {
     ['node_modules/vite/bin/vite.js', '--port', String(PORT), '--strictPort'],
     { stdio: 'ignore' },
   )
-  base = `http://localhost:${PORT}`
+  base = `http://localhost:${PORT}/app/`
   for (let i = 0; ; i++) {
     try {
       await fetch(base)

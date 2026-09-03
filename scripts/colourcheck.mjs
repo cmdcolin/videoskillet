@@ -66,7 +66,7 @@ import { join } from 'node:path'
 const args = process.argv.slice(2)
 const flag = name => args.find(a => a.startsWith(`--${name}=`))?.split('=')[1]
 const positional = args.filter(a => !a.startsWith('--'))
-const url = positional[0] ?? 'http://localhost:5199/'
+const url = positional[0] ?? 'http://localhost:5199/app/'
 const outDir = positional[1] ?? 'colourcheck'
 const src = flag('src') ?? 'clip-haunted-house'
 const srcb = flag('srcb') ?? 'none'

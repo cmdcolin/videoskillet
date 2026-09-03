@@ -48,7 +48,7 @@ import { watchFrames } from './frames.mjs'
 // Boot waited for rather than slept through — see until.mjs.
 import { appUp } from './until.mjs'
 
-const url = new URL(process.argv[2] ?? 'http://localhost:5372/')
+const url = new URL(process.argv[2] ?? 'http://localhost:5372/app/')
 const fails = []
 const settle = ms => new Promise(r => setTimeout(r, ms))
 

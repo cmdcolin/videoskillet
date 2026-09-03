@@ -10,7 +10,7 @@
 //
 //   npx vite build --outDir /var/tmp/soak-build
 //   npx vite preview --outDir /var/tmp/soak-build --port 5382
-//   node scripts/soak.mjs http://localhost:5382/ [minutes] [out.json]
+//   node scripts/soak.mjs http://localhost:5382/app/ [minutes] [out.json]
 //     --src=webcam   the other half of the trigger; a camera is not a clip
 //     --cycle        hide and show the tab on a timer instead of holding it
 //                    in front, which is how the app is actually used
@@ -60,7 +60,7 @@ import { basename, dirname, join } from 'node:path'
 const flags = process.argv.slice(2).filter(a => a.startsWith('--'))
 const positional = process.argv.slice(2).filter(a => !a.startsWith('--'))
 const flag = name => flags.find(f => f.startsWith(`--${name}`))
-const url = positional[0] ?? 'http://localhost:5382/'
+const url = positional[0] ?? 'http://localhost:5382/app/'
 const minutes = Number(positional[1] ?? 20)
 const out = positional[2] ?? 'soak.json'
 const SAMPLE_MS = 5000

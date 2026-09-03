@@ -37,7 +37,7 @@ const rounds = Number(flag('rounds', '1'))
 const lowPower = flags.includes('--low-power')
 
 const LOOK = 'fbMix:0.45,cfbMix:0.3,phosphor:0.6,crtGlow:0.7,dubGens:3'
-const url = `http://localhost:${port}/?set=${LOOK}${lowPower ? '&gpu=low-power' : ''}`
+const url = `http://localhost:${port}/app/?set=${LOOK}${lowPower ? '&gpu=low-power' : ''}`
 // Two hang strikes plus a rebuild, with room to see frames advance afterwards.
 const SHOW_MS = 30_000
 const CARDS = [1, 2]

@@ -6,7 +6,7 @@ import { VotePage } from './VotePage'
 // The vote page's own entry, and the reason it is a second page rather than a
 // dialog in the app: the instrument has enough on it, and this tool wants the
 // whole screen, its own engine and none of the panel. Vite builds both from
-// `rollupOptions.input`, so it ships alongside index.html at /vote.html.
+// `rollupOptions.input`, so it ships alongside the app at /vote/.
 //
 // Not wrapped in <StrictMode>, for exactly the reason src/main.tsx gives: it
 // double-invokes effects, and the effect here calls Engine.create. Two

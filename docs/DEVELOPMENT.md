@@ -87,7 +87,7 @@ runs last and is marked, because it is the one entry that can fail for a reason
 that is nobody's bug.
 
 ```
-node scripts/shot.mjs http://localhost:5199/ out.png [waitMs]
+node scripts/shot.mjs http://localhost:5199/app/ out.png [waitMs]
 ```
 
 Drives a headed Firefox Nightly, steps frames deterministically, probes pixels,
@@ -125,7 +125,7 @@ in by more than one agent at a time, and an uncommitted edit to a tracked file
 does not reliably survive somebody else's commit.
 
 ```
-node scripts/sourcecheck.mjs [http://localhost:5199/]
+node scripts/sourcecheck.mjs [http://localhost:5199/app/]
 ```
 
 Drives the two source pickers and the teletype dialog, which is the half of the
@@ -143,7 +143,7 @@ broken on purpose that reads 0.00 where a healthy one reads 2.58 at its tightest
 `?srcb=none&set=bGain:1` is load-bearing rather than cosmetic.
 
 ```
-node scripts/fatfinger.mjs [http://localhost:5199/] [minPx]
+node scripts/fatfinger.mjs [http://localhost:5199/app/] [minPx]
 ```
 
 What a fingertip gets, on every control the panel shows at 390px with the
@@ -843,7 +843,7 @@ file — the run survives being tabbed away from.
 ## Surviving a lost GPU device
 
 ```
-node scripts/deviceloss.mjs http://localhost:5199/ [restore|giveup|retry] [outDir]
+node scripts/deviceloss.mjs http://localhost:5199/app/ [restore|giveup|retry] [outDir]
 ```
 
 Sleep/wake and driver resets fire `device.lost`, and the session is meant to
@@ -965,8 +965,8 @@ pnpm docshots --force            # rewrite even unchanged shots
 pnpm docshots:check              # which ones are behind the app
 ```
 
-It runs against `localhost:5199` and starts a dev server itself if nothing is
-serving there, so a regen is one command from a cold checkout.
+It runs against `localhost:5199/app/` and starts a dev server itself if nothing
+is serving there, so a regen is one command from a cold checkout.
 
 ### Knowing when they have gone stale
 
@@ -1216,7 +1216,7 @@ that were real once, which is exactly what they cannot keep being — so the liv
 contract has its own harness:
 
 ```
-node scripts/poolcheck.mjs http://localhost:5199
+node scripts/poolcheck.mjs http://localhost:5199/app
 ```
 
 Eighteen checks over one browser session and a handful of live requests: a
@@ -1346,7 +1346,7 @@ is not pinned because changing one moves a link by less than a step.
 | `?gpu=low-power`     | run on the integrated GPU instead of the discrete one |
 | `?vidbitmap`         | force the bitmap video path where zero-copy exists    |
 
-Example: `?iurl=/sample.jpg&preset=dirty%20mix`
+Example: `/app/?iurl=/sample.jpg&preset=dirty%20mix`
 
 `?iurl=` is what stops a shared link handing the reader a _different_ picture.
 `?src=wiki-random` names the pool, so a link carrying it alone rolls again on

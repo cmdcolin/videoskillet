@@ -25,7 +25,7 @@ import { watchFrames } from './frames.mjs'
 // Boot waited for rather than slept through — see until.mjs.
 import { appUp } from './until.mjs'
 
-const url = process.argv[2] ?? 'http://localhost:5199/'
+const url = process.argv[2] ?? 'http://localhost:5199/app/'
 
 const browser = await puppeteer.launch({
   browser: 'firefox',

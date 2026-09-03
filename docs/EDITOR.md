@@ -94,8 +94,8 @@ That is a fork of the app wearing a second URL, and two copies of one contract
 drift — which is the argument `slotView.ts` already makes about a much smaller
 duplication.
 
-**`vote.html` is the counter-example, and it states the test.** The second entry
-in `vite.config.ts` exists on an explicit condition — "nothing in it should cost
+**`/vote/` is the counter-example, and it states the test.** The second entry in
+`vite.config.ts` exists on an explicit condition — "nothing in it should cost
 the app a byte — a visitor to index.html never downloads it" — and the vote page
 meets it: it shares `Engine` and `presets`, builds its two engines on one
 device, and needs no part of the panel. The strip fails that test from both

@@ -6,14 +6,14 @@ import { FIREFOX } from './browser.mjs'
 // alone (?iurl / ?iurlb / ?preset / ?set) specifies the source image(s), preset,
 // and param overrides, so nothing here uploads files or clicks the UI.
 //
-// Usage:  node scripts/clips.mjs [outDir=clips] [base=http://localhost:5199/] [shot...]
+// Usage:  node scripts/clips.mjs [outDir=clips] [base=http://localhost:5199/app/] [shot...]
 //   (needs dev server + Firefox Nightly + ffmpeg on PATH). Writes an mp4 per
 //   shot into outDir/ (gitignored) for review. Name shots to capture a subset.
 import { execFileSync } from 'node:child_process'
 import { mkdirSync, rmSync, statSync, writeFileSync } from 'node:fs'
 
 const outDir = process.argv[2] ?? 'clips'
-const base = process.argv[3] ?? 'http://localhost:5199/'
+const base = process.argv[3] ?? 'http://localhost:5199/app/'
 const sleep = ms => new Promise(r => setTimeout(r, ms))
 const urlFor = params => base + '?' + new URLSearchParams(params).toString()
 

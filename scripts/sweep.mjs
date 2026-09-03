@@ -68,23 +68,23 @@ const HARNESSES = [
   { name: 'rendercheck', args: [port] },
   { name: 'reccheck', args: [port] },
   { name: 'cuecheck', args: [port] },
-  { name: 'sourcecheck', args: [`${origin}/`] },
-  { name: 'composecheck', args: [`${origin}/`] },
-  { name: 'panelcheck', args: [`${origin}/`] },
-  { name: 'chipcheck', args: [`${origin}/`] },
-  { name: 'inkcheck', args: [`${origin}/`] },
-  { name: 'midicheck', args: [`${origin}/`] },
+  { name: 'sourcecheck', args: [`${origin}/app/`] },
+  { name: 'composecheck', args: [`${origin}/app/`] },
+  { name: 'panelcheck', args: [`${origin}/app/`] },
+  { name: 'chipcheck', args: [`${origin}/app/`] },
+  { name: 'inkcheck', args: [`${origin}/app/`] },
+  { name: 'midicheck', args: [`${origin}/app/`] },
   // Muted through a Firefox pref rather than by leaving the node unconnected,
   // because the connection is half of what it is checking.
-  { name: 'buzzsound', args: [`${origin}/`] },
-  { name: 'pixelcheck', args: ['--url', `${origin}/`] },
+  { name: 'buzzsound', args: [`${origin}/app/`] },
+  { name: 'pixelcheck', args: ['--url', `${origin}/app`] },
   // These two serve themselves; see the note above.
   { name: 'demuxcheck', args: [] },
   { name: 'pullcheck', args: ['--frames=60'] },
   // Last, and on its own footing: this one talks to Wikimedia and archive.org,
   // so it is the only entry here that can fail for a reason that is nobody's
   // bug. A run that fails only this is a network, not a regression.
-  { name: 'poolcheck', args: [origin], live: true },
+  { name: 'poolcheck', args: [`${origin}/app`], live: true },
 ]
 
 const wanted = HARNESSES.filter(

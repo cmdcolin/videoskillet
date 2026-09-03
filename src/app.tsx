@@ -10,6 +10,7 @@ import { createPortal } from 'react-dom'
 
 import styles from './app.module.css'
 import { DEFAULT_CONTROLS, atRest } from './core/controls'
+import { publicUrl } from './publicUrl'
 import { A_OPTIONS, B_OPTIONS } from './sources/modes'
 import { poolCaption } from './sources/pools'
 import { AboutDialog } from './ui/AboutDialog'
@@ -109,10 +110,12 @@ import { usePopout } from './ui/usePopout'
 import { useRender } from './ui/useRender'
 import { useSavedProfiles } from './ui/useSavedProfiles'
 import { useScrollAnchor } from './ui/useScrollAnchor'
+import { useSharedMedia } from './ui/useSharedMedia'
 import { useShortcuts } from './ui/useShortcuts'
 import { useStrip } from './ui/useStrip'
 import { useTempo } from './ui/useTempo'
 import { useUrlState } from './ui/useUrlState'
+import { useWakeLock } from './ui/useWakeLock'
 import { VideoUrlDialog } from './ui/VideoUrlDialog'
 import { WebcamDialog } from './ui/WebcamDialog'
 import { YouTubeDialog } from './ui/YouTubeDialog'
@@ -796,6 +799,14 @@ export function App() {
       profiles.saveProfile(suggestedProfileName, profileQuery()),
   })
   usePageLifecycle(engineRef, setFullscreen)
+  // Nothing here takes an input for minutes at a time — a look is set and then
+  // watched — so the screen has to be told the app is still doing something.
+  // Off while the fatal screen is up: a device that cannot run the thing should
+  // not have its screen held open by it.
+  useWakeLock(engine !== null)
+  // A clip sent in from the phone's share sheet, which arrives as a file the
+  // worker took delivery of rather than as anything in the address.
+  useSharedMedia(engine !== null, eng.a.onFile, eng.setError)
 
   // Everything a control row needs, in one place, read from context by the rows
   // themselves rather than threaded down through each group.
@@ -1172,7 +1183,7 @@ export function App() {
           >
             <img
               className={styles.brandMark}
-              src={`${import.meta.env.BASE_URL}favicon.svg`}
+              src={publicUrl('favicon.svg')}
               alt=""
             />
             <span className={styles.wordmark}>videoskillet.js</span>

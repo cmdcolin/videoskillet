@@ -59,7 +59,7 @@ const page = await browser.newPage()
 await page.setViewport({ width: 1352, height: 900 })
 const errors = []
 page.on('pageerror', e => errors.push(String(e).slice(0, 200)))
-await page.goto(`http://localhost:${port}/?set=strobeHz:8,strobeMs:40`, {
+await page.goto(`http://localhost:${port}/app/?set=strobeHz:8,strobeMs:40`, {
   waitUntil: 'domcontentloaded',
 })
 await appUp(page, 6000)

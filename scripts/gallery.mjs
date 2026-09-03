@@ -1,7 +1,7 @@
 // Regenerate the README gallery: for each preset, drive Firefox Nightly
 // against the dev server, click the preset, step frames deterministically
 // (feedback looks need time to develop), and save the canvas.
-// Usage: node scripts/gallery.mjs [outDir=docs/gallery] [url=http://localhost:5199/]
+// Usage: node scripts/gallery.mjs [outDir=docs/gallery] [url=http://localhost:5199/app/]
 
 import puppeteer from 'puppeteer-core'
 
@@ -10,7 +10,7 @@ import { FIREFOX } from './browser.mjs'
 import { appUp } from './until.mjs'
 
 const outDir = process.argv[2] ?? 'docs/gallery'
-const base = process.argv[3] ?? 'http://localhost:5199/'
+const base = process.argv[3] ?? 'http://localhost:5199/app/'
 
 const SHOTS = [
   { file: 'hero', preset: 'mixer loop', frames: 360, fullPage: true },

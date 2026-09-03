@@ -14,7 +14,7 @@
   line-height: 1.6;
 }
 .fatalCard {
-  max-width: 560px;
+  max-width: 620px;
   background: var(--panel-bg);
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -24,6 +24,46 @@
   font-size: var(--fs-xl);
   margin: 0 0 12px;
   color: #f66;
+}
+/* The unavailable screen is not a diagnostic. It is the first thing a stranger
+   sees when a link someone sent them opens on a browser that cannot run this,
+   often on a phone held at arm's length — so it is sized to be read that way
+   rather than at the density the panel behind it is tuned for. */
+.fatalHeadline {
+  font-size: clamp(1.5rem, 5vw, 2.2rem);
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+  margin: 0 0 14px;
+  color: var(--fg);
+}
+.fatalLead {
+  font-size: clamp(1.05rem, 3vw, 1.25rem);
+  line-height: 1.45;
+  margin: 0 0 18px;
+  color: var(--fg2);
+}
+.fatalHome {
+  display: inline-block;
+  font-size: clamp(1.05rem, 3vw, 1.25rem);
+  font-weight: 600;
+  text-decoration: none;
+  padding: 12px 22px;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #0b160f;
+}
+.fatalHome:hover {
+  filter: brightness(1.08);
+}
+.fatalWhy {
+  font-size: var(--fs-lg);
+  color: var(--fg3);
+  margin: 18px 0 0;
+}
+/* ui.module.css's .link pins itself to --fs-sm, which is the panel's density
+   and not this screen's — a link inside this line reads at the line's size. */
+.fatalLink {
+  color: var(--accent);
 }
 .fatalVideo {
   display: block;
