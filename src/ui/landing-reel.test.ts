@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest'
 
 import { hero } from '../../scripts/demos.mjs'
-import { beatSecs, heroBackdrop, slides } from '../../scripts/reel.mjs'
+import { beatSecs, heroBackdrop, NARROW, slides } from '../../scripts/reel.mjs'
 
 import { readFileSync } from 'node:fs'
 
@@ -55,35 +55,63 @@ test('the carousel has slides', () => {
   expect(slides.length).toBeGreaterThan(0)
 })
 
-test.each(slides)('$file is recorded', ({ clip, still }) => {
-  expect({ clip: bytes(clip) > 0, still: bytes(still) > 0 }).toEqual({
-    clip: true,
-    still: true,
-  })
-})
+test.each(slides)(
+  '$file is recorded, in both frames',
+  ({ clip, still, narrowClip, narrowStill }) => {
+    // Two takes each: the window as a desktop shows it, and the app's portrait
+    // layout at a phone's width. A missing narrow take is a slide that plays
+    // nothing on exactly the devices it was recorded for.
+    expect({
+      clip: bytes(clip) > 0,
+      still: bytes(still) > 0,
+      narrowClip: bytes(narrowClip) > 0,
+      narrowStill: bytes(narrowStill) > 0,
+    }).toEqual({
+      clip: true,
+      still: true,
+      narrowClip: true,
+      narrowStill: true,
+    })
+  },
+)
 
-test.each(slides)('$file is on the page', ({ name, clip, alt, caption }) => {
-  expect({
-    clip: stage.includes(`data-src="${clip}"`),
-    named: stage.includes(`data-name="${name}"`),
-    // The stills are the only account of the window a reader who cannot see it
-    // gets, so an empty alt here is not decoration — it is a slide that says
-    // nothing.
-    described: stage.includes(alt.slice(0, 60)),
-    // Wrapped by the formatter, so the whole caption is not one string in the
-    // file; its opening clause is enough to say which line went missing.
-    captioned: landing.includes(caption.slice(0, 40)),
-  }).toEqual({ clip: true, named: true, described: true, captioned: true })
-})
+test.each(slides)(
+  '$file is on the page',
+  ({ name, clip, narrowClip, alt, caption }) => {
+    expect({
+      clip: stage.includes(`data-src="${clip}"`),
+      narrowClip: stage.includes(`data-src-narrow="${narrowClip}"`),
+      named: stage.includes(`data-name="${name}"`),
+      // The stills are the only account of the window a reader who cannot see
+      // it gets, so an empty alt here is not decoration — it is a slide that
+      // says nothing.
+      described: stage.includes(alt.slice(0, 60)),
+      // Wrapped by the formatter, so the whole caption is not one string in the
+      // file; its opening clause is enough to say which line went missing.
+      captioned: landing.includes(caption.slice(0, 40)),
+    }).toEqual({
+      clip: true,
+      narrowClip: true,
+      named: true,
+      described: true,
+      captioned: true,
+    })
+  },
+)
 
 test.each(slides)('$file holds the stage for its own length', slide => {
-  const secs = new RegExp(
-    `data-name="${slide.name}" data-secs="([\\d.]+)"`,
-  ).exec(stage)?.[1]
-  expect(Number(secs)).toBeCloseTo(
-    slide.act.reduce((total, beat) => total + beatSecs(beat), 0),
-    1,
-  )
+  // Both of them, because the portrait take can run a beat longer: it scrolls
+  // to what the wide frame can already see.
+  const attr = (name: string) =>
+    Number(
+      new RegExp(`data-name="${slide.name}"[^>]*${name}="([\\d.]+)"`, 's').exec(
+        stage,
+      )?.[1],
+    )
+  const length = (act: typeof slide.act) =>
+    act.reduce((total, beat) => total + beatSecs(beat), 0)
+  expect(attr('data-secs')).toBeCloseTo(length(slide.act), 1)
+  expect(attr('data-secs-narrow')).toBeCloseTo(length(slide.narrowAct), 1)
 })
 
 test('only the slide showing has fetched its still', () => {
@@ -96,12 +124,27 @@ test('only the slide showing has fetched its still', () => {
   }).toEqual({ eager: 1, deferred: slides.length - 1 })
 })
 
+test('the stage says where the portrait recordings take over', () => {
+  // The breakpoint is written down once, in the first slide's `<source>`: the
+  // browser picks the still through it, the stage takes its shape from the
+  // still, and the script reads the same string back off the element to pick
+  // the clips. Losing it would leave a phone playing a 1112px window in a box
+  // shaped like a phone.
+  expect({
+    media: /<source\s+media="([^"]+)"/.exec(stage)?.[1],
+    srcset: stage.includes(`srcset="${slides[0].narrowPoster}"`),
+  }).toEqual({ media: NARROW.at, srcset: true })
+})
+
 test('the carousel opens on its first slide', () => {
   // Only the first slide carries `on` — and only its caption does, so a reader
   // with no script sees one line rather than three.
   expect({
-    slide: /class="slide on" data-name="([^"]+)"/.exec(stage)?.[1],
-    slides: [...stage.matchAll(/class="slide[^"]*" data-name=/g)].length,
+    // Whitespace-tolerant: the formatter breaks a <figure> across lines once
+    // it carries enough attributes, and it has since the portrait take gave
+    // every slide a second length.
+    slide: /class="slide on"\s+data-name="([^"]+)"/.exec(stage)?.[1],
+    slides: [...stage.matchAll(/class="slide[^"]*"\s+data-name=/g)].length,
     notes: [...landing.matchAll(/class="slideNote(?: on)?"/g)].length,
     open: [...landing.matchAll(/class="slideNote on"/g)].length,
   }).toEqual({

@@ -49,7 +49,7 @@ import puppeteer from 'puppeteer-core'
 
 import { FIREFOX } from './browser.mjs'
 import { installHelpers, SEED, seedStorage, step } from './drive.mjs'
-import { beatSecs, FRAME, slides } from './reel.mjs'
+import { beatSecs, FRAME, NARROW, slides } from './reel.mjs'
 import { appUp } from './until.mjs'
 
 import { execFileSync } from 'node:child_process'
@@ -114,9 +114,11 @@ const lerp = (a, b, t) => a + (b - a) * t
 // ---------------------------------------------------------------- page side
 
 // The pointer, the map's boxes and a slider by the name on its row. Injected as
-// source like `drive.mjs`'s helpers, so it closes over nothing out here.
-function installReel() {
+// source like `drive.mjs`'s helpers, so it closes over nothing out here — the
+// one argument says whether the hand in the picture is a mouse or a thumb.
+function installReel(touch) {
   const CURSOR = 'reel-cursor'
+  const TOUCH = touch === true
 
   // A box on the signal path map. They are `<g role=button>`, so the click goes
   // on the element and the diagram's own layout stops mattering.
@@ -201,28 +203,35 @@ function installReel() {
   }
 
   window.__reel = {
-    // A pointer drawn into the page. White with a dark outline, because it has
-    // to read on a panel of near-black and over a picture that may be a white
-    // field a moment later. The hotspot is the tip, at the element's own
-    // corner, so the coordinate the recorder presses at is the one it drew.
+    // The hand, drawn into the page. An arrow where a mouse would be holding
+    // it, a fingertip where a thumb would: the portrait takes are a phone's
+    // layout, and an OS pointer in one of those is a picture of something that
+    // does not happen. Both read on a panel of near-black and over a picture
+    // that may be a white field a moment later, and both are placed by their
+    // own hotspot — the arrow's tip is its corner, the fingertip's is its
+    // middle — so the coordinate the recorder presses at is the one it drew.
     cursor: (x, y, pressed) => {
       let el = document.getElementById(CURSOR)
       if (el === null) {
         el = document.createElement('div')
         el.id = CURSOR
-        el.style.cssText =
-          'position:fixed;z-index:2147483647;pointer-events:none;width:34px;height:38px'
-        el.innerHTML = `<svg width="34" height="38" viewBox="0 0 34 38" fill="none">
+        el.style.cssText = `position:fixed;z-index:2147483647;pointer-events:none;width:${TOUCH ? 48 : 34}px;height:${TOUCH ? 48 : 38}px`
+        el.innerHTML = TOUCH
+          ? `<svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+          <circle class="ring" cx="24" cy="24" r="0" fill="none" stroke="#7fd0a0" stroke-width="2" opacity="0" />
+          <circle cx="24" cy="24" r="15" fill="rgb(244 244 248 / 28%)" stroke="rgb(244 244 248 / 82%)" stroke-width="2" />
+        </svg>`
+          : `<svg width="34" height="38" viewBox="0 0 34 38" fill="none">
           <circle class="ring" cx="3" cy="2" r="0" fill="none" stroke="#7fd0a0" stroke-width="2" opacity="0" />
           <path d="M3 1 L3 25 L9.5 18.5 L13.8 26.6 L17.6 24.6 L13.3 16.7 L22.5 16 Z"
             fill="#f4f4f8" stroke="#0b0b0e" stroke-width="1.6" stroke-linejoin="round" />
         </svg>`
         document.body.append(el)
       }
-      el.style.left = `${x}px`
-      el.style.top = `${y}px`
+      el.style.left = `${TOUCH ? x - 24 : x}px`
+      el.style.top = `${TOUCH ? y - 24 : y}px`
       const ring = el.querySelector('.ring')
-      ring.setAttribute('r', pressed ? '13' : '0')
+      ring.setAttribute('r', pressed ? (TOUCH ? '22' : '13') : '0')
       ring.setAttribute('opacity', pressed ? '0.85' : '0')
     },
     drop: () => document.getElementById(CURSOR)?.remove(),
@@ -315,7 +324,7 @@ function installReel() {
 
 // One beat, frame by frame. The only state a timeline carries between beats is
 // `hand` — where the pointer was left, and whether it is down.
-async function runBeat(page, beat, hand, shoot) {
+async function runBeat(page, beat, frame, hand, shoot) {
   const frames = Math.max(1, Math.round(beatSecs(beat) * FPS))
 
   if (beat.scrollTo !== undefined) {
@@ -338,7 +347,7 @@ async function runBeat(page, beat, hand, shoot) {
     const to = await page.evaluate(t => window.__reel.where(t), beat.moveTo)
     // A pointer with no previous position comes in from under the frame rather
     // than appearing on its target, which is a cut.
-    const from = hand.at ?? { x: to.x, y: FRAME.height + 30 }
+    const from = hand.at ?? { x: to.x, y: frame.height + 30 }
     for (let i = 1; i <= frames; i++) {
       const t = ease(i / frames)
       hand.at = { x: lerp(from.x, to.x, t), y: lerp(from.y, to.y, t) }
@@ -389,7 +398,7 @@ async function runBeat(page, beat, hand, shoot) {
     const from = hand.at
     for (let i = 1; i <= frames; i++) {
       const t = ease(i / frames)
-      hand.at = { x: from.x, y: lerp(from.y, FRAME.height + 40, t) }
+      hand.at = { x: from.x, y: lerp(from.y, frame.height + 40, t) }
       await paint(page, hand)
       await shoot()
     }
@@ -413,13 +422,17 @@ const paint = (page, hand) =>
         hand.down === true,
       )
 
-async function record(browser, slide, tmpDir) {
+async function record(browser, slide, take, tmpDir) {
   const page = await browser.newPage()
   try {
     // Before `goto`, and never after it: a `setViewport` on a loaded page swaps
     // the realm under Firefox BiDi and every later `evaluate` sees `window.vf`
     // as undefined, which reads exactly like the app failing to boot.
-    await page.setViewport({ ...FRAME, deviceScaleFactor: 1 })
+    await page.setViewport({
+      width: take.frame.width,
+      height: take.frame.height,
+      deviceScaleFactor: take.frame.dpr,
+    })
     await page.evaluateOnNewDocument(seedStorage, {
       ...SEED,
       // The preset gesture hint teaches something real and is dismissible, so
@@ -437,7 +450,7 @@ async function record(browser, slide, tmpDir) {
     // there is no ready event to wait on.
     await sleep(3000)
     await page.evaluate(installHelpers)
-    await page.evaluate(installReel)
+    await page.evaluate(installReel, take.frame.coarse === true)
     await step(page, slide.warm ?? 90)
 
     const health = await page.evaluate(() => window.__ds.health())
@@ -458,7 +471,8 @@ async function record(browser, slide, tmpDir) {
     }
 
     const hand = {}
-    for (const beat of slide.act) await runBeat(page, beat, hand, shoot)
+    for (const beat of take.act)
+      await runBeat(page, beat, take.frame, hand, shoot)
     return n
   } finally {
     await page.evaluate(() => window.vf?.destroy()).catch(() => {})
@@ -535,62 +549,87 @@ console.log(`${wanted.length} slides → ${outDir}/`)
 const taken = Object.fromEntries(readManifest())
 const at = capturedAt()
 
+// Every slide is recorded twice: the window as a desktop shows it, and the same
+// timeline again at a phone's width, where the app lays itself out in portrait.
+// The frames are different sizes, so they are different sessions rather than
+// one session resized — `setViewport` after a load swaps the realm under
+// Firefox BiDi and takes `window.vf` with it.
+const takes = slide => [
+  { name: slide.file, frame: FRAME, act: slide.act, out: FRAME },
+  {
+    name: `${slide.file}-narrow`,
+    frame: NARROW,
+    act: slide.narrowAct,
+    out: NARROW.out,
+  },
+]
+
 for (const slide of wanted) {
-  const tmpDir = mkdtempSync(join(tmpdir(), `reel-${slide.file}-`))
-  // One browser per slide. A single Firefox does not survive a long WebGPU
-  // batch — after a dozen or so sessions it detaches the frame and every later
-  // page dies with "Target closed" — and a slide is a session with several
-  // hundred stepped frames in it.
-  const browser = await puppeteer.launch({
-    browser: 'firefox',
-    executablePath: FIREFOX,
-    headless: false,
-    extraPrefsFirefox: {
-      'dom.webgpu.enabled': true,
-      'gfx.webgpu.ignore-blocklist': true,
-      'media.navigator.streams.fake': true,
-      'media.navigator.permission.disabled': true,
-    },
-  })
-  try {
-    const frames = await record(browser, slide, tmpDir)
-    const mp4 = join(outDir, `${slide.file}.mp4`)
-    // prettier-ignore
-    execFileSync('ffmpeg', ['-y', '-v', 'error',
-      '-framerate', String(FPS), '-start_number', '0',
-      '-i', join(tmpDir, 'f%04d.jpg'), '-an',
-      '-c:v', 'libx264', '-crf', String(CRF), '-preset', 'veryslow',
-      '-profile:v', 'main', '-pix_fmt', 'yuv420p',
-      '-movflags', '+faststart', mp4])
-    // The still is a frame from the middle of the timeline rather than the
-    // first: these open on a pointer that has not arrived and a stage nobody
-    // has pressed yet, which is the one frame that says least about the slide.
-    const still = join(outDir, `${slide.file}.webp`)
-    const middle = join(
-      tmpDir,
-      `f${String(Math.floor(frames * 0.55)).padStart(4, '0')}.jpg`,
-    )
-    execFileSync('cwebp', [
-      '-quiet',
-      '-q',
-      String(STILL_Q),
-      middle,
-      '-o',
-      still,
-    ])
-    taken[slide.file] = at
-    const kb = f => Math.round(statSync(f).size / 1024)
-    console.log(
-      `  ✓ ${slide.file} — ${frames} frames, ${kb(mp4)}K mp4, ${kb(still)}K still`,
-    )
-  } catch (e) {
-    console.log(`  FAIL ${slide.file}: ${String(e).slice(0, 200)}`)
-  } finally {
-    await browser.close().catch(() => {})
-    if (keep) {
-      console.log(`    frames kept in ${tmpDir}`)
-    } else {
-      rmSync(tmpDir, { recursive: true, force: true })
+  for (const take of takes(slide)) {
+    const tmpDir = mkdtempSync(join(tmpdir(), `reel-${take.name}-`))
+    // One browser per take. A single Firefox does not survive a long WebGPU
+    // batch — after a dozen or so sessions it detaches the frame and every
+    // later page dies with "Target closed" — and a take is a session with
+    // several hundred stepped frames in it. The pointer prefs are per browser
+    // too: told to report a coarse primary pointer, the app lays its rows out
+    // for a thumb, which is what a phone actually gets.
+    const browser = await puppeteer.launch({
+      browser: 'firefox',
+      executablePath: FIREFOX,
+      headless: false,
+      extraPrefsFirefox: {
+        'dom.webgpu.enabled': true,
+        'gfx.webgpu.ignore-blocklist': true,
+        'media.navigator.streams.fake': true,
+        'media.navigator.permission.disabled': true,
+        ...(take.frame.coarse === true
+          ? {
+              'ui.primaryPointerCapabilities': 1,
+              'ui.allPointerCapabilities': 1,
+            }
+          : {}),
+      },
+    })
+    try {
+      const frames = await record(browser, slide, take, tmpDir)
+      const mp4 = join(outDir, `${take.name}.mp4`)
+      const scale =
+        take.out.width === take.frame.width * take.frame.dpr
+          ? []
+          : ['-vf', `scale=${take.out.width}:${take.out.height}:flags=lanczos`]
+      // prettier-ignore
+      execFileSync('ffmpeg', ['-y', '-v', 'error',
+        '-framerate', String(FPS), '-start_number', '0',
+        '-i', join(tmpDir, 'f%04d.jpg'), '-an', ...scale,
+        '-c:v', 'libx264', '-crf', String(CRF), '-preset', 'veryslow',
+        '-profile:v', 'main', '-pix_fmt', 'yuv420p',
+        '-movflags', '+faststart', mp4])
+      // The still is a frame from the middle of the timeline rather than the
+      // first: these open on a pointer that has not arrived and a stage nobody
+      // has pressed yet, which is the one frame that says least about the
+      // slide.
+      const still = join(outDir, `${take.name}.webp`)
+      const middle = join(
+        tmpDir,
+        `f${String(Math.floor(frames * 0.55)).padStart(4, '0')}.jpg`,
+      )
+      // prettier-ignore
+      execFileSync('cwebp', ['-quiet', '-q', String(STILL_Q),
+        '-resize', String(take.out.width), '0', middle, '-o', still])
+      taken[slide.file] = at
+      const kb = f => Math.round(statSync(f).size / 1024)
+      console.log(
+        `  ✓ ${take.name} — ${frames} frames, ${kb(mp4)}K mp4, ${kb(still)}K still`,
+      )
+    } catch (e) {
+      console.log(`  FAIL ${take.name}: ${String(e).slice(0, 200)}`)
+    } finally {
+      await browser.close().catch(() => {})
+      if (keep) {
+        console.log(`    frames kept in ${tmpDir}`)
+      } else {
+        rmSync(tmpDir, { recursive: true, force: true })
+      }
     }
   }
 }

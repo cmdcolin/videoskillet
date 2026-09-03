@@ -1087,8 +1087,8 @@ the page was what using this looks like.
 
 ```
 pnpm demoreel                    # the gallery's clips (the canvas alone)
-pnpm reel                        # the carousel's clips (the whole window)
-pnpm reel one-control            # just this slide
+pnpm reel                        # the carousel's clips (the whole window, both frames)
+pnpm reel control                # just this slide
 pnpm reel:check                  # which slides show an older app
 ```
 
@@ -1105,6 +1105,25 @@ takes a **screenshot per output frame** after stepping the engine a fixed number
 of frames, and gets a clip of exactly 24 frames a second whatever the box was
 doing — deterministic, and indifferent to whether the window is in front. JPEG
 intermediates, at 96ms a frame against PNG's 314ms.
+
+**Every slide is recorded twice.** A 1112px window is what the page's wide
+measure gives a slide, so the app's type lands at the size the app renders it —
+and that same window scaled into a phone's 356px column is a picture of an
+interface rather than an interface, with the panel's labels at 4px. So there is
+a second take at 390x620, where the app lays itself out in portrait (picture on
+top, panel as the scrolling remainder under it) and Firefox is told to report a
+coarse primary pointer, so the rows come out at tap size the way a handset gets
+them. The hand in those is a fingertip rather than an arrow, for the same
+reason: an OS cursor in a phone screenshot is a picture of something that does
+not happen.
+
+The breakpoint between the two is written down **once**, in `NARROW.at`.
+`demogen.mjs` puts it in the `<source media>` of the stage's first still; the
+browser picks the still through it; the stage takes its shape from that still
+(the first slide is left in flow and the rest lie over it, so there is no
+`aspect-ratio` and no media query in the CSS at all); and the page reads the
+same string back off the element to choose which clips to play. One declaration,
+four things that have to agree.
 
 A slide is a look, the panel state to open, and a timeline of beats — hold,
 scroll, move the pointer, press, drag a slider. Three things about writing one:
@@ -1125,8 +1144,10 @@ scroll, move the pointer, press, drag a slider. Three things about writing one:
 ### What the page costs, and what holds it down
 
 A first visit fetches **382K of media**: the hero's backdrop clip (86K), the
-first slide's still (48K) and its clip (212K), plus the gallery stills as they
-scroll in. Walking all three slides adds another ~580K. Four things keep that
+first slide's still (48K) and its clip (216K), plus the gallery stills as they
+scroll in. A phone fetches the portrait take instead and gets off lighter still,
+at **297K** — the frame is smaller, so the recordings are. Walking all three
+slides adds another ~580K on a desktop, ~370K on a phone. Four things keep that
 number where it is, and each was measured rather than assumed:
 
 - **crf 36, not 30.** The panel half of the frame is static, so h264 codes it

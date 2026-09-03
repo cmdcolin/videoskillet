@@ -166,14 +166,19 @@
 
       /* The carousel. One box, one slide showing, and every slide is a
          recording of the app's own window — chrome, panel, picture and a hand
-         on it (scripts/reel.mjs). The stage is a 3:2 frame because that is the
-         shape the window is recorded at, and the recording is 1112px wide
-         because that is what this measure gives it: the app's type lands on the
-         page at the size the app renders it, rather than as a shrunken picture
-         of a program. */
+         on it (scripts/reel.mjs). Each is recorded twice: a 1112px window,
+         which is what this measure gives a slide, so the app's type lands on
+         the page at the size the app renders it; and a 390px one, where the app
+         lays itself out in portrait, because that same window scaled into a
+         phone's column is a picture of an interface rather than an interface.
+
+         The stage has no aspect-ratio of its own and no breakpoint written into
+         it. The first slide is left *in flow* and the rest lie over it, so the
+         box takes the shape of the still the browser picked through that
+         slide's `<source media>` — the only place the breakpoint is written
+         down, and the same place the script reads it from. */
       .stage {
         position: relative;
-        aspect-ratio: 3 / 2;
         background: #000;
         border: 1px solid var(--border);
         border-radius: 0.6rem;
@@ -185,6 +190,12 @@
         margin: 0;
         opacity: 0;
         transition: opacity 0.6s ease;
+      }
+      .slide:first-of-type {
+        position: relative;
+      }
+      .slide picture {
+        display: block;
       }
       .slide.on {
         opacity: 1;
@@ -202,6 +213,12 @@
         object-fit: contain;
         border: 0;
         border-radius: 0;
+      }
+      /* The one exception, and it is what gives the box its height: this still
+         is in the flow at its own shape, and everything else is laid over it. */
+      .slide:first-of-type .still {
+        position: static;
+        height: auto;
       }
       /* The still under the clip, as on the gallery cards: a <video>'s own
          poster is fetched the moment it is laid out, and the slide a reader
@@ -511,17 +528,31 @@
       <div class="wrap wide">
         <!-- generated:carousel -->
         <div class="stage">
-          <figure class="slide on" data-name="The window" data-secs="4.5">
-            <img
-              class="still"
-              src="/reel/window.webp"
-              alt="The videoskillet.js window: a rainbow-ringed synth pattern filling the picture area, and on the right the signal path map with the CHANNEL stage open on its recording controls"
-              width="1112"
-              height="742"
-              decoding="async"
-            />
+          <figure
+            class="slide on"
+            data-name="The window"
+            data-secs="4.5"
+            data-secs-narrow="4.5"
+          >
+            <picture>
+              <source
+                media="(max-width: 46rem)"
+                srcset="/reel/window-narrow.webp"
+                width="624"
+                height="992"
+              />
+              <img
+                class="still"
+                src="/reel/window.webp"
+                alt="The videoskillet.js window: a rainbow-ringed synth pattern filling the picture area, and on the right the signal path map with the CHANNEL stage open on its recording controls"
+                width="1112"
+                height="742"
+                decoding="async"
+              />
+            </picture>
             <video
               data-src="reel/window.mp4"
+              data-src-narrow="reel/window-narrow.mp4"
               muted
               loop
               playsinline
@@ -529,10 +560,16 @@
               aria-hidden="true"
             ></video>
           </figure>
-          <figure class="slide" data-name="One control" data-secs="6.3">
+          <figure
+            class="slide"
+            data-name="One control"
+            data-secs="6.3"
+            data-secs-narrow="6.3"
+          >
             <img
               class="still"
               data-src="reel/control.webp"
+              data-src-narrow="reel/control-narrow.webp"
               alt="The window with the RECEIVER stage open on its decoder controls, chroma gain dragged to 12.8x, and the photograph's colour blooming and clipping into flat cyan and orange"
               width="1112"
               height="742"
@@ -540,6 +577,7 @@
             />
             <video
               data-src="reel/control.mp4"
+              data-src-narrow="reel/control-narrow.mp4"
               muted
               loop
               playsinline
@@ -547,10 +585,16 @@
               aria-hidden="true"
             ></video>
           </figure>
-          <figure class="slide" data-name="The signal path" data-secs="6.7">
+          <figure
+            class="slide"
+            data-name="The signal path"
+            data-secs="6.7"
+            data-secs-narrow="7.5"
+          >
             <img
               class="still"
               data-src="reel/signal-path.webp"
+              data-src-narrow="reel/signal-path-narrow.webp"
               alt="The window with the signal path map at the head of the panel, the RECEIVER box pressed, and its stage unfolded underneath on the sync and decoder groups"
               width="1112"
               height="742"
@@ -558,6 +602,7 @@
             />
             <video
               data-src="reel/signal-path.mp4"
+              data-src-narrow="reel/signal-path-narrow.mp4"
               muted
               loop
               playsinline
@@ -1164,6 +1209,18 @@
       {
         const stage = document.querySelector('.stage')
         const slides = [...stage.querySelectorAll('.slide')]
+        // Which of the two recordings to play, asked of the markup rather than
+        // repeated here: the browser has already used this query to pick the
+        // still that gives the stage its shape, so reading it back is what
+        // keeps the clip on the same side of it as the box it plays in.
+        const narrow = matchMedia(stage.querySelector('source').media)
+        const pick = el =>
+          narrow.matches ? el.dataset.srcNarrow : el.dataset.src
+        // The portrait take can run a beat longer than the wide one — it
+        // scrolls to what the wide frame can already see — so a slide carries
+        // both lengths.
+        const secsOf = slide =>
+          narrow.matches ? slide.dataset.secsNarrow : slide.dataset.secs
         const notes = [...document.querySelectorAll('.slideNote')]
         const tabs = document.querySelector('.slideTabs')
         const toggle = document.querySelector('.slideToggle')
@@ -1192,7 +1249,7 @@
             if (clip) {
               if (i === at && running()) {
                 if (!clip.src) {
-                  clip.src = clip.dataset.src
+                  clip.src = pick(clip)
                 }
                 clip
                   .play()
@@ -1218,7 +1275,7 @@
           // whole of what they are being shown.
           const still = slides[at].querySelector('.still')
           if (!still.getAttribute('src')) {
-            still.src = still.dataset.src
+            still.src = pick(still)
           }
         }
 
@@ -1230,7 +1287,7 @@
                 show((at + 1) % slides.length)
                 sync()
               },
-              Number(slides[at].dataset.secs) * 1000 + READING,
+              Number(secsOf(slides[at])) * 1000 + READING,
             )
           }
           cue()

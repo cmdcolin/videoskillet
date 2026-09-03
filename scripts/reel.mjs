@@ -45,7 +45,35 @@ import { hero, showcase } from './demos.mjs'
 // screen — recording at that width is what puts the app's type on the page at
 // the size the app actually renders it, rather than a shrunken picture of a
 // window. Anything wider reads as a screenshot of somebody else's monitor.
-export const FRAME = { width: 1112, height: 742 }
+export const FRAME = { width: 1112, height: 742, dpr: 1 }
+
+// The same slides again, for a phone. A 1112px window scaled into a 356px
+// column is a picture of an interface rather than an interface — the panel's
+// type lands at 4px — and the app does not need faking on a phone: it has a
+// portrait layout of its own (picture on top, panel as the scrolling remainder
+// under it, `app.module.css`), which is worth showing.
+//
+// `dpr: 2` where the wide frame records at 1, because phones are all HiDPI and
+// this frame is small enough to afford it: 780x1240 recorded, encoded down to
+// 624x992, which is still 1.75x the 356 CSS pixels the stage gets on a 390px
+// phone. The same treatment on the wide frame would be 2224x1484 to encode.
+//
+// `coarse` is what makes it the app's *phone* layout rather than a desktop
+// window squeezed: Firefox reports `(pointer: coarse)` when told to, and the
+// panel's rows grow to tap size the way they do on a handset.
+//
+// `at` is the one place the breakpoint is written down. `demogen.mjs` puts it in
+// the `<source media>` of the stage's first still, and the page reads it back
+// off that element rather than repeating it — so the shape of the box, the still
+// the browser picks and the clip the script picks cannot disagree.
+export const NARROW = {
+  width: 390,
+  height: 620,
+  dpr: 2,
+  out: { width: 624, height: 992 },
+  coarse: true,
+  at: '(max-width: 46rem)',
+}
 
 // The hero's copy of the first demo's clip, which is a different job from the
 // gallery card's copy of it. The card plays it in a 300px tile; the hero plays
@@ -82,6 +110,21 @@ const TAPE = {
     'dropoutRate:5,headSwitchNoise:0.35,headSwitchShiftUs:0.7,tbJitterNs:170,' +
     'tbWowNs:260,hvSagUs:2.4,hvRing:0.5,phosphor:0.22',
 }
+
+// Pressed one after another, each unfolding its own bank, and the last one
+// pressed twice so the panel comes back to the map it started on. Named because
+// the portrait take runs it with a beat in front.
+const MAP_WALK = [
+  { hold: 0.4 },
+  { moveTo: { stage: 'SOURCE A' }, secs: 0.6 },
+  { press: 1.1, on: 'SOURCE A' },
+  { moveTo: { stage: 'CHANNEL' }, secs: 0.5 },
+  { press: 1.2, on: 'CHANNEL' },
+  { moveTo: { stage: 'RECEIVER' }, secs: 0.5 },
+  { press: 1.2, on: 'RECEIVER' },
+  { press: 0.7, on: 'RECEIVER' },
+  { away: 0.5 },
+]
 
 export const slides = [
   {
@@ -155,20 +198,11 @@ export const slides = [
       }),
     },
     warm: 90,
-    act: [
-      { hold: 0.4 },
-      { moveTo: { stage: 'SOURCE A' }, secs: 0.6 },
-      { press: 1.1, on: 'SOURCE A' },
-      { moveTo: { stage: 'CHANNEL' }, secs: 0.5 },
-      { press: 1.2, on: 'CHANNEL' },
-      { moveTo: { stage: 'RECEIVER' }, secs: 0.5 },
-      { press: 1.2, on: 'RECEIVER' },
-      // Pressed again, which closes it: the map with nothing unfolded over it
-      // is where this started, and a loop coming back to a different panel than
-      // it left cuts.
-      { press: 0.7, on: 'RECEIVER' },
-      { away: 0.5 },
-    ],
+    act: MAP_WALK,
+    // In portrait the panel is the bottom half of a phone and the map starts
+    // below its fold, so it is scrolled to first and everything after that is
+    // the same walk.
+    narrowAct: [{ scrollTo: { stage: 'SOURCE A' }, secs: 0.8 }, ...MAP_WALK],
   },
 ].map(slide => {
   const query =
@@ -180,13 +214,15 @@ export const slides = [
       `reel slide “${slide.file}” plays ${slide.look}, which is not one of the demos marked showcase in demos.json`,
     )
   }
+  const narrowAct = slide.narrowAct ?? slide.act
+  const length = act =>
+    Math.round(act.reduce((total, beat) => total + beatSecs(beat), 0) * 10) / 10
   return {
     ...slide,
     query,
-    secs:
-      Math.round(
-        slide.act.reduce((total, beat) => total + beatSecs(beat), 0) * 10,
-      ) / 10,
+    narrowAct,
+    secs: length(slide.act),
+    narrowSecs: length(narrowAct),
     // `clip` and `still` are page-relative and `poster` is not, for the reason
     // `demos.mjs` spells out: vite rewrites `src` and `poster` under this
     // project's relative base and has never heard of a data attribute, so a
@@ -195,5 +231,8 @@ export const slides = [
     clip: `reel/${slide.file}.mp4`,
     still: `reel/${slide.file}.webp`,
     poster: `/reel/${slide.file}.webp`,
+    narrowClip: `reel/${slide.file}-narrow.mp4`,
+    narrowStill: `reel/${slide.file}-narrow.webp`,
+    narrowPoster: `/reel/${slide.file}-narrow.webp`,
   }
 })

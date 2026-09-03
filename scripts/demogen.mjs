@@ -12,7 +12,7 @@
 // is what `pnpm build` runs. See `demos.mjs` for what a demo is, and `reel.mjs`
 // for what a slide is.
 import { demos, hero } from './demos.mjs'
-import { FRAME, heroBackdrop, slides } from './reel.mjs'
+import { FRAME, heroBackdrop, NARROW, slides } from './reel.mjs'
 
 import { execFileSync } from 'node:child_process'
 import { readFileSync, rmSync, writeFileSync } from 'node:fs'
@@ -104,21 +104,50 @@ const heroBlock = `<video
 //
 // `data-secs` is how long the slide's own recording runs, summed off its
 // timeline rather than measured off the file — the page advances on it, and a
-// stage on a fixed clock cuts a drag off halfway.
+// stage on a fixed clock cuts a drag off halfway. The portrait take can be a
+// beat longer (it scrolls to what the wide one can already see), so it carries
+// its own.
+//
+// Every slide is recorded twice, and the *first* one is where the breakpoint
+// between the two is written into the page: the browser picks its still through
+// `<source media>`, the stage takes its shape from whichever it picked, and the
+// script reads that same media string back off the element to pick the clips.
+// One declaration, three things that have to agree.
 const slide = (
   s,
   first,
-) => `<figure class="slide${first ? ' on' : ''}" data-name="${s.name}" data-secs="${s.secs}">
-  <img
+) => `<figure class="slide${first ? ' on' : ''}" data-name="${s.name}" data-secs="${s.secs}" data-secs-narrow="${s.narrowSecs}">
+  ${
+    first
+      ? `<picture>
+    <source
+      media="${NARROW.at}"
+      srcset="${s.narrowPoster}"
+      width="${NARROW.out.width}"
+      height="${NARROW.out.height}"
+    />
+    <img
+      class="still"
+      src="${s.poster}"
+      alt="${s.alt.replaceAll('"', '&quot;')}"
+      width="${FRAME.width}"
+      height="${FRAME.height}"
+      decoding="async"
+    />
+  </picture>`
+      : `<img
     class="still"
-    ${first ? `src="${s.poster}"` : `data-src="${s.still}"`}
+    data-src="${s.still}"
+    data-src-narrow="${s.narrowStill}"
     alt="${s.alt.replaceAll('"', '&quot;')}"
     width="${FRAME.width}"
     height="${FRAME.height}"
     decoding="async"
-  />
+  />`
+  }
   <video
     data-src="${s.clip}"
+    data-src-narrow="${s.narrowClip}"
     muted
     loop
     playsinline
