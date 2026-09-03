@@ -2,22 +2,25 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <!-- viewport-fit=cover so env(safe-area-inset-*) reports the notch/home-bar
-         insets the panel pads itself away from -->
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <title>videoskillet.js</title>
+    <title>
+      videoskillet.js — real-time NTSC / VHS glitch simulator in WebGPU
+    </title>
     <meta
       name="description"
       content="Real-time NTSC / VHS / composite-video glitch simulator in WebGPU — dot crawl, dropouts, head-switch wobble and video feedback emerge from a simulated analog signal, not filters painted on top."
     />
     <link rel="canonical" href="https://videoskillet.com/" />
+    <meta name="theme-color" content="#0e0e11" />
+    <meta name="color-scheme" content="dark" />
 
     <!-- Open Graph / Twitter: how the link unfurls when shared -->
     <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="videoskillet.js" />
     <meta property="og:url" content="https://videoskillet.com/" />
     <meta
       property="og:title"
@@ -40,9 +43,552 @@
       content="Analog video glitches — dot crawl, dropouts, head-switch wobble, video feedback — that fall out of a simulated NTSC signal path, live in the browser."
     />
     <meta name="twitter:image" content="https://videoskillet.com/og.jpg" />
+
+    <!-- The palette, the measure and the type ramp are the guide's
+         (scripts/build-guide.mjs), so arriving here and clicking through to the
+         docs reads as one site rather than two. -->
+    <style>
+      :root {
+        --fg: #e6e6ee;
+        --fg2: #c6c6d6;
+        --fg3: #a6a6ba;
+        --fg4: #85859a;
+        --bg: #0e0e11;
+        --card: #16161a;
+        --border: #2e2e38;
+        --accent: #7fd0a0;
+        --mono: ui-monospace, 'SF Mono', Menlo, monospace;
+        --measure: 46rem;
+      }
+      * {
+        box-sizing: border-box;
+        min-width: 0;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--fg);
+        line-height: 1.65;
+        font-family:
+          system-ui,
+          -apple-system,
+          'Segoe UI',
+          sans-serif;
+        font-size: 16px;
+        -webkit-text-size-adjust: 100%;
+      }
+      a {
+        color: var(--accent);
+      }
+      .wrap {
+        max-width: var(--measure);
+        margin: 0 auto;
+        padding: 0 1.25rem;
+      }
+      .wide {
+        max-width: 72rem;
+      }
+
+      /* Hero. The video is the background of the panel rather than a figure
+         beside it: the first thing the page should do is move. */
+      .hero {
+        position: relative;
+        overflow: hidden;
+        border-bottom: 1px solid var(--border);
+      }
+      .heroVid {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        /* Held back just far enough that display type stays readable over a
+           picture whose whole job is to be violent.
+           The clip is one of the recorded demos rather than the older
+           demo-v2.mp4 the fatal screen uses: that one is a dark tape transfer,
+           and behind a page this colour it read as an empty black band however
+           little scrim was put over it. */
+        opacity: 0.55;
+        filter: saturate(1.1) contrast(1.05);
+      }
+      /* One wash, not two. Stacked scrims multiply: a 82% layer under a 62%
+         layer leaves 7% of the video, which is why the hero read as an empty
+         black band with a bright clip behind it. This single gradient holds the
+         text band near 55% and closes to the page colour at the bottom edge, so
+         the hero still has no seam against the section under it. */
+      .heroScrim {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          rgb(14 14 17 / 66%) 0%,
+          rgb(14 14 17 / 58%) 55%,
+          rgb(14 14 17 / 85%) 92%,
+          var(--bg) 100%
+        );
+      }
+      .heroBody {
+        position: relative;
+        padding: 5.5rem 0 4.5rem;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        font-family: var(--mono);
+        font-size: 0.95rem;
+        color: var(--fg3);
+        letter-spacing: 0.02em;
+      }
+      .brand img {
+        width: 1.6rem;
+        height: 1.6rem;
+      }
+      h1 {
+        font-size: clamp(2.1rem, 6.2vw, 3.4rem);
+        line-height: 1.08;
+        letter-spacing: -0.02em;
+        margin: 1.4rem 0 0;
+        text-wrap: balance;
+      }
+      .cta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin: 2rem 0 0;
+      }
+      .btn {
+        display: inline-block;
+        padding: 0.72rem 1.35rem;
+        border-radius: 0.5rem;
+        border: 1px solid var(--border);
+        background: var(--card);
+        color: var(--fg);
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 1rem;
+      }
+      .btn:hover {
+        border-color: var(--fg4);
+      }
+      .btn.primary {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #0b160f;
+      }
+      .btn.primary:hover {
+        filter: brightness(1.08);
+      }
+      .req {
+        margin: 1.25rem 0 0;
+        font-size: 0.9rem;
+        color: var(--fg4);
+      }
+
+      section {
+        padding: 3.5rem 0;
+      }
+      .sub {
+        color: var(--fg4);
+        font-size: 0.95rem;
+        margin: 0 0 1.1rem;
+      }
+      figure {
+        margin: 0;
+      }
+      /* `height: auto` is not decoration. The width and height attributes on
+         the <img> are presentation hints, so setting only the width in CSS
+         leaves the height hint standing and the shot renders 1600 wide by
+         whatever the attribute said — it was 2.3x too tall on every viewport
+         narrower than the file. */
+      figure img {
+        width: 100%;
+        height: auto;
+        display: block;
+        border: 1px solid var(--border);
+        border-radius: 0.6rem;
+      }
+      code {
+        font-family: var(--mono);
+        font-size: 0.9em;
+        color: var(--fg);
+      }
+
+      /* The demo gallery. Each card is the link it was in the README, so
+         clicking one opens that exact board in the app. */
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(19rem, 1fr));
+        gap: 1rem;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      .demo {
+        display: block;
+        text-decoration: none;
+        color: inherit;
+        border: 1px solid var(--border);
+        border-radius: 0.6rem;
+        overflow: hidden;
+        background: var(--card);
+      }
+      .demo:hover,
+      .demo:focus-visible {
+        border-color: var(--accent);
+      }
+      .demo .shot {
+        position: relative;
+        aspect-ratio: 5 / 4;
+        background: #000;
+      }
+      .demo video {
+        width: 100%;
+        height: 100%;
+        display: block;
+        object-fit: cover;
+      }
+      .demo .name {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 0.5rem;
+        padding: 0.7rem 0.85rem;
+        font-size: 0.94rem;
+        border-top: 1px solid var(--border);
+      }
+      .demo .open {
+        color: var(--fg4);
+        font-size: 0.85rem;
+        white-space: nowrap;
+      }
+      .demo:hover .open,
+      .demo:focus-visible .open {
+        color: var(--accent);
+      }
+
+      footer {
+        padding: 2.5rem 0 4rem;
+        color: var(--fg4);
+        font-size: 0.92rem;
+      }
+      footer nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem 1.25rem;
+        margin-bottom: 1rem;
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <header class="hero">
+      <video
+        class="heroVid"
+        src="/demos/wiggity.mp4"
+        poster="/demos/wiggity.jpg"
+        autoplay
+        muted
+        loop
+        playsinline
+        aria-hidden="true"
+        tabindex="-1"
+      ></video>
+      <div class="heroScrim"></div>
+      <div class="wrap heroBody">
+        <p class="brand">
+          <img src="/favicon.svg" alt="" />
+          videoskillet.js
+        </p>
+        <h1>Analog video that breaks the way analog video broke.</h1>
+        <p class="cta">
+          <a class="btn primary" href="/app/">Open the app →</a>
+          <a class="btn" href="/guide/">Guide</a>
+          <a class="btn" href="https://github.com/cmdcolin/videoskillet"
+            >GitHub</a
+          >
+        </p>
+        <p class="req">
+          Uses WebGPU compute shaders to emulate real composite video signal, so
+          all the video effects are real consequences of this rather than
+          painted-on effects
+        </p>
+      </div>
+    </header>
+
+    <section>
+      <div class="wrap wide">
+        <figure>
+          <img
+            src="/app-shot.jpg"
+            alt="The videoskillet.js window: colour bars fed through a feedback loop into a rainbow-fringed orb on the left, and on the right the signal-path map with the CHANNEL stage open on its recording controls"
+            width="1600"
+            height="1066"
+          />
+        </figure>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap wide">
+        <p class="sub">Open one and you land on that exact board.</p>
+        <ul class="grid">
+          <li>
+            <a
+              class="demo"
+              href="/app/?p=A7.BGgTjAk1NCPEAQCQIACkBgBMAZwhAVwAkAEAHADMARCQAwDQAwDAWwAMAJADANgDAIABAkAA0AEAiAEAwIkBAJADJEAIBCKgnAEfBACgAwCcAQmQAw&amp;mod=&amp;src=ia-random&amp;srcb=tv+static&amp;speeda=0.39"
+            >
+              <span class="shot">
+                <video
+                  data-src="demos/wonkitize-me.mp4"
+                  poster="/demos/wonkitize-me.jpg"
+                  muted
+                  loop
+                  playsinline
+                  preload="none"
+                  aria-hidden="true"
+                ></video>
+              </span>
+              <span class="name"
+                >Wonkitize me<span class="open">open →</span></span
+              >
+            </a>
+          </li>
+          <li>
+            <a
+              class="demo"
+              href="/app/?p=Nj.FJADAMACAuQDNVAImAIAUALIARaQAwoUAIABANQDApQBAHgARAniAQECCVQk5gMAqAEAqAYAgJ9JA8gB&amp;mod=tapeLoopMm:smooth:0.05:0.0151&amp;srcb=tv+static"
+            >
+              <span class="shot">
+                <video
+                  data-src="demos/chaos-black-and-white-feedback.mp4"
+                  poster="/demos/chaos-black-and-white-feedback.jpg"
+                  muted
+                  loop
+                  playsinline
+                  preload="none"
+                  aria-hidden="true"
+                ></video>
+              </span>
+              <span class="name"
+                >Chaos black and white feedback<span class="open"
+                  >open →</span
+                ></span
+              >
+            </a>
+          </li>
+          <li>
+            <a
+              class="demo"
+              href="/app/?p=qQ.BrAEAMgCAKAGPahOAdACAJADAZwCAHolpAIAoB8AegA6ACgAqCAALABgAEQAEACYARDQAgDUAhsEA0oQsAEIBA&amp;mod=&amp;srcb=vhs+static"
+            >
+              <span class="shot">
+                <video
+                  data-src="demos/fuzzy-color-bars-feedback-dissolver.mp4"
+                  poster="/demos/fuzzy-color-bars-feedback-dissolver.jpg"
+                  muted
+                  loop
+                  playsinline
+                  preload="none"
+                  aria-hidden="true"
+                ></video>
+              </span>
+              <span class="name"
+                >Fuzzy color bars feedback+dissolver<span class="open"
+                  >open →</span
+                ></span
+              >
+            </a>
+          </li>
+          <li>
+            <a
+              class="demo"
+              href="/app/?p=DM.CqCsBQEEAcwDAHABXAC8aQGQAwDoAgLMBQCsAgOceQR0GPwBCzgAGADYAQAIAlAAuAIImAIAUALIAQCAAQAkArACAXgAFAJ4ADAGXABcApADCjwA5AEA0AQCkAIA6AEAiAEI0AEA4gEA-AMABAlUJOYDAKgBBcgB&amp;mod=tapeLoopMm:smooth:0.05:0.0151&amp;srcb=tv+static"
+            >
+              <span class="shot">
+                <video
+                  data-src="demos/dull-color-feedback.mp4"
+                  poster="/demos/dull-color-feedback.jpg"
+                  muted
+                  loop
+                  playsinline
+                  preload="none"
+                  aria-hidden="true"
+                ></video>
+              </span>
+              <span class="name"
+                >Dull color feedback<span class="open">open →</span></span
+              >
+            </a>
+          </li>
+          <li>
+            <a
+              class="demo"
+              href="/app/?p=1T.GIgEEVQA9AEAYA6AAhHAAQBkDEgEkAMLoAIAtAEE6AIEjCEBAACkAgAAAKgBBVxwub4DAKHEAQ&amp;mod=vFreqHz:smooth:0.08:0.0049,fbGain:smooth:0.24:0.06&amp;src=vhs+static"
+            >
+              <span class="shot">
+                <video
+                  data-src="demos/camera-feedback-static.mp4"
+                  poster="/demos/camera-feedback-static.jpg"
+                  muted
+                  loop
+                  playsinline
+                  preload="none"
+                  aria-hidden="true"
+                ></video>
+              </span>
+              <span class="name"
+                >Camera feedback + static<span class="open">open →</span></span
+              >
+            </a>
+          </li>
+          <li>
+            <a
+              class="demo"
+              href="/app/?p=zD.GNADE4QCRYQDAJgfANYEAvAlAOQBFNwBAdAFL0AIBCKcvgE&amp;mod=&amp;srcb=none"
+            >
+              <span class="shot">
+                <video
+                  data-src="demos/rainborb.mp4"
+                  poster="/demos/rainborb.jpg"
+                  muted
+                  loop
+                  playsinline
+                  preload="none"
+                  aria-hidden="true"
+                ></video>
+              </span>
+              <span class="name">Rainborb<span class="open">open →</span></span>
+            </a>
+          </li>
+          <li>
+            <a
+              class="demo"
+              href="/app/?p=CU.CqCsBQEEAcwDAHABXAC8aQLoAgLMBQCsAgOceQR0GPwBCzgAGADYAQAIAjgAuAIImAIAUALIAQCAAQAkArACAXgAFAJ4ADAGXABcApADAKAhAIgBCKwCAOQBAJgRApACAAAAAADwCAdIALAJAAAABAlUJOYDAKgBBcgBAQQ&amp;mod=tapeLoopMm:smooth:0.05:0.0151&amp;srcb=tv+static&amp;src=tv+static"
+            >
+              <span class="shot">
+                <video
+                  data-src="demos/dark-camera-feedback.mp4"
+                  poster="/demos/dark-camera-feedback.jpg"
+                  muted
+                  loop
+                  playsinline
+                  preload="none"
+                  aria-hidden="true"
+                ></video>
+              </span>
+              <span class="name"
+                >Dark camera feedback<span class="open">open →</span></span
+              >
+            </a>
+          </li>
+          <li>
+            <a
+              class="demo"
+              href="/app/?p=1w.cqQCAKAfAHoAOgAoAKggACwAYABEABAAmAEQ0AIA1AIwsAEIBA&amp;mod=&amp;srcb=vhs+static"
+            >
+              <span class="shot">
+                <video
+                  data-src="demos/fuzzy-color-bars-feedback.mp4"
+                  poster="/demos/fuzzy-color-bars-feedback.jpg"
+                  muted
+                  loop
+                  playsinline
+                  preload="none"
+                  aria-hidden="true"
+                ></video>
+              </span>
+              <span class="name"
+                >Fuzzy color bars feedback<span class="open">open →</span></span
+              >
+            </a>
+          </li>
+          <li>
+            <a
+              class="demo"
+              href="/app/?p=8A.GIgECaABABwAtCUpNCOQAwCsHACACgKUJQK0ARLEAQGcBwAEAIQCAJQDAEwCbACkAgCkAVKA2QE&amp;mod="
+            >
+              <span class="shot">
+                <video
+                  data-src="demos/woggity.mp4"
+                  poster="/demos/woggity.jpg"
+                  muted
+                  loop
+                  playsinline
+                  preload="none"
+                  aria-hidden="true"
+                ></video>
+              </span>
+              <span class="name">Woggity<span class="open">open →</span></span>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <footer class="wrap">
+      <nav>
+        <a href="/app/">Open the app</a>
+        <a href="/guide/">Guide</a>
+        <a href="https://github.com/cmdcolin/videoskillet">Source</a>
+        <a href="https://github.com/cmdcolin/videoskillet/blob/main/docs/FAQ.md"
+          >FAQ</a
+        >
+      </nav>
+      <p>
+        MIT licensed. Built by
+        <a href="https://github.com/cmdcolin">cmdcolin</a>.
+      </p>
+    </footer>
+
+    <script>
+      // `data-src` is page-relative on purpose. Vite rewrites the asset
+      // attributes it knows — `poster` becomes `./demos/…` under this project's
+      // relative base — but it has never heard of `data-src`, so a root-absolute
+      // one would survive the build unchanged and, on a deploy under a sub-path,
+      // give a card a working poster over a clip that 404s. The landing page is
+      // the root, so `demos/…` is the same URL here and right everywhere.
+      //
+      // The demo cards carry no video until they are looked at. Seven clips is
+      // about ten megabytes, and a landing page that spends that before anyone
+      // has scrolled is a landing page nobody on a phone reaches the bottom of —
+      // so each card ships as its poster, and the <source> is attached only when
+      // the card comes into view. Scrolling past detaches nothing: a clip that
+      // has been fetched keeps playing when it comes back.
+      //
+      // Everything below degrades to the posters if it does not run, which is
+      // also exactly what a reduced-motion reader gets.
+      const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches
+
+      // Reduced motion stops the hero on a frame; it does not blank it. The
+      // rule that used to do this in CSS was `display: none`, which takes the
+      // poster with it and leaves an empty black band — and, since an automated
+      // browser reports `reduce` by default, that is also what every screenshot
+      // of this page showed until it was measured.
+      if (reduced) {
+        document.querySelector('.heroVid').pause()
+      }
+
+      const cards = document.querySelectorAll('.demo video[data-src]')
+      if (!reduced && 'IntersectionObserver' in window) {
+        const seen = new IntersectionObserver(
+          entries => {
+            for (const entry of entries) {
+              const video = entry.target
+              if (entry.isIntersecting) {
+                if (!video.src) {
+                  video.src = video.dataset.src
+                }
+                video.play().catch(() => {})
+              } else {
+                video.pause()
+              }
+            }
+          },
+          { rootMargin: '200px' },
+        )
+        for (const card of cards) {
+          seen.observe(card)
+        }
+      }
+    </script>
   </body>
 </html>
