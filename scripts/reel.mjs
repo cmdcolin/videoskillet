@@ -1,4 +1,5 @@
-// The carousel on the landing page: the app's own window, being used.
+// What the landing page plays: the carousel's recordings of the app's own
+// window, and the hero's own encode of the clip behind the title.
 //
 // The stage under the hero used to hold recordings of the *picture* — the same
 // canvas-only clips the gallery cards play — beside one still screenshot of the
@@ -37,7 +38,7 @@
 //            matters is that a timeline **ends where it began**, because these
 //            loop, and a cursor or an open stage that does not come home reads
 //            as a cut.
-import { showcase } from './demos.mjs'
+import { hero, showcase } from './demos.mjs'
 
 // 3:2, and the width is the stage's own. The landing page's wide measure is
 // 72rem inside 1.25rem gutters, so a slide is 1110 CSS pixels across on a big
@@ -45,6 +46,22 @@ import { showcase } from './demos.mjs'
 // the size the app actually renders it, rather than a shrunken picture of a
 // window. Anything wider reads as a screenshot of somebody else's monitor.
 export const FRAME = { width: 1112, height: 742 }
+
+// The hero's copy of the first demo's clip, which is a different job from the
+// gallery card's copy of it. The card plays it in a 300px tile; the hero plays
+// it full-bleed behind display type at 55% opacity under a scrim that closes to
+// the page colour — about a fifth of the picture survives to the screen. One
+// file was serving both, and being the only clip fetched before a reader has
+// scrolled anywhere, it was the heaviest thing on the page: 298K, against 114K
+// for this, which is indistinguishable behind that scrim on a composited
+// comparison. `demoreel.mjs` writes it beside the card's own clip.
+export const heroBackdrop = {
+  clip: hero.clip.replace(/\.mp4$/, '-hero.mp4'),
+  poster: hero.poster,
+  width: 480,
+  height: 384,
+  crf: 36,
+}
 
 // How long a beat runs. Each verb takes its seconds in its own field, so the
 // timeline's arithmetic lives here rather than in the two places that need it —
@@ -82,7 +99,10 @@ export const slides = [
     // previous frames, and a clip armed early records the bloom instead of the
     // look.
     warm: 500,
-    act: [{ hold: 7 }],
+    // Short, because nothing in this slide happens: the panel sits still and the
+    // picture loops. Seven seconds of it was the biggest file on the page and
+    // said nothing the fourth second had not.
+    act: [{ hold: 4.5 }],
   },
   {
     file: 'control',
@@ -100,19 +120,19 @@ export const slides = [
     // own domain: chroma gain runs 0 to 16 and rests at 1, so 0.06 is where a
     // hand finds it and 0.8 is 12.8x, well past where the gamut runs out.
     act: [
-      { hold: 0.5 },
-      { scrollTo: { slider: 'chroma gain' }, secs: 0.9 },
-      { moveTo: { slider: 'chroma gain' }, secs: 0.8 },
-      { drag: { slider: 'chroma gain', to: 0.8 }, secs: 1.8 },
-      { hold: 1.2 },
-      { drag: { slider: 'chroma gain', to: 0.0625 }, secs: 1.1 },
+      { hold: 0.4 },
+      { scrollTo: { slider: 'chroma gain' }, secs: 0.8 },
+      { moveTo: { slider: 'chroma gain' }, secs: 0.7 },
+      { drag: { slider: 'chroma gain', to: 0.8 }, secs: 1.5 },
+      { hold: 0.9 },
+      { drag: { slider: 'chroma gain', to: 0.0625 }, secs: 0.9 },
       { away: 0.5 },
       // Back to the head of the panel, which is where the clip started: the
       // sidebar scrolls as one column, so reaching the decoder takes the
       // masthead off the top of the frame, and a loop has to put it back. The
       // row is named only to find the column it is in — `to` is where the
       // column ends up.
-      { scrollTo: { slider: 'chroma gain' }, to: 0, secs: 0.7 },
+      { scrollTo: { slider: 'chroma gain' }, to: 0, secs: 0.6 },
     ],
   },
   {
@@ -136,18 +156,18 @@ export const slides = [
     },
     warm: 90,
     act: [
-      { hold: 0.6 },
-      { moveTo: { stage: 'SOURCE A' }, secs: 0.7 },
-      { press: 1.5, on: 'SOURCE A' },
-      { moveTo: { stage: 'CHANNEL' }, secs: 0.6 },
-      { press: 1.6, on: 'CHANNEL' },
-      { moveTo: { stage: 'RECEIVER' }, secs: 0.6 },
-      { press: 1.6, on: 'RECEIVER' },
+      { hold: 0.4 },
+      { moveTo: { stage: 'SOURCE A' }, secs: 0.6 },
+      { press: 1.1, on: 'SOURCE A' },
+      { moveTo: { stage: 'CHANNEL' }, secs: 0.5 },
+      { press: 1.2, on: 'CHANNEL' },
+      { moveTo: { stage: 'RECEIVER' }, secs: 0.5 },
+      { press: 1.2, on: 'RECEIVER' },
       // Pressed again, which closes it: the map with nothing unfolded over it
       // is where this started, and a loop coming back to a different panel than
       // it left cuts.
-      { press: 0.9, on: 'RECEIVER' },
-      { away: 0.6 },
+      { press: 0.7, on: 'RECEIVER' },
+      { away: 0.5 },
     ],
   },
 ].map(slide => {

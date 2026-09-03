@@ -12,7 +12,7 @@
 // is what `pnpm build` runs. See `demos.mjs` for what a demo is, and `reel.mjs`
 // for what a slide is.
 import { demos, hero } from './demos.mjs'
-import { FRAME, slides } from './reel.mjs'
+import { FRAME, heroBackdrop, slides } from './reel.mjs'
 
 import { execFileSync } from 'node:child_process'
 import { readFileSync, rmSync, writeFileSync } from 'node:fs'
@@ -69,11 +69,13 @@ const card = demo => `<li>
 
 // The still is the whole of what ships: no `src` and no `autoplay`, so a reader
 // who asked for reduced motion is never sent a clip they did not ask to see,
-// and what they get before a line of script runs is a frame of the look.
+// and what they get before a line of script runs is a frame of the look. The
+// clip is the hero's own encode of it rather than the card's — `heroBackdrop`
+// in reel.mjs says why.
 const heroBlock = `<video
   class="heroVid"
-  data-clip="${hero.clip}"
-  poster="${hero.poster}"
+  data-clip="${heroBackdrop.clip}"
+  poster="${heroBackdrop.poster}"
   muted
   loop
   playsinline
@@ -92,6 +94,14 @@ const heroBlock = `<video
 // only account of what the window looks like that reaches a reader who cannot
 // see it, or who asked for no motion.
 //
+// Only the first slide's still is fetched by the markup. `loading="lazy"` does
+// not defer the other two — the stage is near enough to the fold that the
+// browser loads them anyway — and at 106K and 89K they were most of what the
+// page spent before anybody had touched a tab. So they arrive the way the clips
+// do, on a `data-src` the page sets when their slide is the one showing. Which
+// is also why that attribute is page-relative: vite rewrites `src`, and has
+// never heard of a data attribute.
+//
 // `data-secs` is how long the slide's own recording runs, summed off its
 // timeline rather than measured off the file — the page advances on it, and a
 // stage on a fixed clock cuts a drag off halfway.
@@ -101,11 +111,11 @@ const slide = (
 ) => `<figure class="slide${first ? ' on' : ''}" data-name="${s.name}" data-secs="${s.secs}">
   <img
     class="still"
-    src="${s.poster}"
+    ${first ? `src="${s.poster}"` : `data-src="${s.still}"`}
     alt="${s.alt.replaceAll('"', '&quot;')}"
     width="${FRAME.width}"
     height="${FRAME.height}"
-    ${first ? 'decoding="async"' : 'loading="lazy" decoding="async"'}
+    decoding="async"
   />
   <video
     data-src="${s.clip}"

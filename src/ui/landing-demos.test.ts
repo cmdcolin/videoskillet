@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest'
 
-import { demos, hero, showcase } from '../../scripts/demos.mjs'
+import { demos, showcase } from '../../scripts/demos.mjs'
 
 import { readFileSync } from 'node:fs'
 
@@ -50,13 +50,4 @@ test.each(demos)('$name is on the page', ({ href, clip }) => {
     href: landing.includes(href.replaceAll('&', '&amp;')),
     clip: landing.includes(`data-src="${clip}"`),
   }).toEqual({ href: true, clip: true })
-})
-
-test('the hero plays the first demo listed', () => {
-  // In the markup rather than set by script, because it is what a reader sees
-  // before a line of it runs — and a reader who asked for reduced motion sees
-  // only the still it names.
-  expect(/class="heroVid"\s+data-clip="([^"]+)"/.exec(landing)?.[1]).toBe(
-    hero.clip,
-  )
 })

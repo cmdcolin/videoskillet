@@ -1075,12 +1075,13 @@ pnpm demos:check                 # fail if a checked-in copy is stale (pnpm buil
 
 Two lists feed it. [`../demos.json`](../demos.json) is the looks — the README's
 "Cool demos" bullets, the hero's clip and the gallery of cards, each opening the
-exact board its clip is a recording of. [`../scripts/reel.mjs`](../scripts/reel.mjs)
-is the carousel under the hero, which is a different thing: recordings of the
-**app's own window**, with the panel, the map and a pointer moving over them.
+exact board its clip is a recording of.
+[`../scripts/reel.mjs`](../scripts/reel.mjs) is the carousel under the hero,
+which is a different thing: recordings of the **app's own window**, with the
+panel, the map and a pointer moving over them.
 
 That split is the point of the page. The picture is what the program makes, and
-the gallery and the hero are full of it; the window is what the program *is*,
+the gallery and the hero are full of it; the window is what the program _is_,
 and until the carousel held it the one thing a stranger could not work out from
 the page was what using this looks like.
 
@@ -1109,8 +1110,8 @@ A slide is a look, the panel state to open, and a timeline of beats — hold,
 scroll, move the pointer, press, drag a slider. Three things about writing one:
 
 - **The pointer is drawn into the page, and the clicks under it are real.** A
-  screenshot never contains the OS cursor, so a clip of a hand dragging a
-  slider would otherwise show a slider moving itself.
+  screenshot never contains the OS cursor, so a clip of a hand dragging a slider
+  would otherwise show a slider moving itself.
 - **A timeline has to end where it began**, because these loop. A stage left
   open or a pointer left mid-frame reads as a cut, which is why the signal-path
   slide presses its last box twice and the control slide scrolls back to the
@@ -1120,6 +1121,38 @@ scroll, move the pointer, press, drag a slider. Three things about writing one:
   between two stepped frames is the one cut a recording cannot hide. Reaching
   the decoder takes the masthead off the top of the frame; that is the app, not
   the harness.
+
+### What the page costs, and what holds it down
+
+A first visit fetches **382K of media**: the hero's backdrop clip (86K), the
+first slide's still (48K) and its clip (212K), plus the gallery stills as they
+scroll in. Walking all three slides adds another ~580K. Four things keep that
+number where it is, and each was measured rather than assumed:
+
+- **crf 36, not 30.** The panel half of the frame is static, so h264 codes it
+  once and the following frames leave it alone — raising the quantizer spends
+  its losses almost entirely on the picture. The 11px labels at 36 are the same
+  pixels as at 30 on a 1:1 crop, and the heaviest slide went 645K to 268K. What
+  38 and 40 take is the fine dropout speckle, which is the thing the app is for.
+- **Nothing is fetched for a slide nobody is looking at**, the stills included.
+  `loading="lazy"` does not defer those: the stage sits near enough to the fold
+  that the browser fetches them anyway, so they arrive on a `data-src` the page
+  sets when their slide comes up — 195K that used to be spent before anybody had
+  touched a tab.
+- **The hero has its own encode of its clip.** The gallery card plays it in a
+  300px tile; the hero plays the same file full-bleed at 55% opacity under a
+  scrim, where about a fifth of the picture survives to the screen. 480x384 at
+  crf 36 is 86K against 298K, and composited through that scrim the two are
+  indistinguishable.
+- **One file per slide, no `<source>` fallbacks.** Neither AV1 (svt, crf 50:
+  290K) nor VP9 (libvpx, crf 42: 1.6M) beat x264 at crf 38's 213K on this
+  material — a field of analog noise is where AV1's tools have least to work
+  with. And dropping the frame rate saves nothing at all: CRF is normalized
+  against time, so 20fps at the same crf spends the same bits on fewer frames
+  and comes out slightly larger.
+
+`node scripts/appreel.mjs --keep` leaves the JPEG frames behind and says where,
+which is how any of that gets re-measured without driving the browser again.
 
 Staleness works the way the docshots' does and for the same reason: these
 recordings carry the app's own masthead with the version printed in it, so a

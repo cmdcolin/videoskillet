@@ -55,6 +55,11 @@
         --card: #16161a;
         --border: #2e2e38;
         --accent: #7fd0a0;
+        /* The app's own `--gate`, which it paints on a control whose
+           prerequisite is not met. A browser without WebGPU is that, one level
+           up — and green here would have read as "all set" beside a button
+           that is about to fail. */
+        --gate: #c0a95e;
         --mono: ui-monospace, 'SF Mono', Menlo, monospace;
         --measure: 46rem;
       }
@@ -305,6 +310,18 @@
         font-size: 0.9rem;
         color: var(--fg4);
       }
+      /* Brighter than the line above it, and boxed. It is the one thing on this
+         page a reader has to act on, and at --fg4 on a scrimmed video it read
+         as a footnote. */
+      .gpuwarn {
+        max-width: 34rem;
+        padding: 0.7rem 0.9rem;
+        border: 1px solid var(--border);
+        border-left: 3px solid var(--gate);
+        border-radius: 0.4rem;
+        background: rgb(14 14 17 / 72%);
+        color: var(--fg2);
+      }
 
       section {
         padding: 3.5rem 0;
@@ -439,7 +456,7 @@
       <!-- generated:hero -->
       <video
         class="heroVid"
-        data-clip="demos/wiggity.mp4"
+        data-clip="demos/wiggity-hero.mp4"
         poster="/demos/wiggity.webp"
         muted
         loop
@@ -467,6 +484,17 @@
           Every fault is a consequence of the signal, not an effect drawn on the
           picture.
         </p>
+        <!-- Asked here rather than found out on the other side of the button.
+             The app opens on a screen that says this browser cannot run it,
+             which is the right screen and the wrong moment: whoever is reading
+             it has already clicked through from a page that promised a picture.
+             Hidden until the check fails, so a browser that can run it is told
+             nothing. -->
+        <p class="req gpuwarn" hidden>
+          This browser has no WebGPU. The signal path is compute shaders with no
+          fallback renderer, so the app will open on a screen saying so —
+          <a href="/guide/install.html">what runs it</a>.
+        </p>
       </div>
       <div class="wrap heroBar">
         <button class="chip heroToggle" type="button">Play</button>
@@ -483,7 +511,7 @@
       <div class="wrap wide">
         <!-- generated:carousel -->
         <div class="stage">
-          <figure class="slide on" data-name="The window" data-secs="7">
+          <figure class="slide on" data-name="The window" data-secs="4.5">
             <img
               class="still"
               src="/reel/window.webp"
@@ -501,14 +529,13 @@
               aria-hidden="true"
             ></video>
           </figure>
-          <figure class="slide" data-name="One control" data-secs="7.5">
+          <figure class="slide" data-name="One control" data-secs="6.3">
             <img
               class="still"
-              src="/reel/control.webp"
+              data-src="reel/control.webp"
               alt="The window with the RECEIVER stage open on its decoder controls, chroma gain dragged to 12.8x, and the photograph's colour blooming and clipping into flat cyan and orange"
               width="1112"
               height="742"
-              loading="lazy"
               decoding="async"
             />
             <video
@@ -520,14 +547,13 @@
               aria-hidden="true"
             ></video>
           </figure>
-          <figure class="slide" data-name="The signal path" data-secs="8.7">
+          <figure class="slide" data-name="The signal path" data-secs="6.7">
             <img
               class="still"
-              src="/reel/signal-path.webp"
+              data-src="reel/signal-path.webp"
               alt="The window with the signal path map at the head of the panel, the RECEIVER box pressed, and its stage unfolded underneath on the sync and decoder groups"
               width="1112"
               height="742"
-              loading="lazy"
               decoding="async"
             />
             <video
@@ -1052,6 +1078,34 @@
       // Everything degrades to the stills if it does not run.
       const motion = matchMedia('(prefers-reduced-motion: reduce)')
 
+      // ---- can this browser run it at all ----
+      //
+      // Two questions, not one. `navigator.gpu` is whether the browser has the
+      // API; `requestAdapter()` is whether there is a GPU it will hand over,
+      // which is a different answer on a blocklisted driver or a Linux build
+      // with the API present and switched off — and it is the second one the
+      // app dies of. An adapter is not a device: nothing here creates one, so
+      // this costs the page a promise and leaves the app's own session
+      // untouched (docs/adr/0004).
+      {
+        const warn = document.querySelector('.gpuwarn')
+        const say = () => {
+          warn.hidden = false
+        }
+        if (navigator.gpu === undefined) {
+          say()
+        } else {
+          navigator.gpu
+            .requestAdapter()
+            .then(adapter => {
+              if (adapter === null) {
+                say()
+              }
+            })
+            .catch(() => say())
+        }
+      }
+
       // ---- the hero ----
       //
       // One clip behind the words, and it is armed only when it is going to be
@@ -1118,7 +1172,12 @@
 
         let at = 0
         let wanted = !motion.matches
-        let onScreen = true
+        // False until the observer below says otherwise, which is what keeps
+        // the first clip off the arrival path: the stage is under the fold on
+        // most windows, and starting at `true` fetched it while the hero was
+        // still painting. The observer reports the real answer on the next
+        // frame either way, so a stage that *is* in view loses nothing.
+        let onScreen = false
         let advance = 0
 
         const running = () => wanted && onScreen
@@ -1152,6 +1211,14 @@
             slide.classList.toggle('on', i === at)
             notes[i].classList.toggle('on', i === at)
             buttons[i].setAttribute('aria-current', String(i === at))
+          }
+          // The still under the clip, fetched the first time its slide is
+          // reached. Here rather than in `cue()` below, because a reader who
+          // asked for reduced motion never reaches `cue()` and the still is the
+          // whole of what they are being shown.
+          const still = slides[at].querySelector('.still')
+          if (!still.getAttribute('src')) {
+            still.src = still.dataset.src
           }
         }
 

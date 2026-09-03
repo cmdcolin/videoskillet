@@ -1,6 +1,7 @@
 import { expect, test } from 'vitest'
 
-import { beatSecs, slides } from '../../scripts/reel.mjs'
+import { hero } from '../../scripts/demos.mjs'
+import { beatSecs, heroBackdrop, slides } from '../../scripts/reel.mjs'
 
 import { readFileSync } from 'node:fs'
 
@@ -25,6 +26,27 @@ const stage = landing.slice(
 
 const bytes = (path: string) =>
   readFileSync(`public/${path.replace(/^\//, '')}`).length
+
+test('the hero plays the first demo listed, in its own encode', () => {
+  // In the markup rather than set by script, because it is what a reader sees
+  // before a line of it runs — and a reader who asked for reduced motion sees
+  // only the still it names.
+  //
+  // Its own encode, because the hero is the one clip fetched before anybody has
+  // scrolled anywhere and it plays scrimmed down to a fifth of itself. Nothing
+  // but this would notice the file going missing: `demoreel.mjs` writes it as a
+  // side effect of recording the first demo, so re-recording a *different* demo
+  // and deleting the old file would leave the hero blank.
+  expect({
+    clip: /class="heroVid"\s+data-clip="([^"]+)"/.exec(landing)?.[1],
+    ofTheFirstDemo: heroBackdrop.clip.startsWith(hero.clip.slice(0, -4)),
+    recorded: bytes(heroBackdrop.clip) > 0,
+  }).toEqual({
+    clip: heroBackdrop.clip,
+    ofTheFirstDemo: true,
+    recorded: true,
+  })
+})
 
 test('the carousel has slides', () => {
   // Not a count: which moves are worth showing is a judgement that changes.
@@ -62,6 +84,16 @@ test.each(slides)('$file holds the stage for its own length', slide => {
     slide.act.reduce((total, beat) => total + beatSecs(beat), 0),
     1,
   )
+})
+
+test('only the slide showing has fetched its still', () => {
+  // The other two arrive on a `data-src` when their tab is reached. They are
+  // 100K apiece of app window, and `loading="lazy"` does not defer them: the
+  // stage sits near enough to the fold that the browser fetches them anyway.
+  expect({
+    eager: [...stage.matchAll(/<img[^>]+\ssrc="/g)].length,
+    deferred: [...stage.matchAll(/<img[^>]+data-src="/g)].length,
+  }).toEqual({ eager: 1, deferred: slides.length - 1 })
 })
 
 test('the carousel opens on its first slide', () => {

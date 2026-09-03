@@ -1,7 +1,8 @@
 import puppeteer from 'puppeteer-core'
 
 import { FIREFOX } from './browser.mjs'
-import { demos } from './demos.mjs'
+import { demos, hero } from './demos.mjs'
+import { heroBackdrop } from './reel.mjs'
 
 // Record the demos as short mp4 loops for the landing page.
 //
@@ -190,6 +191,20 @@ for (const demo of wanted) {
     `${outDir}/${demo.file}.webp`,
   ])
   rmSync(`${outDir}/${demo.file}.png`)
+  // The first demo listed is also what runs behind the hero, where it is
+  // scrimmed down to about a fifth of itself and stretched over the width of
+  // the window. That is not the card's job and should not be the card's file —
+  // see `heroBackdrop` in reel.mjs for the sizes and what the difference costs.
+  if (demo.file === hero.file) {
+    const out = `${outDir}/${heroBackdrop.clip.split('/').pop()}`
+    // prettier-ignore
+    execFileSync('ffmpeg', ['-y', '-v', 'error', '-i', webm, '-an',
+      '-vf', `fps=${FPS},scale=${heroBackdrop.width}:${heroBackdrop.height}:flags=lanczos`,
+      '-c:v', 'libx264', '-crf', String(heroBackdrop.crf), '-preset', 'veryslow',
+      '-profile:v', 'main', '-pix_fmt', 'yuv420p',
+      '-movflags', '+faststart', out])
+    console.log(`  hero backdrop ${Math.round(statSync(out).size / 1024)}K`)
+  }
   rmSync(webm)
   const kb = n =>
     Math.round(statSync(`${outDir}/${demo.file}.${n}`).size / 1024)

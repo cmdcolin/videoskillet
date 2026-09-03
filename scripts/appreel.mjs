@@ -1,7 +1,7 @@
 // Record the app's own window — chrome, panel, picture and a hand on it — for
 // the landing page's carousel. `reel.mjs` is the list; this drives it.
 //
-// Usage: node scripts/appreel.mjs [--base=URL] [--out=DIR] [--check] [file...]
+// Usage: node scripts/appreel.mjs [--base=URL] [--out=DIR] [--check] [--keep] [file...]
 //   needs the dev server (pnpm dev), Firefox Nightly, ffmpeg and cwebp. Names
 //   filter the run: `node scripts/appreel.mjs control`.
 //
@@ -73,6 +73,10 @@ const flag = (name, fallback) => {
 const base = flag('base', 'http://localhost:5199/app/')
 const outDir = flag('out', 'public/reel')
 const check = argv.includes('--check')
+// Leave the frames behind, and say where. An encode is a knob (fps, crf, the
+// codec itself) worth trying more than once, and driving the browser again for
+// each try is a minute a go and a different set of frames to compare against.
+const keep = argv.includes('--keep')
 const only = argv.filter(a => !a.startsWith('--'))
 
 const FPS = 24
@@ -80,11 +84,21 @@ const FPS = 24
 // slower than the app runs, which is the right side to err on — a picture that
 // is a field of noise reads as faster than it is, and these loop.
 const STEPS = 2
-// The picture is noise and the panel is flat colour, which pull opposite ways:
-// noise is what a codec spends bits on, and type is what it must not smear. 30
-// holds the panel's 11px labels legible at the stage's own size and lands a
-// seven-second window under 700K.
-const CRF = 30
+// The picture is noise and the panel is flat colour, and it turns out they do
+// not pull against each other at all. The panel is *static*: h264 codes that
+// half of the frame once and the following frames leave it alone, so raising
+// the quantizer spends its losses almost entirely on the picture — the 11px
+// labels at crf 36 are the same pixels as at crf 30, checked on a 1:1 crop, and
+// the heaviest slide went 645K to 268K. What crf 38 and 40 take is the fine
+// dropout speckle, which is the thing the app is *for*, so this stops here.
+//
+// Two encoder knobs that look like savings and are not. Dropping the frame rate
+// saves nothing: CRF is normalized against time, so 20fps at the same crf
+// spends the same bits on fewer frames and comes out slightly *larger*. And
+// neither AV1 (svt, crf 50: 290K) nor VP9 (libvpx, crf 42: 1.6M) beat x264 on
+// this material — a field of analog noise is where AV1's tools have least to
+// work with — so the page stays one file per slide with no <source> fallbacks.
+const CRF = 36
 // The still under the clip — what ships to a reader who asked for reduced
 // motion, and what stands in until the clip has opened. Higher than the
 // gallery's 72: that one is a field of noise where ringing hides, and this one
@@ -573,7 +587,11 @@ for (const slide of wanted) {
     console.log(`  FAIL ${slide.file}: ${String(e).slice(0, 200)}`)
   } finally {
     await browser.close().catch(() => {})
-    rmSync(tmpDir, { recursive: true, force: true })
+    if (keep) {
+      console.log(`    frames kept in ${tmpDir}`)
+    } else {
+      rmSync(tmpDir, { recursive: true, force: true })
+    }
   }
 }
 
