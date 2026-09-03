@@ -1,7 +1,7 @@
-# videoskillet.js <img src="docs/img/logo.svg" alt="videoskillet logo" height="32" align="right" />
+# videoskillet.js <img src="public/favicon.svg" alt="videoskillet logo" height="48" />
 
-WebGPU composite video emulation. Every fault is a consequence of the signal,
-not an effect drawn on the picture.
+Tasty WebGPU signal-level composite video emulation. The video effects are a
+consequence of NTSC signal, not an effect drawn on the picture.
 
 ### Live app!
 
