@@ -1,13 +1,36 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
   <rect width="32" height="32" rx="6" fill="#0a0b0d"/>
+  <defs>
+    <linearGradient id="lip" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7a8088"/>
+      <stop offset="1" stop-color="#4a4f56"/>
+    </linearGradient>
+    <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0f1113"/>
+      <stop offset="0.45" stop-color="#22262b"/>
+      <stop offset="1" stop-color="#5c636b"/>
+    </linearGradient>
+    <radialGradient id="floor" cx="0.5" cy="0.4" r="0.7">
+      <stop offset="0" stop-color="#2c3035"/>
+      <stop offset="1" stop-color="#111315"/>
+    </radialGradient>
+    <linearGradient id="handle" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8b9199"/>
+      <stop offset="1" stop-color="#2a2e33"/>
+    </linearGradient>
+  </defs>
   <g fill="none" stroke-width="2.4" stroke-linecap="round">
-    <path d="M8 15.8 C6.1 13.7 9.1 12.1 7.6 9.7" stroke="#c7c71f"/>
-    <path d="M12.6 15.6 C10.3 13.1 14.3 11.1 12.4 8.3 C11.3 6.7 12.4 5.5 12.9 4.5" stroke="#1fc7c7"/>
-    <path d="M17.3 15.8 C15.8 14 18.7 12.6 17.4 10.4" stroke="#c71fc7"/>
+    <path d="M8.5 13.5 C6.6 11.4 9.6 9.8 8.1 7.4" stroke="#c7c71f"/>
+    <path d="M13 13.3 C10.7 10.8 14.7 8.8 12.8 6 C11.7 4.4 12.8 3.2 13.3 2.2" stroke="#1fc7c7"/>
+    <path d="M17.5 13.5 C16 11.7 18.9 10.3 17.6 8.1" stroke="#c71fc7"/>
   </g>
-  <g transform="rotate(-7 13 22)">
-    <path d="M21.6 19.6 29.2 15.6" fill="none" stroke="#767d85" stroke-width="3.2" stroke-linecap="round"/>
-    <ellipse cx="13" cy="22.6" rx="10" ry="6.2" fill="#767d85"/>
-    <ellipse cx="13" cy="20.8" rx="10" ry="4.8" fill="#22262b"/>
+  <g transform="rotate(-10 13 22)">
+    <path d="M22.2 20.7 L28.6 18.9 A1.55 1.55 0 0 1 30.4 20.3 A1.55 1.55 0 0 1 29.1 21.9 L22.7 23.6 Z"
+      fill="url(#handle)"/>
+    <circle cx="29" cy="20.4" r="0.5" fill="#0a0b0d"/>
+    <ellipse cx="13" cy="22.3" rx="10.6" ry="5.6" fill="url(#lip)"/>
+    <ellipse cx="13" cy="22.3" rx="9.7" ry="4.9" fill="url(#wall)"/>
+    <ellipse cx="13" cy="23.6" rx="7.8" ry="3.1" fill="url(#floor)"/>
+    <path d="M3.4 23.6 A10.6 5.6 0 0 0 22.6 23.6" fill="none" stroke="#9aa1a9" stroke-width="0.4" opacity="0.5"/>
   </g>
 </svg>
