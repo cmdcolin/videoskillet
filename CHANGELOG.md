@@ -2,6 +2,16 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [0.37.0](https://github.com/cmdcolin/videoskillet/compare/v0.36.0...v0.37.0) - 2026-09-03
+
+### Features
+- *(ui)* [`a85e71a`](https://github.com/cmdcolin/videoskillet/commit/a85e71ab3f989fa3133dfe688bb10fa725974a85) a feedback loop is a chip on its run, not a word over a wire
+- *(ui)* [`ab0df28`](https://github.com/cmdcolin/videoskillet/commit/ab0df28e6698757d5abff664950ee06c37389159) the hero plays a reel, and one file says what the demos are
+- *(ui)* [`33bb6a5`](https://github.com/cmdcolin/videoskillet/commit/33bb6a52d1b02a7921b2cec1d88fba7073ee62da) modulation is a button on the row, not a line in its ⋮ menu
+
+### Other Changes
+- [`ad405d3`](https://github.com/cmdcolin/videoskillet/commit/ad405d303d30277219dfdefcdcff9af88f2ec920) Updates
+
 ## [0.36.0](https://github.com/cmdcolin/videoskillet/compare/v0.35.1...v0.36.0) - 2026-09-03
 
 ### Features
