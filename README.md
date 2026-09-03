@@ -1,4 +1,4 @@
-# videoskillet.js
+# videoskillet.js <img src="docs/img/logo.svg" alt="videoskillet logo" height="32" align="right" />
 
 WebGPU composite video emulation. Every fault is a consequence of the signal,
 not an effect drawn on the picture.
