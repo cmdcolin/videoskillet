@@ -210,6 +210,24 @@ export function useMix(args: {
     else args.startGlide(morphTo(next, morphSeconds))
   }
 
+  // Bank the look on the board, read now rather than when React gets round to
+  // the updater — and the only way this file records a step, so "now" is not a
+  // thing each caller has to remember.
+  //
+  // It is the whole of what "the look you were on" means. The engine is the
+  // store, so `banked()` reads live state, and every verb here writes that state
+  // in the next statement; a `setHistory(h => record(h, banked(), …))` therefore
+  // asked the question *after* the answer had changed and banked the destination
+  // as the step to go back to. Undo then landed where you already were. It
+  // survived because React evaluates an updater eagerly when the fiber happens
+  // to be clean — so the same click was undoable or not depending on what else
+  // had re-rendered, and the rolls, which never had a clean fiber, could not be
+  // taken back at all.
+  const bank = (same: (a: Look, b: Look) => boolean) => {
+    const look = banked()
+    setHistory(h => record(h, look, same))
+  }
+
   // Every destructive path goes through here, so the walk covers all of them.
   //
   // `kind` is what the look on screen was arrived at by, for the label a rating
@@ -220,7 +238,7 @@ export function useMix(args: {
   // in the vocabulary and nothing ever wrote it. A gesture knows what it is, so
   // it says so here rather than being guessed at afterwards.
   const apply = (next: Controls, kind: Provenance) => {
-    setHistory(h => record(h, banked(), sameLook))
+    bank(sameLook)
     setGesture({ kind, look: next })
     land(next)
   }
@@ -345,16 +363,7 @@ export function useMix(args: {
     canUndo: history.past.length > 0,
     canRedo: history.future.length > 0,
     // Bank the look on the board before overwriting it, so undo can restore it.
-    //
-    // The look is read here rather than inside the updater, and that is the
-    // whole of what "before" means: both callers hand the board over to a glide
-    // in the next statement, so an updater that asked `banked()` when React got
-    // round to running it would be told the answer for the look now arriving —
-    // and bank the destination as the step to go back to.
-    snapshotForUndo: () => {
-      const look = banked()
-      setHistory(h => record(h, look, sameLook))
-    },
+    snapshotForUndo: () => bank(sameLook),
     undo: () => goto(stepBack(history, banked())),
     redo: () => goto(stepForward(history, banked())),
     applyPreset: (name: string, patch: Partial<Controls>) => {
@@ -363,7 +372,7 @@ export function useMix(args: {
       // startMix never runs and the step went unrecorded — the one way to apply
       // a preset that could not be undone. Deduped against startMix's snapshot,
       // so the ordinary mouse path still banks exactly one step.
-      setHistory(h => record(h, banked(), sameLook))
+      bank(sameLook)
       if (Object.keys(patch).length === 0) {
         // "clean" is the only empty patch, and it is the reset — the same one
         // the look bar's button presses, so the chip and the button cannot come
@@ -394,7 +403,7 @@ export function useMix(args: {
       if (!controlsEqual(controls, mixed)) {
         setMix({ base: controls, weights: new Map() })
       }
-      setHistory(h => record(h, banked(), sameLook))
+      bank(sameLook)
     },
     setPresetWeight: (name: string, w: number) =>
       writeWeight(name, w, mix.base, mix.weights),
@@ -405,7 +414,7 @@ export function useMix(args: {
     // than one per MIDI message.
     midiPresetWeight: (name: string, w: number) => {
       const drifted = !controlsEqual(controls, mixed)
-      if (drifted) setHistory(h => record(h, banked(), sameLook))
+      if (drifted) bank(sameLook)
       writeWeight(
         name,
         w,
@@ -489,7 +498,7 @@ export function useMix(args: {
       amount: MutateAmount = 'normal',
       opts: { audioLive?: boolean } = {},
     ) => {
-      setHistory(h => record(h, banked(), sameLookAndBay))
+      bank(sameLookAndBay)
       mod.setSlots(
         rollBay({
           amount,
@@ -514,7 +523,7 @@ export function useMix(args: {
     // now banks one: a reset is the only gesture that stops a stab train, so
     // without it in the step, ctrl+z came back to the look with the gate gone.
     reset: () => {
-      setHistory(h => record(h, banked(), sameBoard))
+      bank(sameBoard)
       toStock()
     },
     // One circuit back to stock, from its header. The row-level ↺ is the fine
