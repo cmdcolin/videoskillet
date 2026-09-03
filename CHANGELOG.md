@@ -2,6 +2,33 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [0.37.1](https://github.com/cmdcolin/videoskillet/compare/v0.37.0...v0.37.1) - 2026-09-03
+
+### Features
+- *(ui)* [`088cdc4`](https://github.com/cmdcolin/videoskillet/commit/088cdc46f7bb451564407596a45a38ea0f52e866) the link preview gets a look and a mark, not a bare crop
+- *(ui)* [`ceac5ba`](https://github.com/cmdcolin/videoskillet/commit/ceac5bab6f43a915d78bc0d9c4fb1cdbdeca075c) the favicon is a skillet with a rim and a wall
+
+### Fixes
+- *(ui)* [`892f84e`](https://github.com/cmdcolin/videoskillet/commit/892f84ebebbb588dad49d2f74800c65ccd4927b9) the walk banks the look you were on, not the one arriving
+- *(ui)* [`28b8bdf`](https://github.com/cmdcolin/videoskillet/commit/28b8bdf8395fa39d8d7c6bba0188191fbed4e53e) count is twelve now the duck flew home
+- *(ui)* [`d91334d`](https://github.com/cmdcolin/videoskillet/commit/d91334db4b2074a9439a08ea6c54287a88201ac8) brighten pan handle gradient
+
+### Performance
+- *(gpu)* [`851d8c7`](https://github.com/cmdcolin/videoskillet/commit/851d8c740176343ef825d132111b4ae1a6468d70) the shaders ship their code, not their prose
+
+### Documentation
+- [`c3bb232`](https://github.com/cmdcolin/videoskillet/commit/c3bb232f4e1a80092b5fa23a25e1df64bd6a3f87) add app logo beside README title
+- [`bf3e485`](https://github.com/cmdcolin/videoskillet/commit/bf3e48514dbbb3f2abbe4b1adcdcc6ff1a474fdf) use favicon svg for README logo
+- [`501cce1`](https://github.com/cmdcolin/videoskillet/commit/501cce14f7ffd519cb75691a7ccd80da3a93ba7a) reshoot signal path diagram for README
+
+### Other Changes
+- [`feced8a`](https://github.com/cmdcolin/videoskillet/commit/feced8a08b928dad82328f4856f77b3c2083a57d) Add laserduck
+- [`8c6102c`](https://github.com/cmdcolin/videoskillet/commit/8c6102cffc3c2bf29e972ebf6e944eb8d4514632) No gitignore
+- [`612bdbe`](https://github.com/cmdcolin/videoskillet/commit/612bdbeebca26d8f2ee7967b7d475991a79ae459) Update fatal with logo
+- [`ab14d20`](https://github.com/cmdcolin/videoskillet/commit/ab14d208ff268cec5a8fadcf20b5876bdae5b14c) Updates
+- [`e714ba5`](https://github.com/cmdcolin/videoskillet/commit/e714ba597bea7f2655689da97afcc4483287c184) Update favicon.svg
+- [`f524bac`](https://github.com/cmdcolin/videoskillet/commit/f524bac3809edef372d5d9657462f90fce19e87e) Laserduck
+
 ## [0.37.0](https://github.com/cmdcolin/videoskillet/compare/v0.36.0...v0.37.0) - 2026-09-03
 
 ### Features
