@@ -18,13 +18,15 @@
 //   query  the packed look, `?p=…` onwards. The origin is not stored: every
 //          published link is videoskillet.com, and two of these were pasted
 //          from a dev server and published pointing at localhost.
-//   reel   whether the hero plays it. The hero is a sampler of the gallery, and
-//          this is the half of it that survives the scrim over it — three of
-//          these recordings are dark tape transfers that read as an empty black
-//          band behind the wash the hero's display type needs.
+//   showcase
+//          whether the carousel under the hero shows it. The carousel is a few
+//          looks worth stopping on beside a shot of the app's window, so this
+//          is a short list and the gallery below is the long one — a demo joins
+//          the carousel by turning this on and running `pnpm demos`.
 //
-// Order is the order everything shows in: the reel plays its members in it, the
-// gallery lists all of them in it, and the README prints it.
+// Order is the order everything shows in: the carousel plays its members in it,
+// the gallery lists all of them in it, and the README prints it. The hero's own
+// clip is the first demo listed.
 import { readFileSync } from 'node:fs'
 
 export const APP = 'https://videoskillet.com/app/'
@@ -37,7 +39,7 @@ export const slug = name =>
 
 // Annotated because `JSON.parse` hands back `any`, and `landing-demos.test.ts`
 // imports this module: without a shape here, the tests over it are unchecked.
-/** @type {{ name: string, query: string, reel: boolean }[]} */
+/** @type {{ name: string, query: string, showcase: boolean }[]} */
 const listed = JSON.parse(readFileSync('demos.json', 'utf8'))
 
 // `clip` and `still` are page-relative and `poster` is not, which is not an
@@ -60,4 +62,6 @@ export const demos = listed.map(demo => {
   }
 })
 
-export const reel = demos.filter(demo => demo.reel)
+export const showcase = demos.filter(demo => demo.showcase)
+
+export const hero = demos[0]

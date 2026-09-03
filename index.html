@@ -94,24 +94,19 @@
         overflow: hidden;
         border-bottom: 1px solid var(--border);
       }
-      /* Two of them, stacked: one showing, one holding whatever comes next, so
-         a change of look is a crossfade rather than a black frame while a
-         second file opens. Only the front one is playing — the back one is
-         paused on its first frame the moment the fade is over. */
+      /* One clip, held back just far enough that display type stays readable
+         over a picture whose whole job is to be violent. The looks that used to
+         cycle here are the carousel under the hero instead: a header that
+         changes under the reader is a distraction from the words in front of
+         it, and the carousel can be looked at. */
       .heroVid {
         position: absolute;
         inset: 0;
         width: 100%;
         height: 100%;
         object-fit: cover;
-        opacity: 0;
-        transition: opacity 0.9s ease;
-        filter: saturate(1.1) contrast(1.05);
-      }
-      /* Held back just far enough that display type stays readable over a
-         picture whose whole job is to be violent. */
-      .heroVid.on {
         opacity: 0.55;
+        filter: saturate(1.1) contrast(1.05);
       }
       /* One wash, not two. Stacked scrims multiply: a 82% layer under a 62%
          layer leaves 7% of the video, which is why the hero read as an empty
@@ -133,78 +128,97 @@
         padding: 5.5rem 0 3rem;
       }
 
-      /* The reel's controls. They are the only way in to the hero for a reader
-         whose system asks for reduced motion — nothing starts by itself there,
-         so the ▶ has to be visible rather than a hover secret. The roster the
-         dots carry is the bright half of the gallery: three of the recorded
-         demos are dark tape transfers, and behind a scrim this heavy they read
-         as an empty black band whatever is done to the wash over them. */
-      .reel {
+      /* The hero's play control. It is the only way in for a reader whose
+         system asks for reduced motion — nothing starts by itself for them, so
+         the button has to be visible rather than a hover secret. */
+      .heroBar {
         position: relative;
         display: flex;
-        align-items: center;
         justify-content: flex-end;
-        gap: 0.75rem;
         padding-bottom: 1.5rem;
-        font-family: var(--mono);
-        font-size: 0.8rem;
-        color: var(--fg4);
       }
-      .reelName {
-        margin: 0;
-        letter-spacing: 0.02em;
-      }
-      .reelDots {
-        display: flex;
-        gap: 0.15rem;
-      }
-      /* The dot is drawn small and the button is not: a 0.5rem target is one
-         nobody hits on a phone, so the button keeps a finger-sized box and only
-         the mark inside it is small. */
-      .dot {
-        width: 1.5rem;
-        height: 1.5rem;
-        padding: 0;
-        border: 0;
-        background: none;
-        cursor: pointer;
-        display: grid;
-        place-items: center;
-      }
-      .dot::before {
-        content: '';
-        width: 0.5rem;
-        height: 0.5rem;
-        border-radius: 50%;
-        background: var(--fg4);
-        opacity: 0.5;
-        transition:
-          background 0.2s,
-          opacity 0.2s;
-      }
-      .dot:hover::before {
-        opacity: 1;
-      }
-      .dot[aria-current='true']::before {
-        background: var(--accent);
-        opacity: 1;
-      }
-      .reelToggle {
-        width: 1.9rem;
-        height: 1.9rem;
-        padding: 0;
+      /* A word, not a glyph: a bare ▶ is a guess, and these sit next to each
+         other where one of them says a demo's name. */
+      .chip {
+        padding: 0.35rem 0.8rem;
         border: 1px solid var(--border);
-        border-radius: 50%;
+        border-radius: 0.4rem;
         background: var(--card);
         color: var(--fg3);
-        font-size: 0.7rem;
-        line-height: 1;
+        font: inherit;
+        font-size: 0.85rem;
+        line-height: 1.3;
         cursor: pointer;
       }
-      .reelToggle:hover {
+      .chip:hover {
         border-color: var(--fg4);
         color: var(--fg);
       }
+      .chip[aria-current='true'] {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+
+      /* The carousel. One box, one slide showing, and the slides are of two
+         kinds — a recorded look and the app's own window — so the stage holds a
+         3:2 frame and everything fills it. The screenshot was taken at that
+         shape; a 5:4 clip loses a band off the top and bottom, which on a
+         picture that is all field and noise is nothing to see. */
+      .stage {
+        position: relative;
+        aspect-ratio: 3 / 2;
+        background: #000;
+        border: 1px solid var(--border);
+        border-radius: 0.6rem;
+        overflow: hidden;
+      }
+      .slide {
+        position: absolute;
+        inset: 0;
+        margin: 0;
+        opacity: 0;
+        transition: opacity 0.6s ease;
+      }
+      .slide.on {
+        opacity: 1;
+      }
+      .slide img,
+      .slide video {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        display: block;
+        object-fit: cover;
+        border: 0;
+        border-radius: 0;
+      }
+      /* The still under the clip, as on the gallery cards: a <video>'s own
+         poster is fetched the moment it is laid out, and the slide a reader
+         never reaches should cost nothing. */
+      .slide video {
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+      .slide.live video {
+        opacity: 1;
+      }
+      .slideBar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 0.85rem;
+      }
+      .slideTabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+      .slideToggle {
+        margin-left: auto;
+      }
+
       .brand {
         display: flex;
         align-items: center;
@@ -391,18 +405,9 @@
     <header class="hero">
       <!-- generated:hero -->
       <video
-        class="heroVid on"
+        class="heroVid"
         data-clip="demos/wiggity.mp4"
         poster="/demos/wiggity.webp"
-        muted
-        loop
-        playsinline
-        preload="none"
-        aria-hidden="true"
-        tabindex="-1"
-      ></video>
-      <video
-        class="heroVid"
         muted
         loop
         playsinline
@@ -430,68 +435,49 @@
           picture.
         </p>
       </div>
-      <div class="wrap reel">
-        <!-- generated:reel -->
-        <p class="reelName">Wiggity</p>
-        <div class="reelDots">
-          <button
-            class="dot"
-            type="button"
-            data-clip="demos/wiggity.mp4"
-            data-still="demos/wiggity.webp"
-            data-name="Wiggity"
-            aria-label="Show Wiggity"
-          ></button>
-          <button
-            class="dot"
-            type="button"
-            data-clip="demos/ridiculous-rainbow.mp4"
-            data-still="demos/ridiculous-rainbow.webp"
-            data-name="Ridiculous rainbow"
-            aria-label="Show Ridiculous rainbow"
-          ></button>
-          <button
-            class="dot"
-            type="button"
-            data-clip="demos/rainborb.mp4"
-            data-still="demos/rainborb.webp"
-            data-name="Rainborb"
-            aria-label="Show Rainborb"
-          ></button>
-          <button
-            class="dot"
-            type="button"
-            data-clip="demos/wonkitize-me.mp4"
-            data-still="demos/wonkitize-me.webp"
-            data-name="Wonkitize me"
-            aria-label="Show Wonkitize me"
-          ></button>
-          <button
-            class="dot"
-            type="button"
-            data-clip="demos/chaos-black-and-white-feedback.mp4"
-            data-still="demos/chaos-black-and-white-feedback.webp"
-            data-name="Chaos black and white feedback"
-            aria-label="Show Chaos black and white feedback"
-          ></button>
-        </div>
-        <!-- /generated:reel -->
-        <button class="reelToggle" type="button" aria-label="Play the reel">
-          ▶
-        </button>
+      <div class="wrap heroBar">
+        <button class="chip heroToggle" type="button">Play</button>
       </div>
     </header>
 
     <section>
       <div class="wrap wide">
-        <figure>
-          <img
-            src="/app-shot.jpg"
-            alt="The videoskillet.js window: colour bars fed through a feedback loop into a rainbow-fringed orb on the left, and on the right the signal-path map with the CHANNEL stage open on its recording controls"
-            width="1600"
-            height="1066"
-          />
-        </figure>
+        <div class="stage">
+          <!-- generated:showcase -->
+          <figure class="slide on" data-name="Ridiculous rainbow">
+            <img
+              class="still"
+              src="/demos/ridiculous-rainbow.webp"
+              alt=""
+              width="640"
+              height="512"
+              decoding="async"
+            />
+            <video
+              data-src="demos/ridiculous-rainbow.mp4"
+              muted
+              loop
+              playsinline
+              preload="none"
+              aria-hidden="true"
+            ></video>
+          </figure>
+          <!-- /generated:showcase -->
+          <figure class="slide" data-name="The app window">
+            <img
+              src="/app-shot.jpg"
+              alt="The videoskillet.js window: colour bars fed through a feedback loop into a rainbow-fringed orb on the left, and on the right the signal-path map with the CHANNEL stage open on its recording controls"
+              width="1600"
+              height="1066"
+              loading="lazy"
+              decoding="async"
+            />
+          </figure>
+        </div>
+        <div class="slideBar">
+          <div class="slideTabs"></div>
+          <button class="chip slideToggle" type="button">Play</button>
+        </div>
       </div>
     </section>
 
@@ -978,104 +964,141 @@
       // Everything degrades to the stills if it does not run.
       const motion = matchMedia('(prefers-reduced-motion: reduce)')
 
-      // ---- the hero reel ----
+      // ---- the hero ----
       //
-      // A reader who asks for reduced motion gets the still and the ▶, and the
-      // clip is never fetched — which is also why the hero carries no `src` and
-      // no `autoplay` in the markup. `wanted` is what the reader asked for;
-      // `showing` is whether the hero is somewhere it can be seen. Both have to
-      // hold, so the reel does not play to a scrolled-past page or a background
-      // tab, and neither one has to know about the other.
-      const layers = [...document.querySelectorAll('.heroVid')]
-      const dots = [...document.querySelectorAll('.dot')]
-      const looks = dots.map(dot => dot.dataset)
-      const reelName = document.querySelector('.reelName')
-      const toggle = document.querySelector('.reelToggle')
-      const DWELL = 9000
+      // One clip behind the words, and it is armed only when it is going to be
+      // played: a reader who asks for reduced motion gets the still and the
+      // button, and the file is never fetched — which is why the hero carries
+      // no `src` and no `autoplay` in the markup. `wanted` is what the reader
+      // asked for; `onScreen` is whether the hero is somewhere it can be seen.
+      // Both have to hold, so nothing plays to a scrolled-past page or a
+      // background tab, and neither one has to know about the other.
+      {
+        const clip = document.querySelector('.heroVid')
+        const toggle = document.querySelector('.heroToggle')
+        let wanted = !motion.matches
+        let onScreen = true
 
-      let front = 0
-      let at = 0
-      let wanted = !motion.matches
-      let showing = true
-      let advance = 0
-
-      // The layer showing at load declares its look in the markup and carries
-      // no `src`, so that a reader who asked for reduced motion is never sent a
-      // clip they did not ask to see — which means "already holding this look"
-      // is not on its own enough to skip the load.
-      const arm = (layer, look) => {
-        if (!layer.src || layer.dataset.clip !== look.clip) {
-          layer.dataset.clip = look.clip
-          layer.poster = look.still
-          layer.src = look.clip
-        }
-      }
-
-      const running = () => wanted && showing
-
-      const show = index => {
-        const behind = layers[front]
-        const next = layers[1 - front]
-        arm(next, looks[index])
-        next.currentTime = 0
-        if (running()) {
-          next.play().catch(() => {})
-        }
-        next.classList.add('on')
-        behind.classList.remove('on')
-        front = 1 - front
-        at = index
-        reelName.textContent = looks[at].name
-        for (const [i, dot] of dots.entries()) {
-          dot.setAttribute('aria-current', String(i === at))
-        }
-        // Once the fade is over, the layer left behind stops costing a decoder
-        // and becomes the one holding the look after this one — nine seconds of
-        // lead on a file that has to open before it can be faded to.
-        setTimeout(() => {
-          behind.pause()
-          arm(behind, looks[(at + 1) % looks.length])
-        }, 1000)
-      }
-
-      const sync = () => {
-        clearInterval(advance)
-        if (running()) {
-          arm(layers[front], looks[at])
-          layers[front].play().catch(() => {})
-          advance = setInterval(() => show((at + 1) % looks.length), DWELL)
-        } else {
-          for (const layer of layers) {
-            layer.pause()
+        const sync = () => {
+          if (wanted && onScreen) {
+            if (!clip.src) {
+              clip.src = clip.dataset.clip
+            }
+            clip.play().catch(() => {})
+          } else {
+            clip.pause()
           }
+          toggle.textContent = wanted ? 'Pause' : 'Play'
         }
-        toggle.textContent = wanted ? '❚❚' : '▶'
-        toggle.setAttribute(
-          'aria-label',
-          wanted ? 'Pause the reel' : 'Play the reel',
-        )
-      }
 
-      toggle.addEventListener('click', () => {
-        wanted = !wanted
-        sync()
-      })
-      for (const [i, dot] of dots.entries()) {
-        dot.addEventListener('click', () => {
-          show(i)
+        toggle.addEventListener('click', () => {
+          wanted = !wanted
           sync()
         })
+        document.addEventListener('visibilitychange', () => {
+          onScreen = !document.hidden
+          sync()
+        })
+        new IntersectionObserver(entries => {
+          onScreen = entries[0].isIntersecting && !document.hidden
+          sync()
+        }).observe(document.querySelector('.hero'))
+        sync()
       }
-      document.addEventListener('visibilitychange', () => {
-        showing = !document.hidden
+
+      // ---- the carousel ----
+      //
+      // A look and the app's own window, in one frame, on the same terms as the
+      // hero: nothing is fetched until the slide holding it is the one showing,
+      // and a reader who asked for reduced motion is handed the stills and the
+      // buttons rather than a stage that changes under them.
+      //
+      // The tabs are built from the slides rather than written beside them, so
+      // a slide added to the stage — generated from `demos.json`, or written in
+      // by hand the way the app's window is — arrives with its own way in.
+      {
+        const stage = document.querySelector('.stage')
+        const slides = [...stage.querySelectorAll('.slide')]
+        const tabs = document.querySelector('.slideTabs')
+        const toggle = document.querySelector('.slideToggle')
+        const DWELL = 9000
+
+        let at = 0
+        let wanted = !motion.matches
+        let onScreen = true
+        let advance = 0
+
+        const running = () => wanted && onScreen
+
+        // One clip decodes at a time, and it is the one being looked at. The
+        // `live` class lands on the promise rather than beside it, so a clip
+        // still opening is never faded up over the still it is there to
+        // replace.
+        const cue = () => {
+          for (const [i, slide] of slides.entries()) {
+            const clip = slide.querySelector('video')
+            if (clip) {
+              if (i === at && running()) {
+                if (!clip.src) {
+                  clip.src = clip.dataset.src
+                }
+                clip
+                  .play()
+                  .then(() => slide.classList.add('live'))
+                  .catch(() => {})
+              } else {
+                clip.pause()
+              }
+            }
+          }
+        }
+
+        const show = index => {
+          at = index
+          for (const [i, slide] of slides.entries()) {
+            slide.classList.toggle('on', i === at)
+            buttons[i].setAttribute('aria-current', String(i === at))
+          }
+          cue()
+        }
+
+        const sync = () => {
+          clearInterval(advance)
+          if (running() && slides.length > 1) {
+            advance = setInterval(() => show((at + 1) % slides.length), DWELL)
+          }
+          cue()
+          toggle.textContent = wanted ? 'Pause' : 'Play'
+        }
+
+        const buttons = slides.map((slide, i) => {
+          const button = document.createElement('button')
+          button.type = 'button'
+          button.className = 'chip slideTab'
+          button.textContent = slide.dataset.name
+          button.addEventListener('click', () => {
+            show(i)
+            sync()
+          })
+          tabs.append(button)
+          return button
+        })
+
+        toggle.addEventListener('click', () => {
+          wanted = !wanted
+          sync()
+        })
+        document.addEventListener('visibilitychange', () => {
+          onScreen = !document.hidden
+          sync()
+        })
+        new IntersectionObserver(entries => {
+          onScreen = entries[0].isIntersecting && !document.hidden
+          sync()
+        }).observe(stage)
+        show(0)
         sync()
-      })
-      new IntersectionObserver(entries => {
-        showing = entries[0].isIntersecting && !document.hidden
-        sync()
-      }).observe(document.querySelector('.hero'))
-      dots[0].setAttribute('aria-current', 'true')
-      sync()
+      }
 
       // ---- the gallery ----
       //

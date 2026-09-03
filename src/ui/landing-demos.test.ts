@@ -1,11 +1,11 @@
 import { expect, test } from 'vitest'
 
-import { demos, reel } from '../../scripts/demos.mjs'
+import { demos, hero, showcase } from '../../scripts/demos.mjs'
 
 import { readFileSync } from 'node:fs'
 
 // The demo list is `demos.json`, and both places that show it — the README's
-// "Cool demos" and the landing page's hero reel and gallery — are generated
+// "Cool demos" and the landing page's carousel and gallery — are generated
 // from it by `scripts/demogen.mjs`. So the drift this used to hunt for is gone
 // by construction, and what is left to check is narrower and worth more:
 //
@@ -28,8 +28,8 @@ test('the demo list is not empty', () => {
   expect(demos.length).toBeGreaterThan(3)
 })
 
-test('the reel has looks to play', () => {
-  expect(reel.length).toBeGreaterThan(1)
+test('the carousel has a look to play', () => {
+  expect(showcase.length).toBeGreaterThan(0)
 })
 
 test.each(demos)('$name is recorded', ({ clip, still }) => {
@@ -50,14 +50,31 @@ test.each(demos)('$name is on the page', ({ href, clip }) => {
   }).toEqual({ href: true, clip: true })
 })
 
-test('the hero opens on the first look in the reel', () => {
-  // The layer that ships with a still, and the caption under it. Both are in
-  // the markup rather than set by script, because they are what a reader sees
+test('the hero plays the first demo listed', () => {
+  // In the markup rather than set by script, because it is what a reader sees
   // before a line of it runs — and a reader who asked for reduced motion sees
-  // only them.
-  const [first] = reel
+  // only the still it names.
+  expect(/class="heroVid"\s+data-clip="([^"]+)"/.exec(landing)?.[1]).toBe(
+    hero.clip,
+  )
+})
+
+test('the carousel opens on its first slide, and the app window is one', () => {
+  // The stage holds two kinds of slide: the generated ones and the app's own
+  // window, written in by hand under them. Only the first slide carries `on`,
+  // and losing the hand-written one is a silent edit nothing else would catch.
+  const stage = landing.slice(
+    landing.indexOf('<div class="stage">'),
+    landing.indexOf('<div class="slideBar">'),
+  )
+  const first = showcase[0]
   expect({
-    clip: /class="heroVid on"\s+data-clip="([^"]+)"/.exec(landing)?.[1],
-    name: /class="reelName">([^<]+)</.exec(landing)?.[1],
-  }).toEqual({ clip: first.clip, name: first.name })
+    opensOn: /class="slide on" data-name="([^"]+)"/.exec(stage)?.[1],
+    slides: [...stage.matchAll(/class="slide[^"]*" data-name=/g)].length,
+    appWindow: stage.includes('src="/app-shot.jpg"'),
+  }).toEqual({
+    opensOn: first.name,
+    slides: showcase.length + 1,
+    appWindow: true,
+  })
 })

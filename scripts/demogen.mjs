@@ -1,13 +1,13 @@
 // The demo list, rendered into the two places that show it.
 //
 // `demos.json` is the source; this writes the README's "Cool demos" bullets,
-// the landing page's hero reel and the landing page's gallery. Nobody edits
-// those three blocks — a demo is added by adding it to `demos.json`, recording
+// the landing page's hero clip, its carousel and its gallery. Nobody edits
+// those four blocks — a demo is added by adding it to `demos.json`, recording
 // it with `demoreel.mjs`, and running this.
 //
 // Run: pnpm demos, or `--check` to fail when a checked-in copy is stale, which
 // is what `pnpm build` runs. See `demos.mjs` for what a demo is.
-import { demos, reel } from './demos.mjs'
+import { demos, hero, showcase } from './demos.mjs'
 
 import { execFileSync } from 'node:child_process'
 import { readFileSync, rmSync, writeFileSync } from 'node:fs'
@@ -62,23 +62,13 @@ const card = demo => `<li>
   </a>
 </li>`
 
-// Two layers, and only the first one carries a look: it is what a reader sees
-// before a line of script runs, and the still is the whole of it — no `src` and
-// no `autoplay`, so a reader who asked for reduced motion is never sent a clip
-// they did not ask to see.
+// The still is the whole of what ships: no `src` and no `autoplay`, so a reader
+// who asked for reduced motion is never sent a clip they did not ask to see,
+// and what they get before a line of script runs is a frame of the look.
 const heroBlock = `<video
-  class="heroVid on"
-  data-clip="${reel[0].clip}"
-  poster="${reel[0].poster}"
-  muted
-  loop
-  playsinline
-  preload="none"
-  aria-hidden="true"
-  tabindex="-1"
-></video>
-<video
   class="heroVid"
+  data-clip="${hero.clip}"
+  poster="${hero.poster}"
   muted
   loop
   playsinline
@@ -87,27 +77,37 @@ const heroBlock = `<video
   tabindex="-1"
 ></video>`
 
-// The dots are the roster: nothing else on the page lists what the reel plays,
-// which is the point — the control and the list it scrubs are one thing.
-const reelBlock = `<p class="reelName">${reel[0].name}</p>
-<div class="reelDots">
-${reel
-  .map(
-    demo => `  <button
-    class="dot"
-    type="button"
-    data-clip="${demo.clip}"
-    data-still="${demo.still}"
-    data-name="${demo.name}"
-    aria-label="Show ${demo.name}"
-  ></button>`,
-  )
-  .join('\n')}
-</div>`
+// The carousel's slides. The app's own window is a slide too, written into the
+// page under this block by hand — it is not a demo and has no entry to be
+// generated from — and the tabs are built from whatever slides the stage ends
+// up holding, so the two kinds need nothing said about each other here.
+const slide = (
+  demo,
+  first,
+) => `<figure class="slide${first ? ' on' : ''}" data-name="${demo.name}">
+  <img
+    class="still"
+    src="${demo.poster}"
+    alt=""
+    width="640"
+    height="512"
+    decoding="async"
+  />
+  <video
+    data-src="${demo.clip}"
+    muted
+    loop
+    playsinline
+    preload="none"
+    aria-hidden="true"
+  ></video>
+</figure>`
+
+const showcaseBlock = showcase.map((demo, i) => slide(demo, i === 0)).join('\n')
 
 const landing = [
   ['hero', heroBlock],
-  ['reel', reelBlock],
+  ['showcase', showcaseBlock],
   ['gallery', demos.map(card).join('\n')],
 ].reduce(
   (text, [name, body]) => fillBlock(LANDING, text, name, body),
@@ -166,5 +166,5 @@ if (process.argv.includes('--check')) {
   for (const page of pages) {
     writeFileSync(page.path, page.text)
   }
-  console.log(`${demos.length} demos, ${reel.length} in the reel`)
+  console.log(`${demos.length} demos, ${showcase.length} in the carousel`)
 }
