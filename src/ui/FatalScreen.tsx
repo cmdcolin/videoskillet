@@ -41,9 +41,16 @@ export function FatalScreen({ fatal }: { fatal: Fatal }) {
                 about their browser. They followed a link to see the thing, so
                 what they get is the one move that fixes it, the thing moving,
                 and the page where the rest of it is. */}
-            <h1 className={styles.fatalHeadline}>
-              This browser can’t run videoskillet.
-            </h1>
+            <div className={styles.fatalHeadlineRow}>
+              <h1 className={styles.fatalHeadline}>
+                This browser can’t run videoskillet.
+              </h1>
+              <img
+                className={styles.fatalMark}
+                src={publicUrl('favicon.svg')}
+                alt=""
+              />
+            </div>
             <p className={styles.fatalLead}>
               This app requires WebGPU. Try another browser or even nightly
               build like Chrome Canary or Firefox Nightly.

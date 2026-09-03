@@ -29,11 +29,24 @@
    sees when a link someone sent them opens on a browser that cannot run this,
    often on a phone held at arm's length — so it is sized to be read that way
    rather than at the density the panel behind it is tuned for. */
+.fatalHeadlineRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 0 0 14px;
+}
+.fatalMark {
+  composes: appMark from './ui.module.css';
+  width: 48px;
+  height: 48px;
+  flex: none;
+}
 .fatalHeadline {
   font-size: clamp(1.5rem, 5vw, 2.2rem);
   line-height: 1.15;
   letter-spacing: -0.015em;
-  margin: 0 0 14px;
+  margin: 0;
   color: var(--fg);
 }
 .fatalLead {
