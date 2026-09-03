@@ -1,0 +1,41 @@
+{
+  "name": "videoskillet.js",
+  "short_name": "videoskillet",
+  "description": "Real-time NTSC / VHS / composite-video glitch simulator in WebGPU — dot crawl, dropouts, head-switch wobble and video feedback emerge from a simulated analog signal, not filters painted on top.",
+  "start_url": "app/",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "orientation": "any",
+  "categories": ["entertainment", "graphics", "photo", "video"],
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "og.jpg",
+      "sizes": "1200x630",
+      "type": "image/jpeg",
+      "form_factor": "wide",
+      "label": "A frame off the simulated signal path — chroma smeared across a green field, scanlines and a dropout"
+    }
+  ]
+}

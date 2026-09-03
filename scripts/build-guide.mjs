@@ -50,6 +50,9 @@ const PAGES = [
   // an edit anyway, and what already routes into Max or TouchDesigner. Last in
   // the nav because it answers questions the other pages raise.
   { file: 'docs/FAQ.md', out: 'faq.html', nav: 'FAQ' },
+  // Last, because it is the page a reader wants once they have decided to keep
+  // the thing: what an install needs of the hardware, and how to make one.
+  { file: 'docs/INSTALL.md', out: 'install.html', nav: 'Install' },
   // ARCHITECTURE.md is deliberately not here. It is contributor material, and
   // a reader's nav is the wrong place for it; the part of it a reader wants —
   // the signal path and the three domains — is in HOW-IT-WORKS.md, and links to
@@ -74,6 +77,7 @@ const LINKS = new Map([
   ['MIDI.md', 'midi.html'],
   ['COMPARISON.md', 'comparison.html'],
   ['FAQ.md', 'faq.html'],
+  ['INSTALL.md', 'install.html'],
 ])
 
 const slug = text =>

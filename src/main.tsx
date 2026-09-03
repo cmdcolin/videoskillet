@@ -1,6 +1,7 @@
 import { createRoot } from 'react-dom/client'
 
 import { App } from './app'
+import { registerServiceWorker } from './registerSW'
 import './theme.css'
 
 // Deliberately not wrapped in <StrictMode>, and this is the one place that can
@@ -25,3 +26,5 @@ if (root) {
   document.body.style.margin = '0'
   createRoot(root).render(<App />)
 }
+
+registerServiceWorker()

@@ -42,6 +42,7 @@
     "min": "node scripts/push.mjs minor",
     "maj": "node scripts/push.mjs major",
     "logo": "node scripts/logo.mjs",
+    "icons": "node scripts/icons.mjs",
     "docshots": "node scripts/docshots.mjs",
     "docshots:check": "node scripts/docshots.mjs --check",
     "callout": "node scripts/callout.mjs",
