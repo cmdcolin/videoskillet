@@ -107,10 +107,51 @@
   background-repeat: no-repeat;
 }
 
+/* The morph's slot, sized to the widest thing it can ever say rather than to
+   what it says now. The control swaps out under itself: a select reading
+   `morph: cut` through `morph: 30s`, and, while one travels, a button reading
+   `stop here`. Measured at 1352px, the slot was 94.6 with the select up and
+   73.2 the moment a morph started — 21px that came back on arrival, on a row
+   whose wrap this one is sitting at the end of. Same failure as the strip's
+   stepping chips, one layer out.
+
+   Measured differently, though: `--ring-ch` works there because `.chip` is
+   monospaced, and this row is the panel's proportional font, where a character
+   count is not a width. So every label the slot can carry is rendered into the
+   same grid cell, hidden — the cell is as wide as the widest of them, the
+   browser having measured the actual words, and a duration added to
+   `MORPH_SECONDS` widens the slot rather than starting the shift again. */
+.morphSlot {
+  position: relative;
+  display: grid;
+}
+.morphSlot > * {
+  grid-area: 1 / 1;
+  box-sizing: border-box;
+}
+.morphSizer {
+  composes: btn morphSelect;
+  visibility: hidden;
+}
+/* The sizers alone decide the box, and the live control is stretched over the
+   cell they made. Left in the flow it would have been one more thing the cell
+   had to fit, and a `select` is the one member of this row whose width is not
+   its label: both browsers size a menulist to its *widest* option whatever is
+   selected — which is why stepping the durations never moved anything, and why
+   the select sat 0.45px (Chrome) wider than the sizers agree on. Filling the
+   cell instead, Chrome holds 94.55 and Firefox 94.57 through every label and
+   through the swap. */
+.morphSlot > select,
+.morphSlot > button {
+  position: absolute;
+  inset: 0;
+}
+
 /* A morph in flight, in the select's own slot — same box, same border weight,
-   so the row neither shifts nor grows a line when one starts. It wears the
-   accent outright rather than the select's accent-when-armed, because this one
-   is not a setting that happens to be on: it is a thing happening right now. */
+   and `stop here` is one of the labels the slot above is sized to, so the row
+   neither shifts nor grows a line when one starts. It wears the accent
+   outright rather than the select's accent-when-armed, because this one is not
+   a setting that happens to be on: it is a thing happening right now. */
 .flight {
   position: relative;
   overflow: hidden;

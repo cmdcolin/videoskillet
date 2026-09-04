@@ -318,6 +318,15 @@ function Rolls(props: {
 // it. One slot rather than two, because they are one widget read two ways and
 // this row has no sixth place to give.
 //
+// Everything this one slot can say: the five durations the select steps
+// through, and the word it becomes while a morph runs. The row is set in the
+// panel's proportional font, so no character count describes how wide the
+// widest of them is the way `--ring-ch` does for the strip's monospaced chips
+// — the sizers below hand the words to the browser and let it measure them.
+const morphLabel = (seconds: MorphSeconds) => `morph: ${MORPH_LABELS[seconds]}`
+const STOP_LABEL = 'stop here'
+const SLOT_LABELS = [...MORPH_SECONDS.map(morphLabel), STOP_LABEL]
+
 // The flight readout is worth drawing at all because a long morph is otherwise
 // indistinguishable from an app that ignored you: at 30s the first second of a
 // step back moves almost nothing, and undo is exactly the verb where "did that
@@ -338,26 +347,32 @@ function MorphControl(props: {
   onStop: () => void
 }) {
   const progress = useSyncExternalStore(props.store.subscribe, props.store.get)
-  if (progress === null) {
-    return (
-      <MorphSelect
-        morphSeconds={props.morphSeconds}
-        onSetMorph={props.onSetMorph}
-      />
-    )
-  }
   return (
-    <button
-      className={cx(styles.btn, styles.flight)}
-      onClick={props.onStop}
-      title={`travelling to the new look over ${props.morphSeconds}s — press to stop here and keep the half-way look, which is a look like any other. Grabbing any slider does the same`}
-    >
-      <span
-        className={styles.flightFill}
-        style={{ transform: `scaleX(${progress})` }}
-      />
-      <span className={styles.flightLabel}>stop here</span>
-    </button>
+    <span className={styles.morphSlot}>
+      {SLOT_LABELS.map(label => (
+        <span className={styles.morphSizer} key={label}>
+          {label}
+        </span>
+      ))}
+      {progress === null ? (
+        <MorphSelect
+          morphSeconds={props.morphSeconds}
+          onSetMorph={props.onSetMorph}
+        />
+      ) : (
+        <button
+          className={cx(styles.btn, styles.flight)}
+          onClick={() => props.onStop()}
+          title={`travelling to the new look over ${props.morphSeconds}s — press to stop here and keep the half-way look, which is a look like any other. Grabbing any slider does the same`}
+        >
+          <span
+            className={styles.flightFill}
+            style={{ transform: `scaleX(${progress})` }}
+          />
+          <span className={styles.flightLabel}>{STOP_LABEL}</span>
+        </button>
+      )}
+    </span>
   )
 }
 
@@ -386,7 +401,9 @@ function MorphSelect(props: {
       }
     >
       {MORPH_SECONDS.map(s => (
-        <option key={s} value={s}>{`morph: ${MORPH_LABELS[s]}`}</option>
+        <option key={s} value={s}>
+          {morphLabel(s)}
+        </option>
       ))}
     </select>
   )
