@@ -167,7 +167,7 @@ const lines = [
   '---',
   '',
   '[Features](FEATURES.md) — the tour · [User guide](USER-GUIDE.md) — driving it ·',
-  '[How it works](HOW-IT-WORKS.md) — the code',
+  '[How it works](FAQ.md#how-does-it-actually-work) — the code',
   '',
 ]
 

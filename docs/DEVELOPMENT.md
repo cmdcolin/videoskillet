@@ -1565,8 +1565,8 @@ the other GPU" wants answering without a rebuild.
 
 - [`handoffs/`](handoffs/) — why a past piece of work landed the way it did, and
   what was deliberately left undone
-- [`HOW-IT-WORKS.md`](HOW-IT-WORKS.md) — the code: one array and a chain of GPU
-  shaders
+- [`FAQ.md`](FAQ.md#how-does-it-actually-work) — the code: one array and a
+  chain of GPU shaders
 - [`ARCHITECTURE.md`](ARCHITECTURE.md) — pass graph, buffer layouts, adding a
   control end to end
 - [`OPTIMIZATIONS.md`](OPTIMIZATIONS.md) — what the measurements below decided:

@@ -179,7 +179,10 @@
       }
       .heroBody {
         position: relative;
-        padding: 5.5rem 0 5.5rem;
+        /* The side padding is `.wrap`'s own: zeroing it stood the hero title
+           20px left of every line under it, and put the buttons and the warning
+           against the bezel on a phone. */
+        padding: 5.5rem 1.25rem;
       }
 
       /* A word, not a glyph: a bare ▶ is a guess, and these sit next to each
@@ -545,7 +548,7 @@
         <p class="req gpuwarn" hidden>
           This browser has no WebGPU. The signal path is compute shaders with no
           fallback renderer, so the app will open on a screen saying so —
-          <a href="/guide/install.html">what runs it</a>.
+          <a href="/guide/faq.html#what-does-it-need-to-run">what runs it</a>.
         </p>
       </div>
     </header>
@@ -1084,7 +1087,9 @@
           so feedback runs through the whole chain too.
         </p>
         <p>
-          <a href="/guide/how-it-works.html">Read the full explanation</a>
+          <a href="/guide/faq.html#how-does-it-actually-work"
+            >Read the full explanation</a
+          >
         </p>
         <figure>
           <img
@@ -1107,7 +1112,6 @@
         <a href="/app/">Open the app</a>
         <a href="/guide/">Guide</a>
         <a href="/guide/faq.html">FAQ</a>
-        <a href="/guide/install.html">Install</a>
         <a href="/guide/architecture.html">How it is built</a>
         <a href="https://github.com/cmdcolin/videoskillet">Source</a>
       </nav>

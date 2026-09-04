@@ -1,8 +1,8 @@
 # Optimizations
 
 Why the render path looks the way it does. [`ARCHITECTURE.md`](ARCHITECTURE.md)
-draws the path itself, and [`HOW-IT-WORKS.md`](HOW-IT-WORKS.md) is the one-page
-version of what a pass is.
+draws the path itself, and [the FAQ](FAQ.md#how-does-it-actually-work) is the
+one-page version of what a pass is.
 
 One frame is 477,750 f32 samples (910 × 525) through up to twenty-four compute
 dispatches, sixty times a second, and six of those passes are FIR filters 33 to

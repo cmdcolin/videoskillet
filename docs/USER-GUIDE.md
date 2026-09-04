@@ -400,5 +400,5 @@ OBS at the picture window for anything you care about.
 ---
 
 [Features](FEATURES.md) — everything it can break · [Effects](EFFECTS.md) —
-every control · [How it works](FAQ.md#how-does-it-actually-work) — the code · [MIDI](MIDI.md) —
-setting up a controller
+every control · [MIDI](MIDI.md) — setting up a controller ·
+[How it works](FAQ.md#how-does-it-actually-work) — the code

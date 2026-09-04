@@ -40,6 +40,5 @@ included, each sitting at the point on the path where it acts.
 - [User guide](USER-GUIDE.md) — sources, feedback, modulation, saving, scopes
 - [Features](FEATURES.md) — the tour of everything it can break
 - [Effects](EFFECTS.md) — every control, generated from the app's own table
-- [FAQ](FAQ.md) — how it works, what runs it, and how a take gets into an
-  edit
 - [MIDI](MIDI.md) — setting up a controller
+- [FAQ](FAQ.md) — how it works, what runs it, how a take gets into an edit

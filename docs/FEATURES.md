@@ -196,4 +196,4 @@ the receiver's vertical oscillator, downstream of anything the sound can reach.
 ---
 
 [Effects](EFFECTS.md) — every control · [User guide](USER-GUIDE.md) — how to
-drive it · [How it works](HOW-IT-WORKS.md) — the code
+drive it · [How it works](FAQ.md#how-does-it-actually-work) — the code
