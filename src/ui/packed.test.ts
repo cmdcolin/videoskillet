@@ -231,6 +231,14 @@ describe('a link that is not what this build would have written', () => {
     expect(unpackControls(`${packed.slice(0, 3)}${turned}`)).toBe(null)
     // and a seal that is not the one over these bytes is a mismatch too
     expect(unpackControls(`AA.${body}`)).toBe(null)
+    // A character the alphabet does not have is the same damage as a turned
+    // one and has to read the same. It did not: the base64 read gave up, and
+    // giving up answered with the *unsealed* answer — an empty look, which the
+    // app opens on the default picture with nothing said. So whether a mangled
+    // link was refused came down to where the mangling landed.
+    expect(unpackControls(`${packed.slice(0, 4)}!${packed.slice(5)}`)).toBe(
+      null,
+    )
   })
 
   it('reads a sealed link that picked up a full stop', () => {

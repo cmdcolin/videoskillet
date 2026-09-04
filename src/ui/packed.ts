@@ -199,7 +199,13 @@ export function packControls(c: Partial<Controls>): string {
 export function unpackControls(text: string): Partial<Controls> | null {
   const sealed = text[SEAL_LEN] === SEAL
   const bytes = fromBase64Url(sealed ? text.slice(SEAL_LEN + 1) : text)
-  if (bytes === null) return {}
+  // A character the alphabet does not have is damage too, and under a seal it
+  // has to answer the way a turned character does. This used to fall through to
+  // the unsealed answer — an empty look, `damaged: false`, and the app opening
+  // on the default picture with nothing said — so which of the two a damaged
+  // link got came down to whether whatever mangled it happened to land inside
+  // the alphabet.
+  if (bytes === null) return sealed ? null : {}
   if (sealed && seal(bytes) !== text.slice(0, SEAL_LEN)) return null
   const out: Partial<Controls> = {}
   let at = 0
