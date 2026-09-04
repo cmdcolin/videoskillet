@@ -1,7 +1,7 @@
 [
   {
     "name": "Wiggity",
-    "showcase": false,
+    "showcase": true,
     "query": "?p=je.CoDoBwEEAbAEAKwCAfABAKCZAgXgAw2IIwSIAyFYBrAKEjwGmAEEuB4ZVADsBgr4OiSMCQDEAQDgAgAkAUQEBAAQA9wCAMXBAgCJngIAlf4DAI3tAw&mod=bendUs:lorenz:0.390279:0.27759,hvRing:sine:0.037599:0.090209&srcb=synth&src=sweep"
   },
   {
@@ -32,7 +32,7 @@
   },
   {
     "name": "Fuzzy color bars feedback",
-    "showcase": true,
+    "showcase": false,
     "query": "?p=1w.cqQCAKAfAHoAOgAoAKggACwAYABEABAAmAEQ0AIA1AIwsAEIBA&mod=&srcb=vhs+static"
   },
   {

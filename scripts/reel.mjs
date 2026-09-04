@@ -140,71 +140,90 @@ export const slides = [
     file: 'build',
     name: 'From clean',
     caption:
-      'Colour bars on stock controls, and three rows raised by hand. The camera loop is a lens on the tube’s face; its auto-iris is metering the monitor it feeds, so the servo sits inside the loop it is trying to steady and never settles. Then the mixer loop patches the composite itself back in — subcarrier and all, which is where the colour comes from.',
-    alt: 'A run through the app starting on clean colour bars: the camera feedback fader raised until the picture trails, its auto-iris wound up until the loop blooms, then the mixer loop opened — the bars breeding into a white-hot core with rainbow ripples spreading across the frame',
+      'Colour bars on stock controls, and four rows raised by hand. The camera loop is a lens on the tube’s face — opening it holds trails, and a few degrees of rotate winds them into a spiral. Then the mixer loop patches the composite itself back in, subcarrier and all, and the last row barely moves: a seventh of a microsecond of delay is half a turn of hue on every lap, which is where the colour comes from.',
+    alt: 'A run through the app starting on clean colour bars: the camera feedback fader opened until the picture trails, its rotate wound a few degrees so the trails spiral, then the mixer loop patched in and its delay nudged off zero — the bars becoming a field of flowing green, magenta and blue',
     // Nothing. A bare load is the app's own near-blank board — stock controls,
     // colour bars on both sources — which is the only honest place a slide that
     // claims to build something can start.
     params: {},
     // The finish, not the middle: at 0.55 the poster was the loop half open,
     // which is the frame this slide exists to get past.
-    stillAt: 0.88,
+    stillAt: 0.9,
     // Nothing to fill: both loops are shut when the clip starts, and filling
     // them is the clip.
     warm: 60,
-    // Three rows, in the order the mechanism runs, each a fraction of its own
-    // travel because the recorder reads the row's domain:
-    //   mix             0..1, rests at 0 — a loop that keeps nine tenths a lap
-    //   auto-iris hunt  0..1, rests at 0 — the camera's exposure servo, which
-    //                   is what carries the loop past unity and keeps it there
-    //   loop mix        0..1, rests at 0 — the electrical loop, and the reason
-    //                   the finish is coloured rather than a grey smear
+    // Four rows, each a fraction of its own travel because the recorder reads
+    // the row's domain:
+    //   mix         0..1, rests at 0 — the optical loop opening
+    //   rotate      -180..180 on a 'zero' curve, so the row's own domain is
+    //               travel and 0° sits mid-track. 0.73 is 6°
+    //   loop mix    0..1, rests at 0 — the electrical loop
+    //   loop delay  0..63us linear, rests at 0. 0.0022 is 0.14us
     //
-    // **`gain` would be the obvious second row and it cannot be used.** It is
-    // marked `fine` in controls.ts, so it lives behind the group's "N fine
-    // tweaks" disclosure and there is no row to reach for until something opens
-    // it. The iris is the better demonstration anyway: raising a number until
-    // the loop runs away shows one control doing one thing, and winding up a
-    // servo that is metering its own output shows why the runaway happens.
+    // **`loop delay` is the row the whole picture turns on, and it is the one
+    // whose thumb does not visibly move.** Every variant screened without it is
+    // a pale wash; with it the frame is flowing green and magenta. 0.14us on a
+    // loop carrying its own subcarrier is half a turn of hue a lap, and it
+    // lives in the first third of a per cent of a track that runs to 63us. The
+    // readout and the picture are what say the drag happened.
+    //
+    // **The auto-iris is not in here any more, and that is a correction.** A
+    // loop driven past unity latches: the frame saturates to white and stays
+    // there, so the clip that raised `mix`, `zoom` and the iris spent five of
+    // its sixteen seconds on a white field and finished on a smear. Held under
+    // unity the optical loop only holds trails, and the colour is the electrical
+    // loop's job.
+    //
+    // **What screened well and what recorded well are different questions, and
+    // this is the trap to know about.** `contact.mjs` applies a board with
+    // `?set=` at load, so every candidate it renders grows its loop from an
+    // empty frame buffer — a transient that happens once and that no hand can
+    // reproduce. A board that screened as a radial starburst recorded as a
+    // horizontal smear, and it was not the ordering: all eight orders of the
+    // same four rows land on the same wash. `pathprobe.mjs` is what screens a
+    // timeline — it walks the rows at the timeline's own pace and grabs the
+    // canvas at the end, seconds a variant against ninety for a take.
     act: [
-      { hold: 1 },
-      { moveTo: { stage: 'camera' }, secs: 0.7 },
-      { press: 1, on: 'camera' },
-      { moveTo: { slider: 'mix' }, secs: 0.6 },
-      { drag: { slider: 'mix', to: 0.9 }, secs: 1.7 },
-      { scrollTo: { slider: 'auto-iris hunt' }, secs: 0.5 },
-      { moveTo: { slider: 'auto-iris hunt' }, secs: 0.5 },
-      { drag: { slider: 'auto-iris hunt', to: 0.6 }, secs: 1.5 },
-      { hold: 1.2 },
+      { hold: 0.7 },
+      { moveTo: { stage: 'camera' }, secs: 0.6 },
+      { press: 0.8, on: 'camera' },
+      { moveTo: { slider: 'mix' }, secs: 0.5 },
+      { drag: { slider: 'mix', to: 0.7 }, secs: 1.3 },
+      { moveTo: { slider: 'rotate' }, secs: 0.4 },
+      { drag: { slider: 'rotate', to: 0.73 }, secs: 1.3 },
+      { hold: 0.8 },
       { scrollTo: { stage: 'camera' }, secs: 0.5 },
-      { moveTo: { stage: 'mixer' }, secs: 0.6 },
-      { press: 1, on: 'mixer' },
-      { moveTo: { slider: 'loop mix' }, secs: 0.6 },
-      { drag: { slider: 'loop mix', to: 0.95 }, secs: 1.8 },
-      { hold: 2.4 },
+      { moveTo: { stage: 'mixer' }, secs: 0.5 },
+      { press: 0.8, on: 'mixer' },
+      { moveTo: { slider: 'loop mix' }, secs: 0.5 },
+      { drag: { slider: 'loop mix', to: 0.95 }, secs: 1.4 },
+      { moveTo: { slider: 'loop delay' }, secs: 0.4 },
+      { drag: { slider: 'loop delay', to: 0.0022 }, secs: 0.9 },
+      { hold: 2 },
       { away: 0.5 },
     ],
     // In portrait the panel is the bottom half of a phone and the map starts
     // below its fold, so it is scrolled to before anything is pressed on it.
     narrowAct: [
-      { hold: 0.6 },
-      { scrollTo: { stage: 'camera' }, secs: 0.8 },
-      { moveTo: { stage: 'camera' }, secs: 0.7 },
-      { press: 1, on: 'camera' },
-      { scrollTo: { slider: 'mix' }, secs: 0.6 },
-      { moveTo: { slider: 'mix' }, secs: 0.6 },
-      { drag: { slider: 'mix', to: 0.9 }, secs: 1.7 },
-      { scrollTo: { slider: 'auto-iris hunt' }, secs: 0.6 },
-      { moveTo: { slider: 'auto-iris hunt' }, secs: 0.5 },
-      { drag: { slider: 'auto-iris hunt', to: 0.6 }, secs: 1.5 },
-      { hold: 1.2 },
-      { scrollTo: { stage: 'camera' }, secs: 0.6 },
-      { moveTo: { stage: 'mixer' }, secs: 0.6 },
-      { press: 1, on: 'mixer' },
-      { scrollTo: { slider: 'loop mix' }, secs: 0.6 },
-      { moveTo: { slider: 'loop mix' }, secs: 0.5 },
-      { drag: { slider: 'loop mix', to: 0.95 }, secs: 1.8 },
-      { hold: 2.4 },
+      { hold: 0.5 },
+      { scrollTo: { stage: 'camera' }, secs: 0.7 },
+      { moveTo: { stage: 'camera' }, secs: 0.6 },
+      { press: 0.8, on: 'camera' },
+      { scrollTo: { slider: 'mix' }, secs: 0.5 },
+      { moveTo: { slider: 'mix' }, secs: 0.5 },
+      { drag: { slider: 'mix', to: 0.7 }, secs: 1.3 },
+      { moveTo: { slider: 'rotate' }, secs: 0.4 },
+      { drag: { slider: 'rotate', to: 0.73 }, secs: 1.3 },
+      { hold: 0.8 },
+      { scrollTo: { stage: 'camera' }, secs: 0.5 },
+      { moveTo: { stage: 'mixer' }, secs: 0.5 },
+      { press: 0.8, on: 'mixer' },
+      { scrollTo: { slider: 'loop mix' }, secs: 0.5 },
+      { moveTo: { slider: 'loop mix' }, secs: 0.4 },
+      { drag: { slider: 'loop mix', to: 0.95 }, secs: 1.4 },
+      { moveTo: { slider: 'loop delay' }, secs: 0.4 },
+      { drag: { slider: 'loop delay', to: 0.0022 }, secs: 0.9 },
+      { hold: 2 },
       { away: 0.5 },
     ],
   },
@@ -226,14 +245,25 @@ export const slides = [
     },
     stillAt: 0.78,
     warm: 60,
-    // HV sag runs -100..100 and rests at 0, so 0.53 is +6us; supply ring runs
-    // 0..1 and rests there, and 0.9 is most of the way to the chaos end of its
-    // own label.
+    // **HV sag is on a 'zero' curve, and the first cut of this slide read the
+    // row as if it were linear.** It runs -100..100 and rests at 0, so the
+    // travel expands around the middle: a drag to 0.53 is +1.6us, which is a
+    // thumb three per cent along a track and a picture nobody can see has
+    // changed. The bars sat there looking clean while the caption claimed a
+    // raster that breathes. 0.93 is +70us — the bars bow, and the black between
+    // them bows with them, which is the whole argument for it being geometry.
+    // Screened against the group's other rows (bend, underscan, the beam
+    // limiter): those are more violent and they tear the bars up, and a fault
+    // you cannot still read the picture through says nothing about geometry.
+    //
+    // Supply ring runs 0..1 and rests at 0, and 0.9 is most of the way to the
+    // chaos end of its own label — it is what makes the bow ripple rather than
+    // park.
     act: [
       { hold: 0.8 },
       { scrollTo: { slider: 'HV sag' }, secs: 0.8 },
       { moveTo: { slider: 'HV sag' }, secs: 0.6 },
-      { drag: { slider: 'HV sag', to: 0.53 }, secs: 1.2 },
+      { drag: { slider: 'HV sag', to: 0.93 }, secs: 1.4 },
       { moveTo: { slider: 'supply ring' }, secs: 0.5 },
       { drag: { slider: 'supply ring', to: 0.9 }, secs: 1.4 },
       { hold: 1.8 },
@@ -246,8 +276,14 @@ export const slides = [
     name: 'The signal path',
     caption:
       'The map is the rig: two sources into a mixer, then the channel it is recorded and broadcast over, the receiver that decodes it and the screen it lands on. Click a stage and its controls open under it.',
-    alt: 'The window with the signal path map at the head of the panel, the RECEIVER box pressed and its stage unfolded underneath, over a picture of colour bars smeared into a soft feedback cascade',
-    look: 'Fuzzy color bars feedback',
+    alt: 'The window with the signal path map at the head of the panel, the RECEIVER box pressed and its stage unfolded underneath, over a picture of a bright scanline arch bending across the frame in red and green fringes',
+    // The backdrop, and it is doing a job: the map walk is the content, so what
+    // is behind it only has to be worth looking at for seven seconds. It used
+    // to be `Fuzzy color bars feedback`, which is a soft brown smear that never
+    // changes — 12K a second of encode against the other two slides' 57K, which
+    // is the file size saying the same thing. This one is the gallery's own
+    // first look, it carries two mod wires, and it moves.
+    look: 'Wiggity',
     // Presets folded, which is the app's own resting state and also what keeps
     // the loop shut: opening a stage folds that section away to give the stage
     // the room, and closing the stage does not put it back — so a clip that

@@ -566,7 +566,12 @@ const wanted = slides.filter(s => only.length === 0 || only.includes(s.file))
 mkdirSync(outDir, { recursive: true })
 console.log(`${wanted.length} slides → ${outDir}/`)
 
-const taken = Object.fromEntries(readManifest())
+// Entries for slides that are no longer in the reel are dropped rather than
+// carried: a run naming one slide has to leave the other two alone, so this
+// cannot simply be rebuilt from what the run recorded.
+const taken = Object.fromEntries(
+  [...readManifest()].filter(([file]) => slides.some(s => s.file === file)),
+)
 const at = capturedAt()
 
 // Every slide is recorded twice: the window as a desktop shows it, and the same
@@ -634,14 +639,22 @@ for (const slide of wanted) {
       // where the middle is a picture on the way to the one the clip is about
       // and the reader who asked for reduced motion never sees the finish.
       const still = join(outDir, `${take.name}.webp`)
-      const at = Math.min(
+      const posterAt = Math.min(
         frames - 1,
         Math.floor(frames * (slide.stillAt ?? 0.55)),
       )
-      const middle = join(tmpDir, `f${String(at).padStart(4, '0')}.jpg`)
+      const posterFrame = join(
+        tmpDir,
+        `f${String(posterAt).padStart(4, '0')}.jpg`,
+      )
       // prettier-ignore
       execFileSync('cwebp', ['-quiet', '-q', String(STILL_Q),
-        '-resize', String(take.out.width), '0', middle, '-o', still])
+        '-resize', String(take.out.width), '0', posterFrame, '-o', still])
+      // The version and sha this take was recorded against. Named apart from
+      // the poster's frame number on purpose: a `const at` here shadowed it,
+      // and the manifest went out holding 374 where it should have held a
+      // release — which `--check` reads back as `taken at vundefined` and
+      // reports every clean tree as stale.
       taken[slide.file] = at
       const kb = f => Math.round(statSync(f).size / 1024)
       console.log(

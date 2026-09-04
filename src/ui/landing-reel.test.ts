@@ -120,7 +120,11 @@ test.each(slides)('$file holds the stage for its own length', slide => {
         stage,
       )?.[1],
     )
-  const length = (act: typeof slide.act) =>
+  // Both act types, because the two timelines do not carry the same beats: the
+  // portrait one scrolls to rows the wide frame can already see, so a
+  // parameter typed off `act` alone stops accepting `narrowAct` the moment a
+  // slide drops a verb from one of them.
+  const length = (act: typeof slide.act | typeof slide.narrowAct) =>
     act.reduce((total, beat) => total + beatSecs(beat), 0)
   expect(attr('data-secs')).toBeCloseTo(length(slide.act), 1)
   expect(attr('data-secs-narrow')).toBeCloseTo(length(slide.narrowAct), 1)
