@@ -11,7 +11,13 @@
   "env": {
     "browser": true
   },
-  "ignorePatterns": ["dist", "scripts", "**/*.mjs"],
+  // `.claude/worktrees/` holds `git worktree` copies — full checkouts with their
+  // own `src/` and their own `.oxlintrc.json`. A nested config is an error here
+  // ("typeAware is only supported in the root config"), so a worktree someone
+  // else is working in takes `pnpm lint` down in a checkout that is itself
+  // clean. `vite.config.ts` excludes the same path from vitest, for the same
+  // reason and with the same blast radius.
+  "ignorePatterns": ["dist", "scripts", "**/*.mjs", ".claude"],
   "rules": {
     "react/rules-of-hooks": "error",
     "react/exhaustive-deps": "warn",
