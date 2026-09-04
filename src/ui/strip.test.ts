@@ -687,6 +687,17 @@ describe('learning how long a clip is', () => {
     expect(learnClipSeconds(s, 'nobody', 12).rows[0].clip?.seconds).toBe(0)
   })
 
+  // `undefined` is not `null`, third time — the same field and the same shape
+  // `fireEffects` was caught by. This one fires from a probe nobody asked for,
+  // so a hand-built rundown would have thrown here on a timer rather than on a
+  // gesture, which is the harder half of that to read back.
+  it('steps over a row with no clip key at all', () => {
+    const bare = strip([
+      { ...row({ id: 'a' }), clip: undefined } as unknown as Row,
+    ])
+    expect(learnClipSeconds(bare, 'c1', 12)).toBe(bare)
+  })
+
   // The point of the whole exercise: a row added off the shelf holds for its
   // picture once the measurement lands, where before it held for four bars.
   it('turns a bar-count fallback into the clip’s own length', () => {
@@ -714,6 +725,13 @@ describe('a row that names a clip', () => {
     expect(
       derivedLabel(row({ clip: { id: 'c7', name: '', seconds: 0 } })),
     ).toBe('look only')
+  })
+
+  // And when there is no clip key to read a name off, which is what a row built
+  // by hand carries.
+  it('falls back when the clip is missing rather than null', () => {
+    const bare = { ...row(), clip: undefined } as unknown as Row
+    expect(derivedLabel(bare)).toBe('look only')
   })
 
   it('captures the clip on the deck', () => {

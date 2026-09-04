@@ -627,7 +627,10 @@ export function learnClipSeconds(
   if (seconds <= 0) return strip
   let changed = false
   const rows = strip.rows.map(row => {
-    if (row.clip === null || row.clip.id !== clipId || row.clip.seconds > 0) {
+    // Truthiness, on `stepEffects`' rule: a hand-built row can omit `clip`
+    // entirely, and `undefined` is not `null` — tested against null alone this
+    // read `.id` off nothing and threw on the first probe to land.
+    if (!row.clip || row.clip.id !== clipId || row.clip.seconds > 0) {
       return row
     }
     changed = true
@@ -679,7 +682,9 @@ export function derivedLabel(row: Row): string {
   // — and the session it was captured with says nothing about the source, which
   // is the whole reason `RowClip` exists. Reading the session first would call
   // a row holding a named clip "look only", which is what it used to do.
-  if (row.clip !== null && row.clip.name !== '') return row.clip.name
+  // Truthiness for the same reason as `stepEffects`: a row that never went
+  // through `readRow` may have no `clip` key at all.
+  if (row.clip && row.clip.name !== '') return row.clip.name
   const q = new URLSearchParams(row.session)
   const url = q.get('vurl') ?? q.get('iurl')
   if (url !== null) return urlName(url)
