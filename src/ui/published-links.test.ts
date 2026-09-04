@@ -1,5 +1,6 @@
 import { expect, test } from 'vitest'
 
+import { demos } from '../../scripts/demos.mjs'
 import { SLIDER_BY_KEY } from './controls'
 import { packControls, unpackControls } from './packed'
 import { parseSessionParams } from './urlParams'
@@ -10,10 +11,10 @@ import { readFileSync } from 'node:fs'
 
 // The links the project hands strangers: every demo in the README, which is
 // generated from `demos.json` and so is all of them — two used to be published
-// pointing at a dev server, which is the sort of thing that stops happening
-// when the origin is not stored per demo. The getting-started page carried the
-// hero patch until it was rewritten and now carries none, but it is still read
-// here so that one added back is covered.
+// pointing at a dev server, which is why the origin belongs to the generator
+// and not to an entry. Storing one there is now refused outright
+// (`scripts/demos.mjs`), after a demo pasted whole out of the address bar
+// published as `…/app/https://videoskillet.com/app/?p=…` and opened nothing.
 // They are packed, which is what took them from 400-950 characters to 130-230 —
 // and packed means nobody proofreads them again. A typo in one, or a paste that
 // lost its tail, decodes to a shorter look rather than to an error, so the demo
@@ -30,15 +31,30 @@ const links = (path: string): string[] =>
     ...readFileSync(path, 'utf8').matchAll(/https:\/\/\S*?\?(p=\S+?)[)\s]/g),
   ].map(m => m[1])
 
+const readme = links('README.md')
+
 const published = [
-  ...links('README.md').map(q => ['README.md', q] as const),
+  ...readme.map(q => ['README.md', q] as const),
   ...links('docs/GETTING-STARTED.md').map(
     q => ['docs/GETTING-STARTED.md', q] as const,
   ),
 ]
 
-test('the project publishes the links it means to', () => {
-  expect(published.length).toBe(13)
+test('the project publishes every demo it lists', () => {
+  // Against `demos.json` rather than against a number. The README's block is
+  // generated from that file, so a demo added to it moves the count — and a
+  // count is a thing to update rather than a thing that catches anything:
+  // pinned at thirteen, this went red on a fourteenth demo that was correctly
+  // listed and correctly generated, which is the failure saying nothing.
+  //
+  // What is worth holding is what the regex is actually for: the generated
+  // block is *all* of them, so a demo that never reached the README — or a link
+  // whose shape stopped matching, which would read here as silence — fails.
+  expect(readme.length).toBe(demos.length)
+  // The getting-started page carried the hero patch until it was rewritten and
+  // now carries none, so this is only ever the README today. It is still read,
+  // and still added to, so that a patch put back there is checked like the rest.
+  expect(published.length).toBeGreaterThanOrEqual(readme.length)
 })
 
 test.each(published)('%s: %s', (_page, query) => {
