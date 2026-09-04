@@ -100,6 +100,25 @@ const SRCB_MODES = LINKABLE(SOURCE_B_MODES)
 const PACKED = 'p'
 const NAMED = 'set'
 
+// Which of the two a write spells the look in. Both round-trip to the same
+// board; they are not two formats so much as two audiences.
+//
+// `named` is `?set=noiseIre:9,hHold:0.2` — four times the characters, and the
+// only form anything but this app can read. The address bar carries it, which
+// is what makes the bar a readout as well as an instruction: a look on screen
+// can be read off it, edited in place, or handed to something driving the app.
+//
+// `packed` is what a link is for. It took the README's demos from 400-950
+// characters to 130-230, and nothing that stores or shares a look wants the long
+// one — the share dialog, a saved profile, a strip row's session.
+//
+// An argument rather than the sticky rule this used to infer from the query it
+// was overwriting ("arrived on ?set=, keep writing ?set="). That rule made the
+// readable form reachable only by already having it, so a session that started
+// anywhere else could never be read back off the bar — which is the half of the
+// contract public/llms.txt promises.
+export type LookForm = 'named' | 'packed'
+
 export interface SessionParams {
   // Every control the link asks for, already layered: the landing look or the
   // named preset, then the link's own look on top. One patch, so the caller
@@ -394,16 +413,12 @@ const pinsAddress = (
 export function writeSessionParams(
   existing: URLSearchParams,
   state: SessionState,
+  form: LookForm,
 ): URLSearchParams {
   const q = new URLSearchParams(existing)
   const put = (key: string, on: boolean, value: string) =>
     on ? q.set(key, value) : q.delete(key)
-  // Which form the query is already in, and so which one this write uses. A
-  // `?set=` someone typed is one they mean to keep typing into, so the long
-  // form is sticky: arrive on one and the look stays readable for as long as
-  // you are working that way. Everything else — a fresh load, a short link, a
-  // saved look — comes out packed.
-  const long = q.has(NAMED)
+  const long = form === 'named'
   const set = CONTROL_KEYS.filter(
     k => state.controls[k] !== DEFAULT_CONTROLS[k],
   ).map(k => `${k}:${short(state.controls[k])}`)
@@ -439,6 +454,12 @@ export function writeSessionParams(
   // `?set=` above IS what it rolled. Leaving it on would make the link reroll
   // over its own recorded look every time someone opened it.
   q.delete('surprise')
+  // Spent the same way, and it has to be dropped here as well as by the handler
+  // that acts on it: the service worker hands the app back on `?shared`, and
+  // this write is what moves a session's params into the hash — so a flag left
+  // on would be copied across a moment after `useSharedMedia` deleted it from
+  // the query, and outlive the parked file it names.
+  q.delete('shared')
   // Dropped for the reason `writeProfileParams` gives below, which turned out to
   // apply to the address bar as much as to a saved look. The look above omits
   // every control at stock, so a `?preset=` left underneath it fills those in
@@ -531,7 +552,14 @@ export function writeProfileParams(state: SessionState): URLSearchParams {
     urlA: isPoolMode(state.sourceMode) ? '' : state.urlA,
     urlB: isPoolMode(state.sourceBMode) ? '' : state.urlB,
   }
-  return writeSessionParams(new URLSearchParams(), { ...state, ...rolled })
+  // Packed: a saved look is storage, and storage is read back by this app
+  // alone. It goes to Firestore and to every strip row, where the long form
+  // would be four times the bytes for a readability nothing there uses.
+  return writeSessionParams(
+    new URLSearchParams(),
+    { ...state, ...rolled },
+    'packed',
+  )
 }
 
 // A query string as it should reach a person: `URLSearchParams.toString` escapes

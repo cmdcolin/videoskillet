@@ -43,7 +43,7 @@
 // rather than whenever it eventually finishes, because the wraps that land in
 // between are the ones that would pay for it. See `promoteHead`.
 
-import { debugLog } from '../core/gpu/env'
+import { debugLog, paramsOf } from '../core/gpu/env'
 
 import type { TeletypeCard } from '../sources/teletype'
 
@@ -311,7 +311,7 @@ export async function prerollUrl(
 // that has to be got right about ordering at import time.
 const loopHeadAllowed = (): boolean =>
   typeof location === 'undefined' ||
-  new URLSearchParams(location.search).get('loophead') !== '0'
+  new URLSearchParams(paramsOf(location)).get('loophead') !== '0'
 
 // Retire the second read head. **It does not revoke the url**, which is the one
 // thing to know about it: the head is by construction the same src as the

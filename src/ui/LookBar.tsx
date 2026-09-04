@@ -83,6 +83,11 @@ export function LookBar(props: {
   // wants: out of here. Compare is a look at stock with your finger down, and
   // seating a wipe next to a preview is how a held gesture becomes a lost look.
   onReset: () => void
+  // The look on its way out of the app. Beside reset rather than in the menu:
+  // it is a thing done *to the board on screen*, which is what every other
+  // button in this row has in common, and it is reached at the moment a look is
+  // finished rather than while looking for a setting.
+  onShare: () => void
   canUndo: boolean
   onUndo: () => void
   canRedo: boolean
@@ -136,6 +141,13 @@ export function LookBar(props: {
         title="put the whole board back to stock: every control, the modulation bay and the stab gate — the same as the “clean” chip. Your sources and where you are looking stay as they are, and ctrl+z takes the look back"
       >
         reset
+      </button>
+      <button
+        className={styles.btn}
+        onClick={props.onShare}
+        title="a link to the board on screen — a short one to send, and the readable one the address bar is carrying"
+      >
+        share
       </button>
       <button
         className={cx(styles.btn, !props.canUndo && styles.btnOff)}

@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 
+import { pageSearch } from '../core/gpu/env'
 import { reason } from './format'
 import {
   queryString,
@@ -41,8 +42,23 @@ interface UrlStateArgs extends SessionState {
 // is stored as the query alone: it outlives the origin it was saved on (a dev
 // server this morning, the deployed page tonight), so the link is assembled at
 // the moment it is copied rather than baked into the store.
+//
+// After the `#`, and everything the app writes goes there now. Three reasons,
+// in the order they matter here:
+//
+// A look is a client-side fact. The hash never reaches the server, so a session
+// is not in anyone's request logs or `Referer` headers, and a page on a static
+// host has nothing to gain from sending it. It also stops each look being its
+// own cache key — under `?p=` every shared link was a fresh URL for the HTTP
+// cache and the service worker to miss on, for the same bytes.
+//
+// The cost is the one thing to remember about it: changing a hash on a page that
+// is already open does *not* reload it, where changing a query does. Anything
+// arriving on a new link mid-session — a paste, back/forward, something driving
+// the app — needs the reload to be arranged, and `useUrlState` arranges it
+// below.
 const linkFor = (query: string) =>
-  `${location.origin}${location.pathname}${query ? `?${query}` : ''}`
+  `${location.origin}${location.pathname}${query ? `#${query}` : ''}`
 
 // Mirrors the live look into the query string so a reload or shared link
 // restores it, and hands back a copy-to-clipboard action — plus the two halves
@@ -56,9 +72,21 @@ export function useUrlState(args: UrlStateArgs) {
   // The whole query-string rule lives in urlParams beside the parser that has
   // to read it back; what is left here is the browser half — which params are
   // already on the address bar, and where the link points.
+  //
+  // Named, so the bar reads back. `pageSearch()` rather than `location.search`
+  // is what carries a session across the move: the first write of a session that
+  // arrived on a query takes everything it found there into the hash, and every
+  // write after that reads its own.
   const stateUrl = linkFor(
     queryString(
-      writeSessionParams(new URLSearchParams(location.search), session),
+      writeSessionParams(new URLSearchParams(pageSearch()), session, 'named'),
+    ),
+  )
+  // The same look packed, for the share dialog. Built here beside the other so
+  // the two cannot describe different boards.
+  const shareUrl = linkFor(
+    queryString(
+      writeSessionParams(new URLSearchParams(pageSearch()), session, 'packed'),
     ),
   )
 
@@ -81,6 +109,29 @@ export function useUrlState(args: UrlStateArgs) {
       return () => clearTimeout(id)
     }
   }, [engineReady, stateUrl])
+
+  // A hash arriving from outside: someone pasting a link into the bar of a tab
+  // that is already open, back or forward across one, an agent navigating.
+  //
+  // Under `?` the browser did this for us — a new query is a new document and
+  // the loader ran again. A new hash is not, so without this the address bar
+  // would say one look and the picture would show another, which is worse than
+  // the link not working: it is a link that reports success.
+  //
+  // A reload rather than applying the session in place, and that is a decision
+  // rather than a shortcut. Restoring an arbitrary link is the whole of the
+  // mount path — sources, cues, the teletype card, the bay, the stash — and a
+  // second copy of it that runs against a live engine is a copy to keep in step.
+  // Reloading is what the query did, exactly, and under adr/0004 a reload in one
+  // tab is cheap again. `replaceState` does not fire this, so the app's own
+  // writes never land here.
+  useEffect(() => {
+    const onHash = () => {
+      location.reload()
+    }
+    window.addEventListener('hashchange', onHash)
+    return () => window.removeEventListener('hashchange', onHash)
+  }, [])
 
   // Whether the text actually reached the clipboard. `writeText` rejects for
   // reasons that have nothing to do with the link and everything to do with
@@ -105,7 +156,10 @@ export function useUrlState(args: UrlStateArgs) {
     }
   }
 
-  const copyLink = () => writeClip(stateUrl)
+  // Handed out whole, because the share dialog holds two links and copies
+  // whichever row was pressed. Every other caller in here is a link this hook
+  // built itself.
+  const copyUrl = (url: string) => writeClip(url)
 
   // What a saved look records — the same serialization, minus the params that
   // only make sense for the session that is running (see writeProfileParams).
@@ -120,5 +174,5 @@ export function useUrlState(args: UrlStateArgs) {
 
   const copyQuery = (query: string) => writeClip(linkFor(query))
 
-  return { copyLink, profileQuery, copyQuery }
+  return { copyQuery, copyUrl, profileQuery, shareUrl, stateUrl }
 }

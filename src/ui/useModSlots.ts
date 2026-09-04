@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 
+import { pageSearch } from '../core/gpu/env'
 import {
   DEFAULT_DUTY,
   EMPTY_SLOT,
@@ -34,7 +35,7 @@ function loadSlots(): UiSlot[] {
   // at first render: useUrlState's rewrite is gated on the engine existing and
   // debounced behind it, so nothing has overwritten the query yet.
   const stored = normalizeSlots(readArray<unknown>(MOD_STORE, []))
-  const fromLink = parseSessionParams(location.search).mod
+  const fromLink = parseSessionParams(pageSearch()).mod
   if (fromLink === null) return stored
   // …except for the run switches, which the link does not carry and must not
   // clear. `?mod=` is written on every change, so without this a reload of your

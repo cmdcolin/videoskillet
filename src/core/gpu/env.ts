@@ -17,13 +17,30 @@
 // script rather than the page. That work is deleted (docs/adr/0003); the
 // tolerance is kept because it earns its place without it.
 
-// The page's query string, or '' where there is no page. Gated on `document`
-// rather than on `location` because every context has a `location` and only a
-// page's means the session: `?dbg=`, `?gpu=` and `?debug` are properties of the
-// session, and answering with some other context's URL would be worse than
-// answering with nothing.
+// The page's parameters, from either half of the address bar, or '' where there
+// is no page. Gated on `document` rather than on `location` because every
+// context has a `location` and only a page's means the session: `?dbg=`, `?gpu=`
+// and `?debug` are properties of the session, and answering with some other
+// context's URL would be worse than answering with nothing.
+//
+// Either half because the app's own writes live in the hash now, while
+// everything arriving from outside comes in on the query: every link published
+// before this, the service worker handing back `?shared`, a harness passing
+// `?gpudestroy=1`. Nothing that reads a parameter should have to know which of
+// those wrote it.
+//
+// Whole halves, never merged. A hash means the app has written the bar, and by
+// then it has moved everything it found there into it — so a query still sitting
+// beside one is a link someone assembled by hand out of two looks. Merged, the
+// stale half would show through the fresh one wherever the fresh one is at
+// stock, since `?set=` names only what is off it. One statement at a time.
+export const paramsOf = (loc: { search: string; hash: string }): string => {
+  const hash = loc.hash.replace(/^#/, '')
+  return hash === '' ? loc.search : `?${hash}`
+}
+
 export const pageSearch = (): string =>
-  typeof document === 'undefined' ? '' : location.search
+  typeof document === 'undefined' ? '' : paramsOf(location)
 
 // Whether this session asked for the per-frame logging. One predicate, because
 // the alternative is what was here before: `pageSearch().includes('debug')`

@@ -54,10 +54,21 @@ describe('env', () => {
       expect(isFullscreen()).toBe(true)
     })
 
-    it('reads the page query string', () => {
+    it('reads the page params from the query', () => {
       vi.stubGlobal('document', { visibilityState: 'visible' })
-      vi.stubGlobal('location', { search: '?preset=vhs' })
+      vi.stubGlobal('location', { search: '?preset=vhs', hash: '' })
       expect(pageSearch()).toBe('?preset=vhs')
+    })
+
+    // Where the app's own writes go, so this is the ordinary case once a
+    // session has been running for a moment.
+    it('prefers the hash, whole', () => {
+      vi.stubGlobal('document', { visibilityState: 'visible' })
+      vi.stubGlobal('location', {
+        search: '?p=stale',
+        hash: '#set=noiseIre:9',
+      })
+      expect(pageSearch()).toBe('?set=noiseIre:9')
     })
   })
 })

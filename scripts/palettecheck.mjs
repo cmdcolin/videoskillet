@@ -11,12 +11,9 @@ import puppeteer from 'puppeteer-core'
 
 import { FIREFOX } from './browser.mjs'
 
-// The app, seeded with a named param. useUrlState mirrors the board back in
-// whichever form the link arrived in (ui/urlParams.ts § writeSessionParams), so
-// a session that starts with ?set= keeps writing ?set= — and the check reads the
-// address bar instead of unpacking ?p= by hand.
-const base = process.argv[2] ?? 'http://localhost:5173/app/'
-const url = `${base}${base.includes('?') ? '&' : '?'}set=noiseIre:1`
+// The address bar carries the look by name, so the check reads it straight
+// back — see scripts/linkcheck.mjs for the contract itself.
+const url = process.argv[2] ?? 'http://localhost:5173/app/'
 
 const browser = await puppeteer.launch({
   browser: 'firefox',
@@ -64,7 +61,10 @@ const CASES = [
 
 for (const c of CASES) {
   const got = await palette(c.query)
-  const set = decodeURIComponent(new URL(got.url).searchParams.get('set') ?? '')
+  const set = decodeURIComponent(
+    new URLSearchParams(new URL(got.url).hash.replace(/^#/, '')).get('set') ??
+      '',
+  )
   const ok = set.split(',').includes(c.want)
   console.log(`${ok ? 'ok  ' : 'FAIL'} “${c.query}” -> set=${set || '(none)'}`)
   console.log(`     top row: ${got.rows[0] ?? '(no rows)'}`)

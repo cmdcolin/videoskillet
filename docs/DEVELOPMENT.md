@@ -1429,11 +1429,22 @@ actually download, so the size comes from the metadata read at pick time instead
 
 ## URL parameters
 
-A link specifies a look — **copy link** in the app writes one. It writes the
-look as `?p=`, which is the same controls packed into bytes (`src/ui/packed.ts`)
-and three times shorter; `?set=` is the readable form, and a query that arrives
-carrying one keeps being written that way, so a harness driving the app by name
-gets an address bar it can still read.
+A link specifies a look. The address bar carries the readable form —
+`#set=noiseIre:9`, every control that left stock, by name — so a look on screen
+can be read off it, edited in place, or handed to a harness. **share** in the
+app writes the other one: `#p=`, the same controls packed into bytes
+(`src/ui/packed.ts`) and four times shorter, which is what a link in a message
+wants. `writeSessionParams` takes which of the two it is spelling; nothing
+infers it any more.
+
+Both live after the `#`, and the app writes nothing to the query. The hash never
+reaches the server, so a look is not in anyone's request log and each shared one
+is no longer its own cache key. Every link written before this carries `?` and
+still opens: `pageSearch()` reads the hash when there is one and the query
+otherwise, and the first write of such a session moves it across. The catch is
+that a hash change on an open page does not reload it, so `useUrlState` listens
+for `hashchange` and reloads — which is what the query used to do for free, and
+what makes a pasted link work in a tab that is already open.
 
 A packed look opens with two characters of seal and a `.` — twelve bits over the
 bytes — so a link cut short in a chat window or pasted with a character turned
@@ -1456,24 +1467,27 @@ as it always did. What the wire does depend on is the order of `URL_KEY_ORDER`,
 pinned by golden vectors in `packed.test.ts`, and each control's `step`, which
 is not pinned because changing one moves a link by less than a step.
 
-| Param                | Meaning                                               |
-| -------------------- | ----------------------------------------------------- |
-| `?preset=`           | load a built-in preset by name                        |
-| `?p=`                | the same controls packed into bytes — what a link has |
-| `?set=key:value,…`   | override individual controls                          |
-| `?mod=t:src:hz:d,…`  | modulation routings (target, source, rate, depth)     |
-| `?iurl=` / `?iurlb=` | image source A / B                                    |
-| `?vurl=` / `?vurlb=` | video file address for A / B, played as-is            |
-| `?src=` / `?srcb=`   | source kind for A / B (a `wiki-*` channel rolls)      |
-| `?dbg=1..6`          | signal taps (composite, luma, chroma, burst, scope)   |
-| `?surprise`          | roll a random preset stack on load                    |
-| `?gpu=low-power`     | run on the integrated GPU instead of the discrete one |
-| `?vidbitmap`         | force the bitmap video path where zero-copy exists    |
+| Param                | Meaning                                                |
+| -------------------- | ------------------------------------------------------ |
+| `#preset=`           | load a built-in preset by name                         |
+| `#p=`                | the same controls packed into bytes — what a share has |
+| `#set=key:value,…`   | the look by name — what the bar carries                |
+| `#mod=t:src:hz:d,…`  | modulation routings (target, source, rate, depth)      |
+| `#iurl=` / `#iurlb=` | image source A / B                                     |
+| `#vurl=` / `#vurlb=` | video file address for A / B, played as-is             |
+| `#src=` / `#srcb=`   | source kind for A / B (a `wiki-*` channel rolls)       |
+| `#dbg=1..6`          | signal taps (composite, luma, chroma, burst, scope)    |
+| `#surprise`          | roll a random preset stack on load                     |
+| `#gpu=low-power`     | run on the integrated GPU instead of the discrete one  |
+| `#vidbitmap`         | force the bitmap video path where zero-copy exists     |
 
-Example: `/app/?iurl=/sample.jpg&preset=dirty%20mix`
+Example: `/app/#iurl=/sample.jpg&preset=dirty%20mix`
 
-`?iurl=` is what stops a shared link handing the reader a _different_ picture.
-`?src=wiki-random` names the pool, so a link carrying it alone rolls again on
+Either half of the bar is read, so every one of these also works spelled `?` —
+which is what the harnesses pass and what every published link carries.
+
+`#iurl=` is what stops a shared link handing the reader a _different_ picture.
+`#src=wiki-random` names the pool, so a link carrying it alone rolls again on
 the far end — which is what that picker entry means, and not what someone
 sharing the picture in front of them is saying. A Commons file is already a
 public address, so the link carries that and leaves the channel out:

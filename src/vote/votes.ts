@@ -123,31 +123,41 @@ export interface VoteRecord {
 // the loader and every harness already share, and a second writer of that format
 // would be a second thing to keep in step.
 export function candidateRecord(recipe: Recipe): CandidateRecord {
-  const query = writeSessionParams(new URLSearchParams(), {
-    controls: recipeControls(recipe),
-    mod: recipeMod(recipe),
-    sourceMode: 'bars',
-    sourceBMode: 'none',
-    ytUrlA: '',
-    ytUrlB: '',
-    urlA: '',
-    urlB: '',
-    // …and no address behind it either: bars is generated, so there is no file
-    // for the link to name.
-    imgUrlA: '',
-    imgUrlB: '',
-    // A candidate is a look on bars: no clip, so nothing to cue on one.
-    cueA: null,
-    cueB: null,
-    teletypeA: TELETYPE_DEFAULT,
-    teletypeB: TELETYPE_DEFAULT,
-    // A candidate is a look, and a caption is words: nothing to compare.
-    caption: '',
-    speedA: SPEED_DEFAULT,
-    speedB: SPEED_DEFAULT,
-    reverb: REVERB_DEFAULT,
-    dry: DRY_DEFAULT,
-  })
+  // Named, which is what the sentence above always claimed and what the sticky
+  // rule quietly did not do — an empty query is not a `?set=` one, so every
+  // candidate went to Firestore packed. These records are a dataset before they
+  // are a link: `scripts/labels.mjs` puts this column straight into a CSV, and a
+  // training script reading `p=je.CoDoBw…` there has to carry an unpacker to
+  // learn anything from it.
+  const query = writeSessionParams(
+    new URLSearchParams(),
+    {
+      controls: recipeControls(recipe),
+      mod: recipeMod(recipe),
+      sourceMode: 'bars',
+      sourceBMode: 'none',
+      ytUrlA: '',
+      ytUrlB: '',
+      urlA: '',
+      urlB: '',
+      // …and no address behind it either: bars is generated, so there is no file
+      // for the link to name.
+      imgUrlA: '',
+      imgUrlB: '',
+      // A candidate is a look on bars: no clip, so nothing to cue on one.
+      cueA: null,
+      cueB: null,
+      teletypeA: TELETYPE_DEFAULT,
+      teletypeB: TELETYPE_DEFAULT,
+      // A candidate is a look, and a caption is words: nothing to compare.
+      caption: '',
+      speedA: SPEED_DEFAULT,
+      speedB: SPEED_DEFAULT,
+      reverb: REVERB_DEFAULT,
+      dry: DRY_DEFAULT,
+    },
+    'named',
+  )
   return {
     v: RECORD_VERSION,
     id: recipeId(recipe),

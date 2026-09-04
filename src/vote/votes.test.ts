@@ -83,8 +83,9 @@ describe('candidateRecord', () => {
 
   it('does not turn a rolled look into stock', () => {
     const rec = candidateRecord(A)
-    expect(rec.query).toContain('p=')
-    expect(rec.query).not.toBe('p=&mod=')
+    // Named, because the column goes into a CSV: see candidateRecord.
+    expect(rec.query).toContain('set=')
+    expect(rec.query).not.toBe('set=&mod=')
     expect(Object.keys(rec.weights).length).toBeGreaterThan(0)
   })
 })

@@ -294,8 +294,9 @@ export function paletteActions(o: {
       run: o.onShowMoving,
     },
     {
-      name: 'copy link',
-      blurb: 'put this look on the clipboard as a URL',
+      name: 'share this look',
+      blurb:
+        'a short link to send, and the readable one the address bar carries',
       run: o.onCopyLink,
     },
     {

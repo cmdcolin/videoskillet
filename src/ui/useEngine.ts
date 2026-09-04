@@ -7,7 +7,7 @@ import {
   gpuReleases,
   outOfGpuBudget,
 } from '../core/gpu/context'
-import { debugLog } from '../core/gpu/env'
+import { debugLog, pageSearch } from '../core/gpu/env'
 import { Engine } from '../core/gpu/pipeline'
 import { MAX_SRC_EDGE } from '../core/gpu/sources'
 import { reportPreviousTrace, trace } from '../core/gpu/trace'
@@ -2602,7 +2602,7 @@ export function useEngine() {
               showGenerated(slotA, 'bars', beginLoad('a'))
               showGenerated(slotB, 'bars', beginLoad('b'))
               created.setSourceBEnabled(true) // B defaults to bars; ?srcb=none to opt out
-              applySession(created, parseSessionParams(location.search))
+              applySession(created, parseSessionParams(pageSearch()))
             }
           },
           (e: unknown) =>

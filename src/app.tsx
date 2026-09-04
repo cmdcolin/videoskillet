@@ -77,6 +77,7 @@ import { profileAtSlot, suggestProfileName } from './ui/profileModel'
 import { sameList } from './ui/sameList'
 import { SavedProfiles } from './ui/SavedProfiles'
 import { Section } from './ui/Section'
+import { ShareDialog } from './ui/ShareDialog'
 import { SignalPath } from './ui/SignalPath'
 import { SignalPathDialog } from './ui/SignalPathDialog'
 import { SignalTapContext } from './ui/SignalTapContext'
@@ -276,6 +277,7 @@ export function App() {
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [showDiagram, setShowDiagram] = useState(false)
   const [showAbout, setShowAbout] = useState(false)
+  const [showShare, setShowShare] = useState(false)
   const [showPalette, setShowPalette] = useState(false)
   const [comparing, setComparing] = useState(false)
   // Which tool a drag on the picture is. It used to be neither — the mode was
@@ -567,7 +569,7 @@ export function App() {
   // flat thing and urlParams.ts names these keys on the wire (?cueA=, ?vapor=).
   // Unpacked here, next to each other, rather than left as thirty fields on the
   // engine for everything else to unpack too.
-  const { copyLink, profileQuery, copyQuery } = useUrlState({
+  const { copyQuery, copyUrl, profileQuery, shareUrl, stateUrl } = useUrlState({
     controls,
     mod: slotsToRoutings(modApi.slots),
     engineReady: engine !== null,
@@ -875,7 +877,7 @@ export function App() {
       as: suggestedProfileName,
       run: () => profiles.saveProfile(suggestedProfileName, profileQuery()),
     },
-    onCopyLink: copyLink,
+    onCopyLink: () => setShowShare(true),
     onRecord: capture.toggleRecord,
     onStill: capture.grabStill,
     onFullscreen: toggleFullscreen,
@@ -1322,6 +1324,7 @@ export function App() {
         onRollMotion={amount =>
           mix.rollMotion(amount, { audioLive: audio.active })
         }
+        onShare={() => setShowShare(true)}
         morphSeconds={morphSeconds}
         onSetMorph={s => setMorphStored(String(s))}
         morphStore={morphStore}
@@ -1855,6 +1858,14 @@ export function App() {
         />
       ) : null}
       {showAbout ? <AboutDialog onClose={() => setShowAbout(false)} /> : null}
+      {showShare ? (
+        <ShareDialog
+          shareUrl={shareUrl}
+          readableUrl={stateUrl}
+          onCopy={copyUrl}
+          onClose={() => setShowShare(false)}
+        />
+      ) : null}
       {showPalette ? (
         <CommandPalette
           controls={controls}

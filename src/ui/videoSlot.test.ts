@@ -312,7 +312,7 @@ describe('armHead', () => {
   // `?loophead=0` is what makes the A/B one run rather than two afternoons, so
   // it has to arm nothing at all — not arm one and decline to use it.
   it('arms nothing under ?loophead=0', async () => {
-    vi.stubGlobal('location', { search: '?loophead=0' })
+    vi.stubGlobal('location', { search: '?loophead=0', hash: '' })
     const { slot } = makeSlot(videoEl({ src: 'blob:clip' }))
 
     await armHead(slot, 4)

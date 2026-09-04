@@ -232,7 +232,9 @@ const state = (over: Partial<SessionState> = {}): SessionState => ({
 })
 
 const roundTrip = (s: SessionState, existing = '') =>
-  parseSessionParams(`?${writeSessionParams(new URLSearchParams(existing), s)}`)
+  parseSessionParams(
+    `?${writeSessionParams(new URLSearchParams(existing), s, 'named')}`,
+  )
 
 describe('session round trip', () => {
   it('returns every look it was given, exactly', () => {
@@ -442,7 +444,11 @@ describe('session round trip', () => {
   })
 
   it('writes no cue params when nothing is cued', () => {
-    const q = writeSessionParams(new URLSearchParams(), state()).toString()
+    const q = writeSessionParams(
+      new URLSearchParams(),
+      state(),
+      'named',
+    ).toString()
     expect(q).not.toContain('cuea')
     expect(q).not.toContain('cueb')
   })
@@ -452,6 +458,7 @@ describe('session round trip', () => {
     const q = writeSessionParams(
       new URLSearchParams('?debug=1&set=humAmp:9'),
       state({ controls: { ...DEFAULT_CONTROLS, noiseIre: 4 } }),
+      'named',
     )
     expect(q.get('debug')).toBe('1')
     // ...but a managed key is rewritten from live state, not merged with it
@@ -464,6 +471,7 @@ describe('session round trip', () => {
     const q = writeSessionParams(
       new URLSearchParams('?surprise'),
       state({ controls: { ...DEFAULT_CONTROLS, noiseIre: 4 } }),
+      'named',
     )
     expect(q.has('surprise')).toBe(false)
     expect(parseSessionParams(`?${q.toString()}`).controls.noiseIre).toBe(4)
@@ -484,6 +492,7 @@ describe('session round trip', () => {
           lumaMHz: DEFAULT_CONTROLS.lumaMHz,
         },
       }),
+      'named',
     )
     expect(q.has('preset')).toBe(false)
     const back = presetControls(parseSessionParams(`?${q.toString()}`).controls)
@@ -513,6 +522,7 @@ describe('session round trip', () => {
     const q = writeSessionParams(
       new URLSearchParams('?set=noiseIre:4&speeda=0.5&src=sweep'),
       state(),
+      'named',
     )
     expect(q.get('speeda')).toBe(null)
     expect(q.get('src')).toBe(null)
@@ -520,7 +530,9 @@ describe('session round trip', () => {
     // is a look the link is asserting, and no query at all means a first
     // arrival instead.
     expect(q.get('set')).toBe('')
-    expect(writeSessionParams(new URLSearchParams(), state()).get('p')).toBe('')
+    expect(
+      writeSessionParams(new URLSearchParams(), state(), 'packed').get('p'),
+    ).toBe('')
     expect(parseSessionParams('?set=').controls).toEqual({})
     expect(parseSessionParams('?p=').controls).toEqual({})
     expect(parseSessionParams('').controls).toEqual(LANDING_LOOK)
@@ -530,38 +542,49 @@ describe('session round trip', () => {
 describe('the two forms of the look', () => {
   const look = state({ controls: { ...DEFAULT_CONTROLS, noiseIre: 4 } })
 
-  it('writes the packed form by default, and only that one', () => {
-    const q = writeSessionParams(new URLSearchParams(), look)
-    expect(q.get('p')).toBe(packControls(look.controls))
-    expect(q.has('set')).toBe(false)
-    expect(parseSessionParams(`?${q.toString()}`).controls.noiseIre).toBe(4)
+  it('writes the form it was asked for, and only that one', () => {
+    const named = writeSessionParams(new URLSearchParams(), look, 'named')
+    expect(named.get('set')).toBe('noiseIre:4')
+    expect(named.has('p')).toBe(false)
+
+    const packed = writeSessionParams(new URLSearchParams(), look, 'packed')
+    expect(packed.get('p')).toBe(packControls(look.controls))
+    expect(packed.has('set')).toBe(false)
   })
 
-  it('keeps writing names to a query that arrived carrying them', () => {
-    // A `?set=` someone typed is one they mean to keep typing into: turning it
-    // to bytes under the cursor would take the address bar away as an
-    // instrument mid-session.
-    const q = writeSessionParams(new URLSearchParams('?set=hHold:0.2'), look)
+  it('round-trips through either', () => {
+    for (const form of ['named', 'packed'] as const) {
+      const q = writeSessionParams(new URLSearchParams(), look, form)
+      expect(parseSessionParams(`?${q.toString()}`).controls.noiseIre).toBe(4)
+    }
+  })
+
+  // Neither form is sticky any more: the caller says which it wants, so a bar
+  // showing one and a share writing the other cannot drift into each other.
+  it('replaces the other form when it finds one', () => {
+    const stale = `?p=${packControls({ ...DEFAULT_CONTROLS, noiseIre: 9 })}`
+    const q = writeSessionParams(new URLSearchParams(stale), look, 'named')
     expect(q.get('set')).toBe('noiseIre:4')
     expect(q.has('p')).toBe(false)
   })
 
   it('reads a hand-edited name over the packed look beside it', () => {
-    // Which is the same one the writer would keep, so what a query carrying
-    // both shows is what the next write settles on.
     const packed = packControls({ ...DEFAULT_CONTROLS, noiseIre: 9 })
-    const both = `?p=${packed}&set=noiseIre:4`
-    expect(parseSessionParams(both).controls.noiseIre).toBe(4)
-    expect(writeSessionParams(new URLSearchParams(both), look).has('p')).toBe(
-      false,
-    )
+    expect(
+      parseSessionParams(`?p=${packed}&set=noiseIre:4`).controls.noiseIre,
+    ).toBe(4)
   })
 
-  it('is a shorter query than the same look by name', () => {
-    const packed = writeSessionParams(new URLSearchParams(), look).toString()
+  it('is a shorter query packed than by name', () => {
+    const packed = writeSessionParams(
+      new URLSearchParams(),
+      state({ controls: { ...DEFAULT_CONTROLS, noiseIre: 4, hHold: 0.2 } }),
+      'packed',
+    ).toString()
     const named = writeSessionParams(
-      new URLSearchParams('?set='),
-      look,
+      new URLSearchParams(),
+      state({ controls: { ...DEFAULT_CONTROLS, noiseIre: 4, hHold: 0.2 } }),
+      'named',
     ).toString()
     expect(packed.length).toBeLessThan(named.length)
   })
@@ -626,7 +649,11 @@ describe('motion on a link', () => {
 
   it('carries a beat lock, and leaves a free-running rate four fields wide', () => {
     const locked = [{ ...mod[0], syncDiv: 3 }, mod[1]]
-    const q = writeSessionParams(new URLSearchParams(), state({ mod: locked }))
+    const q = writeSessionParams(
+      new URLSearchParams(),
+      state({ mod: locked }),
+      'named',
+    )
     expect(q.get('mod')).toBe('fbZoom:sine:0.5:0.2:3,cfbMix:lorenz:2:0.45')
     expect(roundTrip(state({ mod: locked })).mod).toEqual(locked)
   })
@@ -643,7 +670,7 @@ describe('motion on a link', () => {
     // Same argument as the empty ?set= marker: a link is a statement about a
     // session, so a still look has to be distinguishable from an old link that
     // never had an opinion — which leaves the reader's own bay alone.
-    const q = writeSessionParams(new URLSearchParams(), state())
+    const q = writeSessionParams(new URLSearchParams(), state(), 'named')
     expect(q.get('mod')).toBe('')
     expect(parseSessionParams('?mod=').mod).toEqual([])
     expect(parseSessionParams('?set=').mod).toBe(null)
