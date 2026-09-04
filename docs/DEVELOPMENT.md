@@ -1604,6 +1604,7 @@ is not pinned because changing one moves a link by less than a step.
 | `#src=` / `#srcb=`   | source kind for A / B (a `wiki-*` channel rolls)       |
 | `#dbg=1..6`          | signal taps (composite, luma, chroma, burst, scope)    |
 | `#surprise`          | roll a random preset stack on load                     |
+| `#seed=n`            | put every roll this session makes on that seed         |
 | `#gpu=low-power`     | run on the integrated GPU instead of the discrete one  |
 | `#vidbitmap`         | force the bitmap video path where zero-copy exists     |
 

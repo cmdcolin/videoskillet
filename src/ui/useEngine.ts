@@ -322,7 +322,7 @@ const onDeck =
 
 // Owns the singleton Engine (a GPUDevice + rAF loop), its lifecycle, and every
 // video/image source path (patterns, files, webcam/USB capture, source B).
-export function useEngine() {
+export function useEngine(args: { rand: Rand }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const engineRef = useRef<EngineApi | null>(null)
   // These stay flat `…A`/`…B` pairs, and it is the one place in this file where
@@ -2070,7 +2070,9 @@ export function useEngine() {
     // stock is what it pins to. `?surprise&set=crtZoom:0.42` still works: the
     // link's own controls land after this and outrank it.
     if (opts.boot && params.surprise) {
-      eng.applyControls(rollControls(randomPresetMix(false), DEFAULT_CONTROLS))
+      eng.applyControls(
+        rollControls(randomPresetMix(false, args.rand), DEFAULT_CONTROLS),
+      )
     }
     // The packed look failed its seal (packed.ts), so `params.controls` has none
     // of it. Said on the banner rather than opened on a prefix of the look: a

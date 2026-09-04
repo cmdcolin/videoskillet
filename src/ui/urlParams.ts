@@ -160,6 +160,20 @@ export interface SessionParams {
   // `?surprise` — roll a random preset stack on load, the same one the button
   // rolls. Layered under ?preset/?set, so an explicit control still wins.
   surprise: boolean
+  // `?seed=n` — every roll this session makes draws from one seeded generator
+  // (core/rng.ts) instead of `Math.random`, so the same link and the same
+  // presses hand back the same looks. "Open this and press random three times"
+  // becomes a thing a link can say, and it is what lets the landing page record
+  // a slide of somebody pressing the button and get the same take back.
+  //
+  // The rolls, and not the wander: a drift leg is timed off the clock, so a
+  // walk is unreproducible however the numbers are drawn. Nor which file a pool
+  // source picks — that is a network answer, not a roll.
+  //
+  // Null for a link that says nothing, which is every link this app writes: the
+  // seed is a mode you ask for by hand, and the look a roll produced is already
+  // in `?p=` without it.
+  seed: number | null
   // What the link says about motion: routings to install, or null for "said
   // nothing", which leaves whatever the browser already had patched. A link
   // written by this app always says something, so null means an old link.
@@ -317,6 +331,10 @@ export function parseSessionParams(search: string): SessionParams {
     cueB: parseCue(q.get('cueb')),
     debug: q.has('debug'),
     surprise: q.has('surprise'),
+    seed:
+      q.has('seed') && Number.isFinite(Number(q.get('seed')))
+        ? Number(q.get('seed'))
+        : null,
     // ?mod= wins over the preset's own motion, atomically: a link that names
     // both is someone who moved the routings after picking the preset.
     mod:

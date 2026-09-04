@@ -109,6 +109,7 @@ import { usePageLifecycle } from './ui/usePageLifecycle'
 import { usePanelNav } from './ui/usePanelNav'
 import { usePopout } from './ui/usePopout'
 import { useRender } from './ui/useRender'
+import { useRollRand } from './ui/useRollRand'
 import { useSavedProfiles } from './ui/useSavedProfiles'
 import { useScrollAnchor } from './ui/useScrollAnchor'
 import { useSharedMedia } from './ui/useSharedMedia'
@@ -191,7 +192,11 @@ export function App() {
   // engine's own store now, which costs nothing while it is closed, so this says
   // only whether the thing is on screen.
   const [showFps, setShowFps] = useState(false)
-  const eng = useEngine()
+  // The session's own generator for everything that rolls, seeded when the link
+  // asked for one (ui/useRollRand.ts). Above the engine because both halves of
+  // "press random" draw from it: the `?surprise` roll at boot, and the buttons.
+  const rollRand = useRollRand()
+  const eng = useEngine({ rand: rollRand })
   // Both pulled off in one destructure, and `engine` is read through the local
   // rather than as `eng.engine` for the rest of the render. Reading a ref out of
   // an object marks the whole object as ref-ish to the React Compiler, so a
@@ -384,6 +389,7 @@ export function App() {
     getGlideTarget,
     morphSeconds,
     sourceBOn: eng.b.mode !== 'none',
+    rand: rollRand,
     mod: modApi,
   })
 

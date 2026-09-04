@@ -24,6 +24,7 @@ import {
 import { rollBay } from './rollMod'
 
 import type { Controls } from '../core/controls'
+import type { Rand } from '../core/rng'
 import type { GlidePlan } from '../core/signal/glide'
 import type { Provenance } from '../labels'
 import type { CardPreset } from './cardPresets'
@@ -113,6 +114,10 @@ export function useMix(args: {
   // of them used to be.
   morphSeconds: number
   sourceBOn: boolean
+  // Where the rolls below draw from (ui/useRollRand.ts). Passed in rather than
+  // reached for, because a session opened with `?seed=` wants every one of them
+  // on the same sequence, and the boot roll in `useEngine` is on it too.
+  rand: Rand
   // `master` and its setter are here for the motion roll alone — see the freeze
   // it lifts there. The other verbs deliberately leave the amount where it is:
   // a preset is a statement about the look and the freeze is a gesture over it.
@@ -433,14 +438,14 @@ export function useMix(args: {
     // button down at 8s and the look wanders continuously through the space
     // between the authored presets, which is where the ones worth keeping are.
     surprise: () => {
-      landRecipe(randomPresetMix(args.sourceBOn), null, 'surprise')
+      landRecipe(randomPresetMix(args.sourceBOn, args.rand), null, 'surprise')
     },
     // The same landing, one authored preset in it. `lastPreset` is the name
     // rather than null because here it is true: the board *is* that preset, so
     // the chip lights up as its own and the caption says which look you are
     // looking at — which is most of what this roll is for.
     surpriseOne: () => {
-      const next = randomSinglePreset(args.sourceBOn, Math.random, lastPreset)
+      const next = randomSinglePreset(args.sourceBOn, args.rand, lastPreset)
       // `preset` rather than `surprise`, and the distinction matters to the one
       // slice the label vocabulary exists for: `surprise` means a look drawn
       // from the same distribution the labelling page samples, and this draws
@@ -451,7 +456,7 @@ export function useMix(args: {
     // Sparse and hard, where `mutateLook` is dense and soft. See `spike`.
     spikeLook: (amount: MutateAmount = 'normal') => {
       apply(
-        spike(getControls(), MUTATE_SLIDERS, SPIKE_TARGETS[amount]),
+        spike(getControls(), MUTATE_SLIDERS, SPIKE_TARGETS[amount], args.rand),
         'mutate',
       )
       setLastPreset(null)
@@ -465,17 +470,22 @@ export function useMix(args: {
     // thing — there is no recipe for this look, because it is half of one and
     // half of whatever you had.
     crossLook: () => {
-      const recipe = randomPresetMix(args.sourceBOn)
+      const recipe = randomPresetMix(args.sourceBOn, args.rand)
       const from = getControls()
       apply(
-        crossover(from, rollControls(recipe, from), MUTATE_CIRCUITS),
+        crossover(from, rollControls(recipe, from), MUTATE_CIRCUITS, args.rand),
         'mutate',
       )
       setLastPreset(null)
     },
     mutateLook: (amount: MutateAmount = 'normal') => {
       apply(
-        mutate(getControls(), MUTATE_SLIDERS, MUTATE_AMOUNTS[amount]),
+        mutate(
+          getControls(),
+          MUTATE_SLIDERS,
+          MUTATE_AMOUNTS[amount],
+          args.rand,
+        ),
         'mutate',
       )
       setLastPreset(null)
@@ -500,12 +510,15 @@ export function useMix(args: {
     ) => {
       bank(sameLookAndBay)
       mod.setSlots(
-        rollBay({
-          amount,
-          sliders: MUTATE_SLIDERS,
-          controls: getControls(),
-          audioLive: opts.audioLive === true,
-        }),
+        rollBay(
+          {
+            amount,
+            sliders: MUTATE_SLIDERS,
+            controls: getControls(),
+            audioLive: opts.audioLive === true,
+          },
+          args.rand,
+        ),
       )
       // The same rule a claim from a control row's ⋮ follows, and this button
       // needs it most: rolling motion onto a frozen bay would cable five slots,
@@ -556,7 +569,7 @@ export function useMix(args: {
       amount: MutateAmount = 'normal',
     ) => {
       apply(
-        mutate(getControls(), sliders, MUTATE_AMOUNTS[amount], Math.random, 1),
+        mutate(getControls(), sliders, MUTATE_AMOUNTS[amount], args.rand, 1),
         'mutate',
       )
       setLastPreset(null)

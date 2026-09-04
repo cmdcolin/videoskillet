@@ -107,6 +107,17 @@ describe('session params', () => {
     expect(parseSessionParams('').surprise).toBe(false)
   })
 
+  it('takes a seed for the session\u2019s rolls, and nothing else from it', () => {
+    // A seed says where the numbers come from, not what is on the board: a link
+    // carrying one alone is still a bare load and still opens on the landing
+    // look, which is what every other link that names no controls does.
+    const p = parseSessionParams('?seed=1234')
+    expect(p.seed).toBe(1234)
+    expect(p.controls).toEqual(parseSessionParams('').controls)
+    expect(parseSessionParams('').seed).toBe(null)
+    expect(parseSessionParams('?seed=banana').seed).toBe(null)
+  })
+
   it('drops control keys it does not recognise', () => {
     const p = parseSessionParams('?set=noiseIre:3,noSuchKnob:5,humAmp:nope')
     expect(p.controls).toEqual({ noiseIre: 3 })
@@ -475,6 +486,17 @@ describe('session round trip', () => {
     )
     expect(q.has('surprise')).toBe(false)
     expect(parseSessionParams(`?${q.toString()}`).controls.noiseIre).toBe(4)
+  })
+
+  it('keeps ?seed= through the rewrite the address bar makes', () => {
+    // Unlike ?surprise, a seed is not spent by the roll it fed: the point of it
+    // is the next press, and a reload landing back on the same sequence.
+    const q = writeSessionParams(
+      new URLSearchParams('?seed=1234'),
+      state({ controls: { ...DEFAULT_CONTROLS, noiseIre: 4 } }),
+      'named',
+    )
+    expect(q.get('seed')).toBe('1234')
   })
 
   it('drops ?preset once the look it seeded has been written', () => {

@@ -39,6 +39,8 @@ its parameters on the `?` query instead and still opens.
 - `#speeda=` / `#speedb=` / `#reverb=` / `#dry=` — playback and the audio send.
 - `#cuea=in,out` / `#cueb=in,out` — a loop over one deck, in seconds.
 - `#surprise` — a random look. `#debug` — the frame and timing readouts.
+- `#seed=n` — every roll the session makes draws from that seed, so the same
+  link and the same presses of the roll button hand back the same looks.
 
 Example — VHS with the head-switch tear pulled wide and the tint drifting:
 
