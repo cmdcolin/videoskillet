@@ -4,10 +4,10 @@
 // The two rolls in the look bar moved where the board *rests* — `random look`
 // stacks presets, `random nudge` jitters every control around where it sits —
 // and neither could produce motion that nobody had written down. `random look`
-// re-cables the bay, but only from the fourteen authored routings in
-// presets.ts, so a session could go a long time without seeing an LFO on
-// anything else. This is the third roll: it leaves every resting value exactly
-// where it is and rolls *what is moving*.
+// re-cables the bay, but only from the routings authored in presets.ts, so a
+// session could go a long time without seeing an LFO on anything else. This is
+// the third roll: it leaves every resting value exactly where it is and rolls
+// *what is moving*.
 //
 // The whole difficulty is depth. The engine swings a target by
 // `depth * (max - min)` (gpu/pipeline.ts › applyMod), a fraction of the raw
@@ -21,7 +21,7 @@
 
 import { DEFAULT_CONTROLS } from '../core/controls'
 import { clamp } from '../core/math'
-import { NEEDS } from './controls'
+import { NEEDS, VIEW_KEYS } from './controls'
 import { isBayKey, EMPTY_SLOT, N_SLOTS, RATE_MAX, RATE_MIN } from './modSlots'
 import { MUTATE_AMOUNTS, ROLL_NEVER_STARTS } from './mutate'
 import { PRESETS } from './presets'
@@ -46,12 +46,12 @@ const ROUTINGS: Record<MutateAmount, number> = {
   turbo: 5,
 }
 
-// The fastest a rolled LFO may run, per amount. The authored routings sit
-// between 0.03 and 0.12Hz — drift, the pace of a circuit warming up, which is
-// the pace that makes a fault look like it is happening rather than like it is
-// being switched. Rolling the slot's whole range instead would spend most of
-// its draws in the buzz above 2Hz, where every source sounds like the same
-// source.
+// The fastest a rolled LFO may run, per amount. Forty-two of the forty-eight
+// authored routings sit at or under 0.12Hz — drift, the pace of a circuit
+// warming up, which is the pace that makes a fault look like it is happening
+// rather than like it is being switched. Rolling the slot's whole range instead
+// would spend most of its draws in the buzz above 2Hz, where every source
+// sounds like the same source.
 const RATE_CEIL: Record<MutateAmount, number> = {
   gentle: 0.25,
   normal: 1,
@@ -69,9 +69,9 @@ const RATE_FLOOR = 0.03
 const BASE_DEPTH = 0.18
 
 // The sources a roll draws from, and how often. Weighted towards what the
-// authored routings actually use — seven of the fourteen are `smooth`, four are
-// `sine` — because that is the closest thing this app has to a record of which
-// sources make a fault look mechanical rather than animated.
+// authored routings actually use — 28 of the 48 are `smooth` and 11 are `sine`
+// — because that is the closest thing this app has to a record of which sources
+// make a fault look mechanical rather than animated.
 //
 // `trig` is deliberately absent, and it is the one exclusion worth explaining:
 // it is playable rather than continuous, so a slot rolled onto it sits there
@@ -96,10 +96,10 @@ const AUDIO_SOURCES: readonly (readonly [ModSource, number])[] = [
   ['hit', 2],
 ]
 
-// Every routing anybody has hand-tuned, by target: fourteen of them across the
-// presets, and the only per-control statement in the app about how much
-// modulation a given control wants. Read off PRESETS rather than copied, so
-// retuning a preset's routing retunes what a roll does with that target.
+// Every routing anybody has hand-tuned, by target: 26 targets across the
+// presets' 48 routings, and the only per-control statement in the app about how
+// much modulation a given control wants. Read off PRESETS rather than copied,
+// so retuning a preset's routing retunes what a roll does with that target.
 //
 // Deepest wins where a target carries several (`bendUs` has three), because the
 // authored depths are a range somebody found usable and the top of it is still
@@ -152,6 +152,46 @@ export function depthBudget(def: SliderDef): number {
       : (def.redline[1] - def.redline[0]) / span
   const curved = def.curve === 'zero' || def.curve === 'unity' ? 0.25 : 1
   return BASE_DEPTH * tuned * curved
+}
+
+// The rate a row's `+ mod` starts at. In the drift band the authored routings
+// live in — 42 of the 48 sit at or under 0.12Hz — rather than at the bay's
+// resting 0.5Hz, which is fast enough to read as a control being switched. The
+// same number the `+ mod` on a slot's own knobs claims (ModRowEditor).
+const CLAIM_RATE_HZ = 0.08
+
+// What a control row patches in the first time it asks for motion, or null on a
+// row that may not claim one at all.
+//
+// Here rather than in ControlGroup because it is the same question `rollBay`
+// asks and it has to get the same answer: the button was written a week before
+// this file and carried a flat source/rate/depth to every control in the app,
+// so the app's signature press was the one distribution the roll beside it
+// exists to reject. Two rules bar a claim outright:
+//
+//   `VIEW_KEYS`, for the reason the roll excludes them and more sharply, since
+//   a press names the row: a wobbling magnifier reads as a bug in the app, and
+//   a modulated `timeScale` presents exactly like the lost rendering step in
+//   ADR 0004. A routing already on one still shows and can still be handed back
+//   — the bar is on claiming, not on showing.
+//
+//   `ROLL_NEVER_STARTS` while the control rests at 0, on the argument the set
+//   is defined for. A press here asks for a wobble, and from rest the only
+//   thing a wobble can do is start the full-field flash. Dial the strobe up and
+//   the button comes back, the same way it does on a control whose gate opens.
+//
+// A row takes the whole budget where a roll takes 0.4 to 1 of it: naming the
+// control is a firmer ask than drawing it.
+export function rowClaim(def: SliderDef, value: number) {
+  const barred =
+    VIEW_KEYS.has(def.key) || (ROLL_NEVER_STARTS.has(def.key) && value === 0)
+  return barred
+    ? null
+    : {
+        source: EMPTY_SLOT.source,
+        rateHz: CLAIM_RATE_HZ,
+        depth: depthBudget(def),
+      }
 }
 
 // How likely this control is to be picked, relative to the others. Zero is

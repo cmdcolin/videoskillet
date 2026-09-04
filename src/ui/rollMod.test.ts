@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { DEFAULT_CONTROLS } from '../core/controls'
 import { rngFor } from '../core/rng'
 import {
+  ALL_SLIDERS,
   MUTATE_SLIDERS,
   NEEDS,
   SLIDER_BY_KEY,
@@ -10,7 +11,8 @@ import {
   sliderFor,
 } from './controls'
 import { EMPTY_SLOT, N_SLOTS, RATE_MAX, RATE_MIN } from './modSlots'
-import { AUTHORED_DEPTH, depthBudget, rollBay } from './rollMod'
+import { ROLL_NEVER_STARTS } from './mutate'
+import { AUTHORED_DEPTH, depthBudget, rollBay, rowClaim } from './rollMod'
 
 import type { ControlKey, Controls } from '../core/controls'
 import type { UiSlot } from './modSlots'
@@ -251,5 +253,72 @@ describe('depthBudget', () => {
       expect(depthBudget(def)).toBeGreaterThan(0)
       expect(depthBudget(def)).toBeLessThanOrEqual(1)
     }
+  })
+})
+
+// The control row's `+ mod`, which is the third caller of everything above and
+// was for a week the only automation path in the app that consulted none of it.
+describe('rowClaim', () => {
+  it('gives every claimable control the depth the app derived for it', () => {
+    for (const def of MUTATE_SLIDERS) {
+      const claim = rowClaim(def, DEFAULT_CONTROLS[def.key])
+      if (claim !== null) expect(claim.depth).toBe(depthBudget(def))
+    }
+  })
+
+  // The flat 0.2 this replaced, against the budget: on a stock board it is
+  // deeper than the app's own answer on all but a handful of rows, and 44x
+  // deeper on the vertical roll rate — a first press that took the picture off
+  // the screen.
+  it('is not the flat depth the bay rests at', () => {
+    expect(rowClaim(sliderFor('bRollLps'), 0.1)?.depth).toBeLessThan(
+      EMPTY_SLOT.depth / 40,
+    )
+  })
+
+  // The same drift band the roll draws from, and the same number a wire onto a
+  // slot's own knob claims.
+  it('starts in the band the authored routings live in', () => {
+    const claim = rowClaim(sliderFor('bendUs'), DEFAULT_CONTROLS.bendUs)
+    expect(claim?.rateHz).toBeLessThanOrEqual(0.12)
+    expect(claim?.rateHz).toBeGreaterThanOrEqual(RATE_MIN)
+  })
+
+  // The rule VIEW_KEYS exists for, now held on the press as well as on the
+  // roll: the button was the sixth reader of that set and the one that skipped
+  // it, so `timeScale` carried a `+ mod` while every roll in the app refused
+  // to cable one.
+  it('never claims a view control', () => {
+    for (const key of VIEW_KEYS) {
+      expect([key, rowClaim(sliderFor(key), DEFAULT_CONTROLS[key])]).toEqual([
+        key,
+        null,
+      ])
+    }
+  })
+
+  // The photosensitivity rule, likewise. A press asks for a wobble, and from
+  // rest the only thing a wobble on these can do is start the full-field flash.
+  it('never starts a strobe that is not already running', () => {
+    for (const key of ROLL_NEVER_STARTS) {
+      expect([key, rowClaim(sliderFor(key), 0)]).toEqual([key, null])
+    }
+  })
+
+  it('will drive one that is already running', () => {
+    for (const key of ROLL_NEVER_STARTS) {
+      expect(rowClaim(sliderFor(key), 1)).not.toBeNull()
+    }
+  })
+
+  // Everything else the panel offers the button on still gets it — the two
+  // rules above take five rows out of the app, not a category of them.
+  it('leaves every other row claimable', () => {
+    const barred = ALL_SLIDERS.filter(
+      s => rowClaim(s, DEFAULT_CONTROLS[s.key]) === null,
+    ).map(s => s.key)
+    expect(barred.toSorted()).toEqual(
+      [...VIEW_KEYS, ...ROLL_NEVER_STARTS].toSorted(),
+    )
   })
 })

@@ -19,11 +19,12 @@ import { LoopTrip } from './LoopTrip'
 import { MagnifierFrame } from './MagnifierFrame'
 import { SYNCABLE_KEYS } from './midi'
 import { ModRowEditor } from './ModRowEditor'
-import { EMPTY_SLOT, modPatch } from './modSlots'
+import { modPatch } from './modSlots'
 import { useModSlotsApi } from './ModSlotsContext'
 import { mutateAmountFor } from './mutate'
 import { PipControl } from './PipControl'
 import { PurityFrame } from './PurityFrame'
+import { rowClaim } from './rollMod'
 import { sameKeySet, sameList } from './sameList'
 import { Section } from './Section'
 import { SIGNAL_TAPS, tapFor } from './signalTap'
@@ -64,6 +65,10 @@ export function ControlSlider(props: {
   const inert = need !== undefined && !need.ok(gate)
   const unmet = inert && props.muted?.has(need.key) !== true
   const slot = mod.modFor(s.key)
+  // What this row would patch if asked, and null on a row that may not ask —
+  // the view controls, and a strobe that is not already running. rollMod owns
+  // both rules, so the button and the roll beside it cannot drift apart.
+  const claim = rowClaim(s, value)
   return (
     <Slider
       label={s.label}
@@ -111,7 +116,7 @@ export function ControlSlider(props: {
       // way to see what is driving the control or to hand the slot back. The
       // rule is about what may be *claimed*, not about what may be shown.
       mod={
-        slot !== null || (!inert && s.choices === undefined)
+        slot !== null || (!inert && s.choices === undefined && claim !== null)
           ? {
               patch: slot === null ? null : modPatch(slot, mod.bpm, mod.master),
               // Running, as opposed to merely patched. The badge is the switch
@@ -129,8 +134,8 @@ export function ControlSlider(props: {
                 // rather than handing over an editor with nothing patched into
                 // it. Handing the slot back is the remove button, one click
                 // away — a claim you can see and undo beats a form to fill in.
-                if (open && slot === null) {
-                  mod.setSlotForKey(s.key, DEFAULT_ROUTING)
+                if (open && slot === null && claim !== null) {
+                  mod.setSlotForKey(s.key, claim)
                 }
                 mod.setEditing(s.key, open)
               },
@@ -141,14 +146,6 @@ export function ControlSlider(props: {
       modEditor={modOpen ? <ModRowEditor controlKey={s.key} /> : undefined}
     />
   )
-}
-
-// What a row patches in when it first asks for motion: slow enough to read as
-// drift rather than flicker, deep enough to see at a glance.
-const DEFAULT_ROUTING = {
-  source: EMPTY_SLOT.source,
-  rateHz: EMPTY_SLOT.rateHz,
-  depth: EMPTY_SLOT.depth,
 }
 
 // The note under an inert control, and the one-click fix for its gate.
