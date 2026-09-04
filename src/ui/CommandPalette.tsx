@@ -5,6 +5,7 @@ import { GROUPS, snapToStep } from './controls'
 import { cx } from './cx'
 import dlg from './dialog.module.css'
 import { formatValue } from './format'
+import { splitTail, tailTarget } from './paletteQuery'
 import { PRESETS, presetLabel } from './presets'
 import { fromTravel, toTravel } from './travel'
 import { useModalDialog } from './useModalDialog'
@@ -114,18 +115,39 @@ export function CommandPalette(props: {
     ...CONTROL_ITEMS,
     ...props.actions.map((action): Item => ({ kind: 'action', action })),
   ]
+  const search = (text: string) =>
+    pool
+      .map(it => ({ it, s: score(text, itemName(it), itemProse(it)) }))
+      .filter(r => r.s >= 0)
+      .toSorted((a, b) => b.s - a.s)
+      .slice(0, MAX_RESULTS)
+      .map(r => r.it)
+
+  // The head first, and the whole query when the head finds nothing: a control
+  // named with a number in it ("vbi test signals 2") is then still reachable by
+  // typing its name, and the split costs that query nothing.
+  const { head, tail } = splitTail(q)
+  const headHits = head === '' || head === q ? [] : search(head)
   const results =
     q === ''
       ? pool.filter(it => it.kind !== 'control').slice(0, MAX_RESULTS)
-      : pool
-          .map(it => ({ it, s: score(q, itemName(it), itemProse(it)) }))
-          .filter(r => r.s >= 0)
-          .toSorted((a, b) => b.s - a.s)
-          .slice(0, MAX_RESULTS)
-          .map(r => r.it)
+      : headHits.length > 0
+        ? headHits
+        : search(q)
 
   const selected =
     results.length === 0 ? null : results[Math.min(cursor, results.length - 1)]
+  // Where the tail sends one row, and null on every row it says nothing about.
+  // Asked per row rather than of the cursor, because a click can land on a row
+  // the cursor is not on — and because each row shows its own answer.
+  //
+  // Only against what the head found: with the whole query searched, the tail is
+  // part of the name that matched, and setting a control to it would be reading
+  // one word two ways.
+  const rowTarget = (it: Item) =>
+    it.kind === 'control' && headHits.length > 0
+      ? tailTarget(it.slider, tail)
+      : null
   const choose = (it: Item) => {
     if (it.kind === 'preset') {
       props.onMixStart()
@@ -135,7 +157,9 @@ export function CommandPalette(props: {
       it.action.run()
       props.onClose()
     } else {
-      props.onRevealControl(it.slider.label)
+      const to = rowTarget(it)
+      if (to === null) props.onRevealControl(it.slider.label)
+      else props.onWriteControl(it.slider.key, to)
       props.onClose()
     }
   }
@@ -192,41 +216,52 @@ export function CommandPalette(props: {
               nothing matches “{query.trim()}”
             </div>
           ) : (
-            results.map((it, i) => (
-              <button
-                key={`${it.kind}:${itemName(it)}`}
-                className={cx(
-                  styles.paletteRow,
-                  it === selected && styles.paletteRowOn,
-                )}
-                // Movement, not entry: a pointer left resting over the list
-                // would otherwise claim the cursor back from the arrow keys
-                // every time the results re-rendered under it.
-                onPointerMove={() => setCursor(i)}
-                onClick={() => choose(it)}
-              >
-                <span className={styles.paletteKind}>
-                  {it.kind === 'preset'
-                    ? 'preset'
-                    : it.kind === 'control'
-                      ? 'control'
-                      : 'action'}
-                </span>
-                <span className={styles.paletteName}>{itemName(it)}</span>
-                <span className={styles.paletteSub}>
-                  {it.kind === 'control' ? it.group : itemProse(it)}
-                </span>
-                {it.kind === 'control' ? (
-                  <span className={styles.paletteValue}>
-                    {readout(it.slider, props.controls[it.slider.key])}
+            results.map((it, i) => {
+              // On the cursor's row alone. Every row a search hit can take the
+              // tail, and drawn on all of them the list read as four controls
+              // about to move — with three of them showing 9 clamped to their
+              // own ceiling, which is a promise about a press that will never
+              // happen. Hovering claims the cursor, so the arrow is still there
+              // before the row is clicked.
+              const to = it === selected ? rowTarget(it) : null
+              return (
+                <button
+                  key={`${it.kind}:${itemName(it)}`}
+                  className={cx(
+                    styles.paletteRow,
+                    it === selected && styles.paletteRowOn,
+                  )}
+                  // Movement, not entry: a pointer left resting over the list
+                  // would otherwise claim the cursor back from the arrow keys
+                  // every time the results re-rendered under it.
+                  onPointerMove={() => setCursor(i)}
+                  onClick={() => choose(it)}
+                >
+                  <span className={styles.paletteKind}>
+                    {it.kind === 'preset'
+                      ? 'preset'
+                      : it.kind === 'control'
+                        ? 'control'
+                        : 'action'}
                   </span>
-                ) : null}
-              </button>
-            ))
+                  <span className={styles.paletteName}>{itemName(it)}</span>
+                  <span className={styles.paletteSub}>
+                    {it.kind === 'control' ? it.group : itemProse(it)}
+                  </span>
+                  {it.kind === 'control' ? (
+                    <span className={styles.paletteValue}>
+                      {readout(it.slider, props.controls[it.slider.key])}
+                      {to === null ? null : ` → ${readout(it.slider, to)}`}
+                    </span>
+                  ) : null}
+                </button>
+              )
+            })
           )}
         </div>
         <div className={styles.paletteFoot}>
-          ↑↓ move · ↵ apply or jump · ←→ nudge a control live · esc close
+          ↑↓ move · ↵ apply or jump · ←→ nudge a control live · “noise 9” sets
+          one · esc close
         </div>
       </div>
     </dialog>

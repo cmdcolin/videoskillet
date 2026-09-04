@@ -73,6 +73,7 @@ const HARNESSES = [
   { name: 'panelcheck', args: [`${origin}/app/`] },
   { name: 'chipcheck', args: [`${origin}/app/`] },
   { name: 'undocheck', args: [`${origin}/app/`] },
+  { name: 'palettecheck', args: [`${origin}/app/`] },
   { name: 'inkcheck', args: [`${origin}/app/`] },
   { name: 'midicheck', args: [`${origin}/app/`] },
   // Muted through a Firefox pref rather than by leaving the node unconnected,
