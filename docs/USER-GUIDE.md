@@ -177,17 +177,26 @@ quickest way out of a filter you did not mean to apply.
 
 ## Making it move
 
-**+ mod**, beside the reading on any control row, sets that control moving: it
-patches a slow sine wobble and unfolds an editor under the row where you pick
-the source — LFO, random walk, noise, sample-and-hold, a Lorenz attractor, audio
+**+ mod**, beside the reading on a control row, sets that control moving: it
+patches a slow sine drift and unfolds an editor under the row where you pick the
+source — LFO, random walk, noise, sample-and-hold, a Lorenz attractor, audio
 level or its hits, or a one-shot envelope you strike by hand or from a MIDI note
 — and dial the rate and depth. Depth is a fraction of the control's range, and
 the slider stays put as the centre the motion happens around, which is why a
-preset or a link still holds the look. The rate's **♩ lock to beat** button in
-the editor ties it to the tempo instead of Hz.
+preset or a link still holds the look. How deep the first press goes is the
+control's own answer rather than one number for the whole app: half a percent of
+the range on the vertical roll rate, a third of it on horizontal hold. The
+rate's **♩ lock to beat** button in the editor ties it to the tempo instead of
+Hz.
+
+The button sits out on two kinds of row. The View controls have none, since a
+wobbling magnifier or a stuttering clock reads as the app breaking rather than
+as the signal doing something. Neither does a strobe or a paperclip resting at
+zero: from there the only thing a wobble can do is start the full-field flash.
+Dial either up and the button is back.
 
 A patched row then carries two buttons in place of **+ mod**: a chip naming the
-routing — **sine 0.5Hz** — that opens and closes its editor, and a **❚❚** that
+routing — **sine 0.08Hz** — that opens and closes its editor, and a **❚❚** that
 holds the wobble still without unpatching it. Held, the chip dims and the button
 reads **▶**; press it and the motion is back exactly as you dialed it.
 **remove** in the editor, or in the row's **⋮**, hands the slot back.
