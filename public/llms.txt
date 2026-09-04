@@ -1,0 +1,57 @@
+# videoskillet.js
+
+> Real-time NTSC / VHS / composite-video simulation in WebGPU compute shaders.
+> Dot crawl, dropouts, head-switch wobble and video feedback are consequences of
+> a simulated analog signal path rather than filters drawn over the picture, so
+> the faults interact the way the hardware’s do.
+
+The app is at https://videoskillet.com/app/ — the root page is a landing page
+with an "Open the app" link. It needs WebGPU; on Linux that means Firefox
+Nightly or Chrome with WebGPU enabled.
+
+## The query string is the remote control
+
+Every control, source and routing is reachable from the address bar, and the
+app mirrors the live board back into it. So the URL says what is on screen,
+and navigating to one puts it there — which is faster and steadier than
+operating 266 knobs by hand, whether the hand is a person’s or an agent’s.
+
+- `?preset=NAME` — a whole look. It resets what it does not name.
+- `?set=key:value,key:value` — controls by key, layered on top of any preset.
+  Out-of-range values clamp. This is the form to write by hand.
+- `?p=…` — the packed form the app writes for itself. Opaque; use `?set=`.
+- `?mod=target:source:rateHz:depth[:division]` — what is moving, comma-
+  separated. `target` is a control key, `source` one of the modulation
+  sources, up to 8 of them.
+- `?src=` / `?srcb=` — what each deck is fed: bars, sweep, tv static, vhs static, synth, cat, clip-test, clip-haunted-house, clip-minnie-moocher, wiki-random, ia-random, browse, teletype, file, library, url, webcam, screen.
+- `?vurl=` / `?iurl=` / `?yt=` (and `?vurlb=`, `?iurlb=`, `?ytb=`) — a video,
+  image or YouTube clip on each deck.
+- `?text=` with `?crawl`, `?boil`, `?garble` — the teletype card; `?caption=`
+  puts a line on the line-21 caption track.
+- `?speeda=` / `?speedb=` / `?reverb=` / `?dry=` — playback and the audio send.
+- `?cuea=in,out` / `?cueb=in,out` — a loop over one deck, in seconds.
+- `?surprise` — a random look. `?debug` — the frame and timing readouts.
+
+Example — VHS with the head-switch tear pulled wide and the tint drifting:
+
+  https://videoskillet.com/app/?preset=vhs&set=headSwitchShiftUs:9&mod=tintDeg:sine:0.2:0.4
+
+## In the page
+
+`ctrl+k` (`⌘k`) opens a command palette that indexes every preset, control and
+verb by name and by the prose describing it. Typing a value after a name sets
+that control outright — "head switch 9", or "combiner ring" on a mode switch —
+and each row shows the control’s current reading, so the palette is also the
+quickest way to read the board back. Every slider is a native range input with
+a label; the drag surfaces (the framing boxes, the A/B lever) take arrow keys.
+
+## The rest
+
+- [Every control, with its key](https://videoskillet.com/llms-full.txt)
+- [Effects](https://videoskillet.com/guide/effects.html) — the fault each
+  control models
+- [User guide](https://videoskillet.com/guide/guide.html) — driving it
+- [How it works](https://videoskillet.com/guide/how-it-works.html) — the
+  signal path and the code
+- [Architecture](https://videoskillet.com/guide/architecture.html) — the pass
+  graph, for changing it
