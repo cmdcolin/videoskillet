@@ -2,6 +2,65 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [0.38.0](https://github.com/cmdcolin/videoskillet/compare/v0.37.1...v0.38.0) - 2026-09-04
+
+### Features
+- *(ui)* [`7603ce7`](https://github.com/cmdcolin/videoskillet/commit/7603ce7fcfefe152e2570c467300b0787684a0ce) the hero holds still, and the carousel is under it
+- *(ui)* [`94e19cc`](https://github.com/cmdcolin/videoskillet/commit/94e19cc0d5e5a778f9511e71144736b1f91a7cfc) the carousel shows the app being used, not what it makes
+- *(ui)* [`7d01f8c`](https://github.com/cmdcolin/videoskillet/commit/7d01f8caabc3904773369bcec62b9d18e5e601f6) the carousel is recorded twice, and a phone gets the portrait one
+- *(ui)* [`547e451`](https://github.com/cmdcolin/videoskillet/commit/547e45179054f288a120b6a25406f1c2f77671b8) the gallery drops dull color feedback
+- *(ui)* [`752bf4c`](https://github.com/cmdcolin/videoskillet/commit/752bf4c9c2c106a2b05602e68db0491fe251cbc3) the palette sets a control from a typed value
+- *(ui)* [`c0f78e4`](https://github.com/cmdcolin/videoskillet/commit/c0f78e4003f1ac6205ac350f56da99302bd9d82b) the bar carries the look by name, and shares it packed
+- *(ui)* [`62f4d8e`](https://github.com/cmdcolin/videoskillet/commit/62f4d8ef106e82e2fd1daae4a9d09bcc45ab9e36) the carousel builds a look from a clean board, and the hero holds still
+- *(ui)* [`0af5d44`](https://github.com/cmdcolin/videoskillet/commit/0af5d44383c3635642ed863661117eb128ee430d) every slide on the stage is worth stopping on
+- *(ui)* [`e628d47`](https://github.com/cmdcolin/videoskillet/commit/e628d47b300d437ae05658a6ebc3a2bb005fe37a) the stage plays on a press, at the resolution the screen asks for
+- *(ui)* [`ee18c30`](https://github.com/cmdcolin/videoskillet/commit/ee18c302f07700e3b5b464bcceb93223290ba0d5) a session's rolls can be seeded from the address bar
+- *(ui)* [`f06723a`](https://github.com/cmdcolin/videoskillet/commit/f06723ae03b317aab4e8af7cd1df12c4fe98ebb1) the carousel's middle slide is the random button, not a fault
+
+### Fixes
+- *(ui)* [`0258d4f`](https://github.com/cmdcolin/videoskillet/commit/0258d4f944bef454e657ebbc8d69ec5aaaca23f7) the + mod button asks the model the rolls ask
+- *(ui)* [`18fd537`](https://github.com/cmdcolin/videoskillet/commit/18fd53768c20711a94938dfe700606f9670838b0) a slot knob's ↺ puts back what the press claimed
+- *(ui)* [`8934c6e`](https://github.com/cmdcolin/videoskillet/commit/8934c6eea28c837ab9bf0efdfa77a9db16cc79da) the MIDI rack's × buttons say what they unbind
+- *(ui)* [`719c581`](https://github.com/cmdcolin/videoskillet/commit/719c5814af3088d334990f6a6c7c4ba9b8f7c545) the palette opens over the panel, not over the picture
+- *(ui)* [`c3ea635`](https://github.com/cmdcolin/videoskillet/commit/c3ea6357a22d4b73de26f88c71b2bab456a18970) a row with no clip key at all is stepped over, not read through
+- *(ui)* [`d94ecb0`](https://github.com/cmdcolin/videoskillet/commit/d94ecb03bbaa3d28c33bcf211e5f0d2b6e18102c) a sealed link is refused wherever the damage landed
+- *(ui)* [`9adc43d`](https://github.com/cmdcolin/videoskillet/commit/9adc43d869ad1f54aa1de3bb0caa08b8626239c3) pnpm dev serves the whole site again, and prettier formats the astro
+- *(ui)* [`5f9d811`](https://github.com/cmdcolin/videoskillet/commit/5f9d8115b9af5156c9b6e6fabf9df67856e0348a) the fatal screen shows the cat again, and a harness that would have caught it
+
+### Performance
+- *(ui)* [`4c46338`](https://github.com/cmdcolin/videoskillet/commit/4c46338a6dc8047dbda4e7fa18ba3b8871ea4359) the page arrives in 382K, where it used to arrive in a megabyte
+
+### Refactor
+- [`ab82456`](https://github.com/cmdcolin/videoskillet/commit/ab82456eaf54537019c2188c4a0d31da6009aa0a) the min-of-max sites call the clamp that already exists
+- *(docs)* [`5c4cac0`](https://github.com/cmdcolin/videoskillet/commit/5c4cac0dce22eeede034da6aa096aca9bd49d6ac) the guide site is an Astro project
+- *(docs)* [`8f561fa`](https://github.com/cmdcolin/videoskillet/commit/8f561fac9168a2785dce1891000349dacbfd32f6) astro takes the site root, so the landing page can join it
+- *(ui)* [`0995788`](https://github.com/cmdcolin/videoskillet/commit/099578890eb974000f7f68376394551e63e4dd64) the landing page is a page of the site, not a file written into
+
+### Documentation
+- [`65ab8e2`](https://github.com/cmdcolin/videoskillet/commit/65ab8e260fb70bee8f8a7641d4dd827377e19bc2) the guide says what + mod actually patches
+- [`07e1224`](https://github.com/cmdcolin/videoskillet/commit/07e1224d61a736e62e3ecaa8274c25142e164c3c) the callouts say what they point at, and the strip gets a section
+- [`354e756`](https://github.com/cmdcolin/videoskillet/commit/354e756ab5adf9e416922936267d835689771c34) every page the site links to is a page of the site
+- [`a120970`](https://github.com/cmdcolin/videoskillet/commit/a120970e4706af47b3c993ac73bdfe5aaf8973bc) llms.txt publishes the URL contract, keys and all
+- *(ui)* [`47708a6`](https://github.com/cmdcolin/videoskillet/commit/47708a65c7f21fdef938772ed0b565eb7ec02f28) the menu links the URL contract
+- *(ui)* [`1c7a8ee`](https://github.com/cmdcolin/videoskillet/commit/1c7a8ee974fb5a4afa6451780c04ac024fb028c2) two comments sit with what they describe
+- [`1abf262`](https://github.com/cmdcolin/videoskillet/commit/1abf26288f4a8da4e67c48cb48ff70864c4535cd) rewrite prose in plain, direct language
+- [`e8fedaf`](https://github.com/cmdcolin/videoskillet/commit/e8fedafe826a9ce881bde3c8dba9fd72dcf02a38) the FAQ answers how it works and what installs it
+- [`c3ed941`](https://github.com/cmdcolin/videoskillet/commit/c3ed9416a3339fa00a431baf4138b1b8674144ff) what a slide costs is the encoder saying whether anything moves
+- [`4695908`](https://github.com/cmdcolin/videoskillet/commit/469590815895ff30ba6f91f1d2d92812cc44d308) the curation and voting notes are pages of the site
+- [`40fe383`](https://github.com/cmdcolin/videoskillet/commit/40fe38303a24aceabec4d161bd37e21424050aad) the app calls what it emulates analog video, not composite
+
+### Tests
+- *(ui)* [`4119ebd`](https://github.com/cmdcolin/videoskillet/commit/4119ebd8b782077ab0072c5ce91670acd4196cb4) the published-link count comes from demos.json, not from a number
+
+### Chores
+- [`002bec2`](https://github.com/cmdcolin/videoskillet/commit/002bec29141b119b4f103eda95479830ba234409) drop the demo poster nothing points at
+- [`929b127`](https://github.com/cmdcolin/videoskillet/commit/929b127564486d03092d429b0135bba69b978aa3) keep the shared worktrees out of lint, and say what runs guidecheck
+
+### Other Changes
+- [`379386b`](https://github.com/cmdcolin/videoskillet/commit/379386ba820bd0356f6657c924c2c05746e3b881) Reshot screens
+- [`9cd3359`](https://github.com/cmdcolin/videoskillet/commit/9cd3359e6da4641421b9777a554ff2434d142aa7) Demos
+- [`e10e0bc`](https://github.com/cmdcolin/videoskillet/commit/e10e0bc21148bbc9022b99de9c5062bd611300ed) Rm github
+
 ## [0.37.1](https://github.com/cmdcolin/videoskillet/compare/v0.37.0...v0.37.1) - 2026-09-03
 
 ### Features
