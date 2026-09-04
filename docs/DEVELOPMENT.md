@@ -1083,11 +1083,12 @@ pnpm demos:check                 # fail if the checked-in copy is stale (pnpm bu
 
 Two lists feed it. [`../demos.json`](../demos.json) is the looks — the README's
 "Cool demos" bullets, the still behind the title and the gallery of cards, each
-opening the exact board its clip is a recording of. Two of its entries carry a
-flag rather than only a name: `hero` is the one the header shows, which
+opening the exact board its clip is a recording of. An entry carries flags
+rather than only a name: `hero` is the one the header shows, which
 [`../scripts/ogimage.mjs`](../scripts/ogimage.mjs) grounds the link preview in
 too, so the page and the card that stands in for it when it is shared are the
-same picture; `showcase` is the ones the carousel is allowed to play.
+same picture; `showcase` is the ones the carousel is allowed to play; `gallery`
+is whether it gets a card at all; and `says` is the clause under the name.
 [`../scripts/reel.mjs`](../scripts/reel.mjs) is that carousel, which is a
 different thing: recordings of the **app's own window**, with the panel, the map
 and a pointer moving over them.
@@ -1096,6 +1097,34 @@ That split is the point of the page. The picture is what the program makes, and
 the gallery and the header are full of it; the window is what the program _is_,
 and until the carousel held it the one thing a stranger could not work out from
 the page was what using this looks like.
+
+**A card has to move, and three of them did not.** Sampling every clip at 4fps
+and differencing successive frames puts most of the gallery between 1.4 and 66
+mean levels of motion, and `Ponderorb`, `Fuzzy color bars feedback` and
+`Collecting dust` at 0.01, 0.11 and 0.59 — which understates it, because every
+frame of those three is _statistically identical_. They are camera loops that
+have reached a fixed point, and `demoreel.mjs` steps 500 frames of warm-up
+before it arms the recorder precisely so that a loop has filled, so what gets
+recorded is eight seconds of one frame. No poster frame is the wrong one; there
+is nothing at any second of it to catch. The first two are off the page on
+`gallery: false` and keep their line in the README. Making one of them a card
+again means giving the look a reason not to settle — a `mod=` on a row it turns
+on — rather than rerecording it.
+
+**The order is what says analog first**, the same rule the slides are under.
+`Chaos black and white feedback` opens the gallery because it is the liveliest
+thing in it by a factor of three; the orbs and the smooth rainbows are at the
+bottom, because a smooth gradient is the one picture here a stranger can read as
+a shader. `Wiggity` is the header for the other half of that rule — scanlines
+and chroma fringing across a bright arc, over a dark corner a title can sit in.
+
+**Every card says which mechanism it is.** A wall of pictures with names like
+"Wonkitize me" over them is a gallery of glitches; the page's claim is that
+these come out of a signal path, and the line under the name is where the card
+makes it — "a composite loop 2.9µs long, ringing at 0.8 MHz". Those are read off
+the look itself rather than the picture: `unpackControls` (ui/packed.ts) against
+`DEFAULT_CONTROLS` gives the controls the look carries that stock does not,
+which is the same list the app's own "N off stock" shows.
 
 **The slides are ordered by what says analog first.** `build` led the stage
 until it was demoted, and what demoted it is the frame it arrives at: a soft

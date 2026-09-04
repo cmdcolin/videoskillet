@@ -498,7 +498,7 @@ code {
   justify-content: space-between;
   align-items: baseline;
   gap: 0.5rem;
-  padding: 0.7rem 0.85rem;
+  padding: 0.7rem 0.85rem 0.35rem;
   font-size: 0.94rem;
   border-top: 1px solid var(--border);
 }
@@ -506,6 +506,17 @@ code {
   color: var(--fg4);
   font-size: 0.85rem;
   white-space: nowrap;
+}
+/* Which mechanism the card is a picture of. The border above it belongs to
+   `.name`, so the two read as one block under the still rather than as a
+   caption floating off the bottom of the card. */
+.demo .says {
+  display: block;
+  padding: 0 0.85rem 0.75rem;
+  color: var(--fg4);
+  font-size: 0.82rem;
+  line-height: 1.45;
+  text-wrap: pretty;
 }
 .demo:hover .open,
 .demo:focus-visible .open {

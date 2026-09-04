@@ -1,16 +1,17 @@
 ---
-// One card per demo in `demos.json`. The still is an <img> under the clip
-// rather than the <video>'s own `poster`, so that it can carry
+// One card per demo `demos.json` marks for the gallery. The still is an <img>
+// under the clip rather than the <video>'s own `poster`, so that it can carry
 // `loading="lazy"` — a poster is fetched the moment its <video> is laid out,
 // and twelve of those were most of a megabyte nobody had scrolled to yet.
 //
-// `alt=""` because the name is on the card beside it.
-import { demos } from '../../scripts/demos.mjs'
+// `alt=""` because the name is on the card beside it, and the line under the
+// name says what the picture is made of.
+import { gallery } from '../../scripts/demos.mjs'
 ---
 
 <ul class="grid">
   {
-    demos.map(demo => (
+    gallery.map(demo => (
       <li>
         <a class="demo" href={demo.href}>
           <span class="shot">
@@ -36,6 +37,7 @@ import { demos } from '../../scripts/demos.mjs'
             {demo.name}
             <span class="open">open →</span>
           </span>
+          <span class="says">{demo.says}</span>
         </a>
       </li>
     ))

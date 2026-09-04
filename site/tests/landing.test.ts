@@ -1,7 +1,7 @@
 import { experimental_AstroContainer } from 'astro/container'
 import { beforeAll, expect, test } from 'vitest'
 
-import { demos, hero, showcase } from '../../scripts/demos.mjs'
+import { demos, gallery, hero, showcase } from '../../scripts/demos.mjs'
 import { beatSecs, NARROW, slides } from '../../scripts/reel.mjs'
 import Landing from '../pages/index.astro'
 
@@ -114,6 +114,7 @@ test('the stage opens on the first slide, and every slide is in it once', () => 
 test('there are demos, and one of them can be a slide', () => {
   expect(demos.length).toBeGreaterThan(3)
   expect(showcase.length).toBeGreaterThan(0)
+  expect(gallery.length).toBeGreaterThan(0)
 })
 
 test.each(demos)('$name has a recording and a still', demo => {
@@ -121,7 +122,28 @@ test.each(demos)('$name has a recording and a still', demo => {
   expect(bytes(demo.still)).toBeGreaterThan(0)
 })
 
-test.each(demos)('$name is a card on the page', demo => {
+test.each(gallery)('$name is a card on the page', demo => {
   expect(page).toContain(demo.href.replaceAll('&', '&amp;'))
   expect(page).toContain(`data-src="${demo.clip}"`)
+})
+
+// A card's own sentence, and the only place on the page that says which
+// mechanism a picture is of. A demo kept out of the gallery still carries one,
+// so that turning it back on is one flag rather than a flag and a caption.
+test.each(demos)('$name says which mechanism it is', demo => {
+  expect(demo.says.length).toBeGreaterThan(20)
+  expect(demo.says.endsWith('.')).toBe(true)
+})
+
+test.each(gallery)('$name has its line under the name', demo => {
+  expect(page).toContain(demo.says.replaceAll("'", '&#39;'))
+})
+
+// Off the page, still in the README: `demos` is what the README prints, so a
+// demo dropped from the gallery has to stay in the list rather than the file.
+test('a demo kept out of the gallery is still a demo', () => {
+  for (const demo of demos.filter(d => !d.gallery)) {
+    expect(page).not.toContain(`data-src="${demo.clip}"`)
+    expect(readFileSync('README.md', 'utf8')).toContain(demo.url)
+  }
 })

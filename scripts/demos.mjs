@@ -23,6 +23,19 @@
 //          looks worth stopping on beside a shot of the app's window, so this
 //          is a short list and the gallery below is the long one — a demo joins
 //          the carousel by turning this on and running `pnpm demos`.
+//   gallery
+//          whether it gets a card on the landing page. A look can be worth a
+//          line in the README and not worth a card: `Ponderorb` and
+//          `Fuzzy color bars feedback` are camera loops that have reached a
+//          fixed point, so every frame of their eight seconds is the same frame
+//          — a card that a reader hovers and nothing happens on. Off the page,
+//          still in the list, still a link that opens.
+//   says   one clause under the name, saying which mechanism is on screen. The
+//          gallery is the page's argument that these faults come out of a
+//          signal path rather than a filter, and a wall of pictures with names
+//          like "Wonkitize me" over them does not make it. Read off the look
+//          itself — the controls it carries that stock does not — so a caption
+//          is a description of the board and not a guess at the picture.
 //   hero   the still behind the title, and the ground of the link preview
 //          (`ogimage.mjs`), which are one picture so that the page and the card
 //          standing in for it when it is shared are the same look. Exactly one
@@ -46,7 +59,7 @@ export const slug = name =>
 
 // Annotated because `JSON.parse` hands back `any`, and `landing-demos.test.ts`
 // imports this module: without a shape here, the tests over it are unchecked.
-/** @type {{ name: string, query: string, showcase: boolean, hero?: boolean }[]} */
+/** @type {{ name: string, query: string, says: string, showcase: boolean, gallery: boolean, hero?: boolean }[]} */
 const listed = JSON.parse(readFileSync('demos.json', 'utf8'))
 
 // `clip` and `still` are page-relative and `poster` is not, which is not an
@@ -81,6 +94,10 @@ export const demos = listed.map(demo => {
 })
 
 export const showcase = demos.filter(demo => demo.showcase)
+
+// The cards, in order. `demos` is still the whole list — the README prints it,
+// and a demo off the page keeps its link there.
+export const gallery = demos.filter(demo => demo.gallery)
 
 const flagged = demos.filter(demo => demo.hero)
 if (flagged.length !== 1) {

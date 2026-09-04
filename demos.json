@@ -1,68 +1,94 @@
 [
   {
-    "name": "Wiggity",
-    "showcase": true,
-    "query": "?p=je.CoDoBwEEAbAEAKwCAfABAKCZAgXgAw2IIwSIAyFYBrAKEjwGmAEEuB4ZVADsBgr4OiSMCQDEAQDgAgAkAUQEBAAQA9wCAMXBAgCJngIAlf4DAI3tAw&mod=bendUs:lorenz:0.390279:0.27759,hvRing:sine:0.037599:0.090209&srcb=synth&src=sweep"
-  },
-  {
-    "name": "Ridiculous rainbow",
+    "name": "Chaos black and white feedback",
     "showcase": false,
-    "hero": true,
-    "query": "?p=T2.GKAEE4QCRYQDAMQfAJ8FAowfFYwDAfAMAWAA8AIARAZgJEAIBCKcvgErYA&mod=&srcb=none"
-  },
-  {
-    "name": "Rainborb",
-    "showcase": false,
-    "query": "?p=zD.GNADE4QCRYQDAJgfANYEAvAlAOQBFNwBAdAFL0AIBCKcvgE&mod=&srcb=none"
+    "gallery": true,
+    "says": "The mixer loop run at negative gain and inverted, on a channel tuned 0.2 MHz off its carrier.",
+    "query": "?p=Nj.FJADAMACAuQDNVAImAIAUALIARaQAwoUAIABANQDApQBAHgARAniAQECCVQk5gMAqAEAqAYAgJ9JA8gB&mod=tapeLoopMm:smooth:0.05:0.0151&srcb=tv+static"
   },
   {
     "name": "Wonkitize me",
     "showcase": false,
+    "gallery": true,
+    "says": "A composite loop 2.9µs long, ringing at 0.8 MHz, closed over an archive film.",
     "query": "?p=A7.BGgTjAk1NCPEAQCQIACkBgBMAZwhAVwAkAEAHADMARCQAwDQAwDAWwAMAJADANgDAIABAkAA0AEAiAEAwIkBAJADJEAIBCKgnAEfBACgAwCcAQmQAw&mod=&src=ia-random&srcb=tv+static&speeda=0.39"
-  },
-  {
-    "name": "Chaos black and white feedback",
-    "showcase": false,
-    "query": "?p=Nj.FJADAMACAuQDNVAImAIAUALIARaQAwoUAIABANQDApQBAHgARAniAQECCVQk5gMAqAEAqAYAgJ9JA8gB&mod=tapeLoopMm:smooth:0.05:0.0151&srcb=tv+static"
-  },
-  {
-    "name": "Fuzzy color bars feedback+dissolver",
-    "showcase": false,
-    "query": "?p=qQ.BrAEAMgCAKAGPahOAdACAJADAZwCAHolpAIAoB8AegA6ACgAqCAALABgAEQAEACYARDQAgDUAhsEA0oQsAEIBA&mod=&srcb=vhs+static"
-  },
-  {
-    "name": "Fuzzy color bars feedback",
-    "showcase": false,
-    "query": "?p=1w.cqQCAKAfAHoAOgAoAKggACwAYABEABAAmAEQ0AIA1AIwsAEIBA&mod=&srcb=vhs+static"
-  },
-  {
-    "name": "Camera feedback + static",
-    "showcase": false,
-    "query": "?p=IK.GIgEEVQA9AEAYA6AAhHAAQBkDEgEkAMLoAIAtAEE6AICnAEB-CEBKACMAQAgAJADBVxwub4DAKHEAQ&mod=vFreqHz:smooth:0.08:0.0049,fbGain:smooth:0.24:0.06&src=vhs+static"
-  },
-  {
-    "name": "Dark camera feedback",
-    "showcase": false,
-    "query": "?p=CU.CqCsBQEEAcwDAHABXAC8aQLoAgLMBQCsAgOceQR0GPwBCzgAGADYAQAIAjgAuAIImAIAUALIAQCAAQAkArACAXgAFAJ4ADAGXABcApADAKAhAIgBCKwCAOQBAJgRApACAAAAAADwCAdIALAJAAAABAlUJOYDAKgBBcgBAQQ&mod=tapeLoopMm:smooth:0.05:0.0151&srcb=tv+static&src=tv+static"
-  },
-  {
-    "name": "Ponderorb",
-    "showcase": false,
-    "query": "?p=8A.GIgECaABABwAtCUpNCOQAwCsHACACgKUJQK0ARLEAQGcBwAEAIQCAJQDAEwCbACkAgCkAVKA2QE&mod="
-  },
-  {
-    "name": "Collecting dust",
-    "showcase": false,
-    "query": "?p=R2.cqQCAKAfAHoAOgAoAKggACwAYABEABAAmAEQ0AIAoAMw-AIArAICjBAEBEjgLgCoAQ&mod=&srcb=vhs+static"
-  },
-  {
-    "name": "Laser duck",
-    "showcase": false,
-    "query": "?p=pa.KsgBFDQOGAGgAQDgAwJ4BvABIaQBBdAMOngsgJMC&mod=&srcb=ia-random&iurl=https:%2F%2Fthumb.wikimedia.org%2Fwikipedia%2Fcommons%2Fthumb%2Fb%2Fb4%2F20250724_mallard_duckling_wethersfield_cove_PD201227.jpg%2F1280px-20250724_mallard_duckling_wethersfield_cove_PD201227.jpg%3Futm_source%3Dcommons.wikimedia.org%26utm_campaign%3Dimageinfo%26utm_content%3Dthumbnail"
   },
   {
     "name": "I can't believe it's not analog butter",
     "showcase": false,
+    "gallery": true,
+    "says": "Chroma gain at sixteen times, the loop delayed 1.7µs and hauled off its timebase.",
     "query": "?p=3t.GKwxE4gDRYQDAMQfANADAqwiFZADALgDAJg1AAwAkAMAtAQAfAXQbwC0AiRACAQirGwroAE&mod=&srcb=none"
+  },
+  {
+    "name": "Wiggity",
+    "showcase": true,
+    "gallery": true,
+    "hero": true,
+    "says": "A 32 kHz oscillator laid over the picture, with the deflection bent by a Lorenz attractor.",
+    "query": "?p=je.CoDoBwEEAbAEAKwCAfABAKCZAgXgAw2IIwSIAyFYBrAKEjwGmAEEuB4ZVADsBgr4OiSMCQDEAQDgAgAkAUQEBAAQA9wCAMXBAgCJngIAlf4DAI3tAw&mod=bendUs:lorenz:0.390279:0.27759,hvRing:sine:0.037599:0.090209&srcb=synth&src=sweep"
+  },
+  {
+    "name": "Fuzzy color bars feedback+dissolver",
+    "showcase": false,
+    "gallery": true,
+    "says": "A detail enhancer regenerating past the point it howls, over a camera loop and 9 IRE of ground hum.",
+    "query": "?p=qQ.BrAEAMgCAKAGPahOAdACAJADAZwCAHolpAIAoB8AegA6ACgAqCAALABgAEQAEACYARDQAgDUAhsEA0oQsAEIBA&mod=&srcb=vhs+static"
+  },
+  {
+    "name": "Dark camera feedback",
+    "showcase": false,
+    "gallery": true,
+    "says": "A tape path — dropouts, wow, head switch — into a camera loop at three times gain.",
+    "query": "?p=CU.CqCsBQEEAcwDAHABXAC8aQLoAgLMBQCsAgOceQR0GPwBCzgAGADYAQAIAjgAuAIImAIAUALIAQCAAQAkArACAXgAFAJ4ADAGXABcApADAKAhAIgBCKwCAOQBAJgRApACAAAAAADwCAdIALAJAAAABAlUJOYDAKgBBcgBAQQ&mod=tapeLoopMm:smooth:0.05:0.0151&srcb=tv+static&src=tv+static"
+  },
+  {
+    "name": "Laser duck",
+    "showcase": false,
+    "gallery": true,
+    "says": "Arcs striking the picture at 120 IRE while the supply sags 5µs.",
+    "query": "?p=pa.KsgBFDQOGAGgAQDgAwJ4BvABIaQBBdAMOngsgJMC&mod=&srcb=ia-random&iurl=https:%2F%2Fthumb.wikimedia.org%2Fwikipedia%2Fcommons%2Fthumb%2Fb%2Fb4%2F20250724_mallard_duckling_wethersfield_cove_PD201227.jpg%2F1280px-20250724_mallard_duckling_wethersfield_cove_PD201227.jpg%3Futm_source%3Dcommons.wikimedia.org%26utm_campaign%3Dimageinfo%26utm_content%3Dthumbnail"
+  },
+  {
+    "name": "Rainborb",
+    "showcase": false,
+    "gallery": true,
+    "says": "A camera loop just over unity, turned 1.5° a lap, with the iris hunting.",
+    "query": "?p=zD.GNADE4QCRYQDAJgfANYEAvAlAOQBFNwBAdAFL0AIBCKcvgE&mod=&srcb=none"
+  },
+  {
+    "name": "Ridiculous rainbow",
+    "showcase": false,
+    "gallery": true,
+    "says": "A composite loop keyed on itself, 0.4µs of delay turning the hue every lap.",
+    "query": "?p=T2.GKAEE4QCRYQDAMQfAJ8FAowfFYwDAfAMAWAA8AIARAZgJEAIBCKcvgErYA&mod=&srcb=none"
+  },
+  {
+    "name": "Camera feedback + static",
+    "showcase": false,
+    "gallery": true,
+    "says": "FM over-deviation on the tape path, with the vertical oscillator drifting under it.",
+    "query": "?p=IK.GIgEEVQA9AEAYA6AAhHAAQBkDEgEkAMLoAIAtAEE6AICnAEB-CEBKACMAQAgAJADBVxwub4DAKHEAQ&mod=vFreqHz:smooth:0.08:0.0049,fbGain:smooth:0.24:0.06&src=vhs+static"
+  },
+  {
+    "name": "Collecting dust",
+    "showcase": false,
+    "gallery": true,
+    "says": "A camera loop with the read clock 1.5% out and the bus clipping.",
+    "query": "?p=R2.cqQCAKAfAHoAOgAoAKggACwAYABEABAAmAEQ0AIAoAMw-AIArAICjBAEBEjgLgCoAQ&mod=&srcb=vhs+static"
+  },
+  {
+    "name": "Fuzzy color bars feedback",
+    "showcase": false,
+    "gallery": false,
+    "says": "A camera loop at 0.73, defocused, settling on colour bars.",
+    "query": "?p=1w.cqQCAKAfAHoAOgAoAKggACwAYABEABAAmAEQ0AIA1AIwsAEIBA&mod=&srcb=vhs+static"
+  },
+  {
+    "name": "Ponderorb",
+    "showcase": false,
+    "gallery": false,
+    "says": "A camera loop turned 3.2° a lap, resonating at 1.35 MHz.",
+    "query": "?p=8A.GIgECaABABwAtCUpNCOQAwCsHACACgKUJQK0ARLEAQGcBwAEAIQCAJQDAEwCbACkAgCkAVKA2QE&mod="
   }
 ]

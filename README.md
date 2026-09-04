@@ -137,44 +137,44 @@ video cables together and posting tumblr gifs.
 
 <!-- generated:demos -->
 
-- Wiggity
-  https://videoskillet.com/app/?p=je.CoDoBwEEAbAEAKwCAfABAKCZAgXgAw2IIwSIAyFYBrAKEjwGmAEEuB4ZVADsBgr4OiSMCQDEAQDgAgAkAUQEBAAQA9wCAMXBAgCJngIAlf4DAI3tAw&mod=bendUs:lorenz:0.390279:0.27759,hvRing:sine:0.037599:0.090209&srcb=synth&src=sweep
-
-- Ridiculous rainbow
-  https://videoskillet.com/app/?p=T2.GKAEE4QCRYQDAMQfAJ8FAowfFYwDAfAMAWAA8AIARAZgJEAIBCKcvgErYA&mod=&srcb=none
-
-- Rainborb
-  https://videoskillet.com/app/?p=zD.GNADE4QCRYQDAJgfANYEAvAlAOQBFNwBAdAFL0AIBCKcvgE&mod=&srcb=none
+- Chaos black and white feedback
+  https://videoskillet.com/app/?p=Nj.FJADAMACAuQDNVAImAIAUALIARaQAwoUAIABANQDApQBAHgARAniAQECCVQk5gMAqAEAqAYAgJ9JA8gB&mod=tapeLoopMm:smooth:0.05:0.0151&srcb=tv+static
 
 - Wonkitize me
   https://videoskillet.com/app/?p=A7.BGgTjAk1NCPEAQCQIACkBgBMAZwhAVwAkAEAHADMARCQAwDQAwDAWwAMAJADANgDAIABAkAA0AEAiAEAwIkBAJADJEAIBCKgnAEfBACgAwCcAQmQAw&mod=&src=ia-random&srcb=tv+static&speeda=0.39
 
-- Chaos black and white feedback
-  https://videoskillet.com/app/?p=Nj.FJADAMACAuQDNVAImAIAUALIARaQAwoUAIABANQDApQBAHgARAniAQECCVQk5gMAqAEAqAYAgJ9JA8gB&mod=tapeLoopMm:smooth:0.05:0.0151&srcb=tv+static
+- I can't believe it's not analog butter
+  https://videoskillet.com/app/?p=3t.GKwxE4gDRYQDAMQfANADAqwiFZADALgDAJg1AAwAkAMAtAQAfAXQbwC0AiRACAQirGwroAE&mod=&srcb=none
+
+- Wiggity
+  https://videoskillet.com/app/?p=je.CoDoBwEEAbAEAKwCAfABAKCZAgXgAw2IIwSIAyFYBrAKEjwGmAEEuB4ZVADsBgr4OiSMCQDEAQDgAgAkAUQEBAAQA9wCAMXBAgCJngIAlf4DAI3tAw&mod=bendUs:lorenz:0.390279:0.27759,hvRing:sine:0.037599:0.090209&srcb=synth&src=sweep
 
 - Fuzzy color bars feedback+dissolver
   https://videoskillet.com/app/?p=qQ.BrAEAMgCAKAGPahOAdACAJADAZwCAHolpAIAoB8AegA6ACgAqCAALABgAEQAEACYARDQAgDUAhsEA0oQsAEIBA&mod=&srcb=vhs+static
 
-- Fuzzy color bars feedback
-  https://videoskillet.com/app/?p=1w.cqQCAKAfAHoAOgAoAKggACwAYABEABAAmAEQ0AIA1AIwsAEIBA&mod=&srcb=vhs+static
-
-- Camera feedback + static
-  https://videoskillet.com/app/?p=IK.GIgEEVQA9AEAYA6AAhHAAQBkDEgEkAMLoAIAtAEE6AICnAEB-CEBKACMAQAgAJADBVxwub4DAKHEAQ&mod=vFreqHz:smooth:0.08:0.0049,fbGain:smooth:0.24:0.06&src=vhs+static
-
 - Dark camera feedback
   https://videoskillet.com/app/?p=CU.CqCsBQEEAcwDAHABXAC8aQLoAgLMBQCsAgOceQR0GPwBCzgAGADYAQAIAjgAuAIImAIAUALIAQCAAQAkArACAXgAFAJ4ADAGXABcApADAKAhAIgBCKwCAOQBAJgRApACAAAAAADwCAdIALAJAAAABAlUJOYDAKgBBcgBAQQ&mod=tapeLoopMm:smooth:0.05:0.0151&srcb=tv+static&src=tv+static
-
-- Ponderorb
-  https://videoskillet.com/app/?p=8A.GIgECaABABwAtCUpNCOQAwCsHACACgKUJQK0ARLEAQGcBwAEAIQCAJQDAEwCbACkAgCkAVKA2QE&mod=
-
-- Collecting dust
-  https://videoskillet.com/app/?p=R2.cqQCAKAfAHoAOgAoAKggACwAYABEABAAmAEQ0AIAoAMw-AIArAICjBAEBEjgLgCoAQ&mod=&srcb=vhs+static
 
 - Laser duck
   https://videoskillet.com/app/?p=pa.KsgBFDQOGAGgAQDgAwJ4BvABIaQBBdAMOngsgJMC&mod=&srcb=ia-random&iurl=https:%2F%2Fthumb.wikimedia.org%2Fwikipedia%2Fcommons%2Fthumb%2Fb%2Fb4%2F20250724_mallard_duckling_wethersfield_cove_PD201227.jpg%2F1280px-20250724_mallard_duckling_wethersfield_cove_PD201227.jpg%3Futm_source%3Dcommons.wikimedia.org%26utm_campaign%3Dimageinfo%26utm_content%3Dthumbnail
 
-- I can't believe it's not analog butter
-  https://videoskillet.com/app/?p=3t.GKwxE4gDRYQDAMQfANADAqwiFZADALgDAJg1AAwAkAMAtAQAfAXQbwC0AiRACAQirGwroAE&mod=&srcb=none
+- Rainborb
+  https://videoskillet.com/app/?p=zD.GNADE4QCRYQDAJgfANYEAvAlAOQBFNwBAdAFL0AIBCKcvgE&mod=&srcb=none
+
+- Ridiculous rainbow
+  https://videoskillet.com/app/?p=T2.GKAEE4QCRYQDAMQfAJ8FAowfFYwDAfAMAWAA8AIARAZgJEAIBCKcvgErYA&mod=&srcb=none
+
+- Camera feedback + static
+  https://videoskillet.com/app/?p=IK.GIgEEVQA9AEAYA6AAhHAAQBkDEgEkAMLoAIAtAEE6AICnAEB-CEBKACMAQAgAJADBVxwub4DAKHEAQ&mod=vFreqHz:smooth:0.08:0.0049,fbGain:smooth:0.24:0.06&src=vhs+static
+
+- Collecting dust
+  https://videoskillet.com/app/?p=R2.cqQCAKAfAHoAOgAoAKggACwAYABEABAAmAEQ0AIAoAMw-AIArAICjBAEBEjgLgCoAQ&mod=&srcb=vhs+static
+
+- Fuzzy color bars feedback
+  https://videoskillet.com/app/?p=1w.cqQCAKAfAHoAOgAoAKggACwAYABEABAAmAEQ0AIA1AIwsAEIBA&mod=&srcb=vhs+static
+
+- Ponderorb
+  https://videoskillet.com/app/?p=8A.GIgECaABABwAtCUpNCOQAwCsHACACgKUJQK0ARLEAQGcBwAEAIQCAJQDAEwCbACkAgCkAVKA2QE&mod=
 
 <!-- /generated:demos -->
 
