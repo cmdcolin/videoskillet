@@ -1,6 +1,8 @@
 .DS_Store
 node_modules/
 dist/
+# astro's generated types and content cache
+.astro/
 *.tsbuildinfo
 clips/
 # contact sheets from scripts/contact.mjs — a working artifact of one screening

@@ -1237,22 +1237,40 @@ keep that.
 ## Docs site
 
 `pnpm guide` (also run by `pnpm build`) renders the reader-facing markdown into
-`dist/guide/`, which Pages serves at `/videoskillet.js/guide/`. Markdown stays
-the source of truth and stays readable on GitHub; the builder only adds the nav,
-the live links, and styling. To add a page, add it to `PAGES` in
-[`../scripts/build-guide.mjs`](../scripts/build-guide.mjs).
+`dist/guide/`, which Pages serves at `/guide/`. Markdown stays the source of
+truth and stays readable on GitHub; the site adds the nav, the live links and
+the styling.
+
+It is an Astro project rooted at [`../guide`](../guide) and configured in
+[`../astro.config.mjs`](../astro.config.mjs). `docs/` is a content collection, so
+the markdown is read where it already lives. To add a page, add it to `GUIDE` or
+`NOTES` in [`../guide/lib/pages.mjs`](../guide/lib/pages.mjs) — the decision
+records and the handoffs are read off their own directories, so one of those is
+a page as soon as it is a file.
+
+`pnpm guide:dev` serves the site with live reload, which is the way to work on
+it: a save re-renders the page you are looking at.
 
 Everything else the site chrome shows is **derived from the markdown, never
 authored twice** — so a heading, a page or a first paragraph is edited in one
 place and the site follows:
 
-- the **"on this page" nav**, from the h2/h3 outline the heading rule collects
-  into `env.headings`. Pages with fewer than five sections don't get one.
-- the **previous/next pager**, from the order of `PAGES`.
+- the **"on this page" nav**, from the h2/h3 outline
+  [`../guide/lib/rehype-guide.mjs`](../guide/lib/rehype-guide.mjs) collects while
+  it is setting the heading ids. Pages with fewer than five sections don't get
+  one.
+- the **previous/next pager**, from the order of the page's own group.
 - the **meta description and `og:` tags**, from each page's first paragraph, cut
   at a sentence.
+- the **"open this in the app" link** under a figure, joined to
+  `docs/img/shots.json` on the image's filename.
 
-The site has one theme and it is dark, so the builder also collapses each
+The figures are copied flat into `dist/guide/img/` rather than handed to Astro's
+asset pipeline, because the path is load-bearing in two places: the landing page
+loads `signal-path-callout.jpg` out of it directly, and `shots.json` joins a
+figure to the session that produced it on the bare filename.
+
+The site has one theme and it is dark, so the renderer also collapses each
 diagram's `<picture>` down to the dark SVG. Left alone, `prefers-color-scheme`
 would hand a light-mode visitor pale pastel diagrams on a near-black page.
 
@@ -1261,13 +1279,17 @@ section nav only at the width where it is a sidebar rather than a disclosure,
 and marking the section being read. Both are enhancements — with the script gone
 the nav is a closed `<details>` and everything still works.
 
+**The stylesheet and that script are inlined into every page deliberately.**
+`guidecheck.mjs` below loads the built pages over `file://` to measure them, and
+a linked stylesheet would leave it measuring an unstyled page and reporting that
+all is well.
+
 ### Checking the layout
 
 `pnpm guide:check` builds the site, then loads every page at 1352px and at 390px
 and fails on anything wider than the viewport that isn't a deliberate scroll
 container ([`../scripts/guidecheck.mjs`](../scripts/guidecheck.mjs)). It leaves
-screenshots in `/tmp/guidecheck` — the fastest way to see all twelve renders at
-once.
+screenshots in `/tmp/guidecheck` — the fastest way to see all 54 renders at once.
 
 The phone arm is the one that earns its keep. The desktop layout has slack in
 it; 390px does not, and both faults the redesign fixed were invisible on a

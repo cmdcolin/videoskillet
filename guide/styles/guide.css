@@ -1,0 +1,601 @@
+:root {
+  --fg: #e6e6ee;
+  --fg2: #c6c6d6;
+  --fg3: #a6a6ba;
+  --fg4: #85859a;
+  --bg: #0e0e11;
+  --card: #16161a;
+  --border: #2e2e38;
+  --accent: #7fd0a0;
+  --mono: ui-monospace, 'SF Mono', Menlo, monospace;
+  /* The reading column, and the gutter the section nav sits in beside it. */
+  --measure: 45rem;
+  --aside: 15rem;
+  --gap: 3rem;
+  --bar: 3.25rem;
+}
+* {
+  box-sizing: border-box;
+  min-width: 0;
+}
+html {
+  scroll-behavior: smooth;
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  line-height: 1.65;
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    sans-serif;
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+}
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+::selection {
+  background: rgba(127, 208, 160, 0.28);
+}
+
+.skip {
+  position: absolute;
+  left: 8px;
+  top: -3rem;
+  z-index: 20;
+  padding: 8px 14px;
+  background: var(--card);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  color: var(--accent);
+  text-decoration: none;
+  transition: top 0.15s;
+}
+.skip:focus {
+  top: 8px;
+}
+
+/* ── header ────────────────────────────────────────────────────────────────
+   Two rows on a phone (identity + call to action, then the page links as one
+   scrolling line) and one row from tablet up. It only sticks where there is
+   vertical room to spare: on a phone a sticky bar cost three wrapped rows of
+   an 844px screen, and the section nav and the pager cover what it was for. */
+header {
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+}
+.bar {
+  max-width: calc(var(--measure) + var(--aside) + var(--gap));
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 10px 20px;
+  flex-wrap: wrap;
+  padding: 10px max(1.15rem, env(safe-area-inset-left)) 0;
+}
+.brand {
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--fg);
+  text-decoration: none;
+  margin-right: auto;
+  font-size: 17px;
+}
+.brand span {
+  color: var(--fg4);
+  font-weight: 400;
+  margin-left: 7px;
+  font-size: 14px;
+}
+.cta {
+  color: var(--accent);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  border: 1px solid rgba(127, 208, 160, 0.45);
+  border-radius: 999px;
+  padding: 4px 13px;
+  white-space: nowrap;
+  background: rgba(127, 208, 160, 0.07);
+}
+.cta:hover {
+  background: rgba(127, 208, 160, 0.16);
+}
+/* order 1 keeps the links below the identity row while the bar wraps, so the
+   phone header is two rows rather than the three the old one wrapped into. */
+.pages {
+  display: flex;
+  gap: 22px;
+  width: 100%;
+  order: 1;
+  overflow-x: auto;
+  padding: 4px 0 0;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+/* Set by script on a row that actually has more beyond it, and on the end that
+   has it, so the fade is a promise of something rather than a soft edge on the
+   last link — and so a row scrolled off its start does not cut a word in half. */
+.pages.more-right {
+  mask-image: linear-gradient(90deg, #000 calc(100% - 40px), transparent);
+}
+.pages.more-left {
+  mask-image: linear-gradient(90deg, transparent, #000 40px);
+}
+.pages.more-left.more-right {
+  mask-image: linear-gradient(
+    90deg,
+    transparent,
+    #000 40px,
+    #000 calc(100% - 40px),
+    transparent
+  );
+}
+.pages::-webkit-scrollbar {
+  display: none;
+}
+.pages a {
+  color: var(--fg3);
+  text-decoration: none;
+  font-size: 14px;
+  white-space: nowrap;
+  padding: 6px 0 9px;
+  border-bottom: 2px solid transparent;
+  flex: none; /* or they shrink past their own text and overlap */
+}
+.pages a:hover {
+  color: var(--fg);
+}
+.pages a.on {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+/* ── layout ─────────────────────────────────────────────────────────────── */
+.wrap {
+  max-width: calc(var(--measure) + var(--aside) + var(--gap));
+  margin: 0 auto;
+  padding: 0 max(1.15rem, env(safe-area-inset-left)) 5rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 var(--gap);
+}
+main {
+  grid-column: 1;
+  min-width: 0;
+}
+
+/* ── prose ──────────────────────────────────────────────────────────────── */
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+h1 {
+  font-size: clamp(1.85rem, 1.35rem + 2.2vw, 2.55rem);
+  line-height: 1.15;
+  margin: 1.9rem 0 0.5rem;
+  letter-spacing: -0.015em;
+}
+h2 {
+  font-size: clamp(1.3rem, 1.12rem + 0.8vw, 1.6rem);
+  line-height: 1.25;
+  margin: 3rem 0 0.5rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--border);
+  letter-spacing: -0.01em;
+}
+h3 {
+  font-size: 1.1rem;
+  margin: 1.9rem 0 0.25rem;
+  color: var(--fg2);
+}
+h2 .anchor,
+h3 .anchor {
+  margin-left: 0.45em;
+  color: var(--fg4);
+  text-decoration: none;
+  font-weight: 400;
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+h2:hover .anchor,
+h3:hover .anchor,
+.anchor:focus-visible {
+  opacity: 1;
+}
+/* Without this an anchored heading lands under the sticky bar — which is every
+   link in the effects page's own table of contents. */
+h1,
+h2,
+h3 {
+  scroll-margin-top: 1.5rem;
+}
+p,
+li {
+  color: var(--fg2);
+}
+p {
+  margin: 0 0 1rem;
+}
+li {
+  margin-bottom: 0.3rem;
+}
+ul,
+ol {
+  padding-left: 1.35rem;
+}
+/* The paragraph under the h1 is the page's own summary — lead with it. */
+main > p:first-of-type {
+  font-size: 1.09rem;
+  color: var(--fg);
+  line-height: 1.6;
+}
+a {
+  color: var(--accent);
+  text-underline-offset: 2px;
+}
+a:hover {
+  text-decoration-thickness: 2px;
+}
+strong {
+  color: var(--fg);
+}
+code {
+  font-family: var(--mono);
+  font-size: 0.86em;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 5px;
+  overflow-wrap: break-word;
+}
+pre {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.85rem 0.95rem;
+  overflow-x: auto;
+}
+pre code {
+  background: none;
+  border: 0;
+  padding: 0;
+}
+blockquote {
+  margin: 1rem 0;
+  padding: 0.15rem 1rem;
+  border-left: 3px solid var(--border);
+  color: var(--fg3);
+}
+img,
+video {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+figure {
+  margin: 1.6rem 0;
+}
+figure img {
+  display: block;
+  border: 1px solid var(--border);
+}
+figcaption {
+  margin-top: 0.4rem;
+  font-size: 0.82rem;
+  color: var(--fg4);
+}
+figcaption a {
+  text-decoration: none;
+}
+figcaption a:hover {
+  text-decoration: underline;
+}
+video {
+  border: 1px solid var(--border);
+  display: block;
+  margin: 1.6rem 0;
+}
+
+/* Scrolls rather than crushing its columns; the shadow says there is more. */
+.tablewrap {
+  overflow-x: auto;
+  margin: 1.3rem 0;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background:
+    linear-gradient(90deg, var(--bg) 30%, transparent) left / 34px 100%
+      no-repeat,
+    linear-gradient(-90deg, var(--bg) 30%, transparent) right / 34px 100%
+      no-repeat,
+    radial-gradient(farthest-side at 0 50%, rgba(0, 0, 0, 0.5), transparent)
+      left / 14px 100% no-repeat,
+    radial-gradient(farthest-side at 100% 50%, rgba(0, 0, 0, 0.5), transparent)
+      right / 14px 100% no-repeat;
+  background-attachment: local, local, scroll, scroll;
+}
+/* A floor on the width so a phone scrolls the table sideways instead of
+   reflowing "Sources and wiring" onto two lines in a 90px column. */
+table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 26rem;
+  font-size: 0.94rem;
+}
+/* Except the picture grids, which are headerless and shrink happily. */
+table:has(th:empty) {
+  min-width: 0;
+}
+th,
+td {
+  border-bottom: 1px solid var(--border);
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  vertical-align: top;
+}
+tr:last-child td {
+  border-bottom: 0;
+}
+th {
+  background: var(--card);
+  color: var(--fg);
+  font-weight: 600;
+}
+/* The picture grids in the markdown are headerless tables of images. */
+th:empty {
+  padding: 0;
+  border: 0;
+}
+td img {
+  border-radius: 5px;
+}
+kbd {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  background: var(--card);
+  border: 1px solid var(--fg4);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  padding: 1px 6px;
+  white-space: nowrap;
+}
+sub,
+sup {
+  color: var(--fg4);
+}
+hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 2.5rem 0;
+}
+
+/* ── on this page ───────────────────────────────────────────────────────────
+   A disclosure on a phone, where it sits above the title collapsed; a sticky
+   column in the gutter from 68rem up, where the space was empty anyway. The
+   open state is set by script per width — an attribute no media query reaches,
+   and closed is the safe default if the script never runs. */
+.toc {
+  margin: 1.25rem 0 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.toc > summary {
+  cursor: pointer;
+  padding: 0.6rem 0.85rem;
+  color: var(--fg3);
+  font-size: 0.83rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  list-style: none;
+}
+.toc > summary::-webkit-details-marker {
+  display: none;
+}
+.toc > summary::after {
+  content: ' ▾';
+  color: var(--fg4);
+}
+.toc[open] > summary::after {
+  content: ' ▴';
+}
+.toc nav {
+  display: flex;
+  flex-direction: column;
+  padding: 0 0 0.6rem;
+}
+.toc a {
+  color: var(--fg3);
+  text-decoration: none;
+  font-size: 0.88rem;
+  line-height: 1.35;
+  padding: 0.32rem 0.85rem;
+  border-left: 2px solid transparent;
+}
+.toc a:hover {
+  color: var(--fg);
+  background: var(--card);
+}
+.toc a.l3 {
+  padding-left: 1.7rem;
+  font-size: 0.83rem;
+  color: var(--fg4);
+}
+.toc a.here {
+  color: var(--accent);
+  border-left-color: var(--accent);
+}
+
+/* ── pager ──────────────────────────────────────────────────────────────── */
+.pager {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-top: 3.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+.pager a {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  text-decoration: none;
+  background: var(--card);
+}
+.pager a:hover {
+  border-color: var(--accent);
+}
+.pager a.next {
+  text-align: right;
+}
+.pager span {
+  font-size: 0.78rem;
+  color: var(--fg4);
+}
+.pager b {
+  color: var(--fg);
+  font-size: 0.98rem;
+}
+
+/* ── footer ─────────────────────────────────────────────────────────────── */
+footer {
+  border-top: 1px solid var(--border);
+  background: var(--card);
+}
+.foot {
+  max-width: calc(var(--measure) + var(--aside) + var(--gap));
+  margin: 0 auto;
+  padding: 1.75rem max(1.15rem, env(safe-area-inset-left))
+    calc(2rem + env(safe-area-inset-bottom));
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.35rem;
+  align-items: baseline;
+  font-size: 0.86rem;
+}
+.foot a {
+  color: var(--fg3);
+  text-decoration: none;
+}
+.foot a:hover {
+  color: var(--fg);
+}
+.foot .sep {
+  flex-basis: 100%;
+  height: 0;
+}
+.foot small {
+  color: var(--fg4);
+}
+
+@media (min-width: 46rem) {
+  body {
+    font-size: 17px;
+  }
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  @supports (backdrop-filter: blur(8px)) {
+    header {
+      background: rgba(14, 14, 17, 0.88);
+      backdrop-filter: blur(8px);
+    }
+  }
+  .bar {
+    flex-wrap: nowrap;
+    padding-bottom: 0;
+    height: var(--bar);
+    align-items: stretch;
+  }
+  .brand,
+  .cta {
+    align-self: center;
+    margin-right: 0;
+  }
+  /* The identity and the call to action keep their width and the page links
+     give theirs up, so the row that scrolls is the one built to scroll. A brand
+     free to shrink is narrower than its own text and paints "videoskillet.js
+     guide" straight over the first nav link; a call to action free to shrink
+     put "Install" underneath "Open the app". */
+  .brand,
+  .cta {
+    flex: none;
+  }
+  .pages {
+    width: auto;
+    order: 0;
+    margin: 0 auto 0 1.6rem;
+    padding: 0;
+    gap: 16px;
+    overflow-x: auto;
+  }
+  .pages a {
+    display: flex;
+    align-items: center;
+    padding: 0;
+  }
+  /* Clear the sticky bar when an anchor scrolls a heading into view. */
+  h1,
+  h2,
+  h3 {
+    scroll-margin-top: calc(var(--bar) + 1rem);
+  }
+}
+
+@media (min-width: 68rem) {
+  /* Held open on every page, section nav or not. A page without one used to
+     centre its column, which put the h1 124px right of the brand above it and
+     shifted the whole text sideways on the way to a page that has one. An
+     empty gutter is quieter than a column that moves under the reader. */
+  .wrap {
+    grid-template-columns: minmax(0, var(--measure)) var(--aside);
+  }
+  main {
+    padding-top: 0.5rem;
+  }
+  .toc {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: start;
+    position: sticky;
+    top: calc(var(--bar) + 1.5rem);
+    margin-top: 4.4rem;
+    border: 0;
+    border-left: 1px solid var(--border);
+    border-radius: 0;
+    max-height: calc(100vh - var(--bar) - 3rem);
+    overflow-y: auto;
+  }
+  .toc {
+    scrollbar-width: thin;
+  }
+  /* No disclosure arrow where it is not a disclosure. The [open] rule above is
+     the more specific one, so it has to be turned off by name. */
+  /* Sticky inside its own scroll, or the label leaves with the list. */
+  .toc > summary {
+    pointer-events: none;
+    padding-left: 0.85rem;
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+  }
+  .toc > summary::after,
+  .toc[open] > summary::after {
+    content: none;
+  }
+}

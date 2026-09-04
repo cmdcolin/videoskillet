@@ -1,0 +1,130 @@
+---
+import spy from '../scripts/spy.js?raw'
+import css from '../styles/guide.css?raw'
+
+const { spec, outline, summary } = Astro.props
+
+const SITE = 'https://videoskillet.com/'
+// The site's own landing page is the directory, not the filename.
+const url = out => `${SITE}guide/${out === 'index.html' ? '' : out}`
+
+// Short pages don't get a section nav — four sections you can see by scrolling
+// are not worth one — but the effects page is 25,000 pixels tall on a phone.
+const NAV_MIN = 5
+
+const title = `${spec.nav} — videoskillet.js`
+const canonical = url(spec.out)
+const pages = spec.group.pages
+const at = pages.findIndex(page => page.out === spec.out)
+const prev = pages[at - 1]
+const next = pages[at + 1]
+const marked = spec.group.mark(spec)
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>{title}</title>
+    <meta name="description" content={summary} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg" />
+    <meta name="theme-color" content="#0e0e11" />
+    <meta name="color-scheme" content="dark" />
+    <!-- A guide page shared on its own unfurls as itself, not as a bare filename. -->
+    <meta property="og:type" content="article" />
+    <meta property="og:site_name" content="videoskillet.js" />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={summary} />
+    <meta property="og:image" content={`${SITE}og.jpg`} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <!-- Inlined rather than linked: `scripts/guidecheck.mjs` loads these pages
+         over file:// to measure overflow, and a linked stylesheet would leave it
+         measuring an unstyled page and reporting nothing. -->
+    <style is:inline set:html={css}></style>
+  </head>
+  <body id="top">
+    <a class="skip" href="#content">Skip to content</a>
+    <header>
+      <div class="bar">
+        <a class="brand" href="index.html"
+          >videoskillet.js<span>{spec.group.label}</span></a
+        >
+        <nav class="pages" aria-label="Guide pages">
+          {
+            spec.group.nav.map(page => (
+              <a
+                class={page.out === marked ? 'on' : undefined}
+                aria-current={page.out === marked ? 'page' : undefined}
+                href={page.out}
+              >
+                {page.nav}
+              </a>
+            ))
+          }
+        </nav>
+        <a class="cta" href="../">Open the app ↗</a>
+      </div>
+    </header>
+    <div class="wrap">
+      {
+        outline.length >= NAV_MIN && (
+          <details class="toc">
+            <summary>On this page</summary>
+            <nav aria-label="On this page">
+              {outline.map(head => (
+                <a class={`l${head.level}`} href={`#${head.id}`}>
+                  {head.text}
+                </a>
+              ))}
+            </nav>
+          </details>
+        )
+      }
+      <main id="content">
+        <slot />
+        <nav class="pager" aria-label="Pages">
+          {
+            prev === undefined ? (
+              <span />
+            ) : (
+              <a class="prev" href={prev.out}>
+                <span>← Previous</span>
+                <b>{prev.nav}</b>
+              </a>
+            )
+          }
+          {
+            next === undefined ? (
+              <span />
+            ) : (
+              <a class="next" href={next.out}>
+                <span>Next →</span>
+                <b>{next.nav}</b>
+              </a>
+            )
+          }
+        </nav>
+      </main>
+    </div>
+    <footer>
+      <div class="foot">
+        <a href="../">Live demo ↗</a>
+        <a href={spec.group.foot.href}>{spec.group.foot.text}</a>
+        <a href="https://github.com/cmdcolin/videoskillet">Source ↗</a>
+        <a href="https://github.com/cmdcolin/videoskillet/issues">Issues ↗</a>
+        <a href="#top">Back to top ↑</a>
+        <span class="sep"></span>
+        <small
+          >MIT. Needs a WebGPU browser — Chrome, Edge, Safari 26+, or Firefox
+          Nightly on Linux.</small
+        >
+      </div>
+    </footer>
+    <script is:inline set:html={spy}></script>
+  </body>
+</html>

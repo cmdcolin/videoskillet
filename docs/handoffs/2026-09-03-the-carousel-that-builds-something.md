@@ -18,6 +18,12 @@ first look. `vite-plugin-guide.ts` serves figures straight out of `docs/img`
 (which is where the builder copies them from, so a figure is right without a
 guide build having been run) and pages out of `dist/guide` when there is one.
 
+**Since superseded.** The docs site is an Astro project now
+([`../DEVELOPMENT.md`](../DEVELOPMENT.md) › Docs site), and its dev server
+renders the markdown live under `/guide/`, so `scripts/build-guide.mjs` and
+`vite-plugin-guide.ts` are both gone. The fault this paragraph describes is what
+that dev server exists to make impossible.
+
 **Nothing on the stage moved on arrival.** It played only after a `Play` chip
 that sat in a row of visually identical tab chips. It autoplays on
 scroll-into-view now and the chip is gone; the tabs are the only control, and

@@ -16,3 +16,5 @@ allowBuilds:
   re2: true
   '@firebase/util': false
   protobufjs: false
+minimumReleaseAgeExclude:
+  - astro@7.3.1

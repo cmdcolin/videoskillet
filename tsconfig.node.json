@@ -17,7 +17,6 @@
   },
   "include": [
     "vite.config.ts",
-    "vite-plugin-guide.ts",
     "vite-plugin-wgsl.ts",
     "vite-plugin-ytdlp.ts",
     "package.json"
