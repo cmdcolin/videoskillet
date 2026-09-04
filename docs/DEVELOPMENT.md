@@ -1068,11 +1068,17 @@ Needs Firefox Nightly, ImageMagick, ffmpeg (clips) and pngquant (optional).
 
 ## The landing page
 
-Nothing on `index.html` between its generated markers is written by hand:
+[`../site/pages/index.astro`](../site/pages/index.astro), built by Astro with
+the guide (§ Docs site). Nothing on it is written by hand: the hero, the
+carousel and the gallery are components that map over the two lists below, so
+adding a demo or a slide is adding it to the list and recording it.
+
+The README's "Cool demos" bullets are markdown in a repo rather than a page a
+component can render, so those are still generated into it:
 
 ```
-pnpm demos                       # rewrite the generated blocks
-pnpm demos:check                 # fail if a checked-in copy is stale (pnpm build runs this)
+pnpm demos                       # rewrite the README's generated block
+pnpm demos:check                 # fail if the checked-in copy is stale (pnpm build runs this)
 ```
 
 Two lists feed it. [`../demos.json`](../demos.json) is the looks — the README's
@@ -1149,12 +1155,13 @@ reason: an OS cursor in a phone screenshot is a picture of something that does
 not happen.
 
 The breakpoint between the two is written down **once**, in `NARROW.at`.
-`demogen.mjs` puts it in the `<source media>` of the stage's first still; the
-browser picks the still through it; the stage takes its shape from that still
-(the first slide is left in flow and the rest lie over it, so there is no
-`aspect-ratio` and no media query in the CSS at all); and the page reads the
-same string back off the element to choose which clips to play. One declaration,
-four things that have to agree.
+[`../site/components/Carousel.astro`](../site/components/Carousel.astro) puts it
+in the `<source media>` of the stage's first still; the browser picks the still
+through it; the stage takes its shape from that still (the first slide is left
+in flow and the rest lie over it, so there is no `aspect-ratio` and no media
+query in the CSS at all); and the page reads the same string back off the
+element to choose which clips to play. One declaration, four things that have to
+agree.
 
 A slide is a look, the panel state to open, and a timeline of beats — hold,
 scroll, move the pointer, press, drag a slider. Three things about writing one:

@@ -32,16 +32,15 @@ export default defineConfig(({ command }) => ({
     __APP_VERSION__: JSON.stringify(pkg.version),
     __GIT_SHA__: JSON.stringify(gitSha()),
   },
-  // Four pages: the landing page a stranger arrives on, the instrument, and the
+  // Three pages, each its own engine on a whole screen: the instrument, and the
   // two labelling tools that build a preference dataset out of it (src/vote) —
   // pairs, and the stream. Each is its own entry rather than a dialog because it
-  // wants the whole screen and its own engine, and because nothing in it should
-  // cost the app a byte — a visitor to the landing page downloads none of them,
-  // and it ships no script of its own either.
+  // wants the whole screen, and because nothing in it should cost the app a byte
+  // — a visitor to the landing page downloads none of them.
   //
-  // Naming any input at all means naming index.html too: rollupOptions.input
-  // replaces vite's default entry rather than adding to it, so leaving it out
-  // would build a project whose main page is the vote page.
+  // The landing page is Astro's (`site/pages/index.astro`) and is not an entry
+  // here. It ships no bundle: its stylesheet and its script are inlined, so a
+  // stranger arriving pays for one document and the picture in it.
   //
   // **Every page is a directory one level below the root, and that is load-
   // bearing.** `public/` lands at the root, the base is relative (above), so a
@@ -57,7 +56,6 @@ export default defineConfig(({ command }) => ({
     emptyOutDir: false,
     rollupOptions: {
       input: {
-        landing: 'index.html',
         app: 'app/index.html',
         vote: 'vote/index.html',
         stream: 'stream/index.html',
@@ -91,7 +89,9 @@ export default defineConfig(({ command }) => ({
   // Spread over the defaults rather than replacing them, so `node_modules` and
   // `dist` stay excluded — passing a bare array here silently drops both.
   test: {
-    exclude: [...configDefaults.exclude, '**/.claude/**'],
+    // `site/` is the other project's (vitest.astro.config.ts) — its tests
+    // import `.astro` components, which only Astro's plugins can transform.
+    exclude: [...configDefaults.exclude, '**/.claude/**', 'site/**'],
     testTimeout: 30000,
   },
 }))

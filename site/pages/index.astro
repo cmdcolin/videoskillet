@@ -1,0 +1,158 @@
+---
+import Carousel from '../components/Carousel.astro'
+import Gallery from '../components/Gallery.astro'
+import Hero from '../components/Hero.astro'
+import script from '../scripts/landing.js?raw'
+import css from '../styles/landing.css?raw'
+import tokens from '../styles/tokens.css?raw'
+
+const SITE = 'https://videoskillet.com/'
+const TITLE = 'videoskillet.js — WebGPU composite video emulation'
+const UNFURL =
+  'Analog video glitches — dot crawl, dropouts, head-switch wobble, video feedback — that fall out of a simulated NTSC signal path, live in the browser.'
+---
+
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{TITLE}</title>
+    <meta
+      name="description"
+      content="Real-time NTSC / VHS / composite-video glitch simulator in WebGPU — dot crawl, dropouts, head-switch wobble and video feedback emerge from a simulated analog signal, not filters painted on top."
+    />
+    <link rel="canonical" href={SITE} />
+    <meta name="theme-color" content="#0e0e11" />
+    <meta name="color-scheme" content="dark" />
+
+    <!-- Open Graph / Twitter: how the link unfurls when shared -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="videoskillet.js" />
+    <meta property="og:url" content={SITE} />
+    <meta property="og:title" content={TITLE} />
+    <meta property="og:description" content={UNFURL} />
+    <meta property="og:image" content={`${SITE}og.jpg`} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={TITLE} />
+    <meta name="twitter:description" content={UNFURL} />
+    <meta name="twitter:image" content={`${SITE}og.jpg`} />
+
+    <!-- The palette and the reset are `tokens.css`, which the guide reads too,
+         so arriving here and clicking through to the docs reads as one site
+         rather than two. Inlined rather than linked: this page is one screen of
+         chrome over a picture, and a stylesheet it has to fetch first is a
+         second round trip before anything is painted. -->
+    <style is:inline set:html={tokens + css}></style>
+  </head>
+  <body>
+    <header class="hero">
+      <Hero />
+      <div class="heroScan"></div>
+      <div class="heroScrim"></div>
+      <div class="wrap heroBody">
+        <p class="brand">
+          <img src="/favicon.svg" alt="" />
+          videoskillet.js
+        </p>
+        <h1>WebGPU composite video emulation.</h1>
+        <p class="cta">
+          <a class="btn primary" href="/app/">Open the app →</a>
+          <a class="btn" href="/guide/">Guide</a>
+        </p>
+        <p class="req">
+          Every fault is a consequence of the signal, not an effect drawn on the
+          picture.
+        </p>
+        <!-- Asked here rather than found out on the other side of the button.
+             The app opens on a screen that says this browser cannot run it,
+             which is the right screen and the wrong moment: whoever is reading
+             it has already clicked through from a page that promised a picture.
+             Hidden until the check fails, so a browser that can run it is told
+             nothing. -->
+        <p class="req gpuwarn" hidden>
+          This browser has no WebGPU. The signal path is compute shaders with no
+          fallback renderer, so the app will open on a screen saying so —
+          <a href="/guide/faq.html#what-does-it-need-to-run">what runs it</a>.
+        </p>
+      </div>
+    </header>
+
+    <!-- The app being used, which is the one thing about this program a
+         stranger cannot work out from a picture of what it makes. Three
+         recordings of the window: what it is, one control moving and the
+         picture answering, and the map the controls hang off. The stage, the
+         tabs and the captions all come from `scripts/reel.mjs`. -->
+    <section>
+      <div class="wrap wide">
+        <Carousel />
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap wide">
+        <p class="sub">Open one and you land on that exact board.</p>
+        <Gallery />
+      </div>
+    </section>
+
+    <section class="tech">
+      <div class="wrap">
+        <h2>How it works</h2>
+        <p>
+          A frame of NTSC is 525 lines of 910 voltage samples. That array lives
+          on the GPU, and a chain of compute shaders rewrites it sixty times a
+          second: encode the picture into the waveform, damage it, decode it
+          back.
+        </p>
+        <p>
+          The faults act on the waveform. A loose cable, a bad ground or a
+          slipping vertical hold change the voltages, and the dot crawl, tearing
+          and hue shifts come out of the decoder on their own.
+        </p>
+        <p>
+          The screen can be fed back into the mixer, or looked at by a camera,
+          so feedback runs through the whole chain too.
+        </p>
+        <p>
+          <a href="/guide/faq.html#how-does-it-actually-work"
+            >Read the full explanation</a
+          >
+        </p>
+        <figure>
+          <img
+            src="/guide/img/signal-path-callout.jpg"
+            alt="The app window with the signal path map at the head of the sidebar and enlarged over the picture: SOURCE A and SOURCE B into MIX, then CHANNEL, RECEIVER and SCREEN, with camera and mixer returns arching back over the trunk"
+            width="1800"
+            height="1227"
+            loading="lazy"
+          />
+          <figcaption>
+            The signal path, as the app draws it. Click a stage and its controls
+            open under it.
+          </figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <footer class="wrap">
+      <nav>
+        <a href="/app/">Open the app</a>
+        <a href="/guide/">Guide</a>
+        <a href="/guide/faq.html">FAQ</a>
+        <a href="/guide/architecture.html">How it is built</a>
+        <a href="https://github.com/cmdcolin/videoskillet">GitHub</a>
+      </nav>
+      <p>
+        MIT licensed. Built by
+        <a href="https://github.com/cmdcolin">cmdcolin</a>.
+      </p>
+    </footer>
+    <script is:inline set:html={script}></script>
+  </body>
+</html>

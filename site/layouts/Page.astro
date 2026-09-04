@@ -1,6 +1,7 @@
 ---
 import spy from '../scripts/spy.js?raw'
 import css from '../styles/guide.css?raw'
+import tokens from '../styles/tokens.css?raw'
 
 const { spec, outline, summary } = Astro.props
 
@@ -45,7 +46,7 @@ const marked = spec.group.mark(spec)
     <!-- Inlined rather than linked: `scripts/guidecheck.mjs` loads these pages
          over file:// to measure overflow, and a linked stylesheet would leave it
          measuring an unstyled page and reporting nothing. -->
-    <style is:inline set:html={css}></style>
+    <style is:inline set:html={tokens + css}></style>
   </head>
   <body id="top">
     <a class="skip" href="#content">Skip to content</a>

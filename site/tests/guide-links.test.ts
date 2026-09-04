@@ -1,18 +1,23 @@
-import { expect, test } from 'vitest'
+import { experimental_AstroContainer } from 'astro/container'
+import { beforeAll, expect, test } from 'vitest'
 
-import { ALL, slug } from '../../site/lib/pages.mjs'
-import { GUIDE_URL } from './links'
+import { GUIDE_URL } from '../../src/ui/links'
+import { ALL, slug } from '../lib/pages.mjs'
+import Landing from '../pages/index.astro'
 
-import { existsSync, readFileSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 
 // The landing page and the app menu are the two places a stranger walks into the
 // guide, and they walk in by page filename and section anchor. Nothing else
 // checks them: the guide is rendered from markdown that has no idea these links
 // exist, so a renamed page or a reworded heading breaks them silently.
-const landing = readFileSync('index.html', 'utf8')
-const into = [...landing.matchAll(/(?:href|src)="\/guide\/([^"]*)"/g)].map(
-  m => m[1],
-)
+let into: string[] = []
+
+beforeAll(async () => {
+  const container = await experimental_AstroContainer.create()
+  const page = await container.renderToString(Landing)
+  into = [...page.matchAll(/(?:href|src)="\/guide\/([^"]*)"/g)].map(m => m[1])
+})
 
 const headings = (file: string) =>
   readFileSync(file, 'utf8')
@@ -30,7 +35,7 @@ test('every page the landing page links to is a page the guide renders', () => {
     if (path !== '' && !path.startsWith('img/')) {
       expect(
         ALL.map(spec => spec.out),
-        `index.html links to /guide/${path}`,
+        `the landing page links to /guide/${path}`,
       ).toContain(path)
     }
   }
@@ -40,7 +45,10 @@ test('every figure the landing page pulls out of the guide exists', () => {
   const figures = into.filter(link => link.startsWith('img/'))
   expect(figures.length).toBeGreaterThan(0)
   for (const figure of figures) {
-    expect(existsSync(`docs/${figure}`), `docs/${figure}`).toBe(true)
+    expect(
+      readFileSync(`docs/${figure}`).length,
+      `docs/${figure}`,
+    ).toBeGreaterThan(0)
   }
 })
 
@@ -52,7 +60,9 @@ test('every section the landing page deep-links to is a heading that exists', ()
     const out = path === '' ? 'index.html' : path
     const spec = ALL.find(page => page.out === out)
     if (spec === undefined) {
-      expect.fail(`index.html deep-links to /guide/${path}, which is no page`)
+      expect.fail(
+        `the landing page deep-links to /guide/${path}, which is no page`,
+      )
     } else {
       expect(headings(spec.file), `/guide/${link}`).toContain(hash)
     }

@@ -1,0 +1,40 @@
+---
+// One card per demo in `demos.json`. The still is an <img> under the clip
+// rather than the <video>'s own `poster`, so that it can carry
+// `loading="lazy"` — a poster is fetched the moment its <video> is laid out,
+// and twelve of those were most of a megabyte nobody had scrolled to yet.
+//
+// `alt=""` because the name is on the card beside it.
+import { demos } from '../../scripts/demos.mjs'
+---
+
+<ul class="grid">
+  {
+    demos.map(demo => (
+      <li>
+        <a class="demo" href={demo.href}>
+          <span class="shot">
+            <img
+              class="still"
+              src={demo.poster}
+              alt=""
+              width="640"
+              height="512"
+              loading="lazy"
+              decoding="async"
+            />
+            <video
+              data-src={demo.clip}
+              muted
+              loop
+              playsinline
+              preload="none"
+              aria-hidden="true"
+            />
+          </span>
+          <span class="name">{demo.name}<span class="open">open →</span></span>
+        </a>
+      </li>
+    ))
+  }
+</ul>

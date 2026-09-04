@@ -1,0 +1,525 @@
+/* The palette and the reset are tokens.css, which the guide shares. */
+:root {
+  /* The app's own `--gate`, which it paints on a control whose prerequisite is
+     not met. A browser without WebGPU is that, one level up — and green here
+     would have read as "all set" beside a button that is about to fail. */
+  --gate: #c0a95e;
+  --measure: 46rem;
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  line-height: 1.65;
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    sans-serif;
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+}
+a {
+  color: var(--accent);
+}
+.wrap {
+  max-width: var(--measure);
+  margin: 0 auto;
+  padding: 0 1.25rem;
+}
+.wide {
+  max-width: 72rem;
+}
+
+/* Hero. The video is the background of the panel rather than a figure
+   beside it: the first thing the page should do is move. */
+.hero {
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid var(--border);
+}
+/* One still, held back just far enough that display type stays readable
+   over a picture whose whole job is to be violent. Nothing here moves:
+   the looks that used to cycle behind the title, and then the one clip
+   that replaced them, are the carousel under the hero instead — a header
+   that changes under the reader is a distraction from the words in front
+   of it, and the carousel can be looked at.
+
+   `cover` on a 640x512 still upscales it several times over, and that is
+   the treatment rather than a fault in it. The link preview is the same
+   file given the same stretch (scripts/ogimage.mjs), and what the upscale
+   buys is a soft field rather than a picture competing with the type. */
+.heroShot {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(1.15) contrast(1.08);
+}
+/* The scanlines the og card draws over the same still, for the same
+   reason: `cover` stretches a 640-wide frame across the window, and a
+   raster over the top is what makes that softness read as a signal rather
+   than as a picture that has been enlarged too far. */
+.heroScan {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgb(0 0 0 / 13%) 0px,
+    rgb(0 0 0 / 13%) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  mix-blend-mode: multiply;
+}
+/* Angled across rather than down, which is the difference between a
+   header and a black band. The wash this replaces ran top-to-bottom and
+   held the whole width near 55%, under a clip at 0.55 opacity — about a
+   fifth of the picture reached the screen, and a *moving* fifth was
+   enough to read as a picture where a still one is mud.
+
+   So it is the link preview's wash instead (scripts/ogimage.mjs), which
+   has always had this job: opaque down the column the type sits in,
+   clearing to nothing past the far edge of the longest line, so the look
+   blazes on the side nothing is written over.
+
+   **Where it clears is the measure, not a percentage of the window.** The
+   og card is 1200px forever and could name a fraction; this has to hold
+   at every width, and the type here is `.wrap` — centred, capped at
+   --measure — so the far edge of the longest line it can hold is
+   `50% + measure/2` and nothing else. Written as a fraction it cleared at
+   336px on a 390px phone, straight through the middle of the sentence
+   under the buttons. Below the measure that calc lands past the right
+   edge, so the gradient simply never reaches its clear stop and a phone
+   gets an even wash — which is the right answer there, because on a phone
+   there is no "beside the type" to clear.
+
+   The second gradient grounds the bottom edge to the page colour, so the
+   hero still has no seam against the section under it. */
+.heroScrim {
+  position: absolute;
+  inset: 0;
+  --typeEdge: calc(50% + var(--measure) / 2);
+  background:
+    linear-gradient(
+      100deg,
+      rgb(14 14 17 / 90%) 0%,
+      rgb(14 14 17 / 84%) var(--typeEdge),
+      rgb(14 14 17 / 26%) calc(var(--typeEdge) + 7%),
+      rgb(14 14 17 / 0%) calc(var(--typeEdge) + 17%)
+    ),
+    linear-gradient(
+      to top,
+      var(--bg) 0%,
+      rgb(14 14 17 / 72%) 12%,
+      rgb(14 14 17 / 0%) 42%
+    );
+}
+.heroBody {
+  position: relative;
+  /* The side padding is `.wrap`'s own: zeroing it stood the hero title
+     20px left of every line under it, and put the buttons and the warning
+     against the bezel on a phone. */
+  padding: 5.5rem 1.25rem;
+}
+
+/* A word, not a glyph: a bare ▶ is a guess, and these sit next to each
+   other where one of them says a demo's name. */
+.chip {
+  padding: 0.35rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 0.4rem;
+  background: var(--card);
+  color: var(--fg3);
+  font: inherit;
+  font-size: 0.85rem;
+  line-height: 1.3;
+  cursor: pointer;
+}
+.chip:hover {
+  border-color: var(--fg4);
+  color: var(--fg);
+}
+.chip[aria-current='true'] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* The carousel. One box, one slide showing, and every slide is a
+   recording of the app's own window — chrome, panel, picture and a hand
+   on it (scripts/reel.mjs). Each is recorded twice: a 1112px window,
+   which is what this measure gives a slide, so the app's type lands on
+   the page at the size the app renders it; and a 390px one, where the app
+   lays itself out in portrait, because that same window scaled into a
+   phone's column is a picture of an interface rather than an interface.
+
+   The stage has no aspect-ratio of its own and no breakpoint written into
+   it. The first slide is left *in flow* and the rest lie over it, so the
+   box takes the shape of the still the browser picked through that
+   slide's `<source media>` — the only place the breakpoint is written
+   down, and the same place the script reads it from. */
+.stage {
+  position: relative;
+  background: #000;
+  border: 1px solid var(--border);
+  border-radius: 0.6rem;
+  overflow: hidden;
+}
+.slide {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+.slide:first-of-type {
+  position: relative;
+}
+.slide picture {
+  display: block;
+}
+.slide.on {
+  opacity: 1;
+}
+/* `contain`, not `cover`: what is in frame here is a window with a
+   360px panel down one edge, and a crop takes the panel rather than a
+   band of noise nobody was reading. */
+.slide img,
+.slide video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+  border: 0;
+  border-radius: 0;
+}
+/* The one exception, and it is what gives the box its height: this still
+   is in the flow at its own shape, and everything else is laid over it. */
+.slide:first-of-type .still {
+  position: static;
+  height: auto;
+}
+/* The still under the clip, as on the gallery cards: a <video>'s own
+   poster is fetched the moment it is laid out, and the slide a reader
+   never reaches should cost nothing. */
+.slide video {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.slide.live video {
+  opacity: 1;
+}
+.slideBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.85rem;
+}
+.slideTabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+/* Shown under exactly the preference that switched the autoplay off:
+   every other reader's stage is already moving. A media query rather
+   than a class, so it follows a reader who changes the setting with the
+   page open.
+
+   The whole stage is the control, scrimmed over the still it is lying on
+   — which is what says the box is a video at all, since the still under
+   it is a photograph of an interface and reads as one. Nothing here
+   moves or scales: this exists only for a reader who asked it not to, so
+   what it changes on a hover or a press is colour and opacity. */
+.stageVeil {
+  display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .stageVeil {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    background: rgb(8 8 10 / 55%);
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+  /* Running: the recording is the point, so the scrim gets out of the
+     way, and comes back under a pointer or a focus ring — which is where
+     a reader looking for the way to stop it already is. */
+  .stageVeil.off {
+    background: rgb(8 8 10 / 0%);
+  }
+  .stageVeil.off .stageIcon {
+    opacity: 0;
+  }
+  .stageVeil.off:hover,
+  .stageVeil.off:focus-visible {
+    background: rgb(8 8 10 / 35%);
+  }
+  .stageVeil.off:hover .stageIcon,
+  .stageVeil.off:focus-visible .stageIcon {
+    opacity: 1;
+  }
+}
+/* The one glyph on the page that stands without a word beside it. A
+   triangle centred in a video is the one symbol a reader does not have
+   to be taught, and the button carries the sentence on `aria-label` for
+   anyone not being shown it. */
+.stageIcon {
+  width: 5.5rem;
+  height: 5.5rem;
+  transition: opacity 0.3s ease;
+}
+.stageIcon circle {
+  fill: rgb(8 8 10 / 55%);
+  stroke: var(--fg);
+  stroke-width: 3;
+}
+.stageIcon path {
+  fill: var(--fg);
+}
+.stagePauseMark {
+  display: none;
+}
+.stageVeil.off .stagePlayMark {
+  display: none;
+}
+.stageVeil.off .stagePauseMark {
+  display: block;
+}
+.stageVeil:hover .stageIcon circle,
+.stageVeil:focus-visible .stageIcon circle {
+  stroke: var(--accent);
+}
+.stageVeil:hover .stageIcon path,
+.stageVeil:focus-visible .stageIcon path {
+  fill: var(--accent);
+}
+/* What the slide showing is of. Every line is in the markup and the one
+   belonging to the slide showing is the one painted, so a reader with no
+   script gets the first slide's own line rather than three of them or
+   none. Held at the page's measure: a caption run to the full width of
+   the stage is a 1100px line of prose.
+
+   Stacked in one grid cell rather than shown and hidden, which is what
+   keeps the section under it still. These lines are of different
+   lengths, so `display: none` on the others would make the box as tall
+   as whichever one was showing and move the page every time the stage
+   advanced — at any width, since which of them wraps longest changes
+   with the measure. One cell is as tall as the tallest of them and the
+   rest sit in it invisibly. */
+.slideNotes {
+  display: grid;
+  max-width: var(--measure);
+  margin-top: 0.85rem;
+}
+.slideNote {
+  grid-area: 1 / 1;
+  margin: 0;
+  color: var(--fg3);
+  font-size: 0.95rem;
+  visibility: hidden;
+}
+.slideNote.on {
+  visibility: visible;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: var(--mono);
+  font-size: 0.95rem;
+  color: var(--fg3);
+  letter-spacing: 0.02em;
+}
+.brand img {
+  width: 1.6rem;
+  height: 1.6rem;
+}
+h1 {
+  font-size: clamp(2.1rem, 6.2vw, 3.4rem);
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  margin: 1.4rem 0 0;
+  text-wrap: balance;
+}
+.cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 2rem 0 0;
+}
+.btn {
+  display: inline-block;
+  padding: 0.72rem 1.35rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--fg);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1rem;
+}
+.btn:hover {
+  border-color: var(--fg4);
+}
+.btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #0b160f;
+}
+.btn.primary:hover {
+  filter: brightness(1.08);
+}
+.req {
+  margin: 1.25rem 0 0;
+  font-size: 0.9rem;
+  color: var(--fg4);
+}
+/* Brighter than the line above it, and boxed. It is the one thing on this
+   page a reader has to act on, and at --fg4 on a scrimmed video it read
+   as a footnote. */
+.gpuwarn {
+  max-width: 34rem;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--gate);
+  border-radius: 0.4rem;
+  background: rgb(14 14 17 / 72%);
+  color: var(--fg2);
+}
+
+section {
+  padding: 3.5rem 0;
+}
+h2 {
+  font-size: 1.5rem;
+  letter-spacing: -0.01em;
+  margin: 0 0 1rem;
+}
+.tech p {
+  margin: 0 0 1rem;
+  color: var(--fg2);
+}
+.tech figure {
+  margin: 2rem 0 0;
+}
+.tech figcaption {
+  margin-top: 0.6rem;
+  font-size: 0.9rem;
+  color: var(--fg4);
+}
+.sub {
+  color: var(--fg4);
+  font-size: 0.95rem;
+  margin: 0 0 1.1rem;
+}
+figure {
+  margin: 0;
+}
+/* `height: auto` is not decoration. The width and height attributes on
+   the <img> are presentation hints, so setting only the width in CSS
+   leaves the height hint standing and the shot renders 1600 wide by
+   whatever the attribute said — it was 2.3x too tall on every viewport
+   narrower than the file. */
+figure img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border: 1px solid var(--border);
+  border-radius: 0.6rem;
+}
+code {
+  font-family: var(--mono);
+  font-size: 0.9em;
+  color: var(--fg);
+}
+
+/* The demo gallery. Each card is the link it was in the README, so
+   clicking one opens that exact board in the app. */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(19rem, 1fr));
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.demo {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  border: 1px solid var(--border);
+  border-radius: 0.6rem;
+  overflow: hidden;
+  background: var(--card);
+}
+.demo:hover,
+.demo:focus-visible {
+  border-color: var(--accent);
+}
+.demo .shot {
+  position: relative;
+  aspect-ratio: 5 / 4;
+  background: #000;
+  display: block;
+}
+/* A still under a clip, rather than the clip's own `poster`. A poster is
+   fetched as soon as its <video> is laid out, so eleven of them were a
+   three-quarter-megabyte page nobody had scrolled yet; an <img> takes
+   `loading="lazy"` and costs nothing until the card is near. The clip
+   fades in over the still it matches, so the swap has nothing to see. */
+.demo .shot img,
+.demo .shot video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+.demo .shot video {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.demo.live .shot video {
+  opacity: 1;
+}
+.demo .name {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.7rem 0.85rem;
+  font-size: 0.94rem;
+  border-top: 1px solid var(--border);
+}
+.demo .open {
+  color: var(--fg4);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+.demo:hover .open,
+.demo:focus-visible .open {
+  color: var(--accent);
+}
+
+footer {
+  padding: 2.5rem 0 4rem;
+  color: var(--fg4);
+  font-size: 0.92rem;
+}
+footer nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.25rem;
+  margin-bottom: 1rem;
+}

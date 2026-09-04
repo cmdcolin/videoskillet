@@ -1,22 +1,10 @@
+/* The palette and the reset are tokens.css, which the landing page shares. */
 :root {
-  --fg: #e6e6ee;
-  --fg2: #c6c6d6;
-  --fg3: #a6a6ba;
-  --fg4: #85859a;
-  --bg: #0e0e11;
-  --card: #16161a;
-  --border: #2e2e38;
-  --accent: #7fd0a0;
-  --mono: ui-monospace, 'SF Mono', Menlo, monospace;
   /* The reading column, and the gutter the section nav sits in beside it. */
   --measure: 45rem;
   --aside: 15rem;
   --gap: 3rem;
   --bar: 3.25rem;
-}
-* {
-  box-sizing: border-box;
-  min-width: 0;
 }
 html {
   scroll-behavior: smooth;

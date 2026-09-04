@@ -1,0 +1,21 @@
+/* What the landing page and the guide agree on. Both used to declare these nine
+   by hand, in two files that had no way of knowing when the other changed —
+   `index.html` carried a comment asking whoever edited it to keep the palette
+   the guide's, which is a rule a person has to remember. Everything below this
+   block is one page's own: the reading column and the gutter belong to the
+   guide, the gate amber to the landing page. */
+:root {
+  --fg: #e6e6ee;
+  --fg2: #c6c6d6;
+  --fg3: #a6a6ba;
+  --fg4: #85859a;
+  --bg: #0e0e11;
+  --card: #16161a;
+  --border: #2e2e38;
+  --accent: #7fd0a0;
+  --mono: ui-monospace, 'SF Mono', Menlo, monospace;
+}
+* {
+  box-sizing: border-box;
+  min-width: 0;
+}
