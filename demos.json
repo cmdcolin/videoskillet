@@ -1,7 +1,7 @@
 [
   {
     "name": "Chaos black and white feedback",
-    "showcase": false,
+    "showcase": true,
     "gallery": true,
     "says": "The mixer loop run at negative gain and inverted, on a channel tuned 0.2 MHz off its carrier.",
     "query": "?p=Nj.FJADAMACAuQDNVAImAIAUALIARaQAwoUAIABANQDApQBAHgARAniAQECCVQk5gMAqAEAqAYAgJ9JA8gB&mod=tapeLoopMm:smooth:0.05:0.0151&srcb=tv+static"
@@ -73,7 +73,7 @@
   {
     "name": "Collecting dust",
     "showcase": false,
-    "gallery": true,
+    "gallery": false,
     "says": "A camera loop with the read clock 1.5% out and the bus clipping.",
     "query": "?p=R2.cqQCAKAfAHoAOgAoAKggACwAYABEABAAmAEQ0AIAoAMw-AIArAICjBAEBEjgLgCoAQ&mod=&srcb=vhs+static"
   },

@@ -17,9 +17,10 @@
 // flowing rainbow, which is the one frame on this page a stranger can read as a
 // shader rather than as a television. The mechanism behind it is the most
 // analog thing here — a composite loop carrying its own subcarrier, half a turn
-// of hue a lap — and none of that is on the screen. `roll` puts a torn,
-// mistracking photograph in the first frame, and nobody has to be told what
-// that is a picture of, so it opens the reel and `build` finishes it.
+// of hue a lap — and none of that is on the screen. `roll` puts a board already
+// torn into hard black and white slabs in the first frame, which needs no
+// caption to read as a television coming apart, so it opens the reel and
+// `build` finishes it.
 //
 // **`roll` used to be the middle slide, and before that it was a fault dialled
 // into clean bars**, which was the weakest thing on the page: a slow bow in a
@@ -44,13 +45,15 @@
 // and a field of rainbow that was not there fifteen seconds ago. Nothing is
 // loaded that the hand does not do.
 //
-// The photograph is back in `roll`, and against none of that. The objection is
-// to a *slider* on a cat, which shows that the program has sliders; that
-// slide's hand presses one button, so what the frame has to carry is how far
-// three presses travel. Screened both ways over the same twelve
-// seeds: on bars, three rolls read as three sets of bars in different colours,
-// and on the photograph the same three are a torn print, a hard duotone and a
-// warm dirty one.
+// **`roll` ran on the bundled photograph for a while, and does not now.** The
+// argument for it was legibility: a roll is legible on a face and abstract on
+// bars, screened both ways over twelve seeds, where three rolls on bars read as
+// three sets of bars in different colours and the same three on the photograph
+// were a torn print, a hard duotone and a warm dirty one. What that argument
+// did not cover is that this is the frame the page opens on, and a cat is a
+// picture of a cat before it is a picture of a signal path coming apart. So the
+// slide runs on a feedback board instead, and the legibility it gives up it
+// buys back in what the first frame says about the program.
 //
 // Which rows those are took a probe rather than a guess, and the two dead ends
 // are worth keeping. Colour bars are already saturated, so chroma gain at 12x
@@ -178,46 +181,67 @@ export const slides = [
     file: 'roll',
     name: 'Random',
     caption:
-      'One button, pressed three times. Each press stacks a few of the authored looks over stock and travels to the result in a second — so it is a way of looking around the space rather than a shuffle, and the preset chips light up to say what went into the one you are looking at. Press it again from wherever you land.',
-    alt: 'The window on the bundled photograph of a cat, and the random look button pressed three times: the picture becomes a torn scanline mess, then a hard orange and teal, then a warm dirty print, each arriving over a second',
-    // The photograph rather than the colour bars the other two slides open on.
-    // A roll is legible on a face and abstract on bars — the same reason the
-    // app ships this picture — and it is the picture a stranger has that the
-    // page has been claiming things about.
-    //
-    // `seed` in the query is the app's, not this file's: `?seed=` puts the
-    // session's rolls on one generator (ui/useRollRand.ts), so this take is the
-    // take the next recording gets too. Screened over seeds 1-12 for three
-    // rolls that each leave a picture you can still read: most seeds spend at
-    // least one press on a white blow-out or a grey wash, which says nothing
-    // about what the button is for.
-    params: { src: 'cat', seed: 7 },
-    // The second roll, which is the loudest of the three. The finish is a warm
-    // print that reads as a photograph somebody has been unkind to, and as a
-    // still it understates the button.
-    stillAt: 0.62,
+      'The roll that keeps what you have. Random nudge takes the look already on the board and moves every control around where it sits, so pressing it again goes further out instead of starting over — two presses and the picture is somewhere nobody would have thought to dial. The caret holds the rest of the row: a whole fresh look, one authored preset, a single nameable fault.',
+    alt: 'The window on a black and white feedback look already torn into hard blocks, and random nudge picked from the roll menu and pressed twice: the picture goes further out with each press rather than starting over, ending in a frame of chroma noise nothing in it is still upright',
+    // A board that is already unstable, rather than the bundled photograph this
+    // opened on. The picture a roll lands on is only as wild as the thing it
+    // lands *in*: `randomPresetMix` is bounded on purpose — two presets usually,
+    // feedback loops as leads only, because unbounded rolls blew a picture out
+    // about one time in eight (presets.ts) — so on a flat source the same
+    // presses read as tinted test cards. Screened against colour bars mixed with
+    // tv static, and against sweep and synth, all of which came back as exactly
+    // that.
+    look: 'Chaos black and white feedback',
+    // `seed` is the app's, not this file's: `?seed=` puts the session's rolls on
+    // one generator (ui/useRollRand.ts), so this take is the take the next
+    // recording gets too.
+    params: { seed: 2 },
+    stillAt: 0.85,
     warm: 60,
-    // Three presses on one button, and the pointer never leaves it. Each is
-    // followed by the second the morph takes to travel plus a beat to look at
-    // where it landed — a press whose picture is still moving when the next one
-    // lands reads as one long smear rather than as three looks.
+    // **Nudge rather than `random look`, and that is the whole slide.** A
+    // `random look` rebuilds from stock every press — `landRecipe` lands its
+    // roll on `DEFAULT_CONTROLS` (ui/useMix.ts) — so a run of them walks *away*
+    // from a wild board rather than further into it. Recorded three times over
+    // nine seeds it decayed the same way every time: the frame store carries the
+    // feedback for a press or two, and by the third the board is stock over
+    // source A, which on this look is colour bars. Six seeds, six test cards.
+    // Pointing source A at tv static fixed the ending and cost the colour —
+    // stock over noise is a grey wash.
+    //
+    // `mutateLook` baselines on `getControls()` instead, so a nudge compounds:
+    // press it on chaos and you get more chaos, which is the sentence this slide
+    // has to say. It is also the way the app is actually used — mutate, mutate,
+    // surprise, mutate (ui/history.ts).
+    //
+    // The menu is worth the two beats it costs. Picking a roll runs it *and*
+    // leaves it on the button, so the two presses after it are one press each,
+    // and the caret says out loud that the row has five other ways to roll.
     act: [
-      { hold: 0.8 },
-      { moveTo: { text: 'random look' }, secs: 0.7 },
-      { press: 2.6, on: 'random look' },
-      { press: 2.6, on: 'random look' },
-      { press: 3, on: 'random look' },
+      { hold: 1 },
+      { moveTo: { title: 'the other ways this row has' }, secs: 0.6 },
+      { press: 1, on: '▾' },
+      { moveTo: { text: 'random nudge' }, secs: 0.6 },
+      // The menu row reads `≈random nudge` — a row carries its icon in its text
+      // where the button carries the label alone, so this is the same target
+      // asserted two ways rather than a typo.
+      { press: 2.4, on: '≈random nudge' },
+      // Back to the button the menu just loaded: the pointer is over where the
+      // menu row was, and the row is gone.
+      { moveTo: { text: 'random nudge' }, secs: 0.5 },
+      { press: 3.2, on: 'random nudge' },
       { away: 0.5 },
     ],
     // In portrait the look bar is under the picture with the panel, so it is
     // scrolled to before the pointer goes anywhere near it.
     narrowAct: [
-      { hold: 0.6 },
+      { hold: 0.8 },
       { scrollTo: { text: 'random look' }, secs: 0.7 },
-      { moveTo: { text: 'random look' }, secs: 0.7 },
-      { press: 2.6, on: 'random look' },
-      { press: 2.6, on: 'random look' },
-      { press: 3, on: 'random look' },
+      { moveTo: { title: 'the other ways this row has' }, secs: 0.6 },
+      { press: 1, on: '▾' },
+      { moveTo: { text: 'random nudge' }, secs: 0.6 },
+      { press: 2.4, on: '≈random nudge' },
+      { moveTo: { text: 'random nudge' }, secs: 0.5 },
+      { press: 3.2, on: 'random nudge' },
       { away: 0.5 },
     ],
   },
@@ -354,7 +378,15 @@ export const slides = [
       `reel slide “${slide.file}” plays ${slide.look}, which is not one of the demos marked showcase in demos.json`,
     )
   }
-  const query = board
+  // A slide that names a look can still carry params of its own, and `roll`
+  // does: `?seed=` belongs to the take rather than to the demo — it is which
+  // rolls the button hands back, which is a fact about this recording, where
+  // the board is a fact about the look. Keeping them apart is what lets the
+  // demo stay written down once while the take stays reproducible.
+  const query =
+    slide.look === undefined || slide.params === undefined
+      ? board
+      : `${board}&${new URLSearchParams(slide.params)}`
   const narrowAct = slide.narrowAct ?? slide.act
   const length = act =>
     Math.round(act.reduce((total, beat) => total + beatSecs(beat), 0) * 10) / 10
