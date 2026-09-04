@@ -8,17 +8,18 @@ Short version: **advanced settings** → **enable MIDI**, then **auto-map** or
 
 ## What you need
 
-Any USB controller that sends **CC messages** — a MIDI Fighter Twister, a
-nanoKONTROL, a Launch Control, the knob row on a keyboard. Plug it in before or
-after loading the page.
+Any USB controller that sends **CC messages** (MIDI's Control Change
+messages — the standard way a knob or slider reports its position) — a MIDI
+Fighter Twister, a nanoKONTROL, a Launch Control, the knob row on a keyboard.
+Plug it in before or after loading the page.
 
 You also need a browser with **Web MIDI** — Chrome or Edge.
 
 ## Turning it on
 
-1. Open the **☰** menu → **advanced settings** (or `ctrl+k` → "advanced
-   settings").
-2. Under **MIDI control**, click **enable MIDI** and allow the browser prompt.
+- Open the **☰** menu → **advanced settings** (or `ctrl+k` → "advanced
+  settings").
+- Under **MIDI control**, click **enable MIDI** and allow the browser prompt.
 
 A **MIDI** section appears in the control panel. You only do this once — the app
 reconnects on later visits.

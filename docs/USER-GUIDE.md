@@ -28,18 +28,19 @@ Click a preset to jump to it; drag it sideways to blend it part-way in.
   and leaves the rest alone, so the accident is one thing you can name and take
   back. **random cross** keeps some circuits of your look — tape, tube, sync —
   and rerolls the rest.
-- **drift** is the random nudge with nobody pressing it: press once (or `d`) and
-  the look wanders on its own — a gentle nudge every 15 seconds, travelling most
-  of the way there, so the picture keeps moving and never cuts. It stays around
-  the look you set drifting rather than running off, however long you leave it.
-  Press again to stop where it has got to; `ctrl+z` then puts back the look you
-  started it on, because none of the legs in between lands in the walk. Each
-  stage heading has the same switch for its own controls alone, so you can set
-  the tape path wandering and go on dialing the sync card by hand — this one is
-  that switch aimed at everything. Pressing one takes over from the other, since
-  a control only ever wanders around one look at a time. For a wander that is
-  part of a piece, use the strip's shake row instead — a rundown holds in bars,
-  is seeded and is yours to keep, where a drift is a switch you flip and forget.
+- **drift** is the random nudge running on its own. Press once (or `d`) and the
+  look wanders — a gentle nudge every 15 seconds, travelling most of the way
+  there each time, so the picture keeps moving and never cuts. It stays around
+  the look you set drifting; it doesn't run off, however long you leave it.
+  Press again to stop where it has got to. `ctrl+z` then restores the look you
+  started it on, because none of the legs in between gets stored in the undo
+  stack. Each stage heading has the same switch for its own controls alone, so
+  you can set the tape path wandering and go on dialing the sync card by hand —
+  this one is that switch aimed at everything. Pressing one takes over from the
+  other, since a control only ever wanders around one look at a time. For a
+  wander that's part of a piece, use the strip's shake row instead: a rundown
+  holds in bars, is seeded, and is yours to keep, where a drift is a switch you
+  flip and forget.
 - **morph** sets how long a new look takes to arrive — cut, 1s, 4s, 8s or 30s.
   Rolls chain, so rolling every few seconds wanders continuously.
 - **undo** (`ctrl+z`) steps back through all of it.
@@ -58,31 +59,31 @@ swap one video for another.
   **Public archives** rolls one from Wikimedia Commons or archive.org;
   **Browse…** searches both in a thumbnail grid.
 - On an archive, the deck grows its own **roll photo** / **roll clip** buttons
-  under the file's name — Commons holds both and they behave differently under
-  the chain, since a still gives still artifacts and a clip gives moving ones.
-  archive.org holds footage, so it gets **roll clip** alone. The **☆** beside
-  the name keeps that file on your clip shelf; the next roll takes it off the
-  deck either way, and **↗** opens its page upstream, which is where the licence
-  and the photographer are.
+  under the file's name. Commons holds both, and they behave differently
+  because a still gives still artifacts while a clip gives moving ones.
+  archive.org holds footage only, so it gets **roll clip** alone. The **☆**
+  beside the name keeps that file on your clip shelf; the next roll takes it
+  off the deck either way, and **↗** opens its page upstream, which is where
+  the licence and the photographer are.
 - **Video file URL…** plays an `.mp4` or `.webm` straight off its address —
   paste the link, no download step. The server has to allow cross-origin reads;
-  one that does not plays the clip and leaves the picture black.
+  if it doesn't, the clip plays and the picture stays black.
 - **Video synth** is two oscillators and a colorizer, no input. Frequency is the
   whole knob: on a multiple of line rate you get standing bars, a few hertz off
-  they lean and creep, at 3.58 MHz it lands on the subcarrier and comes back as
-  flat colour.
+  they lean and creep, and at 3.58 MHz it lands on the subcarrier and comes
+  back as flat colour.
 - **Teletype…** prints what you type onto a dot-matrix card; **draw** paints on
   the same page. Try the dither shades — dot crawl and chroma bleed feed on
-  dither. Three switches keep the card from sitting still, which matters because
-  a still card gives still artifacts: **crawl** rolls it up the frame, **boil**
-  redraws it by an unsteady hand, and **garble** receives it over a wire bad
-  enough to keep misspelling it.
+  dither. Three switches keep the card from sitting still, which matters
+  because a still card gives still artifacts: **crawl** rolls it up the frame,
+  **boil** redraws it by an unsteady hand, and **garble** receives it over a
+  wire bad enough to keep misspelling it.
 - **B** is a second source, deliberately not genlocked, so it beats and tears
   against A. Its controls are in **Mix**.
 - **♪** is audio in, and does nothing until you turn up a knob in **Sound**. It
   takes the mic, a file you pick, the clip already on screen, or **system
-  audio** — a share of the tab or app this machine is playing out of, which is
-  how you drive the picture off a track without the room in between.
+  audio** — a share of the tab or app this machine is playing out of, which
+  lets you drive the picture off a track without the room in between.
 
 Anything with a timeline gets a **cue** button: press to mark, again to loop, a
 third time to drop it. **⇤** stabs back to the cue without waiting for the lap.
@@ -90,8 +91,8 @@ third time to drop it. **⇤** stabs back to the cue without waiting for the lap
 
 **⏏ eject** clears a deck, whatever is standing in it — a clip, a camera, a test
 pattern, a text card. A falls back to snow and B stops summing, and what was
-there is forgotten rather than reopened next time. The button is there until the
-deck is already empty, and then it is not.
+there is forgotten rather than reopened next time. The button shows until the
+deck is already empty, and then it doesn't.
 
 A deck holding a clip gets **❚❚** beside it: that stops the deck's tape where it
 stands, and **▶** rolls it on again. The bar still seeks while it is held, and
@@ -128,10 +129,10 @@ another control gates this one.
 
 Every stage heading carries its own verbs, aimed at that stage and nothing else.
 **randomize** nudges its controls around where they sit — the same modifiers the
-whole-board rolls take, and holding it down keeps nudging, slowly, until you let
-go. **drift** sets the stage wandering on its own, so one circuit breathes while
-the rest of the board holds still; press it again to stop it where it got to.
-**reset defaults** appears once there is something to put back.
+whole-board rolls take — and holding it down keeps nudging, slowly, until you
+let go. **drift** sets the stage wandering on its own, so one circuit breathes
+while the rest of the board holds still; press it again to stop it where it got
+to. **reset defaults** appears once there is something to put back.
 
 ![The app window with a slider's help card open, boxed in red](img/slider-help.jpg)
 
@@ -141,7 +142,7 @@ The look is emergent, so the cause is what tells you how two controls combine.
 The camera loop's **zoom**, **rotate**, **shift** and **gain** carry a second
 button beside the **?**: **minor** drops a card under the row holding the same
 knob with one step of it spread across the whole track, so a drag there moves in
-hundredths of what the row above can step to. That is the resolution the loop's
+hundredths of what the row above can step to. That's the resolution the loop's
 geometry is actually read at — a thousandth of zoom is the difference between a
 spiral that unwinds over a second and one that unwinds over ten — and the card
 is where the value is printed that far in. The row keeps reading its own step,
@@ -183,11 +184,11 @@ source — LFO, random walk, noise, sample-and-hold, a Lorenz attractor, audio
 level or its hits, or a one-shot envelope you strike by hand or from a MIDI note
 — and dial the rate and depth. Depth is a fraction of the control's range, and
 the slider stays put as the centre the motion happens around, which is why a
-preset or a link still holds the look. How deep the first press goes is the
-control's own answer rather than one number for the whole app: half a percent of
-the range on the vertical roll rate, a third of it on horizontal hold. The
-rate's **♩ lock to beat** button in the editor ties it to the tempo instead of
-Hz.
+preset or a link still holds the look. How deep the first press goes is
+particular to each control rather than one number for the whole app: half a
+percent of the range on the vertical roll rate, a third of it on horizontal
+hold. The rate's **♩ lock to beat** button in the editor ties it to the tempo
+instead of Hz.
 
 The button sits out on two kinds of row. The View controls have none, since a
 wobbling magnifier or a stuttering clock reads as the app breaking rather than
@@ -226,7 +227,7 @@ a crossfade would redesign it every frame where a cut redesigns it twice a
 cycle.
 
 **Sound** hangs off Receiver, where audio patches in. Bass lurches the frame,
-level tears line hold. Pick something under **♪** first or the box opens onto
+level tears line hold. Pick something under **♪** first, or the box opens onto
 nothing.
 
 **System audio** asks for a share, because a page can only hear the machine that
@@ -399,5 +400,5 @@ OBS at the picture window for anything you care about.
 ---
 
 [Features](FEATURES.md) — everything it can break · [Effects](EFFECTS.md) —
-every control · [How it works](HOW-IT-WORKS.md) — the code · [MIDI](MIDI.md) —
+every control · [How it works](FAQ.md#how-does-it-actually-work) — the code · [MIDI](MIDI.md) —
 setting up a controller

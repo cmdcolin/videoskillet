@@ -1,11 +1,11 @@
 # Getting started
 
-videoskillet.js simulates composite video signal using WebGPU shaders, and as a
-result, all the video effects are just natural consequences of real signal-level
-glitches, not pseudo-effects that are drawn on top of the image
+videoskillet.js simulates composite video signal using WebGPU shaders. All the
+video effects are natural consequences of real signal-level glitches, rather
+than effects drawn on top of the image.
 
-It does require WebGPU which requires a fairly recent browser, try Firefox
-Nightly or Chrome Canary if you have trouble with your default browser
+It needs WebGPU, which needs a fairly recent browser — try Firefox Nightly or
+Chrome Canary if you have trouble with your default browser.
 
 Visit https://videoskillet.com/app/
 
@@ -29,16 +29,17 @@ included, each sitting at the point on the path where it acts.
 | :--------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------: | :------------------------------------------------------------------------: |
 | ![Reversed polarity: every hue complementary, the raster sheared](img/look-negative.jpg) | ![The video synth keyed against itself: hard bands of saturated colour](img/look-key.jpg) | ![A mixer loop past unity, breeding coloured structure](img/look-loop.jpg) |
 
-**negative** reverses polarity on the composite line, and sync goes with it ·
-**key sweep** runs the video synth through the chroma keyer, with no camera
-anywhere in it · **mixer loop** patches the composite into itself past unity,
-where it stops returning your picture and starts breeding its own.
+- **negative** reverses polarity on the composite line, and sync goes with it.
+- **key sweep** runs the video synth through the chroma keyer, with no camera
+  anywhere in it.
+- **mixer loop** patches the composite into itself past unity, where it stops
+  returning your picture and starts breeding its own.
 
 ## Where next
 
 - [User guide](USER-GUIDE.md) — sources, feedback, modulation, saving, scopes
 - [Features](FEATURES.md) — the tour of everything it can break
 - [Effects](EFFECTS.md) — every control, generated from the app's own table
-- [How it works](HOW-IT-WORKS.md) — the code: one array and a chain of GPU
-  shaders
+- [FAQ](FAQ.md) — how it works, what runs it, and how a take gets into an
+  edit
 - [MIDI](MIDI.md) — setting up a controller

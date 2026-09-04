@@ -10,10 +10,9 @@ One button in the look bar beside `saved` (`src/ui/TagsPopover.tsx`). It
 describes whatever is on screen: ten perceptual tags, and a 1-5 rating that
 files the row and closes the menu in one click.
 
-It is in the app rather than only on the labelling page for one reason — a
-separate page only ever collects from someone who set out to label, which is one
-person on a good evening. The app is where looks are already being made and
-looked at.
+It lives in the app, not just on the labelling page, because a separate page
+only ever collects from someone who set out to label — which is one person on
+a good evening. The app is where looks are already being made and looked at.
 
 Three objections to collecting here turn out not to bite, and one does:
 
@@ -325,18 +324,18 @@ problem needing more data.
 
 ## Then what
 
-The votes are the input to a preference model — the ML half of the idea, and not
-built yet. The shape it is aimed at:
+The votes are the input to a preference model — the ML half of the idea, not
+built yet. The rough shape it's aimed at:
 
-1. A heuristic viability filter on image statistics (black, blown out, frozen,
-   flat) — the baseline the learned model has to beat, and the pre-filter that
-   stops humans voting on garbage.
-2. A warm start with no votes at all: the 70 authored presets are "cool" by
-   construction and turbo-mutate rolls mostly are not, so a classifier can be
-   trained before the first label is cast.
-3. A Bradley–Terry head on the real votes, over the preset-weight vector plus
-   frozen pretrained vision features of the clip frames.
-4. Active learning — show the pairs the model is least sure about.
-5. Search: CMA-ES over preset weights with the model as fitness. That is the new
-   `surprise` button, and the blind A/B against the current one is the number
-   worth reporting.
+- A heuristic viability filter on image statistics (black, blown out, frozen,
+  flat) — the baseline the learned model has to beat, and the pre-filter that
+  stops humans voting on garbage.
+- A warm start with no votes at all: the 70 authored presets are "cool" by
+  construction and turbo-mutate rolls mostly are not, so a classifier can be
+  trained before the first label is cast.
+- A Bradley–Terry head on the real votes, over the preset-weight vector plus
+  frozen pretrained vision features of the clip frames.
+- Active learning — show the pairs the model is least sure about.
+- Search: CMA-ES over preset weights with the model as fitness. That would be
+  the new `surprise` button, and the blind A/B against the current one is the
+  number worth reporting.
