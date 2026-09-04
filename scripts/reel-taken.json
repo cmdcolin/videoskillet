@@ -1,14 +1,20 @@
 {
   "control": {
     "version": "0.37.1",
-    "sha": "4c46338"
+    "sha": "65ab8e2"
   },
   "window": {
     "version": "0.37.1",
-    "sha": "4c46338"
+    "sha": "0258d4f"
   },
   "signal-path": {
     "version": "0.37.1",
-    "sha": "4c46338"
-  }
+    "sha": "547e451"
+  },
+  "feedback": {
+    "version": "0.37.1",
+    "sha": "0258d4f"
+  },
+  "deflection": 152,
+  "build": 374
 }

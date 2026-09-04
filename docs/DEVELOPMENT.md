@@ -1022,12 +1022,14 @@ and the wedge follow the box wherever the panel moves it.
 **The bar for adding a figure is high, and it used to be lower.** There were
 twelve UI shots, each a full window with a red box round a 300px strip (the
 `boxed` helper), and stacked down a page they were 15,000 pixels of screenshot
-saying what the prose already said. Three remain, and each carries something a
-sentence cannot: `overview` names five regions at once, `chain` shows a map you
-would not guess the shape of, and `slider-help` is the guide's own argument for
-why there is no per-control reference in it. A new figure has to clear that bar,
-and a tight crop of the panel region is the shape to reach for rather than
-another boxed window.
+saying what the prose already said. What remains carries something a sentence
+cannot: `overview` labels the four regions at once, `chain` shows a map you
+would not guess the shape of, `slider-help` is the guide's own argument for why
+there is no per-control reference in it, and `strip` draws a row card, which is
+six chips in a shape no list of six chips gives a reader. A new figure has to
+clear that bar, and a tight crop of the region is the shape to reach for rather
+than another boxed window — `presets`, `signal-path` and `strip` are all that
+crop rather than a window with a box on it.
 
 A spec with `video` records the canvas to mp4 instead, with a poster still
 beside it. Clips are too big to commit, so they go to a gitignored `clips/` and
@@ -1074,21 +1076,50 @@ pnpm demos:check                 # fail if a checked-in copy is stale (pnpm buil
 ```
 
 Two lists feed it. [`../demos.json`](../demos.json) is the looks — the README's
-"Cool demos" bullets, the hero's clip and the gallery of cards, each opening the
-exact board its clip is a recording of.
-[`../scripts/reel.mjs`](../scripts/reel.mjs) is the carousel under the hero,
-which is a different thing: recordings of the **app's own window**, with the
-panel, the map and a pointer moving over them.
+"Cool demos" bullets, the still behind the title and the gallery of cards, each
+opening the exact board its clip is a recording of. Two of its entries carry a
+flag rather than only a name: `hero` is the one the header shows, which
+[`../scripts/ogimage.mjs`](../scripts/ogimage.mjs) grounds the link preview in
+too, so the page and the card that stands in for it when it is shared are the
+same picture; `showcase` is the ones the carousel is allowed to play.
+[`../scripts/reel.mjs`](../scripts/reel.mjs) is that carousel, which is a
+different thing: recordings of the **app's own window**, with the panel, the map
+and a pointer moving over them.
 
 That split is the point of the page. The picture is what the program makes, and
-the gallery and the hero are full of it; the window is what the program _is_,
+the gallery and the header are full of it; the window is what the program _is_,
 and until the carousel held it the one thing a stranger could not work out from
 the page was what using this looks like.
+
+**Two of the three slides start on a bare load and get somewhere by hand**, and
+that took two wrong turns to arrive at. They used to run on the bundled
+photograph through a tape path, chosen because damage is legible on a cat — a
+stranger watching a slider bend a photograph has been shown that the program has
+sliders, and nothing else. So they were moved onto the looks the gallery lists,
+with one row of each wound back so that a drag could arrive at it. That is
+worse. The board was ninety per cent of the way there before the clip started
+and the drag took the credit, which is a demonstration of nothing.
+
+What ships is the honest version: `params: {}`, so the app opens on the board a
+first visitor gets — stock controls, colour bars on source A — and every value
+that ends up on screen was put there by the hand in the frame. The lead slide
+raises three rows in the order the mechanism runs (camera loop `mix` to 0.9, its
+`gain` a shade past unity, then the mixer loop's `loop mix`) and finishes on a
+field of rainbow that was not there fifteen seconds earlier. `loop gain` is left
+alone precisely because it already rests at 1: a slide that dragged it would be
+miming.
+
+Finding those three took a probe rather than a guess, and it is worth knowing
+why. Colour bars are already saturated, so chroma gain at 12x clips them back to
+almost the same bars — the photograph was in there for a reason. And the camera
+loop alone runs away to white: `fbMix` and `fbGain` multiply, so what makes the
+picture breed structure rather than bloom out is the product sitting just over
+unity, which is what the group's own "round trip" readout is there to say.
 
 ```
 pnpm demoreel                    # the gallery's clips (the canvas alone)
 pnpm reel                        # the carousel's clips (the whole window, both frames)
-pnpm reel control                # just this slide
+pnpm reel build                  # just this slide
 pnpm reel:check                  # which slides show an older app
 ```
 
@@ -1143,12 +1174,18 @@ scroll, move the pointer, press, drag a slider. Three things about writing one:
 
 ### What the page costs, and what holds it down
 
-A first visit fetches **382K of media**: the hero's backdrop clip (86K), the
-first slide's still (48K) and its clip (216K), plus the gallery stills as they
-scroll in. A phone fetches the portrait take instead and gets off lighter still,
-at **297K** — the frame is smaller, so the recordings are. Walking all three
-slides adds another ~580K on a desktop, ~370K on a phone. Four things keep that
-number where it is, and each was measured rather than assumed:
+Above the fold a first visit now fetches **8K of media** — the header's still,
+which is a gallery card's own frame. It used to be 382K, because the header ran
+a clip.
+
+The stage is under the fold and costs nothing until it is scrolled to. Reaching
+it fetches the lead slide's still (56K) and its clip (914K); walking the other
+two adds ~610K on a desktop, ~530K on a phone, which fetches the portrait takes
+instead. That lead slide is the heaviest file the page has ever had and it is
+not an oversight: sixteen seconds of full-frame moving rainbow is what building
+a look from a clean board looks like, and the alternative was a static window
+that cost 445K and showed nothing happening. Four things keep the number where
+it is, and each was measured rather than assumed:
 
 - **crf 36, not 30.** The panel half of the frame is static, so h264 codes it
   once and the following frames leave it alone — raising the quantizer spends
@@ -1160,11 +1197,20 @@ number where it is, and each was measured rather than assumed:
   that the browser fetches them anyway, so they arrive on a `data-src` the page
   sets when their slide comes up — 195K that used to be spent before anybody had
   touched a tab.
-- **The hero has its own encode of its clip.** The gallery card plays it in a
-  300px tile; the hero plays the same file full-bleed at 55% opacity under a
-  scrim, where about a fifth of the picture survives to the screen. 480x384 at
-  crf 36 is 86K against 298K, and composited through that scrim the two are
-  indistinguishable.
+- **The header is a still, and it is a file the page already had.** It used to
+  be a clip — the first demo's look in its own lighter encode, 86K, and the one
+  video fetched before anybody had scrolled anywhere. It played full-bleed at
+  55% opacity under a scrim that closes to the page colour, so about a fifth of
+  it reached the screen at all. What shows there now is the gallery card's own
+  8K frame for the demo flagged `hero`, upscaled by `object-fit: cover` — which
+  is the treatment rather than a fault in it, since the link preview stretches
+  the same file the same way and what the upscale buys is a soft field for
+  display type to sit on.
+- **The quantizer is not the lever on the heavy slide.** Per-slide crf was tried
+  on the lead and removed again: 36/38/40/42 is 871/782/695/618K off the same
+  frames, so the whole run to the edge of what the material stands buys 29% —
+  and smooth gradient is precisely where a raised quantizer bands. Length is the
+  lever there, not quality.
 - **One file per slide, no `<source>` fallbacks.** Neither AV1 (svt, crf 50:
   290K) nor VP9 (libvpx, crf 42: 1.6M) beat x264 at crf 38's 213K on this
   material — a field of analog noise is where AV1's tools have least to work

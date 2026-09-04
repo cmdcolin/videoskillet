@@ -1,7 +1,7 @@
 // The demo list and the reel, rendered into the places that show them.
 //
 // `demos.json` is the source of the looks; this writes the README's "Cool
-// demos" bullets, the landing page's hero clip and its gallery. `reel.mjs` is
+// demos" bullets, the landing page's hero still and its gallery. `reel.mjs` is
 // the source of the carousel — recordings of the app's own window — and this
 // writes the stage, the tabs' slides and the captions under them. Nobody edits
 // those four blocks: a demo is added by adding it to `demos.json`, recording it
@@ -12,7 +12,7 @@
 // is what `pnpm build` runs. See `demos.mjs` for what a demo is, and `reel.mjs`
 // for what a slide is.
 import { demos, hero } from './demos.mjs'
-import { FRAME, heroBackdrop, NARROW, slides } from './reel.mjs'
+import { FRAME, NARROW, slides } from './reel.mjs'
 
 import { execFileSync } from 'node:child_process'
 import { readFileSync, rmSync, writeFileSync } from 'node:fs'
@@ -67,27 +67,34 @@ const card = demo => `<li>
   </a>
 </li>`
 
-// The still is the whole of what ships: no `src` and no `autoplay`, so a reader
-// who asked for reduced motion is never sent a clip they did not ask to see,
-// and what they get before a line of script runs is a frame of the look. The
-// clip is the hero's own encode of it rather than the card's — `heroBackdrop`
-// in reel.mjs says why.
-const heroBlock = `<video
-  class="heroVid"
-  data-clip="${heroBackdrop.clip}"
-  poster="${heroBackdrop.poster}"
-  muted
-  loop
-  playsinline
-  preload="none"
-  aria-hidden="true"
-  tabindex="-1"
-></video>`
+// The picture behind the title. A still rather than the clip this used to be:
+// it played at 55% opacity under a scrim that closes to the page colour, so a
+// fifth of it reached the screen anyway, and a header that moves under a reader
+// is a distraction from the words in front of it. The moving account of the
+// program is the stage below, where it can be looked at.
+//
+// The gallery card's own still, at 8K, which is the whole cost of the header
+// now — against the 149K of poster and clip it replaces. Upscaled hard by
+// `object-fit: cover`, and that is the treatment rather than a fault in it:
+// `ogimage.mjs` grounds the link preview in the same file the same way, and
+// what the upscale buys is a soft field for display type to sit on.
+//
+// `alt=""` because it is a backdrop. What it is a picture of is on the card
+// for the same look further down the page, with its name under it.
+const heroBlock = `<img
+  class="heroShot"
+  src="${hero.poster}"
+  alt=""
+  width="640"
+  height="512"
+  fetchpriority="high"
+/>`
 
 // The carousel: the stage, the bar under it and the captions under that, all
 // three from the same list. The tabs are the one part not written here — the
 // page builds them from whatever slides the stage ends up holding, so a slide
-// arrives with its own way in.
+// arrives with its own way in, and they are the only control on the stage now
+// that it plays on its own.
 //
 // `alt` is real prose rather than the gallery's `alt=""`, because these stills
 // are not decoration standing in for a clip of the same thing: they are the
@@ -161,7 +168,6 @@ ${slides.map((s, i) => slide(s, i === 0)).join('\n')}
 </div>
 <div class="slideBar">
   <div class="slideTabs" role="group" aria-label="what the stage shows"></div>
-  <button class="chip slideToggle" type="button">Play</button>
 </div>
 <div class="slideNotes">
 ${slides

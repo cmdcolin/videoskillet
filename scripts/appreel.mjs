@@ -122,6 +122,16 @@ function installReel(touch) {
 
   // A box on the signal path map. They are `<g role=button>`, so the click goes
   // on the element and the diagram's own layout stops mattering.
+  //
+  // **Aimed at the label, not the group.** A press is `elementFromPoint` under
+  // the drawn pointer, and the pointer is put at the centre of whatever this
+  // returns — which for the two loop pills is a 271x38 rectangle, because the
+  // <g> carries the dotted band the pill rides on as well as the pill. Its
+  // centre is out on the band, `elementFromPoint` finds a bare <path> there,
+  // and the click is a silent no-op that only shows up as the rest of the
+  // timeline being wrong. Every box on the map has a <text> with its own name
+  // in it, inside the element that takes the click, and on the trunk boxes that
+  // is where the centre already was.
   const stageBox = name => {
     const want = name.trim().toLowerCase()
     const box = [...document.querySelectorAll('g[role="button"]')].find(g =>
@@ -130,7 +140,10 @@ function installReel(touch) {
     if (box === undefined) {
       throw new Error(`no ${name} box on the map`)
     }
-    return box
+    const label = [...box.querySelectorAll('text')].find(t =>
+      (t.textContent ?? '').trim().toLowerCase().startsWith(want),
+    )
+    return label ?? box
   }
 
   // A slider by the name on its row, which takes joining the row back up: a
@@ -335,11 +348,18 @@ async function runBeat(page, beat, frame, hand, shoot) {
     )
     for (let i = 1; i <= frames; i++) {
       const t = ease(i / frames)
-      await page.evaluate(
-        (target, top) => window.__reel.scrollTo(target, top),
-        beat.scrollTo,
-        lerp(plan.from, plan.to, t),
-      )
+      // A null plan is a panel with nothing to scroll, and the beat is a still
+      // one rather than a crash: the same timeline is recorded at two widths,
+      // and a row below the fold on a phone is a row already on screen in a
+      // 1112px window. Holding for the beat's own seconds keeps the two takes
+      // the same length, which is what the page advances the stage on.
+      if (plan !== null) {
+        await page.evaluate(
+          (target, top) => window.__reel.scrollTo(target, top),
+          beat.scrollTo,
+          lerp(plan.from, plan.to, t),
+        )
+      }
       await paint(page, hand)
       await shoot()
     }
@@ -604,15 +624,21 @@ for (const slide of wanted) {
         '-c:v', 'libx264', '-crf', String(CRF), '-preset', 'veryslow',
         '-profile:v', 'main', '-pix_fmt', 'yuv420p',
         '-movflags', '+faststart', mp4])
-      // The still is a frame from the middle of the timeline rather than the
-      // first: these open on a pointer that has not arrived and a stage nobody
-      // has pressed yet, which is the one frame that says least about the
-      // slide.
+      // The still is a frame from inside the timeline rather than the first:
+      // these open on a pointer that has not arrived and a stage nobody has
+      // pressed yet, which is the one frame that says least about the slide.
+      //
+      // Where inside is the slide's own business (`stillAt` in reel.mjs). The
+      // middle suits a walk, whose whole length is the same kind of thing
+      // happening; it is the wrong frame for a slide that *builds* something,
+      // where the middle is a picture on the way to the one the clip is about
+      // and the reader who asked for reduced motion never sees the finish.
       const still = join(outDir, `${take.name}.webp`)
-      const middle = join(
-        tmpDir,
-        `f${String(Math.floor(frames * 0.55)).padStart(4, '0')}.jpg`,
+      const at = Math.min(
+        frames - 1,
+        Math.floor(frames * (slide.stillAt ?? 0.55)),
       )
+      const middle = join(tmpDir, `f${String(at).padStart(4, '0')}.jpg`)
       // prettier-ignore
       execFileSync('cwebp', ['-quiet', '-q', String(STILL_Q),
         '-resize', String(take.out.width), '0', middle, '-o', still])

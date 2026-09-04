@@ -1,8 +1,7 @@
 import puppeteer from 'puppeteer-core'
 
 import { FIREFOX } from './browser.mjs'
-import { demos, hero } from './demos.mjs'
-import { heroBackdrop } from './reel.mjs'
+import { demos } from './demos.mjs'
 
 // Record the demos as short mp4 loops for the landing page.
 //
@@ -42,8 +41,8 @@ const SECS = 8
 // What the landing page is served. The recordings were 960-wide 30fps crf 30
 // and the ten of them came to 11.7 MB, which is a page that costs more than the
 // app it advertises. 640 wide at 24fps and crf 33 is 2.6 MB for the set, and on
-// this material the difference is not visible at card size or behind the hero's
-// scrim: what these clips are made of is noise and scanlines, and the noise
+// this material the difference is not visible at card size: what these clips
+// are made of is noise and scanlines, and the noise
 // survives — it is the flat fields between them that a codec spends bits on.
 // 5:4 is the canvas's own shape and the card's, so nothing is cropped.
 const CLIP = { w: 640, h: 512 }
@@ -191,20 +190,11 @@ for (const demo of wanted) {
     `${outDir}/${demo.file}.webp`,
   ])
   rmSync(`${outDir}/${demo.file}.png`)
-  // The first demo listed is also what runs behind the hero, where it is
-  // scrimmed down to about a fifth of itself and stretched over the width of
-  // the window. That is not the card's job and should not be the card's file —
-  // see `heroBackdrop` in reel.mjs for the sizes and what the difference costs.
-  if (demo.file === hero.file) {
-    const out = `${outDir}/${heroBackdrop.clip.split('/').pop()}`
-    // prettier-ignore
-    execFileSync('ffmpeg', ['-y', '-v', 'error', '-i', webm, '-an',
-      '-vf', `fps=${FPS},scale=${heroBackdrop.width}:${heroBackdrop.height}:flags=lanczos`,
-      '-c:v', 'libx264', '-crf', String(heroBackdrop.crf), '-preset', 'veryslow',
-      '-profile:v', 'main', '-pix_fmt', 'yuv420p',
-      '-movflags', '+faststart', out])
-    console.log(`  hero backdrop ${Math.round(statSync(out).size / 1024)}K`)
-  }
+  // This used to write a second, lighter encode of the first demo for the hero
+  // to play behind the title. The hero is a still now (`demogen.mjs`), and the
+  // still it shows is the `.webp` written just above — so a demo has one clip
+  // and one frame again, and nothing on the page fetches a video before the
+  // reader has scrolled to one.
   rmSync(webm)
   const kb = n =>
     Math.round(statSync(`${outDir}/${demo.file}.${n}`).size / 1024)

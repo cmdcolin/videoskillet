@@ -3,6 +3,7 @@ import react, { reactCompilerPreset } from '@vitejs/plugin-react'
 import { configDefaults, defineConfig } from 'vitest/config'
 
 import pkg from './package.json' with { type: 'json' }
+import { guide } from './vite-plugin-guide.ts'
 import { wgsl } from './vite-plugin-wgsl.ts'
 import { ytdlp } from './vite-plugin-ytdlp.ts'
 
@@ -27,6 +28,7 @@ export default defineConfig(({ command }) => ({
     babel({ presets: [reactCompilerPreset()] }),
     ytdlp(),
     wgsl(),
+    guide(),
   ],
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),

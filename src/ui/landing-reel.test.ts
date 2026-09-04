@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest'
 
 import { hero } from '../../scripts/demos.mjs'
-import { beatSecs, heroBackdrop, NARROW, slides } from '../../scripts/reel.mjs'
+import { beatSecs, NARROW, slides } from '../../scripts/reel.mjs'
 
 import { readFileSync } from 'node:fs'
 
@@ -27,25 +27,37 @@ const stage = landing.slice(
 const bytes = (path: string) =>
   readFileSync(`public/${path.replace(/^\//, '')}`).length
 
-test('the hero plays the first demo listed, in its own encode', () => {
-  // In the markup rather than set by script, because it is what a reader sees
-  // before a line of it runs — and a reader who asked for reduced motion sees
-  // only the still it names.
+test('the hero shows the demo flagged hero, as a still', () => {
+  // In the markup rather than set by script, because it is the whole of what a
+  // reader sees before a line of it runs — and nothing here makes it move
+  // afterwards, so a reader who asked for reduced motion sees the same header
+  // everyone else does.
   //
-  // Its own encode, because the hero is the one clip fetched before anybody has
-  // scrolled anywhere and it plays scrimmed down to a fifth of itself. Nothing
-  // but this would notice the file going missing: `demoreel.mjs` writes it as a
-  // side effect of recording the first demo, so re-recording a *different* demo
-  // and deleting the old file would leave the hero blank.
+  // The <video> this replaced was the one clip the page fetched before anybody
+  // had scrolled anywhere. What is checked instead is that the still it names
+  // is a file that exists: the header is a gallery card's own frame now, so
+  // renaming or re-recording that demo can take the header out with it and
+  // nothing else on the page would notice.
   expect({
-    clip: /class="heroVid"\s+data-clip="([^"]+)"/.exec(landing)?.[1],
-    ofTheFirstDemo: heroBackdrop.clip.startsWith(hero.clip.slice(0, -4)),
-    recorded: bytes(heroBackdrop.clip) > 0,
+    tag: /class="heroShot"\s+src="([^"]+)"/.exec(landing)?.[1],
+    moves: landing.includes('class="heroVid"'),
+    recorded: bytes(hero.poster) > 0,
   }).toEqual({
-    clip: heroBackdrop.clip,
-    ofTheFirstDemo: true,
+    tag: hero.poster,
+    moves: false,
     recorded: true,
   })
+})
+
+test('the stage is the only thing on the page with a transport', () => {
+  // Nothing offers a Play button any more: the hero holds still, and the stage
+  // starts itself when it is scrolled to. The tabs are what is left, and they
+  // are the way in for every reader rather than the fallback for one kind —
+  // which is the whole reason the buttons could go.
+  expect({
+    buttons: [...landing.matchAll(/class="chip [a-zA-Z]*[Tt]oggle"/g)].length,
+    tabs: landing.includes('class="slideTabs"'),
+  }).toEqual({ buttons: 0, tabs: true })
 })
 
 test('the carousel has slides', () => {
@@ -115,7 +127,7 @@ test.each(slides)('$file holds the stage for its own length', slide => {
 })
 
 test('only the slide showing has fetched its still', () => {
-  // The other two arrive on a `data-src` when their tab is reached. They are
+  // The rest arrive on a `data-src` when their tab is reached. They are around
   // 100K apiece of app window, and `loading="lazy"` does not defer them: the
   // stage sits near enough to the fold that the browser fetches them anyway.
   expect({

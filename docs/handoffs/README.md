@@ -14,3 +14,4 @@ the evidence under it.
 | 2026-08-05 | [Freezes on Firefox/Linux, and a worker that is parked](2026-08-05-freezes-and-the-worker.md)            |
 | 2026-08-09 | [The A/B state pairs still inside useEngine](2026-08-09-ab-state-pairs-in-useengine.md)                  |
 | 2026-08-21 | [The headless profiler, and the frame time it has not yet taken](2026-08-21-gpuprof-and-what-is-left.md) |
+| 2026-09-03 | [The carousel that builds something](2026-09-03-the-carousel-that-builds-something.md)                   |

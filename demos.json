@@ -1,7 +1,7 @@
 [
   {
     "name": "Wiggity",
-    "showcase": true,
+    "showcase": false,
     "query": "?p=je.CoDoBwEEAbAEAKwCAfABAKCZAgXgAw2IIwSIAyFYBrAKEjwGmAEEuB4ZVADsBgr4OiSMCQDEAQDgAgAkAUQEBAAQA9wCAMXBAgCJngIAlf4DAI3tAw&mod=bendUs:lorenz:0.390279:0.27759,hvRing:sine:0.037599:0.090209&srcb=synth&src=sweep"
   },
   {
@@ -22,7 +22,7 @@
   },
   {
     "name": "Chaos black and white feedback",
-    "showcase": true,
+    "showcase": false,
     "query": "?p=Nj.FJADAMACAuQDNVAImAIAUALIARaQAwoUAIABANQDApQBAHgARAniAQECCVQk5gMAqAEAqAYAgJ9JA8gB&mod=tapeLoopMm:smooth:0.05:0.0151&srcb=tv+static"
   },
   {
@@ -62,7 +62,7 @@
   },
   {
     "name": "I can't believe it's not analog butter",
-    "showcase": true,
+    "showcase": false,
     "query": "?p=3t.GKwxE4gDRYQDAMQfANADAqwiFZADALgDAJg1AAwAkAMAtAQAfAXQbwC0AiRACAQirGwroAE&mod=&srcb=none"
   }
 ]

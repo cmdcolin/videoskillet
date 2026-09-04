@@ -23,10 +23,17 @@
 //          looks worth stopping on beside a shot of the app's window, so this
 //          is a short list and the gallery below is the long one — a demo joins
 //          the carousel by turning this on and running `pnpm demos`.
+//   hero   the still behind the title, and the ground of the link preview
+//          (`ogimage.mjs`), which are one picture so that the page and the card
+//          standing in for it when it is shared are the same look. Exactly one
+//          demo carries it.
 //
 // Order is the order everything shows in: the carousel plays its members in it,
-// the gallery lists all of them in it, and the README prints it. The hero's own
-// clip is the first demo listed.
+// the gallery lists all of them in it, and the README prints it. The hero used
+// to be the first of them, which is a different job asked of one line: the head
+// of the gallery is picked for what opens a list, and the hero for what a
+// title can be read over — a quiet corner and a bright far side. `hero` above
+// is those two coming apart.
 import { readFileSync } from 'node:fs'
 
 export const APP = 'https://videoskillet.com/app/'
@@ -39,7 +46,7 @@ export const slug = name =>
 
 // Annotated because `JSON.parse` hands back `any`, and `landing-demos.test.ts`
 // imports this module: without a shape here, the tests over it are unchecked.
-/** @type {{ name: string, query: string, showcase: boolean }[]} */
+/** @type {{ name: string, query: string, showcase: boolean, hero?: boolean }[]} */
 const listed = JSON.parse(readFileSync('demos.json', 'utf8'))
 
 // `clip` and `still` are page-relative and `poster` is not, which is not an
@@ -51,6 +58,17 @@ const listed = JSON.parse(readFileSync('demos.json', 'utf8'))
 // same file here.
 export const demos = listed.map(demo => {
   const file = slug(demo.name)
+  // The origin belongs to this file, not to an entry — a demo is copied out of
+  // the address bar, and what lands on the clipboard is the whole url. Left
+  // alone that concatenates: `.../app/https://videoskillet.com/app/?p=…`, a
+  // published link that opens nothing, in a block nobody proofreads because it
+  // is generated. The comment above said the origin is not stored; this is what
+  // makes that true rather than hoped for.
+  if (!demo.query.startsWith('?')) {
+    throw new Error(
+      `${demo.name}: query must start with '?', not an origin — got ${demo.query.slice(0, 40)}…`,
+    )
+  }
   return {
     ...demo,
     file,
@@ -64,4 +82,10 @@ export const demos = listed.map(demo => {
 
 export const showcase = demos.filter(demo => demo.showcase)
 
-export const hero = demos[0]
+const flagged = demos.filter(demo => demo.hero)
+if (flagged.length !== 1) {
+  throw new Error(
+    `exactly one demo carries "hero": true in demos.json — got ${flagged.length}${flagged.length === 0 ? '' : ` (${flagged.map(d => d.name).join(', ')})`}`,
+  )
+}
+export const hero = flagged[0]

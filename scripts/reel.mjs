@@ -1,5 +1,5 @@
 // What the landing page plays: the carousel's recordings of the app's own
-// window, and the hero's own encode of the clip behind the title.
+// window.
 //
 // The stage under the hero used to hold recordings of the *picture* — the same
 // canvas-only clips the gallery cards play — beside one still screenshot of the
@@ -8,9 +8,31 @@
 // arrived at a wall of analog damage with no window, no panel and no hand.
 //
 // These are recordings of the whole window, and each one is a sentence about
-// the app rather than a look: here is the instrument, here is a control moving
-// and the picture answering, here is the map the controls hang off. The picture
-// stays the gallery's job, and the hero's.
+// the app rather than a look: here is a picture built out of nothing, here is a
+// fault put into a clean one, here is the map the controls hang off.
+//
+// **Two of the three start on a bare load and get somewhere by hand**, which is
+// the whole point of them and took two wrong turns to arrive at. The slides
+// used to run on the bundled photograph through a tape path, chosen because
+// damage is legible on a cat — a stranger watching a slider bend a photograph
+// has been shown that the program has sliders, and nothing else. So they were
+// moved onto the looks the gallery lists, with one row of each wound back so a
+// drag could arrive at it — and that is worse, because arriving at a picture
+// somebody else already built is not building one. The board was ninety per
+// cent of the way there before the clip started, and the drag took the credit.
+//
+// What is left is the honest version and it is also the better film: colour
+// bars on stock controls, three rows raised in the order the mechanism runs,
+// and a field of rainbow that was not there fifteen seconds ago. Nothing is
+// loaded that the hand does not do.
+//
+// Which rows those are took a probe rather than a guess, and the two dead ends
+// are worth keeping. Colour bars are already saturated, so chroma gain at 12x
+// clips them back to almost the same bars — the photograph was in there for a
+// reason. And the camera loop's `mix` and `gain` multiply, so a loop under
+// unity decays to a dark wash however far the fader goes: what makes the
+// picture breed rather than fade is the round trip sitting just over 1, which
+// is what the group's own readout is there to say.
 //
 // A slide is declarative, on the same terms as `docshot-specs.mjs`: a look, the
 // panel state to open, and a timeline of beats to run while the shutter is
@@ -26,11 +48,15 @@
 //            reaching the carousel is still marked in the one place a demo is
 //            written down — and a slide naming a look nobody flagged fails
 //            here rather than recording the wrong board.
-//   params   for slides that are not a demo: the app's own URL params, the way
-//            a docshot spec says it. `src: 'cat'` is the bundled photograph,
-//            which is what makes damage legible as damage.
+//   params   for slides that are not a demo at all: the app's own URL params,
+//            the way a docshot spec says it.
 //   seed     localStorage the app boots on, over `drive.mjs`'s SEED — which
 //            stage is unfolded, and which group inside it.
+//   stillAt  where along the timeline the poster frame is taken, as a fraction
+//            of it, over `appreel.mjs`'s 0.55. A build wants the finish, not
+//            the middle: the middle of one is a picture on the way to the one
+//            the slide is about, and it is the whole of what a reader who asked
+//            for reduced motion is shown.
 //   warm     frames stepped before recording starts. A feedback look is mostly
 //            history: it has to fill before the picture is the one the link
 //            promises (`demoreel.mjs` carries the measurement).
@@ -38,7 +64,7 @@
 //            matters is that a timeline **ends where it began**, because these
 //            loop, and a cursor or an open stage that does not come home reads
 //            as a cut.
-import { hero, showcase } from './demos.mjs'
+import { showcase } from './demos.mjs'
 
 // 3:2, and the width is the stage's own. The landing page's wide measure is
 // 72rem inside 1.25rem gutters, so a slide is 1110 CSS pixels across on a big
@@ -75,21 +101,16 @@ export const NARROW = {
   at: '(max-width: 46rem)',
 }
 
-// The hero's copy of the first demo's clip, which is a different job from the
-// gallery card's copy of it. The card plays it in a 300px tile; the hero plays
-// it full-bleed behind display type at 55% opacity under a scrim that closes to
-// the page colour — about a fifth of the picture survives to the screen. One
-// file was serving both, and being the only clip fetched before a reader has
-// scrolled anywhere, it was the heaviest thing on the page: 298K, against 114K
-// for this, which is indistinguishable behind that scrim on a composited
-// comparison. `demoreel.mjs` writes it beside the card's own clip.
-export const heroBackdrop = {
-  clip: hero.clip.replace(/\.mp4$/, '-hero.mp4'),
-  poster: hero.poster,
-  width: 480,
-  height: 384,
-  crf: 36,
-}
+// The hero used to run a clip behind the title — the first demo's look, in its
+// own lighter encode, because it played full-bleed at 55% opacity under a scrim
+// that closes to the page colour and about a fifth of the picture survived to
+// the screen. It is a still now: a header that moves under a reader is a
+// distraction from the words in front of it, and the moving account of this
+// program belongs to the stage below, where it can be looked at.
+//
+// What is left of it lives in `demos.mjs` — the demo flagged `hero`, and its
+// own gallery still, which `ogimage.mjs` grounds the link preview in too. There
+// is nothing for this file to derive.
 
 // How long a beat runs. Each verb takes its seconds in its own field, so the
 // timeline's arithmetic lives here rather than in the two places that need it —
@@ -98,18 +119,6 @@ export const heroBackdrop = {
 // fixed clock cuts one of them off mid-drag.
 export const beatSecs = beat =>
   beat.secs ?? beat.hold ?? beat.press ?? beat.away
-
-// The look the two demonstration slides sit on: the bundled photograph through
-// a tape path, off stock enough that the panel has lamps and counts to show,
-// and left legible enough as a photograph that a control bending it reads as a
-// control bending it.
-const TAPE = {
-  src: 'cat',
-  set:
-    'lumaMHz:2.6,lumaPeak:0.7,noiseIre:3,colorUnderMix:1,underJitterDeg:4,' +
-    'dropoutRate:5,headSwitchNoise:0.35,headSwitchShiftUs:0.7,tbJitterNs:170,' +
-    'tbWowNs:260,hvSagUs:2.4,hvRing:0.5,phosphor:0.22',
-}
 
 // Pressed one after another, each unfolding its own bank, and the last one
 // pressed twice so the panel comes back to the map it started on. Named because
@@ -128,54 +137,108 @@ const MAP_WALK = [
 
 export const slides = [
   {
-    file: 'window',
-    name: 'The window',
+    file: 'build',
+    name: 'From clean',
     caption:
-      'The picture fills the window. The panel holds the whole board — the look, the signal path, and the stage you have open on it.',
-    alt: 'The videoskillet.js window: a rainbow-ringed synth pattern filling the picture area, and on the right the signal path map with the CHANNEL stage open on its recording controls',
-    look: 'Ridiculous rainbow',
-    seed: {
-      video_feedback_open_phase: 'Channel',
-      video_feedback_open_group: 'Recording (luma & FM)',
-    },
-    // A synth pattern through both loops: the picture is built out of its own
-    // previous frames, and a clip armed early records the bloom instead of the
-    // look.
-    warm: 500,
-    // Short, because nothing in this slide happens: the panel sits still and the
-    // picture loops. Seven seconds of it was the biggest file on the page and
-    // said nothing the fourth second had not.
-    act: [{ hold: 4.5 }],
+      'Colour bars on stock controls, and three rows raised by hand. The camera loop is a lens on the tube’s face; its auto-iris is metering the monitor it feeds, so the servo sits inside the loop it is trying to steady and never settles. Then the mixer loop patches the composite itself back in — subcarrier and all, which is where the colour comes from.',
+    alt: 'A run through the app starting on clean colour bars: the camera feedback fader raised until the picture trails, its auto-iris wound up until the loop blooms, then the mixer loop opened — the bars breeding into a white-hot core with rainbow ripples spreading across the frame',
+    // Nothing. A bare load is the app's own near-blank board — stock controls,
+    // colour bars on both sources — which is the only honest place a slide that
+    // claims to build something can start.
+    params: {},
+    // The finish, not the middle: at 0.55 the poster was the loop half open,
+    // which is the frame this slide exists to get past.
+    stillAt: 0.88,
+    // Nothing to fill: both loops are shut when the clip starts, and filling
+    // them is the clip.
+    warm: 60,
+    // Three rows, in the order the mechanism runs, each a fraction of its own
+    // travel because the recorder reads the row's domain:
+    //   mix             0..1, rests at 0 — a loop that keeps nine tenths a lap
+    //   auto-iris hunt  0..1, rests at 0 — the camera's exposure servo, which
+    //                   is what carries the loop past unity and keeps it there
+    //   loop mix        0..1, rests at 0 — the electrical loop, and the reason
+    //                   the finish is coloured rather than a grey smear
+    //
+    // **`gain` would be the obvious second row and it cannot be used.** It is
+    // marked `fine` in controls.ts, so it lives behind the group's "N fine
+    // tweaks" disclosure and there is no row to reach for until something opens
+    // it. The iris is the better demonstration anyway: raising a number until
+    // the loop runs away shows one control doing one thing, and winding up a
+    // servo that is metering its own output shows why the runaway happens.
+    act: [
+      { hold: 1 },
+      { moveTo: { stage: 'camera' }, secs: 0.7 },
+      { press: 1, on: 'camera' },
+      { moveTo: { slider: 'mix' }, secs: 0.6 },
+      { drag: { slider: 'mix', to: 0.9 }, secs: 1.7 },
+      { scrollTo: { slider: 'auto-iris hunt' }, secs: 0.5 },
+      { moveTo: { slider: 'auto-iris hunt' }, secs: 0.5 },
+      { drag: { slider: 'auto-iris hunt', to: 0.6 }, secs: 1.5 },
+      { hold: 1.2 },
+      { scrollTo: { stage: 'camera' }, secs: 0.5 },
+      { moveTo: { stage: 'mixer' }, secs: 0.6 },
+      { press: 1, on: 'mixer' },
+      { moveTo: { slider: 'loop mix' }, secs: 0.6 },
+      { drag: { slider: 'loop mix', to: 0.95 }, secs: 1.8 },
+      { hold: 2.4 },
+      { away: 0.5 },
+    ],
+    // In portrait the panel is the bottom half of a phone and the map starts
+    // below its fold, so it is scrolled to before anything is pressed on it.
+    narrowAct: [
+      { hold: 0.6 },
+      { scrollTo: { stage: 'camera' }, secs: 0.8 },
+      { moveTo: { stage: 'camera' }, secs: 0.7 },
+      { press: 1, on: 'camera' },
+      { scrollTo: { slider: 'mix' }, secs: 0.6 },
+      { moveTo: { slider: 'mix' }, secs: 0.6 },
+      { drag: { slider: 'mix', to: 0.9 }, secs: 1.7 },
+      { scrollTo: { slider: 'auto-iris hunt' }, secs: 0.6 },
+      { moveTo: { slider: 'auto-iris hunt' }, secs: 0.5 },
+      { drag: { slider: 'auto-iris hunt', to: 0.6 }, secs: 1.5 },
+      { hold: 1.2 },
+      { scrollTo: { stage: 'camera' }, secs: 0.6 },
+      { moveTo: { stage: 'mixer' }, secs: 0.6 },
+      { press: 1, on: 'mixer' },
+      { scrollTo: { slider: 'loop mix' }, secs: 0.6 },
+      { moveTo: { slider: 'loop mix' }, secs: 0.5 },
+      { drag: { slider: 'loop mix', to: 0.95 }, secs: 1.8 },
+      { hold: 2.4 },
+      { away: 0.5 },
+    ],
   },
   {
-    file: 'control',
-    name: 'One control',
+    file: 'deflection',
+    name: 'A fault',
     caption:
-      'Chroma gain is the colour control on the set: how hard the demodulated chroma is amplified before the picture is drawn. Past 1 the saturation blooms and clips against the edge of the gamut — and it is the decoder doing that, not a filter over the photograph.',
-    alt: "The window with the RECEIVER stage open on its decoder controls, chroma gain dragged to 12.8x, and the photograph's colour blooming and clipping into flat cyan and orange",
-    params: TAPE,
+      'The same clean bars, and one fault put into the receiver’s power supply. The ring is the high-voltage rail failing to hold still under load, so the raster it is steering breathes — geometry, not a wobble drawn over the picture, which is why the black between the bars bends with them.',
+    alt: 'The window with the RECEIVER stage open on its deflection controls, HV sag and supply ring raised, and the clean colour bars bowing and breathing as the raster loses its geometry',
+    params: {},
+    // The stage and the group it wants, rather than a press on the map. A stage
+    // opened by pressing its box unfolds its *first* group, and the receiver's
+    // first group is SYNC — so a timeline that pressed RECEIVER and then reached
+    // for a deflection row found no such row. Walking the map is the third
+    // slide's job anyway.
     seed: {
       video_feedback_open_phase: 'Receiver',
-      video_feedback_open_group: 'Decoder',
+      video_feedback_open_group: 'Deflection',
     },
-    warm: 90,
-    // Travel fractions rather than values, because the recorder reads the row's
-    // own domain: chroma gain runs 0 to 16 and rests at 1, so 0.06 is where a
-    // hand finds it and 0.8 is 12.8x, well past where the gamut runs out.
+    stillAt: 0.78,
+    warm: 60,
+    // HV sag runs -100..100 and rests at 0, so 0.53 is +6us; supply ring runs
+    // 0..1 and rests there, and 0.9 is most of the way to the chaos end of its
+    // own label.
     act: [
-      { hold: 0.4 },
-      { scrollTo: { slider: 'chroma gain' }, secs: 0.8 },
-      { moveTo: { slider: 'chroma gain' }, secs: 0.7 },
-      { drag: { slider: 'chroma gain', to: 0.8 }, secs: 1.5 },
-      { hold: 0.9 },
-      { drag: { slider: 'chroma gain', to: 0.0625 }, secs: 0.9 },
+      { hold: 0.8 },
+      { scrollTo: { slider: 'HV sag' }, secs: 0.8 },
+      { moveTo: { slider: 'HV sag' }, secs: 0.6 },
+      { drag: { slider: 'HV sag', to: 0.53 }, secs: 1.2 },
+      { moveTo: { slider: 'supply ring' }, secs: 0.5 },
+      { drag: { slider: 'supply ring', to: 0.9 }, secs: 1.4 },
+      { hold: 1.8 },
       { away: 0.5 },
-      // Back to the head of the panel, which is where the clip started: the
-      // sidebar scrolls as one column, so reaching the decoder takes the
-      // masthead off the top of the frame, and a loop has to put it back. The
-      // row is named only to find the column it is in — `to` is where the
-      // column ends up.
-      { scrollTo: { slider: 'chroma gain' }, to: 0, secs: 0.6 },
+      { scrollTo: { slider: 'HV sag' }, to: 0, secs: 0.6 },
     ],
   },
   {
@@ -183,8 +246,8 @@ export const slides = [
     name: 'The signal path',
     caption:
       'The map is the rig: two sources into a mixer, then the channel it is recorded and broadcast over, the receiver that decodes it and the screen it lands on. Click a stage and its controls open under it.',
-    alt: 'The window with the signal path map at the head of the panel, the RECEIVER box pressed, and its stage unfolded underneath on the sync and decoder groups',
-    params: TAPE,
+    alt: 'The window with the signal path map at the head of the panel, the RECEIVER box pressed and its stage unfolded underneath, over a picture of colour bars smeared into a soft feedback cascade',
+    look: 'Fuzzy color bars feedback',
     // Presets folded, which is the app's own resting state and also what keeps
     // the loop shut: opening a stage folds that section away to give the stage
     // the room, and closing the stage does not put it back — so a clip that
@@ -197,7 +260,7 @@ export const slides = [
         'Sound into the picture': false,
       }),
     },
-    warm: 90,
+    warm: 200,
     act: MAP_WALK,
     // In portrait the panel is the bottom half of a phone and the map starts
     // below its fold, so it is scrolled to first and everything after that is
@@ -205,15 +268,16 @@ export const slides = [
     narrowAct: [{ scrollTo: { stage: 'SOURCE A' }, secs: 0.8 }, ...MAP_WALK],
   },
 ].map(slide => {
-  const query =
+  const board =
     slide.look === undefined
       ? `?${new URLSearchParams(slide.params)}`
       : showcase.find(demo => demo.name === slide.look)?.query
-  if (query === undefined) {
+  if (board === undefined) {
     throw new Error(
       `reel slide “${slide.file}” plays ${slide.look}, which is not one of the demos marked showcase in demos.json`,
     )
   }
+  const query = board
   const narrowAct = slide.narrowAct ?? slide.act
   const length = act =>
     Math.round(act.reduce((total, beat) => total + beatSecs(beat), 0) * 10) / 10

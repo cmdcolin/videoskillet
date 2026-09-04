@@ -1,7 +1,7 @@
 import puppeteer from 'puppeteer-core'
 
 import { FIREFOX } from './browser.mjs'
-import { demos } from './demos.mjs'
+import { demos, hero } from './demos.mjs'
 
 // Renders the link-preview image (public/og.jpg): one of the landing page's
 // own demo stills (public/demos/<slug>.webp — see demos.mjs) as the ground,
@@ -10,14 +10,18 @@ import { demos } from './demos.mjs'
 // site itself renders. Reuses the still rather than a fresh capture so the
 // image stays the exact look the landing page already shows for that demo.
 //
-// Usage: node scripts/ogimage.mjs [look="Ridiculous rainbow"]
+// Usage: node scripts/ogimage.mjs [look]   (default: the demo flagged `hero`)
 //   (needs Firefox Nightly + ImageMagick's `magick` on PATH)
 import { execFileSync } from 'node:child_process'
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
-const lookName = process.argv[2] ?? 'Ridiculous rainbow'
+// The demo flagged `hero` in demos.json, which is the same still the landing
+// page's header shows — one look, so the page and the card that stands in for
+// it when the link is shared are a picture of the same thing. A name on the
+// command line overrides it, for trying one out before flagging it.
+const lookName = process.argv[2] ?? hero.name
 const OUT = 'public/og.jpg'
 
 const look = demos.find(d => d.name === lookName)
