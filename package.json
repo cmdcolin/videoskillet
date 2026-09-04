@@ -23,11 +23,11 @@
   ],
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "astro dev --port 4321 && vite",
     "build": "tsc -b && node scripts/docgen.mjs --check && node scripts/demogen.mjs --check && astro build && vite build",
     "preview": "vite preview",
-    "format": "oxfmt",
-    "format:check": "oxfmt --check",
+    "format": "oxfmt && prettier --write \"site/**/*.astro\"",
+    "format:check": "oxfmt --check && prettier --check \"site/**/*.astro\"",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
     "compiler": "node scripts/compilercheck.mjs",
@@ -48,7 +48,7 @@
     "callout": "node scripts/callout.mjs",
     "og": "node scripts/ogimage.mjs",
     "guide": "astro build",
-    "guide:dev": "astro dev",
+    "site:dev": "astro dev --port 4321",
     "docgen": "node scripts/docgen.mjs",
     "docgen:check": "node scripts/docgen.mjs --check",
     "demos": "node scripts/demogen.mjs",
@@ -67,6 +67,9 @@
     "*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}": [
       "oxlint --fix --no-error-on-unmatched-pattern",
       "oxfmt"
+    ],
+    "*.astro": [
+      "prettier --write"
     ]
   },
   "dependencies": {
@@ -95,6 +98,8 @@
     "oxfmt": "^0.65.0",
     "oxlint": "^1.80.0",
     "oxlint-tsgolint": "^7.0.2001",
+    "prettier": "^3.9.6",
+    "prettier-plugin-astro": "^0.14.1",
     "puppeteer-core": "^25.9.0",
     "rehype-raw": "^7.0.0",
     "typescript": "^7.0.2",

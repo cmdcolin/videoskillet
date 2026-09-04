@@ -1260,8 +1260,25 @@ Astro builds `dist/` first and vite adds the app entries to what it left, which
 is the order [`../package.json`](../package.json)'s `build` runs them in and why
 vite's `emptyOutDir` is off.
 
-`pnpm guide:dev` serves the site with live reload, which is the way to work on
-it: a save re-renders the page you are looking at.
+### Two dev servers, one front door
+
+`pnpm dev` starts both: Astro on 4321 for the landing page and the guide, and
+vite on 5199 for the app. Astro's daemonises, so the terminal you started it
+from is vite's.
+
+They are two servers because each one only knows how to serve its own half —
+vite cannot render an `.astro` page, and Astro's dev server injects
+`/@vite/client` and `/@id/astro/runtime/…` into every page it serves, which are
+paths that mean something else on vite's. Proxying the document alone hands the
+browser a page whose scripts resolve against the wrong server, so
+[`../vite-plugin-site.ts`](../vite-plugin-site.ts) redirects `/` and `/guide/…`
+from 5199 to 4321 instead. Everything is reachable from either port, and a save
+re-renders the page you are looking at.
+
+`pnpm site:dev` starts Astro's alone, for working on the site without the app.
+
+The harnesses point at 5199 and drive `/app/`, which is vite's own and is
+unaffected by any of this.
 
 Everything else the site chrome shows is **derived from the markdown, never
 authored twice** — so a heading, a page or a first paragraph is edited in one
@@ -1290,6 +1307,14 @@ Two things the CSS can't reach are done by a small inline script: opening the
 section nav only at the width where it is a sidebar rather than a disclosure,
 and marking the section being read. Both are enhancements — with the script gone
 the nav is a closed `<details>` and everything still works.
+
+`.astro` files are formatted by prettier (`prettier-plugin-astro`, wired into
+`pnpm format`); oxfmt has no astro parser, and its options are repeated in
+`.prettierrc.mjs` so the two tools agree. They are **not typechecked**: that
+wants `astro check`, which needs a TypeScript API that TypeScript 7 does not
+expose yet (withastro/roadmap#1321), and this repo is on 7. The same blocker
+leaves the tests under `site/` unchecked, since both import `.astro`. Worth
+revisiting whenever that lands.
 
 **The stylesheet and that script are inlined into every page deliberately.**
 `guidecheck.mjs` below loads the built pages over `file://` to measure them, and
