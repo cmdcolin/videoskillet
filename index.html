@@ -285,6 +285,84 @@
         flex-wrap: wrap;
         gap: 0.5rem;
       }
+      /* Shown under exactly the preference that switched the autoplay off:
+         every other reader's stage is already moving. A media query rather
+         than a class, so it follows a reader who changes the setting with the
+         page open.
+
+         The whole stage is the control, scrimmed over the still it is lying on
+         — which is what says the box is a video at all, since the still under
+         it is a photograph of an interface and reads as one. Nothing here
+         moves or scales: this exists only for a reader who asked it not to, so
+         what it changes on a hover or a press is colour and opacity. */
+      .stageVeil {
+        display: none;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .stageVeil {
+          position: absolute;
+          inset: 0;
+          z-index: 1;
+          display: grid;
+          place-items: center;
+          padding: 0;
+          border: 0;
+          background: rgb(8 8 10 / 55%);
+          cursor: pointer;
+          transition: background 0.3s ease;
+        }
+        /* Running: the recording is the point, so the scrim gets out of the
+           way, and comes back under a pointer or a focus ring — which is where
+           a reader looking for the way to stop it already is. */
+        .stageVeil.off {
+          background: rgb(8 8 10 / 0%);
+        }
+        .stageVeil.off .stageIcon {
+          opacity: 0;
+        }
+        .stageVeil.off:hover,
+        .stageVeil.off:focus-visible {
+          background: rgb(8 8 10 / 35%);
+        }
+        .stageVeil.off:hover .stageIcon,
+        .stageVeil.off:focus-visible .stageIcon {
+          opacity: 1;
+        }
+      }
+      /* The one glyph on the page that stands without a word beside it. A
+         triangle centred in a video is the one symbol a reader does not have
+         to be taught, and the button carries the sentence on `aria-label` for
+         anyone not being shown it. */
+      .stageIcon {
+        width: 5.5rem;
+        height: 5.5rem;
+        transition: opacity 0.3s ease;
+      }
+      .stageIcon circle {
+        fill: rgb(8 8 10 / 55%);
+        stroke: var(--fg);
+        stroke-width: 3;
+      }
+      .stageIcon path {
+        fill: var(--fg);
+      }
+      .stagePauseMark {
+        display: none;
+      }
+      .stageVeil.off .stagePlayMark {
+        display: none;
+      }
+      .stageVeil.off .stagePauseMark {
+        display: block;
+      }
+      .stageVeil:hover .stageIcon circle,
+      .stageVeil:focus-visible .stageIcon circle {
+        stroke: var(--accent);
+      }
+      .stageVeil:hover .stageIcon path,
+      .stageVeil:focus-visible .stageIcon path {
+        fill: var(--accent);
+      }
       /* What the slide showing is of. Every line is in the markup and the one
          belonging to the slide showing is the one painted, so a reader with no
          script gets the first slide's own line rather than three of them or
@@ -577,8 +655,8 @@
                 class="still"
                 src="/reel/build.webp"
                 alt="A run through the app starting on clean colour bars: the camera feedback fader opened until the picture trails, its rotate wound a few degrees so the trails spiral, then the mixer loop patched in and its delay nudged off zero — the bars becoming a field of flowing green, magenta and blue"
-                width="1112"
-                height="742"
+                width="2224"
+                height="1484"
                 decoding="async"
               />
             </picture>
@@ -603,8 +681,8 @@
               data-src="reel/deflection.webp"
               data-src-narrow="reel/deflection-narrow.webp"
               alt="The window with the RECEIVER stage open on its deflection controls, HV sag and supply ring raised, and the clean colour bars bowing and breathing as the raster loses its geometry"
-              width="1112"
-              height="742"
+              width="2224"
+              height="1484"
               decoding="async"
             />
             <video
@@ -628,8 +706,8 @@
               data-src="reel/signal-path.webp"
               data-src-narrow="reel/signal-path-narrow.webp"
               alt="The window with the signal path map at the head of the panel, the RECEIVER box pressed and its stage unfolded underneath, over a picture of a bright scanline arch bending across the frame in red and green fringes"
-              width="1112"
-              height="742"
+              width="2224"
+              height="1484"
               decoding="async"
             />
             <video
@@ -1206,14 +1284,19 @@
         // frame either way, so a stage that *is* in view loses nothing.
         let inView = false
         let advance = 0
+        // Pressed the Play button below, which is the reader asking for the
+        // reel in so many words — the same thing hover is on a gallery card,
+        // and it outranks the preference for the same reason.
+        let asked = false
 
-        // One flag, not three. Whether the tab is showing and whether the
-        // reader wants motion are *asked* rather than stored, because the only
-        // one of the three with an event that reports the stage's own state is
-        // the observer: folding `document.hidden` into `inView` on a
+        // Stored only where there is nothing to ask. Whether the tab is
+        // showing and whether the reader wants motion are *asked* rather than
+        // stored, because the event that reports the stage's own state is the
+        // observer's: folding `document.hidden` into `inView` on a
         // visibilitychange said a scrolled-past stage was in view every time
         // the reader came back to the tab, and set it playing off screen.
-        const running = () => inView && !document.hidden && !motion.matches
+        const running = () =>
+          inView && !document.hidden && (!motion.matches || asked)
 
         // One clip decodes at a time, and it is the one being looked at. The
         // `live` class lands on the promise rather than beside it, so a clip
@@ -1281,6 +1364,35 @@
           tabs.append(button)
           return button
         })
+
+        // The way into the reel for a reader who asked for reduced motion, who
+        // is otherwise handed a box that never moves. The button is the stage
+        // itself rather than a control beside it, so the thing that has to be
+        // found is the size of the picture, and it says what it does on
+        // `aria-label` rather than in the glyph.
+        const veil = document.createElement('button')
+        veil.type = 'button'
+        veil.className = 'stageVeil'
+        veil.innerHTML =
+          '<svg class="stageIcon" viewBox="0 0 100 100" aria-hidden="true">' +
+          '<circle cx="50" cy="50" r="46" />' +
+          '<path class="stagePlayMark" d="M41 31 L72 50 L41 69 Z" />' +
+          '<path class="stagePauseMark" d="M38 32h10v36h-10zM52 32h10v36h-10z" />' +
+          '</svg>'
+        const name = () => {
+          veil.setAttribute(
+            'aria-label',
+            asked ? 'Pause the reel' : 'Play the reel',
+          )
+          veil.classList.toggle('off', asked)
+        }
+        veil.addEventListener('click', () => {
+          asked = !asked
+          name()
+          sync()
+        })
+        name()
+        stage.append(veil)
 
         motion.addEventListener('change', () => sync())
         document.addEventListener('visibilitychange', () => sync())

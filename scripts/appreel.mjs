@@ -1,8 +1,10 @@
 // Record the app's own window — chrome, panel, picture and a hand on it — for
 // the landing page's carousel. `reel.mjs` is the list; this drives it.
 //
-// Usage: node scripts/appreel.mjs [--base=URL] [--out=DIR] [--check] [--keep] [file...]
-//   needs the dev server (pnpm dev), Firefox Nightly, ffmpeg and cwebp. Names
+// Usage: node scripts/appreel.mjs [--base=URL] [--out=DIR] [--browser=chrome|firefox]
+//        [--check] [--keep] [file...]
+//   needs the dev server (pnpm dev), a browser (Chrome on macOS, Firefox
+//   Nightly on Linux — see `engine` below), ffmpeg and cwebp. Names
 //   filter the run: `node scripts/appreel.mjs control`.
 //
 // **Frames are stepped and shot, not streamed.** `demoreel.mjs` records the
@@ -47,7 +49,7 @@
 
 import puppeteer from 'puppeteer-core'
 
-import { FIREFOX } from './browser.mjs'
+import { CHROME, FIREFOX } from './browser.mjs'
 import { installHelpers, SEED, seedStorage, step } from './drive.mjs'
 import { beatSecs, FRAME, NARROW, slides } from './reel.mjs'
 import { appUp } from './until.mjs'
@@ -64,6 +66,7 @@ import {
 } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { platform } from 'node:process'
 
 const argv = process.argv.slice(2)
 const flag = (name, fallback) => {
@@ -71,6 +74,14 @@ const flag = (name, fallback) => {
   return hit === undefined ? fallback : hit.slice(name.length + 3)
 }
 const base = flag('base', 'http://localhost:5199/app/')
+// Which browser holds the window being recorded. Chrome on macOS, where its
+// Metal backend renders the signal path as faithfully as Firefox does and
+// screenshots come back quicker; Firefox everywhere else, because on Linux
+// Chrome's ANGLE/Vulkan backend reports texture allocations the driver never
+// refused and the app spends the recording arguing with it (CLAUDE.md §
+// Testing WebGPU). `--browser=` overrides either way, which is how the two are
+// compared on the same slide.
+const engine = flag('browser', platform === 'darwin' ? 'chrome' : 'firefox')
 const outDir = flag('out', 'public/reel')
 const check = argv.includes('--check')
 // Leave the frames behind, and say where. An encode is a knob (fps, crf, the
@@ -92,13 +103,18 @@ const STEPS = 2
 // the heaviest slide went 645K to 268K. What crf 38 and 40 take is the fine
 // dropout speckle, which is the thing the app is *for*, so this stops here.
 //
+// Those runs were the 1x frame. The wide take records at 2x now (`FRAME`), and
+// 34 rather than 36 is what that buys back: a quantizer step is coarser in
+// absolute terms on a frame with four times the pixels in it, and the dropout
+// speckle it eats is the same size on the page as it ever was.
+//
 // Two encoder knobs that look like savings and are not. Dropping the frame rate
 // saves nothing: CRF is normalized against time, so 20fps at the same crf
 // spends the same bits on fewer frames and comes out slightly *larger*. And
 // neither AV1 (svt, crf 50: 290K) nor VP9 (libvpx, crf 42: 1.6M) beat x264 on
 // this material — a field of analog noise is where AV1's tools have least to
 // work with — so the page stays one file per slide with no <source> fallbacks.
-const CRF = 36
+const CRF = 34
 // The still under the clip — what ships to a reader who asked for reduced
 // motion, and what stands in until the clip has opened. Higher than the
 // gallery's 72: that one is a field of noise where ringing hides, and this one
@@ -452,6 +468,17 @@ async function record(browser, slide, take, tmpDir) {
       width: take.frame.width,
       height: take.frame.height,
       deviceScaleFactor: take.frame.dpr,
+      // The phone take's whole point: told the pointer is coarse, the app lays
+      // its rows out for a thumb, in `theme.css` and eight component sheets
+      // that all read the media query. Chrome answers it off the viewport
+      // being a touch one, where Firefox has browser-wide prefs for it — and a
+      // touch viewport is the truer emulation of the two, since it carries
+      // `hover: none` and a nonzero `maxTouchPoints` with it rather than the
+      // one query. `emulateMediaFeatures` is not the way: puppeteer checks
+      // names against a fixed list and `pointer` is not on it.
+      ...(engine === 'chrome' && take.frame.coarse === true
+        ? { hasTouch: true, isMobile: true }
+        : {}),
     })
     await page.evaluateOnNewDocument(seedStorage, {
       ...SEED,
@@ -580,7 +607,7 @@ const at = capturedAt()
 // one session resized — `setViewport` after a load swaps the realm under
 // Firefox BiDi and takes `window.vf` with it.
 const takes = slide => [
-  { name: slide.file, frame: FRAME, act: slide.act, out: FRAME },
+  { name: slide.file, frame: FRAME, act: slide.act, out: FRAME.out },
   {
     name: `${slide.file}-narrow`,
     frame: NARROW,
@@ -598,23 +625,36 @@ for (const slide of wanted) {
     // several hundred stepped frames in it. The pointer prefs are per browser
     // too: told to report a coarse primary pointer, the app lays its rows out
     // for a thumb, which is what a phone actually gets.
-    const browser = await puppeteer.launch({
-      browser: 'firefox',
-      executablePath: FIREFOX,
-      headless: false,
-      extraPrefsFirefox: {
-        'dom.webgpu.enabled': true,
-        'gfx.webgpu.ignore-blocklist': true,
-        'media.navigator.streams.fake': true,
-        'media.navigator.permission.disabled': true,
-        ...(take.frame.coarse === true
-          ? {
-              'ui.primaryPointerCapabilities': 1,
-              'ui.allPointerCapabilities': 1,
-            }
-          : {}),
-      },
-    })
+    const browser = await (engine === 'chrome'
+      ? puppeteer.launch({
+          browser: 'chrome',
+          executablePath: CHROME,
+          headless: false,
+          args: [
+            '--use-fake-device-for-media-stream',
+            '--use-fake-ui-for-media-stream',
+          ],
+        })
+      : puppeteer.launch({
+          browser: 'firefox',
+          executablePath: FIREFOX,
+          headless: false,
+          extraPrefsFirefox: {
+            'dom.webgpu.enabled': true,
+            'gfx.webgpu.ignore-blocklist': true,
+            'media.navigator.streams.fake': true,
+            'media.navigator.permission.disabled': true,
+            // Chrome says the same thing per page rather than per browser, in
+            // `record` — the prefs are a browser-wide switch and there is no
+            // Firefox equivalent of `emulateMediaFeatures` under BiDi.
+            ...(take.frame.coarse === true
+              ? {
+                  'ui.primaryPointerCapabilities': 1,
+                  'ui.allPointerCapabilities': 1,
+                }
+              : {}),
+          },
+        }))
     try {
       const frames = await record(browser, slide, take, tmpDir)
       const mp4 = join(outDir, `${take.name}.mp4`)

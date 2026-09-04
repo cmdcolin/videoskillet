@@ -49,15 +49,23 @@ test('the hero shows the demo flagged hero, as a still', () => {
   })
 })
 
-test('the stage is the only thing on the page with a transport', () => {
-  // Nothing offers a Play button any more: the hero holds still, and the stage
-  // starts itself when it is scrolled to. The tabs are what is left, and they
-  // are the way in for every reader rather than the fallback for one kind —
-  // which is the whole reason the buttons could go.
+test('the reel has a way in when autoplay is switched off', () => {
+  // A reduced-motion preference switches off exactly the thing that starts the
+  // stage, so that reader is handed a box that never moves and no way to ask
+  // it to. The scrim over the stage is that way in, and it is built by the
+  // page's own script the way the tabs are — so what is checked is the pair
+  // that has to agree: the class the script gives it, and the rule that lays
+  // it over the picture under that preference and no other time. The hero
+  // still holds still.
   expect({
-    buttons: [...landing.matchAll(/class="chip [a-zA-Z]*[Tt]oggle"/g)].length,
+    built: landing.includes("veil.className = 'stageVeil'"),
+    shown:
+      /@media \(prefers-reduced-motion: reduce\)\s*\{\s*\.stageVeil\s*\{/.test(
+        landing,
+      ),
+    hero: landing.includes('class="heroVid"'),
     tabs: landing.includes('class="slideTabs"'),
-  }).toEqual({ buttons: 0, tabs: true })
+  }).toEqual({ built: true, shown: true, hero: false, tabs: true })
 })
 
 test('the carousel has slides', () => {

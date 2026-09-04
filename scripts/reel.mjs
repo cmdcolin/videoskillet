@@ -71,7 +71,19 @@ import { showcase } from './demos.mjs'
 // screen — recording at that width is what puts the app's type on the page at
 // the size the app actually renders it, rather than a shrunken picture of a
 // window. Anything wider reads as a screenshot of somebody else's monitor.
-export const FRAME = { width: 1112, height: 742, dpr: 1 }
+//
+// `dpr: 2` for the same reason the narrow frame has it, arrived at later: a
+// slide is 1110 CSS pixels on a screen that is nearly always 2x, so recording
+// at 1112 shipped every stage asset at half the resolution the display asked
+// for and had the browser upscale it 2:1. The app's 11px panel type is where
+// that showed. `out` is the recorded size, so nothing is scaled on the way
+// out — the frames are already the pixels the page wants.
+export const FRAME = {
+  width: 1112,
+  height: 742,
+  dpr: 2,
+  out: { width: 2224, height: 1484 },
+}
 
 // The same slides again, for a phone. A 1112px window scaled into a 356px
 // column is a picture of an interface rather than an interface — the panel's

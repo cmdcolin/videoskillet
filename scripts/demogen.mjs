@@ -137,8 +137,8 @@ const slide = (
       class="still"
       src="${s.poster}"
       alt="${s.alt.replaceAll('"', '&quot;')}"
-      width="${FRAME.width}"
-      height="${FRAME.height}"
+      width="${FRAME.out.width}"
+      height="${FRAME.out.height}"
       decoding="async"
     />
   </picture>`
@@ -147,8 +147,8 @@ const slide = (
     data-src="${s.still}"
     data-src-narrow="${s.narrowStill}"
     alt="${s.alt.replaceAll('"', '&quot;')}"
-    width="${FRAME.width}"
-    height="${FRAME.height}"
+    width="${FRAME.out.width}"
+    height="${FRAME.out.height}"
     decoding="async"
   />`
   }
