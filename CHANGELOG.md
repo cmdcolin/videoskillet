@@ -2,6 +2,11 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [0.38.2](https://github.com/cmdcolin/videoskillet/compare/v0.38.1...v0.38.2) - 2026-09-04
+
+### Features
+- *(ui)* [`f20b1ea`](https://github.com/cmdcolin/videoskillet/commit/f20b1ea0705086031057ca23ec13328e1dbf8906) the reel opens on a board coming apart, and nudges it further
+
 ## [0.38.1](https://github.com/cmdcolin/videoskillet/compare/v0.38.0...v0.38.1) - 2026-09-04
 
 ### Features
