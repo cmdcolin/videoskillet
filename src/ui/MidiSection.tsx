@@ -203,6 +203,7 @@ export function MidiSection(props: {
             </span>
             <button
               className={styles.iconX}
+              aria-label={`unbind ${targetLabel(t)}`}
               onClick={() => props.onClearBinding(t)}
             >
               ×
@@ -222,6 +223,7 @@ export function MidiSection(props: {
             </span>
             <button
               className={styles.iconX}
+              aria-label={`unbind ${a.label}`}
               onClick={() => props.onClearNote(a.target)}
             >
               ×
