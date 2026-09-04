@@ -2,13 +2,28 @@
    actions. It takes .modal from dialog.module.css and styles its own card —
    this one is a list, not a page of prose. */
 
-/* Sits high in the viewport rather than centered (the UA centers a modal
-   <dialog> with `margin: auto`; pinning the top margin overrides only the
-   vertical half), so the results grow downward into empty space instead of
-   pushing the box around as the list shrinks. */
+/* Over the panel, not over the picture. The UA centers a modal <dialog> with
+   `margin: auto`, which put the card in the middle of the screen and the dim
+   backdrop over everything — on top of the one thing the palette is for
+   watching, since ←→ nudges and a typed value both land live. Pinning three
+   margins overrides both halves of that auto: high in the viewport so results
+   grow downward into empty space rather than pushing the box around as the list
+   shrinks, and against the right edge where the panel already is.
+
+   Wider than the 332px panel, so on a laptop it still laps onto the right of
+   the picture; the middle stays clear, which is what the note was about. At
+   1280px up the panel is 664px and the card sits inside it. */
 .paletteModal {
-  margin-top: 10vh;
+  margin-top: 6vh;
   margin-bottom: auto;
+  margin-left: auto;
+  margin-right: 12px;
+}
+/* No dim at all. The card carries its own background and border, so it reads
+   against a picture without one — and the picture is what you are looking at
+   while typing into this. */
+.paletteModal::backdrop {
+  background: transparent;
 }
 .paletteCard {
   width: 560px;
