@@ -7,7 +7,7 @@ import {
 } from './frameLock'
 import { CameraIcon, GearIcon, GraphIcon, MenuIcon } from './icons'
 import { clampZoom, zoomAtTravel, zoomTravel } from './lens'
-import { openGuide } from './links'
+import { openGuide, openUrlApi } from './links'
 import { MenuItem, Popover } from './Popover'
 import popoverStyles from './Popover.module.css'
 import { tapFor } from './signalTap'
@@ -202,6 +202,16 @@ export function AppMenu(props: {
             title="sources, feedback, modulation, saving, scopes, and every control"
             closes={id}
             onClick={() => openGuide()}
+          />
+          {/* Under the guide, because it is the same question asked by
+              something that types rather than points: how do I drive this. */}
+          <MenuItem
+            icon="⌨"
+            label="drive it by URL ↗"
+            hint=""
+            title="every query-string parameter, and every control's key — for scripting the app, or for an agent driving it"
+            closes={id}
+            onClick={() => openUrlApi()}
           />
           <MenuItem
             icon="?"
