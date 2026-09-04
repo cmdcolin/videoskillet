@@ -30,10 +30,13 @@
 //   - the generators (`docshots`, `panelshots`, `gallery`, `logo`, `diagrams`,
 //     `clips`, `labels`, `contact`) write files rather than judging anything.
 //   - `compilercheck` needs no server and already runs in CI as `pnpm compiler`.
-//   - `guidecheck` needs no server either, but it wants the guide built and a
-//     browser to measure it in, and CI installs neither — so nothing runs it on
-//     its own. `pnpm guide:check` builds the site and checks it in one step;
-//     run it after touching the guide's markup or its stylesheet.
+//   - `guidecheck` and `distcheck` want a build to look at rather than the dev
+//     server this file starts, so neither belongs in the list below. Both drive
+//     a browser, and CI installs none, so nothing runs them on their own.
+//     `pnpm guide:check` builds the site and measures every guide page for
+//     overflow; `pnpm distcheck` loads every page of `dist/` and fails on a
+//     404, a console error or a broken image. Run them after touching the
+//     site's markup, its stylesheet, or anything that names an asset.
 //   - `perf`, `loopseek`, `pullstep`, `codeccheck`, `pixdiff` and `affinity`
 //     are measurements. They report numbers a human reads; there is no pass to
 //     report. The two newest are why the frame-exact pull is built the way it

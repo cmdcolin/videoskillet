@@ -57,6 +57,7 @@
     "reel": "node scripts/appreel.mjs",
     "reel:check": "node scripts/appreel.mjs --check",
     "guide:check": "astro build && node scripts/guidecheck.mjs",
+    "distcheck": "node scripts/distcheck.mjs",
     "firebase-deploy": "firebase deploy --only firestore:rules",
     "test:rules": "firebase emulators:exec --only firestore --project ntscjs-rules-test \"vitest run firestoreRules\"",
     "docs": "node scripts/diagrams.mjs",

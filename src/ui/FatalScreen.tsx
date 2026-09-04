@@ -55,14 +55,22 @@ export function FatalScreen({ fatal }: { fatal: Fatal }) {
               This app requires WebGPU. Try another browser or even nightly
               build like Chrome Canary or Firefox Nightly.
             </p>
-            {/* One of the recorded demos rather than demo-v2.mp4, which this
-                screen used to show: that one is a dark tape transfer, and in a
-                card this colour it reads as a black band. It stays in public/
-                as the fixture cue.ts and mp4demux.ts are measured against. */}
+            {/* The cat, which is what this screen showed before it was briefly
+                one of the recorded demos. It is a dark tape transfer and it does
+                sit low against a card this colour — but it is a picture of
+                something being damaged, and the demo that replaced it was
+                bright noise with no subject in it. On the one screen a visitor
+                without WebGPU ever sees, a recognisable thing coming apart says
+                what the program does and abstract noise does not.
+
+                Do not re-encode `demo-v2.mp4` to make it lighter: its GOP
+                spacing is a measured fixture (`cue.ts`, `mp4demux.ts`,
+                `cuecheck.mjs`, `demuxcheck.mjs`). The poster beside it is a
+                frame of it at 5.5s, where the cat reads most clearly. */}
             <video
               className={styles.fatalVideo}
-              src={publicUrl('demos/wonkitize-me.mp4')}
-              poster={publicUrl('demos/wonkitize-me.jpg')}
+              src={publicUrl('demo-v2.mp4')}
+              poster={publicUrl('demo-v2.webp')}
               autoPlay
               muted
               loop

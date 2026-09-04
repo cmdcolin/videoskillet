@@ -1321,6 +1321,27 @@ revisiting whenever that lands.
 a linked stylesheet would leave it measuring an unstyled page and reporting that
 all is well.
 
+### Checking the built pages
+
+`pnpm distcheck` serves `dist/` and loads every page of it in a browser — the
+landing page, the guide, the app, and the two labelling tools — failing on a
+404, a console error or a broken image
+([`../scripts/distcheck.mjs`](../scripts/distcheck.mjs)).
+
+Everything else about a build is checked by looking at files: `pnpm build`
+proves the pages were emitted, the tests prove the data reached them, and
+`guide:check` proves the guide does not overflow. None of that opens a page and
+watches what it asks the network for, which is how the fatal screen came to
+poster its clip with a file that had never existed — the only evidence was a 404
+in a log nobody read.
+
+It serves the directory the deploy uploads rather than running `pnpm preview`,
+because a page that works only because a dev server rewrote something for it is
+a page that is broken on Pages. The app opens on its "cannot run" screen there,
+headless Firefox having no WebGPU, and that is a page like any other: a video, a
+poster and a link, all of which have to resolve. The instrument behind it is
+what the harnesses above are for.
+
 ### Checking the layout
 
 `pnpm guide:check` builds the site, then loads every page at 1352px and at 390px
