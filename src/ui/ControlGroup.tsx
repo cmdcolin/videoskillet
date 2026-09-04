@@ -79,6 +79,7 @@ export function ControlSlider(props: {
       value={api.lockedValue(s.key) ?? value}
       defaultValue={DEFAULT_CONTROLS[s.key]}
       onChange={v => api.writeControl(s.key, v)}
+      onReset={() => api.resetControl(s.key)}
       choices={s.choices}
       curve={s.curve}
       redline={s.redline}

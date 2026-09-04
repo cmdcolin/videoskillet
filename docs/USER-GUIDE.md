@@ -9,7 +9,7 @@ Click a preset to jump to it; drag it sideways to blend it part-way in.
 ![The head of the panel: a row of whole-board verbs — compare, random look and its ▾, drift, morph — over tags, reset and undo, then This look with its off-stock count, then the Presets shortlist of chips and the dashed handle to the rest](img/presets.png)
 
 - **This look** lists every control you're off stock on, as sliders. Drag to
-  edit, **↺** to revert one.
+  edit, **↺** to revert one — `ctrl+z` puts back a value the ↺ took.
 - **reset** puts everything back to stock — controls, modulation bay, stab gate
   — and `ctrl+z` undoes it. **clean** is the same verb; hold `c` to preview
   clean without changing anything.

@@ -176,6 +176,39 @@ try {
     `undo after a reset left ${restored} controls off the look it wiped`,
   )
 
+  // The ↺ on a row, which is the finest gesture on the walk and the one that
+  // throws a value away with nothing left on screen saying what it was. It went
+  // straight to `writeControl` and banked nothing, so a control put back by
+  // mistake was gone — and the undo that followed took back whatever whole-look
+  // verb came before it instead, which is worse than doing nothing.
+  //
+  // Reached through the "This look" section, where the rows a look has moved
+  // are gathered: a stage's own rows are behind a fold, and which fold depends
+  // on the preset.
+  await press('reset')
+  await press('vhs')
+  const dialed2 = await look()
+  await run(`
+    const h = [...document.querySelectorAll('button')]
+      .find(b => (b.textContent ?? '').includes('This look'))
+    if (h?.getAttribute('aria-expanded') === 'false') h.click()
+    return 0
+  `)
+  await settle()
+  const rowReset = await run(`
+    const b = [...document.querySelectorAll('button')]
+      .find(b => /^reset .+ to /.test(b.getAttribute('aria-label') ?? ''))
+    b?.click()
+    return b?.getAttribute('aria-label') ?? null
+  `)
+  await settle()
+  check(rowReset !== null, 'no row ↺ under "This look" after a preset')
+  const put = await apart(dialed2, await look())
+  check(put === 1, `a row's ↺ moved ${put} controls, not 1 (${rowReset})`)
+  await press('undo')
+  const back = await apart(dialed2, await look())
+  check(back === 0, `undo after a row's ↺ left ${back} controls at stock`)
+
   // Retraceable in both directions, which is the whole claim the walk makes.
   await press('reset')
   const stock = await look()

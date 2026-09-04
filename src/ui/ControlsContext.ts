@@ -98,6 +98,10 @@ export interface ControlsApi {
   // group headers are rendered from a static table, and the row tree already
   // reads its verbs from this context.
   mutateGroup: (sliders: readonly SliderDef[], amount?: MutateAmount) => void
+  // Put one control back to its default — the row's ↺, and a double-click on
+  // its track. Not `writeControl` with the default in it: this is a step on the
+  // walk, so the value it throws away comes back with ctrl+z.
+  resetControl: (key: ControlKey) => void
   // Put one group back to stock, for the same reason and by the same route.
   resetGroup: (sliders: readonly SliderDef[]) => void
   // Which stages are wandering on their own (ui/drift.ts), and the switch that

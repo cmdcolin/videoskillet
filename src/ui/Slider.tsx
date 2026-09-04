@@ -344,6 +344,12 @@ export function Slider(props: {
   value: number
   defaultValue: number
   onChange: (v: number) => void
+  // What the ↺ and the track's double-click do, where putting the control back
+  // is a gesture of its own rather than a write that happens to land on the
+  // default. A control row hands over a verb that banks a step on the undo
+  // walk; a row outside the look — a dialog setting, a deck's speed — has no
+  // walk to bank on and leaves this out, and the reset is the plain write.
+  onReset?: () => void
   // A discrete control: one label per integer value. Renders a toggle-button
   // group in place of the range input, still reading/writing the same number.
   choices?: string[]
@@ -660,6 +666,11 @@ export function Slider(props: {
   // is still conditional: at stock the slot is empty and the row is a plain
   // span, with no button in the accessibility tree to announce.
   const atStock = props.value === props.defaultValue
+  const onReset = props.onReset
+  const reset = () => {
+    if (onReset === undefined) props.onChange(props.defaultValue)
+    else onReset()
+  }
   const readingBox = (
     <>
       <span className={styles.reading} style={readingStyle}>
@@ -680,7 +691,7 @@ export function Slider(props: {
           className={styles.revert}
           title={`off stock — click to put it back to ${reading(props.defaultValue)} (or double-click the track)`}
           aria-label={`reset ${props.label} to ${reading(props.defaultValue)}`}
-          onClick={() => props.onChange(props.defaultValue)}
+          onClick={() => reset()}
         >
           {readingBox}
         </button>
@@ -728,7 +739,7 @@ export function Slider(props: {
         // fader lives. It carries no tooltip of its own — one on the track
         // would follow the pointer across every drag — so the reading's own
         // tooltip is where it is written down.
-        onDoubleClick={() => props.onChange(props.defaultValue)}
+        onDoubleClick={() => reset()}
         onChange={e =>
           props.onChange(
             curved ? atTravel(Number(e.target.value)) : Number(e.target.value),

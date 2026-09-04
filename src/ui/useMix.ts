@@ -23,7 +23,7 @@ import {
 } from './presets'
 import { rollBay } from './rollMod'
 
-import type { Controls } from '../core/controls'
+import type { ControlKey, Controls } from '../core/controls'
 import type { Rand } from '../core/rng'
 import type { GlidePlan } from '../core/signal/glide'
 import type { Provenance } from '../labels'
@@ -538,6 +538,15 @@ export function useMix(args: {
     reset: () => {
       bank(sameBoard)
       toStock()
+    },
+    // One control back to stock, from the row's ↺ or a double-click on its
+    // track. Through `apply` for the reason the group reset below goes that
+    // way: it throws a value away, and a value you cannot get back is one you
+    // stop reaching for the button over. A drag is its own undo — the slider is
+    // still under your hand and the old value is a pixel away — where a reset
+    // is a press that leaves nothing on screen saying what it took.
+    resetControl: (key: ControlKey) => {
+      apply({ ...getControls(), [key]: DEFAULT_CONTROLS[key] }, 'hand')
     },
     // One circuit back to stock, from its header. The row-level ↺ is the fine
     // move and "clean" is the whole board; between them sat the thing a session
