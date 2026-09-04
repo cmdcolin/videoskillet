@@ -2,6 +2,18 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [0.38.1](https://github.com/cmdcolin/videoskillet/compare/v0.38.0...v0.38.1) - 2026-09-04
+
+### Features
+- *(ui)* [`96bb773`](https://github.com/cmdcolin/videoskillet/commit/96bb7733c9663b9f7dae27adfe179e2fb403f622) the reel opens on the random look, and From clean closes it
+- *(ui)* [`0d79d31`](https://github.com/cmdcolin/videoskillet/commit/0d79d314172a043fcfd3ad36bd9d59b3b93baf5a) the gallery says what it is a picture of, in the order that says it
+
+### Fixes
+- *(ui)* [`9c63f84`](https://github.com/cmdcolin/videoskillet/commit/9c63f8476d107f304d8574578aa9da0a92dff26d) the gallery's clips are recorded a frame at a time, and move
+
+### Performance
+- *(ui)* [`c8ec382`](https://github.com/cmdcolin/videoskillet/commit/c8ec382d33821640b59f7faa54050795d70648dc) the page opens a clip before the reader asks for it
+
 ## [0.38.0](https://github.com/cmdcolin/videoskillet/compare/v0.37.1...v0.38.0) - 2026-09-04
 
 ### Features
