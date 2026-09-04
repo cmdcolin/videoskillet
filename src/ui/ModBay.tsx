@@ -58,8 +58,8 @@ function StabRows() {
         defaultValue={DEFAULT_STAB.hz}
         help={
           flips
-            ? 'Cuts the whole board between the look you are dialing and the one you held, this many times a second. 0 is off. It does not fade: each side arrives as a hard cut, which is the only version of this the signal path can afford — a fade would redesign the filter bank every frame, where a flip does it twice a cycle. Everything with memory runs straight through the flip, so the phosphor trail and the feedback each side leaves are still there when the other one lands. Lock it to the beat with ♩.'
-            : 'Cuts the whole look out and pokes it back in, this many times a second — a clean picture with the fault stabbed into it, rather than the fault running continuously. 0 is off. What it does not do is fade: each stab is a hard cut to stock and back, so the picture between them is the clean signal, still carrying the phosphor trail and the feedback the last stab put there. The look itself is untouched — every slider stays where you left it, and so does where you are looking from. Lock it to the beat with ♩.'
+            ? 'Cuts the whole board between the look you are dialing and the one you held, this many times a second. 0 is off. It does not fade. Each side arrives as a hard cut, which is the only version of this the signal path can afford: a fade would rebuild the filter bank every frame, where a flip does it twice a cycle. Everything with memory runs straight through the flip, so the phosphor trail and the feedback each side leaves are still there when the other one lands. Lock it to the beat with ♩.'
+            : 'Cuts the whole look out and back in, this many times a second: a clean picture with the fault stabbed into it, rather than the fault running continuously. 0 is off. It does not fade. Each stab is a hard cut to stock and back, so the picture between them is the clean signal, still carrying the phosphor trail and the feedback the last stab left. The look itself is untouched. Every slider stays where you left it, and so does the view. Lock it to the beat with ♩.'
         }
         sync={{
           label:
@@ -86,7 +86,7 @@ function StabRows() {
           step={1}
           value={(stab.duty ?? DEFAULT_DUTY) * 100}
           defaultValue={DEFAULT_DUTY * 100}
-          help="How much of each cycle sits on the look you are dialing, with the held one taking the rest. A share rather than a length, so dialing the rate or changing the tempo leaves the split where you put it: at 50 the two get equal time, and pushing it either way makes one look the state and the other the interruption — which at the far end is the same gesture as a stab, with your own look in place of clean."
+          help="How much of each cycle sits on the look you are dialing, with the held one taking the rest. A share rather than a length, so changing the rate or the tempo leaves the split where you put it. At 50 the two get equal time. Pushing it either way makes one look the resting state and the other the interruption, which at the far end is the same as a stab, with your own look in place of clean."
           onChange={pct => setStab({ ...stab, duty: pct / 100 })}
         />
       ) : (
@@ -98,7 +98,7 @@ function StabRows() {
           step={4}
           value={stab.ms}
           defaultValue={DEFAULT_STAB.ms}
-          help="How long each stab of the look lasts. Milliseconds rather than a share of the gap, so changing the rate leaves the hit the same weight: 60ms is about four frames, short enough that the clean signal is what you are watching. Below one frame it is one frame — the stab still lands rather than being skipped."
+          help="How long each stab of the look lasts. Milliseconds rather than a share of the gap, so changing the rate leaves each hit the same length. 60ms is about four frames, short enough that the clean signal is what you are mostly watching. Below one frame it is one frame, so the stab still lands rather than being skipped."
           onChange={ms => setStab({ ...stab, ms })}
         />
       )}
@@ -140,10 +140,10 @@ function FarEnd(props: {
     <>
       <div className={ui.hint}>
         {!props.flips
-          ? 'The far end is stock, so each stab pokes a clean picture through. Hold a look there and the gate cuts between the two instead.'
+          ? 'The far end is stock, so each stab shows a clean picture. Hold a look there and the gate cuts between the two instead.'
           : props.running
-            ? 'Cutting against a held look. The sliders are still the live one — the held look is a copy, and nothing you do here moves it.'
-            : 'A look is held at the far end, and the rate above is at 0 — set it and the board starts cutting between the two.'}
+            ? 'Cutting against a held look. The sliders still control the live one. The held look is a copy, and nothing you do here changes it.'
+            : 'A look is held at the far end, and the rate above is at 0. Set a rate and the board starts cutting between the two.'}
       </div>
       <div className={styles.farEnd}>
         <button

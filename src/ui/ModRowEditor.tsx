@@ -116,8 +116,8 @@ function KnobRow(props: { i: number; slot: UiSlot; field: BayField }) {
       defaultValue={rate ? CLAIM_RATE_HZ : knobStock(s.target)}
       help={
         rate
-          ? 'How fast this wobble cycles, in Hz. Slow rates drift the control the way a warming-up circuit does; fast ones buzz it per frame. The ♩ button below locks it to the tempo instead. Press + mod on this row and a second routing walks the rate itself — an oscillator that speeds up and slows down instead of keeping time.'
-          : 'How far the wobble swings the control, as a fraction of its own slider range. The slider itself stays put — it is the centre the motion happens around, which is why a preset or a link still holds the look. The rule under the control’s own track is this number. Press + mod on this row and a second routing brings the wobble in and out on its own: leave this at 0 and it comes in from nothing, which is the difference between a fault that is running and one that keeps happening.'
+          ? 'How fast this wobble cycles, in Hz. Slow rates drift the control the way a warming-up circuit does. Fast ones buzz it every frame. The ♩ button below locks it to the tempo instead. Press + mod on this row and a second routing modulates the rate itself, so the oscillator speeds up and slows down instead of keeping time.'
+          : 'How far the wobble swings the control, as a fraction of its own slider range. The slider itself stays put. It is the centre the motion happens around, which is why a preset or a link still holds the look. The marker under the control’s own track shows this number. Press + mod on this row and a second routing brings the wobble in and out on its own. Leave this at 0 and it comes in from nothing, which is the difference between a fault that runs continuously and one that keeps happening.'
       }
       sync={
         rate

@@ -121,16 +121,16 @@ export function SignalPathDialog(props: {
   return (
     <Dialog title="the signal path" size="diagram" onClose={onClose}>
       <p className={ui.helpText}>
-        Two inputs, each with a feed of its own, meeting at the mixer — then one
-        chain to the glass, with the sound patched into the receiver along the
-        way and your own view at the end of it. Every box is a piece of hardware
-        misbehaving, and the artifacts come out of how they interfere. Click one
-        to open its controls — the two chips riding the loops over the top open
-        theirs the same way, each one its own way back into the chain. The two
-        boxes on the bottom row have no wire on them: the modulation bay and the
-        deck are patched into the controls rather than into the signal — one
-        setting them moving on its own, the other gathering the ones a hand
-        moves during a take — which is why they float.
+        Two inputs, each with a feed of its own, meet at the mixer. From there
+        one chain runs to the glass, with the sound patched into the receiver
+        along the way and your own view at the end. Every box is a piece of
+        hardware misbehaving, and the artifacts come out of how they interfere.
+        Click one to open its controls. The two chips on the loops over the top
+        open theirs the same way, and each is its own path back into the chain.
+        The two boxes on the bottom row have no wire on them. The modulation bay
+        and the deck are patched into the controls rather than into the signal:
+        one moves them on its own, the other records the ones a hand moves
+        during a take. That is why they float.
       </p>
       <svg
         className={styles.diagram}

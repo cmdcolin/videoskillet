@@ -65,7 +65,7 @@ export function YouTubeDialog(props: {
           it costs *more* per second than the whole file does. */}
       <p className={ui.helpText}>
         {secs === WHOLE_CLIP
-          ? 'Fetching part of a clip is slower per second than fetching all of it — worth it only for something long.'
+          ? 'Fetching part of a clip is slower per second than fetching all of it, so it is only worth it for something long.'
           : 'Trimming is done with ffmpeg while it downloads, which is slower per second than fetching the whole clip. It pays off on a long film and costs on a short one.'}
       </p>
     </Dialog>

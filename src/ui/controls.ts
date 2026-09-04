@@ -266,8 +266,8 @@ export const LOOP_STAGES: readonly LoopStage[] = [
     // the name is what the loop band already says.
     short: 'Camera',
     blurb:
-      'optical — a camera on the tube’s face, its picture mixed back in ahead of the encoder, plus the gun and glass it is pointed at',
-    what: 'light rather than wire — a camera on the tube’s face, its picture mixed back into the input ahead of the encoder. It carries an image that has already been decoded and lit, so it can only do what a lens can: zoom, shift, defocus, cut a black level. Past unity gain it breeds structure on its own',
+      'optical: a camera pointed at the tube, its picture mixed back in ahead of the encoder, plus the gun and glass it is looking at',
+    what: 'light rather than wire: a camera pointed at the tube, its picture mixed back into the input ahead of the encoder. It carries an image that has already been decoded and lit, so it can only do what a lens can: zoom, shift, defocus, cut a black level. Past unity gain it builds structure on its own',
     mix: 'fbMix',
   },
   {
@@ -275,8 +275,8 @@ export const LOOP_STAGES: readonly LoopStage[] = [
     name: MIXER_LOOP_STAGE,
     short: 'Mixer',
     blurb:
-      'electrical — the composite off the bus, crossfaded back against the live signal, subcarrier and all',
-    what: 'the composite itself, patched off the bus into an input and crossfaded against the live signal. The subcarrier rides round with it, so each sample of cable delay spins fed-back hue 90° a generation and colour does things optics cannot',
+      'electrical: the composite taken off the bus and crossfaded back against the live signal, subcarrier included',
+    what: 'the composite itself, patched off the bus into an input and crossfaded against the live signal. The subcarrier goes round with it, so each sample of cable delay rotates fed-back hue 90° per generation and colour does things optics cannot',
     mix: 'cfbMix',
   },
 ]
@@ -296,7 +296,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: 'Negates the composite waveform coming out of the encoder, as if the video pair were fed in backwards. At 1 the picture is a full negative; halfway lands on the solarized midpoint where bright and dark both fold toward grey. Hue inverts with it, since the colour subcarrier rides on the same wire.',
+        help: 'Negates the composite waveform coming out of the encoder, as if the video pair were wired backwards. At 1 the picture is a full negative. Halfway is the solarized midpoint, where bright and dark both fold toward grey. Hue inverts too, because the colour subcarrier is on the same wire.',
       },
       {
         key: 'deint',
@@ -307,7 +307,7 @@ export const GROUPS: Group[] = [
         step: 1,
         unit: '',
         choices: ['off', 'on'],
-        help: 'Rebuilds each frame from a single field instead of both, the way a bob deinterlacer does. Use it when an interlaced source (a captured video or webcam) shows comb teeth on horizontal motion. Costs half the vertical detail, which is exactly the trade a real deinterlacer makes.',
+        help: 'Rebuilds each frame from a single field instead of both, like a bob deinterlacer. Use it when an interlaced source (a captured video or webcam) shows comb teeth on horizontal motion. It costs half the vertical detail, which is the same trade a real deinterlacer makes.',
       },
       {
         key: 'capLumaMHz',
@@ -317,7 +317,7 @@ export const GROUPS: Group[] = [
         max: 4.2,
         step: 0.1,
         unit: 'MHz',
-        help: 'The file was digitised off a tape, and the deck that played it could only hand the capture card this much luma bandwidth: VHS manages about 3 MHz at SP, EP less, a camcorder on a tired head under 2. Whatever the chain does from here lands on a picture that was already soft, the way a tape dubbed from a tape is. 0 means the file never went through a deck.',
+        help: 'The file was digitised from a tape, and the deck that played it passed only this much luma bandwidth to the capture card. VHS manages about 3 MHz at SP, less at EP, and a camcorder on a worn head under 2. Everything the chain does from here acts on a picture that was already soft, like a tape dubbed from a tape. 0 means the file never went through a deck.',
       },
       {
         key: 'capChromaMHz',
@@ -327,7 +327,7 @@ export const GROUPS: Group[] = [
         max: 1.5,
         step: 0.05,
         unit: 'MHz',
-        help: 'The colour band the same deck handed the capture card. Color-under records chroma on a 629 kHz carrier, so a home deck passes about 0.5 MHz of it against 3 MHz of luma — colour that smears sideways across many pixels while the edges under it stay put. That smear is in the file, so colour-under on the chain here stacks on it as a second deck would.',
+        help: 'The colour bandwidth the same deck passed to the capture card. Colour-under records chroma on a 629 kHz carrier, so a home deck passes about 0.5 MHz of it against 3 MHz of luma. Colour smears sideways across many pixels while the edges under it stay sharp. That smear is in the file, so colour-under in the chain here stacks on top of it, as a second deck would.',
       },
       {
         key: 'capNoiseIre',
@@ -337,7 +337,7 @@ export const GROUPS: Group[] = [
         max: 30,
         step: 0.5,
         unit: 'IRE',
-        help: "The noise floor of the deck's luma FM path, as the capture card saw it: fine grain baked into every frame of the file. Held with the picture when the deck is paused, because it was on the tape, not in the chain.",
+        help: "The noise floor of the deck's luma FM path as the capture card saw it: fine grain in every frame of the file. It holds still with the picture when the deck is paused, because it was on the tape rather than in the chain.",
       },
       {
         key: 'capChromaNoiseIre',
@@ -348,7 +348,7 @@ export const GROUPS: Group[] = [
         step: 1,
         unit: 'IRE',
         fine: true,
-        help: "Noise on the deck's colour-under carrier, which had a fraction of the luma path's headroom. It reaches the file through the narrow chroma band above, so it arrives as slow blotches of wrong hue and saturation rather than speckle — bring the capture chroma band down to make it blotchier.",
+        help: "Noise on the deck's colour-under carrier, which had a fraction of the luma path's headroom. It reaches the file through the narrow chroma band above, so it arrives as slow blotches of wrong hue and saturation rather than speckle. Lower the capture chroma band to make it blotchier.",
       },
       {
         key: 'capYcDelayNs',
@@ -359,7 +359,7 @@ export const GROUPS: Group[] = [
         step: 10,
         unit: 'ns',
         fine: true,
-        help: "The deck's chroma path arriving at the capture card late (+) or early (-) against its luma: colour displaced off the edges it belongs to, a few hundred nanoseconds on a home deck. One sample is 70 ns.",
+        help: "The deck's chroma path arriving at the capture card late (+) or early (-) relative to its luma. Colour is displaced off the edges it belongs to, by a few hundred nanoseconds on a home deck. One sample is 70 ns.",
       },
       {
         key: 'vbi',
@@ -370,19 +370,17 @@ export const GROUPS: Group[] = [
         step: 1,
         unit: '',
         choices: ['off', 'on'],
-        help: `The furniture broadcasters parked in the vertical blanking
-          interval:
+        help: `Vertical blanking interval
 
-          - **lines 17-18** — VITS multiburst and a modulated staircase, the
+          - **lines 17-18**: VITS multiburst and a modulated staircase, the
             transmission-test signals engineers measured the plant with.
-          - **line 19** — a VIR reference.
-          - **line 21** — caption data: a clock run-in and dashes that change
+          - **line 19**: a VIR reference.
+          - **line 21**: caption data, a clock run-in and dashes that change
             every frame, because captions are live.
 
-          Invisible in normal framing; roll the picture or shrink v size and the
-          black bar turns out to have all of this in it. On by default because a
-          broadcast signal genuinely carried it — switch it off for a bare
-          studio feed.`,
+          Invisible in normal framing. Roll the picture or shrink v size and all
+          of this appears in the black bar. On by default because a broadcast
+          signal carried it. Switch it off for a bare studio feed.`,
       },
     ],
   },
@@ -405,7 +403,7 @@ export const GROUPS: Group[] = [
         max: 7,
         step: 0.05,
         unit: 'MHz',
-        help: "The bandwidth of the path the noise arrived through, which is what sets the size of the grain: noise cannot change faster than the circuit carrying it allows. A tuner's IF stops at 4.2 MHz, so broadcast snow is fine but not infinitely fine — per-pixel noise is sharper than any real receiver could deliver. Wind it down and the grain coarsens into the smeared streaks of a deck reading unmagnetised tape, since a playback head's own aperture is a second bandwidth in series with this one. Less bandwidth also means less noise power, so the field dims as it coarsens — that is the physics, not a compensation to dial back out.",
+        help: "The bandwidth of the path the noise came through, which sets the grain size: noise cannot change faster than the circuit carrying it allows. A tuner's IF stops at 4.2 MHz, so broadcast snow is fine but not infinitely fine. Per-pixel noise is sharper than any real receiver could produce. Lower it and the grain coarsens into the smeared streaks of a deck reading blank tape, because a playback head's aperture is a second bandwidth limit in series with this one. Less bandwidth also means less noise power, so the field dims as it coarsens. That is the physics rather than something to compensate for.",
       },
       {
         key: 'srcNoiseLevel',
@@ -415,7 +413,7 @@ export const GROUPS: Group[] = [
         max: 2,
         step: 0.01,
         unit: '',
-        help: 'How much noise the detector is handed. On an untuned channel this scales the snow against a black floor, because an envelope detector with no carrier has nothing to lift the dark end off zero; on blank tape it scales the swing around mid grey instead, since the deemphasis network still sets the DC level whatever the demodulator is doing. Past 1 the field clips, which a real front end would only reach with the AGC wound fully open.',
+        help: 'How much noise the detector receives. On an untuned channel this scales the snow against a black floor, because an envelope detector with no carrier has nothing to lift the dark end off zero. On blank tape it scales the swing around mid grey instead, since the deemphasis network still sets the DC level whatever the demodulator does. Past 1 the field clips, which a real front end would only reach with the AGC fully open.',
       },
       {
         key: 'srcNoiseLine',
@@ -425,7 +423,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: "A gain error that lasts exactly one scan line: the tuner's AGC hunting on the noise it is trying to measure, or a playback head's contact varying sweep to sweep. It multiplies rather than adds, so it shows on the noise it is amplifying, and because a sweep is a whole line the result is horizontal banding that flickers — the difference between snow and blank tape's restless venetian texture. At zero every line is independent and the field reads as flat fuzz.",
+        help: "A gain error that lasts exactly one scan line: the tuner's AGC hunting on the noise it is trying to measure, or a playback head's contact varying from sweep to sweep. It multiplies rather than adds, so it shows on the noise it is amplifying, and because a sweep is a whole line the result is flickering horizontal bands. This is the difference between snow and the shifting striped texture of blank tape. At zero every line is independent and the field is flat fuzz.",
       },
       {
         key: 'srcNoiseHz',
@@ -435,7 +433,7 @@ export const GROUPS: Group[] = [
         max: 60,
         step: 0.5,
         unit: 'Hz',
-        help: 'How often the noise field re-rolls. At 60 it boils at display rate, which is what a live signal does; below it the source is handing over fields more slowly than the set is drawing them, so each one is held for several frames and the boil goes chunky. Non-integer ratios hold fields unevenly — the same cadence 3:2 pulldown has, out of the same arithmetic. A held field is noise you can see the frame rate of, and everything downstream then carries it: the mixer loop breeds structure out of a field that stays still long enough to feed back.',
+        help: 'How often the noise field changes. At 60 it changes at display rate, like a live signal. Below that the source delivers fields more slowly than the set draws them, so each one is held for several frames and the boil goes chunky. Non-integer ratios hold fields unevenly, with the same cadence as 3:2 pulldown, from the same arithmetic. A held field is noise with a visible frame rate, and everything downstream carries it: the mixer loop builds structure out of a field that stays still long enough to feed back.',
       },
     ],
   },
@@ -457,7 +455,7 @@ export const GROUPS: Group[] = [
         step: 1,
         curve: 'synth',
         unit: 'Hz',
-        help: "The first oscillator's frequency, and the whole instrument in one knob — because what it draws is where it sits against the raster, not a shape anyone chose. At 60 Hz it fits one cycle down the frame and reads as a vertical gradient. At 15734 Hz — line rate — it fits one cycle across a line and the gradient stands up sideways. On an exact multiple it paints that many standing bars; a few hertz off and every line starts the wave a little later than the last, so the bars lean and creep, and how fast is the error. At 3579545 Hz it lands on the colour subcarrier, so the encoder downstream reads the whole screen as chroma and hands back flat colour — detune from there and hue turns across the picture.",
+        help: "The first oscillator's frequency. What it draws depends on where it sits relative to the raster. At 60 Hz it fits one cycle down the frame and reads as a vertical gradient. At 15734 Hz, the line rate, it fits one cycle across a line and the gradient turns sideways. On an exact multiple it paints that many standing bars. A few hertz off, every line starts the wave a little later than the last, so the bars lean and creep, and the error sets how fast. At 3579545 Hz it lands on the colour subcarrier, so the encoder downstream reads the whole screen as chroma and returns flat colour. Detune from there and hue turns across the picture.",
       },
       {
         key: 'synthBHz',
@@ -468,7 +466,7 @@ export const GROUPS: Group[] = [
         step: 1,
         curve: 'synth',
         unit: 'Hz',
-        help: 'The second oscillator, on the same scale. It does nothing until the combiner is off "osc A alone", and what it does then is beat against the first: two free-running oscillators put their difference frequency on screen, so a pair a few hertz apart draws a moire whose own drift rate is neither knob but the gap between them.',
+        help: 'The second oscillator, on the same scale. It does nothing until the combiner is off "osc A alone". Then it beats against the first: two free-running oscillators put their difference frequency on screen, so a pair a few hertz apart draws a moire that drifts at the gap between them rather than at either knob.',
       },
       {
         key: 'synthShape',
@@ -479,7 +477,7 @@ export const GROUPS: Group[] = [
         step: 1,
         unit: '',
         choices: ['ramp', 'triangle', 'sine', 'pulse'],
-        help: 'The waveform selector, on both oscillators at once. Ramp is the one to reach for first: a sawtooth is what a ramp generator makes, so at low frequencies it is a clean gradient and at high ones a stack of hard edges. Triangle folds it symmetric, sine rounds it into something the encoder passes without ringing, and pulse is a comparator output — two levels, hard edges, and the most bandwidth for the rest of the chain to mangle.',
+        help: 'The waveform selector, for both oscillators at once. Ramp is the one to try first: a sawtooth is what a ramp generator makes, so at low frequencies it is a clean gradient and at high ones a stack of hard edges. Triangle folds it symmetric. Sine rounds it into something the encoder passes without ringing. Pulse is a comparator output: two levels, hard edges, and the most bandwidth for the rest of the chain to distort.',
       },
       {
         key: 'synthMix',
@@ -490,7 +488,7 @@ export const GROUPS: Group[] = [
         step: 1,
         unit: '',
         choices: ['osc A', 'sum', 'ring mod', 'comparator'],
-        help: 'How the two oscillators are patched together. Sum is a mixing amplifier into its rails, so the two patterns lie over each other and clip where they agree. Ring mod is a balanced multiply — both carriers suppressed, only their sum and difference left — which is where plaid and moire come from. Comparator puts oscillator B on the reference input of a slicer, so A comes out two-level with its duty cycle modulated everywhere the two cross.',
+        help: 'How the two oscillators are combined. Sum is a mixing amplifier driven into its rails, so the two patterns lie over each other and clip where they agree. Ring mod is a balanced multiply, with both carriers suppressed and only their sum and difference left, which is where plaid and moire come from. Comparator puts oscillator B on the reference input of a slicer, so A comes out two-level with its duty cycle modulated wherever the two cross.',
       },
       {
         key: 'synthLevel',
@@ -502,7 +500,7 @@ export const GROUPS: Group[] = [
         redline: [0, 2],
         unit: 'x',
         fine: true,
-        help: 'Output contrast about mid-video, before the colorizer. Past 1 the waveform runs into its rails and the shape squares off — a sine becomes a pulse with soft corners — so this doubles as a coarse waveshaper.',
+        help: 'Output contrast around mid-video, before the colorizer. Past 1 the waveform runs into its rails and the shape squares off, so a sine becomes a pulse with soft corners. This makes it a coarse waveshaper too.',
       },
       {
         key: 'synthColor',
@@ -512,7 +510,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: 'One signal into three guns through three phase shifts 120 degrees apart, which is all a colorizer ever was. At 0 the three agree and the pattern comes out the grey it is; opened up, signal level becomes hue, so a ramp turns through the whole wheel and a pulse lands on two opposite colours.',
+        help: 'One signal into three guns through three phase shifts 120 degrees apart, which is all a colorizer ever was. At 0 the three agree and the pattern comes out grey. Opened up, signal level becomes hue, so a ramp turns through the whole wheel and a pulse lands on two opposite colours.',
       },
       {
         key: 'synthHueDeg',
@@ -523,7 +521,7 @@ export const GROUPS: Group[] = [
         step: 1,
         unit: 'deg',
         fine: true,
-        help: 'Rotates all three phase shifts together, which slides the whole palette round the wheel without changing how the pattern is coloured. Modulate it and the picture cycles colour while the geometry holds still.',
+        help: 'Rotates all three phase shifts together, which slides the whole palette around the wheel without changing how the pattern is coloured. Modulate it and the picture cycles colour while the geometry holds still.',
       },
       {
         key: 'synthColorSoftPx',
@@ -534,7 +532,7 @@ export const GROUPS: Group[] = [
         step: 0.1,
         redline: [0, 12],
         unit: 'px',
-        help: "The lowpass a colorizer box has ahead of its slicers, and the control that decides how large the colour fields are. A slicer handed a sharp picture finds a threshold crossing on every piece of detail and posterizes into confetti; handed a soft one it finds a few long boundaries and the picture arrives in slabs. It filters the colorizer's input alone — the picture that reaches the screen keeps every bit of its own detail, so what comes back is a sharp image wearing flat colour. Both axes, unlike the capture band above it, which is a tape loss and so is horizontal only.",
+        help: "The lowpass a colorizer box has ahead of its slicers, which decides how large the colour fields are. A slicer given a sharp picture finds a threshold crossing on every piece of detail and posterizes into confetti. Given a soft one it finds a few long boundaries and the picture comes out in slabs. It filters only the colorizer's input. The picture that reaches the screen keeps all its own detail, so the result is a sharp image with flat colour on it. It filters both axes, unlike the capture band above it, which is a tape loss and so horizontal only.",
       },
       {
         key: 'synthColorSrc',
@@ -545,7 +543,7 @@ export const GROUPS: Group[] = [
         step: 1,
         choices: ['oscillator', 'picture'],
         unit: '',
-        help: "What the colorizer is slicing. Its own oscillator is one connector; the picture is the other, and the second is the arrangement a colorizer box was actually sold as — video in, colour out, the oscillators out of circuit behind it. Pointed at the picture it turns the image's own brightness into hue, so two areas at the same brightness come back the same colour however far apart they are on screen. That is what lays colour down in large fields: an encoder puts colour on detail, and this puts it on tone. Needs the synth over a picture to have anything to read, since a synth patched in as a source has nothing in front of it.",
+        help: "What the colorizer is slicing. Its own oscillator is one input. The picture is the other, and that is how a colorizer box was actually sold: video in, colour out, with the oscillators out of circuit. Pointed at the picture it turns the image's own brightness into hue, so two areas at the same brightness come back the same colour however far apart they are on screen. That is what lays colour down in large fields: an encoder puts colour on detail, and this puts it on tone. Needs the synth over a picture to have anything to read, since a synth patched in as a source has nothing in front of it.",
       },
       {
         key: 'synthColorMode',
@@ -556,7 +554,7 @@ export const GROUPS: Group[] = [
         step: 1,
         choices: ['phase shifts', 'comparators'],
         unit: '',
-        help: 'How the box makes colour out of level. Phase shifts is one signal into three guns through three shifts 120 degrees apart, so level turns continuously through the wheel and a gradient comes back as a smooth sweep of hue. Comparators is how the cheap boxes did it before anyone put a phase shifter in one: three slicers at three different levels, each gun switched fully on or fully off at its own threshold. The output can then only be one of eight corners of the colour cube, so the picture arrives posterized into flat areas of saturated primary with hard edges between them, and the hue knob slides the three thresholds together to walk those edges through the tonal range.',
+        help: 'How the box turns level into colour. Phase shifts sends one signal into three guns through three shifts 120 degrees apart, so level turns continuously through the wheel and a gradient comes back as a smooth sweep of hue. Comparators is how the cheap boxes did it before anyone put a phase shifter in one: three slicers at three different levels, each gun switched fully on or off at its own threshold. The output can then only be one of eight corners of the colour cube, so the picture is posterized into flat areas of saturated primary with hard edges between them. The hue knob slides the three thresholds together to move those edges through the tonal range.',
       },
       {
         key: 'synthOver',
@@ -566,7 +564,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: "Lays the synth over slot A's picture rather than replacing it, so it becomes a module in the chain instead of a source. Source A only — slot B's pass writes its texture rather than reading one, so there is no picture on that side to lay anything over. Does nothing while A is already showing the synth, since then the synth is what the picture is.",
+        help: "Lays the synth over slot A's picture rather than replacing it, so it becomes a module in the chain instead of a source. Source A only: slot B's pass writes its texture rather than reading one, so there is no picture on that side to lay anything over. Does nothing while A is already showing the synth, because then the synth is the picture.",
       },
       {
         key: 'synthFm',
@@ -577,7 +575,7 @@ export const GROUPS: Group[] = [
         step: 10,
         redline: [0, 60000],
         unit: 'Hz',
-        help: "The picture's own brightness into oscillator A's frequency input — the patch every video synth was bought for. It pulls the frequency rather than offsetting the phase, so the wave genuinely runs faster through bright picture and slower through dark: the spacing of the bars becomes the brightness, and equal-brightness regions fall into step, so the image draws itself as contour lines nobody traced. Needs something over the picture to read, so it does nothing until the control above is up.",
+        help: "The picture's own brightness into oscillator A's frequency input, the patch every video synth was bought for. It pulls the frequency rather than offsetting the phase, so the wave genuinely runs faster through bright picture and slower through dark. The spacing of the bars becomes the brightness, and equal-brightness regions fall into step, so the image draws itself as contour lines. Needs something over the picture to read, so it does nothing until the control above is up.",
       },
       {
         key: 'synthFmSrc',
@@ -588,7 +586,7 @@ export const GROUPS: Group[] = [
         step: 1,
         choices: ['the deck', 'the loop'],
         unit: '',
-        help: "Which picture the frequency input is reading. The deck is the slot's own, so the contours land on the source and are drawn again from scratch every frame. The loop is the camera's return — the picture this stage wrote a frame ago with the synth already in it — so the contours are traced on the last generation's contours and the result goes round again: the frequency at a point is set by how bright the oscillator's own drawing was there last time. Nothing in the patch decides what that settles into, and it does not settle. With the camera loop out it reads the same picture the deck does, since there is no return to read.",
+        help: "Which picture the frequency input reads. The deck is the slot's own, so the contours land on the source and are redrawn from scratch every frame. The loop is the camera's return, the picture this stage wrote a frame ago with the synth already in it. The contours are then traced on the last generation's contours and the result goes round again: the frequency at a point is set by how bright the oscillator's own drawing was there last time. Nothing in the patch decides what that settles into, and it does not settle. With the camera loop out it reads the same picture the deck does, since there is no return to read.",
       },
     ],
   },
@@ -615,7 +613,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: "The pause button on the deck feeding input A, at how badly the deck copes with it. The frame holds — the drum keeps re-reading one track — but pause defeats the capstan servo, so every line of the program's own signal scatters sideways on its own around a slow wander, the raster hops when the servo hunts vertically, and a mistrack stripe of snow creeps through the picture. A is the house reference, so the receiver's PLL hunts on every line and hue wobbles with the displacement — and if B is up, B's clean sync starts winning fights it used to lose.",
+        help: "The pause button on the deck feeding input A, at how badly the deck copes with it. The frame holds, because the drum keeps re-reading one track, but pause defeats the capstan servo. Every line of the program's own signal scatters sideways around a slow wander, the raster hops when the servo hunts vertically, and a mistrack stripe of snow creeps through the picture. A is the house reference, so the receiver's PLL hunts on every line and hue wobbles with the displacement. If B is up, B's clean sync starts winning sync contests it used to lose.",
       },
       {
         key: 'aDropoutRate',
@@ -626,7 +624,7 @@ export const GROUPS: Group[] = [
         step: 1,
         redline: [0, 60],
         unit: '/frame',
-        help: 'Dropout events per frame on the tape feeding input A alone. Shed oxide means the head reads nothing for a moment and the detector hands back snow — and this feed has no delay-line compensator, so every gap stays a raw streak. B sums in over the scars untouched.',
+        help: 'Dropout events per frame on the tape feeding input A alone. Shed oxide means the head reads nothing for a moment and the detector outputs snow. This feed has no delay-line compensator, so every gap stays a raw streak. B sums in over the scars untouched.',
       },
       {
         key: 'aDropoutLenUs',
@@ -647,7 +645,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: "Head-end scrambling on input A alone — a premium channel is scrambled per channel, not per set. A's sync tips are lifted toward blanking before the mix, so the receiver is left choosing between A's mutilated pulses and whatever B is offering — mixing in a little clean B is exactly the pirate trick of feeding a decoder substitute sync.",
+        help: "Head-end scrambling on input A alone. A premium channel is scrambled per channel, not per set. A's sync tips are lifted toward blanking before the mix, so the receiver has to choose between A's damaged pulses and whatever B is offering. Mixing in a little clean B is the pirate trick of feeding a decoder substitute sync.",
       },
       {
         key: 'aScrambleMode',
@@ -658,7 +656,7 @@ export const GROUPS: Group[] = [
         step: 1,
         unit: '',
         choices: ['gated', 'alternate', 'ssavi'],
-        help: "Which scrambling system A's channel uses. Gated suppresses every line, alternate every other line, and SSAVI also inverts the active video — so A leaks through as a negative while B stays a positive.",
+        help: "Which scrambling system A's channel uses. Gated suppresses every line, alternate every other line, and SSAVI also inverts the active video, so A leaks through as a negative while B stays positive.",
       },
     ],
   },
@@ -678,7 +676,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: "How loose the plug in input A's jack is: bands of lines lose contact, re-rolled every frame the way a plug hanging on its own cable weight makes and breaks. Which contact is failing is the row below, and on a per-input feed that choice matters more than it does on the program bus — a break that takes A's sync leaves the receiver B's pulses to lock to.",
+        help: "How loose the plug in input A's jack is. Bands of lines lose contact, re-rolled every frame, the way a plug hanging on its own cable weight makes and breaks. Which contact is failing is the row below, and on a per-input feed that choice matters more than on the program bus: a break that takes A's sync leaves the receiver B's pulses to lock to.",
       },
       {
         key: 'aConnectorMode',
@@ -689,7 +687,7 @@ export const GROUPS: Group[] = [
         step: 1,
         unit: '',
         choices: ['pin', 'shield', 'both'],
-        help: "Which of A's two contacts is intermittent. The centre pin breaks the signal path, so those bands collapse to the input's own noise and take A's sync tips with them — and with B patched in, the receiver locks to B's pulses for the length of the band and hands the line start back when contact returns, so the picture snaps between two geometries with nothing drawing the switch. The shell breaks the ground reference instead and leaves the signal alone: the return current goes hunting through the mains earth, so a ground loop's hum lands on the bad bands and A's level walks and buzzes while its picture and sync survive. Both is a genuinely wiggled plug, the two on independent bands.",
+        help: "Which of A's two contacts is intermittent. The centre pin breaks the signal path, so those bands collapse to the input's own noise and take A's sync tips with them. With B patched in, the receiver locks to B's pulses for the length of the band and returns to A's line start when contact comes back, so the picture snaps between two geometries. The shell breaks the ground reference instead and leaves the signal alone: the return current runs through the mains earth, so a ground loop's hum lands on the bad bands and A's level walks and buzzes while its picture and sync survive. Both is a wiggled plug, with the two faults on independent bands.",
       },
       {
         key: 'aHumIre',
@@ -700,7 +698,7 @@ export const GROUPS: Group[] = [
         step: 0.5,
         redline: [-20, 20],
         unit: 'IRE',
-        help: "A ground loop on input A's cable alone. A loop needs two earthed boxes joined by a shield, so it belongs to one run — this deck's outlet against the mixer's — which is why a hum bar on the program bus cannot say which cable is carrying it and this can. It lifts A's sync tips along with A's picture, so the receiver's AGC and hold chase A sixty times a second while B sits still; which of the two wins the sync fight then alternates with the hum phase, and the picture rolls in sympathy with the bar instead of merely wearing it. Negative is the other leg of a split-phase service — the same bar 180° round — so two feeds on opposite legs push against each other rather than together.",
+        help: "A ground loop on input A's cable alone. A loop needs two earthed boxes joined by a shield, so it belongs to one run, this deck's outlet against the mixer's. That is why a hum bar on the program bus cannot say which cable carries it and this can. It lifts A's sync tips along with A's picture, so the receiver's AGC and hold chase A sixty times a second while B sits still. Which of the two wins the sync contest alternates with the hum phase, so the picture rolls with the bar instead of just wearing it. Negative is the other leg of a split-phase service, the same bar 180° round, so two feeds on opposite legs push against each other rather than together.",
       },
       {
         key: 'aNoiseIre',
@@ -711,7 +709,7 @@ export const GROUPS: Group[] = [
         step: 0.1,
         redline: [0, 40],
         unit: 'IRE',
-        help: "Snow on A's feed only — a long antenna run or a bad patch cable ahead of the mixer. B sums in clean over the top, which is what tells a noisy input apart from a noisy program bus.",
+        help: "Snow on A's feed only, from a long antenna run or a bad patch cable ahead of the mixer. B sums in clean over the top, which is what tells a noisy input apart from a noisy program bus.",
       },
       {
         key: 'aTermination',
@@ -721,7 +719,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: "Termination fault on A's cable alone. Negative is double-terminated: A arrives dim and shallow, so it loses the sync fight against a healthy B. Positive is unterminated: A runs hot and rings with a short reflection echo while B stays clean.",
+        help: "Termination fault on A's cable alone. Negative is double-terminated: A arrives dim and shallow, so it loses the sync contest against a healthy B. Positive is unterminated: A runs hot and rings with a short reflection echo while B stays clean.",
       },
       {
         key: 'aPolarity',
@@ -731,7 +729,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: "A signal/ground swap on A's own connector: A's waveform is negated, sync included, before it reaches the mixer. Unlike pulling A gain negative this holds even when the mixer path is idle, and unlike the program-bus hard polarity it leaves B's signal — and B's sync, which the receiver may latch onto instead — untouched.",
+        help: "A signal/ground swap on A's own connector. A's waveform is negated, sync included, before it reaches the mixer. Unlike pulling A gain negative this holds even when the mixer path is idle, and unlike the program-bus polarity swap it leaves B's signal and sync untouched, so the receiver may latch onto B instead.",
       },
     ],
   },
@@ -755,7 +753,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: 'How much of the camera-pointed-at-the-monitor image is fed back into the input. This is the classic video feedback loop, and it is half of the round trip: the fader and the exposure below multiply, so a mix of 0.6 costs the loop 40 percent a lap that no exposure under 1.67 makes back. Raise the two together until the product passes unity and the picture starts breeding structure on its own. Everything below shapes what the loop does on each trip around.',
+        help: 'How much of the camera-pointed-at-the-monitor image is fed back into the input. This is the classic video feedback loop, and it is half of the round trip: the fader and the exposure below multiply, so a mix of 0.6 costs the loop 40 percent per lap, which no exposure under 1.67 makes back. Raise the two together until the product passes unity and the picture starts building structure on its own. Everything below shapes what the loop does on each trip around.',
       },
       {
         key: 'fbZoom',
@@ -768,7 +766,7 @@ export const GROUPS: Group[] = [
         redline: [0.7, 1.6],
         unit: 'x',
         vernier: true,
-        help: 'How much bigger or smaller the camera frames the screen each time around. Above 1 detail flows outward and tunnels form; below 1 it collapses inward. The distance from 1 sets how fast the loop marches, and tiny offsets are usually the most interesting.',
+        help: 'How much bigger or smaller the camera frames the screen each time around. Above 1 detail flows outward and tunnels form. Below 1 it collapses inward. The distance from 1 sets how fast the loop moves, and tiny offsets are usually the most interesting.',
       },
       {
         key: 'fbRotateDeg',
@@ -781,7 +779,7 @@ export const GROUPS: Group[] = [
         redline: [-30, 30],
         unit: 'deg',
         vernier: true,
-        help: 'Camera tilt on the loop. Each pass rotates the image again, so structures spiral instead of expanding straight out. Combines with zoom into the classic logarithmic-spiral feedback. A hundredth of a degree is a visible difference in how fast the spiral winds, which is why the track is fine around zero and coarse out at the ends.',
+        help: 'Camera tilt on the loop. Each pass rotates the image again, so structures spiral instead of expanding straight out. Combined with zoom this gives the classic logarithmic-spiral feedback. A hundredth of a degree visibly changes how fast the spiral winds, which is why the track is fine around zero and coarse at the ends.',
       },
       {
         key: 'fbShiftX',
@@ -795,7 +793,7 @@ export const GROUPS: Group[] = [
         unit: '',
         fine: true,
         vernier: true,
-        help: 'Camera aim off-centre horizontally. Moves where the feedback fixed point sits, which is what decides where the tunnel mouth or spiral core lands on screen.',
+        help: 'Camera aim off-centre horizontally. Moves the feedback fixed point, which decides where the tunnel mouth or spiral core lands on screen.',
       },
       {
         key: 'fbShiftY',
@@ -809,7 +807,7 @@ export const GROUPS: Group[] = [
         unit: '',
         fine: true,
         vernier: true,
-        help: 'Camera aim off-centre vertically. Same as shift x on the other axis — together they steer the centre of the loop.',
+        help: 'Camera aim off-centre vertically. Same as shift x on the other axis. Together they steer the centre of the loop.',
       },
       {
         key: 'fbGain',
@@ -823,7 +821,7 @@ export const GROUPS: Group[] = [
         unit: 'x',
         fine: true,
         vernier: true,
-        help: 'Camera exposure on the loop. The round trip is this times the mix above, not this alone — at a mix of 0.6 the knife edge where patterns persist is an exposure of 1.67, and everything under it is a smear a few frames deep however far past 1 the exposure reads. Which side of that edge is safe depends on the zoom: a loop collapsing inward concentrates what it gains into a shrinking core and holds a picture well above unity, while one expanding outward spreads it over the whole raster and walks to white within a second of crossing.',
+        help: 'Camera exposure on the loop. The round trip gain is this times the mix above. At a mix of 0.6 the threshold where patterns persist is an exposure of 1.67, and below it the loop is a smear a few frames deep however far past 1 the exposure reads. Which side of that threshold is safe depends on the zoom: a loop collapsing inward concentrates its gain into a shrinking core and holds a picture well above unity, while one expanding outward spreads it over the whole raster and goes to white within a second of crossing.',
       },
       {
         key: 'fbIris',
@@ -833,7 +831,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: "Puts the camera's exposure on its own auto-iris servo instead of the fixed gain above. The camera is metering the monitor it feeds, so the servo is inside the loop it is trying to steady: the loop brightens, the iris clamps a beat later, the loop starves, the iris reopens. Wound up, the mechanical lag outruns the damping and it never settles — bloom, clamp, collapse, reopen, at the servo's own rhythm. Runs at a different natural frequency from the beam limiter (in Deflection), so with both engaged the two pumps beat against each other.",
+        help: "Puts the camera's exposure on its own auto-iris servo instead of the fixed gain above. The camera is metering the monitor it feeds, so the servo is inside the loop it is trying to steady: the loop brightens, the iris clamps a beat later, the loop starves, the iris reopens. Turned up, the mechanical lag outruns the damping and it never settles: bloom, clamp, collapse, reopen, at the servo's own rhythm. It runs at a different natural frequency from the beam limiter (in Deflection), so with both engaged the two beat against each other.",
       },
       {
         key: 'fbFocus',
@@ -845,7 +843,7 @@ export const GROUPS: Group[] = [
         redline: [0, 3],
         unit: 'px',
         fine: true,
-        help: 'Lens blur radius on the camera. A little defocus is what keeps a feedback loop from going straight to pixel noise: it smooths each generation, so the loop favours large soft structures over single-pixel speckle.',
+        help: 'Lens blur radius on the camera. A little defocus keeps a feedback loop from going straight to pixel noise. It smooths each generation, so the loop favours large soft structures over single-pixel speckle.',
       },
       {
         key: 'fbVign',
@@ -856,7 +854,7 @@ export const GROUPS: Group[] = [
         step: 0.01,
         unit: '',
         fine: true,
-        help: 'Lens falloff toward the corners. Loop gain becomes position-dependent — high in the middle, low at the edges — so feedback lives in the centre of frame and dies before it reaches the border.',
+        help: 'Lens falloff toward the corners. Loop gain becomes position-dependent, high in the middle and low at the edges, so feedback lives in the centre of frame and dies before it reaches the border.',
       },
       {
         key: 'fbBlack',
@@ -867,7 +865,7 @@ export const GROUPS: Group[] = [
         step: 0.005,
         unit: '',
         fine: true,
-        help: 'The camera sensor black level. Anything dimmer than this reads as pure black, so trails do not linger forever at low level — they thin and snap off once they fall under the cut.',
+        help: "The camera sensor's black level. Anything dimmer than this reads as pure black, so trails do not linger forever at low level. They thin and cut off once they fall under the threshold.",
       },
       {
         key: 'fbKnee',
@@ -878,7 +876,7 @@ export const GROUPS: Group[] = [
         step: 0.01,
         unit: '',
         fine: true,
-        help: 'Sensor highlight compression. Bright areas roll off into a shoulder instead of clipping flat, which stabilizes a runaway loop into thick glowing bands rather than a white-out.',
+        help: 'Sensor highlight compression. Bright areas roll off into a shoulder instead of clipping flat, which turns a runaway loop into thick glowing bands rather than a white-out.',
       },
     ],
   },
@@ -904,7 +902,7 @@ export const GROUPS: Group[] = [
         step: 0.01,
         redline: [0, 0.6],
         unit: '',
-        help: 'The gun bias point: drive below this emits no light at all. It gives the tube a true black background and, in a feedback loop, sets the floor everything has to stay above to survive another pass.',
+        help: 'The gun bias point. Drive below this emits no light at all. It gives the tube a true black background and, in a feedback loop, sets the floor everything has to stay above to survive another pass.',
       },
       {
         key: 'crtGamma',
@@ -915,7 +913,7 @@ export const GROUPS: Group[] = [
         step: 0.05,
         redline: [1, 3],
         unit: '',
-        help: 'The gun transfer curve — light out versus drive in. High gamma deepens shadows and stretches highlights, which is much of what gives a CRT its contrast; in a feedback loop it sharpens the boundary between what survives and what dies.',
+        help: 'The gun transfer curve, light out versus drive in. High gamma deepens shadows and stretches highlights, which is much of what gives a CRT its contrast. In a feedback loop it sharpens the boundary between what survives and what dies.',
       },
       {
         key: 'crtSat',
@@ -926,7 +924,7 @@ export const GROUPS: Group[] = [
         step: 0.01,
         redline: [0, 2],
         unit: '',
-        help: 'Colour saturation of the emitted light, applied after the beam transfer. Feedback multiplies it every pass, so a small boost here compounds into wildly saturated bands.',
+        help: 'Colour saturation of the emitted light, applied after the beam transfer. Feedback multiplies it every pass, so a small boost here compounds into heavily saturated bands.',
       },
       {
         key: 'crtBloom',
@@ -937,7 +935,7 @@ export const GROUPS: Group[] = [
         step: 0.01,
         redline: [0, 1.5],
         unit: '',
-        help: 'Light spreading out of bright phosphor cores. A tight halo that fattens highlights, and in a loop it is how a bright point grows into a blob over successive passes.',
+        help: 'Light spreading out of bright phosphor cores. A tight halo that fattens highlights. In a loop, it is how a bright point grows into a blob over successive passes.',
       },
       {
         key: 'crtHalation',
@@ -948,7 +946,7 @@ export const GROUPS: Group[] = [
         step: 0.01,
         redline: [0, 1.5],
         unit: '',
-        help: 'Light scattering inside the thick glass faceplate and bouncing back — a wide, warm, low-level halo around highlights. Broader and softer than bloom, and the reason bright CRT images look like they are glowing through the screen rather than off it.',
+        help: 'Light scattering inside the thick glass faceplate and bouncing back: a wide, warm, low-level halo around highlights. Broader and softer than bloom, and the reason bright CRT images look like they glow through the screen rather than off it.',
       },
       {
         key: 'crtHaloKey',
@@ -959,7 +957,7 @@ export const GROUPS: Group[] = [
         step: 0.01,
         redline: [0, 1],
         unit: '',
-        help: 'How much the halo widens with local beam drive. At 0 the halo is one fixed width, which is the tell — real glass scatter grows with beam current, so a peak white throws light much further into the faceplate than a mid grey. Raise it and highlights bloom disproportionately while ordinary picture keeps a tight halo.',
+        help: 'How much the halo widens with local beam drive. At 0 the halo is one fixed width, which is the giveaway. Real glass scatter grows with beam current, so a peak white throws light much further into the faceplate than a mid grey. Raise it and highlights bloom disproportionately while ordinary picture keeps a tight halo.',
       },
       {
         key: 'crtGlow',
@@ -970,7 +968,7 @@ export const GROUPS: Group[] = [
         step: 0.01,
         redline: [0, 1],
         unit: '',
-        help: 'Faceplate haze: the dull ambient sheen a powered tube has even in black areas. Lifts the black floor slightly, which in a feedback loop gives the whole frame a small standing gain.',
+        help: 'Faceplate haze: the dull ambient sheen a powered tube has even in black areas. It lifts the black floor slightly, which in a feedback loop gives the whole frame a small standing gain.',
       },
     ],
   },
@@ -987,7 +985,7 @@ export const GROUPS: Group[] = [
         step: 0.01,
         redline: [0, 0.95],
         unit: '',
-        help: "Feedback through a video mixer instead of a camera: the previous frame's composite waveform is patched back into the input, electrically. This is the crossfader position toward that loop bus. The subcarrier goes around the loop too, so colour does things optics cannot. All the way over the crossfader is past the loop bus rather than on it: the program is fully out, so the loop has only itself left to feed on, and the delay and the filters take a little off every lap. Below unity gain that decays to black in about a second. It stays a picture only if the loop makes back what it loses, which is what the gain beside it is for.",
+        help: "Feedback through a video mixer instead of a camera. The previous frame's composite waveform is patched back into the input electrically, and this is the crossfader position toward that loop bus. The subcarrier goes around the loop too, so colour does things optics cannot. All the way over, the crossfader is past the loop bus rather than on it: the program is fully out, so the loop has only itself to feed on, and the delay and filters take a little off every lap. Below unity gain that decays to black in about a second. It stays a picture only if the loop makes back what it loses, which is what the gain beside it is for.",
       },
       {
         key: 'cfbGain',
@@ -1009,7 +1007,7 @@ export const GROUPS: Group[] = [
         step: 0.001,
         redline: [0, 8],
         unit: 'us',
-        help: 'Delay on the loop return, in microseconds. Because the colour subcarrier rides the same waveform, delay is also a hue rotation — one sample (70 ns) is a 90° spin. Sub-microsecond moves smear the picture sideways and repaint it in a different colour at the same time.',
+        help: 'Delay on the loop return, in microseconds. Because the colour subcarrier rides the same waveform, delay is also a hue rotation: one sample (70 ns) is a 90° spin. Sub-microsecond moves smear the picture sideways and recolour it at the same time.',
       },
       {
         key: 'cfbServoUs',
@@ -1021,7 +1019,7 @@ export const GROUPS: Group[] = [
         curve: 'zero',
         redline: [-8, 8],
         unit: 'us',
-        help: "The loop's delay trimmer replaced by a varactor hanging off the video bus, so the fed-back waveform tunes the delay it is riding through. Bright content and sync tips pull opposite ways from mid-video, and every 70 ns of pull is another 90° of hue — so each lap the picture rewrites its own timing and colour, and that rewritten picture does the pulling on the next lap. Structures shear apart by brightness, sync walks into neighbouring lines and tears, and none of it can repeat, because the displacement field is the picture itself one generation late. Sign chooses which way brightness pulls.",
+        help: "The loop's delay trimmer replaced by a varactor hanging off the video bus, so the fed-back waveform tunes the delay it passes through. Bright content and sync tips pull opposite ways from mid-video, and every 70 ns of pull is another 90° of hue. Each lap the picture rewrites its own timing and colour, and that rewritten picture does the pulling on the next lap. Structures shear apart by brightness, sync walks into neighbouring lines and tears, and none of it repeats, because the displacement field is the picture itself one generation late. Sign chooses which way brightness pulls.",
       },
       {
         key: 'cfbLines',
@@ -1042,7 +1040,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: 'Keys the loop return, so only part of the picture feeds back. Positive keeps the side of the slice the key is set to, negative inverts the polarity and keeps the other. This is what makes feedback follow the subject instead of flooding the frame. What the box slices is the level below, until the acceptance angle opens and it slices hue instead.',
+        help: 'Keys the loop return, so only part of the picture feeds back. Positive keeps the side of the slice the key is set to. Negative inverts the polarity and keeps the other. This is what makes feedback follow the subject instead of flooding the frame. The box slices the level below, until the acceptance angle opens and it slices hue instead.',
       },
       {
         key: 'cfbKeyLevel',
@@ -1064,7 +1062,7 @@ export const GROUPS: Group[] = [
         step: 0.5,
         unit: 'IRE',
         fine: true,
-        help: 'How wide the key transition is, in IRE. Narrow gives a hard-edged cut-out; wide gives a gradual blend that follows the picture gradient.',
+        help: 'How wide the key transition is, in IRE. Narrow gives a hard-edged cut-out. Wide gives a gradual blend that follows the picture gradient.',
       },
       {
         key: 'cfbKeyExt',
@@ -1075,7 +1073,7 @@ export const GROUPS: Group[] = [
         step: 1,
         choices: ['self', 'program'],
         unit: '',
-        help: "Which connector the keyer's key input is on. Self is the loop return itself, so the loop's own past decides where it is allowed to carry on — the trail draws its own boundary and the boundary is a generation old. Program is the live picture, so what decides is what is in front of the camera now: a subject moving through the frame carves its own shape out of everything the loop has accumulated, and the accumulation cannot follow it.",
+        help: "Which connector the keyer's key input is on. Self is the loop return itself, so the loop's own past decides where it may continue: the trail draws its own boundary, and the boundary is a generation old. Program is the live picture, so what decides is what is in front of the camera now. A subject moving through the frame carves its own shape out of everything the loop has accumulated, and the accumulation cannot follow it.",
       },
       {
         key: 'cfbKeyHueDeg',
@@ -1086,7 +1084,7 @@ export const GROUPS: Group[] = [
         step: 1,
         unit: 'deg',
         fine: true,
-        help: 'Which chroma phase the keyer slices at, once the acceptance angle below has taken it off level and put it on hue. 241 is where a green backing lands; in a loop the number matters less than where it sits relative to the hue the delay is spinning the return through.',
+        help: 'Which chroma phase the keyer slices at, once the acceptance angle below has switched it from level to hue. 241 is where a green backing lands. In a loop the number matters less than where it sits relative to the hue the delay is spinning the return through.',
       },
       {
         key: 'cfbKeyAcceptDeg',
@@ -1096,7 +1094,7 @@ export const GROUPS: Group[] = [
         max: 180,
         step: 1,
         unit: 'deg',
-        help: 'Swaps the luma keyer in the loop for a chroma one: a wedge this wide either side of the key hue, and at zero there is no wedge and the box goes back to slicing level. A loop keyed on its own colour is self-limiting, because the loop delay is a hue rotation — a region regenerates until its own return has spun out of the wedge, gives up, and hands the territory to whatever has spun into it. Nothing draws the boundary and nothing holds it still.',
+        help: 'Swaps the luma keyer in the loop for a chroma one: a wedge this wide either side of the key hue. At zero there is no wedge and the box goes back to slicing level. A loop keyed on its own colour is self-limiting, because the loop delay is a hue rotation. A region regenerates until its own return has spun out of the wedge, then stops, and whatever has spun into the wedge takes over. Nothing draws the boundary and nothing holds it still.',
       },
       {
         key: 'cfbHold',
@@ -1107,7 +1105,7 @@ export const GROUPS: Group[] = [
         step: 1,
         unit: 'frames',
         fine: true,
-        help: "Freezes the loop's frame store for this many frames before it grabs again — a frame synchronizer stuttering. At small values motion strobes; at large ones the picture holds still while the live signal keeps mixing over it.",
+        help: "Freezes the loop's frame store for this many frames before it grabs again, like a frame synchronizer stuttering. At small values motion strobes. At large ones the picture holds still while the live signal keeps mixing over it.",
       },
       {
         key: 'cfbTrail',
@@ -1118,7 +1116,7 @@ export const GROUPS: Group[] = [
         step: 0.01,
         redline: [0, 0.98],
         unit: '',
-        help: "Peak-hold decay in the loop's frame store: bright areas are retained and fade rather than being replaced. This is the smeary luminance trail of a frame synchronizer left in the loop, distinct from the tube's own phosphor persistence.",
+        help: "Peak-hold decay in the loop's frame store. Bright areas are retained and fade rather than being replaced. This is the smeared luminance trail of a frame synchronizer left in the loop, distinct from the tube's own phosphor persistence.",
       },
       {
         key: 'cfbFilterMHz',
@@ -1129,7 +1127,7 @@ export const GROUPS: Group[] = [
         step: 0.05,
         unit: 'MHz',
         fine: true,
-        help: 'Puts a resonant filter in the loop, centred here — a bent video enhancer patched into the feedback. Around 3.58 MHz it rings on the colour subcarrier itself; lower down it rings on picture detail and turns edges into repeating bars.',
+        help: 'Puts a resonant filter in the loop, centred here, like a bent video enhancer patched into the feedback. Around 3.58 MHz it rings on the colour subcarrier itself. Lower down it rings on picture detail and turns edges into repeating bars.',
       },
       {
         key: 'cfbFilterQ',
@@ -1140,7 +1138,7 @@ export const GROUPS: Group[] = [
         step: 0.01,
         unit: '',
         fine: true,
-        help: 'How selective that resonance is. Broad gives the loop a gentle tonal tilt; narrow makes it ring for a long time after every edge, laying a fixed-frequency pattern across the line.',
+        help: 'How selective that resonance is. Broad gives the loop a gentle tonal tilt. Narrow makes it ring for a long time after every edge, laying a fixed-frequency pattern across the line.',
       },
       {
         key: 'cfbFilterBoost',
@@ -1162,7 +1160,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: "The loop bus multiplied instead of just summed with what it meets — a ring modulator with one input patched to the machine's own past. Every product goes round again and is re-multiplied a frame later, so the spectrum folds over itself generation after generation. What is on the other input is the row below, and it decides whether any of that arrives as colour.",
+        help: "The loop bus multiplied instead of summed with what it meets: a ring modulator with one input patched to the machine's own past. Every product goes round again and is re-multiplied a frame later, so the spectrum folds over itself generation after generation. What is on the other input is the row below, and it decides whether any of that arrives as colour.",
       },
       {
         key: 'cfbClockPct',
@@ -1175,7 +1173,7 @@ export const GROUPS: Group[] = [
         redline: [-0.3, 0.3],
         vernier: true,
         unit: '%',
-        help: "The loop's frame store read out at a clock this far off the one it was written at. A store re-triggers its readout on the output's line sync, so the error starts again every line rather than accumulating down the frame: the picture is stretched or squeezed sideways from the line start, and past the end of a line the read walks into the store's next one. What makes it a colour control is that the subcarrier is in the samples being re-clocked — a thousandth off, and the carrier comes back a thousandth off the lattice the decoder measures against, so hue turns further the further a sample sits from where the line began: eighty degrees by the right-hand edge. Each lap re-clocks what the last one wrote, so the fan opens wider every generation. No lens can do it and no delay can either; both of those move a picture without rewriting where its carrier sits.",
+        help: "The loop's frame store read out at a clock this far off the one it was written at. A store re-triggers its readout on the output's line sync, so the error starts again every line rather than accumulating down the frame. The picture is stretched or squeezed sideways from the line start, and past the end of a line the read runs into the store's next one. It is a colour control because the subcarrier is in the samples being re-clocked. A thousandth off, and the carrier comes back a thousandth off the lattice the decoder measures against, so hue turns further the further a sample sits from the line start: eighty degrees by the right-hand edge. Each lap re-clocks what the last one wrote, so the fan opens wider every generation. Neither a lens nor a delay can do this. Both move a picture without changing where its carrier sits.",
       },
       {
         key: 'cfbGenlock',
@@ -1185,7 +1183,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: "Whether the return comes back through a frame synchronizer or down a bare cable. A store genlocked to house reference writes its own sync and burst on the way out, so what circulates is picture: the delay, the offsets and the varactor can be run as far as they go and the receiver still finds every line start, which is what lets a loop be pushed hard and stay a picture. On the cable the loop's own sync tip goes round with the video, one delay late, and lands somewhere inside a line — the separator loses the edge it was hunting for, the flywheel free-runs, and a second's worth of accumulated structure is thrown across a raster that is no longer under it. Both are things a rack does; this is which one is patched.",
+        help: "Whether the return comes back through a frame synchronizer or down a bare cable. A store genlocked to house reference writes its own sync and burst on the way out, so what circulates is picture only. The delay, the offsets and the varactor can be run as far as they go and the receiver still finds every line start, which is what lets a loop be pushed hard and stay a picture. On the cable the loop's own sync tip goes round with the video, one delay late, and lands somewhere inside a line. The separator loses the edge it was looking for, the flywheel free-runs, and a second's worth of accumulated structure is thrown across a raster that no longer lines up with it. Both are things a rack does. This is which one is patched.",
       },
       {
         key: 'cfbReturn',
@@ -1196,7 +1194,7 @@ export const GROUPS: Group[] = [
         step: 1,
         choices: ['composite', 'chroma', 'luma'],
         unit: '',
-        help: "A Y/C separator on the loop return and a recombiner after it, so one wire comes round the loop and the other comes from the live picture. Composite is the whole waveform going round, which is what a loop normally is. Chroma sends the loop's colour over the live brightness: hue accumulates and keeps turning through the delay's rotation while the picture under it stays sharp and current, so what builds up is colour that has come loose from the thing that cast it. Luma is the reverse — brightness and the sync tip go round underneath the live colour, so trails stack up in grey and still drag at where the receiver thinks each line starts.",
+        help: "A Y/C separator on the loop return and a recombiner after it, so one wire comes round the loop and the other comes from the live picture. Composite sends the whole waveform round, which is what a loop normally is. Chroma sends the loop's colour over the live brightness. Hue accumulates and keeps turning through the delay's rotation while the picture under it stays sharp and current, so what builds up is colour detached from the thing that cast it. Luma is the reverse: brightness and the sync tip go round underneath the live colour, so trails stack up in grey and still pull at where the receiver thinks each line starts.",
       },
       {
         key: 'cfbRingSrc',
@@ -1207,7 +1205,7 @@ export const GROUPS: Group[] = [
         step: 1,
         choices: ['program', 'oscillator'],
         unit: '',
-        help: "Which connector the ring modulator's other input is on. Program is the live picture, and both sides then carry their subcarrier on the same crystal — so chroma against chroma lands at DC and at 7.16 MHz, the chroma filter keeps neither, and what the multiply makes is brightness structure and pulses minted mid-line. Oscillator patches the box's own subcarrier generator there instead, which makes the bridge an encoder's chroma modulator: the return's brightness is translated up onto 3.58 MHz where the decoder reads it as colour, and the return's colour is translated down to brightness. Each lap swaps the two, so a picture's light comes back as its hue and that hue comes back as light.",
+        help: "Which connector the ring modulator's other input is on. Program is the live picture, and both sides then carry their subcarrier on the same crystal. Chroma against chroma lands at DC and at 7.16 MHz, the chroma filter keeps neither, and what the multiply produces is brightness structure and pulses created mid-line. Oscillator patches the box's own subcarrier generator there instead, which makes the bridge an encoder's chroma modulator. The return's brightness is translated up onto 3.58 MHz, where the decoder reads it as colour, and the return's colour is translated down to brightness. Each lap swaps the two, so a picture's light comes back as its hue and that hue comes back as light.",
       },
       {
         key: 'cfbCarrierKHz',
@@ -1219,7 +1217,7 @@ export const GROUPS: Group[] = [
         curve: 'zero',
         redline: [-40, 40],
         unit: 'kHz',
-        help: 'How far that oscillator sits off the house 3.579545 MHz. At zero it agrees with the encoder, so the colour it makes out of brightness lands on one phase and the picture comes back in a single hue. Detuned, the phase it writes with ramps continuously through the frame, so the manufactured colour turns along every line and down the picture, and how fast is how far off. It is a second crystal in a second box, so nothing pulls it back — the hue keeps turning for as long as it is running.',
+        help: 'How far that oscillator sits off the house 3.579545 MHz. At zero it agrees with the encoder, so the colour it makes out of brightness lands on one phase and the picture comes back in a single hue. Detuned, the phase it writes with ramps continuously through the frame, so the manufactured colour turns along every line and down the picture, faster the further off it is. It is a second crystal in a second box, so nothing pulls it back. The hue keeps turning as long as it runs.',
       },
     ],
   },
@@ -1236,7 +1234,7 @@ export const GROUPS: Group[] = [
         step: 1,
         unit: '',
         choices: ['dirty sum', 'clean dissolve'],
-        help: "Whether source B is genlocked to the house reference. Off (0): B free-runs and is summed into the composite — a wiring fault, so its detune, roll and skew below drive fighting sync and chroma beats. On (1): B is re-encoded on A's carrier and raster and the combine becomes a clean crossfade — a production switcher dissolve, with B gain as the fader and the wipe as a clean B-replaces-A wipe. The detune/roll/skew and ring mod do nothing on this path.",
+        help: "Whether source B is genlocked to the house reference. Off (0): B free-runs and is summed into the composite, a wiring fault, so its detune, roll and skew below produce fighting sync and chroma beats. On (1): B is re-encoded on A's carrier and raster and the combine becomes a clean crossfade, a production switcher dissolve, with B gain as the fader and the wipe as a clean B-replaces-A wipe. The detune, roll, skew and ring mod do nothing on this path.",
       },
       {
         key: 'aGain',
@@ -1249,7 +1247,7 @@ export const GROUPS: Group[] = [
         unit: 'x',
         // Not a trim: it is one of the two faders this stage exists to be, and
         // the disclosure it was folded into is gone with B's proc-amp trio.
-        help: "A's own level on the summing bus (dirty path only). 1 is full program; pull it down to fade A out under B for a manual crossfade, or take it negative to invert A into a difference key that cancels against B. Does nothing on the genlocked clean-dissolve path, where A is implied by (1 − B gain).",
+        help: "A's own level on the summing bus (dirty path only). 1 is full program. Pull it down to fade A out under B for a manual crossfade, or take it negative to invert A into a difference key that cancels against B. Does nothing on the genlocked clean-dissolve path, where A is implied by (1 − B gain).",
       },
       {
         key: 'bGain',
@@ -1260,7 +1258,7 @@ export const GROUPS: Group[] = [
         step: 0.01,
         redline: [-1.2, 1.2],
         unit: 'x',
-        help: "How much of source B reaches the composite line. With genlock off this is the level B is summed in at — a wiring fault, not a clean dissolve — and negative inverts B's whole signal, sync tips included, the same hard polarity trick A gain plays. With genlock on it is the crossfade fader: 0 full A, 1 full B, and anything below 0 is simply a closed fader, since a dissolve has nothing to invert. Everything below detunes B's timebase relative to A (dirty path only).",
+        help: "How much of source B reaches the composite line. With genlock off this is the level B is summed in at, a wiring fault rather than a clean dissolve, and negative inverts B's whole signal, sync tips included, the same polarity trick as A gain. With genlock on it is the crossfade fader: 0 full A, 1 full B, and anything below 0 is a closed fader, since a dissolve has nothing to invert. Everything below detunes B's timebase relative to A (dirty path only).",
       },
       {
         key: 'bRing',
@@ -1280,7 +1278,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: 'How little headroom the summing amplifier has. Two full composites added is twice the amplitude one was designed to carry, and at 0 the sum goes into the channel as arithmetic — a bus that never meets its own supply. Open it and the stage runs out: its gain falls away toward the rail rather than clipping flat, and a falling gain multiplies the two signals sharing the bus by each other. A detuned B then beats against A and lands products at their difference, inside the chroma band, so colour arrives that neither source is carrying — what the ring mod beside this does deliberately, happening because the box ran out of volts. Sync tips are squashed with everything else, so the fight for the line start changes character too: a deeper tip stops winning by as much once both are against the rail.',
+        help: 'How little headroom the summing amplifier has. Two full composites added is twice the amplitude one was designed to carry, and at 0 the sum goes into the channel as pure arithmetic, a bus that never runs into its supply. Open it and the stage runs out of volts: its gain falls away toward the rail rather than clipping flat, and a falling gain multiplies the two signals sharing the bus by each other. A detuned B then beats against A and lands products at their difference, inside the chroma band, so colour arrives that neither source carries. This is what the ring mod beside it does deliberately, happening because the box ran out of volts. Sync tips are squashed with everything else, so the sync contest changes too: a deeper tip wins by less once both are against the rail.',
       },
       {
         key: 'bLineHz',
@@ -1304,7 +1302,7 @@ export const GROUPS: Group[] = [
         curve: 'zero',
         redline: [-400, 400],
         unit: 'Hz',
-        help: "How far B's colour subcarrier sits from A's 3.579545 MHz. The decoder locks to A's burst, so B's colour beats against it and its hue cycles continuously — the rainbow crawl of a non-genlocked source.",
+        help: "How far B's colour subcarrier sits from A's 3.579545 MHz. The decoder locks to A's burst, so B's colour beats against it and its hue cycles continuously: the rainbow crawl of a non-genlocked source.",
       },
       {
         key: 'bRollLps',
@@ -1342,7 +1340,7 @@ export const GROUPS: Group[] = [
         max: 180,
         step: 1,
         unit: 'deg',
-        help: "Proc-amp hue trim on B before it is mixed — a static phase offset on its subcarrier. Unlike sc detune this does not drift; it just parks B's colours somewhere else.",
+        help: "Proc-amp hue trim on B before it is mixed: a static phase offset on its subcarrier. Unlike sc detune this does not drift. It just parks B's colours somewhere else.",
       },
       {
         key: 'bVidGain',
@@ -1363,7 +1361,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: "Inverts B's picture. Mixed against A this reads as a difference key — where the two agree they cancel toward flat grey, where they differ the mix lights up.",
+        help: "Inverts B's picture. Mixed against A this reads as a difference key. Where the two agree they cancel toward flat grey, and where they differ the mix lights up.",
       },
       {
         key: 'deintB',
@@ -1374,7 +1372,7 @@ export const GROUPS: Group[] = [
         step: 1,
         unit: '',
         choices: ['off', 'on'],
-        help: "The same bob deinterlacer source A has, on B's own picture: each frame rebuilt from one field instead of both, at half the vertical detail. B is where the second grabber goes, and a deck's combing is its own — a progressive camera in A and an interlaced dongle in B want opposite answers, which is why this is a switch per source rather than one on the bus.",
+        help: "The same bob deinterlacer source A has, on B's own picture: each frame rebuilt from one field instead of both, at half the vertical detail. B is where the second grabber goes, and a deck's combing is its own. A progressive camera in A and an interlaced dongle in B want opposite answers, which is why this is a switch per source rather than one on the bus.",
       },
     ],
   },
@@ -1395,7 +1393,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: "The pause button on the B deck, at how badly the deck copes with it. The frame holds — the drum keeps re-reading one track — but pause defeats the capstan servo, so B's timebase wanders aperiodically and scatters line to line; the head sweeps off the parked track through a mistrack stripe of snow that creeps down the frame on its own; and the drum's two reads never had their colour-under phase interleaved, so B's hue flickers at frame rate. All of it lands on B's own raster and then rides the dirty sum, which is the classic rig: a paused VCR into a mixer, two fighting syncs, one of them broken. When the stripe drifts through B's vertical interval it takes B's field pulses with it and the fight turns into rolls nobody scheduled. Genlock implies a time-base corrector, so on the clean-dissolve path the button just freezes the frame.",
+        help: "The pause button on the B deck, at how badly the deck copes with it. The frame holds, because the drum keeps re-reading one track, but pause defeats the capstan servo. B's timebase wanders aperiodically and scatters line to line. The head sweeps off the parked track through a mistrack stripe of snow that creeps down the frame on its own. The drum's two reads never had their colour-under phase interleaved, so B's hue flickers at frame rate. All of it lands on B's own raster and then rides the dirty sum, which is the classic rig: a paused VCR into a mixer, two fighting syncs, one of them broken. When the stripe drifts through B's vertical interval it takes B's field pulses with it and the fight turns into unplanned rolls. Genlock implies a time-base corrector, so on the clean-dissolve path the button just freezes the frame.",
       },
       {
         key: 'bDropoutRate',
@@ -1406,7 +1404,7 @@ export const GROUPS: Group[] = [
         step: 1,
         redline: [0, 60],
         unit: '/frame',
-        help: "Dropout events per frame on B's own tape. The streaks land on B's raster, so they slip, skew and roll with B's picture through the mix — which is what tells B's worn tape apart from damage on the program bus.",
+        help: "Dropout events per frame on B's own tape. The streaks land on B's raster, so they slip, skew and roll with B's picture through the mix. That is what tells B's worn tape apart from damage on the program bus.",
       },
       {
         key: 'bDropoutLenUs',
@@ -1427,7 +1425,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: "Head-end scrambling on input B alone: B's sync tips are lifted toward blanking before it is summed in. B's contribution to the sync fight goes toothless — its picture still beats and rolls through the mix, but the receiver only ever hears A's pulses.",
+        help: "Head-end scrambling on input B alone. B's sync tips are lifted toward blanking before it is summed in. B stops contributing to the sync contest: its picture still beats and rolls through the mix, but the receiver only ever sees A's pulses.",
       },
       {
         key: 'bScrambleMode',
@@ -1438,7 +1436,7 @@ export const GROUPS: Group[] = [
         step: 1,
         unit: '',
         choices: ['gated', 'alternate', 'ssavi'],
-        help: "Which scrambling system B's channel uses. Gated suppresses every line, alternate every other line, and SSAVI also inverts B's active video — a negative picture drifting through a positive one.",
+        help: "Which scrambling system B's channel uses. Gated suppresses every line, alternate every other line, and SSAVI also inverts B's active video: a negative picture drifting through a positive one.",
       },
     ],
   },
@@ -1454,7 +1452,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: "How loose the plug in input B's jack is: bands of lines lose contact, re-rolled every frame. Which contact is failing is the row below. B is the input the receiver is not locked to, so a break here decides whether B's bands merely stop contributing picture or stop contributing sync — which are two different fights.",
+        help: "How loose the plug in input B's jack is. Bands of lines lose contact, re-rolled every frame. Which contact is failing is the row below. B is the input the receiver is not locked to, so a break here decides whether B's bands stop contributing picture or stop contributing sync, which are two different fights.",
       },
       {
         key: 'bConnectorMode',
@@ -1465,7 +1463,7 @@ export const GROUPS: Group[] = [
         step: 1,
         unit: '',
         choices: ['pin', 'shield', 'both'],
-        help: "Which of B's two contacts is intermittent. The centre pin breaks the signal path, so those bands of B collapse to the input's own noise and B stops pushing sync at all there — the mix goes quiet and steady for a band, then B's pulses come back and the fight resumes. The shell breaks the ground instead and leaves B's signal alone: a ground loop's hum lands on the bad bands, so B arrives on a walking pedestal that rides B's own raster through the slip and roll. Both is a genuinely wiggled plug, the two on independent bands.",
+        help: "Which of B's two contacts is intermittent. The centre pin breaks the signal path, so those bands of B collapse to the input's own noise and B stops pushing sync there. The mix goes quiet and steady for a band, then B's pulses come back and the fight resumes. The shell breaks the ground instead and leaves B's signal alone: a ground loop's hum lands on the bad bands, so B arrives on a shifting pedestal that rides B's own raster through the slip and roll. Both is a wiggled plug, with the two faults on independent bands.",
       },
       {
         key: 'bHumIre',
@@ -1476,7 +1474,7 @@ export const GROUPS: Group[] = [
         step: 0.5,
         redline: [-20, 20],
         unit: 'IRE',
-        help: "A ground loop on input B's cable alone — B's deck and the mixer on different outlets, the loop current landing in series with B's video. The bar rides B's own raster, so unlike a program-bus hum it slips and rolls with B's picture instead of standing still on the glass. It lifts B's sync tips with it, so how hard B fights for the line start breathes at 60 Hz. Negative is the other leg of the mains: set against A's ground loop it pushes the opposite way, which is the difference between two hum bars that agree and two that beat.",
+        help: "A ground loop on input B's cable alone: B's deck and the mixer on different outlets, with the loop current in series with B's video. The bar rides B's own raster, so unlike a program-bus hum it slips and rolls with B's picture instead of standing still on the glass. It lifts B's sync tips with it, so how hard B fights for the line start varies at 60 Hz. Negative is the other leg of the mains. Set against A's ground loop it pushes the opposite way, which is the difference between two hum bars that agree and two that beat.",
       },
       {
         key: 'bNoiseIre',
@@ -1497,7 +1495,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: "Termination fault on B's cable alone. Negative halves B toward a dim ghost of a signal under A; positive runs B hot and ringing, so its sync and burst bully their way into the fight against a clean A.",
+        help: "Termination fault on B's cable alone. Negative halves B toward a dim ghost of a signal under A. Positive runs B hot and ringing, so its sync and burst push harder in the contest against a clean A.",
       },
       {
         key: 'bPolarity',
@@ -1507,7 +1505,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: "A signal/ground swap on B's own connector: B's waveform is negated, sync included, before it reaches the summing bus. The same trick as pulling B gain negative, but as a fault in the cable rather than the fader — level and polarity stay independent knobs.",
+        help: "A signal/ground swap on B's own connector. B's waveform is negated, sync included, before it reaches the summing bus. The same trick as pulling B gain negative, but as a fault in the cable rather than the fader, so level and polarity stay independent knobs.",
       },
     ],
   },
@@ -1534,19 +1532,19 @@ export const GROUPS: Group[] = [
         step: 0.01,
         unit: '',
         help: `A character generator at the switcher, keying the caption text
-          into the picture — the box every lower third, score bug and station
+          into the picture, the box every lower third, score bug and station
           ident came out of.
 
           What makes it a CG rather than an overlay is that it puts out **two
           wires**: a fill, which is video, and a key, which is a matte cut at
-          the characters' own edges. Everything below bends the relationship
+          the characters' own edges. Everything below changes the relationship
           between those two, which is what every bent chyron is doing.
 
           Because it keys onto the composite bus ahead of the loops and the
-          deck, what it writes is signal from here on: full-swing type is the
+          deck, what it writes is signal from here on. Full-swing type is the
           harshest thing a composite path carries, so the AGC pumps on it, the
-          sound detector hands it back as a whine that changes with what it
-          says, and the tape ages it along with the picture.`,
+          sound detector turns it into a whine that changes with the text, and
+          the tape ages it along with the picture.`,
       },
       {
         key: 'cgKeyDelayNs',
@@ -1556,7 +1554,7 @@ export const GROUPS: Group[] = [
         max: 600,
         step: 10,
         unit: 'ns',
-        help: 'The trim every real keyer has, because the key path and the video path are different lengths of circuit. Mis-set on a photograph it slides a soft matte a few samples and nobody notices. Mis-set on a glyph it puts background through one side of every stem and a hard shadow down the other — and far enough out it leaves an outline with no letter inside it. One sample is 70 ns.',
+        help: 'The trim every real keyer has, because the key path and the video path are different lengths of circuit. Mis-set on a photograph it slides a soft matte a few samples and nobody notices. Mis-set on a glyph it puts background through one side of every stem and a hard shadow down the other, and far enough out it leaves an outline with no letter inside it. One sample is 70 ns.',
       },
       {
         key: 'cgClip',
@@ -1566,7 +1564,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: 'Where the slicer cuts the processed key. On type this is stroke weight rather than an edge position: down, and thin strokes fuse and the whole line grows a halo; up, and stems drop out of the middle of words. How much range it has depends on the key bandwidth below — a key with no soft edge has nothing for a clip to slide along.',
+        help: 'Where the slicer cuts the processed key. On type this is stroke weight rather than an edge position. Down, thin strokes fuse and the whole line grows a halo. Up, stems drop out of the middle of words. How much range it has depends on the key bandwidth below: a key with no soft edge has nothing for a clip to slide along.',
       },
       {
         key: 'cgKeyMHz',
@@ -1576,7 +1574,7 @@ export const GROUPS: Group[] = [
         max: 8,
         step: 0.1,
         unit: 'MHz',
-        help: 'The key-processing amplifier ahead of the slicer, which is narrower than the video path and is the only reason a key has a soft edge at all. Horizontal only — the same lopsided edge the chroma keyer has, and for the same reason: this is a line of signal, not a picture, so there is no vertical neighbour on the wire.',
+        help: 'The key-processing amplifier ahead of the slicer, which is narrower than the video path and is the only reason a key has a soft edge at all. Horizontal only, the same lopsided edge the chroma keyer has, for the same reason: this is a line of signal rather than a picture, so there is no vertical neighbour on the wire.',
       },
       {
         key: 'cgInvert',
@@ -1587,7 +1585,7 @@ export const GROUPS: Group[] = [
         step: 1,
         unit: '',
         choices: ['normal', 'inverted'],
-        help: "Which side of the key is cut. Inverted, the box fills the whole raster and the letters are holes in it showing the picture — which is what a downstream keyer inverted actually does, since the key's domain is the picture rather than the block of type.",
+        help: "Which side of the key is cut. Inverted, the box fills the whole raster and the letters are holes in it showing the picture. That is what a downstream keyer inverted actually does, since the key's domain is the picture rather than the block of type.",
       },
       {
         key: 'cgEdgeX',
@@ -1598,7 +1596,7 @@ export const GROUPS: Group[] = [
         step: 1,
         unit: 'smp',
         fine: true,
-        help: 'A CG drew its border and drop shadow by delaying the key a sample and a line and OR-ing it back in underneath the fill. This is that delay, and pulling it far past the sample it was meant to be detaches the shadow from the type and walks it across the frame.',
+        help: 'A CG drew its border and drop shadow by delaying the key a sample and a line and OR-ing it back in underneath the fill. This is that delay. Pulling it far past the sample it was meant to be detaches the shadow from the type and moves it across the frame.',
       },
       {
         key: 'cgEdgeY',
@@ -1609,7 +1607,7 @@ export const GROUPS: Group[] = [
         step: 1,
         unit: 'ln',
         fine: true,
-        help: 'The other half of the drop shadow, in lines. Bending the two apart is what puts a shadow in front of the letters it belongs to instead of behind them.',
+        help: 'The other half of the drop shadow, in lines. Bending the two apart puts a shadow in front of the letters it belongs to instead of behind them.',
       },
       {
         key: 'cgFill',
@@ -1620,7 +1618,7 @@ export const GROUPS: Group[] = [
         step: 1,
         unit: 'IRE',
         fine: true,
-        help: 'How bright the characters are laid in, in IRE on the composite. 100 is peak white; past that the box is overmodulating, and everything downstream that reacts to level reacts to it — the receiver AGC, the tape, and the sound detector, which starts buzzing in time with what the caption says.',
+        help: 'How bright the characters are laid in, in IRE on the composite. 100 is peak white. Past that the box is overmodulating, and everything downstream that reacts to level reacts to it: the receiver AGC, the tape, and the sound detector, which starts buzzing in time with the caption.',
       },
       {
         key: 'cgX',
@@ -1642,7 +1640,7 @@ export const GROUPS: Group[] = [
         step: 0.01,
         unit: '',
         fine: true,
-        help: "The block's top edge down the picture. The stock value is a lower third, sat clear of the caption decoder's own block below it — the two are meant to be run together and read against each other.",
+        help: "The block's top edge down the picture. The stock value is a lower third, clear of the caption decoder's own block below it. The two are meant to be run together and compared.",
       },
       {
         key: 'cgScale',
@@ -1653,7 +1651,7 @@ export const GROUPS: Group[] = [
         step: 0.25,
         unit: '',
         fine: true,
-        help: 'Picture samples per font dot. The glyphs are dots on a grid, so this scales in whole dots and the type stays as crunchy as the ROM made it.',
+        help: 'Picture samples per font dot. The glyphs are dots on a grid, so this scales in whole dots and the type stays as blocky as the ROM made it.',
       },
       {
         key: 'cgRomAddr',
@@ -1664,7 +1662,7 @@ export const GROUPS: Group[] = [
         step: 1,
         unit: '',
         fine: true,
-        help: "A pin held high on this box's font ROM — the same bend as the caption decoder's, on a different chip, because these are two boxes and shorting one says nothing about the other. Low lines carry the row inside the cell, so every glyph grows a seam; high lines carry the character code, so the whole font substitutes.",
+        help: "A pin held high on this box's font ROM. The same bend as the caption decoder's, on a different chip, because these are two boxes and shorting one says nothing about the other. Low lines carry the row inside the cell, so every glyph grows a seam. High lines carry the character code, so the whole font is substituted.",
       },
       {
         key: 'cgRomData',
@@ -1692,7 +1690,7 @@ export const GROUPS: Group[] = [
         step: 1,
         unit: '',
         choices: ['off', 'h', 'v', 'box', 'diamond'],
-        help: "Selects the switcher wipe pattern that decides which parts of the frame show B instead of A: 0 off, 1 horizontal, 2 vertical, 3 box, 4 diamond. The pattern shapes the picture only — on the dirty path B's sync and burst keep summing across the whole raster whatever the wipe is doing, so engaging one shapes what you see without calling off the sync fight underneath it.",
+        help: "Selects the switcher wipe pattern that decides which parts of the frame show B instead of A: 0 off, 1 horizontal, 2 vertical, 3 box, 4 diamond. The pattern shapes the picture only. On the dirty path B's sync and burst keep summing across the whole raster whatever the wipe does, so a wipe changes what you see without stopping the sync contest underneath it.",
       },
       {
         key: 'wipePos',
@@ -1712,7 +1710,7 @@ export const GROUPS: Group[] = [
         max: 0.5,
         step: 0.005,
         unit: '',
-        help: 'Width of the blended border along the wipe edge — a hard switcher cut at 0, a soft dissolving edge as it opens up.',
+        help: 'Width of the blended border along the wipe edge. A hard switcher cut at 0, a soft dissolving edge as it opens up.',
       },
       {
         key: 'wipeRate',
@@ -1738,7 +1736,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: 'Squeezes source B into a positionable window over the program, like a switcher DVE. Unlike the dirty mix, the inset is re-encoded genlocked to the house raster — so it dot-crawls like real video but does not beat or roll.',
+        help: 'Squeezes source B into a positionable window over the program, like a switcher DVE. Unlike the dirty mix, the inset is re-encoded genlocked to the house raster, so it dot-crawls like real video but does not beat or roll.',
       },
       {
         key: 'pipX',
@@ -1789,7 +1787,7 @@ export const GROUPS: Group[] = [
         step: 0.001,
         unit: '',
         fine: true,
-        help: 'Thickness of the matte border drawn around the inset — the hard frame line a switcher puts around a squeezed source.',
+        help: 'Thickness of the matte border drawn around the inset, the hard frame line a switcher puts around a squeezed source.',
       },
       {
         key: 'pipSoft',
@@ -1810,7 +1808,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: 'Keys the inset against its own brightness so it is not a solid box: positive keeps the bright parts of B, negative keeps the dark ones. This is how you drop a subject in without the rectangle.',
+        help: 'Keys the inset against its own brightness so it is not a solid box. Positive keeps the bright parts of B, negative keeps the dark ones. This is how you drop a subject in without the rectangle.',
       },
       {
         key: 'pipKeyLevel',
@@ -1832,7 +1830,7 @@ export const GROUPS: Group[] = [
         step: 0.01,
         unit: '',
         fine: true,
-        help: 'Width of the inset key transition. Narrow cuts a hard matte; wide feathers the subject into the program.',
+        help: 'Width of the inset key transition. Narrow cuts a hard matte. Wide feathers the subject into the program.',
       },
     ],
   },
@@ -1853,7 +1851,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: "Cuts B's backing colour away so A shows through it — a chroma keyer across the mixer, with B as the foreground. Negative inverts which side survives: the subject is cut out and the backing kept. Because the keyer is on the bus it slices the chroma the *encoder* made, not the colour the camera saw, so the matte it cuts is soft across and sharp down — the lopsided edge every composite key had. Narrowing the encoder's chroma bandwidth widens that edge, since it is the same filter.",
+        help: "Cuts B's backing colour away so A shows through it: a chroma keyer across the mixer, with B as the foreground. Negative inverts which side survives, so the subject is cut out and the backing kept. Because the keyer is on the bus it slices the chroma the encoder made, not the colour the camera saw, so the matte it cuts is soft across and sharp down, the lopsided edge every composite key had. Narrowing the encoder's chroma bandwidth widens that edge, since it is the same filter.",
       },
       {
         key: 'bKeyHueDeg',
@@ -1863,7 +1861,7 @@ export const GROUPS: Group[] = [
         max: 360,
         step: 1,
         unit: 'deg',
-        help: 'Which chroma phase the keyer treats as the backing. 241 is where a pure green screen lands, 347 a blue one — these are angles on the colour wheel the subcarrier actually carries, not names, which is why anything sharing a hue with the backing disappears too. Sweeping it live keys through the whole picture in turn.',
+        help: 'Which chroma phase the keyer treats as the backing. 241 is where a pure green screen lands, 347 a blue one. These are angles on the colour wheel the subcarrier carries rather than names, which is why anything sharing a hue with the backing disappears too. Sweeping it live keys through the whole picture in turn.',
       },
       {
         key: 'bKeyAcceptDeg',
@@ -1873,7 +1871,7 @@ export const GROUPS: Group[] = [
         max: 180,
         step: 1,
         unit: 'deg',
-        help: 'How wide a wedge of hue either side of the backing counts as backing. Narrow only takes the backing itself and leaves every shadow and fold on it opaque; wide starts eating anything that leans that way, which on a warm-lit subject is the skin. Past about 90 it is keying half the colour wheel.',
+        help: 'How wide a wedge of hue either side of the backing counts as backing. Narrow takes only the backing itself and leaves every shadow and fold on it opaque. Wide starts eating anything that leans that way, which on a warm-lit subject is the skin. Past about 90 it is keying half the colour wheel.',
       },
       {
         key: 'bKeyClip',
@@ -1884,7 +1882,7 @@ export const GROUPS: Group[] = [
         step: 0.005,
         unit: '',
         fine: true,
-        help: 'The saturation a sample must reach before the keyer will act on its hue at all. A demodulator handed an unsaturated sample reports an essentially arbitrary phase, so without this the greys and blacks key out at random. It is also why a keyer cannot hold a dark subject against a dark backing: below the clip the two are the same signal.',
+        help: 'The saturation a sample must reach before the keyer will act on its hue at all. A demodulator given an unsaturated sample reports an essentially arbitrary phase, so without this the greys and blacks key out at random. It is also why a keyer cannot hold a dark subject against a dark backing: below the clip the two are the same signal.',
       },
       {
         key: 'bKeySoft',
@@ -1894,7 +1892,7 @@ export const GROUPS: Group[] = [
         max: 0.4,
         step: 0.005,
         unit: '',
-        help: 'How fast the keyer swings between keep and cut, in both hue and saturation at once — the "gain" knob on the front of the box. At 0 the comparator snaps and the matte is a hard stencil with the composite edge showing as steps; open it up and the subject feathers into A, taking the backing colour with it unless spill is up.',
+        help: 'How fast the keyer swings between keep and cut, in both hue and saturation at once, the "gain" knob on the front of the box. At 0 the comparator snaps and the matte is a hard stencil with the composite edge showing as steps. Open it up and the subject feathers into A, taking the backing colour with it unless spill is up.',
       },
       {
         key: 'bKeySpill',
@@ -1904,7 +1902,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: "Cancels the backing colour still bouncing off the subject. You cannot lift green off a composite sample — luma and chroma are the same wire — so the box does what the hardware did and reinjects the backing's own subcarrier in antiphase to null the component lying along it. It nulls flat on the genlocked path, where B's carrier phase is known exactly; on the dirty path B's carrier is running away, so the cancellation is always a little late and leaves a residue that breathes with the slip.",
+        help: "Cancels the backing colour still reflecting off the subject. You cannot lift green off a composite sample, because luma and chroma are the same wire, so the box does what the hardware did and reinjects the backing's own subcarrier in antiphase to null the component along it. It nulls fully on the genlocked path, where B's carrier phase is known exactly. On the dirty path B's carrier is drifting, so the cancellation is always a little late and leaves a residue that varies with the slip.",
       },
       {
         key: 'bKeyDelayUs',
@@ -1915,7 +1913,7 @@ export const GROUPS: Group[] = [
         step: 0.01,
         unit: 'us',
         fine: true,
-        help: 'Where the keyer looks, against where the picture it is gating came from — the registration trim, because the key path and the video path are different lengths of circuit. Off zero the matte lies beside the subject instead of over it: one edge keeps a rim of backing colour, the other eats a rim of subject.',
+        help: 'Where the keyer looks, relative to where the picture it is gating came from: the registration trim, because the key path and the video path are different lengths of circuit. Off zero the matte lies beside the subject instead of over it. One edge keeps a rim of backing colour and the other eats a rim of subject.',
       },
       {
         key: 'bKeyFill',
@@ -1926,7 +1924,7 @@ export const GROUPS: Group[] = [
         step: 1,
         unit: '',
         choices: ['program A', 'matte', 'loop bus'],
-        help: "What shows through the hole the key cut — the connector on the back of a real keyer. Program A is the other input. Matte is the box's own generator, a flat colour encoded on the house carrier, so it dot-crawls and demodulates like any other colour rather than being an RGB value pasted on the output. Loop bus patches the mixer's own last frame into the fill, so the feedback only regenerates inside the keyed shape and grows in the silhouette of whatever was the backing colour. Genlocked path only: a fill is what sits behind the foreground, and only a crossfade has a behind — on the dirty sum both signals are on the wire at once, so there the key just gates B and A is always there.",
+        help: "What shows through the hole the key cut, the connector on the back of a real keyer. Program A is the other input. Matte is the box's own generator, a flat colour encoded on the house carrier, so it dot-crawls and demodulates like any other colour rather than being an RGB value pasted on the output. Loop bus patches the mixer's own last frame into the fill, so the feedback only regenerates inside the keyed shape and grows in the silhouette of whatever was the backing colour. Genlocked path only: a fill sits behind the foreground, and only a crossfade has a behind. On the dirty sum both signals are on the wire at once, so there the key just gates B and A is always present.",
       },
       {
         key: 'bKeyMatteY',
@@ -1937,7 +1935,7 @@ export const GROUPS: Group[] = [
         step: 0.01,
         unit: '',
         fine: true,
-        help: 'How bright the matte generator sits, black to peak white. This is the luma of a real encoded line, so pushing it to the top with saturation up puts the sum past 100 IRE and whatever is downstream — the AGC, the tape, the beam limiter — reacts to an over-level signal.',
+        help: 'How bright the matte generator sits, black to peak white. This is the luma of a real encoded line, so pushing it to the top with saturation up puts the sum past 100 IRE, and whatever is downstream (the AGC, the tape, the beam limiter) reacts to an over-level signal.',
       },
       {
         key: 'bKeyMatteHueDeg',
@@ -1948,7 +1946,7 @@ export const GROUPS: Group[] = [
         step: 1,
         unit: 'deg',
         fine: true,
-        help: 'The matte colour, as a phase on the subcarrier — the same wheel the backing hue above is read off. Setting it near the backing hue is the self-defeating case worth knowing about: the fill lands inside the acceptance wedge, so anything that keys the matte away keys it again next generation through a loop.',
+        help: 'The matte colour, as a phase on the subcarrier, the same wheel the backing hue above is read off. Setting it near the backing hue is the self-defeating case worth knowing about: the fill lands inside the acceptance wedge, so anything that keys the matte away keys it again next generation through a loop.',
       },
       {
         key: 'bKeyMatteSat',
@@ -1959,7 +1957,7 @@ export const GROUPS: Group[] = [
         step: 0.01,
         unit: '',
         fine: true,
-        help: 'How much chroma the matte generator puts on the carrier. At 0 it is a flat grey field with no subcarrier at all, which is the honest way to get a black or white fill; opened up it approaches the amplitude of a fully saturated primary.',
+        help: 'How much chroma the matte generator puts on the carrier. At 0 it is a flat grey field with no subcarrier at all, which is the correct way to get a black or white fill. Opened up it approaches the amplitude of a fully saturated primary.',
       },
     ],
   },
@@ -1989,7 +1987,7 @@ export const GROUPS: Group[] = [
         step: 0.05,
         redline: [1.2, 6],
         unit: 'MHz',
-        help: 'How much brightness detail the recording or channel passes. Broadcast is about 4.2 MHz; VHS manages roughly 3 MHz, EP mode less. Lowering it softens fine horizontal detail exactly the way a worn tape does — vertical edges smear while the picture stays sharp top to bottom.',
+        help: 'How much brightness detail the recording or channel passes. Broadcast is about 4.2 MHz. VHS manages roughly 3 MHz, EP mode less. Lowering it softens fine horizontal detail the way a worn tape does: vertical edges smear while the picture stays sharp top to bottom.',
       },
       {
         key: 'lumaPeak',
@@ -2000,7 +1998,7 @@ export const GROUPS: Group[] = [
         step: 0.05,
         redline: [0, 3],
         unit: '',
-        help: 'The sharpness boost VCRs and TVs apply to fake back the detail the bandwidth limit took away. It overshoots on every edge, laying a bright ringing outline against a dark one — the crispening artifact of consumer video.',
+        help: 'The sharpness boost VCRs and TVs apply to fake back the detail the bandwidth limit removed. It overshoots on every edge, laying a bright ringing outline against a dark one: the crispening artifact of consumer video.',
       },
       {
         key: 'diffGain',
@@ -2014,7 +2012,7 @@ export const GROUPS: Group[] = [
         // above set up, and neither is a look on its own — no preset in the
         // table reaches for either.
         fine: true,
-        help: "The video amplifier's gain is not flat against the brightness it is amplifying at that instant, so the colour subcarrier riding bright picture comes through smaller than the same colour on dark picture — saturation drains out of the highlights while the shadows keep theirs. On the spec sheet of every VTR and proc amp ever sold as DG%; here the full knob wipes chroma off peak white entirely. Negative is the opposite misdesign: colour swells in the brights.",
+        help: "The video amplifier's gain is not flat against the brightness it is amplifying at that instant, so the colour subcarrier riding bright picture comes through smaller than the same colour on dark picture. Saturation drains out of the highlights while the shadows keep theirs. Every VTR and proc amp spec sheet lists this as DG%. Here the full knob wipes chroma off peak white entirely. Negative is the opposite misdesign: colour swells in the brights.",
       },
       {
         key: 'diffPhaseDeg',
@@ -2025,7 +2023,7 @@ export const GROUPS: Group[] = [
         step: 0.5,
         unit: 'deg',
         fine: true,
-        help: "The same amplifier's delay moves with brightness, and a delay at 3.58 MHz is a phase shift — so hue swings with the luma underneath it: a face turns one way in the light and the other in the shadow, and flat colour picks up a wrongness that tracks the picture. The burst sits at blanking level where the shift is zero, so the decoder's reference never moves — this is hue error against a still reference, not a tint you could dial back out.",
+        help: "The same amplifier's delay moves with brightness, and a delay at 3.58 MHz is a phase shift, so hue swings with the luma underneath it. A face turns one way in the light and the other in the shadow, and flat colour picks up an error that tracks the picture. The burst sits at blanking level where the shift is zero, so the decoder's reference never moves. This is hue error against a still reference, not a tint you could dial back out.",
       },
       {
         key: 'fmOverdev',
@@ -2035,7 +2033,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: "A VHS deck records brightness as FM with the video pre-emphasized, and a white-clip circuit is supposed to stop hard bright edges from overshooting the deviation the head and tape can carry. Set too hot, the overshoot runs past the response cliff and the discriminator folds back — more frequency comes out as less video — so every sharp dark-to-bright edge trails a black streak that smears rightward for about a microsecond and boils frame to frame, because the fold sits on a threshold the demod's own noise keeps re-deciding. Colour is recorded separately (color-under), so it rides straight through the fold: the streaks carry saturated colour over black. Only sharp edges trigger it, so it lives where the picture has detail and moves with the image.",
+        help: "A VHS deck records brightness as FM with the video pre-emphasized, and a white-clip circuit is supposed to stop hard bright edges from overshooting the deviation the head and tape can carry. Set too hot, the overshoot runs past the response cliff and the discriminator folds back: more frequency comes out as less video. Every sharp dark-to-bright edge trails a black streak that smears rightward for about a microsecond and boils frame to frame, because the fold sits on a threshold the demod's own noise keeps re-deciding. Colour is recorded separately (colour-under), so it passes straight through the fold and the streaks carry saturated colour over black. Only sharp edges trigger it, so it lives where the picture has detail and moves with the image.",
       },
       {
         key: 'fmStreakUs',
@@ -2046,7 +2044,7 @@ export const GROUPS: Group[] = [
         step: 0.01,
         unit: 'us',
         fine: true,
-        help: 'How long the demodulator takes to recover from a fold — the deemphasis time constant, which is what smears the inversion rightward. Short is a hairline shadow on every hard edge; long drags each fold out toward a microsecond-scale black comet.',
+        help: 'How long the demodulator takes to recover from a fold: the deemphasis time constant, which is what smears the inversion rightward. Short is a hairline shadow on every hard edge. Long drags each fold out into a black streak about a microsecond long.',
       },
     ],
   },
@@ -2066,7 +2064,7 @@ export const GROUPS: Group[] = [
         step: 0.1,
         redline: [0, 40],
         unit: 'IRE',
-        help: 'Additive noise on the waveform, in IRE: tape grain and RF snow. Because it lands on the whole signal, enough of it will also disturb sync and confuse the colour burst — noise degrades everything downstream.',
+        help: 'Additive noise on the waveform, in IRE: tape grain and RF snow. Because it lands on the whole signal, enough of it will also disturb sync and confuse the colour burst. Noise degrades everything downstream.',
       },
       {
         key: 'noiseTilt',
@@ -2077,7 +2075,7 @@ export const GROUPS: Group[] = [
         step: 0.01,
         unit: '',
         fine: true,
-        help: "Where that floor comes from, which decides its colour. At 0 it is the RF path: noise through the tuner's IF filter, flat across the video band and grainless above it. At 1 it is the deck's own FM demodulator, and recovering frequency from phase differentiates whatever noise rides along — so the floor comes back with its energy rising toward the top of the band, the triangular spectrum every deemphasis network exists to tilt back. What survives that tilt is why tape hiss is not grey: it lives up near 3.58 MHz, lands inside the chroma bandpass, and decodes as crawling coloured speckle rather than as grain. Turn it up with the comb set to notch and the floor pulls colour out of nothing; the level stays put as you turn it, so what changes is character alone.",
+        help: "Where that noise floor comes from, which decides its colour. At 0 it is the RF path: noise through the tuner's IF filter, flat across the video band and grainless above it. At 1 it is the deck's own FM demodulator. Recovering frequency from phase differentiates whatever noise rides along, so the floor comes back with its energy rising toward the top of the band, the triangular spectrum every deemphasis network exists to tilt back. What survives that tilt is why tape hiss is not grey: it lives up near 3.58 MHz, lands inside the chroma bandpass, and decodes as crawling coloured speckle rather than grain. Turn it up with the comb set to notch and the floor produces colour from nothing. The level stays put as you turn it, so only the character changes.",
       },
       {
         key: 'impulseRate',
@@ -2088,7 +2086,7 @@ export const GROUPS: Group[] = [
         step: 0.1,
         redline: [0, 8],
         unit: '/frame',
-        help: 'Impulse interference — ignition, an arcing thermostat, a dying flyback next door. Each event is a run of signal time at carrier-scale amplitude, and its duration decides its shape on screen: tens of microseconds is a ringing comet whose tone the decoder turns into a colour streak, hundreds is a stepped diagonal streak folded across a few lines, milliseconds a torn slab of hash. The long ones land on sync tips and the beam-load measurement, so the raster tears and the sag and beam-limiter servos flinch at every hit — the rig reacting is most of the look. Arrives in storms: flurries with real quiet between.',
+        help: 'Impulse interference: ignition, an arcing thermostat, a dying flyback next door. Each event is a run of signal time at carrier-scale amplitude, and its duration decides its shape on screen. Tens of microseconds is a ringing streak whose tone the decoder turns into a colour streak. Hundreds is a stepped diagonal streak folded across a few lines. Milliseconds is a torn slab of hash. The long ones land on sync tips and the beam-load measurement, so the raster tears and the sag and beam-limiter servos react to every hit. The rig reacting is most of the look. It arrives in bursts, with real quiet between.',
       },
       {
         key: 'impulseHz',
@@ -2098,7 +2096,7 @@ export const GROUPS: Group[] = [
         max: 2000,
         step: 5,
         unit: 'Hz',
-        help: "A periodic impulse source — spark plugs, a commutator motor — firing at this rate. Periodic hits against the 15.734 kHz line rate land each event a fixed step sideways from the last, so the dashes line up in drifting diagonal lattices, the signature of ignition interference. The source's rate wanders like an engine revving, which tilts and shears the lattice live. Independent of the random rate above — different neighbours' appliances.",
+        help: "A periodic impulse source, such as spark plugs or a commutator motor, firing at this rate. Periodic hits against the 15.734 kHz line rate land each event a fixed step sideways from the last, so the dashes line up in drifting diagonal lattices, the signature of ignition interference. The source's rate wanders like an engine revving, which tilts and shears the lattice live. Independent of the random rate above, since these are different neighbours' appliances.",
       },
       {
         key: 'strikeRate',
@@ -2109,7 +2107,7 @@ export const GROUPS: Group[] = [
         step: 0.05,
         redline: [0, 3],
         unit: '/s',
-        help: 'Millisecond-scale events — lightning, an arcing breaker, a compressor kicking on. Dozens of full lines of dense hash with a DC lift, decaying down the raster. Because a strike spans whole lines it lands on sync tips and the beam-load measurement too: the PLL tears at the strike, HV sag lurches the geometry, and the beam limiter dims and blooms back — one event, and the whole rig flinches.',
+        help: 'Millisecond-scale events: lightning, an arcing breaker, a compressor starting. Dozens of full lines of dense hash with a DC lift, decaying down the raster. Because a strike spans whole lines it lands on sync tips and the beam-load measurement too. The PLL tears at the strike, HV sag lurches the geometry, and the beam limiter dims and blooms back. One event, and the whole rig reacts.',
       },
       {
         key: 'impulseIre',
@@ -2121,7 +2119,7 @@ export const GROUPS: Group[] = [
         redline: [20, 140],
         unit: 'IRE',
         fine: true,
-        help: 'Peak amplitude of each impulse. Real impulses saturate the front end, so the useful range is huge: past 100 IRE every hit blooms and drags the AGC.',
+        help: 'Peak amplitude of each impulse. Real impulses saturate the front end, so the useful range is large. Past 100 IRE every hit blooms and drags the AGC.',
       },
       {
         key: 'impulseMains',
@@ -2132,7 +2130,7 @@ export const GROUPS: Group[] = [
         step: 0.01,
         unit: '',
         fine: true,
-        help: 'A triac dimmer fires twice per mains cycle at its set angle, so its hits bunch at two phases of the mains instead of falling anywhere. The random hits concentrate into two bands of hash that roll through the picture with the hum bar — the same mains, so they move together.',
+        help: 'A triac dimmer fires twice per mains cycle at its set angle, so its hits bunch at two phases of the mains instead of falling anywhere. The random hits concentrate into two bands of hash that roll through the picture with the hum bar. They share the same mains, so they move together.',
       },
     ],
   },
@@ -2153,7 +2151,7 @@ export const GROUPS: Group[] = [
         step: 0.05,
         redline: [0, 12],
         unit: 'us',
-        help: 'Multipath: a reflected copy of the broadcast arriving this many microseconds late. It shows as a displaced echo to the right of everything — the further away the reflecting building, the further out the ghost.',
+        help: 'Multipath: a reflected copy of the broadcast arriving this many microseconds late. It shows as a displaced echo to the right of everything. The further away the reflecting building, the further out the ghost.',
       },
       {
         key: 'ghostGain',
@@ -2175,7 +2173,7 @@ export const GROUPS: Group[] = [
         step: 0.1,
         redline: [0, 30],
         unit: 'IRE',
-        help: 'Mains hum riding on the video from a ground loop — 60 Hz on the signal, in IRE. Because it is not quite locked to the field rate it appears as a soft bright bar drifting slowly up the picture.',
+        help: 'Mains hum riding on the video from a ground loop: 60 Hz on the signal, in IRE. Because it is not quite locked to the field rate it appears as a soft bright bar drifting slowly up the picture.',
       },
       {
         key: 'humMod',
@@ -2186,7 +2184,7 @@ export const GROUPS: Group[] = [
         step: 0.01,
         unit: '',
         fine: true,
-        help: "The same mains ripple, but in the supply of an amplifier the signal passes through — a failing line amp — so it moves that stage's gain instead of adding to its output. The picture pumps and its colour saturates and fades in bands rather than just brightening, and because sync is scaled along with everything else the depth breathes: the receiver's AGC and horizontal hold end up chasing the hum. Mostly 120 Hz, from the rectified supply.",
+        help: "The same mains ripple, but in the supply of an amplifier the signal passes through, such as a failing line amp, so it moves that stage's gain instead of adding to its output. The picture pumps and its colour saturates and fades in bands rather than just brightening. Sync is scaled along with everything else, so its depth varies and the receiver's AGC and horizontal hold end up chasing the hum. Mostly 120 Hz, from the rectified supply.",
       },
       {
         key: 'soundIre',
@@ -2198,7 +2196,7 @@ export const GROUPS: Group[] = [
         redline: [0, 10],
         unit: 'IRE',
         fine: true,
-        help: 'The 4.5 MHz intercarrier sound leaking past the trap that is supposed to remove it. Lays a fine herringbone of interference over the picture — sound buzz you can see.',
+        help: 'The 4.5 MHz intercarrier sound leaking past the trap that is supposed to remove it. It lays a fine herringbone of interference over the picture: sound buzz you can see.',
       },
       {
         key: 'buzzLevel',
@@ -2209,7 +2207,7 @@ export const GROUPS: Group[] = [
         step: 0.01,
         unit: '',
         fine: true,
-        help: 'The same leak heard instead of seen — this one comes out of your speakers. The sound detector recovers the 4.5 MHz beat between the picture and sound carriers, and a limiter that cannot keep the picture off it hands you the video as audio: the vertical interval as a 60 Hz buzz, line structure as a whine, and the faults above riding along. Bright scenes buzz louder because peak white really does overmodulate, snow hisses, a head switch clicks. Fine tuning adds to it the same way it adds to the weave. The detector taps the signal and not the tube, so a rolling picture leaves the buzz where it is — the roll happens after the sound has already been taken off.',
+        help: 'The same leak heard instead of seen. This one comes out of your speakers. The sound detector recovers the 4.5 MHz beat between the picture and sound carriers, and a limiter that cannot keep the picture off it passes the video through as audio: the vertical interval as a 60 Hz buzz, line structure as a whine, and the faults above along with it. Bright scenes buzz louder because peak white really does overmodulate. Snow hisses and a head switch clicks. Fine tuning adds to it the same way it adds to the weave. The detector taps the signal rather than the tube, so a rolling picture leaves the buzz where it is. The roll happens after the sound has already been taken off.',
       },
     ],
   },
@@ -2230,7 +2228,7 @@ export const GROUPS: Group[] = [
         step: 1,
         redline: [0, 60],
         unit: '/frame',
-        help: 'How many dropout events happen per frame. Shed oxide or a clogged head means the head reads nothing for a moment, leaving white streaks and, on a bad one, a scarred line the decoder cannot reconstruct.',
+        help: 'How many dropout events happen per frame. Shed oxide or a clogged head means the head reads nothing for a moment, leaving white streaks and, on a bad one, a damaged line the decoder cannot reconstruct.',
       },
       {
         key: 'dropoutComp',
@@ -2241,7 +2239,7 @@ export const GROUPS: Group[] = [
         step: 1,
         unit: '',
         choices: ['none', '1-line', '2-line'],
-        help: "The circuit that patches a dropout instead of letting the head's silence reach the screen, filling the gap from a delay line holding what played a line or two ago. A line of NTSC is 227.5 subcarrier cycles, so one line back the colour arrives exactly out of phase: the patch is invisible in brightness and comes out in the complementary hue, which is the coloured streak a cheap deck leaves down a worn tape. Two lines back is a whole number of cycles, so the hue is right — at the price of a patch two lines stale, which smears across anything moving. Neither can help where the line it is holding lost the same samples, and there the raw dropout shows through.",
+        help: "The circuit that patches a dropout instead of letting the head's silence reach the screen. It fills the gap from a delay line holding what played a line or two ago. A line of NTSC is 227.5 subcarrier cycles, so one line back the colour arrives exactly out of phase. The patch is invisible in brightness and comes out in the complementary hue, which is the coloured streak a cheap deck leaves down a worn tape. Two lines back is a whole number of cycles, so the hue is right, at the price of a patch two lines stale, which smears across anything moving. Neither can help where the line it is holding lost the same samples, and there the raw dropout shows through.",
       },
       {
         key: 'dropoutLenUs',
@@ -2262,7 +2260,7 @@ export const GROUPS: Group[] = [
         max: 4,
         step: 1,
         unit: 'x',
-        help: 'Runs the whole tape/channel stage this many times over — a copy of a copy of a copy. Each generation adds its own independent noise, dropouts and timebase wander on top of the last, which is why third-generation dubs fall apart much faster than one pass at triple the damage.',
+        help: 'Runs the whole tape/channel stage this many times over: a copy of a copy of a copy. Each generation adds its own independent noise, dropouts and timebase wander on top of the last, which is why third-generation dubs fall apart much faster than one pass at triple the damage.',
       },
     ],
   },
@@ -2278,7 +2276,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: "How much of the next channel up the cable gets through the IF trap. What leaks is the neighbour's carriers, so the detector turns them into beats: their sound carrier lays a 1.5 MHz weave over everything, and their vision carrier's beat is amplitude-modulated by their raster — their blanking is peak power, so it crosses the screen as slanted dark bars, and their vertical interval as the broad sweeping band (the windshield wiper). Their line rate is not ours and wanders, so the bars slant, sweep, hang and reverse; where their content beats into our chroma band the decoder makes colour out of it — colour out of carrier arithmetic alone.",
+        help: "How much of the next channel up the cable gets through the IF trap. What leaks is the neighbour's carriers, and the detector turns them into beats. Their sound carrier lays a 1.5 MHz weave over everything. Their vision carrier's beat is amplitude-modulated by their raster: their blanking is peak power, so it crosses the screen as slanted dark bars, and their vertical interval as the broad sweeping band (the windshield wiper). Their line rate is not ours and wanders, so the bars slant, sweep, hang and reverse. Where their content beats into our chroma band the decoder makes colour out of it, from carrier arithmetic alone.",
       },
       {
         key: 'rfMistuneMHz',
@@ -2289,7 +2287,7 @@ export const GROUPS: Group[] = [
         step: 0.01,
         redline: [-1, 1],
         unit: 'MHz',
-        help: "The fine-tuning knob pulled off channel. Positive moves the 4.5 MHz sound carrier out of its trap: the buzz weave arrives on its own, and the detector starts multiplying the loose carrier against the video — chroma comes back at 920 kHz as a coarse beat, and 920 kHz picture detail comes back at 3.58 MHz, which the decoder reads as rainbow crawl on fine detail. Negative slides the picture carrier down the IF's Nyquist slope, so the upper sideband goes first: detail softens, saturation dies, and far enough down the burst starves until the colour killer drops colour entirely.",
+        help: "The fine-tuning knob pulled off channel. Positive moves the 4.5 MHz sound carrier out of its trap. The buzz weave arrives on its own, and the detector starts multiplying the loose carrier against the video: chroma comes back at 920 kHz as a coarse beat, and 920 kHz picture detail comes back at 3.58 MHz, which the decoder reads as rainbow crawl on fine detail. Negative slides the picture carrier down the IF's Nyquist slope, so the upper sideband goes first. Detail softens, saturation dies, and far enough down the burst starves until the colour killer drops colour entirely.",
       },
       {
         key: 'rfSnow',
@@ -2299,7 +2297,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: 'IF noise into the envelope detector, which is what weak-signal snow actually is. The picture rides a negative-modulation carrier — sync is peak power, white is 12.5% — so the noise is not spread evenly: whites boil first, blacks stay quiet longest, and sync is the last thing to die, so the picture fights through the snow instead of sinking into flat grey fuzz. Wind it up and the sync tips themselves go statistical: the line hunt starts missing, the AGC chases a depth that no longer means anything, and the set loses the station the way a set actually loses a station.',
+        help: 'IF noise into the envelope detector, which is what weak-signal snow actually is. The picture rides a negative-modulation carrier, with sync at peak power and white at 12.5%, so the noise is not spread evenly. Whites boil first, blacks stay quiet longest, and sync is the last thing to go, so the picture fights through the snow instead of sinking into flat grey fuzz. Turn it up and the sync tips themselves become unreliable. The line hunt starts missing, the AGC chases a depth that no longer means anything, and the set loses the station the way a set actually loses a station.',
       },
       {
         key: 'ingress',
@@ -2309,7 +2307,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: 'A two-way radio getting into the cable through a cracked shield or corroded fitting. The carrier owes nothing to any NTSC frequency, so its beat draws a herringbone at no fixed angle, wandering as the transmitter drifts — and it arrives in transmissions: the operator keys the mic for stretches with real silence between. The program audio stands in for the speech, AM and FM at once, so the weave swells and sways when someone talks and drops back to a bare idling carrier between words.',
+        help: 'A two-way radio getting into the cable through a cracked shield or corroded fitting. The carrier is unrelated to any NTSC frequency, so its beat draws a herringbone at no fixed angle, wandering as the transmitter drifts. It arrives in transmissions: the operator keys the mic for stretches with silence between. The program audio stands in for the speech, AM and FM at once, so the weave swells and sways when someone talks and drops back to a bare idling carrier between words.',
       },
     ],
   },
@@ -2342,7 +2340,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: 'Composite video expects a single 75 Ω load. Negative is double-terminated — a monitor daisy-chained with its loop-through still on — halving the signal, so the picture goes dim and the colour killer starts to bite. Positive is unterminated, so the line reflects: signal runs hot and rings, with overshoot on every edge.',
+        help: 'Composite video expects a single 75 Ω load. Negative is double-terminated, a monitor daisy-chained with its loop-through still on, which halves the signal. The picture goes dim and the colour killer starts to cut in. Positive is unterminated, so the line reflects: the signal runs hot and rings, with overshoot on every edge.',
       },
       {
         key: 'chromaPinOnly',
@@ -2355,7 +2353,7 @@ export const GROUPS: Group[] = [
         // The one miswiring in the group that is a party trick rather than a
         // fault you would meet: it takes sync and luma away entirely.
         fine: true,
-        help: 'S-video miswired into a composite input: only the chroma pin arrives. There is no luma and no sync, so the receiver free-runs on a bare subcarrier — floating colour over a black raster that has nothing to lock to.',
+        help: 'S-video miswired into a composite input, so only the chroma pin arrives. There is no luma and no sync, so the receiver free-runs on a bare subcarrier: floating colour over a black raster with nothing to lock to.',
       },
       {
         key: 'connectorGlitch',
@@ -2365,7 +2363,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: 'How loose the plug is: bands of lines lose contact, re-rolled every frame the way a plug hanging on its own cable weight makes and breaks. Which of the two contacts is failing is the row below, and they fail into completely different pictures.',
+        help: 'How loose the plug is. Bands of lines lose contact, re-rolled every frame, the way a plug hanging on its own cable weight makes and breaks. Which of the two contacts is failing is the row below, and they fail into completely different pictures.',
       },
       {
         key: 'connectorMode',
@@ -2378,16 +2376,16 @@ export const GROUPS: Group[] = [
         choices: ['pin', 'shield', 'both'],
         help: `Which contact of the plug is intermittent.
 
-          - **pin** — the centre breaks the signal path, so the jack sees an
+          - **pin**: the centre breaks the signal path, so the jack sees an
             open through its own terminator and those bands collapse to the
             input stage’s noise floor. Sync included, which is why they tear.
-          - **shield** — the shell breaks the ground reference instead and
-            leaves the signal alone: the return current goes looking for the
-            mains earth through both boxes’ supplies, so a ground loop’s hum
-            lands on the bad bands and the level walks and buzzes while the
-            picture and its sync survive.
-          - **both** — a genuinely wiggled plug, the two faults on independent
-            bands so they interleave.`,
+          - **shield**: the shell breaks the ground reference instead and
+            leaves the signal alone. The return current runs to the mains earth
+            through both boxes’ supplies, so a ground loop’s hum lands on the
+            bad bands and the level walks and buzzes while the picture and its
+            sync survive.
+          - **both**: a wiggled plug, with the two faults on independent bands
+            so they interleave.`,
       },
       // Scrambling and macrovision were two more groups of two, sitting directly
       // below this one and running on the same pass over the same wire. Three
@@ -2402,7 +2400,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: 'How hard the head-end suppresses sync on a premium channel. The scrambler lifts the carrier during each sync pulse, so a set without a decoder box has a shallow tip — or none at all — to find the start of a line in. Under about half depth the tip still clears the slicer and the set merely mismeasures it, so the AGC over-compensates and the picture washes out bright. Past that the tip is gone and the line oscillator is left free-running, so what the picture does next is whatever the h-osc detune below says its own rate is — a set sitting exactly on 15.734 kHz coasts through the gap almost cleanly. Vertical stays roughly framed either way: the broad vertical pulses are wider than the line-rate gate, so the frame shears instead of tumbling.',
+        help: 'How hard the head-end suppresses sync on a premium channel. The scrambler lifts the carrier during each sync pulse, so a set without a decoder box has a shallow tip, or none at all, to find the start of a line in. Under about half depth the tip still clears the slicer and the set merely mismeasures it, so the AGC over-compensates and the picture washes out bright. Past that the tip is gone and the line oscillator free-runs, so what the picture does next depends on the h-osc detune below. A set sitting exactly on 15.734 kHz coasts through the gap almost cleanly. Vertical stays roughly framed either way, because the broad vertical pulses are wider than the line-rate gate, so the frame shears instead of tumbling.',
       },
       {
         key: 'scrambleMode',
@@ -2413,7 +2411,7 @@ export const GROUPS: Group[] = [
         step: 1,
         unit: '',
         choices: ['gated', 'alternate', 'ssavi'],
-        help: "Which scrambling system. Gated suppresses every line, so the oscillator free-runs the whole way down and the raster shears continuously. Alternate suppresses every other line, so the flywheel is hauled back half the time and the drift between corrections comes out as a ragged line-pair zigzag on every vertical edge — it tolerates far more h-osc detune before it stops being a picture. SSAVI is Zenith's: suppression plus inversion of the active video, so what does leak through is a negative. Burst sits in the back porch and is untouched, so hue survives the inversion.",
+        help: "Which scrambling system. Gated suppresses every line, so the oscillator free-runs the whole way down and the raster shears continuously. Alternate suppresses every other line, so the flywheel is pulled back half the time and the drift between corrections shows as a ragged line-pair zigzag on every vertical edge. It tolerates far more h-osc detune before it stops being a picture. SSAVI is Zenith's: suppression plus inversion of the active video, so what leaks through is a negative. Burst sits in the back porch and is untouched, so hue survives the inversion.",
       },
       {
         key: 'macrovision',
@@ -2423,7 +2421,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: "Macrovision's AGC poisoning, stamped on vertical-interval lines 12-19 of the source — exactly the window this receiver averages its sync depth over. A pulse parked on the back porch makes the measured sync depth balloon, so with the agc control up the set answers by crushing gain on a signal that was never hot; the pulse level walks a slow staircase, so the picture breathes instead of settling. The pulse trains themselves sit in the blanking interval — invisible until the picture rolls, when the classic flashing bar rides the vertical interval into view.",
+        help: "Macrovision's AGC poisoning, stamped on vertical-interval lines 12-19 of the source, exactly the window this receiver averages its sync depth over. A pulse parked on the back porch makes the measured sync depth balloon, so with the agc control up the set responds by crushing gain on a signal that was never hot. The pulse level walks a slow staircase, so the picture breathes instead of settling. The pulse trains sit in the blanking interval, invisible until the picture rolls and the classic flashing bar rides the vertical interval into view.",
       },
       {
         key: 'mvStripeDeg',
@@ -2436,7 +2434,7 @@ export const GROUPS: Group[] = [
         // A trim on the row above: colourstripe is the second half of macrovision
         // and does nothing without it.
         fine: true,
-        help: "The later half of the process: colourbursts on walking bands of picture lines are rotated off the house phase by this much. The decoder corrects each line's hue by the burst it just gated, so the poisoned bands come out rotated the other way — hue banding crawling down the frame. A set that trusts its burst less (burst lock) or averages bursts over lines (chroma AGC lag) shrugs it off, which is exactly the difference between the TV this was invisible on and the VCR it was aimed at.",
+        help: "The later half of the process: colourbursts on moving bands of picture lines are rotated off the house phase by this much. The decoder corrects each line's hue by the burst it just gated, so the poisoned bands come out rotated the other way, as hue banding crawling down the frame. A set that trusts its burst less (burst lock) or averages bursts over lines (chroma AGC lag) is barely affected, which is the difference between the TV this was invisible on and the VCR it was aimed at.",
       },
     ],
   },
@@ -2456,7 +2454,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: "VHS cannot record 3.58 MHz colour, so it heterodynes chroma down to 629 kHz, records it under the luma, and converts it back on playback. Raising this routes colour through that path: it collapses colour bandwidth to a fraction of luma's, which is why VHS colour smears sideways for many pixels while edges stay sharp.",
+        help: "VHS cannot record 3.58 MHz colour, so it heterodynes chroma down to 629 kHz, records it under the luma, and converts it back on playback. Raising this routes colour through that path. It collapses colour bandwidth to a fraction of luma's, which is why VHS colour smears sideways for many pixels while edges stay sharp.",
       },
       {
         key: 'chromaNoiseIre',
@@ -2467,7 +2465,7 @@ export const GROUPS: Group[] = [
         step: 0.1,
         redline: [0, 30],
         unit: 'IRE',
-        help: 'Noise on the colour-under carrier itself, before it is converted back up. The 629 kHz chroma carrier gets a fraction of the headroom the luma FM does, so its signal-to-noise is far worse — which is why VHS colour is blotchy while its luma is merely grainy. This noise has to come back through the narrow chroma bandpass, so it arrives as slow smears of wrong hue rather than the fine speckle the noise slider gives. Needs colour-under raised to do anything.',
+        help: 'Noise on the colour-under carrier itself, before it is converted back up. The 629 kHz chroma carrier gets a fraction of the headroom the luma FM does, so its signal-to-noise is far worse, which is why VHS colour is blotchy while its luma is merely grainy. This noise has to come back through the narrow chroma bandpass, so it arrives as slow smears of wrong hue rather than the fine speckle the noise slider gives. Needs colour-under raised to do anything.',
       },
       {
         key: 'underJitterDeg',
@@ -2483,7 +2481,7 @@ export const GROUPS: Group[] = [
         // band position rides tracking error), which is exactly what the tier is
         // for. Takes the merged group from eight rows on show to six.
         fine: true,
-        help: 'Per-line phase error in that down/up conversion. The colour-under path has to reinsert phase exactly; when it does not, hue wanders line to line and the picture picks up a coloured venetian-blind texture. Needs colour-under raised to do anything.',
+        help: 'Per-line phase error in that down/up conversion. The colour-under path has to reinsert phase exactly, and when it does not, hue wanders line to line and the picture picks up a coloured venetian-blind texture. Needs colour-under raised to do anything.',
       },
       {
         key: 'ycDelayNs',
@@ -2494,7 +2492,7 @@ export const GROUPS: Group[] = [
         step: 70,
         redline: [-840, 840],
         unit: 'ns',
-        help: "The chroma path through a deck or proc amp runs its own filters and delay lines, and when their group delay is mistrimmed against the luma path the colour arrives late (or early): every coloured area sits bodily sideways off the edge it belongs to, colour bleeding out of one side of objects and falling short of the other. The burst travels the same mistrimmed path, so the decoder's reference moves with the picture's chroma and hue stays correct — displaced colour, not rotated, which is what tells this from a timebase error. Steps are whole samples, about 70 ns each.",
+        help: "The chroma path through a deck or proc amp runs its own filters and delay lines. When their group delay is mistrimmed against the luma path the colour arrives late (or early), so every coloured area sits sideways off the edge it belongs to, bleeding out of one side of objects and falling short of the other. The burst travels the same mistrimmed path, so the decoder's reference moves with the picture's chroma and hue stays correct. Displaced colour rather than rotated, which is what tells this from a timebase error. Steps are whole samples, about 70 ns each.",
       },
       {
         key: 'trackAmt',
@@ -2504,7 +2502,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: 'The head is not following the recorded track. It reads partly off-track, so a band of noise appears where the signal is weakest and the picture tears and bends through it — the thing the tracking knob on a VCR was for.',
+        help: 'The head is not following the recorded track. It reads partly off-track, so a band of noise appears where the signal is weakest and the picture tears and bends through it. This is what the tracking knob on a VCR was for.',
       },
       {
         key: 'trackPos',
@@ -2515,7 +2513,7 @@ export const GROUPS: Group[] = [
         step: 0.005,
         unit: '',
         fine: true,
-        help: 'Where that mistracked band sits vertically, 0 top to 1 bottom. With the servo parked you park it; with the servo hunting it is where the servo is trying to sit.',
+        help: 'Where that mistracked band sits vertically, 0 top to 1 bottom. With the servo parked you park it. With the servo hunting it is where the servo is trying to sit.',
       },
       {
         key: 'trackHunt',
@@ -2525,7 +2523,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: "The deck's auto-tracking servo, searching for the track instead of holding it. It reads the RF envelope and steps until the envelope peaks; a stretched tape drifts it back off, and it corrects with less damping the higher this goes, so every correction overshoots and rings. A scene change, coming out of shuttle, the loop's splice passing, a transition cut or a thump through the cabinet from the music all knock it off the peak — the band sweeps, the picture bends through it, and the top of the frame flags on the tape tension. Draws the band by itself; tracking error above adds a floor to it.",
+        help: "The deck's auto-tracking servo, searching for the track instead of holding it. It reads the RF envelope and steps until the envelope peaks. A stretched tape drifts it back off, and it corrects with less damping the higher this goes, so every correction overshoots and rings. A scene change, coming out of shuttle, the loop's splice passing, a transition cut or a thump through the cabinet from the music all knock it off the peak. The band sweeps, the picture bends through it, and the top of the frame flags on the tape tension. Draws the band by itself. Tracking error above adds a floor to it.",
       },
       {
         key: 'trackKick',
@@ -2546,7 +2544,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: 'Oxide packed into the gap of one of the two spinning heads, so that head reads weak or nothing. The heads take turns — one sweep each — which is why a clogged head never shows as a steady veil: picture and snow alternate at field rate, a hard 30 Hz flicker between the good head’s sweep and the dead one’s. The head switch near the bottom of the picture is where the other head is already reading, so a few last lines always belong to the opposite head: they survive the snowed sweeps and die on the clean ones. Sync goes down with the sweep, so the receiver tears through the snow instead of framing it.',
+        help: "Oxide packed into the gap of one of the two spinning heads, so that head reads weak or nothing. The heads take turns, one sweep each, which is why a clogged head never shows as a steady veil. Picture and snow alternate at field rate, a hard 30 Hz flicker between the good head's sweep and the dead one's. The head switch near the bottom of the picture is where the other head is already reading, so a few last lines always belong to the opposite head: they survive the snowed sweeps and die on the clean ones. Sync goes down with the sweep, so the receiver tears through the snow instead of framing it.",
       },
       {
         key: 'shuttleX',
@@ -2561,7 +2559,7 @@ export const GROUPS: Group[] = [
         curve: 'shuttle',
         redline: [-8, 8],
         unit: 'x',
-        help: 'Tape speed as a multiple of play — cue past 1, pause at 0, review negative. Off play speed the spinning head no longer follows a single recorded track: each sweep crosses several, the RF nulls at every crossing, and that many noise bars sweep the frame. Each strip between bars is a different track with its own timing and color-under phase, so the picture tears and rainbows at the boundaries. At 1 the head tracks and the picture is clean.',
+        help: 'Tape speed as a multiple of play: cue past 1, pause at 0, review negative. Off play speed the spinning head no longer follows a single recorded track. Each sweep crosses several, the RF nulls at every crossing, and that many noise bars sweep the frame. Each strip between bars is a different track with its own timing and colour-under phase, so the picture tears and rainbows at the boundaries. At 1 the head tracks and the picture is clean.',
       },
     ],
   },
@@ -2578,7 +2576,7 @@ export const GROUPS: Group[] = [
         step: 5,
         redline: [0, 800],
         unit: 'ns',
-        help: 'Fast timebase error from capstan flutter, in nanoseconds. Each line starts a slightly different moment late, so edges get a ragged, shimmering wobble. This is signal-domain error — the burst moves with the picture, so hue wobbles too.',
+        help: 'Fast timebase error from capstan flutter, in nanoseconds. Each line starts a slightly different moment late, so edges get a ragged, shimmering wobble. This is signal-domain error: the burst moves with the picture, so hue wobbles too.',
       },
       {
         key: 'tbWowNs',
@@ -2600,7 +2598,7 @@ export const GROUPS: Group[] = [
         step: 10,
         redline: [0, 3000],
         unit: 'ns',
-        help: 'Binder hydrolysis making the tape grab the head drum — tension builds until the patch breaks free, snaps forward, and re-sticks: a relaxation oscillator, chaotic rather than periodic, the mechanism behind squealing tapes. Down the raster that is bands of shear that lean further line by line, snap back in a few, and hang where a strong patch holds on. Signal-domain, so the color-under phase rainbows at every slip boundary.',
+        help: 'Binder hydrolysis making the tape grab the head drum. Tension builds until the patch breaks free, snaps forward, and re-sticks: a relaxation oscillator, chaotic rather than periodic, and the mechanism behind squealing tapes. Down the raster that is bands of shear that lean further line by line, snap back in a few, and hang where a strong patch holds on. Signal-domain, so the colour-under phase rainbows at every slip boundary.',
       },
       {
         key: 'headSwitchShiftUs',
@@ -2621,7 +2619,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: 'How much noise hash fills the few lines during the head switch, before the servo settles on the new head. Usually hidden under the bottom of the overscan; raise it and the frayed band shows.',
+        help: 'How much noise hash fills the few lines during the head switch, before the servo settles on the new head. Usually hidden under the bottom of the overscan. Raise it and the frayed band shows.',
       },
     ],
   },
@@ -2639,7 +2637,7 @@ export const GROUPS: Group[] = [
         redline: [-8, 50],
         unit: 'us',
         fine: true,
-        help: "How far the box's DC-restoration gate has slid off the back porch, in microseconds. A clamp pins one sample per line to blanking and the rest of the line rides on that; correct, it lands on the porch and does nothing. Drag it into active video and black level is set by whatever the picture happens to be at that instant, so the level bounces line to line with the image. Negative puts the gate on the burst or the sync tip, and the whole line lifts by the depth of sync.",
+        help: "How far the box's DC-restoration gate has slid off the back porch, in microseconds. A clamp pins one sample per line to blanking and the rest of the line rides on that. Correctly set, it lands on the porch and does nothing. Drag it into active video and black level is set by whatever the picture happens to be at that instant, so the level bounces line to line with the image. Negative puts the gate on the burst or the sync tip, and the whole line lifts by the depth of sync.",
       },
       {
         key: 'enhDroopUs',
@@ -2651,7 +2649,7 @@ export const GROUPS: Group[] = [
         redline: [0, 400],
         unit: 'us',
         fine: true,
-        help: 'Time constant of the coupling capacitor between the gates, in microseconds. Short enough and the level sags back toward blanking within the line: bright content drags a dark streak behind it all the way to the right edge, and a lit area leaves the rest of its line depressed. This is the low-frequency smear of a box with an undersized cap — vertical edges stay sharp.',
+        help: 'Time constant of the coupling capacitor between the gates, in microseconds. Short enough and the level sags back toward blanking within the line: bright content drags a dark streak behind it all the way to the right edge, and a lit area leaves the rest of its line depressed. This is the low-frequency smear of a box with an undersized cap. Vertical edges stay sharp.',
       },
       {
         key: 'enhPeakMHz',
@@ -2661,7 +2659,7 @@ export const GROUPS: Group[] = [
         max: 5,
         step: 0.05,
         unit: 'MHz',
-        help: "Centre of the peaking stage the detail knob drives, with the bend's own feedback wrapped around it. A composite box has no Y/C split, so this is one knob doing two jobs: down around 1-2 MHz it rings on picture detail and lays bars behind every edge, and up at 3.58 it is boosting the subcarrier itself, so saturation climbs with detail and dot crawl comes apart.",
+        help: "Centre of the peaking stage the detail knob drives, with the bend's own feedback wrapped around it. A composite box has no Y/C split, so this is one knob doing two jobs. Down around 1-2 MHz it rings on picture detail and lays bars behind every edge. Up at 3.58 it boosts the subcarrier itself, so saturation climbs with detail and dot crawl comes apart.",
       },
       {
         key: 'enhPeakQ',
@@ -2671,7 +2669,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: "How much of the peaking stage's output the bend feeds back into it. Low rings for a few samples — ordinary edge overshoot. Approaching 0.75 the ring lasts most of a line. Past it the stage is regenerative: excited by the sync pulse at the head of every line it climbs until it hits the amplifier's rails, so the bars build left to right across the picture and the image only knocks them about.",
+        help: "How much of the peaking stage's output the bend feeds back into it. Low rings for a few samples: ordinary edge overshoot. Approaching 0.75 the ring lasts most of a line. Past it the stage is regenerative. Excited by the sync pulse at the head of every line it climbs until it hits the amplifier's rails, so the bars build left to right across the picture and the image only disturbs them.",
       },
       {
         key: 'enhPeakBoost',
@@ -2683,7 +2681,7 @@ export const GROUPS: Group[] = [
         redline: [0, 4],
         unit: 'x',
         fine: true,
-        help: 'How much of the peaking stage is mixed back into the video. With the regen low this is a sharpness control; with it past unity this is how loud the howl is, and past about 1 the bars are full-scale and swamp the picture they came from.',
+        help: 'How much of the peaking stage is mixed back into the video. With the regen low this is a sharpness control. With it past unity this is how loud the howl is, and past about 1 the bars are full-scale and swamp the picture they came from.',
       },
       {
         key: 'enhSync',
@@ -2704,7 +2702,7 @@ export const GROUPS: Group[] = [
         step: 0.5,
         unit: 'IRE',
         fine: true,
-        help: 'The level the separator calls sync, in IRE. Blanking is 0 and the real tip is -40, so anything under about -10 only ever finds real pulses. Bend it up into picture territory and dark content starts minting pulses of its own, mid-line and mid-field: the set is handed a line rate the image is writing, and it tears wherever the picture goes dark. The separator slices its own lowpassed copy, so burst and fine detail cannot trip it — only sustained dark areas can.',
+        help: 'The level the separator calls sync, in IRE. Blanking is 0 and the real tip is -40, so anything under about -10 only ever finds real pulses. Raise it into picture territory and dark content starts producing pulses of its own, mid-line and mid-field. The set is given a line rate the image is writing, and it tears wherever the picture goes dark. The separator slices its own lowpassed copy, so burst and fine detail cannot trip it. Only sustained dark areas can.',
       },
     ],
   },
@@ -2721,7 +2719,7 @@ export const GROUPS: Group[] = [
         step: 0.01,
         redline: [0.02, 0.8],
         unit: '',
-        help: "How hard the receiver's horizontal PLL pulls toward each sync pulse it finds. Low is a loose flywheel that ignores noise but drifts and skews; high snaps to every edge including the false ones, so damage in the waveform is translated straight into a bent picture. Sync-domain: the burst gate moves with it, so a large enough error throws colour off too.",
+        help: "How hard the receiver's horizontal PLL pulls toward each sync pulse it finds. Low is a loose flywheel that ignores noise but drifts and skews. High snaps to every edge including the false ones, so damage in the waveform is translated straight into a bent picture. Sync-domain: the burst gate moves with it, so a large enough error throws colour off too.",
       },
       {
         key: 'vHold',
@@ -2731,7 +2729,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: "How much authority the incoming vertical sync has over the receiver's own field oscillator. At 1 the picture locks solid; as it falls the oscillator wins and the frame starts to roll — the old vertical hold knob, from the picture's side.",
+        help: "How much authority the incoming vertical sync has over the receiver's own field oscillator. At 1 the picture locks solid. As it falls the oscillator wins and the frame starts to roll. This is the old vertical hold knob, from the picture's side.",
       },
       {
         key: 'vFreqHz',
@@ -2742,7 +2740,7 @@ export const GROUPS: Group[] = [
         step: 0.05,
         redline: [50, 70],
         unit: 'Hz',
-        help: "The free-running frequency of the receiver's vertical oscillator. At 60 Hz it agrees with the signal and sits still; detune it and the frame rolls at a speed set by the difference, up or down. Only bites once vertical hold is loose enough to let the oscillator win.",
+        help: "The free-running frequency of the receiver's vertical oscillator. At 60 Hz it agrees with the signal and sits still. Detune it and the frame rolls at a speed set by the difference, up or down. Only takes effect once vertical hold is loose enough to let the oscillator win.",
       },
       {
         key: 'syncBendUs',
@@ -2765,7 +2763,7 @@ export const GROUPS: Group[] = [
         curve: 'zero',
         redline: [-500, 500],
         unit: 'Hz',
-        help: "Free-run drift of the receiver's horizontal oscillator away from 15.734 kHz. The PLL has to keep dragging it back, so the picture leans into a diagonal skew — and past the pull-in range it gives up and shears into diagonal bars.",
+        help: "Free-run drift of the receiver's horizontal oscillator away from 15.734 kHz. The PLL has to keep pulling it back, so the picture leans into a diagonal skew. Past the pull-in range it gives up and shears into diagonal bars.",
       },
     ],
   },
@@ -2786,7 +2784,7 @@ export const GROUPS: Group[] = [
         step: 0.1,
         redline: [0, 6],
         unit: '/s',
-        help: 'How often the metal touches the board, on average, per second. 0 is off — the hand is not on it. On average is the point: the gaps between contacts are drawn fresh each time rather than counted off a clock, so two land together and then nothing happens for a second. A rate here reads as somebody working at the board; the same figure on the stab gate reads as a machine.',
+        help: 'How often the metal touches the board, on average, per second. 0 is off: the hand is not on it. The gaps between contacts are drawn at random rather than counted off a clock, so two land together and then nothing happens for a second. A rate here reads as somebody working at the board. The same figure on the stab gate reads as a machine.',
       },
       {
         key: 'clipPoint',
@@ -2803,7 +2801,7 @@ export const GROUPS: Group[] = [
           'chroma demodulator',
           'video output stage',
         ],
-        help: 'Which point inside the set the clip is bridging. Each one shorts a different circuit, so each one damages the picture in a different domain: **sync separator** takes away where the line starts, so the picture tears and takes hue with it; **vertical oscillator** collapses the scan toward a band and lets it spring back, with the picture decoded correctly throughout; **EHT / beam supply** droops the high-tension rail so the raster swells and the beam limiter hauls the drive down after it, late; **chroma demodulator** shorts the reference network, so the decoder stops trusting the burst and its two axes stop being 90° apart — hue shears without the picture moving at all; **video output stage** runs the guns out of headroom and stops the level loop catching it.',
+        help: 'Which point inside the set the clip is bridging. Each one shorts a different circuit, so each one damages the picture in a different domain. **sync separator** removes where the line starts, so the picture tears and takes hue with it. **vertical oscillator** collapses the scan toward a band and lets it spring back, with the picture decoded correctly throughout. **EHT / beam supply** droops the high-tension rail so the raster swells and the beam limiter pulls the drive down after it, late. **chroma demodulator** shorts the reference network, so the decoder stops trusting the burst and its two axes stop being 90° apart, and hue shears without the picture moving at all. **video output stage** runs the guns out of headroom and stops the level loop catching it.',
       },
       {
         key: 'clipBite',
@@ -2813,7 +2811,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: 'How far the short goes while the metal is down — a fingertip resting on a pin against a paperclip laid flat across it. The controls the point names travel this far toward the shorted state and back, from wherever they are resting, so a look already leaning that way has less distance to go and a bite lands softer on it.',
+        help: 'How far the short goes while the metal is down: a fingertip resting on a pin, or a paperclip laid flat across it. The controls the point names travel this far toward the shorted state and back, from wherever they are resting, so a look already leaning that way has less distance to go and a bite lands softer on it.',
       },
       {
         key: 'clipDwellMs',
@@ -2824,7 +2822,7 @@ export const GROUPS: Group[] = [
         step: 4,
         redline: [8, 250],
         unit: 'ms',
-        help: "How long one contact lasts. Only that: how fast the damage arrives and clears is the receiver's business, not the clip's — a bite lands over two or three frames and takes five or six to let go, whether the metal was down for one frame or for half a second, because what is decaying is the flywheel finding sync again and the level loop finding the tip. Under about 40ms the contact is gone before the picture has finished reacting, so a short dwell is a flick that never reaches the full bite.",
+        help: "How long one contact lasts. Only that. How fast the damage arrives and clears is the receiver's business rather than the clip's: a bite lands over two or three frames and takes five or six to let go, whether the metal was down for one frame or for half a second, because what is decaying is the flywheel finding sync again and the level loop finding the tip. Under about 40ms the contact is gone before the picture has finished reacting, so a short dwell is a flick that never reaches the full bite.",
       },
       {
         key: 'clipChatter',
@@ -2834,7 +2832,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: "How much the contact breaks up while it is down. Bare metal on a pin does not sit still — it bounces and scrapes, and each break takes the contact clean off rather than softening it. What stops that reading as a one-frame stutter is the set's own recovery: it takes five or six frames to let go of a short, so a single bounce inside a long contact dips the damage rather than cancelling it, and it takes a run of them to clear it entirely. Wound right up the clip is barely touching at all.",
+        help: "How much the contact breaks up while it is down. Bare metal on a pin does not sit still. It bounces and scrapes, and each break takes the contact off entirely rather than softening it. What stops that reading as a one-frame stutter is the set's own recovery: it takes five or six frames to let go of a short, so a single bounce inside a long contact dips the damage rather than cancelling it, and it takes a run of them to clear it entirely. Turned right up the clip is barely touching at all.",
       },
     ],
   },
@@ -2878,7 +2876,7 @@ export const GROUPS: Group[] = [
         redline: [0, 40],
         unit: 'us',
         fine: true,
-        help: 'Bass loads the high-voltage supply as if the beam were drawing current, so the scan collapses momentarily on each hit — the picture smacks inward and springs back. Needs supply ring (in Deflection) above zero to have a tank to disturb.',
+        help: 'Bass loads the high-voltage supply as if the beam were drawing current, so the scan collapses momentarily on each hit. The picture pulls inward and springs back. Needs supply ring (in Deflection) above zero to have a tank to disturb.',
       },
       {
         key: 'audioBendUs',
@@ -2890,7 +2888,7 @@ export const GROUPS: Group[] = [
         curve: 'zero',
         redline: [-20, 20],
         unit: 'us',
-        help: 'The audio waveform itself is patched into the horizontal deflection, one sample per scan line — literally drawing the oscilloscope trace of the sound into the geometry of the picture. Deflection-domain, so hue stays put while the glass bends.',
+        help: 'The audio waveform itself is patched into the horizontal deflection, one sample per scan line, so the oscilloscope trace of the sound is drawn into the geometry of the picture. Deflection-domain, so hue stays put while the glass bends.',
       },
       {
         key: 'audioLoad',
@@ -2913,7 +2911,7 @@ export const GROUPS: Group[] = [
         step: 0.5,
         redline: [0, 60],
         unit: 'IRE',
-        help: 'The audio is patched straight into the video input, in IRE. Loud passages therefore land on the sync tips and the burst as well as the picture, so you get brightness bands, shifting colour and sync that tears — the classic wrong-cable-into-the-video-input result.',
+        help: 'The audio is patched straight into the video input, in IRE. Loud passages land on the sync tips and the burst as well as the picture, so you get brightness bands, shifting colour and sync that tears: the classic result of the wrong cable in the video input.',
       },
       {
         key: 'audioHueDeg',
@@ -2923,7 +2921,7 @@ export const GROUPS: Group[] = [
         max: 180,
         step: 1,
         unit: 'deg',
-        help: "The audio waveform driven into the colour demodulator's reference oscillator, one sample per scan line — the same wire the tint control sits on, so the sound is turning the tint knob 15,734 times a second. Bass swings the whole picture's hue on the beat; anything with content up near line rate paints the hue in bands that dance down the frame. Since the reference is in the receiver, the bands stay on the glass while a rolling picture slides through them.",
+        help: "The audio waveform driven into the colour demodulator's reference oscillator, one sample per scan line. This is the same wire the tint control sits on, so the sound is turning the tint knob 15,734 times a second. Bass swings the whole picture's hue on the beat. Anything with content up near line rate paints the hue in bands that move down the frame. Since the reference is in the receiver, the bands stay on the glass while a rolling picture slides through them.",
       },
       {
         key: 'audioGain',
@@ -2935,7 +2933,7 @@ export const GROUPS: Group[] = [
         redline: [0, 4],
         unit: '',
         fine: true,
-        help: 'Input trim on the waveform routings — into deflection and into video in — which is how hard the raw sound drives the geometry and the composite line. The envelope routings (the two hold oscillators and HV sag) normalize against a decaying peak instead, so they ride any input level on their own and this trim does not move them, or the meter above.',
+        help: 'Input trim on the waveform routings (into deflection and into video in), which sets how hard the raw sound drives the geometry and the composite line. The envelope routings (the two hold oscillators and HV sag) normalize against a decaying peak instead, so they follow any input level on their own and this trim does not move them, or the meter above.',
       },
     ],
   },
@@ -2953,7 +2951,7 @@ export const GROUPS: Group[] = [
         curve: 'zero',
         redline: [-30, 30],
         unit: 'us',
-        help: "How far the tube's own scan is displaced sideways, in microseconds of line time. This is deflection-domain damage: the beam is bent after the picture has been decoded, so geometry warps but hue stays exactly where it was, and a rolling picture slides through a bend that stays put on the glass.",
+        help: "How far the tube's own scan is displaced sideways, in microseconds of line time. This is deflection-domain damage. The beam is bent after the picture has been decoded, so geometry warps but hue stays exactly where it was, and a rolling picture slides through a bend that stays put on the glass.",
       },
       {
         key: 'bendShape',
@@ -2975,7 +2973,7 @@ export const GROUPS: Group[] = [
         step: 1,
         redline: [4, 480],
         unit: 'lines',
-        help: 'How many scan lines the shape takes: the decay length for the flag hook, or the wavelength for the ripple. Short gives a tight buzz near the top; long stretches the shape across the whole frame.',
+        help: 'How many scan lines the shape takes: the decay length for the flag hook, or the wavelength for the ripple. Short gives a tight buzz near the top. Long stretches the shape across the whole frame.',
       },
       {
         key: 'vSize',
@@ -2986,7 +2984,7 @@ export const GROUPS: Group[] = [
         step: 0.01,
         redline: [0.5, 1.2],
         unit: 'x',
-        help: "Vertical deflection amplitude — the service knob on the yoke. Below 1 the scan shrinks and the raster itself comes into view past the picture: the vertical interval with whatever is parked in it (VITS test lines, caption dashes, Macrovision's pulse trains), the head-switch band, and beam-off black beyond the retrace. Above 1 is overscan, which is how consumer sets actually shipped. Deflection-domain, so a rolling picture slides through the underscanned frame while the raster furniture stays put on the glass.",
+        help: "Vertical deflection amplitude, the service knob on the yoke. Below 1 the scan shrinks and the raster itself comes into view past the picture: the vertical interval with whatever is parked in it (VITS test lines, caption dashes, Macrovision's pulse trains), the head-switch band, and beam-off black beyond the retrace. Above 1 is overscan, which is how consumer sets actually shipped. Deflection-domain, so a rolling picture slides through the underscanned frame while the raster contents stay put on the glass.",
       },
       {
         key: 'hvSagUs',
@@ -2998,7 +2996,7 @@ export const GROUPS: Group[] = [
         curve: 'zero',
         redline: [-25, 25],
         unit: 'us',
-        help: 'A bright picture draws beam current, which loads the high-voltage supply and lets the scan widen — so bright content stretches the geometry around it. It is why a white box on a tired tube bulges the image outward, and because it follows the content it moves with the picture.',
+        help: 'A bright picture draws beam current, which loads the high-voltage supply and lets the scan widen, so bright content stretches the geometry around it. It is why a white box on a tired tube bulges the image outward, and because it follows the content it moves with the picture.',
       },
       {
         key: 'hvRing',
@@ -3008,7 +3006,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: 'How well damped that supply is. At 0 it droops smoothly and recovers; toward 1 the tank rings and overshoots, so a bright edge sets off a decaying wobble down the lines below it and hard content makes the geometry chaotic.',
+        help: 'How well damped that supply is. At 0 it droops smoothly and recovers. Toward 1 the tank rings and overshoots, so a bright edge sets off a decaying wobble down the lines below it and hard content makes the geometry chaotic.',
       },
       {
         key: 'abl',
@@ -3018,7 +3016,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: "The automatic beam limiter: the flyback can only source so much average beam current, so past a threshold the set pulls video drive down to protect it. The sense loop has a real time constant, so the dimming always lands after the bright content that caused it — and the knob undersizes the flyback while stripping the servo's damping, so wound up the correction overshoots and the whole picture pumps at a couple of Hz, a rhythm no content is writing. Inside either feedback loop the drive is part of the loop, so the servo and the loop beat instead of settling; it also throttles the very beam current HV sag integrates.",
+        help: "The automatic beam limiter. The flyback can only source so much average beam current, so past a threshold the set pulls video drive down to protect it. The sense loop has a real time constant, so the dimming always lands after the bright content that caused it. The knob undersizes the flyback while stripping the servo's damping, so turned up the correction overshoots and the whole picture pumps at a couple of Hz, a rhythm no content is writing. Inside either feedback loop the drive is part of the loop, so the servo and the loop beat instead of settling. It also throttles the very beam current HV sag integrates.",
       },
     ],
   },
@@ -3038,12 +3036,12 @@ export const GROUPS: Group[] = [
         help: `How the TV separates brightness from colour, which share one
           wire.
 
-          - **trap** — a notch filter. Cheap, and it mistakes fine detail for
+          - **trap**: a notch filter. Cheap, and it mistakes fine detail for
             colour (rainbow fringing on stripes) and colour for detail (dot
             crawl on edges).
-          - **2-line** and **3-line** — combs, which use the line-to-line
-            subcarrier alternation to separate the two properly and largely kill
-            both artifacts.`,
+          - **2-line** and **3-line**: combs, which use the line-to-line
+            subcarrier alternation to separate the two properly and largely
+            remove both artifacts.`,
       },
       {
         key: 'svideoBleed',
@@ -3065,7 +3063,7 @@ export const GROUPS: Group[] = [
         step: 0.01,
         redline: [0.15, 3],
         unit: 'MHz',
-        help: "The colour demodulator's low-pass, which decides how fast colour is allowed to change across a line. Real sets are around 0.5 MHz, which is why colour bleeds past its edges while brightness stays crisp — the eye barely notices, and broadcasters exploited it. Open it past about 1.5 and the passband stops being a colour filter and starts admitting luma detail, so every edge and every fine texture arrives as cross-colour and the picture rainbows wholesale.",
+        help: "The colour demodulator's low-pass, which decides how fast colour is allowed to change across a line. Real sets are around 0.5 MHz, which is why colour bleeds past its edges while brightness stays crisp. The eye barely notices, and broadcasters exploited it. Open it past about 1.5 and the passband stops being a colour filter and starts admitting luma detail, so every edge and every fine texture arrives as cross-colour and the picture rainbows everywhere.",
       },
       {
         key: 'chromaTail',
@@ -3076,7 +3074,7 @@ export const GROUPS: Group[] = [
         step: 0.01,
         unit: '',
         fine: true,
-        help: 'Asymmetric colour smear, trailing to the right only. A symmetric filter blurs both ways; a lagging chroma path drags colour behind the edge, which is the direction real sets and tapes actually smear.',
+        help: 'Asymmetric colour smear, trailing to the right only. A symmetric filter blurs both ways. A lagging chroma path drags colour behind the edge, which is the direction real sets and tapes actually smear.',
       },
       {
         key: 'chromaCoarse',
@@ -3087,7 +3085,7 @@ export const GROUPS: Group[] = [
         step: 1,
         unit: 'px',
         fine: true,
-        help: 'How coarsely the demodulated colour is sampled before being stretched back up. Coarse sampling lands on the subcarrier lattice at intervals, so moving detail rainbows in blocks — the cross-colour a cheap decoder makes of a striped shirt.',
+        help: 'How coarsely the demodulated colour is sampled before being stretched back up. Coarse sampling lands on the subcarrier lattice at intervals, so moving detail rainbows in blocks, the cross-colour a cheap decoder makes of a striped shirt.',
       },
       {
         key: 'chromaGain',
@@ -3108,7 +3106,7 @@ export const GROUPS: Group[] = [
         max: 180,
         step: 1,
         unit: 'deg',
-        help: "The tint knob on the front of the set, which rotates the demodulator's reference against the incoming colour. Every hue turns together, so flesh goes green one way and magenta the other; at ±180 the reference is backwards and the picture comes out in complementary colour with its brightness untouched. Burst lock corrects the signal's phase errors, not this — the knob sits after the correction, which is why turning it never un-corrects itself.",
+        help: "The tint knob on the front of the set, which rotates the demodulator's reference against the incoming colour. Every hue turns together, so flesh goes green one way and magenta the other. At ±180 the reference is backwards and the picture comes out in complementary colour with its brightness untouched. Burst lock corrects the signal's phase errors, not this. The knob sits after the correction, which is why turning it never un-corrects itself.",
       },
       {
         key: 'burstLock',
@@ -3118,7 +3116,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: 'How much the decoder trusts the colour burst it measured. At 1 it follows the burst, so phase errors in the incoming signal are corrected out; at 0 it ignores it and runs on its own crystal, so any subcarrier error shows up directly as wrong, drifting hue.',
+        help: 'How much the decoder trusts the colour burst it measured. At 1 it follows the burst, so phase errors in the incoming signal are corrected out. At 0 it ignores it and runs on its own crystal, so any subcarrier error shows up directly as wrong, drifting hue.',
       },
       {
         key: 'demodAxisDeg',
@@ -3128,7 +3126,7 @@ export const GROUPS: Group[] = [
         max: 180,
         step: 0.5,
         unit: 'deg',
-        help: 'The angle between the set\'s two synchronous colour demodulators. They sit 90° apart only because the reference network says so — cheap sets used non-quadrature "X/Z" axes deliberately, and a drifted network lands anywhere. Unlike tint, this does not rotate the colour wheel, it shears it: hues that were opposite stop being opposite, so the picture keeps some of its colours and loses others. Wound down toward 0 both demodulators read the same phase and every hue collapses onto a single axis; past 90 the plane stretches and then folds through itself.',
+        help: 'The angle between the set\'s two synchronous colour demodulators. They sit 90° apart only because the reference network says so. Cheap sets used non-quadrature "X/Z" axes deliberately, and a drifted network lands anywhere. Unlike tint, this does not rotate the colour wheel, it shears it: hues that were opposite stop being opposite, so the picture keeps some of its colours and loses others. Toward 0 both demodulators read the same phase and every hue collapses onto a single axis. Past 90 the plane stretches and then folds through itself.',
       },
       {
         key: 'scDetuneKHz',
@@ -3140,7 +3138,7 @@ export const GROUPS: Group[] = [
         curve: 'zero',
         redline: [-20, 20],
         unit: 'kHz',
-        help: "The decoder's reference crystal pulled off 3.579545 MHz — the classic circuit-bend. The demodulation axis rotates continuously against the incoming colour, so hue sweeps the whole wheel at a rate set by how far off you are. Turn burst lock down to let it run.",
+        help: "The decoder's reference crystal pulled off 3.579545 MHz, the classic circuit-bend. The demodulation axis rotates continuously against the incoming colour, so hue sweeps the whole wheel at a rate set by how far off you are. Turn burst lock down to let it run.",
       },
       {
         key: 'killThresh',
@@ -3152,7 +3150,7 @@ export const GROUPS: Group[] = [
         redline: [0, 15],
         unit: 'IRE',
         fine: true,
-        help: 'The burst amplitude below which the set decides the broadcast is monochrome and shuts colour off entirely, in IRE. Raise it and anything that weakens the burst — noise, a dim signal, dropouts — makes colour cut in and out in patches.',
+        help: 'The burst amplitude below which the set decides the broadcast is monochrome and shuts colour off entirely, in IRE. Raise it and anything that weakens the burst (noise, a dim signal, dropouts) makes colour cut in and out in patches.',
       },
       {
         key: 'accLagLines',
@@ -3164,7 +3162,7 @@ export const GROUPS: Group[] = [
         redline: [0, 32],
         unit: 'lines',
         fine: true,
-        help: "The time constant of the chroma AGC's control voltage, in scan lines of burst memory. At 0 the set corrects colour gain instantly per line, which no real ACC can; raised, gain and the colour killer answer burst damage tens of lines late, so colour blooms back after a dropout band instead of snapping, overshoots on a scene change, and a marginal burst makes the killer chatter in and out down the frame. With fed-back burst circulating in the mixer loop the lag turns into colour that pumps.",
+        help: "The time constant of the chroma AGC's control voltage, in scan lines of burst memory. At 0 the set corrects colour gain instantly per line, which no real ACC can. Raised, gain and the colour killer respond to burst damage tens of lines late, so colour blooms back after a dropout band instead of snapping, overshoots on a scene change, and a marginal burst makes the killer chatter in and out down the frame. With fed-back burst circulating in the mixer loop the lag turns into colour that pumps.",
       },
       {
         key: 'vir',
@@ -3174,7 +3172,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: 'How far the set trusts the reference stamped on line 19 of the vertical interval. A VIR receiver decoded that line, compared it against what it knew was sent, and trimmed its own hue and saturation until the two agreed — a closed loop around the demodulator, and one that is only ever as right as the reference arriving. Damage the signal above line 21 and the correction goes with it: the whole picture rotates toward whatever the reference was bent into, and a dub whose chroma the tape path has been eating a generation at a time comes back garish rather than washed out, because a weak reference is a set turning colour up. Needs the VBI test signals on to have anything to read.',
+        help: 'How far the set trusts the reference stamped on line 19 of the vertical interval. A VIR receiver decoded that line, compared it against what it knew was sent, and trimmed its own hue and saturation until the two agreed: a closed loop around the demodulator, and one that is only as right as the reference arriving. Damage the signal above line 21 and the correction goes with it. The whole picture rotates toward whatever the reference was bent into, and a dub whose chroma the tape path has been eating a generation at a time comes back garish rather than washed out, because a weak reference makes the set turn colour up. Needs the VBI test signals on to have anything to read.',
       },
       {
         key: 'virLag',
@@ -3186,7 +3184,7 @@ export const GROUPS: Group[] = [
         redline: [8, 120],
         unit: 'frames',
         fine: true,
-        help: 'The corrector’s time constant, in frames. Short and it chases the reference line by line, so damage that comes and goes makes the picture flicker; long is what a real corrector did — it answers over a second or more, which is why a reference that has been bent drags the whole frame somewhere wrong and leaves it there, and only walks back as slowly once the signal recovers.',
+        help: "The corrector's time constant, in frames. Short and it chases the reference line by line, so damage that comes and goes makes the picture flicker. Long is what a real corrector did. It responds over a second or more, which is why a bent reference drags the whole frame somewhere wrong and leaves it there, and only walks back as slowly once the signal recovers.",
       },
       {
         key: 'matrixClip',
@@ -3197,7 +3195,7 @@ export const GROUPS: Group[] = [
         step: 0.01,
         unit: '',
         fine: true,
-        help: 'How the RGB output amplifiers run out of headroom. At 0 the matrix is fitted back into gamut without moving the hue, which keeps overdriven colour vivid; at 1 the three guns simply hit their rails, and since they hit them one at a time the first to clip drags the hue toward the two still in range. Turn it up with chroma gain past 1 and saturated areas migrate toward the primaries as they blow out instead of holding their colour.',
+        help: 'How the RGB output amplifiers run out of headroom. At 0 the matrix is fitted back into gamut without moving the hue, which keeps overdriven colour vivid. At 1 the three guns simply hit their rails, and since they hit them one at a time the first to clip drags the hue toward the two still in range. Turn it up with chroma gain past 1 and saturated areas migrate toward the primaries as they blow out instead of holding their colour.',
       },
       {
         key: 'agc',
@@ -3207,7 +3205,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: 'How aggressively the receiver normalizes signal level off the sync tip. At 1 it corrects for weak or hot signals and holds contrast steady; at 0 the gain is fixed, so anything that changes signal amplitude changes picture brightness directly.',
+        help: 'How aggressively the receiver normalizes signal level off the sync tip. At 1 it corrects for weak or hot signals and holds contrast steady. At 0 the gain is fixed, so anything that changes signal amplitude changes picture brightness directly.',
       },
       {
         key: 'encChromaMHz',
@@ -3219,7 +3217,7 @@ export const GROUPS: Group[] = [
         redline: [0.3, 2],
         unit: 'MHz',
         fine: true,
-        help: "Colour bandwidth at the encode end, before the signal is ever transmitted — the camera's own limit, as opposed to the decoder's. Wide enough and the chroma sidebands spill into the luma band and generate their own cross-colour.",
+        help: "Colour bandwidth at the encode end, before the signal is ever transmitted: the camera's own limit, as opposed to the decoder's. Wide enough and the chroma sidebands spill into the luma band and generate their own cross-colour.",
       },
     ],
   },
@@ -3247,21 +3245,20 @@ export const GROUPS: Group[] = [
         help: `The set's own caption decoder, slicing line 21 off the signal it
           actually received.
 
-          What makes this different from putting words on a card: the caption
-          is *data*, and it has been through everything the picture has. Snow,
-          a narrow channel, tape noise and generation loss arrive as
-          misspellings — dropped characters, wrong ones, a solid block wherever
-          parity caught an error and the decoder refused to guess. Wind the
+          The caption is *data*, and it has been through everything the picture
+          has. Snow, a narrow channel, tape noise and generation loss arrive as
+          misspellings: dropped characters, wrong ones, a solid block wherever
+          parity caught an error and the decoder refused to guess. Turn the
           tracking off and the caption dies before the picture does, because
           line 21 is at the top of the field where the band lands first.
 
-          And it is painted on the set's raster rather than the signal's, which
-          is where a real decoder paints: the page is redrawn on the set's own
-          timing. So the picture can roll, tear and spin hue underneath a
-          caption sitting perfectly still. It still bends with the tube and
+          It is painted on the set's raster rather than the signal's, which is
+          where a real decoder paints. The page is redrawn on the set's own
+          timing, so the picture can roll, tear and change hue underneath a
+          caption that sits perfectly still. It still bends with the tube and
           still blooms, because both of those happen after it.
 
-          Needs vbi test signals on — that is the switch that puts line 21 on
+          Needs vbi test signals on. That is the switch that puts line 21 on
           the wire at all.`,
       },
       {
@@ -3272,7 +3269,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.05,
         unit: '',
-        help: 'How black the box behind the characters is. Broadcast captions sat in a solid one because type keyed straight over picture is unreadable the moment the picture is bright — wind it out and you get exactly that problem, which is the one every set-top caption box had.',
+        help: 'How black the box behind the characters is. Broadcast captions sat in a solid one because type keyed straight over picture is unreadable the moment the picture is bright. Turn it down and you get exactly that problem, which every set-top caption box had.',
       },
       {
         key: 'ccRomAddr',
@@ -3282,20 +3279,20 @@ export const GROUPS: Group[] = [
         max: 11,
         step: 1,
         unit: '',
-        help: `A pin held high on the character generator's font ROM — the
-          literal circuit bend, and a different thing from a bad feed.
+        help: `A pin held high on the character generator's font ROM: a literal
+          circuit bend, and a different thing from a bad feed.
 
-          Which line decides everything, because of how the chip is addressed.
-          The **low** lines carry the row inside the cell, so holding one makes
-          every glyph repeat a scan line through itself and the whole font grows
-          a seam. The **high** lines carry the character code, so holding one
-          substitutes the entire font for its neighbour a fixed distance away in
-          the ROM — text that keeps its length and its rhythm and comes out
-          systematically wrong.
+          Which line matters, because of how the chip is addressed. The **low**
+          lines carry the row inside the cell, so holding one makes every glyph
+          repeat a scan line through itself and the whole font grows a seam. The
+          **high** lines carry the character code, so holding one substitutes
+          the entire font for its neighbour a fixed distance away in the ROM.
+          The text keeps its length and spacing and comes out systematically
+          wrong.
 
           Held rather than switched, the way a jumper does it, so a glyph whose
           bit was already set comes back untouched and the damage is uneven.
-          Nothing here is random: the same text bends the same way every time,
+          Nothing here is random. The same text bends the same way every time,
           which is what tells a bent machine from a noisy wire.`,
       },
       {
@@ -3306,7 +3303,7 @@ export const GROUPS: Group[] = [
         max: 8,
         step: 1,
         unit: '',
-        help: "The other bus. A font ROM's data lines are the eight dots across one row, so holding one lights or kills the same column of every character on the page — a stripe straight down the font rather than a fault in any one letter. Positive holds the line high, negative holds it low.",
+        help: "The other bus. A font ROM's data lines are the eight dots across one row, so holding one lights or kills the same column of every character on the page: a stripe straight down the font rather than a fault in any one letter. Positive holds the line high, negative holds it low.",
       },
     ],
   },
@@ -3329,7 +3326,7 @@ export const GROUPS: Group[] = [
         max: 20,
         step: 0.1,
         unit: 'Hz',
-        help: 'Holds the beam-blanking gate on, so the guns are cut for most of each cycle and let through in flashes. The gate sits one line above the phosphor, so the light already on the glass keeps decaying through the dark — set persistence long and the picture fades between flashes instead of cutting to black, cooling toward green as it goes. Everything downstream with memory sees the dark frames too, so the beam limiter opens up and surges on the first field back, and a feedback loop pumps at the strobe rate. Lock it to the beat with ♩.',
+        help: 'Holds the beam-blanking gate on, so the guns are cut for most of each cycle and let through in flashes. The gate sits one line above the phosphor, so the light already on the glass keeps decaying through the dark. Set persistence long and the picture fades between flashes instead of cutting to black, shifting toward green as it goes. Everything downstream with memory sees the dark frames too, so the beam limiter opens up and surges on the first field back, and a feedback loop pumps at the strobe rate. Lock it to the beat with ♩.',
       },
       {
         key: 'strobeMs',
@@ -3339,7 +3336,7 @@ export const GROUPS: Group[] = [
         max: 200,
         step: 1,
         unit: 'ms',
-        help: 'How long the beam is let through each cycle. An absolute length rather than a share of the cycle, so speeding the strobe up does not shorten the flash with it — how hard the hit reads stays where you put it. Under one frame it is one frame, since a flash the display never samples is a picture that simply went dark.',
+        help: 'How long the beam is let through each cycle. An absolute length rather than a share of the cycle, so speeding the strobe up does not shorten the flash with it, and how hard the hit reads stays where you put it. Under one frame it is one frame, since a flash the display never samples is a picture that simply went dark.',
       },
       {
         key: 'scanBeam',
@@ -3349,7 +3346,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: 'The electron beam is a spot of finite height, so it does not quite fill the gap between scan lines. Raise this for a tighter spot and visible dark gaps — scanlines — and lower it for a fat spot that fills in like a well-used consumer set.',
+        help: 'The electron beam is a spot of finite height, so it does not quite fill the gap between scan lines. Raise this for a tighter spot and visible dark gaps (scanlines). Lower it for a fat spot that fills in like a well-used consumer set.',
       },
       {
         key: 'scanBloom',
@@ -3359,7 +3356,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: "The spot grows with beam current, so bright lines are fatter than dark ones. Scanlines therefore show in the shadows and close up entirely in the highlights — which is why a real CRT's scanline structure appears and disappears with the picture.",
+        help: "The spot grows with beam current, so bright lines are fatter than dark ones. Scanlines therefore show in the shadows and close up entirely in the highlights, which is why a real CRT's scanline structure appears and disappears with the picture.",
       },
       {
         key: 'crtSpot',
@@ -3370,7 +3367,7 @@ export const GROUPS: Group[] = [
         step: 0.05,
         redline: [0, 3],
         unit: 'px',
-        help: 'How wide a spot the gun writes on the phosphor. The beam is a smooth blob, not a square, so light from one sample lands partly on its neighbours and every edge arrives as a ramp — unlike screen bloom this applies to dim picture too, which is what stops the image resolving into hard pixels. At 0 the samples are point-sharp.',
+        help: 'How wide a spot the gun writes on the phosphor. The beam is a smooth blob rather than a square, so light from one sample lands partly on its neighbours and every edge arrives as a ramp. Unlike screen bloom this applies to dim picture too, which is what stops the image resolving into hard pixels. At 0 the samples are point-sharp.',
       },
       {
         key: 'crtGrain',
@@ -3380,7 +3377,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: 'The coating is a granular deposit of crystallites, so its emission is mottled rather than perfectly even. Fixed on the glass, so it does not crawl with the picture, and strongest in the mid tones — black grains have nothing to vary and fully driven ones have no headroom left.',
+        help: 'The coating is a granular deposit of crystallites, so its emission is mottled rather than perfectly even. Fixed on the glass, so it does not move with the picture, and strongest in the mid tones. Black grains have nothing to vary and fully driven ones have no headroom left.',
       },
       {
         key: 'crtSharp',
@@ -3391,7 +3388,7 @@ export const GROUPS: Group[] = [
         step: 0.01,
         unit: '',
         fine: true,
-        help: 'How the sampled line is reconstructed into continuous light across the screen. Toward 0 is plain linear interpolation, which loses high frequencies; toward 1 is a cubic that stays flat past the subcarrier, so fine patterns hold instead of pumping as they move.',
+        help: 'How the sampled line is reconstructed into continuous light across the screen. Toward 0 is plain linear interpolation, which loses high frequencies. Toward 1 is a cubic that stays flat past the subcarrier, so fine patterns hold instead of pumping as they move.',
       },
       // Scan velocity modulation is a deflection trick played on the beam, so it
       // files with the beam rather than with the glass — it used to sit between
@@ -3406,7 +3403,7 @@ export const GROUPS: Group[] = [
         step: 0.01,
         redline: [-1, 1],
         unit: '',
-        help: 'Consumer sets faked sharpness by patching differentiated luma into an extra deflection coil, slowing the beam through a dark-to-bright transition and speeding it through a bright-to-dark one. Emission follows dwell time, so light is moved across the edge rather than added: a white overshoot on one side, a black notch on the other. The asymmetry is the whole complaint people had about it. Negative wires the coil backwards and swaps which side glows.',
+        help: 'Consumer sets faked sharpness by patching differentiated luma into an extra deflection coil, slowing the beam through a dark-to-bright transition and speeding it through a bright-to-dark one. Emission follows dwell time, so light is moved across the edge rather than added: a white overshoot on one side, a black notch on the other. The asymmetry was the main complaint about it. Negative wires the coil backwards and swaps which side glows.',
       },
       {
         key: 'crtSvmWidth',
@@ -3418,7 +3415,7 @@ export const GROUPS: Group[] = [
         redline: [0.5, 6],
         unit: 'px',
         fine: true,
-        help: 'How wide a span the differentiator looks across. Narrow gives a tight edge-liner on fine detail; wide reaches past the detail and starts shading whole objects, which is the point where it stops reading as sharpening and starts reading as relief.',
+        help: 'How wide a span the differentiator looks across. Narrow gives a tight edge-liner on fine detail. Wide reaches past the detail and starts shading whole objects, which is the point where it stops reading as sharpening and starts reading as relief.',
       },
     ],
   },
@@ -3435,13 +3432,13 @@ export const GROUPS: Group[] = [
         step: 1,
         unit: '',
         choices: ['sRGB', 'P22', '1953', 'green'],
-        help: `Which phosphors the tube is coated with — what its primaries
-          actually are.
+        help: `Which phosphors the tube is coated with, which sets its
+          primaries.
 
-          - **sRGB** — no conversion.
-          - **P22** — SMPTE-C, a normal colour TV.
-          - **1953** — the wide NTSC primaries nobody ever built.
-          - **green** — a long-persistence monochrome monitor.`,
+          - **sRGB**: no conversion.
+          - **P22**: SMPTE-C, a normal colour TV.
+          - **1953**: the wide NTSC primaries nobody ever built.
+          - **green**: a long-persistence monochrome monitor.`,
       },
       {
         key: 'phosphor',
@@ -3457,16 +3454,16 @@ export const GROUPS: Group[] = [
         redline: [0, 0.995],
         unit: '',
         help: `How long the layer keeps glowing after the beam has passed. This
-          is afterglow in the glass, not electronic feedback — the decay is
-          second-order, so the bright core of a trail dumps almost all of itself
-          at once and only the dim remainder hangs on.
+          is afterglow in the glass, not electronic feedback. The decay is
+          second-order, so the bright core of a trail loses almost all of itself
+          at once and only the dim remainder lingers.
 
           A real picture-tube phosphor is gone well inside one field, so
           anything you can actually *see* as a trail is already past P22 and
-          into scope-tube territory. The top of the dial is where that lives;
-          the middle is a hold of a field or two, which is enough to catch an
-          arc strike or a sync tear that would otherwise be gone before you
-          registered it.`,
+          into oscilloscope-tube territory. That is the top of the range. The
+          middle is a hold of a field or two, which is enough to catch an arc
+          strike or a sync tear that would otherwise be gone before you
+          noticed it.`,
       },
       {
         key: 'phosphorSkew',
@@ -3477,7 +3474,7 @@ export const GROUPS: Group[] = [
         step: 0.05,
         redline: [0, 2],
         unit: '',
-        help: 'The three phosphors do not decay at the same rate — red and blue die faster than green. Raise this and trails tint green as they fade, which is the giveaway that you are looking at real persistence rather than a blend of frames.',
+        help: 'The three phosphors do not decay at the same rate. Red and blue die faster than green. Raise this and trails tint green as they fade, which is the giveaway that you are looking at real persistence rather than a blend of frames.',
       },
       {
         key: 'phosphorBleed',
@@ -3488,7 +3485,7 @@ export const GROUPS: Group[] = [
         step: 0.01,
         redline: [0, 0.5],
         unit: '',
-        help: 'Held light does not leave through the grain that emitted it — it scatters sideways through the layer and the glass, into phosphor that is still glowing itself. The spread therefore compounds along a trail: the fresh edge stays sharp while old light gets progressively wider and softer, instead of the tail being a stack of hard copies.',
+        help: 'Held light does not leave through the grain that emitted it. It scatters sideways through the layer and the glass, into phosphor that is still glowing itself. The spread therefore compounds along a trail: the fresh edge stays sharp while old light gets progressively wider and softer, instead of the tail being a stack of hard copies.',
       },
     ],
   },
@@ -3512,7 +3509,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: 'Strength of the shadow mask / aperture grille — the vertical stripes of R, G and B phosphor the beam actually lands on. Raise it and the picture is visibly built out of coloured stripes, as it is on the real glass up close.',
+        help: 'Strength of the shadow mask / aperture grille, the vertical stripes of R, G and B phosphor the beam actually lands on. Raise it and the picture is visibly built out of coloured stripes, as it is on the real glass up close.',
       },
       {
         key: 'maskPitch',
@@ -3523,7 +3520,7 @@ export const GROUPS: Group[] = [
         step: 0.5,
         redline: [1.5, 12],
         unit: 'px',
-        help: 'Spacing of those phosphor triads in screen pixels. Fine pitch is a high-end monitor seen from a distance; coarse is a cheap tube with your nose against it. Pitches near a small whole number of pixels alias into moiré, exactly as photographing a CRT does.',
+        help: 'Spacing of those phosphor triads in screen pixels. Fine pitch is a high-end monitor seen from a distance. Coarse is a cheap tube with your nose against it. Pitches near a small whole number of pixels alias into moiré, exactly as photographing a CRT does.',
       },
       {
         key: 'crtConverge',
@@ -3545,7 +3542,7 @@ export const GROUPS: Group[] = [
         step: 0.01,
         redline: [-1, 1],
         unit: '',
-        help: 'A patch of the shadow mask left magnetised — a speaker set too close, or a set moved without degaussing. The field bends all three beams together, but a triad is three dots 120° apart, so the same nudge over-excites the dot it moves toward and starves the one opposite. The stain turns hue across itself rather than tinting flat, and it is fixed on the glass, so a rolling picture travels through it.',
+        help: 'A patch of the shadow mask left magnetised by a speaker set too close, or a set moved without degaussing. The field bends all three beams together, but a triad is three dots 120° apart, so the same nudge over-excites the dot it moves toward and starves the one opposite. The stain turns hue across itself rather than tinting flat, and it is fixed on the glass, so a rolling picture travels through it.',
       },
       {
         key: 'crtPurityX',
@@ -3576,7 +3573,7 @@ export const GROUPS: Group[] = [
         step: 0.01,
         redline: [0.05, 0.8],
         unit: 'h',
-        help: 'Radius of the magnetised patch as a fraction of picture height. Small is a screwdriver left on the cabinet; large is a set that spent a year next to a loudspeaker.',
+        help: 'Radius of the magnetised patch as a fraction of picture height. Small is a screwdriver left on the cabinet. Large is a set that spent a year next to a loudspeaker.',
       },
     ],
   },
@@ -3603,7 +3600,7 @@ export const GROUPS: Group[] = [
         // grille is the rare one, so it gets the last sliver of travel.
         curve: 'magnifier',
         unit: '×',
-        help: 'Where your eye is, up against the glass. Everything that lives on the screen rather than in the image magnifies with it — scanline structure, the beam spot bleeding between samples, phosphor grain, the grille triads — so this is the way to see what the picture is actually built out of.',
+        help: 'Where your eye is, up against the glass. Everything that lives on the screen rather than in the image magnifies with it (scanline structure, the beam spot bleeding between samples, phosphor grain, the grille triads), so this is the way to see what the picture is actually built out of.',
       },
       {
         key: 'crtZoomX',
@@ -3633,7 +3630,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: 'x',
-        help: 'Steps the whole simulation at a fraction of display rate, like slowed footage of the rig: noise, rolls, sweeps, feedback loops and phosphor all crawl together, and 0 freezes the frame. Modulation stays live, so an LFO or audio envelope here warps time itself. Pair with a source’s own speed control, under its transport at the head of its stage, to slow the footage to match.',
+        help: "Steps the whole simulation at a fraction of display rate, like slowed footage of the rig. Noise, rolls, sweeps, feedback loops and phosphor all slow together, and 0 freezes the frame. Modulation stays live, so an LFO or audio envelope here warps time itself. Pair it with a source's own speed control, under its transport at the head of its stage, to slow the footage to match.",
       },
       {
         key: 'frameLock',
@@ -3645,21 +3642,21 @@ export const GROUPS: Group[] = [
         unit: '',
         choices: ['off', '1/2 rate', '1/3 rate', '1/4 rate', 'auto'],
         help: `Renders every second, third or fourth display refresh instead of
-          chasing every one. A signal path that costs slightly more than a
-          refresh interval otherwise wavers between full rate and half rate, and
-          the wavering reads as stutter where a steady lower cadence reads as
+          trying to hit every one. A signal path that costs slightly more than
+          a refresh interval otherwise wavers between full rate and half rate.
+          The wavering reads as stutter, where a steady lower rate reads as
           intentional.
 
-          - **off** — chase every refresh, which is what a rig with headroom
+          - **off**: render every refresh, which is what a rig with headroom
             should do.
-          - **1/2 rate**, **1/3 rate**, **1/4 rate** — a fixed cadence. The
-            skipped refreshes do no work at all, so the lock never slows the rig
-            further; but like slow motion, the simulation (modulation included)
-            steps once per rendered frame, so rolls and noise crawl
+          - **1/2 rate**, **1/3 rate**, **1/4 rate**: a fixed rate. The skipped
+            refreshes do no work at all, so the lock never slows the rig
+            further. Like slow motion, the simulation (modulation included)
+            steps once per rendered frame, so rolls and noise move
             proportionally slower under one.
-          - **auto** — watches the loop itself: sustained missed refreshes
-            engage the half-rate lock, and it quietly retries full rate with a
-            lengthening pause between attempts.`,
+          - **auto**: watches the loop itself. Sustained missed refreshes engage
+            the half-rate lock, and it retries full rate with a lengthening
+            pause between attempts.`,
       },
     ],
   },
@@ -4030,13 +4027,13 @@ export const NEEDS: Partial<Record<ControlKey, SliderNeed>> = {
 // signal path, so the map explains itself without opening anything.
 const PHASE_BLURBS: Record<Phase, string> = {
   'Source A':
-    'input A becoming a composite waveform — the encoder, the static generator, and the deck and cable this one signal arrives on',
-  Mix: 'where the two signals meet — the mixer that beats them together, the wipe and the PiP inset. Needs a source B to do anything',
+    'input A becoming a composite waveform: the encoder, the static generator, and the deck and cable this one signal arrives on',
+  Mix: 'where the two signals meet: the mixer that combines them, the wipe and the PiP inset. Needs a source B to do anything',
   Channel:
-    'everything between the encoder and the aerial socket — the tape it was recorded on, the tuner it came through, and the cable it came down',
+    'everything between the encoder and the aerial socket: the tape it was recorded on, the tuner it came through, and the cable it came down',
   Receiver:
-    'a TV hunting for sync and decoding color from whatever arrives — hold, deflection, the decoder',
-  Screen: 'the tube itself — beam profile, phosphor persistence, shadow mask',
+    'a TV finding sync and decoding colour from whatever arrives: hold, deflection, the decoder',
+  Screen: 'the tube itself: beam profile, phosphor persistence, shadow mask',
 }
 
 // The signal-path phases, in order — the spine the panel is browsed along.

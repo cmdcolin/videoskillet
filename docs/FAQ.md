@@ -1,9 +1,9 @@
 # FAQ
 
-How the thing works, what it takes to run, why it is an app rather than a
-plugin, and how a take gets out of it and into an edit.
-[Choosing a tool](COMPARISON.md) and [the editor](EDITOR.md) carry the longer
-arguments; this page is the short version of each, plus what to do instead.
+How it works, what it takes to run, why it is an app rather than a plugin, and
+how a take gets out of it and into an edit. [Choosing a tool](COMPARISON.md) and
+[the editor](EDITOR.md) have the longer arguments. This page is the short
+version of each, plus what to do instead.
 
 ## How does it actually work?
 
@@ -26,9 +26,9 @@ for (let n = 0; n < signal.length; n++) {
 }
 ```
 
-478k iterations, a dozen stages, 60 times a second — hopeless on one thread. A
+478k iterations, a dozen stages, 60 times a second is hopeless on one thread. A
 GPU runs that body for every `n` at once, so you write only the body and it
-hands you the `n`. That is `timebase.wgsl`, trimmed:
+supplies the `n`. That is `timebase.wgsl`, trimmed:
 
 ```wgsl
 @compute @workgroup_size(64, 1, 1)
@@ -53,7 +53,7 @@ cp.dispatchWorkgroups(Math.ceil(910 / 64), 525)
 ```
 
 Threads launch in fixed blocks of 64, so 15 blocks per line covers 910 samples
-with 50 to spare — hence the `if (s >= SPL) { return; }` in every shader.
+with 50 to spare, hence the `if (s >= SPL) { return; }` in every shader.
 
 ### The chain
 
@@ -88,11 +88,11 @@ comb) run fine, but you won't get the resolution or frame rate a laptop holds.
 
 ## Can I install it on a phone or a desktop?
 
-Yes — a manifest, an icon set, and a service worker ship with the build, so the
+Yes. A manifest, an icon set, and a service worker ship with the build, so the
 browser can put it on a home screen or dock and open it in its own window, with
-no browser chrome around the picture. Once installed, it starts offline — the
-shell and bundle are cached — though the sample clips and anything saved to the
-cloud still need a network connection.
+no browser chrome around the picture. Once installed, it starts offline, since
+the shell and bundle are cached, though the sample clips and anything saved to
+the cloud still need a network connection.
 
 - **Android / Chrome** — the address bar offers _Install app_, or use _Add to
   Home screen_ from the ⋮ menu.
@@ -161,13 +161,13 @@ inside an edit, it's probably the better fit today.
 
 ## Then how do I get a result into an edit?
 
-Render a file — the app does this today. Open the **strip** tray at the bottom
+Render a file. The app does this today. Open the **strip** tray at the bottom
 and press **⎙ render**. The take plays on a virtual clock instead of wall time,
 and you get a constant-framerate H.264 MP4 that Resolve and Premiere import
-directly — no plugin needed, and no WebM (which Resolve won't import at all).
+directly, with no plugin needed and no WebM (which Resolve won't import at all).
 
 You can also render a performance. **●** records every move you make against the
-frame it happened on — sliders, presets, a controller knob, a morph — and **⎙**
+frame it happened on (sliders, presets, a controller knob, a morph) and **⎙**
 replays that into the render. So a take you ran live, at whatever framerate the
 tab managed, comes back as a file with a steady, non-drifting framerate.
 

@@ -280,10 +280,10 @@ export function ClipLibraryDialog(props: {
 
       {props.lib.clips.length === 0 ? (
         <div className={ui.hint}>
-          nothing on the shelf yet. Add the folder your rips live in and every
-          clip in it is one click away for the rest of the session — and, on a
-          browser that can hold a folder open, every session after this one. The
-          ★ beside a rolled picture keeps that too, on the same shelf.
+          nothing saved yet. Add the folder your rips live in and every clip in
+          it is one click away for the rest of the session, and on a browser
+          that can hold a folder open, every session after this one. The ★
+          beside a rolled picture keeps that here too.
         </div>
       ) : groups.length === 0 ? (
         <div className={ui.hint}>no clip matches “{query}”</div>
@@ -346,10 +346,10 @@ export function ClipLibraryDialog(props: {
 
       {kept === 0 ? null : (
         <div className={ui.hint}>
-          a kept roll is the file’s name alone, so it costs nothing on disk and
-          comes back on its own next session — playing one asks the archive for
-          it again, at whatever size this app wants today. Kept in this browser:
-          a shared link carries only the look.
+          a kept roll is only the file’s name, so it costs nothing on disk and
+          comes back on its own next session. Playing one asks the archive for
+          it again, at whatever size this app wants today. It is kept in this
+          browser only. A shared link carries just the look.
         </div>
       )}
 
@@ -361,9 +361,10 @@ export function ClipLibraryDialog(props: {
       {fetched === 0 ? null : (
         <div className={ui.hint}>
           a fetched clip is its address, so playing one asks {YTDLP_LABEL} for
-          it again — instantly while the dev server still has the download, and
-          not at all in a build without the bridge. A trimmed clip and the whole
-          of the same clip are two rows, because they are two different files.
+          it again. That is instant while the dev server still has the download,
+          and not possible in a build without the bridge. A trimmed clip and the
+          whole of the same clip are two rows, because they are two different
+          files.
         </div>
       )}
 

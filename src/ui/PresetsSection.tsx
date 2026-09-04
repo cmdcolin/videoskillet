@@ -86,23 +86,23 @@ function PresetsHelpDialog(props: { onClose: () => void }) {
   return (
     <Dialog title="Presets" size="prose" onClose={props.onClose}>
       <p className={ui.helpText}>
-        Each preset is a named look that sets a whole bank of controls at once —
-        five for a simple fault, twenty for a whole-board look — spread across
+        Each preset is a named look that sets a whole bank of controls at once,
+        five for a simple fault or twenty for a whole-board look, spread across
         every stage of the chain, because that is what it takes to recreate a
         particular signal fault or device. Hover one for what it does and how
-        many controls it moves; “this look” in the bar above then lists every
+        many controls it moves. “this look” in the bar above then lists every
         one of them as a live row you can drag.
       </p>
       <p className={ui.helpText}>
-        Every preset but “clean” is also a fader: click to dial it fully in, or
+        Every preset but “clean” is also a fader. Click to dial it fully in, or
         drag sideways for a partial amount. Either way it layers onto what’s
         already there rather than replacing it, and the fill shows how much is
-        in — so stacking several accumulates their faults. “clean” is a plain
-        reset: click it to clear them all.
+        in, so stacking several accumulates their faults. “clean” is a plain
+        reset. Click it to clear them all.
       </p>
       <div className={ui.muted}>
-        A mix lasts only until something else moves the look — a slider, mutate,
-        a saved look — and then the fills reset, since a blended look can’t be
+        A mix lasts only until something else moves the look (a slider, mutate,
+        a saved look). Then the fills reset, since a blended look can’t be
         traced back to exact amounts.
       </div>
     </Dialog>

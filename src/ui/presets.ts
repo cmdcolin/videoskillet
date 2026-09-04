@@ -57,7 +57,7 @@ export const PRESETS: PresetDef[] = [
     name: 'clean',
     group: 'Clean',
     blurb:
-      'Pristine studio signal — no artifacts. The baseline everything else departs from.',
+      'Pristine studio signal with no artifacts. The baseline everything else departs from.',
     patch: {},
   },
   {
@@ -84,7 +84,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'protected tape',
     group: 'Tape wear',
     blurb:
-      "A rental pressing with Macrovision on it, into a set whose AGC believes the lie: pulses in the vertical interval balloon the measured sync depth, so the gain crushes and recovers on the process's own slow cycle; colorstripe bands crawl down the frame wrong-hued; and a vertical hold this marginal lets the flashing bar itself ride into view.",
+      "A rental tape with Macrovision on it, into a set whose AGC trusts the measurement. Pulses in the vertical interval inflate the measured sync depth, so the gain crushes and recovers on the process's own slow cycle. Colourstripe bands crawl down the frame in the wrong hue, and a vertical hold this marginal lets the flashing bar itself come into view.",
     patch: {
       macrovision: 0.9,
       mvStripeDeg: 110,
@@ -150,7 +150,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'stuck tape',
     group: 'Tape wear',
     blurb:
-      'Deck jammed on pause: the head grinds one track boundary into a drifting noise bar, time crawls at a third of real speed, and phosphor trails smear what little still moves.',
+      'Deck jammed on pause. The head grinds one track boundary into a drifting noise bar, time runs at a third of real speed, and phosphor trails smear what little still moves.',
     patch: {
       shuttleX: 0,
       timeScale: 0.35,
@@ -172,7 +172,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'tracking band',
     group: 'Tape wear',
     blurb:
-      'The head riding half off its track: a band of hash where the signal is weakest, the picture bending through it, and colour dropping out across it because the 629 kHz carrier starves before the luma does. The thing the tracking knob on the front of the deck was for.',
+      'The head riding half off its track: a band of hash where the signal is weakest, the picture bending through it, and colour dropping out across it because the 629 kHz carrier starves before the luma does. This is what the tracking knob on the front of the deck was for.',
     patch: {
       trackAmt: 0.55,
       trackPos: 0.62,
@@ -194,7 +194,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'servo hunt',
     group: 'Tape wear',
     blurb:
-      'An auto-tracking deck that cannot find the track. The servo sweeps the noise band up the picture, overshoots, rings back, settles for a breath and loses it again as the tape stretches; every scene change, shuttle exit, splice and thump from the music throws it off the peak, and the top of the frame flags on the tension each time. Nothing here is drawn — it is a loop with too little damping.',
+      'An auto-tracking deck that cannot find the track. The servo sweeps the noise band up the picture, overshoots, rings back, settles for a moment and loses it again as the tape stretches. Every scene change, shuttle exit, splice and thump from the music knocks it off the peak, and the top of the frame flags on the tension each time. Nothing here is drawn. It is a loop with too little damping.',
     patch: {
       trackHunt: 0.85,
       trackKick: 0.9,
@@ -214,7 +214,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'hue rides the light',
     group: 'Tape wear',
     blurb:
-      "The video amplifier's gain and its delay are both bent against the brightness they are working on, which is what every VTR spec sheet called DG and DP — and this is the third copy through it, so each generation rotates the last one's hue again by the light it is carrying. Subcarrier riding bright picture comes through smaller and later than the same colour on dark picture, so saturation drains out of the highlights while hue swings with the luma underneath it, and three passes take that from a wrongness to a palette: a red chair lit from above turns gold at the top and holds brown underneath. Burst sits at blanking where the error is zero, so the decoder's reference never moves and no tint knob takes any of it back out. And the line amp it is all passing through has a failing supply, which scales the brightness the errors are reading rather than adding to it — so the hum bar comes through as a band of different colour, rolling up the picture and taking the palette with it.",
+      "The video amplifier's gain and delay both vary with the brightness they are working on, which every VTR spec sheet called DG and DP. This is the third copy through it, so each generation rotates the last one's hue again by the light it carries. Subcarrier on bright picture comes through smaller and later than the same colour on dark picture, so saturation drains out of the highlights while hue swings with the luma underneath. Three passes turn that from an error into a palette: a red chair lit from above turns gold at the top and stays brown underneath. Burst sits at blanking where the error is zero, so the decoder's reference never moves and no tint knob undoes any of it. The line amp it all passes through has a failing supply, which scales the brightness the errors depend on rather than adding to it, so the hum bar comes through as a band of different colour rolling up the picture and taking the palette with it.",
     patch: {
       diffPhaseDeg: 52,
       diffGain: 0.75,
@@ -236,7 +236,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'over-deviated white',
     group: 'Tape wear',
     blurb:
-      "A deck whose white clip is set too hot, with its own sharpener making the edges that undo it. Brightness is recorded as FM with the video pre-emphasized, so a hard dark-to-bright edge overshoots the deviation the head and tape can carry, and past the response cliff the discriminator folds back: more frequency out as less video, which is a black streak trailing every bright edge and smearing a microsecond rightward as the deemphasis recovers. Colour is a separate recording on its own carrier, so it rides straight through the fold and the streaks come out saturated over black. The threshold is re-decided per sample per frame off the demod's own noise, so the comets boil where the picture has detail and hold still where it does not.",
+      "A deck whose white clip is set too hot, with its own sharpener making the edges that trigger it. Brightness is recorded as FM with the video pre-emphasized, so a hard dark-to-bright edge overshoots the deviation the head and tape can carry. Past the response cliff the discriminator folds back and more frequency comes out as less video: a black streak trailing every bright edge, smearing a microsecond rightward as the deemphasis recovers. Colour is a separate recording on its own carrier, so it passes straight through the fold and the streaks come out saturated over black. The threshold is re-decided per sample per frame by the demod's own noise, so the streaks boil where the picture has detail and hold still where it does not.",
     patch: {
       fmOverdev: 0.92,
       fmStreakUs: 0.7,
@@ -257,7 +257,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'one line back',
     group: 'Tape wear',
     blurb:
-      'Binder hydrolysis, and the circuit that is supposed to hide half of it. The same failure does two things at once: the oxide sheds, so the head reads nothing several times a line, and the tape grabs the drum until the tension breaks it free — a relaxation oscillator, which is bands of shear leaning further line by line and then snapping back. Where the head read nothing the compensator patches the gap from a delay line holding the line above, and a line of NTSC is 227.5 subcarrier cycles, so the patch arrives exactly half a cycle out of phase: invisible in brightness, and in the complementary hue. That is why a shedding tape on a cheap deck streaks in colours the scene never had rather than in white. The chroma AGC lags a whole frame-part behind, so colour blooms back through each scarred band instead of snapping, and where two dropouts stack the delay line is holding a line that lost the same samples — there the raw dropout shows through.',
+      'Binder hydrolysis, and the circuit that is supposed to hide half of it. The same failure does two things at once. The oxide sheds, so the head reads nothing several times a line, and the tape grabs the drum until the tension breaks it free, a relaxation oscillator that shows as bands of shear leaning further line by line and then snapping back. Where the head read nothing the compensator patches the gap from a delay line holding the line above. A line of NTSC is 227.5 subcarrier cycles, so the patch arrives exactly half a cycle out of phase: invisible in brightness, and in the complementary hue. That is why a shedding tape on a cheap deck streaks in colours the scene never had rather than in white. The chroma AGC lags well behind, so colour blooms back through each scarred band instead of snapping, and where two dropouts stack the delay line holds a line that lost the same samples, so the raw dropout shows through.',
     patch: {
       dropoutRate: 120,
       dropoutLenUs: 30,
@@ -280,7 +280,7 @@ export const PRESETS: PresetDef[] = [
     name: 'broadcast',
     group: 'RF / Broadcast',
     blurb:
-      'Clean over-the-air feed: a whisper of noise and a soft multipath ghost.',
+      'Clean over-the-air feed: a little noise and a soft multipath ghost.',
     patch: { noiseIre: 1.2, ghostDelayUs: 1.8, ghostGain: 0.1, demodMHz: 0.8 },
   },
   {
@@ -288,7 +288,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'mistuned rf',
     group: 'RF / Broadcast',
     blurb:
-      'Tuner off-station: the sound carrier climbs out of its trap and the detector multiplies it against the picture — buzz weave, a coarse 920 kHz beat, rainbow crawl on fine detail — over snow, a hard ghost and a struggling AGC.',
+      'Tuner off-station. The sound carrier gets out of its trap and the detector multiplies it against the picture, giving buzz weave, a coarse 920 kHz beat and rainbow crawl on fine detail, over snow, a hard ghost and a struggling AGC.',
     patch: {
       rfMistuneMHz: 0.55,
       noiseIre: 6,
@@ -303,7 +303,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'fringe reception',
     group: 'RF / Broadcast',
     blurb:
-      'A station at the edge of its range, through the envelope detector that makes weak signal mean something: whites boil into snow first, blacks hold longest, sync dies last — a picture fighting through rather than sinking into grey fuzz, while a far-off reflection ghosts it and the AGC leans on what depth it can still find.',
+      'A station at the edge of its range, through the envelope detector that gives weak signal its character. Whites boil into snow first, blacks hold longest, and sync dies last, so the picture fights through rather than sinking into grey fuzz, while a distant reflection ghosts it and the AGC works from what sync depth it can still find.',
     patch: {
       rfSnow: 0.5,
       agc: 0.7,
@@ -318,7 +318,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'ignition storm',
     group: 'RF / Broadcast',
     blurb:
-      'Arc interference over a dim signal: storm-clustered hits from ticks to torn slabs, plus millisecond strikes — and every big one lands on sync and the beam load, so the raster tears, the supply rings, and the AGC claws its way back while the phosphor holds each flash. The rig reacting is most of the look.',
+      'Arc interference over a dim signal: clustered hits from ticks to torn slabs, plus millisecond strikes. Every big one lands on sync and the beam load, so the raster tears, the supply rings, and the AGC recovers slowly while the phosphor holds each flash. The rig reacting is most of the look.',
     patch: {
       impulseRate: 4,
       impulseIre: 120,
@@ -356,7 +356,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'dimmer hash',
     group: 'RF / Broadcast',
     blurb:
-      'A triac dimmer on the same mains, firing twice a cycle at its set angle: the interference stops falling anywhere and bunches into two bands of hash that roll up the picture locked to the hum bar — same mains, so they travel together. Quieter than an arc storm and far more unsettling, because it is periodic.',
+      'A triac dimmer on the same mains, firing twice a cycle at its set angle. The interference stops falling anywhere and bunches into two bands of hash that roll up the picture locked to the hum bar. They share the same mains, so they travel together. Quieter than an arc storm and more unsettling, because it is periodic.',
     patch: {
       impulseRate: 9,
       impulseHz: 420,
@@ -374,7 +374,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'scrambled channel',
     group: 'RF / Broadcast',
     blurb:
-      'Premium channel with no decoder box: sync suppressed at the head-end, so every line lands at its own offset and the AGC winds up chasing a tip that is not there.',
+      'Premium channel with no decoder box. Sync is suppressed at the head-end, so every line lands at its own offset and the AGC ends up chasing a tip that is not there.',
     patch: {
       scramble: 0.55,
       hDetuneHz: 18,
@@ -420,7 +420,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'bent scan',
     group: 'Sync / Deflection',
     blurb:
-      'Deflection bowed hard across the glass — the blanking interval itself curves through the picture.',
+      'Deflection bowed hard across the glass. The blanking interval itself curves through the picture.',
     patch: { bendUs: 24, bendShape: 2, syncBendUs: 4, noiseIre: 2 },
   },
   {
@@ -445,7 +445,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'full collapse',
     group: 'Sync / Deflection',
     blurb:
-      'Every deflection fault at once, feeding the mixer loop — bend, roll and beam load chasing each other frame to frame.',
+      'Every deflection fault at once, feeding the mixer loop. Bend, roll and beam load chase each other frame to frame.',
     patch: {
       hvSagUs: 20,
       hvRing: 0.9,
@@ -491,7 +491,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'line nineteen',
     group: 'Decoder',
     blurb:
-      'A VIR set trimming itself off the reference stamped on line 19, handed a third-generation dub whose amplifier is bent against brightness. The reference sits at burst phase on a 70 IRE pedestal, so the set rotates and re-gains the whole picture until that one level decodes right — and a correction that is exact at 70 IRE is a correction that is wrong everywhere else. What was already near the pedestal comes back true while everything under it leans the other way instead: the window returns to green as the red chair goes electric magenta, which is the picture telling you where the reference sat. The saturation half is the reason none of it is subtle. Three generations of colour-under have eaten the reference as well as the picture, and a weak reference reads to the corrector as a set that needs more colour — so a worn dub arrives garish rather than washed out, which is the opposite of what the tape did to it.',
+      'A VIR set trimming itself against the reference on line 19, given a third-generation dub whose amplifier is bent against brightness. The reference sits at burst phase on a 70 IRE pedestal, so the set rotates and re-gains the whole picture until that one level decodes right. A correction that is exact at 70 IRE is wrong everywhere else. What was already near the pedestal comes back true while everything under it leans the other way: the window returns to green as the red chair goes electric magenta, which shows where the reference sat. The saturation half is why none of it is subtle. Three generations of colour-under have eaten the reference as well as the picture, and a weak reference reads to the corrector as a set that needs more colour, so a worn dub arrives garish rather than washed out, the opposite of what the tape did to it.',
     patch: {
       vir: 1,
       virLag: 90,
@@ -514,7 +514,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'collapsed axes',
     group: 'Decoder',
     blurb:
-      'A cheap decoder with its whole colour reference out. The two demodulators sit 90° apart only because that network says so, and here they have drifted toward reading the same phase twice, which squashes the colour plane onto a single line: this shears the wheel rather than rotating it, so hues that were opposite stop being opposite, some come through at full strength and their neighbours land somewhere nothing in the scene was. The crystal is pulled a few kilohertz off with it, so hue also ramps along every line, and the reconstruction lattice is sampling the result four samples coarse, which lays the whole squashed palette down in blocks. The guns are left to hit their own rails, so what survives arrives fluorescent. And the drift walks: down to both axes reading as one, up through quadrature and out the far side where the plane stretches and folds, so green comes back gold while nothing in the picture has moved.',
+      'A cheap decoder with its whole colour reference out. The two demodulators sit 90° apart only because that network says so, and here they have drifted toward reading the same phase twice, which squashes the colour plane onto a single line. This shears the wheel rather than rotating it, so hues that were opposite stop being opposite. Some come through at full strength and their neighbours land on colours nothing in the scene had. The crystal is pulled a few kilohertz off with it, so hue also ramps along every line, and the reconstruction lattice samples the result four samples coarse, which lays the squashed palette down in blocks. The guns are left to hit their own rails, so what survives arrives fluorescent. The drift moves: down to both axes reading as one, up through quadrature and out the far side where the plane stretches and folds, so green comes back gold while nothing in the picture has moved.',
     patch: {
       demodAxisDeg: 30,
       scDetuneKHz: 6,
@@ -566,7 +566,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'key loop',
     group: 'Feedback loops',
     blurb:
-      'Luma-keyed feedback — only bright areas re-enter the loop and tunnel.',
+      'Luma-keyed feedback. Only bright areas re-enter the loop and tunnel.',
     patch: {
       cfbMix: 0.92,
       cfbKey: 0.85,
@@ -606,7 +606,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'wound spiral',
     group: 'Feedback loops',
     blurb:
-      'The camera turned a few degrees on its mount and the exposure pushed past unity — each pass lands rotated and brighter than the last, so the subject smears into a spiral instead of a tunnel.',
+      'The camera turned a few degrees on its mount and the exposure pushed past unity. Each pass lands rotated and brighter than the last, so the subject smears into a spiral instead of a tunnel.',
     patch: {
       fbMix: 0.78,
       fbZoom: 1.015,
@@ -625,7 +625,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'shadow ladder',
     group: 'Feedback loops',
     blurb:
-      'Loop key inverted so only the dark areas re-enter, stepped four lines every trip — the shadows climb the frame in rungs while the highlights stay put.',
+      'Loop key inverted so only the dark areas re-enter, stepped four lines every trip. The shadows climb the frame in rungs while the highlights stay put.',
     patch: {
       cfbMix: 0.9,
       cfbKey: -0.7,
@@ -657,7 +657,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'subcarrier siren',
     group: 'Feedback loops',
     blurb:
-      'Resonance in the loop parked on the colour subcarrier and driven past unity: the filter stops responding to the picture and starts generating its own, in bands of pure hue.',
+      'Resonance in the loop set on the colour subcarrier and driven past unity. The filter stops responding to the picture and starts generating its own, in bands of pure hue.',
     patch: {
       cfbMix: 0.55,
       cfbFilterMHz: 3.6,
@@ -679,7 +679,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'hunting servos',
     group: 'Feedback loops',
     blurb:
-      "Two gain servos left underdamped — the beam limiter and the camera's auto-iris — each metering a loop it is inside. Neither can settle while the other moves, and their unequal rhythms beat: bloom, clamp, collapse, reopen, on no beat the content wrote.",
+      "Two underdamped gain servos, the beam limiter and the camera's auto-iris, each metering a loop it is inside. Neither can settle while the other moves, and their unequal rhythms beat: bloom, clamp, collapse, reopen, on a rhythm no content is writing.",
     patch: {
       abl: 0.8,
       fbIris: 0.9,
@@ -696,7 +696,7 @@ export const PRESETS: PresetDef[] = [
     name: 'meltdown',
     group: 'Feedback loops',
     blurb:
-      "The loop's delay trimmer bent onto its own video bus, so every lap the picture rewrites its own timing and hue — with a ring mod folding the products back in and every servo in the rack hunting. The image dissolves into flowing terrain that never repeats, because the displacement field is the picture one generation late.",
+      "The loop's delay trimmer driven by its own video bus, so every lap the picture rewrites its own timing and hue, with a ring mod folding the products back in and every servo in the rack hunting. The image dissolves into flowing terrain that never repeats, because the displacement field is the picture one generation late.",
     patch: {
       cfbMix: 0.7,
       cfbGain: 1.06,
@@ -721,7 +721,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'zoom bloom',
     group: 'Feedback loops',
     blurb:
-      'The camera pushed in two percent a pass, with the loop above unity so the geometry accumulates instead of dimming out. A highlight breeds inward toward the middle and never quite arrives, because every generation is a little larger than the one it grew from.',
+      'The camera pushed in two percent a pass, with the loop above unity so the geometry accumulates instead of dimming out. A highlight grows inward toward the middle and never quite arrives, because every generation is a little larger than the one it grew from.',
     patch: {
       fbMix: 0.82,
       fbGain: 1.13,
@@ -739,7 +739,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'tunnel out',
     group: 'Feedback loops',
     blurb:
-      'The same loop pulled the other way: each pass a shade smaller than the last, so the picture falls away from itself down a corridor rather than growing out of the frame. The vignette is what gives the corridor walls.',
+      'The same loop pulled the other way. Each pass is a shade smaller than the last, so the picture recedes down a corridor rather than growing out of the frame. The vignette gives the corridor its walls.',
     patch: {
       fbMix: 0.9,
       fbGain: 1.25,
@@ -753,7 +753,7 @@ export const PRESETS: PresetDef[] = [
     name: 'spiral',
     group: 'Feedback loops',
     blurb:
-      'Three degrees of rotation a pass on top of a slight zoom. Either alone gives a ring or a corridor; the two together are what makes the picture wind, because a generation lands rotated *and* displaced from the one under it.',
+      'Three degrees of rotation a pass on top of a slight zoom. Either alone gives a ring or a corridor. The two together make the picture wind, because a generation lands rotated *and* displaced from the one under it.',
     patch: {
       fbMix: 0.9,
       fbGain: 1.22,
@@ -770,7 +770,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'subcarrier comb',
     group: 'Feedback loops',
     blurb:
-      'A mixer loop delayed by about a quarter of a subcarrier cycle, so what comes back is ninety degrees out and the hue steps round the wheel one generation at a time. Nothing here touches a colour control: the rotation is the delay, arriving as colour because the subcarrier rode round the loop with the picture.',
+      'A mixer loop delayed by about a quarter of a subcarrier cycle, so what comes back is ninety degrees out and the hue steps round the wheel one generation at a time. Nothing here touches a colour control. The rotation is the delay, arriving as colour because the subcarrier went round the loop with the picture.',
     patch: {
       cfbMix: 0.82,
       cfbGain: 0.98,
@@ -790,7 +790,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'ring loop',
     group: 'Feedback loops',
     blurb:
-      'The loop bus multiplied against the live picture instead of summed with it. Subcarrier against subcarrier lands colour at sum and difference phases neither frame contained, and every product goes round to be multiplied again — so the spectrum folds over itself generation after generation rather than settling.',
+      'The loop bus multiplied against the live picture instead of summed with it. Subcarrier against subcarrier lands colour at sum and difference phases neither frame contained, and every product goes round to be multiplied again, so the spectrum folds over itself generation after generation rather than settling.',
     patch: {
       cfbMix: 0.9,
       cfbGain: 1.06,
@@ -806,7 +806,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'ring ladder',
     group: 'Feedback loops',
     blurb:
-      'The loop offset two dozen lines a lap, with the return multiplied against the live program rather than summed into it. The offset is what stacks generations down the frame; the multiplier is what makes each one a product of the band above it and whatever the picture is doing there now, so instead of a ladder of copies the frame fills with blocks of colour at frequencies nothing in the chain is carrying.',
+      'The loop offset two dozen lines a lap, with the return multiplied against the live program rather than summed into it. The offset stacks generations down the frame. The multiplier makes each one a product of the band above it and whatever the picture is doing there now, so instead of a ladder of copies the frame fills with blocks of colour at frequencies nothing in the chain is carrying.',
     patch: {
       cfbMix: 0.8,
       cfbGain: 1.02,
@@ -828,7 +828,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'ring storm',
     group: 'Feedback loops',
     blurb:
-      'Feedback and a multiplier, with the depth of the multiply on a Lorenz attractor. Summed, a loop hands back what it was given; multiplied, every lap beats the last generation against the live one and folds frequencies in that neither carried, then sends the products round to be multiplied again. The knob deciding between those two is being walked by something that never returns to where it was, so the loop is never in the same regime twice — and the peak hold keeps each state on the glass long enough for the next one to multiply it.',
+      'Feedback and a multiplier, with the depth of the multiply on a Lorenz attractor. Summed, a loop returns what it was given. Multiplied, every lap beats the last generation against the live one and folds in frequencies neither carried, then sends the products round to be multiplied again. The knob deciding between those two is driven by something that never returns to where it was, so the loop is never in the same regime twice, and the peak hold keeps each state on the glass long enough for the next one to multiply it.',
     patch: {
       cfbMix: 0.9,
       cfbGain: 1,
@@ -847,7 +847,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'ring on the beat',
     group: 'Feedback loops',
     blurb:
-      'The same two mechanisms with the bass deciding between them. The loop rests as a plain echo — delayed, offset, summed — and every kick throws the multiplier in for as long as the envelope lasts, so the trails that were accumulating are suddenly beating against the live frame and come back in sum-and-difference colour. It settles between hits, which is what makes the hits read: patch something with a low end into the audio input.',
+      'The same two mechanisms with the bass deciding between them. The loop rests as a plain echo, delayed, offset and summed, and every kick switches the multiplier in for as long as the envelope lasts, so the trails that were accumulating suddenly beat against the live frame and come back in sum-and-difference colour. It settles between hits, which is what makes the hits legible. Patch something with a low end into the audio input.',
     patch: {
       cfbMix: 0.72,
       cfbGain: 1.02,
@@ -867,7 +867,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'inverted rungs',
     group: 'Feedback loops',
     blurb:
-      'The loop returning below zero, so every lap comes back as the polarity of the one before it, and dropped sixty lines while it does — the frame fills with a stack of generations alternating positive and negative down the screen. The multiplier is what holds them apart: summed, the alternating laps cancel into vertical smear and the copies stop being legible; multiplied, each rung lands hard-edged and in a palette the rung above it did not have.',
+      'The loop returning below zero, so every lap comes back as the opposite polarity of the one before it, dropped sixty lines each time. The frame fills with a stack of generations alternating positive and negative down the screen. The multiplier holds them apart. Summed, the alternating laps cancel into vertical smear and the copies stop being legible. Multiplied, each rung lands hard-edged and in a palette the rung above it did not have.',
     patch: {
       cfbMix: 0.78,
       cfbGain: -1.1,
@@ -884,7 +884,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'ring in the highlights',
     group: 'Feedback loops',
     blurb:
-      'The loop return keyed on brightness, so the multiply can only happen where the picture is already lit. Highlights grow scalloped trails sideways and everything under the slice — a dark subject, a saturated backing — stays photographic, which is the difference between feedback that follows the subject and feedback that floods the frame. Keyed and summed, that trail is a grey smear of the highlight itself; keyed and multiplied, the same trail comes back through the spectrum, because the loop against the live picture lands at sums and differences the highlight never carried.',
+      'The loop return keyed on brightness, so the multiply can only happen where the picture is already lit. Highlights grow scalloped trails sideways and everything under the slice, a dark subject or a saturated backing, stays photographic. That is the difference between feedback that follows the subject and feedback that floods the frame. Keyed and summed, the trail is a grey smear of the highlight itself. Keyed and multiplied, the same trail comes back through the spectrum, because the loop against the live picture lands at sums and differences the highlight never carried.',
     patch: {
       cfbMix: 0.92,
       cfbGain: 1.02,
@@ -904,7 +904,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'ring in the shadows',
     group: 'Feedback loops',
     blurb:
-      "The same key wired the other way up: the return is gated where the signal is low, so the multiply happens everywhere the picture is not lit. What that turns out to mean is the whole difference from keying the highlights, because the key is watching a composite line and the darkest thing on a composite line is not a shadow — it is blanking and the sync tip. So the strongest return of every lap lands on the receiver's own timing reference: the frame shears and rolls while the shadows fill with product, and a lit subject sits through it photographic. The slice walks, so the boundary climbs the picture's own gradient instead of sitting where it was put.",
+      "The same key wired the other way up. The return is gated where the signal is low, so the multiply happens everywhere the picture is not lit. That is a bigger change than it sounds, because the key is watching a composite line and the darkest thing on a composite line is not a shadow. It is blanking and the sync tip. So the strongest return of every lap lands on the receiver's own timing reference. The frame shears and rolls while the shadows fill with product, and a lit subject sits through it photographic. The slice moves, so the boundary climbs the picture's own gradient instead of sitting where it was put.",
     patch: {
       cfbMix: 0.92,
       cfbGain: 1.14,
@@ -927,7 +927,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'warp in the highlights',
     group: 'Feedback loops',
     blurb:
-      "The same key on the varactor instead of the multiplier. What comes back is not a colour the highlight never had — it is the highlight in the wrong place: the varactor pulls the loop's own delay by the brightness riding through it, and the key only lets the pulled return land where the picture was already lit. So a lit subject tears sideways into ribbons that repaint as they go, every 70 ns of pull being another 90 degrees of hue, and a dark subject or a saturated backing sits through it in register. Feedback that displaces geometry rather than manufacturing colour, and keyed so it displaces only what it was pointed at.",
+      "The same key on the varactor instead of the multiplier. What comes back is the highlight in the wrong place rather than a colour it never had. The varactor pulls the loop's own delay by the brightness passing through it, and the key only lets the pulled return land where the picture was already lit. A lit subject tears sideways into ribbons that recolour as they go, every 70 ns of pull being another 90 degrees of hue, and a dark subject or a saturated backing sits through it in register. Feedback that displaces geometry rather than manufacturing colour, keyed so it displaces only what it was pointed at.",
     patch: {
       cfbMix: 0.8,
       cfbGain: 1.06,
@@ -947,7 +947,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'warp in the shadows',
     group: 'Feedback loops',
     blurb:
-      "The varactor keyed the other way up, which lands it on the one thing a composite line keeps below every shadow: blanking, and the sync tip under that. The deepest part of the wire is what pulls the delay hardest, and now it is also the only part the key lets through — so the pull walks each line's sync into its neighbour's territory and the receiver's problems compound on their own. The frame shears into bands and rolls; a lit subject rides it photographic. The slice drifts, so which shadows are doing the pulling changes without anyone moving it.",
+      "The varactor keyed the other way up, which lands it on the one thing a composite line keeps below every shadow: blanking, and the sync tip under that. The deepest part of the wire pulls the delay hardest, and now it is also the only part the key lets through, so the pull moves each line's sync into its neighbour's territory and the receiver's problems compound on their own. The frame shears into bands and rolls. A lit subject rides it photographic. The slice drifts, so which shadows are doing the pulling changes without anyone moving it.",
     patch: {
       cfbMix: 0.92,
       cfbGain: 1.12,
@@ -970,7 +970,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'rungs in the light',
     group: 'Feedback loops',
     blurb:
-      'The inverted loop and its sixty-line drop, but keyed — so the ladder of alternating-polarity generations is only built where the picture is lit, and the shadows underneath it never join in. What that does to the rungs is make them hard: with the whole frame feeding back the positive and negative laps overlap into vertical smear, and with only the lit areas feeding back each rung stands against unfed picture and keeps its edge. A subject comes back as a stack of plates in polarities the plate above it did not have.',
+      'The inverted loop and its sixty-line drop, but keyed, so the ladder of alternating-polarity generations is only built where the picture is lit and the shadows underneath never join in. That makes the rungs hard. With the whole frame feeding back the positive and negative laps overlap into vertical smear. With only the lit areas feeding back, each rung stands against unfed picture and keeps its edge. A subject comes back as a stack of plates in polarities the plate above it did not have.',
     patch: {
       cfbMix: 0.8,
       cfbGain: -1.14,
@@ -990,7 +990,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'ringing in the highlights',
     group: 'Feedback loops',
     blurb:
-      "A resonant network bridged across the loop instead of a multiplier, brought just far enough that the round trip passes unity inside its band and the loop starts generating a pattern out of nothing. Unkeyed that pattern is the whole frame and the picture is gone. Keyed, the oscillation can only stand where the picture is bright — so a fine mesh grows on a white shirt and a lit window and stops at the edge of them, and the mesh is at the network's own frequency rather than at anything in the scene. The rest of the picture never learns the loop is oscillating.",
+      "A resonant network across the loop instead of a multiplier, brought just far enough that the round trip passes unity inside its band and the loop starts generating a pattern from nothing. Unkeyed, that pattern is the whole frame and the picture is gone. Keyed, the oscillation can only stand where the picture is bright, so a fine mesh grows on a white shirt and a lit window and stops at their edges, and the mesh is at the network's own frequency rather than anything in the scene. The rest of the picture is unaffected by the oscillation.",
     patch: {
       cfbMix: 0.7,
       cfbGain: 1.08,
@@ -1017,7 +1017,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'chasing its own colour',
     group: 'Feedback loops',
     blurb:
-      'A chroma keyer in the loop return where the luma one was: the box slices the phase of the signal instead of its level, so what decides whether a region may carry on regenerating is the colour it came back as. That makes it self-limiting, because the loop delay is a hue rotation — a region regenerates, its own return spins a little further round the wheel every lap, and at some lap it leaves the wedge and gives up. The territory is then whatever has spun in behind it. Nothing draws the boundary, nothing holds it still, and the frame ends up shredded along its own colour edges rather than its brightness ones.',
+      'A chroma keyer in the loop return where the luma one was. The box slices the phase of the signal instead of its level, so what decides whether a region may keep regenerating is the colour it came back as. That makes it self-limiting, because the loop delay is a hue rotation. A region regenerates, its own return turns a little further round the wheel every lap, and at some lap it leaves the wedge and stops. The territory then goes to whatever has turned into the wedge behind it. Nothing draws the boundary, nothing holds it still, and the frame ends up shredded along its own colour edges rather than its brightness ones.',
     patch: {
       cfbMix: 0.9,
       cfbGain: 1.14,
@@ -1038,7 +1038,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'carved by the live picture',
     group: 'Feedback loops',
     blurb:
-      "The keyer's key input moved off the loop return and onto program, so the boundary is drawn by what is in front of the camera now rather than by what the loop was doing a generation ago. The trails still grow and still come back through the spectrum, and they are cut off crisply at the live subject's edge instead of smearing across it — the accumulation cannot follow a subject that moves, so a hand crossing the frame carves its own shape out of everything the loop has built. Compare it against the self-keyed version: same product, same delay, and the difference is only which cable the key is on.",
+      "The keyer's key input moved off the loop return and onto program, so the boundary is drawn by what is in front of the camera now rather than by what the loop was doing a generation ago. The trails still grow and still come back through the spectrum, but they are cut off cleanly at the live subject's edge instead of smearing across it. The accumulation cannot follow a subject that moves, so a hand crossing the frame carves its own shape out of everything the loop has built. Compare it against the self-keyed version: same product, same delay, and the only difference is which cable the key is on.",
     patch: {
       cfbMix: 0.92,
       cfbGain: 0.92,
@@ -1059,7 +1059,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'the hole the subject keeps',
     group: 'Feedback loops',
     blurb:
-      'The live key inverted, so the loop is allowed everywhere the picture is not lit and the subject holds a clean hole in it. What fills the rest is generations of product beating against generations of product, which drains most of the colour out of itself and churns far faster than anything in the scene — fast enough that no two frames of it hold the same palette. The hole does not churn: it is redrawn from live picture every frame, so it stays photographic and stays wherever the subject went, and the boundary between the two is the only still thing on the screen.',
+      'The live key inverted, so the loop is allowed everywhere the picture is not lit and the subject holds a clean hole in it. What fills the rest is generations of product beating against generations of product, which drains most of the colour out of itself and changes far faster than anything in the scene, fast enough that no two frames hold the same palette. The hole does not change. It is redrawn from live picture every frame, so it stays photographic and stays wherever the subject went, and the boundary between the two is the only still thing on the screen.',
     patch: {
       cfbMix: 0.93,
       cfbGain: 1.06,
@@ -1080,7 +1080,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'it only eats the red',
     group: 'Feedback loops',
     blurb:
-      "Both of the keyer's connectors at once: it slices hue rather than level, and it slices the live picture rather than the loop's own past. So the loop is confined to a colour — 103 degrees is where red actually lands on the wheel the subcarrier carries — and confined to wherever that colour is right now. A red chair goes to rainbow striping and everything green or neutral beside it stays a photograph, with no mask anywhere and nothing tracking anything. Move the key hue and the loop changes its mind about which part of the room it is eating.",
+      "Both of the keyer's connectors at once: it slices hue rather than level, and it slices the live picture rather than the loop's own past. So the loop is confined to a colour (103 degrees is where red lands on the wheel the subcarrier carries) and confined to wherever that colour is right now. A red chair goes to rainbow striping and everything green or neutral beside it stays a photograph, with no mask anywhere and nothing tracking anything. Move the key hue and the loop switches to a different part of the room.",
     patch: {
       cfbMix: 0.94,
       cfbGain: 1.16,
@@ -1102,7 +1102,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'the wrong clock',
     group: 'Feedback loops',
     blurb:
-      "The loop's frame store read out three thousandths fast. Every line is stretched from where it started, which on its own is a squeeze nobody would cross a room for — but the subcarrier is in the samples being re-clocked, so the carrier comes back off the lattice the decoder measures against and hue turns further the further a sample sits from the line start. One pass is a rainbow fanning left to right across the picture. The next pass re-clocks the picture that came out of the first, so the fan opens again, and again, until the right-hand side has been round the wheel several times while the left edge is still the colour it started. Neither loop's geometry knobs do this and no lens could: a camera moves a picture, and a clock rewrites where its colour sits while it moves it.",
+      "The loop's frame store read out three thousandths fast. Every line is stretched from where it started, which on its own is a small squeeze. But the subcarrier is in the samples being re-clocked, so the carrier comes back off the lattice the decoder measures against and hue turns further the further a sample sits from the line start. One pass is a rainbow fanning left to right across the picture. The next pass re-clocks the picture that came out of the first, so the fan opens again, and again, until the right-hand side has been round the wheel several times while the left edge is still the colour it started. Neither loop's geometry knobs do this and no lens could. A camera moves a picture, and a clock rewrites where its colour sits while it moves it.",
     patch: {
       cfbMix: 0.85,
       cfbGain: 1.02,
@@ -1123,7 +1123,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'colour in the dark',
     group: 'Feedback loops',
     blurb:
-      "The separator's chroma wire round the loop and the live brightness taken from the picture, so only the colour is fed back. Hue accumulates lap after lap and keeps turning through the delay's rotation, while the picture under it stays sharp and current — so what builds up is colour that has come loose from the thing that cast it, drifting across a subject that is still exactly where it is. Nothing is smeared, because brightness never enters the loop: the edges are as crisp as the source and the colour on them is minutes old. The slice is on nothing here and the key is out; what decides where colour survives is only how far round the wheel it has already turned.",
+      "The separator's chroma wire round the loop and the live brightness taken from the picture, so only the colour is fed back. Hue accumulates lap after lap and keeps turning through the delay's rotation, while the picture under it stays sharp and current. What builds up is colour detached from the thing that cast it, drifting across a subject that has not moved. Nothing is smeared, because brightness never enters the loop: the edges are as crisp as the source and the colour on them is minutes old. The slice is on nothing here and the key is out. What decides where colour survives is only how far round the wheel it has already turned.",
     patch: {
       cfbMix: 0.88,
       cfbGain: 1.02,
@@ -1142,7 +1142,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'grey under the colour',
     group: 'Feedback loops',
     blurb:
-      "The other wire off the same separator, with the live colour recombined over it. Brightness alone goes round, so the trails a moving subject leaves are grey rungs stacking four lines up a lap — and the colour laid over them is the picture's own, current and in the wrong place, because it belongs to where the subject is now rather than to the ladder of where it was. The sync tip is on the luma wire too, so this return still pushes the receiver about: the accumulation drags at where each line starts, and the ladder tears along with the picture instead of sitting behind it.",
+      "The other wire off the same separator, with the live colour recombined over it. Brightness alone goes round, so the trails a moving subject leaves are grey rungs stacking four lines up a lap, and the colour laid over them is the picture's own, current and in the wrong place, because it belongs to where the subject is now rather than to the ladder of where it was. The sync tip is on the luma wire too, so this return still disturbs the receiver. The accumulation pulls at where each line starts, and the ladder tears along with the picture instead of sitting behind it.",
     patch: {
       cfbMix: 0.9,
       cfbGain: 1.06,
@@ -1162,7 +1162,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'light becomes hue',
     group: 'Feedback loops',
     blurb:
-      "The ring modulator's other input taken off the program and put on the box's own subcarrier oscillator, which turns the bridge into the thing an encoder's chroma modulator is. Against a carrier sitting on 3.58 MHz the return's brightness is translated up into the chroma band, where the decoder has no way to read it as anything but colour, and the return's own colour is translated down to where it is read as brightness. So each lap trades the two: a lit face comes back as a saturated field, that field comes back as light, and the light is translated again. What settles out is a picture drawn entirely in colours nothing in the room is, arranged exactly where the brightness was. Multiplied against the program instead, this same knob makes none of it — both sides are on one crystal there, and their products land where the chroma filter throws them away.",
+      "The ring modulator's other input taken off the program and put on the box's own subcarrier oscillator, which turns the bridge into an encoder's chroma modulator. Against a carrier at 3.58 MHz the return's brightness is translated up into the chroma band, where the decoder can only read it as colour, and the return's own colour is translated down to where it is read as brightness. Each lap trades the two: a lit face comes back as a saturated field, that field comes back as light, and the light is translated again. What settles out is a picture drawn entirely in colours nothing in the room has, arranged exactly where the brightness was. Multiplied against the program instead, this same knob makes none of it. Both sides are on one crystal there, and their products land where the chroma filter discards them.",
     patch: {
       cfbMix: 0.9,
       cfbGain: 1,
@@ -1181,7 +1181,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'the second crystal',
     group: 'Feedback loops',
     blurb:
-      'The same modulator with its oscillator pulled twelve kilohertz off the house crystal. On frequency the colour it invents out of brightness lands on one phase, so the loop comes back monochrome in a hue you picked; off frequency the phase it writes with ramps continuously through the frame, so the invented colour turns along every line and further down every line after it, and the whole picture barber-poles through the wheel at a rate the detune sets. It is a crystal in another box, so nothing hauls it back into step — and because the loop re-modulates its own output, the hue a region arrives at is the hue it was given a lap ago turned again by however far the two crystals have drifted since. The detune walks, so the pitch of the barber pole leans while it runs.',
+      'The same modulator with its oscillator pulled twelve kilohertz off the house crystal. On frequency the colour it makes out of brightness lands on one phase, so the loop comes back monochrome in a hue you picked. Off frequency the phase it writes with ramps continuously through the frame, so the invented colour turns along every line and further down every line after it, and the whole picture barber-poles through the wheel at a rate the detune sets. It is a crystal in another box, so nothing pulls it back into step. Because the loop re-modulates its own output, the hue a region arrives at is the hue it was given a lap ago turned again by however far the two crystals have drifted since. The detune wanders, so the pitch of the barber pole leans while it runs.',
     patch: {
       cfbMix: 0.84,
       cfbGain: 1.02,
@@ -1204,7 +1204,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'layered by brightness',
     group: 'Feedback loops',
     blurb:
-      "The loop's frame store taps the bus after the tape, so the amplifier bent against brightness is inside the loop and every lap goes through it again. A delay at 3.58 MHz is a phase shift, so the hue rotation the loop delay applies stops being one number and becomes a function of the light each part of the trail is carrying: a lit edge turns further per generation than the shadow beside it, and after four or five laps one trail has separated into layers ordered by how bright each layer started. The differential gain alongside it drains the highlights' saturation as they go, so the layers differ in how much colour they have as well as which — the far end of a bright trail arrives pale and rotated where the dark end is still deep and near where it began.",
+      "The loop's frame store taps the bus after the tape, so the amplifier bent against brightness is inside the loop and every lap goes through it again. A delay at 3.58 MHz is a phase shift, so the hue rotation the loop delay applies stops being one number and becomes a function of the light each part of the trail carries. A lit edge turns further per generation than the shadow beside it, and after four or five laps one trail has separated into layers ordered by how bright each layer started. The differential gain alongside it drains the highlights' saturation as they go, so the layers differ in how much colour they have as well as which. The far end of a bright trail arrives pale and rotated where the dark end is still deep and near where it began.",
     patch: {
       cfbMix: 0.8,
       cfbGain: 1.01,
@@ -1233,7 +1233,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'intermod loop',
     group: 'Feedback loops',
     blurb:
-      "A tuner off channel feeding a loop that taps the bus behind it. With the sound carrier out of its trap the video detector multiplies it against everything else on the wire, so chroma comes back at 920 kHz and 920 kHz picture detail comes back at 3.58 MHz, where the decoder reads it as colour. That much is a mistuned set. What the loop does with it is the look: the manufactured colour is on the bus when the frame store captures, so next lap it is picture, and the detector multiplies it again — each generation folding the last one's invented chroma back through the same arithmetic. Fine detail rainbows, the rainbow becomes detail, and the herringbone the loose carrier lays over everything is riding round with it.",
+      "A tuner off channel feeding a loop that taps the bus behind it. With the sound carrier out of its trap the video detector multiplies it against everything else on the wire, so chroma comes back at 920 kHz and 920 kHz picture detail comes back at 3.58 MHz, where the decoder reads it as colour. That much is a mistuned set. The loop makes the look: the manufactured colour is on the bus when the frame store captures, so next lap it is picture, and the detector multiplies it again. Each generation folds the last one's invented chroma back through the same arithmetic. Fine detail rainbows, the rainbow becomes detail, and the herringbone the loose carrier lays over everything goes round with it.",
     patch: {
       cfbMix: 0.88,
       cfbGain: 1,
@@ -1254,7 +1254,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'where the products land',
     group: 'Feedback loops',
     blurb:
-      'A ring loop read by a decoder whose colour reference has drifted. The multiplier fills the bus with products at phases neither frame was carrying, and the two demodulators that have to make colour out of them are no longer 90 degrees apart — so the plane those products land on is sheared rather than turned. Hues that were opposite stop being opposite: some of what the loop makes arrives at full strength, its neighbour a few degrees round arrives somewhere nothing in the room is, and the pair that would have cancelled reinforce instead. The guns are left to hit their own rails, so whatever survives the shear arrives fluorescent. The axis walks through quadrature and out the far side where the plane folds through itself, which is the same loop being read two incompatible ways while nothing about the loop changes.',
+      'A ring loop read by a decoder whose colour reference has drifted. The multiplier fills the bus with products at phases neither frame was carrying, and the two demodulators that have to make colour out of them are no longer 90 degrees apart, so the plane those products land on is sheared rather than turned. Hues that were opposite stop being opposite. Some of what the loop makes arrives at full strength, its neighbour a few degrees round arrives as a colour nothing in the room has, and the pair that would have cancelled reinforce instead. The guns are left to hit their own rails, so whatever survives the shear arrives fluorescent. The axis drifts through quadrature and out the far side where the plane folds through itself, which is the same loop being read two incompatible ways while nothing about the loop changes.',
     patch: {
       cfbMix: 0.84,
       cfbGain: 1,
@@ -1285,7 +1285,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'servo warp',
     group: 'Feedback loops',
     blurb:
-      "A varactor on the loop's own delay, driven by the video going through it: bright picture pulls its own timebase, so the frame that comes back is bent where it was lit. The bend is a map of the last generation's brightness, which is why it moves with the picture instead of across it.",
+      "A varactor on the loop's own delay, driven by the video going through it. Bright picture pulls its own timebase, so the frame that comes back is bent where it was lit. The bend is a map of the last generation's brightness, which is why it moves with the picture instead of across it.",
     patch: {
       cfbMix: 0.74,
       cfbGain: 1.02,
@@ -1303,7 +1303,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'both loops',
     group: 'Feedback loops',
     blurb:
-      'Camera and mixer running at once, each modest. The optical loop can only do what a lens can — zoom, rotate, cut a black level — and the electrical one carries the subcarrier round with it, so the two disagree about what the picture is and the disagreement is the look.',
+      'Camera and mixer running at once, each modest. The optical loop can only do what a lens can (zoom, rotate, cut a black level) and the electrical one carries the subcarrier round with it, so the two disagree about what the picture is and the disagreement is the look.',
     patch: {
       fbMix: 0.8,
       fbGain: 1.15,
@@ -1323,7 +1323,7 @@ export const PRESETS: PresetDef[] = [
     name: 'runaway',
     group: 'Feedback loops',
     blurb:
-      'A camera loop wound past unity with the beam limiter left to argue with it. The picture blooms toward white, the limiter senses the beam current and pulls the drive down, and the loop climbs again — a cycle set by two servos disagreeing rather than by anything on screen. The auto-iris is in the loop too, hunting, so the bloom never arrives at the same brightness twice.',
+      'A camera loop pushed past unity with the beam limiter working against it. The picture blooms toward white, the limiter senses the beam current and pulls the drive down, and the loop climbs again: a cycle set by two servos disagreeing rather than by anything on screen. The auto-iris is in the loop too, hunting, so the bloom never reaches the same brightness twice.',
     patch: {
       fbMix: 0.8,
       fbGain: 1.2,
@@ -1342,7 +1342,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'sync in the loop',
     group: 'Feedback loops',
     blurb:
-      'The picture already coming apart before the camera gets to it: the vertical hold is marginal, so what the loop photographs is a frame mid-roll, and it feeds the roll back in to be photographed again. The seam accumulates instead of passing through, and the loop ends up holding several rolls at once at different ages.',
+      'The picture already coming apart before the camera gets to it. The vertical hold is marginal, so what the loop photographs is a frame mid-roll, and it feeds the roll back in to be photographed again. The seam accumulates instead of passing through, and the loop ends up holding several rolls at once at different ages.',
     patch: {
       fbMix: 0.85,
       fbGain: 1.12,
@@ -1362,7 +1362,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'lorenz loop',
     group: 'Feedback loops',
     blurb:
-      "The mixer loop's delay driven by a Lorenz attractor rather than an oscillator. The echo spacing never repeats and never settles, so the structure the loop builds never lands twice in the same place — aperiodic without being random, which is the difference between this and shaking the control.",
+      "The mixer loop's delay driven by a Lorenz attractor rather than an oscillator. The echo spacing never repeats and never settles, so the structure the loop builds never lands twice in the same place. Aperiodic without being random, which is the difference between this and shaking the control.",
     patch: {
       cfbMix: 0.82,
       cfbGain: 1.02,
@@ -1379,7 +1379,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'strobe bloom',
     group: 'Feedback loops',
     blurb:
-      'The beam cut for most of each cycle and let through in flashes, inside a loop running above unity. The loop photographs the dark frames as well as the lit ones, so instead of running steady it pumps at the strobe rate — and the phosphor is long enough that each flash is still on the glass when the next one lands.',
+      'The beam cut for most of each cycle and let through in flashes, inside a loop running above unity. The loop photographs the dark frames as well as the lit ones, so instead of running steady it pumps at the strobe rate, and the phosphor is long enough that each flash is still on the glass when the next one lands.',
     patch: {
       strobeHz: 6,
       strobeMs: 40,
@@ -1399,7 +1399,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'clean dissolve',
     group: 'A/B mixing',
     blurb:
-      'Source B genlocked to the house reference and dissolved half over A — a clean switcher mix, no beat or roll.',
+      'Source B genlocked to the house reference and dissolved half over A: a clean switcher mix, with no beat or roll.',
     patch: {
       bGenlock: 1,
       bGain: 0.5,
@@ -1425,7 +1425,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'ring mix',
     group: 'A/B mixing',
     blurb:
-      'Both faders nearly shut and the ring mod up, so the two composite signals barely meet in the summing amplifier and meet properly only in the multiplier. Two subcarriers multiplied land colour at their sum and their difference, so the screen comes back in hues neither source is carrying — and the product of two sync tips is a bright spike rather than a sync tip, so the receiver is left hunting for an edge wherever the two decks happen to agree.',
+      'Both faders nearly shut and the ring mod up, so the two composite signals barely meet in the summing amplifier and meet properly only in the multiplier. Two subcarriers multiplied land colour at their sum and their difference, so the screen comes back in hues neither source is carrying. The product of two sync tips is a bright spike rather than a sync tip, so the receiver is left hunting for an edge wherever the two decks happen to agree.',
     patch: {
       aGain: 0.3,
       bGain: 0.15,
@@ -1443,7 +1443,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'out of volts',
     group: 'A/B mixing',
     blurb:
-      "Both faders wide open into a summing amplifier with no headroom left. Two full composites added is twice what one stage was built to carry, so it spends most of every line against its supply — and a stage against its supply is not a limiter, it is a multiplier: its gain falls away as the sum rises, and a falling gain multiplies the two signals sharing the bus by each other. B's subcarrier is running thirty hertz off A's, so the beat between them lands inside the chroma band and comes back as colour, which is the ring mod's trick arriving because the box ran out of volts rather than because anybody patched a multiplier. The sync tips are squashed along with the picture, so neither deck's pulse wins the line start by as much as it should and the frame hunts between two geometries while the colour churns.",
+      "Both faders wide open into a summing amplifier with no headroom left. Two full composites added is twice what one stage was built to carry, so it spends most of every line against its supply. A stage against its supply is a multiplier rather than a limiter: its gain falls as the sum rises, and a falling gain multiplies the two signals sharing the bus by each other. B's subcarrier is running thirty hertz off A's, so the beat between them lands inside the chroma band and comes back as colour. This is what the ring mod does deliberately, arriving because the box ran out of volts rather than because anybody patched a multiplier. The sync tips are squashed along with the picture, so neither deck's pulse wins the line start by as much as it should and the frame hunts between two geometries while the colour churns.",
     patch: {
       // Eight tenths each rather than wide open. Two composites at full sum to
       // twice what the stage carries and the survey put the driven look at mean
@@ -1468,7 +1468,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'pause fight',
     group: 'A/B mixing',
     blurb:
-      'The old rig: a VCR on pause into the dirty mixer. The held frame shreds through the live picture in torn bands — the paused deck free-runs with its servo defeated, the mistrack stripe walks, hue flickers between the drum’s two reads, and when the stripe crosses B’s vertical interval the sync fight rolls.',
+      "The old rig: a VCR on pause into the dirty mixer. The held frame shreds through the live picture in torn bands. The paused deck free-runs with its servo defeated, the mistrack stripe moves, hue flickers between the drum's two reads, and when the stripe crosses B's vertical interval the sync fight turns into a roll.",
     patch: {
       bGain: 0.5,
       bPause: 0.8,
@@ -1481,7 +1481,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'pirate feed',
     group: 'A/B mixing',
     blurb:
-      'A scrambled premium channel on input A — sync suppressed at the head-end — with a pirate box summing a whisper of clean B in as substitute sync. The receiver almost saves the picture around the borrowed pulses, which is exactly how the real boxes worked; pull B gain to zero to watch it collapse into shear.',
+      'A scrambled premium channel on input A, with sync suppressed at the head-end, and a pirate box summing a little clean B in as substitute sync. The receiver almost recovers the picture around the borrowed pulses, which is exactly how the real boxes worked. Pull B gain to zero to watch it collapse into shear.',
     patch: {
       aScramble: 1,
       bGain: 0.22,
@@ -1495,7 +1495,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'negative drifter',
     group: 'A/B mixing',
     blurb:
-      "SSAVI scrambling on input B alone: its sync goes toothless before the mix, so A holds the raster steady while B's picture leaks through as a negative — a ghost image in complementary luma drifting and beating through the program.",
+      "SSAVI scrambling on input B alone. Its sync is suppressed before the mix, so A holds the raster steady while B's picture leaks through as a negative: a ghost image in complementary luma drifting and beating through the program.",
     patch: {
       bScramble: 1,
       bScrambleMode: 2,
@@ -1509,7 +1509,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'house deck held',
     group: 'A/B mixing',
     blurb:
-      "The pause button on the deck feeding input A — the house reference itself. Every line of the program scatters around the defeated servo's wander, a mistrack stripe creeps through the picture, and the clean B summed underneath starts winning sync fights it used to lose.",
+      "The pause button on the deck feeding input A, which is the house reference itself. Every line of the program scatters around the defeated servo's wander, a mistrack stripe creeps through the picture, and the clean B summed underneath starts winning sync contests it used to lose.",
     patch: {
       aPause: 0.75,
       bGain: 0.35,
@@ -1522,7 +1522,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'difference key',
     group: 'A/B mixing',
     blurb:
-      'Source A inverted on its own bus fader and summed against B: where the two pictures agree they cancel to flat grey, where they differ the mix lights up, with a slow chroma beat riding through.',
+      'Source A inverted on its own bus fader and summed against B. Where the two pictures agree they cancel to flat grey, and where they differ the mix lights up, with a slow chroma beat passing through.',
     patch: {
       aGain: -1,
       bGain: 1,
@@ -1537,7 +1537,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'dirty dissolve',
     group: 'A/B mixing',
     blurb:
-      'A manual crossfade on the summing bus — A pulled halfway down under B — but B is still off-frequency and off-line, so the dissolve beats and rolls instead of sitting clean like the genlocked one.',
+      'A manual crossfade on the summing bus, with A pulled halfway down under B. B is still off-frequency and off-line, so the dissolve beats and rolls instead of sitting clean like the genlocked one.',
     patch: {
       aGain: 0.5,
       bGain: 0.6,
@@ -1553,7 +1553,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'green screen',
     group: 'A/B mixing',
     blurb:
-      "A chroma keyer across the mixer, slicing B's green out so A shows through it. B's hue is trimmed round so the two inputs disagree even when they are the same picture — the keyed band comes back in A's own colour while everything else stays rotated. Put different things in the two slots for the real thing, and note the edge: the keyer is on the bus, so it slices the chroma the encoder made, and that filter has no vertical term — the matte is soft across and razor sharp down, the way every composite key was.",
+      "A chroma keyer across the mixer, slicing B's green out so A shows through it. B's hue is trimmed round so the two inputs disagree even when they are the same picture. The keyed band comes back in A's own colour while everything else stays rotated. Put different things in the two slots for the real thing, and note the edge: the keyer is on the bus, so it slices the chroma the encoder made, and that filter has no vertical term. The matte is soft across and sharp down, the way every composite key was.",
     patch: {
       bGenlock: 1,
       bGain: 1,
@@ -1570,7 +1570,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'matte flood',
     group: 'A/B mixing',
     blurb:
-      "The keyer's own matte generator poured through an inverted key, so what floods the picture is a single flat encoded colour and what survives is one hue. Inverted, the wedge is the only thing the box keeps: everything more than eighty degrees off the backing is cut, the fill comes up behind it, and the fill is not an RGB value pasted on — it is a flat field on the house carrier, so it dot-crawls and demodulates like any other colour the chain is carrying. What that gives is enormous areas of one hue with a hard organic boundary shaped by where the picture's own colour happens to sit, and the subject still legible inside it as brightness. The backing hue sweeps, so the boundary migrates through the picture's colours and the flood takes over a different part of the room as it goes. The most saturated look in the table, and among the flattest: three hues holding more than half the frame.",
+      "The keyer's own matte generator poured through an inverted key, so what floods the picture is a single flat encoded colour and what survives is one hue. Inverted, the wedge is the only thing the box keeps. Everything more than eighty degrees off the backing is cut and the fill comes up behind it. The fill is a flat field on the house carrier rather than an RGB value pasted on, so it dot-crawls and demodulates like any other colour the chain carries. The result is large areas of one hue with a hard organic boundary shaped by where the picture's own colour happens to sit, with the subject still legible inside it as brightness. The backing hue sweeps, so the boundary migrates through the picture's colours and the flood takes over a different part of the room as it goes. The most saturated look in the table, and among the flattest: three hues holding more than half the frame.",
     patch: {
       bGenlock: 1,
       bGain: 1,
@@ -1597,7 +1597,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'key sweep',
     group: 'A/B mixing',
     blurb:
-      "The keyer's backing colour walked round the wheel by an LFO, so the transparent hue travels and the picture dissolves into A one colour at a time. Best with the video synth in slot B: its colorizer turns level into hue, so B is a moving ramp *through* the wheel and the key cuts a band out of it — the acceptance angle becomes the width of the hole and the key hue becomes where it sits, with nothing anywhere drawing a stripe.",
+      "The keyer's backing colour moved round the wheel by an LFO, so the transparent hue travels and the picture dissolves into A one colour at a time. Best with the video synth in slot B. Its colorizer turns level into hue, so B is a moving ramp *through* the wheel and the key cuts a band out of it. The acceptance angle becomes the width of the hole and the key hue becomes where it sits, with nothing anywhere drawing a stripe.",
     patch: {
       bGenlock: 1,
       bGain: 1,
@@ -1626,7 +1626,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'key into the loop',
     group: 'A/B mixing',
     blurb:
-      "The mixer's own output patched into the keyer's fill input, so the feedback only regenerates inside the shape the key cut. What grows is the silhouette of whatever was the backing colour — the loop is bounded by a matte the picture is making for itself, and every lap it comes back a little further round the hue the delay spins it.",
+      "The mixer's own output patched into the keyer's fill input, so the feedback only regenerates inside the shape the key cut. What grows is the silhouette of whatever was the backing colour. The loop is bounded by a matte the picture is making for itself, and every lap it comes back a little further round the hue the delay turns it.",
     patch: {
       bGenlock: 1,
       bGain: 1,
@@ -1647,7 +1647,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'wipe fight',
     group: 'A/B mixing',
     blurb:
-      'Two sources battling across a slowly sweeping wipe, sync fighting to hold.',
+      'Two sources across a slowly sweeping wipe, with sync struggling to hold.',
     patch: {
       bGain: 0.6,
       bLineHz: 1.2,
@@ -1664,7 +1664,7 @@ export const PRESETS: PresetDef[] = [
     name: 'negative',
     group: 'Cross-wired',
     blurb:
-      'Reversed polarity on the composite line — luma and every hue flip to their complement.',
+      'Reversed polarity on the composite line. Luma and every hue flip to their complement.',
     patch: { invert: 1 },
   },
   {
@@ -1672,7 +1672,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 's-video miswire',
     group: 'Cross-wired',
     blurb:
-      'S-video pins jammed into a composite jack, the chroma pin making the best contact: color glows hot through a darkened, barely-locking picture, the subcarrier herringbones through brightness, detail decodes as rainbow blocks, and the frame rolls when the shallow sync loses its grip.',
+      'S-video pins jammed into a composite jack, with the chroma pin making the best contact. Colour glows hot through a darkened, barely-locking picture, the subcarrier herringbones through brightness, detail decodes as rainbow blocks, and the frame rolls when the shallow sync loses lock.',
     patch: {
       svideoBleed: 1,
       chromaGain: 2.6,
@@ -1690,7 +1690,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'no terminator',
     group: 'Bad cables',
     blurb:
-      'Unterminated line running hot — blown highlights and edges ringing from the reflected wave.',
+      'Unterminated line running hot: blown highlights and edges ringing from the reflected wave.',
     patch: { termination: 0.7, agc: 0.3 },
   },
   {
@@ -1737,7 +1737,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'contour lines',
     group: 'Circuit bent',
     blurb:
-      "The video synth patched over slot A with the picture's own brightness driving its oscillator. Frequency, not phase — so the wave genuinely runs faster through bright picture and slower through dark, equal-brightness regions fall into step, and the image draws itself as contour lines nobody traced. The colorizer turns those bands into hue, and the encoder downstream has a picture full of edges it was never designed to carry.",
+      "The video synth patched over slot A with the picture's own brightness driving its oscillator. Frequency rather than phase, so the wave runs faster through bright picture and slower through dark, equal-brightness regions fall into step, and the image draws itself as contour lines. The colorizer turns those bands into hue, and the encoder downstream gets a picture full of edges it was never designed to carry.",
     patch: {
       synthOver: 0.6,
       synthShape: 1,
@@ -1754,7 +1754,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'poured colour',
     group: 'Circuit bent',
     blurb:
-      "Both synth oscillators run down at frame rate rather than across at line rate — ninety hertz against thirty-seven, so one fits a cycle and a half down the picture and the other under half of one — and their product is a slow beat with no fine structure in it anywhere. The colorizer then turns level into hue, which on a signal that only changes over hundreds of lines means the whole screen is a few enormous fields of saturated colour rather than the fringing that arrives whenever colour is carried on detail. The set's chroma bandwidth is wound down to keep it that way: a narrow colour filter cannot follow an edge, so it holds the fields flat and soft where a wide one would put a rainbow on every line of the picture underneath. What is left of the picture reads through the colour as brightness alone.",
+      "Both synth oscillators run down at frame rate rather than across at line rate, ninety hertz against thirty-seven, so one fits a cycle and a half down the picture and the other under half of one. Their product is a slow beat with no fine structure anywhere. The colorizer then turns level into hue, which on a signal that only changes over hundreds of lines means the whole screen is a few enormous fields of saturated colour rather than the fringing that appears whenever colour is carried on detail. The set's chroma bandwidth is turned down to keep it that way. A narrow colour filter cannot follow an edge, so it holds the fields flat and soft where a wide one would put a rainbow on every line of the picture underneath. What is left of the picture reads through the colour as brightness alone.",
     patch: {
       synthOver: 0.8,
       synthAHz: 90,
@@ -1781,7 +1781,7 @@ export const PRESETS: PresetDef[] = [
     name: 'silkscreen',
     group: 'Circuit bent',
     blurb:
-      "A colorizer wired the way one was actually sold — video in, colour out, its oscillators out of circuit behind it — and slicing rather than phase-shifting. Three comparators sit at three levels and each gun is switched fully on or fully off at its own threshold, so the output can only be one of eight corners of the colour cube: the cat comes back as a flat yellow shape inside a red outline on a dark green ground, with every area of equal brightness taking the same colour however far apart the two are on screen. The box's own input filter is wide open ahead of it, which is what keeps the regions large — a slicer handed a sharp picture finds a threshold crossing on every piece of detail, and handed a soft one it finds a few long boundaries. That filter is on the colorizer's input alone, so the picture reaching the screen keeps all of its detail and what comes back is a sharp image wearing flat colour. The hue knob slides all three thresholds together, so the colours hold still and the boundaries walk through the picture's tonal range.",
+      "A colorizer wired the way one was actually sold, video in and colour out with its oscillators out of circuit, and slicing rather than phase-shifting. Three comparators sit at three levels and each gun is switched fully on or off at its own threshold, so the output can only be one of eight corners of the colour cube. The cat comes back as a flat yellow shape inside a red outline on a dark green ground, with every area of equal brightness taking the same colour however far apart the two are on screen. The box's own input filter is wide open ahead of it, which keeps the regions large. A slicer given a sharp picture finds a threshold crossing on every piece of detail, and given a soft one it finds a few long boundaries. That filter is on the colorizer's input alone, so the picture reaching the screen keeps all of its detail and the result is a sharp image with flat colour on it. The hue knob slides all three thresholds together, so the colours hold still and the boundaries move through the picture's tonal range.",
     patch: {
       synthOver: 0.9,
       synthColor: 1,
@@ -1802,7 +1802,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'false colour',
     group: 'Circuit bent',
     blurb:
-      "The same box with the phase shifter back in it, so level turns continuously through the wheel instead of being sliced into corners. Pointed at the picture that maps the whole tonal range onto the whole colour wheel: shadows land at one hue, mid tones a third of the way round, highlights two thirds, and every area of equal brightness comes back the same colour wherever it sits. What it looks like is the picture reprinted as a heat map nobody computed — the tones are the image's own, and the only thing added is the decision to read them as hue. Turning the phase rotates the entire palette while the boundaries between the fields stay exactly where the picture's brightness put them.",
+      "The same box with the phase shifter back in it, so level turns continuously through the wheel instead of being sliced into corners. Pointed at the picture, it maps the whole tonal range onto the whole colour wheel. Shadows land at one hue, mid tones a third of the way round, highlights two thirds, and every area of equal brightness comes back the same colour wherever it sits. It looks like the picture reprinted as a heat map. The tones are the image's own, and the only thing added is the decision to read them as hue. Turning the phase rotates the entire palette while the boundaries between the fields stay exactly where the picture's brightness put them.",
     patch: {
       synthOver: 0.9,
       synthColor: 1,
@@ -1824,7 +1824,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'block colour',
     group: 'Circuit bent',
     blurb:
-      'The same two slow oscillators as the poured look, into the comparator instead of the multiplier. A comparator has two output levels and nothing in between, so the second oscillator on its reference input decides only where the boundary falls — and with both of them running down the frame at a few cycles, that boundary is a handful of horizontal edges that drift. The colorizer maps level to hue, and a signal with two levels lands on two opposite hues: the screen becomes slabs of red and cyan, hard-edged, with the picture reading through each slab as brightness alone. Measured the flattest thing in the table — the fewest hues of any coloured look and less colour edging than a clean signal has.',
+      'The same two slow oscillators as the poured look, into the comparator instead of the multiplier. A comparator has two output levels and nothing in between, so the second oscillator on its reference input decides only where the boundary falls. With both running down the frame at a few cycles, that boundary is a handful of horizontal edges that drift. The colorizer maps level to hue, and a signal with two levels lands on two opposite hues, so the screen becomes hard-edged slabs of red and cyan with the picture reading through each slab as brightness alone. Measured the flattest thing in the table: the fewest hues of any coloured look and less colour edging than a clean signal has.',
     patch: {
       synthOver: 0.8,
       synthAHz: 90,
@@ -1847,7 +1847,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'lit at the edges',
     group: 'Feedback loops',
     blurb:
-      "The carrier making hue out of brightness, with the loop left well under unity so it colours the picture instead of breeding structure out of it. Where the colour lands is the thing to know, and it is not where you would guess: translating brightness onto the subcarrier puts the *fast* part of the brightness into the chroma band, so the flats of the picture come back nearly neutral and everything the light changes across arrives saturated. A subject is drawn in colour along its own edges — bones, a rim, the line where a shadow starts — with the fields between them left grey, and the loop's delay turns each of those edges a little further round the wheel than the one beside it. The beam is opened to a wide spot so it is laid down as light on glass rather than as pixels.",
+      "The carrier making hue out of brightness, with the loop kept well under unity so it colours the picture instead of building structure out of it. Where the colour lands is the thing to know, and it is not where you would guess. Translating brightness onto the subcarrier puts the *fast* part of the brightness into the chroma band, so the flat areas of the picture come back nearly neutral and everything the light changes across arrives saturated. A subject is drawn in colour along its own edges (bones, a rim, the line where a shadow starts) with the fields between them left grey, and the loop's delay turns each of those edges a little further round the wheel than the one beside it. The beam is opened to a wide spot so it is laid down as light on glass rather than as pixels.",
     patch: {
       cfbMix: 0.6,
       cfbGain: 0.65,
@@ -1873,7 +1873,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'contours on contours',
     group: 'Circuit bent',
     blurb:
-      "The same patch with the oscillator's frequency input moved off the deck and onto the camera loop's return, which is this stage's own output one frame ago with the synth already drawn into it. So the contours are not traced on the picture — they are traced on last frame's contours, and the frequency at any point is set by how bright the oscillator's own drawing was there the time before. A little defocus in the lens is what keeps that from collapsing into single-pixel noise, and a lens turned slightly means each generation lands rotated off the one it grew from. What comes out is banding that reorganises continuously and never arrives anywhere, over a subject you can still recognise, with the colorizer turning the whole thing through hue.",
+      "The same patch with the oscillator's frequency input moved off the deck and onto the camera loop's return, which is this stage's own output one frame ago with the synth already drawn into it. So the contours are traced on last frame's contours rather than on the picture, and the frequency at any point is set by how bright the oscillator's own drawing was there the time before. A little defocus in the lens keeps that from collapsing into single-pixel noise, and a slightly turned lens means each generation lands rotated off the one it grew from. The result is banding that reorganises continuously and never settles, over a subject you can still recognise, with the colorizer turning the whole thing through hue.",
     patch: {
       synthOver: 0.55,
       synthShape: 1,
@@ -1903,7 +1903,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'ring plaid',
     group: 'Circuit bent',
     blurb:
-      "Both synth oscillators into the balanced multiplier and the result laid over the picture — one fitting eight cycles across a line, the other twenty-one down the frame, so what comes out is a weave neither of them contains. The picture's own brightness is on oscillator A's frequency input, which pulls the bars running across the line tighter through the highlights and lets them out through the shadows, so the fabric is woven at the image's own contours with nothing anywhere drawing an edge.",
+      "Both synth oscillators into the balanced multiplier and the result laid over the picture. One fits eight cycles across a line, the other twenty-one down the frame, so what comes out is a weave neither of them contains. The picture's own brightness is on oscillator A's frequency input, which pulls the bars running across the line tighter through the highlights and lets them out through the shadows, so the fabric is woven at the image's own contours with nothing anywhere drawing an edge.",
     patch: {
       synthOver: 0.7,
       synthMix: 2,
@@ -1927,7 +1927,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'two multipliers',
     group: 'Circuit bent',
     blurb:
-      "A ring modulator in the synth feeding a ring modulator in the loop. The first one beats two oscillators against each other and lays the product over the picture; the second beats that against the machine's own last frame, so every product is an input to the next multiply. Two balanced bridges in series is where a spectrum stops being a list of frequencies — nothing on screen is at a frequency either oscillator is set to, and the pattern reorganises itself every few seconds without a single control moving.",
+      "A ring modulator in the synth feeding a ring modulator in the loop. The first beats two oscillators against each other and lays the product over the picture. The second beats that against the machine's own last frame, so every product is an input to the next multiply. With two balanced bridges in series, nothing on screen is at a frequency either oscillator is set to, and the pattern reorganises itself every few seconds without a single control moving.",
     patch: {
       synthOver: 0.6,
       synthMix: 2,
@@ -1951,7 +1951,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'punch in',
     group: 'Circuit bent',
     blurb:
-      'A look that sits still until you hit it. The board rests just short of trouble, with two one-shot envelopes patched to the horizontal hold and the deflection bend — press ⚡ fire in the Modulation section (or the ⚡ on either slot) and the picture is knocked out of lock and recovers on its own, fast one and slow one together. The gesture the bay had no source for: everything else in there says what a knob is doing, this says what you just did.',
+      'A look that sits still until you hit it. The board rests just short of trouble, with two one-shot envelopes patched to the horizontal hold and the deflection bend. Press ⚡ fire in the Modulation section (or the ⚡ on either slot) and the picture is knocked out of lock and recovers on its own, fast one and slow one together. Everything else in the bay says what a knob is doing. This says what you just did.',
     patch: {
       hHold: 0.5,
       bendPeriod: 40,
@@ -2008,7 +2008,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'strobed tube',
     group: 'Phosphor / CRT',
     blurb:
-      'The blanking gate held on: the guns cut for most of each cycle and let through in short flashes, over a long-persistence phosphor. It does not cut to black — the gate is upstream of the phosphor, so the light already on the glass goes on giving itself back through the dark, cooling toward green as red and blue die first. The beam limiter sees the beam current collapse and opens up, so the first field after each dark stretch surges before the servo catches it. Lock the rate to the beat with ♩.',
+      'The blanking gate held on. The guns are cut for most of each cycle and let through in short flashes, over a long-persistence phosphor. It does not cut to black. The gate is upstream of the phosphor, so the light already on the glass keeps decaying through the dark, shifting toward green as red and blue die first. The beam limiter sees the beam current collapse and opens up, so the first field after each dark stretch surges before the servo catches it. Lock the rate to the beat with ♩.',
     patch: {
       strobeHz: 3.5,
       strobeMs: 30,
@@ -2027,7 +2027,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'round tube',
     group: 'Phosphor / CRT',
     blurb:
-      'Early-60s colorimetry: the deep 1953 phosphors on an Illuminant-C white — green and red pull in, whites cool, bright lines fatten between visible scanlines, and a soft-focus gun bleeds every sample into its neighbours.',
+      'Early-60s colorimetry: the deep 1953 phosphors on an Illuminant-C white. Green and red pull in, whites cool, bright lines fatten between visible scanlines, and a soft-focus gun bleeds every sample into its neighbours.',
     patch: {
       phosphorMode: 2,
       crtCutoff: 0.06,
@@ -2048,7 +2048,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'green terminal',
     group: 'Phosphor / CRT',
     blurb:
-      'Long-persistence mono green tube (P1 family): everything lands on one phosphor, and motion hangs as a seconds-long tail that sums like light, not paint — and keeps scattering sideways in the layer while it hangs, so old light goes soft and cloudy while the fresh edge stays sharp.',
+      'Long-persistence mono green tube (P1 family). Everything lands on one phosphor, and motion leaves a seconds-long tail that sums like light rather than paint. It keeps scattering sideways in the layer while it lingers, so old light goes soft and cloudy while the fresh edge stays sharp.',
     patch: {
       phosphorMode: 3,
       phosphor: 0.99,
@@ -2067,7 +2067,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'radar tube',
     group: 'Phosphor / CRT',
     blurb:
-      'A P7 cascade — the two-layer phosphor radar and scope tubes were coated with. The beam lands on a fast blue layer and dumps most of its light there at once, but what it excites underneath is a slow yellow-green that keeps emitting long after the blue has gone. So the tail walks in colour as it fades: the fresh edge is white, a few tenths of a second back it is amber, and what is still glowing seconds later is green. The three channels are simply given the decay rates the two layers have, and the colour walk falls out of them dying at different speeds.',
+      'A P7 cascade, the two-layer phosphor radar and oscilloscope tubes were coated with. The beam lands on a fast blue layer and releases most of its light there at once, but what it excites underneath is a slow yellow-green that keeps emitting long after the blue has gone. So the tail changes colour as it fades: the fresh edge is white, a few tenths of a second back it is amber, and what is still glowing seconds later is green. The three channels are given the decay rates the two layers have, and the colour change follows from them dying at different speeds.',
     patch: {
       // Green holds ~2.5s; the skew puts red at a quarter of that and blue at a
       // seventh, which is the cascade. Bleed is high because the long layer is
@@ -2101,7 +2101,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'nose against the glass',
     group: 'Phosphor / CRT',
     blurb:
-      'The magnifier, wound up: close enough to see what the picture is made of — grille triads, the gaps between scan lines, the granular deposit, and the beam spot bleeding one sample into the next. Drag the magnifier x/y sliders in Screen to move around the glass.',
+      'The magnifier, turned up: close enough to see what the picture is made of. Grille triads, the gaps between scan lines, the granular deposit, and the beam spot bleeding one sample into the next. Drag the magnifier x/y sliders in Screen to move around the glass.',
     patch: {
       crtZoom: 5,
       // parked on a colour-bar boundary, where the beam spot's ramp from one
@@ -2124,7 +2124,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'bent detailer',
     group: 'Circuit bent',
     blurb:
-      "Jumper across the enhancer's peaking coil: the stage is regenerative, so the sync pulse at the head of every line sets it ringing and the bars build across the picture into the amplifier's rails.",
+      "Jumper across the enhancer's peaking coil. The stage is regenerative, so the sync pulse at the head of every line sets it ringing and the bars build across the picture into the amplifier's rails.",
     patch: {
       enhPeakMHz: 2.5,
       enhPeakQ: 0.86,
@@ -2140,7 +2140,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'howlround loom',
     group: 'Circuit bent',
     blurb:
-      "The enhancer's peaking coil regenerative and minting its own sync, fed into a loop whose delay its video is pulling and whose ring mod re-multiplies every product: the howl, the servo warp and the raster lock weave a full-field electric tapestry with no picture left in it.",
+      "The enhancer's peaking coil regenerative and generating its own sync, fed into a loop whose delay its video is pulling and whose ring mod re-multiplies every product. The howl, the servo warp and the raster lock combine into a full-field electric pattern with no picture left in it.",
     patch: {
       enhPeakMHz: 1.9,
       enhPeakQ: 0.95,
@@ -2168,7 +2168,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'false sync',
     group: 'Circuit bent',
     blurb:
-      "The stabilizer's sync slicer bent up into picture territory: every dark area mints pulses of its own mid-line, and the set tears wherever the image goes dark.",
+      "The stabilizer's sync slicer raised into picture territory. Every dark area produces pulses of its own mid-line, and the set tears wherever the image goes dark.",
     patch: {
       enhSync: 1,
       enhSliceIre: 14,
@@ -2182,7 +2182,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'paperclip on the chroma',
     group: 'Circuit bent',
     blurb:
-      "Metal held across the chroma reference network three times a second, a fifth of a second at a time. While the short is down the set stops trusting the burst and its two demodulators stop sitting 90° apart, so hue shears rather than rotating: some colours come through the bite and their opposites do not. The colour AGC has tens of lines of burst memory here, so its gain answers each short a good part of a frame late and colour blooms down the picture instead of snapping at either edge of the contact — and a bite the set takes two or three frames to show it takes five or six to let go of, so every one arrives quicker than it leaves. The gaps between contacts are drawn rather than counted off a clock, so two land together and then a stretch of nothing, which is what makes this read as somebody's hand instead of a machine.",
+      "Metal held across the chroma reference network three times a second, a fifth of a second at a time. While the short is down the set stops trusting the burst and its two demodulators stop sitting 90° apart, so hue shears rather than rotating: some colours come through the bite and their opposites do not. The colour AGC has tens of lines of burst memory here, so its gain responds to each short a good part of a frame late and colour blooms down the picture instead of snapping at either edge of the contact. A bite the set takes two or three frames to show takes five or six to let go of, so every one arrives quicker than it leaves. The gaps between contacts are random rather than counted off a clock, so two land together and then a stretch of nothing, which is what makes this read as somebody's hand instead of a machine.",
     patch: {
       // Three contacts a second at a fifth of a second each: the board is
       // shorted about half the time counting the tails, which is what makes
@@ -2204,7 +2204,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'black restore',
     group: 'Phosphor / CRT',
     blurb:
-      'Just the beam transfer — cutoff and gun gamma with no bloom. Lifts the decoded pedestal off the floor for a clean tube with a genuinely black background.',
+      'Just the beam transfer: cutoff and gun gamma with no bloom. Lifts the decoded pedestal off the floor for a clean tube with a genuinely black background.',
     patch: {
       crtCutoff: 0.08,
       crtGamma: 2.2,
@@ -2214,7 +2214,7 @@ export const PRESETS: PresetDef[] = [
     name: 'magnetised',
     group: 'Phosphor / CRT',
     blurb:
-      'A speaker left against the cabinet, or a set moved without degaussing: a patch of mask stays magnetised and bends all three beams together. A triad is three dots 120° apart, so the same nudge over-excites the one it moves toward and starves the one opposite — the stain turns hue across itself instead of tinting flat, and it is fixed on the glass, so a rolling picture travels through it.',
+      'A speaker left against the cabinet, or a set moved without degaussing. A patch of mask stays magnetised and bends all three beams together. A triad is three dots 120° apart, so the same nudge over-excites the one it moves toward and starves the one opposite. The stain turns hue across itself instead of tinting flat, and it is fixed on the glass, so a rolling picture travels through it.',
     patch: {
       crtPurity: 1.1,
       crtPurityX: 0.31,
@@ -2233,7 +2233,7 @@ export const PRESETS: PresetDef[] = [
     name: 'misconverged',
     group: 'Phosphor / CRT',
     blurb:
-      'Three guns firing through one mask from three positions, registered only in the middle: sharp at the centre and fringing red and blue harder toward every corner. With the scan-velocity trick wired in on top, edges also get the asymmetric relief consumer sets used to fake sharpness — a white overshoot one side, a black notch the other.',
+      'Three guns firing through one mask from three positions, registered only in the middle. Sharp at the centre and fringing red and blue harder toward every corner. With the scan-velocity trick wired in on top, edges also get the asymmetric relief consumer sets used to fake sharpness: a white overshoot one side, a black notch the other.',
     patch: {
       crtConverge: 2.6,
       crtSvm: 1.2,
@@ -2257,7 +2257,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'transmission fault',
     group: 'Full board',
     blurb:
-      'Sync suppressed at the head-end while the colour crystal sits off frequency and the tube is left long: every line lands at its own offset, in the wrong hue, over the ghost of the last one.',
+      'Sync suppressed at the head-end while the colour crystal sits off frequency and the tube is left long. Every line lands at its own offset, in the wrong hue, over the ghost of the last one.',
     patch: {
       scramble: 0.35,
       agc: 0.5,
@@ -2280,7 +2280,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'night monitor',
     group: 'Full board',
     blurb:
-      'A monitor run hot in a dark room with a camera on it: the loop breeds halos out of the highlights, the faceplate scatters them, and the phosphor holds what is left.',
+      'A monitor run hot in a dark room with a camera on it. The loop grows halos out of the highlights, the faceplate scatters them, and the phosphor holds what is left.',
     patch: {
       fbMix: 0.55,
       fbZoom: 1.01,
@@ -2318,7 +2318,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'every colour but one',
     group: 'Past the redline',
     blurb:
-      "The loop's chroma keyer inverted, and that is not a small move: a wedge a hundred and forty degrees wide inverted leaves everything outside it regenerating, which is very nearly a loop with no key on it. What survives is one narrow band of hue and the rest of the frame goes over to product — including blanking and the sync tip, which no longer have a key holding them out, so the receiver loses the top of the picture to one timing and the bottom to another and a hard seam sits between them. The surviving hue walks, so which band of the picture is still a picture travels.",
+      "The loop's chroma keyer inverted, which is a large change. A wedge a hundred and forty degrees wide inverted leaves everything outside it regenerating, which is very nearly a loop with no key on it. What survives is one narrow band of hue and the rest of the frame goes over to product, including blanking and the sync tip, which no longer have a key holding them out. The receiver loses the top of the picture to one timing and the bottom to another and a hard seam sits between them. The surviving hue drifts, so which band of the picture is still a picture moves.",
     patch: {
       cfbMix: 0.62,
       cfbGain: 0.95,
@@ -2344,7 +2344,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'past the yoke',
     group: 'Past the redline',
     blurb:
-      'The scan magnified far past anything the tube would frame, and bowed with it: a narrow band of raster standing in for a picture, barrelling against its own beam current.',
+      'The scan magnified far past anything the tube would frame, and bowed with it. A narrow band of raster stands in for a picture, barrelling against its own beam current.',
     patch: {
       vSize: 3.4,
       bendUs: 70,
@@ -2383,7 +2383,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'rail slam',
     group: 'Past the redline',
     blurb:
-      'The composite bus fed back at more than unity, ninety lines up, through a resonance that howls. The loop clips to a square and stays there — it cannot run away, so what it does instead is ring.',
+      'The composite bus fed back at more than unity, ninety lines up, through a resonance that howls. The loop clips to a square and stays there. It cannot run away, so it rings instead.',
     patch: {
       // Just over unity, not far over. The loop clips instead of diverging, so
       // gain this side of the rail rings and gain well past it just pins every
@@ -2406,7 +2406,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'chroma rails',
     group: 'Past the redline',
     blurb:
-      'Colour driven six times past the knob’s top into output stages with no headroom left, under a colorized pulse laid over the picture. The guns hit their rails one at a time, so every hue on screen slides to whichever corner of the cube it reached first and the picture comes back in four colours it was never carrying.',
+      "Colour driven six times past the knob's top into output stages with no headroom left, under a colorized pulse laid over the picture. The guns hit their rails one at a time, so every hue on screen slides to whichever corner of the cube it reached first and the picture comes back in four colours it was never carrying.",
     patch: {
       // The two together are the look; either alone is not it. Gain past 1
       // with the matrix fitting back into gamut (matrixClip 0) just makes
@@ -2489,7 +2489,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'light that stays',
     group: 'Past the redline',
     blurb:
-      'A phosphor that gives almost nothing back, scattering sideways as it goes, under a gun with its gamma turned inside out. Everything the beam has touched is still on the glass, spreading.',
+      'A phosphor that gives almost nothing back, scattering sideways as it goes, under a gun with its gamma inverted. Everything the beam has touched is still on the glass, spreading.',
     patch: {
       phosphor: 0.999,
       phosphorBleed: 0.9,

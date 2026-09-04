@@ -1,19 +1,19 @@
 # Using a MIDI controller
 
-There are more sliders in this thing than you want to drag one at a time. A
-cheap box of knobs gets you both hands and stops you looking at the panel.
+There are more sliders here than you want to drag one at a time. A cheap box of
+knobs gives you both hands and means you can stop looking at the panel.
 
 Short version: **advanced settings** → **enable MIDI**, then **auto-map** or
 **learn in order** in the sidebar's **MIDI** section.
 
 ## What you need
 
-Any USB controller that sends **CC messages** (MIDI's Control Change messages —
-the standard way a knob or slider reports its position) — a MIDI Fighter
-Twister, a nanoKONTROL, a Launch Control, the knob row on a keyboard. Plug it in
-before or after loading the page.
+Any USB controller that sends **CC messages** (MIDI's Control Change messages,
+the standard way a knob or slider reports its position): a MIDI Fighter Twister,
+a nanoKONTROL, a Launch Control, the knob row on a keyboard. Plug it in before
+or after loading the page.
 
-You also need a browser with **Web MIDI** — Chrome or Edge.
+You also need a browser with **Web MIDI**, which means Chrome or Edge.
 
 ## Turning it on
 
@@ -29,8 +29,8 @@ denied**, click **retry** or clear the site permission and reload.
 
 ## Binding one knob
 
-Each slider now has a **⚟** button. Click it, wiggle the knob, done — the button
-reads **CC7** and the pairing shows in the MIDI panel. `Esc` cancels.
+Each slider now has a **⚟** button. Click it and wiggle the knob. The button
+then reads **CC7** and the pairing shows in the MIDI panel. `Esc` cancels.
 
 - **×** in the MIDI panel unbinds. Clicking **CC7** re-learns instead, so you
   can move a control to another knob without unbinding first.
@@ -39,49 +39,49 @@ reads **CC7** and the pairing shows in the MIDI panel. `Esc` cancels.
 
 ## Two knobs that aren't sliders
 
-- **The motion amount** — the strip above the filter box scales every modulation
+- **The motion amount**: the strip above the filter box scales every modulation
   routing at once, and carries the same **⚟**. One hand takes the board from
   still to swimming.
-- **A preset's weight** — every preset is a fader, so a preset on a knob is a
+- **A preset's weight**: every preset is a fader, so a preset on a knob is a
   macro that moves everything that preset touches. Use the picker at the bottom
   of the MIDI panel: choose the preset, click **⚟ preset mix**, move a knob.
   Weights layer, so several presets on several knobs is a small desk of looks.
 
-Neither does soft takeover — they grab on the first message, because neither has
+Neither does soft takeover. They grab on the first message, because neither has
 a track to draw a waiting mark on. A weight also resets once anything else moves
 the board: the next turn starts a fresh mix from what is on screen.
 
 ## Pads, for the things you hit rather than set
 
 A knob holds a value. Some of what you do during a set isn't a value at all —
-striking the modulation bay's one-shot envelopes, marking a cue, stabbing back
-to one — and those go on **pads or keys**, bound at the bottom of the MIDI
-panel: pick the gesture, click **⚟ pad**, hit the pad.
+triggering the modulation bay's one-shot envelopes, marking a cue, jumping back
+to one. Those go on **pads or keys**, bound at the bottom of the MIDI panel:
+pick the gesture, click **⚟ pad**, hit the pad.
 
 What can go on one:
 
-- **⚡ fire all**, and **⚡ fire slot 1–8** — the buttons in the MODULATION box.
+- **⚡ fire all**, and **⚡ fire slot 1–8**: the buttons in the MODULATION box.
   Velocity carries, so a soft hit is a small envelope.
-- **cue source A/B** and **back to the cue · A/B** — the same two gestures `i`
-  and `o` are on the keyboard. The stab back is the one worth a pad; it lands
-  like a drum hit.
+- **cue source A/B** and **back to the cue · A/B**: the same two actions `i` and
+  `o` do on the keyboard. The jump back is the one most worth a pad, since it
+  works like a drum hit.
 
 **With nothing bound, any note fires the whole bay.** That is what the app has
 always done with a note, and it is the right answer for a keyboard you haven't
 mapped. Bind one pad and that stops: from then on notes fire only what is listed
 in the panel, and everything else is ignored.
 
-Nothing here does soft takeover — there is no value to catch up to. `Esc`
+Nothing here does soft takeover, since there is no value to catch up to. `Esc`
 cancels an arm, the same as for a knob.
 
 ## Mapping the whole device
 
 Both buttons **wipe every knob binding** first, with no confirmation. Pads are
-left alone — a device profile is a list of CC numbers and has nothing to say
+left alone, since a device profile is a list of CC numbers and says nothing
 about notes. **clear all bindings** takes both.
 
-- **auto-map** is for a MIDI Fighter Twister: it assigns the first 64 controls —
-  motion amount first, then look-makers in signal-path order — to CC 0–63 on
+- **auto-map** is for a MIDI Fighter Twister. It assigns the first 64 controls
+  (motion amount first, then look-makers in signal-path order) to CC 0–63 on
   channel 1, across all four banks.
 - **learn in order** works with anything: sweep your knobs one at a time and
   each takes the next control down the same list. **stop learning** or `Esc`
@@ -98,8 +98,8 @@ mouse-only. The panel says how many are left over.
 
 That is **soft takeover**. A physical knob at 3 o'clock doesn't know the value
 is at 10 o'clock, so it stays inert until you sweep it **through** the current
-value — then it catches and tracks normally. An **amber mark** on the track
-shows where the knob is waiting.
+value. Then it catches and tracks normally. An **amber mark** on the track shows
+where the knob is waiting.
 
 Knobs let go and need re-catching whenever a value is set from elsewhere:
 loading a preset, recalling a save, undoing, randomising. Expect a row of amber
@@ -109,15 +109,15 @@ marks after a preset load.
 
 The tempo comes from **MIDI clock** if anything is sending it (the panel shows
 **clock ♩ = 128.0 BPM**), otherwise from the top of the **MODULATION** box on
-the signal-path map — type it or **tap** four times. Clock wins while it runs;
-the hand-set number waits underneath.
+the signal-path map, where you type it or **tap** four times. Clock wins while
+it runs, and the hand-set number waits underneath.
 
 Three things can follow the beat, each through the **♩** in its own **⋮** menu,
 cycling 1/1 → 1/16 → off:
 
-- **sweep** — the wipe auto-sweep. Tops out at 2 Hz, so past ~120 BPM the fast
+- **sweep**: the wipe auto-sweep. Tops out at 2 Hz, so past ~120 BPM the fast
   divisions all pin.
-- **line offset** — source B's line rate.
+- **line offset**: source B's line rate.
 - **any modulation slot's rate**. Tops out at 10 Hz, which 1/16 reaches at 150
   BPM.
 
@@ -127,12 +127,12 @@ BPM. The app only listens for clock; it never sends it.
 
 ## What sticks around
 
-Bindings — knobs and pads alike, in two separate stores — the hand-set tempo and
+Bindings (knobs and pads alike, in two separate stores), the hand-set tempo and
 the clock locks on **sweep** and **line offset** are saved in this browser. They
-are **not** in presets, saved looks or the URL — a link carries the look, not
+are **not** in presets, saved looks or the URL. A link carries the look, not
 your knob layout, and there is no way to export a mapping.
 
-A modulation slot's lock is the exception: it rides along on the link, because
+A modulation slot's lock is the exception. It travels with the link, because
 "this wobbles on eighth notes" is part of the patch.
 
 A preset weight is bound by name, so a renamed or dropped preset discards that
@@ -140,23 +140,23 @@ one binding on the next load.
 
 ## What isn't supported
 
-- **CC and notes only** — pitch bend, program change and aftertouch do nothing.
-  A note is an on/off with a velocity; there is no note-off handling, because
+- **CC and notes only**: pitch bend, program change and aftertouch do nothing. A
+  note is an on/off with a velocity; there is no note-off handling, because
   every gesture a pad can fire is a one-shot that decays on its own.
-- **Absolute knobs only** — endless encoders in relative mode will jump around.
-- **No LED feedback** — nothing is sent back to the device.
-- **No device picker** — everything plugged in drives the app at once.
+- **Absolute knobs only**: endless encoders in relative mode will jump around.
+- **No LED feedback**: nothing is sent back to the device.
+- **No device picker**: everything plugged in drives the app at once.
 - **No per-knob range, invert or curve.**
 
 ## When it seems broken
 
 | What you see                        | What's going on                                                               |
 | ----------------------------------- | ----------------------------------------------------------------------------- |
-| No MIDI section in the sidebar      | Not enabled yet, or there's text in the panel's filter box — clear it         |
+| No MIDI section in the sidebar      | Not enabled yet, or there's text in the panel's filter box. Clear it.         |
 | Knob does nothing, amber mark shown | Soft takeover: sweep the knob across the on-screen value to catch it          |
 | Everything went dead after a preset | Same thing; a preset load drops every knob's catch                            |
-| Two controls move together          | Both bound to the same CC — unbind one with **×** and re-learn it             |
+| Two controls move together          | Both bound to the same CC. Unbind one with **×** and re-learn it.             |
 | Value jumps in steps                | Coarse-stepped slider; 128 knob positions land on fewer distinct values       |
 | Bindings vanished                   | **auto-map** or **learn in order** clears every knob binding before it starts |
-| Tempo says "no signal"              | Nothing is sending clock; ticks are what it counts, start/continue is ignored |
-| A pad stopped firing the bay        | Binding any pad ends the blanket: only what the panel lists fires now         |
+| Tempo says "no signal"              | Nothing is sending clock. It counts ticks, and ignores start/continue.        |
+| A pad stopped firing the bay        | Binding any pad ends the default. Only what the panel lists fires now.        |

@@ -17,7 +17,7 @@
     "name": "I can't believe it's not analog butter",
     "showcase": false,
     "gallery": true,
-    "says": "Chroma gain at sixteen times, the loop delayed 1.7µs and hauled off its timebase.",
+    "says": "Chroma gain at sixteen times, the loop delayed 1.7µs and pulled off its timebase.",
     "query": "?p=3t.GKwxE4gDRYQDAMQfANADAqwiFZADALgDAJg1AAwAkAMAtAQAfAXQbwC0AiRACAQirGwroAE&mod=&srcb=none"
   },
   {
@@ -39,7 +39,7 @@
     "name": "Dark camera feedback",
     "showcase": false,
     "gallery": true,
-    "says": "A tape path — dropouts, wow, head switch — into a camera loop at three times gain.",
+    "says": "A tape path with dropouts, wow and a head switch, into a camera loop at three times gain.",
     "query": "?p=CU.CqCsBQEEAcwDAHABXAC8aQLoAgLMBQCsAgOceQR0GPwBCzgAGADYAQAIAjgAuAIImAIAUALIAQCAAQAkArACAXgAFAJ4ADAGXABcApADAKAhAIgBCKwCAOQBAJgRApACAAAAAADwCAdIALAJAAAABAlUJOYDAKgBBcgBAQQ&mod=tapeLoopMm:smooth:0.05:0.0151&srcb=tv+static&src=tv+static"
   },
   {

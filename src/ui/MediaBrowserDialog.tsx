@@ -216,9 +216,8 @@ export function MediaBrowserDialog(props: {
         <div className={cx(ui.hint, ui.warn)}>{found.error}</div>
       ) : found.status === 'idle' ? (
         <div className={ui.hint}>
-          type a phrase, or take one of the pools above. Results are ranked, so
-          words that would be useless to a random pick work here — which is the
-          whole reason this is not another entry in the dropdown.
+          type a phrase, or pick one of the pools above. Results are ranked, so
+          specific words that would be useless to a random pick work here.
         </div>
       ) : found.hits.length === 0 ? (
         <div className={ui.hint}>nothing came back for “{asked}”</div>
