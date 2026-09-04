@@ -102,6 +102,12 @@ export interface ControlsApi {
   // its track. Not `writeControl` with the default in it: this is a step on the
   // walk, so the value it throws away comes back with ctrl+z.
   resetControl: (key: ControlKey) => void
+  // A hand taking hold of a row: pointer down on its track, or a step key on
+  // it. Banks the board as it stands, so the drag that follows is one step on
+  // the walk and ctrl+z puts the row back where the hand found it. A drag used
+  // to bank nothing on the grounds that the old value was a pixel away — which
+  // it is not once the hand has let go and something else has been moved.
+  beginHand: () => void
   // Put one group back to stock, for the same reason and by the same route.
   resetGroup: (sliders: readonly SliderDef[]) => void
   // Which stages are wandering on their own (ui/drift.ts), and the switch that

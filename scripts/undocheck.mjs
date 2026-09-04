@@ -209,6 +209,53 @@ try {
   const back = await apart(dialed2, await look())
   check(back === 0, `undo after a row's ↺ left ${back} controls at stock`)
 
+  // A drag. It banked nothing for a long time on the argument that the old
+  // value was a pixel away under the hand — true while the hand is on the row,
+  // and not after it has let go and moved three other rows. So the pointer down
+  // on a track banks the board, and the drag is one step like any other. A real
+  // mouse drag here, thumb to a quarter along, since the bank rides on the
+  // pointer sequence rather than on the value events.
+  await press('reset')
+  await press('vhs')
+  const held = await look()
+  await run(`
+    const h = [...document.querySelectorAll('button')]
+      .find(b => (b.textContent ?? '').includes('This look'))
+    if (h?.getAttribute('aria-expanded') === 'false') h.click()
+    return 0
+  `)
+  await settle()
+  // Under the section's own header rather than the first range on the page,
+  // which is Presets' `mod amount` — a slider that is not a control row.
+  const thumb = await run(`
+    const h = [...document.querySelectorAll('h3 button')]
+      .find(b => (b.textContent ?? '').includes('This look'))
+    const el = h?.closest('h3')?.parentElement?.querySelector('input[type=range]')
+    if (!el) return null
+    el.scrollIntoView({ block: 'center' })
+    const r = el.getBoundingClientRect()
+    const min = Number(el.min), span = Number(el.max) - min
+    const at = (Number(el.value) - min) / span
+    return { x: r.left + 7 + at * (r.width - 14), y: r.top + r.height / 2,
+      to: r.left + 7 + 0.25 * (r.width - 14) }
+  `)
+  check(thumb !== null, 'no range input under "This look" after a preset')
+  if (thumb !== null) {
+    await page.mouse.move(thumb.x, thumb.y)
+    await page.mouse.down()
+    await page.mouse.move(thumb.to, thumb.y, { steps: 8 })
+    await page.mouse.up()
+    await settle()
+    const dragged = await apart(held, await look())
+    check(dragged === 1, `a drag moved ${dragged} controls, not 1`)
+    await press('undo')
+    const undone = await apart(held, await look())
+    check(
+      undone === 0,
+      `undo after a drag left ${undone} controls where it went`,
+    )
+  }
+
   // Retraceable in both directions, which is the whole claim the walk makes.
   await press('reset')
   const stock = await look()

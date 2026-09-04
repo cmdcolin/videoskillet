@@ -256,6 +256,19 @@ const centFill = (cents: number) => ({
   '--def': `${centPct(0)}%`,
 })
 
+// What a range input answers to as a step, which is what tells a hand on the
+// keyboard from a focus passing through.
+const STEP_KEYS = new Set([
+  'ArrowLeft',
+  'ArrowRight',
+  'ArrowUp',
+  'ArrowDown',
+  'PageUp',
+  'PageDown',
+  'Home',
+  'End',
+])
+
 // The minor-adjustment card: the last two digits of the same number.
 //
 // Opened from the row's `minor` button rather than given a row of its own,
@@ -350,6 +363,11 @@ export function Slider(props: {
   // walk; a row outside the look — a dialog setting, a deck's speed — has no
   // walk to bank on and leaves this out, and the reset is the plain write.
   onReset?: () => void
+  // The hand arriving on the row — pointer down on the track, a step key on
+  // it, a press on one of a discrete row's choices — before the value moves.
+  // A control row banks a step on the undo walk here; a row outside the look
+  // leaves it out, the same way it leaves out `onReset`.
+  onBegin?: () => void
   // A discrete control: one label per integer value. Renders a toggle-button
   // group in place of the range input, still reading/writing the same number.
   choices?: string[]
@@ -671,6 +689,10 @@ export function Slider(props: {
     if (onReset === undefined) props.onChange(props.defaultValue)
     else onReset()
   }
+  const onBegin = props.onBegin
+  const begin = () => {
+    if (onBegin !== undefined) onBegin()
+  }
   const readingBox = (
     <>
       <span className={styles.reading} style={readingStyle}>
@@ -714,7 +736,10 @@ export function Slider(props: {
       disabled={locked}
       dense={inline}
       className={styles.trackCell}
-      onChange={props.onChange}
+      onChange={v => {
+        begin()
+        props.onChange(v)
+      }}
     />
   ) : (
     <span className={cx(styles.rangeWrap, styles.trackCell)}>
@@ -740,6 +765,12 @@ export function Slider(props: {
         // would follow the pointer across every drag — so the reading's own
         // tooltip is where it is written down.
         onDoubleClick={() => reset()}
+        onPointerDown={() => begin()}
+        // Only the keys that move the thumb: a Tab through the row is not a
+        // hand on it, and banking there would leave a step that undoes nothing.
+        onKeyDown={e => {
+          if (STEP_KEYS.has(e.key)) begin()
+        }}
         onChange={e =>
           props.onChange(
             curved ? atTravel(Number(e.target.value)) : Number(e.target.value),

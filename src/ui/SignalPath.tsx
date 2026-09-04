@@ -297,9 +297,40 @@ export function SignalPath(props: {
       n.dim === true ? [n.name] : [],
     ),
   )
+  // The stage rows under the map, by name, as scroll targets — the Bench keeps
+  // the same map of its headings for the same reason.
+  const rows = useRef(new Map<string, HTMLDivElement>())
+  // A stage opened on a phone opens out of sight. Portrait stacks the panel
+  // under the picture, and the map alone fills what is left of it, so the stage
+  // that unfolds under the map lands below the fold: the box lights and nothing
+  // else on screen changes, which reads as a button that did nothing. So a
+  // heading that opened below the visible panel is brought up to its middle —
+  // half a screen of the map above it, half a screen of its rows below. The
+  // heading and not the row: a stage is taller than the panel it opens in, and
+  // centring the whole of it put the heading off the top and the map with it.
+  // A heading already in view, which is every desktop panel, is left alone,
+  // and so is a press that folds a stage away.
+  const reveal = (name: string) => {
+    const head = rows.current.get(name)?.firstElementChild
+    if (head instanceof HTMLElement) {
+      let box = head.parentElement
+      while (box !== null && box.scrollHeight <= box.clientHeight + 1) {
+        box = box.parentElement
+      }
+      if (
+        box !== null &&
+        head.getBoundingClientRect().top + 48 >
+          box.getBoundingClientRect().bottom
+      ) {
+        head.scrollIntoView({ block: 'center', behavior: 'smooth' })
+      }
+    }
+  }
   const openStage = (name: string) => {
     if (missed.has(name)) props.onDropFilter()
     props.onOpen(name)
+    // The row is not mounted until the open commits, so the look waits a frame.
+    if (props.open !== name) requestAnimationFrame(() => reveal(name))
   }
   if (props.bench) {
     return (
@@ -360,7 +391,14 @@ export function SignalPath(props: {
           the header line, where it costs no row and survives the first click. */}
       <div className={styles.stages}>
         {shown.map(({ node, body }) => (
-          <div key={node.name} className={styles.stageRow}>
+          <div
+            key={node.name}
+            className={styles.stageRow}
+            ref={el => {
+              if (el === null) rows.current.delete(node.name)
+              else rows.current.set(node.name, el)
+            }}
+          >
             <StageHead
               node={node}
               nameHint="click to fold this stage"

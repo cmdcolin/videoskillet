@@ -839,6 +839,7 @@ export function App() {
     toggleGroupDrift,
     mutateGroup: mix.mutateGroup,
     resetControl: mix.resetControl,
+    beginHand: mix.snapshotForUndo,
     resetGroup: mix.resetGroup,
     landCard: mix.landCard,
     // Through the ref, like every other engine verb here: the deck holds this
