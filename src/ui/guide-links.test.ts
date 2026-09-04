@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest'
 
-import { ALL, slug } from '../../guide/lib/pages.mjs'
+import { ALL, slug } from '../../site/lib/pages.mjs'
 import { GUIDE_URL } from './links'
 
 import { existsSync, readFileSync } from 'node:fs'

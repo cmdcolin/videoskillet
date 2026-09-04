@@ -1,0 +1,18 @@
+---
+import { getEntry, render } from 'astro:content'
+
+import Page from '../layouts/Page.astro'
+
+const { spec } = Astro.props
+const { Content, remarkPluginFrontmatter } = await render(
+  await getEntry('docs', spec.id),
+)
+---
+
+<Page
+  spec={spec}
+  outline={remarkPluginFrontmatter.outline}
+  summary={remarkPluginFrontmatter.summary}
+>
+  <Content />
+</Page>

@@ -105,8 +105,7 @@ export const ALL = GROUPS.flatMap(group =>
     ...spec,
     group,
     id: spec.file.replace(/^docs\//, '').replace(/\.md$/, ''),
-    slug:
-      spec.out === 'index.html' ? undefined : spec.out.replace(/\.html$/, ''),
+    slug: spec.out.replace(/\.html$/, ''),
   })),
 )
 

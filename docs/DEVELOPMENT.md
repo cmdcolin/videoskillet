@@ -1241,12 +1241,17 @@ keep that.
 truth and stays readable on GitHub; the site adds the nav, the live links and
 the styling.
 
-It is an Astro project rooted at [`../guide`](../guide) and configured in
-[`../astro.config.mjs`](../astro.config.mjs). `docs/` is a content collection,
-so the markdown is read where it already lives. To add a page, add it to `GUIDE`
-or `NOTES` in [`../guide/lib/pages.mjs`](../guide/lib/pages.mjs) — the decision
-records and the handoffs are read off their own directories, so one of those is
-a page as soon as it is a file.
+The site is an Astro project rooted at [`../site`](../site) and configured in
+[`../astro.config.mjs`](../astro.config.mjs); the guide is the part of it under
+`site/pages/guide/`. `docs/` is a content collection, so the markdown is read
+where it already lives. To add a page, add it to `GUIDE` or `NOTES` in
+[`../site/lib/pages.mjs`](../site/lib/pages.mjs) — the decision records and the
+handoffs are read off their own directories, so one of those is a page as soon
+as it is a file.
+
+Astro builds `dist/` first and vite adds the app entries to what it left, which
+is the order [`../package.json`](../package.json)'s `build` runs them in and why
+vite's `emptyOutDir` is off.
 
 `pnpm guide:dev` serves the site with live reload, which is the way to work on
 it: a save re-renders the page you are looking at.
@@ -1256,9 +1261,9 @@ authored twice** — so a heading, a page or a first paragraph is edited in one
 place and the site follows:
 
 - the **"on this page" nav**, from the h2/h3 outline
-  [`../guide/lib/rehype-guide.mjs`](../guide/lib/rehype-guide.mjs) collects
-  while it is setting the heading ids. Pages with fewer than five sections don't
-  get one.
+  [`../site/lib/rehype-guide.mjs`](../site/lib/rehype-guide.mjs) collects while
+  it is setting the heading ids. Pages with fewer than five sections don't get
+  one.
 - the **previous/next pager**, from the order of the page's own group.
 - the **meta description and `og:` tags**, from each page's first paragraph, cut
   at a sentence.

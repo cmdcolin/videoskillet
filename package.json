@@ -24,7 +24,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build && node scripts/docgen.mjs --check && node scripts/demogen.mjs --check && astro build",
+    "build": "tsc -b && node scripts/docgen.mjs --check && node scripts/demogen.mjs --check && astro build && vite build",
     "preview": "vite preview",
     "format": "oxfmt",
     "format:check": "oxfmt --check",

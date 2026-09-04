@@ -50,6 +50,11 @@ export default defineConfig(({ command }) => ({
   // `foo.html` would take that page a level up and leave the rule true for its
   // siblings and false for it.
   build: {
+    // Astro builds the site shell into `dist/` first (astro.config.mjs, and the
+    // order in package.json's `build`), and vite adds the app entries to what it
+    // left. Emptying here would take the landing page and the whole guide with
+    // it.
+    emptyOutDir: false,
     rollupOptions: {
       input: {
         landing: 'index.html',
@@ -59,6 +64,10 @@ export default defineConfig(({ command }) => ({
       },
     },
   },
+  // Astro copies `public/` into `dist/` on its way past, so a second copy here
+  // would be the same bytes written twice. The dev server still serves it: this
+  // is the app's own `sample.jpg`, `demos/` and `reel/`.
+  publicDir: command === 'build' ? false : 'public',
   // Preferred port for the screenshot harness (scripts/shot.mjs, README);
   // falls back to the next free port if it's taken.
   //

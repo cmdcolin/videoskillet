@@ -2,8 +2,8 @@ import { unified } from '@astrojs/markdown-remark'
 import { defineConfig } from 'astro/config'
 import rehypeRaw from 'rehype-raw'
 
-import { rehypeGuide } from './guide/lib/rehype-guide.mjs'
-import { remarkGuide } from './guide/lib/remark-guide.mjs'
+import { rehypeGuide } from './site/lib/rehype-guide.mjs'
+import { remarkGuide } from './site/lib/remark-guide.mjs'
 
 import { copyFileSync, mkdirSync, readFileSync, readdirSync } from 'node:fs'
 import { extname, join } from 'node:path'
@@ -53,7 +53,7 @@ const figures = () => ({
       })
     },
     'astro:build:done': ({ dir }) => {
-      const out = join(fileURLToPath(dir), 'img')
+      const out = join(fileURLToPath(dir), 'guide', 'img')
       mkdirSync(out, { recursive: true })
       for (const file of readdirSync(FIGURES)) {
         copyFileSync(join(FIGURES, file), join(out, file))
@@ -64,17 +64,18 @@ const figures = () => ({
 
 export default defineConfig({
   site: 'https://videoskillet.com',
-  base: '/guide',
-  srcDir: './guide',
-  outDir: './dist/guide',
-  // The site has no static files of its own — the figures come from `docs/img`
-  // through the integration above. Pointed away from the repo's `public/`, which
-  // is the app's and would land whole inside `dist/guide/`.
-  publicDir: './guide/public',
-  // Flat `*.html` in one directory. `scripts/guidecheck.mjs` reads the output
-  // non-recursively, so nested pages would go unchecked without saying so, and
-  // flat names are what let every cross-link and figure stay relative.
-  build: { format: 'file' },
+  srcDir: './site',
+  // Astro owns the site root, so it builds first and vite adds the three app
+  // entries to what it left (vite.config.ts).
+  outDir: './dist',
+  publicDir: './public',
+  // Flat `*.html` in one directory, laid out the way the pages directory is.
+  // `scripts/guidecheck.mjs` reads the guide non-recursively, so nested pages
+  // would go unchecked without saying so, and flat names are what let every
+  // cross-link and figure stay relative. `file` would be the obvious setting
+  // and is the wrong one: it renders a directory's index as `guide.html`
+  // beside the directory rather than `guide/index.html` inside it.
+  build: { format: 'preserve' },
   integrations: [figures()],
   markdown: {
     // `build-guide.mjs` emitted plain <pre>, styled by the guide's own palette.

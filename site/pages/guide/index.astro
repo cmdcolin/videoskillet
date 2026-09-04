@@ -1,0 +1,10 @@
+---
+import GuideDoc from '../../components/GuideDoc.astro'
+import { ALL } from '../../lib/pages.mjs'
+
+// `index` is a reserved route param, so the guide's own front page is a route
+// of its own rather than one more entry in the dynamic one beside it.
+const spec = ALL.find(page => page.out === 'index.html')
+---
+
+<GuideDoc spec={spec} />
