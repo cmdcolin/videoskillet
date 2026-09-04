@@ -8,22 +8,31 @@
 // arrived at a wall of analog damage with no window, no panel and no hand.
 //
 // These are recordings of the whole window, and each one is a sentence about
-// the app rather than a look: here is a picture built out of nothing, here is
-// one button handing you three you did not build, here is the map the controls
-// hang off.
+// the app rather than a look: here is one button handing you three looks you
+// did not build, here is the map the controls hang off, here is a picture built
+// out of nothing.
 //
-// **The middle one used to be a fault dialled into clean bars**, and it was the
-// weakest thing on the page: a slow bow in a colour bar, next to a gallery of
-// looks somebody had already tuned. What the button does is the better sentence
-// and the better picture, and it is now reproducible enough to record:
-// `?seed=` (ui/useRollRand.ts) is what makes a take of somebody pressing random
-// the same take next time.
+// **The order is that of what says analog first.** `build` opened the stage
+// until it was demoted, and the reason is what it arrives at: a soft field of
+// flowing rainbow, which is the one frame on this page a stranger can read as a
+// shader rather than as a television. The mechanism behind it is the most
+// analog thing here — a composite loop carrying its own subcarrier, half a turn
+// of hue a lap — and none of that is on the screen. `roll` puts a torn,
+// mistracking photograph in the first frame, and nobody has to be told what
+// that is a picture of, so it opens the reel and `build` finishes it.
 //
-// **The first two start on a bare load and get somewhere while you watch**,
-// which is the whole point of them and took two wrong turns to arrive at. The
-// slides used to run on the bundled photograph through a tape path, chosen
-// because damage is legible on a cat — a stranger watching a slider bend a
-// photograph has been shown that the program has sliders, and nothing else. So
+// **`roll` used to be the middle slide, and before that it was a fault dialled
+// into clean bars**, which was the weakest thing on the page: a slow bow in a
+// colour bar, next to a gallery of looks somebody had already tuned. What the
+// button does is the better sentence and the better picture, and it is now
+// reproducible enough to record: `?seed=` (ui/useRollRand.ts) is what makes a
+// take of somebody pressing random the same take next time.
+//
+// **`roll` and `build` both start on a bare load and get somewhere while you
+// watch**, which is the whole point of them and took two wrong turns to arrive
+// at. The slides used to run on the bundled photograph through a tape path,
+// chosen because damage is legible on a cat — a stranger watching a slider bend
+// a photograph has been shown that the program has sliders, and nothing else. So
 // they were moved onto the looks the gallery lists, with one row of each wound
 // back so a drag could arrive at it — and that is worse, because arriving at a
 // picture somebody else already built is not building one. The board was
@@ -31,14 +40,14 @@
 // the credit.
 //
 // What is left is the honest version and it is also the better film: colour
-// bars on stock controls, three rows raised in the order the mechanism runs,
+// bars on stock controls, four rows raised in the order the mechanism runs,
 // and a field of rainbow that was not there fifteen seconds ago. Nothing is
 // loaded that the hand does not do.
 //
-// The photograph is back in the second slide, and against none of that. The
-// objection is to a *slider* on a cat, which shows that the program has
-// sliders; that slide's hand presses one button, so what the frame has to carry
-// is how far three presses travel. Screened both ways over the same twelve
+// The photograph is back in `roll`, and against none of that. The objection is
+// to a *slider* on a cat, which shows that the program has sliders; that
+// slide's hand presses one button, so what the frame has to carry is how far
+// three presses travel. Screened both ways over the same twelve
 // seeds: on bars, three rolls read as three sets of bars in different colours,
 // and on the photograph the same three are a torn print, a hard duotone and a
 // warm dirty one.
@@ -166,6 +175,85 @@ const MAP_WALK = [
 
 export const slides = [
   {
+    file: 'roll',
+    name: 'Random',
+    caption:
+      'One button, pressed three times. Each press stacks a few of the authored looks over stock and travels to the result in a second — so it is a way of looking around the space rather than a shuffle, and the preset chips light up to say what went into the one you are looking at. Press it again from wherever you land.',
+    alt: 'The window on the bundled photograph of a cat, and the random look button pressed three times: the picture becomes a torn scanline mess, then a hard orange and teal, then a warm dirty print, each arriving over a second',
+    // The photograph rather than the colour bars the other two slides open on.
+    // A roll is legible on a face and abstract on bars — the same reason the
+    // app ships this picture — and it is the picture a stranger has that the
+    // page has been claiming things about.
+    //
+    // `seed` in the query is the app's, not this file's: `?seed=` puts the
+    // session's rolls on one generator (ui/useRollRand.ts), so this take is the
+    // take the next recording gets too. Screened over seeds 1-12 for three
+    // rolls that each leave a picture you can still read: most seeds spend at
+    // least one press on a white blow-out or a grey wash, which says nothing
+    // about what the button is for.
+    params: { src: 'cat', seed: 7 },
+    // The second roll, which is the loudest of the three. The finish is a warm
+    // print that reads as a photograph somebody has been unkind to, and as a
+    // still it understates the button.
+    stillAt: 0.62,
+    warm: 60,
+    // Three presses on one button, and the pointer never leaves it. Each is
+    // followed by the second the morph takes to travel plus a beat to look at
+    // where it landed — a press whose picture is still moving when the next one
+    // lands reads as one long smear rather than as three looks.
+    act: [
+      { hold: 0.8 },
+      { moveTo: { text: 'random look' }, secs: 0.7 },
+      { press: 2.6, on: 'random look' },
+      { press: 2.6, on: 'random look' },
+      { press: 3, on: 'random look' },
+      { away: 0.5 },
+    ],
+    // In portrait the look bar is under the picture with the panel, so it is
+    // scrolled to before the pointer goes anywhere near it.
+    narrowAct: [
+      { hold: 0.6 },
+      { scrollTo: { text: 'random look' }, secs: 0.7 },
+      { moveTo: { text: 'random look' }, secs: 0.7 },
+      { press: 2.6, on: 'random look' },
+      { press: 2.6, on: 'random look' },
+      { press: 3, on: 'random look' },
+      { away: 0.5 },
+    ],
+  },
+  {
+    file: 'signal-path',
+    name: 'The signal path',
+    caption:
+      'The map is the rig: two sources into a mixer, then the channel it is recorded and broadcast over, the receiver that decodes it and the screen it lands on. Click a stage and its controls open under it.',
+    alt: 'The window with the signal path map at the head of the panel, the RECEIVER box pressed and its stage unfolded underneath, over a picture of a bright scanline arch bending across the frame in red and green fringes',
+    // The backdrop, and it is doing a job: the map walk is the content, so what
+    // is behind it only has to be worth looking at for seven seconds. It used
+    // to be `Fuzzy color bars feedback`, which is a soft brown smear that never
+    // changes — 12K a second of encode against the other two slides' 57K, which
+    // is the file size saying the same thing. This one is the gallery's own
+    // first look, it carries two mod wires, and it moves.
+    look: 'Wiggity',
+    // Presets folded, which is the app's own resting state and also what keeps
+    // the loop shut: opening a stage folds that section away to give the stage
+    // the room, and closing the stage does not put it back — so a clip that
+    // started with it open ended with it shut and jumped every time it came
+    // round.
+    seed: {
+      video_feedback_sections: JSON.stringify({
+        Presets: false,
+        Scenes: false,
+        'Sound into the picture': false,
+      }),
+    },
+    warm: 200,
+    act: MAP_WALK,
+    // In portrait the panel is the bottom half of a phone and the map starts
+    // below its fold, so it is scrolled to first and everything after that is
+    // the same walk.
+    narrowAct: [{ scrollTo: { stage: 'SOURCE A' }, secs: 0.8 }, ...MAP_WALK],
+  },
+  {
     file: 'build',
     name: 'From clean',
     caption:
@@ -255,85 +343,6 @@ export const slides = [
       { hold: 2 },
       { away: 0.5 },
     ],
-  },
-  {
-    file: 'roll',
-    name: 'Random',
-    caption:
-      'One button, pressed three times. Each press stacks a few of the authored looks over stock and travels to the result in a second — so it is a way of looking around the space rather than a shuffle, and the preset chips light up to say what went into the one you are looking at. Press it again from wherever you land.',
-    alt: 'The window on the bundled photograph of a cat, and the random look button pressed three times: the picture becomes a torn scanline mess, then a hard orange and teal, then a warm dirty print, each arriving over a second',
-    // The photograph rather than the colour bars the other two slides open on.
-    // A roll is legible on a face and abstract on bars — the same reason the
-    // app ships this picture — and it is the picture a stranger has that the
-    // page has been claiming things about.
-    //
-    // `seed` in the query is the app's, not this file's: `?seed=` puts the
-    // session's rolls on one generator (ui/useRollRand.ts), so this take is the
-    // take the next recording gets too. Screened over seeds 1-12 for three
-    // rolls that each leave a picture you can still read: most seeds spend at
-    // least one press on a white blow-out or a grey wash, which says nothing
-    // about what the button is for.
-    params: { src: 'cat', seed: 7 },
-    // The second roll, which is the loudest of the three. The finish is a warm
-    // print that reads as a photograph somebody has been unkind to, and as a
-    // still it understates the button.
-    stillAt: 0.62,
-    warm: 60,
-    // Three presses on one button, and the pointer never leaves it. Each is
-    // followed by the second the morph takes to travel plus a beat to look at
-    // where it landed — a press whose picture is still moving when the next one
-    // lands reads as one long smear rather than as three looks.
-    act: [
-      { hold: 0.8 },
-      { moveTo: { text: 'random look' }, secs: 0.7 },
-      { press: 2.6, on: 'random look' },
-      { press: 2.6, on: 'random look' },
-      { press: 3, on: 'random look' },
-      { away: 0.5 },
-    ],
-    // In portrait the look bar is under the picture with the panel, so it is
-    // scrolled to before the pointer goes anywhere near it.
-    narrowAct: [
-      { hold: 0.6 },
-      { scrollTo: { text: 'random look' }, secs: 0.7 },
-      { moveTo: { text: 'random look' }, secs: 0.7 },
-      { press: 2.6, on: 'random look' },
-      { press: 2.6, on: 'random look' },
-      { press: 3, on: 'random look' },
-      { away: 0.5 },
-    ],
-  },
-  {
-    file: 'signal-path',
-    name: 'The signal path',
-    caption:
-      'The map is the rig: two sources into a mixer, then the channel it is recorded and broadcast over, the receiver that decodes it and the screen it lands on. Click a stage and its controls open under it.',
-    alt: 'The window with the signal path map at the head of the panel, the RECEIVER box pressed and its stage unfolded underneath, over a picture of a bright scanline arch bending across the frame in red and green fringes',
-    // The backdrop, and it is doing a job: the map walk is the content, so what
-    // is behind it only has to be worth looking at for seven seconds. It used
-    // to be `Fuzzy color bars feedback`, which is a soft brown smear that never
-    // changes — 12K a second of encode against the other two slides' 57K, which
-    // is the file size saying the same thing. This one is the gallery's own
-    // first look, it carries two mod wires, and it moves.
-    look: 'Wiggity',
-    // Presets folded, which is the app's own resting state and also what keeps
-    // the loop shut: opening a stage folds that section away to give the stage
-    // the room, and closing the stage does not put it back — so a clip that
-    // started with it open ended with it shut and jumped every time it came
-    // round.
-    seed: {
-      video_feedback_sections: JSON.stringify({
-        Presets: false,
-        Scenes: false,
-        'Sound into the picture': false,
-      }),
-    },
-    warm: 200,
-    act: MAP_WALK,
-    // In portrait the panel is the bottom half of a phone and the map starts
-    // below its fold, so it is scrolled to first and everything after that is
-    // the same walk.
-    narrowAct: [{ scrollTo: { stage: 'SOURCE A' }, secs: 0.8 }, ...MAP_WALK],
   },
 ].map(slide => {
   const board =
