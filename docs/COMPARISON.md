@@ -20,7 +20,7 @@ as AE / Premiere / OpenFX plugins, so Resolve, Vegas, HitFilm and Natron all
 reach it. Multithreaded, SIMD-accelerated Rust on the CPU, and it runs in real
 time well above NTSC resolution — two advantages this project does not have. If
 what you want is this look on a clip in an edit, that is the one to reach for:
-videoskillet.js has no plugin and is not going to have one ([FAQ.md](FAQ.md)).
+videoskillet.js has no plugin and is not going to have one ([the FAQ](FAQ.md)).
 
 ### BENDR
 
@@ -103,7 +103,7 @@ write, not a re-render. That buys:
 
 - **No plugin, and no timeline.** Clips line up in a rundown, not on an NLE
   timeline, and none of this becomes a plugin for somebody else's — deliberately
-  ([EDITOR.md](EDITOR.md)). A rendered take carries no audio track either.
+  ([the editor](EDITOR.md)). A rendered take carries no audio track either.
 - **The raster is fixed** at 910×525 samples, 754×480 active, so a 4K source is
   sampled down to NTSC resolution.
 - **A take is only reproducible from clips.** Offline renders of one take come
@@ -111,7 +111,7 @@ write, not a re-render. That buys:
   so those are real-time capture.
 - **It needs a WebGPU browser** — on Linux, Firefox Nightly or Chrome.
 - **The model is progressive** 525/60 rather than interlaced at field rate, the
-  largest remaining authenticity gap ([ARCHITECTURE.md](ARCHITECTURE.md)).
+  largest remaining authenticity gap ([the architecture](ARCHITECTURE.md)).
 
 <sub>All free and open source, except the hardware. Written from the other
 projects' own documentation and source, not from benchmarks run here — nothing

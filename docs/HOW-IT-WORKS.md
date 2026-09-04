@@ -60,6 +60,6 @@ number the next frame reads. Nothing recompiles.
 ---
 
 Pass list in `src/core/gpu/pipeline.ts`, shaders in `src/core/gpu/shaders/`. The
-full pass order and buffer layouts are in [`ARCHITECTURE.md`](ARCHITECTURE.md);
+full pass order and buffer layouts are in [the architecture](ARCHITECTURE.md);
 what keeps a dozen of those passes inside a 60 Hz budget is in
-[`OPTIMIZATIONS.md`](OPTIMIZATIONS.md).
+[the optimizations](OPTIMIZATIONS.md).

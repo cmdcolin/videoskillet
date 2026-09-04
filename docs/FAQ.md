@@ -2,13 +2,13 @@
 
 The questions that keep arriving, all versions of the same one: why is this a
 whole app instead of something that plugs into what you already run. The longer
-arguments live in [COMPARISON.md](COMPARISON.md) and [EDITOR.md](EDITOR.md);
+arguments live in [Choosing a tool](COMPARISON.md) and [the editor](EDITOR.md);
 this page is the short answer plus what to do instead.
 
 ## Why isn't this a plugin for After Effects, Premiere or Resolve?
 
 Investigated and declined — the full findings are in
-[EDITOR.md](EDITOR.md#what-this-is-not-an-nle-plugin). Three of them, in the
+[the editor](EDITOR.md#what-this-is-not-an-nle-plugin). Three of them, in the
 order of how fast each one kills it.
 
 **There is no "the shaders" to port.** The WGSL is about a third of the
@@ -29,7 +29,7 @@ phosphor persistence, the PLL's lock age, the AGC and the two servos all make
 frame N a function of every frame before it. Under a timeline that means
 scrubbing is wrong, playing from the middle is wrong, and a viewer means nothing
 until it has rendered from the top. Those loops are what
-[COMPARISON.md](COMPARISON.md) names as the thing distinguishing this project
+[Choosing a tool](COMPARISON.md) names as the thing distinguishing this project
 from its neighbours, and they are exactly the parts that cannot survive being a
 plugin.
 
@@ -57,7 +57,7 @@ comes back as a file at a rate that never drifts.
 Most of this works now, with no code on either side:
 
 - **Control in** — MIDI CC and MIDI clock over a virtual port (IAC bus,
-  loopMIDI). Every slider learns a CC; see [MIDI.md](MIDI.md).
+  loopMIDI). Every slider learns a CC; see [Using a MIDI controller](MIDI.md).
 - **Audio in** — pick **System audio** under **♪** and share the tab or app the
   patch is playing out of; it reaches the audio-driven bend, load and level
   controls, so a patch's output bends the signal directly. A loopback device
@@ -74,8 +74,9 @@ Worth it because controls are already a flat named record behind one write path:
 a patch could address `/hHold`, `/scDetuneKHz` or `/bendUs` by name, with float
 precision and none of the 128-control CC ceiling. The same channel run backwards
 would let a patch's UI track the app. _Patching into other apps_ in
-[IDEAS.md](IDEAS.md) carries the shape of both, along with NDI or WebRTC output
-for anyone who needs the picture back in Jitter without the OBS round trip.
+[the backlog](IDEAS.md) carries the shape of both, along with NDI or WebRTC
+output for anyone who needs the picture back in Jitter without the OBS round
+trip.
 
 Going the other way — hosting the app _inside_ a patch — is the one arrangement
 to rule out. Max's `jweb` embeds a web view but is unlikely to expose WebGPU.

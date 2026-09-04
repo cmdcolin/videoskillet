@@ -1,8 +1,14 @@
-// The docs site: renders the reader-facing markdown into static pages under
+// The docs site: renders every document under docs/ into a static page under
 // dist/guide/, which GitHub Pages then serves beside the app at /guide/.
 //
 // Run by `pnpm build` after vite, or on its own with `node scripts/build-guide.mjs`
 // (add --out=DIR to render somewhere else).
+//
+// Everything the site links to is a page of the site. The reader's tour comes
+// first and carries the nav across the top; the contributor docs, the decision
+// records and the handoffs are pages too, on a nav of their own, because a link
+// followed off this site into a raw markdown view on GitHub is a reader losing
+// the styling, the section nav and the way back.
 //
 // The markdown files stay the source of truth and stay readable on GitHub: the
 // only thing added here is what a static site needs and a repo view can't have —
@@ -23,7 +29,9 @@ import { basename, dirname, join, posix } from 'node:path'
 const outArg = process.argv.find(a => a.startsWith('--out='))
 const outDir = outArg === undefined ? 'dist/guide' : outArg.slice(6)
 
-const PAGES = [
+// The reader's sequence: the tour, in the order someone new to the thing wants
+// it. This is what the header nav across the top of every page is.
+const GUIDE = [
   // The landing page is the short one: what this is, four steps, a picture of
   // the panel. Everything that used to be on it lives in the user guide.
   {
@@ -53,31 +61,101 @@ const PAGES = [
   // Last, because it is the page a reader wants once they have decided to keep
   // the thing: what an install needs of the hardware, and how to make one.
   { file: 'docs/INSTALL.md', out: 'install.html', nav: 'Install' },
-  // ARCHITECTURE.md is deliberately not here. It is contributor material, and
-  // a reader's nav is the wrong place for it; the part of it a reader wants —
-  // the signal path and the three domains — is in HOW-IT-WORKS.md, and links to
-  // it fall through to the repo like any other contributor doc.
 ]
 
-// Markdown link -> where it goes on the site. Anything else that ends in .md is
-// a contributor doc with no page here, so it goes to the repo.
+// The contributor docs. A link on this site lands on a page of this site, which
+// is why these are here: the FAQ's "what an editor would have to be" pointed at
+// a raw markdown view on GitHub, and so did the architecture link under how it
+// works. They are still not the reader's tour, so they carry a nav of their own
+// rather than lengthening the one across the top of the guide.
+const NOTES = [
+  {
+    file: 'docs/ARCHITECTURE.md',
+    out: 'architecture.html',
+    nav: 'Architecture',
+  },
+  {
+    file: 'docs/OPTIMIZATIONS.md',
+    out: 'optimizations.html',
+    nav: 'Optimizations',
+  },
+  { file: 'docs/DEVELOPMENT.md', out: 'development.html', nav: 'Development' },
+  { file: 'docs/EDITOR.md', out: 'editor.html', nav: 'Editor' },
+  { file: 'docs/IDEAS.md', out: 'ideas.html', nav: 'Ideas' },
+  { file: 'docs/adr/README.md', out: 'decisions.html', nav: 'Decisions' },
+  { file: 'docs/handoffs/README.md', out: 'handoffs.html', nav: 'Handoffs' },
+]
+
+// The decision records and the handoffs, read off their directories so a new
+// one is a page without being named twice, and titled from their own h1. Flat
+// output names (`adr-0004-….html`) keep every page in one directory, which is
+// what lets the figures and every cross-link stay relative.
+const heading = file => {
+  const line = readFileSync(file, 'utf8')
+    .split('\n')
+    .find(l => l.startsWith('# '))
+  return line === undefined ? basename(file, '.md') : line.slice(2)
+}
+const folder = (dir, prefix) =>
+  readdirSync(dir)
+    .filter(f => f.endsWith('.md') && f !== 'README.md')
+    .sort()
+    .map(f => ({
+      file: `${dir}/${f}`,
+      out: `${prefix}-${f.replace(/\.md$/, '.html')}`,
+      nav: heading(`${dir}/${f}`),
+    }))
+const ADRS = folder('docs/adr', 'adr')
+const HANDOFFS = folder('docs/handoffs', 'handoff')
+
+// Which pages a page's header nav and its previous/next run over. The records
+// borrow the notes nav with Decisions marked, since their own index is that
+// page and a nav of eight numbered titles is a wall.
+const GROUPS = [
+  {
+    label: 'guide',
+    pages: GUIDE,
+    nav: GUIDE,
+    mark: spec => spec.out,
+    foot: { href: 'architecture.html', text: 'How it is built' },
+  },
+  {
+    label: 'notes',
+    pages: NOTES,
+    nav: NOTES,
+    mark: spec => spec.out,
+    foot: { href: 'index.html', text: 'Guide' },
+  },
+  {
+    label: 'decisions',
+    pages: ADRS,
+    nav: NOTES,
+    mark: () => 'decisions.html',
+    foot: { href: 'decisions.html', text: 'All decisions' },
+  },
+  {
+    label: 'handoff',
+    pages: HANDOFFS,
+    nav: NOTES,
+    mark: () => 'handoffs.html',
+    foot: { href: 'handoffs.html', text: 'All handoffs' },
+  },
+]
+const ALL = GROUPS.flatMap(group =>
+  group.pages.map(spec => ({ ...spec, group })),
+)
+
+// Where a markdown link goes on the site, keyed by the source path it resolves
+// to. Anything else relative is a file with no page here — a script, a source
+// file, a working note — so it goes to the repo.
 const REPO = 'https://github.com/cmdcolin/videoskillet/blob/main/'
+// A directory has no blob to point at, and the two the docs link to are the two
+// that have an index page here anyway.
+const REPO_DIR = 'https://github.com/cmdcolin/videoskillet/tree/main/'
 const LINKS = new Map([
-  ['GETTING-STARTED.md', 'index.html'],
-  ['USER-GUIDE.md', 'guide.html'],
-  ['HOW-IT-WORKS.md', 'how-it-works.html'],
-  // Split apart again, on a different seam than the one that was merged. The
-  // old FEATURES.md was a second hand-written list of the same things, which is
-  // why it went; this one is the hand-written half of a page whose other half
-  // is now generated from the control table (scripts/docgen.mjs). Prose
-  // that argues a point and a table of 235 controls are not the same document,
-  // and only one of them can be generated.
-  ['FEATURES.md', 'features.html'],
-  ['EFFECTS.md', 'effects.html'],
-  ['MIDI.md', 'midi.html'],
-  ['COMPARISON.md', 'comparison.html'],
-  ['FAQ.md', 'faq.html'],
-  ['INSTALL.md', 'install.html'],
+  ...ALL.map(spec => [spec.file, spec.out]),
+  ['docs/adr', 'decisions.html'],
+  ['docs/handoffs', 'handoffs.html'],
 ])
 
 const slug = text =>
@@ -120,22 +198,27 @@ md.renderer.rules.heading_close = (tokens, i, opts, _env, self) => {
 md.renderer.rules.table_open = () => '<div class="tablewrap"><table>'
 md.renderer.rules.table_close = () => '</table></div>'
 
-// Repoint cross-document links at the site's own pages. Paths are relative and
-// vary by where the source file sits (docs/EFFECTS.md vs ../EFFECTS.md), so
-// match on the basename; anything else relative is a file with no page here
-// (a contributor doc, a script) and goes to the repo, resolved from the source
-// file's own directory so `../scripts/x.mjs` lands on `scripts/x.mjs`.
+// Repoint cross-document links at the site's own pages. Every relative href is
+// resolved from the source file's own directory first, so `EDITOR.md` in
+// docs/FAQ.md and `../EDITOR.md` in an ADR arrive at the same key — and so
+// `../scripts/x.mjs`, which has no page here, lands on `scripts/x.mjs` in the
+// repo. The figures are copied flat beside the pages, so a path into docs/img
+// becomes `img/…` whichever directory asked for it.
+const IMG = 'docs/img/'
 const rewriteLink = (href, dir) => {
   const [path, hash] = href.split('#')
-  const page = LINKS.get(basename(path))
   const anchor = hash === undefined ? '' : `#${hash}`
-  return href.startsWith('http') ||
-    href.startsWith('#') ||
-    path.startsWith('img/')
+  const target = posix.normalize(posix.join(dir, path))
+  const isDir = target.endsWith('/')
+  const file = isDir ? target.slice(0, -1) : target
+  const page = LINKS.get(file)
+  return /^[a-z]+:/.test(href) || href.startsWith('#')
     ? href
-    : page !== undefined
-      ? page + anchor
-      : REPO + posix.normalize(posix.join(dir, path)) + anchor
+    : file.startsWith(IMG)
+      ? `img/${file.slice(IMG.length)}${anchor}`
+      : page !== undefined
+        ? page + anchor
+        : (isDir ? REPO_DIR : REPO) + file + anchor
 }
 const defaultLinkOpen =
   md.renderer.rules.link_open ??
@@ -221,37 +304,38 @@ ${headings
 </nav>
 </details>`
 
-// Previous / next across PAGES, so the site reads as a sequence rather than six
-// unrelated documents. On a phone this is also the way back to the nav without
-// scrolling to the top: the header does not stick down there.
+// Previous / next across the page's own group, so the site reads as a sequence
+// rather than six unrelated documents. On a phone this is also the way back to
+// the nav without scrolling to the top: the header does not stick down there.
 const pagerFor = current => {
-  const i = PAGES.findIndex(p => p.out === current)
+  const pages = current.group.pages
+  const i = pages.findIndex(p => p.out === current.out)
   const link = (spec, rel, label) =>
     spec === undefined
       ? '<span></span>'
-      : `<a class="${rel}" href="${spec.out}"><span>${label}</span><b>${spec.nav}</b></a>`
+      : `<a class="${rel}" href="${spec.out}"><span>${label}</span><b>${esc(spec.nav)}</b></a>`
   return `<nav class="pager" aria-label="Pages">
-${link(PAGES[i - 1], 'prev', '← Previous')}
-${link(PAGES[i + 1], 'next', 'Next →')}
+${link(pages[i - 1], 'prev', '← Previous')}
+${link(pages[i + 1], 'next', 'Next →')}
 </nav>`
 }
 
-const page = (body, title, current, headings) => `<!doctype html>
+const page = (body, spec, headings) => `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>${title} — videoskillet.js</title>
+<title>${esc(spec.nav)} — videoskillet.js</title>
 <meta name="description" content="${esc(summarise(body))}">
-<link rel="canonical" href="${url(current)}">
+<link rel="canonical" href="${url(spec.out)}">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <meta name="theme-color" content="#0e0e11">
 <meta name="color-scheme" content="dark">
 <!-- A guide page shared on its own unfurls as itself, not as a bare filename. -->
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="videoskillet.js">
-<meta property="og:url" content="${url(current)}">
-<meta property="og:title" content="${esc(title)} — videoskillet.js">
+<meta property="og:url" content="${url(spec.out)}">
+<meta property="og:title" content="${esc(spec.nav)} — videoskillet.js">
 <meta property="og:description" content="${esc(summarise(body))}">
 <meta property="og:image" content="${SITE}og.jpg">
 <meta name="twitter:card" content="summary_large_image">
@@ -311,6 +395,10 @@ header { border-bottom: 1px solid var(--border); background: var(--bg); }
 .pages {
   display: flex; gap: 22px; width: 100%; order: 1; overflow-x: auto;
   padding: 4px 0 0; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+}
+/* Set by script on a row that actually has more to the right of it, so the
+   fade is a promise of something rather than a soft edge on the last link. */
+.pages.over {
   mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent);
 }
 .pages::-webkit-scrollbar { display: none; }
@@ -477,10 +565,13 @@ footer { border-top: 1px solid var(--border); background: var(--card); }
     align-items: stretch;
   }
   .brand, .cta { align-self: center; margin-right: 0; }
-  /* margin-right auto is what pushes the call to action to the far edge. */
+  /* The call to action keeps its width and the page links give theirs up: with
+     both free to shrink, a nine-page nav at 1352px put "Install" underneath
+     "Open the app". Scrolling the row is what a phone already does with it. */
+  .cta { flex: none; }
   .pages {
     width: auto; order: 0; margin: 0 auto 0 1.6rem; padding: 0;
-    mask-image: none; overflow: visible;
+    gap: 16px; overflow-x: auto;
   }
   .pages a { display: flex; align-items: center; padding: 0; }
   /* Clear the sticky bar when an anchor scrolls a heading into view. */
@@ -518,9 +609,9 @@ footer { border-top: 1px solid var(--border); background: var(--card); }
 <a class="skip" href="#content">Skip to content</a>
 <header>
   <div class="bar">
-    <a class="brand" href="index.html">videoskillet.js<span>guide</span></a>
+    <a class="brand" href="index.html">videoskillet.js<span>${spec.group.label}</span></a>
     <nav class="pages" aria-label="Guide pages">
-      ${PAGES.map(p => `<a${p.out === current ? ' class="on" aria-current="page"' : ''} href="${p.out}">${p.nav}</a>`).join('\n      ')}
+      ${spec.group.nav.map(p => `<a${p.out === spec.group.mark(spec) ? ' class="on" aria-current="page"' : ''} href="${p.out}">${esc(p.nav)}</a>`).join('\n      ')}
     </nav>
     <a class="cta" href="../">Open the app ↗</a>
   </div>
@@ -529,12 +620,13 @@ footer { border-top: 1px solid var(--border); background: var(--card); }
 ${tocFor(headings)}
 <main id="content">
 ${body}
-${pagerFor(current)}
+${pagerFor(spec)}
 </main>
 </div>
 <footer>
   <div class="foot">
     <a href="../">Live demo ↗</a>
+    <a href="${spec.group.foot.href}">${spec.group.foot.text}</a>
     <a href="https://github.com/cmdcolin/videoskillet">Source ↗</a>
     <a href="https://github.com/cmdcolin/videoskillet/issues">Issues ↗</a>
     <a href="#top">Back to top ↑</a>
@@ -551,10 +643,16 @@ ${pagerFor(current)}
 
   var pages = document.querySelector('.pages')
   var on = pages && pages.querySelector('a.on')
-  // Scroll the current page into view only while the row actually scrolls,
-  // i.e. on a phone, where it is otherwise off the right-hand end.
-  if (on && pages.scrollWidth > pages.clientWidth) {
-    on.scrollIntoView({ inline: 'center', block: 'nearest' })
+  if (pages && pages.scrollWidth > pages.clientWidth) {
+    pages.classList.add('over')
+    // Only when the current page is off the end. Centring it unconditionally
+    // scrolled a desktop row that overflowed by 30px far enough to cut
+    // "Getting started" down to "rted".
+    var row = pages.getBoundingClientRect()
+    var here = on && on.getBoundingClientRect()
+    if (here && (here.left < row.left || here.right > row.right)) {
+      on.scrollIntoView({ inline: 'center', block: 'nearest' })
+    }
   }
 
   // Mark the section being read. "The last heading that has passed the top of
@@ -610,18 +708,17 @@ mkdirSync(join(outDir, 'img'), { recursive: true })
 for (const file of readdirSync('docs/img')) {
   copyFileSync(join('docs/img', file), join(outDir, 'img', file))
 }
-for (const spec of PAGES) {
+for (const spec of ALL) {
   // `env` carries the source directory in and the page's outline back out.
   const env = { dir: dirname(spec.file), headings: [] }
   const body = forceDarkDiagrams(
     withLiveLinks(md.render(readFileSync(spec.file, 'utf8'), env)),
   )
-  writeFileSync(
-    join(outDir, spec.out),
-    page(body, spec.nav, spec.out, env.headings),
-  )
+  writeFileSync(join(outDir, spec.out), page(body, spec, env.headings))
   console.log(
     `  ✓ ${join(outDir, spec.out)}` +
-      (env.headings.length < 5 ? '' : ` (${env.headings.length} sections)`),
+      (env.headings.length < NAV_MIN
+        ? ''
+        : ` (${env.headings.length} sections)`),
   )
 }

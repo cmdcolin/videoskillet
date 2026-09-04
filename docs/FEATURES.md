@@ -172,7 +172,7 @@ the receiver's vertical oscillator, downstream of anything the sound can reach.
   fraction of that control's range, so the slider stays the centre and a preset
   still holds the look. Rates lock to a tapped BPM or MIDI clock.
 - **MIDI** — any controller sending CC, with learn, auto-map and soft takeover.
-  See [MIDI.md](MIDI.md).
+  See [Using a MIDI controller](MIDI.md).
 - **Presets** — also faders you can drag partway in. Morph, random nudge, full
   undo, and saved profiles behind a sign-in.
 - **Drift** — one switch and the look wanders on its own, unattended: a gentle
