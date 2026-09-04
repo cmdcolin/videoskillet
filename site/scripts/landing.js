@@ -96,6 +96,36 @@ const motion = matchMedia('(prefers-reduced-motion: reduce)')
   // the reader came back to the tab, and set it playing off screen.
   const running = () => inView && !document.hidden && (!motion.matches || asked)
 
+  // The next slide, opened once the one showing is running. A tab pressed
+  // before its own clip is open is 770ms of a still with nothing happening on
+  // it, against 2ms when it was opened ahead — and the stage walks into that
+  // gap on its own every time it advances, so what a reader waits for is only
+  // ever the first slide.
+  //
+  // One ahead rather than all of them, which was the first try: these are
+  // 2-3M each, and opening both of the others the moment the first was
+  // playing was a 5.2M burst 900ms into the page. The reel advances in
+  // order, so one ahead is the same reel arriving in the same state, spread
+  // over the time it is actually watched.
+  const ahead = () => {
+    const next = slides[(at + 1) % slides.length]
+    const still = next.querySelector('.still')
+    if (!still.getAttribute('src')) {
+      still.src = pick(still)
+    }
+    const clip = next.querySelector('video')
+    if (!clip.src) {
+      // `auto` where a card settles for `metadata`, because the intent here
+      // is exact: this clip is the one playing next. `metadata` is Chrome's
+      // cue to stop as soon as it has frames — a tenth of the file on the
+      // cards, which is the right trade for a hover and the wrong one for a
+      // slide about to run for sixteen seconds. Firefox takes the whole file
+      // on either word.
+      clip.preload = 'auto'
+      clip.src = pick(clip)
+    }
+  }
+
   // One clip decodes at a time, and it is the one being looked at. The
   // `live` class lands on the promise rather than beside it, so a clip
   // still opening is never faded up over the still it is there to
@@ -106,11 +136,15 @@ const motion = matchMedia('(prefers-reduced-motion: reduce)')
       if (clip) {
         if (i === at && running()) {
           if (!clip.src) {
+            clip.preload = 'metadata'
             clip.src = pick(clip)
           }
           clip
             .play()
-            .then(() => slide.classList.add('live'))
+            .then(() => {
+              slide.classList.add('live')
+              ahead()
+            })
             .catch(() => {})
         } else {
           clip.pause()
@@ -208,6 +242,18 @@ const motion = matchMedia('(prefers-reduced-motion: reduce)')
 const cards = [...document.querySelectorAll('.demo')]
 let live
 
+// `preload` is raised off the markup's `none` as well as the source being set,
+// and that is the half that does the work: a `src` on a clip the browser has
+// been told not to preload leaves it at readyState 0 until something plays it,
+// so opening one without this buys nothing at all.
+const open = card => {
+  const clip = card.querySelector('video')
+  if (!clip.src) {
+    clip.preload = 'metadata'
+    clip.src = clip.dataset.src
+  }
+}
+
 const activate = card => {
   if (live !== card) {
     if (live) {
@@ -216,10 +262,8 @@ const activate = card => {
     }
     live = card
     if (card) {
+      open(card)
       const clip = card.querySelector('video')
-      if (!clip.src) {
-        clip.src = clip.dataset.src
-      }
       // The class lands on the promise rather than beside it, so a clip
       // that is still opening never gets faded up over the still it is
       // there to replace.
@@ -236,6 +280,63 @@ for (const card of cards) {
   card.addEventListener('pointerleave', () => activate(undefined))
   card.addEventListener('focus', () => activate(card))
   card.addEventListener('blur', () => activate(undefined))
+}
+
+// What made hovering a card look like it had done nothing is the decode, not
+// the fetch. A clip opened at the moment the pointer lands on it is 233-488ms
+// from a first frame in Chrome, and 150-700ms in Firefox with the file already
+// in cache — up to 1.9s on a cold one. That is long enough that the reader has
+// moved the mouse again by then and reads *that* as what started it. So a card
+// opens its clip when it reaches the screen, and the hover has only play() left
+// to do: 1ms.
+//
+// The whole gallery costs 279K on Chrome, which stops once it has frames. On
+// Firefox, which takes the whole of every clip it is shown, a screenful is
+// 1.8M. It is still the rule the page has always kept — a card on screen is a
+// card about to be looked at — and it is asked of a pointer that can hover, so
+// a phone fetches one clip at a time as it scrolls past, as before. The margin
+// makes it a look-ahead rather than an arrival: a card is open before it
+// reaches the screen, because scrolling down and hovering the card that has
+// just come up is the ordinary way to read a gallery.
+//
+// Waiting for the window to load is the other half, and it is not politeness.
+// The stage is 541px down a 950px window, so it is *on screen* at load and its
+// own clip starts at 431ms; a margin this wide reaches the gallery from up
+// there, and three cards were opening alongside it before anybody had
+// scrolled. The page's first job is the picture already in front of the
+// reader.
+//
+// Not for a reader who asked for reduced motion, who gets the clip on hover
+// the way they always did — hover is something they *did*, and it still plays
+// — but is not handed 2.2M of the gallery in advance on the chance of it.
+if (!motion.matches && matchMedia('(hover: hover)').matches) {
+  const lookAhead = () => {
+    const showing = new IntersectionObserver(
+      entries => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            open(entry.target)
+          }
+        }
+      },
+      { rootMargin: '800px 0px' },
+    )
+    for (const card of cards) {
+      showing.observe(card)
+    }
+  }
+  const settled = () => {
+    if (window.requestIdleCallback === undefined) {
+      lookAhead()
+    } else {
+      requestIdleCallback(() => lookAhead())
+    }
+  }
+  if (document.readyState === 'complete') {
+    settled()
+  } else {
+    addEventListener('load', () => settled())
+  }
 }
 
 if (!motion.matches && matchMedia('(hover: none)').matches) {

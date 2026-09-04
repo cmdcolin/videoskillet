@@ -1097,25 +1097,34 @@ the gallery and the header are full of it; the window is what the program _is_,
 and until the carousel held it the one thing a stranger could not work out from
 the page was what using this looks like.
 
-**The first two slides start on a bare load and get somewhere while you watch**,
-and that took two wrong turns to arrive at. They used to run on the bundled
-photograph through a tape path, chosen because damage is legible on a cat — a
-stranger watching a slider bend a photograph has been shown that the program has
-sliders, and nothing else. So they were moved onto the looks the gallery lists,
-with one row of each wound back so that a drag could arrive at it. That is
-worse. The board was ninety per cent of the way there before the clip started
-and the drag took the credit, which is a demonstration of nothing.
+**The slides are ordered by what says analog first.** `build` led the stage
+until it was demoted, and what demoted it is the frame it arrives at: a soft
+field of flowing rainbow, which is the one picture on this page a stranger can
+read as a shader rather than as a television. The mechanism under it is the most
+analog thing on the page — a composite loop carrying its own subcarrier, half a
+turn of hue a lap — and none of that shows. `roll` puts a torn, mistracking
+photograph in its first frame, which nobody has to be told the meaning of, so it
+opens the reel now and `build` closes it.
+
+**Two of the three slides start on a bare load and get somewhere while you
+watch**, and that took two wrong turns to arrive at. They used to run on the
+bundled photograph through a tape path, chosen because damage is legible on a
+cat — a stranger watching a slider bend a photograph has been shown that the
+program has sliders, and nothing else. So they were moved onto the looks the
+gallery lists, with one row of each wound back so that a drag could arrive at
+it. That is worse. The board was ninety per cent of the way there before the
+clip started and the drag took the credit, which is a demonstration of nothing.
 
 What ships is the honest version: `params: {}`, so the app opens on the board a
 first visitor gets — stock controls, colour bars on source A — and every value
-that ends up on screen was put there by the hand in the frame. The lead slide
-raises three rows in the order the mechanism runs (camera loop `mix` to 0.9, its
-`gain` a shade past unity, then the mixer loop's `loop mix`) and finishes on a
-field of rainbow that was not there fifteen seconds earlier. `loop gain` is left
-alone precisely because it already rests at 1: a slide that dragged it would be
+that ends up on screen was put there by the hand in the frame. `build` raises
+four rows in the order the mechanism runs (the camera loop's `mix` and `rotate`,
+then the mixer loop's `loop mix` and `loop delay`) and finishes on a field of
+rainbow that was not there fifteen seconds earlier. `loop gain` is left alone
+precisely because it already rests at 1: a slide that dragged it would be
 miming.
 
-**The middle slide is one button pressed three times**, and it is where
+**The stage opens on one button pressed three times**, and it is where
 [`?seed=`](#url-parameters) earns its keep: `random look` stacks a few authored
 presets over stock, so the slide is the app answering "give me one I did not
 build" — three times, each from wherever the last one landed. Unseeded that take
@@ -1131,13 +1140,13 @@ on the page: a slow bow in a colour bar, sitting above a gallery of looks
 somebody had already tuned. What a fault does is the gallery's job and the
 guide's; what the button does is the app's.
 
-Finding the lead slide's three rows took a probe rather than a guess, and it is
-worth knowing why. Colour bars are already saturated, so chroma gain at 12x
-clips them back to almost the same bars — the photograph was in there for a
-reason. And the camera loop alone runs away to white: `fbMix` and `fbGain`
-multiply, so what makes the picture breed structure rather than bloom out is the
-product sitting just over unity, which is what the group's own "round trip"
-readout is there to say.
+Finding `build`'s four rows took a probe rather than a guess, and it is worth
+knowing why. Colour bars are already saturated, so chroma gain at 12x clips them
+back to almost the same bars — the photograph was in there for a reason. And the
+camera loop alone runs away to white: `fbMix` and `fbGain` multiply, so what
+makes the picture breed structure rather than bloom out is the product sitting
+just over unity, which is what the group's own "round trip" readout is there to
+say.
 
 ```
 pnpm demoreel                    # the gallery's clips (the canvas alone)
@@ -1203,13 +1212,13 @@ which is a gallery card's own frame. It used to be 382K, because the header ran
 a clip.
 
 The stage is under the fold and costs nothing until it is scrolled to. Reaching
-it fetches the lead slide's still (56K) and its clip (914K); walking the other
-two adds ~610K on a desktop, ~530K on a phone, which fetches the portrait takes
-instead. That lead slide is the heaviest file the page has ever had and it is
-not an oversight: sixteen seconds of full-frame moving rainbow is what building
-a look from a clean board looks like, and the alternative was a static window
-that cost 445K and showed nothing happening. Four things keep the number where
-it is, and each was measured rather than assumed:
+it fetches `roll`'s still (242K) and its clip (1.9M); walking the other two adds
+5.6M on a desktop, 1.5M on a phone, which fetches the portrait takes instead.
+`build` is 2.4M of that and it is not an oversight: sixteen seconds of
+full-frame moving rainbow is what building a look from a clean board looks like,
+and the alternative was a static window that cost 445K and showed nothing
+happening. Four things keep the number where it is, and each was measured rather
+than assumed:
 
 - **crf 36, not 30.** The panel half of the frame is static, so h264 codes it
   once and the following frames leave it alone — raising the quantizer spends
@@ -1231,7 +1240,7 @@ it is, and each was measured rather than assumed:
   the same file the same way and what the upscale buys is a soft field for
   display type to sit on.
 - **The quantizer is not the lever on the heavy slide.** Per-slide crf was tried
-  on the lead and removed again: 36/38/40/42 is 871/782/695/618K off the same
+  on `build` and removed again: 36/38/40/42 is 871/782/695/618K off the same
   frames, so the whole run to the edge of what the material stands buys 29% —
   and smooth gradient is precisely where a raised quantizer bands. Length is the
   lever there, not quality.
@@ -1241,6 +1250,44 @@ it is, and each was measured rather than assumed:
   with. And dropping the frame rate saves nothing at all: CRF is normalized
   against time, so 20fps at the same crf spends the same bits on fewer frames
   and comes out slightly larger.
+
+**Both the stage and the gallery open the clip before it is wanted**, and the
+numbers below are Chrome's, which is the browser the page is read in.
+
+Opening a clip is not the same as being able to show one, and that gap is what
+made the page feel unresponsive in two places. A gallery card used to open its
+clip when the pointer landed on it: 233-488ms to a first frame, which is a hover
+that looks like it did nothing — and the reader, who has moved the mouse again
+by then, reads _that_ as what started it. A carousel tab pressed before its own
+clip was open was 770ms of a still with nothing happening on it, and the stage
+advanced into that gap on its own every time it moved on. Opened ahead, both are
+**1-2ms**.
+
+Three things make that work, each measured rather than assumed:
+
+- **`preload` has to come off the markup's `none` as well as the source being
+  set.** A `src` on a clip the browser was told not to preload sits at
+  readyState 0 until something plays it, so opening one without this buys
+  nothing at all.
+- **`metadata` for a card, `auto` for the next slide.** `metadata` is Chrome's
+  cue to stop as soon as it has frames — the whole gallery for 279K, which is
+  the right trade for a hover and the wrong one for a slide about to run for
+  sixteen seconds. Firefox takes the whole file on either word, which is why a
+  screenful of cards is 1.8M there.
+- **One slide ahead, not all of them.** These are 2-3M each; opening both of the
+  others the moment the first was playing was a 5.2M burst 900ms into the page.
+  The reel advances in order, so one ahead arrives in the same state spread over
+  the time it is actually watched.
+
+The gallery's look-ahead waits for `load` and an idle callback, which is not
+politeness: the stage sits 541px down a 950px window, so it is on screen at load
+and its own clip starts at 431ms, and a `rootMargin` wide enough to be a
+look-ahead reaches the gallery from up there — three cards were opening
+alongside the picture already in front of the reader. It is asked of
+`(hover: hover)` so a phone still fetches one clip at a time as it scrolls past,
+and of `prefers-reduced-motion` so a reader who asked for less is not handed the
+gallery in advance on the chance of a hover. They still get the clip when they
+hover, the way they always did.
 
 `node scripts/appreel.mjs --keep` leaves the JPEG frames behind and says where,
 which is how any of that gets re-measured without driving the browser again.
