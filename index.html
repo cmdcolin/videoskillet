@@ -99,49 +99,89 @@
         overflow: hidden;
         border-bottom: 1px solid var(--border);
       }
-      /* One clip, held back just far enough that display type stays readable
-         over a picture whose whole job is to be violent. The looks that used to
-         cycle here are the carousel under the hero instead: a header that
-         changes under the reader is a distraction from the words in front of
-         it, and the carousel can be looked at. */
-      .heroVid {
+      /* One still, held back just far enough that display type stays readable
+         over a picture whose whole job is to be violent. Nothing here moves:
+         the looks that used to cycle behind the title, and then the one clip
+         that replaced them, are the carousel under the hero instead — a header
+         that changes under the reader is a distraction from the words in front
+         of it, and the carousel can be looked at.
+
+         `cover` on a 640x512 still upscales it several times over, and that is
+         the treatment rather than a fault in it. The link preview is the same
+         file given the same stretch (scripts/ogimage.mjs), and what the upscale
+         buys is a soft field rather than a picture competing with the type. */
+      .heroShot {
         position: absolute;
         inset: 0;
         width: 100%;
         height: 100%;
         object-fit: cover;
-        opacity: 0.55;
-        filter: saturate(1.1) contrast(1.05);
+        filter: saturate(1.15) contrast(1.08);
       }
-      /* One wash, not two. Stacked scrims multiply: a 82% layer under a 62%
-         layer leaves 7% of the video, which is why the hero read as an empty
-         black band with a bright clip behind it. This single gradient holds the
-         text band near 55% and closes to the page colour at the bottom edge, so
-         the hero still has no seam against the section under it. */
+      /* The scanlines the og card draws over the same still, for the same
+         reason: `cover` stretches a 640-wide frame across the window, and a
+         raster over the top is what makes that softness read as a signal rather
+         than as a picture that has been enlarged too far. */
+      .heroScan {
+        position: absolute;
+        inset: 0;
+        background: repeating-linear-gradient(
+          to bottom,
+          rgb(0 0 0 / 13%) 0px,
+          rgb(0 0 0 / 13%) 1px,
+          transparent 1px,
+          transparent 3px
+        );
+        mix-blend-mode: multiply;
+      }
+      /* Angled across rather than down, which is the difference between a
+         header and a black band. The wash this replaces ran top-to-bottom and
+         held the whole width near 55%, under a clip at 0.55 opacity — about a
+         fifth of the picture reached the screen, and a *moving* fifth was
+         enough to read as a picture where a still one is mud.
+
+         So it is the link preview's wash instead (scripts/ogimage.mjs), which
+         has always had this job: opaque down the column the type sits in,
+         clearing to nothing past the far edge of the longest line, so the look
+         blazes on the side nothing is written over.
+
+         **Where it clears is the measure, not a percentage of the window.** The
+         og card is 1200px forever and could name a fraction; this has to hold
+         at every width, and the type here is `.wrap` — centred, capped at
+         --measure — so the far edge of the longest line it can hold is
+         `50% + measure/2` and nothing else. Written as a fraction it cleared at
+         336px on a 390px phone, straight through the middle of the sentence
+         under the buttons. Below the measure that calc lands past the right
+         edge, so the gradient simply never reaches its clear stop and a phone
+         gets an even wash — which is the right answer there, because on a phone
+         there is no "beside the type" to clear.
+
+         The second gradient grounds the bottom edge to the page colour, so the
+         hero still has no seam against the section under it. */
       .heroScrim {
         position: absolute;
         inset: 0;
-        background: linear-gradient(
-          rgb(14 14 17 / 66%) 0%,
-          rgb(14 14 17 / 58%) 55%,
-          rgb(14 14 17 / 85%) 92%,
-          var(--bg) 100%
-        );
+        --typeEdge: calc(50% + var(--measure) / 2);
+        background:
+          linear-gradient(
+            100deg,
+            rgb(14 14 17 / 90%) 0%,
+            rgb(14 14 17 / 84%) var(--typeEdge),
+            rgb(14 14 17 / 26%) calc(var(--typeEdge) + 7%),
+            rgb(14 14 17 / 0%) calc(var(--typeEdge) + 17%)
+          ),
+          linear-gradient(
+            to top,
+            var(--bg) 0%,
+            rgb(14 14 17 / 72%) 12%,
+            rgb(14 14 17 / 0%) 42%
+          );
       }
       .heroBody {
         position: relative;
-        padding: 5.5rem 0 3rem;
+        padding: 5.5rem 0 5.5rem;
       }
 
-      /* The hero's play control. It is the only way in for a reader whose
-         system asks for reduced motion — nothing starts by itself for them, so
-         the button has to be visible rather than a hover secret. */
-      .heroBar {
-        position: relative;
-        display: flex;
-        justify-content: flex-end;
-        padding-bottom: 1.5rem;
-      }
       /* A word, not a glyph: a bare ▶ is a guess, and these sit next to each
          other where one of them says a demo's name. */
       .chip {
@@ -241,9 +281,6 @@
         display: flex;
         flex-wrap: wrap;
         gap: 0.5rem;
-      }
-      .slideToggle {
-        margin-left: auto;
       }
       /* What the slide showing is of. Every line is in the markup and the one
          belonging to the slide showing is the one painted, so a reader with no
@@ -471,18 +508,16 @@
   <body>
     <header class="hero">
       <!-- generated:hero -->
-      <video
-        class="heroVid"
-        data-clip="demos/wiggity-hero.mp4"
-        poster="/demos/wiggity.webp"
-        muted
-        loop
-        playsinline
-        preload="none"
-        aria-hidden="true"
-        tabindex="-1"
-      ></video>
+      <img
+        class="heroShot"
+        src="/demos/ridiculous-rainbow.webp"
+        alt=""
+        width="640"
+        height="512"
+        fetchpriority="high"
+      />
       <!-- /generated:hero -->
+      <div class="heroScan"></div>
       <div class="heroScrim"></div>
       <div class="wrap heroBody">
         <p class="brand">
@@ -513,9 +548,6 @@
           <a href="/guide/install.html">what runs it</a>.
         </p>
       </div>
-      <div class="wrap heroBar">
-        <button class="chip heroToggle" type="button">Play</button>
-      </div>
     </header>
 
     <!-- The app being used, which is the one thing about this program a
@@ -530,29 +562,29 @@
         <div class="stage">
           <figure
             class="slide on"
-            data-name="The window"
-            data-secs="4.5"
-            data-secs-narrow="4.5"
+            data-name="Feedback"
+            data-secs="7.1"
+            data-secs-narrow="7.1"
           >
             <picture>
               <source
                 media="(max-width: 46rem)"
-                srcset="/reel/window-narrow.webp"
+                srcset="/reel/feedback-narrow.webp"
                 width="624"
                 height="992"
               />
               <img
                 class="still"
-                src="/reel/window.webp"
-                alt="The videoskillet.js window: a rainbow-ringed synth pattern filling the picture area, and on the right the signal path map with the CHANNEL stage open on its recording controls"
+                src="/reel/feedback.webp"
+                alt="The window with the CAMERA FEEDBACK stage open on its optical loop controls and the mix fader dragged from 0 to 0.73, clean colour bars folding into a soft smeared cascade of themselves"
                 width="1112"
                 height="742"
                 decoding="async"
               />
             </picture>
             <video
-              data-src="reel/window.mp4"
-              data-src-narrow="reel/window-narrow.mp4"
+              data-src="reel/feedback.mp4"
+              data-src-narrow="reel/feedback-narrow.mp4"
               muted
               loop
               playsinline
@@ -563,14 +595,14 @@
           <figure
             class="slide"
             data-name="One control"
-            data-secs="6.3"
-            data-secs-narrow="6.3"
+            data-secs="8.9"
+            data-secs-narrow="8.9"
           >
             <img
               class="still"
               data-src="reel/control.webp"
               data-src-narrow="reel/control-narrow.webp"
-              alt="The window with the RECEIVER stage open on its decoder controls, chroma gain dragged to 12.8x, and the photograph's colour blooming and clipping into flat cyan and orange"
+              alt="The window with the RECEIVER stage open on its decoder controls and chroma gain dragged from 1x to 15.8x, the feedback loop’s colour blooming and clipping into flat bands of cyan, magenta and orange"
               width="1112"
               height="742"
               decoding="async"
@@ -595,7 +627,7 @@
               class="still"
               data-src="reel/signal-path.webp"
               data-src-narrow="reel/signal-path-narrow.webp"
-              alt="The window with the signal path map at the head of the panel, the RECEIVER box pressed, and its stage unfolded underneath on the sync and decoder groups"
+              alt="The window with the signal path map at the head of the panel, the RECEIVER box pressed and its stage unfolded underneath, over a picture of torn black and white feedback columns"
               width="1112"
               height="742"
               decoding="async"
@@ -617,18 +649,20 @@
             role="group"
             aria-label="what the stage shows"
           ></div>
-          <button class="chip slideToggle" type="button">Play</button>
         </div>
         <div class="slideNotes">
           <p class="slideNote on">
-            The picture fills the window. The panel holds the whole board — the
-            look, the signal path, and the stage you have open on it.
+            A camera on the tube’s face, its picture mixed back in ahead of the
+            encoder. Open the fader and the colour bars start breeding structure
+            out of their own previous frames — “Fuzzy color bars feedback”, in
+            the gallery below, is where this drag ends up.
           </p>
           <p class="slideNote">
             Chroma gain is the colour control on the set: how hard the
             demodulated chroma is amplified before the picture is drawn. Past 1
             the saturation blooms and clips against the edge of the gamut — and
-            it is the decoder doing that, not a filter over the photograph.
+            “I can’t believe it’s not analog butter”, in the gallery below, is
+            this one row at 15.8x.
           </p>
           <p class="slideNote">
             The map is the rig: two sources into a mixer, then the channel it is
@@ -845,35 +879,6 @@
               </span>
               <span class="name"
                 >Fuzzy color bars feedback<span class="open">open →</span></span
-              >
-            </a>
-          </li>
-          <li>
-            <a
-              class="demo"
-              href="/app/?p=DM.CqCsBQEEAcwDAHABXAC8aQGQAwDoAgLMBQCsAgOceQR0GPwBCzgAGADYAQAIAlAAuAIImAIAUALIAQCAAQAkArACAXgAFAJ4ADAGXABcApADCjwA5AEA0AQCkAIA6AEAiAEI0AEA4gEA-AMABAlUJOYDAKgBBcgB&amp;mod=tapeLoopMm:smooth:0.05:0.0151&amp;srcb=tv+static"
-            >
-              <span class="shot">
-                <img
-                  class="still"
-                  src="/demos/dull-color-feedback.webp"
-                  alt=""
-                  width="640"
-                  height="512"
-                  loading="lazy"
-                  decoding="async"
-                />
-                <video
-                  data-src="demos/dull-color-feedback.mp4"
-                  muted
-                  loop
-                  playsinline
-                  preload="none"
-                  aria-hidden="true"
-                ></video>
-              </span>
-              <span class="name"
-                >Dull color feedback<span class="open">open →</span></span
               >
             </a>
           </li>
@@ -1151,55 +1156,18 @@
         }
       }
 
-      // ---- the hero ----
-      //
-      // One clip behind the words, and it is armed only when it is going to be
-      // played: a reader who asks for reduced motion gets the still and the
-      // button, and the file is never fetched — which is why the hero carries
-      // no `src` and no `autoplay` in the markup. `wanted` is what the reader
-      // asked for; `onScreen` is whether the hero is somewhere it can be seen.
-      // Both have to hold, so nothing plays to a scrolled-past page or a
-      // background tab, and neither one has to know about the other.
-      {
-        const clip = document.querySelector('.heroVid')
-        const toggle = document.querySelector('.heroToggle')
-        let wanted = !motion.matches
-        let onScreen = true
-
-        const sync = () => {
-          if (wanted && onScreen) {
-            if (!clip.src) {
-              clip.src = clip.dataset.clip
-            }
-            clip.play().catch(() => {})
-          } else {
-            clip.pause()
-          }
-          toggle.textContent = wanted ? 'Pause' : 'Play'
-        }
-
-        toggle.addEventListener('click', () => {
-          wanted = !wanted
-          sync()
-        })
-        document.addEventListener('visibilitychange', () => {
-          onScreen = !document.hidden
-          sync()
-        })
-        new IntersectionObserver(entries => {
-          onScreen = entries[0].isIntersecting && !document.hidden
-          sync()
-        }).observe(document.querySelector('.hero'))
-        sync()
-      }
-
       // ---- the carousel ----
       //
-      // Three recordings of the app's own window, one showing at a time, on the
-      // same terms as the hero: nothing is fetched until the slide holding it is
-      // the one showing, and a reader who asked for reduced motion is handed the
-      // stills, the tabs and a Play button rather than a stage that changes
-      // under them.
+      // Recordings of the app's own window, one showing at a time. It plays on
+      // its own once it is on screen and stops when it is not — there is no
+      // Play button, because the stage is the one thing on this page a stranger
+      // cannot read as a video until it moves, and a control that has to be
+      // found first is a control that answers the question too late.
+      //
+      // Nothing is fetched until the slide holding it is the one showing. A
+      // reader who asked for reduced motion is handed the stills and the tabs,
+      // and steps through them by hand: the tabs are the way in for everybody,
+      // so there is no path here that only one kind of reader can walk.
       //
       // The tabs and the captions are read off the slides rather than written
       // beside them, so a slide added to the reel arrives with its own way in
@@ -1223,21 +1191,25 @@
           narrow.matches ? slide.dataset.secsNarrow : slide.dataset.secs
         const notes = [...document.querySelectorAll('.slideNote')]
         const tabs = document.querySelector('.slideTabs')
-        const toggle = document.querySelector('.slideToggle')
         // Long enough after the clip has run once to read the line under it.
         const READING = 2500
 
         let at = 0
-        let wanted = !motion.matches
         // False until the observer below says otherwise, which is what keeps
         // the first clip off the arrival path: the stage is under the fold on
-        // most windows, and starting at `true` fetched it while the hero was
+        // most windows, and starting at `true` fetched it while the page was
         // still painting. The observer reports the real answer on the next
         // frame either way, so a stage that *is* in view loses nothing.
-        let onScreen = false
+        let inView = false
         let advance = 0
 
-        const running = () => wanted && onScreen
+        // One flag, not three. Whether the tab is showing and whether the
+        // reader wants motion are *asked* rather than stored, because the only
+        // one of the three with an event that reports the stage's own state is
+        // the observer: folding `document.hidden` into `inView` on a
+        // visibilitychange said a scrolled-past stage was in view every time
+        // the reader came back to the tab, and set it playing off screen.
+        const running = () => inView && !document.hidden && !motion.matches
 
         // One clip decodes at a time, and it is the one being looked at. The
         // `live` class lands on the promise rather than beside it, so a clip
@@ -1291,7 +1263,6 @@
             )
           }
           cue()
-          toggle.textContent = wanted ? 'Pause' : 'Play'
         }
 
         const buttons = slides.map((slide, i) => {
@@ -1307,16 +1278,10 @@
           return button
         })
 
-        toggle.addEventListener('click', () => {
-          wanted = !wanted
-          sync()
-        })
-        document.addEventListener('visibilitychange', () => {
-          onScreen = !document.hidden
-          sync()
-        })
+        motion.addEventListener('change', () => sync())
+        document.addEventListener('visibilitychange', () => sync())
         new IntersectionObserver(entries => {
-          onScreen = entries[0].isIntersecting && !document.hidden
+          inView = entries[0].isIntersecting
           sync()
         }).observe(stage)
         show(0)

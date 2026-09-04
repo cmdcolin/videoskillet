@@ -42,6 +42,9 @@ Details in [How it works](docs/HOW-IT-WORKS.md), fault by fault in
 - Easy-to-use "randomize" buttons that morph between settings over multiple
   seconds
 - Bleeds video into the audio channel, so you can hear that static-y hum
+- A rundown down in the **strip** tray: a list of looks that plays itself, each
+  row holding for a count of bars and arriving as a cut, a morph or a fault, and
+  a **⎙ render** that writes the whole thing to a constant-framerate MP4
 - ...[much more](docs/FEATURES.md)
 
 ## Video sources
@@ -152,9 +155,6 @@ composite video cables together and posting tumblr gifs.
 - Fuzzy color bars feedback
   https://videoskillet.com/app/?p=1w.cqQCAKAfAHoAOgAoAKggACwAYABEABAAmAEQ0AIA1AIwsAEIBA&mod=&srcb=vhs+static
 
-- Dull color feedback
-  https://videoskillet.com/app/?p=DM.CqCsBQEEAcwDAHABXAC8aQGQAwDoAgLMBQCsAgOceQR0GPwBCzgAGADYAQAIAlAAuAIImAIAUALIAQCAAQAkArACAXgAFAJ4ADAGXABcApADCjwA5AEA0AQCkAIA6AEAiAEI0AEA4gEA-AMABAlUJOYDAKgBBcgB&mod=tapeLoopMm:smooth:0.05:0.0151&srcb=tv+static
-
 - Camera feedback + static
   https://videoskillet.com/app/?p=IK.GIgEEVQA9AEAYA6AAhHAAQBkDEgEkAMLoAIAtAEE6AICnAEB-CEBKACMAQAgAJADBVxwub4DAKHEAQ&mod=vFreqHz:smooth:0.08:0.0049,fbGain:smooth:0.24:0.06&src=vhs+static
 
@@ -171,7 +171,7 @@ composite video cables together and posting tumblr gifs.
   https://videoskillet.com/app/?p=pa.KsgBFDQOGAGgAQDgAwJ4BvABIaQBBdAMOngsgJMC&mod=&srcb=ia-random&iurl=https:%2F%2Fthumb.wikimedia.org%2Fwikipedia%2Fcommons%2Fthumb%2Fb%2Fb4%2F20250724_mallard_duckling_wethersfield_cove_PD201227.jpg%2F1280px-20250724_mallard_duckling_wethersfield_cove_PD201227.jpg%3Futm_source%3Dcommons.wikimedia.org%26utm_campaign%3Dimageinfo%26utm_content%3Dthumbnail
 
 - I can't believe it's not analog butter
-  https://videoskillet.com/app/https://videoskillet.com/app/?p=3t.GKwxE4gDRYQDAMQfANADAqwiFZADALgDAJg1AAwAkAMAtAQAfAXQbwC0AiRACAQirGwroAE&mod=&srcb=none
+  https://videoskillet.com/app/?p=3t.GKwxE4gDRYQDAMQfANADAqwiFZADALgDAJg1AAwAkAMAtAQAfAXQbwC0AiRACAQirGwroAE&mod=&srcb=none
 
 <!-- /generated:demos -->
 

@@ -1,12 +1,13 @@
 [
   {
     "name": "Wiggity",
-    "showcase": false,
+    "showcase": true,
     "query": "?p=je.CoDoBwEEAbAEAKwCAfABAKCZAgXgAw2IIwSIAyFYBrAKEjwGmAEEuB4ZVADsBgr4OiSMCQDEAQDgAgAkAUQEBAAQA9wCAMXBAgCJngIAlf4DAI3tAw&mod=bendUs:lorenz:0.390279:0.27759,hvRing:sine:0.037599:0.090209&srcb=synth&src=sweep"
   },
   {
     "name": "Ridiculous rainbow",
-    "showcase": true,
+    "showcase": false,
+    "hero": true,
     "query": "?p=T2.GKAEE4QCRYQDAMQfAJ8FAowfFYwDAfAMAWAA8AIARAZgJEAIBCKcvgErYA&mod=&srcb=none"
   },
   {
@@ -21,7 +22,7 @@
   },
   {
     "name": "Chaos black and white feedback",
-    "showcase": false,
+    "showcase": true,
     "query": "?p=Nj.FJADAMACAuQDNVAImAIAUALIARaQAwoUAIABANQDApQBAHgARAniAQECCVQk5gMAqAEAqAYAgJ9JA8gB&mod=tapeLoopMm:smooth:0.05:0.0151&srcb=tv+static"
   },
   {
@@ -31,13 +32,8 @@
   },
   {
     "name": "Fuzzy color bars feedback",
-    "showcase": false,
+    "showcase": true,
     "query": "?p=1w.cqQCAKAfAHoAOgAoAKggACwAYABEABAAmAEQ0AIA1AIwsAEIBA&mod=&srcb=vhs+static"
-  },
-  {
-    "name": "Dull color feedback",
-    "showcase": false,
-    "query": "?p=DM.CqCsBQEEAcwDAHABXAC8aQGQAwDoAgLMBQCsAgOceQR0GPwBCzgAGADYAQAIAlAAuAIImAIAUALIAQCAAQAkArACAXgAFAJ4ADAGXABcApADCjwA5AEA0AQCkAIA6AEAiAEI0AEA4gEA-AMABAlUJOYDAKgBBcgB&mod=tapeLoopMm:smooth:0.05:0.0151&srcb=tv+static"
   },
   {
     "name": "Camera feedback + static",
@@ -66,7 +62,7 @@
   },
   {
     "name": "I can't believe it's not analog butter",
-    "showcase": false,
-    "query": "https://videoskillet.com/app/?p=3t.GKwxE4gDRYQDAMQfANADAqwiFZADALgDAJg1AAwAkAMAtAQAfAXQbwC0AiRACAQirGwroAE&mod=&srcb=none"
+    "showcase": true,
+    "query": "?p=3t.GKwxE4gDRYQDAMQfANADAqwiFZADALgDAJg1AAwAkAMAtAQAfAXQbwC0AiRACAQirGwroAE&mod=&srcb=none"
   }
 ]
