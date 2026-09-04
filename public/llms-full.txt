@@ -286,8 +286,8 @@ cfbKeySoft  (key soft)
   1..30 step 0.5 IRE  default 8
   How wide the key transition is, in IRE. Narrow gives a hard-edged cut-out; wide gives a gradual blend that follows the picture gradient.
 
-cfbKeyExt  (key input (self / program))
-  0..1 step 1  default 0
+cfbKeyExt  (key input)
+  0=self 1=program  default 0
   Which connector the keyer's key input is on. Self is the loop return itself, so the loop's own past decides where it is allowed to carry on — the trail draws its own boundary and the boundary is a generation old. Program is the live picture, so what decides is what is in front of the camera now: a subject moving through the frame carves its own shape out of everything the loop has accumulated, and the accumulation cannot follow it.
 
 cfbKeyHueDeg  (key hue)

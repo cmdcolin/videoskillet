@@ -252,7 +252,7 @@
 264 vir step=0.01 default=0
 265 virLag step=1 default=45
 266 deintB step=1 default=0 choices=off|on
-267 cfbKeyExt step=1 default=0
+267 cfbKeyExt step=1 default=0 choices=self|program
 268 cfbKeyHueDeg step=1 default=180
 269 cfbKeyAcceptDeg step=1 default=0
 270 cfbRingSrc step=1 default=0 choices=program|oscillator
