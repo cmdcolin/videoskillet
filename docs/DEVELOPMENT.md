@@ -102,12 +102,12 @@ node scripts/colourcheck.mjs --arms-file=sheet.json
 
 Does a patch make colour, how much, and in what shape — one sheet of arms
 through one page load, with a screenshot each. It answers the question
-`docs/CURATION.md` keeps having to settle by eye, and its default source is the
-point: on the bundled 1929 film a clean arm reads sat 0.018, so any hue on
-screen was manufactured by the chain. Run a colour claim against a saturated
-source and the mechanism that makes colour out of nothing reads as one that
-slightly reduces it — a mistake this repo has made once already, and CURATION.md
-carries the numbers.
+[`CURATION.md`](CURATION.md) keeps having to settle by eye, and its default
+source is the point: on the bundled 1929 film a clean arm reads sat 0.018, so
+any hue on screen was manufactured by the chain. Run a colour claim against a
+saturated source and the mechanism that makes colour out of nothing reads as one
+that slightly reduces it — a mistake this repo has made once already, and
+CURATION.md carries the numbers.
 
 Read the columns against each other. `hues` beside `sat`, because one hue
 everywhere and a whole wheel score the same on saturation alone. `edge%` beside
@@ -1242,9 +1242,9 @@ truth and stays readable on GitHub; the site adds the nav, the live links and
 the styling.
 
 It is an Astro project rooted at [`../guide`](../guide) and configured in
-[`../astro.config.mjs`](../astro.config.mjs). `docs/` is a content collection, so
-the markdown is read where it already lives. To add a page, add it to `GUIDE` or
-`NOTES` in [`../guide/lib/pages.mjs`](../guide/lib/pages.mjs) — the decision
+[`../astro.config.mjs`](../astro.config.mjs). `docs/` is a content collection,
+so the markdown is read where it already lives. To add a page, add it to `GUIDE`
+or `NOTES` in [`../guide/lib/pages.mjs`](../guide/lib/pages.mjs) — the decision
 records and the handoffs are read off their own directories, so one of those is
 a page as soon as it is a file.
 
@@ -1256,9 +1256,9 @@ authored twice** — so a heading, a page or a first paragraph is edited in one
 place and the site follows:
 
 - the **"on this page" nav**, from the h2/h3 outline
-  [`../guide/lib/rehype-guide.mjs`](../guide/lib/rehype-guide.mjs) collects while
-  it is setting the heading ids. Pages with fewer than five sections don't get
-  one.
+  [`../guide/lib/rehype-guide.mjs`](../guide/lib/rehype-guide.mjs) collects
+  while it is setting the heading ids. Pages with fewer than five sections don't
+  get one.
 - the **previous/next pager**, from the order of the page's own group.
 - the **meta description and `og:` tags**, from each page's first paragraph, cut
   at a sentence.
@@ -1289,7 +1289,7 @@ all is well.
 `pnpm guide:check` builds the site, then loads every page at 1352px and at 390px
 and fails on anything wider than the viewport that isn't a deliberate scroll
 container ([`../scripts/guidecheck.mjs`](../scripts/guidecheck.mjs)). It leaves
-screenshots in `/tmp/guidecheck` — the fastest way to see all 54 renders at once.
+screenshots in `/tmp/guidecheck` — the fastest way to see every render at once.
 
 The phone arm is the one that earns its keep. The desktop layout has slack in
 it; 390px does not, and both faults the redesign fixed were invisible on a
@@ -1587,8 +1587,8 @@ the other GPU" wants answering without a rebuild.
 
 - [`handoffs/`](handoffs/) — why a past piece of work landed the way it did, and
   what was deliberately left undone
-- [`FAQ.md`](FAQ.md#how-does-it-actually-work) — the code: one array and a
-  chain of GPU shaders
+- [`FAQ.md`](FAQ.md#how-does-it-actually-work) — the code: one array and a chain
+  of GPU shaders
 - [`ARCHITECTURE.md`](ARCHITECTURE.md) — pass graph, buffer layouts, adding a
   control end to end
 - [`OPTIMIZATIONS.md`](OPTIMIZATIONS.md) — what the measurements below decided:

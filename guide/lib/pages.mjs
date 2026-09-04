@@ -30,6 +30,8 @@ const NOTES = [
   { file: 'docs/DEVELOPMENT.md', out: 'development.html', nav: 'Development' },
   { file: 'docs/EDITOR.md', out: 'editor.html', nav: 'Editor' },
   { file: 'docs/IDEAS.md', out: 'ideas.html', nav: 'Ideas' },
+  { file: 'docs/CURATION.md', out: 'curation.html', nav: 'Curation' },
+  { file: 'docs/VOTING.md', out: 'voting.html', nav: 'Voting' },
   { file: 'docs/adr/README.md', out: 'decisions.html', nav: 'Decisions' },
   { file: 'docs/handoffs/README.md', out: 'handoffs.html', nav: 'Handoffs' },
 ]

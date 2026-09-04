@@ -59,31 +59,31 @@ swap one video for another.
   **Public archives** rolls one from Wikimedia Commons or archive.org;
   **Browse…** searches both in a thumbnail grid.
 - On an archive, the deck grows its own **roll photo** / **roll clip** buttons
-  under the file's name. Commons holds both, and they behave differently
-  because a still gives still artifacts while a clip gives moving ones.
-  archive.org holds footage only, so it gets **roll clip** alone. The **☆**
-  beside the name keeps that file on your clip shelf; the next roll takes it
-  off the deck either way, and **↗** opens its page upstream, which is where
-  the licence and the photographer are.
+  under the file's name. Commons holds both, and they behave differently because
+  a still gives still artifacts while a clip gives moving ones. archive.org
+  holds footage only, so it gets **roll clip** alone. The **☆** beside the name
+  keeps that file on your clip shelf; the next roll takes it off the deck either
+  way, and **↗** opens its page upstream, which is where the licence and the
+  photographer are.
 - **Video file URL…** plays an `.mp4` or `.webm` straight off its address —
   paste the link, no download step. The server has to allow cross-origin reads;
   if it doesn't, the clip plays and the picture stays black.
 - **Video synth** is two oscillators and a colorizer, no input. Frequency is the
   whole knob: on a multiple of line rate you get standing bars, a few hertz off
-  they lean and creep, and at 3.58 MHz it lands on the subcarrier and comes
-  back as flat colour.
+  they lean and creep, and at 3.58 MHz it lands on the subcarrier and comes back
+  as flat colour.
 - **Teletype…** prints what you type onto a dot-matrix card; **draw** paints on
   the same page. Try the dither shades — dot crawl and chroma bleed feed on
-  dither. Three switches keep the card from sitting still, which matters
-  because a still card gives still artifacts: **crawl** rolls it up the frame,
-  **boil** redraws it by an unsteady hand, and **garble** receives it over a
-  wire bad enough to keep misspelling it.
+  dither. Three switches keep the card from sitting still, which matters because
+  a still card gives still artifacts: **crawl** rolls it up the frame, **boil**
+  redraws it by an unsteady hand, and **garble** receives it over a wire bad
+  enough to keep misspelling it.
 - **B** is a second source, deliberately not genlocked, so it beats and tears
   against A. Its controls are in **Mix**.
 - **♪** is audio in, and does nothing until you turn up a knob in **Sound**. It
   takes the mic, a file you pick, the clip already on screen, or **system
-  audio** — a share of the tab or app this machine is playing out of, which
-  lets you drive the picture off a track without the room in between.
+  audio** — a share of the tab or app this machine is playing out of, which lets
+  you drive the picture off a track without the room in between.
 
 Anything with a timeline gets a **cue** button: press to mark, again to loop, a
 third time to drop it. **⇤** stabs back to the cue without waiting for the lap.

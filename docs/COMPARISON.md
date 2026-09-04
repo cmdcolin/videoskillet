@@ -20,8 +20,8 @@ as AE / Premiere / OpenFX plugins, so Resolve, Vegas, HitFilm and Natron all
 reach it. Multithreaded, SIMD-accelerated Rust on the CPU, and it runs in real
 time well above NTSC resolution — two advantages this project does not have. If
 what you want is this look on a clip in an edit, that is the one to reach for:
-videoskillet.js has no plugin, and isn't planning one right now ([the
-FAQ](FAQ.md)).
+videoskillet.js has no plugin, and isn't planning one right now
+([the FAQ](FAQ.md)).
 
 ### BENDR
 

@@ -11,8 +11,8 @@ describes whatever is on screen: ten perceptual tags, and a 1-5 rating that
 files the row and closes the menu in one click.
 
 It lives in the app, not just on the labelling page, because a separate page
-only ever collects from someone who set out to label — which is one person on
-a good evening. The app is where looks are already being made and looked at.
+only ever collects from someone who set out to label — which is one person on a
+good evening. The app is where looks are already being made and looked at.
 
 Three objections to collecting here turn out not to bite, and one does:
 
