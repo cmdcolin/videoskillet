@@ -11,7 +11,7 @@ import type { ControlKey } from '../core/controls'
 import type { Group } from './controls'
 
 // Where a control lives, for the surfaces that gather rows *out* of the chain
-// and then have to say where each one came from. "This look" needs it for the
+// and then have to say where each one came from. the look menu needs it for the
 // captions over its runs of rows; the modulation bay needs it to name what a
 // slot is driving, now that a slot's target is picked at the control rather
 // than out of a list of every slider in the app.
@@ -37,7 +37,7 @@ export function groupOf(key: ControlKey): Group | undefined {
 //
 // `Partial<Record<Group['place'], …>>` is what holds it to the placements that
 // actually exist: a seventh added to the union without a row here is a control
-// whose caption in "This look" points at a stage nobody can open.
+// whose caption in the look menu points at a stage nobody can open.
 const OFF_SPINE_STAGE: Partial<Record<Group['place'], string>> = {
   b: SOURCE_B_STAGE,
   audio: SOUND_STAGE,

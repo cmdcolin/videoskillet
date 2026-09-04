@@ -77,6 +77,9 @@ export function LookBar(props: {
   // segmented pair, then tag it — and before the buttons that walk the history,
   // which stay the row's tail.
   tags: ReactNode
+  // The look's own rows, as a menu. First in the row: it is what the board is,
+  // and everything after it is something done to it.
+  look: ReactNode
   // The whole board back to stock. Among the take-back verbs rather than beside
   // `compare` — which is the other button in this row about the clean signal —
   // because what it has in common with undo is what a hand reaching for it
@@ -95,6 +98,7 @@ export function LookBar(props: {
 }) {
   return (
     <div className={styles.bar}>
+      {props.look}
       {/* Held, not clicked, so it stays a gesture: press and the picture goes
           to stock, release and it comes back. The label says which state you
           are in, since the button is under your finger while it happens. */}

@@ -30,9 +30,9 @@ const TAPE_SPAN: SliderDef = sliderFor('shuttleX')
 // none of it reachable from a keyboard, which the lever and the pads beside it
 // both were. The frozen box in particular was working around a problem the
 // browser does not have: it existed because the first nudge takes the speed off
-// stock, which grows "This look" at the top of the panel and shoves every row
-// below it, so a gesture measured against clientX aimed at a strip that had
-// moved. A range input tracks its own thumb and never notices.
+// stock, which at the time grew a section at the top of the panel and shoved
+// every row below it, so a gesture measured against clientX aimed at a strip
+// that had moved. A range input tracks its own thumb and never notices.
 function ShuttleStrip(props: {
   span: SliderDef
   value: number

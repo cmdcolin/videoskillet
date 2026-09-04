@@ -218,7 +218,7 @@ function Wire(props: { live: boolean }) {
 // can only change by opening it.
 //
 // The destination chip is still a way back, not just a label: it opens the
-// module the control lives in, the same jump "This look"'s captions make and
+// module the control lives in, the same jump the look menu's captions make and
 // for the same reason — a routing you cannot find the row for is a wobble
 // with no way to tune what it is wobbling.
 function SlotHead(props: {
@@ -230,7 +230,7 @@ function SlotHead(props: {
   // The stages that will actually open right now. A branch with nothing patched
   // into it opens onto nothing, and a look carried in from a preset or a link
   // can hold a routing into one — so this is a live question, not a property of
-  // the table. Same guard as LookSection's captions.
+  // the table. Same guard as LookPopover's captions.
   openStages: ReadonlySet<string>
   onOpenGroup: (stage: string, group: string) => void
   // Unfold the editor under the row this slot drives, so the jump lands on

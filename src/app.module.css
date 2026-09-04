@@ -50,10 +50,11 @@
   /* the panel is the app's only scroller; without this a flick past its end
      rubber-bands the page (or triggers pull-to-refresh) on a phone */
   overscroll-behavior: contain;
-  /* Anchoring is done by hand instead — see useScrollAnchor, and the measurement
-     in its header for why: Firefox computes `auto` here and then does not
-     anchor, so the browser's version is a coin flip on the engine. Off outright
-     leaves one behaviour everywhere rather than ours stacked on Chrome's. */
+  /* Firefox computes `auto` here and then does not anchor, so the browser's
+     version is a coin flip on the engine. Off outright leaves one behaviour
+     everywhere. Nothing in the panel grows on its own any more — the look's
+     rows live in a popover off the look bar (LookPopover) — so nothing needs
+     anchoring. */
   overflow-anchor: none;
   padding: 10px 14px;
   flex-shrink: 0;
@@ -270,15 +271,4 @@
 .filterClear:hover {
   border-color: var(--fg4);
   color: var(--fg);
-}
-
-/* The wrapper "This look" grows inside, held to its own block formatting
-   context. Not cosmetic: useScrollAnchor compensates the scroller by the
-   height this box reports, and without it the section's first and last child
-   margins — 7px above the header, 2px under the last row — collapse straight
-   through this box and out into the panel. The box then reports 83px of growth
-   for 92px of content, and the row you were dragging still slid 9px (measured,
-   panel scrolled to 900; flow-root takes it to 0). */
-.lookAnchor {
-  display: flow-root;
 }

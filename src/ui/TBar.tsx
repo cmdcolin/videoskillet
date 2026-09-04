@@ -32,10 +32,8 @@ import type { KeyboardEvent, PointerEvent as ReactPointerEvent } from 'react'
 // metaphor that was only ever decoration.
 //
 // Measured against the track's box as it was when the throw began, not as it is
-// each frame: the first move takes wipePos or bGain off stock, which grows
-// "This look" at the top of the panel and moves everything below it. A
-// horizontal throw survives the vertical shove that causes today, but only by
-// luck — the deck sits above two sections that can also change width.
+// each frame: the deck sits above two sections that can change width under a
+// control write, and a box read live would move under the pointer.
 const posFrom = (e: ReactPointerEvent<HTMLDivElement>, box: DOMRect) =>
   clamp01((e.clientX - box.left) / box.width)
 

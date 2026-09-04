@@ -28,10 +28,9 @@ interface Pt {
 // under the pointer however the panel is sized.
 //
 // Both carry the frame's box as it was at the press, and for the same reason the
-// 'move' variant has always carried fw/fh: aiming writes crtZoomX/Y off stock,
-// which grows "This look" at the top of the panel and pushes this frame down the
-// page mid-gesture. Measured live, the rest of the drag is measured against a
-// frame that has moved out from under the pointer. See uvInRect.
+// 'move' variant has always carried fw/fh: measured live, the rest of the drag
+// is measured against a frame that may have moved out from under the pointer.
+// See uvInRect.
 type Drag =
   | { kind: 'box' | 'aim'; a: Pt; b: Pt; box: DOMRect }
   | {

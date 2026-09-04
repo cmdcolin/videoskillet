@@ -47,10 +47,7 @@ export function PurityFrame(props: {
   // Which gesture is in flight. Placing works in the frame's own 0..1; sizing
   // needs no start state, since the radius is just how far the pointer is from
   // the centre.
-  // The gesture, and the frame's box as it was when it began. Frozen because
-  // placing the patch writes crtPurityX/Y off stock, which grows "This look" at
-  // the top of the panel and shoves this frame down the page mid-drag — see
-  // uvInRect.
+  // The gesture, and the frame's box as it was when it began — see uvInRect.
   const [drag, setDrag] = useState<{
     kind: 'place' | 'size'
     box: DOMRect

@@ -6,10 +6,12 @@ Everything past [Getting started](GETTING-STARTED.md).
 
 Click a preset to jump to it; drag it sideways to blend it part-way in.
 
-![The head of the panel: a row of whole-board verbs — compare, random look and its ▾, drift, morph — over tags, reset and undo, then This look with its off-stock count, then the Presets shortlist of chips and the dashed handle to the rest](img/presets.png)
+![The head of the panel: a row of whole-board verbs — compare, random look and its ▾, drift, morph — over tags, reset and undo, then the Presets shortlist of chips and the dashed handle to the rest](img/presets.png)
 
-- **This look** lists every control you're off stock on, as sliders. Drag to
-  edit, **↺** to revert one — `ctrl+z` puts back a value the ↺ took.
+- **this look** opens a menu listing every control you're off stock on, as
+  sliders. Drag to edit, **↺** to revert one — `ctrl+z` puts back a value the ↺
+  took. It's a menu rather than a section of the panel so the panel never grows
+  under your pointer as you edit.
 - **reset** puts everything back to stock — controls, modulation bay, stab gate
   — and `ctrl+z` undoes it. **clean** is the same verb; hold `c` to preview
   clean without changing anything.

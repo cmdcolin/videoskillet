@@ -101,7 +101,7 @@ export function Section(props: {
   // that is still browsing them, which is the same click at the wrong end.
   //
   // Compared during render rather than watched in an effect — the same shape
-  // LookSection uses to re-sync its held list — so the fold lands in the render
+  // LookPopover uses to re-sync its held list — so the fold lands in the render
   // that carries the new look rather than one paint later. Initialised from the
   // mount value, so a session that restores a look from a link is not folded on
   // arrival by a token that has not actually changed.

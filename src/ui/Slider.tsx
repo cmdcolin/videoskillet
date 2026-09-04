@@ -40,7 +40,7 @@ import type { CSSProperties, ReactNode } from 'react'
 // and one open stage came out with its tracks at four different x.
 //
 // A context rather than a prop because the rows are not always the provider's
-// own children — LookSection wraps each in a <div> of its own — and threading a
+// own children — LookPopover wraps each in a <div> of its own — and threading a
 // number through every such wrapper is how the two halves drift apart. Zero
 // means "no rack": the row falls back to its own width, which is still stable.
 const RackContext = createContext(0)

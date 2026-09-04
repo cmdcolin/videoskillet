@@ -6,12 +6,11 @@ import type { PointerEvent } from 'react'
 //
 // It exists to delete a mistake rather than to save typing. Every pad that reads
 // absolute positions has to freeze its box, for the reason `uvInRect` records:
-// writing a control off its default adds a row to "This look" at the top of the
-// panel, which pushes everything below it down, so re-measuring on each
-// pointermove measures the frame *after* it has moved out from under the
-// pointer. Sixty-eight pixels, mid-gesture, the first time a pad is touched —
-// and only the first time, which is what makes it so easy to write and so hard
-// to notice. Written out per pad, the correct version was a fourteen-line
+// anything in the panel that changes size under a control write moves the
+// frame, and re-measuring on each pointermove measures it *after* it has moved
+// out from under the pointer — a fault that only shows on the first touch,
+// which is what makes it so easy to write and so hard to notice. Written out
+// per pad, the correct version was a fourteen-line
 // quartet that had to be got right again each time; here it is what you get by
 // default, and a new pad cannot forget it.
 //

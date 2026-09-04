@@ -59,7 +59,7 @@ import {
 import { FpsMonitor } from './ui/FpsMonitor'
 import { CrosshairIcon } from './ui/icons'
 import { LookBar } from './ui/LookBar'
-import { LookSection } from './ui/LookSection'
+import { LookPopover } from './ui/LookPopover'
 import { MediaBrowserDialog } from './ui/MediaBrowserDialog'
 import { MenuRow } from './ui/MenuRow'
 import { MidiSection } from './ui/MidiSection'
@@ -111,7 +111,6 @@ import { usePopout } from './ui/usePopout'
 import { useRender } from './ui/useRender'
 import { useRollRand } from './ui/useRollRand'
 import { useSavedProfiles } from './ui/useSavedProfiles'
-import { useScrollAnchor } from './ui/useScrollAnchor'
 import { useSharedMedia } from './ui/useSharedMedia'
 import { useShortcuts } from './ui/useShortcuts'
 import { useStrip } from './ui/useStrip'
@@ -152,8 +151,8 @@ const getNoMorph = (): number | null => null
 
 // Which stages are open to a jump, in the only four arrangements there are: a
 // second source patched in or not, an audio input picked or not. Built once
-// rather than per render because it is a prop on "This look" — a fresh Set each
-// render rebuilds every row in that section, and the answer only ever changes
+// rather than per render because it is a prop on the look menu — a fresh Set each
+// render rebuilds every row in it, and the answer only ever changes
 // when one of those two inputs does.
 const TRUNK_STAGES = PHASES.map(p => p.name)
 const stageSet = (b: boolean, sound: boolean): ReadonlySet<string> =>
@@ -166,7 +165,7 @@ const stageSet = (b: boolean, sound: boolean): ReadonlySet<string> =>
     VIEW_STAGE,
     // Nor into a loop — a loop *is* a patch, across a chain that is always
     // carrying A. So all three are open to a jump in every arrangement, which
-    // is what a caption in "This look" needs to know before it offers the way
+    // is what a caption in the look menu needs to know before it offers the way
     // back to the knob that made the look.
     ...LOOP_STAGE_NAMES,
   ])
@@ -918,21 +917,8 @@ export function App() {
   )
   // Everything the current look actually moves, gathered out of the six stages
   // it is scattered across. The same walk the chain map's `• N` does, kept as
-  // rows rather than reduced to a count — see LookSection, which does its own
-  // filtering because its membership has to be decided before a query narrows
-  // it, not after.
+  // rows rather than reduced to a count — see LookPopover.
   const edited = ALL_SLIDERS.filter(s => !atRest(controls[s.key], s.key))
-  // "This look" grows as you work, and it sits above everything you work *on*:
-  // move a control eight stages down and a row for it appears up here, pushing
-  // the row still under your pointer 44px down the screen for no reason you can
-  // see. Folded it doesn't grow at all (see LookSection), so what is left for
-  // the anchor is the section you unfolded yourself and then scrolled past —
-  // a preset applied from the palette, say, while you are eight stages down.
-  // The wrapper is a block formatting context (`lookAnchor`, app.module.css):
-  // the section's outer margins collapse straight through a bare div, and the
-  // anchor would then compensate 9px short of what actually grew.
-  const lookRef = useRef<HTMLDivElement>(null)
-  useScrollAnchor(lookRef)
   // Nothing patched into B leaves two stages with nothing to act on: B itself,
   // and the mixer beside it, whose every control needs a second signal. Both
   // are still drawn — together they are the one thing on screen saying a second
@@ -972,7 +958,8 @@ export function App() {
     [SOUND_STAGE]: soundPatched(audio.mode, audio.name),
   }
   // Which stages something outside the map can jump to. Not read off the chain
-  // below: a live filter drops stages from the map, and a caption in "This look"
+  // below: a live filter drops stages from the map, and a caption in the look
+  // menu
   // is still a way back to the module it came from.
   const openStages = OPEN_STAGES[bOn ? 1 : 0][soundOn ? 1 : 0]
   // Every box on the map, and whether the query reached one that will draw
@@ -1004,7 +991,7 @@ export function App() {
           <ModBay
             tempo={tempo}
             // A patched slot names the control it drives and opens the module
-            // that control lives in — the same jump "This look"'s captions
+            // that control lives in — the same jump the look menu's captions
             // make, and the reason the bay no longer needs a picker listing
             // every slider in the app.
             openStages={openStages}
@@ -1315,6 +1302,13 @@ export function App() {
       {/* Acts on the whole board, so it sits above the sections rather than
           inside any one of them — and stays reachable with Presets folded. */}
       <LookBar
+        look={
+          <LookPopover
+            sliders={edited}
+            openStages={openStages}
+            onOpenGroup={nav.openAt}
+          />
+        }
         comparing={comparing}
         onStartCompare={startCompare}
         onEndCompare={endCompare}
@@ -1359,33 +1353,7 @@ export function App() {
         onRedo={mix.redo}
       />
 
-      {/* The working set goes above the catalog, not under it.
-
-          "This look" is the only surface in the panel holding the controls that
-          are actually making the picture, gathered out of the six stages they
-          are scattered across — and it was sitting under 162px of chips that
-          had already done their job by the time it had anything in it. The
-          chips are not gone: they are one section down, and the way to a
-          different look is where it always was.
-
-          It sits here unconditionally rather than swapping places with the
-          catalog once something is off stock. A swap reads better and cannot be
-          built: the two orders are two positions in this children array, so
-          crossing over unmounts the section and takes its held list, its ▸ more
-          fold and its scroll anchor with it — at the exact moment of the first
-          edit, which is when all three matter. Rendered at zero rows it is one
-          35px header saying so, which is the price of the first edit not being
-          a layout change (see LookSection). */}
-      <div ref={lookRef} className={styles.lookAnchor}>
-        <LookSection
-          sliders={edited}
-          openStages={openStages}
-          onOpenGroup={nav.openAt}
-        />
-      </div>
-
-      {/* Under it, because it is what you came in through rather than what you
-          work on. It drops out under a live filter, for the same reason
+      {/* The catalog. It drops out under a live filter, for the same reason
           Modulation below already does: it holds no control the query can
           match, the panel below the box is meant to be the result set, and at
           180px of chips and caption it is the largest thing in it — with it up,
@@ -1402,8 +1370,7 @@ export function App() {
         />
       )}
 
-      {/* The three source pickers used to be a section here, under "This look"
-          and above the map — which drew a box for each of the same three
+      {/* The three source pickers used to be a section here, above the map — which drew a box for each of the same three
           sources. They head their own stages now (see `stageTop`), so the box
           that carries the name is the one that opens the picker.
 

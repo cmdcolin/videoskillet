@@ -90,8 +90,8 @@ function PresetsHelpDialog(props: { onClose: () => void }) {
         five for a simple fault, twenty for a whole-board look — spread across
         every stage of the chain, because that is what it takes to recreate a
         particular signal fault or device. Hover one for what it does and how
-        many controls it moves; “This look”, right below this section, then
-        lists every one of them as a live row you can drag.
+        many controls it moves; “this look” in the bar above then lists every
+        one of them as a live row you can drag.
       </p>
       <p className={ui.helpText}>
         Every preset but “clean” is also a fader: click to dial it fully in, or

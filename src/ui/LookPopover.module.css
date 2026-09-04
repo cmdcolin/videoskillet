@@ -1,0 +1,44 @@
+/* The trigger wears the look bar's own button, like `tags` beside it. */
+.trigger {
+  composes: btn from './LookBar.module.css';
+}
+
+/* The list, sized like a panel section so the rows lay out as they do there.
+   Its own scroller: a long look scrolls here instead of growing anything. */
+.body {
+  width: 304px;
+  max-height: 70vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0 6px 4px;
+}
+
+/* Which module the rows under it came from. Quieter and smaller than the group
+   headers it names, because it is a caption on borrowed rows rather than a
+   division of the panel. */
+.from {
+  display: block;
+  width: 100%;
+  margin: 8px 0 1px;
+  padding: 0;
+  background: none;
+  border: none;
+  font: inherit;
+  font-size: var(--fs-xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-align: left;
+  color: var(--fg4);
+}
+button.from {
+  cursor: pointer;
+}
+button.from:hover {
+  color: var(--accent);
+}
+
+.empty {
+  margin: 6px 0;
+  font-size: var(--fs-sm);
+  color: var(--fg3);
+}

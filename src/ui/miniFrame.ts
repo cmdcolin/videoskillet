@@ -106,13 +106,13 @@ export const resizeAxis = (
 // Where a pointer is inside a box, in the 0..1 UV the shaders read.
 //
 // Takes the box rather than the element, so a caller can freeze it at
-// pointerdown — and a drag on a miniature has to. Writing a control off its
-// default adds a row to "This look" at the top of the panel, which pushes
-// everything below it down; re-measuring the frame each pointermove therefore
-// re-measures it *after* it has moved out from under the pointer, and the drag
-// lands somewhere nobody aimed. Sixty-eight pixels, mid-gesture, the first time
-// a pad is touched. PipFrame never had this because it works in deltas from the
-// press; this is the same immunity for the pads that work in absolutes.
+// pointerdown — and a drag on a miniature has to. Anything in the panel that
+// changes size while a control is being written moves the frame, and
+// re-measuring it each pointermove then measures it *after* it has moved out
+// from under the pointer. That was sixty-eight pixels mid-gesture when the
+// look's rows still lived in the panel (they are a popover now, LookPopover);
+// the freeze stays because it makes a pad immune to whatever grows next.
+// PipFrame never had this because it works in deltas from the press.
 export const uvInRect = (r: DOMRect, clientX: number, clientY: number) => ({
   u: clamp01((clientX - r.left) / r.width),
   v: clamp01((clientY - r.top) / r.height),
