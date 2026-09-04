@@ -149,7 +149,7 @@ const html = `<!doctype html>
         <p class="brand">
           <img src="data:image/svg+xml;base64,${favicon}" />videoskillet.js
         </p>
-        <h1>WebGPU composite video emulation.</h1>
+        <h1>WebGPU analog video emulation.</h1>
         <p class="req">Real-time NTSC / VHS glitches.</p>
       </div>
     </div>

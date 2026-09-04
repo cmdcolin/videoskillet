@@ -21,9 +21,9 @@ export function AboutDialog({ onClose }: { onClose: () => void }) {
       onClose={onClose}
     >
       <p className={ui.helpText}>
-        A real-time simulator of NTSC composite video rendered entirely in
-        WebGPU compute shaders, with mixer feedback, camera-pointed-at-tv
-        feedback, and many other effects
+        A real-time simulator of NTSC analog video rendered entirely in WebGPU
+        compute shaders, with mixer feedback, camera-pointed-at-tv feedback, and
+        many other effects
       </p>
       <p className={ui.helpText}>
         <a

@@ -1,6 +1,6 @@
 # Getting started
 
-videoskillet.js simulates composite video signal using WebGPU shaders. All the
+videoskillet.js simulates analog video signal using WebGPU shaders. All the
 video effects are natural consequences of real signal-level glitches, rather
 than effects drawn on top of the image.
 

@@ -1,6 +1,6 @@
 # videoskillet.js <img src="public/favicon.svg" alt="videoskillet logo" height="48" />
 
-Tasty WebGPU signal-level composite video emulation. The video effects are a
+Tasty WebGPU signal-level analog video emulation. The video effects are a
 consequence of NTSC signal, not an effect drawn on the picture.
 
 ### Live app!
@@ -130,8 +130,8 @@ one-shotted by [Fable](https://claude.com/), which nailed the "signal level"
 idea behind the glitches.
 
 I also had a hard time coming up with a name for this project. I hope you enjoy.
-This app is inspired by my old 2010s-era experiments alligator clipping
-composite video cables together and posting tumblr gifs.
+This app is inspired by my old 2010s-era experiments alligator clipping analog
+video cables together and posting tumblr gifs.
 
 ## Cool demos
 
