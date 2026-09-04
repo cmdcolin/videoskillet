@@ -4,6 +4,7 @@
 // returned values onto controls at the uniform boundary, so presets, saved looks,
 // and the UI keep the resting value.
 
+import { clamp01 } from '../math'
 import { Lorenz, valueNoise } from './noise'
 
 import type { ModSlot } from '../controls'
@@ -96,7 +97,7 @@ export function driveSlots(
       // Clamped to the driven knob's own range, so a wire deep enough to push
       // depth past 1 parks there rather than inverting the wobble — the same
       // bargain a control row makes with a slider already at its end.
-      depth: Math.min(1, Math.max(0, s.depth + dDepth)),
+      depth: clamp01(s.depth + dDepth),
       // Floors at 0 rather than at the row's minimum: a wire is allowed to stop
       // an LFO dead, and a negative rate would walk the phase backwards past the
       // wrap `sample` detects a completed cycle with.
@@ -133,7 +134,7 @@ export class ModState {
   // softly is a nudge and played hard is the whole excursion. The panel's own
   // buttons pass 1, since a click has no weight to report.
   fire(id: number, level = 1): void {
-    this.fired.set(id, Math.min(1, Math.max(0, level)))
+    this.fired.set(id, clamp01(level))
   }
 
   // Fire every routing that has an envelope on it. The performance gesture: one

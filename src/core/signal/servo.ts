@@ -22,6 +22,8 @@
 // band parks where `trackPos` says at the severity `trackAmt` says, and nothing
 // here costs a frame anything.
 
+import { clamp, clamp01 } from '../math'
+
 const DT = 1 / 60
 
 export interface ServoControls {
@@ -56,7 +58,7 @@ export class TrackingServo {
   }
 
   update(c: ServoControls): ServoOut {
-    const hunt = Math.min(Math.max(c.hunt, 0), 1)
+    const hunt = clamp01(c.hunt)
     this.tension *= 0.94
     if (hunt === 0) {
       this.pos = c.target
@@ -85,12 +87,12 @@ export class TrackingServo {
     const zeta = 0.9 - 0.75 * hunt
     const damp = 2 * Math.sqrt(k) * zeta
     const acc = (Math.abs(err) > dead ? k * err : 0) - damp * this.vel
-    this.vel = Math.min(Math.max(this.vel + acc * DT, -MAX_VEL), MAX_VEL)
+    this.vel = clamp(this.vel + acc * DT, -MAX_VEL, MAX_VEL)
     this.pos += this.vel * DT
     // The band cannot leave the picture; a servo slammed against its end stop
     // bounces back in.
     if (this.pos < 0 || this.pos > 1) {
-      this.pos = Math.min(Math.max(this.pos, 0), 1)
+      this.pos = clamp01(this.pos)
       this.vel = -this.vel * 0.5
     }
 

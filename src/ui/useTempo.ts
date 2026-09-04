@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 
+import { clamp } from '../core/math'
 import { readJSON, writeJSON } from './storage'
 
 // Where a beat comes from, for everything in the panel that can lock to one.
@@ -28,7 +29,7 @@ const TAP_GAP_MAX_MS = 2000
 // than diluted.
 const TAP_GAPS = 4
 
-const clampBpm = (v: number) => Math.min(BPM_MAX, Math.max(BPM_MIN, v))
+const clampBpm = (v: number) => clamp(v, BPM_MIN, BPM_MAX)
 
 const loadManual = (): number | null => {
   const v = readJSON<unknown>(TEMPO_STORE, null)

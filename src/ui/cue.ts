@@ -16,6 +16,8 @@
 // into "the loop button sometimes does nothing", which a browser is an expensive
 // place to find out about.
 
+import { clamp } from '../core/math'
+
 // Shortest loop that still plays, in seconds of the clip's own time. A tap closer
 // than this to the in-point is widened to it rather than rejected: a fast
 // double-tap is how you ask for the shortest stutter the clip can do, and a
@@ -43,7 +45,7 @@ export interface Cue {
 }
 
 const clampTo = (t: number, duration: number): number =>
-  duration > 0 ? Math.min(duration, Math.max(0, t)) : Math.max(0, t)
+  duration > 0 ? clamp(t, 0, duration) : Math.max(0, t)
 
 // A cue that has both marks. Named so the check below can narrow to it: a
 // predicate returning `cue is Cue` proves only non-null, which left every caller

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 
+import { clamp01 } from '../core/math'
 import { cx } from './cx'
 import styles from './Meter.module.css'
 
@@ -27,7 +28,7 @@ export function Meter({
     let id = requestAnimationFrame(function tick() {
       const el = unlitRef.current
       if (el !== null) {
-        const lit = Math.min(Math.max(audio.hit, 0) * 100, 100)
+        const lit = clamp01(audio.hit) * 100
         const unlit = `${(100 - lit).toFixed(1)}%`
         if (orient === 'h') {
           el.style.width = unlit

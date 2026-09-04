@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 
 import { pageSearch } from '../core/gpu/env'
+import { clamp01 } from '../core/math'
 import {
   DEFAULT_DUTY,
   EMPTY_SLOT,
@@ -55,9 +56,7 @@ function loadSlots(): UiSlot[] {
 // to be when they copied it would hand them a still picture as often as not.
 const loadMaster = (): number => {
   const v = readJSON<unknown>(MASTER_STORE, 1)
-  return typeof v === 'number' && Number.isFinite(v)
-    ? Math.min(1, Math.max(0, v))
-    : 1
+  return typeof v === 'number' && Number.isFinite(v) ? clamp01(v) : 1
 }
 
 // Persisted, and deliberately not on the URL yet — see the note on the motion

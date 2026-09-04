@@ -1,5 +1,6 @@
 import { use, useEffect, useRef, useState } from 'react'
 
+import { clamp01 } from '../core/math'
 import {
   ControlStoreContext,
   useControls,
@@ -36,7 +37,7 @@ import type { KeyboardEvent, PointerEvent as ReactPointerEvent } from 'react'
 // horizontal throw survives the vertical shove that causes today, but only by
 // luck — the deck sits above two sections that can also change width.
 const posFrom = (e: ReactPointerEvent<HTMLDivElement>, box: DOMRect) =>
-  Math.min(1, Math.max(0, (e.clientX - box.left) / box.width))
+  clamp01((e.clientX - box.left) / box.width)
 
 // The transition lever.
 //

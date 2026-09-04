@@ -12,6 +12,7 @@
 // did it" is a value a test can assert on. Every bug this file could have is
 // then a wrong list rather than a wrong picture.
 
+import { clamp, clamp01 } from '../core/math'
 import { randomSeed, rngFor } from '../core/rng'
 import { clipUrl, isClipId } from '../sources/clips'
 import { SOURCE_DESC, SOURCE_MODES } from '../sources/modes'
@@ -363,7 +364,7 @@ export function holdFrames(
   // One draw, at the moment the row fires. `rngFor` is constructed here rather
   // than threaded so the answer depends on the seed alone — the same row on the
   // same lap drifts by the same amount however it was reached.
-  const drift = Math.min(MAX_DRIFT, Math.max(0, hold.drift))
+  const drift = clamp(hold.drift, 0, MAX_DRIFT)
   const spread = drift === 0 ? 0 : (rngFor(seed)() * 2 - 1) * drift
   return Math.max(1, Math.round(seconds * (1 + spread) * clock.fps))
 }
@@ -640,7 +641,7 @@ export function learnClipSeconds(
 export function holdProgress(walk: Walk, clock: Clock): number | null {
   if (!walking(walk) || walk.frames === null || walk.frames <= 0) return null
   const through = (clock.frame - walk.since) / walk.frames
-  return Math.min(1, Math.max(0, through))
+  return clamp01(through)
 }
 
 // --- reading a row off a session string -------------------------------------
@@ -1004,7 +1005,7 @@ function readHold(raw: unknown): Hold {
           : typeof bars === 'number' && Number.isFinite(bars) && bars > 0
             ? bars
             : DEFAULT_HOLD.bars,
-    drift: Math.min(MAX_DRIFT, Math.max(0, num(drift, DEFAULT_HOLD.drift))),
+    drift: clamp(num(drift, DEFAULT_HOLD.drift), 0, MAX_DRIFT),
   }
 }
 

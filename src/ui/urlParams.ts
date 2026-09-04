@@ -7,6 +7,7 @@
 // app with, so a silent change here breaks them with no test to say so.
 
 import { CONTROL_KEYS, DEFAULT_CONTROLS, LANDING_LOOK } from '../core/controls'
+import { clamp, clamp01 } from '../core/math'
 import { SOURCE_B_MODES, SOURCE_MODES } from '../sources/modes'
 import { isPoolMode } from '../sources/pools'
 import { TELETYPE_DEFAULT, clampCardText } from '../sources/teletype'
@@ -195,8 +196,7 @@ function parseSet(raw: string): Partial<Controls> {
     const key = CONTROL_KEYS.find(c => c === k)
     if (key !== undefined && Number.isFinite(n)) {
       const def = SLIDER_BY_KEY.get(key)
-      patch[key] =
-        def === undefined ? n : Math.min(def.max, Math.max(def.min, n))
+      patch[key] = def === undefined ? n : clamp(n, def.min, def.max)
     }
   }
   return patch
@@ -229,8 +229,8 @@ function parseMod(raw: string): ModRouting[] {
       out.push({
         target,
         source,
-        rateHz: Math.min(RATE_MAX, Math.max(RATE_MIN, rateHz)),
-        depth: Math.min(1, Math.max(0, depth)),
+        rateHz: clamp(rateHz, RATE_MIN, RATE_MAX),
+        depth: clamp01(depth),
         ...(v === undefined ? {} : (syncDivision(Number(v)) ?? {})),
       })
     }

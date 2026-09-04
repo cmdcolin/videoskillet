@@ -1,3 +1,5 @@
+import { clamp } from '../core/math'
+
 import type { Controls, ControlKey } from '../core/controls'
 import type { SourceBMode, SourceMode } from '../sources/modes'
 import type { CurveName } from './travel'
@@ -4273,7 +4275,7 @@ export function snapToStep(
       : value
   // Trim the float dust the multiply leaves: matchPreset compares controls with
   // ===, so a 0.30000000000000004 reads as a look someone edited.
-  return Number(Math.min(def.max, Math.max(def.min, stepped)).toFixed(6))
+  return Number(clamp(stepped, def.min, def.max).toFixed(6))
 }
 
 // Controls that move where you are looking rather than what the signal does.

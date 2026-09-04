@@ -1,3 +1,4 @@
+import { clamp01 } from '../core/math'
 import { cx } from './cx'
 import { WIPE_SHAPES, cqw, snapOffset, uvInRect } from './miniFrame'
 import styles from './MiniFrame.module.css'
@@ -26,7 +27,7 @@ export function WipeFrame(props: {
     if (shape !== undefined) {
       const { u, v } = uvInRect(box, e.clientX, e.clientY)
       const p = shape.pos(u, v)
-      props.onChange(Math.min(1, Math.max(0, p + snapOffset([p], !e.altKey))))
+      props.onChange(clamp01(p + snapOffset([p], !e.altKey)))
     }
   }
   const grab = useGrabRect(set)

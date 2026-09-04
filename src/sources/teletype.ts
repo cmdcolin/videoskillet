@@ -20,6 +20,9 @@
 // dot resolution, thresholded to one bit, and then blown up with the smoothing
 // off. Everything crunchy about it — broken thin strokes, stairstepped
 // diagonals, letters that shift a dot as they wrap — is the ROM, not a bug.
+
+import { clamp } from '../core/math'
+
 export const CELL_W = 8
 export const CELL_H = 12
 // Font size used inside a cell. Small enough that thresholding it to one bit
@@ -675,7 +678,7 @@ export function buildTeletype(
   const widest = rows.reduce((n, r) => Math.max(n, r.length), 0)
   // One spare column for the cursor, so a line that fills the row still has
   // somewhere to put it.
-  const cols = Math.min(MAX_COLS + 1, Math.max(MIN_COLS, widest + 1))
+  const cols = clamp(widest + 1, MIN_COLS, MAX_COLS + 1)
   const grid = dotGrid(
     rows,
     cols,

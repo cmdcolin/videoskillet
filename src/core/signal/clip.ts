@@ -25,7 +25,7 @@
 // metal lifts, which is the asymmetric slew below. A bite lands in two or three
 // frames and takes five or six to let go.
 
-import { clamp01 } from '../math'
+import { clamp, clamp01 } from '../math'
 
 import type { Controls } from '../controls'
 
@@ -133,8 +133,7 @@ export const clipPointDef = (p: ClipPoint): ClipPointDef => {
 // mutator all land on this key too, and a fractional or out-of-range one should
 // pick a point rather than throw inside a frame.
 export const clipPointAt = (i: number): ClipPoint =>
-  CLIP_POINTS[Math.min(CLIP_POINTS.length - 1, Math.max(0, Math.round(i) || 0))]
-    .value
+  CLIP_POINTS[clamp(Math.round(i) || 0, 0, CLIP_POINTS.length - 1)].value
 
 export interface ClipStep {
   peak: Partial<Controls>
