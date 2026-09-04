@@ -8,23 +8,40 @@
 // arrived at a wall of analog damage with no window, no panel and no hand.
 //
 // These are recordings of the whole window, and each one is a sentence about
-// the app rather than a look: here is a picture built out of nothing, here is a
-// fault put into a clean one, here is the map the controls hang off.
+// the app rather than a look: here is a picture built out of nothing, here is
+// one button handing you three you did not build, here is the map the controls
+// hang off.
 //
-// **Two of the three start on a bare load and get somewhere by hand**, which is
-// the whole point of them and took two wrong turns to arrive at. The slides
-// used to run on the bundled photograph through a tape path, chosen because
-// damage is legible on a cat — a stranger watching a slider bend a photograph
-// has been shown that the program has sliders, and nothing else. So they were
-// moved onto the looks the gallery lists, with one row of each wound back so a
-// drag could arrive at it — and that is worse, because arriving at a picture
-// somebody else already built is not building one. The board was ninety per
-// cent of the way there before the clip started, and the drag took the credit.
+// **The middle one used to be a fault dialled into clean bars**, and it was the
+// weakest thing on the page: a slow bow in a colour bar, next to a gallery of
+// looks somebody had already tuned. What the button does is the better sentence
+// and the better picture, and it is now reproducible enough to record:
+// `?seed=` (ui/useRollRand.ts) is what makes a take of somebody pressing random
+// the same take next time.
+//
+// **The first two start on a bare load and get somewhere while you watch**,
+// which is the whole point of them and took two wrong turns to arrive at. The
+// slides used to run on the bundled photograph through a tape path, chosen
+// because damage is legible on a cat — a stranger watching a slider bend a
+// photograph has been shown that the program has sliders, and nothing else. So
+// they were moved onto the looks the gallery lists, with one row of each wound
+// back so a drag could arrive at it — and that is worse, because arriving at a
+// picture somebody else already built is not building one. The board was
+// ninety per cent of the way there before the clip started, and the drag took
+// the credit.
 //
 // What is left is the honest version and it is also the better film: colour
 // bars on stock controls, three rows raised in the order the mechanism runs,
 // and a field of rainbow that was not there fifteen seconds ago. Nothing is
 // loaded that the hand does not do.
+//
+// The photograph is back in the second slide, and against none of that. The
+// objection is to a *slider* on a cat, which shows that the program has
+// sliders; that slide's hand presses one button, so what the frame has to carry
+// is how far three presses travel. Screened both ways over the same twelve
+// seeds: on bars, three rolls read as three sets of bars in different colours,
+// and on the photograph the same three are a torn print, a hard duotone and a
+// warm dirty one.
 //
 // Which rows those are took a probe rather than a guess, and the two dead ends
 // are worth keeping. Colour bars are already saturated, so chroma gain at 12x
@@ -240,47 +257,50 @@ export const slides = [
     ],
   },
   {
-    file: 'deflection',
-    name: 'A fault',
+    file: 'roll',
+    name: 'Random',
     caption:
-      'The same clean bars, and one fault put into the receiver’s power supply. The ring is the high-voltage rail failing to hold still under load, so the raster it is steering breathes — geometry, not a wobble drawn over the picture, which is why the black between the bars bends with them.',
-    alt: 'The window with the RECEIVER stage open on its deflection controls, HV sag and supply ring raised, and the clean colour bars bowing and breathing as the raster loses its geometry',
-    params: {},
-    // The stage and the group it wants, rather than a press on the map. A stage
-    // opened by pressing its box unfolds its *first* group, and the receiver's
-    // first group is SYNC — so a timeline that pressed RECEIVER and then reached
-    // for a deflection row found no such row. Walking the map is the third
-    // slide's job anyway.
-    seed: {
-      video_feedback_open_phase: 'Receiver',
-      video_feedback_open_group: 'Deflection',
-    },
-    stillAt: 0.78,
-    warm: 60,
-    // **HV sag is on a 'zero' curve, and the first cut of this slide read the
-    // row as if it were linear.** It runs -100..100 and rests at 0, so the
-    // travel expands around the middle: a drag to 0.53 is +1.6us, which is a
-    // thumb three per cent along a track and a picture nobody can see has
-    // changed. The bars sat there looking clean while the caption claimed a
-    // raster that breathes. 0.93 is +70us — the bars bow, and the black between
-    // them bows with them, which is the whole argument for it being geometry.
-    // Screened against the group's other rows (bend, underscan, the beam
-    // limiter): those are more violent and they tear the bars up, and a fault
-    // you cannot still read the picture through says nothing about geometry.
+      'One button, pressed three times. Each press stacks a few of the authored looks over stock and travels to the result in a second — so it is a way of looking around the space rather than a shuffle, and the preset chips light up to say what went into the one you are looking at. Press it again from wherever you land.',
+    alt: 'The window on the bundled photograph of a cat, and the random look button pressed three times: the picture becomes a torn scanline mess, then a hard orange and teal, then a warm dirty print, each arriving over a second',
+    // The photograph rather than the colour bars the other two slides open on.
+    // A roll is legible on a face and abstract on bars — the same reason the
+    // app ships this picture — and it is the picture a stranger has that the
+    // page has been claiming things about.
     //
-    // Supply ring runs 0..1 and rests at 0, and 0.9 is most of the way to the
-    // chaos end of its own label — it is what makes the bow ripple rather than
-    // park.
+    // `seed` in the query is the app's, not this file's: `?seed=` puts the
+    // session's rolls on one generator (ui/useRollRand.ts), so this take is the
+    // take the next recording gets too. Screened over seeds 1-12 for three
+    // rolls that each leave a picture you can still read: most seeds spend at
+    // least one press on a white blow-out or a grey wash, which says nothing
+    // about what the button is for.
+    params: { src: 'cat', seed: 7 },
+    // The second roll, which is the loudest of the three. The finish is a warm
+    // print that reads as a photograph somebody has been unkind to, and as a
+    // still it understates the button.
+    stillAt: 0.62,
+    warm: 60,
+    // Three presses on one button, and the pointer never leaves it. Each is
+    // followed by the second the morph takes to travel plus a beat to look at
+    // where it landed — a press whose picture is still moving when the next one
+    // lands reads as one long smear rather than as three looks.
     act: [
       { hold: 0.8 },
-      { scrollTo: { slider: 'HV sag' }, secs: 0.8 },
-      { moveTo: { slider: 'HV sag' }, secs: 0.6 },
-      { drag: { slider: 'HV sag', to: 0.93 }, secs: 1.4 },
-      { moveTo: { slider: 'supply ring' }, secs: 0.5 },
-      { drag: { slider: 'supply ring', to: 0.9 }, secs: 1.4 },
-      { hold: 1.8 },
+      { moveTo: { text: 'random look' }, secs: 0.7 },
+      { press: 2.6, on: 'random look' },
+      { press: 2.6, on: 'random look' },
+      { press: 3, on: 'random look' },
       { away: 0.5 },
-      { scrollTo: { slider: 'HV sag' }, to: 0, secs: 0.6 },
+    ],
+    // In portrait the look bar is under the picture with the panel, so it is
+    // scrolled to before the pointer goes anywhere near it.
+    narrowAct: [
+      { hold: 0.6 },
+      { scrollTo: { text: 'random look' }, secs: 0.7 },
+      { moveTo: { text: 'random look' }, secs: 0.7 },
+      { press: 2.6, on: 'random look' },
+      { press: 2.6, on: 'random look' },
+      { press: 3, on: 'random look' },
+      { away: 0.5 },
     ],
   },
   {

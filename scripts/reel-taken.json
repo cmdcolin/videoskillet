@@ -3,12 +3,12 @@
     "version": "0.37.1",
     "sha": "43ec99f"
   },
-  "deflection": {
-    "version": "0.37.1",
-    "sha": "43ec99f"
-  },
   "build": {
     "version": "0.37.1",
     "sha": "eb9350e"
+  },
+  "roll": {
+    "version": "0.37.1",
+    "sha": "ee18c30"
   }
 }

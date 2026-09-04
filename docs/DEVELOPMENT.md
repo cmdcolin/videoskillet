@@ -1097,8 +1097,8 @@ the gallery and the header are full of it; the window is what the program _is_,
 and until the carousel held it the one thing a stranger could not work out from
 the page was what using this looks like.
 
-**Two of the three slides start on a bare load and get somewhere by hand**, and
-that took two wrong turns to arrive at. They used to run on the bundled
+**The first two slides start on a bare load and get somewhere while you watch**,
+and that took two wrong turns to arrive at. They used to run on the bundled
 photograph through a tape path, chosen because damage is legible on a cat — a
 stranger watching a slider bend a photograph has been shown that the program has
 sliders, and nothing else. So they were moved onto the looks the gallery lists,
@@ -1115,12 +1115,29 @@ field of rainbow that was not there fifteen seconds earlier. `loop gain` is left
 alone precisely because it already rests at 1: a slide that dragged it would be
 miming.
 
-Finding those three took a probe rather than a guess, and it is worth knowing
-why. Colour bars are already saturated, so chroma gain at 12x clips them back to
-almost the same bars — the photograph was in there for a reason. And the camera
-loop alone runs away to white: `fbMix` and `fbGain` multiply, so what makes the
-picture breed structure rather than bloom out is the product sitting just over
-unity, which is what the group's own "round trip" readout is there to say.
+**The middle slide is one button pressed three times**, and it is where
+[`?seed=`](#url-parameters) earns its keep: `random look` stacks a few authored
+presets over stock, so the slide is the app answering "give me one I did not
+build" — three times, each from wherever the last one landed. Unseeded that take
+is unrepeatable, and a rerecording would need its caption rewritten around
+whatever came up; `?seed=7` fixes the three rolls, and `src=cat` is what makes
+them legible, since three rolls of colour bars read as three sets of colour bars
+in different colours. Both were screened over twelve seeds, and most of them
+spend at least one press on a white blow-out or a grey wash.
+
+It replaced a fault dialled into clean bars — HV sag and supply ring, the raster
+losing its geometry. The mechanism is right and the slide was the weakest thing
+on the page: a slow bow in a colour bar, sitting above a gallery of looks
+somebody had already tuned. What a fault does is the gallery's job and the
+guide's; what the button does is the app's.
+
+Finding the lead slide's three rows took a probe rather than a guess, and it is
+worth knowing why. Colour bars are already saturated, so chroma gain at 12x
+clips them back to almost the same bars — the photograph was in there for a
+reason. And the camera loop alone runs away to white: `fbMix` and `fbGain`
+multiply, so what makes the picture breed structure rather than bloom out is the
+product sitting just over unity, which is what the group's own "round trip"
+readout is there to say.
 
 ```
 pnpm demoreel                    # the gallery's clips (the canvas alone)
