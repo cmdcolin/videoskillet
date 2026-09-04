@@ -2596,9 +2596,12 @@ export function matchPreset(values: Controls): PresetDef | undefined {
 // 40000 draws on this engine, against a fair 9.1% each: Tape wear led 18.1% of
 // rolls and Phosphor / CRT 5.5%, a 3.3x spread across families, purely from
 // where they sit in this file. Somebody rolling and rolling and getting tape
-// again was reading the sort comparator, not the presets. (`vote/candidates.ts`
-// spells the same shuffle out for the same reason; when its TODO to take a
-// seeded `rand` through here lands, the two can share one.)
+// again was reading the sort comparator, not the presets.
+//
+// `rand` rather than `Math.random` inside, which is what lets `vote/candidates.ts`
+// sample the same space from a recorded seed: a dataset labelling looks nobody
+// can render again is worth nothing, and it calls straight through to
+// `randomPresetMix` rather than keeping a second copy of the roll.
 function shuffled<T>(items: readonly T[], rand: () => number): T[] {
   const out = [...items]
   for (let i = out.length - 1; i > 0; i--) {

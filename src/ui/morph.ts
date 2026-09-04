@@ -11,6 +11,12 @@ import type { ControlKey, Controls } from '../core/controls'
 import type { Store } from '../core/listeners'
 import type { GlidePlan, Track } from '../core/signal/glide'
 
+// A morph in flight: how far along, 0..1, or null when none is running. A
+// `Store` because the value moves at the frame rate — so it is subscribed to by
+// the one widget that draws it rather than passed down from a component that
+// would have to re-render to carry it.
+export type MorphStore = Store<number | null>
+
 // Off first, because a cut is a legitimate choice and the one every gesture used
 // to make: a preset chip that took four seconds to land would be the wrong
 // answer to "show me what this preset is".
@@ -20,12 +26,6 @@ import type { GlidePlan, Track } from '../core/signal/glide'
 // you can watch, 8s is long enough to hit surprise again in the middle of, and
 // 30s is a slow sweep to leave running — the one where the point is not arriving
 // at the destination at all but seeing what the path goes through on the way.
-// A morph in flight: how far along, 0..1, or null when none is running. A
-// `Store` because the value moves at the frame rate — so it is subscribed to by
-// the one widget that draws it rather than passed down from a component that
-// would have to re-render to carry it.
-export type MorphStore = Store<number | null>
-
 export const MORPH_SECONDS = [0, 1, 4, 8, 30] as const
 export type MorphSeconds = (typeof MORPH_SECONDS)[number]
 
