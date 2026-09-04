@@ -1098,18 +1098,40 @@ the gallery and the header are full of it; the window is what the program _is_,
 and until the carousel held it the one thing a stranger could not work out from
 the page was what using this looks like.
 
-**A card has to move, and three of them did not.** Sampling every clip at 4fps
-and differencing successive frames puts most of the gallery between 1.4 and 66
-mean levels of motion, and `Ponderorb`, `Fuzzy color bars feedback` and
-`Collecting dust` at 0.01, 0.11 and 0.59 — which understates it, because every
-frame of those three is _statistically identical_. They are camera loops that
-have reached a fixed point, and `demoreel.mjs` steps 500 frames of warm-up
-before it arms the recorder precisely so that a loop has filled, so what gets
-recorded is eight seconds of one frame. No poster frame is the wrong one; there
-is nothing at any second of it to catch. The first two are off the page on
-`gallery: false` and keep their line in the README. Making one of them a card
-again means giving the look a reason not to settle — a `mod=` on a row it turns
-on — rather than rerecording it.
+**A card has to move, and the reading that said three of them did not was taken
+on broken clips.** Sampling every clip at 4fps put most of the gallery between
+1.4 and 66 mean levels of motion and `Ponderorb`, `Fuzzy color bars feedback`
+and `Collecting dust` at 0.01, 0.11 and 0.59 — read at the time as three camera
+loops that had reached a fixed point, eight seconds of one frame each, with no
+poster frame available to get wrong. What that was measuring is the
+`captureStream` fault above: those clips were frozen where the sampler had
+missed a paint, which is a fact about the recorder rather than the look.
+
+Re-measured on stepped captures, differencing every frame in RGB:
+
+| demo                             | shipped | stepped |
+| -------------------------------- | ------: | ------: |
+| `Ponderorb`                      |   0.011 |   0.018 |
+| `Fuzzy color bars feedback`      |   0.185 |   0.895 |
+| `Collecting dust`                |   1.141 |   3.193 |
+| `Camera feedback + static`       |   0.033 |  10.104 |
+| `Chaos black and white feedback` |  42.179 |  98.063 |
+
+The verdict splits three ways. `Ponderorb` has genuinely settled — 0.018 is
+nothing — and keeps `gallery: false` on its merits. `Fuzzy color bars feedback`
+does move, but at 0.9 against a gallery that now runs 3 to 98 it is still a card
+a reader hovers and little happens on, so it stays off for the reason originally
+given if not the one originally measured. `Collecting dust` moves evenly down
+its whole length and is a card.
+
+The demo that reading missed is `Camera feedback + static`, which at 0.033 was
+as still as `Ponderorb` and had been on the page the whole time. Stepped, it
+runs at 10.1 — three hundred times what shipped.
+
+Giving a settled look a reason not to settle — a `mod=` on a row it turns on —
+is still how one of these becomes a card. What no longer holds is that a low
+reading is evidence about the look: it is evidence about the recorder first, and
+wants a stepped capture under it before it means anything.
 
 **The order is what says analog first**, the same rule the slides are under.
 `Chaos black and white feedback` opens the gallery because it is the liveliest
@@ -1179,24 +1201,37 @@ say.
 
 ```
 pnpm demoreel                    # the gallery's clips (the canvas alone)
+pnpm demoreel laser-duck         # just this demo
 pnpm reel                        # the carousel's clips (the whole window, both frames)
 pnpm reel build                  # just this slide
 pnpm reel:check                  # which slides show an older app
 ```
 
-Both want the dev server, Firefox Nightly, ffmpeg and cwebp, and both are slow
-enough to run per-slide while you are working on one.
+Both want the dev server, ffmpeg and cwebp, and a browser — Chrome on macOS,
+Firefox Nightly elsewhere, which each picks per platform and `--browser=`
+overrides. Both are slow enough to run per-slide while you are working on one,
+and both take `--keep` to leave the JPEG frames on disk, which is what makes an
+encode knob (fps, crf, the codec) worth trying more than once without driving
+the browser again.
 
-**They capture by different routes, and the reason matters if you write another
-one.** `demoreel.mjs` records the canvas through `captureStream`, which samples
-on paint — so its window has to be the only one on screen, because an occluded
-one paints at about 1Hz (see the traps above). Nothing can stream a whole
-window: `getDisplayMedia` wants a permission nobody is there to answer, and
-nothing inside the page can see the panel beside the canvas. So `appreel.mjs`
+**Both capture the same way, and it took a bad set of clips to get there.** Each
 takes a **screenshot per output frame** after stepping the engine a fixed number
-of frames, and gets a clip of exactly 24 frames a second whatever the box was
-doing — deterministic, and indifferent to whether the window is in front. JPEG
+of frames, so a clip is exactly its `FPS` whatever the box was doing —
+deterministic, and indifferent to whether the window is in front. JPEG
 intermediates, at 96ms a frame against PNG's 314ms.
+
+`appreel.mjs` had to work this way: nothing can stream a whole window, since
+`getDisplayMedia` wants a permission nobody is there to answer and nothing
+inside the page can see the panel beside the canvas. `demoreel.mjs` had the
+easier route open to it — `captureStream` on the canvas — and took it until the
+clips it produced were measured. `captureStream` samples on paint, so what
+landed in a file was whatever the compositor had drawn by the time the sampler
+looked. Differencing the shipped gallery frame by frame in RGB, **42 to 79 per
+cent of every clip was a frozen frame**: `laser-duck` held one picture for 6.3
+of its 7.9 seconds and then moved, and `chaos-black-and-white-feedback`
+alternated moving and still frames down its whole length. Stepped instead, the
+same look runs 0 per cent frozen at ten times the mean motion. The lesson is
+that a capture that samples on paint measures the machine, not the picture.
 
 **Every slide is recorded twice.** A 1112px window is what the page's wide
 measure gives a slide, so the app's type lands at the size the app renders it —

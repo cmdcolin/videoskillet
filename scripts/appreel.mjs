@@ -7,17 +7,18 @@
 //   Nightly on Linux — see `engine` below), ffmpeg and cwebp. Names
 //   filter the run: `node scripts/appreel.mjs control`.
 //
-// **Frames are stepped and shot, not streamed.** `demoreel.mjs` records the
-// canvas through `captureStream`, which samples on paint — so it needs to own
-// the only window on screen, because an occluded one paints at about 1Hz
-// (docs/DEVELOPMENT.md). There is no equivalent for a whole window: a
-// `getDisplayMedia` capture wants a permission nobody is there to answer, and
-// nothing else in the page can see the panel beside the canvas. So each output
-// frame here is a screenshot, taken after the engine has been stepped a fixed
-// number of frames, and the result is a clip of exactly `FPS` frames a second
-// whatever the box was doing at the time. That is worth more than the
-// convenience: the recording is deterministic, and it does not care whether the
-// window is in front.
+// **Frames are stepped and shot, not streamed**, which is how `demoreel.mjs`
+// records now too. Each output frame is a screenshot taken after the engine has
+// been stepped a fixed number of frames, so a clip is exactly `FPS` frames a
+// second whatever the box was doing at the time.
+//
+// A whole window left no other route to begin with: a `getDisplayMedia` capture
+// wants a permission nobody is there to answer, and nothing inside the page can
+// see the panel beside the canvas. What the gallery's clips then showed is that
+// determinism is the reason to prefer this even where streaming *is* available.
+// `captureStream` samples on paint, and the set it recorded shipped with 42 to
+// 79 per cent of every clip a frozen frame — `demoreel.mjs` carries the
+// measurement.
 //
 // JPEG rather than PNG for those intermediate frames, which is not a quality
 // question at this quality — it is 96ms a frame against 314ms, measured, and
