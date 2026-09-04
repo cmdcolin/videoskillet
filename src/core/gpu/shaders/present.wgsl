@@ -170,13 +170,27 @@ fn fs(in: VOut) -> @location(0) vec4f {
   // picture shrinks past the sampling limit.
   let pxPerLine = 3.0 * scale * zoom / f32(ACTIVE_H);
   let resolved = smoothstep(0.6, 1.4, pxPerLine);
-  let fr = fract(tuv.y * f32(ACTIVE_H)) - 0.5;
   // Finite beam spot between scanlines. The spot is space-charge limited, so it
   // grows with beam current: at scanBloom > 0 bright lines fatten until the gaps
   // close in the whites while dim picture keeps thin, separated lines — the
   // signature that makes real scanline structure read as a beam, not an overlay.
   let spot = 1.0 + 3.0 * P.scanBloom * luma(col);
-  let beam = 1.0 - resolved * P.scanBeam * (1.0 - exp(-fr * fr * 10.0 / spot));
+  // The profile is integrated over the output pixel's height rather than read
+  // at its centre. Between about two and four pixels a line the gap is a pixel
+  // wide, and a point sample lands in it on some lines and beside it on others,
+  // which beats into coarse horizontal bands that crawl with the picture — at
+  // 1129 output pixels for 480 lines, a 752px-wide window at 2x, every third
+  // line came out dark. Four taps across the pixel's footprint band-limit the
+  // gap to what the pixel can carry, and a tall window, where a line is many
+  // pixels, sees the same profile it always did.
+  let ly = tuv.y * f32(ACTIVE_H);
+  let dy = 1.0 / max(pxPerLine, 1e-3);
+  var gap = 0.0;
+  for (var k = 0u; k < 4u; k++) {
+    let fr = fract(ly + dy * (f32(k) - 1.5) * 0.25) - 0.5;
+    gap += 1.0 - exp(-fr * fr * 10.0 / spot);
+  }
+  let beam = 1.0 - resolved * P.scanBeam * gap * 0.25;
   col = col * beam;
   // Aperture grille: vertical RGB phosphor stripes, gain-compensated for the
   // mean transmission loss so mids hold while bright areas clip toward white —
