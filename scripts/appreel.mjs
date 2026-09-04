@@ -37,7 +37,11 @@
 //                                path map, `{ slider }` for a control row by
 //                                its label, or anything `drive.mjs` resolves.
 //   { press: secs, on }          click whatever the pointer is over, then dwell
-//                                there. `on` is what that had better be.
+//                                there. `on` is what that had better be. A
+//                                target of `{ choice: { row, pick } }` is one
+//                                option of a switch row — `key input` is
+//                                self/program — since two rows can offer the
+//                                same word and `{ text }` finds the last.
 //   { drag: { slider, to }, secs }
 //                                walk a slider to `to` — a fraction of its own
 //                                travel — with the pointer on the thumb
@@ -52,7 +56,7 @@ import puppeteer from 'puppeteer-core'
 
 import { CHROME, FIREFOX } from './browser.mjs'
 import { installHelpers, SEED, seedStorage, step } from './drive.mjs'
-import { beatSecs, FRAME, NARROW, slides } from './reel.mjs'
+import { beatSecs, FRAME, NARROW, slides as reel } from './reel.mjs'
 import { appUp } from './until.mjs'
 
 import { execFileSync } from 'node:child_process'
@@ -66,8 +70,9 @@ import {
   writeFileSync,
 } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { join, resolve } from 'node:path'
 import { platform } from 'node:process'
+import { pathToFileURL } from 'node:url'
 
 const argv = process.argv.slice(2)
 const flag = (name, fallback) => {
@@ -89,6 +94,19 @@ const check = argv.includes('--check')
 // codec itself) worth trying more than once, and driving the browser again for
 // each try is a minute a go and a different set of frames to compare against.
 const keep = argv.includes('--keep')
+// A module exporting `slides` in place of the reel, and which of a slide's two
+// takes to record. Together they make this the screen for a slide's rows:
+// `pathprobe.mjs` ramps rows on a stepped engine with no wall clock between
+// frames, and a feedback loop paced that way lands somewhere the recorded take
+// never goes — a three-row backdrop screened pale white where the take shows a
+// rainbow. What decides whether a row reads in the clip is the clip, so a
+// variant is recorded the way the reel is, wide only, and looked at.
+const slidesPath = flag('slides', null)
+const takesWanted = flag('takes', 'both')
+const slides =
+  slidesPath === null
+    ? reel
+    : (await import(pathToFileURL(resolve(slidesPath)).href)).slides
 const only = argv.filter(a => !a.startsWith('--'))
 
 const FPS = 24
@@ -151,9 +169,14 @@ function installReel(touch) {
   // is where the centre already was.
   const stageBox = name => {
     const want = name.trim().toLowerCase()
-    const box = [...document.querySelectorAll('g[role="button"]')].find(g =>
-      (g.textContent ?? '').trim().toLowerCase().startsWith(want),
-    )
+    // An exact name first: `MIX` is a prefix of the `mixer` pill, and the pill
+    // comes first in the document, so a prefix match alone opened the loop
+    // when the stage was asked for.
+    const boxes = [...document.querySelectorAll('g[role="button"]')]
+    const text = g => (g.textContent ?? '').trim().toLowerCase()
+    const box =
+      boxes.find(g => text(g).split(/\s+/)[0] === want) ??
+      boxes.find(g => text(g).startsWith(want))
     if (box === undefined) {
       throw new Error(`no ${name} box on the map`)
     }
@@ -212,12 +235,35 @@ function installReel(touch) {
     return { x: r.left + r.width / 2, y: r.top + r.height / 2 }
   }
 
+  // One option of a switch row. The row is a radiogroup carrying its own label,
+  // so the option is found under the row rather than by its word alone.
+  const choice = ({ row, pick }) => {
+    const group = [...document.querySelectorAll('[role="radiogroup"]')].find(
+      g =>
+        (g.getAttribute('aria-label') ?? '')
+          .toLowerCase()
+          .startsWith(row.toLowerCase()),
+    )
+    const el = group?.querySelector(`[role="radio"]`)
+      ? [...group.querySelectorAll('[role="radio"]')].find(
+          b =>
+            (b.textContent ?? '').trim().toLowerCase() === pick.toLowerCase(),
+        )
+      : undefined
+    if (el === undefined) {
+      throw new Error(`no “${pick}” on the ${row} switch — is its stage open?`)
+    }
+    return el
+  }
+
   const elementFor = target =>
     target.stage !== undefined
       ? stageBox(target.stage)
       : target.slider !== undefined
         ? slider(target.slider)
-        : window.__ds.elementOf(target)
+        : target.choice !== undefined
+          ? choice(target.choice)
+          : window.__ds.elementOf(target)
 
   // The panel is its own scroll container, and most groups are below its fold —
   // the decoder is the fourth of five in the receiver. So a row is scrolled to
@@ -325,6 +371,20 @@ function installReel(touch) {
 
     travel: label => travelOf(slider(label)).at,
 
+    // The hand arriving on the thumb and leaving it. A drag is a pointerdown
+    // before the first value and a pointerup after the last, and the app banks
+    // its undo step on the first of those (Slider's `onBegin`) — so a drag that
+    // is only `input` events leaves `undo` greyed, which is what a take of the
+    // hand pressing a dead button looked like.
+    takeHold: label =>
+      slider(label).dispatchEvent(
+        new PointerEvent('pointerdown', { bubbles: true }),
+      ),
+    letGo: label =>
+      slider(label).dispatchEvent(
+        new PointerEvent('pointerup', { bubbles: true }),
+      ),
+
     // React owns the range input's value, so a bare `el.value = x` is reverted
     // on the next render — go through the native setter and let React's own
     // listener see the event, which is what `drive.mjs` says for the same
@@ -396,6 +456,7 @@ async function runBeat(page, beat, frame, hand, shoot) {
       s => window.__reel.travel(s),
       beat.drag.slider,
     )
+    await page.evaluate(s => window.__reel.takeHold(s), beat.drag.slider)
     for (let i = 1; i <= frames; i++) {
       const t = ease(i / frames)
       hand.at = await page.evaluate(
@@ -407,6 +468,7 @@ async function runBeat(page, beat, frame, hand, shoot) {
       await paint(page, hand)
       await shoot()
     }
+    await page.evaluate(s => window.__reel.letGo(s), beat.drag.slider)
     hand.down = false
   } else if (beat.press !== undefined) {
     const hit = await page.evaluate(
@@ -414,9 +476,15 @@ async function runBeat(page, beat, frame, hand, shoot) {
       hand.at.x,
       hand.at.y,
     )
+    // A bank's header leads with its disclosure caret, so `on: 'Deflection'`
+    // is checked against the title behind it as well as the raw text — the
+    // look bar's own caret button is still asserted as the bare '▾'.
+    const said = hit.toLowerCase()
+    const want = beat.on?.toLowerCase()
     if (
-      beat.on !== undefined &&
-      !hit.toLowerCase().startsWith(beat.on.toLowerCase())
+      want !== undefined &&
+      !said.startsWith(want) &&
+      !said.replace(/^[▸▾]\s*/, '').startsWith(want)
     ) {
       // A click that finds nothing must fail where it happened: these press
       // whatever is under the pointer, so a box that moved makes the press a
@@ -607,15 +675,19 @@ const at = capturedAt()
 // The frames are different sizes, so they are different sessions rather than
 // one session resized — `setViewport` after a load swaps the realm under
 // Firefox BiDi and takes `window.vf` with it.
-const takes = slide => [
-  { name: slide.file, frame: FRAME, act: slide.act, out: FRAME.out },
-  {
-    name: `${slide.file}-narrow`,
-    frame: NARROW,
-    act: slide.narrowAct,
-    out: NARROW.out,
-  },
-]
+const takes = slide =>
+  [
+    { name: slide.file, frame: FRAME, act: slide.act, out: FRAME.out },
+    {
+      name: `${slide.file}-narrow`,
+      frame: NARROW,
+      act: slide.narrowAct ?? slide.act,
+      out: NARROW.out,
+    },
+  ].filter(
+    (take, i) =>
+      takesWanted === 'both' || takesWanted === ['wide', 'narrow'][i],
+  )
 
 for (const slide of wanted) {
   for (const take of takes(slide)) {
@@ -626,38 +698,60 @@ for (const slide of wanted) {
     // several hundred stepped frames in it. The pointer prefs are per browser
     // too: told to report a coarse primary pointer, the app lays its rows out
     // for a thumb, which is what a phone actually gets.
-    const browser = await (engine === 'chrome'
-      ? puppeteer.launch({
-          browser: 'chrome',
-          executablePath: CHROME,
-          headless: false,
-          args: [
-            '--use-fake-device-for-media-stream',
-            '--use-fake-ui-for-media-stream',
-          ],
-        })
-      : puppeteer.launch({
-          browser: 'firefox',
-          executablePath: FIREFOX,
-          headless: false,
-          extraPrefsFirefox: {
-            'dom.webgpu.enabled': true,
-            'gfx.webgpu.ignore-blocklist': true,
-            'media.navigator.streams.fake': true,
-            'media.navigator.permission.disabled': true,
-            // Chrome says the same thing per page rather than per browser, in
-            // `record` — the prefs are a browser-wide switch and there is no
-            // Firefox equivalent of `emulateMediaFeatures` under BiDi.
-            ...(take.frame.coarse === true
-              ? {
-                  'ui.primaryPointerCapabilities': 1,
-                  'ui.allPointerCapabilities': 1,
-                }
-              : {}),
-          },
-        }))
+    const launch = () =>
+      engine === 'chrome'
+        ? puppeteer.launch({
+            browser: 'chrome',
+            executablePath: CHROME,
+            headless: false,
+            args: [
+              '--use-fake-device-for-media-stream',
+              '--use-fake-ui-for-media-stream',
+            ],
+          })
+        : puppeteer.launch({
+            browser: 'firefox',
+            executablePath: FIREFOX,
+            headless: false,
+            extraPrefsFirefox: {
+              'dom.webgpu.enabled': true,
+              'gfx.webgpu.ignore-blocklist': true,
+              'media.navigator.streams.fake': true,
+              'media.navigator.permission.disabled': true,
+              // Chrome says the same thing per page rather than per browser, in
+              // `record` — the prefs are a browser-wide switch and there is no
+              // Firefox equivalent of `emulateMediaFeatures` under BiDi.
+              ...(take.frame.coarse === true
+                ? {
+                    'ui.primaryPointerCapabilities': 1,
+                    'ui.allPointerCapabilities': 1,
+                  }
+                : {}),
+            },
+          })
+    // **Retried, with a new browser each go.** A take is a browser launch, a
+    // page load and several hundred stepped WebGPU frames, and on a loaded box
+    // any of those can lose a race: a run of the three slides came back with
+    // two `dead frame — nothing rendered` and a `canvas` that never appeared,
+    // on slides that had recorded cleanly minutes earlier. The stepping is
+    // deterministic; it is the session around it that is not, so what a retry
+    // buys is another session. A new browser rather than a new page, because a
+    // device that came up dead stays dead for the life of the one that made it
+    // (docs/adr/0004).
+    let frames = null
+    let last
+    for (let attempt = 0; attempt < 3 && frames === null; attempt++) {
+      const browser = await launch()
+      try {
+        frames = await record(browser, slide, take, tmpDir)
+      } catch (e) {
+        last = e
+      } finally {
+        await browser.close().catch(() => {})
+      }
+    }
     try {
-      const frames = await record(browser, slide, take, tmpDir)
+      if (frames === null) throw last
       const mp4 = join(outDir, `${take.name}.mp4`)
       const scale =
         take.out.width === take.frame.width * take.frame.dpr
@@ -704,7 +798,6 @@ for (const slide of wanted) {
     } catch (e) {
       console.log(`  FAIL ${take.name}: ${String(e).slice(0, 200)}`)
     } finally {
-      await browser.close().catch(() => {})
       if (keep) {
         console.log(`    frames kept in ${tmpDir}`)
       } else {
@@ -714,4 +807,7 @@ for (const slide of wanted) {
   }
 }
 
-writeFileSync(MANIFEST, `${JSON.stringify(taken, null, 2)}\n`)
+// A screen of variants is not the reel, and must not date it.
+if (slidesPath === null) {
+  writeFileSync(MANIFEST, `${JSON.stringify(taken, null, 2)}\n`)
+}

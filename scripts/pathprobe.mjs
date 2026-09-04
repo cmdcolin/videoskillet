@@ -40,11 +40,12 @@
 
 import puppeteer from 'puppeteer-core'
 
-import { FIREFOX } from './browser.mjs'
+import { CHROME, FIREFOX } from './browser.mjs'
 import { installHelpers, SEED, seedStorage, step } from './drive.mjs'
 
 import { writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { platform } from 'node:process'
 import { pathToFileURL } from 'node:url'
 
 const [specPath, outDir, baseArg] = process.argv.slice(2)
@@ -66,9 +67,14 @@ const HOLD = 43
 function installProbe() {
   const stageBox = name => {
     const want = name.trim().toLowerCase()
-    const box = [...document.querySelectorAll('g[role="button"]')].find(g =>
-      (g.textContent ?? '').trim().toLowerCase().startsWith(want),
-    )
+    // An exact name first: `MIX` is a prefix of the `mixer` pill, and the pill
+    // comes first in the document, so a prefix match alone opened the loop
+    // when the stage was asked for.
+    const boxes = [...document.querySelectorAll('g[role="button"]')]
+    const text = g => (g.textContent ?? '').trim().toLowerCase()
+    const box =
+      boxes.find(g => text(g).split(/\s+/)[0] === want) ??
+      boxes.find(g => text(g).startsWith(want))
     if (box === undefined) {
       throw new Error(`no ${name} box on the map`)
     }
@@ -98,13 +104,26 @@ function installProbe() {
   window.__path = {
     expand: text => {
       const want = text.trim().toLowerCase()
+      // A bank's header leads with its disclosure caret, so the title is what
+      // follows it — matched bare, the way `drive.mjs`'s `section` does, or
+      // every bank on the receiver is “no section”.
       const el = [
         ...document.querySelectorAll('button,summary,[role="button"]'),
-      ].find(b => (b.textContent ?? '').trim().toLowerCase().startsWith(want))
+      ].find(b =>
+        (b.textContent ?? '')
+          .replace(/^\s*[▸▾]/, '')
+          .trim()
+          .toLowerCase()
+          .startsWith(want),
+      )
       if (el === undefined) {
         throw new Error(`no section “${text}”`)
       }
-      el.click()
+      // The banks under a stage are an accordion, so a header pressed twice is
+      // a bank folded again — and a pair of rows in one bank names it twice.
+      if (el.getAttribute('aria-expanded') !== 'true') {
+        el.click()
+      }
     },
     open: name => {
       const r = stageBox(name).getBoundingClientRect()
@@ -138,15 +157,34 @@ function installProbe() {
   }
 }
 
-const browser = await puppeteer.launch({
-  browser: 'firefox',
-  executablePath: FIREFOX,
-  headless: false,
-  extraPrefsFirefox: {
-    'dom.webgpu.enabled': true,
-    'gfx.webgpu.ignore-blocklist': true,
-  },
-})
+// The same browser `appreel.mjs` records in, chosen the same way — Chrome on
+// macOS, Firefox Nightly elsewhere (CLAUDE.md § Testing WebGPU). This
+// hardcoded Firefox, which quietly made the instrument disagree with the thing
+// it screens for: a variant judged in one renderer and recorded in the other is
+// a variant judged on a picture nobody is going to ship. `--browser=` overrides
+// it, which is how the two are compared on the same timeline.
+const engine =
+  process.argv.find(a => a.startsWith('--browser='))?.slice(10) ??
+  (platform === 'darwin' ? 'chrome' : 'firefox')
+const browser = await (engine === 'chrome'
+  ? puppeteer.launch({
+      browser: 'chrome',
+      executablePath: CHROME,
+      headless: false,
+      args: [
+        '--use-fake-device-for-media-stream',
+        '--use-fake-ui-for-media-stream',
+      ],
+    })
+  : puppeteer.launch({
+      browser: 'firefox',
+      executablePath: FIREFOX,
+      headless: false,
+      extraPrefsFirefox: {
+        'dom.webgpu.enabled': true,
+        'gfx.webgpu.ignore-blocklist': true,
+      },
+    }))
 console.log(`${variants.length} timelines → ${outDir}/`)
 for (const [name, beats] of variants) {
   // A page each, for the reason `appreel.mjs` takes a browser each: a WebGPU

@@ -13,14 +13,14 @@
 // out of nothing.
 //
 // **The order is that of what says analog first.** `build` opened the stage
-// until it was demoted, and the reason is what it arrives at: a soft field of
-// flowing rainbow, which is the one frame on this page a stranger can read as a
-// shader rather than as a television. The mechanism behind it is the most
-// analog thing here — a composite loop carrying its own subcarrier, half a turn
-// of hue a lap — and none of that is on the screen. `roll` puts a board already
+// until it was demoted, and the reason was what it arrived at then: a soft
+// field of flowing rainbow, which is the one frame on this page a stranger can
+// read as a shader rather than as a television. `roll` puts a board already
 // torn into hard black and white slabs in the first frame, which needs no
 // caption to read as a television coming apart, so it opens the reel and
-// `build` finishes it.
+// `build` finishes it — on a photograph now, with a ring-modulated loop carving
+// colour along the subject's edges, which is a picture of a signal path doing
+// something to a picture rather than a shader doing something to a field.
 //
 // **`roll` used to be the middle slide, and before that it was a fault dialled
 // into clean bars**, which was the weakest thing on the page: a slow bow in a
@@ -40,10 +40,15 @@
 // ninety per cent of the way there before the clip started, and the drag took
 // the credit.
 //
-// What is left is the honest version and it is also the better film: colour
-// bars on stock controls, four rows raised in the order the mechanism runs,
-// and a field of rainbow that was not there fifteen seconds ago. Nothing is
-// loaded that the hand does not do.
+// What is left is the honest version: a picture on stock controls, the rows
+// raised in the order the mechanism runs, and a look that was not there fifteen
+// seconds ago. Nothing is loaded that the hand does not do. The picture is the
+// bundled photograph again — `build` ran on colour bars for a while, and the
+// camera loop it opened there was demoted for being dull, so the argument
+// against the photograph (a slider bending a cat shows only that there are
+// sliders) gave way to the one for it: the ring loop it builds now is keyed on
+// the live picture, and a look that carves along a subject's edges needs a
+// subject to carve.
 //
 // **`roll` ran on the bundled photograph for a while, and does not now.** The
 // argument for it was legibility: a roll is legible on a face and abstract on
@@ -55,13 +60,15 @@
 // slide runs on a feedback board instead, and the legibility it gives up it
 // buys back in what the first frame says about the program.
 //
-// Which rows those are took a probe rather than a guess, and the two dead ends
+// Which rows a slide pulls took a screen rather than a guess, and the dead ends
 // are worth keeping. Colour bars are already saturated, so chroma gain at 12x
-// clips them back to almost the same bars — the photograph was in there for a
-// reason. And the camera loop's `mix` and `gain` multiply, so a loop under
-// unity decays to a dark wash however far the fader goes: what makes the
-// picture breed rather than fade is the round trip sitting just over 1, which
-// is what the group's own readout is there to say.
+// clips them back to almost the same bars. The camera loop's `mix` and `gain`
+// multiply, so a loop under unity decays to a dark wash however far the fader
+// goes, and one over it latches white: the round trip the group's readout
+// prints is the number that matters. And a probe that steps the engine with no
+// wall clock between frames (`pathprobe.mjs`) lands a feedback loop somewhere
+// the recorded take never goes, so a feedback slide is screened by recording
+// it (`appreel.mjs --slides= --takes=wide`) and looking.
 //
 // A slide is declarative, on the same terms as `docshot-specs.mjs`: a look, the
 // panel state to open, and a timeline of beats to run while the shutter is
@@ -161,17 +168,72 @@ export const NARROW = {
 export const beatSecs = beat =>
   beat.secs ?? beat.hold ?? beat.press ?? beat.away
 
-// Pressed one after another, each unfolding its own bank, and the last one
-// pressed twice so the panel comes back to the map it started on. Named because
-// the portrait take runs it with a beat in front.
+// Two stages pressed, and every press is followed by a row pulled. The walk
+// used to open SOURCE A, CHANNEL and RECEIVER in turn to show that a stage
+// opens under its box, and Colin watching it said what a stranger would: "i
+// dont understand the recording that just clicks on source, channel, receiver
+// ... it should be changing settings in interesting ways". So the presses that
+// lead nowhere are gone and the ones that stay are the way to a slider.
+//
+// **Which rows took a screen, and the first answer was the wrong one.** The
+// receiver opens on its Sync bank, and the pair in reach there — `vertical
+// hold` let go, `vertical osc` detuned — rolls the frame three times over the
+// beat that follows. Legible, and unwatchable: a picture tumbling at field
+// rate is the one thing a landing page must not loop. `blanking strobe` is
+// out on the same ground. So the hand opens banks the stages did not, which
+// is a truer picture of the panel anyway: the banks under a stage are an
+// accordion, and a header is a press like any other.
+//
+// Screened over fifty rows on this look (`candidates.sync.mjs` and the channel
+// after it, through `pathprobe.mjs`): ghost gain, hum and an open termination
+// white the frame out, noise and peaking bury it in snow, phosphor persistence
+// washes it, the MIX rows do nothing because B is genlocked here, and bend
+// amount is already on a Lorenz wire so a hand on it reads as nothing. `v
+// size` and `HV sag` were in and came out — "did not do anything interesting"
+// and "we demonstrate hv sag repeatedly", and both are right. What stays
+// changes the picture without flashing it. In the channel's Timebase bank,
+// `flutter` shimmies every line sideways and `sticky shed` — tape binder
+// grabbing the head drum — leans the stripes into shear bands that snap back.
+// Then the receiver's `tint` turns the hue of all of it.
 const MAP_WALK = [
   { hold: 0.4 },
-  { moveTo: { stage: 'SOURCE A' }, secs: 0.6 },
-  { press: 1.1, on: 'SOURCE A' },
-  { moveTo: { stage: 'CHANNEL' }, secs: 0.5 },
-  { press: 1.2, on: 'CHANNEL' },
+  { moveTo: { stage: 'CHANNEL' }, secs: 0.6 },
+  { press: 0.8, on: 'CHANNEL' },
+  { scrollTo: { section: 'Timebase' }, secs: 0.5 },
+  { moveTo: { section: 'Timebase' }, secs: 0.4 },
+  { press: 0.7, on: 'Timebase' },
+  { scrollTo: { slider: 'flutter' }, secs: 0.4 },
+  { moveTo: { slider: 'flutter' }, secs: 0.4 },
+  { drag: { slider: 'flutter', to: 0.7 }, secs: 1.2 },
+  { moveTo: { slider: 'sticky shed' }, secs: 0.4 },
+  { drag: { slider: 'sticky shed', to: 0.5 }, secs: 1.2 },
+  { hold: 1 },
+  { scrollTo: { stage: 'CHANNEL' }, secs: 0.5 },
   { moveTo: { stage: 'RECEIVER' }, secs: 0.5 },
-  { press: 1.2, on: 'RECEIVER' },
+  { press: 0.8, on: 'RECEIVER' },
+  { scrollTo: { section: 'Decoder' }, secs: 0.5 },
+  { moveTo: { section: 'Decoder' }, secs: 0.4 },
+  { press: 0.7, on: 'Decoder' },
+  { scrollTo: { slider: 'tint' }, secs: 0.4 },
+  { moveTo: { slider: 'tint' }, secs: 0.4 },
+  { drag: { slider: 'tint', to: 0.85 }, secs: 1.2 },
+  { hold: 1.6 },
+  // Home on the morph rather than by dragging back: undo travels the same
+  // second-long glide a roll arrives on, so each row settles out of the picture
+  // instead of being yanked out of it — and the board is stock again, which is
+  // what lets this run round without a jump. Three drags, three presses.
+  //
+  // Scrolled to first, because the toolbar it lives in is the top of the panel
+  // and the rows just dragged are most of a phone below it: the portrait take
+  // reached for `undo` at y=-43 and the recorder said there was nothing under
+  // the pointer, which there was not.
+  { scrollTo: { text: 'undo' }, secs: 0.5 },
+  { moveTo: { text: 'undo' }, secs: 0.4 },
+  { press: 1, on: 'undo' },
+  { press: 1, on: 'undo' },
+  { press: 1.3, on: 'undo' },
+  { scrollTo: { stage: 'RECEIVER' }, secs: 0.5 },
+  { moveTo: { stage: 'RECEIVER' }, secs: 0.4 },
   { press: 0.7, on: 'RECEIVER' },
   { away: 0.5 },
 ]
@@ -196,7 +258,12 @@ export const slides = [
     // one generator (ui/useRollRand.ts), so this take is the take the next
     // recording gets too.
     params: { seed: 2 },
-    stillAt: 0.85,
+    // The last nudge, which is where this take is loudest. Measured rather than
+    // guessed: the four presses finish at 0.63 of the timeline and the undos
+    // walk back down from there, so the 0.85 this sat at while the slide ran
+    // three presses now lands mid-way home — a poster of the picture coming
+    // apart *less*, which is the one thing the still must not say.
+    stillAt: 0.63,
     warm: 60,
     // **Nudge rather than `random look`, and that is the whole slide.** A
     // `random look` rebuilds from stock every press — `landRecipe` lands its
@@ -224,11 +291,30 @@ export const slides = [
       // The menu row reads `≈random nudge` — a row carries its icon in its text
       // where the button carries the label alone, so this is the same target
       // asserted two ways rather than a typo.
-      { press: 2.4, on: '≈random nudge' },
+      { press: 2.2, on: '≈random nudge' },
       // Back to the button the menu just loaded: the pointer is over where the
       // menu row was, and the row is gone.
       { moveTo: { text: 'random nudge' }, secs: 0.5 },
-      { press: 3.2, on: 'random nudge' },
+      { press: 2, on: 'random nudge' },
+      { press: 2, on: 'random nudge' },
+      { press: 2.2, on: 'random nudge' },
+      // Four presses out and four back. Undo travels on the same morph a roll
+      // arrives on, so the way home is the same second-long glide as the way
+      // out and the picture walks itself back through the looks it came
+      // through — which is the loop this slide needed anyway (`act`, above:
+      // a timeline ends where it began, because these run round).
+      { moveTo: { text: 'undo' }, secs: 0.6 },
+      // **Three, for four nudges.** The fourth press landed on an `undo` that
+      // had already greyed out — measured off the take, where the button's
+      // label sits at 39 while it is live, dips as each of three presses lands,
+      // then holds a dead 28.7 through a fourth that does nothing. The menu's
+      // own pick rolls the look *and* arms the button, and it is the one that
+      // leaves no step behind it. Worth knowing that `on:` cannot catch this: a
+      // disabled button still reads `undo`, so the assertion passes and the
+      // clip records a hand pressing nothing.
+      { press: 1.3, on: 'undo' },
+      { press: 1.3, on: 'undo' },
+      { press: 2.2, on: 'undo' },
       { away: 0.5 },
     ],
     // In portrait the look bar is under the picture with the panel, so it is
@@ -239,9 +325,23 @@ export const slides = [
       { moveTo: { title: 'the other ways this row has' }, secs: 0.6 },
       { press: 1, on: '▾' },
       { moveTo: { text: 'random nudge' }, secs: 0.6 },
-      { press: 2.4, on: '≈random nudge' },
+      { press: 2.2, on: '≈random nudge' },
       { moveTo: { text: 'random nudge' }, secs: 0.5 },
-      { press: 3.2, on: 'random nudge' },
+      { press: 2, on: 'random nudge' },
+      { press: 2, on: 'random nudge' },
+      { press: 2.2, on: 'random nudge' },
+      { moveTo: { text: 'undo' }, secs: 0.6 },
+      // **Three, for four nudges.** The fourth press landed on an `undo` that
+      // had already greyed out — measured off the take, where the button's
+      // label sits at 39 while it is live, dips as each of three presses lands,
+      // then holds a dead 28.7 through a fourth that does nothing. The menu's
+      // own pick rolls the look *and* arms the button, and it is the one that
+      // leaves no step behind it. Worth knowing that `on:` cannot catch this: a
+      // disabled button still reads `undo`, so the assertion passes and the
+      // clip records a hand pressing nothing.
+      { press: 1.3, on: 'undo' },
+      { press: 1.3, on: 'undo' },
+      { press: 2.2, on: 'undo' },
       { away: 0.5 },
     ],
   },
@@ -249,8 +349,8 @@ export const slides = [
     file: 'signal-path',
     name: 'The signal path',
     caption:
-      'The map is the rig: two sources into a mixer, then the channel it is recorded and broadcast over, the receiver that decodes it and the screen it lands on. Click a stage and its controls open under it.',
-    alt: 'The window with the signal path map at the head of the panel, the RECEIVER box pressed and its stage unfolded underneath, over a picture of a bright scanline arch bending across the frame in red and green fringes',
+      'The map is the rig: two sources into a mixer, then the channel it is recorded and broadcast over, the receiver that decodes it and the screen it lands on. Click a stage and its controls open under it. In the channel, flutter shimmies the timebase and sticky shed is the tape grabbing the head drum, so the stripes shear and snap back. In the receiver, tint turns the colour of all of it — then undo walks it home.',
+    alt: 'The window with the signal path map at the head of the panel: the CHANNEL box pressed, flutter dragged until every line of the scanline arch shimmies sideways and sticky shed dragged until it shears into leaning bands, then the RECEIVER box pressed, its Decoder bank opened and tint dragged so the orange bands turn violet — and undo walking it back',
     // The backdrop, and it is doing a job: the map walk is the content, so what
     // is behind it only has to be worth looking at for seven seconds. It used
     // to be `Fuzzy color bars feedback`, which is a soft brown smear that never
@@ -275,96 +375,98 @@ export const slides = [
     // In portrait the panel is the bottom half of a phone and the map starts
     // below its fold, so it is scrolled to first and everything after that is
     // the same walk.
-    narrowAct: [{ scrollTo: { stage: 'SOURCE A' }, secs: 0.8 }, ...MAP_WALK],
+    narrowAct: [{ scrollTo: { stage: 'CHANNEL' }, secs: 0.8 }, ...MAP_WALK],
   },
   {
     file: 'build',
     name: 'From clean',
     caption:
-      'Colour bars on stock controls, and four rows raised by hand. The camera loop is a lens on the tube’s face — opening it holds trails, and a few degrees of rotate winds them into a spiral. Then the mixer loop patches the composite itself back in, subcarrier and all, and the last row barely moves: a seventh of a microsecond of delay is half a turn of hue on every lap, which is where the colour comes from.',
-    alt: 'A run through the app starting on clean colour bars: the camera feedback fader opened until the picture trails, its rotate wound a few degrees so the trails spiral, then the mixer loop patched in and its delay nudged off zero — the bars becoming a field of flowing green, magenta and blue',
-    // Nothing. A bare load is the app's own near-blank board — stock controls,
-    // colour bars on both sources — which is the only honest place a slide that
-    // claims to build something can start.
-    params: {},
-    // The finish, not the middle: at 0.55 the poster was the loop half open,
-    // which is the frame this slide exists to get past.
+      'A photograph on stock controls, and seven rows of the mixer loop raised by hand. The return is synced and the loop opened, its gain eased under unity and its delay stretched so each lap comes back a little further round the hue wheel. Then the loop is keyed on the live picture and multiplied against it — a ring modulator with one input on the machine’s own past — and the trails grow in colours nothing in the room is, cut off crisply at the subject’s edge.',
+    alt: 'A run through the app starting on a clean photograph of a cat on a red chair: the mixer loop opened row by row — frame sync, loop mix, loop gain, loop delay, loop key, key input on program, loop ring mod — until rainbow trails grow sideways out of the fur and the window blinds while the chair stays photographic',
+    // **The bundled photograph, and a hand-built ring loop.** This slide used to
+    // open the camera loop and then the mixer loop on colour bars and finish on a
+    // soft field of flowing rainbow, and Colin's verdict on the take was the
+    // right one: "for all the time spent with this camera feedback and mixer
+    // feedback combo, it looks very boring". Three rows added after the loops
+    // — `loop delay` at a third of a per cent, `FM over-deviation`, `beam
+    // bloom` — read as nothing at all, and every tail screened in their place
+    // either greyed the loop out (anything in the channel that disturbs timing:
+    // sticky shed, wow, tracking) or was a non-event (zoom, HV sag on a soft
+    // field).
+    //
+    // So the slide builds one of the looks the app is actually good at: the
+    // ring-modulated loop, `carved by the live picture` (presets.ts), picked off
+    // a contact sheet of every ring preset rendered on the photograph. Damage
+    // is legible on a picture of something, and the photograph is a Commons
+    // image already bundled, so the take is the same take next time where a
+    // live Commons pick would not be.
+    //
+    // **Seven rows, and two of them looked too small to matter and were not.**
+    // A five-row build (mix, key, key input, ring, sync) blew the cat out to a
+    // white field; `loop gain` eased to 0.92 and `loop delay` stretched to
+    // 1.1us are what hold it just under unity — the bank's own readout says so:
+    // "round trip 0.85x · just under — trails hold, structure does not build".
+    // The delay is a fifth of a per cent of its track and its thumb barely
+    // moves, but its readout goes 0.15us to 1.10us and without it the loop
+    // latches white. `frame sync` goes first rather than last: raised at the
+    // end, after the loop had run unsynced for ten seconds, the return's tear
+    // stayed in the frame store as a black block wandering through the rest
+    // of the take. Synced before the loop opens, there is nothing to tear.
+    params: { src: 'cat' },
     stillAt: 0.9,
-    // Nothing to fill: both loops are shut when the clip starts, and filling
-    // them is the clip.
     warm: 60,
-    // Four rows, each a fraction of its own travel because the recorder reads
-    // the row's domain:
-    //   mix         0..1, rests at 0 — the optical loop opening
-    //   rotate      -180..180 on a 'zero' curve, so the row's own domain is
-    //               travel and 0° sits mid-track. 0.73 is 6°
-    //   loop mix    0..1, rests at 0 — the electrical loop
-    //   loop delay  0..63us linear, rests at 0. 0.0022 is 0.14us
-    //
-    // **`loop delay` is the row the whole picture turns on, and it is the one
-    // whose thumb does not visibly move.** Every variant screened without it is
-    // a pale wash; with it the frame is flowing green and magenta. 0.14us on a
-    // loop carrying its own subcarrier is half a turn of hue a lap, and it
-    // lives in the first third of a per cent of a track that runs to 63us. The
-    // readout and the picture are what say the drag happened.
-    //
-    // **The auto-iris is not in here any more, and that is a correction.** A
-    // loop driven past unity latches: the frame saturates to white and stays
-    // there, so the clip that raised `mix`, `zoom` and the iris spent five of
-    // its sixteen seconds on a white field and finished on a smear. Held under
-    // unity the optical loop only holds trails, and the colour is the electrical
-    // loop's job.
-    //
-    // **What screened well and what recorded well are different questions, and
-    // this is the trap to know about.** `contact.mjs` applies a board with
-    // `?set=` at load, so every candidate it renders grows its loop from an
-    // empty frame buffer — a transient that happens once and that no hand can
-    // reproduce. A board that screened as a radial starburst recorded as a
-    // horizontal smear, and it was not the ordering: all eight orders of the
-    // same four rows land on the same wash. `pathprobe.mjs` is what screens a
-    // timeline — it walks the rows at the timeline's own pace and grabs the
-    // canvas at the end, seconds a variant against ninety for a take.
     act: [
-      { hold: 0.7 },
-      { moveTo: { stage: 'camera' }, secs: 0.6 },
-      { press: 0.8, on: 'camera' },
-      { moveTo: { slider: 'mix' }, secs: 0.5 },
-      { drag: { slider: 'mix', to: 0.7 }, secs: 1.3 },
-      { moveTo: { slider: 'rotate' }, secs: 0.4 },
-      { drag: { slider: 'rotate', to: 0.73 }, secs: 1.3 },
       { hold: 0.8 },
-      { scrollTo: { stage: 'camera' }, secs: 0.5 },
-      { moveTo: { stage: 'mixer' }, secs: 0.5 },
+      { moveTo: { stage: 'mixer' }, secs: 0.6 },
       { press: 0.8, on: 'mixer' },
-      { moveTo: { slider: 'loop mix' }, secs: 0.5 },
-      { drag: { slider: 'loop mix', to: 0.95 }, secs: 1.4 },
+      { scrollTo: { slider: 'frame sync' }, secs: 0.5 },
+      { moveTo: { slider: 'frame sync' }, secs: 0.4 },
+      { drag: { slider: 'frame sync', to: 1 }, secs: 0.9 },
+      { scrollTo: { slider: 'loop mix' }, secs: 0.5 },
+      { moveTo: { slider: 'loop mix' }, secs: 0.4 },
+      { drag: { slider: 'loop mix', to: 0.92 }, secs: 1.3 },
+      { moveTo: { slider: 'loop gain' }, secs: 0.4 },
+      { drag: { slider: 'loop gain', to: 0.653 }, secs: 0.8 },
       { moveTo: { slider: 'loop delay' }, secs: 0.4 },
-      { drag: { slider: 'loop delay', to: 0.0022 }, secs: 0.9 },
-      { hold: 2 },
+      { drag: { slider: 'loop delay', to: 0.0175 }, secs: 0.8 },
+      { scrollTo: { slider: 'loop key' }, secs: 0.4 },
+      { moveTo: { slider: 'loop key' }, secs: 0.4 },
+      { drag: { slider: 'loop key', to: 1 }, secs: 1.1 },
+      { moveTo: { choice: { row: 'key input', pick: 'program' } }, secs: 0.4 },
+      { press: 0.7, on: 'program' },
+      { scrollTo: { slider: 'loop ring mod' }, secs: 0.4 },
+      { moveTo: { slider: 'loop ring mod' }, secs: 0.4 },
+      { drag: { slider: 'loop ring mod', to: 1 }, secs: 1.3 },
+      { hold: 3.5 },
       { away: 0.5 },
     ],
     // In portrait the panel is the bottom half of a phone and the map starts
-    // below its fold, so it is scrolled to before anything is pressed on it.
+    // below its fold, so it is scrolled to before anything is pressed on it;
+    // every row after that scrolls to itself.
     narrowAct: [
       { hold: 0.5 },
-      { scrollTo: { stage: 'camera' }, secs: 0.7 },
-      { moveTo: { stage: 'camera' }, secs: 0.6 },
-      { press: 0.8, on: 'camera' },
-      { scrollTo: { slider: 'mix' }, secs: 0.5 },
-      { moveTo: { slider: 'mix' }, secs: 0.5 },
-      { drag: { slider: 'mix', to: 0.7 }, secs: 1.3 },
-      { moveTo: { slider: 'rotate' }, secs: 0.4 },
-      { drag: { slider: 'rotate', to: 0.73 }, secs: 1.3 },
-      { hold: 0.8 },
-      { scrollTo: { stage: 'camera' }, secs: 0.5 },
-      { moveTo: { stage: 'mixer' }, secs: 0.5 },
+      { scrollTo: { stage: 'mixer' }, secs: 0.7 },
+      { moveTo: { stage: 'mixer' }, secs: 0.6 },
       { press: 0.8, on: 'mixer' },
+      { scrollTo: { slider: 'frame sync' }, secs: 0.5 },
+      { moveTo: { slider: 'frame sync' }, secs: 0.4 },
+      { drag: { slider: 'frame sync', to: 1 }, secs: 0.9 },
       { scrollTo: { slider: 'loop mix' }, secs: 0.5 },
       { moveTo: { slider: 'loop mix' }, secs: 0.4 },
-      { drag: { slider: 'loop mix', to: 0.95 }, secs: 1.4 },
+      { drag: { slider: 'loop mix', to: 0.92 }, secs: 1.3 },
+      { moveTo: { slider: 'loop gain' }, secs: 0.4 },
+      { drag: { slider: 'loop gain', to: 0.653 }, secs: 0.8 },
       { moveTo: { slider: 'loop delay' }, secs: 0.4 },
-      { drag: { slider: 'loop delay', to: 0.0022 }, secs: 0.9 },
-      { hold: 2 },
+      { drag: { slider: 'loop delay', to: 0.0175 }, secs: 0.8 },
+      { scrollTo: { slider: 'loop key' }, secs: 0.4 },
+      { moveTo: { slider: 'loop key' }, secs: 0.4 },
+      { drag: { slider: 'loop key', to: 1 }, secs: 1.1 },
+      { moveTo: { choice: { row: 'key input', pick: 'program' } }, secs: 0.4 },
+      { press: 0.7, on: 'program' },
+      { scrollTo: { slider: 'loop ring mod' }, secs: 0.4 },
+      { moveTo: { slider: 'loop ring mod' }, secs: 0.4 },
+      { drag: { slider: 'loop ring mod', to: 1 }, secs: 1.3 },
+      { hold: 3.5 },
       { away: 0.5 },
     ],
   },
