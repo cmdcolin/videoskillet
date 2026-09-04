@@ -180,9 +180,16 @@ the receiver's vertical oscillator, downstream of anything the sound can reach.
   and staying around the look you set drifting rather than running off. Every
   stage has the same switch for its own controls, so one circuit can breathe
   while you work on another.
+- **Rundown** — the strip tray is a list of looks that plays itself. A row holds
+  for a count of bars, arrives as a cut, a morph or a fault off the transition
+  shelf, and can roll a source out of a pool or shake the look rather than
+  naming either. Play it from the top, or fire rows by hand.
 - **Sharing** — the whole board mirrors to the URL, so a link is a patch.
-- **Capture** — stills, webm recording, or pop the controls into a second window
-  and point OBS at the picture.
+- **Capture** — stills, and a constant-framerate H.264 MP4 of the picture as it
+  plays. The strip's ⎙ render is the other way out: it steps the engine on a
+  clock the render owns, so a take comes back at 60 however fast the tab ran,
+  and comes back the same twice. Or pop the controls into a second window and
+  point OBS at the picture.
 - **Interface** — the chain map, a command palette, signal taps and an IRE
   scope, a magnifier that magnifies the tube face along with the picture.
 

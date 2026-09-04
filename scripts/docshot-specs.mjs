@@ -121,6 +121,9 @@ const HERO = { ...CAT, srcb: 'cat', set: HERO_SET }
 // callout target in others.
 const MAP = { selector: 'svg[aria-label="signal chain"]' }
 
+// The hold chip on the first row of the strip, which the tray shot steps.
+const HOLD_CHIP = '[data-index="0"] [data-act="hold"]'
+
 export const SPECS = [
   {
     name: 'overview',
@@ -128,16 +131,30 @@ export const SPECS = [
     format: 'jpeg',
     width: 1360,
     height: 860,
-    // Numbered to a legend in the guide: spelled-out labels would crowd a 360px
-    // panel, and the numbers survive the prose being rewritten around them.
+    // Labelled rather than numbered: a badge sends the reader to a legend and
+    // back to find out what it sat on, and the legend then reads as a key
+    // rather than as prose. Each pill hangs off the left edge of the thing it
+    // names, in the picture rather than in the 360px panel.
     annotations: [
-      { target: 'canvas', n: 1, at: 'tl', dx: 40, dy: 40 },
-      { target: { title: 'menu (' }, n: 2, at: 'tl', dx: -22, dy: 16 },
-      { target: { section: 'Presets' }, n: 3, at: 'tl', dx: -22, dy: 14 },
-      // Four, not five: "Input" was its own section until the pickers moved
-      // into the stages they feed, and the map now numbers for both — a source
-      // is reached by opening its box like any other stage.
-      { target: MAP, n: 4, at: 'tl', dx: -22, dy: 16 },
+      { target: 'canvas', text: 'the picture', at: 'tl', dx: 40, dy: 40 },
+      { target: { title: 'menu (' }, text: 'menu', at: 'tl', dx: -66, dy: 14 },
+      {
+        target: { section: 'Presets' },
+        text: 'presets',
+        at: 'tl',
+        dx: -100,
+        dy: 14,
+      },
+      // One label, not two: "Input" was its own section until the pickers moved
+      // into the stages they feed, so the map is the way to a source as well —
+      // a source is reached by opening its box like any other stage.
+      {
+        target: MAP,
+        text: 'signal path — click a stage',
+        at: 'tl',
+        dx: -262,
+        dy: 16,
+      },
     ],
   },
   boxed('dialog', {
@@ -183,6 +200,51 @@ export const SPECS = [
     params: WILD,
     crop: { union: [{ text: 'compare' }, { section: 'Presets' }], pad: 0 },
   },
+  // The rundown with a few rows standing in it, cropped to the tray. The user
+  // guide's strip section names a card's parts one after another — the kind
+  // glyph, the hold, the arrival, the transition — and a list of six chips is
+  // exactly the thing a reader cannot assemble into a card from words. Rows
+  // rather than an empty tray for the same reason: the buttons along the bar
+  // are legible in an empty one, and the card is what the section is about.
+  {
+    ...WINDOW,
+    format: 'png',
+    name: 'strip',
+    params: WILD,
+    actions: [
+      { click: { text: 'strip' } },
+      { click: { text: '+ row' } },
+      { click: { text: '+ shake' } },
+      { click: { text: '+ row' } },
+      // The first card, dialled off its defaults so the two in frame differ in
+      // the two places the section says a card can: the hold ring stepped round
+      // to `whole clip`, and a transition taken off the shelf. A figure of three
+      // identical cards would say only that a card exists.
+      // Four steps round the hold ring — clip, 1, 2, 4, 8, 16, hold — is what
+      // it takes to walk a fresh row's 4 bars back to `whole clip`.
+      { click: { selector: HOLD_CHIP } },
+      { click: { selector: HOLD_CHIP } },
+      { click: { selector: HOLD_CHIP } },
+      { click: { selector: HOLD_CHIP } },
+      { click: { selector: '[data-index="0"] [data-act="transition"]' } },
+      // Opening the tray resizes the canvas, and an occluded window's rAF does
+      // not run to fill it again — so the health check reads the blank frame the
+      // resize left and calls the shot dead. Step the engine after the clicks.
+      { steps: 30 },
+    ],
+    // Two cards rather than the whole tray. The guide's measure is 720px, and
+    // the tray is 1300 CSS wide — printed across it, a chip reading "≈4 bars"
+    // arrives at seven pixels tall. Two cards land at 420, which the measure
+    // shows at something larger than the app draws it. The bar's own buttons
+    // are words the section spells out anyway; a card is not.
+    crop: {
+      union: [
+        { selector: '[data-index="0"]' },
+        { selector: '[data-index="1"]' },
+      ],
+      pad: 4,
+    },
+  },
   // Ten boxed-UI shots stood here: presets, preset-mix, input, signal-path,
   // filter, palette, motion, audio, menu, magnifier, scope, advanced. They went
   // together, and for one reason rather than twelve — a full 1320x900 window
@@ -191,13 +253,14 @@ export const SPECS = [
   // is the same app window every time, and stacked twelve deep they took the
   // user guide to 15,000 pixels of screenshots the prose was already saying.
   //
-  // Three survive, and the test each passes is that the picture carries
-  // something the sentence cannot: `overview` names the five regions at once,
-  // `chain` shows a map you would not guess the shape of, and `slider-help` is
-  // the doc's own argument for why there is no per-control reference here.
-  // Anything re-added should clear the same bar, and a tight crop of the panel
-  // region is the shape to reach for rather than another boxed window — which
-  // is how `presets` came back above, and `signal-path` beside it.
+  // What survives passes one test: the picture carries something the sentence
+  // cannot. `overview` labels the four regions at once, `chain` shows a map you
+  // would not guess the shape of, `slider-help` is the doc's own argument for
+  // why there is no per-control reference here, and `strip` draws a row card,
+  // whose six chips a reader cannot assemble out of a list of six chips.
+  // Anything re-added should clear the same bar, and a tight crop of the region
+  // is the shape to reach for rather than another boxed window — which is how
+  // `presets` came back above, and `signal-path` beside it.
 
   // The showcase gallery: three mechanisms, one per tile, each starting from
   // the preset that names it and pushed well past where that preset stops.

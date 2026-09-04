@@ -11,14 +11,17 @@ Visit https://videoskillet.com/app/
 
 ## What's on screen
 
-![The videoskillet.js window: the picture on the left, the control panel on the right](img/overview.jpg)
+![The videoskillet.js window with four labels: the picture on the left, and down the right-hand panel the menu, the presets and the signal path map](img/overview.jpg)
 
-**1** the picture, where a drag boxes a region to magnify and a double-click
-pulls back · **2** the ☰ menu, for stills, recording, fullscreen and settings ·
-**3** presets · **4** the way into every control, sources included.
+**The picture** takes the left of the window: drag a box across it to magnify
+that region, and double-click to pull back. **The ☰ menu**, top right, holds
+stills, recording, fullscreen and settings. **Presets**, below it, is a
+shortlist of whole looks — click one and every control it names moves at once.
 
-Controls sit where they belong on the signal path. The chain map at the top of
-the sidebar is that path, and every box on it is a button.
+**Signal path** is the map at the head of the sidebar, and it is the thing to
+click: every box on it is a stage of the chain, and clicking one opens that
+stage's controls underneath it. That is where all of them live, sources
+included, each sitting at the point on the path where it acts.
 
 ## Three looks to try
 

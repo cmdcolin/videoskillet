@@ -6,7 +6,7 @@ Everything past [Getting started](GETTING-STARTED.md).
 
 Click a preset to jump to it; drag it sideways to blend it part-way in.
 
-![The head of the panel: a row of whole-board verbs — compare, random look and its ▾, drift, morph — over tags, reset and undo, then This look with its off-stock count, then the Presets shortlist of chips and the dashed handle to the other 101](img/presets.png)
+![The head of the panel: a row of whole-board verbs — compare, random look and its ▾, drift, morph — over tags, reset and undo, then This look with its off-stock count, then the Presets shortlist of chips and the dashed handle to the rest](img/presets.png)
 
 - **This look** lists every control you're off stock on, as sliders. Drag to
   edit, **↺** to revert one.
@@ -235,6 +235,56 @@ the picker tells you it did. Not every browser can send audio through a share �
 Chrome can. Ending the share from the browser's own bar puts the picker back to
 off, since a dead capture and a quiet room sound the same from here.
 
+## Playing a piece
+
+The **strip** tray along the bottom of the window is a rundown: a list of looks
+that plays itself. Set the board up, press **+ row**, and do it again — **▶
+play** then walks the rows from the top, each holding for its own count and
+arriving its own way.
+
+![Two cards from a rundown: row 1 marked with the clip glyph, named Tama station master, its chips reading whole clip, 1s and the tracking transition; row 2 marked with the shake glyph, named shake · normal, its chips reading ≈4 bars, 1s and no transition, both cards ending in a rename, duplicate and remove button](img/strip.png)
+
+A row is the session the address bar carries — the look, the modulation bay, the
+source and its cue — plus how long it holds and how it arrives. Clicking a card
+fires that row on its own, so one list serves a piece that plays itself and a
+bank of scenes you play by hand.
+
+Three kinds, marked by the glyph on the card:
+
+- **▤ a clip** — this source, this look, these cue points.
+- **⟳ a roll** — a pool rather than a file, drawn when the row fires, so you
+  know the shape of what is coming without knowing which one.
+- **⚄ a shake** — keeps whatever is up and jitters the look instead. **+ shake**
+  adds one.
+
+The chips along the foot of a card are its timing, and each steps when you click
+it:
+
+- **How long it holds.** **≈4 bars** is loose — the boundary lands anywhere
+  within a quarter of the count either way, so a rundown played twice is two
+  videos. **4 bars** with the drift off is the exact lock, for the cut that has
+  to land on a hit. **whole clip** holds as long as the picture runs, trimmed to
+  the cue when there is one, and **hold** waits for a hand.
+- **How the look arrives** — a cut, or a morph over 1, 4, 8 or 30 seconds.
+- **What it arrives behind** — a transition off the shelf, drawn as its glyph:
+  **track** sweeps a band of head noise up the frame and swaps the clip under
+  it, **roll** loses vertical hold and cuts mid-roll, **collapse** folds the
+  raster toward a line and opens it back out, **shuttle** runs the transport
+  away, **dub** piles up generations so the new clip arrives already worn. Each
+  is the board dialled into a fault and back out again, so it compounds with
+  whatever the look is already doing rather than covering it.
+
+**✎** names a row, **⧉** copies it, **✕** takes it out, and dragging a card by
+its face reorders the rundown. **↶ ↷** step the rundown's own edits — a separate
+stack from `ctrl+z`, which stays with the board.
+
+Bars come from the tempo, tapped or off MIDI clock, so a rundown cut to music
+follows the music. **♪** picks that track and **▶** starts it from the top with
+the walk. **↻ loop** comes back round at the end. **seed** is what every roll
+and shake draws from: press it for a new one and the same rundown plays a
+different video, and it is printed because a take worth finding again needs a
+name.
+
 ## Keeping what you find
 
 **saved** is your library, kept on your account, so it needs a sign-in.
@@ -303,6 +353,27 @@ understand it.
 
 ## Getting it out
 
+`s` saves a still and `r` records the picture as it plays; both land as files
+when they finish. The recording is an H.264 MP4 written at a constant 60, out of
+whatever frames the tab managed while it ran — so a run that dropped frames
+comes back playing fast.
+
+**⎙ render** in the strip tray is the other way to a file, and the one an editor
+conforms without argument. It takes the frames off the screen and steps the
+engine on a clock the render owns, so it runs as fast as the GPU allows and the
+timing in the file is the simulation's rather than the tab's. What it renders is
+the recorded take if there is one, else the length of the track, else the whole
+rundown at the lengths its rows hold for, else ten seconds — the button says
+which. Two renders of one take are the same file: a take starts from a fresh
+signal state with the tray's seed in the dice.
+
+**● rec** records what the hands do rather than what the picture does — every
+slider, preset, controller knob and morph, against the frame it happened on —
+and **⎙** replays that into the render, so a run performed at whatever rate the
+tab managed comes back at 60. It rolls over a bare clip with no rundown at all.
+The **⏺** readout beside it is the take's length; clicking it throws the take
+away.
+
 The ☰ menu has stills, recording, fullscreen, and **pop out controls**, which
 moves the panel to a second window and gives the picture the whole screen. Point
 OBS at the picture window for anything you care about.
@@ -319,6 +390,8 @@ OBS at the picture window for anything you care about.
 | `i`                     | cue a clip · press again to loop from there · `+shift` for source B |
 | `o`                     | stab back to the cue · `+shift` for source B                        |
 | `t`                     | strike every one-shot envelope in the bay                           |
+| `d`                     | set the whole board drifting · press again to stop where it got to  |
+| `ctrl/⌘+s`              | save this look to your library                                      |
 | `1`–`9` / `shift+1`–`9` | recall / overwrite one of your first nine saves                     |
 | `ctrl/⌘+z`              | step back a look · `+shift` or `ctrl/⌘+y` steps forward again       |
 | `esc`                   | close a dialog, cancel a MIDI arm, clear the filter                 |
