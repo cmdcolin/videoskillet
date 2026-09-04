@@ -2,6 +2,18 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [0.38.3](https://github.com/cmdcolin/videoskillet/compare/v0.38.2...v0.38.3) - 2026-09-04
+
+### Features
+- *(ui)* [`c9a0453`](https://github.com/cmdcolin/videoskillet/commit/c9a0453fc9aa935985744ecf8a490157ecb65a5a) a drag is a step on the undo walk, and a stage opened on a phone comes into view
+- *(ui)* [`f1a1770`](https://github.com/cmdcolin/videoskillet/commit/f1a1770d97f2aef6a151e62a13254f1caeba5e51) the key input is a switch, because it is one
+- *(ui)* [`f317a49`](https://github.com/cmdcolin/videoskillet/commit/f317a49b370df4ee4237bc2a984721e4277561d5) the reel drags rows that change the picture, and builds a ring loop on the photograph
+
+### Fixes
+- *(ui)* [`251c476`](https://github.com/cmdcolin/videoskillet/commit/251c4766c18cd9907fb642dedc084c52906baa3c) a control put back by the row's ↺ comes back with ctrl+z
+- *(gpu)* [`8c24f2b`](https://github.com/cmdcolin/videoskillet/commit/8c24f2b19f4afa35f205dcfd3c9402524a51896c) the scanline beam is integrated over the pixel, so it stops banding
+- *(ui)* [`b277057`](https://github.com/cmdcolin/videoskillet/commit/b277057d6930343479c16dab25f97bed9b5f9334) the morph slot is as wide as the widest thing it can say
+
 ## [0.38.2](https://github.com/cmdcolin/videoskillet/compare/v0.38.1...v0.38.2) - 2026-09-04
 
 ### Features
