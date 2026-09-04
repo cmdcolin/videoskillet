@@ -9,7 +9,6 @@ import {
   bayKeyFor,
   isBayKey,
   targetLabel,
-  EMPTY_SLOT,
   MOD_SOURCES,
   RATE_MAX,
   RATE_MIN,
@@ -17,6 +16,7 @@ import {
   slotRate,
 } from './modSlots'
 import { useModSlotsApi } from './ModSlotsContext'
+import { CLAIM_RATE_HZ, depthBudget } from './rollMod'
 import { SelectRow } from './SelectRow'
 import { Slider } from './Slider'
 import ui from './ui.module.css'
@@ -61,17 +61,26 @@ function ClippedNote(props: {
   )
 }
 
-// What a wire onto another wire patches in when it is first claimed, and it is
-// deliberately not what a control row claims. This one is not moving the
-// picture — it is deciding how much the routing under it moves — so it wants a
-// slow aimless drift rather than a legible cycle: at 0.08 Hz a walk takes about
-// twelve seconds to change its mind, which is the rate at which a fault reads
-// as coming and going rather than as stuttering.
+// What a wire onto another wire patches in when it is first claimed. It shares
+// the drift rate a control row claims (rollMod › CLAIM_RATE_HZ) and neither of
+// the other two fields, because this one is not moving the picture — it is
+// deciding how much the routing under it moves. So it wants an aimless walk
+// rather than a legible cycle, and half the knob's travel rather than a
+// fraction sized to a control's span: at 0.08 Hz a walk takes about twelve
+// seconds to change its mind, which is the rate at which a fault reads as
+// coming and going rather than as stuttering.
 const DRIVER_ROUTING = {
   source: 'walk' as const,
-  rateHz: 0.08,
+  rateHz: CLAIM_RATE_HZ,
   depth: 0.5,
 }
+
+// The depth a knob's ↺ puts back, which depends on what the slot drives: the
+// control's own budget, or the driver depth a wire onto a wire is claimed at.
+const knobStock = (target: UiSlot['target']) =>
+  target === '' || isBayKey(target)
+    ? DRIVER_ROUTING.depth
+    : depthBudget(sliderFor(target))
 
 // One of a routing's own two knobs, wired so a second routing can be clipped
 // onto it (modSlots.ts › BAY_TARGETS).
@@ -98,7 +107,13 @@ function KnobRow(props: { i: number; slot: UiSlot; field: BayField }) {
       // Tempo's business while ♩ is set; the dialed Hz stays put underneath and
       // comes back when the lock cycles off.
       value={rate ? slotRate(s, mod.bpm) : s.depth}
-      defaultValue={rate ? EMPTY_SLOT.rateHz : EMPTY_SLOT.depth}
+      // Stock for one of these knobs is what the app itself would patch onto
+      // this slot's target, so the ↺ puts back the routing the `+ mod` press
+      // claimed. It used to be the bay's resting 0.5Hz/0.2 pair, which stopped
+      // being anything anybody had chosen the moment the press started reading
+      // rollMod: every claimed row wore an "off stock" badge offering to put
+      // the flat depth back — 44x too deep on the vertical roll rate.
+      defaultValue={rate ? CLAIM_RATE_HZ : knobStock(s.target)}
       help={
         rate
           ? 'How fast this wobble cycles, in Hz. Slow rates drift the control the way a warming-up circuit does; fast ones buzz it per frame. The ♩ button below locks it to the tempo instead. Press + mod on this row and a second routing walks the rate itself — an oscillator that speeds up and slows down instead of keeping time.'

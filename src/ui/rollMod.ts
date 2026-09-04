@@ -158,7 +158,7 @@ export function depthBudget(def: SliderDef): number {
 // live in — 42 of the 48 sit at or under 0.12Hz — rather than at the bay's
 // resting 0.5Hz, which is fast enough to read as a control being switched. The
 // same number the `+ mod` on a slot's own knobs claims (ModRowEditor).
-const CLAIM_RATE_HZ = 0.08
+export const CLAIM_RATE_HZ = 0.08
 
 // What a control row patches in the first time it asks for motion, or null on a
 // row that may not claim one at all.
