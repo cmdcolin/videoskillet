@@ -482,6 +482,17 @@ const SAG_BASE = ${LINES + 8}u; // deflection sag region of the timing buffer
 // restarted every frame would have no time constant to speak of.
 const VIR_HUE = ${LINES * 2 + 8}u;
 const VIR_GAIN = ${LINES * 2 + 9}u;
+// The sync separator's peak detector and the DC restorer hanging off it: the
+// tip level the slicer is referenced to, how far black sits off nominal, and
+// whether the flywheel's gate is open wide because it has lost the pulses.
+// Persistent like the servos above; zero means never run.
+const TIP_LEVEL = ${LINES * 2 + 10}u;
+const BLACK_SHIFT = ${LINES * 2 + 11}u;
+const GATE_WIDE = ${LINES * 2 + 12}u;
+// Frames the separator must go without pulses before its gate opens to the
+// whole line. A flywheel coasts through a hum trough or an AGC dip; it only
+// starts hunting once the pulses have genuinely gone.
+const GATE_OPEN_FRAMES = 12.0;
 const VSYNC_FIRST = ${VSYNC_FIRST}u;
 const VSYNC_LAST = ${VSYNC_LAST}u;
 const HEAD_SWITCH_LINE = ${HEAD_SWITCH_LINE}u;

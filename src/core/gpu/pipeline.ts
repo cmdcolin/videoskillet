@@ -490,8 +490,10 @@ export class Engine implements EngineApi {
     // second-order gain servos — beam limiter and camera iris, gain + velocity
     // each — and the sync separator's lock age) + a per-raster-line sag + the
     // VIR corrector's two integrators
-    this.timingBuf = storage((LINES * 2 + 10) * 4)
-    this.syncMeasureBuf = storage(LINES * 16)
+    // Readable back through window.vf, so a harness can watch the receiver's
+    // sync and restorer state settle instead of inferring it from the picture.
+    this.timingBuf = storage((LINES * 2 + 13) * 4, GPUBufferUsage.COPY_SRC)
+    this.syncMeasureBuf = storage(LINES * 32, GPUBufferUsage.COPY_SRC)
     // one audio sample per line, uploaded each frame
     this.audioBuf = storage(LINES * 4)
     // The caption decoder's font ROM and page RAM in one buffer, the ROM half

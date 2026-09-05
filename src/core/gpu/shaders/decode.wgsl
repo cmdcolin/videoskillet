@@ -423,7 +423,11 @@ fn main(
   let ur = (us * ce + vs * se) * g;
   let vr = (us * (ce * ca - se * sa) + vs * (se * ca + ce * sa)) * g;
 
-  let yn = (lum - IRE_BLACK) / VIDEO_RANGE;
+  // Black is where the restorer put it (sync.wgsl), which is nominal for as
+  // long as the separator is finding pulses and the porch behind them sits at
+  // blanking. A line the set can find no sync in is decoded around whatever
+  // the coupling settled on instead.
+  let yn = (lum - IRE_BLACK - timing[BLACK_SHIFT]) / VIDEO_RANGE;
   let un = ur / VIDEO_RANGE;
   let vn = vr / VIDEO_RANGE;
 

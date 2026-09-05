@@ -162,7 +162,7 @@ fault through `timing[]` will spin hue that should have stayed put.
 
 ## Buffer layouts worth knowing
 
-- **`timingBuf`** (`(LINES * 2 + 10)` floats) — `[0..524]` per-line horizontal
+- **`timingBuf`** (`(LINES * 2 + 13)` floats) — `[0..524]` per-line horizontal
   offset; `[525]` vertical oscillator phase, signed and fractional; `[526]` PLL
   state; `[527]` AGC gain; `[528..531]` the two second-order gain servos (beam
   limiter and camera auto-iris, gain + velocity each — `sync` updates them,
@@ -172,15 +172,21 @@ fault through `timing[]` will spin hue that should have stayed put.
   coasting; `[SAG_BASE..]` normalized deflection sag per raster line;
   `[VIR_HUE]` and `[VIR_GAIN]`, past the sag region, the VIR corrector's two
   integrators — `vir` writes them, `decode` adds them to the demodulator's
-  reference and to its chroma gain. Indices 525–532 and the two VIR slots are
+  reference and to its chroma gain; `[TIP_LEVEL]`, `[BLACK_SHIFT]` and
+  `[GATE_WIDE]` after them, the sync separator's peak-detector reference, the
+  DC restorer's offset from nominal black, and whether the separator's gate is
+  open to the whole line — `sync` updates them, `sync_measure` slices against
+  the first and hunts as far as the third says, `decode` subtracts the second
+  (see ADR 0009). Indices 525–532, the two VIR slots and those three are
   persistent across frames; treat them as state. A zeroed `VIR_GAIN` means the
   servo has never run, which is what lets `resetSignal` clear the whole buffer
   and still hand the loop a sane start.
 - **`lineParamsBuf`** — one `vec4f` per line from `LineState`:
   `(tbOffsetSamples, underBasePhase, underJitterPhase, seed)`. All four slots
   are taken; a new per-line CPU quantity needs its own buffer.
-- **`syncMeasureBuf`** — one `vec4f` per line from `sync_measure`:
-  `(sync edge or −1000, sync depth, mean beam load, broad-pulse flag)`.
+- **`syncMeasureBuf`** — two `vec4f` per line from `sync_measure`, interleaved:
+  `(sync edge or −1000, sync depth, mean beam load, broad-pulse flag)` then
+  `(tip level, porch level, the line's deepest excursion, 0)`, all post-IF-gain.
 - **`audioBuf`** — one float per line, the audio waveform at line rate.
 - **`buzzBuf`** — one `vec2f` per line from `buzz_tap`: the line's mean
   composite level and the RMS of its within-line deviation, both IRE. The

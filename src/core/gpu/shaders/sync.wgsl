@@ -26,6 +26,15 @@
 //                     correction on the feedback loop, plus its velocity
 // timing[SAG_BASE..]  normalized deflection sag per *raster* line (not source
 //                     row), scaled by hvSag at read time
+// timing[TIP_LEVEL]   the separator's peak-detector reference: the deepest
+//                     level it has been charging to, nominal sync at shallowest
+// timing[BLACK_SHIFT] the DC restorer: how far black sits off IRE_BLACK —
+//                     nominal while pulses are found where they belong, and
+//                     floating to the picture's mean when they are not
+// timing[GATE_WIDE]   frames the separator has gone without pulses near the
+//                     line start; past GATE_OPEN_FRAMES its gate is open and
+//                     it hunts the whole line, and it closes again only when
+//                     the pulses are back where they belong
 
 @group(0) @binding(0) var<uniform> P: Params;
 @group(0) @binding(1) var<storage, read> measure: array<vec4f>;
@@ -59,7 +68,7 @@ fn main(@builtin(local_invocation_id) lid: vec3u) {
   // vertical sync check: broad pulses should sit at sync level mid-line
   var vscore = 0.0;
   for (var r = VSYNC_FIRST; r <= VSYNC_LAST; r = r + 1u) {
-    vscore = vscore + measure[r].w;
+    vscore = vscore + measure[r * 2u].w;
   }
 
   // Free-running vertical oscillator. The deflection generator runs at its own
@@ -129,7 +138,7 @@ fn main(@builtin(local_invocation_id) lid: vec3u) {
         // beam current plus whatever audio is patched in: the tank cannot tell
         // them apart, so a bass transient rings the geometry exactly like a
         // bright band does
-        let load = (measure[u32(r)].z * ablHeld - 50.0) / 50.0
+        let load = (measure[u32(r) * 2u].z * ablHeld - 50.0) / 50.0
           + P.audioLoad * audio[ry];
         vel = vel + w * (load - sag) - damp * vel;
         sag = clamp(sag + w * vel, -3.0, 3.0);
@@ -146,6 +155,9 @@ fn main(@builtin(local_invocation_id) lid: vec3u) {
   var depthCount = 0.0;
   var loadSum = 0.0;
   var loadCount = 0.0;
+  var foundCount = 0.0;
+  var nearCount = 0.0;
+  var minSum = 0.0;
   // How long the separator has gone without a real edge, carried across
   // frames: a flywheel keeps an unlocked oscillator honest for a while, but
   // not forever, and the decay below is scaled by this.
@@ -167,11 +179,19 @@ fn main(@builtin(local_invocation_id) lid: vec3u) {
     // the picture simply sits off-center — but past it the phase gains a little
     // more every line and the raster shears into diagonal bars.
     pll = pll + P.hRate;
-    let m = measure[row];
+    let m = measure[row * 2u];
+    let aux = measure[row * 2u + 1u];
     // beam current is drawn whether or not this line's sync was findable
     if (row > VSYNC_LAST + 3u) {
       loadSum = loadSum + m.z;
       loadCount = loadCount + 1.0;
+      minSum = minSum + min(IRE_SYNC, aux.x);
+      if (m.x > -999.0) {
+        foundCount = foundCount + 1.0;
+        if (m.x <= 55.0) {
+          nearCount = nearCount + 1.0;
+        }
+      }
     }
     if (m.x > -999.0) {
       // flywheel: blend measurement in at the hold gain, within pull-in range
@@ -217,6 +237,40 @@ fn main(@builtin(local_invocation_id) lid: vec3u) {
     let want = applied * 40.0 / clamp(depthSum / depthCount, 5.0, 160.0);
     agc = agc + 0.25 * (want - agc);
   }
+
+  // The separator's peak detector and the DC restorer behind it. The detector
+  // charges to the deepest thing on each line, with nominal sync as its floor,
+  // so on a line whose picture stays above blanking it reads the tip and
+  // nothing changes. While pulses are being found where the line start
+  // belongs the restorer holds black at nominal: the clamp's capacitor is far
+  // too big to follow anything at line or field rate, so a hum bar rides
+  // through it untouched. With no pulses there to key it, the coupling floats
+  // until the picture's mean sits at mid-grey, which is what an AC-coupled
+  // stage with no key does. Keyed and unkeyed are the gate's two states, with
+  // the gate's hysteresis: a marginal signal whose pulses come and go with a
+  // hum bar or a pumping AGC stays keyed, and only a separator that has found
+  // nothing at all lets the coupling float. A negated line lands in that second state: its
+  // deepest excursions are the old peak whites, so the set slices there, tears
+  // wherever the picture is bright, and decodes a negative around a black
+  // level it took from the picture's own average.
+  var tipRef = timing[TIP_LEVEL];
+  if (tipRef == 0.0) {
+    tipRef = IRE_SYNC;
+  }
+  var blackShift = timing[BLACK_SHIFT];
+  var starved = timing[GATE_WIDE];
+  let lines = max(loadCount, 1.0);
+  let foundFrac = foundCount / lines;
+  let nearFrac = nearCount / lines;
+  if (nearFrac > 0.5) {
+    starved = 0.0;
+  } else if (foundFrac < 0.15) {
+    starved = min(starved + 1.0, 4.0 * GATE_OPEN_FRAMES);
+  }
+  let gateWide = starved >= GATE_OPEN_FRAMES;
+  tipRef = tipRef + 0.3 * (minSum / lines - tipRef);
+  let shiftWant = select(0.0, loadSum / lines - 45.0, gateWide);
+  blackShift = clamp(blackShift + 0.12 * (shiftWant - blackShift), -110.0, 60.0);
 
   // Mean beam current over the picture, in IRE — the sense input for both gain
   // servos below. Post-IF, because the guns are driven by the gain-corrected
@@ -289,4 +343,7 @@ fn main(@builtin(local_invocation_id) lid: vec3u) {
   timing[IRIS_GAIN] = irisG;
   timing[IRIS_VEL] = irisV;
   timing[LOCK_AGE] = lockAge;
+  timing[TIP_LEVEL] = clamp(tipRef, -150.0, -1.0);
+  timing[BLACK_SHIFT] = blackShift;
+  timing[GATE_WIDE] = starved;
 }

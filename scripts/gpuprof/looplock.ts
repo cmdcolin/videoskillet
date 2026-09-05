@@ -53,7 +53,7 @@ import type { LooseRouting } from './render'
 
 const V_PHASE = LINES
 const LOCK_AGE = LINES + 7
-const TIMING_LEN = LINES * 2 + 10
+const TIMING_LEN = LINES * 2 + 13
 
 interface Preset {
   name: string
@@ -114,7 +114,7 @@ class Lock {
         size,
         usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
       })
-    return new Lock(map(TIMING_LEN * 4), map(LINES * 16))
+    return new Lock(map(TIMING_LEN * 4), map(LINES * 32))
   }
 
   reset(): void {
@@ -127,7 +127,7 @@ class Lock {
   async sample(device: GPUDevice, g: Probed): Promise<void> {
     const enc = device.createCommandEncoder()
     enc.copyBufferToBuffer(g.timingBuf, 0, this.timingRead, 0, TIMING_LEN * 4)
-    enc.copyBufferToBuffer(g.syncMeasureBuf, 0, this.measureRead, 0, LINES * 16)
+    enc.copyBufferToBuffer(g.syncMeasureBuf, 0, this.measureRead, 0, LINES * 32)
     device.queue.submit([enc.finish()])
     await this.timingRead.mapAsync(GPUMapMode.READ)
     const t = new Float32Array(this.timingRead.getMappedRange().slice(0))
@@ -137,7 +137,7 @@ class Lock {
     this.measureRead.unmap()
     let found = 0
     for (let row = 0; row < LINES; row++) {
-      if (m[row * 4] > -999) found++
+      if (m[row * 8] > -999) found++
     }
     this.locks.push((100 * found) / LINES)
     this.hjits.push(spread(t.subarray(0, LINES)).sd)

@@ -205,9 +205,9 @@ export class Graph {
     // floats short and `vir` writes out of bounds, which a storage buffer
     // discards silently — the corrector then does nothing here and everything
     // in the app.
-    const timingBuf = storage((LINES * 2 + 10) * 4, GPUBufferUsage.COPY_SRC)
+    const timingBuf = storage((LINES * 2 + 13) * 4, GPUBufferUsage.COPY_SRC)
     this.timingBuf = timingBuf
-    const syncMeasureBuf = storage(LINES * 16, GPUBufferUsage.COPY_SRC)
+    const syncMeasureBuf = storage(LINES * 32, GPUBufferUsage.COPY_SRC)
     this.syncMeasureBuf = syncMeasureBuf
     // The caption decoder's font ROM and page RAM (captionrom.ts), which
     // `decode` reads whether or not a caption is switched on.
