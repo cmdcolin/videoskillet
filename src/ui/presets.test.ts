@@ -168,8 +168,10 @@ describe('blendPresets', () => {
         DEFAULT_CONTROLS,
       )
       expect(rolled.strobeHz).toBe(0)
+      // Its persistence is held back on the same rule, on taste (mutate.ts).
+      expect(rolled.phosphor).toBe(0)
       // The rest of that tube is a look, and it still arrives.
-      expect(rolled.phosphor).toBeGreaterThan(0)
+      expect(rolled.crtHalation).toBeGreaterThan(0)
     }
   })
 

@@ -76,7 +76,18 @@ export function mutateAmountFor(e: {
 // same rate — which is the strobe's shape arriving by a different mechanism, in
 // the same band, and it would land on a roll that never asked for a hand on the
 // board at all.
-export const ROLL_NEVER_STARTS = new Set<ControlKey>(['strobeHz', 'clipHz'])
+//
+// `phosphor` is here on taste rather than safety. Persistence smears whatever
+// else a roll did into a trail and reads as a blur filter over the look, and
+// the note on the reel was plain: "the phosphor persist setting normally doesnt
+// look very good ... i dont recommend using it, and even making it shy from the
+// randomizer settings so it doesnt get triggered from random". The chips that
+// carry it still click through whole.
+export const ROLL_NEVER_STARTS = new Set<ControlKey>([
+  'strobeHz',
+  'clipHz',
+  'phosphor',
+])
 
 // Values a roll may not land a control on, and what it lands on instead.
 //
