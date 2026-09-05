@@ -2,6 +2,14 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [0.38.7](https://github.com/cmdcolin/videoskillet/compare/v0.38.6...v0.38.7) - 2026-09-05
+
+### Features
+- *(ui)* [`79fb17f`](https://github.com/cmdcolin/videoskillet/commit/79fb17f80f455069d12140217824750e9b9e7b6f) a share link can open on a burst of snow, so the loops have something to start on
+
+### Documentation
+- *(docs)* [`b160aa2`](https://github.com/cmdcolin/videoskillet/commit/b160aa23b362b3287dcfe8337a7146d84b3f548c) an AI usage page, and links into it from the guide and llms.txt
+
 ## [0.38.6](https://github.com/cmdcolin/videoskillet/compare/v0.38.5...v0.38.6) - 2026-09-05
 
 ### Features
