@@ -334,6 +334,73 @@ const PRESET_RUN = [
   { hold: 2.4 },
 ]
 
+// The signal path, used: a pill and a box pressed on the map, and the rows
+// behind them dragged, on Ridiculous rainbow. Colin's brief for this one, over
+// three notes: "sliding the non-preset sliders is important", "accessing the
+// signal path", and — on a first cut — "dont just show us the signal path
+// pages that is pointless. edit stuff".
+//
+// **Screened the way the take plays, after a screen that lied twice.** The
+// first pass shot rows forty stepped frames after each move, and read as if
+// every row on this board changed the picture. It was measuring time: the
+// loop turns its hue every lap, so two tiles shot at different moments differ
+// whatever was dragged between them — and `reelscreen.mjs` was performing only
+// the first key of a beat that said `open`, `expand` and `row` at once, so
+// nothing *was* dragged. Recorded, that cut had `key hue` moving a row the
+// panel marks inert ("needs key acceptance above 0"), `v offset` pushing the
+// loop out of itself so the frame was a dim striped field within a second,
+// and `bend amount` and `HV sag` acting on nothing. Colin, watching it: "the
+// 'key hue' is doing nothing", "the bend amount also is doing nothing after
+// the voffset lines were applied", "the hv sag ... is a boring grey wash at
+// that point".
+//
+// The second pass (`candidates.rt.mjs`, `candidates.path2.mjs`) fixed the
+// harness and shot each row alone, right after the move and 2.5 s on, so a
+// loop that decays shows up as the decay. What survives:
+//
+//   loop delay   the demo's own mechanism — "0.4µs of delay turning the hue
+//                every lap". At 0.2µs the frame is a fine rainbow comb on
+//                white; at 0.7µs it is broad green and orange bands. Both hold.
+//                A fifth of a microsecond on a 63µs row: the thumb barely
+//                moves and the readout carries the change.
+//   bend amount  bows the whole raster, and the bands with it.
+//   supply ring  at 0.9 the raster wobbles on its own supply, which is motion
+//                a still cannot show and the clip can.
+//
+// Out: `loop gain` and `loop key` take the loop to a flat grey field; `HV sag`
+// tears it to black and white; `v size` — "the underscan slider is not a good
+// one to demo"; `key hue` is inert on this board; `v offset` empties the loop.
+// Fuzzy colour bars is a fixed point no row moves, Wiggity's rows change
+// nothing the eye can find, Camera feedback + static goes black under a
+// deflection row and Chaos is monochrome (`candidates.walk.mjs`,
+// `candidates.use.mjs`).
+//
+// The mixer pill first because the look *is* a mixer loop, and the receiver
+// second because a fault downstream of a loop lands on what the loop made.
+// `Deflection` is behind an accordion header when the receiver opens on
+// another bank, so it is unfolded rather than assumed.
+const PATH = [
+  { moveTo: { stage: 'mixer' }, secs: 0.4 },
+  { press: 0.6, on: 'mixer' },
+  { moveTo: { slider: 'loop delay' }, secs: 0.35 },
+  { drag: { slider: 'loop delay', to: 0.0032 }, secs: 0.9 },
+  { hold: 1.5 },
+  { drag: { slider: 'loop delay', to: 0.0111 }, secs: 1.0 },
+  { hold: 1.5 },
+  { scrollTo: { stage: 'RECEIVER' }, secs: 0.6 },
+  { moveTo: { stage: 'RECEIVER' }, secs: 0.4 },
+  { press: 0.6, on: 'receiver' },
+  { scrollTo: { bank: 'Deflection' }, secs: 0.5 },
+  { unfold: 'Deflection', secs: 0.8 },
+  { moveTo: { slider: 'bend amount' }, secs: 0.35 },
+  { drag: { slider: 'bend amount', to: 0.8 }, secs: 1.0 },
+  { hold: 1.2 },
+  { moveTo: { slider: 'supply ring' }, secs: 0.35 },
+  { drag: { slider: 'supply ring', to: 0.9 }, secs: 1.0 },
+  { away: 0.4 },
+  { hold: 2.6 },
+]
+
 export const slides = [
   {
     file: 'presets',
@@ -365,6 +432,20 @@ export const slides = [
     // In portrait the panel is the bottom half of a phone and the map starts
     // below its fold, so it is scrolled to before anything is pressed on it.
     narrowAct: [{ scrollTo: { stage: 'camera' }, secs: 0.4 }, ...ORB],
+  },
+  {
+    file: 'path',
+    name: 'Signal path',
+    caption:
+      'The map is the board. Every box and pill on it is a stage of the chain, and pressing one opens its rows in the panel. Ridiculous rainbow is a composite loop, so the mixer pill comes first, and its delay row is the whole mechanism: the colour subcarrier rides the loop, so delay is hue rotation. At a fifth of a microsecond the frame is a fine rainbow comb; at seven tenths it is broad bands of green and orange. Then the receiver, downstream of all that: bend amount bows the raster and the bands with it, and supply ring lets the deflection wobble on its own power supply. Every row is a mechanism, and each one lands on the picture the last one made.',
+    alt: 'The window on Ridiculous rainbow with the mixer pill pressed on the signal path map and its loop delay row dragged twice — the frame turning into a fine rainbow comb on white, then into broad bands of green and orange — then the receiver box pressed and its deflection bank unfolded, bend amount bowing the raster and supply ring setting it wobbling',
+    look: 'Ridiculous rainbow',
+    stillAt: 0.95,
+    warm: 60,
+    act: PATH,
+    // In portrait the map is under the picture, so it is scrolled to before
+    // anything on it is pressed.
+    narrowAct: [{ scrollTo: { stage: 'mixer' }, secs: 0.4 }, ...PATH],
   },
 ].map(slide => {
   const board =

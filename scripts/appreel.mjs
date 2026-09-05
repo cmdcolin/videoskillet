@@ -52,6 +52,9 @@
 //                                travel is 100%). The real mouse does this
 //                                one, since the chip integrates pointer
 //                                travel and holds capture on it.
+//   { unfold: bank, secs }       open a bank inside the open stage by pressing
+//                                its header — or hold, if the accordion already
+//                                shows it. A target of `{ bank }` is the header.
 //   { away: secs }               glide the pointer off the frame and drop it
 //
 // The pointer is drawn by the page (`installReel` below) rather than being the
@@ -280,6 +283,24 @@ function installReel(touch) {
     return el
   }
 
+  // A bank's header inside an open stage, by its title. The stage's banks are
+  // an accordion, so which one is unfolded when a stage opens is whichever was
+  // last, and a row in another bank is behind a header a hand has to press.
+  const bank = title => {
+    const want = title.trim().toLowerCase()
+    const btn = [...document.querySelectorAll('h3 button')].find(b =>
+      (b.textContent ?? '')
+        .replace(/^\s*[▸▾]\s*/, '')
+        .trim()
+        .toLowerCase()
+        .startsWith(want),
+    )
+    if (btn === undefined) {
+      throw new Error(`no bank “${title}” — is its stage open?`)
+    }
+    return btn
+  }
+
   const elementFor = target =>
     target.stage !== undefined
       ? stageBox(target.stage)
@@ -287,7 +308,9 @@ function installReel(touch) {
         ? slider(target.slider)
         : target.choice !== undefined
           ? choice(target.choice)
-          : window.__ds.elementOf(target)
+          : target.bank !== undefined
+            ? bank(target.bank)
+            : window.__ds.elementOf(target)
 
   // The panel is its own scroll container, and most groups are below its fold —
   // the decoder is the fourth of five in the receiver. So a row is scrolled to
@@ -387,6 +410,7 @@ function installReel(touch) {
       }
       return centre(elementFor(target))
     },
+    bankOpen: title => bank(title).getAttribute('aria-expanded') === 'true',
 
     // Where the panel is scrolled and where it would have to be for a target to
     // sit in the middle of it, so the recorder can walk between the two. A beat
@@ -592,6 +616,35 @@ async function runBeat(page, beat, frame, hand, shoot) {
     )
     if (fill === '' || fill === '0%') {
       throw new Error(`dragged “${beat.mix.chip}” and it stayed at ${fill}`)
+    }
+  } else if (beat.unfold !== undefined) {
+    // A bank already open is left alone and the beat is a hold, so the same
+    // timeline records at both widths whatever the accordion happened to be
+    // showing. Otherwise the hand glides to the header over the first half of
+    // the beat and presses it, which is the one gesture a stranger has to see
+    // to know the rows are there.
+    const open = await page.evaluate(
+      t => window.__reel.bankOpen(t),
+      beat.unfold,
+    )
+    if (open) {
+      await runBeat(page, { hold: beatSecs(beat) }, frame, hand, shoot)
+    } else {
+      const half = Math.round(beatSecs(beat) * 50) / 100
+      await runBeat(
+        page,
+        { moveTo: { bank: beat.unfold }, secs: half },
+        frame,
+        hand,
+        shoot,
+      )
+      await runBeat(
+        page,
+        { press: beatSecs(beat) - half, on: beat.unfold },
+        frame,
+        hand,
+        shoot,
+      )
     }
   } else if (beat.press !== undefined) {
     const hit = await page.evaluate(

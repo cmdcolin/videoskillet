@@ -295,10 +295,12 @@ for (const [name, spec] of variants) {
         await page.evaluate(n => window.__p.open(n), beat.open)
         await sleep(250)
         await step(page, 10)
-      } else if (beat.expand !== undefined) {
+      }
+      if (beat.expand !== undefined) {
         await page.evaluate(t => window.__p.expand(t), beat.expand)
         await sleep(250)
-      } else if (beat.row !== undefined) {
+      }
+      if (beat.row !== undefined) {
         const to = beat.to ?? (await travelFor(page, beat.row, beat.value))
         const from = await page.evaluate(r => window.__p.travel(r), beat.row)
         const n = beat.frames ?? 18
@@ -315,14 +317,17 @@ for (const [name, spec] of variants) {
         }
         const read = await page.evaluate(r => window.__p.readout(r), beat.row)
         notes.push(`${beat.row} → travel ${to.toFixed(4)} reads ${read}`)
-      } else if (beat.choice !== undefined) {
+      }
+      if (beat.choice !== undefined) {
         await page.evaluate(c => window.__p.choice(c), beat.choice)
         await sleep(150)
-      } else if (beat.press !== undefined) {
+      }
+      if (beat.press !== undefined) {
         const hit = await page.evaluate(t => window.__p.press(t), beat.press)
         notes.push(`press ${beat.press} → ${hit}`)
         await sleep(100)
-      } else if (beat.menu !== undefined) {
+      }
+      if (beat.menu !== undefined) {
         await page.evaluate(
           t => window.__p.pressTitle(t),
           'the other ways this row has',
@@ -331,7 +336,8 @@ for (const [name, spec] of variants) {
         const hit = await page.evaluate(t => window.__p.press(t), beat.menu)
         notes.push(`menu ${beat.menu} → ${hit}`)
         await sleep(100)
-      } else if (beat.mix !== undefined) {
+      }
+      if (beat.mix !== undefined) {
         const grip = await page.evaluate(t => window.__p.chipGrip(t), beat.mix)
         await page.mouse.move(grip.x, grip.y)
         await page.mouse.down()
@@ -347,13 +353,17 @@ for (const [name, spec] of variants) {
         await page.mouse.up()
         const fill = await page.evaluate(t => window.__p.chipFill(t), beat.mix)
         notes.push(`mix ${beat.mix} → ${fill}`)
-      } else if (beat.steps !== undefined) {
+      }
+      if (beat.steps !== undefined) {
         await step(page, beat.steps)
-      } else if (beat.wait !== undefined) {
+      }
+      if (beat.wait !== undefined) {
         await stepping(page, beat.wait)
-      } else if (beat.lit !== undefined) {
+      }
+      if (beat.lit !== undefined) {
         notes.push(`lit: ${await page.evaluate(() => window.__p.lit())}`)
-      } else if (beat.shot !== undefined) {
+      }
+      if (beat.shot !== undefined) {
         const jpg = await grabCanvas(page)
         const file = `${outDir}/${name}-${String(shots.length).padStart(2, '0')}.jpg`
         writeFileSync(file, jpg)
