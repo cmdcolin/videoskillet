@@ -182,6 +182,106 @@ a {
 .slide.on {
   opacity: 1;
 }
+/* The stage rolls between slides. A cross-fade is what a slideshow does, and
+   this page is about a signal path: the way one picture became another on the
+   equipment it models was the vertical hold letting go for a moment. So the
+   outgoing frame slips down and dims, the incoming one comes in from above,
+   and a bright bar crosses the stage while the brightness kicks — the whole
+   thing in 620ms, which `landing.js` holds the class on for.
+
+   `will-change` on nothing: these run for half a second every fifteen and the
+   stage is a video the compositor is already carrying.
+
+   Both halves are keyframes rather than transitions because the incoming
+   slide has to arrive from off the top, and a transition on `.on` can only
+   animate to where the element already is. */
+.stage.rolling .slide.on {
+  animation: slideRollIn 0.62s cubic-bezier(0.22, 0.7, 0.25, 1);
+}
+.stage.rolling .slide.leaving {
+  animation: slideRollOut 0.62s cubic-bezier(0.5, 0, 0.7, 0.4);
+  opacity: 1;
+}
+@keyframes slideRollIn {
+  0% {
+    transform: translateY(-100%);
+    filter: brightness(2.4) saturate(0.2);
+  }
+  38% {
+    transform: translateY(-100%);
+    filter: brightness(2.4) saturate(0.2);
+  }
+  72% {
+    filter: brightness(1.35) saturate(0.85);
+  }
+  100% {
+    transform: translateY(0);
+    filter: none;
+  }
+}
+@keyframes slideRollOut {
+  0% {
+    transform: translateY(0);
+    filter: none;
+  }
+  30% {
+    filter: brightness(1.6) saturate(0.5);
+  }
+  62% {
+    transform: translateY(100%);
+    filter: brightness(2.4) saturate(0.2);
+  }
+  100% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+/* The bar the slip crosses under, and the only part of this that is drawn
+   rather than moved: a soft band that sweeps the stage once while the two
+   frames pass each other, the way a head-switch point does. */
+.stage.rolling::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  height: 14%;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgb(255 255 255 / 0.5),
+    rgb(255 255 255 / 0.72),
+    transparent
+  );
+  mix-blend-mode: screen;
+  animation: slideRollBar 0.62s linear;
+}
+@keyframes slideRollBar {
+  0% {
+    top: -16%;
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    top: 102%;
+    opacity: 0;
+  }
+}
+/* A reader who asked for no motion is handed the stills and steps through
+   them by hand, and a stage that lurches when they press a tab is exactly
+   what they asked not to have. */
+@media (prefers-reduced-motion: reduce) {
+  .stage.rolling .slide.on,
+  .stage.rolling .slide.leaving,
+  .stage.rolling::after {
+    animation: none;
+  }
+}
 /* `contain`, not `cover`: what is in frame here is a window with a
    360px panel down one edge, and a crop takes the panel rather than a
    band of noise nobody was reading. */

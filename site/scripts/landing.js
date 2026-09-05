@@ -73,9 +73,16 @@ const motion = matchMedia('(prefers-reduced-motion: reduce)')
   const notes = [...document.querySelectorAll('.slideNote')]
   const tabs = document.querySelector('.slideTabs')
   // After the clip has run once, a beat to read the line under it before the
-  // next slide. It was 2.5s, and a stage that sits still that long between
-  // clips reads as having stopped.
-  const READING = 1200
+  // next slide. It was 2.5s once and came down to 1.2s because a stage that
+  // sat still that long between clips read as having stopped — but what it was
+  // sitting still *on* then was a reset board, since three of the four
+  // timelines walked home to stock before they ended. They end on their own
+  // loudest frame now, so the beat is holding the picture the slide was about
+  // rather than the one it started from, and it can afford to be a beat.
+  const READING = 2600
+  // How long the roll between slides runs, and the one place it is written
+  // down: the CSS animation is this long and the swap lands at its middle.
+  const ROLL = 620
 
   let at = 0
   // False until the observer below says otherwise, which is what keeps
@@ -141,6 +148,15 @@ const motion = matchMedia('(prefers-reduced-motion: reduce)')
             clip.preload = 'metadata'
             clip.src = pick(clip)
           }
+          // Rewound rather than looped. These do not `loop` any more: a
+          // timeline ends on the loudest frame it reaches, and looping threw
+          // that away by cutting back to the opening board for the length of
+          // READING. Ended, the clip holds its last frame instead, which is
+          // the frame the reader is given time to look at — and the stage is
+          // what comes back to the beginning, when its slide next comes round.
+          if (clip.ended) {
+            clip.currentTime = 0
+          }
           clip
             .play()
             .then(() => {
@@ -155,7 +171,35 @@ const motion = matchMedia('(prefers-reduced-motion: reduce)')
     }
   }
 
+  // The stage rolls between slides rather than dissolving. A cross-fade is
+  // what a slideshow does; this is a program about a signal path, and the way
+  // one picture became another on the equipment it models was the vertical
+  // hold letting go for a moment — the frame slips, a bar crosses it, the
+  // brightness kicks, the next picture comes in from the top. It is written in
+  // CSS (`landing.css`, `.stage.rolling`) so a reader who asked for reduced
+  // motion gets none of it, and it is stateless: a class for `ROLL`ms.
+  let rolling = 0
+  const roll = leaving => {
+    clearTimeout(rolling)
+    stage.classList.remove('rolling')
+    leaving.classList.remove('leaving')
+    // Read back so the class coming off and going on are two style changes
+    // rather than none, which is what restarts an animation already running
+    // when a reader presses tabs faster than the roll.
+    void stage.offsetWidth
+    leaving.classList.add('leaving')
+    stage.classList.add('rolling')
+    rolling = setTimeout(() => {
+      stage.classList.remove('rolling')
+      leaving.classList.remove('leaving')
+    }, ROLL)
+  }
+
   const show = index => {
+    const from = slides[at]
+    if (index !== at && running()) {
+      roll(from)
+    }
     at = index
     for (const [i, slide] of slides.entries()) {
       slide.classList.toggle('on', i === at)

@@ -1,7 +1,7 @@
 [
   {
     "name": "Chaos black and white feedback",
-    "showcase": true,
+    "showcase": false,
     "gallery": true,
     "says": "The mixer loop run at negative gain and inverted, on a channel tuned 0.2 MHz off its carrier.",
     "query": "?p=Nj.FJADAMACAuQDNVAImAIAUALIARaQAwoUAIABANQDApQBAHgARAniAQECCVQk5gMAqAEAqAYAgJ9JA8gB&mod=tapeLoopMm:smooth:0.05:0.0151&srcb=tv+static"
@@ -22,7 +22,7 @@
   },
   {
     "name": "Wiggity",
-    "showcase": true,
+    "showcase": false,
     "gallery": true,
     "hero": true,
     "says": "A 32 kHz oscillator laid over the picture, with the deflection bent by a Lorenz attractor.",
@@ -51,14 +51,14 @@
   },
   {
     "name": "Rainborb",
-    "showcase": false,
+    "showcase": true,
     "gallery": true,
     "says": "A camera loop just over unity, turned 1.5° a lap, with the iris hunting.",
     "query": "?p=zD.GNADE4QCRYQDAJgfANYEAvAlAOQBFNwBAdAFL0AIBCKcvgE&mod=&srcb=none"
   },
   {
     "name": "Ridiculous rainbow",
-    "showcase": false,
+    "showcase": true,
     "gallery": true,
     "says": "A composite loop keyed on itself, 0.4µs of delay turning the hue every lap.",
     "query": "?p=T2.GKAEE4QCRYQDAMQfAJ8FAowfFYwDAfAMAWAA8AIARAZgJEAIBCKcvgErYA&mod=&srcb=none"

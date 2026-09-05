@@ -24,6 +24,11 @@
 // beat longer (it scrolls to what the wide one can already see), so it carries
 // its own.
 //
+// No `loop` on the clip. Every timeline ends on the loudest frame it reaches
+// now, and a looping clip spent the reading beat after it cutting back to the
+// board the slide opened on. Ended, a video holds its last frame; `landing.js`
+// rewinds it when its slide next comes round.
+//
 // Every slide is recorded twice, and the *first* one is where the breakpoint
 // between the two is written into the page: the browser picks its still through
 // `<source media>`, the stage takes its shape from whichever it picked, and the
@@ -73,7 +78,6 @@ import { FRAME, NARROW, slides } from '../../scripts/reel.mjs'
           data-src={slide.clip}
           data-src-narrow={slide.narrowClip}
           muted
-          loop
           playsinline
           preload="none"
           aria-hidden="true"
