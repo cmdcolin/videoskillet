@@ -175,8 +175,10 @@ function PresetButton(props: {
         // anywhere else you have to leave here first, so a chip cannot be left
         // armed for a release that starts somewhere else. During a real drag
         // the pointer is captured and this does not fire at all until the
-        // release has already been dealt with.
-        if (e.buttons === 0) dragRef.current = null
+        // release has already been dealt with. Mouse only: a touch pointer
+        // reports no buttons in WebKit, and its release is pointerup or
+        // pointercancel, both handled below.
+        if (e.pointerType === 'mouse' && e.buttons === 0) dragRef.current = null
       }}
       onPointerDown={
         !mixable
@@ -208,7 +210,8 @@ function PresetButton(props: {
           : e => {
               const d = dragRef.current
               if (d !== null) {
-                if (e.buttons === 0 || e.pointerId !== d.pointerId) {
+                const handEmpty = e.pointerType === 'mouse' && e.buttons === 0
+                if (handEmpty || e.pointerId !== d.pointerId) {
                   // A release this chip never saw — a context menu ate it, the
                   // tab lost focus mid-drag, the gesture was cancelled. The
                   // gesture used to be disarmed only by pointerup on this same
@@ -216,6 +219,12 @@ function PresetButton(props: {
                   // rest of the session and plain hover scrubbed its weight
                   // with no button down. Whatever swallowed the release, the
                   // next move says the hand is empty, and that is enough.
+                  //
+                  // A mouse's hand, that is. A touch pointer reports `buttons`
+                  // as 0 on WebKit even while the finger is down, so read as a
+                  // mouse it disarmed the fader on the first move and a drag
+                  // on a phone slid nothing. A finger that lets go says so
+                  // with pointerup or pointercancel, never by going quiet.
                   dragRef.current = null
                   if (e.currentTarget.hasPointerCapture(e.pointerId)) {
                     // Held capture also pins :hover to this chip in Firefox.
