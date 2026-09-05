@@ -2,6 +2,11 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [0.39.1](https://github.com/cmdcolin/videoskillet/compare/v0.39.0...v0.39.1) - 2026-09-05
+
+### Other Changes
+- [`a7b8908`](https://github.com/cmdcolin/videoskillet/commit/a7b8908d4fe69f1d5ccee53be78c064623de2396) No HTML minifier
+
 ## [0.39.0](https://github.com/cmdcolin/videoskillet/compare/v0.38.8...v0.39.0) - 2026-09-05
 
 ### Features
