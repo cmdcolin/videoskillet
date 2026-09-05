@@ -5,7 +5,7 @@ import { GROUPS, snapToStep } from './controls'
 import { cx } from './cx'
 import dlg from './dialog.module.css'
 import { readingOf } from './format'
-import { splitTail, tailTarget } from './paletteQuery'
+import { score, splitTail, tailTarget } from './paletteQuery'
 import { PRESETS, presetLabel } from './presets'
 import { fromTravel, toTravel } from './travel'
 import { useModalDialog } from './useModalDialog'
@@ -34,20 +34,6 @@ const CONTROL_ITEMS: Item[] = GROUPS.flatMap(g =>
 const PRESET_ITEMS: Item[] = PRESETS.map(def => ({ kind: 'preset', def }))
 
 const MAX_RESULTS = 40
-
-// Name match beats prose match, and an earlier hit in the name beats a later
-// one, so typing "vhs" ranks the preset above the sliders that mention VHS.
-function score(query: string, name: string, prose: string): number {
-  const i = name.toLowerCase().indexOf(query)
-  if (i >= 0) return 1000 - i
-  // One scan of the prose, not two. This runs over every preset, control and
-  // action on each keystroke, and the miss is the common case — so the branch
-  // that used to ask `includes` and then `indexOf` for the same answer was
-  // lowercasing and walking the help text twice for every row that did not
-  // match.
-  const j = prose.toLowerCase().indexOf(query)
-  return j >= 0 ? 100 - Math.min(99, j / 8) : -1
-}
 
 const itemName = (it: Item) =>
   it.kind === 'preset'

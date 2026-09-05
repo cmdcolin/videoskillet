@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { SLIDER_BY_KEY } from './controls'
-import { splitTail, tailTarget } from './paletteQuery'
+import { score, splitTail, tailTarget } from './paletteQuery'
 
 import type { SliderDef } from './controls'
 
@@ -69,5 +69,33 @@ describe('tailTarget', () => {
 
   it('says nothing for a mode it does not have', () => {
     expect(tailTarget(mix, 'chorus')).toBe(null)
+  })
+})
+
+describe('score', () => {
+  // The whole reason this moved out of the component. Two controls answer to
+  // "noise"; before an exact name won outright, the tie fell to whichever the
+  // group walk reached first, and `noise 12` set the bandwidth of the noise
+  // generator while reporting the number it had been asked for.
+  it('puts an exact name above a longer one that starts with it', () => {
+    expect(score('noise', 'noise', '')).toBeGreaterThan(
+      score('noise', 'noise bandwidth', ''),
+    )
+  })
+
+  it('ranks an earlier hit in a name above a later one', () => {
+    expect(score('switch', 'switch noise', '')).toBeGreaterThan(
+      score('switch', 'head switch', ''),
+    )
+  })
+
+  it('puts any name hit above any prose hit', () => {
+    expect(score('vhs', 'a name with vhs late in it', '')).toBeGreaterThan(
+      score('vhs', 'nothing', 'vhs right at the front of the prose'),
+    )
+  })
+
+  it('reports a miss as negative', () => {
+    expect(score('nothing at all', 'noise', 'tape')).toBeLessThan(0)
   })
 })

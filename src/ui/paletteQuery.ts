@@ -16,6 +16,31 @@ import type { SliderDef } from './controls'
 // mode switch, what an out-of-range number does — and a dialog is an expensive
 // place to find that out.
 
+// How well one row answers a query. Name match beats prose match, and an
+// earlier hit in the name beats a later one, so typing "vhs" ranks the preset
+// above the sliders that mention VHS.
+//
+// **An exact name wins outright**, which is the rule that was missing. Two
+// controls are called `noise` and `noise bandwidth`, both score a hit at
+// character 0, and the tie used to fall to whichever the group walk reached
+// first — so `noise 12`, naming one control exactly, set the other one and
+// reported the number it had been asked for. A palette that answers a control's
+// own name with a different control is worse than one that finds nothing:
+// nothing is visible, and this was not.
+export function score(query: string, name: string, prose: string): number {
+  const lower = name.toLowerCase()
+  if (lower === query) return 2000
+  const i = lower.indexOf(query)
+  if (i >= 0) return 1000 - i
+  // One scan of the prose, not two. This runs over every preset, control and
+  // action on each keystroke, and the miss is the common case — so the branch
+  // that used to ask `includes` and then `indexOf` for the same answer was
+  // lowercasing and walking the help text twice for every row that did not
+  // match.
+  const j = prose.toLowerCase().indexOf(query)
+  return j >= 0 ? 100 - Math.min(99, j / 8) : -1
+}
+
 // The query's last word, held apart from what the search runs on. Split only on
 // a real space, so a one-word query behaves exactly as it did before any of this
 // existed.
