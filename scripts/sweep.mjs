@@ -82,6 +82,7 @@ const HARNESSES = [
   { name: 'palettecheck', args: [`${origin}/app/`] },
   { name: 'linkcheck', args: [`${origin}/app/`] },
   { name: 'inkcheck', args: [`${origin}/app/`] },
+  { name: 'bandcheck', args: [port] },
   { name: 'midicheck', args: [`${origin}/app/`] },
   // Muted through a Firefox pref rather than by leaving the node unconnected,
   // because the connection is half of what it is checking.

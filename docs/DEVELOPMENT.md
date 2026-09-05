@@ -172,6 +172,23 @@ It reports rather than passes, which is why `pnpm harnesses` leaves it out. The
 run that prompted the touch pass read **112 of 242 controls under 24px**; after
 it, 24. What is left is mostly one class — a caption that doubles as a button.
 
+```
+node scripts/bandcheck.mjs [port]
+```
+
+Whether the beam profile is beating with the output raster. Colour bars are
+constant down each column, so every row-to-row change in the canvas is the
+profile and nothing else, and the check reports the strongest ripple slower than
+the line pitch — a period the structure itself cannot produce, so whatever lands
+there is a beat. It walks seven viewports at both device pixel ratios, which is
+the whole point of it: **a scanline fault lives in the window size, and a retina
+screen carries twice the pixels per line and hides it.** The run that prompted
+this measured 8.22% at 7 px on a 740x733 canvas and 0.88% on the same window at
+2x, and an agent working on one screen would have called the shader fine.
+
+Grain and the picture's own shading leave about 1.5% at every size, so that is
+the floor rather than a beat; the threshold is 3%.
+
 ### What every browser harness here has learned the hard way
 
 Every script below shares one browser story, and each of these cost real time to

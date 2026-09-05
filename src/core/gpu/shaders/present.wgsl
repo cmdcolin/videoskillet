@@ -164,10 +164,10 @@ fn fs(in: VOut) -> @location(0) vec4f {
     let sharp = catmull3(p0, p1, p2, p3, t);
     col = mix(col, clamp(sharp, vec3f(0.0), vec3f(1.0)), P.crtSharp);
   }
-  // Scanline and grille structure can only be drawn while a line still covers
-  // more than a screen pixel. Pulled back it does not, and drawing it anyway
-  // aliases into moire that crawls with every roll, so both fade out as the
-  // picture shrinks past the sampling limit.
+  // Grille structure can only be drawn while a line still covers more than a
+  // screen pixel. Pulled back it does not, and drawing it anyway aliases into
+  // moire that crawls with every roll, so it fades out as the picture shrinks
+  // past the sampling limit. The beam below carries its own, stricter limit.
   let pxPerLine = 3.0 * scale * zoom / f32(ACTIVE_H);
   let resolved = smoothstep(0.6, 1.4, pxPerLine);
   // Finite beam spot between scanlines. The spot is space-charge limited, so it
@@ -175,22 +175,26 @@ fn fs(in: VOut) -> @location(0) vec4f {
   // close in the whites while dim picture keeps thin, separated lines — the
   // signature that makes real scanline structure read as a beam, not an overlay.
   let spot = 1.0 + 3.0 * P.scanBloom * luma(col);
-  // The profile is integrated over the output pixel's height rather than read
-  // at its centre. Between about two and four pixels a line the gap is a pixel
-  // wide, and a point sample lands in it on some lines and beside it on others,
-  // which beats into coarse horizontal bands that crawl with the picture — at
-  // 1129 output pixels for 480 lines, a 752px-wide window at 2x, every third
-  // line came out dark. Four taps across the pixel's footprint band-limit the
-  // gap to what the pixel can carry, and a tall window, where a line is many
-  // pixels, sees the same profile it always did.
+  // The profile is integrated over the window an output pixel covers rather than
+  // read at its centre, and that window opens to a whole line once the structure
+  // passes what the raster can carry. A line period needs two output pixels to
+  // show at all: below that the gap falls inside some pixels and beside others,
+  // and the picture reads as coarse horizontal bands at the beat frequency
+  // rather than as scanlines — 480 lines across 555 pixels put an 8% ripple
+  // every 7 px on screen. Averaged over a full line the profile arrives at its
+  // own mean, so the picture keeps the brightness the scanlines cost it and
+  // loses only the structure it was never able to show; a tall window, where a
+  // line is several pixels, sees the profile it always did.
   let ly = tuv.y * f32(ACTIVE_H);
   let dy = 1.0 / max(pxPerLine, 1e-3);
+  let shown = 1.0 - smoothstep(0.45, 0.5, dy);
+  let fw = mix(1.0, dy, shown);
   var gap = 0.0;
-  for (var k = 0u; k < 4u; k++) {
-    let fr = fract(ly + dy * (f32(k) - 1.5) * 0.25) - 0.5;
+  for (var k = 0u; k < 8u; k++) {
+    let fr = fract(ly + fw * ((f32(k) + 0.5) * 0.125 - 0.5)) - 0.5;
     gap += 1.0 - exp(-fr * fr * 10.0 / spot);
   }
-  let beam = 1.0 - resolved * P.scanBeam * gap * 0.25;
+  let beam = 1.0 - P.scanBeam * gap * 0.125;
   col = col * beam;
   // Aperture grille: vertical RGB phosphor stripes, gain-compensated for the
   // mean transmission loss so mids hold while bright areas clip toward white —
