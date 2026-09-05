@@ -65,10 +65,7 @@ const UNFURL =
           <a class="btn primary" href="/app/">Open the app →</a>
           <a class="btn" href="/guide/">Guide</a>
         </p>
-        <p class="req">
-          Every fault is a consequence of the signal, not an effect drawn on the
-          picture.
-        </p>
+
         <!-- Asked here rather than found out on the other side of the button.
              The app opens on a screen that says this browser cannot run it,
              which is the right screen and the wrong moment: whoever is reading
@@ -76,9 +73,10 @@ const UNFURL =
              Hidden until the check fails, so a browser that can run it is told
              nothing. -->
         <p class="req gpuwarn" hidden>
-          This browser has no WebGPU. The signal path is compute shaders with no
-          fallback renderer, so the app will open on a screen saying so —
-          <a href="/guide/faq.html#what-does-it-need-to-run">what runs it</a>.
+          Unfortunately, this browser has no WebGPU. You'll just get an error if
+          you try to open the app. Please try another browser or use Chrome
+          Canary or Firefox Nightly or look up how to enable WebGPU in your
+          browser!
         </p>
       </div>
     </header>
@@ -106,6 +104,13 @@ const UNFURL =
     <section class="tech">
       <div class="wrap">
         <h2>How it works</h2>
+        <p>
+          <a href="/guide/comparison.html">Unlike other tools</a>, this program
+          works by literally emulating the video signal in real time using
+          WebGPU compute shaders. All the visual effects are actual consequences
+          of the video signal being distorted, not just a cheesy effect that is
+          painted on the image
+        </p>
         <p>
           A frame of NTSC is 525 lines of 910 voltage samples. That array lives
           on the GPU, and a chain of compute shaders rewrites it sixty times a
