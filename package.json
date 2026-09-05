@@ -56,6 +56,7 @@
     "demoreel": "node scripts/demoreel.mjs",
     "reel": "node scripts/appreel.mjs",
     "reel:check": "node scripts/appreel.mjs --check",
+    "agentreel": "node scripts/agentreel.mjs",
     "guide:check": "astro build && node scripts/guidecheck.mjs",
     "distcheck": "node scripts/distcheck.mjs",
     "firebase-deploy": "firebase deploy --only firestore:rules",

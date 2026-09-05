@@ -5,6 +5,22 @@ built to be played by. Three jobs bring one here, and they want different halves
 of what follows: **operating the panel** from inside a browser, **driving the
 board by link**, and **changing the code**.
 
+Here is one doing it. Claude Sonnet on the right, the app in a Chrome on the
+left, and nothing between them scripted — the recording is `pnpm agentreel`,
+which sets the two windows down side by side, hands a real Claude Code session
+the task, and stops when it lands:
+
+<video
+  controls muted loop playsinline
+  poster="img/agent-drive-poster.jpg"
+  src="https://cmdcolinphotos.s3.amazonaws.com/phosphene/agent-drive.mp4"></video>
+
+Every press in it comes from the model: it opens the palette, applies `vhs`,
+reads the row `head switch 9` lands on before committing it, sets the noise, and
+finishes by reading the whole board back. `DEVELOPMENT.md` §
+[Recording an agent driving the app](DEVELOPMENT.md#recording-an-agent-driving-the-app)
+is how to run it.
+
 ## Operating the panel from inside a browser
 
 An agent that can see a page and type into it — Claude in Chrome, or anything

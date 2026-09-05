@@ -1066,6 +1066,63 @@ spec.
 
 Needs Firefox Nightly, ImageMagick, ffmpeg (clips) and pngquant (optional).
 
+## Recording an agent driving the app
+
+[`AI-USAGE.md`](AI-USAGE.md) claims this app is built to be played by an agent,
+and prose is the one thing a reader cannot check. `pnpm agentreel` records the
+claim being true — a real Claude Code session, driving the real app in a real
+Chrome, with both windows in one frame:
+
+```
+pnpm agentreel                        # the default palette task, into clips/
+pnpm agentreel --model=opus           # a different model at the keys
+pnpm agentreel --task=/tmp/ask.txt    # a different sentence to carry out
+pnpm agentreel --keep                 # keep the terminal log and the raw grab
+```
+
+It needs Xvfb, xterm, xdotool, ffmpeg, Chrome, and a logged-in `claude`. It
+costs real tokens — a run is about 45 seconds of session and a dollar or so, and
+the status line in the recording says how much.
+
+**Nothing in the timeline is scripted, and that is the point.** `appreel.mjs`
+next door walks a drawn pointer along a written list of beats, which is right
+for a product reel; here the presses, their order and the model's own
+corrections mid-run are what the recording is evidence of. The script sets the
+stage, opens the shutter, and stops when the session lands.
+
+Four things it had to get right, each of which cost a wrong answer first:
+
+- **A nested X display, not the desktop.** This box is GNOME on Wayland, where
+  `x11grab` against `:0` grabs nothing: mutter composites outside X, so the root
+  window a screen grab reads is empty. An Xvfb is its own root with our two
+  clients in it, and the recording then contains nothing but them.
+- **Chrome loses WebGPU on an Xvfb unless told otherwise.** Its default path
+  opens the DRM _card_ node, which a desktop session's ACLs do not grant, and
+  the app's own "this page keeps rebuilding its GPU engine" banner is what that
+  looks like from the outside. `GPU_ARGS` routes it through Vulkan on the render
+  node, which the seat user does hold.
+- **The prompt goes before any variadic flag.** `--disallowedTools` and
+  `--mcp-config` both keep eating arguments until the next flag, so a prompt
+  written after one of them is read as a tool name — the first take is four
+  minutes of Claude Code sitting at an empty prompt.
+- **The end is the terminal going quiet, not the last click.** The dialog the
+  task ends on opens while the model is still writing what it says, which is the
+  sentence worth recording. xterm logs every byte it draws, so a session that
+  has stopped writing has stopped working.
+
+The clip lands in gitignored `clips/`, the same place `docshots.mjs` leaves its
+recordings, and the poster — the last frame, since that is the one that makes
+the case — is committed to `docs/img/`. Upload the clip beside the guide's
+others:
+
+```
+aws s3 cp clips/agent-drive.mp4 s3://cmdcolinphotos/phosphene/ --profile colin
+```
+
+No GIF. This recording as one is 45MB against the mp4's five: 1920 pixels of
+live analog grain is the worst case a palette-indexed format has, and every crop
+small enough to fix it drops one of the two windows the recording is about.
+
 ## The landing page
 
 [`../site/pages/index.astro`](../site/pages/index.astro), built by Astro with
