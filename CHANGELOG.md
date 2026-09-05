@@ -2,6 +2,15 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [0.38.4](https://github.com/cmdcolin/videoskillet/compare/v0.38.3...v0.38.4) - 2026-09-05
+
+### Features
+- *(ui)* [`8c80250`](https://github.com/cmdcolin/videoskillet/commit/8c80250c38a7867255c377d4ec29ef8c27627e97) the look's rows are a menu off the look bar, so the panel never grows under your pointer
+- *(ui)* [`b51ca98`](https://github.com/cmdcolin/videoskillet/commit/b51ca98515084f35f8a22c494dfffc466e8e0ce2) the reel moves at the speed a visitor watches, and blends presets on the photograph
+
+### Documentation
+- *(ui)* [`618e48c`](https://github.com/cmdcolin/videoskillet/commit/618e48cc622101d37e0632181c26d3919adb594d) say what each control does in plain sentences
+
 ## [0.38.3](https://github.com/cmdcolin/videoskillet/compare/v0.38.2...v0.38.3) - 2026-09-04
 
 ### Features
