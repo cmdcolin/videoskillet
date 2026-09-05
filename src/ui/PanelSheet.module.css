@@ -1,0 +1,21 @@
+/* See PanelSheet.tsx. The frame is a flex column so whichever child asked for
+   the scrolling gets exactly the panel's height — the panel itself stops
+   scrolling while a sheet is up (`.panelSheet` in app.module.css). */
+.sheet {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+.head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.title {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: var(--fs-lg);
+}

@@ -18,7 +18,7 @@ import { AdvancedDialog } from './ui/AdvancedDialog'
 import { AppMenu, ShowMenuButton } from './ui/AppMenu'
 import { AudioHint, AudioInput } from './ui/AudioInput'
 import { boardControls } from './ui/boardText'
-import { BoardTextDialog } from './ui/BoardTextDialog'
+import { BoardTextSheet } from './ui/BoardTextSheet'
 import { CaptionContext } from './ui/CaptionContext'
 import { ClipLibraryDialog } from './ui/ClipLibraryDialog'
 import { ClipPicker } from './ui/ClipPicker'
@@ -757,7 +757,12 @@ export function App() {
 
   useShortcuts(popout, {
     // Dialogs close themselves (each Dialog binds Escape to its own document);
-    // here Escape just backs out of the panel's own modes.
+    // here Escape backs out of the panel's own modes, outermost first.
+    //
+    // A sheet is the outermost, and the one mode that is not a <dialog> — it
+    // has the sidebar, so it takes the press before anything standing behind
+    // it does, and takes it alone: escaping the palette has no business also
+    // clearing the filter it was about to land you in.
     //
     // The open stage is the last of them and only gets the press none of the
     // others wanted: it is where you are rather than a mode you are in, so
@@ -766,6 +771,11 @@ export function App() {
     // on the map rather than a thing on screen to back out of.
     onSearch: openSearch,
     onEscape: () => {
+      if (showPalette || showBoardText) {
+        setShowPalette(false)
+        setShowBoardText(false)
+        return
+      }
       const mode =
         filter !== '' ||
         movingOnly ||
@@ -1503,6 +1513,57 @@ export function App() {
       )}
     </>
   )
+  // The palette and the board dump take the sidebar over rather than floating
+  // over the picture in the top layer, which is where both used to open. The
+  // picture is the thing this app is for watching — and in the palette's case
+  // the thing its own ←→ nudge is aimed at, so a card that landed on it hid the
+  // result of the gesture it was offering. Only one is ever up: `board as text`
+  // is a palette action, and running one closes the palette.
+  const sheet = showPalette ? (
+    <CommandPalette
+      controls={controls}
+      actions={palette}
+      onApplyPreset={mix.applyPreset}
+      onMixStart={mix.startMix}
+      onWriteControl={writeControl}
+      onRevealControl={revealText}
+      onClose={() => setShowPalette(false)}
+    />
+  ) : showBoardText ? (
+    <BoardTextSheet
+      board={{
+        look:
+          activePreset !== undefined
+            ? `“${lookLabel}”`
+            : lookName === null
+              ? 'dialed in from stock — no preset behind it'
+              : `modified from “${lookLabel}”`,
+        sources: [eng.a, eng.b].map(slot => ({
+          tag: slot.tag,
+          what: slotPatched(slot) ?? 'nothing patched in',
+        })),
+        controls: boardControls(controls),
+        // Every slot holding a target, parked ones included: the link carries a
+        // patch whether or not it is running, so a dump that dropped the parked
+        // ones would describe a different board from the one the link rebuilds.
+        motion: modApi.slots.flatMap(slot =>
+          slot.target === ''
+            ? []
+            : [
+                {
+                  target: targetLabel(slot.target),
+                  detail: modDetail(slot, modApi.bpm),
+                  still: !slot.on,
+                },
+              ],
+        ),
+        link: stateUrl,
+      }}
+      onCopy={copyUrl}
+      onClose={() => setShowBoardText(false)}
+    />
+  ) : null
+
   // The filter and the control API reach the rows through the tree, so a group
   // renders the same whether the panel is docked or in the popout window.
   const panel = (
@@ -1524,7 +1585,7 @@ export function App() {
               <CaptionContext
                 value={{ caption: eng.caption, onCaption: eng.changeCaption }}
               >
-                {panelBody}
+                {sheet ?? panelBody}
               </CaptionContext>
             </SignalTapContext>
           </ModSlotsContext>
@@ -1694,7 +1755,13 @@ export function App() {
         )}
       </div>
       {fullscreen || popout !== null ? null : (
-        <div className={cx(styles.panel, benchOn && styles.panelWide)}>
+        <div
+          className={cx(
+            styles.panel,
+            benchOn && styles.panelWide,
+            sheet !== null && styles.panelSheet,
+          )}
+        >
           {panel}
         </div>
       )}
@@ -1702,10 +1769,28 @@ export function App() {
         ? null
         : createPortal(
             <div className={styles.appPop}>
-              <div className={cx(styles.panel, styles.panelPop)}>{panel}</div>
+              <div
+                className={cx(
+                  styles.panel,
+                  styles.panelPop,
+                  sheet !== null && styles.panelSheet,
+                )}
+              >
+                {panel}
+              </div>
             </div>,
             popout.document.body,
           )}
+      {/* Fullscreen is the one state with no sidebar to stand in, and both
+          sheets are still reachable there — ⌘K is bound, and the stage's own ☰
+          carries the row. So the sidebar comes back for as long as the sheet is
+          up, over the right edge of a picture that is otherwise the whole
+          window. */}
+      {fullscreen && sheet !== null ? (
+        <div className={cx(styles.panel, styles.panelSheet, styles.panelOver)}>
+          {panel}
+        </div>
+      ) : null}
       {showAdvanced ? (
         <AdvancedDialog
           renderScale={eng.renderScale}
@@ -1843,52 +1928,6 @@ export function App() {
           readableUrl={stateUrl}
           onCopy={copyUrl}
           onClose={() => setShowShare(false)}
-        />
-      ) : null}
-      {showBoardText ? (
-        <BoardTextDialog
-          board={{
-            look:
-              activePreset !== undefined
-                ? `“${lookLabel}”`
-                : lookName === null
-                  ? 'dialed in from stock — no preset behind it'
-                  : `modified from “${lookLabel}”`,
-            sources: [eng.a, eng.b].map(slot => ({
-              tag: slot.tag,
-              what: slotPatched(slot) ?? 'nothing patched in',
-            })),
-            controls: boardControls(controls),
-            // Every slot holding a target, parked ones included: the link
-            // carries a patch whether or not it is running, so a dump that
-            // dropped the parked ones would describe a different board from the
-            // one the link rebuilds.
-            motion: modApi.slots.flatMap(slot =>
-              slot.target === ''
-                ? []
-                : [
-                    {
-                      target: targetLabel(slot.target),
-                      detail: modDetail(slot, modApi.bpm),
-                      still: !slot.on,
-                    },
-                  ],
-            ),
-            link: stateUrl,
-          }}
-          onCopy={copyUrl}
-          onClose={() => setShowBoardText(false)}
-        />
-      ) : null}
-      {showPalette ? (
-        <CommandPalette
-          controls={controls}
-          actions={palette}
-          onApplyPreset={mix.applyPreset}
-          onMixStart={mix.startMix}
-          onWriteControl={writeControl}
-          onRevealControl={revealText}
-          onClose={() => setShowPalette(false)}
         />
       ) : null}
     </div>

@@ -166,6 +166,8 @@ underneath:
 The filter box narrows the panel. `/` opens it and puts the caret in it, and
 `ctrl+k` opens a palette over presets, controls and actions at once. Both search
 the help text, so you can hunt an artifact without knowing which knob makes it.
+The palette stands in the panel for as long as it is up, so the picture beside
+it stays clear — which is where `←→` on a control row is landing.
 
 The count on the modulation strip (**2 mod**) is a filter as well as a readout.
 Press it and the panel narrows to the controls the bay is driving, which nothing

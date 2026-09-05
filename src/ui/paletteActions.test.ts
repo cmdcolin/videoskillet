@@ -37,6 +37,7 @@ const actions = () => {
     roll: { can: true, up: null, kept: false, again: noop, keep: noop },
     save: { can: true, as: 'my look', run: noop },
     onCopyLink: noop,
+    onBoardText: noop,
     onRecord: noop,
     onStill: noop,
     onFullscreen: noop,

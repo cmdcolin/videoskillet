@@ -1,13 +1,15 @@
 /* The dump itself. Monospace and pre-wrapped: the block is columns, and a
    proportional font or a reflow turns them back into a paragraph.
 
-   Selectable and scrollable rather than sized to the content — a wrecked board
-   runs to fifty rows, and a card that grew to hold them would run off the top
-   layer. */
+   It fills the sheet and scrolls both ways inside it — a wrecked board runs to
+   fifty rows, and the columns are wider than the sidebar however few rows there
+   are. Sideways in its own box rather than dragging the panel with it, which is
+   why the panel is `overflow-x: hidden` and this is not. */
 .dump {
-  margin: 0 0 10px;
+  margin: 0;
   padding: 10px 12px;
-  max-height: 52vh;
+  flex: 1;
+  min-height: 0;
   overflow: auto;
   overscroll-behavior: contain;
   background: var(--panel-bg);

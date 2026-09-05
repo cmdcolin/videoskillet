@@ -59,6 +59,33 @@
   padding: 10px 14px;
   flex-shrink: 0;
 }
+/* While a sheet is up the panel *is* that sheet (see PanelSheet.tsx), so it
+   stops being a scrolling column of sections and becomes the sheet's frame: the
+   sheet takes the height and does its own scrolling inside, which is what keeps
+   the palette's search box at the top with its results moving under it.
+
+   Unscoped, unlike the shell rules below: this describes the panel's contents
+   rather than the shell around it, and it has to hold in the popout window too. */
+.panelSheet {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Fullscreen has no sidebar for a sheet to stand in, so one borrows the edge the
+   sidebar would have had. Fixed rather than in the flow — the picture is the
+   whole window in this state, and a sheet that pushed it would resize the
+   canvas to open a search box. */
+.panelOver {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  background: var(--app-bg);
+  border-left: 1px solid var(--border);
+}
+
 /* Every rule from here to the popout block is written `.app .panel`, not
    `.panel`. The descendant is load-bearing, not tidiness: these describe a
    *shell* — a picture with a sidebar beside or under it, on a device held one

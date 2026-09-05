@@ -1,33 +1,21 @@
 /* The palette: a search box over one flat list of presets, controls and
-   actions. It takes .modal from dialog.module.css and styles its own card —
-   this one is a list, not a page of prose. */
+   actions, standing in the sidebar as a PanelSheet.
 
-/* Over the panel, not over the picture. The UA centers a modal <dialog> with
-   `margin: auto`, which put the card in the middle of the screen and the dim
-   backdrop over everything — on top of the one thing the palette is for
-   watching, since ←→ nudges and a typed value both land live. Pinning three
-   margins overrides both halves of that auto: high in the viewport so results
-   grow downward into empty space rather than pushing the box around as the list
-   shrinks, and against the right edge where the panel already is.
+   It used to be a floating card in the top layer, pinned to the top right so it
+   would sit over the panel rather than over the picture. It missed: 560px is
+   wider than the 332px panel, so on a laptop the card lapped onto the picture —
+   which is the one thing the palette is for watching, since ←→ nudges and a
+   typed value both land live. In the sidebar it cannot lap onto anything. */
 
-   Wider than the 332px panel, so on a laptop it still laps onto the right of
-   the picture; the middle stays clear, which is what the note was about. At
-   1280px up the panel is 664px and the card sits inside it. */
-.paletteModal {
-  margin-top: 6vh;
-  margin-bottom: auto;
-  margin-left: auto;
-  margin-right: 12px;
-}
-/* No dim at all. The card carries its own background and border, so it reads
-   against a picture without one — and the picture is what you are looking at
-   while typing into this. */
-.paletteModal::backdrop {
-  background: transparent;
-}
-.paletteCard {
-  width: 560px;
-  max-width: 92vw;
+/* The box, the list and the footer as one column, as tall as the results and no
+   taller — a card stretched to the panel's full height under four hits reads as
+   a list still loading. It shrinks rather than grows, so a long list stops at
+   the bottom of the panel and scrolls inside instead. */
+.paletteBody {
+  display: flex;
+  flex-direction: column;
+  flex: 0 1 auto;
+  min-height: 0;
   background: var(--panel-bg);
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -35,9 +23,10 @@
 }
 .paletteInput {
   display: block;
+  flex: none;
   width: 100%;
   box-sizing: border-box;
-  padding: 10px 14px;
+  padding: 8px 12px;
   border: 0;
   border-bottom: 1px solid var(--border);
   background: transparent;
@@ -45,9 +34,9 @@
   font: inherit;
   font-size: var(--fs-lg);
 }
-/* The one place the UA ring is still suppressed: this input is autofocused, is
-   the only focusable thing in the card, and runs its full width — a ring here
-   frames the top of the dialog rather than pointing at anything. */
+/* The one place the UA ring is still suppressed: this input is focused on
+   arrival, is the first focusable thing in the sheet, and runs its full width —
+   a ring here frames the top of the box rather than pointing at anything. */
 .paletteInput:focus {
   outline: none;
 }
@@ -55,56 +44,66 @@
   color: var(--fg4);
 }
 .paletteList {
-  max-height: 46vh;
+  flex: 0 1 auto;
+  min-height: 0;
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
+/* Two lines: name and reading across the top, kind and group under them. */
 .paletteRow {
   composes: bare from './ui.module.css';
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto;
   align-items: baseline;
-  gap: 8px;
+  gap: 0 8px;
   width: 100%;
-  padding: 6px 14px;
+  padding: 5px 12px;
   color: var(--fg);
   text-align: left;
 }
 .paletteRowOn {
   background: #22303a;
 }
-.paletteKind {
-  flex-shrink: 0;
-  width: 54px;
-  color: var(--fg3);
-  font-size: var(--fs-xs);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
 .paletteName {
-  flex-shrink: 0;
-  font-weight: 600;
-}
-.paletteRowOn .paletteName {
-  color: var(--accent);
-}
-.paletteSub {
-  flex: 1;
   min-width: 0;
-  color: var(--fg3);
+  font-weight: 600;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.paletteRowOn .paletteName {
+  color: var(--accent);
+}
 .paletteValue {
-  flex-shrink: 0;
   font-family: var(--mono);
   color: var(--fg2);
 }
+.paletteMeta {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 6px;
+  min-width: 0;
+  color: var(--fg3);
+  font-size: var(--fs-sm);
+}
+.paletteKind {
+  flex-shrink: 0;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.paletteSub {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .paletteEmpty {
-  padding: 10px 14px;
+  padding: 10px 12px;
   color: var(--fg3);
 }
 .paletteFoot {
-  padding: 6px 14px;
+  flex: none;
+  padding: 6px 12px;
   border-top: 1px solid var(--border);
   color: var(--fg3);
   font-size: var(--fs-sm);

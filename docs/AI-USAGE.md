@@ -30,8 +30,8 @@ which Chrome ships on desktop; an older Linux build may still want it switched
 on at `chrome://flags`.
 
 **The command palette is the surface built for exactly this.** `ctrl+k` (`⌘k`)
-opens a dialog labelled `command palette` holding one text input, and the input
-takes a control's name and the value to set it to in one string:
+puts a region labelled `command palette` in the sidebar, holding one text input,
+and the input takes a control's name and the value to set it to in one string:
 
 ```
 head switch 9      the head-switch tear, pulled to 9 µs
@@ -48,13 +48,13 @@ number is the one gesture that is faster from outside the app than from inside
 it.
 
 **Read the board back off the list, not off the picture.** Every palette row is
-a button carrying, as text, the kind, the name, the group and the control's
-current reading — and the row under the cursor shows `current → target` before
+a button carrying, as text, the name, the control's current reading, the kind
+and the group — and the row under the cursor shows `current → target` before
 Enter is pressed, so an agent can check what a press is about to do. Typing
 `head switch 9` puts this on the first row:
 
 ```
-CONTROL | head switch | Timebase | 0.80us → 9.00us
+head switch | 0.80us → 9.00us | CONTROL | Timebase
 ```
 
 The picture is a `<canvas>`: a screenshot says what the fault looks like and
@@ -64,8 +64,8 @@ never what a control is set to.
 takes one query at a time and the address bar names its values in wire keys with
 no units, so the whole board is a verb of its own — the look, both decks, every
 control off stock with its reading and its stock value, every routing the
-modulation bay is driving, and the link. It opens a dialog with the block on
-screen:
+modulation bay is driving, and the link. It puts the block in the sidebar, in a
+region labelled `board as text`:
 
 ```
 look      modified from “vhs”
@@ -82,7 +82,7 @@ source B  nothing patched in
 Each row carries the control's wire key beside its label, so a board read this
 way is a `#set=` link you can write without looking anything up. The text is on
 the page rather than only on the clipboard, because the page is where a browsing
-agent reads; the dialog's copy button is for the other reader.
+agent reads; the copy button beside the heading is for the other reader.
 
 **Every button says what it does in words.** `src/ui/buttonNames.test.ts` fails
 the build on a button whose whole content is a glyph, because a screen reader

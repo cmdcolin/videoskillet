@@ -1,14 +1,13 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import styles from './CommandPalette.module.css'
 import { GROUPS, snapToStep } from './controls'
 import { cx } from './cx'
-import dlg from './dialog.module.css'
 import { readingOf } from './format'
 import { score, splitTail, tailTarget } from './paletteQuery'
+import { PanelSheet } from './PanelSheet'
 import { PRESETS, presetLabel } from './presets'
 import { fromTravel, toTravel } from './travel'
-import { useModalDialog } from './useModalDialog'
 
 import type { ControlKey, Controls } from '../core/controls'
 import type { SliderDef } from './controls'
@@ -82,13 +81,19 @@ export function CommandPalette(props: {
   onApplyPreset: (name: string, patch: Partial<Controls>) => void
   onMixStart: () => void
   onWriteControl: (key: ControlKey, value: number) => void
-  // Surfaces a control in the panel behind the palette by filtering to it —
-  // every section force-opens while a filter is live, so this reaches controls
-  // in collapsed stages and in the contextual A/B and audio sections alike.
+  // Surfaces a control in the panel the palette is standing in front of, by
+  // filtering to it — every section force-opens while a filter is live, so this
+  // reaches controls in collapsed stages and in the contextual A/B and audio
+  // sections alike.
   onRevealControl: (label: string) => void
   onClose: () => void
 }) {
-  const ref = useModalDialog()
+  // A sheet is an ordinary region rather than a modal <dialog>, so nothing moves
+  // focus into it for us. The box is what the ⌘K press was aimed at.
+  const box = useRef<HTMLInputElement>(null)
+  useEffect(() => {
+    box.current?.focus()
+  }, [])
   const [query, setQuery] = useState('')
   const [cursor, setCursor] = useState(0)
 
@@ -161,7 +166,8 @@ export function CommandPalette(props: {
       (e.key === 'ArrowLeft' || e.key === 'ArrowRight') &&
       selected?.kind === 'control'
     ) {
-      // Adjust without leaving: the picture is right there behind the palette.
+      // Adjust without leaving. The palette stands in the sidebar, so the
+      // picture beside it is uncovered while the value moves.
       e.preventDefault()
       const s = selected.slider
       props.onWriteControl(
@@ -172,21 +178,20 @@ export function CommandPalette(props: {
   }
 
   return (
-    <dialog
-      ref={ref}
-      className={cx(dlg.modal, styles.paletteModal)}
-      aria-label="command palette"
-      onCancel={props.onClose}
-      onClick={e => {
-        if (e.target === ref.current) props.onClose()
-      }}
+    <PanelSheet
+      title="Jump to anything"
+      // The name the shortcut, the menu row and the docs all use for this. It
+      // stays on the region so a screen reader and a browsing agent still find
+      // it by the name they were given.
+      label="command palette"
+      onClose={props.onClose}
     >
-      <div className={styles.paletteCard} onKeyDown={onKeyDown}>
+      <div className={styles.paletteBody} onKeyDown={onKeyDown}>
         <input
-          data-autofocus
+          ref={box}
           className={styles.paletteInput}
           type="text"
-          placeholder="jump to a preset, control, or action…"
+          placeholder="a preset, control, or action…"
           value={query}
           onChange={e => {
             setQuery(e.target.value)
@@ -220,23 +225,29 @@ export function CommandPalette(props: {
                   onPointerMove={() => setCursor(i)}
                   onClick={() => choose(it)}
                 >
-                  <span className={styles.paletteKind}>
-                    {it.kind === 'preset'
-                      ? 'preset'
-                      : it.kind === 'control'
-                        ? 'control'
-                        : 'action'}
-                  </span>
                   <span className={styles.paletteName}>{itemName(it)}</span>
-                  <span className={styles.paletteSub}>
-                    {it.kind === 'control' ? it.group : itemProse(it)}
-                  </span>
                   {it.kind === 'control' ? (
                     <span className={styles.paletteValue}>
                       {readout(it.slider, props.controls[it.slider.key])}
                       {to === null ? null : ` → ${readout(it.slider, to)}`}
                     </span>
                   ) : null}
+                  {/* A second line under the name, because a sheet is 332px
+                      across on a laptop: as four columns on one line the group
+                      and the blurb took their width off the name and the
+                      reading, which are the two the row is read for. */}
+                  <span className={styles.paletteMeta}>
+                    <span className={styles.paletteKind}>
+                      {it.kind === 'preset'
+                        ? 'preset'
+                        : it.kind === 'control'
+                          ? 'control'
+                          : 'action'}
+                    </span>
+                    <span className={styles.paletteSub}>
+                      {it.kind === 'control' ? it.group : itemProse(it)}
+                    </span>
+                  </span>
                 </button>
               )
             })
@@ -247,6 +258,6 @@ export function CommandPalette(props: {
           one · esc close
         </div>
       </div>
-    </dialog>
+    </PanelSheet>
   )
 }

@@ -1,9 +1,9 @@
 import { useState } from 'react'
 
 import { boardText } from './boardText'
-import styles from './BoardTextDialog.module.css'
+import styles from './BoardTextSheet.module.css'
 import { cx } from './cx'
-import { Dialog } from './Dialog'
+import { PanelSheet } from './PanelSheet'
 import ui from './ui.module.css'
 
 import type { Board } from './boardText'
@@ -15,7 +15,7 @@ import type { Board } from './boardText'
 // screen reader, an agent walking the accessibility tree — gets the same block,
 // and the copy button is there for the one reader that wanted the clipboard
 // after all.
-export function BoardTextDialog(props: {
+export function BoardTextSheet(props: {
   board: Board
   onCopy: (text: string) => Promise<boolean>
   onClose: () => void
@@ -23,11 +23,11 @@ export function BoardTextDialog(props: {
   const [copied, setCopied] = useState(false)
   const text = boardText(props.board)
   return (
-    <Dialog title="Board as text" size="paint" onClose={props.onClose}>
-      <pre className={styles.dump} data-autofocus tabIndex={0}>
-        {text}
-      </pre>
-      <div className={ui.helpText}>
+    <PanelSheet
+      title="Board as text"
+      label="board as text"
+      onClose={props.onClose}
+      actions={
         <button
           className={cx(ui.btn, ui.btnFlush)}
           onClick={() => {
@@ -38,7 +38,11 @@ export function BoardTextDialog(props: {
         >
           {copied ? 'copied ✓' : 'copy'}
         </button>
-      </div>
-    </Dialog>
+      }
+    >
+      <pre className={styles.dump} tabIndex={0}>
+        {text}
+      </pre>
+    </PanelSheet>
   )
 }
