@@ -72,8 +72,10 @@ const motion = matchMedia('(prefers-reduced-motion: reduce)')
     narrow.matches ? slide.dataset.secsNarrow : slide.dataset.secs
   const notes = [...document.querySelectorAll('.slideNote')]
   const tabs = document.querySelector('.slideTabs')
-  // Long enough after the clip has run once to read the line under it.
-  const READING = 2500
+  // After the clip has run once, a beat to read the line under it before the
+  // next slide. It was 2.5s, and a stage that sits still that long between
+  // clips reads as having stopped.
+  const READING = 1200
 
   let at = 0
   // False until the observer below says otherwise, which is what keeps

@@ -1157,7 +1157,27 @@ turn of hue a lap — and none of that shows. `roll` puts a torn, mistracking
 photograph in its first frame, which nobody has to be told the meaning of, so it
 opens the reel now and `build` closes it.
 
-**Two of the three slides start on a bare load and get somewhere while you
+**The hand moves fast.** A glide onto a control is 0.2-0.35s, a press dwells
+0.4s, a drag takes 0.5-0.7s, and the only long holds are the ones a feedback
+loop needs to lap. The reel ran twice as long as this, at 24fps over two engine
+frames a shot (a fifth slow), and the note on it was the brief: "people are very
+fast visual learners, they can see things happen quickly so dont dawdle and move
+dials and click buttons in relatively quick succession". `appreel.mjs` records
+at 30fps over the same two steps now, which is the app's own 60Hz.
+
+**The `presets` slide is pairs of chips dragged part of the way in.** A preset
+chip is a fader — click for all of it, drag sideways for some — and every chip
+layers onto the board already there, so two at half strength are a look neither
+is alone with the photograph still in it. Part way is the finding: the same
+pairs at full strength, screened on a contact sheet of forty-four, are an op-art
+spiral with no cat in it, and the read on that sheet was "some or even many of
+the presets, at full strength, tend to be too chaotic and even cheesey to the
+degree they look too distorted". The four that ship came off a second sheet of
+forty blends. The chips are seeded as recents so they sit on the shortlist row
+beside `clean`, and the recorder's `mix` verb drives the drag with the real
+mouse, since the chip integrates pointer travel and holds capture on it.
+
+**Two of the four slides start on a bare load and get somewhere while you
 watch**, and that took two wrong turns to arrive at. They used to run on the
 bundled photograph through a tape path, chosen because damage is legible on a
 cat — a stranger watching a slider bend a photograph has been shown that the
@@ -1175,15 +1195,15 @@ rainbow that was not there fifteen seconds earlier. `loop gain` is left alone
 precisely because it already rests at 1: a slide that dragged it would be
 miming.
 
-**The stage opens on one button pressed three times**, and it is where
-[`?seed=`](#url-parameters) earns its keep: `random look` stacks a few authored
-presets over stock, so the slide is the app answering "give me one I did not
-build" — three times, each from wherever the last one landed. Unseeded that take
-is unrepeatable, and a rerecording would need its caption rewritten around
-whatever came up; `?seed=7` fixes the three rolls, and `src=cat` is what makes
-them legible, since three rolls of colour bars read as three sets of colour bars
-in different colours. Both were screened over twelve seeds, and most of them
-spend at least one press on a white blow-out or a grey wash.
+**The stage opens on one button pressed four times**, and it is where
+[`?seed=`](#url-parameters) earns its keep: `random nudge` moves every control
+around where it sits, so on a board that is already coming apart each press goes
+further out rather than starting over — the slide is the app answering "further"
+four times, from wherever the last press landed, and undo walking it home.
+Unseeded that take is unrepeatable, and a rerecording would need its caption
+rewritten around whatever came up; `?seed=2` fixes the rolls. `reel.mjs` carries
+why it is a nudge and not a `random look`, and why the board under it is a
+feedback look rather than the photograph.
 
 It replaced a fault dialled into clean bars — HV sag and supply ring, the raster
 losing its geometry. The mechanism is right and the slide was the weakest thing

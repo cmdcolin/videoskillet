@@ -35,7 +35,8 @@
 //   { moveTo: target, secs }     glide the pointer onto a target, eased. A
 //                                target is `{ stage }` for a box on the signal
 //                                path map, `{ slider }` for a control row by
-//                                its label, or anything `drive.mjs` resolves.
+//                                its label, `{ chip }` for a preset chip's
+//                                grip, or anything `drive.mjs` resolves.
 //   { press: secs, on }          click whatever the pointer is over, then dwell
 //                                there. `on` is what that had better be. A
 //                                target of `{ choice: { row, pick } }` is one
@@ -45,6 +46,12 @@
 //   { drag: { slider, to }, secs }
 //                                walk a slider to `to` — a fraction of its own
 //                                travel — with the pointer on the thumb
+//   { mix: { chip, to }, secs }  drag a preset chip sideways to blend it in at
+//                                `to` of full strength, the way the app's own
+//                                gesture does (PresetsSection.tsx: 120px of
+//                                travel is 100%). The real mouse does this
+//                                one, since the chip integrates pointer
+//                                travel and holds capture on it.
 //   { away: secs }               glide the pointer off the frame and drop it
 //
 // The pointer is drawn by the page (`installReel` below) rather than being the
@@ -109,10 +116,12 @@ const slides =
     : (await import(pathToFileURL(resolve(slidesPath)).href)).slides
 const only = argv.filter(a => !a.startsWith('--'))
 
-const FPS = 24
-// Engine frames per output frame. 60/24 would be real time; two is a shade
-// slower than the app runs, which is the right side to err on — a picture that
-// is a field of noise reads as faster than it is, and these loop.
+const FPS = 30
+// Engine frames per output frame. Two at 30fps is the app's own 60Hz, so the
+// picture runs at the speed a visitor would see it run. It was 24fps over the
+// same two steps, a fifth slow, picked so a field of noise would not read as
+// faster than it is — and the reel dawdled for it, since every beat in it is
+// paced in seconds and every second played long.
 const STEPS = 2
 // The picture is noise and the panel is flat colour, and it turns out they do
 // not pull against each other at all. The panel is *static*: h264 codes that
@@ -278,6 +287,17 @@ function installReel(touch) {
     return box
   }
 
+  // Where a hand takes hold of a preset chip to drag it: just inside its left
+  // edge, so the travel that follows runs across the chip rather than off it.
+  const chipGrip = text => {
+    const el = window.__ds.elementOf({ text })
+    if (el === null || el.textContent.trim() !== text) {
+      throw new Error(`no chip “${text}” on the row`)
+    }
+    const r = el.getBoundingClientRect()
+    return { x: r.left + 8, y: r.top + r.height / 2 }
+  }
+
   window.__reel = {
     // The hand, drawn into the page. An arrow where a mouse would be holding
     // it, a fingertip where a thumb would: the portrait takes are a phone's
@@ -319,6 +339,9 @@ function installReel(touch) {
       if (target.slider !== undefined) {
         const el = slider(target.slider)
         return thumbAt(el, travelOf(el).at)
+      }
+      if (target.chip !== undefined) {
+        return chipGrip(target.chip)
       }
       return centre(elementFor(target))
     },
@@ -370,6 +393,11 @@ function installReel(touch) {
     },
 
     travel: label => travelOf(slider(label)).at,
+
+    chipGrip,
+    // How far in a chip is after a drag — it carries its own fill as `--w`.
+    chipFill: text =>
+      window.__ds.elementOf({ text }).style.getPropertyValue('--w'),
 
     // The hand arriving on the thumb and leaving it. A drag is a pointerdown
     // before the first value and a pointerup after the last, and the app banks
@@ -470,6 +498,32 @@ async function runBeat(page, beat, frame, hand, shoot) {
     }
     await page.evaluate(s => window.__reel.letGo(s), beat.drag.slider)
     hand.down = false
+  } else if (beat.mix !== undefined) {
+    const grip = await page.evaluate(
+      t => window.__reel.chipGrip(t),
+      beat.mix.chip,
+    )
+    await page.mouse.move(grip.x, grip.y)
+    await page.mouse.down()
+    await page.mouse.move(grip.x + 6, grip.y, { steps: 2 })
+    const travel = beat.mix.to * 120
+    for (let i = 1; i <= frames; i++) {
+      const t = ease(i / frames)
+      hand.at = { x: grip.x + 6 + travel * t, y: grip.y }
+      hand.down = true
+      await page.mouse.move(hand.at.x, hand.at.y)
+      await paint(page, hand)
+      await shoot()
+    }
+    await page.mouse.up()
+    hand.down = false
+    const fill = await page.evaluate(
+      t => window.__reel.chipFill(t),
+      beat.mix.chip,
+    )
+    if (fill === '' || fill === '0%') {
+      throw new Error(`dragged “${beat.mix.chip}” and it stayed at ${fill}`)
+    }
   } else if (beat.press !== undefined) {
     const hit = await page.evaluate(
       (x, y) => window.__reel.pressAt(x, y),

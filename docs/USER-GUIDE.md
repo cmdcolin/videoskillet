@@ -113,8 +113,8 @@ session's clips back.
 
 The map at the top of the sidebar is the signal path, and every box is a button.
 Amber marks a stage you've moved something in. The wires arcing over the trunk
-are the feedback loops, camera and mixer, and the chip on each one is that
-loop's button.
+are the feedback loops (camera, mixer), and the chip on each one is that loop's
+button.
 
 ![The same map at readable size, its header reading Signal path · click a stage: SOURCE A and SOURCE B into MIX, then CHANNEL, RECEIVER and SCREEN in amber, the camera and mixer returns arching back over the trunk, SOUND dashed and inert under RECEIVER, VIEW under SCREEN, and MODULATION and DECK on a row of their own with no wire reaching them](img/signal-path.png)
 
