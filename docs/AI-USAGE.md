@@ -44,6 +44,30 @@ CONTROL | head switch | Timebase | 0.80us → 9.00us
 The picture is a `<canvas>`: a screenshot says what the fault looks like and
 never what a control is set to.
 
+**`board as text` answers the same question in one read.** The palette's list
+takes one query at a time and the address bar names its values in wire keys with
+no units, so the whole board is a verb of its own — the look, both decks, every
+control off stock with its reading and its stock value, every routing the
+modulation bay is driving, and the link. It opens a dialog with the block on
+screen:
+
+```
+look      modified from “vhs”
+source A  Color bars
+source B  nothing patched in
+
+11 controls off stock
+  Timebase
+    head switch   headSwitchShiftUs  9.00us  stock 0.00us
+    wow           tbWowNs            300ns   stock 0ns
+  …
+```
+
+Each row carries the control's wire key beside its label, so a board read this
+way is a `#set=` link you can write without looking anything up. The text is on
+the page rather than only on the clipboard, because the page is where a browsing
+agent reads; the dialog's copy button is for the other reader.
+
 **Every button says what it does in words.** `src/ui/buttonNames.test.ts` fails
 the build on a button whose whole content is a glyph, because a screen reader
 and a browsing agent reach for the same thing — the accessible name. So clicking
