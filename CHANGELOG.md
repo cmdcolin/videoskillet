@@ -2,6 +2,16 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [0.38.5](https://github.com/cmdcolin/videoskillet/compare/v0.38.4...v0.38.5) - 2026-09-05
+
+### Features
+- *(ui)* [`8d28026`](https://github.com/cmdcolin/videoskillet/commit/8d2802648e185985b83ca3f544ffa915b68ab190) no roll starts phosphor persistence from rest
+- *(ui)* [`02ef453`](https://github.com/cmdcolin/videoskillet/commit/02ef45378f3bdd139493166cc371a92272f6ecff) the reel runs on the photograph, and every pull lands on the last one's picture
+
+### Fixes
+- *(ui)* [`f773d2b`](https://github.com/cmdcolin/videoskillet/commit/f773d2b6aec555cabbe5b85f53eef4ee7f72473d) a preset chip slides under a finger, not only a mouse
+- *(ui)* [`43db2a7`](https://github.com/cmdcolin/videoskillet/commit/43db2a7b5ba129cdfb8076708855ce6325f1a9b9) the dissolver demo keeps its colour in Chrome
+
 ## [0.38.4](https://github.com/cmdcolin/videoskillet/compare/v0.38.3...v0.38.4) - 2026-09-05
 
 ### Features
