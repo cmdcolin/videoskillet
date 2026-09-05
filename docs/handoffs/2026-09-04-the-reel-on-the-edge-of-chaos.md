@@ -106,6 +106,20 @@ sentence of the slide wanted anyway, and the re-recorded take logs every chip
 lit at the strength it was dragged to. If it recurs,
 `REEL_DEBUG=1 pnpm reel presets` is the first thing to run.
 
+## Second pass, same day
+
+- **The build raises chroma gain first.** Screened four orders of the same ten
+  rows: with the decoder rows last the loop is grey trails for eight seconds
+  before any colour arrives; with chroma gain first the photograph saturates on
+  the first drag, every loop row changes a coloured picture, and the finale
+  (saturation and bloom on the tube) is the same.
+- **Clicks ripple red.** "if you are capturing user videos and expecting them to
+  see what you are clicking you might be going a bit too fast potentially. might
+  want to add red 'ripple' to clicks and stuff too". A press, and the first
+  moment of a drag, throw a red ring that grows and fades over 0.4s; a held drag
+  keeps a steady red ring. The green three-frame ring it replaces was a click as
+  the hand feels it, not as a viewer sees it.
+
 ## Left open
 
 - The wide takes are 2 to 7 MB each at crf 34 — heavier than the last set (the

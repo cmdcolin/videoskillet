@@ -306,29 +306,56 @@ function installReel(touch) {
     // that may be a white field a moment later, and both are placed by their
     // own hotspot — the arrow's tip is its corner, the fingertip's is its
     // middle — so the coordinate the recorder presses at is the one it drew.
-    cursor: (x, y, pressed) => {
+    //
+    // **A click ripples red for twelve frames.** It was a green ring for three,
+    // which is what a click looks like to the hand making it and not to
+    // somebody watching a clip of it: "if you are capturing user videos and
+    // expecting them to see what you are clicking you might be going a bit too
+    // fast potentially. might want to add red 'ripple' to clicks and stuff
+    // too". So a press, and the first moment of a drag, throw a red ring that
+    // grows and fades over 0.4s, and a drag that is being held keeps a steady
+    // red ring under the pointer for as long as it is held. Red because the
+    // panel is near-black and green, and the picture is anything.
+    cursor: (x, y, pressed, ripple) => {
       let el = document.getElementById(CURSOR)
       if (el === null) {
         el = document.createElement('div')
         el.id = CURSOR
-        el.style.cssText = `position:fixed;z-index:2147483647;pointer-events:none;width:${TOUCH ? 48 : 34}px;height:${TOUCH ? 48 : 38}px`
+        // Oversized so the ripple has room to grow past the pointer.
+        el.style.cssText = `position:fixed;z-index:2147483647;pointer-events:none;width:96px;height:96px`
+        const c = 48
         el.innerHTML = TOUCH
-          ? `<svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-          <circle class="ring" cx="24" cy="24" r="0" fill="none" stroke="#7fd0a0" stroke-width="2" opacity="0" />
-          <circle cx="24" cy="24" r="15" fill="rgb(244 244 248 / 28%)" stroke="rgb(244 244 248 / 82%)" stroke-width="2" />
+          ? `<svg width="96" height="96" viewBox="0 0 96 96" fill="none">
+          <circle class="tap" cx="${c}" cy="${c}" r="0" fill="none" stroke="#ff3b30" stroke-width="3" opacity="0" />
+          <circle class="ring" cx="${c}" cy="${c}" r="0" fill="none" stroke="#ff3b30" stroke-width="2.5" opacity="0" />
+          <circle cx="${c}" cy="${c}" r="15" fill="rgb(244 244 248 / 28%)" stroke="rgb(244 244 248 / 82%)" stroke-width="2" />
         </svg>`
-          : `<svg width="34" height="38" viewBox="0 0 34 38" fill="none">
-          <circle class="ring" cx="3" cy="2" r="0" fill="none" stroke="#7fd0a0" stroke-width="2" opacity="0" />
-          <path d="M3 1 L3 25 L9.5 18.5 L13.8 26.6 L17.6 24.6 L13.3 16.7 L22.5 16 Z"
+          : `<svg width="96" height="96" viewBox="0 0 96 96" fill="none">
+          <circle class="tap" cx="${c}" cy="${c}" r="0" fill="none" stroke="#ff3b30" stroke-width="3" opacity="0" />
+          <circle class="ring" cx="${c}" cy="${c}" r="0" fill="none" stroke="#ff3b30" stroke-width="2.5" opacity="0" />
+          <path transform="translate(${c - 3} ${c - 2})" d="M3 1 L3 25 L9.5 18.5 L13.8 26.6 L17.6 24.6 L13.3 16.7 L22.5 16 Z"
             fill="#f4f4f8" stroke="#0b0b0e" stroke-width="1.6" stroke-linejoin="round" />
         </svg>`
         document.body.append(el)
       }
-      el.style.left = `${TOUCH ? x - 24 : x}px`
-      el.style.top = `${TOUCH ? y - 24 : y}px`
+      // The hotspot — the arrow's tip or the fingertip's middle — sits at the
+      // box's centre, so the box is placed by that.
+      el.style.left = `${x - 48}px`
+      el.style.top = `${y - 48}px`
       const ring = el.querySelector('.ring')
       ring.setAttribute('r', pressed ? (TOUCH ? '22' : '13') : '0')
-      ring.setAttribute('opacity', pressed ? '0.85' : '0')
+      ring.setAttribute('opacity', pressed ? '0.9' : '0')
+      const tap = el.querySelector('.tap')
+      if (ripple === null) {
+        tap.setAttribute('opacity', '0')
+      } else {
+        tap.setAttribute(
+          'r',
+          String((TOUCH ? 18 : 8) + ripple * (TOUCH ? 26 : 30)),
+        )
+        tap.setAttribute('opacity', String(0.95 * (1 - ripple)))
+        tap.setAttribute('stroke-width', String(3.5 - 2 * ripple))
+      }
     },
     drop: () => document.getElementById(CURSOR)?.remove(),
 
@@ -442,6 +469,10 @@ function installReel(touch) {
 
 // One beat, frame by frame. The only state a timeline carries between beats is
 // `hand` — where the pointer was left, and whether it is down.
+// How long a click's ripple lives, in output frames: 0.4s at 30fps.
+const RIPPLE = 12
+const rippleAt = i => (i <= RIPPLE ? i / RIPPLE : null)
+
 async function runBeat(page, beat, frame, hand, shoot) {
   const frames = Math.max(1, Math.round(beatSecs(beat) * FPS))
 
@@ -493,11 +524,13 @@ async function runBeat(page, beat, frame, hand, shoot) {
         lerp(from, beat.drag.to, t),
       )
       hand.down = true
+      hand.ripple = rippleAt(i)
       await paint(page, hand)
       await shoot()
     }
     await page.evaluate(s => window.__reel.letGo(s), beat.drag.slider)
     hand.down = false
+    hand.ripple = null
   } else if (beat.mix !== undefined) {
     const grip = await page.evaluate(
       t => window.__reel.chipGrip(t),
@@ -530,12 +563,14 @@ async function runBeat(page, beat, frame, hand, shoot) {
       const t = ease(i / frames)
       hand.at = { x: grip.x + 6 + travel * t, y: grip.y }
       hand.down = true
+      hand.ripple = rippleAt(i)
       await to(hand.at.x, hand.at.y)
       await paint(page, hand)
       await shoot()
     }
     await up()
     hand.down = false
+    hand.ripple = null
     const fill = await page.evaluate(
       t => window.__reel.chipFill(t),
       beat.mix.chip,
@@ -565,13 +600,13 @@ async function runBeat(page, beat, frame, hand, shoot) {
       throw new Error(`pressed “${hit}”, wanted ${beat.on}`)
     }
     for (let i = 1; i <= frames; i++) {
-      // The ring is the press, not a state: it lands with the click and is gone
-      // in three frames, which is what a click looks like.
-      hand.down = i <= 3
+      // The ripple is the press, not a state: it lands with the click and has
+      // faded by the twelfth frame (`cursor`, above, for why twelve).
+      hand.ripple = rippleAt(i)
       await paint(page, hand)
       await shoot()
     }
-    hand.down = false
+    hand.ripple = null
   } else if (beat.away !== undefined) {
     const from = hand.at
     for (let i = 1; i <= frames; i++) {
@@ -594,10 +629,11 @@ const paint = (page, hand) =>
   hand.at === undefined
     ? page.evaluate(() => window.__reel.drop())
     : page.evaluate(
-        (x, y, down) => window.__reel.cursor(x, y, down),
+        (x, y, down, ripple) => window.__reel.cursor(x, y, down, ripple),
         hand.at.x,
         hand.at.y,
         hand.down === true,
+        hand.ripple ?? null,
       )
 
 async function record(browser, slide, take, tmpDir) {

@@ -234,9 +234,9 @@ const ROLL = [
   { away: 0.4 },
 ]
 
-// The seven rows of the ring loop, in the order the mechanism runs, and then
-// the three that turn its trails from a grey smear into colour. The wide and
-// portrait takes share them; portrait scrolls to the map first.
+// The receiver's chroma gain, the seven rows of the ring loop in the order
+// the mechanism runs, and the tube's saturation and bloom to finish. The wide
+// and portrait takes share them; portrait scrolls to the map first.
 //
 // **The finish used to be the ring modulator, and it was the wrong place to
 // stop.** Colin on the take: "it just stops too soon, and the result is also a
@@ -249,7 +249,23 @@ const ROLL = [
 // bloom wound up behind it are what make them electric and set the highlights
 // glowing, on the same red chair.
 const RING_LOOP = [
-  { moveTo: { stage: 'mixer' }, secs: 0.3 },
+  // Chroma gain first, so the photograph is saturated before the loop opens
+  // and everything the loop does is done to a coloured picture. Screened
+  // against the decoder rows coming last (`v-build4`, `v-build5`): the loop
+  // raised on a stock photograph is grey trails for eight seconds before any
+  // colour arrives, and the same rows in this order are colour from the first
+  // drag with the same finale.
+  { moveTo: { stage: 'RECEIVER' }, secs: 0.3 },
+  { press: 0.4, on: 'RECEIVER' },
+  { scrollTo: { section: 'Decoder' }, secs: 0.3 },
+  { moveTo: { section: 'Decoder' }, secs: 0.2 },
+  { press: 0.35, on: 'Decoder' },
+  { scrollTo: { slider: 'chroma gain' }, secs: 0.25 },
+  { moveTo: { slider: 'chroma gain' }, secs: 0.2 },
+  { drag: { slider: 'chroma gain', to: 0.1875 }, secs: 0.5 },
+  { hold: 0.3 },
+  { scrollTo: { stage: 'RECEIVER' }, secs: 0.3 },
+  { moveTo: { stage: 'mixer' }, secs: 0.25 },
   { press: 0.4, on: 'mixer' },
   { scrollTo: { slider: 'frame sync' }, secs: 0.3 },
   { moveTo: { slider: 'frame sync' }, secs: 0.2 },
@@ -258,9 +274,9 @@ const RING_LOOP = [
   { moveTo: { slider: 'loop mix' }, secs: 0.2 },
   { drag: { slider: 'loop mix', to: 0.92 }, secs: 0.7 },
   { moveTo: { slider: 'loop gain' }, secs: 0.2 },
-  { drag: { slider: 'loop gain', to: 0.653 }, secs: 0.45 },
+  { drag: { slider: 'loop gain', to: 0.653 }, secs: 0.4 },
   { moveTo: { slider: 'loop delay' }, secs: 0.2 },
-  { drag: { slider: 'loop delay', to: 0.0175 }, secs: 0.45 },
+  { drag: { slider: 'loop delay', to: 0.0175 }, secs: 0.4 },
   { scrollTo: { slider: 'loop key' }, secs: 0.25 },
   { moveTo: { slider: 'loop key' }, secs: 0.2 },
   { drag: { slider: 'loop key', to: 1 }, secs: 0.6 },
@@ -271,18 +287,8 @@ const RING_LOOP = [
   { drag: { slider: 'loop ring mod', to: 1 }, secs: 0.7 },
   // The loop has to lap a few times before the trails have grown out of the
   // fur, and the rest of the build is done on top of them.
-  { hold: 1.4 },
+  { hold: 1.0 },
   { scrollTo: { stage: 'mixer' }, secs: 0.3 },
-  { moveTo: { stage: 'RECEIVER' }, secs: 0.25 },
-  { press: 0.4, on: 'RECEIVER' },
-  { scrollTo: { section: 'Decoder' }, secs: 0.3 },
-  { moveTo: { section: 'Decoder' }, secs: 0.2 },
-  { press: 0.35, on: 'Decoder' },
-  { scrollTo: { slider: 'chroma gain' }, secs: 0.25 },
-  { moveTo: { slider: 'chroma gain' }, secs: 0.2 },
-  { drag: { slider: 'chroma gain', to: 0.1875 }, secs: 0.5 },
-  { hold: 0.4 },
-  { scrollTo: { stage: 'RECEIVER' }, secs: 0.3 },
   { moveTo: { stage: 'camera' }, secs: 0.25 },
   { press: 0.4, on: 'camera' },
   { scrollTo: { section: 'Tube face' }, secs: 0.3 },
@@ -486,8 +492,8 @@ export const slides = [
     file: 'build',
     name: 'From clean',
     caption:
-      'A photograph on stock controls, and ten rows raised by hand. The mixer loop’s return is synced and the loop opened, its gain eased under unity and its delay stretched so each lap comes back a little further round the hue wheel; then it is keyed on the live picture and multiplied against it, a ring modulator with one input on the machine’s own past, and trails grow out of the subject’s edges. They are grey until the receiver’s chroma gain goes up and the tube’s saturation and bloom go up behind it, and then they are electric.',
-    alt: 'A run through the app starting on a clean photograph of a cat on a red chair: the mixer loop opened row by row — frame sync, loop mix, loop gain, loop delay, loop key, key input on program, loop ring mod — until grey trails grow out of the fur, then the receiver’s chroma gain and the tube’s beam saturation and screen bloom dragged up until the trails are saturated rainbow and the highlights glow, while the red chair stays photographic',
+      'A photograph on stock controls, and ten rows raised by hand. The receiver’s chroma gain goes up first, so the colour is already loud. Then the mixer loop: its return synced and the loop opened, its gain eased under unity and its delay stretched so each lap comes back a little further round the hue wheel, then keyed on the live picture and multiplied against it, a ring modulator with one input on the machine’s own past. Trails grow out of the subject’s edges in colours nothing in the room is, and the tube’s saturation and bloom make them glow.',
+    alt: 'A run through the app starting on a clean photograph of a cat on a red chair: the receiver’s chroma gain dragged up until the colours are loud, then the mixer loop opened row by row — frame sync, loop mix, loop gain, loop delay, loop key, key input on program, loop ring mod — until rainbow trails grow out of the fur, then the tube’s beam saturation and screen bloom dragged up until the trails are electric and the highlights glow, while the red chair stays photographic',
     // The bundled photograph, and a hand-built ring loop that goes on to be
     // coloured. This slide used to open the camera loop and then the mixer
     // loop on colour bars and finish on a soft field of flowing rainbow, and
@@ -517,7 +523,7 @@ export const slides = [
     // every row after that scrolls to itself.
     narrowAct: [
       { hold: 0.3 },
-      { scrollTo: { stage: 'mixer' }, secs: 0.4 },
+      { scrollTo: { stage: 'RECEIVER' }, secs: 0.4 },
       ...RING_LOOP,
     ],
   },
