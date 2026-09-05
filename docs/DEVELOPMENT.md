@@ -913,24 +913,29 @@ crashing the run.
 ## Screening candidate looks
 
 ```
-node scripts/contact.mjs candidates.mjs [outDir] [url] [--missing|--only=a,b]
+node scripts/contact.mjs candidates.mjs [outDir] [url] [--browser=chrome|firefox] [--missing|--only=a,b]
 ```
 
 Renders a batch of `?set=` patches through one browser, scores each (spread,
-brightness, saturation, per-frame motion, and whether the loop has collapsed by
-frame 800), and writes a contact sheet — `index.html` with a link per tile back
-to the live patch, plus paged PNGs. Authoring a preset is a search rather than a
-derivation, and this is what makes the search cheap enough to actually run: a
-round of twenty guesses costs one command instead of twenty.
+brightness, saturation, per-frame motion in luma and in colour, and whether the
+loop has collapsed by frame 800), and writes a contact sheet — `index.html` with
+a link per tile back to the live patch, plus paged PNGs. Authoring a preset is a
+search rather than a derivation, and this is what makes the search cheap enough
+to actually run: a round of twenty guesses costs one command instead of twenty.
 
 Results accumulate in `results.json`, so `--only=spiral core` re-renders one
 retuned candidate and the sheet keeps everyone else. The candidates module
 default-exports
-`{ src, srcb, frames, settle, late, items: [{ name, blurb, set, mod }] }`;
+`{ src, srcb, frames, settle, late, items: [{ name, blurb, set, mod, caption }] }`;
 anything at the top level is a default each item may override. `mod` takes the
 same `target:source:rateHz:depth` string the app's `?mod=` reads — a shipped
 preset may name routings as well as controls, and screening it without them
-judges a different look than the one the chip loads.
+judges a different look than the one the chip loads. `caption` puts words on
+line 21, which a chyron or caption look has nothing to show without. The browser
+defaults to Chrome on macOS and Firefox Nightly on Linux; the scorer steps and
+reads the canvas in one task because Chrome drops a presented WebGPU canvas's
+contents once the task that drew it ends, and it measures colour motion beside
+luma motion because a tint sweep is invisible to the latter.
 
 **It cannot screen an effect that runs on the wall clock.** The harness steps
 frames, and `signal/strobe.ts` and `signal/stab.ts` deliberately read

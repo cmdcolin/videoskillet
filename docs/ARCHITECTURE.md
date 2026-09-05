@@ -173,14 +173,14 @@ fault through `timing[]` will spin hue that should have stayed put.
   `[VIR_HUE]` and `[VIR_GAIN]`, past the sag region, the VIR corrector's two
   integrators — `vir` writes them, `decode` adds them to the demodulator's
   reference and to its chroma gain; `[TIP_LEVEL]`, `[BLACK_SHIFT]` and
-  `[GATE_WIDE]` after them, the sync separator's peak-detector reference, the
-  DC restorer's offset from nominal black, and whether the separator's gate is
-  open to the whole line — `sync` updates them, `sync_measure` slices against
-  the first and hunts as far as the third says, `decode` subtracts the second
-  (see ADR 0009). Indices 525–532, the two VIR slots and those three are
-  persistent across frames; treat them as state. A zeroed `VIR_GAIN` means the
-  servo has never run, which is what lets `resetSignal` clear the whole buffer
-  and still hand the loop a sane start.
+  `[GATE_WIDE]` after them, the sync separator's peak-detector reference, the DC
+  restorer's offset from nominal black, and whether the separator's gate is open
+  to the whole line — `sync` updates them, `sync_measure` slices against the
+  first and hunts as far as the third says, `decode` subtracts the second (see
+  ADR 0009). Indices 525–532, the two VIR slots and those three are persistent
+  across frames; treat them as state. A zeroed `VIR_GAIN` means the servo has
+  never run, which is what lets `resetSignal` clear the whole buffer and still
+  hand the loop a sane start.
 - **`lineParamsBuf`** — one `vec4f` per line from `LineState`:
   `(tbOffsetSamples, underBasePhase, underJitterPhase, seed)`. All four slots
   are taken; a new per-line CPU quantity needs its own buffer.

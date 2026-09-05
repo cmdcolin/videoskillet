@@ -9,7 +9,7 @@
 // walls out to white, a look that never leaves black, a patch whose picture is
 // identical to stock) are rejected without anyone squinting at them.
 //
-// Usage: node scripts/contact.mjs <candidates.mjs> [outDir] [baseUrl]
+// Usage: node scripts/contact.mjs <candidates.mjs> [outDir] [baseUrl] [--browser=chrome|firefox]
 //
 // The candidates module default-exports:
 //   { src, srcb, frames, warm, settle, items: [{ name, blurb, set, ... }] }
@@ -17,16 +17,25 @@
 
 import puppeteer from 'puppeteer-core'
 
-import { FIREFOX } from './browser.mjs'
+import { CHROME, FIREFOX } from './browser.mjs'
 
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
+import { platform } from 'node:process'
 import { pathToFileURL } from 'node:url'
 
-const [specPath, outArg, baseArg] = process.argv.slice(2)
+const [specPath, outArg, baseArg] = process.argv
+  .slice(2)
+  .filter(a => !a.startsWith('--'))
+// Which browser renders the batch. Chrome is the one that has WebGPU on macOS
+// without a Nightly; on Linux Nightly is the one that has it at all
+// (CLAUDE.md § Testing WebGPU).
+const engine =
+  process.argv.find(a => a.startsWith('--browser='))?.slice(10) ??
+  (platform === 'darwin' ? 'chrome' : 'firefox')
 if (specPath === undefined) {
   console.error(
-    'usage: node scripts/contact.mjs <candidates.mjs> [outDir] [url]',
+    'usage: node scripts/contact.mjs <candidates.mjs> [outDir] [url] [--browser=chrome|firefox]',
   )
   process.exit(1)
 }
@@ -66,6 +75,8 @@ const patchUrl = item => {
   if (item.srcb !== 'none') q.set('srcb', item.srcb)
   q.set('set', item.set)
   if (item.mod) q.set('mod', item.mod)
+  if (item.caption) q.set('caption', item.caption)
+  if (item.preset) q.set('preset', item.preset)
   return `${base}?${q.toString()}`
 }
 
@@ -73,16 +84,24 @@ const patchUrl = item => {
 // transport serializes each `evaluate` separately, so the scorer is installed
 // once per page rather than shipped with every checkpoint.
 const INSTALL_SCORER = (sw, sh) => `(() => {
-  window.__cs = { prev: null }
+  window.__cs = { prev: null, prevSat: null }
   window.__csScore = () => {
     const cv = document.querySelector('canvas')
     if (!cv) return { dead: true }
+    // Draw the frame this call reads, in this same task. Chrome hands a
+    // WebGPU canvas's contents to the compositor when the task that drew them
+    // ends, and drawImage after that sees transparent black — half the
+    // checkpoints came back as an all-black frame and every motion figure was
+    // the difference against one. Firefox keeps the presented image readable,
+    // so there this is one extra frame and nothing else.
+    window.vf?.step()
     const oc = new OffscreenCanvas(${sw}, ${sh})
     const g = oc.getContext('2d')
     g.drawImage(cv, 0, 0, ${sw}, ${sh})
     const d = g.getImageData(0, 0, ${sw}, ${sh}).data
     const n = ${sw} * ${sh}
     const luma = new Float32Array(n)
+    const spread = new Float32Array(n)
     let sum = 0, sat = 0, black = 0, white = 0
     for (let i = 0; i < n; i++) {
       const r = d[i * 4], gg = d[i * 4 + 1], b = d[i * 4 + 2]
@@ -92,7 +111,8 @@ const INSTALL_SCORER = (sw, sh) => `(() => {
       // Distance from grey, as a stand-in for saturation that costs no HSV
       // conversion: a monochrome look and a lurid one are the thing being told
       // apart, and the max-min spread does that fine.
-      sat += Math.max(r, gg, b) - Math.min(r, gg, b)
+      spread[i] = Math.max(r, gg, b) - Math.min(r, gg, b)
+      sat += spread[i]
       if (y < 6) black++
       if (y > 248) white++
     }
@@ -100,13 +120,21 @@ const INSTALL_SCORER = (sw, sh) => `(() => {
     let varc = 0
     for (let i = 0; i < n; i++) varc += (luma[i] - mean) ** 2
     // Mean absolute frame-to-frame change, so a frozen picture is separable
-    // from one that is merely calm.
+    // from one that is merely calm. Measured on the colour spread as well as
+    // on luma: a tint sweep or a hue shear moves nothing the luma delta can
+    // see, and every colour-only look in round 3 scored as still until it did.
     let delta = 0
+    let cdelta = 0
     if (window.__cs.prev !== null) {
-      for (let i = 0; i < n; i++) delta += Math.abs(luma[i] - window.__cs.prev[i])
+      for (let i = 0; i < n; i++) {
+        delta += Math.abs(luma[i] - window.__cs.prev[i])
+        cdelta += Math.abs(spread[i] - window.__cs.prevSat[i])
+      }
       delta /= n
+      cdelta /= n
     }
     window.__cs.prev = luma
+    window.__cs.prevSat = spread
     return {
       mean,
       sd: Math.sqrt(varc / n),
@@ -114,6 +142,7 @@ const INSTALL_SCORER = (sw, sh) => `(() => {
       black: black / n,
       white: white / n,
       delta,
+      cdelta,
     }
   }
 })()`
@@ -185,12 +214,12 @@ function verdicts(m) {
   if (m.shot.sd < 6) out.push('flat')
   if (m.shot.white > 0.5 || m.late.white > 0.6) out.push('blown')
   if (m.shot.mean < 8) out.push('dark')
-  if (m.motion < 0.4) out.push('still')
+  if (m.motion < 0.4 && m.colourMotion < 0.4) out.push('still')
   // Structure at the grab frame that is gone by the late one: the loop found a
   // wall. Judged on spread rather than brightness, so a collapse to flat black
   // and one to flat white both land here.
   if (m.shot.sd > 12 && m.late.sd < m.shot.sd * 0.35) out.push('collapses')
-  if (m.develops < 1.5) out.push('static-from-start')
+  if (m.develops < 1.5 && m.colourDevelops < 1.5) out.push('static-from-start')
   return out
 }
 
@@ -224,20 +253,34 @@ const items = spec.items.map(it => ({
   items: undefined,
 }))
 
+// Stepping a thousand frames of a heavy patch outruns the default timeout.
 const launch = () =>
-  puppeteer.launch({
-    browser: 'firefox',
-    executablePath: FIREFOX,
-    headless: false,
-    // Stepping a thousand frames of a heavy patch outruns the default.
-    protocolTimeout: 600_000,
-    extraPrefsFirefox: {
-      'dom.webgpu.enabled': true,
-      'gfx.webgpu.ignore-blocklist': true,
-      'media.navigator.streams.fake': true,
-      'media.navigator.permission.disabled': true,
-    },
-  })
+  engine === 'chrome'
+    ? puppeteer.launch({
+        browser: 'chrome',
+        executablePath: CHROME,
+        headless: false,
+        protocolTimeout: 600_000,
+        args: [
+          '--enable-unsafe-webgpu',
+          '--use-mock-keychain',
+          '--no-first-run',
+          '--use-fake-device-for-media-stream',
+          '--use-fake-ui-for-media-stream',
+        ],
+      })
+    : puppeteer.launch({
+        browser: 'firefox',
+        executablePath: FIREFOX,
+        headless: false,
+        protocolTimeout: 600_000,
+        extraPrefsFirefox: {
+          'dom.webgpu.enabled': true,
+          'gfx.webgpu.ignore-blocklist': true,
+          'media.navigator.streams.fake': true,
+          'media.navigator.permission.disabled': true,
+        },
+      })
 
 // One browser does not survive a long batch: after a handful of WebGPU sessions
 // Firefox detaches the frame mid-run and every later page dies with "Target
@@ -322,8 +365,8 @@ for (const item of todo) {
     const warm = await page.evaluate(() => window.__csScore())
     await step(page, item.frames - item.warm)
     const shot = await page.evaluate(() => window.__csScore())
-    // One more frame, alone: the difference against the grab frame is motion.
-    await step(page, 1)
+    // The scorer steps one frame before it reads, so scoring again is the
+    // next frame alone: the difference against the grab frame is motion.
     const next = await page.evaluate(() => window.__csScore())
 
     // Hide the overlay buttons sitting on top of the canvas before the grab.
@@ -349,10 +392,12 @@ for (const item of todo) {
       shot,
       late,
       motion: next.delta,
+      colourMotion: next.cdelta,
       // How much the picture moved between the early checkpoint and the grab:
       // a loop that is identical at 140 and 420 frames is a still image with
       // extra steps.
       develops: shot.delta,
+      colourDevelops: shot.cdelta,
     }
     // The reference is exempt: it is a clean render, so "still" and "not
     // developing" are what it is for, not faults it has.
@@ -360,7 +405,7 @@ for (const item of todo) {
       item.name === (spec.reference ?? 'ref clean') ? [] : verdicts(m)
     results.push({ item, file, url, m, flags, error })
     console.log(
-      `${item.name.padEnd(22)} sd=${shot.sd.toFixed(1)} mean=${shot.mean.toFixed(0)} sat=${shot.sat.toFixed(0)} motion=${m.motion.toFixed(1)} ${flags.join(',') || 'ok'}`,
+      `${item.name.padEnd(22)} sd=${shot.sd.toFixed(1)} mean=${shot.mean.toFixed(0)} sat=${shot.sat.toFixed(0)} motion=${m.motion.toFixed(1)} colour=${m.colourMotion.toFixed(1)} ${flags.join(',') || 'ok'}`,
     )
   } catch (err) {
     console.log(`${item.name.padEnd(22)} FAILED ${String(err).slice(0, 120)}`)
@@ -400,11 +445,11 @@ results.sort(
 const refItem = spec.reference ?? 'ref clean'
 const ref = results.find(r => r.item.name === refItem && r.file !== null)
 
-const shooter = await puppeteer.launch({
-  browser: 'firefox',
-  executablePath: FIREFOX,
-  headless: true,
-})
+const shooter = await puppeteer.launch(
+  engine === 'chrome'
+    ? { browser: 'chrome', executablePath: CHROME, headless: true }
+    : { browser: 'firefox', executablePath: FIREFOX, headless: true },
+)
 const sp = await shooter.newPage()
 await sp.setViewport({ width: 1600, height: 1200 })
 

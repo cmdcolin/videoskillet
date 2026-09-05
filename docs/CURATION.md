@@ -541,3 +541,26 @@ The list of presets allowed to run a bare cable is now explicit in
 `presets.test.ts`, split into the ones that tear on purpose and the ones
 measured to hold without it, so a change to any of them has to be re-measured
 rather than inheriting a verdict about a patch it is no longer.
+
+## Round three: the controls nobody had used
+
+Counting control names across the table found seventy-five that appeared in no
+preset: the whole chyron and caption family, the PiP inset, every per-feed cable
+fault, tint, the hard polarity flip, Y/C delay, adjacent-channel leak, the
+raster underscan. `scripts/candidates.round3.mjs` screened one candidate per
+family and retuned a dozen; fourteen shipped, under a new `Switcher` group for
+the four that are about a box at the switcher rather than the mixer.
+
+Three things the round established about the harness itself. The scorer was
+blind to hue — a tint walked round the whole wheel scored `still` — so it now
+carries a colour-motion term beside the luma one. Under Chrome it read a black
+canvas at half its checkpoints until it stepped and read in one task. And a
+preset that turns on the caption decoder or the chyron does nothing on a bare
+board, because the caption is blank until somebody types: those chips now seed
+the teletype default when the caption is empty, and a `?preset=` link naming one
+does the same at boot.
+
+One retirement: `dirtyDissolve` was `dirtyMix` with A pulled halfway down, and
+`cleanDissolve` already owns the dissolve. `pictureSearch` stays despite the
+0.076 distance from `vhs` — the distance under-weights `shuttleX`'s range, and
+cueing at 5x is a different mechanism, not a retune.

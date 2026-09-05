@@ -34,47 +34,46 @@ over a few frames. `sync_measure` slices at `min(tip / 2, -20)`. On any line
 whose picture stays above blanking the reference is the nominal tip and the
 slice is the -20 IRE it always was, so every such look is unchanged, noise
 included — the peak is read inside active video precisely so that noise on the
-tips cannot drag it. A waveform whose picture reaches below blanking — a
-negated line, where the old peak whites are now the bottom of everything —
-pulls the slice down into the picture.
+tips cannot drag it. A waveform whose picture reaches below blanking — a negated
+line, where the old peak whites are now the bottom of everything — pulls the
+slice down into the picture.
 
-A first cut read the peak off the tips the slicer had gated. On the negated
-line that found the picture's left edge, measured a shallow "tip" just inside
-it, and never descended to the whites; the frame stayed dark. The detector has
-to charge to the deepest thing on the line whether or not the slicer fired
-there.
+A first cut read the peak off the tips the slicer had gated. On the negated line
+that found the picture's left edge, measured a shallow "tip" just inside it, and
+never descended to the whites; the frame stayed dark. The detector has to charge
+to the deepest thing on the line whether or not the slicer fired there.
 
 **The gate opens when lock is lost.** The separator hunts the narrow window
 round the expected line start while it is locked, and the whole line once the
 pulses have gone: `timing[GATE_WIDE]` counts frames on which fewer than a
 seventh of the picture lines produced an edge, the gate opens after twelve of
 them, and it closes again only when more than half the lines have an edge back
-near nominal. The count is what keeps a hum trough or an AGC dip from opening
-it — on the split-phase look the fraction found swings between 0.15 and 1.0
-with the bar, and a gate that opened on any one bad frame flapped and dragged
-the restorer with it. On a negated line the gate is what lets the separator
-find its "sync" in the picture, so the flywheel follows the bright content and
-the raster tears around it rather than walking randomly.
+near nominal. The count is what keeps a hum trough or an AGC dip from opening it
+— on the split-phase look the fraction found swings between 0.15 and 1.0 with
+the bar, and a gate that opened on any one bad frame flapped and dragged the
+restorer with it. On a negated line the gate is what lets the separator find its
+"sync" in the picture, so the flywheel follows the bright content and the raster
+tears around it rather than walking randomly.
 
 **Black is where the restorer puts it.** `decode` subtracts
 `timing[BLACK_SHIFT]` from `IRE_BLACK`. While the gate is closed black is
 nominal: the model's blanking is the level a keyed clamp would find, and every
-look tuned against a fixed black stays exactly as it was. With the gate open
-the coupling floats — slewed over about eight frames — until the picture's mean
-level sits at mid-grey, which is what an AC-coupled stage does
-with no clamp. The negated line lands in that second state, and comes out as a
-negative around a black level taken from its own average.
+look tuned against a fixed black stays exactly as it was. With the gate open the
+coupling floats — slewed over about eight frames — until the picture's mean
+level sits at mid-grey, which is what an AC-coupled stage does with no clamp.
+The negated line lands in that second state, and comes out as a negative around
+a black level taken from its own average.
 
 ## The trap this was steered round
 
 A back-porch clamp done properly, per line, cancels every additive hum bar in
-the library at line rate: `humAmp`, both feed ground loops, the split-phase look.
-And a clamp keyed to the measured porch, even averaged over a frame, moves black
-on every dirty sum, because B's picture lands on A's porch — the first cut
-darkened the split-phase look by a third and would have shifted the landing
-look itself. Real sets showed hum bars because their clamps were slow and
-imperfect; this one holds nominal black outright while it is keyed, which is
-the limit of slow, and floats only when there is nothing to key it. Measured on
+the library at line rate: `humAmp`, both feed ground loops, the split-phase
+look. And a clamp keyed to the measured porch, even averaged over a frame, moves
+black on every dirty sum, because B's picture lands on A's porch — the first cut
+darkened the split-phase look by a third and would have shifted the landing look
+itself. Real sets showed hum bars because their clamps were slow and imperfect;
+this one holds nominal black outright while it is keyed, which is the limit of
+slow, and floats only when there is nothing to key it. Measured on
 `deadChannel`, `dimmerHash`, a bare 60 IRE hum and the split-phase preset before
 and after.
 
@@ -90,8 +89,8 @@ of blanking the picture sits on, so the slice stays at -20.
 
 - `syncMeasureBuf` is two `vec4f` per line, interleaved. `timingBuf` grew by
   three floats. The gpuprof mirror and `looplock.ts` follow.
-- Anything that leaves the receiver with no pulses at all now decodes around
-  the floating reference rather than nominal black, and its open gate catches
+- Anything that leaves the receiver with no pulses at all now decodes around the
+  floating reference rather than nominal black, and its open gate catches
   whatever falling edges the line does have. Three shipped looks moved with
   that, each by the mechanism rather than by accident: `ssavi` (tips suppressed,
   video inverted) now tears round the inverted whites and floats brighter;

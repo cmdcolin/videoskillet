@@ -1064,13 +1064,32 @@ process — is unmeasured, and it is the half that stays put however the other
 half moves. A `performance` measure around the flush and one `buzzsound` run
 would settle whether the rest is worth chasing.
 
-## In flight — preset screening, round 2
+## Preset screening — rounds 2 and 3
 
-Ten retuned candidates sit schema-checked in `scripts/candidates.example.mjs`;
-`scripts/contact.mjs` (documented in `DEVELOPMENT.md`) renders them into a
-linked contact sheet. Needs a quiet machine — each candidate is ~800 stepped
-frames, and on a loaded box candidates trip the protocol timeout. Nothing
-depends on it; the shipped presets stand alone.
+Round 2's ten retuned candidates sit schema-checked in
+`scripts/candidates.example.mjs`. Round 3 (`scripts/candidates.round3.mjs`) went
+after the seventy-five controls no preset touched and shipped fourteen looks out
+of thirty-three candidates, with what it learned in that file's header.
+`scripts/contact.mjs` renders either into a linked contact sheet, in Chrome by
+default on macOS and Firefox Nightly on Linux; its scorer now steps and reads
+the canvas in one task (Chrome drops a presented WebGPU canvas otherwise) and
+measures colour motion beside luma motion, since a tint sweep scored as a still
+frame until it did.
+
+What round 3 left open:
+
+- ~~**The hard polarity flip renders near black.**~~ Fixed by giving the
+  receiver a peak-referenced sync slicer, a gate that opens when lock is lost
+  and a slow DC restorer — ADR 0009 has the reasoning and the hum-bar trap it
+  was steered round. `signalAndGroundSwapped` in Cross-wired is the look.
+- **A camera loop aimed off-centre dims away** even at a round trip of 1.1 with
+  the zoom under 1. The off-axis shift carries most of the picture out of frame
+  each lap, so the gain has nothing to compound. Two tunings tried; neither held
+  a picture.
+- **Two hero frames for the guide.** The rolling underscan and the split-phase
+  sum are stronger pictures than most of what the guide embeds, and both are one
+  `?preset=` from reproducible. `docshot-specs.mjs` takes a `look()` line each;
+  the shots themselves need the Firefox docshots run.
 
 ## Not worth building
 
