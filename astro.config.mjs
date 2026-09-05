@@ -76,6 +76,12 @@ export default defineConfig({
   // and is the wrong one: it renders a directory's index as `guide.html`
   // beside the directory rather than `guide/index.html` inside it.
   build: { format: 'preserve' },
+  // Astro's HTML minifier strips whitespace-only text nodes between elements,
+  // so `Built by\n<a>cmdcolin</a>.` renders as "Built bycmdcolin." and the
+  // markup needs `{' '}` spacers to read as a sentence. Off, the browser
+  // collapses the newline to the one space that was written; the bytes it
+  // costs are nothing against a handful of static pages.
+  compressHTML: false,
   integrations: [figures()],
   markdown: {
     // `build-guide.mjs` emitted plain <pre>, styled by the guide's own palette.
