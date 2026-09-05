@@ -150,7 +150,7 @@ video cables together and posting tumblr gifs.
   https://videoskillet.com/app/?p=je.CoDoBwEEAbAEAKwCAfABAKCZAgXgAw2IIwSIAyFYBrAKEjwGmAEEuB4ZVADsBgr4OiSMCQDEAQDgAgAkAUQEBAAQA9wCAMXBAgCJngIAlf4DAI3tAw&mod=bendUs:lorenz:0.390279:0.27759,hvRing:sine:0.037599:0.090209&srcb=synth&src=sweep
 
 - Fuzzy color bars feedback+dissolver
-  https://videoskillet.com/app/?p=qQ.BrAEAMgCAKAGPahOAdACAJADAZwCAHolpAIAoB8AegA6ACgAqCAALABgAEQAEACYARDQAgDUAhsEA0oQsAEIBA&mod=&srcb=vhs+static
+  https://videoskillet.com/app/?p=tQ.BrAEAMgCAKAGPahOAdACAJADAXgAeiWkAgCgHwB6ADoAKACoIAAsAGAARAAQAJgBENACANQCGwQDShCwAQgE&mod=&srcb=vhs+static
 
 - Dark camera feedback
   https://videoskillet.com/app/?p=CU.CqCsBQEEAcwDAHABXAC8aQLoAgLMBQCsAgOceQR0GPwBCzgAGADYAQAIAjgAuAIImAIAUALIAQCAAQAkArACAXgAFAJ4ADAGXABcApADAKAhAIgBCKwCAOQBAJgRApACAAAAAADwCAdIALAJAAAABAlUJOYDAKgBBcgBAQQ&mod=tapeLoopMm:smooth:0.05:0.0151&srcb=tv+static&src=tv+static
