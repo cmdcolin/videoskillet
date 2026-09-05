@@ -2,6 +2,11 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [0.38.6](https://github.com/cmdcolin/videoskillet/compare/v0.38.5...v0.38.6) - 2026-09-05
+
+### Features
+- *(ui)* [`c2c30a2`](https://github.com/cmdcolin/videoskillet/commit/c2c30a27eb6e75c8e90c9b3ff00423228d80fc4f) clicks ripple red in the reel, and the build is coloured from its first drag
+
 ## [0.38.5](https://github.com/cmdcolin/videoskillet/compare/v0.38.4...v0.38.5) - 2026-09-05
 
 ### Features
