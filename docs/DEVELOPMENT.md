@@ -1075,13 +1075,14 @@ Chrome, with both windows in one frame:
 
 ```
 pnpm agentreel                        # the default palette task, into clips/
+pnpm agentreel --upload               # and send it where the docs point
 pnpm agentreel --model=opus           # a different model at the keys
 pnpm agentreel --task=/tmp/ask.txt    # a different sentence to carry out
 pnpm agentreel --keep                 # keep the terminal log and the raw grab
 ```
 
 It needs Xvfb, xterm, xdotool, ffmpeg, Chrome, and a logged-in `claude`. It
-costs real tokens — a run is about 45 seconds of session and a dollar or so, and
+costs real tokens — a run is a minute or two of session and a dollar or so, and
 the status line in the recording says how much.
 
 **Nothing in the timeline is scripted, and that is the point.** `appreel.mjs`
@@ -1090,7 +1091,19 @@ for a product reel; here the presses, their order and the model's own
 corrections mid-run are what the recording is evidence of. The script sets the
 stage, opens the shutter, and stops when the session lands.
 
-Four things it had to get right, each of which cost a wrong answer first:
+**The rows in the default task are the ones the reel already screened.** The
+first take typed `head switch 9` and `noise 12`, which are real edits and read
+on camera as almost nothing — a 9µs tear is a band at one edge of the frame and
+12 IRE of noise is grain. The screening behind the landing page's map walk had
+already answered this, off thirty-six rows tried one at a time on the same
+photograph: most of the panel reads as nothing alone, sync suppression,
+subcarrier detune and chroma gain read on their own and read better stacked, and
+HV sag and supply ring shear the result once it is already coming apart. Every
+pull lands on what the last one did, which is the only reason five edits in a
+minute read as an escalation rather than a list. Write a new task against that
+list rather than against the schema.
+
+Five things it had to get right, each of which cost a wrong answer first:
 
 - **A nested X display, not the desktop.** This box is GNOME on Wayland, where
   `x11grab` against `:0` grabs nothing: mutter composites outside X, so the root
@@ -1105,23 +1118,33 @@ Four things it had to get right, each of which cost a wrong answer first:
   `--mcp-config` both keep eating arguments until the next flag, so a prompt
   written after one of them is read as a tool name — the first take is four
   minutes of Claude Code sitting at an empty prompt.
-- **The end is the terminal going quiet, not the last click.** The dialog the
+- **The end is the terminal going quiet, not the last click.** The sheet the
   task ends on opens while the model is still writing what it says, which is the
   sentence worth recording. xterm logs every byte it draws, so a session that
   has stopped writing has stopped working.
+- **The stop condition asks by accessible name**, `[aria-label="board as text"]`
+  — the one handle on this app that is held still on purpose. Asked for as a
+  `<dialog>` it broke silently the week those sheets moved into the sidebar, and
+  a broken stop condition looks exactly like a model that never finished.
 
-The clip lands in gitignored `clips/`, the same place `docshots.mjs` leaves its
-recordings, and the poster — the last frame, since that is the one that makes
-the case — is committed to `docs/img/`. Upload the clip beside the guide's
-others:
+The clip lands in gitignored `clips/`, and with `--upload` at
+`https://myloveydove.com/videoskillet/agent-drive.mp4`, which is where the AI
+usage page points. Its own bucket rather than the one the guide's other clips
+are in: those are seconds of canvas and this is minutes of a whole window, and
+the size a good take costs is not a reason to record a worse one. The encode is
+set for how it looks rather than what it weighs — a couple of minutes at 1080p
+runs to 45MB.
 
-```
-aws s3 cp clips/agent-drive.mp4 s3://cmdcolinphotos/phosphene/ --profile colin
-```
+The poster is committed to `docs/img/`, taken three seconds before the board
+sheet opens. The last frame was tried first and is the wrong one: the sheet
+takes the sidebar, so the thumbnail a reader decides on is half a column of
+text, where three seconds earlier the picture is at its worst across the whole
+width with the transcript beside it.
 
-No GIF. This recording as one is 45MB against the mp4's five: 1920 pixels of
-live analog grain is the worst case a palette-indexed format has, and every crop
-small enough to fix it drops one of the two windows the recording is about.
+No GIF. This recording as one is 45MB against an mp4 of the same take at five:
+1920 pixels of live analog grain is the worst case a palette-indexed format has,
+and every crop small enough to fix it drops one of the two windows the recording
+is about.
 
 ## The landing page
 

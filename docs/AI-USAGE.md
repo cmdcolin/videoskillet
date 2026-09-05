@@ -13,11 +13,14 @@ the task, and stops when it lands:
 <video
   controls muted loop playsinline
   poster="img/agent-drive-poster.jpg"
-  src="https://cmdcolinphotos.s3.amazonaws.com/phosphene/agent-drive.mp4"></video>
+  src="https://myloveydove.com/videoskillet/agent-drive.mp4"></video>
 
-Every press in it comes from the model: it opens the palette, applies `vhs`,
-reads the row `head switch 9` lands on before committing it, sets the noise, and
-finishes by reading the whole board back. `DEVELOPMENT.md` §
+Every press in it comes from the model. It types five controls into the palette
+in turn — sync suppression, subcarrier detune, chroma gain, HV sag, supply ring
+— checking each row before committing it, and each one lands on what the last
+one did: a photograph scrambles into inverted bands, the hue barber-poles down
+the frame, the whole thing goes rainbow, and the geometry bends it into waves.
+Then it reads the board back. `DEVELOPMENT.md` §
 [Recording an agent driving the app](DEVELOPMENT.md#recording-an-agent-driving-the-app)
 is how to run it.
 

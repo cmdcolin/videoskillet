@@ -2,7 +2,7 @@
 // windows in frame.
 //
 // Usage: node scripts/agentreel.mjs [--base=URL] [--out=DIR] [--model=sonnet]
-//        [--task=FILE] [--seconds=N] [--display=:99] [--keep]
+//        [--task=FILE] [--seconds=N] [--display=:99] [--upload] [--keep]
 //   needs the dev server (pnpm dev), Xvfb, xterm, xdotool, ffmpeg, google-chrome,
 //   and a logged-in `claude` on PATH.
 //
@@ -74,6 +74,10 @@ const model = flag('model', 'sonnet')
 const display = flag('display', ':99')
 const capSecs = Number(flag('seconds', '240'))
 const keep = argv.includes('--keep')
+// Sending the clip where the docs point. Off by default: a recording is worth
+// looking at before it is published, and every take but the last one is a take
+// that was not good enough.
+const upload = argv.includes('--upload')
 
 // Pinned, not `@latest`: the tool list this server exposes is what the task
 // below is written against, and a server that grows or renames a tool mid-run
@@ -100,11 +104,11 @@ const FPS = 24
 // a compositor and a WebGPU app on the same box, so it is cheap and fat;
 // the file that ships is squeezed afterwards, off disk, with time to spare.
 const GRAB_CRF = 18
-// Read off four re-encodes of one grab: 30 is 13MB, 32 is 8.5, 34 is 5.7, and
-// the terminal's nine-pixel text is still clean at 34 — checked on a 1:1 crop,
-// since that text is what the recording is evidence of. Dropping to 15fps saved
-// a megabyte and cost the picture its motion, which is the other half.
-const FINAL_CRF = 34
+// The clip is hosted, not committed, so this is set for how it looks rather than
+// for what it weighs — 24 over the 34 it started at, which held the terminal's
+// nine-pixel text but left the picture's grain smeared, and grain is half of
+// what the app is. A minute at 1080p lands around 30MB.
+const FINAL_CRF = 24
 
 const sleep = ms => new Promise(r => setTimeout(r, ms))
 
@@ -115,15 +119,37 @@ const sleep = ms => new Promise(r => setTimeout(r, ms))
 // what the page claims an agent can use — and it ends on `board as text`, which
 // gives the recording a legible last beat and gives this script something
 // unambiguous to stop on.
-const TASK = `You are demonstrating videoskillet.js, a live NTSC signal-path simulator, in the Chrome window beside you. Work only in that browser; take your time and let each change render.
+//
+// **The rows are the ones the reel already screened, in the order it screened
+// them into.** The first take of this typed `head switch 9` and `noise 12`,
+// which are real edits and read on camera as almost nothing: a 9µs tear is a
+// band at one edge of the frame and 12 IRE of noise is grain. `reel.mjs` carries
+// the answer, off thirty-six rows tried one at a time on the same photograph —
+// most of the panel reads as nothing on its own, three rows read alone and read
+// *better* stacked, and two more shear the result once it is already coming
+// apart. Sync suppression scrambles the picture into inverted bands with a black
+// bar walking through it; subcarrier detune barber-poles the hue down the frame;
+// chroma gain makes the whole scrambled thing rainbow; HV sag and supply ring
+// then bend all of it into waves. Every pull lands on what the last one did,
+// which is the rule that made the reel work and is the only reason five edits in
+// a minute read as an escalation rather than a list.
+//
+// Values, not travel fractions, because the palette takes what a person would
+// type. They are the reel's own drags read back through `travel.ts`: its 0.811
+// on subcarrier detune is 7kHz, its 0.695 on HV sag is 16µs.
+const TASK = `You are demonstrating videoskillet.js, a live NTSC signal-path simulator, in the Chrome window beside you. Work only in that browser. After each step, take a screenshot and say in one line what changed in the picture.
 
-1. Look at the page.
-2. Open the command palette with ctrl+k and apply the "vhs" preset.
-3. Open the palette again and type "head switch 9" — read the row it lands on out loud in your reply before pressing Enter, then press Enter.
-4. Open the palette again and set "noise" to 12.
-5. Open the palette once more and run "board as text", then tell me what the board says.
+Each of these is typed into the command palette, which you open with ctrl+k. Type the whole line, check the row it lands on says what you meant, then press Enter.
 
-Keep your replies short.`
+1. sync suppression 1
+2. subcarrier detune 7
+3. chroma gain 3.5
+4. HV sag 16
+5. supply ring 0.84
+
+Then open the palette once more, run "board as text", and tell me what the board says.
+
+Keep every reply to a line or two.`
 
 const die = msg => {
   console.error(`agentreel: ${msg}`)
@@ -146,6 +172,12 @@ mkdirSync(outDir, { recursive: true })
 const mp4 = resolve(outDir, 'agent-drive.mp4')
 const poster = resolve(posterDir, 'agent-drive-poster.jpg')
 const grab = join(tmp, 'grab.mp4')
+// Where the clip is served from. Its own bucket rather than the one the guide's
+// other clips are in: those are seconds of canvas and this is minutes of a whole
+// window, and the size a good take costs is not a reason to make a worse one.
+const S3_PREFIX = 's3://myloveydove.com/videoskillet/'
+const CLIP_URL = 'https://myloveydove.com/videoskillet/agent-drive.mp4'
+const uploadCmd = ['aws', 's3', 'cp', mp4, S3_PREFIX, '--profile', 'colin']
 const termLog = join(tmp, 'terminal.log')
 
 const kids = []
@@ -261,6 +293,7 @@ spawnSync('npx', ['-y', MCP, '--help'], { stdio: 'ignore' })
 // --------------------------------------------------------------- the shutter
 
 console.log('agentreel: recording')
+const recStart = Date.now()
 const rec = spawnKid('ffmpeg', [
   '-y',
   '-v',
@@ -369,12 +402,23 @@ if (termId === undefined || termId === '') {
 // session that never gets there.
 const deadline = Date.now() + capSecs * 1000
 let landed = false
+let landedAt = 0
 while (Date.now() < deadline) {
   await sleep(2000)
   landed = await page
-    .evaluate(() => document.querySelector('dialog pre') !== null)
+    // By accessible name, which is the one handle on this app that is held
+    // still on purpose (`buttonNames.test.ts`, PanelSheet's `label`). Asked for
+    // as a `<dialog>` this broke silently the week the sheets moved into the
+    // sidebar, and a broken stop condition looks exactly like a model that never
+    // finished.
+    .evaluate(
+      () => document.querySelector('[aria-label="board as text"] pre') !== null,
+    )
     .catch(() => false)
-  if (landed) break
+  if (landed) {
+    landedAt = Date.now()
+    break
+  }
 }
 console.log(
   landed
@@ -429,22 +473,29 @@ spawnSync('ffmpeg', [
   mp4,
 ])
 
-// The poster, taken from the last frame rather than the first: the frame a
-// reader is shown before pressing play should be the one that makes the case —
-// the board dialog open beside the transcript that produced it. A first frame is
-// an app nobody has touched yet.
+// The poster: the frame just before the board sheet opens.
+//
+// Not the first frame, which is an app nobody has touched yet, and not the last
+// either — that one was tried, and the sheet takes the sidebar, so the thumbnail
+// a reader decides on is half a column of text. Three seconds earlier the
+// picture is at its worst across the whole width with the transcript beside it,
+// which is the frame that makes the case.
 //
 // No GIF. One was tried, and this recording as a GIF is 45MB against the mp4's
 // six: 1920 pixels of live analog grain is the worst case a palette-indexed
 // format has, and every crop small enough to fix it drops one of the two windows
 // the recording is about.
+const posterAt = Math.max(
+  1,
+  (landed ? landedAt - recStart : Date.now() - recStart) / 1000 - 3,
+).toFixed(1)
 mkdirSync(posterDir, { recursive: true })
 spawnSync('ffmpeg', [
   '-y',
   '-v',
   'error',
-  '-sseof',
-  '-2',
+  '-ss',
+  String(posterAt),
   '-i',
   mp4,
   '-frames:v',
@@ -456,10 +507,15 @@ spawnSync('ffmpeg', [
 
 cleanUp()
 if (!keep) rmSync(tmp, { recursive: true, force: true })
-console.log(`agentreel: ${mp4}`)
+console.log(`agentreel: ${mp4} (${(statSync(mp4).size / 1e6).toFixed(0)}MB)`)
 console.log(`agentreel: ${poster}`)
-console.log(
-  `agentreel: upload with aws s3 cp ${mp4} s3://cmdcolinphotos/phosphene/ --profile colin`,
-)
+if (upload) {
+  console.log('agentreel: uploading')
+  const up = spawnSync(uploadCmd[0], uploadCmd.slice(1), { stdio: 'inherit' })
+  if (up.status !== 0) die('the upload failed — the clip is still on disk')
+  console.log(`agentreel: ${CLIP_URL}`)
+} else {
+  console.log(`agentreel: upload with ${uploadCmd.join(' ')}`)
+}
 if (keep) console.log(`agentreel: kept ${tmp} (terminal log, chrome profile)`)
 if (!landed) process.exit(1)
