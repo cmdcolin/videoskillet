@@ -1,46 +1,92 @@
 # AI usage
 
-Most of this codebase was written by AI agents, and most of what an agent needs
-in order to work here safely sits in four files it will not find on its own.
-This page is the route in: what to read and in what order, how to drive the app
-as a check on your own change, and the mistakes that repeat.
+Agents wrote most of this codebase, and agents are one of the two hands it is
+built to be played by. Three jobs bring one here, and they want different halves
+of what follows: **operating the panel** from inside a browser, **driving the
+board by link**, and **changing the code**.
 
-Two jobs bring an agent here, and they want different halves of the docs.
-Driving the app — building a look, screenshotting one, scripting a sequence —
-needs the address-bar contract and nothing else. Changing the code needs the
-premise, the invariants and the harnesses.
+## Operating the panel from inside a browser
 
-## Read these, in this order
+An agent that can see a page and type into it — Claude in Chrome, or anything
+else browsing on a person's behalf — reaches this app the way a person does, at
+[videoskillet.com/app/](https://videoskillet.com/app/). The app needs WebGPU,
+which Chrome ships on desktop; an older Linux build may still want it switched
+on at `chrome://flags`.
 
-| file                                    | what it answers                                          |
-| --------------------------------------- | -------------------------------------------------------- |
-| [`CLAUDE.md`](../CLAUDE.md)             | the rules of this repo, short enough to read in full     |
-| [`ARCHITECTURE.md`](ARCHITECTURE.md)    | the premise, the pass graph, adding a control end to end |
-| [`adr/`](adr/)                          | the decisions where the obvious change is wrong          |
-| [`DEVELOPMENT.md`](DEVELOPMENT.md)      | every harness, and what each one cost to get right       |
-| [`public/llms.txt`](../public/llms.txt) | the address bar, which is the whole remote control       |
+**The command palette is the surface built for exactly this.** `ctrl+k` (`⌘k`)
+opens a dialog labelled `command palette` holding one text input, and the input
+takes a control's name and the value to set it to in one string:
 
-Two sections earn a read before you touch anything they cover:
-[what every browser harness here has learned the hard way](DEVELOPMENT.md#what-every-browser-harness-here-has-learned-the-hard-way),
-before driving a browser at the app, and
-[Measuring performance](DEVELOPMENT.md#measuring-performance), before believing
-a number that came off this box.
+```
+head switch 9      the head-switch tear, pulled to 9 µs
+noise 12           luma noise to 12 IRE
+synth mix ring     a mode switch, by a prefix of the option's name
+vhs                a preset by name, applied whole
+still              a verb — the palette indexes actions too
+```
 
-## Driving the app
+Enter commits. The reason the box takes a value at all is written in
+`src/ui/paletteQuery.ts`: **an agent cannot aim at a slider track**, and nudging
+0 to 9 IRE with an arrow key is thirty presses. Naming the control and the
+number is the one gesture that is faster from outside the app than from inside
+it.
 
-The address bar carries the whole board, both ways: navigating to a link puts
-that look on screen, and turning a knob writes the change back into the bar. So
-an agent sets controls by navigation and reads the result by reading the URL,
-which beats operating a few hundred knobs through a pointer.
+**Read the board back off the list, not off the picture.** Every palette row is
+a button carrying, as text, the kind, the name, the group and the control's
+current reading — and the row under the cursor shows `current → target` before
+Enter is pressed, so an agent can check what a press is about to do. Typing
+`head switch 9` puts this on the first row:
+
+```
+CONTROL | head switch | Timebase | 0.80us → 9.00us
+```
+
+The picture is a `<canvas>`: a screenshot says what the fault looks like and
+never what a control is set to.
+
+**Every button says what it does in words.** `src/ui/buttonNames.test.ts` fails
+the build on a button whose whole content is a glyph, because a screen reader
+and a browsing agent reach for the same thing — the accessible name. So clicking
+by name works across the panel, not only in the palette.
+
+Single keys are verbs while the palette is closed: `f` fullscreen, `c`
+hold-to-compare, `r` record, `s` still, `t` fire, `d` drift, `i` cue, `/`
+search, `ctrl+z` undo.
+
+Three things to know before trusting what comes back:
+
+- **A backgrounded or covered tab throttles rAF to about 1 Hz.** The app goes on
+  reporting `visible`, so a screenshot of a tab that was clicked away shows a
+  picture that is seconds stale rather than an error. Keep the tab in front.
+- **A value out of range clamps rather than failing**, the same as dragging past
+  the end of the track. `head switch 9000` lands on the ceiling and reports it.
+- **On Linux, Chrome logs texture-allocation errors that are ANGLE/Vulkan driver
+  artifacts.** They are noise, not a broken app.
+
+A worked sequence, all of it inside the browser: open the app, `ctrl+k`, type
+`vhs`, Enter. `ctrl+k` again, `head switch 9`, Enter. Take a screenshot, and the
+tear is there in the bars. The panel's preset chip now reads
+`modified from "vhs"`, and the address bar carries every control the preset
+moved with the edit folded in —
+`#set=demodMHz:0.5,lumaMHz:2.8,…,headSwitchShiftUs:9,…`. Handing that link back
+is how an agent reports what it built, and pasting it into another tab rebuilds
+it exactly.
+
+## Driving the board by link
+
+The address bar carries the board both ways: navigating to a link puts that look
+on screen, and turning a knob writes the change back into the bar. An agent that
+can navigate but cannot see the page still drives the whole instrument this way.
 
 [`public/llms.txt`](../public/llms.txt) is the contract — every parameter, with
 an example — and [`public/llms-full.txt`](../public/llms-full.txt) names every
 control key, its range and the fault it models. Both are published
-(`videoskillet.com/llms.txt`) and both are **generated** by `scripts/docgen.mjs`
-from `src/ui/controls.ts`; a hand edit to either one dies at the next
-`pnpm docgen`.
+(`videoskillet.com/llms.txt`), and both are **generated** by
+`scripts/docgen.mjs` from `src/ui/controls.ts`; a hand edit to either dies at
+the next `pnpm docgen`.
 
-One command takes a picture of a link:
+One command takes a picture of a link, for an agent working from a shell rather
+than a browser:
 
 ```
 node scripts/shot.mjs 'http://localhost:5199/app/#preset=vhs&set=headSwitchShiftUs:9' out.png 6000
@@ -57,16 +103,30 @@ Four ways a link looks like it worked and did not:
 - **A feedback look opens black without `#snow`.** The reader's frame store
   starts empty and a loop needs something to amplify; the burst heals off and
   leaves the board the rest of the link describes.
-- **An occluded window throttles rAF to about 1 Hz**, so a shot of a
-  backgrounded tab is a shot of a picture that never rendered. Step frames with
-  `window.vf.step()` from Node rather than waiting on wall clock.
+- **An occluded window throttles rAF**, so a shot of a backgrounded tab is a
+  shot of a picture that never rendered. Step frames with `window.vf.step()`
+  from Node rather than waiting on wall clock.
 
-On Linux, drive Firefox Nightly. Chrome's ANGLE/Vulkan backend reports
-texture-allocation errors that are driver artifacts and read as app bugs;
-`scripts/shot.mjs` already launches Firefox with the right prefs, so model a new
-harness on it.
+On Linux, drive Firefox Nightly from a harness. Chrome's driver artifacts are
+harmless in the browser and unreadable in a log; `scripts/shot.mjs` already
+launches Firefox with the right prefs, so model a new harness on it.
 
 ## Changing the code
+
+Read these, in this order:
+
+| file                                 | what it answers                                          |
+| ------------------------------------ | -------------------------------------------------------- |
+| [`CLAUDE.md`](../CLAUDE.md)          | the rules of this repo, short enough to read in full     |
+| [`ARCHITECTURE.md`](ARCHITECTURE.md) | the premise, the pass graph, adding a control end to end |
+| [`adr/`](adr/)                       | the decisions where the obvious change is wrong          |
+| [`DEVELOPMENT.md`](DEVELOPMENT.md)   | every harness, and what each one cost to get right       |
+
+Two sections earn a read before you touch anything they cover:
+[what every browser harness here has learned the hard way](DEVELOPMENT.md#what-every-browser-harness-here-has-learned-the-hard-way),
+before driving a browser at the app, and
+[Measuring performance](DEVELOPMENT.md#measuring-performance), before believing
+a number that came off this box.
 
 **Model the mechanism, not the artifact.** There is no "VHS filter" here: dot
 crawl, tearing and hue drift emerge from a simulated signal path, which is why
@@ -88,6 +148,11 @@ of devices instead and hands the live one on.
 [ADR 0004](adr/0004-never-destroy-a-presenting-device.md) has the runs. A freeze
 showing `frame 0` / `STEP-DEAD` / `clock +0ms` is that fault, not a bug in the
 signal path.
+
+**A control added to `src/ui/controls.ts` reaches every agent for free** — the
+palette indexes it by name and by its help prose, `#set=` takes its key, and
+`pnpm docgen` writes it into `llms-full.txt`. Nothing else needs teaching about
+it, which is the payoff for the schema being one table.
 
 Several files in the tree are generated, and an edit to one survives until the
 next build:
