@@ -60,6 +60,29 @@ interface UrlStateArgs extends SessionState {
 const linkFor = (query: string) =>
   `${location.origin}${location.pathname}${query ? `#${query}` : ''}`
 
+// The same link with the opening burst switched on or off (snow.ts): seconds to
+// arm it, null to strip it.
+//
+// It edits a finished link rather than going back through `writeSessionParams`,
+// because the burst is not part of the session — the writer has nothing to ask
+// about it, and every link the app builds is already assembled by the time the
+// share dialog offers the choice. Which makes this the one place that has to
+// know the params live after the `#`, alongside `linkFor` that put them there.
+export const withSnow = (url: string, seconds: number | null): string => {
+  const cut = url.indexOf('#')
+  const base = cut === -1 ? url : url.slice(0, cut)
+  const q = new URLSearchParams(cut === -1 ? '' : url.slice(cut + 1))
+  if (seconds === null) q.delete('snow')
+  else q.set('snow', String(seconds))
+  const query = queryString(q)
+  return `${base}${query ? `#${query}` : ''}`
+}
+
+export const hasSnow = (url: string): boolean => {
+  const cut = url.indexOf('#')
+  return cut !== -1 && new URLSearchParams(url.slice(cut + 1)).has('snow')
+}
+
 // Mirrors the live look into the query string so a reload or shared link
 // restores it, and hands back a copy-to-clipboard action — plus the two halves
 // the saved-look library needs: the query string for the look on screen, and the

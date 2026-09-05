@@ -23,6 +23,7 @@ import {
 } from './modSlots'
 import { packControls, unpackControls } from './packed'
 import { PRESETS, presetControls } from './presets'
+import { snowSeconds } from './snow'
 
 import type { Controls } from '../core/controls'
 import type { SourceBMode, SourceMode } from '../sources/modes'
@@ -174,6 +175,17 @@ export interface SessionParams {
   // seed is a mode you ask for by hand, and the look a roll produced is already
   // in `?p=` without it.
   seed: number | null
+  // `?snow` — seconds of snow to open on, or null for a link that asks for
+  // none, which is most of them. The look is not what changes: the burst heals
+  // off the board entirely (snow.ts), and what it leaves behind is whatever the
+  // feedback loops made of it.
+  //
+  // It is a property of the *link* rather than a spent instruction, which is
+  // what tells it apart from `?surprise` in the writer below. A roll is
+  // absorbed into the look it produced and must not fire twice; a kick leaves
+  // no trace in `?p=`, so dropping it would hand the next reader a board that
+  // needs starting and no way to say so.
+  snow: number | null
   // What the link says about motion: routings to install, or null for "said
   // nothing", which leaves whatever the browser already had patched. A link
   // written by this app always says something, so null means an old link.
@@ -285,6 +297,7 @@ export function parseSessionParams(search: string): SessionParams {
   const setParam = q.get(NAMED)
   const packedParam = q.get(PACKED)
   const modParam = q.get('mod')
+  const snowParam = q.get('snow')
   const presetName = q.get('preset')
   // Gated on the *params*, not on the lookup: a link naming a preset that has
   // since been retired asked for that preset and got nothing, which is not the
@@ -335,6 +348,7 @@ export function parseSessionParams(search: string): SessionParams {
       q.has('seed') && Number.isFinite(Number(q.get('seed')))
         ? Number(q.get('seed'))
         : null,
+    snow: snowParam === null ? null : snowSeconds(snowParam),
     // ?mod= wins over the preset's own motion, atomically: a link that names
     // both is someone who moved the routings after picking the preset.
     mod:
@@ -472,6 +486,17 @@ export function writeSessionParams(
   // `?set=` above IS what it rolled. Leaving it on would make the link reroll
   // over its own recorded look every time someone opened it.
   q.delete('surprise')
+  // `?snow` is the one-shot that stays, and the contrast with the line above is
+  // the whole of why. A roll ends up in `?set=`, so the link that rerolled would
+  // be overwriting its own record of itself. A burst ends up nowhere: it heals
+  // off the board completely, and what it started — a loop that has caught — is
+  // engine state no query can carry. Drop it and the reader's copy of a camera
+  // feedback link opens on the black screen the burst exists to prevent.
+  //
+  // So it rides through `existing` untouched, which also makes it the one link
+  // instruction a session inherits: arrive on a kicked link and the bar keeps
+  // saying so, because a reload empties VRAM and the loop needs starting again.
+  // Turning it off is the share dialog's tick box.
   // Spent the same way, and it has to be dropped here as well as by the handler
   // that acts on it: the service worker hands the app back on `?shared`, and
   // this write is what moves a session's params into the hash — so a flag left

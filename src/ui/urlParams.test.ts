@@ -7,6 +7,7 @@ import { ALL_SLIDERS, sliderFor } from './controls'
 import { mutate } from './mutate'
 import { packControls } from './packed'
 import { PRESETS, presetControls } from './presets'
+import { SNOW_MAX_SECONDS, SNOW_SECONDS } from './snow'
 import {
   DRY_DEFAULT,
   REVERB_DEFAULT,
@@ -44,6 +45,14 @@ describe('session params', () => {
     expect(parseSessionParams('?preset=vhs').controls.bGain).toBe(
       DEFAULT_CONTROLS.bGain,
     )
+  })
+
+  it('reads the burst a link opens on', () => {
+    expect(parseSessionParams('').snow).toBe(null)
+    expect(parseSessionParams('?snow').snow).toBe(SNOW_SECONDS)
+    expect(parseSessionParams('?snow=3').snow).toBe(3)
+    // A link is untrusted input, and this one drives an envelope.
+    expect(parseSessionParams('?snow=1e9').snow).toBe(SNOW_MAX_SECONDS)
   })
 
   it('layers ?set over the named preset, not under it', () => {
@@ -486,6 +495,28 @@ describe('session round trip', () => {
     )
     expect(q.has('surprise')).toBe(false)
     expect(parseSessionParams(`?${q.toString()}`).controls.noiseIre).toBe(4)
+  })
+
+  it('keeps ?snow= through the rewrite the address bar makes', () => {
+    // Also unlike ?surprise, and for a sharper reason: a burst leaves nothing
+    // in ?set= to inherit it. A reload empties VRAM, so a loop that needed
+    // starting still needs starting, and the flag is the only thing that says
+    // so.
+    const q = writeSessionParams(
+      new URLSearchParams('?snow=1.5'),
+      state({ controls: { ...DEFAULT_CONTROLS, fbMix: 0.7 } }),
+      'named',
+    )
+    expect(q.get('snow')).toBe('1.5')
+    expect(parseSessionParams(`?${q.toString()}`).snow).toBe(1.5)
+  })
+
+  it('leaves a saved look unkicked', () => {
+    // A burst is an instruction about opening a link, and a profile is a look.
+    // Recalling one mid-set onto running loops has nothing to start.
+    expect(
+      writeProfileParams(state({ controls: DEFAULT_CONTROLS })).has('snow'),
+    ).toBe(false)
   })
 
   it('keeps ?seed= through the rewrite the address bar makes', () => {

@@ -49,6 +49,7 @@ import { canPickHandle, pickHandle } from './fsAccess'
 import { morphTo } from './morph'
 import { randomPresetMix, rollControls } from './presets'
 import { RebuildPolicy } from './rebuildPolicy'
+import { snowPlan } from './snow'
 import { printCard } from './teletypeSlot'
 import { faultPlan, transitionOf } from './transitions'
 import {
@@ -2099,6 +2100,17 @@ export function useEngine(args: { rand: Rand }) {
       )
     } else {
       eng.applyControls(params.controls)
+    }
+    // The link asked to be kicked off (snow.ts): a burst of snow over the board
+    // that just landed, healing back onto it.
+    //
+    // After the look and not before it, because the burst travels from wherever
+    // the board rests and reads the board to find its own peak — a look already
+    // noisier than the burst must not be cleaned by it. Boot only, like the roll
+    // above: a strip row landing mid-set has the transition shelf for this, and
+    // the loops it is landing on are already running.
+    if (opts.boot && params.snow !== null) {
+      eng.startFault(snowPlan(eng.getControls(), params.snow))
     }
     // Armed before any source is touched, and claimed by whichever load the link
     // goes on to start (see takePendingCue). A link that names no clip leaves

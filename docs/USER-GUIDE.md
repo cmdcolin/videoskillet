@@ -336,6 +336,20 @@ app no longer has is dropped. A bar already carrying `?set=` keeps carrying it,
 so the look stays readable while you are working that way rather than turning to
 bytes under the cursor. Type a bare `?set=` to switch a tab over.
 
+### Starting a loop the reader cannot see
+
+A look travels; a running feedback loop does not. What the loops have built is
+in video memory, and the reader's page comes up with it empty — so a board that
+lives on what it is amplifying opens black and stays there, which reads as a
+broken link rather than as a set warming up. **start it with a burst of snow**
+in the share box is the fix: the link opens on a second and a half of snow, the
+loops take hold of it, and the burst heals off completely. What is left is the
+look the link says, running on what it started.
+
+It is the same move as waving a hand in front of a camera pointed at its own
+monitor, and snow rather than a flash for the same reason a hand works better
+than a lamp: a loop amplifies detail, and a flat field has none.
+
 ## Looking closer
 
 Drag a box on the picture to zoom, double-click to reset. The magnifier is part

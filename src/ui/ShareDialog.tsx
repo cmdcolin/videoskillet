@@ -3,7 +3,9 @@ import { useState } from 'react'
 import { cx } from './cx'
 import { Dialog } from './Dialog'
 import dlg from './dialog.module.css'
+import { SNOW_SECONDS } from './snow'
 import ui from './ui.module.css'
+import { hasSnow, withSnow } from './useUrlState'
 
 // Handing the look to someone else.
 //
@@ -26,6 +28,11 @@ export function ShareDialog(props: {
   // Which row last reached the clipboard, so the tick sits on the button that
   // was pressed rather than on the dialog.
   const [copied, setCopied] = useState<'share' | 'readable' | null>(null)
+  // Whether the link kicks its loops off. It starts wherever the session is:
+  // arrive on a kicked link and the bar keeps saying so (urlParams.ts), and a
+  // link passed on ought to open the way this one did.
+  const [snow, setSnow] = useState(hasSnow(props.shareUrl))
+  const link = (url: string) => withSnow(url, snow ? SNOW_SECONDS : null)
   const row = (
     kind: 'share' | 'readable',
     label: string,
@@ -67,14 +74,31 @@ export function ShareDialog(props: {
         'share',
         'Short link',
         'the whole board packed into a couple of hundred characters',
-        props.shareUrl,
+        link(props.shareUrl),
       )}
       {row(
         'readable',
         'Readable link',
         'every control it moved, by name — what the address bar is showing, and what to hand something driving the app',
-        props.readableUrl,
+        link(props.readableUrl),
       )}
+      {/* The look travels; a running feedback loop does not. Whatever the loops
+          have built is in VRAM, and the reader's page comes up with it empty —
+          so a board that lives on what it is amplifying opens black and stays
+          there, which reads as the link being broken. The burst is what a hand
+          across the lens does for a camera pointed at its own monitor. */}
+      <label className={dlg.check}>
+        <input
+          type="checkbox"
+          checked={snow}
+          onChange={e => {
+            setSnow(e.target.checked)
+            setCopied(null)
+          }}
+        />
+        start it with a burst of snow — for a look the feedback loops have to
+        build, which opens on black without something to amplify
+      </label>
       <p className={ui.helpText}>
         Both open the same board. Neither carries a picked file: a source off
         your own disk lives in this browser, so a link naming one lands on bars
