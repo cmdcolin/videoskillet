@@ -2,6 +2,22 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [0.38.8](https://github.com/cmdcolin/videoskillet/compare/v0.38.7...v0.38.8) - 2026-09-05
+
+### Features
+- *(ui)* [`64ed123`](https://github.com/cmdcolin/videoskillet/commit/64ed12334d57e3bedeffcbf34d753f5d079fd52d) the whole board reads back as labelled text from the palette
+- *(docs)* [`7a80992`](https://github.com/cmdcolin/videoskillet/commit/7a80992dac9cad330071913888e3d60dc4e43edd) record a real Claude session driving the app, both windows in frame
+- *(ui)* [`3d948a1`](https://github.com/cmdcolin/videoskillet/commit/3d948a15049f62293faf8f5febe3979348cadb7d) the palette and the board dump stand in the sidebar, not over the picture
+- *(docs)* [`e4b733b`](https://github.com/cmdcolin/videoskillet/commit/e4b733b3fec50b9b5138bb16f539608bd64e7189) the demo drives the rows that read on camera, and hosts the clip
+- *(docs)* [`5f10a0f`](https://github.com/cmdcolin/videoskillet/commit/5f10a0f04125ca0d34c2f7187dcef113d770db31) a clip on a guide page wears a play button over a dimmed poster
+
+### Fixes
+- *(ui)* [`c5afbc6`](https://github.com/cmdcolin/videoskillet/commit/c5afbc6fd95931c57b4fbb00c5c24b9e1a876ebb) a control's own name wins the palette outright
+
+### Documentation
+- *(docs)* [`8015ff3`](https://github.com/cmdcolin/videoskillet/commit/8015ff3d1c9ce77ac1379f15256de078cf6506e4) put the browser-driving agent first on the AI usage page
+- *(docs)* [`bdd7441`](https://github.com/cmdcolin/videoskillet/commit/bdd744123c53b969c49951144e9bb262872fd725) the AI usage page says how to read the whole board back
+
 ## [0.38.7](https://github.com/cmdcolin/videoskillet/compare/v0.38.6...v0.38.7) - 2026-09-05
 
 ### Features
