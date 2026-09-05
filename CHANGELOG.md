@@ -2,6 +2,15 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [0.39.2](https://github.com/cmdcolin/videoskillet/compare/v0.39.1...v0.39.2) - 2026-09-05
+
+### Features
+- *(ui)* [`0414faf`](https://github.com/cmdcolin/videoskillet/commit/0414faf026d5e2ce8b2a2afe3f71e325df520279) two reel slides on demo boards, ending on their own loudest frame
+- *(ui)* [`bfb226a`](https://github.com/cmdcolin/videoskillet/commit/bfb226aef82ed9a650cd641efc9d9fd5a76cfde5) the orb slide's recordings
+
+### Other Changes
+- [`c2e03eb`](https://github.com/cmdcolin/videoskillet/commit/c2e03eb06e363e1efe3295f1c2d10e08af4b3df4) Better
+
 ## [0.39.1](https://github.com/cmdcolin/videoskillet/compare/v0.39.0...v0.39.1) - 2026-09-05
 
 ### Other Changes
