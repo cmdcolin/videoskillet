@@ -1,0 +1,22 @@
+/* The dump itself. Monospace and pre-wrapped: the block is columns, and a
+   proportional font or a reflow turns them back into a paragraph.
+
+   Selectable and scrollable rather than sized to the content — a wrecked board
+   runs to fifty rows, and a card that grew to hold them would run off the top
+   layer. */
+.dump {
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  max-height: 52vh;
+  overflow: auto;
+  overscroll-behavior: contain;
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--fg);
+  font-family: var(--mono);
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+  white-space: pre;
+  tab-size: 2;
+}

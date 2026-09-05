@@ -4,7 +4,7 @@ import styles from './CommandPalette.module.css'
 import { GROUPS, snapToStep } from './controls'
 import { cx } from './cx'
 import dlg from './dialog.module.css'
-import { formatValue } from './format'
+import { readingOf } from './format'
 import { splitTail, tailTarget } from './paletteQuery'
 import { PRESETS, presetLabel } from './presets'
 import { fromTravel, toTravel } from './travel'
@@ -87,11 +87,8 @@ function nudge(s: SliderDef, value: number, dir: number): number {
   return Math.max(s.min, Math.min(s.max, next))
 }
 
-function readout(s: SliderDef, value: number): string {
-  return s.choices === undefined
-    ? `${formatValue(value, s.step)}${s.unit}`
-    : (s.choices[Math.round(value)] ?? String(value))
-}
+const readout = (s: SliderDef, value: number): string =>
+  readingOf(value, s.step, s.unit, s.choices)
 
 export function CommandPalette(props: {
   controls: Controls

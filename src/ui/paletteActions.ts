@@ -120,6 +120,7 @@ export function paletteActions(o: {
   // was not the name you wanted.
   save: { can: boolean; as: string; run: () => void }
   onCopyLink: () => void
+  onBoardText: () => void
   onRecord: () => void
   onStill: () => void
   // Where the picture and the panel are.
@@ -298,6 +299,17 @@ export function paletteActions(o: {
       blurb:
         'a short link to send, and the readable one the address bar carries',
       run: o.onCopyLink,
+    },
+    // The one row in this list written for a reader rather than for a hand. The
+    // palette answers "what is this control set to" one query at a time and the
+    // address bar answers it in wire keys with no units; this is the whole board
+    // at once, in words, for whoever is driving the app from outside it and
+    // cannot see the picture.
+    {
+      name: 'board as text',
+      blurb:
+        'read the whole board back: the look, both decks, every control off stock with its reading, what the bay is driving, and the link',
+      run: o.onBoardText,
     },
     {
       name: 'save this look',

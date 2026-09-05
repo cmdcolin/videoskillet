@@ -9,6 +9,22 @@ const placesFor = (step: number) => (step < 0.01 ? 3 : step < 1 ? 2 : 0)
 export const formatValue = (value: number, step: number) =>
   value.toFixed(placesFor(step))
 
+// A control's value as its row says it: the option's name on a mode switch, and
+// the number with its unit everywhere else.
+//
+// Shared because three surfaces read a control out loud — the row, the palette's
+// list, and the board dump — and a mode switch that announced its index in one
+// of them would be reporting a different board from the other two.
+export const readingOf = (
+  value: number,
+  step: number,
+  unit: string,
+  choices?: readonly string[],
+): string =>
+  choices === undefined
+    ? `${formatValue(value, step)}${unit}`
+    : (choices[Math.round(value)] ?? String(value))
+
 // The same value read to the cent — two places further, which is exactly what a
 // hundredth of the step is worth. Only the vernier card prints this: the row's
 // own readout is a shared column sized off `step` (see Rack), and widening it

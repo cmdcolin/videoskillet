@@ -17,6 +17,8 @@ import { AboutDialog } from './ui/AboutDialog'
 import { AdvancedDialog } from './ui/AdvancedDialog'
 import { AppMenu, ShowMenuButton } from './ui/AppMenu'
 import { AudioHint, AudioInput } from './ui/AudioInput'
+import { boardControls } from './ui/boardText'
+import { BoardTextDialog } from './ui/BoardTextDialog'
 import { CaptionContext } from './ui/CaptionContext'
 import { ClipLibraryDialog } from './ui/ClipLibraryDialog'
 import { ClipPicker } from './ui/ClipPicker'
@@ -64,7 +66,7 @@ import { MediaBrowserDialog } from './ui/MediaBrowserDialog'
 import { MenuRow } from './ui/MenuRow'
 import { MidiSection } from './ui/MidiSection'
 import { ModBay } from './ui/ModBay'
-import { bayLoad, slotsToRoutings } from './ui/modSlots'
+import { bayLoad, modDetail, slotsToRoutings, targetLabel } from './ui/modSlots'
 import { ModSlotsContext } from './ui/ModSlotsContext'
 import { parseMorph } from './ui/morph'
 import { MotionStrip } from './ui/MotionStrip'
@@ -282,6 +284,7 @@ export function App() {
   const [showDiagram, setShowDiagram] = useState(false)
   const [showAbout, setShowAbout] = useState(false)
   const [showShare, setShowShare] = useState(false)
+  const [showBoardText, setShowBoardText] = useState(false)
   const [showPalette, setShowPalette] = useState(false)
   const [comparing, setComparing] = useState(false)
   // Which tool a drag on the picture is. It used to be neither — the mode was
@@ -885,6 +888,7 @@ export function App() {
       run: () => profiles.saveProfile(suggestedProfileName, profileQuery()),
     },
     onCopyLink: () => setShowShare(true),
+    onBoardText: () => setShowBoardText(true),
     onRecord: capture.toggleRecord,
     onStill: capture.grabStill,
     onFullscreen: toggleFullscreen,
@@ -1839,6 +1843,41 @@ export function App() {
           readableUrl={stateUrl}
           onCopy={copyUrl}
           onClose={() => setShowShare(false)}
+        />
+      ) : null}
+      {showBoardText ? (
+        <BoardTextDialog
+          board={{
+            look:
+              activePreset !== undefined
+                ? `“${lookLabel}”`
+                : lookName === null
+                  ? 'dialed in from stock — no preset behind it'
+                  : `modified from “${lookLabel}”`,
+            sources: [eng.a, eng.b].map(slot => ({
+              tag: slot.tag,
+              what: slotPatched(slot) ?? 'nothing patched in',
+            })),
+            controls: boardControls(controls),
+            // Every slot holding a target, parked ones included: the link
+            // carries a patch whether or not it is running, so a dump that
+            // dropped the parked ones would describe a different board from the
+            // one the link rebuilds.
+            motion: modApi.slots.flatMap(slot =>
+              slot.target === ''
+                ? []
+                : [
+                    {
+                      target: targetLabel(slot.target),
+                      detail: modDetail(slot, modApi.bpm),
+                      still: !slot.on,
+                    },
+                  ],
+            ),
+            link: stateUrl,
+          }}
+          onCopy={copyUrl}
+          onClose={() => setShowBoardText(false)}
         />
       ) : null}
       {showPalette ? (
