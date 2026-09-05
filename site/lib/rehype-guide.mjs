@@ -107,6 +107,72 @@ const wrapTables = tree => {
   })
 }
 
+// A clip gets a frame, a dimmed poster and a play button over it.
+//
+// The markdown ships a bare `<video controls poster>`, which is what GitHub
+// renders and all it will render — its sanitizer drops the button and the
+// wrapper, and the reader gets the browser's own control bar over the poster.
+// So the overlay is added here rather than written into the page: this is the
+// half only the site can show, and adding it in the markdown would put dead
+// markup in the file GitHub serves.
+//
+// The reason a clip needs one at all is that a poster and a still are the same
+// thing to a reader scrolling past. Every figure in these docs is a screenshot,
+// so a frame that is merely sitting there reads as one more of them, and the
+// only tell is a control bar the browser draws in its own good time.
+const wrapVideos = tree => {
+  // A `<video>` written on its own line arrives inside the paragraph markdown
+  // put around it, and a `<div>` inside a `<p>` is not something a browser
+  // keeps: it closes the paragraph early and leaves an empty one behind with
+  // the margin still on it. So the frame takes the paragraph's place whenever
+  // the paragraph holds nothing else.
+  visit(tree, 'element', (node, i, parent) => {
+    if (node.tagName !== 'p' || parent === undefined) return
+    const kids = node.children.filter(
+      c => c.type !== 'text' || c.value.trim() !== '',
+    )
+    const only = kids.length === 1 ? kids[0] : undefined
+    if (only?.type === 'element' && only.tagName === 'video') {
+      parent.children[i] = only
+    }
+  })
+  visit(tree, 'element', (node, i, parent) => {
+    if (node.tagName !== 'video' || parent === undefined) return
+    if (
+      parent.type === 'element' &&
+      parent.properties?.className?.includes('videoframe')
+    )
+      return
+    parent.children[i] = {
+      type: 'element',
+      tagName: 'div',
+      properties: { className: ['videoframe'] },
+      children: [
+        node,
+        {
+          type: 'element',
+          tagName: 'button',
+          properties: {
+            type: 'button',
+            className: ['videoplay'],
+            // What a screen reader is handed, since everything else about this
+            // control is a triangle drawn in CSS.
+            ariaLabel: 'Play',
+          },
+          children: [
+            {
+              type: 'element',
+              tagName: 'span',
+              properties: { className: ['videoplayicon'] },
+              children: [],
+            },
+          ],
+        },
+      ],
+    }
+  })
+}
+
 const linkFigures = tree => {
   visit(tree, 'element', (node, i, parent) => {
     if (node.tagName !== 'img' || parent === undefined) return
@@ -142,6 +208,7 @@ export const rehypeGuide = () => (tree, file) => {
   collapsePictures(tree)
   const outline = headings(tree)
   wrapTables(tree)
+  wrapVideos(tree)
   linkFigures(tree)
   const data = file.data.astro.frontmatter
   data.outline = outline

@@ -296,6 +296,77 @@ video {
   margin: 1.6rem 0;
 }
 
+/* A clip, under a cover with a play button on it (site/lib/rehype-guide.mjs
+   builds the markup, site/scripts/video.js works it).
+
+   Every figure on these pages is a screenshot, so a poster frame sitting there
+   reads as one more of them — the cover is what says this one moves. It sizes
+   itself off the video rather than declaring an aspect ratio, since the clips
+   here are not all one shape and the poster gives the box its height before any
+   metadata has loaded. */
+.videoframe {
+  position: relative;
+  display: block;
+}
+.videoframe video {
+  margin: 0;
+}
+/* Dimmed, not hidden. The poster is the argument for pressing play, and a
+   reader deciding whether to watch is looking at it through this. */
+.videoframe:not(.playing) video {
+  filter: brightness(0.5) saturate(0.9);
+}
+.videoplay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* The cover reaches the bottom edge, so a press anywhere starts the clip —
+     but the browser's control bar is drawn inside the video box and is about
+     this tall at any size, so centring on the box put the button low of the
+     picture's own centre. The button centres on the picture; the cover still
+     covers everything. */
+  padding: 0 0 2.5rem;
+  border: 0;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.videoplay:hover,
+.videoplay:focus-visible {
+  background: rgba(0, 0, 0, 0.3);
+}
+.videoframe.playing .videoplay {
+  display: none;
+}
+.videoplayicon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5);
+  transition: transform 0.15s ease;
+}
+.videoplay:hover .videoplayicon,
+.videoplay:focus-visible .videoplayicon {
+  transform: scale(1.07);
+}
+/* A border triangle rather than a glyph: crisp at any size, and it paints
+   without waiting for a font. Nudged right by a third of its own width, because
+   a triangle centred on its bounding box reads as sitting left of centre. */
+.videoplayicon::before {
+  content: '';
+  margin-left: 0.4rem;
+  border-style: solid;
+  border-width: 0.85rem 0 0.85rem 1.35rem;
+  border-color: transparent transparent transparent #0e0e11;
+}
+
 /* Scrolls rather than crushing its columns; the shadow says there is more. */
 .tablewrap {
   overflow-x: auto;
