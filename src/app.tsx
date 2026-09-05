@@ -20,6 +20,7 @@ import { AudioHint, AudioInput } from './ui/AudioInput'
 import { boardControls } from './ui/boardText'
 import { BoardTextSheet } from './ui/BoardTextSheet'
 import { CaptionContext } from './ui/CaptionContext'
+import { CAPTION_SEED, wantsWords } from './ui/captionSeed'
 import { ClipLibraryDialog } from './ui/ClipLibraryDialog'
 import { ClipPicker } from './ui/ClipPicker'
 import { CommandPalette } from './ui/CommandPalette'
@@ -394,6 +395,13 @@ export function App() {
     rand: rollRand,
     mod: modApi,
   })
+
+  // A chip that turns on the caption decoder or the chyron has nothing to show
+  // until line 21 carries words, so it brings some when the caption is blank.
+  const applyPreset = (name: string, patch: Partial<Controls>) => {
+    mix.applyPreset(name, patch)
+    if (wantsWords(patch) && eng.caption === '') eng.changeCaption(CAPTION_SEED)
+  }
 
   // The board — or one stage of it — wandering by itself (ui/drift.ts). The
   // switches, and everything a leg needs, handed over at the press rather than
@@ -1378,7 +1386,7 @@ export function App() {
           lastPreset={mix.lastPreset}
           weights={mix.weights}
           openStage={nav.openPhase}
-          onApplyPreset={mix.applyPreset}
+          onApplyPreset={(name, patch) => applyPreset(name, patch)}
           onMixStart={mix.startMix}
           onMix={mix.setPresetWeight}
         />
@@ -1523,7 +1531,7 @@ export function App() {
     <CommandPalette
       controls={controls}
       actions={palette}
-      onApplyPreset={mix.applyPreset}
+      onApplyPreset={(name, patch) => applyPreset(name, patch)}
       onMixStart={mix.startMix}
       onWriteControl={writeControl}
       onRevealControl={revealText}

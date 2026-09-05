@@ -1,4 +1,5 @@
 import { DEFAULT_CONTROLS } from '../core/controls'
+import { FEED_A_CABLE_GROUP, FEED_B_CABLE_GROUP } from './controls'
 
 import type { Controls } from '../core/controls'
 import type { Group } from './controls'
@@ -156,6 +157,167 @@ export const CARD_PRESETS: CardPreset[] = [
     name: 'cb ingress',
     blurb: 'somebody keying a radio into a cable with a bad shield',
     patch: { ingress: 0.6 },
+  },
+  {
+    group: 'Signal (source A)',
+    name: 'capture card',
+    blurb:
+      'what a consumer grabber already did to the file: luma cut to 2.4 MHz, colour-under chroma, colour a few samples late, grain in both',
+    patch: {
+      capLumaMHz: 2.4,
+      capChromaMHz: 0.4,
+      capYcDelayNs: 300,
+      capNoiseIre: 6,
+      capChromaNoiseIre: 20,
+    },
+  },
+  {
+    group: 'Signal (source A)',
+    name: 'bob deinterlace',
+    blurb:
+      'each frame rebuilt from one field, which is what kills a dongle’s combing',
+    patch: { deint: 1 },
+  },
+  {
+    group: FEED_A_CABLE_GROUP,
+    name: 'ground loop',
+    blurb:
+      'a hum bar on A’s run alone, lifting A’s sync tips with it so the receiver chases this feed and not the other',
+    patch: { aHumIre: 30 },
+  },
+  {
+    group: FEED_A_CABLE_GROUP,
+    name: 'open cable',
+    blurb:
+      'A unterminated: hot, ringing on every edge, and winning the sync contest against anything healthy',
+    patch: { aTermination: 1 },
+  },
+  {
+    group: FEED_A_CABLE_GROUP,
+    name: 'wiggled plug',
+    blurb:
+      'both of A’s contacts intermittent, so bands go to snow and bands go to hum, on independent lines',
+    patch: { aConnector: 0.4, aConnectorMode: 2 },
+  },
+  {
+    group: FEED_A_CABLE_GROUP,
+    name: 'long run',
+    blurb: 'snow on A alone, with B summing in clean over the top of it',
+    patch: { aNoiseIre: 40 },
+  },
+  {
+    group: FEED_B_CABLE_GROUP,
+    name: 'ground loop, other leg',
+    blurb:
+      'B’s hum bar on the opposite phase of the mains, so with A’s it pushes the other way',
+    patch: { bHumIre: -30 },
+  },
+  {
+    group: FEED_B_CABLE_GROUP,
+    name: 'daisy-chained',
+    blurb:
+      'B double-terminated: dim and shallow, and losing every sync contest to A',
+    patch: { bTermination: -1 },
+  },
+  {
+    group: FEED_B_CABLE_GROUP,
+    name: 'wiggled plug',
+    blurb:
+      'B’s centre pin making and breaking, so B stops pushing sync for a band and then comes back fighting',
+    patch: { bConnector: 0.35, bConnectorMode: 0 },
+  },
+  {
+    group: 'Character generator (chyron)',
+    name: 'mis-timed key',
+    blurb:
+      'the key three samples behind the fill: background through one side of every stem, a hard shadow down the other',
+    patch: { cgMix: 1, cgKeyDelayNs: 210, cgScale: 3 },
+  },
+  {
+    group: 'Character generator (chyron)',
+    name: 'detached shadow',
+    blurb:
+      'the edge generator’s delays pulled far past the one sample and one line they were meant to be, so the drop shadow walks off the type',
+    patch: { cgMix: 1, cgEdgeX: 14, cgEdgeY: -9, cgScale: 3 },
+  },
+  {
+    group: 'Character generator (chyron)',
+    name: 'letters are holes',
+    blurb:
+      'the key cut the other way: a black raster with the picture showing only through the type',
+    patch: { cgMix: 1, cgInvert: 1, cgScale: 6, cgX: 0.02, cgY: 0.2 },
+  },
+  {
+    group: 'Character generator (chyron)',
+    name: 'held rom pin',
+    blurb:
+      'an address line and a data line held on the font ROM: the font substituted for its neighbour, with a stripe down every character',
+    patch: { cgMix: 1, cgScale: 3, cgRomAddr: 9, cgRomData: -5 },
+  },
+  {
+    group: 'Character generator (chyron)',
+    name: 'overmodulated',
+    blurb:
+      'type laid in at 120 IRE, past peak white, so the AGC and the sound detector react to every word',
+    patch: { cgMix: 1, cgFill: 120, cgScale: 4 },
+  },
+  {
+    group: 'PiP inset (source B)',
+    name: 'corner inset',
+    blurb:
+      'B squeezed into a bordered box top right, re-encoded on the house raster so it dot-crawls but never beats',
+    patch: { pipMix: 1 },
+  },
+  {
+    group: 'PiP inset (source B)',
+    name: 'keyed subject',
+    blurb:
+      'a big centred inset keyed on its own brightness, so B’s bright parts land over A without the rectangle',
+    patch: {
+      pipMix: 1,
+      pipX: 0.5,
+      pipY: 0.5,
+      pipW: 0.6,
+      pipH: 0.6,
+      pipKey: 0.7,
+      pipKeyLevel: 0.3,
+      pipKeySoft: 0.1,
+    },
+  },
+  {
+    group: 'Decoder',
+    name: 'tint backwards',
+    blurb:
+      'the tint knob at the end of its travel: every hue its complement, brightness untouched',
+    patch: { tintDeg: 180 },
+  },
+  {
+    group: 'Decoder',
+    name: 'x/z axes',
+    blurb:
+      'the two demodulators pulled to 45 degrees apart, so the colour wheel shears and opposite hues stop being opposite',
+    patch: { demodAxisDeg: 45, chromaGain: 1.4 },
+  },
+  {
+    group: 'Deflection',
+    name: 'service underscan',
+    blurb:
+      'the vertical scan shrunk so the raster shows past the picture: the vertical interval above it, the head switch below',
+    patch: { vSize: 0.7 },
+  },
+  {
+    group: 'Captions',
+    name: 'decoder on',
+    blurb:
+      'line 21 sliced off the signal the set actually got, misspelt by whatever the path did to it',
+    patch: { cc: 1 },
+  },
+  {
+    group: 'Captions',
+    name: 'bent rom',
+    blurb:
+      'a pin held on the decoder’s font ROM: every glyph grows a seam and one column of dots is held down the page',
+    patch: { cc: 1, ccRomAddr: 2, ccRomData: -5 },
   },
 ]
 

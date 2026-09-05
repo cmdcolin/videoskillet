@@ -27,6 +27,7 @@ import {
 import { TELETYPE_DEFAULT } from '../sources/teletype'
 import { WHOLE_CLIP, fetchClipUrl, watchClipUrl } from '../sources/ytdlp'
 import { backingStoreSize } from './canvasSize'
+import { CAPTION_SEED, wantsWords } from './captionSeed'
 import { openClipById } from './clipLibrary'
 import {
   cueLooping,
@@ -2214,7 +2215,11 @@ export function useEngine(args: { rand: Rand }) {
     setSpeed(restored)
     setReverb(params.vapor.reverb)
     setDry(params.vapor.dry)
-    if (params.caption !== '') changeCaption(params.caption)
+    if (params.caption !== '') {
+      changeCaption(params.caption)
+    } else if (wantsWords(params.controls)) {
+      changeCaption(CAPTION_SEED)
+    }
     if (params.yt !== null) loadYouTubeOn('a', params.yt, WHOLE_CLIP)
     if (params.ytb !== null) loadYouTubeOn('b', params.ytb, WHOLE_CLIP)
     // Boot only, and the reason `opts` exists at all. What follows is a question

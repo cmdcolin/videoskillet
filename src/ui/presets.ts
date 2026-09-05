@@ -1533,22 +1533,6 @@ export const PRESETS: PresetDef[] = [
     },
   },
   {
-    name: 'dirtyDissolve',
-    displayName: 'dirty dissolve',
-    group: 'A/B mixing',
-    blurb:
-      'A manual crossfade on the summing bus, with A pulled halfway down under B. B is still off-frequency and off-line, so the dissolve beats and rolls instead of sitting clean like the genlocked one.',
-    patch: {
-      aGain: 0.5,
-      bGain: 0.6,
-      bLineHz: 0.3,
-      bDetuneHz: 60,
-      bRollLps: 0.12,
-      hHold: 0.28,
-      noiseIre: 1.8,
-    },
-  },
-  {
     name: 'greenScreen',
     displayName: 'green screen',
     group: 'A/B mixing',
@@ -1666,6 +1650,18 @@ export const PRESETS: PresetDef[] = [
     blurb:
       'Reversed polarity on the composite line. Luma and every hue flip to their complement.',
     patch: { invert: 1 },
+  },
+  {
+    name: 'signalAndGroundSwapped',
+    displayName: 'signal and ground swapped',
+    group: 'Cross-wired',
+    blurb:
+      "The centre pin and the shell swapped at a connector, so the whole line arrives upside down: sync pointing up, picture below blanking. The set's separator charges to the deepest thing it can find, which is now the peak whites, and slices there, so the flywheel follows the bright content and the raster tears round it. Nothing in the vertical interval reads as a broad pulse any more, so the frame rolls. With no pulses keying its clamp, the coupling floats until the picture's mean sits at mid-grey, and what comes out around that is a ghostly negative.",
+    patch: {
+      polarityFlip: 1,
+      hHold: 0.35,
+      phosphor: 0.5,
+    },
   },
   {
     name: 'sVideoMiswire',
@@ -2513,7 +2509,260 @@ export const PRESETS: PresetDef[] = [
     // somewhere new each pass and the smear stays spatial.
     mod: [{ target: 'bendUs', source: 'lorenz', rateHz: 0.08, depth: 0.04 }],
   },
+  {
+    name: 'servicePosition',
+    displayName: 'service position',
+    group: 'Sync / Deflection',
+    blurb:
+      "The vertical scan shrunk to seventy percent, the way a set is opened up on the bench, with vertical hold loosened until the oscillator wins. The picture rolls through the raster while the vertical interval stays put on the glass: the VITS dashes, Macrovision's pulse train, the head-switch band underneath. The caption is painted on the set's own raster too, so it sits still while the picture travels behind it.",
+    patch: {
+      vSize: 0.7,
+      vHold: 0.35,
+      vFreqHz: 57,
+      macrovision: 0.8,
+      cc: 1,
+      ccBox: 0.9,
+      headSwitchShiftUs: 2.5,
+      headSwitchNoise: 0.7,
+      scanBeam: 0.55,
+      phosphor: 0.3,
+    },
+  },
+  {
+    name: 'splitPhase',
+    displayName: 'split phase',
+    group: 'A/B mixing',
+    blurb:
+      'Two decks plugged into outlets on opposite legs of a split-phase service, each with its own ground loop. The two hum bars are the same bar half a cycle apart, so where one lifts the picture the other dims it. Both lift their own sync tips, so which feed wins the sync contest alternates with the hum, and the picture rolls with the bars rather than just wearing them.',
+    patch: {
+      aHumIre: 32,
+      bHumIre: -32,
+      bGain: 0.55,
+      agc: 1,
+      hHold: 0.5,
+      phosphor: 0.35,
+    },
+  },
+  {
+    name: 'wiggledPlugs',
+    displayName: 'wiggled plugs',
+    group: 'A/B mixing',
+    blurb:
+      "Both inputs loose in their jacks. Where A's pin drops, its bands collapse to snow and the receiver locks to B's pulses for the length of the band, so the picture snaps between two geometries a band at a time. Where A's shield lifts instead, hum lands on those bands and the level walks while the picture survives. B's own plug is on the centre pin, so B stops fighting for a band and then comes back.",
+    patch: {
+      aConnector: 0.35,
+      aConnectorMode: 2,
+      bConnector: 0.3,
+      bConnectorMode: 0,
+      bGain: 0.6,
+      bDetuneHz: 25,
+      hHold: 0.6,
+      phosphor: 0.5,
+    },
+  },
+  {
+    name: 'threeServos',
+    displayName: 'three servos',
+    group: 'Feedback loops',
+    blurb:
+      'A camera loop with three servos inside it: the auto-iris metering the monitor it feeds, the beam limiter pulling drive down after bright content, and an underdamped HV tank ringing the geometry on every bright edge. Each has its own natural frequency, so they beat instead of settling, and the picture pours through the ringing scan like liquid.',
+    patch: {
+      fbMix: 0.7,
+      fbGain: 1.5,
+      fbZoom: 0.975,
+      fbIris: 0.9,
+      fbFocus: 1.2,
+      fbKnee: 0.5,
+      fbBlack: 0.03,
+      abl: 0.9,
+      hvSagUs: 35,
+      hvRing: 0.9,
+      crtBloom: 0.6,
+      phosphor: 0.5,
+    },
+  },
+  {
+    name: 'hairOffTheCrystal',
+    displayName: 'a hair off the crystal',
+    group: 'Circuit bent',
+    blurb:
+      "The synth's oscillator laid over the picture and parked a few hundred hertz off 3.579545 MHz. Brightness at the subcarrier frequency is chroma to the encoder, so it hands the decoder a colour it never saw, and the small detune walks that colour round the wheel across every line. The picture comes back under a rainbow raster made of nothing but a sine wave, with the subcarrier itself showing through as dots.",
+    patch: {
+      synthOver: 0.6,
+      synthAHz: 3580200,
+      synthShape: 2,
+      synthLevel: 1.6,
+      chromaGain: 2,
+      svideoBleed: 0.35,
+    },
+    // A fraction of an eight-megahertz span: a few hundred hertz of wander,
+    // which is a warm crystal rather than a hand on the knob.
+    mod: [
+      { target: 'synthAHz', source: 'smooth', rateHz: 0.05, depth: 0.0002 },
+    ],
+  },
+  {
+    name: 'clampInThePicture',
+    displayName: 'clamp in the picture',
+    group: 'Circuit bent',
+    blurb:
+      "The enhancer's clamp gate dragged off the back porch and into active video. Black level is then set by whatever the picture happens to be at that instant on each line, so the level bounces line to line with the image and the frame posterizes into slabs. An undersized coupling capacitor drags a dark streak behind anything bright, and the detail stage rings on the edges that survive.",
+    patch: {
+      enhClampUs: 24,
+      enhDroopUs: 110,
+      enhPeakMHz: 1.3,
+      enhPeakQ: 0.55,
+      enhPeakBoost: 2.5,
+      agc: 0.6,
+      phosphor: 0.3,
+    },
+  },
+  {
+    name: 'colourAStepRight',
+    displayName: 'colour a step to the right',
+    group: 'Tape wear',
+    blurb:
+      "The deck's chroma path mistrimmed against its luma path by a microsecond and a half. Every coloured area sits that far right of the edge it belongs to, bleeding out of one side of things and falling short of the other. The burst travels the same path, so hue is correct and only the position is wrong, which is what tells a Y/C delay from a timebase error.",
+    patch: {
+      colorUnderMix: 1,
+      ycDelayNs: 1400,
+      chromaGain: 2,
+      phosphor: 0.2,
+    },
+  },
+  {
+    name: 'aimedAtTheVcr',
+    displayName: 'aimed at the VCR',
+    group: 'Tape wear',
+    blurb:
+      'Copy protection meeting the one set it was never meant to bother. Colorstripe rotates the burst on walking bands of lines, so those bands come back in the wrong hue, and the AGC pulses in the vertical interval make the set crush its gain. This set is also a VIR receiver, trusting line 19 to trim its own hue and saturation, and line 19 is inside the damaged interval, so the whole frame drifts after the bands.',
+    patch: {
+      macrovision: 0.7,
+      mvStripeDeg: 150,
+      vir: 1,
+      virLag: 15,
+      agc: 1,
+      colorUnderMix: 0.6,
+      chromaGain: 1.4,
+      phosphor: 0.3,
+    },
+  },
+  {
+    name: 'oneHeadPacked',
+    displayName: 'one head packed',
+    group: 'Tape wear',
+    blurb:
+      'One of the two video heads clogged with oxide. The heads take turns, one sweep each, so the picture and a field of snow alternate at thirty hertz, and sync goes down with the dead sweep so the receiver tears through the snow rather than framing it. The phosphor is long enough to hold each good sweep across the bad one.',
+    patch: {
+      headClog: 0.75,
+      colorUnderMix: 0.8,
+      chromaNoiseIre: 8,
+      hHold: 0.4,
+      phosphor: 0.65,
+    },
+  },
+  {
+    name: 'tintInASlowHand',
+    displayName: 'tint in a slow hand',
+    group: 'Decoder',
+    blurb:
+      'The tint knob walked slowly through its whole travel while the two demodulator axes drift off quadrature. Tint turns every hue together and the axis shears the wheel, so some colours come through and their opposites do not, and which ones changes as the two wander. Nothing in the geometry moves. Colour is the only thing on the board that is.',
+    patch: {
+      demodAxisDeg: 70,
+      chromaGain: 2.2,
+      matrixClip: 0.6,
+      crtSat: 1.3,
+    },
+    mod: [
+      { target: 'tintDeg', source: 'smooth', rateHz: 0.06, depth: 0.4 },
+      { target: 'demodAxisDeg', source: 'sine', rateHz: 0.03, depth: 0.3 },
+    ],
+  },
+  {
+    name: 'overmodulatedChyron',
+    displayName: 'overmodulated chyron',
+    group: 'Switcher',
+    blurb:
+      'A lower third laid in at 120 IRE, past peak white, with the key trimmed four samples behind the fill. Background shows through one side of every stem and a hard shadow runs down the other. Type at full swing is the harshest thing a composite line carries, so the AGC pumps on it and the sound carrier leaks through as a herringbone. The words are the caption, under Captions.',
+    patch: {
+      cgMix: 1,
+      cgFill: 120,
+      cgScale: 4,
+      cgX: 0.05,
+      cgY: 0.36,
+      cgKeyDelayNs: 280,
+      cgEdgeX: 6,
+      cgEdgeY: 4,
+      agc: 1,
+      soundIre: 14,
+      noiseIre: 2,
+      phosphor: 0.3,
+    },
+  },
+  {
+    name: 'bentFontRom',
+    displayName: 'bent font ROM',
+    group: 'Switcher',
+    blurb:
+      "The same words through two boxes with pins held on their font ROMs. The chyron at the switcher has an address line held high, so its whole font is substituted for a neighbour a fixed distance away in the chip. The set's caption decoder has a low address line and a data line held, so every glyph grows a seam and one column of dots is held down the page. Snow on line 21 adds the misspellings a bad wire makes, which are random where the bends are not.",
+    patch: {
+      cc: 1,
+      ccBox: 1,
+      ccRomAddr: 2,
+      ccRomData: -5,
+      cgMix: 0.9,
+      cgY: 0.08,
+      cgScale: 3,
+      cgRomAddr: 9,
+      noiseIre: 10,
+      phosphor: 0.3,
+    },
+  },
+  {
+    name: 'thePictureInTheType',
+    displayName: 'the picture in the type',
+    group: 'Switcher',
+    blurb:
+      "The chyron's key cut the other way. The fill wire is black everywhere the characters are not, so an inverted key lays black over the whole raster and the picture shows only through the letters, six samples to the dot. Persistence holds what the letters showed a moment ago.",
+    patch: {
+      cgMix: 1,
+      cgInvert: 1,
+      cgScale: 6,
+      cgX: 0.02,
+      cgY: 0.2,
+      phosphor: 0.6,
+    },
+  },
+  {
+    name: 'wanderingInset',
+    displayName: 'wandering inset',
+    group: 'Switcher',
+    blurb:
+      'Source B squeezed into a DVE inset that nobody is steering. Its position walks at random, re-encoded genlocked to the house raster, so the box dot-crawls but never beats. The phosphor is long, so the inset leaves a ghost of itself wherever it was.',
+    patch: {
+      pipMix: 1,
+      pipW: 0.5,
+      pipH: 0.5,
+      pipBorder: 0.02,
+      pipSoft: 0.005,
+      phosphor: 0.92,
+      phosphorBleed: 0.5,
+    },
+    mod: [
+      { target: 'pipX', source: 'walk', rateHz: 2, depth: 0.5 },
+      { target: 'pipY', source: 'walk', rateHz: 1.6, depth: 0.5 },
+    ],
+  },
 ]
+
+// Whether a look has anything to show without a second source. The A/B group
+// is the obvious case, and the inset is the other: it is a window onto B, and
+// with B off it is a window onto nothing. The rollers use this to leave both
+// out when slot B is empty, so a roll never lands on a look that reads as the
+// picture untouched.
+export const needsSourceB = (p: PresetDef): boolean =>
+  p.group === 'A/B mixing' ||
+  (p.patch.pipMix !== undefined && p.patch.pipMix > 0)
 
 export function presetControls(patch: Partial<Controls>): Controls {
   return { ...DEFAULT_CONTROLS, ...patch }
@@ -2647,7 +2896,7 @@ export function randomPresetMix(
   rand: () => number = Math.random,
 ): PresetWeights {
   const pool = PRESETS.filter(
-    p => p.group !== 'Clean' && (sourceBOn || p.group !== 'A/B mixing'),
+    p => p.group !== 'Clean' && (sourceBOn || !needsSourceB(p)),
   )
   const groups = shuffled([...new Set(pool.map(p => p.group))], rand)
   // Two most of the time. Three whole authored looks at once — which is what a
@@ -2727,7 +2976,7 @@ export function randomSinglePreset(
     p =>
       p.group !== 'Clean' &&
       p.name !== avoid &&
-      (sourceBOn || p.group !== 'A/B mixing'),
+      (sourceBOn || !needsSourceB(p)),
   )
   const group = shuffled([...new Set(pool.map(p => p.group))], rand)[0]
   const lead = pool.filter(p => p.group === group)

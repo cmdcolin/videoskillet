@@ -9,6 +9,7 @@ import {
   blendPresets,
   controlsEqual,
   matchPreset,
+  needsSourceB,
   presetControls,
   randomPresetMix,
   randomSinglePreset,
@@ -423,12 +424,12 @@ describe('randomPresetMix', () => {
     }
   })
 
-  it('drops the A/B presets when there is no second source', () => {
+  it('drops the presets that need a second source when there is none', () => {
     for (let s = 0; s < 200; s++) {
-      const groups = [...randomPresetMix(false).keys()].map(
-        n => PRESETS.find(p => p.name === n)?.group,
+      const drawn = [...randomPresetMix(false).keys()].map(n =>
+        PRESETS.find(p => p.name === n),
       )
-      expect(groups).not.toContain('A/B mixing')
+      expect(drawn.some(p => p !== undefined && needsSourceB(p))).toBe(false)
     }
   })
 
@@ -454,13 +455,13 @@ describe('randomSinglePreset', () => {
 
   // 'clean' is the reset. A random button that lands on it now and then is a
   // random button that occasionally wipes your board and calls it a look.
-  it('never draws the empty patch, and drops A/B without a second source', () => {
+  it('never draws the empty patch, and drops what needs B without a second source', () => {
     for (let s = 0; s < 300; s++) {
-      const group = (on: boolean) =>
+      const drawn = (on: boolean) =>
         PRESETS.find(p => p.name === [...randomSinglePreset(on).keys()][0])
-          ?.group
-      expect(group(true)).not.toBe('Clean')
-      expect(group(false)).not.toBe('A/B mixing')
+      expect(drawn(true)?.group).not.toBe('Clean')
+      const withoutB = drawn(false)
+      expect(withoutB !== undefined && needsSourceB(withoutB)).toBe(false)
     }
   })
 
