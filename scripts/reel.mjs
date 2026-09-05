@@ -12,53 +12,24 @@
 // did not build, here is the map the controls hang off, here is a picture built
 // out of nothing.
 //
-// **The order is that of what says analog first.** `build` opened the stage
-// until it was demoted, and the reason was what it arrived at then: a soft
-// field of flowing rainbow, which is the one frame on this page a stranger can
-// read as a shader rather than as a television. `roll` puts a board already
-// torn into hard black and white slabs in the first frame, which needs no
-// caption to read as a television coming apart, so it opens the reel and
-// `build` finishes it — on a photograph now, with a ring-modulated loop carving
-// colour along the subject's edges, which is a picture of a signal path doing
-// something to a picture rather than a shader doing something to a field.
+// **Every slide runs on the bundled photograph now, on stock controls.** Three
+// of them did before this, and `roll` ran on a black and white feedback board
+// so that the frame the page opens on would read as a television coming apart
+// rather than as a cat. What that bought was slabs, nudged: Colin's read on the
+// reel was that all four were weak — "the 'nudge' is too minor of a change",
+// the presets "go over the same settings sort of repeatedly", the map walk's
+// "results are not that interesting", and the build "stops too soon" on
+// "dark and muddy colors rather than bright vibrant crazy rainbows". A
+// photograph is what makes colour nothing in the room is read as colour put
+// there, and a clean one is what makes every press and drag read as the thing
+// that changed the picture. Where the slides were then screened is in the notes
+// on each timeline below; the instrument was a probe that drives the app the
+// way `appreel.mjs` does and grabs the canvas at checkpoints.
 //
-// **`roll` used to be the middle slide, and before that it was a fault dialled
-// into clean bars**, which was the weakest thing on the page: a slow bow in a
-// colour bar, next to a gallery of looks somebody had already tuned. What the
-// button does is the better sentence and the better picture, and it is now
-// reproducible enough to record: `?seed=` (ui/useRollRand.ts) is what makes a
-// take of somebody pressing random the same take next time.
-//
-// **`roll` and `build` both start on a bare load and get somewhere while you
-// watch**, which is the whole point of them and took two wrong turns to arrive
-// at. The slides used to run on the bundled photograph through a tape path,
-// chosen because damage is legible on a cat — a stranger watching a slider bend
-// a photograph has been shown that the program has sliders, and nothing else. So
-// they were moved onto the looks the gallery lists, with one row of each wound
-// back so a drag could arrive at it — and that is worse, because arriving at a
-// picture somebody else already built is not building one. The board was
-// ninety per cent of the way there before the clip started, and the drag took
-// the credit.
-//
-// What is left is the honest version: a picture on stock controls, the rows
-// raised in the order the mechanism runs, and a look that was not there fifteen
-// seconds ago. Nothing is loaded that the hand does not do. The picture is the
-// bundled photograph again — `build` ran on colour bars for a while, and the
-// camera loop it opened there was demoted for being dull, so the argument
-// against the photograph (a slider bending a cat shows only that there are
-// sliders) gave way to the one for it: the ring loop it builds now is keyed on
-// the live picture, and a look that carves along a subject's edges needs a
-// subject to carve.
-//
-// **`roll` ran on the bundled photograph for a while, and does not now.** The
-// argument for it was legibility: a roll is legible on a face and abstract on
-// bars, screened both ways over twelve seeds, where three rolls on bars read as
-// three sets of bars in different colours and the same three on the photograph
-// were a torn print, a hard duotone and a warm dirty one. What that argument
-// did not cover is that this is the frame the page opens on, and a cat is a
-// picture of a cat before it is a picture of a signal path coming apart. So the
-// slide runs on a feedback board instead, and the legibility it gives up it
-// buys back in what the first frame says about the program.
+// **Things have to combo.** The rows that read on their own on a still are few
+// and generic — HV sag on a clean photograph is a wobble — and the same rows on
+// a picture already scrambled or already rainbow are the slide. Every timeline
+// here is ordered so that each pull lands on what the last one did.
 //
 // **The hand moves fast.** A beat is a fraction of a second: a glide onto a
 // control is 0.2-0.35s, a press dwells 0.4s, a drag takes 0.5-0.7s, and the
@@ -176,45 +147,43 @@ export const NARROW = {
 export const beatSecs = beat =>
   beat.secs ?? beat.hold ?? beat.press ?? beat.away
 
-// Two stages pressed, and every press is followed by a row pulled. The walk
-// used to open SOURCE A, CHANNEL and RECEIVER in turn to show that a stage
-// opens under its box, and Colin watching it said what a stranger would: "i
-// dont understand the recording that just clicks on source, channel, receiver
-// ... it should be changing settings in interesting ways". So the presses that
-// lead nowhere are gone and the ones that stay are the way to a slider.
+// Two stages pressed and every press followed by rows pulled, and **every pull
+// lands on a picture the last one already changed.** The walk used to open
+// SOURCE A, CHANNEL and RECEIVER in turn to show that a stage opens under its
+// box, and Colin watching it said what a stranger would: "i dont understand the
+// recording that just clicks on source, channel, receiver ... it should be
+// changing settings in interesting ways". Its second version pulled flutter,
+// sticky shed and tint on the gallery's first look, and read as a beige arch
+// shimmying: "the results are not that interesting".
 //
-// **Which rows took a screen, and the first answer was the wrong one.** The
-// receiver opens on its Sync bank, and the pair in reach there — `vertical
-// hold` let go, `vertical osc` detuned — rolls the frame three times over the
-// beat that follows. Legible, and unwatchable: a picture tumbling at field
-// rate is the one thing a landing page must not loop. `blanking strobe` is
-// out on the same ground. So the hand opens banks the stages did not, which
-// is a truer picture of the panel anyway: the banks under a stage are an
-// accordion, and a header is a press like any other.
+// What decided this version is a note on the sheet it was picked from: "some of
+// the settings like hv sag look a bit generic when applied without anything
+// else interesting going on ... so things need to combo well". Screened one row
+// at a time on the photograph (thirty-six rows, `v-rows` in the 2026-09-04
+// session), most of the panel reads as nothing on a still: grille, convergence,
+// purity, phosphor, colour-under, ghosting, tracking. Three read on their own
+// and read *better* stacked, in this order. Sync suppression in the channel is
+// a scrambled pay-TV feed — the picture tears into inverted bands with a black
+// bar wandering through it. Subcarrier detune in the receiver's decoder sets the
+// hue barber-poling down the frame, and chroma gain wound up makes the whole
+// scrambled picture rainbow. HV sag and supply ring in the deflection bank then
+// shear all of that into waves — the same rows that were "generic" on a clean
+// photograph, landing last on a picture that is already coming apart. Reset
+// walks it home on the morph.
 //
-// Screened over fifty rows on this look (`candidates.sync.mjs` and the channel
-// after it, through `pathprobe.mjs`): ghost gain, hum and an open termination
-// white the frame out, noise and peaking bury it in snow, phosphor persistence
-// washes it, the MIX rows do nothing because B is genlocked here, and bend
-// amount is already on a Lorenz wire so a hand on it reads as nothing. `v
-// size` and `HV sag` were in and came out — "did not do anything interesting"
-// and "we demonstrate hv sag repeatedly", and both are right. What stays
-// changes the picture without flashing it. In the channel's Timebase bank,
-// `flutter` shimmies every line sideways and `sticky shed` — tape binder
-// grabbing the head drum — leans the stripes into shear bands that snap back.
-// Then the receiver's `tint` turns the hue of all of it.
+// Travel fractions rather than values, since a drag is a fraction of the track
+// (`appreel.mjs`). Subcarrier detune is a `zero` curve, so its 0.811 is 7 kHz
+// and not 124 — read off the row by the screen rather than computed.
 const MAP_WALK = [
   { hold: 0.2 },
   { moveTo: { stage: 'CHANNEL' }, secs: 0.3 },
   { press: 0.4, on: 'CHANNEL' },
-  { scrollTo: { section: 'Timebase' }, secs: 0.3 },
-  { moveTo: { section: 'Timebase' }, secs: 0.2 },
-  { press: 0.35, on: 'Timebase' },
-  { scrollTo: { slider: 'flutter' }, secs: 0.25 },
-  { moveTo: { slider: 'flutter' }, secs: 0.2 },
-  { drag: { slider: 'flutter', to: 0.7 }, secs: 0.6 },
-  { moveTo: { slider: 'sticky shed' }, secs: 0.2 },
-  { drag: { slider: 'sticky shed', to: 0.5 }, secs: 0.6 },
+  { scrollTo: { section: 'Cable' }, secs: 0.3 },
+  { moveTo: { section: 'Cable' }, secs: 0.2 },
+  { press: 0.35, on: 'Cable' },
+  { scrollTo: { slider: 'sync suppression' }, secs: 0.25 },
+  { moveTo: { slider: 'sync suppression' }, secs: 0.2 },
+  { drag: { slider: 'sync suppression', to: 1 }, secs: 0.6 },
   { hold: 0.6 },
   { scrollTo: { stage: 'CHANNEL' }, secs: 0.3 },
   { moveTo: { stage: 'RECEIVER' }, secs: 0.25 },
@@ -222,69 +191,63 @@ const MAP_WALK = [
   { scrollTo: { section: 'Decoder' }, secs: 0.3 },
   { moveTo: { section: 'Decoder' }, secs: 0.2 },
   { press: 0.35, on: 'Decoder' },
-  { scrollTo: { slider: 'tint' }, secs: 0.25 },
-  { moveTo: { slider: 'tint' }, secs: 0.2 },
-  { drag: { slider: 'tint', to: 0.85 }, secs: 0.6 },
-  { hold: 0.9 },
-  // Home on the morph rather than by dragging back: undo travels the same
-  // second-long glide a roll arrives on, so each row settles out of the picture
-  // instead of being yanked out of it — and the board is stock again, which is
-  // what lets this run round without a jump. Three drags, three presses.
-  //
-  // Scrolled to first, because the toolbar it lives in is the top of the panel
-  // and the rows just dragged are most of a phone below it: the portrait take
-  // reached for `undo` at y=-43 and the recorder said there was nothing under
-  // the pointer, which there was not.
-  { scrollTo: { text: 'undo' }, secs: 0.3 },
-  { moveTo: { text: 'undo' }, secs: 0.2 },
-  { press: 0.7, on: 'undo' },
-  { press: 0.7, on: 'undo' },
-  { press: 1.1, on: 'undo' },
+  { scrollTo: { slider: 'subcarrier detune' }, secs: 0.25 },
+  { moveTo: { slider: 'subcarrier detune' }, secs: 0.2 },
+  { drag: { slider: 'subcarrier detune', to: 0.811 }, secs: 0.5 },
+  { moveTo: { slider: 'chroma gain' }, secs: 0.2 },
+  { drag: { slider: 'chroma gain', to: 0.2184 }, secs: 0.5 },
+  { hold: 0.7 },
+  { scrollTo: { section: 'Deflection' }, secs: 0.3 },
+  { moveTo: { section: 'Deflection' }, secs: 0.2 },
+  { press: 0.35, on: 'Deflection' },
+  { scrollTo: { slider: 'HV sag' }, secs: 0.25 },
+  { moveTo: { slider: 'HV sag' }, secs: 0.2 },
+  { drag: { slider: 'HV sag', to: 0.695 }, secs: 0.5 },
+  { moveTo: { slider: 'supply ring' }, secs: 0.2 },
+  { drag: { slider: 'supply ring', to: 0.845 }, secs: 0.5 },
+  { hold: 1.3 },
+  // Home on the morph: reset puts every control back over the same second a
+  // roll arrives on, so the picture settles out of its damage rather than
+  // being yanked, and the board is stock again for the loop. Scrolled to
+  // first because the toolbar is the top of the panel and the rows just
+  // dragged are most of a phone below it.
+  { scrollTo: { text: 'reset' }, secs: 0.3 },
+  { moveTo: { text: 'reset' }, secs: 0.2 },
+  { press: 1.2, on: 'reset' },
   { scrollTo: { stage: 'RECEIVER' }, secs: 0.3 },
   { moveTo: { stage: 'RECEIVER' }, secs: 0.2 },
   { press: 0.35, on: 'RECEIVER' },
   { away: 0.4 },
 ]
 
-// The roll slide's presses. A nudge arrives on a one-second morph, so a press
-// dwells long enough for the picture to land before the next one moves it
-// again — and no longer, since the three that follow the menu are the slide.
+// Four presses of the button the look bar opens on, each a whole look nobody
+// built, and reset to come home. A press dwells long enough for the morph to
+// land and the picture to be looked at, and no longer.
 const ROLL = [
-  { moveTo: { title: 'the other ways this row has' }, secs: 0.35 },
-  { press: 0.5, on: '▾' },
-  { moveTo: { text: 'random nudge' }, secs: 0.3 },
-  // The menu row reads `≈random nudge` — a row carries its icon in its text
-  // where the button carries the label alone, so this is the same target
-  // asserted two ways rather than a typo.
-  { press: 1.4, on: '≈random nudge' },
-  // Back to the button the menu just loaded: the pointer is over where the
-  // menu row was, and the row is gone.
-  { moveTo: { text: 'random nudge' }, secs: 0.3 },
-  { press: 1.3, on: 'random nudge' },
-  { press: 1.3, on: 'random nudge' },
-  { press: 1.5, on: 'random nudge' },
-  // Four presses out and four back. Undo travels on the same morph a roll
-  // arrives on, so the way home is the same glide as the way out and the
-  // picture walks itself back through the looks it came through — which is
-  // the loop this slide needed anyway (`act`, above: a timeline ends where it
-  // began, because these run round).
-  { moveTo: { text: 'undo' }, secs: 0.35 },
-  // **Three, for four nudges.** The fourth press landed on an `undo` that
-  // had already greyed out — measured off the take, where the button's
-  // label sits at 39 while it is live, dips as each of three presses lands,
-  // then holds a dead 28.7 through a fourth that does nothing. The menu's
-  // own pick rolls the look *and* arms the button, and it is the one that
-  // leaves no step behind it. Worth knowing that `on:` cannot catch this: a
-  // disabled button still reads `undo`, so the assertion passes and the
-  // clip records a hand pressing nothing.
-  { press: 0.9, on: 'undo' },
-  { press: 0.9, on: 'undo' },
-  { press: 1.4, on: 'undo' },
+  { moveTo: { text: 'random look' }, secs: 0.35 },
+  { press: 1.4, on: 'random look' },
+  { press: 1.4, on: 'random look' },
+  { press: 1.4, on: 'random look' },
+  { press: 1.5, on: 'random look' },
+  { moveTo: { text: 'reset' }, secs: 0.3 },
+  { press: 1.2, on: 'reset' },
   { away: 0.4 },
 ]
 
-// The seven rows of the ring loop, in the order the mechanism runs. The wide
-// and portrait takes share them; portrait scrolls to the map first.
+// The seven rows of the ring loop, in the order the mechanism runs, and then
+// the three that turn its trails from a grey smear into colour. The wide and
+// portrait takes share them; portrait scrolls to the map first.
+//
+// **The finish used to be the ring modulator, and it was the wrong place to
+// stop.** Colin on the take: "it just stops too soon, and the result is also a
+// little dark and muddy colors rather than bright vibrant crazy rainbows". The
+// loop is held just under unity so it cannot build structure, which is right,
+// and it is also why what it builds is dim. Screened as continuations of the
+// same seven rows (`v-prog2`, 2026-09-04): loop gain to 1.0 walls the frame
+// white, a shorter delay shifts the smear without colouring it, and chroma
+// gain in the decoder colours the trails at once. The tube's saturation and
+// bloom wound up behind it are what make them electric and set the highlights
+// glowing, on the same red chair.
 const RING_LOOP = [
   { moveTo: { stage: 'mixer' }, secs: 0.3 },
   { press: 0.4, on: 'mixer' },
@@ -306,65 +269,114 @@ const RING_LOOP = [
   { scrollTo: { slider: 'loop ring mod' }, secs: 0.25 },
   { moveTo: { slider: 'loop ring mod' }, secs: 0.2 },
   { drag: { slider: 'loop ring mod', to: 1 }, secs: 0.7 },
-  // The payoff: the loop has to lap a few times before the trails have grown
-  // out of the fur, and this is the frame the still is taken from.
-  { hold: 2.5 },
+  // The loop has to lap a few times before the trails have grown out of the
+  // fur, and the rest of the build is done on top of them.
+  { hold: 1.4 },
+  { scrollTo: { stage: 'mixer' }, secs: 0.3 },
+  { moveTo: { stage: 'RECEIVER' }, secs: 0.25 },
+  { press: 0.4, on: 'RECEIVER' },
+  { scrollTo: { section: 'Decoder' }, secs: 0.3 },
+  { moveTo: { section: 'Decoder' }, secs: 0.2 },
+  { press: 0.35, on: 'Decoder' },
+  { scrollTo: { slider: 'chroma gain' }, secs: 0.25 },
+  { moveTo: { slider: 'chroma gain' }, secs: 0.2 },
+  { drag: { slider: 'chroma gain', to: 0.1875 }, secs: 0.5 },
+  { hold: 0.4 },
+  { scrollTo: { stage: 'RECEIVER' }, secs: 0.3 },
+  { moveTo: { stage: 'camera' }, secs: 0.25 },
+  { press: 0.4, on: 'camera' },
+  { scrollTo: { section: 'Tube face' }, secs: 0.3 },
+  { moveTo: { section: 'Tube face' }, secs: 0.2 },
+  { press: 0.35, on: 'Tube face' },
+  { scrollTo: { slider: 'beam saturation' }, secs: 0.25 },
+  { moveTo: { slider: 'beam saturation' }, secs: 0.2 },
+  { drag: { slider: 'beam saturation', to: 0.3333 }, secs: 0.5 },
+  { moveTo: { slider: 'screen bloom' }, secs: 0.2 },
+  { drag: { slider: 'screen bloom', to: 0.1667 }, secs: 0.5 },
+  // The payoff, and the frame the still is taken from.
+  { hold: 2.6 },
   { away: 0.4 },
 ]
 
-// Four blends, each two preset chips dragged part of the way in, and `clean`
-// to wipe the board between them. A chip is a fader — click for all of it,
-// drag sideways for some — and every chip layers onto what is already on the
-// board, so two at half strength are a look neither is alone and the
-// photograph is still in it. **Part way, not all the way.** Screened at full
-// strength (`pairs.mjs`, 2026-09-04) the same pairs are an op-art spiral with
-// no cat in it, and Colin's read on that sheet was the brief for this one:
-// "some or even many of the presets, at full strength, tend to be too chaotic
-// and even cheesey to the degree they look too distorted". Blended at half,
-// the subject stays and the mechanism shows.
+// Four blends, seven chips, and `clean` to wipe the board between them. A chip
+// is a fader — click for all of it, drag sideways for some — and every chip
+// layers onto what is already on the board, so two part way in are a look
+// neither is alone. **Part way, not all the way.** Screened at full strength
+// (2026-09-04) the same pairs are an op-art spiral with no cat in it, and
+// Colin's read on that sheet was the brief: "some or even many of the presets,
+// at full strength, tend to be too chaotic and even cheesey to the degree they
+// look too distorted".
 //
-// The four, off a sheet of forty blends: a picture out of headroom bent round
-// a black curve; poured colour wound into a spiral; a rainbow smear on a
-// supply gone chaotic; and the headroom picture sent round the spiral, which
-// comes back magenta and cyan.
+// **Seven different chips, where the last version reused three across its four
+// blends** — "it just goes over the same settings sort of repeatedly which is
+// boring". These came off a sheet of twenty-eight chips alone and twenty-two
+// pairs on the photograph (`v-chips`, `v-pairs`): the colorizer chips
+// (silkscreen, poured colour, block colour) are what puts colour nothing in the
+// room is onto a picture of something, and a fault on top of one is what tears
+// it. Each blend is a different pair of mechanisms: a slicing colorizer under a
+// detail enhancer regenerating past the point it howls, a phase-shift colorizer
+// into a raster that is collapsing, a block colorizer into a melting loop, and
+// the finale three deep — headroom, the howling enhancer, poured colour — which
+// is blocks of cyan, green and red with the picture under them. Seven is the
+// shortlist row's whole width beside `clean` (PresetsSection.tsx: eight chips),
+// so nothing scrolls, and the enhancer is the one chip used twice, under two
+// partners that make two different pictures of it.
+//
+// `supply chaos` was the tearing fault in two of the blends and came out on
+// the note "preset: supply chaos often looks kind of boring also"; the
+// eighteen pairs on `v-pairs3` are what it was screened against.
+//
+// **`clean` dwells for the whole morph.** Looks arrive over a second, and a
+// chip dragged before the board has landed is dragged onto a board still
+// travelling: the wide take showed block colour lit for the drag and dark a
+// beat later, which Colin read as "the mouse missed", and the portrait take
+// lost a drag outright. A chip gesture stops the morph now (useMix
+// `startMix`), the way a slider grab always did — and the slide still waits,
+// because the sentence is that clean wipes the board, so the photograph has
+// to be back before the next pair goes on.
+//
+// `bent scan` was the second blend's fault and came out on a note from the
+// take: "bent scan looks boring, it just adds a little bend to the image, not
+// the kind of dramatic cool stuff i like. we like stuff on the edge of chaos,
+// but still discernable". Eighteen more pairs were screened against that
+// sentence (`v-pairs2`), and `full collapse` at 0.4 is the one that folds the
+// poured colour into bands with the chair still readable through them.
 const PRESET_RUN = [
-  { moveTo: { text: 'vhs' }, secs: 0.3 },
-  { press: 0.6, on: 'vhs' },
-  { moveTo: { chip: 'out of headroom' }, secs: 0.2 },
-  { mix: { chip: 'out of headroom', to: 0.7 }, secs: 0.5 },
-  { hold: 0.2 },
-  { moveTo: { chip: 'bent scan' }, secs: 0.2 },
-  { mix: { chip: 'bent scan', to: 0.5 }, secs: 0.5 },
+  { moveTo: { chip: 'silkscreen' }, secs: 0.3 },
+  { mix: { chip: 'silkscreen', to: 0.8 }, secs: 0.5 },
+  { hold: 0.15 },
+  { moveTo: { chip: 'howlround loom' }, secs: 0.2 },
+  { mix: { chip: 'howlround loom', to: 0.5 }, secs: 0.5 },
   { hold: 0.9 },
   { moveTo: { text: 'clean' }, secs: 0.2 },
-  { press: 0.4, on: 'clean' },
+  { press: 1.1, on: 'clean' },
   { moveTo: { chip: 'poured colour' }, secs: 0.2 },
-  { mix: { chip: 'poured colour', to: 0.5 }, secs: 0.5 },
-  { hold: 0.2 },
-  { moveTo: { chip: 'spiral' }, secs: 0.2 },
-  { mix: { chip: 'spiral', to: 0.45 }, secs: 0.5 },
-  { hold: 1.1 },
+  { mix: { chip: 'poured colour', to: 0.7 }, secs: 0.5 },
+  { hold: 0.15 },
+  { moveTo: { chip: 'full collapse' }, secs: 0.2 },
+  { mix: { chip: 'full collapse', to: 0.4 }, secs: 0.5 },
+  { hold: 0.9 },
   { moveTo: { text: 'clean' }, secs: 0.2 },
-  { press: 0.4, on: 'clean' },
-  { moveTo: { chip: 'supply chaos' }, secs: 0.2 },
-  { mix: { chip: 'supply chaos', to: 0.4 }, secs: 0.5 },
-  { hold: 0.2 },
-  { moveTo: { chip: 'poured colour' }, secs: 0.2 },
-  { mix: { chip: 'poured colour', to: 0.5 }, secs: 0.5 },
-  { hold: 1 },
+  { press: 1.1, on: 'clean' },
+  { moveTo: { chip: 'block colour' }, secs: 0.2 },
+  { mix: { chip: 'block colour', to: 0.6 }, secs: 0.5 },
+  { hold: 0.15 },
+  { moveTo: { chip: 'meltdown' }, secs: 0.2 },
+  { mix: { chip: 'meltdown', to: 0.7 }, secs: 0.5 },
+  { hold: 1.0 },
   { moveTo: { text: 'clean' }, secs: 0.2 },
-  { press: 0.4, on: 'clean' },
-  // The spiral at half over the headroom picture ran away in the take — by
-  // the end of the hold it was a magenta disc with no cat in it — so it goes
-  // in at a third and the hold is what the loop needs to wind up, no longer.
+  { press: 1.1, on: 'clean' },
   { moveTo: { chip: 'out of headroom' }, secs: 0.2 },
-  { mix: { chip: 'out of headroom', to: 0.5 }, secs: 0.5 },
-  { hold: 0.2 },
-  { moveTo: { chip: 'spiral' }, secs: 0.2 },
-  { mix: { chip: 'spiral', to: 0.35 }, secs: 0.5 },
-  { hold: 1 },
+  { mix: { chip: 'out of headroom', to: 0.8 }, secs: 0.5 },
+  { hold: 0.15 },
+  { moveTo: { chip: 'howlround loom' }, secs: 0.2 },
+  { mix: { chip: 'howlround loom', to: 0.5 }, secs: 0.5 },
+  { hold: 0.3 },
+  { moveTo: { chip: 'poured colour' }, secs: 0.2 },
+  { mix: { chip: 'poured colour', to: 0.5 }, secs: 0.5 },
+  { hold: 1.3 },
   { moveTo: { text: 'clean' }, secs: 0.2 },
-  { press: 0.5, on: 'clean' },
+  { press: 1.1, on: 'clean' },
   { away: 0.4 },
 ]
 
@@ -373,46 +385,26 @@ export const slides = [
     file: 'roll',
     name: 'Random',
     caption:
-      'The roll that keeps what you have. Random nudge takes the look already on the board and moves every control around where it sits, so pressing it again goes further out instead of starting over — two presses and the picture is somewhere nobody would have thought to dial. The caret holds the rest of the row: a whole fresh look, one authored preset, a single nameable fault.',
-    alt: 'The window on a black and white feedback look already torn into hard blocks, and random nudge picked from the roll menu and pressed twice: the picture goes further out with each press rather than starting over, ending in a frame of chroma noise nothing in it is still upright',
-    // A board that is already unstable, rather than the bundled photograph this
-    // opened on. The picture a roll lands on is only as wild as the thing it
-    // lands *in*: `randomPresetMix` is bounded on purpose — two presets usually,
-    // feedback loops as leads only, because unbounded rolls blew a picture out
-    // about one time in eight (presets.ts) — so on a flat source the same
-    // presses read as tinted test cards. Screened against colour bars mixed with
-    // tv static, and against sweep and synth, all of which came back as exactly
-    // that.
-    look: 'Chaos black and white feedback',
-    // `seed` is the app's, not this file's: `?seed=` puts the session's rolls on
-    // one generator (ui/useRollRand.ts), so this take is the take the next
-    // recording gets too.
-    params: { seed: 2 },
-    // The last nudge, which is where this take is loudest. Measured rather than
-    // guessed: the four presses finish at 0.65 of the timeline and the undos
-    // walk back down from there, so a still taken later lands mid-way home — a
-    // poster of the picture coming apart *less*, which is the one thing the
-    // still must not say.
-    stillAt: 0.64,
+      'One button, pressed four times. Random look stacks a few presets from different groups over stock and morphs the board to them, so every press is a whole picture nobody dialled: a photograph posterised into green and red, sheared into rainbow waves, torn into bands of colour, then inverted to gold. The chips light up to show what went in, and reset puts the photograph back.',
+    alt: 'The window on a photograph of a cat on a red chair, and random look pressed four times: the picture posterises into green and red, shears into rainbow waves, tears into coloured bands and turns golden and inverted, a different look each press, then reset morphs it back to the photograph',
+    // The bundled photograph, and `random look` rather than a nudge. This slide
+    // was a black and white feedback board with `random nudge` pressed on it,
+    // and the note on the take was "the 'nudge' is too minor of a change":
+    // every press moved the slabs and left them slabs. A `random look` rebuilds
+    // from stock each press (`landRecipe` in ui/useMix.ts), which was the
+    // argument against it when the board under it was the point — here the
+    // board is a clean photograph, so each press is a whole new picture and
+    // the photograph is what every one of them is a picture of.
+    //
+    // Screened over forty seeds (`v-roll`, `v-roll2`, 2026-09-04): a roll
+    // lands on a dull look about one press in three — a cable fault, a
+    // dissolve to the bars on B, a white or grey field — so which seed is the
+    // slide. 26 gives four vivid and different pictures in a row and a pale
+    // fifth, which is where it stops.
+    params: { src: 'cat', seed: 26 },
+    // The fourth look at the end of its dwell, which is the loudest frame.
+    stillAt: 0.76,
     warm: 60,
-    // **Nudge rather than `random look`, and that is the whole slide.** A
-    // `random look` rebuilds from stock every press — `landRecipe` lands its
-    // roll on `DEFAULT_CONTROLS` (ui/useMix.ts) — so a run of them walks *away*
-    // from a wild board rather than further into it. Recorded three times over
-    // nine seeds it decayed the same way every time: the frame store carries the
-    // feedback for a press or two, and by the third the board is stock over
-    // source A, which on this look is colour bars. Six seeds, six test cards.
-    // Pointing source A at tv static fixed the ending and cost the colour —
-    // stock over noise is a grey wash.
-    //
-    // `mutateLook` baselines on `getControls()` instead, so a nudge compounds:
-    // press it on chaos and you get more chaos, which is the sentence this slide
-    // has to say. It is also the way the app is actually used — mutate, mutate,
-    // surprise, mutate (ui/history.ts).
-    //
-    // The menu is worth the two beats it costs. Picking a roll runs it *and*
-    // leaves it on the button, so the two presses after it are one press each,
-    // and the caret says out loud that the row has five other ways to roll.
     act: [{ hold: 0.4 }, ...ROLL],
     // In portrait the look bar is under the picture with the panel, so it is
     // scrolled to before the pointer goes anywhere near it.
@@ -426,37 +418,34 @@ export const slides = [
     file: 'presets',
     name: 'Presets',
     caption:
-      'Every preset chip is a fader: click for all of it, drag sideways for some, and each one layers onto the board already there. So two chips dragged halfway in are a look neither is alone, with the photograph still in it — a picture out of headroom bent round a black curve, poured colour wound into a spiral, a rainbow smear on a supply gone chaotic, the headroom picture sent round the spiral and coming back magenta. Clean wipes the board between each. There are a hundred and twenty chips.',
-    alt: 'The window on a photograph of a cat on a red chair run through a VHS deck, and pairs of preset chips dragged halfway in with clean between: out of headroom then bent scan bends the poster-coloured cat round a black curve, poured colour then spiral winds it into a green and cyan swirl, supply chaos then poured colour smears rainbow bands across it, and out of headroom then spiral turns it magenta and cyan',
+      'Every preset chip is a fader: click for all of it, drag sideways for some, and each one layers onto the board already there. So two chips dragged part way in are a look neither is alone — a silkscreened cat under a detail enhancer howling, poured colour into a raster collapsing on itself, block colour into a melting loop, then three deep: headroom, the howling enhancer and poured colour, which is blocks of cyan, green and red with the picture under them. Clean wipes the board between each. There are a hundred and twenty chips.',
+    alt: 'The window on a photograph of a cat on a red chair, and preset chips dragged part way in with clean between: silkscreen then howlround loom slices the cat into yellow and red and ripples rainbow through its edges, poured colour then full collapse folds cyan and violet bands as the raster collapses, block colour then meltdown melts it into green and magenta, and out of headroom, howlround loom and poured colour together turn it into blocks of cyan, green and red with the picture under them',
     // The bundled photograph, for the reason `build` uses it: a preset is a
-    // board, and a board is legible on a picture of something.
-    //
-    // The chips are seeded as recents, which puts them on the shortlist row
-    // beside `clean` (PresetsSection.tsx: the row is `clean`, then what is in
-    // the mix, then recents, capped at eight) — so every press and drag in the
-    // take is on one row, with no scroll to the catalog between them. It is
-    // the row a returning visitor who used these six would see.
+    // board, and a board is legible on a picture of something. The chips are
+    // seeded as recents, which puts them on the shortlist row beside `clean`
+    // (PresetsSection.tsx: the row is `clean`, then what is in the mix, then
+    // recents, capped at eight) — so every drag in the take is on one row.
     params: { src: 'cat' },
     seed: {
       video_feedback_recent_presets: JSON.stringify([
-        'vhs',
-        'outOfHeadroom',
-        'bentScan',
+        'silkscreen',
+        'howlroundLoom',
         'pouredColour',
-        'spiral',
-        'supplyChaos',
+        'fullCollapse',
+        'blockColour',
+        'meltdown',
+        'outOfHeadroom',
       ]),
     },
-    // The last blend at the end of its hold: the magenta spiral is the
-    // loudest frame in the take.
-    stillAt: 0.9,
+    // The finale at the end of its hold.
+    stillAt: 0.92,
     warm: 60,
     act: [{ hold: 0.3 }, ...PRESET_RUN],
     // In portrait the presets row is under the picture with the panel, so it
     // is scrolled to before the pointer goes anywhere near it.
     narrowAct: [
       { hold: 0.3 },
-      { scrollTo: { text: 'vhs' }, secs: 0.4 },
+      { scrollTo: { text: 'silkscreen' }, secs: 0.4 },
       ...PRESET_RUN,
     ],
   },
@@ -464,15 +453,14 @@ export const slides = [
     file: 'signal-path',
     name: 'The signal path',
     caption:
-      'The map is the rig: two sources into a mixer, then the channel it is recorded and broadcast over, the receiver that decodes it and the screen it lands on. Click a stage and its controls open under it. In the channel, flutter shimmies the timebase and sticky shed is the tape grabbing the head drum, so the stripes shear and snap back. In the receiver, tint turns the colour of all of it — then undo walks it home.',
-    alt: 'The window with the signal path map at the head of the panel: the CHANNEL box pressed, flutter dragged until every line of the scanline arch shimmies sideways and sticky shed dragged until it shears into leaning bands, then the RECEIVER box pressed, its Decoder bank opened and tint dragged so the orange bands turn violet — and undo walking it back',
-    // The backdrop, and it is doing a job: the map walk is the content, so what
-    // is behind it only has to be worth looking at for seven seconds. It used
-    // to be `Fuzzy color bars feedback`, which is a soft brown smear that never
-    // changes — 12K a second of encode against the other two slides' 57K, which
-    // is the file size saying the same thing. This one is the gallery's own
-    // first look, it carries two mod wires, and it moves.
-    look: 'Wiggity',
+      'The map is the rig: two sources into a mixer, then the channel it is recorded and broadcast over, the receiver that decodes it and the screen it lands on. Click a stage and its controls open under it. In the channel, sync suppression scrambles the feed the way pay TV was. In the receiver, subcarrier detune sets the hue barber-poling and chroma gain makes the scramble rainbow, then HV sag and a ringing supply shear all of it into waves. Reset walks it home.',
+    alt: 'The window with the signal path map at the head of the panel: the CHANNEL box pressed and sync suppression dragged until the photograph of a cat tears into inverted bands, then the RECEIVER box pressed, subcarrier detune and chroma gain dragged until the bands go rainbow, HV sag and supply ring dragged until the whole picture shears into waves — and reset morphing it back',
+    // The photograph, on stock controls. This slide ran on the gallery's first
+    // look with the walk pulling timebase rows over it, and what a stranger saw
+    // was a beige arch shimmying. Every value on screen now is one the hand in
+    // the frame put there, and each row lands on a picture the last one already
+    // changed, which is the whole of what makes them read (`MAP_WALK`).
+    params: { src: 'cat' },
     // Presets folded, which is the app's own resting state and also what keeps
     // the loop shut: opening a stage folds that section away to give the stage
     // the room, and closing the stage does not put it back — so a clip that
@@ -485,7 +473,9 @@ export const slides = [
         'Sound into the picture': false,
       }),
     },
-    warm: 200,
+    // The end of the deflection hold, before reset.
+    stillAt: 0.77,
+    warm: 60,
     act: MAP_WALK,
     // In portrait the panel is the bottom half of a phone and the map starts
     // below its fold, so it is scrolled to first and everything after that is
@@ -496,39 +486,30 @@ export const slides = [
     file: 'build',
     name: 'From clean',
     caption:
-      'A photograph on stock controls, and seven rows of the mixer loop raised by hand. The return is synced and the loop opened, its gain eased under unity and its delay stretched so each lap comes back a little further round the hue wheel. Then the loop is keyed on the live picture and multiplied against it — a ring modulator with one input on the machine’s own past — and the trails grow in colours nothing in the room is, cut off crisply at the subject’s edge.',
-    alt: 'A run through the app starting on a clean photograph of a cat on a red chair: the mixer loop opened row by row — frame sync, loop mix, loop gain, loop delay, loop key, key input on program, loop ring mod — until rainbow trails grow sideways out of the fur and the window blinds while the chair stays photographic',
-    // **The bundled photograph, and a hand-built ring loop.** This slide used to
-    // open the camera loop and then the mixer loop on colour bars and finish on a
-    // soft field of flowing rainbow, and Colin's verdict on the take was the
-    // right one: "for all the time spent with this camera feedback and mixer
-    // feedback combo, it looks very boring". Three rows added after the loops
-    // — `loop delay` at a third of a per cent, `FM over-deviation`, `beam
-    // bloom` — read as nothing at all, and every tail screened in their place
-    // either greyed the loop out (anything in the channel that disturbs timing:
-    // sticky shed, wow, tracking) or was a non-event (zoom, HV sag on a soft
-    // field).
+      'A photograph on stock controls, and ten rows raised by hand. The mixer loop’s return is synced and the loop opened, its gain eased under unity and its delay stretched so each lap comes back a little further round the hue wheel; then it is keyed on the live picture and multiplied against it, a ring modulator with one input on the machine’s own past, and trails grow out of the subject’s edges. They are grey until the receiver’s chroma gain goes up and the tube’s saturation and bloom go up behind it, and then they are electric.',
+    alt: 'A run through the app starting on a clean photograph of a cat on a red chair: the mixer loop opened row by row — frame sync, loop mix, loop gain, loop delay, loop key, key input on program, loop ring mod — until grey trails grow out of the fur, then the receiver’s chroma gain and the tube’s beam saturation and screen bloom dragged up until the trails are saturated rainbow and the highlights glow, while the red chair stays photographic',
+    // The bundled photograph, and a hand-built ring loop that goes on to be
+    // coloured. This slide used to open the camera loop and then the mixer
+    // loop on colour bars and finish on a soft field of flowing rainbow, and
+    // Colin's verdict on the take was the right one: "for all the time spent
+    // with this camera feedback and mixer feedback combo, it looks very
+    // boring". Its next version built the ring loop and stopped there, which
+    // was "kind of cool, but it just stops too soon" — see `RING_LOOP` for
+    // what was screened as the continuation and what stayed.
     //
-    // So the slide builds one of the looks the app is actually good at: the
-    // ring-modulated loop, `carved by the live picture` (presets.ts), picked off
-    // a contact sheet of every ring preset rendered on the photograph. Damage
-    // is legible on a picture of something, and the photograph is a Commons
-    // image already bundled, so the take is the same take next time where a
-    // live Commons pick would not be.
-    //
-    // **Seven rows, and two of them looked too small to matter and were not.**
-    // A five-row build (mix, key, key input, ring, sync) blew the cat out to a
-    // white field; `loop gain` eased to 0.92 and `loop delay` stretched to
-    // 1.1us are what hold it just under unity — the bank's own readout says so:
-    // "round trip 0.85x · just under — trails hold, structure does not build".
-    // The delay is a fifth of a per cent of its track and its thumb barely
-    // moves, but its readout goes 0.15us to 1.10us and without it the loop
-    // latches white. `frame sync` goes first rather than last: raised at the
-    // end, after the loop had run unsynced for ten seconds, the return's tear
-    // stayed in the frame store as a black block wandering through the rest
-    // of the take. Synced before the loop opens, there is nothing to tear.
+    // **Seven rows for the loop, and two of them looked too small to matter
+    // and were not.** A five-row build (mix, key, key input, ring, sync) blew
+    // the cat out to a white field; `loop gain` eased to 0.92 and `loop delay`
+    // stretched to 1.1us are what hold it just under unity — the bank's own
+    // readout says so: "round trip 0.85x · just under — trails hold, structure
+    // does not build". The delay is a fifth of a per cent of its track and
+    // its thumb barely moves, but its readout goes 0.15us to 1.10us and
+    // without it the loop latches white. `frame sync` goes first rather than
+    // last: raised at the end, after the loop had run unsynced for ten
+    // seconds, the return's tear stayed in the frame store as a black block
+    // wandering through the rest of the take.
     params: { src: 'cat' },
-    stillAt: 0.9,
+    stillAt: 0.93,
     warm: 60,
     act: [{ hold: 0.3 }, ...RING_LOOP],
     // In portrait the panel is the bottom half of a phone and the map starts
@@ -560,8 +541,11 @@ export const slides = [
       ? board
       : `${board}&${new URLSearchParams(slide.params)}`
   const narrowAct = slide.narrowAct ?? slide.act
+  // Two decimals, since a timeline that sums to an odd twentieth rounds to a
+  // tenth a whole 0.05 off the sum the page is checked against.
   const length = act =>
-    Math.round(act.reduce((total, beat) => total + beatSecs(beat), 0) * 10) / 10
+    Math.round(act.reduce((total, beat) => total + beatSecs(beat), 0) * 100) /
+    100
   return {
     ...slide,
     query,

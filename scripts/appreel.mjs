@@ -503,19 +503,38 @@ async function runBeat(page, beat, frame, hand, shoot) {
       t => window.__reel.chipGrip(t),
       beat.mix.chip,
     )
-    await page.mouse.move(grip.x, grip.y)
-    await page.mouse.down()
-    await page.mouse.move(grip.x + 6, grip.y, { steps: 2 })
+    // A finger on the phone take, a mouse on the desktop one — and not only
+    // for honesty. Under Chrome's phone emulation every `page.screenshot`
+    // fires a pointerleave at a position off the page and drops the pointer
+    // capture a mouse drag holds, so the chip's fader let go at the first
+    // frame and the portrait take shipped every drag at 1%. A touch sequence
+    // rides through the screenshots untouched, measured 67% against 8% for
+    // the same drag.
+    const finger = frame.coarse === true && engine === 'chrome'
+    const down = async () => {
+      if (finger) {
+        await page.touchscreen.touchStart(grip.x, grip.y)
+        await page.touchscreen.touchMove(grip.x + 6, grip.y)
+      } else {
+        await page.mouse.move(grip.x, grip.y)
+        await page.mouse.down()
+        await page.mouse.move(grip.x + 6, grip.y, { steps: 2 })
+      }
+    }
+    const to = (x, y) =>
+      finger ? page.touchscreen.touchMove(x, y) : page.mouse.move(x, y)
+    const up = () => (finger ? page.touchscreen.touchEnd() : page.mouse.up())
+    await down()
     const travel = beat.mix.to * 120
     for (let i = 1; i <= frames; i++) {
       const t = ease(i / frames)
       hand.at = { x: grip.x + 6 + travel * t, y: grip.y }
       hand.down = true
-      await page.mouse.move(hand.at.x, hand.at.y)
+      await to(hand.at.x, hand.at.y)
       await paint(page, hand)
       await shoot()
     }
-    await page.mouse.up()
+    await up()
     hand.down = false
     const fill = await page.evaluate(
       t => window.__reel.chipFill(t),
@@ -641,8 +660,23 @@ async function record(browser, slide, take, tmpDir) {
     }
 
     const hand = {}
-    for (const beat of take.act)
+    for (const beat of take.act) {
       await runBeat(page, beat, take.frame, hand, shoot)
+      // REEL_DEBUG=1 prints, after every beat, which preset chips are lit and
+      // how far — the one reading a take cannot be trusted to show, since a
+      // chip's fill is what a drag looks like and a frame without it reads as
+      // the hand having missed.
+      if (process.env.REEL_DEBUG !== undefined) {
+        const lit = await page.evaluate(() =>
+          [...document.querySelectorAll('button')]
+            .map(b => [b.textContent.trim(), b.style.getPropertyValue('--w')])
+            .filter(([, w]) => w !== '' && w !== '0%')
+            .map(([t, w]) => `${t}=${w}`)
+            .join(', '),
+        )
+        console.log(`    ${JSON.stringify(beat).slice(0, 60)} → ${lit}`)
+      }
+    }
     return n
   } finally {
     await page.evaluate(() => window.vf?.destroy()).catch(() => {})

@@ -1148,14 +1148,30 @@ the look itself rather than the picture: `unpackControls` (ui/packed.ts) against
 `DEFAULT_CONTROLS` gives the controls the look carries that stock does not,
 which is the same list the app's own "N off stock" shows.
 
-**The slides are ordered by what says analog first.** `build` led the stage
-until it was demoted, and what demoted it is the frame it arrives at: a soft
-field of flowing rainbow, which is the one picture on this page a stranger can
-read as a shader rather than as a television. The mechanism under it is the most
-analog thing on the page — a composite loop carrying its own subcarrier, half a
-turn of hue a lap — and none of that shows. `roll` puts a torn, mistracking
-photograph in its first frame, which nobody has to be told the meaning of, so it
-opens the reel now and `build` closes it.
+**Every slide runs on the bundled photograph, on stock controls.** Three of the
+four did before 2026-09-04 and `roll` ran on a black and white feedback board,
+and the read on that reel was that all four were weak: the nudge "is too minor
+of a change", the presets "go over the same settings sort of repeatedly", the
+map walk's "results are not that interesting", the build "stops too soon" on
+"dark and muddy colors rather than bright vibrant crazy rainbows". What replaced
+them was screened on the photograph — twenty-eight chips alone and twenty-two
+pairs, thirty-six single rows, nine loop recipes and forty seeds — with a probe
+that drives the app the way `appreel.mjs` does and grabs the canvas at
+checkpoints. `reel.mjs` carries what each sheet said next to the timeline it
+decided.
+
+**Things have to combo.** The note on the row sheet was "some of the settings
+like hv sag look a bit generic when applied without anything else interesting
+going on ... so things need to combo well", and it is the rule every timeline
+follows: each pull lands on a picture the last one already changed. The map walk
+scrambles the feed in the channel, sets the hue barber-poling and winds chroma
+gain up in the receiver's decoder, and only then shears it all with HV sag and a
+ringing supply. The build raises the ring loop's seven rows and then colours its
+trails from the decoder and the tube. The presets slide is four blends of seven
+different chips, the colorizer chips under a geometry or supply fault. `roll` is
+`random look` pressed four times on the photograph, which is a whole new picture
+a press, and `?seed=26` is the run of four vivid ones — screened over forty
+seeds, a roll lands somewhere dull about one press in three.
 
 **The hand moves fast.** A glide onto a control is 0.2-0.35s, a press dwells
 0.4s, a drag takes 0.5-0.7s, and the only long holds are the ones a feedback
@@ -1165,59 +1181,24 @@ fast visual learners, they can see things happen quickly so dont dawdle and move
 dials and click buttons in relatively quick succession". `appreel.mjs` records
 at 30fps over the same two steps now, which is the app's own 60Hz.
 
-**The `presets` slide is pairs of chips dragged part of the way in.** A preset
-chip is a fader — click for all of it, drag sideways for some — and every chip
-layers onto the board already there, so two at half strength are a look neither
-is alone with the photograph still in it. Part way is the finding: the same
-pairs at full strength, screened on a contact sheet of forty-four, are an op-art
-spiral with no cat in it, and the read on that sheet was "some or even many of
-the presets, at full strength, tend to be too chaotic and even cheesey to the
-degree they look too distorted". The four that ship came off a second sheet of
-forty blends. The chips are seeded as recents so they sit on the shortlist row
-beside `clean`, and the recorder's `mix` verb drives the drag with the real
-mouse, since the chip integrates pointer travel and holds capture on it.
+**A preset chip is a fader** — click for all of it, drag sideways for some — and
+every chip layers onto the board already there, so two part way in are a look
+neither is alone with the photograph still in it. Part way is the finding: the
+same pairs at full strength are an op-art spiral with no cat in it ("some or
+even many of the presets, at full strength, tend to be too chaotic and even
+cheesey to the degree they look too distorted"). The chips are seeded as recents
+so they sit on the shortlist row beside `clean`, seven being the row's width,
+and the recorder's `mix` verb drives the drag with the real mouse, since the
+chip integrates pointer travel and holds capture on it.
 
-**Two of the four slides start on a bare load and get somewhere while you
-watch**, and that took two wrong turns to arrive at. They used to run on the
-bundled photograph through a tape path, chosen because damage is legible on a
-cat — a stranger watching a slider bend a photograph has been shown that the
-program has sliders, and nothing else. So they were moved onto the looks the
-gallery lists, with one row of each wound back so that a drag could arrive at
-it. That is worse. The board was ninety per cent of the way there before the
-clip started and the drag took the credit, which is a demonstration of nothing.
-
-What ships is the honest version: `params: {}`, so the app opens on the board a
-first visitor gets — stock controls, colour bars on source A — and every value
-that ends up on screen was put there by the hand in the frame. `build` raises
-four rows in the order the mechanism runs (the camera loop's `mix` and `rotate`,
-then the mixer loop's `loop mix` and `loop delay`) and finishes on a field of
-rainbow that was not there fifteen seconds earlier. `loop gain` is left alone
-precisely because it already rests at 1: a slide that dragged it would be
-miming.
-
-**The stage opens on one button pressed four times**, and it is where
-[`?seed=`](#url-parameters) earns its keep: `random nudge` moves every control
-around where it sits, so on a board that is already coming apart each press goes
-further out rather than starting over — the slide is the app answering "further"
-four times, from wherever the last press landed, and undo walking it home.
-Unseeded that take is unrepeatable, and a rerecording would need its caption
-rewritten around whatever came up; `?seed=2` fixes the rolls. `reel.mjs` carries
-why it is a nudge and not a `random look`, and why the board under it is a
-feedback look rather than the photograph.
-
-It replaced a fault dialled into clean bars — HV sag and supply ring, the raster
-losing its geometry. The mechanism is right and the slide was the weakest thing
-on the page: a slow bow in a colour bar, sitting above a gallery of looks
-somebody had already tuned. What a fault does is the gallery's job and the
-guide's; what the button does is the app's.
-
-Finding `build`'s four rows took a probe rather than a guess, and it is worth
-knowing why. Colour bars are already saturated, so chroma gain at 12x clips them
-back to almost the same bars — the photograph was in there for a reason. And the
-camera loop alone runs away to white: `fbMix` and `fbGain` multiply, so what
-makes the picture breed structure rather than bloom out is the product sitting
-just over unity, which is what the group's own "round trip" readout is there to
-say.
+**Screening a canvas needs the frame grabbed in the task that rendered it.** A
+`drawImage` off the WebGPU canvas after a wall-clock wait reads black, and the
+same grab straight after an engine step reads the frame — so the probe steps
+once and screenshots the canvas rect in one go, and a sheet with black tiles on
+it is the probe rather than the look. The readout beside a row updates on
+React's next render, not synchronously with the input event, so finding a travel
+fraction for a value on a curved row is a bisection across evaluates, not inside
+one.
 
 ```
 pnpm demoreel                    # the gallery's clips (the canvas alone)

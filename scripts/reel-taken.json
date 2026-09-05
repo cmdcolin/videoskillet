@@ -1,18 +1,18 @@
 {
   "signal-path": {
-    "version": "0.38.3",
-    "sha": "618e48c"
+    "version": "0.38.4",
+    "sha": "5b99d2f"
   },
   "build": {
-    "version": "0.38.3",
-    "sha": "618e48c"
+    "version": "0.38.4",
+    "sha": "5b99d2f"
   },
   "roll": {
-    "version": "0.38.3",
-    "sha": "618e48c"
+    "version": "0.38.4",
+    "sha": "5b99d2f"
   },
   "presets": {
-    "version": "0.38.3",
-    "sha": "618e48c"
+    "version": "0.38.4",
+    "sha": "43db2a7"
   }
 }
