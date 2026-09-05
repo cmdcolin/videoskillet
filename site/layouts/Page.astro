@@ -4,20 +4,20 @@ import video from '../scripts/video.js?raw'
 import css from '../styles/guide.css?raw'
 import tokens from '../styles/tokens.css?raw'
 
+import { href } from '../lib/pages.mjs'
+
 const { spec, outline, summary } = Astro.props
 
-const SITE = 'https://videoskillet.com/'
-// The site's own landing page is the directory, not the filename.
-const url = out => `${SITE}guide/${out === 'index.html' ? '' : out}`
+const SITE = 'https://videoskillet.com'
 
 // Short pages don't get a section nav — four sections you can see by scrolling
 // are not worth one — but the effects page is 25,000 pixels tall on a phone.
 const NAV_MIN = 5
 
 const title = `${spec.nav} — videoskillet.js`
-const canonical = url(spec.out)
+const canonical = SITE + href(spec.slug)
 const pages = spec.group.pages
-const at = pages.findIndex(page => page.out === spec.out)
+const at = pages.findIndex(page => page.slug === spec.slug)
 const prev = pages[at - 1]
 const next = pages[at + 1]
 const marked = spec.group.mark(spec)
@@ -33,7 +33,7 @@ const marked = spec.group.mark(spec)
     <title>{title}</title>
     <meta name="description" content={summary} />
     <link rel="canonical" href={canonical} />
-    <link rel="icon" type="image/svg+xml" href="../favicon.svg" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="theme-color" content="#0e0e11" />
     <meta name="color-scheme" content="dark" />
     <!-- A guide page shared on its own unfurls as itself, not as a bare filename. -->
@@ -42,34 +42,34 @@ const marked = spec.group.mark(spec)
     <meta property="og:url" content={canonical} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={summary} />
-    <meta property="og:image" content={`${SITE}og.jpg`} />
+    <meta property="og:image" content={`${SITE}/og.jpg`} />
     <meta name="twitter:card" content="summary_large_image" />
-    <!-- Inlined rather than linked: `scripts/guidecheck.mjs` loads these pages
-         over file:// to measure overflow, and a linked stylesheet would leave it
-         measuring an unstyled page and reporting nothing. -->
+    <!-- Inlined rather than linked: a handful of static pages, each one then
+         self-contained enough to render opened straight off the filesystem,
+         with no server to resolve a stylesheet path against. -->
     <style is:inline set:html={tokens + css}></style>
   </head>
   <body id="top">
     <a class="skip" href="#content">Skip to content</a>
     <header>
       <div class="bar">
-        <a class="brand" href="../"
+        <a class="brand" href="/guide/"
           >videoskillet.js<span>{spec.group.label}</span></a
         >
         <nav class="pages" aria-label="Guide pages">
           {
             spec.group.nav.map(page => (
               <a
-                class={page.out === marked ? 'on' : undefined}
-                aria-current={page.out === marked ? 'page' : undefined}
-                href={page.out}
+                class={page.slug === marked ? 'on' : undefined}
+                aria-current={page.slug === marked ? 'page' : undefined}
+                href={href(page.slug)}
               >
                 {page.nav}
               </a>
             ))
           }
         </nav>
-        <a class="cta" href="../app/">Open the app ↗</a>
+        <a class="cta" href="/app/">Open the app ↗</a>
       </div>
     </header>
     <div class="wrap">
@@ -94,7 +94,7 @@ const marked = spec.group.mark(spec)
             prev === undefined ? (
               <span />
             ) : (
-              <a class="prev" href={prev.out}>
+              <a class="prev" href={href(prev.slug)}>
                 <span>← Previous</span>
                 <b>{prev.nav}</b>
               </a>
@@ -104,7 +104,7 @@ const marked = spec.group.mark(spec)
             next === undefined ? (
               <span />
             ) : (
-              <a class="next" href={next.out}>
+              <a class="next" href={href(next.slug)}>
                 <span>Next →</span>
                 <b>{next.nav}</b>
               </a>
@@ -115,8 +115,8 @@ const marked = spec.group.mark(spec)
     </div>
     <footer>
       <div class="foot">
-        <a href="../app/">Live demo ↗</a>
-        <a href={spec.group.foot.href}>{spec.group.foot.text}</a>
+        <a href="/app/">Live demo ↗</a>
+        <a href={href(spec.group.foot.slug)}>{spec.group.foot.text}</a>
         <a href="https://github.com/cmdcolin/videoskillet">Source ↗</a>
         <a href="https://github.com/cmdcolin/videoskillet/issues">Issues ↗</a>
         <a href="#top">Back to top ↑</a>

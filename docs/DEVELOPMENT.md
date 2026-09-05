@@ -1530,6 +1530,14 @@ asset pipeline, because the path is load-bearing in two places: the landing page
 loads `signal-path-callout.jpg` out of it directly, and `shots.json` joins a
 figure to the session that produced it on the bare filename.
 
+Every address on the site is site-absolute and ends in a slash: a page is a
+directory with an index in it (`build.format: 'directory'`), read at
+`/guide/faq/`, and [`../site/lib/pages.mjs`](../site/lib/pages.mjs) is the one
+place that turns a slug into that address. The slugs stay flat — an ADR is
+`adr-0004-…`, not a page inside `adr/` — so every page is one level deep and
+reaches the figures at `/guide/img/` from the same distance. A relative href
+would have to know that depth; none of them do.
+
 The site has one theme and it is dark, so the renderer also collapses each
 diagram's `<picture>` down to the dark SVG. Left alone, `prefers-color-scheme`
 would hand a light-mode visitor pale pastel diagrams on a near-black page.
@@ -1547,10 +1555,10 @@ expose yet (withastro/roadmap#1321), and this repo is on 7. The same blocker
 leaves the tests under `site/` unchecked, since both import `.astro`. Worth
 revisiting whenever that lands.
 
-**The stylesheet and that script are inlined into every page deliberately.**
-`guidecheck.mjs` below loads the built pages over `file://` to measure them, and
-a linked stylesheet would leave it measuring an unstyled page and reporting that
-all is well.
+**The stylesheet and that script are inlined into every page deliberately.** It
+is a handful of static pages, and inlining leaves each one self-contained: it
+renders opened straight off the filesystem, with no server to resolve a
+stylesheet path against.
 
 ### Checking the built pages
 
@@ -1575,10 +1583,15 @@ what the harnesses above are for.
 
 ### Checking the layout
 
-`pnpm guide:check` builds the site, then loads every page at 1352px and at 390px
-and fails on anything wider than the viewport that isn't a deliberate scroll
-container ([`../scripts/guidecheck.mjs`](../scripts/guidecheck.mjs)). It leaves
+`pnpm guide:check` builds the site, then serves `dist/` and loads every page at
+1352px and at 390px, failing on anything wider than the viewport that isn't a
+deliberate scroll container
+([`../scripts/guidecheck.mjs`](../scripts/guidecheck.mjs)). It leaves
 screenshots in `/tmp/guidecheck` — the fastest way to see every render at once.
+It serves rather than opening the pages over `file://` because the links and
+figures are site-absolute: off the filesystem a page looks for `/guide/img/…` at
+the root of it and gets measured with none of its diagrams in it. The server is
+[`../scripts/static.mjs`](../scripts/static.mjs), shared with `distcheck`.
 
 The phone arm is the one that earns its keep. The desktop layout has slack in
 it; 390px does not, and both faults the redesign fixed were invisible on a

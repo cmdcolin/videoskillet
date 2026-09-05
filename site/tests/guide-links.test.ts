@@ -2,13 +2,13 @@ import { experimental_AstroContainer } from 'astro/container'
 import { beforeAll, expect, test } from 'vitest'
 
 import { GUIDE_URL } from '../../src/ui/links'
-import { ALL, slug } from '../lib/pages.mjs'
+import { ALL, href, slug } from '../lib/pages.mjs'
 import Landing from '../pages/index.astro'
 
 import { readFileSync } from 'node:fs'
 
 // The landing page and the app menu are the two places a stranger walks into the
-// guide, and they walk in by page filename and section anchor. Nothing else
+// guide, and they walk in by page address and section anchor. Nothing else
 // checks them: the guide is rendered from markdown that has no idea these links
 // exist, so a renamed page or a reworded heading breaks them silently.
 let into: string[] = []
@@ -34,9 +34,9 @@ test('every page the landing page links to is a page the guide renders', () => {
     const [path] = link.split('#')
     if (path !== '' && !path.startsWith('img/')) {
       expect(
-        ALL.map(spec => spec.out),
+        ALL.map(spec => href(spec.slug)),
         `the landing page links to /guide/${path}`,
-      ).toContain(path)
+      ).toContain(`/guide/${path}`)
     }
   }
 })
@@ -57,8 +57,7 @@ test('every section the landing page deep-links to is a heading that exists', ()
   expect(anchored.length).toBeGreaterThan(0)
   for (const link of anchored) {
     const [path, hash] = link.split('#')
-    const out = path === '' ? 'index.html' : path
-    const spec = ALL.find(page => page.out === out)
+    const spec = ALL.find(page => href(page.slug) === `/guide/${path}`)
     if (spec === undefined) {
       expect.fail(
         `the landing page deep-links to /guide/${path}, which is no page`,

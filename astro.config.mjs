@@ -26,12 +26,6 @@ const figures = () => ({
   name: 'guide-figures',
   hooks: {
     'astro:server:setup': ({ server }) => {
-      server.middlewares.use((req, _res, next) => {
-        // Dev routes have no extension; the pages link to each other by
-        // filename because that is what the build emits.
-        req.url = req.url.replace(/\.html(?=$|[?#])/, '')
-        next()
-      })
       // Vite strips the base before middlewares run, so the path arrives here
       // as `/img/…` rather than `/guide/img/…`.
       server.middlewares.use((req, res, next) => {
@@ -69,13 +63,12 @@ export default defineConfig({
   // entries to what it left (vite.config.ts).
   outDir: './dist',
   publicDir: './public',
-  // Flat `*.html` in one directory, laid out the way the pages directory is.
-  // `scripts/guidecheck.mjs` reads the guide non-recursively, so nested pages
-  // would go unchecked without saying so, and flat names are what let every
-  // cross-link and figure stay relative. `file` would be the obvious setting
-  // and is the wrong one: it renders a directory's index as `guide.html`
-  // beside the directory rather than `guide/index.html` inside it.
-  build: { format: 'preserve' },
+  // A page is a directory with an index inside it, so it is read at
+  // `/guide/faq/` and every link the site writes ends in a slash. `preserve`
+  // emitted `faq.html` and put that filename in the address bar. The slugs stay
+  // flat (`adr-0004-…`), so every page is one level deep and the figures are at
+  // `/guide/img/` from all of them.
+  build: { format: 'directory' },
   // Astro's HTML minifier strips whitespace-only text nodes between elements,
   // so `Built by\n<a>cmdcolin</a>.` renders as "Built bycmdcolin." and the
   // markup needs `{' '}` spacers to read as a sentence. Off, the browser

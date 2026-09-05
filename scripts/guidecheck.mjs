@@ -2,9 +2,14 @@
 // a phone width, screenshot it, and fail if anything but a deliberate scroll
 // container is wider than the viewport.
 //
-// Usage: node scripts/guidecheck.mjs [guideDir] [outDir]
-//   guideDir defaults to dist/guide — run `pnpm guide` first.
+// Usage: node scripts/guidecheck.mjs [distDir] [outDir]
+//   distDir defaults to dist — run `pnpm guide` first.
 //   outDir defaults to /tmp/guidecheck.
+//
+// Served over http rather than opened over file://, because every link and
+// figure in the guide is site-absolute: a page opened off the filesystem looks
+// for `/guide/img/…` at the root of it and measures a page with no diagrams in
+// it.
 //
 // The phone arm is the one worth running. The desktop layout has slack in it;
 // 390px does not, and the things that break there — a nav row that wraps three
@@ -14,27 +19,34 @@
 import puppeteer from 'puppeteer-core'
 
 import { FIREFOX } from './browser.mjs'
+import { serveDist } from './static.mjs'
 
-import { mkdirSync, readdirSync } from 'node:fs'
-import { resolve } from 'node:path'
+import { existsSync, mkdirSync, readdirSync } from 'node:fs'
+import { join, resolve } from 'node:path'
 
-const [dirArg = 'dist/guide', outArg = '/tmp/guidecheck'] =
-  process.argv.slice(2)
-const dir = resolve(dirArg)
+const [distArg = 'dist', outArg = '/tmp/guidecheck'] = process.argv.slice(2)
+const root = resolve(distArg)
+const dir = join(root, 'guide')
 const out = resolve(outArg)
+const PORT = 8098
 mkdirSync(out, { recursive: true })
 
-// Whatever the builder emitted, so a page added to PAGES is covered here
-// without being named twice.
-const pages = readdirSync(dir)
-  .filter(f => f.endsWith('.html'))
-  .sort((a, b) => (a === 'index.html' ? -1 : b === 'index.html' ? 1 : 0))
+// Whatever the builder emitted, so a page added to the guide is covered here
+// without being named twice. Each one is a directory with an index in it, apart
+// from the guide's own front page, which is the directory they all sit in.
+const pages = [
+  { name: 'index', path: '/guide/' },
+  ...readdirSync(dir, { withFileTypes: true })
+    .filter(e => e.isDirectory() && existsSync(join(dir, e.name, 'index.html')))
+    .map(e => ({ name: e.name, path: `/guide/${e.name}/` })),
+]
 
 const WIDTHS = [
   { name: 'desktop', width: 1352, height: 900 },
   { name: 'phone', width: 390, height: 844 },
 ]
 
+const server = await serveDist(root, PORT)
 const browser = await puppeteer.launch({
   browser: 'firefox',
   executablePath: FIREFOX,
@@ -45,7 +57,7 @@ let bad = 0
 for (const vp of WIDTHS) {
   await page.setViewport({ width: vp.width, height: vp.height })
   for (const p of pages) {
-    await page.goto(`file://${dir}/${p}`, { waitUntil: 'load' })
+    await page.goto(`http://localhost:${PORT}${p.path}`, { waitUntil: 'load' })
     await new Promise(r => setTimeout(r, 250))
     const m = await page.evaluate(() => {
       const de = document.documentElement
@@ -79,18 +91,17 @@ for (const vp of WIDTHS) {
       m.scrollW > m.clientW + 1 || m.over.length > 0 || m.leaky > 0
     if (overflow) bad++
     console.log(
-      `${overflow ? 'OVERFLOW' : '   ok   '} ${vp.name.padEnd(7)} ${p.padEnd(17)} ` +
+      `${overflow ? 'OVERFLOW' : '   ok   '} ${vp.name.padEnd(7)} ${p.name.padEnd(17)} ` +
         `scrollW=${m.scrollW} clientW=${m.clientW} h=${m.docH} ` +
         `tables=${m.scrolling}/${m.wraps} scrolling` +
         (m.leaky > 0 ? ` LEAKY=${m.leaky}` : '') +
         (m.over.length > 0 ? ` :: ${m.over.join(', ')}` : ''),
     )
-    await page.screenshot({
-      path: `${out}/${vp.name}-${p.replace('.html', '')}.png`,
-    })
+    await page.screenshot({ path: `${out}/${vp.name}-${p.name}.png` })
   }
 }
 await browser.close()
+server.close()
 console.log(
   bad === 0
     ? `\nno horizontal overflow — shots in ${out}`

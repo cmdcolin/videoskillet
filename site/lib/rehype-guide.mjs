@@ -4,6 +4,8 @@ import { slug } from './pages.mjs'
 
 import { readFileSync } from 'node:fs'
 
+const IMG = '/guide/img/'
+
 // The live URL for each captured figure, keyed by the image file it produced
 // (scripts/docshots.mjs writes both). A figure whose image came from a spec gets
 // the session that produced it as a link, so the reader can open the exact state
@@ -38,6 +40,23 @@ const summarise = tree => {
   return stop > 80
     ? head.slice(0, stop + 1)
     : `${head.slice(0, head.lastIndexOf(' ')).trimEnd()}…`
+}
+
+// The diagrams and the clips are raw HTML in the markdown, and their `img/…`
+// paths are relative to `docs/`, which is where GitHub reads them. Here every
+// page is a directory of its own, so nothing relative would find the figures:
+// they are copied to one place and addressed from it.
+const FIGURE_ATTRS = ['src', 'srcSet', 'srcset', 'poster']
+
+const absoluteFigures = tree => {
+  visit(tree, 'element', node => {
+    for (const attr of FIGURE_ATTRS) {
+      const value = node.properties[attr]
+      if (typeof value === 'string' && value.startsWith('img/')) {
+        node.properties[attr] = IMG + value.slice('img/'.length)
+      }
+    }
+  })
 }
 
 // The markdown ships each Graphviz diagram as a <picture> so GitHub can serve a
@@ -177,8 +196,8 @@ const linkFigures = tree => {
   visit(tree, 'element', (node, i, parent) => {
     if (node.tagName !== 'img' || parent === undefined) return
     const src = node.properties.src
-    if (typeof src !== 'string' || !src.startsWith('img/')) return
-    const live = shots.get(src.slice('img/'.length))
+    if (typeof src !== 'string' || !src.startsWith(IMG)) return
+    const live = shots.get(src.slice(IMG.length))
     if (live === undefined) return
     parent.children[i] = {
       type: 'element',
@@ -205,6 +224,7 @@ const linkFigures = tree => {
 }
 
 export const rehypeGuide = () => (tree, file) => {
+  absoluteFigures(tree)
   collapsePictures(tree)
   const outline = headings(tree)
   wrapTables(tree)

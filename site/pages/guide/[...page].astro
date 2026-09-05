@@ -3,7 +3,7 @@ import GuideDoc from '../../components/GuideDoc.astro'
 import { ALL } from '../../lib/pages.mjs'
 
 export function getStaticPaths() {
-  return ALL.filter(spec => spec.out !== 'index.html').map(spec => ({
+  return ALL.filter(spec => spec.slug !== '').map(spec => ({
     params: { page: spec.slug },
     props: { spec },
   }))

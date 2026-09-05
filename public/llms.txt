@@ -65,12 +65,10 @@ a label; the drag surfaces (the framing boxes, the A/B lever) take arrow keys.
 ## The rest
 
 - [Every control, with its key](https://videoskillet.com/llms-full.txt)
-- [Effects](https://videoskillet.com/guide/effects.html) — the fault each
+- [Effects](https://videoskillet.com/guide/effects/) — the fault each
   control models
-- [User guide](https://videoskillet.com/guide/guide.html) — driving it
-- [How it works](https://videoskillet.com/guide/how-it-works.html) — the
-  signal path and the code
-- [Architecture](https://videoskillet.com/guide/architecture.html) — the pass
-  graph, for changing it
-- [AI usage](https://videoskillet.com/guide/ai.html) — working on this
+- [User guide](https://videoskillet.com/guide/guide/) — driving it
+- [Architecture](https://videoskillet.com/guide/architecture/) — the signal
+  path pass by pass, for changing it
+- [AI usage](https://videoskillet.com/guide/ai/) — working on this
   codebase with an agent
