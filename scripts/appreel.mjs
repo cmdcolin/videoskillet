@@ -63,7 +63,14 @@ import puppeteer from 'puppeteer-core'
 
 import { CHROME, FIREFOX } from './browser.mjs'
 import { installHelpers, SEED, seedStorage, step } from './drive.mjs'
-import { beatSecs, FRAME, NARROW, slides as reel } from './reel.mjs'
+import {
+  beatSecs,
+  CLIPS,
+  FRAME,
+  NARROW,
+  S3_PREFIX,
+  slides as reel,
+} from './reel.mjs'
 import { appUp } from './until.mjs'
 
 import { execFileSync } from 'node:child_process'
@@ -209,10 +216,18 @@ function installReel(touch) {
         `${rows.get(lab.htmlFor) ?? ''} ${lab.textContent ?? ''}`,
       )
     }
-    const hit = [...rows].find(([, text]) =>
-      text.replaceAll(/\s+/g, ' ').trim().toLowerCase().startsWith(want),
-    )
-    const el = hit === undefined ? null : document.getElementById(hit[0])
+    // The first row that answers and has a box. A look's touched rows are
+    // rendered twice — once in the panel and once inside the look bar's closed
+    // popover, which comes first in the document and measures as a 0x0 box at
+    // the origin. Taking that one moved the control (both inputs drive it) and
+    // drew the hand at the top-left corner for the whole take.
+    const hits = [...rows]
+      .filter(([, text]) =>
+        text.replaceAll(/\s+/g, ' ').trim().toLowerCase().startsWith(want),
+      )
+      .map(([id]) => document.getElementById(id))
+      .filter(el => el !== null)
+    const el = hits.find(el => el.getBoundingClientRect().width > 0) ?? null
     if (el === null) {
       throw new Error(`no slider “${label}” — is its stage open?`)
     }
@@ -778,7 +793,11 @@ if (check) {
   process.exit(0)
 }
 
-for (const bin of ['ffmpeg', 'cwebp']) {
+for (const bin of [
+  'ffmpeg',
+  'cwebp',
+  ...(slidesPath === null ? ['aws'] : []),
+]) {
   execFileSync('sh', ['-c', `command -v ${bin}`], { stdio: 'ignore' })
 }
 
@@ -876,7 +895,13 @@ for (const slide of wanted) {
     }
     try {
       if (frames === null) throw last
-      const mp4 = join(outDir, `${take.name}.mp4`)
+      // The reel's own clips are encoded beside their frames and uploaded from
+      // there; a screen of variants (`--slides=`) keeps its mp4 in `outDir`
+      // to be looked at, and nothing about it leaves the box.
+      const mp4 = join(
+        slidesPath === null ? tmpDir : outDir,
+        `${take.name}.mp4`,
+      )
       const scale =
         take.out.width === take.frame.width * take.frame.dpr
           ? []
@@ -919,6 +944,22 @@ for (const slide of wanted) {
       console.log(
         `  ✓ ${take.name} — ${frames} frames, ${kb(mp4)}K mp4, ${kb(still)}K still`,
       )
+      if (slidesPath === null) {
+        execFileSync(
+          'aws',
+          [
+            's3',
+            'cp',
+            mp4,
+            S3_PREFIX,
+            '--profile',
+            'colin',
+            '--only-show-errors',
+          ],
+          { stdio: 'inherit' },
+        )
+        console.log(`    ↑ ${CLIPS}${take.name}.mp4`)
+      }
     } catch (e) {
       console.log(`  FAIL ${take.name}: ${String(e).slice(0, 200)}`)
     } finally {

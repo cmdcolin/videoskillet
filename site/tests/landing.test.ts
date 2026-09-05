@@ -2,7 +2,7 @@ import { experimental_AstroContainer } from 'astro/container'
 import { beforeAll, expect, test } from 'vitest'
 
 import { demos, gallery, hero, showcase } from '../../scripts/demos.mjs'
-import { beatSecs, NARROW, slides } from '../../scripts/reel.mjs'
+import { beatSecs, CLIPS, NARROW, slides } from '../../scripts/reel.mjs'
 import Landing from '../pages/index.astro'
 
 import { readFileSync } from 'node:fs'
@@ -59,12 +59,17 @@ test('the carousel has slides', () => {
   expect(slides.length).toBeGreaterThan(0)
 })
 
-test.each(slides)('$name has all four recordings', slide => {
-  expect(bytes(slide.clip)).toBeGreaterThan(0)
-  expect(bytes(slide.still)).toBeGreaterThan(0)
-  expect(bytes(slide.narrowClip)).toBeGreaterThan(0)
-  expect(bytes(slide.narrowStill)).toBeGreaterThan(0)
-})
+// The clips are on the bucket, so what can be checked here is that a slide
+// points there; the stills ship with the page and have to be on disk.
+test.each(slides)(
+  '$name has both stills, and its clips on the bucket',
+  slide => {
+    expect(slide.clip).toBe(`${CLIPS}${slide.file}.mp4`)
+    expect(slide.narrowClip).toBe(`${CLIPS}${slide.file}-narrow.mp4`)
+    expect(bytes(slide.still)).toBeGreaterThan(0)
+    expect(bytes(slide.narrowStill)).toBeGreaterThan(0)
+  },
+)
 
 test.each(slides)('$name reaches the stage', slide => {
   expect(stage).toContain(`data-src="${slide.clip}"`)

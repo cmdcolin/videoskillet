@@ -114,6 +114,15 @@ const repin = (query, pin) => {
 // for and had the browser upscale it 2:1. The app's 11px panel type is where
 // that showed. `out` is the recorded size, so nothing is scaled on the way
 // out — the frames are already the pixels the page wants.
+// Where the clips live. The bucket `agentreel.mjs` already uses, since a slide
+// of the whole window at 2x runs to megabytes and a minute-long one to tens of
+// them, which is not a thing to keep in a git history — the stills stay in
+// `public/reel`, the mp4s go up with `aws s3 cp` at the end of a take. The
+// page reads the clip URL straight off `data-src`, so an absolute URL is fine
+// where a root-absolute path would not be.
+export const S3_PREFIX = 's3://myloveydove.com/videoskillet/reel/'
+export const CLIPS = 'https://myloveydove.com/videoskillet/reel/'
+
 export const FRAME = {
   width: 1112,
   height: 742,
@@ -247,7 +256,8 @@ const ORB = [
 ]
 
 // Five chips onto Ridiculous rainbow, cumulative, and the board is never
-// wiped.
+// wiped — each reached through the grouped catalog rather than off the
+// shortlist row.
 //
 // **What this replaced, and why the obvious version is wrong twice over.** The
 // take that shipped ran on the bundled photograph and pressed `clean` between
@@ -272,23 +282,56 @@ const ORB = [
 // picture still legible through them. Three colorizers first, since a
 // colorizer lays colour on tone and there is no undoing a fault to get one on
 // afterwards, then the ring for shimmer and `full collapse` to shear the lot.
+//
+// **Through the catalog, not the shortlist.** The take before this one seeded
+// the five chips as recents so they sat on one row beside `clean`, and every
+// drag was on that row. Colin on it: "it only delves into the top e.g. N
+// presets which is boring. dig deeper." What the seeding hid is the thing a
+// stranger most needs shown: the row is eight of a hundred and thirty-eight,
+// and `+ N more…` opens the rest grouped by the fault they model. So the hand
+// presses that chip first, then scrolls to each family in turn — Feedback
+// loops, Circuit bent, Past the redline, Phosphor / CRT, back up to Sync /
+// Deflection — and drags the chip from where it lives. One chip is new:
+// `magnetised`, a patch of mask bending all three beams, which reads on the
+// colorizer stack as a dark bulge pushing the bands aside. The rest of the
+// deeper catalog screened worse (`candidates.deep.mjs`, `deep2.mjs`, this
+// session): every colour but one, neon tube, rail slam, strobed tube and arc
+// storm each took the frame to grey, black or noise on top of the colorizers;
+// misconverged, radar tube, round tube, contour lines and a hair off the
+// crystal changed nothing the eye could find; light that stays whited it out.
+//
+// **Slower than it was.** A mix ran 0.5s with a 0.5s hold and the whole slide
+// was 8.5s — "the settings for the presets are toggled too fast. they can be
+// relatively fast but this is too fast". A drag is 0.8s now, the picture gets
+// a second to answer it before the hand moves on, and a scroll between
+// families is a beat of its own, since a panel that jumps is a cut.
 const PRESET_RUN = [
-  { moveTo: { chip: 'false colour' }, secs: 0.3 },
-  { mix: { chip: 'false colour', to: 0.7 }, secs: 0.5 },
-  { hold: 0.5 },
-  { moveTo: { chip: 'poured colour' }, secs: 0.2 },
-  { mix: { chip: 'poured colour', to: 0.6 }, secs: 0.5 },
-  { hold: 0.5 },
-  { moveTo: { chip: 'chroma rails' }, secs: 0.2 },
-  { mix: { chip: 'chroma rails', to: 0.6 }, secs: 0.5 },
-  { hold: 0.7 },
-  { moveTo: { chip: 'ring in the highlights' }, secs: 0.2 },
-  { mix: { chip: 'ring in the highlights', to: 0.5 }, secs: 0.5 },
-  { hold: 0.6 },
-  { moveTo: { chip: 'full collapse' }, secs: 0.2 },
-  { mix: { chip: 'full collapse', to: 0.4 }, secs: 0.5 },
+  { moveTo: { text: 'more…' }, secs: 0.4 },
+  { press: 0.6, on: '+' },
+  { scrollTo: { text: 'ring in the highlights' }, secs: 0.8 },
+  { moveTo: { chip: 'ring in the highlights' }, secs: 0.35 },
+  { mix: { chip: 'ring in the highlights', to: 0.5 }, secs: 0.8 },
+  { hold: 1.0 },
+  { scrollTo: { text: 'false colour' }, secs: 0.8 },
+  { moveTo: { chip: 'false colour' }, secs: 0.35 },
+  { mix: { chip: 'false colour', to: 0.7 }, secs: 0.8 },
+  { hold: 1.0 },
+  { moveTo: { chip: 'poured colour' }, secs: 0.35 },
+  { mix: { chip: 'poured colour', to: 0.6 }, secs: 0.8 },
+  { hold: 1.0 },
+  { scrollTo: { text: 'chroma rails' }, secs: 0.8 },
+  { moveTo: { chip: 'chroma rails' }, secs: 0.35 },
+  { mix: { chip: 'chroma rails', to: 0.6 }, secs: 0.8 },
+  { hold: 1.1 },
+  { scrollTo: { text: 'magnetised' }, secs: 0.6 },
+  { moveTo: { chip: 'magnetised' }, secs: 0.35 },
+  { mix: { chip: 'magnetised', to: 0.8 }, secs: 0.8 },
+  { hold: 1.1 },
+  { scrollTo: { text: 'full collapse' }, secs: 0.9 },
+  { moveTo: { chip: 'full collapse' }, secs: 0.35 },
+  { mix: { chip: 'full collapse', to: 0.4 }, secs: 0.8 },
   { away: 0.4 },
-  { hold: 2.2 },
+  { hold: 2.4 },
 ]
 
 export const slides = [
@@ -296,36 +339,20 @@ export const slides = [
     file: 'presets',
     name: 'Presets',
     caption:
-      'Every preset chip is a fader: click for all of it, drag sideways for some, and each one layers onto the board already there. Five go on here over Ridiculous rainbow — a composite loop keyed on itself, turning the hue every lap — and nothing is wiped between them. False colour, poured colour and chroma rails put colour on tone until the frame is bands of red, green and cyan; ring in the highlights shimmers through them; full collapse shears the lot as the raster gives way. Each chip lands on the picture the last one made. There are a hundred and twenty of them.',
-    alt: 'The window on Ridiculous rainbow — a white core with bands of red, green and blue pouring off it — and five preset chips dragged part way in one after another with nothing wiped between them: false colour, poured colour and chroma rails turn the frame into vivid wavy bands of red, green, cyan and magenta, ring in the highlights shimmers through them, and full collapse shears the whole thing sideways as the raster collapses',
+      'Every preset chip is a fader: click for all of it, drag sideways for some, and each one layers onto the board already there. The row shows eight; “+ more” opens all hundred and thirty-eight, grouped by the fault they model. Five go on here over Ridiculous rainbow — a composite loop keyed on itself, turning the hue every lap — and nothing is wiped between them. Ring in the highlights from the feedback loops, false colour and poured colour from the circuit-bent family and chroma rails from past the redline put colour on tone until the frame is bands of red, green and cyan; then full collapse, from the deflection faults, shears the lot as the raster gives way. Each chip lands on the picture the last one made.',
+    alt: 'The window on Ridiculous rainbow — a white core with bands of red, green and blue pouring off it — with the preset catalog opened from its “+ more” chip and scrolled family by family, and five chips dragged part way in one after another with nothing wiped between them: ring in the highlights, then false colour, poured colour and chroma rails turn the frame into vivid wavy bands of red, green, cyan and magenta, and full collapse shears the whole thing sideways as the raster collapses',
     look: 'Ridiculous rainbow',
-    // The chips are seeded as recents, which puts them on the shortlist row
-    // beside `clean` (PresetsSection.tsx: the row is `clean`, then what is in
-    // the mix, then recents, capped at eight) — so every drag in the take is
-    // on one row and nothing scrolls.
-    seed: {
-      video_feedback_recent_presets: JSON.stringify([
-        'falseColour',
-        'pouredColour',
-        'chromaRails',
-        'ringInTheHighlights',
-        'fullCollapse',
-      ]),
-    },
     // The finish, at the end of its hold.
     stillAt: 0.95,
     warm: 60,
     act: PRESET_RUN,
     // In portrait the presets row is under the picture with the panel, so it
     // is scrolled to before the pointer goes anywhere near it.
-    narrowAct: [
-      { scrollTo: { text: 'false colour' }, secs: 0.4 },
-      ...PRESET_RUN,
-    ],
+    narrowAct: [{ scrollTo: { text: 'more…' }, secs: 0.4 }, ...PRESET_RUN],
   },
   {
     file: 'orb',
-    name: 'A hair at a time',
+    name: 'Camera feedback',
     caption:
       'Rainborb is a camera pointed at the screen it feeds, with the loop held just over unity — a system on the edge, and what it wants is not a preset. Nothing here is one: every move is hundredths of a slider on the loop’s own rows. Rotate goes up a hundredth of a degree at a time and the orb goes from round to faceted; zoom moves by a hundredth and a crescent grows out of the rim, then a thick ring of yellow and magenta. That is one and a half per cent of one control for a different picture. The auto-iris hunt at the end is a servo inside the loop it is steadying, so it blooms, clamps and reopens on its own rhythm and never settles.',
     alt: 'The window on Rainborb — a pale orb rimmed with rainbow teeth on black — and the camera loop’s own rows moved a hair at a time: rotate nudged three times and the orb goes from round to faceted, zoom nudged three times and a crescent grows out of the rim into a thick ring of yellow and magenta, and the auto-iris hunt set going so the whole thing blooms and clamps on its own rhythm',
@@ -381,15 +408,16 @@ export const slides = [
     narrowAct,
     secs: length(slide.act),
     narrowSecs: length(narrowAct),
-    // `clip` and `still` are page-relative and `poster` is not, for the reason
-    // `demos.mjs` spells out: vite rewrites `src` and `poster` under this
-    // project's relative base and has never heard of a data attribute, so a
+    // The clips are served off the bucket (`CLIPS`), the stills off the page.
+    // `still` is page-relative and `poster` is not, for the reason `demos.mjs`
+    // spells out: vite rewrites `src` and `poster` under this project's
+    // relative base and has never heard of a data attribute, so a
     // root-absolute `data-src` would survive the build and 404 under a
     // sub-path.
-    clip: `reel/${slide.file}.mp4`,
+    clip: `${CLIPS}${slide.file}.mp4`,
     still: `reel/${slide.file}.webp`,
     poster: `/reel/${slide.file}.webp`,
-    narrowClip: `reel/${slide.file}-narrow.mp4`,
+    narrowClip: `${CLIPS}${slide.file}-narrow.mp4`,
     narrowStill: `reel/${slide.file}-narrow.webp`,
     narrowPoster: `/reel/${slide.file}-narrow.webp`,
   }

@@ -21,3 +21,7 @@ firestore-debug.log
 # failing run and stale the moment the baseline is regenerated — six of them
 # were committed once and outlived the drift they were evidence of.
 scripts/panelshots/*.actual.png
+
+# the carousel's clips go to s3://myloveydove.com/videoskillet/reel/ at the end of a
+# take (scripts/appreel.mjs); the stills beside them stay
+public/reel/*.mp4

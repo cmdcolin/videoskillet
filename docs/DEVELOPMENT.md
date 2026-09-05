@@ -1306,7 +1306,7 @@ one.
 pnpm demoreel                    # the gallery's clips (the canvas alone)
 pnpm demoreel laser-duck         # just this demo
 pnpm reel                        # the carousel's clips (the whole window, both frames)
-pnpm reel build                  # just this slide
+pnpm reel orb                    # just this slide
 pnpm reel:check                  # which slides show an older app
 ```
 
@@ -1316,6 +1316,13 @@ overrides. Both are slow enough to run per-slide while you are working on one,
 and both take `--keep` to leave the JPEG frames on disk, which is what makes an
 encode knob (fps, crf, the codec) worth trying more than once without driving
 the browser again.
+
+The carousel's mp4s do not live in the repo. `pnpm reel` encodes each beside
+its frames and uploads it with `aws s3 cp … --profile colin` to
+`s3://myloveydove.com/videoskillet/reel/`, the bucket the AI-usage clip is on,
+and the page plays it from `https://myloveydove.com/videoskillet/reel/`; only
+the stills land in `public/reel`. A screen of variants (`--slides=`) keeps its
+mp4 in `--out` and uploads nothing.
 
 **Both capture the same way, and it took a bad set of clips to get there.** Each
 takes a **screenshot per output frame** after stepping the engine a fixed number
