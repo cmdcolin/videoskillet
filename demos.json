@@ -90,5 +90,12 @@
     "gallery": false,
     "says": "A camera loop turned 3.2° a lap, resonating at 1.35 MHz.",
     "query": "?p=8A.GIgECaABABwAtCUpNCOQAwCsHACACgKUJQK0ARLEAQGcBwAEAIQCAJQDAEwCbACkAgCkAVKA2QE&mod="
+  },
+  {
+    "name": "Messed up clouds man",
+    "showcase": true,
+    "gallery": true,
+    "says": "A feedback loop over VHS static, its gain breathing past unity while the colour-under path runs 1.6 times hot.",
+    "query": "?mod=vFreqHz:smooth:0.08:0.0049,fbGain:smooth:0.24:0.06&src=vhs+static&set=chromaGain:1.62,hvSagUs:2.1,hvRing:0.61,abl:0.24,lumaMHz:3.2,lumaPeak:2.4,noiseIre:2.5,agc:0.18,colorUnderMix:1,ycDelayNs:420,fmOverdev:0.72,fmStreakUs:0.45,fbMix:0.9,fbShiftX:0.039,fbGain:1.086,fbFocus:0.5,fbVign:0.35,fbBlack:0.04,fbKnee:1,crtBloom:0.23,phosphor:0.065,crtZoomX:0.7143,crtZoomY:0.314"
   }
 ]
