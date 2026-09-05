@@ -330,6 +330,8 @@ const llms = [
   '  signal path and the code',
   '- [Architecture](https://videoskillet.com/guide/architecture.html) — the pass',
   '  graph, for changing it',
+  '- [AI usage](https://videoskillet.com/guide/ai.html) — working on this',
+  '  codebase with an agent',
   '',
 ].join('\n')
 

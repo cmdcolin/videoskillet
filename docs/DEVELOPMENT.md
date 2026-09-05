@@ -1793,3 +1793,5 @@ the other GPU" wants answering without a rebuild.
   editor can conform: design for work not yet built
 - [`adr/`](adr/) — the decisions where the obvious thing is wrong for a
   non-obvious reason
+- [`AI-USAGE.md`](AI-USAGE.md) — the route in for an agent: what to read in what
+  order, driving the app as a check, and the mistakes that repeat

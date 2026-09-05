@@ -119,6 +119,7 @@ OBS browser source. OSC is the piece that is missing.
   of the docs leave out. Published at
   [videoskillet.com/llms.txt](https://videoskillet.com/llms.txt) for anything
   scripting the app.
+- [AI usage](docs/AI-USAGE.md) — building and driving it with agents
 - [MIDI](docs/MIDI.md)
 - [Comparison with other tools](docs/COMPARISON.md)
 - [FAQ](docs/FAQ.md) — how it works, what runs it, installing it

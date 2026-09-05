@@ -28,6 +28,7 @@ const NOTES = [
     nav: 'Optimizations',
   },
   { file: 'docs/DEVELOPMENT.md', out: 'development.html', nav: 'Development' },
+  { file: 'docs/AI-USAGE.md', out: 'ai.html', nav: 'AI' },
   { file: 'docs/EDITOR.md', out: 'editor.html', nav: 'Editor' },
   { file: 'docs/IDEAS.md', out: 'ideas.html', nav: 'Ideas' },
   { file: 'docs/CURATION.md', out: 'curation.html', nav: 'Curation' },
