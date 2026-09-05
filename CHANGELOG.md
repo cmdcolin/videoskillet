@@ -2,6 +2,16 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [0.39.0](https://github.com/cmdcolin/videoskillet/compare/v0.38.8...v0.39.0) - 2026-09-05
+
+### Features
+- *(sync)* [`bd5673b`](https://github.com/cmdcolin/videoskillet/commit/bd5673b209f93e3aa4ee76906504adf8f2b04579) the receiver finds its own black, so a polarity flip reads as a negative
+- *(ui)* [`698cebf`](https://github.com/cmdcolin/videoskillet/commit/698cebf7453f85d1b761dddaec76462c94e3eb15) fifteen looks for the controls no preset had used, and a Switcher group
+- *(docs)* [`aca4698`](https://github.com/cmdcolin/videoskillet/commit/aca4698a3d180d747e29427ce0466fefcd564caf) the screening harness runs in Chrome, scores colour motion, and carries round 3
+
+### Other Changes
+- [`39f9234`](https://github.com/cmdcolin/videoskillet/commit/39f92343da527a62b54418ad061f4a1baf7ed70c) Stuff
+
 ## [0.38.8](https://github.com/cmdcolin/videoskillet/compare/v0.38.7...v0.38.8) - 2026-09-05
 
 ### Features
