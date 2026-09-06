@@ -93,13 +93,6 @@ function PresetsHelpDialog(props: { onClose: () => void }) {
         many controls it moves. “this look” in the bar above then lists every
         one of them as a live row you can drag.
       </p>
-      <p className={ui.helpText}>
-        Every preset but “clean” is also a fader. Click to dial it fully in, or
-        drag sideways for a partial amount. Either way it layers onto what’s
-        already there rather than replacing it, and the fill shows how much is
-        in, so stacking several accumulates their faults. “clean” is a plain
-        reset. Click it to clear them all.
-      </p>
       <div className={ui.muted}>
         A mix lasts only until something else moves the look (a slider, mutate,
         a saved look). Then the fills reset, since a blended look can’t be
