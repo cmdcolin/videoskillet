@@ -1,11 +1,11 @@
 # Getting started
 
-videoskillet.js simulates analog video signal using WebGPU shaders. All the
-video effects are natural consequences of real signal-level glitches, rather
-than effects drawn on top of the image.
+videoskillet.js simulates the analog video signal in WebGPU shaders. Every
+effect is a consequence of a real signal-level fault rather than something drawn
+on top of the picture.
 
-It needs WebGPU, which needs a fairly recent browser — try Firefox Nightly or
-Chrome Canary if you have trouble with your default browser.
+It needs WebGPU, so it needs a fairly recent browser — try Firefox Nightly or
+Chrome Canary if your default one has trouble.
 
 Visit https://videoskillet.com/app/
 
@@ -13,15 +13,15 @@ Visit https://videoskillet.com/app/
 
 ![The videoskillet.js window with four labels: the picture on the left, and down the right-hand panel the menu, the presets and the signal path map](img/overview.jpg)
 
-**The picture** takes the left of the window: drag a box across it to magnify
-that region, and double-click to pull back. **The ☰ menu**, top right, holds
-stills, recording, fullscreen and settings. **Presets**, below it, is a
-shortlist of whole looks. Click one and every control it names moves at once.
+**The picture** takes the left of the window: drag a box across it to magnify a
+region, double-click to pull back. **The ☰ menu**, top right, holds stills,
+recording, fullscreen and settings. **Presets**, below it, is a shortlist of
+whole looks — click one and every control it names moves at once.
 
 **Signal path** is the map at the top of the sidebar, and it is the main thing
-to click. Every box on it is a stage of the chain, and clicking one opens that
-stage's controls underneath it. All the controls live there, sources included,
-each at the point on the path where it acts.
+to click. Every box is a stage of the chain, and clicking one opens that stage's
+controls underneath it. Every control lives there, sources included, each at the
+point on the path where it acts.
 
 ## Three looks to try
 

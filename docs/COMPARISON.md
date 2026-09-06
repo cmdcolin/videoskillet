@@ -2,7 +2,7 @@
 
 Several good tools make video look like it went through composite, tape and a
 CRT, and they mostly differ in the job they are for. This page points at the
-right one quickly, including when that is not this one.
+right one quickly, this one included.
 
 - That look on a clip in your edit → **ntsc-rs**
 - Four sources, a mixer, and every kind of glitch → **BENDR**
@@ -26,22 +26,21 @@ videoskillet.js has no plugin, and isn't planning one right now
 ### BENDR
 
 [BENDR](https://github.com/clickysteve/bendr) is the closest neighbour: another
-live browser tool, and a much broader one. four channels, a reorderable chain on
-each, three mix buses, keys and wipes, all in one self-contained HTML file that
-a phone will run. It works on the picture. Chroma bleed, rainbow fringing, dot
-crawl and ringing are each an effect with its own slider, and the sync faults
-are drawn on top, line by line. Nothing has to be a signal for that to look
-right, which is what lets the stages reorder freely.
+live browser tool, and a much broader one — four channels, a reorderable chain
+on each, three mix buses, keys and wipes, all in one self-contained HTML file
+that a phone will run. It works on the picture. Chroma bleed, rainbow fringing,
+dot crawl and ringing are each an effect with its own slider, and the sync
+faults are drawn on top line by line. Nothing has to be a signal for that to
+look right, which is what lets the stages reorder freely.
 
 videoskillet.js has no dot-crawl slider, because it builds the signal instead. A
 picture becomes an actual composite waveform, with sync pulses, colour burst and
-colour carried on the subcarrier the way a real encoder carries it. The model
-damages that waveform, and a model of a TV has to lock to it and decode it back.
-Dot crawl and rainbow fringing are then leftovers of a decoder that could not
-separate colour from brightness cleanly. Nobody draws them, and they change
-whenever anything upstream does. That is the trade: far narrower, but every
-fault lands on the same signal, so they affect each other without being wired
-together.
+colour on the subcarrier the way a real encoder carries it; the model damages
+that waveform, and a model of a TV has to lock to it and decode it back. Dot
+crawl and rainbow fringing are then leftovers of a decoder that could not
+separate colour from brightness cleanly, so they change whenever anything
+upstream does. That is the trade: far narrower, and every fault lands on the
+same signal, so they affect each other without being wired together.
 
 ### ntscQT
 
@@ -60,7 +59,7 @@ rather than an app to use.
 the RF straight off a working deck's head amp, captures it with a CX card or a
 Domesday Duplicator, and decodes the tape in software — VHS, SVHS, U-Matic,
 Betamax, Video8 and more — out to timebase-corrected luma and chroma files.
-Nothing about it is synthesised, so with the tape and the hardware in hand, that
+Nothing about it is synthesised, so with the tape and the hardware in hand that
 is where a real signal comes from, and where a claim made here can be checked
 against one.
 
@@ -80,15 +79,14 @@ same thing from the other side.
 
 ## Where videoskillet.js fits
 
-videoskillet.js works best as a **live instrument** rather than an offline
-signal processor, and that follows from how it is built: the signal path stays
-resident on the GPU as compute shaders, so a control change is a uniform-buffer
-write, not a re-render. That buys:
+videoskillet.js works best as a **live instrument**, which follows from how it
+is built: the signal path stays resident on the GPU as compute shaders, so a
+control change is a uniform-buffer write rather than a re-render. That buys:
 
 - **A control for every stage** of the path: wiring, tape, RF, the receiver and
   the screen
-- **Three feedback loops**: a camera at its own monitor, a mixer patched into
-  itself at signal level, and a tape loop with up to eight heads
+- **Two feedback loops**: a camera at its own monitor, and a mixer patched into
+  itself at signal level
 - **Modulation on any slider**: LFO, random walk, sample-and-hold, Lorenz
   attractor, or live audio
 - **MIDI** with automap, soft takeover, and rates locked to incoming clock

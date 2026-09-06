@@ -1,7 +1,7 @@
 # Using a MIDI controller
 
 There are more sliders here than you want to drag one at a time. A cheap box of
-knobs gives you both hands and means you can stop looking at the panel.
+knobs gives you both hands and lets you stop looking at the panel.
 
 Short version: **advanced settings** → **enable MIDI**, then **auto-map** or
 **learn in order** in the sidebar's **MIDI** section.
@@ -47,16 +47,16 @@ then reads **CC7** and the pairing shows in the MIDI panel. `Esc` cancels.
   of the MIDI panel: choose the preset, click **⚟ preset mix**, move a knob.
   Weights layer, so several presets on several knobs is a small desk of looks.
 
-Neither does soft takeover. They grab on the first message, because neither has
+Neither does soft takeover — they grab on the first message, because neither has
 a track to draw a waiting mark on. A weight also resets once anything else moves
 the board: the next turn starts a fresh mix from what is on screen.
 
 ## Pads, for the things you hit rather than set
 
-A knob holds a value. Some of what you do during a set isn't a value at all —
-triggering the modulation bay's one-shot envelopes, marking a cue, jumping back
-to one. Those go on **pads or keys**, bound at the bottom of the MIDI panel:
-pick the gesture, click **⚟ pad**, hit the pad.
+A knob holds a value. Triggering the modulation bay's one-shot envelopes,
+marking a cue and jumping back to one are gestures instead, so they go on **pads
+or keys**, bound at the bottom of the MIDI panel: pick the gesture, click **⚟
+pad**, hit the pad.
 
 What can go on one:
 

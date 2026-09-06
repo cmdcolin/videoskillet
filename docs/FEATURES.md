@@ -2,13 +2,13 @@
 
 Every control breaks a piece of hardware rather than drawing an artifact. Dot
 crawl, rainbows, tearing and hue drift follow from that, which is why two
-controls compound instead of just stacking.
+controls compound instead of stacking.
 
 This page is a tour: what each stage is, and the one thing about it worth
 knowing before you turn anything. [Effects](EFFECTS.md) is the full list of
-controls, generated from the app's own control table.
+controls, generated from the app's own table.
 
-The five blocks below are the five boxes on the app's own chain map, in the same
+The five blocks below are the five boxes on the app's chain map, in the same
 order and under the same names, so the picture here matches what you click.
 
 <picture>
@@ -18,23 +18,23 @@ order and under the same names, so the picture here matches what you click.
 
 ## Sources and wiring
 
-Two decks, and they offer the same list: a still, a video file, a webcam, a
-shared screen, colour bars, TV or VHS static, a video synth, or a teletype card
-you type on, plus your own clip list and a random pick from Wikimedia Commons
-and archive.org. The webcam is how an RCA capture dongle gets real gear in, and
-both decks take one, so two grabbers can be mixed against each other. Only B can
-be switched off, which is the only difference between the two lists.
+Two decks offering the same list: a still, a video file, a webcam, a shared
+screen, colour bars, TV or VHS static, a video synth, a teletype card you type
+on, your own clip list, and a random pick from Wikimedia Commons or archive.org.
+The webcam entry is how an RCA capture dongle gets real gear in, and both decks
+take one, so two grabbers can be mixed against each other. Only B can be
+switched off, which is the only difference between the two lists.
 
 Then the faults, starting at the connector: snow, a loose plug, a ground loop, a
 termination fault, polarity flips, S-video miswired into composite. Cable
-scrambling, Macrovision AGC pulses and colorstripe are the interesting ones.
-They work by turning the receiver's own AGC and burst circuits against it.
+scrambling, Macrovision AGC pulses and colorstripe are the interesting ones —
+they work by turning the receiver's own AGC and burst circuits against it.
 
-Source A can also arrive as a file that was already a tape: a capture group
-models the deck it was digitised from (luma and chroma bands, Y/C delay, grain
-and the colour-under carrier's blotchy noise) before the chain encodes it, so
-the tape damage downstream lands on a picture that was a tape to begin with. Off
-by default, and it costs nothing while it is.
+Source A can also arrive as a file that was already a tape. A capture group
+models the deck it was digitised from — luma and chroma bands, Y/C delay, grain,
+the colour-under carrier's blotchy noise — before the chain encodes it, so the
+damage downstream lands on a picture that was a tape to begin with. Off by
+default, and it costs nothing while it is.
 
 Each input also has its own deck and cable ahead of the mixer, so a fault can
 hit one source alone. Knock out one input's sync and the receiver locks to the
@@ -43,7 +43,7 @@ other, and the geometry snaps between two pictures.
 ## Feedback loops
 
 Two, and they differ in what goes round. Each is described here in the app's own
-words, since the chain map opens both of them with the same description:
+words, so the chain map and this page cannot disagree:
 
 <!-- generated:loops — from LOOP_STAGES in src/ui/controls.ts, via scripts/docgen.mjs -->
 
@@ -70,13 +70,12 @@ term, so mattes come out soft across and sharp down, the way every composite key
 was.
 
 A **character generator** stands here too, keying the caption text into the
-picture the way every lower third and station ident was made. What makes it a CG
-rather than an overlay is that it puts out two wires, a fill (the characters as
-video) and a key (their matte), so trimming the timing between them puts program
-through one side of every stem and the box's own black down the other. It is the
-open caption to line 21's closed one: the same sentence, one keyed into the
-picture and aged by everything downstream, one sent as data and misspelled
-instead.
+picture the way every lower third and station ident was made. It puts out two
+wires — a fill, the characters as video, and a key, their matte — so trimming
+the timing between them puts program through one side of every stem and the
+box's own black down the other. It is the open caption to line 21's closed one:
+the same sentence, one keyed into the picture and aged by everything downstream,
+one sent as data and misspelled instead.
 
 ## Channel
 
@@ -88,13 +87,13 @@ The one worth knowing: noise out of an FM discriminator rises toward the top of
 the band, which lands it in the chroma passband, so tape noise arrives as
 crawling coloured speckle rather than grey grain.
 
-The tracking band is a servo, not a position. With **servo hunt** up the deck
-searches for the track the way an auto-tracking machine does — a second-order
-loop with a dead band, and less damping the higher the control, so it sweeps,
-overshoots and rings, settles for a moment, and drifts back off as the tape
-stretches. A scene change, coming out of shuttle, the loop's splice, a
-transition cut or a thump from the music all knock it off the peak, and the top
-of the frame flags on the tape tension each time (`signal/servo.ts`).
+The tracking band is a servo rather than a position. With **servo hunt** up the
+deck searches for the track the way an auto-tracking machine does — a
+second-order loop with a dead band, and less damping the higher the control, so
+it sweeps, overshoots, rings, settles for a moment and drifts back off as the
+tape stretches. A scene change, coming out of shuttle, a transition cut or a
+thump from the music all knock it off the peak, and the top of the frame flags
+on the tape tension each time (`signal/servo.ts`).
 
 ## Enhancer
 
@@ -113,13 +112,13 @@ Deflection bend happens after decoding, so it warps geometry but must not touch
 hue. That distinction, whether a wobble takes the colour with it, is the most
 useful one to keep in mind while using the app.
 
-The set also has a **caption decoder**, and it is the one thing here that reads
-the signal as _data_. Line 21 carries whatever you type, so noise, a narrow
-channel and generation loss arrive as misspellings: dropped characters, wrong
-ones, and the solid block a real decoder drew wherever parity caught an error
-and it refused to guess. The page is repainted on the set's own timing, which is
-where a real one painted it, so the picture can roll and tear underneath a
-caption sitting perfectly still.
+The set also has a **caption decoder**, the one thing here that reads the signal
+as _data_. Line 21 carries whatever you type, so noise, a narrow channel and
+generation loss arrive as misspellings: dropped characters, wrong ones, and the
+solid block a real decoder drew wherever parity caught an error and it refused
+to guess. The page is repainted on the set's own timing, where a real one
+painted it, so the picture can roll and tear underneath a caption sitting
+perfectly still.
 
 ## Screen
 
@@ -142,9 +141,9 @@ through them.
 
 The sound can be the mic, a file, the clip's own track, or whatever the machine
 itself is playing, that last through a share of the tab or app it comes out of.
-It is worth knowing which you are on. The mic route puts the room, the speakers
-and the microphone's own colouring between the track and the envelope detector,
-while a share delivers the track itself.
+Which route matters: the mic puts the room, the speakers and the microphone's
+own colouring between the track and the envelope detector, where a share
+delivers the track itself.
 
 ## Intercarrier buzz: picture into sound
 
@@ -153,17 +152,17 @@ recovers the 4.5 MHz beat between the picture and sound carriers, and a limiter
 that cannot keep video crosstalk off it passes the picture through as audio: the
 vertical interval as a 60 Hz buzz, line structure as a whine, snow as hiss.
 
-It is a tap on the real composite rather than a synthesised noise, so the faults
-above arrive already in the right relationship to what you can see. Bright
-scenes buzz louder because peak white overmodulates. Hum bars beat against the
-field rate. A head switch clicks on the line it damages. Fine tuning frees the
-carrier and makes the weave and the buzz worse together, because they are one
-leak seen from two ends.
+It taps the real composite rather than synthesising a noise, so the faults above
+arrive already in the right relationship to what you can see. Bright scenes buzz
+louder because peak white overmodulates. Hum bars beat against the field rate. A
+head switch clicks on the line it damages. Fine tuning frees the carrier and
+makes the weave and the buzz worse together, because they are one leak seen from
+two ends.
 
-The tap sits ahead of the receiver, which is where a real set's sound detector
-sits too, so it hears the signal domain and nothing the receiver does after it.
-A rolling picture over a steady buzz is the audible form of that: the roll is
-the receiver's vertical oscillator, downstream of anything the sound can reach.
+The tap sits ahead of the receiver, where a real set's sound detector sits, so
+it hears the signal domain and nothing the receiver does after it. A rolling
+picture over a steady buzz is the audible form of that: the roll is the
+receiver's vertical oscillator, downstream of anything the sound can reach.
 
 ## The rig
 
@@ -175,18 +174,17 @@ the receiver's vertical oscillator, downstream of anything the sound can reach.
   See [Using a MIDI controller](MIDI.md).
 - **Presets**: also faders you can drag partway in. Morph, random nudge, full
   undo, and saved profiles behind a sign-in.
-- **Drift**: one switch and the look wanders on its own, unattended, with a
-  gentle nudge every fifteen seconds, travelling most of the way there so
-  nothing cuts, and staying around the look you set drifting rather than running
-  off. Every stage has the same switch for its own controls, so one circuit can
-  move while you work on another.
+- **Drift**: one switch and the look wanders on its own, a gentle nudge every
+  fifteen seconds, travelling most of the way there so nothing cuts, and staying
+  around the look you set it drifting on. Every stage has the same switch for
+  its own controls, so one circuit can move while you work on another.
 - **Rundown**: the strip tray is a list of looks that plays itself. A row holds
   for a count of bars, arrives as a cut, a morph or a fault from the transition
   list, and can roll a source out of a pool or shake the look rather than naming
   either. Play it from the top, or fire rows by hand.
 - **Sharing**: the whole board mirrors to the URL, so a link is a patch.
 - **Capture**: stills, and a constant-framerate H.264 MP4 of the picture as it
-  plays. The strip's ⎙ render is the other way out: it steps the engine on a
+  plays. The strip's ⎙ render is the other way out — it steps the engine on a
   clock the render owns, so a take comes back at 60 however fast the tab ran,
   and comes back the same twice. Or pop the controls into a second window and
   point OBS at the picture.

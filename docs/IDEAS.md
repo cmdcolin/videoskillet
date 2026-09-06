@@ -56,10 +56,10 @@ These read like naked periodic waves but are physically correct — don't
   track bleeds through as a _low-frequency-only_ ghost — a soft, colourless
   second picture that swims when tracking is off. Distinct from the multipath
   ghost, which is sharp and full-bandwidth.
-- **Crease / edge damage on the main deck.** The delay loop's `tapeWear` seeds
-  defects on _position on the tape_ so they recur every lap; the same idea on
-  the main deck still wants doing — it has no tape-position coordinate to hang a
-  defect off, which is exactly what the ring gave the loop.
+- **Crease / edge damage.** A crease is a defect at a _position on the tape_, so
+  it recurs every time that stretch passes the head. The main deck has no
+  tape-position coordinate to hang one off, which is what has to exist first.
+  (The cut delay loop had one, in its ring; see `ecec59e`.)
 - **Luma FM beating the 629 kHz color-under carrier.** The fine crawling chroma
   noise in saturated reds. Modelling the luma FM properly is expensive; the
   honest cheap version is the beat product alone.
@@ -135,18 +135,17 @@ that. Rough payoff order:
 
 - **Transport (shuttle / rewind / still), per input.** The biggest one.
   `shuttleX` sits on the summed bus (`channel.wgsl`), but shuttle bars are _one
-  deck's head_ crossing tracks — `tape_play.wgsl` already says so out loud. Per
-  input it gives B rewinding under a playing A, with B's bars sweeping B's
-  raster and rolling with B's picture through the dirty sum, each strip between
-  bars a different recorded track with its own timing and colour-under phase.
-  The strips that lose sync hand the fight to A and the ones that don't fight
-  back, so the picture flickers between two geometries at bar rate. Most of the
-  machinery is already there: `feed.wgsl`'s pause path computes a per-row offset
-  and `catmull`- resamples, and shuttle is that path with a per-strip offset
-  instead of a random scatter. `decode`'s row-uniform constraint does not bind
-  here — a feed is 1-D on the composite. It also makes `aPause`/`bPause` the
-  _zero_ of a transport continuum rather than a separate button, the way
-  `tapeTransport` already reads.
+  deck's head_ crossing tracks. Per input it gives B rewinding under a playing
+  A, with B's bars sweeping B's raster and rolling with B's picture through the
+  dirty sum, each strip between bars a different recorded track with its own
+  timing and colour-under phase. The strips that lose sync hand the fight to A
+  and the ones that don't fight back, so the picture flickers between two
+  geometries at bar rate. Most of the machinery is already there: `feed.wgsl`'s
+  pause path computes a per-row offset and `catmull`- resamples, and shuttle is
+  that path with a per-strip offset instead of a random scatter. `decode`'s
+  row-uniform constraint does not bind here — a feed is 1-D on the composite. It
+  also makes `aPause`/`bPause` the _zero_ of a transport continuum rather than a
+  separate button, the way `tapeTransport` already reads.
 - **Head clog, per input.** Cheapest violent effect left, ~6 lines keyed on
   `P.frame`. The heads alternate sweeps, so a clogged head on one input makes
   the receiver alternate _which source it locks to_ at field rate.
@@ -786,35 +785,6 @@ does not work":
   real cost to weigh against a gate that is arguably the most performable thing
   in the bay.
 
-## Delay loop follow-ons (after the tape-delay pass)
-
-The loop shipped with the play head's own damage model — band loss, medium
-noise, wear, splice — rather than routing the return through the real `channel`
-block. Two things were considered and left:
-
-- **Erase residue.** A record head with no full erase leaves the previous lap
-  under the new one. Cut because on a loop whose length _is_ the delay, the tape
-  reaching the record head is the tape that just played, so residue is
-  arithmetically the same as more loop gain — a second knob for the fader's job.
-  It would become a distinct mechanism only if the record and play heads were
-  independently placeable round the loop.
-- **Routing the return through `channel`/`timebase`.** Physically the honest
-  version of generation loss, and it would give the loop dropouts and time-base
-  wander for free. It needs a second set of scratch buffers (`chromaExtract` →
-  `underDown` → `channel` → `timebase` is a four-buffer chain) and roughly
-  doubles the loop's cost. The 1-2-1 kernel in `tape_play` gets the dominant
-  term — chroma dying faster than luma — for one tap.
-
-Worth doing if the loop ever needs to sound like a _different deck_ from the
-main one, which is the case the current model cannot express.
-
-- **Per-strip timing on the loop's shuttle bars.** The deck's shuttle gives each
-  strip between its noise bars its own timing and colour-under phase (via
-  `linestate`), so the picture tears and rainbows at the boundaries; the loop's
-  strips come off one contiguous read, so they are clean between bars. Doing it
-  would need per-line offsets on the loop read, which `decode`'s row-uniform
-  constraint does not block but `tape_play` has no per-line buffer for yet.
-
 ## Clip cues — what shipped left
 
 `ui/cue.ts` marks a cue on a clip's own timeline and loops a stretch of it; the
@@ -858,7 +828,7 @@ A last one used to be a real limit rather than a choice: the wrap is a hard cut
 in the clip's audio when playback audio is on. Nothing short of a crossfade
 fixes it, and a crossfade needs two read heads on one element, which a `<video>`
 does not have. **That one is now built** — `armHead` / `promoteHead` in
-`ui/videoSlot.ts`, and the write-up is at the end of this section.
+`ui/videoSlot.ts`, written up at the end of this section.
 
 **This used to say "audible as a click", and that undersold it by two orders of
 magnitude.** The app's own readout is the evidence, and it was shipping the

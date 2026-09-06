@@ -501,7 +501,6 @@ on the dev box's WX 3200, against a 3.3 ms always-on floor):
   hiding in this gather and no superlinearity to exploit: tap count is the only
   lever, which is why both spreads now tier it (bloom on strength, the spot on
   radius) rather than restructuring the sampling.
-- **`tapePlay` with many heads** (~2 ms on eight-head lap).
 - **Per-source feed snow** ~0.9 ms per engaged feed.
 - The true-waveform B chain (`encodeChromaB → encodeCompositeB → mixB`) totals
   ~0.9 ms engaged and dispatches nothing idle.
@@ -771,8 +770,8 @@ it decodes what it encoded in the browser that encoded it.
 **`rendercheck.mjs` is the one to run after touching anything in the signal
 path.** Its headline check is that two renders of one take come back with the
 same SHA-256 — with 25ms of real time injected at every yield of the second, and
-the live render loop running in between to dirty the tape ring, the phosphor and
-the PLL that the second take then starts from. Nothing else here is as
+the live render loop running in between to dirty the frame store, the phosphor
+and the PLL that the second take then starts from. Nothing else here is as
 sensitive: one unseeded `Math.random` in a per-frame modulator, or one buffer
 left out of the reset, and it fails. It is the guard
 [`adr/0006`](adr/0006-a-take-is-a-seed-and-its-picks.md) names.

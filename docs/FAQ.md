@@ -142,12 +142,13 @@ Investigated and declined, at least for now; the details are in
   through CUDA, OpenCL, or Metal. wgpu/naga can compile the WGSL for a native
   port, which is useful, but inside a CUDA/Metal host you'd still be paying a
   full-frame upload and readback every frame in both directions.
-- **The host's frame model doesn't fit the feedback loops.** The tape ring,
-  phosphor persistence, PLL lock age, AGC and two servos all make each frame
-  depend on every frame before it, while a timeline host expects scrubbing,
-  playing from the middle, and a preview that means something before the clip
-  has been rendered from the top. The loops [Choosing a tool](COMPARISON.md)
-  names as what distinguishes this project are exactly what a plugin breaks.
+- **The host's frame model doesn't fit the feedback loops.** Phosphor
+  persistence, the mixer loop's frame store, PLL lock age, AGC and two servos
+  all make each frame depend on every frame before it, while a host expects
+  scrubbing, playing from the middle, and a preview that means something before
+  the clip has been rendered from the top. The loops
+  [Choosing a tool](COMPARISON.md) names as what distinguishes this project are
+  exactly what a plugin breaks.
 
 [ntsc-rs](https://github.com/ntsc-rs/ntsc-rs) already covers a lot of this need:
 same premise, multithreaded SIMD Rust on the CPU, not locked to the NTSC raster,

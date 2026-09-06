@@ -211,8 +211,8 @@ rate to it. MIDI clock takes over whenever something sends it. See
 
 **stabs** flip the board back to clean in bursts, 60ms by default and anywhere
 from 8 to 400, so the look cuts into a clean picture instead of running
-continuously. Phosphor, the loops and the tape bin keep running through the
-flip, so a stab leaves a trail.
+continuously. Phosphor and both feedback loops keep running through the flip, so
+a stab leaves a trail.
 
 Clean is only the gate's default far end. **⧉ hold this look** parks the current
 board at that end, and the gate cuts between it and whatever you dial next: two

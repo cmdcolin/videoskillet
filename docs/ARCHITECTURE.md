@@ -377,7 +377,7 @@ Three consequences bind anything that touches this:
   re-attaching; only stills and noise fields are re-issued. A fourth way to set
   a source, bypassing a slot, would silently lose it across a loss.
 
-VRAM does not come back — phosphor state, the frame store and the tape loop all
+VRAM does not come back — phosphor state and the mixer loop's frame store both
 restart empty. `onHang` is deliberately **not** rebuilt: a wedged GPU process is
 shared across tabs and outlives the page, so a fresh device would land on the
 same one. That one still goes to `FatalScreen`.
