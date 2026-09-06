@@ -529,37 +529,6 @@ hr {
   font-size: 0.98rem;
 }
 
-/* ── footer ─────────────────────────────────────────────────────────────── */
-footer {
-  border-top: 1px solid var(--border);
-  background: var(--card);
-}
-.foot {
-  max-width: calc(var(--measure) + var(--aside) + var(--gap));
-  margin: 0 auto;
-  padding: 1.75rem max(1.15rem, env(safe-area-inset-left))
-    calc(2rem + env(safe-area-inset-bottom));
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem 1.35rem;
-  align-items: baseline;
-  font-size: 0.86rem;
-}
-.foot a {
-  color: var(--fg3);
-  text-decoration: none;
-}
-.foot a:hover {
-  color: var(--fg);
-}
-.foot .sep {
-  flex-basis: 100%;
-  height: 0;
-}
-.foot small {
-  color: var(--fg4);
-}
-
 @media (min-width: 46rem) {
   body {
     font-size: 17px;

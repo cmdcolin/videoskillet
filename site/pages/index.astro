@@ -1,5 +1,6 @@
 ---
 import Carousel from '../components/Carousel.astro'
+import Footer from '../components/Footer.astro'
 import Gallery from '../components/Gallery.astro'
 import Hero from '../components/Hero.astro'
 import script from '../scripts/landing.js?raw'
@@ -50,7 +51,7 @@ const UNFURL =
          second round trip before anything is painted. -->
     <style is:inline set:html={tokens + css}></style>
   </head>
-  <body>
+  <body id="top">
     <header class="hero">
       <Hero />
       <div class="heroScan"></div>
@@ -101,20 +102,7 @@ const UNFURL =
       </div>
     </section>
 
-    <footer class="wrap">
-      <nav>
-        <a href="/app/">Open the app</a>
-        <a href="/guide/">Guide</a>
-        <a href="/guide/faq/#how-does-it-actually-work">How it works</a>
-        <a href="/guide/comparison/">Other tools</a>
-        <a href="/guide/architecture/">How it is built</a>
-        <a href="https://github.com/cmdcolin/videoskillet">GitHub</a>
-      </nav>
-      <p>
-        MIT licensed. Built by
-        <a href="https://github.com/cmdcolin">cmdcolin</a>.
-      </p>
-    </footer>
+    <Footer />
     <script is:inline set:html={script} />
   </body>
 </html>

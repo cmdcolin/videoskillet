@@ -19,3 +19,34 @@
   box-sizing: border-box;
   min-width: 0;
 }
+
+/* The site footer, shared the same way the palette is: both pages inline this
+   file, so the band at the bottom is one piece of markup and one set of rules
+   wherever a reader lands. */
+.siteFoot {
+  border-top: 1px solid var(--border);
+  background: var(--card);
+}
+.footIn {
+  max-width: 63rem;
+  margin: 0 auto;
+  padding: 1.75rem max(1.15rem, env(safe-area-inset-left))
+    calc(2rem + env(safe-area-inset-bottom));
+  font-size: 0.86rem;
+}
+.footIn nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.35rem;
+  margin-bottom: 0.9rem;
+}
+.footIn a {
+  color: var(--fg3);
+  text-decoration: none;
+}
+.footIn a:hover {
+  color: var(--fg);
+}
+.footIn small {
+  color: var(--fg4);
+}

@@ -73,28 +73,24 @@ const GROUPS = [
     pages: GUIDE,
     nav: GUIDE,
     mark: spec => spec.slug,
-    foot: { slug: 'architecture', text: 'How it is built' },
   },
   {
     label: 'notes',
     pages: NOTES,
     nav: NOTES,
     mark: spec => spec.slug,
-    foot: { slug: '', text: 'Guide' },
   },
   {
     label: 'decisions',
     pages: ADRS,
     nav: NOTES,
     mark: () => 'decisions',
-    foot: { slug: 'decisions', text: 'All decisions' },
   },
   {
     label: 'handoff',
     pages: HANDOFFS,
     nav: NOTES,
     mark: () => 'handoffs',
-    foot: { slug: 'handoffs', text: 'All handoffs' },
   },
 ]
 
