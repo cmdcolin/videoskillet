@@ -44,14 +44,13 @@ test('the hero shows the demo flagged hero, as a still', () => {
 // stylesheet at all.
 const stylesheet = readFileSync('site/styles/landing.css', 'utf8')
 
-test('a reader who asked for no motion gets the stills and the tabs', () => {
+test('the stage starts still, and every reader gets the way in', () => {
   expect(page).toContain("veil.className = 'stageVeil'")
   expect(page).toContain('<style')
-  expect(
-    /@media \(prefers-reduced-motion: reduce\)\s*\{\s*\.stageVeil\s*\{/.test(
-      stylesheet,
-    ),
-  ).toBe(true)
+  expect(page).toContain(
+    'const running = () => inView && !document.hidden && asked',
+  )
+  expect(/\.stageVeil \{\s*position: absolute;/.test(stylesheet)).toBe(true)
   expect(page).toContain('class="slideTabs"')
 })
 

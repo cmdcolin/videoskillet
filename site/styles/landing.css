@@ -324,49 +324,42 @@ a {
   flex-wrap: wrap;
   gap: 0.5rem;
 }
-/* Shown under exactly the preference that switched the autoplay off:
-   every other reader's stage is already moving. A media query rather
-   than a class, so it follows a reader who changes the setting with the
-   page open.
+/* The way into the reel, and every reader gets it: the stage starts still
+   and runs when it is pressed.
 
    The whole stage is the control, scrimmed over the still it is lying on
    — which is what says the box is a video at all, since the still under
    it is a photograph of an interface and reads as one. Nothing here
-   moves or scales: this exists only for a reader who asked it not to, so
-   what it changes on a hover or a press is colour and opacity. */
+   moves or scales: what it changes on a hover or a press is colour and
+   opacity. */
 .stageVeil {
-  display: none;
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: rgb(8 8 10 / 55%);
+  cursor: pointer;
+  transition: background 0.3s ease;
 }
-@media (prefers-reduced-motion: reduce) {
-  .stageVeil {
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    display: grid;
-    place-items: center;
-    padding: 0;
-    border: 0;
-    background: rgb(8 8 10 / 55%);
-    cursor: pointer;
-    transition: background 0.3s ease;
-  }
-  /* Running: the recording is the point, so the scrim gets out of the
-     way, and comes back under a pointer or a focus ring — which is where
-     a reader looking for the way to stop it already is. */
-  .stageVeil.off {
-    background: rgb(8 8 10 / 0%);
-  }
-  .stageVeil.off .stageIcon {
-    opacity: 0;
-  }
-  .stageVeil.off:hover,
-  .stageVeil.off:focus-visible {
-    background: rgb(8 8 10 / 35%);
-  }
-  .stageVeil.off:hover .stageIcon,
-  .stageVeil.off:focus-visible .stageIcon {
-    opacity: 1;
-  }
+/* Running: the recording is the point, so the scrim gets out of the way,
+   and comes back under a pointer or a focus ring — which is where a
+   reader looking for the way to stop it already is. */
+.stageVeil.off {
+  background: rgb(8 8 10 / 0%);
+}
+.stageVeil.off .stageIcon {
+  opacity: 0;
+}
+.stageVeil.off:hover,
+.stageVeil.off:focus-visible {
+  background: rgb(8 8 10 / 35%);
+}
+.stageVeil.off:hover .stageIcon,
+.stageVeil.off:focus-visible .stageIcon {
+  opacity: 1;
 }
 /* The one glyph on the page that stands without a word beside it. A
    triangle centred in a video is the one symbol a reader does not have

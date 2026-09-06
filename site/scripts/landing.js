@@ -40,16 +40,14 @@ const motion = matchMedia('(prefers-reduced-motion: reduce)')
 
 // ---- the carousel ----
 //
-// Recordings of the app's own window, one showing at a time. It plays on
-// its own once it is on screen and stops when it is not — there is no
-// Play button, because the stage is the one thing on this page a stranger
-// cannot read as a video until it moves, and a control that has to be
-// found first is a control that answers the question too late.
+// Recordings of the app's own window, one showing at a time. The reel
+// runs when the reader presses Play on the stage and stops when the stage
+// leaves the screen or the tab goes away; nothing here starts on its own.
 //
 // Nothing is fetched until the slide holding it is the one showing. A
-// reader who asked for reduced motion is handed the stills and the tabs,
-// and steps through them by hand: the tabs are the way in for everybody,
-// so there is no path here that only one kind of reader can walk.
+// reader who never presses Play is handed the stills and the tabs, and
+// steps through them by hand: the tabs are the way in for everybody, so
+// there is no path here that only one kind of reader can walk.
 //
 // The tabs and the captions are read off the slides rather than written
 // beside them, so a slide added to the reel arrives with its own way in
@@ -92,18 +90,18 @@ const motion = matchMedia('(prefers-reduced-motion: reduce)')
   // frame either way, so a stage that *is* in view loses nothing.
   let inView = false
   let advance = 0
-  // Pressed the Play button below, which is the reader asking for the
-  // reel in so many words — the same thing hover is on a gallery card,
-  // and it outranks the preference for the same reason.
+  // Pressed the Play button below, which is the only thing that starts the
+  // reel — a recording of somebody else's window is not something to hand a
+  // reader unasked, whatever their motion preference says.
   let asked = false
 
   // Stored only where there is nothing to ask. Whether the tab is
-  // showing and whether the reader wants motion are *asked* rather than
-  // stored, because the event that reports the stage's own state is the
-  // observer's: folding `document.hidden` into `inView` on a
-  // visibilitychange said a scrolled-past stage was in view every time
-  // the reader came back to the tab, and set it playing off screen.
-  const running = () => inView && !document.hidden && (!motion.matches || asked)
+  // showing is *asked* rather than stored, because the event that reports
+  // the stage's own state is the observer's: folding `document.hidden`
+  // into `inView` on a visibilitychange said a scrolled-past stage was in
+  // view every time the reader came back to the tab, and set it playing
+  // off screen.
+  const running = () => inView && !document.hidden && asked
 
   // The next slide, opened once the one showing is running. A tab pressed
   // before its own clip is open is 770ms of a still with nothing happening on
@@ -243,11 +241,10 @@ const motion = matchMedia('(prefers-reduced-motion: reduce)')
     return button
   })
 
-  // The way into the reel for a reader who asked for reduced motion, who
-  // is otherwise handed a box that never moves. The button is the stage
-  // itself rather than a control beside it, so the thing that has to be
-  // found is the size of the picture, and it says what it does on
-  // `aria-label` rather than in the glyph.
+  // The way into the reel, and the stage starts still for everybody. The
+  // button is the stage itself rather than a control beside it, so the
+  // thing that has to be found is the size of the picture, and it says
+  // what it does on `aria-label` rather than in the glyph.
   const veil = document.createElement('button')
   veil.type = 'button'
   veil.className = 'stageVeil'
@@ -269,7 +266,6 @@ const motion = matchMedia('(prefers-reduced-motion: reduce)')
   name()
   stage.append(veil)
 
-  motion.addEventListener('change', () => sync())
   document.addEventListener('visibilitychange', () => sync())
   new IntersectionObserver(entries => {
     inView = entries[0].isIntersecting
