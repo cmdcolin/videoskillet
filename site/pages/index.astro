@@ -2,7 +2,6 @@
 import Carousel from '../components/Carousel.astro'
 import Footer from '../components/Footer.astro'
 import Gallery from '../components/Gallery.astro'
-import Header from '../components/Header.astro'
 import Hero from '../components/Hero.astro'
 import script from '../scripts/landing.js?raw'
 import css from '../styles/landing.css?raw'
@@ -53,12 +52,6 @@ const UNFURL =
     <style is:inline set:html={tokens + css}></style>
   </head>
   <body id="top">
-    <Header
-      links={[
-        { href: '/guide/', nav: 'Guide' },
-        { href: 'https://github.com/cmdcolin/videoskillet', nav: 'GitHub ↗' },
-      ]}
-    />
     <section class="hero">
       <Hero />
       <div class="heroScan"></div>

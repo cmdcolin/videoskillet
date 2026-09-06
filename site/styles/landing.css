@@ -5,8 +5,6 @@
      would have read as "all set" beside a button that is about to fail. */
   --gate: #c0a95e;
   --measure: 46rem;
-  /* The header spans the widest thing under it, which is the carousel. */
-  --barw: 72rem;
 }
 body {
   margin: 0;

@@ -1,12 +1,11 @@
 ---
-// One bar for the whole site, over the footer's precedent: the landing page
-// used to say its own name inside the hero picture, in a different typeface at
-// a different size, so the way back to anything only existed at the bottom of
-// the page.
+// The guide's bar, lifted out of the layout so its markup and the props it
+// needs sit in one file: `label` is what follows the name — the group the
+// reader is in — and `links` is the row under it, one entry per page, `on`
+// marking the one being read. The rules are guide.css.
 //
-// `label` is what sits after the name — the guide names the group the reader is
-// in, the landing page has nothing to add and leaves it out. `links` is the row
-// under it, one entry per destination, `on` marking the one being read.
+// The landing page does not carry this. It opens on a picture, and a bar across
+// the top of that was tried and turned down.
 interface Props {
   label?: string
   links: { href: string; nav: string; on?: boolean }[]
