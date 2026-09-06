@@ -171,6 +171,35 @@ frame it happened on (sliders, presets, a controller knob, a morph) and **⎙**
 replays that into the render. So a take you ran live, at whatever framerate the
 tab managed, comes back as a file with a steady, non-drifting framerate.
 
+## Can I feed it a real composite signal off a yellow RCA cable?
+
+Through a USB capture dongle, yes. Directly off the cable, no — and nothing in a
+browser can. A yellow RCA cable carries a baseband composite waveform at about
+1 Vpp, and something has to sample that voltage. The dongle is that something:
+plug the cable into an RCA/composite grabber, and the OS presents it as a
+camera. Pick **Webcam / USB device** on a source deck, choose the grabber from the device
+list, and it lands in a slot like any other source — with the whole signal, sync
+and deflection chain over it. Two decks each take their own device, so a camera
+in A and a grabber in B is a rig the app expects.
+
+The app never sees composite, though, and it is worth knowing what that costs.
+The grabber demodulates the signal in hardware and hands over decoded 720×480
+frames, so the damage a consumer dongle does — luma cut to around 2.4 MHz,
+colour-under chroma, chroma a few samples late — has already happened upstream
+and cannot be undone. The `capture card` preset models exactly that decode,
+which means a captured feed carries one pass of it for real and then whatever
+you dial in on top. For glitch work that stacks fine; as a clean analog capture
+it is not one.
+
+Interlacing comes with the territory. A grabber delivers 480/60i, so the app
+turns bob deinterlace on when a device connects, per deck — a progressive camera
+in one and an interlaced dongle in the other want opposite answers. PAL grabbers
+(720×576/50i) are not handled yet; the pipeline is NTSC-shaped at 525/60.
+
+Raw composite samples — the unsliced waveform, before any decoder touches it —
+need an SDR or a fast ADC and a native program to read it. That is a different
+instrument, and not one a web page can be.
+
 ## Can I patch it into Max/MSP, Jitter, TouchDesigner or VJ software?
 
 Most of this already works, with no code on either side:
