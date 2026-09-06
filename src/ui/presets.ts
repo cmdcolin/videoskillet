@@ -150,11 +150,10 @@ export const PRESETS: PresetDef[] = [
     displayName: 'stuck tape',
     group: 'Tape wear',
     blurb:
-      'Deck jammed on pause. The head grinds one track boundary into a drifting noise bar, time runs at a third of real speed, and phosphor trails smear what little still moves.',
+      'Deck jammed on pause. The head grinds one track boundary into a drifting noise bar, and time runs at a third of real speed, so what little still moves crawls.',
     patch: {
       shuttleX: 0,
       timeScale: 0.35,
-      phosphor: 0.9,
       lumaMHz: 2.6,
       lumaPeak: 1,
       noiseIre: 4,
@@ -318,7 +317,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'ignition storm',
     group: 'RF / Broadcast',
     blurb:
-      'Arc interference over a dim signal: clustered hits from ticks to torn slabs, plus millisecond strikes. Every big one lands on sync and the beam load, so the raster tears, the supply rings, and the AGC recovers slowly while the phosphor holds each flash. The rig reacting is most of the look.',
+      'Arc interference over a dim signal: clustered hits from ticks to torn slabs, plus millisecond strikes. Every big one lands on sync and the beam load, so the raster tears, the supply rings, and the AGC recovers slowly after each strike. The rig reacting is most of the look.',
     patch: {
       impulseRate: 4,
       impulseIre: 120,
@@ -328,7 +327,6 @@ export const PRESETS: PresetDef[] = [
       hvSagUs: 5,
       hvRing: 0.5,
       crtCutoff: 0.1,
-      phosphor: 0.88,
     },
   },
   {
@@ -366,7 +364,6 @@ export const PRESETS: PresetDef[] = [
       humMod: 0.35,
       agc: 0.45,
       noiseIre: 3,
-      phosphor: 0.8,
     },
   },
   {
@@ -461,7 +458,6 @@ export const PRESETS: PresetDef[] = [
       bRollLps: 0.2,
       cfbMix: 0.45,
       cfbLines: 3,
-      phosphor: 0.85,
       noiseIre: 3,
     },
   },
@@ -482,7 +478,6 @@ export const PRESETS: PresetDef[] = [
       hvRing: 0.5,
       vHold: 0.45,
       hHold: 0.3,
-      phosphor: 0.8,
       noiseIre: 2,
     },
   },
@@ -521,7 +516,6 @@ export const PRESETS: PresetDef[] = [
       chromaCoarse: 4,
       chromaGain: 2.6,
       matrixClip: 1,
-      phosphor: 0.5,
       noiseIre: 1.2,
     },
     mod: [
@@ -727,7 +721,6 @@ export const PRESETS: PresetDef[] = [
       fbGain: 1.13,
       fbZoom: 1.02,
       fbBlack: 0.05,
-      phosphor: 0.6,
     },
     // The gain is the one thing standing between this and a white field, so
     // walking it is walking how close to the edge the loop runs — slow, and
@@ -745,7 +738,6 @@ export const PRESETS: PresetDef[] = [
       fbGain: 1.25,
       fbZoom: 0.95,
       fbVign: 0.45,
-      phosphor: 0.5,
     },
     mod: [{ target: 'fbZoom', source: 'sine', rateHz: 0.04, depth: 0.008 }],
   },
@@ -759,7 +751,6 @@ export const PRESETS: PresetDef[] = [
       fbGain: 1.22,
       fbZoom: 0.955,
       fbRotateDeg: 5,
-      phosphor: 0.55,
     },
     // Through zero, so the wind reverses: the arms unwind, stall, and go back
     // the other way, which a fixed rotation never does.
@@ -814,7 +805,6 @@ export const PRESETS: PresetDef[] = [
       cfbLines: 24,
       cfbRing: 0.7,
       chromaGain: 1.4,
-      phosphor: 0.5,
       cfbGenlock: 1,
     },
     // Walking the offset walks the rung spacing, so the mosaic re-lays itself
@@ -837,7 +827,6 @@ export const PRESETS: PresetDef[] = [
       cfbRing: 0.55,
       cfbTrail: 0.8,
       chromaGain: 1.5,
-      phosphor: 0.6,
       cfbGenlock: 1,
     },
     mod: [{ target: 'cfbRing', source: 'lorenz', rateHz: 0.6, depth: 0.45 }],
@@ -855,7 +844,6 @@ export const PRESETS: PresetDef[] = [
       cfbLines: 3,
       cfbTrail: 0.6,
       chromaGain: 1.4,
-      phosphor: 0.55,
       cfbGenlock: 1,
     },
     // The bass-onset follower rather than an LFO: this is the one control here
@@ -875,7 +863,6 @@ export const PRESETS: PresetDef[] = [
       cfbLines: 60,
       cfbRing: 0.9,
       chromaGain: 1.6,
-      phosphor: 0.3,
       cfbGenlock: 1,
     },
   },
@@ -895,7 +882,6 @@ export const PRESETS: PresetDef[] = [
       cfbKeyLevel: 50,
       cfbKeySoft: 10,
       chromaGain: 1.8,
-      phosphor: 0.5,
       cfbGenlock: 1,
     },
   },
@@ -915,7 +901,6 @@ export const PRESETS: PresetDef[] = [
       cfbKeyLevel: 32,
       cfbKeySoft: 14,
       chromaGain: 1.6,
-      phosphor: 0.45,
       cfbGenlock: 1,
     },
     mod: [
@@ -938,7 +923,6 @@ export const PRESETS: PresetDef[] = [
       cfbKeyLevel: 50,
       cfbKeySoft: 12,
       chromaGain: 1.3,
-      phosphor: 0.45,
       cfbGenlock: 1,
     },
   },
@@ -958,7 +942,6 @@ export const PRESETS: PresetDef[] = [
       cfbKeyLevel: 30,
       cfbKeySoft: 14,
       chromaGain: 1.5,
-      phosphor: 0.45,
       cfbGenlock: 1,
     },
     mod: [
@@ -981,7 +964,6 @@ export const PRESETS: PresetDef[] = [
       cfbKeyLevel: 48,
       cfbKeySoft: 8,
       chromaGain: 1.6,
-      phosphor: 0.3,
       cfbGenlock: 1,
     },
   },
@@ -1003,7 +985,6 @@ export const PRESETS: PresetDef[] = [
       cfbKeyLevel: 58,
       cfbKeySoft: 8,
       chromaGain: 1.4,
-      phosphor: 0.45,
       cfbGenlock: 1,
     },
     // The slice, not the network: the mesh keeps its pitch and changes how much
@@ -1029,7 +1010,6 @@ export const PRESETS: PresetDef[] = [
       cfbKeyHueDeg: 180,
       cfbKeySoft: 10,
       chromaGain: 1.6,
-      phosphor: 0.5,
       cfbGenlock: 1,
     },
   },
@@ -1050,7 +1030,6 @@ export const PRESETS: PresetDef[] = [
       cfbKeyLevel: 50,
       cfbKeySoft: 10,
       chromaGain: 1.8,
-      phosphor: 0.5,
       cfbGenlock: 1,
     },
   },
@@ -1071,7 +1050,6 @@ export const PRESETS: PresetDef[] = [
       cfbKeyLevel: 42,
       cfbKeySoft: 12,
       chromaGain: 1.6,
-      phosphor: 0.45,
       cfbGenlock: 1,
     },
   },
@@ -1093,7 +1071,6 @@ export const PRESETS: PresetDef[] = [
       cfbKeyHueDeg: 103,
       cfbKeySoft: 10,
       chromaGain: 1.7,
-      phosphor: 0.5,
       cfbGenlock: 1,
     },
   },
@@ -1110,7 +1087,6 @@ export const PRESETS: PresetDef[] = [
       cfbDelayUs: 0.2,
       cfbLines: 1,
       chromaGain: 1.9,
-      phosphor: 0.5,
       noiseIre: 1.2,
       cfbGenlock: 1,
     },
@@ -1131,7 +1107,6 @@ export const PRESETS: PresetDef[] = [
       cfbLines: 2,
       cfbReturn: 1,
       chromaGain: 2.2,
-      phosphor: 0.5,
       crtSat: 1.3,
       noiseIre: 1.2,
       cfbGenlock: 1,
@@ -1152,7 +1127,6 @@ export const PRESETS: PresetDef[] = [
       cfbTrail: 0.45,
       hHold: 0.5,
       chromaGain: 1.3,
-      phosphor: 0.4,
       noiseIre: 1.5,
       cfbGenlock: 0.6,
     },
@@ -1171,7 +1145,6 @@ export const PRESETS: PresetDef[] = [
       cfbRing: 0.9,
       cfbRingSrc: 1,
       chromaGain: 1.5,
-      phosphor: 0.45,
       noiseIre: 1.2,
       cfbGenlock: 1,
     },
@@ -1191,7 +1164,6 @@ export const PRESETS: PresetDef[] = [
       cfbRingSrc: 1,
       cfbCarrierKHz: 12,
       chromaGain: 1.8,
-      phosphor: 0.5,
       noiseIre: 1.5,
       cfbGenlock: 1,
     },
@@ -1213,7 +1185,6 @@ export const PRESETS: PresetDef[] = [
       diffPhaseDeg: 42,
       diffGain: 0.4,
       chromaGain: 1.7,
-      phosphor: 0.45,
       noiseIre: 1.5,
       cfbGenlock: 1,
     },
@@ -1241,7 +1212,6 @@ export const PRESETS: PresetDef[] = [
       cfbLines: -2,
       rfMistuneMHz: 1.4,
       chromaGain: 1.8,
-      phosphor: 0.4,
       noiseIre: 2,
       cfbGenlock: 1,
     },
@@ -1270,7 +1240,6 @@ export const PRESETS: PresetDef[] = [
       demodAxisDeg: 34,
       matrixClip: 1,
       chromaGain: 1.8,
-      phosphor: 0.5,
       noiseIre: 1.2,
       cfbGenlock: 1,
     },
@@ -1291,7 +1260,6 @@ export const PRESETS: PresetDef[] = [
       cfbGain: 1.02,
       cfbDelayUs: 1.2,
       cfbServoUs: 34,
-      phosphor: 0.45,
       cfbGenlock: 0.85,
     },
     // Through zero again: the pull reverses, so the warp leans one way, flattens
@@ -1312,7 +1280,6 @@ export const PRESETS: PresetDef[] = [
       cfbMix: 0.8,
       cfbGain: 1.04,
       cfbDelayUs: 1.6,
-      phosphor: 0.5,
       cfbGenlock: 1,
     },
     // One routing, on the optical half only. Walking both at once makes a look
@@ -1331,7 +1298,6 @@ export const PRESETS: PresetDef[] = [
       fbIris: 0.7,
       abl: 0.8,
       chromaGain: 1.2,
-      phosphor: 0.75,
     },
     // Slow, and through the region where the loop crosses unity: above it the
     // structure breeds, below it decays, and the look is the crossing.
@@ -1351,7 +1317,6 @@ export const PRESETS: PresetDef[] = [
       vFreqHz: 59.85,
       hHold: 0.4,
       chromaGain: 1.3,
-      phosphor: 0.7,
     },
     // A hold this marginal does not drift steadily — it wanders, and the roll
     // rate wanders with it, which is what keeps the stack of seams uneven.
@@ -1369,7 +1334,6 @@ export const PRESETS: PresetDef[] = [
       cfbDelayUs: 2,
       cfbLines: 1,
       chromaGain: 1.4,
-      phosphor: 0.6,
       cfbGenlock: 1,
     },
     mod: [{ target: 'cfbDelayUs', source: 'lorenz', rateHz: 0.5, depth: 0.06 }],
@@ -1623,7 +1587,6 @@ export const PRESETS: PresetDef[] = [
       cfbGain: 0.92,
       cfbDelayUs: 0.3,
       cfbLines: 2,
-      phosphor: 0.35,
     },
   },
   {
@@ -1660,7 +1623,6 @@ export const PRESETS: PresetDef[] = [
     patch: {
       polarityFlip: 1,
       hHold: 0.35,
-      phosphor: 0.5,
     },
   },
   {
@@ -1857,7 +1819,6 @@ export const PRESETS: PresetDef[] = [
       crtSat: 2.2,
       crtSpot: 5,
       crtBloom: 0.8,
-      phosphor: 0.4,
       cfbGenlock: 1,
     },
     mod: [
@@ -1888,7 +1849,6 @@ export const PRESETS: PresetDef[] = [
       fbFocus: 2.5,
       fbBlack: 0.04,
       chromaGain: 1.3,
-      phosphor: 0.35,
     },
     mod: [
       { target: 'synthHueDeg', source: 'smooth', rateHz: 0.05, depth: 0.35 },
@@ -1938,7 +1898,6 @@ export const PRESETS: PresetDef[] = [
       cfbLines: 1,
       cfbRing: 0.8,
       chromaGain: 1.3,
-      phosphor: 0.45,
       cfbGenlock: 1,
     },
   },
@@ -1953,7 +1912,6 @@ export const PRESETS: PresetDef[] = [
       bendPeriod: 40,
       noiseIre: 1.5,
       lumaMHz: 3.2,
-      phosphor: 0.3,
     },
     // Two rates on purpose: the fast one is the hit and the slow one is the
     // settle, and firing them together reads as one event with a tail rather
@@ -2035,8 +1993,6 @@ export const PRESETS: PresetDef[] = [
       crtGlow: 0.15,
       scanBeam: 0.45,
       scanBloom: 0.7,
-      phosphor: 0.7,
-      phosphorBleed: 0.2,
     },
   },
   {
@@ -2192,7 +2148,6 @@ export const PRESETS: PresetDef[] = [
       accLagLines: 36,
       lumaMHz: 3.4,
       noiseIre: 2,
-      phosphor: 0.35,
     },
   },
   {
@@ -2253,7 +2208,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'transmission fault',
     group: 'Full board',
     blurb:
-      'Sync suppressed at the head-end while the colour crystal sits off frequency and the tube is left long. Every line lands at its own offset, in the wrong hue, over the ghost of the last one.',
+      'Sync suppressed at the head-end while the colour crystal sits off frequency. Every line lands at its own offset and in a hue the line above it did not have.',
     patch: {
       scramble: 0.35,
       agc: 0.5,
@@ -2266,7 +2221,6 @@ export const PRESETS: PresetDef[] = [
       encChromaMHz: 1.7,
       demodMHz: 1.1,
       noiseIre: 8,
-      phosphor: 0.75,
       crtBloom: 0.4,
       crtGamma: 1.4,
     },
@@ -2276,7 +2230,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'night monitor',
     group: 'Full board',
     blurb:
-      'A monitor run hot in a dark room with a camera on it. The loop grows halos out of the highlights, the faceplate scatters them, and the phosphor holds what is left.',
+      'A monitor run hot in a dark room with a camera on it. The loop grows halos out of the highlights and the faceplate scatters them across the glass.',
     patch: {
       fbMix: 0.55,
       fbZoom: 1.01,
@@ -2290,7 +2244,6 @@ export const PRESETS: PresetDef[] = [
       crtCutoff: 0.06,
       crtGamma: 1.5,
       crtSat: 1.3,
-      phosphor: 0.9,
       noiseIre: 2,
     },
     // A loop sitting a hair over unity is a knife edge, and a tube warming up
@@ -2326,7 +2279,6 @@ export const PRESETS: PresetDef[] = [
       cfbKeyHueDeg: 180,
       cfbKeySoft: 12,
       chromaGain: 1.5,
-      phosphor: 0.5,
     },
     // Parked mid-wheel so a quarter-span walk has room either side: the control
     // clamps at 0 and 360, and a sweep into a clamp parks the surviving band
@@ -2349,7 +2301,6 @@ export const PRESETS: PresetDef[] = [
       hvRing: 0.9,
       abl: 0.5,
       hDetuneHz: 900,
-      phosphor: 0.85,
       noiseIre: 3,
     },
   },
@@ -2371,7 +2322,6 @@ export const PRESETS: PresetDef[] = [
       noiseIre: 32,
       tbStickNs: 8000,
       tbJitterNs: 2200,
-      phosphor: 0.88,
     },
   },
   {
@@ -2476,7 +2426,6 @@ export const PRESETS: PresetDef[] = [
       audioHueDeg: 60,
       audioBendUs: 30,
       audioGain: 4,
-      phosphor: 0.6,
       noiseIre: 2,
     },
   },
@@ -2525,7 +2474,6 @@ export const PRESETS: PresetDef[] = [
       headSwitchShiftUs: 2.5,
       headSwitchNoise: 0.7,
       scanBeam: 0.55,
-      phosphor: 0.3,
     },
   },
   {
@@ -2540,7 +2488,6 @@ export const PRESETS: PresetDef[] = [
       bGain: 0.55,
       agc: 1,
       hHold: 0.5,
-      phosphor: 0.35,
     },
   },
   {
@@ -2557,7 +2504,6 @@ export const PRESETS: PresetDef[] = [
       bGain: 0.6,
       bDetuneHz: 25,
       hHold: 0.6,
-      phosphor: 0.5,
     },
   },
   {
@@ -2578,7 +2524,6 @@ export const PRESETS: PresetDef[] = [
       hvSagUs: 35,
       hvRing: 0.9,
       crtBloom: 0.6,
-      phosphor: 0.5,
     },
   },
   {
@@ -2614,7 +2559,6 @@ export const PRESETS: PresetDef[] = [
       enhPeakQ: 0.55,
       enhPeakBoost: 2.5,
       agc: 0.6,
-      phosphor: 0.3,
     },
   },
   {
@@ -2627,7 +2571,6 @@ export const PRESETS: PresetDef[] = [
       colorUnderMix: 1,
       ycDelayNs: 1400,
       chromaGain: 2,
-      phosphor: 0.2,
     },
   },
   {
@@ -2644,7 +2587,6 @@ export const PRESETS: PresetDef[] = [
       agc: 1,
       colorUnderMix: 0.6,
       chromaGain: 1.4,
-      phosphor: 0.3,
     },
   },
   {
@@ -2652,13 +2594,12 @@ export const PRESETS: PresetDef[] = [
     displayName: 'one head packed',
     group: 'Tape wear',
     blurb:
-      'One of the two video heads clogged with oxide. The heads take turns, one sweep each, so the picture and a field of snow alternate at thirty hertz, and sync goes down with the dead sweep so the receiver tears through the snow rather than framing it. The phosphor is long enough to hold each good sweep across the bad one.',
+      'One of the two video heads clogged with oxide. The heads take turns, one sweep each, so the picture and a field of snow alternate at thirty hertz, and sync goes down with the dead sweep so the receiver tears through the snow rather than framing it.',
     patch: {
       headClog: 0.75,
       colorUnderMix: 0.8,
       chromaNoiseIre: 8,
       hHold: 0.4,
-      phosphor: 0.65,
     },
   },
   {
@@ -2696,7 +2637,6 @@ export const PRESETS: PresetDef[] = [
       agc: 1,
       soundIre: 14,
       noiseIre: 2,
-      phosphor: 0.3,
     },
   },
   {
@@ -2715,7 +2655,6 @@ export const PRESETS: PresetDef[] = [
       cgScale: 3,
       cgRomAddr: 9,
       noiseIre: 10,
-      phosphor: 0.3,
     },
   },
   {
@@ -2723,14 +2662,13 @@ export const PRESETS: PresetDef[] = [
     displayName: 'the picture in the type',
     group: 'Switcher',
     blurb:
-      "The chyron's key cut the other way. The fill wire is black everywhere the characters are not, so an inverted key lays black over the whole raster and the picture shows only through the letters, six samples to the dot. Persistence holds what the letters showed a moment ago.",
+      "The chyron's key cut the other way. The fill wire is black everywhere the characters are not, so an inverted key lays black over the whole raster and the picture shows only through the letters, six samples to the dot.",
     patch: {
       cgMix: 1,
       cgInvert: 1,
       cgScale: 6,
       cgX: 0.02,
       cgY: 0.2,
-      phosphor: 0.6,
     },
   },
   {
@@ -2738,15 +2676,13 @@ export const PRESETS: PresetDef[] = [
     displayName: 'wandering inset',
     group: 'Switcher',
     blurb:
-      'Source B squeezed into a DVE inset that nobody is steering. Its position walks at random, re-encoded genlocked to the house raster, so the box dot-crawls but never beats. The phosphor is long, so the inset leaves a ghost of itself wherever it was.',
+      'Source B squeezed into a DVE inset that nobody is steering. Its position walks at random, re-encoded genlocked to the house raster, so the box dot-crawls but never beats.',
     patch: {
       pipMix: 1,
       pipW: 0.5,
       pipH: 0.5,
       pipBorder: 0.02,
       pipSoft: 0.005,
-      phosphor: 0.92,
-      phosphorBleed: 0.5,
     },
     mod: [
       { target: 'pipX', source: 'walk', rateHz: 2, depth: 0.5 },

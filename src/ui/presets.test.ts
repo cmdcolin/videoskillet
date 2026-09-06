@@ -131,14 +131,14 @@ describe('blendPresets', () => {
     const both = blendPresets(
       DEFAULT_CONTROLS,
       new Map([
-        ['stuckTape', 1],
-        ['roundTube', 0.25],
+        ['greenTerminal', 1],
+        ['radarTube', 0.25],
       ]),
     )
-    expect(both.phosphor).toBe(0.9)
-    // The rest of what those two bring still stacks, this trim included —
-    // 0.15 stock plus a quarter of the follower's 0.05, on a 0.01 grid.
-    expect(both.phosphorBleed).toBe(0.16)
+    expect(both.phosphor).toBe(0.99)
+    // The rest of what those two bring still stacks, this scatter included —
+    // 0.15 stock plus the lead's 0.2 plus a quarter of the follower's 0.15.
+    expect(both.phosphorBleed).toBe(0.39)
   })
 
   it('lets a follower carry the hold when the lead brought none', () => {
