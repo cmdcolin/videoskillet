@@ -65,7 +65,6 @@
 //
 //   file     what the recording is called on disk, and in the markup.
 //   name     the tab under the stage. Short — it is a button, beside others.
-//   caption  one line under the stage, saying what is happening in it.
 //   alt      what a reader who cannot see it is told, and what stands in for
 //            the clip when the reader asked for reduced motion.
 //   look     a demo from `demos.json`, by name, for slides that are one of the
@@ -310,36 +309,57 @@ const PRESET_RUN = [
 // second because a fault downstream of a loop lands on what the loop made.
 // The receiver's banks are an accordion, so `Deflection` and then `Decoder`
 // are each unfolded rather than assumed.
+//
+// **Four presses on the map, not two.** The slide is about the map being the
+// way around the program, and a hand that touches it twice in twenty seconds
+// and spends the rest of the clip in a scrolling column of rows is a slide
+// about the rows. So each edit is reached the same way — back to the diagram,
+// press the stage the next control belongs to, work it — and the trip back to
+// the mixer in the middle is the point of the whole arrangement: the loop is
+// still running under the deflection fault, and a fifth of a microsecond off
+// its delay changes what the bowed frame is made of.
+//
+// **Slower than the take before it**, which ran the same rows in 20.6s. A press
+// on the map is 0.9s where it was 0.6, a picture gets 1.6-1.8s to answer a drag
+// where it got 1.2-1.5, and the mark round a pressed box (`appreel.mjs`'s
+// `flash`) needs a beat to land in and fade out of.
 const PATH = [
-  { moveTo: { stage: 'mixer' }, secs: 0.4 },
-  { press: 0.6, on: 'mixer' },
-  { moveTo: { slider: 'loop delay' }, secs: 0.35 },
-  { drag: { slider: 'loop delay', to: 0.0032 }, secs: 0.9 },
-  { hold: 1.5 },
-  { drag: { slider: 'loop delay', to: 0.0111 }, secs: 1.0 },
-  { hold: 1.5 },
-  { scrollTo: { stage: 'RECEIVER' }, secs: 0.6 },
-  { moveTo: { stage: 'RECEIVER' }, secs: 0.4 },
-  { press: 0.6, on: 'receiver' },
-  { scrollTo: { bank: 'Deflection' }, secs: 0.5 },
-  { unfold: 'Deflection', secs: 0.8 },
-  { moveTo: { slider: 'bend amount' }, secs: 0.35 },
-  { drag: { slider: 'bend amount', to: 0.8 }, secs: 1.0 },
-  { hold: 1.2 },
-  { scrollTo: { bank: 'Decoder' }, secs: 0.5 },
-  { unfold: 'Decoder', secs: 0.8 },
-  { moveTo: { slider: 'tint' }, secs: 0.35 },
-  { drag: { slider: 'tint', to: 0.85 }, secs: 1.0 },
+  { moveTo: { stage: 'mixer' }, secs: 0.45 },
+  { press: 0.9, on: 'mixer' },
+  { moveTo: { slider: 'loop delay' }, secs: 0.4 },
+  { drag: { slider: 'loop delay', to: 0.0032 }, secs: 1.0 },
+  { hold: 1.8 },
+  { drag: { slider: 'loop delay', to: 0.0111 }, secs: 1.1 },
+  { hold: 1.8 },
+  { scrollTo: { stage: 'RECEIVER' }, secs: 0.7 },
+  { moveTo: { stage: 'RECEIVER' }, secs: 0.45 },
+  { press: 0.9, on: 'receiver' },
+  { scrollTo: { bank: 'Deflection' }, secs: 0.6 },
+  { unfold: 'Deflection', secs: 0.9 },
+  { moveTo: { slider: 'bend amount' }, secs: 0.4 },
+  { drag: { slider: 'bend amount', to: 0.8 }, secs: 1.1 },
+  { hold: 1.6 },
+  { scrollTo: { stage: 'mixer' }, secs: 0.7 },
+  { moveTo: { stage: 'mixer' }, secs: 0.45 },
+  { press: 0.9, on: 'mixer' },
+  { moveTo: { slider: 'loop delay' }, secs: 0.4 },
+  { drag: { slider: 'loop delay', to: 0.0065 }, secs: 1.0 },
+  { hold: 1.6 },
+  { scrollTo: { stage: 'RECEIVER' }, secs: 0.7 },
+  { moveTo: { stage: 'RECEIVER' }, secs: 0.45 },
+  { press: 0.9, on: 'receiver' },
+  { scrollTo: { bank: 'Decoder' }, secs: 0.6 },
+  { unfold: 'Decoder', secs: 0.9 },
+  { moveTo: { slider: 'tint' }, secs: 0.4 },
+  { drag: { slider: 'tint', to: 0.85 }, secs: 1.1 },
   { away: 0.4 },
-  { hold: 2.6 },
+  { hold: 2.8 },
 ]
 
 export const slides = [
   {
     file: 'presets',
     name: 'Presets',
-    caption:
-      'Every preset chip is a fader: click for all of it, drag sideways for some, and each one layers onto the board already there. The row shows eight; “+ more” opens all hundred and thirty-eight, grouped by the fault they model. Five go on here over Ridiculous rainbow — a composite loop keyed on itself, turning the hue every lap — and nothing is wiped between them. Ring in the highlights from the feedback loops, false colour and poured colour from the circuit-bent family and chroma rails from past the redline put colour on tone until the frame is bands of red, green and cyan; then full collapse, from the deflection faults, shears the lot as the raster gives way. Each chip lands on the picture the last one made.',
     alt: 'The window on Ridiculous rainbow — a white core with bands of red, green and blue pouring off it — with the preset catalog opened from its “+ more” chip and scrolled family by family, and five chips dragged part way in one after another with nothing wiped between them: ring in the highlights, then false colour, poured colour and chroma rails turn the frame into vivid wavy bands of red, green, cyan and magenta, and full collapse shears the whole thing sideways as the raster collapses',
     look: 'Ridiculous rainbow',
     // The finish, at the end of its hold.
@@ -377,9 +397,7 @@ export const slides = [
   {
     file: 'path',
     name: 'Signal path',
-    caption:
-      'The map is the board. Every box and pill on it is a stage of the chain, and pressing one opens its rows in the panel. Ridiculous rainbow is a composite loop, so the mixer pill comes first, and its delay row is the whole mechanism: the colour subcarrier rides the loop, so delay is hue rotation. At a fifth of a microsecond the frame is a fine rainbow comb; at seven tenths it is broad bands of green and orange. Then the receiver, downstream of all that: bend amount, in the deflection bank, bows the raster and the bands with it; tint, in the decoder, turns the colour phase, and on a loop that lands again every lap, so the bowed bands go to a fine comb of every hue. Every row is a mechanism, and each one lands on the picture the last one made.',
-    alt: 'The window on Ridiculous rainbow with the mixer pill pressed on the signal path map and its loop delay row dragged twice — the frame turning into a fine rainbow comb on white, then into broad bands of green and orange — then the receiver box pressed, its deflection bank unfolded and bend amount bowing the raster, and its decoder bank unfolded and tint turning the bowed bands into a fine comb of every hue',
+    alt: 'The window on Ridiculous rainbow, worked through the signal path map: the mixer pill is pressed, flashing red, and its loop delay row dragged twice — the frame turning into a fine rainbow comb on white, then into broad bands of green and orange — then the receiver box is pressed and bend amount bows the raster, then back to the mixer for a third delay, and back to the receiver a last time where tint turns the bowed bands into a fine comb of every hue',
     look: 'Ridiculous rainbow',
     stillAt: 0.95,
     warm: 60,

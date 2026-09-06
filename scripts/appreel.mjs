@@ -38,7 +38,9 @@
 //                                its label, `{ chip }` for a preset chip's
 //                                grip, or anything `drive.mjs` resolves.
 //   { press: secs, on }          click whatever the pointer is over, then dwell
-//                                there. `on` is what that had better be. A
+//                                there, with a red mark round the control it
+//                                landed on for the first 0.6s of the dwell.
+//                                `on` is what that had better be. A
 //                                target of `{ choice: { row, pick } }` is one
 //                                option of a switch row — `key input` is
 //                                self/program — since two rows can offer the
@@ -172,7 +174,11 @@ const lerp = (a, b, t) => a + (b - a) * t
 // one argument says whether the hand in the picture is a mouse or a thumb.
 function installReel(touch) {
   const CURSOR = 'reel-cursor'
+  const FLASH = 'reel-flash'
   const TOUCH = touch === true
+  // The control the last press landed on, which the mark round it is measured
+  // off every frame.
+  let marked = null
 
   // A box on the signal path map. They are `<g role=button>`, so the click goes
   // on the element and the diagram's own layout stops mattering.
@@ -260,6 +266,41 @@ function installReel(touch) {
   const centre = el => {
     const r = el.getBoundingClientRect()
     return { x: r.left + r.width / 2, y: r.top + r.height / 2 }
+  }
+
+  // A point the recording will actually show, or a beat that fails here rather
+  // than in the clip.
+  //
+  // Nothing about a row being *found* says it is on screen: a control row is
+  // located by its label wherever the panel happens to be scrolled, and a
+  // `drag` moves it through the app's own input either way. So a timeline whose
+  // `scrollTo` fell short — a bank that unfolded further than it used to, a
+  // row that moved down its group — recorded the hand gliding off the bottom of
+  // the frame and the picture changing for no reason a viewer could see. Which
+  // is the one failure this whole file is arranged against: the drawn pointer
+  // and the click under it must never disagree, and a control worked out of
+  // frame is that disagreement at its worst, since it looks like the program
+  // doing things by itself.
+  //
+  // The margin is the pointer's own arrow, so a thumb flush with the bottom
+  // edge counts as off screen — half a cursor in frame is not a hand a reader
+  // can follow.
+  const EDGE = 24
+  // How much room a target wants above and below it to count as reached rather
+  // than merely visible. The drawn pointer's own height is the floor of it; the
+  // rest is the panel's sticky heading, which is inside the scrolling column
+  // and over the top of it, so a row brought exactly to the column's top edge
+  // arrives with its name behind the heading and only its thumb showing.
+  const REACH = 88
+  const onScreen = (at, target) => {
+    const w = document.documentElement.clientWidth
+    const h = document.documentElement.clientHeight
+    if (at.x >= EDGE && at.y >= EDGE && at.x <= w - EDGE && at.y <= h - EDGE) {
+      return at
+    }
+    throw new Error(
+      `${JSON.stringify(target)} is off screen at ${Math.round(at.x)},${Math.round(at.y)} in ${w}x${h} — scroll to it first`,
+    )
   }
 
   // One option of a switch row. The row is a radiogroup carrying its own label,
@@ -403,14 +444,60 @@ function installReel(touch) {
     where: target => {
       if (target.slider !== undefined) {
         const el = slider(target.slider)
-        return thumbAt(el, travelOf(el).at)
+        return onScreen(thumbAt(el, travelOf(el).at), target)
       }
       if (target.chip !== undefined) {
-        return chipGrip(target.chip)
+        return onScreen(chipGrip(target.chip), target)
       }
-      return centre(elementFor(target))
+      return onScreen(centre(elementFor(target)), target)
     },
     bankOpen: title => bank(title).getAttribute('aria-expanded') === 'true',
+
+    // The least scrolling that puts a target in frame, or null when it is
+    // already there.
+    //
+    // Every beat that reaches for a control runs this first, which is what
+    // stops a recording working a control nobody can see. The portrait take is
+    // where that happened: the app puts the picture on top and the panel below
+    // it, so a bank that unfolds pushes its own rows past the bottom of the
+    // screen, and the timeline's next beat glided the hand off the frame and
+    // dragged a slider down there — a clip of a picture changing by itself,
+    // which is the opposite of what the reel is for.
+    //
+    // *Least*, and not `scrollPlan`'s centring: a target already in frame moves
+    // nothing at all, so the desktop take, where all of this was always
+    // visible, records exactly as it did before. And where a scroll is needed
+    // it is the smallest one, since the panel travelling further than it has to
+    // is a second thing happening in the frame.
+    revealPlan: target => {
+      const el = elementFor(target)
+      const box = scroller(el)
+      if (box === null) {
+        return null
+      }
+      const r = el.getBoundingClientRect()
+      const view = box.getBoundingClientRect()
+      // The floor and ceiling of what counts as in frame: the scrolling
+      // column's own box, clipped to the window, inset by room for the drawn
+      // pointer.
+      const top = Math.max(view.top, 0) + REACH
+      const bottom = Math.min(view.bottom, window.innerHeight) - REACH
+      const over = r.bottom > bottom ? r.bottom - bottom : 0
+      const under = r.top < top ? r.top - top : 0
+      // Both at once is a row taller than the column has room for, and
+      // scrolling cannot help — `onScreen` throws on it when the hand arrives.
+      const delta = under !== 0 ? under : over
+      if (delta === 0) {
+        return null
+      }
+      return {
+        from: box.scrollTop,
+        to: Math.max(
+          0,
+          Math.min(box.scrollHeight - box.clientHeight, box.scrollTop + delta),
+        ),
+      }
+    },
 
     // Where the panel is scrolled and where it would have to be for a target to
     // sit in the middle of it, so the recorder can walk between the two. A beat
@@ -455,10 +542,63 @@ function installReel(touch) {
         throw new Error(`nothing under the pointer at ${x},${y}`)
       }
       hit.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+      // The box that answered is kept for the mark below to sit on. An SVG
+      // <text> is what the map's presses land on and its own rect is a few
+      // characters wide, so the mark goes round the target a reader would
+      // name — the <g role=button> the click bubbled to, which is the whole
+      // chip.
+      marked = hit.closest('[role="button"],button') ?? hit
       return hit.textContent?.trim().slice(0, 40) ?? ''
     },
 
+    // The pressed control, marked where it stands: a red box that lands on the
+    // click, swells a little and fades over half a second. The ripple under the
+    // pointer says a click happened; this says what it happened *to*, which on
+    // the signal path map is the whole sentence — a 60x18 chip on a diagram
+    // changes colour when it opens, and at 30fps on a page somebody is reading
+    // for the first time that arrives as nothing at all. Modelled on jbrowse's
+    // feature wash, and red for the reason the ripple is: the panel is
+    // near-black and green, and the picture is anything.
+    flash: t => {
+      const el = document.getElementById(FLASH)
+      if (t === null || marked === null) {
+        el?.remove()
+        return
+      }
+      // Measured every frame rather than once at the press. Opening a stage
+      // scrolls the panel under a mark that was a fixed rectangle, and the
+      // take showed the box sliding off the pill it was drawn for and landing
+      // over the row below. The box the mark is on is the box it follows.
+      const box = marked.getBoundingClientRect()
+      const mark =
+        el ??
+        document.body.appendChild(
+          Object.assign(document.createElement('div'), {
+            id: FLASH,
+            style:
+              'position:fixed;z-index:2147483646;pointer-events:none;border-radius:6px',
+          }),
+        )
+      // Swelling outward from a 6px surround to 16px, so the mark reads as
+      // something that landed rather than a border the control always had.
+      const pad = 6 + 10 * t
+      mark.style.left = `${box.left - pad}px`
+      mark.style.top = `${box.top - pad}px`
+      mark.style.width = `${box.width + 2 * pad}px`
+      mark.style.height = `${box.height + 2 * pad}px`
+      mark.style.border = `${4 - 2 * t}px solid rgb(255 59 48 / ${0.95 * (1 - t)})`
+      mark.style.background = `rgb(255 59 48 / ${0.22 * (1 - t)})`
+    },
+
     travel: label => travelOf(slider(label)).at,
+
+    // Both ends of a drag, on screen. The thumb travels along the row, so the
+    // end it is walking to has to be in frame as much as the end it starts at.
+    dragRoom: (label, to) => {
+      const el = slider(label)
+      onScreen(thumbAt(el, travelOf(el).at), { slider: label })
+      onScreen(thumbAt(el, to), { slider: label, to })
+    },
 
     chipGrip,
     // How far in a chip is after a drag — it carries its own fill as `--w`.
@@ -511,6 +651,11 @@ function installReel(touch) {
 // How long a click's ripple lives, in output frames: 0.4s at 30fps.
 const RIPPLE = 12
 const rippleAt = i => (i <= RIPPLE ? i / RIPPLE : null)
+// And how long the mark round the pressed control lives: 0.6s, half again as
+// long as the ripple. It is the slower half of the same event — the ripple says
+// a click happened, the mark says what it opened — and a press beat is 0.6s or
+// more, so it fades inside its own beat.
+const FLASH_FRAMES = 18
 
 async function runBeat(page, beat, frame, hand, shoot) {
   const frames = Math.max(1, Math.round(beatSecs(beat) * FPS))
@@ -539,17 +684,44 @@ async function runBeat(page, beat, frame, hand, shoot) {
       await shoot()
     }
   } else if (beat.moveTo !== undefined) {
+    // The target brought into frame before the hand reaches for it, out of the
+    // beat's own seconds — see `revealPlan` for what recording without this
+    // looked like on a phone. A target already in frame plans nothing and the
+    // whole beat is the glide, which is every beat of the desktop take.
+    const reveal = await page.evaluate(
+      t => window.__reel.revealPlan(t),
+      beat.moveTo,
+    )
+    const scrolling = reveal === null ? 0 : Math.round(frames * 0.45)
+    for (let i = 1; i <= scrolling; i++) {
+      await page.evaluate(
+        (target, top) => window.__reel.scrollTo(target, top),
+        beat.moveTo,
+        lerp(reveal.from, reveal.to, ease(i / scrolling)),
+      )
+      await paint(page, hand)
+      await shoot()
+    }
+    // Asked for after the scroll, since that is what moved it.
     const to = await page.evaluate(t => window.__reel.where(t), beat.moveTo)
     // A pointer with no previous position comes in from under the frame rather
     // than appearing on its target, which is a cut.
     const from = hand.at ?? { x: to.x, y: frame.height + 30 }
-    for (let i = 1; i <= frames; i++) {
-      const t = ease(i / frames)
+    for (let i = scrolling + 1; i <= frames; i++) {
+      const t = ease((i - scrolling) / (frames - scrolling))
       hand.at = { x: lerp(from.x, to.x, t), y: lerp(from.y, to.y, t) }
       await paint(page, hand)
       await shoot()
     }
   } else if (beat.drag !== undefined) {
+    // Where the thumb is now and where it ends up, both asserted on screen
+    // before a single value is written: a drag walks the thumb across the row,
+    // so a row half out of frame is one this cannot record either.
+    await page.evaluate(
+      (s, to) => window.__reel.dragRoom(s, to),
+      beat.drag.slider,
+      beat.drag.to,
+    )
     const from = await page.evaluate(
       s => window.__reel.travel(s),
       beat.drag.slider,
@@ -669,11 +841,18 @@ async function runBeat(page, beat, frame, hand, shoot) {
     }
     for (let i = 1; i <= frames; i++) {
       // The ripple is the press, not a state: it lands with the click and has
-      // faded by the twelfth frame (`cursor`, above, for why twelve).
+      // faded by the twelfth frame (`cursor`, above, for why twelve). The mark
+      // round the control it landed on runs a little longer, since it is the
+      // half a reader is meant to follow.
       hand.ripple = rippleAt(i)
+      await page.evaluate(
+        t => window.__reel.flash(t),
+        i <= FLASH_FRAMES ? i / FLASH_FRAMES : null,
+      )
       await paint(page, hand)
       await shoot()
     }
+    await page.evaluate(() => window.__reel.flash(null))
     hand.ripple = null
   } else if (beat.away !== undefined) {
     const from = hand.at
