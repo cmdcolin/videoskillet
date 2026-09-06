@@ -48,6 +48,8 @@
     "docshots:check": "node scripts/docshots.mjs --check",
     "callout": "node scripts/callout.mjs",
     "og": "node scripts/ogimage.mjs",
+    "heroplate": "node scripts/heroplate.mjs",
+    "heroplate:check": "node scripts/heroplate.mjs --check",
     "guide": "astro build",
     "site:dev": "astro dev --port 4321",
     "docgen": "node scripts/docgen.mjs",

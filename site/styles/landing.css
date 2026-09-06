@@ -31,97 +31,58 @@ a {
   max-width: 72rem;
 }
 
-/* Hero. The video is the background of the panel rather than a figure
-   beside it: the first thing the page should do is move. */
+/* Hero. The headline is a picture of itself: the h1 holds the title card
+   scripts/heroplate.mjs renders — the words set in the type below, photographed
+   and run through the program — and it is the header's whole picture. The demo
+   still that used to be here, with a raster over it and a scrim closing it back
+   to the page colour, was a picture of what the program makes held far enough
+   back that display type stayed readable over it. The card is the picture and
+   the words at once, so the layers between them have nothing left to do.
+
+   The moving account of the program is still the carousel underneath: a header
+   that changes under a reader is a distraction from the words in front of it,
+   and the stage can be looked at. */
 .hero {
   position: relative;
   overflow: hidden;
   border-bottom: 1px solid var(--border);
+  min-height: clamp(20rem, 56vh, 34rem);
 }
-/* One still, held back just far enough that display type stays readable
-   over a picture whose whole job is to be violent. Nothing here moves:
-   the looks that used to cycle behind the title, and then the one clip
-   that replaced them, are the carousel under the hero instead — a header
-   that changes under the reader is a distraction from the words in front
-   of it, and the carousel can be looked at.
-
-   `cover` on a 640x512 still upscales it several times over, and that is
-   the treatment rather than a fault in it. The link preview is the same
-   file given the same stretch (scripts/ogimage.mjs), and what the upscale
-   buys is a soft field rather than a picture competing with the type. */
-.heroShot {
+.heroTitle {
   position: absolute;
   inset: 0;
+  margin: 0;
+}
+/* The <picture> is only there to hand the img a second source; it is not a box
+   of its own, and left as one it gives `height: 100%` nothing to resolve
+   against and the card falls back to its intrinsic height. */
+.heroTitle picture {
+  display: contents;
+}
+/* Each source is cropped to about the shape it is shown at, so `cover` has
+   little left to take — the crop that matters is the one the harness made, with
+   the words in the middle of it. */
+.heroTitle img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  filter: saturate(1.15) contrast(1.08);
-}
-/* The scanlines the og card draws over the same still, for the same
-   reason: `cover` stretches a 640-wide frame across the window, and a
-   raster over the top is what makes that softness read as a signal rather
-   than as a picture that has been enlarged too far. */
-.heroScan {
-  position: absolute;
-  inset: 0;
-  background: repeating-linear-gradient(
-    to bottom,
-    rgb(0 0 0 / 13%) 0px,
-    rgb(0 0 0 / 13%) 1px,
-    transparent 1px,
-    transparent 3px
-  );
-  mix-blend-mode: multiply;
-}
-/* Angled across rather than down, which is the difference between a
-   header and a black band. The wash this replaces ran top-to-bottom and
-   held the whole width near 55%, under a clip at 0.55 opacity — about a
-   fifth of the picture reached the screen, and a *moving* fifth was
-   enough to read as a picture where a still one is mud.
-
-   So it is the link preview's wash instead (scripts/ogimage.mjs), which
-   has always had this job: opaque down the column the type sits in,
-   clearing to nothing past the far edge of the longest line, so the look
-   blazes on the side nothing is written over.
-
-   **Where it clears is the measure, not a percentage of the window.** The
-   og card is 1200px forever and could name a fraction; this has to hold
-   at every width, and the type here is `.wrap` — centred, capped at
-   --measure — so the far edge of the longest line it can hold is
-   `50% + measure/2` and nothing else. Written as a fraction it cleared at
-   336px on a 390px phone, straight through the middle of the sentence
-   under the buttons. Below the measure that calc lands past the right
-   edge, so the gradient simply never reaches its clear stop and a phone
-   gets an even wash — which is the right answer there, because on a phone
-   there is no "beside the type" to clear.
-
-   The second gradient grounds the bottom edge to the page colour, so the
-   hero still has no seam against the section under it. */
-.heroScrim {
-  position: absolute;
-  inset: 0;
-  --typeEdge: calc(50% + var(--measure) / 2);
-  background:
-    linear-gradient(
-      100deg,
-      rgb(14 14 17 / 90%) 0%,
-      rgb(14 14 17 / 84%) var(--typeEdge),
-      rgb(14 14 17 / 26%) calc(var(--typeEdge) + 7%),
-      rgb(14 14 17 / 0%) calc(var(--typeEdge) + 17%)
-    ),
-    linear-gradient(
-      to top,
-      var(--bg) 0%,
-      rgb(14 14 17 / 72%) 12%,
-      rgb(14 14 17 / 0%) 42%
-    );
 }
 .heroBody {
   position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: inherit;
   /* The side padding is `.wrap`'s own: zeroing it stood the hero title
      20px left of every line under it, and put the buttons and the warning
      against the bezel on a phone. */
-  padding: 3.75rem 1.25rem 4rem;
+  padding: 3.75rem 1.25rem 2.75rem;
+}
+.heroCta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 0;
 }
 
 /* A word, not a glyph: a bare ▶ is a guess, and these sit next to each
@@ -394,48 +355,6 @@ a {
 .stageVeil:hover .stageIcon path,
 .stageVeil:focus-visible .stageIcon path {
   fill: var(--accent);
-}
-/* What the slide showing is of. Every line is in the markup and the one
-   belonging to the slide showing is the one painted, so a reader with no
-   script gets the first slide's own line rather than three of them or
-   none. Held at the page's measure: a caption run to the full width of
-   the stage is a 1100px line of prose.
-
-   Stacked in one grid cell rather than shown and hidden, which is what
-   keeps the section under it still. These lines are of different
-   lengths, so `display: none` on the others would make the box as tall
-   as whichever one was showing and move the page every time the stage
-   advanced — at any width, since which of them wraps longest changes
-   with the measure. One cell is as tall as the tallest of them and the
-   rest sit in it invisibly. */
-.slideNotes {
-  display: grid;
-  max-width: var(--measure);
-  margin-top: 0.85rem;
-}
-.slideNote {
-  grid-area: 1 / 1;
-  margin: 0;
-  color: var(--fg3);
-  font-size: 0.95rem;
-  visibility: hidden;
-}
-.slideNote.on {
-  visibility: visible;
-}
-
-h1 {
-  font-size: clamp(2.1rem, 6.2vw, 3.4rem);
-  line-height: 1.08;
-  letter-spacing: -0.02em;
-  margin: 0;
-  text-wrap: balance;
-}
-.heroCta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  margin: 2rem 0 0;
 }
 .btn {
   display: inline-block;

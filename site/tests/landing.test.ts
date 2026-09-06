@@ -1,7 +1,7 @@
 import { experimental_AstroContainer } from 'astro/container'
 import { beforeAll, expect, test } from 'vitest'
 
-import { demos, gallery, hero, showcase } from '../../scripts/demos.mjs'
+import { demos, gallery, showcase } from '../../scripts/demos.mjs'
 import { beatSecs, CLIPS, NARROW, slides } from '../../scripts/reel.mjs'
 import Landing from '../pages/index.astro'
 
@@ -30,10 +30,13 @@ beforeAll(async () => {
 const bytes = (path: string) =>
   readFileSync(`public/${path.replace(/^\//, '')}`).length
 
-test('the hero shows the demo flagged hero, as a still', () => {
-  expect(/class="heroShot"\s+src="([^"]+)"/.exec(page)?.[1]).toBe(hero.poster)
-  expect(page).not.toContain('class="heroVid"')
-  expect(bytes(hero.poster)).toBeGreaterThan(0)
+test('the headline is the title card, and it says the headline', () => {
+  const img = /<img[^>]+src="(\/hero-title\.webp)"[^>]*>/.exec(page)
+  expect(img?.[1]).toBe('/hero-title.webp')
+  expect(img?.[0]).toContain('alt="WebGPU analog video emulation."')
+  expect(page).toContain('srcset="/hero-title-narrow.webp"')
+  expect(bytes('/hero-title.webp')).toBeGreaterThan(0)
+  expect(bytes('/hero-title-narrow.webp')).toBeGreaterThan(0)
 })
 
 // The stylesheet is read off disk rather than out of the render: vitest resolves
@@ -75,7 +78,6 @@ test.each(slides)('$name reaches the stage', slide => {
   expect(stage).toContain(`data-src-narrow="${slide.narrowClip}"`)
   expect(stage).toContain(`data-name="${slide.name}"`)
   expect(stage).toContain(slide.alt.slice(0, 60))
-  expect(page).toContain(slide.caption.slice(0, 40))
 })
 
 const total = (act: { secs?: number }[]) =>
@@ -109,10 +111,6 @@ test('the stage opens on the first slide, and every slide is in it once', () => 
   expect([...stage.matchAll(/class="slide[^"]*"\s+data-name=/g)]).toHaveLength(
     slides.length,
   )
-  expect([...page.matchAll(/class="slideNote(?: on)?"/g)]).toHaveLength(
-    slides.length,
-  )
-  expect([...page.matchAll(/class="slideNote on"/g)]).toHaveLength(1)
 })
 
 test('there are demos, and one of them can be a slide', () => {
