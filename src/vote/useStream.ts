@@ -33,7 +33,7 @@ import type { VoteSource } from './prepare'
 // `IDLE_AFTER` unanswered looks in a row it stops and says so — a page left
 // running is a page nobody is rating.
 //
-// The other half of the same rule, from VOTING.md: rating must be cheaper than
+// The other half of the same rule, from CURATION.md: rating must be cheaper than
 // moving on. A key advances the stream at once; waiting advances it in
 // `HOLD_MS`. So the fastest way through is to rate everything, and the 1s and 2s
 // come in at the same cost as the 5s — the shape a preference model needs.

@@ -24,7 +24,6 @@ const NOTES = [
   { file: 'docs/EDITOR.md', slug: 'editor', nav: 'Editor' },
   { file: 'docs/IDEAS.md', slug: 'ideas', nav: 'Ideas' },
   { file: 'docs/CURATION.md', slug: 'curation', nav: 'Curation' },
-  { file: 'docs/VOTING.md', slug: 'voting', nav: 'Voting' },
   { file: 'docs/adr/README.md', slug: 'decisions', nav: 'Decisions' },
   { file: 'docs/handoffs/README.md', slug: 'handoffs', nav: 'Handoffs' },
 ]

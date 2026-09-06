@@ -176,6 +176,21 @@ character generator goes wrong.
   third bend and is unbuilt in both places: it walks the entire page diagonally
   through itself a few cells a field.
 
+- **A drawing that moves on its own.** `draw` paints on the card and the card
+  then sits still, so `boil` is the only thing keeping it alive. Two shapes
+  worth trying: interpolating between two saved drawings, which gives a hand-
+  drawn tween the chain then damages; and a wigglypaint-style stroke that
+  jitters along its own path, which is `boil` applied per stroke rather than per
+  cell.
+
+## Looks to leave alone
+
+A taste note rather than a mechanism: **the plain green phosphor and the plain
+chroma-key green both read badly** on their own — a flat saturated green field
+is the one colour in this palette that looks like a filter rather than a fault.
+Both are worth having as ingredients under something else and neither is worth
+an authored preset that is about it.
+
 ## The caption channel
 
 Line 21 carries real characters (`signal/captionstate.ts` feeds them),

@@ -8,10 +8,10 @@ pnpm lint --fix # oxlint
 pnpm test       # vitest
 ```
 
-**`pnpm test` excludes `.claude/`, and that is load-bearing rather than tidy.**
-Work here happens in `git worktree` copies under `.claude/worktrees/`, which are
-full checkouts with their own `src/` — and vitest's default `include` is a glob
-over the whole tree, so a run from the primary checkout used to collect every
+**`pnpm test` excludes `.claude/`, and the exclude is load-bearing.** Work here
+happens in `git worktree` copies under `.claude/worktrees/`, which are full
+checkouts with their own `src/` — and vitest's default `include` is a glob over
+the whole tree, so a run from the primary checkout used to collect every
 worktree's suite along with its own: **374 test files and 6746 tests against
 this checkout's 71 and 1385**, twelve seconds against two and a half. The cost
 that matters is not the time, though: a half-finished branch somebody else is
@@ -140,7 +140,7 @@ saturates at ~242 on every source this app draws. So each step takes a coarse
 tile signature and the run fails if the picture did not move. Against a build
 broken on purpose that reads 0.00 where a healthy one reads 2.58 at its tightest
 — the header records how the two arms were separated, and why the default
-`?srcb=none&set=bGain:1` is load-bearing rather than cosmetic.
+`?srcb=none&set=bGain:1` is load-bearing.
 
 ```
 node scripts/fatfinger.mjs [http://localhost:5199/app/] [minPx]
@@ -484,43 +484,9 @@ sources attached, before believing a batch number — and note the app's own fps
 readout reports loop cadence, which vsync steps down in jumps (48 → 24 on the
 dev panel), not a gradual slide.
 
-Where the frame time goes, measured 2026-08-08 (all 66 presets land 3.3–5.4 ms
-on the dev box's WX 3200, against a 3.3 ms always-on floor):
-
-- **Dub generations × colour-under** is the big multiplier: `channel` +
-  `underDown` cost ~1.4 ms per generation (worn tape runs 3.3 → 6.5 ms from one
-  generation to four).
-- **The CRT beam spot's** wide tiers (~1.8 ms) on the presets that push
-  `crtSpot` past a pixel; at the 0.6 px default the tap table is small and the
-  pass costs ~0.2 ms.
-- **`crt_face`'s bloom + halation gather** is ~0.30 ms of a 4.90 ms frame (6%),
-  measured by deleting both loops outright. Its cost is **linear in tap count at
-  ~0.0094 ms/tap and does not care about radius** — dropping eight taps saves
-  0.083 ms whether they sit on the 3.5 px bloom disk or the 15 px halo one,
-  measured as separate arms and indistinguishable. So there is no locality win
-  hiding in this gather and no superlinearity to exploit: tap count is the only
-  lever, which is why both spreads now tier it (bloom on strength, the spot on
-  radius) rather than restructuring the sampling.
-- **Per-source feed snow** ~0.9 ms per engaged feed.
-- The true-waveform B chain (`encodeChromaB → encodeCompositeB → mixB`) totals
-  ~0.9 ms engaged and dispatches nothing idle.
-
-The keyer, the synth and the strobe (e273959) were measured after the fact, at
-920x800 on the same box, best-of interleaved runs. All three are behind uniform
-branches, and the branches hold:
-
-- **Idle cost is nil.** The whole feature set against its own parent revision
-  (9e0da4c, two dev servers off two worktrees, alternated) lands 4.52 ms both
-  sides at stock — no separable difference.
-- **The chroma keyer** costs ~0.07 ms engaged (`greenScreen` 4.53 against 4.47
-  with `bKey:0`), the `atan2` + `length` per active sample and the extra `mix_b`
-  binding together. `keyIntoTheLoop` is the dearest of the six at 4.78 ms, and
-  that is its mixer loop, not the key.
-- **`synthOver`** costs ~0.01 ms — a full `videoSynth` per pixel, and it does
-  not register. **The strobe is free**: a uniform multiply in `decode`, ON and
-  OFF both 4.55 ms.
-- The six presets that shipped with them run 2.82–4.78 ms (`contourLines` and
-  `punchIn` at the bottom are source-A-only, so they never pay for the B chain).
+Where the frame time actually goes is [`OPTIMIZATIONS.md`](OPTIMIZATIONS.md) ›
+_What a frame costs_, which is the page that owns what these measurements
+decided.
 
 ### Proving an approximation is free
 
@@ -559,14 +525,9 @@ stable, convincing, wrong number:
   what a take promises, and not only a harness problem: two renders of a look
   with a polarity flip in it are not the same file.
 
-Two ALU micro-optimizations were implemented, measured dead flat, and reverted
-([ADR 0007](adr/0007-the-fir-passes-are-not-alu-bound.md)) — the FIR passes are
-not ALU-bound on this hardware, so arithmetic saved there rides idle slots: the
-filter bank as a uniform buffer (vec4-packed for the constant cache) and a
-Chebyshev recurrence replacing the heterodyne phasor walk in
-`under_down`/`channel` (verified pixel-exact first). A one-shot bake of
-`crt_face`'s grain field met the same fate earlier. Measure an ablation upper
-bound before building any optimization here.
+Measure an ablation upper bound before building any optimization here — three
+were built, measured dead flat and reverted
+([ADR 0007](adr/0007-the-fir-passes-are-not-alu-bound.md)).
 
 ### Building the pipelines is not the startup cost, and async is worse
 
@@ -1106,11 +1067,11 @@ It needs Xvfb, xterm, xdotool, ffmpeg, Chrome, and a logged-in `claude`. It
 costs real tokens — a run is a minute or two of session and a dollar or so, and
 the status line in the recording says how much.
 
-**Nothing in the timeline is scripted, and that is the point.** `appreel.mjs`
-next door walks a drawn pointer along a written list of beats, which is right
-for a product reel; here the presses, their order and the model's own
-corrections mid-run are what the recording is evidence of. The script sets the
-stage, opens the shutter, and stops when the session lands.
+**Nothing in the timeline is scripted.** `appreel.mjs` next door walks a drawn
+pointer along a written list of beats, which is right for a product reel; here
+the presses, their order and the model's own corrections mid-run are what the
+recording is evidence of. The script sets the stage, opens the shutter, and
+stops when the session lands.
 
 **The rows in the default task are the ones the reel already screened.** The
 first take typed `head switch 9` and `noise 12`, which are real edits and read
@@ -1532,9 +1493,8 @@ place and the site follows:
   `docs/img/shots.json` on the image's filename.
 
 The figures are copied flat into `dist/guide/img/` rather than handed to Astro's
-asset pipeline, because the path is load-bearing in two places: the landing page
-loads `signal-path-callout.jpg` out of it directly, and `shots.json` joins a
-figure to the session that produced it on the bare filename.
+asset pipeline, because `shots.json` joins a figure to the session that produced
+it on the bare filename.
 
 Every address on the site is site-absolute and ends in a slash: a page is a
 directory with an index in it (`build.format: 'directory'`), read at
@@ -1712,8 +1672,8 @@ The layering is worth knowing before changing any of it:
   case of a clip, with no handle, no grant and no re-link.
 
 `commons.test.ts` and `archive.test.ts` pin the readers against response shapes
-that were real once, which is exactly what they cannot keep being — so the live
-contract has its own harness:
+that were real once and will not stay real, so the live contract has its own
+harness:
 
 ```
 node scripts/poolcheck.mjs http://localhost:5199/app

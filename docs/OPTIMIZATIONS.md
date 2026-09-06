@@ -23,6 +23,36 @@ one exception is _What a CPU profile of the live app found_, which is main
 thread rather than GPU and says its own box and browser, because the largest
 thing in it is a browser difference and would have read as zero on the other.
 
+## What a frame costs
+
+Measured 2026-08-08 on the dev box's WX 3200; every built-in preset lands
+**3.3–5.4 ms** against a 3.3 ms always-on floor. In order of what actually moves
+the number:
+
+- **Dub generations × colour-under** is the big multiplier: `channel` +
+  `underDown` cost ~1.4 ms per generation, so worn tape runs 3.3 → 6.5 ms from
+  one generation to four.
+- **The CRT beam spot's wide tiers** cost ~1.8 ms on the presets that push
+  `crtSpot` past a pixel; at the 0.6 px default the tap table is small and the
+  pass costs ~0.2 ms.
+- **`crt_face`'s bloom + halation gather** is ~0.30 ms of a 4.90 ms frame, 6%,
+  measured by deleting both loops outright. See _Tiering_ below for why tap
+  count is the only lever on it.
+- **Per-source feed snow** ~0.9 ms per engaged feed.
+- **The true-waveform B chain** (`encodeChromaB → encodeCompositeB → mixB`)
+  totals ~0.9 ms engaged, and dispatches nothing idle.
+
+The keyer, the synth and the strobe (e273959) were measured after the fact at
+920x800, best-of interleaved runs. All three sit behind uniform branches and the
+branches hold: the whole feature set against its parent revision lands 4.52 ms
+both sides at stock, with no separable difference. Engaged, the chroma keyer
+costs ~0.07 ms (`greenScreen` 4.53 against 4.47 with `bKey:0`) — the `atan2` and
+`length` per active sample plus the extra `mix_b` binding. `synthOver` costs
+~0.01 ms for a full `videoSynth` per pixel. The strobe is free: a uniform
+multiply in `decode`, ON and OFF both 4.55 ms. The six presets that shipped with
+them run 2.82–4.78 ms, and `keyIntoTheLoop` at the top pays for its mixer loop
+rather than for the key.
+
 ## The rule: ablate before you optimize
 
 Delete the thing and measure the frame without it. That number is the upper
@@ -518,34 +548,12 @@ a render-loop probe spinning at 8 kHz, a per-frame object copy, and a
 rather than React's. React is a tenant of that thread and pays its rent. The
 rest of this section is the design that keeps it that way.
 
-React only ever configures the engine. The render loop lives in `useEngine` and
-writes to the canvas directly, so live per-frame state reaches the overlays as
-**mutable refs read during render** rather than as sixty state updates a second.
-
-- **A morph notifies React a tenth as often as it moves.** `GLIDE_NOTIFY`
-  batches to every sixth frame. Notifying per frame is a full panel render per
-  frame — 19 ms with every row mounted — the morph paying for its own stutter.
-  The landing frame always notifies regardless, and it assigns the destination
-  rather than evaluating the path at `t = 1`, because `from + (to − from) * 1`
-  is not bit-identical to `to` and `matchPreset` compares exactly.
-- **Two panel contexts, split by clock.** `ControlsContext` changes on every
-  pointer move of a drag; `ModSlotsContext` changes only when someone patches
-  the bay. One shared context would rebuild every consumer of both on each drag
-  frame.
-- **One gesture is one notify.** Drags on the direct-manipulation miniatures
-  write through `writeControls`, so a gesture moving four controls notifies
-  once.
-- **Nothing in a miniature runs per frame.** No rAF, no transitions that recalc
-  style each tick. The panel shares a main thread with a 60 fps canvas, and a
-  decorative pulse measured 7 ms of style recalc per 3 s for information a
-  static border carries. Measure this with `page.metrics()` deltas
-  (`RecalcStyleDuration`, `ScriptDuration`), not fps — the loop is vsync-capped,
-  so fps stays at 60 until the budget is already gone.
-- **React Compiler is on**, so don't hand-write `useMemo`/`useCallback`. The
-  ref-during-render pattern is exactly what the compiler refuses, which costs
-  that component its memoization — so every bail-out is recorded in `KNOWN` in
-  `scripts/compilercheck.mjs` with whose fault it is, and `pnpm compiler` fails
-  on any that is not on the list.
+The design that keeps it that way — refs read during render, one context per
+clock, a morph notifying every sixth frame, the compiler gate — is
+[`ARCHITECTURE.md`](ARCHITECTURE.md) › _The React layer_. Two of its numbers
+came from here: notifying per frame is a full panel render per frame, 19 ms with
+every row mounted, and a decorative pulse in a miniature measured 7 ms of style
+recalc per 3 s for information a static border carries.
 
 ### The main thread is the one feeding the GPU
 

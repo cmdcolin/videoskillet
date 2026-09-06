@@ -785,22 +785,22 @@ That reasoning was about a strip whose rows were looks; once a row can be a
 clip, the in/out pair becomes the row's own length. The rest of the section
 stands — this buys a trim, not a timeline.
 
-## The lesson this document kept re-learning
+## What the build order missed
 
-Everything on the build order was about the parts that were hard: a
-deterministic clock, a demuxer, a frame-exact puller, an encoder an editor will
-conform. All of it shipped, and the thing still could not do what this page
-opens by asking for — because three separate gaps were invisible from inside the
-design and obvious the moment somebody laid out eight clips and pressed play.
+The build order was a list of hard problems: a deterministic clock, a demuxer, a
+frame-exact puller, an encoder an editor will conform. All of them shipped, and
+three ordinary gaps survived the whole list. Each turned up by laying out eight
+clips and pressing play.
 
-A row could not name its clip. A clip added off the shelf had never been
-measured, so a hold saying `whole clip` meant `4 bars`. And preroll reached a
-`#vurl` and a bundled clip id but not the shelf clip an ordinary rundown is made
-of, so every cut in one was cold and every transition in one had a single live
-picture.
+- A row recorded the look and dropped the clip, so a rundown of footage played
+  as a rundown of effects over whatever was on the deck.
+- A clip added off the shelf had never been measured, so a hold set to
+  `whole clip` ran for four bars.
+- Preroll resolved a `#vurl` and a bundled clip id and skipped shelf clips,
+  which is what an ordinary rundown is made of, so every cut in one paid the
+  cold price and every transition in one had a single live picture.
 
-None of the three was inconsistent with anything. A field was simply absent, and
-**absence is what a checklist cannot see** — a design that specifies a type and
-a shipped thing that omits it look identical from the inside. So: a list of the
-difficult things is not a list of the necessary ones, and the two look identical
-right up until somebody uses what you built.
+Each is a missing field rather than a contradiction, which is why reading the
+code found none of them: a design that specifies a type and a shipped thing that
+omits it read the same from the inside. Test the gesture the document opens by
+asking for.
