@@ -1317,8 +1317,8 @@ and both take `--keep` to leave the JPEG frames on disk, which is what makes an
 encode knob (fps, crf, the codec) worth trying more than once without driving
 the browser again.
 
-The carousel's mp4s do not live in the repo. `pnpm reel` encodes each beside
-its frames and uploads it with `aws s3 cp … --profile colin` to
+The carousel's mp4s do not live in the repo. `pnpm reel` encodes each beside its
+frames and uploads it with `aws s3 cp … --profile colin` to
 `s3://myloveydove.com/videoskillet/reel/`, the bucket the AI-usage clip is on,
 and the page plays it from `https://myloveydove.com/videoskillet/reel/`; only
 the stills land in `public/reel`. A screen of variants (`--slides=`) keeps its
