@@ -51,7 +51,7 @@
   },
   {
     "name": "Rainborb",
-    "showcase": true,
+    "showcase": false,
     "gallery": true,
     "says": "A camera loop just over unity, turned 1.5° a lap, with the iris hunting.",
     "query": "?p=zD.GNADE4QCRYQDAJgfANYEAvAlAOQBFNwBAdAFL0AIBCKcvgE&mod=&srcb=none"

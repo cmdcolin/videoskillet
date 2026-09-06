@@ -29,13 +29,15 @@
 //
 // So a slide here is a board with somewhere left to go, matched to a hand that
 // moves the way that board can stand — chips onto a picture with tone in it,
-// hundredths of a slider onto a loop on the edge. **Two slides rather than
-// four** because the other two both wanted a source that is colour, detailed
-// and recognisably of something, and the app ships exactly one of those. The
-// candidates and how each failed are in the screens this session left behind;
-// the short version is that the duck is too dark for a roll to read on and the
-// two public-domain cartoons are monochrome, so the chroma rows have nothing
-// to amplify.
+// pills off the map onto a loop whose mechanism is one of its own rows. A
+// third, on a feedback board worked in hundredths, stood between these two and
+// is gone; the note where it was says what a loop on the edge costs a stage.
+// **Two slides rather than four** because the other two both wanted a source
+// that is colour, detailed and recognisably of something, and the app ships
+// exactly one of those. The candidates and how each failed are in the screens
+// that session left behind; the short version is that the duck is too dark for
+// a roll to read on and the two public-domain cartoons are monochrome, so the
+// chroma rows have nothing to amplify.
 //
 // **Things have to combo.** The rows and chips that read on their own are few
 // and generic, and the same ones land differently on a picture something else
@@ -176,84 +178,6 @@ export const NARROW = {
 // fixed clock cuts one of them off mid-drag.
 export const beatSecs = beat =>
   beat.secs ?? beat.hold ?? beat.press ?? beat.away
-// Rainborb is a camera loop held just over unity, and what is worth doing to
-// it is not a preset — it is a hundredth of a slider. Colin's brief was the
-// mechanism: "it is highly driven by feedback to start with, so it requires
-// delicacy in mutation of the delicate feedback features", and then, on a
-// screen that was still moving too far, "even more subtle changes should be
-// applied". The rows say the same thing themselves in `controls.ts`: zoom's
-// "tiny offsets are usually the most interesting", rotate's "a hundredth of a
-// degree visibly changes how fast the spiral winds".
-//
-// So the whole slide is four rows of one bank, moved a hair at a time, and
-// nothing else. That is also why it has almost no panel navigation in it: the
-// four rows sit together under the camera stage, so there is no scrolling
-// between them and the picture is changing in every frame of the take.
-//
-// **Where the numbers came from.** Screened by travel fraction rather than by
-// value (`v-orb2`, this session): the bisection that resolves a value
-// misreports on these curved rows — it was asked for zoom 1.01 and the readout
-// came back 0.87 — and a drag takes a fraction of the track anyway. The board
-// sits at about 0.20 of zoom's travel and 0.50 of rotate's, so these are small
-// moves from where the look already is:
-//
-//   zoom    **0.196 to 0.208, and no further.** The board sits at about 0.200,
-//           so this is four thousandths of the track a step, one of them
-//           downward. Past roughly 0.22 the loop stops being a picture: it
-//           expands every lap without bound and the frame fills with a single
-//           flat colour, which is what the take at 0.212/0.224/0.236 did — the
-//           orb relobed beautifully for eight seconds and then went solid
-//           yellow for the last four. Colin on that take: "after you keep
-//           sliding it it just expands to infinity at a certain point ... only
-//           small tweaks needed". Under 1 the loop collapses inward instead
-//           and concentrates its gain in a shrinking core, so the step down is
-//           safe in a way the steps up are not.
-//   rotate  0.504 onward relobes the silhouette — the orb goes from round to
-//           faceted, with the rainbow teeth redistributing round it. Every
-//           step is a different shape and all of them stay legible.
-//   gain    is a trap and is not in the timeline. Past about 0.8 of travel the
-//           rim washes out and the frame goes flat grey; the first orb screen
-//           lost its last two tiles that way.
-//   iris    reads as nothing on a still and as a pulse in a clip — the servo
-//           is inside the loop it is steadying, so it blooms, clamps and
-//           reopens on its own rhythm. It is here for the motion.
-//
-// **No chip on this one, and that took two takes to accept.** The orb is a
-// pale core with all its colour on the rim, so the obvious move is one
-// colorizer to make the frame loud — `chroma rails` was the finale, then, when
-// opening the camera stage turned out to fold the Presets section away and
-// leave no chip to reach for, the opening. Recorded, it posterised the loop
-// into flat slabs of magenta and green and the rim structure the slide is
-// about was gone; the zoom expansion then pushed those slabs out until the
-// last six seconds were a green field with a cyan band across it. Which is the
-// same mistake as stacking `howlround loom` on this board, moved to the front.
-//
-// A delicate system does not want a chip on it. What the loop's own rows make
-// on their own is vivid enough — by 0.236 of zoom's travel the rim is a thick
-// ring of yellow and magenta — and it is the picture the mechanism actually
-// makes, which is the whole claim the page is there to support.
-const ORB = [
-  { moveTo: { stage: 'camera' }, secs: 0.3 },
-  { press: 0.4, on: 'camera' },
-  { moveTo: { slider: 'rotate' }, secs: 0.25 },
-  { drag: { slider: 'rotate', to: 0.504 }, secs: 0.45 },
-  { hold: 0.5 },
-  { drag: { slider: 'rotate', to: 0.512 }, secs: 0.45 },
-  { hold: 0.5 },
-  { drag: { slider: 'rotate', to: 0.524 }, secs: 0.45 },
-  { hold: 0.6 },
-  { moveTo: { slider: 'zoom' }, secs: 0.25 },
-  { drag: { slider: 'zoom', to: 0.196 }, secs: 0.45 },
-  { hold: 0.8 },
-  { drag: { slider: 'zoom', to: 0.204 }, secs: 0.45 },
-  { hold: 0.8 },
-  { drag: { slider: 'zoom', to: 0.208 }, secs: 0.45 },
-  { hold: 1.0 },
-  { moveTo: { slider: 'auto-iris hunt' }, secs: 0.25 },
-  { drag: { slider: 'auto-iris hunt', to: 0.45 }, secs: 0.5 },
-  { away: 0.4 },
-  { hold: 2.4 },
-]
 
 // Five chips onto Ridiculous rainbow, cumulative, and the board is never
 // wiped — each reached through the grouped catalog rather than off the
@@ -426,22 +350,30 @@ export const slides = [
     // is scrolled to before the pointer goes anywhere near it.
     narrowAct: [{ scrollTo: { text: 'more…' }, secs: 0.4 }, ...PRESET_RUN],
   },
-  {
-    file: 'orb',
-    name: 'Camera feedback',
-    caption:
-      'Rainborb is a camera pointed at the screen it feeds, with the loop held just over unity — a system on the edge, and what it wants is not a preset. Nothing here is one: every move is hundredths of a slider on the loop’s own rows. Rotate goes up a hundredth of a degree at a time and the orb goes from round to faceted; zoom moves by a hundredth and a crescent grows out of the rim, then a thick ring of yellow and magenta. That is one and a half per cent of one control for a different picture. The auto-iris hunt at the end is a servo inside the loop it is steadying, so it blooms, clamps and reopens on its own rhythm and never settles.',
-    alt: 'The window on Rainborb — a pale orb rimmed with rainbow teeth on black — and the camera loop’s own rows moved a hair at a time: rotate nudged three times and the orb goes from round to faceted, zoom nudged three times and a crescent grows out of the rim into a thick ring of yellow and magenta, and the auto-iris hunt set going so the whole thing blooms and clamps on its own rhythm',
-    look: 'Rainborb',
-    stillAt: 0.95,
-    // A camera loop is mostly history: it has to lap enough times to be the
-    // picture the link promises before the shutter opens.
-    warm: 90,
-    act: ORB,
-    // In portrait the panel is the bottom half of a phone and the map starts
-    // below its fold, so it is scrolled to before anything is pressed on it.
-    narrowAct: [{ scrollTo: { stage: 'camera' }, secs: 0.4 }, ...ORB],
-  },
+  // **There was a `Camera feedback` slide here, on Rainborb, and it is gone.**
+  // Not because the picture was wrong — the orb is the best-looking thing the
+  // program makes — but because nothing anyone does to that board is worth
+  // watching. It exists in a narrow band, and either side of it are two
+  // failure modes, both dull: push the loop harder (zoom past ×1.008, rotate
+  // past a few degrees, exposure up, bloom, halation, beam gamma, beam cutoff)
+  // and the frame ends on one flat colour; weaken it at all (`cam s-curve`,
+  // mix and exposure together) and the SMPTE bars it was eating come through.
+  // Inside the band every safe move is a different rim on the same disc.
+  //
+  // Three cuts were recorded to find that out — nineteen small drags across
+  // four rows, then the same with the mixer loop's `v offset` and `read clock
+  // error` crossed in for a second act. Colin on the last of them: "these are
+  // all honestly terrible. we should just delete this from the carousel."
+  // Earlier, on the picture itself: "the image itself is amazing, the circular
+  // rainbow orb, but the tweaks we make are not interesting at all".
+  //
+  // `candidates.orb.mjs` is what the rows were screened with, kept so that
+  // whoever next thinks a feedback board belongs on the stage can look at the
+  // sheet before spending an afternoon on it. Changing the source does not
+  // rescue it either: screened on tv static, vhs static, sweep, the cat and the
+  // synth, the loop dominates so completely that all five settle into the same
+  // orb. Rainborb keeps its gallery card, where one still of it is exactly
+  // right.
   {
     file: 'path',
     name: 'Signal path',
