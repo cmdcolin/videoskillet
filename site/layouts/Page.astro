@@ -1,5 +1,6 @@
 ---
 import Footer from '../components/Footer.astro'
+import Header from '../components/Header.astro'
 import spy from '../scripts/spy.js?raw'
 import video from '../scripts/video.js?raw'
 import css from '../styles/guide.css?raw'
@@ -52,27 +53,14 @@ const marked = spec.group.mark(spec)
   </head>
   <body id="top">
     <a class="skip" href="#content">Skip to content</a>
-    <header>
-      <div class="bar">
-        <a class="brand" href="/"
-          >videoskillet.js<span>{spec.group.label}</span></a
-        >
-        <nav class="pages" aria-label="Guide pages">
-          {
-            spec.group.nav.map(page => (
-              <a
-                class={page.slug === marked ? 'on' : undefined}
-                aria-current={page.slug === marked ? 'page' : undefined}
-                href={href(page.slug)}
-              >
-                {page.nav}
-              </a>
-            ))
-          }
-        </nav>
-        <a class="cta" href="/app/">Open the app ↗</a>
-      </div>
-    </header>
+    <Header
+      label={spec.group.label}
+      links={spec.group.nav.map(page => ({
+        href: href(page.slug),
+        nav: page.nav,
+        on: page.slug === marked,
+      }))}
+    />
     <div class="wrap">
       {
         outline.length >= NAV_MIN && (

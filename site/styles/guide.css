@@ -4,7 +4,7 @@
   --measure: 45rem;
   --aside: 15rem;
   --gap: 3rem;
-  --bar: 3.25rem;
+  --barw: calc(var(--measure) + var(--aside) + var(--gap));
 }
 html {
   scroll-behavior: smooth;
@@ -51,102 +51,6 @@ body {
 }
 .skip:focus {
   top: 8px;
-}
-
-/* ── header ────────────────────────────────────────────────────────────────
-   Two rows on a phone (identity + call to action, then the page links as one
-   scrolling line) and one row from tablet up. It only sticks where there is
-   vertical room to spare: on a phone a sticky bar cost three wrapped rows of
-   an 844px screen, and the section nav and the pager cover what it was for. */
-header {
-  border-bottom: 1px solid var(--border);
-  background: var(--bg);
-}
-.bar {
-  max-width: calc(var(--measure) + var(--aside) + var(--gap));
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  gap: 10px 20px;
-  flex-wrap: wrap;
-  padding: 10px max(1.15rem, env(safe-area-inset-left)) 0;
-}
-.brand {
-  font-weight: 700;
-  letter-spacing: 0.01em;
-  color: var(--fg);
-  text-decoration: none;
-  margin-right: auto;
-  font-size: 17px;
-}
-.brand span {
-  color: var(--fg4);
-  font-weight: 400;
-  margin-left: 7px;
-  font-size: 14px;
-}
-.cta {
-  color: var(--accent);
-  text-decoration: none;
-  font-size: 14px;
-  font-weight: 600;
-  border: 1px solid rgba(127, 208, 160, 0.45);
-  border-radius: 999px;
-  padding: 4px 13px;
-  white-space: nowrap;
-  background: rgba(127, 208, 160, 0.07);
-}
-.cta:hover {
-  background: rgba(127, 208, 160, 0.16);
-}
-/* order 1 keeps the links below the identity row while the bar wraps, so the
-   phone header is two rows rather than the three the old one wrapped into. */
-.pages {
-  display: flex;
-  gap: 22px;
-  width: 100%;
-  order: 1;
-  overflow-x: auto;
-  padding: 4px 0 0;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-}
-/* Set by script on a row that actually has more beyond it, and on the end that
-   has it, so the fade is a promise of something rather than a soft edge on the
-   last link — and so a row scrolled off its start does not cut a word in half. */
-.pages.more-right {
-  mask-image: linear-gradient(90deg, #000 calc(100% - 40px), transparent);
-}
-.pages.more-left {
-  mask-image: linear-gradient(90deg, transparent, #000 40px);
-}
-.pages.more-left.more-right {
-  mask-image: linear-gradient(
-    90deg,
-    transparent,
-    #000 40px,
-    #000 calc(100% - 40px),
-    transparent
-  );
-}
-.pages::-webkit-scrollbar {
-  display: none;
-}
-.pages a {
-  color: var(--fg3);
-  text-decoration: none;
-  font-size: 14px;
-  white-space: nowrap;
-  padding: 6px 0 9px;
-  border-bottom: 2px solid transparent;
-  flex: none; /* or they shrink past their own text and overlap */
-}
-.pages a:hover {
-  color: var(--fg);
-}
-.pages a.on {
-  color: var(--accent);
-  border-bottom-color: var(--accent);
 }
 
 /* ── layout ─────────────────────────────────────────────────────────────── */
@@ -532,50 +436,6 @@ hr {
 @media (min-width: 46rem) {
   body {
     font-size: 17px;
-  }
-  header {
-    position: sticky;
-    top: 0;
-    z-index: 10;
-  }
-  @supports (backdrop-filter: blur(8px)) {
-    header {
-      background: rgba(14, 14, 17, 0.88);
-      backdrop-filter: blur(8px);
-    }
-  }
-  .bar {
-    flex-wrap: nowrap;
-    padding-bottom: 0;
-    height: var(--bar);
-    align-items: stretch;
-  }
-  .brand,
-  .cta {
-    align-self: center;
-    margin-right: 0;
-  }
-  /* The identity and the call to action keep their width and the page links
-     give theirs up, so the row that scrolls is the one built to scroll. A brand
-     free to shrink is narrower than its own text and paints "videoskillet.js
-     guide" straight over the first nav link; a call to action free to shrink
-     put "Install" underneath "Open the app". */
-  .brand,
-  .cta {
-    flex: none;
-  }
-  .pages {
-    width: auto;
-    order: 0;
-    margin: 0 auto 0 1.6rem;
-    padding: 0;
-    gap: 16px;
-    overflow-x: auto;
-  }
-  .pages a {
-    display: flex;
-    align-items: center;
-    padding: 0;
   }
   /* Clear the sticky bar when an anchor scrolls a heading into view. */
   h1,

@@ -2,6 +2,7 @@
 import Carousel from '../components/Carousel.astro'
 import Footer from '../components/Footer.astro'
 import Gallery from '../components/Gallery.astro'
+import Header from '../components/Header.astro'
 import Hero from '../components/Hero.astro'
 import script from '../scripts/landing.js?raw'
 import css from '../styles/landing.css?raw'
@@ -52,19 +53,20 @@ const UNFURL =
     <style is:inline set:html={tokens + css}></style>
   </head>
   <body id="top">
-    <header class="hero">
+    <Header
+      links={[
+        { href: '/guide/', nav: 'Guide' },
+        { href: 'https://github.com/cmdcolin/videoskillet', nav: 'GitHub ↗' },
+      ]}
+    />
+    <section class="hero">
       <Hero />
       <div class="heroScan"></div>
       <div class="heroScrim"></div>
       <div class="wrap heroBody">
-        <p class="brand">
-          <img src="/favicon.svg" alt="" />
-          videoskillet.js
-        </p>
         <h1>WebGPU analog video emulation.</h1>
-        <p class="cta">
+        <p class="heroCta">
           <a class="btn primary" href="/app/">Open the app →</a>
-          <a class="btn" href="/guide/">Guide</a>
         </p>
 
         <!-- Asked here rather than found out on the other side of the button.
@@ -80,7 +82,7 @@ const UNFURL =
           browser!
         </p>
       </div>
-    </header>
+    </section>
 
     <!-- The app being used, which is the one thing about this program a
          stranger cannot work out from a picture of what it makes. Four

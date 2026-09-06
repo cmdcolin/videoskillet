@@ -5,6 +5,8 @@
      would have read as "all set" beside a button that is about to fail. */
   --gate: #c0a95e;
   --measure: 46rem;
+  /* The header spans the widest thing under it, which is the carousel. */
+  --barw: 72rem;
 }
 body {
   margin: 0;
@@ -121,7 +123,7 @@ a {
   /* The side padding is `.wrap`'s own: zeroing it stood the hero title
      20px left of every line under it, and put the buttons and the warning
      against the bezel on a phone. */
-  padding: 5.5rem 1.25rem;
+  padding: 3.75rem 1.25rem 4rem;
 }
 
 /* A word, not a glyph: a bare ▶ is a guess, and these sit next to each
@@ -424,27 +426,14 @@ a {
   visibility: visible;
 }
 
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  font-family: var(--mono);
-  font-size: 0.95rem;
-  color: var(--fg3);
-  letter-spacing: 0.02em;
-}
-.brand img {
-  width: 1.6rem;
-  height: 1.6rem;
-}
 h1 {
   font-size: clamp(2.1rem, 6.2vw, 3.4rem);
   line-height: 1.08;
   letter-spacing: -0.02em;
-  margin: 1.4rem 0 0;
+  margin: 0;
   text-wrap: balance;
 }
-.cta {
+.heroCta {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;

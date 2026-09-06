@@ -1,0 +1,38 @@
+---
+// One bar for the whole site, over the footer's precedent: the landing page
+// used to say its own name inside the hero picture, in a different typeface at
+// a different size, so the way back to anything only existed at the bottom of
+// the page.
+//
+// `label` is what sits after the name — the guide names the group the reader is
+// in, the landing page has nothing to add and leaves it out. `links` is the row
+// under it, one entry per destination, `on` marking the one being read.
+interface Props {
+  label?: string
+  links: { href: string; nav: string; on?: boolean }[]
+}
+
+const { label, links } = Astro.props
+---
+
+<header>
+  <div class="bar">
+    <a class="brand" href="/"
+      >videoskillet.js{label === undefined ? null : <span>{label}</span>}</a
+    >
+    <nav class="pages" aria-label="Site pages">
+      {
+        links.map(link => (
+          <a
+            class={link.on === true ? 'on' : undefined}
+            aria-current={link.on === true ? 'page' : undefined}
+            href={link.href}
+          >
+            {link.nav}
+          </a>
+        ))
+      }
+    </nav>
+    <a class="cta" href="/app/">Open the app ↗</a>
+  </div>
+</header>

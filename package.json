@@ -41,6 +41,7 @@
     "pat": "node scripts/push.mjs patch",
     "min": "node scripts/push.mjs minor",
     "maj": "node scripts/push.mjs major",
+    "ship": "node scripts/push.mjs none",
     "logo": "node scripts/logo.mjs",
     "icons": "node scripts/icons.mjs",
     "docshots": "node scripts/docshots.mjs",

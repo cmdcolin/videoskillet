@@ -4,15 +4,21 @@
 // CHANGELOG.md via git-cliff (see cliff.toml) and folds it into the same
 // release commit.
 // Usage: node scripts/push.mjs <patch|minor|major>   (via pnpm {pat,min,maj})
+//        node scripts/push.mjs none                  (via pnpm ship)
+//
+// `none` runs the same preflight and pushes the commits already on the branch
+// without touching the version — Pages deploys on every push to main, so that
+// is how a docs or site change ships between releases.
 
 import { execSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 
 const bump = process.argv[2]
-if (!['patch', 'minor', 'major'].includes(bump)) {
-  console.error(`usage: node scripts/push.mjs <patch|minor|major>`)
+if (!['patch', 'minor', 'major', 'none'].includes(bump)) {
+  console.error(`usage: node scripts/push.mjs <patch|minor|major|none>`)
   process.exit(1)
 }
+const releasing = bump !== 'none'
 
 function run(cmd) {
   console.log(`$ ${cmd}`)
@@ -57,33 +63,44 @@ const parse = v => {
 const compare = (a, b) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2]
 
 const version = JSON.parse(readFileSync('package.json', 'utf8')).version
-const current = parse(version)
-if (current === null) {
-  refuse(
-    `package.json version ${version} is not a plain x.y.z — bump it by hand`,
-  )
-}
 
-const [major, minor, patch] = current
-const next =
-  bump === 'major'
-    ? [major + 1, 0, 0]
-    : bump === 'minor'
-      ? [major, minor + 1, 0]
-      : [major, minor, patch + 1]
+if (releasing) {
+  const current = parse(version)
+  if (current === null) {
+    refuse(
+      `package.json version ${version} is not a plain x.y.z — bump it by hand`,
+    )
+  }
 
-const highest = read("git ls-remote --tags --refs origin 'v*'")
-  .split('\n')
-  .map(line => parse(line.split('refs/tags/v')[1] ?? ''))
-  .filter(v => v !== null)
-  .sort(compare)
-  .at(-1)
+  const [major, minor, patch] = current
+  const next =
+    bump === 'major'
+      ? [major + 1, 0, 0]
+      : bump === 'minor'
+        ? [major, minor + 1, 0]
+        : [major, minor, patch + 1]
 
-if (highest !== undefined && compare(next, highest) <= 0) {
-  refuse(
-    `v${next.join('.')} would not be above v${highest.join('.')}, the highest tag on ` +
-      `origin — this checkout is at v${version}. Rebase, or bump past it by hand.`,
-  )
+  const highest = read("git ls-remote --tags --refs origin 'v*'")
+    .split('\n')
+    .map(line => parse(line.split('refs/tags/v')[1] ?? ''))
+    .filter(v => v !== null)
+    .sort(compare)
+    .at(-1)
+
+  if (highest !== undefined && compare(next, highest) <= 0) {
+    refuse(
+      `v${next.join('.')} would not be above v${highest.join('.')}, the highest tag on ` +
+        `origin — this checkout is at v${version}. Rebase, or bump past it by hand.`,
+    )
+  }
+} else {
+  const ahead = read('git rev-list --count origin/main..HEAD')
+  if (ahead === '0') {
+    refuse(
+      'nothing to push — commit the change first, or re-run the Pages workflow by hand',
+    )
+  }
+  console.log(`shipping ${ahead} commit(s) at v${version}, no version bump`)
 }
 
 // Catch what CI would catch, before it's a remote failure blocking the release.
@@ -109,6 +126,10 @@ try {
   )
 }
 
-// `pnpm version` bumps package.json, commits it, and creates a `v<x.y.z>` tag.
-run(`pnpm version ${bump} -m "Release v%s"`)
-run('git push --follow-tags')
+if (releasing) {
+  // `pnpm version` bumps package.json, commits it, and creates a `v<x.y.z>` tag.
+  run(`pnpm version ${bump} -m "Release v%s"`)
+  run('git push --follow-tags')
+} else {
+  run('git push')
+}

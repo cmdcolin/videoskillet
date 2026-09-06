@@ -53,9 +53,12 @@ test('every figure the landing page pulls out of the guide exists', () => {
   }
 })
 
+// No floor here either, for the reason the figure test gives: the page links to
+// the guide's front door and nothing deeper since the How it works section came
+// out of it, and a page that deep-links to nothing is a layout decision rather
+// than an extraction that has stopped working.
 test('every section the landing page deep-links to is a heading that exists', () => {
   const anchored = into.filter(link => link.includes('#'))
-  expect(anchored.length).toBeGreaterThan(0)
   for (const link of anchored) {
     const [path, hash] = link.split('#')
     const spec = ALL.find(page => href(page.slug) === `/guide/${path}`)
