@@ -859,6 +859,7 @@ export function App() {
     toggleGroupDrift,
     mutateGroup: mix.mutateGroup,
     resetControl: mix.resetControl,
+    resetSeconds: morphSeconds,
     beginHand: mix.snapshotForUndo,
     resetGroup: mix.resetGroup,
     landCard: mix.landCard,

@@ -102,6 +102,11 @@ export interface ControlsApi {
   // its track. Not `writeControl` with the default in it: this is a step on the
   // walk, so the value it throws away comes back with ctrl+z.
   resetControl: (key: ControlKey) => void
+  // How long that takes, in seconds — the board's morph duration, since a reset
+  // lands the way every other look does. The row needs the number rather than
+  // just the verb: it draws the flight home (Slider.module.css › .homing), and
+  // an animation of its own length would be describing a different journey.
+  resetSeconds: number
   // A hand taking hold of a row: pointer down on its track, or a step key on
   // it. Banks the board as it stands, so the drag that follows is one step on
   // the walk and ctrl+z puts the row back where the hand found it. A drag used

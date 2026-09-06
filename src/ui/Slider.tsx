@@ -363,6 +363,11 @@ export function Slider(props: {
   // walk; a row outside the look — a dialog setting, a deck's speed — has no
   // walk to bank on and leaves this out, and the reset is the plain write.
   onReset?: () => void
+  // How long that reset takes to arrive, in seconds — the board's morph
+  // duration, since putting one control back is a landing like any other. The
+  // row draws the journey off this; left out (or 0) it cuts, which needs no
+  // drawing. See `homingUntil` below.
+  resetSeconds?: number
   // The hand arriving on the row — pointer down on the track, a step key on
   // it, a press on one of a discrete row's choices — before the value moves.
   // A control row banks a step on the undo walk here; a row outside the look
@@ -426,6 +431,20 @@ export function Slider(props: {
   // was on its way somewhere else and covered the row below it uninvited — for
   // a control most passes over a row never need.
   const [showVernier, setShowVernier] = useState(false)
+  // The reset now on its way home, as the moment it was pressed — or null, which
+  // is every row that is sitting still.
+  //
+  // A reset travels for as long as morph says and the glide is smoothstepped,
+  // so at the default 1s the number has moved about three percent of the way
+  // home a tenth of a second in: a press that reads as a press that missed. So
+  // the row answers the press itself, on the frame it lands, and keeps saying
+  // so until the value is there (see `readingBox`).
+  //
+  // The press time is the token that ends it, rather than a plain flag, because
+  // two presses can be in the air at once — reset, grab the track to stop it
+  // half way, reset again — and the first one's timer would otherwise take the
+  // second one's flight down with it.
+  const [homing, setHoming] = useState<number | null>(null)
   const vernierId = useId()
   const vernierAnchor = `--vernier-${vernierId.replaceAll(/\W/g, '')}`
   // Both hang off the same edge of the same row; the ? card wins because it is
@@ -685,20 +704,51 @@ export function Slider(props: {
   // span, with no button in the accessibility tree to announce.
   const atStock = props.value === props.defaultValue
   const onReset = props.onReset
+  const resetSeconds = props.resetSeconds
   const reset = () => {
+    if (resetSeconds !== undefined && resetSeconds > 0) {
+      const pressed = Date.now()
+      setHoming(pressed)
+      // Timed rather than waiting for the value to arrive: the row is told
+      // about a morph in flight only every sixth frame (pipeline.ts ›
+      // GLIDE_NOTIFY), and a control whose step is coarser than the last stretch
+      // of the journey stops being re-rendered before the journey is over.
+      setTimeout(
+        () => setHoming(h => (h === pressed ? null : h)),
+        resetSeconds * 1000,
+      )
+    }
     if (onReset === undefined) props.onChange(props.defaultValue)
     else onReset()
   }
   const onBegin = props.onBegin
   const begin = () => {
+    // A hand on the track stops the morph where it stands, so the row stops
+    // saying one is on its way.
+    setHoming(null)
     if (onBegin !== undefined) onBegin()
   }
+  // While it travels, the ↺ turns once over exactly the flight — linear, so it
+  // moves on the frame of the click — and the reading's amber walks back to the
+  // resting colour on the glide's own easing, arriving with the value. Keyed on
+  // the press so a second one restarts the turn rather than joining one already
+  // half done.
+  const homingStyle =
+    homing !== null ? { animationDuration: `${resetSeconds}s` } : undefined
   const readingBox = (
     <>
       <span className={styles.reading} style={readingStyle}>
         {reading(props.value)}
       </span>
-      <span className={cx(styles.revertMark, atStock && styles.markIdle)}>
+      <span
+        key={String(homing)}
+        className={cx(
+          styles.revertMark,
+          atStock && styles.markIdle,
+          homing !== null && styles.homingMark,
+        )}
+        style={homingStyle}
+      >
         ↺
       </span>
     </>
@@ -710,8 +760,13 @@ export function Slider(props: {
       ) : (
         <button
           type="button"
-          className={styles.revert}
-          title={`off stock — click to put it back to ${reading(props.defaultValue)} (or double-click the track)`}
+          className={cx(styles.revert, homing !== null && styles.homing)}
+          style={homingStyle}
+          title={
+            homing !== null
+              ? `on its way back to ${reading(props.defaultValue)} over ${resetSeconds}s — grab the track to stop it here`
+              : `off stock — click to put it back to ${reading(props.defaultValue)} (or double-click the track)`
+          }
           aria-label={`reset ${props.label} to ${reading(props.defaultValue)}`}
           onClick={() => reset()}
         >

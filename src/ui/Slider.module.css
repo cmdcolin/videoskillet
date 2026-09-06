@@ -310,6 +310,55 @@
 .revert:hover .revertMark {
   opacity: 1;
 }
+/* On its way back: the state between "off stock" and "at stock", which until
+   now the row had no way to be in. A reset travels for as long as morph says,
+   and the glide is smoothstepped, so the number barely leaves for the first
+   tenth of a second — long enough for the press to read as one that missed.
+
+   Two animations, and they say different things. The reading's colour walks
+   from amber to the resting green on the glide's own easing, so the row's
+   colour arrives when its value does; the ↺ turns once, linear, so something
+   moves on the frame of the click. Both are given the flight's length inline by
+   the row (Slider.tsx › homingStyle) — a fixed second of animation on a
+   thirty-second morph would announce an arrival that has barely started.
+
+   Neither fills afterwards. The states either side are the ones already here:
+   amber if the morph was stopped part-way, and the plain reading once the value
+   has landed and the ↺ has gone back to being a slot. */
+.homing {
+  animation-name: homingColor;
+  animation-duration: 0s;
+  animation-timing-function: cubic-bezier(0.5, 0, 0.5, 1);
+}
+@keyframes homingColor {
+  from {
+    color: var(--edit);
+  }
+  to {
+    color: var(--accent);
+  }
+}
+.homingMark {
+  animation-name: homingTurn;
+  animation-duration: 0s;
+  animation-timing-function: linear;
+  opacity: 1;
+}
+@keyframes homingTurn {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+/* A glyph spinning beside a number is the first thing to drop for a reader who
+   asked for less motion, and it can go without taking the message with it: the
+   ↺ still lights to full on the press, the colour still walks home, and the
+   press is still answered on the frame it lands. */
+@media (prefers-reduced-motion: reduce) {
+  .homingMark {
+    animation-name: none;
+  }
+}
+
 /* The slot the ↺ will occupy, held open on a row that is at stock. `visibility`
    rather than not rendering it: the box has to be identical in both states, or
    moving a control off stock would resize its own readout and shift the track

@@ -726,6 +726,87 @@ await phase('reset', {}, async page => {
   check(back.gate === 4, `undo left the gate at ${back.gate} rather than 4`)
 })
 
+// --- a row's ↺ answers the press before the value can -----------------------
+//
+// A reset travels for as long as morph says, and the glide is smoothstepped, so
+// a tenth of a second after the press the number has moved about three percent
+// of the way home. A press whose only answer is that is a press that reads as
+// having missed, which is what this row's readout now covers: it animates from
+// the frame of the click (Slider.module.css › .homing) and stops when the value
+// is there.
+//
+// Asserted as "is anything animating on it", not as a class name, because the
+// animation is the thing the eye gets — and it is the half that survives
+// `prefers-reduced-motion`, which puppeteer's profile turns on: the ↺ stops
+// turning there, the colour still walks home.
+await phase('reset row', {}, async page => {
+  const { run, settle } = runner(page)
+
+  await run(`press(byTitle('filter the controls')); return 0`)
+  await settle(300)
+  await page.type('input[type="search"]', 'ghost gain')
+  await settle(600)
+  await run(`setRange(rowFor('ghost gain'), 0.6); return 0`)
+  await settle(400)
+
+  const pressed = await page.evaluate(() => {
+    // The panel is not the only place a control row is drawn — the favourites
+    // menu holds one too, folded away behind `display: none`. A hidden element
+    // takes a click and reports the classes it would wear, and runs no
+    // animation at all, so a check that finds it measures nothing and says the
+    // feature is broken.
+    const shown = () =>
+      [...document.querySelectorAll('button')]
+        .filter(b =>
+          (b.getAttribute('aria-label') ?? '').startsWith('reset ghost gain'),
+        )
+        .find(b => b.getBoundingClientRect().width > 0)
+    const btn = shown()
+    if (btn === undefined) return { found: false }
+    btn.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    return new Promise(res =>
+      setTimeout(() => {
+        const live = shown()
+        res({
+          found: true,
+          // Both halves matter: something has to be moving, and the value has
+          // to be still on its way — an answer that only arrives with the value
+          // is the thing this replaced.
+          animating:
+            live === undefined
+              ? 0
+              : live.getAnimations().length +
+                (live.querySelector('span:last-child')?.getAnimations()
+                  .length ?? 0),
+          value: window.vf.getControls().ghostGain,
+        })
+      }, 80),
+    )
+  })
+  check(pressed.found, 'the ghost gain row is not on screen to be reset')
+  check(
+    pressed.animating > 0,
+    'the row said nothing on the frame of the press — the reset reads as a click that missed',
+  )
+  check(
+    pressed.value > 0.4,
+    `the value was already at ${pressed.value} 80ms in, so this proves nothing about a press answered before its arrival`,
+  )
+
+  await settle(1400)
+  const landed = await page.evaluate(() => ({
+    value: window.vf.getControls().ghostGain,
+    animating: [...document.querySelectorAll('button, span')].filter(
+      el => el.getAnimations().length > 0,
+    ).length,
+  }))
+  check(landed.value === 0, `the reset left ghost gain at ${landed.value}`)
+  check(
+    landed.animating === 0,
+    'something is still animating a second after the value landed',
+  )
+})
+
 // The panel renders in two documents, and only one of them has a picture in it.
 // Everything responsive in app.module.css describes the *shell* — a sidebar
 // beside or under a stage — and the popout is the panel alone in a window
