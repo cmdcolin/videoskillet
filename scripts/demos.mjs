@@ -15,9 +15,13 @@
 //   name   what it is called, on the card and in the README. The recording is
 //          named after it, so renaming a demo renames its files — which the
 //          generator's --check will tell you about before a card goes blank.
-//   query  the packed look, `?p=…` onwards. The origin is not stored: every
-//          published link is videoskillet.com, and two of these were pasted
-//          from a dev server and published pointing at localhost.
+//   query  the packed look, from its sigil onwards — `?p=…` or `#src=…`. Both
+//          are links the app writes: it moves what it was handed into the
+//          fragment once it owns the bar, so a look copied out of the address
+//          bar arrives with either, and `paramsOf` in core/gpu/env reads
+//          whichever is there. The origin is not stored: every published link
+//          is videoskillet.com, and two of these were pasted from a dev server
+//          and published pointing at localhost.
 //   showcase
 //          whether the carousel under the hero shows it. The carousel is a few
 //          looks worth stopping on beside a shot of the app's window, so this
@@ -36,20 +40,27 @@
 //          like "Wonkitize me" over them does not make it. Read off the look
 //          itself — the controls it carries that stock does not — so a caption
 //          is a description of the board and not a guess at the picture.
-//   hero   the still behind the title, and the ground of the link preview
-//          (`ogimage.mjs`), which are one picture so that the page and the card
-//          standing in for it when it is shared are the same look. Exactly one
-//          demo carries it.
 //
 // Order is the order everything shows in: the carousel plays its members in it,
-// the gallery lists all of them in it, and the README prints it. The hero used
-// to be the first of them, which is a different job asked of one line: the head
-// of the gallery is picked for what opens a list, and the hero for what a
-// title can be read over — a quiet corner and a bright far side. `hero` above
-// is those two coming apart.
+// the gallery lists all of them in it, and the README prints it.
+//
+// There was a `hero` flag here too, naming the one still the header showed and
+// the link preview was grounded in. The header is the headline itself now
+// (`scripts/heroplate.mjs`) and so is the card, so no demo stands in for the
+// page any more and nothing read the flag.
 import { readFileSync } from 'node:fs'
 
 export const APP = 'https://videoskillet.com/app/'
+
+// Where the clips live, which is the bucket the carousel's already go to
+// (`reel.mjs`) under a prefix of their own. Fifteen loops of a moving picture
+// is fifteen megabytes, and a git history is the wrong place to keep a file
+// that is rewritten whenever its look is re-recorded — the stills stay in
+// `public/demos`, the mp4s go up with `aws s3 cp` at the end of a take
+// (`demoreel.mjs`). The page reads the clip URL straight off `data-src`, so an
+// absolute URL is fine where a root-absolute path would not be.
+export const S3_PREFIX = 's3://myloveydove.com/videoskillet/demos/'
+export const CLIPS = 'https://myloveydove.com/videoskillet/demos/'
 
 export const slug = name =>
   name
@@ -59,16 +70,17 @@ export const slug = name =>
 
 // Annotated because `JSON.parse` hands back `any`, and `landing-demos.test.ts`
 // imports this module: without a shape here, the tests over it are unchecked.
-/** @type {{ name: string, query: string, says: string, showcase: boolean, gallery: boolean, hero?: boolean }[]} */
+/** @type {{ name: string, query: string, says: string, showcase: boolean, gallery: boolean }[]} */
 const listed = JSON.parse(readFileSync('demos.json', 'utf8'))
 
-// `clip` and `still` are page-relative and `poster` is not, which is not an
-// oversight: vite rewrites the asset attributes it knows — `src` and `poster`
-// become `./demos/…` under this project's relative base — and it has never
-// heard of a data attribute, so a root-absolute one would survive the build
-// unchanged and, on a deploy under a sub-path, give a card a working still over
-// a clip that 404s. The landing page is the root, so both spellings name the
-// same file here.
+// `still` is page-relative and `poster` is not, which is not an oversight: vite
+// rewrites the asset attributes it knows — `src` and `poster` become
+// `./demos/…` under this project's relative base — and it has never heard of a
+// data attribute, so a root-absolute one would survive the build unchanged and,
+// on a deploy under a sub-path, give a card a working still over a clip that
+// 404s. The landing page is the root, so both spellings name the same file.
+//
+// `clip` sidesteps all of that by being somewhere else entirely.
 export const demos = listed.map(demo => {
   const file = slug(demo.name)
   // The origin belongs to this file, not to an entry — a demo is copied out of
@@ -77,9 +89,14 @@ export const demos = listed.map(demo => {
   // published link that opens nothing, in a block nobody proofreads because it
   // is generated. The comment above said the origin is not stored; this is what
   // makes that true rather than hoped for.
-  if (!demo.query.startsWith('?')) {
+  //
+  // Either sigil passes. This used to demand a `?` and reject everything else
+  // as an origin, which also rejected the form the app itself hands you: once
+  // it owns the address bar it writes the look into the fragment, so half the
+  // links a person copies begin `#`.
+  if (!demo.query.startsWith('?') && !demo.query.startsWith('#')) {
     throw new Error(
-      `${demo.name}: query must start with '?', not an origin — got ${demo.query.slice(0, 40)}…`,
+      `${demo.name}: query must start with '?' or '#', not an origin — got ${demo.query.slice(0, 40)}…`,
     )
   }
   return {
@@ -87,7 +104,7 @@ export const demos = listed.map(demo => {
     file,
     url: `${APP}${demo.query}`,
     href: `/app/${demo.query}`,
-    clip: `demos/${file}.mp4`,
+    clip: `${CLIPS}${file}.mp4`,
     still: `demos/${file}.webp`,
     poster: `/demos/${file}.webp`,
   }
@@ -98,11 +115,3 @@ export const showcase = demos.filter(demo => demo.showcase)
 // The cards, in order. `demos` is still the whole list — the README prints it,
 // and a demo off the page keeps its link there.
 export const gallery = demos.filter(demo => demo.gallery)
-
-const flagged = demos.filter(demo => demo.hero)
-if (flagged.length !== 1) {
-  throw new Error(
-    `exactly one demo carries "hero": true in demos.json — got ${flagged.length}${flagged.length === 0 ? '' : ` (${flagged.map(d => d.name).join(', ')})`}`,
-  )
-}
-export const hero = flagged[0]

@@ -81,6 +81,22 @@ edits are HMR** — an `src/` write mid-run reloads the page and resets the engi
 under whatever you were measuring. See the traps list in `docs/DEVELOPMENT.md`;
 every one of them cost real time.
 
+## Clips live on the bucket, not in the history
+
+Every mp4 this project records — the carousel's slides (`scripts/appreel.mjs`)
+and the gallery's demo loops (`scripts/demoreel.mjs`) — goes to
+`s3://myloveydove.com/videoskillet/` under a prefix of its own, with
+`aws s3 cp --profile colin`. Both recorders upload at the end of a take, and
+both `public/reel/*.mp4` and `public/demos/*.mp4` are gitignored. The **stills
+stay** in the repo: a card has to show something before its clip is fetched, and
+a webp is kilobytes.
+
+A recording is rewritten whenever its look is re-recorded, so a tracked one puts
+every version of a megabyte-scale binary in the history forever. `demos.mjs` and
+`reel.mjs` each export the pair of constants that says where the clips are —
+`S3_PREFIX` to write, `CLIPS` to read — and the page takes the URL straight off
+`data-src`, so an absolute one is fine there.
+
 ## Writing
 
 Prose in the docs and in the app says what a thing is. Definition by negation —

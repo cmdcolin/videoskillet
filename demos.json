@@ -24,7 +24,6 @@
     "name": "Wiggity",
     "showcase": false,
     "gallery": true,
-    "hero": true,
     "says": "A 32 kHz oscillator laid over the picture, with the deflection bent by a Lorenz attractor.",
     "query": "?p=je.CoDoBwEEAbAEAKwCAfABAKCZAgXgAw2IIwSIAyFYBrAKEjwGmAEEuB4ZVADsBgr4OiSMCQDEAQDgAgAkAUQEBAAQA9wCAMXBAgCJngIAlf4DAI3tAw&mod=bendUs:lorenz:0.390279:0.27759,hvRing:sine:0.037599:0.090209&srcb=synth&src=sweep"
   },
@@ -97,5 +96,12 @@
     "gallery": true,
     "says": "A feedback loop over VHS static, its gain breathing past unity while the colour-under path runs 1.6 times hot.",
     "query": "?p=Y5.GIgFEVQA9AEAYA6AAhHAAQBkDEgEkAMIGAKgAgC0AQToAgKcAQH4IQEoAIwBACAAkAMFXGioFAe5vgMAocQB&mod=vFreqHz:smooth:0.08:0.0049,fbGain:smooth:0.24:0.06&src=vhs+static"
+  },
+  {
+    "name": "My lord",
+    "showcase": true,
+    "gallery": true,
+    "says": "A caption decoder with two pins held on its font ROM, reading line 21 through an inverting mixer loop keyed on the live picture.",
+    "query": "#src=cat&set=chromaGain:2.62,cc:1,ccBox:0.85,ccRomAddr:1,ccRomData:-3,cgMix:0.48,cgY:0.28,cgScale:2.5,cgRomAddr:5,noiseIre:5.9,rfMistuneMHz:0.39,fbMix:0.61,fbZoom:1.028,fbGain:1.096,fbBlack:0.045,cfbMix:1,cfbGain:-1.22,cfbDelayUs:2.357,cfbLines:60,cfbKey:1,cfbKeyLevel:53,cfbKeySoft:10,cfbKeyExt:1,cfbRing:1,cfbGenlock:1,phosphor:0.1603,timeScale:0.45&mod="
   }
 ]

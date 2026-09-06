@@ -1,7 +1,7 @@
 import puppeteer from 'puppeteer-core'
 
 import { CHROME, FIREFOX } from './browser.mjs'
-import { demos } from './demos.mjs'
+import { CLIPS, demos, S3_PREFIX } from './demos.mjs'
 import { installHelpers, step } from './drive.mjs'
 import { appUp } from './until.mjs'
 
@@ -189,9 +189,12 @@ async function record(demo, tmpDir) {
   }
 }
 
-// Both encoders are wanted at the end of a run that takes a browser recording
-// per demo to reach it, so they are checked at the start of it.
-for (const bin of ['ffmpeg', 'cwebp']) {
+// All three are wanted at the end of a run that takes a browser recording per
+// demo to reach it, so they are checked at the start of it. `aws` is in the
+// list because the clip only exists on the bucket: a run that records fine and
+// then cannot upload has produced a card pointing at a 404, and it should say
+// so before spending the recordings rather than after.
+for (const bin of ['ffmpeg', 'cwebp', 'aws']) {
   execFileSync('sh', ['-c', `command -v ${bin}`], { stdio: 'ignore' })
 }
 
@@ -264,6 +267,24 @@ for (const demo of wanted) {
     console.log(
       `  ✓ ${demo.file} — ${frames} frames, ${kb('mp4')}K mp4, ${kb('webp')}K still`,
     )
+    // Up it goes, the way `appreel.mjs` sends the carousel's. The still stays
+    // on disk and in the history; the mp4 is on the bucket and gitignored, so
+    // this is not an extra step at the end of a take but the step that makes
+    // the recording reachable at all.
+    execFileSync(
+      'aws',
+      [
+        's3',
+        'cp',
+        `${outDir}/${demo.file}.mp4`,
+        S3_PREFIX,
+        '--profile',
+        'colin',
+        '--only-show-errors',
+      ],
+      { stdio: 'inherit' },
+    )
+    console.log(`    ↑ ${CLIPS}${demo.file}.mp4`)
   } catch (e) {
     console.log(`  FAIL ${demo.file}: ${String(e).slice(0, 200)}`)
   } finally {

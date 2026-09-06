@@ -26,9 +26,13 @@ import { readFileSync } from 'node:fs'
 // looks themselves — the format is pinned in packed.test.ts, and a second copy
 // of these forty controls here would be a thing to update rather than a thing
 // to read.
+// Either sigil, because the app writes both: a look copied out of the address
+// bar arrives under `?` before the app owns the bar and under `#` after. A
+// pattern that took only `?p=` read a `#src=` demo as absent, which the count
+// below would have called a demo missing from the README.
 const links = (path: string): string[] =>
   [
-    ...readFileSync(path, 'utf8').matchAll(/https:\/\/\S*?\?(p=\S+?)[)\s]/g),
+    ...readFileSync(path, 'utf8').matchAll(/https:\/\/\S*?[?#](\S+?)[)\s]/g),
   ].map(m => m[1])
 
 const readme = links('README.md')
@@ -58,22 +62,29 @@ test('the project publishes every demo it lists', () => {
 })
 
 test.each(published)('%s: %s', (_page, query) => {
-  const packed = new URLSearchParams(query).get('p') ?? ''
-  const decoded = unpackControls(packed)
-  // Sealed, so a mistyped one is refused outright rather than read short.
-  expect(decoded).not.toBe(null)
-  const look = decoded === null ? {} : decoded
+  // What the loader will make of the link, which is the one reading every
+  // published demo has in common: `?p=` carries the look packed, `?set=` names
+  // the controls it moves, and both arrive here as the same patch.
+  const look = parseSessionParams(`?${query}`).controls
+  const packed = new URLSearchParams(query).get('p')
 
-  // Re-packing what it decoded has to give the link back. The decoder is
-  // deliberately lenient — it stops at the first short read and keeps what it
-  // had, which is what lets an old build open a newer link — so a lost tail
-  // decodes to a prefix rather than to an error. That prefix re-packs shorter
-  // than the link, and a typo'd character throws the varint stream out of step;
-  // both fail here. What it cannot see is a cut landing on a byte boundary and
-  // a field boundary at once — measured on the shortest demo, three truncation
-  // lengths in four are caught and the fourth is not — which is the part the
-  // floor below is left holding.
-  expect(packControls(look)).toBe(packed)
+  if (packed !== null) {
+    const decoded = unpackControls(packed)
+    // Sealed, so a mistyped one is refused outright rather than read short.
+    expect(decoded).not.toBe(null)
+    expect(look).toEqual(decoded)
+
+    // Re-packing what it decoded has to give the link back. The decoder is
+    // deliberately lenient — it stops at the first short read and keeps what it
+    // had, which is what lets an old build open a newer link — so a lost tail
+    // decodes to a prefix rather than to an error. That prefix re-packs shorter
+    // than the link, and a typo'd character throws the varint stream out of
+    // step; both fail here. What it cannot see is a cut landing on a byte
+    // boundary and a field boundary at once — measured on the shortest demo,
+    // three truncation lengths in four are caught and the fourth is not — which
+    // is the part the floor below is left holding.
+    expect(packControls(look)).toBe(packed)
+  }
 
   // A demo is a look, not one knob. The floor sits well under the narrowest
   // published demo (the feedback-only patch moves fifteen) because a demo is
@@ -88,7 +99,4 @@ test.each(published)('%s: %s', (_page, query) => {
       inRange: true,
     })
   }
-
-  // and the whole query is a look the loader will take, not a first arrival
-  expect(parseSessionParams(`?${query}`).controls).toEqual(look)
 })

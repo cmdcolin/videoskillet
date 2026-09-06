@@ -1,7 +1,12 @@
 import { experimental_AstroContainer } from 'astro/container'
 import { beforeAll, expect, test } from 'vitest'
 
-import { demos, gallery, showcase } from '../../scripts/demos.mjs'
+import {
+  CLIPS as DEMO_CLIPS,
+  demos,
+  gallery,
+  showcase,
+} from '../../scripts/demos.mjs'
 import { beatSecs, CLIPS, NARROW, slides } from '../../scripts/reel.mjs'
 import Landing from '../pages/index.astro'
 
@@ -119,8 +124,11 @@ test('there are demos, and one of them can be a slide', () => {
   expect(gallery.length).toBeGreaterThan(0)
 })
 
+// Same split as the carousel's above: the clip is on the bucket, so what can be
+// checked here is that the card points there, and the still ships with the page
+// so it has to be on disk.
 test.each(demos)('$name has a recording and a still', demo => {
-  expect(bytes(demo.clip)).toBeGreaterThan(0)
+  expect(demo.clip).toBe(`${DEMO_CLIPS}${demo.file}.mp4`)
   expect(bytes(demo.still)).toBeGreaterThan(0)
 })
 

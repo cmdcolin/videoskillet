@@ -25,3 +25,8 @@ scripts/panelshots/*.actual.png
 # the carousel's clips go to s3://myloveydove.com/videoskillet/reel/ at the end of a
 # take (scripts/appreel.mjs); the stills beside them stay
 public/reel/*.mp4
+
+# and the gallery's to s3://myloveydove.com/videoskillet/demos/ (scripts/demoreel.mjs),
+# for the same reason: a moving picture re-recorded whenever its look changes is
+# a file a git history keeps every version of forever
+public/demos/*.mp4
