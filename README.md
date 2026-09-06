@@ -42,6 +42,8 @@ in [Features](docs/FEATURES.md).
 - Easy-to-use "randomize" buttons that morph between settings over multiple
   seconds
 - Bleeds video into the audio channel, so you can hear that static-y hum
+- Has the spirit of video toaster inside of it, being related to kitchen
+  appliances https://en.wikipedia.org/wiki/Video_Toaster
 - A rundown down in the **strip** tray: a list of looks that plays itself, each
   row holding for a count of bars and arriving as a cut, a morph or a fault, and
   a **⎙ render** that writes the whole thing to a constant-framerate MP4
