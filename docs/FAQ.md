@@ -1,7 +1,7 @@
 # FAQ
 
 How it works, what it takes to run, why it is an app rather than a plugin, and
-how a take gets into an edit. [Choosing a tool](COMPARISON.md) and
+how a take gets into an edit. [Where it sits](COMPARISON.md) and
 [the editor](EDITOR.md) carry the long arguments; this page is the short version
 of each, plus what to do instead.
 
@@ -147,7 +147,7 @@ Investigated and declined, at least for now; the details are in
   all make each frame depend on every frame before it, while a host expects
   scrubbing, playing from the middle, and a preview that means something before
   the clip has been rendered from the top. The loops
-  [Choosing a tool](COMPARISON.md) names as what distinguishes this project are
+  [Where it sits](COMPARISON.md) names as what distinguishes this project are
   exactly what a plugin breaks.
 
 [ntsc-rs](https://github.com/ntsc-rs/ntsc-rs) already covers a lot of this need:

@@ -46,15 +46,15 @@ Lifting the shaders alone lifts nothing that runs.
   wrong, and a viewer means nothing until it has been rendered from the top. The
   loops [`COMPARISON.md`](COMPARISON.md) names as what distinguishes this
   project are exactly the parts that cannot survive being a plugin.
-- **The slot is taken, by a tool built for it.**
-  [`COMPARISON.md`](COMPARISON.md) already routes "put this look on a clip in
-  your edit" to **ntsc-rs** — same premise, in Rust, CPU-side and SIMD, already
-  shipping After Effects, Premiere and OpenFX builds, and not locked to the NTSC
-  raster. Going there means competing on raster independence, resolution and
-  host integration, which are its three strengths and this architecture's three
-  weakest points, while giving up the live instrument that is the whole reason
-  for building it this way. Resolve's free tier does not load third-party OFX
-  either, so the "more accessible" host is Studio or an Adobe subscription.
+- **The slot is taken, by a tool built for it.** **ntsc-rs** holds the
+  editing-suite corner [`COMPARISON.md`](COMPARISON.md) maps — same premise, in
+  Rust, CPU-side and SIMD, already shipping After Effects, Premiere and OpenFX
+  builds, and not locked to the NTSC raster. Going there means competing on
+  raster independence, resolution and host integration, which are its three
+  strengths and this architecture's three weakest points, while giving up the
+  live instrument that is the whole reason for building it this way. Resolve's
+  free tier does not load third-party OFX either, so the "more accessible" host
+  is Studio or an Adobe subscription.
 
 So the honest version of "put it in an editor" is a **deterministic render of
 frame N handed over as a file**, which is the export half below. A native
