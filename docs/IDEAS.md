@@ -1,53 +1,37 @@
 # Ideas / backlog
 
 Things worth doing that aren't done, and things that look worth doing but aren't
-— so a future pass doesn't re-litigate them. Line numbers drift; grep the
-described feature.
+— so a future pass doesn't re-litigate them. Where a shipped feature left a
+lesson the next person needs, it is here under that feature's gaps; the rest of
+the working-out is in the commits. Line numbers drift; grep the described
+feature.
 
-The last two ideas from the original list — the video-synth oscillator source
-and chroma key — have shipped; see the two sections below for what each one
-deliberately left. That list is now empty.
+## Modulation: the remaining naked periodic wave
 
-## Modulation: kill the remaining naked periodic waves
+The premise (see `ARCHITECTURE.md`) is that a fault should be _mechanistic_, and
+a single periodic wave traced down the raster reads as a filter effect rather
+than a fault — the warning `signal/audiostate.ts` opens with. The shared home
+for bounded-aperiodic drift is **`signal/noise.ts`** (`valueNoise`, `Lorenz`,
+`Wow`); reuse it rather than rolling a new sine. Tape wow, the modulation LFOs
+and intercarrier buzz are converted. One is left.
 
-The premise (see `ARCHITECTURE.md`) is that a fault should be _mechanistic_. A
-single periodic wave traced straight down the raster violates that — it reads as
-a filter effect, not a fault (the warning `signal/audiostate.ts` opens with).
-The shared home for bounded-aperiodic drift is **`signal/noise.ts`**
-(`valueNoise`, `Lorenz`, `Wow`); reuse it rather than rolling a new sine. Tape
-wow, the modulation LFOs and intercarrier buzz have already been converted; what
-is left is the one item below.
+**Mains-frequency roll drift (hum), `channel.wgsl` — deferred.** The 60 Hz
+fundamental is a clean sine and should stay one; it is mains, it really is that
+periodic. The boring part is the fixed roll rate (the `f32(P.frame) * 0.0037`
+term): real mains frequency wanders with grid load, so the beat against field
+rate should breathe. Replace the constant with a slowly-drifting phase
+accumulated CPU-side (the `Engine.advanceScPhase` pattern) driven by an
+OU/`valueNoise` slow term, and optionally add a 120 Hz full-wave harmonic.
+Deferred because it is the only one of these needing a new uniform and phase
+plumbing (`PARAM_DEFS`, `DEFAULT_CONTROLS`, `uniformValues`) for the
+least-visible win.
 
-### Deferred — mains-frequency roll drift (hum), `channel.wgsl`
-
-The 60 Hz hum fundamental is a clean sine and **should stay one** — it's mains,
-it really is that periodic. The boring part is the fixed roll rate (the
-`f32(P.frame) * 0.0037` term): real mains frequency wanders with grid load, so
-the beat against field rate should breathe instead of ticking at a constant
-rate.
-
-Approach: replace the constant with a slowly-drifting phase accumulated CPU-side
-(same pattern as `Engine.advanceScPhase`), driven by an OU/`valueNoise` slow
-term from `signal/noise.ts`. Optionally add a 120 Hz full-wave harmonic.
-
-Deferred because it's the only one of the modulation ideas that needs a new
-uniform + phase plumbing (a `PARAM_DEFS` field, `DEFAULT_CONTROLS`,
-`uniformValues`) for the least-visible win. Everything else in the batch was
-self-contained.
-
-### Not worth aperiodic-ising
-
-These read like naked periodic waves but are physically correct — don't
-"aperiodic-ise" them:
-
-- **Hum fundamental** (`channel.wgsl`) — mains is a clean sine; only its _roll
-  rate_ is worth drifting (above).
-- **Wipe ping-pong** (`signal/mixstate.ts`) — a switcher sweep is _deliberately_
-  periodic; that's what the hardware does.
-- **Source-B detune / roll** (`signal/mixstate.ts`) — a mistuned crystal really
-  does sit at a fixed wrong frequency. The constant is the point.
-- **Decode bend ripple** (`decode.wgsl`) — spatial, not animated; nothing to
-  make aperiodic in time.
+**Not worth aperiodic-ising.** These read like naked periodic waves and are
+physically correct: the hum fundamental (mains is a clean sine — only its _roll
+rate_ is worth drifting), the wipe ping-pong (`signal/mixstate.ts` — a switcher
+sweep is deliberately periodic), source-B detune and roll (a mistuned crystal
+really does sit at a fixed wrong frequency), and the decode bend ripple
+(`decode.wgsl` — spatial, not animated).
 
 ## Tape mechanisms not modelled
 
@@ -60,22 +44,18 @@ These read like naked periodic waves but are physically correct — don't
   it recurs every time that stretch passes the head. The main deck has no
   tape-position coordinate to hang one off, which is what has to exist first.
   (The cut delay loop had one, in its ring; see `ecec59e`.)
-- **Luma FM beating the 629 kHz color-under carrier.** The fine crawling chroma
+- **Luma FM beating the 629 kHz colour-under carrier.** The fine crawling chroma
   noise in saturated reds. Modelling the luma FM properly is expensive; the
   honest cheap version is the beat product alone.
 
 ## Noise mechanisms not modelled
 
-Shipped from this pass: the generated no-signal sources became one parameterized
-generator (`snowSource` in `prelude.ts`, four statistics on the Source stage),
-and the program-bus floor got a spectrum (`noiseTilt`, an RF lowpass against an
-FM discriminator's first difference over the same deviates in `channel.wgsl`).
-Two things learned there, for whoever adds the next one. A **first** difference
-is triangular (power ∝ f²) and a 1-2-1 signed pair is not (∝ f⁴) — the honest FM
-shape is the cheaper kernel. And the two arms share taps, so holding the floor's
-level constant across the tilt needs the covariance, not just the weights;
-without it the knob reads as a noise-amount control with a side effect. The
-algebra is in `noiseTiltWeights` (`pipeline.ts`), CPU-side.
+Two things the last pass here established, for whoever adds the next one. A
+**first** difference is triangular (power ∝ f²) and a 1-2-1 signed pair is not
+(∝ f⁴), so the honest FM shape is the cheaper kernel. And when two arms share
+taps, holding the floor's level constant across a tilt needs the covariance, not
+just the weights — without it the knob reads as a noise-amount control with a
+side effect. The algebra is in `noiseTiltWeights` (`pipeline.ts`), CPU-side.
 
 What is left, in rough payoff order:
 
@@ -84,11 +64,11 @@ What is left, in rough payoff order:
   mechanisms, all cheap, and this is the one that _compounds_: shot noise (σ ∝
   √signal, so highlights are noisiest — the opposite weighting from tape grain,
   and the tell that separates a photographed screen from an electronic path);
-  **fixed-pattern noise**, which is fixed to the _sensor_ rather than to the
-  glass, so each pass zooms and rotates the previous generation's pattern and
-  adds its own, breeding grain into structure with nothing drawing it; and gain
-  noise coupled to the camera's own auto-gain, so noise pumps against the iris
-  hunt at a third rhythm alongside the beam limiter.
+  **fixed-pattern noise**, fixed to the _sensor_ rather than to the glass, so
+  each pass zooms and rotates the previous generation's pattern and adds its
+  own, breeding grain into structure with nothing drawing it; and gain noise
+  coupled to the camera's own auto-gain, so noise pumps against the iris hunt at
+  a third rhythm alongside the beam limiter.
 - **Flicker (1/f) and popcorn noise in the video amplifier.** Everything
   aperiodic in the chain is per-sample and everything slow is periodic (hum).
   Missing: a random-walk level, so black level and brightness breathe sub-Hz,
@@ -103,8 +83,7 @@ What is left, in rough payoff order:
   arbitrary 15–60 kHz that _drifts with load_, so it draws a herringbone that
   creeps and breathes instead of standing still — the drift is what identifies
   it — and it intermodulates with the subcarrier. Same CPU-accumulated-phase
-  pattern as the deferred hum-drift item above, and it is what the "kill the
-  naked periodic waves" section actually wants.
+  pattern as the hum-drift item above.
 - **Noise on decisions rather than on picture.** The dropout _detector_ is the
   good one: a real DOC fires on an RF envelope dip, so a noisy floor trips it on
   lines that were fine and it patches them anyway — and the patch comes back in
@@ -116,7 +95,7 @@ What is left, in rough payoff order:
   Structural rather than a knob: `channel.wgsl` mixes snow in at a set level per
   band (tracking, head clog, shuttle, head switch). If the preamp's floor were
   fixed and the _RF level_ varied, noise would appear wherever signal is weak
-  from one mechanism, and the four blocks would collapse into it. The honest
+  from any one mechanism, and the four blocks would collapse into it. The honest
   version, and it would delete code; also the largest of these.
 
 ## Per-input feeds — what is still on the program bus
@@ -140,12 +119,12 @@ that. Rough payoff order:
   dirty sum, each strip between bars a different recorded track with its own
   timing and colour-under phase. The strips that lose sync hand the fight to A
   and the ones that don't fight back, so the picture flickers between two
-  geometries at bar rate. Most of the machinery is already there: `feed.wgsl`'s
-  pause path computes a per-row offset and `catmull`- resamples, and shuttle is
-  that path with a per-strip offset instead of a random scatter. `decode`'s
-  row-uniform constraint does not bind here — a feed is 1-D on the composite. It
-  also makes `aPause`/`bPause` the _zero_ of a transport continuum rather than a
-  separate button, the way `tapeTransport` already reads.
+  geometries at bar rate. Most of the machinery is there: `feed.wgsl`'s pause
+  path computes a per-row offset and `catmull`-resamples, and shuttle is that
+  path with a per-strip offset instead of a random scatter. `decode`'s
+  row-uniform constraint does not bind — a feed is 1-D on the composite. It also
+  makes `aPause`/`bPause` the _zero_ of a transport continuum rather than a
+  separate button.
 - **Head clog, per input.** Cheapest violent effect left, ~6 lines keyed on
   `P.frame`. The heads alternate sweeps, so a clogged head on one input makes
   the receiver alternate _which source it locks to_ at field rate.
@@ -155,12 +134,12 @@ that. Rough payoff order:
 - **Tracking error, per input.** A band parked on one deck that then rides that
   source's roll. Cheap; less novel than the three above.
 - **Macrovision is A-only.** `mvAgcIre`/`mvStripe` live in
-  `encode_composite.wgsl`; `encode_composite_b.wgsl` has no equivalent, so B can
-  never carry a protected tape. Narrow, but it is a real asymmetry, and a
+  `encode_composite.wgsl` and `encode_composite_b.wgsl` has no equivalent, so B
+  can never carry a protected tape. Narrow, but a real asymmetry, and a
   protected B summed against a clean A makes the receiver's `agc` pump against a
   signal whose sync is fine.
 
-## The teletype card's wire (follow-ons to `garble`)
+## The teletype card's wire
 
 The card can be received badly (`sources/teletype.ts` › `garbleRows`): holes
 where parity caught a bit, wrong characters where it didn't, blocks for the rest
@@ -169,46 +148,39 @@ wrong address. What is left is a dial, two attributes, and the other way a
 character generator goes wrong.
 
 - **A strength, not a switch.** The rate is one constant picked by eye.
-  `?garble=0.8` would carry a strength without breaking the flag — `q.has` is
-  true whatever the value — but the dialog would grow its first slider, and
+  `#garble=0.8` would carry a strength without breaking the flag — `q.has` is
+  true whatever the value — but the dialog would grow its first slider where
   every other thing a card carries is a checkbox. Worth doing when someone
-  reaches for it, not before.
+  reaches for it.
 - **The two control codes the card has no attribute for.** A hit on a colour
   code turned the rest of a row red; a hit on double height doubled a row and
   ate the line under it. Both are famous garbles and neither is reachable here:
   this card is one bit deep and white on black, and rendering them means
-  carrying attributes per row through `dotGrid`. Double height is the cheaper of
-  the two and the one you saw more often. A chyron has both and is coloured, so
-  the keyer section below is what would pay for them.
+  carrying attributes per row through `dotGrid`. Double height is the cheaper
+  and the one you saw more often.
 - **Bending the card's own ROM.** Shipped for the caption generator (`ccRomAddr`
   / `ccRomData`, `romRead` in `decode.wgsl`) and not for the card, because the
-  caption's font is a ROM in a buffer where the card's is a canvas raster — the
-  bend is two lines there and a rebuild of `dotGrid` here. What the shipped one
-  taught, for whoever does the card: holding a pin is not one effect but a range
-  of them, and the range comes out of the wiring rather than being authored. The
-  address bus carries the character code in its high lines and the row inside
-  the cell in its low ones, so one knob sweeps from every glyph growing a seam
-  to the whole font substituting. And the pin is held _high_ rather than
-  switched, so a glyph whose bit was already set is untouched and the damage is
-  uneven the way a jumper's is.
+  caption's font is a ROM in a buffer where the card's is a canvas raster — two
+  lines there and a rebuild of `dotGrid` here. What the shipped one taught:
+  holding a pin is a _range_ of effects rather than one, and the range comes out
+  of the wiring. The address bus carries the character code in its high lines
+  and the row inside the cell in its low ones, so one knob sweeps from every
+  glyph growing a seam to the whole font substituting. And the pin is held
+  _high_ rather than switched, so a glyph whose bit was already set is untouched
+  and the damage is uneven the way a jumper's is.
 
-  This is what separates a bend from `garbleRows`, which models a bad
+  That is what separates a bend from `garbleRows`, which models a bad
   _transmission_ — random hits on bytes in flight. A bend is deterministic: the
   same text comes out wrong the same way every time, because the machine is
   wrong rather than the wire. Holding a line on the page-address counter is the
-  third one and is unbuilt in both places: it walks the entire page diagonally
+  third bend and is unbuilt in both places: it walks the entire page diagonally
   through itself a few cells a field.
 
-## The caption channel — shipped
+## The caption channel
 
-`encode_composite.wgsl` carries real characters on line 21 now
-(`signal/captionstate.ts` feeds them), `caption.wgsl` is the set's decoder, and
-`decode` paints the page it recovers. The two things it was built for both
-arrived: damage lands as **wrong words** rather than as smearing, and the
-caption is painted on the set's raster, so the picture rolls, tears and spins
-hue underneath one that does not move.
-
-Five things learned, for whoever touches it.
+Line 21 carries real characters (`signal/captionstate.ts` feeds them),
+`caption.wgsl` is the set's decoder, and `decode` paints the page it recovers.
+Three things about it are load-bearing enough to state before anyone touches it.
 
 **The cell grid is fitted to the active window, not to 503 kHz.** Real line 21
 clocks at the true rate and spills into the blanking either side to fit its
@@ -222,68 +194,48 @@ every one of its centres sits exactly on the midpoint the slicer is trying to
 measure _around_ — sampled there, a perfect signal comes back flat and the
 threshold never arms. It is scanned sample by sample instead. This cost a build.
 
-**The font ROM and the page RAM share one binding** (`captionrom.ts`). `decode`
-was already carrying seven storage buffers and eight is the floor WebGPU
-guarantees, so a ninth would be a device that works here and refuses elsewhere.
-They are one memory on the chip being modelled anyway.
-
-**A pair that runs out mid-way sends a null**, not the first character of the
-next time round. The gap after a caption is what leaves it on screen to be read,
-and a pair reaching across it puts one stray character on the page a beat ahead
-of its line.
-
 **Painting goes before `crt_face` and is indexed by screen position.** Before
-the face pass because a caption is light off the same glass — after it, it would
+the face pass because a caption is light off the same glass; after it, it would
 be a sticker on a photograph of a screen. By screen position because that is the
-physical claim: a decoder holds bytes and repaints on the set's own timing.
+physical claim — a decoder holds bytes and repaints on the set's own timing.
+(The font ROM and the page RAM share one binding, `captionrom.ts`, because
+`decode` was already carrying seven storage buffers and eight is the floor
+WebGPU guarantees. They are one memory on the chip being modelled anyway.)
 
 What it does not do:
 
-- **Roll-up is the only mode.** Pop-on and paint-on are the other two, and both
-  are control-code state machines over the same page rather than new mechanism.
+- **Roll-up is the only mode.** Pop-on and paint-on are control-code state
+  machines over the same page rather than new mechanism.
 - **No squelch.** A real decoder muted its display after a run of parity
   failures; this one paints every block it catches, so heavy snow fills a row
   with them. Dramatic, and not quite what the box did.
 - **Attributes are ignored.** Line 21 carries colour, italics and the PAC codes
   that position a caption; this page is white, upright and where it was put.
-  Same shape of gap as the teletype card's two attributes above, and the same
-  fix would serve both.
+  Same shape of gap as the teletype card's two attributes, and one fix serves
+  both.
 - **CC1 only.** The second caption channel lives on field 2, so it needs
-  interlace before it means anything — see the section below.
+  interlace before it means anything.
 
-## The character generator as a keyer — shipped
+## The character generator as a keyer
 
 `chyron.wgsl` stands where the box stood: after the mixer, ahead of the loop and
 the deck, so what it keys in ages with the picture instead of being laid over a
-finished frame. It takes no text of its own — it says what the caption says, and
-that is not a shortcut. An open caption and a closed one were the same sentence
-down two paths, and running both is what makes the difference legible: this one
-is picture, so it is torn and smeared and rainbowed and never misspelled; line
-21 is data, so it is spelled wrong and never moves.
+finished frame. It says what the caption says, and that is not a shortcut — an
+open caption and a closed one are the same sentence down two paths, and running
+both is what makes the difference legible: this one is picture, so it is torn
+and smeared and rainbowed and never misspelled; line 21 is data, so it is
+spelled wrong and never moves.
 
-Three things learned.
-
-**The fill has to be video, or the timing trim does nothing.** The first cut
-keyed a flat IRE level through the glyph matte, and with a constant fill,
-delaying the key only translates the type — the control did nothing its help
-text claimed. A real CG puts out the characters _as video_ on one wire and their
-matte on the other, so where the key is open and the fill has not arrived the
-box hands over its own black, and where the fill is lit and the key has closed
-the program shows straight through the letter. That is the artifact, and it only
-exists because the two wires carry the same shapes separately.
-
-**The edge generator is OR-ed into the key, not drawn.** Widening the matte to
-the shadow's shape puts the fill's own black out there for free, which is how
-one extra tap bought a border. Drawing the shadow as a third element would have
-been the same picture by a worse mechanism, and bending the delays apart would
-not have detached it.
-
-**Two boxes means two chips.** The generator has its own font ROM and its own
-pin to hold (`cgRomAddr`/`cgRomData`), separate from the caption decoder's in
-the set. They share the baked ROM bytes and nothing else, so bending one says
-nothing about the other — which is the physically honest answer and also why
-`cgRom` is a near-copy of `decode.wgsl`'s `romRead` rather than something shared
-through a pointer.
+Two things it taught. **The fill has to be video, or the timing trim does
+nothing** — the first cut keyed a flat IRE level through the glyph matte, and
+with a constant fill, delaying the key only translates the type. A real CG puts
+out the characters _as video_ on one wire and their matte on the other, so where
+the key is open and the fill has not arrived the box hands over its own black,
+and where the fill is lit and the key has closed the program shows straight
+through the letter. That artifact exists only because the two wires carry the
+same shapes separately. And **the edge generator is OR-ed into the key, not
+drawn**: widening the matte to the shadow's shape puts the fill's own black out
+there for free, which is how one extra tap bought a border.
 
 What it does not do:
 
@@ -292,16 +244,21 @@ What it does not do:
   would make an inverted key a window onto the feedback bus rather than onto
   program, which is the one obviously good thing left here.
 - **Monochrome.** A CG with a colour matte generator is `bKeyMatte*` pointed at
-  this instead, and the same attribute work the teletype card wants above.
-- **No page-address bend.** The third of the three bends, unbuilt in both
-  places: it walks the whole page diagonally through itself a few cells a field.
+  this instead, plus the same attribute work the teletype card wants.
+- **No page-address bend**, the third bend, unbuilt in both places.
+
+The generator has its own font ROM and its own pin to hold
+(`cgRomAddr`/`cgRomData`), separate from the caption decoder's in the set. They
+share the baked ROM bytes and nothing else, so bending one says nothing about
+the other — which is the physically honest answer and why `cgRom` is a near-copy
+of `decode.wgsl`'s `romRead` rather than something shared.
 
 ## Chroma key follow-ons
 
-The keyer shipped in `mix_b.wgsl` on both mix paths, slicing `uvfB` — B's chroma
-after the encoder's bandlimit — so the soft-across/sharp-down composite edge and
-the per-line breathing on the dirty path are the filter and the detune doing it,
-not anything drawn. Two things learned, for whoever extends it.
+The keyer slices `uvfB` — B's chroma after the encoder's bandlimit — so the
+soft-across/sharp-down composite edge and the per-line breathing on the dirty
+path are the filter and the detune doing it, not anything drawn. Two things it
+taught.
 
 The keyer had to read B's chroma at **B's own raster index** on the dirty path,
 the same index the fill is resampled from. Keying at the output sample instead
@@ -313,46 +270,47 @@ the same wire, so the only honest null is reinjecting the backing's subcarrier
 antiphase, which means the suppressor has to know B's carrier phase. It does,
 exactly, on the genlocked path; on the dirty path it is always late by however
 far the fractional slip has rotated the carrier between samples, which leaves a
-residue that breathes. That asymmetry is the mechanism, not a gap to close.
-
-What was left:
-
-Shipped since: the **fill selector** (program A, the box's matte generator, or
-the mixer loop bus). One thing learned there — a fill is only meaningful on the
+residue that breathes. That asymmetry is the mechanism, not a gap to close. The
+same shape of limit governs the fill selector: a fill is only meaningful on the
 genlocked path, because a fill is what sits _behind_ the foreground and only a
-crossfade has a behind. On the dirty sum both signals are on the wire at once,
-so the key gates B's contribution and the program is simply always present. That
-is a mechanical limit, not a gap to close, and the row is gated on genlock.
+crossfade has a behind. The row is gated on genlock.
+
+What is left:
 
 - **The PiP inset keeps its luma key alone.** Wiring the chroma key into the
-  inset as well is two lines, since `chromaKey` already takes an index and the
-  inset re-encodes from `yuvB`/`uvfB`; left out to keep the first pass one box.
+  inset is two lines, since `chromaKey` already takes an index and the inset
+  re-encodes from `yuvB`/`uvfB`; left out to keep the first pass one box.
 - **Nothing keys off A.** A self-key on the program bus (A's own backing cut so
   the loop bus shows through) is the same function pointed at the other input,
   and would need A's chroma materialized the way `uvfB` materializes B's.
 - **Keyer bandwidth is the encoder's.** A real keyer has its own key-processing
   filter ahead of the slicer, usually narrower than the encoder's chroma. A
   short boxcar over `uvfB` would make edge softness a control of its own rather
-  than a side effect of `encChromaMHz` — at the cost of four more storage taps
-  per active sample, which is why it is not there.
+  than a side effect of `encChromaMHz` — at four more storage taps per active
+  sample, which is why it is not there.
 
 ## Video synth follow-ons
 
-Shipped as mode 3 of the same `srcNoise` selector the static sources use — one
-`videoSynth` in the prelude, two call sites, no new pass and no new buffer.
 Phase is carried as cycles at frame start plus the walk per line and per sample
 rather than as a frequency, both for f32 precision across a 477750-sample frame
-and because the per-line walk **is** the lean of the pattern.
+and because the per-line walk **is** the lean of the pattern. Two later
+findings: the FM term has to multiply the sample index, not the phase — pulling
+a frequency makes the wave genuinely run faster through bright picture, where
+offsetting a phase only slides the pattern about and never produces a contour.
+And the synth-over-picture patch is **slot A only**, because `compose` has the
+slot's picture in hand while `compose_b` writes its texture rather than reading
+one. Left as an asymmetry rather than plumbed around.
 
-Shipped since: **the synth over a picture rather than instead of one**, which is
-what made the luma → VCO patch possible — a mix knob (`synthOver`) beside the
-source mode, plus `synthFm`. Two things learned. The FM term has to multiply the
-sample index, not the phase: pulling a frequency makes the wave genuinely run
-faster through bright picture, where offsetting a phase only slides the pattern
-about and never produces a contour. And it is **slot A only** — `compose` has
-the slot's picture in hand while `compose_b` writes its texture rather than
-reading one, so a synth over B would need that pass restructured or a second
-texture. Left as an asymmetry rather than plumbed around.
+**The colorizer is the only reliable way to get colour into large fields**,
+because it maps _level_ to hue, and level varies over hundreds of lines where an
+encoder puts colour on detail. Everything measured against it coloured detail
+instead: phosphor scatter (17.5 fringe — it spreads only the light the layer
+already holds and leaves the fresh edge sharp by design), a magnetised purity
+patch (17.9), collapsed demod axes (20.2), colour-under smear (35.1, and worse
+than doing nothing, since its per-line jitter is speckle). Note the limit of
+that measurement: `colourcheck`'s `fringe` column reads edge _contrast_, not
+edge count, so a posterizer holding four enormous hard-edged fields scores like
+speckle. Low fringe proves flatness; high fringe does not prove fringing.
 
 - **One waveform selector serves both oscillators.** Hardware would have one per
   VCO; a ramp beating against a pulse is a patch this cannot express.
@@ -361,58 +319,25 @@ texture. Left as an asymmetry rather than plumbed around.
   be at drive rate, so it is only ever as steady as the number typed in. Exact
   is reachable (`synthAHz` = 15734 lands within a hertz), but a genuine
   drive-locked mode would give a gradient that cannot creep at all.
-- ~~**The colorizer is a phase rotator, not three comparators.**~~ Shipped as
-  `synthColorMode`, and with it the connector that turned out to matter more:
-  `synthColorSrc` puts the _picture_ on the colorizer's input instead of the
-  oscillator, which is how a colorizer box was actually sold — video in, colour
-  out, the oscillators out of circuit behind it. Pointed at the picture, the
-  phase rotator maps the whole tonal range onto the wheel (a heat map nobody
-  computed) and the comparators posterize it into flat areas of saturated
-  primary.
-
-  What that pass established, for whoever chases flat colour next. **The
-  colorizer is the only reliable way to get colour into large fields**, because
-  it maps _level_ to hue, and level varies over hundreds of lines where an
-  encoder puts colour on detail. Everything measured against it coloured detail
-  instead: phosphor scatter (17.5 fringe — it spreads only the light the layer
-  already holds and leaves the fresh edge sharp by design), a magnetised purity
-  patch (17.9), collapsed demod axes (20.2), colour-under smear (35.1, and that
-  one is worse than doing nothing, since its per-line jitter is speckle).
-
-  And the limit of the measurement, since it will mislead the next person:
-  `colourcheck`'s `fringe` column reads edge _contrast_, not edge count, so a
-  posterizer holding four enormous hard-edged fields scores like speckle. Low
-  fringe proves flatness; high fringe does not prove fringing, and the
-  screenshot settles it.
 
 ## The mixer has no hardware model
 
 `mix_b.wgsl` combines the two inputs with arithmetic —
 `aGain * a + gate * (bGain * b + ...)`. Three real mechanisms are missing, all
-of them cheap:
+cheap:
 
 - **Crosspoint crosstalk.** A cheap switcher leaks the unselected input at about
   −40 dB, and the leak path is stray capacitance, so it is _high-pass_: what
   gets through is B's subcarrier and edges, never B's flat areas. With the fader
   fully closed you still get a faint moving rainbow from B's detuned carrier
   beating the burst-locked decoder, and no visible picture — "there's something
-  else on this wire", which is not drawable. Note it interacts with the gates: a
+  else on this wire", which is not drawable. It interacts with the gates: a
   non-zero crosstalk floor has to appear in `bWaveOn`/`bOn` or B's chain is
   switched off underneath it.
-- ~~**Summing-bus rails.**~~ Shipped as `busClip`. `rails()` moved to the
-  prelude as `softRail` and the mixer takes it with knees the control moves, so
-  the loop's output stage and the summing bus are one amplifier model at two
-  points. It does what this entry predicted — a detuned B beats against A
-  through the falling gain and lands products inside the chroma band — and the
-  size is worth writing down, because it is smaller than the entry implies: sat
-  0.073 → 0.109 on a monochrome A against a detuned B, peaking in the middle of
-  the travel and falling back at the top, where the compression is flattening
-  the subcarrier along with everything else.
 - **Genlock that can lose lock.** `bGenlock` is an absolute TBC today. Real
   genlock has a capture range: push B's pause wander or wow past it and lock
   drops, B rips for a few lines, and it re-hunts. That makes the corrective
-  box's _failure_ a function of how hard B is driven — crank B's pause and the
-  clean dissolve starts breaking on its own.
+  box's _failure_ a function of how hard B is driven.
 - **Mid-field cut.** A switcher cuts at the vertical interval; a cheap A/B box
   or a relay cuts wherever you pressed it, tearing one frame into two
   half-pictures with a broken field sequence. Cheap in `mix_b` (a cut position
@@ -425,101 +350,88 @@ the second raster — it is a restructure, not a knob.
 
 ### The loop bus into the B input — sized, not built
 
-The one item from the loop-hardware pass that was started and put down. What it
-buys is real and nothing else on the board gives it: B's dirty path resamples a
-signal, so patching the mixer's own loop bus in there makes the machine's past
-arrive **non-genlocked**. `bLineHz` becomes a shear that compounds a lap,
-`bRollLps` a drift per lap, and `bDetuneHz` a continuous hue _rate_ where
-`cfbDelayUs` is a fixed rotation. Every feed-B fault then lands on the return —
-pause scatter, ground loop, dropouts, an SSAVI negative — and the return's own
-sync tips fight A's, so the receiver locks to the machine's past for bands of
-lines.
+The one item from the loop-hardware pass that was started and put down. B's
+dirty path resamples a signal, so patching the mixer's own loop bus in there
+makes the machine's past arrive **non-genlocked**: `bLineHz` becomes a shear
+that compounds a lap, `bRollLps` a drift per lap, and `bDetuneHz` a continuous
+hue _rate_ where `cfbDelayUs` is a fixed rotation. Every feed-B fault then lands
+on the return — pause scatter, ground loop, dropouts, an SSAVI negative — and
+the return's own sync tips fight A's, so the receiver locks to the machine's
+past for bands of lines.
 
 The shader half is nearly free: `mix_b` already binds `loopBus` for the keyer's
-fill, so the dirty-path resample is a choice of which buffer it reads.
-
-What stops it being cheap is everything around that:
+fill, so the dirty-path resample is a choice of which buffer it reads. What
+stops it being cheap is everything around that:
 
 - **It wants to be a source-B mode, not a knob.** The gates (`bOn`, `bWaveOn`,
   `bFeedOn`) all require `bEnabled`, so as a control it would need a B source
-  picked in order to patch the loop in _instead of_ a source, which is the wrong
-  shape. As a mode it is `SOURCE_B_MODES`, `SOURCE_DESC`, `SOURCE_KIND`, the
-  picker, and the docgen source list.
-- **The B encoders have to stay off in that mode**, which is a fourth condition
-  in gates whose containment (`bFeedOn ⊆ bWaveOn ⊆ bOn`) is under test.
-- **The chroma keyer reads `uvfB`**, which is B's encoder chroma and does not
-  exist for the loop bus. Either the keyer is gated off in the mode or the
-  loop's chroma is materialized, and the first is the honest cheap answer.
+  picked in order to patch the loop in _instead of_ a source. As a mode it is
+  `SOURCE_B_MODES`, `SOURCE_DESC`, `SOURCE_KIND`, the picker, and the docgen
+  source list.
+- **The B encoders have to stay off in that mode**, a fourth condition in gates
+  whose containment (`bFeedOn ⊆ bWaveOn ⊆ bOn`) is under test.
+- **The chroma keyer reads `uvfB`**, which does not exist for the loop bus.
+  Either the keyer is gated off in the mode or the loop's chroma is
+  materialized, and the first is the honest cheap answer.
 - **`SlotSource` has to carry it** or a device loss drops the patch, per the
   three-setters rule in `ARCHITECTURE.md`.
 
-None of that is hard; it is just a different size from the rest of that pass,
-and it crosses the source layer, which none of the others did.
+None of that is hard; it is a different size from the rest of that pass, and it
+crosses the source layer, which none of the others did.
 
-## Capture / deinterlace (grown out of the RCA-input work)
+## Capture / deinterlace
 
 - **Motion-adaptive deinterlace.** Current `deint` is an unconditional
-  even-field bob — halves vertical resolution even on still frames. Weave where
-  fields match (full res on static areas) and bob only where they differ (a
-  per-pixel inter-field delta metric); keeps sharpness off motion.
-- **Deint modes instead of on/off.** Turn the toggle into a mode select: off /
-  bob (current) / blend (average both fields — ghosts on motion, keeps res) /
-  weave. Blend is cheaper and some people prefer its look.
+  even-field bob — it halves vertical resolution even on still frames. Weave
+  where fields match and bob only where they differ (a per-pixel inter-field
+  delta metric) keeps sharpness off motion.
+- **Deint modes instead of on/off.** off / bob (current) / blend (average both
+  fields — ghosts on motion, keeps res) / weave. Blend is cheaper and some
+  people prefer its look.
 - **Auto-detect interlacing.** Measure a comb metric on the incoming source and
-  flip `deint` on automatically only for genuinely-interlaced feeds, instead of
-  hard-enabling it on every webcam/USB connect (progressive USB cams get
-  needlessly softened today).
+  flip `deint` on only for genuinely-interlaced feeds, instead of hard-enabling
+  it on every webcam/USB connect.
 - **Remember the last capture device.** Persist the chosen `deviceId` so a
   reconnect re-selects the dongle rather than the OS default camera.
 - **PAL capture.** Composite grabbers also deliver 720×576/50i; the pipeline is
   NTSC-shaped (525/60). At minimum square-pixel it correctly; ideally note the
   standard mismatch in the UI.
 
-## Deflection (follow-ons to the sync/bend work)
+## Deflection
 
 - **Intra-line geometry.** `hSize`, `hLin` (S-correction failure stretching one
   side), pincushion. Blocked on decode's tiling: the workgroup stages one
-  contiguous 128-sample span per row, so only _row-uniform_ horizontal offsets
-  are free. Non-uniform scaling within a line reads outside the halo.
-- **Vertical geometry.** `vSize` shipped and was nearly free (the raster row
+  contiguous span per row, so only _row-uniform_ horizontal offsets are free.
+- **Vertical linearity.** `vSize` shipped and was nearly free (the raster row
   remap is a function of the screen row alone, so decode's row-uniform
   constraint never bites). `vLin` — the top-of-frame stretch of a failing
-  vertical output stage — is the remaining half, a quadratic term in the same
-  row remap.
+  vertical output stage — is a quadratic term in the same remap.
 - **Fractional bend.** `hoff` is `round()`ed to whole samples; at large
   amplitudes adjacent rows stair-step. Resampling the tile with `catmull` would
   smooth it, at the cost of restructuring the staging.
 
-## Screen-domain effects not yet built
+## Screen-domain effects
 
-The neon phosphor colour work (beam transfer, `phosphorMode` tube identities,
-persistence skew/bleed, the magnifier) shipped in full, and the luma-keyed
-halation radius shipped as `crtHaloKey`; this one item is what remains of it.
+- **Per-channel bloom radius.** One radius serves all three channels; the
+  phosphors don't actually scatter alike. Note that `crtHaloKey` keys the halo
+  radius off the _destination_ pixel's own drive, because a gather has to pick
+  its radius before it samples. That widens how far a bright area reaches _in_,
+  which is the visible half; genuinely widening how far a highlight throws light
+  _out_ needs a second, higher-threshold ring rather than a keyed radius.
 
-- **Per-channel bloom radius.** One radius for all three channels; the phosphors
-  don't actually scatter alike. Note that `crtHaloKey` keys the halo radius off
-  the _destination_ pixel's own drive, because a gather has to pick its radius
-  before it samples. That widens how far a bright area reaches _in_, which is
-  the visible half; genuinely widening how far a highlight throws light _out_
-  needs a second, higher-threshold ring rather than a keyed radius. Worth
-  knowing before anyone tries to key the bloom radius the same way.
+Two things the last screen pass taught, for whoever adds the next fault.
+Convergence has to re-run the whole beam-spot integral per channel — blurring
+one shared sample averages the landing error away instead of leaving a fringe —
+so it costs 3× the spot taps whenever it is non-zero, behind a uniform branch.
+And every new mechanism has to be added to the identity-copy early-out at the
+top of `crt_face`'s `main`, or turning it on by itself reads as a dead control.
 
-## Boxes in the rack (from the commercial-processing-unit pass)
+## Boxes in the rack
 
-What is left of the pass, in rough payoff-per-effort order. (A preset worth
-authoring off the shipped `diffPhaseDeg`: inside the mixer loop, differential
-phase separates a feedback trail into colour layers by brightness, because
-`cfbDelay`'s rotation per generation stops being uniform.)
-
-The two tube items from this list shipped together: convergence error
-(`crtConverge`) and the magnetised purity patch (`crtPurity`), plus scan
-velocity modulation (`crtSvm`), all in `crt_face`. Two things learned there, for
-whoever adds the next screen fault. Convergence has to re-run the whole
-beam-spot integral per channel — blurring one shared sample averages the landing
-error away instead of leaving a fringe — so it costs 3× the spot taps whenever
-it is non-zero, behind a uniform branch. And every new mechanism has to be added
-to the identity-copy early-out at the top of `main`, or turning it on by itself
-reads as a dead control.
+In rough payoff-per-effort order. (A preset worth authoring off the shipped
+`diffPhaseDeg`: inside the mixer loop, differential phase separates a feedback
+trail into colour layers by brightness, because `cfbDelay`'s rotation per
+generation stops being uniform.)
 
 - **A DVE / framestore, as the digital box in the analog last mile.** Distinct
   from the digital cable tier below, and more era-correct. An ADO / A53 /
@@ -546,76 +458,69 @@ reads as a dead control.
   catch is that it is a per-pixel _vertical_ gather, so it wants `crt_face` over
   the decoded image with a bounded column search, not `decode`.
 - **Setup mismatch** — a 0 IRE deck into a 7.5 IRE set and back, for crushed or
-  milky blacks. The last of the smaller trims (Y/C delay and head clog shipped).
+  milky blacks. The last of the smaller trims.
 
 Considered and not worth it: **PAL / Hanover bars** (a raster change, not an
 effect — `constants.ts` is 525/60 throughout) and **standards-converter
 judder**, which needs 50 Hz first.
 
-## Interlace — the gap `ARCHITECTURE.md` names and this file forgot
+## Interlace
 
 `ARCHITECTURE.md` calls progressive 525/60 "the largest remaining authenticity
-gap" and has done for a while, but it has never had an entry here. It is a
-raster restructure rather than a knob, which is presumably why: fields at 262.5
-lines with the half-line offset, and everything indexed by row has to learn
-which field it is in.
+gap". It is a raster restructure rather than a knob: fields at 262.5 lines with
+the half-line offset, and everything indexed by row has to learn which field it
+is in.
 
 What it pays for. Vertical roll steps a whole frame at a time today because a
 frame is the only unit there is; at field rate it would creep the way a real one
 does. Head switch would land where it actually lands. The 2- and 3-line combs
 would see the line relationships they were designed around instead of the
-progressive stand-in.
-
-And it changes what `dropoutComp` looks like: a real compensator's 1H delay
-operates _within a field_, so the line it patches from is two raster lines up on
-the glass, not one. The complementary hue is the same either way — 227.5 cycles
-does not care — but the patch would visibly come from further away, which on
-fine horizontal detail is a different artifact. Worth knowing before anyone
-tunes that control's look.
+progressive stand-in. And it changes what `dropoutComp` looks like: a real
+compensator's 1H delay operates _within a field_, so the line it patches from is
+two raster lines up on the glass rather than one. The complementary hue is the
+same either way — 227.5 cycles does not care — but the patch would visibly come
+from further away, which on fine horizontal detail is a different artifact.
 
 ## Instruments and pixel checks
 
 - **A waveform monitor, overlaid.** One line of it landed as the scope tap
-  (`?dbg=6`): a single line traced against an IRE graticule inside `decode`,
+  (`#dbg=6`): a single line traced against an IRE graticule inside `decode`,
   columns filled min..max so an edge connects and a modulated sample draws its
-  envelope. What is still open is the real instrument, every line of the field
-  overlaid at once, where the density of the trace is how many lines agree — a
-  chroma error on eight lines out of 480 is invisible on one line and obvious on
-  all of them. That one is a pass: `decode` would scatter into a bins buffer and
-  `present` draw it, with a finite spot on the way out, or a flat field lands
-  every sample in one bin and draws as a speck.
+  envelope. The real instrument is every line of the field overlaid at once,
+  where the density of the trace is how many lines agree — a chroma error on
+  eight lines out of 480 is invisible on one line and obvious on all of them.
+  That one is a pass: `decode` would scatter into a bins buffer and `present`
+  draw it, with a finite spot on the way out, or a flat field lands every sample
+  in one bin and draws as a speck.
 - **A line selector for the scope.** It traces the middle line because that is
-  the line the cursor is parked on; the interesting lines are the ones you
-  choose — the head-switch line, a line inside the VBI, the line a dropout is
-  on. Wants a control and a draggable cursor, not just a constant.
+  where the cursor is parked; the interesting lines are the head-switch line, a
+  line inside the VBI, the line a dropout is on. Wants a control and a draggable
+  cursor.
 - **Extend pixelcheck.** `scripts/pixelcheck.mjs` pins the six SMPTE hues and
-  the fine-tuning cliff; any deterministic `?set=` look plus a probe is one more
+  the fine-tuning cliff; any deterministic `#set=` look plus a probe is one more
   pinned fact. Candidates: burst-lock hue rotation, the killer threshold,
   scramble's wash-out level.
 - **Read VITS back as the app's own frequency response.** Lines 17 and 18 are
   already stamped with the real instruments — multiburst stepping 0.5 to 4.2
-  MHz, and the modulated staircase that differential gain and phase were
-  measured off. They are then eaten by the chain like everything else, so
-  demodulating them at the receiver end and reading the packet levels back
-  answers what the whole path is doing to frequency, and what it is doing to
-  chroma amplitude and phase against luma level. That is not an approximation of
-  the broadcaster's number, it is the same measurement on the same signal. Two
-  things fall out: an instrument worth drawing (a response curve, next to the
-  waveform monitor above), and a rail — a `?set=` look plus a response is a
-  pinned fact about the chain that no pixel probe reaches, because a filter
-  regression moves the curve long before it moves a hue. `vir.wgsl` is the
-  worked example of the gate-and-demodulate half, and `buzzBuf` is the worked
-  example of getting a per-frame measurement back to the CPU cheaply.
-- **Count the caption channel's errors.** The caption channel's whole premise is
-  that damage arrives as wrong words, and a wrong word is _countable_ in a way a
+  MHz, and the modulated staircase differential gain and phase were measured
+  off. They are then eaten by the chain like everything else, so demodulating
+  them at the receiver end and reading the packet levels back answers what the
+  whole path is doing to frequency, and to chroma amplitude and phase against
+  luma level. That is not an approximation of the broadcaster's number, it is
+  the same measurement on the same signal. Two things fall out: an instrument
+  worth drawing (a response curve beside the waveform monitor), and a rail — a
+  `#set=` look plus a response is a pinned fact about the chain that no pixel
+  probe reaches, because a filter regression moves the curve long before it
+  moves a hue. `vir.wgsl` is the worked example of the gate-and-demodulate half,
+  and `buzzBuf` of getting a per-frame measurement back to the CPU cheaply.
+- **Count the caption channel's errors.** A wrong word is _countable_ in a way a
   wrong pixel is not — feed a known string, read the page `caption.wgsl`
   recovered, and the character error rate is one scalar per look. That makes a
-  regression rail out of a thing already built: a noise level and a dub count
-  either still cost the same characters or they do not, with no tolerance to
-  tune and no screenshot to eyeball. It also fails in the right direction. The
-  slicer sits at the far end of sync, timing and the whole channel block, so a
-  regression anywhere upstream shows up as a misspelling, and the number says
-  how bad rather than only that something moved.
+  regression rail out of a thing already built, with no tolerance to tune and no
+  screenshot to eyeball. It also fails in the right direction: the slicer sits
+  at the far end of sync, timing and the whole channel block, so a regression
+  anywhere upstream shows up as a misspelling, and the number says how bad
+  rather than only that something moved.
 
 ## Digital cable tier
 
@@ -623,16 +528,15 @@ Macroblocking, DCT ringing, frozen last-good-blocks, motion-vector smear. Large
 — it is a codec, not a knob — and it does not compose with the composite chain,
 so it is only interesting under one framing: a digital head-end feeding an
 analog last mile. Box → impairment → NTSC encode → the entire existing chain,
-which is era-correct for the late nineties and is genuinely mechanism modelling
-rather than artifact drawing. Not worth starting until something needs it.
+which is era-correct for the late nineties and is genuinely mechanism modelling.
+Not worth starting until something needs it.
 
 ## Patching into other apps (Max/MSP, Jitter, TouchDesigner, VJ software)
 
-Already works with no code: MIDI CC + MIDI clock in (`src/ui/midi.ts`) via a
-virtual port (IAC bus / loopMIDI); audio in by sharing the tab or app it plays
-out of (`AudioState.enableSystem`), or via a loopback device (BlackHole) on a
-browser that cannot share audio, either of which reaches `audioBendUs` /
-`audioLoad` / `audioIre`; Jitter output in as a webcam through a
+Already works with no code: MIDI CC and MIDI clock in (`src/ui/midi.ts`) via a
+virtual port; audio in by sharing the tab or app it plays out of
+(`AudioState.enableSystem`) or via a loopback device, either of which reaches
+`audioBendUs` / `audioLoad` / `audioIre`; Jitter output in as a webcam through a
 Syphon→virtual-camera bridge; and output back out by pointing an OBS browser
 source at the page. The gaps below are what would make it feel like a patchable
 module rather than a coincidence.
@@ -644,18 +548,17 @@ module rather than a coincidence.
   bridge lets Max address `/hHold`, `/scDetuneKHz`, `/bendUs` by name, with
   float precision and no 128-control CC ceiling. The app side is a thin client
   that validates the key against `ControlKey` and calls the existing write path.
-- **Bidirectional state.** Same channel in reverse — emit control changes so a
-  Max patch's UI tracks the app (and so presets/scenes can be recalled from
-  outside). Needs a loop guard on the write path.
+- **Bidirectional state.** The same channel in reverse, so a Max patch's UI
+  tracks the app and presets can be recalled from outside. Needs a loop guard on
+  the write path.
 - **A saved look on a pad.** The note-binding family shipped (`ActionTarget` in
   `ui/midi.ts`), so the wire exists — what it carries is the thirteen gestures
-  that need nothing but a velocity. A saved look is the obvious next one and is
-  a different shape: its name comes from a list that changes under the binding,
-  which is the problem `preset:` already solves for knobs by binding the name
-  and dropping the entry when the name goes. `savedProfiles.ts` would need the
-  same treatment. Program change is the other half — one message per look, which
-  is what a PC number _is_ — and would want its own family again, since a PC
-  carries a number rather than a velocity.
+  that need nothing but a velocity. A saved look is a different shape: its name
+  comes from a list that changes under the binding, which is the problem
+  `preset:` already solves for knobs by binding the name and dropping the entry
+  when the name goes. `savedProfiles.ts` would need the same treatment. Program
+  change is the other half — one message per look — and would want its own
+  family again, since a PC carries a number rather than a velocity.
 - **MIDI transport, not just clock.** `midi.ts` handles `0xF8`/`0xFC`; honouring
   `0xFA` start / `0xFB` continue would let clock-locked rates reset phase on
   downbeat instead of free-running from whenever the tick stream began.
@@ -668,327 +571,154 @@ Note for anyone evaluating the reverse arrangement: Max's `jweb` embeds a web
 view but is unlikely to expose WebGPU, so hosting videoskillet.js inside a patch
 probably isn't viable — it wants to be a separate app you route into.
 
-## The editor — moved to its own document
+## The modulation bay
 
-The clip strip, fixed-framerate export and the declined NLE plugin used to be
-three sections here. They are one project, so they are now one document:
-[`EDITOR.md`](EDITOR.md) — the rundown and its transition shelf, the constant-
-framerate render an editor can conform, why it is not a plugin for somebody
-else's timeline, and the build order across all of it.
-
-What stayed here belongs to the shipped app rather than to that project: **Clip
-cues** below, and **Patching into other apps** above.
-
-## Motion follow-ups (after the ∿-on-every-row pass)
-
-Shipped: the bay lifted into `useModSlots` (eight slots), a `∿` on every control
-row that claims a slot on first press, presets/scenes/`?mod=` carrying motion, a
-global motion amount with a phase-holding freeze, and an undo walk that restores
-routings alongside controls.
-
-Shipped since: the **one-shot envelope** (`trig`), which is the gesture the bay
-had no source for — every other source describes what a knob is doing
-continuously, this one says what you just did. Instant attack, exponential
-decay, `rateHz` read as the decay rate so the existing rate row and its clock
-lock still mean "faster". Two things it had to get right. Firing is an
-**event**, so it goes to the engine as a method rather than a field on `ModSlot`
-— a flag on a slot list that presets, links and undo rewrite wholesale would
-have to be cleared by whoever set it. And a press lands _between_ two frames, so
-the trigger is held in a set until a frame picks it up; sampling an edge at 60
-Hz loses roughly one press in every few otherwise.
-
-Both halves of what was open on it have shipped: a pad fires the whole bay or
-any one slot (the note-binding family, below), and `t` fires the bay from the
-keyboard. What that pass learned, for whoever extends the family: the rule worth
-naming was what an _unbound_ note does, and it is `noteAction` in `ui/midi.ts` —
-with nothing bound every note fires the bay, which is what shipped and the right
-reading of an unmapped keyboard, and binding one pad lifts the blanket. Written
-the other way round (bound pads plus a blanket that never lifts) a pad would
-strike its slot and knock every other envelope over on the way.
-
-What was deliberately left from the original pass:
+What was deliberately left:
 
 - **Performance macros — cut, not deferred by accident.** The design was three
-  assignable 0..1 knobs, routed through the same eight slots as the LFOs. That
+  assignable 0..1 knobs routed through the same eight slots as the LFOs, which
   makes the good case the expensive one: a macro is only worth a knob once it
   drives several controls at once, which is exactly when it eats the most slots,
   at four clicks and one slot per control. The motion amount does the
-  one-gesture-scales-the-patch job with no assignment ritual at all, and now
-  that the MIDI binding key reaches beyond `ControlKey` (a knob can drive the
-  motion amount or a preset weight), the chips already cover the
-  several-controls-per-gesture case. If macros come back they need their own
-  routing table, not a berth in the LFO bay — or they are a slider that does
-  less than the slider it is standing in for.
+  one-gesture-scales-the-patch job with no assignment ritual, and the MIDI
+  binding key now reaches beyond `ControlKey`, so a knob can drive the motion
+  amount or a preset weight. If macros come back they need their own routing
+  table, not a berth in the LFO bay.
 - **Modulating the five filter controls** (`encChromaMHz`, `demodMHz`,
   `chromaTail`, `lumaMHz`, `lumaPeak`) rebuilds the FIR bank every frame.
   Allowed from the UI deliberately — it is a real patch someone may want — but
-  authored presets are forbidden from it by `presets.test.ts`. If it ever needs
-  to be cheap, the bank would have to be rebuilt only when the modulated value
-  crosses a meaningful step rather than on every frame.
-- **`?surprise` on boot stays controls-only.** A rolled recipe applies its
+  authored presets are forbidden it by `presets.test.ts`. If it ever needs to be
+  cheap, the bank would have to be rebuilt only when the modulated value crosses
+  a meaningful step.
+- **`#surprise` on boot stays controls-only.** A rolled recipe applies its
   motion in the app, but the boot path layers controls before the bay exists.
-  Accepted asymmetry, not a bug worth plumbing around.
+  Accepted asymmetry.
 
-### The stab gate — what the freeze fix left open
+Two things the one-shot envelope had to get right, for whoever extends the
+family. Firing is an **event**, so it goes to the engine as a method rather than
+a field on `ModSlot` — a flag on a slot list that presets, links and undo
+rewrite wholesale would have to be cleared by whoever set it. And a press lands
+_between_ two frames, so the trigger is held in a set until a frame picks it up;
+sampling an edge at 60 Hz loses roughly one press in every few. The related rule
+is what an _unbound_ note does (`noteAction` in `ui/midi.ts`): with nothing
+bound every note fires the bay, which is the right reading of an unmapped
+keyboard, and binding one pad lifts the blanket. Written the other way round a
+pad would strike its slot and knock every other envelope over on the way.
 
-Shipped: the gate no longer goes dead under the freeze. The "stabs" row reads
-what the gate is _running_ at, so `❚❚` pinned that at 0 however far the slider
-was dragged, with nothing on the row saying why — dialing the gate on now lifts
-the freeze, the same rule a claim and a restart in the bay already follow, and
-`panelcheck.mjs` drives every state the row can be in.
-
-Shipped since: **the far end takes a held look**, which turns the same gate into
-a hard flip between two looks — `⧉ hold this look` parks the resting board at
-the other side and the length row becomes a duty, because the two ends of a flip
-are peers where a stab's are not. Worth knowing for anything built near it: the
-_hard_ flip is the affordable one and a crossfade is not, since the filter bank
-is redesigned whenever a filter control moves — a cut pays that on the two edges
-of a cycle, a fade would pay it every frame. That is also why this is the gate's
-job and not a mod slot's: a routing drives one `ControlKey`, and two looks is
-every key at once.
+### The stab gate
 
 Two things it is still missing, both surfaced by pulling on "the stabs slider
 does not work":
 
-- **It does not travel with the look, and now there is more of it not to
-  travel.** The gate lives in `localStorage` and nowhere else — not in `?mod=`,
-  not in a preset's routings, not in a saved look. A link, a preset or a saved
-  profile therefore drops the most visible thing the bay does, and whoever opens
-  it sees a still picture where the board had been cutting four times a second.
-  `useModSlots.ts` already carries the reasoning for why it belongs in both — a
-  stab train is part of the look in a way a freeze is not — so what is owed is
-  the schema change to `?mod=` and to the preset routings, with readers that
-  tolerate its absence the way `readStab` already tolerates a junk entry.
+- **It does not travel with the look.** The gate lives in `localStorage` and
+  nowhere else — not in `#mod=`, not in a preset's routings, not in a saved
+  look. A link, a preset or a saved profile therefore drops the most visible
+  thing the bay does, and whoever opens it sees a still picture where the board
+  had been cutting four times a second. `useModSlots.ts` carries the reasoning
+  for why it belongs in both; what is owed is the schema change to `#mod=` and
+  to the preset routings, with readers that tolerate its absence the way
+  `readStab` already tolerates a junk entry.
 
   The held-look pass raised the stakes and complicated the schema in the same
-  stroke. A gate whose far end is a look is not two numbers any more, it is two
-  numbers and a whole second board — so a link carrying one would roughly double
-  the query string, and a "look" someone shares is now genuinely two looks. The
-  shape to reach for is probably the same one the strip uses for a row: store
-  the far board as a diff against stock, since a held look is usually a handful
-  of controls off it and `writeProfileParams` already knows how to write that.
-  Storing a preset _name_ is the tempting cheap version and it is wrong for the
-  same reason `Stab.to` is a board rather than a name — the look you hold is
-  usually one you dialed, not one somebody authored.
+  stroke. A gate whose far end is a look is two numbers and a whole second
+  board, so a link carrying one would roughly double the query string. The shape
+  to reach for is probably the strip's: store the far board as a diff against
+  stock, since a held look is usually a handful of controls off it and
+  `writeProfileParams` already knows how to write that. Storing a preset _name_
+  is the tempting cheap version and is wrong for the same reason `Stab.to` is a
+  board rather than a name — the look you hold is usually one you dialed.
 
 - **No knob can reach it.** The row passes `sync` but no `midi`, so the one
-  lever here described as "the kill switch a bender keeps a thumb on"
-  (`signal/stab.ts`) is mouse-only, while the motion fader an inch away is a
-  `BindTarget` sitting at the front of the auto-map spine. It wants a `'stab'`
-  target beside `'motion'` in `ui/midi.ts` — its span is the row's own
-  0..`STAB_HZ_MAX` in tenths rather than the `UNIT_SPAN` the other two
-  non-control targets share, and since the layering puts `midi.ts` under
-  `modSlots.ts` that number has to be written twice and pinned with a test, the
-  way `STOCK_HOLD` and `VIEW_KEYS` are pinned — plus a sink in `app.tsx` beside
-  `setMotion`. The open question is `AUTOMAP_TARGETS`: inserting it after
-  `MOTION` shifts every knob for anyone who re-runs the auto-map, which is a
-  real cost to weigh against a gate that is arguably the most performable thing
-  in the bay.
+  lever `signal/stab.ts` describes as "the kill switch a bender keeps a thumb
+  on" is mouse-only, while the motion fader an inch away is a `BindTarget` at
+  the front of the auto-map spine. It wants a `'stab'` target beside `'motion'`
+  in `ui/midi.ts` — its span is the row's own 0..`STAB_HZ_MAX` in tenths rather
+  than the `UNIT_SPAN` the other two non-control targets share, and since the
+  layering puts `midi.ts` under `modSlots.ts` that number has to be written
+  twice and pinned with a test, the way `STOCK_HOLD` and `VIEW_KEYS` are — plus
+  a sink in `app.tsx` beside `setMotion`. The open question is
+  `AUTOMAP_TARGETS`: inserting it after `MOTION` shifts every knob for anyone
+  who re-runs the auto-map.
 
-## Clip cues — what shipped left
+Worth knowing for anything built near the gate: the _hard_ flip between two
+looks is the affordable one and a crossfade is not, since the filter bank is
+redesigned whenever a filter control moves — a cut pays that on the two edges of
+a cycle, a fade would pay it every frame. That is also why this is the gate's
+job and not a mod slot's: a routing drives one `ControlKey`, and two looks is
+every key at once.
+
+## Clip cues
 
 `ui/cue.ts` marks a cue on a clip's own timeline and loops a stretch of it; the
-clamp is `VideoPump.wrap`. Three things around it are deliberately not done.
+clamp is `VideoPump.wrap`, and `armHead`/`promoteHead` in `ui/videoSlot.ts` give
+the loop a second read head so the wrap does not seek. Three things around it
+are deliberately not done.
 
 - **A cue row in the Deck.** The Deck is the panel's second index for controls a
-  hand moves during a take (`Deck.tsx` argues the case), and a cue is exactly
-  that. It is not there because every row the Deck renders is backed by a
-  control read through `ControlsContext`, and a cue is deliberately _not_ a
-  control — two timestamps into one clip cannot be recalled by a preset or moved
-  by mutate. So the Deck would need a way to take per-source state, which is a
-  new pattern rather than a placement. The command palette carries the two verbs
-  in the meantime, which is where the roll-and-keep verbs went for the same
-  reason.
-- ~~**MIDI on the cue.**~~ Shipped with the note-binding family: `cue:a/b` and
-  `jump:a/b` are four of its thirteen actions, and both go through the same
-  `slotFor` lookup the keyboard's `i` and `o` use, so a pad and a key cannot
-  disagree about which deck they are on. The retrigger was the argument for
-  building the family — it is a drum pad, not a knob.
-- **Beat-snapped loops.** `useTempo` already has a beat, from MIDI clock or
-  tapped in, and ½/1/2/4-bar buttons from the cue would give exact musical
-  loops. Left out on purpose for now: it doubles the row, and it is inert on a
-  machine with no tempo set, which is most of them. The free-marked loop works
-  everywhere and is the thing worth having first.
+  hand moves during a take, and a cue is exactly that. It is not there because
+  every row the Deck renders is backed by a control read through
+  `ControlsContext`, and a cue is deliberately _not_ a control — two timestamps
+  into one clip cannot be recalled by a preset or moved by mutate. So the Deck
+  would need a way to take per-source state, which is a new pattern rather than
+  a placement. The command palette carries the two verbs meanwhile.
+- **Beat-snapped loops.** `useTempo` already has a beat, and ½/1/2/4-bar buttons
+  from the cue would give exact musical loops. Left out for now: it doubles the
+  row, and it is inert on a machine with no tempo set, which is most of them.
+- **A de-click envelope on the wrap.** All that is left of the dropout: 11 ms is
+  one frame, which is a click rather than a hole, and fading the gain across the
+  join is the standard fix. It was worth almost nothing against the half-second
+  hole the seek used to cost; against what is left it is the whole remainder.
 
-- **Judging the wrap cost rather than reporting it.** The cue row now shows what
-  a loop's jump back is measuring (`wrap 0.15s`, off the `seeked` event in
-  `VideoPump`), and deliberately makes no claim about whether that is bad. Two
-  goes at a threshold were both wrong, and the second is the one worth
-  remembering: at 2.2x-the-frame-cadence it fired on `public/demo-v2.mp4`, a
-  _well_ encoded file, which the enc:dense arm of `scripts/cuecheck.mjs` caught.
-  Re-measuring then showed why no cutoff works here — the reproducible gap
-  between the fine tier (~90ms) and the slow tier (~150ms) is about the size of
-  the run-to-run variance on a loaded machine, and one early reading of 513ms on
-  a file that otherwise sits near 150ms is how much a single sample is worth. A
-  verdict is buildable on a quiet machine with a proper distribution behind it;
-  it was not buildable from what was measured here, and a readout the user can
-  re-mark against turned out to be more useful than a label anyway.
+Three things the read head taught, and the first two were not in its design.
 
-A last one used to be a real limit rather than a choice: the wrap is a hard cut
-in the clip's audio when playback audio is on. Nothing short of a crossfade
-fixes it, and a crossfade needs two read heads on one element, which a `<video>`
-does not have. **That one is now built** — `armHead` / `promoteHead` in
-`ui/videoSlot.ts`, written up at the end of this section.
+**The two elements do not contend for the preroll slot, because the bound that
+rule protects is _files_.** This was filed as a policy decision and dissolved on
+contact: a preroll is speculative and names a different clip, so it can cost a
+whole download; a loop's head is the same url as the element on air, which for a
+`blob:` is the same object and otherwise a cache hit. Sharing one field would
+have made a rundown's lookahead and a marked loop take turns breaking each
+other, to protect a budget only one of them spends. **The expensive-looking part
+of a feature is worth re-deriving before it is paid for.**
 
-**This used to say "audible as a click", and that undersold it by two orders of
-magnitude.** The app's own readout is the evidence, and it was shipping the
-whole time: `loopHealth().medianMs` is the median time from issuing the wrap's
-`currentTime = start` to its `seeked`, and `cuecheck` prints it every run —
-**199 ms on a densely-keyframed clip and 524 ms on a sparse one**. A seeking
-element is not playing, so what a loop actually does to the sound is drop out
-for a fifth to half a second, every lap. A click is what is left at the edges of
-that.
+**The first cut made the sparse case worse, and only measurement said so.**
+Where the outgoing head cannot re-park within one lap, both elements seek the
+same expensive file at once: 1028 ms of dropout on half the laps in place of 213
+ms on all of them — a better median, a worse sound. So the re-park is held
+against its own lap and an overrun retires the head for the life of the cue,
+with no minimum-lap constant, because whether a head can keep up is a question
+about the clip and the loop together that the first lap answers. And it is **a
+deadline, not a stopwatch**: checking elapsed time inside `seeked` cannot fire
+until the re-park finishes, so an overrun stayed armed for the whole of its own
+overrun, and a re-park that never completed never fired the check at all.
 
-Three things follow, and they are why this is worth more than its place in the
-build order suggests.
+**The wrap-cost readout became the threshold two attempts could not build.** A
+loop with a working head does not seek, so `wrapCostMs` reports nothing; when
+the head gives up, the number comes back. It appears exactly when looping this
+clip here is costing something — by mechanism rather than by a cutoff someone
+had to pick. That took one line to hold: a relayed wrap has to _clear_ the
+health window rather than merely not add to it, because a head is armed
+unawaited and a big file wraps by seeking a lap or two before it lands.
 
-- **A de-click envelope is not the cheap version of this.** Fading the gain to
-  zero across the join and back is the standard fix for a seek discontinuity,
-  and here it tidies the edges of a half-second hole. Worth almost nothing on
-  its own.
-- **The two-element fix has no sync cost**, which is the objection that would
-  otherwise sink it. The instinct is to crossfade the audio while the picture
-  stays on the outgoing element, and that trades a click for lip-sync error. But
-  the second element can carry _both_: `playUrl` already promotes a parked
-  element for picture and sound together, so the loop's double-buffer is a swap
-  and not a blend, and nothing leads anything.
-- **The machinery is nearly all built, and `strip.ts` says so in passing.**
-  `land`'s comment already notices that a one-row looping rundown prerolls the
-  clip it is playing and calls it "an odd-looking case that happens to be the
-  loop's best behaviour" — which is exactly this feature, arrived at sideways. A
-  loop's second read head _is_ a preroll of the same clip at its in-point. Two
-  gaps: a parked element is paused, and it would have to be rolling before the
-  outgoing one reaches `r.end`; and there is one `next` field per slot, so a
-  looping clip and a rundown's lookahead contend for it. That contention is a
-  policy decision and is the reason this is not simply a small job.
+The measurement behind all of it, from `scripts/wrapsound.mjs` — an AudioWorklet
+on the app's own analyser, over a generated tone so floor means silence:
 
-**Measured, and it is both.** `scripts/wrapsound.mjs` listens rather than
-inferring — an AudioWorklet tapping the app's own analyser, on a generated 440
-Hz tone so that floor means silence and not a quiet bar, with the same GOP arms
-`loopseek` uses. Three runs, medians, Firefox Nightly / Linux:
+    arm            wraps   seek     silence   quiet
+    intra:seek        13    7 ms      11 ms      1%
+    intra:head        11     --       11 ms      0%
+    dense:seek        13   14 ms      21 ms      2%
+    dense:head        13     --       11 ms      0%
+    sparse:seek       10  237 ms     245 ms     18%
+    sparse:head       13     --       11 ms      0%
 
-    arm      keyframes   seek (app)   silence (heard)   worst   quiet
-    intra          600      4-6 ms         11 ms        21 ms      1%
-    dense           40     11-14 ms      11-21 ms       85 ms    1-3%
-    sparse           1    188-219 ms    203-235 ms     469 ms   16-19%
-    control         40         --           --           --        0%
-
-**Read the middle two columns against each other, not the absolute numbers.**
-These are `testsrc` fixtures, which loopseek's header is emphatic about: they
-are about as cheap a thing to decode as exists, and the same "frames back" buys
-an order of magnitude more on real footage. The dense arm at 11-14 ms is not
-`demo-v2.mp4`, which the same `medianMs` instrument puts at 64-90 ms.
-
-What transfers is the relationship, and it is the finding:
-
-- **The silence _is_ the seek, plus about one animation frame.** Two independent
-  instruments — a worklet on the audio thread, and the app's own `seeked` timing
-  — agree to within about 15 ms on every arm, across three orders of magnitude
-  of seek. So there is no separate audio cost hiding here and nothing to fix in
-  the audio graph: whatever removes the seek removes the dropout.
-- **Which means the app has been displaying the dropout all along.** The cue
-  row's `wrap 0.15s` is `wrapCostMs`, off the same `seeked` timing — so every
-  number in the table above can now be read as milliseconds of silence without
-  re-measuring anything: 12-15 ms on minnie-moocher, 64-90 ms on demo-v2,
-  128-233 ms on haunted-house. That readout was built to be re-marked against,
-  and it turns out to be a readout of the sound.
-- **Both earlier claims were right, about different clips.** "Audible as a
-  click" is what the well-encoded end does, and there the de-click envelope
-  above really would be the whole fix. "A fifth to half a second" is what the
-  sparse end does: **19% of the run silent, and one wrap in 469 ms**. Neither
-  number is a property of _looping_ — both are properties of the file, which is
-  the same conclusion the wrap-cost readout reached from the picture side and
-  declined to threshold.
-
-So this is worth building for the clips that need it and worth nothing for the
-rest. Two of the four clips this repo ships are in the slow tier, and an
-archive.org pick is whatever it is; that is the case the second read head is
-for.
-
-The control arm is what makes the rest a measurement: same clip, no loop marked,
-0% quiet and no wraps. Without it "the sound sits at floor" cannot be told from
-an analyser that was never fed.
-
-Two notes for anyone re-running it. `public/test.mp4` — the sparse clip every
-existing reading comes from — **has no audio track at all**, which is why the
-fixtures are generated rather than pointed at `public/`. And the run steps the
-engine from Node rather than riding rAF, because the region clamp lives in
-`VideoPump.pump()`: on an occluded window the loop wraps once a second and the
-harness would be measuring the window manager.
-
-### Landed: the second read head
-
-`armHead` / `promoteHead` in `ui/videoSlot.ts`, and a `Relay` the pump asks at
-the wrap. Same harness, `?loophead=0` against the shipped path, both arms of
-each clip minutes apart on one quiet machine:
-
-    arm            wraps   seek     silence   quiet   free
-    intra:seek        13    7 ms      11 ms      1%     0%
-    intra:head        11     --       11 ms      0%    73%
-    dense:seek        13   14 ms      21 ms      2%     0%
-    dense:head        13     --       11 ms      0%    85%
-    sparse:seek       10  237 ms     245 ms     18%     0%
-    sparse:head       13     --       11 ms      0%    85%
-
-**A sparse clip goes from a fifth of the run silent to none of it.** 85% of
-wraps make no sound at all; the rest are 11 ms, which is the instrument's floor
-rather than a reading. `seek --` is the app recording fewer than two seeks in a
-fourteen-second run — the head essentially never gave up on a one-second lap.
-
-Four things are worth keeping from building it, and the first two were not in
-the design above.
-
-- **The two elements do not contend for the preroll slot, because the bound that
-  rule protects is _files_.** This section filed the contention as a policy
-  decision and it dissolved instead: a preroll is speculative and names a
-  different clip, so it can cost a whole download; a loop's head is the same url
-  as the element on air, which for a `blob:` is the same object and otherwise a
-  cache hit. Sharing one field would have made a rundown's lookahead and a
-  marked loop take turns breaking each other, to protect a budget only one of
-  them spends.
-- **The first cut made the sparse case worse, and only the measurement said
-  so.** Where the outgoing head cannot re-park within one lap, both elements
-  seek the same expensive file at once: 1028 ms of dropout on half the laps in
-  place of 213 ms on all of them — a better median, a worse sound, and a shape
-  that reads as fine if you look at the wrong number. So the re-park is held
-  against its own lap and an overrun retires the head for the life of the cue.
-  There is no minimum-lap constant, because whether a head can keep up is a
-  question about the clip and the loop together that the first lap answers and
-  no threshold written here could.
-
-  **A deadline and not a stopwatch**, which is the correction the first fix
-  needed in its turn. Checking the elapsed time inside `seeked` cannot fire
-  until the re-park finishes, so an overrun stayed armed for the whole of its
-  own overrun — and every wrap in that span found a head that was not ready and
-  seeked against it, which is the contention being retired for. Worse, a re-park
-  that never completes at all never fired the check, so the one case with no
-  bound on it was the one nothing retired. A timer armed at the lap catches
-  both.
-
-- **The promotion deliberately does not go through `setVideoSource`.** That is a
-  source change, and `retarget` clears the region on purpose — a loop routed
-  through it ends at its first lap. The pump asks for an element and installs it
-  itself (`continueOn`), so it never has to learn what a read head is, which is
-  the same seam `faultPlan` uses to avoid learning what a rundown is.
-- **The wrap-cost readout became the threshold two attempts could not build.** A
-  loop with a working head does not seek, so `wrapCostMs` reports nothing; when
-  the head gives up, the number comes back. It now appears exactly when looping
-  this clip here is costing something — by mechanism rather than by a cutoff
-  someone had to pick, and nothing was calibrated to make it true.
-
-  It takes one line to hold, and it did not have it at first: a relayed wrap has
-  to _clear_ the health window rather than merely not add to it. A head is armed
-  unawaited, so on a big file a lap or two wraps by seeking before it lands —
-  and those two laps were otherwise the number the row showed for the rest of
-  the cue, while every wrap after them was free. Clearing is safe rather than
-  blinding because a head cannot alternate: one that misses its lap is retired
-  at the deadline, so the window refills within two laps and the number returns.
-
-Still open, and genuinely small now: the **de-click envelope** at the top of
-this section. 11 ms is one frame, which is a click rather than a dropout, and
-fading the gain across the join is the standard fix for exactly that. It was
-worth almost nothing against a half-second hole; against what is left it is the
-whole of the remainder.
+**The silence _is_ the seek**, plus about one animation frame — two independent
+instruments agree to within 15 ms across three orders of magnitude, so there was
+never a separate audio cost to fix. Read the relationship, not the numbers:
+these are `testsrc` fixtures, about as cheap to decode as exists, and the dense
+arm's 11–14 ms is 64–90 ms on `demo-v2.mp4`. Two notes for re-running it.
+`public/test.mp4` has no audio track at all, which is why the fixtures are
+generated. And the run steps the engine from Node rather than riding rAF,
+because the region clamp lives in `VideoPump.pump()` and an occluded window
+wraps once a second.
 
 ## Intercarrier buzz — taking the detector off the main thread
 
@@ -996,80 +726,48 @@ whole of the remainder.
 `gpu/buzzread.ts` gets back from `mapAsync`. Measured with the slider up: 20.0
 µs for the 525-line DC-block/hiss/tanh loop and 1.7 µs for the copy that gets
 transferred — about 25 µs a frame once the `postMessage` is counted, or 0.13% of
-a 60 fps budget. Nothing at all at `buzzLevel` 0, since the pass, the copy and
-the readback are gated on it together.
+a 60 fps budget. Nothing at all at `buzzLevel` 0.
 
 **The part worth moving is the part that cannot move.** The `GPUDevice` belongs
 to the main thread, `mapAsync` resolves on whichever thread owns the buffer, and
 `getMappedRange` hands back an `ArrayBuffer` the browser detaches on unmap — so
 nothing can forward it to a worker or a worklet. What is left on the main thread
 is the callback, a memcpy and a `postMessage`: roughly 2 µs of the 25. Moving
-the device itself means reopening [0003](adr/0003-delete-the-worker-engine.md),
-and "an unimplemented audio path" was already on that decision's list of costs.
+the device itself means reopening [0003](adr/0003-delete-the-worker-engine.md).
 
-Two routes, if anyone revisits this.
+Two routes, if anyone revisits this:
 
 - **`detect` into the worklet.** Send the raw `(mean, dev)` pairs rather than
   finished samples — 4.2 KB instead of 2.1 KB — and do the arithmetic on the
   audio thread. Simple, and it puts a 20 µs loop on the thread with the hardest
   deadline in the app: 0.75% of a 2.67 ms quantum at 48 kHz, once every six
-  quanta or so. Safe, and still the worse of the two.
+  quanta. Safe, and still the worse of the two.
 - **`detect` onto the GPU.** `sync.wgsl` already carries the pattern for a
-  serial recurrence — it dispatches `[1, 1]` and walks all 525 lines in one
-  thread to run the PLL — so a `buzz_detect` pass would sit beside it: the DC
+  serial recurrence, so a `buzz_detect` pass would sit beside it: the DC
   blocker's state in two persistent slots, `pcg`/`gauss` for the hiss, and
-  `tanh` is a WGSL builtin anyway. The readback then carries finished audio,
-  which halves it, and both threads are left holding only the handoff.
-
-The GPU route costs the tests, which is the reason it has not simply been done.
-`signal/buzz.spec.ts` makes six behavioural assertions on `detect` — that it
-rejects the standing level a picture sits at, that the vertical interval comes
-back as the buzz, that brightness orders the loudness, that no drive setting
-reaches full scale — and in WGSL each of those becomes a shader naga typechecks
-and nothing exercises.
+  `tanh` is a WGSL builtin. The readback then carries finished audio, which
+  halves it. The cost is the tests — `signal/buzz.spec.ts` makes six behavioural
+  assertions on `detect`, and in WGSL each becomes a shader naga typechecks and
+  nothing exercises.
 
 **What would decide this is a number nobody has.** The 25 µs above is the JS
-only. `mapAsync`'s own main-thread cost inside Firefox — syncing with the GPU
-process — is unmeasured, and it is the half that stays put however the other
-half moves. A `performance` measure around the flush and one `buzzsound` run
-would settle whether the rest is worth chasing.
-
-## Preset screening — rounds 2 and 3
-
-Round 2's ten retuned candidates sit schema-checked in
-`scripts/candidates.example.mjs`. Round 3 (`scripts/candidates.round3.mjs`) went
-after the seventy-five controls no preset touched and shipped fourteen looks out
-of thirty-three candidates, with what it learned in that file's header.
-`scripts/contact.mjs` renders either into a linked contact sheet, in Chrome by
-default on macOS and Firefox Nightly on Linux; its scorer now steps and reads
-the canvas in one task (Chrome drops a presented WebGPU canvas otherwise) and
-measures colour motion beside luma motion, since a tint sweep scored as a still
-frame until it did.
-
-What round 3 left open:
-
-- ~~**The hard polarity flip renders near black.**~~ Fixed by giving the
-  receiver a peak-referenced sync slicer, a gate that opens when lock is lost
-  and a slow DC restorer — ADR 0009 has the reasoning and the hum-bar trap it
-  was steered round. `signalAndGroundSwapped` in Cross-wired is the look.
-- **A camera loop aimed off-centre dims away** even at a round trip of 1.1 with
-  the zoom under 1. The off-axis shift carries most of the picture out of frame
-  each lap, so the gain has nothing to compound. Two tunings tried; neither held
-  a picture.
-- **Two hero frames for the guide.** The rolling underscan and the split-phase
-  sum are stronger pictures than most of what the guide embeds, and both are one
-  `?preset=` from reproducible. `docshot-specs.mjs` takes a `look()` line each;
-  the shots themselves need the Firefox docshots run.
+only; `mapAsync`'s own main-thread cost inside Firefox is unmeasured, and it is
+the half that stays put however the other half moves. A `performance` measure
+around the flush and one `buzzsound` run would settle whether the rest is worth
+chasing.
 
 ## Not worth building
 
 - **Cochannel interference.** Already reachable: source B's dirty-sum path is a
   second non-genlocked composite beating against A, with its own line and
-  subcarrier detune. That _is_ cochannel. (Adjacent-channel is not — that one
+  subcarrier detune. That _is_ cochannel. (Adjacent-channel is not — that
   shipped as `rfAdjacent`, and is carrier beats rather than a second picture.)
-- **A TBC.** A corrective box that removes `tbJitter`/`tbWow`. Considered and
-  declined; inverse-effect controls are interesting for performance but nobody
-  has wanted one.
+- **A TBC.** A corrective box that removes `tbJitter`/`tbWow`. Inverse-effect
+  controls are interesting for performance but nobody has wanted one.
 - **An After Effects / Premiere / OpenFX plugin.** Declined at length in
   [`EDITOR.md`](EDITOR.md), which also says what the reusable part turned out to
   be and where the editor-facing work actually goes.
+- **A camera loop aimed off-centre.** It dims away even at a round trip of 1.1
+  with the zoom under 1, because the off-axis shift carries most of the picture
+  out of frame each lap and the gain has nothing to compound. Two tunings tried;
+  neither held a picture.
