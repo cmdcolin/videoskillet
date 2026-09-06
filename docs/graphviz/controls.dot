@@ -4,7 +4,7 @@
 // Colours are placeholder tokens — render with `pnpm run docs`.
 digraph ntsc_js_controls {
   rankdir=LR;
-  bgcolor="transparent";
+  bgcolor="@BG@";
   nodesep=0.3;
   ranksep=0.5;
   fontname="Helvetica,Arial,sans-serif";

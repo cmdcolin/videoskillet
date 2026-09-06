@@ -3,6 +3,11 @@
 // sources use placeholder colour tokens rather than literal hex so one graph
 // definition produces both themes -- the previous approach recoloured only
 // edges, leaving pale fills and near-black label text on a dark page.
+//
+// Each SVG carries its own opaque background rather than a transparent one, so
+// a viewer whose picture-element pick doesn't match its actual page (GitHub's
+// theme setting is independent of the OS's prefers-color-scheme) still gets a
+// legible card instead of near-invisible text on a mismatched background.
 import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
@@ -17,6 +22,7 @@ const graphs = ['pipeline', 'pipeline-simple', 'domains', 'controls']
 // silently light-looking diagram.
 const palette = {
   //                 light        dark
+  BG: /*         */ ['#ffffff', '#0e0e11'], // canvas — see bgcolor below
   FG: /*         */ ['#111111', '#e8ebf1'], // node label text
   STROKE: /*     */ ['#33333322', '#ffffff26'], // node border
   EDGE: /*       */ ['#555555', '#8b95a5'], // edge + edge label

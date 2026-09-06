@@ -17,7 +17,7 @@
 // directly. See scripts/diagrams.mjs.
 digraph ntsc_js {
   rankdir=TB;
-  bgcolor="transparent";
+  bgcolor="@BG@";
   compound=true;
   newrank=true;
   labelloc="t"; labeljust="l";

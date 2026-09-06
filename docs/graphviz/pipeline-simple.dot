@@ -9,7 +9,7 @@
 // Colours are placeholder tokens — render with `pnpm run docs`.
 digraph ntsc_js_simple {
   rankdir=LR;
-  bgcolor="transparent";
+  bgcolor="@BG@";
   fontname="Helvetica,Arial,sans-serif";
   node [shape=box style="rounded,filled" fontname="Helvetica,Arial,sans-serif"
         fontsize=12 color="@STROKE@" fontcolor="@FG@" penwidth=1 margin="0.22,0.14"];
