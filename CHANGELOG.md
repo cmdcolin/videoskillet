@@ -2,6 +2,11 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [0.40.2](https://github.com/cmdcolin/videoskillet/compare/v0.40.1...v0.40.2) - 2026-09-06
+
+### Other Changes
+- [`b5d2cc4`](https://github.com/cmdcolin/videoskillet/commit/b5d2cc4336a49e732acdd5a693e95220ab1b99e2) Rm orb
+
 ## [0.40.1](https://github.com/cmdcolin/videoskillet/compare/v0.40.0...v0.40.1) - 2026-09-06
 
 ### Documentation
