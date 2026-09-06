@@ -2,6 +2,22 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [0.40.1](https://github.com/cmdcolin/videoskillet/compare/v0.40.0...v0.40.1) - 2026-09-06
+
+### Documentation
+- *(docs)* [`8fdf71e`](https://github.com/cmdcolin/videoskillet/commit/8fdf71eb696b522ba6f599102e6b8fdd7b8e1938) an FAQ answer on feeding in a real composite signal
+- [`3f0c980`](https://github.com/cmdcolin/videoskillet/commit/3f0c98049182f5c787fe900d66bc1646b693bcf7) trim the architecture page and drop the landing page's How it works
+- [`aec9c86`](https://github.com/cmdcolin/videoskillet/commit/aec9c86d3b012552087ce40c8461d13d8ec95eab) trim the FAQ and the user guide, and spell links with the hash
+- [`0caea07`](https://github.com/cmdcolin/videoskillet/commit/0caea07aaa926a6dfd57b457f741c9304553fcae) the tape delay loop is gone, and five pages still described it
+- [`da4b4c6`](https://github.com/cmdcolin/videoskillet/commit/da4b4c6066ff46b14996a591969a3caf932c8b57) cut the construction diary out of EDITOR.md and IDEAS.md
+- [`9a944b2`](https://github.com/cmdcolin/videoskillet/commit/9a944b27fa8e91adc2144825315707d3f57fe69f) fold VOTING into CURATION, and drop PROJECT.md
+- [`cea662f`](https://github.com/cmdcolin/videoskillet/commit/cea662fc0dd777924433dcbd57d818d4f99d06bd) cut DEVELOPMENT.md from 1919 lines to 1081
+- [`ba7fec7`](https://github.com/cmdcolin/videoskillet/commit/ba7fec705ed820bdf5b6b5d9809fb4aba3314757) cut OPTIMIZATIONS.md from 736 lines to 626
+- *(docs)* [`58b825f`](https://github.com/cmdcolin/videoskillet/commit/58b825fa59cc73d78210ddffda8d6c7a7f48a2ef) index the handoff the README table had missed
+
+### Other Changes
+- [`6283a7d`](https://github.com/cmdcolin/videoskillet/commit/6283a7d936ca594343fbc83a7b02095d36987a04) Toaster comparison
+
 ## [0.40.0](https://github.com/cmdcolin/videoskillet/compare/v0.39.2...v0.40.0) - 2026-09-06
 
 ### Features
