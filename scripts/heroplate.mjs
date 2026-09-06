@@ -45,6 +45,12 @@ const SET = [
   'lumaMHz:3.4',
   'tbJitterNs:70',
   'tbWowNs:150',
+  // And colour has to stay colour. `vhs` runs the whole chroma path under the
+  // luma at a 0.5 MHz demod, which is the right bandwidth for a face and far
+  // too little for a mark whose only colour is a few thin strokes.
+  'demodMHz:0.9',
+  'colorUnderMix:0.6',
+  'underJitterDeg:2',
   // Colour off the edges: a coarse reconstruction lattice and a dead comb, so
   // the stems fringe rather than the field tinting.
   'chromaCoarse:3',
@@ -114,13 +120,39 @@ const RENDERS = [
     aspect: 3 / 4,
     width: 1080,
   },
+  // The link preview, whole. Not a ground with the brand composited over it
+  // afterwards: the mark and the wordmark are drawn onto the plate with the
+  // headline and go down the same path, so the icon's colours are the ones the
+  // decoder made of them and the wordmark carries the same fringe as the words
+  // above it. One picture, and every part of it is a picture of the program.
+  //
+  // Centred rather than bottom-anchored, because this crop is composed: the
+  // plate lays the card out inside the band the crop keeps.
+  {
+    out: 'public/og.jpg',
+    brand: true,
+    text: 'WebGPU analog<br>video emulation.',
+    size: 140,
+    aspect: 1200 / 630,
+    width: 1200,
+    anchor: 'center',
+  },
 ]
 
 const check = process.argv.includes('--check')
 
-const plateHtml = ({ text, size }) => `<!doctype html><style>
+// The site's own mark, drawn onto the plate rather than laid over the picture
+// afterwards, so it arrives at the decoder as video like everything else.
+const FAVICON = readFileSync('public/favicon.svg').toString('base64')
+
+// Everything on a plate is full-swing white on black. That is the harshest
+// thing a composite path can be handed — a vertical edge on every stem — and it
+// is what makes the fringing, so nothing here is drawn in the greys the page
+// would use.
+const plateHtml = ({ text, size, brand = false }) => `<!doctype html><style>
   html, body { margin: 0; height: 100% }
   body { background: #000; display: grid; place-items: center }
+  .card { display: flex; flex-direction: column; align-items: center; gap: 78px }
   p {
     margin: 0;
     color: #fff;
@@ -132,7 +164,28 @@ const plateHtml = ({ text, size }) => `<!doctype html><style>
     text-align: center;
     -webkit-font-smoothing: antialiased;
   }
-</style><p>${text}</p>`
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 26px;
+    color: #fff;
+    font-family: ${FAMILY};
+    font-weight: 700;
+    font-size: 66px;
+    letter-spacing: -0.01em;
+  }
+  /* Bigger than the wordmark's cap height, which a mark beside a word usually
+     is not. The steam wisps are the only colour in it and they are 2.4 units
+     wide in a 32-unit box: drawn at the size the page uses them, the chroma
+     path has nothing left to carry by the time it has been through the tape. */
+  .brand img { width: 122px; height: 122px }
+</style><div class="card"><p>${text}</p>${
+  brand
+    ? `<div class="brand">
+         <img src="data:image/svg+xml;base64,${FAVICON}" />videoskillet.js
+       </div>`
+    : ''
+}</div>`
 
 const scratch = mkdtempSync(join(tmpdir(), 'heroplate-'))
 
@@ -245,12 +298,19 @@ for (const render of RENDERS) {
   execFileSync('magick', [
     framePath,
     '-crop',
-    `${cropW}x${cropH}+${Math.round((w - cropW) / 2)}+${rasterY + rasterH - cropH}`,
+    `${cropW}x${cropH}+${Math.round((w - cropW) / 2)}+${
+      render.anchor === 'center'
+        ? rasterY + Math.round((rasterH - cropH) / 2)
+        : rasterY + rasterH - cropH
+    }`,
     '+repage',
     '-resize',
     `${render.width}x`,
     '-quality',
-    '62',
+    // webp is spending its bytes on grain and can be pushed hard; the link
+    // preview is a jpeg because that is what the card's meta names, and jpeg
+    // at the same number turns the fringing into blocks.
+    render.out.endsWith('.jpg') ? '90' : '62',
     target,
   ])
   if (check) {

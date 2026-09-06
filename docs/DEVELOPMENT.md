@@ -680,12 +680,16 @@ pnpm demos                       # rewrite the README's generated demo bullets
 pnpm demos:check                 # fail if the checked-in copy is stale
 ```
 
-[`../demos.json`](../demos.json) is the looks — the README's bullets, the still
-behind the title, and the gallery of cards, each opening the exact board its
-clip is a recording of. Entries carry flags: `hero` is the one the header shows,
-which [`../scripts/ogimage.mjs`](../scripts/ogimage.mjs) grounds the link
-preview in too; `showcase` is the ones the carousel may play; `gallery` is
-whether it gets a card; `says` is the clause under the name.
+[`../demos.json`](../demos.json) is the looks — the README's bullets and the
+gallery of cards, each opening the exact board its clip is a recording of.
+Entries carry flags: `showcase` is the ones the carousel may play; `gallery` is
+whether it gets a card; `says` is the clause under the name. The header and the
+link preview are no demo's still any more:
+[`../scripts/heroplate.mjs`](../scripts/heroplate.mjs) sets the headline in the
+h1's own typeface, photographs it, runs the plate through the app and reads the
+canvas back, so the words on the page are a picture of what the program does to
+words. The link-preview card is the same render with the mark and the wordmark
+drawn onto the plate beside them, which is why they carry the same fringe.
 [`../scripts/reel.mjs`](../scripts/reel.mjs) is the carousel, which records the
 **app's own window** instead — the panel, the map and a pointer moving over
 them. That split is the point of the page: the picture is what the program
