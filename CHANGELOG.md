@@ -2,6 +2,11 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [0.40.3](https://github.com/cmdcolin/videoskillet/compare/v0.40.2...v0.40.3) - 2026-09-06
+
+### Documentation
+- *(docs)* [`592171b`](https://github.com/cmdcolin/videoskillet/commit/592171bef038bdacd7f8b1b16ea1a8c3d4c1c63d) cut COMPARISON.md to a map instead of a recommender
+
 ## [0.40.2](https://github.com/cmdcolin/videoskillet/compare/v0.40.1...v0.40.2) - 2026-09-06
 
 ### Other Changes
