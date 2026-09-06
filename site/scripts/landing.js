@@ -49,11 +49,11 @@ const motion = matchMedia('(prefers-reduced-motion: reduce)')
 // steps through them by hand: the tabs are the way in for everybody, so
 // there is no path here that only one kind of reader can walk.
 //
-// The tabs and the captions are read off the slides rather than written
-// beside them, so a slide added to the reel arrives with its own way in
-// and its own line — and each slide carries how long its own recording
-// runs, because they are timelines of different lengths and a stage that
-// advances on a fixed clock cuts one of them off mid-drag.
+// The tabs are read off the slides rather than written beside them, so a
+// slide added to the reel arrives with its own way in — and each slide
+// carries how long its own recording runs, because they are timelines of
+// different lengths and a stage that advances on a fixed clock cuts one of
+// them off mid-drag.
 {
   const stage = document.querySelector('.stage')
   const slides = [...stage.querySelectorAll('.slide')]
@@ -68,7 +68,6 @@ const motion = matchMedia('(prefers-reduced-motion: reduce)')
   // both lengths.
   const secsOf = slide =>
     narrow.matches ? slide.dataset.secsNarrow : slide.dataset.secs
-  const notes = [...document.querySelectorAll('.slideNote')]
   const tabs = document.querySelector('.slideTabs')
   // After the clip has run once, a beat to read the line under it before the
   // next slide. It was 2.5s once and came down to 1.2s because a stage that
@@ -201,7 +200,6 @@ const motion = matchMedia('(prefers-reduced-motion: reduce)')
     at = index
     for (const [i, slide] of slides.entries()) {
       slide.classList.toggle('on', i === at)
-      notes[i].classList.toggle('on', i === at)
       buttons[i].setAttribute('aria-current', String(i === at))
     }
     // The still under the clip, fetched the first time its slide is

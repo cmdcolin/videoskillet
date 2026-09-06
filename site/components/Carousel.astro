@@ -1,6 +1,6 @@
 ---
-// The carousel: the stage, the bar under it and the captions under that, all
-// three from the same list. The tabs are the one part not written here — the
+// The carousel: the stage and the bar under it, both from the same list. The
+// tabs are the one part not written here — the
 // page builds them from whatever slides the stage ends up holding, so a slide
 // arrives with its own way in, alongside the Play button the stage waits on.
 //
@@ -87,11 +87,4 @@ import { FRAME, NARROW, slides } from '../../scripts/reel.mjs'
 </div>
 <div class="slideBar">
   <div class="slideTabs" role="group" aria-label="what the stage shows"></div>
-</div>
-<div class="slideNotes">
-  {
-    slides.map((slide, i) => (
-      <p class={i === 0 ? 'slideNote on' : 'slideNote'}>{slide.caption}</p>
-    ))
-  }
 </div>
