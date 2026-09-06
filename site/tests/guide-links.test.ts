@@ -41,9 +41,10 @@ test('every page the landing page links to is a page the guide renders', () => {
   }
 })
 
+// No floor on the count: the page carries no guide figure today, and the two
+// tests above already fail loudly if the extraction stops matching anything.
 test('every figure the landing page pulls out of the guide exists', () => {
   const figures = into.filter(link => link.startsWith('img/'))
-  expect(figures.length).toBeGreaterThan(0)
   for (const figure of figures) {
     expect(
       readFileSync(`docs/${figure}`).length,

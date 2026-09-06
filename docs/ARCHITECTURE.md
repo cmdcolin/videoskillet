@@ -6,16 +6,15 @@ inventory of every file.
 
 ## The premise
 
-videoskillet.js simulates the NTSC signal path, not the _look_ of one. There is
-no "VHS filter". A picture is encoded to a real composite waveform on a fixed
-raster, damaged in the ways real hardware damages a waveform, then decoded by a
-model of a TV that has to find sync in whatever it is handed. Dot crawl, rainbow
-fringing, tearing, rolling and hue drift are **emergent** — nobody draws them.
+videoskillet.js simulates the NTSC signal path. A picture is encoded to a real
+composite waveform on a fixed raster, damaged the way hardware damages a
+waveform, then decoded by a model of a TV that has to find sync in whatever it
+is handed. Dot crawl, rainbow fringing, tearing, rolling and hue drift are
+**emergent** — nobody draws them.
 
-That premise is the main design constraint: when adding an effect, prefer
-modelling the mechanism that causes the artifact over drawing the artifact. The
-payoff is that mechanisms interact for free, which is where the interesting
-output comes from.
+That is the main design constraint: model the mechanism that causes an artifact
+rather than drawing the artifact. Mechanisms modelled that way interact for
+free, which is where the interesting output comes from.
 
 ## The layout
 
@@ -36,10 +35,10 @@ core declares the shape and the app satisfies it: `core/gpu/videopump.ts` does
 that for `Relay`, `PullOpener` and `FramePull`, so the pump names what it
 depends on instead of naming who builds it.
 
-The boundary is a directory, not a package. Core has no build of its own, the
-app imports its source, HMR crosses the line freely, and the doc tests read core
-files by path. Making it a workspace package is a separate decision, and what
-would make one worth taking is somebody outside this repo wanting to install it.
+The boundary is a directory rather than a package: core has no build of its own,
+the app imports its source, HMR crosses the line freely, and the doc tests read
+core files by path. Making it a workspace package is a separate decision, worth
+taking when somebody outside this repo wants to install it.
 
 ## The raster
 
@@ -76,10 +75,10 @@ postPasses   [enhancer] → [buzzTap] → syncMeasure → sync → lineAnalyze �
 present      render pass to the swap chain
 ```
 
-That block is not decoration: `src/core/gpu/pipeline-graph.test.ts` parses the
-three arrays out of `pipeline.ts` and fails if this order, or which names are
-bracketed, no longer matches. `docs/graphviz/pipeline.dot` draws the same order
-with the buffers on the arrows and is held to the same list:
+`src/core/gpu/pipeline-graph.test.ts` parses the three arrays out of
+`pipeline.ts` and fails if this order, or which names are bracketed, no longer
+matches. `docs/graphviz/pipeline.dot` draws the same order with the buffers on
+the arrows and is held to the same list:
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="img/pipeline-dark.svg">
@@ -117,28 +116,28 @@ packs each source's fault controls — and its paused deck's servo state — int
 the standard damage fields of a second `Params` block, so each mechanism is
 written once in `feed.wgsl` and reused fields cost no `PARAM_DEFS` growth.
 
-That reuse sets one trap, and it is the trap to know before adding a per-source
-fault. `packFeed` spreads the program-bus pack and overrides only the fields
-`FEEDS` names, so **every other `Params` field reaches a feed still holding the
-bus's value**. A block in `feed.wgsl` that reads a field nobody overrode applies
-a program-bus knob to one source and looks like it works. The declaration is
-therefore one table entry (`feedgates.ts`), one `packFeed` override, one shader
-block, and one line in `feedFaults` — and `feedgates.spec.ts` fails if the last
-is missed, because a fault the gate does not know about dispatches no pass and
-its slider does nothing until some unrelated fault on the same input is up.
+**The trap to know before adding a per-source fault:** `packFeed` spreads the
+program-bus pack and overrides only the fields `FEEDS` names, so every other
+`Params` field reaches a feed still holding the bus's value. A block in
+`feed.wgsl` that reads a field nobody overrode applies a program-bus knob to one
+source and looks like it works. Declaring a fault is therefore one table entry
+(`feedgates.ts`), one `packFeed` override, one shader block, and one line in
+`feedFaults`. `feedgates.spec.ts` fails if the last is missed, because a fault
+the gate does not know about dispatches no pass, and its slider does nothing
+until some unrelated fault on the same input is up.
 
 An engaged feed makes its encoder detour through the `compB` scratch (a
-bind-group pair swapped off the same predicate that gates the feed). What makes
-feedB possible at all is `encodeCompositeB`: B exists as a real composite on its
-own raster, which `mix_b`'s dirty path then resamples — so B's damage, its pause
-stripe included, rides B's raster through the slip and roll instead of parking
-on the output.
+bind-group pair swapped off the same predicate that gates the feed).
+`encodeCompositeB` is what makes feedB possible: B exists as a real composite on
+its own raster, which `mix_b`'s dirty path then resamples, so B's damage — its
+pause stripe included — rides B's raster through the slip and roll instead of
+parking on the output.
 
 ## The three domains
 
-The single most important distinction in this codebase, and the easiest to get
-wrong. A horizontal displacement can come from three places, and they are _not_
-interchangeable — what tells them apart is what happens to hue:
+The most important distinction in this codebase, and the easiest to get wrong. A
+horizontal displacement can come from three places, and what tells them apart is
+what happens to hue:
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="img/domains-dark.svg">
@@ -189,12 +188,12 @@ fault through `timing[]` will spin hue that should have stayed put.
   `(tip level, porch level, the line's deepest excursion, 0)`, all post-IF-gain.
 - **`audioBuf`** — one float per line, the audio waveform at line rate.
 - **`buzzBuf`** — one `vec2f` per line from `buzz_tap`: the line's mean
-  composite level and the RMS of its within-line deviation, both IRE. The
-  traffic in the opposite direction to `audioBuf`, and the app's **only
-  steady-state GPU→CPU readback** — `gpu/buzzread.ts` maps it through a pool of
-  three staging buffers and skips the frame when none is free, because the sound
-  side can glide over a gap and the render loop cannot afford to wait. Gated on
-  the buzz being audible at all, so an idle listener pays nothing.
+  composite level and the RMS of its within-line deviation, both IRE. It runs
+  GPU→CPU, and it is the app's **only steady-state readback in that direction**.
+  `gpu/buzzread.ts` maps it through a pool of three staging buffers and skips
+  the frame when none is free, because the sound side can glide over a gap and
+  the render loop cannot afford to wait. Gated on the buzz being audible, so an
+  idle listener pays nothing.
 - **`persistBufs`** — phosphor state (the light still on the glass), packed
   `rgba8`, ping-ponged by frame parity: `decode` reads one and writes the other,
   because its lateral scatter reads neighbouring pixels and a single buffer
@@ -234,35 +233,35 @@ geometry in `miniFrame.ts` (`lens.ts` for the magnifier).
 The magnifier is also driven straight on the output: `Stage.tsx` turns a wheel
 into `zoomAbout`, a drag into `panLens` or `zoomToBox`, and a double-click into
 1x. All of it goes through `lens.ts`, which mirrors the transform in
-`present.wgsl` — including the clamp that stops the lens looking past the edge
-of the glass, so the miniature draws where the shader actually looks. That
-mirroring is the thing to keep honest: change the transform in the shader and
+`present.wgsl`, clamp included, so the miniature draws where the shader actually
+looks. Keep that mirroring honest: change the transform in the shader and
 `lens.ts` moves with it, or `lens.test.ts` starts lying.
 
-Step 4 above still holds without exception: **every control keeps its slider.**
-The miniature only hides the ones it duplicates, behind the group's `▸ sliders`
-toggle. That is what keeps MIDI binding, clock sync, presets, scenes and URL
-state working untouched — a miniature is another writer of a normal control,
-never the only one.
+**Every control keeps its slider.** The miniature only hides the ones it
+duplicates, behind the group's `▸ sliders` toggle, which is what keeps MIDI
+binding, clock sync, presets, scenes and URL state working untouched. A
+miniature is another writer of a normal control, never the only one.
 
-The **fine tier** is the second sanctioned hider, under the same contract. A
-`fine: true` on a `SliderDef` in `src/ui/controls.ts` marks a trim — a control
-that shapes an effect some other control turns on — and `ControlGroup` folds
-those rows behind a `▸ N fine tweaks` disclosure so a group's look-makers stay
-scannable. Hidden, not removed: the row is one click away, a live filter
-collapses the tier entirely so search and the ⌘K palette reach fine rows
-directly, the group's touched dot and the phase roll-ups still walk every
-slider, and the fold shows `· N touched` in the same amber when a preset has
-moved something behind it. The tier is also the auto-map ranking (`AUTOMAP_KEYS`
-puts non-fine controls first, then fine, then `VIEW_KEYS`), so a
-knob-count-bound controller lands on look-makers first. Demotion criteria and
-the vetoes that protect mode switches, preset-heavy keys and the
-miniature-backed keys are pinned by `controls.test.ts`.
+Three other surfaces hide a row under that same contract.
 
-The **generator gate** is the third, and it hides a whole group rather than rows
-inside one. Two groups in `src/ui/controls.ts` describe a generator instead of
-the stage they are filed under — the noise source behind TV and VHS static, and
-the video synth — because a group has to live somewhere and both are patched
+The **fine tier** is the first. A `fine: true` on a `SliderDef` in
+`src/ui/controls.ts` marks a trim — a control that shapes an effect some other
+control turns on — and `ControlGroup` folds those rows behind a
+`▸ N fine tweaks` disclosure so a group's look-makers stay scannable. Hidden,
+not removed: the row is one click away, a live filter collapses the tier
+entirely so search and the ⌘K palette reach fine rows directly, the group's
+touched dot and the phase roll-ups still walk every slider, and the fold shows
+`· N touched` in the same amber when a preset has moved something behind it. The
+tier is also the auto-map ranking (`AUTOMAP_KEYS` puts non-fine controls first,
+then fine, then `VIEW_KEYS`), so a knob-count-bound controller lands on
+look-makers first. Demotion criteria and the vetoes that protect mode switches,
+preset-heavy keys and the miniature-backed keys are pinned by
+`controls.test.ts`.
+
+The **generator gate** is the second, and it hides a whole group rather than
+rows inside one. Two groups in `src/ui/controls.ts` describe a generator instead
+of the stage they are filed under — the noise source behind TV and VHS static,
+and the video synth — because a group has to live somewhere and both are patched
 into whichever slot is calling for them. Each carries `generator:` on its
 `Group`, `generatorsLive` says which are actually running, and `panelChain.ts`
 leaves a group off the Source A stage while nothing is running it, so a stage
@@ -273,7 +272,7 @@ search and ⌘K still reach every row, and the synth's liveness includes
 with no picker anywhere saying `synth`, and gating on the two source modes alone
 would take the group off screen while it was drawing half the picture.
 
-Two things to respect when adding another:
+Two things to respect when adding a miniature:
 
 - **The frame is the shader's UV space** — 0..1 across the active picture, y
   down, the same `u`/`v` the pass computes. Anything the miniature draws or maps
@@ -289,61 +288,54 @@ Two things to respect when adding another:
 Drags write through `writeControls` (one `applyControls`), so a gesture that
 moves four controls is one notify, not four.
 
-The **minor-adjustment card** is the third surface onto a control that is not
-its own row, and it keeps the same contract. `vernier: true` on a `SliderDef`
-gives the row a `minor` button opening a card that holds a second track spanning
-one `step` of the control, in hundredths of it (`vernier.ts`, `Vernier` in
-`Slider.tsx`). Nothing is stored for it: the card splits the value that is
-already there into the notch of the step grid it is nearest plus a remainder, so
-a trimmed control is one number like any other and a preset, a link or a MIDI
-knob writes it without knowing the card exists. Two things this leans on — a
-control's `step` is what the row's shared readout column and its curve are both
-sized off, so the extra two digits are printed on the card (`formatFine`) and
-never in the column; and `snapToStep` rounds a half up, which is why the
-remainder runs [-50, +49] and no value sits on a tie the card's thumb would jump
-across mid-drag. Take one where a control's step is a floor the mechanism can
-see past — the camera loop's geometry — rather than wherever a finer number
-might be nice.
+The **minor-adjustment card** is the third. `vernier: true` on a `SliderDef`
+gives the row a `minor` button opening a card with a second track spanning one
+`step` of the control, in hundredths of it (`vernier.ts`, `Vernier` in
+`Slider.tsx`). Nothing is stored for it: the card splits the value already there
+into the nearest notch of the step grid plus a remainder, so a trimmed control
+is one number like any other and a preset, a link or a MIDI knob writes it
+without knowing the card exists. Two things it leans on — a control's `step`
+sizes the row's shared readout column and its curve, so the extra two digits are
+printed on the card (`formatFine`) and never in the column; and `snapToStep`
+rounds a half up, which is why the remainder runs [-50, +49] and no value sits
+on a tie the card's thumb would jump across mid-drag. Give the card to a control
+whose step is a floor the mechanism can see past — the camera loop's geometry —
+rather than wherever a finer number might be nice.
 
 Nothing in a miniature may run per frame — no `rAF`, no transitions or
 animations that recalc style each tick. The panel shares a main thread with a 60
 fps canvas, and a decorative pulse measured 7 ms of style recalc per 3 s for
 information a static border carries. Measure with `page.metrics()` deltas
-(`RecalcStyleDuration`, `ScriptDuration`), not fps: the loop is vsync-capped, so
-fps stays at 60 until the budget is already gone.
+(`RecalcStyleDuration`, `ScriptDuration`) rather than fps: the loop is
+vsync-capped, so fps stays at 60 until the budget is already gone.
 
 ## Performance shape
 
-[`OPTIMIZATIONS.md`](OPTIMIZATIONS.md) is the long form of this section — why
-the path is gated, tiled, tiered and packed the way it is, with what measured
-each one and what was tried and reverted.
+[`OPTIMIZATIONS.md`](OPTIMIZATIONS.md) is the long form — why the path is gated,
+tiled, tiered and packed the way it is, what measured each one, and what was
+tried and reverted. Two things from it belong in an orientation.
 
-Where the frame time goes (see `DEVELOPMENT.md` › Measuring performance for the
-protocol and the current numbers): every built-in preset fits comfortably in a
-60 Hz budget on the dev box; the settings that genuinely cost are dub
-generations with colour-under (the `channel`/`underDown` pair per generation), a
-beam spot pushed past a pixel, a many-headed tape loop, and per-source feed snow
-— and they stack. Live frame rate is a different budget from batch GPU
-throughput: video decode/upload lands on it, and the display's vsync steps it in
-jumps. That wavering is what `frameLock` exists for — it renders every Nth
-refresh and submits _nothing_ in between (a held re-present made Firefox's
-scheduler slow rAF delivery itself), trading rate the display was stepping
-anyway for a cadence that holds still; `auto` engages it from the loop's own
-interval spread and probes back on a backoff. Note before optimizing shaders
-here: three ALU micro-optimizations have measured exactly zero (the FIR passes
-are not ALU-bound), so ablate an upper bound first. The same rule caught a
-startup one: the constructor's 22 blocking `createComputePipeline` calls look
-like an obvious `createComputePipelineAsync` job and are worth 9 ms in total,
-while the async path measured far slower — see DEVELOPMENT.md.
+**Ablate before you optimize.** Three ALU micro-optimizations measured exactly
+zero here (the FIR passes are not ALU-bound), and the constructor's 22 blocking
+`createComputePipeline` calls are worth 9 ms in total against an async path that
+measured far slower. Delete the thing and measure the frame without it first.
+
+**Live frame rate is a different budget from batch GPU throughput.** Video
+decode and upload land on the rAF loop, and the display steps it in jumps rather
+than sliding. `frameLock` renders every Nth refresh and submits nothing in
+between (a held re-present made Firefox's scheduler slow rAF delivery itself),
+trading rate the display was stepping anyway for a cadence that holds still;
+`auto` engages it from the loop's own interval spread and probes back on a
+backoff.
 
 Almost everything is comfortably parallel. Two exceptions:
 
 - **`sync.wgsl` is two lanes in two waves** — the PLL flywheel and the HV sag
-  are each a 525-iteration loop on one lane, and they run side by side. They
-  must be serial: each line's value depends on the previous line's. It is
-  latency on a lane rather than GPU throughput, and it measures fine at 60 fps,
-  but it is the one pass that cannot scale. Another per-line recurrence should
-  be a parallel prefix-scan instead of a third loop here.
+  are each a 525-iteration loop on one lane, running side by side. They must be
+  serial: each line's value depends on the previous line's. It is latency on a
+  lane rather than GPU throughput and it measures fine at 60 fps, but it is the
+  one pass that cannot scale. Another per-line recurrence should be a parallel
+  prefix scan instead of a third loop here.
 - **`decode` stages a shared tile per row.** A workgroup covers 64 pixels of one
   raster row and stages a contiguous span with a 32-sample halo, so the demod
   FIR reads workgroup memory. Consequence: horizontal offsets must be
@@ -363,12 +355,11 @@ replaces the board and restores. Each subsection below says why that order.
 
 ### A lost device is rebuilt in place, not reloaded
 
-Sleep/wake and driver resets fire `device.lost`, and they are the losses a
-session should survive: `onDeviceLost` builds a replacement engine and hands it
-back the controls, the debug tap, B's enable flag and both slots' sources, so
-the only thing the user sees is a banner for the length of a `requestDevice`
-(measured well under 100 ms on the dev box). Three consequences bind anything
-that touches this:
+Sleep/wake and driver resets fire `device.lost`, and a session should survive
+them. `onDeviceLost` builds a replacement engine and hands it back the controls,
+the debug tap, B's enable flag and both slots' sources, so the user sees a
+banner for the length of a `requestDevice` (well under 100 ms on the dev box).
+Three consequences bind anything that touches this:
 
 - **The outgoing engine stays the store until the swap.** React reads controls
   from the engine via `useSyncExternalStore`, so nulling `engineRef` during the
@@ -381,15 +372,15 @@ that touches this:
   playing — `createMediaElementSource` throws on the second call for an element.
 - **Every source reaches a slot through `VideoSlot`'s three setters**, which is
   what makes the restore possible: `useEngine` records what each slot was last
-  handed (`SlotSource`) and replays it. A live `<video>` is the browser's, not
-  the device's, so a clip, a webcam or a screen share only needs re-attaching;
-  only stills and noise fields are re-issued. Adding a fourth way to set a
-  source without going through a slot would silently lose it across a loss.
+  handed (`SlotSource`) and replays it. A live `<video>` belongs to the browser
+  rather than to the device, so a clip, a webcam or a screen share only needs
+  re-attaching; only stills and noise fields are re-issued. A fourth way to set
+  a source, bypassing a slot, would silently lose it across a loss.
 
-What does _not_ come back is the content of VRAM — phosphor state, the frame
-store and the tape loop all restart empty. `onHang` is deliberately **not**
-rebuilt: a wedged GPU process is shared across tabs and outlives the page, so a
-fresh device would land on the same one. That one still goes to `FatalScreen`.
+VRAM does not come back — phosphor state, the frame store and the tape loop all
+restart empty. `onHang` is deliberately **not** rebuilt: a wedged GPU process is
+shared across tabs and outlives the page, so a fresh device would land on the
+same one. That one still goes to `FatalScreen`.
 
 ### React Compiler is on
 
@@ -398,30 +389,27 @@ Don't add `useMemo`/`useCallback` — memoization is the compiler's job. Two
 consequences worth knowing:
 
 - **The ref-during-render pattern above is exactly what the compiler refuses.**
-  A bail-out is harmless in itself — the compiler leaves that code as written —
-  but it costs that component its memoization, which is why every one of them is
-  recorded rather than tolerated: `KNOWN` in `scripts/compilercheck.mjs` is the
-  live list, with a line per bail-out saying whose fault it is, and
-  `pnpm compiler` fails on any that is not on it. Read that list rather than one
-  written out here, which drifts the moment a component is renamed or fixed.
-  `useEngine` itself does compile (it only returns the refs, never reads one for
-  render output within its own body) — a bail-out lands on a caller that reads
-  one. Pulling a ref out of props with a destructure is what keeps that from
-  spreading: read as `props.someRef`, the compiler marks the whole props object
-  ref-ish and refuses every other `props.x` read in the component. oxlint's
-  `react` plugin (`.oxlintrc.json`) has no rule equivalent to
-  eslint-plugin-react-hooks' `refs` (which used to flag this on principle), so
-  there's nothing to suppress; `react/rules-of-hooks` and
-  `react/exhaustive-deps` still run and report real bail-outs.
-- **What is load-bearing is that a callback held in a dep array keeps its
-  identity.** `useClockSync` holds `writeControl` from `useMidi` in an effect
-  dep array; if that closure got a fresh identity per render the effect would
-  re-fire constantly and `midi.setExternal` would reset soft-takeover every
-  render, so a physical knob could never hold its catch. `useMidi` therefore
-  keeps hand-written `useCallback`s (`useMidi.ts:57`) rather than trusting the
-  compiler — the invariant is correctness, so it is stated at the definition
-  instead of inferred from build output. Note the consumer's own status is
-  irrelevant: a compiled consumer still re-fires on a changed identity.
+  A bail-out leaves that code as written and costs the component its
+  memoization, so every one is recorded rather than tolerated: `KNOWN` in
+  `scripts/compilercheck.mjs` is the live list, a line per bail-out saying whose
+  fault it is, and `pnpm compiler` fails on any that is not on it. Read that
+  list rather than one written out here. `useEngine` itself compiles — it only
+  returns the refs, never reads one for render output in its own body — so a
+  bail-out lands on a caller that reads one. Destructuring a ref out of props is
+  what stops it spreading: read as `props.someRef`, the compiler marks the whole
+  props object ref-ish and refuses every other `props.x` read in the component.
+  oxlint's `react` plugin (`.oxlintrc.json`) has no equivalent of
+  eslint-plugin-react-hooks' `refs` rule, so there is nothing to suppress;
+  `react/rules-of-hooks` and `react/exhaustive-deps` still report real
+  bail-outs.
+- **A callback held in a dep array must keep its identity.** `useClockSync`
+  holds `writeControl` from `useMidi` in an effect dep array; a fresh identity
+  per render would re-fire that effect constantly and `midi.setExternal` would
+  reset soft takeover every render, so a physical knob could never hold its
+  catch. `useMidi` therefore keeps hand-written `useCallback`s
+  (`useMidi.ts:57`), so the invariant is stated at the definition rather than
+  inferred from build output. The consumer's own status is irrelevant: a
+  compiled consumer still re-fires on a changed identity.
 
 ### Two panel contexts, deliberately
 
@@ -434,11 +422,10 @@ shared context would rebuild every consumer of both on each drag frame.
 ### The modulation bay
 
 The bay lives in React (`useModSlots`), never in the engine. `setModSlots` is
-write-only by design: the engine applies routings by mutating `controls` for the
-duration of one frame and restoring after (`pipeline.ts`, `applyMod`), so a
-modulated value never comes back out of `getControls` — which is what keeps
-presets, scenes, links and the sliders showing the resting look. Two
-consequences worth knowing before touching it:
+write-only by design: the engine applies routings by mutating `controls` for one
+frame and restoring after (`pipeline.ts`, `applyMod`), so a modulated value
+never comes back out of `getControls`, and presets, scenes, links and the
+sliders all keep showing the resting look. Two consequences before touching it:
 
 - **Slot position is identity.** `ModState` keys each wave's phase and its noise
   seed by the slot's index, so a stale routing must be blanked in place rather
@@ -451,20 +438,20 @@ consequences worth knowing before touching it:
 
 ### Morphing is the opposite of modulating
 
-`signal/glide.ts` walks the _resting_ values from where they were to a
-destination over a span of seconds — a preset, a roll or a scene arriving slowly
-instead of cutting — so unlike `applyMod` it does not restore afterwards: a
-morph lands, stays landed, and comes back out of `getControls` because the board
-really is there now. It runs immediately before `applyMod` in `render()`, which
-is what makes an LFO wobble around wherever the morph has reached rather than
-around a resting value the board has left. Three things it has to get right, all
-of which are the reasons it is not a `setInterval` writing controls:
+`signal/glide.ts` walks the _resting_ values to a destination over a span of
+seconds — a preset, a roll or a scene arriving slowly instead of cutting. Unlike
+`applyMod` it does not restore afterwards: a morph lands, stays landed, and
+comes back out of `getControls`, because the board really is there now. It runs
+immediately before `applyMod` in `render()`, so an LFO wobbles around wherever
+the morph has reached rather than around a resting value the board has left.
+Three things it has to get right, and together they are why it is not a
+`setInterval` writing controls:
 
 - **React hears about it a tenth as often as it happens.** `GLIDE_NOTIFY`
-  batches the notify to every sixth frame. Notifying per frame is a full panel
-  render per frame (19ms with every row mounted) — the morph paying for its own
-  stutter — and the landing frame always notifies regardless, because the
-  destination is a look scenes, links and the recipe chips all have to agree on.
+  batches the notify to every sixth frame; notifying per frame is a full panel
+  render per frame (19 ms with every row mounted), the morph paying for its own
+  stutter. The landing frame always notifies regardless, because the destination
+  is a look scenes, links and the recipe chips all have to agree on.
 - **The landing frame assigns the destination** rather than evaluating the path
   at `t=1`: `from + (to - from) * 1` is not bit-identical to `to`, and
   `controlsEqual`/`matchPreset` compare exactly.
@@ -480,13 +467,13 @@ morphs at all.
 ### The stab gate
 
 `signal/stab.ts`, `applyStab`. It replaces the _whole board_ with
-`DEFAULT_CONTROLS` for a few tens of milliseconds several times a second — a
-clean picture with the look poked into it, rather than the look running
-continuously. Like `applyMod` it restores at the end of the frame, so the
-sliders never move; unlike it, there is nothing to point at a target and no
-depth, because it drives everything at once. It runs immediately **after**
-`applyMod` and restores immediately before it, so a clean frame is clean
-including whatever the LFOs were doing to it. Three things it has to get right:
+`DEFAULT_CONTROLS` for a few tens of milliseconds several times a second, so the
+look cuts into a clean picture instead of running continuously. Like `applyMod`
+it restores at the end of the frame, so the sliders never move; unlike it, there
+is no target and no depth, because it drives everything at once. It runs
+immediately **after** `applyMod` and restores immediately before it, so a clean
+frame is clean including whatever the LFOs were doing to it. Three things it has
+to get right:
 
 - **`STOCK_HOLD` (`src/core/controls.ts`) is held back.** The engine cannot read
   the panel's `VIEW_KEYS`, so it carries its own copy of the same five keys, and
@@ -506,13 +493,13 @@ including whatever the LFOs were doing to it. Three things it has to get right:
   must not halve the hit.
 
 The gate lives in the modulation bay (`useModSlots`) rather than in
-`DEFAULT_CONTROLS`, and that is deliberate. It is a clock over the whole board,
-which is the family the routings beside it belong to, and it wants the tempo row
-already at the top of that section. As a control it would need a slider in some
-`GROUP` — the panel gives every control exactly one row and `controls.test.ts`
-holds that — which means a stage on the chain map for a thing that gates every
-stage; it would also have to be exempted from mutate and from its own sweep to
-stock, since a control that cleans itself twice a second stops being one.
+`DEFAULT_CONTROLS`. It is a clock over the whole board, which is the family the
+routings beside it belong to, and it wants the tempo row already at the top of
+that section. As a control it would need a slider in some `GROUP` — the panel
+gives every control exactly one row and `controls.test.ts` holds that — which
+means a stage on the chain map for a thing that gates every stage; it would also
+have to be exempted from mutate and from its own sweep to stock, since a control
+that cleans itself twice a second stops being one.
 
 To check what compiled, build unminified and look for the memo-cache preamble:
 
@@ -523,8 +510,8 @@ grep -n "import_compiler_runtime.c)(" dist/assets/*.js   # one per compiled fn
 
 ## Testing
 
-Two things here are architecture rather than procedure; the harnesses, the traps
-they have hit and the performance protocol are all in
+Two things here are architecture rather than procedure. The harnesses, the traps
+they have hit and the performance protocol are in
 [`DEVELOPMENT.md`](DEVELOPMENT.md).
 
 - **WGSL is validated statically.** `src/core/gpu/shaders.test.ts` prepends the
@@ -542,11 +529,11 @@ they have hit and the performance protocol are all in
 comments explain _why_ — the physical mechanism being modelled — not _what_.
 
 **Comment the shaders as freely as the TypeScript.** A `.wgsl` file arrives in
-the bundle as a string, so its prose used to ship — a quarter of the chunk every
-page loads, 62.5 kB gzipped of it. `vite-plugin-wgsl.ts` now blanks those
-comments on the way in, leaving the line in place so `createShaderModule`'s
-error rows still name the line you would count to in the file. It runs in dev
-too, so what the browser compiles is the same text either way.
+the bundle as a string, so its prose used to ship — 62.5 kB gzipped, a quarter
+of the chunk every page loads. `vite-plugin-wgsl.ts` blanks those comments on
+the way in, leaving the line in place so `createShaderModule`'s error rows still
+name the line you would count to in the file. It runs in dev too, so the browser
+compiles the same text either way.
 
 The one thing that has to survive is the `/* wgsl */` tag on `PRELUDE` — the
 prelude is WGSL living in a `.ts` file, so the tag is how the plugin finds it,

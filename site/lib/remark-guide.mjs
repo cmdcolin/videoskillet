@@ -32,9 +32,9 @@ const rewriteLink = (href, dir) => {
 }
 
 // Astro optimizes markdown images into hashed assets under `_astro/`. The
-// figures have to stay at `/guide/img/<name>`: the landing page loads one of them
-// directly, and `shots.json` joins the live-session links on the bare filename.
-// Handing them over as raw HTML is what keeps them out of that pipeline.
+// figures have to stay at `/guide/img/<name>`, because `shots.json` joins the
+// live-session links on the bare filename. Handing them over as raw HTML is
+// what keeps them out of that pipeline.
 const attr = s => String(s).replaceAll('&', '&amp;').replaceAll('"', '&quot;')
 
 export const remarkGuide = () => (tree, file) => {
