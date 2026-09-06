@@ -364,21 +364,28 @@ const PRESET_RUN = [
 //                A fifth of a microsecond on a 63µs row: the thumb barely
 //                moves and the readout carries the change.
 //   bend amount  bows the whole raster, and the bands with it.
-//   supply ring  at 0.9 the raster wobbles on its own supply, which is motion
-//                a still cannot show and the clip can.
+//   tint         the decoder's colour phase turned 126°, which on a loop
+//                lands again every lap: the bowed bands go to a fine comb of
+//                every hue and hold there (`candidates.finale2.mjs`).
 //
-// Out: `loop gain` and `loop key` take the loop to a flat grey field; `HV sag`
-// tears it to black and white; `v size` — "the underscan slider is not a good
-// one to demo"; `key hue` is inert on this board; `v offset` empties the loop.
-// Fuzzy colour bars is a fixed point no row moves, Wiggity's rows change
-// nothing the eye can find, Camera feedback + static goes black under a
-// deflection row and Chaos is monochrome (`candidates.walk.mjs`,
-// `candidates.use.mjs`).
+// Out, and why: `loop gain` and `loop key` take the loop to a flat grey field;
+// `HV sag` tears it to black and white; `key hue` is inert on this board;
+// `v offset` empties the loop; `supply ring` — recorded as the finale once —
+// "did nothing visually interesting"; the deflection `shape` switch — "the
+// ripple effects look cheesey, dont use them in showcase"; `beam bloom`
+// "did nothing"; `v size` — "the underscan slider is not a good one to demo";
+// `phosphor persistence` — "i dont like phosphor persistence"; `subcarrier
+// detune` moved the picture but the panel marks it inert while burst lock is
+// at 1 ("the subcarrier detune you edited literally said 'inert'"), and with
+// burst lock taken down first it bleaches the frame to white. Fuzzy colour
+// bars is a fixed point no row moves, Wiggity's rows change nothing the eye
+// can find, Camera feedback + static goes black under a deflection row and
+// Chaos is monochrome (`candidates.walk.mjs`, `candidates.use.mjs`).
 //
 // The mixer pill first because the look *is* a mixer loop, and the receiver
 // second because a fault downstream of a loop lands on what the loop made.
-// `Deflection` is behind an accordion header when the receiver opens on
-// another bank, so it is unfolded rather than assumed.
+// The receiver's banks are an accordion, so `Deflection` and then `Decoder`
+// are each unfolded rather than assumed.
 const PATH = [
   { moveTo: { stage: 'mixer' }, secs: 0.4 },
   { press: 0.6, on: 'mixer' },
@@ -395,8 +402,10 @@ const PATH = [
   { moveTo: { slider: 'bend amount' }, secs: 0.35 },
   { drag: { slider: 'bend amount', to: 0.8 }, secs: 1.0 },
   { hold: 1.2 },
-  { moveTo: { slider: 'supply ring' }, secs: 0.35 },
-  { drag: { slider: 'supply ring', to: 0.9 }, secs: 1.0 },
+  { scrollTo: { bank: 'Decoder' }, secs: 0.5 },
+  { unfold: 'Decoder', secs: 0.8 },
+  { moveTo: { slider: 'tint' }, secs: 0.35 },
+  { drag: { slider: 'tint', to: 0.85 }, secs: 1.0 },
   { away: 0.4 },
   { hold: 2.6 },
 ]
@@ -437,8 +446,8 @@ export const slides = [
     file: 'path',
     name: 'Signal path',
     caption:
-      'The map is the board. Every box and pill on it is a stage of the chain, and pressing one opens its rows in the panel. Ridiculous rainbow is a composite loop, so the mixer pill comes first, and its delay row is the whole mechanism: the colour subcarrier rides the loop, so delay is hue rotation. At a fifth of a microsecond the frame is a fine rainbow comb; at seven tenths it is broad bands of green and orange. Then the receiver, downstream of all that: bend amount bows the raster and the bands with it, and supply ring lets the deflection wobble on its own power supply. Every row is a mechanism, and each one lands on the picture the last one made.',
-    alt: 'The window on Ridiculous rainbow with the mixer pill pressed on the signal path map and its loop delay row dragged twice — the frame turning into a fine rainbow comb on white, then into broad bands of green and orange — then the receiver box pressed and its deflection bank unfolded, bend amount bowing the raster and supply ring setting it wobbling',
+      'The map is the board. Every box and pill on it is a stage of the chain, and pressing one opens its rows in the panel. Ridiculous rainbow is a composite loop, so the mixer pill comes first, and its delay row is the whole mechanism: the colour subcarrier rides the loop, so delay is hue rotation. At a fifth of a microsecond the frame is a fine rainbow comb; at seven tenths it is broad bands of green and orange. Then the receiver, downstream of all that: bend amount, in the deflection bank, bows the raster and the bands with it; tint, in the decoder, turns the colour phase, and on a loop that lands again every lap, so the bowed bands go to a fine comb of every hue. Every row is a mechanism, and each one lands on the picture the last one made.',
+    alt: 'The window on Ridiculous rainbow with the mixer pill pressed on the signal path map and its loop delay row dragged twice — the frame turning into a fine rainbow comb on white, then into broad bands of green and orange — then the receiver box pressed, its deflection bank unfolded and bend amount bowing the raster, and its decoder bank unfolded and tint turning the bowed bands into a fine comb of every hue',
     look: 'Ridiculous rainbow',
     stillAt: 0.95,
     warm: 60,
