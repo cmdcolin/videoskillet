@@ -95,6 +95,31 @@ const UNFURL =
       </div>
     </section>
 
+    <!-- Where the controls are, which is the question a stranger arrives at
+         after the demos: the map at the head of the sidebar, boxed in the
+         window and enlarged beside it. The figure is the README's, served
+         from docs/img by the `figures` integration in astro.config.mjs. -->
+    <section>
+      <div class="wrap wide">
+        <h2 class="head">How do I use this thing?</h2>
+        <p class="sub">Use the signal path!</p>
+        <figure>
+          <img
+            src="/guide/img/signal-path-callout.jpg"
+            alt="The app window with the signal path map boxed in red at the head of the sidebar and enlarged over the picture: SOURCE A and SOURCE B into MIX, then CHANNEL, RECEIVER and SCREEN, with camera and mixer returns arching back over the trunk, SOUND and VIEW hanging below, and MODULATION and DECK on a row of their own with no wire reaching them"
+            width="1800"
+            height="1227"
+            loading="lazy"
+            decoding="async"
+          />
+          <figcaption>
+            It sits at the top of the sidebar. Load videos into SOURCE A and
+            SOURCE B; click any other stage to open its controls.
+          </figcaption>
+        </figure>
+      </div>
+    </section>
+
     <Footer />
     <script is:inline set:html={script} />
   </body>

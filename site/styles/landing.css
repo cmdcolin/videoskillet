@@ -399,10 +399,17 @@ a {
 section {
   padding: 3.5rem 0;
 }
+.head {
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: var(--fg);
+  margin: 0 0 0.5rem;
+}
 .sub {
   color: var(--fg4);
   font-size: 0.95rem;
   margin: 0 0 1.1rem;
+  max-width: var(--measure);
 }
 figure {
   margin: 0;
@@ -418,6 +425,12 @@ figure img {
   display: block;
   border: 1px solid var(--border);
   border-radius: 0.6rem;
+}
+figcaption {
+  color: var(--fg4);
+  font-size: 0.95rem;
+  max-width: var(--measure);
+  margin: 0.7rem 0 0;
 }
 code {
   font-family: var(--mono);
