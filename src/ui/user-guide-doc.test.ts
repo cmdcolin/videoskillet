@@ -99,13 +99,17 @@ test('the guide offers the devices source A actually ships', () => {
   expect(doc).toContain('a webcam')
 })
 
-// Both links under "The link is the look" are quoted rather than generated, and
-// a quoted link is a claim that rots. The packed one is bytes nobody can read
-// by eye, so a wire order edited without it would go on looking right on the
-// page while opening on a different picture.
+// Both links under "The link carries the look" are quoted rather than
+// generated, and a quoted link is a claim that rots. The packed one is bytes
+// nobody can read by eye, so a wire order edited without it would go on looking
+// right on the page while opening on a different picture.
+//
+// Spelled with the `#` the address bar actually writes (useUrlState's `linkFor`).
+// Both sigils still parse — `pageSearch()` reads whichever is there — so the
+// assertions strip the leading character rather than requiring one.
 test('the guide quotes two links that open the look it says they do', () => {
   const worn = presetControls(PRESETS.find(p => p.name === 'wornTape')!.patch)
-  const quoted = doc.slice(doc.indexOf('?p=')).split(/\s|`/)[0]
+  const quoted = doc.slice(doc.indexOf('#p=')).split(/\s|`/)[0]
   const packed = new URLSearchParams(quoted.slice(1)).get('p')
 
   expect(unpackControls(packed ?? '')).toEqual(
@@ -116,9 +120,9 @@ test('the guide quotes two links that open the look it says they do', () => {
       ]),
     ),
   )
-  const named = '?set=noiseIre:9,hHold:0.2,chromaGain:1.79'
+  const named = '#set=noiseIre:9,hHold:0.2,chromaGain:1.79'
   expect(doc).toContain(named)
-  expect(parseSessionParams(named).controls).toEqual({
+  expect(parseSessionParams(named.slice(1)).controls).toEqual({
     noiseIre: 9,
     hHold: 0.2,
     chromaGain: 1.79,

@@ -10,8 +10,7 @@ Click a preset to jump to it. Drag it sideways to blend it part-way in.
 
 - **this look** opens a menu listing every control you're off stock on, as
   sliders. Drag to edit, **↺** to revert one, and `ctrl+z` puts back a value the
-  ↺ took. It is a menu rather than a section of the panel so the panel never
-  grows under your pointer as you edit.
+  ↺ took. It is a menu so the panel never grows under your pointer as you edit.
 - **reset** puts everything back to stock (controls, modulation bay, stab gate)
   and `ctrl+z` undoes it. **clean** does the same thing. Hold `c` to preview
   clean without changing anything.
@@ -33,16 +32,15 @@ Click a preset to jump to it. Drag it sideways to blend it part-way in.
 - **drift** is the random nudge running on its own. Press once (or `d`) and the
   look wanders: a gentle nudge every 15 seconds, travelling most of the way
   there each time, so the picture keeps moving and never cuts. It stays around
-  the look you set drifting and doesn't run off, however long you leave it.
-  Press again to stop where it has got to. `ctrl+z` then restores the look you
-  started it on, because none of the legs in between gets stored in the undo
-  stack. Each stage heading has the same switch for its own controls alone, so
-  you can set the tape path wandering and go on dialing the sync card by hand.
-  This one is that switch for everything. Pressing one takes over from the
-  other, since a control only ever wanders around one look at a time. For a
-  wander that's part of a piece, use the strip's shake row instead: a rundown
-  holds in bars, is seeded, and is saved, where a drift is a switch you flip and
-  forget.
+  the look you set it drifting on, however long you leave it. Press again to
+  stop where it got to; `ctrl+z` then restores the look you started it on,
+  because none of the legs in between is stored. Each stage heading has the same
+  switch for its own controls, so you can set the tape path wandering and go on
+  dialing the sync card by hand — this button is that switch for everything, and
+  pressing one takes over from the other, since a control only wanders around
+  one look at a time. For a wander that is part of a piece, use the strip's
+  shake row: it holds in bars, is seeded and is saved, where a drift is a switch
+  you flip and forget.
 - **morph** sets how long a new look takes to arrive: cut, 1s, 4s, 8s or 30s.
   Rolls chain, so rolling every few seconds wanders continuously.
 - **undo** (`ctrl+z`) steps back through all of it.
@@ -54,9 +52,9 @@ sound on SOUND. Each picker is a menu rather than a dropdown, so picking the
 entry you are already on opens it again. Picking **File…** a second time is how
 you swap one video for another.
 
-- **A** takes bars, sweep, snow, the bundled photo, a file, a shared screen, or
-  a webcam. An RCA capture dongle is how real gear gets in. B takes the same
-  list, and adds **Off**.
+- **A** takes bars, sweep, snow, the bundled photo, a file, a shared screen or a
+  webcam — which is how an RCA capture dongle gets real gear in. B takes the
+  same list plus **Off**.
 - **Clips…** is a shelf of files you've opened before, folders included.
   **Public archives** rolls one from Wikimedia Commons or archive.org;
   **Browse…** searches both in a thumbnail grid.
@@ -75,11 +73,11 @@ you swap one video for another.
   hertz off they lean and creep, and at 3.58 MHz it lands on the subcarrier and
   comes back as flat colour.
 - **Teletype…** prints what you type onto a dot-matrix card; **draw** paints on
-  the same page. Try the dither shades, since dot crawl and chroma bleed respond
-  strongly to dither. Three switches keep the card from sitting still, which
-  matters because a still card gives still artifacts: **crawl** rolls it up the
-  frame, **boil** redraws it by an unsteady hand, and **garble** receives it
-  over a wire bad enough to keep misspelling it.
+  the same page. Try the dither shades — dot crawl and chroma bleed respond
+  strongly to dither. Three switches keep the card moving, which matters because
+  a still card gives still artifacts: **crawl** rolls it up the frame, **boil**
+  redraws it by an unsteady hand, and **garble** receives it over a wire bad
+  enough to keep misspelling it.
 - **B** is a second source, deliberately not genlocked, so it beats and tears
   against A. Its controls are in **Mix**.
 - **♪** is audio in, and does nothing until you turn up a knob in **Sound**. It
@@ -98,9 +96,9 @@ empty.
 
 A deck holding a clip gets **❚❚** beside it: that stops the deck's tape where it
 stands, and **▶** rolls it on again. The bar still seeks while it is held, and
-the cue and the loop survive. The **A pause** slider down in Source A is a
-different thing entirely. That one freezes the picture and lets the tape run on
-underneath, with servo damage and a mistrack stripe.
+the cue and the loop survive. The **A pause** slider down in Source A does
+something else — it freezes the picture and lets the tape run on underneath,
+with servo damage and a mistrack stripe.
 
 A reload otherwise puts each deck back on whatever it was last holding. Switch
 that off in **☰ › advanced settings › on reload** for a machine other people
@@ -143,13 +141,13 @@ The look is emergent, so knowing the cause is what tells you how two controls
 combine.
 
 The camera loop's **zoom**, **rotate**, **shift** and **gain** carry a second
-button beside the **?**: **minor** drops a card under the row holding the same
-knob with one step of it spread across the whole track, so a drag there moves in
-hundredths of what the row above can step to. That is the resolution the loop's
-geometry is actually read at. A thousandth of zoom is the difference between a
-spiral that unwinds over a second and one that unwinds over ten, and the card
-shows the value to that precision. The row keeps showing its own step, and stays
-the thing a preset, a link or a MIDI knob writes.
+button beside the **?**. **minor** drops a card under the row with one step of
+the same knob spread across the whole track, so a drag there moves in hundredths
+of what the row above can reach — which is the resolution the loop's geometry is
+actually read at. A thousandth of zoom is the difference between a spiral that
+unwinds over a second and one that unwinds over ten, and the card shows the
+value to that precision. The row keeps its own step and stays the thing a
+preset, a link or a MIDI knob writes.
 
 The loops are the exception to working left to right. They take the picture off
 the end and put it back at the front, compounding everything else. Here is a
@@ -163,17 +161,17 @@ underneath:
 
 ## Finding a control
 
-The filter box narrows the panel. `/` opens it and puts the caret in it, and
+The filter box narrows the panel. `/` opens it with the caret in it, and
 `ctrl+k` opens a palette over presets, controls and actions at once. Both search
 the help text, so you can hunt an artifact without knowing which knob makes it.
-The palette stands in the panel for as long as it is up, so the picture beside
-it stays clear — which is where `←→` on a control row is landing.
+The palette stands in the panel while it is up, so the picture beside it stays
+clear.
 
 The count on the modulation strip (**2 mod**) is a filter as well as a readout.
 Press it and the panel narrows to the controls the bay is driving, which nothing
 else marks, since a routing leaves the resting value alone. It stays pressed
-until you press it again, it shows in the box as a **mod only** token, and it
-narrows whatever text is already up rather than replacing it.
+until you press it again, shows in the box as a **mod only** token, and narrows
+whatever text is already up rather than replacing it.
 
 Either filter fades the map boxes it did not match rather than hiding them, so
 the chain still reads as a chain while the panel is narrow. A faded box is still
@@ -189,16 +187,14 @@ level or its hits, or a one-shot envelope you trigger by hand or from a MIDI
 note) and dial the rate and depth. Depth is a fraction of the control's range,
 and the slider stays put as the centre the motion happens around, which is why a
 preset or a link still holds the look. How deep the first press goes is
-particular to each control rather than one number for the whole app: half a
-percent of the range on the vertical roll rate, a third of it on horizontal
-hold. The rate's **♩ lock to beat** button in the editor ties it to the tempo
-instead of Hz.
+particular to each control: half a percent of the range on the vertical roll
+rate, a third of it on horizontal hold. The rate's **♩ lock to beat** button
+ties it to the tempo instead of Hz.
 
 Two kinds of row have no button. The View controls have none, since a wobbling
-magnifier or a stuttering clock reads as the app breaking rather than as the
-signal doing something. Neither does a strobe or a paperclip resting at zero,
-because from there the only thing a wobble can do is start the full-field flash.
-Dial either up and the button is back.
+magnifier or a stuttering clock reads as the app breaking. Neither does a strobe
+or a paperclip resting at zero, because from there the only thing a wobble can
+do is start the full-field flash. Dial either up and the button is back.
 
 A patched row then carries two buttons in place of **+ mod**: a chip naming the
 routing (**sine 0.08Hz**) that opens and closes its editor, and a **❚❚** that
@@ -220,12 +216,11 @@ flip, so a stab leaves a trail.
 
 Clean is only the gate's default far end. **⧉ hold this look** parks the current
 board at that end, and the gate cuts between it and whatever you dial next: two
-looks, hard cut on the beat, with no fade. The sliders belong to the live look.
-The held one is a copy nothing moves. While a look is held the length row
-becomes a **share**, so a tempo change keeps the split rather than the
-milliseconds. 50 is even, and pushing it either way makes one look the resting
-state and the other the interruption. **× drop** returns the gate to stabbing
-clean.
+looks, hard cut on the beat, no fade. The sliders belong to the live look; the
+held one is a copy nothing moves. While a look is held the length row becomes a
+**share**, so a tempo change keeps the split rather than the milliseconds. 50 is
+even, and pushing it either way makes one look the resting state and the other
+the interruption. **× drop** returns the gate to stabbing clean.
 
 Two looks never crossfade. A moving filter control rebuilds the filter bank, so
 a crossfade would rebuild it every frame where a cut rebuilds it twice a cycle.
@@ -249,10 +244,10 @@ arriving its own way.
 
 ![Two cards from a rundown: row 1 marked with the clip glyph, named Tama station master, its chips reading whole clip, 1s and the tracking transition; row 2 marked with the shake glyph, named shake · normal, its chips reading ≈4 bars, 1s and no transition, both cards ending in a rename, duplicate and remove button](img/strip.png)
 
-A row is the session the address bar carries (the look, the modulation bay, the
-source and its cue) plus how long it holds and how it arrives. Clicking a card
-fires that row on its own, so one list serves a piece that plays itself and a
-bank of scenes you play by hand.
+A row is the session the address bar carries — the look, the modulation bay, the
+source and its cue — plus how long it holds and how it arrives. Clicking a card
+fires that row on its own, so one list serves both a piece that plays itself and
+a bank of scenes you play by hand.
 
 Three kinds, marked by the glyph on the card:
 
@@ -301,8 +296,8 @@ records a clip.
 
 ### The link carries the look
 
-The address bar carries the whole look at all times (every control off stock,
-what is moving in the bay, the source and its cue), so copying it is the share
+The address bar carries the whole look at all times — every control off stock,
+what is moving in the bay, the source and its cue — so copying it is the share
 button and reloading keeps what you had.
 
 The source travels as far as a string can carry it. A pattern, a text card and a
@@ -315,42 +310,43 @@ opens on whatever else it names.
 It comes out short. Here is **worn tape**, whole:
 
 ```
-https://videoskillet.com/app/?p=mD.FbQBJbABEXAAmAIN8AEAPAKQAwDoAgCQAwBkAEgBwAIAgAEGwAIA6AIBCA&mod=
+https://videoskillet.com/app/#p=mD.FbQBJbABEXAAmAIN8AEAPAKQAwDoAgCQAwBkAEgBwAIAgAEGwAIA6AIBCA&mod=
 ```
 
 That is the look written as bytes, behind a two-character checksum. A link that
 arrives truncated or with a character changed is refused with a notice rather
-than opened on a picture nobody made. `?set=` says the same thing by name, and
+than opened on a picture nobody made. `#set=` says the same thing by name, and
 the app both reads and writes it:
 
 ```
-https://videoskillet.com/app/?set=noiseIre:9,hHold:0.2,chromaGain:1.79
+https://videoskillet.com/app/#set=noiseIre:9,hHold:0.2,chromaGain:1.79
 ```
 
-Three times the characters for the same look, which is why the bar carries the
-short one. That is the difference between a link that survives a chat window and
-one that arrives in three pieces. Written out, worn tape runs to 248.
+Written out, worn tape runs to 248 characters — three times the packed form,
+which is the difference between a link that survives a chat window and one that
+arrives in three pieces, and why the bar carries the short one.
 
 What the long form buys is a look you can program by hand: a control name from
 [EFFECTS.md](EFFECTS.md), a colon, a number, commas between. Anything left out
 is at stock, anything out of range is pulled back onto the panel, and a name the
-app no longer has is dropped. A bar already carrying `?set=` keeps carrying it,
+app no longer has is dropped. A bar already carrying `#set=` keeps carrying it,
 so the look stays readable while you are working that way rather than turning to
-bytes under the cursor. Type a bare `?set=` to switch a tab over.
+bytes under the cursor. Type a bare `#set=` to switch a tab over. Either sigil
+is read, so every one of these also opens spelled `?`.
 
 ### Starting a loop the reader cannot see
 
 A look travels; a running feedback loop does not. What the loops have built is
-in video memory, and the reader's page comes up with it empty — so a board that
-lives on what it is amplifying opens black and stays there, which reads as a
-broken link rather than as a set warming up. **start it with a burst of snow**
-in the share box is the fix: the link opens on a second and a half of snow, the
-loops take hold of it, and the burst heals off completely. What is left is the
-look the link says, running on what it started.
+in video memory, and the reader's page comes up with it empty, so a board that
+lives on what it is amplifying opens black and stays there — which reads as a
+broken link. **start it with a burst of snow** in the share box is the fix: the
+link opens on a second and a half of snow, the loops take hold of it, and the
+burst heals off completely, leaving the look the link says running on what it
+started.
 
 It is the same move as waving a hand in front of a camera pointed at its own
-monitor, and snow rather than a flash for the same reason a hand works better
-than a lamp: a loop amplifies detail, and a flat field has none.
+monitor, and it is snow rather than a flash for the same reason a hand works
+better than a lamp: a loop amplifies detail, and a flat field has none.
 
 ## Looking closer
 
@@ -380,15 +376,15 @@ imports cleanly. It takes the frames off the screen and steps the engine on a
 clock the render owns, so it runs as fast as the GPU allows and the timing in
 the file is the simulation's rather than the tab's. It renders the recorded take
 if there is one, else the length of the track, else the whole rundown at the
-lengths its rows hold for, else ten seconds. The button says which. Two renders
+lengths its rows hold for, else ten seconds; the button says which. Two renders
 of one take are the same file, because a take starts from a fresh signal state
 using the tray's seed.
 
-**● rec** records what the hands do rather than what the picture does (every
-slider, preset, controller knob and morph, against the frame it happened on) and
-**⎙** replays that into the render, so a run performed at whatever rate the tab
-managed comes back at 60. It works over a bare clip with no rundown at all. The
-**⏺** readout beside it is the take's length. Clicking it discards the take.
+**● rec** records the hands rather than the picture — every slider, preset,
+controller knob and morph, against the frame it happened on — and **⎙** replays
+that into the render, so a run performed at whatever rate the tab managed comes
+back at 60. It works over a bare clip with no rundown at all. The **⏺** readout
+beside it is the take's length; clicking it discards the take.
 
 The ☰ menu has stills, recording, fullscreen, and **pop out controls**, which
 moves the panel to a second window and gives the picture the whole screen. Point
