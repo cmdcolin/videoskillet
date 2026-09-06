@@ -178,7 +178,7 @@ video cables together and posting tumblr gifs.
   https://videoskillet.com/app/?p=8A.GIgECaABABwAtCUpNCOQAwCsHACACgKUJQK0ARLEAQGcBwAEAIQCAJQDAEwCbACkAgCkAVKA2QE&mod=
 
 - Messed up clouds man
-  https://videoskillet.com/app/?mod=vFreqHz:smooth:0.08:0.0049,fbGain:smooth:0.24:0.06&src=vhs+static&set=chromaGain:1.62,hvSagUs:2.1,hvRing:0.61,abl:0.24,lumaMHz:3.2,lumaPeak:2.4,noiseIre:2.5,agc:0.18,colorUnderMix:1,ycDelayNs:420,fmOverdev:0.72,fmStreakUs:0.45,fbMix:0.9,fbShiftX:0.039,fbGain:1.086,fbFocus:0.5,fbVign:0.35,fbBlack:0.04,fbKnee:1,crtBloom:0.23,phosphor:0.065,crtZoomX:0.7143,crtZoomY:0.314
+  https://videoskillet.com/app/?p=Y5.GIgFEVQA9AEAYA6AAhHAAQBkDEgEkAMIGAKgAgC0AQToAgKcAQH4IQEoAIwBACAAkAMFXGioFAe5vgMAocQB&mod=vFreqHz:smooth:0.08:0.0049,fbGain:smooth:0.24:0.06&src=vhs+static
 
 <!-- /generated:demos -->
 
