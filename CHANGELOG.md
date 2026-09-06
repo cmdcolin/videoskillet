@@ -2,6 +2,22 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [0.40.0](https://github.com/cmdcolin/videoskillet/compare/v0.39.2...v0.40.0) - 2026-09-06
+
+### Features
+- *(ui)* [`cd0d614`](https://github.com/cmdcolin/videoskillet/commit/cd0d6147a993eae0fa93f126b18d43db6b6090d6) the presets slide opens the catalog and digs through it, and the reel's clips go to the bucket
+- *(ui)* [`79c759e`](https://github.com/cmdcolin/videoskillet/commit/79c759e5bd4cff5cd150b9a39fa9fb6bae276fb0) a Signal path slide that opens stages off the map and drags their rows
+- *(ui)* [`2a5fde5`](https://github.com/cmdcolin/videoskillet/commit/2a5fde5855cc4ed922735c07e16c97509a2cc155) the Signal path slide ends on tint, screened in real time
+- *(ui)* [`249d2bf`](https://github.com/cmdcolin/videoskillet/commit/249d2bfe2be859bdd61bb44909fbb1db9f173325) the reel's recordings — three slides, both frames, clips on the bucket
+
+### Fixes
+- *(gpu)* [`32483be`](https://github.com/cmdcolin/videoskillet/commit/32483be0a3a0b903b03a2ed4ba4c024072a3fbe3) band-limit the beam profile so scanlines stop beating into bands
+- *(docs)* [`2b48c10`](https://github.com/cmdcolin/videoskillet/commit/2b48c10b65d0fd7c0cfb4952d1c6477f98227cf7) read a guide page at /guide/faq/, not /guide/faq.html
+- *(ui)* [`c2c956f`](https://github.com/cmdcolin/videoskillet/commit/c2c956ff7ad663d0e6a980d81c7929c88a8b430f) the clouds demo is packed and recorded
+
+### Other Changes
+- [`64fa097`](https://github.com/cmdcolin/videoskillet/commit/64fa09753cbc68a93d973095a508224aaafd8867) Demo
+
 ## [0.39.2](https://github.com/cmdcolin/videoskillet/compare/v0.39.1...v0.39.2) - 2026-09-05
 
 ### Features
