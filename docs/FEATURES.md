@@ -4,12 +4,10 @@ Every control breaks a piece of hardware rather than drawing an artifact. Dot
 crawl, rainbows, tearing and hue drift follow from that, which is why two
 controls compound instead of stacking.
 
-This is a tour of what each stage is and the one thing worth knowing before you
-turn anything. [Effects](EFFECTS.md) is the full list of controls, generated
-from the app's own table.
-
-The headings below are the boxes on the app's chain map, in the same order and
-under the same names.
+This is a tour of each stage and the one thing worth knowing before you turn
+anything. [Effects](EFFECTS.md) is the full list of controls, generated from the
+app's own table. The headings are the boxes on the app's chain map, in the same
+order and under the same names.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="img/pipeline-simple-dark.svg">
@@ -29,16 +27,16 @@ under the same names.
 - **Scrambling, Macrovision AGC pulses and colorstripe** are the interesting
   ones. They turn the receiver's own AGC and burst circuits against it.
 - **A file that was already a tape**: a capture group models the deck Source A
-  was digitised from, so damage downstream lands on a picture that was a tape to
-  begin with. Off by default, and free while it is.
+  was digitised from, so damage downstream lands on a picture that was already a
+  tape. Off by default, and free while it is.
 - **Each input has its own deck and cable** ahead of the mixer. Knock out one
   input's sync and the receiver locks to the other, and the geometry snaps
   between two pictures.
 
 ## Feedback loops
 
-Two, and they differ in what goes round. Each is described in the app's own
-words, so the chain map and this page cannot disagree:
+Two, and they differ in what goes round. Each is in the app's own words, so the
+chain map and this page cannot disagree:
 
 <!-- generated:loops — from LOOP_STAGES in src/ui/controls.ts, via scripts/docgen.mjs -->
 
@@ -65,21 +63,21 @@ things optics cannot.
 - **A character generator** keys caption text into the picture. It puts out a
   fill and a key on two wires, so trimming the timing between them puts program
   through one side of every stem and black down the other. It is the open
-  caption to line 21's closed one: the same sentence, one aged by everything
-  downstream, one sent as data and misspelled instead.
+  caption to line 21's closed one: the same sentence, aged by everything
+  downstream rather than sent as data and misspelled.
 
 ## Channel
 
 - **Everything between the recorder and the set**: bandwidth, nonlinearity,
-  noise, the tuner, colour-under, the tape and heads. The whole stage runs up to
-  four times, one per dub generation.
+  noise, the tuner, colour-under, the tape and heads. The stage runs up to four
+  times, one per dub generation.
 - **Tape noise is coloured**: an FM discriminator's noise rises toward the top
   of the band, which is the chroma passband, so it arrives as crawling coloured
   speckle rather than grey grain.
 - **Tracking is a servo**, a second-order loop with a dead band. With servo hunt
-  up the deck sweeps, overshoots, rings, settles and drifts back off as the tape
-  stretches. A scene change, coming out of shuttle or a thump from the music
-  knocks it off the peak, and the top of the frame flags each time.
+  up the deck sweeps, overshoots, rings, settles and drifts off again as the
+  tape stretches. A scene change, coming out of shuttle or a thump from the
+  music knocks it off the peak, and the top of the frame flags each time.
 
 ## Enhancer
 
@@ -94,9 +92,9 @@ things optics cannot.
 
 - **A television and the ways one can be misadjusted.** Sync faults move the
   picture. Decoding faults move its colour.
-- **Deflection bend happens after decoding**, so it warps geometry but never
-  touches hue. Whether a wobble takes the colour with it is the most useful
-  distinction to keep in mind while using the app.
+- **Deflection bend happens after decoding**, so it warps geometry and never
+  touches hue. Whether a wobble takes the colour with it is the distinction most
+  worth keeping in mind.
 - **A caption decoder** reads line 21 as data, so noise, a narrow channel and
   generation loss arrive as dropped characters, wrong ones, and the solid block
   a real decoder drew where parity caught an error. Captions repaint on the
@@ -113,21 +111,20 @@ things optics cannot.
 
 - **Audio drives the faults above** at one sample per scan line: bass into
   vertical hold and HV sag, level into horizontal hold, the waveform into
-  deflection or into the demodulator's reference.
+  deflection or the demodulator's reference.
 - **The demodulator route turns the tint 15,734 times a second.** The reference
   lives in the receiver, so the colour bands stay on the glass while a rolling
   picture slides through them.
 - **Sound can be the mic, a file, the clip's own track, or a share** of the tab
-  or app it comes out of. The mic puts the room, the speakers and the microphone
-  between the track and the envelope detector. A share delivers the track
-  itself.
+  or app it comes out of. The mic puts the room and the speakers between the
+  track and the envelope detector; a share delivers the track itself.
 
 ## Intercarrier buzz
 
 - **Sound buzz is the only effect you listen to.** The sound detector recovers
   the 4.5 MHz beat between picture and sound carriers, and a limiter that cannot
   keep video crosstalk off it passes the picture through as audio: the vertical
-  interval as a 60 Hz buzz, line structure as a whine, snow as hiss.
+  interval buzzes at 60 Hz, line structure whines, snow hisses.
 - **It taps the real composite**, so bright scenes buzz louder, hum bars beat
   against the field rate, and a head switch clicks on the line it damages. Fine
   tuning frees the carrier and makes the weave and the buzz worse together,
@@ -141,14 +138,14 @@ things optics cannot.
 - **Modulation**: any control can run on an LFO, random walk, noise,
   sample-and-hold, a Lorenz attractor, audio, or a one-shot envelope. Depth is a
   fraction of the control's range, so the slider stays the centre and a preset
-  still holds the look. Rates lock to a tapped BPM or MIDI clock.
+  still holds. Rates lock to a tapped BPM or MIDI clock.
 - **MIDI**: any controller sending CC, with learn, auto-map and soft takeover.
   See [Using a MIDI controller](MIDI.md).
 - **Presets**: also faders you can drag partway in. Morph, random nudge, full
   undo, and saved profiles behind a sign-in.
 - **Drift**: one switch and the look wanders on its own, a gentle nudge every
-  fifteen seconds, staying around the look you set it drifting on. Every stage
-  has the same switch for its own controls.
+  fifteen seconds, staying near where you set it going. Every stage has the same
+  switch for its own controls.
 - **Rundown**: the strip tray is a list of looks that plays itself. A row holds
   for a count of bars, arrives as a cut, a morph or a fault, and can roll a
   source out of a pool or shake the look. Play it from the top, or fire rows by

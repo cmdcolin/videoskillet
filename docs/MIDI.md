@@ -8,12 +8,12 @@ Short version: **advanced settings** → **enable MIDI**, then **auto-map** or
 
 ## What you need
 
-Any USB controller that sends **CC messages** (MIDI's Control Change messages,
-the standard way a knob or slider reports its position): a MIDI Fighter Twister,
-a nanoKONTROL, a Launch Control, the knob row on a keyboard. Plug it in before
-or after loading the page.
+Any USB controller that sends **CC messages** (Control Change, the standard way
+a knob reports its position): a MIDI Fighter Twister, a nanoKONTROL, a Launch
+Control, the knob row on a keyboard. Plug it in before or after loading the
+page.
 
-You also need a browser with **Web MIDI**, which means Chrome or Edge.
+You also need **Web MIDI**, which means Chrome or Edge.
 
 ## Turning it on
 
@@ -21,19 +21,19 @@ You also need a browser with **Web MIDI**, which means Chrome or Edge.
   settings").
 - Under **MIDI control**, click **enable MIDI** and allow the browser prompt.
 
-A **MIDI** section appears in the control panel. You only do this once — the app
+A **MIDI** section appears in the control panel. You do this once; the app
 reconnects on later visits.
 
-If you get **Web MIDI not supported**, try Chrome or Edge. If you get **access
-denied**, click **retry** or clear the site permission and reload.
+**Web MIDI not supported** means try Chrome or Edge. **Access denied** means
+click **retry**, or clear the site permission and reload.
 
 ## Binding one knob
 
 Each slider now has a **⚟** button. Click it and wiggle the knob. The button
-then reads **CC7** and the pairing shows in the MIDI panel. `Esc` cancels.
+reads **CC7** and the pairing shows in the MIDI panel. `Esc` cancels.
 
-- **×** in the MIDI panel unbinds. Clicking **CC7** re-learns instead, so you
-  can move a control to another knob without unbinding first.
+- **×** in the MIDI panel unbinds. Clicking **CC7** re-learns, so a control can
+  move to another knob without unbinding first.
 - One knob drives one thing. Bind a knob that was already driving something and
   it quietly moves.
 
@@ -42,37 +42,35 @@ then reads **CC7** and the pairing shows in the MIDI panel. `Esc` cancels.
 - **The motion amount**: the strip above the filter box scales every modulation
   routing at once, and carries the same **⚟**. One hand takes the board from
   still to swimming.
-- **A preset's weight**: every preset is a fader, so a preset on a knob is a
-  macro that moves everything that preset touches. Use the picker at the bottom
-  of the MIDI panel: choose the preset, click **⚟ preset mix**, move a knob.
-  Weights layer, so several presets on several knobs is a small desk of looks.
+- **A preset's weight**: every preset is a fader, so a preset on a knob moves
+  everything that preset touches. Use the picker at the bottom of the MIDI
+  panel: choose the preset, click **⚟ preset mix**, move a knob. Weights layer,
+  so several presets on several knobs is a small desk of looks.
 
-Neither does soft takeover — they grab on the first message, because neither has
-a track to draw a waiting mark on. A weight also resets once anything else moves
-the board: the next turn starts a fresh mix from what is on screen.
+Neither does soft takeover — they grab on the first message, having no track to
+draw a waiting mark on. A weight also resets once anything else moves the board:
+the next turn starts a fresh mix from what is on screen.
 
 ## Pads, for the things you hit rather than set
 
-A knob holds a value. Triggering the modulation bay's one-shot envelopes,
-marking a cue and jumping back to one are gestures instead, so they go on **pads
-or keys**, bound at the bottom of the MIDI panel: pick the gesture, click **⚟
-pad**, hit the pad.
+A knob holds a value. Firing the modulation bay's one-shot envelopes, marking a
+cue and jumping back to one are gestures, so they go on **pads or keys**, bound
+at the bottom of the MIDI panel: pick the gesture, click **⚟ pad**, hit the pad.
 
 What can go on one:
 
 - **⚡ fire all**, and **⚡ fire slot 1–8**: the buttons in the MODULATION box.
   Velocity carries, so a soft hit is a small envelope.
-- **cue source A/B** and **back to the cue · A/B**: the same two actions `i` and
-  `o` do on the keyboard. The jump back is the one most worth a pad, since it
-  works like a drum hit.
+- **cue source A/B** and **back to the cue · A/B**: what `i` and `o` do on the
+  keyboard. The jump back is the one most worth a pad — it works like a drum
+  hit.
 
-**With nothing bound, any note fires the whole bay.** That is what the app has
-always done with a note, and it is the right answer for a keyboard you haven't
-mapped. Bind one pad and that stops: from then on notes fire only what is listed
-in the panel, and everything else is ignored.
+**With nothing bound, any note fires the whole bay**, which is the right answer
+for a keyboard you haven't mapped. Bind one pad and that stops: notes then fire
+only what the panel lists.
 
-Nothing here does soft takeover, since there is no value to catch up to. `Esc`
-cancels an arm, the same as for a knob.
+Pads do no soft takeover either, since there is no value to catch up to. `Esc`
+cancels an arm.
 
 ## Mapping the whole device
 
@@ -89,7 +87,7 @@ about notes. **clear all bindings** takes both.
 
 Fine tweaks rank after the look-makers, and the magnifier ranks last. Bindings
 are stored per control, so re-ranking never moves one you already have. In a
-sweep, a knob bumped by accident is consumed and there is no going back a step.
+sweep, a knob bumped by accident is consumed with no going back a step.
 
 There are more controls than most controllers have knobs, so some stay
 mouse-only. The panel says how many are left over.
@@ -98,8 +96,8 @@ mouse-only. The panel says how many are left over.
 
 That is **soft takeover**. A physical knob at 3 o'clock doesn't know the value
 is at 10 o'clock, so it stays inert until you sweep it **through** the current
-value. Then it catches and tracks normally. An **amber mark** on the track shows
-where the knob is waiting.
+value. Then it catches and tracks. An **amber mark** on the track shows where
+the knob is waiting.
 
 Knobs let go and need re-catching whenever a value is set from elsewhere:
 loading a preset, recalling a save, undoing, randomising. Expect a row of amber
@@ -121,16 +119,16 @@ cycling 1/1 → 1/16 → off:
 - **any modulation slot's rate**. Tops out at 10 Hz, which 1/16 reaches at 150
   BPM.
 
-While locked the rate ignores its own value, and the Hz you dialled in comes
-back when you unlock. Asking for a lock with no tempo at all sets one at 120
-BPM. The app only listens for clock; it never sends it.
+A locked rate ignores its own value, and the Hz you dialled in comes back when
+you unlock. Asking for a lock with no tempo sets one at 120 BPM. The app listens
+for clock and never sends it.
 
 ## What sticks around
 
-Bindings (knobs and pads alike, in two separate stores), the hand-set tempo and
-the clock locks on **sweep** and **line offset** are saved in this browser. They
-are **not** in presets, saved looks or the URL. A link carries the look, not
-your knob layout, and there is no way to export a mapping.
+Bindings (knobs and pads, in two separate stores), the hand-set tempo and the
+clock locks on **sweep** and **line offset** are saved in this browser. They are
+**not** in presets, saved looks or the URL. A link carries the look, not your
+knob layout, and there is no way to export a mapping.
 
 A modulation slot's lock is the exception. It travels with the link, because
 "this wobbles on eighth notes" is part of the patch.
