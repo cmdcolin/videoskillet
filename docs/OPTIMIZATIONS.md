@@ -6,28 +6,21 @@ one-page version of what a pass is.
 
 One frame is 477,750 f32 samples (910 × 525) through up to twenty-four compute
 dispatches, sixty times a second, and six of those passes are FIR filters 33 to
-55 taps wide. That budget is the reason for everything below. On the dev box's
-WX 3200 every built-in preset lands **3.3–5.4 ms** against a 3.3 ms always-on
-floor, so the headroom exists — but it exists because the expensive things are
-gated, tiled, tiered, or not dispatched at all.
+55 taps wide. That budget is the reason for everything below. Every built-in
+preset lands **3.3–5.4 ms** against a 3.3 ms always-on floor, and the headroom
+exists because the expensive things are gated, tiled, tiered, or not dispatched
+at all.
 
-The measurement protocol, the harnesses and the traps are in
-[`DEVELOPMENT.md`](DEVELOPMENT.md) › Measuring performance. This page is what
-the measurements decided.
-
-Every millisecond quoted below was taken on the dev box — a WX 3200 under
-Firefox Nightly / Linux — best-of over interleaved runs, in August 2026. They
-are one machine on one day: read them for their ratios and their signs, not
-their third digit, and re-derive rather than cite one before building on it. The
-one exception is _What a CPU profile of the live app found_, which is main
-thread rather than GPU and says its own box and browser, because the largest
-thing in it is a browser difference and would have read as zero on the other.
+How to take a measurement is [`DEVELOPMENT.md`](DEVELOPMENT.md) › Measuring
+performance. This page is what the measurements decided. Every millisecond here
+was taken on the dev box — a WX 3200 under Firefox Nightly / Linux — best-of
+over interleaved runs, in August 2026, except where a section says otherwise.
+One machine on one day: read them for their ratios and their signs rather than
+their third digit, and re-derive before building on one.
 
 ## What a frame costs
 
-Measured 2026-08-08 on the dev box's WX 3200; every built-in preset lands
-**3.3–5.4 ms** against a 3.3 ms always-on floor. In order of what actually moves
-the number:
+In order of what actually moves the number:
 
 - **Dub generations × colour-under** is the big multiplier: `channel` +
   `underDown` cost ~1.4 ms per generation, so worn tape runs 3.3 → 6.5 ms from
@@ -42,16 +35,11 @@ the number:
 - **The true-waveform B chain** (`encodeChromaB → encodeCompositeB → mixB`)
   totals ~0.9 ms engaged, and dispatches nothing idle.
 
-The keyer, the synth and the strobe (e273959) were measured after the fact at
-920x800, best-of interleaved runs. All three sit behind uniform branches and the
+The keyer, the synth and the strobe sit behind uniform branches, and the
 branches hold: the whole feature set against its parent revision lands 4.52 ms
 both sides at stock, with no separable difference. Engaged, the chroma keyer
-costs ~0.07 ms (`greenScreen` 4.53 against 4.47 with `bKey:0`) — the `atan2` and
-`length` per active sample plus the extra `mix_b` binding. `synthOver` costs
-~0.01 ms for a full `videoSynth` per pixel. The strobe is free: a uniform
-multiply in `decode`, ON and OFF both 4.55 ms. The six presets that shipped with
-them run 2.82–4.78 ms, and `keyIntoTheLoop` at the top pays for its mixer loop
-rather than for the key.
+costs ~0.07 ms, `synthOver` ~0.01 ms for a full `videoSynth` per pixel, and the
+strobe nothing at all — a uniform multiply in `decode`, ON and OFF both 4.55 ms.
 
 ## The rule: ablate before you optimize
 
@@ -59,33 +47,23 @@ Delete the thing and measure the frame without it. That number is the upper
 bound on any optimization of it, and it is usually smaller than it looks.
 
 The rule exists because three plausible optimizations were built here and
-measured **exactly flat**:
+measured **exactly flat**: the filter bank moved from a storage buffer to a
+uniform, a Chebyshev recurrence replacing the heterodyne phasor walk in
+`under_down` and `channel`, and a one-shot bake of `crt_face`'s grain field. The
+FIR passes are not ALU-bound on this hardware, so arithmetic saved inside them
+rides in idle slots — which is not knowable from reading the shader, hence
+[ADR 0007](adr/0007-the-fir-passes-are-not-alu-bound.md) rather than a comment.
 
-- the filter bank moved from a storage buffer to a uniform, vec4-packed for the
-  constant cache;
-- a Chebyshev recurrence replacing the heterodyne phasor walk in `under_down`
-  and `channel` (verified pixel-exact first);
-- a one-shot bake of `crt_face`'s grain field.
-
-All three were reverted. The FIR passes are not ALU-bound on this hardware, so
-arithmetic saved inside them rides in idle slots. Nothing about that is knowable
-from reading the shader, which is why it is
-[ADR 0007](adr/0007-the-fir-passes-are-not-alu-bound.md) rather than a comment:
-the record carries what the three arms did not preserve, and what to measure
-before trying a fourth.
-
-The third of those has since been re-measured and landed. Per-pass GPU
-timestamps (`pnpm gpuprof`, below) put the grain hashing at 0.115 ms of a 2.29
-ms stock frame — a tenth of a millisecond that whole-frame wall clock in Firefox
-could not separate from its own bimodal noise. The verdict stands where it was
-drawn, inside the FIR loops; `crt_face` is a per-pixel ALU pass, and there the
-arithmetic was the cost. The ADR carries the addendum.
+The grain bake has since been re-measured and landed: per-pass timestamps put
+the hashing at 0.115 ms of a 2.29 ms stock frame, a tenth of a millisecond
+whole-frame wall clock could not separate from its own bimodal noise. The
+verdict stands where it was drawn, inside the FIR loops; `crt_face` is a
+per-pixel ALU pass, and there the arithmetic was the cost.
 
 ## What per-pass timestamps found
 
-`scripts/gpuprof` (see `DEVELOPMENT.md` › _Measuring performance_) times each
-pass on the GPU's own counter, headless, on the same wgpu Firefox Nightly runs.
-Its first pass over the stock frame, 2026-08-21 on the WX 3200, GPU ms:
+`scripts/gpuprof` times each pass on the GPU's own counter, headless. Its first
+pass over the stock frame, GPU ms:
 
 | change                                            | pass            | before | after | frame       |
 | ------------------------------------------------- | --------------- | ------ | ----- | ----------- |
@@ -95,21 +73,16 @@ Its first pass over the stock frame, 2026-08-21 on the WX 3200, GPU ms:
 | feedback camera gathered only while patched in    | compose         | 0.124  | 0.071 | 1.82 → 1.77 |
 | halation tiered to 8 taps below `crtHalation` 0.2 | crtFace         | 0.45   | 0.33  | 1.77 → 1.66 |
 
-Confirmed in the app the way this page asks: Firefox Nightly, `perf.mjs`, 6 ×
-120 stepped frames, base and patched interleaved over two rounds — stock went
-**4.17 → 2.88 ms/frame** best-of, both rounds within 0.02 ms and no batch
-disturbed. That is more than the profiler's 0.63 ms of GPU time, which says the
+Confirmed in the app with `perf.mjs`: stock went **4.17 → 2.88 ms/frame**
+best-of. That is more than the profiler's 0.63 ms of GPU time, which says the
 7.6 MB buffer round trip cost the browser's queue more than it cost the card.
+The first three are bit-exact; the fourth is the bloom bargain, below. Every one
+is of the form _do less_ — a pass not dispatched, a buffer not written, a gather
+not run, a fetch not made.
 
-The first three are bit-exact against the previous shader (`--dump` and
-`cmp.ts`: max 0 on the composite, the decoded frame and the CRT face, at stock
-and with each path engaged); the fourth is the bloom bargain again, measured
-below. Every one is of the form _do less_ — a pass not dispatched, a buffer not
-written, a gather not run, a fetch not made — which is the rule above holding.
-
-A second pass, the same day, went after the looks rather than the floor. A sweep
-of every preset (`gpuprof --preset=` in a loop) ranked the hot passes; each fix
-below is bit-exact except where it says otherwise.
+A second pass went after the looks rather than the floor, ranking the hot passes
+over a sweep of every preset. Each fix is bit-exact except where it says
+otherwise.
 
 | change                                                                              | look                      | pass    | before | after |
 | ----------------------------------------------------------------------------------- | ------------------------- | ------- | ------ | ----- |
@@ -126,61 +99,29 @@ The gamma one is the trade. `crt_face` was running the beam transfer per tap —
 three `pow` a tap across spot, bloom and halation, a millisecond a frame on a
 look with all of them up. `decode` now applies cutoff and gamma as it writes
 `outTex`, sRGB-encoded while they are active so the byte keeps fine steps where
-gamma pushes the light (an `rgba8unorm-srgb` view decodes it back for free; an
-`rgba16float` store was tried first and halved the sampler's rate, giving back
-most of the win). Stock is bit-exact. Gamma looks change at hard edges, where a
-tap between two pixels now interpolates light rather than drive, and
-scan-velocity modulation keys on light: lightThatStays mean 0.13/255 with 0.9%
-of pixels off by more than one level, misconverged mean 0.43 concentrated in the
-SVM notch — invisible at 1×, and a millisecond.
+gamma pushes the light (an `rgba16float` store was tried first and halved the
+sampler's rate, giving back most of the win). Stock is bit-exact; gamma looks
+change at hard edges, where a tap between two pixels now interpolates light
+rather than drive — lightThatStays mean 0.13/255, misconverged mean 0.43
+concentrated in the SVM notch. Invisible at 1×, and a millisecond. Confirmed in
+Firefox with `perf.mjs`: stock 2.88 → 2.50 ms/frame, lightThatStays 4.18 → 2.57,
+colourLate 3.03 → 2.56, fullCollapse 4.18 → 2.82.
 
-Confirmed in Firefox Nightly the same way as the first pass, `perf.mjs` best-of
-over five batches, base and patched back to back: stock 2.88 → 2.50 ms/frame,
-lightThatStays 4.18 → 2.57, colourLate 3.03 → 2.56, dirtyMix 2.94 → 2.59,
-fullCollapse 4.18 → 2.82.
+Three arms were reverted, and all three are worth knowing.
 
-Two arms from that pass were reverted, and both are worth knowing. Spreading the
-per-line serial passes (`enhancer`, `buzz_tap`, `sync_measure`) one lane to a
-workgroup, so the scheduler could interleave 525 of them across every SIMD, was
-**twice as slow** — the wave64 lockstep had been issuing those loads efficiently
-and workgroup launch dominated. And tabling the FM fold's per-source threshold
-noise alongside its decay cost 0.2 ms at stock, where none of it runs; a padding
-array of the same size cost nothing, so it is not shared memory. The compiler
-does something with that table the profiler can see and the source cannot, and
-the hash stays per tap.
-
-The one that did not pay is the instructive one. `sync.wgsl` was staged into
-workgroup memory on the theory that a single lane walking 525 lines against
-storage was paying a dependent global load per line: 0.174 → 0.166 ms, bit exact
-and not worth the shared memory. Prefetching the next line's measurement ahead
-of the update did nothing either. That pass is bound by the issue latency of one
-lane running a dependent recurrence, about 300 ns a line, and no arrangement of
-its memory changes that — only fewer instructions on the serial path would, or a
-recurrence that admits a scan, which the clamp in the flywheel does not.
-
-The same rule caught a startup one before it was written. The `Engine`
-constructor makes a couple of dozen blocking `createComputePipeline` calls,
-which looks like an obvious `createComputePipelineAsync` job. Timed in place
-first, at 22 pipelines:
-
-```
-PLBUILD n=22 sync=9.0ms syncWarm=2.0ms asyncParallel=396.0ms
-```
-
-**9 ms is the entire upper bound**, and the refactor would have meant splitting
-construction in two, because the constructor consumes the pipelines to build the
-pass graph. The async arm being 44× slower is the more interesting half and has
-its caveat in `DEVELOPMENT.md`; it did not need to be true for the answer to be
-no.
-
-Two harnesses back the rule up. `scripts/perf.mjs` is best-of wall clock over
-batched `vf.step()` runs — read its per-batch list, because cost on this box
-reads as **bimodal ~0.8 ms apart** and that is another GPU client, not the app
-(a second stepped session costs +3.6 ms; one idle app tab left presenting costs
-+0.17 ms). `scripts/pixdiff.mjs` is what makes an approximation honest: it
-reports the tail of the error distribution as well as the peak, because a
-thinned kernel fails as banding, which a peak-error number waves straight
-through.
+- **Spreading the per-line serial passes one lane to a workgroup**, so the
+  scheduler could interleave 525 of them across every SIMD, was **twice as
+  slow** — the wave64 lockstep had been issuing those loads efficiently and
+  workgroup launch dominated.
+- **Tabling the FM fold's per-source threshold noise** alongside its decay cost
+  0.2 ms at stock, where none of it runs; a padding array of the same size cost
+  nothing, so it is not shared memory. The compiler does something with that
+  table the profiler can see and the source cannot, and the hash stays per tap.
+- **Staging `sync.wgsl` into workgroup memory** was 0.174 → 0.166 ms, bit exact
+  and not worth the shared memory, and prefetching the next line's measurement
+  did nothing either. That pass is bound by the issue latency of one lane
+  running a dependent recurrence, about 300 ns a line, and no arrangement of its
+  memory changes that.
 
 ## Not dispatching is the largest optimization here
 
@@ -517,69 +458,41 @@ depending on whether refreshes present, and the handover would otherwise score
 phantom misses against the mode that just started. Failed probes back off to a
 minute.
 
-## React never renders a frame
+## The main thread
 
-**Does React cost this app frame rate? No, and that is measured rather than
-assumed.** On the built app with the panel at its heaviest — every stage
-unfolded behind a live filter query, 230 sliders and 4,434 DOM nodes — a
-ten-second idle profile attributes **0 ms** to React, with six style recalcs and
-five layouts in the whole ten seconds. Holding a slider down in that same panel
-at 60 pointer moves a second, which is the one thing in the app that asks React
-for work at anything like frame rate, holds **59 fps at 82% idle**, and React's
-share of the frame is about **0.45 ms of 16.6** — `Slider`, `renderWithHooks`,
-`ControlSlider`, `reconcileChildrenArray`. `scripts/cpuprof.mjs --scenario=drag`
-is that measurement; re-run it rather than citing this paragraph.
+**Does React cost this app frame rate? No, and that is measured.** On the built
+app with every stage unfolded — 230 sliders, 4,434 DOM nodes — a ten-second idle
+profile attributes **0 ms** to React. Holding a slider down at 60 pointer moves
+a second, which is the one thing in the app that asks React for work at anything
+like frame rate, holds **59 fps at 82% idle** with React's share about **0.45 ms
+of 16.6**. `scripts/cpuprof.mjs --scenario=drag` is that measurement; re-run it
+rather than citing this paragraph. Two things will tell you otherwise, and both
+have: a dev build measures React's development machinery (43% of the thread in
+`jsxDEV` and friends), and frame rate is the last thing to move, because the
+loop is vsync-capped.
 
-Two things will tell you otherwise, and both have:
+Everything that has cost frame rate here has been other work on the same thread
+— a render-loop probe spinning at 8 kHz, a per-frame object copy, and a
+21,420-read preset scan inside a render body. The design that keeps React out of
+the way is [`ARCHITECTURE.md`](ARCHITECTURE.md) › _The React layer_; two of its
+numbers came from here, that notifying per frame is a full panel render per
+frame (19 ms with every row mounted) and that a decorative pulse in a miniature
+measured 7 ms of style recalc per 3 s.
 
-- **A dev build measures React's development machinery.** The same drag falls to
-  24 fps at a quarter the pointer rate, with 43% of the thread in `jsxDEV`,
-  `validateProperty` and `logComponentRender`, none of which ship. Build and
-  preview before profiling; `cpuprof` says so when it is pointed at a dev
-  server.
-- **Frame rate is the last thing to move.** The loop is vsync-capped, so a fifth
-  of the budget can go before fps reports anything — the largest cost ever found
-  on this thread was 3.6 ms a frame, and it moved fps on neither browser. Read
-  `TaskDuration` per frame.
+Anything else per-frame on this thread competes with the render loop too, so the
+per-frame path avoids allocating and the drag paths coalesce their writes.
+`glide` writes into `controls` in place rather than returning a fresh
+two-hundred-key object every frame. `emit()` walks its listener set live rather
+than over a defensive copy, which is safe regardless because `Set` iteration
+skips an entry deleted before it is reached. And storage and history writes are
+debounced out of the drag — a synchronous `localStorage` write per frame of a
+drag is paid on the thread feeding the GPU.
 
-Everything that has cost frame rate here has been other work on the same thread:
-a render-loop probe spinning at 8 kHz, a per-frame object copy, and a
-21,420-read preset scan that ran inside a render body and was this app's code
-rather than React's. React is a tenant of that thread and pays its rent. The
-rest of this section is the design that keeps it that way.
+### What a CPU profile found
 
-The design that keeps it that way — refs read during render, one context per
-clock, a morph notifying every sixth frame, the compiler gate — is
-[`ARCHITECTURE.md`](ARCHITECTURE.md) › _The React layer_. Two of its numbers
-came from here: notifying per frame is a full panel render per frame, 19 ms with
-every row mounted, and a decorative pulse in a miniature measured 7 ms of style
-recalc per 3 s for information a static border carries.
-
-### The main thread is the one feeding the GPU
-
-Re-rendering is not the only thing that competes with the render loop. Anything
-per-frame on this thread does, including work that never touches React, so the
-per-frame path avoids allocating and the drag paths coalesce their writes:
-
-- **`glide` writes into `controls` in place** rather than returning a look. It
-  runs every frame, and a fresh two-hundred-key object per frame is pure churn —
-  the engine's controls are where the values have to end up anyway.
-- **`emit()` walks its listener set live** rather than over a defensive copy.
-  Three of these fire on the frame path, where a copy per notify is an
-  allocation per frame. Unsubscribing during a notify is safe regardless: `Set`
-  iteration skips an entry deleted before it is reached.
-- **Storage and history writes are debounced out of the drag.** A slider drag
-  emits a move per pointer event, so the URL mirror coalesces to one
-  `replaceState` once the value settles (the browser rate-limits the history API
-  anyway), and the modulation bay defers its `localStorage` write — a
-  synchronous one per frame of a drag is paid on the thread feeding the GPU.
-
-### What a CPU profile of the live app found
-
-The page above was written from GPU-side measurement, and the main thread had
-never been profiled the same way. Sampling it under Chrome's CDP profiler
-(`Profiler.setSamplingInterval` at 100 µs, `Performance.getMetrics` for the
-style and layout halves) on the production build, macOS, August 2026:
+Sampled under Chrome's CDP profiler on the production build, macOS, August 2026.
+This one names its box and browser because the largest thing in it is a browser
+difference that would have read as zero on Firefox.
 
 | what                         | before  | after   |
 | ---------------------------- | ------- | ------- |
@@ -590,111 +503,80 @@ style and layout halves) on the production build, macOS, August 2026:
 | idle, all 230 rows mounted   | 72%     | 94%     |
 
 **Frame rate said none of this.** Every arm held 60 fps on both browsers before
-and after, which is the trap `DEVELOPMENT.md` states in one line and this page
-had never had a case for: the loop is vsync-capped, so a fifth of the budget
-goes before the first frame is missed. Read `TaskDuration` per frame.
-
-Three findings, in the order they were worth:
+and after. Read `TaskDuration` per frame.
 
 - **The drain probe was re-arming at 8.3 kHz.** `renderloop.ts`'s backpressure
   gate kept one completion probe outstanding and re-armed it the moment it
-  settled. On Firefox that reads as one probe a frame, and it is an accident of
-  Firefox's implementation: it resolves `onSubmittedWorkDone` off a main-thread
-  timer with a ~17 ms floor, measured here at a 17 ms median, so the re-arm
-  could not outrun the display. Chrome resolves in ~0.1 ms and the same code
-  armed **135 probes per rendered frame** — 0.55 ms/frame of JS and 3.1 ms/frame
-  in the browser's own C++, which is where it hid: nearly all of it landed in
-  the profiler's `(program)` bucket, attributable to no JS frame at all. The
-  rate now comes from the caller, one arm per refresh, which is every reading
-  `queueLate` can use since it is consulted once per refresh and nowhere else.
-  Worth **3.2 ms/frame** on Chrome and nothing on Firefox, where it was already
-  one a frame.
+  settled. On Firefox that reads as one probe a frame, by accident of its
+  implementation: it resolves `onSubmittedWorkDone` off a main-thread timer with
+  a ~17 ms floor, so the re-arm could not outrun the display. Chrome resolves in
+  ~0.1 ms and the same code armed **135 probes per rendered frame** — 0.55
+  ms/frame of JS and 3.1 ms/frame in the browser's own C++, which is where it
+  hid, landing in the profiler's `(program)` bucket and attributable to no JS
+  frame at all. The rate now comes from the caller, one arm per refresh. Worth
+  **3.2 ms/frame** on Chrome and nothing on Firefox.
 - **The per-frame uniform object was spread into dictionary mode.**
   `uniformValues` returns a literal of 222 fields, so it arrives with a hidden
-  class; `renderFrame` then spread it and four per-frame state updates into a
-  fresh object, which copies every field one at a time and lands in dictionary
-  mode. That cost twice — 49 µs to build against 12 for `Object.assign` onto the
-  object that already existed, and then 8.9 µs rather than 4.0 for `packParams`
-  to read 234 names back out of it. **51 µs a frame**, bit-exact.
+  class; `renderFrame` then spread it and four state updates into a fresh
+  object, which copies every field one at a time and lands in dictionary mode.
+  That cost twice — 49 µs to build against 12 for `Object.assign` onto the
+  object that already existed, then 8.9 µs rather than 4.0 for `packParams` to
+  read 234 names back out. **51 µs a frame**, bit-exact.
 - **`Wow.at` was drawing 2100 sines a frame to multiply them by zero.**
-  `LineState.update` walks 525 lines and sampled the wow oscillator — four
-  `Math.sin` a row — on every one, then scaled it by an amplitude that is zero
-  in the default look and in 80 of the 85 authored presets. It reads no random
-  stream, so gating it on the amplitude moves nothing. That, plus hoisting the
-  eight other control-derived constants the loop was recomputing 525 times,
-  takes an at-rest frame **86 µs → 23 µs** and leaves a look with wow up paying
-  the same as before, which is the right shape.
+  `LineState.update` sampled the wow oscillator on all 525 lines, then scaled it
+  by an amplitude that is zero in the default look and in 80 of the 85 authored
+  presets. Gating on the amplitude plus hoisting eight other control-derived
+  constants out of the loop takes an at-rest frame **86 µs → 23 µs**, and leaves
+  a look with wow up paying the same as before.
 
-The last two are bit-exact by construction and checked as such rather than
-argued: `LineState`'s two implementations were run side by side over 240 frames
-of four control configurations against a seeded `rand` and compared float by
-float, and the built app was compared against the parent build over 60 stepped
-frames of a seeded take on the default look and three presets, hashing the
-canvas per frame — identical throughout. The hoists keep each expression's
-grouping (`a * b * c` hoisted as `a`, left as `x * a * c` rather than folded
-into `a * c`), because float multiplication does not associate.
+The last two are bit-exact by construction and checked as such: `LineState`'s
+two implementations were run side by side over 240 frames against a seeded
+`rand` and compared float by float, and the built app was compared against the
+parent build over 60 stepped frames, hashing the canvas per frame. The hoists
+keep each expression's grouping (`a * b * c` hoisted as `a`, left as `x * a * c`
+rather than folded into `a * c`), because float multiplication does not
+associate.
 
-This is also where the page's oldest claim was finally measured. React costs 0
-ms at rest and about 0.45 ms a frame under a drag — the numbers, and the two
-ways to get the wrong ones, are at the top of _React never renders a frame_,
-because that is where somebody asking about React will look.
+The drag is comfortable **because** of the probe fix rather than beside it: the
+same drag on the parent build ran 6.4 ms/frame and gave up frame rate as the box
+got busier — 59.4, 54.1, 51.4 fps over three rounds, where the patched arm held
+59.3, 58.1, 57.9. The drag was always affordable; there was 3.6 ms of probe in
+front of it, and the first thing headroom buys is tolerance of a busy machine.
 
-One half of it belongs here rather than there. The drag is comfortable
-**because** of the probe fix above rather than beside it: the same drag on the
-parent build ran 6.4 ms/frame and gave up frame rate as the box got busier —
-59.4, 54.1, 51.4 fps over three rounds, where the patched arm held 59.3, 58.1,
-57.9. The drag was always affordable. There was 3.6 ms of probe sitting in front
-of it, and the first thing headroom buys is tolerance of a busy machine.
-
-A second pass went after the scenarios rather than the resting frame, since the
-resting frame was down to 0.84 ms and nothing in it was above 45 µs. Both of the
-two things it found were the same shape, and it is the shape to look for here:
-**a large multiple of 252**.
+A second pass went after the scenarios rather than the resting frame. Both
+things it found were the same shape, and it is the shape to look for here: **a
+large multiple of 252**.
 
 | what                            | when               | before | after |
 | ------------------------------- | ------------------ | ------ | ----- |
 | `matchPreset`, per call in situ | any panel render   | 612 µs | 24 µs |
 | `packFeed`, per frame           | both feeds engaged | 200 µs | 10 µs |
 
-Both were spending a control-board scan where they did not need one, and both
-were made worse by the same property of the board. **A `Controls` object cannot
-be fast.** V8 keeps a literal's hidden class, but 252 properties is far past the
-limit for either cloning one or building one a key at a time, so every
-`{...controls}` in this codebase lands in dictionary mode and reads about three
-times slower than `DEFAULT_CONTROLS` does — measured at 3.1 µs against 9.9 for
-one pass over the keys. Nothing is going to change that short of making the
+**A `Controls` object cannot be fast.** V8 keeps a literal's hidden class, but
+252 properties is far past the limit for either cloning one or building one a
+key at a time, so every `{...controls}` in this codebase lands in dictionary
+mode and reads about three times slower than `DEFAULT_CONTROLS` does — 9.9 µs
+against 3.1 for one pass over the keys. Nothing changes that short of making the
 board an array, which the other 250 sites that read it by name would not
-survive.
-
-**So 9.9 µs a pass is the floor, and it is a settled one.** It is what a board
-of 252 named knobs costs to read, it has been looked at, and the lever that
-remains is how many passes a hot path makes rather than how fast one is. Both
-fixes above are that lever: neither made a read cheaper, and both went from tens
-of passes to one.
+survive. So **9.9 µs a pass is a settled floor**, and the lever is how many
+passes a hot path makes rather than how fast one is. Both fixes are that lever.
 
 `matchPreset` was 85 presets × 252 keys, and a board matching nothing — anyone
-who has touched a knob — scanned all of them: 21,420 reads, in a render body, on
-the live board, at 612 µs a call. It runs 10 times a second with a clip playing
-and 21 during a drag. Asking instead which keys the board holds off stock
-answers all 85 in one pass, because a preset matches exactly when it moves the
-same keys and agrees on them. `packFeed` was `{...vals, …seventeen overrides}`:
-a 222-field copy into dictionary mode, then 234 names read back out of it, twice
-a frame. `patchParams` writes the seventeen onto the packed block instead.
+who has touched a knob — scanned all of them: 21,420 reads, in a render body, at
+612 µs a call, ten times a second with a clip playing and 21 during a drag.
+Asking instead which keys the board holds off stock answers all 85 in one pass,
+because a preset matches exactly when it moves the same keys and agrees on them.
+`packFeed` was a 222-field copy into dictionary mode and then 234 names read
+back out, twice a frame; `patchParams` writes the seventeen overrides onto the
+packed block instead.
 
-The residue is measured and left alone. `stateUrl` is rebuilt in a render body,
-which is another 252-key scan plus `packControls`, at about 48 µs a render — the
-`replaceState` behind it is debounced but the string is not, because the effect
-depends on it. And the frame encodes ~20 compute passes one `beginComputePass`
-at a time, whose upper bound is around 40 µs. Neither is worth what changing it
-would risk.
-
-Two things it looked for and did not find. **It does not degrade**: four minutes
-on `vhs`, sampled every 30 s, held 60.0 fps at 831-864 µs/frame with no trend,
-heap oscillating between 5.6 and 7.1 MB, node and listener counts flat. And the
-layered control machinery is cheap — eight modulation routings, the paperclip
-and the stab gate all running at once cost 756 µs/frame, with `applyMod` not
-appearing in the profile at all, because those loops are gated on there being
-something to do.
+The residue is measured and left alone: `stateUrl` is rebuilt in a render body
+at about 48 µs a render, and the frame encodes ~20 compute passes one
+`beginComputePass` at a time, an upper bound around 40 µs. Two things the pass
+looked for and did not find: **it does not degrade** (four minutes on `vhs` held
+60.0 fps at 831-864 µs/frame with no trend, heap flat), and the layered control
+machinery is cheap — eight routings, the paperclip and the stab gate at once
+cost 756 µs/frame, with `applyMod` not appearing in the profile at all.
 
 ## Devices are created freely and never destroyed
 
