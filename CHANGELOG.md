@@ -2,6 +2,11 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [0.40.4](https://github.com/cmdcolin/videoskillet/compare/v0.40.3...v0.40.4) - 2026-09-06
+
+### Fixes
+- *(ui)* [`987b2a9`](https://github.com/cmdcolin/videoskillet/commit/987b2a960ef76e2940dce2e1f4f3b0d1b1e13e64) one footer for the site, and a brand link that goes home
+
 ## [0.40.3](https://github.com/cmdcolin/videoskillet/compare/v0.40.2...v0.40.3) - 2026-09-06
 
 ### Documentation
