@@ -2,6 +2,16 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [0.40.6](https://github.com/cmdcolin/videoskillet/compare/v0.40.5...v0.40.6) - 2026-09-07
+
+### Fixes
+- *(ui)* [`04c8dd4`](https://github.com/cmdcolin/videoskillet/commit/04c8dd40f50fbf974224e37de161ce7f8675b0a8) the hero card and the buttons stop sharing a row
+- *(ui)* [`0770de1`](https://github.com/cmdcolin/videoskillet/commit/0770de11c477857da3cb6250566dd1f82d7003e0) the hero card runs on under the buttons again
+- *(ui)* [`68cec5a`](https://github.com/cmdcolin/videoskillet/commit/68cec5ac81a7c2d597f522ab88e36927306fc626) drop the fuzzy-dissolver and camera-static gallery demos
+
+### Other Changes
+- [`948fa0e`](https://github.com/cmdcolin/videoskillet/commit/948fa0ef591c13169f08e53fa8d97572985abc7c) Optional buzz
+
 ## [0.40.5](https://github.com/cmdcolin/videoskillet/compare/v0.40.4...v0.40.5) - 2026-09-07
 
 ### Features
