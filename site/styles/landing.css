@@ -43,16 +43,15 @@ a {
    that changes under a reader is a distraction from the words in front of it,
    and the stage can be looked at.
 
-   Two rows, and the card gets the one the buttons leave. The card used to be
-   the whole box with the buttons lying over its foot, which is a collision
-   waiting for a short window: the words sit in a fixed band of the picture —
-   43% to 58% of its height, where `heroplate.mjs` set them — and `cover` scales
-   that band with the box's *width*, while the buttons stack up from its
-   *bottom*. A 1600x600 window crossed the two with nothing else shown, and the
-   WebGPU warning, another 116px of stack, crossed them at every size a reader
-   without WebGPU has. So the picture takes the row that is left over and crops
-   itself into it, and that row's floor keeps the words bigger than a caption on
-   a window too short to hand them anything. */
+   Two rows: the words are cropped into the one the buttons leave, and the card
+   goes on running under them. Cropping the card to the whole box instead put
+   the words where the buttons were on any window wide for its height — they sit
+   in a fixed band of the picture, 43% to 58% of its height, where
+   `heroplate.mjs` set them, and `cover` scales that band with the box's *width*
+   while the buttons stack up from its *bottom*. A 1600x600 window crossed the
+   two with nothing else shown, and the WebGPU warning, another 116px of stack,
+   crossed them at every size a reader without WebGPU has. The row's floor keeps
+   the words bigger than a caption on a window with nothing to spare. */
 .hero {
   display: grid;
   grid-template-rows: minmax(max(11rem, 17vw), 1fr) auto;
@@ -60,12 +59,15 @@ a {
      absolute inset and now would sit in as a band of page colour. */
   padding: 0;
   overflow: hidden;
+  /* The card's own black, under whatever the overhang does not reach — a phone
+     with the WebGPU warning open is taller than 16rem of card — so the foot of
+     the header stays one field instead of stepping to page colour mid-notice. */
+  background: #050701;
   border-bottom: 1px solid var(--border);
   min-height: clamp(20rem, 56vh, 34rem);
 }
 .heroTitle {
   position: relative;
-  overflow: hidden;
   margin: 0;
 }
 /* The <picture> is only there to hand the img a second source; it is not a box
@@ -79,12 +81,20 @@ a {
    the words in the middle of it. */
 .heroTitle img {
   position: absolute;
-  inset: 0;
+  inset: 0 0 auto;
   width: 100%;
-  height: 100%;
+  /* 16rem taller than its row, with the crop pulled back by half of that, which
+     lands the words on the row's centre under either of `cover`'s scalings: the
+     percentage half of the offset is what carries when the picture is scaled by
+     width, the 8rem is what carries when it is scaled by height. The rest of
+     the card hangs below the row, under the buttons, and `.hero` clips it. */
+  height: calc(100% + 16rem);
   object-fit: cover;
+  object-position: 50% calc(50% - 8rem);
 }
 .heroBody {
+  /* Positioned, so it stacks over the card's overhang rather than under it. */
+  position: relative;
   /* The side padding is `.wrap`'s own: zeroing it stood the hero title
      20px left of every line under it, and put the buttons and the warning
      against the bezel on a phone. */
