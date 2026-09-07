@@ -108,32 +108,30 @@ const PLATE_H = 1200
 // 3:4 with the type set small enough to survive it. Its crop is anchored to the
 // bottom of the raster, keeping the head-switch band on the image's own edge —
 // the flag along the top is the half worth losing.
+//
+// Every card is one stack: headline, then the mark and the wordmark under it.
+// The three differ only in what they are set at, and the wide one is set by the
+// crop it has to survive — a 3440-wide header keeps a 5:1 slice of the plate,
+// some 300 of its 1200 rows, and this card stands 295. The type gives up six per
+// cent against a headline on its own, which is what the name costs. Past that
+// slice the crop starts taking the caps: a window 3440 wide and only 800 tall
+// keeps 261 rows, and holding that would cost the headline another eight.
 const RENDERS = [
-  // The lockup goes beside the headline, which is the one arrangement a
-  // letterbox costs nothing: the card comes out exactly as tall as the two lines
-  // were on their own, so a band that held the headline holds the brand too.
-  // Under the words it would not. The header on a 3440-wide window keeps a 5:1
-  // slice of the plate — some 300 of 1200 rows — and the headline is 210 of them.
   {
     out: 'public/hero-title.webp',
     text: 'WebGPU analog<br>video emulation.',
-    size: 100,
-    // The mark is as big as the arrangement allows and no bigger: at 118 the
-    // lockup column stands 208 tall against the headline's 210, so the two lines
-    // still set the card's height and the crop still holds all of it. The tape
-    // crushes the skillet's greys, and size is the only thing that answers that.
-    brand: { place: 'beside', word: 60, mark: 118, gap: 54 },
+    size: 94,
+    brand: { word: 56, mark: 80, gap: 18 },
     aspect: 4 / 3,
     width: 2000,
   },
-  // Beside is the one thing the portrait crop cannot keep: it holds the middle
-  // 56% of the raster's width, and a lockup off to one side lands outside that.
-  // So this one stacks, and the height it needs is the height this crop has.
+  // The portrait crop takes the sides and leaves the height, so this one can
+  // stand the lockup off the headline and set the mark half as big again.
   {
     out: 'public/hero-title-narrow.webp',
     text: 'WebGPU analog<br>video emulation.',
     size: 95,
-    brand: { place: 'below', word: 58, mark: 96, gap: 44 },
+    brand: { word: 58, mark: 96, gap: 44 },
     aspect: 3 / 4,
     width: 1080,
   },
@@ -149,7 +147,7 @@ const RENDERS = [
     out: 'public/og.jpg',
     text: 'WebGPU analog<br>video emulation.',
     size: 140,
-    brand: { place: 'below', word: 66, mark: 122, gap: 78 },
+    brand: { word: 66, mark: 122, gap: 78 },
     aspect: 1200 / 630,
     width: 1200,
     anchor: 'center',
@@ -166,21 +164,12 @@ const FAVICON = readFileSync('public/favicon.svg').toString('base64')
 // thing a composite path can be handed — a vertical edge on every stem — and it
 // is what makes the fringing, so nothing here is drawn in the greys the page
 // would use.
-//
-// `beside` transposes both axes at once: the card lays the lockup and the
-// headline in a row, and the lockup stands the mark over the wordmark rather
-// than left of it. A row of a row would be wider than the plate.
-const plateHtml = ({ text, size, brand }) => {
-  const beside = brand.place === 'beside'
-  const lockup = `<div class="lockup">
-       <img src="data:image/svg+xml;base64,${FAVICON}" />videoskillet.js
-     </div>`
-  return `<!doctype html><style>
+const plateHtml = ({ text, size, brand }) => `<!doctype html><style>
   html, body { margin: 0; height: 100% }
   body { background: #000; display: grid; place-items: center }
   .card {
     display: flex;
-    flex-direction: ${beside ? 'row' : 'column'};
+    flex-direction: column;
     align-items: center;
     gap: ${brand.gap}px;
   }
@@ -197,9 +186,11 @@ const plateHtml = ({ text, size, brand }) => {
   }
   .lockup {
     display: flex;
-    flex-direction: ${beside ? 'column' : 'row'};
     align-items: center;
-    gap: ${Math.round(brand.gap / 3)}px;
+    /* Off the wordmark rather than off the gap above: the space between a mark
+       and the word it stands with belongs to the type's size, and the space
+       above belongs to the crop. */
+    gap: ${Math.round(brand.word * 0.4)}px;
     color: #fff;
     font-family: ${FAMILY};
     font-weight: 700;
@@ -211,8 +202,9 @@ const plateHtml = ({ text, size, brand }) => {
      wide in a 32-unit box: drawn at the size the page uses them, the chroma
      path has nothing left to carry by the time it has been through the tape. */
   .lockup img { width: ${brand.mark}px; height: ${brand.mark}px }
-</style><div class="card">${beside ? lockup : ''}<p>${text}</p>${beside ? '' : lockup}</div>`
-}
+</style><div class="card"><p>${text}</p><div class="lockup">
+    <img src="data:image/svg+xml;base64,${FAVICON}" />videoskillet.js
+  </div></div>`
 
 const scratch = mkdtempSync(join(tmpdir(), 'heroplate-'))
 

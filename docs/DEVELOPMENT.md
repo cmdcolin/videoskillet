@@ -694,10 +694,10 @@ link preview are no demo's still any more:
 [`../scripts/heroplate.mjs`](../scripts/heroplate.mjs) sets the headline in the
 h1's own typeface, photographs it, runs the plate through the app and reads the
 canvas back, so the words on the page are a picture of what the program does to
-words. The mark and the wordmark go onto every plate with the headline, which is
-why they carry the same fringe — beside the words on the wide header, where a
-letterbox crop has width to spare and no height at all, and under them on the
-portrait and link-preview plates, which have the height and not the width.
+words. The mark and the wordmark go onto every plate under the headline, which is
+why they carry the same fringe. What changes between the three is the size, and
+the wide header sets its own: the crop it has to survive is a 5:1 slice of the
+plate, so the type there gives up six per cent to make room for the name.
 [`../scripts/reel.mjs`](../scripts/reel.mjs) is the carousel, which records the
 **app's own window** instead — the panel, the map and a pointer moving over
 them. That split is the point of the page: the picture is what the program
