@@ -35,8 +35,8 @@ same order and under the same names.
 
 ## Feedback loops
 
-Two, and they differ in what goes round. Each is described in the app's own
-words, so the chain map and this page cannot disagree:
+The two loops differ in what travels around them. Each is described in the app's
+own words, so the chain map and this page cannot disagree:
 
 <!-- generated:loops — from LOOP_STAGES in src/ui/controls.ts, via scripts/docgen.mjs -->
 
