@@ -74,8 +74,27 @@ const FEATURES = 'docs/FEATURES.md'
 const LLMS = 'public/llms.txt'
 const LLMS_FULL = 'public/llms-full.txt'
 
-// Markdown table cells break on a raw pipe, and a few help strings carry one.
-const cell = s => s.replaceAll('|', '\\|')
+// Markdown table cells break on a raw pipe and on a newline. A few help strings
+// carry a pipe, and a few are written as wrapped paragraphs with a bullet list.
+// Wrapped lines rejoin with a space, bullets each take a line, and paragraphs
+// keep a blank one, in the tags a table cell can hold.
+const paragraph = lines =>
+  lines
+    .reduce(
+      (acc, l) =>
+        l.startsWith('- ') || acc.length === 0
+          ? [...acc, l]
+          : [...acc.slice(0, -1), `${acc.at(-1)} ${l}`],
+      [],
+    )
+    .join('<br>')
+
+const cell = s =>
+  s
+    .replaceAll('|', '\\|')
+    .split(/\n\s*\n/)
+    .map(p => paragraph(p.split('\n').map(l => l.trim())))
+    .join('<br><br>')
 
 // A control's span, in the terms its own row shows. An enum has no span worth
 // printing — its choices *are* the span — so it prints those instead.
@@ -124,15 +143,15 @@ const lines = [
   '',
   '# Effects',
   '',
-  'Every control in the app, by where it sits on the signal path, with the fault',
-  'each one models. Generated from the same control table the panel renders, so',
-  'it cannot fall behind the app.',
+  'Every control in the app, listed by where it sits on the signal path, with',
+  'the fault each one models. The page is generated from the control table the',
+  'panel renders, so it cannot fall behind the app.',
   '',
-  '[Features](FEATURES.md) is the other half — what the app *is*, argued rather',
-  'than enumerated. Start there for the tour.',
+  '[Features](FEATURES.md) is the other half: a tour of what each stage does',
+  'and what is worth knowing before you turn anything. Start there.',
   '',
-  'Every control carries its text below on its own **?**, and both the filter box',
-  'and `ctrl+k` search it, so a fault is findable here or in the app.',
+  'In the app, every control shows the same text under its **?**, and both the',
+  'filter box and `ctrl+k` search it, so a fault found here is findable there.',
   '',
   '## Sources',
   '',

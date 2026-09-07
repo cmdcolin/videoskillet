@@ -1,12 +1,12 @@
 # Features
 
-Every control breaks a piece of hardware rather than drawing an artifact. Dot
-crawl, rainbows, tearing and hue drift follow from that, which is why two
-controls compound instead of stacking.
+Every control breaks a piece of hardware. Dot crawl, rainbows, tearing and hue
+drift follow from the break, which is why two controls compound instead of
+stacking.
 
 This is a tour of each stage and the one thing worth knowing before you turn
-anything. [Effects](EFFECTS.md) is the full list of controls, generated from the
-app's own table. The headings are the boxes on the app's chain map, in the same
+anything. [Effects](EFFECTS.md) lists every control, generated from the app's
+own table. The headings here are the boxes on the app's chain map, in the same
 order and under the same names.
 
 <picture>
@@ -18,25 +18,26 @@ order and under the same names.
 
 - **Two decks, same list**: a still, a video file, a webcam, a shared screen,
   colour bars, TV or VHS static, a video synth, a teletype card you type on,
-  your own clip list, or a random pick from Wikimedia Commons or archive.org.
-  Only B can be switched off.
+  your own clip shelf, or a random pick from Wikimedia Commons or archive.org.
+  Deck B can also be switched off.
 - **Real gear comes in as a webcam**: an RCA capture dongle on either deck, so
   two grabbers can be mixed against each other.
 - **Connector faults**: snow, a loose plug, a ground loop, a termination fault,
   polarity flips, S-video miswired into composite.
 - **Scrambling, Macrovision AGC pulses and colorstripe** are the interesting
-  ones. They turn the receiver's own AGC and burst circuits against it.
+  faults, because they turn the receiver's own AGC and burst circuits against
+  it.
 - **A file that was already a tape**: a capture group models the deck Source A
-  was digitised from, so damage downstream lands on a picture that was already a
-  tape. Off by default, and free while it is.
+  was digitised from, so everything downstream lands on a picture that was
+  already soft. Off by default, and free while it is.
 - **Each input has its own deck and cable** ahead of the mixer. Knock out one
   input's sync and the receiver locks to the other, and the geometry snaps
   between two pictures.
 
 ## Feedback loops
 
-Two, and they differ in what goes round. Each is in the app's own words, so the
-chain map and this page cannot disagree:
+Two, and they differ in what goes round. Each is described in the app's own
+words, so the chain map and this page cannot disagree:
 
 <!-- generated:loops — from LOOP_STAGES in src/ui/controls.ts, via scripts/docgen.mjs -->
 
@@ -59,7 +60,7 @@ things optics cannot.
   summed free-running against it, which is the two-deck rig.
 - **The keyer cuts chroma the encoder made**, and that filter has no vertical
   term, so mattes come out soft across and sharp down, the way every composite
-  key was.
+  key did.
 - **A character generator** keys caption text into the picture. It puts out a
   fill and a key on two wires, so trimming the timing between them puts program
   through one side of every stem and black down the other. It is the open
@@ -70,7 +71,7 @@ things optics cannot.
 
 - **Everything between the recorder and the set**: bandwidth, nonlinearity,
   noise, the tuner, colour-under, the tape and heads. The stage runs up to four
-  times, one per dub generation.
+  times over, once per dub generation.
 - **Tape noise is coloured**: an FM discriminator's noise rises toward the top
   of the band, which is the chroma passband, so it arrives as crawling coloured
   speckle rather than grey grain.
@@ -91,10 +92,10 @@ things optics cannot.
 ## Receiver
 
 - **A television and the ways one can be misadjusted.** Sync faults move the
-  picture. Decoding faults move its colour.
+  picture and decoding faults move its colour.
 - **Deflection bend happens after decoding**, so it warps geometry and never
   touches hue. Whether a wobble takes the colour with it is the distinction most
-  worth keeping in mind.
+  worth keeping in mind, and it tells you which stage the wobble is in.
 - **A caption decoder** reads line 21 as data, so noise, a narrow channel and
   generation loss arrive as dropped characters, wrong ones, and the solid block
   a real decoder drew where parity caught an error. Captions repaint on the
@@ -103,7 +104,8 @@ things optics cannot.
 
 ## Screen
 
-- **The beam and the phosphor it lands on.**
+- **The beam and the phosphor it lands on**: spot size, focus, the shadow mask
+  and convergence.
 - **Persistence decays second-order**, so a trail is a bright front over a long
   faint tail, and it goes green because red and blue die first.
 
@@ -141,8 +143,8 @@ things optics cannot.
   still holds. Rates lock to a tapped BPM or MIDI clock.
 - **MIDI**: any controller sending CC, with learn, auto-map and soft takeover.
   See [Using a MIDI controller](MIDI.md).
-- **Presets**: also faders you can drag partway in. Morph, random nudge, full
-  undo, and saved profiles behind a sign-in.
+- **Presets** double as faders you can drag partway in. Morph, random nudge,
+  full undo, and saved profiles behind a sign-in.
 - **Drift**: one switch and the look wanders on its own, a gentle nudge every
   fifteen seconds, staying near where you set it going. Every stage has the same
   switch for its own controls.
@@ -153,8 +155,8 @@ things optics cannot.
 - **Sharing**: the whole board mirrors to the URL, so a link is a patch.
 - **Capture**: stills, and a constant-framerate H.264 MP4 of the picture as it
   plays. The strip's ⎙ render steps the engine on its own clock, so a take comes
-  back at 60 however fast the tab ran, and comes back the same twice. Or pop the
-  controls into a second window and point OBS at the picture.
+  back at 60 fps however fast the tab ran, and comes back the same twice. Or pop
+  the controls into a second window and point OBS at the picture.
 - **Interface**: the chain map, a command palette, signal taps and an IRE scope,
   a magnifier that magnifies the tube face along with the picture.
 

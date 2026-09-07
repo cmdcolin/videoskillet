@@ -3,15 +3,15 @@
 
 # Effects
 
-Every control in the app, by where it sits on the signal path, with the fault
-each one models. Generated from the same control table the panel renders, so it
-cannot fall behind the app.
+Every control in the app, listed by where it sits on the signal path, with the
+fault each one models. The page is generated from the control table the panel
+renders, so it cannot fall behind the app.
 
-[Features](FEATURES.md) is the other half — what the app _is_, argued rather
-than enumerated. Start there for the tour.
+[Features](FEATURES.md) is the other half: a tour of what each stage does and
+what is worth knowing before you turn anything. Start there.
 
-Every control carries its text below on its own **?**, and both the filter box
-and `ctrl+k` search it, so a fault is findable here or in the app.
+In the app, every control shows the same text under its **?**, and both the
+filter box and `ctrl+k` search it, so a fault found here is findable there.
 
 ## Sources
 
@@ -40,26 +40,16 @@ What either deck can be fed:
 
 ### Signal (source A)
 
-| Control                         | Range        | The fault it models                                                                                                                                                                                                                                                                                                                                                        |
-| ------------------------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **invert (polarity swap)**      | 0–1          | Negates the composite waveform coming out of the encoder, as if the video pair were wired backwards. At 1 the picture is a full negative. Halfway is the solarized midpoint, where bright and dark both fold toward grey. Hue inverts too, because the colour subcarrier is on the same wire.                                                                              |
-| **deinterlace**                 | `off` · `on` | Rebuilds each frame from a single field instead of both, like a bob deinterlacer. Use it when an interlaced source (a captured video or webcam) shows comb teeth on horizontal motion. It costs half the vertical detail, which is the same trade a real deinterlacer makes.                                                                                               |
-| **capture luma band (0 off)**   | 0–4.2 MHz    | The file was digitised from a tape, and the deck that played it passed only this much luma bandwidth to the capture card. VHS manages about 3 MHz at SP, less at EP, and a camcorder on a worn head under 2. Everything the chain does from here acts on a picture that was already soft, like a tape dubbed from a tape. 0 means the file never went through a deck.      |
-| **capture chroma band (0 off)** | 0–1.5 MHz    | The colour bandwidth the same deck passed to the capture card. Colour-under records chroma on a 629 kHz carrier, so a home deck passes about 0.5 MHz of it against 3 MHz of luma. Colour smears sideways across many pixels while the edges under it stay sharp. That smear is in the file, so colour-under in the chain here stacks on top of it, as a second deck would. |
-| **capture grain**               | 0–30 IRE     | The noise floor of the deck's luma FM path as the capture card saw it: fine grain in every frame of the file. It holds still with the picture when the deck is paused, because it was on the tape rather than in the chain.                                                                                                                                                |
-| **capture chroma noise**        | 0–60 IRE     | Noise on the deck's colour-under carrier, which had a fraction of the luma path's headroom. It reaches the file through the narrow chroma band above, so it arrives as slow blotches of wrong hue and saturation rather than speckle. Lower the capture chroma band to make it blotchier.                                                                                  |
-| **capture y/c delay**           | -500–500 ns  | The deck's chroma path arriving at the capture card late (+) or early (-) relative to its luma. Colour is displaced off the edges it belongs to, by a few hundred nanoseconds on a home deck. One sample is 70 ns.                                                                                                                                                         |
-| **vbi test signals**            | `off` · `on` | Vertical blanking interval                                                                                                                                                                                                                                                                                                                                                 |
-
-          - **lines 17-18**: VITS multiburst and a modulated staircase, the
-            transmission-test signals engineers measured the plant with.
-          - **line 19**: a VIR reference.
-          - **line 21**: caption data, a clock run-in and dashes that change
-            every frame, because captions are live.
-
-          Invisible in normal framing. Roll the picture or shrink v size and all
-          of this appears in the black bar. On by default because a broadcast
-          signal carried it. Switch it off for a bare studio feed. |
+| Control                         | Range        | The fault it models                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| ------------------------------- | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **invert (polarity swap)**      | 0–1          | Negates the composite waveform coming out of the encoder, as if the video pair were wired backwards. At 1 the picture is a full negative. Halfway is the solarized midpoint, where bright and dark both fold toward grey. Hue inverts too, because the colour subcarrier is on the same wire.                                                                                                                                                                                                                                |
+| **deinterlace**                 | `off` · `on` | Rebuilds each frame from a single field instead of both, like a bob deinterlacer. Use it when an interlaced source (a captured video or webcam) shows comb teeth on horizontal motion. It costs half the vertical detail, which is the same trade a real deinterlacer makes.                                                                                                                                                                                                                                                 |
+| **capture luma band (0 off)**   | 0–4.2 MHz    | The file was digitised from a tape, and the deck that played it passed only this much luma bandwidth to the capture card. VHS manages about 3 MHz at SP, less at EP, and a camcorder on a worn head under 2. Everything the chain does from here acts on a picture that was already soft, like a tape dubbed from a tape. 0 means the file never went through a deck.                                                                                                                                                        |
+| **capture chroma band (0 off)** | 0–1.5 MHz    | The colour bandwidth the same deck passed to the capture card. Colour-under records chroma on a 629 kHz carrier, so a home deck passes about 0.5 MHz of it against 3 MHz of luma. Colour smears sideways across many pixels while the edges under it stay sharp. That smear is in the file, so colour-under in the chain here stacks on top of it, as a second deck would.                                                                                                                                                   |
+| **capture grain**               | 0–30 IRE     | The noise floor of the deck's luma FM path as the capture card saw it: fine grain in every frame of the file. It holds still with the picture when the deck is paused, because it was on the tape rather than in the chain.                                                                                                                                                                                                                                                                                                  |
+| **capture chroma noise**        | 0–60 IRE     | Noise on the deck's colour-under carrier, which had a fraction of the luma path's headroom. It reaches the file through the narrow chroma band above, so it arrives as slow blotches of wrong hue and saturation rather than speckle. Lower the capture chroma band to make it blotchier.                                                                                                                                                                                                                                    |
+| **capture y/c delay**           | -500–500 ns  | The deck's chroma path arriving at the capture card late (+) or early (-) relative to its luma. Colour is displaced off the edges it belongs to, by a few hundred nanoseconds on a home deck. One sample is 70 ns.                                                                                                                                                                                                                                                                                                           |
+| **vbi test signals**            | `off` · `on` | Vertical blanking interval<br><br>- **lines 17-18**: VITS multiburst and a modulated staircase, the transmission-test signals engineers measured the plant with.<br>- **line 19**: a VIR reference.<br>- **line 21**: caption data, a clock run-in and dashes that change every frame, because captions are live.<br><br>Invisible in normal framing. Roll the picture or shrink v size and all of this appears in the black bar. On by default because a broadcast signal carried it. Switch it off for a bare studio feed. |
 
 ### Noise source (static)
 
@@ -126,65 +116,21 @@ What either deck can be fed:
 
 ### Character generator (chyron)
 
-| Control             | Range | The fault it models                                            |
-| ------------------- | ----- | -------------------------------------------------------------- |
-| **cg over program** | 0–1   | A character generator at the switcher, keying the caption text |
-
-          into the picture, the box every lower third, score bug and station
-          ident came out of.
-
-          What makes it a CG rather than an overlay is that it puts out **two
-          wires**: a fill, which is video, and a key, which is a matte cut at
-          the characters' own edges. Everything below changes the relationship
-          between those two, which is what every bent chyron is doing.
-
-          Because it keys onto the composite bus ahead of the loops and the
-          deck, what it writes is signal from here on. Full-swing type is the
-          harshest thing a composite path carries, so the AGC pumps on it, the
-          sound detector turns it into a whine that changes with the text, and
-          the tape ages it along with the picture. |
-
-| **key timing** | -600–600 ns | The trim every real keyer has, because the key
-path and the video path are different lengths of circuit. Mis-set on a
-photograph it slides a soft matte a few samples and nobody notices. Mis-set on a
-glyph it puts background through one side of every stem and a hard shadow down
-the other, and far enough out it leaves an outline with no letter inside it. One
-sample is 70 ns. | | **key clip** | 0–1 | Where the slicer cuts the processed
-key. On type this is stroke weight rather than an edge position. Down, thin
-strokes fuse and the whole line grows a halo. Up, stems drop out of the middle
-of words. How much range it has depends on the key bandwidth below: a key with
-no soft edge has nothing for a clip to slide along. | | **key bandwidth** |
-0.3–8 MHz | The key-processing amplifier ahead of the slicer, which is narrower
-than the video path and is the only reason a key has a soft edge at all.
-Horizontal only, the same lopsided edge the chroma keyer has, for the same
-reason: this is a line of signal rather than a picture, so there is no vertical
-neighbour on the wire. | | **key invert** | `normal` · `inverted` | Which side
-of the key is cut. Inverted, the box fills the whole raster and the letters are
-holes in it showing the picture. That is what a downstream keyer inverted
-actually does, since the key's domain is the picture rather than the block of
-type. | | **edge offset x** | -24–24 smp | A CG drew its border and drop shadow
-by delaying the key a sample and a line and OR-ing it back in underneath the
-fill. This is that delay. Pulling it far past the sample it was meant to be
-detaches the shadow from the type and moves it across the frame. | | **edge
-offset y** | -24–24 ln | The other half of the drop shadow, in lines. Bending
-the two apart puts a shadow in front of the letters it belongs to instead of
-behind them. | | **fill level** | 0–120 IRE | How bright the characters are laid
-in, in IRE on the composite. 100 is peak white. Past that the box is
-overmodulating, and everything downstream that reacts to level reacts to it: the
-receiver AGC, the tape, and the sound detector, which starts buzzing in time
-with the caption. | | **cg x** | 0–1 | The block's left edge across the picture.
-| | **cg y** | 0–1 | The block's top edge down the picture. The stock value is a
-lower third, clear of the caption decoder's own block below it. The two are
-meant to be run together and compared. | | **cg size** | 1–6 | Picture samples
-per font dot. The glyphs are dots on a grid, so this scales in whole dots and
-the type stays as blocky as the ROM made it. | | **cg rom address line** | 0–11
-| A pin held high on this box's font ROM. The same bend as the caption
-decoder's, on a different chip, because these are two boxes and shorting one
-says nothing about the other. Low lines carry the row inside the cell, so every
-glyph grows a seam. High lines carry the character code, so the whole font is
-substituted. | | **cg rom data line** | -8–8 | The data bus of the same chip:
-eight dots across one row, so holding one stripes a column down every character
-on the page. Positive holds it high, negative holds it low. |
+| Control                 | Range                 | The fault it models                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| ----------------------- | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **cg over program**     | 0–1                   | A character generator at the switcher, keying the caption text into the picture, the box every lower third, score bug and station ident came out of.<br><br>What makes it a CG rather than an overlay is that it puts out **two wires**: a fill, which is video, and a key, which is a matte cut at the characters' own edges. Everything below changes the relationship between those two, which is what every bent chyron is doing.<br><br>Because it keys onto the composite bus ahead of the loops and the deck, what it writes is signal from here on. Full-swing type is the harshest thing a composite path carries, so the AGC pumps on it, the sound detector turns it into a whine that changes with the text, and the tape ages it along with the picture. |
+| **key timing**          | -600–600 ns           | The trim every real keyer has, because the key path and the video path are different lengths of circuit. Mis-set on a photograph it slides a soft matte a few samples and nobody notices. Mis-set on a glyph it puts background through one side of every stem and a hard shadow down the other, and far enough out it leaves an outline with no letter inside it. One sample is 70 ns.                                                                                                                                                                                                                                                                                                                                                                               |
+| **key clip**            | 0–1                   | Where the slicer cuts the processed key. On type this is stroke weight rather than an edge position. Down, thin strokes fuse and the whole line grows a halo. Up, stems drop out of the middle of words. How much range it has depends on the key bandwidth below: a key with no soft edge has nothing for a clip to slide along.                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| **key bandwidth**       | 0.3–8 MHz             | The key-processing amplifier ahead of the slicer, which is narrower than the video path and is the only reason a key has a soft edge at all. Horizontal only, the same lopsided edge the chroma keyer has, for the same reason: this is a line of signal rather than a picture, so there is no vertical neighbour on the wire.                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| **key invert**          | `normal` · `inverted` | Which side of the key is cut. Inverted, the box fills the whole raster and the letters are holes in it showing the picture. That is what a downstream keyer inverted actually does, since the key's domain is the picture rather than the block of type.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| **edge offset x**       | -24–24 smp            | A CG drew its border and drop shadow by delaying the key a sample and a line and OR-ing it back in underneath the fill. This is that delay. Pulling it far past the sample it was meant to be detaches the shadow from the type and moves it across the frame.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| **edge offset y**       | -24–24 ln             | The other half of the drop shadow, in lines. Bending the two apart puts a shadow in front of the letters it belongs to instead of behind them.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| **fill level**          | 0–120 IRE             | How bright the characters are laid in, in IRE on the composite. 100 is peak white. Past that the box is overmodulating, and everything downstream that reacts to level reacts to it: the receiver AGC, the tape, and the sound detector, which starts buzzing in time with the caption.                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| **cg x**                | 0–1                   | The block's left edge across the picture.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| **cg y**                | 0–1                   | The block's top edge down the picture. The stock value is a lower third, clear of the caption decoder's own block below it. The two are meant to be run together and compared.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| **cg size**             | 1–6                   | Picture samples per font dot. The glyphs are dots on a grid, so this scales in whole dots and the type stays as blocky as the ROM made it.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| **cg rom address line** | 0–11                  | A pin held high on this box's font ROM. The same bend as the caption decoder's, on a different chip, because these are two boxes and shorting one says nothing about the other. Low lines carry the row inside the cell, so every glyph grows a seam. High lines carry the character code, so the whole font is substituted.                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| **cg rom data line**    | -8–8                  | The data bus of the same chip: eight dots across one row, so holding one stripes a column down every character on the page. Positive holds it high, negative holds it low.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 
 ### Wipe (A/B)
 
@@ -282,57 +228,17 @@ on the page. Positive holds it high, negative holds it low. |
 
 ### Cable / Wiring
 
-| Control                             | Range                     | The fault it models                                                                                                                                                                                                                                                                                                                   |
-| ----------------------------------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **hard polarity (flips sync)**      | 0–1                       | A signal/ground swap at the connector: the whole composite waveform is negated, sync pulses included. Unlike the picture-only invert above, the receiver now has to find sync in what used to be peak white, so the picture tears and rolls while it hunts.                                                                           |
-| **termination (-1 daisy, +1 open)** | -1–1                      | Composite video expects a single 75 Ω load. Negative is double-terminated, a monitor daisy-chained with its loop-through still on, which halves the signal. The picture goes dim and the colour killer starts to cut in. Positive is unterminated, so the line reflects: the signal runs hot and rings, with overshoot on every edge. |
-| **chroma-pin only**                 | 0–1                       | S-video miswired into a composite input, so only the chroma pin arrives. There is no luma and no sync, so the receiver free-runs on a bare subcarrier: floating colour over a black raster with nothing to lock to.                                                                                                                   |
-| **loose connector**                 | 0–1                       | How loose the plug is. Bands of lines lose contact, re-rolled every frame, the way a plug hanging on its own cable weight makes and breaks. Which of the two contacts is failing is the row below, and they fail into completely different pictures.                                                                                  |
-| **bad contact**                     | `pin` · `shield` · `both` | Which contact of the plug is intermittent.                                                                                                                                                                                                                                                                                            |
-
-          - **pin**: the centre breaks the signal path, so the jack sees an
-            open through its own terminator and those bands collapse to the
-            input stage’s noise floor. Sync included, which is why they tear.
-          - **shield**: the shell breaks the ground reference instead and
-            leaves the signal alone. The return current runs to the mains earth
-            through both boxes’ supplies, so a ground loop’s hum lands on the
-            bad bands and the level walks and buzzes while the picture and its
-            sync survive.
-          - **both**: a wiggled plug, with the two faults on independent bands
-            so they interleave. |
-
-| **sync suppression** | 0–1 | How hard the head-end suppresses sync on a
-premium channel. The scrambler lifts the carrier during each sync pulse, so a
-set without a decoder box has a shallow tip, or none at all, to find the start
-of a line in. Under about half depth the tip still clears the slicer and the set
-merely mismeasures it, so the AGC over-compensates and the picture washes out
-bright. Past that the tip is gone and the line oscillator free-runs, so what the
-picture does next depends on the h-osc detune below. A set sitting exactly on
-15.734 kHz coasts through the gap almost cleanly. Vertical stays roughly framed
-either way, because the broad vertical pulses are wider than the line-rate gate,
-so the frame shears instead of tumbling. | | **system** | `gated` · `alternate`
-· `ssavi` | Which scrambling system. Gated suppresses every line, so the
-oscillator free-runs the whole way down and the raster shears continuously.
-Alternate suppresses every other line, so the flywheel is pulled back half the
-time and the drift between corrections shows as a ragged line-pair zigzag on
-every vertical edge. It tolerates far more h-osc detune before it stops being a
-picture. SSAVI is Zenith's: suppression plus inversion of the active video, so
-what leaks through is a negative. Burst sits in the back porch and is untouched,
-so hue survives the inversion. | | **agc pulses (macrovision)** | 0–1 |
-Macrovision's AGC poisoning, stamped on vertical-interval lines 12-19 of the
-source, exactly the window this receiver averages its sync depth over. A pulse
-parked on the back porch makes the measured sync depth balloon, so with the agc
-control up the set responds by crushing gain on a signal that was never hot. The
-pulse level walks a slow staircase, so the picture breathes instead of settling.
-The pulse trains sit in the blanking interval, invisible until the picture rolls
-and the classic flashing bar rides the vertical interval into view. | |
-**colorstripe** | 0–180 deg | The later half of the process: colourbursts on
-moving bands of picture lines are rotated off the house phase by this much. The
-decoder corrects each line's hue by the burst it just gated, so the poisoned
-bands come out rotated the other way, as hue banding crawling down the frame. A
-set that trusts its burst less (burst lock) or averages bursts over lines
-(chroma AGC lag) is barely affected, which is the difference between the TV this
-was invisible on and the VCR it was aimed at. |
+| Control                             | Range                           | The fault it models                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| ----------------------------------- | ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **hard polarity (flips sync)**      | 0–1                             | A signal/ground swap at the connector: the whole composite waveform is negated, sync pulses included. Unlike the picture-only invert above, the receiver now has to find sync in what used to be peak white, so the picture tears and rolls while it hunts.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| **termination (-1 daisy, +1 open)** | -1–1                            | Composite video expects a single 75 Ω load. Negative is double-terminated, a monitor daisy-chained with its loop-through still on, which halves the signal. The picture goes dim and the colour killer starts to cut in. Positive is unterminated, so the line reflects: the signal runs hot and rings, with overshoot on every edge.                                                                                                                                                                                                                                                                                                                                                                                                           |
+| **chroma-pin only**                 | 0–1                             | S-video miswired into a composite input, so only the chroma pin arrives. There is no luma and no sync, so the receiver free-runs on a bare subcarrier: floating colour over a black raster with nothing to lock to.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| **loose connector**                 | 0–1                             | How loose the plug is. Bands of lines lose contact, re-rolled every frame, the way a plug hanging on its own cable weight makes and breaks. Which of the two contacts is failing is the row below, and they fail into completely different pictures.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| **bad contact**                     | `pin` · `shield` · `both`       | Which contact of the plug is intermittent.<br><br>- **pin**: the centre breaks the signal path, so the jack sees an open through its own terminator and those bands collapse to the input stage’s noise floor. Sync included, which is why they tear.<br>- **shield**: the shell breaks the ground reference instead and leaves the signal alone. The return current runs to the mains earth through both boxes’ supplies, so a ground loop’s hum lands on the bad bands and the level walks and buzzes while the picture and its sync survive.<br>- **both**: a wiggled plug, with the two faults on independent bands so they interleave.                                                                                                     |
+| **sync suppression**                | 0–1                             | How hard the head-end suppresses sync on a premium channel. The scrambler lifts the carrier during each sync pulse, so a set without a decoder box has a shallow tip, or none at all, to find the start of a line in. Under about half depth the tip still clears the slicer and the set merely mismeasures it, so the AGC over-compensates and the picture washes out bright. Past that the tip is gone and the line oscillator free-runs, so what the picture does next depends on the h-osc detune below. A set sitting exactly on 15.734 kHz coasts through the gap almost cleanly. Vertical stays roughly framed either way, because the broad vertical pulses are wider than the line-rate gate, so the frame shears instead of tumbling. |
+| **system**                          | `gated` · `alternate` · `ssavi` | Which scrambling system. Gated suppresses every line, so the oscillator free-runs the whole way down and the raster shears continuously. Alternate suppresses every other line, so the flywheel is pulled back half the time and the drift between corrections shows as a ragged line-pair zigzag on every vertical edge. It tolerates far more h-osc detune before it stops being a picture. SSAVI is Zenith's: suppression plus inversion of the active video, so what leaks through is a negative. Burst sits in the back porch and is untouched, so hue survives the inversion.                                                                                                                                                             |
+| **agc pulses (macrovision)**        | 0–1                             | Macrovision's AGC poisoning, stamped on vertical-interval lines 12-19 of the source, exactly the window this receiver averages its sync depth over. A pulse parked on the back porch makes the measured sync depth balloon, so with the agc control up the set responds by crushing gain on a signal that was never hot. The pulse level walks a slow staircase, so the picture breathes instead of settling. The pulse trains sit in the blanking interval, invisible until the picture rolls and the classic flashing bar rides the vertical interval into view.                                                                                                                                                                              |
+| **colorstripe**                     | 0–180 deg                       | The later half of the process: colourbursts on moving bands of picture lines are rotated off the house phase by this much. The decoder corrects each line's hue by the burst it just gated, so the poisoned bands come out rotated the other way, as hue banding crawling down the frame. A set that trusts its burst less (burst lock) or averages bursts over lines (chroma AGC lag) is barely affected, which is the difference between the TV this was invisible on and the VCR it was aimed at.                                                                                                                                                                                                                                            |
 
 ### VHS colour & tracking
 
@@ -407,145 +313,34 @@ was invisible on and the VCR it was aimed at. |
 
 ### Decoder
 
-| Control      | Range                        | The fault it models                                          |
-| ------------ | ---------------------------- | ------------------------------------------------------------ |
-| **Y/C comb** | `trap` · `2-line` · `3-line` | How the TV separates brightness from colour, which share one |
-
-          wire.
-
-          - **trap**: a notch filter. Cheap, and it mistakes fine detail for
-            colour (rainbow fringing on stripes) and colour for detail (dot
-            crawl on edges).
-          - **2-line** and **3-line**: combs, which use the line-to-line
-            subcarrier alternation to separate the two properly and largely
-            remove both artifacts. |
-
-| **S-video bleed** | 0–1 | Chroma crossing into the luma path, as if the Y and
-C wires were shorted. It defeats the separation, so the subcarrier itself
-appears in the picture as a dense moving dot pattern over anything coloured. | |
-**chroma bandwidth** | 0.05–6 MHz | The colour demodulator's low-pass, which
-decides how fast colour is allowed to change across a line. Real sets are around
-0.5 MHz, which is why colour bleeds past its edges while brightness stays crisp.
-The eye barely notices, and broadcasters exploited it. Open it past about 1.5
-and the passband stops being a colour filter and starts admitting luma detail,
-so every edge and every fine texture arrives as cross-colour and the picture
-rainbows everywhere. | | **chroma trail** | 0–1 | Asymmetric colour smear,
-trailing to the right only. A symmetric filter blurs both ways. A lagging chroma
-path drags colour behind the edge, which is the direction real sets and tapes
-actually smear. | | **chroma upsample error** | 1–8 px | How coarsely the
-demodulated colour is sampled before being stretched back up. Coarse sampling
-lands on the subcarrier lattice at intervals, so moving detail rainbows in
-blocks, the cross-colour a cheap decoder makes of a striped shirt. | | **chroma
-gain** | 0–16 x | The colour control on the set: how much the demodulated chroma
-is amplified. Past 1 saturation blooms and clips against the edge of the gamut.
-| | **tint** | -180–180 deg | The tint knob on the front of the set, which
-rotates the demodulator's reference against the incoming colour. Every hue turns
-together, so flesh goes green one way and magenta the other. At ±180 the
-reference is backwards and the picture comes out in complementary colour with
-its brightness untouched. Burst lock corrects the signal's phase errors, not
-this. The knob sits after the correction, which is why turning it never
-un-corrects itself. | | **burst lock** | 0–1 | How much the decoder trusts the
-colour burst it measured. At 1 it follows the burst, so phase errors in the
-incoming signal are corrected out. At 0 it ignores it and runs on its own
-crystal, so any subcarrier error shows up directly as wrong, drifting hue. | |
-**demod axis** | 0–180 deg | The angle between the set's two synchronous colour
-demodulators. They sit 90° apart only because the reference network says so.
-Cheap sets used non-quadrature "X/Z" axes deliberately, and a drifted network
-lands anywhere. Unlike tint, this does not rotate the colour wheel, it shears
-it: hues that were opposite stop being opposite, so the picture keeps some of
-its colours and loses others. Toward 0 both demodulators read the same phase and
-every hue collapses onto a single axis. Past 90 the plane stretches and then
-folds through itself. | | **subcarrier detune** | -200–200 kHz | The decoder's
-reference crystal pulled off 3.579545 MHz, the classic circuit-bend. The
-demodulation axis rotates continuously against the incoming colour, so hue
-sweeps the whole wheel at a rate set by how far off you are. Turn burst lock
-down to let it run. | | **color killer** | 0–100 IRE | The burst amplitude below
-which the set decides the broadcast is monochrome and shuts colour off entirely,
-in IRE. Raise it and anything that weakens the burst (noise, a dim signal,
-dropouts) makes colour cut in and out in patches. | | **chroma AGC lag** | 0–240
-lines | The time constant of the chroma AGC's control voltage, in scan lines of
-burst memory. At 0 the set corrects colour gain instantly per line, which no
-real ACC can. Raised, gain and the colour killer respond to burst damage tens of
-lines late, so colour blooms back after a dropout band instead of snapping,
-overshoots on a scene change, and a marginal burst makes the killer chatter in
-and out down the frame. With fed-back burst circulating in the mixer loop the
-lag turns into colour that pumps. | | **VIR correction** | 0–1 | How far the set
-trusts the reference stamped on line 19 of the vertical interval. A VIR receiver
-decoded that line, compared it against what it knew was sent, and trimmed its
-own hue and saturation until the two agreed: a closed loop around the
-demodulator, and one that is only as right as the reference arriving. Damage the
-signal above line 21 and the correction goes with it. The whole picture rotates
-toward whatever the reference was bent into, and a dub whose chroma the tape
-path has been eating a generation at a time comes back garish rather than washed
-out, because a weak reference makes the set turn colour up. Needs the VBI test
-signals on to have anything to read. | | **VIR lag** | 1–240 frames | The
-corrector's time constant, in frames. Short and it chases the reference line by
-line, so damage that comes and goes makes the picture flicker. Long is what a
-real corrector did. It responds over a second or more, which is why a bent
-reference drags the whole frame somewhere wrong and leaves it there, and only
-walks back as slowly once the signal recovers. | | **output stage clip** | 0–1 |
-How the RGB output amplifiers run out of headroom. At 0 the matrix is fitted
-back into gamut without moving the hue, which keeps overdriven colour vivid. At
-1 the three guns simply hit their rails, and since they hit them one at a time
-the first to clip drags the hue toward the two still in range. Turn it up with
-chroma gain past 1 and saturated areas migrate toward the primaries as they blow
-out instead of holding their colour. | | **agc** | 0–1 | How aggressively the
-receiver normalizes signal level off the sync tip. At 1 it corrects for weak or
-hot signals and holds contrast steady. At 0 the gain is fixed, so anything that
-changes signal amplitude changes picture brightness directly. | | **encoder
-chroma bw** | 0.1–4 MHz | Colour bandwidth at the encode end, before the signal
-is ever transmitted: the camera's own limit, as opposed to the decoder's. Wide
-enough and the chroma sidebands spill into the luma band and generate their own
-cross-colour. |
+| Control                   | Range                        | The fault it models                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| ------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Y/C comb**              | `trap` · `2-line` · `3-line` | How the TV separates brightness from colour, which share one wire.<br><br>- **trap**: a notch filter. Cheap, and it mistakes fine detail for colour (rainbow fringing on stripes) and colour for detail (dot crawl on edges).<br>- **2-line** and **3-line**: combs, which use the line-to-line subcarrier alternation to separate the two properly and largely remove both artifacts.                                                                                                                                                                                                                                                                                                                  |
+| **S-video bleed**         | 0–1                          | Chroma crossing into the luma path, as if the Y and C wires were shorted. It defeats the separation, so the subcarrier itself appears in the picture as a dense moving dot pattern over anything coloured.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| **chroma bandwidth**      | 0.05–6 MHz                   | The colour demodulator's low-pass, which decides how fast colour is allowed to change across a line. Real sets are around 0.5 MHz, which is why colour bleeds past its edges while brightness stays crisp. The eye barely notices, and broadcasters exploited it. Open it past about 1.5 and the passband stops being a colour filter and starts admitting luma detail, so every edge and every fine texture arrives as cross-colour and the picture rainbows everywhere.                                                                                                                                                                                                                               |
+| **chroma trail**          | 0–1                          | Asymmetric colour smear, trailing to the right only. A symmetric filter blurs both ways. A lagging chroma path drags colour behind the edge, which is the direction real sets and tapes actually smear.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| **chroma upsample error** | 1–8 px                       | How coarsely the demodulated colour is sampled before being stretched back up. Coarse sampling lands on the subcarrier lattice at intervals, so moving detail rainbows in blocks, the cross-colour a cheap decoder makes of a striped shirt.                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| **chroma gain**           | 0–16 x                       | The colour control on the set: how much the demodulated chroma is amplified. Past 1 saturation blooms and clips against the edge of the gamut.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| **tint**                  | -180–180 deg                 | The tint knob on the front of the set, which rotates the demodulator's reference against the incoming colour. Every hue turns together, so flesh goes green one way and magenta the other. At ±180 the reference is backwards and the picture comes out in complementary colour with its brightness untouched. Burst lock corrects the signal's phase errors, not this. The knob sits after the correction, which is why turning it never un-corrects itself.                                                                                                                                                                                                                                           |
+| **burst lock**            | 0–1                          | How much the decoder trusts the colour burst it measured. At 1 it follows the burst, so phase errors in the incoming signal are corrected out. At 0 it ignores it and runs on its own crystal, so any subcarrier error shows up directly as wrong, drifting hue.                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| **demod axis**            | 0–180 deg                    | The angle between the set's two synchronous colour demodulators. They sit 90° apart only because the reference network says so. Cheap sets used non-quadrature "X/Z" axes deliberately, and a drifted network lands anywhere. Unlike tint, this does not rotate the colour wheel, it shears it: hues that were opposite stop being opposite, so the picture keeps some of its colours and loses others. Toward 0 both demodulators read the same phase and every hue collapses onto a single axis. Past 90 the plane stretches and then folds through itself.                                                                                                                                           |
+| **subcarrier detune**     | -200–200 kHz                 | The decoder's reference crystal pulled off 3.579545 MHz, the classic circuit-bend. The demodulation axis rotates continuously against the incoming colour, so hue sweeps the whole wheel at a rate set by how far off you are. Turn burst lock down to let it run.                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| **color killer**          | 0–100 IRE                    | The burst amplitude below which the set decides the broadcast is monochrome and shuts colour off entirely, in IRE. Raise it and anything that weakens the burst (noise, a dim signal, dropouts) makes colour cut in and out in patches.                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| **chroma AGC lag**        | 0–240 lines                  | The time constant of the chroma AGC's control voltage, in scan lines of burst memory. At 0 the set corrects colour gain instantly per line, which no real ACC can. Raised, gain and the colour killer respond to burst damage tens of lines late, so colour blooms back after a dropout band instead of snapping, overshoots on a scene change, and a marginal burst makes the killer chatter in and out down the frame. With fed-back burst circulating in the mixer loop the lag turns into colour that pumps.                                                                                                                                                                                        |
+| **VIR correction**        | 0–1                          | How far the set trusts the reference stamped on line 19 of the vertical interval. A VIR receiver decoded that line, compared it against what it knew was sent, and trimmed its own hue and saturation until the two agreed: a closed loop around the demodulator, and one that is only as right as the reference arriving. Damage the signal above line 21 and the correction goes with it. The whole picture rotates toward whatever the reference was bent into, and a dub whose chroma the tape path has been eating a generation at a time comes back garish rather than washed out, because a weak reference makes the set turn colour up. Needs the VBI test signals on to have anything to read. |
+| **VIR lag**               | 1–240 frames                 | The corrector's time constant, in frames. Short and it chases the reference line by line, so damage that comes and goes makes the picture flicker. Long is what a real corrector did. It responds over a second or more, which is why a bent reference drags the whole frame somewhere wrong and leaves it there, and only walks back as slowly once the signal recovers.                                                                                                                                                                                                                                                                                                                               |
+| **output stage clip**     | 0–1                          | How the RGB output amplifiers run out of headroom. At 0 the matrix is fitted back into gamut without moving the hue, which keeps overdriven colour vivid. At 1 the three guns simply hit their rails, and since they hit them one at a time the first to clip drags the hue toward the two still in range. Turn it up with chroma gain past 1 and saturated areas migrate toward the primaries as they blow out instead of holding their colour.                                                                                                                                                                                                                                                        |
+| **agc**                   | 0–1                          | How aggressively the receiver normalizes signal level off the sync tip. At 1 it corrects for weak or hot signals and holds contrast steady. At 0 the gain is fixed, so anything that changes signal amplitude changes picture brightness directly.                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| **encoder chroma bw**     | 0.1–4 MHz                    | Colour bandwidth at the encode end, before the signal is ever transmitted: the camera's own limit, as opposed to the decoder's. Wide enough and the chroma sidebands spill into the luma band and generate their own cross-colour.                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 
 ### Captions
 
-| Control             | Range        | The fault it models                                              |
-| ------------------- | ------------ | ---------------------------------------------------------------- |
-| **caption decoder** | `off` · `on` | The set's own caption decoder, slicing line 21 off the signal it |
-
-          actually received.
-
-          The caption is *data*, and it has been through everything the picture
-          has. Snow, a narrow channel, tape noise and generation loss arrive as
-          misspellings: dropped characters, wrong ones, a solid block wherever
-          parity caught an error and the decoder refused to guess. Turn the
-          tracking off and the caption dies before the picture does, because
-          line 21 is at the top of the field where the band lands first.
-
-          It is painted on the set's raster rather than the signal's, which is
-          where a real decoder paints. The page is redrawn on the set's own
-          timing, so the picture can roll, tear and change hue underneath a
-          caption that sits perfectly still. It still bends with the tube and
-          still blooms, because both of those happen after it.
-
-          Needs vbi test signals on. That is the switch that puts line 21 on
-          the wire at all. |
-
-| **caption box** | 0–1 | How black the box behind the characters is. Broadcast
-captions sat in a solid one because type keyed straight over picture is
-unreadable the moment the picture is bright. Turn it down and you get exactly
-that problem, which every set-top caption box had. | | **rom address line** |
-0–11 | A pin held high on the character generator's font ROM: a literal circuit
-bend, and a different thing from a bad feed.
-
-          Which line matters, because of how the chip is addressed. The **low**
-          lines carry the row inside the cell, so holding one makes every glyph
-          repeat a scan line through itself and the whole font grows a seam. The
-          **high** lines carry the character code, so holding one substitutes
-          the entire font for its neighbour a fixed distance away in the ROM.
-          The text keeps its length and spacing and comes out systematically
-          wrong.
-
-          Held rather than switched, the way a jumper does it, so a glyph whose
-          bit was already set comes back untouched and the damage is uneven.
-          Nothing here is random. The same text bends the same way every time,
-          which is what tells a bent machine from a noisy wire. |
-
-| **rom data line** | -8–8 | The other bus. A font ROM's data lines are the
-eight dots across one row, so holding one lights or kills the same column of
-every character on the page: a stripe straight down the font rather than a fault
-in any one letter. Positive holds the line high, negative holds it low. |
+| Control              | Range        | The fault it models                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| -------------------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **caption decoder**  | `off` · `on` | The set's own caption decoder, slicing line 21 off the signal it actually received.<br><br>The caption is _data_, and it has been through everything the picture has. Snow, a narrow channel, tape noise and generation loss arrive as misspellings: dropped characters, wrong ones, a solid block wherever parity caught an error and the decoder refused to guess. Turn the tracking off and the caption dies before the picture does, because line 21 is at the top of the field where the band lands first.<br><br>It is painted on the set's raster rather than the signal's, which is where a real decoder paints. The page is redrawn on the set's own timing, so the picture can roll, tear and change hue underneath a caption that sits perfectly still. It still bends with the tube and still blooms, because both of those happen after it.<br><br>Needs vbi test signals on. That is the switch that puts line 21 on the wire at all. |
+| **caption box**      | 0–1          | How black the box behind the characters is. Broadcast captions sat in a solid one because type keyed straight over picture is unreadable the moment the picture is bright. Turn it down and you get exactly that problem, which every set-top caption box had.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| **rom address line** | 0–11         | A pin held high on the character generator's font ROM: a literal circuit bend, and a different thing from a bad feed.<br><br>Which line matters, because of how the chip is addressed. The **low** lines carry the row inside the cell, so holding one makes every glyph repeat a scan line through itself and the whole font grows a seam. The **high** lines carry the character code, so holding one substitutes the entire font for its neighbour a fixed distance away in the ROM. The text keeps its length and spacing and comes out systematically wrong.<br><br>Held rather than switched, the way a jumper does it, so a glyph whose bit was already set comes back untouched and the damage is uneven. Nothing here is random. The same text bends the same way every time, which is what tells a bent machine from a noisy wire.                                                                                                        |
+| **rom data line**    | -8–8         | The other bus. A font ROM's data lines are the eight dots across one row, so holding one lights or kills the same column of every character on the page: a stripe straight down the font rather than a fault in any one letter. Positive holds the line high, negative holds it low.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 
 ## Screen
 
@@ -565,37 +360,12 @@ in any one letter. Positive holds the line high, negative holds it low. |
 
 ### Phosphor
 
-| Control       | Range                             | The fault it models                                     |
-| ------------- | --------------------------------- | ------------------------------------------------------- |
-| **phosphors** | `sRGB` · `P22` · `1953` · `green` | Which phosphors the tube is coated with, which sets its |
-
-          primaries.
-
-          - **sRGB**: no conversion.
-          - **P22**: SMPTE-C, a normal colour TV.
-          - **1953**: the wide NTSC primaries nobody ever built.
-          - **green**: a long-persistence monochrome monitor. |
-
-| **phosphor persistence** | 0–0.9995 | How long the layer keeps glowing after
-the beam has passed. This is afterglow in the glass, not electronic feedback.
-The decay is second-order, so the bright core of a trail loses almost all of
-itself at once and only the dim remainder lingers.
-
-          A real picture-tube phosphor is gone well inside one field, so
-          anything you can actually *see* as a trail is already past P22 and
-          into oscilloscope-tube territory. That is the top of the range. The
-          middle is a hold of a field or two, which is enough to catch an arc
-          strike or a sync tear that would otherwise be gone before you
-          noticed it. |
-
-| **trail tint** | 0–6 | The three phosphors do not decay at the same rate. Red
-and blue die faster than green. Raise this and trails tint green as they fade,
-which is the giveaway that you are looking at real persistence rather than a
-blend of frames. | | **trail scatter** | 0–1 | Held light does not leave through
-the grain that emitted it. It scatters sideways through the layer and the glass,
-into phosphor that is still glowing itself. The spread therefore compounds along
-a trail: the fresh edge stays sharp while old light gets progressively wider and
-softer, instead of the tail being a stack of hard copies. |
+| Control                  | Range                             | The fault it models                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| ------------------------ | --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **phosphors**            | `sRGB` · `P22` · `1953` · `green` | Which phosphors the tube is coated with, which sets its primaries.<br><br>- **sRGB**: no conversion.<br>- **P22**: SMPTE-C, a normal colour TV.<br>- **1953**: the wide NTSC primaries nobody ever built.<br>- **green**: a long-persistence monochrome monitor.                                                                                                                                                                                                                                                                                                                                                |
+| **phosphor persistence** | 0–0.9995                          | How long the layer keeps glowing after the beam has passed. This is afterglow in the glass, not electronic feedback. The decay is second-order, so the bright core of a trail loses almost all of itself at once and only the dim remainder lingers.<br><br>A real picture-tube phosphor is gone well inside one field, so anything you can actually _see_ as a trail is already past P22 and into oscilloscope-tube territory. That is the top of the range. The middle is a hold of a field or two, which is enough to catch an arc strike or a sync tear that would otherwise be gone before you noticed it. |
+| **trail tint**           | 0–6                               | The three phosphors do not decay at the same rate. Red and blue die faster than green. Raise this and trails tint green as they fade, which is the giveaway that you are looking at real persistence rather than a blend of frames.                                                                                                                                                                                                                                                                                                                                                                             |
+| **trail scatter**        | 0–1                               | Held light does not leave through the grain that emitted it. It scatters sideways through the layer and the glass, into phosphor that is still glowing itself. The spread therefore compounds along a trail: the fresh edge stays sharp while old light gets progressively wider and softer, instead of the tail being a stack of hard copies.                                                                                                                                                                                                                                                                  |
 
 ### Mask & convergence
 
@@ -741,29 +511,13 @@ signal path.
 
 ### View
 
-| Control                        | Range                                                 | The fault it models                                                                                                                                                                                                                                                                                                                                                                       |
-| ------------------------------ | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **magnifier**                  | 0.25–12 ×                                             | Where your eye is, up against the glass. Everything that lives on the screen rather than in the image magnifies with it (scanline structure, the beam spot bleeding between samples, phosphor grain, the grille triads), so this is the way to see what the picture is actually built out of.                                                                                             |
-| **magnifier x**                | 0–1                                                   | Which part of the glass is under the magnifier, across. Ignored at 1× since the whole screen is already in view.                                                                                                                                                                                                                                                                          |
-| **magnifier y**                | 0–1                                                   | Which part of the glass is under the magnifier, down. Ignored at 1× and below, where the whole screen is already in view.                                                                                                                                                                                                                                                                 |
-| **slow motion (1 = realtime)** | 0–1 x                                                 | Steps the whole simulation at a fraction of display rate, like slowed footage of the rig. Noise, rolls, sweeps, feedback loops and phosphor all slow together, and 0 freezes the frame. Modulation stays live, so an LFO or audio envelope here warps time itself. Pair it with a source's own speed control, under its transport at the head of its stage, to slow the footage to match. |
-| **frame rate lock**            | `off` · `1/2 rate` · `1/3 rate` · `1/4 rate` · `auto` | Renders every second, third or fourth display refresh instead of                                                                                                                                                                                                                                                                                                                          |
-
-          trying to hit every one. A signal path that costs slightly more than
-          a refresh interval otherwise wavers between full rate and half rate.
-          The wavering reads as stutter, where a steady lower rate reads as
-          intentional.
-
-          - **off**: render every refresh, which is what a rig with headroom
-            should do.
-          - **1/2 rate**, **1/3 rate**, **1/4 rate**: a fixed rate. The skipped
-            refreshes do no work at all, so the lock never slows the rig
-            further. Like slow motion, the simulation (modulation included)
-            steps once per rendered frame, so rolls and noise move
-            proportionally slower under one.
-          - **auto**: watches the loop itself. Sustained missed refreshes engage
-            the half-rate lock, and it retries full rate with a lengthening
-            pause between attempts. |
+| Control                        | Range                                                 | The fault it models                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| ------------------------------ | ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **magnifier**                  | 0.25–12 ×                                             | Where your eye is, up against the glass. Everything that lives on the screen rather than in the image magnifies with it (scanline structure, the beam spot bleeding between samples, phosphor grain, the grille triads), so this is the way to see what the picture is actually built out of.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| **magnifier x**                | 0–1                                                   | Which part of the glass is under the magnifier, across. Ignored at 1× since the whole screen is already in view.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| **magnifier y**                | 0–1                                                   | Which part of the glass is under the magnifier, down. Ignored at 1× and below, where the whole screen is already in view.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| **slow motion (1 = realtime)** | 0–1 x                                                 | Steps the whole simulation at a fraction of display rate, like slowed footage of the rig. Noise, rolls, sweeps, feedback loops and phosphor all slow together, and 0 freezes the frame. Modulation stays live, so an LFO or audio envelope here warps time itself. Pair it with a source's own speed control, under its transport at the head of its stage, to slow the footage to match.                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| **frame rate lock**            | `off` · `1/2 rate` · `1/3 rate` · `1/4 rate` · `auto` | Renders every second, third or fourth display refresh instead of trying to hit every one. A signal path that costs slightly more than a refresh interval otherwise wavers between full rate and half rate. The wavering reads as stutter, where a steady lower rate reads as intentional.<br><br>- **off**: render every refresh, which is what a rig with headroom should do.<br>- **1/2 rate**, **1/3 rate**, **1/4 rate**: a fixed rate. The skipped refreshes do no work at all, so the lock never slows the rig further. Like slow motion, the simulation (modulation included) steps once per rendered frame, so rolls and noise move proportionally slower under one.<br>- **auto**: watches the loop itself. Sustained missed refreshes engage the half-rate lock, and it retries full rate with a lengthening pause between attempts. |
 
 ---
 
