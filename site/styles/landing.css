@@ -41,16 +41,31 @@ a {
 
    The moving account of the program is still the carousel underneath: a header
    that changes under a reader is a distraction from the words in front of it,
-   and the stage can be looked at. */
+   and the stage can be looked at.
+
+   Two rows, and the card gets the one the buttons leave. The card used to be
+   the whole box with the buttons lying over its foot, which is a collision
+   waiting for a short window: the words sit in a fixed band of the picture —
+   43% to 58% of its height, where `heroplate.mjs` set them — and `cover` scales
+   that band with the box's *width*, while the buttons stack up from its
+   *bottom*. A 1600x600 window crossed the two with nothing else shown, and the
+   WebGPU warning, another 116px of stack, crossed them at every size a reader
+   without WebGPU has. So the picture takes the row that is left over and crops
+   itself into it, and that row's floor keeps the words bigger than a caption on
+   a window too short to hand them anything. */
 .hero {
-  position: relative;
+  display: grid;
+  grid-template-rows: minmax(max(11rem, 17vw), 1fr) auto;
+  /* A section's own 3.5rem, which the card used to cover from under its
+     absolute inset and now would sit in as a band of page colour. */
+  padding: 0;
   overflow: hidden;
   border-bottom: 1px solid var(--border);
   min-height: clamp(20rem, 56vh, 34rem);
 }
 .heroTitle {
-  position: absolute;
-  inset: 0;
+  position: relative;
+  overflow: hidden;
   margin: 0;
 }
 /* The <picture> is only there to hand the img a second source; it is not a box
@@ -63,20 +78,17 @@ a {
    little left to take — the crop that matters is the one the harness made, with
    the words in the middle of it. */
 .heroTitle img {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 .heroBody {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  min-height: inherit;
   /* The side padding is `.wrap`'s own: zeroing it stood the hero title
      20px left of every line under it, and put the buttons and the warning
      against the bezel on a phone. */
-  padding: 3.75rem 1.25rem 2.75rem;
+  padding: 1.5rem 1.25rem 2.75rem;
 }
 .heroCta {
   display: flex;
