@@ -99,11 +99,22 @@ every version of a megabyte-scale binary in the history forever. `demos.mjs` and
 
 ## Writing
 
-Prose in the docs and in the app says what a thing is. Definition by negation —
-"not the rig — the hand on it now" — reads as filler, since the positive half
-carries the sentence on its own. Keep a negation only where the alternative is
-one a reader would otherwise pick: an ADR naming what it turned down, or a fault
-told apart from the one it resembles.
+Write plain technical English in the docs and in the app. State what a thing is
+and what it does, in ordinary declarative sentences.
+
+Two habits to avoid:
+
+- **Mannered phrasing**: inversions, dropped verbs, sentence fragments, and
+  aphorisms. "Light rather than wire" and "the only effect you listen to" are
+  the house style this replaces; "an optical loop" and "sound buzz is an audio
+  output" are what to write instead.
+- **Contrastive phrasing**: "X rather than Y", "not A but B", "instead of".
+  State the positive half and stop.
+
+Keep a contrast only where the reader needs the distinction to choose correctly:
+an ADR naming the option it turned down, or a fault that resembles another one.
+A physical mechanism often needs one — "it multiplies rather than adds" is the
+fact, not a flourish.
 
 ## Commits
 
