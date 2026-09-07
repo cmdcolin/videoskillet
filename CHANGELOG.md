@@ -2,6 +2,36 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [0.40.5](https://github.com/cmdcolin/videoskillet/compare/v0.40.4...v0.40.5) - 2026-09-07
+
+### Features
+- *(ui)* [`31d5aee`](https://github.com/cmdcolin/videoskillet/commit/31d5aeebaf5a8ac7cca06f675b15d63726dbae18) one header for the site, and a ship command that cuts no release
+- *(ui)* [`694e02a`](https://github.com/cmdcolin/videoskillet/commit/694e02aa355fb220a1fbb2d1d6ace871b3a3c79d) the headline, run through the program
+- *(ui)* [`3611555`](https://github.com/cmdcolin/videoskillet/commit/3611555939375ce753803a41ca98c1bbdcc9012b) the signal path slide works the map four times, and a press marks what it opened
+- *(ui)* [`f38a5cf`](https://github.com/cmdcolin/videoskillet/commit/f38a5cf65935ea0830ab5db8ed4b33d1150890be) a signal-path section under the landing page's demos
+- *(ui)* [`6c70cce`](https://github.com/cmdcolin/videoskillet/commit/6c70cce98e1fec6f0439d18602b2551fbbd29332) presets stop reaching for the phosphor
+- *(ui)* [`4dca8f2`](https://github.com/cmdcolin/videoskillet/commit/4dca8f24e88300777400f22e714fa3f4762c711c) a row's reset answers the press before the value gets home
+- *(ui)* [`1f6e6ec`](https://github.com/cmdcolin/videoskillet/commit/1f6e6ec7a6ed1a178ffc2b67bc30d2c82f9ad0cf) the link preview is the same picture, mark and all
+- *(ui)* [`7d6d548`](https://github.com/cmdcolin/videoskillet/commit/7d6d548f41ace2676a6639a7ee8f08372cba45fd) demos may arrive as a hash, and their clips live on the bucket
+- *(ui)* [`1f25be0`](https://github.com/cmdcolin/videoskillet/commit/1f25be01b921c245fbfd4182f928e132f824c75e) drop the caption row under the carousel stage
+
+### Fixes
+- *(ui)* [`91d5113`](https://github.com/cmdcolin/videoskillet/commit/91d51136959e81b45d0d46e8278d686afefdb29b) drop redundant fader explainer from presets help dialog
+- *(docs)* [`519f8a9`](https://github.com/cmdcolin/videoskillet/commit/519f8a913168e9e431afa338f4fd067d941d41e4) bake a background into each architecture diagram SVG
+
+### Documentation
+- [`f0519cf`](https://github.com/cmdcolin/videoskillet/commit/f0519cfff02f7c06482c19627c0f8c8298b0e010) rewrite the features tour as bullets under the chain-map headings
+- [`61a11e0`](https://github.com/cmdcolin/videoskillet/commit/61a11e00e5e61664ee9a8fb2bb846fb326de6022) say it in fewer words across the guide
+- [`4b7c3d7`](https://github.com/cmdcolin/videoskillet/commit/4b7c3d7b0a6cf824c285e42236fc15b9476c6aee) the FAQ answers as a website, and effect help keeps its paragraphs in the table
+- [`09ad674`](https://github.com/cmdcolin/videoskillet/commit/09ad67406294684415cb5a1c7b48582975e5e682) the guide pages stop leaning on the working notes, and the backlog sheds its postmortems
+- [`309f690`](https://github.com/cmdcolin/videoskillet/commit/309f690d877796d19e2b92113a406c8916e0f2dd) rewrap the FAQ
+
+### Reverts
+- *(ui)* [`89aa6d2`](https://github.com/cmdcolin/videoskillet/commit/89aa6d2c16384b35bd40e75a77bf4560100966ae) no bar over the landing page's picture
+
+### Other Changes
+- [`257c73b`](https://github.com/cmdcolin/videoskillet/commit/257c73b5624a92627e4cd92c95a803330fe8e5b2) More reductions
+
 ## [0.40.4](https://github.com/cmdcolin/videoskillet/compare/v0.40.3...v0.40.4) - 2026-09-06
 
 ### Fixes
