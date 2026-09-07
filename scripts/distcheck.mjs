@@ -25,13 +25,13 @@ import { join } from 'node:path'
 const root = process.argv[2] ?? 'dist'
 const PORT = 8099
 
-// `/guide/architecture/` earns its place: its diagrams are raw HTML in the
-// markdown, so their paths are rewritten by hand rather than by the renderer.
+// `/guide/features/` earns its place: its diagram is raw HTML in the markdown,
+// so its paths are rewritten by hand rather than by the renderer.
 const PAGES = [
   '/',
   '/guide/',
   '/guide/faq/',
-  '/guide/architecture/',
+  '/guide/features/',
   '/app/',
   '/vote/',
   '/stream/',

@@ -12,8 +12,10 @@ const GUIDE = [
   { file: 'docs/FAQ.md', slug: 'faq', nav: 'FAQ' },
 ]
 
+// ARCHITECTURE.md is not here on purpose: it is orientation for someone about
+// to change the code — file paths, buffer layouts, uniform packing — and a
+// reader of the site wants none of it. Every link to it rewrites to the repo.
 const NOTES = [
-  { file: 'docs/ARCHITECTURE.md', slug: 'architecture', nav: 'Architecture' },
   {
     file: 'docs/OPTIMIZATIONS.md',
     slug: 'optimizations',
