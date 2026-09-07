@@ -273,6 +273,10 @@
 285 cgRomStride step=1 default=0
 286 cgRomRot step=0.01 default=0
 287 cgPageAddr step=1 default=0
+288 ccRomSlip step=0.05 default=0
+289 ccPageSlip step=0.05 default=0
+290 cgRomSlip step=0.05 default=0
+291 cgPageSlip step=0.05 default=0
 
 # ?mod= sources, by name
 sine

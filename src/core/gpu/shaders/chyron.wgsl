@@ -26,9 +26,15 @@
 // one says nothing about the other. The wiring is shared because the part is:
 // `romAddr` and `romData` in the prelude, called here with this box's knobs.
 fn cgRom(glyph: u32, row: u32) -> u32 {
-  let addr = romAddr(glyph, row, P.cgRomStride, P.cgRomCross, P.cgRomAddr);
-  let bits = cg[addr % (GLYPH_COUNT * GLYPH_H)];
-  return romData(bits, addr, P.cgRomRot, P.cgRomData);
+  let addr = romAddr(
+    glyph, row, P.cgRomStride, P.cgRomCross, P.cgRomAddr,
+    counterSlip(P.cgRomSlip, P.frame, ROM_SPAN),
+  );
+  var bits = ROM_ERASED;
+  if (addr < ROM_FONT) {
+    bits = cg[addr];
+  }
+  return romData(bits, addr, ROM_DIE_CG, P.cgRomRot, P.cgRomData);
 }
 
 // The raw key at a point on the picture: 1 inside a lit dot, 0 outside. Sampled
@@ -47,7 +53,7 @@ fn cgInk(x: f32, y: f32) -> f32 {
   if (col >= CC_COLS || row >= CC_ROWS) {
     return 0.0;
   }
-  let cell = cg[CC_PAGE + pageAddr(row, col, P.cgPageAddr)];
+  let cell = cg[CC_PAGE + pageAddr(row, col, P.cgPageAddr, counterSlip(P.cgPageSlip, P.frame, CC_ROWS * CC_COLS))];
   if ((cell & CC_SET) == 0u) {
     return 0.0;
   }

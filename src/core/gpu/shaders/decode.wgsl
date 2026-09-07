@@ -269,9 +269,19 @@ const CC_Y0 = ACTIVE_H - CC_ROWS * CC_CELL_H - ACTIVE_H / 8u;
 // thing from `garble`. The same text comes out wrong the same way every frame,
 // because the machine is wrong and the wire is fine.
 fn romRead(glyph: u32, row: u32) -> u32 {
-  let addr = romAddr(glyph, row, P.ccRomStride, P.ccRomCross, P.ccRomAddr);
-  let bits = cc[addr % (GLYPH_COUNT * GLYPH_H)];
-  return romData(bits, addr, P.ccRomRot, P.ccRomData);
+  let addr = romAddr(
+    glyph, row, P.ccRomStride, P.ccRomCross, P.ccRomAddr,
+    counterSlip(P.ccRomSlip, P.frame, ROM_SPAN),
+  );
+  var bits = ROM_ERASED;
+  if (addr < ROM_FONT) {
+    bits = cc[addr];
+  }
+  return romData(bits, addr, ROM_DIE_CC, P.ccRomRot, P.ccRomData);
+}
+
+fn ccPageSlip() -> u32 {
+  return counterSlip(P.ccPageSlip, P.frame, CC_ROWS * CC_COLS);
 }
 
 // (ink, covered) for one screen pixel: whether a glyph lights it, and whether a
@@ -287,7 +297,7 @@ fn captionAt(x: u32, y: u32) -> vec2f {
   if (col >= CC_COLS || row >= CC_ROWS) {
     return vec2f(0.0);
   }
-  let cell = cc[CC_PAGE + pageAddr(row, col, P.ccPageAddr)];
+  let cell = cc[CC_PAGE + pageAddr(row, col, P.ccPageAddr, ccPageSlip())];
   if ((cell & CC_SET) == 0u) {
     return vec2f(0.0);
   }

@@ -116,9 +116,11 @@ export const DEFAULT_CONTROLS = {
   ccRomAddr: 0, // address line held high, 1-based (0 = the chip is intact)
   ccRomData: 0, // data line held, 1-based; negative holds it low
   ccRomCross: 0, // two adjacent address lines transposed, 1-based (0 = wired right)
+  ccRomSlip: 0, // character-address counter slipping, counts per frame (0 = it holds)
   ccRomStride: 0, // cell-height strap error, rows (0 = strapped for this font)
   ccRomRot: 0, // decayed fraction of the array; negative if the erased cell reads dark
   ccPageAddr: 0, // a line held on the page-address counter (0 = the counter is intact)
+  ccPageSlip: 0, // page-address counter slipping, counts per frame (0 = it holds)
   // The character generator at the switcher, keying the same words into picture
   cgMix: 0, // the box's output over program (0 = bypassed)
   cgX: 0.08, // block's left edge, active-picture UV
@@ -137,9 +139,11 @@ export const DEFAULT_CONTROLS = {
   cgRomAddr: 0, // a pin held on this box's font ROM, address bus
   cgRomData: 0, // and on its data bus
   cgRomCross: 0, // two of its address lines transposed
+  cgRomSlip: 0, // its character-address counter slipping, counts per frame
   cgRomStride: 0, // its cell-height strap error, rows
   cgRomRot: 0, // its decayed fraction; negative if the erased cell reads dark
   cgPageAddr: 0, // a line held on its page-address counter
+  cgPageSlip: 0, // and that counter slipping, counts per frame
   // bent video enhancer, patched inline between the deck and the set
   enhClampUs: 0, // clamp gate slid off the back porch (0 = correct)
   enhDroopUs: 0, // coupling-capacitor time constant (0 = DC coupled, no droop)

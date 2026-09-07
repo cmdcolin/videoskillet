@@ -198,9 +198,11 @@ export function uniformValues(c: Controls, env: UniformEnv) {
     ccRomAddr: c.ccRomAddr,
     ccRomData: c.ccRomData,
     ccRomCross: c.ccRomCross,
+    ccRomSlip: c.ccRomSlip,
     ccRomStride: c.ccRomStride,
     ccRomRot: c.ccRomRot,
     ccPageAddr: c.ccPageAddr,
+    ccPageSlip: c.ccPageSlip,
     cgMix: c.cgMix,
     cgX: c.cgX,
     cgY: c.cgY,
@@ -217,9 +219,11 @@ export function uniformValues(c: Controls, env: UniformEnv) {
     cgRomAddr: c.cgRomAddr,
     cgRomData: c.cgRomData,
     cgRomCross: c.cgRomCross,
+    cgRomSlip: c.cgRomSlip,
     cgRomStride: c.cgRomStride,
     cgRomRot: c.cgRomRot,
     cgPageAddr: c.cgPageAddr,
+    cgPageSlip: c.cgPageSlip,
     enhClampOff: c.enhClampUs * 1e-6 * SAMPLE_RATE,
     // RC leak per sample from the coupling time constant; 0 us is the
     // DC-coupled box, which never lets the level move at all.

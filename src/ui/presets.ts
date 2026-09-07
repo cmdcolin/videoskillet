@@ -2662,7 +2662,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'scrambled character ROM',
     group: 'Switcher',
     blurb:
-      "Two character generators failing in different places. The chyron's cell-height strap is five rows out and a pair of its address lines are transposed, so its address walks out of the cell the raster is drawing and each scan line arrives off a different character: the lower third shears into a diagonal slice of the whole font. The set's decoder has an intact font and a bent page counter, so its caption is spelled correctly in the wrong order, with a seventh of the array decayed to lit dots on top. Every bit of it is deterministic, so the same words come out wrong the same way in every frame.",
+      "Two character generators failing in different places. The chyron's cell-height strap is five rows out and a pair of its address lines are transposed, so its address walks out of the cell the raster is drawing and each scan line arrives off a different character: the lower third shears into a diagonal slice of the whole font. The set's decoder has an intact font and a bent page counter, so its caption is spelled correctly in the wrong order, with a seventh of the array decayed to lit dots on top. Both counters are also slipping, which is the one fault on these chips that moves: the chyron's font crawls up through its cells and the caption's page walks a cell sideways every ten frames, over damage that is otherwise fixed.",
     patch: {
       cc: 1,
       ccBox: 1,
@@ -2673,6 +2673,8 @@ export const PRESETS: PresetDef[] = [
       cgScale: 3,
       cgRomStride: 5,
       cgRomCross: 5,
+      cgRomSlip: 0.35,
+      ccPageSlip: 0.1,
     },
   },
   {

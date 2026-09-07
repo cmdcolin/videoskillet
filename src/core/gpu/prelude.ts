@@ -269,9 +269,11 @@ export const PARAM_DEFS = [
   ['ccRomAddr', 'f32'], // address line held high, 1-based (0 = none)
   ['ccRomData', 'f32'], // data line held, 1-based; negative holds it low (0 = none)
   ['ccRomCross', 'f32'], // address lines n and n+1 transposed, 1-based (0 = none)
+  ['ccRomSlip', 'f32'], // character-address counter gaining/losing counts, per frame
   ['ccRomStride', 'f32'], // cell-height strap error, rows (0 = strapped for this font)
   ['ccRomRot', 'f32'], // fraction of the array that has lost its charge; sign is the erased state
   ['ccPageAddr', 'f32'], // page-address line held high, 1-based (0 = none)
+  ['ccPageSlip', 'f32'], // page-address counter gaining/losing counts, per frame
   // The character generator at the switcher: the same words keyed into the
   // picture rather than sent as data, which is what an open caption was. Two
   // wires, fill and key, and every artifact is those two coming apart.
@@ -289,9 +291,11 @@ export const PARAM_DEFS = [
   ['cgRomAddr', 'f32'], // this box's own font ROM, address line held high
   ['cgRomData', 'f32'], // and its data line; negative holds it low
   ['cgRomCross', 'f32'], // its address lines n and n+1 transposed
+  ['cgRomSlip', 'f32'], // its character-address counter slipping, counts per frame
   ['cgRomStride', 'f32'], // its cell-height strap error, rows
   ['cgRomRot', 'f32'], // its decayed fraction; sign is the erased state
   ['cgPageAddr', 'f32'], // a line held on its page-address counter
+  ['cgPageSlip', 'f32'], // and that counter slipping, counts per frame
   // bent video enhancer, inline between the deck and the set
   ['enhClampOff', 'f32'], // clamp gate displaced off the back porch, samples
   ['enhDroop', 'f32'], // coupling-capacitor leak per sample (0 = DC coupled)
@@ -519,6 +523,17 @@ const CC_CR = ${CC_CR}u;
 const GLYPH_W = ${GLYPH_W}u;
 const GLYPH_H = ${GLYPH_H}u;
 const GLYPH_COUNT = ${GLYPH_COUNT}u;
+// The character-generator part both boxes are built around: a 2 KiB EPROM on
+// eleven address lines, holding a 1152-byte font with 896 bytes above it that
+// were never programmed. An erased cell on this part reads all ones, so an
+// address that lands up there returns a solid row of dots.
+const ROM_SPAN = 2048u;
+const ROM_ERASED = 0xffu;
+const ROM_FONT = GLYPH_COUNT * GLYPH_H;
+// Two parts, two dies. The seeds are what keep one box's decay from being the
+// other's, and nothing else about the chips differs.
+const ROM_DIE_CC = 0x9e3779b9u;
+const ROM_DIE_CG = 0x85ebca6bu;
 const IRE_SYNC = ${IRE_SYNC}.0;
 const IRE_BLANK = ${IRE_BLANK}.0;
 const IRE_BLACK = ${IRE_BLACK};
@@ -766,6 +781,26 @@ fn gauss(seed: u32) -> f32 {
   return sqrt(-2.0 * log(a)) * cos(2.0 * PI * b);
 }
 
+// A counter that is not holding its count. Both of a character generator's
+// address counters are clocked by the dot chain and reset off blanking, and
+// either one drops or gains a count when a reset arrives late or an edge is
+// missed. Nothing puts the count back, so the error accumulates: the address is
+// one further out every field, and the picture crawls.
+//
+// This is the one fault here that moves on its own. A held pin does not — the
+// bends either side of it are the machine being wrong in a fixed way, and a
+// slipping counter is the machine being wrong at a rate.
+//
+// The rate is counts per frame, so 0.05 is one count every twenty frames and 2
+// is two a frame. Signed, because a counter can slip either way.
+fn counterSlip(rate: f32, frame: u32, span: u32) -> u32 {
+  if (rate == 0.0) {
+    return 0u;
+  }
+  let m = i32(span);
+  return u32(((i32(floor(rate * f32(frame))) % m) + m) % m);
+}
+
 // A character generator's font memory as it is wired. Both boxes hold their own
 // pins on their own chip and pass them in here. The part is the same part in
 // both racks, so the wiring is written once and the knobs stay separate.
@@ -787,8 +822,13 @@ fn gauss(seed: u32) -> f32 {
 // code.
 //
 // hold is one line jumpered high.
-fn romAddr(glyph: u32, row: u32, stride: f32, cross: f32, hold: f32) -> u32 {
-  var addr = glyph * u32(max(f32(GLYPH_H) + stride, 1.0)) + row;
+//
+// The part is a 2 KiB EPROM on eleven address lines, A0 to A10, and the font
+// occupies the low 1152 bytes of it. A bent address reaches the 896 above that
+// too, which were never programmed, so the caller answers those from ROM_ERASED
+// and whole characters come back solid.
+fn romAddr(glyph: u32, row: u32, stride: f32, cross: f32, hold: f32, slip: u32) -> u32 {
+  var addr = glyph * u32(max(f32(GLYPH_H) + stride, 1.0)) + row + slip;
   if (cross > 0.5) {
     let b = u32(cross - 1.0);
     let two = (addr >> b) & 3u;
@@ -797,7 +837,7 @@ fn romAddr(glyph: u32, row: u32, stride: f32, cross: f32, hold: f32) -> u32 {
   if (hold > 0.5) {
     addr = addr | (1u << u32(hold - 1.0));
   }
-  return addr;
+  return addr & (ROM_SPAN - 1u);
 }
 
 // The eight dots of one row, out of the array and through the data pins.
@@ -808,13 +848,17 @@ fn romAddr(glyph: u32, row: u32, stride: f32, cross: f32, hold: f32) -> u32 {
 // depends on how the font was masked into the part: positive erases to a lit
 // dot, negative to a dark one.
 //
+// seed is which die. Two parts off the same tape decay in different places, so
+// the boxes pass different constants and one rot setting damages a letter
+// differently in each, which is the reason they have separate knobs at all.
+//
 // hold is one data line jumpered, which stripes a column down every character.
-fn romData(stored: u32, addr: u32, rot: f32, hold: f32) -> u32 {
+fn romData(stored: u32, addr: u32, seed: u32, rot: f32, hold: f32) -> u32 {
   var bits = stored;
   let r = min(abs(rot), 1.0);
   if (r > 0.0) {
     let t = u32(r * 256.0);
-    let h = vec2u(pcg(addr * 2u), pcg(addr * 2u + 1u));
+    let h = vec2u(pcg(addr * 2u + seed), pcg(addr * 2u + 1u + seed));
     var gone = 0u;
     for (var i = 0u; i < 4u; i = i + 1u) {
       if (((h.x >> (i * 8u)) & 0xffu) < t) { gone = gone | (1u << i); }
@@ -839,9 +883,11 @@ fn romData(stored: u32, addr: u32, rot: f32, hold: f32) -> u32 {
 // the block: the column in its low lines, the row in its high ones. Hold a low
 // line and columns repeat across the box; hold a high one and a row of text
 // stands in for the row above it. Every character is still spelled correctly by
-// an undamaged font, sitting in a cell it was never written to.
-fn pageAddr(row: u32, col: u32, hold: f32) -> u32 {
-  var idx = row * CC_COLS + col;
+// an undamaged font, sitting in a cell it was never written to. Slip the counter
+// instead of holding a line on it and the whole page walks through itself, a few
+// cells a field.
+fn pageAddr(row: u32, col: u32, hold: f32, slip: u32) -> u32 {
+  var idx = row * CC_COLS + col + slip;
   if (hold > 0.5) {
     idx = idx | (1u << u32(hold - 1.0));
   }

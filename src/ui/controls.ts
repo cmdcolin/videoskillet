@@ -1680,11 +1680,22 @@ export const GROUPS: Group[] = [
         id: 284,
         label: 'cg rom crossed lines',
         min: 0,
-        max: 11,
+        max: 10,
         step: 1,
         unit: '',
         fine: true,
         help: "Two adjacent address lines of this box's font ROM transposed. Low in the bus it shuffles the scan lines inside every cell, high in the bus it permutes the font in blocks, and across the boundary between the two it folds the row count into the character code.",
+      },
+      {
+        key: 'cgRomSlip',
+        id: 290,
+        label: 'cg rom counter slip',
+        min: -4,
+        max: 4,
+        step: 0.05,
+        unit: '/frame',
+        fine: true,
+        help: "This box's character-address counter losing or gaining counts rather than holding them, so the address is further out every frame. Twelve counts is one whole character: a slow rate crawls the font up through the cells, a fast one churns the lower third through the alphabet.",
       },
       {
         key: 'cgRomStride',
@@ -1695,7 +1706,7 @@ export const GROUPS: Group[] = [
         step: 1,
         unit: 'rows',
         fine: true,
-        help: "The cell-height jumper in the wrong hole. The address of a glyph's first row is its code times the cell height, and the raster keeps stepping 12 rows whatever the strap says, so each scan line comes off a different character and a line of text shears into a diagonal slice of the font.",
+        help: "The cell-height jumper in the wrong hole. The address of a glyph's first row is its code times the cell height, and the raster keeps stepping 12 rows whatever the strap says, so each scan line comes off a different character and a line of text shears into a diagonal slice of the font. Far enough out and the address runs off the end of the font into unprogrammed cells, which read solid.",
       },
       {
         key: 'cgRomRot',
@@ -1706,7 +1717,7 @@ export const GROUPS: Group[] = [
         step: 0.01,
         unit: '',
         fine: true,
-        help: "Charge leaked off this box's array. Decayed cells read back as the erased state — positive erases to a lit dot and the letters thicken, negative to a dark one and they crumble. The pattern is in the die, so a letter is damaged identically everywhere it appears.",
+        help: "Charge leaked off this box's array. Decayed cells read back as the erased state — positive erases to a lit dot and the letters thicken, negative to a dark one and they crumble. The pattern is in the die, so a letter is damaged identically everywhere it appears, and this die is not the one in the set's decoder.",
       },
       {
         key: 'cgPageAddr',
@@ -1718,6 +1729,17 @@ export const GROUPS: Group[] = [
         unit: '',
         fine: true,
         help: "A line held on the counter that walks this box's page memory instead of its font. Low lines are the column and high lines are the row, so characters keep their shapes and lose their places.",
+      },
+      {
+        key: 'cgPageSlip',
+        id: 291,
+        label: 'cg page counter slip',
+        min: -4,
+        max: 4,
+        step: 0.05,
+        unit: '/frame',
+        fine: true,
+        help: "The same slip on the counter that walks this box's page memory. Every character keeps its shape and the whole lower third walks diagonally through itself, a cell at a time.",
       },
     ],
   },
@@ -3337,7 +3359,12 @@ export const GROUPS: Group[] = [
           Held rather than switched, the way a jumper does it, so a glyph whose
           bit was already set comes back untouched and the damage is uneven.
           Nothing here is random. The same text bends the same way every time,
-          which distinguishes a bent machine from a noisy wire.`,
+          which distinguishes a bent machine from a noisy wire.
+
+          The part is 2 KiB on eleven lines and the font fills the low 1152
+          bytes of it. Hold a line high enough to push the address above that
+          and the chip answers from cells nobody ever programmed, which read all
+          ones: the character comes back a solid block.`,
       },
       {
         key: 'ccRomData',
@@ -3347,6 +3374,7 @@ export const GROUPS: Group[] = [
         max: 8,
         step: 1,
         unit: '',
+        fine: true,
         help: "The other bus. A font ROM's data lines are the eight dots across one row, so holding one lights or kills the same column of every character on the page: a stripe straight down the font rather than a fault in any one letter. Positive holds the line high, negative holds it low.",
       },
       {
@@ -3354,9 +3382,10 @@ export const GROUPS: Group[] = [
         id: 280,
         label: 'rom crossed lines',
         min: 0,
-        max: 11,
+        max: 10,
         step: 1,
         unit: '',
+        fine: true,
         help: `Two adjacent address lines transposed — a chip seated a pin over,
           or two traces swapped on the board. The bus still carries every value
           the counter put on it, in the wrong order.
@@ -3368,6 +3397,28 @@ export const GROUPS: Group[] = [
           places across the whole page, and the text reads as somebody else's
           alphabet. Cross the boundary between the two and the row count folds
           into the character code, which is the loudest setting here.`,
+      },
+      {
+        key: 'ccRomSlip',
+        id: 288,
+        label: 'rom counter slip',
+        min: -4,
+        max: 4,
+        step: 0.05,
+        unit: '/frame',
+        help: `The character-address counter losing or gaining counts instead of
+          holding them. It is clocked by the dot chain and reset off blanking,
+          and a reset that arrives late leaves it one out. Nothing puts the
+          count back, so the error accumulates and the address is further out
+          every frame.
+
+          This is the one fault on this chip that moves on its own. Every other
+          bend here is the machine being wrong in a fixed way, and a slipping
+          counter is the machine being wrong at a rate, so the two read as
+          different faults on screen even when they land on the same address
+          line. Twelve counts is one whole character, so a slow rate crawls the
+          font upward through the cells and a fast one churns the page through
+          the alphabet. Negative slips the other way.`,
       },
       {
         key: 'ccRomStride',
@@ -3387,7 +3438,8 @@ export const GROUPS: Group[] = [
           line of a character comes off a different character, and the error
           grows along the line, so a row of text shears into a diagonal slice of
           the entire font. Small errors leave the type readable and leaning;
-          large ones leave a page of dot patterns that never spelled anything.`,
+          large ones run the address off the end of the font into unprogrammed
+          cells, and those characters come back solid.`,
       },
       {
         key: 'ccRomRot',
@@ -3397,6 +3449,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
+        fine: true,
         help: `Charge that has leaked off the array over thirty years. A cell
           that has lost it reads back as the erased state, and which state that
           is depends on how the font was masked into the part: positive erases
@@ -3405,7 +3458,9 @@ export const GROUPS: Group[] = [
 
           The pattern is in the die, so it is fixed. The same letter is damaged
           identically everywhere it appears and in every frame, which is what
-          separates a decayed chip from snow on the page. Turn it up past about
+          separates a decayed chip from snow on the page. The two boxes hold
+          different dies, so the same setting damages a letter differently in
+          each. Turn it up past about
           a third and the glyphs are dot patterns.`,
       },
       {
@@ -3416,6 +3471,7 @@ export const GROUPS: Group[] = [
         max: 7,
         step: 1,
         unit: '',
+        fine: true,
         help: `A line held high on the counter that walks the page memory as
           the raster crosses the block. The font ROM is intact and the address
           reaching it is fine; the box is reading the wrong cell of the page.
@@ -3426,6 +3482,23 @@ export const GROUPS: Group[] = [
           row above it. Every character is still spelled correctly, drawn from
           an undamaged font, and sitting in the wrong place — which looks
           nothing like a bent font ROM and is worth running against one.`,
+      },
+      {
+        key: 'ccPageSlip',
+        id: 289,
+        label: 'page counter slip',
+        min: -4,
+        max: 4,
+        step: 0.05,
+        unit: '/frame',
+        help: `The same slip on the other counter, the one walking page memory.
+          The font is intact and every character keeps its shape; what moves is
+          where each one lands. The whole page walks diagonally through itself,
+          a cell at a time, wrapping off one row onto the next.
+
+          Run it against the font counter's slip and the two come apart: this
+          one carries readable words across the box, and that one leaves the
+          words in place and churns what they are drawn with.`,
       },
     ],
   },
@@ -3919,9 +3992,11 @@ export const NEEDS: Partial<Record<ControlKey, SliderNeed>> = {
   ccRomAddr: captioned,
   ccRomData: captioned,
   ccRomCross: captioned,
+  ccRomSlip: captioned,
   ccRomStride: captioned,
   ccRomRot: captioned,
   ccPageAddr: captioned,
+  ccPageSlip: captioned,
   cgX: chyroning,
   cgY: chyroning,
   cgScale: chyroning,
@@ -3935,9 +4010,11 @@ export const NEEDS: Partial<Record<ControlKey, SliderNeed>> = {
   cgRomAddr: chyroning,
   cgRomData: chyroning,
   cgRomCross: chyroning,
+  cgRomSlip: chyroning,
   cgRomStride: chyroning,
   cgRomRot: chyroning,
   cgPageAddr: chyroning,
+  cgPageSlip: chyroning,
   fbZoom: fb,
   fbRotateDeg: fb,
   fbShiftX: fb,

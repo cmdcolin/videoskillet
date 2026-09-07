@@ -181,10 +181,26 @@ character generator goes wrong.
   by `ccPageAddr` / `cgPageAddr`, and that one is the odd member: every
   character stays correctly spelled and lands somewhere else.
 
-  All of them are what separates a bend from `garbleRows`, which models a bad
+  All five are what separates a bend from `garbleRows`, which models a bad
   _transmission_ — random hits on bytes in flight. A bend is deterministic: the
   same text comes out wrong the same way every time, because the machine is
   wrong rather than the wire.
+
+  **The counters are the exception, and they had to be a sixth thing rather than
+  a rate on the other five.** `romSlip` and `pageSlip` are a counter losing or
+  gaining counts instead of holding them, so the address is further out every
+  frame and nothing puts it back. That is the whole of what moves here. Putting
+  a clock on a held pin would have said something false — a jumper does not
+  flicker — where a counter that will not hold its count is dynamic by
+  construction, and it is what the page bend was described as in the first
+  place: it walks the entire page diagonally through itself, a few cells a
+  field.
+
+  The part all of it is wired around is a 2 KiB EPROM on eleven address lines
+  holding a 1152-byte font, so 896 bytes of it were never programmed. `romAddr`
+  masks to the bus and the callers answer anything above the font from
+  `ROM_ERASED`, which is why a high line held or a large strap error returns
+  solid characters rather than wrapping onto a glyph that happens to be there.
 
 - **A drawing that moves on its own.** `draw` paints on the card and the card
   then sits still, so `boil` is the only thing keeping it alive. Two shapes
@@ -272,11 +288,17 @@ What it does not do:
   this instead, plus the same attribute work the teletype card wants.
 
 The generator has its own font ROM and its own set of pins to hold (`cgRomAddr`,
-`cgRomData`, `cgRomCross`, `cgRomStride`, `cgRomRot`, `cgPageAddr`), separate
-from the caption decoder's in the set. They share the baked ROM bytes and
-nothing else, so bending one says nothing about the other. The wiring itself is
-shared — `romAddr`, `romData` and `pageAddr` in `prelude.ts` — because the part
-is the same part, and each box calls them with its own knobs.
+`cgRomData`, `cgRomCross`, `cgRomStride`, `cgRomRot`, `cgPageAddr`) and its own
+two counters to slip (`cgRomSlip`, `cgPageSlip`), separate from the caption
+decoder's in the set. They share the baked ROM bytes and nothing else, so
+bending one says nothing about the other. The wiring itself is shared —
+`romAddr`, `romData`, `pageAddr` and `counterSlip` in `prelude.ts` — because the
+part is the same part, and each box calls them with its own knobs.
+
+The one thing that is not shared is the decay pattern. `romData` takes a die
+seed (`ROM_DIE_CC`, `ROM_DIE_CG`), so one `rot` setting damages a letter
+differently in each box. Seeding it on the address alone had both chips decaying
+in identical places, which is the invariant this whole split exists to keep.
 
 ## Chroma key follow-ons
 
