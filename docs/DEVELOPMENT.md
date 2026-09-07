@@ -340,6 +340,12 @@ Every bullet cost a real afternoon.
   under a running server.
 - **A `file://` image taints the canvas it is drawn on**, so frames are passed
   into the page as `data:` URIs.
+- **`load` and `document.fonts.ready` both resolve before Chrome composites a
+  frame**, so a `screenshot()` behind them comes back a blank rectangle perhaps
+  one time in three. Two frames of `requestAnimationFrame` is what waits for the
+  paint. `heroplate.mjs` also reads the capture back and re-takes it, because a
+  blank plate fails nowhere downstream: it goes through the signal path as a dark
+  picture and lands as a finished file with nothing in it.
 - **Puppeteer writes its throwaway Firefox profile into `$TMPDIR`**, ~85 MB a
   run, and never cleans up after a killed one. On a tmpfs that has filled, the
   launch dies in `createProfile` with `Unknown system error -122` — that is
@@ -688,8 +694,10 @@ link preview are no demo's still any more:
 [`../scripts/heroplate.mjs`](../scripts/heroplate.mjs) sets the headline in the
 h1's own typeface, photographs it, runs the plate through the app and reads the
 canvas back, so the words on the page are a picture of what the program does to
-words. The link-preview card is the same render with the mark and the wordmark
-drawn onto the plate beside them, which is why they carry the same fringe.
+words. The mark and the wordmark go onto every plate with the headline, which is
+why they carry the same fringe — beside the words on the wide header, where a
+letterbox crop has width to spare and no height at all, and under them on the
+portrait and link-preview plates, which have the height and not the width.
 [`../scripts/reel.mjs`](../scripts/reel.mjs) is the carousel, which records the
 **app's own window** instead — the panel, the map and a pointer moving over
 them. That split is the point of the page: the picture is what the program

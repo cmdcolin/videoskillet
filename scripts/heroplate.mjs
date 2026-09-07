@@ -18,6 +18,9 @@ import { CHROME, FIREFOX } from './browser.mjs'
 // that a portrait header, which crops a picture at the sides, still has the
 // whole of both lines inside it.
 //
+// The mark and the wordmark ride along on all three plates, arranged to suit
+// what each crop keeps. Where they go is the render's own `brand.place`.
+//
 // Needs Firefox Nightly (WebGPU), Chrome (the plate) and ImageMagick's `magick`.
 import { execFileSync } from 'node:child_process'
 import {
@@ -106,17 +109,31 @@ const PLATE_H = 1200
 // bottom of the raster, keeping the head-switch band on the image's own edge —
 // the flag along the top is the half worth losing.
 const RENDERS = [
+  // The lockup goes beside the headline, which is the one arrangement a
+  // letterbox costs nothing: the card comes out exactly as tall as the two lines
+  // were on their own, so a band that held the headline holds the brand too.
+  // Under the words it would not. The header on a 3440-wide window keeps a 5:1
+  // slice of the plate — some 300 of 1200 rows — and the headline is 210 of them.
   {
     out: 'public/hero-title.webp',
     text: 'WebGPU analog<br>video emulation.',
     size: 100,
+    // The mark is as big as the arrangement allows and no bigger: at 118 the
+    // lockup column stands 208 tall against the headline's 210, so the two lines
+    // still set the card's height and the crop still holds all of it. The tape
+    // crushes the skillet's greys, and size is the only thing that answers that.
+    brand: { place: 'beside', word: 60, mark: 118, gap: 54 },
     aspect: 4 / 3,
     width: 2000,
   },
+  // Beside is the one thing the portrait crop cannot keep: it holds the middle
+  // 56% of the raster's width, and a lockup off to one side lands outside that.
+  // So this one stacks, and the height it needs is the height this crop has.
   {
     out: 'public/hero-title-narrow.webp',
     text: 'WebGPU analog<br>video emulation.',
     size: 95,
+    brand: { place: 'below', word: 58, mark: 96, gap: 44 },
     aspect: 3 / 4,
     width: 1080,
   },
@@ -130,9 +147,9 @@ const RENDERS = [
   // plate lays the card out inside the band the crop keeps.
   {
     out: 'public/og.jpg',
-    brand: true,
     text: 'WebGPU analog<br>video emulation.',
     size: 140,
+    brand: { place: 'below', word: 66, mark: 122, gap: 78 },
     aspect: 1200 / 630,
     width: 1200,
     anchor: 'center',
@@ -149,10 +166,24 @@ const FAVICON = readFileSync('public/favicon.svg').toString('base64')
 // thing a composite path can be handed — a vertical edge on every stem — and it
 // is what makes the fringing, so nothing here is drawn in the greys the page
 // would use.
-const plateHtml = ({ text, size, brand = false }) => `<!doctype html><style>
+//
+// `beside` transposes both axes at once: the card lays the lockup and the
+// headline in a row, and the lockup stands the mark over the wordmark rather
+// than left of it. A row of a row would be wider than the plate.
+const plateHtml = ({ text, size, brand }) => {
+  const beside = brand.place === 'beside'
+  const lockup = `<div class="lockup">
+       <img src="data:image/svg+xml;base64,${FAVICON}" />videoskillet.js
+     </div>`
+  return `<!doctype html><style>
   html, body { margin: 0; height: 100% }
   body { background: #000; display: grid; place-items: center }
-  .card { display: flex; flex-direction: column; align-items: center; gap: 78px }
+  .card {
+    display: flex;
+    flex-direction: ${beside ? 'row' : 'column'};
+    align-items: center;
+    gap: ${brand.gap}px;
+  }
   p {
     margin: 0;
     color: #fff;
@@ -164,28 +195,24 @@ const plateHtml = ({ text, size, brand = false }) => `<!doctype html><style>
     text-align: center;
     -webkit-font-smoothing: antialiased;
   }
-  .brand {
+  .lockup {
     display: flex;
+    flex-direction: ${beside ? 'column' : 'row'};
     align-items: center;
-    gap: 26px;
+    gap: ${Math.round(brand.gap / 3)}px;
     color: #fff;
     font-family: ${FAMILY};
     font-weight: 700;
-    font-size: 66px;
+    font-size: ${brand.word}px;
     letter-spacing: -0.01em;
   }
   /* Bigger than the wordmark's cap height, which a mark beside a word usually
      is not. The steam wisps are the only colour in it and they are 2.4 units
      wide in a 32-unit box: drawn at the size the page uses them, the chroma
      path has nothing left to carry by the time it has been through the tape. */
-  .brand img { width: 122px; height: 122px }
-</style><div class="card"><p>${text}</p>${
-  brand
-    ? `<div class="brand">
-         <img src="data:image/svg+xml;base64,${FAVICON}" />videoskillet.js
-       </div>`
-    : ''
-}</div>`
+  .lockup img { width: ${brand.mark}px; height: ${brand.mark}px }
+</style><div class="card">${beside ? lockup : ''}<p>${text}</p>${beside ? '' : lockup}</div>`
+}
 
 const scratch = mkdtempSync(join(tmpdir(), 'heroplate-'))
 
@@ -199,11 +226,42 @@ const chrome = await puppeteer.launch({
 })
 const chromePage = await chrome.newPage()
 await chromePage.setViewport({ width: PLATE_W, height: PLATE_H })
+// A plate is white type on black, so a plate with no white in it is one the
+// screenshot took before the page was painted — `load` and `fonts.ready` both
+// resolve before the first frame is composited, and about one capture in three
+// comes back a black rectangle. Two frames of rAF is what actually waits for the
+// paint; the reading is what proves it, because a blank plate does not fail
+// anywhere downstream. It scans as a dark picture and writes a picture of
+// nothing.
+const white = png => {
+  const probe = join(scratch, 'plate.png')
+  writeFileSync(probe, png)
+  return Number(
+    execFileSync('magick', [probe, '-format', '%[fx:maxima]', 'info:']),
+  )
+}
 const plates = new Map()
 for (const render of RENDERS) {
-  await chromePage.setContent(plateHtml(render), { waitUntil: 'load' })
-  await chromePage.evaluate(() => document.fonts.ready)
-  plates.set(render.out, await chromePage.screenshot({ type: 'png' }))
+  let png = null
+  for (
+    let tries = 0;
+    tries < 5 && (png === null || white(png) < 0.5);
+    tries++
+  ) {
+    await chromePage.setContent(plateHtml(render), { waitUntil: 'load' })
+    await chromePage.evaluate(async () => {
+      await document.fonts.ready
+      await new Promise(r =>
+        requestAnimationFrame(() => requestAnimationFrame(r)),
+      )
+    })
+    png = await chromePage.screenshot({ type: 'png' })
+  }
+  if (white(png) < 0.5) {
+    console.error(`heroplate: the plate for ${render.out} came back blank`)
+    process.exit(1)
+  }
+  plates.set(render.out, png)
 }
 await chrome.close()
 
@@ -249,10 +307,41 @@ for (const render of RENDERS) {
   serving = plates.get(render.out)
   const url = `http://localhost:${appPort}/app/?iurl=${iurl}&srcb=none&preset=${PRESET}&set=${SET}`
   await page.goto(url, { waitUntil: 'networkidle0' })
-  // Real time for the device to come up and the first pictures to land, then
-  // frames stepped deterministically: an occluded window throttles rAF, and the
-  // loop below needs laps to develop the colour rather than wall-clock.
-  await new Promise(r => setTimeout(r, 3500))
+  // Waited for rather than counted out. The device coming up and the plate
+  // landing are both real time and how much of it varies — a cold dev server
+  // serves the app's own modules while the picture is already in flight — and a
+  // fixed 3.5s wait spent that budget on the first render and wrote a frame with
+  // nothing in it but grain. Once white is on the canvas the picture is there.
+  // Counted rather than maximised: the head-switch band and the dropouts are
+  // bright and coloured, so the brightest pixel on an empty raster is as bright
+  // as one on the type. What tells the two apart is how many there are —
+  // hundreds of pixels of sparkle, tens of thousands of pixels of headline.
+  const lit = () => {
+    const canvas = document.querySelector('canvas')
+    if (canvas === null) return 0
+    const off = new OffscreenCanvas(canvas.width, canvas.height)
+    const ctx = off.getContext('2d')
+    ctx.drawImage(canvas, 0, 0)
+    const { data } = ctx.getImageData(0, 0, off.width, off.height)
+    let count = 0
+    for (let i = 0; i < data.length; i += 4) {
+      if (data[i] + data[i + 1] + data[i + 2] > 360) count++
+    }
+    return count
+  }
+  const landed = await page
+    .waitForFunction(`(${lit})() > 2000`, { timeout: 40000, polling: 250 })
+    .then(
+      () => true,
+      () => false,
+    )
+  if (!landed) {
+    failure ||= 'the plate never reached the canvas'
+    break
+  }
+  // Then frames stepped deterministically: an occluded window throttles rAF,
+  // and the loop below needs laps to develop the colour rather than wall-clock.
+  await new Promise(r => setTimeout(r, 500))
   await page.evaluate(async () => {
     for (let i = 0; i < 150; i++) {
       window.vf?.step()
