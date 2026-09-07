@@ -2,6 +2,31 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [0.40.7](https://github.com/cmdcolin/videoskillet/compare/v0.40.6...v0.40.7) - 2026-09-07
+
+### Features
+- *(ui)* [`ccfacf4`](https://github.com/cmdcolin/videoskillet/commit/ccfacf4ab649bd0ce178bc8b38855e5602bdc220) the header says the name, in the picture with the words
+- *(ui)* [`9ba7c80`](https://github.com/cmdcolin/videoskillet/commit/9ba7c8092e244a26333c2c84a658db9b67b546ec) the header's card is one stack, name and all
+
+### Fixes
+- *(ui)* [`1740bd1`](https://github.com/cmdcolin/videoskillet/commit/1740bd16578ab5979f0e70611c3cc470455142cb) lift the mark on the plate so the tape leaves a skillet
+- *(ui)* [`4cde672`](https://github.com/cmdcolin/videoskillet/commit/4cde6729ad2d23922bdb30274ec0d565b4242029) the hero is one centred stack, and the notice stops cropping it
+
+### Documentation
+- *(ui)* [`709b713`](https://github.com/cmdcolin/videoskillet/commit/709b713d3852af9b632d14990ce8eff0f8751c05) the hero's comment says the alt-text reason once
+- *(ui)* [`5c74d37`](https://github.com/cmdcolin/videoskillet/commit/5c74d3771dcad0270ba0aac9dbc3ff4d187dfd16) the feature bullets say it once and stop
+- *(ui)* [`bfca30d`](https://github.com/cmdcolin/videoskillet/commit/bfca30d140efcf411bc377ca1c1206772e785e49) plain technical wording in the feature list
+- *(ui)* [`2822aa8`](https://github.com/cmdcolin/videoskillet/commit/2822aa8b936a9002fdea698b364bfe595a9d6b2b) plain wording in the feedback loops intro
+- *(ui)* [`c024a1f`](https://github.com/cmdcolin/videoskillet/commit/c024a1f360398cae095e0b0733bac5c70dedf73f) plain wording for the two feedback loops
+- [`e6be0d5`](https://github.com/cmdcolin/videoskillet/commit/e6be0d56eb05b7bb3ee55aedb518ea4a27de4b03) CLAUDE.md asks for plain technical English
+- *(ui)* [`6426e0b`](https://github.com/cmdcolin/videoskillet/commit/6426e0bab2fb7b0fb67d521c51140e0d44c97c60) drop rhetorical contrasts from the control help strings
+
+### Tests
+- [`e4383aa`](https://github.com/cmdcolin/videoskillet/commit/e4383aa5a715b61d135ccd09de4e01803c048724) give the suite a localStorage shim and quiet the loop's expected warnings
+
+### Other Changes
+- [`c4a0600`](https://github.com/cmdcolin/videoskillet/commit/c4a06000027a9a5c8d7bebffe4cb090a82deee10) Updates
+
 ## [0.40.6](https://github.com/cmdcolin/videoskillet/compare/v0.40.5...v0.40.6) - 2026-09-07
 
 ### Fixes
