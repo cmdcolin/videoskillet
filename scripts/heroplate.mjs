@@ -157,8 +157,13 @@ const RENDERS = [
 const check = process.argv.includes('--check')
 
 // The site's own mark, drawn onto the plate rather than laid over the picture
-// afterwards, so it arrives at the decoder as video like everything else.
-const FAVICON = readFileSync('public/favicon.svg').toString('base64')
+// afterwards, so it arrives at the decoder as video like everything else. Its
+// rounded tile goes: that ground is for a browser tab, and on a plate the
+// ground is the field itself — lifted by the brightness below, the tile comes
+// back as a grey square around the pan.
+const FAVICON = Buffer.from(
+  readFileSync('public/favicon.svg', 'utf8').replace(/<rect[^>]*\/>\s*/, ''),
+).toString('base64')
 
 // Everything on a plate is full-swing white on black. That is the harshest
 // thing a composite path can be handed — a vertical edge on every stem — and it
@@ -200,8 +205,18 @@ const plateHtml = ({ text, size, brand }) => `<!doctype html><style>
   /* Bigger than the wordmark's cap height, which a mark beside a word usually
      is not. The steam wisps are the only colour in it and they are 2.4 units
      wide in a 32-unit box: drawn at the size the page uses them, the chroma
-     path has nothing left to carry by the time it has been through the tape. */
-  .lockup img { width: ${brand.mark}px; height: ${brand.mark}px }
+     path has nothing left to carry by the time it has been through the tape.
+     And lifted, because the pan is drawn in the greys a browser tab wants —
+     15% to 35% swing, against full-swing white everywhere else on the plate,
+     which is the one range the chroma-under path has least to give. Unlifted
+     it came back an olive smudge that read as dirt on the tape; lifted, the
+     rim and the handle clip to white, the wall's lower half comes up with them
+     and the wisps keep their hue. */
+  .lockup img {
+    width: ${brand.mark}px;
+    height: ${brand.mark}px;
+    filter: brightness(2.4) saturate(1.3);
+  }
 </style><div class="card"><p>${text}</p><div class="lockup">
     <img src="data:image/svg+xml;base64,${FAVICON}" />videoskillet.js
   </div></div>`
