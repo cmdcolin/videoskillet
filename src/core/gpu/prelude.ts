@@ -268,6 +268,10 @@ export const PARAM_DEFS = [
   // its low ones, and the data bus is the eight dots across one row.
   ['ccRomAddr', 'f32'], // address line held high, 1-based (0 = none)
   ['ccRomData', 'f32'], // data line held, 1-based; negative holds it low (0 = none)
+  ['ccRomCross', 'f32'], // address lines n and n+1 transposed, 1-based (0 = none)
+  ['ccRomStride', 'f32'], // cell-height strap error, rows (0 = strapped for this font)
+  ['ccRomRot', 'f32'], // fraction of the array that has lost its charge; sign is the erased state
+  ['ccPageAddr', 'f32'], // page-address line held high, 1-based (0 = none)
   // The character generator at the switcher: the same words keyed into the
   // picture rather than sent as data, which is what an open caption was. Two
   // wires, fill and key, and every artifact is those two coming apart.
@@ -284,6 +288,10 @@ export const PARAM_DEFS = [
   ['cgInvert', 'f32'], // cut the other way: letter-shaped holes in a full fill
   ['cgRomAddr', 'f32'], // this box's own font ROM, address line held high
   ['cgRomData', 'f32'], // and its data line; negative holds it low
+  ['cgRomCross', 'f32'], // its address lines n and n+1 transposed
+  ['cgRomStride', 'f32'], // its cell-height strap error, rows
+  ['cgRomRot', 'f32'], // its decayed fraction; sign is the erased state
+  ['cgPageAddr', 'f32'], // a line held on its page-address counter
   // bent video enhancer, inline between the deck and the set
   ['enhClampOff', 'f32'], // clamp gate displaced off the back porch, samples
   ['enhDroop', 'f32'], // coupling-capacitor leak per sample (0 = DC coupled)
@@ -756,6 +764,88 @@ fn gauss(seed: u32) -> f32 {
   let a = max(rand01(seed), 1e-7);
   let b = rand01(seed ^ 0x9E3779B9u);
   return sqrt(-2.0 * log(a)) * cos(2.0 * PI * b);
+}
+
+// A character generator's font memory as it is wired. Both boxes hold their own
+// pins on their own chip and pass them in here. The part is the same part in
+// both racks, so the wiring is written once and the knobs stay separate.
+//
+// The address the generator presents is the character code in the high lines
+// and the row inside the cell in the low ones, formed by the multiply the row
+// counter drives. Three faults land on that bus and they are separate faults.
+//
+// stride is the cell-height strap, which tells the counter how far apart two
+// glyphs sit in the array. Strap it for a taller or shorter cell than the ROM
+// was masked for and the address walks out of the cell the raster is drawing:
+// every scan line of a character comes off a different character, and a line of
+// text shears into a diagonal slice of the whole font.
+//
+// cross is two adjacent lines transposed — a socket seated a pin over, two
+// traces swapped on the board. Low in the bus it shuffles the scan lines inside
+// every cell, high in the bus it permutes the font in blocks, and on the
+// boundary between the two fields it folds the row count into the character
+// code.
+//
+// hold is one line jumpered high.
+fn romAddr(glyph: u32, row: u32, stride: f32, cross: f32, hold: f32) -> u32 {
+  var addr = glyph * u32(max(f32(GLYPH_H) + stride, 1.0)) + row;
+  if (cross > 0.5) {
+    let b = u32(cross - 1.0);
+    let two = (addr >> b) & 3u;
+    addr = (addr & ~(3u << b)) | ((((two & 1u) << 1u) | (two >> 1u)) << b);
+  }
+  if (hold > 0.5) {
+    addr = addr | (1u << u32(hold - 1.0));
+  }
+  return addr;
+}
+
+// The eight dots of one row, out of the array and through the data pins.
+//
+// rot is stored charge that has leaked away. A cell that has lost it reads
+// back as the erased state, so the damage is a fixed pattern in the die and the
+// same character comes out wrong the same way every frame. Which state that is
+// depends on how the font was masked into the part: positive erases to a lit
+// dot, negative to a dark one.
+//
+// hold is one data line jumpered, which stripes a column down every character.
+fn romData(stored: u32, addr: u32, rot: f32, hold: f32) -> u32 {
+  var bits = stored;
+  let r = min(abs(rot), 1.0);
+  if (r > 0.0) {
+    let t = u32(r * 256.0);
+    let h = vec2u(pcg(addr * 2u), pcg(addr * 2u + 1u));
+    var gone = 0u;
+    for (var i = 0u; i < 4u; i = i + 1u) {
+      if (((h.x >> (i * 8u)) & 0xffu) < t) { gone = gone | (1u << i); }
+      if (((h.y >> (i * 8u)) & 0xffu) < t) { gone = gone | (1u << (i + 4u)); }
+    }
+    if (rot > 0.0) {
+      bits = bits | gone;
+    } else {
+      bits = bits & ~gone;
+    }
+  }
+  let d = i32(hold);
+  if (d > 0) {
+    bits = bits | (1u << u32(d - 1));
+  } else if (d < 0) {
+    bits = bits & ~(1u << u32(-d - 1));
+  }
+  return bits;
+}
+
+// The page-address counter, which walks the page memory as the raster crosses
+// the block: the column in its low lines, the row in its high ones. Hold a low
+// line and columns repeat across the box; hold a high one and a row of text
+// stands in for the row above it. Every character is still spelled correctly by
+// an undamaged font, sitting in a cell it was never written to.
+fn pageAddr(row: u32, col: u32, hold: f32) -> u32 {
+  var idx = row * CC_COLS + col;
+  if (hold > 0.5) {
+    idx = idx | (1u << u32(hold - 1.0));
+  }
+  return idx % (CC_ROWS * CC_COLS);
 }
 
 // What a detector hands back when the signal it was demodulating is not there.

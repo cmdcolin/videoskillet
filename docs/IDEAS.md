@@ -159,23 +159,32 @@ character generator goes wrong.
   this card is one bit deep and white on black, and rendering them means
   carrying attributes per row through `dotGrid`. Double height is the cheaper
   and the one you saw more often.
-- **Bending the card's own ROM.** Shipped for the caption generator (`ccRomAddr`
-  / `ccRomData`, `romRead` in `decode.wgsl`) and not for the card, because the
-  caption's font is a ROM in a buffer where the card's is a canvas raster — two
-  lines there and a rebuild of `dotGrid` here. What the shipped one taught:
-  holding a pin is a _range_ of effects rather than one, and the range comes out
-  of the wiring. The address bus carries the character code in its high lines
-  and the row inside the cell in its low ones, so one knob sweeps from every
-  glyph growing a seam to the whole font substituting. And the pin is held
-  _high_ rather than switched, so a glyph whose bit was already set is untouched
-  and the damage is uneven the way a jumper's is.
+- **Bending the card's own ROM.** Shipped for both character generators
+  (`romAddr` / `romData` / `pageAddr` in `prelude.ts`, called from `decode.wgsl`
+  and `chyron.wgsl`) and not for the card, because the caption's font is a ROM
+  in a buffer where the card's is a canvas raster — two lines there and a
+  rebuild of `dotGrid` here. What the shipped ones taught: holding a pin is a
+  _range_ of effects rather than one, and the range comes out of the wiring. The
+  address bus carries the character code in its high lines and the row inside
+  the cell in its low ones, so one knob sweeps from every glyph growing a seam
+  to the whole font substituting. And the pin is held _high_ rather than
+  switched, so a glyph whose bit was already set is untouched and the damage is
+  uneven the way a jumper's is.
 
-  That is what separates a bend from `garbleRows`, which models a bad
+  Five faults live on that wiring now and each answers a different question the
+  bus is being asked. `romStride` is the cell-height strap, so the address walks
+  out of the cell the raster is drawing and a line of text shears diagonally
+  through the whole font. `romCross` transposes two adjacent address lines, the
+  way a socket seated a pin over does. `romAddr` holds one high. `romRot` decays
+  a fraction of the array to its erased state, which is a fixed pattern in the
+  die. `romData` holds a data line. The page-address counter is bent separately
+  by `ccPageAddr` / `cgPageAddr`, and that one is the odd member: every
+  character stays correctly spelled and lands somewhere else.
+
+  All of them are what separates a bend from `garbleRows`, which models a bad
   _transmission_ — random hits on bytes in flight. A bend is deterministic: the
   same text comes out wrong the same way every time, because the machine is
-  wrong rather than the wire. Holding a line on the page-address counter is the
-  third bend and is unbuilt in both places: it walks the entire page diagonally
-  through itself a few cells a field.
+  wrong rather than the wire.
 
 - **A drawing that moves on its own.** `draw` paints on the card and the card
   then sits still, so `boil` is the only thing keeping it alive. Two shapes
@@ -261,13 +270,13 @@ What it does not do:
   program, which is the one obviously good thing left here.
 - **Monochrome.** A CG with a colour matte generator is `bKeyMatte*` pointed at
   this instead, plus the same attribute work the teletype card wants.
-- **No page-address bend**, the third bend, unbuilt in both places.
 
-The generator has its own font ROM and its own pin to hold
-(`cgRomAddr`/`cgRomData`), separate from the caption decoder's in the set. They
-share the baked ROM bytes and nothing else, so bending one says nothing about
-the other — which is the physically honest answer and why `cgRom` is a near-copy
-of `decode.wgsl`'s `romRead` rather than something shared.
+The generator has its own font ROM and its own set of pins to hold (`cgRomAddr`,
+`cgRomData`, `cgRomCross`, `cgRomStride`, `cgRomRot`, `cgPageAddr`), separate
+from the caption decoder's in the set. They share the baked ROM bytes and
+nothing else, so bending one says nothing about the other. The wiring itself is
+shared — `romAddr`, `romData` and `pageAddr` in `prelude.ts` — because the part
+is the same part, and each box calls them with its own knobs.
 
 ## Chroma key follow-ons
 

@@ -260,33 +260,18 @@ const CC_CELL_H = GLYPH_H * CC_SCALE;
 const CC_X0 = (ACTIVE_W - CC_COLS * CC_CELL_W) / 2u;
 const CC_Y0 = ACTIVE_H - CC_ROWS * CC_CELL_H - ACTIVE_H / 8u;
 
-// One row of one glyph, off a font ROM with a pin held on it.
+// One row of one glyph, off the decoder's font ROM with the set's own bends on
+// it. `romAddr` and `romData` in the prelude carry the wiring: the cell-height
+// strap, a transposed pair of address lines, a line jumpered high, decayed
+// cells in the array, and a data line held.
 //
-// Which pin is the entire effect, and it falls out of how the chip is wired
-// rather than being three effects in a list. The address bus carries the
-// character code in its high lines and the row inside the cell in its low ones:
-// hold a low line and every glyph repeats a scan line through itself, hold a
-// high one and the whole font substitutes to its neighbour a fixed distance
-// away. The data bus is the eight dots across one row, so holding one of those
-// lights or kills the same column of every character on the page.
-//
-// Held *high* rather than switched, which is what a jumper does — so a glyph
-// whose bit was already set comes back untouched, and the damage is uneven in
-// the way a real bend's is. Deterministic either way, and that is what makes
-// this a different thing from `garble`: the machine is wrong, not the wire.
+// Every one of them is deterministic, which is what makes this a different
+// thing from `garble`. The same text comes out wrong the same way every frame,
+// because the machine is wrong and the wire is fine.
 fn romRead(glyph: u32, row: u32) -> u32 {
-  var addr = glyph * GLYPH_H + row;
-  if (P.ccRomAddr > 0.5) {
-    addr = addr | (1u << u32(P.ccRomAddr - 1.0));
-  }
-  var bits = cc[addr % (GLYPH_COUNT * GLYPH_H)];
-  let d = i32(P.ccRomData);
-  if (d > 0) {
-    bits = bits | (1u << u32(d - 1));
-  } else if (d < 0) {
-    bits = bits & ~(1u << u32(-d - 1));
-  }
-  return bits;
+  let addr = romAddr(glyph, row, P.ccRomStride, P.ccRomCross, P.ccRomAddr);
+  let bits = cc[addr % (GLYPH_COUNT * GLYPH_H)];
+  return romData(bits, addr, P.ccRomRot, P.ccRomData);
 }
 
 // (ink, covered) for one screen pixel: whether a glyph lights it, and whether a
@@ -302,7 +287,7 @@ fn captionAt(x: u32, y: u32) -> vec2f {
   if (col >= CC_COLS || row >= CC_ROWS) {
     return vec2f(0.0);
   }
-  let cell = cc[CC_PAGE + row * CC_COLS + col];
+  let cell = cc[CC_PAGE + pageAddr(row, col, P.ccPageAddr)];
   if ((cell & CC_SET) == 0u) {
     return vec2f(0.0);
   }

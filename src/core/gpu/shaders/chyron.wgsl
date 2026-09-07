@@ -21,23 +21,14 @@
 @group(0) @binding(1) var<storage, read_write> comp: array<f32>;
 @group(0) @binding(2) var<storage, read> cg: array<u32>;
 
-// This box's own font ROM, with its own pin held on it. The caption decoder in
-// the set has a chip of its own and a bend of its own — two boxes, so bending
-// one says nothing about the other. See decode.wgsl's `romRead` for what the
-// address and data buses each do; the wiring is the same chip.
+// This box's own font ROM, with its own pins held on it. The caption decoder in
+// the set has a chip of its own and bends of its own — two boxes, so bending
+// one says nothing about the other. The wiring is shared because the part is:
+// `romAddr` and `romData` in the prelude, called here with this box's knobs.
 fn cgRom(glyph: u32, row: u32) -> u32 {
-  var addr = glyph * GLYPH_H + row;
-  if (P.cgRomAddr > 0.5) {
-    addr = addr | (1u << u32(P.cgRomAddr - 1.0));
-  }
-  var bits = cg[addr % (GLYPH_COUNT * GLYPH_H)];
-  let d = i32(P.cgRomData);
-  if (d > 0) {
-    bits = bits | (1u << u32(d - 1));
-  } else if (d < 0) {
-    bits = bits & ~(1u << u32(-d - 1));
-  }
-  return bits;
+  let addr = romAddr(glyph, row, P.cgRomStride, P.cgRomCross, P.cgRomAddr);
+  let bits = cg[addr % (GLYPH_COUNT * GLYPH_H)];
+  return romData(bits, addr, P.cgRomRot, P.cgRomData);
 }
 
 // The raw key at a point on the picture: 1 inside a lit dot, 0 outside. Sampled
@@ -56,7 +47,7 @@ fn cgInk(x: f32, y: f32) -> f32 {
   if (col >= CC_COLS || row >= CC_ROWS) {
     return 0.0;
   }
-  let cell = cg[CC_PAGE + row * CC_COLS + col];
+  let cell = cg[CC_PAGE + pageAddr(row, col, P.cgPageAddr)];
   if ((cell & CC_SET) == 0u) {
     return 0.0;
   }

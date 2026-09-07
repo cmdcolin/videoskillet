@@ -1675,6 +1675,50 @@ export const GROUPS: Group[] = [
         fine: true,
         help: 'The data bus of the same chip: eight dots across one row, so holding one stripes a column down every character on the page. Positive holds it high, negative holds it low.',
       },
+      {
+        key: 'cgRomCross',
+        id: 284,
+        label: 'cg rom crossed lines',
+        min: 0,
+        max: 11,
+        step: 1,
+        unit: '',
+        fine: true,
+        help: "Two adjacent address lines of this box's font ROM transposed. Low in the bus it shuffles the scan lines inside every cell, high in the bus it permutes the font in blocks, and across the boundary between the two it folds the row count into the character code.",
+      },
+      {
+        key: 'cgRomStride',
+        id: 285,
+        label: 'cg rom cell strap',
+        min: -11,
+        max: 12,
+        step: 1,
+        unit: 'rows',
+        fine: true,
+        help: "The cell-height jumper in the wrong hole. The address of a glyph's first row is its code times the cell height, and the raster keeps stepping 12 rows whatever the strap says, so each scan line comes off a different character and a line of text shears into a diagonal slice of the font.",
+      },
+      {
+        key: 'cgRomRot',
+        id: 286,
+        label: 'cg rom bit rot',
+        min: -1,
+        max: 1,
+        step: 0.01,
+        unit: '',
+        fine: true,
+        help: "Charge leaked off this box's array. Decayed cells read back as the erased state — positive erases to a lit dot and the letters thicken, negative to a dark one and they crumble. The pattern is in the die, so a letter is damaged identically everywhere it appears.",
+      },
+      {
+        key: 'cgPageAddr',
+        id: 287,
+        label: 'cg page address line',
+        min: 0,
+        max: 7,
+        step: 1,
+        unit: '',
+        fine: true,
+        help: "A line held on the counter that walks this box's page memory instead of its font. Low lines are the column and high lines are the row, so characters keep their shapes and lose their places.",
+      },
     ],
   },
   {
@@ -3305,6 +3349,84 @@ export const GROUPS: Group[] = [
         unit: '',
         help: "The other bus. A font ROM's data lines are the eight dots across one row, so holding one lights or kills the same column of every character on the page: a stripe straight down the font rather than a fault in any one letter. Positive holds the line high, negative holds it low.",
       },
+      {
+        key: 'ccRomCross',
+        id: 280,
+        label: 'rom crossed lines',
+        min: 0,
+        max: 11,
+        step: 1,
+        unit: '',
+        help: `Two adjacent address lines transposed — a chip seated a pin over,
+          or two traces swapped on the board. The bus still carries every value
+          the counter put on it, in the wrong order.
+
+          Where you cross them is the effect. Low in the bus the two lines carry
+          the row inside the cell, so every glyph gets its scan lines shuffled
+          and the font grows a stutter. High in the bus they carry the character
+          code, so the font is permuted in blocks: pairs of characters trade
+          places across the whole page, and the text reads as somebody else's
+          alphabet. Cross the boundary between the two and the row count folds
+          into the character code, which is the loudest setting here.`,
+      },
+      {
+        key: 'ccRomStride',
+        id: 281,
+        label: 'rom cell strap',
+        min: -11,
+        max: 12,
+        step: 1,
+        unit: 'rows',
+        help: `The strap that tells the row counter how tall a character cell
+          is. One generator chip served 7-, 9- and 12-line cells and the board
+          picked which by a jumper, so this is a jumper in the wrong hole.
+
+          The address of a glyph's first row is its code times the cell height,
+          and the raster keeps stepping 12 rows whatever the strap says. Set it
+          wrong and the address walks out of the cell being drawn: each scan
+          line of a character comes off a different character, and the error
+          grows along the line, so a row of text shears into a diagonal slice of
+          the entire font. Small errors leave the type readable and leaning;
+          large ones leave a page of dot patterns that never spelled anything.`,
+      },
+      {
+        key: 'ccRomRot',
+        id: 282,
+        label: 'rom bit rot',
+        min: -1,
+        max: 1,
+        step: 0.01,
+        unit: '',
+        help: `Charge that has leaked off the array over thirty years. A cell
+          that has lost it reads back as the erased state, and which state that
+          is depends on how the font was masked into the part: positive erases
+          to a lit dot, so the letters fill in and thicken; negative erases to a
+          dark one, so they crumble.
+
+          The pattern is in the die, so it is fixed. The same letter is damaged
+          identically everywhere it appears and in every frame, which is what
+          separates a decayed chip from snow on the page. Turn it up past about
+          a third and the glyphs are dot patterns.`,
+      },
+      {
+        key: 'ccPageAddr',
+        id: 283,
+        label: 'page address line',
+        min: 0,
+        max: 7,
+        step: 1,
+        unit: '',
+        help: `A line held high on the counter that walks the page memory as
+          the raster crosses the block. The font ROM is intact and the address
+          reaching it is fine; the box is reading the wrong cell of the page.
+
+          The page counter's low lines are the column and its high lines are the
+          row. Hold a low one and columns repeat across the box in blocks of
+          two, four, eight. Hold a high one and a row of text stands in for the
+          row above it. Every character is still spelled correctly, drawn from
+          an undamaged font, and sitting in the wrong place — which looks
+          nothing like a bent font ROM and is worth running against one.`,
+      },
     ],
   },
   {
@@ -3796,6 +3918,10 @@ export const NEEDS: Partial<Record<ControlKey, SliderNeed>> = {
   ccBox: captioned,
   ccRomAddr: captioned,
   ccRomData: captioned,
+  ccRomCross: captioned,
+  ccRomStride: captioned,
+  ccRomRot: captioned,
+  ccPageAddr: captioned,
   cgX: chyroning,
   cgY: chyroning,
   cgScale: chyroning,
@@ -3808,6 +3934,10 @@ export const NEEDS: Partial<Record<ControlKey, SliderNeed>> = {
   cgInvert: chyroning,
   cgRomAddr: chyroning,
   cgRomData: chyroning,
+  cgRomCross: chyroning,
+  cgRomStride: chyroning,
+  cgRomRot: chyroning,
+  cgPageAddr: chyroning,
   fbZoom: fb,
   fbRotateDeg: fb,
   fbShiftX: fb,

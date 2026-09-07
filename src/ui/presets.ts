@@ -2658,6 +2658,24 @@ export const PRESETS: PresetDef[] = [
     },
   },
   {
+    name: 'scrambledCharacterRom',
+    displayName: 'scrambled character ROM',
+    group: 'Switcher',
+    blurb:
+      "Two character generators failing in different places. The chyron's cell-height strap is five rows out and a pair of its address lines are transposed, so its address walks out of the cell the raster is drawing and each scan line arrives off a different character: the lower third shears into a diagonal slice of the whole font. The set's decoder has an intact font and a bent page counter, so its caption is spelled correctly in the wrong order, with a seventh of the array decayed to lit dots on top. Every bit of it is deterministic, so the same words come out wrong the same way in every frame.",
+    patch: {
+      cc: 1,
+      ccBox: 1,
+      ccRomRot: 0.14,
+      ccPageAddr: 2,
+      cgMix: 0.9,
+      cgY: 0.08,
+      cgScale: 3,
+      cgRomStride: 5,
+      cgRomCross: 5,
+    },
+  },
+  {
     name: 'thePictureInTheType',
     displayName: 'the picture in the type',
     group: 'Switcher',

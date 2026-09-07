@@ -265,6 +265,14 @@
 277 synthColorMode step=1 default=0 choices=phase shifts|comparators
 278 synthColorSoftPx step=0.1 default=0
 279 cfbGenlock step=0.01 default=0
+280 ccRomCross step=1 default=0
+281 ccRomStride step=1 default=0
+282 ccRomRot step=0.01 default=0
+283 ccPageAddr step=1 default=0
+284 cgRomCross step=1 default=0
+285 cgRomStride step=1 default=0
+286 cgRomRot step=0.01 default=0
+287 cgPageAddr step=1 default=0
 
 # ?mod= sources, by name
 sine
