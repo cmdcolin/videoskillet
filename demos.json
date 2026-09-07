@@ -28,13 +28,6 @@
     "query": "?p=je.CoDoBwEEAbAEAKwCAfABAKCZAgXgAw2IIwSIAyFYBrAKEjwGmAEEuB4ZVADsBgr4OiSMCQDEAQDgAgAkAUQEBAAQA9wCAMXBAgCJngIAlf4DAI3tAw&mod=bendUs:lorenz:0.390279:0.27759,hvRing:sine:0.037599:0.090209&srcb=synth&src=sweep"
   },
   {
-    "name": "Fuzzy color bars feedback+dissolver",
-    "showcase": false,
-    "gallery": true,
-    "says": "A sync regenerator slicing into picture, over a camera loop and 9 IRE of ground hum.",
-    "query": "?p=tQ.BrAEAMgCAKAGPahOAdACAJADAXgAeiWkAgCgHwB6ADoAKACoIAAsAGAARAAQAJgBENACANQCGwQDShCwAQgE&mod=&srcb=vhs+static"
-  },
-  {
     "name": "Dark camera feedback",
     "showcase": false,
     "gallery": true,
@@ -61,13 +54,6 @@
     "gallery": true,
     "says": "A composite loop keyed on itself, 0.4µs of delay turning the hue every lap.",
     "query": "?p=T2.GKAEE4QCRYQDAMQfAJ8FAowfFYwDAfAMAWAA8AIARAZgJEAIBCKcvgErYA&mod=&srcb=none"
-  },
-  {
-    "name": "Camera feedback + static",
-    "showcase": false,
-    "gallery": true,
-    "says": "FM over-deviation on the tape path, with the vertical oscillator drifting under it.",
-    "query": "?p=IK.GIgEEVQA9AEAYA6AAhHAAQBkDEgEkAMLoAIAtAEE6AICnAEB-CEBKACMAQAgAJADBVxwub4DAKHEAQ&mod=vFreqHz:smooth:0.08:0.0049,fbGain:smooth:0.24:0.06&src=vhs+static"
   },
   {
     "name": "Collecting dust",

@@ -152,9 +152,6 @@ video cables together and posting tumblr gifs.
 - Wiggity
   https://videoskillet.com/app/?p=je.CoDoBwEEAbAEAKwCAfABAKCZAgXgAw2IIwSIAyFYBrAKEjwGmAEEuB4ZVADsBgr4OiSMCQDEAQDgAgAkAUQEBAAQA9wCAMXBAgCJngIAlf4DAI3tAw&mod=bendUs:lorenz:0.390279:0.27759,hvRing:sine:0.037599:0.090209&srcb=synth&src=sweep
 
-- Fuzzy color bars feedback+dissolver
-  https://videoskillet.com/app/?p=tQ.BrAEAMgCAKAGPahOAdACAJADAXgAeiWkAgCgHwB6ADoAKACoIAAsAGAARAAQAJgBENACANQCGwQDShCwAQgE&mod=&srcb=vhs+static
-
 - Dark camera feedback
   https://videoskillet.com/app/?p=CU.CqCsBQEEAcwDAHABXAC8aQLoAgLMBQCsAgOceQR0GPwBCzgAGADYAQAIAjgAuAIImAIAUALIAQCAAQAkArACAXgAFAJ4ADAGXABcApADAKAhAIgBCKwCAOQBAJgRApACAAAAAADwCAdIALAJAAAABAlUJOYDAKgBBcgBAQQ&mod=&srcb=tv+static&src=tv+static
 
@@ -166,9 +163,6 @@ video cables together and posting tumblr gifs.
 
 - Ridiculous rainbow
   https://videoskillet.com/app/?p=T2.GKAEE4QCRYQDAMQfAJ8FAowfFYwDAfAMAWAA8AIARAZgJEAIBCKcvgErYA&mod=&srcb=none
-
-- Camera feedback + static
-  https://videoskillet.com/app/?p=IK.GIgEEVQA9AEAYA6AAhHAAQBkDEgEkAMLoAIAtAEE6AICnAEB-CEBKACMAQAgAJADBVxwub4DAKHEAQ&mod=vFreqHz:smooth:0.08:0.0049,fbGain:smooth:0.24:0.06&src=vhs+static
 
 - Collecting dust
   https://videoskillet.com/app/?p=R2.cqQCAKAfAHoAOgAoAKggACwAYABEABAAmAEQ0AIAoAMw-AIArAICjBAEBEjgLgCoAQ&mod=&srcb=vhs+static

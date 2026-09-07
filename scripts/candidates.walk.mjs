@@ -44,8 +44,6 @@ const walk = name => [
 
 export default [
   walk('Wiggity'),
-  walk('Fuzzy color bars feedback+dissolver'),
-  walk('Camera feedback + static'),
   walk('Dark camera feedback'),
   walk('Chaos black and white feedback'),
 ]

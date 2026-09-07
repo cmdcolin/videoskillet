@@ -25,30 +25,11 @@ const probe = (look, tag, beats) => [
 ]
 const at = (open, expand, row, to) => ({ open, expand, row, to })
 
-const FUZZ = 'Fuzzy color bars feedback+dissolver'
 const RR = 'Ridiculous rainbow'
 const WIG = 'Wiggity'
 const CHAOS = 'Chaos black and white feedback'
 
 export default [
-  probe(FUZZ, 'camera', [
-    at('camera', undefined, 'zoom', 0.15),
-    at('camera', undefined, 'zoom', 0.3),
-    at('camera', undefined, 'rotate', 0.6),
-    at('camera', undefined, 'defocus', 0.5),
-    at('camera', undefined, 'shift x', 0.6),
-  ]),
-  probe(FUZZ, 'channel', [
-    at('CHANNEL', 'Enhancer', 'sync regen', 0.7),
-    at('CHANNEL', 'Enhancer', 'detail regen', 0.8),
-    at('CHANNEL', 'VHS colour', 'tracking error', 0.7),
-  ]),
-  probe(FUZZ, 'receiver+mix', [
-    at('RECEIVER', 'Sync', 'horizontal hold', 0.35),
-    at('RECEIVER', 'Deflection', 'HV sag', 0.8),
-    at('MIX', 'A/B Mixer', 'line offset', 0.6),
-    at('MIX', 'A/B Mixer', 'sc detune', 0.7),
-  ]),
   probe(RR, 'mixer a', [
     at('mixer', undefined, 'key hue', 0.3),
     at('mixer', undefined, 'key hue', 0.7),
