@@ -1,10 +1,11 @@
 # Ideas / backlog
 
-Things worth doing that aren't done, and things that look worth doing but aren't
-— so a future pass doesn't re-litigate them. Where a shipped feature left a
-lesson the next person needs, it is here under that feature's gaps; the rest of
-the working-out is in the commits. Line numbers drift; grep the described
-feature.
+Things worth doing that aren't done, and things that look worth doing but
+aren't, so a future pass doesn't re-litigate them. Where a shipped feature left
+a lesson the next person needs, it is here under that feature's gaps. The rest
+of the working-out is in the commits, so an entry here is cut once it is built
+or once it stops being worth the page. Grep the described feature rather than
+trusting a line number.
 
 ## Modulation: the remaining naked periodic wave
 
@@ -582,9 +583,8 @@ module rather than a coincidence.
   Meaningfully more work than the rest of this list; only worth it for
   performance use.
 
-Note for anyone evaluating the reverse arrangement: Max's `jweb` embeds a web
-view but is unlikely to expose WebGPU, so hosting videoskillet.js inside a patch
-probably isn't viable — it wants to be a separate app you route into.
+Hosting the app inside a patch (Max's `jweb`) waits on that web view exposing
+WebGPU. Until then it is a separate app you route into.
 
 ## The modulation bay
 
@@ -609,167 +609,66 @@ What was deliberately left:
   motion in the app, but the boot path layers controls before the bay exists.
   Accepted asymmetry.
 
-Two things the one-shot envelope had to get right, for whoever extends the
-family. Firing is an **event**, so it goes to the engine as a method rather than
-a field on `ModSlot` — a flag on a slot list that presets, links and undo
-rewrite wholesale would have to be cleared by whoever set it. And a press lands
-_between_ two frames, so the trigger is held in a set until a frame picks it up;
-sampling an edge at 60 Hz loses roughly one press in every few. The related rule
-is what an _unbound_ note does (`noteAction` in `ui/midi.ts`): with nothing
-bound every note fires the bay, which is the right reading of an unmapped
-keyboard, and binding one pad lifts the blanket. Written the other way round a
-pad would strike its slot and knock every other envelope over on the way.
+For whoever extends the envelope family: firing is an event, so it goes to the
+engine as a method rather than a flag on `ModSlot`, and a press is held in a set
+until a frame picks it up, because sampling an edge at 60 Hz drops presses. An
+unbound note fires the whole bay (`noteAction` in `ui/midi.ts`) and binding one
+pad lifts the blanket.
 
 ### The stab gate
 
-Two things it is still missing, both surfaced by pulling on "the stabs slider
-does not work":
+Two gaps, both surfaced by pulling on "the stabs slider does not work":
 
 - **It does not travel with the look.** The gate lives in `localStorage` and
-  nowhere else — not in `#mod=`, not in a preset's routings, not in a saved
-  look. A link, a preset or a saved profile therefore drops the most visible
-  thing the bay does, and whoever opens it sees a still picture where the board
-  had been cutting four times a second. `useModSlots.ts` carries the reasoning
-  for why it belongs in both; what is owed is the schema change to `#mod=` and
-  to the preset routings, with readers that tolerate its absence the way
-  `readStab` already tolerates a junk entry.
+  nowhere else: not in `#mod=`, not in a preset's routings, not in a saved look.
+  A link or a preset therefore drops the most visible thing the bay does. What
+  is owed is the schema change to `#mod=` and the preset routings, with readers
+  that tolerate its absence the way `readStab` already does. A held look is a
+  whole second board, so store it as a diff against stock the way the strip
+  does, rather than as a preset name, since the look you hold is usually one you
+  dialed.
+- **No knob can reach it.** The row passes `sync` but no `midi`, so the kill
+  switch a bender keeps a thumb on is mouse-only while the motion fader beside
+  it is a `BindTarget`. It wants a `'stab'` target beside `'motion'` in
+  `ui/midi.ts` and a sink in `app.tsx`. Inserting it into `AUTOMAP_TARGETS`
+  shifts every knob for anyone who re-runs the auto-map, which is the open
+  question.
 
-  The held-look pass raised the stakes and complicated the schema in the same
-  stroke. A gate whose far end is a look is two numbers and a whole second
-  board, so a link carrying one would roughly double the query string. The shape
-  to reach for is probably the strip's: store the far board as a diff against
-  stock, since a held look is usually a handful of controls off it and
-  `writeProfileParams` already knows how to write that. Storing a preset _name_
-  is the tempting cheap version and is wrong for the same reason `Stab.to` is a
-  board rather than a name — the look you hold is usually one you dialed.
-
-- **No knob can reach it.** The row passes `sync` but no `midi`, so the one
-  lever `signal/stab.ts` describes as "the kill switch a bender keeps a thumb
-  on" is mouse-only, while the motion fader an inch away is a `BindTarget` at
-  the front of the auto-map spine. It wants a `'stab'` target beside `'motion'`
-  in `ui/midi.ts` — its span is the row's own 0..`STAB_HZ_MAX` in tenths rather
-  than the `UNIT_SPAN` the other two non-control targets share, and since the
-  layering puts `midi.ts` under `modSlots.ts` that number has to be written
-  twice and pinned with a test, the way `STOCK_HOLD` and `VIEW_KEYS` are — plus
-  a sink in `app.tsx` beside `setMotion`. The open question is
-  `AUTOMAP_TARGETS`: inserting it after `MOTION` shifts every knob for anyone
-  who re-runs the auto-map.
-
-Worth knowing for anything built near the gate: the _hard_ flip between two
-looks is the affordable one and a crossfade is not, since the filter bank is
-redesigned whenever a filter control moves — a cut pays that on the two edges of
-a cycle, a fade would pay it every frame. That is also why this is the gate's
-job and not a mod slot's: a routing drives one `ControlKey`, and two looks is
-every key at once.
+A hard flip between two looks is the affordable gesture and a crossfade is not,
+since the filter bank is redesigned whenever a filter control moves. That is
+also why this is the gate's job and not a mod slot's: a routing drives one
+`ControlKey`, and two looks is every key at once.
 
 ## Clip cues
 
-`ui/cue.ts` marks a cue on a clip's own timeline and loops a stretch of it; the
-clamp is `VideoPump.wrap`, and `armHead`/`promoteHead` in `ui/videoSlot.ts` give
-the loop a second read head so the wrap does not seek. Three things around it
-are deliberately not done.
+`ui/cue.ts` marks a cue on a clip's own timeline and loops a stretch of it, with
+a second read head (`armHead`/`promoteHead` in `ui/videoSlot.ts`) so the wrap
+does not seek. Three things around it are deliberately not done.
 
-- **A cue row in the Deck.** The Deck is the panel's second index for controls a
-  hand moves during a take, and a cue is exactly that. It is not there because
-  every row the Deck renders is backed by a control read through
-  `ControlsContext`, and a cue is deliberately _not_ a control — two timestamps
-  into one clip cannot be recalled by a preset or moved by mutate. So the Deck
-  would need a way to take per-source state, which is a new pattern rather than
-  a placement. The command palette carries the two verbs meanwhile.
+- **A cue row in the Deck.** Every row the Deck renders is backed by a control
+  read through `ControlsContext`, and a cue is deliberately not a control: two
+  timestamps into one clip cannot be recalled by a preset or moved by mutate.
+  The Deck would need a way to take per-source state, which is a new pattern.
+  The command palette carries the two verbs meanwhile.
 - **Beat-snapped loops.** `useTempo` already has a beat, and ½/1/2/4-bar buttons
-  from the cue would give exact musical loops. Left out for now: it doubles the
-  row, and it is inert on a machine with no tempo set, which is most of them.
-- **A de-click envelope on the wrap.** All that is left of the dropout: 11 ms is
-  one frame, which is a click rather than a hole, and fading the gain across the
-  join is the standard fix. It was worth almost nothing against the half-second
-  hole the seek used to cost; against what is left it is the whole remainder.
+  off the cue would give exact musical loops. It doubles the row and is inert on
+  a machine with no tempo set, which is most of them.
+- **A de-click envelope on the wrap.** What is left of the dropout is one frame,
+  a click rather than a hole, and fading the gain across the join is the
+  standard fix.
 
-Three things the read head taught, and the first two were not in its design.
+The measurement behind the head is `scripts/wrapsound.mjs`: the silence on a
+wrap is the seek plus about one frame, and a working head removes it entirely.
+The commit that added the head carries the numbers and what they taught.
 
-**The two elements do not contend for the preroll slot, because the bound that
-rule protects is _files_.** This was filed as a policy decision and dissolved on
-contact: a preroll is speculative and names a different clip, so it can cost a
-whole download; a loop's head is the same url as the element on air, which for a
-`blob:` is the same object and otherwise a cache hit. Sharing one field would
-have made a rundown's lookahead and a marked loop take turns breaking each
-other, to protect a budget only one of them spends. **The expensive-looking part
-of a feature is worth re-deriving before it is paid for.**
+## Intercarrier buzz off the main thread
 
-**The first cut made the sparse case worse, and only measurement said so.**
-Where the outgoing head cannot re-park within one lap, both elements seek the
-same expensive file at once: 1028 ms of dropout on half the laps in place of 213
-ms on all of them — a better median, a worse sound. So the re-park is held
-against its own lap and an overrun retires the head for the life of the cue,
-with no minimum-lap constant, because whether a head can keep up is a question
-about the clip and the loop together that the first lap answers. And it is **a
-deadline, not a stopwatch**: checking elapsed time inside `seeked` cannot fire
-until the re-park finishes, so an overrun stayed armed for the whole of its own
-overrun, and a re-park that never completed never fired the check at all.
-
-**The wrap-cost readout became the threshold two attempts could not build.** A
-loop with a working head does not seek, so `wrapCostMs` reports nothing; when
-the head gives up, the number comes back. It appears exactly when looping this
-clip here is costing something — by mechanism rather than by a cutoff someone
-had to pick. That took one line to hold: a relayed wrap has to _clear_ the
-health window rather than merely not add to it, because a head is armed
-unawaited and a big file wraps by seeking a lap or two before it lands.
-
-The measurement behind all of it, from `scripts/wrapsound.mjs` — an AudioWorklet
-on the app's own analyser, over a generated tone so floor means silence:
-
-    arm            wraps   seek     silence   quiet
-    intra:seek        13    7 ms      11 ms      1%
-    intra:head        11     --       11 ms      0%
-    dense:seek        13   14 ms      21 ms      2%
-    dense:head        13     --       11 ms      0%
-    sparse:seek       10  237 ms     245 ms     18%
-    sparse:head       13     --       11 ms      0%
-
-**The silence _is_ the seek**, plus about one animation frame — two independent
-instruments agree to within 15 ms across three orders of magnitude, so there was
-never a separate audio cost to fix. Read the relationship, not the numbers:
-these are `testsrc` fixtures, about as cheap to decode as exists, and the dense
-arm's 11–14 ms is 64–90 ms on `demo-v2.mp4`. Two notes for re-running it.
-`public/test.mp4` has no audio track at all, which is why the fixtures are
-generated. And the run steps the engine from Node rather than riding rAF,
-because the region clamp lives in `VideoPump.pump()` and an occluded window
-wraps once a second.
-
-## Intercarrier buzz — taking the detector off the main thread
-
-`signal/buzz.ts`'s `detect` runs on the main thread, inside the callback
-`gpu/buzzread.ts` gets back from `mapAsync`. Measured with the slider up: 20.0
-µs for the 525-line DC-block/hiss/tanh loop and 1.7 µs for the copy that gets
-transferred — about 25 µs a frame once the `postMessage` is counted, or 0.13% of
-a 60 fps budget. Nothing at all at `buzzLevel` 0.
-
-**The part worth moving is the part that cannot move.** The `GPUDevice` belongs
-to the main thread, `mapAsync` resolves on whichever thread owns the buffer, and
-`getMappedRange` hands back an `ArrayBuffer` the browser detaches on unmap — so
-nothing can forward it to a worker or a worklet. What is left on the main thread
-is the callback, a memcpy and a `postMessage`: roughly 2 µs of the 25. Moving
-the device itself means reopening [0003](adr/0003-delete-the-worker-engine.md).
-
-Two routes, if anyone revisits this:
-
-- **`detect` into the worklet.** Send the raw `(mean, dev)` pairs rather than
-  finished samples — 4.2 KB instead of 2.1 KB — and do the arithmetic on the
-  audio thread. Simple, and it puts a 20 µs loop on the thread with the hardest
-  deadline in the app: 0.75% of a 2.67 ms quantum at 48 kHz, once every six
-  quanta. Safe, and still the worse of the two.
-- **`detect` onto the GPU.** `sync.wgsl` already carries the pattern for a
-  serial recurrence, so a `buzz_detect` pass would sit beside it: the DC
-  blocker's state in two persistent slots, `pcg`/`gauss` for the hiss, and
-  `tanh` is a WGSL builtin. The readback then carries finished audio, which
-  halves it. The cost is the tests — `signal/buzz.spec.ts` makes six behavioural
-  assertions on `detect`, and in WGSL each becomes a shader naga typechecks and
-  nothing exercises.
-
-**What would decide this is a number nobody has.** The 25 µs above is the JS
-only; `mapAsync`'s own main-thread cost inside Firefox is unmeasured, and it is
-the half that stays put however the other half moves. A `performance` measure
-around the flush and one `buzzsound` run would settle whether the rest is worth
-chasing.
+`signal/buzz.ts`'s `detect` runs on the main thread inside the `mapAsync`
+callback, at about 25 µs a frame with the slider up and nothing at all at zero.
+The device and the mapped buffer cannot leave the main thread, so what could
+move is the arithmetic, either into the audio worklet or into a `buzz_detect`
+pass beside `sync.wgsl`. Neither is worth doing until someone measures
+`mapAsync`'s own main-thread cost, which is the half that stays put either way.
 
 ## Not worth building
 
@@ -779,9 +678,11 @@ chasing.
   shipped as `rfAdjacent`, and is carrier beats rather than a second picture.)
 - **A TBC.** A corrective box that removes `tbJitter`/`tbWow`. Inverse-effect
   controls are interesting for performance but nobody has wanted one.
-- **An After Effects / Premiere / OpenFX plugin.** Declined at length in
-  [`EDITOR.md`](EDITOR.md), which also says what the reusable part turned out to
-  be and where the editor-facing work actually goes.
+- **An After Effects / Premiere / OpenFX plugin, as a port of the shaders.** The
+  shaders are a third of the simulator and the feedback loops need sequential
+  render. A sequential-render OFX effect on a native wgpu build is the shape
+  that could work; [`EDITOR.md`](EDITOR.md) has the working notes and the
+  fixed-framerate export is what serves an edit today.
 - **A camera loop aimed off-centre.** It dims away even at a round trip of 1.1
   with the zoom under 1, because the off-axis shift carries most of the picture
   out of frame each lap and the gain has nothing to compound. Two tunings tried;

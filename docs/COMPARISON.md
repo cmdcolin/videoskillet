@@ -12,7 +12,7 @@ of that map: one signal, bent live, its faults interacting.
 path, don't draw the look — and lives in the editing suite. It ships standalone,
 in a browser, and as AE / Premiere / OpenFX plugins, and its multithreaded SIMD
 Rust runs in real time well above NTSC resolution. videoskillet.js is fixed to
-the NTSC raster and has no plugin ([the FAQ](FAQ.md), [the editor](EDITOR.md)).
+the NTSC raster and has no plugin yet ([the FAQ](FAQ.md)).
 
 ### BENDR
 

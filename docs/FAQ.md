@@ -1,8 +1,8 @@
 # FAQ
 
 How it works, what it takes to run, where it can be installed, and how a take
-gets into an edit. [Where it sits](COMPARISON.md) and [the editor](EDITOR.md)
-carry the long arguments; this page is the short version.
+gets into an edit. [Where it sits](COMPARISON.md) has the longer comparison
+with other tools; this page is the short version.
 
 ## How does it actually work?
 
@@ -133,13 +133,12 @@ worth knowing, because they shape what a plugin could look like:
   names as this project's distinguishing feature.
 
 A sequential-render OFX effect on a native wgpu build is the shape that could
-work, and it stays on the list.
-[The editor](EDITOR.md#what-this-is-not-an-nle-plugin) has the longer working
-notes. In the meantime [ntsc-rs](https://github.com/ntsc-rs/ntsc-rs) covers much
-of the need: same premise, multithreaded Rust on the CPU, not locked to the NTSC
-raster, with After Effects, Premiere and OpenFX builds. For this look on a clip
-inside an edit, it is the better fit today, and the section below is how a take
-from here gets in.
+work, and it stays on the list. In the meantime
+[ntsc-rs](https://github.com/ntsc-rs/ntsc-rs) covers much of the need: same
+premise, multithreaded Rust on the CPU, not locked to the NTSC raster, with
+After Effects, Premiere and OpenFX builds. For this look on a clip inside an
+edit, it is the better fit today, and the section below is how a take from here
+gets in.
 
 ## Then how do I get a result into an edit?
 
@@ -203,9 +202,8 @@ UDP, so it needs a small local bridge in the middle. It is a good fit, because
 every control here is already a flat named record behind one write path: a patch
 could address `/hHold`, `/scDetuneKHz` or `/bendUs` by name, with float
 precision and no 128-control ceiling, and the same channel could run in reverse
-to keep the patch's UI in sync. See _Patching into other apps_ in
-[the backlog](IDEAS.md) for both directions, plus NDI or WebRTC output as an
-alternative to OBS.
+to keep the patch's UI in sync. NDI or WebRTC output as an alternative to OBS is
+on the same list.
 
 Running the app inside a patch, through Max's `jweb` for instance, depends on
 that web view getting WebGPU. Until then, this app is the thing you route into.
