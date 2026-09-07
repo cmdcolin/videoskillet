@@ -18,21 +18,19 @@ order and under the same names.
 
 - **Two decks, same list**: a still, a video file, a webcam, a shared screen,
   colour bars, TV or VHS static, a video synth, a teletype card you type on,
-  your own clip shelf, or a random pick from Wikimedia Commons or archive.org.
-  Deck B can also be switched off.
-- **Real gear comes in as a webcam**: an RCA capture dongle on either deck, so
-  two grabbers can be mixed against each other.
-- **Connector faults**: snow, a loose plug, a ground loop, a termination fault,
+  your clip shelf, or a random pick from Wikimedia Commons or archive.org. Deck
+  B can also switch off.
+- **Real gear arrives as a webcam**: an RCA dongle on either deck, so two
+  grabbers can be mixed against each other.
+- **Connector faults**: snow, a loose plug, a ground loop, bad termination,
   polarity flips, S-video miswired into composite.
-- **Scrambling, Macrovision AGC pulses and colorstripe** are the interesting
-  faults, because they turn the receiver's own AGC and burst circuits against
-  it.
+- **Scrambling, Macrovision AGC pulses and colorstripe** turn the receiver's own
+  AGC and burst circuits against it.
 - **A file that was already a tape**: a capture group models the deck Source A
-  was digitised from, so everything downstream lands on a picture that was
-  already soft. Off by default, and free while it is.
-- **Each input has its own deck and cable** ahead of the mixer. Knock out one
-  input's sync and the receiver locks to the other, and the geometry snaps
-  between two pictures.
+  came off, so everything downstream lands on a picture that was already soft.
+  Off by default.
+- **Each input has its own deck and cable**. Knock out one input's sync and the
+  receiver locks to the other, and the geometry snaps between two pictures.
 
 ## Feedback loops
 
@@ -59,48 +57,43 @@ things optics cannot.
 - **Genlocked or dirty**: B locked onto A's raster for a clean dissolve, or
   summed free-running against it, which is the two-deck rig.
 - **The keyer cuts chroma the encoder made**, and that filter has no vertical
-  term, so mattes come out soft across and sharp down, the way every composite
-  key did.
-- **A character generator** keys caption text into the picture. It puts out a
-  fill and a key on two wires, so trimming the timing between them puts program
-  through one side of every stem and black down the other. It is the open
-  caption to line 21's closed one: the same sentence, aged by everything
-  downstream rather than sent as data and misspelled.
+  term, so mattes come out soft across and sharp down.
+- **A character generator** keys caption text in on separate fill and key wires,
+  so trimming the timing between them puts program through one side of every
+  stem and black down the other.
 
 ## Channel
 
 - **Everything between the recorder and the set**: bandwidth, nonlinearity,
-  noise, the tuner, colour-under, the tape and heads. The stage runs up to four
-  times over, once per dub generation.
+  noise, the tuner, colour-under, the tape and heads. It runs up to four times
+  over, once per dub generation.
 - **Tape noise is coloured**: an FM discriminator's noise rises toward the top
-  of the band, which is the chroma passband, so it arrives as crawling coloured
-  speckle rather than grey grain.
-- **Tracking is a servo**, a second-order loop with a dead band. With servo hunt
-  up the deck sweeps, overshoots, rings, settles and drifts off again as the
-  tape stretches. A scene change, coming out of shuttle or a thump from the
-  music knocks it off the peak, and the top of the frame flags each time.
+  of the band, which is the chroma passband, so it crawls as coloured speckle
+  rather than grey grain.
+- **Tracking is a servo** with a dead band: it sweeps, overshoots, rings,
+  settles and drifts off again as the tape stretches. A scene change or a thump
+  from the music knocks it off the peak, and the top of the frame flags.
 
 ## Enhancer
 
-- **A consumer enhancer with its jumpers moved**, sitting between deck and set.
+- **A consumer enhancer with its jumpers moved**, between deck and set.
 - **The clamp gate slides off the back porch**, so black level bounces line to
   line.
 - **The peaking coil gets feedback** wrapped round it and rings.
-- **The sync regenerator restamps pulses** wherever its slicer crosses. Raise
-  that into picture and dark content starts producing sync of its own.
+- **The sync regenerator restamps pulses** wherever its slicer crosses. Raise it
+  into picture and dark content starts making sync of its own.
 
 ## Receiver
 
-- **A television and the ways one can be misadjusted.** Sync faults move the
-  picture and decoding faults move its colour.
+- **A television, and the ways one can be misadjusted.** Sync faults move the
+  picture, decoding faults move its colour.
 - **Deflection bend happens after decoding**, so it warps geometry and never
-  touches hue. Whether a wobble takes the colour with it is the distinction most
-  worth keeping in mind, and it tells you which stage the wobble is in.
-- **A caption decoder** reads line 21 as data, so noise, a narrow channel and
-  generation loss arrive as dropped characters, wrong ones, and the solid block
-  a real decoder drew where parity caught an error. Captions repaint on the
-  set's own timing, so the picture can roll and tear under a caption sitting
-  perfectly still.
+  touches hue. Whether a wobble takes the colour with it tells you which stage
+  it is in.
+- **A caption decoder** reads line 21 as data, so noise and generation loss
+  arrive as dropped characters, wrong ones, and the solid block a real decoder
+  drew on a parity error. Captions repaint on the set's own timing, so the
+  picture can roll under a caption sitting perfectly still.
 
 ## Screen
 
@@ -117,53 +110,50 @@ things optics cannot.
 - **The demodulator route turns the tint 15,734 times a second.** The reference
   lives in the receiver, so the colour bands stay on the glass while a rolling
   picture slides through them.
-- **Sound can be the mic, a file, the clip's own track, or a share** of the tab
-  or app it comes out of. The mic puts the room and the speakers between the
-  track and the envelope detector; a share delivers the track itself.
+- **Sound can be the mic, a file, the clip's own track, or a share.** The mic
+  puts the room and the speakers between the track and the envelope detector; a
+  share delivers the track itself.
 
 ## Intercarrier buzz
 
 - **Sound buzz is the only effect you listen to.** The sound detector recovers
-  the 4.5 MHz beat between picture and sound carriers, and a limiter that cannot
-  keep video crosstalk off it passes the picture through as audio: the vertical
-  interval buzzes at 60 Hz, line structure whines, snow hisses.
+  the 4.5 MHz beat between picture and sound carriers, and a limiter that leaks
+  video crosstalk passes the picture through as audio: the vertical interval
+  buzzes at 60 Hz, line structure whines, snow hisses.
 - **It taps the real composite**, so bright scenes buzz louder, hum bars beat
   against the field rate, and a head switch clicks on the line it damages. Fine
-  tuning frees the carrier and makes the weave and the buzz worse together,
-  because they are one leak seen from two ends.
+  tuning makes the weave and the buzz worse together — one leak seen from two
+  ends.
 - **The tap sits ahead of the receiver**, so it hears the signal domain only. A
-  rolling picture over a steady buzz is that in audible form: the roll is the
-  receiver's vertical oscillator, downstream of anything the sound can reach.
-- **Nothing reaches the speakers until you ask.** The level is two controls, and
-  a preset, a shared link or a random roll can raise either, so the buzz waits
-  behind a switch of its own in the Sound stage — set to _silent_ until it is
-  thrown, and remembered from then on. Switched off it costs nothing rather than
-  playing silence: no tap pass, no readback, no audio context.
+  rolling picture over a steady buzz is that in audible form.
+- **Nothing reaches the speakers until you ask.** The buzz waits behind a switch
+  of its own in the Sound stage, _silent_ until it is thrown and remembered from
+  then on. Switched off it costs nothing: no tap pass, no readback, no audio
+  context.
 
 ## The rig
 
 - **Modulation**: any control can run on an LFO, random walk, noise,
   sample-and-hold, a Lorenz attractor, audio, or a one-shot envelope. Depth is a
-  fraction of the control's range, so the slider stays the centre and a preset
-  still holds. Rates lock to a tapped BPM or MIDI clock.
+  fraction of the control's range, so the slider stays the centre. Rates lock to
+  a tapped BPM or MIDI clock.
 - **MIDI**: any controller sending CC, with learn, auto-map and soft takeover.
   See [Using a MIDI controller](MIDI.md).
 - **Presets** double as faders you can drag partway in. Morph, random nudge,
   full undo, and saved profiles behind a sign-in.
 - **Drift**: one switch and the look wanders on its own, a gentle nudge every
-  fifteen seconds, staying near where you set it going. Every stage has the same
+  fifteen seconds, staying near where you left it. Every stage has the same
   switch for its own controls.
 - **Rundown**: the strip tray is a list of looks that plays itself. A row holds
   for a count of bars, arrives as a cut, a morph or a fault, and can roll a
-  source out of a pool or shake the look. Play it from the top, or fire rows by
-  hand.
+  source out of a pool.
 - **Sharing**: the whole board mirrors to the URL, so a link is a patch.
-- **Capture**: stills, and a constant-framerate H.264 MP4 of the picture as it
-  plays. The strip's ⎙ render steps the engine on its own clock, so a take comes
-  back at 60 fps however fast the tab ran, and comes back the same twice. Or pop
-  the controls into a second window and point OBS at the picture.
+- **Capture**: stills, and a constant-framerate H.264 MP4. The strip's ⎙ render
+  steps the engine on its own clock, so a take comes back at 60 fps however fast
+  the tab ran, and comes back the same twice. Or pop the controls into a second
+  window and point OBS at the picture.
 - **Interface**: the chain map, a command palette, signal taps and an IRE scope,
-  a magnifier that magnifies the tube face along with the picture.
+  a magnifier that takes the tube face with the picture.
 
 ---
 
