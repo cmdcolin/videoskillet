@@ -16,7 +16,7 @@ import { poolCaption } from './sources/pools'
 import { AboutDialog } from './ui/AboutDialog'
 import { AdvancedDialog } from './ui/AdvancedDialog'
 import { AppMenu, ShowMenuButton } from './ui/AppMenu'
-import { AudioHint, AudioInput } from './ui/AudioInput'
+import { AudioHint, AudioInput, SoundOut } from './ui/AudioInput'
 import { boardControls } from './ui/boardText'
 import { BoardTextSheet } from './ui/BoardTextSheet'
 import { CaptionContext } from './ui/CaptionContext'
@@ -1134,6 +1134,7 @@ export function App() {
           hasClip={eng.a.live === 'clip' || eng.b.live === 'clip'}
           error={audio.error}
         />
+        <SoundOut on={eng.soundOut} onChange={eng.changeSoundOut} />
       </>
     ),
   }

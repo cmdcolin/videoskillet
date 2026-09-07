@@ -188,6 +188,12 @@ export class Engine implements EngineApi {
     if (e instanceof GPUUncapturedErrorEvent) this.onGpuError(e.error.message)
   }
 
+  // Whether the sound detector is allowed to reach the speakers at all. Off
+  // until someone asks for it: `buzzLevel` is a control, so a preset or a
+  // `?set=` in a link can raise it, and a page that starts making noise on its
+  // own is a page people close. See `buzzDrive`.
+  private soundOut = false
+
   // Initialized from ?dbg=; also switchable live via setDbgView (panel, Advanced).
   private dbgView = Number(new URLSearchParams(pageSearch()).get('dbg') ?? 0)
   // ?debug: dev-only per-frame logging and the first-frame readback.
@@ -1498,7 +1504,23 @@ export class Engine implements EngineApi {
   // two symptoms, one knob moving both.
   private buzzDrive(): number {
     const c = this.controls
-    return Math.min(1.5, c.buzzLevel + 0.6 * Math.max(c.rfMistuneMHz, 0))
+    return this.soundOut
+      ? Math.min(1.5, c.buzzLevel + 0.6 * Math.max(c.rfMistuneMHz, 0))
+      : 0
+  }
+
+  // The master switch on that path. Zero drive gates the tap pass, the readback
+  // and the push alike, so a session with the sound off pays for none of it —
+  // and never builds an AudioContext, since `pushBuzz` is the only caller that
+  // would.
+  setSoundOut(on: boolean): void {
+    this.soundOut = on
+  }
+
+  // Read back by the rebuild path, the same way `sourceBOn` is: the flag is the
+  // engine's, and a replacement has to come up carrying it.
+  get soundOutOn(): boolean {
+    return this.soundOut
   }
 
   private allTexs(): GPUTexture[] {

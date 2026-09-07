@@ -228,6 +228,14 @@ picker says so. Not every browser can send audio through a share — Chrome can.
 Ending the share from the browser's own bar puts the picker back to off, since a
 dead capture and a quiet room look the same from here.
 
+Under the picker is the one thing in the app that comes out of your speakers:
+the set's own intercarrier buzz, the picture arriving on the audio line. It
+starts **silent** and stays there until you switch it to **buzz out loud**,
+because its level is two controls — _sound buzz_ under **Channel · Ghosting &
+leakage** and _fine tuning_ under **Channel · RF / Tuner** — and a preset, a
+shared link or a random roll can raise either without anyone having asked for
+noise. The switch is remembered between visits.
+
 ## Playing a piece
 
 The **strip** tray along the bottom of the window is a rundown: a list of looks

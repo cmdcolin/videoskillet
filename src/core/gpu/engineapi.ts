@@ -60,6 +60,14 @@ export interface EngineApi {
   // life, so an engine replacing a lost one inherits its predecessor's graph.
   readonly audioState: AudioState
 
+  // Whether the intercarrier buzz — the picture arriving on the audio line —
+  // is allowed out of the speakers. Off until asked for, and read back the way
+  // `sourceBOn` is so a rebuilt engine comes up carrying it. Not a control:
+  // `buzzLevel` is what the set is doing, this is whether anyone is listening,
+  // and a preset has no business answering the second question.
+  setSoundOut: (on: boolean) => void
+  readonly soundOutOn: boolean
+
   // How an engine reports its own health. Four failures the app answers
   // differently, which is why they are four callbacks and not one: a lost device
   // rebuilds, a hang is fatal, a frozen tab is a banner that clears itself, and

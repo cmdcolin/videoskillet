@@ -134,6 +134,11 @@ things optics cannot.
 - **The tap sits ahead of the receiver**, so it hears the signal domain only. A
   rolling picture over a steady buzz is that in audible form: the roll is the
   receiver's vertical oscillator, downstream of anything the sound can reach.
+- **Nothing reaches the speakers until you ask.** The level is two controls, and
+  a preset, a shared link or a random roll can raise either, so the buzz waits
+  behind a switch of its own in the Sound stage — set to _silent_ until it is
+  thrown, and remembered from then on. Switched off it costs nothing rather than
+  playing silence: no tap pass, no readback, no audio context.
 
 ## The rig
 

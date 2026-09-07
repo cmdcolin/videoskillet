@@ -314,8 +314,9 @@ export class AudioState {
   // Video crosstalk out to the speakers, one measurement pair per line. Builds
   // the graph on first use, so the buzz works with no input source picked at
   // all — a set buzzes at whatever is on screen, and nothing about that needs a
-  // microphone. The slider that raises `drive` is the user gesture the context
-  // needs to leave suspended.
+  // microphone. The Sound stage's switch is the user gesture the context needs
+  // to leave suspended, and until it is thrown the engine never calls this at
+  // all, so a session that wants no noise builds no context either.
   //
   // BuzzOut connects to `ctx.destination` and to nothing else, deliberately.
   // Routing it into `analyser` would put it into `data`, which FMs the very

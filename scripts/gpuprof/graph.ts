@@ -627,6 +627,9 @@ export class Graph {
     }
   }
 
+  // No sound-out gate here, unlike the app's copy: this profiles what a pass
+  // costs when the controls ask for it, and a run that skipped buzzTap because
+  // nobody was listening would report a number for a pass it never ran.
   private buzzDrive(): number {
     const c = this.c
     return Math.min(1.5, c.buzzLevel + 0.6 * Math.max(c.rfMistuneMHz, 0))

@@ -192,8 +192,9 @@ fault through `timing[]` will spin hue that should have stayed put.
   GPU→CPU, and it is the app's **only steady-state readback in that direction**.
   `gpu/buzzread.ts` maps it through a pool of three staging buffers and skips
   the frame when none is free, because the sound side can glide over a gap and
-  the render loop cannot afford to wait. Gated on the buzz being audible, so an
-  idle listener pays nothing.
+  the render loop cannot afford to wait. Gated on the buzz being audible — the
+  level the controls ask for, and the Sound stage's switch saying anyone is
+  listening — so an idle listener pays nothing.
 - **`persistBufs`** — phosphor state (the light still on the glass), packed
   `rgba8`, ping-ponged by frame parity: `decode` reads one and writes the other,
   because its lateral scatter reads neighbouring pixels and a single buffer

@@ -73,10 +73,17 @@ await page.goto(`${base}?set=buzzLevel:0.9`, { waitUntil: 'networkidle0' })
 
 const settle = ms => new Promise(r => setTimeout(r, ms))
 
+// The app comes up silent whatever `?set=` asks for — a page that makes noise on
+// its own is one people close — so the switch the Sound stage owns is thrown
+// here, before anything below can look for a node that would not otherwise
+// exist. It also stands in for the click the AudioContext needs.
+await settle(3000)
+await page.evaluate(() => window.vf?.setSoundOut(true))
+
 // Say which of the two ways this can be dead before spending four arms finding
 // out: no node means the worklet module never loaded, and a suspended context
 // means it loaded into a graph nobody started.
-await settle(3000)
+await settle(1500)
 const alive = await page.evaluate(() => ({
   node: window.__buzz !== undefined,
   state: window.__buzz?.context.state ?? 'no context',

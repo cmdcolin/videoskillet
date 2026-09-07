@@ -1,8 +1,10 @@
+import { useControlReading } from './ControlsContext'
 import { FileName } from './FileName'
 import { MenuRow } from './MenuRow'
 import { Meter } from './Meter'
 import { Scrub } from './Scrub'
 import { Slider } from './Slider'
+import { ToggleButtonGroup } from './ToggleButtonGroup'
 import ui from './ui.module.css'
 import { DRY_DEFAULT, REVERB_DEFAULT } from './urlParams'
 import { AUDIO_DESC, AUDIO_MODES } from './useAudio'
@@ -128,4 +130,41 @@ export function AudioHint(props: {
       picture.
     </div>
   ) : null
+}
+
+// The other direction on the Sound branch: the picture arriving on the audio
+// line, out of the speakers. A switch rather than a slider because the level is
+// already two controls — `buzzLevel` is the limiter failing, `rfMistuneMHz` is
+// the carrier loose in its trap — and both are things a preset, a shared link or
+// a roll of the dice can raise. Every one of those is a gesture about the
+// picture, so the noise waits behind a gesture of its own.
+//
+// Off costs nothing rather than playing silence: the engine gates the tap pass,
+// the readback and the push on this one flag, and the AudioContext the buzz
+// would need is built by the first push, so a session that never asks never
+// builds one (core/gpu/pipeline.ts › buzzDrive).
+export function SoundOut(props: {
+  on: boolean
+  onChange: (on: boolean) => void
+}) {
+  const driven = useControlReading(
+    c => c.buzzLevel + 0.6 * Math.max(c.rfMistuneMHz, 0) > 0,
+  )
+  return (
+    <>
+      <ToggleButtonGroup
+        label="the set's own buzz, out of your speakers"
+        options={['silent', 'buzz out loud']}
+        value={props.on ? 1 : 0}
+        onChange={v => props.onChange(v === 1)}
+      />
+      {props.on === driven ? null : (
+        <div className={ui.hint}>
+          {props.on
+            ? 'nothing is driving it — raise sound buzz under Channel · Ghosting & leakage, or fine tuning under Channel · RF / Tuner.'
+            : 'the look on the board is asking to buzz; this is what is keeping it quiet.'}
+        </div>
+      )}
+    </>
+  )
 }

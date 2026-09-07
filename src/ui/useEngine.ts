@@ -51,6 +51,7 @@ import { morphTo } from './morph'
 import { randomPresetMix, rollControls } from './presets'
 import { RebuildPolicy } from './rebuildPolicy'
 import { snowPlan } from './snow'
+import { usePersistedFlag } from './storage'
 import { printCard } from './teletypeSlot'
 import { faultPlan, transitionOf } from './transitions'
 import {
@@ -183,6 +184,8 @@ const readPlayhead = (el: HTMLVideoElement | null): Playhead =>
 
 const samePlayhead = (a: Playhead, b: Playhead): boolean =>
   a.time === b.time && a.duration === b.duration && a.paused === b.paused
+
+const SOUND_OUT_KEY = 'videoskillet.js_sound_out'
 
 // Tries per rebuild, and the wait between them. requestAdapter can fail outright
 // in the moments after a driver reset — the GPU stack is still coming back — so
@@ -505,6 +508,11 @@ export function useEngine(args: { rand: Rand }) {
   const [caption, setCaption] = useState('')
   const [reverb, setReverb] = useState(REVERB_DEFAULT)
   const [dry, setDry] = useState(DRY_DEFAULT)
+  // Whether the set is allowed to buzz out loud. Persisted, and off until it is
+  // asked for: `buzzLevel` and `rfMistuneMHz` are controls, so a preset, a
+  // shared link or a random roll can raise them, and every one of those is a
+  // gesture about the picture rather than a request for noise.
+  const [soundOut, setSoundOutState] = usePersistedFlag(SOUND_OUT_KEY)
   const [live, setLiveState] = useState<{ a: SlotKind; b: SlotKind }>({
     a: 'none',
     b: 'none',
@@ -671,6 +679,12 @@ export function useEngine(args: { rand: Rand }) {
   const setVideoAudio = (on: boolean) => {
     vaporRef.current.playAudio = on
     routeAudio(on)
+  }
+  // The click is also the user gesture the AudioContext needs: nothing builds
+  // one until the buzz has somewhere to go.
+  const changeSoundOut = (on: boolean) => {
+    setSoundOutState(on)
+    engineRef.current?.setSoundOut(on)
   }
   const changeReverb = (mix: number) => {
     vaporRef.current.reverb = mix
@@ -2547,6 +2561,7 @@ export function useEngine(args: { rand: Rand }) {
             created.setDbgView(dead.getDbgView())
             created.setCaption(dead.getCaption())
             created.setSourceBEnabled(dead.sourceBOn)
+            created.setSoundOut(dead.soundOutOn)
             wire(created)
             // Sources last: they write through engineRef, which `wire` just
             // moved. The modulation bay needs nothing here — it lives in React
@@ -2621,6 +2636,9 @@ export function useEngine(args: { rand: Rand }) {
               showGenerated(slotA, 'bars', beginLoad('a'))
               showGenerated(slotB, 'bars', beginLoad('b'))
               created.setSourceBEnabled(true) // B defaults to bars; ?srcb=none to opt out
+              // The stored answer, which is what this render read the flag as:
+              // the effect is mount-once, so nothing has moved it yet.
+              created.setSoundOut(soundOut)
               applySession(created, parseSessionParams(pageSearch()))
             }
           },
@@ -2839,6 +2857,8 @@ export function useEngine(args: { rand: Rand }) {
     changeCaption,
     reverb,
     dry,
+    soundOut,
+    changeSoundOut,
     setVideoAudio,
     changeReverb,
     changeDry,

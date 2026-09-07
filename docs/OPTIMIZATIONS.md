@@ -135,8 +135,9 @@ alternating: the chroma keyer, the video synth and the blanking strobe together
 land **4.52 ms on both sides at stock** — no separable difference at all. The
 true-waveform B chain (`encodeChromaB → encodeCompositeB → mixB`) totals ~0.9 ms
 engaged and dispatches nothing idle. The intercarrier-buzz readback is gated on
-the buzz being audible, so a listener who never touches it pays neither the copy
-nor the map.
+the buzz being audible — which now takes a switch as well as a level, since the
+sound is off until asked for — so a listener who never touches it pays neither
+the copy nor the map.
 
 Gating inside a shader gets the same treatment when a pass is already running.
 `crt_face`'s bloom and halation used to share one gate and one loop body, so
