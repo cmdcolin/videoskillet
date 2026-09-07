@@ -1,8 +1,8 @@
 # FAQ
 
 How it works, what it takes to run, where it can be installed, and how a take
-gets into an edit. [Where it sits](COMPARISON.md) has the longer comparison
-with other tools; this page is the short version.
+gets into an edit. [Where it sits](COMPARISON.md) has the longer comparison with
+other tools; this page is the short version.
 
 ## How does it actually work?
 
