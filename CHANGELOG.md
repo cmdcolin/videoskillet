@@ -2,6 +2,12 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [0.41.0](https://github.com/cmdcolin/videoskillet/compare/v0.40.7...v0.41.0) - 2026-09-07
+
+### Features
+- *(gpu)* [`8883852`](https://github.com/cmdcolin/videoskillet/commit/8883852ebfc022e5f2fffc55b027a3506ecd3c8a) four more ways to bend a character generator's ROM
+- *(gpu)* [`d9b3059`](https://github.com/cmdcolin/videoskillet/commit/d9b30591e71eaa4f4f327122147d4fc39226f134) the ROM bends move, decay per die, and run off the end of the font
+
 ## [0.40.7](https://github.com/cmdcolin/videoskillet/compare/v0.40.6...v0.40.7) - 2026-09-07
 
 ### Features
