@@ -267,7 +267,7 @@ export const LOOP_STAGES: readonly LoopStage[] = [
     short: 'Camera',
     blurb:
       'optical: a camera pointed at the tube, its picture mixed back in ahead of the encoder, plus the gun and glass it is looking at',
-    what: 'light rather than wire: a camera pointed at the tube, its picture mixed back into the input ahead of the encoder. It carries an image that has already been decoded and lit, so it can only do what a lens can: zoom, shift, defocus, cut a black level. Past unity gain it builds structure on its own',
+    what: 'an optical loop. A camera points at the tube and the mixer feeds its picture back into the input ahead of the encoder. That picture has already been decoded and displayed, so the loop can apply only what a lens applies: zoom, shift, defocus, black level. Above unity gain it builds structure on its own',
     mix: 'fbMix',
   },
   {
@@ -276,7 +276,7 @@ export const LOOP_STAGES: readonly LoopStage[] = [
     short: 'Mixer',
     blurb:
       'electrical: the composite taken off the bus and crossfaded back against the live signal, subcarrier included',
-    what: 'the composite itself, patched off the bus into an input and crossfaded against the live signal. The subcarrier goes round with it, so each sample of cable delay rotates fed-back hue 90° per generation and colour does things optics cannot',
+    what: 'an electrical loop. The mixer takes the composite signal off the bus into an input and crossfades it against the live signal. The subcarrier travels round with it, so each sample of cable delay rotates fed-back hue by 90° per generation',
     mix: 'cfbMix',
   },
 ]

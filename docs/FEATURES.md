@@ -40,16 +40,16 @@ own words, so the chain map and this page cannot disagree:
 
 <!-- generated:loops — from LOOP_STAGES in src/ui/controls.ts, via scripts/docgen.mjs -->
 
-**Camera feedback**: light rather than wire: a camera pointed at the tube, its
-picture mixed back into the input ahead of the encoder. It carries an image that
-has already been decoded and lit, so it can only do what a lens can: zoom,
-shift, defocus, cut a black level. Past unity gain it builds structure on its
-own.
+**Camera feedback**: an optical loop. A camera points at the tube and the mixer
+feeds its picture back into the input ahead of the encoder. That picture has
+already been decoded and displayed, so the loop can apply only what a lens
+applies: zoom, shift, defocus, black level. Above unity gain it builds structure
+on its own.
 
-**Mixer feedback**: the composite itself, patched off the bus into an input and
-crossfaded against the live signal. The subcarrier goes round with it, so each
-sample of cable delay rotates fed-back hue 90° per generation and colour does
-things optics cannot.
+**Mixer feedback**: an electrical loop. The mixer takes the composite signal off
+the bus into an input and crossfades it against the live signal. The subcarrier
+travels round with it, so each sample of cable delay rotates fed-back hue by 90°
+per generation.
 
 <!-- /generated:loops -->
 
