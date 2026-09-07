@@ -50,11 +50,16 @@ a {
    `heroplate.mjs` set them, and `cover` scales that band with the box's *width*
    while the buttons stack up from its *bottom*. A 1600x600 window crossed the
    two with nothing else shown, and the WebGPU warning, another 116px of stack,
-   crossed them at every size a reader without WebGPU has. The row's floor keeps
-   the words bigger than a caption on a window with nothing to spare. */
+   crossed them at every size a reader without WebGPU has.
+
+   The row's floor is what the whole card needs rather than what the headline
+   does: the words end at 58% of the picture, the name under them runs to 66%,
+   and `cover` scales all of it with the width. At 17vw the notice took enough
+   of a 1440x900 window that the first line lost its caps off the top — the
+   notice grows the second row, and the first falls to its floor to pay. */
 .hero {
   display: grid;
-  grid-template-rows: minmax(max(11rem, 17vw), 1fr) auto;
+  grid-template-rows: minmax(max(11rem, 21vw), 1fr) auto;
   /* A section's own 3.5rem, which the card used to cover from under its
      absolute inset and now would sit in as a band of page colour. */
   padding: 0;
@@ -98,11 +103,17 @@ a {
   /* The side padding is `.wrap`'s own: zeroing it stood the hero title
      20px left of every line under it, and put the buttons and the warning
      against the bezel on a phone. */
-  padding: 1.5rem 1.25rem 2.75rem;
+  padding: 2.25rem 1.25rem 2.75rem;
 }
+/* Centred, because the row above it is. The card is full-bleed and its words
+   are centred in the raster, so the headline centres on the window; the buttons
+   sit in `.wrap`'s 46rem column, and left-aligned they started at an edge the
+   picture knows nothing about — a gap that widens with the window, so no width
+   made it read as a decision. */
 .heroCta {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 0.75rem;
   margin: 0;
 }
@@ -400,8 +411,10 @@ a {
 .btn.primary:hover {
   filter: brightness(1.08);
 }
+/* Centred as a box, with its own text left: it is three lines of prose, and
+   three centred lines under two centred buttons is a ragged stack. */
 .req {
-  margin: 1.25rem 0 0;
+  margin: 1.25rem auto 0;
   font-size: 0.9rem;
   color: var(--fg4);
 }
