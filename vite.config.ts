@@ -94,6 +94,7 @@ export default defineConfig(({ command }) => ({
     // `site/` is the other project's (vitest.astro.config.ts) — its tests
     // import `.astro` components, which only Astro's plugins can transform.
     exclude: [...configDefaults.exclude, '**/.claude/**', 'site/**'],
+    setupFiles: ['./src/testSetup.ts'],
     testTimeout: 30000,
   },
 }))

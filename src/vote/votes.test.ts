@@ -16,22 +16,6 @@ import {
 const A = sampleRecipe(11)
 const B = sampleRecipe(12)
 
-// The suite runs on bare node — there is no jsdom in this project and every other
-// test here is pure logic — so the queue's one dependency gets a shim rather than
-// the whole suite getting a DOM. Only the four methods storage.ts calls.
-function installLocalStorage() {
-  const map = new Map<string, string>()
-  Object.defineProperty(globalThis, 'localStorage', {
-    configurable: true,
-    value: {
-      getItem: (k: string) => map.get(k) ?? null,
-      setItem: (k: string, v: string) => void map.set(k, v),
-      removeItem: (k: string) => void map.delete(k),
-      clear: () => map.clear(),
-    },
-  })
-}
-
 const aVote = (over: Partial<ReturnType<typeof voteRecord>> = {}) => ({
   ...voteRecord({
     a: A,
@@ -157,7 +141,7 @@ describe('readVote', () => {
 
 describe('the pending queue', () => {
   beforeEach(() => {
-    installLocalStorage()
+    localStorage.clear()
   })
 
   it('starts empty and keeps what is queued', () => {

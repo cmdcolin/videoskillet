@@ -38,6 +38,9 @@ describe('env', () => {
     })
 
     it('has no session store', () => {
+      // The suite's setup shims `localStorage` in for the code that persists;
+      // this is the context that has none, so it goes away again for one test.
+      vi.stubGlobal('localStorage', undefined)
       expect(sessionStore()).toBe(null)
     })
   })

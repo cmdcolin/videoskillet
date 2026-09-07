@@ -239,10 +239,17 @@ function harness({
 describe('RenderLoop', () => {
   beforeEach(() => {
     vi.useFakeTimers()
+    // Every test here drives the loop through a fault it is meant to report, so
+    // its warnings are the expected output rather than a symptom. Silenced, not
+    // removed: a run that reaches one of these unexpectedly still fails on the
+    // assertion, and `vi.mocked(console.warn).mock.calls` reads them back.
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
+    vi.spyOn(console, 'error').mockImplementation(() => {})
   })
   afterEach(() => {
     vi.useRealTimers()
     vi.unstubAllGlobals()
+    vi.restoreAllMocks()
   })
 
   it('drives frames from the fallback once rAF stops being delivered', async () => {
