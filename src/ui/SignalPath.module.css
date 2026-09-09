@@ -209,6 +209,39 @@
    what makes it hittable without aiming. Bigger than .filterClear's because
    that one sits inside a field that already draws its own box, while this one
    stands alone on a heading row with nothing around it to say where it ends. */
+/* Hold-to-compare for this stage alone: what the picture would be with nothing
+   in here touched. It sits before the ×, and `margin-left: auto` on this one is
+   what pushes the pair to the far end — the name and its count keep the left.
+
+   Only ever drawn on a stage that has something to put back (StageHead), which
+   is the same rule the group header's `reset defaults` follows, so a resting
+   panel carries none of these. A word rather than a glyph, in the panel's own
+   vocabulary — the counts beside it say "off stock" — and bordered, because a
+   press-and-hold has to look like something you can press.
+
+   Gold at rest and lit while it is down: it belongs to the edited board rather
+   than to the chrome, and the amber is the panel's one colour for that. */
+.stageStock {
+  composes: bare tap from './ui.module.css';
+  margin-left: auto;
+  flex-shrink: 0;
+  padding: 1px 6px;
+  border: 1px solid var(--border-quiet);
+  border-radius: 3px;
+  font-size: var(--fs-xs);
+  line-height: 1.4;
+  color: var(--fg3);
+}
+.stageStock:hover {
+  border-color: var(--edit);
+  color: var(--edit);
+}
+.stageStockOn {
+  border-color: var(--edit);
+  background: color-mix(in srgb, var(--edit) 24%, transparent);
+  color: var(--edit-hi);
+}
+
 .stageClose {
   composes: bare tap from './ui.module.css';
   margin-left: auto;

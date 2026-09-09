@@ -129,6 +129,14 @@ let go. **drift** sets the stage wandering on its own, so one circuit moves
 while the rest of the board holds still. Press it again to stop it where it is.
 **reset defaults** appears once there is something to put back.
 
+The stage's own heading — the tinted strip with the name on it — carries **at
+stock**, which is the whole-board **compare** aimed at one part of the path:
+hold it and this stage reads as untouched while the rest of the look stays where
+it is, so a picture damaged in five places will tell you which one is making the
+artifact. It appears once the stage has something to put back. Nothing moves and
+nothing is spent — no slider, no undo step — and the picture comes back on
+release.
+
 ![The app window with a slider's help card open, boxed in red](img/slider-help.jpg)
 
 **?** on any slider explains the fault it models rather than what you'll see.

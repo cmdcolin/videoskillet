@@ -89,6 +89,7 @@ import { SignalTapContext } from './ui/SignalTapContext'
 import { Rack } from './ui/Slider'
 import { HiddenFilePicker, SourceSlot } from './ui/SourceSlot'
 import { Stage } from './ui/Stage'
+import { stockIn } from './ui/stageStock'
 import {
   usePersistedFlag,
   usePersistedNumber,
@@ -308,6 +309,8 @@ export function App() {
   const [showBoardText, setShowBoardText] = useState(false)
   const [showPalette, setShowPalette] = useState(false)
   const [comparing, setComparing] = useState(false)
+  // Which stage is being held at stock, if any — see holdStock.
+  const [heldStage, setHeldStage] = useState<string | null>(null)
   // Which tool a drag on the picture is. It used to be neither — the mode was
   // inferred from the magnification, so one gesture meant two things depending
   // on a number elsewhere on screen, and the only way to ask for the other one
@@ -523,6 +526,28 @@ export function App() {
   const endCompare = () => {
     engineRef.current?.preview(null)
     setComparing(false)
+  }
+
+  // The same hold, aimed at one part of the signal path: this stage's controls
+  // read as stock while the rest of the look stays where it is. The whole-board
+  // compare answers "is this me or the source"; with five stages damaged at once
+  // this is the one that answers "which part of the rig is making that".
+  //
+  // Not a bypass — every pass still runs and the picture still goes through.
+  // What it holds is the controls, which is why it costs nothing but a patch:
+  // the engine already keeps its own snapshot to restore from.
+  const holdStock = (stage: string) => {
+    engineRef.current?.preview(stockIn(controls, stage))
+    setHeldStage(stage)
+  }
+  // Called by a pointer leaving the button as well as by one lifting off it, so
+  // it has to be harmless on a stage that was never held — the same rule
+  // endCompare above follows.
+  const releaseStock = () => {
+    if (heldStage !== null) {
+      engineRef.current?.preview(null)
+      setHeldStage(null)
+    }
   }
 
   // What the board is called: the preset it matches, or the last one it was
@@ -1497,6 +1522,9 @@ export function App() {
         openGroup={nav.groupIn}
         onOpenGroup={nav.toggleGroup}
         stageTop={stageTop}
+        heldStage={heldStage}
+        onHoldStock={holdStock}
+        onReleaseStock={releaseStock}
       />
       {!filtering || anyResult ? null : (
         <div className={ui.hint}>

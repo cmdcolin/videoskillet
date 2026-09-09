@@ -2,9 +2,11 @@ import { Fragment, useRef } from 'react'
 
 import { ChainMap } from './ChainMap'
 import { ControlGroup } from './ControlGroup'
+import { cx } from './cx'
 import { Accordion, NestedSections } from './Section'
 import styles from './SignalPath.module.css'
 import { hasBody, stageBody } from './stageBody'
+import { holdable } from './stageStock'
 
 import type { BranchSpec, FreeBox, WiredBranch } from './chainLayout'
 import type { ChainStage } from './ChainMap'
@@ -79,6 +81,13 @@ const counted = (node: PathNode): string =>
   node.touchedSay ??
   `${node.touched} control${node.touched === 1 ? '' : 's'} in this stage off stock`
 
+// The hold, as a heading takes it.
+interface StageStock {
+  held: boolean
+  onHold: () => void
+  onRelease: () => void
+}
+
 function StageHead(props: {
   node: PathNode
   nameHint: string
@@ -106,8 +115,14 @@ function StageHead(props: {
   // Nothing is lost with it: the full line is the title of the name button
   // beside it, and of the map box the click came from.
   blurb?: boolean
+  // Hold-to-compare, scoped to this stage: what the picture would be with
+  // nothing in here touched. Absent on a stage with nothing to put back, and on
+  // the two boxes wired to nothing, whose rows are not this stage's controls
+  // (see `holdable`).
+  stock?: StageStock
 }) {
   const { node } = props
+  const stock = props.stock
   return (
     <>
       <div className={styles.stageHead}>
@@ -141,6 +156,35 @@ function StageHead(props: {
             </button>
           )}
         </span>
+        {/* Held rather than switched, like the look bar's whole-board compare
+            and for the same reason: it is a look at something, not a state to
+            leave the board in. It moves no slider and banks no undo step — the
+            engine takes the stock board on its render path and hands the dialed
+            one back on release (Engine.preview).
+
+            A press that sends no pointer event at all is a keyboard
+            activation — `detail` is 0 there and never on a mouse press — and
+            there is no key-up to release on, so that one toggles. The same
+            idiom the group's randomize uses for its hold. */}
+        {stock === undefined ? null : (
+          <button
+            className={cx(styles.stageStock, stock.held && styles.stageStockOn)}
+            aria-pressed={stock.held}
+            title={`hold to see ${node.name} at stock — what the picture would be with nothing in here touched. The rest of the look stays, and no control moves`}
+            onPointerDown={() => stock.onHold()}
+            onPointerUp={() => stock.onRelease()}
+            onPointerLeave={() => stock.onRelease()}
+            onBlur={() => stock.onRelease()}
+            onClick={e => {
+              if (e.detail === 0) {
+                if (stock.held) stock.onRelease()
+                else stock.onHold()
+              }
+            }}
+          >
+            at stock
+          </button>
+        )}
         {props.onClose === undefined ? null : (
           <button
             className={styles.stageClose}
@@ -249,6 +293,11 @@ export function SignalPath(props: {
   // Opens the full diagram, where there is room to draw both feeds and the
   // returns with their names on them.
   onShowDiagram: () => void
+  // Which stage is being held at stock, and the two halves of the gesture. One
+  // at a time, because it is a hold: the engine previews one board.
+  heldStage: string | null
+  onHoldStock: (stage: string) => void
+  onReleaseStock: () => void
 }) {
   // Whether a stage's box is a door, stamped on here rather than handed in.
   // A stage opens if its controls can act on something, or if it has a picker at
@@ -266,6 +315,17 @@ export function SignalPath(props: {
   // a map of ten ghosts that nothing could open, which reads as a broken app
   // rather than as a narrowed panel. Every box on the map is a door now, and a
   // dimmed one drops the query on the way through (see `openStage`).
+  // Whether a heading offers the hold, and the gesture if it does. One rule, so
+  // the spine and the bench cannot disagree about which stages have something to
+  // put back.
+  const stockFor = (node: PathNode): StageStock | undefined =>
+    node.touched > 0 && holdable(node.name)
+      ? {
+          held: props.heldStage === node.name,
+          onHold: () => props.onHoldStock(node.name),
+          onRelease: props.onReleaseStock,
+        }
+      : undefined
   const opensOn = <T extends PathNode>(n: T): MapNode<T> => ({
     ...n,
     opens: n.off !== true || props.stageTop[n.name] !== undefined,
@@ -349,6 +409,7 @@ export function SignalPath(props: {
         onOpen={openStage}
         onShowDiagram={props.onShowDiagram}
         stageTop={props.stageTop}
+        stockFor={stockFor}
       />
     )
   }
@@ -416,6 +477,7 @@ export function SignalPath(props: {
               onClose={
                 props.expandAll ? undefined : () => props.onOpen(node.name)
               }
+              stock={stockFor(node)}
             />
             {/* The picker first, because it is what the rest of the stage is
                 downstream of. */}
@@ -464,6 +526,9 @@ function Bench(props: {
   onOpen: (name: string) => void
   onShowDiagram: () => void
   stageTop: Partial<Record<string, () => ReactNode>>
+  // Built by SignalPath, so the bench's headings and the spine's offer the hold
+  // on the same terms.
+  stockFor: (node: PathNode) => StageStock | undefined
 }) {
   // The stage headings, by name, as scroll targets. Element-relative
   // scrollIntoView only: the panel also renders inside the popout's document,
@@ -518,6 +583,7 @@ function Bench(props: {
                   onName={() => props.onOpen(node.name)}
                   onCount={() => jump(node.name)}
                   blurb
+                  stock={props.stockFor(node)}
                 />
                 {/* The picker rides with the heading rather than in a card of
                   its own: it is what the stage is fed by, not one more module
