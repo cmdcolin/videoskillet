@@ -242,9 +242,16 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
     // settles into a bright fixed point instead of pinning the whole raster
     // white. fbKnee sets where the well starts to fill: 0 is a hard clip (no
     // shoulder, the loop can still white out), 1 rolls off early and gently.
+    //
+    // At 0 there is no headroom above the knee for a shoulder to fill, and the
+    // guard is what makes that arrive as the clip the knob promises: a pixel
+    // under the knee has neither headroom nor anything over it, so the
+    // unguarded quotient was 0/0 and came back NaN for most of the frame. The
+    // bottom of this slider rendered black.
     let knee = mix(1.0, 0.3, clamp(P.fbKnee, 0.0, 1.0));
+    let head = 1.0 - knee;
     let over = max(fb - vec3f(knee), vec3f(0.0));
-    fb = min(fb, vec3f(knee)) + (1.0 - knee) * over / (1.0 - knee + over);
+    fb = min(fb, vec3f(knee)) + head * over / max(head + over, vec3f(1e-6));
   }
   var outc = mix(src, fb, P.fbMix);
   // The modulation input on the loop return instead of on the deck: the synth
