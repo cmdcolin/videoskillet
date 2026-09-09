@@ -4,6 +4,12 @@
 //   deno run -A --config scripts/gpuprof/deno.json scripts/gpuprof/looplock.ts \
 //     [--only=a,b] [--group='Feedback loops'] [--frames=240] [--nomod]
 //     [--source=bars|detail] [--set=cfbMix=0.9]
+//     [--spec=scripts/gpuprof/candidates.chaos.ts]
+//
+// `--spec` reads a candidate file in sheet.ts's format instead of the shipped
+// presets, so a loop can be measured before it is authored. These two columns
+// are the ones that decide a feedback look, and until this a candidate could
+// only be looked at.
 //
 // A loop that reads as tame and a loop that reads as chaos are usually the same
 // loop: the mixer loop crossfades the whole waveform, sync tip included, so
@@ -65,6 +71,14 @@ interface Preset {
 interface PresetsModule {
   PRESETS: Preset[]
   presetControls: (patch: Partial<Controls>) => Controls
+}
+
+interface SpecModule {
+  candidates: {
+    name: string
+    patch: Partial<Controls>
+    mod?: readonly LooseRouting[]
+  }[]
 }
 
 function arg(name: string): string | undefined {
@@ -159,11 +173,26 @@ async function main(): Promise<void> {
     new URL('../../src/ui/presets.ts', import.meta.url).href
   )) as PresetsModule
   const only = arg('only')?.split(',')
-  const items = presets.PRESETS.filter(
-    p =>
-      (only === undefined ? p.group === GROUP : only.includes(p.name)) &&
-      p.group !== undefined,
-  )
+  const spec = arg('spec')
+  const items: Preset[] =
+    spec === undefined
+      ? presets.PRESETS.filter(
+          p =>
+            (only === undefined ? p.group === GROUP : only.includes(p.name)) &&
+            p.group !== undefined,
+        )
+      : (
+          (await import(
+            new URL(spec, `file://${Deno.cwd()}/`).href
+          )) as SpecModule
+        ).candidates
+          .filter(c => only === undefined || only.includes(c.name))
+          .map(c => ({
+            name: c.name,
+            group: GROUP,
+            patch: c.patch,
+            mod: c.mod,
+          }))
   const extra = arg('set')
   const runner = await Runner.create(
     arg('source') === 'detail' ? 'detail' : 'bars',

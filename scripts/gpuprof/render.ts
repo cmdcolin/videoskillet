@@ -4,12 +4,14 @@
 // arm, and pixels out without a browser in the room.
 
 import { rngFor } from '../../src/core/rng'
+import { ClipContact, clipPointAt } from '../../src/core/signal/clip'
 import { ACTIVE_HEIGHT, ACTIVE_WIDTH } from '../../src/core/signal/constants'
 import { ModState } from '../../src/core/signal/modstate'
 import { Graph } from './graph'
 import { barsA, detailA, gradientB } from './sources'
 
 import type { ControlKey, Controls } from '../../src/core/controls'
+import type { ClipStep } from '../../src/core/signal/clip'
 
 // A frame's worth of source, or nothing to leave the picture where it is.
 export type Animate = (frame: number) => Uint8Array<ArrayBuffer> | undefined
@@ -229,6 +231,11 @@ export class Runner {
     // nothing. That fault cost a round of candidates and a wrong diagnosis, and
     // it is invisible in every column a sheet prints.
     const pinned = (mod ?? []).map(() => 0)
+    // The paperclip lives in Engine.applyClip, which this harness does not
+    // have — the same reason the routings are re-implemented above. Without
+    // it a candidate built on a contact renders as the board it rests on, and
+    // resting just short of trouble is the whole point of one.
+    const clip = new ClipContact()
     const wanted = new Map(cap.tail.map((t, i) => [frames - 1 - t, i]))
     const shots: Float32Array[] = cap.tail.map(
       () => new Float32Array(cap.w * cap.h * 3),
@@ -241,6 +248,23 @@ export class Runner {
           const want = rest[r.target] + values[i] * r.depth * def.travel
           live[r.target] = Math.min(def.max, Math.max(def.min, want))
           if (want < def.min || want > def.max) pinned[i]++
+        }
+      }
+      let clipped: ClipStep | null = null
+      if (rest.clipHz > 0) {
+        clipped = clip.step(
+          {
+            hz: rest.clipHz,
+            bite: rest.clipBite,
+            dwellMs: rest.clipDwellMs,
+            chatter: rest.clipChatter,
+            point: clipPointAt(rest.clipPoint),
+          },
+          this.rand,
+        )
+        for (const [k, to] of Object.entries(clipped?.peak ?? {})) {
+          const key = k as ControlKey
+          live[key] = live[key] + (to - live[key]) * (clipped?.depth ?? 0)
         }
       }
       const px = animate?.(f)
@@ -260,6 +284,12 @@ export class Runner {
       if (probe !== undefined) await probe(f, g)
       const slot = wanted.get(f)
       if (slot !== undefined) shots[slot] = await this.grab(g, cap.w, cap.h)
+      // The bite is one frame's override, like a routing's: put back what the
+      // contact carried away so the next frame lerps from the resting board.
+      for (const k of Object.keys(clipped?.peak ?? {})) {
+        const key = k as ControlKey
+        live[key] = rest[key]
+      }
     }
     for (const [i, r] of (mod ?? []).entries()) {
       if (pinned[i] > frames / 4) {
