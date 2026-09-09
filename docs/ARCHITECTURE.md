@@ -185,7 +185,9 @@ fault through `timing[]` will spin hue that should have stayed put.
   are taken; a new per-line CPU quantity needs its own buffer.
 - **`syncMeasureBuf`** — two `vec4f` per line from `sync_measure`, interleaved:
   `(sync edge or −1000, sync depth, mean beam load, broad-pulse flag)` then
-  `(tip level, porch level, the line's deepest excursion, 0)`, all post-IF-gain.
+  `(the line's deepest excursion inside active video, 0, 0, 0)`, all
+  post-IF-gain. Three slots of the second one are spare; `sync` reads `.x` as
+  what its peak detector charges to (ADR 0009).
 - **`audioBuf`** — one float per line, the audio waveform at line rate.
 - **`buzzBuf`** — one `vec2f` per line from `buzz_tap`: the line's mean
   composite level and the RMS of its within-line deviation, both IRE. It runs
