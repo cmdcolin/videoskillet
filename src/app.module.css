@@ -33,10 +33,18 @@
   min-height: 0;
 }
 
-/* Wide enough that a slider's label and its value share a line at --fs; at
-   300px the labels were wrapping as soon as the type stopped being tiny. */
+/* 332px is wide enough that a slider's label and its value share a line at
+   --fs; at 300px the labels were wrapping as soon as the type stopped being
+   tiny, which is the floor below.
+
+   It is a starting width rather than the width: the rail on the panel's inner
+   edge (PanelResizer) writes --panel-w, and a session that wants the labels to
+   stop wrapping — or two columns on a screen the bench's old viewport gate
+   called too small — drags it there. Clamped in CSS as well as at the drag, so
+   a width stored on a 27" display cannot eat the picture when the same profile
+   opens on a laptop. */
 .panel {
-  width: 332px;
+  width: clamp(300px, var(--panel-w, 332px), 70vw);
   /* Named container, so the panel's contents can ask how much room *the panel*
      has rather than how wide the screen is — the popout window is sized by
      whoever dragged its edge, and a viewport query would read that as a phone.
@@ -59,6 +67,29 @@
   padding: 10px 14px;
   flex-shrink: 0;
 }
+/* The grip between the picture and the panel (PanelResizer.tsx). Its own flex
+   item rather than a border on either neighbour: it is a target, and 5px of one
+   is the smallest that a pointer picks up reliably at speed.
+
+   Invisible at rest — the col-resize cursor is what says it is there, and a
+   permanent line between the two panes is a rule the shell has never drawn.
+   `touch-action: none` because the drag is pointer-captured, and without it a
+   touch on the rail scrolls the panel behind it instead. */
+.resizer {
+  flex: 0 0 5px;
+  align-self: stretch;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: col-resize;
+  touch-action: none;
+}
+.resizer:hover,
+.resizer:focus-visible,
+.resizerOn {
+  background: var(--rail);
+}
+
 /* While a sheet is up the panel *is* that sheet (see PanelSheet.tsx), so it
    stops being a scrolling column of sections and becomes the sheet's frame: the
    sheet takes the height and does its own scrolling inside, which is what keeps
@@ -123,6 +154,12 @@
     border-top: 1px solid var(--border);
     padding-bottom: max(10px, env(safe-area-inset-bottom));
   }
+  /* Stacked, the panel's width is the screen's and there is nothing to drag.
+     Hidden here rather than left off in app.tsx, so the breakpoint that decides
+     it is written once — as the rule that restacks the shell. */
+  .app .resizer {
+    display: none;
+  }
 }
 
 /* On its side the sidebar still reads, but 332px out of 844 is a third of the
@@ -131,6 +168,12 @@
   .app .panel {
     width: min(300px, 40vw);
     padding: 8px max(10px, env(safe-area-inset-right)) 8px 10px;
+  }
+  /* The width here is the phone's, not the session's: this rule wins over
+     --panel-w by weight, so a rail left on screen would be a grip that moves
+     nothing. */
+  .app .resizer {
+    display: none;
   }
 }
 
@@ -141,10 +184,15 @@
    `.panelWide` it could be: a 1400x500 window matches both queries, and the two
    selectors have to stay the same weight for source order to keep deciding
    between them. Below the gate app.tsx ignores the flag by construction, so
-   nothing here has to undo it. */
+   nothing here has to undo it.
+
+   664 is a floor here rather than the width it used to be. The two columns need
+   it, so the bench takes it whatever the rail was left at; a session that has
+   dragged the panel wider than that keeps its width, where a flat 664 would have
+   answered "give me two columns" by making the panel narrower. */
 @media (min-width: 1280px) {
   .app .panelWide {
-    width: 664px;
+    width: clamp(664px, var(--panel-w, 664px), 80vw);
   }
 }
 

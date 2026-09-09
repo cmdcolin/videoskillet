@@ -389,6 +389,14 @@ The ☰ menu has stills, recording, fullscreen, and **pop out controls**, which
 moves the panel to a second window and gives the picture the whole screen. Point
 OBS at the picture window to capture it.
 
+Drag the edge between the picture and the panel to set how wide the sidebar is.
+Arrow keys nudge it once it has focus, and a double-click puts it back to the
+332px it starts at. The drag stops at 300px, which is where a slider's label and
+its value stop sharing a line, and it stops before the picture is down to its
+last 320. Dragged past 540 the panel is wide enough for **☰ › wide bench**,
+which lays every stage out at once over two columns — on a screen 1280 wide or
+more the bench is offered anyway, and takes the width it needs.
+
 ## Keyboard
 
 | Key                     | Does                                                                |

@@ -176,6 +176,25 @@ export function usePersistedFlag(key: string, fallback = false) {
   return [on, set] as const
 }
 
+// A number persisted across reloads, written through `writeJSONSoon` — for the
+// state a *drag* sets, where the setter runs once per pointer move and sixty
+// synchronous localStorage writes a second land on the thread feeding the GPU.
+//
+// A stored value of some other shape falls back rather than being handed on: the
+// callers here multiply and compare it, so a stale-schema string would reach a
+// layout as `NaN` and take the shell's width with it.
+export function usePersistedNumber(key: string, fallback: number) {
+  const [value, setValue] = useState(() => {
+    const v = readJSON<unknown>(key, fallback)
+    return typeof v === 'number' && Number.isFinite(v) ? v : fallback
+  })
+  const set = (next: number) => {
+    setValue(next)
+    writeJSONSoon(key, next)
+  }
+  return [value, set] as const
+}
+
 // A nullable string persisted across reloads — null clears the key, so absent
 // and "nothing selected" are the same state rather than two.
 export function usePersistedString(key: string) {

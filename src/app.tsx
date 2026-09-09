@@ -73,6 +73,8 @@ import { parseMorph } from './ui/morph'
 import { MotionStrip } from './ui/MotionStrip'
 import { paletteActions } from './ui/paletteActions'
 import { panelChain } from './ui/panelChain'
+import { PanelResizer } from './ui/PanelResizer'
+import { BENCH_W, PANEL_W } from './ui/panelWidth'
 import { slotPatched, soundPatched } from './ui/patched'
 import { matchPreset, presetControls, presetLabelFor } from './ui/presets'
 import { PresetsSection } from './ui/PresetsSection'
@@ -87,7 +89,11 @@ import { SignalTapContext } from './ui/SignalTapContext'
 import { Rack } from './ui/Slider'
 import { HiddenFilePicker, SourceSlot } from './ui/SourceSlot'
 import { Stage } from './ui/Stage'
-import { usePersistedFlag, usePersistedString } from './ui/storage'
+import {
+  usePersistedFlag,
+  usePersistedNumber,
+  usePersistedString,
+} from './ui/storage'
 import { StripContext } from './ui/StripContext'
 import { StripTray } from './ui/StripTray'
 import { TagsPopover } from './ui/TagsPopover'
@@ -139,13 +145,18 @@ import type { PickSlot } from './ui/SourceSlot'
 import type { RenderFrom } from './ui/StripTray'
 import type { LookContext } from './ui/useLookLabels'
 import type { SourcePrompt } from './ui/useSourcePrompt'
-import type { ReactNode } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 
 // Whether the menu over the picture has been dismissed. Persisted across
 // reloads so a collapse sticks — it only ever applies where the masthead is off
 // screen (fullscreen, the popout), which is where somebody clearing the picture
 // off for a projector is likely to be.
 const BAR_HIDDEN_STORE = 'videoskillet.js_overlay_bar_hidden'
+
+// How wide the sidebar was left. Persisted for the same reason the bench flag
+// is: it is how this session reads the panel, not something it re-decides every
+// time it opens the app.
+const PANEL_W_STORE = 'videoskillet.js_panel_width'
 
 // useSyncExternalStore fallbacks for the window before the async engine exists.
 const subscribeNever = () => () => {}
@@ -267,13 +278,22 @@ export function App() {
     writeControl,
   })
   const { popout, openPopout, widenPopout } = usePopout()
+  // How wide the sidebar is, by the rail on its inner edge (PanelResizer). The
+  // shell reads it as a custom property, so the media queries that restack the
+  // panel on a phone still have the last word over it.
+  const [panelW, setPanelW] = usePersistedNumber(PANEL_W_STORE, PANEL_W)
   // The bench: every stage of the chain at once, two columns wide. Persisted,
-  // but inert unless there is room for it — the docked panel needs a wide
-  // screen, while the popout is the user's own window to size, so there the
-  // panel's container query has the last word.
+  // but inert unless there is room for it. Three ways there is: the popout is
+  // the user's own window to size, so there the panel's container query has the
+  // last word; a wide screen, where switching it on widens the docked panel in
+  // CSS; and a panel already dragged past the width the two columns need, which
+  // is the case the viewport gate alone used to refuse — a 1100px laptop with
+  // 600px of sidebar has the room, and it is the panel's width that decides,
+  // not the screen's.
   const [benchOn, setBenchOn] = usePersistedFlag('videoskillet.js_panel_bench')
   const roomy = useMediaQuery('(min-width: 1280px)')
-  const bench = benchOn && (popout !== null || roomy)
+  const wideEnough = popout !== null || roomy || panelW >= BENCH_W
+  const bench = benchOn && wideEnough
   // Switching it on asks the popout for the room the two columns need; the
   // docked panel widens itself in CSS and has nothing to ask for.
   const toggleBench = () => {
@@ -1183,7 +1203,7 @@ export function App() {
     onToggleRecord: capture.toggleRecord,
     onToggleFullscreen: toggleFullscreen,
     bench: benchOn,
-    canBench: popout !== null || roomy,
+    canBench: wideEnough,
     onToggleBench: toggleBench,
     onPopout: () => openPopout(benchOn),
     showFps,
@@ -1604,10 +1624,22 @@ export function App() {
     </FilterContext>
   )
 
+  // The width the rail was left at, handed to the shell as a property rather
+  // than as an inline `width` on the panel: the media queries that stack the
+  // panel under the picture, or narrow it on a phone held sideways, have to keep
+  // the last word, and an inline width outranks every one of them. On `.app`
+  // rather than on the panel itself so the fullscreen sheet — which borrows the
+  // edge the sidebar would have had — is the same width as the sidebar it stands
+  // in for. The popout is a portal into its own document and inherits nothing
+  // from here, which is right: that window's width is the one somebody dragged.
+  const shellStyle: CSSProperties & Record<'--panel-w', string> = {
+    '--panel-w': `${panelW}px`,
+  }
+
   return eng.fatal !== null ? (
     <FatalScreen fatal={eng.fatal} />
   ) : (
-    <div className={styles.app}>
+    <div className={styles.app} style={shellStyle}>
       {/* The stage and the strip share a column, so the tray sits under the
           picture rather than beside it; the panel is untouched either way. */}
       <div className={styles.left}>
@@ -1765,15 +1797,29 @@ export function App() {
         )}
       </div>
       {fullscreen || popout !== null ? null : (
-        <div
-          className={cx(
-            styles.panel,
-            benchOn && styles.panelWide,
-            sheet !== null && styles.panelSheet,
-          )}
-        >
-          {panel}
-        </div>
+        <>
+          {/* Between the two panes, so the edge a drag moves is the edge under
+              the pointer. It is drawn in every docked layout and hidden by the
+              same media queries that take the width off the panel — see
+              .resizer, which is where that decision belongs: the stacked shell
+              is a CSS fact, and asking it here would be a second copy of the
+              breakpoint. */}
+          <PanelResizer
+            className={styles.resizer}
+            onClassName={styles.resizerOn}
+            width={panelW}
+            onWidth={setPanelW}
+          />
+          <div
+            className={cx(
+              styles.panel,
+              benchOn && styles.panelWide,
+              sheet !== null && styles.panelSheet,
+            )}
+          >
+            {panel}
+          </div>
+        </>
       )}
       {popout === null
         ? null
