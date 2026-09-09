@@ -262,7 +262,7 @@ One retirement: `dirtyDissolve` was `dirtyMix` with A pulled halfway down, and
 0.076 distance from `vhs` — the distance under-weights `shuttleX`'s range, and
 cueing at 5x is a different mechanism rather than a retune.
 
-## Five findings that generalise
+## Six findings that generalise
 
 ### Ring modulation does not make rainbows
 
@@ -497,6 +497,106 @@ Genlocked it holds the raster at `motion` 8.8 with the highest chroma spread of
 anything measured that afternoon. The list of presets allowed to run a bare
 cable is now explicit in `presets.test.ts`, split into the ones that tear on
 purpose and the ones measured to hold without it.
+
+### The camera loop is a whole generation, and the mixer loop is not the place for a tape fault
+
+Two results from one round of screening, and they are the same result read from
+both ends. The round started from a coverage count rather than a hunch: sixty of
+the 285 controls appear in no preset at all and eighty in exactly one, and
+almost the whole of the unused set is the receiver and the screen. So the
+question was which of them is worth putting inside a loop.
+
+**Where the two loops tap decides which half of the rack is inside them.** The
+mixer loop stores `comp` at the end of the frame and injects it at
+`fbComposite`, so its round trip is the channel block, the timebase and the
+outboard enhancer — the tape and RF faults. The camera loop's return re-enters
+at `compose`, ahead of the encoder, so its round trip is the encoder, the
+channel, the receiver **and** the tube face: a complete encode/decode
+generation, with every fault between those two points applied once per lap.
+
+Nine arms put a channel fault inside the mixer loop — sticky-shed shear, picture
+search, the dropout compensator, the tracking servo, multiplying hum, ingress,
+the enhancer's own resonator, a clogged head, the colour killer's threshold. All
+nine came back grey: `csd` 4.9 to 13 against 28 to 49 for the camera-loop arms
+rendered beside them, and the frames are the fine mesh and the soft grey bands
+round one of the feedback screening already cut on sight. Several were also
+washed out (`mean` 109 to 127), because additive damage inside a loop is
+something the loop averages rather than something it develops.
+
+That is the same shape as the `cfbRing`-on-the-program finding above, and it has
+the same cause: the mixer loop's colour comes from its own card — the delay's
+rotation, the read clock, the modulator's oscillator, the Y/C split — and that
+card has been mined. A tape fault dropped into the loop beside it adds noise to
+a mechanism that was already the whole look.
+
+The camera loop had eight presets against the mixer loop's thirty-five and is
+where the room was. Measured over 240 frames on bars, against the group's
+existing keepers:
+
+| look                                |  loop |  grow |  csd |
+| ----------------------------------- | ----: | ----: | ---: |
+| shearedEveryGeneration (demod axis) |  89.2 | 100.0 | 72.7 |
+| colourKeepsWalking (Y/C delay)      |  87.2 |  80.4 | 55.2 |
+| wheelBehindTheSubject (tint)        |  48.5 |  85.3 | 49.7 |
+| subcarrierSiren (the previous best) | 100.2 |  68.8 | 45.6 |
+| crystalInTheOpticalLoop (sc detune) |  74.2 |  82.6 | 22.7 |
+| tunnelOut                           |  67.6 |  74.7 | 28.7 |
+| ringLoop                            |  84.1 |  35.2 |  7.1 |
+
+Eight shipped. All eight hold `lock` 99.8, `age` 0 and `vroll` 0 — the camera
+loop sits ahead of the encoder and cannot reach the sync path, which is what
+lets it be pushed where the mixer loop needs `cfbGenlock` first.
+
+**An affine transport gives a tunnel; a picture-dependent one gives shapes.**
+The sharper half of the round, and it is about the geometry rather than the
+fault. Zoom, rotation and shift are the only transport a camera loop here had
+ever been given, and all three are affine, so a generation lands scaled and
+turned and the fixed point is a tunnel or a spiral. Seven arms with seven
+different faults in them all rendered as the same saturated radial starburst,
+because seven arms ran the same collapse at zoom 0.955-0.97. Vary the transport
+and the mechanism becomes visible again: `hvSagUs` bends the scan by an amount
+the picture sets, so the displacement field is the picture one lap back and the
+loop finds ribbons that wander; `bendUs` on the flag shape adds a skew where a
+zoom would have multiplied one, and builds an arch. Neither is reachable from
+the fb controls at any setting.
+
+Two traps in measuring that family:
+
+- **A bend renders black if you let it.** `the beam bends its own scan` and
+  `a bow in the glass` first measured `mean` 13 and 18 against 45-81 for the
+  arms beside them, and neither is a dark look. A bend pushes content off the
+  edge of the raster and none of it comes back, so the loop loses light every
+  lap before the vignette, the black cut and the beam limiter take any. Both
+  read normally with the vignette near zero and the limiter off the drive.
+- **Fixing a preset's round trip can break it.** `huntingServos` runs `fbMix`
+  0.6 × `fbGain` 1.1 — a round trip of 0.66, which the section above calls a
+  three-frame smear — and an expanding zoom. Rebuilt as a collapse past unity it
+  measures `motion` 86 and renders as a blown white field: the weak round trip
+  is what was holding two undamped servos together. Left alone.
+
+What was cut, and why, since these are the near misses:
+
+- `velocity modulation compounding` (`crtSvm` in the loop) — the fine grey mesh
+  with the picture gone, which is the exact frame round one cut on sight.
+- `off the axis` (`fbShiftX/Y`, so the fixed point is in a corner) — `sd` 15.4,
+  `mean` 27. The corner drains the light out of it.
+- `a magnet on the glass` (`crtPurity`) — a good rainbow spiral, and
+  `colourKeepsWalking` is a better one. Two spirals a mechanism apart, and the
+  mechanism is not what you see. Retuned stain-dominant it blew out at
+  `mean` 127.
+- `guns drifting apart` (`crtConverge`) — measured well (`grow` 80, `csd` 49)
+  and rendered as the generic starburst. Cut on form, not on numbers.
+- `generation loss` — the same loop at zoom 1.0, so nothing accumulates except
+  the encode/decode round trip. Real cross-colour breeding and it reads as
+  bands. Worth another look when the DVE in `IDEAS.md` gives it a second raster
+  to cascade against.
+
+Both harnesses grew what this round needed. `looplock.ts --spec=` reads a
+candidate file in `sheet.ts`'s format, so the two columns that decide a feedback
+look can be read before it is authored rather than after. And `Runner.run`
+drives the paperclip (`signal/clip.ts`), which lives in `Engine.applyClip` and
+so had never reached the headless graph — a look that rests just short of
+trouble and is thrown by a contact rendered as the board it rests on.
 
 ## Labelling: the collectors, and what they were for
 
