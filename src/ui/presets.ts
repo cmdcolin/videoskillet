@@ -46,7 +46,7 @@ export const presetLabel = (p: PresetDef): string => p.displayName ?? p.name
 // suggested name), and the failure it produces is silent — a row called
 // "neonTube" where the chip beside it says "neon tube".
 export const presetLabelFor = (name: string): string => {
-  const found = PRESETS.find(p => p.name === name)
+  const found = PRESET_BY_NAME.get(name)
   return found === undefined ? name : presetLabel(found)
 }
 
@@ -1095,6 +1095,32 @@ export const PRESETS: PresetDef[] = [
     ],
   },
   {
+    name: 'clockAndCrystal',
+    displayName: 'the clock and the crystal',
+    group: 'Feedback loops',
+    blurb:
+      'The read clock fans hue along every line, and a second crystal is what makes the hue there is to fan. One lap invents colour out of brightness on an oscillator the house reference has no hold over. The next lap reads that colour back at a rate half a percent off the one it was written at, so what arrived on a single phase comes out spread along the line, further round the wheel the further a sample sits from the line start. Then the modulator works on the spread. Two boxes writing hue by different arithmetic, each of them handed what the other did a lap ago.',
+    patch: {
+      cfbMix: 0.85,
+      cfbGain: 1.02,
+      cfbClockPct: 0.5,
+      cfbDelayUs: 0.15,
+      cfbLines: 1,
+      cfbRing: 0.95,
+      cfbRingSrc: 1,
+      cfbCarrierKHz: 16,
+      chromaGain: 1.8,
+      noiseIre: 1.2,
+      cfbGenlock: 1,
+    },
+    // The width of the fan: how far each line is stretched from its own start,
+    // and with it how far round the wheel the right-hand edge sits from the
+    // left one.
+    mod: [
+      { target: 'cfbClockPct', source: 'smooth', rateHz: 0.04, depth: 0.06 },
+    ],
+  },
+  {
     name: 'colourInTheDark',
     displayName: 'colour in the dark',
     group: 'Feedback loops',
@@ -1129,6 +1155,46 @@ export const PRESETS: PresetDef[] = [
       chromaGain: 1.3,
       noiseIre: 1.5,
       cfbGenlock: 0.6,
+    },
+  },
+  {
+    name: 'noColourToTrade',
+    displayName: 'no colour to trade',
+    group: 'Feedback loops',
+    blurb:
+      "The separator's luma wire round the loop, into the ring modulator's own oscillator. That arrangement trades a picture's light for its hue and its hue for its light, and the trade needs both — this return carries one. Brightness and the sync tip go round; the separator took the colour off before the loop ever saw it. So every lap lifts brightness up into the chroma band and no lap has any colour to bring back down, and the invented hue accumulates because nothing is spending it. Over the top of it the recombiner lays the live picture's own colour, current and in the right place, on a wash the machine made out of where the light used to be.",
+    patch: {
+      cfbMix: 0.9,
+      cfbGain: 1.02,
+      cfbDelayUs: 0.5,
+      cfbLines: 2,
+      cfbReturn: 2,
+      cfbRing: 0.9,
+      cfbRingSrc: 1,
+      cfbCarrierKHz: 6,
+      chromaGain: 1.6,
+      noiseIre: 1.2,
+      cfbGenlock: 1,
+    },
+  },
+  {
+    name: 'theLightIsALapBehind',
+    displayName: 'the light is a lap behind',
+    group: 'Feedback loops',
+    blurb:
+      "The other wire off the same separator, so the loop carries the colour and the live picture supplies the brightness, and the modulator then trades the two. What it lifts into the chroma band is brightness that arrived this frame. What it drops down into brightness is the colour that has been round the loop, turning through the delay's rotation the whole way. So the frame's light is a record of hue that is seconds old and its hue is a record of light that is now, and a subject crossing the picture writes its shape into the colour and reads it back out as brightness a lap later.",
+    patch: {
+      cfbMix: 0.88,
+      cfbGain: 1.02,
+      cfbDelayUs: 0.35,
+      cfbLines: 2,
+      cfbReturn: 1,
+      cfbRing: 1,
+      cfbRingSrc: 1,
+      chromaGain: 1.8,
+      crtSat: 1.2,
+      noiseIre: 1.2,
+      cfbGenlock: 1,
     },
   },
   {
@@ -1170,6 +1236,29 @@ export const PRESETS: PresetDef[] = [
     mod: [
       { target: 'cfbCarrierKHz', source: 'smooth', rateHz: 0.05, depth: 0.06 },
     ],
+  },
+  {
+    name: 'keyedOnWhatItMade',
+    displayName: 'keyed on what it made',
+    group: 'Feedback loops',
+    blurb:
+      'The modulator paints a hue out of brightness and the keyer is set to that hue, so the only thing allowed to keep regenerating is colour the box invented a lap ago. It cannot hold on to any of it. The loop delay turns every return a little further round the wheel, so a region feeds itself until its own product leaves the acceptance wedge and stops there, and the territory goes to whatever has turned into the wedge behind it. Nothing in front of the camera decides where those boundaries fall. What decides is how long ago each patch of screen was manufactured.',
+    patch: {
+      cfbMix: 0.9,
+      cfbGain: 1.1,
+      cfbDelayUs: 1,
+      cfbLines: 1,
+      cfbRing: 1,
+      cfbRingSrc: 1,
+      cfbCarrierKHz: 5,
+      cfbKey: 1,
+      cfbKeyAcceptDeg: 55,
+      cfbKeyHueDeg: 200,
+      cfbKeySoft: 10,
+      chromaGain: 1.6,
+      noiseIre: 1.2,
+      cfbGenlock: 1,
+    },
   },
   {
     name: 'layeredByBrightness',
@@ -1247,6 +1336,31 @@ export const PRESETS: PresetDef[] = [
     // 34 spends a third of the sine below zero and clamped there.
     mod: [
       { target: 'demodAxisDeg', source: 'sine', rateHz: 0.03, depth: 0.15 },
+    ],
+  },
+  {
+    name: 'shearedAndStacked',
+    displayName: 'sheared and stacked',
+    group: 'Feedback loops',
+    blurb:
+      'The modulator on its own oscillator with the loop stepping twenty lines a lap, so the frame fills with bands and each band down it has been through the bridge one more time than the one above: light, then hue, then light again. The demodulator reading them sits off quadrature, so the plane the products land on is sheared, and two bands one trade apart arrive in colours with no relation to each other. The offset walks, which re-lays the whole stack at a new pitch while the trading carries on underneath it.',
+    patch: {
+      cfbMix: 0.82,
+      cfbGain: 1.02,
+      cfbDelayUs: 1.1,
+      cfbLines: 20,
+      cfbRing: 0.95,
+      cfbRingSrc: 1,
+      cfbCarrierKHz: 4,
+      demodAxisDeg: 62,
+      chromaGain: 1.7,
+      noiseIre: 1.2,
+      cfbGenlock: 1,
+    },
+    // The offset, walked slowly. A band's colour says how many trades deep it
+    // is, so moving where the bands fall re-dates every one of them.
+    mod: [
+      { target: 'cfbLines', source: 'triangle', rateHz: 0.03, depth: 0.05 },
     ],
   },
   {
@@ -2737,6 +2851,15 @@ const PRESET_FULL: ReadonlyMap<PresetDef, Controls> = new Map(
   PRESETS.map(p => [p, presetControls(p.patch)]),
 )
 
+// The table by name. A preset's name is its identity everywhere it is written
+// down — `?preset=`, `mix.lastPreset`, a recipe's weights, a MIDI binding — so
+// every one of those has to get from a name back to the def, and each did it
+// with its own `PRESETS.find`. The blender's two ran inside a loop over the
+// recipe on every pointer step of a weight drag.
+export const PRESET_BY_NAME: ReadonlyMap<string, PresetDef> = new Map(
+  PRESETS.map(p => [p.name, p]),
+)
+
 // A preset's full control-set. Falls back to resolving on the spot for a def
 // that isn't one of PRESETS' own — nothing hands one in today, and the map
 // lookup should not be the reason that stops working.
@@ -2994,7 +3117,7 @@ export function blendMod(weights: PresetWeights): ModRouting[] | null {
     .toArray()
     .toSorted(([, a], [, b]) => b - a)
     .flatMap(([name, w]) => {
-      const def = PRESETS.find(p => p.name === name)
+      const def = PRESET_BY_NAME.get(name)
       return def?.mod === undefined ? [] : [{ w, mod: def.mod }]
     })
     .at(0)
@@ -3018,7 +3141,7 @@ export function blendPresets(
     .toArray()
     .toSorted(([, a], [, b]) => b - a)
     .flatMap(([name, w]) => {
-      const def = PRESETS.find(p => p.name === name)
+      const def = PRESET_BY_NAME.get(name)
       return def === undefined ? [] : [{ w, full: fullControls(def) }]
     })
   const out = { ...baseline }

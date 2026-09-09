@@ -22,7 +22,7 @@ import {
   syncDivision,
 } from './modSlots'
 import { packControls, unpackControls } from './packed'
-import { PRESETS, presetControls } from './presets'
+import { PRESET_BY_NAME, presetControls } from './presets'
 import { snowSeconds } from './snow'
 
 import type { Controls } from '../core/controls'
@@ -307,7 +307,8 @@ export function parseSessionParams(search: string): SessionParams {
     packedParam === null &&
     presetName === null &&
     !q.has('surprise')
-  const preset = PRESETS.find(p => p.name === presetName)
+  const preset =
+    presetName === null ? undefined : PRESET_BY_NAME.get(presetName)
   const packed = packedParam === null ? {} : unpackControls(packedParam)
   return {
     controls: {

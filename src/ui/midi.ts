@@ -1,7 +1,7 @@
 import { CONTROL_KEYS } from '../core/controls'
 import { clamp } from '../core/math'
 import { AUTOMAP_KEYS, SLIDER_BY_KEY, sliderFor, snapToStep } from './controls'
-import { PRESETS, presetLabel } from './presets'
+import { PRESET_BY_NAME, presetLabel } from './presets'
 import {
   readRecord,
   readStored,
@@ -55,7 +55,7 @@ export function parseTarget(s: string): BindTarget | null {
   if (!s.startsWith(PRESET_PREFIX))
     return CONTROL_KEYS.find(k => k === s) ?? null
   const name = s.slice(PRESET_PREFIX.length)
-  return PRESETS.some(p => p.name === name) ? presetTarget(name) : null
+  return PRESET_BY_NAME.has(name) ? presetTarget(name) : null
 }
 
 export type BindingMap = Partial<Record<BindTarget, MidiBinding>>
@@ -215,7 +215,7 @@ export function targetLabel(t: BindTarget): string {
   if (key !== null) return sliderFor(key).label
   const preset = presetOf(t)
   if (preset === null) return 'motion amount'
-  const def = PRESETS.find(p => p.name === preset)
+  const def = PRESET_BY_NAME.get(preset)
   return `${def === undefined ? preset : presetLabel(def)} · preset`
 }
 

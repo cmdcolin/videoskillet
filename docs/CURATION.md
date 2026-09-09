@@ -157,6 +157,37 @@ dependency-gated rather than weak — nothing in the camera loop moves until
 That is what `--base=` is for, and the gated ones need re-running from a base
 that opens their path before any of them is called a trim.
 
+### One control whose top half is a black frame
+
+`demodMHz` runs to 6 MHz and stops producing a picture at about 3.3, from stock,
+on the default Y/C separation. Bisected on `--source=detail`:
+
+| demodMHz |  2.0 |  2.5 |  2.8 |  3.0 |  3.2 | 3.5 | 4.0 |
+| -------- | ---: | ---: | ---: | ---: | ---: | --: | --: |
+| mean     | 95.9 | 95.5 | 93.9 | 86.0 | 64.0 | 3.7 | 0.0 |
+| sd       | 49.4 | 46.4 | 43.8 | 39.7 | 30.6 | 4.2 | 0.0 |
+
+The trap is what eats it, and the ablation is clean: at `demodMHz` 4 the frame
+is mean 0.0, with the trap's subtraction zeroed (`svideoBleed` 0.5) it is 97.0,
+and with a 2-line comb doing the separation instead it is 96.6. At 6 MHz on a
+3-line comb it is 96.2, so the whole range is fine wherever the trap is out of
+circuit.
+
+The mechanism is honest as far as it goes. `decode` demodulates `csrc()`, which
+at `combMode` 0 is the raw composite with no bandpass ahead of it, so `demodMHz`
+is the only thing band-limiting the chroma path and past fsc/2 the demodulated
+"chroma" carries luma DC. The trap then subtracts the picture from itself. A
+real set has a chroma bandpass in front of its demodulator and a post-demod
+lowpass of about 0.5 MHz, which is the modelling gap: one control is doing both
+jobs.
+
+Three ways out, and they are different products. End the slider where the
+mechanism stops (~3.5) and every saved board past that moves. Keep the range and
+say in the help what the top of it does — the help currently promises rainbows
+up there, and the frames show darkening rather than rainbowing from about 2.8.
+Or put a bandpass ahead of the demodulator, which is the real fix and moves
+every look in the library.
+
 ## What the eye said that the numbers did not
 
 Screening rounds went in front of Colin as contact sheets, each candidate a
@@ -282,6 +313,23 @@ hold it, and the detune is what turns it into a wheel.
 sheet on `clip-test` puts every one of those arms between 0.29 and 0.39 against
 a clean 0.487, so the mechanism that makes colour out of nothing reads as one
 that slightly reduces it. This section fell into that trap once already.
+
+**The finding survives the rest of the rack.** A later round
+(`scripts/gpuprof/candidates.ringloop.ts`) put the multiplier beside each of the
+four other boxes on the mixer-loop card — the Y/C separator on the return, the
+read clock, the resonant network and the varactor — on the theory that one of
+them would give the program-side multiply something to work with. It does not
+matter what else is patched: the two arms that kept `cfbRingSrc` on the program
+rendered at `csd` 2.5 and 7.3 where the five that shipped read 16 to 42, and one
+of them is the fine grey mesh with the picture gone that round one cut on sight.
+The crystal is the whole of it. Both inputs on one and the products land where
+the chroma filter throws them away; put the box's own oscillator on the second
+input and the same patch manufactures more colour than anything already in the
+group.
+
+Read `csd` and not `sat` for this now — `looplock.ts` prints it beside `sd`, and
+it is the number that separates a loop drawing in hue from a loop drawing in
+grey without needing a monochrome source to do it.
 
 ### Chaotic is not the same as wild
 
