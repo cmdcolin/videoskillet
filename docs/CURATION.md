@@ -1,9 +1,9 @@
 # Curating looks
 
-Which looks are worth keeping, and how anyone knows. The preset table grew to 85
-entries and the roll draws from all of them, so a preset that is not worth
+Which looks are worth keeping, and how anyone knows. The preset table is past
+150 entries and the roll draws from all of them, so a preset that is not worth
 clicking is also a preset dragging every `surprise` toward mush. Same question
-one level down for the 215 controls — which are looks, and which are trims that
+one level down for the 285 controls — which are looks, and which are trims that
 belong behind `fine: true`.
 
 Most of this is a working record rather than a conclusion. The screening
@@ -533,19 +533,62 @@ The camera loop had eight presets against the mixer loop's thirty-five and is
 where the room was. Measured over 240 frames on bars, against the group's
 existing keepers:
 
-| look                                |  loop |  grow |  csd |
-| ----------------------------------- | ----: | ----: | ---: |
-| shearedEveryGeneration (demod axis) |  89.2 | 100.0 | 72.7 |
-| colourKeepsWalking (Y/C delay)      |  87.2 |  80.4 | 55.2 |
-| wheelBehindTheSubject (tint)        |  48.5 |  85.3 | 49.7 |
-| subcarrierSiren (the previous best) | 100.2 |  68.8 | 45.6 |
-| crystalInTheOpticalLoop (sc detune) |  74.2 |  82.6 | 22.7 |
-| tunnelOut                           |  67.6 |  74.7 | 28.7 |
-| ringLoop                            |  84.1 |  35.2 |  7.1 |
+| look                                | loop | grow |   sd |  csd |
+| ----------------------------------- | ---: | ---: | ---: | ---: |
+| colourKeepsWalking (Y/C delay)      | 93.3 | 55.9 | 98.5 | 17.3 |
+| encoderWiredBackwards (invert)      | 85.8 | 38.0 | 51.1 |  4.6 |
+| beamBendsItsOwnScan (HV sag)        | 83.4 | 34.2 | 29.8 |  5.6 |
+| flagOnEveryLap (scan flag)          | 80.5 | 39.4 | 49.5 | 11.5 |
+| handOnTheChassis (paperclip)        | 73.6 | 60.0 | 71.2 | 18.6 |
+| shearedEveryGeneration (demod axis) | 70.0 | 63.8 | 74.0 | 19.5 |
+| wheelBehindTheSubject (tint)        | 41.7 | 81.5 | 67.2 | 34.2 |
+| spiral, for scale                   | 90.2 | 57.4 | 88.1 | 19.3 |
+| tunnelOut, for scale                | 67.6 | 74.7 | 89.9 | 28.7 |
 
-Eight shipped. All eight hold `lock` 99.8, `age` 0 and `vroll` 0 — the camera
+Seven shipped. All seven hold `lock` 99.8, `age` 0 and `vroll` 0 — the camera
 loop sits ahead of the encoder and cannot reach the sync path, which is what
 lets it be pushed where the mixer loop needs `cfbGenlock` first.
+
+Those are the numbers **after** the retune below, and the retune is the part of
+this round worth reading.
+
+**A chroma trim in a camera loop is a chroma trim per generation.** All eight
+shipped with `chromaGain` 1.2-1.6 and five with `crtSat` 1.2 on top, and the
+verdict on them was that they were garish — "somewhat absurd chroma colorings
+... just too extreme". They were. `decode` and `crt_face` are both inside the
+lap, so those two knobs apply once per generation: 1.6 over five laps is a
+chroma gain of ten, everything walks to the primaries and sits there. In the
+mixer loop the same knobs run once, outside the lap, which is why `ringLoop`,
+`theWrongClock` and `colourInTheDark` carry 1.2 to 2.2 safely — and copying that
+house style across was the whole mistake. The library's own optical loops
+already knew: `spiral`, `tunnelOut`, `zoomBloom`, `fbBloom` and `woundSpiral`
+set no `chromaGain` at all, and 1.3 is the highest on any of them.
+
+Three things fell out of taking all three trims off:
+
+- **The luma came back.** `sd` rose on every one — `colourKeepsWalking` 48.8 to
+  98.5, `shearedEveryGeneration` 54.5 to 74.0 — because a frame pinned to the
+  primaries has no tonal range left. The retune is not a trade of colour for
+  restraint; the over-driven version was the worse picture by the luma column
+  too.
+- **`matrixClip` was doing nothing.** Ablated on `shearedEveryGeneration` it
+  renders within a point of stock (`csd` 25.0 against 19.5). It only ever
+  registered because the gain was already driving the guns into their rails, so
+  it went with the gain, and the blurb clause about arriving fluorescent went
+  with both. `chromaGain` 1.15, the smallest dose worth trying, is
+  indistinguishable from stock — there is no small helping to keep.
+- **`crystalInTheOpticalLoop` had to be cut.** `scDetuneKHz` 0.8 is 0.2% of a
+  ±200 slider, so once the chroma trim came off, the only thing separating that
+  preset from `spiral` in control space was a rounding error: the pair went from
+  0.055 apart to **0.022**, the closest in the whole 152-preset table, and the
+  frames agree — it is the spiral family. The trim had been masking a duplicate.
+
+**And the screening ranked on `csd`, which is the quantity the error inflated.**
+`csd` is in `looplock` to stop a colour look being cut for reading flat on a
+luma-only `sd`. It is a rescue, not a score. Ranking on it sorted the arms with
+the worst case of the per-lap gain to the top, and they were then tuned further
+toward it. The same sentence this page already carries about `dep` — departure
+is not quality — applies to every column in it, `csd` included.
 
 **An affine transport gives a tunnel; a picture-dependent one gives shapes.**
 The sharper half of the round, and it is about the geometry rather than the
@@ -586,6 +629,9 @@ What was cut, and why, since these are the near misses:
   `mean` 127.
 - `guns drifting apart` (`crtConverge`) — measured well (`grow` 80, `csd` 49)
   and rendered as the generic starburst. Cut on form, not on numbers.
+- `crystalInTheOpticalLoop` (`scDetuneKHz`) — shipped, then cut: 0.022 from
+  `spiral` once its chroma trim came off, which is the closest pair in the
+  table. The mechanism is real and the look it makes is one the library has.
 - `generation loss` — the same loop at zoom 1.0, so nothing accumulates except
   the encode/decode round trip. Real cross-colour breeding and it reads as
   bands. Worth another look when the DVE in `IDEAS.md` gives it a second raster

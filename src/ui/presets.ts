@@ -1481,6 +1481,12 @@ export const PRESETS: PresetDef[] = [
   // picture wears once is a fault the loop applies to its own output forever.
   // docs/CURATION.md carries the round these came out of, including the nine
   // that put a tape fault in the *mixer* loop instead and all came back grey.
+  //
+  // The trap that follows from the same fact: `chromaGain` and `crtSat` are
+  // inside that lap, so in a camera loop they multiply once per generation
+  // where in a mixer loop they trim once. None of these carries either, and
+  // 1.4 on one of them is not a trim — it is a chroma gain of ten by the fifth
+  // lap, which pins the picture to the primaries and flattens its luma with it.
   {
     name: 'beamBendsItsOwnScan',
     displayName: 'the beam bends its own scan',
@@ -1497,8 +1503,6 @@ export const PRESETS: PresetDef[] = [
       fbVign: 0.08,
       fbBlack: 0.015,
       fbKnee: 0.75,
-      chromaGain: 1.4,
-      crtSat: 1.2,
     },
     // Through zero, so the bend reverses and the ribbons unwind. The vignette
     // and the black cut are nearly out on purpose: a bend pushes content off
@@ -1522,7 +1526,6 @@ export const PRESETS: PresetDef[] = [
       fbVign: 0.12,
       fbBlack: 0.02,
       fbKnee: 0.65,
-      chromaGain: 1.4,
     },
     mod: [{ target: 'bendUs', source: 'sine', rateHz: 0.04, depth: 0.1 }],
   },
@@ -1540,33 +1543,9 @@ export const PRESETS: PresetDef[] = [
       fbRotateDeg: 6,
       fbVign: 0.3,
       fbBlack: 0.03,
-      chromaGain: 1.5,
-      crtSat: 1.2,
     },
     mod: [
       { target: 'ycDelayNs', source: 'triangle', rateHz: 0.03, depth: 0.12 },
-    ],
-  },
-  {
-    name: 'crystalInTheOpticalLoop',
-    displayName: 'the crystal in the optical loop',
-    group: 'Feedback loops',
-    blurb:
-      "The receiver's colour reference pulled 800 hertz off the burst, inside the loop. Off frequency the demodulator's phase error grows with distance from the line start, so hue ramps along every line and further down every line after it. That much is a set needing a service call. The loop hands the ramped picture back to the same demodulator, which ramps what was already ramped, so the pole winds a turn tighter every generation and the rings it lays down are ordered by how many laps deep each one is.",
-    patch: {
-      scDetuneKHz: 0.8,
-      fbMix: 0.9,
-      fbGain: 1.16,
-      fbZoom: 0.96,
-      fbRotateDeg: 1.5,
-      chromaGain: 1.6,
-      crtSat: 1.2,
-    },
-    // A crystal in a box nobody is holding to a reference drifts. Walking the
-    // detune through zero reverses which way the pole leans, so the rings
-    // unwind and re-wind without the transport changing.
-    mod: [
-      { target: 'scDetuneKHz', source: 'smooth', rateHz: 0.04, depth: 0.01 },
     ],
   },
   {
@@ -1574,15 +1553,13 @@ export const PRESETS: PresetDef[] = [
     displayName: 'sheared every generation',
     group: 'Feedback loops',
     blurb:
-      'The two synchronous demodulators thirty-five degrees off quadrature, inside the loop. The plane the colour lands on is sheared instead of turned, so hues that were opposite stop being opposite and the pair that would have cancelled reinforce. Then the loop hands what that made back to be sheared again. Where the products land shears a mixer loop full of ring products; here the shear is the whole mechanism, applied once a lap to a picture that keeps coming back, with the guns left on their own rails so what survives arrives fluorescent.',
+      'The two synchronous demodulators thirty-five degrees off quadrature, inside the loop. The plane the colour lands on is sheared instead of turned, so hues that were opposite stop being opposite and the pair that would have cancelled reinforce. Then the loop hands what that made back to be sheared again. Where the products land shears a mixer loop full of ring products; here the shear is the whole mechanism, applied once a lap to a picture that keeps coming back.',
     patch: {
       demodAxisDeg: 55,
-      matrixClip: 1,
       fbMix: 0.9,
       fbGain: 1.16,
       fbZoom: 0.955,
       fbVign: 0.3,
-      chromaGain: 1.6,
     },
     // 0.12 of a 180-degree span is 22 degrees either side of 55, which stays
     // clear of both ends and of quadrature, where the shear stops.
@@ -1605,7 +1582,6 @@ export const PRESETS: PresetDef[] = [
       fbVign: 0.4,
       fbBlack: 0.05,
       fbKnee: 0.6,
-      chromaGain: 1.4,
     },
     // Without a rotation this converges: concentric rings, and a strip four
     // seconds long that barely changes. The wedges are the rotation.
@@ -1626,8 +1602,6 @@ export const PRESETS: PresetDef[] = [
       fbVign: 0.2,
       fbBlack: 0.03,
       fbKnee: 0.7,
-      chromaGain: 1.4,
-      crtSat: 1.2,
     },
     mod: [{ target: 'tintDeg', source: 'smooth', rateHz: 0.05, depth: 0.08 }],
   },
@@ -1648,7 +1622,6 @@ export const PRESETS: PresetDef[] = [
       fbZoom: 0.95,
       fbVign: 0.35,
       fbBlack: 0.04,
-      chromaGain: 1.2,
     },
   },
   {
