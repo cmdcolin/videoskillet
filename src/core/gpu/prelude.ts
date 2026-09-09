@@ -608,6 +608,16 @@ fn carrierRot(n: u32, frame: u32, delta: f32) -> vec2f {
   return vec2f(sc.x * cd + sc.y * sd, sc.y * cd - sc.x * sd);
 }
 
+// A chroma phase measured against a reference, brought back into (-PI, PI].
+// Three boxes ask that question — the mixer's chroma keyer, the loop's, and the
+// VIR corrector's residual — and each of them then cares about how *far* the
+// answer is from zero. Left unwrapped, a hue a degree either side of the atan2
+// branch differs by a whole turn, which is a keyer dropping its own territory
+// at one hue and a corrector integrating a step nothing on the wire took.
+fn wrapPi(a: f32) -> f32 {
+  return a - 2.0 * PI * round(a / (2.0 * PI));
+}
+
 // One NTSC line's blanking-interval structure — equalizing pulses, serrated
 // vsync, sync tip, breezeway/back porch, and 9-cycle colorburst — shared by
 // every composite generator so the raster timing lives in exactly one place.

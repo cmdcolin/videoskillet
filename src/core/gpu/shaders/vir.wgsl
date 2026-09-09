@@ -63,8 +63,7 @@ fn main() {
   let li = lineInfo[VIR_LINE];
   let locked = li.w > P.killThresh;
   let phBurst = select(0.0, atan2(-li.y, -li.x), locked);
-  var resid = atan2(-uv.y, -uv.x) - phBurst * P.burstLock;
-  resid = resid - 2.0 * PI * round(resid / (2.0 * PI));
+  let resid = wrapPi(atan2(-uv.y, -uv.x) - phBurst * P.burstLock);
 
   // Saturation, against the gain the chroma ACC has already applied. A
   // reference that comes back weak makes the set turn colour *up* — which is

@@ -73,6 +73,12 @@ fn keyTap(pos: f32, n: u32, ext: bool) -> KeyTap {
   return KeyTap(y * 0.25, uv * 0.5);
 }
 
+// The level this card's two multiplying boxes work about. The bridge
+// suppresses a carrier by subtracting it from each of its inputs, and the
+// varactor pulls the delay one way for what sits under it and the other for
+// what sits over, so one number decides what "no product" and "no pull" mean.
+const BUS_MID = 40.0;
+
 // Below this much chroma amplitude there is no phase to slice: a demodulator
 // handed an unsaturated sample reports an essentially arbitrary angle, and a
 // loop keyed on that would flicker its own territory out of noise. 3 IRE
@@ -88,8 +94,7 @@ fn keyGate(tap: KeyTap) -> f32 {
   // regenerates until its own return has spun out of the wedge, stops, and
   // whatever has spun in takes the territory over. The softness knob is in IRE
   // of a 100 IRE slice, so it carries over as the same fraction of PI.
-  var w = atan2(tap.uv.y, tap.uv.x) - P.cfbKeyHue;
-  w = w - 2.0 * PI * round(w / (2.0 * PI));
+  let w = wrapPi(atan2(tap.uv.y, tap.uv.x) - P.cfbKeyHue);
   let soft = P.cfbKeySoft * 0.01 * PI;
   let ang = 1.0 - smoothstep(P.cfbKeyAccept - soft, P.cfbKeyAccept + soft, abs(w));
   return ang * smoothstep(KEY_CLIP, 2.0 * KEY_CLIP, length(tap.uv));
@@ -200,7 +205,7 @@ fn main(
     for (var k = -8; k <= 7; k = k + 1) {
       lvl = lvl + prev[clampIdx(c0 + k * 2)];
     }
-    pos = pos0 - P.cfbServo * (lvl / 16.0 - 40.0) / 100.0;
+    pos = pos0 - P.cfbServo * (lvl / 16.0 - BUS_MID) / 100.0;
   }
   let i0 = i32(floor(pos));
   var fb = catmull(prev[clampIdx(i0 - 1)], prev[clampIdx(i0)], prev[clampIdx(i0 + 1)], prev[clampIdx(i0 + 2)], fract(pos));
@@ -274,12 +279,12 @@ fn main(
     // writes with, so the manufactured hue turns along the line and down the
     // frame instead of landing on one colour — and since the two crystals are
     // in two boxes, nothing pulls them back together.
-    var other = comp[n] - 40.0;
+    var other = comp[n] - BUS_MID;
     if (P.cfbRingSrc > 0.5) {
       let ph = P.cfbCarrierPhase + P.cfbCarrierPerSample * f32(n);
       other = VIDEO_RANGE * carrierRot(n, P.frame, ph).x;
     }
-    fb = fb + P.cfbRing * (fb - 40.0) * other * 0.01;
+    fb = fb + P.cfbRing * (fb - BUS_MID) * other * 0.01;
   }
   var m = P.cfbMix;
   // The frame synchronizer, if the return came through one. A store genlocked

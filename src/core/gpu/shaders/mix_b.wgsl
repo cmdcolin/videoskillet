@@ -79,9 +79,7 @@ fn chromaKey(idx: u32) -> KeySlice {
   // to the key. This is the "clip" knob, and it is why a keyer cannot hold a
   // dark subject against a dark backing.
   let satg = smoothstep(P.bKeyClip, P.bKeyClip + soft, length(uv));
-  // angle to the backing, wrapped into (-PI, PI]
-  var w = atan2(uv.y, uv.x) - P.bKeyHue;
-  w = w - 2.0 * PI * round(w / (2.0 * PI));
+  let w = wrapPi(atan2(uv.y, uv.x) - P.bKeyHue);
   let ang = 1.0 - smoothstep(P.bKeyAccept - soft * PI, P.bKeyAccept + soft * PI, abs(w));
   var g = 1.0 - ang * satg;
   if (P.bKey < 0.0) {
