@@ -1,17 +1,38 @@
+import { useState } from 'react'
+
 import {
   CAMERA_LOOP_STAGE,
   CHANNEL_STAGE,
   MIXER_LOOP_STAGE,
   stageGroups,
 } from './controls'
-import { usePersistedString } from './storage'
+import {
+  readRecord,
+  readStored,
+  usePersistedString,
+  writeJSON,
+} from './storage'
 
-// Which stage, and which group inside it, are unfolded — one of each, so the
-// chain map stays on screen instead of scrolling past as a flat list of sixteen
-// headers. Persisted; null is the map alone, and closing the open stage is how
-// you get back to it.
-const OPEN_GROUP_STORE = 'video_feedback_open_group'
+// Which stage is unfolded — one at a time, so the chain map stays on screen
+// instead of scrolling past as a flat list of sixteen headers. Persisted; null
+// is the map alone, and closing the open stage is how you get back to it.
 const OPEN_PHASE_STORE = 'video_feedback_open_phase'
+
+// And which group is unfolded inside each stage, one entry per stage.
+//
+// It was one name for the whole panel, which made a stage's fold a fact about
+// the sidebar rather than about the stage: opening Receiver and coming back to
+// Channel landed on Channel's first group, and Channel has nine. Where you were
+// is a property of the place you were in, so it is stored per stage and the trip
+// out and back costs nothing.
+const OPEN_GROUPS_STORE = 'video_feedback_open_groups'
+
+// The single name older builds wrote, superseded by the record above. Read once
+// at mount and never written again — see `openGroupsFrom`, which is the only
+// thing that can say which stage it belonged to.
+const OPEN_GROUP_STORE = 'video_feedback_open_group'
+
+export type OpenGroups = Partial<Record<string, string>>
 
 // Which stage is open, read out of what was stored.
 //
@@ -52,21 +73,71 @@ const GONE: Readonly<Record<string, string>> = {
 export const openStageFrom = (stored: string | null): string | null =>
   stored === null || stored === '' ? null : (GONE[stored] ?? stored)
 
+// Which group a stage is unfolded at, out of what was stored.
+//
+// Validated against the stage's own groups rather than trusted, for the reason
+// the stage name above is: groups get renamed, and one moved to another stage
+// takes its stored entry with it. A name nothing under this stage renders would
+// fold every one of its sections shut, which from the outside is a stage that
+// opened onto nothing. Unrecognised is therefore the same answer as never
+// having opened one.
+export const groupOpenIn = (
+  groups: OpenGroups,
+  stage: string,
+): string | null => {
+  const name = groups[stage]
+  return name !== undefined && stageGroups(stage).some(g => g.name === name)
+    ? name
+    : null
+}
+
+// The one name an older build stored, filed under the stage it must have
+// belonged to: the one that was open when it was written. It says which group
+// without saying where, so that is the only stage it can be restored into — and
+// only while nothing has been stored per stage yet, since after that this build
+// has a better answer for every stage including that one.
+export const openGroupsFrom = (
+  stored: OpenGroups,
+  legacy: string | null,
+  stage: string | null,
+): OpenGroups =>
+  legacy === null ||
+  legacy === '' ||
+  stage === null ||
+  Object.keys(stored).length > 0
+    ? stored
+    : { [stage]: legacy }
+
 export function usePanelNav() {
-  const [openGroup, setOpenGroup] = usePersistedString(OPEN_GROUP_STORE)
   const [stored, setOpenPhase] = usePersistedString(OPEN_PHASE_STORE)
   const openPhase = openStageFrom(stored)
+  const [groups, setGroups] = useState<OpenGroups>(() =>
+    openGroupsFrom(
+      readRecord<OpenGroups>(OPEN_GROUPS_STORE, {}),
+      readStored(OPEN_GROUP_STORE),
+      openStageFrom(readStored(OPEN_PHASE_STORE)),
+    ),
+  )
 
+  const setGroupIn = (stage: string, name: string | null) => {
+    const next: OpenGroups = { ...groups }
+    if (name === null) delete next[stage]
+    else next[stage] = name
+    setGroups(next)
+    writeJSON(OPEN_GROUPS_STORE, next)
+  }
   const openAt = (phase: string, group: string) => {
     setOpenPhase(phase)
-    setOpenGroup(group)
+    setGroupIn(phase, group)
   }
   return {
-    openGroup,
+    // Asked per stage rather than handed over as one name, because under a live
+    // filter several stages are on screen at once and each carries its own fold.
+    groupIn: (stage: string) => groupOpenIn(groups, stage),
     openPhase,
     openAt,
-    toggleGroup: (name: string) =>
-      setOpenGroup(openGroup === name ? null : name),
+    toggleGroup: (stage: string, name: string) =>
+      setGroupIn(stage, groupOpenIn(groups, stage) === name ? null : name),
     // Back to the map alone — what the × on the open stage's heading does, and
     // what Escape falls through to once it has nothing else to back out of.
     closePhase: () => setOpenPhase(null),
@@ -74,13 +145,15 @@ export function usePanelNav() {
     // rather than a fold: a click marks where you are (and the bench scrolls
     // there) instead of unfolding one stage and closing another.
     jumpPhase: (name: string) => setOpenPhase(name),
-    // Opening a stage opens its first group too, so reaching a knob stays one
-    // click deep rather than two. Through stageGroups rather than PHASES: the B
-    // branch is opened by the same click and is not one of them.
+    // Opening a stage opens a group too, so reaching a knob stays one click deep
+    // rather than two: the one you left open in it, or its first if this is the
+    // first time it has been opened. Through stageGroups rather than PHASES: the
+    // B branch is opened by the same click and is not one of them.
     togglePhase: (name: string) => {
       const first = stageGroups(name)[0]
       if (openPhase === name) setOpenPhase(null)
-      else if (first === undefined) setOpenPhase(name)
+      else if (first === undefined || groupOpenIn(groups, name) !== null)
+        setOpenPhase(name)
       else openAt(name, first.name)
     },
   }

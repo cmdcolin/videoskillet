@@ -229,9 +229,13 @@ export function SignalPath(props: {
   // calls it for a box the query missed, which is the only press here that has
   // to change the filter as well as the stage.
   onDropFilter: () => void
-  // Which group inside the open stage is unfolded — one at a time.
-  openGroup: string | null
-  onOpenGroup: (name: string) => void
+  // Which group inside a stage is unfolded — one at a time, and asked stage by
+  // stage. A live filter puts several stages on screen at once, so one answer
+  // for the whole panel would have had them all folding to the same name; and
+  // the fold is where you were in that stage, which is what makes coming back
+  // to it land on the row you left rather than on its first group.
+  openGroup: (stage: string) => string | null
+  onOpenGroup: (stage: string, name: string) => void
   // What heads a stage, above its groups: the picker that decides what feeds it.
   // Keyed by stage name, and the three keys are three of the boxes the map
   // already draws — Source A, Source B, Sound — which is the whole reason these
@@ -421,8 +425,8 @@ export function SignalPath(props: {
             {body.groups.length === 0 ? null : (
               <NestedSections>
                 <Accordion
-                  openId={props.openGroup}
-                  onToggle={props.onOpenGroup}
+                  openId={props.openGroup(node.name)}
+                  onToggle={name => props.onOpenGroup(node.name, name)}
                 >
                   {body.groups.map(group => (
                     <ControlGroup key={group.name} group={group} />

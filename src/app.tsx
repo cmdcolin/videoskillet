@@ -1474,7 +1474,7 @@ export function App() {
           clearFilter()
           setSearchOpen(false)
         }}
-        openGroup={nav.openGroup}
+        openGroup={nav.groupIn}
         onOpenGroup={nav.toggleGroup}
         stageTop={stageTop}
       />
