@@ -1511,6 +1511,30 @@ export const PRESETS: PresetDef[] = [
     mod: [{ target: 'hvSagUs', source: 'sine', rateHz: 0.04, depth: 0.15 }],
   },
   {
+    name: 'supplyWiredBackwards',
+    displayName: 'the supply wired backwards',
+    group: 'Feedback loops',
+    blurb:
+      "The same tank as `the beam bends its own scan`, with its polarity reversed. The sag is a horizontal displacement per raster line, set by that line's own beam current, so flipping the sign mirrors the whole field: what was thrown right is thrown left. On a still picture that is the same bend reflected. Inside a loop it is a different machine, because the sign decides whether the displacement gathers content or separates it — and what accumulates is a curtain of vertical columns where the same tank the other way up builds horizontal ribbons. One sign, and the structure changes axis.",
+    patch: {
+      hvSagUs: -55,
+      hvRing: 0.5,
+      abl: 0.15,
+      fbMix: 0.9,
+      // Brighter than the forward-bend sibling's 1.28: a reversed field
+      // evacuates the raster just as hard, and a shallower bend buys the light
+      // back by losing the columns (-42 renders as soft horizontal bands).
+      fbGain: 1.36,
+      fbZoom: 0.965,
+      fbVign: 0.08,
+      fbBlack: 0.015,
+      fbKnee: 0.75,
+    },
+    // Through zero, so the field passes through flat and comes back the other
+    // way up: the columns dissolve into ribbons and re-form as columns.
+    mod: [{ target: 'hvSagUs', source: 'sine', rateHz: 0.04, depth: 0.15 }],
+  },
+  {
     name: 'flagOnEveryLap',
     displayName: 'a flag on every lap',
     group: 'Feedback loops',

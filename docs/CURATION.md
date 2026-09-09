@@ -637,6 +637,42 @@ What was cut, and why, since these are the near misses:
   bands. Worth another look when the DVE in `IDEAS.md` gives it a second raster
   to cascade against.
 
+**A follow-up round on the self-bending half returned one preset out of nine**,
+and its negatives are worth more than its positive. The property being chased is
+narrow: `beamBendsItsOwnScan` is interesting because the displacement field _is_
+the picture one lap back, where `flagOnEveryLap` beside it is a fixed shape that
+merely accumulates. Nine arms tried to find more of that.
+
+- **`hvRing` stops mattering inside a loop.** The tank's own time constant sets
+  how much of the picture above a line is still in that line's displacement, and
+  0.9 against the shipped 0.55 renders as the same ribbon field — the strips are
+  hard to tell apart. After a dozen laps the loop is feeding the tank a filtered
+  version of what the tank did last time, so the recirculation sets the memory
+  and the dial does not. The knob still earns its keep outside a loop, where the
+  excitation is the source rather than the tank's own output.
+- **Two content-driven displacements in series evacuate the raster.** The tank
+  and the mixer loop's varactor together — the best idea in the round, one
+  bending geometry after decoding and one pulling the waveform itself — rendered
+  mean 3.0, then mean 5.0 with both backed off. They do not compose; they each
+  walk content off the edge and neither puts any back.
+- **Coupling the iris to the tank runs away.** The auto-iris meters the loop's
+  brightness, which is the beam current the tank is bending by: `motion` 97.6,
+  mean 120. Straight into the band this page cuts as chaos.
+- **The same bend under unity is not a second preset.** Held at a round trip of
+  0.96 so the subject survives, it renders within a shade of the shipped one.
+- **`scanBloom` is not in this family at all**, though it reads beam current per
+  pixel: it lives in `present.wgsl`, downstream of `crt_face` and therefore
+  outside the loop, so it cannot compound. Checked before rendering.
+
+What shipped is `supplyWiredBackwards`: the same tank with `hvSagUs` negated.
+The sag is a horizontal displacement per raster line, so the sign flip mirrors
+the field, which on a still picture is the same bend reflected. In a loop it
+changes what the field does to what it built — the structure changes axis, from
+horizontal ribbons to a curtain of vertical columns, at `loop` 92.7 against the
+forward bend's 83.4. The columns need the depth: at `hvSagUs` -42 they dissolve
+into soft horizontal bands, so the light it loses is bought back with gain (1.36
+against the sibling's 1.28) rather than with a shallower bend.
+
 Both harnesses grew what this round needed. `looplock.ts --spec=` reads a
 candidate file in `sheet.ts`'s format, so the two columns that decide a feedback
 look can be read before it is authored rather than after. And `Runner.run`
