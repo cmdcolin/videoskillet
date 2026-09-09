@@ -1,5 +1,10 @@
 import { DEFAULT_CONTROLS } from '../core/controls'
-import { FEED_A_CABLE_GROUP, FEED_B_CABLE_GROUP } from './controls'
+import {
+  CAMERA_LOOP_GROUP,
+  FEED_A_CABLE_GROUP,
+  FEED_B_CABLE_GROUP,
+  MIXER_LOOP_GROUP,
+} from './controls'
 
 import type { Controls } from '../core/controls'
 import type { Group } from './controls'
@@ -283,6 +288,97 @@ export const CARD_PRESETS: CardPreset[] = [
       pipKeyLevel: 0.3,
       pipKeySoft: 0.1,
     },
+  },
+  {
+    group: CAMERA_LOOP_GROUP,
+    name: 'bloom',
+    blurb:
+      'the camera pushed in two percent a lap, so a highlight grows inward toward the middle and never arrives',
+    patch: { fbMix: 0.82, fbGain: 1.13, fbZoom: 1.02, fbBlack: 0.05 },
+  },
+  {
+    group: CAMERA_LOOP_GROUP,
+    name: 'tunnel',
+    blurb:
+      'the same loop pulled the other way, each lap a shade smaller, so the picture recedes down a corridor the vignette gives walls to',
+    patch: { fbMix: 0.9, fbGain: 1.25, fbZoom: 0.95, fbVign: 0.45 },
+  },
+  {
+    group: CAMERA_LOOP_GROUP,
+    name: 'spiral',
+    blurb:
+      'five degrees of rotation on top of the corridor: a lap lands turned and displaced from the one under it, so the picture winds',
+    patch: { fbMix: 0.9, fbGain: 1.22, fbZoom: 0.955, fbRotateDeg: 5 },
+  },
+  {
+    group: CAMERA_LOOP_GROUP,
+    name: 'hunting iris',
+    blurb:
+      'the exposure servo undamped inside a loop it is metering, so the whole frame pumps at a rate nothing on screen is setting',
+    patch: { fbMix: 0.75, fbGain: 1.2, fbZoom: 1.02, fbIris: 0.9 },
+  },
+  {
+    group: MIXER_LOOP_GROUP,
+    name: 'plain loop',
+    blurb:
+      'the composite fed back and summed, three lines down a lap, with the frame sync keeping the raster under it',
+    patch: {
+      cfbMix: 0.85,
+      cfbGain: 1.04,
+      cfbDelayUs: 1.2,
+      cfbLines: 3,
+      cfbGenlock: 1,
+    },
+  },
+  {
+    group: MIXER_LOOP_GROUP,
+    name: 'ring mod',
+    blurb:
+      'the return multiplied against the live picture, so every lap beats the last generation against this one and sends the products round to be multiplied again',
+    patch: {
+      cfbMix: 0.9,
+      cfbGain: 1.06,
+      cfbDelayUs: 2.2,
+      cfbRing: 0.65,
+      cfbGenlock: 1,
+    },
+  },
+  {
+    group: MIXER_LOOP_GROUP,
+    name: 'encoder modulator',
+    blurb:
+      "the multiplier's other input on the box's own subcarrier, twelve kilohertz off the house crystal: brightness comes back as hue, hue comes back as brightness, and the phase it writes with turns down the frame",
+    patch: {
+      cfbMix: 0.88,
+      cfbGain: 1.02,
+      cfbDelayUs: 0.6,
+      cfbLines: 1,
+      cfbRing: 0.9,
+      cfbRingSrc: 1,
+      cfbCarrierKHz: 12,
+      cfbGenlock: 1,
+    },
+  },
+  {
+    group: MIXER_LOOP_GROUP,
+    name: 'chroma only',
+    blurb:
+      'a Y/C separator on the return with the colour wire round the loop: hue accumulates and keeps turning through the delay while the picture under it stays sharp and current',
+    patch: {
+      cfbMix: 0.88,
+      cfbGain: 1.02,
+      cfbDelayUs: 0.35,
+      cfbLines: 2,
+      cfbReturn: 1,
+      cfbGenlock: 1,
+    },
+  },
+  {
+    group: MIXER_LOOP_GROUP,
+    name: 'bare cable',
+    blurb:
+      'the frame sync out of circuit, so the loop’s own sync tip comes round one delay late and lands mid-line, and the separator loses the edge it was hunting for',
+    patch: { cfbMix: 0.8, cfbGain: 1.04, cfbDelayUs: 1.4, cfbGenlock: 0 },
   },
   {
     group: 'Decoder',
