@@ -1385,7 +1385,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'both loops',
     group: 'Feedback loops',
     blurb:
-      'Camera and mixer running at once, each modest. The optical loop can only do what a lens can (zoom, rotate, cut a black level) and the electrical one carries the subcarrier round with it, so the two disagree about what the picture is and the disagreement is the look.',
+      "Camera and mixer running at once, each modest. The optical loop's own camera can only do what a lens can (zoom, rotate, cut a black level) and the electrical one carries the subcarrier round with it, so the two disagree about what the picture is and the disagreement is the look.",
     patch: {
       fbMix: 0.8,
       fbGain: 1.15,
@@ -1471,6 +1471,185 @@ export const PRESETS: PresetDef[] = [
     // and sit there, because a strobe sliding continuously through its rates
     // reads as a broken strobe rather than as one being played.
     mod: [{ target: 'strobeHz', source: 'hold', rateHz: 0.4, depth: 0.3 }],
+  },
+  // The eight below are one round, and they share a premise worth stating once:
+  // the camera loop's round trip is a whole encode/decode generation. The
+  // return re-enters at `compose`, ahead of the encoder, so the encoder, the
+  // channel, the receiver and the tube face are all inside the lap and each
+  // applies once per generation. Only the camera's own knobs are lens-like.
+  // Everything the set does wrong is in there with them, and a fault a still
+  // picture wears once is a fault the loop applies to its own output forever.
+  // docs/CURATION.md carries the round these came out of, including the nine
+  // that put a tape fault in the *mixer* loop instead and all came back grey.
+  {
+    name: 'beamBendsItsOwnScan',
+    displayName: 'the beam bends its own scan',
+    group: 'Feedback loops',
+    blurb:
+      'Beam-current sag inside the optical loop. Bright picture loads the supply and drags the scan sideways, the camera photographs the bent frame, and the brightness of that frame decides where the next lap bends. Zoom, rotation and shift are the only geometry a camera loop is usually given, and all three are affine: a generation lands scaled and turned, so what it settles into is a tunnel or a spiral. A supply under load is not affine. The displacement field here is the picture one generation back, so the loop finds ribbons that wander and never close.',
+    patch: {
+      hvSagUs: 45,
+      hvRing: 0.55,
+      abl: 0.2,
+      fbMix: 0.9,
+      fbGain: 1.28,
+      fbZoom: 0.965,
+      fbVign: 0.08,
+      fbBlack: 0.015,
+      fbKnee: 0.75,
+      chromaGain: 1.4,
+      crtSat: 1.2,
+    },
+    // Through zero, so the bend reverses and the ribbons unwind. The vignette
+    // and the black cut are nearly out on purpose: a bend pushes content off
+    // the raster and none of it comes back, so this loop loses light every lap
+    // before anything else takes any.
+    mod: [{ target: 'hvSagUs', source: 'sine', rateHz: 0.04, depth: 0.15 }],
+  },
+  {
+    name: 'flagOnEveryLap',
+    displayName: 'a flag on every lap',
+    group: 'Feedback loops',
+    blurb:
+      'The hook a set throws into the top few lines coming out of vertical retrace, inside the loop. Every generation lands with its top displaced further than its bottom, on a generation that was already displaced, so the skew adds where a zoom would only have multiplied. What builds is an arch: lines near the top have been bent five or six times over and lines near the bottom hardly at all, with a hard bright rim where the two meet that the loop redraws every lap.',
+    patch: {
+      bendUs: 34,
+      bendShape: 0,
+      bendPeriod: 120,
+      fbMix: 0.9,
+      fbGain: 1.22,
+      fbZoom: 0.965,
+      fbVign: 0.12,
+      fbBlack: 0.02,
+      fbKnee: 0.65,
+      chromaGain: 1.4,
+    },
+    mod: [{ target: 'bendUs', source: 'sine', rateHz: 0.04, depth: 0.1 }],
+  },
+  {
+    name: 'colourKeepsWalking',
+    displayName: 'the colour keeps walking',
+    group: 'Feedback loops',
+    blurb:
+      "Chroma running late against luma inside the loop, in a transport that is mostly rotation. One pass puts a subject's colour a fraction of a microsecond to the right of the shape it belongs to. The next pass turns that displaced colour six degrees and moves it the same distance right of where it now is, so the colour winds away from its own object into a spiral whose arms are ordered by age. The luma stays where the camera put it, which is what makes the separation legible.",
+    patch: {
+      ycDelayNs: 700,
+      fbMix: 0.9,
+      fbGain: 1.16,
+      fbZoom: 0.985,
+      fbRotateDeg: 6,
+      fbVign: 0.3,
+      fbBlack: 0.03,
+      chromaGain: 1.5,
+      crtSat: 1.2,
+    },
+    mod: [
+      { target: 'ycDelayNs', source: 'triangle', rateHz: 0.03, depth: 0.12 },
+    ],
+  },
+  {
+    name: 'crystalInTheOpticalLoop',
+    displayName: 'the crystal in the optical loop',
+    group: 'Feedback loops',
+    blurb:
+      "The receiver's colour reference pulled 800 hertz off the burst, inside the loop. Off frequency the demodulator's phase error grows with distance from the line start, so hue ramps along every line and further down every line after it. That much is a set needing a service call. The loop hands the ramped picture back to the same demodulator, which ramps what was already ramped, so the pole winds a turn tighter every generation and the rings it lays down are ordered by how many laps deep each one is.",
+    patch: {
+      scDetuneKHz: 0.8,
+      fbMix: 0.9,
+      fbGain: 1.16,
+      fbZoom: 0.96,
+      fbRotateDeg: 1.5,
+      chromaGain: 1.6,
+      crtSat: 1.2,
+    },
+    // A crystal in a box nobody is holding to a reference drifts. Walking the
+    // detune through zero reverses which way the pole leans, so the rings
+    // unwind and re-wind without the transport changing.
+    mod: [
+      { target: 'scDetuneKHz', source: 'smooth', rateHz: 0.04, depth: 0.01 },
+    ],
+  },
+  {
+    name: 'shearedEveryGeneration',
+    displayName: 'sheared every generation',
+    group: 'Feedback loops',
+    blurb:
+      'The two synchronous demodulators thirty-five degrees off quadrature, inside the loop. The plane the colour lands on is sheared instead of turned, so hues that were opposite stop being opposite and the pair that would have cancelled reinforce. Then the loop hands what that made back to be sheared again. Where the products land shears a mixer loop full of ring products; here the shear is the whole mechanism, applied once a lap to a picture that keeps coming back, with the guns left on their own rails so what survives arrives fluorescent.',
+    patch: {
+      demodAxisDeg: 55,
+      matrixClip: 1,
+      fbMix: 0.9,
+      fbGain: 1.16,
+      fbZoom: 0.955,
+      fbVign: 0.3,
+      chromaGain: 1.6,
+    },
+    // 0.12 of a 180-degree span is 22 degrees either side of 55, which stays
+    // clear of both ends and of quadrature, where the shear stops.
+    mod: [
+      { target: 'demodAxisDeg', source: 'sine', rateHz: 0.03, depth: 0.12 },
+    ],
+  },
+  {
+    name: 'encoderWiredBackwards',
+    displayName: 'the encoder wired backwards',
+    group: 'Feedback loops',
+    blurb:
+      'Active video inverted at the encoder, sync tip left alone, inside a rotating loop. Every lap is the negative of the lap under it, so what comes back is a stack of generations alternating polarity, and the transport turns each one a couple of degrees further than the last. It draws a pinwheel of hard light and dark wedges with the live picture at the hub. The raster is untouched throughout: the inversion is on the picture and not on the waveform the receiver locks to, which is what separates this from a polarity flip on the cable.',
+    patch: {
+      invert: 1,
+      fbMix: 0.88,
+      fbGain: 1.14,
+      fbZoom: 0.945,
+      fbRotateDeg: 2.4,
+      fbVign: 0.4,
+      fbBlack: 0.05,
+      fbKnee: 0.6,
+      chromaGain: 1.4,
+    },
+    // Without a rotation this converges: concentric rings, and a strip four
+    // seconds long that barely changes. The wedges are the rotation.
+    mod: [{ target: 'fbRotateDeg', source: 'sine', rateHz: 0.03, depth: 0.02 }],
+  },
+  {
+    name: 'wheelBehindTheSubject',
+    displayName: 'the wheel behind the subject',
+    group: 'Feedback loops',
+    blurb:
+      "The set's tint knob inside the loop, with the round trip held just under unity. Every lap decodes the picture with the colour reference turned another thirty degrees, so a ring of the accumulation says how many generations old it is by what colour it is. Under unity the structure decays about as fast as it builds, which is what leaves the live picture in front of the wheel instead of underneath it. Take the gain past unity and the subject goes.",
+    patch: {
+      tintDeg: 30,
+      fbMix: 0.8,
+      fbGain: 1.2,
+      fbZoom: 0.96,
+      fbRotateDeg: 1.5,
+      fbVign: 0.2,
+      fbBlack: 0.03,
+      fbKnee: 0.7,
+      chromaGain: 1.4,
+      crtSat: 1.2,
+    },
+    mod: [{ target: 'tintDeg', source: 'smooth', rateHz: 0.05, depth: 0.08 }],
+  },
+  {
+    name: 'handOnTheChassis',
+    displayName: 'a hand on the chassis',
+    group: 'Feedback loops',
+    blurb:
+      "A paperclip held on the chroma demodulator's reference network, about a contact a second, over a loop that is otherwise a clean collapse. Between contacts it runs photographic. While the metal is down the set stops trusting the burst and its two demodulators stop being ninety degrees apart, and the loop keeps what that made for several seconds after the hand has moved on. The gaps are exponential, so two bites land together and then nothing for a second and a half, and no two of them land on the same accumulation.",
+    patch: {
+      clipHz: 1.2,
+      clipPoint: 3,
+      clipBite: 0.95,
+      clipDwellMs: 140,
+      clipChatter: 0.5,
+      fbMix: 0.9,
+      fbGain: 1.18,
+      fbZoom: 0.95,
+      fbVign: 0.35,
+      fbBlack: 0.04,
+      chromaGain: 1.2,
+    },
   },
   {
     name: 'cleanDissolve',
