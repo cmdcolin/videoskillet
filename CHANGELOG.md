@@ -2,6 +2,21 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [0.43.0](https://github.com/cmdcolin/videoskillet/compare/v0.42.0...v0.43.0) - 2026-09-09
+
+### Features
+- *(ui)* [`9a41bce`](https://github.com/cmdcolin/videoskillet/commit/9a41bce0801e90360da67759c252826107279b94) eight looks inside the camera loop's own generation
+- *(ui)* [`721ff8b`](https://github.com/cmdcolin/videoskillet/commit/721ff8bef51d39bd8aebfbdb218c1f0e51d7be72) the same tank, wired backwards
+
+### Fixes
+- *(ui)* [`1b05a04`](https://github.com/cmdcolin/videoskillet/commit/1b05a0464bbe5d1bea911045086cdcaf827916d6) a chroma trim in a camera loop is a trim per generation
+
+### Documentation
+- *(docs)* [`1a4ed92`](https://github.com/cmdcolin/videoskillet/commit/1a4ed92af6a2a7be33ad7470d313968fa74f534f) the round the camera-loop looks came out of
+
+### Tests
+- *(gpu)* [`479498d`](https://github.com/cmdcolin/videoskillet/commit/479498d88e360bf07353029d0b4f71c0f06850f4) screen a feedback candidate before it is a preset
+
 ## [0.42.0](https://github.com/cmdcolin/videoskillet/compare/v0.41.0...v0.42.0) - 2026-09-09
 
 ### Features
