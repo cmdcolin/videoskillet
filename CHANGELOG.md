@@ -2,6 +2,22 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [0.42.0](https://github.com/cmdcolin/videoskillet/compare/v0.41.0...v0.42.0) - 2026-09-09
+
+### Features
+- *(ui)* [`8c7b85d`](https://github.com/cmdcolin/videoskillet/commit/8c7b85dd9c8bb5981eda28882db5f37c6786f45e) drag the sidebar's inner edge to set its width
+- *(ui)* [`bad3fd8`](https://github.com/cmdcolin/videoskillet/commit/bad3fd8b1e2d0a214e18cb1868d12ef57772a201) hold a stage at stock to see what it is doing
+- *(ui)* [`69e2807`](https://github.com/cmdcolin/videoskillet/commit/69e28078d3ac6d226d0776e5cc1877f2cde6df31) five ways the ring modulator meets the mixer loop
+- *(ui)* [`e4b6b66`](https://github.com/cmdcolin/videoskillet/commit/e4b6b669090c8f71467ed635f0b95f7ed18ab53d) chips on the two feedback cards
+
+### Fixes
+- *(ui)* [`baa50a8`](https://github.com/cmdcolin/videoskillet/commit/baa50a882fd9aef76bbea60c5a61afece236f849) a stage reopens at the group you left it on
+- *(gpu)* [`7a6304f`](https://github.com/cmdcolin/videoskillet/commit/7a6304f4afa6d3bbb6737594c3a79c518800cbca) the camera sensor's hard-clip end returned NaN for most of the frame
+- *(docs)* [`17331ec`](https://github.com/cmdcolin/videoskillet/commit/17331ecef9099c2d113a9787377963ec30d844c6) syncMeasureBuf's second vec4f carries the deepest excursion alone
+
+### Refactor
+- *(gpu)* [`82eee73`](https://github.com/cmdcolin/videoskillet/commit/82eee73249099a3d11e56d56adcf40965ccf7048) name the chroma phase wrap and the loop bus's reference level
+
 ## [0.41.0](https://github.com/cmdcolin/videoskillet/compare/v0.40.7...v0.41.0) - 2026-09-07
 
 ### Features
