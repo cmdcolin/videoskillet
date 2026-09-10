@@ -2,6 +2,11 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [0.44.4](https://github.com/cmdcolin/videoskillet/compare/v0.44.3...v0.44.4) - 2026-09-10
+
+### Fixes
+- *(gpu)* [`92049ae`](https://github.com/cmdcolin/videoskillet/commit/92049aeb4b0dd14c7a7111fd93e46a66ee27bf60) drop the last global augmentation from core, and check for it
+
 ## [0.44.3](https://github.com/cmdcolin/videoskillet/compare/v0.44.2...v0.44.3) - 2026-09-10
 
 ### Features
