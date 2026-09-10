@@ -158,17 +158,22 @@ interface HeldGpu {
   live: boolean
 }
 
-declare global {
-  // oxlint-disable-next-line no-var
-  var ntscGpu: HeldGpu | undefined
+interface GpuGlobals {
+  ntscGpu: HeldGpu | undefined
   // Devices created by *this document*. On `globalThis` for the same reason as the
   // stash and with the same lifetime, which is exactly the lifetime being counted:
   // a hot update must not reset it (a hot update is when engines get rebuilt), and
   // a real page load must, because the devices a previous document made went away
   // with it. See `gpuBuilds` below.
-  // oxlint-disable-next-line no-var
-  var ntscGpuBuilds: number | undefined
+  ntscGpuBuilds: number | undefined
 }
+
+// A typed view of the two slots, in place of a `declare global` block, because
+// JSR rejects a package that augments the global type. It is `globalThis`
+// itself, so `vi.stubGlobal` in the tests still reaches the same properties, and
+// the widening is an assignment rather than an assertion because the slots are
+// optional until something writes one.
+const gpuGlobals: typeof globalThis & Partial<GpuGlobals> = globalThis
 
 // Let go of a device the next engine must not inherit: the caller is saying it is
 // the *device* that has to go, not just the engine on top of it (a loss, a hang, a
@@ -179,7 +184,7 @@ declare global {
 // presented is what ends the tab's rendering step, and a leaked device is undone
 // by the document going away while a dead tab is undone by nothing.
 export function releaseGpu(device: GPUDevice): void {
-  if (globalThis.ntscGpu?.device === device) globalThis.ntscGpu = undefined
+  if (gpuGlobals.ntscGpu?.device === device) gpuGlobals.ntscGpu = undefined
   if (gpuDestroyAllowed()) {
     // Counted, and counted here, because this is the only place it can happen: the
     // count is what lets the app say "this tab has already done the thing that
@@ -219,7 +224,7 @@ function present(canvas: RenderTarget, held: HeldGpu): Gpu {
 // about a rebuild loop — warn, decline, advise a new tab — is about devices that
 // still exist.
 export function gpuBuilds(): number {
-  return globalThis.ntscGpuBuilds ?? 0
+  return gpuGlobals.ntscGpuBuilds ?? 0
 }
 
 // Devices this *tab* has created, across every document it has loaded. Kept in
@@ -260,7 +265,7 @@ function bump(key: string, from: number): number {
 // app acts on, and the tab's, which is what the trace reads back.
 function recordGpuSession(): { builds: number; sessions: number } {
   const builds = gpuBuilds() + 1
-  globalThis.ntscGpuBuilds = builds
+  gpuGlobals.ntscGpuBuilds = builds
   return { builds, sessions: bump(GPU_SESSION_KEY, gpuSessions()) }
 }
 
@@ -286,7 +291,7 @@ export async function initGpu(
   // The power preference is deliberately not re-checked. It is a property of the
   // document (`?gpu=`), so it cannot have changed under a live device, and honouring
   // a change that cannot happen would cost the thing this exists to save.
-  const held = globalThis.ntscGpu
+  const held = gpuGlobals.ntscGpu
   if (held !== undefined && held.live) {
     trace.add('gpuReuse', `${gpuBuilds()} in this page`)
     return present(canvas, held)
@@ -329,7 +334,7 @@ export async function initGpu(
   trace.add('gpuSession', `${builds} in this page, ${sessions} in this tab`)
   const format = navigator.gpu.getPreferredCanvasFormat()
   const stash: HeldGpu = { device, format, live: true }
-  globalThis.ntscGpu = stash
+  gpuGlobals.ntscGpu = stash
   // A device the driver takes away must stop being offered to the next engine,
   // and this is the only witness that fires whether or not anything is watching
   // the engine that was using it.

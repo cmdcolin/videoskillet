@@ -117,7 +117,7 @@ export interface AnalysisSource {
 export const ANALYSIS_FFT = 2048
 
 export class AudioState {
-  readonly data = new Float32Array(LINES)
+  readonly data: Float32Array<ArrayBuffer> = new Float32Array(LINES)
   private scratch = new Float32Array(2048)
   private spectrum = new Float32Array(1024)
   private peak = PEAK_FLOOR

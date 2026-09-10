@@ -1,0 +1,33 @@
+/**
+ * videoskillet — a real-time NTSC signal path in WebGPU compute shaders.
+ *
+ * `Engine.create` takes a canvas and runs the pass graph on it: RGB is encoded
+ * to a composite waveform, the waveform is impaired, and a simulated receiver
+ * decodes what is left. Artifacts come out of the mechanism, so they interact
+ * the way the analog ones do.
+ *
+ * The signal-domain modules are exported alongside it. They are plain
+ * TypeScript with no GPU dependency, so a host can drive the fault, glide and
+ * stability planners itself.
+ */
+
+export { Engine } from './core/gpu/pipeline.ts'
+export type {
+  DestroyOptions,
+  EngineApi,
+} from './core/gpu/engineapi.ts'
+export {
+  atRest,
+  CONTROL_KEYS,
+  DEFAULT_CONTROLS,
+  LANDING_LOOK,
+  STOCK_HOLD,
+} from './core/controls.ts'
+export type {
+  BayKey,
+  ControlKey,
+  Controls,
+  FrameStats,
+  ModSlot,
+  ModTarget,
+} from './core/controls.ts'

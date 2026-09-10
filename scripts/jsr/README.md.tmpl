@@ -1,0 +1,36 @@
+# @videoskillet/videoskillet
+
+A real-time NTSC signal path in WebGPU compute shaders — the engine behind
+[videoskillet.com](https://videoskillet.com/).
+
+`Engine.create` takes a canvas and runs the pass graph on it: RGB is encoded to
+a composite waveform, the waveform is impaired, and a simulated receiver decodes
+what is left. The artifacts come out of the mechanism, so dot crawl, ringing,
+head switching noise and sync loss interact the way the analog ones do.
+
+```ts
+import { Engine } from '@videoskillet/videoskillet'
+
+const engine = await Engine.create(canvas)
+engine.setControl('noiseIre', 4)
+engine.setControl('rfSnow', 0.3)
+engine.step()
+```
+
+The signal-domain modules under `core/signal/` are plain TypeScript with no GPU
+dependency. A host can drive the fault, glide and stability planners on its own.
+
+## Requirements
+
+A WebGPU context. The engine presents to an `HTMLCanvasElement` or an
+`OffscreenCanvas`, and the audio return path wants Web Audio where it is
+available.
+
+## Source
+
+This package is `src/core` from
+[cmdcolin/videoskillet](https://github.com/cmdcolin/videoskillet), restaged by
+`scripts/jsrpack.mjs` so it resolves without Vite. Issues and pull requests go
+to that repository.
+
+MIT.

@@ -1148,7 +1148,8 @@ export class Engine implements EngineApi {
 
   // useSyncExternalStore wiring: a single write path keeps React and the render
   // loop in sync, replacing the hand-mirrored `values` copy in the UI.
-  readonly subscribeControls = this.controlListeners.subscribe
+  readonly subscribeControls: (fn: () => void) => () => void =
+    this.controlListeners.subscribe
 
   // What every rate in the signal path measures itself against.
   //
@@ -1247,7 +1248,8 @@ export class Engine implements EngineApi {
   // morph runs. Nothing that moves at the frame rate can be published through
   // it. This one is heard only by the readout in the look bar — one button — so
   // it fires every frame and stays honest.
-  readonly subscribeGlide = this.glideListeners.subscribe
+  readonly subscribeGlide: (fn: () => void) => () => void =
+    this.glideListeners.subscribe
 
   // How far along a morph is, 0..1, or null if none is running. A primitive on
   // purpose: useSyncExternalStore compares snapshots by identity, and two equal
@@ -1271,7 +1273,8 @@ export class Engine implements EngineApi {
   // answers "what is the rate now", a callback answers "tell me when"; the vote
   // page reads both engines through the store for the same reason the masthead
   // does.
-  readonly subscribeStats = this.statsListeners.subscribe
+  readonly subscribeStats: (fn: () => void) => () => void =
+    this.statsListeners.subscribe
 
   readonly getStats = (): FrameStats => this.statsSnapshot
 
