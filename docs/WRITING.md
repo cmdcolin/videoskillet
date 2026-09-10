@@ -1,16 +1,18 @@
 # Writing patterns to fix
 
 `CLAUDE.md` › _Writing_ states the rule: plain technical English, in ordinary
-declarative sentences. This page is the checklist under it — the specific habits
+declarative sentences. This page is the checklist under it: the specific habits
 that produced the prose this repo has had to rewrite, each with a pair from the
-docs so the fix is a shape rather than a taste.
+docs so the fix is a shape rather than a taste. The last three sections came
+from passing the same checklist over other repositories, and they are the ones
+it kept missing.
 
 They compound. One fragment reads as a choice; a page of them reads as
 generated, because the sentences stop connecting to each other and the reader
 has to supply the joins. That is the failure the pass below was fixing, and it
 is the reason to catch these while writing rather than in a rewrite.
 
-## The eight that keep coming back
+## The ones that keep coming back
 
 **A fragment standing in for a sentence.** A caption with no verb, or a subject
 with no predicate, usually after a code block or as a bullet's opening.
@@ -44,11 +46,11 @@ Everywhere else, state what is true and stop.
 >
 > Staleness is stamped, not compared. → Staleness is stamped.
 
-**A heading written as a phrase where a noun would do.** "Where the file
-goes" and "What you get out" are sentences doing a label's job. Name the
-subject: `Output`. Keep a phrase only where the section answers a question the
-reader actually asks in those words — an FAQ entry, or a `Why ...` section whose
-whole point is the reasoning.
+**A heading written as a phrase where a noun would do.** "Where the file goes"
+and "What you get out" are sentences doing a label's job. Name the subject:
+`Output`. Keep a phrase only where the section answers a question the reader
+actually asks in those words — an FAQ entry, or a `Why ...` section whose whole
+point is the reasoning.
 
 > Where the file goes → Output
 >
@@ -108,7 +110,7 @@ belongs.
 > the address bar and the picture out of the file, and the output is
 > ProRes 4444.
 
-## Two more that are structural
+## Two that are structural
 
 **Two clauses stacked on one "so".** A sentence that reaches a conclusion and
 then reaches another one wants splitting; the second conclusion is what the
@@ -122,6 +124,72 @@ reader loses.
 **Em-dash asides doing the work of clauses.** One in a paragraph is punctuation;
 three is a writer avoiding sentence boundaries. Promote one to its own sentence,
 demote one to a comma, keep the one that is genuinely parenthetical.
+
+## Voice, register and terminology
+
+These three came out of a pass over other repositories, where the prose was
+already clean of everything above. They are the ones a checklist misses, because
+each looks like the house voice around it.
+
+**A value given a stance.** A component may speak: a track, a lane, a file or a
+caller can say, report or refuse, and a codebase that does this consistently is
+using a voice rather than slipping. A **value** may not. A sign, a flag, a
+column, a coordinate or a character is a thing being described, so it holds no
+opinion and disagrees with nothing.
+
+> The test is two ends on the backbone with signs that disagree. → A breakpoint
+> link has rank 0 at both ends, one ending in `+` and the other in `-`.
+>
+> Each segment draws where its tags say it sits. → Each segment is drawn at the
+> position its tags give.
+>
+> In a stranded library the read also says which strand its transcript came
+> from. → In a stranded library the pair flags mark which strand the transcript
+> came from.
+
+The same rule covers a subject given a will: "a strain breaks from the backbone"
+and "a strain leaving the backbone" describe an absence of alignment, so say
+that. "A strain with no alignment to the backbone leaves a white gap."
+
+**A technical term given a personality.** Keep a term the tools use — a
+`--reference backbone` is what minigraph calls it, and renaming it in prose
+costs the reader the word they will meet in the manual. What to fix is the
+sentence around it, where the term acquires a voice or a motive it cannot have.
+The term names a structure; the sentence says what the structure does.
+
+> stated as an orientation disagreement between two backbone segments → a pair
+> of backbone segments entered in opposite orientations
+>
+> the force drawing lets the axis go → the force drawing drops the axis
+
+**An informalism in a formal register.** A word can be exactly right in a
+tutorial and wrong in a manuscript. The test is the document, not the word.
+
+> blocks of memory held on the graphics card … uploading to the card is slow →
+> blocks of memory held on the GPU … uploading to the GPU is slow
+>
+> a page that exhausts it anyway can drop to the canvas backend → …can fall back
+> to the canvas backend
+>
+> We used @jbrowse/img and @jbrowse/capture extensively in producing the
+> tutorials → …to produce the figures in the tutorials
+
+An intensifier with no number behind it is the same slip in a document that
+quantifies everything else: `dramatically simpler`, `greatly reduced`,
+`extensively`.
+
+## A rule that breaks its own rule teaches the break
+
+`website/docs/tutorials/CLAUDE.md` in the JBrowse repository opens with "No
+em-dashes anywhere, including code comments", in a sentence that contained one.
+The file held fifteen more, and thirty-one had accumulated across the tutorials
+it governs.
+
+A style rule is read as prose before it is read as a rule, and the prose is the
+part that gets imitated. So a rule about writing has to hold in the file that
+states it, and where that is not obvious the file should say so outright. The
+same goes for the examples: a rule illustrated with a violation ships the
+violation.
 
 ## Not a problem here, worth knowing
 
@@ -145,6 +213,14 @@ Write the claim as its own sentence or drop it.
   exactly that: "Chaotic is not the same as wild" rewritten as "Wildness is
   large coherent structure" reads better and says something the section does not
   support.
+- **An author's established idiom.** One flagged instance is not licence to
+  sweep a device the writer uses deliberately and consistently. "The bubbles say
+  where the graph varies" and "a curve says two loci are joined" are a voice,
+  forty of them in one corpus; the fix is the value that borrowed that voice,
+  not the voice.
+- **A term the tools use.** `--reference backbone`, `minigraph backbone`, a
+  consensus's backbone read: renaming these in prose leaves the reader without
+  the word the manual uses.
 - **The measurement.** Numbers, file paths and the names of mechanisms are the
   content. A prose pass moves sentences around them and changes none of them.
 - **The author's own voice** in `README.md`. "Tasty WebGPU signal-level analog
