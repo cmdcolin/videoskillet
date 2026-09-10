@@ -799,8 +799,46 @@ an NLE plugin above makes a CLI the natural shape rather than a lesser one.
 Measured on this machine: ~49 fps at 754x480, so a render runs slightly faster
 than real time and a minute of footage takes about seventy seconds.
 
-What it does not do yet: no audio (ffmpeg is right there, so this is a flag
-rather than a design), no rundown — `--look` is one board for the whole render
+**Audio is not a nicety here, it is correctness.** `audioBendUs`, `audioLoad`
+and `audioIre` drive vertical hold, HV sag and the demodulator's reference, so a
+look built over a track and rendered in silence comes back with the artifacts
+that should be pumping sitting still — a render of a different board. The proof
+is a pair of renders of one look over one clip: with `--audio=none` twice the
+files are bit-identical frame for frame, and against `--audio=auto` they differ
+at 14.5 dB. The renderer is deterministic, so all of that difference is the
+sound.
+
+`--audio=auto` feeds the input's own track in and writes the intercarrier buzz
+beside it when the look asks for one; `buzz`, `source` and `none` name the
+halves. Two seams carry it, both in `signal/audiostate.ts`:
+
+- **`setAnalysisSource`** supplies the three things `update` and `lowEnergy` ask
+  the AnalyserNode for — a sample rate, the last window, that window's spectrum.
+  Everything after them (the peak tracker, the per-line resample, `stepHit`) is
+  the code the live path runs, which is what makes an offline render the same
+  instrument rather than a second one. `scripts/render/audio.ts` satisfies it
+  with a Blackman-windowed FFT and the analyser's own 0.8 smoothing, so the dB
+  the onset detector reads are calibrated the same way.
+- **`setBuzzSink`** takes the tap as numbers instead of as sound, before
+  `ensureGraph` — an offline render has no AudioContext to build. The buzz comes
+  out at `LINES x fps` = 31500 Hz, which is the rate `signal/buzz.ts` produces
+  natively rather than a resampling.
+
+What it cannot promise is the same _numbers_ as a live session: a browser hands
+the analyser whatever arrived on its own audio clock, where this cuts the window
+at the frame the render is on. The offline answer is the more defensible one —
+two renders of a take agree, and two live takes never did — but it is not
+bit-identical to what the speakers did.
+
+**Every tap has to arrive, or the sound drifts against the picture.** `BuzzRead`
+skips a frame when all three staging buffers are still in flight, which is right
+live (the audio ring glides over a gap) and wrong in a file, where a dropped
+frame shortens the track and slides everything after it earlier. Measured: a
+two-second render writes 63000 samples, exactly 31500 a second, so nothing is
+dropped — and the renderer says so out loud if the counts ever disagree rather
+than writing a track that drifts.
+
+What it does not do yet: no rundown — `--look` is one board for the whole render
 where the strip is a sequence of them — and no modulation, since `#mod=` is not
 parsed.
 

@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
 import { rngFor } from '../rng'
-import { hallTail, stepHit } from './audiostate'
+import { ANALYSIS_FFT, AudioState, hallTail, stepHit } from './audiostate'
 
-import type { HitState } from './audiostate'
+import type { AnalysisSource, HitState } from './audiostate'
 
 const START: HitState = { hit: 0, lowPrev: 0, ref: 0.01 }
 
@@ -84,5 +84,92 @@ describe('hall tail', () => {
     expect(energy(tail.subarray(half))).toBeLessThan(
       energy(tail.subarray(0, half)) / 10,
     )
+  })
+})
+
+// A source of the shape a runtime with no Web Audio supplies, so the injected
+// path can be exercised without an AudioContext — which is also the only way to
+// exercise `update` at all under vitest.
+const sourceOf = (
+  sample: (i: number) => number,
+  lowDb = -6,
+): AnalysisSource => ({
+  sampleRate: 48000,
+  timeDomain: out => {
+    for (let i = 0; i < out.length; i++) out[i] = sample(i)
+  },
+  frequency: out => out.fill(lowDb),
+})
+
+describe('analysis source', () => {
+  it('leaves the per-line data silent with nothing injected and no graph', () => {
+    const a = new AudioState()
+    const data = a.update(1)
+    expect(data.every(v => v === 0)).toBe(true)
+    expect(a.level).toBe(0)
+  })
+
+  it('drives the per-line data from an injected window', () => {
+    const a = new AudioState()
+    a.setAnalysisSource(sourceOf(i => (i % 2 === 0 ? 0.5 : -0.5)))
+    const data = a.update(1)
+    expect(data.some(v => v !== 0)).toBe(true)
+    // The auto-gain normalises against the running peak, so a half-scale input
+    // comes back near full scale rather than at the number that went in.
+    expect(Math.max(...data)).toBeGreaterThan(0.5)
+    expect(a.level).toBeGreaterThan(0)
+  })
+
+  it('clamps however hard it is driven', () => {
+    const a = new AudioState()
+    a.setAnalysisSource(sourceOf(() => 40))
+    const data = a.update(8)
+    expect(Math.max(...data)).toBeLessThanOrEqual(2)
+    expect(Math.min(...data)).toBeGreaterThanOrEqual(-2)
+  })
+
+  it('punches the onset envelope on a step in the low band', () => {
+    const a = new AudioState()
+    let low = -60
+    a.setAnalysisSource({
+      sampleRate: 48000,
+      timeDomain: out => out.fill(0.2),
+      frequency: out => out.fill(low),
+    })
+    a.update(1)
+    expect(a.hit).toBeLessThan(0.2)
+    low = -3
+    a.update(1)
+    expect(a.hit).toBeGreaterThan(0.5)
+  })
+
+  it('sizes its window to the analyser it stands in for', () => {
+    const a = new AudioState()
+    let asked = 0
+    a.setAnalysisSource({
+      sampleRate: 48000,
+      timeDomain: out => {
+        asked = out.length
+      },
+      frequency: out => out.fill(-60),
+    })
+    a.update(1)
+    // The offline renderer's own window is sized off this, so a disagreement
+    // here is a short read there rather than an error.
+    expect(asked).toBe(ANALYSIS_FFT)
+  })
+
+  it('hands the buzz to a sink instead of the speakers', () => {
+    const a = new AudioState()
+    const taps: number[] = []
+    a.setBuzzSink((tap, drive) => {
+      taps.push(tap.length, drive)
+    })
+    a.pushBuzz(new Float32Array(8), 0.5)
+    expect(taps).toEqual([8, 0.5])
+    // Zero drive is the master gate, and it comes before the sink: a session
+    // with the sound off must not compute a track nobody asked for.
+    a.pushBuzz(new Float32Array(8), 0)
+    expect(taps).toEqual([8, 0.5])
   })
 })

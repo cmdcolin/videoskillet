@@ -1,4 +1,7 @@
 {
   "unstable": ["sloppy-imports", "webgpu"],
-  "lint": { "rules": { "exclude": ["no-sloppy-imports"] } }
+  "lint": { "rules": { "exclude": ["no-sloppy-imports"] } },
+  "compilerOptions": {
+    "lib": ["deno.window", "deno.ns", "dom", "dom.iterable"]
+  }
 }

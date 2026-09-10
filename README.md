@@ -108,8 +108,10 @@ pnpm render in.mp4 out.mov --look='#p=mD.FbQB…'
 ```
 
 A look off the address bar, a file in, ProRes 4444 out — so the colour artifacts
-survive, which they do not through the 4:2:0 a browser will encode. It renders
-at about real time and batches over a folder.
+survive, which they do not through the 4:2:0 a browser will encode. The clip's
+own sound goes in, which matters because bass drives vertical hold, and the
+intercarrier buzz comes back out beside it. It renders at about real time and
+batches over a folder.
 
 ### Can I patch it into Max/MSP, Jitter or TouchDesigner?
 

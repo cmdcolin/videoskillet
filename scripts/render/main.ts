@@ -25,7 +25,8 @@
 // renders in the tab. See `vite.render.config.ts` for why a bundle is involved.
 
 import './runtime.ts'
-import { ffmpegDecode, ffmpegEncode, CODECS, probeFrames } from './ffmpeg.ts'
+import { AUDIO_RATE, decodeAudio, mux, OfflineAnalysis } from './audio.ts'
+import { CODECS, ffmpegDecode, ffmpegEncode, probeFrames } from './ffmpeg.ts'
 import { pattern } from './pattern.ts'
 
 // From the source rather than from the bundle: a bundle is JavaScript, so the
@@ -33,6 +34,7 @@ import { pattern } from './pattern.ts'
 // resolves directly. The values still come from the bundle — only a type
 // crosses here, and `verbatimModuleSyntax` keeps it from becoming an import.
 import type { Controls } from '../../src/core/controls.ts'
+import type { AudioMode } from './audio.ts'
 
 const flag = (name: string): string | undefined => {
   const hit = Deno.args.find(a => a.startsWith(`--${name}=`))
@@ -55,7 +57,12 @@ if (has('help') || positional.length === 0) {
   --seed=<n>                    the dice (default 1); same seed, same file
   --pattern=<bars|static|none>  render a generated source instead of a file
   --codec=<${Object.keys(CODECS).join('|')}>
+  --audio=<auto|buzz|source|none>
   --quiet                       no progress line
+
+Audio is not decoration: bass drives vertical hold and HV sag, so a look built
+over a track renders differently in silence. --audio=auto feeds the input's own
+sound in, and writes the intercarrier buzz beside it when the look asks for one.
 
 Every control name is in docs/EFFECTS.md. A link off the app works whole:
 copy the address bar and pass it as --look.`)
@@ -65,8 +72,12 @@ copy the address bar and pass it as --look.`)
 const {
   ACTIVE_HEIGHT,
   ACTIVE_WIDTH,
+  AudioState,
   DEFAULT_CONTROLS,
+  dcState,
+  detect,
   Engine,
+  LINES,
   PRESET_BY_NAME,
   presetControls,
   unpackControls,
@@ -165,8 +176,25 @@ if (seconds !== null) frames = Math.round(seconds * fps)
 else if (input !== null) frames = await probeFrames(input, fps)
 else frames = 10 * fps
 
+const audioMode = (flag('audio') ?? 'auto') as AudioMode
+if (!['auto', 'buzz', 'source', 'none'].includes(audioMode)) {
+  console.error(`no audio mode named ${audioMode}`)
+  Deno.exit(2)
+}
+
+// The track, decoded before the engine exists because whether there is one
+// decides how the engine is set up.
+const track =
+  audioMode === 'none' || input === null ? null : await decodeAudio(input)
+const analysis = track === null ? null : new OfflineAnalysis(track, fps)
+
 const canvas = new OffscreenCanvas(ACTIVE_WIDTH, ACTIVE_HEIGHT)
-const engine = await Engine.create(canvas as never, {})
+// The engine is handed an AudioState of our own so the analysis source can be
+// set on it — the same object the live app builds, reading a track instead of a
+// microphone.
+const audioState = new AudioState()
+if (analysis !== null) audioState.setAnalysisSource(analysis)
+const engine = await Engine.create(canvas as never, { audio: audioState })
 // The loop was started by the constructor and has nothing to run on here, but
 // stopping it is what makes the clock the render's — the same first move
 // `ui/render.ts` makes, for the same reason.
@@ -174,12 +202,49 @@ engine.pauseLoop()
 engine.startTake({ fps, seed })
 engine.applyControls(controls)
 
+// The buzz, if anyone is listening. `buzzDrive` gates the tap pass, the
+// readback and the push alike on this switch, so leaving it off is what makes
+// `--audio=source` cost nothing rather than compute a track and discard it.
+const wantBuzz = audioMode === 'auto' || audioMode === 'buzz'
+const BUZZ_RATE = LINES * fps
+const buzzChunks: Float32Array[] = []
+let buzzTaps = 0
+if (wantBuzz) {
+  engine.setSoundOut(true)
+  const dc = dcState()
+  // Seeded, so the hiss is the same hiss on a re-render. The picture's dice
+  // come from `startTake`; this is the sound's, and it is the same argument.
+  let n = seed >>> 0
+  const rand = () => {
+    n = (n * 1664525 + 1013904223) >>> 0
+    return n / 4294967296
+  }
+  engine.audioState.setBuzzSink((tap: Float32Array, drive: number) => {
+    const out = new Float32Array(tap.length / 2)
+    detect(tap, out, dc, drive, rand)
+    buzzChunks.push(out)
+    buzzTaps++
+  })
+}
+
 const source =
   input === null
     ? pattern(patternName ?? 'bars', ACTIVE_WIDTH, ACTIVE_HEIGHT)
     : ffmpegDecode(input, ACTIVE_WIDTH, ACTIVE_HEIGHT, fps)
 
-const sink = ffmpegEncode(output, ACTIVE_WIDTH, ACTIVE_HEIGHT, fps, codec)
+// With audio the picture goes to a scratch file first and is copied into the
+// finished one alongside the sound — see `mux`, which does not re-encode it.
+const wantAudio = wantBuzz || audioMode === 'source'
+// The extension is kept, because ffmpeg picks the container from it and
+// `out.mov.tmp` names no format it knows.
+const scratch = (suffix: string): string => {
+  const dot = output.lastIndexOf('.')
+  return dot === -1
+    ? `${output}.${suffix}`
+    : `${output.slice(0, dot)}.${suffix}${output.slice(dot)}`
+}
+const videoPath = wantAudio ? scratch('videoonly') : output
+const sink = ffmpegEncode(videoPath, ACTIVE_WIDTH, ACTIVE_HEIGHT, fps, codec)
 
 const started = performance.now()
 let wrote = 0
@@ -196,6 +261,10 @@ try {
     if (frame !== null) {
       engine.setImagePixels(frame, ACTIVE_WIDTH, ACTIVE_HEIGHT)
     }
+    // Before the step, because the step is what reads it. The window the
+    // analyser hands over ends at this frame's position in the track, so the
+    // bass that lands on frame N bends frame N.
+    analysis?.seek(i)
     engine.step()
     await sink.write(await engine.readFrame())
     wrote++
@@ -226,15 +295,76 @@ try {
   } catch (e) {
     fail(e)
   }
+  // **Drain the buzz before tearing anything down.** The tap arrives from a
+  // `mapAsync` a frame or two behind the submit that copied it, and
+  // `BuzzRead.destroy` drops whatever is still in flight — so destroying the
+  // engine here would silently shorten the track by the last few frames.
+  if (wantBuzz) {
+    for (let i = 0; i < 8; i++) await new Promise(r => setTimeout(r, 0))
+  }
   // The device is let go of, never destroyed — adr/0004. There is no tab here
   // to take a rendering step from, but the rule is the engine's rather than the
   // browser's and a renderer is not the place to make an exception to it.
   engine.destroy({ keepDevice: true })
 }
 
+const buzzPath = `${output}.buzz.f32`
+try {
+  if (wantAudio) {
+    let havebuzz = false
+    if (wantBuzz && buzzChunks.length > 0) {
+      // **A tap per rendered frame, or the sound and the picture disagree.**
+      // `BuzzRead` skips a frame when every staging buffer is still in flight,
+      // which is right in a live session (the audio ring glides over a gap) and
+      // wrong in a file, where a dropped frame shortens the track and slides
+      // everything after it earlier. Worth saying rather than quietly writing a
+      // track that drifts.
+      if (buzzTaps !== wrote) {
+        console.warn(
+          `\n  note: ${wrote} frames rendered but ${buzzTaps} buzz taps arrived; the sound is ${(((wrote - buzzTaps) / wrote) * 100).toFixed(1)}% short and will drift against the picture`,
+        )
+      }
+      const total = buzzChunks.reduce((n, c) => n + c.length, 0)
+      const all = new Float32Array(total)
+      let at = 0
+      for (const c of buzzChunks) {
+        all.set(c, at)
+        at += c.length
+      }
+      await Deno.writeFile(buzzPath, new Uint8Array(all.buffer))
+      havebuzz = true
+    }
+    await mux(
+      videoPath,
+      output,
+      havebuzz ? buzzPath : null,
+      (audioMode === 'auto' || audioMode === 'source') && track !== null
+        ? input
+        : null,
+      BUZZ_RATE,
+    )
+  }
+} catch (e) {
+  fail(e)
+} finally {
+  if (wantAudio) {
+    await Deno.remove(videoPath).catch(() => {})
+    await Deno.remove(buzzPath).catch(() => {})
+  }
+}
+
 const took = (performance.now() - started) / 1000
 if (!quiet) {
+  const sound =
+    !wantAudio || (buzzChunks.length === 0 && track === null)
+      ? 'silent'
+      : [
+          buzzChunks.length > 0 ? 'buzz' : null,
+          track !== null && audioMode !== 'buzz' ? 'source' : null,
+        ]
+          .filter(x => x !== null)
+          .join(' + ')
   console.log(
-    `\r  ${wrote} frames in ${took.toFixed(1)}s (${(wrote / took).toFixed(1)} fps) → ${output}`,
+    `\r  ${wrote} frames in ${took.toFixed(1)}s (${(wrote / took).toFixed(1)} fps), ${sound} → ${output}`,
   )
 }

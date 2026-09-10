@@ -100,6 +100,22 @@ interface Graph {
   wet: GainNode
 }
 
+// The three things `update` and `lowEnergy` ask the AnalyserNode for, as an
+// interface something without Web Audio can satisfy. See `setAnalysisSource`.
+export interface AnalysisSource {
+  sampleRate: number
+  // The most recent window of samples, filling `out` (length `ANALYSIS_FFT`).
+  timeDomain: (out: Float32Array) => void
+  // That window's magnitude spectrum in dB, filling `out` — the same units and
+  // the same bin layout `getFloatFrequencyData` writes, since `lowEnergy` reads
+  // them as dB over the bottom 60 and converts by bin width.
+  frequency: (out: Float32Array) => void
+}
+
+// The window the live analyser uses, so an offline source is sized the same and
+// `lowEnergy`'s bin arithmetic lands on the same frequencies.
+export const ANALYSIS_FFT = 2048
+
 export class AudioState {
   readonly data = new Float32Array(LINES)
   private scratch = new Float32Array(2048)
@@ -132,6 +148,8 @@ export class AudioState {
   // node in the page has to share, and because the rule keeping it off the
   // analyser is this object's to enforce. See `pushBuzz`.
   private buzz: BuzzOut | null = null
+  private buzzSink: ((tap: Float32Array, drive: number) => void) | null = null
+  private analysis: AnalysisSource | null = null
   private closed = false
   level = 0
   hit = 0
@@ -329,9 +347,48 @@ export class AudioState {
   // engine that no longer exists.
   pushBuzz(tap: Float32Array, drive: number): void {
     if (drive > 0 && !this.closed) {
+      // A sink takes the tap instead of the speakers, and takes it *before*
+      // `ensureGraph` — an offline render has no AudioContext to build and no
+      // speakers to build one for, and the whole point of the tap there is that
+      // it ends up in a file. The rule the comment above states is unaffected:
+      // a sink is further from the analyser than the speakers were.
+      if (this.buzzSink !== null) {
+        this.buzzSink(tap, drive)
+        return
+      }
       const g = this.ensureGraph()
       this.buzz ??= new BuzzOut(g.ctx)
       this.buzz.push(tap, drive)
+    }
+  }
+
+  // Take the buzz as numbers rather than as sound. Set by the offline renderer,
+  // null everywhere else.
+  setBuzzSink(fn: ((tap: Float32Array, drive: number) => void) | null): void {
+    this.buzzSink = fn
+  }
+
+  // Analyse audio this object was handed rather than audio it is listening to.
+  //
+  // `update` and `lowEnergy` are the only two readers of the AnalyserNode, and
+  // between them they want three things: a sample rate, the last window of
+  // samples, and that window's spectrum. A runtime with no Web Audio can supply
+  // all three — so it is those three that are injectable, and every line after
+  // them (the peak tracker, the per-line resample, `stepHit`) stays exactly the
+  // code the live path runs. That is what makes an offline render the same
+  // instrument rather than a second one.
+  //
+  // What it cannot promise is the same *numbers* as a live session. A browser
+  // delivers audio on its own clock and the analyser smooths across whatever
+  // arrived; offline, the window is cut at the frame the render is on. The
+  // offline answer is the more defensible of the two — it is deterministic and
+  // frame-exact, so two renders of a take agree — but it is not bit-identical
+  // to what the speakers did, and nothing here should claim otherwise.
+  setAnalysisSource(src: AnalysisSource | null): void {
+    this.analysis = src
+    if (src !== null) {
+      this.scratch = new Float32Array(ANALYSIS_FFT)
+      this.spectrum = new Float32Array(ANALYSIS_FFT / 2)
     }
   }
 
@@ -400,10 +457,13 @@ export class AudioState {
   // line, normalized against a slowly-decaying peak so any input level is
   // usable without riding a gain slider.
   update(gain: number): Float32Array<ArrayBuffer> {
+    const a = this.analysis
     const g = this.graph
-    if (g !== null) {
-      g.analyser.getFloatTimeDomainData(this.scratch)
-      const field = Math.round(g.ctx.sampleRate / 60)
+    if (a !== null || g !== null) {
+      const sampleRate = a?.sampleRate ?? g!.ctx.sampleRate
+      if (a !== null) a.timeDomain(this.scratch)
+      else g!.analyser.getFloatTimeDomainData(this.scratch)
+      const field = Math.round(sampleRate / 60)
       const span = Math.min(this.scratch.length, field)
       const start = this.scratch.length - span
 
@@ -444,11 +504,13 @@ export class AudioState {
 
   // Mean magnitude below ~200 Hz: kick and bass, where the punch lives.
   private lowEnergy(): number {
+    const a = this.analysis
     const g = this.graph
     let acc = 0
-    if (g !== null) {
-      g.analyser.getFloatFrequencyData(this.spectrum)
-      const hz = g.ctx.sampleRate / 2 / this.spectrum.length
+    if (a !== null || g !== null) {
+      if (a !== null) a.frequency(this.spectrum)
+      else g!.analyser.getFloatFrequencyData(this.spectrum)
+      const hz = (a?.sampleRate ?? g!.ctx.sampleRate) / 2 / this.spectrum.length
       const bins = Math.max(1, Math.round(200 / hz))
       for (let i = 0; i < bins; i++) {
         // dB (-Inf..0) to a 0..1 weighting over the bottom 60 dB

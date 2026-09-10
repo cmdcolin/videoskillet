@@ -12,7 +12,19 @@
 // producing files anybody keeps.)
 export { Engine } from '../../src/core/gpu/pipeline'
 export { DEFAULT_CONTROLS } from '../../src/core/controls'
-export { ACTIVE_HEIGHT, ACTIVE_WIDTH } from '../../src/core/signal/constants'
+export {
+  ACTIVE_HEIGHT,
+  ACTIVE_WIDTH,
+  LINES,
+} from '../../src/core/signal/constants'
+
+// The sound half. `AudioState` is what the engine analyses through and what the
+// buzz tap comes back to; `detect` is the arithmetic that turns a frame of tap
+// measurements into audio samples, and it is the app's own — the renderer
+// running a second version of it would make a file that does not sound like the
+// instrument.
+export { AudioState } from '../../src/core/signal/audiostate'
+export { dcState, detect } from '../../src/core/signal/buzz'
 
 // The look, in the two spellings a link can carry it. Both are `src/ui/`, which
 // is a layer core may not import — but this entry is not core, and these two
