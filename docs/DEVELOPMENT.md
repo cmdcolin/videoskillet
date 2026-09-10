@@ -32,8 +32,8 @@ SVGs. `docs:check` compares bytes, so it is a local check rather than a CI gate:
 a different Graphviz build emits different SVG.
 
 If you are about to drive a browser at this app, read
-[what every browser harness has learned the hard way](#what-every-browser-harness-here-has-learned-the-hard-way)
-first. If you are about to measure a performance change, read
+[the browser harness traps](#browser-harness-traps) first. If you are about to
+measure a performance change, read
 [Measuring performance](#measuring-performance) before believing a number.
 
 ## Verification harness
@@ -75,19 +75,19 @@ is why it's Firefox.
 node scripts/colourcheck.mjs [url] [outDir] [--arms=k:v,…] [--arms-file=sheet.json]
 ```
 
-Does a patch make colour, how much, and in what shape — one sheet of arms
-through one page load, with a screenshot each. Its default source is the point:
-on the bundled 1929 film a clean arm reads sat 0.018, so any hue on screen was
-manufactured by the chain. **Run a colour claim against a saturated source and
-the mechanism that makes colour out of nothing reads as one that slightly
-reduces it** — a mistake this repo has made once already
+It answers whether a patch makes colour, how much, and in what shape: one sheet
+of arms through one page load, with a screenshot each. The default source is
+what makes that readable — on the bundled 1929 film a clean arm reads sat 0.018,
+so any hue on screen was manufactured by the chain. **Run a colour claim against
+a saturated source and the mechanism that makes colour out of nothing reads as
+one that slightly reduces it** — a mistake this repo has made once already
 ([`CURATION.md`](CURATION.md) carries the numbers).
 
-Read the columns against each other. `hues` beside `sat`, because one hue
-everywhere and a whole wheel score the same on saturation alone. `edge%` beside
+Read the columns against each other: `hues` beside `sat`, because one hue
+everywhere and a whole wheel score the same on saturation alone; `edge%` beside
 `fringe`, because the first counts pixels on a colour boundary and the second
-says how hard those boundaries are — a posterizer holding four enormous flat
-fields scores like speckle on `fringe` and nothing like it on `edge%`. And
+says how hard those boundaries are, so a posterizer holding four enormous flat
+fields scores like speckle on `fringe` and nothing like it on `edge%`; and
 `motion`, because every other column is one frame, and one frame calls an
 evolving look and a frozen one the same thing.
 
@@ -100,10 +100,10 @@ does not reliably survive somebody else's commit.
 node scripts/sourcecheck.mjs [url]
 ```
 
-Drives the two source pickers and the teletype dialog, which is the half of the
-app no other harness can reach: everything else goes in through the query
+It drives the two source pickers and the teletype dialog, which is the half of
+the app no other harness can reach: everything else goes in through the query
 string, and a link lands in `restoreSession` rather than on the route a hand
-takes. Nine load paths, no unit test that can touch them. "The canvas is not
+takes. Nine load paths, and no unit test can touch them. "The canvas is not
 black" would pass all of them, so each step takes a coarse tile signature and
 the run fails if the picture did not move.
 
@@ -111,30 +111,31 @@ the run fails if the picture did not move.
 node scripts/fatfinger.mjs [url] [minPx]
 ```
 
-What a fingertip gets, on every control the panel shows at 390px with the
-pointer reported coarse. It walks `elementFromPoint` outward from each control's
-centre, because `getBoundingClientRect` is wrong in both directions: it misses
-the `::after` expanders that grow a target without moving its neighbours (an
-11px ⋮ whose press gets 23), and it counts area a neighbour is painted over.
-**The one harness here that drives Chrome**, and it has to — what it measures
-only exists under `pointer: coarse`, and CDP's `Emulation.setEmulatedMedia` is
-the only way to turn that on from a driver (Firefox's pref does not reach the
-content process through puppeteer's BiDi). The floor is WCAG 2.2's 24px rather
-than Apple's 44: this panel is 245 rows in a 332px column, and at 44 every one
-fails. It reports rather than passes, so `pnpm harnesses` leaves it out.
+It measures what a fingertip gets, on every control the panel shows at 390px
+with the pointer reported coarse. It walks `elementFromPoint` outward from each
+control's centre, because `getBoundingClientRect` is wrong in both directions:
+it misses the `::after` expanders that grow a target without moving its
+neighbours (an 11px ⋮ whose press gets 23), and it counts area a neighbour is
+painted over. **The one harness here that drives Chrome**, and it has to — what
+it measures only exists under `pointer: coarse`, and CDP's
+`Emulation.setEmulatedMedia` is the only way to turn that on from a driver
+(Firefox's pref does not reach the content process through puppeteer's BiDi).
+The floor is WCAG 2.2's 24px rather than Apple's 44: this panel is 245 rows in a
+332px column, and at 44 every one fails. It reports rather than passes, so
+`pnpm harnesses` leaves it out.
 
 ```
 node scripts/bandcheck.mjs [port]
 ```
 
-Whether the beam profile is beating with the output raster. Colour bars are
-constant down each column, so every row-to-row change is the profile and nothing
-else, and the check reports the strongest ripple slower than the line pitch. It
-walks seven viewports at both device pixel ratios, which is the whole point: **a
-scanline fault lives in the window size, and a retina screen carries twice the
-pixels per line and hides it** — 8.22% at 7px on a 740x733 canvas, 0.88% on the
-same window at 2x. Grain and shading leave about 1.5% at every size, so the
-threshold is 3%.
+It checks whether the beam profile is beating with the output raster. Colour
+bars are constant down each column, so every row-to-row change is the profile
+and nothing else, and the check reports the strongest ripple slower than the
+line pitch. It walks seven viewports at both device pixel ratios, which is the
+whole point: **a scanline fault lives in the window size, and a retina screen
+carries twice the pixels per line and hides it** — 8.22% at 7px on a 740x733
+canvas, 0.88% on the same window at 2x. Grain and shading leave about 1.5% at
+every size, so the threshold is 3%.
 
 ```
 node scripts/midicheck.mjs [url]
@@ -159,14 +160,14 @@ chip, plays, drags a row, and reads the stored rundown back — the wiring betwe
 the pure walk (`ui/strip.test.ts`) and its driver (`ui/stripRun.test.ts`), which
 is where it can break with every unit test passing.
 
-`traylayout` asks the other question: not "does the chip work" but "does using
-it move anything". A row card is shrink-to-fit and the tray is one horizontal
-row of them, so a chip that grows as it steps slides every card to its right out
-from under the hand. Two things about its fixture cost a wrong answer once: row
-0 carries the _default_ drift, not none, because `cycleHold` preserves drift and
-a row at drift 0 never draws the `≈` the widest label has; and the reserves are
-checked against the card's ceiling in the same run, since widening a chip is
-what once pushed the ✕ out past `overflow: hidden`.
+`traylayout` asks whether using a chip moves anything else on screen. A row card
+is shrink-to-fit and the tray is one horizontal row of them, so a chip that
+grows as it steps slides every card to its right out from under the hand. Two
+things about its fixture cost a wrong answer once: row 0 carries the _default_
+drift, not none, because `cycleHold` preserves drift and a row at drift 0 never
+draws the `≈` the widest label has; and the reserves are checked against the
+card's ceiling in the same run, since widening a chip is what once pushed the ✕
+out past `overflow: hidden`.
 
 `prerollcheck`'s cold arm has to be genuinely cold — a browser that has already
 fetched a url serves the second load out of its HTTP cache, which would make
@@ -289,7 +290,7 @@ resolves lands well into the decay.
 Budget real time: a candidate is a thousand stepped frames of a patch built to
 be expensive, so a full round is an hour or more.
 
-### What every browser harness here has learned the hard way
+### Browser harness traps
 
 Every bullet cost a real afternoon.
 
@@ -582,16 +583,16 @@ dead-black frame or one with the stage's error banner up. `--freeze` writes what
 the address bar said into `scripts/docshot-frozen.json`, and that entry then
 wins over the spec's own params.
 
-**Staleness is stamped, not compared.** `docs:check` and `docgen:check`
-regenerate and compare; a screenshot cannot, because comparing means
-recapturing, which needs Firefox Nightly, a GPU and a minute — which is how
-`chain.jpg` spent two releases showing a stage that had been renamed. So every
-capture stamps the app version and commit into `docs/img/shots.json` and
-`pnpm docshots:check` reads it back, headless and in CI. It fires **once per
-release**: each shot prints the masthead with the version in it, so a release
-dates them whether or not the panel moved. Only shots with the app's chrome in
-them are checked, read off the spec (`crop: 'canvas'`, or a `video`), because
-flagging all eleven canvas tiles every release is how a check stops being read.
+**Staleness is stamped.** `docs:check` and `docgen:check` regenerate and
+compare; a screenshot cannot, because comparing means recapturing, which needs
+Firefox Nightly, a GPU and a minute — which is how `chain.jpg` spent two
+releases showing a stage that had been renamed. So every capture stamps the app
+version and commit into `docs/img/shots.json` and `pnpm docshots:check` reads it
+back, headless and in CI. It fires **once per release**: each shot prints the
+masthead with the version in it, so a release dates them whether or not the
+panel moved. Only shots with the app's chrome in them are checked, read off the
+spec (`crop: 'canvas'`, or a `video`), because flagging all eleven canvas tiles
+every release is how a check stops being read.
 
 `shots.json` also holds the app's own address bar at the moment of each capture,
 which is what puts the "open this in the app" link under every figure on the
@@ -634,9 +635,9 @@ in the timeline is scripted**, which is what the recording is evidence of; the
 script sets the stage, opens the shutter, and stops when the session lands. Five
 things it had to get right, each of which cost a wrong answer:
 
-- **A nested X display, not the desktop.** This box is GNOME on Wayland, where
-  `x11grab` against `:0` grabs nothing — mutter composites outside X, so the
-  root window a screen grab reads is empty.
+- **A nested X display.** This box is GNOME on Wayland, where `x11grab` against
+  `:0` grabs nothing — mutter composites outside X, so the root window a screen
+  grab reads is empty.
 - **Chrome loses WebGPU on an Xvfb unless told otherwise.** Its default path
   opens the DRM _card_ node, which a desktop session's ACLs do not grant, and
   the app's "this page keeps rebuilding its GPU engine" banner is what that
@@ -690,7 +691,7 @@ pnpm demos:check                 # fail if the checked-in copy is stale
 gallery of cards, each opening the exact board its clip is a recording of.
 Entries carry flags: `showcase` is the ones the carousel may play; `gallery` is
 whether it gets a card; `says` is the clause under the name. The header and the
-link preview are no demo's still any more:
+link preview no longer use a demo's still:
 [`../scripts/heroplate.mjs`](../scripts/heroplate.mjs) sets the headline in the
 h1's own typeface, photographs it, runs the plate through the app and reads the
 canvas back, so the words on the page are a picture of what the program does to
@@ -701,7 +702,7 @@ the plate, so the type there gives up six per cent to make room for the name.
 [`../scripts/reel.mjs`](../scripts/reel.mjs) is the carousel, which records the
 **app's own window** instead — the panel, the map and a pointer moving over
 them. That split is the point of the page: the picture is what the program
-makes, and the window is what the program _is_.
+makes, and the window is the program itself.
 
 **Every card says which mechanism it is** — "a composite loop 2.9µs long,
 ringing at 0.8 MHz" rather than a name. Those lines are read off the look
@@ -797,10 +798,10 @@ sits at readyState 0. `metadata` for a card and `auto` for the next slide —
 `metadata` is Chrome's cue to stop as soon as it has frames, the whole gallery
 for 279K (Firefox takes the whole file on either word, which is why a screenful
 of cards is 1.8M there). And one slide ahead, not all of them, since these are
-2-3M each. The gallery's look-ahead waits for `load` and an idle callback, which
-is not politeness: the stage sits 541px down a 950px window, so a `rootMargin`
-wide enough to be a look-ahead reaches the gallery from up there and three cards
-were opening alongside the picture in front of the reader.
+2-3M each. The gallery's look-ahead waits for `load` and an idle callback for a
+reason of its own: the stage sits 541px down a 950px window, so a `rootMargin`
+wide enough to be a look-ahead reaches the gallery from up there, and three
+cards were opening alongside the picture in front of the reader.
 
 ## Docs site
 
@@ -1084,8 +1085,8 @@ wants answering without a rebuild.
 - [`OPTIMIZATIONS.md`](OPTIMIZATIONS.md) — what these measurements decided
 - [`EDITOR.md`](EDITOR.md) — the strip, glitch transitions, and the export an
   editor can conform
-- [`CURATION.md`](CURATION.md) — screening presets, and what the eye said that
-  the numbers did not
+- [`CURATION.md`](CURATION.md) — screening presets, and what the eye added to
+  the numbers
 - [`adr/`](adr/) — the decisions where the obvious thing is wrong for a
   non-obvious reason, and [`handoffs/`](handoffs/) for the evidence under them
 - [`EFFECTS.md`](EFFECTS.md) — every control, **generated** by

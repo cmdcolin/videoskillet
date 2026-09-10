@@ -166,8 +166,8 @@ Read these, in this order:
 | [`DEVELOPMENT.md`](DEVELOPMENT.md)   | every harness, and what each one cost to get right       |
 
 Two sections earn a read before you touch anything they cover:
-[what every browser harness here has learned the hard way](DEVELOPMENT.md#what-every-browser-harness-here-has-learned-the-hard-way),
-before driving a browser at the app, and
+[the browser harness traps](DEVELOPMENT.md#browser-harness-traps), before
+driving a browser at the app, and
 [Measuring performance](DEVELOPMENT.md#measuring-performance), before believing
 a number that came off this box.
 

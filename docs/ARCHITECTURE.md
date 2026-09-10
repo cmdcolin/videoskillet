@@ -1,8 +1,8 @@
 # videoskillet.js architecture
 
-Orientation for someone (or something) about to change this codebase. It covers
-the shape of the system and the invariants that are easy to violate, not an
-inventory of every file.
+Orientation for a person or an agent about to change this codebase. It covers
+the shape of the system and the invariants that are easy to violate. It is not
+an inventory of every file.
 
 ## The premise
 
@@ -202,7 +202,7 @@ fault through `timing[]` will spin hue that should have stayed put.
   because its lateral scatter reads neighbouring pixels and a single buffer
   would hand it values the same dispatch is part way through overwriting.
 
-## Params are generated, not hand-written
+## Params are generated
 
 `PARAM_DEFS` in `src/core/gpu/prelude.ts` is the single source of truth for the
 uniform struct: **field order there is the GPU memory layout**. It generates
@@ -250,8 +250,8 @@ Three other surfaces hide a row under that same contract.
 The **fine tier** is the first. A `fine: true` on a `SliderDef` in
 `src/ui/controls.ts` marks a trim — a control that shapes an effect some other
 control turns on — and `ControlGroup` folds those rows behind a
-`▸ N fine tweaks` disclosure so a group's look-makers stay scannable. Hidden,
-not removed: the row is one click away, a live filter collapses the tier
+`▸ N fine tweaks` disclosure so a group's look-makers stay scannable. The row
+stays where it was: it is one click away, a live filter collapses the tier
 entirely so search and the ⌘K palette reach fine rows directly, the group's
 touched dot and the phase roll-ups still walk every slider, and the fold shows
 `· N touched` in the same amber when a preset has moved something behind it. The
@@ -356,7 +356,7 @@ Three things share one frame and run in a fixed order: `glide` (morph) walks the
 resting values, then `applyMod` drives routings and restores, then `applyStab`
 replaces the board and restores. Each subsection below says why that order.
 
-### A lost device is rebuilt in place, not reloaded
+### A lost device is rebuilt in place
 
 Sleep/wake and driver resets fire `device.lost`, and a session should survive
 them. `onDeviceLost` builds a replacement engine and hands it back the controls,
@@ -414,7 +414,7 @@ consequences worth knowing:
   inferred from build output. The consumer's own status is irrelevant: a
   compiled consumer still re-fires on a changed identity.
 
-### Two panel contexts, deliberately
+### Two panel contexts
 
 `ControlsContext` carries the controls and the verbs a row needs;
 `ModSlotsContext` carries the modulation bay. They are separate because they
@@ -439,7 +439,7 @@ sliders all keep showing the resting look. Two consequences before touching it:
   as a deliberate patch, which is why the UI allows it; not fine hanging off an
   authored preset, which is why `presets.test.ts` forbids it there.
 
-### Morphing is the opposite of modulating
+### Morphing walks the resting values
 
 `signal/glide.ts` walks the _resting_ values to a destination over a span of
 seconds — a preset, a roll or a scene arriving slowly instead of cutting. Unlike
