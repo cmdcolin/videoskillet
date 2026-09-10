@@ -219,6 +219,35 @@ export class Sources {
     }
   }
 
+  // The same picture as `setImageSource`, handed over as raw RGBA instead of as
+  // something a browser can draw.
+  //
+  // Every other way into this texture goes through
+  // `copyExternalImageToTexture`, which wants a `Drawable` — an ImageBitmap, a
+  // canvas, a video element. A runtime with no display has none of those and
+  // does not implement that call either, so the offline renderer under
+  // `scripts/render/` would have no way to put a frame on the deck at all. This
+  // is the same upload one step lower down, and it needs nothing new: the slot
+  // texture already carries `COPY_DST`.
+  //
+  // **The caller sizes the picture.** The `Drawable` paths scale an oversized
+  // source through a staging canvas, and there is no canvas here to scale with,
+  // so `w` and `h` are taken as given and rows must be tightly packed at
+  // `w * 4`. Keep them inside `fitSrc`'s cap.
+  //
+  // No `samplePixel` either — that reads a 1x1 draw of a Drawable for the
+  // `?debug` readout, and it has nothing to read here.
+  setImagePixels(rgba: Uint8Array, w: number, h: number, aspect = 4 / 3): void {
+    this.noiseA = 0
+    this.ensureTexA(w, h, aspect)
+    this.host.device.queue.writeTexture(
+      { texture: this.texA },
+      rgba,
+      { bytesPerRow: w * 4, rowsPerImage: h },
+      [w, h],
+    )
+  }
+
   // Switch slot A to a GPU-generated source (1 TV static, 2 VHS static, 3 the
   // video synth); 0 restores the texture path. Any real image/video source
   // clears this.

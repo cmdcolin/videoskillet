@@ -101,6 +101,16 @@ constant-framerate H.264 MP4 that Resolve and Premiere conform straight off the
 header. **●** records a live performance first, and ⎙ replays it into the
 render.
 
+Running locally there is also `pnpm render`, which does it without a browser:
+
+```
+pnpm render in.mp4 out.mov --look='#p=mD.FbQB…'
+```
+
+A look off the address bar, a file in, ProRes 4444 out — so the colour artifacts
+survive, which they do not through the 4:2:0 a browser will encode. It renders
+at about real time and batches over a folder.
+
 ### Can I patch it into Max/MSP, Jitter or TouchDesigner?
 
 Most of it works now with no code: MIDI CC and clock over a virtual port, a

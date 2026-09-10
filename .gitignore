@@ -30,3 +30,7 @@ public/reel/*.mp4
 # for the same reason: a moving picture re-recorded whenever its look changes is
 # a file a git history keeps every version of forever
 public/demos/*.mp4
+
+# The offline renderer bundles the engine to run it without a bundler; the
+# bundle is a build product of src/ and is rebuilt by `pnpm render`.
+scripts/render/build/

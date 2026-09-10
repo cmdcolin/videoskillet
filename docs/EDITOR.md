@@ -742,6 +742,68 @@ Whatever shell it runs in, an offline render must **adopt the live device, not
 create or destroy one**
 ([adr/0004](adr/0004-never-destroy-a-presenting-device.md)).
 
+## The offline renderer, outside the browser
+
+`scripts/render/` runs the signal path over a file with no browser in the room:
+
+```
+pnpm render in.mp4 out.mov --look='#p=mD.FbQB…'
+pnpm render in.mp4 out.mov --preset=wornTape --codec=prores
+pnpm render --pattern=bars out.mov --seconds=5 --set=noiseIre:9
+```
+
+**It exists because the browser's encoder is what caps picture quality**, and
+that turned out to be a harder ceiling than the bitrate ADR 0008 was arguing
+about. `scripts/enccheck.mjs` arm 4 measures the app's own input path — a canvas
+handed to an encoder, one-pixel alternating chroma, which is what dot crawl is:
+
+| codec through the app's path | RGB PSNR |
+| ---------------------------- | -------- |
+| H.264 High 4:2:0             | 9.03 dB  |
+| VP9 profile 1 4:4:4          | 27.66 dB |
+| AV1 4:4:4                    | 42.63 dB |
+
+Measured on Chrome/Linux. On Firefox, which this project develops against, every
+one of those arms scores ~10 dB: it declines AV1 4:4:4 and subsamples VP9
+profile 1 on the way in whatever profile it was asked for. So the 4:4:4 route
+does not exist in the browser this app is built in, and no amount of muxer work
+creates one. Here the encoder is ffmpeg, and ProRes 4444 is a default rather
+than a negotiation.
+
+Three things about how it is built.
+
+**It runs the app's own `Engine`, not a copy of the pass graph.** A renderer
+whose output disagrees with the tab is worse than no renderer, so
+`vite.render.config.ts` bundles `core/gpu/pipeline.ts` itself — the one thing
+between Deno and that file being that the pass graph reaches its shaders through
+Vite's `?raw`, which only a Vite build resolves. `scripts/gpuprof/graph.ts` is
+the second copy, and can live with mirroring because it times passes rather than
+producing files anybody keeps.
+
+**Deno's WebGPU needed two seams in core and no more.** `OffscreenCanvas` there
+supports a real WebGPU context, so `RenderTarget` was already satisfied and
+`initGpu` needed nothing. What was missing was a way in and a way out:
+`copyExternalImageToTexture` does not exist in Deno, so every source path was
+closed (`Sources.setImagePixels` is the same upload one step lower down, on the
+`COPY_DST` the slot texture already carried); and a canvas texture comes back
+`RENDER_ATTACHMENT` only and cannot be copied out of, so there was no way to see
+what had been drawn (`Engine.readFrame`, off `faceTex`, which now carries
+`COPY_SRC`). `scripts/render/runtime.ts` supplies the three browser globals the
+engine expects — and a `requestAnimationFrame` that never fires is the _correct_
+stub, not a placeholder, because an offline render owns the clock.
+
+**Walking the file from the top is not a compromise.** Frame N is a function of
+every frame before it, so there is no seeking — the same argument that rules out
+an NLE plugin above makes a CLI the natural shape rather than a lesser one.
+
+Measured on this machine: ~49 fps at 754x480, so a render runs slightly faster
+than real time and a minute of footage takes about seventy seconds.
+
+What it does not do yet: no audio (ffmpeg is right there, so this is a flag
+rather than a design), no rundown — `--look` is one board for the whole render
+where the strip is a sequence of them — and no modulation, since `#mod=` is not
+parsed.
+
 ## What is left
 
 - **The filmstrip, and trimming.** Cards that show their clip and are as wide as

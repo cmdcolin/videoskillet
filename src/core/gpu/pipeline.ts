@@ -552,7 +552,18 @@ export class Engine implements EngineApi {
     // view so the sampler decodes it: the gathers then pay no pow per tap and
     // the byte keeps fine steps in the dark, where gamma puts the light.
     this.outTex = stateTex(['rgba8unorm-srgb'])
-    this.faceTex = stateTex()
+    // `COPY_SRC` on this one alone, because this is the finished tube face —
+    // what `present` samples, and so the only texture here that is the picture
+    // rather than a stage on the way to it. It is what `readFrame` copies out,
+    // and a usage flag costs nothing to carry.
+    this.faceTex = d.createTexture(
+      texDesc(
+        GPUTextureUsage.TEXTURE_BINDING |
+          GPUTextureUsage.STORAGE_BINDING |
+          GPUTextureUsage.RENDER_ATTACHMENT |
+          GPUTextureUsage.COPY_SRC,
+      ),
+    )
     this.linearSamp = d.createSampler({
       magFilter: 'linear',
       minFilter: 'linear',
@@ -1313,6 +1324,21 @@ export class Engine implements EngineApi {
     this.sources.setImageSource(source, aspect)
   }
 
+  // `setImageSource` for a caller holding bytes rather than a drawable — see
+  // `Sources.setImagePixels`.
+  //
+  // **No servo kick, unlike `setImageSource`.** That one is a still being put on
+  // the deck, which happens once and is a scene change. This is the frame-at-a-
+  // time path an offline render feeds sixty times a second, and kicking the
+  // tracking servo on every one of them would hold it permanently off its peak
+  // — a fault nobody dialled, on every frame of the file. It is the analogue of
+  // `pushA`, which does not kick either; a caller genuinely changing clip can
+  // call `kick()`.
+  setImagePixels(rgba: Uint8Array, w: number, h: number, aspect = 4 / 3): void {
+    this.pump.setA(null)
+    this.sources.setImagePixels(rgba, w, h, aspect)
+  }
+
   setVideoSource(el: HTMLVideoElement | null): void {
     if (el !== null) this.sources.setNoiseSource(0)
     this.servo.kick(0.6)
@@ -1703,6 +1729,50 @@ export class Engine implements EngineApi {
   // Frame counter, for the diagnostic recorder and the verification harness.
   frameNo(): number {
     return this.frame
+  }
+
+  // The finished picture, as tightly-packed RGBA at the raster's own size.
+  //
+  // In a browser the frame is already reachable — it is on the canvas, and
+  // `new VideoFrame(canvas)` is how `ui/record.ts` takes it. This exists for
+  // the runtime where that is not true: a canvas texture comes back
+  // `RENDER_ATTACHMENT` only and cannot be copied out of, and Deno's WebGPU has
+  // no `VideoFrame` to build either, so an offline render has no way to see
+  // what it just drew. It reads `faceTex` rather than the swapchain for the
+  // same reason `present` samples it — that is the tube face, and everything
+  // between it and the window is scaling.
+  //
+  // **Call it after `step()`, not after `render()` on a running loop.** It
+  // reads whatever is in the texture now, which on a live loop is a race with
+  // the next frame.
+  //
+  // Rows arrive from the GPU padded to a 256-byte multiple and are copied down
+  // to `width * 4` on the way out, so the caller gets the picture rather than
+  // the alignment.
+  async readFrame(): Promise<Uint8Array> {
+    const w = ACTIVE_WIDTH
+    const h = ACTIVE_HEIGHT
+    const stride = Math.ceil((w * 4) / 256) * 256
+    const staging = this.gpu.device.createBuffer({
+      size: stride * h,
+      usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
+    })
+    const enc = this.gpu.device.createCommandEncoder()
+    enc.copyTextureToBuffer(
+      { texture: this.faceTex },
+      { buffer: staging, bytesPerRow: stride, rowsPerImage: h },
+      [w, h],
+    )
+    this.gpu.device.queue.submit([enc.finish()])
+    await staging.mapAsync(GPUMapMode.READ)
+    const padded = new Uint8Array(staging.getMappedRange())
+    const out = new Uint8Array(w * h * 4)
+    for (let y = 0; y < h; y++) {
+      out.set(padded.subarray(y * stride, y * stride + w * 4), y * w * 4)
+    }
+    staging.unmap()
+    staging.destroy()
+    return out
   }
 
   // Everything a take needs held still (docs/EDITOR.md › _Take state_): time
