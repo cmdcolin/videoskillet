@@ -13,8 +13,13 @@ pnpm render out.mov --look='<a link that names its own source>'
 The renderer runs the app's own engine. The pass graph, the control table and
 the link parser are the same code the tab runs, bundled so a JavaScript runtime
 with no bundler in it can load them. A look therefore renders here the way it
-renders on screen. The command runs from a checkout of the repository, which
-[Installing](#installing) sets up in four lines.
+renders on screen.
+
+Every release carries the renderer as a single executable, so a render needs no
+checkout and no toolchain. `pnpm render` is the same program run from a clone.
+Both take the same arguments, and this page writes its examples as
+`pnpm render`; put `./videoskillet` in that place to run the binary. See
+[Installing](#installing).
 
 The app's **⎙ render** button in the strip tray also writes a file, and it is
 the one to use while performing. This page covers the offline case: putting a
@@ -170,8 +175,35 @@ to `renders/`, which is gitignored.
 
 ## Installing
 
-`pnpm render` runs from a checkout of the repository. The renderer is a local
-tool, and the hosted app has no equivalent.
+The renderer is a local tool, and the hosted app has no equivalent. Either take
+the binary or run it from a clone.
+
+### The binary
+
+The [releases page](https://github.com/cmdcolin/videoskillet/releases) carries
+one executable per platform, each holding the renderer, the engine and a Deno
+runtime:
+
+```
+tar xzf videoskillet-x86_64-unknown-linux-gnu.tar.gz
+mv videoskillet-x86_64-unknown-linux-gnu videoskillet
+./videoskillet in.mp4 out.mov --preset=vhs
+```
+
+Linux and macOS are built for x86_64 and aarch64 and ship as `.tar.gz`; Windows
+is x86_64 and ships as a `.zip` holding a `.exe`. `SHA256SUMS` beside them
+covers every archive. A download is around 30 MB and unpacks to about 100 MB,
+most of it the runtime.
+
+Two programs still have to be on PATH. ffmpeg handles both ends of the pipe,
+decoding the input and encoding the output, and ffprobe reads the input's
+length. The binary shells out to them.
+
+Rendering also needs a working GPU. The renderer drives Deno's own WebGPU, so
+the shaders execute on the same hardware the tab would use, and a machine whose
+driver Deno cannot reach cannot run a render at all.
+
+### From a clone
 
 ```
 git clone https://github.com/cmdcolin/videoskillet
@@ -180,36 +212,21 @@ pnpm install
 pnpm render in.mp4 out.mov --preset=vhs
 ```
 
-Four programs have to be on PATH. Node and pnpm build the engine bundle.
-[Deno](https://deno.com/) runs it: the renderer drives Deno's own WebGPU, so the
-shaders execute on the same hardware the tab would use, and a machine without a
-working GPU driver cannot run a render at all. ffmpeg handles both ends of the
-pipe, decoding the input and encoding the output.
+This adds Node, pnpm and [Deno](https://deno.com/) to the two programs above:
+Node and pnpm build the engine bundle, and Deno runs it. `pnpm render` builds
+the bundle before every run, so there is no separate step, and the first run
+takes a few seconds longer than the ones after it.
 
-`pnpm render` builds the bundle before every run, so there is no separate step.
-The first run takes a few seconds longer than the ones after it.
+A clone is what you want for rendering against an edit you are making, since a
+binary carries the engine it was built with.
 
-### A single executable
+### Building a binary
 
-The renderer also ships as a self-contained binary that carries the engine
-bundle, the renderer and a Deno runtime. It takes the same arguments and needs
-no checkout. Every release has one per platform on the
-[releases page](https://github.com/cmdcolin/videoskillet/releases):
-
-```
-tar xzf videoskillet-x86_64-unknown-linux-gnu.tar.gz
-./videoskillet-x86_64-unknown-linux-gnu --pattern=bars out.mov --seconds=5
-```
-
-ffmpeg stays an outside dependency — the binary shells out to it, and to
-ffprobe, the same way `pnpm render` does. A GPU driver Deno's WebGPU can reach
-is still required.
-
-To build one from a checkout, `pnpm render:compile` writes `bin/videoskillet`
-for the machine it runs on. `deno compile` cross-compiles, so
+`pnpm render:compile` writes `bin/videoskillet` for the machine it runs on.
+`deno compile` cross-compiles, so
 `node scripts/render/compile.mjs --all --out=dist-bin` builds every platform
-from any one of them, which is what `.github/workflows/release.yml` does on a
-version tag. The binary is around 100 MB, most of it the runtime.
+from any one of them. That is what `.github/workflows/release.yml` runs on a
+version tag, which is where the release archives come from.
 
 ## Limitations
 
