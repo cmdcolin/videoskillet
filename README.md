@@ -133,6 +133,8 @@ OBS browser source. OSC is the piece that is missing.
 - [User guide](docs/USER-GUIDE.md)
 - [Features](docs/FEATURES.md)
 - [Effects](docs/EFFECTS.md) — every control, generated
+- [Rendering](docs/RENDERING.md) — `pnpm render`, the offline renderer: a link
+  and a file in, ProRes 4444 out
 - [Drive it by URL](public/llms.txt) — the query string is a complete remote
   control, and [every control's key](public/llms-full.txt) is the half the rest
   of the docs leave out. Published at

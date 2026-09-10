@@ -393,6 +393,12 @@ that into the render, so a run performed at whatever rate the tab managed comes
 back at 60. It works over a bare clip with no rundown. The **⏺** readout beside
 it is the take's length; clicking it discards the take.
 
+Running the project locally there is a third way, and it is the one to use when
+the colour matters. `pnpm render` takes a link and a file and writes ProRes
+4444, so dot crawl and rainbow fringing survive — a browser encodes 4:2:0 and
+loses most of them. It also renders in batches, over a folder, without a tab
+open. [Rendering](RENDERING.md) covers it.
+
 The ☰ menu has stills, recording, fullscreen, and **pop out controls**, which
 moves the panel to a second window and gives the picture the whole screen. Point
 OBS at the picture window to capture it.

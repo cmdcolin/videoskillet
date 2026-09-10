@@ -8,6 +8,7 @@ const GUIDE = [
   { file: 'docs/FEATURES.md', slug: 'features', nav: 'Features' },
   { file: 'docs/EFFECTS.md', slug: 'effects', nav: 'Effects' },
   { file: 'docs/MIDI.md', slug: 'midi', nav: 'MIDI' },
+  { file: 'docs/RENDERING.md', slug: 'rendering', nav: 'Rendering' },
   { file: 'docs/COMPARISON.md', slug: 'comparison', nav: 'Comparison' },
   { file: 'docs/FAQ.md', slug: 'faq', nav: 'FAQ' },
 ]
@@ -24,7 +25,6 @@ const NOTES = [
   { file: 'docs/DEVELOPMENT.md', slug: 'development', nav: 'Development' },
   { file: 'docs/AI-USAGE.md', slug: 'ai', nav: 'AI' },
   { file: 'docs/EDITOR.md', slug: 'editor', nav: 'Editor' },
-  { file: 'docs/RENDERING.md', slug: 'rendering', nav: 'Rendering' },
   { file: 'docs/IDEAS.md', slug: 'ideas', nav: 'Ideas' },
   { file: 'docs/CURATION.md', slug: 'curation', nav: 'Curation' },
   { file: 'docs/adr/README.md', slug: 'decisions', nav: 'Decisions' },

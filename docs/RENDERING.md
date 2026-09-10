@@ -30,19 +30,19 @@ one-pixel alternating chroma, which is what dot crawl is:
 | VP9 profile 1 4:4:4 | 27.66 dB               |
 | AV1 4:4:4           | 42.63 dB               |
 
-Measured on Chrome. Firefox scores about 10 dB on every one of those arms: it
-declines AV1 4:4:4 and subsamples VP9 profile 1 on the way in whatever profile
-it is asked for. So the colour artifacts this whole app exists to produce are
-thrown away on the way out, and no muxer work fixes it in the browser this
-project develops against.
+Those numbers are Chrome's. Firefox scores about 10 dB on every one of those
+arms: it declines AV1 4:4:4, and it subsamples VP9 profile 1 on the way in
+whatever profile it is asked for. So a browser recording throws away the colour
+artifacts this app exists to produce, and the browser this project develops
+against has no route that keeps them.
 
-Here the encoder is ffmpeg. ProRes 4444 keeps every chroma sample, and the codec
-roster stops being a negotiation.
+`pnpm render` hands the frames to ffmpeg, which encodes ProRes 4444 and keeps
+every chroma sample.
 
-Walking the file from the top is not a compromise either. Frame N is a function
-of every frame before it, because the feedback loops make it one, so there is no
-seeking — which is the same argument that rules out an NLE plugin, arriving at a
-command line instead.
+A command line also suits the simulation. Frame N is a function of every frame
+before it, because the feedback loops make it one, so a render walks the file
+from the top and never seeks. That is the same property that rules out an NLE
+plugin, and it is one a batch tool has for free.
 
 ## Three renders
 
@@ -50,8 +50,8 @@ Every figure below is one frame of an actual render, made by the command printed
 under it. `pnpm render:docs` regenerates them.
 
 Half of what these looks do only reads in motion, and a still cannot show a
-Lorenz attractor wandering. `pnpm render:docs --keep` writes watchable copies to
-`renders/` alongside the stills.
+Lorenz attractor wandering. `pnpm render:docs:keep` writes watchable copies
+beside the stills — see [Where the file goes](#where-the-file-goes).
 
 ### A link, whole
 
@@ -102,34 +102,35 @@ VHS deck, the bottom two survive at full contrast, the middle two fade, and the
 top two are washed to flat grey — which is the deck's luma bandwidth, read
 straight off the picture.
 
-That makes the renderer an instrument as well as an export: a pattern, a look
-and a file is a measurement you can keep and compare against the next one.
+A pattern, a look and a file is a measurement, which makes the renderer an
+instrument as well as an export. Keep the file and the next one is comparable.
 
 ## Options
 
-| Flag               | Does                                                  |
-| ------------------ | ----------------------------------------------------- |
-| `--look=<url>`     | a whole address bar off the app                       |
-| `--preset=<name>`  | a built-in preset by name                             |
-| `--set=<k:v,…>`    | controls by name, over the above                      |
-| `--seconds=<n>`    | how much to render; default is the input's own length |
-| `--fps=<n>`        | output rate, default 60 — the simulation's own        |
-| `--seed=<n>`       | the dice; the same seed gives the same file           |
-| `--motion=<0..1>`  | the modulation bay's master amount                    |
-| `--bpm=<n>`        | tempo, for routings locked to a clock                 |
-| `--pattern=<name>` | `bars`, `sweep` or `none`, over what the link says    |
-| `--codec=<name>`   | `prores`, `dnxhr`, `ffv1`, `h264` or `preview`        |
-| `--audio=<mode>`   | `auto`, `buzz`, `source` or `none`                    |
+| Flag               | Does                                               |
+| ------------------ | -------------------------------------------------- |
+| `--look=<url>`     | a whole address bar off the app                    |
+| `--preset=<name>`  | a built-in preset by name                          |
+| `--set=<k:v,…>`    | controls by name, over the above                   |
+| `--seconds=<n>`    | how much to render; default is the input's length  |
+| `--fps=<n>`        | output rate, default 60 — the simulation's own     |
+| `--seed=<n>`       | the dice; the same seed gives the same file        |
+| `--motion=<0..1>`  | the modulation bay's master amount                 |
+| `--bpm=<n>`        | tempo, for routings locked to a clock              |
+| `--pattern=<name>` | `bars`, `sweep` or `none`, over what the link says |
+| `--codec=<name>`   | `prores`, `dnxhr`, `ffv1`, `h264` or `preview`     |
+| `--audio=<mode>`   | `auto`, `buzz`, `source` or `none`                 |
 
 `--look` takes the link whole and reads it with the app's own parser, so the
 board, the modulation bay, the source mode, the caption and the seed all arrive
 together. Every control name is in [Effects](EFFECTS.md).
 
-Two of the codecs are for leaving the edit suite. `h264` writes High 4:4:4
-Predictive, which x264 encodes and no browser will, so a file small enough to
-send someone still keeps its chroma — at the cost of players that decline it.
-`preview` writes ordinary 4:2:0 High with the index at the front, which opens
-anywhere and is what to use for something whose job is to play.
+`prores` is the default and the one to cut with. Two of the others are for a
+file that has to travel. `h264` writes High 4:4:4 Predictive, which x264 encodes
+and no browser will, so it stays small and still keeps its chroma — some players
+decline the profile. `preview` writes ordinary 4:2:0 High with the index at the
+front, which opens anywhere, and is the one to reach for when the file's job is
+to play.
 
 ## Audio is part of the picture
 
@@ -149,11 +150,27 @@ Two renders of one take are the same file, sound included. The dice come from
 frame being rendered rather than whenever the browser's audio clock delivered
 it.
 
+## Where the file goes
+
+The last argument is the output path, and its extension picks the container: a
+`.mov` for ProRes, an `.mp4` for the H.264 arms. Nothing is written anywhere
+else, and nothing is cleaned up behind you.
+
+Length comes from the input. A clip renders for as long as it runs, `--seconds`
+overrides that, and a source with no length of its own — a still, a pattern, a
+link naming the synth — renders ten seconds unless told otherwise.
+
+The figures on this page are the exception worth knowing about.
+`pnpm render:docs` renders each one, keeps the still and throws the clip away,
+because a megabyte-scale binary re-rendered whenever a look changes is what the
+repo's clips rule exists to keep out of the history. `pnpm render:docs:keep`
+writes watchable copies to `renders/` as well, which is gitignored.
+
 ## What it needs
 
-Deno for the runtime, ffmpeg for both ends, and a checkout — this is a local
-tool rather than something the hosted app can do. `pnpm render` builds the
-engine bundle first, so there is no separate step.
+Deno for the runtime, ffmpeg for both ends, and a checkout. This is a local
+tool; the hosted app cannot do it. `pnpm render` builds the engine bundle first,
+so there is no separate step.
 
 ## What it does not do
 
