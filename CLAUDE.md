@@ -116,6 +116,10 @@ an ADR naming the option it turned down, or a fault that resembles another one.
 A physical mechanism often needs one — "it multiplies rather than adds" is the
 fact, not a flourish.
 
+[`docs/WRITING.md`](docs/WRITING.md) is the checklist under this: the specific
+habits that produced the prose this repo has rewritten, each with a before and
+after, and what a prose pass must leave alone.
+
 ## Commits
 
 Use Conventional Commits (`type(scope): description`) — `cliff.toml` groups the

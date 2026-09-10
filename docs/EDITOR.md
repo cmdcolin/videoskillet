@@ -455,7 +455,7 @@ the phosphor is still holding the band and the PLL is still walking its lock
 back. A transition ends as a receiver recovering rather than as an effect
 switching off.
 
-### A chip that steps must not move the card
+### A card must not move because its own text changed
 
 A row card is shrink-to-fit, so **every label in it is load-bearing on layout**,
 and the tray is one horizontal row of them — a card that grows slides every card

@@ -331,7 +331,7 @@ Read `csd` and not `sat` for this now — `looplock.ts` prints it beside `sd`, a
 it is the number that separates a loop drawing in hue from a loop drawing in
 grey without needing a monochrome source to do it.
 
-### Wildness is large coherent structure
+### Chaotic is not the same as wild
 
 The correction that cost the most to learn. Three rounds came back "very
 subtle", so the next round stacked everything: both ring modulators, both loops
@@ -498,7 +498,7 @@ anything measured that afternoon. The list of presets allowed to run a bare
 cable is now explicit in `presets.test.ts`, split into the ones that tear on
 purpose and the ones measured to hold without it.
 
-### The camera loop is a whole generation
+### The camera loop is a whole generation, and a tape fault does not belong in the mixer loop
 
 Two results from one round of screening, and they are the same result read from
 both ends. The round started from a coverage count rather than a hunch: sixty of
