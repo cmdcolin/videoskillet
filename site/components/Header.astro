@@ -16,22 +16,22 @@ const { label, links } = Astro.props
 
 <header>
   <div class="bar">
-    <a class="brand" href="/"
-      >videoskillet.js{label === undefined ? null : <span>{label}</span>}</a
-    >
+    <a class="brand" href="/">
+      videoskillet.js{label === undefined ? null : <span>{label}</span>}
+    </a>
     <nav class="pages" aria-label="Site pages">
-      {
-        links.map(link => (
-          <a
-            class={link.on === true ? 'on' : undefined}
-            aria-current={link.on === true ? 'page' : undefined}
-            href={link.href}
-          >
-            {link.nav}
-          </a>
-        ))
-      }
+      {links.map(link => (
+        <a
+          class={link.on === true ? 'on' : undefined}
+          aria-current={link.on === true ? 'page' : undefined}
+          href={link.href}
+        >
+          {link.nav}
+        </a>
+      ))}
     </nav>
-    <a class="cta" href="/app/">Open the app ↗</a>
+    <a class="cta" href="/app/">
+      Open the app ↗
+    </a>
   </div>
 </header>

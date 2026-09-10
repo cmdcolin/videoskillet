@@ -37,53 +37,51 @@ import { FRAME, NARROW, slides } from '../../scripts/reel.mjs'
 ---
 
 <div class="stage">
-  {
-    slides.map((slide, i) => (
-      <figure
-        class={i === 0 ? 'slide on' : 'slide'}
-        data-name={slide.name}
-        data-secs={slide.secs}
-        data-secs-narrow={slide.narrowSecs}
-      >
-        {i === 0 ? (
-          <picture>
-            <source
-              media={NARROW.at}
-              srcset={slide.narrowPoster}
-              width={NARROW.out.width}
-              height={NARROW.out.height}
-            />
-            <img
-              class="still"
-              src={slide.poster}
-              alt={slide.alt}
-              width={FRAME.out.width}
-              height={FRAME.out.height}
-              decoding="async"
-            />
-          </picture>
-        ) : (
+  {slides.map((slide, i) => (
+    <figure
+      class={i === 0 ? 'slide on' : 'slide'}
+      data-name={slide.name}
+      data-secs={slide.secs}
+      data-secs-narrow={slide.narrowSecs}
+    >
+      {i === 0 ? (
+        <picture>
+          <source
+            media={NARROW.at}
+            srcset={slide.narrowPoster}
+            width={NARROW.out.width}
+            height={NARROW.out.height}
+          />
           <img
             class="still"
-            data-src={slide.still}
-            data-src-narrow={slide.narrowStill}
+            src={slide.poster}
             alt={slide.alt}
             width={FRAME.out.width}
             height={FRAME.out.height}
             decoding="async"
           />
-        )}
-        <video
-          data-src={slide.clip}
-          data-src-narrow={slide.narrowClip}
-          muted
-          playsinline
-          preload="none"
-          aria-hidden="true"
+        </picture>
+      ) : (
+        <img
+          class="still"
+          data-src={slide.still}
+          data-src-narrow={slide.narrowStill}
+          alt={slide.alt}
+          width={FRAME.out.width}
+          height={FRAME.out.height}
+          decoding="async"
         />
-      </figure>
-    ))
-  }
+      )}
+      <video
+        data-src={slide.clip}
+        data-src-narrow={slide.narrowClip}
+        muted
+        playsinline
+        preload="none"
+        aria-hidden="true"
+      />
+    </figure>
+  ))}
 </div>
 <div class="slideBar">
   <div class="slideTabs" role="group" aria-label="what the stage shows"></div>

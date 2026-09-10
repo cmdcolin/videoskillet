@@ -10,36 +10,34 @@ import { gallery } from '../../scripts/demos.mjs'
 ---
 
 <ul class="grid">
-  {
-    gallery.map(demo => (
-      <li>
-        <a class="demo" href={demo.href}>
-          <span class="shot">
-            <img
-              class="still"
-              src={demo.poster}
-              alt=""
-              width="640"
-              height="512"
-              loading="lazy"
-              decoding="async"
-            />
-            <video
-              data-src={demo.clip}
-              muted
-              loop
-              playsinline
-              preload="none"
-              aria-hidden="true"
-            />
-          </span>
-          <span class="name">
-            {demo.name}
-            <span class="open">open →</span>
-          </span>
-          <span class="says">{demo.says}</span>
-        </a>
-      </li>
-    ))
-  }
+  {gallery.map(demo => (
+    <li>
+      <a class="demo" href={demo.href}>
+        <span class="shot">
+          <img
+            class="still"
+            src={demo.poster}
+            alt=""
+            width="640"
+            height="512"
+            loading="lazy"
+            decoding="async"
+          />
+          <video
+            data-src={demo.clip}
+            muted
+            loop
+            playsinline
+            preload="none"
+            aria-hidden="true"
+          />
+        </span>
+        <span class="name">
+          {demo.name}
+          <span class="open">open →</span>
+        </span>
+        <span class="says">{demo.says}</span>
+      </a>
+    </li>
+  ))}
 </ul>

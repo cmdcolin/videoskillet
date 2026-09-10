@@ -744,8 +744,8 @@ create or destroy one**
 
 ## The offline renderer, outside the browser
 
-[`CLI.md`](CLI.md) is the page for someone who wants to use it. This
-section is how it is built and what it cost.
+[`CLI.md`](CLI.md) is the page for someone who wants to use it. This section is
+how it is built and what it cost.
 
 `scripts/render/` runs the signal path over a file with no browser in the room:
 

@@ -53,7 +53,9 @@ const marked = spec.group.mark(spec)
     <style is:inline set:html={tokens + css}></style>
   </head>
   <body id="top">
-    <a class="skip" href="#content">Skip to content</a>
+    <a class="skip" href="#content">
+      Skip to content
+    </a>
     <Header
       label={spec.group.label}
       links={spec.group.nav.map(page => ({
@@ -63,49 +65,43 @@ const marked = spec.group.mark(spec)
       }))}
     />
     <div class="wrap">
-      {
-        outline.length >= NAV_MIN && (
-          <details class="toc">
-            <summary>On this page</summary>
-            <nav aria-label="On this page">
-              {outline.map(head => (
-                <a class={`l${head.level}`} href={`#${head.id}`}>
-                  {head.text}
-                </a>
-              ))}
-            </nav>
-          </details>
-        )
-      }
+      {outline.length >= NAV_MIN && (
+        <details class="toc">
+          <summary>On this page</summary>
+          <nav aria-label="On this page">
+            {outline.map(head => (
+              <a class={`l${head.level}`} href={`#${head.id}`}>
+                {head.text}
+              </a>
+            ))}
+          </nav>
+        </details>
+      )}
       <main id="content">
         <slot />
         <nav class="pager" aria-label="Pages">
-          {
-            prev === undefined ? (
-              <span />
-            ) : (
-              <a class="prev" href={href(prev.slug)}>
-                <span>← Previous</span>
-                <b>{prev.nav}</b>
-              </a>
-            )
-          }
-          {
-            next === undefined ? (
-              <span />
-            ) : (
-              <a class="next" href={href(next.slug)}>
-                <span>Next →</span>
-                <b>{next.nav}</b>
-              </a>
-            )
-          }
+          {prev === undefined ? (
+            <span />
+          ) : (
+            <a class="prev" href={href(prev.slug)}>
+              <span>← Previous</span>
+              <b>{prev.nav}</b>
+            </a>
+          )}
+          {next === undefined ? (
+            <span />
+          ) : (
+            <a class="next" href={href(next.slug)}>
+              <span>Next →</span>
+              <b>{next.nav}</b>
+            </a>
+          )}
         </nav>
       </main>
     </div>
     <Footer />
-    <script is:inline set:html={spy} />
-    <script is:inline set:html={video} />
-    <script is:inline set:html={tabs} />
+    <script is:inline set:html={spy}></script>
+    <script is:inline set:html={video}></script>
+    <script is:inline set:html={tabs}></script>
   </body>
 </html>
