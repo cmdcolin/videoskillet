@@ -850,6 +850,13 @@ fallback to put back. Each route then has to stand alone, which is what the
 tabbing is for: a page that says "this adds Deno to the two programs above" has
 already lost the reader who took the other route.
 
+A marker that does not parse stops the build. A comment renders as nothing in
+both places, so a typo in one would otherwise leave the sections flat with
+nothing on the page to say that anything was meant to happen.
+[`../site/tests/guide-tabs.test.ts`](../site/tests/guide-tabs.test.ts) covers
+the transform, and `guide:check` opens every tab at both widths — a folded panel
+has never been laid out, and the click is also what proves the script works.
+
 Every address is site-absolute and ends in a slash: a page is a directory with
 an index in it, and `pages.mjs` is the one place that turns a slug into that
 address. The slugs stay flat — an ADR is `adr-0004-…`, not a page inside `adr/`
@@ -873,7 +880,7 @@ leaves the tests under `site/` unchecked.
 
 ```
 pnpm distcheck      # serve dist/ and load every page — 404s, console errors, broken images
-pnpm guide:check    # build, then load every page at 1352px and at 390px
+pnpm guide:check    # build, then load every page and tab at 1352px and at 390px
 ```
 
 `distcheck` exists because everything else about a build is checked by looking

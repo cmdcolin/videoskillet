@@ -104,6 +104,20 @@ const CLOSE = /^\s*\/tabs\s*$/
 const isOpen = node => node.type === 'comment' && OPEN.test(node.value)
 const isClose = node => node.type === 'comment' && CLOSE.test(node.value)
 
+// A marker with a typo in it is the failure that has nothing to show for
+// itself: a comment renders as nothing on GitHub and nothing here, so the
+// sections stay flat and the page looks like someone decided against tabs.
+// Anything that was reaching for a marker and missed stops the build instead.
+const NEAR = /^\s*\/?\s*tabs?\b/i
+
+const checkMarkers = tree => {
+  visit(tree, 'comment', node => {
+    if (NEAR.test(node.value) && !isOpen(node) && !isClose(node)) {
+      throw new Error(`not a tabs marker: <!--${node.value}-->`)
+    }
+  })
+}
+
 const tabButton = (route, i) => ({
   type: 'element',
   tagName: 'button',
@@ -203,6 +217,7 @@ const split = nodes => {
 }
 
 const groupTabs = tree => {
+  checkMarkers(tree)
   visit(tree, node => {
     if (node.children === undefined) return
     for (;;) {
