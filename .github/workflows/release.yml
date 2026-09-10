@@ -13,9 +13,10 @@ permissions:
   id-token: write
 
 jobs:
-  # The engine bundle is an input to every binary below, and building it needs
-  # node and the app's dependencies. Built once here so the compile job can be a
-  # matrix over targets with only Deno installed.
+  # Two builds are inputs to every binary below, and both need node and the
+  # app's dependencies: the engine bundle the renderer runs, and the app that
+  # `videoskillet serve` hosts out of the executable. Built once here so the
+  # compile job can be a matrix over targets with only Deno installed.
   bundle:
     runs-on: ubuntu-latest
     steps:
@@ -29,10 +30,15 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm render:build
+      - run: pnpm build
       - uses: actions/upload-artifact@v5
         with:
           name: engine-bundle
           path: scripts/render/build
+      - uses: actions/upload-artifact@v5
+        with:
+          name: app-build
+          path: dist
 
   binaries:
     needs: bundle
@@ -56,16 +62,18 @@ jobs:
         with:
           name: engine-bundle
           path: scripts/render/build
+      - uses: actions/download-artifact@v6
+        with:
+          name: app-build
+          path: dist
       # `deno compile` cross-compiles, so every platform is built on this one
-      # runner. The bundle is already here, so this skips the vite step the
-      # script would otherwise run.
+      # runner. Through the script rather than inline, so the list of app files
+      # baked into the executable is written once (scripts/render/compile.mjs);
+      # `--no-bundle` skips the vite step, since the bundle arrived above.
       - name: Compile
         run: |
-          deno compile -A --unstable-webgpu \
-            --config scripts/gpuprof/deno.json \
-            --target ${{ matrix.target }} \
-            --output dist-bin/videoskillet-${{ matrix.target }} \
-            scripts/render/main.ts
+          node scripts/render/compile.mjs --no-bundle \
+            --target=${{ matrix.target }} --out=dist-bin
       # A tarball for the platforms whose shells keep the executable bit, a zip
       # for the one that does not.
       - name: Package

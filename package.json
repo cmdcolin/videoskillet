@@ -38,6 +38,7 @@
     "gpuprof": "deno run -A --config scripts/gpuprof/deno.json scripts/gpuprof/main.ts",
     "render": "vite build --config vite.render.config.ts && deno run -A --config scripts/gpuprof/deno.json scripts/render/main.ts",
     "render:build": "vite build --config vite.render.config.ts",
+    "serve": "deno run -A --config scripts/gpuprof/deno.json scripts/render/main.ts serve",
     "render:compile": "node scripts/render/compile.mjs",
     "render:docs": "node scripts/renderdocs.mjs",
     "render:docs:keep": "node scripts/renderdocs.mjs --keep",

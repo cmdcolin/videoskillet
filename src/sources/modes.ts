@@ -1,3 +1,4 @@
+import { hasBridge } from './bridge'
 import { CLIP_IDS, CLIPS } from './clips'
 import { POOL_MODES } from './pools'
 
@@ -174,19 +175,20 @@ export function sourceOptions<T extends SourceMode | SourceBMode>(
   )
 }
 
-// The two pickers' option lists, built once. Here rather than beside the
-// component that draws them because they are a fact about the mode lists above
-// — including the one build-time subtraction: the YouTube option is backed by
-// the dev-only yt-dlp bridge, so a production build has no /yt endpoint to
-// offer it against.
-// The same two lists minus that subtraction: what a production build actually
-// offers. Named and exported because two things want it and neither is a
-// picker — the docs generator, which describes what ships rather than what a
-// dev server happens to have, and the test that holds the two in step.
+// The two lists minus the one source that needs a program on the machine: the
+// video-URL option is fetched by yt-dlp behind a `/yt` endpoint, and a page on
+// a CDN has nothing behind it to run. Named and exported because two things
+// want it and neither is a picker — the docs generator, which describes what a
+// visitor to the website gets, and the test that holds the two in step.
 export const SHIPPED_MODES = SOURCE_MODES.filter(m => m !== 'youtube')
 export const SHIPPED_B_MODES = SOURCE_B_MODES.filter(m => m !== 'youtube')
 
-const A_MODES = import.meta.env.DEV ? SOURCE_MODES : SHIPPED_MODES
-const B_MODES = import.meta.env.DEV ? SOURCE_B_MODES : SHIPPED_B_MODES
+// The two pickers' option lists, built once. Here rather than beside the
+// component that draws them because they are a fact about the mode lists above
+// — including the subtraction, which the server decides: `videoskillet serve`
+// and the dev server both mount the bridge and both say so in the document,
+// so the option appears under either and nowhere else (`bridge.ts`).
+const A_MODES = hasBridge('ytdlp') ? SOURCE_MODES : SHIPPED_MODES
+const B_MODES = hasBridge('ytdlp') ? SOURCE_B_MODES : SHIPPED_B_MODES
 export const A_OPTIONS = sourceOptions(A_MODES)
 export const B_OPTIONS = sourceOptions(B_MODES)

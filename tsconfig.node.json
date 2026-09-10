@@ -20,6 +20,8 @@
     "vite-plugin-site.ts",
     "vite-plugin-wgsl.ts",
     "vite-plugin-ytdlp.ts",
+    "scripts/serve/ytdlp.ts",
+    "scripts/serve/static.ts",
     "package.json"
   ]
 }

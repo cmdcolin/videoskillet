@@ -126,10 +126,15 @@ self.addEventListener('fetch', event => {
   // kindness to anyone's storage quota.
   const media =
     request.headers.has('range') || /\.(mp4|webm)$/.test(url.pathname)
+  // `videoskillet serve` mounts the yt-dlp bridge at /yt, and a fetch from it
+  // is a whole clip — tens of megabytes, named by a query string rather than a
+  // path, and already cached on the machine that downloaded it. Caching it here
+  // would keep a second copy in the browser's quota to save a local read.
+  const bridge = url.pathname === '/yt' || url.pathname.startsWith('/yt/')
   const share = url.pathname.endsWith('/app/share')
   if (request.method === 'POST' && sameOrigin && share) {
     event.respondWith(receiveShare(request))
-  } else if (request.method === 'GET' && sameOrigin && !media) {
+  } else if (request.method === 'GET' && sameOrigin && !media && !bridge) {
     if (request.mode === 'navigate') {
       event.respondWith(navigate(request))
     } else if (url.pathname.includes('/assets/')) {

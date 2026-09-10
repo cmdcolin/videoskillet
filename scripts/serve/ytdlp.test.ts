@@ -8,7 +8,7 @@ import {
   isFetchable,
   readFetchLine,
   seconds,
-} from './vite-plugin-ytdlp'
+} from './ytdlp'
 
 // The endpoint shells out to yt-dlp, and yt-dlp reaches far past YouTube, so
 // the guard is the scheme rather than a host list: a web address is fair game,
