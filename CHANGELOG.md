@@ -2,6 +2,13 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [0.44.1](https://github.com/cmdcolin/videoskillet/compare/v0.44.0...v0.44.1) - 2026-09-10
+
+### Documentation
+- *(docs)* [`5ce01dc`](https://github.com/cmdcolin/videoskillet/commit/5ce01dc0bc5536105867d0cf8cffc7723853342b) the renderer joins the feature lists, and stops claiming it batches
+- *(docs)* [`76988e6`](https://github.com/cmdcolin/videoskillet/commit/76988e6d9a1d127dffed4c5de9d15eedea4ce6a2) tidy the README's render answer
+- *(docs)* [`d7f3afb`](https://github.com/cmdcolin/videoskillet/commit/d7f3afbb718fc36a3e94931fd7bc19380e65148c) say how to get the renderer
+
 ## [0.44.0](https://github.com/cmdcolin/videoskillet/compare/v0.43.0...v0.44.0) - 2026-09-10
 
 ### Features
