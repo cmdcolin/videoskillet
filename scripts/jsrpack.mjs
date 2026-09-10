@@ -71,17 +71,22 @@ for (const file of walk(CORE).filter(f => f.endsWith('.ts'))) {
   }
 }
 
-const leftover = walk(CORE).filter(f =>
-  /\?(raw|url)'/.test(readFileSync(f, 'utf8')),
-)
-if (leftover.length > 0) {
+const refuse = (why, files) => {
+  if (files.length === 0) return
   console.error(
-    `unresolved Vite query imports in:\n${leftover
-      .map(f => `  ${relative(ROOT, f)}`)
-      .join('\n')}`,
+    `${why}:\n${files.map(f => `  ${relative(ROOT, f)}`).join('\n')}`,
   )
   process.exit(1)
 }
+
+const staged = walk(CORE)
+const has = re => staged.filter(f => re.test(readFileSync(f, 'utf8')))
+
+refuse('unresolved Vite query imports', has(/\?(raw|url)'/))
+// The registry refuses a package that augments the global type, and it is the
+// registry that checks: `deno publish --dry-run` passes on one of these and the
+// real publish fails after uploading. Caught here so a release does not.
+refuse('global augmentation, which JSR refuses', has(/^declare global\b/m))
 
 writeFileSync(
   join(OUT, 'deno.json'),

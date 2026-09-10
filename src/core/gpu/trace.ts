@@ -205,16 +205,18 @@ export function reportPreviousTrace(): void {
   }
 }
 
-declare global {
-  interface Window {
-    vfTrace?: () => void
-  }
+// A typed view of the one slot this module puts on `window`, in place of a
+// `declare global` block, because JSR rejects a package that augments the
+// global type. Same object, so the console still finds `vfTrace()`.
+interface TraceWindow {
+  vfTrace?: () => void
 }
 
 // Guarded so importing the loop under a bare node test environment doesn't need
 // a DOM.
 if (typeof window !== 'undefined') {
-  window.vfTrace = () => {
+  const w: Window & TraceWindow = window
+  w.vfTrace = () => {
     // Oldest first, this session last and labelled as still running. A freeze
     // that survives reloads is read across sessions, not within one — which
     // session was the last healthy one is the question, and it cannot be
