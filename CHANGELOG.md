@@ -2,6 +2,21 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [0.44.0](https://github.com/cmdcolin/videoskillet/compare/v0.43.0...v0.44.0) - 2026-09-10
+
+### Features
+- *(gpu)* [`5b09eaf`](https://github.com/cmdcolin/videoskillet/commit/5b09eaf238f08fea4da08686846bbb9b15fbc69e) render a look over a file with no browser in the room
+- *(audio)* [`e4292a8`](https://github.com/cmdcolin/videoskillet/commit/e4292a898144d0a6b9adb26bbf08adee97d801d5) the renderer was making the wrong picture, not a quiet one
+- *(gpu)* [`e1d67db`](https://github.com/cmdcolin/videoskillet/commit/e1d67db018b11ac2086c524ce3c5faf739a877e3) the renderer reads a link the way the app does
+- *(gpu)* [`5e82f69`](https://github.com/cmdcolin/videoskillet/commit/5e82f69046a76d363eed8362e9663a542ecff741) a preview codec, and keep the doc clips when asked
+
+### Fixes
+- *(ui)* [`1f6ffb5`](https://github.com/cmdcolin/videoskillet/commit/1f6ffb532e8f2fa2836e1e280f2fb277bd4d1a4d) enccheck was reporting settings this platform never applied
+
+### Documentation
+- *(docs)* [`0f86354`](https://github.com/cmdcolin/videoskillet/commit/0f86354afa20eba90c1a99f6274b351b60151ccd) a rendering page, with three renders that made themselves
+- *(docs)* [`8a97ce0`](https://github.com/cmdcolin/videoskillet/commit/8a97ce0d672218881795ca19ad1353bc517193db) make the rendering page findable, and tighten it
+
 ## [0.43.0](https://github.com/cmdcolin/videoskillet/compare/v0.42.0...v0.43.0) - 2026-09-09
 
 ### Features
