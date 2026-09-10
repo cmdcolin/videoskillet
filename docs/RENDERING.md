@@ -47,7 +47,11 @@ command line instead.
 ## Three renders
 
 Every figure below is one frame of an actual render, made by the command printed
-under it. `node scripts/renderdocs.mjs` regenerates them.
+under it. `pnpm render:docs` regenerates them.
+
+Half of what these looks do only reads in motion, and a still cannot show a
+Lorenz attractor wandering. `pnpm render:docs --keep` writes watchable copies to
+`renders/` alongside the stills.
 
 ### A link, whole
 
@@ -114,16 +118,18 @@ and a file is a measurement you can keep and compare against the next one.
 | `--motion=<0..1>`  | the modulation bay's master amount                    |
 | `--bpm=<n>`        | tempo, for routings locked to a clock                 |
 | `--pattern=<name>` | `bars`, `sweep` or `none`, over what the link says    |
-| `--codec=<name>`   | `prores`, `dnxhr`, `ffv1` or `h264`                   |
+| `--codec=<name>`   | `prores`, `dnxhr`, `ffv1`, `h264` or `preview`        |
 | `--audio=<mode>`   | `auto`, `buzz`, `source` or `none`                    |
 
 `--look` takes the link whole and reads it with the app's own parser, so the
 board, the modulation bay, the source mode, the caption and the seed all arrive
 together. Every control name is in [Effects](EFFECTS.md).
 
-`h264` is worth knowing about: it writes High 4:4:4 Predictive, which x264
-encodes and no browser will, so a file small enough to send someone still keeps
-its chroma.
+Two of the codecs are for leaving the edit suite. `h264` writes High 4:4:4
+Predictive, which x264 encodes and no browser will, so a file small enough to
+send someone still keeps its chroma — at the cost of players that decline it.
+`preview` writes ordinary 4:2:0 High with the index at the front, which opens
+anywhere and is what to use for something whose job is to play.
 
 ## Audio is part of the picture
 

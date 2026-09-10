@@ -2,6 +2,7 @@
 //
 //   node scripts/renderdocs.mjs [name...]
 //   node scripts/renderdocs.mjs --check     which figures are missing
+//   node scripts/renderdocs.mjs --keep      also leave the clips in renders/
 //
 // Every image under `docs/img/render-*.webp` is one frame of an actual render,
 // produced by running `scripts/render/main.ts` with the arguments printed
@@ -12,11 +13,17 @@
 // Distinct from `docshots.mjs`, which drives the app in a browser to photograph
 // its UI. Nothing here opens a browser at all.
 //
+// The clips themselves are thrown away — a still is what the page embeds, and a
+// megabyte-scale binary re-rendered whenever a look changes is what the clips
+// rule exists to keep out of the history. `--keep` writes them to `renders/`
+// (gitignored) as well, for watching: half of what these looks do only reads in
+// motion, and a page of stills cannot show a Lorenz attractor wandering.
+//
 // Needs Deno, ffmpeg, and the engine bundle (`pnpm render:build`, which the
 // `pnpm render` script runs anyway).
 
 import { execFileSync } from 'node:child_process'
-import { existsSync, mkdtempSync, rmSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import process from 'node:process'
@@ -61,6 +68,28 @@ const run = (cmd, args) =>
 
 const names = process.argv.slice(2).filter(a => !a.startsWith('--'))
 const check = process.argv.includes('--check')
+const keep = process.argv.includes('--keep')
+// `preview` for the kept copies rather than the ProRes the renderer defaults
+// to: a clip to watch wants to open anywhere and weigh megabytes, where a clip
+// to cut with wants every chroma sample. The 4:4:4 arm is not the one to reach
+// for here — plenty of players decline it.
+const KEEP_DIR = 'renders'
+// The same arguments `--codec=preview` uses in the renderer, since this is a
+// transcode of an already-rendered file rather than a render.
+const PREVIEW = [
+  '-c:v',
+  'libx264',
+  '-profile:v',
+  'high',
+  '-preset',
+  'medium',
+  '-crf',
+  '18',
+  '-pix_fmt',
+  'yuv420p',
+  '-movflags',
+  '+faststart',
+]
 const wanted = FIGURES.filter(f => names.length === 0 || names.includes(f.name))
 
 if (check) {
@@ -75,9 +104,16 @@ if (check) {
   process.exit(0)
 }
 
+if (keep) mkdirSync(KEEP_DIR, { recursive: true })
+
 const tmp = mkdtempSync(join(tmpdir(), 'renderdocs-'))
 try {
   for (const fig of wanted) {
+    // **The render is always ProRes and the still always comes off it.** The
+    // first cut of `--keep` rendered `preview` instead and took the figure from
+    // that, which quietly made every image on a page about chroma a 4:2:0
+    // one. The watchable copy is a transcode of this file rather than a second
+    // render — same frames, and it costs seconds instead of minutes.
     const mov = join(tmp, `${fig.name}.mov`)
     process.stdout.write(`  ${fig.name} … `)
     run('deno', [
@@ -108,7 +144,13 @@ try {
       '82',
       `${OUT}/${fig.name}.webp`,
     ])
-    console.log('done')
+    if (keep) {
+      const out = join(KEEP_DIR, `${fig.name}.mp4`)
+      run('ffmpeg', ['-v', 'error', '-y', '-i', mov, ...PREVIEW, out])
+      console.log(`done → ${out}`)
+    } else {
+      console.log('done')
+    }
   }
 } finally {
   rmSync(tmp, { recursive: true, force: true })

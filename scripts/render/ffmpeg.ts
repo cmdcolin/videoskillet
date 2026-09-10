@@ -27,8 +27,28 @@ export const CODECS: Record<string, string[]> = {
   ],
   // Lossless, when the render is an intermediate and size does not matter.
   ffv1: ['-c:v', 'ffv1', '-level', '3', '-pix_fmt', 'yuv444p'],
-  // For sending someone. Still 4:4:4 — `yuv444p` with H.264 High 4:4:4
-  // Predictive, which x264 encodes even though no browser will.
+  // For watching and for sending someone: 4:2:0 High, which every player and
+  // every phone opens, with the index at the front so it starts before it has
+  // finished downloading. The chroma detail is gone — that is what 4:2:0 costs,
+  // and it is the right trade for a file whose job is to play rather than to be
+  // cut with.
+  preview: [
+    '-c:v',
+    'libx264',
+    '-profile:v',
+    'high',
+    '-preset',
+    'medium',
+    '-crf',
+    '18',
+    '-pix_fmt',
+    'yuv420p',
+    '-movflags',
+    '+faststart',
+  ],
+  // Small enough to send and still 4:4:4 — `yuv444p` with H.264 High 4:4:4
+  // Predictive, which x264 encodes even though no browser will. Not every
+  // player decodes it; `preview` above is the one that always opens.
   h264: [
     '-c:v',
     'libx264',
