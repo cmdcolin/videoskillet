@@ -7,6 +7,12 @@ docs so the fix is a shape rather than a taste. The last three sections came
 from passing the same checklist over other repositories, and they are the ones
 it kept missing.
 
+The checklist covers the comments in the source too. A comment here carries the
+measurement behind a decision and the reason a later reader should not undo it,
+so it gets read the way a page of the guide gets read, and the same habits land
+in it. The entry on conclusions below came out of one change whose docs, CSS
+comments, script comments and tests all needed the same fix.
+
 They compound. One fragment reads as a choice; a page of them reads as
 generated, because the sentences stop connecting to each other and the reader
 has to supply the joins. That is the failure the pass below was fixing, and it
@@ -35,6 +41,30 @@ edit, because it reads as style.
 > A measurement that lives only in a transcript gets paid for again. → A
 > measurement that lives only in a transcript has to be made again.
 
+**A conclusion standing in for the mechanism.** A sentence that names the
+outcome — the build stops, the link breaks, the choice is hidden — where the
+sentence saying how it happens belongs. It carries a fact, so the edit that
+catches an aphorism leaves it alone, and it still hands the reader a verdict
+with no machine behind it. Write what the machine does and name the actor
+working it; the outcome usually arrives in the same sentence.
+
+> A marker that does not parse stops the build. → The build fails when a marker
+> is misspelled.
+>
+> A marker with a typo in it is the failure that has nothing to show for itself.
+> → A renderer draws an HTML comment as nothing at all, so a marker with a typo
+> in it leaves the subsections flat.
+>
+> A row that scrolls hides the choice it exists to offer. → A reader who has to
+> scroll the row sideways cannot see the whole choice it offers.
+>
+> The click is also what proves the tabs work at all. → Those clicks confirm
+> that the script still switches the panels.
+
+A sentence in this shape usually hands an artifact a purpose on the way past —
+"the choice it exists to offer", "the failure that has nothing to show for
+itself". That is the stance rule under _Voice_, arriving through this door.
+
 **Contrastive framing where the positive half says it.** "X, not Y", "rather
 than", "instead of", "it is not merely". Keep one only where the reader needs
 the distinction to choose correctly — an ADR naming the option it turned down, a
@@ -45,6 +75,10 @@ Everywhere else, state what is true and stop.
 > The same look with no audio produces a different picture.
 >
 > Staleness is stamped, not compared. → Staleness is stamped.
+>
+> An install page has routes through it rather than sections of it. → The
+> install section of the CLI page offers the reader two routes: take the release
+> binary, or take a clone.
 
 **A heading written as a phrase where a noun would do.** "Where the file goes"
 and "What you get out" are sentences doing a label's job. Name the subject:
