@@ -43,3 +43,6 @@ renders/
 # The JSR package is src/core restaged so it resolves without Vite
 # (scripts/jsrpack.mjs). A build product, like scripts/render/build.
 /jsr/
+
+# The compiled offline renderer (pnpm render:compile) — a build product.
+/bin/

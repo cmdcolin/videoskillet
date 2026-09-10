@@ -189,6 +189,24 @@ pipe, decoding the input and encoding the output.
 `pnpm render` builds the bundle before every run, so there is no separate step.
 The first run takes a few seconds longer than the ones after it.
 
+### A single executable
+
+`pnpm render:compile` writes `bin/videoskillet`, a self-contained binary that
+carries the engine bundle, the renderer and a Deno runtime. It takes the same
+arguments and needs no checkout:
+
+```
+pnpm render:compile
+./bin/videoskillet --pattern=bars out.mov --seconds=5 --preset=wornTape
+```
+
+ffmpeg stays an outside dependency — the binary shells out to it, and to
+ffprobe, the same way `pnpm render` does. A GPU driver Deno's WebGPU can reach
+is still required.
+
+Pass `--target` to `deno compile` to build for another platform. The binary is
+around 100 MB, most of it the runtime.
+
 ## Limitations
 
 - **One board per render.** `--look` sets a single board for the whole render,

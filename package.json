@@ -38,6 +38,7 @@
     "gpuprof": "deno run -A --config scripts/gpuprof/deno.json scripts/gpuprof/main.ts",
     "render": "vite build --config vite.render.config.ts && deno run -A --config scripts/gpuprof/deno.json scripts/render/main.ts",
     "render:build": "vite build --config vite.render.config.ts",
+    "render:compile": "vite build --config vite.render.config.ts && deno compile -A --unstable-webgpu --config scripts/gpuprof/deno.json --output bin/videoskillet scripts/render/main.ts",
     "render:docs": "node scripts/renderdocs.mjs",
     "render:docs:keep": "node scripts/renderdocs.mjs --keep",
     "render:docs:check": "node scripts/renderdocs.mjs --check",
