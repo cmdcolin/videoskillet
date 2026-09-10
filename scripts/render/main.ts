@@ -47,18 +47,24 @@ if (has('help') || positional.length === 0) {
   console.log(`videoskillet render — the signal path over a file, offline.
 
   render <in> <out> [options]
-  render --pattern=<name> <out> [options]
+  render <out> [options]          when the look names its own source
 
-  --look=<#p=… | ?p=… | set=…>  a look as a link carries it
+  --look=<url>                  a whole address bar off the app
   --preset=<name>               a built-in preset by name
   --set=<key:value,…>           controls by name, applied over the above
   --seconds=<n>                 how much to render (default: the whole input)
   --fps=<n>                     output rate (default 60, the simulation's own)
-  --seed=<n>                    the dice (default 1); same seed, same file
-  --pattern=<bars|static|none>  render a generated source instead of a file
+  --seed=<n>                    the dice; same seed, same file
+  --motion=<0..1>               the bay's master amount (default 1)
+  --bpm=<n>                     tempo, for routings locked to a clock
+  --pattern=<bars|sweep|none>   a generated source, over what the link says
   --codec=<${Object.keys(CODECS).join('|')}>
   --audio=<auto|buzz|source|none>
   --quiet                       no progress line
+
+--look takes the link whole and reads it with the app's own parser, so the
+board, the modulation bay, the source mode, the caption and the seed all arrive
+together. Every demo in the README renders as it stands.
 
 Audio is not decoration: bass drives vertical hold and HV sag, so a look built
 over a track renders differently in silence. --audio=auto feeds the input's own
@@ -76,49 +82,58 @@ const {
   DEFAULT_CONTROLS,
   dcState,
   detect,
+  EMPTY_SLOT,
   Engine,
   LINES,
+  parseSessionParams,
   PRESET_BY_NAME,
   presetControls,
-  unpackControls,
+  smpteBarsPixels,
+  sweepPixels,
+  toEngineSlots,
 } = await import('./build/engine.js')
 
-// The look, layered the way the app layers it: a preset or a packed link is the
-// board, and `--set=` names individual controls over the top. Same precedence
-// as a URL carrying both.
-function look(): Controls {
-  let c: Controls = { ...DEFAULT_CONTROLS }
+// Everything a link says, read by the app's own parser.
+//
+// `--look` takes a whole address bar, and giving it to `parseSessionParams`
+// rather than picking `p=` out with a regex is what makes the two agree: the
+// same layering (landing look, then preset, then `p=`, then `set=`), the same
+// checksum on the packed form, and — the part a regex was never going to reach
+// — the same `mod=`, `src=`, `seed=` and caption. A link whose motion lives in
+// the bay used to render at its resting frame, which is the same shape of bug
+// silence was.
+function session() {
+  const linked = flag('look') ?? ''
+  // Either sigil and either half, the way the app takes them: it writes the
+  // hash and reads both, so a link copied from anywhere works whole. A bare
+  // packed payload with no `p=` in front of it is spelled out into one.
+  const at = Math.min(
+    ...[linked.indexOf('?'), linked.indexOf('#')].filter(i => i !== -1),
+    linked.length,
+  )
+  const search =
+    linked === ''
+      ? ''
+      : at === linked.length
+        ? `?p=${linked}`
+        : `?${linked.slice(at + 1)}`
+
   const preset = flag('preset')
-  if (preset !== undefined) {
-    const p = PRESET_BY_NAME.get(preset)
-    if (p === undefined) {
-      console.error(`no preset named ${preset}`)
-      Deno.exit(2)
-    }
-    c = presetControls(p.patch)
+  if (preset !== undefined && !PRESET_BY_NAME.has(preset)) {
+    console.error(`no preset named ${preset}`)
+    Deno.exit(2)
   }
-  const linked = flag('look')
-  if (linked !== undefined) {
-    // Take it however it was copied: a whole URL, a bare `#p=…`, or the packed
-    // payload on its own. The app writes the hash and reads either sigil, so a
-    // renderer that only accepted one spelling would reject half the links
-    // anybody actually has.
-    const m = /[#?&]?p=([^&]+)/.exec(linked)
-    const packed = m === null ? linked : m[1]
-    const from = unpackControls(decodeURIComponent(packed))
-    if (from === null) {
-      console.error(
-        'that look did not decode — a packed link carries a checksum, so this is a truncated or edited one rather than a wrong guess',
-      )
-      Deno.exit(2)
-    }
-    c = { ...c, ...from }
-    const set = /[#?&]set=([^&]+)/.exec(linked)
-    if (set !== null) applySet(c, decodeURIComponent(set[1]))
-  }
+  const parsed = parseSessionParams(search)
+  // A `--preset` under a `--look`, so naming both layers the way a link
+  // carrying `?preset=` under its own `?set=` does.
+  const base =
+    preset === undefined
+      ? { ...DEFAULT_CONTROLS }
+      : presetControls(PRESET_BY_NAME.get(preset)!.patch)
+  const controls: Controls = { ...base, ...parsed.controls }
   const set = flag('set')
-  if (set !== undefined) applySet(c, set)
-  return c
+  if (set !== undefined) applySet(controls, set)
+  return { ...parsed, controls }
 }
 
 function applySet(c: Controls, text: string): void {
@@ -146,9 +161,12 @@ function fail(e: unknown): never {
   Deno.exit(1)
 }
 
-const controls = look()
+const link = session()
+const controls = link.controls
 const fps = Number(flag('fps') ?? 60)
-const seed = Number(flag('seed') ?? 1)
+// A link may name the dice itself (`?seed=`), and `--seed` overrides it. Same
+// precedence as everything else here: the flag is the later word.
+const seed = Number(flag('seed') ?? link.seed ?? 1)
 const quiet = has('quiet')
 const codec = flag('codec') ?? 'prores'
 if (!(codec in CODECS)) {
@@ -158,9 +176,13 @@ if (!(codec in CODECS)) {
   Deno.exit(2)
 }
 
+// One positional is an output and two are a file and an output. A link that
+// names its own source (`?src=vhs+static`, a pattern, the synth) needs no input
+// file, and neither does `--pattern`, so requiring a placeholder for one would
+// be a word with nothing to say.
 const patternName = flag('pattern')
-const input = patternName === undefined ? positional[0] : null
-const output = patternName === undefined ? positional[1] : positional[0]
+const input = positional.length > 1 ? positional[0] : null
+const output = positional.length > 1 ? positional[1] : positional[0]
 if (output === undefined) {
   console.error('no output file')
   Deno.exit(2)
@@ -202,6 +224,52 @@ engine.pauseLoop()
 engine.startTake({ fps, seed })
 engine.applyControls(controls)
 
+// **The bay, which is half of what a published link is.** Every demo in the
+// README carries a `?mod=`, and a routing that never reaches the engine renders
+// the look at its resting frame — a still of a patch that was supposed to
+// wander. `toEngineSlots` is the same conversion `useModSlots` runs each render,
+// so the master amount and the tempo lock behave as they do in the panel; the
+// tempo is whatever `--bpm` says, since a render has no tap and no MIDI clock.
+const bpm: number | null =
+  flag('bpm') === undefined ? null : Number(flag('bpm'))
+const routings = link.mod ?? []
+if (routings.length > 0) {
+  // Retyped at the boundary because the bundle is JavaScript: TypeScript infers
+  // `bpm` from its `= null` default and decides the parameter is `null`. The
+  // real signature is `modSlots.ts`'s, which takes the tempo or nothing.
+  const slotsFor = toEngineSlots as unknown as (
+    slots: readonly unknown[],
+    master: number,
+    bpm: number | null,
+  ) => never[]
+  engine.setModSlots(
+    slotsFor(
+      routings.map(r => ({ ...EMPTY_SLOT, ...r, on: true })),
+      Number(flag('motion') ?? 1),
+      bpm,
+    ),
+  )
+}
+
+// What the link put on the deck, for the sources that need nothing fetched.
+// The rest — a clip, a still, a pool pick — is what the positional input is
+// for, and a link naming one renders over whatever file was given instead.
+const NOISE: Record<string, number> = {
+  'tv static': 1,
+  'vhs static': 2,
+  synth: 3,
+}
+const linkPattern =
+  link.src === 'bars' ? 'bars' : link.src === 'sweep' ? 'sweep' : null
+if (link.src !== null && link.src in NOISE) {
+  engine.setNoiseSource(NOISE[link.src])
+}
+if (link.srcb !== null) {
+  if (link.srcb === 'none') engine.setSourceBEnabled(false)
+  else if (link.srcb in NOISE) engine.setNoiseSourceB(NOISE[link.srcb])
+}
+if (link.caption !== '') engine.setCaption(link.caption)
+
 // The buzz, if anyone is listening. `buzzDrive` gates the tap pass, the
 // readback and the push alike on this switch, so leaving it off is what makes
 // `--audio=source` cost nothing rather than compute a track and discard it.
@@ -229,7 +297,11 @@ if (wantBuzz) {
 
 const source =
   input === null
-    ? pattern(patternName ?? 'bars', ACTIVE_WIDTH, ACTIVE_HEIGHT)
+    ? pattern(
+        patternName ?? linkPattern ?? (link.src === null ? 'bars' : 'none'),
+        smpteBarsPixels,
+        sweepPixels,
+      )
     : ffmpegDecode(input, ACTIVE_WIDTH, ACTIVE_HEIGHT, fps)
 
 // With audio the picture goes to a scratch file first and is copied into the

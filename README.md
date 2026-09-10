@@ -104,8 +104,12 @@ render.
 Running locally there is also `pnpm render`, which does it without a browser:
 
 ```
-pnpm render in.mp4 out.mov --look='#p=mD.FbQB…'
+pnpm render in.mp4 out.mov --look='<paste a link off the app>'
 ```
+
+Every demo link below renders as it stands — the board, the modulation, the
+source and the seed all come off the link, so a look that names its own source
+needs no input file at all.
 
 A look off the address bar, a file in, ProRes 4444 out — so the colour artifacts
 survive, which they do not through the 4:2:0 a browser will encode. The clip's

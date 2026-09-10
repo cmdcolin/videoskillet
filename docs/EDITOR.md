@@ -838,9 +838,37 @@ two-second render writes 63000 samples, exactly 31500 a second, so nothing is
 dropped — and the renderer says so out loud if the counts ever disagree rather
 than writing a track that drifts.
 
+**`--look` takes the link whole and reads it with the app's own parser.**
+`parseSessionParams` is what the app boots from, so the CLI gets the same
+layering (landing look, then preset, then `p=`, then `set=`), the same checksum
+on the packed form, and the three things a regex was never going to reach: the
+modulation bay, the source mode and the seed.
+
+The bay is the one that was a bug rather than a gap. Every demo in the README
+carries a `?mod=`, and a routing that never reached the engine rendered the look
+at its **resting frame** — a still of a patch that was supposed to wander, which
+is the same shape of failure silence was. `toEngineSlots` is the same conversion
+`useModSlots` runs each render, so the master amount (`--motion`) and the tempo
+lock (`--bpm`) behave as they do in the panel; a render has no tap and no MIDI
+clock, so the tempo is whatever the flag says.
+
+Source modes come across for everything that needs nothing fetched — `bars`,
+`sweep`, `tv static`, `vhs static`, `synth`, and B switched off. A link naming
+one of those renders with no input file at all, which is why one positional
+argument is an output and two are a file and an output.
+
+The patterns themselves now live once. `sources/pattern.ts` writes each as
+pixels and wraps it in a canvas for the app, because the renderer has no canvas
+and had grown its own copy of the bars — a renderer with its own idea of what
+bars look like is a renderer whose output cannot be compared with the app's.
+`pattern.spec.ts` pins the seven bars, the PLUGE steps and the sweep's rising
+grating, since that copy is now shared by every screenshot, contact sheet and
+render made against it.
+
 What it does not do yet: no rundown — `--look` is one board for the whole render
-where the strip is a sequence of them — and no modulation, since `#mod=` is not
-parsed.
+where the strip is a sequence of them — and nothing that has to be fetched, so a
+link naming a clip, a still or a pool pick renders over whatever file was passed
+instead.
 
 ## What is left
 

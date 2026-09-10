@@ -34,4 +34,18 @@ export { dcState, detect } from '../../src/core/signal/buzz'
 export { unpackControls } from '../../src/ui/packed'
 export { PRESET_BY_NAME, presetControls } from '../../src/ui/presets'
 
+// The whole of what a link says, parsed by the app's own reader rather than by
+// a second one here. `?p=`, `?set=`, `?preset=`, `?mod=`, `?src=`, `?seed=` and
+// the caption all come back layered in the order the app layers them, so
+// pasting an address bar into `--look` reproduces what that address bar opens
+// instead of the half a regex could pick out.
+export { parseSessionParams } from '../../src/ui/urlParams'
+// A link's `?mod=` is routings; the engine wants slots. This is the same
+// conversion `useModSlots` runs every render, master amount and tempo lock
+// included.
+export { EMPTY_SLOT, toEngineSlots } from '../../src/ui/modSlots'
+// The generated sources, as bytes. `pattern.ts` writes each one once and wraps
+// it in a canvas for the app; the renderer takes the pixels.
+export { smpteBarsPixels, sweepPixels } from '../../src/sources/pattern'
+
 export type { ControlKey, Controls } from '../../src/core/controls'

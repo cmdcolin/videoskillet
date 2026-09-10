@@ -22,14 +22,21 @@ if (typeof g.requestAnimationFrame !== 'function') {
   g.cancelAnimationFrame = () => {}
 }
 
-// `window` is gone in Deno 2. `renderloop.ts` qualifies its two timers with it
-// deliberately — bare `setInterval` resolves to node's overload, which returns a
-// `Timeout` where the field holds a `number` — so the qualification is a typing
-// fix rather than a claim about the runtime, and the honest shim is the two
-// functions it names rather than an alias of the whole global object. Narrow on
-// purpose: `window = globalThis` would also satisfy every other
-// `typeof window !== 'undefined'` in the tree, and a headless run should fail
-// those.
+// `window` is gone in Deno 2, and two kinds of code here want it.
+// `renderloop.ts` qualifies its timers with it deliberately — bare
+// `setInterval` resolves to node's overload, which returns a `Timeout` where
+// the field holds a `number` — so that one is a typing fix rather than a claim
+// about the runtime. `ui/storage.ts` asks `typeof window !== 'undefined'`
+// before registering a `pagehide` handler, which is a genuine question about
+// the runtime and one this shim changes the answer to.
+//
+// So the shim has to be **complete for what it claims**. An earlier version
+// supplied the two timer functions alone, on the reasoning that a narrow
+// `window` would let every other `typeof window` check fail — and that is not
+// what a failing check does. It passes, then calls a method that is not there,
+// which is a crash rather than a graceful absence. Everything below is the
+// honest headless answer: there is no page, so a page event never fires, and
+// registering a listener for one does nothing.
 if (typeof g.window !== 'object') {
   g.window = {
     setInterval: (fn: () => void, ms: number) => setInterval(fn, ms),
@@ -40,5 +47,8 @@ if (typeof g.window !== 'object') {
     clearTimeout: (id: number) => {
       clearTimeout(id)
     },
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    dispatchEvent: () => true,
   }
 }
