@@ -8,34 +8,45 @@
 // so the numbers there can be re-derived against a new browser build rather
 // than believed.
 //
-// It never touches the app. Every frame it encodes is synthetic and handed over
-// as raw planar YUV — `I420` for the profile arm, `I444` for the chroma arm —
-// so nothing measured here depends on a canvas, a device, or an RGB->YUV
-// conversion on the way in. That is deliberate: `ui/record.ts` feeds the
-// encoder from a WebGPU canvas, and a conversion in that path would be a
-// constant across every arm below and so cannot change the ranking, but it
-// would sit in every absolute number and make them mean something else.
+// Arms 1 to 3 never touch the app. Every frame they encode is synthetic and
+// handed over as raw planar YUV — `I420` for the profile arm, `I444` for the
+// chroma arm — so nothing they measure depends on a canvas, a device, or an
+// RGB->YUV conversion on the way in.
+//
+// **Arm 4 exists because that isolation hides the question that matters.** The
+// app hands over `new VideoFrame(canvas)`, so what a codec *can* carry and what
+// reaches it are two different facts, and a browser that subsamples RGBA on the
+// way in makes a 4:4:4 profile worth nothing however well arm 3 scores it.
 //
 // **The source is deliberately worse than the app's picture.** Grain at 46/255
 // with one-pixel structure over it is close to incompressible, so the Mbps
 // figures are an upper bound and the dB figures a lower one. What transfers is
 // the ordering between arms, which is what the ADR reads off it.
 //
-// Three arms, and the third is the one that changed a design:
+// Four arms:
 //
 //   1. **Support.** Which profile/level/mode combinations `isConfigSupported`
 //      admits at 2560x1600. It is worth asking rather than assuming: this is
 //      what says the probe in `ui/record.ts` discriminates at all.
 //   2. **Profile.** Baseline vs Main vs High at one bitrate, plus what raising
-//      the bitrate and forcing software actually buy.
+//      the bitrate, forcing software, and a quantizer actually buy.
 //   3. **Chroma.** The same picture through a 4:2:0 codec and a 4:4:4 one,
 //      scored on chroma separately from luma. The luma columns are close and
 //      the chroma columns are 25 dB apart, which is the finding.
+//   4. **The app's own input path.** The same one-pixel chroma, drawn on a
+//      canvas and handed over as one, scored in RGB.
 //
-// PSNR is measured by decoding the file back and comparing against the source
-// planes — for a 4:2:0 arm the decoded chroma is upsampled to full resolution
-// first, because the fidelity being scored is the one a viewer sees and not the
-// one the codec's own sample grid flatters.
+// PSNR for arms 2 and 3 is measured by decoding the file back and comparing
+// against the source planes — for a 4:2:0 arm the decoded chroma is upsampled
+// to full resolution first, because the fidelity being scored is the one a
+// viewer sees and not the one the codec's own sample grid flatters.
+//
+// **Two results here are platform facts and not settings to copy.** The ADR's
+// quantizer numbers are VideoToolbox on macOS: on Linux, Chrome declines
+// `bitrateMode: 'quantizer'` outright (`OperationError: Unsupported
+// configuration parameters`) and Firefox admits it and ignores the per-frame
+// QP. And Firefox has no 4:4:4 route at all — it declines AV1 4:4:4 and
+// subsamples VP9 profile 1 on the way in. Re-run this before believing either.
 
 import puppeteer from 'puppeteer-core'
 
@@ -244,7 +255,7 @@ const measure = async (page, opts) =>
         },
       })
       const isAvc = c.codec.startsWith('avc1')
-      enc.configure({
+      const cfg = {
         codec: c.codec,
         width: W,
         height: H,
@@ -254,7 +265,23 @@ const measure = async (page, opts) =>
         ...(isAvc ? { avc: { format: 'avc' } } : {}),
         ...(c.qp === undefined ? {} : { bitrateMode: 'quantizer' }),
         ...(c.hw === undefined ? {} : { hardwareAcceleration: c.hw }),
-      })
+      }
+      // **Probed before configuring, because the failure arrives late and then
+      // buries itself.** `configure` accepts a mode this platform does not
+      // implement, the error callback closes the codec, and every `encode`
+      // after it throws `InvalidStateError: Cannot call 'encode' on a closed
+      // codec` — which is what the whole arm prints, with the real reason
+      // (`OperationError: Unsupported configuration parameters`) nowhere in the
+      // output. An arm the platform declines has to say so in those words.
+      const admitted = await VideoEncoder.isConfigSupported(cfg).then(
+        r => r.supported === true,
+        () => false,
+      )
+      if (!admitted) {
+        enc.close()
+        return { unsupported: true }
+      }
+      enc.configure(cfg)
       for (let i = 0; i < N; i++) {
         const frame = new VideoFrame(src[i], {
           format: chroma444 ? 'I444' : 'I420',
@@ -282,9 +309,31 @@ const measure = async (page, opts) =>
       let n = 0
       let fmt = ''
       let derr = ''
-      const dec = new VideoDecoder({
-        output: async frame => {
+      let packed = false
+      // **The output callback is async and nothing awaits it.** A decoder
+      // treats the callback as fire-and-forget, so `flush()` resolves while
+      // every comparison below is still suspended at its first `await` — and
+      // the PSNR was then computed over whichever handful had finished. On
+      // Firefox that read as a *constant* 8.5 dB across every arm, which looks
+      // like a browser that ignores its settings and is really a harness
+      // scoring almost no frames. Each callback's promise is collected and
+      // awaited after the flush instead.
+      const scored = []
+      const score = async frame => {
+        {
           fmt = frame.format
+          // **A packed decode format cannot be scored here.** Firefox hands
+          // back `BGRX` where Chrome hands back `I420`/`I444`, and reading
+          // interleaved RGB through `L[0]` as if it were a luma plane produces
+          // a number rather than an error: a constant ~8.5 dB, identical
+          // across every arm, which reads as a browser ignoring its settings.
+          // Arm 4 is the one that scores a picture through a canvas; these two
+          // score planes, so they say so and stop.
+          if (!fmt.startsWith('I4') && !fmt.startsWith('NV12')) {
+            packed = true
+            frame.close()
+            return
+          }
           const rect = { x: 0, y: 0, width: W, height: H }
           const buf = new Uint8Array(frame.allocationSize({ rect }))
           const L = await frame.copyTo(buf, { rect })
@@ -324,6 +373,11 @@ const measure = async (page, opts) =>
           }
           n++
           frame.close()
+        }
+      }
+      const dec = new VideoDecoder({
+        output: frame => {
+          scored.push(score(frame))
         },
         error: e => {
           derr = String(e)
@@ -337,8 +391,15 @@ const measure = async (page, opts) =>
       })
       for (const chunk of chunks) dec.decode(new EncodedVideoChunk(chunk))
       await dec.flush()
+      await Promise.all(scored)
       dec.close()
       if (derr !== '') return { error: derr.slice(0, 90) }
+      if (packed || n === 0) {
+        return {
+          packed: fmt === '' ? 'no frames' : fmt,
+          mbps: +((bytes * 8 * FPS) / N / 1e6).toFixed(1),
+        }
+      }
       return {
         mbps: +((bytes * 8 * FPS) / N / 1e6).toFixed(1),
         luma: psnr(ySse, n * ps),
@@ -412,8 +473,16 @@ for (const [name, r] of profile) {
   console.log(
     `  ${name}`.padEnd(26),
     (asked === null ? '' : asked[0]).padStart(7),
-    r.error === undefined ? `${r.mbps} Mbps`.padStart(9) : `ERROR ${r.error}`,
-    r.error === undefined ? `${r.luma} dB`.padStart(9) : '',
+    r.unsupported === true
+      ? 'declined'.padStart(9)
+      : r.error === undefined
+        ? `${r.mbps} Mbps`.padStart(9)
+        : `ERROR ${r.error}`,
+    r.unsupported === true || r.error !== undefined
+      ? ''
+      : r.packed !== undefined
+        ? `unscorable (${r.packed})`
+        : `${r.luma} dB`.padStart(9),
   )
 }
 
@@ -442,12 +511,203 @@ console.log(
   '  decoded as',
 )
 for (const [name, r] of chroma) {
+  const scored =
+    r.unsupported !== true && r.error === undefined && r.packed === undefined
   console.log(
     `  ${name}`.padEnd(22),
-    r.error === undefined ? `${r.mbps} Mbps`.padStart(9) : `ERROR ${r.error}`,
-    r.error === undefined ? `${r.luma} dB`.padStart(9) : '',
-    r.error === undefined ? `${r.chroma} dB`.padStart(9) : '',
-    r.error === undefined ? `  ${r.fmt}` : '',
+    r.unsupported === true
+      ? 'declined'.padStart(9)
+      : r.error !== undefined
+        ? `ERROR ${r.error}`
+        : `${r.mbps} Mbps`.padStart(9),
+    r.packed === undefined ? '' : `unscorable (${r.packed})`,
+    scored ? `${r.luma} dB`.padStart(9) : '',
+    scored ? `${r.chroma} dB`.padStart(9) : '',
+    scored ? `  ${r.fmt}` : '',
+  )
+}
+console.log()
+
+// Arm 4. The same question as arm 3, asked through the path `ui/record.ts`
+// actually uses.
+//
+// Arm 3 hands the encoder `I444` planes, which proves what the *codec* can
+// carry and says nothing about what reaches it. The app hands over
+// `new VideoFrame(canvas)` and lets the browser convert RGBA to YUV, and a
+// browser that subsamples on the way in makes a 4:4:4 profile worth exactly
+// nothing however well it scores in arm 3. That is not hypothetical: measured
+// on Firefox Nightly / Linux, VP9 profile 1 is admitted by
+// `isConfigSupported`, encodes without complaint, and scores the same as its
+// own 4:2:0 arm.
+//
+// Scored in RGB, because RGB is what went in and what a viewer gets back.
+const rgba = await page.evaluate(async () => {
+  const W = 640
+  const H = 400
+  const N = 8
+  const FPS = 60
+  const canvas = document.createElement('canvas')
+  canvas.width = W
+  canvas.height = H
+  const ctx = canvas.getContext('2d', { willReadFrequently: true })
+  const img = ctx.createImageData(W, H)
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      const o = (y * W + x) * 4
+      // Magenta and green alternating pixel by pixel at matched luma: chroma
+      // detail with nothing for a luma channel to carry it in.
+      const on = (x + y) % 2 === 0
+      img.data[o] = on ? 210 : 60
+      img.data[o + 1] = on ? 60 : 210
+      img.data[o + 2] = on ? 210 : 60
+      img.data[o + 3] = 255
+    }
+  }
+  ctx.putImageData(img, 0, 0)
+  const truth = new Uint8ClampedArray(ctx.getImageData(0, 0, W, H).data)
+
+  const run = async codec => {
+    const cfg = {
+      codec,
+      width: W,
+      height: H,
+      bitrate: 200e6,
+      framerate: FPS,
+      latencyMode: 'quality',
+      ...(codec.startsWith('avc1') ? { avc: { format: 'avc' } } : {}),
+    }
+    const admitted = await VideoEncoder.isConfigSupported(cfg).then(
+      r => r.supported === true,
+      () => false,
+    )
+    if (!admitted) return { unsupported: true }
+
+    let failure = ''
+    let desc = null
+    const chunks = []
+    const enc = new VideoEncoder({
+      output: (chunk, meta) => {
+        const d = meta?.decoderConfig?.description
+        if (desc === null && d !== undefined) {
+          desc = ArrayBuffer.isView(d)
+            ? new Uint8Array(d.buffer, d.byteOffset, d.byteLength).slice()
+            : new Uint8Array(d).slice()
+        }
+        const data = new Uint8Array(chunk.byteLength)
+        chunk.copyTo(data)
+        chunks.push({
+          data,
+          type: chunk.type,
+          timestamp: chunk.timestamp,
+          duration: chunk.duration,
+        })
+      },
+      error: e => {
+        failure = String(e)
+      },
+    })
+    enc.configure(cfg)
+    for (let i = 0; i < N; i++) {
+      if (failure !== '' || enc.state !== 'configured') break
+      const frame = new VideoFrame(canvas, {
+        timestamp: Math.round((i * 1e6) / FPS),
+        duration: Math.round(1e6 / FPS),
+      })
+      enc.encode(frame, { keyFrame: i === 0 })
+      frame.close()
+      await new Promise(r => setTimeout(r, 0))
+    }
+    if (enc.state === 'configured') await enc.flush()
+    if (enc.state !== 'closed') enc.close()
+    if (failure !== '') return { error: failure.slice(0, 90) }
+
+    // Read back through a 2D canvas rather than through planes: the decoded
+    // format differs per browser (Firefox hands back BGRX, Chrome I420/I444)
+    // and what is being compared is the picture, not the sample grid.
+    let out = null
+    let fmt = ''
+    const scored = []
+    const dec = new VideoDecoder({
+      output: frame => {
+        scored.push(
+          (async () => {
+            fmt = frame.format
+            const c2 = document.createElement('canvas')
+            c2.width = W
+            c2.height = H
+            const cx = c2.getContext('2d', { willReadFrequently: true })
+            const bmp = await createImageBitmap(frame)
+            cx.drawImage(bmp, 0, 0)
+            bmp.close()
+            frame.close()
+            out = cx.getImageData(0, 0, W, H).data
+          })(),
+        )
+      },
+      error: () => {},
+    })
+    dec.configure({
+      codec,
+      codedWidth: W,
+      codedHeight: H,
+      ...(desc === null ? {} : { description: desc }),
+    })
+    for (const c of chunks) dec.decode(new EncodedVideoChunk(c))
+    await dec.flush()
+    await Promise.all(scored)
+    dec.close()
+    if (out === null) return { error: 'no decoded frame' }
+
+    let sse = 0
+    for (let p = 0; p < W * H; p++) {
+      for (let k = 0; k < 3; k++) {
+        const d = truth[p * 4 + k] - out[p * 4 + k]
+        sse += d * d
+      }
+    }
+    const mse = sse / (W * H * 3)
+    const bytes = chunks.reduce((a, c) => a + c.data.length, 0)
+    return {
+      fmt,
+      mbps: +((bytes * 8 * FPS) / N / 1e6).toFixed(1),
+      psnr: mse === 0 ? 99 : +(10 * Math.log10((255 * 255) / mse)).toFixed(2),
+    }
+  }
+
+  const rows = []
+  for (const [name, codec] of [
+    ['H.264 high 4:2:0', 'avc1.640028'],
+    ['VP9   p0   4:2:0', 'vp09.00.51.08'],
+    ['VP9   p1   4:4:4', 'vp09.01.51.08.03'],
+    ['AV1   4:2:0', 'av01.0.08M.08'],
+    ['AV1   4:4:4', 'av01.1.08M.08'],
+  ]) {
+    rows.push([name, await run(codec)])
+  }
+  return rows
+})
+
+console.log(
+  '--- 4. RGBA canvas in (the app path), one-pixel chroma, 640x400 --\n',
+)
+console.log(
+  '  arm'.padEnd(22),
+  'written'.padStart(9),
+  'RGB'.padStart(9),
+  '  decoded as',
+)
+for (const [name, r] of rgba) {
+  console.log(
+    `  ${name}`.padEnd(22),
+    r.unsupported === true
+      ? 'declined'.padStart(9)
+      : r.error === undefined
+        ? `${r.mbps} Mbps`.padStart(9)
+        : `ERROR ${r.error}`,
+    r.unsupported === true || r.error !== undefined
+      ? ''
+      : `${r.psnr} dB`.padStart(9),
+    r.unsupported === true || r.error !== undefined ? '' : `  ${r.fmt}`,
   )
 }
 console.log()
