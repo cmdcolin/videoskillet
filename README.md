@@ -47,6 +47,11 @@ in [Features](docs/FEATURES.md).
 - A rundown down in the **strip** tray: a list of looks that plays itself, each
   row holding for a count of bars and arriving as a cut, a morph or a fault, and
   a **⎙ render** that writes the whole thing to a constant-framerate MP4
+- Renders offline with no browser open, when you run it locally:
+  `pnpm render in.mp4 out.mov --look='<a link>'` writes ProRes 4444, so the dot
+  crawl and rainbow fringing survive — a browser only encodes 4:2:0 and loses
+  most of them. It is a command, so a shell loop runs it over a folder.
+  [Rendering](docs/RENDERING.md)
 - ...[much more](docs/FEATURES.md)
 
 ## Video sources
@@ -115,8 +120,8 @@ three worked examples.
 A look off the address bar, a file in, ProRes 4444 out — so the colour artifacts
 survive, which they do not through the 4:2:0 a browser will encode. The clip's
 own sound goes in, which matters because bass drives vertical hold, and the
-intercarrier buzz comes back out beside it. It renders at about real time and
-batches over a folder.
+intercarrier buzz comes back out beside it. It renders at about real time, and
+it is a command rather than a page, so a shell loop takes a folder.
 
 ### Can I patch it into Max/MSP, Jitter or TouchDesigner?
 

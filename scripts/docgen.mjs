@@ -346,7 +346,7 @@ const llms = [
   '  control models',
   '- [User guide](https://videoskillet.com/guide/guide/) — driving it',
   '- [Rendering](https://videoskillet.com/guide/rendering/) — `pnpm render`,',
-  '  which takes one of these links and writes a file, offline and in batches',
+  '  which takes one of these links and writes a file, with no browser open',
   '- [Architecture](https://github.com/cmdcolin/videoskillet/blob/main/docs/ARCHITECTURE.md)',
   '  — the signal path pass by pass, for changing it',
   '- [AI usage](https://videoskillet.com/guide/ai/) — working on this',

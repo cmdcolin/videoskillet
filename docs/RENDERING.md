@@ -42,7 +42,7 @@ every chroma sample.
 A command line also suits the simulation. Frame N is a function of every frame
 before it, because the feedback loops make it one, so a render walks the file
 from the top and never seeks. That is the same property that rules out an NLE
-plugin, and it is one a batch tool has for free.
+plugin, and a command that starts at the beginning has it for free.
 
 ## Three renders
 

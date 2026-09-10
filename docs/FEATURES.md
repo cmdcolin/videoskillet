@@ -158,6 +158,13 @@ per generation.
   plays. The strip's ⎙ render steps the engine on its own clock, so a take comes
   back at 60 fps whatever rate the tab ran at, and it is reproducible. You can
   also move the controls to a second window and capture the picture with OBS.
+- **Rendering offline**, running the project locally. `pnpm render` takes a link
+  and a file and writes ProRes 4444 with no browser open, which is what keeps
+  the colour artifacts: a browser encodes 4:2:0 and loses most of the dot crawl.
+  It reads a link the way the app does, so the modulation and the source come
+  across with the board, and it feeds the clip's own sound in — which matters,
+  because a look built over a track renders differently in silence. See
+  [Rendering](RENDERING.md).
 - **Interface**: the chain map, a command palette, signal taps, an IRE scope,
   and a magnifier that magnifies the tube face along with the picture.
 
