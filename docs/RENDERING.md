@@ -1,24 +1,24 @@
 # Rendering to a file
 
-`pnpm render` runs the signal path over a file without a browser. A look goes in
-as a link copied from the app, a clip or a still goes in as a file, and the
-command writes ProRes 4444 that an editor can open.
+`pnpm render` runs the signal path over a file without a browser. The look comes
+from a link copied from the app, the picture from a clip or a still on disk, and
+the output is ProRes 4444 that an editor can open.
 
 ```
-pnpm render in.mp4 out.mov --look='<paste a link off the app>'
+pnpm render in.mp4 out.mov --look='<a link copied from the app>'
 pnpm render photo.jpg out.mov --preset=wornTape --seconds=8
 pnpm render out.mov --look='<a link that names its own source>'
 ```
 
 The renderer runs the app's own engine. The pass graph, the control table and
 the link parser are the same code the tab runs, bundled so a JavaScript runtime
-with no bundler in it can load them, so a look renders here as it renders on
-screen. The command runs from a checkout of the repository;
-[Installing](#installing) has the four-line version.
+with no bundler in it can load them. A look therefore renders here the way it
+renders on screen. The command runs from a checkout of the repository, which
+[Installing](#installing) sets up in four lines.
 
-The app's own **⎙ render** in the strip tray is the other route to a file, and
-the one to use while you are performing. This page covers the offline case: a
-look you already have, a clip to put it over, and a file to cut with.
+The app's **⎙ render** button in the strip tray also writes a file, and it is
+the one to use while performing. This page covers the offline case: putting a
+look you already have over a clip, to get a file you can cut with.
 
 ## Why rendering happens outside the browser
 
@@ -43,8 +43,8 @@ every chroma sample.
 
 A command line also suits the simulation. The feedback loops make frame N a
 function of every frame before it, so a render walks the file from the top and
-never seeks. The same property is what rules out an NLE plugin, and a command
-that always starts at the beginning satisfies it without extra machinery.
+never seeks. That requirement also rules out an NLE plugin, and a command that
+always starts at the beginning meets it without any extra machinery.
 
 ## Example renders
 
@@ -65,7 +65,8 @@ pnpm render out.mov --look='https://videoskillet.com/app/?p=je.CoDoBwEEAbAEAKwCA
 
 This is the README's **Wiggity** demo, rendered from the link exactly as it is
 published. The command passes no input: the link names its own sources, so the
-video synth and the sweep pattern load on the two decks by themselves.
+video synth and the sweep pattern load on the two decks without further
+arguments.
 
 The bend across the frame is the part of a link that is easiest to lose. The
 look's motion lives in the modulation bay, a Lorenz attractor on `bendUs` and a
@@ -103,15 +104,15 @@ VHS deck, the bottom two survive at full contrast, the middle two fade, and the
 top two wash out to flat grey. That is the deck's luma bandwidth, read straight
 off the picture.
 
-A pattern, a look and a file together make a measurement, so the renderer serves
-as an instrument as well as an export. Keeping the file makes the next render
-comparable.
+Rendering a known pattern through a look measures what the look does to it, so
+the renderer works as an instrument as well as an export. Keeping the file makes
+the next render comparable to this one.
 
 ## Options
 
 | Flag               | Meaning                                            |
 | ------------------ | -------------------------------------------------- |
-| `--look=<url>`     | a whole address bar off the app                    |
+| `--look=<url>`     | a whole address bar copied from the app            |
 | `--preset=<name>`  | a built-in preset by name                          |
 | `--set=<k:v,…>`    | individual controls, applied over the above        |
 | `--seconds=<n>`    | how much to render; default is the input's length  |
@@ -119,7 +120,7 @@ comparable.
 | `--seed=<n>`       | random seed; the same seed gives the same file     |
 | `--motion=<0..1>`  | the modulation bay's master amount                 |
 | `--bpm=<n>`        | tempo, for routings locked to a clock              |
-| `--pattern=<name>` | `bars`, `sweep` or `none`, over what the link says |
+| `--pattern=<name>` | `bars`, `sweep` or `none`, overriding the link     |
 | `--codec=<name>`   | `prores`, `dnxhr`, `ffv1`, `h264` or `preview`     |
 | `--audio=<mode>`   | `auto`, `buzz`, `source` or `none`                 |
 
@@ -131,8 +132,8 @@ together. Every control name is in [Effects](EFFECTS.md).
 that has to travel. `h264` writes High 4:4:4 Predictive, which x264 encodes and
 no browser does, so the file stays small and keeps its chroma, though some
 players decline the profile. `preview` writes ordinary 4:2:0 High with the index
-at the front, which opens anywhere, and is the choice when the file's job is to
-play.
+at the front, which opens anywhere, and is the choice for a file that only has
+to play.
 
 ## Audio
 
@@ -159,13 +160,13 @@ file and leaves everything already on disk in place.
 
 Length comes from the input. A clip renders for as long as it runs, `--seconds`
 overrides that, and a source with no length of its own — a still, a pattern, a
-link naming the synth — renders ten seconds unless told otherwise.
+link naming the synth — renders ten seconds by default.
 
-The figures on this page work differently. `pnpm render:docs` renders each one,
-keeps the still and discards the clip: the repo's clips rule exists to keep
-megabyte-scale binaries, re-rendered whenever a look changes, out of the
-history. `pnpm render:docs:keep` also writes watchable copies to `renders/`,
-which is gitignored.
+`pnpm render:docs` handles the figures on this page differently: it renders each
+one, keeps the still and discards the clip. The repo's clips rule keeps
+megabyte-scale binaries out of the history, and each of these is re-rendered
+whenever its look changes. `pnpm render:docs:keep` also writes watchable copies
+to `renders/`, which is gitignored.
 
 ## Installing
 
@@ -181,9 +182,9 @@ pnpm render in.mp4 out.mov --preset=vhs
 
 Four programs have to be on PATH. Node and pnpm build the engine bundle.
 [Deno](https://deno.com/) runs it: the renderer drives Deno's own WebGPU, so the
-shaders execute on the same hardware the tab would use, and a machine with no
-working GPU driver has nothing to render on. ffmpeg works both ends of the pipe,
-decoding the input and encoding the output.
+shaders execute on the same hardware the tab would use, and a machine without a
+working GPU driver cannot run a render at all. ffmpeg handles both ends of the
+pipe, decoding the input and encoding the output.
 
 `pnpm render` builds the bundle before every run, so there is no separate step.
 The first run takes a few seconds longer than the ones after it.
@@ -191,7 +192,7 @@ The first run takes a few seconds longer than the ones after it.
 ## Limitations
 
 - **One board per render.** `--look` sets a single board for the whole render,
-  where the strip tray holds a sequence of them. Perform a sequence in the app
+  while the strip tray holds a sequence of them. Perform a sequence in the app
   and export it with ⎙.
 - **Local sources only.** A link that names a clip, a still or a random pick
   from an archive renders over whatever file was passed on the command line. The
