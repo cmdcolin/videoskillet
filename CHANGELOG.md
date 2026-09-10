@@ -2,6 +2,19 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [0.44.3](https://github.com/cmdcolin/videoskillet/compare/v0.44.2...v0.44.3) - 2026-09-10
+
+### Features
+- *(gpu)* [`b493e97`](https://github.com/cmdcolin/videoskillet/commit/b493e97393269eb092b0b5b82b6f898bf9aef904) publish src/core to JSR as @videoskillet/videoskillet
+- [`3e93038`](https://github.com/cmdcolin/videoskillet/commit/3e93038d0237e28618b1c010b91dbe7abb596338) compile the offline renderer to a single executable
+
+### Documentation
+- *(docs)* [`6411b32`](https://github.com/cmdcolin/videoskillet/commit/6411b32761ca35a65093b5db518f947a23a08010) write down the prose patterns the docs pass fixed
+
+### Chores
+- [`6e5cef1`](https://github.com/cmdcolin/videoskillet/commit/6e5cef1527217090178b983539860e4c7b27a7ff) build the renderer binaries and publish to JSR on a version tag
+- [`9149b36`](https://github.com/cmdcolin/videoskillet/commit/9149b362549dcc67c55013ffedab2257e35187d0) keep the release and JSR jobs to tag pushes
+
 ## [0.44.2](https://github.com/cmdcolin/videoskillet/compare/v0.44.1...v0.44.2) - 2026-09-10
 
 ### Documentation
