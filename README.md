@@ -46,7 +46,7 @@ in [Features](docs/FEATURES.md).
   appliances https://en.wikipedia.org/wiki/Video_Toaster
 - Mix your own videos or built-in random choice from archive/wiki, static, or
   NTSC color bars
-- Render videos entirely via [command line](docs/RENDERING.md)
+- Render videos entirely via [command line](docs/CLI.md)
 - ...[much more](docs/FEATURES.md)
 
 ## Other random features
@@ -100,7 +100,7 @@ bass drives vertical hold; the intercarrier buzz comes back out beside it.
 
 Every demo link below renders as it stands: the board, the modulation, the
 source and the seed all come off the link, so a look that names its own source
-needs no input file at all. [Rendering](docs/RENDERING.md) has the options and
+needs no input file at all. [CLI](docs/CLI.md) has the options and
 three worked examples.
 
 ### Can I patch it into Max/MSP, Jitter or TouchDesigner?
@@ -118,7 +118,7 @@ OBS browser source. OSC is the piece that is missing.
 - [User guide](docs/USER-GUIDE.md)
 - [Features](docs/FEATURES.md)
 - [Effects](docs/EFFECTS.md) — every control, generated
-- [Rendering](docs/RENDERING.md) — `pnpm render`, the offline renderer: it takes
+- [CLI](docs/CLI.md) — `pnpm render`, the offline renderer: it takes
   a link and a file and writes ProRes 4444
 - [Drive it by URL](public/llms.txt) — the query string is a complete remote
   control, and [every control's key](public/llms-full.txt) lists what the rest

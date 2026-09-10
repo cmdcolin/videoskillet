@@ -1,4 +1,4 @@
-# Rendering to a file
+# The CLI renderer
 
 `pnpm render` runs the signal path over a file without a browser. The look comes
 from a link copied from the app, the picture from a clip or a still on disk, and
@@ -198,7 +198,7 @@ audio-driven, though, and `--audio-file` keeps them so: point it at the same
 clip ffmpeg is reading and bass still drives vertical hold. Mux the sound back
 on in the last ffmpeg if you want it in the file.
 
-## Where the file goes
+## Output
 
 The last argument is the output path, and its extension picks the container:
 `.mov` for ProRes, `.mp4` for the H.264 codecs. The command writes only that

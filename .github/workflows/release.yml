@@ -117,7 +117,7 @@ jobs:
             ./videoskillet-x86_64-unknown-linux-gnu in.mp4 out.mov --preset=vhs
             ```
 
-            See [docs/RENDERING.md](docs/RENDERING.md) for the options.
+            See [docs/CLI.md](docs/CLI.md) for the options.
 
   # src/core, restaged so it resolves without Vite. The version comes from
   # package.json, which the same commit as this tag bumped, so the published

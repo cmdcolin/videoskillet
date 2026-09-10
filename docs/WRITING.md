@@ -44,6 +44,18 @@ Everywhere else, state what is true and stop.
 >
 > Staleness is stamped, not compared. → Staleness is stamped.
 
+**A heading written as a phrase where a noun would do.** "Where the file
+goes" and "What you get out" are sentences doing a label's job. Name the
+subject: `Output`. Keep a phrase only where the section answers a question the
+reader actually asks in those words — an FAQ entry, or a `Why ...` section whose
+whole point is the reasoning.
+
+> Where the file goes → Output
+>
+> What you need before starting → Requirements
+>
+> How the look gets in → Looks
+
 **A heading that says what a thing is not.** The reader scanning a contents list
 gets nothing from a negative. Name the subject, or call a list of limits
 `Limitations`. The exception is a heading whose whole content is a distinction —

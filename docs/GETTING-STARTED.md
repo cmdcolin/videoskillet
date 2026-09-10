@@ -38,5 +38,5 @@ underneath. Every control lives there, sources included.
 - [Features](FEATURES.md): a tour of everything it can break
 - [Effects](EFFECTS.md): every control, generated from the app's own table
 - [MIDI](MIDI.md): setting up a controller
-- [Rendering](RENDERING.md): getting a look onto a file, running locally
+- [CLI](CLI.md): getting a look onto a file, running locally
 - [FAQ](FAQ.md): how it works, what runs it, how a take gets into an edit

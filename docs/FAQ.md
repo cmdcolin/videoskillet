@@ -155,7 +155,7 @@ comes back at a steady one.
 Running the project locally gives a third way, and it is the one to use when the
 colour matters. `pnpm render` takes a link and a file and writes ProRes 4444, so
 the chroma artifacts survive; a browser encodes 4:2:0 and throws most of them
-away. [Rendering](RENDERING.md) covers it.
+away. [CLI](CLI.md) covers it.
 
 ## Can I feed it a real composite signal off a yellow RCA cable?
 

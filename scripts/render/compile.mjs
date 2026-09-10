@@ -6,7 +6,7 @@
 //
 // The binary carries the renderer, the engine bundle and a Deno runtime. ffmpeg
 // and ffprobe stay outside it, and a GPU driver Deno's WebGPU can reach is still
-// required — see docs/RENDERING.md.
+// required — see docs/CLI.md.
 //
 // `deno compile` cross-compiles, so one Linux runner builds every platform. That
 // is what the release workflow does with `--all`.

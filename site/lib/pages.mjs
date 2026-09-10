@@ -8,7 +8,7 @@ const GUIDE = [
   { file: 'docs/FEATURES.md', slug: 'features', nav: 'Features' },
   { file: 'docs/EFFECTS.md', slug: 'effects', nav: 'Effects' },
   { file: 'docs/MIDI.md', slug: 'midi', nav: 'MIDI' },
-  { file: 'docs/RENDERING.md', slug: 'rendering', nav: 'Rendering' },
+  { file: 'docs/CLI.md', slug: 'cli', nav: 'CLI' },
   { file: 'docs/COMPARISON.md', slug: 'comparison', nav: 'Comparison' },
   { file: 'docs/FAQ.md', slug: 'faq', nav: 'FAQ' },
 ]
