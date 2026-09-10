@@ -1,0 +1,134 @@
+name: Release
+
+# Fires on the tag `pnpm pat` / `pnpm min` / `pnpm maj` pushes. `pnpm ship`
+# makes no tag, so an ordinary push to main deploys the site and does nothing
+# here.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  # The engine bundle is an input to every binary below, and building it needs
+  # node and the app's dependencies. Built once here so the compile job can be a
+  # matrix over targets with only Deno installed.
+  bundle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 11.11.0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm render:build
+      - uses: actions/upload-artifact@v5
+        with:
+          name: engine-bundle
+          path: scripts/render/build
+
+  binaries:
+    needs: bundle
+    runs-on: ubuntu-latest
+    strategy:
+      # One target failing should not withdraw the platforms that built.
+      fail-fast: false
+      matrix:
+        target:
+          - x86_64-unknown-linux-gnu
+          - aarch64-unknown-linux-gnu
+          - x86_64-apple-darwin
+          - aarch64-apple-darwin
+          - x86_64-pc-windows-msvc
+    steps:
+      - uses: actions/checkout@v7
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - uses: actions/download-artifact@v6
+        with:
+          name: engine-bundle
+          path: scripts/render/build
+      # `deno compile` cross-compiles, so every platform is built on this one
+      # runner. The bundle is already here, so this skips the vite step the
+      # script would otherwise run.
+      - name: Compile
+        run: |
+          deno compile -A --unstable-webgpu \
+            --config scripts/gpuprof/deno.json \
+            --target ${{ matrix.target }} \
+            --output dist-bin/videoskillet-${{ matrix.target }} \
+            scripts/render/main.ts
+      # A tarball for the platforms whose shells keep the executable bit, a zip
+      # for the one that does not.
+      - name: Package
+        id: package
+        run: |
+          cd dist-bin
+          if [ -f videoskillet-${{ matrix.target }}.exe ]; then
+            zip -q videoskillet-${{ matrix.target }}.zip videoskillet-${{ matrix.target }}.exe
+            echo "asset=videoskillet-${{ matrix.target }}.zip" >> "$GITHUB_OUTPUT"
+          else
+            tar czf videoskillet-${{ matrix.target }}.tar.gz videoskillet-${{ matrix.target }}
+            echo "asset=videoskillet-${{ matrix.target }}.tar.gz" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/upload-artifact@v5
+        with:
+          name: binary-${{ matrix.target }}
+          path: dist-bin/${{ steps.package.outputs.asset }}
+
+  release:
+    needs: binaries
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v6
+        with:
+          pattern: binary-*
+          merge-multiple: true
+          path: dist-bin
+      - name: Checksums
+        run: cd dist-bin && sha256sum * > SHA256SUMS
+      # Draft, so a release goes out when someone has looked at it. The tag is
+      # already public by this point; the binaries are not.
+      - uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          generate_release_notes: true
+          files: dist-bin/*
+          body: |
+            Offline renderer binaries. Each one carries the renderer, the
+            engine and a Deno runtime; ffmpeg and ffprobe have to be on PATH,
+            and rendering needs a GPU driver Deno's WebGPU can reach.
+
+            ```
+            tar xzf videoskillet-x86_64-unknown-linux-gnu.tar.gz
+            ./videoskillet-x86_64-unknown-linux-gnu in.mp4 out.mov --preset=vhs
+            ```
+
+            See [docs/RENDERING.md](docs/RENDERING.md) for the options.
+
+  # src/core, restaged so it resolves without Vite. The version comes from
+  # package.json, which the same commit as this tag bumped, so the published
+  # version and the tag always agree.
+  jsr:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      # No dependencies: the stager reads package.json and node builtins only.
+      - run: node scripts/jsrpack.mjs
+      - run: deno publish
+        working-directory: jsr

@@ -46,3 +46,6 @@ renders/
 
 # The compiled offline renderer (pnpm render:compile) — a build product.
 /bin/
+
+# Cross-compiled renderer binaries (node scripts/render/compile.mjs --all).
+/dist-bin/
