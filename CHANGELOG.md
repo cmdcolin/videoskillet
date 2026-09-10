@@ -2,6 +2,16 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [0.44.2](https://github.com/cmdcolin/videoskillet/compare/v0.44.1...v0.44.2) - 2026-09-10
+
+### Documentation
+- *(docs)* [`d899bdd`](https://github.com/cmdcolin/videoskillet/commit/d899bddfe73f2da22243c6a523af0d671c84cc40) plain prose in the rendering page
+- *(docs)* [`291159b`](https://github.com/cmdcolin/videoskillet/commit/291159baf9c0b219adb83f4e4aaed12763d12e7f) second prose pass on the rendering page
+- *(docs)* [`ffe5408`](https://github.com/cmdcolin/videoskillet/commit/ffe5408d71672c08a84daa2b678aa5c413903297) plain prose across the user-facing docs
+- *(docs)* [`e941eb9`](https://github.com/cmdcolin/videoskillet/commit/e941eb90229b485db40b3823c0d94e0ed4e20de2) plain prose in the architecture and development notes
+- *(docs)* [`d71ec5b`](https://github.com/cmdcolin/videoskillet/commit/d71ec5b30661884803b18077e482a1f4fc4f3703) plain prose in the editor, curation, optimization and ideas notes
+- *(docs)* [`05dc118`](https://github.com/cmdcolin/videoskillet/commit/05dc1186e7bcd88722b894096de8045813465823) drop the sentence-opening "And" in the decision records
+
 ## [0.44.1](https://github.com/cmdcolin/videoskillet/compare/v0.44.0...v0.44.1) - 2026-09-10
 
 ### Documentation
