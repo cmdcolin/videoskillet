@@ -32,6 +32,8 @@ import {
   ffmpegEncode,
   isStill,
   probeFrames,
+  rawSink,
+  rawSource,
 } from './ffmpeg.ts'
 import { pattern } from './pattern.ts'
 
@@ -50,10 +52,12 @@ const has = (name: string): boolean => Deno.args.includes(`--${name}`)
 const positional = Deno.args.filter(a => !a.startsWith('--'))
 
 if (has('help') || positional.length === 0) {
-  console.log(`videoskillet render — the signal path over a file, offline.
+  console.log(
+    `videoskillet render — the signal path over a file, offline.
 
   render <in> <out> [options]
   render <out> [options]          when the look names its own source
+  render - - [options]            raw rgba on stdin and stdout, as a pipe stage
 
   --look=<url>                  a whole address bar off the app
   --preset=<name>               a built-in preset by name
@@ -66,6 +70,8 @@ if (has('help') || positional.length === 0) {
   --pattern=<bars|sweep|none>   a generated source, over what the link says
   --codec=<${Object.keys(CODECS).join('|')}>
   --audio=<auto|buzz|source|none>
+  --audio-file=<path>           the track that drives the artifacts, when it
+                                is not the input (required with a raw stdin)
   --quiet                       no progress line
 
 --look takes the link whole and reads it with the app's own parser, so the
@@ -76,8 +82,20 @@ Audio is not decoration: bass drives vertical hold and HV sag, so a look built
 over a track renders differently in silence. --audio=auto feeds the input's own
 sound in, and writes the intercarrier buzz beside it when the look asks for one.
 
+A single dash in place of the input or the output carries frames as raw rgba
+on stdin or stdout, at the signal raster and nothing else, so the caller's own
+ffmpeg decides what is decoded and how it is written:
+
+  ffmpeg -i in.mkv -s 754x480 -pix_fmt rgba -f rawvideo - \\
+    | videoskillet - - --preset=vhs --audio-file=in.mkv \\
+    | ffmpeg -f rawvideo -pix_fmt rgba -s 754x480 -r 60 -i - -c:v prores_ks out.mov
+
+A raw stdout carries no sound, so a render that ends there writes the picture
+alone; --audio-file still drives the artifacts with it.
+
 Every control name is in docs/EFFECTS.md. A link off the app works whole:
-copy the address bar and pass it as --look.`)
+copy the address bar and pass it as --look.`,
+  )
   Deno.exit(0)
 }
 
@@ -194,6 +212,14 @@ if (output === undefined) {
   Deno.exit(2)
 }
 
+// `-` on either end makes this a stage in someone else's pipeline: raw RGBA
+// at the signal raster, in on stdin, out on stdout. What that buys is every
+// format, filter and encoder flag ffmpeg has, without a flag here for each of
+// them — `--codec`'s five recipes are the version of that which does not
+// scale.
+const rawIn = input === '-'
+const rawOut = output === '-'
+
 const seconds = flag('seconds') === undefined ? null : Number(flag('seconds'))
 // How many frames to render. An explicit `--seconds` wins; failing that the
 // input's own length, which is what "run the look over this clip" means; and
@@ -203,6 +229,8 @@ let frames: number
 if (seconds !== null) frames = Math.round(seconds * fps)
 // A still has no length of its own, so it falls in with the generated sources
 // rather than being asked how long it is.
+// A pipe has no length to ask for, so a raw stdin runs until it ends.
+else if (rawIn) frames = Infinity
 else if (input !== null && !isStill(input))
   frames = await probeFrames(input, fps)
 else frames = 10 * fps
@@ -213,10 +241,19 @@ if (!['auto', 'buzz', 'source', 'none'].includes(audioMode)) {
   Deno.exit(2)
 }
 
+// Which file the sound comes from. Normally the input's own, which is what
+// "run the look over this clip" means. A raw stdin has no sound in it and must
+// not be read twice besides, so there `--audio-file` is the only way to keep
+// the artifacts audio-driven — and they are: bass drives vertical hold and HV
+// sag, so the same look renders differently in silence.
+const audioFile = flag('audio-file') ?? (rawIn ? null : input)
+
 // The track, decoded before the engine exists because whether there is one
 // decides how the engine is set up.
 const track =
-  audioMode === 'none' || input === null ? null : await decodeAudio(input)
+  audioMode === 'none' || audioFile === null
+    ? null
+    : await decodeAudio(audioFile)
 const analysis = track === null ? null : new OfflineAnalysis(track, fps)
 
 const canvas = new OffscreenCanvas(ACTIVE_WIDTH, ACTIVE_HEIGHT)
@@ -282,7 +319,16 @@ if (link.caption !== '') engine.setCaption(link.caption)
 // The buzz, if anyone is listening. `buzzDrive` gates the tap pass, the
 // readback and the push alike on this switch, so leaving it off is what makes
 // `--audio=source` cost nothing rather than compute a track and discard it.
-const wantBuzz = audioMode === 'auto' || audioMode === 'buzz'
+// A raw stdout is frames and nothing else — there is no container to put a
+// track in, so the buzz has nowhere to go. Said out loud when it was asked
+// for by name, silent under the default, because `auto` means "if the look
+// wants one" and a pipe is an answer to that.
+if (rawOut && audioMode === 'buzz') {
+  console.error(
+    'note: --audio=buzz writes no sound to a raw stdout; the picture goes out alone',
+  )
+}
+const wantBuzz = !rawOut && (audioMode === 'auto' || audioMode === 'buzz')
 const BUZZ_RATE = LINES * fps
 const buzzChunks: Float32Array[] = []
 let buzzTaps = 0
@@ -304,8 +350,9 @@ if (wantBuzz) {
   })
 }
 
-const source =
-  input === null
+const source = rawIn
+  ? rawSource(ACTIVE_WIDTH, ACTIVE_HEIGHT)
+  : input === null
     ? pattern(
         patternName ?? linkPattern ?? (link.src === null ? 'bars' : 'none'),
         smpteBarsPixels,
@@ -315,7 +362,7 @@ const source =
 
 // With audio the picture goes to a scratch file first and is copied into the
 // finished one alongside the sound — see `mux`, which does not re-encode it.
-const wantAudio = wantBuzz || audioMode === 'source'
+const wantAudio = !rawOut && (wantBuzz || audioMode === 'source')
 // The extension is kept, because ffmpeg picks the container from it and
 // `out.mov.tmp` names no format it knows.
 const scratch = (suffix: string): string => {
@@ -325,13 +372,24 @@ const scratch = (suffix: string): string => {
     : `${output.slice(0, dot)}.${suffix}${output.slice(dot)}`
 }
 const videoPath = wantAudio ? scratch('videoonly') : output
-const sink = ffmpegEncode(videoPath, ACTIVE_WIDTH, ACTIVE_HEIGHT, fps, codec)
+const sink = rawOut
+  ? rawSink()
+  : ffmpegEncode(videoPath, ACTIVE_WIDTH, ACTIVE_HEIGHT, fps, codec)
 
 const started = performance.now()
 let wrote = 0
 try {
   for (let i = 0; i < frames; i++) {
-    const frame = await source.next()
+    // Reported here rather than left to escape, because the `finally` below
+    // closes an encoder that has been handed nothing and ffmpeg's complaint
+    // about an empty stream would arrive first and bury the real one — which
+    // for a raw stdin is usually "you sent the wrong frame size".
+    let frame: Uint8Array | null
+    try {
+      frame = await source.next()
+    } catch (e) {
+      fail(e)
+    }
     // A file that ends before the frame count asked for stops the render there
     // rather than padding it: the last frame repeated is a still nobody asked
     // for, and the loops would keep eating it. A still is the exception — it is
@@ -351,12 +409,14 @@ try {
     await sink.write(await engine.readFrame())
     wrote++
     if (!quiet && i % 30 === 0) {
-      const done = ((i + 1) / frames) * 100
       const rate = (i + 1) / ((performance.now() - started) / 1000)
-      await Deno.stdout.write(
-        new TextEncoder().encode(
-          `\r  ${done.toFixed(0)}%  frame ${i + 1}/${frames}  ${rate.toFixed(1)} fps  `,
-        ),
+      // A pipe has no total to be a percentage of, and stdout may be carrying
+      // the picture, so the line goes to stderr either way.
+      const of = Number.isFinite(frames)
+        ? `${(((i + 1) / frames) * 100).toFixed(0)}%  frame ${i + 1}/${frames}`
+        : `frame ${i + 1}`
+      await Deno.stderr.write(
+        new TextEncoder().encode(`\r  ${of}  ${rate.toFixed(1)} fps  `),
       )
     }
   }
@@ -421,7 +481,7 @@ try {
       output,
       havebuzz ? buzzPath : null,
       (audioMode === 'auto' || audioMode === 'source') && track !== null
-        ? input
+        ? audioFile
         : null,
       BUZZ_RATE,
     )
@@ -446,7 +506,7 @@ if (!quiet) {
         ]
           .filter(x => x !== null)
           .join(' + ')
-  console.log(
-    `\r  ${wrote} frames in ${took.toFixed(1)}s (${(wrote / took).toFixed(1)} fps), ${sound} → ${output}`,
+  console.error(
+    `\r  ${wrote} frames in ${took.toFixed(1)}s (${(wrote / took).toFixed(1)} fps), ${sound} → ${rawOut ? 'stdout' : output}`,
   )
 }

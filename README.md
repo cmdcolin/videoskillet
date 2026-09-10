@@ -44,29 +44,10 @@ in [Features](docs/FEATURES.md).
 - Bleeds video into the audio channel, so you can hear that static-y hum
 - Has the spirit of video toaster inside of it, being related to kitchen
   appliances https://en.wikipedia.org/wiki/Video_Toaster
-- A rundown down in the **strip** tray: a list of looks that plays itself, each
-  row holding for a count of bars and arriving as a cut, a morph or a fault, and
-  a **⎙ render** that writes the whole thing to a constant-framerate MP4
-- Renders offline with no browser open, when you run it locally:
-  `pnpm render in.mp4 out.mov --look='<a link>'` writes ProRes 4444, so the dot
-  crawl and rainbow fringing survive — a browser only encodes 4:2:0 and loses
-  most of them. It runs from a shell, so a loop takes a whole folder.
-  [Rendering](docs/RENDERING.md)
+- Mix your own videos or built-in random choice from archive/wiki, static, or
+  NTSC color bars
+- Render videos entirely via [command line](docs/RENDERING.md)
 - ...[much more](docs/FEATURES.md)
-
-## Video sources
-
-There are two 'sources' A and B and you can mix them together like a video
-mixer, and you get to choose what to load into each
-
-- NTSC color bars/Video sweep test signals
-- VHS static or TV static
-- MP4 videos or still-frame picture from your computer/phone
-- Webcam/screenshare
-- Teletype style text overlay (includes 'mspaint style' feature to draw blocky
-  text)
-- Load random video from archive.org or wiki
-- Basic video synth
 
 ## Other random features
 

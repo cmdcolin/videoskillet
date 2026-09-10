@@ -25,6 +25,9 @@ The app's **⎙ render** button in the strip tray also writes a file, and it is
 the one to use while performing. This page covers the offline case: putting a
 look you already have over a clip, to get a file you can cut with.
 
+A render can also be one stage of a longer ffmpeg pipeline instead of the whole
+command — see [As a pipe stage](#as-a-pipe-stage).
+
 ## Why rendering happens outside the browser
 
 The browser's encoder limits what a recording can carry, and the limit sits
@@ -115,19 +118,20 @@ the next render comparable to this one.
 
 ## Options
 
-| Flag               | Meaning                                            |
-| ------------------ | -------------------------------------------------- |
-| `--look=<url>`     | a whole address bar copied from the app            |
-| `--preset=<name>`  | a built-in preset by name                          |
-| `--set=<k:v,…>`    | individual controls, applied over the above        |
-| `--seconds=<n>`    | how much to render; default is the input's length  |
-| `--fps=<n>`        | output rate; default 60, the simulation's own rate |
-| `--seed=<n>`       | random seed; the same seed gives the same file     |
-| `--motion=<0..1>`  | the modulation bay's master amount                 |
-| `--bpm=<n>`        | tempo, for routings locked to a clock              |
-| `--pattern=<name>` | `bars`, `sweep` or `none`, overriding the link     |
-| `--codec=<name>`   | `prores`, `dnxhr`, `ffv1`, `h264` or `preview`     |
-| `--audio=<mode>`   | `auto`, `buzz`, `source` or `none`                 |
+| Flag               | Meaning                                             |
+| ------------------ | --------------------------------------------------- |
+| `--look=<url>`     | a whole address bar copied from the app             |
+| `--preset=<name>`  | a built-in preset by name                           |
+| `--set=<k:v,…>`    | individual controls, applied over the above         |
+| `--seconds=<n>`    | how much to render; default is the input's length   |
+| `--fps=<n>`        | output rate; default 60, the simulation's own rate  |
+| `--seed=<n>`       | random seed; the same seed gives the same file      |
+| `--motion=<0..1>`  | the modulation bay's master amount                  |
+| `--bpm=<n>`        | tempo, for routings locked to a clock               |
+| `--pattern=<name>` | `bars`, `sweep` or `none`, overriding the link      |
+| `--codec=<name>`   | `prores`, `dnxhr`, `ffv1`, `h264` or `preview`      |
+| `--audio=<mode>`   | `auto`, `buzz`, `source` or `none`                  |
+| `--audio-file=<p>` | the track driving the artifacts, when not the input |
 
 `--look` takes the link whole and reads it with the app's own parser, so the
 board, the modulation bay, the source mode, the caption and the seed all arrive
@@ -156,6 +160,43 @@ damages.
 Two renders of one take produce the same file, sound included. `--seed` fixes
 the random sequence, the render supplies its own clock, and each audio window is
 cut at the frame being rendered.
+
+## As a pipe stage
+
+A `-` in place of the input or the output carries frames as raw RGBA on stdin or
+stdout, so the renderer sits inside somebody else's ffmpeg pipeline:
+
+```
+ffmpeg -i in.mkv -vf "crop=1440:1080,yadif" -s 754x480 -pix_fmt rgba -f rawvideo - \
+  | videoskillet - - --preset=vhs --audio-file=in.mkv \
+  | ffmpeg -f rawvideo -pix_fmt rgba -s 754x480 -r 60 -i - -c:v prores_ks -profile:v 4 out.mov
+```
+
+What that buys is every format, filter, encoder and flag ffmpeg has, without a
+flag here for each of them — deinterlacing on the way in, an encoder setting
+`--codec`'s five recipes do not cover, a hardware encoder, a container this page
+never mentions. Either end works alone: `videoskillet in.mp4 -` decodes normally
+and writes frames out, and `videoskillet - out.mov` takes frames in and encodes
+as usual.
+
+The stream is 754x480 RGBA at the signal raster, and nothing in it says so — raw
+video carries no header. `-s 754x480 -pix_fmt rgba` on both ffmpeg commands is
+the whole contract, and getting it wrong is reported rather than rendered:
+
+```
+stdin ended 723840 bytes into a 1447680-byte frame — the stream is not 754x480 rgba
+```
+
+A raw stdin has no length to ask ffprobe for, so the render runs until the
+stream ends; `--seconds` still cuts it short. The progress line and the summary
+go to stderr, because stdout may be carrying the picture.
+
+**Sound needs saying explicitly.** A raw stdin carries none, and a raw stdout
+has no container to put a track in, so a render that ends in a pipe writes the
+picture alone and the intercarrier buzz has nowhere to go. The artifacts are
+audio-driven, though, and `--audio-file` keeps them so: point it at the same
+clip ffmpeg is reading and bass still drives vertical hold. Mux the sound back
+on in the last ffmpeg if you want it in the file.
 
 ## Where the file goes
 

@@ -74,15 +74,16 @@ export interface Sink {
   close: () => Promise<void>
 }
 
-// Read exactly `n` bytes, or null if the stream ended first. A pipe hands over
+// Fill `buf`, and answer with how much of it got filled. A pipe hands over
 // whatever it has, so a frame arrives in several reads and the last one is
 // usually short — treating a short read as the end is how a decoder loses the
-// bottom of every frame.
+// bottom of every frame. Anything less than the whole buffer means the stream
+// ended, and the count is what says whether it ended on a frame boundary.
 async function readFull(
   r: ReadableStreamDefaultReader<Uint8Array>,
   buf: Uint8Array,
   carry: { rest: Uint8Array },
-): Promise<boolean> {
+): Promise<number> {
   let at = 0
   if (carry.rest.length > 0) {
     const take = Math.min(carry.rest.length, buf.length)
@@ -92,13 +93,13 @@ async function readFull(
   }
   while (at < buf.length) {
     const { value, done } = await r.read()
-    if (done) return false
+    if (done) return at
     const take = Math.min(value.length, buf.length - at)
     buf.set(value.subarray(0, take), at)
     at += take
     if (take < value.length) carry.rest = value.subarray(take)
   }
-  return true
+  return at
 }
 
 // A still is a source too — the app takes one on either deck, and a look over a
@@ -153,8 +154,8 @@ export function ffmpegDecode(
     next: async () => {
       if (spent) return null
       const buf = new Uint8Array(w * h * 4)
-      const ok = await readFull(reader, buf, carry)
-      if (!ok) {
+      const got = await readFull(reader, buf, carry)
+      if (got < buf.length) {
         spent = true
         return null
       }
@@ -181,6 +182,67 @@ export function ffmpegDecode(
             : `ffmpeg could not read ${path}:\n${text}`,
         )
       }
+    },
+  }
+}
+
+// The same frames without an ffmpeg of our own on the near end: raw RGBA
+// arrives on stdin, so the caller's own ffmpeg — or anything else — decides
+// what is decoded and how. The contract is what `ffmpegDecode` asks ffmpeg for
+// above, and it is not negotiable here, because a raw stream carries no header
+// saying otherwise:
+//
+//   ffmpeg -i in.mkv -s 754x480 -pix_fmt rgba -f rawvideo -
+//
+// A short read at a frame boundary is the input ending. A short read partway
+// through a frame is a caller who sent the wrong size, and it is worth saying
+// so: the alternative is a render that silently walks a diagonal through every
+// frame after the first.
+export function rawSource(w: number, h: number): Source {
+  const reader = Deno.stdin.readable.getReader()
+  const carry = { rest: new Uint8Array(0) }
+  let spent = false
+  return {
+    next: async () => {
+      if (spent) return null
+      const buf = new Uint8Array(w * h * 4)
+      const got = await readFull(reader, buf, carry)
+      if (got < buf.length) {
+        spent = true
+        if (got > 0) {
+          throw new Error(
+            `stdin ended ${got} bytes into a ${w * h * 4}-byte frame — the stream is not ${w}x${h} rgba`,
+          )
+        }
+        return null
+      }
+      return buf
+    },
+    close: async () => {
+      try {
+        await reader.cancel()
+      } catch {
+        // Already gone when stdin ended on its own.
+      }
+    },
+  }
+}
+
+// The far end of the same idea. Frames go out as raw RGBA at the signal
+// raster's size, for the caller's ffmpeg to encode:
+//
+//   ffmpeg -f rawvideo -pix_fmt rgba -s 754x480 -r 60 -i - out.mov
+//
+// Nothing else may touch stdout while this is open, which is why the progress
+// line and the summary move to stderr for a render that ends here.
+export function rawSink(): Sink {
+  const writer = Deno.stdout.writable.getWriter()
+  return {
+    write: async rgba => {
+      await writer.write(rgba)
+    },
+    close: async () => {
+      await writer.close()
     },
   }
 }
