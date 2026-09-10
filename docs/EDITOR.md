@@ -872,6 +872,35 @@ where the strip holds a sequence of them. And it fetches nothing, so a link
 naming a clip, a still or a pool pick renders over whatever file was passed on
 the command line.
 
+### The same binary hosts the app
+
+`videoskillet serve` puts the instrument on a local address out of the same
+executable, and it is here for one source. The **Video URL…** option shells out
+to yt-dlp, so a page served from a CDN can never offer it — until now it existed
+only behind a clone, a pnpm install and a vite plugin. A server on the machine
+is what that source needs, and the binary is already on the machine.
+
+Three pieces, and the third is the one that had to be designed:
+
+- **The bridge left the vite plugin.** The download, the cache and the progress
+  readings are `scripts/serve/ytdlp.ts`, which reaches for node builtins Deno
+  implements too, so one file runs under both servers. `vite-plugin-ytdlp.ts`
+  and `scripts/serve/main.ts` each write their own transport — connect on one
+  side, `Deno.serve` on the other — and share everything else.
+- **The app rides inside the executable.** `deno compile --include` carries
+  `dist/app`, `dist/assets` and the files in `public/` the app fetches: about 3
+  MB against a 100 MB runtime. The landing page, the guide and the demo reel are
+  the website's and stay out, which is 12 of dist's 15 MB, so `/` goes to
+  `/app/` instead of a page this program was never asked for.
+- **The picker asks the server what it can do.** A server with yt-dlp on PATH
+  writes `<meta name="videoskillet-bridge" content="ytdlp">` into the document
+  it serves, and `sources/bridge.ts` reads that while `modes.ts` evaluates. This
+  was `import.meta.env.DEV`, which cannot answer the question any more: the same
+  production bundle is the website, which has no bridge, and what `serve` hands
+  out, which does. A tag rather than an endpoint to poll, because a module
+  script runs after the head is parsed — so the answer is already in the
+  document and the source lists stay plain constants.
+
 ## What is left
 
 - **The filmstrip, and trimming.** Cards that show their clip and are as wide as

@@ -1,8 +1,11 @@
-# The CLI renderer
+# The command line
 
-`videoskillet` runs the signal path over a file without a browser. The look
-comes from a link copied from the app, the picture from a clip or a still on
-disk, and the output is ProRes 4444 that an editor can open.
+`videoskillet` is the app's engine with no browser around it, and it does two
+things.
+
+**It renders a file.** The look comes from a link copied from the app, the
+picture from a clip or a still on disk, and the output is ProRes 4444 that an
+editor can open.
 
 ```
 videoskillet in.mp4 out.mov --look='<a link copied from the app>'
@@ -10,10 +13,15 @@ videoskillet photo.jpg out.mov --preset=wornTape --seconds=8
 videoskillet out.mov --look='<a link that names its own source>'
 ```
 
-Every release carries the renderer as a single executable, so a render needs no
-checkout and no toolchain. A clone runs the same program as `pnpm render`, and
-both take the same arguments; put `pnpm render` in place of `videoskillet` in
-the examples on this page to run it from a clone.
+**It hosts the app.** `videoskillet serve` puts the instrument on a local
+address, with one source the hosted copy at videoskillet.com cannot offer: the
+video-URL option, which fetches a clip with yt-dlp. See
+[Serving the app](#serving-the-app).
+
+Every release carries both as a single executable, so neither needs a checkout
+or a toolchain. A clone runs the same program as `pnpm render`, and both take
+the same arguments; put `pnpm render` in place of `videoskillet` in the examples
+on this page to run it from a clone.
 
 The renderer runs the app's own engine. The pass graph, the control table and
 the link parser are the same code the tab runs, bundled so a JavaScript runtime
@@ -32,11 +40,14 @@ command — see [As a pipe stage](#as-a-pipe-stage).
 The renderer is a local tool, and the hosted app has no equivalent. Take the
 binary, or run it from a clone.
 
-Both routes need ffmpeg and ffprobe on PATH: ffmpeg decodes the input and
-encodes the output, and ffprobe reads the input's length. Both also need a GPU
-Deno can reach. The renderer drives Deno's own WebGPU, so the shaders execute on
-the same hardware the tab would use, and a machine whose driver Deno cannot
-reach cannot run a render at all.
+Both routes need ffmpeg and ffprobe on PATH for a render: ffmpeg decodes the
+input and encodes the output, and ffprobe reads the input's length. Both also
+need a GPU Deno can reach. The renderer drives Deno's own WebGPU, so the shaders
+execute on the same hardware the tab would use, and a machine whose driver Deno
+cannot reach cannot run a render at all.
+
+`serve` asks for neither: it needs [yt-dlp](https://github.com/yt-dlp/yt-dlp) on
+PATH for the video-URL source, and nothing at all for the rest of the app.
 
 <!-- tabs: How to install -->
 
@@ -84,6 +95,47 @@ from any one of them. That is what `.github/workflows/release.yml` runs on a
 version tag, which is where the release archives come from.
 
 <!-- /tabs -->
+
+## Serving the app
+
+```
+videoskillet serve
+videoskillet serve --port=9000 --open
+```
+
+`serve` hosts the instrument at `http://127.0.0.1:8787/app/` and prints the
+address. What it serves is the production build, carried inside the executable,
+so this costs no checkout, no toolchain and no network.
+
+**The video-URL source is the reason to run it.** That source fetches a clip
+from any site yt-dlp has an extractor for, and yt-dlp is a program on a machine
+— so videoskillet.com, which is files on a CDN, has nothing behind it to run
+one. A server on your own machine does. Everything else the app does it already
+does in a tab.
+
+The source appears when `yt-dlp` is on PATH. When it is not, `serve` says so at
+startup and the app offers every other source as usual; installing yt-dlp and
+restarting is the whole fix. The server tells the page what it can do with a
+`<meta name="videoskillet-bridge">` tag, and `pnpm dev` writes the same tag,
+which is how a dev server offers the same option.
+
+| Flag            | Meaning                                             |
+| --------------- | --------------------------------------------------- |
+| `--port=<n>`    | which port to listen on; default 8787               |
+| `--host=<addr>` | which address to bind; default 127.0.0.1            |
+| `--dir=<path>`  | serve a build from disk instead of the embedded one |
+| `--open`        | open the app in the default browser once it is up   |
+
+The default binding answers this machine and nothing else. `--host=0.0.0.0`
+opens it to the network, which is how a phone or a second machine reaches it —
+the app is one HTML page and a bundle, and it runs the same in any browser with
+WebGPU.
+
+Clips fetched through the bridge are cached under `$TMPDIR/videoskillet.js-yt`,
+keyed by address and range, so the same URL opened twice downloads once.
+
+From a clone the command is `pnpm serve`, which hosts whatever `pnpm build` last
+wrote to `dist/` — the binary carries that build, and a clone has it on disk.
 
 ## Why rendering happens outside the browser
 
@@ -173,7 +225,7 @@ Rendering a known pattern through a look measures what the look does to it, so
 the renderer works as an instrument as well as an export. Keeping the file makes
 the next render comparable to this one.
 
-## Options
+## Render options
 
 | Flag               | Meaning                                             |
 | ------------------ | --------------------------------------------------- |

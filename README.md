@@ -64,9 +64,10 @@ pnpm install
 pnpm dev
 ```
 
-Fun bonus: If you are running this locally, it adds a **Video URL…** source that
-works with yt-dlp and lets you video mix with YouTube — or anything else yt-dlp
-can fetch — on the fly.
+Fun bonus: a server on your own machine adds a **Video URL…** source that works
+with yt-dlp and lets you video mix with YouTube — or anything else yt-dlp can
+fetch — on the fly. `pnpm dev` has it, and so does `videoskillet serve` from the
+[released binary](docs/CLI.md#serving-the-app), which needs no clone.
 
 ## FAQ
 
@@ -118,8 +119,9 @@ OBS browser source. OSC is the piece that is missing.
 - [User guide](docs/USER-GUIDE.md)
 - [Features](docs/FEATURES.md)
 - [Effects](docs/EFFECTS.md) — every control, generated
-- [CLI](docs/CLI.md) — `pnpm render`, the offline renderer: it takes a link and
-  a file and writes ProRes 4444
+- [CLI](docs/CLI.md) — the offline renderer, which takes a link and a file and
+  writes ProRes 4444, and `videoskillet serve`, which hosts the app on your own
+  machine
 - [Drive it by URL](public/llms.txt) — the query string is a complete remote
   control, and [every control's key](public/llms-full.txt) lists what the rest
   of the docs leave out. Published at

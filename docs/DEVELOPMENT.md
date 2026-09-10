@@ -900,15 +900,30 @@ and both faults the redesign fixed were invisible on a laptop — a nav row that
 wrapped three deep and stuck there, and a two-column table crushed to two words
 a line.
 
-## Video URL source (dev server only)
+## Video URL source (a server on the machine)
 
-The **Video URL…** source fetches `/yt?url=…`, a Vite middleware
-([`vite-plugin-ytdlp.ts`](../vite-plugin-ytdlp.ts)) that shells out to `yt-dlp`.
-It's `apply: 'serve'`, so it exists under `pnpm dev` only. Any site `yt-dlp` has
-an extractor for works; the guard on the endpoint is the scheme, which keeps it
-from being pointed at a local path or handed something that reads as a flag. The
-reply is served under the type of the file `yt-dlp` actually wrote, since a
-generic extractor can hand back webm as easily as mp4.
+The **Video URL…** source fetches `/yt?url=…`, an endpoint that shells out to
+`yt-dlp`. Any site `yt-dlp` has an extractor for works; the guard on the
+endpoint is the scheme, which keeps it from being pointed at a local path or
+handed something that reads as a flag. The reply is served under the type of the
+file `yt-dlp` actually wrote, since a generic extractor can hand back webm as
+easily as mp4.
+
+Two servers mount it and neither owns it. The download, the cache and the
+progress readings are [`scripts/serve/ytdlp.ts`](../scripts/serve/ytdlp.ts),
+which uses node builtins Deno implements as well, so one file runs under both:
+[`vite-plugin-ytdlp.ts`](../vite-plugin-ytdlp.ts) is the connect glue for
+`pnpm dev`, and [`scripts/serve/main.ts`](../scripts/serve/main.ts) is the
+`videoskillet serve` command in the released binary
+([CLI](CLI.md#serving-the-app)). Each host writes its own transport and nothing
+else.
+
+The server decides which pages offer the source. One that has `yt-dlp` on PATH
+writes `<meta name="videoskillet-bridge" content="ytdlp">` into the document,
+`src/sources/bridge.ts` reads it while `modes.ts` evaluates, and the option is
+in the picker or it is not. So the same production bundle offers the source
+under `serve` and withholds it on videoskillet.com, where nothing behind the
+page could run `yt-dlp` anyway.
 
 Setup is the binaries on `PATH`: `yt-dlp --version`, and `ffmpeg -version` for
 sites that publish video and audio apart. Clips are capped at 480 lines, which
