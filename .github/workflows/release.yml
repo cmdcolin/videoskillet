@@ -84,8 +84,12 @@ jobs:
           name: binary-${{ matrix.target }}
           path: dist-bin/${{ steps.package.outputs.asset }}
 
+  # Both of the jobs that publish something are tag-only. A manual dispatch is
+  # for rebuilding the binaries against a new Deno, and has no version to
+  # release under.
   release:
     needs: binaries
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -119,6 +123,7 @@ jobs:
   # package.json, which the same commit as this tag bumped, so the published
   # version and the tag always agree.
   jsr:
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
