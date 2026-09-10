@@ -837,6 +837,19 @@ in the app" link under a figure, joined to `docs/img/shots.json` on the image's
 filename. The figures are copied flat into `dist/guide/img/` rather than handed
 to Astro's asset pipeline, because `shots.json` joins on the bare filename.
 
+**A set of routes gets tabs.** Where subsections are alternatives rather than
+steps — the install routes on the CLI page — the markdown wraps a run of `###`
+sections in `<!-- tabs: How to install -->` and `<!-- /tabs -->`. GitHub drops
+the comments and renders the subsections; the site turns each heading into a tab
+over its own panel
+([`../site/lib/rehype-guide.mjs`](../site/lib/rehype-guide.mjs) builds the
+markup, [`../site/scripts/tabs.js`](../site/scripts/tabs.js) switches it). The
+panel takes the heading's id, so `#from-a-clone` still lands on that
+section and opens its tab, and the heading stays in the markup for the noscript
+fallback to put back. Each route then has to stand alone, which is what the
+tabbing is for: a page that says "this adds Deno to the two programs above" has
+already lost the reader who took the other route.
+
 Every address is site-absolute and ends in a slash: a page is a directory with
 an index in it, and `pages.mjs` is the one place that turns a slug into that
 address. The slugs stay flat — an ADR is `adr-0004-…`, not a page inside `adr/`

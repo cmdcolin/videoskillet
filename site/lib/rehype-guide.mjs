@@ -79,12 +79,154 @@ const collapsePictures = tree => {
   })
 }
 
+// An install page has routes through it rather than sections of it: a reader
+// takes the binary or takes a clone, and the route they did not take is prose
+// they read past. The markdown marks a run of `###` sections as a set of
+// routes, and the site puts them behind one row of tabs.
+//
+// The markdown stays what GitHub renders — plain subsections between two
+// comments, which GitHub drops — so the page reads the same in both places and
+// nothing dead goes into the file. This is the split the clip frames use.
+//
+//     <!-- tabs: Install options -->
+//     ### The binary
+//     …
+//     ### From a clone
+//     …
+//     <!-- /tabs -->
+//
+// Each heading becomes a tab and its section the panel behind it. The panel
+// carries the heading's own id, so a link to `#from-a-clone` still lands on it
+// and site/scripts/tabs.js opens that tab on arrival.
+const OPEN = /^\s*tabs(?::\s*(.+?))?\s*$/
+const CLOSE = /^\s*\/tabs\s*$/
+
+const isOpen = node => node.type === 'comment' && OPEN.test(node.value)
+const isClose = node => node.type === 'comment' && CLOSE.test(node.value)
+
+const tabButton = (route, i) => ({
+  type: 'element',
+  tagName: 'button',
+  properties: {
+    type: 'button',
+    className: ['tab'],
+    role: 'tab',
+    id: `tab-${route.id}`,
+    ariaControls: route.id,
+    ariaSelected: i === 0 ? 'true' : 'false',
+    // Roving: the row is one stop on the tab key, and the arrow keys move
+    // within it. tabs.js keeps this in step with the selection.
+    tabIndex: i === 0 ? 0 : -1,
+  },
+  children: [{ type: 'text', value: route.label }],
+})
+
+const tabPanel = (route, i) => ({
+  type: 'element',
+  tagName: 'section',
+  properties: {
+    className: ['tabpanel'],
+    role: 'tabpanel',
+    id: route.id,
+    ariaLabelledBy: `tab-${route.id}`,
+    tabIndex: 0,
+    hidden: i > 0,
+  },
+  children: route.body,
+})
+
+// Scripting off leaves a row of buttons that do nothing over the one route the
+// server happened to open. Every panel is in the markup either way, so the
+// fallback shows them the way the markdown does: each section under its own
+// heading, with no tab row.
+const FALLBACK = {
+  type: 'element',
+  tagName: 'noscript',
+  properties: {},
+  children: [
+    {
+      type: 'element',
+      tagName: 'style',
+      properties: {},
+      children: [
+        {
+          type: 'text',
+          value:
+            '.tabbar{display:none}.tabpanel[hidden]{display:block}' +
+            '.tabpanel{padding-top:0}.tabhead{display:revert}',
+        },
+      ],
+    },
+  ],
+}
+
+const tabs = (routes, label) => ({
+  type: 'element',
+  tagName: 'div',
+  properties: { className: ['tabs'] },
+  children: [
+    FALLBACK,
+    {
+      type: 'element',
+      tagName: 'div',
+      properties: { className: ['tabbar'], role: 'tablist', ariaLabel: label },
+      children: routes.map(tabButton),
+    },
+    ...routes.map(tabPanel),
+  ],
+})
+
+// The heading stays in the panel for the fallback to show, hidden while the tab
+// row is doing the labelling. `tabhead` also keeps it out of the page outline: a
+// section nav that scrolls to something invisible is a broken link.
+// The panel takes the section's slug, so the heading needs an id of its own:
+// Astro gives every heading one, and two elements answering to `#the-binary`
+// is a link that lands on whichever the browser saw first.
+const route = heading => {
+  const label = text(heading)
+  const id = slug(label)
+  heading.properties.className = ['tabhead']
+  heading.properties.id = `${id}-head`
+  return { id, label, body: [heading] }
+}
+
+const split = nodes => {
+  const routes = []
+  for (const node of nodes) {
+    if (node.type === 'element' && node.tagName === 'h3') {
+      routes.push(route(node))
+    } else if (routes.length > 0) {
+      routes.at(-1).body.push(node)
+    }
+  }
+  return routes
+}
+
+const groupTabs = tree => {
+  visit(tree, node => {
+    if (node.children === undefined) return
+    for (;;) {
+      const open = node.children.findIndex(isOpen)
+      if (open === -1) return
+      const close = node.children.findIndex((c, i) => i > open && isClose(c))
+      if (close === -1) throw new Error('a <!-- tabs --> block is never closed')
+      const routes = split(node.children.slice(open + 1, close))
+      if (routes.length === 0) {
+        throw new Error('a <!-- tabs --> block holds no ### sections')
+      }
+      const label = OPEN.exec(node.children[open].value)[1] ?? 'Options'
+      node.children.splice(open, close - open + 1, tabs(routes, label))
+    }
+  })
+}
+
 const headings = tree => {
   const outline = []
   visit(tree, 'element', node => {
     const level = /^h([1-6])$/.exec(node.tagName)
     if (level === null) return
     const depth = Number(level[1])
+    if (node.properties.className?.includes('tabhead')) return
     const id = slug(text(node))
     node.properties.id = id
     if (depth === 2 || depth === 3) {
@@ -226,6 +368,7 @@ const linkFigures = tree => {
 export const rehypeGuide = () => (tree, file) => {
   absoluteFigures(tree)
   collapsePictures(tree)
+  groupTabs(tree)
   const outline = headings(tree)
   wrapTables(tree)
   wrapVideos(tree)

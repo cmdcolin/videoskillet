@@ -216,8 +216,16 @@ to `renders/`, which is gitignored.
 
 ## Installing
 
-The renderer is a local tool, and the hosted app has no equivalent. Either take
-the binary or run it from a clone.
+The renderer is a local tool, and the hosted app has no equivalent. Take the
+binary, or run it from a clone.
+
+Both routes need ffmpeg and ffprobe on PATH: ffmpeg decodes the input and
+encodes the output, and ffprobe reads the input's length. Both also need a GPU
+Deno can reach. The renderer drives Deno's own WebGPU, so the shaders execute on
+the same hardware the tab would use, and a machine whose driver Deno cannot
+reach cannot run a render at all.
+
+<!-- tabs: How to install -->
 
 ### The binary
 
@@ -234,15 +242,8 @@ mv videoskillet-x86_64-unknown-linux-gnu videoskillet
 Linux and macOS are built for x86_64 and aarch64 and ship as `.tar.gz`; Windows
 is x86_64 and ships as a `.zip` holding a `.exe`. `SHA256SUMS` beside them
 covers every archive. A download is around 30 MB and unpacks to about 100 MB,
-most of it the runtime.
-
-Two programs still have to be on PATH. ffmpeg handles both ends of the pipe,
-decoding the input and encoding the output, and ffprobe reads the input's
-length. The binary shells out to them.
-
-Rendering also needs a working GPU. The renderer drives Deno's own WebGPU, so
-the shaders execute on the same hardware the tab would use, and a machine whose
-driver Deno cannot reach cannot run a render at all.
+most of it the runtime. Nothing else is needed: the executable carries its own
+runtime and shells out to ffmpeg for the encoding.
 
 ### From a clone
 
@@ -253,21 +254,23 @@ pnpm install
 pnpm render in.mp4 out.mov --preset=vhs
 ```
 
-This adds Node, pnpm and [Deno](https://deno.com/) to the two programs above:
-Node and pnpm build the engine bundle, and Deno runs it. `pnpm render` builds
-the bundle before every run, so there is no separate step, and the first run
-takes a few seconds longer than the ones after it.
+Node, pnpm and [Deno](https://deno.com/) do the work here: Node and pnpm build
+the engine bundle, and Deno runs it. `pnpm render` builds the bundle before
+every run, so there is no separate step, and the first run takes a few seconds
+longer than the ones after it.
 
 A clone is what you want for rendering against an edit you are making, since a
 binary carries the engine it was built with.
 
-### Building a binary
+#### Building a binary
 
 `pnpm render:compile` writes `bin/videoskillet` for the machine it runs on.
 `deno compile` cross-compiles, so
 `node scripts/render/compile.mjs --all --out=dist-bin` builds every platform
 from any one of them. That is what `.github/workflows/release.yml` runs on a
 version tag, which is where the release archives come from.
+
+<!-- /tabs -->
 
 ## Limitations
 

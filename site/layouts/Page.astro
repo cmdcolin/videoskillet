@@ -2,6 +2,7 @@
 import Footer from '../components/Footer.astro'
 import Header from '../components/Header.astro'
 import spy from '../scripts/spy.js?raw'
+import tabs from '../scripts/tabs.js?raw'
 import video from '../scripts/video.js?raw'
 import css from '../styles/guide.css?raw'
 import tokens from '../styles/tokens.css?raw'
@@ -105,5 +106,6 @@ const marked = spec.group.mark(spec)
     <Footer />
     <script is:inline set:html={spy} />
     <script is:inline set:html={video} />
+    <script is:inline set:html={tabs} />
   </body>
 </html>

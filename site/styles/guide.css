@@ -367,6 +367,54 @@ video {
   border-color: transparent transparent transparent #0e0e11;
 }
 
+/* One row of routes through a section, with the route not taken folded away
+   (site/lib/rehype-guide.mjs builds the markup, site/scripts/tabs.js switches
+   it). The row wraps on a narrow screen rather than scrolling sideways: two or
+   three labels fit a phone in two lines, and a row that scrolls hides the
+   choice it exists to offer. */
+.tabs {
+  margin: 1.5rem 0 1.8rem;
+}
+.tabbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem 1.2rem;
+  border-bottom: 1px solid var(--border);
+}
+.tab {
+  appearance: none;
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  padding: 0.5rem 0.15rem;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--fg3);
+  cursor: pointer;
+}
+.tab:hover {
+  color: var(--fg);
+}
+.tab[aria-selected='true'] {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+/* The panel is prose in the reading column, so it gets no box of its own; the
+   space under the row is what says the two belong together. */
+.tabpanel {
+  padding-top: 1.1rem;
+}
+.tabpanel > :last-child {
+  margin-bottom: 0;
+}
+/* The tab is the panel's heading while the row is there. It stays in the markup
+   for the noscript fallback, which puts it back. */
+.tabhead {
+  display: none;
+}
+
 /* Scrolls rather than crushing its columns; the shadow says there is more. */
 .tablewrap {
   overflow-x: auto;
