@@ -79,14 +79,15 @@ const collapsePictures = tree => {
   })
 }
 
-// An install page has routes through it rather than sections of it: a reader
-// takes the binary or takes a clone, and the route they did not take is prose
-// they read past. The markdown marks a run of `###` sections as a set of
-// routes, and the site puts them behind one row of tabs.
+// The install section of the CLI page offers the reader two routes: take the
+// release binary, or take a clone. A reader follows one of them, and the other
+// one is prose they scroll past. The markdown marks a run of `###` sections as
+// a set of routes like that, and the site puts them behind one row of tabs.
 //
-// The markdown stays what GitHub renders — plain subsections between two
-// comments, which GitHub drops — so the page reads the same in both places and
-// nothing dead goes into the file. This is the split the clip frames use.
+// What the markdown holds is what GitHub renders: plain subsections, wrapped in
+// two comments that GitHub drops. The page therefore reads the same in both
+// places, and the file carries no markup that works only here. The clip frames
+// below are built the same way.
 //
 //     <!-- tabs: Install options -->
 //     ### The binary
@@ -95,19 +96,19 @@ const collapsePictures = tree => {
 //     …
 //     <!-- /tabs -->
 //
-// Each heading becomes a tab and its section the panel behind it. The panel
-// carries the heading's own id, so a link to `#from-a-clone` still lands on it
-// and site/scripts/tabs.js opens that tab on arrival.
+// Each heading becomes a tab, and its section becomes the panel behind it. The
+// panel carries the heading's own id, so a link to `#from-a-clone` still lands
+// on that section, and site/scripts/tabs.js opens its tab when the page loads.
 const OPEN = /^\s*tabs(?::\s*(.+?))?\s*$/
 const CLOSE = /^\s*\/tabs\s*$/
 
 const isOpen = node => node.type === 'comment' && OPEN.test(node.value)
 const isClose = node => node.type === 'comment' && CLOSE.test(node.value)
 
-// A marker with a typo in it is the failure that has nothing to show for
-// itself: a comment renders as nothing on GitHub and nothing here, so the
-// sections stay flat and the page looks like someone decided against tabs.
-// Anything that was reaching for a marker and missed stops the build instead.
+// A renderer draws an HTML comment as nothing at all, so a marker with a typo
+// in it leaves the subsections flat and the page reads as though nobody ever
+// asked for tabs. Anything close enough to a marker to have been meant as one
+// stops the build instead.
 const NEAR = /^\s*\/?\s*tabs?\b/i
 
 const checkMarkers = tree => {
@@ -128,8 +129,9 @@ const tabButton = (route, i) => ({
     id: `tab-${route.id}`,
     ariaControls: route.id,
     ariaSelected: i === 0 ? 'true' : 'false',
-    // Roving: the row is one stop on the tab key, and the arrow keys move
-    // within it. tabs.js keeps this in step with the selection.
+    // A roving tabindex: the tab key reaches the row once, and the arrow keys
+    // move between the tabs inside it. tabs.js keeps this in step with the
+    // selection.
     tabIndex: i === 0 ? 0 : -1,
   },
   children: [{ type: 'text', value: route.label }],
@@ -149,10 +151,10 @@ const tabPanel = (route, i) => ({
   children: route.body,
 })
 
-// Scripting off leaves a row of buttons that do nothing over the one route the
-// server happened to open. Every panel is in the markup either way, so the
-// fallback shows them the way the markdown does: each section under its own
-// heading, with no tab row.
+// With scripting off, the buttons do nothing and the reader is left with
+// whichever route the build opened. Every panel is in the markup either way, so
+// this style shows all of them the way the markdown does, each section under
+// its own heading, and hides the row of buttons.
 const FALLBACK = {
   type: 'element',
   tagName: 'noscript',
@@ -190,12 +192,14 @@ const tabs = (routes, label) => ({
   ],
 })
 
-// The heading stays in the panel for the fallback to show, hidden while the tab
-// row is doing the labelling. `tabhead` also keeps it out of the page outline: a
-// section nav that scrolls to something invisible is a broken link.
-// The panel takes the section's slug, so the heading needs an id of its own:
-// Astro gives every heading one, and two elements answering to `#the-binary`
-// is a link that lands on whichever the browser saw first.
+// The heading stays inside the panel so the fallback above can show it, and CSS
+// hides it while the tab row is doing the labelling. The `tabhead` class also
+// keeps it out of the page outline, since a nav entry that scrolls to a hidden
+// heading goes nowhere.
+//
+// The panel takes the section's slug, so the heading needs an id of its own.
+// Astro gives every heading an id, and if both elements answered to
+// `#the-binary` a link would land on whichever one the browser saw first.
 const route = heading => {
   const label = text(heading)
   const id = slug(label)

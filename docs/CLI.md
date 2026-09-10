@@ -242,8 +242,8 @@ mv videoskillet-x86_64-unknown-linux-gnu videoskillet
 Linux and macOS are built for x86_64 and aarch64 and ship as `.tar.gz`; Windows
 is x86_64 and ships as a `.zip` holding a `.exe`. `SHA256SUMS` beside them
 covers every archive. A download is around 30 MB and unpacks to about 100 MB,
-most of it the runtime. Nothing else is needed: the executable carries its own
-runtime and shells out to ffmpeg for the encoding.
+most of it the runtime. The executable carries that runtime with it and shells
+out to ffmpeg for the encoding, so nothing else has to be installed.
 
 ### From a clone
 

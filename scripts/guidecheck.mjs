@@ -16,8 +16,9 @@
 // deep, a two-column table crushed to two words a line — are invisible on a
 // laptop.
 //
-// Each route behind a tab is opened and measured as well, since a folded panel
-// has never been laid out. That click is also what proves the tabs work at all.
+// The run also opens each route behind a tab and measures it, because a browser
+// never lays out a folded panel. Those clicks are the only check the tab script
+// gets.
 
 import puppeteer from 'puppeteer-core'
 
@@ -108,19 +109,19 @@ for (const vp of WIDTHS) {
     if (report(vp, p.name, await measure())) bad++
     await page.screenshot({ path: `${out}/${vp.name}-${p.name}.png` })
 
-    // A route behind a tab is in the markup but has never been laid out, so the
-    // measurement above only ever covers the one the page opens with. Open each
-    // of the others: a wide table or a long line in one is invisible from here
-    // otherwise, and it is the phone arm that would have caught it.
+    // A route behind a tab sits in the markup with no layout of its own, so the
+    // measurement above covers only the route the page opens with. Opening each
+    // of the others brings a wide table or a long line inside one of them into
+    // view, which is the kind of thing the phone arm is here to catch.
     const tabs = await page.$$('.tab')
     for (const [i, tab] of tabs.entries()) {
       if (i === 0) continue
       const label = await tab.evaluate(el => el.textContent.trim())
       await tab.click()
       await new Promise(r => setTimeout(r, 150))
-      // The click is also the only test site/scripts/tabs.js gets: a page whose
-      // script never ran keeps the panel folded, and every route but the first
-      // becomes unreachable with nothing on screen to say so.
+      // The click is also the only check site/scripts/tabs.js gets. When that
+      // script does not run, the panel stays folded, every route after the
+      // first is unreachable, and the page shows nothing to say so.
       const opened = await tab.evaluate(
         el => !document.getElementById(el.getAttribute('aria-controls')).hidden,
       )

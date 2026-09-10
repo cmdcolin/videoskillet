@@ -1,6 +1,7 @@
-// The route tabs on a page that has more than one way in — the install section
-// of the CLI page is the first. The row and the panels come out of the markdown
-// pipeline (site/lib/rehype-guide.mjs); this switches between them.
+// The route tabs, on a page that offers the reader more than one way in. The
+// install section of the CLI page is the first of them. The row and the panels
+// come out of the markdown pipeline (site/lib/rehype-guide.mjs), and this
+// script switches between them.
 //
 // Written in the same ES5 the rest of the inlined scripts here are: they go into
 // the page as they are, so nothing transpiles them.
@@ -35,9 +36,9 @@
     if (row) select(row, tab)
   })
 
-  // Arrow keys move within the row and wrap, Home and End go to its ends. The
-  // tab key leaves the row entirely, which is what the roving tabindex the
-  // markup ships with is for.
+  // The arrow keys move within the row and wrap around, and Home and End go to
+  // its ends. The tab key leaves the row entirely, which is what the roving
+  // tabindex in the markup is for.
   var STEP = { ArrowLeft: -1, ArrowRight: 1, Home: 'first', End: 'last' }
 
   document.addEventListener('keydown', function (e) {
@@ -59,8 +60,8 @@
     select(row, tabs[to], true)
   })
 
-  // A link to a panel's own id — the heading anchor the markdown had before the
-  // section became a tab — opens the tab it names.
+  // A link to a panel's own id opens the tab that names it. That id is the
+  // heading anchor the section had before it became a tab.
   function fromHash() {
     var panel = location.hash && document.querySelector(location.hash)
     if (!panel || panel.className.indexOf('tabpanel') < 0) return

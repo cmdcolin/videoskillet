@@ -837,25 +837,28 @@ in the app" link under a figure, joined to `docs/img/shots.json` on the image's
 filename. The figures are copied flat into `dist/guide/img/` rather than handed
 to Astro's asset pipeline, because `shots.json` joins on the bare filename.
 
-**A set of routes gets tabs.** Where subsections are alternatives rather than
-steps — the install routes on the CLI page — the markdown wraps a run of `###`
-sections in `<!-- tabs: How to install -->` and `<!-- /tabs -->`. GitHub drops
-the comments and renders the subsections; the site turns each heading into a tab
-over its own panel
+**Some sections offer the reader a set of routes, and those get tabs.** The
+install section of the CLI page is one of them: a reader takes the release
+binary or takes a clone. The markdown wraps that run of `###` sections in
+`<!-- tabs: How to install -->` and `<!-- /tabs -->`. GitHub drops the comments
+and renders the subsections as they stand, and the site turns each heading into
+a tab over its own panel
 ([`../site/lib/rehype-guide.mjs`](../site/lib/rehype-guide.mjs) builds the
 markup, [`../site/scripts/tabs.js`](../site/scripts/tabs.js) switches it). The
-panel takes the heading's id, so `#from-a-clone` still lands on that
-section and opens its tab, and the heading stays in the markup for the noscript
-fallback to put back. Each route then has to stand alone, which is what the
-tabbing is for: a page that says "this adds Deno to the two programs above" has
-already lost the reader who took the other route.
+panel takes the heading's id, so `#from-a-clone` still lands on that section and
+opens its tab, and the heading stays in the markup so the noscript fallback can
+put it back. Write each route so that it stands on its own, since the reader
+sees one of them. The install section used to say "this adds Node, pnpm and Deno
+to the two programs above", and a reader who took the binary route had never
+read about those two programs.
 
-A marker that does not parse stops the build. A comment renders as nothing in
-both places, so a typo in one would otherwise leave the sections flat with
-nothing on the page to say that anything was meant to happen.
+The build fails when a marker is misspelled. GitHub and the site both render an
+HTML comment as nothing at all, so a typo would otherwise leave the subsections
+flat, with nothing on the page to say that anything was meant to happen there.
 [`../site/tests/guide-tabs.test.ts`](../site/tests/guide-tabs.test.ts) covers
-the transform, and `guide:check` opens every tab at both widths — a folded panel
-has never been laid out, and the click is also what proves the script works.
+the transform. `guide:check` opens every tab at both widths, because a browser
+never lays out a folded panel, and those clicks also confirm that the script
+still switches them.
 
 Every address is site-absolute and ends in a slash: a page is a directory with
 an index in it, and `pages.mjs` is the one place that turns a slug into that
