@@ -37,9 +37,8 @@ cycle    round 1: presented  2 frames, then 103 rAF/1.5s
 cycle    round 2: presented 76 frames, then   0 rAF/1.5s   *** rAF STOPPED ***
 ```
 
-**And that is the whole difference.** Identical page, identical frames
-presented, one arm destroying the device at the end of each round and one
-keeping it:
+**That is the whole difference.** Identical page, identical frames presented,
+one arm destroying the device at the end of each round and one keeping it:
 
 ```
 destroy  round 1: presented 51 frames, then  90 rAF/1.5s
@@ -73,9 +72,9 @@ made a refresh cost the tab. `nopresent` is the control: a device that never
 presented is free to destroy, so this is about the swapchain and not about
 devices.
 
-**And the app, end to end.** `scripts/rafceiling.mjs --page=app` reloads the
-real app in one tab. Before this change it recorded `firstDeadSession: 2` (the
-run in [0002](0002-webgpu-sessions-are-scarce.md)); after it:
+**The app, end to end.** `scripts/rafceiling.mjs --page=app` reloads the real
+app in one tab. Before this change it recorded `firstDeadSession: 2` (the run in
+[0002](0002-webgpu-sessions-are-scarce.md)); after it:
 
 ```
 app session 1: 72 rAF/1.5s  vis=visible      app session 5: 73 rAF/1.5s  vis=visible
@@ -199,7 +198,7 @@ things were wrong with it.
 gives up after three faults inside a minute, per fault kind, on a screen that
 explains itself. Anything that reached eight builds had to get there slowly.
 
-**And what reaches it slowly is the case the policy deliberately forgives.**
+**What reaches it slowly is the case the policy deliberately forgives.**
 `RebuildPolicy` resets when a replacement held — a laptop whose discrete card
 suspends under a hidden tab produces one loss per alt-tab, each rebuilt
 successfully, and the policy is written not to punish that. Every one of those

@@ -23,8 +23,8 @@ was real but is no longer about anything:
   than the one it would now be protecting.
 - A 21.6-minute soak on a deliberately expensive look found zero stalls, zero
   frozen windows and zero device losses. The main thread is not the problem.
-- **And the freeze is now explained, by a mechanism a worker cannot touch.** A
-  tab is worth about two WebGPU sessions before the browser stops delivering
+- **The freeze is now explained, by a mechanism a worker cannot touch.** A tab
+  is worth about two WebGPU sessions before the browser stops delivering
   animation frames to it ([0002](0002-webgpu-sessions-are-scarce.md)). Moving
   the loop to another thread does not change how many devices a tab has created.
   Worse, per the handoff's own "if it is picked back up" list, a worker cannot

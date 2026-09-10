@@ -17,8 +17,8 @@ and it is the first thing a cleanup wipes. The library was the one feature in
 the app whose value grew the longer it survived, stored in the one place that
 guarantees it will not.
 
-So: Firebase Authentication (Google) plus Cloud Firestore, project
-`ntscjs-d4f56`, one document per user at `users/{uid}`.
+The replacement is Firebase Authentication (Google) plus Cloud Firestore,
+project `ntscjs-d4f56`, one document per user at `users/{uid}`.
 
 ## Decision
 

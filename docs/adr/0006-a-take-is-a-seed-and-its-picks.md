@@ -17,7 +17,7 @@ unreproducible by construction unless the draws come from somewhere a record can
 point at. Record four good minutes with unseeded rolls and there is no way back
 to them.
 
-**And the signal path rolls too**, which was not on the list. `MixState` and
+**The signal path rolls too**, which was not on the list. `MixState` and
 `TapeState` each own a `Wow` — the capstan's quasi-periodic wander, which draws
 three times a frame — and both reached for `Math.random` from inside the frame.
 `LineState` draws once a line and `ModState`'s random walk and sample-hold once
