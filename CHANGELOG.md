@@ -2,6 +2,26 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [0.44.5](https://github.com/cmdcolin/videoskillet/compare/v0.44.4...v0.44.5) - 2026-09-10
+
+### Features
+- [`0438ee1`](https://github.com/cmdcolin/videoskillet/commit/0438ee1a33014870eff9d506a1dbc718cc5131ff) run the renderer as a pipe stage
+- *(docs)* [`9171328`](https://github.com/cmdcolin/videoskillet/commit/9171328ee93aacdb4a22e9f251fd3163fcff0b36) put the CLI page's install routes behind tabs
+
+### Documentation
+- *(docs)* [`dc37c77`](https://github.com/cmdcolin/videoskillet/commit/dc37c77aeba3aa0874ae9c174f11fab3201b710b) lead the rendering page with the release binary
+- *(docs)* [`1077648`](https://github.com/cmdcolin/videoskillet/commit/10776484bd560ac272533ff71085ca9c6b41e79c) rename the rendering page to CLI
+- *(docs)* [`5a7d7ec`](https://github.com/cmdcolin/videoskillet/commit/5a7d7ece58a0bc15fb0a793a9bf0f2226e28de5d) add the voice, register and self-consistency rules
+- *(docs)* [`bf444f4`](https://github.com/cmdcolin/videoskillet/commit/bf444f43d35b0fac987c54abfbd45b80ddb2b4bd) rewrite the tabs prose in plain sentences
+- *(docs)* [`ead8f6f`](https://github.com/cmdcolin/videoskillet/commit/ead8f6f541bb83c87cb46c383b095c6ef31d7409) add the conclusion-for-mechanism entry to WRITING.md
+- *(docs)* [`74d2f79`](https://github.com/cmdcolin/videoskillet/commit/74d2f790eb1ca05c64f00fea9d182ec2bbb32fad) compact WRITING.md
+
+### Tests
+- *(docs)* [`d16a5b1`](https://github.com/cmdcolin/videoskillet/commit/d16a5b1ade06e0e10c7b8e1ebe3dc88a5a1785c5) cover the tabs transform, and measure every tab at both widths
+
+### Other Changes
+- [`74e7ffb`](https://github.com/cmdcolin/videoskillet/commit/74e7ffb023e2a1f2e2c24494b0a2a480325ad765) format and bump deps
+
 ## [0.44.4](https://github.com/cmdcolin/videoskillet/compare/v0.44.3...v0.44.4) - 2026-09-10
 
 ### Fixes
