@@ -1,25 +1,24 @@
 # The CLI renderer
 
-`pnpm render` runs the signal path over a file without a browser. The look comes
-from a link copied from the app, the picture from a clip or a still on disk, and
-the output is ProRes 4444 that an editor can open.
+`videoskillet` runs the signal path over a file without a browser. The look
+comes from a link copied from the app, the picture from a clip or a still on
+disk, and the output is ProRes 4444 that an editor can open.
 
 ```
-pnpm render in.mp4 out.mov --look='<a link copied from the app>'
-pnpm render photo.jpg out.mov --preset=wornTape --seconds=8
-pnpm render out.mov --look='<a link that names its own source>'
+videoskillet in.mp4 out.mov --look='<a link copied from the app>'
+videoskillet photo.jpg out.mov --preset=wornTape --seconds=8
+videoskillet out.mov --look='<a link that names its own source>'
 ```
+
+Every release carries the renderer as a single executable, so a render needs no
+checkout and no toolchain. A clone runs the same program as `pnpm render`, and
+both take the same arguments; put `pnpm render` in place of `videoskillet` in
+the examples on this page to run it from a clone.
 
 The renderer runs the app's own engine. The pass graph, the control table and
 the link parser are the same code the tab runs, bundled so a JavaScript runtime
 with no bundler in it can load them. A look therefore renders here the way it
 renders on screen.
-
-Every release carries the renderer as a single executable, so a render needs no
-checkout and no toolchain. `pnpm render` is the same program run from a clone.
-Both take the same arguments, and this page writes its examples as
-`pnpm render`; put `./videoskillet` in that place to run the binary. See
-[Installing](#installing).
 
 The app's **⎙ render** button in the strip tray also writes a file, and it is
 the one to use while performing. This page covers the offline case: putting a
@@ -27,6 +26,64 @@ look you already have over a clip, to get a file you can cut with.
 
 A render can also be one stage of a longer ffmpeg pipeline instead of the whole
 command — see [As a pipe stage](#as-a-pipe-stage).
+
+## Installing
+
+The renderer is a local tool, and the hosted app has no equivalent. Take the
+binary, or run it from a clone.
+
+Both routes need ffmpeg and ffprobe on PATH: ffmpeg decodes the input and
+encodes the output, and ffprobe reads the input's length. Both also need a GPU
+Deno can reach. The renderer drives Deno's own WebGPU, so the shaders execute on
+the same hardware the tab would use, and a machine whose driver Deno cannot
+reach cannot run a render at all.
+
+<!-- tabs: How to install -->
+
+### The binary
+
+The [releases page](https://github.com/cmdcolin/videoskillet/releases) carries
+one executable per platform, each holding the renderer, the engine and a Deno
+runtime:
+
+```
+tar xzf videoskillet-x86_64-unknown-linux-gnu.tar.gz
+mv videoskillet-x86_64-unknown-linux-gnu videoskillet
+./videoskillet in.mp4 out.mov --preset=vhs
+```
+
+Linux and macOS are built for x86_64 and aarch64 and ship as `.tar.gz`; Windows
+is x86_64 and ships as a `.zip` holding a `.exe`. `SHA256SUMS` beside them
+covers every archive. A download is around 30 MB and unpacks to about 100 MB,
+most of it the runtime. The executable carries that runtime with it and shells
+out to ffmpeg for the encoding, so nothing else has to be installed.
+
+### From a clone
+
+```
+git clone https://github.com/cmdcolin/videoskillet
+cd videoskillet
+pnpm install
+pnpm render in.mp4 out.mov --preset=vhs
+```
+
+Node, pnpm and [Deno](https://deno.com/) do the work here: Node and pnpm build
+the engine bundle, and Deno runs it. `pnpm render` builds the bundle before
+every run, so there is no separate step, and the first run takes a few seconds
+longer than the ones after it.
+
+A clone is what you want for rendering against an edit you are making, since a
+binary carries the engine it was built with.
+
+#### Building a binary
+
+`pnpm render:compile` writes `bin/videoskillet` for the machine it runs on.
+`deno compile` cross-compiles, so
+`node scripts/render/compile.mjs --all --out=dist-bin` builds every platform
+from any one of them. That is what `.github/workflows/release.yml` runs on a
+version tag, which is where the release archives come from.
+
+<!-- /tabs -->
 
 ## Why rendering happens outside the browser
 
@@ -46,7 +103,7 @@ asked for. A browser recording therefore discards the colour artifacts this app
 exists to produce, and the browser this project develops against has no path
 that keeps them.
 
-`pnpm render` hands the frames to ffmpeg, which encodes ProRes 4444 and keeps
+`videoskillet` hands the frames to ffmpeg, which encodes ProRes 4444 and keeps
 every chroma sample.
 
 A command line also suits the simulation. The feedback loops make frame N a
@@ -68,7 +125,7 @@ beside the stills; see [Where the file goes](#where-the-file-goes).
 ![A curved band of raster sweeping across the frame, filled with fine horizontal red and cyan stripes over white, the geometry bending through a lens-shaped arc](img/render-link.webp)
 
 ```
-pnpm render out.mov --look='https://videoskillet.com/app/?p=je.CoDoBwEEAbAEAKwCAfABAKCZAgXgAw2IIwSIAyFYBrAKEjwGmAEEuB4ZVADsBgr4OiSMCQDEAQDgAgAkAUQEBAAQA9wCAMXBAgCJngIAlf4DAI3tAw&mod=bendUs:lorenz:0.390279:0.27759,hvRing:sine:0.037599:0.090209&srcb=synth&src=sweep'
+videoskillet out.mov --look='https://videoskillet.com/app/?p=je.CoDoBwEEAbAEAKwCAfABAKCZAgXgAw2IIwSIAyFYBrAKEjwGmAEEuB4ZVADsBgr4OiSMCQDEAQDgAgAkAUQEBAAQA9wCAMXBAgCJngIAlf4DAI3tAw&mod=bendUs:lorenz:0.390279:0.27759,hvRing:sine:0.037599:0.090209&srcb=synth&src=sweep'
 ```
 
 This is the README's **Wiggity** demo, rendered from the link exactly as it is
@@ -87,7 +144,7 @@ patch that was supposed to wander, a failure that looks deliberate.
 ![A cat photographed and dubbed to tape: heavy coloured speckle over the whole frame, colour smearing sideways off every edge, and short bright dropout dashes across the picture](img/render-still.webp)
 
 ```
-pnpm render public/sample.jpg out.mov --preset=wornTape --seconds=8
+videoskillet public/sample.jpg out.mov --preset=wornTape --seconds=8
 ```
 
 A still is a source like any other. ffmpeg holds the picture open for as long as
@@ -104,7 +161,7 @@ FM discriminator noise landing in the chroma passband.
 ![A multiburst test pattern through a VHS deck: the low-frequency gratings survive at full contrast, the middle ones fade, and the highest two bands are washed to flat grey](img/render-sweep.webp)
 
 ```
-pnpm render out.mov --pattern=sweep --preset=vhs --seconds=2
+videoskillet out.mov --pattern=sweep --preset=vhs --seconds=2
 ```
 
 The sweep pattern stacks gratings at 0.5, 1, 2, 3, 4.2 and 5 MHz. Sent through a
@@ -213,64 +270,6 @@ one, keeps the still and discards the clip. The repo's clips rule keeps
 megabyte-scale binaries out of the history, and each of these is re-rendered
 whenever its look changes. `pnpm render:docs:keep` also writes watchable copies
 to `renders/`, which is gitignored.
-
-## Installing
-
-The renderer is a local tool, and the hosted app has no equivalent. Take the
-binary, or run it from a clone.
-
-Both routes need ffmpeg and ffprobe on PATH: ffmpeg decodes the input and
-encodes the output, and ffprobe reads the input's length. Both also need a GPU
-Deno can reach. The renderer drives Deno's own WebGPU, so the shaders execute on
-the same hardware the tab would use, and a machine whose driver Deno cannot
-reach cannot run a render at all.
-
-<!-- tabs: How to install -->
-
-### The binary
-
-The [releases page](https://github.com/cmdcolin/videoskillet/releases) carries
-one executable per platform, each holding the renderer, the engine and a Deno
-runtime:
-
-```
-tar xzf videoskillet-x86_64-unknown-linux-gnu.tar.gz
-mv videoskillet-x86_64-unknown-linux-gnu videoskillet
-./videoskillet in.mp4 out.mov --preset=vhs
-```
-
-Linux and macOS are built for x86_64 and aarch64 and ship as `.tar.gz`; Windows
-is x86_64 and ships as a `.zip` holding a `.exe`. `SHA256SUMS` beside them
-covers every archive. A download is around 30 MB and unpacks to about 100 MB,
-most of it the runtime. The executable carries that runtime with it and shells
-out to ffmpeg for the encoding, so nothing else has to be installed.
-
-### From a clone
-
-```
-git clone https://github.com/cmdcolin/videoskillet
-cd videoskillet
-pnpm install
-pnpm render in.mp4 out.mov --preset=vhs
-```
-
-Node, pnpm and [Deno](https://deno.com/) do the work here: Node and pnpm build
-the engine bundle, and Deno runs it. `pnpm render` builds the bundle before
-every run, so there is no separate step, and the first run takes a few seconds
-longer than the ones after it.
-
-A clone is what you want for rendering against an edit you are making, since a
-binary carries the engine it was built with.
-
-#### Building a binary
-
-`pnpm render:compile` writes `bin/videoskillet` for the machine it runs on.
-`deno compile` cross-compiles, so
-`node scripts/render/compile.mjs --all --out=dist-bin` builds every platform
-from any one of them. That is what `.github/workflows/release.yml` runs on a
-version tag, which is where the release archives come from.
-
-<!-- /tabs -->
 
 ## Limitations
 
