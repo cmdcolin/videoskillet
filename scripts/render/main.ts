@@ -26,7 +26,13 @@
 
 import './runtime.ts'
 import { AUDIO_RATE, decodeAudio, mux, OfflineAnalysis } from './audio.ts'
-import { CODECS, ffmpegDecode, ffmpegEncode, probeFrames } from './ffmpeg.ts'
+import {
+  CODECS,
+  ffmpegDecode,
+  ffmpegEncode,
+  isStill,
+  probeFrames,
+} from './ffmpeg.ts'
 import { pattern } from './pattern.ts'
 
 // From the source rather than from the bundle: a bundle is JavaScript, so the
@@ -195,7 +201,10 @@ const seconds = flag('seconds') === undefined ? null : Number(flag('seconds'))
 // the same fallback the app's ⎙ button lands on.
 let frames: number
 if (seconds !== null) frames = Math.round(seconds * fps)
-else if (input !== null) frames = await probeFrames(input, fps)
+// A still has no length of its own, so it falls in with the generated sources
+// rather than being asked how long it is.
+else if (input !== null && !isStill(input))
+  frames = await probeFrames(input, fps)
 else frames = 10 * fps
 
 const audioMode = (flag('audio') ?? 'auto') as AudioMode
@@ -325,8 +334,9 @@ try {
     const frame = await source.next()
     // A file that ends before the frame count asked for stops the render there
     // rather than padding it: the last frame repeated is a still nobody asked
-    // for, and the loops would keep eating it.
-    if (frame === null && input !== null) {
+    // for, and the loops would keep eating it. A still is the exception — it is
+    // *meant* to repeat, and `-loop 1` keeps handing the same frame over.
+    if (frame === null && input !== null && !isStill(input)) {
       frames = i
       break
     }

@@ -24,6 +24,7 @@ const NOTES = [
   { file: 'docs/DEVELOPMENT.md', slug: 'development', nav: 'Development' },
   { file: 'docs/AI-USAGE.md', slug: 'ai', nav: 'AI' },
   { file: 'docs/EDITOR.md', slug: 'editor', nav: 'Editor' },
+  { file: 'docs/RENDERING.md', slug: 'rendering', nav: 'Rendering' },
   { file: 'docs/IDEAS.md', slug: 'ideas', nav: 'Ideas' },
   { file: 'docs/CURATION.md', slug: 'curation', nav: 'Curation' },
   { file: 'docs/adr/README.md', slug: 'decisions', nav: 'Decisions' },

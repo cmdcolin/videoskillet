@@ -152,6 +152,11 @@ happened on (sliders, presets, a controller knob, a morph) and **⎙** replays i
 into the render, so a take you ran live at whatever framerate the tab managed
 comes back at a steady one.
 
+Running the project locally there is a third way, and it is the one to use when
+the colour matters. `pnpm render` takes a link and a file and writes ProRes
+4444, so the chroma artifacts survive — a browser encodes 4:2:0 and throws most
+of them away. [Rendering](RENDERING.md) covers it.
+
 ## Can I feed it a real composite signal off a yellow RCA cable?
 
 Through a USB capture dongle, yes. Directly off the cable, no. The cable carries

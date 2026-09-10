@@ -81,6 +81,13 @@ async function readFull(
   return true
 }
 
+// A still is a source too — the app takes one on either deck, and a look over a
+// photograph is what most of the docs' own figures are. ffmpeg needs telling:
+// left alone it decodes one frame and stops, where `-loop 1` holds the picture
+// open for as long as the render keeps reading.
+const STILL = /\.(jpe?g|png|webp|gif|bmp|avif|tiff?)$/i
+export const isStill = (path: string): boolean => STILL.test(path)
+
 export function ffmpegDecode(
   path: string,
   w: number,
@@ -91,6 +98,7 @@ export function ffmpegDecode(
     args: [
       '-v',
       'error',
+      ...(isStill(path) ? ['-loop', '1'] : []),
       '-i',
       path,
       // The raster is 754x480 with non-square pixels, and the source is
