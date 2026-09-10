@@ -1,18 +1,19 @@
 # Where videoskillet.js sits
 
 Several projects make video look like it went through composite, tape and a CRT.
-They differ in what they operate on and what they are for. This project's corner
-of that map: one signal, bent live, its faults interacting.
+They differ in what they operate on and what they are for. This project
+simulates one signal, bent live, with every fault landing on it.
 
 ## The neighbours
 
 ### ntsc-rs
 
-[ntsc-rs](https://github.com/ntsc-rs/ntsc-rs) shares the premise — simulate the
-path, don't draw the look — and lives in the editing suite. It ships standalone,
-in a browser, and as AE / Premiere / OpenFX plugins, and its multithreaded SIMD
-Rust runs in real time well above NTSC resolution. videoskillet.js is fixed to
-the NTSC raster and has no plugin yet ([the FAQ](FAQ.md)).
+[ntsc-rs](https://github.com/ntsc-rs/ntsc-rs) shares the premise of simulating
+the path rather than drawing the look, and it lives in the editing suite. It
+ships standalone, in a browser, and as AE / Premiere / OpenFX plugins, and its
+multithreaded SIMD Rust runs in real time well above NTSC resolution.
+videoskillet.js is fixed to the NTSC raster and has no plugin yet
+([the FAQ](FAQ.md)).
 
 ### BENDR
 
@@ -28,25 +29,25 @@ waveform — sync pulses, colour burst, colour on the subcarrier — the model
 damages that waveform, and a model of a TV locks to it and decodes it back. Dot
 crawl and rainbow fringing are then leftovers of a decoder that could not
 separate colour from brightness cleanly, so they change whenever anything
-upstream does. That is the trade: far narrower, and every fault lands on the
-same signal, so they interact without being wired together.
+upstream does. The trade is a far narrower tool where every fault lands on the
+same signal, so the faults interact without being wired together.
 
 ### vhs-decode / ld-decode
 
 [vhs-decode](https://github.com/oyvindln/vhs-decode) runs the other way: RF
 tapped off a working deck's head amp, captured with a CX card or a Domesday
 Duplicator and decoded in software — VHS, SVHS, U-Matic, Betamax, Video8 — out
-to timebase-corrected luma and chroma. It synthesises nothing, so it is where a
-real signal comes from, and where a claim made here can be checked against one.
+to timebase-corrected luma and chroma. It synthesises nothing, so it supplies
+real signals, and a claim made here can be checked against one.
 
 ### Blargg's filters and the RetroArch CRT shaders
 
-The console-on-a-period-TV problem. `nes_ntsc` and `snes_ntsc` model composite
-artifacts for one console's output, fast and accurate for that case; the
-RetroArch shaders (`crt-royale`, `crt-guest-advanced`) model the display — mask,
-scanlines, phosphor, geometry, glow.
+These solve the console-on-a-period-TV problem. `nes_ntsc` and `snes_ntsc` model
+composite artifacts for one console's output, fast and accurate for that case;
+the RetroArch shaders (`crt-royale`, `crt-guest-advanced`) model the display —
+mask, scanlines, phosphor, geometry, glow.
 
-## What that leaves this one doing
+## What videoskillet.js does
 
 videoskillet.js is a **live instrument**. The signal path stays resident on the
 GPU as compute shaders, so a control change is a uniform-buffer write rather
@@ -56,7 +57,7 @@ the model — a camera at its own monitor, and a mixer patched into itself at
 signal level. A take renders offline to constant-framerate H.264, and a link
 carries the look. [The features](FEATURES.md) list the rest.
 
-### What it does not do
+### Limitations
 
 - **No plugin, and no timeline.** Clips line up in a rundown, and a rendered
   take carries no audio track ([the editor](EDITOR.md)).

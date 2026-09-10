@@ -50,7 +50,7 @@ in [Features](docs/FEATURES.md).
 - Renders offline with no browser open, when you run it locally:
   `pnpm render in.mp4 out.mov --look='<a link>'` writes ProRes 4444, so the dot
   crawl and rainbow fringing survive — a browser only encodes 4:2:0 and loses
-  most of them. It is a command, so a shell loop runs it over a folder.
+  most of them. It runs from a shell, so a loop takes a whole folder.
   [Rendering](docs/RENDERING.md)
 - ...[much more](docs/FEATURES.md)
 
@@ -112,10 +112,10 @@ Running locally there is also `pnpm render`, which does it without a browser:
 pnpm render in.mp4 out.mov --look='<paste a link off the app>'
 ```
 
-A look off the address bar, a file in, ProRes 4444 out — so the colour artifacts
-survive, which they do not through the 4:2:0 a browser will encode. The clip's
-own sound goes in too, which matters because bass drives vertical hold, and the
-intercarrier buzz comes back out beside it.
+The look comes off the address bar and the picture out of the file, and the
+output is ProRes 4444, which keeps the colour artifacts that a browser's 4:2:0
+encode throws away. The clip's own sound goes in too, and that matters because
+bass drives vertical hold; the intercarrier buzz comes back out beside it.
 
 Every demo link below renders as it stands: the board, the modulation, the
 source and the seed all come off the link, so a look that names its own source
@@ -137,10 +137,10 @@ OBS browser source. OSC is the piece that is missing.
 - [User guide](docs/USER-GUIDE.md)
 - [Features](docs/FEATURES.md)
 - [Effects](docs/EFFECTS.md) — every control, generated
-- [Rendering](docs/RENDERING.md) — `pnpm render`, the offline renderer: a link
-  and a file in, ProRes 4444 out
+- [Rendering](docs/RENDERING.md) — `pnpm render`, the offline renderer: it takes
+  a link and a file and writes ProRes 4444
 - [Drive it by URL](public/llms.txt) — the query string is a complete remote
-  control, and [every control's key](public/llms-full.txt) is the half the rest
+  control, and [every control's key](public/llms-full.txt) lists what the rest
   of the docs leave out. Published at
   [videoskillet.com/llms.txt](https://videoskillet.com/llms.txt) for anything
   scripting the app.

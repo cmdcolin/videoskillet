@@ -25,9 +25,9 @@ for (let n = 0; n < signal.length; n++) {
 }
 ```
 
-478k iterations, a dozen stages, 60 times a second is hopeless on one thread. A
-GPU runs that body for every `n` at once, so you write the body and it supplies
-the `n`. That is `timebase.wgsl`, trimmed:
+That is 478k iterations, a dozen stages deep, 60 times a second, which is
+hopeless on one thread. A GPU runs that body for every `n` at once, so you write
+the body and it supplies the `n`. That is `timebase.wgsl`, trimmed:
 
 ```wgsl
 @compute @workgroup_size(64, 1, 1)
@@ -78,8 +78,8 @@ browser without WebGPU gets the "this browser cannot run it" screen.
   by default. A home-screen install runs on the same WebKit engine, so it gets
   WebGPU on exactly the versions Safari does.
 
-A phone GPU is still a phone GPU. The most expensive effects (feedback, the wide
-comb) run, but not at the resolution or frame rate a laptop holds.
+A phone GPU has much less headroom. The most expensive effects (feedback, the
+wide comb) run, at a lower resolution and frame rate than a laptop holds.
 
 ## Can I install it on a phone or a desktop?
 
@@ -152,10 +152,10 @@ happened on (sliders, presets, a controller knob, a morph) and **⎙** replays i
 into the render, so a take you ran live at whatever framerate the tab managed
 comes back at a steady one.
 
-Running the project locally there is a third way, and it is the one to use when
-the colour matters. `pnpm render` takes a link and a file and writes ProRes
-4444, so the chroma artifacts survive — a browser encodes 4:2:0 and throws most
-of them away. [Rendering](RENDERING.md) covers it.
+Running the project locally gives a third way, and it is the one to use when the
+colour matters. `pnpm render` takes a link and a file and writes ProRes 4444, so
+the chroma artifacts survive; a browser encodes 4:2:0 and throws most of them
+away. [Rendering](RENDERING.md) covers it.
 
 ## Can I feed it a real composite signal off a yellow RCA cable?
 
@@ -173,17 +173,17 @@ in hardware and hands over decoded 720×480 frames, so what a consumer dongle
 does (luma cut to around 2.4 MHz, colour-under chroma, chroma a few samples
 late) has already happened and cannot be undone. The `capture card` preset
 models that decode, so a captured feed carries one pass of it for real and
-whatever you dial in on top. Fine for glitch work, and not a clean analog
-capture.
+whatever you dial in on top. That suits glitch work, and it is not a clean
+analog capture.
 
-Interlacing comes with the territory. A grabber delivers 480/60i, so the app
-turns bob deinterlace on per deck when a device connects — a progressive camera
-in one and an interlaced dongle in the other want opposite answers. PAL grabbers
+Interlacing comes with a grabber. A dongle delivers 480/60i, so the app turns
+bob deinterlace on per deck when a device connects — a progressive camera in one
+and an interlaced dongle in the other want opposite answers. PAL grabbers
 (720×576/50i) are not handled yet; the pipeline is NTSC-shaped at 525/60.
 
 Raw composite samples, the waveform before any decoder touches it, need an SDR
 or a fast ADC and a native program to read them. That is a different instrument,
-and one a web page cannot be.
+and a web page cannot be one.
 
 ## Can I patch it into Max/MSP, Jitter, TouchDesigner or VJ software?
 
@@ -211,4 +211,4 @@ to keep the patch's UI in sync. NDI or WebRTC output as an alternative to OBS is
 on the same list.
 
 Running the app inside a patch, through Max's `jweb` for instance, depends on
-that web view getting WebGPU. Until then, this app is the thing you route into.
+that web view getting WebGPU. Until then, route into the app from the patch.

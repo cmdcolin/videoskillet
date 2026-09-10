@@ -1,9 +1,9 @@
 # AI usage
 
-Agents wrote most of this codebase, and agents are one of the two hands it is
-built to be played by. Three jobs bring one here, and they want different halves
-of what follows: **operating the panel** from inside a browser, **driving the
-board by link**, and **changing the code**.
+Agents wrote most of this codebase, and the app is built to be played by an
+agent as well as by a person. Three jobs bring an agent here, and each wants a
+different part of this page: **operating the panel** from inside a browser,
+**driving the board by link**, and **changing the code**.
 
 Here is one doing it. Claude Sonnet on the right, the app in a Chrome on the
 left, and nothing between them scripted — the recording is `pnpm agentreel`,
@@ -173,8 +173,8 @@ a number that came off this box.
 
 **Model the mechanism, not the artifact.** There is no "VHS filter" here: dot
 crawl, tearing and hue drift emerge from a simulated signal path, which is why
-mechanisms interact for free. A shader that draws the look of a fault scores the
-screenshot and loses the interaction.
+mechanisms interact for free. A shader that draws the look of a fault matches
+one screenshot and loses every interaction.
 
 **Pick the domain before writing the effect.** A horizontal displacement means
 one thing in the signal domain, another in sync, another in deflection, and
@@ -231,8 +231,8 @@ paths that look like yours.
 
 ## Leave the record where the next agent reads it
 
-An agent's context ends with its session; the docs are what survives. A
-measurement that lives only in a transcript gets paid for again.
+An agent's context ends with its session, and the docs are what survives. A
+measurement that lives only in a transcript has to be made again.
 
 - **Commits** follow Conventional Commits, scope from the domains in
   `ARCHITECTURE.md` (`signal`, `sync`, `deflection`, `gpu`, `ui`, `midi`,

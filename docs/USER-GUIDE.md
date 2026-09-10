@@ -17,7 +17,7 @@ Click a preset to jump to it. Drag it sideways to blend it part-way in.
 - **random look** stacks a few presets into something new. **random nudge**
   keeps your look and moves it a little: everything already doing something,
   plus a few controls that weren't. `shift` for wilder, `alt` for gentler,
-  `ctrl`/`cmd` for a wreck. The best way to find something new.
+  `ctrl`/`cmd` for a wreck. It is the quickest way to find something new.
 - **random motion** leaves every slider where it is and re-patches the
   modulation bay, putting LFOs, drift and sample-and-hold onto controls this
   look uses. Same modifiers, with `ctrl`/`cmd` giving a bay that never settles.
@@ -115,7 +115,8 @@ button.
 controls rather than the signal. MODULATION holds the automation you set running
 and leave. DECK holds what you use live during a take: the transition lever and
 its wipes, the DVE inset, both tape transports, the tracking knob, and the hold
-that stops the frame. One surface instead of four stages.
+that stops the frame. They share one surface, where the signal path would spread
+them over four stages.
 
 Inside a stage: **• 10** counts what you've moved, amber means off stock, **↺**
 reverts, **+ mod** sets the control moving, **⋮** holds the rest of the wiring
@@ -192,8 +193,8 @@ half a percent of the range on the vertical roll rate, a third of it on
 horizontal hold. The rate's **♩ lock to beat** button ties it to the tempo
 instead of Hz.
 
-Two kinds of row have no button. The View controls, since a wobbling magnifier
-or a stuttering clock reads as the app breaking. And a strobe or a paperclip
+Two kinds of row have no button: the View controls, where a wobbling magnifier
+or a stuttering clock reads as the app breaking, and a strobe or a paperclip
 resting at zero, where the only thing a wobble can do is start the full-field
 flash. Dial either up and the button is back.
 
@@ -258,7 +259,7 @@ source and its cue — plus how long it holds and how it arrives. Clicking a car
 fires that row on its own, so one list serves a piece that plays itself and a
 bank of scenes you play by hand.
 
-Three kinds, marked by the glyph on the card:
+There are three kinds, marked by the glyph on the card:
 
 - **▤ a clip**: this source, this look, these cue points.
 - **⟳ a roll**: a pool rather than a file, drawn when the row fires, so you know
@@ -291,7 +292,8 @@ Bars come from the tempo, tapped or off MIDI clock, so a rundown cut to music
 follows the music. **♪** picks that track and **▶** starts it from the top with
 the walk. **↻ loop** comes back round at the end. **seed** is what every roll
 and shake draws from: press it for a new one and the same rundown plays a
-different video. It is printed, so a take worth finding again can be found.
+different video. The seed is printed on the tray, so a take worth repeating can
+be found again.
 
 ## Keeping what you find
 
@@ -331,9 +333,9 @@ reads and writes it:
 https://videoskillet.com/app/#set=noiseIre:9,hHold:0.2,chromaGain:1.79
 ```
 
-Written out, worn tape runs to 248 characters — three times the packed form, and
-the difference between a link that survives a chat window and one that arrives
-in three pieces. Hence the short one in the bar.
+Written out, worn tape runs to 248 characters, three times the packed form. A
+link that length arrives in three pieces from a chat window, which is why the
+bar carries the packed form.
 
 The long form buys a look you can program by hand: a control name from
 [EFFECTS.md](EFFECTS.md), a colon, a number, commas between. Anything left out
@@ -393,11 +395,11 @@ that into the render, so a run performed at whatever rate the tab managed comes
 back at 60. It works over a bare clip with no rundown. The **⏺** readout beside
 it is the take's length; clicking it discards the take.
 
-Running the project locally there is a third way, and it is the one to use when
-the colour matters. `pnpm render` takes a link and a file and writes ProRes
-4444, so dot crawl and rainbow fringing survive — a browser encodes 4:2:0 and
-loses most of them. It runs with no tab open, and it is a command rather than a
-page, so a shell loop takes a folder. [Rendering](RENDERING.md) covers it.
+Running the project locally gives a third way, and it is the one to use when the
+colour matters. `pnpm render` takes a link and a file and writes ProRes 4444, so
+dot crawl and rainbow fringing survive; a browser encodes 4:2:0 and loses most
+of them. It runs with no tab open, and it runs from a shell, so a loop takes a
+whole folder. [Rendering](RENDERING.md) covers it.
 
 The ☰ menu has stills, recording, fullscreen, and **pop out controls**, which
 moves the panel to a second window and gives the picture the whole screen. Point
@@ -413,7 +415,7 @@ more the bench is offered anyway, and takes the width it needs.
 
 ## Keyboard
 
-| Key                     | Does                                                                |
+| Key                     | Action                                                              |
 | ----------------------- | ------------------------------------------------------------------- |
 | `ctrl/⌘+k`              | command palette                                                     |
 | `/`                     | filter the controls                                                 |

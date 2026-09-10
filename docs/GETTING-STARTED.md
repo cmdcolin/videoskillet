@@ -17,8 +17,8 @@ pull back. **The ☰ menu**, top right, holds stills, recording, fullscreen and
 settings. **Presets**, below it, is a shortlist of whole looks: click one and
 every control it names moves at once.
 
-**Signal path** is the map at the top of the sidebar, and it is the main thing
-to click. Each box is a stage of the chain. Click one and its controls open
+**Signal path** is the map at the top of the sidebar, and the main thing to
+click. Each box is a stage of the chain. Click one and its controls open
 underneath. Every control lives there, sources included.
 
 ## Three looks to try

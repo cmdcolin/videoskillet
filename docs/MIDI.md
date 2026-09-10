@@ -41,7 +41,7 @@ reads **CC7** and the pairing shows in the MIDI panel. `Esc` cancels.
 
 - **The motion amount**: the strip above the filter box scales every modulation
   routing at once, and carries the same **⚟**. One hand takes the board from
-  still to swimming.
+  still to fully in motion.
 - **A preset's weight**: every preset is a fader, so a preset on a knob moves
   everything that preset touches. Use the picker at the bottom of the MIDI
   panel: choose the preset, click **⚟ preset mix**, move a knob. Weights layer,
@@ -51,11 +51,12 @@ Neither does soft takeover — they grab on the first message, having no track t
 draw a waiting mark on. A weight also resets once anything else moves the board:
 the next turn starts a fresh mix from what is on screen.
 
-## Pads, for the things you hit rather than set
+## Pads, for gestures
 
-A knob holds a value. Firing the modulation bay's one-shot envelopes, marking a
-cue and jumping back to one are gestures, so they go on **pads or keys**, bound
-at the bottom of the MIDI panel: pick the gesture, click **⚟ pad**, hit the pad.
+A knob holds a value, while firing the modulation bay's one-shot envelopes,
+marking a cue and jumping back to one are single gestures. Those go on **pads or
+keys**, bound at the bottom of the MIDI panel: pick the gesture, click **⚟
+pad**, hit the pad.
 
 What can go on one:
 
@@ -65,9 +66,9 @@ What can go on one:
   keyboard. The jump back is the one most worth a pad — it works like a drum
   hit.
 
-**With nothing bound, any note fires the whole bay**, which is the right answer
-for a keyboard you haven't mapped. Bind one pad and that stops: notes then fire
-only what the panel lists.
+**With nothing bound, any note fires the whole bay**, which suits a keyboard you
+haven't mapped. Bind one pad and that stops: notes then fire only what the panel
+lists.
 
 Pads do no soft takeover either, since there is no value to catch up to. `Esc`
 cancels an arm.
@@ -123,7 +124,7 @@ A locked rate ignores its own value, and the Hz you dialled in comes back when
 you unlock. Asking for a lock with no tempo sets one at 120 BPM. The app listens
 for clock and never sends it.
 
-## What sticks around
+## What is saved
 
 Bindings (knobs and pads, in two separate stores), the hand-set tempo and the
 clock locks on **sweep** and **line offset** are saved in this browser. They are
@@ -136,7 +137,7 @@ A modulation slot's lock is the exception. It travels with the link, because
 A preset weight is bound by name, so a renamed or dropped preset discards that
 one binding on the next load.
 
-## What isn't supported
+## Limitations
 
 - **CC and notes only**: pitch bend, program change and aftertouch do nothing. A
   note is an on/off with a velocity; there is no note-off handling, because
@@ -146,7 +147,7 @@ one binding on the next load.
 - **No device picker**: everything plugged in drives the app at once.
 - **No per-knob range, invert or curve.**
 
-## When it seems broken
+## Troubleshooting
 
 | What you see                        | What's going on                                                               |
 | ----------------------------------- | ----------------------------------------------------------------------------- |
