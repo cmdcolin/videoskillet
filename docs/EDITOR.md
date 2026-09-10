@@ -1,4 +1,4 @@
-# The editor — a rundown, and an export an NLE will conform
+# The editor: a rundown, and an export an NLE can conform
 
 The ask behind this was music videos: a series of clips, set up in advance,
 played back to back. It has two halves.
@@ -17,11 +17,11 @@ Related material in [`IDEAS.md`](IDEAS.md): **Clip cues**, **Patching into other
 apps** (live routing to Max/TouchDesigner), and **Capture / deinterlace** (a
 composite grabber on the way _in_).
 
-## What this is not: an NLE plugin
+## Why this is not an NLE plugin
 
 The recurring version of this is "the shaders are the value, so put them in
-something that has a timeline" — After Effects, Premiere, Resolve. Investigated
-and declined, in order of how fast each finding kills it.
+something that has a timeline" — After Effects, Premiere, Resolve. Each route
+was investigated and declined, in order of how fast the finding kills it.
 
 **There is no "the shaders" to port.** The WGSL is about a third of the
 simulator. Against twenty-six shaders sit `src/core/signal/`'s per-frame CPU
@@ -61,11 +61,11 @@ frame N handed over as a file**, which is the export half below. A native
 standalone on wgpu stays on the table as a _shell_ decision (see _What a desktop
 shell buys_) and never as an integration strategy.
 
-## What this is not either: a second page
+## Why the strip stays in the app
 
 The live app is already dense, a rundown is a lot of new surface, and this repo
-has a second entry point already. Still one document, and three of the reasons
-are load-bearing rather than preferences.
+has a second entry point already. It stays one document, and three of the
+reasons are load-bearing rather than preferences.
 
 **The strip writes; it does not view.** Every row it fires goes through funnels
 the live app owns — `writeControls` / `startGlide` for the look, `selectSource`
@@ -91,9 +91,9 @@ cannot adopt the first tab's.
 What the worry is actually about is screen space, and `usePopout` already
 answers it: a same-origin window with the panel portalled into it — same React
 tree, same engine store, same MIDI, no message plumbing, because the JS heap is
-shared. Picture on the projector, rundown on the laptop. So the live/edit
-tension is a **mode, not a page**: tray shut, the app is what it is today to the
-byte.
+shared. The picture goes on the projector and the rundown on the laptop. So the
+live/edit tension is a **mode rather than a page**: with the tray shut, the app
+is what it is today to the byte.
 
 ## The strip
 
@@ -195,7 +195,7 @@ clip's own length second, so an in/out pair is also how long the row is up.
 `ui/useTempo.ts` supplies the beat from MIDI clock or a tapped `DEFAULT_BPM`, so
 bar-relative holds work with no gear attached.
 
-### Seeding: the rule that was expensive to retrofit
+### Seeding
 
 **Every roll goes through a seeded RNG, and a take records the seed plus the
 resolved picks.** Without it a take is unreproducible by construction, and the
@@ -242,7 +242,7 @@ and never cared where the frame came from.
   lands. The awaiting sink `stripRun.ts`'s header describes is the remaining
   half, and it is buildable now that the other side of it is frame exact.
 
-### The modules, and what does not need a browser
+### The modules
 
 The walk is where an editor gets its bugs, and a browser is an expensive place
 to find them. So the arithmetic is pure and tested under vitest, and React only
@@ -269,7 +269,7 @@ nothing else changed. It also means the picture and the rundown freeze
 _together_ when a tab stops getting frames, where a wall-clock strip would come
 back having silently skipped four rows nobody saw.
 
-### The React shape, and the rule it follows
+### The React shape
 
 **One context per clock.** `ControlsContext.ts` carries the measurement: a
 `controls` object that changed identity on every write re-rendered every
@@ -366,7 +366,7 @@ on a small file over localhost, which is the least favourable case there is.
 `stopSlot` deliberately leaves a parked element alone, since the load paths stop
 the slot and _then_ call `playUrl`.
 
-### Transitions: a fault that resolves, not a drawn wipe
+### Transitions are faults that resolve
 
 A look-morph is not a transition. It walks the resting board from one place to
 another and the picture stays legible the whole way; nothing about it says a cut
@@ -443,7 +443,7 @@ Five things the shelf had to get right, and none was guessable from the design:
   step (`atCut`), the sink's `fault` verb takes a callback rather than a
   session, and `useEngine.faultTo` is the shelf lookup and nothing else.
 
-**And a pending cut goes stale.** Half a second is long enough for the answer to
+**A pending cut goes stale.** Half a second is long enough for the answer to
 change, so the runner numbers its steps and the cut checks its number before
 running — on the sink, so the offline walk inherits it. The _fault_ is not
 cancelled: a fault is a picture effect and should heal rather than vanish, while
@@ -455,7 +455,7 @@ the phosphor is still holding the band and the PLL is still walking its lock
 back. A transition ends as a receiver recovering rather than as an effect
 switching off.
 
-### Nothing in the tray moves because its own text changed
+### A chip that steps must not move the card
 
 A row card is shrink-to-fit, so **every label in it is load-bearing on layout**,
 and the tray is one horizontal row of them — a card that grows slides every card
@@ -482,13 +482,13 @@ chip at 1.1px, the rename ✎ at 21.8px, and ▶ → ■ at 4.3px.
 The cost is real: the feet are six controls, three now held at a fixed width,
 and together they exceed the card's floor, so cards come out very nearly equal.
 The variety they used to have was the hold chip being three characters wider on
-some rows — which is the shift, not a feature. Cards that say something by their
-width want the _hold_ to set it.
+some rows, and that width difference is the shift itself. Cards that say
+something by their width want the _hold_ to set it.
 
 Two harness lessons came out of the same work, and both generalise.
 `element.click()` does no hit-testing, so it reaches a button a hand cannot —
 the tray harness now _measures_ that every control on a card is inside the card.
-And reaching a card's chips positionally meant adding one chip silently shifted
+Reaching a card's chips positionally meant that adding one chip silently shifted
 three unrelated buttons; they carry `data-act` names now.
 
 ## Fixed-framerate export
@@ -522,8 +522,8 @@ the single keyframe. And `seeked` is not a promise that the picture moved: on
 the all-intra arm `createImageBitmap` handed back the pre-seek frame about half
 the time.
 
-**So the proper route.** `ui/mp4demux.ts` is the demuxer — not mp4box.js, for
-the argument `mp4.ts` already makes in the other direction — checked against
+**Hence the demuxer route.** `ui/mp4demux.ts` is the demuxer — not mp4box.js,
+for the argument `mp4.ts` already makes in the other direction — checked against
 ffprobe on real files by `scripts/demuxcheck.mjs`. `ui/framePull.ts` walks a
 `VideoDecoder`: ask for a clip time, get the frame a viewer would see there, at
 **0.85 ms a frame and flat in the keyframe spacing**, because nothing seeks.
@@ -582,10 +582,10 @@ with the tape rolling.
   its own soft takeover and routing it there would reset the takeover it had
   just satisfied. Tapping a funnel would have recorded the sliders and lost the
   controller, which is precisely the input this exists for.
-- **Frames, not milliseconds.** A take performed in a tab running at 40 fps
-  renders at two thirds of the wall time it was performed in. The strip's holds
-  are already measured in frames, and stamping this any other way would put the
-  automation and the walk on two clocks.
+- **Stamped in frames.** A take performed in a tab running at 40 fps renders at
+  two thirds of the wall time it was performed in. The strip's holds are already
+  measured in frames, and stamping this any other way would put the automation
+  and the walk on two clocks.
 - **The walk first, the hand second.** `onFrame` replays the rundown and then
   the tape, so a knob moved on top of a row is not overwritten by it.
 - **Nothing the walk reproduces is on the tape**, structurally: a row reaches
@@ -626,10 +626,10 @@ reproduce with no way to see why. It costs one command submission and no frames.
 
 Three things it turned up:
 
-- **A morph in flight was a bug, not merely state.** Its origin is stamped on
-  the wall clock and a take counts from zero, so a render started under one saw
-  `now() - startMs` go hugely negative and parked the board on the morph's
-  _origin_ look for the whole take.
+- **A morph in flight was a bug.** Its origin is stamped on the wall clock and a
+  take counts from zero, so a render started under one saw `now() - startMs` go
+  hugely negative and parked the board on the morph's _origin_ look for the
+  whole take.
 - **The file had the wall clock in it.** `mp4.ts` stamped `Date.now()` into six
   `creation_time` / `modification_time` fields, so two takes came back the same
   length to the byte with different digests. Nothing reads them; they are zero
@@ -665,9 +665,9 @@ Three things measurement corrected, and three browser faults:
   and still true; the _still_ grab still needs the mirror.
 - **This did not have to be Chrome-only.** Nightly has `VideoEncoder` and
   reports vp8, vp9, H.264 and AV1 all supported.
-- **MP4 rather than WebM was not a free choice.** Resolve does not import WebM
-  at all and Premiere needs a plugin, so the container is what decides whether
-  "an editor will conform it" is true.
+- **MP4 rather than WebM was forced.** Resolve does not import WebM at all and
+  Premiere needs a plugin, so the container is what decides whether "an editor
+  will conform it" is true.
 - **H.264 needs even dimensions**, and an ordinary window gives an odd one
   (measured: 440x573). Firefox accepts the `configure` _and_ the `encode`, then
   fails the whole encoder asynchronously on its error callback with
@@ -770,8 +770,7 @@ Measured on Chrome/Linux. On Firefox, which this project develops against, every
 one of those arms scores ~10 dB: it declines AV1 4:4:4 and subsamples VP9
 profile 1 on the way in whatever profile it was asked for. So the 4:4:4 route
 does not exist in the browser this app is built in, and no amount of muxer work
-creates one. Here the encoder is ffmpeg, and ProRes 4444 is a default rather
-than a negotiation.
+creates one. Here the encoder is ffmpeg, and ProRes 4444 is the default.
 
 Three things about how it is built.
 
@@ -795,15 +794,15 @@ what had been drawn (`Engine.readFrame`, off `faceTex`, which now carries
 engine expects — and a `requestAnimationFrame` that never fires is the _correct_
 stub, not a placeholder, because an offline render owns the clock.
 
-**Walking the file from the top is not a compromise.** Frame N is a function of
-every frame before it, so there is no seeking — the same argument that rules out
-an NLE plugin above makes a CLI the natural shape rather than a lesser one.
+**Walking the file from the top is the shape the simulation wants.** Frame N is
+a function of every frame before it, so there is no seeking, and the argument
+that rules out an NLE plugin above makes a command line the natural shape.
 
 Measured on this machine: ~49 fps at 754x480, so a render runs slightly faster
 than real time and a minute of footage takes about seventy seconds.
 
-**Audio is not a nicety here, it is correctness.** `audioBendUs`, `audioLoad`
-and `audioIre` drive vertical hold, HV sag and the demodulator's reference, so a
+**Audio is part of the correctness here.** `audioBendUs`, `audioLoad` and
+`audioIre` drive vertical hold, HV sag and the demodulator's reference, so a
 look built over a track and rendered in silence comes back with the artifacts
 that should be pumping sitting still — a render of a different board. The proof
 is a pair of renders of one look over one clip: with `--audio=none` twice the
@@ -868,10 +867,10 @@ bars look like is a renderer whose output cannot be compared with the app's.
 grating, since that copy is now shared by every screenshot, contact sheet and
 render made against it.
 
-What it does not do yet: no rundown — `--look` is one board for the whole render
-where the strip is a sequence of them — and nothing that has to be fetched, so a
-link naming a clip, a still or a pool pick renders over whatever file was passed
-instead.
+Two things it does not do yet. `--look` sets one board for the whole render,
+where the strip holds a sequence of them. And it fetches nothing, so a link
+naming a clip, a still or a pool pick renders over whatever file was passed on
+the command line.
 
 ## What is left
 
@@ -898,7 +897,7 @@ instead.
   lap zero's holds with lap zero's seeds, so what the button says is what will
   play, drift included).
 
-### Deliberately not this
+### Out of scope
 
 - **Tracks and a scrubbable playhead.** A large amount of UI for a storyboard,
   and the playhead half is not taste: row N depends on every row before it, so
@@ -933,5 +932,5 @@ clips and pressing play.
 
 Each is a missing field rather than a contradiction, which is why reading the
 code found none of them: a design that specifies a type and a shipped thing that
-omits it read the same from the inside. Test the gesture the document opens by
-asking for.
+omits it read the same from the inside. The lesson is to test the gesture the
+document opens by asking for.

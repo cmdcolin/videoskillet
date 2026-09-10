@@ -123,7 +123,7 @@ Three arms were reverted, and all three are worth knowing.
   running a dependent recurrence, about 300 ns a line, and no arrangement of its
   memory changes that.
 
-## Not dispatching is the largest optimization here
+## Skipping dispatches is the largest optimization here
 
 Every optional pass carries a `when()` predicate over the controls, and
 `renderFrame` skips the whole compute pass — encoder, bind group and dispatch —
@@ -359,7 +359,8 @@ and each tiers on whatever decides visibility for it:
   in `crt_face` at stock.
 
 All three thresholds are hard steps, so sweeping the control through one pops
-the result by that difference. That is the bargain, stated where the step is.
+the result by that difference. That is the trade, written down beside the step
+that makes it.
 
 `crt_face`'s grain is the other kind of saving: the mottle is fixed to the
 glass, so sixteen hashes a pixel were reproducing the same field every frame.
@@ -380,13 +381,13 @@ It is latency on one thread rather than GPU throughput, and it measures fine at
 60 fps, but it is the one pass in the app that cannot scale. A third per-line
 recurrence should be a parallel prefix scan rather than another loop here.
 
-Which latency is now known: the lane's own. Staging the measurements into
-workgroup memory and prefetching the next line both measured within 5% of the
-plain loop (0.17 ms at stock), so the cost is a single lane issuing a dependent
-recurrence at roughly 300 ns a line, not the memory it reads. Shortening the
-serial path is the only lever.
+The latency is now known, and it is the lane's own. Staging the measurements
+into workgroup memory and prefetching the next line both measured within 5% of
+the plain loop (0.17 ms at stock), so the cost is a single lane issuing a
+dependent recurrence at roughly 300 ns a line, not the memory it reads.
+Shortening the serial path is the only lever.
 
-## The one readback, and it never waits
+## The one readback
 
 `buzz_tap` leaves 525 measurement pairs on the GPU per frame and the sound
 detector needs them on the CPU. That is the app's only steady-state GPU→CPU

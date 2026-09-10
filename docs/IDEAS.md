@@ -1,11 +1,11 @@
 # Ideas / backlog
 
-Things worth doing that aren't done, and things that look worth doing but
-aren't, so a future pass doesn't re-litigate them. Where a shipped feature left
-a lesson the next person needs, it is here under that feature's gaps. The rest
-of the working-out is in the commits, so an entry here is cut once it is built
-or once it stops being worth the page. Grep the described feature rather than
-trusting a line number.
+This page holds the things worth doing that are not done, and the things that
+look worth doing and are not, so a future pass does not re-litigate them. Where
+a shipped feature left a lesson the next person needs, it is here under that
+feature's gaps. The rest of the working-out is in the commits, so an entry here
+is cut once it is built or once it stops being worth the page. Grep the
+described feature rather than trusting a line number.
 
 ## Modulation: the remaining naked periodic wave
 
@@ -148,7 +148,7 @@ of a row whose control code took the hit, and the odd line delivered to the
 wrong address. What is left is a dial, two attributes, and the other way a
 character generator goes wrong.
 
-- **A strength, not a switch.** The rate is one constant picked by eye.
+- **Garble as a strength.** The rate is one constant picked by eye.
   `#garble=0.8` would carry a strength without breaking the flag — `q.has` is
   true whatever the value — but the dialog would grow its first slider where
   every other thing a card carries is a checkbox. Worth doing when someone
@@ -395,7 +395,7 @@ Considered and left: **a house-reference selector** (letting B be the raster
 instead of A) would double the expressive range of all of the above, but B _is_
 the second raster — it is a restructure, not a knob.
 
-### The loop bus into the B input — sized, not built
+### The loop bus into the B input, sized but not built
 
 The one item from the loop-hardware pass that was started and put down. B's
 dirty path resamples a signal, so patching the mixer's own loop bus in there

@@ -1,13 +1,13 @@
 # Curating looks
 
-Which looks are worth keeping, and how anyone knows. The preset table is past
-150 entries and the roll draws from all of them, so a preset that is not worth
-clicking is also a preset dragging every `surprise` toward mush. Same question
-one level down for the 285 controls — which are looks, and which are trims that
-belong behind `fine: true`.
+This page is about which looks are worth keeping, and how anyone knows. The
+preset table is past 150 entries and the roll draws from all of them, so a
+preset that is not worth clicking is also a preset dragging every `surprise`
+toward mush. Same question one level down for the 285 controls — which are
+looks, and which are trims that belong behind `fine: true`.
 
 Most of this is a working record rather than a conclusion. The screening
-harness, its blind spots, what the surveys found and what the eye said are the
+harness, its blind spots, what the surveys found and what the eye added are the
 live half. A labelling system was also built to answer the same question with a
 model; it has barely been used, and the last section is what it would take to
 pick that up.
@@ -23,7 +23,7 @@ deno run -A --config scripts/gpuprof/deno.json scripts/gpuprof/survey.ts \
   sliders --base=vhs
 ```
 
-### Read the columns together or not at all
+### Read the columns together
 
 - **dep** — mean channel departure from the reference, 0-255. How much of the
   picture moved.
@@ -39,7 +39,7 @@ deno run -A --config scripts/gpuprof/deno.json scripts/gpuprof/survey.ts \
 **Departure is not quality.** It says a patch went somewhere, never that
 somewhere is worth going. Every list below is a shortlist to look at.
 
-### What the harness cannot see, and who that is unfair to
+### What the harness cannot see
 
 Four blind spots, each of which makes a real preset score like a dead one:
 
@@ -188,7 +188,7 @@ up there, and the frames show darkening rather than rainbowing from about 2.8.
 Or put a bandpass ahead of the demodulator, which is the real fix and moves
 every look in the library.
 
-## What the eye said that the numbers did not
+## What the eye added to the numbers
 
 Screening rounds went in front of Colin as contact sheets, each candidate a
 playable strip rather than a still. These verdicts are worth more than the
@@ -236,7 +236,7 @@ and they were the strongest prior going in. `both loops` was kept at dep 26, the
 lowest departure in its sheet, while `iris hunt` was cut at 106. Departure did
 not order these at all.
 
-So: propose looks that **change where the picture is** (zoom, rotation, timebase
+So propose looks that **change where the picture is** (zoom, rotation, timebase
 pull) or **what colour it is by arithmetic** (subcarrier delay, ring
 modulation). Do not propose looks whose content is texture — a blur, a ring, a
 grain, a stutter.
@@ -309,7 +309,7 @@ Against the program the ring mod takes away the little colour the chain had
 frequency the invented colour lands on one phase, which is why three sectors
 hold it, and the detune is what turns it into a wheel.
 
-**A colour claim measured on a saturated source is not measured.** The same
+**A colour claim measured on a saturated source measures nothing.** The same
 sheet on `clip-test` puts every one of those arms between 0.29 and 0.39 against
 a clean 0.487, so the mechanism that makes colour out of nothing reads as one
 that slightly reduces it. This section fell into that trap once already.
@@ -331,7 +331,7 @@ Read `csd` and not `sat` for this now — `looplock.ts` prints it beside `sd`, a
 it is the number that separates a loop drawing in hue from a loop drawing in
 grey without needing a monochrome source to do it.
 
-### Chaotic is not the same as wild
+### Wildness is large coherent structure
 
 The correction that cost the most to learn. Three rounds came back "very
 subtle", so the next round stacked everything: both ring modulators, both loops
@@ -413,7 +413,7 @@ rotating at all.
 against an end, naming the base and the range. It catches `bDetuneHz` based at
 1500 in a ±3000 span as well, at 28%. None of the 23 presets trip it.
 
-### The two failures a feedback look actually has
+### The two failures of a feedback look
 
 "Not dramatic enough" and "too chaotic" were reported about the same family
 within a minute of each other, and they turned out to be one setting apart in
@@ -449,8 +449,8 @@ product crosses 1, with `lock` untouched. The camera loop sits ahead of the
 encoder and cannot reach the sync path at all, which makes it the half of the
 family that was free to be pushed.
 
-**But only inward.** Above unity the direction of the transport decides whether
-there is a picture:
+**The gain only pays off inward.** Above unity the direction of the transport
+decides whether there is a picture:
 
 | zoom  | round trip | result                    |
 | ----- | ---------: | ------------------------- |
@@ -498,7 +498,7 @@ anything measured that afternoon. The list of presets allowed to run a bare
 cable is now explicit in `presets.test.ts`, split into the ones that tear on
 purpose and the ones measured to hold without it.
 
-### The camera loop is a whole generation, and the mixer loop is not the place for a tape fault
+### The camera loop is a whole generation
 
 Two results from one round of screening, and they are the same result read from
 both ends. The round started from a coverage count rather than a hunch: sixty of
@@ -583,7 +583,7 @@ Three things fell out of taking all three trims off:
   0.055 apart to **0.022**, the closest in the whole 152-preset table, and the
   frames agree — it is the spiral family. The trim had been masking a duplicate.
 
-**And the screening ranked on `csd`, which is the quantity the error inflated.**
+**The screening ranked on `csd`, which is the quantity the error inflated.**
 `csd` is in `looplock` to stop a colour look being cut for reading flat on a
 luma-only `sd`. It is a rescue, not a score. Ranking on it sorted the arms with
 the worst case of the per-lap gain to the top, and they were then tuned further
@@ -680,7 +680,7 @@ drives the paperclip (`signal/clip.ts`), which lives in `Engine.applyClip` and
 so had never reached the headless graph — a look that rests just short of
 trouble and is thrown by a contact rendered as the board it rests on.
 
-## Labelling: the collectors, and what they were for
+## Labelling: the collectors
 
 **Barely used, and kept as reference.** The idea was to answer "which settings
 are cool" with a model rather than with `surprise`'s uniform roll, which needs
