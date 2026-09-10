@@ -12,7 +12,9 @@ pnpm render out.mov --look='<a link that names its own source>'
 
 It runs the app's own engine. The pass graph, the control table and the link
 parser are the same code the tab runs, bundled so a JavaScript runtime with no
-bundler in it can load them, so a look renders here as it renders on screen.
+bundler in it can load them, so a look renders here as it renders on screen. The
+command lives in a checkout of the repository — [Getting it](#getting-it) has
+the four-line version.
 
 The app's own **⎙ render** in the strip tray is the other way to a file, and the
 one to reach for while you are performing. This page is about the other case: a
@@ -166,11 +168,26 @@ because a megabyte-scale binary re-rendered whenever a look changes is what the
 repo's clips rule exists to keep out of the history. `pnpm render:docs:keep`
 writes watchable copies to `renders/` as well, which is gitignored.
 
-## What it needs
+## Getting it
 
-Deno for the runtime, ffmpeg for both ends, and a checkout. This is a local
-tool; the hosted app cannot do it. `pnpm render` builds the engine bundle first,
-so there is no separate step.
+`pnpm render` runs out of a checkout. It is a local tool, and the hosted app
+cannot do it.
+
+```
+git clone https://github.com/cmdcolin/videoskillet
+cd videoskillet
+pnpm install
+pnpm render in.mp4 out.mov --preset=vhs
+```
+
+Four things have to be on PATH. **Node** and **pnpm** build the engine bundle.
+**[Deno](https://deno.com/)** runs it — the renderer drives Deno's own WebGPU,
+so the shaders execute on the same hardware the tab would use, and a machine
+with no working GPU driver has nothing to render on. **ffmpeg** works both ends
+of the pipe, decoding the input and encoding the output.
+
+`pnpm render` builds the bundle before every run, so there is no separate step.
+The first run takes a few seconds longer than the ones after it.
 
 ## What it does not do
 
