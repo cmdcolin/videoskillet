@@ -385,6 +385,25 @@ restart empty. `onHang` is deliberately **not** rebuilt: a wedged GPU process is
 shared across tabs and outlives the page, so a fresh device would land on the
 same one. That one still goes to `FatalScreen`.
 
+### What is stored where
+
+Two stores sit behind the panel, and which one a piece of state belongs in
+follows from whether it describes a look or a machine.
+
+- **The account** (Firestore, `users/{uid}`) holds the saved-profile library,
+  the session last open as `current`, and one still per profile in a `stills`
+  subcollection. `src/ui/savedProfiles.ts` and `cloud.ts` are the only writers,
+  and both merge into the user document from paths of their own, so every field
+  is optional.
+- **The browser** (`localStorage`) holds the clip library, the rundown, the
+  pinned sliders, the 1-9 scenes and the panel's own layout. These describe how
+  one machine is set up, and syncing them would mean reconciling two machines'
+  hardware.
+
+[ADR 0005](adr/0005-saved-profiles-need-an-account.md) has why the library needs
+an account at all, and [0010](adr/0010-the-account-holds-the-session.md) why the
+session and the stills joined it.
+
 ### React Compiler is on
 
 Via `reactCompilerPreset` and `@rolldown/plugin-babel` in `vite.config.ts`.

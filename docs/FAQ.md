@@ -92,8 +92,10 @@ need a network.
 - **Android / Chrome** — the address bar offers _Install app_, or use _Add to
   Home screen_ from the ⋮ menu.
 - **iPhone / iPad / Safari** — Share → _Add to Home Screen_. Safari is the only
-  browser on iOS that can do this, and the installed copy keeps its own storage,
-  so saved profiles and clips stay behind in the Safari tab.
+  browser on iOS that can do this, and the installed copy keeps its own storage.
+  Saved profiles and the last session come from the account, so they follow you
+  into the installed copy once you sign in there; the clip library is per-device
+  and stays behind in the Safari tab.
 - **Desktop Chrome or Edge** — use the install icon at the right of the address
   bar, or _Install videoskillet.js_ from the menu.
 
@@ -103,6 +105,21 @@ runs in a tab there and loses nothing but the window.
 The install starts the app at `/app/`. The landing page and labelling tools are
 inside its scope, so a link to one opens in the same window rather than a
 browser tab.
+
+## What does signing in give me?
+
+A library and a way back into it. Saved profiles live on the account rather than
+in one browser, so a look named on a laptop is there on a phone. The app also
+autosaves the session you are running, and videoskillet.com then opens on a home
+page with a card that resumes it, your saved looks with a still of each, and the
+gallery. Each saved look has an _open_ that reloads the whole setup and a
+_recall_ that brings back the controls and the motion alone.
+
+Everything else works signed out, offline, forever: presets, scenes, pinned
+sliders, the rundown, recording, and the URL that carries the whole look. The
+clip library, the rundown and the pinned sliders describe one machine's setup
+and stay on that machine. [ADR 0010](adr/0010-the-account-holds-the-session.md)
+has the reasoning.
 
 ## Will it be in an app store?
 

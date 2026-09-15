@@ -145,7 +145,14 @@ per generation.
 - **MIDI**: any controller sending CC, with learn, auto-map and soft takeover.
   See [Using a MIDI controller](MIDI.md).
 - **Presets** also work as faders you can drag partway. Morph, random nudge,
-  full undo, and saved profiles behind a sign-in.
+  full undo, and saved profiles behind a sign-in. A saved profile keeps a still
+  of the picture, and the popover's _open_ reloads the whole setup from it,
+  where _recall_ brings back the controls and the motion alone.
+- **Home**: signed in, videoskillet.com opens on a page of your own — a card
+  that resumes the session you were last running, your saved looks with their
+  stills, and the gallery. The app autosaves the current session to the account
+  while you are signed in, so the resume card is up to date on whatever machine
+  you open next.
 - **Drift**: one switch makes the look wander on its own, with a small change
   every fifteen seconds around the current setting. Each stage has the same
   switch for its own controls.

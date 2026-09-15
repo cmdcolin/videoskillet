@@ -61,8 +61,8 @@ picture of the look.
 - **The autosave adds writes.** Every settle of the controls sends one document
   write while signed in, throttled to roughly one per settle rather than one per
   slider move. A long session of dialling costs tens of writes where it used to
-  cost none, which is small against the free tier and is the price of the
-  resume card.
+  cost none, which is small against the free tier and is the price of the resume
+  card.
 - **A still is a few KB.** Base64 inflates a webp by a third, so the 60000-
   character cap is about 45 kB of picture — a wide margin over the thumbnails
   the app writes, and far under the 1 MiB a document may hold. 200 profiles at
