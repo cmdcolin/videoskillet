@@ -4,6 +4,7 @@ import Footer from '../components/Footer.astro'
 import SiteBar from '../components/SiteBar.astro'
 import css from '../styles/landing.css?raw'
 import designTokens from '../../src/tokens.css?raw'
+import site from '../styles/site.css?raw'
 import tokens from '../styles/tokens.css?raw'
 
 // Two services and what each one is for. Short on purpose.
@@ -27,7 +28,7 @@ const REPO = 'https://github.com/cmdcolin/videoskillet'
     <link rel="canonical" href={`${SITE}privacy/`} />
     <meta name="theme-color" content="#0e0e11" />
     <meta name="color-scheme" content="dark" />
-    <style is:inline set:html={designTokens + tokens + css}></style>
+    <style is:inline set:html={designTokens + tokens + site + css}></style>
     <Analytics />
   </head>
   <body id="top">

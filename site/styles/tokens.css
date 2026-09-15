@@ -3,6 +3,7 @@
    page's own sheet. */
 :root {
   --accent: #7fd0a0;
+  --accent-ink: #0b160f;
 }
 * {
   box-sizing: border-box;

@@ -1,0 +1,525 @@
+/* CROSS_REPO_SYNC_FILE(site-css) */
+/* The static site's shared components, identical in videoskillet and bender:
+   the page base, buttons, the site bar, the account menu, the why-sign-in card,
+   the privacy page, the signed-in home and its skeleton. Colours come from
+   tokens.css and each product's --accent and --accent-ink. */
+:root {
+  --measure: 46rem;
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  line-height: 1.65;
+  font-family: var(--font);
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+}
+a {
+  color: var(--accent);
+}
+/* `display` on a class beats the browser's own `[hidden]` rule, and the bar
+   hides an inline-flex button and a flex box by setting the attribute. */
+[hidden] {
+  display: none !important;
+}
+.wrap {
+  max-width: var(--measure);
+  margin: 0 auto;
+  padding: 0 1.25rem;
+}
+.wide {
+  max-width: 72rem;
+}
+
+section {
+  padding: 3.5rem 0;
+}
+.head {
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: var(--fg);
+  margin: 0 0 0.5rem;
+}
+.sub {
+  color: var(--fg4);
+  font-size: 0.95rem;
+  margin: 0 0 1.1rem;
+  max-width: var(--measure);
+}
+
+.btn {
+  display: inline-block;
+  padding: 0.72rem 1.35rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border-faint);
+  background: var(--surface);
+  color: var(--fg);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1rem;
+}
+.btn:hover {
+  border-color: var(--fg4);
+}
+.btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+.btn.primary:hover {
+  filter: brightness(1.08);
+}
+
+/* ── the site bar ──────────────────────────────────────────────────────────
+   A slim row over both states of `/`: the site's three destinations on the
+   left, the account and the app on the right. The guide's own bar is in
+   guide.css and keeps its shape; the two share the palette and nothing else,
+   because the middle of the guide's bar is the pages of one group and the
+   middle of this one is the site. */
+.siteBar {
+  border-bottom: 1px solid var(--border-faint);
+  background: var(--bg);
+}
+.barIn {
+  display: flex;
+  align-items: center;
+  gap: 0 1.25rem;
+  height: 56px;
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 0 max(1.15rem, env(safe-area-inset-left));
+}
+.barBrand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--fg);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.barNav {
+  display: flex;
+  gap: 1.15rem;
+  margin-right: auto;
+}
+.barNav a {
+  color: var(--fg3);
+  text-decoration: none;
+  font-size: 14px;
+  white-space: nowrap;
+}
+.barNav a:hover {
+  color: var(--fg);
+}
+.barEnd {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-left: auto;
+}
+/* The bar's own size for `.btn`, which the hero sets at full size. */
+.btn.slim {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.875rem;
+}
+.ico {
+  width: 1.05rem;
+  height: 1.05rem;
+  flex: none;
+}
+/* On a phone the bar keeps the brand and the two buttons it exists for. The
+   destinations are in the footer and the rail, "Why sign in?" is asked again
+   under the hero, and the sign-in button keeps its icon and its label for
+   screen readers. The narrowest phones keep the logo without the name. */
+.barEnd .btn {
+  white-space: nowrap;
+}
+@media (max-width: 44rem) {
+  .barIn {
+    gap: 0 0.75rem;
+  }
+  .barNav,
+  #why,
+  .barLabel {
+    display: none;
+  }
+  .barBrand {
+    margin-right: auto;
+  }
+  .barEnd {
+    gap: 0.5rem;
+  }
+  #signIn {
+    padding-inline: 0.55rem;
+  }
+}
+@media (max-width: 23rem) {
+  .barBrand span {
+    display: none;
+  }
+}
+
+.acct {
+  position: relative;
+}
+.acctBtn {
+  display: block;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1px solid var(--border-faint);
+  background: var(--surface);
+  color: var(--fg2);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.acctBtn:hover .avatar,
+.acctBtn:focus-visible .avatar {
+  border-color: var(--accent);
+}
+.acctMenu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.45rem);
+  z-index: 20;
+  min-width: 11rem;
+  padding: 0.5rem;
+  border: 1px solid var(--border-faint);
+  border-radius: 0.5rem;
+  background: var(--surface);
+}
+.acctName {
+  margin: 0 0 0.3rem;
+  padding: 0.15rem 0.4rem;
+  font-size: 0.85rem;
+  color: var(--fg2);
+  overflow-wrap: anywhere;
+}
+.acctOut {
+  width: 100%;
+  padding: 0.35rem 0.4rem;
+  border: 0;
+  border-radius: 0.35rem;
+  background: none;
+  color: var(--fg3);
+  font: inherit;
+  font-size: 0.85rem;
+  text-align: left;
+  cursor: pointer;
+}
+.acctOut:hover {
+  background: var(--bg);
+  color: var(--fg);
+}
+
+/* ── why sign in ───────────────────────────────────────────────────────────
+   The question beside the bar's sign-in button and under the hero, and the card
+   both of them open. The card's prose is src/ui/whySignIn.ts, the same strings
+   the app's own dialog renders. */
+.why {
+  font: inherit;
+  font-size: 0.9rem;
+  padding: 0.35rem 0.15rem;
+  background: none;
+  color: var(--fg4);
+  border: none;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.why:hover,
+.why:focus-visible {
+  color: var(--fg);
+}
+.whyCard {
+  width: min(34rem, calc(100vw - 2rem));
+  padding: 1.4rem 1.5rem;
+  background: var(--surface);
+  color: var(--fg);
+  border: 1px solid var(--border-faint);
+  border-radius: 0.6rem;
+}
+.whyCard::backdrop {
+  background: #000a;
+}
+.whyTop {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.whyHead {
+  margin: 0 0 0.9rem;
+  font-size: 1.4rem;
+}
+/* The answer, at the size of the thing being answered. */
+.whyPitch {
+  margin: 0 0 0.7rem;
+  font-size: 1.05rem;
+  color: var(--fg);
+}
+.whyLine {
+  margin: 0 0 0.7rem;
+  color: var(--fg3);
+  font-size: 0.95rem;
+}
+.whyLine a {
+  color: var(--accent);
+  white-space: nowrap;
+}
+.whyCta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin: 1.1rem 0 0.8rem;
+}
+/* ── the privacy page ──────────────────────────────────────────────────────
+   One column of prose under the site bar, at the width the rest of the site
+   reads at. */
+.privacy {
+  padding-top: 2.5rem;
+  padding-bottom: 4rem;
+}
+.privacy h1 {
+  margin: 0 0 0.6rem;
+  font-size: 2rem;
+}
+.privacy h2 {
+  margin: 2rem 0 0.5rem;
+  font-size: 1.25rem;
+}
+.privacy p {
+  margin: 0;
+  color: var(--fg3);
+  line-height: 1.65;
+}
+.privacy a {
+  color: var(--accent);
+}
+.privacyLead {
+  font-size: 1.1rem;
+}
+
+/* ── the signed-in home ────────────────────────────────────────────────────
+   A rail of links and one column of sections, built by site/scripts/home.ts
+   once Firebase has answered. The cards are the gallery's own anatomy, so a
+   saved look and a demo read as the same kind of thing. */
+.homeIn {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  gap: 2rem;
+  max-width: 88rem;
+  margin: 0 auto;
+  padding: 2rem max(1.15rem, env(safe-area-inset-left)) 3.5rem;
+}
+.rail {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  position: sticky;
+  top: 1rem;
+  align-self: start;
+}
+.rail a {
+  padding: 0.4rem 0.6rem;
+  border-radius: 0.4rem;
+  color: var(--fg3);
+  text-decoration: none;
+  font-size: 0.92rem;
+  white-space: nowrap;
+}
+.rail a:hover {
+  background: var(--surface);
+  color: var(--fg);
+}
+.rail a.on {
+  background: var(--surface);
+  color: var(--accent);
+}
+.homeMain {
+  display: flex;
+  flex-direction: column;
+  gap: 2.75rem;
+}
+/* `section`'s 3.5rem belongs to the landing page's full-bleed bands; the
+   column spaces itself. */
+.homeSec {
+  padding: 0;
+  scroll-margin-top: 1rem;
+}
+.homeSec .head {
+  font-size: 1.15rem;
+}
+/* The rail becomes the row under the bar: 200px of links beside a single
+   column of cards is most of a phone's width. */
+@media (max-width: 52rem) {
+  .homeIn {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.35rem;
+  }
+  .rail {
+    position: static;
+    flex-direction: row;
+    gap: 0.35rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+}
+
+.resumeCard {
+  display: grid;
+  grid-template-columns: minmax(0, 20rem) minmax(0, 1fr);
+  border: 1px solid var(--border-faint);
+  border-radius: 0.6rem;
+  background: var(--surface);
+  overflow: hidden;
+}
+.resumeCard .shot {
+  position: relative;
+  display: block;
+  aspect-ratio: 5 / 4;
+  background: #000;
+}
+.resumeCard .shot .still {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+.resumeBody {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 1.35rem;
+}
+.when {
+  margin: 0;
+  color: var(--fg4);
+  font-size: 0.85rem;
+}
+.resumeSays {
+  margin: 0;
+  color: var(--fg2);
+  font-size: 0.95rem;
+  text-wrap: pretty;
+}
+.resumeCta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin: 0.7rem 0 0;
+}
+@media (max-width: 44rem) {
+  .resumeCard {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* A look with no still: the app mark on the card's own black, so the row of
+   cards keeps its shape. */
+.shot.blank {
+  display: grid;
+  place-items: center;
+  background: #0a0b0d;
+}
+.resumeCard .shot.blank .blankMark {
+  position: static;
+  width: 2.5rem;
+  height: 2.5rem;
+  object-fit: contain;
+  opacity: 0.55;
+}
+
+.empty {
+  padding: 2.25rem 1.5rem;
+  border: 1px dashed var(--border-faint);
+  border-radius: 0.6rem;
+  text-align: center;
+}
+.emptyHead {
+  margin: 0 0 0.5rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+.emptySays {
+  max-width: 34rem;
+  margin: 0 auto 1.15rem;
+  color: var(--fg4);
+  font-size: 0.92rem;
+  text-wrap: pretty;
+}
+
+/* ── waiting for Firebase ──────────────────────────────────────────────────
+   The head script in index.astro sets `data-home="pending"` on a browser that
+   has signed in before. The landing page and the sign-in controls stay out of
+   sight and the home's outline stands in until home.ts paints one state. */
+.homeWait {
+  display: none;
+}
+html[data-home='pending'] .homeWait {
+  display: block;
+  min-height: 100vh;
+}
+html[data-home='pending'] #landing,
+html[data-home='pending'] #signIn,
+html[data-home='pending'] #why {
+  display: none;
+}
+.vh {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.bone {
+  display: block;
+  animation: bone 1.4s ease-in-out infinite;
+}
+@keyframes bone {
+  50% {
+    opacity: 0.5;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bone {
+    animation: none;
+  }
+}
+.bone {
+  border-radius: 0.4rem;
+  background: var(--surface);
+}
+.railBone {
+  width: 7rem;
+  height: 1.9rem;
+}
+.headBone {
+  width: 14rem;
+  height: 1.4rem;
+}
