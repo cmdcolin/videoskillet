@@ -9,14 +9,16 @@ import puppeteer from 'puppeteer-core'
 // site/scripts/home.ts are the two halves under test.
 //
 // No real account is involved, so "Firebase settles" here is always the
-// signed-out answer. The two blocked cases hold back the chunks the entry
-// script imports, which is the SDK.
+// signed-out answer. The two blocked cases hold back Firebase's `index.esm`
+// chunks, which cloud.ts imports dynamically. Blocking every chunk would also
+// catch modules home.ts imports statically, and a page whose script never runs
+// has only the timeout to rescue it.
 //
 // Run: node scripts/homewait.mjs [dir]  (default dist)
 import { FIREFOX } from './browser.mjs'
 import { serveDist } from './static.mjs'
 
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 
 const root = process.argv[2] ?? 'dist'
@@ -28,11 +30,6 @@ if (!existsSync(join(root, 'index.html'))) {
   console.error(`no ${root}/index.html — run \`pnpm build\` first`)
   process.exit(1)
 }
-const entries = [
-  ...readFileSync(join(root, 'index.html'), 'utf8').matchAll(
-    /<script[^>]+src="([^"]+)"/g,
-  ),
-].map(m => new URL(m[1], BASE).href)
 
 const server = await serveDist(root, PORT)
 const browser = await puppeteer.launch({
@@ -63,11 +60,7 @@ async function load(hint, block) {
     await page.setRequestInterception(true)
     page.on('request', req => {
       const url = req.url()
-      if (
-        url.includes('/_astro/') &&
-        url.endsWith('.js') &&
-        !entries.includes(url)
-      ) {
+      if (url.includes('/_astro/index.esm.')) {
         blocked++
         if (block === 'abort') void req.abort()
       } else void req.continue()
