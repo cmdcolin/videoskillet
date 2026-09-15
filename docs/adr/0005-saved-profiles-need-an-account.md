@@ -1,6 +1,7 @@
 # 0005 — Saved profiles live in Firestore, and need an account
 
-**Status:** accepted, 2026-08-07.
+**Status:** accepted, 2026-08-07; partly superseded by
+[0010](0010-the-account-holds-the-session.md).
 
 ## Context
 
@@ -41,6 +42,9 @@ than one that says "sign in first".
 did, signed out, offline, forever: presets, the 1–9 scenes, pinned sliders, the
 URL that carries the whole look, the ⧉ link beside each saved profile. An
 account buys the library and nothing else, and no feature was moved behind it.
+(0010 widens that last sentence: the account also carries the session last open
+and a still per profile, so a signed-in visitor can pick a setup back up. No
+feature moved behind the account to do it.)
 
 ## Consequences
 
