@@ -2,6 +2,24 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [0.47.0](https://github.com/cmdcolin/videoskillet/compare/v0.46.4...v0.47.0) - 2026-09-15
+
+### Features
+- [`227e592`](https://github.com/cmdcolin/videoskillet/commit/227e592b5d4786c83b7c166e0a04579bf7bb5a2a) add cross-repo sync with bender
+- *(ui)* [`ac7155e`](https://github.com/cmdcolin/videoskillet/commit/ac7155ed5c890c90cd652cd2b49e9ca8069f61ef) modulation is a section that lists what moves and how fast
+
+### Fixes
+- *(ui)* [`b9a8848`](https://github.com/cmdcolin/videoskillet/commit/b9a8848311758f4b1e10fc130753ea2f3db93815) fit the site bar and the gallery on a phone
+
+### Refactor
+- *(ui)* [`35b65b6`](https://github.com/cmdcolin/videoskillet/commit/35b65b6ed27e16571974683900c08dd94a3aa4c5) move the neutrals and type scale into a shared tokens.css
+- *(ui)* [`b1c8986`](https://github.com/cmdcolin/videoskillet/commit/b1c89865f6cc3c1f057ed3a11dfbbbe2262e2fd7) move the site's shared components into a synced site.css
+- *(ui)* [`057c355`](https://github.com/cmdcolin/videoskillet/commit/057c3558510329915a5a4586685caf54d2ccd5a1) share the site bar and footer markup with bender
+- *(ui)* [`025591c`](https://github.com/cmdcolin/videoskillet/commit/025591c1374ef34f6f0ca692c33544dd2a8311ab) use --surface in the modulation section
+
+### Chores
+- [`9ecdd5f`](https://github.com/cmdcolin/videoskillet/commit/9ecdd5f3c7c5942067f26ee1840614d9c2060a26) share the lint, format and changelog config with bender
+
 ## [0.46.4](https://github.com/cmdcolin/videoskillet/compare/v0.46.3...v0.46.4) - 2026-09-15
 
 ### Features
