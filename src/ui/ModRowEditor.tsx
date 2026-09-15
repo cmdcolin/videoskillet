@@ -97,22 +97,9 @@ function KnobRow(props: { i: number; slot: UiSlot; field: BayField }) {
   const open = mod.editing.has(key)
   const s = props.slot
   const rate = props.field === 'rate'
-  // A wire onto a wire looks exactly like the row above it — same "rate"/
-  // "depth" text at every level — unless the label says which knob it drives.
-  // A control's own rate/depth needs no such pointer: the control's name is
-  // already the row above it.
-  const wired = isBayKey(s.target) ? targetLabel(s.target) : null
   return (
     <Slider
-      label={
-        wired === null
-          ? rate
-            ? 'rate'
-            : 'depth (of slider range)'
-          : rate
-            ? `rate → ${wired}`
-            : `depth → ${wired}`
-      }
+      label={rate ? 'rate' : 'depth (of slider range)'}
       unit={rate ? 'Hz' : ''}
       min={rate ? RATE_MIN : 0}
       max={rate ? RATE_MAX : 1}
@@ -213,6 +200,14 @@ export function ModRowEditor(props: {
 
   return (
     <div className={styles.editor}>
+      {/* A wire onto a wire unfolds into the same rows as any other routing —
+          the point of the bay's knobs living in the control key space — so
+          "rate"/"depth" below reads the same at every nesting level. Only
+          this line says which knob it drives, once, rather than the rows
+          repeating it each time. */}
+      {isBayKey(key) ? (
+        <div className={ui.hint}>on {targetLabel(key)}</div>
+      ) : null}
       <SelectRow
         tag="∿"
         title="modulation source"
