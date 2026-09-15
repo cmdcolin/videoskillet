@@ -97,9 +97,22 @@ function KnobRow(props: { i: number; slot: UiSlot; field: BayField }) {
   const open = mod.editing.has(key)
   const s = props.slot
   const rate = props.field === 'rate'
+  // A wire onto a wire looks exactly like the row above it — same "rate"/
+  // "depth" text at every level — unless the label says which knob it drives.
+  // A control's own rate/depth needs no such pointer: the control's name is
+  // already the row above it.
+  const wired = isBayKey(s.target) ? targetLabel(s.target) : null
   return (
     <Slider
-      label={rate ? 'rate' : 'depth (of slider range)'}
+      label={
+        wired === null
+          ? rate
+            ? 'rate'
+            : 'depth (of slider range)'
+          : rate
+            ? `rate → ${wired}`
+            : `depth → ${wired}`
+      }
       unit={rate ? 'Hz' : ''}
       min={rate ? RATE_MIN : 0}
       max={rate ? RATE_MAX : 1}
