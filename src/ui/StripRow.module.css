@@ -140,7 +140,7 @@
   font: inherit;
   font-size: var(--fs-sm);
   color: var(--fg);
-  background: var(--ctl-face);
+  background: var(--surface-raised);
   border: 1px solid var(--edit);
   border-radius: 2px;
   padding: 4px 5px;
@@ -182,7 +182,7 @@
 }
 .chip:hover {
   color: var(--fg);
-  background: var(--ctl-face);
+  background: var(--surface-raised);
 }
 
 .arrive {
@@ -248,7 +248,7 @@
   line-height: 1;
 }
 .drop:hover {
-  color: var(--bad);
+  color: var(--danger);
 }
 
 /* The hold's own progress. A track that is always there, so a row does not

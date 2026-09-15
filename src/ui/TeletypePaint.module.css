@@ -14,7 +14,7 @@
   display: grid;
   place-items: center;
   overflow: hidden;
-  background: var(--ctl-face);
+  background: var(--surface-raised);
   color: var(--fg);
   border: 1px solid var(--border);
   border-radius: 3px;

@@ -25,7 +25,7 @@
    track so the bar reads empty until the first frame writes a level */
 .unlit {
   position: absolute;
-  background: var(--ctl-face);
+  background: var(--surface-raised);
 }
 .unlitH {
   inset: 0 0 0 auto;

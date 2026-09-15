@@ -35,7 +35,7 @@
   padding: 2px 7px;
   border: 1px solid var(--border-quiet);
   border-radius: 4px;
-  background: var(--panel-bg);
+  background: var(--surface);
   color: var(--fg3);
   font: inherit;
   line-height: 1.4;

@@ -18,7 +18,7 @@
   font-family: inherit;
   font-size: var(--fs-xs);
   color: var(--fg2);
-  background: var(--ctl-face);
+  background: var(--surface-raised);
   border: 1px solid var(--border);
   border-radius: 3px;
   cursor: pointer;

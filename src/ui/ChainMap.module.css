@@ -29,7 +29,7 @@
    for good after the first click. Everything else clickable in this sidebar is
    a filled control with a hover state; now this is too. */
 .mapBox {
-  fill: var(--ctl-face);
+  fill: var(--surface-raised);
   stroke: var(--border);
   stroke-width: 1;
   /* SVG hit-tests what is painted, and the two states below paint no fill —
@@ -101,7 +101,7 @@
   stroke-width: 1.8;
 }
 .mapReturnOn .mapLoopChip {
-  fill: color-mix(in srgb, var(--accent) 14%, var(--ctl-face));
+  fill: color-mix(in srgb, var(--accent) 14%, var(--surface-raised));
 }
 .mapReturnOn .mapLoopLabel {
   fill: var(--accent);
@@ -163,7 +163,7 @@
    letters. A chip is that knockout with an edge on it, and a label inside one
    must not keep the stroke — it would halo every glyph against the face. */
 .mapLoopChip {
-  fill: var(--ctl-face);
+  fill: var(--surface-raised);
   stroke: currentColor;
   stroke-width: 1;
 }
@@ -230,7 +230,7 @@
    chips a stroke alone is a thin claim, and this is the map's answer to "where
    am I". */
 .mapNodeOn .mapBox {
-  fill: color-mix(in srgb, var(--accent) 14%, var(--ctl-face));
+  fill: color-mix(in srgb, var(--accent) 14%, var(--surface-raised));
 }
 /* A stage that cannot be opened: Mix and input B with nothing patched into B.
    Drawn rather than dropped — together they are the one thing on screen saying

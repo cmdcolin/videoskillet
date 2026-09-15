@@ -60,7 +60,7 @@
 .btn {
   height: var(--ctl-h);
   padding: 0 0.6rem;
-  background: var(--ctl-face);
+  background: var(--surface-raised);
   color: var(--fg);
   border: 1px solid var(--border-quiet);
   border-radius: var(--ctl-radius);
@@ -104,7 +104,7 @@
 .pick {
   height: var(--ctl-h);
   min-width: 10rem;
-  background: var(--ctl-face);
+  background: var(--surface-raised);
   color: var(--fg);
   border: 1px solid var(--border-quiet);
   border-radius: var(--ctl-radius);
@@ -191,7 +191,7 @@
   padding: 0 0.5rem;
   border: 1px solid var(--border-quiet);
   border-radius: var(--ctl-radius);
-  background: var(--ctl-face);
+  background: var(--surface-raised);
   color: var(--fg2);
   font: inherit;
   cursor: pointer;

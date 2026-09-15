@@ -1,0 +1,51 @@
+/* CROSS_REPO_SYNC_FILE(design-tokens) */
+/* The design system videoskillet and bender share: neutrals, borders and type,
+   for the static site and the app alike. Each product adds its own accent,
+   signal colours and reset in its own sheet, and nothing here names one.
+
+   Four text tiers: primary reading text, secondary (headers, labels about
+   labels), tertiary (prose, meta), and faint (icon affordances, placeholders).
+   --fg3 clears 8:1 on --surface, so explanatory prose reads at a glance.
+   Anything dimmer than --fg4 is decoration only.
+
+   The type scale is in rem, which nests without compounding and honours a
+   reader who set their browser's default font size. The comments give the px
+   each size lands on at the 16px default. */
+:root {
+  /* Tells the browser the UI is dark, so scrollbars, dropped lists, clear
+     buttons and focus rings come out dark too. */
+  color-scheme: dark;
+  --font: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mono: ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, monospace;
+
+  /* The page, a card or panel on it, and a filled control on that. */
+  --bg: #0e0e11;
+  --surface: #16161a;
+  --surface-raised: #26262e;
+
+  --fg: #e6e6ee;
+  --fg2: #c6c6d6;
+  --fg3: #a6a6ba;
+  --fg4: #85859a;
+
+  /* --border is a surface's own edge. --border-quiet outlines chrome that sits
+     beside the controls it acts on. Both lift to --border-hover under the
+     pointer. --border-faint is a hairline that only has to exist. */
+  --border: #44444f;
+  --border-quiet: #33333f;
+  --border-hover: #63637a;
+  --border-faint: #2e2e38;
+
+  /* A failed write, or a button whose job is to remove something. */
+  --danger: #e08484;
+
+  --fs-xs: 0.6875rem; /* 11px */
+  --fs-sm: 0.75rem; /* 12px */
+  --fs: 0.8125rem; /* 13px */
+  --fs-md: 0.875rem; /* 14px */
+  --fs-lg: 1rem; /* 16px */
+  --fs-xl: 1.25rem; /* 20px */
+  /* Prose wraps to three to five lines in a narrow panel, where 1.2 is
+     unreadable. */
+  --prose-lh: 1.45;
+}

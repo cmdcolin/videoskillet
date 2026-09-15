@@ -7,7 +7,7 @@
 .tray {
   flex: none;
   border-top: 1px solid var(--border-quiet);
-  background: var(--panel-bg);
+  background: var(--surface);
   /* the picture above it keeps the rest; the tray never grows past a third of
      the stage even with forty rows, because what is being watched is up there */
   max-height: 33dvh;

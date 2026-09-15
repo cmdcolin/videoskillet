@@ -1,65 +1,16 @@
-/* The palette and the type scale, as tokens on :root — a plain stylesheet, not
-   a CSS module, because these are global by design: every module reads them,
-   and FatalScreen renders outside .app and still has to look like the app.
-   Imported once, from main.tsx. Retheme here and nowhere else.
+/* videoskillet's own tokens: the accent and the colours that say something
+   about a control. The neutrals, borders and type scale come from tokens.css,
+   which bender shares. Imported once per entry, from main.tsx and the vote and
+   stream pages. Retheme here and nowhere else. */
+@import './tokens.css';
 
-   Four text tiers, not twelve near-identical grays: primary reading text,
-   secondary (headers, labels-about-labels), tertiary (prose, meta), and faint
-   (icon affordances, placeholders). The floor is set by contrast on the panel —
-   --fg3 clears 8:1, so the explanatory prose reads at a glance rather than
-   asking to be leaned into. Anything dimmer than --fg4 must be decoration only.
-
-   One type scale, so "the whole UI is too small" is a six-line edit rather than
-   a sweep over sixty declarations. --fs-xs is the floor: nothing sets a size
-   below it, and the only raw sizes left in the app are .mapLabel and its loop
-   names, which are in svg user units rather than pixels. rem, not em, because
-   these nest (a button in a
-   row in a section) and em would compound into sizes nobody chose — rem always
-   resolves against the root, so it nests without compounding and still honours
-   a reader who set their browser's default font size to something other than
-   16px. The comments give the px each one lands on at that default. */
 :root {
-  /* Tells the UA the app is dark, which is worth more than it sounds: the
-     panel's scrollbar, a <select>'s dropped list, an <input type=search>'s
-     clear affordance and every focus ring are all UA-drawn, and without this
-     they come out light-on-light over a black app. It also means the default
-     focus ring is the right colour, so nothing here has to draw its own — the
-     three hand-rolled rings this replaced were dimmer than the UA's and had
-     already drifted to two different greys. */
-  color-scheme: dark;
-  /* The app's face. A token rather than a stack repeated per file, because
-     FatalScreen renders outside .app and so cannot inherit it — and a five-name
-     fallback chain written twice is one that drifts. */
-  --font: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, monospace;
   /* For text made of block characters — the teletype card and its palette.
      --mono's first choices are UI faces whose block elements are narrow and
      don't meet, so a drawing made of them reads as gaps; the DejaVu/Liberation
      family draws them cell-filling, the way the card itself will. */
   --mono-blocks: 'DejaVu Sans Mono', 'Liberation Mono', var(--mono);
-  --fg: #e6e6ee;
-  --fg2: #c6c6d6;
-  --fg3: #a6a6ba;
-  --fg4: #85859a;
-  --fs-xs: 0.6875rem; /* 11px */
-  --fs-sm: 0.75rem; /* 12px */
-  --fs: 0.8125rem; /* 13px */
-  --fs-md: 0.875rem; /* 14px */
-  --fs-lg: 1rem; /* 16px */
-  --fs-xl: 1.25rem; /* 20px */
   --accent: #7fd0a0;
-  /* Two edges, because the panel draws two kinds of thing. --border is a
-     surface's own edge: a card, a filled button, the map's wires.
-     --border-quiet is the outline of *chrome* — the masthead icons, the look
-     bar, the catalog handle — which sits beside the controls it acts on and
-     must not read as loud as they do. Both lift to --border-hover under the
-     pointer, so a hover means the same thing whichever family it lands on. */
-  --border: #44444f;
-  --border-quiet: #33333f;
-  --border-hover: #63637a;
-  /* below both: a hairline that only has to exist — a group card's outline, a
-     subheading's rule, the edge of an empty slot */
-  --border-faint: #2e2e38;
   /* A rail down the left of a block that belongs to the thing above it: the
      open stage on the spine (SignalPath.module.css, which turns the same colour
      into a lid across the head) and the modulation editor that opens under a
@@ -77,10 +28,8 @@
      paint the panel's own ground over the sliver above it, and a fill that has
      to agree with another fill is exactly what a token is for. */
   --app-bg: #000;
-  --panel-bg: #16161a;
-  /* the face of a filled control — a preset chip, a segmented toggle, a tab */
-  --ctl-face: #26262e;
-  /* And its lit state, the one place the panel inverts its text — which is why
+  /* The lit state of a filled control (--surface-raised), the one place the
+     panel inverts its text — which is why
      this one is measured rather than picked. The ink is already all but black,
      so the ratio is the green's to give: at #4a7a62 the pair came out at
      3.84:1, under the 4.5 WCAG asks of 11px text and well under the 5:1 the
@@ -123,15 +72,6 @@
   --cue: #b98ae0;
   /* and the ink that stays readable on it, for the lit cue button */
   --cue-fg: #14101a;
-  /* The panel's red — a failed write, and the one button whose job is to take
-     something off screen. Softer than the two reds on the picture (#f66 on the
-     overlay, #ff6060 on the recording button): those have to carry across a
-     room, this one sits in prose at 12px and only has to be unmistakably not
-     the amber. Was a bare hex in ui.module.css .err, which is why it is here —
-     a second thing wanted it, and a hue written twice is a hue that drifts. */
-  --bad: #e08484;
-  /* prose wraps to 3–5 lines in a panel this narrow; 1.2 is unreadable there */
-  --prose-lh: 1.45;
   /* One height for every control that can end up sitting beside another one.
      Padding alone can't hold a row level — a control with an <input> in it, or
      one wrapped for positioning, measures differently — so anything on the

@@ -16,7 +16,7 @@
   flex-direction: column;
   flex: 0 1 auto;
   min-height: 0;
-  background: var(--panel-bg);
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 8px;
   overflow: hidden;

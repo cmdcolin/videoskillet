@@ -7,7 +7,7 @@
   margin: 0 0 12px;
   padding: 6px 8px;
   color: var(--fg);
-  background: var(--ctl-face);
+  background: var(--surface-raised);
   border-left: 2px solid var(--accent);
   border-radius: 3px;
   line-height: var(--prose-lh);

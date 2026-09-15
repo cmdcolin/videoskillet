@@ -27,7 +27,7 @@
   max-height: calc(100dvh - 32px);
   overflow-y: auto;
   overscroll-behavior: contain;
-  background: var(--panel-bg);
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 20px 24px;
@@ -56,7 +56,7 @@
 }
 .tab {
   padding: 5px 14px;
-  background: var(--ctl-face);
+  background: var(--surface-raised);
   color: var(--fg2);
   border: 1px solid var(--border);
   border-radius: 3px;
@@ -96,7 +96,7 @@
   width: 100%;
   margin-bottom: 8px;
   padding: 6px 8px;
-  background: var(--panel-bg);
+  background: var(--surface);
   color: var(--fg);
   border: 1px solid var(--border);
   border-radius: 4px;
@@ -125,7 +125,7 @@
   display: grid;
   place-items: center;
   overflow: hidden;
-  background: var(--panel-bg);
+  background: var(--surface);
   color: var(--fg);
   border: 1px solid var(--border);
   border-radius: 3px;

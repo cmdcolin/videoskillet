@@ -38,7 +38,7 @@
   flex: 1;
   min-width: 0;
   box-sizing: border-box;
-  background: var(--panel-bg);
+  background: var(--surface);
   color: var(--fg);
   border: 1px solid var(--border);
   border-radius: 4px;

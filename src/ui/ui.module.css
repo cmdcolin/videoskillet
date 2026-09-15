@@ -192,7 +192,7 @@
 
 /* buttons */
 .btn {
-  background: var(--ctl-face);
+  background: var(--surface-raised);
   color: var(--fg);
   border: 1px solid var(--border);
   border-radius: 3px;
@@ -234,7 +234,7 @@
   background: linear-gradient(
     to right,
     #3a6355 var(--w, 0%),
-    var(--ctl-face) var(--w, 0%)
+    var(--surface-raised) var(--w, 0%)
   );
   touch-action: pan-y;
 }
@@ -257,7 +257,7 @@
   padding: 1px 0;
   border: 1px solid var(--border-quiet);
   border-radius: 4px;
-  background: var(--panel-bg);
+  background: var(--surface);
   color: var(--fg3);
   font-size: var(--fs-md);
   line-height: 1.2;
@@ -381,7 +381,7 @@
   color: #cba065;
 }
 .err {
-  color: var(--bad);
+  color: var(--danger);
 }
 .blue {
   color: var(--midi);

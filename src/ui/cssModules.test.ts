@@ -25,6 +25,14 @@ function sourceFiles(dir: string): string[] {
   })
 }
 
+function siteFiles(dir = join(SRC, '..', 'site')): string[] {
+  return readdirSync(dir, { withFileTypes: true }).flatMap(e => {
+    const path = join(dir, e.name)
+    if (e.isDirectory()) return siteFiles(path)
+    return /\.(css|astro)$/.test(e.name) ? [path] : []
+  })
+}
+
 // `composes: bare from './ui.module.css'` — the name pulled in, and from where.
 // Both passes below have to know about these: the path is a string with dots in
 // it, so left in place `./ui.module.css` reads as definitions of `.module` and
@@ -153,7 +161,11 @@ describe('css modules', () => {
   // worse than a dead class, because the comment reads as documentation of a
   // decision the app no longer makes.
   it('declares no token nothing reads', () => {
-    const theme = readFileSync(join(SRC, 'theme.css'), 'utf8')
+    // tokens.css is shared with bender and read by the site as well, so the
+    // site's sheets and pages count as readers of it.
+    const theme = ['theme.css', 'tokens.css']
+      .map(name => readFileSync(join(SRC, name), 'utf8'))
+      .join('\n')
     const declared = [
       ...theme
         .replaceAll(/\/\*[\s\S]*?\*\//g, '')
@@ -169,6 +181,7 @@ describe('css modules', () => {
       theme,
       ...files.map(f => readFileSync(f, 'utf8')),
       ...[...sheetPaths()].map(p => readFileSync(p, 'utf8')),
+      ...siteFiles().map(f => readFileSync(f, 'utf8')),
     ].join('\n')
 
     const uses = new Set(

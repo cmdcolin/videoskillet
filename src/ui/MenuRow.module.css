@@ -20,7 +20,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  background: var(--ctl-face);
+  background: var(--surface-raised);
   color: var(--fg);
   border: 1px solid var(--border);
   border-radius: var(--ctl-radius);

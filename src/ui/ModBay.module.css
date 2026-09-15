@@ -112,7 +112,7 @@ button.destChip.chipOff:hover {
   text-align: center;
 }
 .remove:hover {
-  color: var(--bad);
+  color: var(--danger);
 }
 
 @media (pointer: coarse) {
@@ -140,5 +140,5 @@ button.destChip.chipOff:hover {
   color: var(--fg4);
 }
 .dropHeld:hover {
-  color: var(--bad);
+  color: var(--danger);
 }

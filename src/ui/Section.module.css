@@ -14,7 +14,7 @@
   color: #fff;
 }
 /* A group inside a stage, as an object of its own. The panel paints no ground —
-   it is the app's black — so a --panel-bg fill is an enclosure that costs no
+   it is the app's black — so a --surface fill is an enclosure that costs no
    width at all, which is the module card the bench gives every group
    (SignalPath.module.css .groupCard) at a price the 332px sidebar can pay.
 
@@ -28,7 +28,7 @@
 .sec {
   margin: 4px 0;
   border-radius: 4px;
-  background: var(--panel-bg);
+  background: var(--surface);
 }
 /* The open block's rows sit inside the fill, and the header spans back out over
    that padding — the same negative margin the stage's head uses to reach its
@@ -36,7 +36,7 @@
    is the lit thing in the column. */
 .sec.secOpen {
   padding: 0 6px 6px;
-  background: color-mix(in srgb, var(--ctl-face) 35%, var(--panel-bg));
+  background: color-mix(in srgb, var(--surface-raised) 35%, var(--surface));
 }
 
 /* A group's header, as the door it is: the block's own title bar, in the same
@@ -50,14 +50,14 @@
   padding: 5px 8px;
   border-bottom: 0;
   border-radius: 4px;
-  background: var(--ctl-face);
+  background: var(--surface-raised);
   letter-spacing: 0.04em;
   text-transform: uppercase;
   font-size: var(--fs-sm);
 }
 .headSub:hover {
   color: var(--fg);
-  background: color-mix(in srgb, var(--fg4) 18%, var(--ctl-face));
+  background: color-mix(in srgb, var(--fg4) 18%, var(--surface-raised));
 }
 /* The lid: the same bar, two steps lighter and in white type. It lifts by value
    and not by hue on purpose — the stage's own strip
@@ -67,11 +67,11 @@
 .sec.secOpen .headSub {
   margin: 0 -6px;
   color: var(--fg);
-  background: color-mix(in srgb, var(--fg4) 36%, var(--ctl-face));
+  background: color-mix(in srgb, var(--fg4) 36%, var(--surface-raised));
   border-radius: 4px 4px 0 0;
 }
 .sec.secOpen .headSub:hover {
-  background: color-mix(in srgb, var(--fg4) 46%, var(--ctl-face));
+  background: color-mix(in srgb, var(--fg4) 46%, var(--surface-raised));
 }
 
 /* What a folded group says, and what it leaves out. The three verbs are for the

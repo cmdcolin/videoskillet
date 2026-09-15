@@ -138,7 +138,7 @@
   /* Lit further than it was, because the groups under it are title bars in the
      control face now (Section.module.css .headSub): at 9% over the panel's own
      ground the stage read as the quietest thing inside itself. */
-  background: color-mix(in srgb, var(--accent) 22%, var(--ctl-face));
+  background: color-mix(in srgb, var(--accent) 22%, var(--surface-raised));
   /* And the panel's own ground painted above the strip, because a pinned one
      does not sit flush with the top of the panel. Measured on Firefox Nightly:
      `top: 0` lands the strip below the scroller's top *padding* rather than at
@@ -259,16 +259,16 @@
      Tinted rather than filled — a solid red block on a heading row would outrank
      the stage it closes — so the edge and a wash carry it at rest and the fill
      arrives under the pointer, where the press is about to happen. */
-  border: 1px solid color-mix(in srgb, var(--bad) 55%, transparent);
+  border: 1px solid color-mix(in srgb, var(--danger) 55%, transparent);
   border-radius: 4px;
-  background: color-mix(in srgb, var(--bad) 12%, transparent);
-  color: var(--bad);
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+  color: var(--danger);
   font-size: var(--fs-lg);
   line-height: 1;
 }
 .stageClose:hover {
-  border-color: var(--bad);
-  background: color-mix(in srgb, var(--bad) 24%, transparent);
+  border-color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 24%, transparent);
   color: #fff;
 }
 

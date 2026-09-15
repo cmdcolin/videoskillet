@@ -31,7 +31,7 @@
 .tag {
   height: var(--ctl-h);
   padding: 0 0.5rem;
-  background: var(--ctl-face);
+  background: var(--surface-raised);
   color: var(--fg2);
   border: 1px solid var(--border-quiet);
   border-radius: var(--ctl-radius);
@@ -62,7 +62,7 @@
 .rate {
   flex: 1;
   height: var(--ctl-h);
-  background: var(--ctl-face);
+  background: var(--surface-raised);
   color: var(--fg);
   border: 1px solid var(--border-quiet);
   font: inherit;

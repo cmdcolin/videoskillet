@@ -293,7 +293,7 @@
   width: 100%;
   min-width: 0;
   box-sizing: border-box;
-  background: var(--panel-bg);
+  background: var(--surface);
   color: var(--fg);
   border: 1px solid var(--border-quiet);
   border-radius: 4px;
@@ -338,7 +338,7 @@
   padding: 0 4px;
   border: 1px solid var(--border-quiet);
   border-radius: 4px;
-  background: var(--panel-bg);
+  background: var(--surface);
   color: var(--fg3);
   font-size: var(--fs-md);
   line-height: 1.2;

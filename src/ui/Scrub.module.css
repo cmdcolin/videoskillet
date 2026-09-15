@@ -27,7 +27,7 @@
   font-size: var(--fs-xs);
   line-height: 1.2;
   color: var(--fg2);
-  background: var(--ctl-face);
+  background: var(--surface-raised);
   border: 1px solid var(--border);
   border-radius: var(--ctl-radius);
   cursor: pointer;

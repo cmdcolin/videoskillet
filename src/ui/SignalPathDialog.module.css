@@ -41,7 +41,7 @@
    survive the verticals crossing it, and a chip is that same knockout with an
    edge on it. */
 .loopChip {
-  fill: var(--ctl-face);
+  fill: var(--surface-raised);
   stroke: currentColor;
   stroke-width: 1.25;
 }
@@ -145,7 +145,7 @@
    the ground with an edge, which is what left the loops' names looking like the
    only thing here that was not a button. Both are chips now. */
 .box {
-  fill: var(--ctl-face);
+  fill: var(--surface-raised);
   stroke: var(--border);
   stroke-width: 1.25;
 }
