@@ -327,24 +327,22 @@ await phase('hold', { seed: OLD_BAY }, async page => {
   const { run, settle } = runner(page)
   await run(`press(strip()); return 0`) // the mod count filters to driven rows
   await settle(500)
-  await run(`press(byText('mod')); return 0`)
+  await run(`press(byTitle('hold mix still')); return 0`)
   await settle(500)
   const parked = await run(`
     return {
       strip: strip()?.textContent ?? null,
-      // The badge says which of its two states it is in, rather than tinting or
-      // striking one glyph and leaving the reader to infer the other.
-      said: byText('held') !== undefined,
-      stillRunning: byText('mod') !== undefined,
+      said: byTitle('start mix moving again') !== undefined,
+      stillRunning: byTitle('hold mix still') !== undefined,
     }`)
   check(
     parked.strip?.startsWith('0 mod') === true,
     `holding one routing left the count at ${parked.strip}`,
   )
-  check(parked.said, 'a held routing does not say “held” on its row')
+  check(parked.said, 'a held routing offers no ▶ on its row')
   check(
     !parked.stillRunning,
-    'the row still reads “mod” after the routing was held still',
+    'the row still offers ❚❚ after the routing was held still',
   )
 
   // The switch is coalesced to localStorage like the rest of the bay.
@@ -369,7 +367,7 @@ await phase(
 
     await run(`press(strip()); return 0`)
     await settle(500)
-    await run(`press(byText('held')); return 0`)
+    await run(`press(byTitle('start mix moving again')); return 0`)
     await settle(500)
     const restarted = await run(
       `return { strip: strip()?.textContent ?? null }`,
@@ -380,25 +378,23 @@ await phase(
     )
 
     // remove folds the editor rather than leaving it claiming the bay is full.
-    await run(`press(byTitle('more for')); return 0`)
-    await settle(400)
-    await run(`press(byPart('driving it')); return 0`)
+    await run(`press(byTitle('sine LFO at')); return 0`)
     await settle(500)
     const editorUp = await run(`return {
-    open: byText('remove') !== undefined,
+    open: byText('× remove') !== undefined,
     holdable: document.body.innerText.includes('hold still'),
   }`)
-    check(editorUp.open, 'the ⋮ did not open the row editor')
+    check(editorUp.open, 'the routing chip did not open the row editor')
     check(
       editorUp.holdable,
       'the row editor offers no way to hold the routing still',
     )
 
-    await run(`press(byText('remove')); return 0`)
+    await run(`press(byText('× remove')); return 0`)
     await settle(500)
     const afterRemove = await run(`return {
     busy: document.body.innerText.includes('modulation slots are busy'),
-    editor: byText('remove') !== undefined,
+    editor: byText('× remove') !== undefined,
   }`)
     check(!afterRemove.busy, 'remove left the row claiming every slot is busy')
     check(
