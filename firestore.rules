@@ -1,8 +1,9 @@
 rules_version = '2';
 
-// Two things live in this project: one document per signed-in user holding that
-// user's saved profiles, and the vote page's training data — candidates and the
-// pairwise comparisons between them. Deploy with `pnpm firebase-deploy`.
+// Three things live in this project: one document per signed-in user holding
+// that user's saved profiles, the vote page's training data — candidates and
+// the pairwise comparisons between them — and bender's saved voices, a second
+// app that shares the project. Deploy with `pnpm firebase-deploy`.
 //
 // Default deny: this file grants access to exactly one path, so every other
 // collection in the project — including any added later without a rule of its
@@ -81,6 +82,33 @@ service cloud.firestore {
         allow create, update: if isOwner(uid) && isValidStill();
         allow delete: if isOwner(uid);
       }
+    }
+
+    // --- bender (github.com/cmdcolin/bender) ---
+    //
+    // A second app on the same project: a web circuit-bending synth whose saved
+    // boards are voices. It shares the project so Google sign-in and the
+    // authorized domains are set up once, and its rules live here because a
+    // project has one rules file. The document is the same shape as /users
+    // with `voices` for `profiles`, and no stills: a board has no picture.
+    function isValidVoiceDoc() {
+      let data = request.resource.data;
+      return data.keys().hasOnly(['voices', 'current'])
+             && (!('voices' in data)
+                 || (data.voices is list && data.voices.size() <= 200))
+             && (!('current' in data)
+                 || data.current == null
+                 || (data.current is map
+                     && data.current.keys().hasOnly(['query', 'at'])
+                     && data.current.query is string
+                     && data.current.query.size() <= 8000
+                     && data.current.at is number));
+    }
+
+    match /benderUsers/{uid} {
+      allow get: if isOwner(uid);
+      allow create, update: if isOwner(uid) && isValidVoiceDoc();
+      allow delete: if isOwner(uid);
     }
 
     // --- the vote page (src/vote) ---

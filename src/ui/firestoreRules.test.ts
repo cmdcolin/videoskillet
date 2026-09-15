@@ -326,6 +326,69 @@ describe.skipIf(EMULATOR === undefined)('firestore.rules', () => {
     await assertFails(asOwner().doc(`users/${OWNER}/extra/doc`).set({ x: 1 }))
   })
 
+  // bender's document: the /users shape under another name, on the same
+  // project. One test per guard that differs from nothing above, and one that
+  // the two collections stay apart.
+  describe('the bender collection', () => {
+    const voice = { name: 'squeezed screamer', query: 'p=AbCd' }
+    const doc = `benderUsers/${OWNER}`
+
+    it('lets the owner write voices and the session, apart or together', async () => {
+      await assertSucceeds(
+        asOwner()
+          .doc(doc)
+          .set({ voices: [voice] }),
+      )
+      await assertSucceeds(
+        asOwner()
+          .doc(doc)
+          .set({ current: { query: 'p=Ab', at: 1 } }, { merge: true }),
+      )
+      await assertSucceeds(
+        asOwner().doc(doc).set({ current: null }, { merge: true }),
+      )
+      const snap = await asOwner().doc(doc).get()
+      expect(snap.data()).toEqual({ voices: [voice], current: null })
+      await assertSucceeds(asOwner().doc(doc).delete())
+    })
+
+    it('refuses a stranger, an unauthenticated client, and a bad shape', async () => {
+      await env.withSecurityRulesDisabled(async ctx => {
+        await ctx
+          .firestore()
+          .doc(doc)
+          .set({ voices: [voice] })
+      })
+      await assertFails(asStranger().doc(doc).get())
+      await assertFails(asStranger().doc(doc).set({ voices: [] }))
+      await assertFails(asAnon().doc(doc).get())
+      await assertFails(
+        asOwner()
+          .doc(doc)
+          .set({ profiles: [voice] }),
+      )
+      await assertFails(asOwner().doc(doc).set({ voices: 'nope' }))
+      await assertFails(
+        asOwner()
+          .doc(doc)
+          .set({ current: { query: 'p=', at: 'now' } }),
+      )
+      await assertFails(
+        asOwner()
+          .doc(doc)
+          .set({ voices: Array.from({ length: 201 }, () => voice) }),
+      )
+    })
+
+    it('keeps a bender uid out of the videoskillet document', async () => {
+      await assertFails(
+        asOwner()
+          .doc(`users/${OWNER}`)
+          .set({ voices: [voice] }),
+      )
+    })
+  })
+
   // The vote page's two collections. Unlike saved profiles these are shared —
   // anyone signed in contributes to one dataset — so the rules bound what a bad
   // contributor can do rather than who can contribute. Every assertion below is
