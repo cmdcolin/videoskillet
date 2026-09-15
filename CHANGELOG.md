@@ -2,6 +2,18 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [0.47.1](https://github.com/cmdcolin/videoskillet/compare/v0.47.0...v0.47.1) - 2026-09-15
+
+### Features
+- *(ui)* [`112a44a`](https://github.com/cmdcolin/videoskillet/commit/112a44aee8b19341f71db0f02da393ea5e91bc12) the Modulation section shows each routing moving
+
+### Documentation
+- *(ui)* [`8db332f`](https://github.com/cmdcolin/videoskillet/commit/8db332f2e55edf0843f0a2dec13ed3a68b027e65) comments name the Modulation section where they said the motion strip
+
+### Tests
+- *(ui)* [`37b7139`](https://github.com/cmdcolin/videoskillet/commit/37b7139c71cbfec14717096ecc6bd1cc6a9ed919) panelcheck holds a routing from the row's ❚❚ and opens it from its chip
+- *(ui)* [`93f2145`](https://github.com/cmdcolin/videoskillet/commit/93f2145c18acc1490d5019f13f92e0f93fc0d069) retake the modulated panel shot on the Modulation section
+
 ## [0.47.0](https://github.com/cmdcolin/videoskillet/compare/v0.46.4...v0.47.0) - 2026-09-15
 
 ### Features
