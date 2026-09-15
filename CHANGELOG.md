@@ -2,6 +2,13 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [0.46.0](https://github.com/cmdcolin/videoskillet/compare/v0.45.1...v0.46.0) - 2026-09-15
+
+### Other Changes
+- [`e857b81`](https://github.com/cmdcolin/videoskillet/commit/e857b814f7d019b2993db79900e43cc9f6b585e4) Bump deps
+- [`0c7d60e`](https://github.com/cmdcolin/videoskillet/commit/0c7d60e7b0594553a51ee39e003b6b1b21b0143d) Explain why signing in is worth it, and add analytics and a privacy page
+- [`e8a87e4`](https://github.com/cmdcolin/videoskillet/commit/e8a87e40a4824937d2048ce3a9a042df07bb922a) Cut the why-sign-in card to two sentences
+
 ## [0.45.1](https://github.com/cmdcolin/videoskillet/compare/v0.45.0...v0.45.1) - 2026-09-15
 
 ### Fixes
