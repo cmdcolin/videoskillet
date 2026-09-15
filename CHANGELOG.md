@@ -2,6 +2,11 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [0.45.1](https://github.com/cmdcolin/videoskillet/compare/v0.45.0...v0.45.1) - 2026-09-15
+
+### Fixes
+- *(ui)* [`4726775`](https://github.com/cmdcolin/videoskillet/commit/4726775f260d01ccd64ab1c713fc381009f7b8e2) a bare load no longer overwrites the account's resume session
+
 ## [0.45.0](https://github.com/cmdcolin/videoskillet/compare/v0.44.5...v0.45.0) - 2026-09-15
 
 ### Features
