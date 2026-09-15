@@ -6,12 +6,7 @@ import Gallery from '../components/Gallery.astro'
 import Hero from '../components/Hero.astro'
 import SiteBar from '../components/SiteBar.astro'
 import script from '../scripts/landing.js?raw'
-import {
-  FREE_WITHOUT,
-  LINKS_INSTEAD,
-  REASONS,
-  WHAT_IT_HOLDS,
-} from '../../src/ui/whySignIn'
+import { FREE_WITHOUT, PITCH } from '../../src/ui/whySignIn'
 import css from '../styles/landing.css?raw'
 import tokens from '../styles/tokens.css?raw'
 
@@ -163,17 +158,9 @@ const UNFURL =
           Close
         </button>
       </div>
-      <ul class="whyList">
-        {REASONS.map(reason => (
-          <li>
-            <b>{reason.head}</b>
-            <span>{reason.says}</span>
-          </li>
-        ))}
-      </ul>
-      <p class="whyLine">{FREE_WITHOUT}</p>
+      <p class="whyPitch">{PITCH}</p>
       <p class="whyLine">
-        {WHAT_IT_HOLDS} <a href="/privacy/">What is stored, in full →</a>
+        {FREE_WITHOUT} <a href="/privacy/">What an account holds →</a>
       </p>
       <p class="whyCta">
         <button class="btn primary" id="whySignIn" type="button">
@@ -183,7 +170,6 @@ const UNFURL =
           Open the app instead →
         </a>
       </p>
-      <p class="whyFine">{LINKS_INSTEAD}</p>
     </dialog>
 
     <Footer />

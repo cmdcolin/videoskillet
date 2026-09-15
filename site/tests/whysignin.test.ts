@@ -2,11 +2,7 @@ import { experimental_AstroContainer } from 'astro/container'
 import { beforeAll, expect, test } from 'vitest'
 
 import { GA_ID } from '../../src/analytics'
-import {
-  FREE_WITHOUT,
-  REASONS,
-  WHAT_IT_HOLDS,
-} from '../../src/ui/whySignIn'
+import { FREE_WITHOUT, PITCH } from '../../src/ui/whySignIn'
 import Landing from '../pages/index.astro'
 import Privacy from '../pages/privacy.astro'
 
@@ -23,13 +19,9 @@ beforeAll(async () => {
   privacy = await container.renderToString(Privacy)
 })
 
-test('the card carries every reason, in the page', () => {
-  for (const reason of REASONS) {
-    expect(landing).toContain(reason.head)
-    expect(landing).toContain(reason.says)
-  }
+test('the card carries the answer, in the page', () => {
+  expect(landing).toContain(PITCH)
   expect(landing).toContain(FREE_WITHOUT)
-  expect(landing).toContain(WHAT_IT_HOLDS)
 })
 
 test('the question is asked where the ask is, and the card can be opened', () => {

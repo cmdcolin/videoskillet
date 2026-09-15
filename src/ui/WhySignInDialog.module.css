@@ -1,5 +1,5 @@
 /* The why-sign-in card's own rows. The box, the title and the close button come
-   from Dialog; everything here is the list inside it. */
+   from Dialog; everything here is what sits inside it. */
 
 /* The save waiting on the button below, called out because it is the only thing
    in the card about this press rather than about accounts. */
@@ -17,27 +17,10 @@
   color: var(--accent);
 }
 
-.list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin: 0 0 12px;
-  padding: 0;
-  list-style: none;
-}
-
-.reason {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-
-.reasonHead {
+/* The answer, at the size of the thing being answered. */
+.pitch {
+  margin: 0 0 10px;
   color: var(--fg);
-}
-
-.reasonSays {
-  color: var(--fg2);
   line-height: var(--prose-lh);
 }
 
@@ -59,10 +42,4 @@
 .alt {
   composes: btn from './ui.module.css';
   composes: btnFlush from './ui.module.css';
-}
-
-.fine {
-  margin: 0;
-  color: var(--fg3);
-  line-height: var(--prose-lh);
 }

@@ -731,7 +731,7 @@ code {
   color: var(--fg);
 }
 .whyCard {
-  width: min(40rem, calc(100vw - 2rem));
+  width: min(34rem, calc(100vw - 2rem));
   padding: 1.4rem 1.5rem;
   background: var(--card);
   color: var(--fg);
@@ -751,22 +751,11 @@ code {
   margin: 0 0 0.9rem;
   font-size: 1.4rem;
 }
-.whyList {
-  display: flex;
-  flex-direction: column;
-  gap: 0.8rem;
-  margin: 0 0 1rem;
-  padding: 0;
-  list-style: none;
-}
-.whyList li {
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-}
-.whyList span {
-  color: var(--fg3);
-  font-size: 0.95rem;
+/* The answer, at the size of the thing being answered. */
+.whyPitch {
+  margin: 0 0 0.7rem;
+  font-size: 1.05rem;
+  color: var(--fg);
 }
 .whyLine {
   margin: 0 0 0.7rem;
@@ -783,12 +772,6 @@ code {
   gap: 0.6rem;
   margin: 1.1rem 0 0.8rem;
 }
-.whyFine {
-  margin: 0;
-  color: var(--fg4);
-  font-size: 0.9rem;
-}
-
 /* ── the privacy page ──────────────────────────────────────────────────────
    One column of prose under the site bar, at the width the rest of the site
    reads at. */
