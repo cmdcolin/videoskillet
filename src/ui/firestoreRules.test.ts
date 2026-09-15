@@ -167,6 +167,157 @@ describe.skipIf(EMULATOR === undefined)('firestore.rules', () => {
     )
   })
 
+  // The session the account carries alongside the library: the same packed query
+  // a profile holds, and a clock. The app writes it with merge from a path of its
+  // own, so it has to be legal on its own and legal absent — see docs/adr/0010.
+  const session = (over: object = {}) => ({
+    query: 'set=noiseIre:4&mod=',
+    at: 1_700_000_000_000,
+    ...over,
+  })
+
+  it('lets the owner write the session on its own, and the list on its own', async () => {
+    // The autosave can land before the first profile is ever saved, so a document
+    // with no `profiles` key at all has to be a legal write.
+    await assertSucceeds(
+      asOwner().doc(`users/${OWNER}`).set({ current: session() }),
+    )
+    // ...and a profile save must be able to leave `current` alone, which with
+    // merge means sending a document that does not mention it.
+    await assertSucceeds(
+      asOwner().doc(`users/${OWNER}`).set(docOf('vhs'), { merge: true }),
+    )
+    const snap = await asOwner().doc(`users/${OWNER}`).get()
+    expect(snap.data()).toEqual({ ...docOf('vhs'), current: session() })
+  })
+
+  it('accepts a cleared session', async () => {
+    // Signing out of a look writes null rather than deleting the field, so null
+    // is part of the contract.
+    await assertSucceeds(asOwner().doc(`users/${OWNER}`).set({ current: null }))
+    await assertSucceeds(
+      asOwner()
+        .doc(`users/${OWNER}`)
+        .set({ ...docOf('vhs'), current: null }),
+    )
+  })
+
+  it('refuses a malformed session', async () => {
+    // Unlike a profile entry, `current` is a map the rules can read field by
+    // field, so every one of these is caught in the rules and not in the client.
+    await assertFails(
+      asOwner()
+        .doc(`users/${OWNER}`)
+        .set({ current: session({ extra: 'field' }) }),
+    )
+    await assertFails(
+      asOwner()
+        .doc(`users/${OWNER}`)
+        .set({ current: session({ query: 7 }) }),
+    )
+    await assertFails(
+      asOwner()
+        .doc(`users/${OWNER}`)
+        .set({ current: session({ query: 'x'.repeat(8001) }) }),
+    )
+    await assertFails(
+      asOwner()
+        .doc(`users/${OWNER}`)
+        .set({ current: session({ at: 'now' }) }),
+    )
+    await assertFails(asOwner().doc(`users/${OWNER}`).set({ current: 'vhs' }))
+  })
+
+  it('refuses a session written by anybody else', async () => {
+    await seed(OWNER, docOf('private look'))
+    await assertFails(
+      asStranger().doc(`users/${OWNER}`).set({ current: session() }),
+    )
+    await assertFails(
+      asStranger()
+        .doc(`users/${OWNER}`)
+        .set({ current: session() }, { merge: true }),
+    )
+    await assertFails(
+      asAnon().doc(`users/${OWNER}`).set({ current: session() }),
+    )
+  })
+
+  // One still per saved profile, keyed by the profile's id. Its own
+  // subcollection because the user document is capped at 1 MiB and two hundred
+  // stills would pass it.
+  describe('the stills subcollection', () => {
+    const still = (over: object = {}) => ({
+      webp: 'UklGRh'.repeat(4),
+      at: 1_700_000_000_000,
+      ...over,
+    })
+    const seedStill = async (uid: string, id: string, data: object) => {
+      await env.withSecurityRulesDisabled(async ctx => {
+        await ctx.firestore().doc(`users/${uid}/stills/${id}`).set(data)
+      })
+    }
+
+    it('lets the owner read, write and remove their own stills', async () => {
+      const ref = asOwner().doc(`users/${OWNER}/stills/p1`)
+      await assertSucceeds(ref.set(still()))
+      await assertSucceeds(ref.get())
+      await assertSucceeds(ref.update({ at: 1_700_000_001_000 }))
+      await assertSucceeds(ref.delete())
+    })
+
+    it('lets the owner list their own stills', async () => {
+      // `list` is allowed here and withheld on /users because the path binds the
+      // uid, so the query can only ever be over one person's own stills. The home
+      // page reads the whole set in one query to put a picture on every card.
+      await seedStill(OWNER, 'p1', still())
+      await seedStill(OWNER, 'p2', still())
+      await assertSucceeds(asOwner().collection(`users/${OWNER}/stills`).get())
+    })
+
+    it('refuses another signed-in user and an unauthenticated client', async () => {
+      await seedStill(OWNER, 'p1', still())
+      await assertFails(asStranger().doc(`users/${OWNER}/stills/p1`).get())
+      await assertFails(
+        asStranger().doc(`users/${OWNER}/stills/p1`).set(still()),
+      )
+      await assertFails(asStranger().doc(`users/${OWNER}/stills/p1`).delete())
+      await assertFails(asAnon().doc(`users/${OWNER}/stills/p1`).get())
+      await assertFails(asAnon().doc(`users/${OWNER}/stills/p1`).set(still()))
+    })
+
+    it("refuses a stranger listing somebody else's stills", async () => {
+      // The finding that would matter most on this collection: `list` is granted,
+      // so the uid in the path is the only thing keeping one account's pictures
+      // out of another's query.
+      await seedStill(OWNER, 'p1', still())
+      await assertFails(asStranger().collection(`users/${OWNER}/stills`).get())
+      await assertFails(asAnon().collection(`users/${OWNER}/stills`).get())
+    })
+
+    it('refuses a still that is too big or the wrong shape', async () => {
+      const ref = asOwner().doc(`users/${OWNER}/stills/p1`)
+      // 60000 characters of base64 is roughly 45 kB of webp, which is a wide
+      // margin over the thumbnails the app writes and well under the 1 MiB a
+      // document may hold.
+      await assertSucceeds(ref.set(still({ webp: 'A'.repeat(60000) })))
+      await assertFails(ref.set(still({ webp: 'A'.repeat(60001) })))
+      await assertFails(ref.set(still({ webp: 7 })))
+      await assertFails(ref.set({ webp: 'UklGRh' }))
+      await assertFails(ref.set(still({ at: 'now' })))
+      await assertFails(ref.set(still({ admin: true })))
+      // The cap has to hold on update too, for the same reason the 200-entry cap
+      // does: a cap enforced only on create is one you get past by growing a
+      // small document.
+      await seedStill(OWNER, 'p2', still())
+      await assertFails(
+        asOwner()
+          .doc(`users/${OWNER}/stills/p2`)
+          .update({ webp: 'A'.repeat(60001) }),
+      )
+    })
+  })
+
   it('refuses every other collection in the project', async () => {
     // Default deny: firestore.rules names the paths it grants, so anything added
     // later without a rule of its own is closed rather than open.
