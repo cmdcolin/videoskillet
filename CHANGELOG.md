@@ -2,6 +2,31 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [0.45.0](https://github.com/cmdcolin/videoskillet/compare/v0.44.5...v0.45.0) - 2026-09-15
+
+### Features
+- [`36d3d35`](https://github.com/cmdcolin/videoskillet/commit/36d3d356604e9c889a93fe9468351d43b87bda74) add `videoskillet serve`, the app hosted from the binary
+- *(ui)* [`5a61dbb`](https://github.com/cmdcolin/videoskillet/commit/5a61dbb693a83e1ee51a8eb363ad1db5f379e740) the account holds the last session and a still per profile
+- *(ui)* [`dcf67d1`](https://github.com/cmdcolin/videoskillet/commit/dcf67d171000728615680799d67d5d6a78be5d98) mirror the open session onto the signed-in account
+- *(ui)* [`f4a2aad`](https://github.com/cmdcolin/videoskillet/commit/f4a2aad86389d1c1ef5c84744f08a70823c12b5f) stamp saves and opens, and keep a still per profile
+- *(ui)* [`7643bfa`](https://github.com/cmdcolin/videoskillet/commit/7643bfae3377da7013d0a21d5e30689d92f49498) an open verb beside recall in the profile library
+- *(ui)* [`e0d17b5`](https://github.com/cmdcolin/videoskillet/commit/e0d17b56063d1f777142d7b4e7b3b3d87eafb9a3) a site bar over the landing page, with a way to sign in
+- *(ui)* [`ce005f0`](https://github.com/cmdcolin/videoskillet/commit/ce005f016f033b0c164dceee7d2faecdd220d887) the signed-in home renders over the landing page at /
+- [`2e14102`](https://github.com/cmdcolin/videoskillet/commit/2e14102f320173c0a56a673e797726b4c803e8b8) rules for bender's saved voices on the shared project
+
+### Fixes
+- *(ui)* [`59909e2`](https://github.com/cmdcolin/videoskillet/commit/59909e212672803650e819a419acbed46a83cff3) give the signed-in home a wider column than the landing page
+
+### Documentation
+- *(docs)* [`48603ce`](https://github.com/cmdcolin/videoskillet/commit/48603ced19c081342ee5e92645ae02c826a2f727) lead CLI.md with the binary and move Installing up
+- *(docs)* [`4519b29`](https://github.com/cmdcolin/videoskillet/commit/4519b292870544c364001c7b0c4267ff445122c0) document `videoskillet serve`
+- *(docs)* [`58eb5c3`](https://github.com/cmdcolin/videoskillet/commit/58eb5c3bcf16c65174061f49bf9a938c8676f09f) record why the account holds the session and a still per profile
+- *(docs)* [`d1edd37`](https://github.com/cmdcolin/videoskillet/commit/d1edd3705032d849dc0e1f3894f64e7ed6020897) document the home page, resume, and what an account carries
+- *(docs)* [`a7f5093`](https://github.com/cmdcolin/videoskillet/commit/a7f5093157894d1d739617cbeda730b6e86d3d96) align the ADR index table
+
+### Tests
+- *(ui)* [`d9b56ec`](https://github.com/cmdcolin/videoskillet/commit/d9b56ec7f0d41984bcae2ed45c20fb4a06f912ec) cover the session field and the stills subcollection in the rules tests
+
 ## [0.44.5](https://github.com/cmdcolin/videoskillet/compare/v0.44.4...v0.44.5) - 2026-09-10
 
 ### Features
