@@ -719,7 +719,7 @@ code {
   display: grid;
   grid-template-columns: 200px minmax(0, 1fr);
   gap: 2rem;
-  max-width: 72rem;
+  max-width: 88rem;
   margin: 0 auto;
   padding: 2rem max(1.15rem, env(safe-area-inset-left)) 3.5rem;
 }
