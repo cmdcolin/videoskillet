@@ -72,6 +72,12 @@ picture of the look.
   the library and the session, one list of the stills subcollection for the
   pictures. `list` is granted on stills and withheld on `/users` because the
   path binds the uid, so a stills query can only ever be over one person's own.
+- **A bare load writes nothing.** The app button on the home page opens the
+  landing look on bars, and the autosave used to record that a few seconds
+  later, so pressing the button and leaving put a blank card over the session
+  the account held. The autosave now waits for a control off rest or a deck on
+  something other than bars, and for the engine to be up, since before that the
+  controls it reads are the defaults and not the board.
 - **The last write wins on `current`.** Two devices signed into one account
   overwrite each other's session, and the card resumes whichever settled last.
   No merge and no conflict prompt: `current` is a convenience, the profile

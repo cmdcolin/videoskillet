@@ -152,7 +152,8 @@ per generation.
   that resumes the session you were last running, your saved looks with their
   stills, and the gallery. The app autosaves the current session to the account
   while you are signed in, so the resume card is up to date on whatever machine
-  you open next.
+  you open next. A bare load of the app is not a session and leaves the card as
+  it was.
 - **Drift**: one switch makes the look wander on its own, with a small change
   every fifteen seconds around the current setting. Each stage has the same
   switch for its own controls.

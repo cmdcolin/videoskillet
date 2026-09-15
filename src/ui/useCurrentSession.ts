@@ -2,9 +2,16 @@ import { useEffect, useRef } from 'react'
 
 import { putCurrent } from './cloud'
 
+import type { SourceBMode, SourceMode } from '../sources/modes'
+
 // The session a signed-in user has open, mirrored onto their account so the home
 // page can offer it back as a resume card. The same packed query the address bar
 // carries, written by the same producer — `profileQuery()` in useUrlState.
+//
+// A null query is a session with nothing in it to resume, and the hook leaves
+// the account alone. The app passes null while the engine is absent, when the
+// controls it would read are the defaults and not the board, and for a board
+// nobody has touched — see `worthResuming`.
 //
 // The address bar takes a write per settled change and costs nothing;
 // a Firestore document takes a network round trip and counts against a quota, so
@@ -34,7 +41,19 @@ export function nextWriteAt(
   return Math.max(now + SETTLE_MS, gate.at + MIN_GAP_MS)
 }
 
-export function useCurrentSession(uid: string | null, query: string) {
+// Whether the session is one the home page should offer back. A bare load
+// opens the landing look on bars, and the app button on the home page opens
+// exactly that, so a visitor who presses it and leaves has not made a session:
+// writing the blank board would put it over the one they last dialled in, which
+// is what the resume card then opened on. A control off rest, or a deck on
+// something other than bars, is a session.
+export const worthResuming = (
+  edited: number,
+  modeA: SourceMode,
+  modeB: SourceBMode,
+): boolean => edited > 0 || modeA !== 'bars' || modeB !== 'bars'
+
+export function useCurrentSession(uid: string | null, query: string | null) {
   const gate = useRef<WriteGate>({ query: null, at: 0 })
   // The query as of the last render, for the handler below, which fires long
   // after the effect that installed it.
@@ -63,6 +82,7 @@ export function useCurrentSession(uid: string | null, query: string) {
       gate.current = { query: null, at: 0 }
       return undefined
     }
+    if (query === null) return undefined
     const due = nextWriteAt(gate.current, query, Date.now())
     if (due === null) return undefined
     const id = setTimeout(() => send(uid, query), Math.max(0, due - Date.now()))
@@ -81,11 +101,13 @@ export function useCurrentSession(uid: string | null, query: string) {
   useEffect(() => {
     if (uid === null) return undefined
     const onHide = () => {
+      const held = live.current
       if (
         document.visibilityState === 'hidden' &&
-        live.current !== gate.current.query
+        held !== null &&
+        held !== gate.current.query
       )
-        send(uid, live.current)
+        send(uid, held)
     }
     document.addEventListener('visibilitychange', onHide)
     return () => document.removeEventListener('visibilitychange', onHide)

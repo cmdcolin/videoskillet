@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
-import { MIN_GAP_MS, SETTLE_MS, nextWriteAt } from './useCurrentSession'
+import {
+  MIN_GAP_MS,
+  SETTLE_MS,
+  nextWriteAt,
+  worthResuming,
+} from './useCurrentSession'
 
 describe('the current-session write gate', () => {
   it('waits for the board to settle before the first write', () => {
@@ -34,5 +39,20 @@ describe('the current-session write gate', () => {
     expect(nextWriteAt({ query: 'set=1', at: 0 }, 'set=2', 1_000_000)).toBe(
       1_000_000 + SETTLE_MS,
     )
+  })
+})
+
+describe('which sessions the account is offered back', () => {
+  it("leaves a bare load alone: the landing look on bars is nobody's session", () => {
+    expect(worthResuming(0, 'bars', 'bars')).toBe(false)
+  })
+
+  it('takes a control off rest', () => {
+    expect(worthResuming(1, 'bars', 'bars')).toBe(true)
+  })
+
+  it('takes a deck on something other than bars, with the board at rest', () => {
+    expect(worthResuming(0, 'url', 'bars')).toBe(true)
+    expect(worthResuming(0, 'bars', 'file')).toBe(true)
   })
 })
