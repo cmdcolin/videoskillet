@@ -16,7 +16,7 @@
 .range {
   flex: 1;
   min-width: 0;
-  accent-color: color-mix(in srgb, var(--mod) 50%, var(--panel-bg));
+  accent-color: color-mix(in srgb, var(--mod) 50%, var(--surface));
   height: 14px;
 }
 .range:hover,
