@@ -4,8 +4,11 @@
 // reader is in — and `links` is the row under it, one entry per page, `on`
 // marking the one being read. The rules are guide.css.
 //
-// The landing page does not carry this. It opens on a picture, and a bar across
-// the top of that was tried and turned down.
+// The landing page carries a bar of its own, SiteBar.astro. A bar over the hero
+// was tried and turned down once; the account reversed that, because a page that
+// can be signed in needs somewhere to say who is signed in. The two stay
+// separate components: the middle of this one is the pages of one guide group,
+// and the middle of SiteBar is the site.
 interface Props {
   label?: string
   links: { href: string; nav: string; on?: boolean }[]

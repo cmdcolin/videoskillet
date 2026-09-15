@@ -1,0 +1,61 @@
+---
+// The bar across the top of `/`, in both of the page's states. The guide has a
+// bar of its own (Header.astro) whose middle row is the pages of one group;
+// this one carries the site's three destinations and the account.
+//
+// The account end is server-rendered and starts as the sign-in button, because
+// the page is static HTML and nobody is signed in until `home.ts` has asked.
+// The script swaps the button for the avatar once Firebase answers.
+---
+
+<header class="siteBar">
+  <div class="barIn">
+    <a class="barBrand" href="/">
+      <img src="/favicon.svg" width="24" height="24" alt="" />
+      <span>videoskillet.js</span>
+    </a>
+    <nav class="barNav" aria-label="Site">
+      <a href="/#gallery">Gallery</a>
+      <a href="/guide/">User guide</a>
+      <a href="https://github.com/cmdcolin/videoskillet">Source</a>
+    </nav>
+    <div class="barEnd">
+      <button class="btn slim" id="signIn" type="button">
+        <svg
+          class="ico"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.7"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <circle cx="12" cy="8" r="3.6"></circle>
+          <path d="M4.8 20a7.2 7.2 0 0 1 14.4 0"></path>
+        </svg>
+        Sign in
+      </button>
+      <div class="acct" id="acct" hidden>
+        <button
+          class="acctBtn"
+          id="acctBtn"
+          type="button"
+          aria-haspopup="menu"
+          aria-expanded="false"
+        >
+          <span class="avatar" id="avatar"></span>
+        </button>
+        <div class="acctMenu" id="acctMenu" role="menu" hidden>
+          <p class="acctName" id="acctName"></p>
+          <button class="acctOut" id="signOut" type="button" role="menuitem">
+            Sign out
+          </button>
+        </div>
+      </div>
+      <a class="btn primary slim" href="/app/">
+        Open the app →
+      </a>
+    </div>
+  </div>
+</header>
