@@ -120,7 +120,7 @@
   composes: slot;
 }
 
-/* The two per-row verbs. Quiet until the pointer is on them: they sit beside
+/* The per-row verbs. Quiet until the pointer is on them: they sit beside
    every name in the list, and a column of live-looking glyphs would read as the
    list being made of buttons rather than of looks. */
 .rowBtn {

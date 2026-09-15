@@ -50,6 +50,10 @@ export function SavedProfiles(props: {
   suggestedName: string
   onSave: (name: string) => void
   onRecall: (profile: SavedProfile) => void
+  // The other half of recall: reload the page on the profile's own link, so the
+  // sources, the cues and everything else the query carries come back with the
+  // controls. Recall leaves the input alone; this replaces the session.
+  onOpen: (profile: SavedProfile) => void
   onDelete: (name: string) => void
   // Resolves false when the clipboard refused the write, so the ✓ below stands
   // for something that happened rather than for something that was attempted.
@@ -223,6 +227,14 @@ export function SavedProfiles(props: {
                         </button>
                         <button
                           className={styles.rowBtn}
+                          title={`open “${profile.name}” — reloads the app on this profile, input and all`}
+                          aria-label={`open ${profile.name}`}
+                          onClick={() => props.onOpen(profile)}
+                        >
+                          ↗
+                        </button>
+                        <button
+                          className={styles.rowBtn}
                           title={`copy a link to “${profile.name}”`}
                           aria-label={`copy a link to ${profile.name}`}
                           onClick={() => copy(profile)}
@@ -248,8 +260,9 @@ export function SavedProfiles(props: {
                   <div className={ui.hint}>
                     the first nine are on the number keys — 1–9 recall,
                     shift+1–9 keeps the board over one. A recall brings back the
-                    controls and the motion; the input stays whatever is patched
-                    in. ⧉ copies a link that carries both.
+                    controls and the motion and leaves the input patched as it
+                    is, while ↗ reloads the app on the whole saved setup, input
+                    included. ⧉ copies a link that does what ↗ does.
                   </div>
                 </>
               )}

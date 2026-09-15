@@ -107,6 +107,7 @@ import { useAutomation } from './ui/useAutomation'
 import { useCapture } from './ui/useCapture'
 import { useClipLibrary } from './ui/useClipLibrary'
 import { useClockSync } from './ui/useClockSync'
+import { useCurrentSession } from './ui/useCurrentSession'
 import { useDrift } from './ui/useDrift'
 import { useEngine } from './ui/useEngine'
 import { useFavorites } from './ui/useFavorites'
@@ -195,6 +196,17 @@ const toggleFullscreen = () => {
   } else {
     document.documentElement.requestFullscreen().catch(() => {})
   }
+}
+
+// The other verb the profile library offers. A recall lands the controls in the
+// running session; an open reloads the page on the profile's own link, which is
+// the mount path and therefore the only thing that restores the sources, the
+// cues and the rest of what the query carries. `useUrlState`'s hashchange
+// handler does the reload — except when the hash is already this query, where no
+// event fires and the reload has to be asked for.
+function openProfile(profile: SavedProfile) {
+  if (location.hash === `#${profile.query}`) location.reload()
+  else location.hash = profile.query
 }
 
 export function App() {
@@ -655,6 +667,10 @@ export function App() {
     onError: eng.setError,
   })
 
+  // The packed look as a value, so the account's copy of it depends on the
+  // string and not on the identity of the closure that builds it.
+  const sessionQuery = profileQuery()
+
   // The saved-profile library, which is the query string above kept under a name.
   // Recall snapshots for undo, lands the controls, re-cables the bay — and stops
   // there: the query carries the source urls so a copied *link* opens on the
@@ -742,7 +758,15 @@ export function App() {
           ? { seconds: strip.seconds, from: 'rundown' }
           : { seconds: 10, from: 'default' }
 
-  const profiles = useSavedProfiles()
+  const profiles = useSavedProfiles(capture.grabThumb)
+
+  // The address bar's look, mirrored onto the account behind it. Signed out the
+  // hook writes nothing; signed in it writes the packed query a few seconds
+  // after the board settles, which is what the home page's resume card reads.
+  useCurrentSession(
+    profiles.user === null ? null : profiles.user.uid,
+    sessionQuery,
+  )
 
   // Labelling the live look — the tags menu in the look bar. Nothing leaves the
   // browser until somebody signs in, so this is opt-in by construction.
@@ -1361,6 +1385,7 @@ export function App() {
             onSignOut={profiles.signOut}
             onSave={name => profiles.saveProfile(name, profileQuery())}
             onRecall={recallProfile}
+            onOpen={openProfile}
             onDelete={profiles.deleteProfile}
             onCopyLink={profile => copyQuery(profile.query)}
           />
