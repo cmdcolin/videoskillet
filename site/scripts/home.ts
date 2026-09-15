@@ -93,6 +93,25 @@ function shotOf(still: string | undefined): HTMLElement {
   return shot
 }
 
+// The stills arrive after the home is drawn, since they can be most of a
+// megabyte between them. Until then a look that may have one gets the card's
+// black with nothing on it, and `fillStills` swaps in the picture or the mark.
+function shotFor(
+  id: string | undefined,
+  stills: Map<string, string> | undefined,
+): HTMLElement {
+  if (id === undefined) return shotOf(undefined)
+  if (stills !== undefined) return shotOf(stills.get(id))
+  const shot = el('span', 'shot')
+  shot.dataset.look = id
+  return shot
+}
+
+function fillStills(stills: Map<string, string>) {
+  for (const shot of home.querySelectorAll<HTMLElement>('[data-look]'))
+    shot.replaceWith(shotOf(stills.get(shot.dataset.look ?? '')))
+}
+
 function nameRow(name: string): HTMLElement {
   const row = el('span', 'name')
   row.append(document.createTextNode(name), el('span', 'open', 'open →'))
@@ -101,7 +120,7 @@ function nameRow(name: string): HTMLElement {
 
 function lookCard(
   profile: SavedProfile,
-  still: string | undefined,
+  stills: Map<string, string> | undefined,
   key: number,
   now: number,
 ): HTMLElement {
@@ -113,7 +132,11 @@ function lookCard(
       ? 'not saved yet'
       : `saved ${sinceWords(profile.savedAt, now)}`
   const says = key <= SLOTS ? `${saved} · key ${key}` : saved
-  link.append(shotOf(still), nameRow(profile.name), el('span', 'says', says))
+  link.append(
+    shotFor(profile.id, stills),
+    nameRow(profile.name),
+    el('span', 'says', says),
+  )
   item.append(link)
   return item
 }
@@ -128,7 +151,11 @@ function section(id: string, heading: string, sub?: string): HTMLElement {
 
 // --- the three sections -----------------------------------------------------
 
-function resumeSection(doc: HomeDoc, stills: Map<string, string>, now: number) {
+function resumeSection(
+  doc: HomeDoc,
+  stills: Map<string, string> | undefined,
+  now: number,
+) {
   const current = doc.current
   if (current === null) return undefined
 
@@ -139,11 +166,10 @@ function resumeSection(doc: HomeDoc, stills: Map<string, string>, now: number) {
   const match = doc.profiles
     .filter(p => p.query === current.query)
     .sort((a, b) => (b.savedAt ?? 0) - (a.savedAt ?? 0))[0]
-  const still = match?.id === undefined ? undefined : stills.get(match.id)
 
   const box = section('resume', 'Continue where you left off')
   const card = el('div', 'resumeCard')
-  card.append(shotOf(still))
+  card.append(shotFor(match?.id, stills))
 
   const body = el('div', 'resumeBody')
   body.append(
@@ -186,7 +212,11 @@ function emptyLooks(): HTMLElement {
   return box
 }
 
-function looksSection(doc: HomeDoc, stills: Map<string, string>, now: number) {
+function looksSection(
+  doc: HomeDoc,
+  stills: Map<string, string> | undefined,
+  now: number,
+) {
   const box = section('saved', 'Your saved looks')
   if (doc.profiles.length === 0) {
     box.append(emptyLooks())
@@ -200,11 +230,28 @@ function looksSection(doc: HomeDoc, stills: Map<string, string>, now: number) {
   keyed.sort((a, b) => (b.profile.savedAt ?? 0) - (a.profile.savedAt ?? 0))
 
   const grid = el('ul', 'grid')
-  for (const { profile, key } of keyed) {
-    const still = profile.id === undefined ? undefined : stills.get(profile.id)
-    grid.append(lookCard(profile, still, key, now))
-  }
+  for (const { profile, key } of keyed)
+    grid.append(lookCard(profile, stills, key, now))
   box.append(grid)
+  return box
+}
+
+function failedSection(retry: () => void): HTMLElement {
+  const box = section('saved', 'Your saved looks')
+  const empty = el('div', 'empty')
+  empty.append(
+    el('h3', 'emptyHead', 'Your saved looks did not load'),
+    el(
+      'p',
+      'emptySays',
+      'The account is signed in, but the request for its looks failed. Check the connection and try again.',
+    ),
+  )
+  const again = el('button', 'btn primary', 'Try again')
+  again.type = 'button'
+  again.addEventListener('click', retry)
+  empty.append(again)
+  box.append(empty)
   return box
 }
 
@@ -281,12 +328,26 @@ whyCard.addEventListener('click', event => {
 
 // --- the two states ---------------------------------------------------------
 
-export function showHome(
-  user: CloudUser,
-  doc: HomeDoc,
-  stills: Map<string, string>,
-  now = Date.now(),
-): void {
+// The landing page's gallery section gives up its id while the home is up, so
+// `#gallery` names the home's section and the page has one element per id.
+const landingGallery = galleryHost.closest('section')
+
+// Counts renders, so stills that arrive after a sign-out or a second paint are
+// dropped.
+let turn = 0
+
+function settle() {
+  turn++
+  const root = document.documentElement
+  if (root.dataset.home !== 'pending') return
+  delete root.dataset.home
+  // A link to `/#gallery` arrived while the skeleton hid its target, so the
+  // browser had nothing to scroll to.
+  if (location.hash !== '')
+    document.getElementById(location.hash.slice(1))?.scrollIntoView()
+}
+
+function showFrame(user: CloudUser, sections: HTMLElement[]) {
   paintAvatar(user)
   whyCard.close()
   signInBtn.hidden = true
@@ -308,17 +369,28 @@ export function showHome(
   }
 
   const main = el('div', 'homeMain')
-  const resume = resumeSection(doc, stills, now)
-  if (resume !== undefined) main.append(resume)
-  main.append(looksSection(doc, stills, now), gallerySection())
+  main.append(...sections, gallerySection())
 
   const inner = el('div', 'homeIn')
   inner.append(rail, main)
+  landingGallery?.removeAttribute('id')
   home.textContent = ''
   home.append(inner)
   home.hidden = false
   landing.hidden = true
-  delete document.documentElement.dataset.home
+  settle()
+}
+
+// `stills` left out draws the home without them; `fillStills` adds them.
+export function showHome(
+  user: CloudUser,
+  doc: HomeDoc,
+  stills?: Map<string, string>,
+  now = Date.now(),
+): void {
+  const resume = resumeSection(doc, stills, now)
+  const looks = looksSection(doc, stills, now)
+  showFrame(user, resume === undefined ? [looks] : [resume, looks])
 }
 
 export function showLanding(): void {
@@ -329,28 +401,38 @@ export function showLanding(): void {
   // The gallery <ul> goes back where Astro rendered it, so the landing page is
   // whole again without a reload.
   if (galleryCards !== null) galleryHost.append(galleryCards)
+  landingGallery?.setAttribute('id', 'gallery')
   home.textContent = ''
   home.hidden = true
   landing.hidden = false
-  delete document.documentElement.dataset.home
+  settle()
 }
 
-async function paint(user: CloudUser | null) {
-  if (user === null) {
-    showLanding()
+async function paint(user: CloudUser) {
+  let doc: HomeDoc
+  try {
+    doc = await fetchHome(user.uid)
+  } catch {
+    showFrame(user, [failedSection(() => void paint(user))])
     return
   }
-  const [doc, stills] = await Promise.all([
-    fetchHome(user.uid),
-    fetchStills(user.uid),
-  ])
-  showHome(user, doc, stills)
+  showHome(user, doc)
+  const drawn = turn
+  const stills = await fetchStills(user.uid).catch(
+    () => new Map<string, string>(),
+  )
+  if (drawn === turn) fillStills(stills)
 }
+
+let signedIn: CloudUser | null = null
 
 const startSignIn = (button: HTMLButtonElement) => {
   button.disabled = true
   signIn()
-    .then(paint)
+    .then(user => {
+      signedIn = user
+      return paint(user)
+    })
     .catch(() => {
       // A popup the reader closed, or one the browser blocked. The page is the
       // landing page already and there is nothing to report.
@@ -369,14 +451,24 @@ whySignInBtn.addEventListener('click', () => {
 })
 
 signOutBtn.addEventListener('click', () => {
+  signedIn = null
   showLanding()
   void signOut()
 })
 
+// Back from /app/ restores this page from the back-forward cache as it was, so
+// a look saved in the app would be missing until a reload.
+addEventListener('pageshow', event => {
+  if (event.persisted && signedIn !== null) void paint(signedIn)
+})
+
 // The one path that costs a page load anything: a browser that has signed in
 // before subscribes on load, which is what fetches the SDK. Everyone else waits
-// for the button.
+// for the button. A failure here is the SDK failing to load, and a page with no
+// SDK can only be the landing page.
 if (wasSignedIn())
   watchAuth(user => {
-    paint(user).catch(showLanding)
+    signedIn = user
+    if (user === null) showLanding()
+    else void paint(user)
   }).catch(showLanding)

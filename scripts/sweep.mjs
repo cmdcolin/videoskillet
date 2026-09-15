@@ -37,6 +37,9 @@
 //     overflow; `pnpm distcheck` loads every page of `dist/` and fails on a
 //     404, a console error or a broken image. Run them after touching the
 //     site's markup, its stylesheet, or anything that names an asset.
+//     `pnpm homewait` is the same kind: it loads `/` from `dist/` with and
+//     without the signed-in hint and checks the skeleton never gives way to a
+//     landing page that is then swapped for the home.
 //   - `perf`, `loopseek`, `pullstep`, `codeccheck`, `pixdiff` and `affinity`
 //     are measurements. They report numbers a human reads; there is no pass to
 //     report. The two newest are why the frame-exact pull is built the way it

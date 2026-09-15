@@ -56,17 +56,29 @@ const UNFURL =
     <style is:inline set:html={tokens + css}></style>
     <!-- Runs before the first paint. A browser that has signed in before
          gets the skeleton in place of the landing page, so the home does not
-         replace a landing page the reader has already started reading.
-         home.ts clears the flag once Firebase answers; the timeout is for a
-         Firebase that never does. -->
+         replace a landing page the reader has already started reading, and
+         opens its connections to Google while the SDK downloads. home.ts
+         clears the flag once Firebase answers; the timeout is for a Firebase
+         that never does. -->
     <script is:inline define:vars={{ SIGNED_IN_HINT }}>
       try {
         if (localStorage.getItem(SIGNED_IN_HINT) === '1') {
           const root = document.documentElement
           root.dataset.home = 'pending'
+          for (const host of [
+            'identitytoolkit.googleapis.com',
+            'securetoken.googleapis.com',
+            'firestore.googleapis.com',
+          ]) {
+            const link = document.createElement('link')
+            link.rel = 'preconnect'
+            link.href = `https://${host}`
+            link.crossOrigin = 'anonymous'
+            document.head.append(link)
+          }
           setTimeout(() => {
             delete root.dataset.home
-          }, 5000)
+          }, 15000)
         }
       } catch {}
     </script>
@@ -79,8 +91,9 @@ const UNFURL =
          said who is here. Empty in the HTML every stranger gets. -->
     <div id="home" class="home" hidden></div>
 
-    <div class="homeWait" aria-hidden="true">
-      <div class="homeIn">
+    <div class="homeWait" role="status">
+      <span class="vh">Loading your saved looks</span>
+      <div class="homeIn" aria-hidden="true">
         <div class="rail">
           <span class="bone railBone"></span>
           <span class="bone railBone"></span>
