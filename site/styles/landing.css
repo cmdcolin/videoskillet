@@ -482,7 +482,7 @@ code {
    clicking one opens that exact board in the app. */
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(19rem, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(19rem, 100%), 1fr));
   gap: 1rem;
   margin: 0;
   padding: 0;
@@ -620,17 +620,39 @@ code {
   height: 1.05rem;
   flex: none;
 }
-/* The three links go first on a phone: the brand says where you are and the
-   two buttons are what the row is for, and the destinations are all in the
-   footer and the rail. */
+/* On a phone the bar keeps the brand and the two buttons it exists for. The
+   destinations are in the footer and the rail, "Why sign in?" is asked again
+   under the hero, and the sign-in button keeps its icon and its label for
+   screen readers. The narrowest phones keep the logo without the name. */
+/* CROSS_REPO_SYNC(site-bar-phone) */
+.barEnd .btn {
+  white-space: nowrap;
+}
 @media (max-width: 44rem) {
-  .barNav {
+  .barIn {
+    gap: 0 0.75rem;
+  }
+  .barNav,
+  #why,
+  .barLabel {
     display: none;
   }
   .barBrand {
     margin-right: auto;
   }
+  .barEnd {
+    gap: 0.5rem;
+  }
+  #signIn {
+    padding-inline: 0.55rem;
+  }
 }
+@media (max-width: 23rem) {
+  .barBrand span {
+    display: none;
+  }
+}
+/* CROSS_REPO_SYNC_END(site-bar-phone) */
 
 .acct {
   position: relative;
