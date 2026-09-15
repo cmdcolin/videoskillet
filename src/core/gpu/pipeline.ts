@@ -72,7 +72,13 @@ import { Sources } from './sources'
 import { loRadPerSample, uniformValues } from './uniforms'
 import { VideoPump } from './videopump'
 
-import type { ControlKey, Controls, FrameStats, ModSlot } from '../controls'
+import type {
+  ControlKey,
+  Controls,
+  FrameStats,
+  ModLive,
+  ModSlot,
+} from '../controls'
 import type { Rand } from '../rng'
 import type { FaultPlan } from '../signal/fault'
 import type { GlidePlan } from '../signal/glide'
@@ -256,6 +262,7 @@ export class Engine implements EngineApi {
   // panel is offering, and cleared rather than rebuilt so a patched bay costs
   // no allocation a frame.
   private bayDrive = new Map<number, number>()
+  private modLive: ModLive = { slots: [], values: [] }
   // The bay's layer over the board (savedBoard.ts › Overlay) — reused frame to
   // frame, because a patched bay runs on *every* frame, where the stab below
   // only lands on the clean ones.
@@ -1950,6 +1957,10 @@ export class Engine implements EngineApi {
     else this.modState.fire(id, level)
   }
 
+  readModLive(): ModLive {
+    return this.modLive
+  }
+
   setModSlots(slots: ModSlot[]): void {
     this.modSlots = slots
   }
@@ -2074,6 +2085,7 @@ export class Engine implements EngineApi {
       // otherwise be asked for again. The other six are functions of a phase.
       this.rand,
     )
+    this.modLive = { slots: eff, values: vals }
     this.modLayer.begin()
     if (eff.length === 0) return NOOP
     // Save-then-write in one pass, including where two routings drive the same

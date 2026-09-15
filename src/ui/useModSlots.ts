@@ -208,6 +208,7 @@ export function useModSlots(
     // is an edge, and routing it through `commit` would put a storage write and
     // a re-render between the press and the hit.
     fire: (i, level) => engine?.fireMod(i, level),
+    readLive: () => engine?.readModLive() ?? null,
     setSlots: next => commit(normalizeSlots(next)),
     setRoutings: mod => commit(routingsToSlots(mod)),
     modFor: key => slots.find(s => s.target === key) ?? null,

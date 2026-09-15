@@ -1,6 +1,6 @@
 import { createContext, use } from 'react'
 
-import type { ModSlot, ModTarget } from '../core/controls'
+import type { ModLive, ModSlot, ModTarget } from '../core/controls'
 import type { ModRouting, Stab, UiSlot } from './modSlots'
 
 // The modulation bay, read by anything that needs to know what is moving: the
@@ -78,6 +78,8 @@ export interface ModSlotsApi {
   // one says what just happened, so it goes straight to the engine instead of
   // through the slot list React owns.
   fire: (i?: number, level?: number) => void
+  // The last frame's bay, or null before the engine exists.
+  readLive: () => ModLive | null
   // Park or restart the routing driving `key`, keeping what it is patched with.
   // The one-click "off" a set needs: `setSlotForKey(key, null)` is the other
   // kind of off — it hands the slot back and the patch with it. A no-op when

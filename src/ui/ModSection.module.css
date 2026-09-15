@@ -82,6 +82,28 @@ button.target:hover {
   font-size: var(--fs-xs);
   color: var(--mod);
 }
+.meter {
+  position: relative;
+  flex-shrink: 0;
+  align-self: center;
+  width: 32px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--border-quiet);
+}
+.dot {
+  position: absolute;
+  top: -2px;
+  width: 6px;
+  height: 6px;
+  margin-left: -3px;
+  border-radius: 50%;
+  background: var(--mod);
+}
+.drive {
+  margin-left: 4px;
+  color: var(--edit-hi);
+}
 .itemOff .target,
 .itemOff .reading {
   color: var(--fg4);

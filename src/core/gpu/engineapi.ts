@@ -31,7 +31,13 @@
 //     page owns the engine, not something the engine offers, so it stays off this
 //     surface.
 
-import type { ControlKey, Controls, FrameStats, ModSlot } from '../controls'
+import type {
+  ControlKey,
+  Controls,
+  FrameStats,
+  ModLive,
+  ModSlot,
+} from '../controls'
 import type { AudioState } from '../signal/audiostate'
 import type { FaultPlan } from '../signal/fault'
 import type { GlidePlan } from '../signal/glide'
@@ -183,6 +189,9 @@ export interface EngineApi {
   // next one runs, and a flag on a slot list that presets and undo rewrite
   // wholesale could not.
   fireMod: (id?: number, level?: number) => void
+  // The bay as the last frame ran it, for a readout: each routing with wires
+  // already folded into its rate and depth, beside its wave's value.
+  readModLive: () => ModLive
   // The stab gate: how often the whole look is poked into an otherwise clean
   // picture, and for how long (signal/stab.ts). Same contract as the bay above —
   // written to, never read from, applied and undone inside one frame — so a rate

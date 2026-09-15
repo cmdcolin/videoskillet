@@ -468,3 +468,10 @@ interface ModSlotBase extends ModWave {
   min: number
   max: number
 }
+
+// One frame of the bay, read back for display: `values[i]` is the wave driving
+// `slots[i]`, bipolar [-1, 1] or unipolar [0, 1] by source.
+export interface ModLive {
+  slots: readonly ModSlot[]
+  values: readonly number[]
+}
