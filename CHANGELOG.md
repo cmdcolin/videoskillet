@@ -2,6 +2,15 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [0.47.3](https://github.com/cmdcolin/videoskillet/compare/v0.47.2...v0.47.3) - 2026-09-15
+
+### Fixes
+- *(ui)* [`016be31`](https://github.com/cmdcolin/videoskillet/commit/016be31f0ccec61096da095c42fe1cf7ac3c05d5) name what a wired rate/depth knob drives
+- *(ui)* [`2eb6dbe`](https://github.com/cmdcolin/videoskillet/commit/2eb6dbe0eda6181880861f69c56672932ada627d) head a wire-onto-wire editor with what it drives
+
+### Other Changes
+- [`01dee01`](https://github.com/cmdcolin/videoskillet/commit/01dee01673e27d2c254f3bdc6713cf5c7ca09995) Wait to show sign in, and show avatar
+
 ## [0.47.2](https://github.com/cmdcolin/videoskillet/compare/v0.47.1...v0.47.2) - 2026-09-15
 
 ### Fixes
