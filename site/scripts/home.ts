@@ -318,6 +318,7 @@ export function showHome(
   home.append(inner)
   home.hidden = false
   landing.hidden = true
+  delete document.documentElement.dataset.home
 }
 
 export function showLanding(): void {
@@ -331,6 +332,7 @@ export function showLanding(): void {
   home.textContent = ''
   home.hidden = true
   landing.hidden = false
+  delete document.documentElement.dataset.home
 }
 
 async function paint(user: CloudUser | null) {
@@ -374,4 +376,7 @@ signOutBtn.addEventListener('click', () => {
 // The one path that costs a page load anything: a browser that has signed in
 // before subscribes on load, which is what fetches the SDK. Everyone else waits
 // for the button.
-if (wasSignedIn()) void watchAuth(user => void paint(user))
+if (wasSignedIn())
+  watchAuth(user => {
+    paint(user).catch(showLanding)
+  }).catch(showLanding)

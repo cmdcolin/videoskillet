@@ -6,6 +6,7 @@ import Gallery from '../components/Gallery.astro'
 import Hero from '../components/Hero.astro'
 import SiteBar from '../components/SiteBar.astro'
 import script from '../scripts/landing.js?raw'
+import { SIGNED_IN_HINT } from '../../src/ui/cloud'
 import { FREE_WITHOUT, PITCH } from '../../src/ui/whySignIn'
 import css from '../styles/landing.css?raw'
 import tokens from '../styles/tokens.css?raw'
@@ -53,6 +54,22 @@ const UNFURL =
          chrome over a picture, and a stylesheet it has to fetch first is a
          second round trip before anything is painted. -->
     <style is:inline set:html={tokens + css}></style>
+    <!-- Runs before the first paint. A browser that has signed in before
+         gets the skeleton in place of the landing page, so the home does not
+         replace a landing page the reader has already started reading.
+         home.ts clears the flag once Firebase answers; the timeout is for a
+         Firebase that never does. -->
+    <script is:inline define:vars={{ SIGNED_IN_HINT }}>
+      try {
+        if (localStorage.getItem(SIGNED_IN_HINT) === '1') {
+          const root = document.documentElement
+          root.dataset.home = 'pending'
+          setTimeout(() => {
+            delete root.dataset.home
+          }, 5000)
+        }
+      } catch {}
+    </script>
     <Analytics />
   </head>
   <body id="top">
@@ -61,6 +78,30 @@ const UNFURL =
     <!-- The signed-in home, filled by site/scripts/home.ts once Firebase has
          said who is here. Empty in the HTML every stranger gets. -->
     <div id="home" class="home" hidden></div>
+
+    <div class="homeWait" aria-hidden="true">
+      <div class="homeIn">
+        <div class="rail">
+          <span class="bone railBone"></span>
+          <span class="bone railBone"></span>
+          <span class="bone railBone"></span>
+        </div>
+        <div class="homeMain">
+          <span class="bone headBone"></span>
+          <ul class="grid">
+            <li>
+              <span class="bone cardBone"></span>
+            </li>
+            <li>
+              <span class="bone cardBone"></span>
+            </li>
+            <li>
+              <span class="bone cardBone"></span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
 
     <div id="landing">
       <section class="hero">
