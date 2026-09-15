@@ -12,6 +12,12 @@ import type { RefObject } from 'react'
 // a file whose timing disagrees with what produced it.
 const FPS = { num: 60, den: 1 }
 
+// The size a profile's still is stored at. 5:4, which is what the home page's
+// cards are, and small enough that the base64 of it clears STILL_MAX with room
+// to spare.
+const THUMB_W = 160
+const THUMB_H = 128
+
 // A still still needs the 2D mirror, and that is not an oversight: `toBlob` on
 // a WebGPU canvas comes back blank in Firefox because the presented drawing
 // buffer is not retained for async readback, while `drawImage` out of it
@@ -66,6 +72,37 @@ export function useCapture(
       })
     }
   }
+
+  // A profile's still, as base64 webp with the `data:` prefix taken off — what
+  // putStill writes under the profile's id. Null when there is no canvas yet or
+  // the browser declined to encode.
+  //
+  // It scales straight out of the WebGPU canvas into a 160x128 2D canvas, which
+  // is the same drawImage `mirrorOf` relies on and works for the same reason.
+  // Inside a frame, as grabStill is, because Chrome only keeps the drawing
+  // buffer readable during a paint.
+  const grabThumb = (): Promise<string | null> =>
+    new Promise(resolve => {
+      const canvas = canvasRef.current
+      if (canvas === null) {
+        resolve(null)
+        return
+      }
+      requestAnimationFrame(() => {
+        const thumb = document.createElement('canvas')
+        thumb.width = THUMB_W
+        thumb.height = THUMB_H
+        const ctx = thumb.getContext('2d')
+        if (ctx === null) {
+          resolve(null)
+          return
+        }
+        ctx.drawImage(canvas, 0, 0, THUMB_W, THUMB_H)
+        const url = thumb.toDataURL('image/webp', 0.7)
+        const comma = url.indexOf(',')
+        resolve(comma === -1 ? null : url.slice(comma + 1))
+      })
+    })
 
   const stop = async () => {
     const rec = recRef.current
@@ -124,5 +161,5 @@ export function useCapture(
     )
   }
 
-  return { recording, toggleRecord, grabStill }
+  return { recording, toggleRecord, grabStill, grabThumb }
 }
