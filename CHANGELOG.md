@@ -2,6 +2,14 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [0.46.2](https://github.com/cmdcolin/videoskillet/compare/v0.46.1...v0.46.2) - 2026-09-15
+
+### Features
+- *(ui)* [`874f0aa`](https://github.com/cmdcolin/videoskillet/commit/874f0aaabc8a3364d22b3b711e926bb7fec37bb5) draw the signed-in home before its stills, and harden the wait
+
+### Tests
+- *(ui)* [`0d7bcfa`](https://github.com/cmdcolin/videoskillet/commit/0d7bcfaa5adfb7f86715a0e7abcc9fb572ea555f) block only the Firebase chunks in homewait
+
 ## [0.46.1](https://github.com/cmdcolin/videoskillet/compare/v0.46.0...v0.46.1) - 2026-09-15
 
 ### Features
