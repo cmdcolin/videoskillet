@@ -50,7 +50,7 @@ export interface CurrentSession {
   at: number
 }
 
-// How many profiles one account holds. The rules refuse a longer list.
+// How many profiles one account has. The rules refuse a longer list.
 export const PROFILE_MAX = 200
 
 // The longest query the rules accept, which a packed board never approaches.

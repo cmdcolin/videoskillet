@@ -47,7 +47,7 @@ export function WhySignInDialog(props: {
           target="_blank"
           rel="noreferrer"
         >
-          what an account holds ↗
+          what an account stores ↗
         </a>
       </p>
       <div className={styles.row}>

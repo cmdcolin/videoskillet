@@ -1021,7 +1021,8 @@ export function App() {
   // after the board settles, which is what the home page's resume card reads.
   // Nothing is written while the engine is absent, when `controls` is the
   // default fallback and not the board, or for a board nobody has touched: a
-  // bare load must not put a blank card over the session the account holds.
+  // bare load must not put a blank card over the session already written to
+  // the account.
   useCurrentSession(
     profiles.user === null ? null : profiles.user.uid,
     engine !== null && worthResuming(edited.length, eng.a.mode, eng.b.mode)

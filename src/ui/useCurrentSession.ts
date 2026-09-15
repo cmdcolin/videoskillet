@@ -24,7 +24,7 @@ import type { SourceBMode, SourceMode } from '../sources/modes'
 export const SETTLE_MS = 5000
 export const MIN_GAP_MS = 10000
 
-// What the account holds and when it was put there.
+// The query last written to the account, and when it landed.
 export interface WriteGate {
   query: string | null
   at: number

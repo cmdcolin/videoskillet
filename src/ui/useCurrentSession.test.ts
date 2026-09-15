@@ -14,7 +14,7 @@ describe('the current-session write gate', () => {
     )
   })
 
-  it('writes nothing for the query the account already holds', () => {
+  it('writes nothing for the query already written to the account', () => {
     expect(
       nextWriteAt({ query: 'set=1', at: 10_000 }, 'set=1', 99_000),
     ).toBeNull()

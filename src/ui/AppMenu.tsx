@@ -221,7 +221,7 @@ export function AppMenu(props: {
               icon="⌘"
               label="why sign in?"
               hint=""
-              title="what an account is for here, and what it holds"
+              title="what an account is for here, and what it stores"
               closes={id}
               onClick={() => props.onWhySignIn?.()}
             />
