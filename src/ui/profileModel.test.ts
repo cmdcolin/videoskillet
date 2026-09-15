@@ -4,7 +4,9 @@ import {
   PROFILE_NAME_MAX,
   PROFILE_SLOTS,
   cleanProfileName,
+  markOpened,
   profileAtSlot,
+  readCurrent,
   readProfiles,
   removeProfile,
   suggestProfileName,
@@ -67,6 +69,67 @@ describe('profile store', () => {
 
   it('removes by name', () => {
     expect(removeProfile([p('a'), p('b')], 'a')).toEqual([p('b')])
+  })
+})
+
+describe('profile metadata', () => {
+  it('mints an id on the first stamped save and keeps it on an overwrite', () => {
+    const first = upsertProfile([], 'a', 'set=1', 1000)
+    expect(first[0].id).toMatch(/^[a-z0-9]+$/)
+    expect(first[0].savedAt).toBe(1000)
+    const again = upsertProfile(first, 'a', 'set=2', 2000)
+    expect(again[0].id).toBe(first[0].id)
+    expect(again[0].savedAt).toBe(2000)
+  })
+
+  it('gives two profiles ids of their own', () => {
+    const two = upsertProfile(upsertProfile([], 'a', 'q', 1), 'b', 'q', 2)
+    expect(two[0].id).not.toBe(two[1].id)
+  })
+
+  it('stamps nothing when the caller has no clock', () => {
+    expect(upsertProfile([], 'a', 'set=1')[0]).toEqual(p('a', 'set=1'))
+  })
+
+  it('carries openedAt through an overwrite', () => {
+    const opened = markOpened(upsertProfile([], 'a', 'set=1', 1000), 'a', 1500)
+    expect(upsertProfile(opened, 'a', 'set=2', 2000)[0].openedAt).toBe(1500)
+  })
+
+  it('marks only the profile that was opened', () => {
+    const two = [p('a'), p('b')]
+    const after = markOpened(two, 'b', 99)
+    expect(after[0].openedAt).toBeUndefined()
+    expect(after[1].openedAt).toBe(99)
+  })
+
+  it('keeps the metadata a stored entry carries and drops the rest', () => {
+    expect(
+      readProfiles([
+        { name: 'a', query: 'q', id: 'x1', savedAt: 5, openedAt: 6 },
+        { name: 'b', query: 'q', id: 7, savedAt: 'soon', openedAt: null },
+      ]),
+    ).toEqual([
+      { name: 'a', query: 'q', id: 'x1', savedAt: 5, openedAt: 6 },
+      p('b', 'q'),
+    ])
+  })
+})
+
+describe('the current session', () => {
+  it('reads a session with both fields', () => {
+    expect(readCurrent({ query: 'set=1', at: 9 })).toEqual({
+      query: 'set=1',
+      at: 9,
+    })
+  })
+
+  it('reads anything else as no session', () => {
+    expect(readCurrent(null)).toBeNull()
+    expect(readCurrent('set=1')).toBeNull()
+    expect(readCurrent({ query: 'set=1' })).toBeNull()
+    expect(readCurrent({ query: 7, at: 9 })).toBeNull()
+    expect(readCurrent({ query: 'set=1', at: Number.NaN })).toBeNull()
   })
 })
 

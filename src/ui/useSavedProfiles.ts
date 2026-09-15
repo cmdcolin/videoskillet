@@ -1,17 +1,20 @@
 import { useEffect, useState } from 'react'
 
 import {
-  fetchProfiles,
+  STILL_MAX,
+  deleteStill,
+  fetchHome,
   putProfiles,
+  putStill,
   signIn as cloudSignIn,
   signOut as cloudSignOut,
   wasSignedIn,
   watchAuth,
 } from './cloud'
-import { removeProfile, upsertProfile } from './profileModel'
+import { markOpened, removeProfile, upsertProfile } from './profileModel'
 
 import type { CloudUser } from './cloud'
-import type { SavedProfile } from './profileModel'
+import type { CurrentSession, SavedProfile } from './profileModel'
 
 // The profile library: who is signed in, what they have saved, and the verbs over
 // it. Firestore is the only store — nothing is written to this device — so
@@ -55,8 +58,12 @@ export type ProfileFlash =
   | { kind: 'needs-auth' }
   | { kind: 'failed' }
 
-export function useSavedProfiles() {
+// `grabThumb` is how a save gets a picture: a function so this hook holds no
+// canvas of its own. Optional, because the callers that have no output to grab
+// (a test, a future panel) still want the library.
+export function useSavedProfiles(grabThumb?: () => Promise<string | null>) {
   const [profiles, setProfiles] = useState<SavedProfile[]>([])
+  const [current, setCurrent] = useState<CurrentSession | null>(null)
   const [user, setUser] = useState<CloudUser | null>(null)
   const [status, setStatus] = useState<CloudStatus>(() =>
     wasSignedIn() ? 'loading' : 'signed-out',
@@ -95,14 +102,16 @@ export function useSavedProfiles() {
       // Signing out clears the rows as well as the session: leaving them up would
       // offer recall and overwrite against a document nobody may write any more.
       setProfiles([])
+      setCurrent(null)
       setLastName(null)
       setStatus('signed-out')
       return
     }
     setStatus('loading')
-    fetchProfiles(next.uid)
-      .then(list => {
-        setProfiles(list)
+    fetchHome(next.uid)
+      .then(home => {
+        setProfiles(home.profiles)
+        setCurrent(home.current)
         setStatus('ready')
         setError(null)
       })
@@ -144,6 +153,26 @@ export function useSavedProfiles() {
     // oxlint-disable-next-line react-hooks/exhaustive-deps
   }, [wantAuth])
 
+  // The picture the home page's card shows, written after the entry it belongs
+  // to has landed. Best effort throughout: a profile with no still is a card
+  // with a placeholder, and a save that reported success must not then report a
+  // failure because the encoder declined.
+  const saveStill = (next: SavedProfile[], name: string) => {
+    const id = next.find(p => p.name === name)?.id
+    if (user === null || id === undefined || grabThumb === undefined) return
+    const uid = user.uid
+    grabThumb()
+      .then(webp => {
+        // Over the cap the document would be refused anyway, and a still is
+        // worth less than the save it hangs off.
+        if (webp === null || webp.length > STILL_MAX) return undefined
+        return putStill(uid, id, webp)
+      })
+      .catch((e: unknown) => {
+        console.error('saving the profile still failed', e)
+      })
+  }
+
   // Every write is cloud-only, and the list moves when the document has been
   // accepted rather than before. An optimistic row is a row that looks saved and
   // is not — the one thing a save must never show.
@@ -156,6 +185,7 @@ export function useSavedProfiles() {
         if (landed !== undefined) {
           setLastName(landed)
           showFlash({ kind: 'saved', name: landed })
+          saveStill(next, landed)
         }
       })
       .catch((e: unknown) => {
@@ -171,6 +201,9 @@ export function useSavedProfiles() {
 
   return {
     profiles,
+    // The session this account last had open, read with the profiles. Nothing in
+    // the app shows it yet; the home page is what it is there for.
+    current,
     user,
     status,
     error,
@@ -184,18 +217,29 @@ export function useSavedProfiles() {
         showFlash({ kind: 'needs-auth' })
         return
       }
-      write(upsertProfile(profiles, name, query), name)
+      write(upsertProfile(profiles, name, query, Date.now()), name)
     },
     deleteProfile: (name: string) => {
+      const id = profiles.find(p => p.name === name)?.id
       write(removeProfile(profiles, name))
+      if (user !== null && id !== undefined) {
+        deleteStill(user.uid, id).catch((e: unknown) => {
+          console.error('deleting the profile still failed', e)
+        })
+      }
       // Deleting the profile you were in frees its name again: the next save
       // should offer "my rig", not "my rig 2" against a row that is gone.
       setLastName(cur => (cur === name ? null : cur))
     },
     // A recall makes that profile the one you are in, so the next save offers its
     // name (with a counter) rather than falling back to whichever preset the
-    // controls happen to still match.
-    markRecalled: setLastName,
+    // controls happen to still match. It also stamps `openedAt`, which is what
+    // the home page sorts by — one document write per recall, through the same
+    // path a save takes and with no flash, since nobody asked for a save.
+    markRecalled: (name: string) => {
+      setLastName(name)
+      write(markOpened(profiles, name, Date.now()))
+    },
     signIn: () => {
       setStatus('loading')
       setError(null)
