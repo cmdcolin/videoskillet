@@ -75,6 +75,10 @@ export function SavedProfiles(props: {
   onWhy: () => void
 }) {
   const signedIn = props.status === 'ready'
+  // Only a returning user (wasSignedIn() true) ever sees this: a fresh visitor
+  // starts at signed-out directly. `sign in` here would flash false for the
+  // beat it takes Firebase to confirm what the last visit already told us.
+  const checking = props.status === 'loading'
   const [name, setName] = useState('')
   const nameRef = useRef<HTMLInputElement>(null)
   // Which row's link just went to the clipboard. A copy is otherwise silent —
@@ -129,7 +133,9 @@ export function SavedProfiles(props: {
           title={
             signedIn
               ? 'save this look as a named profile and bring it back later, like the voices on a synth (ctrl+S saves without opening this) — the list lives on your account'
-              : 'sign in to save looks under a name — everything else in the app works signed out'
+              : checking
+                ? 'checking your account…'
+                : 'sign in to save looks under a name — everything else in the app works signed out'
           }
         >
           {/* A glyph and a colour, never the name: this button sits beside the
@@ -137,19 +143,25 @@ export function SavedProfiles(props: {
               `saved “worn tape”` or `save failed` for two seconds would shove
               them sideways — twice, once each way. The count moves on a new
               save anyway; the ✓ is what an overwrite has to say, and the ✕ is
-              what a rejected write has to.
-
-              `sign in` is what this button says whenever there is no account
-              behind it — loading, signed-out, or error — so the button itself
-              is the answer to "am I signed in", rather than something you find
-              out by opening the popover. */}
+              what a rejected write has to. */}
           {signedIn ? (
             <>
+              {props.user?.photo === undefined ||
+              props.user.photo === null ? null : (
+                <img
+                  className={styles.triggerAvatar}
+                  src={props.user.photo}
+                  alt=""
+                  referrerPolicy="no-referrer"
+                />
+              )}
               saved
               {props.profiles.length === 0 ? '' : ` ${props.profiles.length}`}
               {props.flash?.kind === 'saved' ? ' ✓' : ''}
               {props.flash?.kind === 'failed' ? ' ✕' : ''}
             </>
+          ) : checking ? (
+            '…'
           ) : (
             'sign in'
           )}

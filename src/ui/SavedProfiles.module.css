@@ -8,6 +8,9 @@
    the same way LookBar.module.css's own `.btn` is its own rule rather than a
    composed one, for the same reason: same family, different shape. */
 .trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   flex-shrink: 0;
   width: auto;
   padding: 1px 7px;
@@ -19,6 +22,14 @@
   line-height: 1.2;
   white-space: nowrap;
   cursor: pointer;
+}
+/* Same crop as the popover footer's `.avatar` — one photo, shown twice, so
+   the masthead already answers "signed in as who" before the popover opens. */
+.triggerAvatar {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
 }
 .trigger:hover {
   border-color: var(--fg4);
