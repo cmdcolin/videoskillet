@@ -34,10 +34,24 @@ service cloud.firestore {
     // be scrolled through, and it is the guard that stops a bug — or a
     // hand-rolled request — pushing an unbounded document into the project and
     // billing it to whoever owns these rules.
+    //
+    // Both fields are optional because the app writes them with merge, each
+    // from its own path: the session autosave can land before the first profile
+    // is ever saved, and a profile save must leave `current` as it found it.
+    // `current` is the session last open — the same packed query a profile
+    // holds, and a clock — or null once cleared.
     function isValidProfileDoc() {
-      return request.resource.data.keys().hasOnly(['profiles'])
-             && request.resource.data.profiles is list
-             && request.resource.data.profiles.size() <= 200;
+      let data = request.resource.data;
+      return data.keys().hasOnly(['profiles', 'current'])
+             && (!('profiles' in data)
+                 || (data.profiles is list && data.profiles.size() <= 200))
+             && (!('current' in data)
+                 || data.current == null
+                 || (data.current is map
+                     && data.current.keys().hasOnly(['query', 'at'])
+                     && data.current.query is string
+                     && data.current.query.size() <= 8000
+                     && data.current.at is number));
     }
 
     match /users/{uid} {
@@ -49,6 +63,24 @@ service cloud.firestore {
       allow delete: if isOwner(uid);
       // No `list`: there is no query over /users, and allowing one would let any
       // signed-in user enumerate the collection.
+
+      // One still per saved profile, keyed by the profile's id: a small webp as
+      // base64 and the clock it was taken at. Its own collection because the
+      // user document is capped at 1 MiB and two hundred stills would pass it.
+      // `list` is allowed here and not on /users because the path binds the
+      // uid, so the query can only ever be over one person's own stills.
+      function isValidStill() {
+        return request.resource.data.keys().hasOnly(['webp', 'at'])
+               && request.resource.data.webp is string
+               && request.resource.data.webp.size() <= 60000
+               && request.resource.data.at is number;
+      }
+
+      match /stills/{stillId} {
+        allow get, list: if isOwner(uid);
+        allow create, update: if isOwner(uid) && isValidStill();
+        allow delete: if isOwner(uid);
+      }
     }
 
     // --- the vote page (src/vote) ---

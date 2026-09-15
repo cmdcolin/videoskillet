@@ -33,6 +33,33 @@
 export interface SavedProfile {
   name: string
   query: string
+  // What the home page reads a profile by. Optional because a profile written
+  // before these existed carries none; the next save fills them in. `id` keys
+  // the still in `users/{uid}/stills/{id}` and never changes once minted.
+  id?: string
+  savedAt?: number
+  openedAt?: number
+}
+
+// The session a signed-in user last had open, written by the app as the address
+// bar changes and read by the home page's resume card. The query is the same
+// packed string a profile holds.
+export interface CurrentSession {
+  query: string
+  at: number
+}
+
+export const newProfileId = (): string =>
+  Math.random().toString(36).slice(2, 10)
+
+const num = (v: unknown): number | undefined =>
+  typeof v === 'number' && Number.isFinite(v) ? v : undefined
+
+export function readCurrent(raw: unknown): CurrentSession | null {
+  if (typeof raw !== 'object' || raw === null) return null
+  const query = 'query' in raw ? raw.query : undefined
+  const at = 'at' in raw ? num(raw.at) : undefined
+  return typeof query === 'string' && at !== undefined ? { query, at } : null
 }
 
 // The longest name a row will hold before the popover starts wrapping. Trimmed
@@ -54,7 +81,17 @@ function readProfile(raw: unknown): SavedProfile | undefined {
   const query = 'query' in raw ? raw.query : undefined
   if (typeof name !== 'string' || typeof query !== 'string') return undefined
   const clean = cleanProfileName(name)
-  return clean === '' ? undefined : { name: clean, query }
+  if (clean === '') return undefined
+  const id = 'id' in raw && typeof raw.id === 'string' ? raw.id : undefined
+  const savedAt = 'savedAt' in raw ? num(raw.savedAt) : undefined
+  const openedAt = 'openedAt' in raw ? num(raw.openedAt) : undefined
+  return {
+    name: clean,
+    query,
+    ...(id === undefined ? {} : { id }),
+    ...(savedAt === undefined ? {} : { savedAt }),
+    ...(openedAt === undefined ? {} : { openedAt }),
+  }
 }
 
 export const readProfiles = (raw: unknown[]): SavedProfile[] =>
@@ -67,18 +104,38 @@ export const readProfiles = (raw: unknown[]): SavedProfile[] =>
 // is insertion order and a re-save does not disturb it: the list is read by eye
 // during a set, and a save that reshuffled everything above it would cost the
 // one thing a library is for.
+//
+// `at` stamps the save and mints an id for a profile that has none; an
+// overwrite keeps the id and the openedAt it already had. Without `at` the
+// entry carries no metadata, which is what a caller with no clock wants.
 export function upsertProfile(
   profiles: readonly SavedProfile[],
   name: string,
   query: string,
+  at?: number,
 ): SavedProfile[] {
   const clean = cleanProfileName(name)
   if (clean === '') return [...profiles]
-  const at = profiles.findIndex(p => p.name === clean)
-  const entry = { name: clean, query }
-  if (at === -1) return [...profiles, entry]
-  return profiles.map((p, i) => (i === at ? entry : p))
+  const index = profiles.findIndex(p => p.name === clean)
+  const prior = index === -1 ? undefined : profiles[index]
+  const entry: SavedProfile = { name: clean, query }
+  if (prior?.id !== undefined) entry.id = prior.id
+  if (prior?.openedAt !== undefined) entry.openedAt = prior.openedAt
+  if (at !== undefined) {
+    entry.id ??= newProfileId()
+    entry.savedAt = at
+  }
+  if (index === -1) return [...profiles, entry]
+  return profiles.map((p, i) => (i === index ? entry : p))
 }
+
+// A recall or an open, so the home page can sort by what you reach for.
+export const markOpened = (
+  profiles: readonly SavedProfile[],
+  name: string,
+  at: number,
+): SavedProfile[] =>
+  profiles.map(p => (p.name === name ? { ...p, openedAt: at } : p))
 
 // How many profiles the number keys reach. The digits are the whole reason for
 // the bound: there is no key for a tenth.

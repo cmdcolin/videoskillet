@@ -1,15 +1,16 @@
-import { readProfiles } from './profileModel'
+import { readCurrent, readProfiles } from './profileModel'
 import { readStored, removeStored, writeString } from './storage'
 
 import type { RatingRecord } from '../labels'
 import type { CandidateRecord, VoteRecord } from '../vote/votes'
-import type { SavedProfile } from './profileModel'
+import type { CurrentSession, SavedProfile } from './profileModel'
 import type { FirebaseApp } from 'firebase/app'
 import type { Auth, User } from 'firebase/auth'
 import type { Firestore } from 'firebase/firestore/lite'
 
-// The whole Firebase surface: sign-in, and the one document a signed-in user
-// keeps their saved profiles in. Nothing else in the app imports `firebase`.
+// The whole Firebase surface: sign-in, the one document a signed-in user keeps
+// their saved profiles and last session in, and the stills under it. Nothing
+// else in the app imports `firebase`.
 //
 // **Every firebase import in here is dynamic, and that is the point.** The three
 // entry points come to ~110kB gzipped, which is most of a WebGPU app's budget
@@ -133,31 +134,102 @@ export async function signOut(): Promise<void> {
   await auth.signOut()
 }
 
-// The saved profiles on this account, or [] for an account that has never saved
-// one. Read through the same sanitizer the list has always used, because a
-// document is exactly as untrusted as a localStorage value was: it can carry a
+// Everything the user document holds: the saved profiles and the session last
+// left open. Read through the same sanitizers the list has always used, because
+// a document is exactly as untrusted as a localStorage value was: it can carry a
 // shape written by an older version of this app, or by a hand-rolled request.
-export async function fetchProfiles(uid: string): Promise<SavedProfile[]> {
+export interface HomeDoc {
+  profiles: SavedProfile[]
+  current: CurrentSession | null
+}
+
+export async function fetchHome(uid: string): Promise<HomeDoc> {
   const { db, fs } = await loadSdk()
   const snap = await fs.getDoc(fs.doc(db, 'users', uid))
-  if (!snap.exists()) return []
-  const raw: unknown = snap.data().profiles
-  return Array.isArray(raw) ? readProfiles(raw) : []
+  if (!snap.exists()) return { profiles: [], current: null }
+  const data = snap.data()
+  const raw: unknown = data.profiles
+  return {
+    profiles: Array.isArray(raw) ? readProfiles(raw) : [],
+    current: readCurrent(data.current),
+  }
 }
+
+// The saved profiles on this account, or [] for an account that has never saved
+// one.
+export const fetchProfiles = async (uid: string): Promise<SavedProfile[]> =>
+  (await fetchHome(uid)).profiles
+
+// Firestore refuses a field set to undefined, so an entry is built from the
+// fields it has.
+const profileEntry = (p: SavedProfile) => ({
+  name: p.name,
+  query: p.query,
+  ...(p.id === undefined ? {} : { id: p.id }),
+  ...(p.savedAt === undefined ? {} : { savedAt: p.savedAt }),
+  ...(p.openedAt === undefined ? {} : { openedAt: p.openedAt }),
+})
 
 // The whole list in one write. A document per profile would make two devices
 // editing different profiles conflict-free, but it also turns one save into a
 // write plus a delete-detection pass, and the case it protects — the same person
 // on two devices inside the same second — costs a re-save. The list is small and
-// it is one person's.
+// it is one person's. Merged, so the write leaves `current` standing.
 export async function putProfiles(
   uid: string,
   profiles: readonly SavedProfile[],
 ): Promise<void> {
   const { db, fs } = await loadSdk()
-  await fs.setDoc(fs.doc(db, 'users', uid), {
-    profiles: profiles.map(p => ({ name: p.name, query: p.query })),
+  await fs.setDoc(
+    fs.doc(db, 'users', uid),
+    { profiles: profiles.map(profileEntry) },
+    { merge: true },
+  )
+}
+
+// The session last open, or null to clear it. Merged for the same reason.
+export async function putCurrent(
+  uid: string,
+  current: CurrentSession | null,
+): Promise<void> {
+  const { db, fs } = await loadSdk()
+  await fs.setDoc(fs.doc(db, 'users', uid), { current }, { merge: true })
+}
+
+// A profile's still: a small webp as base64, one document per profile under the
+// user, keyed by the profile's id. A subcollection rather than a field on the
+// entry because the user document is capped at 1 MiB and two hundred stills
+// would pass it; one document per still also means the home page fetches them
+// in one query while a save writes one.
+export const STILL_MAX = 60000
+
+export async function putStill(
+  uid: string,
+  id: string,
+  webp: string,
+): Promise<void> {
+  const { db, fs } = await loadSdk()
+  await fs.setDoc(fs.doc(db, 'users', uid, 'stills', id), {
+    webp,
+    at: Date.now(),
   })
+}
+
+export async function deleteStill(uid: string, id: string): Promise<void> {
+  const { db, fs } = await loadSdk()
+  await fs.deleteDoc(fs.doc(db, 'users', uid, 'stills', id))
+}
+
+// Every still on the account, by profile id.
+export async function fetchStills(uid: string): Promise<Map<string, string>> {
+  const { db, fs } = await loadSdk()
+  const snap = await fs.getDocs(fs.collection(db, 'users', uid, 'stills'))
+  const stills = new Map<string, string>()
+  for (const d of snap.docs) {
+    const webp: unknown = d.data().webp
+    if (typeof webp === 'string') stills.set(d.id, webp)
+  }
+  return stills
 }
 
 // --- the vote page's training data (src/vote) ---
