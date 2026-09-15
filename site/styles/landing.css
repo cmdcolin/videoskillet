@@ -22,6 +22,11 @@ body {
 a {
   color: var(--accent);
 }
+/* `display` on a class beats the browser's own `[hidden]` rule, and the bar
+   hides an inline-flex button and a flex box by setting the attribute. */
+[hidden] {
+  display: none !important;
+}
 .wrap {
   max-width: var(--measure);
   margin: 0 auto;
@@ -551,4 +556,310 @@ code {
 .demo:hover .open,
 .demo:focus-visible .open {
   color: var(--accent);
+}
+
+/* ── the site bar ──────────────────────────────────────────────────────────
+   A slim row over both states of `/`: the site's three destinations on the
+   left, the account and the app on the right. The guide's own bar is in
+   guide.css and keeps its shape; the two share the palette and nothing else,
+   because the middle of the guide's bar is the pages of one group and the
+   middle of this one is the site. */
+.siteBar {
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+}
+.barIn {
+  display: flex;
+  align-items: center;
+  gap: 0 1.25rem;
+  height: 56px;
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 0 max(1.15rem, env(safe-area-inset-left));
+}
+.barBrand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--fg);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.barNav {
+  display: flex;
+  gap: 1.15rem;
+  margin-right: auto;
+}
+.barNav a {
+  color: var(--fg3);
+  text-decoration: none;
+  font-size: 14px;
+  white-space: nowrap;
+}
+.barNav a:hover {
+  color: var(--fg);
+}
+.barEnd {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-left: auto;
+}
+/* The bar's own size for `.btn`, which the hero sets at full size. */
+.btn.slim {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.875rem;
+}
+.ico {
+  width: 1.05rem;
+  height: 1.05rem;
+  flex: none;
+}
+/* The three links go first on a phone: the brand says where you are and the
+   two buttons are what the row is for, and the destinations are all in the
+   footer and the rail. */
+@media (max-width: 44rem) {
+  .barNav {
+    display: none;
+  }
+  .barBrand {
+    margin-right: auto;
+  }
+}
+
+.acct {
+  position: relative;
+}
+.acctBtn {
+  display: block;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--fg2);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.acctBtn:hover .avatar,
+.acctBtn:focus-visible .avatar {
+  border-color: var(--accent);
+}
+.acctMenu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.45rem);
+  z-index: 20;
+  min-width: 11rem;
+  padding: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--card);
+}
+.acctName {
+  margin: 0 0 0.3rem;
+  padding: 0.15rem 0.4rem;
+  font-size: 0.85rem;
+  color: var(--fg2);
+  overflow-wrap: anywhere;
+}
+.acctOut {
+  width: 100%;
+  padding: 0.35rem 0.4rem;
+  border: 0;
+  border-radius: 0.35rem;
+  background: none;
+  color: var(--fg3);
+  font: inherit;
+  font-size: 0.85rem;
+  text-align: left;
+  cursor: pointer;
+}
+.acctOut:hover {
+  background: var(--bg);
+  color: var(--fg);
+}
+
+/* The line under the hero buttons, saying what an account is for. */
+.dim {
+  color: var(--fg4);
+  font-size: 0.9rem;
+}
+.heroNote {
+  max-width: 34rem;
+  margin: 1.1rem auto 0;
+  text-align: center;
+}
+
+/* ── the signed-in home ────────────────────────────────────────────────────
+   A rail of links and one column of sections, built by site/scripts/home.ts
+   once Firebase has answered. The cards are the gallery's own anatomy, so a
+   saved look and a demo read as the same kind of thing. */
+.homeIn {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  gap: 2rem;
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 2rem max(1.15rem, env(safe-area-inset-left)) 3.5rem;
+}
+.rail {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  position: sticky;
+  top: 1rem;
+  align-self: start;
+}
+.rail a {
+  padding: 0.4rem 0.6rem;
+  border-radius: 0.4rem;
+  color: var(--fg3);
+  text-decoration: none;
+  font-size: 0.92rem;
+  white-space: nowrap;
+}
+.rail a:hover {
+  background: var(--card);
+  color: var(--fg);
+}
+.rail a.on {
+  background: var(--card);
+  color: var(--accent);
+}
+.homeMain {
+  display: flex;
+  flex-direction: column;
+  gap: 2.75rem;
+}
+/* `section`'s 3.5rem belongs to the landing page's full-bleed bands; the
+   column spaces itself. */
+.homeSec {
+  padding: 0;
+  scroll-margin-top: 1rem;
+}
+.homeSec .head {
+  font-size: 1.15rem;
+}
+/* The rail becomes the row under the bar: 200px of links beside a single
+   column of cards is most of a phone's width. */
+@media (max-width: 52rem) {
+  .homeIn {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.35rem;
+  }
+  .rail {
+    position: static;
+    flex-direction: row;
+    gap: 0.35rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+}
+
+.resumeCard {
+  display: grid;
+  grid-template-columns: minmax(0, 20rem) minmax(0, 1fr);
+  border: 1px solid var(--border);
+  border-radius: 0.6rem;
+  background: var(--card);
+  overflow: hidden;
+}
+.resumeCard .shot {
+  position: relative;
+  display: block;
+  aspect-ratio: 5 / 4;
+  background: #000;
+}
+.resumeCard .shot .still {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+.resumeBody {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 1.35rem;
+}
+.when {
+  margin: 0;
+  color: var(--fg4);
+  font-size: 0.85rem;
+}
+.resumeSays {
+  margin: 0;
+  color: var(--fg2);
+  font-size: 0.95rem;
+  text-wrap: pretty;
+}
+.resumeCta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin: 0.7rem 0 0;
+}
+@media (max-width: 44rem) {
+  .resumeCard {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* A look with no still: the app mark on the card's own black, so the row of
+   cards keeps its shape. */
+.shot.blank {
+  display: grid;
+  place-items: center;
+  background: #0a0b0d;
+}
+.demo .shot.blank .blankMark,
+.resumeCard .shot.blank .blankMark {
+  position: static;
+  width: 2.5rem;
+  height: 2.5rem;
+  object-fit: contain;
+  opacity: 0.55;
+}
+
+.empty {
+  padding: 2.25rem 1.5rem;
+  border: 1px dashed var(--border);
+  border-radius: 0.6rem;
+  text-align: center;
+}
+.emptyHead {
+  margin: 0 0 0.5rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+.emptySays {
+  max-width: 34rem;
+  margin: 0 auto 1.15rem;
+  color: var(--fg4);
+  font-size: 0.92rem;
+  text-wrap: pretty;
 }

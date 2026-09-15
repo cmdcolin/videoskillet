@@ -3,6 +3,7 @@ import Carousel from '../components/Carousel.astro'
 import Footer from '../components/Footer.astro'
 import Gallery from '../components/Gallery.astro'
 import Hero from '../components/Hero.astro'
+import SiteBar from '../components/SiteBar.astro'
 import script from '../scripts/landing.js?raw'
 import css from '../styles/landing.css?raw'
 import tokens from '../styles/tokens.css?raw'
@@ -52,79 +53,98 @@ const UNFURL =
     <style is:inline set:html={tokens + css}></style>
   </head>
   <body id="top">
-    <section class="hero">
-      <Hero />
-      <div class="wrap heroBody">
-        <p class="heroCta">
-          <a class="btn primary" href="/app/">
-            Open the app →
-          </a>
-          <a class="btn" href="/guide/">
-            User guide
-          </a>
-        </p>
+    <SiteBar />
 
-        <!-- Asked here rather than found out on the other side of the button.
+    <!-- The signed-in home, filled by site/scripts/home.ts once Firebase has
+         said who is here. Empty in the HTML every stranger gets. -->
+    <div id="home" class="home" hidden></div>
+
+    <div id="landing">
+      <section class="hero">
+        <Hero />
+        <div class="wrap heroBody">
+          <p class="heroCta">
+            <a class="btn primary" href="/app/">
+              Open the app →
+            </a>
+            <a class="btn" href="/guide/">
+              User guide
+            </a>
+          </p>
+
+          <!-- Asked here rather than found out on the other side of the button.
              The app opens on a screen that says this browser cannot run it,
              which is the right screen and the wrong moment: whoever is reading
              it has already clicked through from a page that promised a picture.
              Hidden until the check fails, so a browser that can run it is told
              nothing. -->
-        <p class="req gpuwarn" hidden>
-          Unfortunately, this browser has no WebGPU. You'll just get an error if
-          you try to open the app. Please try another browser or use Chrome
-          Canary or Firefox Nightly or look up how to enable WebGPU in your
-          browser!
-        </p>
-      </div>
-    </section>
+          <p class="dim heroNote">
+            Sign in to keep looks under a name and pick a session up on another
+            machine. Everything else works signed out.
+          </p>
 
-    <!-- The app being used, which is the one thing about this program a
+          <p class="req gpuwarn" hidden>
+            Unfortunately, this browser has no WebGPU. You'll just get an error
+            if you try to open the app. Please try another browser or use Chrome
+            Canary or Firefox Nightly or look up how to enable WebGPU in your
+            browser!
+          </p>
+        </div>
+      </section>
+
+      <!-- The app being used, which is the one thing about this program a
          stranger cannot work out from a picture of what it makes. Four
          recordings of the window: one button handing you looks you did not
          build, presets stacked into combinations, the map the controls hang
          off, and a look built by hand from nothing. In that order, for the
          reason `scripts/reel.mjs` gives — the stage and the tabs both come
          from there. -->
-    <section>
-      <div class="wrap wide">
-        <Carousel />
-      </div>
-    </section>
+      <section>
+        <div class="wrap wide">
+          <Carousel />
+        </div>
+      </section>
 
-    <section>
-      <div class="wrap wide">
-        <p class="sub">Open one and you land on that exact board.</p>
-        <Gallery />
-      </div>
-    </section>
+      <section id="gallery">
+        <div class="wrap wide">
+          <p class="sub">Open one and you land on that exact board.</p>
+          <div id="galleryHost">
+            <Gallery />
+          </div>
+        </div>
+      </section>
 
-    <!-- Where the controls are, which is the question a stranger arrives at
+      <!-- Where the controls are, which is the question a stranger arrives at
          after the demos: the map at the head of the sidebar, boxed in the
          window and enlarged beside it. The figure is the README's, served
          from docs/img by the `figures` integration in astro.config.mjs. -->
-    <section>
-      <div class="wrap wide">
-        <h2 class="head">How do I use this thing?</h2>
-        <p class="sub">Use the signal path!</p>
-        <figure>
-          <img
-            src="/guide/img/signal-path-callout.jpg"
-            alt="The app window with the signal path map boxed in red at the head of the sidebar and enlarged over the picture: SOURCE A and SOURCE B into MIX, then CHANNEL, RECEIVER and SCREEN, with camera and mixer returns arching back over the trunk, SOUND and VIEW hanging below, and MODULATION and DECK on a row of their own with no wire reaching them"
-            width="1800"
-            height="1227"
-            loading="lazy"
-            decoding="async"
-          />
-          <figcaption>
-            It sits at the top of the sidebar. Load videos into SOURCE A and
-            SOURCE B; click any other stage to open its controls.
-          </figcaption>
-        </figure>
-      </div>
-    </section>
+      <section>
+        <div class="wrap wide">
+          <h2 class="head">How do I use this thing?</h2>
+          <p class="sub">Use the signal path!</p>
+          <figure>
+            <img
+              src="/guide/img/signal-path-callout.jpg"
+              alt="The app window with the signal path map boxed in red at the head of the sidebar and enlarged over the picture: SOURCE A and SOURCE B into MIX, then CHANNEL, RECEIVER and SCREEN, with camera and mixer returns arching back over the trunk, SOUND and VIEW hanging below, and MODULATION and DECK on a row of their own with no wire reaching them"
+              width="1800"
+              height="1227"
+              loading="lazy"
+              decoding="async"
+            />
+            <figcaption>
+              It sits at the top of the sidebar. Load videos into SOURCE A and
+              SOURCE B; click any other stage to open its controls.
+            </figcaption>
+          </figure>
+        </div>
+      </section>
+    </div>
 
     <Footer />
     <script is:inline set:html={script}></script>
+    <!-- Bundled rather than inlined like the three above it, so its firebase
+         imports stay dynamic chunks the page only fetches when somebody signs
+         in (src/ui/cloud.ts). -->
+    <script src="../scripts/home.ts"></script>
   </body>
 </html>
