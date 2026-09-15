@@ -11,6 +11,7 @@ import { FREE_WITHOUT, PITCH } from '../../src/ui/whySignIn'
 import css from '../styles/landing.css?raw'
 import designTokens from '../../src/tokens.css?raw'
 import site from '../styles/site.css?raw'
+import footer from '../styles/footer.css?raw'
 import tokens from '../styles/tokens.css?raw'
 
 const SITE = 'https://videoskillet.com/'
@@ -55,7 +56,10 @@ const UNFURL =
          rather than two. Inlined rather than linked: this page is one screen of
          chrome over a picture, and a stylesheet it has to fetch first is a
          second round trip before anything is painted. -->
-    <style is:inline set:html={designTokens + tokens + site + css}></style>
+    <style
+      is:inline
+      set:html={designTokens + tokens + site + footer + css}
+    ></style>
     <!-- CROSS_REPO_SYNC(home-hint-script) -->
     <!-- Runs before the first paint. A browser that has signed in before
          gets the skeleton in place of the landing page, so the home does not

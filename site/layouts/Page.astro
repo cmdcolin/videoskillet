@@ -7,6 +7,7 @@ import tabs from '../scripts/tabs.js?raw'
 import video from '../scripts/video.js?raw'
 import css from '../styles/guide.css?raw'
 import designTokens from '../../src/tokens.css?raw'
+import footer from '../styles/footer.css?raw'
 import tokens from '../styles/tokens.css?raw'
 
 import { href } from '../lib/pages.mjs'
@@ -52,7 +53,7 @@ const marked = spec.group.mark(spec)
     <!-- Inlined rather than linked: a handful of static pages, each one then
          self-contained enough to render opened straight off the filesystem,
          with no server to resolve a stylesheet path against. -->
-    <style is:inline set:html={designTokens + tokens + css}></style>
+    <style is:inline set:html={designTokens + tokens + footer + css}></style>
     <Analytics />
   </head>
   <body id="top">

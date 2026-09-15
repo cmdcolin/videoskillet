@@ -1,31 +1,35 @@
 ---
-// The bar across the top of `/`, in both of the page's states. The guide has a
-// bar of its own (Header.astro) whose middle row is the pages of one group;
-// this one carries the site's three destinations and the account.
+// The bar across the top of every site page. On `/` it also carries the
+// account: the sign-in button is server-rendered, because the page is static
+// HTML and nobody is signed in until the home script has asked, and the script
+// swaps it for the avatar once Firebase answers.
 //
-// The account end is server-rendered and starts as the sign-in button, because
-// the page is static HTML and nobody is signed in until `home.ts` has asked.
-// The script swaps the button for the avatar once Firebase answers.
-//
-// `account={false}` leaves that half out, for a page that does not load
-// home.ts: those controls are inert without it, and an inert sign-in button is
-// worse than none.
+// `account={false}` leaves that half out, for a page that does not load the
+// home script: those controls are inert without it, and an inert sign-in
+// button is worse than none. `current` marks the nav link for the page it is on.
+import { SITE } from '../lib/site'
+
 interface Props {
   account?: boolean
+  current?: string
 }
-const { account = true } = Astro.props
+const { account = true, current } = Astro.props
 ---
+
+<!-- CROSS_REPO_SYNC(site-bar-markup) -->
 
 <header class="siteBar">
   <div class="barIn">
-    <a class="barBrand" href="/">
-      <img src="/favicon.svg" width="24" height="24" alt="" />
-      <span>videoskillet.js</span>
+    <a class="barBrand" href={SITE.home}>
+      <img src={SITE.icon} width="24" height="24" alt="" />
+      <span>{SITE.name}</span>
     </a>
     <nav class="barNav" aria-label="Site">
-      <a href="/#gallery">Gallery</a>
-      <a href="/guide/">User guide</a>
-      <a href="https://github.com/cmdcolin/videoskillet">Source</a>
+      {SITE.nav.map(([href, label]) => (
+        <a href={href} aria-current={href === current ? 'page' : undefined}>
+          {label}
+        </a>
+      ))}
     </nav>
     <div class="barEnd">
       {account && (
@@ -79,9 +83,10 @@ const { account = true } = Astro.props
           </div>
         </Fragment>
       )}
-      <a class="btn primary slim" href="/app/">
+      <a class="btn primary slim" href={SITE.app}>
         Open the app →
       </a>
     </div>
   </div>
 </header>
+<!-- CROSS_REPO_SYNC_END(site-bar-markup) -->
