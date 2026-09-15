@@ -311,7 +311,7 @@ export function SignalPath(props: {
   //
   // `dim` is deliberately *not* asked here. A box the query missed used to be
   // drawn faint and made unpressable, and a filter narrow enough to miss most
-  // of the chain — the strip's `N mod` count does exactly that — left
+  // of the chain — the Modulation section's `N mod` count does exactly that — left
   // a map of ten ghosts that nothing could open, which reads as a broken app
   // rather than as a narrowed panel. Every box on the map is a door now, and a
   // dimmed one drops the query on the way through (see `openStage`).
@@ -355,7 +355,7 @@ export function SignalPath(props: {
   // Pressing a box the query missed goes there, and takes the query off on the
   // way: the stage is about to be listed and the filter would leave it blank.
   // This is also the map's job as the way *out* of a filter nobody meant to
-  // apply — the strip's count is one press from anywhere.
+  // apply — the Modulation section's count is one press from anywhere.
   const missed = new Set(
     [...nodes, ...loops, ...branches].flatMap(n =>
       n.dim === true ? [n.name] : [],

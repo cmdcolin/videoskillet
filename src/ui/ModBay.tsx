@@ -109,7 +109,7 @@ function StabRows() {
         // held look" over a still picture is the bay claiming something the
         // screen plainly is not doing. The dialed rate rather than the resolved
         // one, so the freeze reads as a freeze and not as a gate that was never
-        // set up — the strip above is where ❚❚ is explained and undone.
+        // set up — the Modulation section is where ❚❚ is explained and undone.
         running={stab.hz > 0}
         onHold={holdLook}
         onDrop={dropLook}

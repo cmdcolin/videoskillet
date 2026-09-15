@@ -81,7 +81,7 @@ export interface ControlsApi {
   favorites: Set<ControlKey>
   toggleFavorite: (key: ControlKey) => void
   // MIDI accessories appear only once a device is wired up. Keyed by bind
-  // target, not by control: the motion strip carries the same ⚟ affordance as a
+  // target, not by control: the Modulation section's amount carries the same ⚟ affordance as a
   // control row, and it is not a control.
   midiReady: boolean
   bindLabel: (target: BindTarget) => string | null

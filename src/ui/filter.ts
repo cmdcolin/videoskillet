@@ -35,11 +35,11 @@ export const useFilter = () => use(FilterContext)
 //
 // A bare `∿` in the text used to mean the mode, so a pasted glyph or a note
 // could carry it. That went with the glyph: nothing in the panel wears ∿ as a
-// state any more (the row's badge says `mod`, the strip's count says `N mod`),
+// state any more (the row's badge says `mod`, the Modulation section's count says `N mod`),
 // so a mark meaning "modulated" would have been a key to a legend that no
 // longer exists. "moving", "modulated", "motion" and "lfo" mean themselves here
 // for the same reason they always have — typing "lfo" has to find the help text
-// explaining what an LFO does. The strip's count and the palette's "show what is
+// explaining what an LFO does. The Modulation section's count and the palette's "show what is
 // moving" are the mode, and both are buttons.
 export const readFilter = (raw: string, moving: boolean): Filter => ({
   text: raw.trim().toLowerCase(),

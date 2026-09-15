@@ -2,7 +2,7 @@ import { useState } from 'react'
 
 // Park a number at zero and put it back where it was.
 //
-// Two of the panel's surfaces are this and nothing else: the motion strip's ❚❚,
+// Two of the panel's surfaces are this and nothing else: the Modulation section's ❚❚,
 // which holds every routing's depth, and the deck's, which holds the simulation
 // clock. Both had their own copy of "remember, zero, restore", and both had the
 // same two-line comment about why the remembered value is local state rather

@@ -49,7 +49,7 @@ describe('text matching', () => {
 describe('the motion mode', () => {
   it('is a mode, not a word — so the words stay searchable', () => {
     // Only a button sets it. A bare ∿ in the box used to mean it too, and went
-    // with the glyph: the row's badge says `mod` and the strip's count says
+    // with the glyph: the row's badge says `mod` and the Modulation section's count says
     // `N mod`, so nothing on screen would have taught the mark.
     expect(readFilter('', true)).toEqual(MOVING)
     expect(readFilter('∿', false)).toEqual(text('∿'))

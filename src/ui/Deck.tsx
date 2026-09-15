@@ -181,7 +181,7 @@ function Hold() {
   const timeScale = useControlValue('timeScale')
   const { writeControl } = useControlsApi()
   // The park and the memory of the rate it was at — see useHold, which the
-  // motion strip's own ❚❚ shares.
+  // Modulation section's own ❚❚ shares.
   const hold = useHold(timeScale, v => writeControl('timeScale', v))
   return (
     <div className={styles.block}>

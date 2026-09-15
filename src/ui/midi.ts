@@ -198,7 +198,7 @@ export type PickupMap = Partial<Record<ControlKey, number>>
 
 // What a knob needs to know about its target: the span it sweeps and the grid
 // it lands on. A control carries that on its SliderDef; motion and preset
-// weights are plain unit faders, 0..1 in hundredths — the motion strip's own
+// weights are plain unit faders, 0..1 in hundredths — the Modulation section's amount
 // step, and fine enough that a weight reads as continuous.
 type BindSpan = Pick<SliderDef, 'min' | 'max' | 'step' | 'curve'>
 
@@ -595,7 +595,7 @@ export function createMidi(cb: MidiCallbacks): MidiManager {
     const mapped = ccToValue(span, cc)
     const key = controlOf(t)
     // Soft takeover is a control's rule, and it works only because the row can
-    // draw an amber mark showing where the knob is waiting. The motion strip
+    // draw an amber mark showing where the knob is waiting. The Modulation section
     // and a preset chip have nowhere to put that mark, so an inert knob there
     // would read as broken with nothing on screen to explain it — those take
     // over on the first message instead, which is what a performance fader

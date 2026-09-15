@@ -310,7 +310,7 @@
   border-color: var(--border-hover);
 }
 /* A stopped clock is the reason nothing on screen is moving, which is worth
-   shouting about — the same call the motion strip's freeze makes, in the same
+   shouting about — the same call the Modulation section's freeze makes, in the same
    colour, so the two read as one kind of state. */
 .holdOn,
 .holdOn:hover {

@@ -4,7 +4,7 @@ import type { ModLive, ModSlot, ModTarget } from '../core/controls'
 import type { ModRouting, Stab, UiSlot } from './modSlots'
 
 // The modulation bay, read by anything that needs to know what is moving: the
-// Modulation section, the badge on every routed control row, the motion strip.
+// Modulation section, the bay, and the badge on every routed control row.
 //
 // A separate context from ControlsContext on purpose. Both change identity when
 // their state changes, and the two move on completely different clocks — a

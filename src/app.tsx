@@ -373,7 +373,7 @@ export function App() {
     setFilter(text)
     setMovingOnly(false)
   }
-  // One switch wherever it is pressed — the strip's count, the palette, the chip
+  // One switch wherever it is pressed — the Modulation section's count, the palette, the chip
   // in the box. Nothing typed can reach the mode, so this is the whole of it.
   const toggleMoving = () => setMovingOnly(!movingOnly)
   const nav = usePanelNav()
@@ -997,7 +997,7 @@ export function App() {
 
   const query = readFilter(filter, movingOnly)
   const filtering = filterActive(query)
-  // A query set from anywhere else — the strip's count, a palette jump — opens
+  // A query set from anywhere else — the Modulation section's count, a palette jump — opens
   // the box too, so the panel is never filtered by something with nothing on
   // screen saying so and no way to clear it.
   const searching = searchOpen || filtering
@@ -1323,7 +1323,7 @@ export function App() {
           <div className={styles.filterBox}>
             {/* The mode, standing in the box beside the words rather than
                 pretending to be one of them. It is where a filter you did not
-                type has to appear: pressing the strip's count narrows the whole
+                type has to appear: pressing the Modulation section's count narrows the whole
                 panel, and before this the only trace of it was a glyph in the
                 text — which said something had happened without saying that the
                 button was what said it, and could not be taken off without

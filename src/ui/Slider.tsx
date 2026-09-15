@@ -861,7 +861,7 @@ export function Slider(props: {
           — so a control parked at one end shows a band with nowhere to go on
           that side, which is the fault the editor's note spells out in words.
 
-          Scaled by the motion fader, so the strip's ❚❚ collapses every band on
+          Scaled by the motion fader, so the Modulation section's ❚❚ collapses every band on
           the board: what the row draws is what the engine is about to do, not
           what the slot was dialed to. */}
       {swing === null ? null : (
