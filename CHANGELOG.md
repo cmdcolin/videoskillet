@@ -2,6 +2,11 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [0.46.1](https://github.com/cmdcolin/videoskillet/compare/v0.46.0...v0.46.1) - 2026-09-15
+
+### Features
+- *(ui)* [`f250f10`](https://github.com/cmdcolin/videoskillet/commit/f250f1081a0a5ddd88789dd95da9a4f033211321) show a skeleton home to browsers that have signed in before
+
 ## [0.46.0](https://github.com/cmdcolin/videoskillet/compare/v0.45.1...v0.46.0) - 2026-09-15
 
 ### Other Changes
