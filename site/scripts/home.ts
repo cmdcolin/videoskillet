@@ -23,6 +23,7 @@ import { sinceWords } from '../lib/relativeTime'
 import type { CloudUser, HomeDoc } from '../../src/ui/cloud'
 import type { SavedProfile } from '../../src/ui/profileModel'
 
+// CROSS_REPO_SYNC(home-dom-helpers)
 const need = (id: string): HTMLElement => {
   const node = document.getElementById(id)
   if (node === null) throw new Error(`no #${id}`)
@@ -39,6 +40,7 @@ const el = <K extends keyof HTMLElementTagNameMap>(
   if (text !== undefined) node.textContent = text
   return node
 }
+// CROSS_REPO_SYNC_END(home-dom-helpers)
 
 const landing = need('landing')
 const home = need('home')
@@ -267,14 +269,17 @@ function gallerySection(): HTMLElement {
 
 // --- the account end of the bar ---------------------------------------------
 
+// CROSS_REPO_SYNC(home-account)
 function paintAvatar(user: CloudUser) {
   avatar.textContent = ''
   avatar.classList.remove('initial')
   const name = user.name ?? ''
-  if (user.photo === null) {
-    avatar.classList.add('initial')
+  const initial = () => {
     avatar.textContent = (name.trim()[0] ?? '?').toUpperCase()
-  } else {
+    avatar.classList.add('initial')
+  }
+  if (user.photo === null) initial()
+  else {
     const img = el('img')
     img.src = user.photo
     img.alt = ''
@@ -282,10 +287,7 @@ function paintAvatar(user: CloudUser) {
     img.height = 28
     // Google serves an avatar only to a request that names no referrer.
     img.referrerPolicy = 'no-referrer'
-    img.addEventListener('error', () => {
-      avatar.textContent = (name.trim()[0] ?? '?').toUpperCase()
-      avatar.classList.add('initial')
-    })
+    img.addEventListener('error', initial)
     avatar.append(img)
   }
   acctName.textContent = name === '' ? 'Signed in' : name
@@ -325,6 +327,7 @@ whyCard.addEventListener('click', event => {
   // landed on the backdrop.
   if (event.target === whyCard) whyCard.close()
 })
+// CROSS_REPO_SYNC_END(home-account)
 
 // --- the two states ---------------------------------------------------------
 
@@ -424,6 +427,7 @@ async function paint(user: CloudUser) {
   if (drawn === turn) fillStills(stills)
 }
 
+// CROSS_REPO_SYNC(home-sign-in)
 let signedIn: CloudUser | null = null
 
 const startSignIn = (button: HTMLButtonElement) => {
@@ -472,3 +476,4 @@ if (wasSignedIn())
     if (user === null) showLanding()
     else void paint(user)
   }).catch(showLanding)
+// CROSS_REPO_SYNC_END(home-sign-in)

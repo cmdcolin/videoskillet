@@ -1,0 +1,12 @@
+{
+  "name": "videoskillet",
+  "sibling": "bender",
+  "terms": {
+    "SavedProfile": "SavedItem",
+    "Profile": "Item",
+    "PROFILE": "ITEM",
+    "profiles": "items",
+    "profile": "item",
+    "my look": "my item"
+  }
+}

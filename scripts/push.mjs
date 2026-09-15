@@ -106,6 +106,7 @@ if (releasing) {
 // Catch what CI would catch, before it's a remote failure blocking the release.
 for (const check of [
   'pnpm lint',
+  'pnpm sync:check',
   'pnpm format:check',
   'pnpm test',
   'pnpm build',

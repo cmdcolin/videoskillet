@@ -68,6 +68,7 @@
     "agentreel": "node scripts/agentreel.mjs",
     "guide:check": "astro build && node scripts/guidecheck.mjs",
     "distcheck": "node scripts/distcheck.mjs",
+    "sync:check": "node scripts/sync-check.mjs",
     "homewait": "node scripts/homewait.mjs",
     "jsr": "node scripts/jsrpack.mjs",
     "jsr:check": "node scripts/jsrpack.mjs && cd jsr && deno publish --dry-run --allow-dirty",

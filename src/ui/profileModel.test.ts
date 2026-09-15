@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  PROFILE_MAX,
   PROFILE_NAME_MAX,
+  QUERY_MAX,
   PROFILE_SLOTS,
   cleanProfileName,
   markOpened,
@@ -179,5 +181,27 @@ describe('number-key slots', () => {
     const resaved = upsertProfile(three, 'a', 'set=hHold%3A0.4')
     expect(profileAtSlot(resaved, 1)?.query).toBe('set=hHold%3A0.4')
     expect(profileAtSlot(resaved, 2)).toEqual(p('b'))
+  })
+})
+
+describe('the caps the rules enforce', () => {
+  it('reads at most PROFILE_MAX entries', () => {
+    const many = Array.from({ length: PROFILE_MAX + 5 }, (_, i) => p(`${i}`))
+    expect(readProfiles(many)).toHaveLength(PROFILE_MAX)
+  })
+
+  it('drops an entry whose query is longer than the rules accept', () => {
+    expect(
+      readProfiles([p('long', 'x'.repeat(QUERY_MAX + 1)), p('ok')]),
+    ).toEqual([p('ok')])
+    expect(readCurrent({ query: 'x'.repeat(QUERY_MAX + 1), at: 1 })).toBeNull()
+  })
+
+  it('drops the oldest entry when a new name would pass the cap', () => {
+    const full = Array.from({ length: PROFILE_MAX }, (_, i) => p(`${i}`))
+    const next = upsertProfile(full, 'new', 'set=')
+    expect(next).toHaveLength(PROFILE_MAX)
+    expect(next[0]).toEqual(p('1'))
+    expect(next.at(-1)).toEqual(p('new'))
   })
 })

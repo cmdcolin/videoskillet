@@ -1,3 +1,4 @@
+// CROSS_REPO_SYNC_FILE(relative-time)
 // How long ago something happened, in the words the home page puts on a resume
 // card and under a saved look. Coarse on purpose: the reader is deciding which
 // of their own looks to open, so "3 days ago" is the whole answer and a date is

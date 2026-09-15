@@ -1,3 +1,5 @@
+#!/bin/sh
+# CROSS_REPO_SYNC_FILE(pre-push-tag-guard)
 # Refuse to push a tag that isn't on main. A rebase rewrites the release commit
 # and leaves the tag behind on the orphaned one, so `git push --follow-tags`
 # would publish a tag pointing at a commit nothing else can reach.

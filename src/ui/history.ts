@@ -1,3 +1,4 @@
+// CROSS_REPO_SYNC_FILE(undo-history)
 // A bounded undo/redo walk over whole look snapshots.
 //
 // One step back was enough while every destructive action was deliberate — a

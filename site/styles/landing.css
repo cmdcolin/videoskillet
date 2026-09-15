@@ -956,6 +956,7 @@ code {
    The head script in index.astro sets `data-home="pending"` on a browser that
    has signed in before. The landing page and the sign-in controls stay out of
    sight and the home's outline stands in until home.ts paints one state. */
+/* CROSS_REPO_SYNC(home-wait-css) */
 .homeWait {
   display: none;
 }
@@ -978,9 +979,22 @@ html[data-home='pending'] #why {
 }
 .bone {
   display: block;
+  animation: bone 1.4s ease-in-out infinite;
+}
+@keyframes bone {
+  50% {
+    opacity: 0.5;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bone {
+    animation: none;
+  }
+}
+/* CROSS_REPO_SYNC_END(home-wait-css) */
+.bone {
   border-radius: 0.4rem;
   background: var(--card);
-  animation: bone 1.4s ease-in-out infinite;
 }
 .railBone {
   width: 7rem;
@@ -993,14 +1007,4 @@ html[data-home='pending'] #why {
 .cardBone {
   aspect-ratio: 5 / 4;
   border-radius: 0.6rem;
-}
-@keyframes bone {
-  50% {
-    opacity: 0.5;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .bone {
-    animation: none;
-  }
 }

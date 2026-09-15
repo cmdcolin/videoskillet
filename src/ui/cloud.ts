@@ -1,4 +1,4 @@
-import { readCurrent, readProfiles } from './profileModel'
+import { PROFILE_MAX, readCurrent, readProfiles } from './profileModel'
 import { readStored, removeStored, writeString } from './storage'
 
 import type { RatingRecord } from '../labels'
@@ -31,6 +31,7 @@ import type { Firestore } from 'firebase/firestore/lite'
 // is what lets the GitHub Pages workflow build with no secrets — ytshuffle2 reads
 // the config from VITE_ vars its CI does not set, so the bundle it deploys
 // carries `undefined` for all seven fields.
+// CROSS_REPO_SYNC(firebase-config)
 const CONFIG = {
   apiKey: 'AIzaSyBHZnQdnaDc5BEYbqwKO8zs0t_wyzLaGFo',
   authDomain: 'ntscjs-d4f56.firebaseapp.com',
@@ -40,6 +41,9 @@ const CONFIG = {
   appId: '1:881016589781:web:9eabd469a30d89b6d7815c',
   measurementId: 'G-ZFH59EM495',
 }
+// CROSS_REPO_SYNC_END(firebase-config)
+
+const COLLECTION = 'users'
 
 // Whether this browser has been signed in before. Not a credential and not
 // trusted for anything — the real session lives in Firebase's own IndexedDB
@@ -47,6 +51,7 @@ const CONFIG = {
 // worth fetching the SDK to go and look. Wrong in the harmless direction either
 // way: stale-true costs one wasted fetch, stale-false costs one click.
 export const SIGNED_IN_HINT = 'videoskillet.js_signed_in'
+// CROSS_REPO_SYNC(firebase-auth)
 export const wasSignedIn = () => readStored(SIGNED_IN_HINT) === '1'
 
 // What the panel needs to know about who is signed in. Deliberately not the
@@ -133,7 +138,9 @@ export async function signOut(): Promise<void> {
   removeStored(SIGNED_IN_HINT)
   await auth.signOut()
 }
+// CROSS_REPO_SYNC_END(firebase-auth)
 
+// CROSS_REPO_SYNC(saved-list-cloud)
 // Everything the user document holds: the saved profiles and the session last
 // left open. Read through the same sanitizers the list has always used, because
 // a document is exactly as untrusted as a localStorage value was: it can carry a
@@ -145,29 +152,23 @@ export interface HomeDoc {
 
 export async function fetchHome(uid: string): Promise<HomeDoc> {
   const { db, fs } = await loadSdk()
-  const snap = await fs.getDoc(fs.doc(db, 'users', uid))
+  const snap = await fs.getDoc(fs.doc(db, COLLECTION, uid))
   if (!snap.exists()) return { profiles: [], current: null }
   const data = snap.data()
-  const raw: unknown = data.profiles
   return {
-    profiles: Array.isArray(raw) ? readProfiles(raw) : [],
+    profiles: readProfiles(data.profiles),
     current: readCurrent(data.current),
   }
 }
 
-// The saved profiles on this account, or [] for an account that has never saved
-// one.
-export const fetchProfiles = async (uid: string): Promise<SavedProfile[]> =>
-  (await fetchHome(uid)).profiles
-
 // Firestore refuses a field set to undefined, so an entry is built from the
 // fields it has.
-const profileEntry = (p: SavedProfile) => ({
-  name: p.name,
-  query: p.query,
-  ...(p.id === undefined ? {} : { id: p.id }),
-  ...(p.savedAt === undefined ? {} : { savedAt: p.savedAt }),
-  ...(p.openedAt === undefined ? {} : { openedAt: p.openedAt }),
+const profileEntry = (item: SavedProfile) => ({
+  name: item.name,
+  query: item.query,
+  ...(item.id === undefined ? {} : { id: item.id }),
+  ...(item.savedAt === undefined ? {} : { savedAt: item.savedAt }),
+  ...(item.openedAt === undefined ? {} : { openedAt: item.openedAt }),
 })
 
 // The whole list in one write. A document per profile would make two devices
@@ -181,8 +182,8 @@ export async function putProfiles(
 ): Promise<void> {
   const { db, fs } = await loadSdk()
   await fs.setDoc(
-    fs.doc(db, 'users', uid),
-    { profiles: profiles.map(profileEntry) },
+    fs.doc(db, COLLECTION, uid),
+    { profiles: profiles.slice(0, PROFILE_MAX).map(profileEntry) },
     { merge: true },
   )
 }
@@ -193,8 +194,14 @@ export async function putCurrent(
   current: CurrentSession | null,
 ): Promise<void> {
   const { db, fs } = await loadSdk()
-  await fs.setDoc(fs.doc(db, 'users', uid), { current }, { merge: true })
+  await fs.setDoc(fs.doc(db, COLLECTION, uid), { current }, { merge: true })
 }
+// CROSS_REPO_SYNC_END(saved-list-cloud)
+
+// The saved profiles on this account, or [] for an account that has never saved
+// one.
+export const fetchProfiles = async (uid: string): Promise<SavedProfile[]> =>
+  (await fetchHome(uid)).profiles
 
 // A profile's still: a small webp as base64, one document per profile under the
 // user, keyed by the profile's id. A subcollection rather than a field on the
@@ -209,7 +216,7 @@ export async function putStill(
   webp: string,
 ): Promise<void> {
   const { db, fs } = await loadSdk()
-  await fs.setDoc(fs.doc(db, 'users', uid, 'stills', id), {
+  await fs.setDoc(fs.doc(db, COLLECTION, uid, 'stills', id), {
     webp,
     at: Date.now(),
   })
@@ -217,13 +224,13 @@ export async function putStill(
 
 export async function deleteStill(uid: string, id: string): Promise<void> {
   const { db, fs } = await loadSdk()
-  await fs.deleteDoc(fs.doc(db, 'users', uid, 'stills', id))
+  await fs.deleteDoc(fs.doc(db, COLLECTION, uid, 'stills', id))
 }
 
 // Every still on the account, by profile id.
 export async function fetchStills(uid: string): Promise<Map<string, string>> {
   const { db, fs } = await loadSdk()
-  const snap = await fs.getDocs(fs.collection(db, 'users', uid, 'stills'))
+  const snap = await fs.getDocs(fs.collection(db, COLLECTION, uid, 'stills'))
   const stills = new Map<string, string>()
   for (const d of snap.docs) {
     const webp: unknown = d.data().webp

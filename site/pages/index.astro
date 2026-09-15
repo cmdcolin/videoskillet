@@ -54,6 +54,7 @@ const UNFURL =
          chrome over a picture, and a stylesheet it has to fetch first is a
          second round trip before anything is painted. -->
     <style is:inline set:html={tokens + css}></style>
+    <!-- CROSS_REPO_SYNC(home-hint-script) -->
     <!-- Runs before the first paint. A browser that has signed in before
          gets the skeleton in place of the landing page, so the home does not
          replace a landing page the reader has already started reading, and
@@ -82,6 +83,7 @@ const UNFURL =
         }
       } catch {}
     </script>
+    <!-- CROSS_REPO_SYNC_END(home-hint-script) -->
     <Analytics />
   </head>
   <body id="top">

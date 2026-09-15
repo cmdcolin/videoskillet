@@ -30,6 +30,7 @@
 // next machine, which a localStorage copy could never promise. Everything in
 // this file is the storage-agnostic half — the list algebra and the name rules;
 // cloud.ts is what reads and writes it.
+// CROSS_REPO_SYNC(saved-list-model)
 export interface SavedProfile {
   name: string
   query: string
@@ -49,23 +50,22 @@ export interface CurrentSession {
   at: number
 }
 
-export const newProfileId = (): string =>
-  Math.random().toString(36).slice(2, 10)
+// How many profiles one account holds. The rules refuse a longer list.
+export const PROFILE_MAX = 200
 
-const num = (v: unknown): number | undefined =>
-  typeof v === 'number' && Number.isFinite(v) ? v : undefined
-
-export function readCurrent(raw: unknown): CurrentSession | null {
-  if (typeof raw !== 'object' || raw === null) return null
-  const query = 'query' in raw ? raw.query : undefined
-  const at = 'at' in raw ? num(raw.at) : undefined
-  return typeof query === 'string' && at !== undefined ? { query, at } : null
-}
+// The longest query the rules accept, which a packed board never approaches.
+export const QUERY_MAX = 8000
 
 // The longest name a row will hold before the popover starts wrapping. Trimmed
 // rather than refused: a paste of a whole sentence should become a name, not an
 // error message.
 export const PROFILE_NAME_MAX = 40
+
+export const newProfileId = (): string =>
+  Math.random().toString(36).slice(2, 10)
+
+const num = (v: unknown): number | undefined =>
+  typeof v === 'number' && Number.isFinite(v) ? v : undefined
 
 // Collapse the whitespace a paste brings with it, and cap the length. An empty
 // result means "no name given", which the caller declines to save.
@@ -80,6 +80,7 @@ function readProfile(raw: unknown): SavedProfile | undefined {
   const name = 'name' in raw ? raw.name : undefined
   const query = 'query' in raw ? raw.query : undefined
   if (typeof name !== 'string' || typeof query !== 'string') return undefined
+  if (query.length > QUERY_MAX) return undefined
   const clean = cleanProfileName(name)
   if (clean === '') return undefined
   const id = 'id' in raw && typeof raw.id === 'string' ? raw.id : undefined
@@ -94,16 +95,26 @@ function readProfile(raw: unknown): SavedProfile | undefined {
   }
 }
 
-export const readProfiles = (raw: unknown[]): SavedProfile[] =>
-  raw.flatMap(v => {
-    const profile = readProfile(v)
-    return profile === undefined ? [] : [profile]
-  })
+export const readProfiles = (raw: unknown): SavedProfile[] =>
+  (Array.isArray(raw) ? raw : [])
+    .flatMap(item => {
+      const profile = readProfile(item)
+      return profile === undefined ? [] : [profile]
+    })
+    .slice(0, PROFILE_MAX)
+
+export function readCurrent(raw: unknown): CurrentSession | null {
+  if (typeof raw !== 'object' || raw === null) return null
+  const query = 'query' in raw ? raw.query : undefined
+  const at = 'at' in raw ? num(raw.at) : undefined
+  if (typeof query !== 'string' || query.length > QUERY_MAX) return null
+  return at === undefined ? null : { query, at }
+}
 
 // Save under a name, replacing any profile already using it **in place**. Order
 // is insertion order and a re-save does not disturb it: the list is read by eye
 // during a set, and a save that reshuffled everything above it would cost the
-// one thing a library is for.
+// one thing a library is for. A list already at the cap drops its oldest entry.
 //
 // `at` stamps the save and mints an id for a profile that has none; an
 // overwrite keeps the id and the openedAt it already had. Without `at` the
@@ -116,7 +127,7 @@ export function upsertProfile(
 ): SavedProfile[] {
   const clean = cleanProfileName(name)
   if (clean === '') return [...profiles]
-  const index = profiles.findIndex(p => p.name === clean)
+  const index = profiles.findIndex(item => item.name === clean)
   const prior = index === -1 ? undefined : profiles[index]
   const entry: SavedProfile = { name: clean, query }
   if (prior?.id !== undefined) entry.id = prior.id
@@ -125,8 +136,9 @@ export function upsertProfile(
     entry.id ??= newProfileId()
     entry.savedAt = at
   }
-  if (index === -1) return [...profiles, entry]
-  return profiles.map((p, i) => (i === index ? entry : p))
+  if (index !== -1)
+    return profiles.map((item, i) => (i === index ? entry : item))
+  return [...profiles, entry].slice(-PROFILE_MAX)
 }
 
 // A recall or an open, so the home page can sort by what you reach for.
@@ -135,7 +147,31 @@ export const markOpened = (
   name: string,
   at: number,
 ): SavedProfile[] =>
-  profiles.map(p => (p.name === name ? { ...p, openedAt: at } : p))
+  profiles.map(item => (item.name === name ? { ...item, openedAt: at } : item))
+
+export const removeProfile = (
+  profiles: readonly SavedProfile[],
+  name: string,
+): SavedProfile[] => profiles.filter(item => item.name !== name)
+
+// What the name box offers, so saving is type-nothing-and-press-save. `base` is
+// whatever the board is already called — the active preset, or the last one
+// edited — and the counter only appears once that name is taken, so the first
+// save off a preset is just its name.
+export function suggestProfileName(
+  profiles: readonly SavedProfile[],
+  base: string,
+): string {
+  const clean = cleanProfileName(base)
+  const stem = clean === '' ? 'my look' : clean
+  if (!profiles.some(item => item.name === stem)) return stem
+  for (let n = 2; n < 1000; n++) {
+    const candidate = `${stem} ${n}`
+    if (!profiles.some(item => item.name === candidate)) return candidate
+  }
+  return stem
+}
+// CROSS_REPO_SYNC_END(saved-list-model)
 
 // How many profiles the number keys reach. The digits are the whole reason for
 // the bound: there is no key for a tenth.
@@ -153,26 +189,3 @@ export const profileAtSlot = (
   n: number,
 ): SavedProfile | undefined =>
   n >= 1 && n <= PROFILE_SLOTS ? profiles[n - 1] : undefined
-
-export const removeProfile = (
-  profiles: readonly SavedProfile[],
-  name: string,
-): SavedProfile[] => profiles.filter(p => p.name !== name)
-
-// What the name box offers, so saving is type-nothing-and-press-save. `base` is
-// whatever the board is already called — the active preset, or the last one
-// edited — and the counter only appears once that name is taken, so the first
-// save off a preset is just its name.
-export function suggestProfileName(
-  profiles: readonly SavedProfile[],
-  base: string,
-): string {
-  const clean = cleanProfileName(base)
-  const stem = clean === '' ? 'my look' : clean
-  if (!profiles.some(p => p.name === stem)) return stem
-  for (let n = 2; n < 1000; n++) {
-    const candidate = `${stem} ${n}`
-    if (!profiles.some(p => p.name === candidate)) return candidate
-  }
-  return stem
-}

@@ -20,6 +20,7 @@ import type { SourceBMode, SourceMode } from '../sources/modes'
 // drag therefore writes once every ten seconds while the address bar writes four
 // times a second. A query identical to the one already on the account writes
 // nothing at all.
+// CROSS_REPO_SYNC(current-session-gate)
 export const SETTLE_MS = 5000
 export const MIN_GAP_MS = 10000
 
@@ -40,6 +41,7 @@ export function nextWriteAt(
   if (query === gate.query) return null
   return Math.max(now + SETTLE_MS, gate.at + MIN_GAP_MS)
 }
+// CROSS_REPO_SYNC_END(current-session-gate)
 
 // Whether the session is one the home page should offer back. A bare load
 // opens the landing look on bars, and the app button on the home page opens

@@ -1,1 +1,6 @@
-pnpm exec lint-staged
+
+
+# CROSS_REPO_SYNC(pre-commit-sync-warning)
+# A warning only: the sibling may be mid-port. The release preflight blocks.
+node scripts/sync-check.mjs --quiet || echo "pre-commit: shared regions differ from the sibling repo (docs/CROSS_REPO_SYNC.md)"
+# CROSS_REPO_SYNC_END(pre-commit-sync-warning)

@@ -1,3 +1,4 @@
+// CROSS_REPO_SYNC_FILE(relative-time-test)
 import { expect, test } from 'vitest'
 
 import { sinceWords } from './relativeTime'
