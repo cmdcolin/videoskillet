@@ -204,12 +204,14 @@ wobble still without unpatching it. Held, the chip dims and the button reads
 **▶**; press it and the motion is back as you dialed it. **remove** in the
 editor, or in the row's **⋮**, frees the slot.
 
-Once anything moves, a **mod amount** strip appears with one amount over every
-routing, a freeze, and the **mod** count that filters the panel to what is
-running. The **MODULATION** box on the map lists every routing with the same
-editor under each, and the tempo at its top. Type or tap a BPM, then lock any
-rate to it. MIDI clock takes over whenever something sends it. See
-[MIDI.md](MIDI.md).
+Once anything moves, a **Modulation** section appears under Presets. It lists
+each routing with the control it drives, its source, its rate and its depth, and
+the stab gate's rate when that is on. Click a control's name to open its row.
+The section also holds one **amount** over every routing, a freeze, and the
+**mod** count that filters the panel to what is running. **edit in the bay**
+opens the **MODULATION** box on the map, which has the full editor under each
+routing and the tempo at its top. Type or tap a BPM, then lock any rate to it.
+MIDI clock takes over whenever something sends it. See [MIDI.md](MIDI.md).
 
 **stabs** flip the board back to clean in bursts, 60ms by default and anywhere
 from 8 to 400, so the look cuts into a clean picture instead of running

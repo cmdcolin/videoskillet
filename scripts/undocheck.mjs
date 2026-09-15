@@ -226,7 +226,7 @@ try {
   `)
   await settle()
   // Under the section's own header rather than the first range on the page,
-  // which is Presets' `mod amount` — a slider that is not a control row.
+  // which can be the Modulation section's `amount` — a slider that is not a control row.
   const thumb = await run(`
     const h = [...document.querySelectorAll('h3 button')]
       .find(b => (b.textContent ?? '').includes('This look'))

@@ -39,9 +39,9 @@ reads **CC7** and the pairing shows in the MIDI panel. `Esc` cancels.
 
 ## Two knobs that aren't sliders
 
-- **The motion amount**: the strip above the filter box scales every modulation
-  routing at once, and carries the same **⚟**. One hand takes the board from
-  still to fully in motion.
+- **The motion amount**: the **amount** fader in the Modulation section scales
+  every modulation routing at once, and carries the same **⚟**. One hand takes
+  the board from still to fully in motion.
 - **A preset's weight**: every preset is a fader, so a preset on a knob moves
   everything that preset touches. Use the picker at the bottom of the MIDI
   panel: choose the preset, click **⚟ preset mix**, move a knob. Weights layer,

@@ -67,10 +67,10 @@ import { MediaBrowserDialog } from './ui/MediaBrowserDialog'
 import { MenuRow } from './ui/MenuRow'
 import { MidiSection } from './ui/MidiSection'
 import { ModBay } from './ui/ModBay'
+import { ModSection } from './ui/ModSection'
 import { bayLoad, modDetail, slotsToRoutings, targetLabel } from './ui/modSlots'
 import { ModSlotsContext } from './ui/ModSlotsContext'
 import { parseMorph } from './ui/morph'
-import { MotionStrip } from './ui/MotionStrip'
 import { paletteActions } from './ui/paletteActions'
 import { panelChain } from './ui/panelChain'
 import { PanelResizer } from './ui/PanelResizer'
@@ -1543,14 +1543,13 @@ export function App() {
           map had no vocabulary for a second thing joining the trunk — they are
           the Sound branch now, under the receiver they feed, and modulation is
           a box on the same map for the same kind of reason. */}
-      {/* Outside the filter gate, unlike the modulation bay it belongs to:
-          while a query is live everything below the box is the result set, and
-          this fader is a live-set control (it has a MIDI bind of its own) that
-          has to stay reachable from anywhere. It stays here for that reason and
-          not because it deserves the position — it is a trim on a feature most
-          sessions never open, so it now draws itself as a row rather than as
-          the green card that outranked the whole spine below it. */}
-      <MotionStrip moving={query.moving} onToggleMoving={toggleMoving} />
+      <ModSection
+        moving={query.moving}
+        onToggleMoving={toggleMoving}
+        openStages={openStages}
+        onOpenGroup={nav.openAt}
+        onOpenBay={() => nav.jumpPhase(MOD_STAGE)}
+      />
       <SignalPath
         nodes={chain.nodes}
         branches={chain.branches}

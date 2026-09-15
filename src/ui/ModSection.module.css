@@ -1,0 +1,161 @@
+.strip {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 2px 0;
+}
+
+.label {
+  font-size: var(--fs-sm);
+  color: var(--fg3);
+  letter-spacing: 0.04em;
+}
+
+/* accent-color fills the track up to the thumb, so at the resting value of 1
+   the full mod green would be the loudest bar in the panel */
+.range {
+  flex: 1;
+  min-width: 0;
+  accent-color: color-mix(in srgb, var(--mod) 50%, var(--panel-bg));
+  height: 14px;
+}
+.range:hover,
+.range:focus-visible {
+  accent-color: var(--mod);
+}
+
+.pct {
+  min-width: 4ch;
+  text-align: right;
+  font-family: var(--mono);
+  font-size: var(--fs-xs);
+  color: var(--fg3);
+}
+
+.freeze {
+  composes: bare from './ui.module.css';
+  padding: 0 2px;
+  font-size: var(--fs-sm);
+  line-height: 1;
+  color: var(--fg4);
+}
+.freeze:hover {
+  color: var(--mod);
+}
+.frozen,
+.frozen:hover {
+  color: var(--edit-hi);
+}
+
+.list {
+  list-style: none;
+  margin: 4px 0 2px;
+  padding: 0;
+}
+.item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 2px 0;
+  font-size: var(--fs-sm);
+}
+.target {
+  composes: bare from './ui.module.css';
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+  color: var(--fg2);
+}
+button.target:hover {
+  color: var(--mod);
+}
+.group {
+  margin-left: 6px;
+  color: var(--fg4);
+}
+.reading {
+  flex-shrink: 0;
+  font-family: var(--mono);
+  font-size: var(--fs-xs);
+  color: var(--mod);
+}
+.itemOff .target,
+.itemOff .reading {
+  color: var(--fg4);
+}
+
+.open {
+  composes: bare from './ui.module.css';
+  font-size: var(--fs-xs);
+  color: var(--fg3);
+}
+.open:hover {
+  color: var(--mod);
+}
+
+/* Presses to filter the panel to the patched rows. The outline says it is a
+   button at rest; the box stays the same in every state so nothing shifts. */
+.count {
+  composes: bare from './ui.module.css';
+  font-family: var(--mono);
+  font-size: var(--fs-xs);
+  font-weight: 400;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--fg3);
+  padding: 0 4px;
+  border: 1px solid var(--border-quiet);
+  border-radius: 3px;
+}
+.count:hover {
+  color: var(--mod);
+  border-color: color-mix(in srgb, var(--mod) 45%, transparent);
+}
+.parked {
+  margin-left: 2px;
+  color: var(--fg4);
+}
+.countOn,
+.countOn:hover {
+  color: var(--mod);
+  background: color-mix(in srgb, var(--mod) 16%, transparent);
+  border-color: color-mix(in srgb, var(--mod) 45%, transparent);
+}
+
+.bind {
+  composes: bare from './ui.module.css';
+  font-size: var(--fs-xs);
+  line-height: 1;
+  color: var(--fg4);
+}
+.bindSet {
+  color: var(--midi);
+}
+.bindArmed {
+  color: var(--edit-hi);
+}
+
+@media (pointer: coarse) {
+  .strip {
+    gap: 10px;
+    padding: 6px 0;
+  }
+  .freeze {
+    padding: 4px 6px;
+  }
+  .count {
+    padding: 4px 5px;
+  }
+  .bind {
+    padding: 4px 2px;
+  }
+  .item {
+    padding: 6px 0;
+  }
+  .open {
+    padding: 6px 0;
+  }
+}
