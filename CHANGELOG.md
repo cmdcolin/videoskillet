@@ -2,6 +2,11 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [0.46.3](https://github.com/cmdcolin/videoskillet/compare/v0.46.2...v0.46.3) - 2026-09-15
+
+### Documentation
+- [`096c700`](https://github.com/cmdcolin/videoskillet/commit/096c7003ad5c71905637b5635c4ce25093f033b7) retake stale docshots for v0.46.2
+
 ## [0.46.2](https://github.com/cmdcolin/videoskillet/compare/v0.46.1...v0.46.2) - 2026-09-15
 
 ### Features
