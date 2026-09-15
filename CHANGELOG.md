@@ -2,6 +2,11 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [0.47.2](https://github.com/cmdcolin/videoskillet/compare/v0.47.1...v0.47.2) - 2026-09-15
+
+### Fixes
+- *(ui)* [`542ef70`](https://github.com/cmdcolin/videoskillet/commit/542ef7013d28708e819058c3d95f369f5f48ec07) stop personifying the account as something that holds data
+
 ## [0.47.1](https://github.com/cmdcolin/videoskillet/compare/v0.47.0...v0.47.1) - 2026-09-15
 
 ### Features
