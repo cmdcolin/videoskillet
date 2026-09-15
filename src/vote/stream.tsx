@@ -1,5 +1,6 @@
 import { createRoot } from 'react-dom/client'
 
+import { installAnalytics } from '../analytics'
 import '../theme.css'
 import { StreamPage } from './StreamPage'
 
@@ -10,3 +11,5 @@ if (root) {
   document.body.style.margin = '0'
   createRoot(root).render(<StreamPage />)
 }
+
+installAnalytics()

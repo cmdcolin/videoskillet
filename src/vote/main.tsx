@@ -1,5 +1,6 @@
 import { createRoot } from 'react-dom/client'
 
+import { installAnalytics } from '../analytics'
 import '../theme.css'
 import { VotePage } from './VotePage'
 
@@ -17,3 +18,5 @@ if (root) {
   document.body.style.margin = '0'
   createRoot(root).render(<VotePage />)
 }
+
+installAnalytics()

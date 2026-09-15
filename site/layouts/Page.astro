@@ -1,4 +1,5 @@
 ---
+import Analytics from '../components/Analytics.astro'
 import Footer from '../components/Footer.astro'
 import Header from '../components/Header.astro'
 import spy from '../scripts/spy.js?raw'
@@ -51,6 +52,7 @@ const marked = spec.group.mark(spec)
          self-contained enough to render opened straight off the filesystem,
          with no server to resolve a stylesheet path against. -->
     <style is:inline set:html={tokens + css}></style>
+    <Analytics />
   </head>
   <body id="top">
     <a class="skip" href="#content">

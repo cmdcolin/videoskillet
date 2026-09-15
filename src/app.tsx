@@ -130,6 +130,7 @@ import { useUrlState } from './ui/useUrlState'
 import { useWakeLock } from './ui/useWakeLock'
 import { VideoUrlDialog } from './ui/VideoUrlDialog'
 import { WebcamDialog } from './ui/WebcamDialog'
+import { WhySignInDialog } from './ui/WhySignInDialog'
 import { YouTubeDialog } from './ui/YouTubeDialog'
 import { gitSha, versionLabel } from './version'
 
@@ -317,6 +318,10 @@ export function App() {
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [showDiagram, setShowDiagram] = useState(false)
   const [showAbout, setShowAbout] = useState(false)
+  // Why an account, and the name of the save waiting on the answer. `null` is
+  // shut, and `{ pending: null }` is the card opened from a menu with no save
+  // behind it.
+  const [why, setWhy] = useState<{ pending: string | null } | null>(null)
   const [showShare, setShowShare] = useState(false)
   const [showBoardText, setShowBoardText] = useState(false)
   const [showPalette, setShowPalette] = useState(false)
@@ -815,13 +820,21 @@ export function App() {
     profiles.lastName ?? lookName ?? '',
   )
 
+  // Every way of saving comes through here. A save with nobody signed in opens
+  // the why-sign-in card: useSavedProfiles holds the look, so signing in from
+  // the card saves what was on screen when the key went down.
+  const askSave = (name: string) => {
+    if (profiles.saveProfile(name, profileQuery()) === 'needs-auth')
+      setWhy({ pending: name })
+  }
+
   // shift+N keeps the board over that slot's profile, under its name. Past the
   // end of the library it is an ordinary save under the offered name, which
   // appends — so it lands on the next free slot rather than the one pressed.
   // Naming nothing is the point of the gesture, so it does not ask.
   const saveSlot = (n: number) => {
     const profile = profileAtSlot(profiles.profiles, n)
-    profiles.saveProfile(profile?.name ?? suggestedProfileName, profileQuery())
+    askSave(profile?.name ?? suggestedProfileName)
   }
 
   useShortcuts(popout, {
@@ -881,11 +894,11 @@ export function App() {
     // library sits above this call for that reason: a handler here is read
     // through a ref every render, but the object it lives in is built now.
     //
-    // Signed out there is nowhere for it to go, and a keystroke that silently
-    // does nothing is worse than one that refuses: saveProfile declines, and the
-    // button in the row goes amber saying `sign in` (see SavedProfiles).
-    onSaveProfile: () =>
-      profiles.saveProfile(suggestedProfileName, profileQuery()),
+    // Signed out there is nowhere for it to go, and a keystroke that does
+    // nothing is worse than one that refuses: the button in the row goes amber
+    // saying `sign in` (see SavedProfiles), and the why-sign-in card opens with
+    // this look held behind it.
+    onSaveProfile: () => askSave(suggestedProfileName),
   })
   usePageLifecycle(engineRef, setFullscreen)
   // Nothing here takes an input for minutes at a time — a look is set and then
@@ -965,7 +978,7 @@ export function App() {
     save: {
       can: profiles.canSave,
       as: suggestedProfileName,
-      run: () => profiles.saveProfile(suggestedProfileName, profileQuery()),
+      run: () => askSave(suggestedProfileName),
     },
     onCopyLink: () => setShowShare(true),
     onBoardText: () => setShowBoardText(true),
@@ -1264,6 +1277,14 @@ export function App() {
     onShowPalette: () => setShowPalette(true),
     onShowAdvanced: () => setShowAdvanced(true),
     onShowAbout: () => setShowAbout(true),
+    // Only offered with nobody signed in; a signed-in reader has the answer
+    // already, which AppMenu decides from this being undefined.
+    onWhySignIn:
+      profiles.status === 'ready'
+        ? undefined
+        : () => {
+            setWhy({ pending: null })
+          },
   }
 
   const panelBody = (
@@ -1387,11 +1408,12 @@ export function App() {
             error={profiles.error}
             onSignIn={profiles.signIn}
             onSignOut={profiles.signOut}
-            onSave={name => profiles.saveProfile(name, profileQuery())}
+            onSave={askSave}
             onRecall={recallProfile}
             onOpen={openProfile}
             onDelete={profiles.deleteProfile}
             onCopyLink={profile => copyQuery(profile.query)}
+            onWhy={() => setWhy({ pending: null })}
           />
           <AppMenu variant="masthead" {...menuProps} />
         </div>
@@ -2035,6 +2057,19 @@ export function App() {
         />
       ) : null}
       {showAbout ? <AboutDialog onClose={() => setShowAbout(false)} /> : null}
+      {/* Closing on the way to the popup leaves the Google window clear. The
+          save the card was holding lands on the button in the masthead. */}
+      {why === null ? null : (
+        <WhySignInDialog
+          pendingName={why.pending}
+          onClose={() => setWhy(null)}
+          onSignIn={() => {
+            setWhy(null)
+            profiles.signIn()
+          }}
+          onCopyLink={() => copyQuery(profileQuery())}
+        />
+      )}
       {showShare ? (
         <ShareDialog
           shareUrl={shareUrl}

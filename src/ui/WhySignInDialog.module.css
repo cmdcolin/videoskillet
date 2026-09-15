@@ -1,0 +1,68 @@
+/* The why-sign-in card's own rows. The box, the title and the close button come
+   from Dialog; everything here is the list inside it. */
+
+/* The save waiting on the button below, called out because it is the only thing
+   in the card about this press rather than about accounts. */
+.pending {
+  margin: 0 0 12px;
+  padding: 6px 8px;
+  color: var(--fg);
+  background: var(--ctl-face);
+  border-left: 2px solid var(--accent);
+  border-radius: 3px;
+  line-height: var(--prose-lh);
+}
+
+.pendingName {
+  color: var(--accent);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.reason {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.reasonHead {
+  color: var(--fg);
+}
+
+.reasonSays {
+  color: var(--fg2);
+  line-height: var(--prose-lh);
+}
+
+/* Two ways on, side by side and at the same size: the second one is a way to
+   keep the look, not a way to decline. */
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 12px 0 10px;
+}
+
+.go {
+  composes: btn from './ui.module.css';
+  composes: btnFlush from './ui.module.css';
+  border-color: var(--accent);
+}
+
+.alt {
+  composes: btn from './ui.module.css';
+  composes: btnFlush from './ui.module.css';
+}
+
+.fine {
+  margin: 0;
+  color: var(--fg3);
+  line-height: var(--prose-lh);
+}

@@ -1,0 +1,69 @@
+---
+import Analytics from '../components/Analytics.astro'
+import Footer from '../components/Footer.astro'
+import SiteBar from '../components/SiteBar.astro'
+import css from '../styles/landing.css?raw'
+import tokens from '../styles/tokens.css?raw'
+
+// Two services and what each one is for. Short on purpose.
+const SITE = 'https://videoskillet.com/'
+const REPO = 'https://github.com/cmdcolin/videoskillet'
+---
+
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>Privacy — videoskillet.js</title>
+    <meta
+      name="description"
+      content="videoskillet uses Google Analytics to count visits and Firebase to hold your saved looks. Nothing else."
+    />
+    <link rel="canonical" href={`${SITE}privacy/`} />
+    <meta name="theme-color" content="#0e0e11" />
+    <meta name="color-scheme" content="dark" />
+    <style is:inline set:html={tokens + css}></style>
+    <Analytics />
+  </head>
+  <body id="top">
+    <SiteBar account={false} />
+
+    <main class="wrap privacy">
+      <h1>Privacy</h1>
+      <p class="privacyLead">
+        videoskillet runs in your browser. Two outside services are involved,
+        and this page is the whole list.
+      </p>
+
+      <h2>Google Analytics</h2>
+      <p>
+        Counts visits: which pages get opened, roughly where from, and on what
+        sort of device. It sets cookies to do that. Any tracker blocker switches
+        it off, and everything here works the same without it.
+      </p>
+
+      <h2>Firebase</h2>
+      <p>
+        Only if you sign in. Google handles the sign-in, and one Firestore
+        document holds your saved looks: a name, the controls the look moves,
+        and a small still of the output beside each one. The same document holds
+        the session you last had open, so the home page can offer it back, and
+        your ratings if you rate a look. Stay signed out and there is no
+        document at all.
+      </p>
+
+      <h2>Getting rid of it</h2>
+      <p>
+        <b>×</b> in the saved menu deletes a look on the spot. To have the whole
+        document deleted, say so in <a href={`${REPO}/issues`}>an issue</a>.
+        Nothing is sold and there are no ads.
+      </p>
+    </main>
+
+    <Footer />
+  </body>
+</html>

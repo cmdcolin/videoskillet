@@ -1,5 +1,6 @@
 import { createRoot } from 'react-dom/client'
 
+import { installAnalytics } from './analytics'
 import { App } from './app'
 import { registerServiceWorker } from './registerSW'
 import './theme.css'
@@ -28,3 +29,4 @@ if (root) {
 }
 
 registerServiceWorker()
+installAnalytics()

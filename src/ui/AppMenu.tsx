@@ -70,6 +70,9 @@ export function AppMenu(props: {
   onShowPalette: () => void
   onShowAdvanced: () => void
   onShowAbout: () => void
+  /** Opens the why-sign-in card. Undefined once there is an account behind the
+      session, which is what keeps the row out of a signed-in menu. */
+  onWhySignIn?: () => void
   // Only the stage's copy has this: the bar being hidden is the one it is in,
   // and the masthead has no bar to hide.
   onHideBar?: () => void
@@ -213,6 +216,16 @@ export function AppMenu(props: {
             closes={id}
             onClick={() => openUrlApi()}
           />
+          {props.onWhySignIn === undefined ? null : (
+            <MenuItem
+              icon="⌘"
+              label="why sign in?"
+              hint=""
+              title="what an account is for here, and what it holds"
+              closes={id}
+              onClick={() => props.onWhySignIn?.()}
+            />
+          )}
           <MenuItem
             icon="?"
             label="about"

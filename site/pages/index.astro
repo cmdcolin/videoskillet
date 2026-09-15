@@ -1,10 +1,17 @@
 ---
+import Analytics from '../components/Analytics.astro'
 import Carousel from '../components/Carousel.astro'
 import Footer from '../components/Footer.astro'
 import Gallery from '../components/Gallery.astro'
 import Hero from '../components/Hero.astro'
 import SiteBar from '../components/SiteBar.astro'
 import script from '../scripts/landing.js?raw'
+import {
+  FREE_WITHOUT,
+  LINKS_INSTEAD,
+  REASONS,
+  WHAT_IT_HOLDS,
+} from '../../src/ui/whySignIn'
 import css from '../styles/landing.css?raw'
 import tokens from '../styles/tokens.css?raw'
 
@@ -51,6 +58,7 @@ const UNFURL =
          chrome over a picture, and a stylesheet it has to fetch first is a
          second round trip before anything is painted. -->
     <style is:inline set:html={tokens + css}></style>
+    <Analytics />
   </head>
   <body id="top">
     <SiteBar />
@@ -80,7 +88,10 @@ const UNFURL =
              nothing. -->
           <p class="dim heroNote">
             Sign in to keep looks under a name and pick a session up on another
-            machine. Everything else works signed out.
+            machine. Everything else works signed out.{' '}
+            <button class="why" id="whyBelow" type="button">
+              Why sign in?
+            </button>
           </p>
 
           <p class="req gpuwarn" hidden>
@@ -139,6 +150,41 @@ const UNFURL =
         </div>
       </section>
     </div>
+
+    <!-- The long answer, from the same strings the app's own card renders, so
+         the two say the same thing. Built here at build time, so it is in the
+         page for a reader with no JavaScript. -->
+    <dialog class="whyCard" id="whyCard" aria-labelledby="whyHead">
+      <div class="whyTop">
+        <h2 class="whyHead" id="whyHead">
+          Why sign in?
+        </h2>
+        <button class="btn" id="whyClose" type="button">
+          Close
+        </button>
+      </div>
+      <ul class="whyList">
+        {REASONS.map(reason => (
+          <li>
+            <b>{reason.head}</b>
+            <span>{reason.says}</span>
+          </li>
+        ))}
+      </ul>
+      <p class="whyLine">{FREE_WITHOUT}</p>
+      <p class="whyLine">
+        {WHAT_IT_HOLDS} <a href="/privacy/">What is stored, in full →</a>
+      </p>
+      <p class="whyCta">
+        <button class="btn primary" id="whySignIn" type="button">
+          Sign in with Google
+        </button>
+        <a class="btn" href="/app/">
+          Open the app instead →
+        </a>
+      </p>
+      <p class="whyFine">{LINKS_INSTEAD}</p>
+    </dialog>
 
     <Footer />
     <script is:inline set:html={script}></script>

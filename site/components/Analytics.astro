@@ -1,0 +1,22 @@
+---
+// Google Analytics on the static pages, written out as Google's own snippet.
+// The id and what the tag is for are in src/analytics.ts, which the app's three
+// pages install from their bundle.
+import { GA_ID } from '../../src/analytics'
+---
+
+<script
+  is:inline
+  async
+  src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
+></script>
+<script is:inline define:vars={{ GA_ID }}>
+  // `define:vars` wraps the script in a function, so these two go on `window`
+  // explicitly to stay global, as they are in Google's snippet.
+  window.dataLayer = window.dataLayer || []
+  window.gtag = function gtag() {
+    window.dataLayer.push(arguments)
+  }
+  gtag('js', new Date())
+  gtag('config', GA_ID)
+</script>

@@ -301,6 +301,13 @@ be found again.
 `ctrl/⌘+S` saves, and the first nine sit on the number keys: `1–9` recalls,
 `shift+1–9` overwrites.
 
+Saving with nobody signed in holds the look and opens **why sign in?**, the same
+card the ⋮ menu offers. Sign in from that card and the look you were looking at
+is saved under the name the card named. If the account turns out to hold that
+name already, the save lands beside the look there and counts up: _worn tape 2_.
+The [privacy page](https://videoskillet.com/privacy/) lists what the account
+holds.
+
 A recall brings back the controls and the motion and leaves your input alone.
 **⧉** copies a link carrying both, source clip included. `s` saves a still, `r`
 records a clip.

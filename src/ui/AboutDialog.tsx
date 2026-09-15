@@ -1,7 +1,7 @@
 import { publicUrl } from '../publicUrl'
 import { gitSha, versionLabel } from '../version'
 import { Dialog } from './Dialog'
-import { GUIDE_URL, REPO_URL } from './links'
+import { GUIDE_URL, PRIVACY_URL, REPO_URL } from './links'
 import ui from './ui.module.css'
 
 // Deliberately three lines: what this is, where to read about it, and which
@@ -37,6 +37,15 @@ export function AboutDialog({ onClose }: { onClose: () => void }) {
         ·{' '}
         <a className={ui.link} href={REPO_URL} target="_blank" rel="noreferrer">
           source on GitHub ↗
+        </a>{' '}
+        ·{' '}
+        <a
+          className={ui.link}
+          href={PRIVACY_URL}
+          target="_blank"
+          rel="noreferrer"
+        >
+          privacy ↗
         </a>
       </p>
       {/* The sha as well as the tag: a bug report against "v0.26.2" cannot say

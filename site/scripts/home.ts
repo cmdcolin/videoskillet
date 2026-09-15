@@ -50,6 +50,9 @@ const acctMenu = need('acctMenu')
 const acctName = need('acctName')
 const avatar = need('avatar')
 const signOutBtn = need('signOut') as HTMLButtonElement
+const whyCard = need('whyCard') as HTMLDialogElement
+const whyBtns = [need('why'), need('whyBelow')]
+const whySignInBtn = need('whySignIn') as HTMLButtonElement
 
 // The gallery cards are server-rendered once, inside the landing page, and the
 // signed-in home borrows the same <ul>. Copying the markup into the script
@@ -257,6 +260,25 @@ document.addEventListener('keydown', event => {
   if (event.key === 'Escape') closeMenu()
 })
 
+// --- why sign in ------------------------------------------------------------
+
+// index.astro writes the card into the page at build time. This opens it, shuts
+// it, and hands its button to the sign-in the bar's button uses.
+for (const button of whyBtns)
+  button.addEventListener('click', () => {
+    whyCard.showModal()
+  })
+
+need('whyClose').addEventListener('click', () => {
+  whyCard.close()
+})
+
+whyCard.addEventListener('click', event => {
+  // A press that landed on the dialog element and on none of its children
+  // landed on the backdrop.
+  if (event.target === whyCard) whyCard.close()
+})
+
 // --- the two states ---------------------------------------------------------
 
 export function showHome(
@@ -266,7 +288,9 @@ export function showHome(
   now = Date.now(),
 ): void {
   paintAvatar(user)
+  whyCard.close()
   signInBtn.hidden = true
+  for (const button of whyBtns) button.hidden = true
   acct.hidden = false
 
   const rail = el('nav', 'rail')
@@ -300,6 +324,7 @@ export function showLanding(): void {
   closeMenu()
   acct.hidden = true
   signInBtn.hidden = false
+  for (const button of whyBtns) button.hidden = false
   // The gallery <ul> goes back where Astro rendered it, so the landing page is
   // whole again without a reload.
   if (galleryCards !== null) galleryHost.append(galleryCards)
@@ -320,8 +345,8 @@ async function paint(user: CloudUser | null) {
   showHome(user, doc, stills)
 }
 
-signInBtn.addEventListener('click', () => {
-  signInBtn.disabled = true
+const startSignIn = (button: HTMLButtonElement) => {
+  button.disabled = true
   signIn()
     .then(paint)
     .catch(() => {
@@ -329,8 +354,16 @@ signInBtn.addEventListener('click', () => {
       // landing page already and there is nothing to report.
     })
     .finally(() => {
-      signInBtn.disabled = false
+      button.disabled = false
     })
+}
+
+signInBtn.addEventListener('click', () => {
+  startSignIn(signInBtn)
+})
+
+whySignInBtn.addEventListener('click', () => {
+  startSignIn(whySignInBtn)
 })
 
 signOutBtn.addEventListener('click', () => {

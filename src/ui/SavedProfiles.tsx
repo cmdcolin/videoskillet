@@ -70,6 +70,9 @@ export function SavedProfiles(props: {
   error: string | null
   onSignIn: () => void
   onSignOut: () => void
+  /** Opens the why-sign-in card, which the ⋮ menu and a signed-out save open
+      too. The pane here gives the one-sentence version. */
+  onWhy: () => void
 }) {
   const signedIn = props.status === 'ready'
   const [name, setName] = useState('')
@@ -162,6 +165,7 @@ export function SavedProfiles(props: {
               status={props.status}
               error={props.error}
               onSignIn={props.onSignIn}
+              onWhy={props.onWhy}
             />
           )}
           {!signedIn ? null : (
@@ -307,12 +311,13 @@ export function SavedProfiles(props: {
 }
 
 // The signed-out head of the menu: what an account is for here, and the button.
-// One sentence, because the honest version is short — this is the only feature
-// that needs one, and every other thing in the app works without it.
+// One sentence, because the library is the only thing in the app that needs an
+// account. `why sign in?` opens the long answer for anyone who wants it.
 function SignInPane(props: {
   status: CloudStatus
   error: string | null
   onSignIn: () => void
+  onWhy: () => void
 }) {
   // Picking a session back up is not the same as being asked to start one: a
   // returning user would otherwise read the pitch for a feature they already
@@ -327,13 +332,18 @@ function SignInPane(props: {
         so they follow you to another machine. Everything else here works signed
         out.
       </div>
-      <button
-        className={styles.saveBtn}
-        title="sign in with Google — the app stores your saved looks and nothing else"
-        onClick={props.onSignIn}
-      >
-        sign in with Google
-      </button>
+      <div className={styles.signInRow}>
+        <button
+          className={styles.saveBtn}
+          title="sign in with Google — the app stores your saved looks and nothing else"
+          onClick={props.onSignIn}
+        >
+          sign in with Google
+        </button>
+        <button className={styles.why} onClick={props.onWhy}>
+          why sign in?
+        </button>
+      </div>
       {props.error === null ? null : (
         <div className={cx(ui.hint, ui.err)}>{props.error}</div>
       )}

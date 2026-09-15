@@ -6,6 +6,14 @@
 // The account end is server-rendered and starts as the sign-in button, because
 // the page is static HTML and nobody is signed in until `home.ts` has asked.
 // The script swaps the button for the avatar once Firebase answers.
+//
+// `account={false}` leaves that half out, for a page that does not load
+// home.ts: those controls are inert without it, and an inert sign-in button is
+// worse than none.
+interface Props {
+  account?: boolean
+}
+const { account = true } = Astro.props
 ---
 
 <header class="siteBar">
@@ -20,39 +28,52 @@
       <a href="https://github.com/cmdcolin/videoskillet">Source</a>
     </nav>
     <div class="barEnd">
-      <button class="btn slim" id="signIn" type="button">
-        <svg
-          class="ico"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.7"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          aria-hidden="true"
-        >
-          <circle cx="12" cy="8" r="3.6"></circle>
-          <path d="M4.8 20a7.2 7.2 0 0 1 14.4 0"></path>
-        </svg>
-        Sign in
-      </button>
-      <div class="acct" id="acct" hidden>
-        <button
-          class="acctBtn"
-          id="acctBtn"
-          type="button"
-          aria-haspopup="menu"
-          aria-expanded="false"
-        >
-          <span class="avatar" id="avatar"></span>
-        </button>
-        <div class="acctMenu" id="acctMenu" role="menu" hidden>
-          <p class="acctName" id="acctName"></p>
-          <button class="acctOut" id="signOut" type="button" role="menuitem">
-            Sign out
+      {account && (
+        <Fragment>
+          {/* The question beside the ask, where the reader meets it. */}
+          <button class="why" id="why" type="button">
+            Why sign in?
           </button>
-        </div>
-      </div>
+          <button class="btn slim" id="signIn" type="button">
+            <svg
+              class="ico"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.7"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <circle cx="12" cy="8" r="3.6" />
+              <path d="M4.8 20a7.2 7.2 0 0 1 14.4 0" />
+            </svg>
+            Sign in
+          </button>
+          <div class="acct" id="acct" hidden>
+            <button
+              class="acctBtn"
+              id="acctBtn"
+              type="button"
+              aria-haspopup="menu"
+              aria-expanded="false"
+            >
+              <span class="avatar" id="avatar" />
+            </button>
+            <div class="acctMenu" id="acctMenu" role="menu" hidden>
+              <p class="acctName" id="acctName" />
+              <button
+                class="acctOut"
+                id="signOut"
+                type="button"
+                role="menuitem"
+              >
+                Sign out
+              </button>
+            </div>
+          </div>
+        </Fragment>
+      )}
       <a class="btn primary slim" href="/app/">
         Open the app →
       </a>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import {
   STILL_MAX,
@@ -11,7 +11,12 @@ import {
   wasSignedIn,
   watchAuth,
 } from './cloud'
-import { markOpened, removeProfile, upsertProfile } from './profileModel'
+import {
+  markOpened,
+  removeProfile,
+  suggestProfileName,
+  upsertProfile,
+} from './profileModel'
 
 import type { CloudUser } from './cloud'
 import type { CurrentSession, SavedProfile } from './profileModel'
@@ -58,6 +63,16 @@ export type ProfileFlash =
   | { kind: 'needs-auth' }
   | { kind: 'failed' }
 
+// What came of asking to save. On `needs-auth` the hook has kept the look, and
+// the caller opens the why-sign-in card.
+export type SaveOutcome = 'saving' | 'needs-auth'
+
+/** A save waiting on a sign-in: the look as it was when the key was pressed. */
+interface PendingSave {
+  name: string
+  query: string
+}
+
 // `grabThumb` is how a save gets a picture: a function so this hook holds no
 // canvas of its own. Optional, because the callers that have no output to grab
 // (a test, a future panel) still want the library.
@@ -71,6 +86,14 @@ export function useSavedProfiles(grabThumb?: () => Promise<string | null>) {
   const [error, setError] = useState<string | null>(null)
   const [lastName, setLastName] = useState<string | null>(null)
   const [flash, setFlash] = useState<ProfileFlash | null>(null)
+
+  // A save pressed with nobody signed in, kept until the library it belongs in
+  // has been fetched. Press save, sign in, and the look is saved, so keeping a
+  // look costs one gesture and a popup.
+  //
+  // A ref, because the auth subscription's callback closes over the render that
+  // installed it and has to read a press made since.
+  const pending = useRef<PendingSave | null>(null)
 
   // Show one for a beat, then take it down — but only if it is still the one this
   // call put up, compared by identity so a second save during the first flash
@@ -114,12 +137,26 @@ export function useSavedProfiles(grabThumb?: () => Promise<string | null>) {
         setCurrent(home.current)
         setStatus('ready')
         setError(null)
+        landPending(next.uid, home.profiles)
       })
       .catch((e: unknown) => {
         console.error('loading saved profiles failed', e)
         setStatus('error')
         setError('could not load your saved profiles')
       })
+  }
+
+  // The save somebody pressed on the way in, written now that there is an
+  // account to write it to. suggestProfileName runs again over the library that
+  // just arrived, because the first run had an empty one to work from: without
+  // the second one, a save named "my rig" would overwrite the "my rig" the
+  // account already held.
+  const landPending = (uid: string, saved: readonly SavedProfile[]) => {
+    const want = pending.current
+    pending.current = null
+    if (want === null) return
+    const name = suggestProfileName(saved, want.name)
+    commit(uid, upsertProfile(saved, name, want.query, Date.now()), name)
   }
 
   // One subscription, and only for a browser that has signed in before — which is
@@ -157,10 +194,9 @@ export function useSavedProfiles(grabThumb?: () => Promise<string | null>) {
   // to has landed. Best effort throughout: a profile with no still is a card
   // with a placeholder, and a save that reported success must not then report a
   // failure because the encoder declined.
-  const saveStill = (next: SavedProfile[], name: string) => {
+  const saveStill = (uid: string, next: SavedProfile[], name: string) => {
     const id = next.find(p => p.name === name)?.id
-    if (user === null || id === undefined || grabThumb === undefined) return
-    const uid = user.uid
+    if (id === undefined || grabThumb === undefined) return
     grabThumb()
       .then(webp => {
         // Over the cap the document would be refused anyway, and a still is
@@ -176,16 +212,15 @@ export function useSavedProfiles(grabThumb?: () => Promise<string | null>) {
   // Every write is cloud-only, and the list moves when the document has been
   // accepted rather than before. An optimistic row is a row that looks saved and
   // is not — the one thing a save must never show.
-  const write = (next: SavedProfile[], landed?: string) => {
-    if (user === null) return
-    putProfiles(user.uid, next)
+  const commit = (uid: string, next: SavedProfile[], landed?: string) => {
+    putProfiles(uid, next)
       .then(() => {
         setProfiles(next)
         setError(null)
         if (landed !== undefined) {
           setLastName(landed)
           showFlash({ kind: 'saved', name: landed })
-          saveStill(next, landed)
+          saveStill(uid, next, landed)
         }
       })
       .catch((e: unknown) => {
@@ -197,6 +232,10 @@ export function useSavedProfiles(grabThumb?: () => Promise<string | null>) {
         // save that worked.
         showFlash({ kind: 'failed' })
       })
+  }
+
+  const write = (next: SavedProfile[], landed?: string) => {
+    if (user !== null) commit(user.uid, next, landed)
   }
 
   return {
@@ -212,12 +251,14 @@ export function useSavedProfiles(grabThumb?: () => Promise<string | null>) {
     // Signed out this is not merely inert but unreachable: the menu offers the
     // sign-in button in place of the name box, and ctrl+S says so on the button.
     canSave: status === 'ready',
-    saveProfile: (name: string, query: string) => {
+    saveProfile: (name: string, query: string): SaveOutcome => {
       if (status !== 'ready') {
+        pending.current = { name, query }
         showFlash({ kind: 'needs-auth' })
-        return
+        return 'needs-auth'
       }
       write(upsertProfile(profiles, name, query, Date.now()), name)
+      return 'saving'
     },
     deleteProfile: (name: string) => {
       const id = profiles.find(p => p.name === name)?.id
@@ -256,6 +297,7 @@ export function useSavedProfiles(grabThumb?: () => Promise<string | null>) {
           code === 'auth/popup-closed-by-user' ||
           code === 'auth/cancelled-popup-request'
         ) {
+          pending.current = null
           setStatus('signed-out')
         } else {
           console.error('sign-in failed', e)
@@ -265,6 +307,7 @@ export function useSavedProfiles(grabThumb?: () => Promise<string | null>) {
       })
     },
     signOut: () => {
+      pending.current = null
       cloudSignOut().catch((e: unknown) => {
         console.error('sign-out failed', e)
       })

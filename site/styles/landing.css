@@ -711,6 +711,111 @@ code {
   text-align: center;
 }
 
+/* ── why sign in ───────────────────────────────────────────────────────────
+   The question beside the bar's sign-in button and under the hero, and the card
+   both of them open. The card's prose is src/ui/whySignIn.ts, the same strings
+   the app's own dialog renders. */
+.why {
+  font: inherit;
+  font-size: 0.9rem;
+  padding: 0.35rem 0.15rem;
+  background: none;
+  color: var(--fg4);
+  border: none;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.why:hover,
+.why:focus-visible {
+  color: var(--fg);
+}
+.whyCard {
+  width: min(40rem, calc(100vw - 2rem));
+  padding: 1.4rem 1.5rem;
+  background: var(--card);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 0.6rem;
+}
+.whyCard::backdrop {
+  background: #000a;
+}
+.whyTop {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.whyHead {
+  margin: 0 0 0.9rem;
+  font-size: 1.4rem;
+}
+.whyList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  margin: 0 0 1rem;
+  padding: 0;
+  list-style: none;
+}
+.whyList li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+.whyList span {
+  color: var(--fg3);
+  font-size: 0.95rem;
+}
+.whyLine {
+  margin: 0 0 0.7rem;
+  color: var(--fg3);
+  font-size: 0.95rem;
+}
+.whyLine a {
+  color: var(--accent);
+  white-space: nowrap;
+}
+.whyCta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin: 1.1rem 0 0.8rem;
+}
+.whyFine {
+  margin: 0;
+  color: var(--fg4);
+  font-size: 0.9rem;
+}
+
+/* ── the privacy page ──────────────────────────────────────────────────────
+   One column of prose under the site bar, at the width the rest of the site
+   reads at. */
+.privacy {
+  padding-top: 2.5rem;
+  padding-bottom: 4rem;
+}
+.privacy h1 {
+  margin: 0 0 0.6rem;
+  font-size: 2rem;
+}
+.privacy h2 {
+  margin: 2rem 0 0.5rem;
+  font-size: 1.25rem;
+}
+.privacy p {
+  margin: 0;
+  color: var(--fg3);
+  line-height: 1.65;
+}
+.privacy a {
+  color: var(--accent);
+}
+.privacyLead {
+  font-size: 1.1rem;
+}
+
 /* ── the signed-in home ────────────────────────────────────────────────────
    A rail of links and one column of sections, built by site/scripts/home.ts
    once Firebase has answered. The cards are the gallery's own anatomy, so a

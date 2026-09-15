@@ -170,6 +170,27 @@
   max-width: 300px;
 }
 
+.signInRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+/* A question, drawn as one: text beside the button it is about. */
+.why {
+  composes: bare from './ui.module.css';
+  color: var(--fg2);
+  font-size: var(--fs-sm);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.why:hover {
+  color: var(--accent);
+}
+
 /* The account, at the foot. Quiet: once you are signed in, whose library this is
    is the least interesting thing in the menu, and it earns one small line. */
 .acct {
