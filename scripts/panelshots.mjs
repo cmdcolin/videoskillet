@@ -99,31 +99,25 @@ const STATES = [
   {
     name: 'modulated',
     height: 640,
-    what: 'the mod badge and the strip’s count — the panel’s two toggle chips',
-    // The one hole this suite had, and the reason a badge could stop reading as
-    // a button without anything noticing: both of these render only while the
-    // bay holds a routing, so every state above is shot on a board that has
-    // none. The badge is the row's `mod`/`held` switch and the strip's `1 mod`
-    // is the panel filter — two chips that have to look pressable at rest,
-    // sitting among badges (CC42, ♩1/4, ★) that are marks and must not.
-    //
-    // Seeded rather than clicked. The routing has to exist before first paint
-    // for the strip to be in the frame at all, and a bay reached by pressing
-    // through the ⋮ would put an open editor under the row and a menu's ghost
-    // over it. `fbMix` is the same routing panelcheck seeds.
+    what: 'the Modulation section, the row’s mod chips, and the filtered panel',
+    // Both chips render only while the bay holds a routing, so every other
+    // state is shot on a board with none. Seeded before first paint, so the
+    // section is in the frame without an open editor. `fbMix` is the routing
+    // panelcheck seeds.
     seed: [{ target: 'fbMix', source: 'sine', rateHz: 0.5, depth: 0.4 }],
-    // Pressing the count is what brings the two together: it narrows the panel
-    // to the rows the bay is driving, so the routed row and its badge come up
-    // directly under the strip that filtered to it. One frame then holds all
-    // four surfaces this shot is for — the lit count, the `mod only` chip the
-    // mode puts in the search box, the row's own badge, and the map with the
-    // stages the query missed faded but still drawn.
+    // Pressing the count narrows the panel to the driven row. The meter dots
+    // follow the running wave, so they are hidden to keep the shot still.
     steps: [
       () => {
+        const style = document.createElement('style')
+        style.textContent =
+          'span[class*="_meter_"] > span { visibility: hidden }'
+        document.head.append(style)
         const b = [...document.querySelectorAll('button')].find(b =>
           /^\d+ mod/.test(b.textContent ?? ''),
         )
-        if (b === undefined) throw new Error('no mod count on the strip')
+        if (b === undefined)
+          throw new Error('no mod count in the Modulation section')
         b.click()
       },
     ],
