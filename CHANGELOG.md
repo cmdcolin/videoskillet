@@ -2,6 +2,11 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [0.46.4](https://github.com/cmdcolin/videoskillet/compare/v0.46.3...v0.46.4) - 2026-09-15
+
+### Features
+- *(ui)* [`f69276a`](https://github.com/cmdcolin/videoskillet/commit/f69276a340071e04bd2b03753e1ba609af213be2) favicon shows torn color bars on the skillet floor
+
 ## [0.46.3](https://github.com/cmdcolin/videoskillet/compare/v0.46.2...v0.46.3) - 2026-09-15
 
 ### Documentation
