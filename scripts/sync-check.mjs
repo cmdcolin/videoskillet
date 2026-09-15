@@ -17,7 +17,7 @@ import process from 'node:process'
 
 const MARK = /CROSS_REPO_SYNC(_FILE|_END)?\(([a-z0-9-]+)\)/
 const TEXT =
-  /\.(astro|css|html|js|json|jsx|md|mjs|ts|tsx|yml|yaml|sh)$|(^|\/)pre-(commit|push)$/
+  /\.(astro|css|html|js|json|jsx|md|mjs|ts|tsx|yml|yaml|sh|toml)$|(^|\/)pre-(commit|push)$/
 
 const args = new Set(process.argv.slice(2))
 

@@ -1,4 +1,5 @@
 {
+  // CROSS_REPO_SYNC_FILE(oxfmt-config)
   "$schema": "./node_modules/oxfmt/configuration_schema.json",
   "semi": false,
   "singleQuote": true,

@@ -137,12 +137,18 @@ fact, not a flourish.
 habits that produced the prose this repo has rewritten, each with a before and
 after, and what a prose pass must leave alone.
 
+<!-- CROSS_REPO_SYNC(commit-conventions) -->
+
 ## Commits
 
-Use Conventional Commits (`type(scope): description`) — `cliff.toml` groups the
-changelog by type and renders the scope inline. Scope is optional; when used,
-pick from the domains in `docs/ARCHITECTURE.md`: `signal`, `sync`, `deflection`,
-`gpu`, `ui`, `midi`, `audio`, `docs`.
+Use Conventional Commits (`type(scope): description`). `cliff.toml` groups the
+changelog by type and renders the scope inline. `Release vX.Y.Z` commits come
+from `scripts/push.mjs` and stay out of the changelog.
+
+<!-- CROSS_REPO_SYNC_END(commit-conventions) -->
+
+Scope is optional; when used, pick from the domains in `docs/ARCHITECTURE.md`:
+`signal`, `sync`, `deflection`, `gpu`, `ui`, `midi`, `audio`, `docs`.
 
 ## Testing WebGPU (Linux)
 

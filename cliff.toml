@@ -37,6 +37,7 @@ body = """
 trim = true
 footer = ""
 
+# CROSS_REPO_SYNC(cliff-git)
 [git]
 conventional_commits = true
 filter_unconventional = false
@@ -65,3 +66,4 @@ topo_order = false
 topo_order_commits = true
 sort_commits = "oldest"
 recurse_submodules = false
+# CROSS_REPO_SYNC_END(cliff-git)
