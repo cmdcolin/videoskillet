@@ -1,6 +1,6 @@
 import { createRoot } from 'react-dom/client'
 
-import { installAnalytics } from '../analytics'
+import { startAnalytics } from '../analytics'
 import '../theme.css'
 import { VotePage } from './VotePage'
 
@@ -19,4 +19,4 @@ if (root) {
   createRoot(root).render(<VotePage />)
 }
 
-installAnalytics()
+startAnalytics()

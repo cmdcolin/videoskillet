@@ -48,8 +48,12 @@ const REPO = 'https://github.com/cmdcolin/videoskillet'
       <h2>Google Analytics</h2>
       <p>
         Counts visits: which pages get opened, roughly where from, and on what
-        sort of device. It sets cookies to do that. Any tracker blocker switches
-        it off, and everything here works the same without it.
+        sort of device. It loads only after you press OK on the notice in the
+        corner of the page, and it sets cookies once it does. Everything here
+        works the same without it.{' '}
+        <button class="why" id="analyticsAgain" type="button">
+          Change your answer
+        </button>
       </p>
 
       <h2>Firebase</h2>
@@ -77,5 +81,16 @@ const REPO = 'https://github.com/cmdcolin/videoskillet'
     </main>
 
     <Footer />
+    <script>
+      import { forgetAnalyticsAnswer } from '../../src/analytics'
+
+      // A reload, so the notice asks again on a page that has not loaded the tag.
+      document
+        .getElementById('analyticsAgain')
+        ?.addEventListener('click', () => {
+          forgetAnalyticsAnswer()
+          location.reload()
+        })
+    </script>
   </body>
 </html>
