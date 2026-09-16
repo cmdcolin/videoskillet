@@ -39,9 +39,10 @@ client, and steps aside for a determined one.
 **App Check attests that a request came from this app, and the rules stay as
 they are.**
 
-`cloud.ts` initializes App Check with a reCAPTCHA v3 provider immediately after
-`initializeApp`, before `getAuth` and `getFirestore` have a chance to send
-anything. The import is dynamic like every other firebase import in that file.
+`cloud.ts` initializes App Check with a reCAPTCHA Enterprise provider
+immediately after `initializeApp`, before `getAuth` and `getFirestore` have a
+chance to send anything. The import is dynamic like every other firebase import
+in that file.
 
 **The site key is a constant that starts empty, and an empty key installs
 nothing.** A build without a key fetches none of the App Check chunk and sends
@@ -58,8 +59,11 @@ first finds out by taking the site down.
 
 ## To turn it on
 
-1. Firebase console → App Check → register the web app with reCAPTCHA v3. Paste
-   the site key into `APPCHECK_SITE_KEY` in `cloud.ts`, in both repos.
+1. Firebase console → App Check → register the web app with reCAPTCHA
+   Enterprise, and paste the key id into `APPCHECK_SITE_KEY` in `cloud.ts`, in
+   both repos. The console deprecated plain reCAPTCHA v3 for App Check, which is
+   why the provider is the Enterprise one; picking the other in the console
+   while the code names this one leaves every request reading as unverified.
 2. Leave enforcement off. Watch the App Check metrics page until verified
    requests are the overwhelming majority.
 3. Enforce, per service, starting with Cloud Firestore.
@@ -73,6 +77,12 @@ first finds out by taking the site down.
   buys is attestation, and never secrecy — a token saying a request came from
   this app, which a script running the same key from another origin cannot get
   because reCAPTCHA is bound to the registered domains.
+- **reCAPTCHA Enterprise is itself a billed service**, at 10,000 assessments a
+  month free and roughly $1 per thousand after that. App Check exchanges a token
+  about once per token TTL per client, an hour by default, so a session costs
+  one assessment or two rather than one per request. The free tier covers this
+  project's traffic by a wide margin, and it is one more line the budget alert
+  is watching.
 - **A signed-in user running the real app can still loop.** App Check answers
   "is this the app", and it does not answer "is this person reasonable". The
   bound left on that is the budget alert, plus create-only, size-capped rows
