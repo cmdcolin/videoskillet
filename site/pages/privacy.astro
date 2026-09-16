@@ -24,7 +24,7 @@ const REPO = 'https://github.com/cmdcolin/videoskillet'
     <title>Privacy — videoskillet.js</title>
     <meta
       name="description"
-      content="videoskillet uses Google Analytics to count visits and Firebase to store your saved looks. Nothing else."
+      content="videoskillet uses Google Analytics to count visits and Firebase to store your saved looks and any ratings you give. Nothing else."
     />
     <link rel="canonical" href={`${SITE}privacy/`} />
     <meta name="theme-color" content="#0e0e11" />
@@ -54,19 +54,25 @@ const REPO = 'https://github.com/cmdcolin/videoskillet'
 
       <h2>Firebase</h2>
       <p>
-        Only if you sign in. Google handles the sign-in, and one Firestore
-        document holds your saved looks: a name, the controls the look moves,
-        and a small still of the output beside each one. The same document holds
-        the session you last had open, so the home page can offer it back, and
-        your ratings if you rate a look. Stay signed out and there is no
-        document at all.
+        Only if you sign in. Google handles the sign-in, and your account's
+        Firestore document holds your saved looks and the session you last had
+        open, so the home page can offer it back. Each one records the look's
+        settings, including the address of any video or image it loaded from a
+        link, and a small still of the output is kept beside each.
+      </p>
+      <p>
+        Rating a look in the tags menu, or voting on the labelling page, adds a
+        row to a shared set of labels. Each row carries your account's id and
+        the look it rates, and the site cannot change or delete a row once it is
+        written. Stay signed out and nothing is stored at all.
       </p>
 
       <h2>Getting rid of it</h2>
       <p>
-        <b>×</b> in the saved menu deletes a look on the spot. To have the whole
-        document deleted, say so in <a href={`${REPO}/issues`}>an issue</a>.
-        Nothing is sold and there are no ads.
+        <b>×</b> in the saved menu deletes a look and its still on the spot. To
+        have your saved looks, your session and their stills deleted, say so in
+        <a href={`${REPO}/issues`}>an issue</a>. Nothing is sold and there are
+        no ads.
       </p>
     </main>
 

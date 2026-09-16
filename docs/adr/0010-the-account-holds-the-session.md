@@ -64,20 +64,31 @@ picture of the look.
   cost none, which is small against the free tier and is the price of the resume
   card.
 - **A still is a few KB.** Base64 inflates a webp by a third, so the 60000-
-  character cap is about 45 kB of picture — a wide margin over the thumbnails
-  the app writes, and far under the 1 MiB a document may hold. 200 profiles at
-  that ceiling is 12 MB across 200 documents, which the subcollection holds and
-  a single document would not.
+  character cap is about 45 kB of picture, far under the 1 MiB a document may
+  hold. 200 profiles at that ceiling is 12 MB across 200 documents, which the
+  subcollection holds and a single document would not. The app writes 320x256
+  and falls back to 160x128 when the larger encode passes the cap; the gallery
+  looks, rendered live, came to 28 kB of base64 at most at the larger size.
+- **The session has a still too.** Each timed session write also writes
+  `stills/_session`, which the rules already allow, since they accept any still
+  id. A profile id is base36 and cannot collide with it. The resume card shows
+  it only when it is no older than `current.at`: a session written from a
+  hidden tab carries no still, because the grab waits for a frame a hidden tab
+  never draws, and an older still pictures an earlier board.
 - **The home page reads two queries on load.** One get of the user document for
   the library and the session, one list of the stills subcollection for the
   pictures. `list` is granted on stills and withheld on `/users` because the
   path binds the uid, so a stills query can only ever be over one person's own.
-- **A bare load writes nothing.** The app button on the home page opens the
-  landing look on bars, and the autosave used to record that a few seconds
-  later, so pressing the button and leaving put a blank card over the session
-  the account held. The autosave now waits for a control off rest or a deck on
-  something other than bars, and for the engine to be up, since before that the
-  controls it reads are the defaults and not the board.
+  A return from the app by Back keeps the stills it has and gets only the ones
+  saved since.
+- **A board the page opened on writes nothing.** The app button on the home
+  page opens the landing look on bars, and a gallery card or a shared link
+  opens a finished look. The autosave used to record either a few seconds
+  later, so opening one and leaving put it over the session the account held.
+  The autosave now takes the first board the page shows, once the engine is up,
+  as where it opened, and writes nothing until the board moves off it. On the
+  gallery links, measured in Firefox Nightly, that first board already carries
+  the whole look, sources included, and nothing moves it until a control does.
 - **The last write wins on `current`.** Two devices signed into one account
   overwrite each other's session, and the card resumes whichever settled last.
   No merge and no conflict prompt: `current` is a convenience, the profile
