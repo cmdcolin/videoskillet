@@ -1,8 +1,6 @@
 import { useEffect, useRef } from 'react'
 
-import { putCurrent } from './cloud'
-
-import type { SourceBMode, SourceMode } from '../sources/modes'
+import { SESSION_STILL, STILL_MAX, putCurrent, putStill } from './cloud'
 
 // The session a signed-in user has open, mirrored onto their account so the home
 // page can offer it back as a resume card. The same packed query the address bar
@@ -10,8 +8,8 @@ import type { SourceBMode, SourceMode } from '../sources/modes'
 //
 // A null query is a session with nothing in it to resume, and the hook leaves
 // the account alone. The app passes null while the engine is absent, when the
-// controls it would read are the defaults and not the board, and for a board
-// nobody has touched — see `worthResuming`.
+// controls it would read are the defaults and not the board. A board the page
+// opened on is not written either — see `observe`.
 //
 // The address bar takes a write per settled change and costs nothing;
 // a Firestore document takes a network round trip and counts against a quota, so
@@ -43,32 +41,58 @@ export function nextWriteAt(
 }
 // CROSS_REPO_SYNC_END(current-session-gate)
 
-// Whether the session is one the home page should offer back. A bare load
-// opens the landing look on bars, and the app button on the home page opens
-// exactly that, so a visitor who presses it and leaves has not made a session:
-// writing the blank board would put it over the one they last dialled in, which
-// is what the resume card then opened on. A control off rest, or a deck on
-// something other than bars, is a session.
-export const worthResuming = (
-  edited: number,
-  modeA: SourceMode,
-  modeB: SourceBMode,
-): boolean => edited > 0 || modeA !== 'bars' || modeB !== 'bars'
+// The board this page opened on, and whether it has moved off it since.
+export interface Opened {
+  query: string | null
+  moved: boolean
+}
 
-export function useCurrentSession(uid: string | null, query: string | null) {
+// A bare load opens on bars, and a link — a gallery look, a look somebody sent,
+// the resume card itself — opens on a finished board. None of those is a
+// session the visitor made, and writing one put it over the session the account
+// held, so a gallery card opened from the home page took the resume card's
+// place. The first query the page shows is where it opened, and the session
+// starts when the board first differs from it.
+export function observe(opened: Opened, query: string | null): Opened {
+  if (query === null || opened.moved) return opened
+  if (opened.query === null) return { query, moved: false }
+  return query === opened.query ? opened : { ...opened, moved: true }
+}
+
+// `grabThumb` gives the resume card a picture. A write made while the tab is
+// hidden goes without one, because the grab waits for a frame and a hidden tab
+// draws none; the home page then shows no still rather than an older board's.
+export function useCurrentSession(
+  uid: string | null,
+  query: string | null,
+  grabThumb?: (max: number) => Promise<string | null>,
+) {
   const gate = useRef<WriteGate>({ query: null, at: 0 })
+  const opened = useRef<Opened>({ query: null, moved: false })
   // The query as of the last render, for the handler below, which fires long
   // after the effect that installed it.
   const live = useRef(query)
 
-  const send = (id: string, q: string) => {
+  const send = (id: string, q: string, withStill: boolean) => {
     const at = Date.now()
     gate.current = { query: q, at }
-    putCurrent(id, { query: q, at }).catch((e: unknown) => {
-      // Dropped. The account keeps the previous session, the next settled change
-      // tries again, and nothing on screen depends on this having landed.
-      console.error('saving the current session failed', e)
-    })
+    // Taken now, so the picture is of the board the query describes, and
+    // written once the session has landed, so a still is never newer than a
+    // session the account refused.
+    const still = withStill ? grabThumb?.(STILL_MAX) : undefined
+    putCurrent(id, { query: q, at })
+      .then(() => still)
+      .then(webp =>
+        webp === null || webp === undefined
+          ? undefined
+          : putStill(id, SESSION_STILL, webp),
+      )
+      .catch((e: unknown) => {
+        // Dropped. The account keeps the previous session, the next settled
+        // change tries again, and nothing on screen depends on this having
+        // landed.
+        console.error('saving the current session failed', e)
+      })
   }
 
   // The dependency is the query string itself, so a render that rebuilds an
@@ -78,18 +102,26 @@ export function useCurrentSession(uid: string | null, query: string | null) {
   // oxlint-disable-next-line typescript/consistent-return
   useEffect(() => {
     live.current = query
+    opened.current = observe(opened.current, query)
     if (uid === null) {
       // Signing out forgets what the last account held, so signing into another
       // one on the same page writes its first session immediately.
       gate.current = { query: null, at: 0 }
       return undefined
     }
-    if (query === null) return undefined
+    if (query === null || !opened.current.moved) return undefined
     const due = nextWriteAt(gate.current, query, Date.now())
     if (due === null) return undefined
-    const id = setTimeout(() => send(uid, query), Math.max(0, due - Date.now()))
+    const id = setTimeout(
+      () => {
+        // The hide handler below may have written this query while the timer
+        // waited.
+        if (query !== gate.current.query) send(uid, query, true)
+      },
+      Math.max(0, due - Date.now()),
+    )
     return () => clearTimeout(id)
-    // `send` reads only refs and the argument it is given.
+    // `send` reads only refs and the arguments it is given.
     // oxlint-disable-next-line react-hooks/exhaustive-deps
   }, [uid, query])
 
@@ -106,10 +138,11 @@ export function useCurrentSession(uid: string | null, query: string | null) {
       const held = live.current
       if (
         document.visibilityState === 'hidden' &&
+        opened.current.moved &&
         held !== null &&
         held !== gate.current.query
       )
-        send(uid, held)
+        send(uid, held, false)
     }
     document.addEventListener('visibilitychange', onHide)
     return () => document.removeEventListener('visibilitychange', onHide)

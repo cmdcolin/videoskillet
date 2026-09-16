@@ -107,7 +107,7 @@ import { useAutomation } from './ui/useAutomation'
 import { useCapture } from './ui/useCapture'
 import { useClipLibrary } from './ui/useClipLibrary'
 import { useClockSync } from './ui/useClockSync'
-import { useCurrentSession, worthResuming } from './ui/useCurrentSession'
+import { useCurrentSession } from './ui/useCurrentSession'
 import { useDrift } from './ui/useDrift'
 import { useEngine } from './ui/useEngine'
 import { useFavorites } from './ui/useFavorites'
@@ -1020,14 +1020,12 @@ export function App() {
   // hook writes nothing; signed in it writes the packed query a few seconds
   // after the board settles, which is what the home page's resume card reads.
   // Nothing is written while the engine is absent, when `controls` is the
-  // default fallback and not the board, or for a board nobody has touched: a
-  // bare load must not put a blank card over the session already written to
-  // the account.
+  // default fallback and not the board, or before the board has moved off the
+  // one the page opened on.
   useCurrentSession(
     profiles.user === null ? null : profiles.user.uid,
-    engine !== null && worthResuming(edited.length, eng.a.mode, eng.b.mode)
-      ? sessionQuery
-      : null,
+    engine === null ? null : sessionQuery,
+    capture.grabThumb,
   )
   // Nothing patched into B leaves two stages with nothing to act on: B itself,
   // and the mixer beside it, whose every control needs a second signal. Both

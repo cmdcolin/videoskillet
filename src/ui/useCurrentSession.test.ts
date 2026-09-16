@@ -4,8 +4,10 @@ import {
   MIN_GAP_MS,
   SETTLE_MS,
   nextWriteAt,
-  worthResuming,
+  observe,
 } from './useCurrentSession'
+
+import type { Opened } from './useCurrentSession'
 
 describe('the current-session write gate', () => {
   it('waits for the board to settle before the first write', () => {
@@ -43,16 +45,30 @@ describe('the current-session write gate', () => {
 })
 
 describe('which sessions the account is offered back', () => {
-  it("leaves a bare load alone: the landing look on bars is nobody's session", () => {
-    expect(worthResuming(0, 'bars', 'bars')).toBe(false)
+  const fresh: Opened = { query: null, moved: false }
+
+  it('waits for a board before it knows where the page opened', () => {
+    expect(observe(fresh, null)).toEqual(fresh)
   })
 
-  it('takes a control off rest', () => {
-    expect(worthResuming(1, 'bars', 'bars')).toBe(true)
+  it('does not count the board the page opened on as a session', () => {
+    const at = observe(fresh, 'set=gallery')
+    expect(at).toEqual({ query: 'set=gallery', moved: false })
+    expect(observe(at, 'set=gallery').moved).toBe(false)
   })
 
-  it('takes a deck on something other than bars, with the board at rest', () => {
-    expect(worthResuming(0, 'url', 'bars')).toBe(true)
-    expect(worthResuming(0, 'bars', 'file')).toBe(true)
+  it('starts the session when the board moves off it', () => {
+    const at = observe(fresh, 'set=gallery')
+    expect(observe(at, 'set=gallery&gain=2').moved).toBe(true)
+  })
+
+  it('keeps the session once started, back on the opening board included', () => {
+    const moved = observe(observe(fresh, 'set=a'), 'set=b')
+    expect(observe(moved, 'set=a').moved).toBe(true)
+  })
+
+  it('keeps where the page opened across a spell with no engine', () => {
+    const at = observe(fresh, 'set=a')
+    expect(observe(observe(at, null), 'set=a').moved).toBe(false)
   })
 })

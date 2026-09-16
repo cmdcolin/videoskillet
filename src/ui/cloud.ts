@@ -84,7 +84,8 @@ interface Sdk {
 let sdk: Promise<Sdk> | null = null
 
 function loadSdk(): Promise<Sdk> {
-  sdk ??= (async () => {
+  if (sdk !== null) return sdk
+  const load = (async () => {
     const [appMod, authMod, fs] = await Promise.all([
       import('firebase/app'),
       import('firebase/auth'),
@@ -104,7 +105,21 @@ function loadSdk(): Promise<Sdk> {
       authMod,
     }
   })()
-  return sdk
+  sdk = load
+  // A download that failed, offline or on a flaky connection, is let go, so the
+  // next press tries again instead of failing until a reload.
+  load.catch(() => {
+    if (sdk === load) sdk = null
+  })
+  return load
+}
+
+// Starts the SDK downloading ahead of a sign-in. The popup can only open inside
+// the browser's allowance for the click that asked for it, and a first sign-in
+// on a slow connection spent that allowance on the download, so the browser
+// blocked the window. Pointing at a sign-in button is reason enough to fetch.
+export const warmSignIn = (): void => {
+  loadSdk().catch(() => undefined)
 }
 
 // Subscribe to who is signed in. Resolves to the unsubscribe once the SDK is up;
@@ -212,6 +227,20 @@ export const fetchProfiles = async (uid: string): Promise<SavedProfile[]> =>
 // in one query while a save writes one.
 export const STILL_MAX = 60000
 
+// The still of the session last open, beside the profiles' own. A profile id is
+// base36, so no profile can have this one.
+export const SESSION_STILL = '_session'
+
+export interface Still {
+  webp: string
+  at: number
+}
+
+const readStill = (data: { webp?: unknown; at?: unknown } | undefined) =>
+  typeof data?.webp === 'string' && typeof data.at === 'number'
+    ? { webp: data.webp, at: data.at }
+    : undefined
+
 export async function putStill(
   uid: string,
   id: string,
@@ -230,15 +259,25 @@ export async function deleteStill(uid: string, id: string): Promise<void> {
 }
 
 // Every still on the account, by profile id.
-export async function fetchStills(uid: string): Promise<Map<string, string>> {
+export async function fetchStills(uid: string): Promise<Map<string, Still>> {
   const { db, fs } = await loadSdk()
   const snap = await fs.getDocs(fs.collection(db, COLLECTION, uid, 'stills'))
-  const stills = new Map<string, string>()
+  const stills = new Map<string, Still>()
   for (const d of snap.docs) {
-    const webp: unknown = d.data().webp
-    if (typeof webp === 'string') stills.set(d.id, webp)
+    const still = readStill(d.data())
+    if (still !== undefined) stills.set(d.id, still)
   }
   return stills
+}
+
+// One still, or undefined when there is none.
+export async function fetchStill(
+  uid: string,
+  id: string,
+): Promise<Still | undefined> {
+  const { db, fs } = await loadSdk()
+  const snap = await fs.getDoc(fs.doc(db, COLLECTION, uid, 'stills', id))
+  return readStill(snap.data())
 }
 
 // --- the vote page's training data (src/vote) ---

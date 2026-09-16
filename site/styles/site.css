@@ -273,6 +273,15 @@ section {
   margin: 0 0 0.9rem;
   font-size: 1.4rem;
 }
+/* Why the last sign-in did not finish, above the pitch and the retry. */
+.whyTrouble {
+  margin: 0 0 0.9rem;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--danger);
+  border-radius: 0.4rem;
+  color: var(--danger);
+  font-size: 0.95rem;
+}
 /* The answer, at the size of the thing being answered. */
 .whyPitch {
   margin: 0 0 0.7rem;

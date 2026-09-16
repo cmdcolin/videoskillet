@@ -11,16 +11,19 @@
 // name is a string somebody typed — `innerHTML` anywhere in here would hand
 // that string to the parser.
 import {
+  SESSION_STILL,
   fetchHome,
+  fetchStill,
   fetchStills,
   signIn,
   signOut,
+  warmSignIn,
   wasSignedIn,
   watchAuth,
 } from '../../src/ui/cloud'
 import { sinceWords } from '../lib/relativeTime'
 
-import type { CloudUser, HomeDoc } from '../../src/ui/cloud'
+import type { CloudUser, HomeDoc, Still } from '../../src/ui/cloud'
 import type { SavedProfile } from '../../src/ui/profileModel'
 
 // CROSS_REPO_SYNC(home-dom-helpers)
@@ -55,6 +58,7 @@ const signOutBtn = need('signOut') as HTMLButtonElement
 const whyCard = need('whyCard') as HTMLDialogElement
 const whyBtns = [need('why'), need('whyBelow')]
 const whySignInBtn = need('whySignIn') as HTMLButtonElement
+const whyTrouble = need('whyTrouble')
 
 // The gallery cards are server-rendered once, inside the landing page, and the
 // signed-in home borrows the same <ul>. Copying the markup into the script
@@ -95,23 +99,58 @@ function shotOf(still: string | undefined): HTMLElement {
   return shot
 }
 
+// Which still a card shows: `id`'s when it was taken no earlier than `since`,
+// and otherwise `or`'s.
+interface StillPick {
+  id?: string
+  since?: number
+  or?: string
+}
+
+function pickStill(
+  stills: Map<string, Still>,
+  pick: StillPick,
+): string | undefined {
+  const own = pick.id === undefined ? undefined : stills.get(pick.id)
+  if (own !== undefined && own.at >= (pick.since ?? 0)) return own.webp
+  return pick.or === undefined ? undefined : stills.get(pick.or)?.webp
+}
+
 // The stills arrive after the home is drawn, since they can be most of a
 // megabyte between them. Until then a look that may have one gets the card's
-// black with nothing on it, and `fillStills` swaps in the picture or the mark.
+// black with nothing on it. Every shot keeps its pick, so `fillStills` can swap
+// in the picture, the mark, or a newer picture on a return by Back.
 function shotFor(
-  id: string | undefined,
-  stills: Map<string, string> | undefined,
+  pick: StillPick,
+  stills: Map<string, Still> | undefined,
 ): HTMLElement {
-  if (id === undefined) return shotOf(undefined)
-  if (stills !== undefined) return shotOf(stills.get(id))
-  const shot = el('span', 'shot')
-  shot.dataset.look = id
+  if (pick.id === undefined && pick.or === undefined) return shotOf(undefined)
+  const shot =
+    stills === undefined ? el('span', 'shot') : shotOf(pickStill(stills, pick))
+  if (pick.id !== undefined) shot.dataset.look = pick.id
+  if (pick.since !== undefined) shot.dataset.since = String(pick.since)
+  if (pick.or !== undefined) shot.dataset.or = pick.or
   return shot
 }
 
-function fillStills(stills: Map<string, string>) {
-  for (const shot of home.querySelectorAll<HTMLElement>('[data-look]'))
-    shot.replaceWith(shotOf(stills.get(shot.dataset.look ?? '')))
+function fillStills(stills: Map<string, Still>) {
+  for (const shot of home.querySelectorAll<HTMLElement>(
+    '.shot[data-look], .shot[data-or]',
+  )) {
+    const { look, since, or } = shot.dataset
+    const pick = {
+      id: look,
+      since: since === undefined ? undefined : Number(since),
+      or,
+    }
+    const webp = pickStill(stills, pick)
+    const img = shot.querySelector<HTMLImageElement>('img.still')
+    const same =
+      webp === undefined
+        ? shot.classList.contains('blank')
+        : img?.src === `data:image/webp;base64,${webp}`
+    if (!same) shot.replaceWith(shotFor(pick, stills))
+  }
 }
 
 function nameRow(name: string): HTMLElement {
@@ -122,7 +161,7 @@ function nameRow(name: string): HTMLElement {
 
 function lookCard(
   profile: SavedProfile,
-  stills: Map<string, string> | undefined,
+  stills: Map<string, Still> | undefined,
   key: number,
   now: number,
 ): HTMLElement {
@@ -139,7 +178,7 @@ function lookCard(
     .filter(part => part !== undefined)
     .join(' · ')
   link.append(
-    shotFor(profile.id, stills),
+    shotFor({ id: profile.id }, stills),
     nameRow(profile.name),
     el('span', 'says', says),
   )
@@ -159,23 +198,25 @@ function section(id: string, heading: string, sub?: string): HTMLElement {
 
 function resumeSection(
   doc: HomeDoc,
-  stills: Map<string, string> | undefined,
+  stills: Map<string, Still> | undefined,
   now: number,
 ) {
   const current = doc.current
   if (current === null) return undefined
 
-  // The still only belongs on this card when the app can prove the session is
-  // one of the saved looks: the same query means the same board. A session
-  // dialled in since the last save gets the plain panel, because the picture of
-  // some other look would be a picture of the wrong thing.
+  // The session's own still, when it was taken after the session was written.
+  // A session written from a hidden tab has none, and an older still is a
+  // picture of an earlier board. A saved look with the same query is the same
+  // board, so its still serves next; failing both, the card shows the mark.
   const match = doc.profiles
     .filter(p => p.query === current.query)
     .sort((a, b) => (b.savedAt ?? 0) - (a.savedAt ?? 0))[0]
 
   const box = section('resume', 'Continue where you left off')
   const card = el('div', 'resumeCard')
-  card.append(shotFor(match?.id, stills))
+  card.append(
+    shotFor({ id: SESSION_STILL, since: current.at, or: match?.id }, stills),
+  )
 
   const body = el('div', 'resumeBody')
   body.append(
@@ -220,7 +261,7 @@ function emptyLooks(): HTMLElement {
 
 function looksSection(
   doc: HomeDoc,
-  stills: Map<string, string> | undefined,
+  stills: Map<string, Still> | undefined,
   now: number,
 ) {
   const box = section('saved', 'Your saved looks')
@@ -392,7 +433,7 @@ function showFrame(user: CloudUser, sections: HTMLElement[]) {
 export function showHome(
   user: CloudUser,
   doc: HomeDoc,
-  stills?: Map<string, string>,
+  stills?: Map<string, Still>,
   now = Date.now(),
 ): void {
   const resume = resumeSection(doc, stills, now)
@@ -415,6 +456,45 @@ export function showLanding(): void {
   settle()
 }
 
+// The stills the last paint fetched, for the account they belong to. A return
+// from the app by Back paints again, and every still coming down a second time
+// was most of a megabyte for the one or two that can have changed.
+let stillCache: { uid: string; stills: Map<string, Still> } | undefined
+
+// The stills `doc` needs that `stills` has no copy of as new as the save: a
+// profile saved since, and the session when it was written since. The still is
+// written after the entry it belongs to, from the same machine's clock.
+function staleStills(doc: HomeDoc, stills: Map<string, Still>): string[] {
+  const behind = (id: string, at: number) => (stills.get(id)?.at ?? -1) < at
+  const ids = doc.profiles.flatMap(p =>
+    p.id !== undefined && p.savedAt !== undefined && behind(p.id, p.savedAt)
+      ? [p.id]
+      : [],
+  )
+  if (doc.current !== null && behind(SESSION_STILL, doc.current.at))
+    ids.push(SESSION_STILL)
+  return ids
+}
+
+async function freshen(
+  uid: string,
+  doc: HomeDoc,
+  cached: Map<string, Still>,
+): Promise<Map<string, Still>> {
+  const stills = new Map(cached)
+  await Promise.all(
+    staleStills(doc, cached).map(id =>
+      fetchStill(uid, id).then(
+        still => {
+          if (still !== undefined) stills.set(id, still)
+        },
+        () => undefined,
+      ),
+    ),
+  )
+  return stills
+}
+
 async function paint(user: CloudUser) {
   let doc: HomeDoc
   try {
@@ -423,27 +503,55 @@ async function paint(user: CloudUser) {
     showFrame(user, [failedSection(() => void paint(user))])
     return
   }
-  showHome(user, doc)
+  const cached = stillCache?.uid === user.uid ? stillCache.stills : undefined
+  showHome(user, doc, cached)
   const drawn = turn
-  const stills = await fetchStills(user.uid).catch(
-    () => new Map<string, string>(),
-  )
-  if (drawn === turn) fillStills(stills)
+  const stills =
+    cached === undefined
+      ? await fetchStills(user.uid).catch(() => undefined)
+      : await freshen(user.uid, doc, cached)
+  if (drawn !== turn) return
+  if (stills !== undefined) stillCache = { uid: user.uid, stills }
+  fillStills(stills ?? new Map())
 }
 
 // CROSS_REPO_SYNC(home-sign-in)
 let signedIn: CloudUser | null = null
 
+// Whether the subscription at the bottom is installed. It paints a sign-in by
+// itself, and a second paint from the button fetched the whole home twice.
+const watching = wasSignedIn()
+
+// What the why card says about a sign-in that did not finish, or undefined for
+// a popup the reader closed: they changed their mind, and the page they are
+// looking at is already the right one.
+function signInTrouble(e: unknown): string | undefined {
+  const code = typeof e === 'object' && e !== null && 'code' in e ? e.code : ''
+  if (
+    code === 'auth/popup-closed-by-user' ||
+    code === 'auth/cancelled-popup-request'
+  )
+    return undefined
+  if (code === 'auth/popup-blocked')
+    return 'The browser blocked the Google sign-in window. Allow pop-ups for this site and try again.'
+  return 'Signing in did not finish. Check the connection and try again.'
+}
+
 const startSignIn = (button: HTMLButtonElement) => {
   button.disabled = true
+  whyTrouble.hidden = true
   signIn()
     .then(user => {
       signedIn = user
-      return paint(user)
+      return watching ? undefined : paint(user)
     })
-    .catch(() => {
-      // A popup the reader closed, or one the browser blocked. The page is the
-      // landing page already and there is nothing to report.
+    .catch((e: unknown) => {
+      const trouble = signInTrouble(e)
+      if (trouble === undefined) return
+      console.error('sign-in failed', e)
+      whyTrouble.textContent = trouble
+      whyTrouble.hidden = false
+      if (!whyCard.open) whyCard.showModal()
     })
     .finally(() => {
       button.disabled = false
@@ -457,6 +565,10 @@ signInBtn.addEventListener('click', () => {
 whySignInBtn.addEventListener('click', () => {
   startSignIn(whySignInBtn)
 })
+
+for (const button of [signInBtn, whySignInBtn, ...whyBtns])
+  for (const type of ['pointerenter', 'focus'])
+    button.addEventListener(type, warmSignIn, { once: true })
 
 signOutBtn.addEventListener('click', () => {
   signedIn = null

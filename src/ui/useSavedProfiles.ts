@@ -325,7 +325,11 @@ export function useSavedProfiles(
         } else {
           console.error('sign-in failed', e)
           setStatus('error')
-          setError('sign-in failed — try again')
+          setError(
+            code === 'auth/popup-blocked'
+              ? 'the browser blocked the sign-in window — allow pop-ups for this site and try again'
+              : 'sign-in failed — try again',
+          )
         }
       })
     },
