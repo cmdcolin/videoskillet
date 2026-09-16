@@ -171,21 +171,24 @@ const profileEntry = (item: SavedProfile) => ({
   ...(item.openedAt === undefined ? {} : { openedAt: item.openedAt }),
 })
 
-// The whole list in one write. A document per profile would make two devices
-// editing different profiles conflict-free, but it also turns one save into a
-// write plus a delete-detection pass, and the case it protects — the same person
-// on two devices inside the same second — costs a re-save. The list is small and
-// it is one person's. Merged, so the write leaves `current` standing.
-export async function putProfiles(
+// Applies `edit` to the stored list and writes the result in one transaction.
+// Firestore reruns `edit` when another write lands between the read and the
+// write, so `edit` must be pure. A caller that builds the list from its own
+// copy drops whatever another tab, device or pending write added. Merged, so
+// the write keeps `current`.
+export async function editProfiles(
   uid: string,
-  profiles: readonly SavedProfile[],
-): Promise<void> {
+  edit: (profiles: SavedProfile[]) => SavedProfile[],
+): Promise<SavedProfile[]> {
   const { db, fs } = await loadSdk()
-  await fs.setDoc(
-    fs.doc(db, COLLECTION, uid),
-    { profiles: profiles.slice(0, PROFILE_MAX).map(profileEntry) },
-    { merge: true },
-  )
+  const ref = fs.doc(db, COLLECTION, uid)
+  return fs.runTransaction(db, async tx => {
+    const snap = await tx.get(ref)
+    const stored = snap.exists() ? readProfiles(snap.data().profiles) : []
+    const next = edit(stored).slice(0, PROFILE_MAX)
+    tx.set(ref, { profiles: next.map(profileEntry) }, { merge: true })
+    return next
+  })
 }
 
 // The session last open, or null to clear it. Merged for the same reason.

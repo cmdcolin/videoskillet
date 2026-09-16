@@ -3,8 +3,8 @@ import { useEffect, useRef, useState } from 'react'
 import {
   STILL_MAX,
   deleteStill,
+  editProfiles,
   fetchHome,
-  putProfiles,
   putStill,
   signIn as cloudSignIn,
   signOut as cloudSignOut,
@@ -137,7 +137,7 @@ export function useSavedProfiles(grabThumb?: () => Promise<string | null>) {
         setCurrent(home.current)
         setStatus('ready')
         setError(null)
-        landPending(next.uid, home.profiles)
+        landPending(next.uid)
       })
       .catch((e: unknown) => {
         console.error('loading saved profiles failed', e)
@@ -146,17 +146,23 @@ export function useSavedProfiles(grabThumb?: () => Promise<string | null>) {
       })
   }
 
-  // The save somebody pressed on the way in, written now that there is an
-  // account to write it to. suggestProfileName runs again over the library that
-  // just arrived, because the first run had an empty one to work from: without
-  // the second one, a save named "my rig" would overwrite the "my rig" the
-  // account already held.
-  const landPending = (uid: string, saved: readonly SavedProfile[]) => {
+  // Writes the save pressed before sign-in. The name was suggested against an
+  // empty list, so suggestProfileName runs again over the stored list: a save
+  // named "my rig" then lands as "my rig 2" beside an existing "my rig".
+  const landPending = (uid: string) => {
     const want = pending.current
     pending.current = null
     if (want === null) return
-    const name = suggestProfileName(saved, want.name)
-    commit(uid, upsertProfile(saved, name, want.query, Date.now()), name)
+    const at = Date.now()
+    let name = want.name
+    commit(
+      uid,
+      list => {
+        name = suggestProfileName(list, want.name)
+        return upsertProfile(list, name, want.query, at)
+      },
+      () => name,
+    )
   }
 
   // One subscription, and only for a browser that has signed in before — which is
@@ -209,18 +215,23 @@ export function useSavedProfiles(grabThumb?: () => Promise<string | null>) {
       })
   }
 
-  // Every write is cloud-only, and the list moves when the document has been
-  // accepted rather than before. An optimistic row is a row that looks saved and
-  // is not — the one thing a save must never show.
-  const commit = (uid: string, next: SavedProfile[], landed?: string) => {
-    putProfiles(uid, next)
-      .then(() => {
+  // The list updates after Firestore accepts the write, so a row on screen is a
+  // saved row. Each write sends an edit, and editProfiles applies it to the
+  // stored list: two saves in quick succession both land.
+  const commit = (
+    uid: string,
+    edit: (list: SavedProfile[]) => SavedProfile[],
+    landed?: () => string,
+  ) => {
+    editProfiles(uid, edit)
+      .then(next => {
         setProfiles(next)
         setError(null)
         if (landed !== undefined) {
-          setLastName(landed)
-          showFlash({ kind: 'saved', name: landed })
-          saveStill(uid, next, landed)
+          const name = landed()
+          setLastName(name)
+          showFlash({ kind: 'saved', name })
+          saveStill(uid, next, name)
         }
       })
       .catch((e: unknown) => {
@@ -234,8 +245,11 @@ export function useSavedProfiles(grabThumb?: () => Promise<string | null>) {
       })
   }
 
-  const write = (next: SavedProfile[], landed?: string) => {
-    if (user !== null) commit(user.uid, next, landed)
+  const write = (
+    edit: (list: SavedProfile[]) => SavedProfile[],
+    landed?: () => string,
+  ) => {
+    if (user !== null) commit(user.uid, edit, landed)
   }
 
   return {
@@ -257,12 +271,16 @@ export function useSavedProfiles(grabThumb?: () => Promise<string | null>) {
         showFlash({ kind: 'needs-auth' })
         return 'needs-auth'
       }
-      write(upsertProfile(profiles, name, query, Date.now()), name)
+      const at = Date.now()
+      write(
+        list => upsertProfile(list, name, query, at),
+        () => name,
+      )
       return 'saving'
     },
     deleteProfile: (name: string) => {
       const id = profiles.find(p => p.name === name)?.id
-      write(removeProfile(profiles, name))
+      write(list => removeProfile(list, name))
       if (user !== null && id !== undefined) {
         deleteStill(user.uid, id).catch((e: unknown) => {
           console.error('deleting the profile still failed', e)
@@ -279,7 +297,8 @@ export function useSavedProfiles(grabThumb?: () => Promise<string | null>) {
     // path a save takes and with no flash, since nobody asked for a save.
     markRecalled: (name: string) => {
       setLastName(name)
-      write(markOpened(profiles, name, Date.now()))
+      const at = Date.now()
+      write(list => markOpened(list, name, at))
     },
     signIn: () => {
       setStatus('loading')
