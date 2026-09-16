@@ -511,6 +511,11 @@ code {
     padding: 0 0.6rem 0.55rem;
     font-size: 0.74rem;
   }
+  .grid.looks .cardActions {
+    gap: 0.2rem 0.4rem;
+    padding: 0.4rem 0.5rem 0.5rem;
+    font-size: 0.72rem;
+  }
 }
 
 /* The line under the hero buttons, saying what an account is for. */
