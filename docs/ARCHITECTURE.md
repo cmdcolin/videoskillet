@@ -392,9 +392,11 @@ follows from whether it describes a look or a machine.
 
 - **The account** (Firestore, `users/{uid}`) holds the saved-profile library,
   the session last open as `current`, and one still per profile in a `stills`
-  subcollection. `src/ui/savedProfiles.ts` and `cloud.ts` are the only writers,
-  and both merge into the user document from paths of their own, so every field
-  is optional.
+  subcollection. `cloud.ts` does every write, for `useSavedProfiles.ts` and
+  `useCurrentSession.ts`, and both merge into the user document from paths of
+  their own, so every field is optional. An edit to the library reads the list
+  inside the same transaction that writes it, because a tab can stay open for
+  hours while another machine saves.
 - **The browser** (`localStorage`) holds the clip library, the rundown, the
   pinned sliders, the 1-9 scenes and the panel's own layout. These describe how
   one machine is set up, and syncing them would mean reconciling two machines'

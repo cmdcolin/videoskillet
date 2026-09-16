@@ -168,7 +168,6 @@ const profileEntry = (item: SavedProfile) => ({
   query: item.query,
   ...(item.id === undefined ? {} : { id: item.id }),
   ...(item.savedAt === undefined ? {} : { savedAt: item.savedAt }),
-  ...(item.openedAt === undefined ? {} : { openedAt: item.openedAt }),
 })
 
 // Applies `edit` to the stored list and writes the result in one transaction.

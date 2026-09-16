@@ -6,7 +6,6 @@ import {
   QUERY_MAX,
   PROFILE_SLOTS,
   cleanProfileName,
-  markOpened,
   profileAtSlot,
   readCurrent,
   readProfiles,
@@ -93,28 +92,13 @@ describe('profile metadata', () => {
     expect(upsertProfile([], 'a', 'set=1')[0]).toEqual(p('a', 'set=1'))
   })
 
-  it('carries openedAt through an overwrite', () => {
-    const opened = markOpened(upsertProfile([], 'a', 'set=1', 1000), 'a', 1500)
-    expect(upsertProfile(opened, 'a', 'set=2', 2000)[0].openedAt).toBe(1500)
-  })
-
-  it('marks only the profile that was opened', () => {
-    const two = [p('a'), p('b')]
-    const after = markOpened(two, 'b', 99)
-    expect(after[0].openedAt).toBeUndefined()
-    expect(after[1].openedAt).toBe(99)
-  })
-
   it('keeps the metadata a stored entry carries and drops the rest', () => {
     expect(
       readProfiles([
         { name: 'a', query: 'q', id: 'x1', savedAt: 5, openedAt: 6 },
-        { name: 'b', query: 'q', id: 7, savedAt: 'soon', openedAt: null },
+        { name: 'b', query: 'q', id: 7, savedAt: 'soon' },
       ]),
-    ).toEqual([
-      { name: 'a', query: 'q', id: 'x1', savedAt: 5, openedAt: 6 },
-      p('b', 'q'),
-    ])
+    ).toEqual([{ name: 'a', query: 'q', id: 'x1', savedAt: 5 }, p('b', 'q')])
   })
 })
 

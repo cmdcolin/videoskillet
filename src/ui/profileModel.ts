@@ -39,7 +39,6 @@ export interface SavedProfile {
   // the still in `users/{uid}/stills/{id}` and never changes once minted.
   id?: string
   savedAt?: number
-  openedAt?: number
 }
 
 // The session a signed-in user last had open, written by the app as the address
@@ -85,13 +84,11 @@ function readProfile(raw: unknown): SavedProfile | undefined {
   if (clean === '') return undefined
   const id = 'id' in raw && typeof raw.id === 'string' ? raw.id : undefined
   const savedAt = 'savedAt' in raw ? num(raw.savedAt) : undefined
-  const openedAt = 'openedAt' in raw ? num(raw.openedAt) : undefined
   return {
     name: clean,
     query,
     ...(id === undefined ? {} : { id }),
     ...(savedAt === undefined ? {} : { savedAt }),
-    ...(openedAt === undefined ? {} : { openedAt }),
   }
 }
 
@@ -117,8 +114,8 @@ export function readCurrent(raw: unknown): CurrentSession | null {
 // one thing a library is for. A list already at the cap drops its oldest entry.
 //
 // `at` stamps the save and mints an id for a profile that has none; an
-// overwrite keeps the id and the openedAt it already had. Without `at` the
-// entry carries no metadata, which is what a caller with no clock wants.
+// overwrite keeps the id it already had. Without `at` the entry carries no
+// metadata, which is what a caller with no clock wants.
 export function upsertProfile(
   profiles: readonly SavedProfile[],
   name: string,
@@ -131,7 +128,6 @@ export function upsertProfile(
   const prior = index === -1 ? undefined : profiles[index]
   const entry: SavedProfile = { name: clean, query }
   if (prior?.id !== undefined) entry.id = prior.id
-  if (prior?.openedAt !== undefined) entry.openedAt = prior.openedAt
   if (at !== undefined) {
     entry.id ??= newProfileId()
     entry.savedAt = at
@@ -140,14 +136,6 @@ export function upsertProfile(
     return profiles.map((item, i) => (i === index ? entry : item))
   return [...profiles, entry].slice(-PROFILE_MAX)
 }
-
-// A recall or an open, so the home page can sort by what you reach for.
-export const markOpened = (
-  profiles: readonly SavedProfile[],
-  name: string,
-  at: number,
-): SavedProfile[] =>
-  profiles.map(item => (item.name === name ? { ...item, openedAt: at } : item))
 
 export const removeProfile = (
   profiles: readonly SavedProfile[],

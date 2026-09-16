@@ -12,7 +12,6 @@ import {
   watchAuth,
 } from './cloud'
 import {
-  markOpened,
   removeProfile,
   suggestProfileName,
   upsertProfile,
@@ -67,16 +66,38 @@ export type ProfileFlash =
 // the caller opens the why-sign-in card.
 export type SaveOutcome = 'saving' | 'needs-auth'
 
-/** A save waiting on a sign-in: the look as it was when the key was pressed. */
+/** A save waiting on a sign-in: the look and its still as they were when the
+    key was pressed. */
 interface PendingSave {
   name: string
   query: string
+  still: Promise<string | null> | undefined
+}
+
+// The picture the home page's card shows, taken when the save was pressed and
+// written after the entry it belongs to has landed. Best effort throughout: a
+// profile with no still is a card with a placeholder, and a save that reported
+// success must not then report a failure because the encoder declined.
+function saveStill(
+  uid: string,
+  id: string | undefined,
+  still: Promise<string | null> | undefined,
+) {
+  if (id === undefined || still === undefined) return
+  still
+    .then(webp => (webp === null ? undefined : putStill(uid, id, webp)))
+    .catch((e: unknown) => {
+      console.error('saving the profile still failed', e)
+    })
 }
 
 // `grabThumb` is how a save gets a picture: a function so this hook holds no
-// canvas of its own. Optional, because the callers that have no output to grab
-// (a test, a future panel) still want the library.
-export function useSavedProfiles(grabThumb?: () => Promise<string | null>) {
+// canvas of its own. It resolves to null when no still fits under `max`.
+// Optional, because the callers that have no output to grab (a test, a future
+// panel) still want the library.
+export function useSavedProfiles(
+  grabThumb?: (max: number) => Promise<string | null>,
+) {
   const [profiles, setProfiles] = useState<SavedProfile[]>([])
   const [current, setCurrent] = useState<CurrentSession | null>(null)
   const [user, setUser] = useState<CloudUser | null>(null)
@@ -162,6 +183,7 @@ export function useSavedProfiles(grabThumb?: () => Promise<string | null>) {
         return upsertProfile(list, name, want.query, at)
       },
       () => name,
+      want.still,
     )
   }
 
@@ -196,25 +218,6 @@ export function useSavedProfiles(grabThumb?: () => Promise<string | null>) {
     // oxlint-disable-next-line react-hooks/exhaustive-deps
   }, [wantAuth])
 
-  // The picture the home page's card shows, written after the entry it belongs
-  // to has landed. Best effort throughout: a profile with no still is a card
-  // with a placeholder, and a save that reported success must not then report a
-  // failure because the encoder declined.
-  const saveStill = (uid: string, next: SavedProfile[], name: string) => {
-    const id = next.find(p => p.name === name)?.id
-    if (id === undefined || grabThumb === undefined) return
-    grabThumb()
-      .then(webp => {
-        // Over the cap the document would be refused anyway, and a still is
-        // worth less than the save it hangs off.
-        if (webp === null || webp.length > STILL_MAX) return undefined
-        return putStill(uid, id, webp)
-      })
-      .catch((e: unknown) => {
-        console.error('saving the profile still failed', e)
-      })
-  }
-
   // The list updates after Firestore accepts the write, so a row on screen is a
   // saved row. Each write sends an edit, and editProfiles applies it to the
   // stored list: two saves in quick succession both land.
@@ -222,6 +225,7 @@ export function useSavedProfiles(grabThumb?: () => Promise<string | null>) {
     uid: string,
     edit: (list: SavedProfile[]) => SavedProfile[],
     landed?: () => string,
+    still?: Promise<string | null>,
   ) => {
     editProfiles(uid, edit)
       .then(next => {
@@ -231,7 +235,7 @@ export function useSavedProfiles(grabThumb?: () => Promise<string | null>) {
           const name = landed()
           setLastName(name)
           showFlash({ kind: 'saved', name })
-          saveStill(uid, next, name)
+          saveStill(uid, next.find(p => p.name === name)?.id, still)
         }
       })
       .catch((e: unknown) => {
@@ -248,8 +252,9 @@ export function useSavedProfiles(grabThumb?: () => Promise<string | null>) {
   const write = (
     edit: (list: SavedProfile[]) => SavedProfile[],
     landed?: () => string,
+    still?: Promise<string | null>,
   ) => {
-    if (user !== null) commit(user.uid, edit, landed)
+    if (user !== null) commit(user.uid, edit, landed, still)
   }
 
   return {
@@ -266,8 +271,9 @@ export function useSavedProfiles(grabThumb?: () => Promise<string | null>) {
     // sign-in button in place of the name box, and ctrl+S says so on the button.
     canSave: status === 'ready',
     saveProfile: (name: string, query: string): SaveOutcome => {
+      const still = grabThumb?.(STILL_MAX)
       if (status !== 'ready') {
-        pending.current = { name, query }
+        pending.current = { name, query, still }
         showFlash({ kind: 'needs-auth' })
         return 'needs-auth'
       }
@@ -275,6 +281,7 @@ export function useSavedProfiles(grabThumb?: () => Promise<string | null>) {
       write(
         list => upsertProfile(list, name, query, at),
         () => name,
+        still,
       )
       return 'saving'
     },
@@ -292,13 +299,10 @@ export function useSavedProfiles(grabThumb?: () => Promise<string | null>) {
     },
     // A recall makes that profile the one you are in, so the next save offers its
     // name (with a counter) rather than falling back to whichever preset the
-    // controls happen to still match. It also stamps `openedAt`, which is what
-    // the home page sorts by — one document write per recall, through the same
-    // path a save takes and with no flash, since nobody asked for a save.
+    // controls happen to still match. It writes nothing: the 1–9 keys recall
+    // mid-set, and a transaction per key press paid for a field nothing read.
     markRecalled: (name: string) => {
       setLastName(name)
-      const at = Date.now()
-      write(list => markOpened(list, name, at))
     },
     signIn: () => {
       setStatus('loading')

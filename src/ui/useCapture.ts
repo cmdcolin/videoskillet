@@ -12,11 +12,13 @@ import type { RefObject } from 'react'
 // a file whose timing disagrees with what produced it.
 const FPS = { num: 60, den: 1 }
 
-// The size a profile's still is stored at. 5:4, which is what the home page's
-// cards are, and small enough that the base64 of it clears STILL_MAX with room
-// to spare.
-const THUMB_W = 160
-const THUMB_H = 128
+// The sizes a profile's still is tried at, largest first. 5:4, which is what the
+// home page's cards are. A card shows its still about 320px wide, and a picture
+// busy enough that the larger encode passes the cap gets the smaller one.
+const THUMB_SIZES = [
+  [320, 256],
+  [160, 128],
+] as const
 
 // A still still needs the 2D mirror, and that is not an oversight: `toBlob` on
 // a WebGPU canvas comes back blank in Firefox because the presented drawing
@@ -74,14 +76,14 @@ export function useCapture(
   }
 
   // A profile's still, as base64 webp with the `data:` prefix taken off — what
-  // putStill writes under the profile's id. Null when there is no canvas yet or
-  // the browser declined to encode.
+  // putStill writes under the profile's id. Null when there is no canvas yet,
+  // the browser declined to encode, or no size fits under `max` characters.
   //
-  // It scales straight out of the WebGPU canvas into a 160x128 2D canvas, which
+  // It scales straight out of the WebGPU canvas into a small 2D canvas, which
   // is the same drawImage `mirrorOf` relies on and works for the same reason.
   // Inside a frame, as grabStill is, because Chrome only keeps the drawing
   // buffer readable during a paint.
-  const grabThumb = (): Promise<string | null> =>
+  const grabThumb = (max: number): Promise<string | null> =>
     new Promise(resolve => {
       const canvas = canvasRef.current
       if (canvas === null) {
@@ -89,18 +91,21 @@ export function useCapture(
         return
       }
       requestAnimationFrame(() => {
-        const thumb = document.createElement('canvas')
-        thumb.width = THUMB_W
-        thumb.height = THUMB_H
-        const ctx = thumb.getContext('2d')
-        if (ctx === null) {
-          resolve(null)
-          return
+        for (const [w, h] of THUMB_SIZES) {
+          const thumb = document.createElement('canvas')
+          thumb.width = w
+          thumb.height = h
+          const ctx = thumb.getContext('2d')
+          if (ctx === null) break
+          ctx.drawImage(canvas, 0, 0, w, h)
+          const url = thumb.toDataURL('image/webp', 0.7)
+          const webp = url.slice(url.indexOf(',') + 1)
+          if (webp !== '' && webp.length <= max) {
+            resolve(webp)
+            return
+          }
         }
-        ctx.drawImage(canvas, 0, 0, THUMB_W, THUMB_H)
-        const url = thumb.toDataURL('image/webp', 0.7)
-        const comma = url.indexOf(',')
-        resolve(comma === -1 ? null : url.slice(comma + 1))
+        resolve(null)
       })
     })
 
