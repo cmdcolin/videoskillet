@@ -50,8 +50,9 @@ export type CloudStatus =
 
 // What the button in the look bar says for a moment after a save was attempted.
 // One value rather than three flags, because the three states are exclusive and
-// as separate booleans they could contradict each other on screen — a ✓ next to
-// an amber `sign in` is a button claiming a save both did and did not happen.
+// as separate booleans they could contradict each other on screen — a ✓ on a
+// button already amber for a save with nowhere to go is one claiming a save
+// both did and did not happen.
 //
 // All three exist for the same reason: two of the three ways to save (ctrl+S and
 // the ⌘K row) happen with the menu shut, so the button is the only surface that

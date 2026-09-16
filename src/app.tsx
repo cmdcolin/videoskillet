@@ -14,6 +14,7 @@ import { publicUrl } from './publicUrl'
 import { A_OPTIONS, B_OPTIONS } from './sources/modes'
 import { poolCaption } from './sources/pools'
 import { AboutDialog } from './ui/AboutDialog'
+import { Account } from './ui/Account'
 import { AdvancedDialog } from './ui/AdvancedDialog'
 import { AppMenu, ShowMenuButton } from './ui/AppMenu'
 import { AudioHint, AudioInput, SoundOut } from './ui/AudioInput'
@@ -895,9 +896,9 @@ export function App() {
     // through a ref every render, but the object it lives in is built now.
     //
     // Signed out there is nowhere for it to go, and a keystroke that does
-    // nothing is worse than one that refuses: the button in the row goes amber
-    // saying `sign in` (see SavedProfiles), and the why-sign-in card opens with
-    // this look held behind it.
+    // nothing is worse than one that refuses: the library button goes amber
+    // (see SavedProfiles), and the why-sign-in card opens with this look held
+    // behind it.
     onSaveProfile: () => askSave(suggestedProfileName),
   })
   usePageLifecycle(engineRef, setFullscreen)
@@ -1394,25 +1395,32 @@ export function App() {
               ⌕
             </button>
           )}
-          {/* The account, at the true corner — beside the ⋮ rather than a verb
+          {/* The library, at the true corner — beside the ⋮ rather than a verb
               among compare/mutate/undo below. Those act on the look that is on
-              screen; this says whose looks they are, which is a fact about the
+              screen; this says which looks are kept, which is a fact about the
               session, not a move it makes. */}
           <SavedProfiles
             profiles={profiles.profiles}
             suggestedName={suggestedProfileName}
             flash={profiles.flash}
             status={profiles.status}
-            user={profiles.user}
             error={profiles.error}
             onSignIn={profiles.signIn}
-            onSignOut={profiles.signOut}
             onSave={askSave}
             onRecall={recallProfile}
             onOpen={openProfile}
             onDelete={profiles.deleteProfile}
             onCopyLink={profile => copyQuery(profile.query)}
             onWhy={() => setWhy({ pending: null })}
+          />
+          {/* Beside the library rather than inside it: the list and the account
+              are two facts, and one button that relabelled itself `sign in`
+              answered for neither. */}
+          <Account
+            user={profiles.user}
+            status={profiles.status}
+            onSignIn={profiles.signIn}
+            onSignOut={profiles.signOut}
           />
           <AppMenu variant="masthead" {...menuProps} />
         </div>

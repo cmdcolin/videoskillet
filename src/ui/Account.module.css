@@ -1,0 +1,88 @@
+/* The account control in the masthead, and the menu it opens. The signed-out
+   button wears the masthead chrome's family without composing `ui.chromeBtn`,
+   for the reason SavedProfiles.module.css's `.trigger` writes its own out: that
+   class fixes a 22px square sized for a glyph, and `width: auto` layered over
+   it is not reliably the rule that wins. */
+.signIn {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  width: auto;
+  padding: 1px 7px;
+  border: 1px solid var(--border-quiet);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--fg3);
+  font-size: var(--fs-md);
+  line-height: 1.2;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.signIn:hover {
+  border-color: var(--fg4);
+  color: var(--fg);
+}
+
+/* Round and picture-sized, because once you are in the picture is the label.
+   Bare of the square's fill and border: a box drawn around a circular photo
+   reads as a second control behind it. */
+.acctBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.acctBtn:hover {
+  border-color: var(--fg4);
+}
+
+/* Google's own photo, at the size of the glyphs beside it — round because that
+   is the crop every other Google surface gives it, so it reads as the same
+   avatar rather than a new one. */
+.avatar {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* Google serves no photo for plenty of accounts, and a broken image is worse
+   than no image. The first letter of the name, drawn the way the site bar on
+   the home page draws it. */
+.initial {
+  composes: avatar;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--fs-sm);
+  background: var(--surface);
+  color: var(--fg2);
+  border: 1px solid var(--border-quiet);
+}
+
+/* Who, at the head of the menu, so the photo has a name under it. Text rather
+   than a row: there is nothing to press here. */
+.who {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 220px;
+  padding: 3px 9px;
+  color: var(--fg3);
+  font-size: var(--fs-sm);
+}
+
+@media (pointer: coarse) {
+  .acctBtn {
+    min-width: 30px;
+    min-height: 30px;
+  }
+}

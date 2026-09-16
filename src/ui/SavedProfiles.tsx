@@ -10,13 +10,11 @@ import {
 import styles from './SavedProfiles.module.css'
 import ui from './ui.module.css'
 
-import type { CloudUser } from './cloud'
 import type { SavedProfile } from './profileModel'
 import type { CloudStatus, ProfileFlash } from './useSavedProfiles'
 
-// The profile library, and the account it lives on: one button in the
-// masthead's top-right corner, beside the ⌕ and the ⋮. A synth's save/recall,
-// plus who it belongs to.
+// The profile library: one button in the masthead's top-right corner, beside
+// the ⌕, the account and the ⋮. A synth's save/recall.
 //
 // It moved here from a slot in the LookBar row, among compare/mutate/undo,
 // because those are verbs that act on the look that's on screen right now and
@@ -25,15 +23,16 @@ import type { CloudStatus, ProfileFlash } from './useSavedProfiles'
 // also read as one more thing to press to change the picture, when its whole
 // job signed-out is the opposite: say there is an account to sign into at all.
 //
-// Signing in lives *here* rather than folded into the ⋮ menu's list, because
-// this is the only thing in the app an account is for. A row in that menu would
-// be an account prompt with no visible purpose; in this popover it is the
-// answer to the question the popover just raised — where would a save go?
-//
 // The button says `saved` rather than naming the noun. "Looks" was the first
 // label and it read as a verb ("looks 3" — looks three what?); `saved` is what
 // the press does and what the list holds, and it leaves "the look" meaning the
 // live board everywhere else in the app.
+//
+// It says `saved` in every state. It used to read `sign in` with nobody signed
+// in, which made one button stand for two things: press it, answer Google, and
+// the save form you never opened was what came back. The account is its own
+// control now (`Account`), and the sign-in still offered inside this popover is
+// the answer to the question the popover raises — where would a save go?
 //
 // It is a popover rather than a section of the panel because saving is a thing
 // you do for two seconds and recall is a list you open — neither wants a fold of
@@ -62,23 +61,17 @@ export function SavedProfiles(props: {
   // the three ways to save leave this menu shut — so this is the only surface
   // that can answer them.
   flash: ProfileFlash | null
-  // Who the library belongs to, and whether it can be written to at all. Saving
-  // is a signed-in act — Firestore is the only store — so `status` decides
-  // whether this menu shows a name box or a sign-in button.
+  // Whether the library can be written to at all. Saving is a signed-in act —
+  // Firestore is the only store — so `status` decides whether this menu shows a
+  // name box or a sign-in button.
   status: CloudStatus
-  user: CloudUser | null
   error: string | null
   onSignIn: () => void
-  onSignOut: () => void
   /** Opens the why-sign-in card, which the ⋮ menu and a signed-out save open
       too. The pane here gives the one-sentence version. */
   onWhy: () => void
 }) {
   const signedIn = props.status === 'ready'
-  // Only a returning user (wasSignedIn() true) ever sees this: a fresh visitor
-  // starts at signed-out directly. `sign in` here would flash false for the
-  // beat it takes Firebase to confirm what the last visit already told us.
-  const checking = props.status === 'loading'
   const [name, setName] = useState('')
   const nameRef = useRef<HTMLInputElement>(null)
   // Which row's link just went to the clipboard. A copy is otherwise silent —
@@ -133,38 +126,21 @@ export function SavedProfiles(props: {
           title={
             signedIn
               ? 'save this look as a named profile and bring it back later, like the voices on a synth (ctrl+S saves without opening this) — the list lives on your account'
-              : checking
-                ? 'checking your account…'
-                : 'sign in to save looks under a name — everything else in the app works signed out'
+              : 'the looks you keep under a name — an account holds the list, so this opens onto what an account is for'
           }
         >
-          {/* A glyph and a colour, never the name: this button sits beside the
+          {/* A count and a glyph, never the name: this button sits beside the
               fixed-width ⌕ and ⋮ squares, and a label that grew to
               `saved “worn tape”` or `save failed` for two seconds would shove
               them sideways — twice, once each way. The count moves on a new
               save anyway; the ✓ is what an overwrite has to say, and the ✕ is
               what a rejected write has to. */}
-          {signedIn ? (
-            <>
-              {props.user?.photo === undefined ||
-              props.user.photo === null ? null : (
-                <img
-                  className={styles.triggerAvatar}
-                  src={props.user.photo}
-                  alt=""
-                  referrerPolicy="no-referrer"
-                />
-              )}
-              saved
-              {props.profiles.length === 0 ? '' : ` ${props.profiles.length}`}
-              {props.flash?.kind === 'saved' ? ' ✓' : ''}
-              {props.flash?.kind === 'failed' ? ' ✕' : ''}
-            </>
-          ) : checking ? (
-            '…'
-          ) : (
-            'sign in'
-          )}
+          saved
+          {signedIn && props.profiles.length > 0
+            ? ` ${props.profiles.length}`
+            : ''}
+          {props.flash?.kind === 'saved' ? ' ✓' : ''}
+          {props.flash?.kind === 'failed' ? ' ✕' : ''}
         </button>
       )}
     >
@@ -282,35 +258,6 @@ export function SavedProfiles(props: {
                   </div>
                 </>
               )}
-              {/* Who the library belongs to, at the foot of it — the account is
-                  the least interesting thing in this menu once you are in, so it
-                  goes last and small, and it is the only place sign-out lives.
-                  The avatar is there so "who am I signed in as" reads at a
-                  glance, from the same photo every other Google surface shows —
-                  not the initial-in-a-circle every account already has one. */}
-              <div className={styles.acct}>
-                <span className={styles.acctUser}>
-                  {props.user?.photo === undefined ||
-                  props.user.photo === null ? null : (
-                    <img
-                      className={styles.avatar}
-                      src={props.user.photo}
-                      alt=""
-                      referrerPolicy="no-referrer"
-                    />
-                  )}
-                  <span className={ui.dim}>
-                    {props.user?.name ?? props.user?.uid.slice(0, 6) ?? ''}
-                  </span>
-                </span>
-                <button
-                  className={styles.acctBtn}
-                  title="sign out — the library stays on your account, this browser just stops showing it"
-                  onClick={props.onSignOut}
-                >
-                  sign out
-                </button>
-              </div>
               {props.error === null ? null : (
                 <div className={cx(ui.hint, ui.err)}>{props.error}</div>
               )}
