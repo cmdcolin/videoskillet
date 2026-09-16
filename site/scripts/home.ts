@@ -234,8 +234,10 @@ function cardActions(profile: SavedProfile, edits: CardEdits): HTMLElement {
     row.replaceChildren(...nodes, status)
   }
   const busy = () => {
-    for (const node of row.querySelectorAll('button, input'))
-      (node as HTMLButtonElement | HTMLInputElement).disabled = true
+    for (const node of row.querySelectorAll<
+      HTMLButtonElement | HTMLInputElement
+    >('button, input'))
+      node.disabled = true
   }
 
   const idle = (focus?: string) => {
@@ -267,7 +269,7 @@ function cardActions(profile: SavedProfile, edits: CardEdits): HTMLElement {
   }
 
   function rename(start: string) {
-    const input = el('input', 'cardName')
+    const input = el('input', 'cardRename')
     input.value = start
     input.maxLength = PROFILE_NAME_MAX
     input.setAttribute('aria-label', `New name for ${profile.name}`)

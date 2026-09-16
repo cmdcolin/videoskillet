@@ -135,8 +135,11 @@ function askAnalytics() {
 }
 
 // Loads Google Analytics when this browser said yes, asks when it has not
-// answered, and does nothing when it said no.
+// answered, and does nothing when it said no. A browser a script is driving
+// does nothing either: the harnesses that screenshot and record these pages
+// would capture the notice, and their visits are nobody's.
 export function startAnalytics(): void {
+  if (navigator.webdriver) return
   const answer = analyticsAnswer()
   if (answer === 'yes') loadAnalytics()
   else if (answer === null) askAnalytics()

@@ -270,6 +270,12 @@ const health = await page.evaluate(() => ({
 }))
 if (!health.canvas) die('the app has no canvas')
 if (health.rebuilding) die('the GPU device is being rebuilt — check GPU_ARGS')
+// This Chrome is headed and not flagged as automated, since the flag hangs a
+// banner across the frame, so the analytics notice is up. Answered here, so the
+// recording opens on the app.
+await page.evaluate(() =>
+  document.querySelector('.consent button:not(.yes)')?.click(),
+)
 
 // The browser tools, pointed at the Chrome that is already on screen.
 const mcpConfig = join(tmp, 'mcp.json')
