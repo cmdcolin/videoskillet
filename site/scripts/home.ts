@@ -693,7 +693,7 @@ let signedIn: CloudUser | null = null
 
 // Whether the subscription at the bottom is installed. It paints a sign-in by
 // itself, and a second paint from the button fetched the whole home twice.
-const watching = wasSignedIn()
+let watching = wasSignedIn()
 
 // What the why card says about a sign-in that did not finish, or undefined for
 // a popup the reader closed: they changed their mind, and the page they are
@@ -764,5 +764,8 @@ if (wasSignedIn())
     signedIn = user
     if (user === null) showLanding()
     else void paint(user)
-  }).catch(showLanding)
+  }).catch(() => {
+    watching = false
+    showLanding()
+  })
 // CROSS_REPO_SYNC_END(home-sign-in)

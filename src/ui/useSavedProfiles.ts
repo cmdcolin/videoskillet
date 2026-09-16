@@ -141,6 +141,14 @@ export function useSavedProfiles(
   // after a different account signs in, checks it and leaves the state alone.
   const uid = useRef<string | null>(null)
 
+  // Bumped by every save and recall. A save that lands names the profile you
+  // are in only if nothing was saved or recalled after it was pressed.
+  const named = useRef(0)
+
+  // Bumped by every sign-in press. Firebase rejects a popup when a second one
+  // opens, so signIn handles a failure from the latest press only.
+  const attempt = useRef(0)
+
   // Show one for a beat, then take it down — but only if it is still the one this
   // call put up, compared by identity so a second save during the first flash
   // does not have its own answer cut short by the first timer. A failure holds
@@ -233,6 +241,8 @@ export function useSavedProfiles(
       .catch((e: unknown) => {
         console.error('auth subscribe failed', e)
         if (!cancelled) {
+          // A later sign-in press subscribes again.
+          setWantAuth(false)
           setStatus('error')
           setError('could not reach the sign-in service')
         }
@@ -255,6 +265,7 @@ export function useSavedProfiles(
     landed?: () => string,
     still?: Promise<string | null>,
   ) => {
+    const mine = landed === undefined ? named.current : ++named.current
     editProfiles(owner, edit)
       .then(next => {
         if (uid.current !== owner) return
@@ -262,7 +273,7 @@ export function useSavedProfiles(
         setError(null)
         if (landed !== undefined) {
           const name = landed()
-          setLastName(name)
+          if (named.current === mine) setLastName(name)
           showFlash({ kind: 'saved', name })
           saveStill(owner, next.find(p => p.name === name)?.id, still)
         }
@@ -345,15 +356,28 @@ export function useSavedProfiles(
     // controls happen to still match. It writes nothing: the 1–9 keys recall
     // mid-set, and a transaction per key press paid for a field nothing read.
     markRecalled: (name: string) => {
+      named.current++
       setLastName(name)
     },
+    /** Forgets a save held for a sign-in that is no longer coming. */
+    dropPending: () => {
+      pending.current = null
+    },
     signIn: () => {
-      setStatus('loading')
       setError(null)
+      // Signed in with a list that failed to load. Firebase reports no change
+      // for a popup that signs the same account in, so fetch again directly.
+      if (user !== null) {
+        applyUser(user)
+        return
+      }
+      setStatus('loading')
       // Installs the subscription if this is the browser's first sign-in; already
       // true for one that is picking a session back up.
       setWantAuth(true)
+      const mine = ++attempt.current
       cloudSignIn().catch((e: unknown) => {
+        if (attempt.current !== mine || uid.current !== null) return
         // A popup the user dismissed is not a failure worth a message: they
         // changed their mind, and the button they came from is the right thing to
         // be looking at again.

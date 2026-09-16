@@ -2060,7 +2060,10 @@ export function App() {
       {why === null ? null : (
         <WhySignInDialog
           pendingName={why.pending}
-          onClose={() => setWhy(null)}
+          onClose={() => {
+            setWhy(null)
+            profiles.dropPending()
+          }}
           onSignIn={() => {
             setWhy(null)
             profiles.signIn()
