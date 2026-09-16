@@ -39,7 +39,6 @@ export function nextWriteAt(
   if (query === gate.query) return null
   return Math.max(now + SETTLE_MS, gate.at + MIN_GAP_MS)
 }
-// CROSS_REPO_SYNC_END(current-session-gate)
 
 // The board this page opened on, and whether it has moved off it since.
 export interface Opened {
@@ -58,6 +57,7 @@ export function observe(opened: Opened, query: string | null): Opened {
   if (opened.query === null) return { query, moved: false }
   return query === opened.query ? opened : { ...opened, moved: true }
 }
+// CROSS_REPO_SYNC_END(current-session-gate)
 
 // `grabThumb` gives the resume card a picture. A write made while the tab is
 // hidden goes without one, because the grab waits for a frame and a hidden tab
