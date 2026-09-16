@@ -1,5 +1,13 @@
 {
   "projects": {
     "default": "ntscjs-d4f56"
+  },
+  "targets": {},
+  "etags": {
+    "ntscjs-d4f56": {
+      "extensionInstances": {
+        "delete-user-data": "602b0c1e8a73dd2b6e2ccb9767f415ed1b169cadde3417663828924ac9b3df08"
+      }
+    }
   }
 }

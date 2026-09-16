@@ -60,7 +60,7 @@ export const SIGNED_IN_HINT = 'videoskillet.js_signed_in'
 // session has sent since the project was created.
 //
 // Outside the shared region because each site attests as itself.
-const APPCHECK_SITE_KEY = ''
+const APPCHECK_SITE_KEY = '6LfXUr8tAAAAAAWJh1jC0NfYTmhiAmdq-Nd8c9nQ'
 
 // Attest that a request comes from this app, before the first one goes.
 //
