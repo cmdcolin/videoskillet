@@ -2,6 +2,14 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [2.0.0](https://github.com/cmdcolin/videoskillet/compare/v1.0.1...v2.0.0) - 2026-09-16
+
+### Fixes
+- *(ui)* [`3bfbe04`](https://github.com/cmdcolin/videoskillet/commit/3bfbe0497b5d9a554dee4d7692fd79ffdef8f87a) open a link that picked up any character, not just a full stop
+
+### Documentation
+- *(ui)* [`a3ca525`](https://github.com/cmdcolin/videoskillet/commit/a3ca5251c63d3419737b59df6856a536c122418e) note the account control in 0005 and the user guide
+
 ## [1.0.1](https://github.com/cmdcolin/videoskillet/compare/v1.0.0...v1.0.1) - 2026-09-16
 
 ### Features
