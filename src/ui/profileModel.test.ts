@@ -10,6 +10,7 @@ import {
   readCurrent,
   readProfiles,
   removeProfile,
+  renameProfile,
   suggestProfileName,
   upsertProfile,
 } from './profileModel'
@@ -70,6 +71,23 @@ describe('profile store', () => {
 
   it('removes by name', () => {
     expect(removeProfile([p('a'), p('b')], 'a')).toEqual([p('b')])
+  })
+
+  it('renames in place and keeps the id and the stamp', () => {
+    const looks = [
+      { name: 'a', query: 'q1', id: 'x1', savedAt: 5 },
+      { name: 'b', query: 'q2' },
+    ]
+    expect(renameProfile(looks, 'a', '  worn   tape ')).toEqual([
+      { name: 'worn tape', query: 'q1', id: 'x1', savedAt: 5 },
+      { name: 'b', query: 'q2' },
+    ])
+  })
+
+  it('refuses a rename onto a name in use, or onto no name', () => {
+    const looks = [p('a'), p('b')]
+    expect(renameProfile(looks, 'a', 'b')).toEqual(looks)
+    expect(renameProfile(looks, 'a', '   ')).toEqual(looks)
   })
 })
 

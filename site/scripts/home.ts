@@ -12,6 +12,8 @@
 // that string to the parser.
 import {
   SESSION_STILL,
+  deleteStill,
+  editProfiles,
   fetchHome,
   fetchStill,
   fetchStills,
@@ -21,6 +23,12 @@ import {
   wasSignedIn,
   watchAuth,
 } from '../../src/ui/cloud'
+import {
+  PROFILE_NAME_MAX,
+  cleanProfileName,
+  removeProfile,
+  renameProfile,
+} from '../../src/ui/profileModel'
 import { sinceWords } from '../lib/relativeTime'
 
 import type { CloudUser, HomeDoc, Still } from '../../src/ui/cloud'
@@ -164,6 +172,7 @@ function lookCard(
   stills: Map<string, Still> | undefined,
   key: number,
   now: number,
+  edits: CardEdits,
 ): HTMLElement {
   const item = el('li')
   const link = el('a', 'demo')
@@ -182,9 +191,152 @@ function lookCard(
     nameRow(profile.name),
     el('span', 'says', says),
   )
-  item.append(link)
+  item.append(link, cardActions(profile, edits))
   return item
 }
+
+// The link a copied card carries, whole, so it opens from a chat window.
+const shareLink = (query: string) => new URL(linkFor(query), location.href).href
+
+// A deleted look's still goes with it. Best effort: a still left behind is a
+// document nothing reads.
+const deleted = (user: CloudUser, profile: SavedProfile) => {
+  if (profile.id === undefined) return
+  deleteStill(user.uid, profile.id).catch((e: unknown) => {
+    console.error('deleting the still failed', e)
+  })
+}
+
+// CROSS_REPO_SYNC(home-card-actions)
+// What a card's verbs need: who is signed in, and how to draw the home again
+// from the list an edit left on the account.
+interface CardEdits {
+  user: CloudUser
+  redraw: (profiles: SavedProfile[]) => void
+}
+
+// Copy link, rename and delete, in a row under a saved card. The row sits
+// beside the card's link, since a button inside an <a> follows the link. A
+// rename or a delete runs through the same transaction the app saves with, and
+// the home redraws from the list that landed.
+function cardActions(profile: SavedProfile, edits: CardEdits): HTMLElement {
+  const row = el('div', 'cardActions')
+  const status = el('span', 'cardStatus')
+  status.setAttribute('role', 'status')
+
+  const act = (label: string, run: () => void) => {
+    const button = el('button', 'cardAct', label)
+    button.type = 'button'
+    button.addEventListener('click', run)
+    return button
+  }
+  const show = (...nodes: HTMLElement[]) => {
+    row.replaceChildren(...nodes, status)
+  }
+  const busy = () => {
+    for (const node of row.querySelectorAll('button, input'))
+      (node as HTMLButtonElement | HTMLInputElement).disabled = true
+  }
+
+  const idle = (focus?: string) => {
+    const buttons = [
+      act('Copy link', copy),
+      act('Rename', () => {
+        rename(profile.name)
+      }),
+      act('Delete', askDelete),
+    ]
+    show(...buttons)
+    buttons.find(button => button.textContent === focus)?.focus()
+  }
+
+  function copy() {
+    const link = shareLink(profile.query)
+    // An insecure origin has no clipboard at all, and reading it throws before
+    // there is a promise to reject.
+    Promise.resolve()
+      .then(() => navigator.clipboard.writeText(link))
+      .then(
+        () => {
+          status.textContent = 'Link copied'
+        },
+        () => {
+          status.textContent = 'Could not copy the link'
+        },
+      )
+  }
+
+  function rename(start: string) {
+    const input = el('input', 'cardName')
+    input.value = start
+    input.maxLength = PROFILE_NAME_MAX
+    input.setAttribute('aria-label', `New name for ${profile.name}`)
+    const save = () => {
+      const to = cleanProfileName(input.value)
+      if (to === '' || to === profile.name) {
+        idle('Rename')
+        return
+      }
+      busy()
+      editProfiles(edits.user.uid, list =>
+        renameProfile(list, profile.name, to),
+      ).then(
+        next => {
+          if (next.some(p => p.name === profile.name)) {
+            rename(to)
+            status.textContent = `Another one is already called “${to}”`
+          } else edits.redraw(next)
+        },
+        () => {
+          rename(to)
+          status.textContent = 'Could not rename. Check the connection.'
+        },
+      )
+    }
+    input.addEventListener('keydown', event => {
+      if (event.key === 'Enter') save()
+      if (event.key === 'Escape') idle('Rename')
+    })
+    status.textContent = ''
+    show(
+      input,
+      act('Save', save),
+      act('Cancel', () => idle('Rename')),
+    )
+    input.select()
+  }
+
+  function askDelete() {
+    status.textContent = ''
+    const keep = act('Keep', () => idle('Delete'))
+    show(
+      el('span', 'cardAsk', `Delete “${profile.name}”?`),
+      act('Delete', remove),
+      keep,
+    )
+    keep.focus()
+  }
+
+  function remove() {
+    busy()
+    editProfiles(edits.user.uid, list =>
+      removeProfile(list, profile.name),
+    ).then(
+      next => {
+        deleted(edits.user, profile)
+        edits.redraw(next)
+      },
+      () => {
+        idle('Delete')
+        status.textContent = 'Could not delete. Check the connection.'
+      },
+    )
+  }
+
+  idle()
+  return row
+}
+// CROSS_REPO_SYNC_END(home-card-actions)
 
 function section(id: string, heading: string, sub?: string): HTMLElement {
   const box = el('section', 'homeSec')
@@ -263,6 +415,7 @@ function looksSection(
   doc: HomeDoc,
   stills: Map<string, Still> | undefined,
   now: number,
+  edits: CardEdits,
 ) {
   const box = section('saved', 'Your saved looks')
   if (doc.profiles.length === 0) {
@@ -278,7 +431,7 @@ function looksSection(
 
   const grid = el('ul', 'grid looks')
   for (const { profile, key } of keyed)
-    grid.append(lookCard(profile, stills, key, now))
+    grid.append(lookCard(profile, stills, key, now, edits))
   box.append(grid)
   return box
 }
@@ -439,8 +592,15 @@ export function showHome(
   stills?: Map<string, Still>,
   now = Date.now(),
 ): void {
+  const edits: CardEdits = {
+    user,
+    // An edit that lands after a sign-out has nothing left to draw on.
+    redraw: profiles => {
+      if (signedIn?.uid === user.uid) void draw(user, { ...doc, profiles })
+    },
+  }
   const resume = resumeSection(doc, stills, now)
-  const looks = looksSection(doc, stills, now)
+  const looks = looksSection(doc, stills, now, edits)
   showFrame(user, resume === undefined ? [looks] : [resume, looks])
 }
 
@@ -510,6 +670,10 @@ async function paint(user: CloudUser) {
     return
   }
   if (signedIn?.uid !== user.uid) return
+  await draw(user, doc)
+}
+
+async function draw(user: CloudUser, doc: HomeDoc) {
   const cached = stillCache?.uid === user.uid ? stillCache.stills : undefined
   showHome(user, doc, cached)
   const drawn = turn

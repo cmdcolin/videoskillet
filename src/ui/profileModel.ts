@@ -142,6 +142,23 @@ export const removeProfile = (
   name: string,
 ): SavedProfile[] => profiles.filter(item => item.name !== name)
 
+// Rename in place: the entry keeps its position, its id and its stamps. A name
+// another entry already uses leaves the list as it was, so a rename can never
+// overwrite anything; the caller tells the two outcomes apart by whether `from`
+// is still in the list.
+export function renameProfile(
+  profiles: readonly SavedProfile[],
+  from: string,
+  to: string,
+): SavedProfile[] {
+  const clean = cleanProfileName(to)
+  if (clean === '' || profiles.some(item => item.name === clean))
+    return [...profiles]
+  return profiles.map(item =>
+    item.name === from ? { ...item, name: clean } : item,
+  )
+}
+
 // What the name box offers, so saving is type-nothing-and-press-save. `base` is
 // whatever the board is already called — the active preset, or the last one
 // edited — and the counter only appears once that name is taken, so the first

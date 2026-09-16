@@ -463,6 +463,75 @@ section {
   opacity: 0.55;
 }
 
+/* A saved card with its verbs under it. The <li> carries the card's border so
+   the link and the row of buttons read as one card, and the row sits at the
+   bottom however long the name above it runs. */
+.grid li:has(> .cardActions) {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--border-faint);
+  border-radius: 0.6rem;
+  background: var(--surface);
+}
+.grid li:has(> .cardActions) > a:first-child {
+  flex: 1;
+  border: 0;
+  border-radius: 0;
+}
+.grid li:has(> a:first-child:hover, > a:first-child:focus-visible) {
+  border-color: var(--accent);
+}
+.cardActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem 0.8rem;
+  padding: 0.45rem 0.85rem 0.6rem;
+  border-top: 1px solid var(--border-faint);
+  font-size: 0.8rem;
+}
+.cardAct {
+  padding: 0.15rem 0;
+  border: 0;
+  background: none;
+  color: var(--fg4);
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.cardAct:hover,
+.cardAct:focus-visible {
+  color: var(--fg);
+}
+.cardAct:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.cardAsk {
+  flex-basis: 100%;
+  color: var(--fg2);
+  overflow-wrap: anywhere;
+}
+.cardName {
+  flex: 1 1 100%;
+  min-width: 0;
+  padding: 0.3rem 0.45rem;
+  border: 1px solid var(--border-faint);
+  border-radius: 0.35rem;
+  background: var(--bg);
+  color: var(--fg);
+  font: inherit;
+}
+.cardStatus {
+  flex-basis: 100%;
+  color: var(--fg3);
+}
+.cardStatus:empty {
+  display: none;
+}
+
 .empty {
   padding: 2.25rem 1.5rem;
   border: 1px dashed var(--border-faint);
