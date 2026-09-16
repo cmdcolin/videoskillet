@@ -241,10 +241,15 @@ describe('a link that is not what this build would have written', () => {
     )
   })
 
-  it('reads a sealed link that picked up a full stop', () => {
+  // The other direction of the cut above: a link that lost its tail is short of
+  // what was written and the seal says so, while one that picked a character up
+  // is not, and opens. The full stop of the sentence it was pasted into, the
+  // bracket of a markdown link, the next word autolinked along with it.
+  it('reads a sealed link that picked up a character on the way', () => {
     const look: Controls = { ...DEFAULT_CONTROLS, hHold: 0.2, noiseIre: 7.5 }
     const packed = packControls(look)
-    expect(unpackControls(`${packed}.`)).toEqual(unpackControls(packed))
+    for (const tail of ['.', ')', '>', ' and the grade'])
+      expect(unpackControls(`${packed}${tail}`)).toEqual(unpackControls(packed))
   })
 
   it('reads a link padded the way another encoder would pad it', () => {

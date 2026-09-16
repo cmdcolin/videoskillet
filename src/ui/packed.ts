@@ -149,16 +149,26 @@ function toBase64Url(bytes: readonly number[]): string {
   return out
 }
 
-function fromBase64Url(text: string): number[] | null {
+// '+' and '/' are read as themselves because the plain alphabet is what most
+// encoders reach for. Everything else outside the alphabet ends the bytes
+// rather than voiding them — '=' from something that pads, and, the case this
+// is really for, whatever the link picked up on its way here. A full stop at
+// the end of the sentence it was pasted into, the bracket of a markdown link,
+// the next word autolinked along with it: a link that arrives with one
+// character too many has lost no more of itself than one whose tail a chat
+// window ate, and that one already opens the look it can still read.
+//
+// Under a seal that is a proposal rather than an answer, and the seal is what
+// judges it: trailing junk leaves the body whole and the seal matches, while a
+// character turned anywhere in it leaves a short body whose seal does not.
+// CROSS_REPO_SYNC(packed-base64)
+function fromBase64Url(text: string): number[] {
   const bytes: number[] = []
   let acc = 0
   let bits = 0
-  // '=' because a link may have been through something that pads, '.' because a
-  // link pasted at the end of a sentence picks one up, and the other two
-  // because the plain alphabet is what most encoders reach for.
-  for (const ch of text.replace(/[=.]+$/, '')) {
+  for (const ch of text) {
     const v = B64.indexOf(ch === '+' ? '-' : ch === '/' ? '_' : ch)
-    if (v < 0) return null
+    if (v < 0) break
     acc = (acc << 6) | v
     bits += 6
     if (bits >= 8) {
@@ -168,6 +178,7 @@ function fromBase64Url(text: string): number[] | null {
   }
   return bytes
 }
+// CROSS_REPO_SYNC_END(packed-base64)
 
 /** A look as bytes: every control off default, by its `id` in the table. */
 export function packControls(c: Partial<Controls>): string {
@@ -199,13 +210,11 @@ export function packControls(c: Partial<Controls>): string {
 export function unpackControls(text: string): Partial<Controls> | null {
   const sealed = text[SEAL_LEN] === SEAL
   const bytes = fromBase64Url(sealed ? text.slice(SEAL_LEN + 1) : text)
-  // A character the alphabet does not have is damage too, and under a seal it
-  // has to answer the way a turned character does. This used to fall through to
-  // the unsealed answer — an empty look, `damaged: false`, and the app opening
-  // on the default picture with nothing said — so which of the two a damaged
-  // link got came down to whether whatever mangled it happened to land inside
-  // the alphabet.
-  if (bytes === null) return sealed ? null : {}
+  // A character the alphabet does not have ends the bytes there, so under a
+  // seal it answers the way a cut does: the seal is over what was written, and
+  // a short body fails it. That is also what keeps a link with the sentence's
+  // full stop stuck to it out of the damaged notice — the body is whole and the
+  // seal says so.
   if (sealed && seal(bytes) !== text.slice(0, SEAL_LEN)) return null
   const out: Partial<Controls> = {}
   let at = 0
