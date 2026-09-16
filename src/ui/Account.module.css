@@ -24,9 +24,9 @@
   color: var(--fg);
 }
 
-/* Round and picture-sized, because once you are in the picture is the label.
-   Bare of the square's fill and border: a box drawn around a circular photo
-   reads as a second control behind it. */
+/* Round and photo-sized — once you are signed in the photo is the label. The
+   button drops the square's fill and border, because a box drawn around a
+   circular photo reads as a second control behind it. */
 .acctBtn {
   display: inline-flex;
   align-items: center;
@@ -54,9 +54,9 @@
   object-fit: cover;
 }
 
-/* Google serves no photo for plenty of accounts, and a broken image is worse
-   than no image. The first letter of the name, drawn the way the site bar on
-   the home page draws it. */
+/* Google serves no photo for plenty of accounts, and an <img> with no src
+   renders as a broken image. This draws the first letter of the name, the way
+   the home page's site bar does. */
 .initial {
   composes: avatar;
   display: flex;
@@ -68,8 +68,8 @@
   border: 1px solid var(--border-quiet);
 }
 
-/* Who, at the head of the menu, so the photo has a name under it. Text rather
-   than a row: there is nothing to press here. */
+/* The name at the head of the menu, so the photo has a name under it. Plain
+   text, because pressing it would do nothing. */
 .who {
   overflow: hidden;
   text-overflow: ellipsis;

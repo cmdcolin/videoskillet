@@ -303,7 +303,8 @@ be found again.
 
 **saved** is your library, kept on your account, so it needs a sign-in.
 `ctrl/⌘+S` saves, and the first nine sit on the number keys: `1–9` recalls,
-`shift+1–9` overwrites.
+`shift+1–9` overwrites. **sign in** sits beside **saved** in the masthead, and
+becomes your account photo once you are in — press the photo to sign out.
 
 Saving with nobody signed in holds the look and opens **why sign in?**, the same
 card the ⋮ menu offers. Sign in from that card and the look you were looking at

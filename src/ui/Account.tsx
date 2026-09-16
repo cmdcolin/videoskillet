@@ -7,14 +7,14 @@ import { MenuItem, Popover } from './Popover'
 import type { CloudUser } from './cloud'
 import type { CloudStatus } from './useSavedProfiles'
 
-// Who is signed in, and the two verbs over that: in, and out. Its own control
-// beside the library button rather than folded into it, because an account and
-// a list of looks are two different facts and one button cannot label both —
-// the library button used to relabel itself `sign in`, so answering it landed
-// you in a save form you had not asked for.
+// The account control: who is signed in, and the way in and out. It sits beside
+// the library button, because a list of looks and an account are two facts and
+// one button can label only one of them. The library button used to relabel
+// itself `sign in`, so answering it left you looking at a save form you had not
+// opened.
 //
-// Signed in it is the photo and nothing else, which is the shape the site bar
-// on the home page already takes. Signed out it is the plain ask.
+// Signed in the control shows the account photo, which is the shape the site
+// bar on the home page already takes. Signed out it shows the ask.
 export function Account(props: {
   user: CloudUser | null
   status: CloudStatus
@@ -23,9 +23,8 @@ export function Account(props: {
 }) {
   const [broken, setBroken] = useState(false)
 
-  // A session being picked back up is not one being asked to sign in: `sign in`
-  // here would flash false for as long as Firebase takes to confirm what the
-  // last visit already recorded.
+  // `sign in` would flash false for as long as Firebase takes to confirm what
+  // the last visit already recorded, so a session still being restored says `…`.
   if (props.user === null) {
     const checking = props.status === 'loading'
     return (

@@ -1413,9 +1413,8 @@ export function App() {
             onCopyLink={profile => copyQuery(profile.query)}
             onWhy={() => setWhy({ pending: null })}
           />
-          {/* Beside the library rather than inside it: the list and the account
-              are two facts, and one button that relabelled itself `sign in`
-              answered for neither. */}
+          {/* The account, beside the library. The two shared one button, whose
+              label alternated between `saved` and `sign in`. */}
           <Account
             user={profiles.user}
             status={profiles.status}

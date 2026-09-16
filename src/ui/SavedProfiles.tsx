@@ -28,11 +28,11 @@ import type { CloudStatus, ProfileFlash } from './useSavedProfiles'
 // the press does and what the list holds, and it leaves "the look" meaning the
 // live board everywhere else in the app.
 //
-// It says `saved` in every state. It used to read `sign in` with nobody signed
-// in, which made one button stand for two things: press it, answer Google, and
-// the save form you never opened was what came back. The account is its own
-// control now (`Account`), and the sign-in still offered inside this popover is
-// the answer to the question the popover raises — where would a save go?
+// The button says `saved` in every state. It used to read `sign in` with nobody
+// signed in, so one button stood for two things, and answering Google handed
+// back a save form nobody had opened. `Account` holds the account now. This
+// popover still offers a sign-in, because it is the answer to the question the
+// popover raises — where would a save go?
 //
 // It is a popover rather than a section of the panel because saving is a thing
 // you do for two seconds and recall is a list you open — neither wants a fold of
