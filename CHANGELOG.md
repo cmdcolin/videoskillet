@@ -2,6 +2,41 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [1.0.0](https://github.com/cmdcolin/videoskillet/compare/v0.47.3...v1.0.0) - 2026-09-16
+
+### Features
+- *(ui)* [`9e08514`](https://github.com/cmdcolin/videoskillet/commit/9e0851401bb08972ccd0d39c1021e59cb4487a68) ask before loading Google Analytics
+- *(ui)* [`b93384f`](https://github.com/cmdcolin/videoskillet/commit/b93384f92378082b5f613fef1de94a2e3804bbb3) copy, rename and delete a saved look from the home page
+- *(ui)* [`78ea87c`](https://github.com/cmdcolin/videoskillet/commit/78ea87cb77dfd1244feb877694d08351dc544a1e) wire App Check, inert until a site key is registered
+- *(ui)* [`89182a8`](https://github.com/cmdcolin/videoskillet/commit/89182a836c87a550e699cd746a9c1347b3b9aeb0) set the App Check key, so sessions start attesting
+
+### Fixes
+- *(ui)* [`36e19e1`](https://github.com/cmdcolin/videoskillet/commit/36e19e1fce039b38651209059c111bbdcac6fbd9) stop a quick second save from erasing the first
+- *(ui)* [`376e832`](https://github.com/cmdcolin/videoskillet/commit/376e8320e408c5d17ed95cba7479f36bdd741526) center the placeholder on saved-look cards and stop calling old looks unsaved
+- *(ui)* [`062bc6e`](https://github.com/cmdcolin/videoskillet/commit/062bc6e3f08949f085e872be1cb3ae1395b2fd6c) stop writing on recall, and take a sharper still when save is pressed
+- *(ui)* [`71d05d4`](https://github.com/cmdcolin/videoskillet/commit/71d05d4710880c56aa42d5c523362a0d4b5c7b5c) keep the resume card on the visitor's own session, with a picture
+- *(ui)* [`1142a44`](https://github.com/cmdcolin/videoskillet/commit/1142a4476922fc1c91274167905e21622a3d1ef1) smaller saved-look cards, and an account menu that is a disclosure
+- *(ui)* [`0dc29c9`](https://github.com/cmdcolin/videoskillet/commit/0dc29c9dabc074a77dc0eb216c088389d24dca3d) say why a save failed, and drop replies that arrive after sign-out
+- *(ui)* [`d766cdc`](https://github.com/cmdcolin/videoskillet/commit/d766cdc81218dd0c65272dc3467a06ec7653aabc) fit a phone card's verbs on one row, and space the privacy page's paragraphs
+- *(ui)* [`a43784a`](https://github.com/cmdcolin/videoskillet/commit/a43784a79b21086483eaf08683cc913b5389ea5e) keep the analytics notice off scripted browsers, and share the card verbs with bender
+- *(ui)* [`2c706b7`](https://github.com/cmdcolin/videoskillet/commit/2c706b7dc3e4a89854b32d355800341778f14e7a) a card edit that lands after sign-out draws nothing, and its failure blames nobody
+- *(ui)* [`a5a7b59`](https://github.com/cmdcolin/videoskillet/commit/a5a7b599eef092132e1b2eb2090f5ddda3e2a2bf) recover sign-in after a failed SDK load or list fetch, and keep held saves in step
+- *(ui)* [`48e6fea`](https://github.com/cmdcolin/videoskillet/commit/48e6fea406516b7e5ada113c72338ac0e44773d5) attest with reCAPTCHA Enterprise, which is what the console offers
+
+### Refactor
+- *(ui)* [`8e18a94`](https://github.com/cmdcolin/videoskillet/commit/8e18a94df10ca90a52de092afbe94a02391d8453) share observe with bender in the current-session region
+
+### Documentation
+- *(ui)* [`ac3a8b0`](https://github.com/cmdcolin/videoskillet/commit/ac3a8b091ea9b9c633cb933cfcd8a08e8164bd94) say what the account stores, and record the session still
+- [`94fe9ec`](https://github.com/cmdcolin/videoskillet/commit/94fe9ec5a13a96926a85be7bd25376077e4d6a66) the home page's card verbs, the resume still, and when a session starts
+
+### Style
+- *(docs)* [`a8d2529`](https://github.com/cmdcolin/videoskillet/commit/a8d25292635bc2851a113976d83e72470b490c1e) reflow two bullets in adr 0010
+
+### Chores
+- [`98d12cd`](https://github.com/cmdcolin/videoskillet/commit/98d12cd6fc173cf6a92f0d8f7f0d5a02c19cc7da) deploy firestore.rules when a push to main changes it
+- [`1969ec3`](https://github.com/cmdcolin/videoskillet/commit/1969ec3bb82a4113412d711dc4fe196dbf0e9aa8) install delete-user-data as an extensions manifest
+
 ## [0.47.3](https://github.com/cmdcolin/videoskillet/compare/v0.47.2...v0.47.3) - 2026-09-15
 
 ### Fixes
