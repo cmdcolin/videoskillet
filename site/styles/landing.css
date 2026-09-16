@@ -502,7 +502,13 @@ code {
   text-align: center;
 }
 
-/* The blank mark on a gallery card; site.css sizes the resume card's. */
+/* The blank mark on a saved-look card; site.css sizes the resume card's.
+   `.demo .shot` above comes later than site.css's `.shot.blank` and would
+   leave the mark in the corner. */
+.demo .shot.blank {
+  display: grid;
+  place-items: center;
+}
 .demo .shot.blank .blankMark {
   position: static;
   width: 2.5rem;

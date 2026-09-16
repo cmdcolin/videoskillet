@@ -129,11 +129,15 @@ function lookCard(
   const item = el('li')
   const link = el('a', 'demo')
   link.href = linkFor(profile.query)
-  const saved =
+  // A look saved before timestamps existed carries no date to show.
+  const says = [
     profile.savedAt === undefined
-      ? 'not saved yet'
-      : `saved ${sinceWords(profile.savedAt, now)}`
-  const says = key <= SLOTS ? `${saved} · key ${key}` : saved
+      ? undefined
+      : `saved ${sinceWords(profile.savedAt, now)}`,
+    key <= SLOTS ? `key ${key}` : undefined,
+  ]
+    .filter(part => part !== undefined)
+    .join(' · ')
   link.append(
     shotFor(profile.id, stills),
     nameRow(profile.name),
@@ -179,7 +183,7 @@ function resumeSection(
     el(
       'p',
       'resumeSays',
-      'Resuming restores the board, the motion, both decks and the cue points.',
+      'Resuming restores the board, the motion and the cue points, and reloads any video or image that came from a link. A local file, a camera or a screen share has to be picked again.',
     ),
   )
   const row = el('p', 'resumeCta')
