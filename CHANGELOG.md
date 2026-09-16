@@ -2,6 +2,11 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [1.0.1](https://github.com/cmdcolin/videoskillet/compare/v1.0.0...v1.0.1) - 2026-09-16
+
+### Features
+- *(ui)* [`c3934a7`](https://github.com/cmdcolin/videoskillet/commit/c3934a754294d98212c74b9eb366fd9d860fd77d) give the account its own control, with the avatar on it
+
 ## [1.0.0](https://github.com/cmdcolin/videoskillet/compare/v0.47.3...v1.0.0) - 2026-09-16
 
 ### Features
