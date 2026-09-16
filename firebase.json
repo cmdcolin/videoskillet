@@ -6,7 +6,7 @@
   "auth": {
     "providers": {
       "googleSignIn": {
-        "oAuthBrandDisplayName": "videoskillet.js",
+        "oAuthBrandDisplayName": "videoskillet & bender",
         "supportEmail": "colin.diesh@gmail.com"
       }
     }

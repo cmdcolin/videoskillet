@@ -498,14 +498,18 @@ async function freshen(
   return stills
 }
 
+// A sign-out during the fetch has already shown the landing page, so paint
+// draws only for the account still signed in.
 async function paint(user: CloudUser) {
   let doc: HomeDoc
   try {
     doc = await fetchHome(user.uid)
   } catch {
-    showFrame(user, [failedSection(() => void paint(user))])
+    if (signedIn?.uid === user.uid)
+      showFrame(user, [failedSection(() => void paint(user))])
     return
   }
+  if (signedIn?.uid !== user.uid) return
   const cached = stillCache?.uid === user.uid ? stillCache.stills : undefined
   showHome(user, doc, cached)
   const drawn = turn

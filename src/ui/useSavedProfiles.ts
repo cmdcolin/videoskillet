@@ -12,6 +12,7 @@ import {
   watchAuth,
 } from './cloud'
 import {
+  QUERY_MAX,
   removeProfile,
   suggestProfileName,
   upsertProfile,
@@ -63,8 +64,28 @@ export type ProfileFlash =
   | { kind: 'failed' }
 
 // What came of asking to save. On `needs-auth` the hook has kept the look, and
-// the caller opens the why-sign-in card.
-export type SaveOutcome = 'saving' | 'needs-auth'
+// the caller opens the why-sign-in card. On `too-long` the hook sets `error`.
+export type SaveOutcome = 'saving' | 'needs-auth' | 'too-long'
+
+const errorCode = (e: unknown): unknown =>
+  typeof e === 'object' && e !== null && 'code' in e ? e.code : undefined
+
+const saveError = (e: unknown): string => {
+  switch (errorCode(e)) {
+    case 'unavailable':
+    case 'deadline-exceeded':
+      return 'could not save — check your connection'
+    case 'permission-denied':
+    case 'unauthenticated':
+      return 'could not save — sign-in expired, sign out and back in'
+    case 'invalid-argument':
+      return 'could not save — Firestore rejected the saved list'
+    case 'resource-exhausted':
+      return 'could not save — too many saves, try again in a minute'
+    default:
+      return 'could not save — try again'
+  }
+}
 
 /** A save waiting on a sign-in: the look and its still as they were when the
     key was pressed. */
@@ -116,6 +137,10 @@ export function useSavedProfiles(
   // installed it and has to read a press made since.
   const pending = useRef<PendingSave | null>(null)
 
+  // The uid signed in now. A fetch or write that resolves after sign-out, or
+  // after a different account signs in, checks it and leaves the state alone.
+  const uid = useRef<string | null>(null)
+
   // Show one for a beat, then take it down — but only if it is still the one this
   // call put up, compared by identity so a second save during the first flash
   // does not have its own answer cut short by the first timer. A failure holds
@@ -141,6 +166,7 @@ export function useSavedProfiles(
   // subscription, so there is one path that fetches the list rather than one per
   // way in. Declared before the effect that installs it.
   const applyUser = (next: CloudUser | null) => {
+    uid.current = next?.uid ?? null
     setUser(next)
     if (next === null) {
       // Signing out clears the rows as well as the session: leaving them up would
@@ -154,6 +180,7 @@ export function useSavedProfiles(
     setStatus('loading')
     fetchHome(next.uid)
       .then(home => {
+        if (uid.current !== next.uid) return
         setProfiles(home.profiles)
         setCurrent(home.current)
         setStatus('ready')
@@ -162,6 +189,7 @@ export function useSavedProfiles(
       })
       .catch((e: unknown) => {
         console.error('loading saved profiles failed', e)
+        if (uid.current !== next.uid) return
         setStatus('error')
         setError('could not load your saved profiles')
       })
@@ -170,14 +198,14 @@ export function useSavedProfiles(
   // Writes the save pressed before sign-in. The name was suggested against an
   // empty list, so suggestProfileName runs again over the stored list: a save
   // named "my rig" then lands as "my rig 2" beside an existing "my rig".
-  const landPending = (uid: string) => {
+  const landPending = (owner: string) => {
     const want = pending.current
     pending.current = null
     if (want === null) return
     const at = Date.now()
     let name = want.name
     commit(
-      uid,
+      owner,
       list => {
         name = suggestProfileName(list, want.name)
         return upsertProfile(list, name, want.query, at)
@@ -222,25 +250,27 @@ export function useSavedProfiles(
   // saved row. Each write sends an edit, and editProfiles applies it to the
   // stored list: two saves in quick succession both land.
   const commit = (
-    uid: string,
+    owner: string,
     edit: (list: SavedProfile[]) => SavedProfile[],
     landed?: () => string,
     still?: Promise<string | null>,
   ) => {
-    editProfiles(uid, edit)
+    editProfiles(owner, edit)
       .then(next => {
+        if (uid.current !== owner) return
         setProfiles(next)
         setError(null)
         if (landed !== undefined) {
           const name = landed()
           setLastName(name)
           showFlash({ kind: 'saved', name })
-          saveStill(uid, next.find(p => p.name === name)?.id, still)
+          saveStill(owner, next.find(p => p.name === name)?.id, still)
         }
       })
       .catch((e: unknown) => {
         console.error('saving profiles failed', e)
-        setError('could not save — check your connection')
+        if (uid.current !== owner) return
+        setError(saveError(e))
         // The half that was missing: the message above lands inside the popover,
         // and a ctrl+S is made with the popover shut. Without this the write went
         // to the network, failed, and the app looked exactly as it does after a
@@ -271,11 +301,24 @@ export function useSavedProfiles(
     // sign-in button in place of the name box, and ctrl+S says so on the button.
     canSave: status === 'ready',
     saveProfile: (name: string, query: string): SaveOutcome => {
+      if (query.length > QUERY_MAX) {
+        setError(
+          `could not save — this look is ${query.length} characters long, and the limit is ${QUERY_MAX}`,
+        )
+        showFlash({ kind: 'failed' })
+        return 'too-long'
+      }
       const still = grabThumb?.(STILL_MAX)
       if (status !== 'ready') {
         pending.current = { name, query, still }
-        showFlash({ kind: 'needs-auth' })
-        return 'needs-auth'
+        if (user === null) {
+          showFlash({ kind: 'needs-auth' })
+          return 'needs-auth'
+        }
+        // Signed in with the list still loading, or with a failed load: the
+        // save lands when the list arrives, and a failed load is retried.
+        if (status === 'error') applyUser(user)
+        return 'saving'
       }
       const at = Date.now()
       write(
@@ -314,8 +357,7 @@ export function useSavedProfiles(
         // A popup the user dismissed is not a failure worth a message: they
         // changed their mind, and the button they came from is the right thing to
         // be looking at again.
-        const code =
-          typeof e === 'object' && e !== null && 'code' in e ? e.code : ''
+        const code = errorCode(e)
         if (
           code === 'auth/popup-closed-by-user' ||
           code === 'auth/cancelled-popup-request'
