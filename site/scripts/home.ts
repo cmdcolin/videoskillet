@@ -276,7 +276,7 @@ function looksSection(
   const keyed = doc.profiles.map((profile, i) => ({ profile, key: i + 1 }))
   keyed.sort((a, b) => (b.profile.savedAt ?? 0) - (a.profile.savedAt ?? 0))
 
-  const grid = el('ul', 'grid')
+  const grid = el('ul', 'grid looks')
   for (const { profile, key } of keyed)
     grid.append(lookCard(profile, stills, key, now))
   box.append(grid)
@@ -350,8 +350,11 @@ acctBtn.addEventListener('click', event => {
   acctBtn.setAttribute('aria-expanded', String(!acctMenu.hidden))
 })
 document.addEventListener('click', closeMenu)
+// A disclosure, so Escape hands focus back to the button that opened it.
 document.addEventListener('keydown', event => {
-  if (event.key === 'Escape') closeMenu()
+  if (event.key !== 'Escape' || acctMenu.hidden) return
+  closeMenu()
+  acctBtn.focus()
 })
 
 // --- why sign in ------------------------------------------------------------

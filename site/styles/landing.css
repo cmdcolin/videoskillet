@@ -490,6 +490,28 @@ code {
 .demo:focus-visible .open {
   color: var(--accent);
 }
+/* The reader's own looks can number two hundred, so their cards run smaller
+   than the gallery's: four across the home column, two on a phone. */
+.grid.looks {
+  grid-template-columns: repeat(auto-fill, minmax(min(13rem, 100%), 1fr));
+}
+@media (max-width: 34rem) {
+  .grid.looks {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.6rem;
+  }
+  .grid.looks .name {
+    padding: 0.5rem 0.6rem 0.2rem;
+    font-size: 0.86rem;
+  }
+  .grid.looks .open {
+    display: none;
+  }
+  .grid.looks .says {
+    padding: 0 0.6rem 0.55rem;
+    font-size: 0.74rem;
+  }
+}
 
 /* The line under the hero buttons, saying what an account is for. */
 .dim {

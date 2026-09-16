@@ -64,19 +64,14 @@ const { account = true, current } = Astro.props
               class="acctBtn"
               id="acctBtn"
               type="button"
-              aria-haspopup="menu"
+              aria-controls="acctMenu"
               aria-expanded="false"
             >
               <span class="avatar" id="avatar" />
             </button>
-            <div class="acctMenu" id="acctMenu" role="menu" hidden>
+            <div class="acctMenu" id="acctMenu" hidden>
               <p class="acctName" id="acctName" />
-              <button
-                class="acctOut"
-                id="signOut"
-                type="button"
-                role="menuitem"
-              >
+              <button class="acctOut" id="signOut" type="button">
                 Sign out
               </button>
             </div>
