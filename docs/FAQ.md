@@ -113,7 +113,8 @@ in one browser, so a look named on a laptop is there on a phone. The app also
 autosaves the session you are running, and videoskillet.com then opens on a home
 page with a card that resumes it, your saved looks with a still of each, and the
 gallery. Each saved look has an _open_ that reloads the whole setup and a
-_recall_ that brings back the controls and the motion alone.
+_recall_ that brings back the controls and the motion alone, and its card on the
+home page copies its link, renames it or deletes it.
 
 Everything else works signed out, offline, forever: presets, scenes, pinned
 sliders, the rundown, recording, and the URL that carries the whole look. The

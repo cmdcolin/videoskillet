@@ -149,11 +149,12 @@ per generation.
   of the picture, and the popover's _open_ reloads the whole setup from it,
   where _recall_ brings back the controls and the motion alone.
 - **Home**: signed in, videoskillet.com opens on a page of your own — a card
-  that resumes the session you were last running, your saved looks with their
-  stills, and the gallery. The app autosaves the current session to the account
-  while you are signed in, so the resume card is up to date on whatever machine
-  you open next. A bare load of the app is not a session and leaves the card as
-  it was.
+  that resumes the session you were last running, with a still of it, your saved
+  looks with their stills, and the gallery. Each saved look's card copies its
+  link, renames it or deletes it. The app autosaves the current session to the
+  account while you are signed in, so the resume card is up to date on whatever
+  machine you open next. Opening the app, a gallery look or a shared link is not
+  a session until something on the board changes, so the card stays as it was.
 - **Drift**: one switch makes the look wander on its own, with a small change
   every fifteen seconds around the current setting. Each stage has the same
   switch for its own controls.
