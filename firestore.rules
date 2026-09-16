@@ -62,6 +62,13 @@ service cloud.firestore {
       // Signing out does not delete anything, and nothing in the app deletes the
       // document — clearing the last profile writes an empty list. The rule
       // exists so the owner is not locked out of removing their own data.
+      //
+      // Deleting the account itself takes this document and its stills with it:
+      // the delete-user-data extension (firebase.json, configured in
+      // extensions/delete-user-data.env) watches Firebase Auth deletions and
+      // removes `users/{uid}` and `benderUsers/{uid}` recursively. Ratings and
+      // votes are outside those paths and stay, which is what docs/CURATION.md
+      // and the privacy page both say happens.
       allow delete: if isOwner(uid);
       // No `list`: there is no query over /users, and allowing one would let any
       // signed-in user enumerate the collection.

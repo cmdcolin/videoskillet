@@ -11,6 +11,9 @@
       }
     }
   },
+  "extensions": {
+    "delete-user-data": "firebase/delete-user-data@0.1.30"
+  },
   "emulators": {
     "firestore": {
       "port": 8817
