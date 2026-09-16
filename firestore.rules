@@ -127,6 +127,9 @@ service cloud.firestore {
     // immutable, size-capped, and stamped with the author's uid and the server's
     // clock. A bad actor can add junk votes; they cannot alter or delete
     // anybody's, cannot enumerate the collection, and cannot forge who or when.
+    // Nothing here bounds how *many* rows a client writes, and no rule can:
+    // docs/adr/0011 has why a limiter built out of a client-updated document
+    // reads as protection and is not one. App Check is what bounds volume.
     // Junk is a filtering problem in the training script (which has the uid and
     // the deliberation time to filter on), and that is the right place for it.
 
