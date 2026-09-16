@@ -3,7 +3,8 @@ rules_version = '2';
 // Three things live in this project: one document per signed-in user holding
 // that user's saved profiles, the vote page's training data — candidates and
 // the pairwise comparisons between them — and bender's saved voices, a second
-// app that shares the project. Deploy with `pnpm firebase-deploy`.
+// app that shares the project. `deploy.yml` sends this file when a push to main
+// changes it; `pnpm firebase-deploy` sends it by hand.
 //
 // Default deny: this file grants access to exactly one path, so every other
 // collection in the project — including any added later without a rule of its

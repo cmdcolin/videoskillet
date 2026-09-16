@@ -94,7 +94,8 @@ picture of the look.
   No merge and no conflict prompt: `current` is a convenience, the profile
   library is the thing worth not losing, and a resume card that asked which
   device you meant would cost more than it saved.
-- **Deploying the rules is still manual.** `pnpm firebase-deploy` sends them and
-  nothing in CI does, so the new fields' guards are tested and not live until
-  someone runs it — the same footgun 0005 recorded, now covering three shapes
-  instead of one.
+- **Deploying the rules was still manual when this was written.** The new
+  fields' guards were tested and not live until someone sent them by hand with
+  `pnpm firebase-deploy` — the same footgun 0005 recorded, covering three shapes
+  instead of one. `deploy.yml` now has a `rules` job that sends the file when a
+  push to main changes it; 0005's consequence has what it needs to work.

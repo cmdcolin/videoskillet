@@ -77,6 +77,57 @@ jobs:
           key: firebase-emulators-${{ hashFiles('pnpm-lock.yaml') }}
       - run: pnpm test:rules
 
+  # The rules were deployed by hand, so a guard the emulator arm above had
+  # already passed could sit un-live indefinitely — the footgun docs/adr/0005
+  # recorded and 0010 recorded again. This lands them alongside the code that
+  # assumes them, and only after `pnpm test:rules` has run against the real
+  # rules engine.
+  #
+  # Two things keep it quiet. It deploys only when firestore.rules is in the
+  # push, because a project holds a bounded number of rulesets and a redeploy of
+  # an identical file spends one for nothing. And a missing secret warns instead
+  # of failing: without it the rules go out by hand, which is where they were,
+  # and a red main on every push would say nothing new.
+  rules:
+    needs: check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 2
+      - id: changed
+        run: |
+          if git diff --name-only HEAD^ HEAD | grep -qx firestore.rules; then
+            echo 'rules=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'firestore.rules is unchanged in this push; nothing to deploy.'
+          fi
+      - uses: pnpm/action-setup@v6
+        if: steps.changed.outputs.rules == 'true'
+        with:
+          version: 11.11.0
+      - uses: actions/setup-node@v7
+        if: steps.changed.outputs.rules == 'true'
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+        if: steps.changed.outputs.rules == 'true'
+      # The service account needs the Firebase Rules Admin role and nothing
+      # else. `firebase deploy` reads it from GOOGLE_APPLICATION_CREDENTIALS, so
+      # the secret is the JSON key file's contents written to a path.
+      - name: Deploy Firestore rules
+        if: steps.changed.outputs.rules == 'true'
+        env:
+          ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          if [ -z "$ACCOUNT" ]; then
+            echo '::warning::FIREBASE_SERVICE_ACCOUNT is not set, so firestore.rules changed in this push and was not deployed. Send it with `pnpm firebase-deploy`.'
+            exit 0
+          fi
+          printf '%s' "$ACCOUNT" > "$RUNNER_TEMP/sa.json"
+          GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/sa.json" pnpm firebase-deploy
+
   build:
     needs: check
     runs-on: ubuntu-latest

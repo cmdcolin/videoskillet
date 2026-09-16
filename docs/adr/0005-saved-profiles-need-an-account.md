@@ -99,11 +99,13 @@ feature moved behind the account to do it.)
   per-entry type or length check, so a signed-in user can bloat their **own**
   document up to Firestore's 1MiB ceiling. Self-data only, no path to anyone
   else's — a "minor" on that scale, and the price of keeping insertion order.
-- **Deploying the rules is a manual step.** `pnpm firebase-deploy` sends them,
-  and nothing in CI does. So an edit to `firestore.rules` can be committed, pass
-  its tests, and never reach the project — the tests prove the file is right,
-  not that it is live. Deploy after changing it. (Wiring it into CI needs a
-  service-account secret in the repo, which is a bigger decision than this
-  record.)
+- **CI deploys the rules, and it used to be a manual step.** `deploy.yml`'s
+  `rules` job sends `firestore.rules` on a push to main that changes it, once
+  the emulator arm has passed. It needs the `FIREBASE_SERVICE_ACCOUNT` secret —
+  a JSON key for an account holding Firebase Rules Admin and nothing else — and
+  while that secret is unset the job warns and deploys nothing. Until somebody
+  sets it, `pnpm firebase-deploy` is the only thing that sends them, and an edit
+  to the file can be committed, pass its tests, and never reach the project: the
+  tests prove the file is right, and never that it is live.
 - **Firestore is a dependency of one feature, not of the app.** If the project
   goes away, saving stops and everything else keeps working.
