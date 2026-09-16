@@ -291,7 +291,7 @@ function cardActions(profile: SavedProfile, edits: CardEdits): HTMLElement {
         },
         () => {
           rename(to)
-          status.textContent = 'Could not rename. Check the connection.'
+          status.textContent = 'Could not rename. Try again.'
         },
       )
     }
@@ -330,7 +330,7 @@ function cardActions(profile: SavedProfile, edits: CardEdits): HTMLElement {
       },
       () => {
         idle('Delete')
-        status.textContent = 'Could not delete. Check the connection.'
+        status.textContent = 'Could not delete. Try again.'
       },
     )
   }
