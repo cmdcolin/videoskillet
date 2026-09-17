@@ -2,6 +2,25 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [2.1.0](https://github.com/cmdcolin/videoskillet/compare/v2.0.3...v2.1.0) - 2026-09-17
+
+### Features
+- *(ui)* [`9597bb8`](https://github.com/cmdcolin/videoskillet/commit/9597bb8ccf2d461382b7aeb4ac06e62fcde20f0f) magnify a running cue loop on a second seek bar
+- *(ui)* [`3ccaf86`](https://github.com/cmdcolin/videoskillet/commit/3ccaf86cce8ff520711e1f0683adabaaeef73599) drag the ends of a cue loop on the zoom bar
+- *(ui)* [`c78492c`](https://github.com/cmdcolin/videoskillet/commit/c78492cc567639b30a939543225887c02047c3d2) give loop delay, the synth oscillators and vertical osc a minor card
+- *(ui)* [`9cbd71f`](https://github.com/cmdcolin/videoskillet/commit/9cbd71fcb1bd1251982b0f6e5eac69034b0cc629) give ghost delay a minor card that walks in nanoseconds
+- *(midi)* [`031c2ee`](https://github.com/cmdcolin/videoskillet/commit/031c2ee48bb1ec884cd57bd5424fe2e516bd0b40) move MIDI setup into a masthead button and card shared with bender
+- *(ui)* [`2f4722e`](https://github.com/cmdcolin/videoskillet/commit/2f4722e17881fe4c1fd317c3338f3a0dc40535ea) make room for midi in the masthead
+- *(ui)* [`4275d9f`](https://github.com/cmdcolin/videoskillet/commit/4275d9f20a41ae0243aa9761011f5d2a51937fc9) open the tags menu as a bottom sheet on phones
+- *(ui)* [`c059ca3`](https://github.com/cmdcolin/videoskillet/commit/c059ca3898d67be95bc855cc39374a26c520217b) narrow the panel to this look on phones
+
+### Fixes
+- *(ui)* [`a55b5d6`](https://github.com/cmdcolin/videoskillet/commit/a55b5d6cf3ad2672591307698c8a5b28db92725e) give the saved and sign in buttons the masthead's touch height
+
+### Refactor
+- *(ui)* [`d659205`](https://github.com/cmdcolin/videoskillet/commit/d659205158a83c6ba54f4a50f4b5b6f4fc3eeb4f) draw the masthead's labelled buttons from one ui.chromeLabel class
+- *(ui)* [`3710aa6`](https://github.com/cmdcolin/videoskillet/commit/3710aa671d16db84a71d512b3adee55ad1a0ad5e) draw the midi button from ui.chromeLabel
+
 ## [2.0.3](https://github.com/cmdcolin/videoskillet/compare/v2.0.2...v2.0.3) - 2026-09-17
 
 ### Fixes
