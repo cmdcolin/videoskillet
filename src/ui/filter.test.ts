@@ -20,8 +20,8 @@ const groupFor = (key: ControlKey): Group => {
   return g
 }
 
-const text = (t: string): Filter => ({ text: t, moving: false })
-const MOVING: Filter = { text: '', moving: true }
+const text = (t: string): Filter => ({ text: t, moving: false, look: null })
+const MOVING: Filter = { text: '', moving: true, look: null }
 
 // A control whose own words say nothing about motion, so a text match can't be
 // what a passing motion filter is finding.
@@ -94,6 +94,24 @@ describe('the motion mode', () => {
   })
 })
 
+describe('the look mode', () => {
+  const look: Filter = { ...NO_FILTER, look: new Set([QUIET]) }
+
+  it('narrows a group to the rows in the look, not the whole group', () => {
+    const group = groupFor(QUIET)
+    expect(filterActive(look)).toBe(true)
+    expect(matchedSliders(group, look).map(s => s.key)).toEqual([QUIET])
+    const named: Filter = { ...look, text: group.name.toLowerCase() }
+    for (const s of matchedSliders(group, named)) expect(s.key).toBe(QUIET)
+  })
+
+  it('shows nothing at all for a look at stock', () => {
+    const stock: Filter = { ...NO_FILTER, look: new Set() }
+    expect(filterActive(stock)).toBe(true)
+    for (const g of GROUPS) expect(groupMatches(g, stock)).toBe(false)
+  })
+})
+
 describe('the two halves narrow together', () => {
   // The whole point of splitting the mode out of the query string: as one
   // string they were alternatives, and "the moving rows that say ghost" could
@@ -101,14 +119,12 @@ describe('the two halves narrow together', () => {
   it('intersects the mode with the text', () => {
     const s = sliderFor(QUIET)
     const word = s.label.toLowerCase()
-    const both: Filter = { text: word, moving: true }
+    const both: Filter = { ...MOVING, text: word }
     expect(sliderMatches(s, both, true)).toBe(true)
     // Moving but not matching the words, and matching the words but not moving:
     // either miss is a miss.
     expect(sliderMatches(s, both, false)).toBe(false)
-    expect(sliderMatches(s, { text: 'zzznope', moving: true }, true)).toBe(
-      false,
-    )
+    expect(sliderMatches(s, { ...MOVING, text: 'zzznope' }, true)).toBe(false)
   })
 
   it('keeps a group-name hit out of the mode', () => {
@@ -119,11 +135,7 @@ describe('the two halves narrow together', () => {
     const group = groupFor(QUIET)
     const name = group.name.toLowerCase()
     expect(matchedSliders(group, text(name), onlyQuiet)).toEqual(group.sliders)
-    const moving = matchedSliders(
-      group,
-      { text: name, moving: true },
-      onlyQuiet,
-    )
+    const moving = matchedSliders(group, { ...MOVING, text: name }, onlyQuiet)
     for (const s of moving) expect(s.key).toBe(QUIET)
     expect(moving.length).toBeLessThan(group.sliders.length)
   })
@@ -149,7 +161,7 @@ describe('the two halves agree', () => {
       text('ghost'),
       text('zzznope'),
       MOVING,
-      { text: 'noise', moving: true },
+      { ...MOVING, text: 'noise' },
     ]
     for (const f of filters) {
       for (const g of GROUPS) {

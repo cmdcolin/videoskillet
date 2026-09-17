@@ -60,7 +60,11 @@ const chain = (
 ) =>
   panelChain({
     controls: over.controls ?? DEFAULT_CONTROLS,
-    filter: { text: over.query ?? '', moving: over.moving ?? false },
+    filter: {
+      text: over.query ?? '',
+      moving: over.moving ?? false,
+      look: null,
+    },
     isRouted: () => false,
     bOn: over.bOn ?? true,
     soundOn: over.soundOn ?? true,

@@ -10,7 +10,9 @@ Click a preset to jump to it. Drag it sideways to blend it part-way in.
 
 - **this look** opens a menu listing every control you're off stock on, as
   sliders. Drag to edit, **↺** to revert one, `ctrl+z` puts back what ↺ took. It
-  is a menu so the panel never grows under your pointer as you edit.
+  is a menu so the panel never grows under your pointer as you edit. On a phone
+  held upright it narrows the panel to those controls, and shows in the filter
+  box as a **this look** token; press either to show the whole panel again.
 - **reset** puts everything back to stock (controls, modulation bay, stab gate)
   and `ctrl+z` undoes it. **clean** does the same thing. Hold `c` to preview
   clean without changing anything.

@@ -334,6 +334,9 @@ export function App() {
   // for moving rows or for "ghost", never both — and left the ✕ clearing a mode
   // it could not tell from a search.
   const [movingOnly, setMovingOnly] = useState(false)
+  // The third half, raised from the look bar on a phone (see LookPopover): the
+  // controls the look moves off stock, or null for the whole panel.
+  const [lookKeys, setLookKeys] = useState<ReadonlySet<ControlKey> | null>(null)
   // Whether the masthead is showing the filter box rather than the wordmark.
   // Held open by a live query as well as by the ⌕, so the box can't disappear
   // out from under a filter that is still narrowing the panel — which is what
@@ -353,6 +356,7 @@ export function App() {
   const clearFilter = () => {
     setFilter('')
     setMovingOnly(false)
+    setLookKeys(null)
   }
   // A jump — the palette revealing a control, a door into a free box — asks for
   // one named thing, so it drops the mode rather than intersecting with it.
@@ -361,6 +365,7 @@ export function App() {
   const revealText = (text: string) => {
     setFilter(text)
     setMovingOnly(false)
+    setLookKeys(null)
   }
   // One switch wherever it is pressed — the Modulation section's count, the palette, the chip
   // in the box. Nothing typed can reach the mode, so this is the whole of it.
@@ -851,6 +856,7 @@ export function App() {
         showMidi ||
         filter !== '' ||
         movingOnly ||
+        lookKeys !== null ||
         searchOpen ||
         armed !== null ||
         armedNote !== null ||
@@ -987,7 +993,21 @@ export function App() {
     onAbout: () => setShowAbout(true),
   })
 
-  const query = readFilter(filter, movingOnly)
+  // Everything the current look actually moves, gathered out of the six stages
+  // it is scattered across. The same walk the chain map's `• N` does, kept as
+  // rows rather than reduced to a count — see LookPopover.
+  const edited = ALL_SLIDERS.filter(s => !atRest(controls[s.key], s.key))
+  const editedKeys = () => new Set(edited.map(s => s.key))
+  // The same sticky membership LookPopover holds, for the same reason: a row
+  // dragged back to stock stays put under the finger.
+  if (
+    lookKeys !== null &&
+    (edited.some(s => !lookKeys.has(s.key)) ||
+      (edited.length === 0 && lookKeys.size > 0))
+  )
+    setLookKeys(editedKeys())
+  const toggleLook = () => setLookKeys(lookKeys === null ? editedKeys() : null)
+  const query = readFilter(filter, movingOnly, lookKeys)
   const filtering = filterActive(query)
   // A query set from anywhere else — the Modulation section's count, a palette jump — opens
   // the box too, so the panel is never filtered by something with nothing on
@@ -1004,10 +1024,6 @@ export function App() {
         (!filtering || sliderMatches(s, query, isRouted(s.key))),
     ),
   )
-  // Everything the current look actually moves, gathered out of the six stages
-  // it is scattered across. The same walk the chain map's `• N` does, kept as
-  // rows rather than reduced to a count — see LookPopover.
-  const edited = ALL_SLIDERS.filter(s => !atRest(controls[s.key], s.key))
   // The address bar's look, mirrored onto the account behind it. Signed out the
   // hook writes nothing; signed in it writes the packed query a few seconds
   // after the board settles, which is what the home page's resume card reads.
@@ -1329,6 +1345,15 @@ export function App() {
                 mod only ×
               </button>
             ) : null}
+            {query.look === null ? null : (
+              <button
+                className={styles.filterChip}
+                title="showing only what this look moves off stock — click to drop it"
+                onClick={toggleLook}
+              >
+                this look ×
+              </button>
+            )}
             <input
               ref={filterBox}
               className={styles.filter}
@@ -1338,8 +1363,10 @@ export function App() {
               // inline `ref={el => el?.focus()}` is a new function every render,
               // which React reattaches — and the fps counter re-renders this
               // component four times a second, so the box took focus back off
-              // whatever you had just clicked, four times a second.
-              autoFocus
+              // whatever you had just clicked, four times a second. Not when
+              // the look bar's phone toggle mounted it, where focus would put a
+              // keyboard over the rows it just asked for.
+              autoFocus={lookKeys === null}
               placeholder="rainbow, ghost, tear…"
               title="matches names and descriptions, so artifact words work: rainbow, ghost, dot crawl, tear, roll… — the count on the modulation row narrows whatever is up here to the controls the bay is driving"
               value={filter}
@@ -1393,6 +1420,8 @@ export function App() {
             sliders={edited}
             openStages={openStages}
             onOpenGroup={nav.openAt}
+            showing={lookKeys !== null}
+            onToggleShowing={toggleLook}
           />
         }
         comparing={comparing}
@@ -1560,17 +1589,19 @@ export function App() {
       />
       {!filtering || anyResult ? null : (
         <div className={ui.hint}>
-          {query.moving
-            ? query.text === ''
-              ? 'nothing is moving — press + mod on any control row to set it wobbling'
-              : `nothing moving matches “${query.text}” — drop “mod only” to search the whole panel`
-            : // A query can land on controls that exist and cannot act, which is
-              // not the same answer as no match at all: "bass" is seven routings
-              // in Sound, and what is missing is the input, not the control.
-              // Saying so is the difference between a dead end and one press.
-              chain.blocked.length > 0
-              ? `“${filter.trim()}” is in ${chain.blocked.join(' and ')}, with nothing patched in — clear the filter and press that box on the map`
-              : `nothing matches “${filter.trim()}” — try an artifact: rainbow, ghost, tear`}
+          {query.look !== null && query.look.size === 0
+            ? 'every control is at its default — move one and it turns up here'
+            : query.moving
+              ? query.text === ''
+                ? 'nothing is moving — press + mod on any control row to set it wobbling'
+                : `nothing moving matches “${query.text}” — drop “mod only” to search the whole panel`
+              : // A query can land on controls that exist and cannot act, which is
+                // not the same answer as no match at all: "bass" is seven routings
+                // in Sound, and what is missing is the input, not the control.
+                // Saying so is the difference between a dead end and one press.
+                chain.blocked.length > 0
+                ? `“${filter.trim()}” is in ${chain.blocked.join(' and ')}, with nothing patched in — clear the filter and press that box on the map`
+                : `nothing matches “${filter.trim()}” — try an artifact: rainbow, ghost, tear`}
         </div>
       )}
 

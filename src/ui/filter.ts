@@ -1,10 +1,12 @@
 import { createContext, use } from 'react'
 
+import type { ControlKey } from '../core/controls'
 import type { Group, SliderDef } from './controls'
 
-// What the panel is being asked for. Two fields because they are two questions:
-// free text asks "what is this called, or what does it do", and the motion mode
-// asks "what is the bay driving". They narrow together — moving rows whose prose
+// What the panel is being asked for. Separate fields because they are separate
+// questions: free text asks "what is this called, or what does it do", the
+// motion mode asks "what is the bay driving", and the look mode asks "what is
+// this look made of". They narrow together — moving rows whose prose
 // says "ghost" is askable — where the single string this used to be made them
 // alternatives, spelled the mode as a token nobody can type, and left the ✕
 // unable to tell a mode from a search.
@@ -13,15 +15,18 @@ export interface Filter {
   text: string
   // Narrowed to what the bay is driving.
   moving: boolean
+  // Narrowed to the controls the look moves off stock; null for the whole panel.
+  look: ReadonlySet<ControlKey> | null
 }
 
-export const NO_FILTER: Filter = { text: '', moving: false }
+export const NO_FILTER: Filter = { text: '', moving: false, look: null }
 
 // Whether anything is narrowing the panel at all. The panel keys a lot off this
 // — the box stays open, the presets and the catalog stand down, the map expands
 // — and every one of those questions is about the filter as a whole rather than
 // about the text in it.
-export const filterActive = (f: Filter) => f.text !== '' || f.moving
+export const filterActive = (f: Filter) =>
+  f.text !== '' || f.moving || f.look !== null
 
 // The live filter, read from the tree: it reaches rows, groups and the sections
 // holding them, and threading it by hand left Favorites filtering nothing while
@@ -41,9 +46,14 @@ export const useFilter = () => use(FilterContext)
 // for the same reason they always have — typing "lfo" has to find the help text
 // explaining what an LFO does. The Modulation section's count and the palette's "show what is
 // moving" are the mode, and both are buttons.
-export const readFilter = (raw: string, moving: boolean): Filter => ({
+export const readFilter = (
+  raw: string,
+  moving: boolean,
+  look: ReadonlySet<ControlKey> | null = null,
+): Filter => ({
   text: raw.trim().toLowerCase(),
   moving,
+  look,
 })
 
 // Whether a control is driven by the bay. Passed in rather than read from a
@@ -64,7 +74,9 @@ const textMatches = (s: SliderDef, text: string) =>
 // is wobbling" unaskable while the bay could hold eight of them, scattered
 // across six stages.
 export const sliderMatches = (s: SliderDef, f: Filter, routed = false) =>
-  (!f.moving || routed) && (f.text === '' || textMatches(s, f.text))
+  (!f.moving || routed) &&
+  (f.look === null || f.look.has(s.key)) &&
+  (f.text === '' || textMatches(s, f.text))
 
 // The rows a group has to show. A name hit takes the whole group, as a heading
 // always has — except under the motion mode, where taking a stage whole would
@@ -76,7 +88,7 @@ export const matchedSliders = (
 ): SliderDef[] =>
   !filterActive(f)
     ? group.sliders
-    : !f.moving && group.name.toLowerCase().includes(f.text)
+    : !f.moving && f.look === null && group.name.toLowerCase().includes(f.text)
       ? group.sliders
       : group.sliders.filter(s => sliderMatches(s, f, isRouted(s.key)))
 
@@ -120,7 +132,7 @@ export const freeMatches = (
   // what is wobbling", and the whole bay dropped on top of that answer would
   // bury the two rows that are actually moving under the surface that lists
   // them — the same reason matchedSliders refuses to take a group whole for it.
-  if (box.keywords === undefined || f.moving) return false
+  if (box.keywords === undefined || f.moving || f.look !== null) return false
   return (
     box.name.toLowerCase().includes(f.text) ||
     box.blurb.toLowerCase().includes(f.text) ||
