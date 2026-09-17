@@ -2,6 +2,14 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [2.0.2](https://github.com/cmdcolin/videoskillet/compare/v2.0.1...v2.0.2) - 2026-09-17
+
+### Chores
+- *(ui)* [`b255ee0`](https://github.com/cmdcolin/videoskillet/commit/b255ee0f3f32c1d8ef34deda19b548fed121dafa) mark the range track as shared with bender
+
+### Other Changes
+- [`edc0a8f`](https://github.com/cmdcolin/videoskillet/commit/edc0a8f7ebcec292bf67a5e20d92f9bc2d17efdb) Sibling link
+
 ## [2.0.1](https://github.com/cmdcolin/videoskillet/compare/v2.0.0...v2.0.1) - 2026-09-17
 
 ### Other Changes
