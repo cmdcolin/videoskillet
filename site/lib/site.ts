@@ -14,5 +14,6 @@ export const SITE = {
     ['/guide/', 'Guide'],
     ['https://github.com/cmdcolin/videoskillet', 'GitHub ↗'],
     ['/privacy/', 'Privacy'],
+    ['https://cmdcolin.github.io/bender/', "videoskillet's sibling: bender ↗"],
   ],
 } as const
