@@ -2,6 +2,11 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [2.1.2](https://github.com/cmdcolin/videoskillet/compare/v2.1.1...v2.1.2) - 2026-09-17
+
+### Features
+- *(ui)* [`00f7351`](https://github.com/cmdcolin/videoskillet/commit/00f7351c67ab7a8b894c67ad9a8255d482349c26) link the about dialog to the homepage and enlarge its type
+
 ## [2.1.1](https://github.com/cmdcolin/videoskillet/compare/v2.1.0...v2.1.1) - 2026-09-17
 
 ### Features
