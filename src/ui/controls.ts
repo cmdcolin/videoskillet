@@ -68,14 +68,19 @@ export interface SliderDef {
   // other control turns on. The group tucks these behind a "fine tweaks"
   // disclosure so the rows that make the picture stay in reach. Absent = shown.
   fine?: true
-  // Offer the minor-adjustment card: a second track, revealed under the row on
-  // hover, that moves the value in hundredths of `step` (vernier.ts). For the
-  // controls where the row's own resolution is a floor rather than a limit of
-  // the mechanism — the loop's geometry, where a notch of track near stock is
-  // one step and the offsets worth hunting are smaller than one. Nothing about
-  // the row changes: the step, the curve and the shared readout column are all
-  // as they were, and the card is what carries the extra digits.
-  vernier?: true
+  // Offer the minor-adjustment card: a second track the row's `minor` button
+  // opens under it (vernier.ts). Nothing about the row changes: the step, the
+  // curve and the shared readout column are all as they were.
+  //
+  // `true` moves the value in hundredths of `step`, for a control whose step is
+  // a floor the mechanism can see past — the loop's geometry, where a notch of
+  // track near stock is one step and the offsets worth hunting are smaller.
+  //
+  // `{ span }` spreads that much of the control across the card at its own
+  // step, for a control whose step is fine enough and whose track is not — loop
+  // delay, where a pixel of track is hundreds of steps. Pick the span off the
+  // mechanism: a turn or two of hue, a roll slow enough to follow.
+  vernier?: true | { span: number }
 }
 
 // The signal-path stages, in the order the panel's spine is browsed. A group
@@ -455,6 +460,7 @@ export const GROUPS: Group[] = [
         step: 1,
         curve: 'synth',
         unit: 'Hz',
+        vernier: { span: 200 },
         help: "The first oscillator's frequency. What it draws depends on where it sits relative to the raster. At 60 Hz it fits one cycle down the frame and reads as a vertical gradient. At 15734 Hz, the line rate, it fits one cycle across a line and the gradient turns sideways. On an exact multiple it paints that many standing bars. A few hertz off, every line starts the wave a little later than the last, so the bars lean and creep, and the error sets how fast. At 3579545 Hz it lands on the colour subcarrier, so the encoder downstream reads the whole screen as chroma and returns flat colour. Detune from there and hue turns across the picture.",
       },
       {
@@ -466,6 +472,7 @@ export const GROUPS: Group[] = [
         step: 1,
         curve: 'synth',
         unit: 'Hz',
+        vernier: { span: 200 },
         help: 'The second oscillator, on the same scale. It does nothing until the combiner is off "osc A alone". Then it beats against the first: two free-running oscillators put their difference frequency on screen, so a pair a few hertz apart draws a moire that drifts at the gap between them rather than at either knob.',
       },
       {
@@ -1007,6 +1014,7 @@ export const GROUPS: Group[] = [
         step: 0.001,
         redline: [0, 8],
         unit: 'us',
+        vernier: { span: 0.56 },
         help: 'Delay on the loop return, in microseconds. Because the colour subcarrier rides the same waveform, delay is also a hue rotation: one sample (70 ns) is a 90° spin. Sub-microsecond moves smear the picture sideways and recolour it at the same time.',
       },
       {
@@ -2806,6 +2814,7 @@ export const GROUPS: Group[] = [
         step: 0.05,
         redline: [50, 70],
         unit: 'Hz',
+        vernier: { span: 4 },
         help: "The free-running frequency of the receiver's vertical oscillator. At 60 Hz it agrees with the signal and sits still. Detune it and the frame rolls at a speed set by the difference, up or down. Only takes effect once vertical hold is loose enough to let the oscillator win.",
       },
       {

@@ -15,7 +15,18 @@ import styles from './Slider.module.css'
 import { SliderHelpDialog } from './SliderHelpDialog'
 import { ToggleButtonGroup } from './ToggleButtonGroup'
 import { fromTravel, toTravel, TRAVEL_STEP } from './travel'
-import { atCents, CENT_MAX, CENT_MIN, centsOf, notchOf } from './vernier'
+import {
+  atCents,
+  atOffset,
+  CENT_MAX,
+  CENT_MIN,
+  centreOf,
+  centsOf,
+  holds,
+  notchOf,
+  offsetOf,
+  reachOf,
+} from './vernier'
 
 import type { SliderDef } from './controls'
 import type { ModPatch } from './modSlots'
@@ -240,21 +251,24 @@ function RowMenu(props: {
   )
 }
 
-// Where a cent sits on the card's own track, and the fill from the notch out to
-// it — the same reading the row's own track gives against stock, one
+// Where the thumb sits on the card's own track, and the fill from the middle
+// out to it — the same reading the row's own track gives against stock, one
 // magnification further in.
 //
 // Out here rather than in the component because the React Compiler's codegen
 // trips over a `Math` call on a value derived from an object argument (the
 // `centsOf(props, …)` below), and a bailout costs the component its memoization
 // with nothing but `pnpm compiler` to say so.
-const centPct = (c: number) => ((c - CENT_MIN) / (CENT_MAX - CENT_MIN)) * 100
+const cardFill = (lo: number, hi: number, at: number) => {
+  const pct = (n: number) => `${((n - lo) / (hi - lo)) * 100}%`
+  return {
+    '--lo': pct(at < 0 ? at : 0),
+    '--hi': pct(at < 0 ? 0 : at),
+    '--def': pct(0),
+  }
+}
 
-const centFill = (cents: number) => ({
-  '--lo': `${centPct(cents < 0 ? cents : 0)}%`,
-  '--hi': `${centPct(cents < 0 ? 0 : cents)}%`,
-  '--def': `${centPct(0)}%`,
-})
+const signed = (text: string) => (text.startsWith('-') ? text : `+${text}`)
 
 // What a range input answers to as a step, which is what tells a hand on the
 // keyboard from a focus passing through.
@@ -269,19 +283,21 @@ const STEP_KEYS = new Set([
   'End',
 ])
 
-// The minor-adjustment card: the last two digits of the same number.
+// The minor-adjustment card: a magnified stretch of the same number.
 //
 // Opened from the row's `minor` button rather than given a row of its own,
 // because it is not a second control. There is one value; this is a magnified
-// view of where it sits between two notches of its own step grid, and a
-// permanent row would double the height of the group while giving one number
-// two readouts and two ↺ to disagree over. What it costs instead is the space
-// under the row for as long as it is asked for — a hover-revealed card dealt
-// itself to every row travelled past on the way somewhere else, and covered the
-// row below while the pointer was nowhere near either.
+// view of where it sits, and a permanent row would double the height of the
+// group while giving one number two readouts and two ↺ to disagree over. What
+// it costs instead is the space under the row for as long as it is asked for —
+// a hover-revealed card dealt itself to every row travelled past on the way
+// somewhere else, and covered the row below while the pointer was nowhere near
+// either.
 //
-// Its whole width is one step of the control above, so a pixel here is worth
-// about a third of a cent where a pixel up there is worth a whole step.
+// In cents mode its whole width is one step of the control above, so a pixel
+// here is worth about a third of a cent where a pixel up there is worth a whole
+// step. In window mode its width is `span`, walked in the control's own steps.
+// See vernier.ts for both.
 function Vernier(props: {
   id: string
   anchorName: string
@@ -290,28 +306,70 @@ function Vernier(props: {
   max: number
   step: number
   unit: string
+  span: number | undefined
   value: number
   disabled: boolean
   onChange: (v: number) => void
   onOpenChange: (open: boolean) => void
 }) {
-  const cents = centsOf(props, props.value)
+  const span = props.span
+  const win = {
+    min: props.min,
+    max: props.max,
+    step: props.step,
+    span: span ?? 0,
+  }
+  const [centre, setCentre] = useState(() => centreOf(win, props.value))
+  if (span !== undefined && !holds(win, centre, props.value)) {
+    setCentre(centreOf(win, props.value))
+  }
+  const reach = reachOf(win)
+  const card =
+    span === undefined
+      ? {
+          lo: CENT_MIN,
+          hi: CENT_MAX,
+          at: centsOf(props, props.value),
+          exact: formatFine(props.value, props.step),
+          middle: notchOf(props, props.value),
+          write: (n: number) => atCents(props, props.value, n),
+        }
+      : {
+          lo: -reach,
+          hi: reach,
+          at: offsetOf(win, centre, props.value),
+          exact: formatValue(props.value, props.step),
+          middle: centre,
+          write: (n: number) => atOffset(win, centre, n),
+        }
+  const offset =
+    span === undefined
+      ? `${card.at > 0 ? '+' : ''}${card.at}¢`
+      : `${signed(formatValue(card.at * props.step, props.step))}${props.unit}`
+  const offsetChars =
+    span === undefined
+      ? 4
+      : formatValue(reach * props.step, props.step).length +
+        props.unit.length +
+        1
   const fill: CSSProperties & Record<'--lo' | '--hi' | '--def', string> =
-    centFill(cents)
+    cardFill(card.lo, card.hi, card.at)
   return (
     <div
       id={props.id}
       popover="auto"
       className={styles.vernier}
       style={{ positionAnchor: props.anchorName }}
-      onToggle={e => props.onOpenChange(e.newState === 'open')}
+      onToggle={e => {
+        const open = e.newState === 'open'
+        if (open && span !== undefined) setCentre(centreOf(win, props.value))
+        props.onOpenChange(open)
+      }}
     >
       <span className={styles.vernierHead}>
         <span>minor adjustment</span>
-        {/* The reading the row cannot give: two places further in, which is
-            exactly what a hundredth of the step is worth. */}
         <span className={styles.vernierExact}>
-          {`${formatFine(props.value, props.step)}${props.unit}`}
+          {`${card.exact}${props.unit}`}
         </span>
         <button
           type="button"
@@ -328,20 +386,25 @@ function Vernier(props: {
           type="range"
           className={styles.vernierRange}
           style={fill}
-          min={CENT_MIN}
-          max={CENT_MAX}
+          min={card.lo}
+          max={card.hi}
           step={1}
-          value={cents}
+          value={card.at}
           disabled={props.disabled}
           aria-label={`${props.label}, minor adjustment`}
-          aria-valuetext={`${cents} hundredths of a step`}
-          onDoubleClick={() => props.onChange(notchOf(props, props.value))}
-          onChange={e =>
-            props.onChange(atCents(props, props.value, Number(e.target.value)))
+          aria-valuetext={
+            span === undefined
+              ? `${card.at} hundredths of a step`
+              : `${offset} from the middle of the card`
           }
+          onDoubleClick={() => props.onChange(card.middle)}
+          onChange={e => props.onChange(card.write(Number(e.target.value)))}
         />
-        <span className={styles.vernierCents}>
-          {`${cents > 0 ? '+' : ''}${cents}¢`}
+        <span
+          className={styles.vernierCents}
+          style={{ width: `${offsetChars}ch` }}
+        >
+          {offset}
         </span>
       </span>
     </div>
@@ -417,9 +480,8 @@ export function Slider(props: {
   }
   // The editor itself, rendered by the caller under the row.
   modEditor?: ReactNode
-  // Offer the minor-adjustment card under the row: this control's step is a
-  // floor the mechanism can see past. See vernier.ts.
-  vernier?: true
+  // Offer the minor-adjustment card under the row. See vernier.ts.
+  vernier?: true | { span: number }
 }) {
   const inputId = useId()
   const [showHelp, setShowHelp] = useState(false)
@@ -463,6 +525,7 @@ export function Slider(props: {
   const favorite = props.favorite
   const choices = props.choices
   const redline = props.redline
+  const vernier = props.vernier
   // Live clock first: it narrows away the undefined case, so the division check
   // isn't comparing `null` against a value that may not exist.
   const locked = sync?.live === true && sync.label !== null
@@ -537,13 +600,15 @@ export function Slider(props: {
             this. It reads "minor", not "fine" — a group's own ▸ fine tweaks
             disclosure already owns that word, and three of the rows that carry
             this card live inside one. */}
-        {props.vernier !== true || choices !== undefined ? null : (
+        {vernier === undefined || choices !== undefined ? null : (
           <button
             type="button"
             title={
               showVernier
                 ? 'hide the minor adjustment'
-                : `minor adjustment — trim ${props.label} in hundredths of a step`
+                : vernier === true
+                  ? `minor adjustment — trim ${props.label} in hundredths of a step`
+                  : `minor adjustment — ${props.label} across ${formatValue(vernier.span, props.step)}${props.unit}, one step at a time`
             }
             className={cx(styles.what, showVernier && styles.whatOn)}
             aria-expanded={showVernier}
@@ -946,7 +1011,7 @@ export function Slider(props: {
           inert — needs {needs.hint} · click to set
         </button>
       ) : null}
-      {props.vernier !== true || choices !== undefined ? null : (
+      {vernier === undefined || choices !== undefined ? null : (
         <Vernier
           id={vernierId}
           anchorName={vernierAnchor}
@@ -955,6 +1020,7 @@ export function Slider(props: {
           max={props.max}
           step={props.step}
           unit={props.unit}
+          span={vernier === true ? undefined : vernier.span}
           value={props.value}
           disabled={locked}
           onChange={props.onChange}

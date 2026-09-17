@@ -1,18 +1,21 @@
-// A control's value between the notches of its own step grid.
+// The minor-adjustment card's arithmetic, in its two modes.
 //
-// The loop's geometry is what needs one. `fbZoom` steps by 0.001 and its curve
-// is solved so a notch of track near ×1 is worth exactly that (see curve.ts),
-// which is the right coarseness for finding a tunnel and too coarse for
-// settling one: a thousandth of zoom is the difference between a spiral that
-// unwinds over a second and one that unwinds over ten, and the interesting
+// Cents (`vernier: true`) reads a control's value between the notches of its
+// own step grid. The loop's geometry is what needs one. `fbZoom` steps by 0.001
+// and its curve is solved so a notch of track near ×1 is worth exactly that (see
+// curve.ts), which is the right coarseness for finding a tunnel and too coarse
+// for settling one: a thousandth of zoom is the difference between a spiral
+// that unwinds over a second and one that unwinds over ten, and the interesting
 // offsets are smaller again. So the row keeps its step — the shared readout
 // column and the curve are both sized off it — and this splits the stored value
-// into that grid plus a remainder a hover card steers in hundredths.
+// into that grid plus a remainder the card steers in hundredths.
 //
-// Derived, never stored. The control still holds one number, so a look, a link
-// or a preset carries a trimmed value without knowing this exists, and a row
-// that has never been trimmed reads exactly as it always did.
+// Both modes derive everything and store nothing. The control still holds one
+// number, so a look, a link or a preset carries a trimmed value without knowing
+// the card exists, and a row that has never been trimmed reads exactly as it
+// always did.
 
+import { clamp } from '../core/math'
 import { snapToStep } from './controls'
 
 export const CENTS_PER_STEP = 100
@@ -59,3 +62,34 @@ export const atCents = (span: VernierSpan, value: number, cents: number) =>
     { ...span, step: centOf(span) },
     notchOf(span, value) + cents * centOf(span),
   )
+
+// Window (`vernier: { span }`) is for a linear or geometric track, where a
+// pixel of the row is hundreds of steps and the step itself is already fine
+// enough. A pixel of `cfbDelayUs` on the docked panel is about 0.2 µs, over
+// half a turn of hue, and one step is a nanosecond. The card spreads `span` of
+// the control across its track at the control's own step, so every value it
+// writes is one the row could have written.
+//
+// The window centres on the value, pushed inside the control's range so the
+// card's whole width always reaches something. The card recentres when it opens
+// and when the value leaves the window from elsewhere; a drag on the card keeps
+// the window still, which keeps the thumb under the pointer.
+
+export interface VernierWindow extends VernierSpan {
+  span: number
+}
+
+export const centreOf = (w: VernierWindow, value: number) =>
+  snapToStep(w, clamp(value, w.min + w.span / 2, w.max - w.span / 2))
+
+// Steps either side of the centre.
+export const reachOf = (w: VernierWindow) => Math.round(w.span / 2 / w.step)
+
+export const offsetOf = (w: VernierWindow, centre: number, value: number) =>
+  Math.round((value - centre) / w.step)
+
+export const atOffset = (w: VernierWindow, centre: number, steps: number) =>
+  snapToStep(w, centre + steps * w.step)
+
+export const holds = (w: VernierWindow, centre: number, value: number) =>
+  Math.abs(offsetOf(w, centre, value)) <= reachOf(w)

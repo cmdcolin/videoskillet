@@ -630,6 +630,7 @@ button.badge {
   inset: auto;
   top: anchor(bottom);
   left: anchor(left);
+  box-sizing: border-box;
   width: anchor-size(width);
   margin-top: 2px;
   max-width: 34rem;
@@ -693,11 +694,10 @@ button.badge {
 .vernierRange:disabled {
   opacity: 0.45;
 }
-/* Fixed at the widest reading it can hold (-50¢), for the reason the row's own
-   readout is: a number that resized its own box would move the track it sits
-   beside while a drag was under way. */
+/* Slider.tsx fixes the width at the widest offset the card can print, for the
+   reason the row's own readout is: a number that resized its own box would move
+   the track it sits beside while a drag was under way. */
 .vernierCents {
-  width: 4ch;
   text-align: right;
   font-size: var(--fs-xs);
   color: var(--muted);

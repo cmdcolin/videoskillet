@@ -2,7 +2,18 @@ import { describe, expect, it } from 'vitest'
 
 import { ALL_SLIDERS, SLIDER_BY_KEY, snapToStep } from './controls'
 import { formatFine, formatValue } from './format'
-import { atCents, CENT_MAX, CENT_MIN, centsOf, notchOf } from './vernier'
+import {
+  atCents,
+  atOffset,
+  CENT_MAX,
+  CENT_MIN,
+  centreOf,
+  centsOf,
+  holds,
+  notchOf,
+  offsetOf,
+  reachOf,
+} from './vernier'
 
 import type { SliderDef } from './controls'
 
@@ -69,5 +80,49 @@ describe('vernier', () => {
         formatFine(0, s.step),
       )
     }
+  })
+
+  describe('window', () => {
+    const delay = span(SLIDER_BY_KEY.get('cfbDelayUs'))
+    const win = () => {
+      if (delay.vernier === undefined || delay.vernier === true)
+        throw new Error('loop delay lost its window')
+      return { ...delay, span: delay.vernier.span }
+    }
+
+    it('centres on the value and walks it in the control’s own steps', () => {
+      const w = win()
+      const c = centreOf(w, 1.2)
+      expect(c).toBe(1.2)
+      expect(atOffset(w, c, 37)).toBe(1.237)
+      expect(offsetOf(w, c, atOffset(w, c, -reachOf(w)))).toBe(-reachOf(w))
+    })
+
+    // Near a stop the window slides inward, so both ends of the card still
+    // reach a value and the thumb is off-centre instead.
+    it('keeps the whole window inside the control', () => {
+      const w = win()
+      const c = centreOf(w, 0.15)
+      expect(atOffset(w, c, -reachOf(w))).toBe(w.min)
+      expect(holds(w, c, 0.15)).toBe(true)
+    })
+
+    it('lets go of a value the row moved past its edge', () => {
+      const w = win()
+      const c = centreOf(w, 1.2)
+      expect(holds(w, c, atOffset(w, c, reachOf(w)))).toBe(true)
+      expect(holds(w, c, 1.2 + w.span)).toBe(false)
+    })
+
+    it('is sized to a track’s worth of steps on every control carrying one', () => {
+      for (const s of ALL_SLIDERS) {
+        if (s.vernier === undefined || s.vernier === true) continue
+        expect(s.choices, s.key).toBeUndefined()
+        expect(s.vernier.span, s.key).toBeLessThan(s.max - s.min)
+        const reach = reachOf({ ...s, span: s.vernier.span })
+        expect(reach, s.key).toBeGreaterThanOrEqual(20)
+        expect(reach, s.key).toBeLessThanOrEqual(500)
+      }
+    })
   })
 })

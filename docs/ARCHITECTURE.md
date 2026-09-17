@@ -305,6 +305,17 @@ on a tie the card's thumb would jump across mid-drag. Give the card to a control
 whose step is a floor the mechanism can see past — the camera loop's geometry —
 rather than wherever a finer number might be nice.
 
+`vernier: { span }` is the card's window mode, for the opposite case: a control
+whose step is fine enough and whose track is too coarse to land on it. A pixel
+of loop delay is about 0.2 µs, over half a turn of hue, and its step is a
+nanosecond. The card spreads `span` of the control across its track at the
+control's own step, centred on the value and pushed inside the range. It
+recentres when it opens and when something else moves the value out of the
+window, and never during its own drag. Every value it writes is on the step
+grid, so the wire format does not change. Loop delay, both synth oscillators and
+the vertical oscillator carry one; choose `span` from the mechanism, such as a
+turn or two of hue or a roll slow enough to follow.
+
 Nothing in a miniature may run per frame — no `rAF`, no transitions or
 animations that recalc style each tick. The panel shares a main thread with a 60
 fps canvas, and a decorative pulse measured 7 ms of style recalc per 3 s for
