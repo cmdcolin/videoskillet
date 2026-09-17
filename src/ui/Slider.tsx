@@ -181,12 +181,8 @@ function RowMenu(props: {
                 sync === undefined) ? null : (
                 <div className={popoverStyles.menuSep} />
               )}
-              {/* The same doors the row's own buttons are, said in words: the
-                  `+ mod` button and the routing chip beside the reading are the
-                  primary way in, and the menu repeats them for anyone who came
-                  here first. Remove is the one verb that lives only here and in
-                  the open editor, so the menu is where a routing can be thrown
-                  away without unfolding it. */}
+              {/* The same doors the row's own buttons are, said in words, for
+                  anyone who came to the menu first. */}
               {mod === undefined ? null : mod.patch === null ? (
                 <MenuItem
                   icon="∿"
@@ -679,28 +675,23 @@ export function Slider(props: {
           CC{midi.label}
         </span>
       )}
-      {/* Modulation, in the open on every row that can take it. It used to be
-          a ⋮ menu item, and the row showed nothing until something was patched
-          — so the app's signature feature had no visible way in. Now an
-          unpatched row carries a small `+ mod` button, and a patched one
-          carries two: a ❚❚/▶ that holds the routing still and starts it again,
-          and the routing itself, which unfolds the editor under the row.
+      {/* Modulation, in the open on every row that can take it. An unpatched
+          row carries `+ mod`, which folds as well as opens: with every slot
+          busy it claims nothing and unfolds a note saying so. A patched row
+          carries a ❚❚/▶ that holds the routing still, the routing chip, which
+          unfolds the editor, and a × that hands the slot back. The × sits on
+          the row so that an accidental `+ mod` is undone where it was pressed.
 
-          Words rather than a glyph, because a ∿ on its own says nothing to
-          someone who has not been told, and both of these are buttons a reader
-          should be able to tell are buttons before pointing at them. The chip
-          says what is driving the row and how fast, in the routing's own
-          colour, and trails a caret so it reads as a thing that opens. The
-          hold button is separate because the two gestures used to share one
-          chip: pressing the routing to change it held it still instead, which
-          read as modulation being broken. */}
+          Hold has its own button because a chip that both opened the editor
+          and held the routing read as modulation being broken. */}
       {modProp === undefined ? null : modProp.patch === null ? (
         <button
           type="button"
+          aria-expanded={modProp.open}
           className={cx(styles.badge, styles.modAdd)}
           title={`add modulation — starts a slow sine wobble on ${props.label}, which you can then change`}
           aria-label={`add modulation to ${props.label}`}
-          onClick={() => modProp.onOpenChange(true)}
+          onClick={() => modProp.onOpenChange(!modProp.open)}
         >
           + mod
         </button>
@@ -736,6 +727,15 @@ export function Slider(props: {
           >
             {modProp.patch.reading}
             <span className={styles.modCaret}>{modProp.open ? '▴' : '▾'}</span>
+          </button>
+          <button
+            type="button"
+            className={cx(styles.badge, styles.modRemove)}
+            title={`remove the modulation from ${props.label} and hand the slot back`}
+            aria-label={`remove modulation from ${props.label}`}
+            onClick={modProp.onRemove}
+          >
+            ×
           </button>
         </>
       )}

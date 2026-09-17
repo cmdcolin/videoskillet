@@ -499,6 +499,13 @@ button.badge {
   font-size: 8px;
   opacity: 0.8;
 }
+/* Hand the slot back: quiet until pointed at, the same as the bay's own × */
+.modRemove {
+  padding: 0 1px 0 4px;
+}
+.modRemove:hover {
+  color: var(--danger);
+}
 .iconMidiSet {
   color: var(--midi);
 }
@@ -571,6 +578,9 @@ button.badge {
   }
   .modChip {
     margin-left: 2px;
+  }
+  .modRemove {
+    padding: 4px 4px 4px 8px;
   }
   /* the reading doubles as the reset, so it needs a fingertip's height — and
      no side padding, which would push the column off the row's right edge */
