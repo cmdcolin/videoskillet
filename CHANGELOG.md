@@ -2,6 +2,11 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [2.1.4](https://github.com/cmdcolin/videoskillet/compare/v2.1.3...v2.1.4) - 2026-09-17
+
+### Fixes
+- *(ui)* [`20358d3`](https://github.com/cmdcolin/videoskillet/commit/20358d38da36c0ae549dcc297e5cb80ea8086dda) match a session's still to its board instead of its clock
+
 ## [2.1.3](https://github.com/cmdcolin/videoskillet/compare/v2.1.2...v2.1.3) - 2026-09-17
 
 ### Features
