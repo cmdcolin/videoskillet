@@ -24,6 +24,12 @@
   color: var(--fg);
 }
 
+@media (pointer: coarse) {
+  .signIn {
+    padding: 5px 9px;
+  }
+}
+
 /* Round and photo-sized — once you are signed in the photo is the label. The
    button drops the square's fill and border, because a box drawn around a
    circular photo reads as a second control behind it. */

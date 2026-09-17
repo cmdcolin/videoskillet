@@ -27,6 +27,12 @@
   border-color: var(--fg4);
   color: var(--fg);
 }
+/* The same touch height `ui.chromeBtn` takes beside it. */
+@media (pointer: coarse) {
+  .trigger {
+    padding: 5px 9px;
+  }
+}
 /* Lit for a second and a half after a save. Same accent the held `compare`
    button wears, because it is saying the same kind of thing — this button just
    did something — and ctrl+S needs *some* answer on screen or a save that
