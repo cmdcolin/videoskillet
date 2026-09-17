@@ -72,6 +72,13 @@ export interface ModSlotsApi {
     key: ModTarget,
     routing: Omit<ModRouting, 'target'> | null,
   ) => void
+  // Hand back the slot driving `from` and patch `routing` onto `to` in one
+  // step: the full bay's way to make room for the row that asked.
+  handOver: (
+    from: ModTarget,
+    to: ModTarget,
+    routing: Omit<ModRouting, 'target'>,
+  ) => void
   // Strike a one-shot envelope: slot `i`, or every routing patched to a trigger
   // when called with nothing. The only verb here that is an event rather than a
   // setting — everything else on this API describes what the bay *is*, and this

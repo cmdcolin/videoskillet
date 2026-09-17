@@ -146,7 +146,9 @@ export function ControlSlider(props: {
             }
           : undefined
       }
-      modEditor={modOpen ? <ModRowEditor controlKey={s.key} /> : undefined}
+      modEditor={
+        modOpen ? <ModRowEditor controlKey={s.key} claim={claim} /> : undefined
+      }
     />
   )
 }

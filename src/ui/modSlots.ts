@@ -218,23 +218,47 @@ export function bayDef(key: BayKey): BayTargetDef {
 export const bayDefFor = (t: ModTarget): BayTargetDef | undefined =>
   isBayKey(t) ? bayDef(t) : undefined
 
-// Blank slot `at`, and with it every routing wired onto one of its knobs, and
-// every routing wired onto theirs. A wire left on an emptied slot's knob holds a
-// slot of its own, and drives whatever routing is next patched into the empty
-// one.
-export function unpatch(slots: readonly UiSlot[], at: number): UiSlot[] {
-  const gone = new Set([at])
+// Blank every wire onto a knob of an empty slot, and every wire onto theirs. An
+// orphaned wire holds a slot of its own, shows nowhere but the bay, and drives
+// whatever routing is next patched into the empty one. Slots it leaves alone
+// keep their identity.
+export function dropOrphans(slots: readonly UiSlot[]): UiSlot[] {
+  let out = [...slots]
   for (let grew = true; grew;) {
     grew = false
-    slots.forEach((s, i) => {
+    out = out.map(s => {
       const bay = s.target === '' ? undefined : bayDefFor(s.target)
-      if (bay !== undefined && gone.has(bay.slot) && !gone.has(i)) {
-        gone.add(i)
-        grew = true
-      }
+      if (bay === undefined || out[bay.slot].target !== '') return s
+      grew = true
+      return EMPTY_SLOT
     })
   }
-  return slots.map((s, i) => (gone.has(i) ? EMPTY_SLOT : s))
+  return out
+}
+
+// Hand slot `at` back, with every wire hanging off it.
+export const unpatch = (slots: readonly UiSlot[], at: number): UiSlot[] =>
+  dropOrphans(slots.map((s, i) => (i === at ? EMPTY_SLOT : s)))
+
+// Patch `routing` onto `key`: in place when a slot already drives it, so its
+// phase carries, or into the first free slot. Null when every slot is busy.
+export function patchSlot(
+  slots: readonly UiSlot[],
+  key: ModTarget,
+  routing: Omit<ModRouting, 'target'>,
+): UiSlot[] | null {
+  const at = slots.findIndex(s => s.target === key)
+  const claiming = at === -1
+  const index = claiming ? slots.findIndex(s => s.target === '') : at
+  if (index === -1) return null
+  return slots.map((s, j) =>
+    j === index
+      ? // A fresh claim always runs; a patch to an existing routing keeps the
+        // switch where it is, so changing a parked routing's rate from the
+        // editor doesn't quietly start it up again.
+        { ...s, ...routing, target: key, on: claiming ? true : s.on }
+      : s,
+  )
 }
 
 // What a routing is driving, named the way the bay names it. Every reader of a
@@ -639,9 +663,11 @@ function readSlot(raw: unknown): UiSlot | null {
 // 1 and restarts everything below it — a Lorenz slot re-enters somewhere else
 // on the attractor and every LFO jumps, for the sake of one dead routing.
 export function normalizeSlots(stored: readonly unknown[]): UiSlot[] {
-  return Array.from(
-    { length: N_SLOTS },
-    (_, i) => readSlot(stored[i]) ?? EMPTY_SLOT,
+  return dropOrphans(
+    Array.from(
+      { length: N_SLOTS },
+      (_, i) => readSlot(stored[i]) ?? EMPTY_SLOT,
+    ),
   )
 }
 

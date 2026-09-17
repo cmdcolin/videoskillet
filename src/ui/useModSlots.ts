@@ -4,12 +4,14 @@ import { pageSearch } from '../core/gpu/env'
 import { clamp01 } from '../core/math'
 import {
   DEFAULT_DUTY,
+  dropOrphans,
   gatePlan,
   gateRate,
   normalizeSlots,
   readStab,
   routingsToSlots,
   toEngineSlots,
+  patchSlot,
   unpatch,
   withNextStabSync,
   withNextSync,
@@ -119,6 +121,35 @@ export function useModSlots(
 
   const indexFor = (key: ModTarget) => slots.findIndex(s => s.target === key)
 
+  // Blanked in place rather than removed: the slot number is the phase's
+  // identity, and shuffling the bay to close a gap would restart every routing
+  // below it.
+  const withoutKey = (key: ModTarget) => {
+    const at = indexFor(key)
+    return at === -1 ? slots : unpatch(slots, at)
+  }
+
+  // Fold the editors of everything a hand-back took with it.
+  const foldEditors = (key: ModTarget, next: readonly UiSlot[]) => {
+    const gone = new Set<string>([
+      key,
+      ...slots.flatMap((s, j) => (next[j] === s ? [] : [s.target])),
+    ])
+    setEditingKeys(prev => {
+      const kept = [...prev].filter(k => !gone.has(k))
+      return kept.length === prev.size ? prev : new Set(kept)
+    })
+  }
+
+  // Patching while the motion amount is at zero would otherwise be silent: the
+  // row lights up as driven and the picture does not move. Asking for a wobble
+  // is unambiguous, and a freeze is a gesture within a set rather than a
+  // setting, so the ask wins.
+  const commitPatched = (next: readonly UiSlot[]) => {
+    commit(next)
+    if (master === 0) writeMaster(1)
+  }
+
   // Dragged too — the motion amount is a fader, not a toggle.
   const writeMaster = (v: number) => {
     writeJSONSoon(MASTER_STORE, v)
@@ -213,41 +244,21 @@ export function useModSlots(
     setRoutings: mod => commit(routingsToSlots(mod)),
     modFor: key => slots.find(s => s.target === key) ?? null,
     setSlotForKey: (key, routing) => {
-      const at = indexFor(key)
       if (routing === null) {
-        // Blanked in place rather than removed: the slot number is the phase's
-        // identity, and shuffling the bay to close a gap would restart every
-        // routing below it.
-        const next = at === -1 ? slots : unpatch(slots, at)
-        const gone = new Set<string>([
-          key,
-          ...slots.flatMap((s, j) => (next[j] === s ? [] : [s.target])),
-        ])
+        const next = withoutKey(key)
         if (next !== slots) commit(next)
-        setEditingKeys(prev => {
-          const kept = [...prev].filter(k => !gone.has(k))
-          return kept.length === prev.size ? prev : new Set(kept)
-        })
+        foldEditors(key, next)
         return
       }
-      const claiming = at === -1
-      const index = claiming ? slots.findIndex(s => s.target === '') : at
-      if (index === -1) return
-      commit(
-        slots.map((s, j) =>
-          j === index
-            ? // A fresh claim always runs; a patch to an existing routing keeps
-              // the switch where it is, so changing a parked routing's rate from
-              // the editor doesn't quietly start it up again.
-              { ...s, ...routing, target: key, on: claiming ? true : s.on }
-            : s,
-        ),
-      )
-      // Patching while the motion amount is at zero would otherwise be silent:
-      // the row lights up as driven and the picture does not move. Asking for a
-      // wobble is unambiguous, and a freeze is a gesture within a set rather
-      // than a setting, so the ask wins.
-      if (master === 0) writeMaster(1)
+      const next = patchSlot(slots, key, routing)
+      if (next !== null) commitPatched(next)
+    },
+    handOver: (from, to, routing) => {
+      const freed = withoutKey(from)
+      const next = patchSlot(freed, to, routing)
+      if (next === null) return
+      foldEditors(from, freed)
+      commitPatched(dropOrphans(next))
     },
     setSlotOn: (key, on) => {
       const at = indexFor(key)

@@ -14,6 +14,7 @@ import {
   RATE_MIN,
   modPatch,
   slotRate,
+  unpatch,
 } from './modSlots'
 import { useModSlotsApi } from './ModSlotsContext'
 import { CLAIM_RATE_HZ, depthBudget } from './rollMod'
@@ -22,7 +23,7 @@ import { Slider } from './Slider'
 import ui from './ui.module.css'
 
 import type { BayField, ControlKey, ModTarget } from '../core/controls'
-import type { UiSlot } from './modSlots'
+import type { ModRouting, UiSlot } from './modSlots'
 
 // Whether the wobble is running into the end of the control's own range.
 //
@@ -144,7 +145,11 @@ function KnobRow(props: { i: number; slot: UiSlot; field: BayField }) {
         },
         onRemove: () => mod.setSlotForKey(key, null),
       }}
-      modEditor={open ? <ModRowEditor controlKey={key} /> : undefined}
+      modEditor={
+        open ? (
+          <ModRowEditor controlKey={key} claim={DRIVER_ROUTING} />
+        ) : undefined
+      }
       onChange={v => mod.setSlot(props.i, rate ? { rateHz: v } : { depth: v })}
     />
   )
@@ -163,6 +168,9 @@ export function ModRowEditor(props: {
   // another wire (modSlots.ts › BAY_TARGETS). The editor is the same either
   // way, which is the point of the bay knobs being in the same key space.
   controlKey: ModTarget
+  // What this row patches when it is given a slot, so the full bay's note can
+  // make room and claim in one press. Absent where the row may not claim.
+  claim?: Omit<ModRouting, 'target'> | null
 }) {
   const mod = useModSlotsApi()
   const key = props.controlKey
@@ -180,15 +188,43 @@ export function ModRowEditor(props: {
     // Every slot busy, and none of them this control's. Naming the holders
     // beats an auto-evict: the bay is small enough that quietly unpatching
     // someone else's routing to make room would be the surprise, not the fix.
+    // Each name is the press that frees its slot for this row. A holder whose
+    // removal would take this knob's own routing with it is not offered.
+    const own = isBayKey(key) ? bayDef(key).slot : -1
+    const claim = props.claim
+    const holders = mod.slots.flatMap((s, j) =>
+      s.target === '' ||
+      (own !== -1 && unpatch(mod.slots, j)[own].target === '')
+        ? []
+        : [s.target],
+    )
     return (
       <div className={styles.editor}>
         <div className={ui.hint}>
-          all {mod.slots.length} modulation slots are busy — remove one in the
-          MODULATION box on the map, or from{' '}
-          {mod.slots
-            .flatMap(s => (s.target === '' ? [] : [targetLabel(s.target)]))
-            .join(', ')}
-          .
+          all {mod.slots.length} modulation slots are busy.{' '}
+          {claim == null
+            ? 'Remove one here, or in the MODULATION box on the map.'
+            : `Remove one to modulate ${def.label} instead:`}
+        </div>
+        <div className={styles.actions}>
+          {holders.map(holder => (
+            <button
+              key={holder}
+              className={cx(styles.action, styles.remove)}
+              title={
+                claim == null
+                  ? `stop modulating ${targetLabel(holder)} and hand the slot back`
+                  : `stop modulating ${targetLabel(holder)} and modulate ${def.label} with its slot`
+              }
+              onClick={() =>
+                claim == null
+                  ? mod.setSlotForKey(holder, null)
+                  : mod.handOver(holder, key, claim)
+              }
+            >
+              × {targetLabel(holder)}
+            </button>
+          ))}
         </div>
       </div>
     )
@@ -292,7 +328,7 @@ export function ModRowEditor(props: {
           title={`stop modulating ${def.label} and hand the slot back`}
           onClick={() => mod.setSlotForKey(key, null)}
         >
-          × remove
+          × remove from {def.label}
         </button>
       </div>
     </div>

@@ -20,6 +20,7 @@ import {
   modPatch,
   modReading,
   normalizeSlots,
+  patchSlot,
   readBoard,
   readStab,
   routingsToSlots,
@@ -279,6 +280,55 @@ describe('unpatch', () => {
   it('leaves the routing a removed wire was driving', () => {
     const bay = normalizeSlots([slot(), slot({ target: 'bayRate1' })])
     expect(unpatch(bay, 1).map(s => s.target)[0]).toBe('fbMix')
+  })
+
+  // A bay stored before a hand-back took its wires with it can still hold one.
+  it('loads a stored wire onto an empty slot as a hole, in place', () => {
+    const out = normalizeSlots([
+      EMPTY_SLOT,
+      slot({ target: 'bayRate1' }),
+      slot({ target: 'bayDepth2' }),
+      slot({ target: 'fbZoom' }),
+    ])
+    expect(out.slice(0, 4).map(s => s.target)).toEqual(['', '', '', 'fbZoom'])
+  })
+})
+
+describe('patchSlot', () => {
+  it('claims the first free slot, running', () => {
+    const bay = normalizeSlots([slot(), EMPTY_SLOT, slot({ on: false })])
+    const out = patchSlot(bay, 'fbZoom', {
+      source: 'walk',
+      rateHz: 1,
+      depth: 0.3,
+    })
+    expect(out?.[1]).toMatchObject({
+      target: 'fbZoom',
+      source: 'walk',
+      on: true,
+    })
+  })
+
+  it('patches a routing in place and leaves its switch alone', () => {
+    const bay = normalizeSlots([EMPTY_SLOT, slot({ on: false })])
+    const out = patchSlot(bay, 'fbMix', {
+      source: 'walk',
+      rateHz: 1,
+      depth: 0.3,
+    })
+    expect(out?.[1]).toMatchObject({
+      target: 'fbMix',
+      source: 'walk',
+      on: false,
+    })
+    expect(out?.[0]).toBe(bay[0])
+  })
+
+  it('refuses a claim on a full bay', () => {
+    const bay = normalizeSlots(Array.from({ length: N_SLOTS }, () => slot()))
+    expect(
+      patchSlot(bay, 'fbZoom', { source: 'sine', rateHz: 1, depth: 0.3 }),
+    ).toBeNull()
   })
 })
 
