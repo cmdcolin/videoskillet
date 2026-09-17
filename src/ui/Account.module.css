@@ -1,34 +1,5 @@
 /* The account control in the masthead, and the menu it opens. The signed-out
-   button wears the masthead chrome's family without composing `ui.chromeBtn`,
-   for the reason SavedProfiles.module.css's `.trigger` writes its own out: that
-   class fixes a 22px square sized for a glyph, and `width: auto` layered over
-   it is not reliably the rule that wins. */
-.signIn {
-  display: inline-flex;
-  align-items: center;
-  flex-shrink: 0;
-  width: auto;
-  padding: 1px 7px;
-  border: 1px solid var(--border-quiet);
-  border-radius: 4px;
-  background: var(--surface);
-  color: var(--fg3);
-  font-size: var(--fs-md);
-  line-height: 1.2;
-  white-space: nowrap;
-  cursor: pointer;
-}
-
-.signIn:hover {
-  border-color: var(--fg4);
-  color: var(--fg);
-}
-
-@media (pointer: coarse) {
-  .signIn {
-    padding: 5px 9px;
-  }
-}
+   button is `ui.chromeLabel`. */
 
 /* Round and photo-sized — once you are signed in the photo is the label. The
    button drops the square's fill and border, because a box drawn around a

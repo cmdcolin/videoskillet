@@ -270,8 +270,8 @@
   gap: 5px;
   margin-left: auto;
 }
-/* The ⌕, the pointer tool and the ⋮ are all `ui.chromeBtn` — one box for the
-   row, defined once in ui.module.css.
+/* The ⌕, the pointer tool and the ⋮ are `ui.chromeBtn`, and `saved` and
+   `sign in` are `ui.chromeLabel`. ui.module.css defines both with one rule.
 
    The control filter, in the masthead rather than in a row of its own.
    It used to be a 25px input plus a 12px margin sitting above the chain map,

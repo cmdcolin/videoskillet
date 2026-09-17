@@ -116,7 +116,7 @@ export function SavedProfiles(props: {
       trigger={attrs => (
         <button
           className={cx(
-            styles.trigger,
+            ui.chromeLabel,
             props.flash?.kind === 'saved' && styles.justSaved,
             props.flash?.kind === 'needs-auth' && styles.needsAuth,
             props.flash?.kind === 'failed' && styles.failed,

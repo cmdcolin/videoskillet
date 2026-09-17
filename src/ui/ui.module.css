@@ -245,19 +245,20 @@
   cursor: ew-resize;
 }
 
-/* The masthead's icon buttons — the pointer tool, the ⌕, the ⋮. One square box
-   for all three, which is what makes them read as one row of chrome rather than
-   three unrelated glyphs; there were three byte-identical copies of this rule in
-   two files, each carrying a comment saying it matched the one beside it.
-   No height: the icon sits in a text line box exactly as a glyph does, so the
-   pair stay level through any change to the type scale. Laying it out with flex
-   instead sizes the button to the 13px icon and leaves it 4px short — and an
-   explicit height would have to carry the padding and border with it, since a
-   <button> is border-box from the UA stylesheet whatever this file says. */
-.chromeBtn {
+/* The masthead's buttons. `.chromeBtn` is the square for a glyph (the pointer
+   tool, the ⌕, the ⋮) and `.chromeLabel` is the same box sized to a word
+   (`saved`, `sign in`). One rule draws both, so the row shares a border, a fill
+   and a touch height. The labelled buttons used to copy the box by hand, and
+   the copies missed the touch padding.
+   No height on the square: the icon sits in a text line box exactly as a glyph
+   does, so the pair stay level through any change to the type scale. Laying it
+   out with flex instead sizes the button to the 13px icon and leaves it 4px
+   short — and an explicit height would have to carry the padding and border
+   with it, since a <button> is border-box from the UA stylesheet whatever this
+   file says. */
+.chromeBtn,
+.chromeLabel {
   flex-shrink: 0;
-  width: 22px;
-  padding: 1px 0;
   border: 1px solid var(--border-quiet);
   border-radius: 4px;
   background: var(--surface);
@@ -266,21 +267,36 @@
   line-height: 1.2;
   cursor: pointer;
 }
-.chromeBtn:hover {
+.chromeBtn {
+  width: 22px;
+  padding: 1px 0;
+}
+.chromeLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 7px;
+  white-space: nowrap;
+}
+.chromeBtn:hover,
+.chromeLabel:hover {
   border-color: var(--fg4);
   color: var(--fg);
 }
 .chromeBtn svg {
   vertical-align: middle;
 }
-/* Touch: 22px square is a glyph, not a button. These three sit in the masthead
-   with 5px between them and the wordmark taking the rest of the row, so the
-   reach has to come from the box rather than from a .tap pseudo-element that
-   would overlap its neighbours — at 390px the row has the 24px this spends. */
+/* Touch: 22px square is a glyph, not a button. These sit in the masthead with
+   5px between them and the wordmark taking the rest of the row, so the reach
+   has to come from the box rather than from a .tap pseudo-element that would
+   overlap its neighbours — at 390px the row has the 24px this spends. */
 @media (pointer: coarse) {
   .chromeBtn {
     width: 30px;
     padding: 5px 0;
+  }
+  .chromeLabel {
+    padding: 5px 9px;
   }
 }
 /* Lit in the accent rather than filled the way a segmented toggle is: this is

@@ -3,6 +3,7 @@ import { useState } from 'react'
 import styles from './Account.module.css'
 import { warmSignIn } from './cloud'
 import { MenuItem, Popover } from './Popover'
+import ui from './ui.module.css'
 
 import type { CloudUser } from './cloud'
 import type { CloudStatus } from './useSavedProfiles'
@@ -29,7 +30,7 @@ export function Account(props: {
     const checking = props.status === 'loading'
     return (
       <button
-        className={styles.signIn}
+        className={ui.chromeLabel}
         disabled={checking}
         title={
           checking
