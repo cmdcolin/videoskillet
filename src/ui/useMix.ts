@@ -369,6 +369,9 @@ export function useMix(args: {
     canRedo: history.future.length > 0,
     // Bank the look on the board before overwriting it, so undo can restore it.
     snapshotForUndo: () => bank(sameLook),
+    // For a routing patched or handed back by hand, which moves no resting
+    // value — the same exception `rollMotion` makes.
+    snapshotBayForUndo: () => bank(sameLookAndBay),
     undo: () => goto(stepBack(history, banked())),
     redo: () => goto(stepForward(history, banked())),
     applyPreset: (name: string, patch: Partial<Controls>) => {

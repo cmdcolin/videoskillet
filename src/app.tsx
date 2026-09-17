@@ -142,6 +142,7 @@ import type { ControlsApi, ControlStore } from './ui/ControlsContext'
 import type { DriftScope } from './ui/drift'
 import type { StashSlot } from './ui/fileStash'
 import type { Lens } from './ui/lens'
+import type { ModSlotsApi } from './ui/ModSlotsContext'
 import type { SavedProfile } from './ui/profileModel'
 import type { AnySlotView } from './ui/slotView'
 import type { PickSlot } from './ui/SourceSlot'
@@ -429,6 +430,21 @@ export function App() {
     rand: rollRand,
     mod: modApi,
   })
+  // The bay as the panel reaches it, where patching a routing onto a row or
+  // handing one back is a step undo can take back.
+  const panelModApi: ModSlotsApi = {
+    ...modApi,
+    setSlotForKey: (key, routing) => {
+      const routed = modApi.modFor(key) !== null
+      const free = modApi.slots.some(s => s.target === '')
+      if (routing === null ? routed : !routed && free) mix.snapshotBayForUndo()
+      modApi.setSlotForKey(key, routing)
+    },
+    handOver: (from, to, routing) => {
+      mix.snapshotBayForUndo()
+      modApi.handOver(from, to, routing)
+    },
+  }
 
   // A chip that turns on the caption decoder or the chyron has nothing to show
   // until line 21 carries words, so it brings some when the caption is blank.
@@ -1677,7 +1693,7 @@ export function App() {
           {/* Its own context beside the controls one: a slider drag rewrites
               controls every pointer move, and rebuilding the bay's consumers on
               each of those frames would cost more than the bay ever does. */}
-          <ModSlotsContext value={modApi}>
+          <ModSlotsContext value={panelModApi}>
             {/* And a third beside those two: dbgView lives on the engine, not in
                 Controls, so the View group's tap row needs its own way down to
                 eng.tap/eng.changeTap. */}
