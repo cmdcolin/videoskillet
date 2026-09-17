@@ -101,7 +101,9 @@ button.target:hover {
   background: var(--mod);
 }
 .drive {
+  display: inline-block;
   margin-left: 4px;
+  white-space: pre;
   color: var(--edit-hi);
 }
 .itemOff .target,

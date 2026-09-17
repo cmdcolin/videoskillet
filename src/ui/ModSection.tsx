@@ -8,11 +8,12 @@ import { MOTION } from './midi'
 import styles from './ModSection.module.css'
 import {
   bayDef,
+  bayKeyFor,
   gateFlips,
   isBayKey,
   modDetail,
   modReading,
-  slotRate,
+  RATE_MAX,
   targetLabel,
 } from './modSlots'
 import { useModSlotsApi } from './ModSlotsContext'
@@ -167,7 +168,28 @@ export function ModSection(props: {
   )
 }
 
-const hzText = (hz: number) => `${Number(hz.toFixed(2))}Hz`
+// Which of slot `i`'s knobs another routing drives.
+const wiredKnobs = (slots: readonly UiSlot[], i: number) => ({
+  rate:
+    !PASS_THROUGH.has(slots[i].source) &&
+    slots.some(s => s.target === bayKeyFor(i, 'rate')),
+  depth: slots.some(s => s.target === bayKeyFor(i, 'depth')),
+})
+
+// Where the wires have pushed a routing's knobs this frame. Padded to one
+// length whatever the values, and the row reserves that length in `ch`, so a
+// readout rewritten every frame never moves the name and meter beside it.
+const driveText = (
+  wired: { rate: boolean; depth: boolean },
+  rateHz: number,
+  depth: number,
+) => {
+  const parts = [
+    wired.rate ? `${rateHz.toFixed(2).padStart(5)}Hz` : '',
+    wired.depth ? `${String(Math.round(depth * 100)).padStart(3)}%` : '',
+  ].filter(t => t !== '')
+  return parts.length === 0 ? '' : `→ ${parts.join(' · ')}`
+}
 
 const keep =
   (refs: RefObject<Map<number, HTMLSpanElement>>, i: number) =>
@@ -197,18 +219,9 @@ function RoutingList(props: {
         dot.style.left = `${Math.round(clamp01(at) * 100)}%`
         dot.hidden = false
       }
-      const slot = slots[e.id]
       const drive = drives.current.get(e.id)
-      if (slot === undefined || drive === undefined) return
-      const rateMoved =
-        !PASS_THROUGH.has(e.source) &&
-        Math.abs(e.rateHz - slotRate(slot, bpm)) > 0.005
-      const depthMoved = Math.abs(e.depth - slot.depth * master) > 0.005
-      const parts = [
-        rateMoved ? hzText(e.rateHz) : '',
-        depthMoved ? `${Math.round(e.depth * 100)}%` : '',
-      ].filter(t => t !== '')
-      const text = parts.length === 0 ? '' : `→ ${parts.join(' · ')}`
+      if (slots[e.id] === undefined || drive === undefined) return
+      const text = driveText(wiredKnobs(slots, e.id), e.rateHz, e.depth)
       if (drive.textContent !== text) drive.textContent = text
     })
     for (const [id, dot] of dots.current) if (!seen.has(id)) dot.hidden = true
@@ -291,7 +304,13 @@ function RoutingList(props: {
                     ? 'frozen'
                     : `${Math.round(s.depth * master * 100)}%`
               }`}
-              <span ref={keep(drives, i)} className={styles.drive} />
+              <span
+                ref={keep(drives, i)}
+                className={styles.drive}
+                style={{
+                  minWidth: `${driveText(wiredKnobs(slots, i), RATE_MAX, 1).length}ch`,
+                }}
+              />
             </span>
           </li>
         )
