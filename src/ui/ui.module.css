@@ -366,6 +366,21 @@ button.filledOn {
   height: 26px;
 }
 
+/* The about card is read once, at arm's length, so it sets its own type rather
+   than taking the panel's 13px. */
+.aboutText {
+  composes: helpText;
+  font-size: var(--fs-md);
+}
+.aboutLinks {
+  composes: aboutText;
+  margin-bottom: 14px;
+}
+.aboutLink {
+  composes: link;
+  font-size: inherit;
+}
+
 /* text colour, by meaning rather than by hue */
 .muted {
   color: var(--fg2);

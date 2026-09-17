@@ -1,7 +1,7 @@
 import { publicUrl } from '../publicUrl'
 import { gitSha, versionLabel } from '../version'
 import { Dialog } from './Dialog'
-import { GUIDE_URL, PRIVACY_URL, REPO_URL } from './links'
+import { GUIDE_URL, HOME_URL, PRIVACY_URL, REPO_URL } from './links'
 import ui from './ui.module.css'
 
 // Deliberately three lines: what this is, where to read about it, and which
@@ -20,14 +20,23 @@ export function AboutDialog({ onClose }: { onClose: () => void }) {
       size="form"
       onClose={onClose}
     >
-      <p className={ui.helpText}>
+      <p className={ui.aboutText}>
         A real-time simulator of NTSC analog video, rendered entirely in WebGPU
         compute shaders, with mixer feedback, camera-pointed-at-TV feedback and
         many other effects.
       </p>
-      <p className={ui.helpText}>
+      <p className={ui.aboutLinks}>
         <a
-          className={ui.link}
+          className={ui.aboutLink}
+          href={HOME_URL}
+          target="_blank"
+          rel="noreferrer"
+        >
+          videoskillet.com ↗
+        </a>{' '}
+        ·{' '}
+        <a
+          className={ui.aboutLink}
           href={GUIDE_URL}
           target="_blank"
           rel="noreferrer"
@@ -35,12 +44,17 @@ export function AboutDialog({ onClose }: { onClose: () => void }) {
           user guide ↗
         </a>{' '}
         ·{' '}
-        <a className={ui.link} href={REPO_URL} target="_blank" rel="noreferrer">
+        <a
+          className={ui.aboutLink}
+          href={REPO_URL}
+          target="_blank"
+          rel="noreferrer"
+        >
           source on GitHub ↗
         </a>{' '}
         ·{' '}
         <a
-          className={ui.link}
+          className={ui.aboutLink}
           href={PRIVACY_URL}
           target="_blank"
           rel="noreferrer"
