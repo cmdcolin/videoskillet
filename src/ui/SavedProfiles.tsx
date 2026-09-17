@@ -13,32 +13,14 @@ import ui from './ui.module.css'
 import type { SavedProfile } from './profileModel'
 import type { CloudStatus, ProfileFlash } from './useSavedProfiles'
 
-// The profile library: one button in the masthead's top-right corner, beside
-// the ⌕, the account and the ⋮. A synth's save/recall.
+// The profile library: a button in the Presets header, beside `all`. A synth's
+// save and recall: presets are the app's catalog, and this list is yours.
 //
-// It moved here from a slot in the LookBar row, among compare/mutate/undo,
-// because those are verbs that act on the look that's on screen right now and
-// this isn't one — it's a fact about the session, the same kind of fact the ⋮
-// answers for the app as a whole. Buried a verb-width away from "mutate" it
-// also read as one more thing to press to change the picture, when its whole
-// job signed-out is the opposite: say there is an account to sign into at all.
+// The button says `saved` in every state. `Account` in the masthead holds the
+// sign-in, and this popover offers one too, because a save needs somewhere to go.
 //
-// The button says `saved` rather than naming the noun. "Looks" was the first
-// label and it read as a verb ("looks 3" — looks three what?); `saved` is what
-// the press does and what the list holds, and it leaves "the look" meaning the
-// live board everywhere else in the app.
-//
-// The button says `saved` in every state. It used to read `sign in` with nobody
-// signed in, so one button stood for two things, and answering Google handed
-// back a save form nobody had opened. `Account` holds the account now. This
-// popover still offers a sign-in, because it is the answer to the question the
-// popover raises — where would a save go?
-//
-// It is a popover rather than a section of the panel because saving is a thing
-// you do for two seconds and recall is a list you open — neither wants a fold of
-// permanent panel height. Presets sit further down as chips because they are the
-// app's own catalog, browsed by eye; this list is yours and starts empty, so a
-// section for it would open onto nothing on every first session.
+// A popover keeps it out of the panel's height: saving takes two seconds and
+// recall is a list you open.
 export function SavedProfiles(props: {
   profiles: readonly SavedProfile[]
   // What the name box offers when you type nothing: the name of the profile this
@@ -116,7 +98,7 @@ export function SavedProfiles(props: {
       trigger={attrs => (
         <button
           className={cx(
-            ui.chromeLabel,
+            styles.trigger,
             props.flash?.kind === 'saved' && styles.justSaved,
             props.flash?.kind === 'needs-auth' && styles.needsAuth,
             props.flash?.kind === 'failed' && styles.failed,
@@ -129,12 +111,8 @@ export function SavedProfiles(props: {
               : 'the looks you keep under a name — an account holds the list, so this opens onto what an account is for'
           }
         >
-          {/* A count and a glyph, never the name: this button sits beside the
-              fixed-width ⌕ and ⋮ squares, and a label that grew to
-              `saved “worn tape”` or `save failed` for two seconds would shove
-              them sideways — twice, once each way. The count moves on a new
-              save anyway; the ✓ is what an overwrite has to say, and the ✕ is
-              what a rejected write has to. */}
+          {/* A count and a glyph, never the name, so the header beside it
+              does not shift on every save. */}
           saved
           {signedIn && props.profiles.length > 0
             ? ` ${props.profiles.length}`

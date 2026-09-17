@@ -588,8 +588,7 @@ compare; a screenshot cannot, because comparing means recapturing, which needs
 Firefox Nightly, a GPU and a minute — which is how `chain.jpg` spent two
 releases showing a stage that had been renamed. So every capture stamps the app
 version and commit into `docs/img/shots.json` and `pnpm docshots:check` reads it
-back, headless and in CI. It fires **once per release**: each shot prints the
-masthead with the version in it, so a release dates them whether or not the
+back, headless and in CI. It fires **once per release**, whether or not the
 panel moved. Only shots with the app's chrome in them are checked, read off the
 spec (`crop: 'canvas'`, or a `video`), because flagging all eleven canvas tiles
 every release is how a check stops being read.

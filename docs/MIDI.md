@@ -3,8 +3,8 @@
 There are more sliders here than you want to drag one at a time. A cheap box of
 knobs gives you both hands and lets you stop looking at the panel.
 
-Short version: **advanced settings** → **enable MIDI**, then **auto-map** or
-**learn in order** in the sidebar's **MIDI** section.
+Short version: press **midi** in the masthead, then **connect a controller**,
+then **auto-map** or **learn in order**.
 
 ## What you need
 
@@ -17,22 +17,26 @@ You also need **Web MIDI**, which means Chrome or Edge.
 
 ## Turning it on
 
-- Open the **☰** menu → **advanced settings** (or `ctrl+k` → "advanced
-  settings").
-- Under **MIDI control**, click **enable MIDI** and allow the browser prompt.
+- Press **midi** at the top of the panel, beside **sign in** (or `ctrl+k` →
+  "midi").
+- Click **connect a controller** and allow the browser prompt.
 
-A **MIDI** section appears in the control panel. You do this once; the app
+The card stays up while you work: it is not modal, so every control behind it
+can still be bound. `Esc` or **×** closes it. You connect once; the app
 reconnects on later visits.
 
-**Web MIDI not supported** means try Chrome or Edge. **Access denied** means
-click **retry**, or clear the site permission and reload.
+The **midi** button lights green once connected. With the card shut it shows **3
+waiting** in amber when knobs have lost their catch (see soft takeover below).
+**n/a** means this browser has no Web MIDI, so try Chrome or Edge. **refused**
+means the browser denied access: allow MIDI for the site and press **connect a
+controller** again.
 
 ## Binding one knob
 
 Each slider now has a **⚟** button. Click it and wiggle the knob. The button
-reads **CC7** and the pairing shows in the MIDI panel. `Esc` cancels.
+reads **CC7** and the pairing shows in the midi card. `Esc` cancels.
 
-- **×** in the MIDI panel unbinds. Clicking **CC7** re-learns, so a control can
+- **×** in the midi card unbinds. Clicking **CC7** re-learns, so a control can
   move to another knob without unbinding first.
 - One knob drives one thing. Bind a knob that was already driving something and
   it quietly moves.
@@ -43,9 +47,9 @@ reads **CC7** and the pairing shows in the MIDI panel. `Esc` cancels.
   every modulation routing at once, and carries the same **⚟**. One hand takes
   the board from still to fully in motion.
 - **A preset's weight**: every preset is a fader, so a preset on a knob moves
-  everything that preset touches. Use the picker at the bottom of the MIDI
-  panel: choose the preset, click **⚟ preset mix**, move a knob. Weights layer,
-  so several presets on several knobs is a small desk of looks.
+  everything that preset touches. Use the preset picker in the midi card: choose
+  the preset, click **⚟ preset mix**, move a knob. Weights layer, so several
+  presets on several knobs is a small desk of looks.
 
 Neither does soft takeover — they grab on the first message, having no track to
 draw a waiting mark on. A weight also resets once anything else moves the board:
@@ -55,8 +59,8 @@ the next turn starts a fresh mix from what is on screen.
 
 A knob holds a value, while firing the modulation bay's one-shot envelopes,
 marking a cue and jumping back to one are single gestures. Those go on **pads or
-keys**, bound at the bottom of the MIDI panel: pick the gesture, click **⚟
-pad**, hit the pad.
+keys**, bound from the gesture picker in the midi card: pick the gesture, click
+**⚟ pad**, hit the pad.
 
 What can go on one:
 
@@ -67,7 +71,7 @@ What can go on one:
   hit.
 
 **With nothing bound, any note fires the whole bay**, which suits a keyboard you
-haven't mapped. Bind one pad and that stops: notes then fire only what the panel
+haven't mapped. Bind one pad and that stops: notes then fire only what the card
 lists.
 
 Pads do no soft takeover either, since there is no value to catch up to. `Esc`
@@ -91,14 +95,14 @@ are stored per control, so re-ranking never moves one you already have. In a
 sweep, a knob bumped by accident is consumed with no going back a step.
 
 There are more controls than most controllers have knobs, so some stay
-mouse-only. The panel says how many are left over.
+mouse-only. The **auto-map** button shows how many it binds.
 
 ## "I turn the knob and nothing happens"
 
 That is **soft takeover**. A physical knob at 3 o'clock doesn't know the value
 is at 10 o'clock, so it stays inert until you sweep it **through** the current
 value. Then it catches and tracks. An **amber mark** on the track shows where
-the knob is waiting.
+the knob is waiting, and the card lists the waiting knob's name in amber.
 
 Knobs let go and need re-catching whenever a value is set from elsewhere:
 loading a preset, recalling a save, undoing, randomising. Expect a row of amber
@@ -106,10 +110,10 @@ marks after a preset load.
 
 ## Locking a rate to the beat
 
-The tempo comes from **MIDI clock** if anything is sending it (the panel shows
-**clock ♩ = 128.0 BPM**), otherwise from the top of the **MODULATION** box on
-the signal-path map, where you type it or **tap** four times. Clock wins while
-it runs, and the hand-set number waits underneath.
+The tempo comes from **MIDI clock** if anything is sending it (the card shows
+**♩ 128.0**), otherwise from the top of the **MODULATION** box on the
+signal-path map, where you type it or **tap** four times. Clock wins while it
+runs, and the hand-set number waits underneath.
 
 Three things can follow the beat, each through the **♩** in its own **⋮** menu,
 cycling 1/1 → 1/16 → off:
@@ -151,11 +155,11 @@ one binding on the next load.
 
 | What you see                        | What's going on                                                               |
 | ----------------------------------- | ----------------------------------------------------------------------------- |
-| No MIDI section in the sidebar      | Not enabled yet, or there's text in the panel's filter box. Clear it.         |
+| **midi** says n/a or refused        | No Web MIDI in this browser, or the browser denied access. See above.         |
 | Knob does nothing, amber mark shown | Soft takeover: sweep the knob across the on-screen value to catch it          |
 | Everything went dead after a preset | Same thing; a preset load drops every knob's catch                            |
 | Two controls move together          | Both bound to the same CC. Unbind one with **×** and re-learn it.             |
 | Value jumps in steps                | Coarse-stepped slider; 128 knob positions land on fewer distinct values       |
 | Bindings vanished                   | **auto-map** or **learn in order** clears every knob binding before it starts |
 | Tempo says "no signal"              | Nothing is sending clock. It counts ticks, and ignores start/continue.        |
-| A pad stopped firing the bay        | Binding any pad ends the default. Only what the panel lists fires now.        |
+| A pad stopped firing the bay        | Binding any pad ends the default. Only what the card lists fires now.         |

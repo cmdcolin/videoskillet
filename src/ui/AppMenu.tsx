@@ -5,7 +5,13 @@ import {
   FRAME_LOCK_LABEL,
   FRAME_LOCK_SHORT,
 } from './frameLock'
-import { CameraIcon, GearIcon, GraphIcon, MenuIcon } from './icons'
+import {
+  CameraIcon,
+  CrosshairIcon,
+  GearIcon,
+  GraphIcon,
+  MenuIcon,
+} from './icons'
 import { clampZoom, zoomAtTravel, zoomTravel } from './lens'
 import { openGuide, openUrlApi } from './links'
 import { MenuItem, Popover } from './Popover'
@@ -51,6 +57,8 @@ export function AppMenu(props: {
   poppedOut: boolean
   lens: Lens
   onLens: (lens: Lens) => void
+  boxZoom: boolean
+  onToggleBoxZoom: () => void
   tap: number
   frameLock: number
   onFrameLock: (v: number) => void
@@ -130,6 +138,17 @@ export function AppMenu(props: {
           />
           <div className={popoverStyles.menuSep} />
           <ZoomRow lens={props.lens} onChange={props.onLens} />
+          <MenuItem
+            icon={<CrosshairIcon />}
+            label="drag to box zoom"
+            hint={props.boxZoom ? 'on' : ''}
+            title={
+              props.boxZoom
+                ? 'dragging the picture boxes a region to zoom into; shift-drag pans'
+                : 'dragging the picture pans; shift-drag boxes a region to zoom into'
+            }
+            onClick={props.onToggleBoxZoom}
+          />
           <LockRow value={props.frameLock} onChange={props.onFrameLock} />
           <div className={popoverStyles.menuSep} />
           <MenuItem

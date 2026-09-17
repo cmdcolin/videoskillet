@@ -12,10 +12,10 @@ Visit https://videoskillet.com/app/
 
 ![The videoskillet.js window with four labels: the picture on the left, and down the right-hand panel the menu, the presets and the signal path map](img/overview.jpg)
 
-**The picture** is on the left. Drag a box across it to zoom in, double-click to
-pull back. **The ☰ menu**, top right, holds stills, recording, fullscreen and
-settings. **Presets**, below it, is a shortlist of whole looks: click one and
-every control it names moves at once.
+**The picture** is on the left. Shift-drag a box across it to zoom in,
+double-click to pull back. **The ☰ menu**, top right, holds stills, recording,
+fullscreen and settings. **Presets**, below it, is a shortlist of whole looks:
+click one and every control it names moves at once.
 
 **Signal path** is the map at the top of the sidebar, and the main thing to
 click. Each box is a stage of the chain. Click one and its controls open

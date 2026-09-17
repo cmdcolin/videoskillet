@@ -242,9 +242,8 @@
   cursor: ew-resize;
 }
 
-/* The masthead's buttons. `.chromeBtn` is the square for a glyph (the pointer
-   tool, the ⌕, the ⋮) and `.chromeLabel` is the same box sized to a word
-   (`saved`, `sign in`). One rule draws both, so the row shares a border, a fill
+/* The masthead's buttons. `.chromeBtn` is the square for a glyph (the ⌕, the
+   ⋮) and `.chromeLabel` is the same box sized to a word (`midi`, `sign in`). One rule draws both, so the row shares a border, a fill
    and a touch height. The labelled buttons used to copy the box by hand, and
    the copies missed the touch padding.
    No height on the square: the icon sits in a text line box exactly as a glyph
@@ -296,17 +295,6 @@
     padding: 5px 9px;
   }
 }
-/* Lit in the accent rather than filled the way a segmented toggle is: this is
-   masthead chrome, and a solid block would be the loudest thing in the row. */
-.chromeBtnOn {
-  color: var(--accent);
-  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
-}
-.chromeBtnOn:hover {
-  color: var(--accent);
-  border-color: var(--accent);
-}
-
 /* Structure only. The dark box this used to draw by hand — a fill, a border, a
    radius, a padding and a hover — is what the UA already draws now that :root
    carries color-scheme: dark, and it draws it a platform at a time rather than

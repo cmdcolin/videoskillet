@@ -61,7 +61,6 @@ import {
   sliderMatches,
 } from './ui/filter'
 import { FpsMonitor } from './ui/FpsMonitor'
-import { CrosshairIcon } from './ui/icons'
 import { LookBar } from './ui/LookBar'
 import { LookPopover } from './ui/LookPopover'
 import { MediaBrowserDialog } from './ui/MediaBrowserDialog'
@@ -323,14 +322,9 @@ export function App() {
   const [comparing, setComparing] = useState(false)
   // Which stage is being held at stock, if any — see holdStock.
   const [heldStage, setHeldStage] = useState<string | null>(null)
-  // Which tool a drag on the picture is. It used to be neither — the mode was
-  // inferred from the magnification, so one gesture meant two things depending
-  // on a number elsewhere on screen, and the only way to ask for the other one
-  // was to already know shift did that. Armed by default: at 1× there is nothing
-  // to pan, so the crosshair is the only tool a fresh session has a use for, and
-  // it is what says the magnifier exists at all. Not persisted — a pointer tool
-  // is a thing you pick up for a minute, not a setting.
-  const [boxZoom, setBoxZoom] = useState(true)
+  // Which tool a drag on the picture is: the crosshair boxes a region to zoom
+  // into, the hand pans, and shift swaps them. Off by default and not persisted.
+  const [boxZoom, setBoxZoom] = useState(false)
   const [barHidden, setBarHidden] = usePersistedFlag(BAR_HIDDEN_STORE)
   const [filter, setFilter] = useState('')
   // The other half of the filter, and a mode rather than a word: which controls
@@ -1259,6 +1253,8 @@ export function App() {
     poppedOut: popout !== null,
     lens,
     onLens: setLens,
+    boxZoom,
+    onToggleBoxZoom: () => setBoxZoom(!boxZoom),
     tap: eng.tap,
     frameLock: controls.frameLock,
     onFrameLock: (v: number) => writeControl('frameLock', v),
@@ -1304,7 +1300,6 @@ export function App() {
               alt=""
             />
             <span className={styles.wordmark}>videoskillet.js</span>
-            <span className={styles.version}>{versionLabel}</span>
           </button>
         )}
         {/* Sits in the masthead rather than over the bottom-left of the
@@ -1364,24 +1359,6 @@ export function App() {
           </div>
         ) : null}
         <div className={styles.chrome}>
-          {/* Stays through a live query, unlike the ⌕ beside it: the filter box
-              takes the wordmark's width, and this is not the thing that has
-              gone redundant. Lit while it is the crosshair — the cursor over
-              the picture is the other half of the readout, and this is the half
-              that is still on screen when the pointer is somewhere else. */}
-          <button
-            className={cx(ui.chromeBtn, boxZoom && ui.chromeBtnOn)}
-            aria-pressed={boxZoom}
-            aria-label="pointer tool over the picture"
-            title={
-              boxZoom
-                ? 'crosshair: drag the picture to box a region and zoom into it (shift-drag moves the glass instead)'
-                : 'hand: drag the picture to move around the glass (shift-drag boxes a region to zoom into)'
-            }
-            onClick={() => setBoxZoom(!boxZoom)}
-          >
-            <CrosshairIcon />
-          </button>
           {searching ? null : (
             <button
               className={ui.chromeBtn}
@@ -1398,26 +1375,6 @@ export function App() {
             onToggle={() => setShowMidi(o => !o)}
             onClose={() => setShowMidi(false)}
           />
-          {/* The library, at the true corner — beside the ⋮ rather than a verb
-              among compare/mutate/undo below. Those act on the look that is on
-              screen; this says which looks are kept, which is a fact about the
-              session, not a move it makes. */}
-          <SavedProfiles
-            profiles={profiles.profiles}
-            suggestedName={suggestedProfileName}
-            flash={profiles.flash}
-            status={profiles.status}
-            error={profiles.error}
-            onSignIn={profiles.signIn}
-            onSave={askSave}
-            onRecall={recallProfile}
-            onOpen={openProfile}
-            onDelete={profiles.deleteProfile}
-            onCopyLink={profile => copyQuery(profile.query)}
-            onWhy={() => setWhy({ pending: null })}
-          />
-          {/* The account, beside the library. The two shared one button, whose
-              label alternated between `saved` and `sign in`. */}
           <Account
             user={profiles.user}
             status={profiles.status}
@@ -1496,6 +1453,22 @@ export function App() {
           onApplyPreset={(name, patch) => applyPreset(name, patch)}
           onMixStart={mix.startMix}
           onMix={mix.setPresetWeight}
+          saved={
+            <SavedProfiles
+              profiles={profiles.profiles}
+              suggestedName={suggestedProfileName}
+              flash={profiles.flash}
+              status={profiles.status}
+              error={profiles.error}
+              onSignIn={profiles.signIn}
+              onSave={askSave}
+              onRecall={recallProfile}
+              onOpen={openProfile}
+              onDelete={profiles.deleteProfile}
+              onCopyLink={profile => copyQuery(profile.query)}
+              onWhy={() => setWhy({ pending: null })}
+            />
+          }
         />
       )}
 

@@ -1,7 +1,27 @@
-/* The library's popover. Its button is `ui.chromeLabel`, and the three flashes
-   below select on `button.` so they outrank that class whichever stylesheet the
-   bundler emits second. */
-
+/* The library's button, in the same outline as `all` beside it. The three
+   flashes below select on `button.` so they outrank it. */
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  padding: 1px 7px;
+  border: 1px solid var(--border-quiet);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--fg3);
+  font: inherit;
+  font-size: var(--fs-sm);
+  font-weight: 400;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.trigger:hover {
+  border-color: var(--fg4);
+  color: var(--fg);
+}
 /* Lit for a second and a half after a save. Same accent the held `compare`
    button wears, because it is saying the same kind of thing — this button just
    did something — and ctrl+S needs *some* answer on screen or a save that

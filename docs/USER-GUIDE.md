@@ -318,8 +318,9 @@ be found again.
 
 **saved** is your library, kept on your account, so it needs a sign-in.
 `ctrl/⌘+S` saves, and the first nine sit on the number keys: `1–9` recalls,
-`shift+1–9` overwrites. **sign in** sits beside **saved** in the masthead, and
-becomes your account photo once you are in — press the photo to sign out.
+`shift+1–9` overwrites. **saved** sits in the Presets header. **sign in** is in
+the masthead, and becomes your account photo once you are in — press the photo
+to sign out.
 
 Saving with nobody signed in holds the look and opens **why sign in?**, the same
 card the ⋮ menu offers. Sign in from that card and the look you were looking at
@@ -387,9 +388,10 @@ better than a lamp: a loop amplifies detail, and a flat field has none.
 
 ## Looking closer
 
-Drag a box on the picture to zoom, double-click to reset. The magnifier is part
-of the display, so it magnifies the lit tube face too — scan lines, mask and
-all.
+Shift-drag a box on the picture to zoom, double-click to reset. **drag to box
+zoom** in the ☰ menu makes a plain drag do the same, and shift-drag pan. The
+magnifier is part of the display, so it magnifies the lit tube face too — scan
+lines, mask and all.
 
 To watch the signal itself, **signal tap** in the View group steps through the
 composite waveform, luma, chroma energy, burst state, the scope, and back. The

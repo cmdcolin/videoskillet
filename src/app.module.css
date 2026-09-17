@@ -252,13 +252,6 @@
 .brand:hover .wordmark {
   color: #fff;
 }
-.version {
-  font-size: var(--fs-xs);
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  color: var(--fg3);
-  font-variant-numeric: tabular-nums;
-}
 
 /* The masthead's right end: the pointer tool, the ⌕, the account and the ⋮,
    held together against the edge whether or not the fps readout is up between

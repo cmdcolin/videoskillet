@@ -141,6 +141,7 @@
   gap: 1px;
   max-height: 220px;
   overflow-y: auto;
+  scrollbar-gutter: stable;
   padding: 2px;
 }
 .bound {

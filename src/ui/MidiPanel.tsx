@@ -226,9 +226,7 @@ export function MidiPanel(props: {
 }) {
   const { midi } = props
   const stranded = Object.keys(midi.pickups).length
-  const count =
-    Object.keys(midi.bindings).length + Object.keys(midi.notes).length
-  const note = midiTabNote(midi.status, count, stranded)
+  const note = midiTabNote(midi.status, stranded)
 
   return (
     <>
@@ -267,15 +265,8 @@ export function MidiPanel(props: {
 }
 
 // CROSS_REPO_SYNC(midi-dialog)
-function midiTabNote(
-  status: MidiStatus,
-  bound: number,
-  stranded: number,
-): string | null {
-  if (status === 'ready') {
-    if (bound === 0) return 'connected'
-    return stranded > 0 ? `${stranded} waiting` : `${bound} bound`
-  }
+function midiTabNote(status: MidiStatus, stranded: number): string | null {
+  if (status === 'ready') return stranded > 0 ? `${stranded} waiting` : null
   if (status === 'unsupported') return 'n/a'
   if (status === 'denied') return 'refused'
   if (status === 'requesting') return 'asking…'

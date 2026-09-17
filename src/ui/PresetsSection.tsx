@@ -13,7 +13,7 @@ import { useRecentPresets } from './useRecentPresets'
 
 import type { Controls } from '../core/controls'
 import type { PresetDef, PresetWeights } from './presets'
-import type { CSSProperties } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 
 // Presets grouped under their labeled headers. Derived purely from the static
 // PRESETS table, so it's computed once at module load, not every render.
@@ -473,6 +473,7 @@ export function PresetsSection(props: {
   onApplyPreset: (name: string, patch: Partial<Controls>) => void
   onMixStart: () => void
   onMix: (name: string, w: number) => void
+  saved: ReactNode
 }) {
   const [showHelp, setShowHelp] = useState(false)
   const [showAll, setShowAll] = usePersistedFlag(ALL_STORE)
@@ -495,6 +496,7 @@ export function PresetsSection(props: {
         }
         help={({ openSection }) => (
           <>
+            {props.saved}
             <button
               className={cx(styles.allBtn, showAll && styles.allBtnOn)}
               aria-pressed={showAll}
