@@ -34,6 +34,7 @@ import {
   cueRegion,
   dropLoop,
   insideCue,
+  moveCueEdge,
   wrapCostMs,
   tapCue,
 } from './cue'
@@ -92,7 +93,7 @@ import type {
   PoolRef,
 } from '../sources/pools'
 import type { TeletypeCard } from '../sources/teletype'
-import type { Cue } from './cue'
+import type { Cue, CueEdge } from './cue'
 import type { Fatal } from './FatalScreen'
 import type { StashSlot, Stashed } from './fileStash'
 import type { PickedFileHandle } from './fsAccess'
@@ -798,7 +799,11 @@ export function useEngine(args: { rand: Rand }) {
   // Write a cue through to both the render loop and the panel. One place, because
   // a cue that reached the ref but not the engine is a loop the buttons claim is
   // running and the picture ignores.
-  const writeCue = (key: StashSlot, next: Cue | null) => {
+  //
+  // `head: false` drops the second read head and arms none, for a loop end being
+  // dragged: arming loads an element, and a head parked at the old in-point would
+  // play the lap from there.
+  const writeCue = (key: StashSlot, next: Cue | null, head = true) => {
     cueRef.current[key] = next
     setCueState(p => ({ ...p, [key]: next }))
     const region = cueRegion(next)
@@ -809,7 +814,7 @@ export function useEngine(args: { rand: Rand }) {
     // first lap wraps by seeking whether or not it has landed, and the only
     // thing waiting for it would achieve is to make marking a loop feel slow.
     const slot = slotOf(key)
-    if (region === null) dropHead(slot)
+    if (region === null || !head) dropHead(slot)
     else void armHead(slot, region.start)
   }
 
@@ -847,6 +852,26 @@ export function useEngine(args: { rand: Rand }) {
   }
 
   const clearCueOn = (key: StashSlot) => writeCue(key, null)
+
+  // Drag one end of a running loop. The region follows every move, and
+  // `settleCueOn` arms the read head once the hand lets go.
+  const moveCueOn = (key: StashSlot, edge: CueEdge, time: number) => {
+    const v = (key === 'a' ? videoRef : videoBRef).current
+    const cur = cueRef.current[key]
+    if (v === null || !cueLooping(cur)) return
+    writeCue(key, moveCueEdge(cur, edge, time, v.duration), false)
+  }
+
+  // An in-point dragged past the playhead leaves it before the loop, where it
+  // would play everything up to the new in-point first. The pump already wraps a
+  // playhead left past the out-point.
+  const settleCueOn = (key: StashSlot) => {
+    const v = (key === 'a' ? videoRef : videoBRef).current
+    const cur = cueRef.current[key]
+    if (v !== null && cueLooping(cur) && v.currentTime < cur.in)
+      jump(key, cur.in)
+    writeCue(key, cur)
+  }
 
   // A cue a link asked for, waiting for the clip it belongs to.
   //
@@ -2731,6 +2756,8 @@ export function useEngine(args: { rand: Rand }) {
       tapCue: () => tapCueOn('a'),
       retrigger: () => retriggerOn('a'),
       clearCue: () => clearCueOn('a'),
+      moveCue: (edge, t) => moveCueOn('a', edge, t),
+      settleCue: () => settleCueOn('a'),
       wrapCost: stall.a,
       mode: sourceMode.a,
       name: sourceName.a,
@@ -2766,6 +2793,8 @@ export function useEngine(args: { rand: Rand }) {
       tapCue: () => tapCueOn('b'),
       retrigger: () => retriggerOn('b'),
       clearCue: () => clearCueOn('b'),
+      moveCue: (edge, t) => moveCueOn('b', edge, t),
+      settleCue: () => settleCueOn('b'),
       wrapCost: stall.b,
       mode: sourceMode.b,
       name: sourceName.b,

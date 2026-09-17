@@ -229,8 +229,11 @@ export function SourceSlot<T extends SourceMode | SourceBMode>(props: {
           {cueLooping(slot.cue) ? (
             <LoopScrub
               cue={slot.cue}
+              duration={slot.duration}
               readTime={slot.readTime}
               onSeek={slot.seek}
+              onMoveEdge={slot.moveCue}
+              onSettle={slot.settleCue}
             />
           ) : null}
           {/* Playback rate, and the pitch that falls with it — a property of

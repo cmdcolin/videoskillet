@@ -51,7 +51,7 @@ const clampTo = (t: number, duration: number): number =>
 // predicate returning `cue is Cue` proves only non-null, which left every caller
 // re-testing `cue.out !== null` to convince the compiler of the thing it had just
 // been told.
-interface LoopingCue extends Cue {
+export interface LoopingCue extends Cue {
   out: number
 }
 
@@ -97,6 +97,41 @@ export function tapCue(cue: Cue | null, time: number, duration: number): Cue {
   // in-point on every ordinary tap would walk it a float's width off the mark the
   // hand made.
   return { in: out > lo ? lo : Math.max(0, out - MIN_CUE_LOOP), out }
+}
+
+export type CueEdge = 'in' | 'out'
+
+// Move one end of a running loop to `time` and leave the other where it is. The
+// moved end stops MIN_CUE_LOOP short of the other, so a drag can neither cross
+// the two ends nor collapse the loop.
+export function moveCueEdge(
+  cue: LoopingCue,
+  edge: CueEdge,
+  time: number,
+  duration: number,
+): LoopingCue {
+  if (edge === 'in')
+    return {
+      in: clamp(time, 0, Math.max(0, cue.out - MIN_CUE_LOOP)),
+      out: cue.out,
+    }
+  return {
+    in: cue.in,
+    out: clampTo(Math.max(time, cue.in + MIN_CUE_LOOP), duration),
+  }
+}
+
+// The stretch of the clip the zoom bar spans: the loop, with half its length
+// again on either side for the ends to be dragged outward into.
+export function loopWindow(
+  cue: LoopingCue,
+  duration: number,
+): { from: number; to: number } {
+  const pad = (cue.out - cue.in) / 2
+  return {
+    from: Math.max(0, cue.in - pad),
+    to: clampTo(cue.out + pad, duration),
+  }
 }
 
 // Let go of the loop but keep the cue. What a seek out of the region does: the

@@ -6,7 +6,9 @@ import {
   dropLoop,
   formatCue,
   insideCue,
+  loopWindow,
   MIN_CUE_LOOP,
+  moveCueEdge,
   parseCue,
   wrapCostMs,
   tapCue,
@@ -167,5 +169,44 @@ describe('link round-trip', () => {
   it('holds the minimum and the ordering against a hand-edited link', () => {
     expect(parseCue('5,4')).toEqual({ in: 4, out: 5 })
     expect(parseCue('4,4')).toEqual({ in: 4, out: 4 + MIN_CUE_LOOP })
+  })
+})
+
+describe('moveCueEdge', () => {
+  const loop = { in: 4, out: 5 }
+
+  it('moves the end it is given and leaves the other', () => {
+    expect(moveCueEdge(loop, 'in', 3.5, DUR)).toEqual({ in: 3.5, out: 5 })
+    expect(moveCueEdge(loop, 'out', 6, DUR)).toEqual({ in: 4, out: 6 })
+  })
+
+  it('stops an end short of the other one', () => {
+    expect(moveCueEdge(loop, 'in', 7, DUR)).toEqual({
+      in: 5 - MIN_CUE_LOOP,
+      out: 5,
+    })
+    expect(moveCueEdge(loop, 'out', 1, DUR)).toEqual({
+      in: 4,
+      out: 4 + MIN_CUE_LOOP,
+    })
+  })
+
+  it('keeps both ends on the clip', () => {
+    expect(moveCueEdge(loop, 'in', -2, DUR)).toEqual({ in: 0, out: 5 })
+    expect(moveCueEdge(loop, 'out', 30, DUR)).toEqual({ in: 4, out: DUR })
+  })
+})
+
+describe('loopWindow', () => {
+  it('pads the loop by half its length on each side', () => {
+    expect(loopWindow({ in: 4, out: 6 }, DUR)).toEqual({ from: 3, to: 7 })
+  })
+
+  it('stops at either end of the clip', () => {
+    expect(loopWindow({ in: 0.5, out: 2.5 }, DUR)).toEqual({ from: 0, to: 3.5 })
+    expect(loopWindow({ in: 18, out: 19.5 }, DUR)).toEqual({
+      from: 17.25,
+      to: DUR,
+    })
   })
 })

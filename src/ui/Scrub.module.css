@@ -122,6 +122,34 @@
   border-right: 2px solid var(--cue);
   box-sizing: border-box;
 }
+/* A grip over each end of the loop on the zoom bar, wider than the 2px edge
+   under it so a finger can find it. It lights on hover, focus and while held. */
+.cueEdge {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 10px;
+  margin-left: -5px;
+  cursor: ew-resize;
+  touch-action: none;
+  outline: none;
+}
+.cueEdge::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 3px;
+  width: 4px;
+  border-radius: 1px;
+  background: var(--cue);
+  opacity: 0;
+}
+.cueEdge:hover::after,
+.cueEdge:focus-visible::after,
+.cueEdgeHeld::after {
+  opacity: 1;
+}
 /* The track and thumb rules are `ui.range`'s — this is a control row's slider
    with a different fill, not a different kind of control. --p (progress) is set
    inline by the component. */

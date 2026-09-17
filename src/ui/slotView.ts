@@ -25,7 +25,7 @@
 import type { SourceBMode, SourceMode } from '../sources/modes'
 import type { PickKind, PoolPick } from '../sources/pools'
 import type { TeletypeCard } from '../sources/teletype'
-import type { Cue } from './cue'
+import type { Cue, CueEdge } from './cue'
 import type { StashSlot } from './fileStash'
 import type { SlotKind } from './videoSlot'
 
@@ -109,6 +109,10 @@ export interface SlotView<T extends SourceMode | SourceBMode> {
   tapCue: () => void
   retrigger: () => void
   clearCue: () => void
+  // Drag one end of a running loop, then let go of it. The read head that makes
+  // a wrap free is re-armed on the let-go.
+  moveCue: (edge: CueEdge, time: number) => void
+  settleCue: () => void
   // What this slot's loop wrap is measured to cost, in ms, or null before there
   // is a reading. Reported, not judged — see ui/cue.ts.
   wrapCost: number | null

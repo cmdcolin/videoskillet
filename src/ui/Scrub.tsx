@@ -1,10 +1,11 @@
-import { useEffect, useEffectEvent, useRef } from 'react'
+import { useEffect, useEffectEvent, useRef, useState } from 'react'
 
 import { clamp } from '../core/math'
+import { loopWindow } from './cue'
 import { cx } from './cx'
 import styles from './Scrub.module.css'
 
-import type { Cue } from './cue'
+import type { Cue, CueEdge, LoopingCue } from './cue'
 import type { CSSProperties, ReactNode } from 'react'
 
 const clock = (s: number) =>
@@ -66,19 +67,50 @@ export function Scrub(props: {
   )
 }
 
-// A running loop magnified to its own bar. It spans the loop exactly, so a drag
-// here never leaves the region and never drops the loop. The thumb reads the
-// element every frame, as Meter does: the 10 Hz poll scatters it on a short loop.
+const EDGES: readonly CueEdge[] = ['in', 'out']
+const NUDGE = new Map([
+  ['ArrowLeft', -1],
+  ['ArrowDown', -1],
+  ['ArrowRight', 1],
+  ['ArrowUp', 1],
+])
+
+// An end of the loop in a hand, with the bar's scale as it was at the press.
+// `box` is the track at the press for a pointer, and null for the keyboard.
+interface EdgeGrab {
+  edge: CueEdge
+  from: number
+  to: number
+  box: DOMRect | null
+  offset: number
+  moved: boolean
+}
+
+// A running loop magnified to its own bar, with half its length again on either
+// side. Seeking stays inside the loop, so a drag here never drops it. Either end
+// can be dragged, or focused and nudged with the arrow keys. The bar keeps its
+// scale for the length of a grab and re-centres on the loop at the let-go.
+//
+// The thumb reads the element every frame, as Meter does: the 10 Hz poll
+// scatters it on a short loop.
 export function LoopScrub(props: {
-  cue: { in: number; out: number }
+  cue: LoopingCue
+  duration: number
   readTime: () => number
   onSeek: (time: number) => void
+  onMoveEdge: (edge: CueEdge, time: number) => void
+  onSettle: () => void
 }) {
-  const { in: from, out: to } = props.cue
+  const { cue } = props
+  const [grab, setGrab] = useState<EdgeGrab | null>(null)
+  const { from, to } = grab ?? loopWindow(cue, props.duration)
+  const span = to - from
+  const at = (t: number) => `${(((t - from) / span) * 100).toFixed(2)}%`
+  const trackRef = useRef<HTMLSpanElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const posRef = useRef<HTMLSpanElement>(null)
   const readTime = useEffectEvent(() => props.readTime())
-  const len = (to - from).toFixed(2)
+  const len = (cue.out - cue.in).toFixed(2)
 
   useEffect(() => {
     let id = 0
@@ -89,22 +121,35 @@ export function LoopScrub(props: {
         input.value = String(t)
         input.style.setProperty(
           '--p',
-          `${(((t - from) / (to - from)) * 100).toFixed(1)}%`,
+          `${(((t - from) / (to - from)) * 100).toFixed(2)}%`,
         )
       }
       const pos = posRef.current
       if (pos !== null)
-        pos.textContent = (t - from).toFixed(2).padStart(len.length)
+        pos.textContent = (clamp(t, cue.in, cue.out) - cue.in)
+          .toFixed(2)
+          .padStart(len.length)
       id = requestAnimationFrame(tick)
     }
     id = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(id)
-  }, [from, to, len])
+  }, [from, to, cue.in, cue.out, len])
+
+  const move = (edge: CueEdge, time: number) => {
+    props.onMoveEdge(edge, time)
+    if (grab !== null && !grab.moved) setGrab({ ...grab, moved: true })
+  }
+  const release = () => {
+    if (grab?.moved) props.onSettle()
+    setGrab(null)
+  }
+  const timeAt = (x: number, box: DOMRect) =>
+    from + ((x - box.left) / box.width) * span
 
   const fill: CSSProperties & Record<'--p', string> = { '--p': '0%' }
   return (
     <div className={styles.scrubRow}>
-      <span className={styles.scrubTrack}>
+      <span ref={trackRef} className={styles.scrubTrack}>
         <input
           ref={inputRef}
           type="range"
@@ -113,10 +158,62 @@ export function LoopScrub(props: {
           min={from}
           max={to}
           step="any"
-          defaultValue={from}
-          onChange={e => props.onSeek(Number(e.target.value))}
+          defaultValue={cue.in}
+          onChange={e =>
+            props.onSeek(clamp(Number(e.target.value), cue.in, cue.out))
+          }
         />
-        <span className={styles.cueSpan} style={{ left: 0, width: '100%' }} />
+        <span
+          className={styles.cueSpan}
+          style={{ left: at(cue.in), width: at(from + cue.out - cue.in) }}
+        />
+        {EDGES.map(edge => (
+          <span
+            key={edge}
+            role="slider"
+            tabIndex={0}
+            aria-label={`loop ${edge}-point`}
+            aria-valuemin={0}
+            aria-valuemax={props.duration}
+            aria-valuenow={cue[edge]}
+            title={`the loop's ${edge}-point — drag it, or nudge it with the arrow keys (shift for bigger steps)`}
+            className={cx(
+              styles.cueEdge,
+              grab?.edge === edge && styles.cueEdgeHeld,
+            )}
+            style={{ left: at(cue[edge]) }}
+            onPointerDown={e => {
+              const box = trackRef.current?.getBoundingClientRect()
+              if (box === undefined) return
+              e.currentTarget.setPointerCapture(e.pointerId)
+              const offset = timeAt(e.clientX, box) - cue[edge]
+              setGrab({ edge, from, to, box, offset, moved: false })
+            }}
+            onPointerMove={e => {
+              if (grab?.edge !== edge || grab.box === null) return
+              move(edge, timeAt(e.clientX, grab.box) - grab.offset)
+            }}
+            onPointerUp={e => {
+              e.currentTarget.releasePointerCapture(e.pointerId)
+              release()
+            }}
+            onPointerCancel={release}
+            onKeyDown={e => {
+              const dir = NUDGE.get(e.key)
+              if (dir === undefined) return
+              e.preventDefault()
+              if (grab === null)
+                setGrab({ edge, from, to, box: null, offset: 0, moved: true })
+              move(edge, cue[edge] + dir * span * (e.shiftKey ? 0.1 : 0.01))
+            }}
+            onKeyUp={e => {
+              if (grab?.box === null && NUDGE.has(e.key)) release()
+            }}
+            onBlur={() => {
+              if (grab?.box === null) release()
+            }}
+          />
+        ))}
       </span>
       <span className={styles.loopTime}>
         <span ref={posRef} /> / {len}
