@@ -89,32 +89,31 @@ await page.evaluate(() => {
   }
 })
 
-// Turn MIDI on the way a user does: gear over the picture → advanced settings.
+// Turn MIDI on the way a user does: the midi button in the masthead, then
+// connect. The card is not modal, so it stays up for the rest of the run.
 await page.evaluate(() => {
   ;[...document.querySelectorAll('button')]
-    .find(b => b.title?.includes('menu ('))
+    .find(b => b.textContent?.trim().startsWith('midi'))
     ?.click()
 })
 await new Promise(r => setTimeout(r, 300))
 await page.evaluate(() => {
   ;[...document.querySelectorAll('button')]
-    .find(b => b.textContent?.trim() === 'advanced settings')
-    ?.click()
-})
-await new Promise(r => setTimeout(r, 300))
-await page.evaluate(() => {
-  ;[...document.querySelectorAll('button')]
-    .find(b => b.textContent?.trim() === 'enable MIDI')
+    .find(b => b.textContent?.trim() === 'connect a controller')
     ?.click()
 })
 await new Promise(r => setTimeout(r, 500))
-await page.evaluate(() => {
-  ;[...document.querySelectorAll('button')]
-    .find(b => b.textContent?.trim() === 'close' || b.title === 'close')
-    ?.click()
-  document.querySelector('dialog')?.close()
-})
-await new Promise(r => setTimeout(r, 300))
+
+// A bound row is its name, its CC or note, and the × whose label names it.
+const listed = (name, code) =>
+  page.evaluate(
+    (n, c) =>
+      document
+        .querySelector(`dialog button[aria-label="unbind ${n}"]`)
+        ?.parentElement?.textContent?.includes(c) === true,
+    name,
+    code,
+  )
 
 // The motion range carries an id for its own <label>, which is the one stable
 // handle on the strip.
@@ -124,11 +123,11 @@ const readMotion = () => page.$eval(strip, el => Number(el.value))
 // --- the motion amount ---------------------------------------------------
 ok('the motion strip is on screen', (await page.$(strip)) !== null)
 ok(
-  'the MIDI panel came up enabled',
+  'the midi card came up connected',
   await page.evaluate(() =>
-    [...document.querySelectorAll('h2,h3,button,div')].some(e =>
-      e.textContent?.trim().startsWith('MIDI'),
-    ),
+    document
+      .querySelector('dialog[aria-label="midi"]')
+      ?.textContent?.includes('learn in order'),
   ),
 )
 
@@ -145,7 +144,7 @@ await new Promise(r => setTimeout(r, 200))
 ok(
   'arming the strip says so in the panel',
   await page.evaluate(() =>
-    document.body.textContent?.includes('learning motion amount'),
+    document.body.textContent?.includes('to take motion amount'),
   ),
 )
 
@@ -162,10 +161,8 @@ ok(
   ),
 )
 ok(
-  'the binding is listed in the MIDI panel',
-  await page.evaluate(() =>
-    document.body.textContent?.includes('motion amount · CC21'),
-  ),
+  'the binding is listed in the midi card',
+  await listed('motion amount', 'CC21'),
 )
 
 // The first message binds rather than drives, so this is the first turn.
@@ -233,18 +230,13 @@ await new Promise(r => setTimeout(r, 200))
 ok(
   'arming a preset weight says which one',
   await page.evaluate(() =>
-    document.body.textContent?.includes('learning vhs · preset'),
+    document.body.textContent?.includes('to take vhs · preset'),
   ),
 )
 
 await page.evaluate(() => window.__cc(22, 100))
 await new Promise(r => setTimeout(r, 300))
-ok(
-  'the preset binding is listed',
-  await page.evaluate(() =>
-    document.body.textContent?.includes('vhs · preset · CC22'),
-  ),
-)
+ok('the preset binding is listed', await listed('vhs · preset', 'CC22'))
 ok(
   'binding it changed nothing yet',
   JSON.stringify(await controlsOf()) === JSON.stringify(clean),
@@ -349,7 +341,7 @@ await new Promise(r => setTimeout(r, 200))
 ok(
   'arming a pad says which gesture',
   await page.evaluate(() =>
-    document.body.textContent?.includes('learning ⚡ fire slot 2'),
+    document.body.textContent?.includes('to take ⚡ fire slot 2'),
   ),
 )
 
@@ -364,9 +356,7 @@ ok(
 )
 ok(
   'the pad is listed with its note number',
-  await page.evaluate(() =>
-    document.body.textContent?.includes('⚡ fire slot 2 · note 40'),
-  ),
+  await listed('⚡ fire slot 2', 'note 40'),
 )
 ok(
   'and persisted under its action name',
@@ -403,12 +393,9 @@ ok(
 // Handing the pad back brings the blanket with it — otherwise clearing a
 // binding would leave the keyboard dead with nothing on screen saying why.
 await page.evaluate(() => {
-  const row = [...document.querySelectorAll('div')].find(
-    d =>
-      d.textContent?.startsWith('⚡ fire slot 2 · note 40') &&
-      d.querySelector('button'),
-  )
-  row?.querySelector('button')?.click()
+  document
+    .querySelector('dialog button[aria-label="unbind ⚡ fire slot 2"]')
+    ?.click()
 })
 await new Promise(r => setTimeout(r, 300))
 await page.evaluate(() => {
@@ -476,10 +463,8 @@ const armed = await page.evaluate(() => {
 })
 ok('and offers ⚟ inside it', armed)
 await new Promise(r => setTimeout(r, 200))
-// The MIDI panel is hidden while the filter box has text in it (below the box
-// is the result set), so the row's own menu is what reports the bind here — and
-// the item closes the menu on its way, so getting the CC back means opening it
-// again.
+// The row's own menu reports the bind here. The item closes the menu on its
+// way, so reading the CC back means opening it again.
 await page.evaluate(() => window.__cc(23, 40))
 await new Promise(r => setTimeout(r, 400))
 await page.evaluate(() => {

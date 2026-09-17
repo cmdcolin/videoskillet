@@ -1,0 +1,186 @@
+/* The masthead button. Written out in full, like SavedProfiles' trigger:
+   composing ui.chromeBtn brings its fixed 22px width along. */
+.tab {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  flex-shrink: 0;
+  padding: 1px 7px;
+  border: 1px solid var(--border-quiet);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--fg3);
+  font-size: var(--fs-md);
+  line-height: 1.2;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.tab:hover {
+  border-color: var(--fg4);
+  color: var(--fg);
+}
+.tabOn {
+  composes: tab;
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+}
+/* The amber a waiting knob wears on its own slider. */
+.tabWaiting {
+  composes: tab;
+  color: var(--edit-hi);
+  border-color: var(--edit-hi);
+}
+.tabNote {
+  font-size: var(--fs-xs);
+  font-family: var(--mono);
+  color: inherit;
+  opacity: 0.85;
+}
+
+/* CROSS_REPO_SYNC(midi-card-css) */
+/* Shown, not modal: the ⚟ that binds a control is on the control, in the panel
+   behind this card. It opens in the panel's corner so it covers as little of
+   that panel as it can. */
+.card {
+  position: fixed;
+  /* The UA sheet sets inset-inline-start: 0 on every dialog, and with both
+     sides and a width set the start edge wins, opening the card in the far
+     corner of the window. */
+  left: auto;
+  right: 12px;
+  /* A shown dialog never reaches the top layer, so later siblings would paint
+     over it by DOM order without a stack level of its own. */
+  z-index: 10;
+  margin: 0;
+  max-width: min(440px, calc(100vw - 24px));
+  max-height: calc(100vh - 88px);
+  overflow-y: auto;
+  padding: 8px 10px 10px;
+  background: var(--surface);
+  color: var(--fg2);
+  border: 1px solid var(--border-hover);
+  border-radius: 5px;
+  box-shadow: 0 8px 28px #000a;
+}
+
+.cardHead {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding-bottom: 4px;
+}
+
+.cardTitle {
+  flex: 1;
+  font-size: var(--fs-md);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.close {
+  background: none;
+  border: none;
+  color: var(--fg3);
+  font-size: var(--fs-md);
+  line-height: 1;
+  padding: 0 2px;
+  cursor: pointer;
+}
+
+.close:hover {
+  color: var(--fg);
+}
+/* CROSS_REPO_SYNC_END(midi-card-css) */
+
+/* Just under the masthead. */
+.card {
+  top: 40px;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 2px 4px;
+}
+.hint {
+  padding: 2px 2px 4px;
+  font-size: var(--fs-sm);
+  color: var(--fg3);
+  line-height: var(--prose-lh);
+}
+/* Armed, sweeping or stranded: the board is waiting on the controller. */
+.waiting {
+  composes: hint;
+  color: var(--edit-hi);
+}
+.btn {
+  composes: btn btnFlush from './ui.module.css';
+}
+.btnOn {
+  composes: btn btnFlush active from './ui.module.css';
+}
+.select {
+  composes: select from './ui.module.css';
+}
+.quiet {
+  font-family: var(--mono);
+  font-size: var(--fs-xs);
+  color: var(--fg4);
+}
+.clock {
+  font-family: var(--mono);
+  font-size: var(--fs-xs);
+  color: var(--edit-hi);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  max-height: 220px;
+  overflow-y: auto;
+  padding: 2px;
+}
+.bound {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: var(--fs-sm);
+  color: var(--fg3);
+}
+.boundName {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.strandedName {
+  composes: boundName;
+  color: var(--edit-hi);
+}
+.cc {
+  font-family: var(--mono);
+  font-size: var(--fs-xs);
+  color: var(--midi);
+}
+.drop {
+  composes: bare from './ui.module.css';
+  color: var(--fg4);
+  font-size: var(--fs);
+  line-height: 1;
+  padding: 0 2px;
+}
+.drop:hover {
+  color: var(--danger);
+}
+.danger {
+  composes: btn;
+  margin-top: 3px;
+  color: var(--fg4);
+}
+.danger:hover {
+  color: var(--danger);
+  border-color: var(--danger);
+}

@@ -48,6 +48,7 @@ const actions = () => {
     onOpenStage: name => opened.push(name),
     onDiagram: noop,
     onAdvanced: noop,
+    onMidi: noop,
     onAbout: noop,
   })
   return { list, opened }

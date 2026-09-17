@@ -135,6 +135,7 @@ export function paletteActions(o: {
   onOpenStage: (name: string) => void
   onDiagram: () => void
   onAdvanced: () => void
+  onMidi: () => void
   onAbout: () => void
 }): PaletteAction[] {
   // A jump into a free box clears the filter first, or it can open a stage that
@@ -381,8 +382,15 @@ export function paletteActions(o: {
       run: jump(DECK_STAGE),
     },
     {
+      name: 'midi',
+      blurb:
+        'connect a controller, auto-map or learn its knobs, put gestures on pads, and see what is bound',
+      run: o.onMidi,
+    },
+    {
       name: 'advanced settings',
-      blurb: 'render scale and MIDI setup',
+      blurb:
+        'render scale, frame lock, the signal tap and what a reload restores',
       run: o.onAdvanced,
     },
     {

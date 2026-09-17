@@ -66,7 +66,7 @@ import { LookBar } from './ui/LookBar'
 import { LookPopover } from './ui/LookPopover'
 import { MediaBrowserDialog } from './ui/MediaBrowserDialog'
 import { MenuRow } from './ui/MenuRow'
-import { MidiSection } from './ui/MidiSection'
+import { MidiPanel } from './ui/MidiPanel'
 import { ModBay } from './ui/ModBay'
 import { ModSection } from './ui/ModSection'
 import { bayLoad, modDetail, slotsToRoutings, targetLabel } from './ui/modSlots'
@@ -240,10 +240,10 @@ export function App() {
   // Pulled off once, because it is the half of `auto` that keeps its identity
   // and the half that ends up in dependency arrays.
   const autoTap = auto.tap
+  const midi = useMidi(engineRef, auto.tap)
   const {
     status: midiStatus,
     bindings: midiBindings,
-    notes: midiNotes,
     armed,
     armedNote,
     bpm,
@@ -251,18 +251,11 @@ export function App() {
     writeControl,
     writeControls,
     setSinks,
-    enable: enableMidi,
     toggleArm,
-    toggleArmNote,
     disarm,
-    autoMap,
     learn,
-    learnSequence,
     stopLearn,
-    clearBinding,
-    clearNote,
-    clearAll,
-  } = useMidi(engineRef, auto.tap)
+  } = midi
   // The engine IS the store: React reads controls straight from it via
   // useSyncExternalStore, so there's no separate `values` copy to keep in sync.
   const controls = useSyncExternalStore(
@@ -317,6 +310,7 @@ export function App() {
   }
   const [fullscreen, setFullscreen] = useState(false)
   const [showAdvanced, setShowAdvanced] = useState(false)
+  const [showMidi, setShowMidi] = useState(false)
   const [showDiagram, setShowDiagram] = useState(false)
   const [showAbout, setShowAbout] = useState(false)
   // Why an account, and the name of the save waiting on the answer. `null` is
@@ -860,12 +854,14 @@ export function App() {
         return
       }
       const mode =
+        showMidi ||
         filter !== '' ||
         movingOnly ||
         searchOpen ||
         armed !== null ||
         armedNote !== null ||
         learn !== null
+      setShowMidi(false)
       clearFilter()
       setSearchOpen(false)
       disarm()
@@ -993,6 +989,7 @@ export function App() {
     onOpenStage: nav.jumpPhase,
     onDiagram: () => setShowDiagram(true),
     onAdvanced: () => setShowAdvanced(true),
+    onMidi: () => setShowMidi(true),
     onAbout: () => setShowAbout(true),
   })
 
@@ -1395,6 +1392,12 @@ export function App() {
               ⌕
             </button>
           )}
+          <MidiPanel
+            midi={midi}
+            open={showMidi}
+            onToggle={() => setShowMidi(o => !o)}
+            onClose={() => setShowMidi(false)}
+          />
           {/* The library, at the true corner — beside the ⋮ rather than a verb
               among compare/mutate/undo below. Those act on the look that is on
               screen; this says which looks are kept, which is a fact about the
@@ -1604,27 +1607,6 @@ export function App() {
           the map now — floating, wired to nothing, because what it is patched
           into is the controls — so it costs the resting panel nothing and is
           where you go looking for something to open. See MOD_STAGE. */}
-
-      {/* MIDI only appears once enabled (from Advanced) — 99% of users never
-          wire up a controller, so it stays out of the default panel. */}
-      {filtering || midiStatus !== 'ready' ? null : (
-        <MidiSection
-          armed={armed}
-          armedNote={armedNote}
-          learn={learn}
-          midiBindings={midiBindings}
-          midiNotes={midiNotes}
-          bpm={bpm}
-          onAutoMap={autoMap}
-          onLearnSequence={learnSequence}
-          onStopLearn={stopLearn}
-          onArm={toggleArm}
-          onArmNote={toggleArmNote}
-          onClearBinding={clearBinding}
-          onClearNote={clearNote}
-          onClearAll={clearAll}
-        />
-      )}
     </>
   )
   // The palette and the board dump take the sidebar over rather than floating
@@ -1940,8 +1922,6 @@ export function App() {
           onTapChange={eng.changeTap}
           frameLock={controls.frameLock}
           onFrameLockChange={v => writeControl('frameLock', v)}
-          midiStatus={midiStatus}
-          onEnableMidi={enableMidi}
           onClose={() => setShowAdvanced(false)}
         />
       ) : null}

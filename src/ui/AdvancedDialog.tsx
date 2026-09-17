@@ -1,4 +1,3 @@
-import { cx } from './cx'
 import { Dialog } from './Dialog'
 import dlg from './dialog.module.css'
 import { REOPEN_KEY } from './fileStash'
@@ -14,8 +13,6 @@ import { Slider } from './Slider'
 import { usePersistedFlag } from './storage'
 import { ToggleButtonGroup } from './ToggleButtonGroup'
 import ui from './ui.module.css'
-
-import type { MidiStatus } from './midi'
 
 const TAP_OPTIONS = SIGNAL_TAPS.map(t => ({
   value: String(t.value),
@@ -38,8 +35,6 @@ export function AdvancedDialog(props: {
   // whether to spend the frame on picture or on cadence.
   frameLock: number
   onFrameLockChange: (v: number) => void
-  midiStatus: MidiStatus
-  onEnableMidi: () => void
   onClose: () => void
 }) {
   // The one setting on this card the app owns rather than the panel: nothing
@@ -147,40 +142,6 @@ export function AdvancedDialog(props: {
             clip does not come back whichever way this is set.
           - A link that names its own source always wins over both.`}
       />
-      <div className={dlg.subhead}>MIDI control</div>
-      {props.midiStatus === 'idle' ? (
-        <button
-          className={cx(ui.btn, ui.btnFlush)}
-          onClick={props.onEnableMidi}
-        >
-          enable MIDI
-        </button>
-      ) : null}
-      {props.midiStatus === 'requesting' ? (
-        <div className={ui.muted}>requesting access…</div>
-      ) : null}
-      {props.midiStatus === 'unsupported' ? (
-        <div className={ui.warn}>Web MIDI not supported in this browser.</div>
-      ) : null}
-      {props.midiStatus === 'denied' ? (
-        <div className={ui.err}>
-          Access denied.{' '}
-          <button
-            className={cx(ui.btn, ui.btnFlush)}
-            onClick={props.onEnableMidi}
-          >
-            retry
-          </button>
-        </div>
-      ) : null}
-      {props.midiStatus === 'ready' ? (
-        <div className={ui.ok}>
-          enabled — bind knobs from the MIDI panel in the sidebar.
-        </div>
-      ) : null}
-      <div className={ui.dim} style={{ margin: '4px 0 0' }}>
-        map a hardware controller to any slider; sync rates to MIDI clock.
-      </div>
     </Dialog>
   )
 }

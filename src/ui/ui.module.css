@@ -218,9 +218,6 @@
 .edited {
   border-color: #7f7f50;
 }
-.danger {
-  border-color: #a05050;
-}
 
 /* Preset buttons double as weight sliders: drag one sideways to dial the preset
    in partially, and the fill shows how much of it is in the mix. The fill can't
@@ -393,17 +390,11 @@
 .dim {
   color: var(--fg3);
 }
-.ok {
-  color: var(--accent);
-}
 .warn {
   color: #cba065;
 }
 .err {
   color: var(--danger);
-}
-.blue {
-  color: var(--midi);
 }
 .amber {
   color: var(--edit-hi);
