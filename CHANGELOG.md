@@ -2,6 +2,12 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [2.1.3](https://github.com/cmdcolin/videoskillet/compare/v2.1.2...v2.1.3) - 2026-09-17
+
+### Features
+- *(ui)* [`9b4603a`](https://github.com/cmdcolin/videoskillet/commit/9b4603af75520af756676a6318f307933dc3593b) let a drift make a round trip instead of only wandering
+- *(ui)* [`15312ab`](https://github.com/cmdcolin/videoskillet/commit/15312ab73fec86890c0514ee9e46a7106fe7c589) give the stab gate a switch outside the bay
+
 ## [2.1.2](https://github.com/cmdcolin/videoskillet/compare/v2.1.1...v2.1.2) - 2026-09-17
 
 ### Features
