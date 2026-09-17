@@ -22,23 +22,14 @@
   margin-top: 4px;
 }
 .action {
-  composes: bare from './ui.module.css';
-  font-size: var(--fs-sm);
-  color: var(--fg3);
-  border: 1px solid var(--border-quiet);
-  border-radius: 3px;
-  padding: 1px 6px;
-}
-.action:hover {
-  color: var(--fg);
-  border-color: var(--border-hover);
+  composes: outline from './ui.module.css';
 }
 /* a lock that is thrown: the amber a clock lock wears on a control row */
-.actionOn {
+button.actionOn {
   color: var(--edit);
   border-color: color-mix(in srgb, var(--edit) 45%, transparent);
 }
 /* the destructive one of the pair, and the only one that reads red on hover */
-.remove:hover {
+button.remove:hover {
   color: #d08a8a;
 }

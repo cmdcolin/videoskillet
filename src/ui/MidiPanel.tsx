@@ -234,7 +234,7 @@ export function MidiPanel(props: {
     <>
       <button
         className={cx(
-          ui.chromeLabel,
+          ui.outline,
           stranded > 0
             ? styles.tabWaiting
             : midi.status === 'ready' && styles.tabOn,

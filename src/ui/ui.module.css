@@ -242,57 +242,48 @@
   cursor: ew-resize;
 }
 
-/* The masthead's buttons. `.chromeBtn` is the square for a glyph (the ⌕, the
-   ⋮) and `.chromeLabel` is the same box sized to a word (`midi`, `sign in`). One rule draws both, so the row shares a border, a fill
-   and a touch height. The labelled buttons used to copy the box by hand, and
-   the copies missed the touch padding.
-   No height on the square: the icon sits in a text line box exactly as a glyph
-   does, so the pair stay level through any change to the type scale. Laying it
-   out with flex instead sizes the button to the 13px icon and leaves it 4px
-   short — and an explicit height would have to carry the padding and border
-   with it, since a <button> is border-box from the UA stylesheet whatever this
-   file says. */
-.chromeBtn,
-.chromeLabel {
+/* The outlined button: the masthead's words, the look bar, the section
+   handles. `.chromeBtn` squares the same box for a glyph and keeps block
+   layout, so the icon sits in a text line box at the words' height. */
+.outline {
   flex-shrink: 0;
-  border: 1px solid var(--border-quiet);
-  border-radius: 4px;
-  background: var(--surface);
-  color: var(--fg3);
-  font-size: var(--fs);
-  line-height: 1.2;
-  cursor: pointer;
-}
-.chromeBtn {
-  width: 22px;
-  padding: 1px 0;
-}
-.chromeLabel {
   display: inline-flex;
   align-items: center;
   gap: 4px;
   padding: 1px 7px;
+  border: 1px solid var(--border-quiet);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--fg3);
+  font: inherit;
+  font-size: var(--fs);
+  font-weight: 400;
+  letter-spacing: normal;
+  text-transform: none;
+  line-height: 1.2;
   white-space: nowrap;
+  cursor: pointer;
 }
-.chromeBtn:hover,
-.chromeLabel:hover {
+.outline:hover:not(:disabled) {
   border-color: var(--fg4);
   color: var(--fg);
+}
+.chromeBtn {
+  composes: outline;
+  display: inline-block;
+  width: 22px;
+  padding: 1px 0;
 }
 .chromeBtn svg {
   vertical-align: middle;
 }
-/* Touch: 22px square is a glyph, not a button. These sit in the masthead with
-   5px between them and the wordmark taking the rest of the row, so the reach
-   has to come from the box rather than from a .tap pseudo-element that would
-   overlap its neighbours — at 390px the row has the 24px this spends. */
 @media (pointer: coarse) {
+  .outline {
+    padding: 5px 9px;
+  }
   .chromeBtn {
     width: 30px;
     padding: 5px 0;
-  }
-  .chromeLabel {
-    padding: 5px 9px;
   }
 }
 /* Structure only. The dark box this used to draw by hand — a fill, a border, a

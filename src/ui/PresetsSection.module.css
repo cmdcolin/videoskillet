@@ -32,34 +32,11 @@
   }
 }
 
-/* The handle onto the full catalog, riding the section header beside the ?.
-   It used to be a full-width bar between the chips and the caption, which cost
-   37px of the sidebar's most contested stretch to say a word and a number —
-   and it is the same kind of thing the caret beside it already is: a switch on
-   how much of this section is unfolded. Carrying the count is what keeps it
-   from reading as decoration, since "49" is the argument for pressing it. */
 .allBtn {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
+  composes: outline from './ui.module.css';
   gap: 5px;
-  padding: 1px 7px;
-  border: 1px solid var(--border-quiet);
-  border-radius: 4px;
-  background: transparent;
-  color: var(--fg3);
-  font: inherit;
-  font-size: var(--fs-sm);
-  font-weight: 400;
-  letter-spacing: normal;
-  text-transform: none;
-  cursor: pointer;
 }
-.allBtn:hover {
-  border-color: var(--fg4);
-  color: var(--fg);
-}
-.allBtnOn {
+button.allBtnOn {
   border-color: #4a5f54;
   color: var(--fg);
 }

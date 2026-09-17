@@ -30,7 +30,7 @@ export function Account(props: {
     const checking = props.status === 'loading'
     return (
       <button
-        className={ui.chromeLabel}
+        className={ui.outline}
         disabled={checking}
         title={
           checking

@@ -1,56 +1,18 @@
-/* The look-actions row under the masthead. Quiet outlined buttons — the same
-   --border-quiet family as the masthead's ⌕ and ⋮ above it and the catalog
-   handle below, rather than ui.module.css's filled .btn, which is what the
-   board itself is made of. This is the widest of that family: a word rather
-   than a glyph, so it is padding instead of a 22px box. */
+/* The look-actions row under the masthead, in `ui.outline` buttons. */
 .bar {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
   margin: 0 0 2px;
 }
-/* The panel's own type size, not the --fs-sm this used to shrink to. That was a
-   compromise made for a row that did not fit, and it bought 13px — not enough
-   to seat `redo`, so the row wrapped anyway and the only thing the smaller type
-   changed was that these five read smaller than everything around them. With
-   "copy link" gone (see LookBar.tsx) five labels needed 247px of 332, and six
-   with redo up 297, so there is nothing left to buy. Wrapping costs a line only
-   while redo is up, which is the state you are already looking at the row in.
-   (Those were measured before the morph select joined the row, which already
-   wrapped tags and undo to a second line. The rolls' two-word names are the
-   next 64px on top of that — 190px of joined pair where `surprise` and
-   `mutate` took 63 + 59 across a 4px gap — and what it costs is that the morph
-   select moves down to join them: line one is compare + the pair at 261 of 332,
-   line two morph + tags + undo at 185. Two lines either way, so the row is the
-   same 52px tall it was, and the words are what the space bought.)
-
-   Measured again with the drift switch in (LookBar.tsx), because it is the
-   first word added to this row since: three lines and 81px tall, redo up or
-   down. Compare has line one to itself at 67, the rolls' set takes line two
-   whole at 321, and the tail is 328 of 332 with redo showing — drift 42, morph
-   90, tags 41, reset 46, undo 46, redo 43, and five gaps. So the switch cost the
-   row nothing, and the 4px left over is the whole of what the next word added
-   here has to fit in. */
 .btn {
-  padding: 2px 7px;
-  border: 1px solid var(--border-quiet);
-  border-radius: 4px;
-  background: var(--surface);
-  color: var(--fg3);
-  font: inherit;
-  line-height: 1.4;
-  cursor: pointer;
+  composes: outline from './ui.module.css';
 }
-.btn:hover:not(:disabled) {
-  border-color: var(--fg4);
-  color: var(--fg);
-}
-/* live: compare is being held down */
-.btnOn {
+button.btnOn {
   border-color: var(--accent);
   color: var(--accent);
 }
-.btnOff {
+button.btnOff {
   color: #55555f;
   border-color: var(--border-faint);
   cursor: default;

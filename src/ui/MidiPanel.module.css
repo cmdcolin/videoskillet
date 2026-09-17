@@ -1,4 +1,4 @@
-/* The masthead button is `ui.chromeLabel`. Its lit states select on `button.`
+/* The masthead button is `ui.outline`. Its lit states select on `button.`
    so they outrank that class whichever stylesheet the bundler emits second. */
 button.tabOn {
   color: var(--accent);

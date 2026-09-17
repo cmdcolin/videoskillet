@@ -263,8 +263,8 @@
   gap: 5px;
   margin-left: auto;
 }
-/* The ⌕, the pointer tool and the ⋮ are `ui.chromeBtn`, and `saved` and
-   `sign in` are `ui.chromeLabel`. ui.module.css defines both with one rule.
+/* The ⌕, the pointer tool and the ⋮ are `ui.chromeBtn`, and `midi` and
+   `sign in` are `ui.outline`.
 
    The control filter, in the masthead rather than in a row of its own.
    It used to be a 25px input plus a 12px margin sitting above the chain map,
@@ -326,17 +326,6 @@
 /* Clears the query and hands the row back to the wordmark. Escape does both
    too (useShortcuts), but the × is the only one of the two that is visible. */
 .filterClear {
-  composes: bare from './ui/ui.module.css';
-  flex-shrink: 0;
+  composes: outline from './ui/ui.module.css';
   padding: 0 4px;
-  border: 1px solid var(--border-quiet);
-  border-radius: 4px;
-  background: var(--surface);
-  color: var(--fg3);
-  font-size: var(--fs-md);
-  line-height: 1.2;
-}
-.filterClear:hover {
-  border-color: var(--fg4);
-  color: var(--fg);
 }

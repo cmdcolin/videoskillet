@@ -1,5 +1,5 @@
 /* The account control in the masthead, and the menu it opens. The signed-out
-   button is `ui.chromeLabel`. */
+   button is `ui.outline`. */
 
 /* Round and photo-sized — once you are signed in the photo is the label. The
    button drops the square's fill and border, because a box drawn around a
