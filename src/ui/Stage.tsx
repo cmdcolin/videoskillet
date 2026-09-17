@@ -148,7 +148,7 @@ export function Stage(props: {
             ? 'drag a box to zoom into it · shift-drag moves the glass · double-click pulls back to 1×'
             : zoomed
               ? 'drag to move around the glass · shift-drag a box to close in · double-click pulls back to 1×'
-              : 'nothing to move at 1× — shift-drag a box to close in, or turn on drag to box zoom in the ☰ menu'
+              : undefined
         }
         onPointerDown={e => down(e)}
         onPointerMove={e => move(e)}
