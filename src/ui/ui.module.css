@@ -83,7 +83,9 @@
      Each engine needs its own rule — a selector list mixing ::-webkit- and
      ::-moz- is dropped whole by both — which is exactly why this is worth
      sharing: it is five rules to keep in step, and there were two copies of
-     them (a control row's slider and the audio scrubber). */
+     them (a control row's slider and the audio scrubber). bender draws its
+     sliders with the same rules. */
+  /* CROSS_REPO_SYNC(range-track) */
   .range {
     --thumb-size: 12px;
     margin: 0;
@@ -154,6 +156,7 @@
         #31313c var(--hi)
       );
   }
+  /* CROSS_REPO_SYNC_END(range-track) */
 
   /* Touch: a fingertip's worth of target on a control that is drawn as chrome.
      The reach is a pseudo-element rather than padding, so the box stays exactly
