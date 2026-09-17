@@ -338,7 +338,10 @@ Every bullet cost a real afternoon.
   run `node_modules/.bin/vite` directly, because `pnpm dev` sees the symlink as
   a modules dir to purge and aborts; and point `cacheDir` somewhere of its own,
   or the worktree and the main checkout re-optimize each other's deps out from
-  under a running server.
+  under a running server. The symlink breaks `git commit` the same way, since
+  the pre-commit hook runs `pnpm exec lint-staged`: it fails with
+  `ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY`. Commit with
+  `pnpm_config_verify_deps_before_run=false` set, which keeps the hook running.
 - **A `file://` image taints the canvas it is drawn on**, so frames are passed
   into the page as `data:` URIs.
 - **`load` and `document.fonts.ready` both resolve before Chrome composites a

@@ -40,7 +40,6 @@
   color: var(--fg2);
 }
 
-
 /* The panel's own lit state, so a toggled tag reads the same as a toggled
    segment anywhere else in the app rather than inventing a second "on". */
 .tagOn {

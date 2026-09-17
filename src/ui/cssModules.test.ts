@@ -217,13 +217,15 @@ describe('css modules', () => {
       join(SRC, 'ui/ToggleButtonGroup.module.css'),
       'utf8',
     )
+    const ui = readFileSync(join(SRC, 'ui/ui.module.css'), 'utf8')
     const slider = readFileSync(join(SRC, 'ui/Slider.module.css'), 'utf8')
 
     // padding: 4px 5px — the horizontal half is what a group spends per option
     const padding = decl(toggle, 'button', 'padding')
     expect(padding).not.toBeNull()
     expect(px((padding ?? '').split(' ')[1] ?? null)).toBe(TRACK_FIT.buttonPadX)
-    expect(px(decl(toggle, 'button', 'border'))).toBe(TRACK_FIT.buttonBorder)
+    // .button composes `filled` from ui.module.css, which is where border lives
+    expect(px(decl(ui, 'filled', 'border'))).toBe(TRACK_FIT.buttonBorder)
     expect(px(decl(toggle, 'group', 'gap'))).toBe(TRACK_FIT.gap)
 
     // .row's second column: minmax(0, 1.2fr) minmax(5.5rem, 0.85fr) minmax(…)
