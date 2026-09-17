@@ -2,6 +2,31 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [2.1.1](https://github.com/cmdcolin/videoskillet/compare/v2.1.0...v2.1.1) - 2026-09-17
+
+### Features
+- *(ui)* [`4ed8e7b`](https://github.com/cmdcolin/videoskillet/commit/4ed8e7bd7db527526c6a28f86f060af018145c0c) keep the last eight sessions and offer them on the home page
+- *(ui)* [`13d2ed2`](https://github.com/cmdcolin/videoskillet/commit/13d2ed2ab29ec3368f3f08aa224631ede6b08361) remove a modulation from its own row
+- *(ui)* [`a9a679b`](https://github.com/cmdcolin/videoskillet/commit/a9a679bf85af5a85ae2a2c5eb8aca6b056607939) make room from the full-bay note, and load bays without orphans
+- *(ui)* [`fa182e6`](https://github.com/cmdcolin/videoskillet/commit/fa182e61b6c0174a350e959c0793d7d143c997de) undo patching or removing a routing by hand
+
+### Fixes
+- *(ui)* [`0f025b7`](https://github.com/cmdcolin/videoskillet/commit/0f025b7a0796780d88e55a7533fd0eb7e7bced42) size masthead buttons to the look bar's 13px
+- *(ui)* [`e62e802`](https://github.com/cmdcolin/videoskillet/commit/e62e802a6c235e0875e997e15c7cc6af2e4ee362) remove the wires on a routing's knobs along with it
+- *(ui)* [`e80ec60`](https://github.com/cmdcolin/videoskillet/commit/e80ec60e18652aa357f5e08bded5033a40bddb7d) drop the 1x stage tooltip
+- *(ui)* [`8f5ce2c`](https://github.com/cmdcolin/videoskillet/commit/8f5ce2cf632cd6a395ac9a6be4766b50d4302f81) stop the live modulation readout shifting its row
+
+### Refactor
+- *(ui)* [`9a3015b`](https://github.com/cmdcolin/videoskillet/commit/9a3015b3c39ff0c90590f75f01edb08b2caa440f) draw every outlined button from one ui.outline class
+- *(ui)* [`2b7bcb0`](https://github.com/cmdcolin/videoskillet/commit/2b7bcb0c61bd9ce5455f6fa196f2dde88ce6029f) draw every filled button from one ui.filled class
+
+### Documentation
+- [`90de69f`](https://github.com/cmdcolin/videoskillet/commit/90de69f43db8677dcfdb31f573bdbc82d5ce351f) note that a symlinked node_modules breaks the pre-commit hook
+
+### Tests
+- *(ui)* [`b7c4d46`](https://github.com/cmdcolin/videoskillet/commit/b7c4d46b44e228b449ace6af3587ea47dac3787e) reshoot the modulated panel baseline for the row's ×
+- *(ui)* [`6ad67d0`](https://github.com/cmdcolin/videoskillet/commit/6ad67d0cbc72c78714d3c7d94456339dfa630c8e) cover row removal, undo and the full bay in panelcheck
+
 ## [2.1.0](https://github.com/cmdcolin/videoskillet/compare/v2.0.3...v2.1.0) - 2026-09-17
 
 ### Features
