@@ -8,7 +8,6 @@ export const SITE = {
   nav: [
     ['/#gallery', 'Gallery'],
     ['/guide/', 'User guide'],
-    ['https://github.com/cmdcolin/videoskillet', 'Source'],
   ],
   footer: [
     ['/app/', 'Open the app ↗'],
