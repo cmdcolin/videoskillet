@@ -2,6 +2,11 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [2.0.3](https://github.com/cmdcolin/videoskillet/compare/v2.0.2...v2.0.3) - 2026-09-17
+
+### Fixes
+- *(ui)* [`8462487`](https://github.com/cmdcolin/videoskillet/commit/8462487c19c1cf8166c225a78f55f31ee6b1a108) clear the React Compiler gate and run it before pushing
+
 ## [2.0.2](https://github.com/cmdcolin/videoskillet/compare/v2.0.1...v2.0.2) - 2026-09-17
 
 ### Chores
