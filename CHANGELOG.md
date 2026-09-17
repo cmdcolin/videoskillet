@@ -2,6 +2,11 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [2.0.1](https://github.com/cmdcolin/videoskillet/compare/v2.0.0...v2.0.1) - 2026-09-17
+
+### Other Changes
+- [`14fc848`](https://github.com/cmdcolin/videoskillet/commit/14fc8489dc8e9946d7d7260b0f0090bca14cf3b4) Remove 'source' from header
+
 ## [2.0.0](https://github.com/cmdcolin/videoskillet/compare/v1.0.1...v2.0.0) - 2026-09-16
 
 ### Fixes
