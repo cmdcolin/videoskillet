@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 
 import { ALL_SLIDERS } from './controls'
+import { cx } from './cx'
 import {
   ACTIONS,
   AUTOMAP_TARGETS,
@@ -14,6 +15,7 @@ import {
 } from './midi'
 import styles from './MidiPanel.module.css'
 import { PRESETS, presetLabel } from './presets'
+import ui from './ui.module.css'
 
 import type { ActionTarget, BindTarget, MidiStatus } from './midi'
 import type { useMidi } from './useMidi'
@@ -231,13 +233,12 @@ export function MidiPanel(props: {
   return (
     <>
       <button
-        className={
+        className={cx(
+          ui.chromeLabel,
           stranded > 0
             ? styles.tabWaiting
-            : midi.status === 'ready'
-              ? styles.tabOn
-              : styles.tab
-        }
+            : midi.status === 'ready' && styles.tabOn,
+        )}
         title={
           midi.status === 'ready'
             ? stranded > 0

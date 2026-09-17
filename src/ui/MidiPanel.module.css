@@ -1,32 +1,11 @@
-/* The masthead button. Written out in full, like SavedProfiles' trigger:
-   composing ui.chromeBtn brings its fixed 22px width along. */
-.tab {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 5px;
-  flex-shrink: 0;
-  padding: 1px 7px;
-  border: 1px solid var(--border-quiet);
-  border-radius: 4px;
-  background: var(--surface);
-  color: var(--fg3);
-  font-size: var(--fs-md);
-  line-height: 1.2;
-  white-space: nowrap;
-  cursor: pointer;
-}
-.tab:hover {
-  border-color: var(--fg4);
-  color: var(--fg);
-}
-.tabOn {
-  composes: tab;
+/* The masthead button is `ui.chromeLabel`. Its lit states select on `button.`
+   so they outrank that class whichever stylesheet the bundler emits second. */
+button.tabOn {
   color: var(--accent);
   border-color: color-mix(in srgb, var(--accent) 45%, transparent);
 }
 /* The amber a waiting knob wears on its own slider. */
-.tabWaiting {
-  composes: tab;
+button.tabWaiting {
   color: var(--edit-hi);
   border-color: var(--edit-hi);
 }
