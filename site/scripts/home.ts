@@ -19,6 +19,8 @@ import {
   sessionStill,
   signIn,
   signOut,
+  stillShows,
+  stillTag,
   warmSignIn,
   wasSignedIn,
   watchAuth,
@@ -108,10 +110,15 @@ function shotOf(still: string | undefined): HTMLElement {
   return shot
 }
 
-// Which still a card shows: `id`'s when it was taken no earlier than `since`,
-// and otherwise `or`'s.
+// Which still a card shows: `id`'s when it is a picture of the board the card
+// is offering, and otherwise `or`'s.
 interface StillPick {
   id?: string
+  // The board, as `stillTag` writes it. A tagged still matches or it does not,
+  // and the clock never enters into it.
+  q?: string
+  // The fallback test for a still written before tagging: taken no earlier than
+  // the entry it belongs to.
   since?: number
   or?: string
 }
@@ -121,7 +128,7 @@ function pickStill(
   pick: StillPick,
 ): string | undefined {
   const own = pick.id === undefined ? undefined : stills.get(pick.id)
-  if (own !== undefined && own.at >= (pick.since ?? 0)) return own.webp
+  if (own !== undefined && stillShows(own, pick)) return own.webp
   return pick.or === undefined ? undefined : stills.get(pick.or)?.webp
 }
 
@@ -137,6 +144,7 @@ function shotFor(
   const shot =
     stills === undefined ? el('span', 'shot') : shotOf(pickStill(stills, pick))
   if (pick.id !== undefined) shot.dataset.look = pick.id
+  if (pick.q !== undefined) shot.dataset.q = pick.q
   if (pick.since !== undefined) shot.dataset.since = String(pick.since)
   if (pick.or !== undefined) shot.dataset.or = pick.or
   return shot
@@ -146,9 +154,10 @@ function fillStills(stills: Map<string, Still>) {
   for (const shot of home.querySelectorAll<HTMLElement>(
     '.shot[data-look], .shot[data-or]',
   )) {
-    const { look, since, or } = shot.dataset
+    const { look, q, since, or } = shot.dataset
     const pick = {
       id: look,
+      q,
       since: since === undefined ? undefined : Number(since),
       or,
     }
@@ -358,10 +367,11 @@ const savedAs = (doc: HomeDoc, session: RecentSession) =>
     .filter(p => p.query === session.query)
     .sort((a, b) => (b.savedAt ?? 0) - (a.savedAt ?? 0))[0]
 
-// The session's own still, when it was taken after the session was written.
-// A session written from a hidden tab has none, and an older still is a
-// picture of an earlier board. The matching saved look's still serves next;
-// failing both, the card shows the mark.
+// The session's own still, when it is a picture of the board the card resumes.
+// A session written from a hidden tab carries no new picture, and the entry it
+// updates keeps the one an earlier write left, so the test is the board and not
+// the clock. The matching saved look's still serves next; failing both, the
+// card shows the mark.
 const sessionShot = (
   doc: HomeDoc,
   session: RecentSession,
@@ -370,6 +380,7 @@ const sessionShot = (
   shotFor(
     {
       id: sessionStill(session.id),
+      q: stillTag(session.query),
       since: session.at,
       or: savedAs(doc, session)?.id,
     },

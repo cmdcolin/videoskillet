@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import { stillShows, stillTag } from './cloud'
 import {
   MIN_GAP_MS,
   SETTLE_MS,
@@ -7,6 +8,7 @@ import {
   observe,
 } from './useCurrentSession'
 
+import type { Still } from './cloud'
 import type { Opened } from './useCurrentSession'
 
 describe('the current-session write gate', () => {
@@ -70,5 +72,40 @@ describe('which sessions the account is offered back', () => {
   it('keeps where the page opened across a spell with no engine', () => {
     const at = observe(fresh, 'set=a')
     expect(observe(observe(at, null), 'set=a').moved).toBe(false)
+  })
+})
+
+// A session entry is rewritten in place as the board settles, and the write made
+// from a hidden tab carries no new picture. Comparing clocks therefore called a
+// good still stale the moment a still-less write moved the entry on, and the
+// card fell back to the mark.
+describe('which still a session card shows', () => {
+  const still = (over: Partial<Still> = {}): Still => ({
+    webp: 'UklGRh',
+    at: 1000,
+    ...over,
+  })
+
+  it('shows a still tagged with the board the card resumes', () => {
+    const q = stillTag('set=a&gain=2')
+    expect(stillShows(still({ q }), { q, since: 9000 })).toBe(true)
+  })
+
+  it('refuses a still tagged with a board the card has moved off', () => {
+    expect(
+      stillShows(still({ q: stillTag('set=a') }), { q: stillTag('set=b') }),
+    ).toBe(false)
+  })
+
+  it('falls back to the clock for a still written before tagging', () => {
+    const want = { q: stillTag('set=a'), since: 1000 }
+    expect(stillShows(still({ at: 2000 }), want)).toBe(true)
+    expect(stillShows(still({ at: 500 }), want)).toBe(false)
+  })
+
+  it('tags a board the same way every time, and two boards apart', () => {
+    expect(stillTag('set=a&gain=2')).toBe(stillTag('set=a&gain=2'))
+    expect(stillTag('set=a&gain=2')).not.toBe(stillTag('set=a&gain=3'))
+    expect(stillTag('')).toMatch(/^[0-9a-z]+$/)
   })
 })

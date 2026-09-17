@@ -78,15 +78,18 @@ service cloud.firestore {
       // signed-in user enumerate the collection.
 
       // One still per saved profile, keyed by the profile's id: a small webp as
-      // base64 and the clock it was taken at. Its own collection because the
-      // user document is capped at 1 MiB and two hundred stills would pass it.
-      // `list` is allowed here and not on /users because the path binds the
-      // uid, so the query can only ever be over one person's own stills.
+      // base64, the clock it was taken at, and optionally `q`, the board it is
+      // a picture of. Its own collection because the user document is capped at
+      // 1 MiB and two hundred stills would pass it. `list` is allowed here and
+      // not on /users because the path binds the uid, so the query can only
+      // ever be over one person's own stills.
       function isValidStill() {
-        return request.resource.data.keys().hasOnly(['webp', 'at'])
-               && request.resource.data.webp is string
-               && request.resource.data.webp.size() <= 60000
-               && request.resource.data.at is number;
+        let data = request.resource.data;
+        return data.keys().hasOnly(['webp', 'at', 'q'])
+               && data.webp is string
+               && data.webp.size() <= 60000
+               && data.at is number
+               && (!('q' in data) || (data.q is string && data.q.size() <= 16));
       }
 
       match /stills/{stillId} {

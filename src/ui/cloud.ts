@@ -293,25 +293,60 @@ const SESSION_STILL = '_session'
 export const sessionStill = (id: string): string =>
   id === '' ? SESSION_STILL : `${SESSION_STILL}-${id}`
 
+// The board a still is a picture of, as a 32-bit FNV-1a hash in base36. A
+// session entry is rewritten in place every time the board settles, and the
+// write made from a hidden tab carries no new picture, so comparing clocks
+// calls a good still stale as soon as a still-less write moves the session on.
+// Comparing boards is the question the card is actually asking.
+export function stillTag(query: string): string {
+  let h = 0x811c9dc5
+  for (let i = 0; i < query.length; i++)
+    h = Math.imul(h ^ query.charCodeAt(i), 0x01000193)
+  return (h >>> 0).toString(36)
+}
+
 export interface Still {
   webp: string
   at: number
+  // Absent on a still written before tagging, and on a saved look's, which is
+  // rewritten with the look it belongs to and so cannot fall behind it.
+  q?: string
 }
 
-const readStill = (data: { webp?: unknown; at?: unknown } | undefined) =>
+const readStill = (
+  data: { webp?: unknown; at?: unknown; q?: unknown } | undefined,
+) =>
   typeof data?.webp === 'string' && typeof data.at === 'number'
-    ? { webp: data.webp, at: data.at }
+    ? {
+        webp: data.webp,
+        at: data.at,
+        ...(typeof data.q === 'string' ? { q: data.q } : {}),
+      }
     : undefined
+
+// Whether a still is a picture of the board a card is offering. A tagged still
+// matches the board or it does not; one written before tagging falls back to
+// the clock, which is the test this replaces — see `stillTag` for why the clock
+// alone gets it wrong.
+export const stillShows = (
+  still: Still,
+  want: { q?: string; since?: number },
+): boolean =>
+  still.q !== undefined && want.q !== undefined
+    ? still.q === want.q
+    : still.at >= (want.since ?? 0)
 
 export async function putStill(
   uid: string,
   id: string,
   webp: string,
+  q?: string,
 ): Promise<void> {
   const { db, fs } = await loadSdk()
   await fs.setDoc(fs.doc(db, COLLECTION, uid, 'stills', id), {
     webp,
     at: Date.now(),
+    ...(q === undefined ? {} : { q }),
   })
 }
 

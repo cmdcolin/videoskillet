@@ -6,6 +6,7 @@ import {
   putSession,
   putStill,
   sessionStill,
+  stillTag,
 } from './cloud'
 import { newProfileId } from './profileModel'
 import { takeSessionId } from './resumeHandoff'
@@ -90,8 +91,10 @@ export function useCurrentSession(
     gate.current = { query: q, at }
     // Taken now, so the picture is of the board the query describes, and
     // written once the session has landed, so a still is never newer than a
-    // session the account refused. The stills of sessions that left the list
-    // go too, best effort: a still left behind is a document nothing reads.
+    // session the account refused. It is tagged with that board, because the
+    // hide write below leaves the entry newer than its own picture. The stills
+    // of sessions that left the list go too, best effort: a still left behind
+    // is a document nothing reads.
     const still = withStill ? grabThumb?.(STILL_MAX) : undefined
     putSession(id, { id: sessionId, query: q, at })
       .then(dropped => {
@@ -102,7 +105,7 @@ export function useCurrentSession(
       .then(webp =>
         webp === null || webp === undefined
           ? undefined
-          : putStill(id, sessionStill(sessionId), webp),
+          : putStill(id, sessionStill(sessionId), webp, stillTag(q)),
       )
       .catch((e: unknown) => {
         // Dropped. The account keeps the previous session, the next settled

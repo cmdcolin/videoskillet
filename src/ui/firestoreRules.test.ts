@@ -338,6 +338,12 @@ describe.skipIf(EMULATOR === undefined)('firestore.rules', () => {
       await assertFails(ref.set({ webp: 'UklGRh' }))
       await assertFails(ref.set(still({ at: 'now' })))
       await assertFails(ref.set(still({ admin: true })))
+      // `q` is the board the picture is of, and optional: a still written
+      // before tagging has none, and one written for a saved look does not
+      // need one.
+      await assertSucceeds(ref.set(still({ q: 'x1y2z3' })))
+      await assertFails(ref.set(still({ q: 7 })))
+      await assertFails(ref.set(still({ q: 'A'.repeat(17) })))
       // The cap has to hold on update too, for the same reason the 200-entry cap
       // does: a cap enforced only on create is one you get past by growing a
       // small document.
