@@ -19,7 +19,7 @@ import {
 } from './profileModel'
 
 import type { CloudUser } from './cloud'
-import type { CurrentSession, SavedProfile } from './profileModel'
+import type { SavedProfile } from './profileModel'
 
 // The profile library: who is signed in, what they have saved, and the verbs over
 // it. Firestore is the only store — nothing is written to this device — so
@@ -121,7 +121,6 @@ export function useSavedProfiles(
   grabThumb?: (max: number) => Promise<string | null>,
 ) {
   const [profiles, setProfiles] = useState<SavedProfile[]>([])
-  const [current, setCurrent] = useState<CurrentSession | null>(null)
   const [user, setUser] = useState<CloudUser | null>(null)
   const [status, setStatus] = useState<CloudStatus>(() =>
     wasSignedIn() ? 'loading' : 'signed-out',
@@ -181,7 +180,6 @@ export function useSavedProfiles(
       // Signing out clears the rows as well as the session: leaving them up would
       // offer recall and overwrite against a document nobody may write any more.
       setProfiles([])
-      setCurrent(null)
       setLastName(null)
       setStatus('signed-out')
       return
@@ -191,7 +189,6 @@ export function useSavedProfiles(
       .then(home => {
         if (uid.current !== next.uid) return
         setProfiles(home.profiles)
-        setCurrent(home.current)
         setStatus('ready')
         setError(null)
         landPending(next.uid)
@@ -301,9 +298,6 @@ export function useSavedProfiles(
 
   return {
     profiles,
-    // The session this account last had open, read with the profiles. Nothing in
-    // the app shows it yet; the home page is what it is there for.
-    current,
     user,
     status,
     error,

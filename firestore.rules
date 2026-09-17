@@ -37,16 +37,20 @@ service cloud.firestore {
     // hand-rolled request — pushing an unbounded document into the project and
     // billing it to whoever owns these rules.
     //
-    // Both fields are optional because the app writes them with merge, each
+    // Every field is optional because the app writes them with merge, each
     // from its own path: the session autosave can land before the first profile
-    // is ever saved, and a profile save must leave `current` as it found it.
-    // `current` is the session last open — the same packed query a profile
-    // holds, and a clock — or null once cleared.
+    // is ever saved, and a profile save must leave the sessions as it found
+    // them. `recent` is the autosaved sessions, newest first, each an id, the
+    // same packed query a profile holds, and a clock; a list, so its entries go
+    // unchecked like the profiles'. `current` is the single session older builds
+    // wrote — the same query and clock — or null once cleared.
     function isValidProfileDoc() {
       let data = request.resource.data;
-      return data.keys().hasOnly(['profiles', 'current'])
+      return data.keys().hasOnly(['profiles', 'recent', 'current'])
              && (!('profiles' in data)
                  || (data.profiles is list && data.profiles.size() <= 200))
+             && (!('recent' in data)
+                 || (data.recent is list && data.recent.size() <= 8))
              && (!('current' in data)
                  || data.current == null
                  || (data.current is map
@@ -101,9 +105,11 @@ service cloud.firestore {
     // with `voices` for `profiles`, and no stills: a board has no picture.
     function isValidVoiceDoc() {
       let data = request.resource.data;
-      return data.keys().hasOnly(['voices', 'current'])
+      return data.keys().hasOnly(['voices', 'recent', 'current'])
              && (!('voices' in data)
                  || (data.voices is list && data.voices.size() <= 200))
+             && (!('recent' in data)
+                 || (data.recent is list && data.recent.size() <= 8))
              && (!('current' in data)
                  || data.current == null
                  || (data.current is map

@@ -1,9 +1,14 @@
-import { PROFILE_MAX, readCurrent, readProfiles } from './profileModel'
+import {
+  PROFILE_MAX,
+  pushRecent,
+  readProfiles,
+  readRecent,
+} from './profileModel'
 import { readStored, removeStored, writeString } from './storage'
 
 import type { RatingRecord } from '../labels'
 import type { CandidateRecord, VoteRecord } from '../vote/votes'
-import type { CurrentSession, SavedProfile } from './profileModel'
+import type { RecentSession, SavedProfile } from './profileModel'
 import type { FirebaseApp } from 'firebase/app'
 import type { Auth, User } from 'firebase/auth'
 import type { Firestore } from 'firebase/firestore/lite'
@@ -189,23 +194,23 @@ export async function signOut(): Promise<void> {
 // CROSS_REPO_SYNC_END(firebase-auth)
 
 // CROSS_REPO_SYNC(saved-list-cloud)
-// Everything the user document holds: the saved profiles and the session last
+// Everything the user document holds: the saved profiles and the sessions last
 // left open. Read through the same sanitizers the list has always used, because
 // a document is exactly as untrusted as a localStorage value was: it can carry a
 // shape written by an older version of this app, or by a hand-rolled request.
 export interface HomeDoc {
   profiles: SavedProfile[]
-  current: CurrentSession | null
+  recent: RecentSession[]
 }
 
 export async function fetchHome(uid: string): Promise<HomeDoc> {
   const { db, fs } = await loadSdk()
   const snap = await fs.getDoc(fs.doc(db, COLLECTION, uid))
-  if (!snap.exists()) return { profiles: [], current: null }
+  if (!snap.exists()) return { profiles: [], recent: [] }
   const data = snap.data()
   return {
     profiles: readProfiles(data.profiles),
-    current: readCurrent(data.current),
+    recent: readRecent(data.recent, data.current),
   }
 }
 
@@ -222,7 +227,7 @@ const profileEntry = (item: SavedProfile) => ({
 // Firestore reruns `edit` when another write lands between the read and the
 // write, so `edit` must be pure. A caller that builds the list from its own
 // copy drops whatever another tab, device or pending write added. Merged, so
-// the write keeps `current`.
+// the write keeps the sessions.
 export async function editProfiles(
   uid: string,
   edit: (profiles: SavedProfile[]) => SavedProfile[],
@@ -238,13 +243,33 @@ export async function editProfiles(
   })
 }
 
-// The session last open, or null to clear it. Merged for the same reason.
-export async function putCurrent(
+// Puts `entry` at the front of the recent sessions in one transaction, merged
+// for the same reason, and resolves to the ids that left the list. The write
+// removes `current`, the single session older builds kept, since the list read
+// it in.
+export async function putSession(
   uid: string,
-  current: CurrentSession | null,
-): Promise<void> {
+  entry: RecentSession,
+): Promise<string[]> {
   const { db, fs } = await loadSdk()
-  await fs.setDoc(fs.doc(db, COLLECTION, uid), { current }, { merge: true })
+  const ref = fs.doc(db, COLLECTION, uid)
+  return fs.runTransaction(db, async tx => {
+    const snap = await tx.get(ref)
+    const data = snap.exists() ? snap.data() : undefined
+    const { recent, dropped } = pushRecent(
+      readRecent(data?.recent, data?.current),
+      entry,
+    )
+    tx.set(
+      ref,
+      {
+        recent: recent.map(s => ({ id: s.id, query: s.query, at: s.at })),
+        current: fs.deleteField(),
+      },
+      { merge: true },
+    )
+    return dropped
+  })
 }
 // CROSS_REPO_SYNC_END(saved-list-cloud)
 
@@ -260,9 +285,13 @@ export const fetchProfiles = async (uid: string): Promise<SavedProfile[]> =>
 // in one query while a save writes one.
 export const STILL_MAX = 60000
 
-// The still of the session last open, beside the profiles' own. A profile id is
-// base36, so no profile can have this one.
-export const SESSION_STILL = '_session'
+// A recent session's still, beside the profiles' own. A profile id is base36,
+// so no profile can have one of these. The session older builds kept, which
+// reads back with an empty id, wrote its still under the bare prefix.
+const SESSION_STILL = '_session'
+
+export const sessionStill = (id: string): string =>
+  id === '' ? SESSION_STILL : `${SESSION_STILL}-${id}`
 
 export interface Still {
   webp: string

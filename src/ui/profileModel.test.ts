@@ -5,10 +5,13 @@ import {
   PROFILE_NAME_MAX,
   QUERY_MAX,
   PROFILE_SLOTS,
+  RECENT_MAX,
   cleanProfileName,
   profileAtSlot,
+  pushRecent,
   readCurrent,
   readProfiles,
+  readRecent,
   removeProfile,
   renameProfile,
   suggestProfileName,
@@ -134,6 +137,48 @@ describe('the current session', () => {
     expect(readCurrent({ query: 'set=1' })).toBeNull()
     expect(readCurrent({ query: 7, at: 9 })).toBeNull()
     expect(readCurrent({ query: 'set=1', at: Number.NaN })).toBeNull()
+  })
+})
+
+describe('the recent sessions', () => {
+  const r = (id: string, query = `set=${id}`, at = 1) => ({ id, query, at })
+
+  it('reads the list in stored order and drops entries of the wrong shape', () => {
+    expect(
+      readRecent([r('a'), { query: 'set=1', at: 2 }, r('b'), null, r('a')]),
+    ).toEqual([r('a'), r('b')])
+  })
+
+  it('reads the single session an older build wrote as one entry', () => {
+    expect(readRecent(undefined, { query: 'set=1', at: 9 })).toEqual([
+      { id: '', query: 'set=1', at: 9 },
+    ])
+    expect(readRecent(undefined, null)).toEqual([])
+    // A list, even an empty one, is newer than `current`.
+    expect(readRecent([], { query: 'set=1', at: 9 })).toEqual([])
+  })
+
+  it('moves the session a page load continues to the front', () => {
+    const { recent, dropped } = pushRecent(
+      [r('a'), r('b'), r('c')],
+      r('c', 'set=moved', 5),
+    )
+    expect(recent).toEqual([r('c', 'set=moved', 5), r('a'), r('b')])
+    expect(dropped).toEqual([])
+  })
+
+  it('replaces another session holding the same board', () => {
+    const { recent, dropped } = pushRecent([r('a'), r('b')], r('c', 'set=b'))
+    expect(recent.map(s => s.id)).toEqual(['c', 'a'])
+    expect(dropped).toEqual(['b'])
+  })
+
+  it('keeps the newest sessions and reports the ones that fell off', () => {
+    const full = Array.from({ length: RECENT_MAX }, (_, i) => r(`s${i}`))
+    const { recent, dropped } = pushRecent(full, r('new'))
+    expect(recent).toHaveLength(RECENT_MAX)
+    expect(recent[0].id).toBe('new')
+    expect(dropped).toEqual([`s${RECENT_MAX - 1}`])
   })
 })
 

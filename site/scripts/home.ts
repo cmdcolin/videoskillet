@@ -11,12 +11,12 @@
 // name is a string somebody typed — `innerHTML` anywhere in here would hand
 // that string to the parser.
 import {
-  SESSION_STILL,
   deleteStill,
   editProfiles,
   fetchHome,
   fetchStill,
   fetchStills,
+  sessionStill,
   signIn,
   signOut,
   warmSignIn,
@@ -29,10 +29,11 @@ import {
   removeProfile,
   renameProfile,
 } from '../../src/ui/profileModel'
+import { handOffSession } from '../../src/ui/resumeHandoff'
 import { sinceWords } from '../lib/relativeTime'
 
 import type { CloudUser, HomeDoc, Still } from '../../src/ui/cloud'
-import type { SavedProfile } from '../../src/ui/profileModel'
+import type { RecentSession, SavedProfile } from '../../src/ui/profileModel'
 
 // CROSS_REPO_SYNC(home-dom-helpers)
 const need = (id: string): HTMLElement => {
@@ -348,29 +349,54 @@ function section(id: string, heading: string, sub?: string): HTMLElement {
   return box
 }
 
-// --- the three sections -----------------------------------------------------
+// --- the sections -----------------------------------------------------------
+
+// A saved look with the session's query is the same board. The newest one names
+// the session's card and lends it a still.
+const savedAs = (doc: HomeDoc, session: RecentSession) =>
+  doc.profiles
+    .filter(p => p.query === session.query)
+    .sort((a, b) => (b.savedAt ?? 0) - (a.savedAt ?? 0))[0]
+
+// The session's own still, when it was taken after the session was written.
+// A session written from a hidden tab has none, and an older still is a
+// picture of an earlier board. The matching saved look's still serves next;
+// failing both, the card shows the mark.
+const sessionShot = (
+  doc: HomeDoc,
+  session: RecentSession,
+  stills: Map<string, Still> | undefined,
+) =>
+  shotFor(
+    {
+      id: sessionStill(session.id),
+      since: session.at,
+      or: savedAs(doc, session)?.id,
+    },
+    stills,
+  )
+
+// A link that continues the session it opens.
+function resumeLink(session: RecentSession, className: string): HTMLElement {
+  const go = el('a', className)
+  go.href = linkFor(session.query)
+  go.addEventListener('click', () => {
+    handOffSession(session.id)
+  })
+  return go
+}
 
 function resumeSection(
   doc: HomeDoc,
   stills: Map<string, Still> | undefined,
   now: number,
 ) {
-  const current = doc.current
-  if (current === null) return undefined
-
-  // The session's own still, when it was taken after the session was written.
-  // A session written from a hidden tab has none, and an older still is a
-  // picture of an earlier board. A saved look with the same query is the same
-  // board, so its still serves next; failing both, the card shows the mark.
-  const match = doc.profiles
-    .filter(p => p.query === current.query)
-    .sort((a, b) => (b.savedAt ?? 0) - (a.savedAt ?? 0))[0]
+  const current = doc.recent[0]
+  if (current === undefined) return undefined
 
   const box = section('resume', 'Continue where you left off')
   const card = el('div', 'resumeCard')
-  card.append(
-    shotFor({ id: SESSION_STILL, since: current.at, or: match?.id }, stills),
-  )
+  card.append(sessionShot(doc, current, stills))
 
   const body = el('div', 'resumeBody')
   body.append(
@@ -382,8 +408,7 @@ function resumeSection(
     ),
   )
   const row = el('p', 'resumeCta')
-  const go = el('a', 'btn primary')
-  go.href = linkFor(current.query)
+  const go = resumeLink(current, 'btn primary')
   go.textContent = 'Resume →'
   const fresh = el('a', 'btn')
   fresh.href = '/app/'
@@ -393,6 +418,44 @@ function resumeSection(
 
   card.append(body)
   box.append(card)
+  return box
+}
+
+function sessionCard(
+  doc: HomeDoc,
+  session: RecentSession,
+  stills: Map<string, Still> | undefined,
+  now: number,
+): HTMLElement {
+  const item = el('li')
+  const link = resumeLink(session, 'demo')
+  const match = savedAs(doc, session)
+  link.append(
+    sessionShot(doc, session, stills),
+    nameRow(sinceWords(session.at, now)),
+  )
+  if (match !== undefined)
+    link.append(el('span', 'says', `saved as “${match.name}”`))
+  item.append(link)
+  return item
+}
+
+function earlierSection(
+  doc: HomeDoc,
+  stills: Map<string, Still> | undefined,
+  now: number,
+) {
+  const earlier = doc.recent.slice(1)
+  if (earlier.length === 0) return undefined
+  const box = section(
+    'recent',
+    'Earlier sessions',
+    'The app saves each visit as you work. Opening one carries on from where that visit stopped.',
+  )
+  const grid = el('ul', 'grid looks')
+  for (const session of earlier)
+    grid.append(sessionCard(doc, session, stills, now))
+  box.append(grid)
   return box
 }
 
@@ -601,9 +664,14 @@ export function showHome(
       if (signedIn?.uid === user.uid) void draw(user, { ...doc, profiles })
     },
   }
-  const resume = resumeSection(doc, stills, now)
-  const looks = looksSection(doc, stills, now, edits)
-  showFrame(user, resume === undefined ? [looks] : [resume, looks])
+  showFrame(
+    user,
+    [
+      resumeSection(doc, stills, now),
+      earlierSection(doc, stills, now),
+      looksSection(doc, stills, now, edits),
+    ].filter(box => box !== undefined),
+  )
 }
 
 export function showLanding(): void {
@@ -627,8 +695,8 @@ export function showLanding(): void {
 let stillCache: { uid: string; stills: Map<string, Still> } | undefined
 
 // The stills `doc` needs that `stills` has no copy of as new as the save: a
-// profile saved since, and the session when it was written since. The still is
-// written after the entry it belongs to, from the same machine's clock.
+// profile saved since, and a session written since. The still is written after
+// the entry it belongs to, from the same machine's clock.
 function staleStills(doc: HomeDoc, stills: Map<string, Still>): string[] {
   const behind = (id: string, at: number) => (stills.get(id)?.at ?? -1) < at
   const ids = doc.profiles.flatMap(p =>
@@ -636,8 +704,9 @@ function staleStills(doc: HomeDoc, stills: Map<string, Still>): string[] {
       ? [p.id]
       : [],
   )
-  if (doc.current !== null && behind(SESSION_STILL, doc.current.at))
-    ids.push(SESSION_STILL)
+  for (const session of doc.recent)
+    if (behind(sessionStill(session.id), session.at))
+      ids.push(sessionStill(session.id))
   return ids
 }
 

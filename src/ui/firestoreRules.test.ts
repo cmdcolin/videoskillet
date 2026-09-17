@@ -3,7 +3,7 @@ import {
   assertSucceeds,
   initializeTestEnvironment,
 } from '@firebase/rules-unit-testing'
-import { documentId, serverTimestamp } from 'firebase/firestore'
+import { deleteField, documentId, serverTimestamp } from 'firebase/firestore'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import type { RulesTestEnvironment } from '@firebase/rules-unit-testing'
@@ -228,6 +228,38 @@ describe.skipIf(EMULATOR === undefined)('firestore.rules', () => {
     await assertFails(asOwner().doc(`users/${OWNER}`).set({ current: 'vhs' }))
   })
 
+  // The autosaved sessions, newest first. A list, so the rules check its size
+  // and leave the entries to the client, as they do for profiles.
+  const recent = (n: number) =>
+    Array.from({ length: n }, (_, i) => ({ id: `s${i}`, ...session() }))
+
+  it('lets the owner write the recent sessions and drop the old one', async () => {
+    await seed(OWNER, { ...docOf('vhs'), current: session() })
+    await assertSucceeds(
+      asOwner()
+        .doc(`users/${OWNER}`)
+        .set({ recent: recent(8), current: deleteField() }, { merge: true }),
+    )
+    const snap = await asOwner().doc(`users/${OWNER}`).get()
+    expect(snap.data()).toEqual({ ...docOf('vhs'), recent: recent(8) })
+  })
+
+  it('refuses a recent list that is too long or not a list', async () => {
+    await assertFails(
+      asOwner()
+        .doc(`users/${OWNER}`)
+        .set({ recent: recent(9) }),
+    )
+    await assertFails(
+      asOwner().doc(`users/${OWNER}`).set({ recent: session() }),
+    )
+    await assertFails(
+      asStranger()
+        .doc(`users/${OWNER}`)
+        .set({ recent: recent(1) }, { merge: true }),
+    )
+  })
+
   it('refuses a session written by anybody else', async () => {
     await seed(OWNER, docOf('private look'))
     await assertFails(
@@ -347,8 +379,18 @@ describe.skipIf(EMULATOR === undefined)('firestore.rules', () => {
       await assertSucceeds(
         asOwner().doc(doc).set({ current: null }, { merge: true }),
       )
+      const saved = { id: 'a1', query: 'p=Ab', at: 1 }
+      await assertSucceeds(
+        asOwner()
+          .doc(doc)
+          .set({ recent: [saved] }, { merge: true }),
+      )
       const snap = await asOwner().doc(doc).get()
-      expect(snap.data()).toEqual({ voices: [voice], current: null })
+      expect(snap.data()).toEqual({
+        voices: [voice],
+        current: null,
+        recent: [saved],
+      })
       await assertSucceeds(asOwner().doc(doc).delete())
     })
 
@@ -377,6 +419,11 @@ describe.skipIf(EMULATOR === undefined)('firestore.rules', () => {
         asOwner()
           .doc(doc)
           .set({ voices: Array.from({ length: 201 }, () => voice) }),
+      )
+      await assertFails(
+        asOwner()
+          .doc(doc)
+          .set({ recent: Array.from({ length: 9 }, () => ({})) }),
       )
     })
 

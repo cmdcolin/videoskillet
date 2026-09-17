@@ -1,6 +1,7 @@
 # 0010 — The account holds the session, not just the library
 
-**Status:** accepted, 2026-09-14.
+**Status:** accepted, 2026-09-14; the single session is superseded by
+[0012](0012-the-account-keeps-recent-sessions.md).
 
 ## Context
 

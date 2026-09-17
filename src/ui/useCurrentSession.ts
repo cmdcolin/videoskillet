@@ -1,10 +1,21 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
-import { SESSION_STILL, STILL_MAX, putCurrent, putStill } from './cloud'
+import {
+  STILL_MAX,
+  deleteStill,
+  putSession,
+  putStill,
+  sessionStill,
+} from './cloud'
+import { newProfileId } from './profileModel'
+import { takeSessionId } from './resumeHandoff'
 
 // The session a signed-in user has open, mirrored onto their account so the home
-// page can offer it back as a resume card. The same packed query the address bar
-// carries, written by the same producer — `profileQuery()` in useUrlState.
+// page can offer it back, as the resume card or one of the earlier sessions
+// under it. The same packed query the address bar carries, written by the same
+// producer — `profileQuery()` in useUrlState. Every write from one page load
+// updates one entry in the account's list; resumeHandoff.ts says which entry a
+// load continues.
 //
 // A null query is a session with nothing in it to resume, and the hook leaves
 // the account alone. The app passes null while the engine is absent, when the
@@ -59,7 +70,7 @@ export function observe(opened: Opened, query: string | null): Opened {
 }
 // CROSS_REPO_SYNC_END(current-session-gate)
 
-// `grabThumb` gives the resume card a picture. A write made while the tab is
+// `grabThumb` gives the session's card a picture. A write made while the tab is
 // hidden goes without one, because the grab waits for a frame and a hidden tab
 // draws none; the home page then shows no still rather than an older board's.
 export function useCurrentSession(
@@ -67,6 +78,7 @@ export function useCurrentSession(
   query: string | null,
   grabThumb?: (max: number) => Promise<string | null>,
 ) {
+  const [sessionId] = useState(() => takeSessionId() ?? newProfileId())
   const gate = useRef<WriteGate>({ query: null, at: 0 })
   const opened = useRef<Opened>({ query: null, moved: false })
   // The query as of the last render, for the handler below, which fires long
@@ -78,14 +90,19 @@ export function useCurrentSession(
     gate.current = { query: q, at }
     // Taken now, so the picture is of the board the query describes, and
     // written once the session has landed, so a still is never newer than a
-    // session the account refused.
+    // session the account refused. The stills of sessions that left the list
+    // go too, best effort: a still left behind is a document nothing reads.
     const still = withStill ? grabThumb?.(STILL_MAX) : undefined
-    putCurrent(id, { query: q, at })
-      .then(() => still)
+    putSession(id, { id: sessionId, query: q, at })
+      .then(dropped => {
+        for (const gone of dropped)
+          deleteStill(id, sessionStill(gone)).catch(() => undefined)
+        return still
+      })
       .then(webp =>
         webp === null || webp === undefined
           ? undefined
-          : putStill(id, SESSION_STILL, webp),
+          : putStill(id, sessionStill(sessionId), webp),
       )
       .catch((e: unknown) => {
         // Dropped. The account keeps the previous session, the next settled
@@ -121,7 +138,7 @@ export function useCurrentSession(
       Math.max(0, due - Date.now()),
     )
     return () => clearTimeout(id)
-    // `send` reads only refs and the arguments it is given.
+    // `send` reads only refs, the session id and the arguments it is given.
     // oxlint-disable-next-line react-hooks/exhaustive-deps
   }, [uid, query])
 
