@@ -30,6 +30,8 @@ const actions = () => {
     drifting: false,
     onToggleDrift: noop,
     onPickDriftMode: noop,
+    gated: false,
+    onToggleStab: noop,
     onReset: noop,
     onUndo: noop,
     onRedo: noop,

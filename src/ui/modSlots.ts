@@ -315,6 +315,17 @@ export interface Stab {
 export const DEFAULT_STAB: Stab = { hz: 0, ms: 60 }
 
 export const STAB_HZ_MAX = 12
+
+// The rate a switch brings the gate on at, for the two surfaces that offer it
+// without a slider — the look bar's menu and the ⌘K palette. Both exist because
+// the gate is the one thing in the bay that needs no patching and was reachable
+// only by opening the bay, which is a box on the map you have to know is there.
+//
+// Twice a second against `DEFAULT_STAB.ms` of 60 leaves the clean signal on
+// screen 88% of the time: unmistakably a gate rather than a look, and slow
+// enough to read what each stab actually pokes through. Every rate above it is a
+// drag on the row this switch is there to find.
+export const STAB_ON_HZ = 2
 export const STAB_MS_MIN = 8
 export const STAB_MS_MAX = 400
 

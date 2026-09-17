@@ -1,6 +1,7 @@
 import { DECK_STAGE, MOD_STAGE } from './controls'
 import { DRIFT_SECONDS } from './drift'
 import { openGuide } from './links'
+import { STAB_ON_HZ } from './modSlots'
 
 import type { PaletteAction } from './CommandPalette'
 import type { DriftMode } from './drift'
@@ -89,6 +90,10 @@ export function paletteActions(o: {
   // the mode is what they choose: asked for while a wander is running, the walk
   // re-tethers it (`makeDrift.add`), and a second ask does nothing.
   onPickDriftMode: (mode: DriftMode) => void
+  // The stab gate, which is a switch for the same reason the drift is: a row
+  // read before it is run cannot be named for the state it is in.
+  gated: boolean
+  onToggleStab: () => void
   onReset: () => void
   onUndo: () => void
   onRedo: () => void
@@ -264,6 +269,18 @@ export function paletteActions(o: {
       blurb:
         'the same round trip, somewhere new every time: out, home, and out again to a look you have not seen',
       run: () => o.onPickDriftMode('tour'),
+    },
+    // The gate, as a switch. It sits with the drifts because it is the same
+    // gesture at a different timescale — the board leaving and coming back — and
+    // because until this row it was the one thing in the app you could only
+    // reach by opening the bay. Its rows are still where they were; this turns
+    // it on so there is something to go and dial.
+    {
+      name: o.gated ? 'stop the stab gate' : 'stab gate',
+      blurb: o.gated
+        ? 'let the look run continuously again. The rate, the length and any look you held at the far end stay as they were'
+        : `cut the whole board out and back in ${STAB_ON_HZ} times a second: a clean picture with your look stabbed into it, on the beat if you lock it. The bay's own rows dial the rate, the length and the look at the far end`,
+      run: o.onToggleStab,
     },
     {
       name: 'vaporwave',

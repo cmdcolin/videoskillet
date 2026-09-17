@@ -246,6 +246,12 @@ from 8 to 400, so the look cuts into a clean picture instead of running
 continuously. Phosphor and both feedback loops keep running through the flip, so
 a stab leaves a trail.
 
+The gate's rows are at the top of the bay, above the routings. To hear it
+without going looking, the **▾** beside drift switches it on at 2 stabs a second
+— the same menu as the round trips, since a gate is that trip at frames instead
+of seconds — and ⌘K finds it under **stab gate**. Once it is running, the
+Modulation section appears in the panel with **edit in the bay** one press away.
+
 Clean is only the gate's default far end. **⧉ hold this look** parks the current
 board at that end, and the gate cuts between it and whatever you dial next: two
 looks, hard cut on the beat, no fade. The sliders belong to the live look; the

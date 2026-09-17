@@ -68,7 +68,13 @@ import { MenuRow } from './ui/MenuRow'
 import { MidiPanel } from './ui/MidiPanel'
 import { ModBay } from './ui/ModBay'
 import { ModSection } from './ui/ModSection'
-import { bayLoad, modDetail, slotsToRoutings, targetLabel } from './ui/modSlots'
+import {
+  bayLoad,
+  modDetail,
+  slotsToRoutings,
+  STAB_ON_HZ,
+  targetLabel,
+} from './ui/modSlots'
 import { ModSlotsContext } from './ui/ModSlotsContext'
 import { parseMorph } from './ui/morph'
 import { paletteActions } from './ui/paletteActions'
@@ -509,6 +515,15 @@ export function App() {
     setDriftMode(mode)
     startDriftScope(boardScope(mode))
   }
+  // The gate on and off, from the two surfaces that name it without drawing its
+  // rows (`STAB_ON_HZ`). Everything else about it — the length, the beat lock,
+  // the look at the far end — stays as it was, so switching it off and on again
+  // gives back the gate you had dialed rather than a fresh one.
+  const toggleStab = () =>
+    modApi.setStab({
+      ...modApi.stab,
+      hz: modApi.stab.hz > 0 ? 0 : STAB_ON_HZ,
+    })
   // A stage's own switch, off the same list its randomize rolls — minus the
   // view, which no roll and no drift may touch.
   const toggleGroupDrift = (group: Group) => {
@@ -998,6 +1013,8 @@ export function App() {
     drifting: drift.scopes.has(DRIFT_BOARD),
     onToggleDrift: toggleDrift,
     onPickDriftMode: pickDriftMode,
+    gated: modApi.stab.hz > 0,
+    onToggleStab: toggleStab,
     onRollMotion: amount => mix.rollMotion(amount, { audioLive: audio.active }),
     onReset: mix.reset,
     onUndo: mix.undo,
@@ -1480,6 +1497,8 @@ export function App() {
         onToggleDrift={toggleDrift}
         driftMode={driftMode}
         onPickDriftMode={pickDriftMode}
+        gated={modApi.stab.hz > 0}
+        onToggleStab={toggleStab}
         // Whether the two audio followers are worth rolling: with nothing on
         // the wire they are slots that will never move, which is the one way a
         // roll can look like it did nothing. App is where that is known — the

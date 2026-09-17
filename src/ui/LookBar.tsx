@@ -3,6 +3,7 @@ import { useState, useSyncExternalStore } from 'react'
 import { cx } from './cx'
 import { DRIFT_MODE_WORDS, DRIFT_SECONDS } from './drift'
 import styles from './LookBar.module.css'
+import { STAB_ON_HZ } from './modSlots'
 import { MORPH_LABELS, MORPH_SECONDS } from './morph'
 import { mutateAmountFor } from './mutate'
 import { MenuItem, Popover } from './Popover'
@@ -65,6 +66,11 @@ export function LookBar(props: {
   // it too — a heading has no room for a caret of its own.
   driftMode: DriftMode
   onPickDriftMode: (mode: DriftMode) => void
+  // The stab gate, in the same menu because it is the same trip at frames
+  // instead of seconds (signal/stab.ts). The row it belongs to is in the bay,
+  // which is a box on the map: this is the switch, not the editor.
+  gated: boolean
+  onToggleStab: () => void
   // How long the verbs in this row take to arrive, and the button that cycles
   // it. It belongs here rather than in a settings dialog because it changes what
   // every other button in the row *does*, and because the duration you want is a
@@ -132,6 +138,8 @@ export function LookBar(props: {
         onToggle={props.onToggleDrift}
         mode={props.driftMode}
         onPick={props.onPickDriftMode}
+        gated={props.gated}
+        onToggleGate={props.onToggleStab}
       />
       <MorphControl
         morphSeconds={props.morphSeconds}
@@ -367,6 +375,8 @@ function Drifts(props: {
   onToggle: () => void
   mode: DriftMode
   onPick: (mode: DriftMode) => void
+  gated: boolean
+  onToggleGate: () => void
 }) {
   const face = DRIFT_MODES[props.mode]
   return (
@@ -388,7 +398,7 @@ function Drifts(props: {
             {...attrs}
             className={cx(styles.btn, styles.pairRight, styles.caret)}
             aria-label="pick a shape for the board to play itself in"
-            title="the other two shapes this switch has: out and back to one look, or out and back to a new one every time. Picking one sets it going, and it stays on the button"
+            title="the other two shapes this switch has: out and back to one look, or out and back to a new one every time. Picking one sets it going, and it stays on the button. The stab gate is here too, which is the same trip at frames instead of seconds"
           >
             ▾
           </button>
@@ -407,6 +417,29 @@ function Drifts(props: {
                 onClick={() => props.onPick(mode)}
               />
             ))}
+            {/* The gate, which is the same gesture as the three above it at a
+                thousandth of the period: the board leaves and comes back. It is
+                a switch and not a shape, so it keeps its state in the hint
+                column and never takes the face — what the face says is what the
+                button beside it will do, and this is not it.
+
+                It is here at all because the gate was reachable only by opening
+                the MODULATION box on the map, and nothing on screen said the
+                word until it was already running. Switching it on is also what
+                makes the panel's Modulation section appear, which is where its
+                own rows are then one press away. */}
+            <MenuItem
+              icon="▮"
+              label={props.gated ? 'stop the stab gate' : 'stab gate'}
+              hint={props.gated ? `${STAB_ON_HZ}/s` : ''}
+              title={
+                props.gated
+                  ? 'let the look run continuously again. The rate, the length and any look held at the far end stay as they are'
+                  : `cut the whole board out and back in ${STAB_ON_HZ} times a second, so a clean picture carries your look stabbed through it. The bay's own rows dial the rate, the length, the beat it locks to and the look at the far end`
+              }
+              closes={id}
+              onClick={props.onToggleGate}
+            />
           </>
         )}
       </Popover>
