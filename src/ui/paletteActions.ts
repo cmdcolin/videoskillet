@@ -3,6 +3,7 @@ import { DRIFT_SECONDS } from './drift'
 import { openGuide } from './links'
 
 import type { PaletteAction } from './CommandPalette'
+import type { DriftMode } from './drift'
 import type { MutateAmount } from './mutate'
 import type { AnySlotView } from './slotView'
 
@@ -84,6 +85,10 @@ export function paletteActions(o: {
   // command whose effect is the opposite of its name.
   drifting: boolean
   onToggleDrift: () => void
+  // The two round trips. They set the board going rather than toggling, since
+  // the mode is what they choose: asked for while a wander is running, the walk
+  // re-tethers it (`makeDrift.add`), and a second ask does nothing.
+  onPickDriftMode: (mode: DriftMode) => void
   onReset: () => void
   onUndo: () => void
   onRedo: () => void
@@ -244,6 +249,21 @@ export function paletteActions(o: {
         ? 'stop the wander and keep the look wherever it has got to'
         : `let the look wander on its own, unattended: a gentle nudge every ${DRIFT_SECONDS} seconds, travelling most of the way there so nothing cuts`,
       run: o.onToggleDrift,
+    },
+    // The two round trips, named the way this list names every other variant of
+    // a verb — `random nudge, gentle` and its siblings — so typing "drift"
+    // reaches all three shapes rather than only the one that wanders.
+    {
+      name: 'drift, cycle',
+      blurb:
+        'travel out to one look and back, over and over: every other leg is exactly the look you set going',
+      run: () => o.onPickDriftMode('cycle'),
+    },
+    {
+      name: 'drift, tour',
+      blurb:
+        'the same round trip, somewhere new every time: out, home, and out again to a look you have not seen',
+      run: () => o.onPickDriftMode('tour'),
     },
     {
       name: 'vaporwave',

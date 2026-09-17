@@ -41,6 +41,15 @@ Click a preset to jump to it. Drag it sideways to blend it part-way in.
   Pressing one takes over from the other, since a control wanders around one
   look at a time. For a wander that is part of a piece, use the strip's shake
   row: it holds in bars, is seeded and is saved.
+- The **▾** beside drift holds two round trips, which travel out and come back.
+  **cycle** morphs out to one look and home again, over and over, so every other
+  leg lands exactly on the look you set going; the far end is a nudge to that
+  look, rolled once when you press. **tour** makes the same trip to a look you
+  have not seen each time. Because both keep arriving back, either is safe to
+  leave running overnight — your look is never more than one leg away, and the
+  trip out can afford to go three times as far as a wander's nudge. Picking one
+  sets it going and leaves it on the button, and every stage heading's switch
+  then does what you picked.
 - **morph** sets how long a new look takes to arrive: cut, 1s, 4s, 8s or 30s.
   Rolls chain, so rolling every few seconds wanders continuously.
 - **undo** (`ctrl+z`) steps back through all of it.

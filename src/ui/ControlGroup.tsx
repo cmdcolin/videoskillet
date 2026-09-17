@@ -13,7 +13,7 @@ import {
   useControlValue,
 } from './ControlsContext'
 import { cx } from './cx'
-import { DRIFT_SECONDS } from './drift'
+import { DRIFT_MODE_WORDS, DRIFT_SECONDS } from './drift'
 import { filterActive, matchedSliders, useFilter } from './filter'
 import { LoopTrip } from './LoopTrip'
 import { MagnifierFrame } from './MagnifierFrame'
@@ -427,10 +427,12 @@ export function ControlGroup(props: { group: Group; defaultOpen?: boolean }) {
     mutateGroup,
     resetGroup,
     driftingGroups,
+    driftMode,
     toggleGroupDrift,
   } = useControlsApi()
   const driftable = MUTATE_CIRCUIT_BY_GROUP.has(group.name)
   const drifting = driftingGroups.has(group.name)
+  const driftWords = DRIFT_MODE_WORDS[driftMode]
   const mod = useModSlotsApi()
   const filter = useFilter()
   // Randomize's timers, while it is held: the wait before a hold becomes a
@@ -618,11 +620,11 @@ export function ControlGroup(props: { group: Group; defaultOpen?: boolean }) {
               title={
                 drifting
                   ? `stop here and keep ${group.name} wherever it has got to (the rest of the board carries on)`
-                  : `let this stage wander on its own: a gentle nudge to its controls every ${DRIFT_SECONDS} seconds, travelling most of the way there so nothing cuts, staying around the look it set off from. The rest of the board holds still (${group.name})`
+                  : `let this stage ${driftWords.does}: a leg every ${DRIFT_SECONDS} seconds, travelling most of the way there so nothing cuts. The rest of the board holds still (${group.name}). The look bar's ▾ is where the three shapes are picked`
               }
               onClick={() => toggleGroupDrift(group)}
             >
-              drift
+              {driftWords.label}
             </button>
           ) : null}
         </>

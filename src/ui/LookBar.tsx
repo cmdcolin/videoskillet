@@ -1,12 +1,13 @@
 import { useState, useSyncExternalStore } from 'react'
 
 import { cx } from './cx'
-import { DRIFT_SECONDS } from './drift'
+import { DRIFT_MODE_WORDS, DRIFT_SECONDS } from './drift'
 import styles from './LookBar.module.css'
 import { MORPH_LABELS, MORPH_SECONDS } from './morph'
 import { mutateAmountFor } from './mutate'
 import { MenuItem, Popover } from './Popover'
 
+import type { DriftMode } from './drift'
 import type { MorphSeconds, MorphStore } from './morph'
 import type { MutateAmount } from './mutate'
 import type { ReactNode } from 'react'
@@ -59,6 +60,11 @@ export function LookBar(props: {
   // you have to press to find out about.
   drifting: boolean
   onToggleDrift: () => void
+  // Which of the three shapes the switch sets going, and the caret that picks
+  // one. Held by App rather than here because every stage heading's switch reads
+  // it too — a heading has no room for a caret of its own.
+  driftMode: DriftMode
+  onPickDriftMode: (mode: DriftMode) => void
   // How long the verbs in this row take to arrive, and the button that cycles
   // it. It belongs here rather than in a settings dialog because it changes what
   // every other button in the row *does*, and because the duration you want is a
@@ -121,17 +127,12 @@ export function LookBar(props: {
       />
       {/* Next to the rolls, because that is what it is: the gentlest of them,
           on a timer, forever. Nothing else in the app plays itself. */}
-      <button
-        className={cx(styles.btn, props.drifting && styles.btnOn)}
-        onClick={props.onToggleDrift}
-        title={
-          props.drifting
-            ? 'stop here and keep the look wherever it has got to. One ctrl+z then puts back the look you set drifting — none of the legs is in the walk (d)'
-            : `let the look wander with nobody at the keyboard: every ${DRIFT_SECONDS} seconds it nudges itself somewhere near where it stands and travels most of the way there, so the picture never cuts. It stays around the look you set drifting rather than wandering off, and one ctrl+z after you stop puts that look back (d)`
-        }
-      >
-        {props.drifting ? 'drifting…' : 'drift'}
-      </button>
+      <Drifts
+        drifting={props.drifting}
+        onToggle={props.onToggleDrift}
+        mode={props.driftMode}
+        onPick={props.onPickDriftMode}
+      />
       <MorphControl
         morphSeconds={props.morphSeconds}
         onSetMorph={props.onSetMorph}
@@ -308,6 +309,102 @@ function Rolls(props: {
                 title={rolls[name].title}
                 closes={id}
                 onClick={() => roll(name, 'normal')}
+              />
+            ))}
+          </>
+        )}
+      </Popover>
+    </div>
+  )
+}
+
+// The shape the board plays itself in, behind one switch (ui/drift.ts).
+//
+// A pair rather than a word, which is the shape the rolls beside it already
+// have: the face is the switch, the caret is where the three shapes are chosen,
+// and picking one sets it going at once. It differs from the rolls in the one
+// way a mode differs from a press — the face says which of its two states it is
+// in, because a switch whose only tell is a lit border is one you have to press
+// to find out about.
+//
+// The three are one axis: how far the board is allowed to get from the look you
+// set going. A wander never comes back, a cycle comes back to it every other
+// leg, and a tour does the same and is somewhere new in between.
+// The label itself comes from `drift.ts`, where the stage headings read it too;
+// what is here is the word the switch wears while it runs, the glyph the menu
+// shows, and the sentence that explains the shape.
+const DRIFT_MODES: Record<
+  DriftMode,
+  { running: string; icon: string; title: string }
+> = {
+  wander: {
+    running: 'drifting…',
+    icon: '↝',
+    title: `let the look wander with nobody at the keyboard: every ${DRIFT_SECONDS} seconds it nudges itself somewhere near where it stands and travels most of the way there, so the picture never cuts. It stays around the look you set drifting rather than wandering off`,
+  },
+  cycle: {
+    running: 'cycling…',
+    icon: '⇄',
+    title: `travel out to one look and back, over and over: the board sets off every ${DRIFT_SECONDS} seconds and morphs most of the way there, so every other leg lands exactly on the look you set going. The far end is a nudge to that look, rolled once when you press this`,
+  },
+  tour: {
+    running: 'touring…',
+    icon: '↻',
+    title: `the same round trip with a fresh far end every time: out to a look you have not seen, home to yours exactly, then out again somewhere else. Your look comes back every other leg however long it runs, so this is the one mode you can leave on all night and still find what you started with`,
+  },
+}
+
+const DRIFT_ORDER: DriftMode[] = ['wander', 'cycle', 'tour']
+
+// What all three say on the way out. One line for the set rather than one each:
+// the promise is the same whichever was running — the board keeps the look it
+// has got to, and the step behind it is the one you set going.
+const DRIFT_STOP =
+  'stop here and keep the look wherever it has got to. One ctrl+z then puts back the look you set going — none of the legs between is in the walk (d)'
+
+function Drifts(props: {
+  drifting: boolean
+  onToggle: () => void
+  mode: DriftMode
+  onPick: (mode: DriftMode) => void
+}) {
+  const face = DRIFT_MODES[props.mode]
+  return (
+    <div className={styles.pair}>
+      <button
+        className={cx(
+          styles.btn,
+          styles.pairLeft,
+          props.drifting && styles.btnOn,
+        )}
+        onClick={props.onToggle}
+        title={props.drifting ? DRIFT_STOP : `${face.title} (d)`}
+      >
+        {props.drifting ? face.running : DRIFT_MODE_WORDS[props.mode].label}
+      </button>
+      <Popover
+        trigger={attrs => (
+          <button
+            {...attrs}
+            className={cx(styles.btn, styles.pairRight, styles.caret)}
+            aria-label="pick a shape for the board to play itself in"
+            title="the other two shapes this switch has: out and back to one look, or out and back to a new one every time. Picking one sets it going, and it stays on the button"
+          >
+            ▾
+          </button>
+        )}
+      >
+        {id => (
+          <>
+            {DRIFT_ORDER.map(mode => (
+              <MenuItem
+                key={mode}
+                icon={DRIFT_MODES[mode].icon}
+                label={DRIFT_MODE_WORDS[mode].label}
+                hint=""
+                title={DRIFT_MODES[mode].title}
+                closes={id}
+                onClick={() => props.onPick(mode)}
               />
             ))}
           </>

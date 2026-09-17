@@ -139,7 +139,7 @@ import type { FaultPlan } from './core/signal/fault'
 import type { GlidePlan } from './core/signal/glide'
 import type { Group, PickerStage } from './ui/controls'
 import type { ControlsApi, ControlStore } from './ui/ControlsContext'
-import type { DriftScope } from './ui/drift'
+import type { DriftMode, DriftScope } from './ui/drift'
 import type { StashSlot } from './ui/fileStash'
 import type { Lens } from './ui/lens'
 import type { ModSlotsApi } from './ui/ModSlotsContext'
@@ -210,6 +210,14 @@ function openProfile(profile: SavedProfile) {
   if (location.hash === `#${profile.query}`) location.reload()
   else location.hash = profile.query
 }
+
+// What the look bar's switch names: everything a roll may touch, minus the view.
+const boardScope = (mode: DriftMode): DriftScope => ({
+  name: DRIFT_BOARD,
+  sliders: MUTATE_SLIDERS,
+  wake: DRIFT_WAKE,
+  mode,
+})
 
 export function App() {
   // Off every session, and not persisted: a counter that moves every frame pulls
@@ -457,6 +465,27 @@ export function App() {
   // switches, and everything a leg needs, handed over at the press rather than
   // held by the hook: see the note there.
   const drift = useDrift()
+  // Which shape every drift switch on the panel sets going — the look bar's and
+  // each stage heading's. One setting for all of them rather than a mode per
+  // switch: a heading has one line to share with a 33-character stage name, and
+  // the board's switch takes every stage over anyway (`makeDrift.add`), so a
+  // mode picked in the look bar is the mode the session is in.
+  const [driftMode, setDriftMode] = useState<DriftMode>('wander')
+  const startDriftScope = (scope: DriftScope) => {
+    // The one step the whole mode banks, and only on the way in from nothing
+    // wandering. A drift left running for an hour is 240 looks nobody chose;
+    // what a hand reaching for ctrl+z wants back is the look it set drifting,
+    // and a second switch flipped ten minutes in would bank a look the mode
+    // itself had made.
+    if (drift.scopes.size === 0) mix.snapshotForUndo()
+    drift.start(
+      {
+        getSettled: () => getGlideTarget() ?? controlStore.get(),
+        land: mix.landDrift,
+      },
+      scope,
+    )
+  }
   const toggleDriftScope = (scope: DriftScope) => {
     if (drift.scopes.has(scope.name)) {
       drift.stop(scope.name)
@@ -467,27 +496,19 @@ export function App() {
       // and stopping it would strand the board mid-travel.
       if (drift.scopes.size === 1) stopMorph()
     } else {
-      // The one step the whole mode banks, and only on the way in from nothing
-      // wandering. A drift left running for an hour is 240 looks nobody chose;
-      // what a hand reaching for ctrl+z wants back is the look it set drifting,
-      // and a second switch flipped ten minutes in would bank a look the mode
-      // itself had made.
-      if (drift.scopes.size === 0) mix.snapshotForUndo()
-      drift.start(
-        {
-          getSettled: () => getGlideTarget() ?? controlStore.get(),
-          land: mix.landDrift,
-        },
-        scope,
-      )
+      startDriftScope(scope)
     }
   }
-  const toggleDrift = () =>
-    toggleDriftScope({
-      name: DRIFT_BOARD,
-      sliders: MUTATE_SLIDERS,
-      wake: DRIFT_WAKE,
-    })
+  const toggleDrift = () => toggleDriftScope(boardScope(driftMode))
+  // Picking a mode sets the board going in it, the way picking a roll rolls it
+  // (`Rolls` in LookBar): a menu that only armed something to press afterwards
+  // would be a mode you have to press twice to hear. Picked while the board is
+  // already drifting, `add` re-tethers it — so this is also how a wander becomes
+  // a round trip without a stop in between.
+  const pickDriftMode = (mode: DriftMode) => {
+    setDriftMode(mode)
+    startDriftScope(boardScope(mode))
+  }
   // A stage's own switch, off the same list its randomize rolls — minus the
   // view, which no roll and no drift may touch.
   const toggleGroupDrift = (group: Group) => {
@@ -495,7 +516,12 @@ export function App() {
     // `wake: 1`, the same answer `mutateGroup` gives to the same question: you
     // named the stage, so the stage has to move on the press.
     if (sliders !== undefined)
-      toggleDriftScope({ name: group.name, sliders, wake: 1 })
+      toggleDriftScope({
+        name: group.name,
+        sliders,
+        wake: 1,
+        mode: driftMode,
+      })
   }
 
   // Either slot, by the key something outside handed over. Five surfaces are
@@ -943,6 +969,7 @@ export function App() {
     syncLabel,
     cycleSync,
     driftingGroups: drift.scopes,
+    driftMode,
     toggleGroupDrift,
     mutateGroup: mix.mutateGroup,
     resetControl: mix.resetControl,
@@ -970,6 +997,7 @@ export function App() {
     onCross: mix.crossLook,
     drifting: drift.scopes.has(DRIFT_BOARD),
     onToggleDrift: toggleDrift,
+    onPickDriftMode: pickDriftMode,
     onRollMotion: amount => mix.rollMotion(amount, { audioLive: audio.active }),
     onReset: mix.reset,
     onUndo: mix.undo,
@@ -1450,6 +1478,8 @@ export function App() {
         onCross={mix.crossLook}
         drifting={drift.scopes.has(DRIFT_BOARD)}
         onToggleDrift={toggleDrift}
+        driftMode={driftMode}
+        onPickDriftMode={pickDriftMode}
         // Whether the two audio followers are worth rolling: with nothing on
         // the wire they are slots that will never move, which is the one way a
         // roll can look like it did nothing. App is where that is known — the

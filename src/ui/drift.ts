@@ -31,6 +31,21 @@
 // a walk of a thousand looks nobody chose, with the one you did choose at the
 // far end of it; the caller banks a single step when it starts (`app.tsx`), so
 // one ctrl+z puts back the look you set drifting.
+//
+// **Three modes, one clock, one tether.** A wander never comes back — it leans
+// toward the anchor and re-aims from wherever it got to. The other two are round
+// trips: the board travels out to an away look and then travels back to the
+// anchor exactly, so every other leg is the look you set going. That is what
+// lets a trip be bold where a wander has to be gentle (`DRIFT_AMOUNT` against
+// `CYCLE_AMOUNT`): a wander compounds and a trip cannot, because half of it is
+// the anchor itself.
+//
+// The gate in `signal/stab.ts` is the same round trip at frames instead of
+// seconds, and the two are not interchangeable. A gate *cuts*, several times a
+// second, and a fade at that rate would redesign the filter bank every frame;
+// this morphs, because a leg is `land(to, seconds)` and the glide is already
+// there. So a trip is a board changing its mind and coming back, and a gate is a
+// thumb on a kill switch.
 
 import { snapToStep } from './controls'
 import { MUTATE_AMOUNTS, ROLL_NEVER_STARTS, mutate } from './mutate'
@@ -125,6 +140,102 @@ export function driftLeg(
   return next
 }
 
+// Which of the three shapes a scope is moving in.
+//
+// `wander` is the mode this file started as: a nudge to where the board is, and
+// it never arrives anywhere. The other two are the round trip — out to an away
+// look, back to the anchor, out again — and they differ in one thing only, which
+// is whether the far end is the same look every time. `cycle` holds the away
+// look it rolled on the press, so the board alternates between two settings the
+// way an intermittent contact does. `tour` rolls a fresh one for every trip out,
+// so the board comes home between excursions that are each somewhere new.
+//
+// Held at look level rather than per control, because that is what it is for: a
+// wobble on one knob is what the modulation bay is, and it has waves of its own
+// (`modstate.ts`). This is the whole board leaving and returning.
+export type DriftMode = 'wander' | 'cycle' | 'tour'
+
+// What each shape is called, and the clause that says what it does to a scope.
+//
+// Here rather than in the row that draws the switch because two surfaces name
+// the same three things — the look bar's switch, which has a caret and a
+// tooltip, and every stage heading, which has neither and still has to say what
+// pressing it will do.
+export const DRIFT_MODE_WORDS: Record<
+  DriftMode,
+  { label: string; does: string }
+> = {
+  wander: {
+    label: 'drift',
+    does: 'wander, staying around the look it set off from',
+  },
+  cycle: {
+    label: 'cycle',
+    does: 'travel out to one look and back to this one, over and over',
+  },
+  tour: {
+    label: 'tour',
+    does: 'travel out somewhere new and back to this one, over and over',
+  },
+}
+
+// How far an away look stands from the anchor, as a share of each slider's
+// travel: the roll a plain press of `random nudge` makes.
+//
+// Three times `DRIFT_AMOUNT`, and the difference is the whole reason a trip can
+// afford it. A wander's legs compound — leg 400 is rolled off leg 399 — so its
+// step size is a statement about the hundredth press, and `DRIFT_PULL` exists
+// because even at 0.04 the walk would otherwise end up against the rails. A trip
+// rolls every away look off the anchor and returns to it exactly, so nothing
+// accumulates and there is nothing to pull back: what is left is taste, and at
+// 0.04 a round trip is a board that appears not to be doing anything.
+export const CYCLE_AMOUNT = MUTATE_AMOUNTS.normal
+
+// How much of a scope resting at stock an away look wakes — `mutate`'s own
+// default for the amount above.
+//
+// A scope says what its first leg wakes (`DriftScope.wake`) and a trip cannot
+// simply use that. The board's answer is `DRIFT_WAKE`, which is deliberately
+// stingy because a wander fills the board in over a minute of compounding legs;
+// a trip has no minute — the away look it rolls is the one you will be looking
+// at for as long as the mode runs, so a board set cycling from stock at 2% would
+// travel between two looks nobody could tell apart. A stage that says 1 means
+// it, and keeps it.
+export const CYCLE_WAKE = CYCLE_AMOUNT / 2
+
+const awayWake = (wake: number) => Math.max(wake, CYCLE_WAKE)
+
+// The look at the far end of a trip: a nudge to the anchor, at the amount above.
+//
+// A nudge rather than a `spike` or a fresh `random look`. What comes back has to
+// still be the look you set going — a trip to somewhere unrelated is a slideshow
+// of two slides — and it inherits every rule a roll obeys by being one, which
+// includes the one that matters most here: `mutate` will not start a strobe on a
+// control resting at zero, so neither end of a trip can.
+export const cycleAway = (
+  anchor: Controls,
+  sliders: readonly SliderDef[],
+  rand: Rand = Math.random,
+  wake: number = CYCLE_WAKE,
+): Controls => mutate(anchor, sliders, CYCLE_AMOUNT, rand, awayWake(wake))
+
+// One leg of a round trip: the scope's own controls taken from wherever this leg
+// is headed, and every other control left exactly as the caller handed it over.
+//
+// No roll and no pull, which is what makes the trip a trip: both ends are looks
+// that already exist — the anchor, and an away look rolled off it — so a leg is
+// a copy rather than a draw, and the board arrives on the anchor to the digit
+// however many hundred trips it has made.
+export function cycleLeg(
+  from: Controls,
+  to: Controls,
+  sliders: readonly SliderDef[],
+): Controls {
+  const next = { ...from }
+  for (const s of sliders) next[s.key] = to[s.key]
+  return next
+}
+
 export interface DriftDeps {
   // Where the board has settled, or where a morph in flight is taking it — the
   // question `useMix.banked` asks, and asked here for the same reason: a tween
@@ -151,6 +262,10 @@ export interface DriftDeps {
 export interface DriftScope {
   name: string
   sliders: readonly SliderDef[]
+  // Which shape this scope moves in. Named per scope rather than held by the
+  // walk because a scope is the unit a switch turns on, and the mode is part of
+  // what the switch means: two stages can be touring while a third wanders.
+  mode: DriftMode
   // How much of the scope the *first* leg wakes — the share of its controls
   // sitting at stock that get moved off it, on the press rather than every
   // fifteen seconds after.
@@ -163,6 +278,9 @@ export interface DriftScope {
   // randomize with the old look showing through (`mutate`'s own note on
   // `wake`), so it wakes `DRIFT_WAKE` and the wander finds the rest in its own
   // time.
+  //
+  // A round trip reads the same number and floors it at `CYCLE_WAKE`, since it
+  // has no "in its own time" to find anything in — see the note there.
   wake: number
 }
 
@@ -176,6 +294,7 @@ export const DRIFT_BOARD = 'the board'
 interface Tether {
   sliders: readonly SliderDef[]
   wake: number
+  mode: DriftMode
   // Where this scope's wander is tethered, and where its last leg was headed.
   // The pair is what lets a drift notice it is no longer the only thing moving
   // the board: a leg that finds a control somewhere other than where it aimed
@@ -184,6 +303,19 @@ interface Tether {
   // undone by a pull toward a look you left ten minutes ago.
   anchor: Controls | null
   aim: Controls | null
+  // The far end of a round trip, and which end the next leg is headed for.
+  //
+  // `away` is null until the first trip out rolls one, and again whenever the
+  // tether moves: an away look is a nudge to a particular anchor, so one kept
+  // across a re-anchor would carry the board back to a look a hand has already
+  // replaced. `tour` re-rolls it every trip out regardless, which is the only
+  // difference between the two round trips.
+  //
+  // `out` is true when the next leg travels away. It starts true so the press
+  // sets off immediately — a switch whose first fifteen seconds are a trip home
+  // to where the board already is looks exactly like a switch that did nothing.
+  away: Controls | null
+  out: boolean
 }
 
 // The walk itself, with no React in it — the same split `useStrip` makes, and
@@ -210,15 +342,33 @@ export function makeDrift(deps: DriftDeps) {
       // it. Only the first of those keeps the tether — and it is asked per
       // scope, so a hand on the tape controls re-tethers the tape's drift and
       // leaves the sync card's wander tethered where it was.
-      const home =
+      const kept =
         t.anchor !== null && t.aim !== null && sameDrift(t.sliders, from, t.aim)
           ? t.anchor
-          : from
+          : null
+      const home = kept ?? from
       // A tether with no anchor yet has never travelled: this is the leg that
       // fired on its press, and the one that has to be seen.
       const wake = t.anchor === null ? t.wake : DRIFT_WAKE
       t.anchor = home
-      next = driftLeg(next, home, t.sliders, deps.rand, wake)
+      if (t.mode === 'wander') {
+        next = driftLeg(next, home, t.sliders, deps.rand, wake)
+        continue
+      }
+      // A hand on the board re-tethered this scope, so whatever it was
+      // travelling to belonged to the look that hand has replaced.
+      if (kept === null) t.away = null
+      if (t.out) {
+        const away =
+          t.mode === 'tour' || t.away === null
+            ? cycleAway(home, t.sliders, deps.rand, t.wake)
+            : t.away
+        t.away = away
+        next = cycleLeg(next, away, t.sliders)
+      } else {
+        next = cycleLeg(next, home, t.sliders)
+      }
+      t.out = !t.out
     }
     // After the loop, so every scope aims at the look that actually travels.
     // Scopes never share a control (`add` sees to it), so each still reads its
@@ -252,8 +402,14 @@ export function makeDrift(deps: DriftDeps) {
     // the drift having stopped working on exactly the controls you aimed two
     // switches at. So the board's switch takes the cards over, and a card's
     // switch narrows a board drift down to that stage.
+    //
+    // A scope already running in another mode is re-tethered rather than left
+    // alone: the mode is part of what the switch says, so picking one is a press
+    // and has to answer like one. Asked again in the mode it is already in, this
+    // is the second press of a switch that is on, and does nothing.
     add(scope: DriftScope) {
-      if (!tethers.has(scope.name)) {
+      if (tethers.get(scope.name)?.mode !== scope.mode) {
+        tethers.delete(scope.name)
         const keys = new Set(scope.sliders.map(s => s.key))
         for (const [name, t] of tethers) {
           if (t.sliders.some(s => keys.has(s.key))) tethers.delete(name)
@@ -261,8 +417,11 @@ export function makeDrift(deps: DriftDeps) {
         tethers.set(scope.name, {
           sliders: scope.sliders,
           wake: scope.wake,
+          mode: scope.mode,
           anchor: null,
           aim: null,
+          away: null,
+          out: true,
         })
         leg()
         tick()

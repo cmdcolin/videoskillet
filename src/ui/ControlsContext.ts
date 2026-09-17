@@ -7,6 +7,7 @@ import type { Store } from '../core/listeners'
 import type { FaultPlan } from '../core/signal/fault'
 import type { CardPreset } from './cardPresets'
 import type { Group, SliderDef } from './controls'
+import type { DriftMode } from './drift'
 import type { BindTarget } from './midi'
 import type { MutateAmount } from './mutate'
 
@@ -121,6 +122,10 @@ export interface ControlsApi {
   // and the identity of this changes on a press rather than on a control write,
   // which is the only thing this object is not allowed to do.
   driftingGroups: ReadonlySet<string>
+  // Which shape a heading's switch will set going. One setting for every switch
+  // on the panel, picked in the look bar: a heading has one line to share with a
+  // stage name and no room for a caret of its own.
+  driftMode: DriftMode
   toggleGroupDrift: (group: Group) => void
   // One card's chip: the card back to stock, then the chip's values into it.
   // Scoped like resetGroup and one step on the walk for the same reason — a

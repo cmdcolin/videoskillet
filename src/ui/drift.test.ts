@@ -13,6 +13,7 @@ import { DEFAULT_CONTROLS } from '../core/controls'
 import { rngFor } from '../core/rng'
 import { MUTATE_CIRCUIT_BY_GROUP, MUTATE_SLIDERS } from './controls'
 import {
+  cycleAway,
   DRIFT_AMOUNT,
   DRIFT_BOARD,
   DRIFT_SECONDS,
@@ -26,6 +27,7 @@ import { mutate } from './mutate'
 import { toTravel } from './travel'
 
 import type { Controls } from '../core/controls'
+import type { DriftMode, DriftScope } from './drift'
 
 // The panel's own set, not a hand-picked one: the claims below are about what
 // the mode does to the board somebody left it running on.
@@ -198,13 +200,19 @@ describe('what a look is measured against', () => {
 })
 
 // The whole board, as the look bar's switch sets it going.
-const BOARD = { name: DRIFT_BOARD, sliders: SLIDERS, wake: DRIFT_WAKE }
+const BOARD: DriftScope = {
+  name: DRIFT_BOARD,
+  sliders: SLIDERS,
+  wake: DRIFT_WAKE,
+  mode: 'wander',
+}
 
 // Two stages that share no control, as two stage switches set them going.
-const stage = (name: string) => ({
+const stage = (name: string): DriftScope => ({
   name,
   sliders: MUTATE_CIRCUIT_BY_GROUP.get(name) ?? [],
   wake: 1,
+  mode: 'wander',
 })
 const [FIRST, SECOND] = [...MUTATE_CIRCUIT_BY_GROUP.keys()].map(stage)
 
@@ -320,6 +328,178 @@ describe('the walk', () => {
 
     expect(b.legs).toHaveLength(2)
     drift.stop()
+    vi.useRealTimers()
+  })
+})
+
+// The two round trips, and every claim here is about the half of them that is
+// not a roll: a trip has to *arrive*, on the look you set it going on, to the
+// digit, however long it has been running. That is what lets the away look be
+// three times a wander's step, and it is the whole difference between a mode you
+// can leave on all night and a walk you have to watch.
+describe('a round trip', () => {
+  const board = (mode: DriftMode) => {
+    const legs: Controls[] = []
+    let settled: Controls = DEFAULT_CONTROLS
+    const drift = makeDrift({
+      getSettled: () => settled,
+      land: (to: Controls) => {
+        legs.push(to)
+        settled = to
+      },
+      rand: rngFor(7),
+    })
+    return {
+      legs,
+      drift,
+      put: (next: Controls) => {
+        settled = next
+      },
+      scope: { ...BOARD, mode },
+    }
+  }
+
+  // The claim the mode is for. Every other leg is not "near" the anchor and not
+  // "pulled toward" it — it is the anchor, which is why a cycle is the one mode
+  // that cannot eat the look it was pointed at.
+  it('comes home to the look it set off from, exactly', () => {
+    vi.useFakeTimers()
+    for (const mode of ['cycle', 'tour'] as const) {
+      const b = board(mode)
+      b.drift.add(b.scope)
+      for (let i = 0; i < 9; i++) vi.advanceTimersByTime(DRIFT_SECONDS * 1000)
+      b.drift.stop()
+
+      // Out on the press, home on the next, and so on alternately.
+      expect(b.legs.length).toBe(10)
+      for (let i = 1; i < b.legs.length; i += 2) {
+        expect(b.legs[i], `${mode} leg ${i}`).toEqual(DEFAULT_CONTROLS)
+      }
+      for (let i = 0; i < b.legs.length; i += 2) {
+        expect(b.legs[i], `${mode} leg ${i}`).not.toEqual(DEFAULT_CONTROLS)
+      }
+    }
+    vi.useRealTimers()
+  })
+
+  // The one difference between the two modes.
+  it('keeps one far end on a cycle and rolls a fresh one on a tour', () => {
+    vi.useFakeTimers()
+    const held = board('cycle')
+    const fresh = board('tour')
+    for (const b of [held, fresh]) {
+      b.drift.add(b.scope)
+      for (let i = 0; i < 5; i++) vi.advanceTimersByTime(DRIFT_SECONDS * 1000)
+      b.drift.stop()
+    }
+
+    expect(held.legs[0]).toEqual(held.legs[2])
+    expect(held.legs[2]).toEqual(held.legs[4])
+    expect(fresh.legs[0]).not.toEqual(fresh.legs[2])
+    expect(fresh.legs[2]).not.toEqual(fresh.legs[4])
+    vi.useRealTimers()
+  })
+
+  // A trip has to be visible from stock, which is the case `CYCLE_WAKE` exists
+  // for: at the board's own `DRIFT_WAKE` a clean board would travel between two
+  // looks nobody could tell apart, because a trip has no compounding minute in
+  // which to find the rest of the rig.
+  it('travels further than a wander leg does, and further from stock', () => {
+    for (let seed = 1; seed <= 3; seed++) {
+      const away = cycleAway(DEFAULT_CONTROLS, SLIDERS, rngFor(seed))
+      const leg = driftLeg(
+        DEFAULT_CONTROLS,
+        DEFAULT_CONTROLS,
+        SLIDERS,
+        rngFor(seed),
+      )
+
+      expect(spread(away, DEFAULT_CONTROLS)).toBeGreaterThan(
+        spread(leg, DEFAULT_CONTROLS),
+      )
+      expect(widest(away, DEFAULT_CONTROLS)).toBeGreaterThan(0.05)
+    }
+  })
+
+  // Inherited from `mutate` by being one, and asserted because a trip runs for
+  // hours with nobody in the room — the same argument the wander's own copy of
+  // this test carries.
+  it('starts no strobe at either end', () => {
+    for (let seed = 1; seed <= 200; seed++) {
+      const away = cycleAway(DEFAULT_CONTROLS, SLIDERS, rngFor(seed), 1)
+      expect(away.strobeHz).toBe(0)
+      expect(away.clipHz).toBe(0)
+    }
+  })
+
+  // A far end is a nudge to a particular look, so a hand that replaces the look
+  // has to replace the far end too — otherwise the next trip out carries the
+  // board back to a look the hand has already thrown away.
+  it('re-tethers and re-rolls its far end when a hand moves the board', () => {
+    vi.useFakeTimers()
+    const b = board('cycle')
+    b.drift.add(b.scope)
+    const first = b.legs[0]
+
+    const elsewhere = mutate(DEFAULT_CONTROLS, SLIDERS, 0.4, rngFor(2), 1)
+    b.put(elsewhere)
+    for (let i = 0; i < 4; i++) vi.advanceTimersByTime(DRIFT_SECONDS * 1000)
+    b.drift.stop()
+
+    // Home is the hand's look now, and the trips out are rolled off it.
+    expect(b.legs[1]).toEqual(elsewhere)
+    expect(b.legs[3]).toEqual(elsewhere)
+    expect(b.legs[2]).not.toEqual(first)
+    expect(spread(b.legs[2], elsewhere)).toBeLessThan(
+      spread(b.legs[2], DEFAULT_CONTROLS),
+    )
+    vi.useRealTimers()
+  })
+
+  // Four hours of it. The wander's own long walk is here to show that it settles
+  // into a neighbourhood; this one is here to show that a trip has no
+  // neighbourhood to settle into, because it keeps arriving at the same place.
+  it(
+    'is still landing on the anchor after four hours',
+    () => {
+      vi.useFakeTimers()
+      const b = board('tour')
+      b.drift.add(b.scope)
+      for (let i = 0; i < 959; i++) {
+        vi.advanceTimersByTime(DRIFT_SECONDS * 1000)
+      }
+      b.drift.stop()
+
+      expect(b.legs.at(-1)).toEqual(DEFAULT_CONTROLS)
+      expect(spread(b.legs.at(-2)!, DEFAULT_CONTROLS)).toBeGreaterThan(0)
+      vi.useRealTimers()
+    },
+    LONG_WALK_MS,
+  )
+
+  // Picking a mode is a press, and a press has to answer. The walk cannot leave
+  // the old tether standing — its phase and its far end belong to the mode that
+  // is being replaced.
+  it('re-tethers a scope already running in another mode', () => {
+    vi.useFakeTimers()
+    const b = board('wander')
+    b.drift.add(b.scope)
+    expect(b.legs).toHaveLength(1)
+
+    b.drift.add({ ...b.scope, mode: 'cycle' })
+    expect(b.drift.running()).toEqual([DRIFT_BOARD])
+    expect(b.legs).toHaveLength(2)
+
+    // The new mode's first leg is a trip out, and it is tethered to the look the
+    // wander had left showing: that is where the mode was picked, so that is
+    // what every home leg after it lands on.
+    const away = b.legs[1]
+    vi.advanceTimersByTime(DRIFT_SECONDS * 1000)
+    expect(b.legs[2]).toEqual(b.legs[0])
+    vi.advanceTimersByTime(DRIFT_SECONDS * 1000)
+    expect(b.legs[3]).toEqual(away)
+
+    b.drift.stop()
     vi.useRealTimers()
   })
 })

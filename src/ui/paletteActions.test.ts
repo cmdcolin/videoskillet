@@ -29,6 +29,7 @@ const actions = () => {
     onCross: noop,
     drifting: false,
     onToggleDrift: noop,
+    onPickDriftMode: noop,
     onReset: noop,
     onUndo: noop,
     onRedo: noop,
