@@ -259,7 +259,7 @@
   border-radius: 4px;
   background: var(--surface);
   color: var(--fg3);
-  font-size: var(--fs-md);
+  font-size: var(--fs);
   line-height: 1.2;
   cursor: pointer;
 }
