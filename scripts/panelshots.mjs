@@ -94,7 +94,9 @@ const STATES = [
     name: 'controls',
     height: 640,
     what: 'slider rows — track, readout, badges, the ⋮ and the ? ',
-    open: ['Sound into'],
+    // Rows live inside a stage now; the section this used to unfold at rest is
+    // gone, and the state shot the folded panel under a missing-section fail.
+    stage: 'Receiver',
   },
   {
     name: 'modulated',

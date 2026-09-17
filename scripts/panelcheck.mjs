@@ -27,6 +27,10 @@
 //    was full, having just freed a slot in it
 //  - a routing could be removed but not held, so there was no way to hear the
 //    picture without one wobble and then have it back
+//  - an accidental `+ mod` could be removed only from the foot of the editor it
+//    unfolded or from the ⋮ menu, and undo could not take the claim back
+//  - removing a routing left the wires on its knobs patched, holding slots
+//  - `+ mod` on a full bay unfolded a note that no press could fold again
 //  - the stabs row reads what the gate is running at, and the freeze pins that
 //    at 0 — so with ❚❚ down the slider snapped back to 0 wherever it was
 //    dragged, wrote nothing to the engine, and said nothing about why
@@ -381,7 +385,7 @@ await phase(
     await run(`press(byTitle('sine LFO at')); return 0`)
     await settle(500)
     const editorUp = await run(`return {
-    open: byText('× remove') !== undefined,
+    open: byText('× remove from mix') !== undefined,
     holdable: document.body.innerText.includes('hold still'),
   }`)
     check(editorUp.open, 'the routing chip did not open the row editor')
@@ -390,11 +394,11 @@ await phase(
       'the row editor offers no way to hold the routing still',
     )
 
-    await run(`press(byText('× remove')); return 0`)
+    await run(`press(byText('× remove from mix')); return 0`)
     await settle(500)
     const afterRemove = await run(`return {
     busy: document.body.innerText.includes('modulation slots are busy'),
-    editor: byText('× remove') !== undefined,
+    editor: byText('× remove from mix') !== undefined,
   }`)
     check(!afterRemove.busy, 'remove left the row claiming every slot is busy')
     check(
@@ -403,6 +407,86 @@ await phase(
     )
   },
 )
+
+// --- a routing comes off from its own row, wires and all, and undo puts it back
+const WIRED_BAY = [
+  { ...OLD_BAY[0], on: true },
+  { target: 'bayRate1', source: 'walk', rateHz: 0.08, depth: 0.5, on: true },
+]
+const storedTargets = page =>
+  page.evaluate(() =>
+    JSON.parse(localStorage.getItem('video_feedback_mod') ?? '[]')
+      .map(s => s.target)
+      .filter(t => t !== ''),
+  )
+await phase('remove from the row', { seed: WIRED_BAY }, async page => {
+  const { run, settle } = runner(page)
+  await run(`press(strip()); return 0`)
+  await settle(500)
+  const removed = await run(
+    `const b = byTitle('remove the modulation from mix'); press(b); return b !== undefined`,
+  )
+  check(removed, 'a routed row carries no × to remove its routing')
+  await settle(1500)
+  const left = await storedTargets(page)
+  check(
+    left.length === 0,
+    `removing a routing left ${left} patched — a wire on its knob outlived it`,
+  )
+
+  await run(`press(byText('undo')); return 0`)
+  await settle(1500)
+  const back = await storedTargets(page)
+  check(
+    back.join() === 'fbMix,bayRate1',
+    `undo after removing a routing brought back ${back}`,
+  )
+})
+
+// --- a full bay says who holds it, and makes room for the row that asked -----
+const FULL_BAY = [
+  'fbMix',
+  'fbZoom',
+  'fbRotateDeg',
+  'fbShiftX',
+  'synthAHz',
+  'synthBHz',
+  'synthMix',
+  'synthLevel',
+].map(target => ({ target, source: 'sine', rateHz: 0.5, depth: 0.1 }))
+await phase('full bay', { seed: FULL_BAY }, async page => {
+  const { run, settle } = runner(page)
+  await run(`press(stage('Channel')); return 0`)
+  await settle(600)
+  const add = `[...document.querySelectorAll('button')]
+    .find(b => (b.getAttribute('aria-label') ?? '').startsWith('add modulation to'))`
+  const label = await run(
+    `const b = ${add}; press(b); return b?.getAttribute('aria-label') ?? null`,
+  )
+  check(label !== null, 'the Channel stage offered no + mod to press')
+  await settle(400)
+  const busy = () =>
+    run(`return document.body.innerText.includes('modulation slots are busy')`)
+  check(await busy(), '+ mod on a full bay did not say every slot is busy')
+
+  await run(`press(${add}); return 0`)
+  await settle(400)
+  check(!(await busy()), 'a second + mod press left the full-bay note up')
+
+  await run(`press(${add}); return 0`)
+  await settle(400)
+  const freed = await run(
+    `const b = byText('× mix'); press(b); return b !== undefined`,
+  )
+  check(freed, 'the full-bay note offers no × on the routings holding it')
+  await settle(1500)
+  const now = await storedTargets(page)
+  check(
+    !now.includes('fbMix') && now.length === 8,
+    `freeing mix from the full-bay note left the bay as ${now}`,
+  )
+  check(!(await busy()), 'the full-bay note stayed up after making room')
+})
 
 // --- the fps stat is read only while something is looking at it -------------
 // The loop reports the frame rate every fifteen frames and each report is a
