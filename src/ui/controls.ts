@@ -79,8 +79,11 @@ export interface SliderDef {
   // `{ span }` spreads that much of the control across the card at its own
   // step, for a control whose step is fine enough and whose track is not — loop
   // delay, where a pixel of track is hundreds of steps. Pick the span off the
-  // mechanism: a turn or two of hue, a roll slow enough to follow.
-  vernier?: true | { span: number }
+  // mechanism: a turn or two of hue, a roll slow enough to follow. `step` walks
+  // the card finer than the row, down to a hundredth of the row's step, which is
+  // what the wire carries (packed.ts); changing the row's own step would
+  // redecode every link that carries the control.
+  vernier?: true | { span: number; step?: number }
 }
 
 // The signal-path stages, in the order the panel's spine is browsed. A group
@@ -2225,7 +2228,8 @@ export const GROUPS: Group[] = [
         step: 0.05,
         redline: [0, 12],
         unit: 'us',
-        help: 'Multipath: a reflected copy of the broadcast arriving this many microseconds late. It shows as a displaced echo to the right of everything. The further away the reflecting building, the further out the ghost.',
+        vernier: { span: 0.56, step: 0.001 },
+        help: "Multipath: a reflected copy of the broadcast arriving this many microseconds late. It shows as a displaced echo to the right of everything. The further away the reflecting building, the further out the ghost. The reflection carries its own copy of the colour subcarrier, so every 70 ns of delay turns the ghost's hue 90° against the picture it lands on.",
       },
       {
         key: 'ghostGain',

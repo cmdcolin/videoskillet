@@ -119,7 +119,11 @@ describe('vernier', () => {
         if (s.vernier === undefined || s.vernier === true) continue
         expect(s.choices, s.key).toBeUndefined()
         expect(s.vernier.span, s.key).toBeLessThan(s.max - s.min)
-        const reach = reachOf({ ...s, span: s.vernier.span })
+        const step = s.vernier.step ?? s.step
+        expect(step, s.key).toBeLessThanOrEqual(s.step)
+        const cents = (step / s.step) * 100
+        expect(Math.abs(cents - Math.round(cents)), s.key).toBeLessThan(1e-9)
+        const reach = reachOf({ ...s, step, span: s.vernier.span })
         expect(reach, s.key).toBeGreaterThanOrEqual(20)
         expect(reach, s.key).toBeLessThanOrEqual(500)
       }

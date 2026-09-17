@@ -311,10 +311,13 @@ of loop delay is about 0.2 µs, over half a turn of hue, and its step is a
 nanosecond. The card spreads `span` of the control across its track at the
 control's own step, centred on the value and pushed inside the range. It
 recentres when it opens and when something else moves the value out of the
-window, and never during its own drag. Every value it writes is on the step
-grid, so the wire format does not change. Loop delay, both synth oscillators and
-the vertical oscillator carry one; choose `span` from the mechanism, such as a
-turn or two of hue or a roll slow enough to follow.
+window, and never during its own drag. `vernier: { span, step }` walks the card
+finer than the row, down to a hundredth of the row's step, which is the finest a
+packed link carries. Ghost delay needs that: its 50 ns step is 64° of the
+ghost's hue, and making the row's step finer would redecode every link that
+carries it. Loop delay, ghost delay, both synth oscillators and the vertical
+oscillator carry a window; choose `span` from the mechanism, such as a turn or
+two of hue or a roll slow enough to follow.
 
 Nothing in a miniature may run per frame — no `rAF`, no transitions or
 animations that recalc style each tick. The panel shares a main thread with a 60

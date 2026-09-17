@@ -296,7 +296,7 @@ const STEP_KEYS = new Set([
 //
 // In cents mode its whole width is one step of the control above, so a pixel
 // here is worth about a third of a cent where a pixel up there is worth a whole
-// step. In window mode its width is `span`, walked in the control's own steps.
+// step. In window mode its width is `span`, walked in the window's own step.
 // See vernier.ts for both.
 function Vernier(props: {
   id: string
@@ -306,17 +306,18 @@ function Vernier(props: {
   max: number
   step: number
   unit: string
-  span: number | undefined
+  spread: { span: number; step: number } | undefined
   value: number
   disabled: boolean
   onChange: (v: number) => void
   onOpenChange: (open: boolean) => void
 }) {
-  const span = props.span
+  const spread = props.spread
+  const span = spread?.span
   const win = {
     min: props.min,
     max: props.max,
-    step: props.step,
+    step: spread?.step ?? props.step,
     span: span ?? 0,
   }
   const [centre, setCentre] = useState(() => centreOf(win, props.value))
@@ -338,20 +339,18 @@ function Vernier(props: {
           lo: -reach,
           hi: reach,
           at: offsetOf(win, centre, props.value),
-          exact: formatValue(props.value, props.step),
+          exact: formatValue(props.value, win.step),
           middle: centre,
           write: (n: number) => atOffset(win, centre, n),
         }
   const offset =
     span === undefined
       ? `${card.at > 0 ? '+' : ''}${card.at}¢`
-      : `${signed(formatValue(card.at * props.step, props.step))}${props.unit}`
+      : `${signed(formatValue(card.at * win.step, win.step))}${props.unit}`
   const offsetChars =
     span === undefined
       ? 4
-      : formatValue(reach * props.step, props.step).length +
-        props.unit.length +
-        1
+      : formatValue(reach * win.step, win.step).length + props.unit.length + 1
   const fill: CSSProperties & Record<'--lo' | '--hi' | '--def', string> =
     cardFill(card.lo, card.hi, card.at)
   return (
@@ -481,7 +480,7 @@ export function Slider(props: {
   // The editor itself, rendered by the caller under the row.
   modEditor?: ReactNode
   // Offer the minor-adjustment card under the row. See vernier.ts.
-  vernier?: true | { span: number }
+  vernier?: true | { span: number; step?: number }
 }) {
   const inputId = useId()
   const [showHelp, setShowHelp] = useState(false)
@@ -608,7 +607,7 @@ export function Slider(props: {
                 ? 'hide the minor adjustment'
                 : vernier === true
                   ? `minor adjustment — trim ${props.label} in hundredths of a step`
-                  : `minor adjustment — ${props.label} across ${formatValue(vernier.span, props.step)}${props.unit}, one step at a time`
+                  : `minor adjustment — ${props.label} across ${formatValue(vernier.span, vernier.step ?? props.step)}${props.unit} in steps of ${formatValue(vernier.step ?? props.step, vernier.step ?? props.step)}${props.unit}`
             }
             className={cx(styles.what, showVernier && styles.whatOn)}
             aria-expanded={showVernier}
@@ -1020,7 +1019,11 @@ export function Slider(props: {
           max={props.max}
           step={props.step}
           unit={props.unit}
-          span={vernier === true ? undefined : vernier.span}
+          spread={
+            vernier === true
+              ? undefined
+              : { span: vernier.span, step: vernier.step ?? props.step }
+          }
           value={props.value}
           disabled={locked}
           onChange={props.onChange}

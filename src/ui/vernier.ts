@@ -67,8 +67,10 @@ export const atCents = (span: VernierSpan, value: number, cents: number) =>
 // pixel of the row is hundreds of steps and the step itself is already fine
 // enough. A pixel of `cfbDelayUs` on the docked panel is about 0.2 µs, over
 // half a turn of hue, and one step is a nanosecond. The card spreads `span` of
-// the control across its track at the control's own step, so every value it
-// writes is one the row could have written.
+// the control across its track at the control's own step, or at a finer one the
+// definition names. Ghost delay steps by 50 ns, 64° of the ghost's hue, so its
+// card walks in nanoseconds. A finer step has to be whole hundredths of the
+// row's, which is the finest the wire carries (packed.ts).
 //
 // The window centres on the value, pushed inside the control's range so the
 // card's whole width always reaches something. The card recentres when it opens

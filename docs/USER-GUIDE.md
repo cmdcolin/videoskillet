@@ -156,15 +156,16 @@ thousandth of zoom is the difference between a spiral that unwinds over a second
 and one that takes ten, and the card shows the value to that precision. The row
 keeps its own step and stays what a preset, a link or a MIDI knob writes.
 
-**Loop delay**, **osc A**, **osc B** and **vertical osc** carry a **minor**
-button too, with a card that works differently. Their tracks cover so much range
-that one pixel skips hundreds of values: a pixel of loop delay is over half a
-turn of hue, and a pixel of an oscillator near line rate is hundreds of hertz.
-Their card spreads a small window around the current value across its whole
-track: ±0.28 µs of loop delay, ±100 Hz of oscillator, ±2 Hz of vertical
-oscillator. The number at the right is the distance from the middle of the card,
-and a double-click on the card returns there. Moving the row past the edge of
-the window recentres the card on the new value.
+**Loop delay**, **ghost delay**, **osc A**, **osc B** and **vertical osc** carry
+a **minor** button too, with a card that works differently. Their tracks cover
+so much range that one pixel skips hundreds of values: a pixel of loop delay is
+over half a turn of hue, and a pixel of an oscillator near line rate is hundreds
+of hertz. Their card spreads a small window around the current value across its
+whole track: ±0.28 µs of either delay, ±100 Hz of oscillator, ±2 Hz of vertical
+oscillator. Ghost delay's card moves in nanoseconds, finer than its row, and
+shows the value to that precision. The number at the right is the distance from
+the middle of the card, and a double-click on the card returns there. Moving the
+row past the edge of the window recentres the card on the new value.
 
 The loops are the exception to working left to right. They take the picture off
 the end and put it back at the front, compounding everything else. Here is a

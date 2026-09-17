@@ -11,7 +11,7 @@ import {
   presetControls,
   randomPresetMix,
 } from './presets'
-import { atCents } from './vernier'
+import { atCents, atOffset, centreOf } from './vernier'
 
 import type { ControlKey, Controls } from '../core/controls'
 
@@ -117,6 +117,20 @@ describe('a look as bytes', () => {
     const trimmed = atCents(span, 1.064, -37)
     expect(trimmed).not.toBe(1.064)
     expect(round({ ...DEFAULT_CONTROLS, fbZoom: trimmed }).fbZoom).toBe(trimmed)
+  })
+
+  it('carries a ghost delay the window card left between two notches', () => {
+    const def = SLIDER_BY_KEY.get('ghostDelayUs')!
+    const step =
+      def.vernier === undefined || def.vernier === true
+        ? def.step
+        : (def.vernier.step ?? def.step)
+    const w = { ...def, step, span: 0.56 }
+    const trimmed = atOffset(w, centreOf(w, 2.4), 13)
+    expect(trimmed).toBe(2.413)
+    expect(
+      round({ ...DEFAULT_CONTROLS, ghostDelayUs: trimmed }).ghostDelayUs,
+    ).toBe(trimmed)
   })
 
   it('only carries what is off default', () => {
