@@ -4,13 +4,13 @@ import { pageSearch } from '../core/gpu/env'
 import { clamp01 } from '../core/math'
 import {
   DEFAULT_DUTY,
-  EMPTY_SLOT,
   gatePlan,
   gateRate,
   normalizeSlots,
   readStab,
   routingsToSlots,
   toEngineSlots,
+  unpatch,
   withNextStabSync,
   withNextSync,
 } from './modSlots'
@@ -218,12 +218,15 @@ export function useModSlots(
         // Blanked in place rather than removed: the slot number is the phase's
         // identity, and shuffling the bay to close a gap would restart every
         // routing below it.
-        if (at !== -1) commit(slots.map((s, j) => (j === at ? EMPTY_SLOT : s)))
+        const next = at === -1 ? slots : unpatch(slots, at)
+        const gone = new Set<string>([
+          key,
+          ...slots.flatMap((s, j) => (next[j] === s ? [] : [s.target])),
+        ])
+        if (next !== slots) commit(next)
         setEditingKeys(prev => {
-          if (!prev.has(key)) return prev
-          const next = new Set(prev)
-          next.delete(key)
-          return next
+          const kept = [...prev].filter(k => !gone.has(k))
+          return kept.length === prev.size ? prev : new Set(kept)
         })
         return
       }

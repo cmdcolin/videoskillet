@@ -218,6 +218,25 @@ export function bayDef(key: BayKey): BayTargetDef {
 export const bayDefFor = (t: ModTarget): BayTargetDef | undefined =>
   isBayKey(t) ? bayDef(t) : undefined
 
+// Blank slot `at`, and with it every routing wired onto one of its knobs, and
+// every routing wired onto theirs. A wire left on an emptied slot's knob holds a
+// slot of its own, and drives whatever routing is next patched into the empty
+// one.
+export function unpatch(slots: readonly UiSlot[], at: number): UiSlot[] {
+  const gone = new Set([at])
+  for (let grew = true; grew;) {
+    grew = false
+    slots.forEach((s, i) => {
+      const bay = s.target === '' ? undefined : bayDefFor(s.target)
+      if (bay !== undefined && gone.has(bay.slot) && !gone.has(i)) {
+        gone.add(i)
+        grew = true
+      }
+    })
+  }
+  return slots.map((s, i) => (gone.has(i) ? EMPTY_SLOT : s))
+}
+
 // What a routing is driving, named the way the bay names it. Every reader of a
 // slot's target has to be able to say this — the strip, the slot head, the
 // "who is holding the slots" note — and only some targets are sliders.

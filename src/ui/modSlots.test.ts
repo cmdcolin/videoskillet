@@ -27,6 +27,7 @@ import {
   slotsToRoutings,
   stabRate,
   toEngineSlots,
+  unpatch,
   withNextStabSync,
   withNextSync,
 } from './modSlots'
@@ -252,6 +253,35 @@ describe('routings', () => {
 // only thing the box can say about the bay while it is shut, so what counts is
 // worth pinning: everything holding a slot, plus the gate, which holds none and
 // is the most visible thing in here.
+describe('unpatch', () => {
+  it('takes the wires on a removed routing’s knobs with it, all the way down', () => {
+    const bay = normalizeSlots([
+      slot(),
+      slot({ target: 'bayRate1' }),
+      slot({ target: 'bayDepth2' }),
+      slot({ target: 'fbZoom' }),
+      slot({ target: 'bayDepth4' }),
+    ])
+    const out = unpatch(bay, 0)
+    expect(out.map(s => s.target)).toEqual([
+      '',
+      '',
+      '',
+      'fbZoom',
+      'bayDepth4',
+      '',
+      '',
+      '',
+    ])
+    expect(out[3]).toBe(bay[3])
+  })
+
+  it('leaves the routing a removed wire was driving', () => {
+    const bay = normalizeSlots([slot(), slot({ target: 'bayRate1' })])
+    expect(unpatch(bay, 1).map(s => s.target)[0]).toBe('fbMix')
+  })
+})
+
 describe('what the bay is holding', () => {
   const bay = (...some: UiSlot[]) => normalizeSlots(some)
   const GATE = { hz: 4, ms: 60 }
