@@ -1,3 +1,6 @@
+import { useEffect, useEffectEvent, useRef } from 'react'
+
+import { clamp } from '../core/math'
 import { cx } from './cx'
 import styles from './Scrub.module.css'
 
@@ -58,6 +61,65 @@ export function Scrub(props: {
       {props.meter}
       <span className={styles.scrubTime}>
         {clock(props.time)} / {clock(props.duration)}
+      </span>
+    </div>
+  )
+}
+
+// A running loop magnified to its own bar. It spans the loop exactly, so a drag
+// here never leaves the region and never drops the loop. The thumb reads the
+// element every frame, as Meter does: the 10 Hz poll scatters it on a short loop.
+export function LoopScrub(props: {
+  cue: { in: number; out: number }
+  readTime: () => number
+  onSeek: (time: number) => void
+}) {
+  const { in: from, out: to } = props.cue
+  const inputRef = useRef<HTMLInputElement>(null)
+  const posRef = useRef<HTMLSpanElement>(null)
+  const readTime = useEffectEvent(() => props.readTime())
+  const len = (to - from).toFixed(2)
+
+  useEffect(() => {
+    let id = 0
+    const tick = () => {
+      const t = clamp(readTime(), from, to)
+      const input = inputRef.current
+      if (input !== null) {
+        input.value = String(t)
+        input.style.setProperty(
+          '--p',
+          `${(((t - from) / (to - from)) * 100).toFixed(1)}%`,
+        )
+      }
+      const pos = posRef.current
+      if (pos !== null)
+        pos.textContent = (t - from).toFixed(2).padStart(len.length)
+      id = requestAnimationFrame(tick)
+    }
+    id = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(id)
+  }, [from, to, len])
+
+  const fill: CSSProperties & Record<'--p', string> = { '--p': '0%' }
+  return (
+    <div className={styles.scrubRow}>
+      <span className={styles.scrubTrack}>
+        <input
+          ref={inputRef}
+          type="range"
+          className={styles.scrub}
+          style={fill}
+          min={from}
+          max={to}
+          step="any"
+          defaultValue={from}
+          onChange={e => props.onSeek(Number(e.target.value))}
+        />
+        <span className={styles.cueSpan} style={{ left: 0, width: '100%' }} />
+      </span>
+      <span className={styles.loopTime}>
+        <span ref={posRef} /> / {len}
       </span>
     </div>
   )

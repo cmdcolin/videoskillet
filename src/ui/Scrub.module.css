@@ -84,6 +84,10 @@
   font-size: var(--fs-sm);
   font-variant-numeric: tabular-nums;
 }
+.loopTime {
+  composes: scrubTime;
+  white-space: pre;
+}
 /* The loop marks sit over the track, so the track needs to be something they can
    be positioned against. It takes the slider's flex sizing so the row lays out
    exactly as it did before there was anything drawn on it. */

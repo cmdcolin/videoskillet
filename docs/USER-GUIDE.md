@@ -83,7 +83,9 @@ opens it again — picking **File…** twice is how you swap one video for anoth
 
 Anything with a timeline gets a **cue** button: press to mark, again to loop, a
 third time to drop it. **⇤** stabs back to the cue without waiting for the lap.
-`i` and `o` do the same from the keyboard, `shift` puts them on B.
+`i` and `o` do the same from the keyboard, `shift` puts them on B. While a loop
+runs, a second bar under the cue buttons spans the loop alone, so a short loop
+on a long clip is wide enough to seek inside.
 
 **⏏ eject** clears a deck, whatever is in it: a clip, a camera, a test pattern,
 a text card. A falls back to snow, B stops summing, and what was there is

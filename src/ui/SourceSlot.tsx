@@ -1,8 +1,9 @@
 import { MODE_ORIGIN, isPoolMode } from '../sources/pools'
+import { cueLooping } from './cue'
 import { FileName, PickCaption, ReopenFile } from './FileName'
 import { MenuRow } from './MenuRow'
 import { RollRow } from './RollRow'
-import { CueRow, PlayRow, Scrub } from './Scrub'
+import { CueRow, LoopScrub, PlayRow, Scrub } from './Scrub'
 import { Slider } from './Slider'
 import { TeletypeRow } from './TeletypeRow'
 import ui from './ui.module.css'
@@ -224,6 +225,14 @@ export function SourceSlot<T extends SourceMode | SourceBMode>(props: {
             keys={cueKeys}
             wrapCost={slot.wrapCost}
           />
+          {/* Under the cue buttons, so closing a loop does not move them. */}
+          {cueLooping(slot.cue) ? (
+            <LoopScrub
+              cue={slot.cue}
+              readTime={slot.readTime}
+              onSeek={slot.seek}
+            />
+          ) : null}
           {/* Playback rate, and the pitch that falls with it — a property of
               this deck and nothing else, which is why it sits under this slot's
               own transport rather than in a "Vaporwave" section that named the

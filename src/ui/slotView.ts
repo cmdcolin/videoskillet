@@ -83,6 +83,8 @@ export interface SlotView<T extends SourceMode | SourceBMode> {
   // a still, a webcam — and everything below is off in that state.
   time: number
   duration: number
+  // The element's position when called, for a readout that moves every frame.
+  readTime: () => number
   seek: (time: number) => void
   // Whether the clip on this deck is rolling, or null for a source with no
   // timeline to hold — a pattern, a still, a webcam, a share. Three states
