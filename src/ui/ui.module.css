@@ -14,28 +14,16 @@
    module instead — this file is for the shared few, and it stays small on
    purpose. Tokens live in src/theme.css. */
 
-/* The two primitives other modules build on with `composes`, in a layer of
-   their own so the module that composes one always wins the tie. Both are
+/* The primitives other modules build on with `composes`, in a layer of
+   their own so the module that composes one always wins the tie. They are
    single-class rules, so without the layer the winner between `.bare`'s
    `font: inherit` and a local `font-size` would be decided by whichever
    stylesheet the bundler happened to emit second — the hazard .presetBtn below
    documents. An unlayered rule beats a layered one whatever the order, so a
    composing module can override any part of these without knowing they exist.
-   Nothing here is referenced as `ui.x` from a component; `composes` is how you
-   reach them.
 
-   What must NOT come in here: a primitive with a *lit* modifier. The segmented
-   toggle is the standing example — ToggleButtonGroup's .button/.on, the paint
-   tools, the teletype card's tabs are three copies of one face and one lit
-   state, and hoisting them looks like the same move. It is the opposite one.
-   The layer works for .bare because a caller only ever *adds* to it, so losing
-   every tie is exactly right; a lit modifier has to beat the face, and a face
-   the caller declares itself is unlayered, so `.chipOn { background }` down
-   here would lose to `.button { background }` up there and the toggle would
-   simply never light. Every one of those three declares its own background and
-   border, and one of them uses --fg where the others use --fg2, so composing
-   would mean stripping all three and changing how the paint tools read. They
-   share the tokens instead, which is where the retheme value was. */
+   A lit modifier stays out of the layer, or the composer's own face would
+   beat it. `button.filledOn` is the example. */
 @layer prim {
   /* A button that is a glyph or a word rather than a box: the ⋮ at the end of a
      control row, a revert, a fold. Written out twenty-odd times before this,
@@ -191,21 +179,66 @@
       transform: translate(-50%, -50%);
     }
   }
+
+  /* The filled button: segments, deck keys, dialog tabs. Its lit state,
+     `button.filledOn`, stays unlayered so it beats a composer's own colours. */
+  .filled {
+    background: var(--surface-raised);
+    color: var(--fg);
+    border: 1px solid var(--border);
+    border-radius: var(--ctl-radius);
+    font: inherit;
+    cursor: pointer;
+  }
+  .filled:hover:not(:disabled) {
+    border-color: var(--border-hover);
+  }
+  .filled:disabled {
+    opacity: 0.45;
+    cursor: default;
+  }
+
+  /* The outlined button: the masthead, the look bar, the section handles.
+     `.chromeBtn` below squares it for a glyph. */
+  .outline {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 1px 7px;
+    border: 1px solid var(--border-quiet);
+    border-radius: 4px;
+    background: var(--surface);
+    color: var(--fg3);
+    font: inherit;
+    font-size: var(--fs);
+    font-weight: 400;
+    letter-spacing: normal;
+    text-transform: none;
+    line-height: 1.2;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  .outline:hover:not(:disabled) {
+    border-color: var(--fg4);
+    color: var(--fg);
+  }
+  @media (pointer: coarse) {
+    .outline {
+      padding: 5px 9px;
+    }
+  }
 }
 
-/* buttons */
+button.filledOn {
+  color: var(--ctl-on-fg);
+  background: var(--ctl-on-bg);
+  border-color: var(--ctl-on-bg);
+}
 .btn {
-  background: var(--surface-raised);
-  color: var(--fg);
-  border: 1px solid var(--border);
-  border-radius: 3px;
+  composes: filled;
   padding: 4px 9px;
   margin: 2px 3px 2px 0;
-  font: inherit;
-  cursor: pointer;
-}
-.btn:hover {
-  border-color: var(--border-hover);
 }
 /* a .btn standing alone (dialog actions, close) rather than in a flowing row */
 .btnFlush {
@@ -242,32 +275,6 @@
   cursor: ew-resize;
 }
 
-/* The outlined button: the masthead's words, the look bar, the section
-   handles. `.chromeBtn` squares the same box for a glyph and keeps block
-   layout, so the icon sits in a text line box at the words' height. */
-.outline {
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 1px 7px;
-  border: 1px solid var(--border-quiet);
-  border-radius: 4px;
-  background: var(--surface);
-  color: var(--fg3);
-  font: inherit;
-  font-size: var(--fs);
-  font-weight: 400;
-  letter-spacing: normal;
-  text-transform: none;
-  line-height: 1.2;
-  white-space: nowrap;
-  cursor: pointer;
-}
-.outline:hover:not(:disabled) {
-  border-color: var(--fg4);
-  color: var(--fg);
-}
 .chromeBtn {
   composes: outline;
   display: inline-block;
@@ -278,9 +285,6 @@
   vertical-align: middle;
 }
 @media (pointer: coarse) {
-  .outline {
-    padding: 5px 9px;
-  }
   .chromeBtn {
     width: 30px;
     padding: 5px 0;

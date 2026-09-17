@@ -58,19 +58,11 @@
 }
 
 .btn {
+  composes: filled from '../ui/ui.module.css';
   height: var(--ctl-h);
   padding: 0 0.6rem;
-  background: var(--surface-raised);
-  color: var(--fg);
-  border: 1px solid var(--border-quiet);
-  border-radius: var(--ctl-radius);
-  font: inherit;
-  cursor: pointer;
 }
 
-.btn:hover {
-  border-color: var(--border-hover);
-}
 
 .pair {
   display: flex;
@@ -102,19 +94,13 @@
 }
 
 .pick {
+  composes: filled from '../ui/ui.module.css';
   height: var(--ctl-h);
   min-width: 10rem;
-  background: var(--surface-raised);
-  color: var(--fg);
-  border: 1px solid var(--border-quiet);
-  border-radius: var(--ctl-radius);
-  font: inherit;
-  cursor: pointer;
 }
 
 .pick:hover {
   background: var(--ctl-bg-hover);
-  border-color: var(--border-hover);
 }
 
 .keys {
@@ -185,29 +171,16 @@
   max-width: 640px;
 }
 
-.tag,
-.tagOn {
+.tag {
+  composes: filled from '../ui/ui.module.css';
   height: var(--ctl-h);
   padding: 0 0.5rem;
-  border: 1px solid var(--border-quiet);
-  border-radius: var(--ctl-radius);
-  background: var(--surface-raised);
   color: var(--fg2);
-  font: inherit;
-  cursor: pointer;
 }
 
 .tagOn {
-  background: var(--ctl-on-bg);
-  color: var(--ctl-on-fg);
-  border-color: var(--ctl-on-bg);
-}
-
-.tag:disabled,
-.tagOn:disabled,
-.pick:disabled {
-  opacity: 0.5;
-  cursor: default;
+  composes: tag;
+  composes: filledOn from '../ui/ui.module.css';
 }
 
 .link {

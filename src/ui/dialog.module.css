@@ -55,25 +55,12 @@
   margin-bottom: 10px;
 }
 .tab {
+  composes: filled from './ui.module.css';
   padding: 5px 14px;
-  background: var(--surface-raised);
   color: var(--fg2);
-  border: 1px solid var(--border);
-  border-radius: 3px;
-  /* The app's face. The card's *content* is block characters and wants
-     --mono-blocks (see .textArea and .chip); its tabs just say "Type" and
-     "Draw", and setting those in a drawing font made the tabs look like part
-     of the artwork. */
-  font: inherit;
-  cursor: pointer;
-}
-.tab:hover {
-  border-color: var(--border-hover);
 }
 .tabOn {
-  color: var(--ctl-on-fg);
-  background: var(--ctl-on-bg);
-  border-color: var(--ctl-on-bg);
+  composes: filledOn from './ui.module.css';
 }
 .cardRow {
   display: flex;

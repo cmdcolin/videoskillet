@@ -9,27 +9,18 @@
 /* Square and large: these are shapes being picked by their shape, and the
    block glyphs on them need room to be told apart at a glance. */
 .tool {
+  composes: filled from './ui.module.css';
   width: 34px;
   height: 34px;
   display: grid;
   place-items: center;
   overflow: hidden;
-  background: var(--surface-raised);
-  color: var(--fg);
-  border: 1px solid var(--border);
-  border-radius: 3px;
   font-family: var(--mono-blocks);
   font-size: 22px;
   line-height: 1;
-  cursor: pointer;
-}
-.tool:hover {
-  border-color: var(--border-hover);
 }
 .on {
-  color: var(--ctl-on-fg);
-  background: var(--ctl-on-bg);
-  border-color: var(--ctl-on-bg);
+  composes: filledOn from './ui.module.css';
 }
 .clear {
   margin-left: auto;

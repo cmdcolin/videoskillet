@@ -127,32 +127,18 @@
    Every button on the deck: the transport glyphs, cut and take. One face, so a
    row of them reads as a keyboard rather than as three kinds of button. */
 .deckBtn {
+  composes: filled from './ui.module.css';
   padding: 3px 6px;
   min-width: 24px;
-  /* The app's face, not the mono stack: min-width already keeps the row even,
-     so monospace was buying nothing and making the words on these keys (CUT,
-     TAKE) read as terminal output. */
-  font-family: inherit;
   font-size: var(--fs-xs);
   line-height: 1.2;
   color: var(--fg2);
-  background: var(--surface-raised);
-  border: 1px solid var(--border);
-  border-radius: var(--ctl-radius);
-  cursor: pointer;
 }
 .deckBtn:hover:not(:disabled) {
   color: var(--accent);
-  border-color: var(--border-hover);
-}
-.deckBtn:disabled {
-  opacity: 0.4;
-  cursor: default;
 }
 .deckBtnOn {
-  color: var(--ctl-on-fg);
-  background: var(--ctl-on-bg);
-  border-color: var(--ctl-on-bg);
+  composes: filledOn from './ui.module.css';
 }
 .deckBtnOn:hover:not(:disabled) {
   color: var(--ctl-on-fg);

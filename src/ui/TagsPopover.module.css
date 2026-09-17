@@ -34,26 +34,17 @@
 }
 
 .tag {
+  composes: filled from './ui.module.css';
   height: var(--ctl-h);
   padding: 0 0.5rem;
-  background: var(--surface-raised);
   color: var(--fg2);
-  border: 1px solid var(--border-quiet);
-  border-radius: var(--ctl-radius);
-  font: inherit;
-  cursor: pointer;
 }
 
-.tag:hover {
-  border-color: var(--border-hover);
-}
 
 /* The panel's own lit state, so a toggled tag reads the same as a toggled
    segment anywhere else in the app rather than inventing a second "on". */
 .tagOn {
-  background: var(--ctl-on-bg);
-  color: var(--ctl-on-fg);
-  border-color: var(--ctl-on-bg);
+  composes: filledOn from './ui.module.css';
 }
 
 /* One press commits, so the five sit as one strip with no gaps to aim between —
@@ -65,13 +56,10 @@
 }
 
 .rate {
+  composes: filled from './ui.module.css';
   flex: 1;
   height: var(--ctl-h);
-  background: var(--surface-raised);
-  color: var(--fg);
-  border: 1px solid var(--border-quiet);
-  font: inherit;
-  cursor: pointer;
+  border-radius: 0;
 }
 
 .rate:first-child {
@@ -82,20 +70,16 @@
   border-radius: 0 var(--ctl-radius) var(--ctl-radius) 0;
 }
 
-.rate:hover {
-  background: var(--ctl-on-bg);
+.rate:hover:not(:disabled) {
   color: var(--ctl-on-fg);
+  background: var(--ctl-on-bg);
   border-color: var(--ctl-on-bg);
 }
 
 .signIn {
+  composes: filled from './ui.module.css';
+  composes: filledOn from './ui.module.css';
   height: var(--ctl-h);
-  background: var(--ctl-on-bg);
-  color: var(--ctl-on-fg);
-  border: 1px solid var(--ctl-on-bg);
-  border-radius: var(--ctl-radius);
-  font: inherit;
-  cursor: pointer;
 }
 
 .note {

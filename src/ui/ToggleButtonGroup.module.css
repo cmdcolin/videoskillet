@@ -10,31 +10,17 @@
   margin: 0;
 }
 .button {
+  composes: filled from './ui.module.css';
   flex: 1;
   padding: 4px 5px;
-  /* The app's face, not the UA's and not the mono stack: these carry words
-     ("Off", "Comb", "Fast"), and a word set in monospace inside a panel of
-     sans-serif labels reads as a different kind of thing than it is. */
-  font-family: inherit;
   font-size: var(--fs-xs);
   color: var(--fg2);
-  background: var(--surface-raised);
-  border: 1px solid var(--border);
-  border-radius: 3px;
-  cursor: pointer;
 }
 .button:hover:not(:disabled) {
   color: var(--accent);
-  border-color: var(--border-hover);
-}
-.button:disabled {
-  opacity: 0.45;
-  cursor: default;
 }
 .on {
-  color: var(--ctl-on-fg);
-  background: var(--ctl-on-bg);
-  border-color: var(--ctl-on-bg);
+  composes: filledOn from './ui.module.css';
 }
 .on:hover:not(:disabled) {
   color: var(--ctl-on-fg);
