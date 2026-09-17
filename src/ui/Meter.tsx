@@ -25,7 +25,8 @@ export function Meter({
   const unlitRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    let id = requestAnimationFrame(function tick() {
+    let id = 0
+    const tick = () => {
       const el = unlitRef.current
       if (el !== null) {
         const lit = clamp01(audio.hit) * 100
@@ -37,7 +38,8 @@ export function Meter({
         }
       }
       id = requestAnimationFrame(tick)
-    })
+    }
+    id = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(id)
   }, [audio, orient])
 

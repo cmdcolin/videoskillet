@@ -7,13 +7,17 @@
 // and in this app the panel is one component (`App`) that builds ~200 control
 // rows, so a bailout there costs a re-render of all of them on every write.
 //
-// The known ways to trip it, both of which have happened here:
+// The known ways to trip it, all of which have happened here:
 //
 //   - reading a ref during render, including reading one *out of an object*,
 //     which marks the whole object as ref-ish (see the `{ engine, engineRef }`
 //     destructure in app.tsx);
 //   - writing a ref during render, which is what the "latest callback" pattern
-//     does if you reach for it.
+//     does if you reach for it;
+//   - a named function expression that calls itself, as in
+//     `let id = requestAnimationFrame(function tick() { … })`. The compiler
+//     reports "Expected value kind to be initialized". Declare `tick` as a
+//     const first and start the loop on the next line.
 //
 // Run: `pnpm compiler`. Add `--verbose` to list what was optimized rather than
 // only what was not.
@@ -33,31 +37,14 @@ const verbose = process.argv.includes('--verbose')
 // which is a choice somebody made rather than a fault.
 const FAILURES = new Set(['CompileError', 'PipelineError'])
 
-// Bailouts that predate this check, recorded so the gate could go in without a
-// refactor in front of it. Every line is something worth fixing rather than
-// something that is fine — but none of them is on the panel's hot path (`App`,
-// the control rows and the look bar all optimize), which is why they can wait.
-//
-// Two of them are ours and two are the compiler's:
-//
-//   - TeletypeDialog / useShortcuts read a ref during render, the exact fault
-//     app.tsx's `{ engine, engineRef }` comment warns about;
-//   - TeletypePaint writes locals after render, which is the paint surface
-//     accumulating strokes outside React;
-//   - Meter trips an internal invariant, and useVoteAuth uses `try/finally`,
-//     which the compiler does not lower yet. Both are upstream, so re-check
-//     them on a compiler upgrade rather than trying to satisfy them.
+// Bailouts the gate tolerates. useVoteAuth uses `try/finally`, which the
+// compiler does not lower yet; that one is upstream, so re-check it on a
+// compiler upgrade.
 //
 // Delete a line the moment its component compiles — the check says so when a
 // recorded bailout stops happening.
 const KNOWN = [
-  ['src/ui/Meter.tsx', 'Expected value kind to be initialized'],
-  ['src/ui/TeletypeDialog.tsx', 'Cannot access refs during render'],
-  ['src/ui/TeletypePaint.tsx', 'Cannot modify local variables after render'],
-  ['src/ui/TeletypePaint.tsx', 'Cannot modify local variables after render'],
-  ['src/ui/useShortcuts.ts', 'Cannot access refs during render'],
   ['src/vote/useVoteAuth.ts', 'Handle TryStatement with a finalizer'],
-  ['src/vote/VotePage.tsx', 'This value cannot be modified'],
 ]
 
 async function sources(dir) {
@@ -168,7 +155,7 @@ if (fresh.length > 0) {
   }
   console.error(
     '\nThis component loses memoization silently — nothing else in the build\n' +
-      'will tell you. See the header of scripts/compilercheck.mjs for the two\n' +
+      'will tell you. See the header of scripts/compilercheck.mjs for the\n' +
       'patterns that cause it.',
   )
   process.exit(1)

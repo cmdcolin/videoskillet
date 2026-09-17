@@ -217,10 +217,12 @@ function RoutingList(props: {
   })
 
   useEffect(() => {
-    let frame = requestAnimationFrame(function tick() {
+    let frame = 0
+    const tick = () => {
       draw()
       frame = requestAnimationFrame(tick)
-    })
+    }
+    frame = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(frame)
   }, [])
 

@@ -108,6 +108,8 @@ for (const check of [
   'pnpm lint',
   'pnpm sync:check',
   'pnpm format:check',
+  'pnpm compiler',
+  'pnpm typecheck',
   'pnpm test',
   'pnpm build',
 ]) {
