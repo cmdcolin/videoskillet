@@ -54,6 +54,7 @@ export function TagsPopover(props: {
   const signedIn = props.status === 'ready'
   return (
     <Popover
+      sheet="tags"
       onOpen={props.onOpen}
       trigger={attrs => (
         <button

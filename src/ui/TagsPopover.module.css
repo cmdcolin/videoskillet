@@ -15,6 +15,11 @@
   padding: 0.5rem;
   width: 20rem;
 }
+@media (orientation: portrait) and (max-width: 900px) {
+  .body {
+    width: auto;
+  }
+}
 
 .lead {
   margin: 0;
