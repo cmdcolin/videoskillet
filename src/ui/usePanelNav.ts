@@ -7,6 +7,7 @@ import {
   stageGroups,
 } from './controls'
 import {
+  readArray,
   readRecord,
   readStored,
   usePersistedString,
@@ -31,6 +32,10 @@ const OPEN_GROUPS_STORE = 'video_feedback_open_groups'
 // at mount and never written again — see `openGroupsFrom`, which is the only
 // thing that can say which stage it belonged to.
 const OPEN_GROUP_STORE = 'video_feedback_open_group'
+
+// Stages showing every group at once. Kept beside the single open group, so
+// leaving "all" returns to the group you were on.
+const ALL_GROUPS_STORE = 'video_feedback_all_groups'
 
 export type OpenGroups = Partial<Record<string, string>>
 
@@ -119,6 +124,18 @@ export function usePanelNav() {
     ),
   )
 
+  const [all, setAll] = useState<readonly string[]>(() =>
+    readArray<unknown>(ALL_GROUPS_STORE, []).filter(
+      (s): s is string => typeof s === 'string',
+    ),
+  )
+  const setAllIn = (stage: string, on: boolean) => {
+    const next = all.filter(s => s !== stage)
+    if (on) next.push(stage)
+    setAll(next)
+    writeJSON(ALL_GROUPS_STORE, next)
+  }
+
   const setGroupIn = (stage: string, name: string | null) => {
     const next: OpenGroups = { ...groups }
     if (name === null) delete next[stage]
@@ -136,8 +153,18 @@ export function usePanelNav() {
     groupIn: (stage: string) => groupOpenIn(groups, stage),
     openPhase,
     openAt,
-    toggleGroup: (stage: string, name: string) =>
-      setGroupIn(stage, groupOpenIn(groups, stage) === name ? null : name),
+    allIn: (stage: string) => all.includes(stage),
+    toggleAll: (stage: string) => setAllIn(stage, !all.includes(stage)),
+    // With every group open, a header click narrows the stage to that group:
+    // the single-open rule, applied from "all".
+    toggleGroup: (stage: string, name: string) => {
+      if (all.includes(stage)) {
+        setAllIn(stage, false)
+        setGroupIn(stage, name)
+      } else {
+        setGroupIn(stage, groupOpenIn(groups, stage) === name ? null : name)
+      }
+    },
     // Back to the map alone — what the × on the open stage's heading does, and
     // what Escape falls through to once it has nothing else to back out of.
     closePhase: () => setOpenPhase(null),

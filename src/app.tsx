@@ -1647,6 +1647,8 @@ export function App() {
         }}
         openGroup={nav.groupIn}
         onOpenGroup={nav.toggleGroup}
+        allGroups={nav.allIn}
+        onToggleAllGroups={nav.toggleAll}
         stageTop={stageTop}
         heldStage={heldStage}
         onHoldStock={holdStock}

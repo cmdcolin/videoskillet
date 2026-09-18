@@ -39,19 +39,26 @@ export function NestedSections(props: { children: ReactNode }) {
 // shared id, so opening a group folds its neighbours and the whole signal path
 // stays on screen. Structural, like NestedContext: a section is a member by
 // where it sits, not by every call site passing a matching pair of props.
+// `all` opens every member at once; a header click still reports its own id.
 const AccordionContext = createContext<{
   openId: string | null
+  all: boolean
   onToggle: (id: string) => void
 } | null>(null)
 
 export function Accordion(props: {
   openId: string | null
+  all?: boolean
   onToggle: (id: string) => void
   children: ReactNode
 }) {
   return (
     <AccordionContext
-      value={{ openId: props.openId, onToggle: props.onToggle }}
+      value={{
+        openId: props.openId,
+        all: props.all === true,
+        onToggle: props.onToggle,
+      }}
     >
       {props.children}
     </AccordionContext>
@@ -124,7 +131,10 @@ export function Section(props: {
       persistOpen(props.title, false)
     }
   }
-  const open = accordion === null ? selfOpen : accordion.openId === props.title
+  const open =
+    accordion === null
+      ? selfOpen
+      : accordion.all || accordion.openId === props.title
   const shown = (props.openOnFilter === true && filterActive(filter)) || open
   const toggle = () => {
     if (accordion === null) {

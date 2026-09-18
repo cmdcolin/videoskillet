@@ -242,6 +242,14 @@
   color: var(--edit-hi);
 }
 
+.stageAll {
+  composes: stageStock;
+  margin-left: auto;
+}
+.stageStock + .stageAll {
+  margin-left: 4px;
+}
+
 .stageClose {
   composes: bare tap from './ui.module.css';
   margin-left: auto;

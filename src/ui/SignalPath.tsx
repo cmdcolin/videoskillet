@@ -120,6 +120,9 @@ function StageHead(props: {
   // the two boxes wired to nothing, whose rows are not this stage's controls
   // (see `holdable`).
   stock?: StageStock
+  // The switch between one group at a time and all of them, on a stage made of
+  // more than one group.
+  all?: { on: boolean; onToggle: () => void }
 }) {
   const { node } = props
   const stock = props.stock
@@ -183,6 +186,20 @@ function StageHead(props: {
             }}
           >
             at stock
+          </button>
+        )}
+        {props.all === undefined ? null : (
+          <button
+            className={cx(styles.stageAll, props.all.on && styles.stageStockOn)}
+            aria-pressed={props.all.on}
+            title={
+              props.all.on
+                ? `every group in ${node.name} is open — click to go back to one at a time, or click a group's header to keep only that one`
+                : `open every group in ${node.name} at once`
+            }
+            onClick={props.all.onToggle}
+          >
+            all
           </button>
         )}
         {props.onClose === undefined ? null : (
@@ -280,6 +297,9 @@ export function SignalPath(props: {
   // to it land on the row you left rather than on its first group.
   openGroup: (stage: string) => string | null
   onOpenGroup: (stage: string, name: string) => void
+  // Whether a stage shows every group at once, and the switch for it.
+  allGroups: (stage: string) => boolean
+  onToggleAllGroups: (stage: string) => void
   // What heads a stage, above its groups: the picker that decides what feeds it.
   // Keyed by stage name, and the three keys are three of the boxes the map
   // already draws — Source A, Source B, Sound — which is the whole reason these
@@ -478,6 +498,14 @@ export function SignalPath(props: {
                 props.expandAll ? undefined : () => props.onOpen(node.name)
               }
               stock={stockFor(node)}
+              all={
+                props.expandAll || body.groups.length < 2
+                  ? undefined
+                  : {
+                      on: props.allGroups(node.name),
+                      onToggle: () => props.onToggleAllGroups(node.name),
+                    }
+              }
             />
             {/* The picker first, because it is what the rest of the stage is
                 downstream of. */}
@@ -488,6 +516,7 @@ export function SignalPath(props: {
               <NestedSections>
                 <Accordion
                   openId={props.openGroup(node.name)}
+                  all={props.allGroups(node.name)}
                   onToggle={name => props.onOpenGroup(node.name, name)}
                 >
                   {body.groups.map(group => (
