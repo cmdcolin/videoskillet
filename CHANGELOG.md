@@ -2,6 +2,18 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [2.2.1](https://github.com/cmdcolin/videoskillet/compare/v2.2.0...v2.2.1) - 2026-09-18
+
+### Features
+- *(ui)* [`474567e`](https://github.com/cmdcolin/videoskillet/commit/474567ec147bdfea8829e48aa0603e877d6eef95) an 'all' switch on each stage opens every group at once
+- *(ui)* [`28d743a`](https://github.com/cmdcolin/videoskillet/commit/28d743af7cc9c921ce1f5d681a6873aaa5bf361c) captions can come from the Wikipedia article on the picture
+
+### Fixes
+- *(ui)* [`58b9861`](https://github.com/cmdcolin/videoskillet/commit/58b98612a07489b9febf84a30bdb16118caa22d1) restore cursor on the midi card's close to match bender
+
+### Documentation
+- *(ui)* [`c7b6a74`](https://github.com/cmdcolin/videoskillet/commit/c7b6a74e9a34258e36593ac87e6c3f8974c00f18) A gain help leads with the dirty-sum requirement
+
 ## [2.2.0](https://github.com/cmdcolin/videoskillet/compare/v2.1.6...v2.2.0) - 2026-09-18
 
 ### Features
