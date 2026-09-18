@@ -76,6 +76,11 @@ const DRIVER_ROUTING = {
   depth: 0.5,
 }
 
+// A notch of the rate row is 0.02Hz, a quarter of the 0.08Hz drift a claimed
+// row starts at. The card spreads half a hertz at a thousandth, which is fine
+// enough to set a slow beat against the frame rate or another slot.
+const RATE_VERNIER = { span: 0.5, step: 0.001 }
+
 // The depth a knob's ↺ puts back, which depends on what the slot drives: the
 // control's own budget, or the driver depth a wire onto a wire is claimed at.
 const knobStock = (target: UiSlot['target']) =>
@@ -105,6 +110,7 @@ function KnobRow(props: { i: number; slot: UiSlot; field: BayField }) {
       min={rate ? RATE_MIN : 0}
       max={rate ? RATE_MAX : 1}
       step={rate ? 0.02 : 0.01}
+      vernier={rate ? RATE_VERNIER : undefined}
       // Tempo's business while ♩ is set; the dialed Hz stays put underneath and
       // comes back when the lock cycles off.
       value={rate ? slotRate(s, mod.bpm) : s.depth}

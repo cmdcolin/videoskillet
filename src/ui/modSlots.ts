@@ -566,7 +566,7 @@ export const withNextSync = (slot: UiSlot): UiSlot => withNextDivision(slot)
 
 // One rate, as a row says it: two decimals at the drift end of the range, no
 // trailing zeros at the buzz end.
-const hzText = (hz: number) => `${Number(hz.toFixed(2))}Hz`
+const hzText = (hz: number) => `${Number(hz.toFixed(3))}Hz`
 
 // Everything a routed row shows about the routing on it, built in one place for
 // the two kinds of row that can hold one — a control, and one of the bay's own
