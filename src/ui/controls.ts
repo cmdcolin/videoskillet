@@ -1271,7 +1271,7 @@ export const GROUPS: Group[] = [
         unit: 'x',
         // Not a trim: it is one of the two faders this stage exists to be, and
         // the disclosure it was folded into is gone with B's proc-amp trio.
-        help: "A's own level on the summing bus (dirty path only). 1 is full program. Pull it down to fade A out under B for a manual crossfade, or take it negative to invert A into a difference key that cancels against B. Does nothing on the genlocked clean-dissolve path, where A is implied by (1 − B gain).",
+        help: 'A\'s level on the summing bus. Works only with genlock on "dirty sum". The clean dissolve sets A to (1 − B gain), so B gain is the only fader there and this control does nothing. On the dirty sum, 1 is full program: pull it down to fade A out under B, or take it negative to invert A into a difference key that cancels against B.',
       },
       {
         key: 'bGain',
