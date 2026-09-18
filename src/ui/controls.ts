@@ -1187,6 +1187,17 @@ export const GROUPS: Group[] = [
         help: "The loop's frame store read out at a clock this far off the one it was written at. A store re-triggers its readout on the output's line sync, so the error starts again every line rather than accumulating down the frame. The picture is stretched or squeezed sideways from the line start, and past the end of a line the read runs into the store's next one. It is a colour control because the subcarrier is in the samples being re-clocked. A thousandth off, and the carrier comes back a thousandth off the lattice the decoder measures against, so hue turns further the further a sample sits from the line start: eighty degrees by the right-hand edge. Each lap re-clocks what the last one wrote, so the fan opens wider every generation. A lens or a delay moves a picture without moving its carrier; this moves both.",
       },
       {
+        key: 'cfbNoiseIre',
+        id: 292,
+        label: 'loop noise',
+        min: 0,
+        max: 10,
+        step: 0.01,
+        vernier: { span: 0.5, step: 0.0005 },
+        unit: 'IRE',
+        help: "The loop amplifier's own noise floor, added to the return on every lap. The noise goes round the loop with the picture, so each generation carries every earlier generation's noise, scaled by the loop gain. Below unity it builds to a steady grain. Near or above unity even a fraction of an IRE is enough to seed structure: the resonance, the ring modulator and the keyer each amplify whatever they are handed, and here they are handed something new every frame. The noise is on the composite wire, so the part of it in the chroma band is decoded as colour.",
+      },
+      {
         key: 'cfbGenlock',
         id: 279,
         label: 'frame sync on the return',
@@ -4056,6 +4067,7 @@ export const NEEDS: Partial<Record<ControlKey, SliderNeed>> = {
   },
   cfbReturn: cfb,
   cfbClockPct: cfb,
+  cfbNoiseIre: cfb,
   cfbGenlock: cfb,
   cfbRingSrc: {
     key: 'cfbRing',

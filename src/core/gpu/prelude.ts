@@ -360,6 +360,7 @@ export const PARAM_DEFS = [
   ['cfbCarrierPerSample', 'f32'], // its phase growth per sample, radians (the detune)
   ['cfbReturn', 'f32'], // Y/C split on the return: 0 composite, 1 loop's chroma, 2 loop's luma
   ['cfbClock', 'f32'], // frame store read-clock error, as a fraction of the write clock
+  ['cfbNoise', 'f32'], // loop amplifier noise added to the return each lap, IRE rms
   // A frame synchronizer on the loop return instead of a bare cable. A store
   // genlocked to house reference writes its own sync and burst on the way out,
   // so what circulates is picture and the raster it lands on is this frame's.

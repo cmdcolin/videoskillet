@@ -326,6 +326,7 @@ export function uniformValues(c: Controls, env: UniformEnv) {
     cfbCarrierPerSample: loRadPerSample(c.cfbCarrierKHz),
     cfbReturn: c.cfbReturn,
     cfbClock: c.cfbClockPct * 0.01,
+    cfbNoise: c.cfbNoiseIre,
     cfbGenlock: c.cfbGenlock,
     // Mistuning frees the sound carrier from its trap, so the buzz the
     // soundIre knob dials in deliberately arrives uninvited — same term,

@@ -247,6 +247,12 @@ fn main(
     py = py * 0.25;
     fb = select(ry + (prog[n] - py), py + (fb - ry), P.cfbReturn < 1.5);
   }
+  if (P.cfbNoise > 0.0) {
+    // The loop amplifier's noise floor. It goes round with the picture, so
+    // each lap adds fresh noise to all the noise before it, and the loop's own
+    // gain, resonance and multiplier work on it as they would on any signal.
+    fb = fb + P.cfbNoise * gauss(n ^ pcg(P.frame * 2654435761u + 0x5eedu));
+  }
   if (resonating) {
     fb = fb + P.cfbFilterBoost * loopResonance(pos);
   }
