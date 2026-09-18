@@ -114,11 +114,66 @@ export const rollPool = (
     // archive.org, as this app reads it, holds footage, so there is nothing
     // there for a kind to pick between.
     kind?: PickKind
+    // Confine the roll to one pool, named by its label (`presetsOf`).
+    topic?: string
   } = {},
 ): Promise<PoolPick> =>
   origin === 'commons'
-    ? rollCommons(opts.avoid, opts.rand, opts.kind)
-    : rollArchive(opts.avoid, opts.onProgress, opts.rand)
+    ? rollCommons(opts.avoid, opts.rand, opts.kind, opts.topic)
+    : rollArchive(opts.avoid, opts.onProgress, opts.rand, opts.topic)
+
+// What a deck's roll draws from: a kind, one pool, or neither.
+export interface RollAim {
+  kind?: PickKind
+  topic?: string
+}
+
+// One entry in a deck's topic picker (ui/FeedRow.tsx).
+export interface RollTopic {
+  value: string
+  label: string
+  group: string | null
+  aim: RollAim
+}
+
+const ANYTHING: RollTopic = {
+  value: 'any',
+  label: 'Anything',
+  group: null,
+  aim: {},
+}
+
+const COMMONS_TOPICS: readonly RollTopic[] = [
+  ANYTHING,
+  {
+    value: 'any photo',
+    label: 'Any photo',
+    group: null,
+    aim: { kind: 'photo' },
+  },
+  { value: 'any clip', label: 'Any clip', group: null, aim: { kind: 'video' } },
+  ...COMMONS_POOLS.map(pool => ({
+    value: pool.label,
+    label: pool.label,
+    group: pool.kind === 'photo' ? 'Photos' : 'Clips',
+    aim: { topic: pool.label },
+  })),
+]
+
+const ARCHIVE_TOPICS: readonly RollTopic[] = [
+  ANYTHING,
+  ...ARCHIVE_POOLS.map(pool => ({
+    value: pool.label,
+    label: pool.label,
+    group: 'Collections',
+    aim: { topic: pool.label },
+  })),
+]
+
+export const rollTopicsOf = (origin: PoolOrigin): readonly RollTopic[] =>
+  origin === 'commons' ? COMMONS_TOPICS : ARCHIVE_TOPICS
+
+export const ANY_TOPIC = ANYTHING
 
 // One named file, resolved back into something playable. This is what a shelf
 // entry is worth: both sources keep an identity rather than a url, and both can

@@ -16,6 +16,7 @@ import { clipUrl, isClipId } from '../sources/clips'
 import { clipLabel } from '../sources/clipUrl'
 import { smpteBars, sweep } from '../sources/pattern'
 import {
+  ANY_TOPIC,
   MODE_ORIGIN,
   POOL_MODE_FOR,
   isPoolMode,
@@ -38,6 +39,7 @@ import {
   wrapCostMs,
   tapCue,
 } from './cue'
+import { FEED_DEFAULT, useFeedTimer } from './feed'
 import {
   clearStash,
   readStash,
@@ -86,15 +88,17 @@ import type { Rand } from '../core/rng'
 import type { SharedMode, SourceBMode, SourceMode } from '../sources/modes'
 import type {
   OnProgress,
-  PickKind,
   PoolMode,
   PoolOrigin,
   PoolPick,
   PoolRef,
+  RollAim,
+  RollTopic,
 } from '../sources/pools'
 import type { TeletypeCard } from '../sources/teletype'
 import type { Cue, CueEdge } from './cue'
 import type { Fatal } from './FatalScreen'
+import type { FeedSettings } from './feed'
 import type { StashSlot, Stashed } from './fileStash'
 import type { PickedFileHandle } from './fsAccess'
 import type { SlotView } from './slotView'
@@ -488,6 +492,11 @@ export function useEngine(args: { rand: Rand }) {
     a: null,
     b: null,
   })
+  // Each deck's feed: the topic it rolls from and whether it advances on a
+  // timer (ui/feed.ts). `rolling` is whether a roll is out, which is what the
+  // timer waits on.
+  const [feed, setFeed] = useState({ a: FEED_DEFAULT, b: FEED_DEFAULT })
+  const [rolling, setRolling] = useState({ a: false, b: false })
   const [card, setCardState] = useState({
     a: TELETYPE_DEFAULT,
     b: TELETYPE_DEFAULT,
@@ -1035,6 +1044,7 @@ export function useEngine(args: { rand: Rand }) {
   const beginLoad = (key: StashSlot): (() => boolean) => {
     const seq = (loadSeq.current[key] += 1)
     setPick(key, null)
+    setRolling(onDeck(key, false))
     prompt.dismiss()
     waiting.current[key] = seq
     return () => loadSeq.current[key] === seq
@@ -1220,7 +1230,7 @@ export function useEngine(args: { rand: Rand }) {
         },
       )
     else if (isClipId(mode)) playUrl(slot, clipUrl(mode))
-    else if (isPoolMode(mode)) rollFrom(slot, mode)
+    else if (isPoolMode(mode)) rollFrom(slot, mode, aimOn(slot.id, mode))
   }
 
   // A pool pick onto a slot: the caption, the subject of the ★, and then the
@@ -1295,13 +1305,14 @@ export function useEngine(args: { rand: Rand }) {
   // roll (the picker, the palette, a MIDI pad), and the take's own generator
   // when a row fires. See rng.ts — and note what a seed does not buy, since the
   // candidate list is upstream's choice either way.
-  // `kind` is the deck's own roll buttons asking for a still or for a clip;
-  // undefined is the mixed roll every other caller wants.
+  // `aim` narrows the roll to a kind or to one pool: the deck's feed topic for
+  // a hand-driven roll, and nothing for a strip row, whose seed has to walk the
+  // same decisions whatever the deck's topic is.
   const rollFrom = (
     slot: VideoSlot,
     mode: PoolMode,
+    aim: RollAim,
     rand?: Rand,
-    kind?: PickKind,
   ) => {
     const origin = MODE_ORIGIN[mode]
     // Read before `beginLoad` clears it: what is on the slot right now is what a
@@ -1311,16 +1322,22 @@ export function useEngine(args: { rand: Rand }) {
     const showing = pickRef.current[slot.id]
     const avoid = showing?.origin === origin ? showing.title : ''
     const fresh = beginLoad(slot.id)
+    setRolling(onDeck(slot.id, true))
     slot.setName('rolling…')
     rollPool(origin, {
       avoid,
       onProgress: downloading(slot, fresh),
       rand,
-      kind,
+      kind: aim.kind,
+      topic: aim.topic,
     }).then(
-      picked => landPick(slot, picked, fresh),
+      picked => {
+        if (fresh()) setRolling(onDeck(slot.id, false))
+        landPick(slot, picked, fresh)
+      },
       (e: unknown) => {
         if (fresh()) {
+          setRolling(onDeck(slot.id, false))
           slot.setName('')
           setError(`${origin}: ${reason(e)}`)
         }
@@ -1328,27 +1345,59 @@ export function useEngine(args: { rand: Rand }) {
     )
   }
 
+  const aimOn = (key: StashSlot, mode: PoolMode) =>
+    feed[key].topic[MODE_ORIGIN[mode]].aim
+
   // Another file out of whichever deck is on a channel, for hands that are not on
   // the sidebar — the command palette's row, and the keyboard through it. A wins
   // when both are rolling, since A is the picture; a set with a channel on B
   // alone still gets the command.
   const rollAgain = (rand?: Rand) => {
-    if (isPoolMode(sourceMode.a)) rollFrom(slotA, sourceMode.a, rand)
-    else if (isPoolMode(sourceMode.b)) rollFrom(slotB, sourceMode.b, rand)
+    if (isPoolMode(sourceMode.a))
+      rollFrom(slotA, sourceMode.a, aimOn('a', sourceMode.a), rand)
+    else if (isPoolMode(sourceMode.b))
+      rollFrom(slotB, sourceMode.b, aimOn('b', sourceMode.b), rand)
   }
 
-  // The roll buttons under one deck's caption. Named per deck rather than
-  // reading whichever is on a pool the way `rollAgain` does: these buttons are
-  // drawn under the deck they belong to, and with both decks on a channel the
-  // one you clicked is the one that has to move.
+  // One deck's feed advancing: its next button, or its timer. Named per deck
+  // rather than reading whichever is on a pool the way `rollAgain` does, since
+  // with both decks on a feed the one that moves has to be the one asked.
   //
-  // Silently nothing when that deck is elsewhere, which is unreachable from the
-  // panel — the row is only drawn on a pool mode — and is the honest answer for
-  // a stale click that arrives after the picker moved on.
-  const rollKindOn = (key: StashSlot, kind?: PickKind) => {
+  // Silently nothing when that deck is elsewhere, which is the honest answer
+  // for a stale click or a timer that fires after the picker moved on.
+  const advanceOn = (key: StashSlot) => {
     const mode = key === 'a' ? sourceMode.a : sourceMode.b
-    if (isPoolMode(mode)) rollFrom(slotOf(key), mode, undefined, kind)
+    if (isPoolMode(mode)) rollFrom(slotOf(key), mode, aimOn(key, mode))
   }
+
+  // A new topic takes effect at once: the file on the deck came from the old
+  // one, so it is replaced rather than left up until the next advance.
+  const chooseTopicOn = (key: StashSlot, origin: PoolOrigin, t: RollTopic) => {
+    const next = {
+      ...feed[key],
+      topic: { ...feed[key].topic, [origin]: t },
+    }
+    setFeed(onDeck(key, next))
+    const mode = key === 'a' ? sourceMode.a : sourceMode.b
+    if (isPoolMode(mode) && MODE_ORIGIN[mode] === origin)
+      rollFrom(slotOf(key), mode, t.aim)
+  }
+
+  const retimeOn = (key: StashSlot, patch: Partial<FeedSettings>) =>
+    setFeed(f => onDeck(key, { ...f[key], ...patch })(f))
+
+  useFeedTimer({
+    on: feed.a.auto && isPoolMode(sourceMode.a),
+    every: feed.a.every,
+    rolling: rolling.a,
+    advance: () => advanceOn('a'),
+  })
+  useFeedTimer({
+    on: feed.b.auto && isPoolMode(sourceMode.b),
+    every: feed.b.every,
+    rolling: rolling.b,
+    advance: () => advanceOn('b'),
+  })
 
   // A strip row's roll, which differs from `rollAgain` in naming the pool rather
   // than reading it off whichever deck happens to be on one: the row said
@@ -1358,7 +1407,7 @@ export function useEngine(args: { rand: Rand }) {
   const rollOn = (origin: PoolOrigin, rand: Rand) => {
     const mode = POOL_MODE_FOR[origin]
     setSourceMode(m => ({ ...m, a: mode }))
-    rollFrom(slotA, mode, rand)
+    rollFrom(slotA, mode, ANY_TOPIC.aim, rand)
   }
 
   // A strip row's lookahead: load what the next row will want onto deck A's
@@ -2777,7 +2826,11 @@ export function useEngine(args: { rand: Rand }) {
       speed: speed.a,
       changeSpeed: r => changeSpeed('a', r),
       pick: pick.a,
-      roll: kind => rollKindOn('a', kind),
+      feed: feed.a,
+      rolling: rolling.a,
+      advance: () => advanceOn('a'),
+      chooseTopic: (origin, t) => chooseTopicOn('a', origin, t),
+      retime: patch => retimeOn('a', patch),
     } satisfies SlotView<SourceMode>,
     b: {
       key: 'b',
@@ -2814,7 +2867,11 @@ export function useEngine(args: { rand: Rand }) {
       speed: speed.b,
       changeSpeed: r => changeSpeed('b', r),
       pick: pick.b,
-      roll: kind => rollKindOn('b', kind),
+      feed: feed.b,
+      rolling: rolling.b,
+      advance: () => advanceOn('b'),
+      chooseTopic: (origin, t) => chooseTopicOn('b', origin, t),
+      retime: patch => retimeOn('b', patch),
     } satisfies SlotView<SourceBMode>,
     // Which source dialog is open, for which deck, and the two verbs that move
     // it (useSourcePrompt.ts). One object rather than five ask/setAsk pairs, and

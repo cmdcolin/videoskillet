@@ -44,8 +44,8 @@ export function ReopenFile({
 // component's memoization, and only `pnpm compiler` says so.
 export function FileName(props: {
   name: string
-  // Null where the name is only a name. That is a pool pick: the roll lives on
-  // its own buttons under this line (RollRow.tsx), and a caption that quietly
+  // Null where the name is only a name. That is a pool pick: the next file comes
+  // from the feed row under this line (FeedRow.tsx), and a caption that quietly
   // rolled when clicked was asking a reader to guess that the name of a
   // photograph is the way to a different photograph.
   onReopen: (() => void) | null

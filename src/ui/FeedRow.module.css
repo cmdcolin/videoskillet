@@ -1,0 +1,52 @@
+/* The feed controls under a deck on a public archive (FeedRow.tsx). Indented to
+   the 19px the caption above it uses — the tag's 13px plus the row's 6px gap —
+   so the name of the file and the controls that replace it read as one block. */
+.feed {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0 0 5px 19px;
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.topic {
+  font-size: var(--fs-xs);
+}
+/* The deck's button, at the deck's size, matching the cue row in
+   Scrub.module.css and the transport stops in Deck.module.css. */
+.btn {
+  padding: 2px 6px;
+  font-family: inherit;
+  font-size: var(--fs-xs);
+  line-height: 1.2;
+  color: var(--fg2);
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--ctl-radius);
+}
+.btn:hover:enabled {
+  color: var(--accent);
+  border-color: var(--border-hover);
+}
+.btn:disabled {
+  color: var(--fg4);
+}
+.btnOn {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.every {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--fs-xs);
+  color: var(--fg3);
+}
+.seconds {
+  width: 4.5em;
+  font: inherit;
+  font-family: var(--mono);
+}

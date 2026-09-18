@@ -71,8 +71,8 @@
   min-width: 0;
   margin: 0;
 }
-/* The same caption where there is nothing to click: a pool pick, whose roll is
-   on its own buttons below (RollRow.tsx). A <span>, so it neither takes focus
+/* The same caption where there is nothing to click: a pool pick, whose next
+   file comes from the feed row below (FeedRow.tsx). A <span>, so it neither takes focus
    nor lights under the pointer offering something it does not do. */
 .fileCaptionPlain {
   composes: fileCaption;

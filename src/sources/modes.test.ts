@@ -11,7 +11,13 @@ import {
   SOURCE_MODES,
   sourceOptions,
 } from './modes'
-import { MODE_ORIGIN, POOL_MODE_FOR, POOL_MODES } from './pools'
+import {
+  MODE_ORIGIN,
+  POOL_MODE_FOR,
+  POOL_MODES,
+  presetsOf,
+  rollTopicsOf,
+} from './pools'
 
 import type { SourceBMode, SourceKind, SourceMode } from './modes'
 
@@ -142,4 +148,17 @@ describe('the shipped mode lists', () => {
       expect(SOURCE_DESC[mode]).toBeTruthy()
     }
   })
+})
+
+describe('feed topics', () => {
+  it.each(['commons', 'archive'] as const)(
+    'names only pools that %s has, each once',
+    origin => {
+      const topics = rollTopicsOf(origin)
+      const labels = new Set(presetsOf(origin).map(p => p.label))
+      for (const t of topics)
+        if (t.aim.topic !== undefined) expect(labels).toContain(t.aim.topic)
+      expect(new Set(topics.map(t => t.value)).size).toBe(topics.length)
+    },
+  )
 })

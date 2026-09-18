@@ -361,15 +361,21 @@ export const rollPlan = <T>(pools: readonly T[], start: number): T[] =>
 // alongside its seed (docs/EDITOR.md › _Seeding_) rather than trusting the seed
 // to regenerate the pick: the seed reproduces the *decisions*, the ref
 // reproduces the *file*.
+//
+// `topic` names one pool by its label and confines the roll to it, which is
+// what a deck's topic picker asks for (ui/FeedRow.tsx).
 export async function rollCommons(
   avoid = '',
   rand: Rand = Math.random,
   kind?: PickKind,
+  topic?: string,
 ): Promise<PoolPick> {
-  const pools =
-    kind === undefined
-      ? COMMONS_POOLS
-      : COMMONS_POOLS.filter(pool => pool.kind === kind)
+  const pools = COMMONS_POOLS.filter(
+    pool =>
+      (kind === undefined || pool.kind === kind) &&
+      (topic === undefined || pool.label === topic),
+  )
+  if (pools.length === 0) throw new Error(`no Commons topic named ${topic}`)
   const start = randomIndex(pools.length, rand)
   for (const pool of rollPlan(pools, start)) {
     const found = await rollFromPool(pool, avoid, rand)

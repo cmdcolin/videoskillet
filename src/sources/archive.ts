@@ -758,15 +758,20 @@ const fetchPick = async (
 // ordering inside a page is archive.org's, and `candidateOrder` then walks it
 // until something holds a playable rendition. The seed reproduces the
 // decisions; the recorded `PoolRef` reproduces the clip.
+//
+// `topic` names one pool by its label and confines the roll to it.
 export async function rollArchive(
   avoid = '',
   onProgress: OnProgress = () => {},
   rand: Rand = Math.random,
+  topic?: string,
 ): Promise<PoolPick> {
-  const pool = chosenPool(
-    ARCHIVE_POOLS,
-    randomIndex(ARCHIVE_POOLS.length, rand),
-  )
+  const pools =
+    topic === undefined
+      ? ARCHIVE_POOLS
+      : ARCHIVE_POOLS.filter(p => p.label === topic)
+  if (pools.length === 0) throw new Error(`no archive.org topic named ${topic}`)
+  const pool = chosenPool(pools, randomIndex(pools.length, rand))
   const page = 1 + randomIndex(PAGE_SPAN, rand)
   let found = identifiersIn(await request(searchUrl(pool.query, page)))
   // A pool smaller than PAGE_SPAN pages answers a deep page with nothing. That

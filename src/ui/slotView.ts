@@ -23,9 +23,10 @@
 // else about them is the same shape.
 
 import type { SourceBMode, SourceMode } from '../sources/modes'
-import type { PickKind, PoolPick } from '../sources/pools'
+import type { PoolOrigin, PoolPick, RollTopic } from '../sources/pools'
 import type { TeletypeCard } from '../sources/teletype'
 import type { Cue, CueEdge } from './cue'
+import type { FeedSettings } from './feed'
 import type { StashSlot } from './fileStash'
 import type { SlotKind } from './videoSlot'
 
@@ -133,13 +134,14 @@ export interface SlotView<T extends SourceMode | SourceBMode> {
   // engine two of every state slot and the caption a branch, to record a
   // difference the UI no longer has.
   pick: PoolPick | null
-  // Roll the next file out of whichever pool this slot's picker names, narrowed
-  // to stills or to clips, or left mixed. Here rather than left to re-firing the
-  // picker because a roll is not a change of source: the deck stays on the same
-  // channel and the picture under it is what moves, which is the one gesture
-  // this panel had no button for — it was hidden on the caption, where clicking
-  // the name of a photograph is not a thing anyone would try.
-  roll: (kind?: PickKind) => void
+  // The feed this slot draws from while it is on a public archive
+  // (ui/feed.ts): its topic and timer, whether a roll is out, and the verbs
+  // that move it on.
+  feed: FeedSettings
+  rolling: boolean
+  advance: () => void
+  chooseTopic: (origin: PoolOrigin, topic: RollTopic) => void
+  retime: (patch: Partial<FeedSettings>) => void
 }
 
 // Either slot, whichever mode union it carries. What to write when a caller

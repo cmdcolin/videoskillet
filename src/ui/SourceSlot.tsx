@@ -1,8 +1,8 @@
 import { MODE_ORIGIN, isPoolMode } from '../sources/pools'
 import { cueLooping } from './cue'
+import { FeedRow } from './FeedRow'
 import { FileName, PickCaption, ReopenFile } from './FileName'
 import { MenuRow } from './MenuRow'
-import { RollRow } from './RollRow'
 import { CueRow, LoopScrub, PlayRow, Scrub } from './Scrub'
 import { Slider } from './Slider'
 import { TeletypeRow } from './TeletypeRow'
@@ -32,7 +32,7 @@ const CUE_KEYS = {
 // The two random-archive entries join them for a different reason: the picker
 // names a pool rather than a picture, so the caption is the only thing saying
 // which file came back. It is a name and nothing more there — the roll is on the
-// buttons under it (RollRow.tsx). The clip shelf and the browser are the first
+// buttons under it (FeedRow.tsx). The clip shelf and the browser are the first
 // shape once more, the option naming a way in and the caption naming what came
 // through it. `library` draws its own caption instead (a menu —
 // ClipPicker.tsx).
@@ -182,12 +182,17 @@ export function SourceSlot<T extends SourceMode | SourceBMode>(props: {
           onReopen={isPoolMode(slot.mode) ? null : () => slot.select(slot.mode)}
         />
       ) : null}
-      {/* The roll, in words, under the name of what is on the deck now. This is
-          the gesture a channel is *for*, and until it had a button it was
-          reachable only by clicking that name or by finding the lit option in
-          the picker and picking it again. */}
+      {/* The feed, under the name of what is on the deck now: its topic, the
+          next file, and the slideshow timer. */}
       {isPoolMode(slot.mode) ? (
-        <RollRow origin={MODE_ORIGIN[slot.mode]} onRoll={k => slot.roll(k)} />
+        <FeedRow
+          origin={MODE_ORIGIN[slot.mode]}
+          feed={slot.feed}
+          rolling={slot.rolling}
+          onAdvance={() => slot.advance()}
+          onTopic={t => slot.chooseTopic(MODE_ORIGIN[slot.mode], t)}
+          onRetime={patch => slot.retime(patch)}
+        />
       ) : null}
       <ReopenFile name={slot.pendingFile} onReopen={() => slot.reopenFile()} />
       {/* Whether either button has anything to do is the slot's own answer, not
