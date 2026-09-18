@@ -2,6 +2,25 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [2.2.0](https://github.com/cmdcolin/videoskillet/compare/v2.1.6...v2.2.0) - 2026-09-18
+
+### Features
+- *(signal)* [`d3d7fc9`](https://github.com/cmdcolin/videoskillet/commit/d3d7fc90142c386262f62882e3116b72c4e2ee2d) noise in the mixer loop
+- *(ui)* [`12a4967`](https://github.com/cmdcolin/videoskillet/commit/12a49678c38823fb7aa98922fbdea9f83b41d45e) minor cards on the mod rate, loop mix and loop gain
+- *(ui)* [`3ba62c6`](https://github.com/cmdcolin/videoskillet/commit/3ba62c6d13c5f236a49bf5d0de4103b4788be5be) feeds on the public archives, with a topic and a slideshow timer
+- *(ui)* [`5e00493`](https://github.com/cmdcolin/videoskillet/commit/5e004934d50caa50e2ce9a7c692654297c042755) feeds walk searches, browse results and the shelf, with a back step
+- *(ui)* [`3ccb684`](https://github.com/cmdcolin/videoskillet/commit/3ccb684df1de65ab2b89ce5aa49d4d0ec2b01788) a running slideshow fetches its next file in the background
+
+### Fixes
+- *(ui)* [`9384f55`](https://github.com/cmdcolin/videoskillet/commit/9384f553188ea9957c9afca13430300bdd446ff6) give every enabled button the pointer cursor
+- *(ui)* [`96a39ad`](https://github.com/cmdcolin/videoskillet/commit/96a39ad5b90dc04ebfb2076e50c37e89d41c90e0) name the drag pads for assistive tech and move their cursors to CSS
+
+### Refactor
+- *(ui)* [`7db2dbf`](https://github.com/cmdcolin/videoskillet/commit/7db2dbf12b9b6731438267cda96facd69f76d81b) drop per-class cursor: pointer now that buttons get it by default
+
+### Documentation
+- [`31c5815`](https://github.com/cmdcolin/videoskillet/commit/31c5815353cbca004becda393e808053a89bc835) feeds, topics and slideshows in the user guide
+
 ## [2.1.5](https://github.com/cmdcolin/videoskillet/compare/v2.1.4...v2.1.5) - 2026-09-18
 
 ### Features
