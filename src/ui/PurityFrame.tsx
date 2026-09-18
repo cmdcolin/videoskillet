@@ -91,8 +91,9 @@ export function PurityFrame(props: {
   return (
     <div className={styles.wrap}>
       <div
-        className={cx(styles.frame, props.inert && styles.inert)}
-        style={{ cursor: 'crosshair' }}
+        className={cx(styles.frame, styles.aim, props.inert && styles.inert)}
+        role="application"
+        aria-label="magnetised patch"
         tabIndex={0}
         title="click or drag to put the magnetised patch there · the grip sizes it · arrows nudge · alt+arrows resize · alt drags off the guides"
         onPointerDown={e => {

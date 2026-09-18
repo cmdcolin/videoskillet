@@ -180,6 +180,8 @@ export function PipFrame(props: {
         <div
           className={styles.window}
           style={winStyle}
+          role="application"
+          aria-label="inset window"
           tabIndex={0}
           title="drag to place · shift locks an axis · alt drags off the guides"
           onPointerDown={e => begin(0, 0)(e)}

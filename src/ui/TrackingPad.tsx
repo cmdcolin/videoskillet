@@ -64,8 +64,9 @@ export function TrackingPad() {
   return (
     <div className={mini.wrap}>
       <div
-        className={cx(mini.frame, amt === 0 && mini.inert)}
-        style={{ cursor: 'crosshair' }}
+        className={cx(mini.frame, mini.aim, amt === 0 && mini.inert)}
+        role="application"
+        aria-label="tracking band and error"
         tabIndex={0}
         title="drag down to the band, right to push the head off track · arrows move the band · alt+arrows push it off track"
         {...grab}

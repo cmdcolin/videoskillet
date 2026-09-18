@@ -34,13 +34,16 @@ export function WipeFrame(props: {
   return (
     <div className={styles.wrap}>
       <div
-        className={cx(styles.frame, props.inert && styles.inert)}
+        className={cx(
+          styles.frame,
+          shape !== undefined && styles.aim,
+          props.inert && styles.inert,
+        )}
         title={
           props.inert
             ? 'no wipe pattern selected — the boundary is not on air'
             : 'drag the boundary · alt drags off the guides'
         }
-        style={{ cursor: shape === undefined ? 'default' : 'crosshair' }}
         {...grab}
       >
         {shape === undefined ? null : (

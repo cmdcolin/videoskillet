@@ -1,6 +1,7 @@
 import { useState } from 'react'
 
 import { clamp01 } from '../core/math'
+import { cx } from './cx'
 import { boxToLens, lensView } from './lens'
 import { nudgeFor, snapOffset, uvInRect } from './miniFrame'
 import styles from './MiniFrame.module.css'
@@ -145,8 +146,9 @@ export function MagnifierFrame(props: {
   return (
     <div className={styles.wrap}>
       <div
-        className={styles.frame}
-        style={{ cursor: 'crosshair' }}
+        className={cx(styles.frame, styles.aim)}
+        role="application"
+        aria-label="magnifier box"
         tabIndex={0}
         title="drag a box to magnify into it · click or shift-drag to aim · arrows nudge · alt drags off the guides"
         onPointerDown={e => {
