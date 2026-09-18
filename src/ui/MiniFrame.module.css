@@ -117,7 +117,6 @@
   font: inherit;
   color: var(--gate);
   text-align: left;
-  cursor: pointer;
 }
 .fix:hover {
   text-decoration: underline;

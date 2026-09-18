@@ -161,7 +161,6 @@ button.needsAuth {
   font-size: var(--fs-sm);
   text-decoration: underline;
   text-underline-offset: 2px;
-  cursor: pointer;
 }
 
 .why:hover {

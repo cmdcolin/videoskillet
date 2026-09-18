@@ -331,7 +331,6 @@ video {
   border: 0;
   border-radius: 8px;
   background: rgba(0, 0, 0, 0.15);
-  cursor: pointer;
   transition: background 0.15s ease;
 }
 .videoplay:hover,
@@ -392,7 +391,6 @@ video {
   font-size: 0.95rem;
   font-weight: 600;
   color: var(--fg3);
-  cursor: pointer;
 }
 .tab:hover {
   color: var(--fg);

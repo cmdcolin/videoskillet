@@ -289,7 +289,6 @@
   border: 1px solid var(--border);
   border-radius: var(--ctl-radius);
   white-space: nowrap;
-  cursor: pointer;
 }
 .holdBtn:hover {
   color: var(--accent);

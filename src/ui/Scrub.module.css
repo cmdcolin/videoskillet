@@ -30,7 +30,6 @@
   background: var(--surface-raised);
   border: 1px solid var(--border);
   border-radius: var(--ctl-radius);
-  cursor: pointer;
 }
 .cueBtn:hover:not(:disabled) {
   color: var(--accent);

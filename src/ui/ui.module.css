@@ -36,7 +36,6 @@
     border: 0;
     background: none;
     font: inherit;
-    cursor: pointer;
   }
 
   /* The panel's section heading: a name with a rule under it, at the top of
@@ -188,7 +187,6 @@
     border: 1px solid var(--border);
     border-radius: var(--ctl-radius);
     font: inherit;
-    cursor: pointer;
   }
   .filled:hover:not(:disabled) {
     border-color: var(--border-hover);
@@ -217,7 +215,6 @@
     text-transform: none;
     line-height: 1.2;
     white-space: nowrap;
-    cursor: pointer;
   }
   .outline:hover:not(:disabled) {
     border-color: var(--fg4);

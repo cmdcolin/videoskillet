@@ -19,7 +19,6 @@
   font-size: var(--fs-xs);
   font-weight: 700;
   line-height: 1;
-  cursor: pointer;
 }
 .helpBtn:hover {
   border-color: var(--accent);
@@ -115,7 +114,6 @@ button.allBtnOn {
   background: transparent;
   color: var(--fg3);
   font: inherit;
-  cursor: pointer;
 }
 .moreChip:hover {
   border-color: var(--fg4);

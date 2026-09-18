@@ -159,7 +159,6 @@
   padding: 2px 7px;
   font: inherit;
   font-size: var(--fs-sm);
-  cursor: pointer;
 }
 
 .cardChip:hover {

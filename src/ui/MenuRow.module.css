@@ -27,7 +27,6 @@
   padding: 3px 6px;
   font: inherit;
   text-align: left;
-  cursor: pointer;
 }
 .trigger:hover {
   border-color: var(--border-hover);

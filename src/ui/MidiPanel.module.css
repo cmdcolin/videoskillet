@@ -63,7 +63,6 @@ button.tabWaiting {
   font-size: var(--fs-md);
   line-height: 1;
   padding: 0 2px;
-  cursor: pointer;
 }
 
 .close:hover {

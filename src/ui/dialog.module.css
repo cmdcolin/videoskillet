@@ -119,7 +119,6 @@
   font-family: var(--mono-blocks);
   font-size: 28px;
   line-height: 1;
-  cursor: pointer;
 }
 .chip:hover {
   border-color: var(--accent);

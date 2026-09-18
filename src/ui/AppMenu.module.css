@@ -21,7 +21,6 @@
   border-radius: var(--ctl-radius);
   padding: 0 9px;
   font: inherit;
-  cursor: pointer;
 }
 .stageTrigger:hover {
   background: var(--ctl-bg-hover);

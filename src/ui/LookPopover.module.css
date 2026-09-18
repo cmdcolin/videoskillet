@@ -30,9 +30,6 @@
   text-align: left;
   color: var(--fg4);
 }
-button.from {
-  cursor: pointer;
-}
 button.from:hover {
   color: var(--accent);
 }

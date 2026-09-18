@@ -376,14 +376,9 @@
    than marks (a routed row's `mod`, an armed ⚟) and take the same box. */
 .badge {
   composes: bare from './ui.module.css';
-  /* a mark on most rows and a button on two, so the hand comes from the tag */
-  cursor: inherit;
   padding: 0 0 0 6px;
   font-size: var(--fs-xs);
   color: var(--fg4);
-}
-button.badge {
-  cursor: pointer;
 }
 /* The row's own menu: ∿ ☆ ↺ and the MIDI pair, which were five buttons in the
    open on every row. Quiet at rest — it sits at the end of 121 rows, and at the
