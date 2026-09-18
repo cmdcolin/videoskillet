@@ -66,12 +66,17 @@ opens it again — picking **File…** twice is how you swap one video for anoth
 - **Clips…** is a shelf of files you've opened before, folders included.
   **Public archives** rolls one from Wikimedia Commons or archive.org;
   **Browse…** searches both in a thumbnail grid.
-- On an archive, the deck grows **roll photo** / **roll clip** buttons under the
-  file's name. Commons holds both, and they differ: a still gives still
-  artifacts, a clip moving ones. archive.org holds footage only, so it gets
-  **roll clip** alone. **☆** keeps that file on your clip shelf; the next roll
-  takes it off the deck either way, and **↗** opens its page upstream, where the
-  licence and the photographer are.
+- On an archive, the deck is on a **feed**, with its controls under the file's
+  name. The topic menu picks what it draws from: anything, any photo, any clip,
+  one of the curated pools, or **Search…**, which walks the results for words
+  you type. **next ▸** puts up another file and **◂** steps back to the one
+  before. **slideshow** advances on its own every N seconds, counted from when
+  the last file finished loading, and fetches the next file in the background
+  while the current one is up. **☆** keeps a file on your clip shelf, and **↗**
+  opens its page upstream, where the licence and the photographer are.
+- **slideshow these** in **Browse…** and **slideshow** on the clip shelf (or
+  **▸▸** on one of its groups) start a feed over those files in shuffled order.
+  **✕** on the feed ends it and leaves the current file on the deck.
 - **Video file URL…** plays an `.mp4` or `.webm` straight from its address, with
   no download step. The server has to allow cross-origin reads; if it doesn't,
   the clip plays and the picture stays black.
