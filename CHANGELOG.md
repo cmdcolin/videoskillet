@@ -2,6 +2,11 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [2.1.5](https://github.com/cmdcolin/videoskillet/compare/v2.1.4...v2.1.5) - 2026-09-18
+
+### Features
+- *(ui)* [`143f84e`](https://github.com/cmdcolin/videoskillet/commit/143f84ecaddbac6822f2d00300684c58e8e66232) add the Purple woman demo to the gallery
+
 ## [2.1.4](https://github.com/cmdcolin/videoskillet/compare/v2.1.3...v2.1.4) - 2026-09-17
 
 ### Fixes
