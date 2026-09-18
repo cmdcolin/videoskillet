@@ -1640,6 +1640,7 @@ export function useEngine(args: { rand: Rand }) {
       item.at === 'ref'
         ? showRef(key, item.ref, mode)
         : shelfClipOn(key, item.id, item.name),
+    land: (key, held) => landPick(slotOf(key), held, beginLoad(key)),
     fail: message => setError(message),
   })
 
