@@ -1,5 +1,7 @@
 import { createContext, use } from 'react'
 
+import type { WikiCaption } from './useWikiCaption'
+
 // What line 21 is carrying, and how to change it — read from context for the
 // same reason the signal tap is: the box that types it lives inside
 // ControlGroup, several components below app.tsx where eng.caption sits. It is
@@ -8,6 +10,7 @@ import { createContext, use } from 'react'
 interface CaptionApi {
   caption: string
   onCaption: (v: string) => void
+  wiki: WikiCaption
 }
 
 export const CaptionContext = createContext<CaptionApi | null>(null)

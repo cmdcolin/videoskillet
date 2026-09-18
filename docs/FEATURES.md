@@ -97,6 +97,11 @@ per generation.
   generation loss produce dropped characters, wrong characters, and the solid
   block a decoder draws on a parity error. Captions repaint on the set's own
   timing, so they stay still while the picture rolls or tears.
+- **Captions can come from Wikipedia.** _From Wikipedia_ fills the caption with
+  a few sentences from the English article on what source A shows, found through
+  the Commons file's categories. _Follow the picture_ fetches a new passage
+  every time a new file lands, so a slideshow keeps its captions on subject. A
+  deck with nothing off Commons or archive.org gets a random article.
 
 ## Screen
 

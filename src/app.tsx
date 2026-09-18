@@ -134,6 +134,7 @@ import { useStrip } from './ui/useStrip'
 import { useTempo } from './ui/useTempo'
 import { useUrlState } from './ui/useUrlState'
 import { useWakeLock } from './ui/useWakeLock'
+import { useWikiCaption } from './ui/useWikiCaption'
 import { VideoUrlDialog } from './ui/VideoUrlDialog'
 import { WebcamDialog } from './ui/WebcamDialog'
 import { WhySignInDialog } from './ui/WhySignInDialog'
@@ -675,6 +676,7 @@ export function App() {
   // same precedence `rollAgain` uses — A is the picture.
   const shown = eng.a.pick ?? eng.b.pick
   const shownKept = shown !== null && clips.kept(shown)
+  const wikiCaption = useWikiCaption(shown, eng.changeCaption)
 
   // The ★ and the credit link under a source picker, for a slot with something
   // off one of the public archives on it. Assembled here because it takes one
@@ -1750,7 +1752,11 @@ export function App() {
                 eng.tap/eng.changeTap. */}
             <SignalTapContext value={{ tap: eng.tap, onTap: eng.changeTap }}>
               <CaptionContext
-                value={{ caption: eng.caption, onCaption: eng.changeCaption }}
+                value={{
+                  caption: eng.caption,
+                  onCaption: eng.changeCaption,
+                  wiki: wikiCaption,
+                }}
               >
                 {sheet ?? panelBody}
               </CaptionContext>

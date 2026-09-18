@@ -77,6 +77,11 @@ opens it again — picking **File…** twice is how you swap one video for anoth
 - **slideshow these** in **Browse…** and **slideshow** on the clip shelf (or
   **▸▸** on one of its groups) start a feed over those files in shuffled order.
   **✕** on the feed ends it and leaves the current file on the deck.
+- Under the caption box in **RECEIVER › Captions**, **From Wikipedia** fills the
+  caption with a few sentences from the English Wikipedia article on what the
+  picture shows. **follow the picture** does it again each time a new file
+  lands, which pairs well with a slideshow. The note under the button links the
+  article, and says when nothing matched and the passage came from a random one.
 - **Video file URL…** plays an `.mp4` or `.webm` straight from its address, with
   no download step. The server has to allow cross-origin reads; if it doesn't,
   the clip plays and the picture stays black.

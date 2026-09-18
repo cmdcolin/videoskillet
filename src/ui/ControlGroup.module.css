@@ -137,6 +137,14 @@
   color: var(--fg4);
   font-size: var(--fs-sm);
 }
+.captionCheck {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--fg3);
+  font-size: var(--fs-sm);
+  cursor: pointer;
+}
 
 /* The card's own chips, over its rows. Quieter than the preset table's, on
    purpose: those name a whole rig and these name a setting of one card, so a

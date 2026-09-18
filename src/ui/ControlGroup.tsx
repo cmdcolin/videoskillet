@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 
 import { DEFAULT_CONTROLS, atRest } from '../core/controls'
 import { clampCardText } from '../sources/teletype'
+import { WIKI_PAGE } from '../sources/wikitext'
 import { useCaptionApi } from './CaptionContext'
 import { activeCardPreset, cardPresetsFor } from './cardPresets'
 import styles from './ControlGroup.module.css'
@@ -304,10 +305,59 @@ function CaptionControl() {
         spellCheck={false}
         onChange={e => onCaption(clampCardText(e.target.value))}
       />
+      <WikiCaptionRow />
       <p className={styles.captionNote}>
         Sent as data, a character at a time. What arrives is whatever survived
         the chain.
       </p>
+    </>
+  )
+}
+
+function WikiCaptionRow() {
+  const { wiki } = useCaptionApi()
+  return (
+    <>
+      <div className={styles.cardChips}>
+        <button
+          type="button"
+          className={styles.cardChip}
+          disabled={wiki.busy}
+          title="A few sentences from the Wikipedia article on what the picture shows, or from a random article when the deck has nothing off Commons or archive.org on it"
+          onClick={wiki.roll}
+        >
+          {wiki.busy ? 'Fetching…' : 'From Wikipedia'}
+        </button>
+        <label className={styles.captionCheck}>
+          <input
+            type="checkbox"
+            checked={wiki.follow}
+            onChange={e => {
+              wiki.setFollow(e.target.checked)
+            }}
+          />
+          follow the picture
+        </label>
+      </div>
+      {wiki.error !== '' ? (
+        <p className={styles.captionNote}>{wiki.error}</p>
+      ) : wiki.passage !== null ? (
+        <p className={styles.captionNote}>
+          {wiki.passage.matched
+            ? 'From '
+            : 'Nothing on Wikipedia matched the picture. From a random article, '}
+          <a
+            href={
+              WIKI_PAGE +
+              encodeURIComponent(wiki.passage.article.replace(/ /g, '_'))
+            }
+            target="_blank"
+            rel="noreferrer"
+          >
+            {wiki.passage.article}
+          </a>
+        </p>
+      ) : null}
     </>
   )
 }
