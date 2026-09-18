@@ -153,13 +153,27 @@ function GroupHead(props: {
   label: string
   folder: ClipFolder | null
   rescannable: boolean
+  slot: StashSlot
+  // Null for a group a feed cannot walk: fetched clips need the yt-dlp bridge
+  // for every play.
+  onSlideshow: (() => void) | null
   onRescan: (folder: ClipFolder) => void
   onForget: (folder: ClipFolder) => void
 }) {
-  const { folder } = props
+  const { folder, onSlideshow } = props
   return (
     <div className={styles.head}>
       <span className={styles.headName}>{props.label}</span>
+      {onSlideshow === null ? null : (
+        <button
+          className={styles.rowBtn}
+          title={`play ${props.label} on source ${props.slot.toUpperCase()} as a feed, in shuffled order`}
+          aria-label={`slideshow of ${props.label}`}
+          onClick={() => onSlideshow()}
+        >
+          ▸▸
+        </button>
+      )}
       {folder === null || !props.rescannable ? null : (
         <button
           className={styles.rowBtn}
@@ -189,6 +203,10 @@ function GroupHead(props: {
 // reaches the DOM without a cast.
 const DIRECTORY = { webkitdirectory: '' }
 
+// The clips a feed can walk without a hand on it.
+const feedable = (clips: readonly Clip[]) =>
+  clips.filter(c => clipFetch(c) === null)
+
 export function ClipLibraryDialog(props: {
   // Which source the shelf was opened for. Every row plays into it on a plain
   // click, and into the other one from the second button — so a two-deck set
@@ -211,6 +229,8 @@ export function ClipLibraryDialog(props: {
   onAdopt: (files: FileList | null) => void
   onRescan: (folder: ClipFolder) => void
   onPlay: (clip: Clip, slot: StashSlot) => void
+  // Walk a set of clips as a feed on this dialog's deck.
+  onSlideshow: (label: string, clips: Clip[]) => void
   onForgetClip: (clip: Clip) => void
   onForgetFolder: (folder: ClipFolder) => void
   onClose: () => void
@@ -256,6 +276,20 @@ export function ClipLibraryDialog(props: {
         >
           add folder…
         </button>
+        {feedable(groups.flatMap(g => g.clips)).length < 2 ? null : (
+          <button
+            className={cx(ui.btn, ui.btnFlush)}
+            title={`play everything listed here on source ${props.slot.toUpperCase()} as a feed, in shuffled order`}
+            onClick={() =>
+              props.onSlideshow(
+                query === '' ? 'shelf' : `shelf “${query}”`,
+                feedable(groups.flatMap(g => g.clips)),
+              )
+            }
+          >
+            slideshow
+          </button>
+        )}
         <span className={ui.dim}>
           {props.lib.clips.length === 0
             ? ''
@@ -297,6 +331,13 @@ export function ClipLibraryDialog(props: {
                 rescannable={
                   group.folder !== null &&
                   props.access.folders.has(group.folder.id)
+                }
+                slot={props.slot}
+                onSlideshow={
+                  feedable(group.clips).length < 2
+                    ? null
+                    : () =>
+                        props.onSlideshow(group.label, feedable(group.clips))
                 }
                 onRescan={props.onRescan}
                 onForget={props.onForgetFolder}

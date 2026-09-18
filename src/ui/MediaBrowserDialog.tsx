@@ -135,6 +135,8 @@ export function MediaBrowserDialog(props: {
   kept: (ref: PoolRef) => boolean
   onPlay: (ref: PoolRef, slot: StashSlot) => void
   onKeep: (ref: PoolRef, label: string) => void
+  // Walk the results as a feed on this dialog's deck.
+  onSlideshow: (label: string, refs: PoolRef[]) => void
   onClose: () => void
 }) {
   const [origin, setOrigin] = useState<PoolOrigin>('commons')
@@ -222,18 +224,35 @@ export function MediaBrowserDialog(props: {
       ) : found.hits.length === 0 ? (
         <div className={ui.hint}>nothing came back for “{asked}”</div>
       ) : (
-        <div className={styles.grid}>
-          {found.hits.map(hit => (
-            <Result
-              key={`${hit.origin}\n${hit.title}`}
-              hit={hit}
-              slot={props.slot}
-              kept={props.kept(hit)}
-              onPlay={props.onPlay}
-              onKeep={props.onKeep}
-            />
-          ))}
-        </div>
+        <>
+          <div className={styles.feedBar}>
+            <button
+              className={cx(ui.btn, ui.btnFlush)}
+              title={`play these ${found.hits.length} on source ${props.slot.toUpperCase()} as a feed, in shuffled order`}
+              onClick={() =>
+                props.onSlideshow(
+                  presetsOf(origin).find(p => p.query === asked)?.label ??
+                    `“${asked}”`,
+                  found.hits,
+                )
+              }
+            >
+              slideshow these
+            </button>
+          </div>
+          <div className={styles.grid}>
+            {found.hits.map(hit => (
+              <Result
+                key={`${hit.origin}\n${hit.title}`}
+                hit={hit}
+                slot={props.slot}
+                kept={props.kept(hit)}
+                onPlay={props.onPlay}
+                onKeep={props.onKeep}
+              />
+            ))}
+          </div>
+        </>
       )}
 
       <div className={ui.hint}>{ORIGIN_NOTE[origin]}</div>

@@ -209,8 +209,11 @@ export const poolPageUrl = (ref: PoolRef): string =>
 export const browsePool = (
   origin: PoolOrigin,
   query: string,
+  limit?: number,
 ): Promise<BrowseHit[]> =>
-  origin === 'commons' ? browseCommons(query) : browseArchive(query)
+  origin === 'commons'
+    ? browseCommons(query, limit)
+    : browseArchive(query, limit)
 
 // The tested queries, as something to click in the browser rather than type.
 //

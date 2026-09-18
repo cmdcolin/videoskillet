@@ -847,9 +847,12 @@ export async function resolveArchive(
 // off good clips and be wrong by three orders of magnitude while doing it. The
 // honest number arrives with the metadata at pick time, which is where the
 // caption says it (`Rendition.bytes`).
-export async function browseArchive(query: string): Promise<BrowseHit[]> {
+export async function browseArchive(
+  query: string,
+  limit = BROWSE_LIMIT,
+): Promise<BrowseHit[]> {
   const body = await request(
-    searchUrl(query, 1, { rows: BROWSE_LIMIT, random: false }),
+    searchUrl(query, 1, { rows: limit, random: false }),
   )
   return docsIn(body).flatMap(doc => {
     const identifier = str(doc.identifier)

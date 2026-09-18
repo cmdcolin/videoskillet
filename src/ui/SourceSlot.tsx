@@ -184,14 +184,19 @@ export function SourceSlot<T extends SourceMode | SourceBMode>(props: {
       ) : null}
       {/* The feed, under the name of what is on the deck now: its topic, the
           next file, and the slideshow timer. */}
-      {isPoolMode(slot.mode) ? (
+      {slot.feedOn ? (
         <FeedRow
-          origin={MODE_ORIGIN[slot.mode]}
+          origin={isPoolMode(slot.mode) ? MODE_ORIGIN[slot.mode] : null}
           feed={slot.feed}
-          rolling={slot.rolling}
           onAdvance={() => slot.advance()}
-          onTopic={t => slot.chooseTopic(MODE_ORIGIN[slot.mode], t)}
-          onRetime={patch => slot.retime(patch)}
+          onBack={() => slot.back()}
+          onTopic={t => {
+            if (isPoolMode(slot.mode))
+              slot.chooseTopic(MODE_ORIGIN[slot.mode], t)
+          }}
+          onSearch={q => slot.searchTopic(q)}
+          onEnd={() => slot.endFeed()}
+          onRetime={change => slot.retime(change)}
         />
       ) : null}
       <ReopenFile name={slot.pendingFile} onReopen={() => slot.reopenFile()} />

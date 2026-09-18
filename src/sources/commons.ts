@@ -434,12 +434,15 @@ export async function resolveCommons(ref: PoolRef): Promise<PoolPick> {
 // channel: `gsrsort=random` throws relevance away, so a typed query would answer
 // with a Greek vase (see the head of this file). Sorted by relevance, an
 // arbitrary query is finally worth offering.
-export async function browseCommons(search: string): Promise<BrowseHit[]> {
+export async function browseCommons(
+  search: string,
+  limit = BROWSE_LIMIT,
+): Promise<BrowseHit[]> {
   const body = await query({
     generator: 'search',
     gsrsearch: search,
     gsrnamespace: '6',
-    gsrlimit: String(BROWSE_LIMIT),
+    gsrlimit: String(limit),
     prop: 'imageinfo',
     // `size` is what carries `duration` for a clip, which is the one number
     // worth showing before a pick — verified against the live API. Its `size`

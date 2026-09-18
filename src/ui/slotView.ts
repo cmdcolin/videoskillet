@@ -26,7 +26,7 @@ import type { SourceBMode, SourceMode } from '../sources/modes'
 import type { PoolOrigin, PoolPick, RollTopic } from '../sources/pools'
 import type { TeletypeCard } from '../sources/teletype'
 import type { Cue, CueEdge } from './cue'
-import type { FeedSettings } from './feed'
+import type { DeckFeed, FeedSettings } from './feed'
 import type { StashSlot } from './fileStash'
 import type { SlotKind } from './videoSlot'
 
@@ -134,14 +134,17 @@ export interface SlotView<T extends SourceMode | SourceBMode> {
   // engine two of every state slot and the caption a branch, to record a
   // difference the UI no longer has.
   pick: PoolPick | null
-  // The feed this slot draws from while it is on a public archive
-  // (ui/feed.ts): its topic and timer, whether a roll is out, and the verbs
-  // that move it on.
-  feed: FeedSettings
-  rolling: boolean
+  // The feed this slot is on, if any (ui/feed.ts): a topic on a public
+  // archive, or a list from a search, the browser or the shelf. `feedOn` is
+  // whether the deck is showing it right now.
+  feed: DeckFeed
+  feedOn: boolean
   advance: () => void
+  back: () => void
   chooseTopic: (origin: PoolOrigin, topic: RollTopic) => void
-  retime: (patch: Partial<FeedSettings>) => void
+  searchTopic: (query: string) => void
+  endFeed: () => void
+  retime: (change: Partial<FeedSettings>) => void
 }
 
 // Either slot, whichever mode union it carries. What to write when a caller

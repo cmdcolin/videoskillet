@@ -180,3 +180,10 @@
     padding: 7px 11px;
   }
 }
+
+/* The one action on the results as a whole, above the grid it acts on. */
+.feedBar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 6px;
+}

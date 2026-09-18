@@ -2037,6 +2037,14 @@ export function App() {
           onAdopt={clips.adopt}
           onRescan={clips.rescan}
           onPlay={clips.play}
+          onSlideshow={(label, shelved) =>
+            eng.startFeed(
+              libraryFor,
+              label,
+              'library',
+              shelved.map(c => ({ at: 'clip', id: c.id, name: c.name })),
+            )
+          }
           // Into the rundown rather than onto a deck. The look it lands with is
           // whatever is on the board now, the same snapshot `+ row` takes —
           // building a rundown of clips is picking the look once and then
@@ -2083,8 +2091,16 @@ export function App() {
         <MediaBrowserDialog
           slot={browseFor}
           kept={clips.kept}
-          onPlay={(ref, slot) => eng.showRef(slot, ref, 'browse')}
+          onPlay={(ref, slot) => void eng.showRef(slot, ref, 'browse')}
           onKeep={clips.keep}
+          onSlideshow={(label, refs) =>
+            eng.startFeed(
+              browseFor,
+              label,
+              'browse',
+              refs.map(ref => ({ at: 'ref', ref })),
+            )
+          }
           onClose={eng.prompt.dismiss}
         />
       )}

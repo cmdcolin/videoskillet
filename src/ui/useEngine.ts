@@ -39,7 +39,6 @@ import {
   wrapCostMs,
   tapCue,
 } from './cue'
-import { FEED_DEFAULT, useFeedTimer } from './feed'
 import {
   clearStash,
   readStash,
@@ -66,6 +65,7 @@ import {
   parseSessionParams,
   urlName,
 } from './urlParams'
+import { feedShowing, useFeeds } from './useFeeds'
 import { isPrompt, useSourcePrompt } from './useSourcePrompt'
 import {
   armHead,
@@ -93,12 +93,11 @@ import type {
   PoolPick,
   PoolRef,
   RollAim,
-  RollTopic,
 } from '../sources/pools'
 import type { TeletypeCard } from '../sources/teletype'
 import type { Cue, CueEdge } from './cue'
 import type { Fatal } from './FatalScreen'
-import type { FeedSettings } from './feed'
+import type { FeedItem, ListMode } from './feed'
 import type { StashSlot, Stashed } from './fileStash'
 import type { PickedFileHandle } from './fsAccess'
 import type { SlotView } from './slotView'
@@ -492,11 +491,6 @@ export function useEngine(args: { rand: Rand }) {
     a: null,
     b: null,
   })
-  // Each deck's feed: the topic it rolls from and whether it advances on a
-  // timer (ui/feed.ts). `rolling` is whether a roll is out, which is what the
-  // timer waits on.
-  const [feed, setFeed] = useState({ a: FEED_DEFAULT, b: FEED_DEFAULT })
-  const [rolling, setRolling] = useState({ a: false, b: false })
   const [card, setCardState] = useState({
     a: TELETYPE_DEFAULT,
     b: TELETYPE_DEFAULT,
@@ -1044,7 +1038,6 @@ export function useEngine(args: { rand: Rand }) {
   const beginLoad = (key: StashSlot): (() => boolean) => {
     const seq = (loadSeq.current[key] += 1)
     setPick(key, null)
-    setRolling(onDeck(key, false))
     prompt.dismiss()
     waiting.current[key] = seq
     return () => loadSeq.current[key] === seq
@@ -1230,7 +1223,7 @@ export function useEngine(args: { rand: Rand }) {
         },
       )
     else if (isClipId(mode)) playUrl(slot, clipUrl(mode))
-    else if (isPoolMode(mode)) rollFrom(slot, mode, aimOn(slot.id, mode))
+    else if (isPoolMode(mode)) feeds.begin(slot.id, mode)
   }
 
   // A pool pick onto a slot: the caption, the subject of the ★, and then the
@@ -1285,9 +1278,10 @@ export function useEngine(args: { rand: Rand }) {
     slot: VideoSlot,
     picked: PoolPick,
     fresh: () => boolean,
-  ) => {
+  ): boolean => {
     if (fresh()) showPick(slot, picked, fresh)
     else releasePick(picked)
+    return fresh()
   }
 
   // Roll a file out of a channel and show it, whichever pool the channel belongs
@@ -1313,7 +1307,7 @@ export function useEngine(args: { rand: Rand }) {
     mode: PoolMode,
     aim: RollAim,
     rand?: Rand,
-  ) => {
+  ): Promise<PoolRef | null> => {
     const origin = MODE_ORIGIN[mode]
     // Read before `beginLoad` clears it: what is on the slot right now is what a
     // re-roll of the *same* source should try not to hand back. A roll on the
@@ -1322,82 +1316,36 @@ export function useEngine(args: { rand: Rand }) {
     const showing = pickRef.current[slot.id]
     const avoid = showing?.origin === origin ? showing.title : ''
     const fresh = beginLoad(slot.id)
-    setRolling(onDeck(slot.id, true))
     slot.setName('rolling…')
-    rollPool(origin, {
+    return rollPool(origin, {
       avoid,
       onProgress: downloading(slot, fresh),
       rand,
       kind: aim.kind,
       topic: aim.topic,
     }).then(
-      picked => {
-        if (fresh()) setRolling(onDeck(slot.id, false))
+      picked =>
         landPick(slot, picked, fresh)
-      },
+          ? { origin: picked.origin, title: picked.title, kind: picked.kind }
+          : null,
       (e: unknown) => {
         if (fresh()) {
-          setRolling(onDeck(slot.id, false))
           slot.setName('')
           setError(`${origin}: ${reason(e)}`)
         }
+        return null
       },
     )
   }
 
-  const aimOn = (key: StashSlot, mode: PoolMode) =>
-    feed[key].topic[MODE_ORIGIN[mode]].aim
-
-  // Another file out of whichever deck is on a channel, for hands that are not on
+  // Another file out of whichever deck is on a feed, for hands that are not on
   // the sidebar — the command palette's row, and the keyboard through it. A wins
-  // when both are rolling, since A is the picture; a set with a channel on B
-  // alone still gets the command.
-  const rollAgain = (rand?: Rand) => {
-    if (isPoolMode(sourceMode.a))
-      rollFrom(slotA, sourceMode.a, aimOn('a', sourceMode.a), rand)
-    else if (isPoolMode(sourceMode.b))
-      rollFrom(slotB, sourceMode.b, aimOn('b', sourceMode.b), rand)
+  // when both are on one, since A is the picture; a set with a feed on B alone
+  // still gets the command.
+  const rollAgain = () => {
+    if (feedShowing(feeds.feeds.a, sourceMode.a)) feeds.next('a')
+    else if (feedShowing(feeds.feeds.b, sourceMode.b)) feeds.next('b')
   }
-
-  // One deck's feed advancing: its next button, or its timer. Named per deck
-  // rather than reading whichever is on a pool the way `rollAgain` does, since
-  // with both decks on a feed the one that moves has to be the one asked.
-  //
-  // Silently nothing when that deck is elsewhere, which is the honest answer
-  // for a stale click or a timer that fires after the picker moved on.
-  const advanceOn = (key: StashSlot) => {
-    const mode = key === 'a' ? sourceMode.a : sourceMode.b
-    if (isPoolMode(mode)) rollFrom(slotOf(key), mode, aimOn(key, mode))
-  }
-
-  // A new topic takes effect at once: the file on the deck came from the old
-  // one, so it is replaced rather than left up until the next advance.
-  const chooseTopicOn = (key: StashSlot, origin: PoolOrigin, t: RollTopic) => {
-    const next = {
-      ...feed[key],
-      topic: { ...feed[key].topic, [origin]: t },
-    }
-    setFeed(onDeck(key, next))
-    const mode = key === 'a' ? sourceMode.a : sourceMode.b
-    if (isPoolMode(mode) && MODE_ORIGIN[mode] === origin)
-      rollFrom(slotOf(key), mode, t.aim)
-  }
-
-  const retimeOn = (key: StashSlot, patch: Partial<FeedSettings>) =>
-    setFeed(f => onDeck(key, { ...f[key], ...patch })(f))
-
-  useFeedTimer({
-    on: feed.a.auto && isPoolMode(sourceMode.a),
-    every: feed.a.every,
-    rolling: rolling.a,
-    advance: () => advanceOn('a'),
-  })
-  useFeedTimer({
-    on: feed.b.auto && isPoolMode(sourceMode.b),
-    every: feed.b.every,
-    rolling: rolling.b,
-    advance: () => advanceOn('b'),
-  })
 
   // A strip row's roll, which differs from `rollAgain` in naming the pool rather
   // than reading it off whichever deck happens to be on one: the row said
@@ -1407,7 +1355,7 @@ export function useEngine(args: { rand: Rand }) {
   const rollOn = (origin: PoolOrigin, rand: Rand) => {
     const mode = POOL_MODE_FOR[origin]
     setSourceMode(m => ({ ...m, a: mode }))
-    rollFrom(slotA, mode, ANY_TOPIC.aim, rand)
+    void rollFrom(slotA, mode, ANY_TOPIC.aim, rand)
   }
 
   // A strip row's lookahead: load what the next row will want onto deck A's
@@ -1603,34 +1551,54 @@ export function useEngine(args: { rand: Rand }) {
       )
       return
     }
+    void shelfClipOn('a', id, name)
+  }
+
+  // A shelf clip onto a deck by its id, resolving to whether it landed. A clip
+  // whose read grant has lapsed is parked for a click, since nothing but a
+  // gesture can renew it, and counts as not landed.
+  const shelfClipOn = (
+    key: StashSlot,
+    id: string,
+    name: string,
+  ): Promise<boolean> =>
     openClipById(id).then(
       open => {
         if (open === null) {
           setError(`${name === '' ? id : name}: no longer on the shelf`)
-          return
+          return false
         }
         if (open.at === 'pool') {
-          showRef('a', open.ref, 'library')
-          markClip('a', { id, name: open.name, seconds: 0 })
-        } else if (open.needsGesture) {
+          markClip(key, { id, name: open.name, seconds: 0 })
+          return showRef(key, open.ref, 'library')
+        }
+        if (open.needsGesture) {
           setPending(
-            onDeck<Stashed | null>('a', {
+            onDeck<Stashed | null>(key, {
               ...open,
               at: 'file',
               mode: 'library',
               clip: id,
             }),
           )
-        } else {
-          open.open().then(
-            file => loadClip('a', file, { id, name: open.name }),
-            (e: unknown) => setError(`${open.name}: ${reason(e)}`),
-          )
+          return false
         }
+        return open.open().then(
+          file => {
+            loadClip(key, file, { id, name: open.name })
+            return true
+          },
+          (e: unknown) => {
+            setError(`${open.name}: ${reason(e)}`)
+            return false
+          },
+        )
       },
-      (e: unknown) => setError(`${name === '' ? id : name}: ${reason(e)}`),
+      (e: unknown) => {
+        setError(`${name === '' ? id : name}: ${reason(e)}`)
+        return false
+      },
     )
-  }
 
   // One named file onto a slot, off the shelf or out of the browser. Resolved
   // rather than replayed from a stored url (sources/pool.ts says why), so this is
@@ -1644,22 +1612,36 @@ export function useEngine(args: { rand: Rand }) {
   const showRef = (
     key: StashSlot,
     ref: PoolRef,
-    mode: 'library' | 'browse',
-  ) => {
+    mode: ListMode,
+  ): Promise<boolean> => {
     setError('')
     const slot = slotOf(key)
     const fresh = commitOn(key, mode)
     slot.setName('opening…')
-    resolvePool(ref, downloading(slot, fresh)).then(
+    return resolvePool(ref, downloading(slot, fresh)).then(
       picked => landPick(slot, picked, fresh),
       (e: unknown) => {
         if (fresh()) {
           slot.setName('')
           setError(`${ref.origin}: ${reason(e)}`)
         }
+        return false
       },
     )
   }
+
+  // Both decks' feeds (ui/useFeeds.ts). A feed item is a file upstream or a
+  // shelf clip, and each goes up the way a click in the browser or on the
+  // shelf would put it up.
+  const feeds = useFeeds({
+    modeOf: key => (key === 'a' ? sourceMode.a : sourceMode.b),
+    roll: (key, mode, aim) => rollFrom(slotOf(key), mode, aim),
+    show: (key, item: FeedItem, mode) =>
+      item.at === 'ref'
+        ? showRef(key, item.ref, mode)
+        : shelfClipOn(key, item.id, item.name),
+    fail: message => setError(message),
+  })
 
   // Decode a still into a slot. A passes the source's own aspect so compose
   // letterboxes it; B ignores the argument.
@@ -1750,7 +1732,7 @@ export function useEngine(args: { rand: Rand }) {
       stashed => {
         if (stashed === null) return
         if (stashed.at === 'pool') {
-          showRef(key, stashed.ref, 'library')
+          void showRef(key, stashed.ref, 'library')
           // After `showRef`, whose own commit clears it. A kept roll restored
           // at load is as much a shelf clip as one clicked, and a row captured
           // over it has to say so — this is the half that made `+ row` record a
@@ -2826,11 +2808,14 @@ export function useEngine(args: { rand: Rand }) {
       speed: speed.a,
       changeSpeed: r => changeSpeed('a', r),
       pick: pick.a,
-      feed: feed.a,
-      rolling: rolling.a,
-      advance: () => advanceOn('a'),
-      chooseTopic: (origin, t) => chooseTopicOn('a', origin, t),
-      retime: patch => retimeOn('a', patch),
+      feed: feeds.feeds.a,
+      feedOn: feedShowing(feeds.feeds.a, sourceMode.a),
+      advance: () => feeds.next('a'),
+      back: () => feeds.back('a'),
+      chooseTopic: (origin, t) => feeds.chooseTopic('a', origin, t),
+      searchTopic: q => feeds.searchTopic('a', q),
+      endFeed: () => feeds.endFeed('a'),
+      retime: change => feeds.retime('a', change),
     } satisfies SlotView<SourceMode>,
     b: {
       key: 'b',
@@ -2867,11 +2852,14 @@ export function useEngine(args: { rand: Rand }) {
       speed: speed.b,
       changeSpeed: r => changeSpeed('b', r),
       pick: pick.b,
-      feed: feed.b,
-      rolling: rolling.b,
-      advance: () => advanceOn('b'),
-      chooseTopic: (origin, t) => chooseTopicOn('b', origin, t),
-      retime: patch => retimeOn('b', patch),
+      feed: feeds.feeds.b,
+      feedOn: feedShowing(feeds.feeds.b, sourceMode.b),
+      advance: () => feeds.next('b'),
+      back: () => feeds.back('b'),
+      chooseTopic: (origin, t) => feeds.chooseTopic('b', origin, t),
+      searchTopic: q => feeds.searchTopic('b', q),
+      endFeed: () => feeds.endFeed('b'),
+      retime: change => feeds.retime('b', change),
     } satisfies SlotView<SourceBMode>,
     // Which source dialog is open, for which deck, and the two verbs that move
     // it (useSourcePrompt.ts). One object rather than five ask/setAsk pairs, and
@@ -2901,6 +2889,8 @@ export function useEngine(args: { rand: Rand }) {
     // picker entry the slot lands on, since the caption reopens whatever the
     // mode names and those two are different doors.
     showRef,
+    // Start a slideshow over a list: the browser's results, or the shelf.
+    startFeed: feeds.startFeed,
     rollAgain,
     // The ones the strip fires through (ui/useStrip.ts). `showSession` is the
     // same apply a link gets, which is what makes "a row is a query string"
