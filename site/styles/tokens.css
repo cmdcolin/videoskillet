@@ -9,3 +9,6 @@
   box-sizing: border-box;
   min-width: 0;
 }
+:where(button:not(:disabled)) {
+  cursor: pointer;
+}
