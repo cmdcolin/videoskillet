@@ -2,6 +2,11 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [2.2.2](https://github.com/cmdcolin/videoskillet/compare/v2.2.1...v2.2.2) - 2026-09-19
+
+### Chores
+- [`953ce58`](https://github.com/cmdcolin/videoskillet/commit/953ce589683199725048baba4436a15b70243356) look for a rules change across the whole push, not the last commit
+
 ## [2.2.1](https://github.com/cmdcolin/videoskillet/compare/v2.2.0...v2.2.1) - 2026-09-18
 
 ### Features
@@ -849,6 +854,7 @@ All notable changes to videoskillet.js are documented here.
 - *(ui)* [`9de4646`](https://github.com/cmdcolin/videoskillet/commit/9de4646410706cb4397c628025027c3bb3ec3dbe) panelshots can open a group inside a stage, and says so when it cannot
 
 ### Documentation
+- *(ui)* [`f46f45c`](https://github.com/cmdcolin/videoskillet/commit/f46f45c7ba78ea4f6179a2f75fe73aadb76ce435) write the app's own copy in the positive
 - [`4da0fc4`](https://github.com/cmdcolin/videoskillet/commit/4da0fc49b86dc4416eef080a722bd8d3f4f51209) the tape loop is gone, and the docs stop drawing it
 - [`5b7b8b4`](https://github.com/cmdcolin/videoskillet/commit/5b7b8b4b99f60b819769c0b0502cb59ffbb736bb) retake the four stale shots, and put the diagrams on one graphviz
 - [`eacd31b`](https://github.com/cmdcolin/videoskillet/commit/eacd31b4d4281dd4e4d75cb7e5fe404299ffa437) the delay loop stops being described by the code that outlived it
@@ -981,7 +987,6 @@ All notable changes to videoskillet.js are documented here.
 
 ### Documentation
 - *(ui)* [`fbe05f9`](https://github.com/cmdcolin/videoskillet/commit/fbe05f99acf3039a1bf77015da455206e928ac2e) record why recordings are H.264 High, and where the chroma goes
-- *(ui)* [`f46f45c`](https://github.com/cmdcolin/videoskillet/commit/f46f45c7ba78ea4f6179a2f75fe73aadb76ce435) write the app's own copy in the positive
 
 ## [0.30.1](https://github.com/cmdcolin/videoskillet/compare/v0.30.0...v0.30.1) - 2026-08-25
 
