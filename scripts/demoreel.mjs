@@ -90,7 +90,12 @@ const CLIP = { w: 640, h: 512 }
 // what a resampler tried to reach, and 30 into `STEPS` of 2 is exactly the
 // 60Hz the app runs at — no slow-motion fudge factor in either direction.
 const FPS = 30
-// Engine frames per output frame. Two at 30fps is real time.
+// Reference engine ticks per output frame at timeScale 1. `record()` scales
+// this by the live `timeScale` control before deciding whether a tick becomes
+// a `step()`, because `step()` itself forces a step past `timeScale`
+// (`pipeline.ts`'s `render()` gates on it, `step()` bypasses that gate) — a
+// demo like `My lord`, parked at `timeScale:0.45` so it crawls, was recording
+// at full rate and playing back over twice its real speed.
 const STEPS = 2
 
 // Recorded well above what is shipped: the clip is scaled down afterwards, and
@@ -169,8 +174,20 @@ async function record(demo, tmpDir) {
     const box = await canvas.boundingBox()
     const frames = SECS * FPS
     for (let n = 0; n < frames; n++) {
+      // Mirrors `simAcc` in `pipeline.ts`'s `render()`: a tick banks
+      // `timeScale` and only fires `step()` once the bank reaches 1, so a
+      // held tick reproduces `presentHeld()` — the frame just sits, same as
+      // it would live. `__demoAcc` lives on the page across ticks and starts
+      // fresh with it, one page per demo.
       await page.evaluate(async k => {
-        for (let i = 0; i < k; i++) window.vf?.step()
+        for (let i = 0; i < k; i++) {
+          const timeScale = window.vf?.getControls().timeScale ?? 1
+          window.__demoAcc = (window.__demoAcc ?? 0) + timeScale
+          if (window.__demoAcc >= 1) {
+            window.__demoAcc -= 1
+            window.vf?.step()
+          }
+        }
         await new Promise(r => setTimeout(r, 4))
       }, STEPS)
       // JPEG rather than PNG for the intermediates, which is not a quality
