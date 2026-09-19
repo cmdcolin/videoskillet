@@ -94,10 +94,22 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          fetch-depth: 2
+          fetch-depth: 0
+      # Across the whole push, not the last commit alone: scripts/push.mjs sends
+      # the work and the `Release vX.Y.Z` commit on top of it in one go, so a
+      # one-commit window sees the version bump and nothing else, and rules a
+      # release carries sit un-live under code that assumes them. That is how
+      # the session still's `q` field missed the deploy in v2.1.4. A base this
+      # checkout does not have — a first push, a force push, a manual run —
+      # deploys rather than guesses.
       - id: changed
+        env:
+          BASE: ${{ github.event.before }}
         run: |
-          if git diff --name-only HEAD^ HEAD | grep -qx firestore.rules; then
+          if ! git cat-file -e "${BASE}^{commit}" 2>/dev/null; then
+            echo 'the base of this push is not in the checkout; deploying to be sure.'
+            echo 'rules=true' >> "$GITHUB_OUTPUT"
+          elif git diff --name-only "$BASE" HEAD | grep -qx firestore.rules; then
             echo 'rules=true' >> "$GITHUB_OUTPUT"
           else
             echo 'firestore.rules is unchanged in this push; nothing to deploy.'
