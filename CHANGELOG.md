@@ -2,6 +2,15 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [2.2.3](https://github.com/cmdcolin/videoskillet/compare/v2.2.2...v2.2.3) - 2026-09-19
+
+### Features
+- *(ui)* [`4a791b7`](https://github.com/cmdcolin/videoskillet/commit/4a791b7a9f0031aa62f12ea2282b1d557a726c86) add Rainbow snakes to the gallery, promote Purple woman to showcase
+- *(ui)* [`8b577bc`](https://github.com/cmdcolin/videoskillet/commit/8b577bc49ed0d6942afc83b11c92acc8fc07a492) riffs — small mods on a gallery demo, linked below its card
+
+### Documentation
+- *(ui)* [`0514bf9`](https://github.com/cmdcolin/videoskillet/commit/0514bf9effbd9099e94cb15d9da4a41eed0c5df0) record stills for Messed up clouds and Rainbow snakes
+
 ## [2.2.2](https://github.com/cmdcolin/videoskillet/compare/v2.2.1...v2.2.2) - 2026-09-19
 
 ### Chores
