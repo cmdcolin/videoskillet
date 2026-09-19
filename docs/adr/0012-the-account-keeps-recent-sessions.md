@@ -1,6 +1,7 @@
-# 0012 — The account keeps one session per visit, the last eight
+# 0012 — The account keeps one session per visit, up to a cap
 
-**Status:** accepted, 2026-09-17. Supersedes the single `current` session in
+**Status:** accepted, 2026-09-17, cap raised and manual delete added 2026-09-19.
+Supersedes the single `current` session in
 [0010](0010-the-account-holds-the-session.md).
 
 ## Context
@@ -12,16 +13,17 @@ slider. The autosave already writes on every settle, so the account was
 discarding boards it had been sent.
 
 The obvious extension is to keep every write as a history entry, and it is
-wrong. A session of dialling writes once every ten seconds, so eight entries
-would hold the last minute or two of one visit, each a slightly different board.
+wrong. A session of dialling writes once every ten seconds, so a short cap would
+hold only the last minute or two of one visit, each a slightly different board —
+which is why a page load gets one entry, not one per write.
 
 ## Decision
 
-**The user document holds `recent`, a list of up to eight `{id, query, at}`,
-newest first.** A page load mints one id, and every write from that load
-replaces its own entry and moves it to the front. A later load adds a new entry.
-An entry whose query matches the one being written is the same board and gives
-up its place too.
+**The user document holds `recent`, a list of up to `RECENT_MAX`
+`{id, query, at}`, newest first.** A page load mints one id, and every write
+from that load replaces its own entry and moves it to the front. A later load
+adds a new entry. An entry whose query matches the one being written is the same
+board and gives up its place too.
 
 **Resuming continues the entry it opened.** The home page's Resume link writes
 the session's id into `sessionStorage` as it is followed, and the app takes it
@@ -38,6 +40,12 @@ entry off the list deletes that entry's still, best effort.
 `stills/_session`. The first write folds it into the list and deletes `current`
 in the same transaction.
 
+**A session can also be deleted by hand.** The home page shows a preview of the
+account's earlier sessions plus a link to `/sessions/`, which lists every one of
+them; each card there and on the home page carries a "Delete" that calls
+`dropSession`, the same kind of transaction as a push, and cleans up the entry's
+still the same way a push dropping it off the end would.
+
 ## Consequences
 
 - **A session write is a transaction.** It reads the document to merge the list,
@@ -48,6 +56,11 @@ in the same transaction.
   on the way in.
 - **Bender shares the model and the rules.** `recent` is in both
   `isValidProfileDoc` and `isValidVoiceDoc`, and the list algebra is in the
-  `saved-list-model` and `saved-list-cloud` sync regions.
-- **Eight is the rules' number too.** `RECENT_MAX` and the `size() <= 8` guard
-  have to move together; the rules test fails at nine.
+  `saved-list-model` and `saved-list-cloud` sync regions. `RECENT_MAX` itself
+  sits just outside those regions, since each product's history cap is its own
+  choice — videoskillet's is 1000, bender's is still 8.
+- **The rules' number has to match `RECENT_MAX`.** `isValidProfileDoc`'s
+  `size() <= 1000` and the rules test have to move together with it. A session's
+  query is normally the packed form (tens to a few hundred bytes), which is what
+  keeps 1000 of them under Firestore's 1 MiB document cap; `QUERY_MAX` alone
+  would not.

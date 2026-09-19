@@ -13,6 +13,7 @@ import {
   readProfiles,
   readRecent,
   removeProfile,
+  removeRecent,
   renameProfile,
   suggestProfileName,
   upsertProfile,
@@ -179,6 +180,18 @@ describe('the recent sessions', () => {
     expect(recent).toHaveLength(RECENT_MAX)
     expect(recent[0].id).toBe('new')
     expect(dropped).toEqual([`s${RECENT_MAX - 1}`])
+  })
+
+  it('drops one session by id and leaves the rest in place', () => {
+    expect(removeRecent([r('a'), r('b'), r('c')], 'b')).toEqual([
+      r('a'),
+      r('c'),
+    ])
+  })
+
+  it('leaves the list as it was when the id is not there', () => {
+    const list = [r('a'), r('b')]
+    expect(removeRecent(list, 'z')).toEqual(list)
   })
 })
 

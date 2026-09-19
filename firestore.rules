@@ -43,14 +43,17 @@ service cloud.firestore {
     // them. `recent` is the autosaved sessions, newest first, each an id, the
     // same packed query a profile holds, and a clock; a list, so its entries go
     // unchecked like the profiles'. `current` is the single session older builds
-    // wrote — the same query and clock — or null once cleared.
+    // wrote — the same query and clock — or null once cleared. 1000 sessions is
+    // the app's own history cap (RECENT_MAX in profileModel.ts); the entries are
+    // usually a packed query of tens to a few hundred bytes, well under the 1
+    // MiB document even at that count.
     function isValidProfileDoc() {
       let data = request.resource.data;
       return data.keys().hasOnly(['profiles', 'recent', 'current'])
              && (!('profiles' in data)
                  || (data.profiles is list && data.profiles.size() <= 200))
              && (!('recent' in data)
-                 || (data.recent is list && data.recent.size() <= 8))
+                 || (data.recent is list && data.recent.size() <= 1000))
              && (!('current' in data)
                  || data.current == null
                  || (data.current is map

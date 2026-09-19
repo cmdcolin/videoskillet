@@ -19,8 +19,6 @@ import {
   sessionStill,
   signIn,
   signOut,
-  stillShows,
-  stillTag,
   warmSignIn,
   wasSignedIn,
   watchAuth,
@@ -31,27 +29,28 @@ import {
   removeProfile,
   renameProfile,
 } from '../../src/ui/profileModel'
-import { handOffSession } from '../../src/ui/resumeHandoff'
 import { sinceWords } from '../lib/relativeTime'
+import {
+  el,
+  fillStills,
+  linkFor,
+  nameRow,
+  resumeLink,
+  section,
+  sessionCard,
+  sessionShot,
+  shareLink,
+  shotFor,
+} from './sessionCards'
 
 import type { CloudUser, HomeDoc, Still } from '../../src/ui/cloud'
-import type { RecentSession, SavedProfile } from '../../src/ui/profileModel'
+import type { SavedProfile } from '../../src/ui/profileModel'
+import type { SessionEdits } from './sessionCards'
 
 // CROSS_REPO_SYNC(home-dom-helpers)
 const need = (id: string): HTMLElement => {
   const node = document.getElementById(id)
   if (node === null) throw new Error(`no #${id}`)
-  return node
-}
-
-const el = <K extends keyof HTMLElementTagNameMap>(
-  tag: K,
-  className?: string,
-  text?: string,
-): HTMLElementTagNameMap[K] => {
-  const node = document.createElement(tag)
-  if (className !== undefined) node.className = className
-  if (text !== undefined) node.textContent = text
   return node
 }
 // CROSS_REPO_SYNC_END(home-dom-helpers)
@@ -76,106 +75,11 @@ const whyTrouble = need('whyTrouble')
 // would put every demo's name, still and clip in the bundle a second time.
 const galleryCards = galleryHost.firstElementChild
 
-const linkFor = (query: string) => `/app/#${query}`
-
 // PROFILE_SLOTS in profileModel: the number keys recall the first nine, so a
 // card past the ninth has no key to name.
 const SLOTS = 9
 
 // --- pieces of a card -------------------------------------------------------
-
-// The still of a saved look, or the panel a look with no still gets. A profile
-// saved before stills existed, or one whose still has not been written yet,
-// shows the app mark on the card's own black.
-function shotOf(still: string | undefined): HTMLElement {
-  const shot = el('span', 'shot')
-  if (still === undefined) {
-    shot.classList.add('blank')
-    const mark = el('img', 'blankMark')
-    mark.src = '/favicon.svg'
-    mark.alt = ''
-    mark.width = 40
-    mark.height = 40
-    shot.append(mark)
-    return shot
-  }
-  const img = el('img', 'still')
-  img.src = `data:image/webp;base64,${still}`
-  img.alt = ''
-  img.width = 640
-  img.height = 512
-  img.loading = 'lazy'
-  img.decoding = 'async'
-  shot.append(img)
-  return shot
-}
-
-// Which still a card shows: `id`'s when it is a picture of the board the card
-// is offering, and otherwise `or`'s.
-interface StillPick {
-  id?: string
-  // The board, as `stillTag` writes it. A tagged still matches or it does not,
-  // and the clock never enters into it.
-  q?: string
-  // The fallback test for a still written before tagging: taken no earlier than
-  // the entry it belongs to.
-  since?: number
-  or?: string
-}
-
-function pickStill(
-  stills: Map<string, Still>,
-  pick: StillPick,
-): string | undefined {
-  const own = pick.id === undefined ? undefined : stills.get(pick.id)
-  if (own !== undefined && stillShows(own, pick)) return own.webp
-  return pick.or === undefined ? undefined : stills.get(pick.or)?.webp
-}
-
-// The stills arrive after the home is drawn, since they can be most of a
-// megabyte between them. Until then a look that may have one gets the card's
-// black with nothing on it. Every shot keeps its pick, so `fillStills` can swap
-// in the picture, the mark, or a newer picture on a return by Back.
-function shotFor(
-  pick: StillPick,
-  stills: Map<string, Still> | undefined,
-): HTMLElement {
-  if (pick.id === undefined && pick.or === undefined) return shotOf(undefined)
-  const shot =
-    stills === undefined ? el('span', 'shot') : shotOf(pickStill(stills, pick))
-  if (pick.id !== undefined) shot.dataset.look = pick.id
-  if (pick.q !== undefined) shot.dataset.q = pick.q
-  if (pick.since !== undefined) shot.dataset.since = String(pick.since)
-  if (pick.or !== undefined) shot.dataset.or = pick.or
-  return shot
-}
-
-function fillStills(stills: Map<string, Still>) {
-  for (const shot of home.querySelectorAll<HTMLElement>(
-    '.shot[data-look], .shot[data-or]',
-  )) {
-    const { look, q, since, or } = shot.dataset
-    const pick = {
-      id: look,
-      q,
-      since: since === undefined ? undefined : Number(since),
-      or,
-    }
-    const webp = pickStill(stills, pick)
-    const img = shot.querySelector<HTMLImageElement>('img.still')
-    const same =
-      webp === undefined
-        ? shot.classList.contains('blank')
-        : img?.src === `data:image/webp;base64,${webp}`
-    if (!same) shot.replaceWith(shotFor(pick, stills))
-  }
-}
-
-function nameRow(name: string): HTMLElement {
-  const row = el('span', 'name')
-  row.append(document.createTextNode(name), el('span', 'open', 'open →'))
-  return row
-}
 
 function lookCard(
   profile: SavedProfile,
@@ -204,9 +108,6 @@ function lookCard(
   item.append(link, cardActions(profile, edits))
   return item
 }
-
-// The link a copied card carries, whole, so it opens from a chat window.
-const shareLink = (query: string) => new URL(linkFor(query), location.href).href
 
 // A deleted look's still goes with it. Best effort: a still left behind is a
 // document nothing reads.
@@ -350,52 +251,7 @@ function cardActions(profile: SavedProfile, edits: CardEdits): HTMLElement {
 }
 // CROSS_REPO_SYNC_END(home-card-actions)
 
-function section(id: string, heading: string, sub?: string): HTMLElement {
-  const box = el('section', 'homeSec')
-  box.id = id
-  box.append(el('h2', 'head', heading))
-  if (sub !== undefined) box.append(el('p', 'sub', sub))
-  return box
-}
-
 // --- the sections -----------------------------------------------------------
-
-// A saved look with the session's query is the same board. The newest one names
-// the session's card and lends it a still.
-const savedAs = (doc: HomeDoc, session: RecentSession) =>
-  doc.profiles
-    .filter(p => p.query === session.query)
-    .sort((a, b) => (b.savedAt ?? 0) - (a.savedAt ?? 0))[0]
-
-// The session's own still, when it is a picture of the board the card resumes.
-// A session written from a hidden tab carries no new picture, and the entry it
-// updates keeps the one an earlier write left, so the test is the board and not
-// the clock. The matching saved look's still serves next; failing both, the
-// card shows the mark.
-const sessionShot = (
-  doc: HomeDoc,
-  session: RecentSession,
-  stills: Map<string, Still> | undefined,
-) =>
-  shotFor(
-    {
-      id: sessionStill(session.id),
-      q: stillTag(session.query),
-      since: session.at,
-      or: savedAs(doc, session)?.id,
-    },
-    stills,
-  )
-
-// A link that continues the session it opens.
-function resumeLink(session: RecentSession, className: string): HTMLElement {
-  const go = el('a', className)
-  go.href = linkFor(session.query)
-  go.addEventListener('click', () => {
-    handOffSession(session.id)
-  })
-  return go
-}
 
 function resumeSection(
   doc: HomeDoc,
@@ -432,29 +288,17 @@ function resumeSection(
   return box
 }
 
-function sessionCard(
-  doc: HomeDoc,
-  session: RecentSession,
-  stills: Map<string, Still> | undefined,
-  now: number,
-): HTMLElement {
-  const item = el('li')
-  const link = resumeLink(session, 'demo')
-  const match = savedAs(doc, session)
-  link.append(
-    sessionShot(doc, session, stills),
-    nameRow(sinceWords(session.at, now)),
-  )
-  if (match !== undefined)
-    link.append(el('span', 'says', `saved as “${match.name}”`))
-  item.append(link)
-  return item
-}
+// How many earlier sessions the home page shows before pointing at the
+// dedicated page for the rest. The account can keep far more than fit here —
+// RECENT_MAX in profileModel.ts — without the home page turning into a scroll
+// of them.
+const EARLIER_PREVIEW = 6
 
 function earlierSection(
   doc: HomeDoc,
   stills: Map<string, Still> | undefined,
   now: number,
+  edits: SessionEdits,
 ) {
   const earlier = doc.recent.slice(1)
   if (earlier.length === 0) return undefined
@@ -464,9 +308,16 @@ function earlierSection(
     'The app saves each visit as you work. Opening one carries on from where that visit stopped.',
   )
   const grid = el('ul', 'grid looks')
-  for (const session of earlier)
-    grid.append(sessionCard(doc, session, stills, now))
+  for (const session of earlier.slice(0, EARLIER_PREVIEW))
+    grid.append(sessionCard(doc, session, stills, now, edits))
   box.append(grid)
+  if (earlier.length > EARLIER_PREVIEW) {
+    const more = el('p', 'sessionsMore')
+    const go = el('a', 'btn', `See all ${earlier.length} sessions →`)
+    go.href = '/sessions/'
+    more.append(go)
+    box.append(more)
+  }
   return box
 }
 
@@ -675,11 +526,17 @@ export function showHome(
       if (signedIn?.uid === user.uid) void draw(user, { ...doc, profiles })
     },
   }
+  const sessionEdits: SessionEdits = {
+    uid: user.uid,
+    redraw: recent => {
+      if (signedIn?.uid === user.uid) void draw(user, { ...doc, recent })
+    },
+  }
   showFrame(
     user,
     [
       resumeSection(doc, stills, now),
-      earlierSection(doc, stills, now),
+      earlierSection(doc, stills, now, sessionEdits),
       looksSection(doc, stills, now, edits),
     ].filter(box => box !== undefined),
   )
@@ -765,7 +622,7 @@ async function draw(user: CloudUser, doc: HomeDoc) {
       : await freshen(user.uid, doc, cached)
   if (drawn !== turn) return
   if (stills !== undefined) stillCache = { uid: user.uid, stills }
-  fillStills(stills ?? new Map())
+  fillStills(home, stills ?? new Map())
 }
 
 // CROSS_REPO_SYNC(home-sign-in)

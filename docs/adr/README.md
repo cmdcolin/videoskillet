@@ -36,4 +36,4 @@ readable without it.
 | [0009](0009-the-receiver-finds-its-own-black.md)     | The sync separator slices off the peak it finds and the restorer sets black from it |
 | [0010](0010-the-account-holds-the-session.md)        | The account holds the session and a still per profile, not just the library         |
 | [0011](0011-app-check-attests-the-client.md)         | App Check attests the client, and the rules do not rate limit                       |
-| [0012](0012-the-account-keeps-recent-sessions.md)    | The account keeps one session per visit, the last eight                             |
+| [0012](0012-the-account-keeps-recent-sessions.md)    | The account keeps one session per visit, up to a cap                                |

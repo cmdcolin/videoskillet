@@ -30,6 +30,14 @@
 // next machine, which a localStorage copy could never promise. Everything in
 // this file is the storage-agnostic half — the list algebra and the name rules;
 // cloud.ts is what reads and writes it.
+
+// How many sessions one account keeps. The rules refuse a longer list. Kept
+// out of the region below: bender caps its own account's history separately.
+// A session's query is usually the packed form (tens to a few hundred bytes),
+// so 1000 of them sits well under Firestore's 1 MiB document cap even though
+// QUERY_MAX would not.
+export const RECENT_MAX = 1000
+
 // CROSS_REPO_SYNC(saved-list-model)
 export interface SavedProfile {
   name: string
@@ -54,9 +62,6 @@ export interface CurrentSession {
 export interface RecentSession extends CurrentSession {
   id: string
 }
-
-// How many sessions one account keeps. The rules refuse a longer list.
-export const RECENT_MAX = 8
 
 // How many profiles one account has. The rules refuse a longer list.
 export const PROFILE_MAX = 200
@@ -156,6 +161,11 @@ export function pushRecent(
     dropped: recent.flatMap(s => (kept.has(s.id) ? [] : [s.id])),
   }
 }
+
+export const removeRecent = (
+  recent: readonly RecentSession[],
+  id: string,
+): RecentSession[] => recent.filter(item => item.id !== id)
 
 // Save under a name, replacing any profile already using it **in place**. Order
 // is insertion order and a re-save does not disturb it: the list is read by eye

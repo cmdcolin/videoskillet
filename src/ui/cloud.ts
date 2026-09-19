@@ -3,6 +3,7 @@ import {
   pushRecent,
   readProfiles,
   readRecent,
+  removeRecent,
 } from './profileModel'
 import { readStored, removeStored, writeString } from './storage'
 
@@ -269,6 +270,27 @@ export async function putSession(
       { merge: true },
     )
     return dropped
+  })
+}
+
+// Removes one session in the same kind of transaction, and resolves to the
+// list that landed.
+export async function dropSession(
+  uid: string,
+  id: string,
+): Promise<RecentSession[]> {
+  const { db, fs } = await loadSdk()
+  const ref = fs.doc(db, COLLECTION, uid)
+  return fs.runTransaction(db, async tx => {
+    const snap = await tx.get(ref)
+    const data = snap.exists() ? snap.data() : undefined
+    const recent = removeRecent(readRecent(data?.recent, data?.current), id)
+    tx.set(
+      ref,
+      { recent: recent.map(s => ({ id: s.id, query: s.query, at: s.at })) },
+      { merge: true },
+    )
+    return recent
   })
 }
 // CROSS_REPO_SYNC_END(saved-list-cloud)

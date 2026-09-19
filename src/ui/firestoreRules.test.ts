@@ -238,17 +238,17 @@ describe.skipIf(EMULATOR === undefined)('firestore.rules', () => {
     await assertSucceeds(
       asOwner()
         .doc(`users/${OWNER}`)
-        .set({ recent: recent(8), current: deleteField() }, { merge: true }),
+        .set({ recent: recent(1000), current: deleteField() }, { merge: true }),
     )
     const snap = await asOwner().doc(`users/${OWNER}`).get()
-    expect(snap.data()).toEqual({ ...docOf('vhs'), recent: recent(8) })
+    expect(snap.data()).toEqual({ ...docOf('vhs'), recent: recent(1000) })
   })
 
   it('refuses a recent list that is too long or not a list', async () => {
     await assertFails(
       asOwner()
         .doc(`users/${OWNER}`)
-        .set({ recent: recent(9) }),
+        .set({ recent: recent(1001) }),
     )
     await assertFails(
       asOwner().doc(`users/${OWNER}`).set({ recent: session() }),
