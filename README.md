@@ -179,7 +179,7 @@ video cables together and posting tumblr gifs.
 - Ponderorb
   https://videoskillet.com/app/?p=8A.GIgECaABABwAtCUpNCOQAwCsHACACgKUJQK0ARLEAQGcBwAEAIQCAJQDAEwCbACkAgCkAVKA2QE&mod=
 
-- Messed up clouds man
+- Messed up clouds
   https://videoskillet.com/app/?p=Y5.GIgFEVQA9AEAYA6AAhHAAQBkDEgEkAMIGAKgAgC0AQToAgKcAQH4IQEoAIwBACAAkAMFXGioFAe5vgMAocQB&mod=vFreqHz:smooth:0.08:0.0049,fbGain:smooth:0.24:0.06&src=vhs+static
 
 - My lord
@@ -187,6 +187,9 @@ video cables together and posting tumblr gifs.
 
 - Purple woman
   https://videoskillet.com/app/#set=capLumaMHz:4.2,demodMHz:3.43,chromaGain:13.62,vir:0.86,lumaMHz:6,noiseIre:9.2,colorUnderMix:0.38,underJitterDeg:1.5,headSwitchNoise:0.15,headSwitchShiftUs:0.3,diffGain:1,diffPhaseDeg:49,tbJitterNs:300,tbWowNs:110,dubGens:3,cfbMix:1,cfbGain:-1.08,cfbDelayUs:2.233,cfbLines:59,cfbKey:0.98,cfbKeyLevel:48,cfbServoUs:0.07,cfbRing:0.89,cfbGenlock:1&mod=&iurlb=https:%2F%2Fthumb.wikimedia.org%2Fwikipedia%2Fcommons%2Fthumb%2Fa%2Fa5%2FMinho_for_Marie_Claire_Magazine_August_Issue_2021_02.png%2F1280px-Minho_for_Marie_Claire_Magazine_August_Issue_2021_02.png%3Futm_source%3Dcommons.wikimedia.org%26utm_campaign%3Dimageinfo%26utm_content%3Dthumbnail&iurl=https:%2F%2Fupload.wikimedia.org%2Fwikipedia%2Fcommons%2Ff%2Ff1%2FJill_St._John_-_Tony_Rome%252C_1967.jpg%3Futm_source%3Dcommons.wikimedia.org%26utm_campaign%3Dimageinfo%26utm_content%3Dthumbnail_unscaled
+
+- Rainbow snakes
+  https://videoskillet.com/app/#mod=fbGain:smooth:0.02:0.64&src=vhs+static&set=chromaGain:1.62,hvSagUs:2.1,hvRing:0.61,abl:0.24,lumaMHz:3.2,lumaPeak:2.4,noiseIre:2.5,agc:0.18,colorUnderMix:1,ycDelayNs:420,fmOverdev:0.72,fmStreakUs:0.45,fbMix:0.93,fbRotateDeg:0.11,fbShiftX:-0.003,fbShiftY:0.035,fbIris:0.43,fbVign:0.188604,fbBlack:0.035,fbKnee:1,crtBloom:0.23,cfbMix:0.9,cfbGain:0.56,cfbDelayUs:0.027,cfbKeySoft:16.5,cfbFilterMHz:1,cfbFilterBoost:2.35,cfbRing:1,cfbRingSrc:1,cfbCarrierKHz:0.09,cfbClockPct:-0.02328,cfbGenlock:1,aGain:0.99,phosphor:0.065,crtZoomX:0.7143,crtZoomY:0.314
 
 <!-- /generated:demos -->
 
