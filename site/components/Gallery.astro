@@ -6,6 +6,10 @@
 //
 // `alt=""` because the name is on the card beside it, and the line under the
 // name says what the picture is made of.
+//
+// A demo's riffs are plain links under its card, not cards of their own — a
+// riff has no recording behind it, just a query one small mod off the demo
+// above it.
 import { gallery } from '../../scripts/demos.mjs'
 ---
 
@@ -38,6 +42,15 @@ import { gallery } from '../../scripts/demos.mjs'
         </span>
         <span class="says">{demo.says}</span>
       </a>
+      {demo.riffs.length > 0 && (
+        <ul class="riffs">
+          {demo.riffs.map(riff => (
+            <li>
+              <a href={riff.href}>{riff.name}</a> — {riff.says}
+            </li>
+          ))}
+        </ul>
+      )}
     </li>
   ))}
 </ul>

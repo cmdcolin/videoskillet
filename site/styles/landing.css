@@ -488,6 +488,40 @@ code {
 .demo:focus-visible .open {
   color: var(--accent);
 }
+/* A demo's riffs, under its card rather than in it — the <li> carries the
+   border so the card and its riffs read as one block, the way a saved look's
+   card and its button row do in site.css. */
+.grid li:has(> .riffs) {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--border-faint);
+  border-radius: 0.6rem;
+  background: var(--surface);
+}
+.grid li:has(> .riffs) > .demo {
+  border: 0;
+  border-radius: 0;
+}
+.grid li:has(> .demo:hover, > .demo:focus-visible) {
+  border-color: var(--accent);
+}
+.riffs {
+  margin: 0;
+  padding: 0.5rem 0.85rem 0.6rem;
+  list-style: none;
+  border-top: 1px solid var(--border-faint);
+  font-size: 0.8rem;
+  color: var(--fg4);
+  line-height: 1.5;
+}
+.riffs a {
+  color: var(--fg2);
+}
+.riffs a:hover,
+.riffs a:focus-visible {
+  color: var(--accent);
+}
 /* The reader's own looks can number two hundred, so their cards run smaller
    than the gallery's: four across the home column, two on a phone. */
 .grid.looks {

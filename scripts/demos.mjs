@@ -40,6 +40,11 @@
 //          like "Wonkitize me" over them does not make it. Read off the look
 //          itself — the controls it carries that stock does not — so a caption
 //          is a description of the board and not a guess at the picture.
+//   riffs  optional small mods on this demo's own board — the query with one
+//          or two values pushed somewhere weirder, each just a name, a `says`
+//          and a query of its own. They show as plain links under the card,
+//          not as cards themselves: no recording, no still, just a way to
+//          reach a look one step off a look already on the page.
 //
 // Order is the order everything shows in: the carousel plays its members in it,
 // the gallery lists all of them in it, and the README prints it.
@@ -70,8 +75,18 @@ export const slug = name =>
 
 // Annotated because `JSON.parse` hands back `any`, and `landing-demos.test.ts`
 // imports this module: without a shape here, the tests over it are unchecked.
-/** @type {{ name: string, query: string, says: string, showcase: boolean, gallery: boolean }[]} */
+/** @type {{ name: string, query: string, says: string, showcase: boolean, gallery: boolean, riffs?: { name: string, query: string, says: string }[] }[]} */
 const listed = JSON.parse(readFileSync('demos.json', 'utf8'))
+
+// Shared between a demo and a riff: both are a name plus a query, and both
+// queries arrive under the same two sigils.
+const checkQuery = (name, query) => {
+  if (!query.startsWith('?') && !query.startsWith('#')) {
+    throw new Error(
+      `${name}: query must start with '?' or '#', not an origin — got ${query.slice(0, 40)}…`,
+    )
+  }
+}
 
 // `still` is page-relative and `poster` is not, which is not an oversight: vite
 // rewrites the asset attributes it knows — `src` and `poster` become
@@ -94,11 +109,11 @@ export const demos = listed.map(demo => {
   // as an origin, which also rejected the form the app itself hands you: once
   // it owns the address bar it writes the look into the fragment, so half the
   // links a person copies begin `#`.
-  if (!demo.query.startsWith('?') && !demo.query.startsWith('#')) {
-    throw new Error(
-      `${demo.name}: query must start with '?' or '#', not an origin — got ${demo.query.slice(0, 40)}…`,
-    )
-  }
+  checkQuery(demo.name, demo.query)
+  const riffs = (demo.riffs ?? []).map(riff => {
+    checkQuery(`${demo.name}: ${riff.name}`, riff.query)
+    return { ...riff, href: `/app/${riff.query}` }
+  })
   return {
     ...demo,
     file,
@@ -107,6 +122,7 @@ export const demos = listed.map(demo => {
     clip: `${CLIPS}${file}.mp4`,
     still: `demos/${file}.webp`,
     poster: `/demos/${file}.webp`,
+    riffs,
   }
 })
 

@@ -100,3 +100,24 @@ test.each(published)('%s: %s', (_page, query) => {
     })
   }
 })
+
+// A riff is one or two values off its own demo, not a look on its own — no
+// floor on how many controls it moves, and no packed form to round-trip. What
+// it still owes a reader is a query that parses and stays in range, same as
+// any other link the project hands out.
+const riffs = demos.flatMap(demo =>
+  demo.riffs.map(riff => [demo.name, riff] as const),
+)
+
+test.each(riffs)('%s: riff %s parses to a look in range', (_demo, riff) => {
+  const look = parseSessionParams(
+    `?${riff.query.replace(/^[?#]/, '')}`,
+  ).controls
+  for (const [key, v] of Object.entries(look)) {
+    const def = SLIDER_BY_KEY.get(key as ControlKey)
+    expect({ key, inRange: v >= def!.min && v <= def!.max }).toEqual({
+      key,
+      inRange: true,
+    })
+  }
+})

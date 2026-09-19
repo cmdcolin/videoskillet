@@ -110,10 +110,7 @@ function askAnalytics() {
   const privacy = document.createElement('a')
   privacy.href = PRIVACY
   privacy.textContent = 'What it collects'
-  says.append(
-    'This site uses Google Analytics. I just want to see if people use the site. ',
-    privacy,
-  )
+  says.append('This site uses Google Analytics', privacy)
 
   const answer = (value: AnalyticsAnswer, label: string) => {
     const button = document.createElement('button')

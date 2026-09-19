@@ -157,3 +157,14 @@ test('a demo kept out of the gallery is still a demo', () => {
     expect(readFileSync('README.md', 'utf8')).toContain(demo.url)
   }
 })
+
+const riffs = gallery.flatMap(demo => demo.riffs)
+
+test('there is at least one riff to check the concept against', () => {
+  expect(riffs.length).toBeGreaterThan(0)
+})
+
+test.each(riffs)('$name is a link under its demo’s card', riff => {
+  expect(page).toContain(riff.href.replaceAll('&', '&amp;'))
+  expect(page).toContain(riff.says.replaceAll("'", '&#39;'))
+})
