@@ -8,48 +8,24 @@ Click a preset to jump to it. Drag it sideways to blend it part-way in.
 
 ![The head of the panel: a row of whole-board buttons (compare, random look and its ▾, drift, morph) over tags, reset and undo, then the Presets shortlist of chips and the dashed handle to the rest](img/presets.png)
 
-- **this look** opens a menu listing every control you're off stock on, as
-  sliders. Drag to edit, **↺** to revert one, `ctrl+z` puts back what ↺ took. It
-  is a menu so the panel never grows under your pointer as you edit. On a phone
-  held upright it narrows the panel to those controls, and shows in the filter
-  box as a **this look** token; press either to show the whole panel again.
-- **reset** puts everything back to stock (controls, modulation bay, stab gate)
-  and `ctrl+z` undoes it. **clean** does the same thing. Hold `c` to preview
-  clean without changing anything.
-- **random look** stacks a few presets into something new. **random nudge**
-  keeps your look and moves it a little: everything already doing something,
-  plus a few controls that weren't. `shift` for wilder, `alt` for gentler,
-  `ctrl`/`cmd` for a wreck. It is the quickest way to find something new.
+- **this look** opens a menu of every control you're off stock on, as sliders.
+  Drag to edit, **↺** to revert one, `ctrl+z` puts back what ↺ took.
+- **reset** puts everything back to stock — controls, modulation bay and stab
+  gate — and `ctrl+z` undoes it. Hold `c` to preview clean without changing
+  anything.
+- **random nudge** keeps your look and moves it a little: everything already
+  doing something, plus a few controls that weren't. `shift` for wilder, `alt`
+  for gentler, `ctrl`/`cmd` for a wreck. **random look** stacks a few presets
+  instead, and the **▾** beside the button holds the rest of the rolls, ordered
+  by how much of your look survives.
 - **random motion** leaves every slider where it is and re-patches the
   modulation bay, putting LFOs, drift and sample-and-hold onto controls this
   look uses. Same modifiers, with `ctrl`/`cmd` giving a bay that never settles.
-  `ctrl+z` restores what it replaced.
-- The **▾** beside the roll button holds all six, ordered by how much of your
-  look survives. Picking one rolls it and leaves it on the button, so going
-  again is one press. **random preset** draws one authored look whole, at its
-  tuned strength. **random fault** throws a couple of controls a long way and
-  leaves the rest, so the change is one thing you can name and take back.
-  **random cross** keeps some circuits of your look (tape, tube, sync) and
-  rerolls the rest.
-- **drift** is the random nudge running on its own. Press once (or `d`) and the
-  look wanders: a gentle nudge every 15 seconds, travelling most of the way each
-  time, so the picture keeps moving and never cuts. It stays near the look you
-  set it going on, however long you leave it. Press again to stop where it got
-  to; `ctrl+z` then restores the look you started on, since none of the legs
-  between is stored. Each stage heading has the same switch for its own
-  controls, so the tape path can wander while you dial the sync card by hand.
-  Pressing one takes over from the other, since a control wanders around one
-  look at a time. For a wander that is part of a piece, use the strip's shake
-  row: it holds in bars, is seeded and is saved.
-- The **▾** beside drift holds two round trips, which travel out and come back.
-  **cycle** morphs out to one look and home again, over and over, so every other
-  leg lands exactly on the look you set going; the far end is a nudge to that
-  look, rolled once when you press. **tour** makes the same trip to a look you
-  have not seen each time. Because both keep arriving back, either is safe to
-  leave running overnight — your look is never more than one leg away, and the
-  trip out can afford to go three times as far as a wander's nudge. Picking one
-  sets it going and leaves it on the button, and every stage heading's switch
-  then does what you picked.
+- **drift** runs the random nudge unattended: a gentle nudge every 15 seconds,
+  travelling most of the way each time. Press once (or `d`) to start it, again
+  to stop where it got to. The **▾** beside it holds **cycle** and **tour**,
+  which travel out to another look and come back over and over, and every stage
+  heading carries the same switch for that stage alone.
 - **morph** sets how long a new look takes to arrive: cut, 1s, 4s, 8s or 30s.
   Rolls chain, so rolling every few seconds wanders continuously.
 - **undo** (`ctrl+z`) steps back through all of it.
@@ -58,72 +34,41 @@ Click a preset to jump to it. Drag it sideways to blend it part-way in.
 
 Pick each source at the head of its stage: **A** on SOURCE A, **B** on SOURCE B,
 sound on SOUND. Each picker is a menu, so choosing the entry you are already on
-opens it again — picking **File…** twice is how you swap one video for another.
+opens it again, and picking **File…** twice swaps one video for another.
 
-- **A** takes bars, sweep, snow, the bundled photo, a file, a shared screen or a
-  webcam — which is how an RCA capture dongle gets real gear in. B takes the
-  same list plus **Off**.
-- **Clips…** is a shelf of files you've opened before, folders included.
-  **Public archives** rolls one from Wikimedia Commons or archive.org;
-  **Browse…** searches both in a thumbnail grid.
-- On an archive, the deck is on a **feed**, with its controls under the file's
-  name. The topic menu picks what it draws from: anything, any photo, any clip,
-  one of the curated pools, or **Search…**, which walks the results for words
-  you type. **next ▸** puts up another file and **◂** steps back to the one
-  before. **slideshow** advances on its own every N seconds, counted from when
-  the last file finished loading, and fetches the next file in the background
-  while the current one is up. **☆** keeps a file on your clip shelf, and **↗**
-  opens its page upstream, where the licence and the photographer are.
-- **slideshow these** in **Browse…** and **slideshow** on the clip shelf (or
-  **▸▸** on one of its groups) start a feed over those files in shuffled order.
-  **✕** on the feed ends it and leaves the current file on the deck.
-- Under the caption box in **RECEIVER › Captions**, **From Wikipedia** fills the
-  caption with a few sentences from the English Wikipedia article on what the
-  picture shows. **follow the picture** does it again each time a new file
-  lands, which pairs well with a slideshow. The note under the button links the
-  article, and says when nothing matched and the passage came from a random one.
-- **Video file URL…** plays an `.mp4` or `.webm` straight from its address, with
-  no download step. The server has to allow cross-origin reads; if it doesn't,
-  the clip plays and the picture stays black.
-- **Video synth** is two oscillators and a colorizer, with no input. Frequency
-  is the main control. On a multiple of line rate you get standing bars, a few
-  hertz off they lean and creep, and at 3.58 MHz it lands on the subcarrier and
-  comes back as flat colour.
-- **Teletype…** prints what you type onto a dot-matrix card; **draw** paints on
-  the same page. Try the dither shades — dot crawl and chroma bleed respond
-  strongly to dither. Three switches keep the card moving, which matters because
-  a still card gives still artifacts: **crawl** rolls it up the frame, **boil**
-  redraws it by an unsteady hand, **garble** receives it over a wire bad enough
-  to keep misspelling it.
-- **B** is a second source, deliberately not genlocked, so it beats and tears
-  against A. Its controls are in **Mix**.
-- **♪** is audio in, and does nothing until you turn up a knob in **Sound**. It
-  takes the mic, a file you pick, the clip already on screen, or **system
-  audio** — a share of the tab or app this machine is playing out of, which
-  drives the picture from a track with no room in between.
+**A** takes bars, sweep, snow, the bundled photo, a file, a shared screen or a
+webcam, which is how an RCA capture dongle gets real gear in. B takes the same
+list plus **Off**, and is deliberately not genlocked, so it beats and tears
+against A. Its controls are in **Mix**.
+
+A few entries behave in ways the picker does not say. **Public archives** and
+**Browse…** put the deck on a **feed** from Wikimedia Commons or archive.org,
+which has a topic menu, a **slideshow** that brings up a new file every N
+seconds, and a **☆** that keeps the file that is up on your clip shelf. **Video
+file URL…** plays an `.mp4` or `.webm` from its address, and needs a server that
+allows cross-origin reads; without one the clip plays and the picture stays
+black. **Teletype…** prints what you type onto a dot-matrix card, and because a
+still card gives still artifacts, **crawl**, **boil** and **garble** keep it
+moving.
+
+Under the caption box in **RECEIVER › Captions**, **From Wikipedia** fills the
+caption from the English Wikipedia article on what the picture shows, and
+**follow the picture** does it again each time a new file lands.
+
+**♪** is audio in, and does nothing until you turn up a knob in **Sound**. It
+takes the mic, a file you pick, the clip already on screen, or **system audio**,
+a share of the tab or app this machine is playing out of.
 
 Anything with a timeline gets a **cue** button: press to mark, again to loop, a
 third time to drop it. **⇤** stabs back to the cue without waiting for the lap.
-`i` and `o` do the same from the keyboard, `shift` puts them on B. While a loop
-runs, a second bar under the cue buttons shows the loop with half its length
-again on either side, so a short loop on a long clip is wide enough to seek
-inside. Drag either end of the loop on that bar to move it, or click an end and
-nudge it with the arrow keys (`shift` for bigger steps).
+`i` and `o` do the same from the keyboard, and `shift` puts them on B.
 
-**⏏ eject** clears a deck, whatever is in it: a clip, a camera, a test pattern,
-a text card. A falls back to snow, B stops summing, and what was there is
-forgotten rather than reopened next time. The button hides once the deck is
-empty.
+**❚❚** stops a deck's tape where it stands. The **A pause** slider in Source A
+is a different thing, freezing the picture while the tape runs on underneath,
+with servo damage and a mistrack stripe.
 
-A deck holding a clip gets **❚❚**: that stops the deck's tape where it stands,
-and **▶** rolls it on again. The bar still seeks while it is held, and the cue
-and the loop survive. The **A pause** slider in Source A is a different thing —
-it freezes the picture and lets the tape run on underneath, with servo damage
-and a mistrack stripe.
-
-A reload otherwise puts each deck back on what it was last holding. Switch that
-off in **☰ › advanced settings › on reload** for a shared machine. The decks
-remember either way, so switching it back on brings last session's clips back.
+A reload puts each deck back on what it was last holding, which **☰ › advanced
+settings › on reload** switches off for a shared machine.
 
 ## Working down the chain
 
@@ -138,54 +83,25 @@ button.
 
 **DECK** and **MODULATION** sit below the chain because they patch into the
 controls rather than the signal. MODULATION holds the automation you set running
-and leave. DECK holds what you use live during a take: the transition lever and
-its wipes, the DVE inset, both tape transports, the tracking knob, and the hold
-that stops the frame. They share one surface, where the signal path would spread
-them over four stages.
+and leave, and DECK holds what you play live: the transition lever and its
+wipes, the DVE inset, both tape transports, the tracking knob and the frame
+hold.
 
-Inside a stage: **• 10** counts what you've moved, amber means off stock, **↺**
-reverts, **+ mod** sets the control moving, **⋮** holds the rest of the wiring
-(pin, learn a MIDI knob, lock to the beat), and **"inert: needs …"** means
-another control gates this one.
+Inside a stage, **• 10** counts what you've moved, **↺** reverts, **+ mod** sets
+the control moving, **⋮** holds the rest of the wiring, and **"inert: needs …"**
+means another control gates this one.
 
-Every stage heading carries its own buttons, which act on that stage only.
-**randomize** nudges its controls around where they sit, with the same modifiers
-the whole-board rolls take, and holding it down keeps nudging slowly until you
-let go. **drift** sets the stage wandering on its own, so one circuit moves
-while the rest of the board holds still. Press it again to stop it where it is.
-**reset defaults** appears once there is something to put back.
-
-The stage's own heading — the tinted strip with the name on it — carries **at
-stock**, which is the whole-board **compare** aimed at one part of the path:
-hold it and this stage reads as untouched while the rest of the look stays where
-it is, so a picture damaged in five places will tell you which one is making the
-artifact. It appears once the stage has something to put back, moves no slider,
-spends no undo step, and returns the picture on release.
+**at stock**, on the tinted strip carrying a stage's name, holds that one stage
+at stock while the rest of the look stays where it is, so on a picture damaged
+in five places you can find which fault makes the artifact.
 
 ![The app window with a slider's help card open, boxed in red](img/slider-help.jpg)
 
-**?** on any slider explains the fault it models rather than what you'll see.
-The look is emergent, so knowing the cause is what tells you how two controls
-combine.
-
-The camera loop's **zoom**, **rotate**, **shift** and **gain** carry a second
-button beside the **?**. **minor** drops a card under the row with one step of
-the same knob spread across the whole track, so a drag there moves in hundredths
-of what the row above reaches — the resolution the loop's geometry is read at. A
-thousandth of zoom is the difference between a spiral that unwinds over a second
-and one that takes ten, and the card shows the value to that precision. The row
-keeps its own step and stays what a preset, a link or a MIDI knob writes.
-
-**Loop delay**, **ghost delay**, **osc A**, **osc B** and **vertical osc** carry
-a **minor** button too, with a card that works differently. Their tracks cover
-so much range that one pixel skips hundreds of values: a pixel of loop delay is
-over half a turn of hue, and a pixel of an oscillator near line rate is hundreds
-of hertz. Their card spreads a small window around the current value across its
-whole track: ±0.28 µs of either delay, ±100 Hz of oscillator, ±2 Hz of vertical
-oscillator. Ghost delay's card moves in nanoseconds, finer than its row, and
-shows the value to that precision. The number at the right is the distance from
-the middle of the card, and a double-click on the card returns there. Moving the
-row past the edge of the window recentres the card on the new value.
+**?** on any slider explains the fault that control models. Some rows also carry
+a **minor** button. It opens a card whose whole track covers a small window
+around the row's current value — ±0.28 µs on **loop delay** and **ghost delay**,
+±100 Hz on **osc A** and **osc B**, ±2 Hz on **vertical osc** — so a drag there
+reaches settings the row's own track steps straight over.
 
 The loops are the exception to working left to right. They take the picture off
 the end and put it back at the front, compounding everything else. Here is a
@@ -202,162 +118,82 @@ underneath:
 The filter box narrows the panel. `/` opens it with the caret in it, and
 `ctrl+k` opens a palette over presets, controls and actions at once. Both search
 the help text, so you can hunt an artifact without knowing which knob makes it.
-The palette stands in the panel, leaving the picture beside it clear.
-
-The count on the modulation strip (**2 mod**) is a filter as well as a readout.
-Press it and the panel narrows to the controls the bay is driving, which nothing
-else marks, since a routing leaves the resting value alone. It stays pressed
-until pressed again, shows in the box as a **mod only** token, and narrows
-whatever text is already up.
-
-Either filter fades the map boxes it did not match rather than hiding them, so
-the chain still reads as a chain. A faded box is still clickable, and pressing
-one drops the filter and opens that stage — the quickest way out of a filter you
-did not mean to apply.
+The count on the modulation strip (**2 mod**) narrows the panel to what the bay
+is driving, which nothing else marks, since a routing leaves the resting value
+alone.
 
 ## Making it move
 
-**+ mod**, beside the reading on a control row, sets that control moving: it
-patches a slow sine drift and unfolds an editor where you pick the source (LFO,
-random walk, noise, sample-and-hold, a Lorenz attractor, audio level or its
-hits, or a one-shot envelope you trigger by hand or from a MIDI note) and dial
-the rate and depth. Depth is a fraction of the control's range, and the slider
-stays put as the centre the motion happens around, which is why a preset or a
-link still holds the look. The first press goes as deep as that control wants:
-half a percent of the range on the vertical roll rate, a third of it on
-horizontal hold. The rate's **♩ lock to beat** button ties it to the tempo
-instead of Hz.
+**+ mod** on a control row patches a slow sine drift onto it and unfolds an
+editor where you pick the source (an LFO, a random walk, noise, sample-and-hold,
+a Lorenz attractor, audio level or its hits, or a one-shot envelope you trigger
+by hand or from a MIDI note) and dial the rate and depth. Depth is a fraction of
+the control's range, and the slider stays put as the centre the motion happens
+around, which is why a preset or a link still holds the look.
 
 Two kinds of row have no button: the View controls, where a wobbling magnifier
 or a stuttering clock reads as the app breaking, and a strobe or a paperclip
-resting at zero, where the only thing a wobble can do is start the full-field
-flash. Dial either up and the button is back.
+resting at zero, where a wobble could only start the full-field flash. Dial one
+of those up and the button is back.
 
-A patched row then carries two buttons in place of **+ mod**: a chip naming the
-routing (**sine 0.08Hz**) that opens its editor, and a **❚❚** that holds the
-wobble still without unpatching it. Held, the chip dims and the button reads
-**▶**; press it and the motion is back as you dialed it. **remove** in the
-editor, or in the row's **⋮**, frees the slot.
-
-Once anything moves, a **Modulation** section appears under Presets. It lists
-each routing with the control it drives, its source, its rate and its depth, and
-the stab gate's rate when that is on. A dot beside each one tracks its wave as
-it runs, and when one routing drives another's rate or depth, an amber **→**
-shows the value it is running at. Click a control's name to open its row. The
-section also holds one **amount** over every routing, a freeze, and the **mod**
-count that filters the panel to what is running. **edit in the bay** opens the
-**MODULATION** box on the map, which has the full editor under each routing and
-the tempo at its top. Type or tap a BPM, then lock any rate to it. MIDI clock
-takes over whenever something sends it. See [MIDI.md](MIDI.md).
+**edit in the bay** opens the **MODULATION** box on the map, which has the full
+editor under each routing and the tempo at its top. Type or tap a BPM there,
+then tie any rate to it with **♩ lock to beat**. MIDI clock takes over whenever
+something sends it. See [MIDI.md](MIDI.md).
 
 **stabs** flip the board back to clean in bursts, 60ms by default and anywhere
-from 8 to 400, so the look cuts into a clean picture instead of running
-continuously. Phosphor and both feedback loops keep running through the flip, so
-a stab leaves a trail.
-
-The gate's rows are at the top of the bay, above the routings. To hear it
-without going looking, the **▾** beside drift switches it on at 2 stabs a second
-— the same menu as the round trips, since a gate is that trip at frames instead
-of seconds — and ⌘K finds it under **stab gate**. Once it is running, the
-Modulation section appears in the panel with **edit in the bay** one press away.
-
-Clean is only the gate's default far end. **⧉ hold this look** parks the current
-board at that end, and the gate cuts between it and whatever you dial next: two
-looks, hard cut on the beat, no fade. The sliders belong to the live look; the
-held one is a copy nothing moves. While a look is held the length row becomes a
-**share**, so a tempo change keeps the split rather than the milliseconds. 50 is
-even; pushing it either way makes one look the resting state and the other the
-interruption. **× drop** returns the gate to stabbing clean.
-
-Two looks never crossfade. A moving filter control rebuilds the filter bank, so
-a crossfade would rebuild it every frame where a cut rebuilds it twice a cycle.
+from 8 to 400, so the look cuts into a clean picture. Phosphor and both feedback
+loops keep running through the flip, so a stab leaves a trail. The **▾** beside
+drift switches the gate on at 2 stabs a second, and ⌘K finds it under **stab
+gate**. Clean is only its default far end: **⧉ hold this look** parks the
+current board there, and the gate then cuts between it and whatever you dial
+next, hard on the beat with no fade.
 
 **Sound** hangs off Receiver, where audio patches in. Bass lurches the frame and
-level tears line hold. Pick something under **♪** first, or the box has nothing
-to work with.
+level tears line hold, so pick something under **♪** first. **System audio**
+asks for a share, which is the only way a browser gives a page the machine's
+sound: pick a tab and tick _Also share tab audio_, or the share arrives silent
+and the picker says so. Chrome sends audio through a share; not every browser
+does.
 
-**System audio** asks for a share, the only way a page can hear the machine:
-pick a tab and tick _Also share tab audio_, or the share arrives silent and the
-picker says so. Not every browser can send audio through a share — Chrome can.
-Ending the share from the browser's own bar puts the picker back to off, since a
-dead capture and a quiet room look the same from here.
-
-Under the picker is the one thing in the app that comes out of your speakers:
+The one thing in the app that comes out of your speakers sits under that picker:
 the set's own intercarrier buzz, the picture arriving on the audio line. It
-starts **silent** and stays there until you switch it to **buzz out loud**,
-because its level is two controls — _sound buzz_ under **Channel · Ghosting &
-leakage** and _fine tuning_ under **Channel · RF / Tuner** — and a preset, a
-shared link or a random roll can raise either without anyone having asked for
-noise. The switch is remembered between visits.
+starts **silent**, because a preset, a link or a random roll can raise either of
+its two level controls — _sound buzz_ under **Channel · Ghosting & leakage** and
+_fine tuning_ under **Channel · RF / Tuner**. Switch it to **buzz out loud** and
+the app remembers that between visits.
 
 ## Playing a piece
 
 The **strip** tray along the bottom of the window is a rundown: a list of looks
-that plays itself. Set the board up, press **+ row**, and do it again. **▶
-play** then walks the rows from the top, each holding for its own count and
-arriving its own way.
+the app plays in order. Set the board up, press **+ row**, and do it again. **▶
+play** walks the rows from the top, and clicking a card fires only that row.
 
 ![Two cards from a rundown: row 1 marked with the clip glyph, named Tama station master, its chips reading whole clip, 1s and the tracking transition; row 2 marked with the shake glyph, named shake · normal, its chips reading ≈4 bars, 1s and no transition, both cards ending in a rename, duplicate and remove button](img/strip.png)
 
 A row is the session the address bar carries — the look, the modulation bay, the
-source and its cue — plus how long it holds and how it arrives. Clicking a card
-fires that row on its own, so one list serves a piece that plays itself and a
-bank of scenes you play by hand.
+source and its cue — plus how long it holds and how it arrives. The chips along
+its foot set that, and each steps when you click it. **≈4 bars** lands anywhere
+within a quarter of the count either way, and **4 bars** with the drift off is
+the exact lock. A row can draw its source from a pool instead of naming a file,
+and a **⚄ shake** row keeps whatever is up and jitters the look.
 
-There are three kinds, marked by the glyph on the card:
-
-- **▤ a clip**: this source, this look, these cue points.
-- **⟳ a roll**: a pool rather than a file, drawn when the row fires, so you know
-  the kind of thing that is coming without knowing which one.
-- **⚄ a shake**: keeps whatever is up and jitters the look instead. **+ shake**
-  adds one.
-
-The chips along the foot of a card are its timing, and each steps when you click
-it:
-
-- **How long it holds.** **≈4 bars** is loose: the boundary lands anywhere
-  within a quarter of the count either way, so a rundown played twice is two
-  different videos. **4 bars** with the drift off is the exact lock, for a cut
-  that has to land on a hit. **whole clip** runs as long as the picture does,
-  trimmed to the cue when there is one, and **hold** waits for a hand.
-- **How the look arrives**: a cut, or a morph over 1, 4, 8 or 30 seconds.
-- **What it arrives behind**: a transition from the list, drawn as its glyph.
-  **track** sweeps a band of head noise up the frame and swaps the clip under
-  it, **roll** loses vertical hold and cuts mid-roll, **collapse** folds the
-  raster toward a line and opens it out, **shuttle** runs the transport away,
-  **dub** piles up generations so the new clip arrives already worn. Each is the
-  board dialled into a fault and back out, so it compounds with the look rather
-  than covering it.
-
-**✎** names a row, **⧉** copies it, **✕** takes it out, and dragging a card by
-its face reorders the rundown. **↶ ↷** step the rundown's own edits, a separate
-stack from `ctrl+z`, which stays with the board.
+A transition chip puts a fault under the arrival: **track** sweeps head noise up
+the frame and swaps the clip under it, **dub** piles up generations so the new
+clip arrives worn. Every transition on that list is the board dialled into a
+fault and back out, so it compounds with the look.
 
 Bars come from the tempo, tapped or off MIDI clock, so a rundown cut to music
-follows the music. **♪** picks that track and **▶** starts it from the top with
-the walk. **↻ loop** comes back round at the end. **seed** is what every roll
-and shake draws from: press it for a new one and the same rundown plays a
-different video. The seed is printed on the tray, so a take worth repeating can
-be found again.
+follows the music. Every roll and shake draws from the **seed**, which the tray
+prints, so you can play a take worth repeating again.
 
 ## Keeping what you find
 
 **saved** is your library, kept on your account, so it needs a sign-in.
 `ctrl/⌘+S` saves, and the first nine sit on the number keys: `1–9` recalls,
-`shift+1–9` overwrites. **saved** sits in the Presets header. **sign in** is in
-the masthead, and becomes your account photo once you are in — press the photo
-to sign out.
-
-Saving with nobody signed in holds the look and opens **why sign in?**, the same
-card the ⋮ menu offers. Sign in from that card and the look you were looking at
-is saved under the name the card named. If the account turns out to hold that
-name already, the save lands beside the look there and counts up: _worn tape 2_.
-The [privacy page](https://videoskillet.com/privacy/) lists what the account
-holds.
-
-A recall brings back the controls and the motion and leaves your input alone.
-**⧉** copies a link carrying both, source clip included. `s` saves a still, `r`
-records a clip.
+`shift+1–9` overwrites. A recall brings back the controls and the motion and
+leaves your input alone. The [privacy page](https://videoskillet.com/privacy/)
+lists what the account holds.
 
 ### The link carries the look
 
@@ -365,52 +201,42 @@ The address bar carries the whole look at all times — every control off stock,
 what is moving in the bay, the source and its cue — so copying it is the share
 button and reloading keeps what you had.
 
-The source travels as far as a string can carry it. A pattern, a text card and a
-pasted video address go whole. An archive clip goes as its identifier, so a link
-sent while a Commons or archive.org file is on screen opens on _that_ file
-rather than the reader's own roll. A clip from your disk or your clip list
-cannot travel, since the reader has neither, so a link made on one opens on
-whatever else it names.
+How much of the source fits in the link depends on the source. A pattern, a text
+card and a pasted video address go in whole, and an archive clip goes in as its
+identifier, so a link sent while a Commons or archive.org file is on screen
+opens on _that_ file. A clip from your disk or your clip shelf cannot go in at
+all, since the reader has neither, so a link made on one opens on whatever else
+it names.
 
-The packed form comes out short. Here is **worn tape**, whole:
+Here is **worn tape**, whole:
 
 ```
 https://videoskillet.com/app/#p=mD.FbQBJbABEXAAmAIN8AEAPAKQAwDoAgCQAwBkAEgBwAIAgAEGwAIA6AIBCA&mod=
 ```
 
-That is the look written as bytes, behind a two-character checksum. A link that
-arrives truncated or with a character changed is refused with a notice rather
-than opened on a picture nobody made. `#set=` says the same by name, and the app
-reads and writes it:
+The app writes the look there as bytes, behind a two-character checksum, and
+refuses a link that arrives truncated or with a character changed. `#set=`
+spells the same look out by name, and the app reads and writes it too:
 
 ```
 https://videoskillet.com/app/#set=noiseIre:9,hHold:0.2,chromaGain:1.79
 ```
 
-Written out, worn tape runs to 248 characters, three times the packed form. A
-link that length arrives in three pieces from a chat window, which is why the
-bar carries the packed form.
+The long form lets you program a look by hand: a control name from
+[EFFECTS.md](EFFECTS.md), a colon, a number, commas between. The app leaves
+anything you left out at stock, pulls anything out of range back onto the panel,
+and drops a name it no longer has. Type a bare `#set=` into the bar to switch a
+tab over. The app reads either sigil, so every one of these also opens spelled
+`?`.
 
-The long form buys a look you can program by hand: a control name from
-[EFFECTS.md](EFFECTS.md), a colon, a number, commas between. Anything left out
-is at stock, anything out of range is pulled back onto the panel, and a name the
-app no longer has is dropped. A bar already carrying `#set=` keeps carrying it,
-so the look stays readable while you work that way. Type a bare `#set=` to
-switch a tab over. Either sigil is read, so every one of these also opens
-spelled `?`.
+### Starting a loop from a link
 
-### Starting a loop the reader cannot see
-
-A look travels; a running feedback loop does not. What the loops have built is
-in video memory, and the reader's page comes up with it empty, so a board that
-lives on what it is amplifying opens black and stays there, reading as a broken
-link. **start it with a burst of snow** in the share box is the fix: the link
-opens on a second and a half of snow, the loops take hold of it, and the burst
-heals off, leaving the look the link says running on what it started.
-
-Waving a hand in front of a camera pointed at its own monitor does the same
-thing, and snow works better than a flash for the same reason a hand works
-better than a lamp: a loop amplifies detail, and a flat field has none.
+A link carries the controls. What the loops have built is in video memory, which
+the reader's page comes up with empty, so a board that builds its picture out of
+its own feedback opens black and stays there. **start it with a burst of snow**
+in the share box opens the link on a second and a half of snow, which the loops
+amplify before the burst fades out. Snow works better than a flat flash because
+a loop amplifies detail and a flat field has none.
 
 ## Looking closer
 
@@ -421,13 +247,11 @@ lines, mask and all.
 
 To watch the signal itself, **signal tap** in the View group steps through the
 composite waveform, luma, chroma energy, burst state, the scope, and back. The
-live tap is named on the ☰ button, so a screen full of waveform is never
-mistaken for a fault.
+live tap is named on the ☰ button.
 
 **scope** is the one to try first. It lays a single line out left to right, sync
-tip and burst included, against an IRE graticule. Sync depth, setup, AGC pumping
-and a burst that is no longer 40 IRE are readable there. Turning a knob and
-watching the waveform is the fastest way to understand it.
+tip and burst included, against an IRE graticule, where sync depth, setup, AGC
+pumping and a burst off 40 IRE are all readable.
 
 ## Getting it out
 
@@ -439,34 +263,21 @@ fast.
 **⎙ render** in the strip tray is the other way to a file, and the one an editor
 imports cleanly. It takes the frames off the screen and steps the engine on its
 own clock, so it runs as fast as the GPU allows and the timing in the file is
-the simulation's. It renders the recorded take if there is one, else the length
-of the track, else the whole rundown at the lengths its rows hold for, else ten
-seconds; the button says which. Two renders of one take are the same file, since
-a take starts from a fresh signal state on the tray's seed.
+the simulation's. **● rec** records the hands rather than the picture — every
+slider, preset, controller knob and morph, against the frame it happened on —
+and **⎙** replays that, so a run performed at whatever rate the tab managed
+comes back at 60.
 
-**● rec** records the hands rather than the picture — every slider, preset,
-controller knob and morph, against the frame it happened on — and **⎙** replays
-that into the render, so a run performed at whatever rate the tab managed comes
-back at 60. It works over a bare clip with no rundown. The **⏺** readout beside
-it is the take's length; clicking it discards the take.
+`pnpm render`, with the project running locally, is the one to use when the
+colour matters. It takes a link and a file and writes ProRes 4444, where a
+browser's 4:2:0 encode loses most of the dot crawl and rainbow fringing.
+[CLI](CLI.md) covers it.
 
-Running the project locally gives a third way, and it is the one to use when the
-colour matters. `pnpm render` takes a link and a file and writes ProRes 4444, so
-dot crawl and rainbow fringing survive; a browser encodes 4:2:0 and loses most
-of them. It runs with no tab open, and it runs from a shell, so a loop takes a
-whole folder. [CLI](CLI.md) covers it.
-
-The ☰ menu has stills, recording, fullscreen, and **pop out controls**, which
-moves the panel to a second window and gives the picture the whole screen. Point
-OBS at the picture window to capture it.
-
-Drag the edge between the picture and the panel to set how wide the sidebar is.
-Arrow keys nudge it once it has focus, and a double-click puts it back to the
-332px it starts at. The drag stops at 300px, which is where a slider's label and
-its value stop sharing a line, and it stops before the picture is down to its
-last 320. Dragged past 540 the panel is wide enough for **☰ › wide bench**,
-which lays every stage out at once over two columns — on a screen 1280 wide or
-more the bench is offered anyway, and takes the width it needs.
+**pop out controls** in the ☰ menu moves the panel to a second window and gives
+the picture the whole screen, so pointing OBS at the picture window captures it.
+Dragging the edge between the picture and the panel sets the sidebar's width,
+and past 540px it is wide enough for **☰ › wide bench**, which lays every stage
+out at once over two columns.
 
 ## Keyboard
 
