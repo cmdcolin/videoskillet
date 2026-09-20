@@ -146,6 +146,23 @@ export const savedAs = (doc: HomeDoc, session: RecentSession) =>
     .filter(p => p.query === session.query)
     .sort((a, b) => (b.savedAt ?? 0) - (a.savedAt ?? 0))[0]
 
+// The still ids a page of sessions needs: each one's own, plus any matching
+// saved look's, since a card falls back to that one. Lets a page fetch stills
+// per id (`fetchStill`) instead of the whole account's collection
+// (`fetchStills`), so opening the sessions page costs only what it shows.
+export function stillIdsFor(
+  doc: HomeDoc,
+  sessions: readonly RecentSession[],
+): string[] {
+  const ids = new Set<string>()
+  for (const session of sessions) {
+    ids.add(sessionStill(session.id))
+    const match = savedAs(doc, session)
+    if (match?.id !== undefined) ids.add(match.id)
+  }
+  return [...ids]
+}
+
 // The session's own still, when it is a picture of the board the card resumes.
 // A session written from a hidden tab carries no new picture, and the entry it
 // updates keeps the one an earlier write left, so the test is the board and not
