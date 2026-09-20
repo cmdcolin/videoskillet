@@ -229,7 +229,7 @@ export function AppMenu(props: {
               something that types rather than points: how do I drive this. */}
           <MenuItem
             icon="⌨"
-            label="drive it by URL ↗"
+            label="LLM instructions ↗"
             hint=""
             title="every query-string parameter, and every control's key — for scripting the app, or for an agent driving it"
             closes={id}
