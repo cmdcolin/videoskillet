@@ -2,6 +2,12 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [2.2.4](https://github.com/cmdcolin/videoskillet/compare/v2.2.3...v2.2.4) - 2026-09-20
+
+### Features
+- *(ui)* [`f7b6d6e`](https://github.com/cmdcolin/videoskillet/commit/f7b6d6eaa32e4d90884a7e63cafe65c7f19db024) let a session be deleted, and raise the history cap
+- *(ui)* [`2a4cb49`](https://github.com/cmdcolin/videoskillet/commit/2a4cb49c9057819cae93a30037abe3ba8d38a5d1) page the sessions list instead of fetching every still at once
+
 ## [2.2.3](https://github.com/cmdcolin/videoskillet/compare/v2.2.2...v2.2.3) - 2026-09-19
 
 ### Features
