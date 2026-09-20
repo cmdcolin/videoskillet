@@ -172,6 +172,26 @@ const PANEL_W_STORE = 'videoskillet.js_panel_width'
 // useSyncExternalStore fallbacks for the window before the async engine exists.
 const subscribeNever = () => () => {}
 const getDefaultControls = (): Controls => DEFAULT_CONTROLS
+
+// A reading of the *live* board, for the few answers App has to keep current
+// while a morph is in flight. App otherwise reads the settled board, which is
+// what keeps a morph off its render budget; these are the exceptions, and they
+// are all thresholds — is a loop carrying signal, is the tape off play — so the
+// answer changes a handful of times across a morph rather than ten times a
+// second.
+//
+// Primitive only, and the restriction is what does the work: two equal
+// primitives are `===`, so `useSyncExternalStore` bails out and App does not
+// re-render. Return an object here and every notify rebuilds the panel again,
+// which is the whole thing this file just stopped doing. Same rule, and the
+// same reasoning, as `useControlReading` in ui/ControlsContext.ts — separate
+// only because App sits above the provider that one reads from.
+function useLiveReading<T extends string | number | boolean>(
+  store: ControlStore,
+  read: (controls: Controls) => T,
+): T {
+  return useSyncExternalStore(store.subscribe, () => read(store.get()))
+}
 const getNoMorph = (): number | null => null
 
 // Which stages are open to a jump, in the only four arrangements there are: a
@@ -1127,15 +1147,20 @@ export function App() {
   // the card cannot disagree about a bay neither of them can count for itself.
   const bay = bayLoad(modApi.slots, modApi.stab)
   // And what the deck is holding, for the same two drawings and the same reason.
-  const deck = deckLoad(controls)
+  // Off the live board: a morph that puts the tape off play should say so while
+  // it is happening, not once it has landed.
+  const deck = {
+    n: useLiveReading(controlStore, c => deckLoad(c).n),
+    say: useLiveReading(controlStore, c => deckLoad(c).say),
+  }
   // Which of the returns is actually carrying signal. Read off each loop's own
   // mix rather than the whole stage: a loop with its mix at zero is patched but
   // silent, and both drawings are answering "is it running". The same two
   // predicates gate the passes that close them (compose and fbComposite in
   // gpu/pipeline.ts), so a lit run and a dispatched pass mean the same thing.
   const loopsLive = {
-    camera: controls.fbMix > 0,
-    mixer: controls.cfbMix > 0,
+    camera: useLiveReading(controlStore, c => c.fbMix > 0),
+    mixer: useLiveReading(controlStore, c => c.cfbMix > 0),
   }
   // What is standing in each of the three boxes with a picker, for the caption
   // under its name on the map (patched.ts). Keyed by `PickerStage`, the same
@@ -1165,7 +1190,16 @@ export function App() {
     patched,
     // Which of the two bench generators is running, so neither one's group is
     // offered under a stage that is showing a webcam.
-    generators: generatorsLive(eng.a.mode, eng.b.mode, controls),
+    generators: {
+      noise: useLiveReading(
+        controlStore,
+        c => generatorsLive(eng.a.mode, eng.b.mode, c).noise,
+      ),
+      synth: useLiveReading(
+        controlStore,
+        c => generatorsLive(eng.a.mode, eng.b.mode, c).synth,
+      ),
+    },
     onOpenGroup: nav.openAt,
     free: [
       {
