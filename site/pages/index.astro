@@ -7,7 +7,12 @@ import Hero from '../components/Hero.astro'
 import SiteBar from '../components/SiteBar.astro'
 import script from '../scripts/landing.js?raw'
 import { SIGNED_IN_HINT } from '../../src/ui/cloud'
-import { FREE_WITHOUT, PITCH } from '../../src/ui/whySignIn'
+import {
+  FREE_WITHOUT,
+  PITCH,
+  SHOT_ALT,
+  SHOT_SIZE,
+} from '../../src/ui/whySignIn'
 import css from '../styles/landing.css?raw'
 import designTokens from '../../src/tokens.css?raw'
 import site from '../styles/site.css?raw'
@@ -209,6 +214,20 @@ const UNFURL =
       </div>
       <p class="whyTrouble" id="whyTrouble" role="alert" hidden></p>
       <p class="whyPitch">{PITCH}</p>
+      <!-- The home an account gets, drawn from a fixture by
+           `scripts/homeshot.mjs`. Lazy because the card is closed until
+           somebody asks the question, and a lazy image inside a closed
+           <dialog> is never in view, so a landing page that goes unasked
+           fetches none of it. -->
+      <img
+        class="whyShot"
+        src="/home-signed-in.webp"
+        alt={SHOT_ALT}
+        width={SHOT_SIZE.width}
+        height={SHOT_SIZE.height}
+        loading="lazy"
+        decoding="async"
+      />
       <p class="whyLine">
         {FREE_WITHOUT} <a href="/privacy/">What an account stores →</a>
       </p>

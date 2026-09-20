@@ -764,6 +764,27 @@ each run stamps the version and commit into `scripts/reel-taken.json`. Element
 resolution, seeding and the actions are shared with the documentation
 screenshots ([`../scripts/drive.mjs`](../scripts/drive.mjs)).
 
+### The picture in "why sign in?"
+
+Both of the site's "why sign in?" cards — the landing page's dialog and the
+app's ([`../src/ui/WhySignInDialog.tsx`](../src/ui/WhySignInDialog.tsx)) — show
+`public/home-signed-in.webp`, a shot of the home an account gets.
+[`../scripts/homeshot.mjs`](../scripts/homeshot.mjs) draws it: the harness loads
+`/` signed out, calls `showHome` in `site/scripts/home.ts` with a fixture built
+out of the gallery's own looks and their stills, and photographs what the page
+paints. No account and no Firebase are involved, so `pnpm homeshot` needs
+nothing but this repo, Firefox Nightly and ImageMagick. It runs its own astro
+dev server on a private port, and the shot comes out byte-identical run to run
+while the page is unchanged.
+
+The picture costs a visit nothing until somebody asks the question. The landing
+page's copy is `loading="lazy"` inside a closed `<dialog>`, which never comes
+into view, and the app mounts its card only while the card is open. Opening
+either one fetches 46K.
+
+Nothing checks that the picture still matches the page, so regenerate it when
+the home's layout moves.
+
 ### What the page costs
 
 Above the fold a first visit fetches **8K of media**, the header's still, which
