@@ -2,7 +2,7 @@ import puppeteer from 'puppeteer-core'
 
 import { CHROME, FIREFOX } from './browser.mjs'
 import { CLIPS, demos, S3_PREFIX } from './demos.mjs'
-import { installHelpers, step } from './drive.mjs'
+import { installHelpers } from './drive.mjs'
 import { appUp } from './until.mjs'
 
 // Record the demos as short mp4 loops for the landing page.
@@ -37,6 +37,14 @@ import { appUp } from './until.mjs'
 // the time — which is what makes a recording reproducible, and what makes a
 // clip that *does* sit still evidence about the look rather than about the
 // machine.
+//
+// That needs the live rAF loop out of the way, or it renders frames of its own
+// between the stepped ones — `record()` calls `pauseLoop()` before stepping
+// and `resumeLoop()` after, the same half of the switch `ui/render.ts` throws
+// for an offline render, and for the same reason: two drivers of `this.frame`
+// make a stepped clip no more deterministic than the `captureStream` it
+// replaced. Not the other half, `startTake` — its `resetSignal` hits a real
+// bug on the caption decoder, unrelated to this and worth its own fix.
 import { execFileSync } from 'node:child_process'
 import { mkdirSync, mkdtempSync, rmSync, statSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -150,13 +158,57 @@ async function record(demo, tmpDir) {
     if ((await appUp(page, 12000)) !== true) {
       throw new Error('app never came up')
     }
+    // `faultcheck.mjs` measured this one: stepping a background tab's canvas
+    // costs far more than it looks, because nothing is consuming the
+    // swapchain and submission itself backs up — and, worse, an unfocused
+    // WebGPU canvas can hand back a present texture that is not renderable at
+    // all.
+    await page.bringToFront()
     // Engine init, plus the source fetch. A demo pulling a file off Commons or
     // rolling one off archive.org is a network round trip — and a whole-file
     // one, since neither is fetched a frame at a time — before there is a
     // picture to record.
     await sleep(REMOTE.test(demo.query) ? 15000 : 5000)
     await page.evaluate(installHelpers)
-    await step(page, WARM)
+
+    // `step()` forces a sim step past the frame lock, but the rAF loop this
+    // page booted is still running underneath it — pipeline.ts's own
+    // `pauseLoop` comment says as much: two runs of the same take step
+    // different totals with it left on, which for a recording means extra,
+    // uncounted frames landing between the stepped ones.
+    //
+    // Not `startTake`: its `resetSignal` reaches a real pipeline bug on any
+    // demo with the caption decoder on (`cc:1`, as `My lord` is) — a texture
+    // it clears comes back missing `RENDER_ATTACHMENT` and the next pass into
+    // it throws. `pauseLoop` alone doesn't touch that path, and a `<video>`
+    // source keeps decoding at wall rate whether or not the sim loop is
+    // paused, so nothing here needs `pullVideo` either.
+    //
+    // The two-rAF wait is `faultcheck.mjs`'s, not a fixed sleep: `pauseLoop`
+    // drops a flag rather than cancelling the chains (`renderloop.ts`), so up
+    // to two frames already scheduled land after it returns, and only rAF
+    // itself says when they have.
+    await page.evaluate(() => window.vf?.pauseLoop())
+    await page.evaluate(
+      () =>
+        new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))),
+    )
+
+    // One reference tick: bank `timeScale` (mirrors `simAcc` in
+    // `pipeline.ts`'s `render()`) and only step the engine once the bank
+    // reaches 1 — an unstepped tick reproduces `presentHeld()`, the frame
+    // just sits. `__demoAcc` lives on the page across calls and starts fresh
+    // with it, one page per demo.
+    await page.evaluate(n => {
+      for (let i = 0; i < n; i++) {
+        const timeScale = window.vf?.getControls().timeScale ?? 1
+        window.__demoAcc = (window.__demoAcc ?? 0) + timeScale
+        if (window.__demoAcc >= 1) {
+          window.__demoAcc -= 1
+          window.vf?.step()
+        }
+      }
+    }, WARM)
 
     // A dead capture is worth catching here rather than in the encode: a clip
     // of a stage that threw is eight seconds of black, and the poster drawn
@@ -174,11 +226,6 @@ async function record(demo, tmpDir) {
     const box = await canvas.boundingBox()
     const frames = SECS * FPS
     for (let n = 0; n < frames; n++) {
-      // Mirrors `simAcc` in `pipeline.ts`'s `render()`: a tick banks
-      // `timeScale` and only fires `step()` once the bank reaches 1, so a
-      // held tick reproduces `presentHeld()` — the frame just sits, same as
-      // it would live. `__demoAcc` lives on the page across ticks and starts
-      // fresh with it, one page per demo.
       await page.evaluate(async k => {
         for (let i = 0; i < k; i++) {
           const timeScale = window.vf?.getControls().timeScale ?? 1
@@ -200,6 +247,9 @@ async function record(demo, tmpDir) {
         quality: 94,
       })
     }
+    // Left as found: the loop goes back to rAF, the same contract
+    // `ui/render.ts` keeps after a take.
+    await page.evaluate(() => window.vf?.resumeLoop())
     return { frames, box }
   } finally {
     await browser.close().catch(() => {})
