@@ -50,7 +50,7 @@ export function AboutDialog({ onClose }: { onClose: () => void }) {
           target="_blank"
           rel="noreferrer"
         >
-          source on GitHub ↗
+          GitHub ↗
         </a>{' '}
         ·{' '}
         <a
