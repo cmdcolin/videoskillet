@@ -86,3 +86,36 @@ describe('mode switch blurbs', () => {
     })
   }
 })
+
+// Every `help` string is also its control's row in docs/EFFECTS.md, so the page
+// is the sum of them and 200+ controls make a long one out of a few extra
+// sentences each. These two numbers are what hold the length the page was cut
+// to: the cap catches the four-paragraph essay on one slider, and the median
+// catches the drift that no single control is guilty of.
+//
+// The cap sits well above the longest blurb today, which is around a hundred
+// words on a switch describing five positions, and well under the worst this
+// replaced, which was nearly two hundred on one slider. A blurb that wants more
+// is describing a mechanism the page should state once and link to.
+describe('help length', () => {
+  const MAX_WORDS = 120
+  const MAX_MEDIAN = 45
+  const words = (help: string) => help.split(/\s+/).filter(Boolean).length
+  const lengths = GROUPS.flatMap(g =>
+    g.sliders.map(s => ({ key: s.key, n: words(s.help) })),
+  )
+
+  it('keeps every control under the cap', () => {
+    const over = lengths
+      .filter(l => l.n > MAX_WORDS)
+      .map(l => `${l.key} (${l.n}w)`)
+    expect(over).toEqual([])
+  })
+
+  it('keeps the median short', () => {
+    const sorted = lengths.map(l => l.n).toSorted((a, b) => a - b)
+    expect(sorted[Math.floor(sorted.length / 2)]).toBeLessThanOrEqual(
+      MAX_MEDIAN,
+    )
+  })
+})
