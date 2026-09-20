@@ -412,9 +412,9 @@ Five things the shelf had to get right, and none was guessable from the design:
   sync domain, `collapse` folds the raster toward a line in the deflection
   domain. One per domain is a varied shelf rather than one effect at five
   intensities.
-- **A recipe is more than the control it is named after.** `hHold`/`vHold` past
-  the capture range rolls a picture only if there is something to roll _to_ — an
-  oscillator free-running at exactly 60 sits still however completely it wins,
+- **`hHold`/`vHold` need more than the control they're named after.** Past the
+  capture range they roll a picture only if there is something to roll _to_ —
+  an oscillator free-running at exactly 60 sits still however completely it wins,
   so `vFreqHz` is what makes the mechanism bite. And `dubGens` ramped 1→4→1
   compounds damage rather than inventing it: four passes over a clean board is
   four times nothing. Both measured at 0.4–0.6/255 from rest by

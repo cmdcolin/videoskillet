@@ -4,10 +4,9 @@ Each control misadjusts or breaks one part of the signal path. Dot crawl,
 rainbows, tearing and hue drift come out of that model, so any two controls
 interact.
 
-This page covers each stage and what to know before adjusting it.
-[Effects](EFFECTS.md) lists every control and is generated from the app's own
-control table. The headings below are the boxes on the app's chain map, in the
-same order and under the same names.
+[Effects](EFFECTS.md) lists every control, generated from the app's own control
+table. The headings below are the boxes on the app's chain map, in the same
+order and under the same names.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="img/pipeline-simple-dark.svg">
@@ -35,8 +34,8 @@ same order and under the same names.
 
 ## Feedback loops
 
-The two loops differ in what travels around them. Each is described in the app's
-own words, so the chain map and this page cannot disagree:
+The two loops differ in what travels around them: light in the camera loop, the
+composite signal in the mixer loop.
 
 <!-- generated:loops — from LOOP_STAGES in src/ui/controls.ts, via scripts/docgen.mjs -->
 

@@ -17,20 +17,18 @@ videoskillet.js is fixed to the NTSC raster and has no plugin yet
 
 ### BENDR
 
-[BENDR](https://github.com/clickysteve/bendr) is the closest neighbour: another
-live browser tool, and a much broader one — four channels, a reorderable chain
-on each, three mix buses, keys and wipes, all in one HTML file that a phone will
-run. It works on the picture. Chroma bleed, rainbow fringing, dot crawl and
-ringing each get a slider, and the sync faults are drawn on line by line, which
-is what lets the stages reorder freely.
+[BENDR](https://github.com/clickysteve/bendr) is the closest neighbour: a live
+browser tool with four channels, a reorderable chain on each, three mix buses,
+keys and wipes, all in one HTML file a phone will run. Each fault — chroma
+bleed, rainbow fringing, dot crawl, ringing, line-by-line sync tears — is a
+slider drawn onto the picture, independent of the others, which is what lets
+the stages reorder freely.
 
-videoskillet.js builds the signal instead. A picture becomes a composite
-waveform — sync pulses, colour burst, colour on the subcarrier — the model
-damages that waveform, and a model of a TV locks to it and decodes it back. Dot
-crawl and rainbow fringing are then leftovers of a decoder that could not
-separate colour from brightness cleanly, so they change whenever anything
-upstream does. The trade is a far narrower tool where every fault lands on the
-same signal, so the faults interact without being wired together.
+videoskillet.js builds the signal: a picture becomes a composite waveform, the
+model damages that waveform, and a model of a TV decodes it back. Dot crawl
+and rainbow fringing are then leftovers of a decoder that could not separate
+colour from brightness cleanly, so every fault on the signal interacts with
+every other one, with no wiring between stages to maintain.
 
 ### vhs-decode / ld-decode
 

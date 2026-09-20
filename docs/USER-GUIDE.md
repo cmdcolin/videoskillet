@@ -159,9 +159,8 @@ The stage's own heading — the tinted strip with the name on it — carries **a
 stock**, which is the whole-board **compare** aimed at one part of the path:
 hold it and this stage reads as untouched while the rest of the look stays where
 it is, so a picture damaged in five places will tell you which one is making the
-artifact. It appears once the stage has something to put back. Nothing moves and
-nothing is spent — no slider, no undo step — and the picture comes back on
-release.
+artifact. It appears once the stage has something to put back, moves no slider,
+spends no undo step, and returns the picture on release.
 
 ![The app window with a slider's help card open, boxed in red](img/slider-help.jpg)
 
@@ -373,7 +372,7 @@ rather than the reader's own roll. A clip from your disk or your clip list
 cannot travel, since the reader has neither, so a link made on one opens on
 whatever else it names.
 
-It comes out short. Here is **worn tape**, whole:
+The packed form comes out short. Here is **worn tape**, whole:
 
 ```
 https://videoskillet.com/app/#p=mD.FbQBJbABEXAAmAIN8AEAPAKQAwDoAgCQAwBkAEgBwAIAgAEGwAIA6AIBCA&mod=
@@ -409,8 +408,8 @@ link. **start it with a burst of snow** in the share box is the fix: the link
 opens on a second and a half of snow, the loops take hold of it, and the burst
 heals off, leaving the look the link says running on what it started.
 
-It is the same move as waving a hand in front of a camera pointed at its own
-monitor, and it is snow rather than a flash for the same reason a hand works
+Waving a hand in front of a camera pointed at its own monitor does the same
+thing, and snow works better than a flash for the same reason a hand works
 better than a lamp: a loop amplifies detail, and a flat field has none.
 
 ## Looking closer

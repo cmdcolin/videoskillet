@@ -124,11 +124,10 @@ has the reasoning.
 
 ## Will it be in an app store?
 
-Not yet, but maybe! The home-screen install above already gets a phone the same
-app, icon and full-screen window a store listing would, so it is the fastest way
-to have it on a phone today. If a store build happens, Google Play is the likely
-first stop, since a wrapped web app there renders through the same Chrome the
-browser uses.
+Not yet. The home-screen install above already gives a phone the same app, icon
+and full-screen window a store listing would, and is the fastest way onto a
+phone today. A store build, if one happens, lands on Google Play first, since a
+wrapped web app there renders through the same Chrome the browser uses.
 
 ## Will there be a plugin for After Effects, Premiere or Resolve?
 

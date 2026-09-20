@@ -64,11 +64,11 @@ The picture is a `<canvas>`: a screenshot says what the fault looks like and
 never what a control is set to.
 
 **`board as text` answers the same question in one read.** The palette's list
-takes one query at a time and the address bar names its values in wire keys with
-no units, so the whole board is a verb of its own — the look, both decks, every
-control off stock with its reading and its stock value, every routing the
-modulation bay is driving, and the link. It puts the block in the sidebar, in a
-region labelled `board as text`:
+answers one query at a time, and the address bar's wire keys carry no units, so
+`board as text` puts the whole state in one readable block: the look, both
+decks, every control off stock with its reading and its stock value, every
+routing the modulation bay is driving, and the link. It sits in the sidebar, in
+a region labelled `board as text`:
 
 ```
 look      modified from “vhs”
@@ -172,9 +172,9 @@ driving a browser at the app, and
 a number that came off this box.
 
 **Model the mechanism, not the artifact.** There is no "VHS filter" here: dot
-crawl, tearing and hue drift emerge from a simulated signal path, which is why
-mechanisms interact for free. A shader that draws the look of a fault matches
-one screenshot and loses every interaction.
+crawl, tearing and hue drift emerge from a simulated signal path, so mechanisms
+interact with no code linking them together. A shader that draws the look of a
+fault matches one screenshot and loses every interaction.
 
 **Pick the domain before writing the effect.** A horizontal displacement means
 one thing in the signal domain, another in sync, another in deflection, and
@@ -192,10 +192,10 @@ of devices instead and hands the live one on.
 showing `frame 0` / `STEP-DEAD` / `clock +0ms` is that fault, not a bug in the
 signal path.
 
-**A control added to `src/ui/controls.ts` reaches every agent for free** — the
-palette indexes it by name and by its help prose, `#set=` takes its key, and
-`pnpm docgen` writes it into `llms-full.txt`. Nothing else needs teaching about
-it, which is the payoff for the schema being one table.
+**A control added to `src/ui/controls.ts` reaches every agent with no extra
+work** — the palette indexes it by name and by its help prose, `#set=` takes
+its key, and `pnpm docgen` writes it into `llms-full.txt`. The schema is one
+table, so nothing else needs teaching about the control.
 
 Several files in the tree are generated, and an edit to one survives until the
 next build:

@@ -31,13 +31,12 @@ in [Features](docs/FEATURES.md).
 - Video feedback effects including hardware mixer, camera-pointed-at-tv style
   feedback
 - Lots of 'faults' like loose cable, bad receiver, inverted polarity, bad
-  ground, etc.
-- Audio-reactive: feed it music and bass shakes vertical hold of the image, etc.
+  ground
+- Audio-reactive: feed it music and bass shakes vertical hold of the image.
   Music can come from the mic, a file you pick, the clip on screen, or straight
   off whatever this machine is playing — no loopback device to install
-- All settings can be modulated (e.g. with LFO, random walk, sample and hold,
-  etc)
-- Allows using MIDI controller via WebMIDI, map different knobs to settings of
+- All settings can be modulated (e.g. with LFO, random walk, sample and hold)
+- MIDI controller support via WebMIDI — map different knobs to settings of
   interest
 - Easy-to-use "randomize" buttons that morph between settings over multiple
   seconds

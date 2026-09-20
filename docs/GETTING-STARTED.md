@@ -1,10 +1,8 @@
 # Getting started
 
-videoskillet.js simulates the analog video signal in WebGPU shaders. The effects
-are real signal faults, not filters drawn on the picture.
-
-It needs WebGPU, so it needs a recent browser. Firefox Nightly and Chrome Canary
-both work.
+videoskillet.js simulates the analog video signal in WebGPU shaders — real
+signal faults, not filters drawn on the picture. It needs a recent browser with
+WebGPU: Firefox Nightly or Chrome Canary.
 
 Visit https://videoskillet.com/app/
 
