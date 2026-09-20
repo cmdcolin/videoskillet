@@ -14,7 +14,7 @@ export function AboutDialog({ onClose }: { onClose: () => void }) {
       title={
         <span className={ui.aboutTitle}>
           <img className={ui.aboutMark} src={publicUrl('favicon.svg')} alt="" />
-          videoskillet.js
+          videoskillet
         </span>
       }
       size="form"

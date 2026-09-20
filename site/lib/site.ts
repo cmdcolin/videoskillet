@@ -4,7 +4,7 @@ export const ORIGIN = 'https://videoskillet.com/'
 // What the shared site components say about this product: its name, where its
 // pages are, and the links the bar and the footer carry.
 export const SITE = {
-  name: 'videoskillet.js',
+  name: 'videoskillet',
   home: '/',
   icon: '/favicon.svg',
   app: '/app/',

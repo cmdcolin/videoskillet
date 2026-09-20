@@ -17,7 +17,7 @@ const SITE_PORT = 4321
 
 export function site(): Plugin {
   return {
-    name: 'videoskillet.js-site',
+    name: 'videoskillet-site',
     apply: 'serve',
     configureServer(server) {
       server.middlewares.use((req, res, next) => {

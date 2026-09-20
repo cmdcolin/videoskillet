@@ -76,7 +76,7 @@ try {
   // localStorage is per origin, so the morph setting has to be written from a
   // loaded page before the one under test.
   await page.goto(url.href, { waitUntil: 'networkidle0' })
-  await page.evaluate(() => localStorage.setItem('videoskillet.js_morph', '0'))
+  await page.evaluate(() => localStorage.setItem('videoskillet_morph', '0'))
   await page.goto(url.href, { waitUntil: 'networkidle0' })
   // Park the pointer clear of the preset chips: a stray hover swaps the caption
   // and a stray press applies a preset.

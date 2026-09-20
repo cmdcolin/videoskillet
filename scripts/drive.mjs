@@ -23,8 +23,8 @@ const sleep = ms => new Promise(r => setTimeout(r, ms))
 // stage open says which one (`video_feedback_open_phase`) in its own spec,
 // rather than every shot inheriting whichever one a default happened to pick.
 export const SEED = {
-  'videoskillet.js_overlay_bar_hidden': '0',
-  'videoskillet.js_fps_hidden': '0',
+  videoskillet_overlay_bar_hidden: '0',
+  videoskillet_fps_hidden: '0',
   video_feedback_preset_hint_dismissed: '0',
   video_feedback_presets_expanded: '0',
   video_feedback_recent_presets: '[]',

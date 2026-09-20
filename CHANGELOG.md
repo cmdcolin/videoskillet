@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to videoskillet.js are documented here.
+All notable changes to videoskillet are documented here.
 
 ## [2.3.0](https://github.com/cmdcolin/videoskillet/compare/v2.2.5...v2.3.0) - 2026-09-20
 

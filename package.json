@@ -1,5 +1,5 @@
 {
-  "name": "videoskillet.js",
+  "name": "videoskillet",
   "private": true,
   "version": "2.3.0",
   "description": "Real-time NTSC / VHS / composite-video glitch simulator in WebGPU compute shaders.",

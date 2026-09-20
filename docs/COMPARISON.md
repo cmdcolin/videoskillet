@@ -1,7 +1,7 @@
-# Where videoskillet.js sits
+# Where videoskillet sits
 
 Several projects make video look like it went through composite, tape and a CRT,
-and they differ in what they operate on. videoskillet.js simulates one signal,
+and they differ in what they operate on. videoskillet simulates one signal,
 live, so every fault lands on the same waveform.
 
 ## The neighbours
@@ -11,7 +11,7 @@ live, so every fault lands on the same waveform.
 [ntsc-rs](https://github.com/ntsc-rs/ntsc-rs) shares the premise of simulating
 the path rather than drawing the look. It ships standalone, in a browser, and as
 AE / Premiere / OpenFX plugins, and its multithreaded SIMD Rust runs in real
-time well above NTSC resolution. videoskillet.js is fixed to the NTSC raster and
+time well above NTSC resolution. videoskillet is fixed to the NTSC raster and
 has no plugin yet ([the FAQ](FAQ.md)).
 
 ### BENDR
@@ -23,7 +23,7 @@ bleed, rainbow fringing, dot crawl, ringing, line-by-line sync tears — is a
 slider drawn onto the picture, independent of the others, so the stages reorder
 freely.
 
-videoskillet.js builds the signal: a picture becomes a composite waveform, the
+videoskillet builds the signal: a picture becomes a composite waveform, the
 model damages that waveform, and a model of a TV decodes it back. Dot crawl and
 rainbow fringing are then leftovers of a decoder that could not separate colour
 from brightness cleanly, so every fault on the signal interacts with every other
@@ -45,12 +45,12 @@ output, fast and accurate for that case; the RetroArch shaders (`crt-royale`,
 `crt-guest-advanced`) model the display — mask, scanlines, phosphor, geometry,
 glow.
 
-## What videoskillet.js does
+## What videoskillet does
 
-videoskillet.js is a **live instrument**. The signal path stays resident on the
-GPU as compute shaders, so a control change costs one uniform-buffer write.
-Every stage of the path gets a control, any of them can be driven by an LFO,
-live audio or a MIDI knob, and two feedback loops run inside the model: a camera
+videoskillet is a **live instrument**. The signal path stays resident on the GPU
+as compute shaders, so a control change costs one uniform-buffer write. Every
+stage of the path gets a control, any of them can be driven by an LFO, live
+audio or a MIDI knob, and two feedback loops run inside the model: a camera
 aimed at the monitor it feeds, and a mixer patched into itself at signal level.
 A take renders offline to constant-framerate H.264, and a link carries the look.
 [The features](FEATURES.md) list the rest.

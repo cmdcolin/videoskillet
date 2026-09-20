@@ -87,7 +87,7 @@ const FIXTURE = {
 
 await page.goto(url, { waitUntil: 'domcontentloaded' })
 await page.evaluate(strip => {
-  localStorage.setItem('videoskillet.js.strip', JSON.stringify(strip))
+  localStorage.setItem('videoskillet.strip', JSON.stringify(strip))
 }, FIXTURE)
 await page.reload({ waitUntil: 'domcontentloaded' })
 await appUp(page, 6000)

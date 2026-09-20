@@ -549,7 +549,7 @@ check(
 
 // --- persistence -----------------------------------------------------------
 const stored = await page.evaluate(() =>
-  JSON.parse(localStorage.getItem('videoskillet.js.strip') ?? 'null'),
+  JSON.parse(localStorage.getItem('videoskillet.strip') ?? 'null'),
 )
 check('the rundown is stored', stored !== null && stored.rows.length === 3)
 check(

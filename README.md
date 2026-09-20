@@ -1,4 +1,4 @@
-# videoskillet.js <img src="public/favicon.svg" alt="videoskillet logo" height="48" />
+# videoskillet <img src="public/favicon.svg" alt="videoskillet logo" height="48" />
 
 Tasty WebGPU signal-level analog video emulation. The video effects are a
 consequence of NTSC signal, not an effect drawn on the picture.

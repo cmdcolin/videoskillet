@@ -24,7 +24,7 @@ import { join } from 'node:path'
 const root = process.argv[2] ?? 'dist'
 const PORT = 8098
 const BASE = `http://localhost:${PORT}/`
-const HINT = 'videoskillet.js_signed_in'
+const HINT = 'videoskillet_signed_in'
 
 if (!existsSync(join(root, 'index.html'))) {
   console.error(`no ${root}/index.html — run \`pnpm build\` first`)

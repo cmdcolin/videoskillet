@@ -19,7 +19,7 @@ import { createReadStream, statSync } from 'node:fs'
 // shaped glue and the tag that tells the app the bridge is up.
 export function ytdlp(): Plugin {
   return {
-    name: 'videoskillet.js-ytdlp',
+    name: 'videoskillet-ytdlp',
     apply: 'serve',
     // The app reads this tag to decide whether to offer the video-URL source
     // (`src/sources/bridge.ts`). A tag rather than a build-time flag, because

@@ -162,12 +162,12 @@ import type { CSSProperties, ReactNode } from 'react'
 // reloads so a collapse sticks — it only ever applies where the masthead is off
 // screen (fullscreen, the popout), which is where somebody clearing the picture
 // off for a projector is likely to be.
-const BAR_HIDDEN_STORE = 'videoskillet.js_overlay_bar_hidden'
+const BAR_HIDDEN_STORE = 'videoskillet_overlay_bar_hidden'
 
 // How wide the sidebar was left. Persisted for the same reason the bench flag
 // is: it is how this session reads the panel, not something it re-decides every
 // time it opens the app.
-const PANEL_W_STORE = 'videoskillet.js_panel_width'
+const PANEL_W_STORE = 'videoskillet_panel_width'
 
 // useSyncExternalStore fallbacks for the window before the async engine exists.
 const subscribeNever = () => () => {}
@@ -343,7 +343,7 @@ export function App() {
   // is the case the viewport gate alone used to refuse — a 1100px laptop with
   // 600px of sidebar has the room, and it is the panel's width that decides,
   // not the screen's.
-  const [benchOn, setBenchOn] = usePersistedFlag('videoskillet.js_panel_bench')
+  const [benchOn, setBenchOn] = usePersistedFlag('videoskillet_panel_bench')
   const roomy = useMediaQuery('(min-width: 1280px)')
   const wideEnough = popout !== null || roomy || panelW >= BENCH_W
   const bench = benchOn && wideEnough
@@ -466,9 +466,7 @@ export function App() {
   // the store is the engine's, so the readout goes down when the engine says a
   // morph is over, however it ended.
   const stopMorph = () => engineRef.current?.stopGlide()
-  const [morphStored, setMorphStored] = usePersistedString(
-    'videoskillet.js_morph',
-  )
+  const [morphStored, setMorphStored] = usePersistedString('videoskillet_morph')
   const morphSeconds = parseMorph(morphStored)
   const mix = useMix({
     controls,
@@ -1420,15 +1418,15 @@ export function App() {
           <button
             className={styles.brand}
             onClick={() => setShowAbout(true)}
-            title={`videoskillet.js ${versionLabel} (${gitSha}) — what is this?`}
-            aria-label="videoskillet.js — what is this?"
+            title={`videoskillet ${versionLabel} (${gitSha}) — what is this?`}
+            aria-label="videoskillet — what is this?"
           >
             <img
               className={styles.brandMark}
               src={publicUrl('favicon.svg')}
               alt=""
             />
-            <span className={styles.wordmark}>videoskillet.js</span>
+            <span className={styles.wordmark}>videoskillet</span>
           </button>
         )}
         {/* Sits in the masthead rather than over the bottom-left of the

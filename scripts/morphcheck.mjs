@@ -81,7 +81,7 @@ try {
   // A long morph on the ring, so the run measures the case the complaint is
   // about. Written before the page under test loads, because localStorage is
   // per origin and the panel reads this at mount.
-  await page.evaluate(() => localStorage.setItem('videoskillet.js_morph', '4'))
+  await page.evaluate(() => localStorage.setItem('videoskillet_morph', '4'))
   await page.goto(url.href, { waitUntil: 'networkidle0' })
   // Park the pointer clear of the preset chips: a stray hover swaps the caption
   // and a stray press applies a preset.

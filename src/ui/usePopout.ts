@@ -23,11 +23,11 @@ export function usePopout() {
     } else {
       const w = window.open(
         '',
-        'videoskillet.js_controls',
+        'videoskillet_controls',
         `width=${wide ? WIDE : NARROW},height=900`,
       )
       if (w !== null) {
-        w.document.title = 'videoskillet.js — controls'
+        w.document.title = 'videoskillet — controls'
         w.document.body.style.margin = '0'
         // Mirror the app's styles (Vite dev injects <style>; prod links CSS).
         for (const el of document.querySelectorAll('style')) {

@@ -20,7 +20,7 @@ const { label, links } = Astro.props
 <header>
   <div class="bar">
     <a class="brand" href="/">
-      videoskillet.js{label === undefined ? null : <span>{label}</span>}
+      videoskillet{label === undefined ? null : <span>{label}</span>}
     </a>
     <nav class="pages" aria-label="Site pages">
       {links.map(link => (

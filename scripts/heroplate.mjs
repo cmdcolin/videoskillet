@@ -218,7 +218,7 @@ const plateHtml = ({ text, size, brand }) => `<!doctype html><style>
     filter: brightness(2.4) saturate(1.3);
   }
 </style><div class="card"><p>${text}</p><div class="lockup">
-    <img src="data:image/svg+xml;base64,${FAVICON}" />videoskillet.js
+    <img src="data:image/svg+xml;base64,${FAVICON}" />videoskillet
   </div></div>`
 
 const scratch = mkdtempSync(join(tmpdir(), 'heroplate-'))

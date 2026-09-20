@@ -56,7 +56,7 @@ const COLLECTION = 'users'
 // store, and this is only the hint that tells a fresh page load whether it is
 // worth fetching the SDK to go and look. Wrong in the harmless direction either
 // way: stale-true costs one wasted fetch, stale-false costs one click.
-export const SIGNED_IN_HINT = 'videoskillet.js_signed_in'
+export const SIGNED_IN_HINT = 'videoskillet_signed_in'
 
 // The reCAPTCHA Enterprise key App Check attests with, from the Firebase console's
 // App Check page. Public in the same way the config above is: it names the site

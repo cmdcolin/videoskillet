@@ -108,7 +108,7 @@ a dev server offers the same option.
 The server answers this machine alone by default. `--host=0.0.0.0` opens it to
 the network, which is how a phone or a second machine reaches it.
 
-Clips fetched through the bridge are cached under `$TMPDIR/videoskillet.js-yt`,
+Clips fetched through the bridge are cached under `$TMPDIR/videoskillet-yt`,
 keyed by address and range, so the same URL opened twice downloads once.
 
 From a clone the command is `pnpm serve`, which hosts whatever `pnpm build` last

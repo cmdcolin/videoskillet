@@ -1,4 +1,4 @@
-# videoskillet.js
+# videoskillet
 
 > Real-time NTSC / VHS / composite-video simulation in WebGPU compute shaders.
 > Dot crawl, dropouts, head-switch wobble and video feedback are consequences of

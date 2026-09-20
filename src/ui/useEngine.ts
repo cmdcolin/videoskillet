@@ -189,7 +189,7 @@ const readPlayhead = (el: HTMLVideoElement | null): Playhead =>
 const samePlayhead = (a: Playhead, b: Playhead): boolean =>
   a.time === b.time && a.duration === b.duration && a.paused === b.paused
 
-const SOUND_OUT_KEY = 'videoskillet.js_sound_out'
+const SOUND_OUT_KEY = 'videoskillet_sound_out'
 
 // Tries per rebuild, and the wait between them. requestAdapter can fail outright
 // in the moments after a driver reset — the GPU stack is still coming back — so

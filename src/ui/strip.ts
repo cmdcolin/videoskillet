@@ -989,7 +989,7 @@ export const transitionLabel = (at: TransitionName | null): string =>
 // an address bar carries, so the rundown is a file and the rows inside it are
 // strings.
 
-const KEY = 'videoskillet.js.strip'
+const KEY = 'videoskillet.strip'
 
 const num = (v: unknown, fallback: number): number =>
   typeof v === 'number' && Number.isFinite(v) ? v : fallback

@@ -11,7 +11,7 @@
 header = """
 # Changelog
 
-All notable changes to videoskillet.js are documented here.
+All notable changes to videoskillet are documented here.
 """
 body = """
 

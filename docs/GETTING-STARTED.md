@@ -1,13 +1,13 @@
 # Getting started
 
-videoskillet.js simulates the analog video signal in WebGPU shaders. It needs a
+videoskillet simulates the analog video signal in WebGPU shaders. It needs a
 recent browser with WebGPU: Firefox Nightly or Chrome Canary.
 
 Visit https://videoskillet.com/app/
 
 ## The window
 
-![The videoskillet.js window with four labels: the picture on the left, and down the right-hand panel the menu, the presets and the signal path map](img/overview.jpg)
+![The videoskillet window with four labels: the picture on the left, and down the right-hand panel the menu, the presets and the signal path map](img/overview.jpg)
 
 **The picture** is on the left. Shift-drag a box across it to zoom in,
 double-click to pull back. **The ☰ menu**, top right, holds stills, recording,

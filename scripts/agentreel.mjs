@@ -137,7 +137,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms))
 // Values, not travel fractions, because the palette takes what a person would
 // type. They are the reel's own drags read back through `travel.ts`: its 0.811
 // on subcarrier detune is 7kHz, its 0.695 on HV sag is 16µs.
-const TASK = `You are demonstrating videoskillet.js, a live NTSC signal-path simulator, in the Chrome window beside you. Work only in that browser. After each step, take a screenshot and say in one line what changed in the picture.
+const TASK = `You are demonstrating videoskillet, a live NTSC signal-path simulator, in the Chrome window beside you. Work only in that browser. After each step, take a screenshot and say in one line what changed in the picture.
 
 Each of these is typed into the command palette, which you open with ctrl+k. Type the whole line, check the row it lands on says what you meant, then press Enter.
 

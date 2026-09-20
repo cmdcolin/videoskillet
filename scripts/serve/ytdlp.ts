@@ -24,7 +24,7 @@ import { extname, join } from 'node:path'
 // object into these calls. The node builtins are what both runtimes share:
 // Deno implements them, so one file runs in both.
 
-const CACHE_DIR = join(tmpdir(), 'videoskillet.js-yt')
+const CACHE_DIR = join(tmpdir(), 'videoskillet-yt')
 
 // The chain downscales to 480 lines, so height above that is bytes fetched to
 // be thrown away, and the picture is decoded every frame, so h264 — hardware

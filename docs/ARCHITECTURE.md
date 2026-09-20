@@ -1,4 +1,4 @@
-# videoskillet.js architecture
+# videoskillet architecture
 
 Orientation for a person or an agent about to change this codebase. It covers
 the shape of the system and the invariants that are easy to violate. It is not
@@ -6,7 +6,7 @@ an inventory of every file.
 
 ## The premise
 
-videoskillet.js simulates the NTSC signal path. A picture is encoded to a real
+videoskillet simulates the NTSC signal path. A picture is encoded to a real
 composite waveform on a fixed raster, damaged the way hardware damages a
 waveform, then decoded by a model of a TV that has to find sync in whatever it
 is handed. Dot crawl, rainbow fringing, tearing, rolling and hue drift are

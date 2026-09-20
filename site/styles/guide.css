@@ -603,7 +603,7 @@ hr {
   }
   /* The identity and the call to action keep their width and the page links
      give theirs up, so the row that scrolls is the one built to scroll. A brand
-     free to shrink is narrower than its own text and paints "videoskillet.js
+     free to shrink is narrower than its own text and paints "videoskillet
      guide" straight over the first nav link; a call to action free to shrink
      put "Install" underneath "Open the app". */
   .brand,

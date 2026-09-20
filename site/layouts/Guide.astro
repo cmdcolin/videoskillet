@@ -20,7 +20,7 @@ const SITE = 'https://videoskillet.com'
 // are not worth one — but the effects page is 25,000 pixels tall on a phone.
 const NAV_MIN = 5
 
-const title = `${spec.nav} — videoskillet.js`
+const title = `${spec.nav} — videoskillet`
 const canonical = SITE + href(spec.slug)
 const pages = spec.group.pages
 const at = pages.findIndex(page => page.slug === spec.slug)
@@ -44,7 +44,7 @@ const marked = spec.group.mark(spec)
     <meta name="color-scheme" content="dark" />
     <!-- A guide page shared on its own unfurls as itself, not as a bare filename. -->
     <meta property="og:type" content="article" />
-    <meta property="og:site_name" content="videoskillet.js" />
+    <meta property="og:site_name" content="videoskillet" />
     <meta property="og:url" content={canonical} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={summary} />

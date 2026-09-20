@@ -1,5 +1,5 @@
 {
-  "name": "videoskillet.js",
+  "name": "videoskillet",
   "short_name": "videoskillet",
   "description": "Real-time NTSC / VHS / composite-video glitch simulator in WebGPU — dot crawl, dropouts, head-switch wobble and video feedback emerge from a simulated analog signal, not filters painted on top.",
   "start_url": "app/",

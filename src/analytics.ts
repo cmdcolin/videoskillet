@@ -5,7 +5,7 @@
 // vote tool and the stream view — call startAnalytics() from their entry
 // module, and the Astro pages call it from site/components/Analytics.astro.
 export const GA_ID = 'G-QWGTGSZ447'
-const CONSENT_KEY = 'videoskillet.js_analytics'
+const CONSENT_KEY = 'videoskillet_analytics'
 
 // CROSS_REPO_SYNC(analytics-consent)
 declare global {

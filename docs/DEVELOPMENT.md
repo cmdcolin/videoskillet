@@ -961,7 +961,7 @@ sites that publish video and audio apart. Clips are capped at 480 lines, which
 is what the chain downscales to anyway, and the selector asks for h264 before
 av1 (the picture is decoded every frame, and h264 is hardware everywhere) and
 for a single file carrying its own audio before a merge. Downloads are cached in
-`$TMPDIR/videoskillet.js-yt`, keyed by URL, format selector _and_ range.
+`$TMPDIR/videoskillet-yt`, keyed by URL, format selector _and_ range.
 
 `/yt/progress?url=…` is a server-sent event stream carrying
 `{loaded, total, stage}` off yt-dlp's own `--progress-template` lines, which the
