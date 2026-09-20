@@ -2,6 +2,15 @@
 
 All notable changes to videoskillet are documented here.
 
+## [2.3.1](https://github.com/cmdcolin/videoskillet/compare/v2.3.0...v2.3.1) - 2026-09-20
+
+### Refactor
+- *(ui)* [`c3d4ae7`](https://github.com/cmdcolin/videoskillet/commit/c3d4ae706acc75a466277921c7402f12bec76494) shorten the About dialog's GitHub link label
+- [`c4a1af5`](https://github.com/cmdcolin/videoskillet/commit/c4a1af52a6bc6e3dbda88e2cd612bc8d5b5d0624) drop the .js from the name
+
+### Other Changes
+- [`b74e9ac`](https://github.com/cmdcolin/videoskillet/commit/b74e9ac99c9c521379cafe7dc951a1bd423f1aa8) Rename
+
 ## [2.3.0](https://github.com/cmdcolin/videoskillet/compare/v2.2.5...v2.3.0) - 2026-09-20
 
 ### Features
