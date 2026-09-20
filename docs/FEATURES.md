@@ -14,17 +14,14 @@ table. The headings below are the boxes on the app's chain map.
 
 ## Sources and wiring
 
-- **Two decks, same source list**: a still image, a video file, a webcam, a
-  shared screen, colour bars, TV or VHS static, a video synth, a teletype card
-  you type on, your own clip shelf, or a random pick from Wikimedia Commons or
-  archive.org. Deck B can be switched off.
-- **Capture hardware appears as a webcam**, on either deck, so two grabbers can
-  run against each other.
-- **Connector faults**: snow, a loose plug, a ground loop, bad termination,
-  polarity flips, S-video miswired into composite.
-- **Each input has its own deck and cable** ahead of the mixer. Remove sync from
-  one input and the receiver locks to the other, and the geometry changes
-  between the two pictures.
+Two decks take the same list: a still image, a video file, a webcam, a shared
+screen, colour bars, TV or VHS static, a video synth, a teletype card you type
+on, your own clip shelf, or a random pick from Wikimedia Commons or archive.org.
+A capture dongle appears as a webcam on either deck.
+
+Each input has its own deck and cable ahead of the mixer. Remove sync from one
+and the receiver locks to the other, and the geometry changes between the two
+pictures.
 
 ## Feedback loops
 
@@ -49,80 +46,63 @@ per generation.
 
 ## A/B mix
 
-- **Genlocked or free-running**: B locks to A's raster for a clean dissolve, or
-  sums against it free-running.
-- **The keyer keys on chroma from the encoder.** That filter has no vertical
-  term, so mattes come out soft horizontally and sharp vertically.
-- **A character generator** keys caption text into the picture on separate fill
-  and key wires. Trimming the timing between them puts program on one side of
-  each stroke and black on the other.
+B locks to A's raster for a clean dissolve, or sums against it free-running. The
+keyer keys on chroma from the encoder, and that filter has no vertical term, so
+mattes come out soft horizontally and sharp vertically. A character generator
+keys caption text in on separate fill and key wires, so trimming the timing
+between them puts program on one side of each stroke and black on the other.
 
 ## Channel
 
-- **Everything between the recorder and the set**: bandwidth, nonlinearity,
-  noise, the tuner, colour-under, the tape and heads. The stage can run up to
-  four times, once per dub generation.
-- **Tape noise is coloured.** FM discriminator noise rises toward the top of the
-  band, which is the chroma passband, so it appears as crawling coloured
-  speckle.
-- **Tracking is a second-order servo with a dead band.** With servo hunt raised,
-  it sweeps, overshoots, rings, settles, then drifts as the tape stretches. A
-  scene change, exiting shuttle, or an audio transient moves it off the peak and
-  flags the top of the frame.
+Everything between the recorder and the set: bandwidth, nonlinearity, noise, the
+tuner, colour-under, the tape and heads. The stage can run up to four times,
+once per dub generation.
+
+Tracking is a second-order servo with a dead band, so with servo hunt raised it
+sweeps, overshoots, rings and settles, and a scene change or an audio transient
+moves it off the peak.
 
 ## Enhancer
 
-A consumer picture enhancer with its jumpers moved, between deck and set. The
-clamp gate can slide off the back porch, which makes black level vary line to
-line; the peaking coil has feedback around it and rings; and the sync
-regenerator restamps pulses wherever its slicer crosses, so a slice level raised
-into picture content lets dark content generate sync.
+A consumer picture enhancer with its jumpers moved, between deck and set. Its
+sync regenerator restamps pulses wherever its slicer crosses, so a slice level
+raised into picture content lets dark content generate sync.
 
 ## Receiver
 
-- **A television and its misadjustments.** Sync faults move the picture and
-  decoding faults change its colour.
-- **Deflection bend applies after decoding**, so it distorts geometry without
-  changing hue. Whether a wobble carries colour with it identifies the stage it
-  comes from.
-- **A caption decoder reads line 21 as data.** Noise, limited bandwidth and
-  generation loss produce dropped characters, wrong characters, and the solid
-  block a decoder draws on a parity error. Captions repaint on the set's own
-  timing, so they stay still while the picture rolls or tears.
+Sync faults move the picture and decoding faults change its colour. Deflection
+bend applies after decoding, so it distorts geometry without changing hue —
+whether a wobble carries colour with it identifies the stage it comes from.
+
+A caption decoder reads line 21 as data, so noise, limited bandwidth and
+generation loss produce dropped characters and the solid block a decoder draws
+on a parity error.
 
 ## Screen
 
-- **The beam and the phosphor it lands on**: spot size, focus, the shadow mask
-  and convergence.
-- **Persistence decays second-order**, so a trail has a bright leading edge and
-  a long faint tail, and it turns green because red and blue decay first.
+The beam and the phosphor it lands on. Persistence decays second-order, so a
+trail has a bright leading edge and a long faint tail, and it turns green
+because red and blue decay first.
 
 ## Audio-reactive
 
-- **Audio modulates the faults above** at one sample per scan line: bass to
-  vertical hold and HV sag, level to horizontal hold, the waveform to deflection
-  or the demodulator's reference.
-- **The demodulator route shifts tint at 15,734 Hz.** The reference is in the
-  receiver, so the colour bands stay fixed on the screen while a rolling picture
-  moves through them.
-- **Audio sources**: a microphone, a file, the clip's own track, or a tab or
-  application share.
+Audio modulates the faults above at one sample per scan line: bass to vertical
+hold and HV sag, level to horizontal hold, the waveform to deflection or the
+demodulator's reference. The reference is in the receiver, so that last route
+leaves its colour bands fixed on the screen while a rolling picture moves
+through them.
 
 ## Intercarrier buzz
 
-- **Sound buzz is an audio output.** The sound detector recovers the 4.5 MHz
-  beat between the picture and sound carriers, and a limiter that does not
-  reject video crosstalk passes picture content through as audio: the vertical
-  interval buzzes at 60 Hz, line structure whines, snow hisses.
-- **The tap reads the actual composite signal**, so bright scenes buzz louder,
-  hum bars beat against the field rate, and a head switch clicks on the line it
-  damages.
-- **The tap sits ahead of the receiver** and hears only the signal domain. A
-  rolling picture keeps a steady buzz, because the roll happens in the
-  receiver's vertical oscillator, downstream of the tap.
-- **Audio output is off until you enable it**, because a preset, a shared link
-  or a random roll can raise either level control. The Sound stage stays
-  _silent_ until you throw its switch, and remembers it after that.
+Sound buzz is an audio output. The sound detector recovers the 4.5 MHz beat
+between the picture and sound carriers, and a limiter that does not reject video
+crosstalk passes picture content through as audio: the vertical interval buzzes
+at 60 Hz, line structure whines, snow hisses.
+
+The tap sits ahead of the receiver, so a rolling picture keeps a steady buzz —
+the roll happens in the receiver's vertical oscillator, downstream of the tap.
+Audio output stays _silent_ until you throw the Sound stage's switch, because a
+preset or a shared link can raise either level control.
 
 ## The rig
 
@@ -132,29 +112,18 @@ into picture content lets dark content generate sync.
   presets still apply. Rates lock to a tapped BPM or MIDI clock.
 - **MIDI**: any controller sending CC, with learn, auto-map and soft takeover.
   See [Using a MIDI controller](MIDI.md).
-- **Presets** also work as faders you can drag partway. Morph, random nudge,
-  full undo, and saved profiles behind a sign-in.
-- **Home**: signed in, videoskillet.com opens on a card that resumes your last
-  session, a row of earlier sessions, and your saved looks with their stills.
-  The app autosaves each visit while you are signed in, so the page is up to
-  date on whatever machine you open next.
-- **Drift**: one switch makes the look wander on its own, with a small change
-  every fifteen seconds. Each stage has the same switch for its own controls.
-- **Rundown**: the strip tray is a list of looks that plays in sequence. A row
-  holds for a number of bars, arrives as a cut, a morph or a fault, and can pick
-  a source from a pool.
-- **Sharing**: the full control state mirrors to the URL, so a link carries a
-  patch.
-- **Capture**: stills, and a constant-framerate H.264 MP4 of the picture as it
-  plays. The strip's ⎙ render steps the engine on its own clock, so a take comes
-  back at 60 fps whatever rate the tab ran at, and it is reproducible.
-- **Rendering offline**, with the project running locally. `pnpm render` takes a
-  link and a file and writes ProRes 4444 with no browser open, which keeps the
-  colour artifacts a browser's 4:2:0 encode loses. It reads a link the way the
-  app does, so the modulation, the source and the clip's own sound all come
-  across. See [CLI](CLI.md).
-- **Interface**: the chain map, a command palette, signal taps, an IRE scope,
-  and a magnifier that magnifies the tube face along with the picture.
+- **Presets** also work as faders you can drag partway, with morph, random
+  nudge, full undo and saved profiles behind a sign-in. **Drift** runs the nudge
+  unattended, and each stage has the same switch for its own controls.
+- **Rundown**: the strip tray plays a list of looks in sequence. A row holds for
+  a number of bars, arrives as a cut, a morph or a fault, and can pick a source
+  from a pool.
+- **Sharing and capture**: the control state mirrors to the URL, so a link
+  carries a patch. The strip's ⎙ render steps the engine on its own clock, so a
+  take comes back at 60 fps whatever rate the tab ran at.
+- **Rendering offline**: `pnpm render` takes a link and a file and writes ProRes
+  4444 with no browser open, which keeps the colour artifacts a browser's 4:2:0
+  encode loses. See [CLI](CLI.md).
 
 ---
 

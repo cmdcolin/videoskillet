@@ -93,13 +93,13 @@ describe('mode switch blurbs', () => {
 // to: the cap catches the four-paragraph essay on one slider, and the median
 // catches the drift that no single control is guilty of.
 //
-// The cap sits well above the longest blurb today, which is around a hundred
-// words on a switch describing five positions, and well under the worst this
-// replaced, which was nearly two hundred on one slider. A blurb that wants more
-// is describing a mechanism the page should state once and link to.
+// The cap sits above the longest blurb today, which is a switch describing five
+// positions, and well under the worst this replaced, which was nearly two
+// hundred words on one slider. A blurb that wants more is describing a
+// mechanism the page should state once and link to.
 describe('help length', () => {
-  const MAX_WORDS = 120
-  const MAX_MEDIAN = 45
+  const MAX_WORDS = 100
+  const MAX_MEDIAN = 35
   const words = (help: string) => help.split(/\s+/).filter(Boolean).length
   const lengths = GROUPS.flatMap(g =>
     g.sliders.map(s => ({ key: s.key, n: words(s.help) })),
