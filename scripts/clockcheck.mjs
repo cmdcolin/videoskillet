@@ -87,6 +87,10 @@ const glideAfter = (virtual, frames) =>
         seconds: 1,
         switchKeys: new Set(),
         holdKeys: new Set(),
+        // `Glide.start` reads a track for every key it is about to move, so a
+        // plan without this throws before the walk begins and every arm below
+        // reports a morph that never ran.
+        tracks: new Map(),
       })
       for (let i = 0; i < n; i++) vf.step()
       // null once the walk is over; a fraction while it is still travelling.

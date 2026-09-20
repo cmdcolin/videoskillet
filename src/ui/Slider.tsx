@@ -773,10 +773,12 @@ export function Slider(props: {
     if (resetSeconds !== undefined && resetSeconds > 0) {
       const pressed = Date.now()
       setHoming(pressed)
-      // Timed rather than waiting for the value to arrive: the row is told
-      // about a morph in flight only every sixth frame (pipeline.ts ›
-      // GLIDE_NOTIFY), and a control whose step is coarser than the last stretch
-      // of the journey stops being re-rendered before the journey is over.
+      // Timed rather than waiting for the value to arrive, and it has to stay
+      // that way: a coarse control reaches its last notch at about 93% of the
+      // journey (glide.ts › COARSE_STEPS), so the row stops being re-rendered
+      // before the flight is over however often React hears about it. The
+      // other half of this reason is gone — the row hears about a morph ten
+      // times a second on the clock now, not every sixth rendered frame.
       setTimeout(
         () => setHoming(h => (h === pressed ? null : h)),
         resetSeconds * 1000,

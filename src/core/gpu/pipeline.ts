@@ -1284,7 +1284,7 @@ export class Engine implements EngineApi {
   //
   // The origin is this engine's live controls, deliberately not passed in: a
   // morph started while one is already running has to set off from where the
-  // picture *is*, and the React snapshot lags by up to `GLIDE_NOTIFY` frames.
+  // picture *is*, and the React snapshot lags by up to `GLIDE_NOTIFY_MS`.
   // That is what makes rolls chain — hit surprise repeatedly and the look wanders
   // continuously rather than snapping back to the last resting one each time.
   startGlide(plan: GlidePlan): void {
@@ -1324,7 +1324,7 @@ export class Engine implements EngineApi {
   // The morph's own useSyncExternalStore pair, deliberately separate from the
   // controls one above rather than folded into it. They differ in who listens:
   // every control write is heard by App, which builds the whole panel, so
-  // `emitControls` is throttled to one notify per GLIDE_NOTIFY frames while a
+  // `emitControls` is throttled to one notify per GLIDE_NOTIFY_MS while a
   // morph runs. Nothing that moves at the frame rate can be published through
   // it. This one is heard only by the readout in the look bar — one button — so
   // it fires every frame and stays honest.

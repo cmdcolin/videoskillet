@@ -451,7 +451,13 @@ export function App() {
   // holding it would reconcile ~200 control rows sixty times a second for a
   // readout the width of one button. Instead the engine publishes it as its own
   // store and the button subscribes, the same shape `useControlValue` uses to
-  // put one slider on one key. App never re-renders for a morph at all.
+  // put one slider on one key.
+  //
+  // App now genuinely does not re-render for a morph: it reads the settled
+  // board (`subscribeSettledControls`), so the only thing that can bring it
+  // back down mid-flight is one of the three threshold readings above crossing
+  // its threshold. This comment used to claim as much and be wrong, because the
+  // whole controls object was one subscription away at the top of the file.
   const morphStore = {
     subscribe: engine === null ? subscribeNever : engine.subscribeGlide,
     get: engine === null ? getNoMorph : engine.getGlide,
