@@ -62,6 +62,21 @@ try {
   const page = await browser.newPage()
   await page.setViewport({ width: 1352, height: 900 })
   page.on('pageerror', e => fails.push(`pageerror: ${String(e).slice(0, 200)}`))
+  // `pageerror` is uncaught exceptions only, and the failures this app cares
+  // about are not thrown: a GPU error, a lost device, a decode that gave up all
+  // arrive through a callback and end at one banner. A run that measured a
+  // cadence under a GPU error measured a different app and said PASS.
+  page.on('console', m => {
+    if (m.type() === 'error') fails.push(`console: ${m.text().slice(0, 200)}`)
+  })
+  // The banner itself (ui/Stage.tsx), which is where every async failure ends
+  // up. `gpu:` is the prefix useEngine puts on a GPUDevice error.
+  const banner = async where => {
+    const said = await page.evaluate(
+      () => document.querySelector('[role="alert"]')?.textContent ?? '',
+    )
+    if (said !== '') fails.push(`banner ${where}: ${said.slice(0, 200)}`)
+  }
   await page.goto(url.href, { waitUntil: 'networkidle0' })
   // A long morph on the ring, so the run measures the case the complaint is
   // about. Written before the page under test loads, because localStorage is
@@ -92,7 +107,14 @@ try {
     fails.push('no roll button found, so there is no busy board to fly to')
   // Long enough for the ring's own 4s morph to land before the board is read.
   await new Promise(r => setTimeout(r, 5000))
-  const busy = await page.evaluate(() => ({ ...window.vf.getControls() }))
+  const rolled = await page.evaluate(() => ({ ...window.vf.getControls() }))
+  await banner('after the roll')
+  // The roll is free to land on a strobe, and this harness runs a headed window
+  // several times in a row on somebody's desk. A gate cutting the beam a few
+  // times a second is exactly the thing not to leave flashing there unasked,
+  // and it is no part of what the run measures — so the destination keeps the
+  // roll's breadth and the strobe's stock value.
+  const busy = { ...rolled, strobeHz: boards.stock.strobeHz }
 
   const arm = (lock, stock, busy) =>
     page.evaluate(
@@ -150,6 +172,7 @@ try {
   const report = []
   for (const lock of LOCKS) {
     const out = await arm(lock, boards.stock, busy)
+    await banner(`after the 1/${lock + 1} arm`)
     // Only the notifies inside the flight; the settling ones either side say
     // nothing about cadence.
     const inFlight = out.notifies.filter(

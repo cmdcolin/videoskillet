@@ -493,16 +493,17 @@ Three things it has to get right, and together they are why it is not a
   chips all have to agree on.
 
   A duration and not a frame count, which it was until `scripts/morphcheck.mjs`
-  measured what that cost. `advanceGlide` runs *after* the frame lock's early
+  measured what that cost. `advanceGlide` runs _after_ the frame lock's early
   return, so six frames meant six rendered frames: the panel updated at 4.75 Hz
-  under a 1/2 lock and 8.5 Hz under none. The gate carries its remainder
-  because a `>=` test against a 16.7 ms frame alternates between six frames and
-  seven, and that beat is what a morph looks chunky as.
+  under a 1/2 lock and 8.5 Hz under none. The gate carries its remainder because
+  a `>=` test against a 16.7 ms frame alternates between six frames and seven,
+  and that beat is what a morph looks chunky as.
 
-  What the panel *does* with a notify matters as much as how often it gets one.
+  What the panel _does_ with a notify matters as much as how often it gets one.
   App reads the settled board rather than the live one, so the sidebar's
   structure, the walk over every slider and the state URL all sit out a flight
   the rows are travelling through. The rows read the live store key by key.
+
 - **The landing frame assigns the destination** rather than evaluating the path
   at `t=1`: `from + (to - from) * 1` is not bit-identical to `to`, and
   `controlsEqual`/`matchPreset` compare exactly.

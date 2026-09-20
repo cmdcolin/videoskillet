@@ -50,8 +50,8 @@ existing regions show the pattern:
 - `SIGNED_IN_HINT` and `COLLECTION` sit above the `firebase-auth` region in
   `cloud.ts`.
 - `privacyHref` sits above the `landing-page-test` region.
-- `LOADING` and `CARDS` sit below the `home-skeleton-markup` region, which
-  holds the markup both sites share.
+- `LOADING` and `CARDS` sit below the `home-skeleton-markup` region, which holds
+  the markup both sites share.
 - bender imports its storage helpers under videoskillet's names
   (`read as readStored`), so `firebase-auth` reads the same on both sides.
 
