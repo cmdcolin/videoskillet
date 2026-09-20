@@ -2,6 +2,15 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [2.2.5](https://github.com/cmdcolin/videoskillet/compare/v2.2.4...v2.2.5) - 2026-09-20
+
+### Fixes
+- *(ui)* [`7419801`](https://github.com/cmdcolin/videoskillet/commit/7419801ec8ce771492a17b0f621c2cf11cf69eb9) demoreel respects timeScale when stepping the engine
+- *(ui)* [`8616e4f`](https://github.com/cmdcolin/videoskillet/commit/8616e4feb3fc2d6435c3829a69d4972f05f1f5a5) demoreel pauses the live loop instead of taking it
+
+### Other Changes
+- [`0535b9d`](https://github.com/cmdcolin/videoskillet/commit/0535b9d980cba1b98a2fbb969e1085e7aeec8f92) Better text
+
 ## [2.2.4](https://github.com/cmdcolin/videoskillet/compare/v2.2.3...v2.2.4) - 2026-09-20
 
 ### Features
