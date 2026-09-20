@@ -30,8 +30,7 @@ in [Features](docs/FEATURES.md).
 - Dirty video mix or genlocked (clean) video mixing of two sources
 - Video feedback effects including hardware mixer, camera-pointed-at-tv style
   feedback
-- Lots of 'faults' like loose cable, bad receiver, inverted polarity, bad
-  ground
+- Lots of 'faults' like loose cable, bad receiver, inverted polarity, bad ground
 - Audio-reactive: feed it music and bass shakes vertical hold of the image.
   Music can come from the mic, a file you pick, the clip on screen, or straight
   off whatever this machine is playing — no loopback device to install

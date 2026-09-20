@@ -21,14 +21,14 @@ videoskillet.js is fixed to the NTSC raster and has no plugin yet
 browser tool with four channels, a reorderable chain on each, three mix buses,
 keys and wipes, all in one HTML file a phone will run. Each fault — chroma
 bleed, rainbow fringing, dot crawl, ringing, line-by-line sync tears — is a
-slider drawn onto the picture, independent of the others, which is what lets
-the stages reorder freely.
+slider drawn onto the picture, independent of the others, which is what lets the
+stages reorder freely.
 
 videoskillet.js builds the signal: a picture becomes a composite waveform, the
-model damages that waveform, and a model of a TV decodes it back. Dot crawl
-and rainbow fringing are then leftovers of a decoder that could not separate
-colour from brightness cleanly, so every fault on the signal interacts with
-every other one, with no wiring between stages to maintain.
+model damages that waveform, and a model of a TV decodes it back. Dot crawl and
+rainbow fringing are then leftovers of a decoder that could not separate colour
+from brightness cleanly, so every fault on the signal interacts with every other
+one, with no wiring between stages to maintain.
 
 ### vhs-decode / ld-decode
 
