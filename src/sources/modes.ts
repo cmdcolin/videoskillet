@@ -79,17 +79,14 @@ export const SOURCE_DESC: Record<SourceMode | SourceBMode, string> = {
   screen: 'Screen / window… — share a window or a tab',
 }
 
-// What kind of thing a source is, which is the fact the picker was not saying.
-// Fourteen options in one flat list ran four unrelated kinds together: signal
-// generators that switch instantly, media that ships with the app, four entries
-// that open a file dialog or a URL box before anything happens, and two that ask
-// the browser for a device. Scanning for "the cat photo" or "popeye" meant
-// reading fourteen lines of "Name — what it is" with nothing to skip by.
+// What kind of thing a source is, so the picker can band the list by what an
+// option costs to take: generators that switch instantly, media that ships with
+// the app, pools that fetch something different every pick, entries that open a
+// file dialog or a URL box first, and devices the browser has to be asked for.
 //
-// A Record rather than a parallel list of arrays: every mode must name its kind
-// or this fails to compile, so a source added to SOURCE_MODES cannot quietly
-// land in whichever band happened to be last (controls.test.ts holds the same
-// line for a control's `place`).
+// A Record, so every mode must name its kind or this fails to compile and a
+// source added to SOURCE_MODES cannot land in whichever band happened to be
+// last (controls.test.ts holds the same line for a control's `place`).
 export type SourceKind =
   | 'off'
   | 'pattern'
@@ -131,19 +128,10 @@ export const SOURCE_KIND_LABEL: Record<SourceKind, string | null> = {
   off: null,
   pattern: 'Generated — switches instantly',
   bundled: 'Bundled with the app',
-  // The one band whose entries are not a *thing*: two of them roll a file out of
-  // a public archive and hand back something different every pick, and the third
-  // is the way to look before you leap. The heading says the band is fetched
-  // because nothing else can — an option that quietly changes what it means
-  // between two picks is worth warning about, and re-picking is the feature.
-  //
-  // This was two bands of eleven entries, one per curated pool. The pools are
-  // still there and are better placed: they are the preset buttons in the
-  // browser, where their names lead somewhere you can see rather than naming a
-  // gamble. What used to close the Commons band — "Favorites…", the rolls you
-  // starred — is now the ★ beside the caption, which puts a roll on the clip
-  // shelf alongside your own footage, because "the ones I keep" belongs with the
-  // other things you keep.
+  // The heading warns that this band fetches: an option here hands back a
+  // different file on every pick, so its name cannot say what arrives. The
+  // curated pools are the browser's preset buttons, and the ★ beside the caption
+  // puts a roll on the clip shelf with your own footage.
   pool: 'Public archives — fetched live, and never the same twice',
   yours: 'Your own — opens a picker',
   live: 'Live — asks the browser',

@@ -132,10 +132,10 @@ const section = (heading, blurb, groups) =>
 
 const at = place => GROUPS.filter(g => g.place === place)
 
-// The picker's bands, one line each. The seventeen entries this replaced were
-// the picker's own descriptions, which put "Minnie the Moocher (1932, public
-// domain)" on the page as though a bundled cartoon were a feature of the
-// simulator. A band that has nothing in a deck's list does not appear, and the
+// The picker's bands, one line each. Printing the picker's own entries here put
+// "Minnie the Moocher (1932, public domain)" on the page as though a bundled
+// cartoon were a feature of the simulator, and it grew a line per source added.
+// A band that has nothing in a deck's list does not appear, and the
 // difference between the two lists is the fact the hand-written page got wrong,
 // so it is still stated below rather than left for a reader to diff.
 const modeList = modes =>
@@ -299,9 +299,9 @@ const llms = [
   '## The address bar is the remote control',
   '',
   'Every control, source and routing is reachable from the address bar, and the',
-  'app mirrors the live board back into it. So the URL says what is on screen,',
-  'and navigating to one puts it there — which is faster and steadier than',
-  'operating 266 knobs by hand, whether the hand is a person’s or an agent’s.',
+  'app mirrors the live board back into it, so the URL says what is on screen and',
+  'navigating to one puts it there. One link sets 200+ controls at once, whether',
+  'the hand writing it is a person’s or an agent’s.',
   '',
   'The parameters live after the `#`. Two shapes of link exist and both open the',
   'same board: the readable one the bar carries, and the packed `#p=…` the share',
