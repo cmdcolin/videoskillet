@@ -102,8 +102,14 @@ const MAX_GENS = 4
 // the state machine that does the picking lives in framelock.ts.
 const LOCK_AUTO = 4
 
-// Frames between telling React where a morph has got to. See `glideNotify`.
-const GLIDE_NOTIFY = 6
+// How often React is told where a morph has got to, in milliseconds of wall
+// clock. Deliberately a duration and not a frame count: `advanceGlide` runs
+// after the frame lock's early return in `render`, so a count of frames is a
+// count of *rendered* frames, and a 1/2 lock halved the panel's update rate
+// while a 1/4 lock quartered it. Measured on a production build before this
+// changed: 8.5Hz at 1/1 and 4.75Hz at 1/2, against the 10Hz the six-frame count
+// was meant to buy. scripts/morphcheck.mjs is that measurement.
+const GLIDE_NOTIFY_MS = 100
 
 const FILTER_KEYS: ReadonlySet<ControlKey> = new Set<ControlKey>([
   'encChromaMHz',
@@ -242,13 +248,17 @@ export class Engine implements EngineApi {
   private captionState = new CaptionState()
   private modState = new ModState()
   private glide = new Glide(FILTER_KEYS)
-  // Frames since React was last told where a morph has got to. A morph writes
+  // When React is next due to hear where a morph has got to. A morph writes
   // every frame; telling React every frame would buy a full panel render per
   // frame (19ms with every row mounted), which is the morph paying for its own
-  // stutter. Six frames is a tenth of a second: the sliders visibly travel,
-  // which is half the point of watching a morph, and the cost is a tenth of what
-  // notifying per frame would be.
-  private glideNotify = 0
+  // stutter. A tenth of a second lets the sliders visibly travel, which is half
+  // the point of watching a morph.
+  //
+  // A deadline that carries its own remainder rather than one measured from the
+  // last notify. `now >= last + 100` against a 16.7ms frame alternates between
+  // six frames and seven — 100ms, then 117ms — and that beat is what a morph
+  // looks chunky *as*: the measured jitter was p95/p50 = 1.55 before this.
+  private glideNotifyAt = 0
   private rfState = new RfState()
   private synthState = new SynthState()
   // The blanking gate. Unlike the stab gate beside it this is a plain control
@@ -1132,7 +1142,7 @@ export class Engine implements EngineApi {
     // the glide only writes the keys it is moving — but because they would fight
     // over that key for the rest of the flight, and the slider would crawl back
     // out from under the finger. Whoever grabbed a control has taken the wheel.
-    this.glide.stop()
+    this.endGlide()
     this.controls[key] = value
     if (FILTER_KEYS.has(key)) this.filtersDirty = true
     this.emitControls()
@@ -1142,7 +1152,7 @@ export class Engine implements EngineApi {
     // Same rule as setControl: an outright write of a look supersedes a morph
     // towards one. (startGlide does not come through here — it hands over a
     // destination, not a patch.)
-    this.glide.stop()
+    this.endGlide()
     for (const k of CONTROL_KEYS) {
       const v = patch[k]
       if (v !== undefined) {
@@ -1189,6 +1199,28 @@ export class Engine implements EngineApi {
   // `engine.controls` directly.
   readonly getControls = (): Controls => this.snapshot
 
+  // Refresh the snapshot React reads, without telling React. Separate from
+  // `emitControls` because a morph does the two at different rates: it writes
+  // the board every frame and tells React ten times a second. A verb that runs
+  // mid-morph builds its destination from `getControls()` — useMix's rolls,
+  // resets and card presets all do — and a snapshot refreshed only on the
+  // notify gate handed one a board a tenth of a second stale.
+  private takeSnapshot(): void {
+    this.snapshot = { ...this.controls }
+  }
+
+  // The morph's own control notify. It never arms `notifyFrame`, and that is
+  // the point: that window exists to fold a storm of hand or MIDI writes into
+  // one render, and a morph already has a gate of its own. Sharing it cost the
+  // first pointer event of a mid-morph grab its leading edge whenever the event
+  // landed inside the armed window — about one frame in six — and React
+  // restores a controlled input's DOM value from the last rendered props when
+  // an input event does not re-render, so the thumb jumped back for a frame.
+  private emitGlideControls(): void {
+    this.takeSnapshot()
+    this.controlListeners.emit()
+  }
+
   // Leading edge now, everything else in the frame folded into one trailing
   // notify. The snapshot itself is always refreshed synchronously — the frame
   // being submitted has to see the write, and so does the next `getControls()`
@@ -1202,7 +1234,7 @@ export class Engine implements EngineApi {
   // trailing path; MIDI is what does — a Twister sends far faster than 60 Hz,
   // and every message used to buy its own full panel render.
   private emitControls(): void {
-    this.snapshot = { ...this.controls }
+    this.takeSnapshot()
     if (this.notifyFrame !== 0) {
       this.notifyMissed = true
       return
@@ -1232,7 +1264,10 @@ export class Engine implements EngineApi {
   // continuously rather than snapping back to the last resting one each time.
   startGlide(plan: GlidePlan): void {
     this.glide.start(this.controls, plan, this.now())
-    this.glideNotify = 0
+    // The gate is deliberately left where it stands. Re-arming it here would
+    // push the next notify a full period out on every start, and a chain of
+    // rolls — press surprise repeatedly, which is a gesture the look bar
+    // invites — would then starve the panel for as long as the chaining went on.
     // On this call rather than on the first frame, so the readout is up before
     // the picture has moved. The gap is one frame and it is the wrong frame to
     // be missing: it is the one where somebody is asking whether the button
@@ -1243,8 +1278,21 @@ export class Engine implements EngineApi {
   // Leave the board wherever the morph had got to. The half-way look is a look;
   // it is the sliders' business now.
   stopGlide(): void {
-    this.glide.stop()
+    this.endGlide()
     this.emitControls()
+  }
+
+  // Every way a morph ends other than arriving. The readout in the look bar
+  // (ui/LookBar.tsx) hears the glide store and nothing else, so a stop that
+  // does not notify it leaves the chip up over a board that has stopped
+  // moving. Three callers used to stop the glide straight and skip that:
+  // `setControl`, `applyControls` and `resetSignal`. It went unnoticed because
+  // App re-renders on every control write, which took the chip down as a side
+  // effect — a mask that goes away the moment App stops reading the whole
+  // board.
+  private endGlide(): void {
+    if (!this.glide.running) return
+    this.glide.stop()
     this.notifyGlide()
   }
 
@@ -1307,13 +1355,31 @@ export class Engine implements EngineApi {
     // so this is what takes the readout down.
     this.notifyGlide()
     // React hears about the landing frame no matter what — the destination is a
-    // real look that saved looks, links and the recipe chips all have to agree on —
-    // and about the flight only every GLIDE_NOTIFY frames.
-    this.glideNotify++
-    if (step.done || this.glideNotify >= GLIDE_NOTIFY) {
-      this.glideNotify = 0
+    // real look that saved looks, links and the recipe chips all have to agree
+    // on — and about the flight on the gate below. The snapshot is refreshed
+    // either way, every frame.
+    if (step.done) {
       this.emitControls()
+      return
     }
+    this.takeSnapshot()
+    // `performance.now()`, not `now()`. What this bounds is React work per
+    // wall second, which is a fact about the machine and not about the signal
+    // path's clock; under a take `now()` is the frame counter, and gating on it
+    // would flood the panel when an export outran real time and starve it when
+    // it fell behind.
+    const wall = performance.now()
+    if (wall < this.glideNotifyAt) return
+    // Carry the remainder while the gate is merely late by less than a period,
+    // which is the six-versus-seven-frame beat. Resync outright when it is
+    // further behind than that: the first frame of a morph, or a tab coming
+    // back from the background, where carrying would fire a burst catching up
+    // on notifies nobody was there to see.
+    this.glideNotifyAt =
+      wall - this.glideNotifyAt > GLIDE_NOTIFY_MS
+        ? wall + GLIDE_NOTIFY_MS
+        : this.glideNotifyAt + GLIDE_NOTIFY_MS
+    this.emitGlideControls()
   }
 
   // Hold-to-compare: push `next` to the render path without touching the React
@@ -1884,7 +1950,7 @@ export class Engine implements EngineApi {
     // about to count from zero: left running, `now() - startMs` goes hugely
     // negative and the morph parks on its origin look for the whole render. The
     // board keeps the values it reached; what stops is the walk to the rest.
-    this.glide.stop()
+    this.endGlide()
     // Same for a transition in flight: it is a span measured in frames, and the
     // counter is about to go back to zero underneath it.
     this.fault.stop()
