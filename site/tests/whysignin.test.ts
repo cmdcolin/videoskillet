@@ -4,15 +4,18 @@ import { beforeAll, expect, test } from 'vitest'
 import {
   FREE_WITHOUT,
   PITCH,
+  SHOT,
   SHOT_ALT,
-  SHOT_SIZE,
+  SHOT_CAPTION,
+  SHOT_H,
+  SHOT_W,
 } from '../../src/ui/whySignIn'
 import Landing from '../pages/index.astro'
 import Privacy from '../pages/privacy.astro'
 
 import { existsSync, readFileSync } from 'node:fs'
 
-const SHOT = 'public/home-signed-in.webp'
+const file = `public/${SHOT}`
 
 // The landing page answers "why sign in?" out of the same strings the app's own
 // card renders, and it answers in the HTML rather than from script: a reader
@@ -63,14 +66,15 @@ test('no page loads Google Analytics before the visitor says yes', () => {
 // Outside the region: each app's card shows a picture of its own home.
 test('the card shows the home an account gets', () => {
   expect(landing).toContain(SHOT_ALT)
-  expect(landing).toContain('src="/home-signed-in.webp"')
-  expect(existsSync(SHOT)).toBe(true)
+  expect(landing).toContain(SHOT_CAPTION)
+  expect(landing).toContain(`src="/${SHOT}"`)
+  expect(existsSync(file)).toBe(true)
 })
 
-// A lossy webp says its size in the six bytes after the sync code: two 14-bit
+// A lossy webp says its size in the four bytes after the sync code: two 14-bit
 // fields, little-endian. Read here rather than shelled out to ImageMagick,
 // which `pnpm test` has no business needing.
-const webpSize = (file: string) => {
+const webpSize = () => {
   const bytes = readFileSync(file)
   return {
     width: bytes.readUInt16LE(26) & 0x3fff,
@@ -79,7 +83,7 @@ const webpSize = (file: string) => {
 }
 
 test('both cards reserve the shape the picture actually has', () => {
-  expect(webpSize(SHOT)).toEqual(SHOT_SIZE)
-  expect(landing).toContain(`width="${SHOT_SIZE.width}"`)
-  expect(landing).toContain(`height="${SHOT_SIZE.height}"`)
+  expect(webpSize()).toEqual({ width: SHOT_W, height: SHOT_H })
+  expect(landing).toContain(`width="${SHOT_W}"`)
+  expect(landing).toContain(`height="${SHOT_H}"`)
 })

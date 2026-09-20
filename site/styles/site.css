@@ -288,17 +288,6 @@ section {
   font-size: 1.05rem;
   color: var(--fg);
 }
-/* The picture of the signed-in home, at the width of the card. The width and
-   height attributes hold its place, so the rows below it do not move when it
-   arrives. */
-.whyShot {
-  display: block;
-  width: 100%;
-  height: auto;
-  margin: 0 0 0.7rem;
-  border: 1px solid var(--border-faint);
-  border-radius: 0.3rem;
-}
 .whyLine {
   margin: 0 0 0.7rem;
   color: var(--fg3);

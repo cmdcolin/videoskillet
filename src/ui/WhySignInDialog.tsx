@@ -4,7 +4,15 @@ import { publicUrl } from '../publicUrl'
 import { Dialog } from './Dialog'
 import { PRIVACY_URL } from './links'
 import ui from './ui.module.css'
-import { FREE_WITHOUT, PITCH, SHOT_ALT, SHOT_SIZE } from './whySignIn'
+import {
+  FREE_WITHOUT,
+  PITCH,
+  SHOT,
+  SHOT_ALT,
+  SHOT_CAPTION,
+  SHOT_H,
+  SHOT_W,
+} from './whySignIn'
 import styles from './WhySignInDialog.module.css'
 
 // Why an account, and the two ways on from the question: sign in, or copy the
@@ -41,13 +49,16 @@ export function WhySignInDialog(props: {
       {/* The home an account gets, drawn from a fixture by
           `scripts/homeshot.mjs`. The card is only mounted while it is open, so
           the picture is fetched by the reader who asked the question. */}
-      <img
-        className={styles.shot}
-        src={publicUrl('home-signed-in.webp')}
-        alt={SHOT_ALT}
-        width={SHOT_SIZE.width}
-        height={SHOT_SIZE.height}
-      />
+      <figure className={styles.figure}>
+        <img
+          className={styles.shot}
+          src={publicUrl(SHOT)}
+          alt={SHOT_ALT}
+          width={SHOT_W}
+          height={SHOT_H}
+        />
+        <figcaption className={styles.caption}>{SHOT_CAPTION}</figcaption>
+      </figure>
       <p className={ui.hint}>
         {FREE_WITHOUT}{' '}
         {/* A new tab, like every link on the about card. Navigating away from

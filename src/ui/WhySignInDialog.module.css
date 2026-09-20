@@ -27,13 +27,22 @@
 /* The picture of the signed-in home, at the width of the card. The width and
    height attributes hold its place, so the rows below it do not move when it
    arrives. */
+.figure {
+  margin: 0 0 10px;
+}
+
 .shot {
   display: block;
   width: 100%;
   height: auto;
-  margin: 0 0 10px;
   border: 1px solid var(--border-faint);
   border-radius: 3px;
+}
+
+.caption {
+  padding-top: 4px;
+  font-size: var(--fs-xs);
+  color: var(--fg4);
 }
 
 /* Two ways on, side by side and at the same size: the second one is a way to

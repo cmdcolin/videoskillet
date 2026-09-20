@@ -783,7 +783,15 @@ into view, and the app mounts its card only while the card is open. Opening
 either one fetches 46K.
 
 Nothing checks that the picture still matches the page, so regenerate it when
-the home's layout moves.
+the home's layout moves. `whysignin.test.ts` does check its shape: the size in
+`SHOT_W`/`SHOT_H` is read back out of the webp's own header, since a re-shot
+home is a picture of a different height and both cards reserve its space.
+
+bender's card carries the same picture of its own home
+([`../docs/CROSS_REPO_SYNC.md`](CROSS_REPO_SYNC.md)). The strings and the sizes
+live in each repo's `whySignIn.ts`, and the rules that lay the shot out sit in
+each repo's private stylesheet — `site.css` is shared, and the two homes look
+nothing like each other.
 
 ### What the page costs
 

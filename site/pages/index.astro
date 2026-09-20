@@ -10,8 +10,11 @@ import { SIGNED_IN_HINT } from '../../src/ui/cloud'
 import {
   FREE_WITHOUT,
   PITCH,
+  SHOT,
   SHOT_ALT,
-  SHOT_SIZE,
+  SHOT_CAPTION,
+  SHOT_H,
+  SHOT_W,
 } from '../../src/ui/whySignIn'
 import css from '../styles/landing.css?raw'
 import designTokens from '../../src/tokens.css?raw'
@@ -219,15 +222,18 @@ const UNFURL =
            somebody asks the question, and a lazy image inside a closed
            <dialog> is never in view, so a landing page that goes unasked
            fetches none of it. -->
-      <img
-        class="whyShot"
-        src="/home-signed-in.webp"
-        alt={SHOT_ALT}
-        width={SHOT_SIZE.width}
-        height={SHOT_SIZE.height}
-        loading="lazy"
-        decoding="async"
-      />
+      <figure class="whyFigure">
+        <img
+          class="whyShot"
+          src={`/${SHOT}`}
+          alt={SHOT_ALT}
+          width={SHOT_W}
+          height={SHOT_H}
+          loading="lazy"
+          decoding="async"
+        />
+        <figcaption class="whyCaption">{SHOT_CAPTION}</figcaption>
+      </figure>
       <p class="whyLine">
         {FREE_WITHOUT} <a href="/privacy/">What an account stores →</a>
       </p>

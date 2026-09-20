@@ -558,3 +558,22 @@ code {
   aspect-ratio: 5 / 4;
   border-radius: 0.6rem;
 }
+
+/* The screenshot in the why-sign-in card, which shows the home a videoskillet
+   account gets. site.css styles the rest of the card, and it is shared with
+   bender, whose home page looks nothing like this one. */
+.whyFigure {
+  margin: 0 0 0.8rem;
+}
+.whyShot {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--border-faint);
+  border-radius: 0.4rem;
+}
+.whyCaption {
+  padding-top: 0.35rem;
+  font-size: 0.85rem;
+  color: var(--fg4);
+}

@@ -6,26 +6,25 @@
 //
 // Two sentences and a picture of the home an account gets, and the card is
 // over. Anyone who wants the long answer is already looking at the privacy
-// page's link.
+// page's link. bender's card is built the same way, from its own copy of this
+// file and a picture of its own home.
 
 /** The answer. */
 export const PITCH =
   'Autosaves the stuff you were doing, and you can keep track of it across multiple computers.'
 
-/**
- * What the picture of the signed-in home shows, for a reader who cannot see
- * it. `scripts/homeshot.mjs` draws the picture itself into
- * `public/home-signed-in.webp`.
- */
-export const SHOT_ALT =
-  'The signed-in home: a card that resumes the last session, and a grid of saved looks with a still of each one.'
+/** The screenshot in both cards: the home with a session and some looks on it.
+    `scripts/homeshot.mjs` draws it. Its size is written into both <img> tags so
+    the card does not reflow around it, and `whysignin.test.ts` reads the file's
+    own header back against these, since a re-shot home changes them. */
+export const SHOT = 'home-signed-in.webp'
+export const SHOT_W = 1280
+export const SHOT_H = 941
 
-/**
- * The shape of that picture, which both cards give their <img> so the rows
- * under it hold still while it loads. `whysignin.test.ts` reads the file's own
- * header back against this, since a re-shot home changes it.
- */
-export const SHOT_SIZE = { width: 1280, height: 941 }
+export const SHOT_ALT =
+  'The home signed in: a card that resumes the last session, and a grid of saved looks with a still of each one'
+
+export const SHOT_CAPTION = 'Your home, once you’re signed in.'
 
 /** What it costs, which is nothing. */
 export const FREE_WITHOUT =
