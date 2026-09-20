@@ -137,16 +137,11 @@ test.each(gallery)('$name is a card on the page', demo => {
   expect(page).toContain(`data-src="${demo.clip}"`)
 })
 
-// A card's own sentence, and the only place on the page that says which
-// mechanism a picture is of. A demo kept out of the gallery still carries one,
-// so that turning it back on is one flag rather than a flag and a caption.
+// `says` isn't shown on the page, but every demo still carries one as a record
+// of which mechanism it is.
 test.each(demos)('$name says which mechanism it is', demo => {
   expect(demo.says.length).toBeGreaterThan(20)
   expect(demo.says.endsWith('.')).toBe(true)
-})
-
-test.each(gallery)('$name has its line under the name', demo => {
-  expect(page).toContain(demo.says.replaceAll("'", '&#39;'))
 })
 
 // Off the page, still in the README: `demos` is what the README prints, so a
@@ -166,5 +161,5 @@ test('there is at least one riff to check the concept against', () => {
 
 test.each(riffs)('$name is a link under its demo’s card', riff => {
   expect(page).toContain(riff.href.replaceAll('&', '&amp;'))
-  expect(page).toContain(riff.says.replaceAll("'", '&#39;'))
+  expect(page).toContain(`>${riff.name}<`)
 })

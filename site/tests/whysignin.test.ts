@@ -27,7 +27,7 @@ test('the card carries the answer, in the page', () => {
 })
 
 test('the question is asked where the ask is, and the card can be opened', () => {
-  expect(landing.match(/Why sign in\?/g)?.length).toBe(3)
+  expect(landing.match(/Why sign in\?/g)?.length).toBe(2)
   expect(landing).toContain('id="whyCard"')
   expect(landing).toContain('id="whySignIn"')
 })

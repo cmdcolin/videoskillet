@@ -9,8 +9,8 @@
 
 /** The answer. */
 export const PITCH =
-  'Sign in and you can save the look you are building under a name, then come back to it later — on this machine or any other.'
+  'Autosaves the stuff you were doing, and you can keep track of it across multiple computers.'
 
 /** What it costs, which is nothing. */
 export const FREE_WITHOUT =
-  'Nothing else here needs an account: every source, every control, recording, MIDI and every shared link work signed out.'
+  'You don’t have to sign in — it just lets you save your work and pick it up on another machine.'
