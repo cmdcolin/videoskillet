@@ -273,9 +273,19 @@ export function App() {
   } = midi
   // The engine IS the store: React reads controls straight from it via
   // useSyncExternalStore, so there's no separate `values` copy to keep in sync.
+  //
+  // The *settled* board, and that is the point. What App does with the whole
+  // object is expensive and is all about the resting look: it builds the
+  // sidebar's entire structure (`panelChain`), walks all 253 sliders to find
+  // what is off stock (`edited`), matches the recipe chips, and rebuilds the
+  // state URL. None of those answers change usefully halfway between two looks,
+  // and paying for them ten times a second during a morph was costing the
+  // render loop frames — the picture's own stutter, bought by the panel
+  // describing it. The rows travel: they read the live store key by key through
+  // `controlStore` below.
   const controls = useSyncExternalStore(
-    engine === null ? subscribeNever : engine.subscribeControls,
-    engine === null ? getDefaultControls : engine.getControls,
+    engine === null ? subscribeNever : engine.subscribeSettledControls,
+    engine === null ? getDefaultControls : engine.getSettledControls,
   )
   // The same store, handed to the rows so each can subscribe to its own key
   // instead of taking the whole object off this render. Hand-memoized, and this

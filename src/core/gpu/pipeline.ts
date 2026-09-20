@@ -170,7 +170,14 @@ export class Engine implements EngineApi {
   // Kept apart from the above — see subscribeGlide for why the two cadences
   // cannot share a notify.
   private readonly glideListeners = new Listeners()
+  // The board at rest, for readers that want the look rather than the flight.
+  // See `subscribeSettledControls`.
+  private readonly settledListeners = new Listeners()
   private readonly statsListeners = new Listeners()
+  // Its own snapshot, deliberately not `this.snapshot`. A useSyncExternalStore
+  // getter has to return the same object until it notifies, and the live one is
+  // replaced on every frame of a morph.
+  private settledSnapshot: Controls = { ...this.controls }
   // The last window the loop reported. Held as one object that is replaced
   // rather than mutated, because it is a useSyncExternalStore snapshot: React
   // compares by identity, so a mutated object would look like no change.
@@ -1241,7 +1248,25 @@ export class Engine implements EngineApi {
     }
     this.notifyFrame = requestAnimationFrame(this.flushNotify)
     this.controlListeners.emit()
+    this.settledSnapshot = this.snapshot
+    this.settledListeners.emit()
   }
+
+  // The board at rest: every hand write, every landing, and a morph stopped
+  // part-way, but nothing from inside a flight. App reads this rather than the
+  // live controls, and the split is what keeps a morph off the panel's render
+  // budget — App builds the whole sidebar (`panelChain`), walks all 253 sliders
+  // for `edited`, and rebuilds the state URL, none of which the tween between
+  // two looks changes the answer to. The rows read the live store through
+  // ui/ControlsContext, key by key, and are what actually travel.
+  //
+  // Several readers already wanted this and worked around not having it by
+  // substituting the glide's destination (ui/useUrlState.ts, ui/useMix.ts), and
+  // `matchPreset` cannot match a tween at all.
+  readonly subscribeSettledControls: (fn: () => void) => () => void =
+    this.settledListeners.subscribe
+
+  readonly getSettledControls = (): Controls => this.settledSnapshot
 
   private readonly flushNotify = (): void => {
     this.notifyFrame = 0

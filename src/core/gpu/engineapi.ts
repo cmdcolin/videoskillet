@@ -115,6 +115,14 @@ export interface EngineApi {
   // referentially stable across renders — React resubscribes if `subscribe`
   // changes identity, and a method would be a fresh binding every time.
   readonly subscribeControls: (fn: () => void) => () => void
+
+  // The board at rest: hand writes, landings and a morph stopped part-way, but
+  // nothing from inside a flight. What App reads, so the panel's expensive
+  // derivations — the sidebar's whole structure, the walk over every slider,
+  // the state URL — sit out a morph the rows are travelling through. See the
+  // implementation in gpu/pipeline.ts for why the two cannot share a snapshot.
+  readonly subscribeSettledControls: (fn: () => void) => () => void
+  readonly getSettledControls: () => Controls
   readonly getControls: () => Controls
 
   // --- sources ---
