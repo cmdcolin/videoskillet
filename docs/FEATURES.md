@@ -5,8 +5,7 @@ rainbows, tearing and hue drift come out of that model, so any two controls
 interact.
 
 [Effects](EFFECTS.md) lists every control, generated from the app's own control
-table. The headings below are the boxes on the app's chain map, in the same
-order and under the same names.
+table. The headings below are the boxes on the app's chain map.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="img/pipeline-simple-dark.svg">
@@ -19,23 +18,18 @@ order and under the same names.
   shared screen, colour bars, TV or VHS static, a video synth, a teletype card
   you type on, your own clip shelf, or a random pick from Wikimedia Commons or
   archive.org. Deck B can be switched off.
-- **Capture hardware appears as a webcam.** An RCA capture dongle works on
-  either deck, so you can mix two grabbers against each other.
+- **Capture hardware appears as a webcam**, on either deck, so two grabbers can
+  run against each other.
 - **Connector faults**: snow, a loose plug, a ground loop, bad termination,
   polarity flips, S-video miswired into composite.
-- **Scrambling, Macrovision AGC pulses and colorstripe** drive the receiver's
-  own AGC and burst circuits out of range.
-- **Source A can be modelled as a tape capture.** A capture group applies deck
-  losses ahead of the rest of the chain, so downstream stages act on an already
-  soft picture. Off by default.
 - **Each input has its own deck and cable** ahead of the mixer. Remove sync from
   one input and the receiver locks to the other, and the geometry changes
   between the two pictures.
 
 ## Feedback loops
 
-The two loops differ in what travels around them: light in the camera loop, the
-composite signal in the mixer loop.
+The camera loop carries light. The mixer loop carries the composite signal,
+subcarrier included.
 
 <!-- generated:loops — from LOOP_STAGES in src/ui/controls.ts, via scripts/docgen.mjs -->
 
@@ -78,12 +72,11 @@ per generation.
 
 ## Enhancer
 
-- **A consumer picture enhancer with its jumpers moved**, between deck and set.
-- **The clamp gate can slide off the back porch**, which makes black level vary
-  line to line.
-- **The peaking coil has feedback around it and rings.**
-- **The sync regenerator restamps pulses wherever its slicer crosses.** Raise
-  the slice level into picture content and dark content generates sync.
+A consumer picture enhancer with its jumpers moved, between deck and set. The
+clamp gate can slide off the back porch, which makes black level vary line to
+line; the peaking coil has feedback around it and rings; and the sync
+regenerator restamps pulses wherever its slicer crosses, so a slice level raised
+into picture content lets dark content generate sync.
 
 ## Receiver
 
@@ -96,11 +89,6 @@ per generation.
   generation loss produce dropped characters, wrong characters, and the solid
   block a decoder draws on a parity error. Captions repaint on the set's own
   timing, so they stay still while the picture rolls or tears.
-- **Captions can come from Wikipedia.** _From Wikipedia_ fills the caption with
-  a few sentences from the English article on what source A shows, found through
-  the Commons file's categories. _Follow the picture_ fetches a new passage
-  every time a new file lands, so a slideshow keeps its captions on subject. A
-  deck with nothing off Commons or archive.org gets a random article.
 
 ## Screen
 
@@ -118,8 +106,7 @@ per generation.
   receiver, so the colour bands stay fixed on the screen while a rolling picture
   moves through them.
 - **Audio sources**: a microphone, a file, the clip's own track, or a tab or
-  application share. A microphone adds the room and the speakers to the path; a
-  share provides the track directly.
+  application share.
 
 ## Intercarrier buzz
 
@@ -129,16 +116,13 @@ per generation.
   interval buzzes at 60 Hz, line structure whines, snow hisses.
 - **The tap reads the actual composite signal**, so bright scenes buzz louder,
   hum bars beat against the field rate, and a head switch clicks on the line it
-  damages. Fine tuning frees the carrier and increases both the weave and the
-  buzz, which come from the same leak.
+  damages.
 - **The tap sits ahead of the receiver** and hears only the signal domain. A
-  rolling picture with a steady buzz shows this: the roll is the receiver's
-  vertical oscillator, downstream of the tap.
-- **Audio output is off until you enable it.** Level is two controls, and a
-  preset, a shared link or a random roll can raise either, so the Sound stage
-  has a switch of its own, set to _silent_ until you throw it and remembered
-  after that. When it is off, the tap pass, the readback and the audio context
-  are all skipped.
+  rolling picture keeps a steady buzz, because the roll happens in the
+  receiver's vertical oscillator, downstream of the tap.
+- **Audio output is off until you enable it**, because a preset, a shared link
+  or a random roll can raise either level control. The Sound stage stays
+  _silent_ until you throw its switch, and remembers it after that.
 
 ## The rig
 
@@ -149,37 +133,26 @@ per generation.
 - **MIDI**: any controller sending CC, with learn, auto-map and soft takeover.
   See [Using a MIDI controller](MIDI.md).
 - **Presets** also work as faders you can drag partway. Morph, random nudge,
-  full undo, and saved profiles behind a sign-in. A saved profile keeps a still
-  of the picture, and the popover's _open_ reloads the whole setup from it,
-  where _recall_ brings back the controls and the motion alone.
-- **Home**: signed in, videoskillet.com opens on a page of your own — a card
-  that resumes the session you were last running, with a still of it, a row of
-  the earlier sessions before it, your saved looks with their stills, and the
-  gallery. Each saved look's card copies its link, renames it or deletes it, and
-  each session's card copies its link or deletes it too. The app autosaves each
-  visit to the account while you are signed in, and a dedicated page lists every
-  one it has kept, so the home page is up to date on whatever machine you open
-  next. Resuming a session carries on writing to it; any other visit starts a
-  new one. Opening the app, a gallery look or a shared link is not a session
-  until something on the board changes, so the cards stay as they were.
+  full undo, and saved profiles behind a sign-in.
+- **Home**: signed in, videoskillet.com opens on a card that resumes your last
+  session, a row of earlier sessions, and your saved looks with their stills.
+  The app autosaves each visit while you are signed in, so the page is up to
+  date on whatever machine you open next.
 - **Drift**: one switch makes the look wander on its own, with a small change
-  every fifteen seconds around the current setting. Each stage has the same
-  switch for its own controls.
+  every fifteen seconds. Each stage has the same switch for its own controls.
 - **Rundown**: the strip tray is a list of looks that plays in sequence. A row
   holds for a number of bars, arrives as a cut, a morph or a fault, and can pick
-  a source from a pool. Play from the top, or fire rows by hand.
+  a source from a pool.
 - **Sharing**: the full control state mirrors to the URL, so a link carries a
   patch.
 - **Capture**: stills, and a constant-framerate H.264 MP4 of the picture as it
   plays. The strip's ⎙ render steps the engine on its own clock, so a take comes
-  back at 60 fps whatever rate the tab ran at, and it is reproducible. You can
-  also move the controls to a second window and capture the picture with OBS.
+  back at 60 fps whatever rate the tab ran at, and it is reproducible.
 - **Rendering offline**, with the project running locally. `pnpm render` takes a
-  link and a file and writes ProRes 4444 with no browser open, which is what
-  keeps the colour artifacts: a browser encodes 4:2:0 and loses most of the dot
-  crawl. It reads a link the way the app does, so the modulation and the source
-  come across with the board, and it feeds the clip's own sound in, so a look
-  built over a track renders differently in silence. See [CLI](CLI.md).
+  link and a file and writes ProRes 4444 with no browser open, which keeps the
+  colour artifacts a browser's 4:2:0 encode loses. It reads a link the way the
+  app does, so the modulation, the source and the clip's own sound all come
+  across. See [CLI](CLI.md).
 - **Interface**: the chain map, a command palette, signal taps, an IRE scope,
   and a magnifier that magnifies the tube face along with the picture.
 

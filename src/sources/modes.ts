@@ -149,6 +149,23 @@ export const SOURCE_KIND_LABEL: Record<SourceKind, string | null> = {
   live: 'Live — asks the browser',
 }
 
+// One line per band for the docs, where the picker's own entries are the wrong
+// grain: which cartoon ships is something you read in the picker while picking,
+// and a page that names each one is listing its media as if the titles were
+// features. A Record, so a kind added above fails to compile without a summary
+// (modes.test.ts holds the same line).
+export const SOURCE_KIND_DOC: Record<SourceKind, string | null> = {
+  off: null,
+  pattern:
+    'colour bars, a frequency sweep, broadcast snow, blank-tape noise, a video synth',
+  bundled:
+    'a still photo, a test pattern and two public-domain cartoon excerpts',
+  pool: 'a random file from Wikimedia Commons or archive.org, or a search across both',
+  yours:
+    'an image or video file, a typed text card, a video URL, your own clip shelf',
+  live: 'a webcam or USB capture device, or a shared window or tab',
+}
+
 export const SOURCE_KIND_ORDER: readonly SourceKind[] = [
   'off',
   'pattern',

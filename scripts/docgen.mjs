@@ -49,9 +49,15 @@ const load = p => vite.ssrLoadModule(p)
 
 // The shipped lists rather than the raw ones: the page describes what a reader
 // can actually reach, and YouTube is backed by a dev-only bridge.
-const { SHIPPED_B_MODES, SHIPPED_MODES, SOURCE_DESC } = await load(
-  '/src/sources/modes.ts',
-)
+const {
+  SHIPPED_B_MODES,
+  SHIPPED_MODES,
+  SOURCE_DESC,
+  SOURCE_KIND,
+  SOURCE_KIND_DOC,
+  SOURCE_KIND_LABEL,
+  SOURCE_KIND_ORDER,
+} = await load('/src/sources/modes.ts')
 const {
   GROUPS,
   LOOP_STAGES,
@@ -126,13 +132,19 @@ const section = (heading, blurb, groups) =>
 
 const at = place => GROUPS.filter(g => g.place === place)
 
-// Each deck's own picker list, as the picker's own descriptions. The difference
-// between the two lists is the fact the hand-written page got wrong, so it is
-// stated here rather than left for a reader to diff.
+// The picker's bands, one line each. The seventeen entries this replaced were
+// the picker's own descriptions, which put "Minnie the Moocher (1932, public
+// domain)" on the page as though a bundled cartoon were a feature of the
+// simulator. A band that has nothing in a deck's list does not appear, and the
+// difference between the two lists is the fact the hand-written page got wrong,
+// so it is still stated below rather than left for a reader to diff.
 const modeList = modes =>
-  modes
-    .filter(m => m !== 'none' && SOURCE_DESC[m] !== undefined)
-    .map(m => `- ${SOURCE_DESC[m]}`)
+  SOURCE_KIND_ORDER.filter(
+    kind =>
+      SOURCE_KIND_LABEL[kind] !== null &&
+      modes.some(m => SOURCE_KIND[m] === kind),
+  )
+    .map(kind => `- **${SOURCE_KIND_LABEL[kind]}**: ${SOURCE_KIND_DOC[kind]}`)
     .join('\n')
 
 const onlyA = SHIPPED_MODES.filter(m => !SHIPPED_B_MODES.includes(m))
@@ -143,15 +155,13 @@ const lines = [
   '',
   '# Effects',
   '',
-  'Every control in the app, listed by where it sits on the signal path, with',
-  'the fault each one models. The page is generated from the control table the',
-  'panel renders, so it cannot fall behind the app.',
+  'Every control in the app, by where it sits on the signal path, with the fault',
+  'each one models. Generated from the table the panel renders.',
   '',
-  '[Features](FEATURES.md) is the other half: a tour of what each stage does',
-  'and what is worth knowing before you turn anything. Start there.',
+  '[Features](FEATURES.md) is the tour of what each stage does. Start there.',
   '',
-  'In the app, every control shows the same text under its **?**, and both the',
-  'filter box and `ctrl+k` search it, so a fault found here is findable there.',
+  'The app shows the same text under each control’s **?**, and `ctrl+k` searches',
+  'it.',
   '',
   '## Sources',
   '',
@@ -179,7 +189,7 @@ const lines = [
   ),
   ...section(
     VIEW_STAGE,
-    `Hangs off ${VIEW_JOIN}. Viewing conditions rather than faults: nothing here is in the signal path.`,
+    `Hangs off ${VIEW_JOIN}. Viewing conditions: nothing here is in the signal path.`,
     at('view'),
   ),
   '',

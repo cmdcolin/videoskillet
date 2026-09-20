@@ -6,6 +6,7 @@ import {
   SOURCE_B_MODES,
   SOURCE_DESC,
   SOURCE_KIND,
+  SOURCE_KIND_DOC,
   SOURCE_KIND_LABEL,
   SOURCE_KIND_ORDER,
   SOURCE_MODES,
@@ -34,6 +35,15 @@ describe('source pickers', () => {
   it('names every kind it labels', () => {
     for (const kind of SOURCE_KIND_ORDER)
       expect(Object.hasOwn(SOURCE_KIND_LABEL, kind)).toBe(true)
+  })
+
+  // docs/EFFECTS.md lists one line per band, so a labelled band with no summary
+  // would print `undefined` on the page.
+  it('summarizes every band it labels for the docs', () => {
+    for (const kind of SOURCE_KIND_ORDER) {
+      if (SOURCE_KIND_LABEL[kind] === null) continue
+      expect(SOURCE_KIND_DOC[kind]).toBeTruthy()
+    }
   })
 
   // Banding reorders the list, so this is the check that it only reorders: every
