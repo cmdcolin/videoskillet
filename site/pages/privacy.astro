@@ -1,82 +1,61 @@
 ---
-import Analytics from '../components/Analytics.astro'
-import Footer from '../components/Footer.astro'
-import SiteBar from '../components/SiteBar.astro'
-import css from '../styles/landing.css?raw'
-import designTokens from '../../src/tokens.css?raw'
-import site from '../styles/site.css?raw'
-import footer from '../styles/footer.css?raw'
-import tokens from '../styles/tokens.css?raw'
-
 // Two services and what each one is for. Short on purpose.
-const SITE = 'https://videoskillet.com/'
-const REPO = 'https://github.com/cmdcolin/videoskillet'
+import Page from '../layouts/Page.astro'
+import { ORIGIN } from '../lib/site'
+import css from '../styles/landing.css?raw'
+
+const NAME = 'videoskillet'
 ---
 
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
-    />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <title>Privacy — videoskillet.js</title>
-    <meta
-      name="description"
-      content="videoskillet uses Google Analytics to count visits and Firebase to store your saved looks and any ratings you give. Nothing else."
-    />
-    <link rel="canonical" href={`${SITE}privacy/`} />
-    <meta name="theme-color" content="#0e0e11" />
-    <meta name="color-scheme" content="dark" />
-    <style
-      is:inline
-      set:html={designTokens + tokens + site + footer + css}
-    ></style>
-    <Analytics />
-  </head>
-  <body id="top">
-    <SiteBar account={false} />
+<Page
+  title="Privacy — videoskillet.js"
+  description="videoskillet uses Google Analytics to count visits and Firebase to store your saved looks and any ratings you give. Nothing else."
+  css={css}
+  canonical={`${ORIGIN}privacy/`}
+  account={false}
+>
+  <main class="wrap privacy">
+    <!-- CROSS_REPO_SYNC(privacy-analytics) -->
+    <h1>Privacy</h1>
+    <p class="privacyLead">
+      {NAME} runs in your browser. Two outside services are involved, and this
+      page is the whole list.
+    </p>
 
-    <main class="wrap privacy">
-      <h1>Privacy</h1>
-      <p class="privacyLead">
-        videoskillet runs in your browser. Two outside services are involved,
-        and this page is the whole list.
-      </p>
+    <h2>Google Analytics</h2>
+    <p>
+      Counts visits: which pages get opened, roughly where from, and on what
+      sort of device. It loads only after you press OK on the notice in the
+      corner of the page, and it sets cookies once it does. Everything here
+      works the same without it.{' '}
+      <button class="why" id="analyticsAgain" type="button">
+        Change your answer
+      </button>
+    </p>
+    <!-- CROSS_REPO_SYNC_END(privacy-analytics) -->
 
-      <h2>Google Analytics</h2>
-      <p>
-        Counts visits: which pages get opened, roughly where from, and on what
-        sort of device. It loads only after you press OK on the notice in the
-        corner of the page, and it sets cookies once it does. Everything here
-        works the same without it.{' '}
-        <button class="why" id="analyticsAgain" type="button">
-          Change your answer
-        </button>
-      </p>
+    <h2>Firebase</h2>
+    <p>
+      Only if you sign in. Google handles the sign-in, and your account's
+      Firestore document holds your saved looks and the recent sessions you had
+      open, so the home page can offer them back. Each one records the look's
+      settings, including the address of any video or image it loaded from a
+      link, and a small still of the output is kept beside each. Delete any of
+      them at any time from the home page or the sessions page.
+    </p>
+    <p>
+      Rating a look in the tags menu, or voting on the labelling page, adds a
+      row to a shared set of labels. Each row carries your account's id and the
+      look it rates, and the site cannot change or delete a row once it is
+      written. Stay signed out and nothing is stored at all.
+    </p>
+  </main>
 
-      <h2>Firebase</h2>
-      <p>
-        Only if you sign in. Google handles the sign-in, and your account's
-        Firestore document holds your saved looks and the recent sessions you
-        had open, so the home page can offer them back. Each one records the
-        look's settings, including the address of any video or image it loaded
-        from a link, and a small still of the output is kept beside each. Delete
-        any of them at any time from the home page or the sessions page.
-      </p>
-      <p>
-        Rating a look in the tags menu, or voting on the labelling page, adds a
-        row to a shared set of labels. Each row carries your account's id and
-        the look it rates, and the site cannot change or delete a row once it is
-        written. Stay signed out and nothing is stored at all.
-      </p>
-    </main>
-
-    <Footer />
+  <Fragment slot="scripts">
     <script>
       import { forgetAnalyticsAnswer } from '../../src/analytics'
 
+      // CROSS_REPO_SYNC(privacy-analytics-reset)
       // A reload, so the notice asks again on a page that has not loaded the tag.
       document
         .getElementById('analyticsAgain')
@@ -84,6 +63,7 @@ const REPO = 'https://github.com/cmdcolin/videoskillet'
           forgetAnalyticsAnswer()
           location.reload()
         })
+      // CROSS_REPO_SYNC_END(privacy-analytics-reset)
     </script>
-  </body>
-</html>
+  </Fragment>
+</Page>

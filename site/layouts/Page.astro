@@ -1,0 +1,80 @@
+---
+// The shell the landing page, the privacy page and the sessions page share: the
+// head, the bar across the top, the footer, and the stylesheets all three want.
+// A page supplies its own `<main>`, because each one wraps its content
+// differently, and hands its own stylesheet in as `css`.
+//
+// The guide has a shell of its own, Guide.astro, because it carries the guide's
+// bar, its section nav and its pager. `/app/` uses neither: the window carries
+// no bar and no footer.
+//
+// The stylesheets arrive as one inline <style> rather than as links, so each
+// page renders opened straight off the filesystem with no server to resolve a
+// path against. The concatenation order is the cascade order, and the page's own
+// sheet goes last, so a page still overrides the shared rules the way it always
+// did.
+import Analytics from '../components/Analytics.astro'
+import Footer from '../components/Footer.astro'
+import SiteBar from '../components/SiteBar.astro'
+import designTokens from '../../src/tokens.css?raw'
+import footer from '../styles/footer.css?raw'
+import site from '../styles/site.css?raw'
+import tokens from '../styles/tokens.css?raw'
+
+interface Props {
+  title: string
+  description: string
+  /** The page's own stylesheet, inlined after the shared three. */
+  css: string
+  /** Absolute URL of this page, for `<link rel="canonical">`. */
+  canonical: string
+  /** Set on a page that should stay out of search. */
+  robots?: string
+  /** Passed to the bar: `false` on a page that does not load the home script. */
+  account?: boolean
+  /** Passed to the bar, to mark the nav link for the page it is on. */
+  current?: string
+}
+const {
+  title,
+  description,
+  css,
+  canonical,
+  robots,
+  account = true,
+  current,
+} = Astro.props
+---
+
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{title}</title>
+    {robots !== undefined && <meta name="robots" content={robots} />}
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <meta name="theme-color" content="#0e0e11" />
+    <meta name="color-scheme" content="dark" />
+    {/* How the link unfurls when shared, on a page anybody shares. */}
+    <slot name="meta" />
+    <style
+      is:inline
+      set:html={designTokens + tokens + site + footer + css}
+    ></style>
+    {/* Anything the page needs before analytics: its own head scripts. */}
+    <slot name="head" />
+    <Analytics />
+  </head>
+  <body id="top">
+    <SiteBar account={account} current={current} />
+    <slot />
+    <Footer />
+    {/* Scripts that want the page under them, which is why they follow it. */}
+    <slot name="scripts" />
+  </body>
+</html>

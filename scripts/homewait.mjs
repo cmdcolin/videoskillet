@@ -5,7 +5,7 @@ import puppeteer from 'puppeteer-core'
 // A browser that has never signed in gets the landing page from the first
 // paint. One that has signed in before gets the skeleton, and then whichever
 // state Firebase settles on; the landing page must never show first and then
-// be swapped away. The head script in site/pages/index.astro and `settle()` in
+// be swapped away. SignedInHint.astro's head script and `settle()` in
 // site/scripts/home.ts are the two halves under test.
 //
 // No real account is involved, so "Firebase settles" here is always the

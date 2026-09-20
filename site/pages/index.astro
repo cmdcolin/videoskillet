@@ -1,257 +1,127 @@
 ---
-import Analytics from '../components/Analytics.astro'
 import Carousel from '../components/Carousel.astro'
-import Footer from '../components/Footer.astro'
 import Gallery from '../components/Gallery.astro'
 import Hero from '../components/Hero.astro'
-import SiteBar from '../components/SiteBar.astro'
+import HomeSkeleton from '../components/HomeSkeleton.astro'
+import SignedInHint from '../components/SignedInHint.astro'
+import WhySignInCard from '../components/WhySignInCard.astro'
+import Page from '../layouts/Page.astro'
+import { ORIGIN } from '../lib/site'
 import script from '../scripts/landing.js?raw'
-import { SIGNED_IN_HINT } from '../../src/ui/cloud'
-import {
-  FREE_WITHOUT,
-  PITCH,
-  SHOT,
-  SHOT_ALT,
-  SHOT_CAPTION,
-  SHOT_H,
-  SHOT_W,
-} from '../../src/ui/whySignIn'
 import css from '../styles/landing.css?raw'
-import designTokens from '../../src/tokens.css?raw'
-import site from '../styles/site.css?raw'
-import footer from '../styles/footer.css?raw'
-import tokens from '../styles/tokens.css?raw'
 
-const SITE = 'https://videoskillet.com/'
 const TITLE = 'videoskillet.js — WebGPU analog video emulation'
+const DESCRIPTION =
+  'Real-time NTSC / VHS / composite-video glitch simulator in WebGPU — dot crawl, dropouts, head-switch wobble and video feedback emerge from a simulated analog signal, not filters painted on top.'
 const UNFURL =
   'Analog video glitches — dot crawl, dropouts, head-switch wobble, video feedback — that fall out of a simulated NTSC signal path, live in the browser.'
 ---
 
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
-    />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <title>{TITLE}</title>
-    <meta
-      name="description"
-      content="Real-time NTSC / VHS / composite-video glitch simulator in WebGPU — dot crawl, dropouts, head-switch wobble and video feedback emerge from a simulated analog signal, not filters painted on top."
-    />
-    <link rel="canonical" href={SITE} />
-    <meta name="theme-color" content="#0e0e11" />
-    <meta name="color-scheme" content="dark" />
-
+<Page title={TITLE} description={DESCRIPTION} css={css} canonical={ORIGIN}>
+  <Fragment slot="meta">
     <!-- Open Graph / Twitter: how the link unfurls when shared -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="videoskillet.js" />
-    <meta property="og:url" content={SITE} />
+    <meta property="og:url" content={ORIGIN} />
     <meta property="og:title" content={TITLE} />
     <meta property="og:description" content={UNFURL} />
-    <meta property="og:image" content={`${SITE}og.jpg`} />
+    <meta property="og:image" content={`${ORIGIN}og.jpg`} />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={TITLE} />
     <meta name="twitter:description" content={UNFURL} />
-    <meta name="twitter:image" content={`${SITE}og.jpg`} />
+    <meta name="twitter:image" content={`${ORIGIN}og.jpg`} />
+  </Fragment>
 
-    <!-- The palette and the reset are `tokens.css`, which the guide reads too,
-         so arriving here and clicking through to the docs reads as one site
-         rather than two. Inlined rather than linked: this page is one screen of
-         chrome over a picture, and a stylesheet it has to fetch first is a
-         second round trip before anything is painted. -->
-    <style
-      is:inline
-      set:html={designTokens + tokens + site + footer + css}
-    ></style>
-    <!-- CROSS_REPO_SYNC(home-hint-script) -->
-    <!-- Runs before the first paint. A browser that has signed in before
-         gets the skeleton in place of the landing page, so the home does not
-         replace a landing page the reader has already started reading, and
-         opens its connections to Google while the SDK downloads. home.ts
-         clears the flag once Firebase answers; the timeout is for a Firebase
-         that never does. -->
-    <script is:inline define:vars={{ SIGNED_IN_HINT }}>
-      try {
-        if (localStorage.getItem(SIGNED_IN_HINT) === '1') {
-          const root = document.documentElement
-          root.dataset.home = 'pending'
-          for (const host of [
-            'identitytoolkit.googleapis.com',
-            'securetoken.googleapis.com',
-            'firestore.googleapis.com',
-          ]) {
-            const link = document.createElement('link')
-            link.rel = 'preconnect'
-            link.href = `https://${host}`
-            link.crossOrigin = 'anonymous'
-            document.head.append(link)
-          }
-          setTimeout(() => {
-            delete root.dataset.home
-          }, 15000)
-        }
-      } catch {}
-    </script>
-    <!-- CROSS_REPO_SYNC_END(home-hint-script) -->
-    <Analytics />
-  </head>
-  <body id="top">
-    <SiteBar />
+  <Fragment slot="head">
+    <SignedInHint />
+  </Fragment>
 
-    <!-- The signed-in home, filled by site/scripts/home.ts once Firebase has
-         said who is here. Empty in the HTML every stranger gets. -->
-    <div id="home" class="home" hidden></div>
+  <!-- The signed-in home, filled by site/scripts/home.ts once Firebase has
+       said who is here. Empty in the HTML every stranger gets. -->
+  <div id="home" class="home" hidden></div>
 
-    <div class="homeWait" role="status">
-      <span class="vh">Loading your saved looks</span>
-      <div class="homeIn" aria-hidden="true">
-        <div class="rail">
-          <span class="bone railBone"></span>
-          <span class="bone railBone"></span>
-          <span class="bone railBone"></span>
-        </div>
-        <div class="homeMain">
-          <span class="bone headBone"></span>
-          <ul class="grid">
-            <li>
-              <span class="bone cardBone"></span>
-            </li>
-            <li>
-              <span class="bone cardBone"></span>
-            </li>
-            <li>
-              <span class="bone cardBone"></span>
-            </li>
-          </ul>
-        </div>
+  <HomeSkeleton />
+
+  <div id="landing">
+    <section class="hero">
+      <Hero />
+      <div class="wrap heroBody">
+        <p class="heroCta">
+          <a class="btn primary" href="/app/">
+            Open the app →
+          </a>
+          <a class="btn" href="/guide/">
+            User guide
+          </a>
+        </p>
+
+        <p class="req gpuwarn" hidden>
+          Unfortunately, this browser has no WebGPU. You'll just get an error if
+          you try to open the app. Please try another browser or use Chrome
+          Canary or Firefox Nightly or look up how to enable WebGPU in your
+          browser!
+        </p>
       </div>
-    </div>
+    </section>
 
-    <div id="landing">
-      <section class="hero">
-        <Hero />
-        <div class="wrap heroBody">
-          <p class="heroCta">
-            <a class="btn primary" href="/app/">
-              Open the app →
-            </a>
-            <a class="btn" href="/guide/">
-              User guide
-            </a>
-          </p>
-
-          <p class="req gpuwarn" hidden>
-            Unfortunately, this browser has no WebGPU. You'll just get an error
-            if you try to open the app. Please try another browser or use Chrome
-            Canary or Firefox Nightly or look up how to enable WebGPU in your
-            browser!
-          </p>
-        </div>
-      </section>
-
-      <!-- The app being used, which is the one thing about this program a
+    <!-- The app being used, which is the one thing about this program a
          stranger cannot work out from a picture of what it makes. Four
          recordings of the window: one button handing you looks you did not
          build, presets stacked into combinations, the map the controls hang
          off, and a look built by hand from nothing. In that order, for the
          reason `scripts/reel.mjs` gives — the stage and the tabs both come
          from there. -->
-      <section>
-        <div class="wrap wide">
-          <Carousel />
-        </div>
-      </section>
+    <section>
+      <div class="wrap wide">
+        <Carousel />
+      </div>
+    </section>
 
-      <section id="gallery">
-        <div class="wrap wide">
-          <h2 class="head">Gallery</h2>
-          <p class="sub">Open one and you land on that exact board.</p>
-          <div id="galleryHost">
-            <Gallery />
-          </div>
+    <section id="gallery">
+      <div class="wrap wide">
+        <h2 class="head">Gallery</h2>
+        <p class="sub">Open one and you land on that exact board.</p>
+        <div id="galleryHost">
+          <Gallery />
         </div>
-      </section>
+      </div>
+    </section>
 
-      <!-- Where the controls are, which is the question a stranger arrives at
+    <!-- Where the controls are, which is the question a stranger arrives at
          after the demos: the map at the head of the sidebar, boxed in the
          window and enlarged beside it. The figure is the README's, served
          from docs/img by the `figures` integration in astro.config.mjs. -->
-      <section>
-        <div class="wrap wide">
-          <h2 class="head">How do I use this thing?</h2>
-          <p class="sub">Use the signal path!</p>
-          <figure>
-            <img
-              src="/guide/img/signal-path-callout.jpg"
-              alt="The app window with the signal path map boxed in red at the head of the sidebar and enlarged over the picture: SOURCE A and SOURCE B into MIX, then CHANNEL, RECEIVER and SCREEN, with camera and mixer returns arching back over the trunk, SOUND and VIEW hanging below, and MODULATION and DECK on a row of their own with no wire reaching them"
-              width="1800"
-              height="1227"
-              loading="lazy"
-              decoding="async"
-            />
-            <figcaption>
-              It sits at the top of the sidebar. Load videos into SOURCE A and
-              SOURCE B; click any other stage to open its controls.
-            </figcaption>
-          </figure>
-        </div>
-      </section>
-    </div>
-
-    <!-- The long answer, from the same strings the app's own card renders, so
-         the two say the same thing. Built here at build time, so it is in the
-         page for a reader with no JavaScript. -->
-    <dialog class="whyCard" id="whyCard" aria-labelledby="whyHead">
-      <div class="whyTop">
-        <h2 class="whyHead" id="whyHead">
-          Why sign in?
-        </h2>
-        <button class="btn" id="whyClose" type="button">
-          Close
-        </button>
+    <section>
+      <div class="wrap wide">
+        <h2 class="head">How do I use this thing?</h2>
+        <p class="sub">Use the signal path!</p>
+        <figure>
+          <img
+            src="/guide/img/signal-path-callout.jpg"
+            alt="The app window with the signal path map boxed in red at the head of the sidebar and enlarged over the picture: SOURCE A and SOURCE B into MIX, then CHANNEL, RECEIVER and SCREEN, with camera and mixer returns arching back over the trunk, SOUND and VIEW hanging below, and MODULATION and DECK on a row of their own with no wire reaching them"
+            width="1800"
+            height="1227"
+            loading="lazy"
+            decoding="async"
+          />
+          <figcaption>
+            It sits at the top of the sidebar. Load videos into SOURCE A and
+            SOURCE B; click any other stage to open its controls.
+          </figcaption>
+        </figure>
       </div>
-      <p class="whyTrouble" id="whyTrouble" role="alert" hidden></p>
-      <p class="whyPitch">{PITCH}</p>
-      <!-- The home an account gets, drawn from a fixture by
-           `scripts/homeshot.mjs`. Lazy because the card is closed until
-           somebody asks the question, and a lazy image inside a closed
-           <dialog> is never in view, so a landing page that goes unasked
-           fetches none of it. -->
-      <figure class="whyFigure">
-        <img
-          class="whyShot"
-          src={`/${SHOT}`}
-          alt={SHOT_ALT}
-          width={SHOT_W}
-          height={SHOT_H}
-          loading="lazy"
-          decoding="async"
-        />
-        <figcaption class="whyCaption">{SHOT_CAPTION}</figcaption>
-      </figure>
-      <p class="whyLine">
-        {FREE_WITHOUT} <a href="/privacy/">What an account stores →</a>
-      </p>
-      <p class="whyCta">
-        <button class="btn primary" id="whySignIn" type="button">
-          Sign in with Google
-        </button>
-        <a class="btn" href="/app/">
-          Open the app instead →
-        </a>
-      </p>
-    </dialog>
+    </section>
+  </div>
 
-    <Footer />
+  <WhySignInCard />
+
+  <Fragment slot="scripts">
     <script is:inline set:html={script}></script>
     <!-- Bundled rather than inlined like the three above it, so its firebase
          imports stay dynamic chunks the page only fetches when somebody signs
          in (src/ui/cloud.ts). -->
     <script src="../scripts/home.ts"></script>
-  </body>
-</html>
+  </Fragment>
+</Page>

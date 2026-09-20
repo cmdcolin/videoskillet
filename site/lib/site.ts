@@ -1,3 +1,6 @@
+// Where the site is served from, for the canonical link every page carries.
+export const ORIGIN = 'https://videoskillet.com/'
+
 // What the shared site components say about this product: its name, where its
 // pages are, and the links the bar and the footer carry.
 export const SITE = {

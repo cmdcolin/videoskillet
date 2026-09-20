@@ -1,0 +1,33 @@
+---
+// Runs before the first paint. A browser that has signed in before gets the
+// skeleton in place of the landing page, so the home does not replace a landing
+// page the reader has already started reading, and opens its connections to
+// Google while the SDK downloads. home.ts clears the flag once Firebase
+// answers; the timeout is for a Firebase that never does.
+import { SIGNED_IN_HINT } from '../../src/ui/cloud'
+---
+
+<!-- CROSS_REPO_SYNC(home-hint-script) -->
+<script is:inline define:vars={{ SIGNED_IN_HINT }}>
+  try {
+    if (localStorage.getItem(SIGNED_IN_HINT) === '1') {
+      const root = document.documentElement
+      root.dataset.home = 'pending'
+      for (const host of [
+        'identitytoolkit.googleapis.com',
+        'securetoken.googleapis.com',
+        'firestore.googleapis.com',
+      ]) {
+        const link = document.createElement('link')
+        link.rel = 'preconnect'
+        link.href = `https://${host}`
+        link.crossOrigin = 'anonymous'
+        document.head.append(link)
+      }
+      setTimeout(() => {
+        delete root.dataset.home
+      }, 15000)
+    }
+  } catch {}
+</script>
+<!-- CROSS_REPO_SYNC_END(home-hint-script) -->

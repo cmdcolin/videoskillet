@@ -1,0 +1,30 @@
+---
+// What a returning reader sees while Firebase answers: the shape of the home,
+// in place of a landing page they would only watch be replaced. SignedInHint
+// puts it up before the first paint and home.ts takes it down.
+const LOADING = 'Loading your saved looks'
+const CARDS = 3
+---
+
+<!-- CROSS_REPO_SYNC(home-skeleton-markup) -->
+<div class="homeWait" role="status">
+  <span class="vh">{LOADING}</span>
+  <div class="homeIn" aria-hidden="true">
+    <div class="rail">
+      <span class="bone railBone"></span>
+      <span class="bone railBone"></span>
+      <span class="bone railBone"></span>
+    </div>
+    <div class="homeMain">
+      <span class="bone headBone"></span>
+      <ul class="grid">
+        {Array.from({ length: CARDS }, () => (
+          <li>
+            <span class="bone cardBone"></span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </div>
+</div>
+<!-- CROSS_REPO_SYNC_END(home-skeleton-markup) -->

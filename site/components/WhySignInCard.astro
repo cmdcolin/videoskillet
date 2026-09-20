@@ -1,0 +1,65 @@
+---
+// The long answer to "why sign in?", from the same strings the app's own card
+// renders, so the two say the same thing. Built at build time, so it is in the
+// page for a reader with no JavaScript; home.ts opens it, shuts it, and wires
+// its button to the same sign-in the bar's button uses.
+import { SITE } from '../lib/site'
+import {
+  FREE_WITHOUT,
+  PITCH,
+  SHOT,
+  SHOT_ALT,
+  SHOT_CAPTION,
+  SHOT_H,
+  SHOT_W,
+} from '../../src/ui/whySignIn'
+
+const appUrl = SITE.app
+const privacyUrl = '/privacy/'
+const shotSrc = `/${SHOT}`
+---
+
+<dialog class="whyCard" id="whyCard" aria-labelledby="whyHead">
+  <!-- CROSS_REPO_SYNC(why-card-top) -->
+  <div class="whyTop">
+    <h2 class="whyHead" id="whyHead">
+      Why sign in?
+    </h2>
+    <button class="btn" id="whyClose" type="button">
+      Close
+    </button>
+  </div>
+  <p class="whyTrouble" id="whyTrouble" role="alert" hidden></p>
+  <p class="whyPitch">{PITCH}</p>
+  <!-- CROSS_REPO_SYNC_END(why-card-top) -->
+  <!-- The home an account gets, drawn from a fixture by
+       `scripts/homeshot.mjs`. Lazy because the card is closed until
+       somebody asks the question, and a lazy image inside a closed
+       <dialog> is never in view, so a landing page that goes unasked
+       fetches none of it. -->
+  <figure class="whyFigure">
+    <img
+      class="whyShot"
+      src={shotSrc}
+      alt={SHOT_ALT}
+      width={SHOT_W}
+      height={SHOT_H}
+      loading="lazy"
+      decoding="async"
+    />
+    <figcaption class="whyCaption">{SHOT_CAPTION}</figcaption>
+  </figure>
+  <p class="whyLine">
+    {FREE_WITHOUT} <a href={privacyUrl}>What an account stores →</a>
+  </p>
+  <!-- CROSS_REPO_SYNC(why-card-cta) -->
+  <p class="whyCta">
+    <button class="btn primary" id="whySignIn" type="button">
+      Sign in with Google
+    </button>
+    <a class="btn" href={appUrl}>
+      Open the app instead →
+    </a>
+  </p>
+  <!-- CROSS_REPO_SYNC_END(why-card-cta) -->
+</dialog>
