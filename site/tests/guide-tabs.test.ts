@@ -1,6 +1,6 @@
 import { createMarkdownProcessor } from '@astrojs/markdown-remark'
 import rehypeRaw from 'rehype-raw'
-import { beforeAll, expect, test } from 'vitest'
+import { afterEach, beforeAll, beforeEach, expect, test, vi } from 'vitest'
 
 import { rehypeGuide } from '../lib/rehype-guide.mjs'
 import { remarkGuide } from '../lib/remark-guide.mjs'
@@ -16,6 +16,16 @@ import { remarkGuide } from '../lib/remark-guide.mjs'
 // plugin order is part of what these tests cover. `rehypeRaw` has to run first;
 // otherwise the markers are still an unparsed string when `rehypeGuide` looks
 // for them.
+// @astrojs/markdown-remark logs a parse error to console.error before
+// rethrowing it, which turns these expected rejections into noisy stderr.
+beforeEach(() => {
+  vi.spyOn(console, 'error').mockImplementation(() => {})
+})
+
+afterEach(() => {
+  vi.restoreAllMocks()
+})
+
 type Head = { level: number; id: string; text: string }
 
 let render: (md: string) => Promise<{ html: string; outline: Head[] }>
