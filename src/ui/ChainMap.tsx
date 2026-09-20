@@ -169,8 +169,7 @@ export function ChainMap(props: {
       {/* Where the picture leaves. Every other wire on this drawing carries a
           head that says which way it goes — both branches, all three returns —
           and the trunk, whose direction is the whole premise, was relying on
-          left-to-right being read as a convention. The full card has always
-          drawn this one (SignalPathDialog); the miniature now agrees. */}
+          left-to-right being read as a convention. */}
       <path
         className={styles.mapArrow}
         d={arrowhead(

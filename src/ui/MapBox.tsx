@@ -1,23 +1,12 @@
 import type { ReactNode } from 'react'
 
-// What a target on a drawing of the chain *is to a hand*: whether it is a
-// button, what it announces to a screen reader, and what Enter and Space do on
-// it. Two kinds of target — a box on the trunk (MapBox) and a run over it
-// (MapRun) — and two drawings of the same chain: the miniature at the head of
-// the sidebar (ChainMap) and the full card (SignalPathDialog).
+// What a target on the chain map *is to a hand*: whether it is a button, what
+// it announces to a screen reader, and what Enter and Space do on it. Two
+// kinds of target — a box on the trunk (MapBox) and a run over it (MapRun).
 //
-// It exists because that rule had drifted between the two drawings. When the
-// source pickers moved inside the stages, `off` stopped meaning "opens
-// nothing": a branch with nothing patched in is drawn inert and still opens,
-// because the picker that ends that state is the first thing inside it. That was
-// applied to the miniature and not to the diagram, which left SOURCE B pressable
-// on one drawing and dead on the other, under a card whose own text says "click
-// one to open its controls".
-//
-// The geometry stays with each drawing. The two are different pictures at
-// different sizes, and nothing about a rect or a path is at risk of drifting in
-// a way anybody would fail to notice — unlike a box that silently stops being a
-// button.
+// `off` does not mean "opens nothing": a branch with nothing patched in is
+// drawn inert and still opens, because the picker that ends that state is the
+// first thing inside it.
 
 // The `<g>` a press lives on. Both kinds of target below are this plus the
 // sentence they assemble, which is the only part they differ in.
@@ -34,9 +23,9 @@ function MapPress(props: {
   // The drawing's own classes for this target, its state included.
   className: string
   // Only where a press can close the stage again is this a disclosure with a
-  // state to report. Left undefined on the bench and on the card, where a press
-  // marks or opens but never closes, and claiming an expanded state would
-  // announce a fold that is not there.
+  // state to report. Left undefined on the bench, where a press marks or opens
+  // but never closes, and claiming an expanded state would announce a fold
+  // that is not there.
   expanded?: boolean
   onOpen: () => void
   // Each drawing's own geometry.

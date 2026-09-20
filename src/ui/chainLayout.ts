@@ -78,8 +78,7 @@ export const BRANCH_Y = 81
 // units below its neighbour that the branch row sits below the trunk, so the
 // three rows are one rhythm and the gap under the last wire is not read as the
 // drawing having ended. Nothing is drawn to these boxes and nothing needs to
-// be: on a row of their own with no wire on it, the emptiness is the row — the
-// argument the full card has always made (SignalPathDialog's own FREE_Y).
+// be: on a row of their own with no wire on it, the emptiness is the row.
 export const FREE_Y = 115
 // Taller than the 13 the map shipped with, and than the 16 that replaced it: at
 // 16 units a box is 17.5 screen pixels at the sidebar's width, and a target is

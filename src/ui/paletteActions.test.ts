@@ -49,7 +49,6 @@ const actions = () => {
     onFilter: noop,
     onShowMoving: noop,
     onOpenStage: name => opened.push(name),
-    onDiagram: noop,
     onAdvanced: noop,
     onMidi: noop,
     onAbout: noop,

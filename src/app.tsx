@@ -90,7 +90,6 @@ import { SavedProfiles } from './ui/SavedProfiles'
 import { Section } from './ui/Section'
 import { ShareDialog } from './ui/ShareDialog'
 import { SignalPath } from './ui/SignalPath'
-import { SignalPathDialog } from './ui/SignalPathDialog'
 import { SignalTapContext } from './ui/SignalTapContext'
 import { Rack } from './ui/Slider'
 import { HiddenFilePicker, SourceSlot } from './ui/SourceSlot'
@@ -356,7 +355,6 @@ export function App() {
   const [fullscreen, setFullscreen] = useState(false)
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [showMidi, setShowMidi] = useState(false)
-  const [showDiagram, setShowDiagram] = useState(false)
   const [showAbout, setShowAbout] = useState(false)
   // Why an account, and the name of the save waiting on the answer. `null` is
   // shut, and `{ pending: null }` is the card opened from a menu with no save
@@ -1084,7 +1082,6 @@ export function App() {
     onFilter: revealText,
     onShowMoving: () => setMovingOnly(true),
     onOpenStage: nav.jumpPhase,
-    onDiagram: () => setShowDiagram(true),
     onAdvanced: () => setShowAdvanced(true),
     onMidi: () => setShowMidi(true),
     onAbout: () => setShowAbout(true),
@@ -1683,7 +1680,6 @@ export function App() {
         open={nav.openPhase}
         expandAll={filtering}
         bench={bench}
-        onShowDiagram={() => setShowDiagram(true)}
         live={loopsLive}
         // On the bench nothing is folded, so the map marks a stage and scrolls
         // to it rather than unfolding one and closing another.
@@ -2169,19 +2165,6 @@ export function App() {
           onClose={eng.prompt.dismiss}
         />
       )}
-      {showDiagram ? (
-        <SignalPathDialog
-          controls={controls}
-          live={loopsLive}
-          bOn={bOn}
-          soundOn={soundOn}
-          patched={patched}
-          mod={bay}
-          deck={deck}
-          onOpen={nav.openAt}
-          onClose={() => setShowDiagram(false)}
-        />
-      ) : null}
       {showAbout ? <AboutDialog onClose={() => setShowAbout(false)} /> : null}
       {/* Closing on the way to the popup leaves the Google window clear. The
           save the card was holding lands on the button in the masthead. */}

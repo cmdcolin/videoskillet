@@ -3,39 +3,23 @@
    every control in the app. Same shape as a Section's, from the same rule, so
    "same rank" is a fact rather than two files agreeing; what it does not take
    is the fold, because nothing here folds. Baseline rather than centre: the
-   diagram link beside the title is smaller type, and centred it sat high. */
+   hint beside the title is smaller type, and centred it sat high. */
 .pathHead {
   composes: head from './ui.module.css';
-  justify-content: space-between;
   align-items: baseline;
   margin-bottom: 0;
 }
 .pathTitle {
   flex-shrink: 0;
 }
-/* The standing instruction, between the title and the diagram link and in the
-   panel's ordinary prose colour so it reads as a caption on the heading rather
-   than as a second thing to press. `margin-right: auto` is what keeps the
-   diagram link at the far end: the hint sits with the title, not with it. */
+/* The standing instruction, in the panel's ordinary prose colour so it reads
+   as a caption on the heading rather than as a second thing to press. */
 .pathHint {
   color: var(--fg3);
   font-size: var(--fs-sm);
   font-weight: 400;
   letter-spacing: normal;
   text-transform: none;
-  margin-right: auto;
-}
-/* The way to the full diagram. In the header's row but at the panel's ordinary
-   weight, like a Section's .summary: it is an offer, not part of the heading. */
-.pathDiagram {
-  composes: bare from './ui.module.css';
-  color: var(--fg3);
-  font-size: var(--fs-sm);
-  font-weight: 400;
-  letter-spacing: normal;
-}
-.pathDiagram:hover {
-  color: var(--accent);
 }
 
 /* The stage the map has open: its name (click to fold), what it does, then its

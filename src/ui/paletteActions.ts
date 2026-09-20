@@ -143,7 +143,6 @@ export function paletteActions(o: {
   onFilter: (text: string) => void
   onShowMoving: () => void
   onOpenStage: (name: string) => void
-  onDiagram: () => void
   onAdvanced: () => void
   onMidi: () => void
   onAbout: () => void
@@ -380,12 +379,6 @@ export function paletteActions(o: {
       name: 'pop out controls',
       blurb: 'move this panel into its own window',
       run: o.onPopout,
-    },
-    {
-      name: 'signal path',
-      blurb:
-        'the whole chain as a diagram — both inputs, the mixer, both loops',
-      run: o.onDiagram,
     },
     // The one part of the app the palette cannot otherwise reach. It indexes
     // GROUPS, and nothing in the bay is in GROUPS: a routing describes a slot

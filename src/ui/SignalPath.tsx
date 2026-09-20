@@ -232,14 +232,7 @@ function StageHead(props: {
 // graphic it was about and gone for good after the first click — and the open
 // stage is persisted, so a returning session never saw it at all. Here it costs
 // no row of its own and it is still there on the visit where you have forgotten.
-//
-// It is also where the full diagram is offered from. The miniature has room for
-// the five trunk stages, the three boxes under them and the three runs over
-// them, and no more — the names on the two feeds and the sentence on each loop
-// and each stage need a card, so they get one. It draws all three loops and
-// names them; what it still cannot carry is what any of them *do*, which is a
-// sentence per run and three sentences the band has no room for.
-function PathHead(props: { onShowDiagram: () => void }) {
+function PathHead() {
   return (
     <div className={styles.pathHead}>
       <span className={styles.pathTitle}>Signal path</span>
@@ -250,13 +243,6 @@ function PathHead(props: { onShowDiagram: () => void }) {
           the trunk now instead of emptying it, so there is always a map under
           this line and always a stage to click. */}
       <span className={styles.pathHint}>click a stage</span>
-      <button
-        className={styles.pathDiagram}
-        title="the whole path drawn large — both inputs, their feeds, the mixer, all three loops and where the sound joins, each one a way into its controls"
-        onClick={props.onShowDiagram}
-      >
-        diagram ⤢
-      </button>
     </div>
   )
 }
@@ -310,9 +296,6 @@ export function SignalPath(props: {
   // folded map builds no pickers. And keyed rather than a plain function so
   // `opensOn` below can ask *whether* a stage has one without building it.
   stageTop: Partial<Record<string, () => ReactNode>>
-  // Opens the full diagram, where there is room to draw both feeds and the
-  // returns with their names on them.
-  onShowDiagram: () => void
   // Which stage is being held at stock, and the two halves of the gesture. One
   // at a time, because it is a hold: the engine previews one board.
   heldStage: string | null
@@ -427,7 +410,6 @@ export function SignalPath(props: {
         open={props.open}
         live={props.live}
         onOpen={openStage}
-        onShowDiagram={props.onShowDiagram}
         stageTop={props.stageTop}
         stockFor={stockFor}
       />
@@ -453,7 +435,7 @@ export function SignalPath(props: {
   // them.
   return (
     <>
-      <PathHead onShowDiagram={props.onShowDiagram} />
+      <PathHead />
       <ChainMap
         stages={nodes}
         branches={wired}
@@ -553,7 +535,6 @@ function Bench(props: {
   open: string | null
   live: LoopsLive
   onOpen: (name: string) => void
-  onShowDiagram: () => void
   stageTop: Partial<Record<string, () => ReactNode>>
   // Built by SignalPath, so the bench's headings and the spine's offer the hold
   // on the same terms.
@@ -576,7 +557,7 @@ function Bench(props: {
   }
   return (
     <>
-      <PathHead onShowDiagram={props.onShowDiagram} />
+      <PathHead />
       <ChainMap
         stages={props.nodes}
         branches={props.wired}
