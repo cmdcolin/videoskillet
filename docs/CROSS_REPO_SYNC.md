@@ -88,11 +88,16 @@ decision about which side's version wins before it can be marked.
   different names for the same roles, and bender's `src/theme.css` uses px where
   videoskillet uses rem.
 - Home and site-bar CSS: the same class names with different values.
-- The site bar, footer and privacy page markup.
+- The page shell: bender links its stylesheets where videoskillet inlines them,
+  and videoskillet's pages carry the canonical, Open Graph and theme-colour meta
+  that bender's do not. The two landing pages hold different things either way.
 - Storage helpers: videoskillet's `src/ui/storage.ts` and bender's
   `src/ui/persist.ts`.
-- The current-session hook body, the saved-list hook and its popover, the
-  why-sign-in dialog and the app menu.
+- The current-session hook body, the saved-list hook and its popover, and the
+  app menu.
+- The why-sign-in card's picture and its closing line: the two name different
+  files and say different amounts. The head of the card and its buttons are
+  `why-card-top` and `why-card-cta`.
 - The home script's `showFrame`, `showHome`, `showLanding`, `paint` and
   `failedSection`.
 - Tooling: formatters, lint, tsconfig, CI workflows, the release script and
