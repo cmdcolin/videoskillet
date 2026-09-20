@@ -50,8 +50,8 @@ existing regions show the pattern:
 - `SIGNED_IN_HINT` and `COLLECTION` sit above the `firebase-auth` region in
   `cloud.ts`.
 - `privacyHref` sits above the `landing-page-test` region.
-- `.bone`, `.railBone` and the other skeleton sizes sit below the
-  `home-wait-css` region, which holds the rules both sites share.
+- `LOADING` and `CARDS` sit below the `home-skeleton-markup` region, which
+  holds the markup both sites share.
 - bender imports its storage helpers under videoskillet's names
   (`read as readStored`), so `firebase-auth` reads the same on both sides.
 
@@ -88,9 +88,10 @@ decision about which side's version wins before it can be marked.
   different names for the same roles, and bender's `src/theme.css` uses px where
   videoskillet uses rem.
 - Home and site-bar CSS: the same class names with different values.
-- The page shell: bender links its stylesheets where videoskillet inlines them,
-  and videoskillet's pages carry the canonical, Open Graph and theme-colour meta
-  that bender's do not. The two landing pages hold different things either way.
+- The page shell: bender links its stylesheets where videoskillet inlines them.
+  Both carry the same canonical, Open Graph and theme-colour meta now, and the
+  unfurl tags themselves are shared as `social-meta`. The two landing pages hold
+  different things either way.
 - Storage helpers: videoskillet's `src/ui/storage.ts` and bender's
   `src/ui/persist.ts`.
 - The current-session hook body, the saved-list hook and its popover, and the

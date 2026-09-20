@@ -439,8 +439,8 @@ document.addEventListener('keydown', event => {
 
 // --- why sign in ------------------------------------------------------------
 
-// index.astro writes the card into the page at build time. This opens it, shuts
-// it, and hands its button to the sign-in the bar's button uses.
+// WhySignInCard.astro writes the card into the page at build time. This opens
+// it, shuts it, and hands its button to the sign-in the bar's button uses.
 for (const button of whyBtns)
   button.addEventListener('click', () => {
     whyCard.showModal()

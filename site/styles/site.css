@@ -26,7 +26,11 @@ a {
 .wrap {
   max-width: var(--measure);
   margin: 0 auto;
-  padding: 0 1.25rem;
+  /* Inline only: `padding` here is a shorthand, and it used to zero the
+     `padding-block` a page's own sheet had set. The inset keeps the text clear
+     of a cutout, the way .barIn and .footIn already do — it reads as zero on
+     every screen that has no cutout. */
+  padding-inline: max(1.25rem, env(safe-area-inset-left));
 }
 .wide {
   max-width: 72rem;
@@ -555,7 +559,7 @@ section {
 }
 
 /* ── waiting for Firebase ──────────────────────────────────────────────────
-   The head script in index.astro sets `data-home="pending"` on a browser that
+   SignedInHint.astro's head script sets `data-home="pending"` on a browser that
    has signed in before. The landing page and the sign-in controls stay out of
    sight and the home's outline stands in until home.ts paints one state. */
 .homeWait {
