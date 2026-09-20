@@ -25,10 +25,15 @@
 // the set has a chip of its own and bends of its own — two boxes, so bending
 // one says nothing about the other. The wiring is shared because the part is:
 // `romAddr` and `romData` in the prelude, called here with this box's knobs.
-fn cgRom(glyph: u32, row: u32) -> u32 {
+//
+// `line` is the raster line the box is keying into, counted from the top of the
+// picture. A horizontal reset the address counter misses leaves the count
+// growing line by line, so the damage runs down the lower third.
+fn cgRom(glyph: u32, row: u32, line: u32) -> u32 {
   let addr = romAddr(
     glyph, row, P.cgRomStride, P.cgRomCross, P.cgRomAddr,
-    counterSlip(P.cgRomSlip, P.frame, ROM_SPAN),
+    counterSlip(P.cgRomSlip, P.frame, ROM_SPAN)
+      + counterSlip(P.cgRomLineSlip, line, ROM_SPAN),
   );
   var bits = ROM_ERASED;
   if (addr < ROM_FONT) {
@@ -62,7 +67,7 @@ fn cgInk(x: f32, y: f32) -> f32 {
   if (gx >= GLYPH_W || gy >= GLYPH_H) {
     return 0.0;
   }
-  return f32((cgRom(cell & 0xffu, gy) >> gx) & 1u);
+  return f32((cgRom(cell & 0xffu, gy, u32(max(y, 0.0))) >> gx) & 1u);
 }
 
 // The key through the box's own key-processing amplifier, which is narrower

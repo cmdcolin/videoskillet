@@ -289,11 +289,12 @@ What it does not do:
 
 The generator has its own font ROM and its own set of pins to hold (`cgRomAddr`,
 `cgRomData`, `cgRomCross`, `cgRomStride`, `cgRomRot`, `cgPageAddr`) and its own
-two counters to slip (`cgRomSlip`, `cgPageSlip`), separate from the caption
-decoder's in the set. They share the baked ROM bytes and nothing else, so
-bending one says nothing about the other. The wiring itself is shared —
-`romAddr`, `romData`, `pageAddr` and `counterSlip` in `prelude.ts` — because the
-part is the same part, and each box calls them with its own knobs.
+two counters to slip (`cgRomSlip` and `cgRomLineSlip` on the font address,
+`cgPageSlip` on the page), separate from the caption decoder's in the set. They
+share the baked ROM bytes and nothing else, so bending one says nothing about
+the other. The wiring itself is shared — `romAddr`, `romData`, `pageAddr` and
+`counterSlip` in `prelude.ts` — because the part is the same part, and each box
+calls them with its own knobs.
 
 The one thing that is not shared is the decay pattern. `romData` takes a die
 seed (`ROM_DIE_CC`, `ROM_DIE_CG`), so one `rot` setting damages a letter

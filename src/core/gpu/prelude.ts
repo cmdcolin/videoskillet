@@ -270,6 +270,7 @@ export const PARAM_DEFS = [
   ['ccRomData', 'f32'], // data line held, 1-based; negative holds it low (0 = none)
   ['ccRomCross', 'f32'], // address lines n and n+1 transposed, 1-based (0 = none)
   ['ccRomSlip', 'f32'], // character-address counter gaining/losing counts, per frame
+  ['ccRomLineSlip', 'f32'], // and per scan line, so the error grows down the page
   ['ccRomStride', 'f32'], // cell-height strap error, rows (0 = strapped for this font)
   ['ccRomRot', 'f32'], // fraction of the array that has lost its charge; sign is the erased state
   ['ccPageAddr', 'f32'], // page-address line held high, 1-based (0 = none)
@@ -292,6 +293,7 @@ export const PARAM_DEFS = [
   ['cgRomData', 'f32'], // and its data line; negative holds it low
   ['cgRomCross', 'f32'], // its address lines n and n+1 transposed
   ['cgRomSlip', 'f32'], // its character-address counter slipping, counts per frame
+  ['cgRomLineSlip', 'f32'], // and per scan line, down the block
   ['cgRomStride', 'f32'], // its cell-height strap error, rows
   ['cgRomRot', 'f32'], // its decayed fraction; sign is the erased state
   ['cgPageAddr', 'f32'], // a line held on its page-address counter
@@ -795,21 +797,27 @@ fn gauss(seed: u32) -> f32 {
 // A counter that is not holding its count. Both of a character generator's
 // address counters are clocked by the dot chain and reset off blanking, and
 // either one drops or gains a count when a reset arrives late or an edge is
-// missed. Nothing puts the count back, so the error accumulates: the address is
-// one further out every field, and the picture crawls.
+// missed. Nothing puts the count back, so the error accumulates.
 //
-// This is the one fault here that moves on its own. A held pin does not — the
-// bends either side of it are the machine being wrong in a fixed way, and a
-// slipping counter is the machine being wrong at a rate.
+// The caller passes the tick that the failed reset should have cleared, which
+// is what decides the artifact. Count frames and the vertical reset is the one
+// arriving late, so the whole block sits an address further out every frame and
+// the text crawls. Count lines and the horizontal reset is the late one while
+// the vertical still clears it, so the error grows down the page from nothing
+// at the top and every row of text is damaged differently.
 //
-// The rate is counts per frame, so 0.05 is one count every twenty frames and 2
-// is two a frame. Signed, because a counter can slip either way.
-fn counterSlip(rate: f32, frame: u32, span: u32) -> u32 {
+// A held pin is the machine being wrong in a fixed way. A slipping counter is
+// the machine being wrong at a rate, and a frame-rate one is the only bend on
+// either chip that changes while you watch it.
+//
+// The rate is counts per tick, so 0.05 a frame is one count every twenty
+// frames. Signed, because a counter can slip either way.
+fn counterSlip(rate: f32, ticks: u32, span: u32) -> u32 {
   if (rate == 0.0) {
     return 0u;
   }
   let m = i32(span);
-  return u32(((i32(floor(rate * f32(frame))) % m) + m) % m);
+  return u32(((i32(floor(rate * f32(ticks))) % m) + m) % m);
 }
 
 // A character generator's font memory as it is wired. Both boxes hold their own

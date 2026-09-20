@@ -117,6 +117,7 @@ export const DEFAULT_CONTROLS = {
   ccRomData: 0, // data line held, 1-based; negative holds it low
   ccRomCross: 0, // two adjacent address lines transposed, 1-based (0 = wired right)
   ccRomSlip: 0, // character-address counter slipping, counts per frame (0 = it holds)
+  ccRomLineSlip: 0, // the same counter slipping per scan line, so the error grows down the page
   ccRomStride: 0, // cell-height strap error, rows (0 = strapped for this font)
   ccRomRot: 0, // decayed fraction of the array; negative if the erased cell reads dark
   ccPageAddr: 0, // a line held on the page-address counter (0 = the counter is intact)
@@ -140,6 +141,7 @@ export const DEFAULT_CONTROLS = {
   cgRomData: 0, // and on its data bus
   cgRomCross: 0, // two of its address lines transposed
   cgRomSlip: 0, // its character-address counter slipping, counts per frame
+  cgRomLineSlip: 0, // and per scan line, down the block
   cgRomStride: 0, // its cell-height strap error, rows
   cgRomRot: 0, // its decayed fraction; negative if the erased cell reads dark
   cgPageAddr: 0, // a line held on its page-address counter

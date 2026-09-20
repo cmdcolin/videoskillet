@@ -415,6 +415,13 @@ export const CARD_PRESETS: CardPreset[] = [
       'a pin held on the decoder’s font ROM: every glyph grows a seam and one column of dots is held down the page',
     patch: { cc: 1, ccRomAddr: 2, ccRomData: -5 },
   },
+  {
+    group: 'Captions',
+    name: 'counter adrift',
+    blurb:
+      'the decoder’s address counter missing its line reset: the font shears further out on every scan line, so the top row still reads and the rows under it come off different parts of the chip',
+    patch: { cc: 1, ccRomLineSlip: 0.012 },
+  },
 ]
 
 export const cardPresetsFor = (group: string): CardPreset[] =>

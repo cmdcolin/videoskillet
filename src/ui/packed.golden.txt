@@ -278,6 +278,8 @@
 290 cgRomSlip step=0.05 default=0
 291 cgPageSlip step=0.05 default=0
 292 cfbNoiseIre step=0.01 default=0
+293 ccRomLineSlip step=0.001 default=0
+294 cgRomLineSlip step=0.001 default=0
 
 # ?mod= sources, by name
 sine

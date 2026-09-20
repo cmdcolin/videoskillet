@@ -1719,7 +1719,18 @@ export const GROUPS: Group[] = [
         step: 0.05,
         unit: '/frame',
         fine: true,
-        help: "This box's character-address counter losing or gaining counts rather than holding them, so the address is further out every frame. Twelve counts is one whole character: a slow rate crawls the font up through the cells, a fast one churns the lower third through the alphabet.",
+        help: "This box's character-address counter losing or gaining counts rather than holding them, so the address is further out every frame. Twelve counts is one whole character: a slow rate crawls the font up through the cells, a fast one churns the lower third through the alphabet. The control below slips the same counter per line, so the damage runs down the block.",
+      },
+      {
+        key: 'cgRomLineSlip',
+        id: 294,
+        label: 'cg rom slip per line',
+        min: -0.25,
+        max: 0.25,
+        step: 0.001,
+        unit: '/line',
+        fine: true,
+        help: "The horizontal reset fails on this box's character-address counter, where the control above is the vertical one failing. The count grows on every scan line from the top of the field and the vertical reset still clears it, so the damage runs down the lower third and each row of the block comes off a different part of the font.",
       },
       {
         key: 'cgRomStride',
@@ -3444,7 +3455,43 @@ export const GROUPS: Group[] = [
           different faults on screen even when they land on the same address
           line. Twelve counts is one whole character, so a slow rate crawls the
           font upward through the cells and a fast one churns the page through
-          the alphabet. Negative slips the other way.`,
+          the alphabet. Negative slips the other way.
+
+          The rate here is per frame, so the whole page is out by the same
+          count. The control below slips the same counter per line, which
+          spreads the error down the page.`,
+      },
+      {
+        key: 'ccRomLineSlip',
+        id: 293,
+        label: 'rom slip per line',
+        min: -0.25,
+        max: 0.25,
+        step: 0.001,
+        unit: '/line',
+        help: `Two blanking pulses reset the character-address counter, and
+          they fail differently. Lose the vertical one and the count is wrong
+          by the same amount everywhere on the page, which is the control
+          above. Lose the horizontal one and the count grows a little on every
+          scan line from the top of the field, and the vertical still clears
+          it, so the damage runs down the block.
+
+          Every other bend on this chip damages a character the same way
+          wherever it sits, so the four rows of a caption come out identical. A
+          line-rate slip gives each row a different address, and the shear
+          grows inside a character as well as between rows. Twelve counts is
+          one whole character and the block is ninety-six scan lines tall, so
+          an eighth of a count a line walks the font one character from the top
+          row to the bottom. The count starts at the top of the field and the
+          block sits three quarters of the way down it, so by the time the
+          raster reaches the caption the font has walked several characters
+          already, and a hundredth of a count a line is enough to see.
+
+          A line-rate slip holds still on screen. The page is painted on the
+          set's raster and the count starts from zero at the top of every
+          field, so every frame draws the same pattern. Run the frame slip
+          under it and the page crawls through the font while the shear
+          stays.`,
       },
       {
         key: 'ccRomStride',
@@ -4019,6 +4066,7 @@ export const NEEDS: Partial<Record<ControlKey, SliderNeed>> = {
   ccRomData: captioned,
   ccRomCross: captioned,
   ccRomSlip: captioned,
+  ccRomLineSlip: captioned,
   ccRomStride: captioned,
   ccRomRot: captioned,
   ccPageAddr: captioned,
@@ -4037,6 +4085,7 @@ export const NEEDS: Partial<Record<ControlKey, SliderNeed>> = {
   cgRomData: chyroning,
   cgRomCross: chyroning,
   cgRomSlip: chyroning,
+  cgRomLineSlip: chyroning,
   cgRomStride: chyroning,
   cgRomRot: chyroning,
   cgPageAddr: chyroning,

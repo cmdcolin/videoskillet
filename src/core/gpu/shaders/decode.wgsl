@@ -268,10 +268,17 @@ const CC_Y0 = ACTIVE_H - CC_ROWS * CC_CELL_H - ACTIVE_H / 8u;
 // Every one of them is deterministic, which is what makes this a different
 // thing from `garble`. The same text comes out wrong the same way every frame,
 // because the machine is wrong and the wire is fine.
-fn romRead(glyph: u32, row: u32) -> u32 {
+//
+// `line` is the raster line the set is drawing, counted from the top of the
+// picture. A horizontal reset the address counter misses leaves the count
+// growing line by line from the top of the field, so the bend a character gets
+// depends on where on the page it sits and the four rows of the block come off
+// four different parts of the array.
+fn romRead(glyph: u32, row: u32, line: u32) -> u32 {
   let addr = romAddr(
     glyph, row, P.ccRomStride, P.ccRomCross, P.ccRomAddr,
-    counterSlip(P.ccRomSlip, P.frame, ROM_SPAN),
+    counterSlip(P.ccRomSlip, P.frame, ROM_SPAN)
+      + counterSlip(P.ccRomLineSlip, line, ROM_SPAN),
   );
   var bits = ROM_ERASED;
   if (addr < ROM_FONT) {
@@ -309,7 +316,7 @@ fn captionAt(x: u32, y: u32) -> vec2f {
     let solid = gx > 0u && gx + 1u < GLYPH_W && gy > 0u && gy + 1u < GLYPH_H;
     return vec2f(select(0.0, 1.0, solid), 1.0);
   }
-  return vec2f(f32((romRead(cell & 0xffu, gy) >> gx) & 1u), 1.0);
+  return vec2f(f32((romRead(cell & 0xffu, gy, y) >> gx) & 1u), 1.0);
 }
 
 @compute @workgroup_size(TILE_WG, 1, 1)
