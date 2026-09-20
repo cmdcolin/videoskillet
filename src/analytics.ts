@@ -1,5 +1,3 @@
-import { PRIVACY_URL } from './ui/links'
-
 // Google Analytics, on every page the site serves, once the visitor has said
 // yes. It counts visits, and /privacy/ says what it collects.
 //
@@ -8,7 +6,6 @@ import { PRIVACY_URL } from './ui/links'
 // module, and the Astro pages call it from site/components/Analytics.astro.
 export const GA_ID = 'G-QWGTGSZ447'
 const CONSENT_KEY = 'videoskillet.js_analytics'
-const PRIVACY = PRIVACY_URL
 
 // CROSS_REPO_SYNC(analytics-consent)
 declare global {
@@ -77,9 +74,6 @@ const NOTICE_CSS = `
 .consent p {
   margin: 0 0 0.6rem;
 }
-.consent a {
-  color: inherit;
-}
 .consent button {
   margin-right: 0.45rem;
   padding: 0.35rem 0.9rem;
@@ -107,10 +101,7 @@ function askAnalytics() {
   notice.setAttribute('aria-label', 'Analytics')
 
   const says = document.createElement('p')
-  const privacy = document.createElement('a')
-  privacy.href = PRIVACY
-  privacy.textContent = 'What it collects'
-  says.append('This site uses Google Analytics ', privacy)
+  says.append('Click OK to allow Google Analytics')
 
   const answer = (value: AnalyticsAnswer, label: string) => {
     const button = document.createElement('button')
