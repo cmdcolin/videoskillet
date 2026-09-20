@@ -2,6 +2,47 @@
 
 All notable changes to videoskillet.js are documented here.
 
+## [2.3.0](https://github.com/cmdcolin/videoskillet/compare/v2.2.5...v2.3.0) - 2026-09-20
+
+### Features
+- *(ui)* [`e05427f`](https://github.com/cmdcolin/videoskillet/commit/e05427f9165bd0e68aab502442bddc2621946fcf) slip the font ROM counters per scan line
+- *(ui)* [`415eb93`](https://github.com/cmdcolin/videoskillet/commit/415eb937c70f20a4045b405b9a935a095c9bc40c) show the signed-in home in both "why sign in?" cards
+
+### Fixes
+- *(ui)* [`f45124e`](https://github.com/cmdcolin/videoskillet/commit/f45124e0fd5f4dd402cc455d71cb773ab79d10b0) keep .wrap clear of a cutout, and stop it zeroing block padding
+- *(ui)* [`10c332a`](https://github.com/cmdcolin/videoskillet/commit/10c332a1828aba18be209c81d11519ead141a8df) tell the panel about a morph on the clock, not on rendered frames
+- *(ui)* [`6354f92`](https://github.com/cmdcolin/videoskillet/commit/6354f92f50ae01ae7aa1c751ec537a301aef29cc) keep the chain map's thresholds on the live board
+
+### Performance
+- *(ui)* [`77673e1`](https://github.com/cmdcolin/videoskillet/commit/77673e1fbcfcade9b49ed499bc5c37d5b26d9b84) let App read the board at rest, not mid-morph
+
+### Refactor
+- *(ui)* [`4370a74`](https://github.com/cmdcolin/videoskillet/commit/4370a748d805e02b6f2291c9f5e6435d675a27d1) build the shot into the card the way bender does
+- [`8222468`](https://github.com/cmdcolin/videoskillet/commit/8222468b780fb2c2ad03fa08d070991e6b1b8306) drop the privacy link from the consent notice
+- *(ui)* [`2a57e33`](https://github.com/cmdcolin/videoskillet/commit/2a57e330f418ca1441aafbd1d5eee5728f2e1879) rename the guide's layout to Guide.astro
+- *(ui)* [`7557b3c`](https://github.com/cmdcolin/videoskillet/commit/7557b3c0f746b4d4bc163e6fe39abbcae4554679) put the landing, privacy and sessions pages on a shared layout
+- *(ui)* [`93438bf`](https://github.com/cmdcolin/videoskillet/commit/93438bfc598d86b72edcdefa6c37c3cfcf7406c5) share the unfurl tags with bender
+
+### Documentation
+- [`1bcc86e`](https://github.com/cmdcolin/videoskillet/commit/1bcc86ee6ef6f73412598725f9929ec08c315098) cut AI-writing tropes and wordiness across user-facing docs
+- *(ui)* [`7955fe3`](https://github.com/cmdcolin/videoskillet/commit/7955fe38c1a9d6ddaa33b56a41a7ff15dc8bc8d0) cut the features and effects pages to the mechanism
+- *(ui)* [`777ad53`](https://github.com/cmdcolin/videoskillet/commit/777ad53f972ccd9ac55a5855f91f2d9608416f81) put the 7.16 MHz chroma product back on the loop ring mod
+- [`fcefcf0`](https://github.com/cmdcolin/videoskillet/commit/fcefcf0d0b0521e990719bcaaf77a1f69e6fcc77) stop quoting exact counts of the app's own inventory
+- [`83c292f`](https://github.com/cmdcolin/videoskillet/commit/83c292fff4b928254b47611a790be69773d02665) cut the user guide to what the app does not already say
+- [`114ff17`](https://github.com/cmdcolin/videoskillet/commit/114ff17887038cd59393b6f6c6d67ca92e294a22) refresh what the sync doc says is not shared yet
+- *(ui)* [`12da09c`](https://github.com/cmdcolin/videoskillet/commit/12da09c7cfe9d665b3236abd4850e6ce10821c40) cut the help text and the features tour to one mechanism each
+- [`b09f65e`](https://github.com/cmdcolin/videoskillet/commit/b09f65eda75ef93ddd001848b664754a5d1ba2e2) cut the CLI and MIDI pages, and fix four claims that were wrong
+- [`618f7af`](https://github.com/cmdcolin/videoskillet/commit/618f7af92df7c43cdbc5d2faaff023e08ec9e87f) cut the user guide and the FAQ to what neither the app nor another page says
+- [`8faf059`](https://github.com/cmdcolin/videoskillet/commit/8faf059aea6228fe8c7997b31da89e9b345ac70e) state the morph notify rule the code now follows
+
+### Style
+- *(docs)* [`17fba13`](https://github.com/cmdcolin/videoskillet/commit/17fba130b2d2cec5b3f5d1f12e0873631cb77652) reflow four docs oxfmt had not been run over
+
+### Tests
+- *(ui)* [`039fedb`](https://github.com/cmdcolin/videoskillet/commit/039fedb45c65ecd5b5634cb603dd34c5daefdd54) cap how long a control's help may get
+- *(ui)* [`d073c20`](https://github.com/cmdcolin/videoskillet/commit/d073c200d9058e485605e82f474b01b3d5e8a9b7) measure how regularly the panel hears about a morph
+- *(ui)* [`7b84e84`](https://github.com/cmdcolin/videoskillet/commit/7b84e8419f9d4b8e08e18ecc94b733d5f1d3e8f6) let morphcheck see a failure it was measuring through
+
 ## [2.2.5](https://github.com/cmdcolin/videoskillet/compare/v2.2.4...v2.2.5) - 2026-09-20
 
 ### Fixes
