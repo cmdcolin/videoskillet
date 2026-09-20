@@ -1,12 +1,11 @@
 # Getting started
 
-videoskillet.js simulates the analog video signal in WebGPU shaders — real
-signal faults, not filters drawn on the picture. It needs a recent browser with
-WebGPU: Firefox Nightly or Chrome Canary.
+videoskillet.js simulates the analog video signal in WebGPU shaders. It needs a
+recent browser with WebGPU: Firefox Nightly or Chrome Canary.
 
 Visit https://videoskillet.com/app/
 
-## What's on screen
+## The window
 
 ![The videoskillet.js window with four labels: the picture on the left, and down the right-hand panel the menu, the presets and the signal path map](img/overview.jpg)
 
@@ -17,7 +16,7 @@ click one and every control it names moves at once.
 
 **Signal path** is the map at the top of the sidebar, and the main thing to
 click. Each box is a stage of the chain. Click one and its controls open
-underneath. Every control lives there, sources included.
+underneath. Every control is in there, sources included.
 
 ## Three looks to try
 
@@ -27,8 +26,8 @@ underneath. Every control lives there, sources included.
 
 - **negative** flips polarity on the composite line, and sync goes with it.
 - **key sweep** runs the video synth through the chroma keyer.
-- **mixer loop** patches the composite into itself past unity, so it breeds its
-  own picture.
+- **mixer loop** patches the composite into itself past unity, so the loop's
+  output builds on itself.
 
 ## Where next
 

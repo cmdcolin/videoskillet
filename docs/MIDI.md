@@ -1,165 +1,119 @@
 # Using a MIDI controller
 
-There are more sliders here than you want to drag one at a time. A cheap box of
-knobs gives you both hands and lets you stop looking at the panel.
+A box of knobs gives you both hands and lets you stop looking at the panel.
 
-Short version: press **midi** in the masthead, then **connect a controller**,
-then **auto-map** or **learn in order**.
-
-## What you need
+## Requirements
 
 Any USB controller that sends **CC messages** (Control Change, the standard way
 a knob reports its position): a MIDI Fighter Twister, a nanoKONTROL, a Launch
 Control, the knob row on a keyboard. Plug it in before or after loading the
-page.
+page. You also need **Web MIDI**, which means Chrome or Edge.
 
-You also need **Web MIDI**, which means Chrome or Edge.
+## Connecting
 
-## Turning it on
+Press **midi** at the top of the panel, beside **sign in** (or `ctrl+k` →
+"midi"), click **connect a controller**, and allow the browser prompt. You
+connect once and the app reconnects on later visits.
 
-- Press **midi** at the top of the panel, beside **sign in** (or `ctrl+k` →
-  "midi").
-- Click **connect a controller** and allow the browser prompt.
+The card is not modal, so you can bind the controls behind it while it is up.
 
-The card stays up while you work: it is not modal, so every control behind it
-can still be bound. `Esc` or **×** closes it. You connect once; the app
-reconnects on later visits.
-
-The **midi** button lights green once connected. With the card shut it shows **3
-waiting** in amber when knobs have lost their catch (see soft takeover below).
-**n/a** means this browser has no Web MIDI, so try Chrome or Edge. **refused**
-means the browser denied access: allow MIDI for the site and press **connect a
-controller** again.
+The **midi** button lights green once connected, and shows **3 waiting** in
+amber when knobs have lost their catch (see [Soft takeover](#soft-takeover)).
+**n/a** means no Web MIDI in this browser, and **refused** means the browser
+denied access.
 
 ## Binding one knob
 
-Each slider now has a **⚟** button. Click it and wiggle the knob. The button
-reads **CC7** and the pairing shows in the midi card. `Esc` cancels.
+Each slider has a **⚟** button. Click it and wiggle the knob, and the button
+reads **CC7**; `Esc` cancels. **×** in the midi card unbinds, and clicking
+**CC7** re-learns, so a control can move to another knob without unbinding
+first.
 
-- **×** in the midi card unbinds. Clicking **CC7** re-learns, so a control can
-  move to another knob without unbinding first.
-- One knob drives one thing. Bind a knob that was already driving something and
-  it quietly moves.
+One knob drives one thing. Bind a knob that was already driving something and it
+moves to the new control, and two controls moving together means both are on the
+same CC.
 
-## Two knobs that aren't sliders
+## The motion amount and preset weights
 
-- **The motion amount**: the **amount** fader in the Modulation section scales
-  every modulation routing at once, and carries the same **⚟**. One hand takes
-  the board from still to fully in motion.
-- **A preset's weight**: every preset is a fader, so a preset on a knob moves
-  everything that preset touches. Use the preset picker in the midi card: choose
-  the preset, click **⚟ preset mix**, move a knob. Weights layer, so several
-  presets on several knobs is a small desk of looks.
+The **amount** fader in the Modulation section scales every modulation routing
+at once and carries the same **⚟**.
 
-Neither does soft takeover — they grab on the first message, having no track to
-draw a waiting mark on. A weight also resets once anything else moves the board:
-the next turn starts a fresh mix from what is on screen.
+Every preset is a fader too. Choose one in the midi card's preset picker, click
+**⚟ preset mix** and move a knob, and that knob moves everything the preset
+touches. Weights layer across knobs.
 
-## Pads, for gestures
+The motion amount and a preset weight do no soft takeover, and both grab on the
+first message. A weight also resets once anything else moves the board, so the
+next turn starts a fresh mix from what is on screen.
 
-A knob holds a value, while firing the modulation bay's one-shot envelopes,
-marking a cue and jumping back to one are single gestures. Those go on **pads or
-keys**, bound from the gesture picker in the midi card: pick the gesture, click
-**⚟ pad**, hit the pad.
+## Pads and keys
 
-What can go on one:
+A gesture goes on a pad or a key: pick one in the midi card's gesture picker,
+click **⚟ pad**, hit the pad. The picker lists the modulation bay's one-shot
+envelopes, all at once or a slot at a time; the source cue and the jump back to
+it that `i` and `o` do from the keyboard; and the transitions. Velocity carries,
+so a soft hit is a small envelope, and pads do no soft takeover, since there is
+no value to catch up to.
 
-- **⚡ fire all**, and **⚡ fire slot 1–8**: the buttons in the MODULATION box.
-  Velocity carries, so a soft hit is a small envelope.
-- **cue source A/B** and **back to the cue · A/B**: what `i` and `o` do on the
-  keyboard. The jump back is the one most worth a pad — it works like a drum
-  hit.
-
-**With nothing bound, any note fires the whole bay**, which suits a keyboard you
-haven't mapped. Bind one pad and that stops: notes then fire only what the card
-lists.
-
-Pads do no soft takeover either, since there is no value to catch up to. `Esc`
-cancels an arm.
+**With nothing bound, any note fires the whole bay.** Bind one pad and notes
+then fire only what the card lists.
 
 ## Mapping the whole device
 
-Both buttons **wipe every knob binding** first, with no confirmation. Pads are
-left alone, since a device profile is a list of CC numbers and says nothing
-about notes. **clear all bindings** takes both.
+**auto-map** and **learn in order** each **wipe every knob binding** first, with
+no confirmation. Pads are left alone, and **clear all bindings** takes both.
 
-- **auto-map** is for a MIDI Fighter Twister. It assigns the first 64 controls
-  (motion amount first, then look-makers in signal-path order) to CC 0–63 on
-  channel 1, across all four banks.
+- **auto-map** is for a MIDI Fighter Twister. It assigns the first 64 controls,
+  motion amount first and the rest in signal-path order, to CC 0–63 on channel 1
+  across all four banks.
 - **learn in order** works with anything: sweep your knobs one at a time and
-  each takes the next control down the same list. **stop learning** or `Esc`
-  keeps what you have bound.
-
-Fine tweaks rank after the look-makers, and the magnifier ranks last. Bindings
-are stored per control, so re-ranking never moves one you already have. In a
-sweep, a knob bumped by accident is consumed with no going back a step.
+  each takes the next control down the same list. A knob bumped by accident is
+  consumed with no going back a step. **stop learning** or `Esc` keeps what you
+  have bound.
 
 There are more controls than most controllers have knobs, so some stay
-mouse-only. The **auto-map** button shows how many it binds.
+mouse-only.
 
-## "I turn the knob and nothing happens"
+## Soft takeover
 
-That is **soft takeover**. A physical knob at 3 o'clock doesn't know the value
-is at 10 o'clock, so it stays inert until you sweep it **through** the current
-value. Then it catches and tracks. An **amber mark** on the track shows where
-the knob is waiting, and the card lists the waiting knob's name in amber.
+A knob that does nothing when you turn it has not caught its control yet: a knob
+at 3 o'clock cannot report that the value is at 10 o'clock, so it stays inert
+until you sweep it **through** the current value. An **amber mark** on the track
+shows where the knob is waiting, and the card lists its name in amber.
 
-Knobs let go and need re-catching whenever a value is set from elsewhere:
-loading a preset, recalling a save, undoing, randomising. Expect a row of amber
-marks after a preset load.
+Knobs lose their catch whenever a value is set from elsewhere: loading a preset,
+recalling a save, undoing, randomising.
+
+A CC is 7 bits, so a knob has 128 positions. On a coarse-stepped slider several
+of them land on the same value, and the reading moves in jumps.
 
 ## Locking a rate to the beat
 
 The tempo comes from **MIDI clock** if anything is sending it (the card shows
 **♩ 128.0**), otherwise from the top of the **MODULATION** box on the
-signal-path map, where you type it or **tap** four times. Clock wins while it
-runs, and the hand-set number waits underneath.
+signal-path map, where you type it or **tap** four times. Clock takes precedence
+while it runs, and the hand-set number applies again once it stops. Asking for a
+lock with no tempo sets one at 120 BPM. The app counts clock ticks, ignores
+start and continue, and sends no clock.
 
-Three things can follow the beat, each through the **♩** in its own **⋮** menu,
-cycling 1/1 → 1/16 → off:
+**sweep**, **line offset**, **blanking strobe** and any modulation slot's rate
+each carry a **♩** in their **⋮** menu, cycling 1/1 → 1/16 → off. A lock sets
+the Hz you dialled in aside and gives it back when you unlock. A division that
+works out higher than the control's range is clamped to the top of it: a slot's
+rate stops at 10 Hz, which 1/16 reaches at 150 BPM.
 
-- **sweep**: the wipe auto-sweep. Tops out at 2 Hz, so past ~120 BPM the fast
-  divisions all pin.
-- **line offset**: source B's line rate.
-- **any modulation slot's rate**. Tops out at 10 Hz, which 1/16 reaches at 150
-  BPM.
+## Storage
 
-A locked rate ignores its own value, and the Hz you dialled in comes back when
-you unlock. Asking for a lock with no tempo sets one at 120 BPM. The app listens
-for clock and never sends it.
-
-## What is saved
-
-Bindings (knobs and pads, in two separate stores), the hand-set tempo and the
-clock locks on **sweep** and **line offset** are saved in this browser. They are
-**not** in presets, saved looks or the URL. A link carries the look, not your
-knob layout, and there is no way to export a mapping.
-
-A modulation slot's lock is the exception. It travels with the link, because
-"this wobbles on eighth notes" is part of the patch.
-
-A preset weight is bound by name, so a renamed or dropped preset discards that
-one binding on the next load.
+Knob bindings, pad bindings, the hand-set tempo and the clock locks are saved in
+this browser. They are **not** in presets, saved looks or the URL, and there is
+no way to export a mapping. A modulation slot's lock is the exception, and
+travels with the link.
 
 ## Limitations
 
-- **CC and notes only**: pitch bend, program change and aftertouch do nothing. A
-  note is an on/off with a velocity; there is no note-off handling, because
-  every gesture a pad can fire is a one-shot that decays on its own.
+- **CC and notes only**: pitch bend, program change and aftertouch do nothing,
+  and a note is an on/off with a velocity, with no note-off handling.
 - **Absolute knobs only**: endless encoders in relative mode will jump around.
 - **No LED feedback**: nothing is sent back to the device.
 - **No device picker**: everything plugged in drives the app at once.
 - **No per-knob range, invert or curve.**
-
-## Troubleshooting
-
-| What you see                        | What's going on                                                               |
-| ----------------------------------- | ----------------------------------------------------------------------------- |
-| **midi** says n/a or refused        | No Web MIDI in this browser, or the browser denied access. See above.         |
-| Knob does nothing, amber mark shown | Soft takeover: sweep the knob across the on-screen value to catch it          |
-| Everything went dead after a preset | Same thing; a preset load drops every knob's catch                            |
-| Two controls move together          | Both bound to the same CC. Unbind one with **×** and re-learn it.             |
-| Value jumps in steps                | Coarse-stepped slider; 128 knob positions land on fewer distinct values       |
-| Bindings vanished                   | **auto-map** or **learn in order** clears every knob binding before it starts |
-| Tempo says "no signal"              | Nothing is sending clock. It counts ticks, and ignores start/continue.        |
-| A pad stopped firing the bay        | Binding any pad ends the default. Only what the card lists fires now.         |
