@@ -1226,7 +1226,7 @@ export const GROUPS: Group[] = [
         step: 1,
         choices: ['program', 'oscillator'],
         unit: '',
-        help: "Which connector the ring modulator's other input is on. Program is the live picture, so both sides carry the same crystal and the products land outside the chroma band as brightness structure. Oscillator patches the box's own subcarrier generator there, making the bridge a chroma modulator: the return's brightness is translated onto 3.58 MHz and read as colour, its colour down to brightness, and each lap swaps the two.",
+        help: "Which connector the ring modulator's other input is on. Program is the live picture, so both sides carry the same crystal and chroma against chroma lands at DC and 7.16 MHz, outside the chroma band, as brightness structure. Oscillator patches the box's own subcarrier generator there, making the bridge a chroma modulator: the return's brightness is translated onto 3.58 MHz and read as colour, its colour down to brightness, and each lap swaps the two.",
       },
       {
         key: 'cfbCarrierKHz',

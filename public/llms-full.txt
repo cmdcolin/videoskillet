@@ -335,7 +335,7 @@ cfbReturn  (return (Y/C split))
 
 cfbRingSrc  (ring carrier)
   0=program 1=oscillator  default 0
-  Which connector the ring modulator's other input is on. Program is the live picture, so both sides carry the same crystal and the products land outside the chroma band as brightness structure. Oscillator patches the box's own subcarrier generator there, making the bridge a chroma modulator: the return's brightness is translated onto 3.58 MHz and read as colour, its colour down to brightness, and each lap swaps the two.
+  Which connector the ring modulator's other input is on. Program is the live picture, so both sides carry the same crystal and chroma against chroma lands at DC and 7.16 MHz, outside the chroma band, as brightness structure. Oscillator patches the box's own subcarrier generator there, making the bridge a chroma modulator: the return's brightness is translated onto 3.58 MHz and read as colour, its colour down to brightness, and each lap swaps the two.
 
 cfbCarrierKHz  (ring carrier detune)
   -200..200 step 0.01 kHz  default 0
