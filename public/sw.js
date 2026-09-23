@@ -15,10 +15,17 @@ const CACHE = 'videoskillet-v1'
 const SHARE = 'videoskillet-share'
 const SHARE_KEY = 'shared-media'
 
-// The cold-start floor: enough for the instrument to open offline before the
-// hashed bundle has been seen once. The bundle itself lands in the same cache
-// the first time it is fetched.
-const SHELL = ['app/', 'manifest.webmanifest', 'favicon.svg', 'icon-192.png']
+// The cold-start floor: enough for the instrument and the camera to open
+// offline before the hashed bundle has been seen once. The bundle itself lands
+// in the same cache the first time it is fetched.
+const SHELL = [
+  'app/',
+  'cam/',
+  'manifest.webmanifest',
+  'cam/manifest.webmanifest',
+  'favicon.svg',
+  'icon-192.png',
+]
 
 const shellUrl = name => new URL(name, self.registration.scope).href
 
@@ -89,15 +96,17 @@ const putIfOk = (request, response) => {
   return response
 }
 
-// Fresh page, cached page if the network is gone, and the instrument itself if
+// Fresh page, cached page if the network is gone, and the app's own shell if
 // the address asked for was never visited — the shape every offline launch of
-// an installed app takes.
+// an installed app takes. The camera installs as an app of its own, so an
+// address under it falls back to the camera.
 const navigate = async request => {
   try {
     return putIfOk(request, await fetch(request))
   } catch (err) {
     const hit = await caches.match(request, { ignoreSearch: true })
-    return hit ?? (await caches.match(shellUrl('app/'))) ?? Promise.reject(err)
+    const home = request.url.startsWith(shellUrl('cam/')) ? 'cam/' : 'app/'
+    return hit ?? (await caches.match(shellUrl(home))) ?? Promise.reject(err)
   }
 }
 

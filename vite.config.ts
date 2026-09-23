@@ -59,6 +59,7 @@ export default defineConfig(({ command }) => ({
     rollupOptions: {
       input: {
         app: 'app/index.html',
+        cam: 'cam/index.html',
         vote: 'vote/index.html',
         stream: 'stream/index.html',
       },

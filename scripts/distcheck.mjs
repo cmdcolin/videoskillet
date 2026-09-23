@@ -33,6 +33,7 @@ const PAGES = [
   '/guide/faq/',
   '/guide/features/',
   '/app/',
+  '/cam/',
   '/vote/',
   '/stream/',
 ]

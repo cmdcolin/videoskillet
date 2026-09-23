@@ -38,10 +38,15 @@ function mirrorOf(src: HTMLCanvasElement): HTMLCanvasElement {
 // Downstream of `present` — the same pixels the user sees — so nothing touches
 // the signal path. Recording holds the window visible (rAF at full rate) by
 // design.
+//
+// `deliver` takes each finished file. It downloads by default; the camera page
+// keeps the file instead, because a phone saves to its photo library through
+// the share sheet.
 export function useCapture(
   canvasRef: RefObject<HTMLCanvasElement | null>,
   name: string,
   onError: (message: string) => void,
+  deliver: (blob: Blob, name: string) => void = save,
 ) {
   const recRef = useRef<Recorder | null>(null)
   const rafRef = useRef(0)
@@ -69,7 +74,7 @@ export function useCapture(
       // handler copies a blank buffer.
       requestAnimationFrame(() => {
         mirrorOf(canvas).toBlob(blob => {
-          if (blob !== null) save(blob, fileName(name, 'png'))
+          if (blob !== null) deliver(blob, fileName(name, 'png'))
         }, 'image/png')
       })
     }
@@ -116,7 +121,7 @@ export function useCapture(
     setRecording(false)
     if (rec === null) return
     try {
-      save(await rec.finish(), fileName(name, 'mp4'))
+      deliver(await rec.finish(), fileName(name, 'mp4'))
     } catch (e) {
       onError(`recording failed: ${e instanceof Error ? e.message : String(e)}`)
     }

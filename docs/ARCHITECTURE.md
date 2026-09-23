@@ -23,17 +23,17 @@ Core holds the pass graph and its WGSL (`core/gpu/`), the per-frame CPU state
 that feeds them (`core/signal/`), the control schema every layer shares
 (`core/controls.ts`), and the three utilities both halves use. Around it,
 `src/ui/` is the panel and the React that drives one, `src/sources/` is where
-pictures come from, and `src/vote/` is the labelling tool that builds a
-preference dataset out of the engine.
+pictures come from, `src/cam/` is the phone camera page, and `src/vote/` is the
+labelling tool that builds a preference dataset out of the engine.
 
 **Nothing under `core/` imports the app.** An engine runs against a canvas and a
-`Controls` object, which is why `src/vote/` can stand up its own engines without
-touching a line of the panel. An oxlint override on `src/core/**` fails the
-build on an import reaching back out — to `ui/`, `sources/`, `vote/`, React or
-firebase, and type-only imports count. Where core needs a shape the app owns,
-core declares the shape and the app satisfies it: `core/gpu/videopump.ts` does
-that for `Relay`, `PullOpener` and `FramePull`, so the pump names what it
-depends on instead of naming who builds it.
+`Controls` object, which is why `src/vote/` and `src/cam/` can stand up their
+own engines without touching a line of the panel. An oxlint override on
+`src/core/**` fails the build on an import reaching back out — to `ui/`,
+`sources/`, `vote/`, React or firebase, and type-only imports count. Where core
+needs a shape the app owns, core declares the shape and the app satisfies it:
+`core/gpu/videopump.ts` does that for `Relay`, `PullOpener` and `FramePull`, so
+the pump names what it depends on instead of naming who builds it.
 
 The boundary is a directory rather than a package: core has no build of its own,
 the app imports its source, HMR crosses the line freely, and the doc tests read

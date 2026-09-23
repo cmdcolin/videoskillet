@@ -1453,10 +1453,6 @@ export class Engine implements EngineApi {
     this.mirrorA = on
   }
 
-  get sourceMirrored(): boolean {
-    return this.mirrorA
-  }
-
   setVideoRegion(region: { start: number; end: number } | null): void {
     this.pump.setRegionA(region)
   }

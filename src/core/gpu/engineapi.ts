@@ -147,10 +147,9 @@ export interface EngineApi {
   ) => void
   setVideoSource: (el: HTMLVideoElement | null) => void
   // Read A right to left, the way a camera facing its subject is shown to them.
-  // A property of the source, like its aspect, so no preset or link carries it;
-  // read back so a rebuilt engine comes up mirrored the same way.
+  // Mirroring is a property of the source, like its aspect, so no preset or
+  // link carries it.
   setSourceMirror: (on: boolean) => void
-  readonly sourceMirrored: boolean
   // The stretch of this slot's clip to keep the playhead inside, or null to play
   // straight through. Positions on the *source's* own timeline, which is why this
   // is a source setter and not a control: a pair of timestamps means nothing
