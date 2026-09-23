@@ -31,15 +31,40 @@ async function nextDevice(current: string): Promise<string | null> {
   return ids[(ids.indexOf(current) + 1) % ids.length]
 }
 
-const stopAll = (stream: MediaStream | null) => {
+export const stopAll = (stream: MediaStream | null) => {
   for (const t of stream?.getTracks() ?? []) t.stop()
 }
 
-interface Opened {
+// A camera still delivering. A phone that cannot run two cameras at once may
+// mute the first when a page asks for the second, rather than refusing.
+const delivering = (stream: MediaStream) =>
+  stream.getVideoTracks().every(t => t.readyState === 'live' && !t.muted)
+
+// How long a second camera is given to take the first one down.
+const SETTLE_MS = 600
+
+export interface Opened {
   stream: MediaStream
   video: HTMLVideoElement
   faces: Facing
   cameras: number
+}
+
+// The camera that is not `settings`, asked for while that one stays open, or
+// null when the phone refuses it. A camera that says which way it faces is
+// asked for the other way; one that does not is asked for by the next device.
+async function askOther(
+  settings: MediaTrackSettings,
+  facing: Facing,
+): Promise<Opened | null> {
+  try {
+    if (settings.facingMode !== undefined && settings.facingMode !== '')
+      return await openCamera(opposite(facing))
+    const next = await nextDevice(settings.deviceId ?? '')
+    return next === null ? null : await openCamera(facing, next)
+  } catch {
+    return null
+  }
 }
 
 // One camera, playing in a <video> the engine can read from. Which way it
@@ -84,9 +109,25 @@ export function useCamera(
   const [error, setError] = useState('')
   const [cameras, setCameras] = useState(0)
   const stream = useRef<MediaStream | null>(null)
+  const held = useRef<Opened | null>(null)
   // Which open is the latest. A flip pressed twice quickly must not land on the
   // first answer after the second was asked for.
   const ask = useRef(0)
+
+  const take = (opened: Opened) => {
+    const got = opened.stream
+    stream.current = got
+    held.current = opened
+    // Another app taking the camera, or the phone ending it in the background,
+    // leaves the last frame standing unless something says so.
+    got.getVideoTracks()[0]?.addEventListener('ended', () => {
+      if (stream.current === got) setState('off')
+    })
+    show(opened.video, opened.faces === 'user')
+    setStored(opened.faces)
+    setCameras(opened.cameras)
+    setState('on')
+  }
 
   const open = async (want: Facing, deviceId?: string) => {
     const mine = ++ask.current
@@ -96,6 +137,7 @@ export function useCamera(
     // has to go before the other can be asked for.
     stopAll(stream.current)
     stream.current = null
+    held.current = null
     let opened: Opened
     try {
       opened = await openCamera(want, deviceId)
@@ -110,17 +152,42 @@ export function useCamera(
       stopAll(opened.stream)
       return
     }
-    const got = opened.stream
-    stream.current = got
-    // Another app taking the camera, or the phone ending it in the background,
-    // leaves the last frame standing unless something says so.
-    got.getVideoTracks()[0]?.addEventListener('ended', () => {
-      if (stream.current === got) setState('off')
-    })
-    show(opened.video, opened.faces === 'user')
-    setStored(opened.faces)
-    setCameras(opened.cameras)
-    setState('on')
+    take(opened)
+  }
+
+  // Puts `next` on screen and hands back the camera that was there, still
+  // running, for the caller to keep or stop.
+  const adopt = (next: Opened): Opened | null => {
+    ++ask.current
+    const prev = held.current
+    take(next)
+    return prev
+  }
+
+  // The other camera, opened beside the one on screen, or null where the phone
+  // cannot run both. A refusal is the plain answer; a phone that mutes or ends
+  // the first camera instead gets it back, reopened.
+  const openOther = async (): Promise<Opened | null> => {
+    const cur = held.current
+    if (cur === null) return null
+    const mine = ++ask.current
+    const settings = cur.stream.getVideoTracks()[0]?.getSettings() ?? {}
+    const other = await askOther(settings, facing)
+    await new Promise(r => setTimeout(r, SETTLE_MS))
+    const same =
+      other?.stream.getVideoTracks()[0]?.getSettings().deviceId ===
+      settings.deviceId
+    if (
+      other !== null &&
+      mine === ask.current &&
+      !same &&
+      delivering(cur.stream) &&
+      delivering(other.stream)
+    )
+      return other
+    stopAll(other?.stream ?? null)
+    if (mine === ask.current && !delivering(cur.stream)) await open(facing)
+    return null
   }
 
   const start = () => void open(facing)
@@ -176,5 +243,7 @@ export function useCamera(
     canFlip: cameras > 1,
     start,
     flip: () => void flip(),
+    adopt,
+    openOther,
   }
 }

@@ -13,7 +13,7 @@ import {
   ROLL_POOL,
   lookBoard,
   lookLabel,
-  needsTape,
+  needsSecond,
   rollLook,
   subtleLoop,
 } from './looks'
@@ -24,7 +24,7 @@ describe('the camera strip', () => {
       expect(PRESET_BY_NAME.has(name), name).toBe(true)
   })
 
-  // B is empty until a tape is recorded, so a look that mixes in a second
+  // B is empty until a second picture goes on it, so a look that mixes one
   // source would show the camera untouched.
   it('offers nothing that needs a second source', () => {
     for (const name of CAM_LOOKS) {
@@ -162,20 +162,20 @@ it('calls no look normal', () => {
   )
 })
 
-describe('the strip with a tape on B', () => {
+describe('the strip with a second picture on B', () => {
   // A look that mixes nothing in would read as the camera untouched, and one
   // already on the strip would show twice.
-  it('offers only looks that mix the tape in', () => {
+  it('offers only looks that mix B in', () => {
     for (const name of CAM_MIX_LOOKS) {
       expect(PRESET_BY_NAME.has(name), name).toBe(true)
-      expect(needsTape(name), name).toBe(true)
+      expect(needsSecond(name), name).toBe(true)
       expect((CAM_LOOKS as readonly string[]).includes(name), name).toBe(false)
     }
   })
 
   it('knows a look that mixes from one that does not', () => {
-    expect(needsTape('cleanDissolve')).toBe(true)
-    expect(needsTape('zoomBloom')).toBe(false)
-    expect(needsTape('no such look')).toBe(false)
+    expect(needsSecond('cleanDissolve')).toBe(true)
+    expect(needsSecond('zoomBloom')).toBe(false)
+    expect(needsSecond('no such look')).toBe(false)
   })
 })

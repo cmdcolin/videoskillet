@@ -20,12 +20,12 @@ import {
   CAM_MIX_LOOKS,
   lookBoard,
   lookLabel,
-  needsTape,
+  needsSecond,
   rollLook,
 } from './looks'
 import { useCamEngine } from './useCamEngine'
 import { useCamera } from './useCamera'
-import { useTape } from './useTape'
+import { useSecond } from './useSecond'
 import { useTilt } from './useTilt'
 
 import type { Look } from './looks'
@@ -95,7 +95,7 @@ export function CamPage() {
   const [shot, setShot] = useState<Shot | null>(null)
   const [error, setError] = useState('')
   const [recSince, setRecSince] = useState(0)
-  const tape = useTape(eng, setError)
+  const second = useSecond(eng, cam, setError)
   const [sound, setSound] = useState(false)
 
   const capture = useCapture(
@@ -163,21 +163,21 @@ export function CamPage() {
     })
   }
 
-  // A tape of the camera goes on B, and the page turns to the other camera and
-  // a look that mixes the two, so the scene behind the phone and the person
-  // holding it share the picture.
-  const recordTape = () => {
+  // The other camera goes on screen and the one that was there goes on B, live
+  // or as a tape, under a look that mixes the two. The scene behind the phone
+  // and the person holding it share the picture.
+  const mixIn = () => {
     setError('')
-    void tape.record().then(ok => {
-      if (!ok) return
-      if (cam.canFlip) cam.flip()
+    void second.load().then(got => {
+      if (got === null) return
+      if (got === 'tape' && cam.canFlip) cam.flip()
       setTuning(false)
       land({ name: CAM_MIX_LOOKS[0], strength: 1, rolled: false })
     })
   }
-  const ejectTape = () => {
-    tape.eject()
-    if (look !== null && needsTape(look.name)) {
+  const takeOff = () => {
+    second.eject()
+    if (look !== null && needsSecond(look.name)) {
       setTuning(false)
       land(null)
     }
@@ -206,7 +206,7 @@ export function CamPage() {
   if (eng.fatal !== null) return <FatalScreen fatal={eng.fatal} />
 
   const strength = look === null ? 0 : Math.round(look.strength * 100)
-  const strip: readonly string[] = tape.loaded
+  const strip: readonly string[] = second.loaded
     ? [...CAM_MIX_LOOKS, ...CAM_LOOKS]
     : CAM_LOOKS
 
@@ -263,29 +263,33 @@ export function CamPage() {
           {cam.state === 'on' ? (
             <div className={cx(styles.switches, styles.right)}>
               <button
-                className={cx(styles.switch, tape.loaded && styles.on)}
-                aria-pressed={tape.loaded}
+                className={cx(styles.switch, second.loaded && styles.on)}
+                aria-pressed={second.loaded}
                 aria-label={
-                  tape.loaded
-                    ? 'take the tape off B'
-                    : 'record a tape to mix under the camera'
+                  second.loaded
+                    ? 'take the second picture off B'
+                    : 'mix the other camera in'
                 }
                 title={
-                  tape.loaded
-                    ? 'take the tape off B'
-                    : 'record a tape to mix under the camera'
+                  second.loaded
+                    ? 'take the second picture off B'
+                    : 'mix the other camera in'
                 }
-                disabled={tape.left > 0 || capture.recording}
-                onClick={tape.loaded ? ejectTape : recordTape}
+                disabled={
+                  second.left > 0 || second.opening || capture.recording
+                }
+                onClick={second.loaded ? takeOff : mixIn}
               >
                 <TapeIcon />
               </button>
             </div>
           ) : null}
-          {tape.left > 0 ? (
+          {second.left > 0 ? (
             <span className={cx(styles.badge, styles.rec)}>
-              tape {tape.left}
+              tape {second.left}
             </span>
+          ) : second.opening ? (
+            <span className={styles.badge}>second camera</span>
           ) : null}
           {comparing ? <span className={styles.badge}>original</span> : null}
           {capture.recording ? (
@@ -407,15 +411,17 @@ export function CamPage() {
             }
             onClick={shutter}
           />
-          {cam.canFlip ? (
+          {cam.canFlip || second.live ? (
             <button
               className={styles.flip}
               aria-label={
-                cam.facing === 'user'
-                  ? 'switch to the back camera'
-                  : 'switch to the front camera'
+                second.live
+                  ? 'swap the two cameras'
+                  : cam.facing === 'user'
+                    ? 'switch to the back camera'
+                    : 'switch to the front camera'
               }
-              onClick={cam.flip}
+              onClick={second.live ? () => void second.swap() : cam.flip}
             >
               <FlipIcon />
             </button>

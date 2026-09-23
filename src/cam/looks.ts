@@ -60,7 +60,7 @@ export function subtleLoop(c: Controls): boolean {
 // one over a moving subject: the shortest delays first, then the camera loops
 // nearest unity zoom, then the keyed loops that colour a face without losing
 // it, then three faults with no loop in them. None needs a second source,
-// since B is empty until a tape is recorded.
+// since B is empty until a second picture goes on it.
 export const CAM_LOOKS = [
   'shadowLadder',
   'theLightIsALapBehind',
@@ -83,8 +83,8 @@ export const CAM_LOOKS = [
   'rainbowStorm',
 ] as const
 
-// The looks the strip leads with once a tape is on B, picked by rendering all
-// 17 that need a second source over a face live on A and a scene on the tape.
+// The looks the strip leads with once a second picture is on B, picked by
+// rendering all 17 that need one over a face live on A and a scene on B.
 // A plain double exposure comes first, then the camera keyed into the scene,
 // a picture-in-picture, a green key, a key that fences off a feedback loop,
 // and two cameras summed with no sync between them. The other eleven fill a
@@ -98,8 +98,8 @@ export const CAM_MIX_LOOKS = [
   'dirtyMix',
 ] as const
 
-// Whether a look shows anything without a tape on B.
-export const needsTape = (name: string): boolean => {
+// Whether a look shows anything without a second picture on B.
+export const needsSecond = (name: string): boolean => {
   const def = PRESET_BY_NAME.get(name)
   return def !== undefined && needsSourceB(def)
 }

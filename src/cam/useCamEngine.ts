@@ -15,11 +15,11 @@ import type { Tilt } from './tilt'
 import type { RefObject } from 'react'
 
 // What the picture is made of: the camera, or bars before there is one, a
-// tape on B when one has been recorded, and the look over them.
+// second picture on B when there is one, and the look over them.
 export interface Shown {
   video: HTMLVideoElement | null
   mirror: boolean
-  tape: HTMLVideoElement | null
+  second: HTMLVideoElement | null
 }
 export interface Board {
   controls: Controls
@@ -39,8 +39,8 @@ const tall = (video: HTMLVideoElement | null) =>
 function dress(engine: Engine, shown: Shown, board: Board, sound: boolean) {
   engine.applyControls(sound ? sounded(board.controls) : board.controls)
   engine.setModSlots(board.mod)
-  engine.setVideoSourceB(shown.tape)
-  engine.setSourceBEnabled(shown.tape !== null)
+  engine.setVideoSourceB(shown.second)
+  engine.setSourceBEnabled(shown.second !== null)
   engine.setSourceMirror(shown.mirror)
   engine.setTubeTurned(tall(shown.video))
   if (shown.video === null) engine.setImageSource(smpteBars())
@@ -49,10 +49,11 @@ function dress(engine: Engine, shown: Shown, board: Board, sound: boolean) {
 
 const reason = (e: unknown) => (e instanceof Error ? e.message : String(e))
 
-// The camera page's engine runs one canvas, the camera on A and a tape on B. It
+// The camera page's engine runs one canvas, a camera on A and a second picture
+// on B. It
 // keeps the two rules `useEngine` is built around: it never destroys a device
 // (docs/adr/0004), and it replaces a lost one in place. It leaves out the
-// instrument's links, its clips and what B can play besides a tape.
+// instrument's links, its clips and what B can play besides a camera.
 export function useCamEngine(canvasRef: RefObject<HTMLCanvasElement | null>) {
   const engineRef = useRef<Engine | null>(null)
   const [engine, setEngine] = useState<Engine | null>(null)
@@ -60,7 +61,7 @@ export function useCamEngine(canvasRef: RefObject<HTMLCanvasElement | null>) {
   const [rebuilding, setRebuilding] = useState(false)
   const [frozen, setFrozen] = useState(false)
   const [turned, setTurned] = useState(false)
-  const shown = useRef<Shown>({ video: null, mirror: false, tape: null })
+  const shown = useRef<Shown>({ video: null, mirror: false, second: null })
   const board = useRef<Board>({ controls: DEFAULT_CONTROLS, mod: [] })
   const comparing = useRef(false)
   const heard = useRef(false)
@@ -83,16 +84,16 @@ export function useCamEngine(canvasRef: RefObject<HTMLCanvasElement | null>) {
     })
   }
 
-  const showTape = (tape: HTMLVideoElement | null) => {
-    shown.current = { ...shown.current, tape }
-    engineRef.current?.setVideoSourceB(tape)
-    engineRef.current?.setSourceBEnabled(tape !== null)
+  const showSecond = (second: HTMLVideoElement | null) => {
+    shown.current = { ...shown.current, second }
+    engineRef.current?.setVideoSourceB(second)
+    engineRef.current?.setSourceBEnabled(second !== null)
   }
 
   // The camera as it is on A, for recording a tape of it.
   const camera = (): Camera | null => {
     const { video, mirror } = shown.current
-    return video === null ? null : { video, mirror, turned: tall(video) }
+    return video === null ? null : { video, mirror }
   }
 
   const showBoard = (next: Board) => {
@@ -226,7 +227,7 @@ export function useCamEngine(canvasRef: RefObject<HTMLCanvasElement | null>) {
     frozen,
     turned,
     showVideo,
-    showTape,
+    showSecond,
     camera,
     showBoard,
     hear,

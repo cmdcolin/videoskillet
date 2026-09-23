@@ -226,14 +226,17 @@ opening the home page gets **Open the camera** as its first button, and
   supply harder keeps its own settings. While the switch is on, **VIDEO**
   records the sound with the picture, as AAC where the browser can encode it and
   Opus where it cannot.
-- The cassette on the picture's other corner records four seconds of the camera
-  to a tape and loops it on source B, the way a studio rolled a deck into a
-  mixer's second input. The page then turns to the other camera and mixes the
-  two, and the strip leads with looks that mix them: a double exposure, the
-  camera keyed into the scene, a picture-in-picture, two keys and two cameras
-  with no sync between them. Point the back camera at a scene, record, and the
-  front camera puts you over it. Most phones cannot run both cameras at once,
-  and a tape works on every one. Pressing the cassette again takes the tape off.
+- The cassette on the picture's other corner mixes the other camera in. The
+  camera on screen goes to source B and the other one comes on screen, and the
+  strip leads with looks that mix them: a double exposure, the camera keyed into
+  the scene, a picture-in-picture, two keys and two cameras with no sync between
+  them. Point the back camera at a scene, press it, and the front camera puts
+  you over the scene. A phone that runs both cameras at once keeps both live,
+  and the flip button then swaps them between the screen and B. On a phone that
+  cannot, the page records four seconds of the camera on screen to a tape and
+  loops it on B, the way a studio rolled a deck into a mixer's second input. The
+  page asks each phone once and remembers the answer. Pressing the cassette
+  again takes the second picture off.
 - **all controls** opens the app on the same preset, asking for the camera
   again.
 
