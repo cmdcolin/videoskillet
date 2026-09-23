@@ -2,6 +2,21 @@
 
 All notable changes to videoskillet are documented here.
 
+## [2.4.0](https://github.com/cmdcolin/videoskillet/compare/v2.3.1...v2.4.0) - 2026-09-23
+
+### Features
+- *(ui)* [`89b4d44`](https://github.com/cmdcolin/videoskillet/commit/89b4d44907c8e8947fb92098d01f345e4cdf3c26) remove the signal-path diagram popout
+- *(signal)* [`57c4fdf`](https://github.com/cmdcolin/videoskillet/commit/57c4fdfb2d23a4d2e658a4f0b5c0b652f594d6a6) read source A right to left when it is a mirror
+- *(ui)* [`7e0a994`](https://github.com/cmdcolin/videoskillet/commit/7e0a9943e04f38f64d14fd67ae212c617832e069) add a camera page for phones
+- *(ui)* [`dd66fe2`](https://github.com/cmdcolin/videoskillet/commit/dd66fe22d57b8f11f31a6431f6bc78852e106b7c) point phones at the camera
+- *(ui)* [`48eb625`](https://github.com/cmdcolin/videoskillet/commit/48eb62534d396b25077076021ed3be8093c0c971) lead the camera with feedback loops
+
+### Fixes
+- *(ui)* [`2366bf5`](https://github.com/cmdcolin/videoskillet/commit/2366bf5ae8345167895fa57360b92fa58cc6cfda) wrap the camera's looks on a desktop window
+
+### Other Changes
+- [`f5894ec`](https://github.com/cmdcolin/videoskillet/commit/f5894ec21ab3c009ab6b666874e2e5e535e6533f) Reshoot snaps
+
 ## [2.3.1](https://github.com/cmdcolin/videoskillet/compare/v2.3.0...v2.3.1) - 2026-09-20
 
 ### Refactor
