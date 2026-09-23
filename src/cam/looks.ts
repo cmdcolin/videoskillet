@@ -56,8 +56,8 @@ export function subtleLoop(c: Controls): boolean {
 
 // The looks the camera's strip offers, in strip order. The instrument has
 // about 150 presets, and a phone needs a list short enough to scroll with a
-// thumb. The strip is mostly subtle feedback loops, picked by rendering all 58
-// over a moving subject: the shortest delays first, then the camera loops
+// thumb. The strip is mostly subtle feedback loops, picked by rendering every
+// one over a moving subject: the shortest delays first, then the camera loops
 // nearest unity zoom, then the keyed loops that colour a face without losing
 // it, then three faults with no loop in them. None needs a second source,
 // since B is empty until a tape is recorded.
@@ -66,6 +66,9 @@ export const CAM_LOOKS = [
   'theLightIsALapBehind',
   'clockAndCrystal',
   'theWrongClock',
+  'aimedAHairOff',
+  'turnedAHair',
+  'theIrisHoldsTheEdge',
   'huntingServos',
   'zoomBloom',
   'noColourToTrade',

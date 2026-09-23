@@ -727,6 +727,55 @@ export const PRESETS: PresetDef[] = [
     // narrow enough that the bottom of the sweep still accumulates.
     mod: [{ target: 'fbGain', source: 'smooth', rateHz: 0.06, depth: 0.03 }],
   },
+  // The three below hold the camera within a percent of unity zoom, and their
+  // gain sits just over what the lens, the black cut and the vignette take out
+  // each lap. A still picture then keeps its own exposure, and the loop shows
+  // only where something moves. A gain tuned for a zoom that spreads the light
+  // each lap would pile it onto the same spot here and wall out to white.
+  {
+    name: 'aimedAHairOff',
+    displayName: 'aimed a hair off',
+    group: 'Feedback loops',
+    blurb:
+      'The feedback camera is squared up to its monitor and nudged a fraction off axis, so each lap lands a few pixels up and to one side. Anything that moves leaves a short stack of echoes stepping away in that one direction, and a still picture keeps its own exposure.',
+    patch: {
+      fbMix: 0.75,
+      fbGain: 1.06,
+      fbZoom: 1.006,
+      fbShiftX: 0.004,
+      fbShiftY: -0.002,
+      fbFocus: 0,
+    },
+  },
+  {
+    name: 'turnedAHair',
+    displayName: 'turned a hair',
+    group: 'Feedback loops',
+    blurb:
+      "The feedback camera frames the monitor at exactly its size and sits turned under a degree on its mount. Each lap is the last one rotated about the centre, so a moving edge leaves echoes swung round in an arc, and the arcs widen towards the picture's edge.",
+    patch: {
+      fbMix: 0.75,
+      fbGain: 1.06,
+      fbZoom: 1,
+      fbRotateDeg: 0.8,
+      fbFocus: 0,
+    },
+  },
+  {
+    name: 'theIrisHoldsTheEdge',
+    displayName: 'the iris holds the edge',
+    group: 'Feedback loops',
+    blurb:
+      'This camera loop runs past unity, pushed in a percent and turned a third of a degree, with the auto-iris metering it. Unmetered, it would walk to white in a second. The iris closes as the picture brightens, which pulls the loop back to the edge and holds it there, breathing a little as the servo overshoots.',
+    patch: {
+      fbMix: 0.7,
+      fbGain: 1.5,
+      fbZoom: 1.01,
+      fbRotateDeg: 0.3,
+      fbIris: 0.5,
+      fbFocus: 0,
+    },
+  },
   {
     name: 'tunnelOut',
     displayName: 'tunnel out',

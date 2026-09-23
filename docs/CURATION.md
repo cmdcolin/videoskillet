@@ -680,6 +680,33 @@ drives the paperclip (`signal/clip.ts`), which lives in `Engine.applyClip` and
 so had never reached the headless graph — a look that rests just short of
 trouble and is thrown by a contact rendered as the board it rests on.
 
+### A camera loop at unity zoom wants a gain of about one
+
+The camera page wanted loops with almost no geometry: a zoom within a percent of
+unity and under a degree of turn. The table had none, and scaling a dramatic one
+down walls out to white, because its gain was tuned for a zoom that spreads the
+light each lap. `aimedAHairOff`, `turnedAHair` and `theIrisHoldsTheEdge` came
+out of four sweeps on the camera page, with `public/sample.jpg` panned slowly as
+the camera. Motion is the input that matters here, because at this geometry a
+loop only shows where the picture moves.
+
+**A still pixel settles at `(1 − fbMix) / (1 − fbMix × fbGain)` of its own
+level.** At mix 0.65 and a round trip of 0.85 that is 2.3, and every white in
+the frame clipped. At gain 1.0 it is 1, less what the black cut, the vignette
+and the lens take each lap, which left the frame at a mean of 91 to 102 against
+111 unlooped. At 1.04 to 1.06 the loop holds within ten percent of the picture's
+own exposure. The mix then sets only how long a moving edge's echoes last. At
+0.9 the live picture is a tenth of each frame and the subject smears into the
+loop; 0.7 to 0.8 keeps a face readable. The lens at `fbFocus` 0 keeps the echoes
+as copies, where the default 0.7 softens them into glow.
+
+**The auto-iris is a second way past unity.** An expanding loop over unity walks
+to white, and `presets.test.ts` forbids one. With `fbIris` 0.5 metering it, a
+static round trip of 1.05 at zoom 1.01 held a mean of 145 to 148 for twenty
+seconds, with the contrast intact. The iris closes as the picture brightens,
+which puts its own gain inside the round trip. The test now lets a loop past
+unity when an iris meters it.
+
 ## Labelling: the collectors
 
 **Barely used, and kept as reference.** The idea was to answer "which settings

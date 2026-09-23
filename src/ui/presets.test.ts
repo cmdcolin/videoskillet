@@ -617,13 +617,23 @@ describe('the camera loop round trip', () => {
   // expands spreads what it gains over the whole raster and walks to white
   // within a second, while one that collapses concentrates it into a shrinking
   // core and holds contrast well past it. Measured in docs/CURATION.md.
-  it('only runs past unity where the transport collapses inward', () => {
+  //
+  // The auto-iris is the other way past unity. It meters the loop and closes
+  // as the picture brightens, which puts its own gain inside the round trip:
+  // theIrisHoldsTheEdge runs a static trip of 1.05 expanding and held a mean
+  // of 145 to 148 over twenty seconds of a moving subject.
+  it('only runs past unity where the transport collapses or an iris meters it', () => {
     const hot = cameraLoops
       .map(p => {
         const c = presetControls(p.patch)
-        return { name: p.name, trip: c.fbMix * c.fbGain, zoom: c.fbZoom }
+        return {
+          name: p.name,
+          trip: c.fbMix * c.fbGain,
+          zoom: c.fbZoom,
+          iris: c.fbIris,
+        }
       })
-      .filter(x => x.trip > 1 && x.zoom >= 1)
+      .filter(x => x.trip > 1 && x.zoom >= 1 && x.iris === 0)
     expect(hot).toEqual([])
   })
 })
