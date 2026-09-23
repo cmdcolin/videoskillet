@@ -325,6 +325,15 @@
   cursor: default;
 }
 
+/* A desktop window has the width for every look at once, and a mouse has no
+   easy way to scroll a row sideways. */
+@media (min-width: 1000px) and (min-height: 561px) {
+  .strip {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
+
 /* On a phone held sideways the picture takes the full height and the
    controls move to a column on the right. */
 @media (orientation: landscape) and (max-height: 560px) {
