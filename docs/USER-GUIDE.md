@@ -197,8 +197,11 @@ opening the home page gets **Open the camera** as its first button, and
 
 - **Start camera** asks the browser for the camera. Once the browser has said
   yes, the page opens the camera by itself on later visits.
-- The strip holds a short list of presets. Pressing the look that is on shows
-  its strength, and **random** picks one from every preset the app has.
+- The strip holds a short list of presets, most of them feedback loops. Pressing
+  the look that is on shows its strength, and **random** picks one of the app's
+  feedback loops. On a loop the strength opens the loop's mix and leaves its
+  gain alone, so the bottom of the slider gives echo trails and the top gives
+  the look building on itself.
 - Holding a finger on the picture shows the camera without the look.
 - **PHOTO** takes a PNG still and **VIDEO** records an MP4. The thumbnail beside
   the shutter opens the phone's share sheet, which is where **Save Image** and

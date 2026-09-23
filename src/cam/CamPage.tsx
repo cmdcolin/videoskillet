@@ -222,7 +222,7 @@ export function CamPage() {
         <nav className={styles.strip} aria-label="Looks">
           <button
             className={cx(styles.chip, look?.rolled === true && styles.chipOn)}
-            title="a look picked at random from all of them"
+            title="a feedback loop picked at random from all of them"
             onClick={roll}
           >
             <DiceIcon />

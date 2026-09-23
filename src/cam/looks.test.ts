@@ -7,7 +7,7 @@ import {
   needsSourceB,
   presetControls,
 } from '../ui/presets'
-import { CAM_LOOKS, lookBoard, lookLabel, rollLook } from './looks'
+import { CAM_LOOKS, ROLL_POOL, lookBoard, lookLabel, rollLook } from './looks'
 
 describe('the camera strip', () => {
   it('names only presets that exist', () => {
@@ -60,17 +60,58 @@ describe('lookBoard', () => {
   })
 })
 
+describe('lookBoard on a feedback loop', () => {
+  const loops = CAM_LOOKS.filter(
+    name => PRESET_BY_NAME.get(name)?.group === 'Feedback loops',
+  )
+
+  it('covers most of the strip', () => {
+    expect(loops.length).toBeGreaterThan(CAM_LOOKS.length / 2)
+  })
+
+  // A loop blended toward stock drops below unity round trip and fades to a
+  // copy of the camera, so the loop has to keep running at zero strength.
+  it('keeps the loop running with its own gain at zero strength', () => {
+    for (const name of loops) {
+      const full = presetControls(PRESET_BY_NAME.get(name)?.patch ?? {})
+      const low = lookBoard({ name, strength: 0, rolled: false }).controls
+      const loopMix = full.fbMix > 0 ? 'fbMix' : 'cfbMix'
+      const loopGain = full.fbMix > 0 ? 'fbGain' : 'cfbGain'
+      expect(low[loopMix], name).toBeGreaterThan(0)
+      expect(low[loopGain], name).toBe(full[loopGain])
+    }
+  })
+
+  it('opens the loop further as strength rises', () => {
+    for (const name of loops) {
+      const full = presetControls(PRESET_BY_NAME.get(name)?.patch ?? {})
+      const loopMix = full.fbMix > 0 ? 'fbMix' : 'cfbMix'
+      const mixes = [0, 0.5, 1].map(
+        strength =>
+          lookBoard({ name, strength, rolled: false }).controls[loopMix],
+      )
+      expect(mixes[0], name).toBeLessThan(mixes[1])
+      expect(mixes[1], name).toBeLessThan(mixes[2])
+    }
+  })
+})
+
 describe('rollLook', () => {
-  it('never rolls the look already up, nor one that needs a second source', () => {
+  it('rolls a feedback loop, never the one already up', () => {
     let look = rollLook(null)
     for (let i = 0; i < 200; i++) {
       const next = rollLook(look)
       expect(next.name).not.toBe(look.name)
       const def = PRESET_BY_NAME.get(next.name)
+      expect(def?.group).toBe('Feedback loops')
       expect(def !== undefined && needsSourceB(def)).toBe(false)
       expect(next.rolled).toBe(true)
       look = next
     }
+  })
+
+  it('has more than one loop to roll', () => {
+    expect(ROLL_POOL.length).toBeGreaterThan(1)
   })
 })
 
