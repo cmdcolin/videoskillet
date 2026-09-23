@@ -203,6 +203,12 @@ opening the home page gets **Open the camera** as its first button, and
   strength opens the loop's mix and leaves its gain alone, so the bottom of the
   slider gives echo trails and the top gives the look building on itself.
 - Holding a finger on the picture shows the camera without the look.
+- The round button on the picture's corner lets the phone steer the loop. The
+  phone stands in for the feedback camera: turning it turns the loop, and
+  tipping it moves where each lap lands. On a loop with no camera in it, turning
+  the phone trims the delay, which slides the echoes and turns their hue. A turn
+  fades back over a few seconds, so a hand that holds still gets the look as
+  tuned, and no turn takes a loop past a degree of spin or 2% of shift per lap.
 - **PHOTO** takes a PNG still and **VIDEO** records an MP4. The thumbnail beside
   the shutter opens the phone's share sheet, which is where **Save Image** and
   **Save Video** put the file in the photo library. A browser without a share

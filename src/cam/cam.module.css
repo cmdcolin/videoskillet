@@ -82,6 +82,28 @@
   touch-action: none;
 }
 
+/* The tilt switch sits on the picture, where a phone camera keeps its flash
+   and timer switches. */
+.tilt {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #000000a0;
+  color: #fff;
+  cursor: pointer;
+}
+.tiltOn {
+  background: #fff;
+  color: #000;
+}
+
 .badge {
   position: absolute;
   top: 12px;

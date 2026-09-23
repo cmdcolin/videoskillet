@@ -5,9 +5,11 @@ import { Engine } from '../core/gpu/pipeline'
 import { smpteBars } from '../sources/pattern'
 import { backingStoreSize } from '../ui/canvasSize'
 import { RebuildPolicy } from '../ui/rebuildPolicy'
+import { steered } from './tilt'
 
 import type { Controls, ModSlot } from '../core/controls'
 import type { Fatal } from '../ui/FatalScreen'
+import type { Tilt } from './tilt'
 import type { RefObject } from 'react'
 
 // What the picture is made of: the camera, or bars before there is one, and
@@ -56,6 +58,7 @@ export function useCamEngine(canvasRef: RefObject<HTMLCanvasElement | null>) {
   const [turned, setTurned] = useState(false)
   const shown = useRef<Shown>({ video: null, mirror: false })
   const board = useRef<Board>({ controls: DEFAULT_CONTROLS, mod: [] })
+  const comparing = useRef(false)
 
   const turn = (video: HTMLVideoElement) => {
     setTurned(tall(video))
@@ -80,9 +83,20 @@ export function useCamEngine(canvasRef: RefObject<HTMLCanvasElement | null>) {
     engineRef.current?.setModSlots(next.mod)
   }
 
+  // The look's own board with the hand's steer on top, so a new look or a
+  // level phone lands the board as tuned.
+  const steer = (t: Tilt) => {
+    if (comparing.current) return
+    engineRef.current?.applyControls(
+      steered(board.current.controls, t, tall(shown.current.video)),
+    )
+  }
+
   // Hold to see the camera clean, the way a photo app shows the original.
-  const compare = (on: boolean) =>
+  const compare = (on: boolean) => {
+    comparing.current = on
     engineRef.current?.preview(on ? { ...DEFAULT_CONTROLS } : null)
+  }
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -181,6 +195,7 @@ export function useCamEngine(canvasRef: RefObject<HTMLCanvasElement | null>) {
     turned,
     showVideo,
     showBoard,
+    steer,
     compare,
   }
 }

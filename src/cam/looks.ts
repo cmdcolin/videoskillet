@@ -30,18 +30,27 @@ import type { Controls, ModSlot } from '../core/controls'
 // down. The preset's gain is tuned to how far its geometry spreads each lap,
 // and at a quarter of the zoom and turn the same gain stacks the picture onto
 // itself and walls out to white.
+export const SUBTLE = {
+  zoom: 0.045,
+  rotateDeg: 1,
+  shift: 0.02,
+  delayUs: 1.2,
+  lines: 4,
+  servoUs: 5,
+}
+
 export function subtleLoop(c: Controls): boolean {
   const camera =
     c.fbMix === 0 ||
-    (Math.abs(c.fbZoom - 1) <= 0.045 &&
-      Math.abs(c.fbRotateDeg) <= 1 &&
-      Math.abs(c.fbShiftX) <= 0.02 &&
-      Math.abs(c.fbShiftY) <= 0.02)
+    (Math.abs(c.fbZoom - 1) <= SUBTLE.zoom &&
+      Math.abs(c.fbRotateDeg) <= SUBTLE.rotateDeg &&
+      Math.abs(c.fbShiftX) <= SUBTLE.shift &&
+      Math.abs(c.fbShiftY) <= SUBTLE.shift)
   const mixer =
     c.cfbMix === 0 ||
-    (c.cfbDelayUs <= 1.2 &&
-      Math.abs(c.cfbLines) <= 4 &&
-      Math.abs(c.cfbServoUs) <= 5)
+    (c.cfbDelayUs <= SUBTLE.delayUs &&
+      Math.abs(c.cfbLines) <= SUBTLE.lines &&
+      Math.abs(c.cfbServoUs) <= SUBTLE.servoUs)
   return camera && mixer
 }
 

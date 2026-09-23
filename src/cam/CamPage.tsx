@@ -7,10 +7,11 @@ import { FatalScreen } from '../ui/FatalScreen'
 import { useCapture } from '../ui/useCapture'
 import { useWakeLock } from '../ui/useWakeLock'
 import styles from './cam.module.css'
-import { DiceIcon, FlipIcon, ShareIcon } from './icons'
+import { DiceIcon, FlipIcon, ShareIcon, TiltIcon } from './icons'
 import { CAM_LOOKS, lookBoard, lookLabel, rollLook } from './looks'
 import { useCamEngine } from './useCamEngine'
 import { useCamera } from './useCamera'
+import { useTilt } from './useTilt'
 
 import type { Look } from './looks'
 import type { PointerEvent } from 'react'
@@ -71,6 +72,7 @@ export function CamPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const eng = useCamEngine(canvasRef)
   const cam = useCamera(eng.showVideo)
+  const tilt = useTilt(eng.steer)
   const [look, setLook] = useState<Look | null>(null)
   const [tuning, setTuning] = useState(false)
   const [mode, setMode] = useState<Mode>('photo')
@@ -133,6 +135,16 @@ export function CamPage() {
     }
   }
 
+  const flipTilt = () => {
+    setError('')
+    void tilt.toggle().then(ok => {
+      if (!ok)
+        setError(
+          'Motion access was turned down. Allow it in the browser’s site settings and try again.',
+        )
+    })
+  }
+
   const hold = (on: boolean) => (e: PointerEvent<HTMLCanvasElement>) => {
     if (on) e.currentTarget.setPointerCapture(e.pointerId)
     if (on !== comparing) {
@@ -171,6 +183,17 @@ export function CamPage() {
             onPointerCancel={hold(false)}
             onContextMenu={e => e.preventDefault()}
           />
+          {tilt.supported && cam.state === 'on' ? (
+            <button
+              className={cx(styles.tilt, tilt.on && styles.tiltOn)}
+              aria-pressed={tilt.on}
+              aria-label="steer the loop by tilting the phone"
+              title="steer the loop by tilting the phone"
+              onClick={flipTilt}
+            >
+              <TiltIcon />
+            </button>
+          ) : null}
           {comparing ? <span className={styles.badge}>original</span> : null}
           {capture.recording ? (
             <span className={cx(styles.badge, styles.rec)}>
