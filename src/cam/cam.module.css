@@ -132,6 +132,32 @@
   text-transform: uppercase;
   pointer-events: none;
 }
+/* The look a swipe landed on, named over the picture for a moment. */
+.flash {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 8px 16px;
+  border-radius: 10px;
+  background: #000000a8;
+  color: #fff;
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+}
+/* Where a tap sampled the colour the keyer now slices. */
+.ring {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  margin: -20px 0 0 -20px;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px #0009;
+  pointer-events: none;
+}
 .rec {
   background: #d22;
   font-family: var(--mono);

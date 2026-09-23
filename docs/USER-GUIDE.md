@@ -202,7 +202,11 @@ opening the home page gets **Open the camera** as its first button, and
   strength, and **random** picks another loop of that kind. On a loop the
   strength opens the loop's mix and leaves its gain alone, so the bottom of the
   slider gives echo trails and the top gives the look building on itself.
-- Holding a finger on the picture shows the camera without the look.
+- Holding a finger on the picture shows the camera without the look. Swiping
+  across it steps to the next or previous look on the strip.
+- On a look that keys its loop by colour, such as **it only eats the red** or
+  **the face stays out of it**, a tap on the picture moves the key to the
+  camera's colour under the finger.
 - The round button on the picture's corner lets the phone steer the loop. The
   phone stands in for the feedback camera: turning it turns the loop, and
   tipping it moves where each lap lands. On a loop with no camera in it, turning

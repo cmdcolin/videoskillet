@@ -77,6 +77,7 @@ export const CAM_LOOKS = [
   'carvedByTheLivePicture',
   'chasingItsOwnColour',
   'itOnlyEatsTheRed',
+  'theFaceStaysOutOfIt',
   'runaway',
   'vhs',
   'verticalHoldGone',

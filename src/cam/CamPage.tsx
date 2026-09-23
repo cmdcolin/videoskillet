@@ -15,6 +15,7 @@ import {
   TapeIcon,
   TiltIcon,
 } from './icons'
+import { aimKey, chromaHue, colourAt, keysOnHue, sourcePoint } from './keyed'
 import {
   CAM_LOOKS,
   CAM_MIX_LOOKS,
@@ -32,6 +33,20 @@ import type { Look } from './looks'
 import type { PointerEvent } from 'react'
 
 type Mode = 'photo' | 'video'
+
+// A press becomes the original after it has been held this long, so a swipe or
+// a tap never flashes it.
+const HOLD_MS = 180
+const SWIPE_PX = 40
+const TAP_PX = 10
+
+interface Gesture {
+  id: number
+  x: number
+  y: number
+  timer: number
+  kind: 'pending' | 'compare' | 'swipe'
+}
 
 // The last thing the shutter made, held until the next one replaces it.
 interface Shot {
@@ -97,6 +112,17 @@ export function CamPage() {
   const [recSince, setRecSince] = useState(0)
   const second = useSecond(eng, cam, setError)
   const [sound, setSound] = useState(false)
+  // Where a tap has aimed the look's hue keyer, while that look is up.
+  const [keyHue, setKeyHue] = useState<number | null>(null)
+  const [flash, setFlash] = useState('')
+  const [ring, setRing] = useState<{
+    x: number
+    y: number
+    rgb: string
+  } | null>(null)
+  const gesture = useRef<Gesture | null>(null)
+  const flashTimer = useRef(0)
+  const ringTimer = useRef(0)
 
   const capture = useCapture(
     canvasRef,
@@ -120,9 +146,17 @@ export function CamPage() {
 
   useWakeLock(eng.engine !== null)
 
+  const show = (next: Look | null, hue: number | null) => {
+    const board = lookBoard(next)
+    eng.showBoard({ ...board, controls: aimKey(board.controls, hue) })
+  }
+  // A tap's aim lasts while its look stays up, through a change of strength.
   const land = (next: Look | null) => {
+    const hue =
+      next !== null && look !== null && next.name === look.name ? keyHue : null
     setLook(next)
-    eng.showBoard(lookBoard(next))
+    setKeyHue(hue)
+    show(next, hue)
   }
   // A second press on the look already up opens its strength, the way a photo
   // app's filter does.
@@ -195,13 +229,114 @@ export function CamPage() {
     )
   }
 
-  const hold = (on: boolean) => (e: PointerEvent<HTMLCanvasElement>) => {
-    if (on) e.currentTarget.setPointerCapture(e.pointerId)
-    if (on !== comparing) {
-      setComparing(on)
-      eng.compare(on)
+  const announce = (text: string) => {
+    setFlash(text)
+    window.clearTimeout(flashTimer.current)
+    flashTimer.current = window.setTimeout(() => setFlash(''), 900)
+  }
+
+  // A swipe steps along the strip, the way a phone camera steps through its
+  // filters, with normal at the start.
+  const step = (dir: 1 | -1) => {
+    const order: (string | null)[] = [null, ...strip]
+    const at = look === null || look.rolled ? 0 : order.indexOf(look.name)
+    const name = order[(Math.max(at, 0) + dir + order.length) % order.length]
+    setTuning(false)
+    land(name === null ? null : { name, strength: 1, rolled: false })
+    announce(
+      name === null
+        ? 'normal'
+        : lookLabel({ name, strength: 1, rolled: false }),
+    )
+    document
+      .querySelector(`[data-look="${name ?? 'normal'}"]`)
+      ?.scrollIntoView({
+        inline: 'center',
+        block: 'nearest',
+        behavior: 'smooth',
+      })
+  }
+
+  // A tap on a look that keys its loop by hue moves the key to the camera's
+  // colour under the finger.
+  const tap = (e: PointerEvent<HTMLCanvasElement>) => {
+    const c = eng.camera()
+    if (c === null || !keysOnHue(lookBoard(look).controls)) return
+    const rect = e.currentTarget.getBoundingClientRect()
+    const at = {
+      x: (e.clientX - rect.left) / rect.width,
+      y: (e.clientY - rect.top) / rect.height,
+    }
+    const rgb = colourAt(
+      c.video,
+      sourcePoint(at, rect, {
+        width: c.video.videoWidth,
+        height: c.video.videoHeight,
+        mirror: c.mirror,
+      }),
+    )
+    if (rgb === null) return
+    const hue = chromaHue(...rgb)
+    if (hue === null) {
+      announce('no colour there to key on')
+      return
+    }
+    setKeyHue(hue)
+    show(look, hue)
+    setRing({
+      ...at,
+      rgb: `rgb(${rgb.map(v => Math.round(v * 255)).join(' ')})`,
+    })
+    window.clearTimeout(ringTimer.current)
+    ringTimer.current = window.setTimeout(() => setRing(null), 800)
+  }
+
+  const press = (e: PointerEvent<HTMLCanvasElement>) => {
+    e.currentTarget.setPointerCapture(e.pointerId)
+    const timer = window.setTimeout(() => {
+      const g = gesture.current
+      if (g !== null && g.kind === 'pending') {
+        g.kind = 'compare'
+        setComparing(true)
+        eng.compare(true)
+      }
+    }, HOLD_MS)
+    gesture.current = {
+      id: e.pointerId,
+      x: e.clientX,
+      y: e.clientY,
+      timer,
+      kind: 'pending',
     }
   }
+  const drag = (e: PointerEvent<HTMLCanvasElement>) => {
+    const g = gesture.current
+    if (g === null || g.id !== e.pointerId || g.kind !== 'pending') return
+    const dx = e.clientX - g.x
+    const dy = e.clientY - g.y
+    if (Math.abs(dx) > SWIPE_PX && Math.abs(dx) > 1.5 * Math.abs(dy)) {
+      window.clearTimeout(g.timer)
+      g.kind = 'swipe'
+      step(dx < 0 ? 1 : -1)
+    }
+  }
+  const release =
+    (cancelled: boolean) => (e: PointerEvent<HTMLCanvasElement>) => {
+      const g = gesture.current
+      if (g === null || g.id !== e.pointerId) return
+      window.clearTimeout(g.timer)
+      gesture.current = null
+      if (g.kind === 'compare') {
+        setComparing(false)
+        eng.compare(false)
+      } else if (
+        !cancelled &&
+        g.kind === 'pending' &&
+        Math.hypot(e.clientX - g.x, e.clientY - g.y) < TAP_PX
+      ) {
+        tap(e)
+      }
+    }
 
   if (eng.fatal !== null) return <FatalScreen fatal={eng.fatal} />
 
@@ -230,10 +365,11 @@ export function CamPage() {
           <canvas
             ref={canvasRef}
             className={styles.canvas}
-            title="hold to see the camera without the look"
-            onPointerDown={hold(true)}
-            onPointerUp={hold(false)}
-            onPointerCancel={hold(false)}
+            title="hold to see the camera without the look, swipe for another look"
+            onPointerDown={press}
+            onPointerMove={drag}
+            onPointerUp={release(false)}
+            onPointerCancel={release(true)}
             onContextMenu={e => e.preventDefault()}
           />
           {cam.state === 'on' ? (
@@ -292,6 +428,17 @@ export function CamPage() {
             <span className={styles.badge}>second camera</span>
           ) : null}
           {comparing ? <span className={styles.badge}>original</span> : null}
+          {flash === '' ? null : <span className={styles.flash}>{flash}</span>}
+          {ring === null ? null : (
+            <span
+              className={styles.ring}
+              style={{
+                left: `${ring.x * 100}%`,
+                top: `${ring.y * 100}%`,
+                background: ring.rgb,
+              }}
+            />
+          )}
           {capture.recording ? (
             <span className={cx(styles.badge, styles.rec)}>
               <Elapsed since={recSince} />
@@ -350,6 +497,7 @@ export function CamPage() {
           </button>
           <button
             className={cx(styles.chip, look === null && styles.chipOn)}
+            data-look="normal"
             onClick={pickNormal}
           >
             normal
@@ -359,6 +507,7 @@ export function CamPage() {
             return (
               <button
                 key={name}
+                data-look={name}
                 className={cx(styles.chip, on && styles.chipOn)}
                 aria-pressed={on}
                 onClick={() => pick(name)}
