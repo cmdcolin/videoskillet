@@ -7,7 +7,14 @@ import { FatalScreen } from '../ui/FatalScreen'
 import { useCapture } from '../ui/useCapture'
 import { useWakeLock } from '../ui/useWakeLock'
 import styles from './cam.module.css'
-import { DiceIcon, FlipIcon, ShareIcon, TapeIcon, TiltIcon } from './icons'
+import {
+  DiceIcon,
+  FlipIcon,
+  MicIcon,
+  ShareIcon,
+  TapeIcon,
+  TiltIcon,
+} from './icons'
 import {
   CAM_LOOKS,
   CAM_MIX_LOOKS,
@@ -89,6 +96,7 @@ export function CamPage() {
   const [error, setError] = useState('')
   const [recSince, setRecSince] = useState(0)
   const tape = useTape(eng, setError)
+  const [sound, setSound] = useState(false)
 
   const capture = useCapture(
     canvasRef,
@@ -174,6 +182,18 @@ export function CamPage() {
     }
   }
 
+  const flipSound = () => {
+    setError('')
+    const next = !sound
+    eng.hear(next).then(
+      () => setSound(next),
+      () =>
+        setError(
+          'Microphone access was turned down. Allow it in the browser’s site settings and try again.',
+        ),
+    )
+  }
+
   const hold = (on: boolean) => (e: PointerEvent<HTMLCanvasElement>) => {
     if (on) e.currentTarget.setPointerCapture(e.pointerId)
     if (on !== comparing) {
@@ -215,40 +235,51 @@ export function CamPage() {
             onPointerCancel={hold(false)}
             onContextMenu={e => e.preventDefault()}
           />
-          {tilt.supported && cam.state === 'on' ? (
-            <button
-              className={cx(styles.switch, styles.tilt, tilt.on && styles.on)}
-              aria-pressed={tilt.on}
-              aria-label="steer the loop by tilting the phone"
-              title="steer the loop by tilting the phone"
-              onClick={flipTilt}
-            >
-              <TiltIcon />
-            </button>
+          {cam.state === 'on' ? (
+            <div className={cx(styles.switches, styles.left)}>
+              {tilt.supported ? (
+                <button
+                  className={cx(styles.switch, tilt.on && styles.on)}
+                  aria-pressed={tilt.on}
+                  aria-label="steer the loop by tilting the phone"
+                  title="steer the loop by tilting the phone"
+                  onClick={flipTilt}
+                >
+                  <TiltIcon />
+                </button>
+              ) : null}
+              <button
+                className={cx(styles.switch, sound && styles.on)}
+                aria-pressed={sound}
+                aria-label="let the room's sound shake the set"
+                title="let the room's sound shake the set"
+                onClick={flipSound}
+              >
+                <MicIcon />
+              </button>
+            </div>
           ) : null}
           {cam.state === 'on' ? (
-            <button
-              className={cx(
-                styles.switch,
-                styles.tape,
-                tape.loaded && styles.on,
-              )}
-              aria-pressed={tape.loaded}
-              aria-label={
-                tape.loaded
-                  ? 'take the tape off B'
-                  : 'record a tape to mix under the camera'
-              }
-              title={
-                tape.loaded
-                  ? 'take the tape off B'
-                  : 'record a tape to mix under the camera'
-              }
-              disabled={tape.left > 0 || capture.recording}
-              onClick={tape.loaded ? ejectTape : recordTape}
-            >
-              <TapeIcon />
-            </button>
+            <div className={cx(styles.switches, styles.right)}>
+              <button
+                className={cx(styles.switch, tape.loaded && styles.on)}
+                aria-pressed={tape.loaded}
+                aria-label={
+                  tape.loaded
+                    ? 'take the tape off B'
+                    : 'record a tape to mix under the camera'
+                }
+                title={
+                  tape.loaded
+                    ? 'take the tape off B'
+                    : 'record a tape to mix under the camera'
+                }
+                disabled={tape.left > 0 || capture.recording}
+                onClick={tape.loaded ? ejectTape : recordTape}
+              >
+                <TapeIcon />
+              </button>
+            </div>
           ) : null}
           {tape.left > 0 ? (
             <span className={cx(styles.badge, styles.rec)}>

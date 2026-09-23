@@ -82,11 +82,22 @@
   touch-action: none;
 }
 
-/* The tilt and tape switches sit on the picture, where a phone camera keeps
-   its flash and timer switches. */
-.switch {
+/* The switches sit on the picture, where a phone camera keeps its flash and
+   timer switches. */
+.switches {
   position: absolute;
   top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.left {
+  left: 10px;
+}
+.right {
+  right: 10px;
+}
+.switch {
   display: grid;
   place-items: center;
   width: 38px;
@@ -105,12 +116,6 @@
 .on {
   background: #fff;
   color: #000;
-}
-.tilt {
-  left: 10px;
-}
-.tape {
-  right: 10px;
 }
 
 .badge {

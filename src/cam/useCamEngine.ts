@@ -5,6 +5,7 @@ import { Engine } from '../core/gpu/pipeline'
 import { smpteBars } from '../sources/pattern'
 import { backingStoreSize } from '../ui/canvasSize'
 import { RebuildPolicy } from '../ui/rebuildPolicy'
+import { sounded } from './sound'
 import { steered } from './tilt'
 
 import type { Controls, ModSlot } from '../core/controls'
@@ -35,8 +36,8 @@ const tall = (video: HTMLVideoElement | null) =>
 // here, so an engine replacing a lost one comes up on the same camera and look.
 // A <video> belongs to the browser and plays straight through a device loss, so
 // it only needs attaching again; the bars lived in a texture and are re-issued.
-function dress(engine: Engine, shown: Shown, board: Board) {
-  engine.applyControls(board.controls)
+function dress(engine: Engine, shown: Shown, board: Board, sound: boolean) {
+  engine.applyControls(sound ? sounded(board.controls) : board.controls)
   engine.setModSlots(board.mod)
   engine.setVideoSourceB(shown.tape)
   engine.setSourceBEnabled(shown.tape !== null)
@@ -62,6 +63,8 @@ export function useCamEngine(canvasRef: RefObject<HTMLCanvasElement | null>) {
   const shown = useRef<Shown>({ video: null, mirror: false, tape: null })
   const board = useRef<Board>({ controls: DEFAULT_CONTROLS, mod: [] })
   const comparing = useRef(false)
+  const heard = useRef(false)
+  const onSet = (c: Controls) => (heard.current ? sounded(c) : c)
 
   const turn = (video: HTMLVideoElement) => {
     setTurned(tall(video))
@@ -94,7 +97,7 @@ export function useCamEngine(canvasRef: RefObject<HTMLCanvasElement | null>) {
 
   const showBoard = (next: Board) => {
     board.current = next
-    engineRef.current?.applyControls(next.controls)
+    engineRef.current?.applyControls(onSet(next.controls))
     engineRef.current?.setModSlots(next.mod)
   }
 
@@ -105,6 +108,17 @@ export function useCamEngine(canvasRef: RefObject<HTMLCanvasElement | null>) {
     engineRef.current?.applyControls(
       steered(board.current.controls, t, tall(shown.current.video)),
     )
+  }
+
+  // The room's sound through the microphone, onto the set's supply. Rejects
+  // when the phone refuses the microphone.
+  const hear = async (on: boolean) => {
+    const audio = engineRef.current?.audioState
+    if (audio === undefined) return
+    if (on) await audio.enableMic()
+    else audio.disconnect()
+    heard.current = on
+    engineRef.current?.applyControls(onSet(board.current.controls))
   }
 
   // Hold to see the camera clean, the way a photo app shows the original.
@@ -144,13 +158,13 @@ export function useCamEngine(canvasRef: RefObject<HTMLCanvasElement | null>) {
     window.addEventListener('pagehide', onPageHide)
 
     const losses = new RebuildPolicy()
-    const create = (onFail: (e: unknown) => void) =>
-      Engine.create(canvas).then(created => {
+    const create = (onFail: (e: unknown) => void, dead?: Engine) =>
+      Engine.create(canvas, { audio: dead?.audioState }).then(created => {
         if (disposed) {
           created.destroy()
           return
         }
-        dress(created, shown.current, board.current)
+        dress(created, shown.current, board.current, heard.current)
         engineRef.current = created
         setEngine(created)
         window.vf = created
@@ -174,12 +188,15 @@ export function useCamEngine(canvasRef: RefObject<HTMLCanvasElement | null>) {
       }
       setRebuilding(true)
       dead.destroy({ keepAudio: true })
-      void create(e =>
-        setFatal({
-          title: 'WebGPU device lost',
-          body: `The GPU device went away and could not be replaced: ${reason(e)}`,
-          kind: 'lost',
-        }),
+      // The replacement takes over the audio graph, and with it a live mic.
+      void create(
+        e =>
+          setFatal({
+            title: 'WebGPU device lost',
+            body: `The GPU device went away and could not be replaced: ${reason(e)}`,
+            kind: 'lost',
+          }),
+        dead,
       ).finally(() => setRebuilding(false))
     }
 
@@ -212,6 +229,7 @@ export function useCamEngine(canvasRef: RefObject<HTMLCanvasElement | null>) {
     showTape,
     camera,
     showBoard,
+    hear,
     steer,
     compare,
   }

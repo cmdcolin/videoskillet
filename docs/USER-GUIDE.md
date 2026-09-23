@@ -220,6 +220,10 @@ opening the home page gets **Open the camera** as its first button, and
   mounts its tube, so the camera's tall picture fills a 3:4 screen whole. The
   scanlines run down the glass, a rolling picture slides sideways, and stills
   and videos come out tall.
+- The microphone switch lets the room's sound into the set. A cheap set runs its
+  audio amplifier off the same supply as the scan, so each kick drum loads the
+  supply and the picture jolts and rings back. A look that already works the
+  supply harder keeps its own settings.
 - The cassette on the picture's other corner records four seconds of the camera
   to a tape and loops it on source B, the way a studio rolled a deck into a
   mixer's second input. The page then turns to the other camera and mixes the
