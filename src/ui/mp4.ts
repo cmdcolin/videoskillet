@@ -125,6 +125,10 @@ const MATRIX = join([
 // dropping a byte is what keeps this correct on a browser without the bug: a
 // real SPS's second byte is `profile_idc` (0x64 for the High profile
 // `record.ts` now asks for) and can never equal its own NAL header, so the two being identical is unambiguous.
+// Parameter sets as avcC lists them, each behind its two-byte length.
+const lengths = (list: { data: Uint8Array }[]) =>
+  list.flatMap(s => [u16(s.data.length), s.data])
+
 export function normaliseAvcc(raw: Uint8Array): Uint8Array {
   // Too short to be a record at all — hand it back and let the file fail
   // visibly rather than inventing parameter sets nothing came from.
@@ -157,9 +161,6 @@ export function normaliseAvcc(raw: Uint8Array): Uint8Array {
   const pps = sets.filter(s => s.type === 8)
   if (sps.length === 0) return raw
 
-  const lengths = (list: { data: Uint8Array }[]) =>
-    list.flatMap(s => [u16(s.data.length), s.data])
-
   return join([
     // Version, and the profile/compat/level triplet, which are the first three
     // bytes of the SPS itself and are taken from there rather than from the
@@ -184,6 +185,25 @@ export interface Sample {
   key: boolean
 }
 
+// One encoded block of sound, as it comes off `AudioEncoder`, and how many
+// sample periods it covers.
+export interface AudioSample {
+  data: Uint8Array
+  frames: number
+}
+
+export interface Mp4Audio {
+  codec: 'aac' | 'opus'
+  sampleRate: number
+  channels: number
+  // AAC's AudioSpecificConfig, which `esds` carries. Opus has none.
+  config: Uint8Array | null
+  // Opus's pre-skip in 48 kHz samples, which `dOps` carries: the encoder's
+  // lookahead, for a player to drop off the front.
+  preSkip: number
+  samples: readonly AudioSample[]
+}
+
 interface Mp4Spec {
   width: number
   height: number
@@ -195,6 +215,164 @@ interface Mp4Spec {
   // unplayable; `VideoEncoder` hands it over on the first chunk's metadata.
   avcc: Uint8Array
   samples: readonly Sample[]
+  audio?: Mp4Audio
+}
+
+// An MPEG-4 descriptor: a tag, a length and a body. Every one written here is
+// under 128 bytes, which is what lets the length be the single-byte form.
+const descriptor = (tag: number, ...parts: Uint8Array[]): Uint8Array => {
+  const body = join(parts)
+  if (body.length > 127) throw new Error(`descriptor ${tag} too long`)
+  return join([u8(tag, body.length), body])
+}
+
+// The sound's sample entry. Both codecs share the audio entry's fixed fields
+// and differ in the box after them: `esds` wraps AAC's AudioSpecificConfig in
+// the MPEG-4 descriptors, and `dOps` states what an Opus decoder needs.
+function soundEntry(a: Mp4Audio, bitrate: number): Uint8Array {
+  const tail =
+    a.codec === 'aac'
+      ? fullBox(
+          'esds',
+          0,
+          0,
+          descriptor(
+            0x03,
+            u16(1),
+            u8(0),
+            descriptor(
+              0x04,
+              // MPEG-4 audio, an audio stream, then a buffer size nothing reads.
+              u8(0x40, 0x15, 0, 0, 0),
+              u32(bitrate),
+              u32(bitrate),
+              descriptor(0x05, a.config ?? new Uint8Array()),
+            ),
+            descriptor(0x06, u8(0x02)),
+          ),
+        )
+      : box(
+          'dOps',
+          u8(0, a.channels),
+          u16(a.preSkip),
+          u32(a.sampleRate),
+          u16(0),
+          u8(0),
+        )
+  return box(
+    a.codec === 'aac' ? 'mp4a' : 'Opus',
+    u8(0, 0, 0, 0, 0, 0),
+    u16(1),
+    u32(0),
+    u32(0),
+    u16(a.channels),
+    u16(16),
+    u16(0),
+    u16(0),
+    u32(a.sampleRate * 0x10000),
+    tail,
+  )
+}
+
+// A time-to-sample table, one entry per run of equal durations. AAC is one
+// run, since every block is 1024 periods; Opus varies with its frame size.
+function timeToSample(durations: readonly number[]): Uint8Array {
+  const runs: [number, number][] = []
+  for (const d of durations) {
+    const last = runs.at(-1)
+    if (last !== undefined && last[1] === d) last[0]++
+    else runs.push([1, d])
+  }
+  return fullBox(
+    'stts',
+    0,
+    0,
+    u32(runs.length),
+    join(runs.flatMap(([count, d]) => [u32(count), u32(d)])),
+  )
+}
+
+// A track's samples as one chunk at `offset` in the file.
+const oneChunk = (sizes: readonly number[], offset: number): Uint8Array[] => [
+  fullBox('stsc', 0, 0, u32(1), u32(1), u32(sizes.length), u32(1)),
+  fullBox('stsz', 0, 0, u32(0), u32(sizes.length), join(sizes.map(u32))),
+  fullBox('stco', 0, 0, u32(1), u32(offset)),
+]
+
+const dinf = () =>
+  box('dinf', fullBox('dref', 0, 0, u32(1), fullBox('url ', 0, 1)))
+
+function soundTrak(
+  a: Mp4Audio,
+  offset: number,
+  movieDuration: number,
+): Uint8Array {
+  const frames = a.samples.reduce((n, s) => n + s.frames, 0)
+  const bytes = a.samples.reduce((n, s) => n + s.data.length, 0)
+  const bitrate =
+    frames > 0 ? Math.round((bytes * 8 * a.sampleRate) / frames) : 0
+  return box(
+    'trak',
+    fullBox(
+      'tkhd',
+      0,
+      3,
+      NO_DATE,
+      NO_DATE,
+      u32(2),
+      u32(0),
+      u32(movieDuration),
+      u32(0),
+      u32(0),
+      // Layer, alternate group, full volume, reserved.
+      u16(0),
+      u16(1),
+      u16(0x0100),
+      u16(0),
+      MATRIX,
+      u32(0),
+      u32(0),
+    ),
+    box(
+      'mdia',
+      fullBox(
+        'mdhd',
+        0,
+        0,
+        NO_DATE,
+        NO_DATE,
+        u32(a.sampleRate),
+        u32(frames),
+        u16(0x55c4),
+        u16(0),
+      ),
+      fullBox(
+        'hdlr',
+        0,
+        0,
+        u32(0),
+        str('soun'),
+        u32(0),
+        u32(0),
+        u32(0),
+        str('SoundHandler\0'),
+      ),
+      box(
+        'minf',
+        fullBox('smhd', 0, 0, u16(0), u16(0)),
+        dinf(),
+        box(
+          'stbl',
+          fullBox('stsd', 0, 0, u32(1), soundEntry(a, bitrate)),
+          timeToSample(a.samples.map(s => s.frames)),
+          ...oneChunk(
+            a.samples.map(s => s.data.length),
+            offset,
+          ),
+        ),
+      ),
+    ),
+  )
 }
 
 // Movie timescale. 1000 is conventional and is only used for the durations in
@@ -213,11 +391,25 @@ export function writeMp4(spec: Mp4Spec): Uint8Array {
   const delta = fps.den
   const n = samples.length
   const trackDuration = n * delta
-  const movieDuration = Math.round(
+  const videoDuration = Math.round(
     (trackDuration / timescale) * MOVIE_TIMESCALE,
   )
+  const audio = spec.audio
+  const audioDuration =
+    audio === undefined
+      ? 0
+      : Math.round(
+          (audio.samples.reduce((t, s) => t + s.frames, 0) / audio.sampleRate) *
+            MOVIE_TIMESCALE,
+        )
+  const movieDuration = Math.max(videoDuration, audioDuration)
 
-  const mdatPayload = join(samples.map(s => s.data))
+  // The picture's samples, then the sound's, each track one chunk.
+  const videoBytes = samples.reduce((t, s) => t + s.data.length, 0)
+  const mdatPayload = join([
+    ...samples.map(s => s.data),
+    ...(audio?.samples.map(s => s.data) ?? []),
+  ])
   const ftyp = box(
     'ftyp',
     str('isom'),
@@ -280,20 +472,13 @@ export function writeMp4(spec: Mp4Spec): Uint8Array {
             join(samples.flatMap((s, i) => (s.key ? [u32(i + 1)] : []))),
           ),
         ]),
-    // One chunk holding every sample, so this is one entry rather than one per
-    // frame: first chunk 1, N samples in it, description 1.
-    fullBox('stsc', 0, 0, u32(1), u32(1), u32(n), u32(1)),
-    // A sample size table rather than a single constant, because encoded frames
-    // are not the same length. The 0 is "sizes are listed individually".
-    fullBox(
-      'stsz',
-      0,
-      0,
-      u32(0),
-      u32(n),
-      join(samples.map(s => u32(s.data.length))),
+    // One chunk holding every sample, so `stsc` is one entry rather than one
+    // per frame. The sizes are listed one by one, because encoded frames are
+    // not the same length.
+    ...oneChunk(
+      samples.map(s => s.data.length),
+      sampleStart,
     ),
-    fullBox('stco', 0, 0, u32(1), u32(sampleStart)),
   )
 
   const moov = box(
@@ -315,7 +500,7 @@ export function writeMp4(spec: Mp4Spec): Uint8Array {
       MATRIX,
       // Six predefined words, then the id the next track would take.
       new Uint8Array(24),
-      u32(2),
+      u32(audio === undefined ? 2 : 3),
     ),
     box(
       'trak',
@@ -328,7 +513,7 @@ export function writeMp4(spec: Mp4Spec): Uint8Array {
         NO_DATE,
         u32(1),
         u32(0),
-        u32(movieDuration),
+        u32(videoDuration),
         u32(0),
         u32(0),
         // Layer, alternate group, volume (0 for video), reserved.
@@ -373,11 +558,14 @@ export function writeMp4(spec: Mp4Spec): Uint8Array {
           fullBox('vmhd', 0, 1, u16(0), u16(0), u16(0), u16(0)),
           // The data is in this file, which is what the self-contained flag on
           // `url ` says — hence a `dref` with one entry and no actual URL.
-          box('dinf', fullBox('dref', 0, 0, u32(1), fullBox('url ', 0, 1))),
+          dinf(),
           stbl,
         ),
       ),
     ),
+    ...(audio === undefined
+      ? []
+      : [soundTrak(audio, sampleStart + videoBytes, audioDuration)]),
   )
 
   return join([ftyp, mdat, moov])

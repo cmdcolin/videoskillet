@@ -223,7 +223,9 @@ opening the home page gets **Open the camera** as its first button, and
 - The microphone switch lets the room's sound into the set. A cheap set runs its
   audio amplifier off the same supply as the scan, so each kick drum loads the
   supply and the picture jolts and rings back. A look that already works the
-  supply harder keeps its own settings.
+  supply harder keeps its own settings. While the switch is on, **VIDEO**
+  records the sound with the picture, as AAC where the browser can encode it and
+  Opus where it cannot.
 - The cassette on the picture's other corner records four seconds of the camera
   to a tape and loops it on source B, the way a studio rolled a deck into a
   mixer's second input. The page then turns to the other camera and mixes the

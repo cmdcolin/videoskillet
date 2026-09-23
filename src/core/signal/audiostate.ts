@@ -116,6 +116,14 @@ export interface AnalysisSource {
 // `lowEnergy`'s bin arithmetic lands on the same frequencies.
 export const ANALYSIS_FFT = 2048
 
+// The analysed input as something else can listen to: a recorder taking the
+// sound with the picture. `listen` wires the input into `node` and hands back
+// the unwiring.
+export interface InputTap {
+  context: AudioContext
+  listen: (node: AudioNode) => () => void
+}
+
 export class AudioState {
   readonly data: Float32Array<ArrayBuffer> = new Float32Array(LINES)
   private scratch = new Float32Array(2048)
@@ -156,6 +164,28 @@ export class AudioState {
 
   get active(): boolean {
     return this.input !== null || this.routed.length > 0
+  }
+
+  // The analysed input for a recorder, or null while nothing is analysed. It
+  // shares this object's context, which a tap already made running, so a
+  // recorder need not start a context of its own outside a tap.
+  tap(): InputTap | null {
+    const input = this.input
+    const g = this.graph
+    if (input === null || g === null) return null
+    return {
+      context: g.ctx,
+      listen: node => {
+        input.connect(node)
+        return () => {
+          try {
+            input.disconnect(node)
+          } catch {
+            // Already gone with the input it hung off.
+          }
+        }
+      },
+    }
   }
 
   // Build the graph on first use and size the analysis buffers to it, shared by

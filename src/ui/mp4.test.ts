@@ -246,3 +246,81 @@ describe('writeMp4', () => {
     expect(u32At(find(kids(stts), 'stts').body, 8)).toBe(3600)
   })
 })
+
+describe('writeMp4 with sound', () => {
+  const ASC = Uint8Array.from([0x11, 0x88])
+  const withSound = (codec: 'aac' | 'opus', frames: number[]) =>
+    writeMp4({
+      width: 640,
+      height: 480,
+      fps: { num: 60, den: 1 },
+      avcc: AVCC,
+      samples: [sample(100, true), sample(60)],
+      audio: {
+        codec,
+        sampleRate: 48000,
+        channels: 1,
+        config: codec === 'aac' ? ASC : null,
+        preSkip: 312,
+        samples: frames.map((f, i) => ({
+          data: new Uint8Array(20 + i).fill(0xa0 + i),
+          frames: f,
+        })),
+      },
+    })
+
+  const traks = (out: Uint8Array) =>
+    kids(find(boxes(out), 'moov')).filter(b => b.type === 'trak')
+  const mdiaOf = (trak: Box) => find(kids(trak), 'mdia')
+  const stblOf = (trak: Box) =>
+    find(kids(find(kids(mdiaOf(trak)), 'minf')), 'stbl')
+  // A sample entry's own fields run 28 bytes before its child box.
+  const entryKids = (entry: Box) => boxes(entry.body, 28, entry.body.length)
+
+  it('adds a sound track after the picture', () => {
+    const out = withSound('aac', [1024, 1024, 1024])
+    const handler = (t: Box) =>
+      String.fromCharCode(...find(kids(mdiaOf(t)), 'hdlr').body.slice(8, 12))
+    expect(traks(out).map(handler)).toEqual(['vide', 'soun'])
+    // mvhd's next track id moves past the sound's.
+    const mvhd = find(kids(find(boxes(out), 'moov')), 'mvhd')
+    expect(u32At(mvhd.body, 96)).toBe(3)
+  })
+
+  // The sound's chunk sits straight after the picture's samples in mdat.
+  it('points the sound at its own bytes', () => {
+    const out = withSound('aac', [1024, 1024])
+    const stco = find(kids(stblOf(traks(out)[1])), 'stco')
+    const offset = u32At(stco.body, 8)
+    expect(offset).toBe(find(boxes(out), 'mdat').start + 8 + 160)
+    expect(out[offset]).toBe(0xa0)
+    expect(out[offset + 20]).toBe(0xa1)
+  })
+
+  it('carries the AudioSpecificConfig in esds', () => {
+    const stbl = stblOf(traks(withSound('aac', [1024]))[1])
+    const [entry] = stsdKids(find(kids(stbl), 'stsd'))
+    expect(entry.type).toBe('mp4a')
+    const body = Array.from(find(entryKids(entry), 'esds').body)
+    const at = body.indexOf(0x05)
+    expect(body.slice(at, at + 4)).toEqual([0x05, 2, 0x11, 0x88])
+  })
+
+  it('states Opus with its pre-skip and runs of frame sizes', () => {
+    const stbl = stblOf(traks(withSound('opus', [960, 960, 480]))[1])
+    const [entry] = stsdKids(find(kids(stbl), 'stsd'))
+    expect(entry.type).toBe('Opus')
+    const dops = find(entryKids(entry), 'dOps')
+    expect(dops.body[1]).toBe(1) // channels
+    expect((dops.body[2] << 8) | dops.body[3]).toBe(312)
+    const stts = find(kids(stbl), 'stts')
+    expect(u32At(stts.body, 4)).toBe(2) // two runs
+    expect([8, 12, 16, 20].map(i => u32At(stts.body, i))).toEqual([
+      2, 960, 1, 480,
+    ])
+  })
+
+  it('leaves a silent take one track long', () => {
+    expect(traks(file([sample(100, true), sample(60)]))).toHaveLength(1)
+  })
+})

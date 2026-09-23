@@ -20,7 +20,9 @@
 // per frame it cost.
 
 import { writeMp4 } from './mp4'
+import { startAudio } from './recordAudio'
 
+import type { InputTap } from '../core/signal/audiostate'
 import type { Sample } from './mp4'
 
 // H.264, and neither half of the codec string is a constant.
@@ -97,6 +99,10 @@ interface RecorderSpec {
   width: number
   height: number
   fps: { num: number; den: number }
+  // The sound to take with the picture. It starts on the first frame, so it
+  // stays in step only with a caller that hands frames at the wall clock's
+  // pace.
+  audio?: InputTap | null
 }
 
 export interface Recorder {
@@ -210,6 +216,11 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
   })
 
   encoder.configure(configFor(codec))
+  // A take whose sound cannot be encoded is still a take, silent.
+  const sound =
+    spec.audio === undefined || spec.audio === null
+      ? null
+      : await startAudio(spec.audio).catch(() => null)
 
   return {
     frames: () => count,
@@ -237,15 +248,20 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
       // GPU or system buffer, and a few unreleased ones stall the encoder
       // outright.
       frame.close()
+      if (count === 0) sound?.go()
       count++
     },
     abort: () => {
       closed = true
+      sound?.abort()
       if (encoder.state !== 'closed') encoder.close()
       samples.length = 0
     },
     finish: async () => {
       closed = true
+      // The sound stops with the last frame, before the picture's flush, which
+      // takes long enough to leave the sound half a second over.
+      const heard = sound === null ? Promise.resolve(null) : sound.finish()
       if (encoder.state === 'configured') await encoder.flush()
       if (encoder.state !== 'closed') encoder.close()
       if (failure !== '') throw new Error(failure)
@@ -253,13 +269,21 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
       if (avcc === null) {
         throw new Error('the encoder produced no parameter sets')
       }
+      const audio = await heard
       // Copied into a fresh ArrayBuffer rather than asserted into one. A
       // `Uint8Array` is a `BlobPart` at runtime in every browser, but its
       // buffer is typed `ArrayBufferLike` — which could be shared — and the
       // cast that quiets that is the kind this codebase does not take. One copy
       // of a file already held whole in memory is not the cost worth arguing
       // over.
-      const file = writeMp4({ width, height, fps, avcc, samples })
+      const file = writeMp4({
+        width,
+        height,
+        fps,
+        avcc,
+        samples,
+        ...(audio === null ? {} : { audio }),
+      })
       const out = new ArrayBuffer(file.length)
       new Uint8Array(out).set(file)
       return new Blob([out], { type: 'video/mp4' })

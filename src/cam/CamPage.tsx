@@ -109,7 +109,7 @@ export function CamPage() {
         url: URL.createObjectURL(blob),
         video: blob.type.startsWith('video/'),
       }),
-    { clock: true },
+    { clock: true, audio: () => eng.engine?.audioState.tap() ?? null },
   )
 
   useEffect(() => {

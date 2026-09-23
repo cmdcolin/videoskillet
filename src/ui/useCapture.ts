@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { fileName, save } from './download'
 import { isSupported, startRecording } from './record'
 
+import type { InputTap } from '../core/signal/audiostate'
 import type { Recorder } from './record'
 import type { RefObject } from 'react'
 
@@ -46,13 +47,14 @@ function mirrorOf(src: HTMLCanvasElement): HTMLCanvasElement {
 // `clock` paces the take by the wall clock instead of by rendered frames,
 // repeating or dropping frames so a second of take is a second of file. A
 // camera is live, so a 120 Hz phone would otherwise write slow motion and one
-// held to 30 Hz double speed.
+// held to 30 Hz double speed, and sound from `audio` would drift off the
+// picture.
 export function useCapture(
   canvasRef: RefObject<HTMLCanvasElement | null>,
   name: string,
   onError: (message: string) => void,
   deliver: (blob: Blob, name: string) => void = save,
-  opts: { clock?: boolean } = {},
+  opts: { clock?: boolean; audio?: () => InputTap | null } = {},
 ) {
   const recRef = useRef<Recorder | null>(null)
   const rafRef = useRef(0)
@@ -152,7 +154,12 @@ export function useCapture(
     // recording started at, which is the behaviour a take actually wants.
     const width = canvas.width
     const height = canvas.height
-    startRecording({ width, height, fps: FPS }).then(
+    startRecording({
+      width,
+      height,
+      fps: FPS,
+      audio: opts.audio?.() ?? null,
+    }).then(
       rec => {
         recRef.current = rec
         setRecording(true)
