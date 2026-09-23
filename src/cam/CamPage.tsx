@@ -7,10 +7,18 @@ import { FatalScreen } from '../ui/FatalScreen'
 import { useCapture } from '../ui/useCapture'
 import { useWakeLock } from '../ui/useWakeLock'
 import styles from './cam.module.css'
-import { DiceIcon, FlipIcon, ShareIcon, TiltIcon } from './icons'
-import { CAM_LOOKS, lookBoard, lookLabel, rollLook } from './looks'
+import { DiceIcon, FlipIcon, ShareIcon, TapeIcon, TiltIcon } from './icons'
+import {
+  CAM_LOOKS,
+  CAM_MIX_LOOKS,
+  lookBoard,
+  lookLabel,
+  needsTape,
+  rollLook,
+} from './looks'
 import { useCamEngine } from './useCamEngine'
 import { useCamera } from './useCamera'
+import { useTape } from './useTape'
 import { useTilt } from './useTilt'
 
 import type { Look } from './looks'
@@ -80,6 +88,7 @@ export function CamPage() {
   const [shot, setShot] = useState<Shot | null>(null)
   const [error, setError] = useState('')
   const [recSince, setRecSince] = useState(0)
+  const tape = useTape(eng, setError)
 
   const capture = useCapture(
     canvasRef,
@@ -145,6 +154,26 @@ export function CamPage() {
     })
   }
 
+  // A tape of the camera goes on B, and the page turns to the other camera and
+  // a look that mixes the two, so the scene behind the phone and the person
+  // holding it share the picture.
+  const recordTape = () => {
+    setError('')
+    void tape.record().then(ok => {
+      if (!ok) return
+      if (cam.canFlip) cam.flip()
+      setTuning(false)
+      land({ name: CAM_MIX_LOOKS[0], strength: 1, rolled: false })
+    })
+  }
+  const ejectTape = () => {
+    tape.eject()
+    if (look !== null && needsTape(look.name)) {
+      setTuning(false)
+      land(null)
+    }
+  }
+
   const hold = (on: boolean) => (e: PointerEvent<HTMLCanvasElement>) => {
     if (on) e.currentTarget.setPointerCapture(e.pointerId)
     if (on !== comparing) {
@@ -156,6 +185,9 @@ export function CamPage() {
   if (eng.fatal !== null) return <FatalScreen fatal={eng.fatal} />
 
   const strength = look === null ? 0 : Math.round(look.strength * 100)
+  const strip: readonly string[] = tape.loaded
+    ? [...CAM_MIX_LOOKS, ...CAM_LOOKS]
+    : CAM_LOOKS
 
   return (
     <div className={styles.page}>
@@ -185,7 +217,7 @@ export function CamPage() {
           />
           {tilt.supported && cam.state === 'on' ? (
             <button
-              className={cx(styles.tilt, tilt.on && styles.tiltOn)}
+              className={cx(styles.switch, styles.tilt, tilt.on && styles.on)}
               aria-pressed={tilt.on}
               aria-label="steer the loop by tilting the phone"
               title="steer the loop by tilting the phone"
@@ -193,6 +225,35 @@ export function CamPage() {
             >
               <TiltIcon />
             </button>
+          ) : null}
+          {cam.state === 'on' ? (
+            <button
+              className={cx(
+                styles.switch,
+                styles.tape,
+                tape.loaded && styles.on,
+              )}
+              aria-pressed={tape.loaded}
+              aria-label={
+                tape.loaded
+                  ? 'take the tape off B'
+                  : 'record a tape to mix under the camera'
+              }
+              title={
+                tape.loaded
+                  ? 'take the tape off B'
+                  : 'record a tape to mix under the camera'
+              }
+              disabled={tape.left > 0 || capture.recording}
+              onClick={tape.loaded ? ejectTape : recordTape}
+            >
+              <TapeIcon />
+            </button>
+          ) : null}
+          {tape.left > 0 ? (
+            <span className={cx(styles.badge, styles.rec)}>
+              tape {tape.left}
+            </span>
           ) : null}
           {comparing ? <span className={styles.badge}>original</span> : null}
           {capture.recording ? (
@@ -257,7 +318,7 @@ export function CamPage() {
           >
             normal
           </button>
-          {CAM_LOOKS.map(name => {
+          {strip.map(name => {
             const on = look !== null && !look.rolled && look.name === name
             return (
               <button

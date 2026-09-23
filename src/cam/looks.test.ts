@@ -9,9 +9,11 @@ import {
 } from '../ui/presets'
 import {
   CAM_LOOKS,
+  CAM_MIX_LOOKS,
   ROLL_POOL,
   lookBoard,
   lookLabel,
+  needsTape,
   rollLook,
   subtleLoop,
 } from './looks'
@@ -22,8 +24,8 @@ describe('the camera strip', () => {
       expect(PRESET_BY_NAME.has(name), name).toBe(true)
   })
 
-  // The camera page has one source, so a look that mixes in a second one
-  // would show the camera untouched.
+  // B is empty until a tape is recorded, so a look that mixes in a second
+  // source would show the camera untouched.
   it('offers nothing that needs a second source', () => {
     for (const name of CAM_LOOKS) {
       const def = PRESET_BY_NAME.get(name)
@@ -158,4 +160,22 @@ it('calls no look normal', () => {
   expect(lookLabel({ name: 'wornTape', strength: 1, rolled: false })).toBe(
     'worn tape',
   )
+})
+
+describe('the strip with a tape on B', () => {
+  // A look that mixes nothing in would read as the camera untouched, and one
+  // already on the strip would show twice.
+  it('offers only looks that mix the tape in', () => {
+    for (const name of CAM_MIX_LOOKS) {
+      expect(PRESET_BY_NAME.has(name), name).toBe(true)
+      expect(needsTape(name), name).toBe(true)
+      expect((CAM_LOOKS as readonly string[]).includes(name), name).toBe(false)
+    }
+  })
+
+  it('knows a look that mixes from one that does not', () => {
+    expect(needsTape('cleanDissolve')).toBe(true)
+    expect(needsTape('zoomBloom')).toBe(false)
+    expect(needsTape('no such look')).toBe(false)
+  })
 })

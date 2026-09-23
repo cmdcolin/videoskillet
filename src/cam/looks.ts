@@ -60,7 +60,7 @@ export function subtleLoop(c: Controls): boolean {
 // over a moving subject: the shortest delays first, then the camera loops
 // nearest unity zoom, then the keyed loops that colour a face without losing
 // it, then three faults with no loop in them. None needs a second source,
-// since the camera page has only one.
+// since B is empty until a tape is recorded.
 export const CAM_LOOKS = [
   'shadowLadder',
   'theLightIsALapBehind',
@@ -79,6 +79,27 @@ export const CAM_LOOKS = [
   'verticalHoldGone',
   'rainbowStorm',
 ] as const
+
+// The looks the strip leads with once a tape is on B, picked by rendering all
+// 17 that need a second source over a face live on A and a scene on the tape.
+// A plain double exposure comes first, then the camera keyed into the scene,
+// a picture-in-picture, a green key, a key that fences off a feedback loop,
+// and two cameras summed with no sync between them. The other eleven fill a
+// set on its side with beat bars and noise stripes.
+export const CAM_MIX_LOOKS = [
+  'cleanDissolve',
+  'keySweep',
+  'wanderingInset',
+  'greenScreen',
+  'keyIntoTheLoop',
+  'dirtyMix',
+] as const
+
+// Whether a look shows anything without a tape on B.
+export const needsTape = (name: string): boolean => {
+  const def = PRESET_BY_NAME.get(name)
+  return def !== undefined && needsSourceB(def)
+}
 
 // What is on the picture: a preset at a strength, or `null` for the camera as
 // it comes. `rolled` marks a look the dice picked, which the strip shows on the

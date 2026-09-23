@@ -220,6 +220,14 @@ opening the home page gets **Open the camera** as its first button, and
   mounts its tube, so the camera's tall picture fills a 3:4 screen whole. The
   scanlines run down the glass, a rolling picture slides sideways, and stills
   and videos come out tall.
+- The cassette on the picture's other corner records four seconds of the camera
+  to a tape and loops it on source B, the way a studio rolled a deck into a
+  mixer's second input. The page then turns to the other camera and mixes the
+  two, and the strip leads with looks that mix them: a double exposure, the
+  camera keyed into the scene, a picture-in-picture, two keys and two cameras
+  with no sync between them. Point the back camera at a scene, record, and the
+  front camera puts you over it. Most phones cannot run both cameras at once,
+  and a tape works on every one. Pressing the cassette again takes the tape off.
 - **all controls** opens the app on the same preset, asking for the camera
   again.
 
