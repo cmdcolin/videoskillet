@@ -42,11 +42,17 @@ function mirrorOf(src: HTMLCanvasElement): HTMLCanvasElement {
 // `deliver` takes each finished file. It downloads by default; the camera page
 // keeps the file instead, because a phone saves to its photo library through
 // the share sheet.
+//
+// `clock` paces the take by the wall clock instead of by rendered frames,
+// repeating or dropping frames so a second of take is a second of file. A
+// camera is live, so a 120 Hz phone would otherwise write slow motion and one
+// held to 30 Hz double speed.
 export function useCapture(
   canvasRef: RefObject<HTMLCanvasElement | null>,
   name: string,
   onError: (message: string) => void,
   deliver: (blob: Blob, name: string) => void = save,
+  opts: { clock?: boolean } = {},
 ) {
   const recRef = useRef<Recorder | null>(null)
   const rafRef = useRef(0)
@@ -150,15 +156,24 @@ export function useCapture(
       rec => {
         recRef.current = rec
         setRecording(true)
+        const start = performance.now()
         const pump = () => {
           rafRef.current = requestAnimationFrame(pump)
           const live = canvasRef.current
-          if (live !== null && recRef.current !== null) {
+          const r = recRef.current
+          if (live === null || r === null) return
+          if (opts.clock === true) {
+            const due =
+              Math.floor(
+                ((performance.now() - start) / 1000) * (FPS.num / FPS.den),
+              ) + 1
+            while (r.frames() < due) r.frame(live)
+          } else {
             // One frame per rAF, and the timestamp comes off the count rather
             // than the clock (record.ts). A slow frame therefore stretches the
             // take in real time and not in the file, which is the trade this
             // whole path exists to make.
-            recRef.current.frame(live)
+            r.frame(live)
           }
         }
         rafRef.current = requestAnimationFrame(pump)
