@@ -49,9 +49,18 @@ const SHARE_IMAGE_H = 630
     <section class="hero">
       <Hero />
       <div class="wrap heroBody">
+        <!-- A phone gets the camera first and the instrument beside it. The
+             media query in landing.css hides the pair that does not apply, so
+             no script rewrites the links. -->
         <p class="heroCta">
-          <a class="btn primary" href="/app/">
+          <a class="btn primary onPhone" href="/cam/">
+            Open the camera →
+          </a>
+          <a class="btn primary offPhone" href="/app/">
             Open the app →
+          </a>
+          <a class="btn onPhone" href="/app/">
+            Full instrument
           </a>
           <a class="btn" href="/guide/">
             User guide

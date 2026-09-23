@@ -93,6 +93,22 @@
   margin: 0;
 }
 
+/* A touch screen too small for the instrument's sidebar is a phone, and a
+   phone opens the camera. The query uses the two sizes app.module.css restacks
+   the instrument at, and adds touch so a narrow desktop window keeps the app. */
+.heroCta .onPhone {
+  display: none;
+}
+@media (pointer: coarse) and (orientation: portrait) and (max-width: 900px),
+  (pointer: coarse) and (orientation: landscape) and (max-height: 560px) {
+  .heroCta .onPhone {
+    display: inline-block;
+  }
+  .heroCta .offPhone {
+    display: none;
+  }
+}
+
 /* A word, not a glyph: a bare ▶ is a guess, and these sit next to each
    other where one of them says a demo's name. */
 .chip {

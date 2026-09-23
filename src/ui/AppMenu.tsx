@@ -1,3 +1,4 @@
+import { publicUrl } from '../publicUrl'
 import styles from './AppMenu.module.css'
 import { cx } from './cx'
 import {
@@ -166,8 +167,9 @@ export function AppMenu(props: {
             onClick={() => props.onToggleRecord()}
           />
           <div className={popoverStyles.menuSep} />
-          {/* Where the app sits: the three rows that move the picture and the
-              board around rather than changing either. */}
+          {/* Where the app sits: the rows that move the picture and the board
+              around, or take them to the camera page, rather than changing
+              either. */}
           <MenuItem
             icon={props.fullscreen ? '⤢' : '⛶'}
             label={props.fullscreen ? 'exit fullscreen' : 'fullscreen'}
@@ -194,6 +196,17 @@ export function AppMenu(props: {
             hint=""
             closes={id}
             onClick={() => props.onPopout()}
+          />
+          {/* The camera is a page of its own (src/cam), so this row leaves
+              the instrument. It opens in this tab, because on a phone the
+              camera is the other half of the same app. */}
+          <MenuItem
+            icon="◉"
+            label="camera"
+            hint=""
+            title="your camera through the set: a strip of looks, a shutter, front and back camera"
+            closes={id}
+            onClick={() => location.assign(publicUrl('cam/'))}
           />
           <div className={popoverStyles.menuSep} />
           {/* The other half of the frame-lock row above: this is where a

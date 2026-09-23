@@ -188,6 +188,28 @@ of the dot crawl and rainbow fringing. [CLI](CLI.md) covers it.
 **pop out controls** in the ☰ menu moves the panel to a second window, so OBS
 can capture the picture window alone.
 
+## Camera
+
+The camera page at `/cam/` puts a phone's camera through the set. It shows the
+picture, a strip of looks and a shutter, and nothing from the panel. A phone
+opening the home page gets **Open the camera** as its first button, and
+**camera** in the ☰ menu reaches the page from the app.
+
+- **Start camera** asks the browser for the camera. Once the browser has said
+  yes, the page opens the camera by itself on later visits.
+- The strip holds a short list of presets. Pressing the look that is on shows
+  its strength, and **random** picks one from every preset the app has.
+- Holding a finger on the picture shows the camera without the look.
+- **PHOTO** takes a PNG still and **VIDEO** records an MP4. The thumbnail beside
+  the shutter opens the phone's share sheet, which is where **Save Image** and
+  **Save Video** put the file in the photo library. A browser without a share
+  sheet downloads the file.
+- The button with the turning arrows switches between the front and back
+  cameras. The front camera is mirrored at the source, before the encoder, so a
+  ghost or a smear still trails to the right the way a set draws it.
+- **all controls** opens the app on the same preset, asking for the camera
+  again.
+
 ## Keyboard
 
 | Key                     | Action                                                              |
