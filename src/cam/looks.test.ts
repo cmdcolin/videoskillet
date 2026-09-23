@@ -7,7 +7,14 @@ import {
   needsSourceB,
   presetControls,
 } from '../ui/presets'
-import { CAM_LOOKS, ROLL_POOL, lookBoard, lookLabel, rollLook } from './looks'
+import {
+  CAM_LOOKS,
+  ROLL_POOL,
+  lookBoard,
+  lookLabel,
+  rollLook,
+  subtleLoop,
+} from './looks'
 
 describe('the camera strip', () => {
   it('names only presets that exist', () => {
@@ -96,22 +103,53 @@ describe('lookBoard on a feedback loop', () => {
   })
 })
 
+describe('subtleLoop', () => {
+  it('passes every loop on the strip', () => {
+    for (const name of CAM_LOOKS) {
+      const def = PRESET_BY_NAME.get(name)
+      expect(
+        def !== undefined && subtleLoop(presetControls(def.patch)),
+        name,
+      ).toBe(true)
+    }
+  })
+
+  it('turns away the big zooms, spins and delays', () => {
+    for (const name of [
+      'spiral',
+      'tunnelOut',
+      'colourKeepsWalking',
+      'ringLadder',
+      'servoWarp',
+    ]) {
+      const def = PRESET_BY_NAME.get(name)
+      expect(
+        def !== undefined && subtleLoop(presetControls(def.patch)),
+        name,
+      ).toBe(false)
+    }
+  })
+})
+
 describe('rollLook', () => {
-  it('rolls a feedback loop, never the one already up', () => {
+  it('rolls a subtle feedback loop, never the one already up', () => {
     let look = rollLook(null)
     for (let i = 0; i < 200; i++) {
       const next = rollLook(look)
       expect(next.name).not.toBe(look.name)
       const def = PRESET_BY_NAME.get(next.name)
       expect(def?.group).toBe('Feedback loops')
+      expect(def !== undefined && subtleLoop(presetControls(def.patch))).toBe(
+        true,
+      )
       expect(def !== undefined && needsSourceB(def)).toBe(false)
       expect(next.rolled).toBe(true)
       look = next
     }
   })
 
-  it('has more than one loop to roll', () => {
-    expect(ROLL_POOL.length).toBeGreaterThan(1)
+  it('has a couple of dozen loops to roll', () => {
+    expect(ROLL_POOL.length).toBeGreaterThan(20)
   })
 })
 

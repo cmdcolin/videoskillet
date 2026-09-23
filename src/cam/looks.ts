@@ -19,31 +19,53 @@ import {
 
 import type { Controls, ModSlot } from '../core/controls'
 
+// How far a loop may move the picture each lap and still count as subtle: a
+// camera within 4.5% of unity zoom, turning at most a degree and shifting at
+// most 2% of the frame, or a mixer loop at most 1.2 us and four lines late
+// whose delay the video does not pull far. Feedback looks best on a camera
+// with that little movement per lap. Big zooms, spins and delays read as
+// cheesy.
+//
+// A subtle loop cannot be made out of a dramatic one by scaling its geometry
+// down. The preset's gain is tuned to how far its geometry spreads each lap,
+// and at a quarter of the zoom and turn the same gain stacks the picture onto
+// itself and walls out to white.
+export function subtleLoop(c: Controls): boolean {
+  const camera =
+    c.fbMix === 0 ||
+    (Math.abs(c.fbZoom - 1) <= 0.045 &&
+      Math.abs(c.fbRotateDeg) <= 1 &&
+      Math.abs(c.fbShiftX) <= 0.02 &&
+      Math.abs(c.fbShiftY) <= 0.02)
+  const mixer =
+    c.cfbMix === 0 ||
+    (c.cfbDelayUs <= 1.2 &&
+      Math.abs(c.cfbLines) <= 4 &&
+      Math.abs(c.cfbServoUs) <= 5)
+  return camera && mixer
+}
+
 // The looks the camera's strip offers, in strip order. The instrument has
 // about 150 presets, and a phone needs a list short enough to scroll with a
-// thumb. The strip is mostly feedback loops, picked by rendering all 58 over a
-// subject: first the loops that keep a face readable, then the ones that turn
-// the picture into geometry, then three faults with no loop in them. None needs
-// a second source, since the camera page has only one.
-//
-// The loops that change most from one frame to the next (threeServos,
-// meltdown, syncInTheLoop, shearedAndStacked) stay off the strip, since a
-// phone is held close to the face. The dice can still roll them.
+// thumb. The strip is mostly subtle feedback loops, picked by rendering all 58
+// over a moving subject: the shortest delays first, then the camera loops
+// nearest unity zoom, then the keyed loops that colour a face without losing
+// it, then three faults with no loop in them. None needs a second source,
+// since the camera page has only one.
 export const CAM_LOOKS = [
+  'shadowLadder',
+  'theLightIsALapBehind',
+  'clockAndCrystal',
+  'theWrongClock',
+  'huntingServos',
+  'zoomBloom',
+  'noColourToTrade',
+  'litAtTheEdges',
   'ringInTheHighlights',
   'carvedByTheLivePicture',
-  'litAtTheEdges',
   'chasingItsOwnColour',
-  'theLightIsALapBehind',
   'itOnlyEatsTheRed',
-  'clockAndCrystal',
-  'warpInTheShadows',
   'runaway',
-  'spiral',
-  'colourKeepsWalking',
-  'tunnelOut',
-  'encoderWiredBackwards',
-  'beamBendsItsOwnScan',
   'vhs',
   'verticalHoldGone',
   'rainbowStorm',
@@ -113,9 +135,13 @@ export function lookBoard(look: Look | null): {
   }
 }
 
-// What the dice rolls: every feedback loop the camera can run on its own.
+// What the dice rolls: every subtle feedback loop the camera can run on its
+// own.
 export const ROLL_POOL: readonly string[] = PRESETS.filter(
-  p => p.group === 'Feedback loops' && !needsSourceB(p),
+  p =>
+    p.group === 'Feedback loops' &&
+    !needsSourceB(p) &&
+    subtleLoop(presetControls(p.patch)),
 ).map(p => p.name)
 
 // One authored loop at full strength, never the one already up.
