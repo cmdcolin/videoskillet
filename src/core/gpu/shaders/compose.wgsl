@@ -20,10 +20,13 @@
 // Landing the linear sampler on exact even-line centers keeps each field line
 // clean; only the vertical fill lerps.
 //
-// The mirror is the source's (srcMirror), so it goes in here: every offset the
-// capture band and the colorizer step by is then on the screen's own axis.
+// The mirror and the turn are the source's (srcMirror, tubeTurn), so they go in
+// here: every offset the capture band and the colorizer step by is then on the
+// raster's own axis. A set on its side has its camera turned with it, so the
+// picture reaches the raster rotated and stands upright on the glass.
 fn pick(at: vec2f) -> vec3f {
-  let suv = vec2f(select(at.x, 1.0 - at.x, P.srcMirror > 0.5), at.y);
+  let r = select(at, vec2f(1.0 - at.y, at.x), P.tubeTurn > 0.5);
+  let suv = vec2f(select(r.x, 1.0 - r.x, P.srcMirror > 0.5), r.y);
   if (P.deint < 0.5) {
     return textureSampleLevel(srcTex, samp, suv, 0.0).rgb;
   }
@@ -147,19 +150,21 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
     return;
   }
   let uv = vec2f((f32(gid.x) + 0.5) / f32(ACTIVE_W), (f32(gid.y) + 0.5) / f32(ACTIVE_H));
-  // cover-fit the source into the 4:3 frame
+  // cover-fit the source into the 4:3 frame, as the source lands on it: a
+  // turned camera lays a tall picture across the raster
   let disp = 4.0 / 3.0;
+  let aspect = select(P.srcAspect, 1.0 / P.srcAspect, P.tubeTurn > 0.5);
   var suv = uv;
-  if (P.srcAspect > disp) {
-    suv.x = 0.5 + (uv.x - 0.5) * (disp / P.srcAspect);
+  if (aspect > disp) {
+    suv.x = 0.5 + (uv.x - 0.5) * (disp / aspect);
   } else {
-    suv.y = 0.5 + (uv.y - 0.5) * (P.srcAspect / disp);
+    suv.y = 0.5 + (uv.y - 0.5) * (aspect / disp);
   }
   // Source uv per output pixel, on each axis, after the cover fit above: the
   // capture band and the colorizer's input filter both step in these.
   let sxy = vec2f(
-    select(1.0, disp / P.srcAspect, P.srcAspect > disp) / f32(ACTIVE_W),
-    select(P.srcAspect / disp, 1.0, P.srcAspect > disp) / f32(ACTIVE_H),
+    select(1.0, disp / aspect, aspect > disp) / f32(ACTIVE_W),
+    select(aspect / disp, 1.0, aspect > disp) / f32(ACTIVE_H),
   );
   let captured = P.capLumaSigma > 0.0 || P.capChromaSigma > 0.0 || P.capYcDelay != 0.0
     || P.capNoise > 0.0 || P.capChromaNoise > 0.0;

@@ -161,7 +161,7 @@ export function CamPage() {
       </header>
 
       <main className={styles.stage}>
-        <div className={styles.frame}>
+        <div className={cx(styles.frame, eng.turned && styles.turned)}>
           <canvas
             ref={canvasRef}
             className={styles.canvas}

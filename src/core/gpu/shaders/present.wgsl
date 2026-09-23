@@ -97,8 +97,12 @@ fn fs(in: VOut) -> @location(0) vec4f {
   if (P.dbgView == 1.0) {
     return vec4f(in.uv, 0.5, 1.0);
   }
-  let cs = vec2f(P.canvasW, P.canvasH);
-  let px = in.uv * cs;
+  // A set on its side: everything below works on the glass the right way up,
+  // and only which canvas pixel lands where turns. The scan runs down the
+  // canvas and the lines stack from right to left.
+  let turned = P.tubeTurn > 0.5;
+  let cs = select(vec2f(P.canvasW, P.canvasH), vec2f(P.canvasH, P.canvasW), turned);
+  let px = select(in.uv, vec2f(in.uv.y, 1.0 - in.uv.x), turned) * cs;
   let scale = min(cs.x / 4.0, cs.y / 3.0);
   let half = vec2f(2.0 * scale, 1.5 * scale);
   let rel = (px - cs * 0.5) / half;

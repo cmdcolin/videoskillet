@@ -21,6 +21,12 @@ export interface Board {
   mod: ModSlot[]
 }
 
+// A phone held upright hands over a tall picture, and the set stands on its
+// side to show all of it. Cover-fitting a tall picture into a 4:3 raster
+// would cut away almost half its height.
+const tall = (video: HTMLVideoElement | null) =>
+  video !== null && video.videoHeight > video.videoWidth
+
 // Hands an engine the whole picture. The boot and the rebuild both go through
 // here, so an engine replacing a lost one comes up on the same camera and look.
 // A <video> belongs to the browser and plays straight through a device loss, so
@@ -30,6 +36,7 @@ function dress(engine: Engine, shown: Shown, board: Board) {
   engine.setModSlots(board.mod)
   engine.setSourceBEnabled(false)
   engine.setSourceMirror(shown.mirror)
+  engine.setTubeTurned(tall(shown.video))
   if (shown.video === null) engine.setImageSource(smpteBars())
   else engine.setVideoSource(shown.video)
 }
@@ -46,13 +53,25 @@ export function useCamEngine(canvasRef: RefObject<HTMLCanvasElement | null>) {
   const [fatal, setFatal] = useState<Fatal | null>(null)
   const [rebuilding, setRebuilding] = useState(false)
   const [frozen, setFrozen] = useState(false)
+  const [turned, setTurned] = useState(false)
   const shown = useRef<Shown>({ video: null, mirror: false })
   const board = useRef<Board>({ controls: DEFAULT_CONTROLS, mod: [] })
 
+  const turn = (video: HTMLVideoElement) => {
+    setTurned(tall(video))
+    engineRef.current?.setTubeTurned(tall(video))
+  }
+
+  // A phone turned in the hand keeps the same camera and hands over frames the
+  // other way up, which the <video> announces as a resize.
   const showVideo = (video: HTMLVideoElement, mirror: boolean) => {
     shown.current = { video, mirror }
     engineRef.current?.setSourceMirror(mirror)
     engineRef.current?.setVideoSource(video)
+    turn(video)
+    video.addEventListener('resize', () => {
+      if (shown.current.video === video) turn(video)
+    })
   }
 
   const showBoard = (next: Board) => {
@@ -159,6 +178,7 @@ export function useCamEngine(canvasRef: RefObject<HTMLCanvasElement | null>) {
     fatal,
     rebuilding,
     frozen,
+    turned,
     showVideo,
     showBoard,
     compare,

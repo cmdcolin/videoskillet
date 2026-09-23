@@ -210,6 +210,10 @@ opening the home page gets **Open the camera** as its first button, and
 - The button with the turning arrows switches between the front and back
   cameras. The front camera is mirrored at the source, before the encoder, so a
   ghost or a smear still trails to the right the way a set draws it.
+- A phone held upright stands the set on its side, the way an arcade cabinet
+  mounts its tube, so the camera's tall picture fills a 3:4 screen whole. The
+  scanlines run down the glass, a rolling picture slides sideways, and stills
+  and videos come out tall.
 - **all controls** opens the app on the same preset, asking for the camera
   again.
 

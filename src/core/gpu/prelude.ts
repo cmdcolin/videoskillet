@@ -55,6 +55,10 @@ export const PARAM_DEFS = [
   // them a mirror, and the mirror belongs to the camera: the set still scans
   // left to right, so ghosts and smears keep trailing the way a set draws them.
   ['srcMirror', 'f32'],
+  // 1 stands the set on its side, the way an arcade cabinet mounts a tube for
+  // a tall picture, with source A's camera turned to match. The raster keeps
+  // its own axes, so the scan runs down the glass and a roll goes sideways.
+  ['tubeTurn', 'f32'],
   ['srcNoise', 'f32'], // GPU-generated source A: 0 texture, 1 TV static, 2 VHS blank-tape static
   // The statistics of that generated noise, shared by both slots. Noise cannot
   // change faster than the path it arrived through lets it, so the grain is a

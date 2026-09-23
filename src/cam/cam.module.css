@@ -51,9 +51,10 @@
   color: #fff;
 }
 
-/* The stage is a size container, so the frame can be the largest 4:3 box
-   that fits the height the controls leave. The canvas is then exactly the
-   picture, and a still or a recording has no letterbox in it. */
+/* The stage is a size container, so the frame can be the largest 4:3 box,
+   or 3:4 with the set on its side, that fits the height the controls leave.
+   The canvas is then exactly the picture, and a still or a recording has no
+   letterbox in it. */
 .stage {
   flex: 1;
   min-height: 0;
@@ -67,6 +68,10 @@
   place-items: center;
   width: min(100cqw, calc(100cqh * 4 / 3));
   aspect-ratio: 4 / 3;
+}
+.turned {
+  width: min(100cqw, calc(100cqh * 3 / 4));
+  aspect-ratio: 3 / 4;
 }
 .canvas {
   position: absolute;

@@ -150,6 +150,10 @@ export interface EngineApi {
   // Mirroring is a property of the source, like its aspect, so no preset or
   // link carries it.
   setSourceMirror: (on: boolean) => void
+  // Stand the set on its side for a tall picture, with A's camera turned to
+  // match. How the set is mounted belongs to the page showing it, so no preset
+  // or link carries this either.
+  setTubeTurned: (on: boolean) => void
   // The stretch of this slot's clip to keep the playhead inside, or null to play
   // straight through. Positions on the *source's* own timeline, which is why this
   // is a source setter and not a control: a pair of timestamps means nothing
