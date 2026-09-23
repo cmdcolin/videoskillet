@@ -213,6 +213,9 @@ export class Engine implements EngineApi {
   // own is a page people close. See `buzzDrive`.
   private soundOut = false
 
+  // Whether source A is read right to left (`srcMirror` in the prelude).
+  private mirrorA = false
+
   // Initialized from ?dbg=; also switchable live via setDbgView (panel, Advanced).
   private dbgView = Number(new URLSearchParams(pageSearch()).get('dbg') ?? 0)
   // ?debug: dev-only per-frame logging and the first-frame readback.
@@ -1446,6 +1449,14 @@ export class Engine implements EngineApi {
     this.pump.setA(el)
   }
 
+  setSourceMirror(on: boolean): void {
+    this.mirrorA = on
+  }
+
+  get sourceMirrored(): boolean {
+    return this.mirrorA
+  }
+
   setVideoRegion(region: { start: number; end: number } | null): void {
     this.pump.setRegionA(region)
   }
@@ -1775,6 +1786,7 @@ export class Engine implements EngineApi {
       canvasW: this.canvas.width,
       canvasH: this.canvas.height,
       srcAspect: this.sources.srcAspect,
+      srcMirror: this.mirrorA ? 1 : 0,
       srcNoise: this.sources.srcNoise,
       srcNoiseB: this.sources.srcNoiseB,
       srcFrame: this.tapeFrame.a,

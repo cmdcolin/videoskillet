@@ -19,7 +19,11 @@
 // its lines — combing gone, at half the vertical resolution (authentic 240p).
 // Landing the linear sampler on exact even-line centers keeps each field line
 // clean; only the vertical fill lerps.
-fn pick(suv: vec2f) -> vec3f {
+//
+// The mirror is the source's (srcMirror), so it goes in here: every offset the
+// capture band and the colorizer step by is then on the screen's own axis.
+fn pick(at: vec2f) -> vec3f {
+  let suv = vec2f(select(at.x, 1.0 - at.x, P.srcMirror > 0.5), at.y);
   if (P.deint < 0.5) {
     return textureSampleLevel(srcTex, samp, suv, 0.0).rgb;
   }

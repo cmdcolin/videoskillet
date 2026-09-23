@@ -51,6 +51,10 @@ export const PARAM_DEFS = [
   ['canvasW', 'f32'],
   ['canvasH', 'f32'],
   ['srcAspect', 'f32'],
+  // 1 reads source A right to left. A camera facing the person it films shows
+  // them a mirror, and the mirror belongs to the camera: the set still scans
+  // left to right, so ghosts and smears keep trailing the way a set draws them.
+  ['srcMirror', 'f32'],
   ['srcNoise', 'f32'], // GPU-generated source A: 0 texture, 1 TV static, 2 VHS blank-tape static
   // The statistics of that generated noise, shared by both slots. Noise cannot
   // change faster than the path it arrived through lets it, so the grain is a

@@ -65,6 +65,7 @@ export interface UniformEnv {
   canvasW: number
   canvasH: number
   srcAspect: number
+  srcMirror: number
   srcNoise: number
   srcNoiseB: number
   srcFrame: number
@@ -92,6 +93,7 @@ export function uniformValues(c: Controls, env: UniformEnv) {
     canvasW: env.canvasW,
     canvasH: env.canvasH,
     srcAspect: env.srcAspect,
+    srcMirror: env.srcMirror,
     srcNoise: env.srcNoise,
     srcNoiseB: env.srcNoiseB,
     srcNoiseGrain: noiseGrainPx(c.srcNoiseBwMHz),
