@@ -1081,10 +1081,9 @@ export function useEngine(args: { rand: Rand }) {
   // paths, and a promise per path is nine chances to leak one — where a poll
   // cannot be forgotten and cannot be left dangling. Cheap, too, because
   // nothing calls this except a render between two frames.
+  const idle = () => waiting.current.a === null && waiting.current.b === null
   const settleSources = (): Promise<void> =>
     new Promise(resolve => {
-      const idle = () =>
-        waiting.current.a === null && waiting.current.b === null
       if (idle()) {
         resolve()
         return
@@ -2093,6 +2092,8 @@ export function useEngine(args: { rand: Rand }) {
     }
   }
 
+  const imageError = (e: unknown) => setError(`image: ${reason(e)}`)
+
   // Put a parsed link on an engine. The parsing itself is pure and tested
   // (urlParams.ts); what is left here is only the applying, in the one order
   // that matters: the vaporwave settings land before any clip loads, since a
@@ -2229,7 +2230,6 @@ export function useEngine(args: { rand: Rand }) {
       showGenerated(slotB, srcb, beginLoad('b'))
       setSourceMode(m => ({ ...m, b: srcb }))
     }
-    const imageError = (e: unknown) => setError(`image: ${reason(e)}`)
     // `beginLoad` in each of the three below is what makes "the link named an
     // address as well as a mode, so the address wins" true rather than a race:
     // ?src= has already been applied above, and where that mode was a Commons

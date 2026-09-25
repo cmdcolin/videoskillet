@@ -91,6 +91,20 @@ export const feedShowing = (
 ): boolean =>
   isPoolMode(mode) || (feed.list !== null && feed.list.mode === mode)
 
+// The list's next item resolved and dropped, which leaves its bytes in the
+// caches the real show will read from.
+const warmNext = (list: FeedList) => {
+  const item = list.items[list.next]
+  if (item !== undefined && item.at === 'ref')
+    void resolvePool(item.ref).then(
+      pick => {
+        warm(pick)
+        releasePick(pick)
+      },
+      () => null,
+    )
+}
+
 // Both decks' feeds, and the verbs that move them. Lives beside the engine
 // rather than inside a panel component, so a slideshow keeps running with its
 // stage folded away.
@@ -144,20 +158,6 @@ export function useFeeds(deps: FeedDeps) {
         () => null,
       ),
     }
-  }
-
-  // The list's next item resolved and dropped, which leaves its bytes in the
-  // caches the real show will read from.
-  const warmNext = (list: FeedList) => {
-    const item = list.items[list.next]
-    if (item !== undefined && item.at === 'ref')
-      void resolvePool(item.ref).then(
-        pick => {
-          warm(pick)
-          releasePick(pick)
-        },
-        () => null,
-      )
   }
 
   const patch = (key: StashSlot, f: (d: DeckFeed) => DeckFeed) =>

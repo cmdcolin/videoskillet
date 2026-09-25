@@ -250,6 +250,11 @@ const median = (xs: readonly number[]): number => {
   return s[Math.floor((s.length - 1) / 2)]
 }
 
+const wrapHealth = (s: Slot): WrapHealth => ({
+  medianMs: median(s.wrapGaps),
+  laps: s.wrapGaps.length,
+})
+
 const probe = (el: HTMLVideoElement | null) =>
   el === null
     ? null
@@ -632,11 +637,7 @@ export class VideoPump {
   }
 
   health(): { a: WrapHealth; b: WrapHealth } {
-    const read = (s: Slot): WrapHealth => ({
-      medianMs: median(s.wrapGaps),
-      laps: s.wrapGaps.length,
-    })
-    return { a: read(this.a), b: read(this.b) }
+    return { a: wrapHealth(this.a), b: wrapHealth(this.b) }
   }
 
   private wrap(slot: Slot): void {
