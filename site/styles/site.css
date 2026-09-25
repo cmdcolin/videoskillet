@@ -144,6 +144,8 @@ section {
    screen readers. The narrowest phones keep the logo without the name. */
 .barEnd .btn {
   white-space: nowrap;
+  justify-content: center;
+  min-width: 8.5rem;
 }
 @media (max-width: 44rem) {
   .barIn {
@@ -159,6 +161,9 @@ section {
   }
   .barEnd {
     gap: 0.5rem;
+  }
+  .barEnd .btn {
+    min-width: 0;
   }
   #signIn {
     padding-inline: 0.55rem;

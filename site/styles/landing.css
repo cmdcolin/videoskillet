@@ -92,6 +92,10 @@
   gap: 0.75rem;
   margin: 0;
 }
+.heroCta .btn {
+  min-width: 11rem;
+  text-align: center;
+}
 
 /* A touch screen too small for the instrument's sidebar is a phone, and a
    phone opens the camera. The query uses the two sizes app.module.css restacks
