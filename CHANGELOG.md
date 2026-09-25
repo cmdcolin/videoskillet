@@ -2,6 +2,23 @@
 
 All notable changes to videoskillet are documented here.
 
+## [2.5.0](https://github.com/cmdcolin/videoskillet/compare/v2.4.0...v2.5.0) - 2026-09-25
+
+### Features
+- *(ui)* [`588614c`](https://github.com/cmdcolin/videoskillet/commit/588614c790ff50f266250ca9761233476b6cf6c3) keep the camera's loops to subtle geometry
+- *(ui)* [`f9be6d1`](https://github.com/cmdcolin/videoskillet/commit/f9be6d192f232fc73b97f7431ae135eeae11e422) stand the set on its side for a phone held upright
+- *(ui)* [`7ef6412`](https://github.com/cmdcolin/videoskillet/commit/7ef64127f0e74b5ce8e424df8d5fdd8597ed0ab0) steer the camera page's loop by tilting the phone
+- *(ui)* [`bac6123`](https://github.com/cmdcolin/videoskillet/commit/bac6123b9b3973353fb7ae2cb29e93741cd8d510) record a tape of the camera to mix under the other one
+- *(ui)* [`97f0cc6`](https://github.com/cmdcolin/videoskillet/commit/97f0cc66ee07a510c78f589f83a2b3b7015e2c7c) let the room's sound shake the camera page's set
+- *(ui)* [`061f3ad`](https://github.com/cmdcolin/videoskillet/commit/061f3ad92f221414f90d64be06e56b3811bc6fcb) record the room's sound with a camera take
+- *(ui)* [`7ec0860`](https://github.com/cmdcolin/videoskillet/commit/7ec0860f1920a7309136ab05d65386e3664d8a98) add three camera loops that sit near unity
+- *(ui)* [`a031af1`](https://github.com/cmdcolin/videoskillet/commit/a031af1cb9e7fd7cc28b6da9eaaba54831b6ab2c) run both cameras live where the phone allows it
+- *(ui)* [`f68e8a9`](https://github.com/cmdcolin/videoskillet/commit/f68e8a96407eb673e3de89302ef1ea6dbfd10fc9) swipe between the camera's looks and tap to aim a keyer
+
+### Fixes
+- *(ui)* [`2469b8a`](https://github.com/cmdcolin/videoskillet/commit/2469b8aa876c2724646210a6f6738e5b2db82872) pace the camera page's takes by the wall clock
+- *(ui)* [`5b92a7c`](https://github.com/cmdcolin/videoskillet/commit/5b92a7cd5c86ce7b824d55f0d77eda6a78ecc71a) hoist closures that capture nothing from their scope
+
 ## [2.4.0](https://github.com/cmdcolin/videoskillet/compare/v2.3.1...v2.4.0) - 2026-09-23
 
 ### Features
