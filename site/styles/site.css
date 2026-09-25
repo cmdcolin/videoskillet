@@ -131,6 +131,7 @@ section {
   gap: 0.4rem;
   padding: 0.4rem 0.85rem;
   font-size: 0.875rem;
+  line-height: 1.25;
 }
 .ico {
   width: 1.05rem;
