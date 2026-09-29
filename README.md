@@ -5,12 +5,8 @@ consequence of NTSC signal, not an effect drawn on the picture.
 
 ### Live app!
 
-https://videoskillet.com/app/ — and https://videoskillet.com/ is the landing
-page it is reached from.
+TLDR go here! https://videoskillet.com/ 
 
-## Screenshot
-
-[![A photo dubbed to VHS: rainbow chroma noise banding across the frame, torn lines, and the picture bending through a tracking band](img/screenshot.jpg)](https://cmdcolinphotos.s3.amazonaws.com/phosphene/demo-v2.mp4)
 
 ## The signal path
 
