@@ -5,8 +5,7 @@ consequence of NTSC signal, not an effect drawn on the picture.
 
 ### Live app!
 
-TLDR go here! https://videoskillet.com/ 
-
+TLDR go here! https://videoskillet.com/
 
 ## The signal path
 
