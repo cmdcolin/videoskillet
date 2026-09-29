@@ -2,6 +2,17 @@
 
 All notable changes to videoskillet are documented here.
 
+## [2.5.1](https://github.com/cmdcolin/videoskillet/compare/v2.5.0...v2.5.1) - 2026-09-29
+
+### Fixes
+- *(ui)* [`d6f0990`](https://github.com/cmdcolin/videoskillet/commit/d6f09908072c59dfddf0411a3fb438f3586f75e5) match the site bar's Sign in and Open the app button heights
+- *(ui)* [`2fbccc0`](https://github.com/cmdcolin/videoskillet/commit/2fbccc0f9529350f31e8131d290277cec4b4ef25) give the site bar's and hero's paired buttons one width
+
+### Other Changes
+- [`b4c8b2e`](https://github.com/cmdcolin/videoskillet/commit/b4c8b2ea30a8321993275d7a347c65b20b83e201) Update README.md
+- [`f51181c`](https://github.com/cmdcolin/videoskillet/commit/f51181c25ac797ef1d4cc27923d4baf280aabe00) Cranky formatter lint
+- [`ef1ff4b`](https://github.com/cmdcolin/videoskillet/commit/ef1ff4bc33203d8e2a61cc7169846f420f4e916d) More README.md
+
 ## [2.5.0](https://github.com/cmdcolin/videoskillet/compare/v2.4.0...v2.5.0) - 2026-09-25
 
 ### Features
