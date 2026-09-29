@@ -26,27 +26,19 @@ in [Features](docs/FEATURES.md).
 - Video feedback effects including hardware mixer, camera-pointed-at-tv style
   feedback
 - Lots of 'faults' like loose cable, bad receiver, inverted polarity, bad ground
-- Audio-reactive: feed it music and bass shakes vertical hold of the image.
-  Music can come from the mic, a file you pick, the clip on screen, or straight
-  off whatever this machine is playing — no loopback device to install
-- All settings can be modulated (e.g. with LFO, random walk, sample and hold)
-- MIDI controller support via WebMIDI — map different knobs to settings of
-  interest
-- Easy-to-use "randomize" buttons that morph between settings over multiple
-  seconds
-- Bleeds video into the audio channel, so you can hear that static-y hum
-- Has the spirit of video toaster inside of it, being related to kitchen
-  appliances https://en.wikipedia.org/wiki/Video_Toaster
-- Mix your own videos or built-in random choice from archive/wiki, static, or
-  NTSC color bars
-- Render videos entirely via [command line](docs/CLI.md)
+- Audio-reactive: from the 'mic'/system/loopback, or a file
+- All settings can be modulated (e.g. with LFO)
+- MIDI controller support via WebMIDI — map different knobs to settings
+- Easy-to-use "randomize" buttons, and settings 'morph' over N seconds for
+  smooth transitions
+- Has the spirit of [video toaster](https://en.wikipedia.org/wiki/Video_Toaster)
+  inside of it, being related to kitchen appliances
+- Mix your own videos,webcam, static,NTSC color bars,or random archive.org/wiki
+  commons videos
+- Supports live youtube mixing, but you have to download our
+  [command line](docs/CLI.md) tool with yt-dlp
+- Also renders videos entirely offline via [command line](docs/CLI.md)
 - ...[much more](docs/FEATURES.md)
-
-## Other random features
-
-- Pops controls into a second window for a second screen or projector
-- Records the video live, or render it offline
-- The whole board mirrors to the URL, so a link is a patch
 
 and it works on mobile! tested on Google Pixel with Chrome
 
@@ -61,49 +53,6 @@ Fun bonus: a server on your own machine adds a **Video URL…** source that work
 with yt-dlp and lets you video mix with YouTube — or anything else yt-dlp can
 fetch — on the fly. `pnpm dev` has it, and so does `videoskillet serve` from the
 [released binary](docs/CLI.md#serving-the-app), which needs no clone.
-
-## FAQ
-
-Short versions; the arguments behind them are in [the full FAQ](docs/FAQ.md).
-
-### Why isn't this an After Effects / Premiere / Resolve plugin?
-
-No plugin API speaks WebGPU — OFX and Adobe's SDK are CUDA, OpenCL and Metal —
-and the feedback loops make frame N a function of every frame before it, so
-scrubbing a timeline is wrong by construction. For this look on a clip in an
-edit, [ntsc-rs](https://github.com/ntsc-rs/ntsc-rs) shares the premise and
-already ships those plugins.
-
-### How do I get a result into an edit then?
-
-Open the **strip** tray along the bottom and press **⎙ render**. It writes a
-constant-framerate H.264 MP4 that Resolve and Premiere conform straight off the
-header. **●** records a live performance first, and ⎙ replays it into the
-render.
-
-Running locally there is also `pnpm render`, which does it without a browser:
-
-```
-pnpm render in.mp4 out.mov --look='<paste a link off the app>'
-```
-
-The look comes off the address bar and the picture out of the file, and the
-output is ProRes 4444, which keeps the colour artifacts that a browser's 4:2:0
-encode throws away. The clip's own sound goes in too, and that matters because
-bass drives vertical hold; the intercarrier buzz comes back out beside it.
-
-Every demo link below renders as it stands: the board, the modulation, the
-source and the seed all come off the link, so a look that names its own source
-needs no input file at all. [CLI](docs/CLI.md) has the options and three worked
-examples.
-
-### Can I patch it into Max/MSP, Jitter or TouchDesigner?
-
-Most of it works now with no code: MIDI CC and clock over a virtual port, a
-patch's audio in by sharing the tab or app it is playing out of (a loopback
-device still works, and is the way in on browsers that cannot share audio), a
-Jitter render in as a webcam through Syphon, and the picture back out through an
-OBS browser source. OSC is the piece that is missing.
 
 ## Docs
 
