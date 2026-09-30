@@ -100,7 +100,8 @@
 /* A touch screen too small for the instrument's sidebar is a phone, and a
    phone opens the camera. The query uses the two sizes app.module.css restacks
    the instrument at, and adds touch so a narrow desktop window keeps the app. */
-.heroCta .onPhone {
+.heroCta .onPhone,
+.phoneOnly {
   display: none;
 }
 @media (pointer: coarse) and (orientation: portrait) and (max-width: 900px),
@@ -108,9 +109,54 @@
   .heroCta .onPhone {
     display: inline-block;
   }
-  .heroCta .offPhone {
+  .phoneOnly {
+    display: block;
+  }
+  .heroCta .offPhone,
+  .deskOnly {
     display: none;
   }
+}
+
+/* The camera page's tour: one card per thing it does, in a row a thumb
+   scrolls. */
+.tour {
+  display: flex;
+  gap: 1rem;
+  margin: 1.5rem -1.25rem;
+  padding: 0 1.25rem 0.5rem;
+  overflow-x: auto;
+  list-style: none;
+  scroll-padding: 0 1.25rem;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+}
+.tour::-webkit-scrollbar {
+  display: none;
+}
+.tour li {
+  flex: none;
+  width: min(72vw, 300px);
+  scroll-snap-align: start;
+}
+.tour img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--border-faint);
+  border-radius: 0.75rem;
+  background: #000;
+}
+.tour h3 {
+  margin: 0.85rem 0 0.35rem;
+  font-size: 1.05rem;
+}
+.tour p {
+  margin: 0;
+  color: var(--fg3);
+  font-size: 0.92rem;
+  line-height: 1.5;
 }
 
 /* A word, not a glyph: a bare ▶ is a guess, and these sit next to each

@@ -17,6 +17,40 @@ const DESCRIPTION =
 const UNFURL =
   'Analog video glitches — dot crawl, dropouts, head-switch wobble, video feedback — that fall out of a simulated NTSC signal path, live in the browser.'
 
+// The camera page's tour, in the order a first visit meets it.
+const TOUR = [
+  {
+    still: 'looks',
+    title: 'Swipe for looks',
+    body: 'Swipe across the picture for the next look, and hold a finger on it to see the camera clean. Random rolls a feedback loop from all of them.',
+    alt: 'The camera page with a feedback look on a cat, the strip of looks under the picture',
+  },
+  {
+    still: 'tune',
+    title: 'Tune every knob',
+    body: 'Tune opens the controls the look is made of: its loop, its delay, its colour. Reset puts the look back.',
+    alt: 'The tune sheet open over the controls, with a slider for each of the look’s controls',
+  },
+  {
+    still: 'mix',
+    title: 'Mix a second picture',
+    body: 'Mix puts the other camera, or a clip from your phone, on source B. Then dissolve, wipe, inset, key or sum it in with the fader.',
+    alt: 'A clip of pine trees in an inset over the camera, with the mixer’s modes and fader under the picture',
+  },
+  {
+    still: 'zoom',
+    title: 'Zoom',
+    body: 'Pinch, or tap a lens stop. Where the browser allows it the page drives the phone’s own lenses, the ultrawide included.',
+    alt: 'The camera zoomed to 2×, with the lens stops over the bottom of the picture',
+  },
+  {
+    still: 'help',
+    title: 'Everything else',
+    body: 'Sound lets the room’s noise shake the set, tilt steers a loop with the phone, and full app opens the whole instrument on the same look.',
+    alt: 'The camera page’s help, naming each gesture and switch over the picture',
+  },
+]
+
 const SHARE_IMAGE = `${ORIGIN}og.jpg`
 const SHARE_IMAGE_W = 1200
 const SHARE_IMAGE_H = 630
@@ -76,6 +110,43 @@ const SHARE_IMAGE_H = 630
       </div>
     </section>
 
+    <!-- What the camera page does, for a phone, which is where it is the
+         front door. Each card is a still of the page from
+         scripts/camshots.mjs. -->
+    <section class="phoneOnly">
+      <div class="wrap wide">
+        <h2 class="head">On your phone</h2>
+        <p class="sub">
+          The camera runs your phone's camera through the set. Everything is a
+          swipe or a tap.
+        </p>
+        <ol class="tour">
+          {TOUR.map(card => (
+            <li>
+              <img
+                src={`/phone/${card.still}.webp`}
+                alt={card.alt}
+                width="600"
+                height="800"
+                loading="lazy"
+                decoding="async"
+              />
+              <h3>{card.title}</h3>
+              <p>{card.body}</p>
+            </li>
+          ))}
+        </ol>
+        <p class="heroCta">
+          <a class="btn primary" href="/cam/">
+            Open the camera →
+          </a>
+          <a class="btn" href="/guide/guide/#camera">
+            Camera guide
+          </a>
+        </p>
+      </div>
+    </section>
+
     <!-- The app being used, which is the one thing about this program a
          stranger cannot work out from a picture of what it makes. Four
          recordings of the window: one button handing you looks you did not
@@ -103,7 +174,7 @@ const SHARE_IMAGE_H = 630
          after the demos: the map at the head of the sidebar, boxed in the
          window and enlarged beside it. The figure is the README's, served
          from docs/img by the `figures` integration in astro.config.mjs. -->
-    <section>
+    <section class="deskOnly">
       <div class="wrap wide">
         <h2 class="head">How do I use this thing?</h2>
         <p class="sub">Use the signal path!</p>
