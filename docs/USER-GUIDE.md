@@ -199,15 +199,25 @@ and **camera** in the ☰ menu reaches the page from the app.
   yes, the page opens the camera by itself on later visits. The first visit
   opens on a card naming each gesture and switch, and **?** in the top bar
   brings it back.
-- The strip holds a short list of presets, most of them feedback loops that move
-  the picture only a little each lap. **random** picks another loop of that
-  kind.
-- **tune** opens a sheet with the look's strength and every control its preset
-  sets, then colour, tint, noise and a ghost. On a loop the strength opens the
-  loop's mix and leaves its gain alone, so the bottom of the slider gives echo
-  trails and the top gives the look building on itself. The other sliders move
-  the controls themselves, over the whole range the app gives them. **reset**
-  puts the look back. Pressing the look that is on also opens the sheet.
+- The tabs over the strip sort the looks by which part of the set goes wrong:
+  **loops** holds feedback loops that move the picture only a little each lap
+  and do their work in colour, **tape** the deck and its tape, **signal** the
+  picture on its way in (reception, cables, the decoder), **scan** the sync, the
+  deflection and the tube, and **bent** the circuit-bent boxes and the signal
+  driven past its rails. Each tab lists the looks that read best at phone size,
+  and **random** rolls one from every preset of that kind in the app, including
+  the ones the tab does not list.
+- A tap puts a look up outright. Dragging a look's chip up mixes it in partway
+  and stacks it on the look that is up, the way dragging a preset chip sideways
+  does in the app; the chip fills to its weight, and dragging it down takes it
+  back out. Any number of looks, from any tab, can be stacked.
+- **tune** opens a sheet with the strength of the look, the weight of each look
+  stacked on it, and every control any of them sets, then colour, tint, noise
+  and a ghost. On a loop the strength opens the loop's mix and leaves its gain
+  alone, so the bottom of the slider gives echo trails and the top gives the
+  look building on itself. The other sliders move the controls themselves, over
+  the whole range the app gives them. **reset** puts the looks back. Pressing
+  the look that is on also opens the sheet.
 - Holding a finger on the picture shows the camera without the look. Swiping
   across it steps to the next or previous look on the strip.
 - Pinching the picture zooms, and the stops under the picture jump to 1× and 2×,
@@ -230,10 +240,13 @@ and **camera** in the ☰ menu reaches the page from the app.
 - The button with the turning arrows switches between the front and back
   cameras. The front camera is mirrored at the source, before the encoder, so a
   ghost or a smear still trails to the right the way a set draws it.
-- A phone held upright stands the set on its side, the way an arcade cabinet
-  mounts its tube, so the camera's tall picture fills a 3:4 screen whole. The
-  scanlines run down the glass, a rolling picture slides sideways, and stills
-  and videos come out tall.
+- A phone held upright shows an upright slice down the middle of the set's
+  glass, with the camera's tall picture fitted into it. The scanlines run across
+  the picture, a tracking band sweeps up it and a roll rolls, and stills and
+  videos come out tall. The set carries black either side of the slice, so a
+  picture torn or pulled sideways brings black in with it. **on side** stands
+  the set on its side instead, the way an arcade cabinet mounts its tube: the
+  whole glass is on show, and the scanlines run down the picture.
 - **sound** lets the room's sound into the set. A cheap set runs its audio
   amplifier off the same supply as the scan, so each kick drum loads the supply
   and the picture jolts and rings back. A look that already works the supply
@@ -248,13 +261,24 @@ and **camera** in the ☰ menu reaches the page from the app.
   the screen and B. On a phone that cannot, the page records four seconds of the
   camera on screen to a tape and loops it on B, the way a studio rolled a deck
   into a mixer's second input. The page asks each phone once and remembers the
-  answer.
-- While B has a picture, the mixer sits over the strip. **dissolve** crossfades
-  the two genlocked, **wipe** splits the screen between them, **inset** squeezes
-  B into a corner, **key** lays B's bright parts over A, and **sum** adds B in
-  with no sync, so the two beat against each other. The fader runs each from A
-  to B. The look stays up under the mixer, and the × or **mix** again takes the
-  second picture off.
+  answer. B comes up dissolved halfway under the look that is up, and a **mix**
+  tab opens with mixers that have lost their sync, their supply or their plugs.
+  **mix** again takes the second picture off.
+- **deck** opens the controls for playing the set live, and the page remembers
+  whether it is open. With it closed the page keeps to looks.
+- On the deck, while B has a picture, the mixer sits over the strip.
+  **dissolve** crossfades the two genlocked, **wipe** splits the screen between
+  them, **inset** squeezes B into a corner, or opens a box of it in the middle
+  of an upright slice, **key** lays B's bright parts over A, and **sum** adds B
+  in with no sync, so the two beat against each other. The fader runs each from
+  A to B. A look from the **mix** tab works the mixer itself, and pressing a
+  mode takes the mixer back from it.
+- The deck's pads throw a fault that breaks the picture and heals. **track**
+  sweeps a band of mistracking up the picture, **roll** loses the vertical hold,
+  **collapse** folds the raster to a line, **shuttle** runs the tape at speed,
+  and **dub** piles up generations of copying. With a second picture on B, the
+  fader flips to the other end on the frame the picture is least legible, so the
+  fault carries the change of camera the way a transition does in the app.
 - **full app** opens the app on the same preset, asking for the camera again.
 
 ## Keyboard

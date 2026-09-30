@@ -505,6 +505,19 @@
   padding-bottom: 8px;
   border-bottom: 1px solid #ffffff18;
 }
+.drop {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #ffffff20;
+  color: #fff;
+  cursor: pointer;
+}
 .knobName {
   flex: none;
   width: 7.5em;
@@ -576,6 +589,32 @@
   line-height: 1;
 }
 
+/* Which part of the set the strip breaks. */
+.tabs {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin-bottom: -6px;
+  padding: 0 12px;
+}
+.tab {
+  padding: 4px 10px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--fg3);
+  font: inherit;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.tabOn {
+  border-bottom-color: #fc3;
+  color: #fff;
+}
+
 /* The looks sit in one row that scrolls sideways. */
 .strip {
   display: flex;
@@ -605,11 +644,19 @@
   white-space: nowrap;
   scroll-snap-align: start;
   cursor: pointer;
+  /* Sideways scrolls the strip; up and down weigh the chip's look in. */
+  touch-action: pan-x;
 }
 .chipOn {
   border-color: #fff;
   background: #fff;
   color: #000;
+}
+/* A look stacked on the one that is up, filled to its weight. */
+.chipMixed {
+  border-color: #fc3;
+  background: linear-gradient(to top, #fc36 var(--w), transparent var(--w));
+  color: #fff;
 }
 .chipStrength {
   font-family: var(--mono);

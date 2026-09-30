@@ -23,13 +23,18 @@ import {
   TiltIcon,
 } from './icons'
 import { aimKey, chromaHue, colourAt, keysOnHue, sourcePoint } from './keyed'
+import { LookChip } from './LookChip'
 import {
-  CAM_LOOKS,
   MIX_MODES,
+  MIX_SHELF,
+  SHELVES,
   lookBoard,
   lookLabel,
   mixControls,
+  mixesItself,
   rollLook,
+  rollPool,
+  stackLabel,
 } from './looks'
 import { SLICE } from './tape'
 import { Tune } from './Tune'
@@ -42,7 +47,7 @@ import { stopAt, zoomLabel } from './zoom'
 
 import type { ControlKey, Controls } from '../core/controls'
 import type { Transition } from '../ui/transitions'
-import type { Look, Mix } from './looks'
+import type { Layers, Look, Mix } from './looks'
 import type { Layout } from './tape'
 import type { ChangeEvent, PointerEvent, ReactNode } from 'react'
 
@@ -56,6 +61,7 @@ const TAP_PX = 10
 
 const HELP_STORE = 'videoskillet_cam_help_seen'
 const SIDEWAYS_STORE = 'videoskillet_cam_sideways'
+const DECK_STORE = 'videoskillet_cam_deck'
 
 const sliceOf = (layout: Layout) => (layout === 'slice' ? SLICE : 1)
 
@@ -80,26 +86,40 @@ interface Shot {
   video: boolean
 }
 
-// Everything the board is built from: the look, the knobs moved off it, the
-// mixer while B has a picture, and where a tap has aimed the look's keyer.
+// Everything the board is built from: the look, the presets dragged in partway
+// on top of it, the knobs moved off both, the mixer while B has a picture, and
+// where a tap has aimed the look's keyer.
 interface Scene {
   look: Look | null
+  layers: Layers
   tweaks: Partial<Controls>
   mix: Mix | null
   hue: number | null
 }
 
+const CLEAN = { look: null, layers: {}, tweaks: {}, hue: null } as const
+
+// A look that sets the mixer itself keeps it; the mixer's own modes run under
+// every other look.
+const mixerOwned = (s: Scene) =>
+  [...(s.look === null ? [] : [s.look.name]), ...Object.keys(s.layers)].some(
+    mixesItself,
+  )
+
 const boardOf = (s: Scene, slice: number) => {
-  const board = lookBoard(s.look)
+  const board = lookBoard(s.look, s.layers)
   const controls = {
     ...board.controls,
     ...s.tweaks,
-    ...(s.mix === null ? {} : mixControls(s.mix, slice)),
+    ...(s.mix === null || mixerOwned(s) ? {} : mixControls(s.mix, slice)),
   }
   return { ...board, controls: aimKey(controls, s.hue) }
 }
 
 const FIRST_MIX: Mix = { mode: 'dissolve', fader: 0.5 }
+
+const without = (layers: Layers, name: string): Layers =>
+  Object.fromEntries(Object.entries(layers).filter(([n]) => n !== name))
 
 const isAbort = (e: unknown) =>
   e instanceof DOMException && e.name === 'AbortError'
@@ -175,6 +195,12 @@ const HINTS: [string, string][] = [
     'mix',
     'put the other camera or a clip from your phone on B, then fade to it',
   ],
+  ['tabs', 'which part of the set goes wrong: loops, tape, signal, scan, bent'],
+  ['drag up', 'on a look, mixes it in partway; stack as many as you like'],
+  [
+    'deck',
+    'fault pads that break the picture, and the mixer’s own modes and fader',
+  ],
   ['tune', 'every knob the look is made of'],
   ['full app', 'the whole instrument, on the same look'],
 ]
@@ -193,6 +219,7 @@ export function CamPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const clipRef = useRef<HTMLInputElement>(null)
   const [sideways, setSideways] = usePersistedFlag(SIDEWAYS_STORE)
+  const [deck, setDeck] = usePersistedFlag(DECK_STORE)
   // The wipe and the inset are laid out across the glass on show, so a new
   // layout lays the board again.
   const eng = useCamEngine(canvasRef, {
@@ -205,13 +232,9 @@ export function CamPage() {
     zoom.reset()
   })
   const tilt = useTilt(eng.steer)
-  const [scene, setScene] = useState<Scene>({
-    look: null,
-    tweaks: {},
-    mix: null,
-    hue: null,
-  })
+  const [scene, setScene] = useState<Scene>({ ...CLEAN, mix: null })
   const sceneRef = useRef(scene)
+  const [shelfName, setShelfName] = useState(SHELVES[0].name)
   const [tuning, setTuning] = useState(false)
   const [menu, setMenu] = useState(false)
   const [helpSeen, setHelpSeen] = usePersistedFlag(HELP_STORE)
@@ -235,10 +258,13 @@ export function CamPage() {
   const flashTimer = useRef(0)
   const ringTimer = useRef(0)
   const { look } = scene
+  // The mix tab opens while B has a picture to mix.
+  const shelves = second.loaded ? [...SHELVES, MIX_SHELF] : SHELVES
+  const shelf = shelves.find(s => s.name === shelfName) ?? SHELVES[0]
 
   const capture = useCapture(
     canvasRef,
-    lookLabel(look),
+    stackLabel(look, scene.layers),
     setError,
     (blob, name) =>
       setShot({
@@ -266,27 +292,46 @@ export function CamPage() {
   }
 
   // A tap's aim and the knobs moved off a look last while that look stays up,
-  // through a change of strength.
+  // through a change of strength. A new look goes under whatever is stacked on
+  // the old one; normal takes the stack off too.
   const land = (next: Look | null) => {
     const cur = sceneRef.current
-    const same =
-      next !== null && cur.look !== null && next.name === cur.look.name
+    if (next === null) {
+      paint(CLEAN)
+      return
+    }
+    const same = cur.look !== null && next.name === cur.look.name
     paint({
       look: next,
+      layers: without(cur.layers, next.name),
       hue: same ? cur.hue : null,
       tweaks: same ? cur.tweaks : {},
     })
   }
-  // A second press on the look already up opens its knobs, the way a photo
-  // app's filter does.
+  // A tap puts a look up outright, the way a photo app's filter does, and a
+  // second tap on the look already up opens its knobs.
   const pick = (name: string) => {
     if (look !== null && look.name === name && !look.rolled) {
       setTuning(!tuning)
       return
     }
-    land({ name, strength: 1, rolled: false })
+    paint({ ...CLEAN, look: { name, strength: 1, rolled: false } })
   }
-  const roll = () => land(rollLook(look))
+  // A chip dragged up mixes its preset in partway: as the look when nothing
+  // is up, as the look's strength when it is the look, and stacked on the look
+  // otherwise.
+  const weigh = (name: string, w: number) => {
+    const cur = sceneRef.current
+    if (cur.look === null) {
+      paint({ ...CLEAN, look: { name, strength: w, rolled: false } })
+    } else if (cur.look.name === name) {
+      paint({ look: { ...cur.look, strength: w } })
+    } else {
+      const rest = without(cur.layers, name)
+      paint({ layers: w > 0 ? { ...rest, [name]: w } : rest })
+    }
+  }
+  const roll = () => land(rollLook(look, rollPool(shelf)))
 
   const turnKnob = (key: ControlKey, value: number) =>
     paint({ tweaks: { ...sceneRef.current.tweaks, [key]: value } })
@@ -320,7 +365,7 @@ export function CamPage() {
     void second.load().then(got => {
       if (got === null) return
       if (got === 'tape' && cam.canFlip) cam.flip()
-      paint({ mix: FIRST_MIX })
+      mixing()
     })
   }
   const mixClip = (e: ChangeEvent<HTMLInputElement>) => {
@@ -330,24 +375,36 @@ export function CamPage() {
     setMenu(false)
     setError('')
     void second.loadClip(file).then(ok => {
-      if (ok) paint({ mix: FIRST_MIX })
+      if (ok) mixing()
     })
   }
+  // A second picture opens the mix tab and dissolves halfway to it under the
+  // look that is up.
+  const mixing = () => {
+    setShelfName(MIX_SHELF.name)
+    paint({ mix: FIRST_MIX })
+  }
+  // The mixer's own modes take the mixer back from a look that set it.
+  const mixWith = (mix: Mix) =>
+    paint(mixerOwned(sceneRef.current) ? { ...CLEAN, mix } : { mix })
   // A pad breaks the picture and lets it heal. With a second picture on B, the
   // cut lands on the frame the picture is least legible and throws the fader to
   // the other end, so the fault carries the change of picture.
   const hit = (t: Transition) => {
     eng.engine?.startFault(
       faultPlan(t, () => {
-        const m = sceneRef.current.mix
-        if (m !== null) paint({ mix: { ...m, fader: m.fader < 0.5 ? 1 : 0 } })
+        const s = sceneRef.current
+        if (s.mix !== null && !mixerOwned(s))
+          paint({ mix: { ...s.mix, fader: s.mix.fader < 0.5 ? 1 : 0 } })
       }),
     )
   }
 
   const takeOff = () => {
     second.eject()
-    paint({ mix: null })
+    paint(
+      mixerOwned(sceneRef.current) ? { ...CLEAN, mix: null } : { mix: null },
+    )
   }
 
   const flipSound = () => {
@@ -368,10 +425,10 @@ export function CamPage() {
     flashTimer.current = window.setTimeout(() => setFlash(''), 900)
   }
 
-  // A swipe steps along the strip, the way a phone camera steps through its
-  // filters, with normal at the start.
+  // A swipe steps along the tab's strip, the way a phone camera steps through
+  // its filters, with normal at the start.
   const step = (dir: 1 | -1) => {
-    const order: (string | null)[] = [null, ...CAM_LOOKS]
+    const order: (string | null)[] = [null, ...shelf.looks]
     const at = look === null || look.rolled ? 0 : order.indexOf(look.name)
     const name = order[(Math.max(at, 0) + dir + order.length) % order.length]
     land(name === null ? null : { name, strength: 1, rolled: false })
@@ -393,7 +450,7 @@ export function CamPage() {
   // colour under the finger.
   const tap = (e: PointerEvent<HTMLCanvasElement>) => {
     const c = eng.camera()
-    if (c === null || !keysOnHue(lookBoard(look).controls)) return
+    if (c === null || !keysOnHue(lookBoard(look, scene.layers).controls)) return
     const rect = e.currentTarget.getBoundingClientRect()
     const at = {
       x: (e.clientX - rect.left) / rect.width,
@@ -507,6 +564,8 @@ export function CamPage() {
     setHelpSeen(true)
   }
   const tweaked = Object.keys(scene.tweaks).length > 0
+  const ownedMixer = mixerOwned(scene)
+  const stacked = Object.keys(scene.layers).length > 0
   const strength = look === null ? 0 : Math.round(look.strength * 100)
   const stop = stopAt(zoom.zoom, zoom.stops)
   const busy = second.left > 0 || second.opening || capture.recording
@@ -529,7 +588,7 @@ export function CamPage() {
           </button>
           <a
             className={styles.full}
-            href={instrumentHref(look, on)}
+            href={instrumentHref(stacked ? null : look, on)}
             title="open the whole instrument on this look"
           >
             full app ↗
@@ -608,6 +667,14 @@ export function CamPage() {
                 onClick={() => setTuning(!tuning)}
               >
                 <SlidersIcon />
+              </Switch>
+              <Switch
+                on={deck}
+                label="deck"
+                title="fault pads, and the mixer's own modes and fader"
+                onClick={() => setDeck(!deck)}
+              >
+                <TapeIcon />
               </Switch>
             </div>
           ) : null}
@@ -725,25 +792,25 @@ export function CamPage() {
       <section className={styles.controls}>
         {error === '' ? null : <p className={styles.error}>{error}</p>}
 
-        {scene.mix === null || !second.loaded ? null : (
+        {!deck || scene.mix === null || !second.loaded ? null : (
           <div className={styles.mixer} aria-label="Mixer">
             <div className={styles.mixModes} role="radiogroup">
-              {MIX_MODES.map(m => (
-                <button
-                  key={m}
-                  role="radio"
-                  aria-checked={scene.mix?.mode === m}
-                  className={cx(
-                    styles.mixMode,
-                    scene.mix?.mode === m && styles.mixModeOn,
-                  )}
-                  onClick={() =>
-                    paint({ mix: { mode: m, fader: scene.mix?.fader ?? 0.5 } })
-                  }
-                >
-                  {m}
-                </button>
-              ))}
+              {MIX_MODES.map(m => {
+                const up = !ownedMixer && scene.mix?.mode === m
+                return (
+                  <button
+                    key={m}
+                    role="radio"
+                    aria-checked={up}
+                    className={cx(styles.mixMode, up && styles.mixModeOn)}
+                    onClick={() =>
+                      mixWith({ mode: m, fader: scene.mix?.fader ?? 0.5 })
+                    }
+                  >
+                    {m}
+                  </button>
+                )
+              })}
             </div>
             <label className={styles.fader}>
               <span>A</span>
@@ -754,12 +821,12 @@ export function CamPage() {
                 max={100}
                 value={Math.round(scene.mix.fader * 100)}
                 aria-label="fader"
+                title={ownedMixer ? 'the look is working the mixer' : undefined}
+                disabled={ownedMixer}
                 onChange={e =>
-                  paint({
-                    mix: {
-                      mode: scene.mix?.mode ?? 'dissolve',
-                      fader: Number(e.target.value) / 100,
-                    },
+                  mixWith({
+                    mode: scene.mix?.mode ?? 'dissolve',
+                    fader: Number(e.target.value) / 100,
                   })
                 }
               />
@@ -776,7 +843,7 @@ export function CamPage() {
           </div>
         )}
 
-        {on ? (
+        {on && deck ? (
           <div className={styles.hits} aria-label="Faults">
             {TRANSITIONS.map(t => (
               <button
@@ -794,10 +861,24 @@ export function CamPage() {
           </div>
         ) : null}
 
+        <div className={styles.tabs} role="tablist" aria-label="Kinds of look">
+          {shelves.map(s => (
+            <button
+              key={s.name}
+              role="tab"
+              aria-selected={s === shelf}
+              className={cx(styles.tab, s === shelf && styles.tabOn)}
+              onClick={() => setShelfName(s.name)}
+            >
+              {s.name}
+            </button>
+          ))}
+        </div>
+
         <nav className={styles.strip} aria-label="Looks">
           <button
             className={cx(styles.chip, look?.rolled === true && styles.chipOn)}
-            title="a feedback loop picked at random from all of them"
+            title={`a look picked at random from every one the ${shelf.name} tab's families hold`}
             onClick={roll}
           >
             <DiceIcon />
@@ -810,23 +891,24 @@ export function CamPage() {
           >
             normal
           </button>
-          {CAM_LOOKS.map(name => {
+          {shelf.looks.map(name => {
             const up = look !== null && !look.rolled && look.name === name
             return (
-              <button
+              <LookChip
                 key={name}
-                data-look={name}
-                className={cx(styles.chip, up && styles.chipOn)}
-                aria-pressed={up}
-                onClick={() => pick(name)}
+                name={name}
+                label={lookLabel({ name, strength: 1, rolled: false })}
+                up={up}
+                weight={up ? look.strength : (scene.layers[name] ?? 0)}
+                onPick={() => pick(name)}
+                onWeigh={w => weigh(name, w)}
               >
-                {lookLabel({ name, strength: 1, rolled: false })}
                 {up && (look.strength < 1 || tweaked) ? (
                   <span className={styles.chipStrength}>
                     {tweaked ? '•' : strength}
                   </span>
                 ) : null}
-              </button>
+              </LookChip>
             )
           })}
         </nav>
@@ -907,9 +989,16 @@ export function CamPage() {
         {tuning ? (
           <Tune
             look={look}
+            layers={scene.layers}
             controls={boardOf(scene, sliceOf(eng.layout)).controls}
             tweaked={tweaked}
             onStrength={s => look !== null && land({ ...look, strength: s })}
+            onLayer={(name, w) =>
+              paint({ layers: { ...sceneRef.current.layers, [name]: w } })
+            }
+            onDrop={name =>
+              paint({ layers: without(sceneRef.current.layers, name) })
+            }
             onKnob={turnKnob}
             onReset={() => paint({ tweaks: {} })}
             onClose={() => setTuning(false)}

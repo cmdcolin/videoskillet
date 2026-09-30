@@ -41,8 +41,9 @@ const CROP_H = (WIDTH * 4) / 3
 const STILLS = {
   looks: { shot: 'look', under: 'nav[aria-label="Looks"]' },
   tune: { shot: 'tune', under: 'section[aria-label="Tune the look"]' },
-  mix: { shot: 'inset', under: '[aria-label="Mixer"]' },
+  mix: { shot: 'mix', under: 'nav[aria-label="Looks"]' },
   zoom: { shot: 'zoom', under: '[aria-label="Zoom"]' },
+  faults: { shot: 'fault', under: '[aria-label="Faults"]' },
   help: { shot: 'help', under: 'button[class*="hints"]' },
 }
 const MARGIN = 12
@@ -168,16 +169,27 @@ const clickText = async text => {
   }, text)
   if (!found) throw new Error(`no button says ${text}`)
 }
-const setFader = v =>
-  page.evaluate(v => {
-    const el = document.querySelector('input[aria-label="fader"]')
-    const set = Object.getOwnPropertyDescriptor(
-      HTMLInputElement.prototype,
-      'value',
-    ).set
-    set.call(el, String(v))
-    el.dispatchEvent(new Event('input', { bubbles: true }))
-  }, v)
+// A chip dragged up by `px`, the way a thumb weighs a look in.
+const dragUp = async (name, px) => {
+  await page.evaluate(
+    n =>
+      document
+        .querySelector(`[data-look="${n}"]`)
+        ?.scrollIntoView({ inline: 'center', block: 'nearest' }),
+    name,
+  )
+  await settle(400)
+  const box = await (await page.$(`[data-look="${name}"]`)).boundingBox()
+  const x = box.x + box.width / 2
+  const y = box.y + box.height / 2
+  await page.mouse.move(x, y)
+  await page.mouse.down()
+  for (let i = 1; i <= 12; i++) {
+    await page.mouse.move(x, y - (px * i) / 12)
+    await settle(16)
+  }
+  await page.mouse.up()
+}
 
 let failed
 try {
@@ -193,26 +205,36 @@ try {
   // A first visit opens on the help.
   await shoot('help')
   await click('button[class*="hints"]')
-  await click('[data-look="theLightIsALapBehind"]')
+  // A tape look with a second one dragged in under it.
+  await clickText('tape')
+  await click('[data-look="pictureSearch"]')
+  await dragUp('trackingBand', 45)
   await settle(3000)
   await shoot('look')
   await click('button[title="the look\'s own knobs"]')
   await settle(1000)
   await shoot('tune')
   await click('button[aria-label="close"]')
+  await clickText('normal')
   await click('button[aria-label="zoom 2×"]')
   await settle(2500)
   await shoot('zoom')
   await click('button[aria-label="zoom 1×"]')
-  await clickText('normal')
+  await click('button[title^="fault pads"]')
+  await settle(1500)
+  // Taken near the middle of the track fault's second and a half, where the
+  // band is widest.
+  await click('button[title^="the head comes off track"]')
+  await settle(650)
+  await shoot('fault')
+  await click('button[title^="fault pads"]')
   await click('button[title="mix a second picture in"]')
   const input = await page.$('input[type=file]')
   await input.uploadFile(clip)
   await settle(3000)
-  await clickText('inset')
-  await setFader(35)
-  await settle(2500)
-  await shoot('inset')
+  await click('[data-look="pauseFight"]')
+  await settle(3000)
+  await shoot('mix')
   await page.evaluate(() => window.vf?.destroy())
 } catch (e) {
   failed = e

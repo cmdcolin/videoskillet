@@ -3,47 +3,71 @@ import { describe, expect, it } from 'vitest'
 import { DEFAULT_CONTROLS } from '../core/controls'
 import {
   PRESET_BY_NAME,
+  blendPresets,
   controlsEqual,
   needsSourceB,
   presetControls,
 } from '../ui/presets'
 import {
-  CAM_LOOKS,
   MIX_MODES,
+  MIX_SHELF,
   ROLL_POOL,
+  SHELVES,
   lookBoard,
   lookKnobs,
   lookLabel,
   mixControls,
+  mixesItself,
   rollLook,
+  rollPool,
+  stackLabel,
   subtleLoop,
 } from './looks'
 
-import type { Mix } from './looks'
+import type { Layers, Mix } from './looks'
+
+const ON_TABS = [...SHELVES, MIX_SHELF].flatMap(s => s.looks)
+const LOOPS = SHELVES.find(s => s.name === 'loops')?.looks ?? []
 
 describe('the camera strip', () => {
   it('names only presets that exist', () => {
-    for (const name of CAM_LOOKS)
+    for (const name of ON_TABS)
       expect(PRESET_BY_NAME.has(name), name).toBe(true)
   })
 
   // B is empty until a second picture goes on it, so a look that mixes one
-  // source would show the camera untouched.
-  it('offers nothing that needs a second source', () => {
-    for (const name of CAM_LOOKS) {
-      const def = PRESET_BY_NAME.get(name)
-      expect(def !== undefined && needsSourceB(def), name).toBe(false)
-    }
+  // source would show the camera untouched, and the mix tab only opens with B.
+  it('keeps the looks that need a second source on the mix tab', () => {
+    for (const shelf of SHELVES)
+      for (const name of shelf.looks)
+        expect(mixesItself(name), name).toBe(false)
+    for (const name of MIX_SHELF.looks)
+      expect(mixesItself(name), name).toBe(true)
   })
 
   it('lists each look once', () => {
-    expect(new Set(CAM_LOOKS).size).toBe(CAM_LOOKS.length)
+    expect(new Set(ON_TABS).size).toBe(ON_TABS.length)
+  })
+
+  it('lists each look under a family its tab rolls from', () => {
+    for (const shelf of [...SHELVES, MIX_SHELF])
+      for (const name of shelf.looks)
+        expect(shelf.groups, name).toContain(PRESET_BY_NAME.get(name)?.group)
+  })
+
+  it('rolls within the tab', () => {
+    for (const shelf of [...SHELVES, MIX_SHELF]) {
+      const pool = rollPool(shelf)
+      expect(pool.length, shelf.name).toBeGreaterThan(shelf.looks.length / 2)
+      const next = rollLook(null, pool)
+      expect(pool).toContain(next.name)
+    }
   })
 })
 
 describe('lookBoard', () => {
   it('lands a look at full strength as the preset itself', () => {
-    for (const name of CAM_LOOKS) {
+    for (const name of ON_TABS) {
       const def = PRESET_BY_NAME.get(name)
       if (def === undefined) continue
       const { controls } = lookBoard({ name, strength: 1, rolled: false })
@@ -72,14 +96,50 @@ describe('lookBoard', () => {
   })
 })
 
-describe('lookBoard on a feedback loop', () => {
-  const loops = CAM_LOOKS.filter(
-    name => PRESET_BY_NAME.get(name)?.group === 'Feedback loops',
-  )
+describe('lookBoard with looks stacked on it', () => {
+  const look = { name: 'pictureSearch', strength: 1, rolled: false }
 
-  it('covers most of the strip', () => {
-    expect(loops.length).toBeGreaterThan(CAM_LOOKS.length / 2)
+  it('mixes a stacked look in by its weight, as the preset mixer does', () => {
+    const { controls } = lookBoard(look, { looseConnector: 0.5 })
+    const mixed = blendPresets(
+      DEFAULT_CONTROLS,
+      new Map([
+        ['looseConnector', 0.5],
+        ['pictureSearch', 1],
+      ]),
+    )
+    expect(controlsEqual(controls, mixed)).toBe(true)
   })
+
+  it('ignores a layer at nothing and a layer that is the look', () => {
+    const alone = lookBoard(look).controls
+    const cases: Layers[] = [{ looseConnector: 0 }, { pictureSearch: 0.3 }]
+    for (const layers of cases)
+      expect(controlsEqual(lookBoard(look, layers).controls, alone)).toBe(true)
+  })
+
+  // Two presets on one loop cannot both set its geometry.
+  it('lets the heavier of two loops set the loop', () => {
+    const heavy = presetControls(
+      PRESET_BY_NAME.get('clockAndCrystal')?.patch ?? {},
+    )
+    const { controls } = lookBoard(
+      { name: 'theLightIsALapBehind', strength: 0.2, rolled: false },
+      { clockAndCrystal: 0.9 },
+    )
+    expect(controls.cfbDelayUs).toBe(heavy.cfbDelayUs)
+  })
+
+  it('counts the stack in its name', () => {
+    expect(stackLabel(look, {})).toBe('picture search')
+    expect(stackLabel(look, { looseConnector: 0.4, wornTape: 0.2 })).toBe(
+      'picture search + 2',
+    )
+  })
+})
+
+describe('lookBoard on a feedback loop', () => {
+  const loops = LOOPS
 
   // A loop blended toward stock drops below unity round trip and fades to a
   // copy of the camera, so the loop has to keep running at zero strength.
@@ -109,8 +169,8 @@ describe('lookBoard on a feedback loop', () => {
 })
 
 describe('subtleLoop', () => {
-  it('passes every loop on the strip', () => {
-    for (const name of CAM_LOOKS) {
+  it('passes every loop on the loops tab', () => {
+    for (const name of LOOPS) {
       const def = PRESET_BY_NAME.get(name)
       expect(
         def !== undefined && subtleLoop(presetControls(def.patch)),
