@@ -159,49 +159,6 @@
 }
 
 /* What the mix switch can put on B. */
-.menu {
-  position: absolute;
-  top: 10px;
-  right: 60px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  width: min(250px, 70%);
-  padding: 6px;
-  border-radius: 14px;
-  background: #111e;
-  box-shadow: 0 6px 24px #000a;
-}
-.menuItem {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px;
-  border: 0;
-  border-radius: 10px;
-  background: none;
-  color: #fff;
-  font: inherit;
-  font-size: var(--fs-md);
-  text-align: left;
-  cursor: pointer;
-}
-.menuItem:hover,
-.menuItem:focus-visible {
-  background: #ffffff18;
-}
-.menuItem svg {
-  flex: none;
-  width: 22px;
-  height: 22px;
-}
-.menuItem small {
-  display: block;
-  margin-top: 2px;
-  color: var(--fg3);
-  font-size: var(--fs-sm);
-}
-
 /* The lens stops, where a phone camera keeps them: over the bottom of the
    picture. */
 .zoom {
@@ -377,12 +334,32 @@
   accent-color: #fff;
 }
 
-/* The mixer, while B has a picture: how the two meet, and the fader. */
+/* The mixer: what is on each source, how the two meet, and the fader. */
 .mixer {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   padding: 0 16px;
+}
+.sources {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sources .mixModes {
+  flex: 1;
+}
+.source {
+  color: var(--fg2);
+  font-size: var(--fs-sm);
+  white-space: nowrap;
+}
+.source b {
+  margin-right: 4px;
+  color: #fff;
+}
+.source + .source {
+  margin-left: 4px;
 }
 .mixModes {
   display: flex;
@@ -402,6 +379,16 @@
   font-size: var(--fs-sm);
   cursor: pointer;
 }
+.mixMode svg {
+  width: 14px;
+  height: 14px;
+  margin-right: 4px;
+  vertical-align: -2px;
+}
+.mixMode:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
 .mixModeOn {
   background: #fff;
   color: #000;
@@ -415,17 +402,8 @@
   font-size: var(--fs-sm);
   font-weight: 700;
 }
-.eject {
-  display: grid;
-  place-items: center;
-  width: 30px;
-  height: 30px;
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-  background: #ffffff20;
-  color: #fff;
-  cursor: pointer;
+.fader:has(:disabled) {
+  opacity: 0.4;
 }
 
 /* The tune sheet rises over the strip and the shutter, so the picture above

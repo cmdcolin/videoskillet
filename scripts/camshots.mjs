@@ -200,13 +200,13 @@ try {
     timeout: 60000,
   })
   await clickText('Start camera')
-  await page.waitForSelector('button[class*="hints"]', { timeout: 30000 })
+  await page.waitForSelector('[aria-label="Mixer"]', { timeout: 30000 })
   await settle(3000)
-  // A first visit opens on the help.
+  await click('button[aria-label="how to use the camera"]')
   await shoot('help')
   await click('button[class*="hints"]')
   // A tape look with a second one dragged in under it.
-  await clickText('tape')
+  await click('xpath/.//button[@role="tab" and text()="tape"]')
   await click('[data-look="pictureSearch"]')
   await dragUp('trackingBand', 45)
   await settle(3000)
@@ -228,7 +228,6 @@ try {
   await settle(650)
   await shoot('fault')
   await click('button[title^="fault pads"]')
-  await click('button[title="mix a second picture in"]')
   const input = await page.$('input[type=file]')
   await input.uploadFile(clip)
   await settle(3000)

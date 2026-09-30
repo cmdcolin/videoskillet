@@ -10,12 +10,10 @@ import { useCapture } from '../ui/useCapture'
 import { useWakeLock } from '../ui/useWakeLock'
 import styles from './cam.module.css'
 import {
-  CloseIcon,
   DiceIcon,
   FilmIcon,
   FlipIcon,
   MicIcon,
-  MixIcon,
   ShareIcon,
   SideIcon,
   SlidersIcon,
@@ -52,6 +50,7 @@ import type { Layout } from './tape'
 import type { ChangeEvent, PointerEvent, ReactNode } from 'react'
 
 type Mode = 'photo' | 'video'
+type BSource = 'none' | 'camera' | 'clip'
 
 // A press becomes the original after it has been held this long, so a swipe or
 // a tap never flashes it.
@@ -59,7 +58,6 @@ const HOLD_MS = 180
 const SWIPE_PX = 40
 const TAP_PX = 10
 
-const HELP_STORE = 'videoskillet_cam_help_seen'
 const SIDEWAYS_STORE = 'videoskillet_cam_sideways'
 const DECK_STORE = 'videoskillet_cam_deck'
 
@@ -191,16 +189,10 @@ const HINTS: [string, string][] = [
   ['hold', 'see the camera without the look'],
   ['pinch', 'zoom, or tap a lens stop under the picture'],
   ['tap', 'aim the key at a colour, on looks that key by colour'],
-  [
-    'mix',
-    'put the other camera or a clip from your phone on B, then fade to it',
-  ],
+  ['mixer', 'put the other camera or a clip on B, then fade to it'],
   ['tabs', 'which part of the set goes wrong: loops, tape, signal, scan, bent'],
   ['drag up', 'on a look, mixes it in partway; stack as many as you like'],
-  [
-    'deck',
-    'fault pads that break the picture, and the mixer’s own modes and fader',
-  ],
+  ['deck', 'fault pads that break the picture and let it heal'],
   ['tune', 'every knob the look is made of'],
   ['full app', 'the whole instrument, on the same look'],
 ]
@@ -236,9 +228,7 @@ export function CamPage() {
   const sceneRef = useRef(scene)
   const [shelfName, setShelfName] = useState(SHELVES[0].name)
   const [tuning, setTuning] = useState(false)
-  const [menu, setMenu] = useState(false)
-  const [helpSeen, setHelpSeen] = usePersistedFlag(HELP_STORE)
-  const [helpAsked, setHelpAsked] = useState(false)
+  const [help, setHelp] = useState(false)
   const [mode, setMode] = useState<Mode>('photo')
   const [comparing, setComparing] = useState(false)
   const [shot, setShot] = useState<Shot | null>(null)
@@ -360,10 +350,13 @@ export function CamPage() {
   // or as a tape. The scene behind the phone and the person holding it share
   // the picture.
   const mixCamera = () => {
-    setMenu(false)
+    second.eject()
     setError('')
     void second.load().then(got => {
-      if (got === null) return
+      if (got === null) {
+        takeOff()
+        return
+      }
       if (got === 'tape' && cam.canFlip) cam.flip()
       mixing()
     })
@@ -372,17 +365,15 @@ export function CamPage() {
     const file = e.target.files?.[0]
     e.target.value = ''
     if (file === undefined) return
-    setMenu(false)
+    second.eject()
     setError('')
-    void second.loadClip(file).then(ok => {
-      if (ok) mixing()
-    })
+    void second.loadClip(file).then(ok => (ok ? mixing() : takeOff()))
   }
   // A second picture opens the mix tab and dissolves halfway to it under the
-  // look that is up.
+  // look that is up. A change of picture on B keeps the mixer where it was.
   const mixing = () => {
     setShelfName(MIX_SHELF.name)
-    paint({ mix: FIRST_MIX })
+    paint({ mix: sceneRef.current.mix ?? FIRST_MIX })
   }
   // The mixer's own modes take the mixer back from a look that set it.
   const mixWith = (mix: Mix) =>
@@ -558,17 +549,44 @@ export function CamPage() {
   if (eng.fatal !== null) return <FatalScreen fatal={eng.fatal} />
 
   const on = cam.state === 'on'
-  const help = on && (helpAsked || !helpSeen)
-  const closeHelp = () => {
-    setHelpAsked(false)
-    setHelpSeen(true)
-  }
   const tweaked = Object.keys(scene.tweaks).length > 0
   const ownedMixer = mixerOwned(scene)
   const stacked = Object.keys(scene.layers).length > 0
   const strength = look === null ? 0 : Math.round(look.strength * 100)
   const stop = stopAt(zoom.zoom, zoom.stops)
   const busy = second.left > 0 || second.opening || capture.recording
+  const showHelp = on && help
+  const mix = scene.mix ?? FIRST_MIX
+  const noB = scene.mix === null || !second.loaded
+  const sources: {
+    key: BSource
+    label: string
+    icon: ReactNode
+    title: string
+  }[] = [
+    { key: 'none', label: 'none', icon: null, title: 'nothing on B' },
+    {
+      key: 'camera',
+      label: cam.canFlip ? 'other camera' : 'tape',
+      icon: cam.canFlip ? <FlipIcon /> : <TapeIcon />,
+      title: cam.canFlip
+        ? 'the other camera, live where the phone runs both, else a 4 s tape'
+        : 'record 4 s of this camera and loop it on B',
+    },
+    {
+      key: 'clip',
+      label: 'clip',
+      icon: <FilmIcon />,
+      title: 'any video in your library, looped',
+    },
+  ]
+  const onB: BSource =
+    second.kind === null ? 'none' : second.kind === 'clip' ? 'clip' : 'camera'
+  const putOnB = (key: BSource) => {
+    if (key === 'none') takeOff()
+    else if (key === 'camera') mixCamera()
+    else clipRef.current?.click()
+  }
 
   return (
     <div className={styles.page}>
@@ -582,7 +600,7 @@ export function CamPage() {
             className={styles.help}
             aria-label="how to use the camera"
             aria-pressed={help}
-            onClick={() => (help ? closeHelp() : setHelpAsked(true))}
+            onClick={() => setHelp(!help)}
           >
             ?
           </button>
@@ -648,19 +666,6 @@ export function CamPage() {
           {on ? (
             <div className={cx(styles.switches, styles.right)}>
               <Switch
-                on={second.loaded || menu}
-                label="mix"
-                title={
-                  second.loaded
-                    ? 'take the second picture off B'
-                    : 'mix a second picture in'
-                }
-                disabled={busy}
-                onClick={second.loaded ? takeOff : () => setMenu(!menu)}
-              >
-                <MixIcon />
-              </Switch>
-              <Switch
                 on={tuning}
                 label="tune"
                 title="the look's own knobs"
@@ -671,41 +676,11 @@ export function CamPage() {
               <Switch
                 on={deck}
                 label="deck"
-                title="fault pads, and the mixer's own modes and fader"
+                title="fault pads that break the picture and let it heal"
                 onClick={() => setDeck(!deck)}
               >
                 <TapeIcon />
               </Switch>
-            </div>
-          ) : null}
-          {menu && !second.loaded ? (
-            <div className={styles.menu} role="menu">
-              <button
-                className={styles.menuItem}
-                role="menuitem"
-                onClick={mixCamera}
-              >
-                {cam.canFlip ? <FlipIcon /> : <TapeIcon />}
-                <span>
-                  {cam.canFlip ? 'the other camera' : 'a tape of this camera'}
-                  <small>
-                    {cam.canFlip
-                      ? 'live where the phone runs both, else a 4 s tape'
-                      : 'records 4 s and loops it on B'}
-                  </small>
-                </span>
-              </button>
-              <button
-                className={styles.menuItem}
-                role="menuitem"
-                onClick={() => clipRef.current?.click()}
-              >
-                <FilmIcon />
-                <span>
-                  a clip from your phone
-                  <small>any video in your library, looped</small>
-                </span>
-              </button>
             </div>
           ) : null}
           <input
@@ -715,7 +690,7 @@ export function CamPage() {
             hidden
             onChange={mixClip}
           />
-          {on && !help ? (
+          {on && !showHelp ? (
             <div className={styles.zoom} role="group" aria-label="Zoom">
               {zoom.stops.map(s => (
                 <button
@@ -753,8 +728,8 @@ export function CamPage() {
               <Elapsed since={recSince} />
             </span>
           ) : null}
-          {help ? (
-            <button className={styles.hints} onClick={closeHelp}>
+          {showHelp ? (
+            <button className={styles.hints} onClick={() => setHelp(false)}>
               <dl>
                 {HINTS.map(([k, v]) => (
                   <div key={k}>
@@ -792,20 +767,50 @@ export function CamPage() {
       <section className={styles.controls}>
         {error === '' ? null : <p className={styles.error}>{error}</p>}
 
-        {!deck || scene.mix === null || !second.loaded ? null : (
+        {on ? (
           <div className={styles.mixer} aria-label="Mixer">
-            <div className={styles.mixModes} role="radiogroup">
+            <div className={styles.sources}>
+              <span className={styles.source}>
+                <b>A</b> camera
+              </span>
+              <span className={styles.source}>
+                <b>B</b>
+              </span>
+              <div
+                className={styles.mixModes}
+                role="radiogroup"
+                aria-label="Source B"
+              >
+                {sources.map(src => {
+                  const up = src.key === onB
+                  return (
+                    <button
+                      key={src.label}
+                      role="radio"
+                      aria-checked={up}
+                      className={cx(styles.mixMode, up && styles.mixModeOn)}
+                      disabled={busy}
+                      title={src.title}
+                      onClick={() => up || putOnB(src.key)}
+                    >
+                      {src.icon}
+                      {src.label}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+            <div className={styles.mixModes} role="radiogroup" aria-label="Mix">
               {MIX_MODES.map(m => {
-                const up = !ownedMixer && scene.mix?.mode === m
+                const up = !noB && !ownedMixer && mix.mode === m
                 return (
                   <button
                     key={m}
                     role="radio"
                     aria-checked={up}
                     className={cx(styles.mixMode, up && styles.mixModeOn)}
-                    onClick={() =>
-                      mixWith({ mode: m, fader: scene.mix?.fader ?? 0.5 })
-                    }
+                    disabled={noB}
+                    onClick={() => mixWith({ mode: m, fader: mix.fader })}
                   >
                     {m}
                   </button>
@@ -819,29 +824,27 @@ export function CamPage() {
                 type="range"
                 min={0}
                 max={100}
-                value={Math.round(scene.mix.fader * 100)}
+                value={Math.round(mix.fader * 100)}
                 aria-label="fader"
-                title={ownedMixer ? 'the look is working the mixer' : undefined}
-                disabled={ownedMixer}
+                title={
+                  noB
+                    ? 'put a picture on B to fade to it'
+                    : ownedMixer
+                      ? 'the look is working the mixer'
+                      : undefined
+                }
+                disabled={noB || ownedMixer}
                 onChange={e =>
                   mixWith({
-                    mode: scene.mix?.mode ?? 'dissolve',
+                    mode: mix.mode,
                     fader: Number(e.target.value) / 100,
                   })
                 }
               />
               <span>B</span>
-              <button
-                className={styles.eject}
-                aria-label="take the second picture off B"
-                title="take the second picture off B"
-                onClick={takeOff}
-              >
-                <CloseIcon />
-              </button>
             </label>
           </div>
-        )}
+        ) : null}
 
         {on && deck ? (
           <div className={styles.hits} aria-label="Faults">

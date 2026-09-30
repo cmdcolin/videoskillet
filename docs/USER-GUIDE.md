@@ -191,14 +191,13 @@ can capture the picture window alone.
 ## Camera
 
 The camera page at `/cam/` puts a phone's camera through the set. It shows the
-picture, a strip of looks, a mixer and a shutter. A phone opening the home page
+picture, a mixer, a strip of looks and a shutter. A phone opening the home page
 gets **Open the camera** as its first button and a tour of the page under it,
 and **camera** in the ☰ menu reaches the page from the app.
 
 - **Start camera** asks the browser for the camera. Once the browser has said
-  yes, the page opens the camera by itself on later visits. The first visit
-  opens on a card naming each gesture and switch, and **?** in the top bar
-  brings it back.
+  yes, the page opens the camera by itself on later visits. **?** in the top bar
+  opens a card naming each gesture and switch.
 - The tabs over the strip sort the looks by which part of the set goes wrong:
   **loops** holds feedback loops that move the picture only a little each lap
   and do their work in colour, **tape** the deck and its tape, **signal** the
@@ -253,26 +252,27 @@ and **camera** in the ☰ menu reaches the page from the app.
   harder keeps its own settings. While the switch is on, **VIDEO** records the
   sound with the picture, as AAC where the browser can encode it and Opus where
   it cannot.
-- **mix** puts a second picture on source B: the other camera, or a clip from
-  the phone's library, looped. With the other camera, the camera on screen goes
-  to B and the other one comes on screen. Point the back camera at a scene,
-  press it, and the front camera puts you over the scene. A phone that runs both
-  cameras at once keeps both live, and the flip button then swaps them between
-  the screen and B. On a phone that cannot, the page records four seconds of the
-  camera on screen to a tape and loops it on B, the way a studio rolled a deck
-  into a mixer's second input. The page asks each phone once and remembers the
-  answer. B comes up dissolved halfway under the look that is up, and a **mix**
-  tab opens with mixers that have lost their sync, their supply or their plugs.
-  **mix** again takes the second picture off.
-- **deck** opens the controls for playing the set live, and the page remembers
-  whether it is open. With it closed the page keeps to looks.
-- On the deck, while B has a picture, the mixer sits over the strip.
-  **dissolve** crossfades the two genlocked, **wipe** splits the screen between
-  them, **inset** squeezes B into a corner, or opens a box of it in the middle
-  of an upright slice, **key** lays B's bright parts over A, and **sum** adds B
-  in with no sync, so the two beat against each other. The fader runs each from
-  A to B. A look from the **mix** tab works the mixer itself, and pressing a
-  mode takes the mixer back from it.
+- The mixer under the picture shows what is on each source. **A** is the camera,
+  and **B** starts at **none**. **other camera** puts the other camera on B: the
+  camera on screen goes to B and the other one comes on screen. Point the back
+  camera at a scene, press it, and the front camera puts you over the scene. A
+  phone that runs both cameras at once keeps both live, and the flip button then
+  swaps them between the screen and B. On a phone that cannot, the page records
+  four seconds of the camera on screen to a tape and loops it on B, the way a
+  studio rolled a deck into a mixer's second input; a phone with one camera
+  offers **tape** in its place. The page asks each phone once and remembers the
+  answer. **clip** loops a video from the phone's library on B, and **none**
+  takes B off.
+- B comes up dissolved halfway under the look that is up, and a **mix** tab
+  opens with mixers that have lost their sync, their supply or their plugs. The
+  mixer's modes and fader wait for a picture on B. **dissolve** crossfades the
+  two genlocked, **wipe** splits the screen between them, **inset** squeezes B
+  into a corner, or opens a box of it in the middle of an upright slice, **key**
+  lays B's bright parts over A, and **sum** adds B in with no sync, so the two
+  beat against each other. The fader runs each from A to B. A look from the
+  **mix** tab works the mixer itself, and pressing a mode takes the mixer back
+  from it.
+- **deck** opens the fault pads, and the page remembers whether it is open.
 - The deck's pads throw a fault that breaks the picture and heals. **track**
   sweeps a band of mistracking up the picture, **roll** loses the vertical hold,
   **collapse** folds the raster to a line, **shuttle** runs the tape at speed,

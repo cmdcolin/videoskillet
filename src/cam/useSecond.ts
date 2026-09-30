@@ -176,6 +176,7 @@ export function useSecond(
   }
 
   return {
+    kind: second?.kind ?? null,
     loaded: second !== null,
     live: second?.kind === 'live',
     left,
