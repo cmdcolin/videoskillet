@@ -1,16 +1,18 @@
 import { useEffect, useRef, useState } from 'react'
 
 import { usePersistedString } from '../ui/storage'
-import { TAPE_SECONDS, playTape, recordTape, relayCamera } from './tape'
+import { TAPE_SECONDS, playLoop, recordTape, relayCamera } from './tape'
 import { stopAll } from './useCamera'
 
 import type { Camera, Relay } from './tape'
 import type { Opened } from './useCamera'
 
-// What is on source B: a tape of one camera, or the other camera live.
+// What is on source B: a tape of one camera, the other camera live, or a clip
+// from the phone's library.
 type Second =
   | { kind: 'tape'; url: string; video: HTMLVideoElement }
   | { kind: 'live'; cam: Opened; relay: Relay }
+  | { kind: 'clip'; url: string; video: HTMLVideoElement; relay: Relay }
 
 // Whether this phone ran both cameras at once when asked. A phone that cannot
 // may take the first camera down to answer, so it is asked once.
@@ -19,26 +21,28 @@ const DUAL_STORE = 'videoskillet_cam_dual'
 const reason = (e: unknown) => (e instanceof Error ? e.message : String(e))
 
 const unload = (b: Second) => {
-  if (b.kind === 'tape') {
-    b.video.pause()
-    b.video.removeAttribute('src')
-    b.video.load()
-    URL.revokeObjectURL(b.url)
-  } else {
+  if (b.kind === 'live') {
     b.relay.stop()
     stopAll(b.cam.stream)
+    return
   }
+  if (b.kind === 'clip') b.relay.stop()
+  b.video.pause()
+  b.video.removeAttribute('src')
+  b.video.load()
+  URL.revokeObjectURL(b.url)
 }
 
 // The second picture on source B. `load` puts the other camera there live where
 // the phone runs both cameras at once, and moves the screen to it; elsewhere it
 // records a tape of the camera on screen, and the caller flips to the other
-// one. `left` counts down a tape's seconds; `opening` covers the ask for the
-// second camera.
+// one. `loadClip` puts a video file there. `left` counts down a tape's
+// seconds; `opening` covers the ask for the second camera.
 export function useSecond(
   eng: {
     camera: () => Camera | null
     showSecond: (video: HTMLVideoElement | null) => void
+    isTurned: () => boolean
   },
   cam: {
     openOther: () => Promise<Opened | null>
@@ -101,7 +105,7 @@ export function useSecond(
     let loaded: Second | null = null
     try {
       const url = URL.createObjectURL(await recordTape(c, setLeft))
-      loaded = { kind: 'tape', url, video: await playTape(url) }
+      loaded = { kind: 'tape', url, video: await playLoop(url) }
     } catch (e) {
       onError(`tape: ${reason(e)}`)
     }
@@ -135,6 +139,21 @@ export function useSecond(
     return (await tape()) ? 'tape' : null
   }
 
+  const loadClip = async (file: File): Promise<boolean> => {
+    if (held.current !== null || left > 0 || opening) return false
+    const url = URL.createObjectURL(file)
+    try {
+      const video = await playLoop(url)
+      const relay = await relayCamera({ video, mirror: false }, eng.isTurned)
+      show({ kind: 'clip', url, video, relay })
+      return true
+    } catch (e) {
+      URL.revokeObjectURL(url)
+      onError(`clip: ${reason(e)}`)
+      return false
+    }
+  }
+
   // With both cameras live, the flip trades them between A and B.
   const swap = async () => {
     const b = held.current
@@ -160,6 +179,7 @@ export function useSecond(
     left,
     opening,
     load,
+    loadClip,
     eject,
     swap,
   }

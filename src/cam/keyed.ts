@@ -19,18 +19,20 @@ export const aimKey = (c: Controls, hue: number | null): Controls =>
   hue === null || !keysOnHue(c) ? c : { ...c, cfbKeyHueDeg: Math.round(hue) }
 
 // Where a point on the picture lands on the camera's own frame, both in 0..1.
-// The picture is the camera cover-fitted into the frame, so the long side is
-// cropped, and a camera facing its subject is shown mirrored. A set on its
-// side needs no case of its own: turning the tube and the camera together
-// leaves the picture upright in the camera's own axes.
+// The picture is the camera cropped by the zoom and cover-fitted into the
+// frame, so the long side is cropped, and a camera facing its subject is shown
+// mirrored. A set on its side needs no case of its own: turning the tube and
+// the camera together leaves the picture upright in the camera's own axes.
 export function sourcePoint(
   at: { x: number; y: number },
   view: { width: number; height: number },
-  src: { width: number; height: number; mirror: boolean },
+  src: { width: number; height: number; mirror: boolean; crop?: number },
 ): { x: number; y: number } {
   const va = view.width / view.height
   const sa = src.width / src.height
-  let { x, y } = at
+  const crop = src.crop ?? 1
+  let x = 0.5 + (at.x - 0.5) / crop
+  let y = 0.5 + (at.y - 0.5) / crop
   if (sa > va) x = 0.5 + (x - 0.5) * (va / sa)
   else y = 0.5 + (y - 0.5) * (sa / va)
   return { x: src.mirror ? 1 - x : x, y }

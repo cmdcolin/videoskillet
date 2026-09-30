@@ -4,6 +4,7 @@ import {
   LOOP_STAGES,
   SLIDER_BY_KEY,
   loopGroups,
+  sliderFor,
   snapToStep,
 } from '../ui/controls'
 import { routingsToSlots, toEngineSlots } from '../ui/modSlots'
@@ -17,7 +18,8 @@ import {
   presetLabelFor,
 } from '../ui/presets'
 
-import type { Controls, ModSlot } from '../core/controls'
+import type { ControlKey, Controls, ModSlot } from '../core/controls'
+import type { SliderDef } from '../ui/controls'
 
 // How far a loop may move the picture each lap and still count as subtle: a
 // camera within 4.5% of unity zoom, turning at most a degree and shifting at
@@ -83,27 +85,6 @@ export const CAM_LOOKS = [
   'verticalHoldGone',
   'rainbowStorm',
 ] as const
-
-// The looks the strip leads with once a second picture is on B, picked by
-// rendering all 17 that need one over a face live on A and a scene on B.
-// A plain double exposure comes first, then the camera keyed into the scene,
-// a picture-in-picture, a green key, a key that fences off a feedback loop,
-// and two cameras summed with no sync between them. The other eleven fill a
-// set on its side with beat bars and noise stripes.
-export const CAM_MIX_LOOKS = [
-  'cleanDissolve',
-  'keySweep',
-  'wanderingInset',
-  'greenScreen',
-  'keyIntoTheLoop',
-  'dirtyMix',
-] as const
-
-// Whether a look shows anything without a second picture on B.
-export const needsSecond = (name: string): boolean => {
-  const def = PRESET_BY_NAME.get(name)
-  return def !== undefined && needsSourceB(def)
-}
 
 // What is on the picture: a preset at a strength, or `null` for the camera as
 // it comes. `rolled` marks a look the dice picked, which the strip shows on the
@@ -182,4 +163,79 @@ export const ROLL_POOL: readonly string[] = PRESETS.filter(
 export function rollLook(current: Look | null): Look {
   const pool = ROLL_POOL.filter(name => name !== current?.name)
   return { name: pool[randomIndex(pool.length)], strength: 1, rolled: true }
+}
+
+// How the mixer puts B with A. Each is a switcher's own tool: a genlocked
+// dissolve, a wipe, a squeezed inset, a luma key of B over A, and the dirty
+// sum of two sources with no sync between them.
+export const MIX_MODES = ['dissolve', 'wipe', 'inset', 'key', 'sum'] as const
+export type MixMode = (typeof MIX_MODES)[number]
+
+export interface Mix {
+  mode: MixMode
+  // 0 is all A, and 1 all of what the mode lets B be.
+  fader: number
+}
+
+const INSET_MARGIN = 0.04
+
+// The mixer's controls for a mode at a fader position. Every mode sets the
+// switches the others use, so a change of mode leaves nothing of the last one
+// up.
+const MIXES: Record<MixMode, (f: number) => Partial<Controls>> = {
+  dissolve: f => ({ bGain: f }),
+  wipe: f => ({ bGain: 1, wipeMode: 1, wipePos: f, wipeSoft: 0.04 }),
+  inset: f => {
+    const w = 0.2 + 0.72 * f
+    return {
+      pipMix: 1,
+      pipW: w,
+      pipH: w,
+      pipX: 1 - INSET_MARGIN - w / 2,
+      pipY: INSET_MARGIN + w / 2,
+    }
+  },
+  key: f => ({
+    pipMix: 1,
+    pipX: 0.5,
+    pipY: 0.5,
+    pipW: 1,
+    pipH: 1,
+    pipBorder: 0,
+    pipKey: 1,
+    pipKeyLevel: 1 - f,
+    pipKeySoft: 0.1,
+  }),
+  sum: f => ({ bGenlock: 0, bGain: f }),
+}
+
+export const mixControls = (mix: Mix): Partial<Controls> => ({
+  bGenlock: 1,
+  bGain: 0,
+  wipeMode: 0,
+  pipMix: 0,
+  pipKey: 0,
+  ...MIXES[mix.mode](mix.fader),
+})
+
+// What every look offers after its own controls: colour, tint, snow and a
+// ghost.
+const SET_KNOBS: readonly ControlKey[] = [
+  'chromaGain',
+  'tintDeg',
+  'noiseIre',
+  'ghostGain',
+]
+
+const SLIDER_BY_NAME = new Map<string, SliderDef>(SLIDER_BY_KEY)
+
+// The controls the tune sheet shows for a look: the ones its preset sets, in
+// the preset's order, then the set's own.
+export function lookKnobs(look: Look | null): SliderDef[] {
+  const def = look === null ? undefined : PRESET_BY_NAME.get(look.name)
+  const own = Object.keys(def?.patch ?? {}).flatMap(
+    k => SLIDER_BY_NAME.get(k) ?? [],
+  )
+  const keys = new Set(own.map(s => s.key))
+  return [...own, ...SET_KNOBS.filter(k => !keys.has(k)).map(sliderFor)]
 }

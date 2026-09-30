@@ -4,33 +4,42 @@ import { publicUrl } from '../publicUrl'
 import { cx } from '../ui/cx'
 import { save } from '../ui/download'
 import { FatalScreen } from '../ui/FatalScreen'
+import { usePersistedFlag } from '../ui/storage'
 import { useCapture } from '../ui/useCapture'
 import { useWakeLock } from '../ui/useWakeLock'
 import styles from './cam.module.css'
 import {
+  CloseIcon,
   DiceIcon,
+  FilmIcon,
   FlipIcon,
   MicIcon,
+  MixIcon,
   ShareIcon,
+  SlidersIcon,
   TapeIcon,
   TiltIcon,
 } from './icons'
 import { aimKey, chromaHue, colourAt, keysOnHue, sourcePoint } from './keyed'
 import {
   CAM_LOOKS,
-  CAM_MIX_LOOKS,
+  MIX_MODES,
   lookBoard,
   lookLabel,
-  needsSecond,
+  mixControls,
   rollLook,
 } from './looks'
+import { Tune } from './Tune'
 import { useCamEngine } from './useCamEngine'
 import { useCamera } from './useCamera'
 import { useSecond } from './useSecond'
 import { useTilt } from './useTilt'
+import { useZoom } from './useZoom'
+import { stopAt, zoomLabel } from './zoom'
 
-import type { Look } from './looks'
-import type { PointerEvent } from 'react'
+import type { ControlKey, Controls } from '../core/controls'
+import type { Look, Mix } from './looks'
+import type { ChangeEvent, PointerEvent, ReactNode } from 'react'
 
 type Mode = 'photo' | 'video'
 
@@ -40,12 +49,19 @@ const HOLD_MS = 180
 const SWIPE_PX = 40
 const TAP_PX = 10
 
+const HELP_STORE = 'videoskillet_cam_help_seen'
+
 interface Gesture {
   id: number
   x: number
   y: number
   timer: number
   kind: 'pending' | 'compare' | 'swipe'
+}
+
+interface Pinch {
+  span: number
+  zoom: number
 }
 
 // The last thing the shutter made, held until the next one replaces it.
@@ -55,6 +71,27 @@ interface Shot {
   url: string
   video: boolean
 }
+
+// Everything the board is built from: the look, the knobs moved off it, the
+// mixer while B has a picture, and where a tap has aimed the look's keyer.
+interface Scene {
+  look: Look | null
+  tweaks: Partial<Controls>
+  mix: Mix | null
+  hue: number | null
+}
+
+const boardOf = (s: Scene) => {
+  const board = lookBoard(s.look)
+  const controls = {
+    ...board.controls,
+    ...s.tweaks,
+    ...(s.mix === null ? {} : mixControls(s.mix)),
+  }
+  return { ...board, controls: aimKey(controls, s.hue) }
+}
+
+const FIRST_MIX: Mix = { mode: 'dissolve', fader: 0.5 }
 
 const isAbort = (e: unknown) =>
   e instanceof DOMException && e.name === 'AbortError'
@@ -74,6 +111,14 @@ async function deliver(shot: Shot) {
   }
 }
 
+const trackOf = (video: HTMLVideoElement | undefined) =>
+  video?.srcObject instanceof MediaStream
+    ? (video.srcObject.getVideoTracks()[0] ?? null)
+    : null
+
+const dist = (a: { x: number; y: number }, b: { x: number; y: number }) =>
+  Math.hypot(a.x - b.x, a.y - b.y)
+
 function Elapsed(props: { since: number }) {
   const [now, setNow] = useState(() => performance.now())
   useEffect(() => {
@@ -88,6 +133,44 @@ function Elapsed(props: { since: number }) {
   )
 }
 
+// A round switch on the picture with its name under it.
+function Switch(props: {
+  on: boolean
+  label: string
+  title: string
+  disabled?: boolean
+  onClick: () => void
+  children: ReactNode
+}) {
+  return (
+    <button
+      className={styles.switch}
+      aria-pressed={props.on}
+      title={props.title}
+      disabled={props.disabled}
+      onClick={props.onClick}
+    >
+      <span className={cx(styles.switchDot, props.on && styles.on)}>
+        {props.children}
+      </span>
+      <span className={styles.switchLabel}>{props.label}</span>
+    </button>
+  )
+}
+
+const HINTS: [string, string][] = [
+  ['swipe', 'step to the next or previous look'],
+  ['hold', 'see the camera without the look'],
+  ['pinch', 'zoom, or tap a lens stop under the picture'],
+  ['tap', 'aim the key at a colour, on looks that key by colour'],
+  [
+    'mix',
+    'put the other camera or a clip from your phone on B, then fade to it',
+  ],
+  ['tune', 'every knob the look is made of'],
+  ['full app', 'the whole instrument, on the same look'],
+]
+
 // The instrument, opened on the look this page is showing and asking for the
 // camera again. A look at full strength is a preset the link can name; a
 // weaker one is a blend, which only the instrument's own link format carries.
@@ -100,11 +183,25 @@ function instrumentHref(look: Look | null, cameraOn: boolean): string {
 
 export function CamPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const clipRef = useRef<HTMLInputElement>(null)
   const eng = useCamEngine(canvasRef)
-  const cam = useCamera(eng.showVideo)
+  const zoom = useZoom(() => trackOf(eng.camera()?.video), eng.zoomA)
+  const cam = useCamera((video, mirror) => {
+    eng.showVideo(video, mirror)
+    zoom.reset()
+  })
   const tilt = useTilt(eng.steer)
-  const [look, setLook] = useState<Look | null>(null)
+  const [scene, setScene] = useState<Scene>({
+    look: null,
+    tweaks: {},
+    mix: null,
+    hue: null,
+  })
+  const sceneRef = useRef(scene)
   const [tuning, setTuning] = useState(false)
+  const [menu, setMenu] = useState(false)
+  const [helpSeen, setHelpSeen] = usePersistedFlag(HELP_STORE)
+  const [helpAsked, setHelpAsked] = useState(false)
   const [mode, setMode] = useState<Mode>('photo')
   const [comparing, setComparing] = useState(false)
   const [shot, setShot] = useState<Shot | null>(null)
@@ -112,8 +209,6 @@ export function CamPage() {
   const [recSince, setRecSince] = useState(0)
   const second = useSecond(eng, cam, setError)
   const [sound, setSound] = useState(false)
-  // Where a tap has aimed the look's hue keyer, while that look is up.
-  const [keyHue, setKeyHue] = useState<number | null>(null)
   const [flash, setFlash] = useState('')
   const [ring, setRing] = useState<{
     x: number
@@ -121,8 +216,11 @@ export function CamPage() {
     rgb: string
   } | null>(null)
   const gesture = useRef<Gesture | null>(null)
+  const pointers = useRef(new Map<number, { x: number; y: number }>())
+  const pinch = useRef<Pinch | null>(null)
   const flashTimer = useRef(0)
   const ringTimer = useRef(0)
+  const { look } = scene
 
   const capture = useCapture(
     canvasRef,
@@ -146,36 +244,38 @@ export function CamPage() {
 
   useWakeLock(eng.engine !== null)
 
-  const show = (next: Look | null, hue: number | null) => {
-    const board = lookBoard(next)
-    eng.showBoard({ ...board, controls: aimKey(board.controls, hue) })
+  const paint = (next: Partial<Scene>) => {
+    const s = { ...sceneRef.current, ...next }
+    sceneRef.current = s
+    setScene(s)
+    eng.showBoard(boardOf(s))
   }
-  // A tap's aim lasts while its look stays up, through a change of strength.
+
+  // A tap's aim and the knobs moved off a look last while that look stays up,
+  // through a change of strength.
   const land = (next: Look | null) => {
-    const hue =
-      next !== null && look !== null && next.name === look.name ? keyHue : null
-    setLook(next)
-    setKeyHue(hue)
-    show(next, hue)
+    const cur = sceneRef.current
+    const same =
+      next !== null && cur.look !== null && next.name === cur.look.name
+    paint({
+      look: next,
+      hue: same ? cur.hue : null,
+      tweaks: same ? cur.tweaks : {},
+    })
   }
-  // A second press on the look already up opens its strength, the way a photo
+  // A second press on the look already up opens its knobs, the way a photo
   // app's filter does.
   const pick = (name: string) => {
     if (look !== null && look.name === name && !look.rolled) {
       setTuning(!tuning)
       return
     }
-    setTuning(false)
     land({ name, strength: 1, rolled: false })
   }
-  const pickNormal = () => {
-    setTuning(false)
-    land(null)
-  }
-  const roll = () => {
-    setTuning(false)
-    land(rollLook(look))
-  }
+  const roll = () => land(rollLook(look))
+
+  const turnKnob = (key: ControlKey, value: number) =>
+    paint({ tweaks: { ...sceneRef.current.tweaks, [key]: value } })
 
   const shutter = () => {
     setError('')
@@ -198,23 +298,30 @@ export function CamPage() {
   }
 
   // The other camera goes on screen and the one that was there goes on B, live
-  // or as a tape, under a look that mixes the two. The scene behind the phone
-  // and the person holding it share the picture.
-  const mixIn = () => {
+  // or as a tape. The scene behind the phone and the person holding it share
+  // the picture.
+  const mixCamera = () => {
+    setMenu(false)
     setError('')
     void second.load().then(got => {
       if (got === null) return
       if (got === 'tape' && cam.canFlip) cam.flip()
-      setTuning(false)
-      land({ name: CAM_MIX_LOOKS[0], strength: 1, rolled: false })
+      paint({ mix: FIRST_MIX })
+    })
+  }
+  const mixClip = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (file === undefined) return
+    setMenu(false)
+    setError('')
+    void second.loadClip(file).then(ok => {
+      if (ok) paint({ mix: FIRST_MIX })
     })
   }
   const takeOff = () => {
     second.eject()
-    if (look !== null && needsSecond(look.name)) {
-      setTuning(false)
-      land(null)
-    }
+    paint({ mix: null })
   }
 
   const flipSound = () => {
@@ -238,10 +345,9 @@ export function CamPage() {
   // A swipe steps along the strip, the way a phone camera steps through its
   // filters, with normal at the start.
   const step = (dir: 1 | -1) => {
-    const order: (string | null)[] = [null, ...strip]
+    const order: (string | null)[] = [null, ...CAM_LOOKS]
     const at = look === null || look.rolled ? 0 : order.indexOf(look.name)
     const name = order[(Math.max(at, 0) + dir + order.length) % order.length]
-    setTuning(false)
     land(name === null ? null : { name, strength: 1, rolled: false })
     announce(
       name === null
@@ -273,6 +379,7 @@ export function CamPage() {
         width: c.video.videoWidth,
         height: c.video.videoHeight,
         mirror: c.mirror,
+        crop: zoom.crop,
       }),
     )
     if (rgb === null) return
@@ -281,8 +388,7 @@ export function CamPage() {
       announce('no colour there to key on')
       return
     }
-    setKeyHue(hue)
-    show(look, hue)
+    paint({ hue })
     setRing({
       ...at,
       rgb: `rgb(${rgb.map(v => Math.round(v * 255)).join(' ')})`,
@@ -291,8 +397,27 @@ export function CamPage() {
     ringTimer.current = window.setTimeout(() => setRing(null), 800)
   }
 
+  const endCompare = () => {
+    setComparing(false)
+    eng.compare(false)
+  }
+
+  // A second finger turns whatever the first one started into a pinch.
   const press = (e: PointerEvent<HTMLCanvasElement>) => {
     e.currentTarget.setPointerCapture(e.pointerId)
+    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
+    if (pointers.current.size === 2) {
+      const g = gesture.current
+      if (g !== null) {
+        window.clearTimeout(g.timer)
+        if (g.kind === 'compare') endCompare()
+        gesture.current = null
+      }
+      const [a, b] = [...pointers.current.values()]
+      pinch.current = { span: dist(a, b), zoom: zoom.zoom }
+      return
+    }
+    if (pointers.current.size > 2) return
     const timer = window.setTimeout(() => {
       const g = gesture.current
       if (g !== null && g.kind === 'pending') {
@@ -310,6 +435,14 @@ export function CamPage() {
     }
   }
   const drag = (e: PointerEvent<HTMLCanvasElement>) => {
+    if (pointers.current.has(e.pointerId))
+      pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
+    const p = pinch.current
+    if (p !== null && pointers.current.size === 2) {
+      const [a, b] = [...pointers.current.values()]
+      zoom.set((p.zoom * dist(a, b)) / Math.max(p.span, 1))
+      return
+    }
     const g = gesture.current
     if (g === null || g.id !== e.pointerId || g.kind !== 'pending') return
     const dx = e.clientX - g.x
@@ -322,13 +455,14 @@ export function CamPage() {
   }
   const release =
     (cancelled: boolean) => (e: PointerEvent<HTMLCanvasElement>) => {
+      pointers.current.delete(e.pointerId)
+      if (pointers.current.size < 2) pinch.current = null
       const g = gesture.current
       if (g === null || g.id !== e.pointerId) return
       window.clearTimeout(g.timer)
       gesture.current = null
       if (g.kind === 'compare') {
-        setComparing(false)
-        eng.compare(false)
+        endCompare()
       } else if (
         !cancelled &&
         g.kind === 'pending' &&
@@ -340,24 +474,41 @@ export function CamPage() {
 
   if (eng.fatal !== null) return <FatalScreen fatal={eng.fatal} />
 
+  const on = cam.state === 'on'
+  const help = on && (helpAsked || !helpSeen)
+  const closeHelp = () => {
+    setHelpAsked(false)
+    setHelpSeen(true)
+  }
+  const tweaked = Object.keys(scene.tweaks).length > 0
   const strength = look === null ? 0 : Math.round(look.strength * 100)
-  const strip: readonly string[] = second.loaded
-    ? [...CAM_MIX_LOOKS, ...CAM_LOOKS]
-    : CAM_LOOKS
+  const stop = stopAt(zoom.zoom, zoom.stops)
+  const busy = second.left > 0 || second.opening || capture.recording
 
   return (
     <div className={styles.page}>
       <header className={styles.top}>
-        <a className={styles.brand} href="../">
+        <a className={styles.brand} href="../" aria-label="videoskillet home">
           <img className={styles.mark} src={publicUrl('favicon.svg')} alt="" />
-          videoskillet
+          <span className={styles.brandName}>videoskillet</span>
         </a>
-        <a
-          className={styles.more}
-          href={instrumentHref(look, cam.state === 'on')}
-        >
-          all controls
-        </a>
+        <span className={styles.topRight}>
+          <button
+            className={styles.help}
+            aria-label="how to use the camera"
+            aria-pressed={help}
+            onClick={() => (help ? closeHelp() : setHelpAsked(true))}
+          >
+            ?
+          </button>
+          <a
+            className={styles.full}
+            href={instrumentHref(look, on)}
+            title="open the whole instrument on this look"
+          >
+            full app ↗
+          </a>
+        </span>
       </header>
 
       <main className={styles.stage}>
@@ -365,59 +516,109 @@ export function CamPage() {
           <canvas
             ref={canvasRef}
             className={styles.canvas}
-            title="hold to see the camera without the look, swipe for another look"
+            title="hold to see the camera without the look, swipe for another look, pinch to zoom"
             onPointerDown={press}
             onPointerMove={drag}
             onPointerUp={release(false)}
             onPointerCancel={release(true)}
             onContextMenu={e => e.preventDefault()}
           />
-          {cam.state === 'on' ? (
+          {on ? (
             <div className={cx(styles.switches, styles.left)}>
               {tilt.supported ? (
-                <button
-                  className={cx(styles.switch, tilt.on && styles.on)}
-                  aria-pressed={tilt.on}
-                  aria-label="steer the loop by tilting the phone"
+                <Switch
+                  on={tilt.on}
+                  label="tilt"
                   title="steer the loop by tilting the phone"
                   onClick={flipTilt}
                 >
                   <TiltIcon />
-                </button>
+                </Switch>
               ) : null}
-              <button
-                className={cx(styles.switch, sound && styles.on)}
-                aria-pressed={sound}
-                aria-label="let the room's sound shake the set"
+              <Switch
+                on={sound}
+                label="sound"
                 title="let the room's sound shake the set"
                 onClick={flipSound}
               >
                 <MicIcon />
-              </button>
+              </Switch>
             </div>
           ) : null}
-          {cam.state === 'on' ? (
+          {on ? (
             <div className={cx(styles.switches, styles.right)}>
-              <button
-                className={cx(styles.switch, second.loaded && styles.on)}
-                aria-pressed={second.loaded}
-                aria-label={
-                  second.loaded
-                    ? 'take the second picture off B'
-                    : 'mix the other camera in'
-                }
+              <Switch
+                on={second.loaded || menu}
+                label="mix"
                 title={
                   second.loaded
                     ? 'take the second picture off B'
-                    : 'mix the other camera in'
+                    : 'mix a second picture in'
                 }
-                disabled={
-                  second.left > 0 || second.opening || capture.recording
-                }
-                onClick={second.loaded ? takeOff : mixIn}
+                disabled={busy}
+                onClick={second.loaded ? takeOff : () => setMenu(!menu)}
               >
-                <TapeIcon />
+                <MixIcon />
+              </Switch>
+              <Switch
+                on={tuning}
+                label="tune"
+                title="the look's own knobs"
+                onClick={() => setTuning(!tuning)}
+              >
+                <SlidersIcon />
+              </Switch>
+            </div>
+          ) : null}
+          {menu && !second.loaded ? (
+            <div className={styles.menu} role="menu">
+              <button
+                className={styles.menuItem}
+                role="menuitem"
+                onClick={mixCamera}
+              >
+                {cam.canFlip ? <FlipIcon /> : <TapeIcon />}
+                <span>
+                  {cam.canFlip ? 'the other camera' : 'a tape of this camera'}
+                  <small>
+                    {cam.canFlip
+                      ? 'live where the phone runs both, else a 4 s tape'
+                      : 'records 4 s and loops it on B'}
+                  </small>
+                </span>
               </button>
+              <button
+                className={styles.menuItem}
+                role="menuitem"
+                onClick={() => clipRef.current?.click()}
+              >
+                <FilmIcon />
+                <span>
+                  a clip from your phone
+                  <small>any video in your library, looped</small>
+                </span>
+              </button>
+            </div>
+          ) : null}
+          <input
+            ref={clipRef}
+            type="file"
+            accept="video/*"
+            hidden
+            onChange={mixClip}
+          />
+          {on && !help ? (
+            <div className={styles.zoom} role="group" aria-label="Zoom">
+              {zoom.stops.map(s => (
+                <button
+                  key={s}
+                  className={cx(styles.zoomStop, s === stop && styles.zoomOn)}
+                  aria-label={`zoom ${zoomLabel(s)}×`}
+                  onClick={() => zoom.set(s)}
+                >
+                  {s === stop ? `${zoomLabel(zoom.zoom)}×` : zoomLabel(s)}
+                </button>
+              ))}
             </div>
           ) : null}
           {second.left > 0 ? (
@@ -444,6 +645,19 @@ export function CamPage() {
               <Elapsed since={recSince} />
             </span>
           ) : null}
+          {help ? (
+            <button className={styles.hints} onClick={closeHelp}>
+              <dl>
+                {HINTS.map(([k, v]) => (
+                  <div key={k}>
+                    <dt>{k}</dt>
+                    <dd>{v}</dd>
+                  </div>
+                ))}
+              </dl>
+              <span className={styles.hintsClose}>tap to close</span>
+            </button>
+          ) : null}
           {eng.rebuilding ? (
             <p className={styles.notice}>Reconnecting to the GPU…</p>
           ) : eng.frozen ? (
@@ -469,22 +683,57 @@ export function CamPage() {
 
       <section className={styles.controls}>
         {error === '' ? null : <p className={styles.error}>{error}</p>}
-        {tuning && look !== null ? (
-          <label className={styles.tune}>
-            <span className={styles.tuneName}>{lookLabel(look)}</span>
-            <input
-              className={styles.slider}
-              type="range"
-              min={0}
-              max={100}
-              value={strength}
-              onChange={e =>
-                land({ ...look, strength: Number(e.target.value) / 100 })
-              }
-            />
-            <span className={styles.tuneValue}>{strength}</span>
-          </label>
-        ) : null}
+
+        {scene.mix === null || !second.loaded ? null : (
+          <div className={styles.mixer} aria-label="Mixer">
+            <div className={styles.mixModes} role="radiogroup">
+              {MIX_MODES.map(m => (
+                <button
+                  key={m}
+                  role="radio"
+                  aria-checked={scene.mix?.mode === m}
+                  className={cx(
+                    styles.mixMode,
+                    scene.mix?.mode === m && styles.mixModeOn,
+                  )}
+                  onClick={() =>
+                    paint({ mix: { mode: m, fader: scene.mix?.fader ?? 0.5 } })
+                  }
+                >
+                  {m}
+                </button>
+              ))}
+            </div>
+            <label className={styles.fader}>
+              <span>A</span>
+              <input
+                className={styles.slider}
+                type="range"
+                min={0}
+                max={100}
+                value={Math.round(scene.mix.fader * 100)}
+                aria-label="fader"
+                onChange={e =>
+                  paint({
+                    mix: {
+                      mode: scene.mix?.mode ?? 'dissolve',
+                      fader: Number(e.target.value) / 100,
+                    },
+                  })
+                }
+              />
+              <span>B</span>
+              <button
+                className={styles.eject}
+                aria-label="take the second picture off B"
+                title="take the second picture off B"
+                onClick={takeOff}
+              >
+                <CloseIcon />
+              </button>
+            </label>
+          </div>
+        )}
 
         <nav className={styles.strip} aria-label="Looks">
           <button
@@ -498,23 +747,25 @@ export function CamPage() {
           <button
             className={cx(styles.chip, look === null && styles.chipOn)}
             data-look="normal"
-            onClick={pickNormal}
+            onClick={() => land(null)}
           >
             normal
           </button>
-          {strip.map(name => {
-            const on = look !== null && !look.rolled && look.name === name
+          {CAM_LOOKS.map(name => {
+            const up = look !== null && !look.rolled && look.name === name
             return (
               <button
                 key={name}
                 data-look={name}
-                className={cx(styles.chip, on && styles.chipOn)}
-                aria-pressed={on}
+                className={cx(styles.chip, up && styles.chipOn)}
+                aria-pressed={up}
                 onClick={() => pick(name)}
               >
                 {lookLabel({ name, strength: 1, rolled: false })}
-                {on && look.strength < 1 ? (
-                  <span className={styles.chipStrength}>{strength}</span>
+                {up && (look.strength < 1 || tweaked) ? (
+                  <span className={styles.chipStrength}>
+                    {tweaked ? '•' : strength}
+                  </span>
                 ) : null}
               </button>
             )
@@ -593,6 +844,18 @@ export function CamPage() {
             </button>
           ))}
         </div>
+
+        {tuning ? (
+          <Tune
+            look={look}
+            controls={boardOf(scene).controls}
+            tweaked={tweaked}
+            onStrength={s => look !== null && land({ ...look, strength: s })}
+            onKnob={turnKnob}
+            onReset={() => paint({ tweaks: {} })}
+            onClose={() => setTuning(false)}
+          />
+        ) : null}
       </section>
     </div>
   )

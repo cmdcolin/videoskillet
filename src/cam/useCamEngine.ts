@@ -20,6 +20,8 @@ export interface Shown {
   video: HTMLVideoElement | null
   mirror: boolean
   second: HTMLVideoElement | null
+  // The zoom past what the camera's own lens reached, applied to A.
+  zoom: number
 }
 export interface Board {
   controls: Controls
@@ -43,6 +45,7 @@ function dress(engine: Engine, shown: Shown, board: Board, sound: boolean) {
   engine.setSourceBEnabled(shown.second !== null)
   engine.setSourceMirror(shown.mirror)
   engine.setTubeTurned(tall(shown.video))
+  engine.setSourceZoom(shown.zoom)
   if (shown.video === null) engine.setImageSource(smpteBars())
   else engine.setVideoSource(shown.video)
 }
@@ -50,10 +53,9 @@ function dress(engine: Engine, shown: Shown, board: Board, sound: boolean) {
 const reason = (e: unknown) => (e instanceof Error ? e.message : String(e))
 
 // The camera page's engine runs one canvas, a camera on A and a second picture
-// on B. It
-// keeps the two rules `useEngine` is built around: it never destroys a device
-// (docs/adr/0004), and it replaces a lost one in place. It leaves out the
-// instrument's links, its clips and what B can play besides a camera.
+// on B. It keeps the two rules `useEngine` is built around: it never destroys a
+// device (docs/adr/0004), and it replaces a lost one in place. It leaves out
+// the instrument's links and its cue points.
 export function useCamEngine(canvasRef: RefObject<HTMLCanvasElement | null>) {
   const engineRef = useRef<Engine | null>(null)
   const [engine, setEngine] = useState<Engine | null>(null)
@@ -61,7 +63,12 @@ export function useCamEngine(canvasRef: RefObject<HTMLCanvasElement | null>) {
   const [rebuilding, setRebuilding] = useState(false)
   const [frozen, setFrozen] = useState(false)
   const [turned, setTurned] = useState(false)
-  const shown = useRef<Shown>({ video: null, mirror: false, second: null })
+  const shown = useRef<Shown>({
+    video: null,
+    mirror: false,
+    second: null,
+    zoom: 1,
+  })
   const board = useRef<Board>({ controls: DEFAULT_CONTROLS, mod: [] })
   const comparing = useRef(false)
   const heard = useRef(false)
@@ -89,6 +96,13 @@ export function useCamEngine(canvasRef: RefObject<HTMLCanvasElement | null>) {
     engineRef.current?.setVideoSourceB(second)
     engineRef.current?.setSourceBEnabled(second !== null)
   }
+
+  const zoomA = (zoom: number) => {
+    shown.current = { ...shown.current, zoom }
+    engineRef.current?.setSourceZoom(zoom)
+  }
+
+  const isTurned = () => tall(shown.current.video)
 
   // The camera as it is on A, for recording a tape of it.
   const camera = (): Camera | null => {
@@ -228,6 +242,8 @@ export function useCamEngine(canvasRef: RefObject<HTMLCanvasElement | null>) {
     turned,
     showVideo,
     showSecond,
+    zoomA,
+    isTurned,
     camera,
     showBoard,
     hear,

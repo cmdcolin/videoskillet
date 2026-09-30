@@ -54,6 +54,17 @@ describe('sourcePoint', () => {
     expect(p.y).toBe(0.5)
   })
 
+  it('pulls a point toward the middle of a cropped camera', () => {
+    const p = sourcePoint({ x: 0, y: 1 }, frame, {
+      width: 640,
+      height: 480,
+      mirror: false,
+      crop: 2,
+    })
+    expect(p.x).toBeCloseTo(0.25)
+    expect(p.y).toBeCloseTo(0.75)
+  })
+
   it('reads a mirrored camera from the other side', () => {
     const p = sourcePoint({ x: 0.2, y: 0.3 }, frame, {
       width: 640,

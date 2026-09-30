@@ -191,28 +191,38 @@ can capture the picture window alone.
 ## Camera
 
 The camera page at `/cam/` puts a phone's camera through the set. It shows the
-picture, a strip of looks and a shutter, and nothing from the panel. A phone
-opening the home page gets **Open the camera** as its first button, and
-**camera** in the ☰ menu reaches the page from the app.
+picture, a strip of looks, a mixer and a shutter. A phone opening the home page
+gets **Open the camera** as its first button and a tour of the page under it,
+and **camera** in the ☰ menu reaches the page from the app.
 
 - **Start camera** asks the browser for the camera. Once the browser has said
-  yes, the page opens the camera by itself on later visits.
+  yes, the page opens the camera by itself on later visits. The first visit
+  opens on a card naming each gesture and switch, and **?** in the top bar
+  brings it back.
 - The strip holds a short list of presets, most of them feedback loops that move
-  the picture only a little each lap. Pressing the look that is on shows its
-  strength, and **random** picks another loop of that kind. On a loop the
-  strength opens the loop's mix and leaves its gain alone, so the bottom of the
-  slider gives echo trails and the top gives the look building on itself.
+  the picture only a little each lap. **random** picks another loop of that
+  kind.
+- **tune** opens a sheet with the look's strength and every control its preset
+  sets, then colour, tint, noise and a ghost. On a loop the strength opens the
+  loop's mix and leaves its gain alone, so the bottom of the slider gives echo
+  trails and the top gives the look building on itself. The other sliders move
+  the controls themselves, over the whole range the app gives them. **reset**
+  puts the look back. Pressing the look that is on also opens the sheet.
 - Holding a finger on the picture shows the camera without the look. Swiping
   across it steps to the next or previous look on the strip.
+- Pinching the picture zooms, and the stops under the picture jump to 1× and 2×,
+  and to the ultrawide where the phone has one. Where the browser exposes the
+  camera's own zoom, the page drives the lens and crops only past its longest
+  reach. Elsewhere it crops the camera before the encoder, up to 4×.
 - On a look that keys its loop by colour, such as **it only eats the red** or
   **the face stays out of it**, a tap on the picture moves the key to the
   camera's colour under the finger.
-- The round button on the picture's corner lets the phone steer the loop. The
-  phone stands in for the feedback camera: turning it turns the loop, and
-  tipping it moves where each lap lands. On a loop with no camera in it, turning
-  the phone trims the delay, which slides the echoes and turns their hue. A turn
-  fades back over a few seconds, so a hand that holds still gets the look as
-  tuned, and no turn takes a loop past a degree of spin or 2% of shift per lap.
+- **tilt** lets the phone steer the loop. The phone stands in for the feedback
+  camera: turning it turns the loop, and tipping it moves where each lap lands.
+  On a loop with no camera in it, turning the phone trims the delay, which
+  slides the echoes and turns their hue. A turn fades back over a few seconds,
+  so a hand that holds still gets the look as tuned, and no turn takes a loop
+  past a degree of spin or 2% of shift per lap.
 - **PHOTO** takes a PNG still and **VIDEO** records an MP4. The thumbnail beside
   the shutter opens the phone's share sheet, which is where **Save Image** and
   **Save Video** put the file in the photo library. A browser without a share
@@ -224,25 +234,28 @@ opening the home page gets **Open the camera** as its first button, and
   mounts its tube, so the camera's tall picture fills a 3:4 screen whole. The
   scanlines run down the glass, a rolling picture slides sideways, and stills
   and videos come out tall.
-- The microphone switch lets the room's sound into the set. A cheap set runs its
-  audio amplifier off the same supply as the scan, so each kick drum loads the
-  supply and the picture jolts and rings back. A look that already works the
-  supply harder keeps its own settings. While the switch is on, **VIDEO**
-  records the sound with the picture, as AAC where the browser can encode it and
-  Opus where it cannot.
-- The cassette on the picture's other corner mixes the other camera in. The
-  camera on screen goes to source B and the other one comes on screen, and the
-  strip leads with looks that mix them: a double exposure, the camera keyed into
-  the scene, a picture-in-picture, two keys and two cameras with no sync between
-  them. Point the back camera at a scene, press it, and the front camera puts
-  you over the scene. A phone that runs both cameras at once keeps both live,
-  and the flip button then swaps them between the screen and B. On a phone that
-  cannot, the page records four seconds of the camera on screen to a tape and
-  loops it on B, the way a studio rolled a deck into a mixer's second input. The
-  page asks each phone once and remembers the answer. Pressing the cassette
-  again takes the second picture off.
-- **all controls** opens the app on the same preset, asking for the camera
-  again.
+- **sound** lets the room's sound into the set. A cheap set runs its audio
+  amplifier off the same supply as the scan, so each kick drum loads the supply
+  and the picture jolts and rings back. A look that already works the supply
+  harder keeps its own settings. While the switch is on, **VIDEO** records the
+  sound with the picture, as AAC where the browser can encode it and Opus where
+  it cannot.
+- **mix** puts a second picture on source B: the other camera, or a clip from
+  the phone's library, looped. With the other camera, the camera on screen goes
+  to B and the other one comes on screen. Point the back camera at a scene,
+  press it, and the front camera puts you over the scene. A phone that runs both
+  cameras at once keeps both live, and the flip button then swaps them between
+  the screen and B. On a phone that cannot, the page records four seconds of the
+  camera on screen to a tape and loops it on B, the way a studio rolled a deck
+  into a mixer's second input. The page asks each phone once and remembers the
+  answer.
+- While B has a picture, the mixer sits over the strip. **dissolve** crossfades
+  the two genlocked, **wipe** splits the screen between them, **inset** squeezes
+  B into a corner, **key** lays B's bright parts over A, and **sum** adds B in
+  with no sync, so the two beat against each other. The fader runs each from A
+  to B. The look stays up under the mixer, and the × or **mix** again takes the
+  second picture off.
+- **full app** opens the app on the same preset, asking for the camera again.
 
 ## Keyboard
 

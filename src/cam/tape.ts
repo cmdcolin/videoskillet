@@ -11,21 +11,23 @@ export interface Camera {
   mirror: boolean
 }
 
+const tall = (video: HTMLVideoElement) => video.videoHeight > video.videoWidth
+
 // Sizes `canvas` for the camera's current frame and sets the transform that
 // lays each frame down the way `pick` in compose.wgsl reads A. The engine turns
-// and mirrors only A, so whatever goes to B from a camera is turned and
-// mirrored here instead: mirrored if the camera faced its subject, and turned
-// to lie across a set on its side when the frame is tall. That is a camera
-// mounted sideways to match the set. The returned size is what drawImage
-// takes.
+// and mirrors only A, so whatever goes to B is turned and mirrored here
+// instead: mirrored if the camera faced its subject, and turned to lie across
+// a set on its side. A camera's frame is tall exactly when the set is on its
+// side, so a camera is turned by its own shape; that is a camera mounted
+// sideways to match the set. The returned size is what drawImage takes.
 function lay(
   canvas: HTMLCanvasElement,
   g: CanvasRenderingContext2D,
   cam: Camera,
+  turned: boolean,
 ): [number, number] {
   const vw = cam.video.videoWidth
   const vh = cam.video.videoHeight
-  const turned = vh > vw
   const scale = Math.min(1, LONG_SIDE / Math.max(vw, vh))
   const dw = Math.round(vw * scale)
   const dh = Math.round(vh * scale)
@@ -60,7 +62,7 @@ export async function recordTape(
 ): Promise<Blob> {
   const canvas = document.createElement('canvas')
   const g = context(canvas)
-  const [dw, dh] = lay(canvas, g, cam)
+  const [dw, dh] = lay(canvas, g, cam, tall(cam.video))
   const rec = await startRecording({
     width: canvas.width,
     height: canvas.height,
@@ -92,8 +94,8 @@ export async function recordTape(
   return rec.finish()
 }
 
-// The tape playing on a loop, ready for the engine's B slot.
-export async function playTape(url: string): Promise<HTMLVideoElement> {
+// A tape or a clip playing on a loop, muted, ready for the engine's B slot.
+export async function playLoop(url: string): Promise<HTMLVideoElement> {
   const video = document.createElement('video')
   video.muted = true
   video.playsInline = true
@@ -108,20 +110,27 @@ export interface Relay {
   stop: () => void
 }
 
-// A live camera for source B, laid down each frame the way a tape is recorded.
-// A phone turned in the hand changes the camera's frame size, and the canvas is
-// laid again to follow it.
-export async function relayCamera(cam: Camera): Promise<Relay> {
+// A live picture for source B, laid down each frame the way a tape is
+// recorded. A camera is turned by its own shape; a clip is given `turned`,
+// the set's own state, since its shape says nothing about how the phone is
+// held. A phone turned in the hand changes the camera's frame size or turns
+// the set, and the canvas is laid again to follow it.
+export async function relayCamera(
+  cam: Camera,
+  turned: () => boolean = () => tall(cam.video),
+): Promise<Relay> {
   const canvas = document.createElement('canvas')
   const g = context(canvas)
-  let size = lay(canvas, g, cam)
-  let seen = `${cam.video.videoWidth}x${cam.video.videoHeight}`
+  const state = () =>
+    `${cam.video.videoWidth}x${cam.video.videoHeight}:${turned()}`
+  let size = lay(canvas, g, cam, turned())
+  let seen = state()
   let raf = 0
   const tick = () => {
-    const now = `${cam.video.videoWidth}x${cam.video.videoHeight}`
+    const now = state()
     if (now !== seen) {
       seen = now
-      size = lay(canvas, g, cam)
+      size = lay(canvas, g, cam, turned())
     }
     g.drawImage(cam.video, 0, 0, size[0], size[1])
     raf = requestAnimationFrame(tick)

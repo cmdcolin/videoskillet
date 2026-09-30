@@ -85,6 +85,79 @@ export function TapeIcon() {
   )
 }
 
+// Two overlapping circles: two pictures sharing one screen.
+export function MixIcon() {
+  return (
+    <svg
+      width="22"
+      height="22"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      aria-hidden
+    >
+      <circle cx="9" cy="12" r="6" />
+      <circle cx="15" cy="12" r="6" />
+    </svg>
+  )
+}
+
+// Three faders at different heights.
+export function SlidersIcon() {
+  return (
+    <svg
+      width="22"
+      height="22"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      aria-hidden
+    >
+      <path d="M6 4v16M12 4v16M18 4v16" />
+      <path d="M3.5 15h5M9.5 8h5M15.5 13h5" strokeWidth="3" />
+    </svg>
+  )
+}
+
+// A strip of film.
+export function FilmIcon() {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <rect x="4" y="3" width="16" height="18" rx="2" />
+      <path d="M8 3v18M16 3v18M4 8h4M4 16h4M16 8h4M16 16h4" />
+    </svg>
+  )
+}
+
+export function CloseIcon() {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      aria-hidden
+    >
+      <path d="M6 6l12 12M18 6L6 18" />
+    </svg>
+  )
+}
+
 export function MicIcon() {
   return (
     <svg

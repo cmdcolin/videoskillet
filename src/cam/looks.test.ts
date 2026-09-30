@@ -9,14 +9,17 @@ import {
 } from '../ui/presets'
 import {
   CAM_LOOKS,
-  CAM_MIX_LOOKS,
+  MIX_MODES,
   ROLL_POOL,
   lookBoard,
+  lookKnobs,
   lookLabel,
-  needsSecond,
+  mixControls,
   rollLook,
   subtleLoop,
 } from './looks'
+
+import type { Mix } from './looks'
 
 describe('the camera strip', () => {
   it('names only presets that exist', () => {
@@ -162,20 +165,52 @@ it('calls no look normal', () => {
   )
 })
 
-describe('the strip with a second picture on B', () => {
-  // A look that mixes nothing in would read as the camera untouched, and one
-  // already on the strip would show twice.
-  it('offers only looks that mix B in', () => {
-    for (const name of CAM_MIX_LOOKS) {
-      expect(PRESET_BY_NAME.has(name), name).toBe(true)
-      expect(needsSecond(name), name).toBe(true)
-      expect((CAM_LOOKS as readonly string[]).includes(name), name).toBe(false)
+describe('the mixer', () => {
+  const at = (mix: Mix) => ({ ...DEFAULT_CONTROLS, ...mixControls(mix) })
+
+  it('shows only A with the fader down', () => {
+    expect(at({ mode: 'dissolve', fader: 0 }).bGain).toBe(0)
+    expect(at({ mode: 'sum', fader: 0 }).bGain).toBe(0)
+    expect(at({ mode: 'wipe', fader: 0 }).wipePos).toBe(0)
+    expect(at({ mode: 'key', fader: 0 }).pipKeyLevel).toBe(1)
+  })
+
+  // A mode that left the last one's switch up would show both at once.
+  it('clears what the other modes set', () => {
+    for (const mode of MIX_MODES) {
+      const c = at({ mode, fader: 1 })
+      if (mode !== 'wipe') expect(c.wipeMode, mode).toBe(0)
+      if (mode !== 'inset' && mode !== 'key') expect(c.pipMix, mode).toBe(0)
     }
   })
 
-  it('knows a look that mixes from one that does not', () => {
-    expect(needsSecond('cleanDissolve')).toBe(true)
-    expect(needsSecond('zoomBloom')).toBe(false)
-    expect(needsSecond('no such look')).toBe(false)
+  it('keeps the inset inside the picture', () => {
+    for (const fader of [0, 0.5, 1]) {
+      const c = at({ mode: 'inset', fader })
+      expect(c.pipX + c.pipW / 2).toBeLessThanOrEqual(1)
+      expect(c.pipY - c.pipH / 2).toBeGreaterThanOrEqual(0)
+    }
+  })
+})
+
+describe('the tune sheet', () => {
+  it("leads with the look's own controls", () => {
+    const keys = lookKnobs({
+      name: 'theLightIsALapBehind',
+      strength: 1,
+      rolled: false,
+    }).map(k => k.key)
+    expect(keys[0]).toBe('cfbMix')
+    expect(keys).toContain('ghostGain')
+    expect(new Set(keys).size).toBe(keys.length)
+  })
+
+  it("offers the set's own with no look up", () => {
+    expect(lookKnobs(null).map(k => k.key)).toEqual([
+      'chromaGain',
+      'tintDeg',
+      'noiseIre',
+      'ghostGain',
+    ])
   })
 })
