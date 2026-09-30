@@ -2,6 +2,15 @@
 
 All notable changes to videoskillet are documented here.
 
+## [2.6.0](https://github.com/cmdcolin/videoskillet/compare/v2.5.1...v2.6.0) - 2026-09-30
+
+### Features
+- *(gpu)* [`88a81c5`](https://github.com/cmdcolin/videoskillet/commit/88a81c5c8fec5d677534533b16aa69bcee3a27d6) crop source A for a camera zoomed past its lens
+- *(ui)* [`b9a7fa3`](https://github.com/cmdcolin/videoskillet/commit/b9a7fa3fab1b33a7750059d62fbda3a246429cfd) give the camera page a mixer, a tune sheet, zoom and help
+- *(ui)* [`5dbf26b`](https://github.com/cmdcolin/videoskillet/commit/5dbf26b65df73f7fd308516bbf4e4649ce0d763f) tour the camera page on a phone's home page
+- *(ui)* [`85fac39`](https://github.com/cmdcolin/videoskillet/commit/85fac392e758d0b1ba8e7984442a7bb29599c6ef) keep a phone's picture upright with the scan across it
+- *(ui)* [`f3b9a56`](https://github.com/cmdcolin/videoskillet/commit/f3b9a56d45a30f43d443e8c4c8d7b464d3e189fa) sort the camera's looks by what breaks, and stack them
+
 ## [2.5.1](https://github.com/cmdcolin/videoskillet/compare/v2.5.0...v2.5.1) - 2026-09-29
 
 ### Fixes
