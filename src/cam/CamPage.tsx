@@ -58,6 +58,7 @@ const HOLD_MS = 180
 const SWIPE_PX = 40
 const TAP_PX = 10
 
+const HINT_STORE = 'videoskillet_cam_hint_seen'
 const SIDEWAYS_STORE = 'videoskillet_cam_sideways'
 const DECK_STORE = 'videoskillet_cam_deck'
 
@@ -229,6 +230,7 @@ export function CamPage() {
   const [shelfName, setShelfName] = useState(SHELVES[0].name)
   const [tuning, setTuning] = useState(false)
   const [help, setHelp] = useState(false)
+  const [hintSeen, setHintSeen] = usePersistedFlag(HINT_STORE)
   const [mode, setMode] = useState<Mode>('photo')
   const [comparing, setComparing] = useState(false)
   const [shot, setShot] = useState<Shot | null>(null)
@@ -478,6 +480,7 @@ export function CamPage() {
 
   // A second finger turns whatever the first one started into a pinch.
   const press = (e: PointerEvent<HTMLCanvasElement>) => {
+    if (!hintSeen) setHintSeen(true)
     e.currentTarget.setPointerCapture(e.pointerId)
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
     if (pointers.current.size === 2) {
@@ -567,7 +570,7 @@ export function CamPage() {
     { key: 'none', label: 'none', icon: null, title: 'nothing on B' },
     {
       key: 'camera',
-      label: cam.canFlip ? 'other camera' : 'tape',
+      label: cam.canFlip ? 'other camera' : 'record 4 s',
       icon: cam.canFlip ? <FlipIcon /> : <TapeIcon />,
       title: cam.canFlip
         ? 'the other camera, live where the phone runs both, else a 4 s tape'
@@ -713,6 +716,11 @@ export function CamPage() {
           ) : null}
           {comparing ? <span className={styles.badge}>original</span> : null}
           {flash === '' ? null : <span className={styles.flash}>{flash}</span>}
+          {on && !hintSeen && !showHelp ? (
+            <span className={styles.firstHint}>
+              swipe for looks · hold for the original
+            </span>
+          ) : null}
           {ring === null ? null : (
             <span
               className={styles.ring}
@@ -771,7 +779,7 @@ export function CamPage() {
           <div className={styles.mixer} aria-label="Mixer">
             <div className={styles.sources}>
               <span className={styles.source}>
-                <b>A</b> camera
+                <b>A</b>camera
               </span>
               <span className={styles.source}>
                 <b>B</b>
@@ -788,10 +796,18 @@ export function CamPage() {
                       key={src.label}
                       role="radio"
                       aria-checked={up}
-                      className={cx(styles.mixMode, up && styles.mixModeOn)}
+                      className={cx(
+                        styles.mixMode,
+                        up &&
+                          (src.key === 'none'
+                            ? styles.mixModeEmpty
+                            : styles.mixModeOn),
+                      )}
                       disabled={busy}
                       title={src.title}
-                      onClick={() => up || putOnB(src.key)}
+                      onClick={() => {
+                        if (!up) putOnB(src.key)
+                      }}
                     >
                       {src.icon}
                       {src.label}
@@ -800,49 +816,54 @@ export function CamPage() {
                 })}
               </div>
             </div>
-            <div className={styles.mixModes} role="radiogroup" aria-label="Mix">
-              {MIX_MODES.map(m => {
-                const up = !noB && !ownedMixer && mix.mode === m
-                return (
-                  <button
-                    key={m}
-                    role="radio"
-                    aria-checked={up}
-                    className={cx(styles.mixMode, up && styles.mixModeOn)}
-                    disabled={noB}
-                    onClick={() => mixWith({ mode: m, fader: mix.fader })}
-                  >
-                    {m}
-                  </button>
-                )
-              })}
-            </div>
-            <label className={styles.fader}>
-              <span>A</span>
-              <input
-                className={styles.slider}
-                type="range"
-                min={0}
-                max={100}
-                value={Math.round(mix.fader * 100)}
-                aria-label="fader"
-                title={
-                  noB
-                    ? 'put a picture on B to fade to it'
-                    : ownedMixer
-                      ? 'the look is working the mixer'
-                      : undefined
-                }
-                disabled={noB || ownedMixer}
-                onChange={e =>
-                  mixWith({
-                    mode: mix.mode,
-                    fader: Number(e.target.value) / 100,
-                  })
-                }
-              />
-              <span>B</span>
-            </label>
+            {noB ? null : (
+              <>
+                <div
+                  className={styles.mixModes}
+                  role="radiogroup"
+                  aria-label="Mix"
+                >
+                  {MIX_MODES.map(m => {
+                    const up = !ownedMixer && mix.mode === m
+                    return (
+                      <button
+                        key={m}
+                        role="radio"
+                        aria-checked={up}
+                        className={cx(styles.mixMode, up && styles.mixModeOn)}
+                        onClick={() => mixWith({ mode: m, fader: mix.fader })}
+                      >
+                        {m}
+                      </button>
+                    )
+                  })}
+                </div>
+                {ownedMixer ? (
+                  <p className={styles.mixNote}>
+                    The look is working the mixer. Pick a mode to take it back.
+                  </p>
+                ) : (
+                  <label className={styles.fader}>
+                    <span>A</span>
+                    <input
+                      className={styles.slider}
+                      type="range"
+                      min={0}
+                      max={100}
+                      value={Math.round(mix.fader * 100)}
+                      aria-label="fader"
+                      onChange={e =>
+                        mixWith({
+                          mode: mix.mode,
+                          fader: Number(e.target.value) / 100,
+                        })
+                      }
+                    />
+                    <span>B</span>
+                  </label>
+                )}
+              </>
+            )}
           </div>
         ) : null}
 

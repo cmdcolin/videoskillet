@@ -103,6 +103,11 @@ page.on('pageerror', err =>
   console.log('[pageerror]', String(err).slice(0, 300)),
 )
 
+// The tour's stills leave out the reminder a first visit gets over the picture.
+await page.evaluateOnNewDocument(() => {
+  localStorage.setItem('videoskillet_cam_hint_seen', '1')
+})
+
 // A phone held upright: a tall camera, panning slowly over the sample.
 await page.evaluateOnNewDocument(src => {
   if (navigator.mediaDevices === undefined) return
@@ -227,11 +232,14 @@ try {
   await click('button[title^="the head comes off track"]')
   await settle(650)
   await shoot('fault')
+  // A fault advances once per rendered frame, so under a slow browser its cut
+  // can land after B arrives and throw the fader.
+  await settle(5000)
   await click('button[title^="fault pads"]')
   const input = await page.$('input[type=file]')
   await input.uploadFile(clip)
   await settle(3000)
-  await click('[data-look="pauseFight"]')
+  await clickText('wipe')
   await settle(3000)
   await shoot('mix')
   await page.evaluate(() => window.vf?.destroy())
