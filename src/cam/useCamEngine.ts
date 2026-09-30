@@ -6,11 +6,12 @@ import { smpteBars } from '../sources/pattern'
 import { backingStoreSize } from '../ui/canvasSize'
 import { RebuildPolicy } from '../ui/rebuildPolicy'
 import { sounded } from './sound'
+import { SLICE } from './tape'
 import { steered } from './tilt'
 
 import type { Controls, ModSlot } from '../core/controls'
 import type { Fatal } from '../ui/FatalScreen'
-import type { Camera } from './tape'
+import type { Camera, Layout } from './tape'
 import type { Tilt } from './tilt'
 import type { RefObject } from 'react'
 
@@ -22,17 +23,31 @@ export interface Shown {
   second: HTMLVideoElement | null
   // The zoom past what the camera's own lens reached, applied to A.
   zoom: number
+  // Whether a tall picture stands the set on its side rather than taking an
+  // upright slice of it.
+  sideways: boolean
 }
 export interface Board {
   controls: Controls
   mod: ModSlot[]
 }
 
-// A phone held upright hands over a tall picture, and the set stands on its
-// side to show all of it. Cover-fitting a tall picture into a 4:3 raster
-// would cut away almost half its height.
 const tall = (video: HTMLVideoElement | null) =>
   video !== null && video.videoHeight > video.videoWidth
+
+// A phone held upright hands over a tall picture. Cover-fitting it into a 4:3
+// raster would cut away more than half its height, so the canvas shows an
+// upright slice of the glass with the picture fitted into it, and the scan
+// stays horizontal. Stood on its side instead, the set shows all of its glass,
+// the way an arcade cabinet mounts its tube, and the scan runs down the
+// picture.
+export const layoutOf = (shown: Shown): Layout =>
+  !tall(shown.video) ? 'whole' : shown.sideways ? 'turned' : 'slice'
+
+const lay = (engine: Engine, layout: Layout) => {
+  engine.setTubeTurned(layout === 'turned')
+  engine.setViewSlice(layout === 'slice' ? SLICE : 1)
+}
 
 // Hands an engine the whole picture. The boot and the rebuild both go through
 // here, so an engine replacing a lost one comes up on the same camera and look.
@@ -44,7 +59,7 @@ function dress(engine: Engine, shown: Shown, board: Board, sound: boolean) {
   engine.setVideoSourceB(shown.second)
   engine.setSourceBEnabled(shown.second !== null)
   engine.setSourceMirror(shown.mirror)
-  engine.setTubeTurned(tall(shown.video))
+  lay(engine, layoutOf(shown))
   engine.setSourceZoom(shown.zoom)
   if (shown.video === null) engine.setImageSource(smpteBars())
   else engine.setVideoSource(shown.video)
@@ -56,27 +71,46 @@ const reason = (e: unknown) => (e instanceof Error ? e.message : String(e))
 // on B. It keeps the two rules `useEngine` is built around: it never destroys a
 // device (docs/adr/0004), and it replaces a lost one in place. It leaves out
 // the instrument's links and its cue points.
-export function useCamEngine(canvasRef: RefObject<HTMLCanvasElement | null>) {
+// `sideways` is where the set stands to begin with, and `onLayout` hears each
+// change of layout once it has reached the engine.
+export function useCamEngine(
+  canvasRef: RefObject<HTMLCanvasElement | null>,
+  opts: { sideways: boolean; onLayout: (layout: Layout) => void },
+) {
   const engineRef = useRef<Engine | null>(null)
   const [engine, setEngine] = useState<Engine | null>(null)
   const [fatal, setFatal] = useState<Fatal | null>(null)
   const [rebuilding, setRebuilding] = useState(false)
   const [frozen, setFrozen] = useState(false)
-  const [turned, setTurned] = useState(false)
+  const [layout, setLayout] = useState<Layout>('whole')
   const shown = useRef<Shown>({
     video: null,
     mirror: false,
     second: null,
     zoom: 1,
+    sideways: opts.sideways,
   })
+  const laid = useRef<Layout>('whole')
   const board = useRef<Board>({ controls: DEFAULT_CONTROLS, mod: [] })
   const comparing = useRef(false)
   const heard = useRef(false)
   const onSet = (c: Controls) => (heard.current ? sounded(c) : c)
 
+  const relay = () => {
+    const next = layoutOf(shown.current)
+    if (next === laid.current) return
+    laid.current = next
+    setLayout(next)
+    if (engineRef.current !== null) lay(engineRef.current, next)
+    opts.onLayout(next)
+  }
   const turn = (video: HTMLVideoElement) => {
-    setTurned(tall(video))
-    engineRef.current?.setTubeTurned(tall(video))
+    if (shown.current.video === video) relay()
+  }
+
+  const standSideways = (sideways: boolean) => {
+    shown.current = { ...shown.current, sideways }
+    relay()
   }
 
   // A phone turned in the hand keeps the same camera and hands over frames the
@@ -86,9 +120,7 @@ export function useCamEngine(canvasRef: RefObject<HTMLCanvasElement | null>) {
     engineRef.current?.setSourceMirror(mirror)
     engineRef.current?.setVideoSource(video)
     turn(video)
-    video.addEventListener('resize', () => {
-      if (shown.current.video === video) turn(video)
-    })
+    video.addEventListener('resize', () => turn(video))
   }
 
   const showSecond = (second: HTMLVideoElement | null) => {
@@ -102,7 +134,7 @@ export function useCamEngine(canvasRef: RefObject<HTMLCanvasElement | null>) {
     engineRef.current?.setSourceZoom(zoom)
   }
 
-  const isTurned = () => tall(shown.current.video)
+  const layoutNow = () => layoutOf(shown.current)
 
   // The camera as it is on A, for recording a tape of it.
   const camera = (): Camera | null => {
@@ -121,7 +153,7 @@ export function useCamEngine(canvasRef: RefObject<HTMLCanvasElement | null>) {
   const steer = (t: Tilt) => {
     if (comparing.current) return
     engineRef.current?.applyControls(
-      steered(board.current.controls, t, tall(shown.current.video)),
+      steered(board.current.controls, t, layoutNow() === 'turned'),
     )
   }
 
@@ -239,11 +271,12 @@ export function useCamEngine(canvasRef: RefObject<HTMLCanvasElement | null>) {
     fatal,
     rebuilding,
     frozen,
-    turned,
+    layout,
     showVideo,
     showSecond,
     zoomA,
-    isTurned,
+    layoutNow,
+    standSideways,
     camera,
     showBoard,
     hear,

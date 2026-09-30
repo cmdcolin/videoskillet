@@ -85,6 +85,26 @@ export function TapeIcon() {
   )
 }
 
+// A set standing on its side: a tall tube with its knob at the bottom.
+export function SideIcon() {
+  return (
+    <svg
+      width="22"
+      height="22"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <rect x="6" y="2" width="12" height="20" rx="2" />
+      <rect x="8.5" y="5" width="7" height="10" rx="1" />
+      <circle cx="12" cy="18.5" r="1" fill="currentColor" />
+    </svg>
+  )
+}
+
 // Two overlapping circles: two pictures sharing one screen.
 export function MixIcon() {
   return (

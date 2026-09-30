@@ -182,40 +182,51 @@ const INSET_MARGIN = 0.04
 // The mixer's controls for a mode at a fader position. Every mode sets the
 // switches the others use, so a change of mode leaves nothing of the last one
 // up.
-const MIXES: Record<MixMode, (f: number) => Partial<Controls>> = {
-  dissolve: f => ({ bGain: f }),
-  wipe: f => ({ bGain: 1, wipeMode: 1, wipePos: f, wipeSoft: 0.04 }),
-  inset: f => {
-    const w = 0.2 + 0.72 * f
-    return {
+// `slice` is the share of the glass on show. The wipe travels across that
+// share alone, and an inset in a slice is a box opening in the middle: a
+// squeezed B would bring the black either side of its own slice with it.
+const MIXES: Record<MixMode, (f: number, slice: number) => Partial<Controls>> =
+  {
+    dissolve: f => ({ bGain: f }),
+    wipe: (f, slice) => ({
+      bGain: 1,
+      wipeMode: 1,
+      wipePos: 0.5 - slice / 2 + f * slice,
+      wipeSoft: 0.04,
+    }),
+    inset: (f, slice) => {
+      if (slice < 1)
+        return { bGain: 1, wipeMode: 3, wipePos: f, wipeSoft: 0.02 }
+      const w = 0.2 + 0.72 * f
+      return {
+        pipMix: 1,
+        pipW: w,
+        pipH: w,
+        pipX: 1 - INSET_MARGIN - w / 2,
+        pipY: INSET_MARGIN + w / 2,
+      }
+    },
+    key: f => ({
       pipMix: 1,
-      pipW: w,
-      pipH: w,
-      pipX: 1 - INSET_MARGIN - w / 2,
-      pipY: INSET_MARGIN + w / 2,
-    }
-  },
-  key: f => ({
-    pipMix: 1,
-    pipX: 0.5,
-    pipY: 0.5,
-    pipW: 1,
-    pipH: 1,
-    pipBorder: 0,
-    pipKey: 1,
-    pipKeyLevel: 1 - f,
-    pipKeySoft: 0.1,
-  }),
-  sum: f => ({ bGenlock: 0, bGain: f }),
-}
+      pipX: 0.5,
+      pipY: 0.5,
+      pipW: 1,
+      pipH: 1,
+      pipBorder: 0,
+      pipKey: 1,
+      pipKeyLevel: 1 - f,
+      pipKeySoft: 0.1,
+    }),
+    sum: f => ({ bGenlock: 0, bGain: f }),
+  }
 
-export const mixControls = (mix: Mix): Partial<Controls> => ({
+export const mixControls = (mix: Mix, slice = 1): Partial<Controls> => ({
   bGenlock: 1,
   bGain: 0,
   wipeMode: 0,
   pipMix: 0,
   pipKey: 0,
-  ...MIXES[mix.mode](mix.fader),
+  ...MIXES[mix.mode](mix.fader, slice),
 })
 
 // What every look offers after its own controls: colour, tint, snow and a

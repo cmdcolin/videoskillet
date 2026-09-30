@@ -217,6 +217,7 @@ export class Engine implements EngineApi {
   private mirrorA = false
   private turned = false
   private zoomA = 1
+  private sliceW = 1
 
   // Initialized from ?dbg=; also switchable live via setDbgView (panel, Advanced).
   private dbgView = Number(new URLSearchParams(pageSearch()).get('dbg') ?? 0)
@@ -1463,6 +1464,10 @@ export class Engine implements EngineApi {
     this.zoomA = Math.max(1, zoom)
   }
 
+  setViewSlice(share: number): void {
+    this.sliceW = Math.min(1, Math.max(0.1, share))
+  }
+
   setVideoRegion(region: { start: number; end: number } | null): void {
     this.pump.setRegionA(region)
   }
@@ -1795,6 +1800,7 @@ export class Engine implements EngineApi {
       srcMirror: this.mirrorA ? 1 : 0,
       tubeTurn: this.turned ? 1 : 0,
       srcZoom: this.zoomA,
+      sliceW: this.sliceW,
       srcNoise: this.sources.srcNoise,
       srcNoiseB: this.sources.srcNoiseB,
       srcFrame: this.tapeFrame.a,

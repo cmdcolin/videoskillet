@@ -150,26 +150,33 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
     return;
   }
   let uv = vec2f((f32(gid.x) + 0.5) / f32(ACTIVE_W), (f32(gid.y) + 0.5) / f32(ACTIVE_H));
-  // cover-fit the source into the 4:3 frame, as the source lands on it: a
-  // turned camera lays a tall picture across the raster
-  let disp = 4.0 / 3.0;
+  // cover-fit the source into the part of the 4:3 frame on show, as the source
+  // lands on it: a turned camera lays a tall picture across the raster, and a
+  // slice takes it upright down the middle
+  let disp = 4.0 / 3.0 * P.sliceW;
   let aspect = select(P.srcAspect, 1.0 / P.srcAspect, P.tubeTurn > 0.5);
-  var suv = (uv - 0.5) / P.srcZoom + 0.5;
+  var suv = (vec2f((uv.x - 0.5) / P.sliceW, uv.y - 0.5)) / P.srcZoom + 0.5;
   if (aspect > disp) {
     suv.x = 0.5 + (suv.x - 0.5) * (disp / aspect);
   } else {
     suv.y = 0.5 + (suv.y - 0.5) * (aspect / disp);
   }
-  // Source uv per output pixel, on each axis, after the zoom and the cover fit
-  // above: the capture band and the colorizer's input filter both step in these.
+  // Source uv per output pixel, on each axis, after the slice, the zoom and the
+  // cover fit above: the capture band and the colorizer's input filter both
+  // step in these.
   let sxy = vec2f(
-    select(1.0, disp / aspect, aspect > disp) / (f32(ACTIVE_W) * P.srcZoom),
+    select(1.0, disp / aspect, aspect > disp) / (f32(ACTIVE_W) * P.sliceW * P.srcZoom),
     select(aspect / disp, 1.0, aspect > disp) / (f32(ACTIVE_H) * P.srcZoom),
   );
+  // Either side of a slice the camera saw nothing, so the raster carries black
+  // there, and a picture torn or shifted sideways brings black in with it.
+  let outside = suv.x < 0.0 || suv.x > 1.0;
   let captured = P.capLumaSigma > 0.0 || P.capChromaSigma > 0.0 || P.capYcDelay != 0.0
     || P.capNoise > 0.0 || P.capChromaNoise > 0.0;
   var src: vec3f;
-  if (P.srcNoise < 0.5 && captured) {
+  if (P.srcNoise < 0.5 && outside) {
+    src = vec3f(0.0);
+  } else if (P.srcNoise < 0.5 && captured) {
     src = capture(suv, sxy.x, gid.xy);
   } else {
     src = pick(suv);

@@ -103,7 +103,9 @@ fn fs(in: VOut) -> @location(0) vec4f {
   let turned = P.tubeTurn > 0.5;
   let cs = select(vec2f(P.canvasW, P.canvasH), vec2f(P.canvasH, P.canvasW), turned);
   let px = select(in.uv, vec2f(in.uv.y, 1.0 - in.uv.x), turned) * cs;
-  let scale = min(cs.x / 4.0, cs.y / 3.0);
+  // A slice is fitted by its own width, so the glass either side of it runs
+  // off the canvas.
+  let scale = min(cs.x / (4.0 * P.sliceW), cs.y / 3.0);
   let half = vec2f(2.0 * scale, 1.5 * scale);
   let rel = (px - cs * 0.5) / half;
   // Magnifier: move the viewer closer to the glass, about the point under the

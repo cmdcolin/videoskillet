@@ -5,6 +5,7 @@ import { cx } from '../ui/cx'
 import { save } from '../ui/download'
 import { FatalScreen } from '../ui/FatalScreen'
 import { usePersistedFlag } from '../ui/storage'
+import { TRANSITIONS, faultPlan } from '../ui/transitions'
 import { useCapture } from '../ui/useCapture'
 import { useWakeLock } from '../ui/useWakeLock'
 import styles from './cam.module.css'
@@ -16,6 +17,7 @@ import {
   MicIcon,
   MixIcon,
   ShareIcon,
+  SideIcon,
   SlidersIcon,
   TapeIcon,
   TiltIcon,
@@ -29,6 +31,7 @@ import {
   mixControls,
   rollLook,
 } from './looks'
+import { SLICE } from './tape'
 import { Tune } from './Tune'
 import { useCamEngine } from './useCamEngine'
 import { useCamera } from './useCamera'
@@ -38,7 +41,9 @@ import { useZoom } from './useZoom'
 import { stopAt, zoomLabel } from './zoom'
 
 import type { ControlKey, Controls } from '../core/controls'
+import type { Transition } from '../ui/transitions'
 import type { Look, Mix } from './looks'
+import type { Layout } from './tape'
 import type { ChangeEvent, PointerEvent, ReactNode } from 'react'
 
 type Mode = 'photo' | 'video'
@@ -50,6 +55,9 @@ const SWIPE_PX = 40
 const TAP_PX = 10
 
 const HELP_STORE = 'videoskillet_cam_help_seen'
+const SIDEWAYS_STORE = 'videoskillet_cam_sideways'
+
+const sliceOf = (layout: Layout) => (layout === 'slice' ? SLICE : 1)
 
 interface Gesture {
   id: number
@@ -81,12 +89,12 @@ interface Scene {
   hue: number | null
 }
 
-const boardOf = (s: Scene) => {
+const boardOf = (s: Scene, slice: number) => {
   const board = lookBoard(s.look)
   const controls = {
     ...board.controls,
     ...s.tweaks,
-    ...(s.mix === null ? {} : mixControls(s.mix)),
+    ...(s.mix === null ? {} : mixControls(s.mix, slice)),
   }
   return { ...board, controls: aimKey(controls, s.hue) }
 }
@@ -184,7 +192,13 @@ function instrumentHref(look: Look | null, cameraOn: boolean): string {
 export function CamPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const clipRef = useRef<HTMLInputElement>(null)
-  const eng = useCamEngine(canvasRef)
+  const [sideways, setSideways] = usePersistedFlag(SIDEWAYS_STORE)
+  // The wipe and the inset are laid out across the glass on show, so a new
+  // layout lays the board again.
+  const eng = useCamEngine(canvasRef, {
+    sideways,
+    onLayout: () => paint({}),
+  })
   const zoom = useZoom(() => trackOf(eng.camera()?.video), eng.zoomA)
   const cam = useCamera((video, mirror) => {
     eng.showVideo(video, mirror)
@@ -248,7 +262,7 @@ export function CamPage() {
     const s = { ...sceneRef.current, ...next }
     sceneRef.current = s
     setScene(s)
-    eng.showBoard(boardOf(s))
+    eng.showBoard(boardOf(s, sliceOf(eng.layoutNow())))
   }
 
   // A tap's aim and the knobs moved off a look last while that look stays up,
@@ -319,6 +333,18 @@ export function CamPage() {
       if (ok) paint({ mix: FIRST_MIX })
     })
   }
+  // A pad breaks the picture and lets it heal. With a second picture on B, the
+  // cut lands on the frame the picture is least legible and throws the fader to
+  // the other end, so the fault carries the change of picture.
+  const hit = (t: Transition) => {
+    eng.engine?.startFault(
+      faultPlan(t, () => {
+        const m = sceneRef.current.mix
+        if (m !== null) paint({ mix: { ...m, fader: m.fader < 0.5 ? 1 : 0 } })
+      }),
+    )
+  }
+
   const takeOff = () => {
     second.eject()
     paint({ mix: null })
@@ -512,7 +538,9 @@ export function CamPage() {
       </header>
 
       <main className={styles.stage}>
-        <div className={cx(styles.frame, eng.turned && styles.turned)}>
+        <div
+          className={cx(styles.frame, eng.layout !== 'whole' && styles.turned)}
+        >
           <canvas
             ref={canvasRef}
             className={styles.canvas}
@@ -535,6 +563,19 @@ export function CamPage() {
                   <TiltIcon />
                 </Switch>
               ) : null}
+              {eng.layout === 'whole' ? null : (
+                <Switch
+                  on={sideways}
+                  label="on side"
+                  title="stand the set on its side, so the scan runs down the picture"
+                  onClick={() => {
+                    setSideways(!sideways)
+                    eng.standSideways(!sideways)
+                  }}
+                >
+                  <SideIcon />
+                </Switch>
+              )}
               <Switch
                 on={sound}
                 label="sound"
@@ -735,6 +776,24 @@ export function CamPage() {
           </div>
         )}
 
+        {on ? (
+          <div className={styles.hits} aria-label="Faults">
+            {TRANSITIONS.map(t => (
+              <button
+                key={t.name}
+                className={styles.hit}
+                title={t.title}
+                onClick={() => hit(t)}
+              >
+                <span className={styles.hitGlyph} aria-hidden>
+                  {t.glyph}
+                </span>
+                {t.label}
+              </button>
+            ))}
+          </div>
+        ) : null}
+
         <nav className={styles.strip} aria-label="Looks">
           <button
             className={cx(styles.chip, look?.rolled === true && styles.chipOn)}
@@ -848,7 +907,7 @@ export function CamPage() {
         {tuning ? (
           <Tune
             look={look}
-            controls={boardOf(scene).controls}
+            controls={boardOf(scene, sliceOf(eng.layout)).controls}
             tweaked={tweaked}
             onStrength={s => look !== null && land({ ...look, strength: s })}
             onKnob={turnKnob}

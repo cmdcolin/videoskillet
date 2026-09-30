@@ -191,6 +191,15 @@ describe('the mixer', () => {
       expect(c.pipY - c.pipH / 2).toBeGreaterThanOrEqual(0)
     }
   })
+
+  // Past the edge of a slice the wipe would move with nothing on show.
+  it('wipes across a slice edge to edge', () => {
+    const slice = 0.5625
+    const pos = (fader: number) =>
+      mixControls({ mode: 'wipe', fader }, slice).wipePos
+    expect(pos(0)).toBeCloseTo(0.5 - slice / 2)
+    expect(pos(1)).toBeCloseTo(0.5 + slice / 2)
+  })
 })
 
 describe('the tune sheet', () => {

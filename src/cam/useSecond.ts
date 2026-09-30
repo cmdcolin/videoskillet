@@ -4,7 +4,7 @@ import { usePersistedString } from '../ui/storage'
 import { TAPE_SECONDS, playLoop, recordTape, relayCamera } from './tape'
 import { stopAll } from './useCamera'
 
-import type { Camera, Relay } from './tape'
+import type { Camera, Layout, Relay } from './tape'
 import type { Opened } from './useCamera'
 
 // What is on source B: a tape of one camera, the other camera live, or a clip
@@ -42,7 +42,7 @@ export function useSecond(
   eng: {
     camera: () => Camera | null
     showSecond: (video: HTMLVideoElement | null) => void
-    isTurned: () => boolean
+    layoutNow: () => Layout
   },
   cam: {
     openOther: () => Promise<Opened | null>
@@ -87,10 +87,10 @@ export function useSecond(
   // A live camera on B, taken off when the phone ends it: in the background,
   // or when another app takes it.
   const goLive = async (o: Opened) => {
-    const relay = await relayCamera({
-      video: o.video,
-      mirror: o.faces === 'user',
-    })
+    const relay = await relayCamera(
+      { video: o.video, mirror: o.faces === 'user' },
+      eng.layoutNow,
+    )
     o.stream.getVideoTracks()[0]?.addEventListener('ended', () => {
       const b = held.current
       if (b !== null && b.kind === 'live' && b.cam === o) eject()
@@ -104,7 +104,9 @@ export function useSecond(
     setLeft(TAPE_SECONDS)
     let loaded: Second | null = null
     try {
-      const url = URL.createObjectURL(await recordTape(c, setLeft))
+      const url = URL.createObjectURL(
+        await recordTape(c, eng.layoutNow(), setLeft),
+      )
       loaded = { kind: 'tape', url, video: await playLoop(url) }
     } catch (e) {
       onError(`tape: ${reason(e)}`)
@@ -144,7 +146,7 @@ export function useSecond(
     const url = URL.createObjectURL(file)
     try {
       const video = await playLoop(url)
-      const relay = await relayCamera({ video, mirror: false }, eng.isTurned)
+      const relay = await relayCamera({ video, mirror: false }, eng.layoutNow)
       show({ kind: 'clip', url, video, relay })
       return true
     } catch (e) {

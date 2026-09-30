@@ -6,34 +6,65 @@ const FPS = 30
 // B is staged at raster size, so a larger picture is only a larger encode.
 const LONG_SIDE = 854
 
+// How a picture lies on the set. `whole` fills the 4:3 glass, `turned` lies
+// across a set on its side, and `slice` stands upright in the middle of an
+// upright set, of which the canvas shows only that slice.
+export type Layout = 'whole' | 'turned' | 'slice'
+
+// The share of the glass's width a slice shows: a 3:4 picture down the middle
+// of a 4:3 one.
+export const SLICE = 3 / 4 / (4 / 3)
+
 export interface Camera {
   video: HTMLVideoElement
   mirror: boolean
 }
 
-const tall = (video: HTMLVideoElement) => video.videoHeight > video.videoWidth
-
-// Sizes `canvas` for the camera's current frame and sets the transform that
-// lays each frame down the way `pick` in compose.wgsl reads A. The engine turns
-// and mirrors only A, so whatever goes to B is turned and mirrored here
-// instead: mirrored if the camera faced its subject, and turned to lie across
-// a set on its side. A camera's frame is tall exactly when the set is on its
-// side, so a camera is turned by its own shape; that is a camera mounted
-// sideways to match the set. The returned size is what drawImage takes.
+// Sizes `canvas` for the picture's current frame and returns what lays each
+// frame down the way compose.wgsl lays A. The engine turns, slices and mirrors
+// only A, so whatever goes to B is turned, sliced and mirrored here instead:
+// mirrored if the camera faced its subject, turned to lie across a set on its
+// side, and fitted into the middle of the raster with black either side for a
+// slice.
 function lay(
   canvas: HTMLCanvasElement,
   g: CanvasRenderingContext2D,
   cam: Camera,
-  turned: boolean,
-): [number, number] {
+  layout: Layout,
+): () => void {
   const vw = cam.video.videoWidth
   const vh = cam.video.videoHeight
+  g.resetTransform()
+  if (layout === 'slice') {
+    canvas.width = LONG_SIDE
+    canvas.height = Math.round((LONG_SIDE * 3) / 4)
+    const h = canvas.height
+    const w = Math.round(LONG_SIDE * SLICE)
+    const x0 = (LONG_SIDE - w) / 2
+    const s = Math.max(w / vw, h / vh)
+    const dw = vw * s
+    const dh = vh * s
+    if (cam.mirror) {
+      g.translate(LONG_SIDE, 0)
+      g.scale(-1, 1)
+    }
+    return () => {
+      g.fillStyle = '#000'
+      g.fillRect(0, 0, LONG_SIDE, h)
+      g.save()
+      g.beginPath()
+      g.rect(x0, 0, w, h)
+      g.clip()
+      g.drawImage(cam.video, x0 + (w - dw) / 2, (h - dh) / 2, dw, dh)
+      g.restore()
+    }
+  }
+  const turned = layout === 'turned'
   const scale = Math.min(1, LONG_SIDE / Math.max(vw, vh))
   const dw = Math.round(vw * scale)
   const dh = Math.round(vh * scale)
   canvas.width = turned ? dh : dw
   canvas.height = turned ? dw : dh
-  g.resetTransform()
   // A quarter turn anticlockwise lays the camera's top edge down the canvas's
   // left, which is where compose puts it.
   if (turned) {
@@ -44,7 +75,7 @@ function lay(
     g.translate(dw, 0)
     g.scale(-1, 1)
   }
-  return [dw, dh]
+  return () => g.drawImage(cam.video, 0, 0, dw, dh)
 }
 
 const context = (canvas: HTMLCanvasElement) => {
@@ -58,11 +89,12 @@ const context = (canvas: HTMLCanvasElement) => {
 // left.
 export async function recordTape(
   cam: Camera,
+  layout: Layout,
   onSecond: (left: number) => void,
 ): Promise<Blob> {
   const canvas = document.createElement('canvas')
   const g = context(canvas)
-  const [dw, dh] = lay(canvas, g, cam, tall(cam.video))
+  const draw = lay(canvas, g, cam, layout)
   const rec = await startRecording({
     width: canvas.width,
     height: canvas.height,
@@ -77,7 +109,7 @@ export async function recordTape(
         Math.floor(((performance.now() - start) / 1000) * FPS) + 1,
       )
       while (rec.frames() < due) {
-        g.drawImage(cam.video, 0, 0, dw, dh)
+        draw()
         rec.frame(canvas)
       }
       onSecond(Math.ceil(TAPE_SECONDS - rec.frames() / FPS))
@@ -111,28 +143,27 @@ export interface Relay {
 }
 
 // A live picture for source B, laid down each frame the way a tape is
-// recorded. A camera is turned by its own shape; a clip is given `turned`,
-// the set's own state, since its shape says nothing about how the phone is
-// held. A phone turned in the hand changes the camera's frame size or turns
-// the set, and the canvas is laid again to follow it.
+// recorded, in whatever layout the set has now. A phone turned in the hand
+// changes the camera's frame size and the set's layout, and the canvas is laid
+// again to follow them.
 export async function relayCamera(
   cam: Camera,
-  turned: () => boolean = () => tall(cam.video),
+  layout: () => Layout,
 ): Promise<Relay> {
   const canvas = document.createElement('canvas')
   const g = context(canvas)
   const state = () =>
-    `${cam.video.videoWidth}x${cam.video.videoHeight}:${turned()}`
-  let size = lay(canvas, g, cam, turned())
+    `${cam.video.videoWidth}x${cam.video.videoHeight}:${layout()}`
+  let draw = lay(canvas, g, cam, layout())
   let seen = state()
   let raf = 0
   const tick = () => {
     const now = state()
     if (now !== seen) {
       seen = now
-      size = lay(canvas, g, cam, turned())
+      draw = lay(canvas, g, cam, layout())
     }
-    g.drawImage(cam.video, 0, 0, size[0], size[1])
+    draw()
     raf = requestAnimationFrame(tick)
   }
   tick()

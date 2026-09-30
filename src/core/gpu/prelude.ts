@@ -62,6 +62,10 @@ export const PARAM_DEFS = [
   // Source A's lens zoom, 1 = the whole frame. A camera zoomed past what its
   // own lens reaches crops here, before the encoder, as a longer lens would.
   ['srcZoom', 'f32'],
+  // The share of the glass's width on show, 1 = the whole set. Below 1 the
+  // canvas shows an upright slice down the middle of the glass, and source A is
+  // fitted into that slice, so a phone held upright keeps its scan horizontal.
+  ['sliceW', 'f32'],
   ['srcNoise', 'f32'], // GPU-generated source A: 0 texture, 1 TV static, 2 VHS blank-tape static
   // The statistics of that generated noise, shared by both slots. Noise cannot
   // change faster than the path it arrived through lets it, so the grain is a
