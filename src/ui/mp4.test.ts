@@ -99,6 +99,27 @@ describe('writeMp4', () => {
     expect(u32At(stts.body, 12)).toBe(1) // one tick each
   })
 
+  it('lengthens a held frame and the track with it', () => {
+    const held = file([
+      sample(10, true),
+      { ...sample(10), frames: 3 },
+      sample(10),
+    ])
+    const mdia = find(
+      kids(find(kids(find(boxes(held), 'moov')), 'trak')),
+      'mdia',
+    )
+    const stts = find(
+      kids(find(kids(find(kids(mdia), 'minf')), 'stbl')),
+      'stts',
+    )
+    expect(u32At(stts.body, 4)).toBe(3) // three runs
+    expect([8, 12, 16, 20, 24, 28].map(i => u32At(stts.body, i))).toEqual([
+      1, 1, 1, 3, 1, 1,
+    ])
+    expect(u32At(find(kids(mdia), 'mdhd').body, 16)).toBe(5) // five ticks
+  })
+
   // 60fps is timescale 60 / delta 1; 29.97 has to stay 30000/1001 rather than
   // becoming a decimal an editor rounds its own way.
   it('keeps a broadcast rate exact rather than decimal', () => {

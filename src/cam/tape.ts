@@ -108,10 +108,14 @@ export async function recordTape(
         total,
         Math.floor(((performance.now() - start) / 1000) * FPS) + 1,
       )
-      while (rec.frames() < due) {
-        draw()
-        rec.frame(canvas)
+      if (rec.frames() < due) {
+        if (rec.busy()) rec.hold()
+        else {
+          draw()
+          rec.frame(canvas)
+        }
       }
+      while (rec.frames() < due) rec.hold()
       onSecond(Math.ceil(TAPE_SECONDS - rec.frames() / FPS))
       if (rec.frames() < total) requestAnimationFrame(tick)
       else done()

@@ -95,6 +95,12 @@ const bitrateFor = (w: number, h: number, fps: number): number =>
 // interval makes scrubbing coarse while a short one spends bitrate.
 const KEYFRAME_SECONDS = 2
 
+// Frames the encoder may hold before `busy` says so. Nothing else bounds the
+// queue: each queued frame keeps a full-size copy of the picture, and a phone's
+// encoder that fell behind at 60fps piled up 400 of them, 1.4GB, in ten seconds
+// (scripts/camrec.mjs).
+const MAX_QUEUE = 3
+
 interface RecorderSpec {
   width: number
   height: number
@@ -109,6 +115,11 @@ export interface Recorder {
   // Hand over one rendered frame. The timestamp is derived from how many have
   // been taken, never from the clock — that is the whole point.
   frame: (source: CanvasImageSource) => void
+  // Whether the encoder is too far behind to take another frame.
+  busy: () => boolean
+  // Keep the last frame up for one more frame period without encoding
+  // anything. The file stops being constant-framerate where this is used.
+  hold: () => void
   // Flush the encoder and mux. Rejects if nothing was recorded.
   finish: () => Promise<Blob>
   // Give up without producing a file: an encoder is an OS resource, and a
@@ -145,6 +156,8 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
   const height = even(spec.height)
   const rate = fps.num / fps.den
   const samples: Sample[] = []
+  // Frame periods each encoded frame covers, in the order they were encoded.
+  const spans: number[] = []
   let avcc: Uint8Array | null = null
   let count = 0
   let failure = ''
@@ -225,6 +238,12 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
   return {
     frames: () => count,
     error: () => failure,
+    busy: () => encoder.encodeQueueSize >= MAX_QUEUE,
+    hold: () => {
+      if (closed) return
+      if (spans.length > 0) spans[spans.length - 1]++
+      count++
+    },
     frame: source => {
       if (closed || encoder.state !== 'configured') return
       // Microseconds, off the count and never off a clock. A frame that took
@@ -249,6 +268,7 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
       // outright.
       frame.close()
       if (count === 0) sound?.go()
+      spans.push(1)
       count++
     },
     abort: () => {
@@ -270,6 +290,9 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
         throw new Error('the encoder produced no parameter sets')
       }
       const audio = await heard
+      samples.forEach((s, i) => {
+        s.frames = spans[i] ?? 1
+      })
       // Copied into a fresh ArrayBuffer rather than asserted into one. A
       // `Uint8Array` is a `BlobPart` at runtime in every browser, but its
       // buffer is typed `ArrayBufferLike` — which could be shared — and the

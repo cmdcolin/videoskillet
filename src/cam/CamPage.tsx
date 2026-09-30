@@ -265,7 +265,13 @@ export function CamPage() {
         url: URL.createObjectURL(blob),
         video: blob.type.startsWith('video/'),
       }),
-    { clock: true, audio: () => eng.engine?.audioState.tap() ?? null },
+    // 30fps, which is what a phone's own camera records, and half the
+    // encoding a phone's encoder has to keep up with.
+    {
+      clock: true,
+      fps: { num: 30, den: 1 },
+      audio: () => eng.engine?.audioState.tap() ?? null,
+    },
   )
 
   useEffect(() => {

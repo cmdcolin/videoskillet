@@ -48,14 +48,22 @@ function mirrorOf(src: HTMLCanvasElement): HTMLCanvasElement {
 // repeating or dropping frames so a second of take is a second of file. A
 // camera is live, so a 120 Hz phone would otherwise write slow motion and one
 // held to 30 Hz double speed, and sound from `audio` would drift off the
-// picture.
+// picture. A clocked take holds a frame where the encoder has fallen behind,
+// and its file is then not quite constant-framerate.
+//
+// `fps` overrides the sim's rate, which only makes sense for a clocked take.
 export function useCapture(
   canvasRef: RefObject<HTMLCanvasElement | null>,
   name: string,
   onError: (message: string) => void,
   deliver: (blob: Blob, name: string) => void = save,
-  opts: { clock?: boolean; audio?: () => InputTap | null } = {},
+  opts: {
+    clock?: boolean
+    fps?: { num: number; den: number }
+    audio?: () => InputTap | null
+  } = {},
 ) {
+  const fps = opts.fps ?? FPS
   const recRef = useRef<Recorder | null>(null)
   const rafRef = useRef(0)
   const [recording, setRecording] = useState(false)
@@ -157,7 +165,7 @@ export function useCapture(
     startRecording({
       width,
       height,
-      fps: FPS,
+      fps,
       audio: opts.audio?.() ?? null,
     }).then(
       rec => {
@@ -169,13 +177,23 @@ export function useCapture(
           const live = canvasRef.current
           const r = recRef.current
           if (live === null || r === null) return
+          // A failed encoder has closed and takes no more frames, and the
+          // catch-up below would spin on it forever.
+          if (r.error() !== '') {
+            void stop()
+            return
+          }
           if (opts.clock === true) {
             const due =
               Math.floor(
-                ((performance.now() - start) / 1000) * (FPS.num / FPS.den),
+                ((performance.now() - start) / 1000) * (fps.num / fps.den),
               ) + 1
-            while (r.frames() < due) r.frame(live)
-          } else {
+            if (r.frames() < due) {
+              if (r.busy()) r.hold()
+              else r.frame(live)
+            }
+            while (r.frames() < due) r.hold()
+          } else if (!r.busy()) {
             // One frame per rAF, and the timestamp comes off the count rather
             // than the clock (record.ts). A slow frame therefore stretches the
             // take in real time and not in the file, which is the trade this

@@ -183,6 +183,10 @@ export interface Sample {
   // goes in `stss`; with no `stss` at all a player assumes *every* frame is a
   // sync point, which is wrong the moment the encoder emits a P-frame.
   key: boolean
+  // How many frame periods the sample stays up, 1 when absent. A recorder that
+  // falls behind the wall clock holds a frame for longer and encodes nothing
+  // new in its place.
+  frames?: number
 }
 
 // One encoded block of sound, as it comes off `AudioEncoder`, and how many
@@ -389,8 +393,8 @@ export function writeMp4(spec: Mp4Spec): Uint8Array {
   // recognises on sight.
   const timescale = fps.num
   const delta = fps.den
-  const n = samples.length
-  const trackDuration = n * delta
+  const durations = samples.map(s => (s.frames ?? 1) * delta)
+  const trackDuration = durations.reduce((t, d) => t + d, 0)
   const videoDuration = Math.round(
     (trackDuration / timescale) * MOVIE_TIMESCALE,
   )
@@ -456,8 +460,9 @@ export function writeMp4(spec: Mp4Spec): Uint8Array {
   const stbl = box(
     'stbl',
     fullBox('stsd', 0, 0, u32(1), avc1),
-    // The whole of what makes this constant: one entry for every sample.
-    fullBox('stts', 0, 0, u32(1), u32(n), u32(delta)),
+    // One entry for every sample, which is what makes the file constant, as
+    // long as no frame was held.
+    timeToSample(durations),
     // Which frames an editor may cut on. Omitted entirely when every frame is
     // one — that is what the format's absence means, and writing it out would
     // be a table the size of the movie saying nothing.
