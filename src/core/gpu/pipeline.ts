@@ -216,6 +216,7 @@ export class Engine implements EngineApi {
   // Whether source A is read right to left (`srcMirror` in the prelude).
   private mirrorA = false
   private turned = false
+  private zoomA = 1
 
   // Initialized from ?dbg=; also switchable live via setDbgView (panel, Advanced).
   private dbgView = Number(new URLSearchParams(pageSearch()).get('dbg') ?? 0)
@@ -1458,6 +1459,10 @@ export class Engine implements EngineApi {
     this.turned = on
   }
 
+  setSourceZoom(zoom: number): void {
+    this.zoomA = Math.max(1, zoom)
+  }
+
   setVideoRegion(region: { start: number; end: number } | null): void {
     this.pump.setRegionA(region)
   }
@@ -1789,6 +1794,7 @@ export class Engine implements EngineApi {
       srcAspect: this.sources.srcAspect,
       srcMirror: this.mirrorA ? 1 : 0,
       tubeTurn: this.turned ? 1 : 0,
+      srcZoom: this.zoomA,
       srcNoise: this.sources.srcNoise,
       srcNoiseB: this.sources.srcNoiseB,
       srcFrame: this.tapeFrame.a,

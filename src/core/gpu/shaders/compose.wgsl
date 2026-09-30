@@ -154,17 +154,17 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
   // turned camera lays a tall picture across the raster
   let disp = 4.0 / 3.0;
   let aspect = select(P.srcAspect, 1.0 / P.srcAspect, P.tubeTurn > 0.5);
-  var suv = uv;
+  var suv = (uv - 0.5) / P.srcZoom + 0.5;
   if (aspect > disp) {
-    suv.x = 0.5 + (uv.x - 0.5) * (disp / aspect);
+    suv.x = 0.5 + (suv.x - 0.5) * (disp / aspect);
   } else {
-    suv.y = 0.5 + (uv.y - 0.5) * (aspect / disp);
+    suv.y = 0.5 + (suv.y - 0.5) * (aspect / disp);
   }
-  // Source uv per output pixel, on each axis, after the cover fit above: the
-  // capture band and the colorizer's input filter both step in these.
+  // Source uv per output pixel, on each axis, after the zoom and the cover fit
+  // above: the capture band and the colorizer's input filter both step in these.
   let sxy = vec2f(
-    select(1.0, disp / aspect, aspect > disp) / f32(ACTIVE_W),
-    select(aspect / disp, 1.0, aspect > disp) / f32(ACTIVE_H),
+    select(1.0, disp / aspect, aspect > disp) / (f32(ACTIVE_W) * P.srcZoom),
+    select(aspect / disp, 1.0, aspect > disp) / (f32(ACTIVE_H) * P.srcZoom),
   );
   let captured = P.capLumaSigma > 0.0 || P.capChromaSigma > 0.0 || P.capYcDelay != 0.0
     || P.capNoise > 0.0 || P.capChromaNoise > 0.0;

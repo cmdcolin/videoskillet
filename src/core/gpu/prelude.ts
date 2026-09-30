@@ -59,6 +59,9 @@ export const PARAM_DEFS = [
   // a tall picture, with source A's camera turned to match. The raster keeps
   // its own axes, so the scan runs down the glass and a roll goes sideways.
   ['tubeTurn', 'f32'],
+  // Source A's lens zoom, 1 = the whole frame. A camera zoomed past what its
+  // own lens reaches crops here, before the encoder, as a longer lens would.
+  ['srcZoom', 'f32'],
   ['srcNoise', 'f32'], // GPU-generated source A: 0 texture, 1 TV static, 2 VHS blank-tape static
   // The statistics of that generated noise, shared by both slots. Noise cannot
   // change faster than the path it arrived through lets it, so the grain is a
