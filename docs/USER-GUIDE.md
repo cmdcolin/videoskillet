@@ -198,7 +198,7 @@ and **camera** in the ☰ menu reaches the page from the app.
 - **Start camera** asks the browser for the camera. Once the browser has said
   yes, the page opens the camera by itself on later visits. Until the first
   touch on the picture, a line over it names the swipe and the hold. **?** in
-  the top bar opens a card naming each gesture and switch.
+  the top bar opens a card naming each gesture.
 - The tabs over the strip sort the looks by which part of the set goes wrong:
   **loops** holds feedback loops that move the picture only a little each lap
   and do their work in colour, **tape** the deck and its tape, **signal** the

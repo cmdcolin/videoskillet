@@ -11,7 +11,6 @@ import { useWakeLock } from '../ui/useWakeLock'
 import styles from './cam.module.css'
 import {
   DiceIcon,
-  FilmIcon,
   FlipIcon,
   MicIcon,
   ShareIcon,
@@ -190,12 +189,7 @@ const HINTS: [string, string][] = [
   ['hold', 'see the camera without the look'],
   ['pinch', 'zoom, or tap a lens stop under the picture'],
   ['tap', 'aim the key at a colour, on looks that key by colour'],
-  ['mixer', 'put the other camera or a clip on B, then fade to it'],
-  ['tabs', 'which part of the set goes wrong: loops, tape, signal, scan, bent'],
   ['drag up', 'on a look, mixes it in partway; stack as many as you like'],
-  ['deck', 'fault pads that break the picture and let it heal'],
-  ['tune', 'every knob the look is made of'],
-  ['full app', 'the whole instrument, on the same look'],
 ]
 
 // The instrument, opened on the look this page is showing and asking for the
@@ -570,14 +564,12 @@ export function CamPage() {
   const sources: {
     key: BSource
     label: string
-    icon: ReactNode
     title: string
   }[] = [
-    { key: 'none', label: 'none', icon: null, title: 'nothing on B' },
+    { key: 'none', label: 'none', title: 'nothing on B' },
     {
       key: 'camera',
       label: cam.canFlip ? 'other camera' : 'record 4 s',
-      icon: cam.canFlip ? <FlipIcon /> : <TapeIcon />,
       title: cam.canFlip
         ? 'the other camera, live where the phone runs both, else a 4 s tape'
         : 'record 4 s of this camera and loop it on B',
@@ -585,7 +577,6 @@ export function CamPage() {
     {
       key: 'clip',
       label: 'clip',
-      icon: <FilmIcon />,
       title: 'any video in your library, looped',
     },
   ]
@@ -815,7 +806,6 @@ export function CamPage() {
                         if (!up) putOnB(src.key)
                       }}
                     >
-                      {src.icon}
                       {src.label}
                     </button>
                   )
