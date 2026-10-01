@@ -196,7 +196,16 @@ export function useCamera(
     return null
   }
 
-  const start = () => void open(facing)
+  const start = (want: Facing = facing) => void open(want)
+
+  // Lets the camera go, for a page showing something else on A.
+  const stop = () => {
+    ++ask.current
+    stopAll(stream.current)
+    stream.current = null
+    held.current = null
+    setState('off')
+  }
 
   const flip = async () => {
     const track = stream.current?.getVideoTracks()[0]
@@ -249,6 +258,7 @@ export function useCamera(
     canFlip: cameras > 1,
     sided,
     start,
+    stop,
     flip: () => void flip(),
     adopt,
     openOther,

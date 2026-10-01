@@ -39,10 +39,12 @@ const NOISE: Record<Exclude<Pattern, 'bars' | 'sweep'>, number> = {
   synth: 3,
 }
 
-// What the picture is made of: the camera, or bars before there is one, a
-// second picture or a pattern on B when there is one, and the look over them.
+// What the picture is made of: the camera or a clip on A, a pattern there
+// instead, or bars before there is either; a second picture or a pattern on B
+// when there is one; and the look over them.
 export interface Shown {
   video: HTMLVideoElement | null
+  pattern: Pattern | null
   mirror: boolean
   second: HTMLVideoElement | Pattern | null
   // The zoom past what the camera's own lens reached, applied to A.
@@ -84,12 +86,19 @@ function dress(engine: Engine, shown: Shown, board: Board, sound: boolean) {
   engine.setSourceMirror(shown.mirror)
   lay(engine, layoutOf(shown))
   engine.setSourceZoom(shown.zoom)
-  if (shown.video === null) engine.setImageSource(smpteBars())
+  if (shown.pattern !== null) putA(engine, shown.pattern)
+  else if (shown.video === null) engine.setImageSource(smpteBars())
   else engine.setVideoSource(shown.video)
 }
 
-// A pattern on B lives in a texture or in the shader, so a rebuilt engine is
-// handed it again the same way.
+// A pattern lives in a texture or in the shader, so a rebuilt engine is handed
+// it again the same way.
+function putA(engine: Engine, pattern: Pattern) {
+  if (pattern === 'bars') engine.setImageSource(smpteBars())
+  else if (pattern === 'sweep') engine.setImageSource(sweep())
+  else engine.setNoiseSource(NOISE[pattern])
+}
+
 function putB(engine: Engine, second: Shown['second']) {
   if (second === null || second instanceof HTMLVideoElement)
     engine.setVideoSourceB(second)
@@ -119,6 +128,7 @@ export function useCamEngine(
   const [layout, setLayout] = useState<Layout>('whole')
   const shown = useRef<Shown>({
     video: null,
+    pattern: null,
     mirror: false,
     second: null,
     zoom: 1,
@@ -150,11 +160,20 @@ export function useCamEngine(
   // A phone turned in the hand keeps the same camera and hands over frames the
   // other way up, which the <video> announces as a resize.
   const showVideo = (video: HTMLVideoElement, mirror: boolean) => {
-    shown.current = { ...shown.current, video, mirror }
+    shown.current = { ...shown.current, video, pattern: null, mirror }
     engineRef.current?.setSourceMirror(mirror)
     engineRef.current?.setVideoSource(video)
     turn(video)
     video.addEventListener('resize', () => turn(video))
+  }
+
+  const showPattern = (pattern: Pattern) => {
+    shown.current = { ...shown.current, video: null, pattern, mirror: false }
+    if (engineRef.current !== null) {
+      engineRef.current.setSourceMirror(false)
+      putA(engineRef.current, pattern)
+    }
+    relay()
   }
 
   const showSecond = (second: Shown['second']) => {
@@ -306,6 +325,7 @@ export function useCamEngine(
     frozen,
     layout,
     showVideo,
+    showPattern,
     showSecond,
     zoomA,
     layoutNow,

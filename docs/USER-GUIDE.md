@@ -253,9 +253,12 @@ and **camera** in the ☰ menu reaches the page from the app.
   harder keeps its own settings. While the switch is on, **VIDEO** records the
   sound with the picture, as AAC where the browser can encode it and Opus where
   it cannot.
-- The mixer under the picture has a row for each source. **source A** is the
-  camera, with **back camera** and **front camera** on a phone that has both.
-  **source B** starts at **none**, and its options scroll sideways.
+- The mixer under the picture has a row for each source, and each row scrolls
+  sideways. **source A** starts on the camera, with **back camera** and **front
+  camera** on a phone that has both. It also takes a **clip** of yours or one of
+  the set's own patterns, which works without a camera at all; the page lets the
+  camera go while something else is on A, and picking the camera opens it again.
+  **source B** starts at **none**.
   - **other camera**, on a phone with two, puts the other camera on B: the
     camera on screen goes to B and the other one comes on screen. Point the back
     camera at a scene, press it, and the front camera puts you over the scene. A
@@ -266,7 +269,8 @@ and **camera** in the ☰ menu reaches the page from the app.
     answer.
   - **record 4 s** records four seconds of the camera on screen and loops it on
     B, the way a studio rolled a deck into a mixer's second input. The camera
-    stays on screen, so the tape plays back as an echo of a few seconds ago.
+    stays on screen, so the tape plays back as an echo of a few seconds ago. It
+    and **other camera** need the camera on A.
   - **clip** loops a video of yours on B.
   - **bars**, **tv static**, **vhs static**, **synth** and **sweep** put one of
     the set's own patterns on B, the same ones the app's source menus offer.

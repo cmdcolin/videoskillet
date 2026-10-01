@@ -38,6 +38,7 @@ import { Tune } from './Tune'
 import { PATTERNS, PATTERN_TITLE, useCamEngine } from './useCamEngine'
 import { useCamera } from './useCamera'
 import { useSecond } from './useSecond'
+import { useSourceA } from './useSourceA'
 import { useTilt } from './useTilt'
 import { useZoom } from './useZoom'
 import { stopAt, zoomLabel } from './zoom'
@@ -48,6 +49,7 @@ import type { Layers, Look, Mix } from './looks'
 import type { Layout } from './tape'
 import type { Pattern } from './useCamEngine'
 import type { Facing } from './useCamera'
+import type { ASource } from './useSourceA'
 import type { ChangeEvent, PointerEvent, ReactNode } from 'react'
 
 type Mode = 'photo' | 'video'
@@ -194,19 +196,26 @@ const HINTS: [string, string][] = [
   ['drag up', 'on a look, mixes it in partway; stack as many as you like'],
 ]
 
-// The instrument, opened on the look this page is showing and asking for the
-// camera again. A look at full strength is a preset the link can name; a
-// weaker one is a blend, which only the instrument's own link format carries.
-function instrumentHref(look: Look | null, cameraOn: boolean): string {
+// The instrument, opened on the look this page is showing, asking for the
+// camera again or putting up the same patterns. A look at full strength is a
+// preset the link can name; a weaker one is a blend, which only the
+// instrument's own link format carries. A clip is a file the link cannot carry.
+function instrumentHref(
+  look: Look | null,
+  a: 'webcam' | Pattern | null,
+  b: Pattern | null,
+): string {
   const q = new URLSearchParams()
   if (look !== null && look.strength === 1) q.set('preset', look.name)
-  if (cameraOn) q.set('src', 'webcam')
+  if (a !== null) q.set('src', a)
+  if (b !== null) q.set('srcb', b)
   return q.size === 0 ? '../app/' : `../app/?${q}`
 }
 
 export function CamPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const clipRef = useRef<HTMLInputElement>(null)
+  const clipARef = useRef<HTMLInputElement>(null)
   const [sideways, setSideways] = usePersistedFlag(SIDEWAYS_STORE)
   const [deck, setDeck] = usePersistedFlag(DECK_STORE)
   // The wipe and the inset are laid out across the glass on show, so a new
@@ -216,9 +225,12 @@ export function CamPage() {
     onLayout: () => paint({}),
   })
   const zoom = useZoom(() => trackOf(eng.camera()?.video), eng.zoomA)
+  const [error, setError] = useState('')
+  const srcA = useSourceA(eng, setError)
   const cam = useCamera((video, mirror) => {
     eng.showVideo(video, mirror)
     zoom.reset()
+    srcA.cameraShown()
   })
   const tilt = useTilt(eng.steer)
   const [scene, setScene] = useState<Scene>({ ...CLEAN, mix: null })
@@ -230,7 +242,6 @@ export function CamPage() {
   const [mode, setMode] = useState<Mode>('photo')
   const [comparing, setComparing] = useState(false)
   const [shot, setShot] = useState<Shot | null>(null)
-  const [error, setError] = useState('')
   const [recSince, setRecSince] = useState(0)
   const second = useSecond(eng, cam, setError)
   const [picked, setPicked] = useState<BSource>('none')
@@ -565,7 +576,8 @@ export function CamPage() {
 
   if (eng.fatal !== null) return <FatalScreen fatal={eng.fatal} />
 
-  const on = cam.state === 'on'
+  const cameraUp = srcA.on === 'camera' && cam.state === 'on'
+  const on = srcA.on !== 'camera' || cam.state === 'on'
   const tweaked = Object.keys(scene.tweaks).length > 0
   const ownedMixer = mixerOwned(scene)
   const stacked = Object.keys(scene.layers).length > 0
@@ -575,13 +587,31 @@ export function CamPage() {
   const showHelp = on && help
   const mix = scene.mix ?? FIRST_MIX
   const noB = scene.mix === null || !second.loaded
-  const aSources: { key: Facing; label: string }[] =
+  const cameras: { key: Facing; label: string }[] =
     cam.canFlip && cam.sided
       ? [
           { key: 'environment', label: 'back camera' },
           { key: 'user', label: 'front camera' },
         ]
       : [{ key: cam.facing, label: 'camera' }]
+  const aSources: { key: Facing | ASource; label: string; title?: string }[] = [
+    ...cameras,
+    { key: 'clip', label: 'clip', title: 'any video of yours, looped' },
+    ...PATTERNS.map(p => ({ key: p, label: p, title: PATTERN_TITLE[p] })),
+  ]
+  const onA = srcA.on === 'camera' ? cam.facing : srcA.on
+  const putOnA = (key: Facing | ASource) => {
+    setError('')
+    if (key === 'clip') clipARef.current?.click()
+    else if (key === 'user' || key === 'environment') {
+      if (srcA.on !== 'camera') cam.start(key)
+      else if (second.live) void second.swap()
+      else cam.flip()
+    } else if (key !== 'camera') {
+      srcA.toPattern(key)
+      cam.stop()
+    }
+  }
   const sources: { key: BSource; label: string; title: string }[] = [
     { key: 'none', label: 'none', title: 'nothing on B' },
     ...(cam.canFlip
@@ -629,7 +659,15 @@ export function CamPage() {
           </button>
           <a
             className={styles.full}
-            href={instrumentHref(stacked ? null : look, on)}
+            href={instrumentHref(
+              stacked ? null : look,
+              cameraUp
+                ? 'webcam'
+                : srcA.on === 'camera' || srcA.on === 'clip'
+                  ? null
+                  : srcA.on,
+              second.pattern,
+            )}
             title="open the whole instrument on this look"
           >
             full app ↗
@@ -713,7 +751,19 @@ export function CamPage() {
             hidden
             onChange={mixClip}
           />
-          {on && !showHelp ? (
+          <input
+            ref={clipARef}
+            type="file"
+            accept="video/*"
+            hidden
+            onChange={e => {
+              const file = e.target.files?.[0]
+              e.target.value = ''
+              if (file !== undefined)
+                void srcA.toClip(file).then(ok => ok && cam.stop())
+            }}
+          />
+          {cameraUp && !showHelp ? (
             <div className={styles.zoom} role="group" aria-label="Zoom">
               {zoom.stops.map(s => (
                 <button
@@ -775,8 +825,8 @@ export function CamPage() {
             <p className={styles.notice}>
               The picture stopped updating. Reload the page to bring it back.
             </p>
-          ) : cam.state === 'off' ? (
-            <button className={styles.start} onClick={cam.start}>
+          ) : cam.state === 'off' && srcA.on === 'camera' ? (
+            <button className={styles.start} onClick={() => cam.start()}>
               Start camera
             </button>
           ) : cam.state === 'starting' ? (
@@ -784,7 +834,7 @@ export function CamPage() {
           ) : cam.state === 'error' ? (
             <div className={styles.notice}>
               <p>{cam.error}</p>
-              <button className={styles.start} onClick={cam.start}>
+              <button className={styles.start} onClick={() => cam.start()}>
                 Try again
               </button>
             </div>
@@ -795,7 +845,7 @@ export function CamPage() {
       <section className={styles.controls}>
         {error === '' ? null : <p className={styles.error}>{error}</p>}
 
-        {on ? (
+        {eng.engine === null ? null : (
           <div className={styles.mixer} aria-label="Mixer">
             <div className={styles.sourceRow}>
               <span className={styles.sourceName}>source A</span>
@@ -805,7 +855,7 @@ export function CamPage() {
                 aria-label="Source A"
               >
                 {aSources.map(src => {
-                  const up = src.key === cam.facing
+                  const up = src.key === onA
                   return (
                     <button
                       key={src.key}
@@ -813,10 +863,9 @@ export function CamPage() {
                       aria-checked={up}
                       className={cx(styles.mixMode, up && styles.mixModeOn)}
                       disabled={busy}
+                      title={src.title}
                       onClick={() => {
-                        if (up) return
-                        if (second.live) void second.swap()
-                        else cam.flip()
+                        if (!up) putOnA(src.key)
                       }}
                     >
                       {src.label}
@@ -846,7 +895,11 @@ export function CamPage() {
                             ? styles.mixModeEmpty
                             : styles.mixModeOn),
                       )}
-                      disabled={busy}
+                      disabled={
+                        busy ||
+                        (!cameraUp &&
+                          (src.key === 'camera' || src.key === 'record'))
+                      }
                       title={src.title}
                       onClick={() => {
                         if (!up) putOnB(src.key)
@@ -907,7 +960,7 @@ export function CamPage() {
               </>
             )}
           </div>
-        ) : null}
+        )}
 
         {on && deck ? (
           <div className={styles.hits} aria-label="Faults">
@@ -1018,7 +1071,7 @@ export function CamPage() {
             }
             onClick={shutter}
           />
-          {cam.canFlip || second.live ? (
+          {cameraUp && (cam.canFlip || second.live) ? (
             <button
               className={styles.flip}
               aria-label={
