@@ -5,14 +5,16 @@ import { TAPE_SECONDS, playLoop, recordTape, relayCamera } from './tape'
 import { stopAll } from './useCamera'
 
 import type { Camera, Layout, Relay } from './tape'
+import type { Pattern, Shown } from './useCamEngine'
 import type { Opened } from './useCamera'
 
-// What is on source B: a tape of one camera, the other camera live, or a clip
-// from the phone's library.
+// What is on source B: a tape of one camera, the other camera live, a clip
+// from the phone's library, or a pattern the set makes itself.
 type Second =
   | { kind: 'tape'; url: string; video: HTMLVideoElement }
   | { kind: 'live'; cam: Opened; relay: Relay }
   | { kind: 'clip'; url: string; video: HTMLVideoElement; relay: Relay }
+  | { kind: 'pattern'; pattern: Pattern }
 
 // Whether this phone ran both cameras at once when asked. A phone that cannot
 // may take the first camera down to answer, so it is asked once.
@@ -26,6 +28,7 @@ const unload = (b: Second) => {
     stopAll(b.cam.stream)
     return
   }
+  if (b.kind === 'pattern') return
   if (b.kind === 'clip') b.relay.stop()
   b.video.pause()
   b.video.removeAttribute('src')
@@ -36,12 +39,13 @@ const unload = (b: Second) => {
 // The second picture on source B. `load` puts the other camera there live where
 // the phone runs both cameras at once, and moves the screen to it; elsewhere it
 // records a tape of the camera on screen, and the caller flips to the other
-// one. `loadClip` puts a video file there. `left` counts down a tape's
-// seconds; `opening` covers the ask for the second camera.
+// one. `record` tapes the camera on screen and leaves it there, `loadClip` puts
+// a video file on B and `loadPattern` one of the set's own patterns. `left`
+// counts down a tape's seconds; `opening` covers the ask for the second camera.
 export function useSecond(
   eng: {
     camera: () => Camera | null
-    showSecond: (video: HTMLVideoElement | null) => void
+    showSecond: (second: Shown['second']) => void
     layoutNow: () => Layout
   },
   cam: {
@@ -72,9 +76,11 @@ export function useSecond(
     eng.showSecond(
       next === null
         ? null
-        : next.kind === 'tape'
-          ? next.video
-          : next.relay.video,
+        : next.kind === 'pattern'
+          ? next.pattern
+          : next.kind === 'tape'
+            ? next.video
+            : next.relay.video,
     )
   }
 
@@ -156,6 +162,17 @@ export function useSecond(
     }
   }
 
+  // A tape of the camera on screen, which stays on screen.
+  const record = async (): Promise<boolean> => {
+    if (held.current !== null || left > 0 || opening) return false
+    return tape()
+  }
+
+  const loadPattern = (pattern: Pattern) => {
+    eject()
+    show({ kind: 'pattern', pattern })
+  }
+
   // With both cameras live, the flip trades them between A and B.
   const swap = async () => {
     const b = held.current
@@ -177,12 +194,15 @@ export function useSecond(
 
   return {
     kind: second?.kind ?? null,
+    pattern: second?.kind === 'pattern' ? second.pattern : null,
     loaded: second !== null,
     live: second?.kind === 'live',
     left,
     opening,
     load,
     loadClip,
+    loadPattern,
+    record,
     eject,
     swap,
   }

@@ -254,16 +254,22 @@ and **camera** in the ☰ menu reaches the page from the app.
   sound with the picture, as AAC where the browser can encode it and Opus where
   it cannot.
 - The mixer under the picture shows what is on each source. **A** is the camera,
-  and **B** starts at **none**. **other camera** puts the other camera on B: the
-  camera on screen goes to B and the other one comes on screen. Point the back
-  camera at a scene, press it, and the front camera puts you over the scene. A
-  phone that runs both cameras at once keeps both live, and the flip button then
-  swaps them between the screen and B. On a phone that cannot, the page records
-  four seconds of the camera on screen to a tape and loops it on B, the way a
-  studio rolled a deck into a mixer's second input; a phone with one camera
-  offers **record 4 s** in its place. The page asks each phone once and
-  remembers the answer. **clip** loops a video from the phone's library on B,
-  and **none** takes B off.
+  and **B** starts at **none**. B's options scroll sideways.
+  - **other camera**, on a phone with two, puts the other camera on B: the
+    camera on screen goes to B and the other one comes on screen. Point the back
+    camera at a scene, press it, and the front camera puts you over the scene. A
+    phone that runs both cameras at once keeps both live, and the flip button
+    then swaps them between the screen and B. On a phone that cannot, the page
+    records four seconds of the camera on screen to a tape, loops it on B and
+    flips to the other camera. The page asks each phone once and remembers the
+    answer.
+  - **record 4 s** records four seconds of the camera on screen and loops it on
+    B, the way a studio rolled a deck into a mixer's second input. The camera
+    stays on screen, so the tape plays back as an echo of a few seconds ago.
+  - **clip** loops a video of yours on B.
+  - **bars**, **tv static**, **vhs static**, **synth** and **sweep** put one of
+    the set's own patterns on B, the same ones the app's source menus offer.
+  - **none** takes B off.
 - B comes up dissolved halfway under the look that is up, and a **mix** tab
   opens with mixers that have lost their sync, their supply or their plugs. The
   mixer's modes and fader appear once B has a picture. **dissolve** crossfades

@@ -35,7 +35,7 @@ import {
 } from './looks'
 import { SLICE } from './tape'
 import { Tune } from './Tune'
-import { useCamEngine } from './useCamEngine'
+import { PATTERNS, PATTERN_TITLE, useCamEngine } from './useCamEngine'
 import { useCamera } from './useCamera'
 import { useSecond } from './useSecond'
 import { useTilt } from './useTilt'
@@ -46,10 +46,11 @@ import type { ControlKey, Controls } from '../core/controls'
 import type { Transition } from '../ui/transitions'
 import type { Layers, Look, Mix } from './looks'
 import type { Layout } from './tape'
+import type { Pattern } from './useCamEngine'
 import type { ChangeEvent, PointerEvent, ReactNode } from 'react'
 
 type Mode = 'photo' | 'video'
-type BSource = 'none' | 'camera' | 'clip'
+type BSource = 'none' | 'camera' | 'record' | 'clip' | Pattern
 
 // A press becomes the original after it has been held this long, so a swipe or
 // a tap never flashes it.
@@ -231,6 +232,7 @@ export function CamPage() {
   const [error, setError] = useState('')
   const [recSince, setRecSince] = useState(0)
   const second = useSecond(eng, cam, setError)
+  const [picked, setPicked] = useState<BSource>('none')
   const [sound, setSound] = useState(false)
   const [flash, setFlash] = useState('')
   const [ring, setRing] = useState<{
@@ -360,8 +362,18 @@ export function CamPage() {
         return
       }
       if (got === 'tape' && cam.canFlip) cam.flip()
-      mixing()
+      mixing('camera')
     })
+  }
+  const mixTape = () => {
+    second.eject()
+    setError('')
+    void second.record().then(ok => (ok ? mixing('record') : takeOff()))
+  }
+  const mixPattern = (p: Pattern) => {
+    setError('')
+    second.loadPattern(p)
+    mixing(p)
   }
   const mixClip = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -369,11 +381,12 @@ export function CamPage() {
     if (file === undefined) return
     second.eject()
     setError('')
-    void second.loadClip(file).then(ok => (ok ? mixing() : takeOff()))
+    void second.loadClip(file).then(ok => (ok ? mixing('clip') : takeOff()))
   }
   // A second picture opens the mix tab and dissolves halfway to it under the
   // look that is up. A change of picture on B keeps the mixer where it was.
-  const mixing = () => {
+  const mixing = (from: BSource) => {
+    setPicked(from)
     setShelfName(MIX_SHELF.name)
     paint({ mix: sceneRef.current.mix ?? FIRST_MIX })
   }
@@ -561,31 +574,33 @@ export function CamPage() {
   const showHelp = on && help
   const mix = scene.mix ?? FIRST_MIX
   const noB = scene.mix === null || !second.loaded
-  const sources: {
-    key: BSource
-    label: string
-    title: string
-  }[] = [
+  const sources: { key: BSource; label: string; title: string }[] = [
     { key: 'none', label: 'none', title: 'nothing on B' },
+    ...(cam.canFlip
+      ? [
+          {
+            key: 'camera' as const,
+            label: 'other camera',
+            title:
+              'the other camera, live where the phone runs both, else a 4 s tape',
+          },
+        ]
+      : []),
     {
-      key: 'camera',
-      label: cam.canFlip ? 'other camera' : 'record 4 s',
-      title: cam.canFlip
-        ? 'the other camera, live where the phone runs both, else a 4 s tape'
-        : 'record 4 s of this camera and loop it on B',
+      key: 'record',
+      label: 'record 4 s',
+      title: 'record 4 s of this camera and loop it on B',
     },
-    {
-      key: 'clip',
-      label: 'clip',
-      title: 'any video in your library, looped',
-    },
+    { key: 'clip', label: 'clip', title: 'any video of yours, looped' },
+    ...PATTERNS.map(p => ({ key: p, label: p, title: PATTERN_TITLE[p] })),
   ]
-  const onB: BSource =
-    second.kind === null ? 'none' : second.kind === 'clip' ? 'clip' : 'camera'
+  const onB: BSource = second.kind === null ? 'none' : picked
   const putOnB = (key: BSource) => {
     if (key === 'none') takeOff()
     else if (key === 'camera') mixCamera()
-    else clipRef.current?.click()
+    else if (key === 'record') mixTape()
+    else if (key === 'clip') clipRef.current?.click()
+    else mixPattern(key)
   }
 
   return (

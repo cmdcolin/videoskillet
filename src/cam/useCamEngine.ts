@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 
 import { DEFAULT_CONTROLS } from '../core/controls'
 import { Engine } from '../core/gpu/pipeline'
-import { smpteBars } from '../sources/pattern'
+import { smpteBars, sweep } from '../sources/pattern'
 import { backingStoreSize } from '../ui/canvasSize'
 import { RebuildPolicy } from '../ui/rebuildPolicy'
 import { sounded } from './sound'
@@ -15,12 +15,36 @@ import type { Camera, Layout } from './tape'
 import type { Tilt } from './tilt'
 import type { RefObject } from 'react'
 
+// The pictures the set makes itself, the same ones the app's source menus
+// offer, and what each one is.
+export const PATTERNS = [
+  'bars',
+  'tv static',
+  'vhs static',
+  'synth',
+  'sweep',
+] as const
+export type Pattern = (typeof PATTERNS)[number]
+export const PATTERN_TITLE: Record<Pattern, string> = {
+  bars: 'SMPTE colour bars',
+  'tv static': 'snow from a channel with no station on it',
+  'vhs static': 'the noise off a blank tape',
+  synth: 'oscillators patched into the input',
+  sweep: 'a frequency zone plate',
+}
+
+const NOISE: Record<Exclude<Pattern, 'bars' | 'sweep'>, number> = {
+  'tv static': 1,
+  'vhs static': 2,
+  synth: 3,
+}
+
 // What the picture is made of: the camera, or bars before there is one, a
-// second picture on B when there is one, and the look over them.
+// second picture or a pattern on B when there is one, and the look over them.
 export interface Shown {
   video: HTMLVideoElement | null
   mirror: boolean
-  second: HTMLVideoElement | null
+  second: HTMLVideoElement | Pattern | null
   // The zoom past what the camera's own lens reached, applied to A.
   zoom: number
   // Whether a tall picture stands the set on its side rather than taking an
@@ -56,13 +80,23 @@ const lay = (engine: Engine, layout: Layout) => {
 function dress(engine: Engine, shown: Shown, board: Board, sound: boolean) {
   engine.applyControls(sound ? sounded(board.controls) : board.controls)
   engine.setModSlots(board.mod)
-  engine.setVideoSourceB(shown.second)
-  engine.setSourceBEnabled(shown.second !== null)
+  putB(engine, shown.second)
   engine.setSourceMirror(shown.mirror)
   lay(engine, layoutOf(shown))
   engine.setSourceZoom(shown.zoom)
   if (shown.video === null) engine.setImageSource(smpteBars())
   else engine.setVideoSource(shown.video)
+}
+
+// A pattern on B lives in a texture or in the shader, so a rebuilt engine is
+// handed it again the same way.
+function putB(engine: Engine, second: Shown['second']) {
+  if (second === null || second instanceof HTMLVideoElement)
+    engine.setVideoSourceB(second)
+  else if (second === 'bars') engine.setImageSourceB(smpteBars())
+  else if (second === 'sweep') engine.setImageSourceB(sweep())
+  else engine.setNoiseSourceB(NOISE[second])
+  engine.setSourceBEnabled(second !== null)
 }
 
 const reason = (e: unknown) => (e instanceof Error ? e.message : String(e))
@@ -123,10 +157,9 @@ export function useCamEngine(
     video.addEventListener('resize', () => turn(video))
   }
 
-  const showSecond = (second: HTMLVideoElement | null) => {
+  const showSecond = (second: Shown['second']) => {
     shown.current = { ...shown.current, second }
-    engineRef.current?.setVideoSourceB(second)
-    engineRef.current?.setSourceBEnabled(second !== null)
+    if (engineRef.current !== null) putB(engineRef.current, second)
   }
 
   const zoomA = (zoom: number) => {

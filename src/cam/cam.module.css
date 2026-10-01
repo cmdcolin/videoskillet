@@ -377,8 +377,21 @@
   align-items: center;
   gap: 8px;
 }
+/* B's options run off the end and scroll, the way the strip of looks does. */
 .sources .mixModes {
   flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+}
+.sources .mixModes::-webkit-scrollbar {
+  display: none;
+}
+.sources .mixMode {
+  flex: none;
+  padding: 6px 12px;
+  white-space: nowrap;
 }
 .source {
   display: flex;
