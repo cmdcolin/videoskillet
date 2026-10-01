@@ -1677,7 +1677,14 @@ export class Engine implements EngineApi {
   }
 
   private allTexs(): GPUTexture[] {
-    return [this.inputTex, this.outTex, this.faceTex, this.grainTex]
+    return [...this.stateTexs(), this.grainTex]
+  }
+
+  // The textures a frame writes. `grainTex` is not one: it is baked once at
+  // construction and never written again, so a reset that cleared it would
+  // leave the glass without its grain for the rest of the session.
+  private stateTexs(): GPUTexture[] {
+    return [this.inputTex, this.outTex, this.faceTex]
   }
 
   // Idempotent, and deliberately keyed off its own flag rather than
@@ -2000,8 +2007,8 @@ export class Engine implements EngineApi {
 
   // Nothing on the tape, nothing left on the glass, no lock, frame zero.
   //
-  // Every buffer and texture rather than the handful that carry state, for the
-  // reason `storage` in the constructor gives: this is the constructed state by
+  // Every buffer and every texture a frame writes, rather than the handful that
+  // carry state, for the reason `storage` in the constructor gives: this is the constructed state by
   // definition, and it cannot be wrong about which those are. The CPU-side
   // modulators are the same statement in the other language — a fresh object
   // each, drawing from whichever dice `startTake` has just put in place.
@@ -2011,7 +2018,7 @@ export class Engine implements EngineApi {
     for (const b of this.allBufs()) enc.clearBuffer(b)
     // A render pass whose only job is its `loadOp` — no shader and no bind
     // group, which is why the three textures carry RENDER_ATTACHMENT.
-    for (const t of this.allTexs()) {
+    for (const t of this.stateTexs()) {
       enc
         .beginRenderPass({
           colorAttachments: [
