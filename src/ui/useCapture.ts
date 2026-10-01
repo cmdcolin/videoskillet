@@ -51,6 +51,21 @@ function mirrorOf(src: HTMLCanvasElement): HTMLCanvasElement {
   return canvas
 }
 
+// Outside the hook because React Compiler cannot optimise a try/catch holding
+// an optional call, and gives up on the whole hook when it meets one.
+function letGo(
+  source: FrameSource | null,
+  size: { width: number; height: number },
+) {
+  if (source === null) return
+  // An engine replaced for a lost device may not answer any more.
+  try {
+    source.setFrameSink(null, size)
+  } catch {
+    // Nothing to let go of.
+  }
+}
+
 const jot = (ref: RefObject<TakeNote | null>, patch: Partial<TakeNote>) => {
   if (ref.current === null) return
   ref.current = { ...ref.current, ...patch }
@@ -272,16 +287,11 @@ export function useCapture(
         const attach = () => {
           const next = opts.engine?.() ?? null
           if (next === source) return
-          // An engine replaced for a lost device may not answer any more.
-          try {
-            source?.setFrameSink(null, size)
-          } catch {
-            // Nothing to let go of.
-          }
+          letGo(source, size)
           next?.setFrameSink(sink, size)
           source = next
           detachRef.current = () => {
-            source?.setFrameSink(null, size)
+            letGo(source, size)
             source = null
           }
         }
