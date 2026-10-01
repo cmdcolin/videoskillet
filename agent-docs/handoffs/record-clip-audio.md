@@ -132,17 +132,24 @@ These exist on `main` today, independent of sound.
    nonzero, and adds an edit list for the reorder delay. A held frame is then
    whatever gap its pts leaves, which supersedes `frames`. Build the Blob from
    parts. Add an edit list for AAC priming once Chrome can test it.
-8. **Guard the 4 GiB limit**, by stopping the take or by writing `co64` and
+8. **Recording size is a setting, and full size is the default.** The owner
+   chose maximum quality: a take is worth keeping for its fine detail. The
+   setting goes in the Advanced dialog beside render scale and frame lock,
+   which trade picture against cadence the same way. Full records the canvas
+   as it is when the take starts. Smaller sizes (1080p, 720p) render the
+   present pass a second time into a fixed-size texture for the recorder,
+   which encodes faster: on the dev box at a full window, Firefox encodes
+   about 34 fps at full size and 49 fps at 720p. A full-size take holds a
+   frame wherever the encoder falls behind, so the file stays in step with the
+   sound at a lower frame rate. A fixed-size texture also survives a resize
+   mid-take, which the full-size path has to handle separately.
+9. **Guard the 4 GiB limit**, by stopping the take or by writing `co64` and
    `largesize`.
-9. **Harness.** `reccheck.mjs` gains an arm with sound that asserts both
+10. **Harness.** `reccheck.mjs` gains an arm with sound that asserts both
    tracks, monotonic pts and the A/V median from `spike-avsync.mjs`.
 
 ## Decisions for the owner
 
-- **Recording size.** At the full-window canvas Firefox encodes about 34 fps
-  here; 1280x720 reaches 49 fps. Rendering the present pass a second time into
-  a fixed-size target for the recorder would cap the size and raise the frame
-  rate, at the cost of resolution.
 - **Silent takes on the new path.** Recommended. It takes the readback off
   the main thread. A silent take then needs a timing rule of its own: frame
   count keeps the sim's time, and the wall clock keeps real time, which today's
