@@ -123,10 +123,12 @@ These exist on `main` today, independent of sound.
    in Firefox, so the spike dropped it. A frame whose slot is taken, or that
    arrives while the encoder is `busy()`, is dropped, and its predecessor
    stays up.
-6. **Silent takes need a timing rule.** Frame count (one rendered frame, one
-   slot) keeps sim time and plays fast whenever the engine renders below
-   60 Hz. The wall clock through the same windowed mean keeps real time. The
-   owner decides; see below.
+6. **Every live take runs on the wall clock.** A silent take snaps frames to
+   the same grid from `performance.now()`, since it has no audio clock to
+   follow, and holds frames the same way. The file then lasts as long as the
+   take did, and turning sound on does not change its speed. This reverses
+   `record.ts`'s count-based timing for live takes; see _Why live takes leave
+   strict constant framerate_ below.
 7. **Mux from presentation times.** Each sample carries its pts in frames;
    the muxer sorts them for decode times, writes `ctts` when any offset is
    nonzero, and adds an edit list for the reorder delay. A held frame is then
@@ -146,17 +148,41 @@ These exist on `main` today, independent of sound.
 9. **Guard the 4 GiB limit**, by stopping the take or by writing `co64` and
    `largesize`.
 10. **Harness.** `reccheck.mjs` gains an arm with sound that asserts both
-   tracks, monotonic pts and the A/V median from `spike-avsync.mjs`.
+    tracks, monotonic pts and the A/V median from `spike-avsync.mjs`. Its
+    `r_frame_rate == avg_frame_rate` assertion becomes "every pts lies on the
+    1/60 s grid", which a take with held frames still meets.
 
-## Decisions for the owner
+## Why live takes leave strict constant framerate
 
-- **Silent takes on the new path.** Recommended. It takes the readback off
-  the main thread. A silent take then needs a timing rule of its own: frame
-  count keeps the sim's time, and the wall clock keeps real time, which today's
-  1.6x files do not.
+`record.ts` stamps frames by count because `MediaRecorder`'s wall-clock
+timestamps made files an editor conforms unevenly, which ruins a piece cut to
+music. That argument still holds for arbitrary timestamps. A wall-clock take
+snapped to the 1/60 s grid keeps every frame on a frame boundary and differs
+only where a frame is held, as a longer sample. `a90ecfb` already writes camera
+takes this way.
+
+Writing a held frame as repeated samples would keep the file strictly
+constant-framerate, and `scripts/repeatcost.mjs` measured what that costs. A run
+of repeats is nearly free, but a repeat between fresh frames costs the encoder
+about two thirds of a fresh one, because its B-frames code the repeat against
+neighbours it does not match. At a full window (1494x932) that cuts a take from
+31.4 fresh frames a second to 19.2.
+
+Frame-exact, strictly constant output is the offline render's job
+(`render.ts`), which steps the engine at a full 60 fps and drops nothing. So the
+live recorder offers one timing, the wall clock, and there is no setting for
+count-based takes. The owner left this call to the spike on 2026-09-30, and
+the repeat measurement made it.
+
+The assumption still to check is that editors treat an on-grid held frame as
+one frame shown for longer. Import a take with holds into Resolve and Premiere,
+and open it in Photos and QuickTime: holds should keep their length, sound
+should stay in sync, and nothing should resample the file.
 
 ## Still untested
 
+- **Editors and players on a take with held frames.** See the end of the
+  section above.
 - **Chrome.** This box's Chrome has no WebGPU. On the MacBook, check AAC
   priming, whether `new VideoFrame(canvas)` is cheap there, what
   `getOutputTimestamp` and `outputLatency` return, and the A/V median.
