@@ -2,6 +2,34 @@
 
 All notable changes to videoskillet are documented here.
 
+## [2.7.0](https://github.com/cmdcolin/videoskillet/compare/v2.6.0...v2.7.0) - 2026-10-01
+
+### Features
+- *(ui)* [`1e4dd29`](https://github.com/cmdcolin/videoskillet/commit/1e4dd2998a9508da36e5b09d30b19f9da96da01f) show the camera's mixer from the start
+- *(ui)* [`f7cf583`](https://github.com/cmdcolin/videoskillet/commit/f7cf583ef6c4757b7a9c6c8d056a0388bea698b9) keep the camera's mixer to one row until B has a picture
+- *(ui)* [`95340fe`](https://github.com/cmdcolin/videoskillet/commit/95340fef00f2ea2ba63211cfa2afbb5c1c601288) pare the camera page back
+- *(ui)* [`be1d298`](https://github.com/cmdcolin/videoskillet/commit/be1d298f992344d221685f707df7b8b2e24a76d3) report recordings that fail or crash the page
+- *(ui)* [`fad17e4`](https://github.com/cmdcolin/videoskillet/commit/fad17e41d9c94e8406fc75eb53db66450ef40771) offer the camera page bars, static and a 4 s tape on B
+- *(ui)* [`b988744`](https://github.com/cmdcolin/videoskillet/commit/b9887448563972f1d98253f9158f1712be3d4ba2) name the camera page's sources in two rows
+- *(ui)* [`ea0ec04`](https://github.com/cmdcolin/videoskillet/commit/ea0ec045dd6835b8d7086918565cbb2e7989a45c) email failed-recording reports hourly through Firebase
+- *(ui)* [`6ed6f0a`](https://github.com/cmdcolin/videoskillet/commit/6ed6f0ae07bbffb14111ea1b8ac0493110bf23f6) let the camera page put a clip or a pattern on source A
+- *(ui)* [`2052228`](https://github.com/cmdcolin/videoskillet/commit/2052228ab791b4ada46cc8ae7d7fb82b74b6f877) give the camera page a loops sheet, and desktop a way in
+- *(ui)* [`377ee6b`](https://github.com/cmdcolin/videoskillet/commit/377ee6b3b6fcc1d9a9489d10a814eabc0128ce65) record what the speakers play with a take
+- *(ui)* [`9b49c94`](https://github.com/cmdcolin/videoskillet/commit/9b49c94ce5f5d93bbef2e31b97f3ed81a8739b64) dismiss the error banner, and reload from a GPU error
+
+### Fixes
+- *(ui)* [`a90ecfb`](https://github.com/cmdcolin/videoskillet/commit/a90ecfbfce8678bac2c66f1669ff53799ef89cd5) stop a phone's take from queueing frames until the tab dies
+- *(gpu)* [`1b316e2`](https://github.com/cmdcolin/videoskillet/commit/1b316e2c68b4c056034f1f991db2b56b989a28bb) leave the baked grain out of a take's reset
+- *(ui)* [`a5632fd`](https://github.com/cmdcolin/videoskillet/commit/a5632fd1a39c12e1b451c932ec70efcc05ad6ca0) keep useCapture compiled by React Compiler
+
+### Documentation
+- [`c7a126b`](https://github.com/cmdcolin/videoskillet/commit/c7a126b3e0b5e7aacb4e31ff011ee934cf2d7524) hand off recording the clip's sound with a take
+- [`52a49e4`](https://github.com/cmdcolin/videoskillet/commit/52a49e4c011a8c260f64fb4c66b48204abfbb776) make recording size a setting that defaults to full
+- [`5e40fd3`](https://github.com/cmdcolin/videoskillet/commit/5e40fd392f733a3286462ff7dbbf08f3a58c9ddb) time every live take on the wall clock
+
+### Tests
+- *(ui)* [`6840c2f`](https://github.com/cmdcolin/videoskillet/commit/6840c2f9ad48ad382639fbfbfe684be183f196e6) check a live take's time, sound and cost in the browser
+
 ## [2.6.0](https://github.com/cmdcolin/videoskillet/compare/v2.5.1...v2.6.0) - 2026-09-30
 
 ### Features
