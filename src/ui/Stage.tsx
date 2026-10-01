@@ -38,6 +38,7 @@ const at = (e: PointerEvent<HTMLCanvasElement>) => {
 export function Stage(props: {
   canvasRef: RefObject<HTMLCanvasElement | null>
   error: string
+  onDismissError: () => void
   frozen: FrozenKind | null
   rebuilding: 'lost' | 'hung' | null
   // What has been spent on GPU devices — `builds` by this page, `releases` by this
@@ -165,9 +166,26 @@ export function Stage(props: {
           canvas whose whole content is invisible to a screen reader. Without a
           live region the failure is simply not announced, and the picture not
           changing is the only other evidence there was one. */}
+      {/* Dismissable, because nothing else clears a banner that has no action
+          behind it, and a GPU validation error repeats nothing a reader can act
+          on but a reload. Reloading is safe: the app lets its device go on the
+          way out rather than destroying it (docs/adr/0004). */}
       {props.error !== '' && (
         <div className={styles.error} role="alert">
-          {props.error}
+          <span>{props.error}</span>
+          {props.error.startsWith('gpu:') ? (
+            <button className={ui.btn} onClick={() => location.reload()}>
+              reload
+            </button>
+          ) : null}
+          <button
+            className={styles.budgetDismiss}
+            title="dismiss"
+            aria-label="dismiss"
+            onClick={props.onDismissError}
+          >
+            ✕
+          </button>
         </div>
       )}
       {/* The GPU handed the device back — a driver reset, a sleep/wake. The

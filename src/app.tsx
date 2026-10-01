@@ -1845,6 +1845,7 @@ export function App() {
         <Stage
           canvasRef={eng.canvasRef}
           error={eng.error}
+          onDismissError={() => eng.setError('')}
           frozen={eng.frozen}
           rebuilding={eng.rebuilding}
           budget={eng.budget}
