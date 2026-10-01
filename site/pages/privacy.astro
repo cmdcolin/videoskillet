@@ -5,11 +5,13 @@ import { ORIGIN } from '../lib/site'
 import css from '../styles/landing.css?raw'
 
 const NAME = 'videoskillet'
+const ANALYTICS_EXTRA =
+  'When a recording fails or crashes the page, we also send Google Analytics a short report: the device’s model and memory, the recording’s size, frame rate and encoder, how far it got, and any error message.'
 ---
 
 <Page
   title="Privacy — videoskillet"
-  description="videoskillet uses Google Analytics to count visits and Firebase to store your saved looks and any ratings you give. Nothing else."
+  description="videoskillet uses Google Analytics to count visits and hear about failed recordings, and Firebase to store your saved looks and any ratings you give. Nothing else."
   css={css}
   canonical={`${ORIGIN}privacy/`}
   account={false}
@@ -19,8 +21,9 @@ const NAME = 'videoskillet'
     <h1>Privacy</h1>
     <p class="privacyLead">
       We use Firebase for logins, and storing some of the settings you make
-      there, and Google Analytics to see if anyone is actually using this. That
-      is all. Please contact colin.diesh@gmail.com for concerns.
+      there, and Google Analytics to see if anyone is actually using this.
+      {ANALYTICS_EXTRA} That is all. Please contact colin.diesh@gmail.com for
+      concerns.
     </p>
     <!-- CROSS_REPO_SYNC_END(privacy-analytics) -->
   </main>

@@ -2,9 +2,16 @@ import { useEffect, useRef, useState } from 'react'
 
 import { fileName, save } from './download'
 import { isSupported, startRecording } from './record'
+import {
+  clearTake,
+  noteTake,
+  reportLostTake,
+  reportTakeFailed,
+} from './takeLog'
 
 import type { InputTap } from '../core/signal/audiostate'
 import type { Recorder } from './record'
+import type { TakeNote } from './takeLog'
 import type { RefObject } from 'react'
 
 // The rate the file is written at, and it is the simulation's own: the signal
@@ -33,6 +40,17 @@ function mirrorOf(src: HTMLCanvasElement): HTMLCanvasElement {
   canvas.height = src.height
   canvas.getContext('2d')?.drawImage(src, 0, 0)
   return canvas
+}
+
+const jot = (ref: RefObject<TakeNote | null>, patch: Partial<TakeNote>) => {
+  if (ref.current === null) return
+  ref.current = { ...ref.current, ...patch }
+  noteTake(ref.current)
+}
+
+const endNote = (ref: RefObject<TakeNote | null>) => {
+  ref.current = null
+  clearTake()
 }
 
 // Save the rendered canvas as a PNG still or a constant-framerate MP4.
@@ -66,21 +84,42 @@ export function useCapture(
   const fps = opts.fps ?? FPS
   const recRef = useRef<Recorder | null>(null)
   const rafRef = useRef(0)
+  const noteRef = useRef<TakeNote | null>(null)
+  const startRef = useRef(0)
   const [recording, setRecording] = useState(false)
+
+  const progress = (r: Recorder) => ({
+    seconds: Math.round((performance.now() - startRef.current) / 1000),
+    frames: r.frames(),
+    held: r.held(),
+    deepest: r.deepest(),
+  })
 
   // The encoder and its rAF pump are browser objects that outlive React, so a
   // teardown mid-recording would leave both running forever. Aborted rather
   // than finished, unlike the `MediaRecorder` this replaces: that one could
   // flush a clip to disk on the way out, and a download started from an
   // unmounting tree is not a thing that reliably lands.
-  useEffect(
-    () => () => {
+  //
+  // A take still noted when the page goes away normally was not lost, so the
+  // note goes with it.
+  useEffect(() => {
+    reportLostTake()
+    const onHide = () => {
+      if (document.visibilityState === 'hidden') jot(noteRef, { hidden: true })
+    }
+    const onLeave = () => endNote(noteRef)
+    document.addEventListener('visibilitychange', onHide)
+    window.addEventListener('pagehide', onLeave)
+    return () => {
+      document.removeEventListener('visibilitychange', onHide)
+      window.removeEventListener('pagehide', onLeave)
       cancelAnimationFrame(rafRef.current)
       recRef.current?.abort()
       recRef.current = null
-    },
-    [],
-  )
+      endNote(noteRef)
+    }
+  }, [])
 
   const grabStill = () => {
     const canvas = canvasRef.current
@@ -136,11 +175,15 @@ export function useCapture(
     recRef.current = null
     setRecording(false)
     if (rec === null) return
+    jot(noteRef, { stage: 'finishing', ...progress(rec) })
     try {
       deliver(await rec.finish(), fileName(name, 'mp4'))
     } catch (e) {
-      onError(`recording failed: ${e instanceof Error ? e.message : String(e)}`)
+      const message = e instanceof Error ? e.message : String(e)
+      reportTakeFailed(message, noteRef.current)
+      onError(`recording failed: ${message}`)
     }
+    endNote(noteRef)
   }
 
   const toggleRecord = () => {
@@ -172,6 +215,24 @@ export function useCapture(
         recRef.current = rec
         setRecording(true)
         const start = performance.now()
+        startRef.current = start
+        noteRef.current = {
+          page: location.pathname,
+          width,
+          height,
+          fps: fps.num / fps.den,
+          codec: rec.codec,
+          hardware:
+            rec.hardware === null ? 'unknown' : rec.hardware ? 'yes' : 'no',
+          seconds: 0,
+          frames: 0,
+          held: 0,
+          deepest: 0,
+          stage: 'recording',
+          hidden: false,
+        }
+        noteTake(noteRef.current)
+        let noted = start
         const pump = () => {
           rafRef.current = requestAnimationFrame(pump)
           const live = canvasRef.current
@@ -200,13 +261,17 @@ export function useCapture(
             // whole path exists to make.
             r.frame(live)
           }
+          if (performance.now() - noted >= 1000) {
+            noted = performance.now()
+            jot(noteRef, progress(r))
+          }
         }
         rafRef.current = requestAnimationFrame(pump)
       },
       (e: unknown) => {
-        onError(
-          `could not start recording: ${e instanceof Error ? e.message : String(e)}`,
-        )
+        const message = e instanceof Error ? e.message : String(e)
+        reportTakeFailed(message, null)
+        onError(`could not start recording: ${message}`)
       },
     )
   }

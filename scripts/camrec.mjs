@@ -249,6 +249,9 @@ try {
   }, 250)
   await click('button[aria-label="start recording"]')
   await settle(SECONDS * 1000)
+  const noteDuring = await page.evaluate(() =>
+    localStorage.getItem('videoskillet_take'),
+  )
   await click('button[aria-label="stop recording"]')
   await page.waitForSelector('button[title^="save or share"]', {
     timeout: 120000,
@@ -256,6 +259,9 @@ try {
   await settle(1000)
   clearInterval(poll)
   const stats = await page.evaluate(() => window.__rec)
+  const noteAfter = await page.evaluate(() =>
+    localStorage.getItem('videoskillet_take'),
+  )
   const err = await page.evaluate(
     () => document.querySelector('p[class*="error"]')?.textContent ?? '',
   )
@@ -294,6 +300,7 @@ try {
       `file         ${(stats.outBytes / 2 ** 20).toFixed(1)} MB of video`,
       `ffprobe      ${bytes === '' ? 'no file' : probe()} (duration, frames)`,
       `browser rss  ${idle.toFixed(0)} MB idle, ${peak.toFixed(0)} MB peak`,
+      `take note    ${noteDuring ?? 'none'} during, ${noteAfter ?? 'none'} after`,
       ...(err === '' ? [] : [`error        ${err}`]),
     ].join('\n'),
   )

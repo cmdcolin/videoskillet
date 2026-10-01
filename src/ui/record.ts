@@ -112,6 +112,10 @@ interface RecorderSpec {
 }
 
 export interface Recorder {
+  codec: string
+  // Whether the platform offers a hardware encoder for this config, or null
+  // where the browser will not say.
+  hardware: boolean | null
   // Hand over one rendered frame. The timestamp is derived from how many have
   // been taken, never from the clock — that is the whole point.
   frame: (source: CanvasImageSource) => void
@@ -126,6 +130,10 @@ export interface Recorder {
   // recording abandoned by a device loss or an unmount has to let it go.
   abort: () => void
   frames: () => number
+  // Frame periods covered by `hold`.
+  held: () => number
+  // The deepest the encoder's queue has been.
+  deepest: () => number
   // The last error the encoder reported, or ''. Encoding failures arrive on a
   // callback rather than as a rejected call, so they have nowhere else to go.
   error: () => string
@@ -160,6 +168,8 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
   const spans: number[] = []
   let avcc: Uint8Array | null = null
   let count = 0
+  let held = 0
+  let deepest = 0
   let failure = ''
   let closed = false
 
@@ -199,6 +209,14 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
     )
   }
 
+  const hardware = await VideoEncoder.isConfigSupported({
+    ...configFor(codec),
+    hardwareAcceleration: 'prefer-hardware',
+  }).then(
+    r => r.supported === true,
+    () => null,
+  )
+
   const encoder = new VideoEncoder({
     output: (chunk, meta) => {
       // The parameter sets arrive once, on the first chunk. Kept rather than
@@ -236,12 +254,17 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
       : await startAudio(spec.audio).catch(() => null)
 
   return {
+    codec,
+    hardware,
     frames: () => count,
+    held: () => held,
+    deepest: () => deepest,
     error: () => failure,
     busy: () => encoder.encodeQueueSize >= MAX_QUEUE,
     hold: () => {
       if (closed) return
       if (spans.length > 0) spans[spans.length - 1]++
+      held++
       count++
     },
     frame: source => {
@@ -263,6 +286,7 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
         keyFrame:
           count % Math.max(1, Math.round(rate * KEYFRAME_SECONDS)) === 0,
       })
+      deepest = Math.max(deepest, encoder.encodeQueueSize)
       // Closed at once rather than left to the collector: a VideoFrame holds a
       // GPU or system buffer, and a few unreleased ones stall the encoder
       // outright.
