@@ -13,7 +13,7 @@ import type { Layers, Look } from './looks'
 
 const TRAVEL = 1000
 
-function Knob(props: {
+export function Knob(props: {
   def: SliderDef
   value: number
   onChange: (v: number) => void

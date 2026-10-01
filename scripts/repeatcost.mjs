@@ -68,7 +68,15 @@ try {
       const bitrate = Math.min(60e6, Math.max(16e6, w * h * 60 * 0.4))
       let codec = ''
       for (const c of candidatesFor(w, h)) {
-        const cfg = { codec: c, width: w, height: h, bitrate, framerate: 60, avc: { format: 'avc' }, latencyMode: 'quality' }
+        const cfg = {
+          codec: c,
+          width: w,
+          height: h,
+          bitrate,
+          framerate: 60,
+          avc: { format: 'avc' },
+          latencyMode: 'quality',
+        }
         if ((await VideoEncoder.isConfigSupported(cfg)).supported) {
           codec = c
           break
@@ -80,7 +88,15 @@ try {
           output: c => sizes.push(c.byteLength),
           error: e => console.log('enc error', String(e)),
         })
-        enc.configure({ codec, width: w, height: h, bitrate, framerate: 60, avc: { format: 'avc' }, latencyMode: 'quality' })
+        enc.configure({
+          codec,
+          width: w,
+          height: h,
+          bitrate,
+          framerate: 60,
+          avc: { format: 'avc' },
+          latencyMode: 'quality',
+        })
         const t0 = performance.now()
         for (let i = 0; i < N; i++) {
           const f = new VideoFrame(src[pick(i)], {
@@ -90,7 +106,8 @@ try {
           })
           enc.encode(f, { keyFrame: i % 120 === 0 })
           f.close()
-          while (enc.encodeQueueSize > 8) await new Promise(r => setTimeout(r, 1))
+          while (enc.encodeQueueSize > 8)
+            await new Promise(r => setTimeout(r, 1))
         }
         await enc.flush()
         const dt = (performance.now() - t0) / 1000
@@ -104,14 +121,16 @@ try {
           if (pick(i) === pick(i - 1)) rep.push(sizes[i])
           else fresh.push(sizes[i])
         }
-        const avg = a => (a.length ? Math.round(a.reduce((s, v) => s + v, 0) / a.length) : null)
+        const avg = a =>
+          a.length ? Math.round(a.reduce((s, v) => s + v, 0) / a.length) : null
         res.push({
           size: `${w}x${h}`,
           arm: name,
           fps: +(N / dt).toFixed(1),
-          freshPerSec: +(new Set(Array.from({ length: N }, (_, i) => pick(i))).size === 1
-            ? 0
-            : (N / dt) * (name === 'mixed' ? 0.5 : 1)
+          freshPerSec: +(
+            new Set(Array.from({ length: N }, (_, i) => pick(i))).size === 1
+              ? 0
+              : (N / dt) * (name === 'mixed' ? 0.5 : 1)
           ).toFixed(1),
           repeatBytes: avg(rep),
           freshBytes: avg(fresh),

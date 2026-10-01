@@ -192,8 +192,9 @@ can capture the picture window alone.
 
 The camera page at `/cam/` puts a phone's camera through the set. It shows the
 picture, a mixer, a strip of looks and a shutter. A phone opening the home page
-gets **Open the camera** as its first button and a tour of the page under it,
-and **camera** in the ☰ menu reaches the page from the app.
+gets **Open the camera** as its first button and a tour of the page under it. A
+desktop gets **Simple mode** beside **Open the app**, and **camera** in the ☰
+menu reaches the page from the app.
 
 - **Start camera** asks the browser for the camera. Once the browser has said
   yes, the page opens the camera by itself on later visits. Until the first
@@ -218,6 +219,16 @@ and **camera** in the ☰ menu reaches the page from the app.
   look building on itself. The other sliders move the controls themselves, over
   the whole range the app gives them. **reset** puts the looks back. Pressing
   the look that is on also opens the sheet.
+- **loops** opens a sheet with the knobs of both feedback loops, whatever look
+  is up. The **camera loop** is a camera pointed at the screen and fed back into
+  the input: **mix** and **gain** set how much comes back, and the picture
+  builds on itself once their product passes unity; **zoom**, **rotate** and
+  **shift** set where each lap lands. Their sliders spend most of their travel
+  close to no change, ×1 and 0, where the small moves that read best are. The
+  **mixer loop** is the mixer's output patched into its own input, with its own
+  mix, gain and delay. **more** adds the rest of each loop's knobs, and
+  **reset** takes back what the sheet moved and leaves the look's other knobs
+  alone.
 - Holding a finger on the picture shows the camera without the look. Swiping
   across it steps to the next or previous look on the strip.
 - Pinching the picture zooms, and the stops under the picture jump to 1× and 2×,

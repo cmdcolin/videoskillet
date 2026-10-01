@@ -1,5 +1,6 @@
 // The stills the home page's phone tour shows: the camera page at a phone's
-// size, driven through a look, the tune sheet, a zoom, the mixer and the help.
+// size, driven through a look, the tune sheet, the loops sheet, a zoom, the
+// mixer and the help.
 //
 // No phone is involved. The page's camera is `public/sample.jpg` panning on a
 // canvas, standing in for getUserMedia, and the clip it mixes in is
@@ -41,6 +42,7 @@ const CROP_H = (WIDTH * 4) / 3
 const STILLS = {
   looks: { shot: 'look', under: 'nav[aria-label="Looks"]' },
   tune: { shot: 'tune', under: 'section[aria-label="Tune the look"]' },
+  loops: { shot: 'loops', under: 'section[aria-label="Feedback loops"]' },
   mix: { shot: 'mix', under: 'nav[aria-label="Looks"]' },
   zoom: { shot: 'zoom', under: '[aria-label="Zoom"]' },
   faults: { shot: 'fault', under: '[aria-label="Faults"]' },
@@ -219,6 +221,13 @@ try {
   await click('button[title="the look\'s own knobs"]')
   await settle(1000)
   await shoot('tune')
+  await click('button[aria-label="close"]')
+  // A loop look, with the loops sheet open on the knobs it set.
+  await click('xpath/.//button[@role="tab" and text()="loops"]')
+  await click('[data-look="zoomBloom"]')
+  await click('button[title^="every knob on the camera loop"]')
+  await settle(3000)
+  await shoot('loops')
   await click('button[aria-label="close"]')
   await clickText('normal')
   await click('button[aria-label="zoom 2×"]')

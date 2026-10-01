@@ -12,6 +12,7 @@ import styles from './cam.module.css'
 import {
   DiceIcon,
   FlipIcon,
+  LoopIcon,
   MicIcon,
   ShareIcon,
   SideIcon,
@@ -33,6 +34,7 @@ import {
   rollPool,
   stackLabel,
 } from './looks'
+import { LOOP_KEYS, Loops } from './Loops'
 import { SLICE } from './tape'
 import { Tune } from './Tune'
 import { PATTERNS, PATTERN_TITLE, useCamEngine } from './useCamEngine'
@@ -236,7 +238,7 @@ export function CamPage() {
   const [scene, setScene] = useState<Scene>({ ...CLEAN, mix: null })
   const sceneRef = useRef(scene)
   const [shelfName, setShelfName] = useState(SHELVES[0].name)
-  const [tuning, setTuning] = useState(false)
+  const [sheet, setSheet] = useState<'tune' | 'loops' | null>(null)
   const [help, setHelp] = useState(false)
   const [hintSeen, setHintSeen] = usePersistedFlag(HINT_STORE)
   const [mode, setMode] = useState<Mode>('photo')
@@ -318,7 +320,7 @@ export function CamPage() {
   // second tap on the look already up opens its knobs.
   const pick = (name: string) => {
     if (look !== null && look.name === name && !look.rolled) {
-      setTuning(!tuning)
+      setSheet(sheet === 'tune' ? null : 'tune')
       return
     }
     paint({ ...CLEAN, look: { name, strength: 1, rolled: false } })
@@ -727,12 +729,20 @@ export function CamPage() {
           {on ? (
             <div className={cx(styles.switches, styles.right)}>
               <Switch
-                on={tuning}
+                on={sheet === 'tune'}
                 label="tune"
                 title="the look's own knobs"
-                onClick={() => setTuning(!tuning)}
+                onClick={() => setSheet(sheet === 'tune' ? null : 'tune')}
               >
                 <SlidersIcon />
+              </Switch>
+              <Switch
+                on={sheet === 'loops'}
+                label="loops"
+                title="every knob on the camera loop and the mixer loop"
+                onClick={() => setSheet(sheet === 'loops' ? null : 'loops')}
+              >
+                <LoopIcon />
               </Switch>
               <Switch
                 on={deck}
@@ -1105,7 +1115,24 @@ export function CamPage() {
           ))}
         </div>
 
-        {tuning ? (
+        {sheet === 'loops' ? (
+          <Loops
+            controls={boardOf(scene, sliceOf(eng.layout)).controls}
+            tweaked={Object.keys(scene.tweaks).some(k => LOOP_KEYS.has(k))}
+            onKnob={turnKnob}
+            onReset={() =>
+              paint({
+                tweaks: Object.fromEntries(
+                  Object.entries(sceneRef.current.tweaks).filter(
+                    ([k]) => !LOOP_KEYS.has(k),
+                  ),
+                ),
+              })
+            }
+            onClose={() => setSheet(null)}
+          />
+        ) : null}
+        {sheet === 'tune' ? (
           <Tune
             look={look}
             layers={scene.layers}
@@ -1120,7 +1147,7 @@ export function CamPage() {
             }
             onKnob={turnKnob}
             onReset={() => paint({ tweaks: {} })}
-            onClose={() => setTuning(false)}
+            onClose={() => setSheet(null)}
           />
         ) : null}
       </section>

@@ -32,6 +32,12 @@ const TOUR = [
     alt: 'The tune sheet open over the controls, with a weight for each stacked look and a slider for each control',
   },
   {
+    still: 'loops',
+    title: 'Work the loops',
+    body: 'Loops opens every knob on the camera pointed at the screen and on the mixer patched into itself: how much comes back, how hard, and where each lap lands.',
+    alt: 'The loops sheet open over a feedback look, with the camera loop and mixer loop knobs',
+  },
+  {
     still: 'mix',
     title: 'Mix a second picture',
     body: 'The mixer under the picture puts the other camera, a 4 s tape, a clip from your phone, colour bars or static on source B. Dissolve, wipe, inset, key or sum it in with the fader, or pick from a tab of mixers that have lost their sync, their supply or their plugs.',
@@ -89,9 +95,9 @@ const SHARE_IMAGE_H = 630
     <section class="hero">
       <Hero />
       <div class="wrap heroBody">
-        <!-- A phone gets the camera first and the instrument beside it. The
-             media query in landing.css hides the pair that does not apply, so
-             no script rewrites the links. -->
+        <!-- A phone gets the camera first and the instrument beside it, and a
+             desktop the other way round. The media query in landing.css hides
+             the pair that does not apply, so no script rewrites the links. -->
         <p class="heroCta">
           <a class="btn primary onPhone" href="/cam/">
             Open the camera →
@@ -101,6 +107,9 @@ const SHARE_IMAGE_H = 630
           </a>
           <a class="btn onPhone" href="/app/">
             Full instrument
+          </a>
+          <a class="btn offPhone" href="/cam/">
+            Simple mode
           </a>
           <a class="btn" href="/guide/">
             User guide
