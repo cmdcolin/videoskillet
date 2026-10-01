@@ -32,6 +32,7 @@ import { debugOn, pageSearch } from './env'
 import { aFeedOn, bFeedOn, bOn, bWaveOn, FEEDS } from './feedgates'
 import { designFilterBank } from './filterbank'
 import { AutoLock } from './framelock'
+import { FrameRead } from './frameread'
 import {
   GEN_OFFSET,
   PARAM_BYTES,
@@ -88,6 +89,7 @@ import type { StabPlan } from '../signal/stab'
 import type { Gpu, RenderTarget } from './context'
 import type { DestroyOptions, EngineApi } from './engineapi'
 import type { FeedSource } from './feedgates'
+import type { FrameSink } from './frameread'
 import type { ParamName } from './prelude'
 import type { FrozenKind } from './renderloop'
 import type { PullOpener, PumpedFrame, Relay, WrapHealth } from './videopump'
@@ -405,6 +407,8 @@ export class Engine implements EngineApi {
   private cgBuf: GPUBuffer
   private buzzBuf: GPUBuffer
   private buzzRead: BuzzRead
+  // A live take's readback, while one is recording.
+  private frameRead: FrameRead | null = null
   // Phosphor state, ping-ponged: decode reads the light the screen is holding
   // out of one and writes the new state into the other, so its lateral scatter
   // sees settled neighbours rather than a buffer mid-overwrite.
@@ -1706,6 +1710,7 @@ export class Engine implements EngineApi {
       // Its staging buffers are not in allBufs — they are the readback's own,
       // and one of them is usually mapped or mid-map when this runs.
       this.buzzRead.destroy()
+      this.frameRead?.destroy()
       this.pump.destroy()
       this.sources.destroy()
       // The audio graph is not the device's, so nothing above releases it — and
@@ -1853,6 +1858,39 @@ export class Engine implements EngineApi {
     }
   }
 
+  // Hand each frame this engine renders to a live take, at the take's size, or
+  // stop with null. A held present and a frame the lock skips send nothing,
+  // since neither is a new picture. The canvas is reconfigured so its texture
+  // can be copied out of, and sampled when the window no longer matches the
+  // take's size.
+  setFrameSink(
+    sink: FrameSink | null,
+    size: { width: number; height: number },
+  ): void {
+    const { device, context, format } = this.gpu
+    this.frameRead?.destroy()
+    this.frameRead = null
+    context.configure({
+      device,
+      format,
+      alphaMode: 'opaque',
+      usage:
+        sink === null
+          ? GPUTextureUsage.RENDER_ATTACHMENT
+          : GPUTextureUsage.RENDER_ATTACHMENT |
+            GPUTextureUsage.COPY_SRC |
+            GPUTextureUsage.TEXTURE_BINDING,
+    })
+    if (sink !== null)
+      this.frameRead = new FrameRead(
+        device,
+        size.width,
+        size.height,
+        format,
+        sink,
+      )
+  }
+
   // Frame counter, for the diagnostic recorder and the verification harness.
   frameNo(): number {
     return this.frame
@@ -1860,8 +1898,9 @@ export class Engine implements EngineApi {
 
   // The finished picture, as tightly-packed RGBA at the raster's own size.
   //
-  // In a browser the frame is already reachable — it is on the canvas, and
-  // `new VideoFrame(canvas)` is how `ui/record.ts` takes it. This exists for
+  // In a browser the frame is already reachable — it is on the canvas, where
+  // `setFrameSink` copies it for a live take and `new VideoFrame(canvas)` reads
+  // it for the browser's offline render. This exists for
   // the runtime where that is not true: a canvas texture comes back
   // `RENDER_ATTACHMENT` only and cannot be copied out of, and Deno's WebGPU has
   // no `VideoFrame` to build either, so an offline render has no way to see
@@ -2625,12 +2664,15 @@ export class Engine implements EngineApi {
     if (buzz > 0) this.buzzRead.copy(enc, this.buzzBuf)
 
     this.presentPass(enc)
+    const grab =
+      this.frameRead?.copy(enc, this.gpu.context.getCurrentTexture()) ?? null
 
     if (this.frame < 3) {
       d.pushErrorScope('validation')
       d.pushErrorScope('internal')
     }
     d.queue.submit([enc.finish()])
+    if (grab !== null) this.frameRead?.flush(grab, performance.now())
     // After the submit that carries the copy, and never awaited: the map lands
     // a frame or two from now and the audio ring is built to glide over the
     // gap. The drive is read again on arrival rather than captured above, so

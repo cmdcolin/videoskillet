@@ -42,6 +42,7 @@ import type { AudioState } from '../signal/audiostate'
 import type { FaultPlan } from '../signal/fault'
 import type { GlidePlan } from '../signal/glide'
 import type { StabPlan } from '../signal/stab'
+import type { FrameSink } from './frameread'
 import type { FrozenKind } from './renderloop'
 import type { PullOpener, Relay, WrapHealth } from './videopump'
 
@@ -238,6 +239,11 @@ export interface EngineApi {
   // on a healthy loop.
   kick: () => void
   frameNo: () => number
+  // Each rendered frame to a live take, at the take's size; null stops.
+  setFrameSink: (
+    sink: FrameSink | null,
+    size: { width: number; height: number },
+  ) => void
   // Everything a take needs held still, in one switch, and `endTake` to put it
   // all back (docs/EDITOR.md › _Take state_):
   //

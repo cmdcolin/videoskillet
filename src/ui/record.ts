@@ -19,8 +19,9 @@
 // BGRA and full of picture. So the mirror is gone, and with it the extra copy
 // per frame it cost.
 
-import { writeMp4 } from './mp4'
+import { mp4Parts } from './mp4'
 import { startAudio } from './recordAudio'
+import { audioClock, wallClock } from './takeClock'
 
 import type { InputTap } from '../core/signal/audiostate'
 import type { Sample } from './mp4'
@@ -101,14 +102,27 @@ const KEYFRAME_SECONDS = 2
 // (scripts/camrec.mjs).
 const MAX_QUEUE = 3
 
+// Where a take stops itself. Box sizes and chunk offsets in `mp4.ts` are 32-bit,
+// so a file past 4 GiB would come out silently corrupt; this leaves room for
+// the sound and the movie box.
+const MAX_BYTES = 3_900_000_000
+
+// How long a live take with sound reads the audio clock before its first frame,
+// so the average the frame is placed by has something behind it.
+const CLOCK_WARMUP_MS = 300
+
 interface RecorderSpec {
   width: number
   height: number
   fps: { num: number; den: number }
-  // The sound to take with the picture. It starts on the first frame, so it
-  // stays in step only with a caller that hands frames at the wall clock's
-  // pace.
+  // The sound to take with the picture. A caller using `frame` hands it frames
+  // at the wall clock's pace; `place` keeps it in step on its own.
   audio?: InputTap | null
+  // 2 for what the speakers play, 1 (the default) for a microphone.
+  channels?: 1 | 2
+  // Whether frames arrive through `place`, which needs the audio clock read
+  // ahead of the first one.
+  live?: boolean
 }
 
 export interface Recorder {
@@ -117,8 +131,17 @@ export interface Recorder {
   // where the browser will not say.
   hardware: boolean | null
   // Hand over one rendered frame. The timestamp is derived from how many have
-  // been taken, never from the clock — that is the whole point.
+  // been taken, never from the clock: the offline render's whole point.
   frame: (source: CanvasImageSource) => void
+  // Hand over a frame of a live take, rendered at `renderedAt`
+  // (performance.now()). It lands in the frame period its time falls in, on the
+  // sound's clock when the take has sound and the wall clock when not, and the
+  // frame before it stays up across any period nothing landed in. A frame
+  // whose period is taken, or that finds the encoder `busy`, is dropped. The
+  // recorder closes the frame.
+  place: (frame: VideoFrame, renderedAt: number) => void
+  // Whether the file has reached the size this muxer can write.
+  full: () => boolean
   // Whether the encoder is too far behind to take another frame.
   busy: () => boolean
   // Keep the last frame up for one more frame period without encoding
@@ -164,9 +187,8 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
   const height = even(spec.height)
   const rate = fps.num / fps.den
   const samples: Sample[] = []
-  // Frame periods each encoded frame covers, in the order they were encoded.
-  const spans: number[] = []
-  let avcc: Uint8Array | null = null
+  let avcc: Uint8Array<ArrayBuffer> | null = null
+  let bytes = 0
   let count = 0
   let held = 0
   let deepest = 0
@@ -227,19 +249,26 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
       // belongs to the encoder, which is about to be closed.
       const description = meta?.decoderConfig?.description
       if (avcc === null && description !== undefined) {
-        avcc = new Uint8Array(
+        avcc = (
           ArrayBuffer.isView(description)
             ? new Uint8Array(
                 description.buffer,
                 description.byteOffset,
                 description.byteLength,
               )
-            : new Uint8Array(description),
-        )
+            : new Uint8Array(description)
+        ).slice()
       }
       const data = new Uint8Array(chunk.byteLength)
       chunk.copyTo(data)
-      samples.push({ data, key: chunk.type === 'key' })
+      bytes += data.length
+      // Presentation time in frame periods, off the frame's own timestamp: the
+      // encoder hands chunks over in decode order.
+      samples.push({
+        data,
+        key: chunk.type === 'key',
+        pts: Math.round((chunk.timestamp * fps.num) / (1e6 * fps.den)),
+      })
     },
     error: e => {
       failure = e instanceof Error ? e.message : String(e)
@@ -247,11 +276,30 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
   })
 
   encoder.configure(configFor(codec))
-  // A take whose sound cannot be encoded is still a take, silent.
+  // A take whose sound cannot be encoded is still a take, silent. So is one
+  // whose context is not running: its clock stands still, and every frame would
+  // land in the first period.
+  const tap =
+    spec.audio === undefined || spec.audio === null ? null : spec.audio
+  if (tap !== null && tap.context.state !== 'running')
+    await Promise.race([
+      tap.context.resume().catch(() => {}),
+      new Promise(r => setTimeout(r, CLOCK_WARMUP_MS)),
+    ])
   const sound =
-    spec.audio === undefined || spec.audio === null
+    tap === null || tap.context.state !== 'running'
       ? null
-      : await startAudio(spec.audio).catch(() => null)
+      : await startAudio(tap, spec.channels ?? 1).catch(() => null)
+
+  const clock = sound === null ? wallClock() : audioClock(sound.context)
+  const sampler =
+    spec.live === true && sound !== null ? setInterval(clock.sample, 2) : 0
+  if (sampler !== 0) await new Promise(r => setTimeout(r, CLOCK_WARMUP_MS))
+  const keyEvery = Math.max(1, Math.round(rate * KEYFRAME_SECONDS))
+  const period = (1e6 * fps.den) / fps.num
+  // The take's start on its clock, and the period the last placed frame took.
+  let origin: number | null = null
+  let last = -1
 
   return {
     codec,
@@ -261,11 +309,43 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
     deepest: () => deepest,
     error: () => failure,
     busy: () => encoder.encodeQueueSize >= MAX_QUEUE,
+    full: () => bytes >= MAX_BYTES,
     hold: () => {
       if (closed) return
-      if (spans.length > 0) spans[spans.length - 1]++
       held++
       count++
+    },
+    place: (frame, renderedAt) => {
+      if (closed || encoder.state !== 'configured') {
+        frame.close()
+        return
+      }
+      clock.sample()
+      const t = clock.at(renderedAt)
+      if (origin === null) {
+        origin = t
+        sound?.origin(Math.round(t * sound.context.sampleRate))
+      }
+      const slot = Math.round((t - origin) * rate)
+      if (slot <= last || encoder.encodeQueueSize >= MAX_QUEUE) {
+        frame.close()
+        return
+      }
+      const stamped = new VideoFrame(frame, {
+        timestamp: Math.round(slot * period),
+        duration: Math.round(period),
+        visibleRect: { x: 0, y: 0, width, height },
+      })
+      frame.close()
+      encoder.encode(stamped, {
+        keyFrame:
+          last < 0 || Math.floor(slot / keyEvery) > Math.floor(last / keyEvery),
+      })
+      deepest = Math.max(deepest, encoder.encodeQueueSize)
+      stamped.close()
+      held += Math.max(0, slot - last - 1)
+      last = slot
+      count = slot + 1
     },
     frame: source => {
       if (closed || encoder.state !== 'configured') return
@@ -292,17 +372,27 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
       // outright.
       frame.close()
       if (count === 0) sound?.go()
-      spans.push(1)
       count++
     },
     abort: () => {
+      clearInterval(sampler)
       closed = true
       sound?.abort()
       if (encoder.state !== 'closed') encoder.close()
       samples.length = 0
     },
     finish: async () => {
+      clearInterval(sampler)
       closed = true
+      // A live take lasts until it was stopped, so its last frame stays up
+      // until then, as long as the sound runs.
+      const end =
+        origin === null
+          ? count
+          : Math.max(
+              count,
+              Math.round((clock.at(performance.now()) - origin) * rate),
+            )
       // The sound stops with the last frame, before the picture's flush, which
       // takes long enough to leave the sound half a second over.
       const heard = sound === null ? Promise.resolve(null) : sound.finish()
@@ -314,26 +404,18 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
         throw new Error('the encoder produced no parameter sets')
       }
       const audio = await heard
-      samples.forEach((s, i) => {
-        s.frames = spans[i] ?? 1
-      })
-      // Copied into a fresh ArrayBuffer rather than asserted into one. A
-      // `Uint8Array` is a `BlobPart` at runtime in every browser, but its
-      // buffer is typed `ArrayBufferLike` — which could be shared — and the
-      // cast that quiets that is the kind this codebase does not take. One copy
-      // of a file already held whole in memory is not the cost worth arguing
-      // over.
-      const file = writeMp4({
+      // The Blob takes the file in the pieces it is laid out from. Joining them
+      // first would hold the take in memory twice more, for nothing.
+      const parts = mp4Parts({
         width,
         height,
         fps,
         avcc,
         samples,
+        end,
         ...(audio === null ? {} : { audio }),
       })
-      const out = new ArrayBuffer(file.length)
-      new Uint8Array(out).set(file)
-      return new Blob([out], { type: 'video/mp4' })
+      return new Blob(parts, { type: 'video/mp4' })
     },
   }
 }

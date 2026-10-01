@@ -28,6 +28,7 @@ import grainBake from './shaders/grain_bake.wgsl?raw'
 import lineAnalyze from './shaders/line_analyze.wgsl?raw'
 import mixB from './shaders/mix_b.wgsl?raw'
 import present from './shaders/present.wgsl?raw'
+import rescale from './shaders/rescale.wgsl?raw'
 import storePrev from './shaders/store_prev.wgsl?raw'
 import sync from './shaders/sync.wgsl?raw'
 import syncMeasure from './shaders/sync_measure.wgsl?raw'
@@ -61,6 +62,7 @@ const SHADERS: Record<string, string> = {
   line_analyze: lineAnalyze,
   mix_b: mixB,
   present,
+  rescale,
   store_prev: storePrev,
   sync,
   sync_measure: syncMeasure,

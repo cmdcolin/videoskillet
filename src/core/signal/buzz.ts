@@ -85,7 +85,7 @@ export class BuzzOut {
   // which costs a few frames of buzz at the moment the slider first comes up
   // and nothing after that. A browser without AudioWorklet leaves this inert
   // rather than failing the render loop that called it.
-  constructor(ctx: AudioContext) {
+  constructor(ctx: AudioContext, out: AudioNode) {
     void ctx.audioWorklet.addModule(workletUrl).then(
       () => {
         if (!this.closed) {
@@ -94,7 +94,7 @@ export class BuzzOut {
             numberOfOutputs: 1,
             outputChannelCount: [1],
           })
-          this.node.connect(ctx.destination)
+          this.node.connect(out)
         }
       },
       (e: unknown) => console.warn('buzz worklet unavailable:', e),

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { normaliseAvcc, writeMp4 } from './mp4'
+import { mp4Parts, normaliseAvcc, writeMp4 } from './mp4'
 
 import type { Sample } from './mp4'
 
@@ -101,9 +101,9 @@ describe('writeMp4', () => {
 
   it('lengthens a held frame and the track with it', () => {
     const held = file([
-      sample(10, true),
-      { ...sample(10), frames: 3 },
-      sample(10),
+      { ...sample(10, true), pts: 0 },
+      { ...sample(10), pts: 1 },
+      { ...sample(10), pts: 4 },
     ])
     const mdia = find(
       kids(find(kids(find(boxes(held), 'moov')), 'trak')),
@@ -118,6 +118,86 @@ describe('writeMp4', () => {
       1, 1, 1, 3, 1, 1,
     ])
     expect(u32At(find(kids(mdia), 'mdhd').body, 16)).toBe(5) // five ticks
+  })
+
+  const videoStbl = (buf: Uint8Array) => {
+    const trak = kids(find(kids(find(boxes(buf), 'moov')), 'trak'))
+    const minf = kids(find(kids(find(trak, 'mdia')), 'minf'))
+    return kids(find(minf, 'stbl'))
+  }
+
+  // Firefox's encoder hands over I P B B in decode order for frames shown at
+  // 0 3 1 2. Decode times are the presentation times sorted and pulled back by
+  // the deepest reorder (one period here), `ctts` adds each frame's way back to
+  // its own time, and the edit list starts the movie at the first one.
+  it('orders B-frames by composition offsets and an edit list', () => {
+    const reordered = file([
+      { ...sample(10, true), pts: 0 },
+      { ...sample(10), pts: 3 },
+      { ...sample(10), pts: 1 },
+      { ...sample(10), pts: 2 },
+    ])
+    const table = videoStbl(reordered)
+    const ctts = find(table, 'ctts')
+    // pts - sorted + 1: 0-0+1, 3-1+1, 1-2+1, 2-3+1 = 1 3 0 0, so the frames
+    // are shown at 1 4 2 3 — in order, one period late.
+    expect(u32At(ctts.body, 4)).toBe(3)
+    expect([8, 12, 16, 20, 24, 28].map(i => u32At(ctts.body, i))).toEqual([
+      1, 1, 1, 3, 2, 0,
+    ])
+    const stts = find(table, 'stts')
+    expect([4, 8, 12].map(i => u32At(stts.body, i))).toEqual([1, 4, 1])
+    const trak = kids(find(kids(find(boxes(reordered), 'moov')), 'trak'))
+    const elst = find(kids(find(trak, 'edts')), 'elst')
+    expect(u32At(elst.body, 4)).toBe(1) // one edit
+    expect(u32At(elst.body, 12)).toBe(1) // starting one period in
+  })
+
+  it('writes no composition offsets or edit list for frames in order', () => {
+    const plain = file([sample(10, true), sample(10), sample(10)])
+    expect(videoStbl(plain).some(b => b.type === 'ctts')).toBe(false)
+    const trak = kids(find(kids(find(boxes(plain), 'moov')), 'trak'))
+    expect(trak.some(b => b.type === 'edts')).toBe(false)
+  })
+
+  // A live take stopped while its last frame was up keeps that frame up to
+  // the stop, which is where the sound ends too.
+  it('holds the last frame until the end it is given', () => {
+    const ended = writeMp4({
+      width: 640,
+      height: 480,
+      fps: { num: 60, den: 1 },
+      avcc: AVCC,
+      samples: [
+        { ...sample(10, true), pts: 0 },
+        { ...sample(10), pts: 1 },
+      ],
+      end: 6,
+    })
+    const stts = find(videoStbl(ended), 'stts')
+    expect([4, 8, 12, 16, 20].map(i => u32At(stts.body, i))).toEqual([
+      2, 1, 1, 1, 5,
+    ])
+  })
+
+  it('lays out the same bytes in parts as joined', () => {
+    const spec = {
+      width: 640,
+      height: 480,
+      fps: { num: 60, den: 1 },
+      avcc: AVCC,
+      samples: [sample(10, true), sample(20), sample(30)],
+    }
+    const parts = mp4Parts(spec)
+    const joined = new Uint8Array(parts.reduce((n, p) => n + p.length, 0))
+    let at = 0
+    for (const p of parts) {
+      joined.set(p, at)
+      at += p.length
+    }
+    expect(joined).toEqual(writeMp4(spec))
+    // The sample data is handed over as it came, not copied into a new array.
+    expect(parts).toContain(spec.samples[1].data)
   })
 
   // 60fps is timescale 60 / delta 1; 29.97 has to stay 30000/1001 rather than

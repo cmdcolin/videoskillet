@@ -9,6 +9,7 @@ import {
   reportTakeFailed,
 } from './takeLog'
 
+import type { FrameSink } from '../core/gpu/frameread'
 import type { InputTap } from '../core/signal/audiostate'
 import type { Recorder } from './record'
 import type { TakeNote } from './takeLog'
@@ -19,6 +20,14 @@ import type { RefObject } from 'react'
 // and the artifacts clock off the frame counter), so any other number would be
 // a file whose timing disagrees with what produced it.
 const FPS = { num: 60, den: 1 }
+
+// What a live take needs of the engine: its rendered frames.
+interface FrameSource {
+  setFrameSink: (
+    sink: FrameSink | null,
+    size: { width: number; height: number },
+  ) => void
+}
 
 // The sizes a profile's still is tried at, largest first. 5:4, which is what the
 // home page's cards are. A card shows its still about 320px wide, and a picture
@@ -53,10 +62,16 @@ const endNote = (ref: RefObject<TakeNote | null>) => {
   clearTake()
 }
 
-// Save the rendered canvas as a PNG still or a constant-framerate MP4.
+// Save the rendered canvas as a PNG still or an MP4.
 // Downstream of `present` — the same pixels the user sees — so nothing touches
 // the signal path. Recording holds the window visible (rAF at full rate) by
 // design.
+//
+// `engine` makes the take live: the engine copies each frame it renders off the
+// GPU without blocking the page, and the recorder places it by when it was
+// rendered, on the sound's clock when `audio` has a tap and the wall clock when
+// not. A second of take is a second of file, frames held across any period the
+// engine or the encoder missed. `channels` is the sound's, mono by default.
 //
 // `deliver` takes each finished file. It downloads by default; the camera page
 // keeps the file instead, because a phone saves to its photo library through
@@ -79,6 +94,8 @@ export function useCapture(
     clock?: boolean
     fps?: { num: number; den: number }
     audio?: () => InputTap | null
+    channels?: 1 | 2
+    engine?: () => FrameSource | null
   } = {},
 ) {
   const fps = opts.fps ?? FPS
@@ -86,7 +103,14 @@ export function useCapture(
   const rafRef = useRef(0)
   const noteRef = useRef<TakeNote | null>(null)
   const startRef = useRef(0)
+  // The engine a live take is attached to, and how to let it go.
+  const detachRef = useRef<(() => void) | null>(null)
   const [recording, setRecording] = useState(false)
+
+  const detach = () => {
+    detachRef.current?.()
+    detachRef.current = null
+  }
 
   const progress = (r: Recorder) => ({
     seconds: Math.round((performance.now() - startRef.current) / 1000),
@@ -115,6 +139,8 @@ export function useCapture(
       document.removeEventListener('visibilitychange', onHide)
       window.removeEventListener('pagehide', onLeave)
       cancelAnimationFrame(rafRef.current)
+      detachRef.current?.()
+      detachRef.current = null
       recRef.current?.abort()
       recRef.current = null
       endNote(noteRef)
@@ -172,6 +198,7 @@ export function useCapture(
   const stop = async () => {
     const rec = recRef.current
     cancelAnimationFrame(rafRef.current)
+    detach()
     recRef.current = null
     setRecording(false)
     if (rec === null) return
@@ -205,11 +232,14 @@ export function useCapture(
     // recording started at, which is the behaviour a take actually wants.
     const width = canvas.width
     const height = canvas.height
+    const fromEngine = opts.engine !== undefined
     startRecording({
       width,
       height,
       fps,
       audio: opts.audio?.() ?? null,
+      channels: opts.channels ?? 1,
+      live: fromEngine,
     }).then(
       rec => {
         recRef.current = rec
@@ -233,6 +263,29 @@ export function useCapture(
         }
         noteTake(noteRef.current)
         let noted = start
+        // The engine a live take is attached to. A hot update or a lost device
+        // replaces the engine mid-take, and the new one is attached on the next
+        // frame; the take holds its last frame across the gap.
+        let source: FrameSource | null = null
+        const sink: FrameSink = { frame: (f, at) => rec.place(f, at) }
+        const size = { width, height }
+        const attach = () => {
+          const next = opts.engine?.() ?? null
+          if (next === source) return
+          // An engine replaced for a lost device may not answer any more.
+          try {
+            source?.setFrameSink(null, size)
+          } catch {
+            // Nothing to let go of.
+          }
+          next?.setFrameSink(sink, size)
+          source = next
+          detachRef.current = () => {
+            source?.setFrameSink(null, size)
+            source = null
+          }
+        }
+        if (fromEngine) attach()
         const pump = () => {
           rafRef.current = requestAnimationFrame(pump)
           const live = canvasRef.current
@@ -244,7 +297,13 @@ export function useCapture(
             void stop()
             return
           }
-          if (opts.clock === true) {
+          if (fromEngine) {
+            attach()
+            if (r.full()) {
+              void stop()
+              return
+            }
+          } else if (opts.clock === true) {
             const due =
               Math.floor(
                 ((performance.now() - start) / 1000) * (fps.num / fps.den),

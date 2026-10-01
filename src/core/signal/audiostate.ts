@@ -94,6 +94,8 @@ export function hallTail(
 // ever adds and how much direct sound sits under it is `dry`'s own question.
 interface Graph {
   ctx: AudioContext
+  // Everything audible, on its way to the speakers — what a take records.
+  bus: GainNode
   analyser: AnalyserNode
   dry: GainNode
   send: DelayNode
@@ -170,18 +172,28 @@ export class AudioState {
   // shares this object's context, which a tap already made running, so a
   // recorder need not start a context of its own outside a tap.
   tap(): InputTap | null {
-    const input = this.input
+    return this.tapOf(this.input)
+  }
+
+  // What the speakers play: the clips, the reverb, the buzz and a picked file.
+  // Null until something has built the graph, which is also until anything
+  // could be heard.
+  heard(): InputTap | null {
+    return this.tapOf(this.graph?.bus ?? null)
+  }
+
+  private tapOf(src: AudioNode | null): InputTap | null {
     const g = this.graph
-    if (input === null || g === null) return null
+    if (src === null || g === null) return null
     return {
       context: g.ctx,
       listen: node => {
-        input.connect(node)
+        src.connect(node)
         return () => {
           try {
-            input.disconnect(node)
+            src.disconnect(node)
           } catch {
-            // Already gone with the input it hung off.
+            // Already gone with the source it hung off.
           }
         }
       },
@@ -197,8 +209,10 @@ export class AudioState {
       analyser.fftSize = 2048
       this.scratch = new Float32Array(analyser.fftSize)
       this.spectrum = new Float32Array(analyser.frequencyBinCount)
+      const bus = ctx.createGain()
+      bus.connect(ctx.destination)
       const dry = ctx.createGain()
-      dry.connect(ctx.destination)
+      dry.connect(bus)
       const send = ctx.createDelay()
       send.delayTime.value = TAIL_PREDELAY
       const damp = ctx.createBiquadFilter()
@@ -209,12 +223,8 @@ export class AudioState {
       convolver.buffer = this.impulse(ctx)
       const wet = ctx.createGain()
       wet.gain.value = 0
-      send
-        .connect(damp)
-        .connect(convolver)
-        .connect(wet)
-        .connect(ctx.destination)
-      this.graph = { ctx, analyser, dry, send, wet }
+      send.connect(damp).connect(convolver).connect(wet).connect(bus)
+      this.graph = { ctx, bus, analyser, dry, send, wet }
     }
     // Browsers hand back a suspended context unless creation is tied to a user
     // gesture; the enable button is one, but autoplay policies still vary, so
@@ -314,7 +324,7 @@ export class AudioState {
     const g = this.ensureGraph()
     this.releaseInput()
     const src = this.sourceFor(g, el)
-    src.connect(g.ctx.destination)
+    src.connect(g.bus)
     src.connect(g.analyser)
     this.input = src
   }
@@ -366,8 +376,9 @@ export class AudioState {
   // to leave suspended, and until it is thrown the engine never calls this at
   // all, so a session that wants no noise builds no context either.
   //
-  // BuzzOut connects to `ctx.destination` and to nothing else, deliberately.
-  // Routing it into `analyser` would put it into `data`, which FMs the very
+  // BuzzOut connects to the speakers' bus and to nothing else, deliberately.
+  // A take records the bus, which is the point; routing it into `analyser`
+  // would put it into `data`, which FMs the very
   // sound carrier the tap measures: video → audio → video, with gain.
   //
   // The `closed` guard is not belt and braces: this is the one caller that
@@ -387,7 +398,7 @@ export class AudioState {
         return
       }
       const g = this.ensureGraph()
-      this.buzz ??= new BuzzOut(g.ctx)
+      this.buzz ??= new BuzzOut(g.ctx, g.bus)
       this.buzz.push(tap, drive)
     }
   }

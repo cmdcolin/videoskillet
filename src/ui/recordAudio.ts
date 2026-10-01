@@ -3,9 +3,15 @@ import tapUrl from './tap.worklet.js?url'
 import type { InputTap } from '../core/signal/audiostate'
 import type { AudioSample, Mp4Audio } from './mp4'
 
-// A take's sound, from the tap's first block to `finish`.
+// A take's sound, from its origin to `finish`.
 export interface AudioTake {
-  // Start keeping sound. The recorder calls it with the first frame of picture.
+  context: AudioContext
+  // Where the take starts, in sample frames of the context's clock. The tap
+  // stamps every block with the frame it was processed at, so sound from before
+  // the origin is cut off at the exact sample.
+  origin: (frame: number) => void
+  // The origin at the context's current time, for a caller with no clock of
+  // its own to place it by.
   go: () => void
   // Null when nothing was kept, which leaves the take silent.
   finish: () => Promise<Mp4Audio | null>
@@ -28,17 +34,28 @@ const OPUS_PRESKIP = 312
 
 // The OpusHead the encoder may hand over carries the true pre-skip,
 // little-endian at byte 10.
-const preSkipOf = (head: Uint8Array | null): number =>
+const preSkipOf = (head: Uint8Array<ArrayBuffer> | null): number =>
   head !== null && head.length >= 12 ? head[10] | (head[11] << 8) : OPUS_PRESKIP
 
-const bytesOf = (d: AllowSharedBufferSource): Uint8Array =>
-  ArrayBuffer.isView(d)
-    ? new Uint8Array(d.buffer.slice(d.byteOffset, d.byteOffset + d.byteLength))
-    : new Uint8Array(d.slice(0))
+const bytesOf = (d: AllowSharedBufferSource): Uint8Array<ArrayBuffer> =>
+  (ArrayBuffer.isView(d)
+    ? new Uint8Array(d.buffer, d.byteOffset, d.byteLength)
+    : new Uint8Array(d)
+  ).slice()
 
-// The mic through the tap into an encoder, or null where the browser encodes
-// neither codec, which leaves the take silent rather than failing it.
-export async function startAudio(tap: InputTap): Promise<AudioTake | null> {
+// Blocks kept while the take waits for its origin. The origin is set by the
+// first frame of picture, a moment after the tap starts, so two seconds is
+// ample and bounds a take that never gets a frame.
+const EARLY_FRAMES_MAX = 2 * 48_000
+
+// The tap into an encoder, or null where the browser encodes neither codec,
+// which leaves the take silent rather than failing it. Mono for the mic, and
+// stereo for what the speakers play, where the reverb's two tails are what
+// make it wide.
+export async function startAudio(
+  tap: InputTap,
+  channels: 1 | 2 = 1,
+): Promise<AudioTake | null> {
   if (typeof AudioEncoder === 'undefined' || typeof AudioData === 'undefined')
     return null
   const ctx = tap.context
@@ -46,8 +63,8 @@ export async function startAudio(tap: InputTap): Promise<AudioTake | null> {
   const configFor = (codec: string): AudioEncoderConfig => ({
     codec,
     sampleRate: rate,
-    numberOfChannels: 1,
-    bitrate: BITRATE,
+    numberOfChannels: channels,
+    bitrate: BITRATE * channels,
   })
   let pick: (typeof CODECS)[number] | null = null
   for (const c of CODECS) {
@@ -65,7 +82,7 @@ export async function startAudio(tap: InputTap): Promise<AudioTake | null> {
   const clock = chosen.codec === 'opus' ? 48000 : rate
 
   const samples: AudioSample[] = []
-  let config: Uint8Array | null = null
+  let config: Uint8Array<ArrayBuffer> | null = null
   let failure = ''
   const encoder = new AudioEncoder({
     output: (chunk, meta) => {
@@ -90,9 +107,10 @@ export async function startAudio(tap: InputTap): Promise<AudioTake | null> {
   const node = new AudioWorkletNode(ctx, 'take-tap', {
     numberOfInputs: 1,
     numberOfOutputs: 1,
-    channelCount: 1,
+    channelCount: channels,
     channelCountMode: 'explicit',
     channelInterpretation: 'speakers',
+    processorOptions: { channels },
   })
   // Nothing pulls a node that leads nowhere, so it feeds a muted gain that
   // reaches the speakers.
@@ -101,26 +119,66 @@ export async function startAudio(tap: InputTap): Promise<AudioTake | null> {
   node.connect(mute).connect(ctx.destination)
   const unlisten = tap.listen(node)
 
-  let taken = 0
+  let start = -1
   let ended: (() => void) | null = null
-  const onBlock = (
-    e: MessageEvent<{ pcm: Float32Array<ArrayBuffer>; last: boolean }>,
+  const early: {
+    pcm: Float32Array<ArrayBuffer>
+    frames: number
+    at: number
+  }[] = []
+  let earlyFrames = 0
+  // A block is planar, one channel after another. The part of it before the
+  // origin is cut off, channel by channel.
+  const encode = (
+    pcm: Float32Array<ArrayBuffer>,
+    frames: number,
+    at: number,
   ) => {
-    const { pcm, last } = e.data
-    if (pcm.length > 0 && encoder.state === 'configured') {
-      const data = new AudioData({
-        format: 'f32-planar',
-        sampleRate: rate,
-        numberOfFrames: pcm.length,
-        numberOfChannels: 1,
-        timestamp: Math.round((taken * 1e6) / rate),
-        data: pcm,
-      })
-      encoder.encode(data)
-      data.close()
-      taken += pcm.length
+    const skip = Math.max(0, start - at)
+    const n = frames - skip
+    if (n <= 0 || encoder.state !== 'configured') return
+    let data = pcm
+    if (skip > 0) {
+      data = new Float32Array(n * channels)
+      for (let c = 0; c < channels; c++)
+        data.set(pcm.subarray(c * frames + skip, (c + 1) * frames), c * n)
+    }
+    const audio = new AudioData({
+      format: 'f32-planar',
+      sampleRate: rate,
+      numberOfFrames: n,
+      numberOfChannels: channels,
+      timestamp: Math.round(((at + skip - start) * 1e6) / rate),
+      data,
+    })
+    encoder.encode(audio)
+    audio.close()
+  }
+  const onBlock = (
+    e: MessageEvent<{
+      pcm: Float32Array<ArrayBuffer>
+      frames: number
+      at: number
+      last: boolean
+    }>,
+  ) => {
+    const { pcm, frames, at, last } = e.data
+    if (frames > 0) {
+      if (start >= 0) encode(pcm, frames, at)
+      else {
+        early.push({ pcm, frames, at })
+        earlyFrames += frames
+        while (earlyFrames > EARLY_FRAMES_MAX && early.length > 1)
+          earlyFrames -= early.shift()?.frames ?? 0
+      }
     }
     if (last) ended?.()
+  }
+  const origin = (frame: number) => {
+    if (start >= 0) return
+    start = frame
+    for (const b of early) encode(b.pcm, b.frames, b.at)
+    early.length = 0
   }
   node.port.addEventListener('message', onBlock)
   node.port.start()
@@ -134,7 +192,9 @@ export async function startAudio(tap: InputTap): Promise<AudioTake | null> {
   }
 
   return {
-    go: () => node.port.postMessage('go', []),
+    context: ctx,
+    origin,
+    go: () => origin(Math.round(ctx.currentTime * rate)),
     abort: () => {
       node.port.postMessage('stop', [])
       release()
@@ -153,7 +213,7 @@ export async function startAudio(tap: InputTap): Promise<AudioTake | null> {
       return {
         codec: chosen.codec,
         sampleRate: clock,
-        channels: 1,
+        channels,
         config: chosen.codec === 'aac' ? config : null,
         preSkip: chosen.codec === 'opus' ? preSkipOf(config) : 0,
         samples,

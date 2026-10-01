@@ -4,8 +4,10 @@
 // (react, react-dom, firebase) and this is not worth being the fourth: what an
 // export of this needs is one video track, no audio, every sample the same
 // duration, and a single chunk — which is the simplest shape the format has.
-// The general-purpose muxers are general because they carry fragmented output,
-// multiple tracks, B-frames and edit lists, none of which apply here.
+// The general-purpose muxers are general because they carry fragmented output
+// and multiple tracks, which this does without. It does carry B-frames and an
+// edit list for them: Firefox's H.264 encoder emits B-frames in both latency
+// modes, so its samples arrive in decode order.
 //
 // **Why MP4 and not WebM**, when the app has always written WebM. The point of
 // this half of the editor is "an export an NLE will conform"
@@ -25,7 +27,10 @@
 // so there is no reason to have more.
 
 // Every box is a length, a four-character type, and a payload.
-const box = (type: string, ...parts: Uint8Array[]): Uint8Array => {
+const box = (
+  type: string,
+  ...parts: Uint8Array<ArrayBuffer>[]
+): Uint8Array<ArrayBuffer> => {
   const size = parts.reduce((n, p) => n + p.length, 8)
   const out = new Uint8Array(size)
   const view = new DataView(out.buffer)
@@ -44,25 +49,27 @@ const fullBox = (
   type: string,
   version: number,
   flags: number,
-  ...parts: Uint8Array[]
-): Uint8Array =>
+  ...parts: Uint8Array<ArrayBuffer>[]
+): Uint8Array<ArrayBuffer> =>
   box(
     type,
     u8(version, (flags >> 16) & 0xff, (flags >> 8) & 0xff, flags & 0xff),
     ...parts,
   )
 
-const u8 = (...bytes: number[]): Uint8Array => Uint8Array.from(bytes)
+const u8 = (...bytes: number[]): Uint8Array<ArrayBuffer> =>
+  Uint8Array.from(bytes)
 
-const u16 = (v: number): Uint8Array => u8((v >> 8) & 0xff, v & 0xff)
+const u16 = (v: number): Uint8Array<ArrayBuffer> =>
+  u8((v >> 8) & 0xff, v & 0xff)
 
-const u32 = (v: number): Uint8Array =>
+const u32 = (v: number): Uint8Array<ArrayBuffer> =>
   u8((v >>> 24) & 0xff, (v >>> 16) & 0xff, (v >>> 8) & 0xff, v & 0xff)
 
-const str = (s: string): Uint8Array =>
+const str = (s: string): Uint8Array<ArrayBuffer> =>
   Uint8Array.from(s, c => c.charCodeAt(0) & 0xff)
 
-const join = (parts: Uint8Array[]): Uint8Array => {
+const join = (parts: Uint8Array<ArrayBuffer>[]): Uint8Array<ArrayBuffer> => {
   const out = new Uint8Array(parts.reduce((n, p) => n + p.length, 0))
   let at = 0
   for (const p of parts) {
@@ -126,15 +133,17 @@ const MATRIX = join([
 // real SPS's second byte is `profile_idc` (0x64 for the High profile
 // `record.ts` now asks for) and can never equal its own NAL header, so the two being identical is unambiguous.
 // Parameter sets as avcC lists them, each behind its two-byte length.
-const lengths = (list: { data: Uint8Array }[]) =>
+const lengths = (list: { data: Uint8Array<ArrayBuffer> }[]) =>
   list.flatMap(s => [u16(s.data.length), s.data])
 
-export function normaliseAvcc(raw: Uint8Array): Uint8Array {
+export function normaliseAvcc(
+  raw: Uint8Array<ArrayBuffer>,
+): Uint8Array<ArrayBuffer> {
   // Too short to be a record at all — hand it back and let the file fail
   // visibly rather than inventing parameter sets nothing came from.
   if (raw.length < 7) return raw
 
-  const sets: { type: number; data: Uint8Array }[] = []
+  const sets: { type: number; data: Uint8Array<ArrayBuffer> }[] = []
   let at = 6
   const take = (count: number, expect: number) => {
     for (let i = 0; i < count && at + 2 <= raw.length; i++) {
@@ -178,21 +187,22 @@ export function normaliseAvcc(raw: Uint8Array): Uint8Array {
 
 // One encoded frame, as it comes off `VideoEncoder`.
 export interface Sample {
-  data: Uint8Array
+  data: Uint8Array<ArrayBuffer>
   // Whether an editor can cut here. Every frame the encoder marked a keyframe
   // goes in `stss`; with no `stss` at all a player assumes *every* frame is a
   // sync point, which is wrong the moment the encoder emits a P-frame.
   key: boolean
-  // How many frame periods the sample stays up, 1 when absent. A recorder that
-  // falls behind the wall clock holds a frame for longer and encodes nothing
-  // new in its place.
-  frames?: number
+  // When the frame is shown, in frame periods from the start. The index when
+  // absent. Samples arrive in decode order, which differs from presentation
+  // order wherever the encoder used B-frames, and a gap between two
+  // presentation times is a frame held for longer.
+  pts?: number
 }
 
 // One encoded block of sound, as it comes off `AudioEncoder`, and how many
 // sample periods it covers.
 export interface AudioSample {
-  data: Uint8Array
+  data: Uint8Array<ArrayBuffer>
   frames: number
 }
 
@@ -201,7 +211,7 @@ export interface Mp4Audio {
   sampleRate: number
   channels: number
   // AAC's AudioSpecificConfig, which `esds` carries. Opus has none.
-  config: Uint8Array | null
+  config: Uint8Array<ArrayBuffer> | null
   // Opus's pre-skip in 48 kHz samples, which `dOps` carries: the encoder's
   // lookahead, for a player to drop off the front.
   preSkip: number
@@ -217,14 +227,20 @@ interface Mp4Spec {
   // The encoder's `decoderConfig.description` — the avcC record, which carries
   // the SPS and PPS. Without it a decoder has no parameter sets and the file is
   // unplayable; `VideoEncoder` hands it over on the first chunk's metadata.
-  avcc: Uint8Array
+  avcc: Uint8Array<ArrayBuffer>
   samples: readonly Sample[]
+  // Where the track ends, in frame periods. The last frame stays up until then;
+  // absent, it lasts one period.
+  end?: number
   audio?: Mp4Audio
 }
 
 // An MPEG-4 descriptor: a tag, a length and a body. Every one written here is
 // under 128 bytes, which is what lets the length be the single-byte form.
-const descriptor = (tag: number, ...parts: Uint8Array[]): Uint8Array => {
+const descriptor = (
+  tag: number,
+  ...parts: Uint8Array<ArrayBuffer>[]
+): Uint8Array<ArrayBuffer> => {
   const body = join(parts)
   if (body.length > 127) throw new Error(`descriptor ${tag} too long`)
   return join([u8(tag, body.length), body])
@@ -233,7 +249,7 @@ const descriptor = (tag: number, ...parts: Uint8Array[]): Uint8Array => {
 // The sound's sample entry. Both codecs share the audio entry's fixed fields
 // and differ in the box after them: `esds` wraps AAC's AudioSpecificConfig in
 // the MPEG-4 descriptors, and `dOps` states what an Opus decoder needs.
-function soundEntry(a: Mp4Audio, bitrate: number): Uint8Array {
+function soundEntry(a: Mp4Audio, bitrate: number): Uint8Array<ArrayBuffer> {
   const tail =
     a.codec === 'aac'
       ? fullBox(
@@ -280,7 +296,7 @@ function soundEntry(a: Mp4Audio, bitrate: number): Uint8Array {
 
 // A time-to-sample table, one entry per run of equal durations. AAC is one
 // run, since every block is 1024 periods; Opus varies with its frame size.
-function timeToSample(durations: readonly number[]): Uint8Array {
+function timeToSample(durations: readonly number[]): Uint8Array<ArrayBuffer> {
   const runs: [number, number][] = []
   for (const d of durations) {
     const last = runs.at(-1)
@@ -296,8 +312,45 @@ function timeToSample(durations: readonly number[]): Uint8Array {
   )
 }
 
+function compositionOffsets(
+  offsets: readonly number[],
+): Uint8Array<ArrayBuffer> {
+  const runs: [number, number][] = []
+  for (const o of offsets) {
+    const last = runs.at(-1)
+    if (last !== undefined && last[1] === o) last[0]++
+    else runs.push([1, o])
+  }
+  return fullBox(
+    'ctts',
+    0,
+    0,
+    u32(runs.length),
+    join(runs.flatMap(([count, o]) => [u32(count), u32(o)])),
+  )
+}
+
+// One edit: show the media from `mediaTime` on, for `duration` movie ticks.
+const editList = (duration: number, mediaTime: number) =>
+  box(
+    'edts',
+    fullBox(
+      'elst',
+      0,
+      0,
+      u32(1),
+      u32(duration),
+      u32(mediaTime),
+      u16(1),
+      u16(0),
+    ),
+  )
+
 // A track's samples as one chunk at `offset` in the file.
-const oneChunk = (sizes: readonly number[], offset: number): Uint8Array[] => [
+const oneChunk = (
+  sizes: readonly number[],
+  offset: number,
+): Uint8Array<ArrayBuffer>[] => [
   fullBox('stsc', 0, 0, u32(1), u32(1), u32(sizes.length), u32(1)),
   fullBox('stsz', 0, 0, u32(0), u32(sizes.length), join(sizes.map(u32))),
   fullBox('stco', 0, 0, u32(1), u32(offset)),
@@ -310,7 +363,7 @@ function soundTrak(
   a: Mp4Audio,
   offset: number,
   movieDuration: number,
-): Uint8Array {
+): Uint8Array<ArrayBuffer> {
   const frames = a.samples.reduce((n, s) => n + s.frames, 0)
   const bytes = a.samples.reduce((n, s) => n + s.data.length, 0)
   const bitrate =
@@ -384,7 +437,13 @@ function soundTrak(
 // timing, and it is exact.
 const MOVIE_TIMESCALE = 1000
 
-export function writeMp4(spec: Mp4Spec): Uint8Array {
+export function writeMp4(spec: Mp4Spec): Uint8Array<ArrayBuffer> {
+  return join(mp4Parts(spec))
+}
+
+// The file as the pieces it is laid out from, sample data untouched, so a Blob
+// can be built without first copying the whole take into one array.
+export function mp4Parts(spec: Mp4Spec): Uint8Array<ArrayBuffer>[] {
   const { width, height, fps, samples } = spec
   // The track's timescale *is* the frame rate's numerator, so one frame is
   // exactly `den` ticks and there is no rounding anywhere. 60fps becomes
@@ -393,8 +452,19 @@ export function writeMp4(spec: Mp4Spec): Uint8Array {
   // recognises on sight.
   const timescale = fps.num
   const delta = fps.den
-  const durations = samples.map(s => (s.frames ?? 1) * delta)
-  const trackDuration = durations.reduce((t, d) => t + d, 0)
+  // Decode times are the presentation times sorted, pulled back by the
+  // deepest reorder so that no composition offset is negative. The edit list
+  // then starts the presentation where that pull-back put the first frame.
+  const pts = samples.map((s, i) => (s.pts ?? i) * delta)
+  const sorted = pts.toSorted((a, b) => a - b)
+  let shift = 0
+  for (let i = 0; i < pts.length; i++)
+    shift = Math.max(shift, sorted[i] - pts[i])
+  const last = sorted.at(-1) ?? 0
+  const end = Math.max(last + delta, (spec.end ?? 0) * delta)
+  const durations = sorted.map((v, i) => (sorted[i + 1] ?? end) - v)
+  const offsets = pts.map((p, i) => p - sorted[i] + shift)
+  const trackDuration = end - (sorted[0] ?? 0)
   const videoDuration = Math.round(
     (trackDuration / timescale) * MOVIE_TIMESCALE,
   )
@@ -410,10 +480,10 @@ export function writeMp4(spec: Mp4Spec): Uint8Array {
 
   // The picture's samples, then the sound's, each track one chunk.
   const videoBytes = samples.reduce((t, s) => t + s.data.length, 0)
-  const mdatPayload = join([
+  const payload = [
     ...samples.map(s => s.data),
     ...(audio?.samples.map(s => s.data) ?? []),
-  ])
+  ]
   const ftyp = box(
     'ftyp',
     str('isom'),
@@ -426,7 +496,10 @@ export function writeMp4(spec: Mp4Spec): Uint8Array {
   // Written before `moov` so the offsets in `stco` can be computed without
   // laying the movie box out twice: everything before the samples is `ftyp`
   // plus this box's own 8-byte header.
-  const mdat = box('mdat', mdatPayload)
+  const mdatHead = join([
+    u32(payload.reduce((t, p) => t + p.length, 8)),
+    str('mdat'),
+  ])
   const sampleStart = ftyp.length + 8
 
   const avc1 = box(
@@ -460,9 +533,10 @@ export function writeMp4(spec: Mp4Spec): Uint8Array {
   const stbl = box(
     'stbl',
     fullBox('stsd', 0, 0, u32(1), avc1),
-    // One entry for every sample, which is what makes the file constant, as
-    // long as no frame was held.
+    // One entry for every run of equal durations, so a take with no frame held
+    // is one entry, which is what makes the file constant.
     timeToSample(durations),
+    ...(offsets.some(o => o !== 0) ? [compositionOffsets(offsets)] : []),
     // Which frames an editor may cut on. Omitted entirely when every frame is
     // one — that is what the format's absence means, and writing it out would
     // be a table the size of the movie saying nothing.
@@ -531,6 +605,7 @@ export function writeMp4(spec: Mp4Spec): Uint8Array {
         u32(width * 0x10000),
         u32(height * 0x10000),
       ),
+      ...(shift > 0 ? [editList(videoDuration, shift)] : []),
       box(
         'mdia',
         fullBox(
@@ -573,5 +648,5 @@ export function writeMp4(spec: Mp4Spec): Uint8Array {
       : [soundTrak(audio, sampleStart + videoBytes, audioDuration)]),
   )
 
-  return join([ftyp, mdat, moov])
+  return [ftyp, mdatHead, ...payload, moov]
 }
