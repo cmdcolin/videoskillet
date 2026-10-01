@@ -11,6 +11,11 @@
 // `timestamp: i * 1e6 / fps` and the muxer writes one `stts` entry, so the file
 // is constant by construction and indifferent to how long any frame took.
 //
+// **That is `frame`, the offline render's way in.** A live take arrives through
+// `place` instead, stamped by when each frame was rendered and snapped to the
+// frame grid, because a take with sound has to keep real time: see
+// docs/adr/0013.
+//
 // **Firefox reads a WebGPU canvas here, which it will not do elsewhere.** The
 // note in EDITOR.md — blank `toBlob`, no frames from `captureStream()` — is
 // still true of those two APIs and is why the old path mirrored through a 2D
@@ -108,8 +113,9 @@ const MAX_QUEUE = 3
 const MAX_BYTES = 3_900_000_000
 
 // How long a live take with sound reads the audio clock before its first frame,
-// so the average the frame is placed by has something behind it.
-const CLOCK_WARMUP_MS = 300
+// so the average the frame is placed by has something behind it: about seven
+// of Firefox's refreshes. The take starts this much after the click.
+const CLOCK_WARMUP_MS = 100
 
 interface RecorderSpec {
   width: number

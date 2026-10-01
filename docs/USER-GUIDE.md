@@ -171,9 +171,11 @@ against an IRE graticule, where sync depth, setup, AGC pumping and a burst off
 
 ## Getting it out
 
-`s` saves a still and `r` records the picture as it plays. The recording is an
-H.264 MP4 written at a constant 60, from whatever frames the tab managed, so a
-run that dropped frames comes back playing fast.
+`s` saves a still and `r` records the picture as it plays, with what the
+speakers play: the clip's own sound when **♪** is set to video, the reverb, and
+the buzz, in stereo. The recording is an H.264 MP4 on a 60 fps grid that lasts
+as long as the take did. Where the tab rendered no new frame, the one before it
+stays up longer.
 
 **⎙ render** in the strip tray steps the engine on a virtual clock, so the
 timing in the file is the simulation's and an editor imports it cleanly. **●

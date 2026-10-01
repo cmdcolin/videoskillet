@@ -43,8 +43,8 @@ pnpm harnesses 5199                    # every browser check, one line each
 pnpm harnesses 5199 --skip poolcheck   # …without the live one
 ```
 
-Thirteen harnesses, six to nine minutes — the spread is other work on the box,
-and the GPU-heavy arms are what stretch. Start here, because **none of the
+Fourteen harnesses, eight to eleven minutes — the spread is other work on the
+box, and the GPU-heavy arms are what stretch. Start here, because **none of the
 harnesses below runs in CI**: the workflow does lint, format, the compiler gate,
 typecheck, the unit suite and the build, and every browser check needs Firefox
 Nightly with WebGPU, which the runner has not got. So a harness can stop working
@@ -187,6 +187,7 @@ downscale every third frame.
 
 ```
 node scripts/reccheck.mjs [port]     # the encoder and the muxer
+node scripts/rectakecheck.mjs [port] # a live take: its time, its sound, its cost
 node scripts/clockcheck.mjs [port]   # time counted in frames
 node scripts/rendercheck.mjs [port]  # a whole take, twice
 node scripts/enccheck.mjs            # what the encoder costs — a measurement

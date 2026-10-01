@@ -648,6 +648,11 @@ per frame (`ui/record.ts`) and an MP4 muxer written for the one shape this needs
 ffprobe reports `r_frame_rate == avg_frame_rate == 60/1`, which is what
 constant-framerate _is_ to everything downstream.
 
+A live take in the main app is placed by time instead, on the sound's clock or
+the wall clock, with its frames copied off the GPU, so it keeps real time and
+its sound. [`adr/0013`](adr/0013-a-live-take-runs-on-the-wall-clock.md) has why,
+and what it costs a take's constant framerate.
+
 `ui/render.ts` and `Engine.pauseLoop`/`resumeLoop` own the loop: `renderTake`
 stops it, steps the engine, and hands each frame straight to the encoder, so a
 take renders as fast as the GPU will go and a slow frame costs the render wall
@@ -658,11 +663,14 @@ those land before it.
 
 Three things measurement corrected, and three browser faults:
 
-- **No `copyTextureToBuffer` and no offscreen target.**
-  `new VideoFrame(webgpuCanvas)` reads the canvas directly and comes back BGRA
-  and full of picture, so the mirror-through-a-2D-canvas hack is gone from the
-  recording path. The blank `toBlob` and the silent `captureStream()` are real
-  and still true; the _still_ grab still needs the mirror.
+- **No offscreen target for the render.** `new VideoFrame(webgpuCanvas)` reads
+  the canvas directly and comes back BGRA and full of picture, so the
+  mirror-through-a-2D-canvas hack is gone from the recording path. The blank
+  `toBlob` and the silent `captureStream()` are real and still true; the _still_
+  grab still needs the mirror. That read is synchronous, though, and costs
+  Firefox 16-22 ms per frame at a full-window canvas, which a render stepping on
+  its own clock can afford and a live take cannot: a live take copies with
+  `copyTextureToBuffer` into a mapped pool (`gpu/frameread.ts`).
 - **This did not have to be Chrome-only.** Nightly has `VideoEncoder` and
   reports vp8, vp9, H.264 and AV1 all supported.
 - **MP4 rather than WebM was forced.** Resolve does not import WebM at all and

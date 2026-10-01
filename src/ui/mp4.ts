@@ -20,7 +20,9 @@
 // each `delta` long". There is no per-sample timing to drift, so an editor
 // reads one frame rate off the header and conforms to it — which is exactly
 // what `MediaRecorder` could not do, since it timestamps by wall clock and
-// writes whatever the tab managed.
+// writes whatever the tab managed. A live take that held a frame writes it as
+// one longer sample, still a whole number of frames, and is constant-framerate
+// everywhere else (docs/adr/0013).
 //
 // Layout is `ftyp` / `mdat` / `moov`, samples in a single chunk. One chunk is
 // what collapses `stsc` and `stco` to one entry each, and nothing here streams,

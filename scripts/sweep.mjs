@@ -76,6 +76,7 @@ const HARNESSES = [
   { name: 'clockcheck', args: [port] },
   { name: 'rendercheck', args: [port] },
   { name: 'reccheck', args: [port] },
+  { name: 'rectakecheck', args: [port] },
   { name: 'cuecheck', args: [port] },
   { name: 'sourcecheck', args: [`${origin}/app/`] },
   { name: 'composecheck', args: [`${origin}/app/`] },

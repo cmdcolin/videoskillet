@@ -7,27 +7,36 @@ extremely fast.
 
 ## Status
 
-Nothing has landed. The spike lives in two places:
+The feature is built and tested in Firefox Nightly. It follows the recommended
+design below, steps 1-7, 9 and 10, and
+[ADR 0013](../../docs/adr/0013-a-live-take-runs-on-the-wall-clock.md) records
+the timing decision. `scripts/rectakecheck.mjs` checks a silent take and a take
+with sound through the app's own record key, and passes at 1280x800 and
+1920x1080 on the dev box: renders per second unchanged while recording, file
+length within 0.2 s of the take, stereo sound within 0.1 s of the picture, and a
+sync median of 7-25 ms across runs.
 
-- `agent-docs/handoffs/record-clip-audio.spike.patch`, a diff against `1e4dd29`.
-  It applies cleanly there and nowhere later. To run it:
-  `git worktree add --detach ../vs-spike 1e4dd29`, then `git apply` the patch
-  inside that worktree.
-- The local branch `spike/record-clip-audio` on the Linux box holds the same two
-  commits.
+Still open, in the order they matter:
 
-The spike is throwaway. `src/app.tsx` reads the URL switches `rectake`,
-`recclock`, `recpool` and `recq` and puts `__audio`, `__capture`, `__rec` and
-`__take` on `window` for the harness. `record.ts` logs `SPIKE` lines.
+1. **Chrome**, on the MacBook: AAC priming (bug 5 below), whether
+   `outputLatency` there moves the sync median, and `rectakecheck.mjs` itself,
+   which launches Firefox only.
+2. **Editors and players on a take with held frames**: see _Why live takes leave
+   strict constant framerate_.
+3. **The recording-size setting** (design step 8). Takes record the canvas at
+   its size when the take starts, which is the default the owner chose.
+4. **The camera page** still reads its canvas per frame. ADR 0013 names moving
+   it onto the engine's frame sink.
+5. **Bluetooth output**: a large `outputLatency` should subtract cleanly.
 
-Two commits landed on `main` during the spike and overlap it. `a90ecfb` gives
-the recorder `busy()`/`hold()`, a `MAX_QUEUE` of 3 and per-sample `frames`
-durations in the muxer. `be1d298` adds take logging (`takeLog.ts`). The real
-implementation starts from `main` and reuses both.
+The spike stays for reference as
+`agent-docs/handoffs/record-clip-audio.spike.patch`, a diff against `1e4dd29`,
+and on the local branch `spike/record-clip-audio`. Its harnesses
+(`spike-take.mjs`, `spike-avsync.mjs`) produced the measurements below.
 
-## What the main app records today
+## What the main app recorded before
 
-`src/app.tsx` calls `useCapture` with no `audio`, so every main-app take is
+`src/app.tsx` called `useCapture` with no `audio`, so every main-app take was
 silent. The camera page passes `audioState.tap()`, which carries the microphone
 only. `AudioState.tap()` exposes `input` (mic, screen share, picked file). A
 clip's sound travels through `routeMedia` into `dry`, the reverb send and the

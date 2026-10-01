@@ -31,6 +31,9 @@ public/reel/*.mp4
 # a file a git history keeps every version of forever
 public/demos/*.mp4
 
+# the flash-and-click clip scripts/rectakecheck.mjs generates and records
+public/check/
+
 # The offline renderer bundles the engine to run it without a bundler; the
 # bundle is a build product of src/ and is rebuilt by `pnpm render`.
 scripts/render/build/
