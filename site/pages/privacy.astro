@@ -6,12 +6,12 @@ import css from '../styles/landing.css?raw'
 
 const NAME = 'videoskillet'
 const ANALYTICS_EXTRA =
-  'When a recording fails or crashes the page, we also send Google Analytics a short report: the device’s model and memory, the recording’s size, frame rate and encoder, how far it got, and any error message.'
+  'When a recording fails or crashes the page, we also send a short report to Google Analytics and to our Firebase database, which emails it to us: the device’s model, memory and browser, the recording’s size, frame rate and encoder, how far it got, and any error message.'
 ---
 
 <Page
   title="Privacy — videoskillet"
-  description="videoskillet uses Google Analytics to count visits and hear about failed recordings, and Firebase to store your saved looks and any ratings you give. Nothing else."
+  description="videoskillet uses Google Analytics to count visits, Firebase to store your saved looks and any ratings you give, and both to hear about failed recordings. Nothing else."
   css={css}
   canonical={`${ORIGIN}privacy/`}
   account={false}

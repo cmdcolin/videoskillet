@@ -746,4 +746,67 @@ describe.skipIf(EMULATOR === undefined)('firestore.rules', () => {
       }
     })
   })
+
+  describe('takeReports', () => {
+    const report = (over: object = {}) => ({
+      kind: 'lost',
+      version: '2.6.0',
+      browser: 'Mozilla/5.0 (Linux; Android 14; K) Chrome/141',
+      page: '/cam/',
+      width: 822,
+      height: 1096,
+      fps: 30,
+      codec: 'avc1.64001f',
+      hardware: 'no',
+      seconds: 7,
+      frames: 210,
+      held: 40,
+      deepest: 3,
+      stage: 'recording',
+      hidden: false,
+      model: 'XQ-DQ54',
+      memory: 8,
+      sat: serverTimestamp(),
+      ...over,
+    })
+
+    it('takes a report from a visitor who never signed in', async () => {
+      await assertSucceeds(asAnon().collection('takeReports').add(report()))
+      await assertSucceeds(
+        asAnon().collection('takeReports').add({
+          kind: 'failed',
+          version: '2.6.0',
+          browser: 'x',
+          message: 'could not start',
+          sat: serverTimestamp(),
+        }),
+      )
+    })
+
+    it('refuses a report with extra, oversized or mistyped fields', async () => {
+      const add = (over: object) =>
+        assertFails(asAnon().collection('takeReports').add(report(over)))
+      await add({ extra: 1 })
+      await add({ kind: 'other' })
+      await add({ message: 'x'.repeat(101) })
+      await add({ browser: 'x'.repeat(201) })
+      await add({ frames: '210' })
+      await add({ hidden: 'no' })
+      await add({ sat: 1_700_000_000_000 })
+    })
+
+    it('lets nobody read, change or list a report', async () => {
+      await env.withSecurityRulesDisabled(async ctx => {
+        await ctx
+          .firestore()
+          .doc('takeReports/one')
+          .set(report({ sat: 1 }))
+      })
+      await assertFails(asAnon().doc('takeReports/one').get())
+      await assertFails(asOwner().doc('takeReports/one').get())
+      await assertFails(asOwner().collection('takeReports').get())
+      await assertFails(asAnon().doc('takeReports/one').update({ held: 0 }))
+      await assertFails(asAnon().doc('takeReports/one').delete())
+    })
+  })
 })

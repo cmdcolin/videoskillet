@@ -75,7 +75,8 @@
     "jsr:check": "node scripts/jsrpack.mjs && cd jsr && deno publish --dry-run --allow-dirty",
     "jsr:publish": "node scripts/jsrpack.mjs && cd jsr && deno publish --allow-dirty",
     "firebase-deploy": "firebase deploy --only firestore:rules",
-    "test:rules": "firebase emulators:exec --only firestore --project ntscjs-rules-test \"vitest run firestoreRules\"",
+    "firebase-deploy:functions": "firebase deploy --only functions",
+    "test:rules": "firebase emulators:exec --only firestore --project ntscjs-rules-test \"vitest run firestoreRules && vitest run --root functions\"",
     "docs": "node scripts/diagrams.mjs",
     "docs:check": "node scripts/diagrams.mjs --check",
     "prepare": "husky"

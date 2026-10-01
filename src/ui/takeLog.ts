@@ -1,14 +1,49 @@
+import { analyticsAnswer } from '../analytics'
+import { version } from '../version'
+import { putTakeReport } from './cloud'
 import { readRecord, readStored, removeStored, writeJSON } from './storage'
 
 // A recording in progress keeps a note of how far it has got, and the next
-// page load reports a note it finds to Google Analytics. A crashed tab runs no
-// code, so a note left behind is the only trace of a take that killed it. Both
-// reports go out only where the visitor said yes to analytics, which is the
-// only case `window.gtag` exists; /privacy/ says what they carry.
+// page load reports a note it finds to Google Analytics and to the
+// `takeReports` collection, which functions/ emails out hourly. A crashed tab
+// runs no code, so a note left behind is the only trace of a take that killed
+// it. Both reports go out only where the visitor said yes to analytics;
+// /privacy/ says what they carry.
 const KEY = 'videoskillet_take'
 
-// GA drops a parameter value longer than this.
-const MAX_VALUE = 100
+// The longest each string field may be, which firestore.rules enforces. GA
+// drops a value over 100.
+const STRINGS: Record<string, number> = {
+  page: 64,
+  codec: 32,
+  hardware: 8,
+  stage: 16,
+  message: 100,
+  model: 64,
+}
+const NUMBERS = new Set([
+  'width',
+  'height',
+  'fps',
+  'seconds',
+  'frames',
+  'held',
+  'deepest',
+  'memory',
+])
+
+// Only the fields the rule admits, at the types and lengths it admits. A note
+// is read back from storage, where an older build may have left anything.
+function fields(params: Record<string, unknown>) {
+  const out: Record<string, string | number | boolean> = {}
+  for (const [k, v] of Object.entries(params)) {
+    if (k in STRINGS && typeof v === 'string') out[k] = v.slice(0, STRINGS[k])
+    else if (NUMBERS.has(k) && typeof v === 'number' && Number.isFinite(v))
+      out[k] = v
+    else if (k === 'hidden' && typeof v === 'boolean') out[k] = v
+  }
+  return out
+}
 
 export interface TakeNote {
   page: string
@@ -54,10 +89,18 @@ async function device(): Promise<Record<string, string | number>> {
   }
 }
 
-function send(event: string, params: Record<string, unknown>) {
-  const gtag = window.gtag
-  if (gtag === undefined) return
-  void device().then(d => gtag('event', event, { ...params, ...d }))
+function send(kind: 'lost' | 'failed', params: Record<string, unknown>) {
+  if (analyticsAnswer() !== 'yes') return
+  void device().then(d => {
+    const report = fields({ ...params, ...d })
+    window.gtag?.('event', `take_${kind}`, report)
+    void putTakeReport({
+      kind,
+      version,
+      browser: navigator.userAgent.slice(0, 200),
+      ...report,
+    })
+  })
 }
 
 // Reports a note an earlier page left, and clears it either way.
@@ -65,9 +108,9 @@ export function reportLostTake() {
   if (readStored(KEY) === null) return
   const note = readRecord<Partial<TakeNote>>(KEY, {})
   clearTake()
-  send('take_lost', note)
+  send('lost', note)
 }
 
 export function reportTakeFailed(message: string, note: TakeNote | null) {
-  send('take_failed', { ...note, message: message.slice(0, MAX_VALUE) })
+  send('failed', { ...note, message })
 }

@@ -512,3 +512,22 @@ export async function putRatings(
   }
   return sent
 }
+
+// --- reports of recordings that failed (src/ui/takeLog.ts) ---
+
+// One report, stamped with the server's clock as the rule requires. Swallowed
+// on failure: the report describes a take that is already lost, and nothing
+// waits on it.
+export async function putTakeReport(
+  report: Record<string, string | number | boolean>,
+): Promise<void> {
+  try {
+    const { db, fs } = await loadSdk()
+    await fs.addDoc(fs.collection(db, 'takeReports'), {
+      ...report,
+      sat: fs.serverTimestamp(),
+    })
+  } catch {
+    // Offline, or a field the rule refused.
+  }
+}

@@ -75,6 +75,8 @@ jobs:
         with:
           path: ~/.cache/firebase/emulators
           key: firebase-emulators-${{ hashFiles('pnpm-lock.yaml') }}
+      # The digest function's tests run here too, on its own dependencies.
+      - run: npm ci --prefix functions
       - run: pnpm test:rules
 
   # The rules were deployed by hand, so a guard the emulator arm above had

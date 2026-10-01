@@ -1,5 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+const putTakeReport = vi.hoisted(() => vi.fn())
+vi.mock('./cloud', () => ({ putTakeReport }))
+
 import {
   clearTake,
   noteTake,
@@ -31,7 +34,9 @@ describe('takeLog', () => {
 
   beforeEach(() => {
     gtag.mockReset()
+    putTakeReport.mockReset()
     vi.stubGlobal('window', { gtag })
+    localStorage.setItem('videoskillet_analytics', 'yes')
   })
   afterEach(() => {
     vi.unstubAllGlobals()
@@ -54,6 +59,23 @@ describe('takeLog', () => {
       'take_lost',
       expect.objectContaining({ codec: 'avc1.64001f', frames: 210 }),
     )
+    expect(putTakeReport).toHaveBeenCalledTimes(1)
+    expect(putTakeReport).toHaveBeenCalledWith(
+      expect.objectContaining({ kind: 'lost', frames: 210, hidden: false }),
+    )
+  })
+
+  it('sends only the fields the rule admits', async () => {
+    localStorage.setItem(
+      'videoskillet_take',
+      JSON.stringify({ ...NOTE, extra: 1, frames: 'many' }),
+    )
+    reportLostTake()
+    await settle()
+    const [sent] = putTakeReport.mock.calls[0]
+    expect(sent).not.toHaveProperty('extra')
+    expect(sent).not.toHaveProperty('frames')
+    expect(sent.codec).toBe('avc1.64001f')
   })
 
   it('forgets a take that finished', async () => {
@@ -65,13 +87,14 @@ describe('takeLog', () => {
   })
 
   it('clears a lost take without analytics, and sends nothing', async () => {
-    vi.stubGlobal('window', {})
+    localStorage.setItem('videoskillet_analytics', 'no')
     noteTake(NOTE)
     reportLostTake()
-    vi.stubGlobal('window', { gtag })
+    localStorage.setItem('videoskillet_analytics', 'yes')
     reportLostTake()
     await settle()
     expect(gtag).not.toHaveBeenCalled()
+    expect(putTakeReport).not.toHaveBeenCalled()
   })
 
   it('cuts a failure message to what GA keeps', async () => {
