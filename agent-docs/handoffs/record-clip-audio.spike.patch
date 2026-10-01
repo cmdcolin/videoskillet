@@ -1,0 +1,2081 @@
+diff --git a/scripts/spike-avsync.mjs b/scripts/spike-avsync.mjs
+new file mode 100644
+index 0000000..57fbaa8
+--- /dev/null
++++ b/scripts/spike-avsync.mjs
+@@ -0,0 +1,113 @@
++// Spike: find the sync clip's flashes and clicks in a take and report the
++// offset between them.
++//   node scripts/spike-avsync.mjs take.mp4
++import { execFileSync } from 'node:child_process'
++
++const file = process.argv[2]
++const probe = execFileSync('ffprobe', [
++  '-v', 'error', '-show_entries',
++  'stream=codec_type,codec_name,sample_rate,channels,duration,nb_frames,r_frame_rate,avg_frame_rate:stream_tags=:format=duration',
++  '-of', 'json', file,
++]).toString()
++const info = JSON.parse(probe)
++const ptsRaw = execFileSync('ffprobe', [
++  '-v', 'error', '-select_streams', 'v:0', '-show_entries', 'frame=pts_time', '-of', 'csv=p=0', file,
++], { maxBuffer: 1 << 28 }).toString().trim().split('\n').map(Number)
++
++const W = 16, H = 12
++const raw = execFileSync('ffmpeg', [
++  '-v', 'error', '-i', file, '-map', '0:v:0', '-vsync', 'passthrough',
++  '-vf', `scale=${W}:${H},format=gray`, '-f', 'rawvideo', '-',
++], { maxBuffer: 1 << 30 })
++const n = Math.floor(raw.length / (W * H))
++const means = []
++for (let i = 0; i < n; i++) {
++  let s = 0
++  for (let j = 0; j < W * H; j++) s += raw[i * W * H + j]
++  means.push(s / (W * H))
++}
++const sorted = [...means].sort((a, b) => a - b)
++const lo = sorted[Math.floor(n * 0.1)], hi = sorted[Math.floor(n * 0.995)]
++const thr = lo + (hi - lo) * 0.5
++// Presentation order: ffprobe lists decoded frames in output order already.
++const flashes = []
++const darkBefore = []
++for (let i = 1; i < n; i++)
++  if (means[i] > thr && means[i - 1] <= thr) {
++    flashes.push(ptsRaw[i])
++    darkBefore.push(ptsRaw[i - 1])
++  }
++
++const hasAudio = info.streams.some(s => s.codec_type === 'audio')
++let clicks = []
++if (hasAudio) {
++  const RATE = 48000
++  const pcm = execFileSync('ffmpeg', [
++    '-v', 'error', '-i', file, '-map', '0:a:0', '-ac', '1', '-ar', String(RATE), '-f', 'f32le', '-',
++  ], { maxBuffer: 1 << 30 })
++  const a = new Float32Array(pcm.buffer, pcm.byteOffset, pcm.length / 4)
++  let peak = 0
++  for (const v of a) peak = Math.max(peak, Math.abs(v))
++  const at = peak * 0.3
++  let quietUntil = 0
++  for (let i = 0; i < a.length; i++) {
++    if (Math.abs(a[i]) > at && i >= quietUntil) {
++      clicks.push(i / RATE)
++      quietUntil = i + RATE * 0.3
++    }
++  }
++}
++
++const pairs = []
++const bounds = []
++for (const c of clicks) {
++  let bi = -1
++  for (let i = 0; i < flashes.length; i++)
++    if (bi < 0 || Math.abs(flashes[i] - c) < Math.abs(flashes[bi] - c)) bi = i
++  if (bi >= 0 && Math.abs(flashes[bi] - c) < 0.45) {
++    pairs.push({ t: flashes[bi], off: (c - flashes[bi]) * 1000 })
++    // The onset lies in (darkBefore, flash], so the offset lies in
++    // [c - flash, c - darkBefore).
++    bounds.push({ t: c, lo: (c - flashes[bi]) * 1000, hi: (c - darkBefore[bi]) * 1000 })
++  }
++}
++const half = arr => arr.slice(0, Math.max(1, arr.length >> 1))
++const meet = bs => ({
++  lo: +Math.max(...bs.map(b => b.lo)).toFixed(1),
++  hi: +Math.min(...bs.map(b => b.hi)).toFixed(1),
++})
++const offs = pairs.map(p => p.off)
++const mean = offs.reduce((s, v) => s + v, 0) / (offs.length || 1)
++let slope = 0
++if (pairs.length > 2) {
++  const mt = pairs.reduce((s, p) => s + p.t, 0) / pairs.length
++  let num = 0, den = 0
++  for (const p of pairs) { num += (p.t - mt) * (p.off - mean); den += (p.t - mt) ** 2 }
++  slope = num / den
++}
++const gaps = new Map()
++for (let i = 1; i < ptsRaw.length; i++) {
++  const g = Math.round((ptsRaw[i] - ptsRaw[i - 1]) * 1e5) / 1e2
++  gaps.set(g, (gaps.get(g) ?? 0) + 1)
++}
++console.log(JSON.stringify({
++  streams: info.streams.map(s => `${s.codec_type}:${s.codec_name}${s.sample_rate ? '@' + s.sample_rate + 'x' + s.channels : ''} dur=${s.duration} n=${s.nb_frames ?? ''} r=${s.r_frame_rate} avg=${s.avg_frame_rate}`),
++  frames: n, flashes: flashes.length, clicks: clicks.length, pairs: pairs.length,
++  offsetMs: { mean: +mean.toFixed(2), min: +Math.min(...offs).toFixed(2), max: +Math.max(...offs).toFixed(2), first: offs.slice(0, 3).map(v => +v.toFixed(1)), last: offs.slice(-3).map(v => +v.toFixed(1)) },
++  driftMsPerMin: +(slope * 60).toFixed(2),
++  mid: (() => {
++    const m = bounds.map(b => (b.lo + b.hi) / 2).sort((a, b) => a - b)
++    const q = f => +m[Math.min(m.length - 1, Math.floor(m.length * f))].toFixed(1)
++    return m.length ? { p10: q(0.1), p50: q(0.5), p90: q(0.9) } : null
++  })(),
++  midFirstVsLast: (() => {
++    const m = bounds.map(b => (b.lo + b.hi) / 2)
++    const k = Math.max(1, Math.floor(m.length / 4))
++    const med = a => [...a].sort((x, y) => x - y)[a.length >> 1]
++    return m.length ? [+med(m.slice(0, k)).toFixed(1), +med(m.slice(-k)).toFixed(1)] : null
++  })(),
++  bound: bounds.length ? meet(bounds) : null,
++  boundFirstHalf: bounds.length ? meet(half(bounds)) : null,
++  boundSecondHalf: bounds.length ? meet(bounds.slice(bounds.length >> 1)) : null,
++  frameGapsMs: Object.fromEntries([...gaps.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6)),
++}))
+diff --git a/scripts/spike-encoder.mjs b/scripts/spike-encoder.mjs
+new file mode 100644
+index 0000000..969ee3c
+--- /dev/null
++++ b/scripts/spike-encoder.mjs
+@@ -0,0 +1,110 @@
++// Spike: raw H.264 encoder throughput in Firefox, per latencyMode and size,
++// and whether its output reorders frames (B-frames).
++//   node scripts/spike-encoder.mjs [port]
++import puppeteer from 'puppeteer-core'
++
++import { FIREFOX } from './browser.mjs'
++import { appUp } from './until.mjs'
++
++import process from 'node:process'
++
++const port = process.argv[2] ?? '5311'
++const browser = await puppeteer.launch({
++  browser: 'firefox',
++  executablePath: FIREFOX,
++  headless: false,
++  defaultViewport: null,
++  args: ['--width=1920', '--height=1080'],
++  extraPrefsFirefox: {
++    'dom.webgpu.enabled': true,
++    'gfx.webgpu.ignore-blocklist': true,
++  },
++})
++try {
++  const page = (await browser.pages())[0] ?? (await browser.newPage())
++  await page.goto(`http://localhost:${port}/app/?gpubudget=ignore`, {
++    waitUntil: 'domcontentloaded',
++  })
++  await appUp(page, 20000)
++  await page.bringToFront()
++  await new Promise(r => setTimeout(r, 3000))
++  const out = await page.evaluate(async () => {
++    const cv = document.querySelector('canvas')
++    const { candidatesFor } = await import('/src/ui/record.ts')
++    // A handful of real frames, so the encoder sees the app's noise.
++    const src = []
++    for (let i = 0; i < 8; i++) {
++      await new Promise(r => requestAnimationFrame(r))
++      src.push(new VideoFrame(cv, { timestamp: 0 }))
++    }
++    const sizes = [
++      [cv.width - (cv.width % 2), cv.height - (cv.height % 2)],
++      [754, 480],
++      [1280, 720],
++    ]
++    const res = []
++    for (const [w, h] of sizes) {
++      for (const mode of ['quality', 'realtime']) {
++        const bitrate = Math.min(60e6, Math.max(16e6, w * h * 60 * 0.4))
++        let codec = ''
++        for (const c of candidatesFor(w, h)) {
++          const cfg = { codec: c, width: w, height: h, bitrate, framerate: 60, avc: { format: 'avc' }, latencyMode: mode }
++          if ((await VideoEncoder.isConfigSupported(cfg)).supported) {
++            codec = c
++            break
++          }
++        }
++        const ts = []
++        let bytes = 0
++        const enc = new VideoEncoder({
++          output: c => {
++            ts.push(c.timestamp)
++            bytes += c.byteLength
++          },
++          error: e => console.log('enc error', String(e)),
++        })
++        enc.configure({ codec, width: w, height: h, bitrate, framerate: 60, avc: { format: 'avc' }, latencyMode: mode })
++        const N = 180
++        const t0 = performance.now()
++        let maxQ = 0
++        const encodeMs = []
++        for (let i = 0; i < N; i++) {
++          const f = new VideoFrame(src[i % src.length], {
++            timestamp: Math.round((i * 1e6) / 60),
++            visibleRect: { x: 0, y: 0, width: w, height: h },
++          })
++          const a = performance.now()
++          enc.encode(f, { keyFrame: i % 120 === 0 })
++          encodeMs.push(performance.now() - a)
++          f.close()
++          maxQ = Math.max(maxQ, enc.encodeQueueSize)
++          // Paced like a 60 Hz producer that yields.
++          while (enc.encodeQueueSize > 8) await new Promise(r => setTimeout(r, 1))
++          if (i % 4 === 0) await new Promise(r => setTimeout(r, 0))
++        }
++        await enc.flush()
++        const dt = (performance.now() - t0) / 1000
++        enc.close()
++        let reordered = 0
++        for (let i = 1; i < ts.length; i++) if (ts[i] < ts[i - 1]) reordered++
++        encodeMs.sort((a, b) => a - b)
++        res.push({
++          size: `${w}x${h}`,
++          mode,
++          codec,
++          fps: +(N / dt).toFixed(1),
++          reordered,
++          maxQ,
++          encodeCallP50: encodeMs[N >> 1],
++          encodeCallMax: encodeMs[N - 1],
++          mbps: +((bytes * 8) / (N / 60) / 1e6).toFixed(1),
++        })
++      }
++    }
++    for (const f of src) f.close()
++    return res
++  })
++  for (const r of out) console.log(JSON.stringify(r))
++} finally {
++  await browser.close()
++}
+diff --git a/scripts/spike-readback.mjs b/scripts/spike-readback.mjs
+new file mode 100644
+index 0000000..a1b88e0
+--- /dev/null
++++ b/scripts/spike-readback.mjs
+@@ -0,0 +1,157 @@
++// Spike: is `new VideoFrame(webgpuCanvas)` a GPU stall or a copy, and what does
++// an async copyTextureToBuffer readback cost the main thread instead?
++//   node scripts/spike-readback.mjs [port] [WxH]
++import puppeteer from 'puppeteer-core'
++
++import { FIREFOX } from './browser.mjs'
++import { appUp } from './until.mjs'
++
++import process from 'node:process'
++
++const port = process.argv[2] ?? '5311'
++const [vw, vh] = (process.argv[3] ?? '800x600').split('x').map(Number)
++const browser = await puppeteer.launch({
++  browser: 'firefox',
++  executablePath: FIREFOX,
++  headless: false,
++  defaultViewport: null,
++  args: [`--width=${vw}`, `--height=${vh}`],
++  extraPrefsFirefox: {
++    'dom.webgpu.enabled': true,
++    'gfx.webgpu.ignore-blocklist': true,
++    'media.autoplay.default': 0,
++    'media.autoplay.blocking_policy': 0,
++  },
++})
++const page = (await browser.pages())[0] ?? (await browser.newPage())
++page.on('pageerror', e => console.log('pageerror', String(e).slice(0, 200)))
++await page.goto(
++  `http://localhost:${port}/app/?vurl=/spike/sync.mp4&gpubudget=ignore`,
++  { waitUntil: 'domcontentloaded' },
++)
++console.log('up', await appUp(page, 15000))
++await page.bringToFront()
++await new Promise(r => setTimeout(r, 3000))
++
++const out = await page.evaluate(async () => {
++  const vf = window.vf
++  const cv = document.querySelector('canvas')
++  const device = vf.gpu.device
++  const pct = (xs, p) => {
++    const s = [...xs].sort((a, b) => a - b)
++    return +s[Math.min(s.length - 1, Math.floor(s.length * p))].toFixed(2)
++  }
++  const stats = xs => ({ p50: pct(xs, 0.5), p90: pct(xs, 0.9), max: pct(xs, 1) })
++  const res = {
++    canvas: `${cv.width}x${cv.height}`,
++    format: navigator.gpu.getPreferredCanvasFormat(),
++  }
++  vf.loop.stop()
++  const N = 60
++  const gpu = [],
++    busy = [],
++    idle = [],
++    step = []
++  for (let i = 0; i < N; i++) {
++    let t = performance.now()
++    vf.step()
++    step.push(performance.now() - t)
++    t = performance.now()
++    await device.queue.onSubmittedWorkDone()
++    gpu.push(performance.now() - t)
++  }
++  for (let i = 0; i < N; i++) {
++    vf.step()
++    const t = performance.now()
++    new VideoFrame(cv, { timestamp: i }).close()
++    busy.push(performance.now() - t)
++    await new Promise(r => setTimeout(r, 0))
++  }
++  for (let i = 0; i < N; i++) {
++    vf.step()
++    await device.queue.onSubmittedWorkDone()
++    const t = performance.now()
++    new VideoFrame(cv, { timestamp: i }).close()
++    idle.push(performance.now() - t)
++    await new Promise(r => setTimeout(r, 0))
++  }
++  res.stepCpuMs = stats(step)
++  res.gpuWaitAfterStepMs = stats(gpu)
++  res.readbackRightAfterStepMs = stats(busy)
++  res.readbackGpuIdleMs = stats(idle)
++
++  // Async: reconfigure with COPY_SRC, copy the swapchain texture into a ring of
++  // mappable buffers in the same task as the render, build the VideoFrame when
++  // the map lands.
++  const ctx = cv.getContext('webgpu')
++  const format = navigator.gpu.getPreferredCanvasFormat()
++  ctx.configure({
++    device,
++    format,
++    alphaMode: 'opaque',
++    usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
++  })
++  const w = cv.width,
++    h = cv.height
++  const stride = Math.ceil((w * 4) / 256) * 256
++  const ring = Array.from({ length: 4 }, () =>
++    device.createBuffer({
++      size: stride * h,
++      usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
++    }),
++  )
++  const submitMs = [],
++    landMs = [],
++    latency = [],
++    mapped = []
++  let pending = []
++  const fmt = format === 'bgra8unorm' ? 'BGRX' : 'RGBX'
++  const tight = stride === w * 4
++  let ok = 0
++  for (let i = 0; i < N; i++) {
++    vf.step()
++    const t0 = performance.now()
++    const buf = ring[i % ring.length]
++    const enc = device.createCommandEncoder()
++    enc.copyTextureToBuffer(
++      { texture: ctx.getCurrentTexture() },
++      { buffer: buf, bytesPerRow: stride, rowsPerImage: h },
++      [w, h],
++    )
++    device.queue.submit([enc.finish()])
++    const p = buf.mapAsync(GPUMapMode.READ).then(() => {
++      const a = performance.now()
++      latency.push(a - t0)
++      const range = buf.getMappedRange()
++      const frame = new VideoFrame(new Uint8Array(range), {
++        format: fmt,
++        codedWidth: w,
++        codedHeight: h,
++        timestamp: i,
++        ...(tight ? {} : { layout: [{ offset: 0, stride }] }),
++      })
++      buf.unmap()
++      frame.close()
++      landMs.push(performance.now() - a)
++      ok++
++    })
++    submitMs.push(performance.now() - t0)
++    pending.push(p)
++    if (pending.length >= ring.length - 1) {
++      await pending.shift()
++    }
++    await new Promise(r => setTimeout(r, 0))
++  }
++  await Promise.all(pending)
++  res.async = {
++    ok,
++    submitMs: stats(submitMs),
++    onLandMs: stats(landMs),
++    latencyMs: stats(latency),
++    stride,
++  }
++  vf.loop.start()
++  return res
++})
++console.log(JSON.stringify(out, null, 1))
++await browser.close()
+diff --git a/scripts/spike-reccost.mjs b/scripts/spike-reccost.mjs
+new file mode 100644
+index 0000000..e191d39
+--- /dev/null
++++ b/scripts/spike-reccost.mjs
+@@ -0,0 +1,124 @@
++// Spike: what recording costs the main thread and the live frame rate today.
++//   node scripts/spike-reccost.mjs [port]
++import puppeteer from 'puppeteer-core'
++
++import { FIREFOX } from './browser.mjs'
++import { appUp } from './until.mjs'
++
++import process from 'node:process'
++
++const port = process.argv[2] ?? '5311'
++const browser = await puppeteer.launch({
++  browser: 'firefox',
++  executablePath: FIREFOX,
++  headless: false,
++  extraPrefsFirefox: {
++    'dom.webgpu.enabled': true,
++    'gfx.webgpu.ignore-blocklist': true,
++    'media.autoplay.default': 0,
++    'media.autoplay.blocking_policy': 0,
++  },
++})
++const page = await browser.newPage()
++page.on('pageerror', e => console.log('pageerror', String(e).slice(0, 200)))
++await page.goto(
++  `http://localhost:${port}/app/?vurl=/spike/sync.mp4&gpubudget=ignore`,
++  { waitUntil: 'domcontentloaded' },
++)
++console.log('up', await appUp(page, 15000))
++await page.bringToFront()
++await new Promise(r => setTimeout(r, 3000))
++
++const out = await page.evaluate(async () => {
++  const cv = document.querySelector('canvas')
++  const raf = () => new Promise(r => requestAnimationFrame(r))
++  const pct = (xs, p) => {
++    const s = [...xs].sort((a, b) => a - b)
++    return +s[Math.min(s.length - 1, Math.floor(s.length * p))].toFixed(3)
++  }
++  const stats = xs => ({
++    n: xs.length,
++    p50: pct(xs, 0.5),
++    p90: pct(xs, 0.9),
++    p99: pct(xs, 0.99),
++    max: pct(xs, 1),
++  })
++  const rate = async ms => {
++    const f0 = window.vf.frameNo()
++    const t0 = performance.now()
++    let ticks = 0
++    while (performance.now() - t0 < ms) {
++      await raf()
++      ticks++
++    }
++    const dt = (performance.now() - t0) / 1000
++    return {
++      rafHz: +(ticks / dt).toFixed(1),
++      engineHz: +((window.vf.frameNo() - f0) / dt).toFixed(1),
++    }
++  }
++  const res = { canvas: `${cv.width}x${cv.height}`, dpr: devicePixelRatio }
++  res.idle = await rate(3000)
++
++  const mod = await import('/src/ui/record.ts')
++  const run = async (label, fn) => {
++    const rec = await mod.startRecording({
++      width: cv.width,
++      height: cv.height,
++      fps: { num: 60, den: 1 },
++    })
++    const f0 = window.vf.frameNo()
++    const t0 = performance.now()
++    const costs = []
++    let ticks = 0
++    while (performance.now() - t0 < 5000) {
++      await raf()
++      const a = performance.now()
++      fn(rec, cv)
++      costs.push(performance.now() - a)
++      ticks++
++    }
++    const dt = (performance.now() - t0) / 1000
++    const fin0 = performance.now()
++    const blob = await rec.finish()
++    res[label] = {
++      frameCallMs: stats(costs),
++      rafHz: +(ticks / dt).toFixed(1),
++      engineHz: +((window.vf.frameNo() - f0) / dt).toFixed(1),
++      frames: rec.frames(),
++      finishMs: +(performance.now() - fin0).toFixed(1),
++      mb: +(blob.size / 1e6).toFixed(2),
++      err: rec.error(),
++    }
++  }
++  await run('recordOnePerTick', (rec, c) => rec.frame(c))
++  await run('recordThreePerTick', (rec, c) => {
++    rec.frame(c)
++    rec.frame(c)
++    rec.frame(c)
++  })
++
++  // Readback alone vs a clone of the last frame, without an encoder.
++  const read = [],
++    clone = []
++  let last = null
++  for (let i = 0; i < 120; i++) {
++    await raf()
++    let a = performance.now()
++    const f = new VideoFrame(cv, { timestamp: i * 16667 })
++    read.push(performance.now() - a)
++    a = performance.now()
++    const c = new VideoFrame(f, { timestamp: i * 16667 + 1, duration: 16667 })
++    clone.push(performance.now() - a)
++    c.close()
++    last?.close()
++    last = f
++  }
++  last?.close()
++  res.readback = stats(read)
++  res.clone = stats(clone)
++  res.after = await rate(3000)
++  return res
++})
++console.log(JSON.stringify(out, null, 1))
++await browser.close()
+diff --git a/scripts/spike-sum.py b/scripts/spike-sum.py
+new file mode 100644
+index 0000000..af91338
+--- /dev/null
++++ b/scripts/spike-sum.py
+@@ -0,0 +1,30 @@
++# Spike: one line per take from spike-take.mjs (and spike-avsync.mjs) output.
++#   node scripts/spike-take.mjs ... | python3 scripts/spike-sum.py <label>
++import json
++import sys
++
++label = sys.argv[1] if len(sys.argv) > 1 else ''
++for line in sys.stdin:
++    line = line.strip()
++    if not line.startswith('{'):
++        if 'error' in line.lower():
++            print(label, line[:300])
++        continue
++    try:
++        d = json.loads(line)
++    except Exception:
++        continue
++    if isinstance(d.get('frames'), dict):
++        f = d['frames']
++        print(label, 'canvas', d['canvas'], 'hz', d['before']['rafHz'], '->', d['during']['rafHz'],
++              'worstGap', d['during']['worstGapMs'], 'pool', d.get('pool'),
++              'arrived', f['arrived'], 'kept', f['kept'], 'qdrop', f['droppedQueue'],
++              'lat', f['arriveLatencyMs'], 'gaps', f['slotGaps'], 'slotNoise', f.get('slotNoise'), 'stop', d['stopToFileMs'], 'MB', d['mb'])
++    elif 'offsetMs' in d:
++        o = d['offsetMs']
++        print(label, 'MID', d.get('mid'), 'q1/q4', d.get('midFirstVsLast'), 'offset mean', o['mean'], 'drift/min', d['driftMsPerMin'],
++              'pairs', d['pairs'], '/', d['clicks'], 'bound', d.get('bound'), '1st', d.get('boundFirstHalf'), '2nd', d.get('boundSecondHalf'), d['streams'])
++    elif 'failed' in d:
++        print(label, 'FAILED', line[:400])
++    else:
++        print(label, line[:400])
+diff --git a/scripts/spike-syncclip.sh b/scripts/spike-syncclip.sh
+new file mode 100755
+index 0000000..e7840af
+--- /dev/null
++++ b/scripts/spike-syncclip.sh
+@@ -0,0 +1,12 @@
++#!/bin/sh
++# Spike: the flash-and-click clip the take harness plays, at public/spike/sync.mp4.
++# A white field for 4 frames and a 10 ms 1 kHz click, both at every whole second,
++# for 10 minutes. public/spike/ is not tracked.
++set -e
++mkdir -p public/spike
++ffmpeg -v error -y \
++  -f lavfi -i "color=c=black:s=640x480:r=60:d=600" \
++  -f lavfi -i "aevalsrc='if(lt(mod(t\,1)\,0.01)\,0.8*sin(2*PI*1000*t)\,0)|if(lt(mod(t\,1)\,0.01)\,0.8*sin(2*PI*1000*t)\,0)':s=48000:d=600" \
++  -filter_complex "[0:v]drawbox=x=0:y=0:w=iw:h=ih:c=white:t=fill:enable='lt(mod(t,1),4/60)'[v]" \
++  -map "[v]" -map 1:a -c:v libx264 -preset veryfast -pix_fmt yuv420p -g 60 \
++  -c:a aac -b:a 128k public/spike/sync.mp4
+diff --git a/scripts/spike-take.mjs b/scripts/spike-take.mjs
+new file mode 100644
+index 0000000..5780890
+--- /dev/null
++++ b/scripts/spike-take.mjs
+@@ -0,0 +1,269 @@
++// Spike: a real take of the sync clip through the app's own record toggle.
++//   node scripts/spike-take.mjs [--port=5311] [--secs=20] [--size=1920x1080]
++//     [--clock=smooth|latency|envelope|output|process] [--q=4] [--pool=3]
++//     [--hitch=0] [--hitchEvery=2000] [--silent] [--browser=firefox|chrome]
++//     [--out=take.mp4]
++// --silent records with the video's sound off, which is today's rAF path.
++// Pipe the output through scripts/spike-sum.py for one line per take.
++import puppeteer from 'puppeteer-core'
++
++import { CHROME, FIREFOX } from './browser.mjs'
++import { appUp } from './until.mjs'
++
++import { execFileSync } from 'node:child_process'
++import { createWriteStream } from 'node:fs'
++import { createServer } from 'node:http'
++import process from 'node:process'
++
++const arg = (k, d) => {
++  const hit = process.argv.find(a => a.startsWith(`--${k}=`))
++  return hit === undefined ? d : hit.slice(k.length + 3)
++}
++const flag = k => process.argv.includes(`--${k}`)
++const port = arg('port', '5311')
++const secs = Number(arg('secs', '20'))
++const [vw, vh] = arg('size', '1920x1080').split('x').map(Number)
++const clock = arg('clock', 'output')
++const hitch = Number(arg('hitch', '0'))
++const hitchEvery = Number(arg('hitchEvery', '2000'))
++const silent = flag('silent')
++const outFile = arg('out', `${process.env.TMPDIR ?? '/tmp'}/take.mp4`)
++
++let landed
++const got = new Promise(r => (landed = r))
++const server = createServer((req, res) => {
++  res.setHeader('Access-Control-Allow-Origin', '*')
++  res.setHeader('Access-Control-Allow-Headers', '*')
++  if (req.method === 'OPTIONS') return res.end()
++  const w = createWriteStream(outFile)
++  req.pipe(w)
++  w.on('finish', () => {
++    res.end('ok')
++    landed()
++  })
++}).listen(5399)
++
++// Chrome is untested: this box's Chrome has no WebGPU.
++const chrome = arg('browser', 'firefox') === 'chrome'
++const browser = await puppeteer.launch(
++  chrome
++    ? {
++        browser: 'chrome',
++        executablePath: CHROME,
++        headless: false,
++        defaultViewport: null,
++        protocolTimeout: 900000,
++        args: [
++          `--window-size=${vw},${vh}`,
++          '--enable-unsafe-webgpu',
++          '--autoplay-policy=no-user-gesture-required',
++        ],
++      }
++    : {
++        browser: 'firefox',
++        executablePath: FIREFOX,
++        headless: false,
++        defaultViewport: null,
++        protocolTimeout: 900000,
++        args: [`--width=${vw}`, `--height=${vh}`],
++        extraPrefsFirefox: {
++          'dom.webgpu.enabled': true,
++          'gfx.webgpu.ignore-blocklist': true,
++          'media.autoplay.default': 0,
++          'media.autoplay.blocking_policy': 0,
++        },
++      },
++)
++try {
++  const page = (await browser.pages())[0] ?? (await browser.newPage())
++  page.on('pageerror', e => console.log('pageerror', String(e).slice(0, 200)))
++  page.on('console', m => {
++    if (m.type() === 'error' || m.text().startsWith('SPIKE'))
++      console.log(m.type(), m.text().slice(0, 200))
++  })
++  await page.goto(
++    `http://localhost:${port}/app/?vurl=/spike/sync.mp4&rectake=1&recclock=${clock}&gpubudget=ignore&recpool=${arg('pool', '3')}&recq=${arg('q', '2')}`,
++    { waitUntil: 'domcontentloaded' },
++  )
++  if (!(await appUp(page, 20000))) throw new Error('app did not come up')
++  await page.bringToFront()
++  await new Promise(r => setTimeout(r, 4000))
++  if (!silent) {
++    await page.evaluate(() => window.__audio.select('video'))
++    await new Promise(r => setTimeout(r, 1500))
++  }
++  const res = await page.evaluate(
++    async (secs, hitch, hitchEvery) => {
++      const raf = () => new Promise(r => requestAnimationFrame(r))
++      const ctx = window.vf.audioState.graph?.ctx
++      const rate = async ms => {
++        const f0 = window.vf.frameNo()
++        const t0 = performance.now()
++        let ticks = 0
++        let worst = 0
++        let prev = t0
++        while (performance.now() - t0 < ms) {
++          await raf()
++          const now = performance.now()
++          worst = Math.max(worst, now - prev)
++          prev = now
++          ticks++
++        }
++        const dt = (performance.now() - t0) / 1000
++        return {
++          rafHz: +(ticks / dt).toFixed(1),
++          engineHz: +((window.vf.frameNo() - f0) / dt).toFixed(1),
++          worstGapMs: +worst.toFixed(1),
++        }
++      }
++      const out = {
++        ctx: ctx
++          ? {
++              state: ctx.state,
++              rate: ctx.sampleRate,
++              baseLatency: ctx.baseLatency,
++              outputLatency: ctx.outputLatency,
++            }
++          : null,
++        canvas: `${document.querySelector('canvas').width}x${document.querySelector('canvas').height}`,
++      }
++      out.before = await rate(3000)
++      window.__capture.toggleRecord()
++      const until = async (f, ms) => {
++        const t = performance.now()
++        while (!f() && performance.now() - t < ms)
++          await new Promise(r => setTimeout(r, 20))
++        return f()
++      }
++      await until(() => window.__capture.recording || window.__rec, 5000)
++      const hitches = []
++      const timer =
++        hitch > 0
++          ? setInterval(() => {
++              const t = performance.now()
++              while (performance.now() - t < hitch);
++              hitches.push(t)
++            }, hitchEvery)
++          : 0
++      const probe = []
++      const probeTimer = setInterval(() => {
++        const c = window.vf.audioState.graph?.ctx
++        if (!c) return
++        const p = performance.now()
++        const o = c.getOutputTimestamp()
++        probe.push([p, c.currentTime, o.contextTime, o.performanceTime])
++      }, 1)
++      out.during = await rate(secs * 1000)
++      clearInterval(probeTimer)
++      if (probe.length > 10) {
++        // currentTime minus the wall clock: flat if currentTime is fresh, a saw
++        // that falls between updates if it is stale.
++        const d = probe.map(([p, ct]) => ct * 1000 - p)
++        const top = Math.max(...d.slice(0, 200))
++        const lag = d.map(v => top - v)
++        lag.sort((a, b) => a - b)
++        const q = f => +lag[Math.floor(lag.length * f)].toFixed(1)
++        let updates = 0
++        for (let i = 1; i < probe.length; i++) if (probe[i][1] !== probe[i - 1][1]) updates++
++        const span = (probe.at(-1)[0] - probe[0][0]) / 1000
++        const dOut = probe.map(([p, , oc, op]) => oc * 1000 - op)
++        const firstHalf = d.slice(0, d.length >> 1), secondHalf = d.slice(d.length >> 1)
++        out.clockProbe = {
++          samples: probe.length,
++          currentTimeUpdatesPerSec: +(updates / span).toFixed(1),
++          staleMs: { p50: q(0.5), p90: q(0.9), p99: q(0.99), max: q(0.999) },
++          envelopeDriftMs: +(Math.max(...secondHalf) - Math.max(...firstHalf)).toFixed(2),
++          outputMinusPerfSpreadMs: +(Math.max(...dOut) - Math.min(...dOut)).toFixed(1),
++          outputVsCurrentMs: +((probe.at(-1)[2] - probe.at(-1)[1]) * 1000).toFixed(1),
++        }
++      }
++      const fr = window.vf.frameRead
++      out.pool = fr ? { copied: fr.copied, skipped: fr.skipped } : null
++      clearInterval(timer)
++      out.hitches = hitches.length
++      const t0 = performance.now()
++      window.__capture.toggleRecord()
++      await until(() => window.__take !== undefined, 120000)
++      out.stopToFileMs = Math.round(performance.now() - t0)
++      if (window.__take === undefined) {
++        const r = window.__rec
++        return {
++          ...out,
++          failed: true,
++          recFrames: r?.frames(),
++          recError: r?.error(),
++          stats: r?.stats?.().length,
++          recording: window.__capture.recording,
++          heard: window.vf.audioState.heard() !== null,
++          ctxState: window.vf.audioState.graph?.ctx.state,
++          banner: [...document.querySelectorAll('[role=alert],[class*=rror]')]
++            .map(e => e.textContent)
++            .join(' | ')
++            .slice(0, 400),
++        }
++      }
++      out.mb = +(window.__take.size / 1e6).toFixed(2)
++      const stats = window.__rec?.stats?.() ?? []
++      if (stats.length > 0) {
++        const pct = (xs, p) => {
++          const s = [...xs].sort((a, b) => a - b)
++          return +s[Math.min(s.length - 1, Math.floor(s.length * p))].toFixed(2)
++        }
++        const kept = stats.filter(s => s.kept)
++        const lat = stats.map(s => s.arrivedAt - s.renderedAt)
++        const lead = stats.map(s => (s.proc - s.out) * 1000)
++        const gaps = new Map()
++        for (let i = 1; i < kept.length; i++) {
++          const g = kept[i].slot - kept[i - 1].slot
++          gaps.set(g, (gaps.get(g) ?? 0) + 1)
++        }
++        out.frames = {
++          arrived: stats.length,
++          kept: kept.length,
++          droppedSameSlot: stats.filter(s => s.why === 'slot').length,
++          droppedQueue: stats.filter(s => s.why === 'queue').length,
++          maxQueue: Math.max(...stats.map(s => s.queue)),
++          arriveLatencyMs: { p50: pct(lat, 0.5), p90: pct(lat, 0.9), max: pct(lat, 1) },
++          procLeadsOutMs: { p50: pct(lead, 0.5), min: pct(lead, 0), max: pct(lead, 1) },
++          slotGaps: Object.fromEntries([...gaps.entries()].sort((a, b) => a[0] - b[0])),
++          lastSlot: kept.at(-1)?.slot,
++          // Where each kept frame landed against where its render time alone
++          // would put it, after removing the mean: the clock's own noise.
++          slotNoise: (() => {
++            const r0 = kept[0]?.renderedAt ?? 0
++            const res = kept.map(s => s.slot - ((s.renderedAt - r0) * 60) / 1000)
++            const m = res.reduce((a, b) => a + b, 0) / (res.length || 1)
++            const dev = res.map(v => Math.abs(v - m)).sort((a, b) => a - b)
++            return {
++              p50: +dev[dev.length >> 1].toFixed(2),
++              p90: +dev[Math.floor(dev.length * 0.9)].toFixed(2),
++              max: +dev.at(-1).toFixed(2),
++            }
++          })(),
++        }
++      }
++      await fetch('http://localhost:5399/take', {
++        method: 'POST',
++        body: window.__take,
++      })
++      return out
++    },
++    secs,
++    hitch,
++    hitchEvery,
++  )
++  console.log(JSON.stringify(res))
++  if (res.failed) process.exit(1)
++  await got
++  console.log(
++    execFileSync('node', [
++      new URL('./spike-avsync.mjs', import.meta.url).pathname,
++      outFile,
++    ])
++      .toString()
++      .replace(/\s+/g, ' '),
++  )
++} finally {
++  await browser.close()
++  server.close()
++}
+diff --git a/src/app.tsx b/src/app.tsx
+index 7532565..6f15d7e 100644
+--- a/src/app.tsx
++++ b/src/app.tsx
+@@ -245,6 +245,9 @@ const boardScope = (mode: DriftMode): DriftScope => ({
+   mode,
+ })
+ 
++
++const SPIKE = new URLSearchParams(location.search)
++
+ export function App() {
+   // Off every session, and not persisted: a counter that moves every frame pulls
+   // the eye, and you want it only while chasing a stall. Two switches reach it —
+@@ -658,7 +661,25 @@ export function App() {
+   // differently. matchPreset returns undefined for "matches nothing authored".
+   const activePreset = matchPreset(controls)
+   const lookName = activePreset ? activePreset.name : mix.lastPreset
+-  const capture = useCapture(eng.canvasRef, lookName ?? 'edit', eng.setError)
++  const capture = useCapture(
++    eng.canvasRef,
++    lookName ?? 'edit',
++    eng.setError,
++    SPIKE.has('rectake')
++      ? blob => {
++          ;(window as unknown as { __take: Blob }).__take = blob
++        }
++      : undefined,
++    {
++      audio: () => engineRef.current?.audioState.heard() ?? null,
++      engine: () => engineRef.current,
++      clock:
++        ['process', 'latency', 'envelope', 'smooth'].includes(SPIKE.get('recclock') ?? '')
++          ? (SPIKE.get('recclock') as 'process' | 'latency' | 'envelope' | 'smooth')
++          : 'output',
++    },
++  )
++  ;(window as unknown as { __capture: typeof capture }).__capture = capture
+   // The same look, spelled for a human rather than for a query string. `?preset=`
+   // and MIDI keys want the identifier `lookName` carries; anything a person
+   // reads wants the words — a strip row called "neonTube" beside a chip that
+@@ -780,6 +801,7 @@ export function App() {
+   // strip takes its transport: ▶ on a rundown starts the picked track from the
+   // top so the two are locked at frame zero.
+   const audio = useAudio(engine, eng.setVideoAudio)
++  ;(window as unknown as { __audio: typeof audio }).__audio = audio
+ 
+   // The offline render, which is the recorder's opposite number: `capture`
+   // follows the picture in real time, this takes the frames away from the
+diff --git a/src/core/gpu/engineapi.ts b/src/core/gpu/engineapi.ts
+index 0dedfa1..98ead17 100644
+--- a/src/core/gpu/engineapi.ts
++++ b/src/core/gpu/engineapi.ts
+@@ -42,6 +42,7 @@ import type { AudioState } from '../signal/audiostate'
+ import type { FaultPlan } from '../signal/fault'
+ import type { GlidePlan } from '../signal/glide'
+ import type { StabPlan } from '../signal/stab'
++import type { FrameSink } from './frameread'
+ import type { FrozenKind } from './renderloop'
+ import type { PullOpener, Relay, WrapHealth } from './videopump'
+ 
+@@ -238,6 +239,7 @@ export interface EngineApi {
+   // on a healthy loop.
+   kick: () => void
+   frameNo: () => number
++  setFrameSink: (sink: FrameSink | null) => { width: number; height: number }
+   // Everything a take needs held still, in one switch, and `endTake` to put it
+   // all back (docs/EDITOR.md › _Take state_):
+   //
+diff --git a/src/core/gpu/frameread.ts b/src/core/gpu/frameread.ts
+new file mode 100644
+index 0000000..431d50b
+--- /dev/null
++++ b/src/core/gpu/frameread.ts
+@@ -0,0 +1,88 @@
++// The presented picture off the GPU for a recorder, without waiting for it.
++//
++// `new VideoFrame(canvas)` reads a WebGPU canvas synchronously, and Firefox
++// Nightly spends 16-22 ms of main thread on it at a full-window canvas
++// (1494x933): a whole frame at 48 Hz. Copying the swapchain texture into a
++// mappable buffer in the frame's own submit costs nothing to encode, and the
++// map lands about 10 ms later, when building the VideoFrame is a memcpy.
++//
++// The pool is the buzz readback's (buzzread.ts): a frame that finds every
++// buffer still in flight is skipped, and the recorder stretches the frame
++// before it over the gap.
++
++const POOL = Number(new URLSearchParams(location.search).get('recpool') ?? 3)
++
++export interface FrameSink {
++  // Called with each frame that made it off the GPU, and when it was rendered
++  // (performance.now()). The sink owns the frame and must close it.
++  frame: (frame: VideoFrame, renderedAt: number) => void
++}
++
++export class FrameRead {
++  private readonly staging: GPUBuffer[]
++  private free: GPUBuffer[]
++  private closed = false
++  skipped = 0
++  copied = 0
++  readonly stride: number
++
++  constructor(
++    device: GPUDevice,
++    readonly width: number,
++    readonly height: number,
++    private readonly format: GPUTextureFormat,
++    private readonly sink: FrameSink,
++  ) {
++    this.stride = Math.ceil((width * 4) / 256) * 256
++    this.staging = Array.from({ length: POOL }, () =>
++      device.createBuffer({
++        size: this.stride * height,
++        usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
++      }),
++    )
++    this.free = [...this.staging]
++  }
++
++  // Encode this frame's copy if a buffer is spare. Returns the buffer to hand
++  // to `flush` after the submit, or null for a skipped frame.
++  copy(enc: GPUCommandEncoder, texture: GPUTexture): GPUBuffer | null {
++    if (texture.width !== this.width || texture.height !== this.height)
++      return null
++    const buf = this.free.pop()
++    if (buf === undefined) {
++      this.skipped++
++      return null
++    }
++    this.copied++
++    enc.copyTextureToBuffer(
++      { texture },
++      { buffer: buf, bytesPerRow: this.stride, rowsPerImage: this.height },
++      [this.width, this.height],
++    )
++    return buf
++  }
++
++  flush(buf: GPUBuffer, renderedAt: number): void {
++    void buf.mapAsync(GPUMapMode.READ).then(
++      () => {
++        if (this.closed) return
++        const frame = new VideoFrame(new Uint8Array(buf.getMappedRange()), {
++          format: this.format === 'bgra8unorm' ? 'BGRX' : 'RGBX',
++          codedWidth: this.width,
++          codedHeight: this.height,
++          timestamp: 0,
++          layout: [{ offset: 0, stride: this.stride }],
++        })
++        buf.unmap()
++        this.free.push(buf)
++        this.sink.frame(frame, renderedAt)
++      },
++      () => {},
++    )
++  }
++
++  destroy(): void {
++    this.closed = true
++    for (const b of this.staging) b.destroy()
++  }
++}
+diff --git a/src/core/gpu/pipeline.ts b/src/core/gpu/pipeline.ts
+index a66463a..9da77e3 100644
+--- a/src/core/gpu/pipeline.ts
++++ b/src/core/gpu/pipeline.ts
+@@ -26,6 +26,7 @@ import { StabGate } from '../signal/stab'
+ import { StrobeGate } from '../signal/strobe'
+ import { SynthState } from '../signal/synthstate'
+ import { BuzzRead } from './buzzread'
++import { FrameRead } from './frameread'
+ import { buildCaptionRom, buildPage, CC_BUF_LEN, CC_PAGE } from './captionrom'
+ import { gpuPowerFromSearch, initGpu, releaseGpu } from './context'
+ import { debugOn, pageSearch } from './env'
+@@ -86,6 +87,7 @@ import type { LineStateControls } from '../signal/linestate'
+ import type { DeckPause } from '../signal/mixstate'
+ import type { StabPlan } from '../signal/stab'
+ import type { Gpu, RenderTarget } from './context'
++import type { FrameSink } from './frameread'
+ import type { DestroyOptions, EngineApi } from './engineapi'
+ import type { FeedSource } from './feedgates'
+ import type { ParamName } from './prelude'
+@@ -405,6 +407,7 @@ export class Engine implements EngineApi {
+   private cgBuf: GPUBuffer
+   private buzzBuf: GPUBuffer
+   private buzzRead: BuzzRead
++  private frameRead: FrameRead | null = null
+   // Phosphor state, ping-ponged: decode reads the light the screen is holding
+   // out of one and writes the new state into the other, so its lateral scatter
+   // sees settled neighbours rather than a buffer mid-overwrite.
+@@ -1706,6 +1709,7 @@ export class Engine implements EngineApi {
+       // Its staging buffers are not in allBufs — they are the readback's own,
+       // and one of them is usually mapped or mid-map when this runs.
+       this.buzzRead.destroy()
++      this.frameRead?.destroy()
+       this.pump.destroy()
+       this.sources.destroy()
+       // The audio graph is not the device's, so nothing above releases it — and
+@@ -1853,6 +1857,27 @@ export class Engine implements EngineApi {
+     }
+   }
+ 
++  // Hand each rendered frame to a recorder as it comes off the GPU, or stop.
++  // Returns the size frames will arrive at: the canvas's, fixed for the take.
++  setFrameSink(sink: FrameSink | null): { width: number; height: number } {
++    const { device, context, format } = this.gpu
++    this.frameRead?.destroy()
++    this.frameRead = null
++    const { width, height } = context.canvas
++    context.configure({
++      device,
++      format,
++      alphaMode: 'opaque',
++      usage:
++        sink === null
++          ? GPUTextureUsage.RENDER_ATTACHMENT
++          : GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
++    })
++    if (sink !== null)
++      this.frameRead = new FrameRead(device, width, height, format, sink)
++    return { width, height }
++  }
++
+   // Frame counter, for the diagnostic recorder and the verification harness.
+   frameNo(): number {
+     return this.frame
+@@ -2625,12 +2650,15 @@ export class Engine implements EngineApi {
+     if (buzz > 0) this.buzzRead.copy(enc, this.buzzBuf)
+ 
+     this.presentPass(enc)
++    const grab =
++      this.frameRead?.copy(enc, this.gpu.context.getCurrentTexture()) ?? null
+ 
+     if (this.frame < 3) {
+       d.pushErrorScope('validation')
+       d.pushErrorScope('internal')
+     }
+     d.queue.submit([enc.finish()])
++    if (grab !== null) this.frameRead?.flush(grab, performance.now())
+     // After the submit that carries the copy, and never awaited: the map lands
+     // a frame or two from now and the audio ring is built to glide over the
+     // gap. The drive is read again on arrival rather than captured above, so
+diff --git a/src/core/signal/audiostate.ts b/src/core/signal/audiostate.ts
+index cd7a595..6f4ddae 100644
+--- a/src/core/signal/audiostate.ts
++++ b/src/core/signal/audiostate.ts
+@@ -94,6 +94,8 @@ export function hallTail(
+ // ever adds and how much direct sound sits under it is `dry`'s own question.
+ interface Graph {
+   ctx: AudioContext
++  // Everything audible, on its way to the speakers — what a take records.
++  bus: GainNode
+   analyser: AnalyserNode
+   dry: GainNode
+   send: DelayNode
+@@ -170,18 +172,28 @@ export class AudioState {
+   // shares this object's context, which a tap already made running, so a
+   // recorder need not start a context of its own outside a tap.
+   tap(): InputTap | null {
+-    const input = this.input
++    return this.tapOf(this.input)
++  }
++
++  // What the speakers play: the clips, the reverb, the buzz and a picked file.
++  // Null until something has built the graph, which is also until anything
++  // could be heard.
++  heard(): InputTap | null {
++    return this.tapOf(this.graph?.bus ?? null)
++  }
++
++  private tapOf(src: AudioNode | null): InputTap | null {
+     const g = this.graph
+-    if (input === null || g === null) return null
++    if (src === null || g === null) return null
+     return {
+       context: g.ctx,
+       listen: node => {
+-        input.connect(node)
++        src.connect(node)
+         return () => {
+           try {
+-            input.disconnect(node)
++            src.disconnect(node)
+           } catch {
+-            // Already gone with the input it hung off.
++            // Already gone with the source it hung off.
+           }
+         }
+       },
+@@ -197,8 +209,10 @@ export class AudioState {
+       analyser.fftSize = 2048
+       this.scratch = new Float32Array(analyser.fftSize)
+       this.spectrum = new Float32Array(analyser.frequencyBinCount)
++      const bus = ctx.createGain()
++      bus.connect(ctx.destination)
+       const dry = ctx.createGain()
+-      dry.connect(ctx.destination)
++      dry.connect(bus)
+       const send = ctx.createDelay()
+       send.delayTime.value = TAIL_PREDELAY
+       const damp = ctx.createBiquadFilter()
+@@ -213,8 +227,8 @@ export class AudioState {
+         .connect(damp)
+         .connect(convolver)
+         .connect(wet)
+-        .connect(ctx.destination)
+-      this.graph = { ctx, analyser, dry, send, wet }
++        .connect(bus)
++      this.graph = { ctx, bus, analyser, dry, send, wet }
+     }
+     // Browsers hand back a suspended context unless creation is tied to a user
+     // gesture; the enable button is one, but autoplay policies still vary, so
+@@ -314,7 +328,7 @@ export class AudioState {
+     const g = this.ensureGraph()
+     this.releaseInput()
+     const src = this.sourceFor(g, el)
+-    src.connect(g.ctx.destination)
++    src.connect(g.bus)
+     src.connect(g.analyser)
+     this.input = src
+   }
+@@ -387,7 +401,7 @@ export class AudioState {
+         return
+       }
+       const g = this.ensureGraph()
+-      this.buzz ??= new BuzzOut(g.ctx)
++      this.buzz ??= new BuzzOut(g.ctx, g.bus)
+       this.buzz.push(tap, drive)
+     }
+   }
+diff --git a/src/core/signal/buzz.ts b/src/core/signal/buzz.ts
+index f8c75cd..e64107d 100644
+--- a/src/core/signal/buzz.ts
++++ b/src/core/signal/buzz.ts
+@@ -85,7 +85,7 @@ export class BuzzOut {
+   // which costs a few frames of buzz at the moment the slider first comes up
+   // and nothing after that. A browser without AudioWorklet leaves this inert
+   // rather than failing the render loop that called it.
+-  constructor(ctx: AudioContext) {
++  constructor(ctx: AudioContext, out: AudioNode) {
+     void ctx.audioWorklet.addModule(workletUrl).then(
+       () => {
+         if (!this.closed) {
+@@ -94,7 +94,7 @@ export class BuzzOut {
+             numberOfOutputs: 1,
+             outputChannelCount: [1],
+           })
+-          this.node.connect(ctx.destination)
++          this.node.connect(out)
+         }
+       },
+       (e: unknown) => console.warn('buzz worklet unavailable:', e),
+diff --git a/src/ui/mp4.ts b/src/ui/mp4.ts
+index e002f2e..6b8de35 100644
+--- a/src/ui/mp4.ts
++++ b/src/ui/mp4.ts
+@@ -25,7 +25,7 @@
+ // so there is no reason to have more.
+ 
+ // Every box is a length, a four-character type, and a payload.
+-const box = (type: string, ...parts: Uint8Array[]): Uint8Array => {
++const box = (type: string, ...parts: Uint8Array<ArrayBuffer>[]): Uint8Array<ArrayBuffer> => {
+   const size = parts.reduce((n, p) => n + p.length, 8)
+   const out = new Uint8Array(size)
+   const view = new DataView(out.buffer)
+@@ -44,25 +44,25 @@ const fullBox = (
+   type: string,
+   version: number,
+   flags: number,
+-  ...parts: Uint8Array[]
+-): Uint8Array =>
++  ...parts: Uint8Array<ArrayBuffer>[]
++): Uint8Array<ArrayBuffer> =>
+   box(
+     type,
+     u8(version, (flags >> 16) & 0xff, (flags >> 8) & 0xff, flags & 0xff),
+     ...parts,
+   )
+ 
+-const u8 = (...bytes: number[]): Uint8Array => Uint8Array.from(bytes)
++const u8 = (...bytes: number[]): Uint8Array<ArrayBuffer> => Uint8Array.from(bytes)
+ 
+-const u16 = (v: number): Uint8Array => u8((v >> 8) & 0xff, v & 0xff)
++const u16 = (v: number): Uint8Array<ArrayBuffer> => u8((v >> 8) & 0xff, v & 0xff)
+ 
+-const u32 = (v: number): Uint8Array =>
++const u32 = (v: number): Uint8Array<ArrayBuffer> =>
+   u8((v >>> 24) & 0xff, (v >>> 16) & 0xff, (v >>> 8) & 0xff, v & 0xff)
+ 
+-const str = (s: string): Uint8Array =>
++const str = (s: string): Uint8Array<ArrayBuffer> =>
+   Uint8Array.from(s, c => c.charCodeAt(0) & 0xff)
+ 
+-const join = (parts: Uint8Array[]): Uint8Array => {
++const join = (parts: Uint8Array<ArrayBuffer>[]): Uint8Array<ArrayBuffer> => {
+   const out = new Uint8Array(parts.reduce((n, p) => n + p.length, 0))
+   let at = 0
+   for (const p of parts) {
+@@ -126,15 +126,15 @@ const MATRIX = join([
+ // real SPS's second byte is `profile_idc` (0x64 for the High profile
+ // `record.ts` now asks for) and can never equal its own NAL header, so the two being identical is unambiguous.
+ // Parameter sets as avcC lists them, each behind its two-byte length.
+-const lengths = (list: { data: Uint8Array }[]) =>
++const lengths = (list: { data: Uint8Array<ArrayBuffer> }[]) =>
+   list.flatMap(s => [u16(s.data.length), s.data])
+ 
+-export function normaliseAvcc(raw: Uint8Array): Uint8Array {
++export function normaliseAvcc(raw: Uint8Array<ArrayBuffer>): Uint8Array<ArrayBuffer> {
+   // Too short to be a record at all — hand it back and let the file fail
+   // visibly rather than inventing parameter sets nothing came from.
+   if (raw.length < 7) return raw
+ 
+-  const sets: { type: number; data: Uint8Array }[] = []
++  const sets: { type: number; data: Uint8Array<ArrayBuffer> }[] = []
+   let at = 6
+   const take = (count: number, expect: number) => {
+     for (let i = 0; i < count && at + 2 <= raw.length; i++) {
+@@ -178,17 +178,21 @@ export function normaliseAvcc(raw: Uint8Array): Uint8Array {
+ 
+ // One encoded frame, as it comes off `VideoEncoder`.
+ export interface Sample {
+-  data: Uint8Array
++  data: Uint8Array<ArrayBuffer>
+   // Whether an editor can cut here. Every frame the encoder marked a keyframe
+   // goes in `stss`; with no `stss` at all a player assumes *every* frame is a
+   // sync point, which is wrong the moment the encoder emits a P-frame.
+   key: boolean
++  // Presentation time in frames of `fps`. The encoder may hand frames over in
++  // decode order (Firefox's H.264 uses B-frames), so this is not the index.
++  // Absent, it is the index.
++  pts?: number
+ }
+ 
+ // One encoded block of sound, as it comes off `AudioEncoder`, and how many
+ // sample periods it covers.
+ export interface AudioSample {
+-  data: Uint8Array
++  data: Uint8Array<ArrayBuffer>
+   frames: number
+ }
+ 
+@@ -197,7 +201,7 @@ export interface Mp4Audio {
+   sampleRate: number
+   channels: number
+   // AAC's AudioSpecificConfig, which `esds` carries. Opus has none.
+-  config: Uint8Array | null
++  config: Uint8Array<ArrayBuffer> | null
+   // Opus's pre-skip in 48 kHz samples, which `dOps` carries: the encoder's
+   // lookahead, for a player to drop off the front.
+   preSkip: number
+@@ -213,14 +217,14 @@ interface Mp4Spec {
+   // The encoder's `decoderConfig.description` — the avcC record, which carries
+   // the SPS and PPS. Without it a decoder has no parameter sets and the file is
+   // unplayable; `VideoEncoder` hands it over on the first chunk's metadata.
+-  avcc: Uint8Array
++  avcc: Uint8Array<ArrayBuffer>
+   samples: readonly Sample[]
+   audio?: Mp4Audio
+ }
+ 
+ // An MPEG-4 descriptor: a tag, a length and a body. Every one written here is
+ // under 128 bytes, which is what lets the length be the single-byte form.
+-const descriptor = (tag: number, ...parts: Uint8Array[]): Uint8Array => {
++const descriptor = (tag: number, ...parts: Uint8Array<ArrayBuffer>[]): Uint8Array<ArrayBuffer> => {
+   const body = join(parts)
+   if (body.length > 127) throw new Error(`descriptor ${tag} too long`)
+   return join([u8(tag, body.length), body])
+@@ -229,7 +233,7 @@ const descriptor = (tag: number, ...parts: Uint8Array[]): Uint8Array => {
+ // The sound's sample entry. Both codecs share the audio entry's fixed fields
+ // and differ in the box after them: `esds` wraps AAC's AudioSpecificConfig in
+ // the MPEG-4 descriptors, and `dOps` states what an Opus decoder needs.
+-function soundEntry(a: Mp4Audio, bitrate: number): Uint8Array {
++function soundEntry(a: Mp4Audio, bitrate: number): Uint8Array<ArrayBuffer> {
+   const tail =
+     a.codec === 'aac'
+       ? fullBox(
+@@ -276,7 +280,7 @@ function soundEntry(a: Mp4Audio, bitrate: number): Uint8Array {
+ 
+ // A time-to-sample table, one entry per run of equal durations. AAC is one
+ // run, since every block is 1024 periods; Opus varies with its frame size.
+-function timeToSample(durations: readonly number[]): Uint8Array {
++function timeToSample(durations: readonly number[]): Uint8Array<ArrayBuffer> {
+   const runs: [number, number][] = []
+   for (const d of durations) {
+     const last = runs.at(-1)
+@@ -292,8 +296,36 @@ function timeToSample(durations: readonly number[]): Uint8Array {
+   )
+ }
+ 
++function runs(values: readonly number[]): [number, number][] {
++  const out: [number, number][] = []
++  for (const v of values) {
++    const last = out.at(-1)
++    if (last !== undefined && last[1] === v) last[0]++
++    else out.push([1, v])
++  }
++  return out
++}
++
++function compositionOffsets(offsets: readonly number[]): Uint8Array<ArrayBuffer> {
++  const r = runs(offsets)
++  return fullBox(
++    'ctts',
++    0,
++    0,
++    u32(r.length),
++    join(r.flatMap(([count, o]) => [u32(count), u32(o)])),
++  )
++}
++
++// One edit: present the media from `mediaTime` on, for `duration` movie ticks.
++const editList = (duration: number, mediaTime: number) =>
++  box(
++    'edts',
++    fullBox('elst', 0, 0, u32(1), u32(duration), u32(mediaTime), u16(1), u16(0)),
++  )
++
+ // A track's samples as one chunk at `offset` in the file.
+-const oneChunk = (sizes: readonly number[], offset: number): Uint8Array[] => [
++const oneChunk = (sizes: readonly number[], offset: number): Uint8Array<ArrayBuffer>[] => [
+   fullBox('stsc', 0, 0, u32(1), u32(1), u32(sizes.length), u32(1)),
+   fullBox('stsz', 0, 0, u32(0), u32(sizes.length), join(sizes.map(u32))),
+   fullBox('stco', 0, 0, u32(1), u32(offset)),
+@@ -306,7 +338,7 @@ function soundTrak(
+   a: Mp4Audio,
+   offset: number,
+   movieDuration: number,
+-): Uint8Array {
++): Uint8Array<ArrayBuffer> {
+   const frames = a.samples.reduce((n, s) => n + s.frames, 0)
+   const bytes = a.samples.reduce((n, s) => n + s.data.length, 0)
+   const bitrate =
+@@ -380,7 +412,13 @@ function soundTrak(
+ // timing, and it is exact.
+ const MOVIE_TIMESCALE = 1000
+ 
+-export function writeMp4(spec: Mp4Spec): Uint8Array {
++export function writeMp4(spec: Mp4Spec): Uint8Array<ArrayBuffer> {
++  return join(mp4Parts(spec))
++}
++
++// The file as the pieces it is laid out from, sample data untouched, so a Blob
++// can be built from them without copying the take into one array first.
++export function mp4Parts(spec: Mp4Spec): Uint8Array<ArrayBuffer>[] {
+   const { width, height, fps, samples } = spec
+   // The track's timescale *is* the frame rate's numerator, so one frame is
+   // exactly `den` ticks and there is no rounding anywhere. 60fps becomes
+@@ -389,8 +427,18 @@ export function writeMp4(spec: Mp4Spec): Uint8Array {
+   // recognises on sight.
+   const timescale = fps.num
+   const delta = fps.den
+-  const n = samples.length
+-  const trackDuration = n * delta
++  // Decode order is the sample order; presentation order is `pts`. Decode
++  // times are the presentation times sorted, pulled back by the deepest
++  // reorder so no composition offset is negative, and the edit list starts
++  // the presentation where that pull-back put the first frame.
++  const pts = samples.map((s, i) => (s.pts ?? i) * delta)
++  const sorted = [...pts].sort((a, b) => a - b)
++  let shift = 0
++  for (let i = 0; i < pts.length; i++)
++    shift = Math.max(shift, sorted[i] - pts[i])
++  const deltas = sorted.map((v, i) => (sorted[i + 1] ?? v + delta) - v)
++  const offsets = pts.map((p, i) => p - sorted[i] + shift)
++  const trackDuration = deltas.reduce((t, d) => t + d, 0)
+   const videoDuration = Math.round(
+     (trackDuration / timescale) * MOVIE_TIMESCALE,
+   )
+@@ -406,10 +454,10 @@ export function writeMp4(spec: Mp4Spec): Uint8Array {
+ 
+   // The picture's samples, then the sound's, each track one chunk.
+   const videoBytes = samples.reduce((t, s) => t + s.data.length, 0)
+-  const mdatPayload = join([
++  const payload = [
+     ...samples.map(s => s.data),
+     ...(audio?.samples.map(s => s.data) ?? []),
+-  ])
++  ]
+   const ftyp = box(
+     'ftyp',
+     str('isom'),
+@@ -422,7 +470,10 @@ export function writeMp4(spec: Mp4Spec): Uint8Array {
+   // Written before `moov` so the offsets in `stco` can be computed without
+   // laying the movie box out twice: everything before the samples is `ftyp`
+   // plus this box's own 8-byte header.
+-  const mdat = box('mdat', mdatPayload)
++  const mdatHead = join([
++    u32(payload.reduce((t, p) => t + p.length, 8)),
++    str('mdat'),
++  ])
+   const sampleStart = ftyp.length + 8
+ 
+   const avc1 = box(
+@@ -457,7 +508,8 @@ export function writeMp4(spec: Mp4Spec): Uint8Array {
+     'stbl',
+     fullBox('stsd', 0, 0, u32(1), avc1),
+     // The whole of what makes this constant: one entry for every sample.
+-    fullBox('stts', 0, 0, u32(1), u32(n), u32(delta)),
++    timeToSample(deltas),
++    ...(offsets.some(o => o !== 0) ? [compositionOffsets(offsets)] : []),
+     // Which frames an editor may cut on. Omitted entirely when every frame is
+     // one — that is what the format's absence means, and writing it out would
+     // be a table the size of the movie saying nothing.
+@@ -526,6 +578,7 @@ export function writeMp4(spec: Mp4Spec): Uint8Array {
+         u32(width * 0x10000),
+         u32(height * 0x10000),
+       ),
++      ...(shift > 0 ? [editList(videoDuration, shift)] : []),
+       box(
+         'mdia',
+         fullBox(
+@@ -568,5 +621,5 @@ export function writeMp4(spec: Mp4Spec): Uint8Array {
+       : [soundTrak(audio, sampleStart + videoBytes, audioDuration)]),
+   )
+ 
+-  return join([ftyp, mdat, moov])
++  return [ftyp, mdatHead, ...payload, moov]
+ }
+diff --git a/src/ui/record.ts b/src/ui/record.ts
+index ea1074a..10b2176 100644
+--- a/src/ui/record.ts
++++ b/src/ui/record.ts
+@@ -19,7 +19,7 @@
+ // BGRA and full of picture. So the mirror is gone, and with it the extra copy
+ // per frame it cost.
+ 
+-import { writeMp4 } from './mp4'
++import { mp4Parts } from './mp4'
+ import { startAudio } from './recordAudio'
+ 
+ import type { InputTap } from '../core/signal/audiostate'
+@@ -95,6 +95,10 @@ const bitrateFor = (w: number, h: number, fps: number): number =>
+ // interval makes scrubbing coarse while a short one spends bitrate.
+ const KEYFRAME_SECONDS = 2
+ 
++const QUEUE_CAP = Number(
++  new URLSearchParams(location.search).get('recq') ?? 2,
++)
++
+ interface RecorderSpec {
+   width: number
+   height: number
+@@ -103,12 +107,30 @@ interface RecorderSpec {
+   // stays in step only with a caller that hands frames at the wall clock's
+   // pace.
+   audio?: InputTap | null
++  channels?: 1 | 2
++  // Spike: which audio clock a frame's render time is mapped onto.
++  clock?: 'output' | 'process' | 'latency' | 'envelope' | 'smooth'
++}
++
++export interface FrameStat {
++  renderedAt: number
++  arrivedAt: number
++  slot: number
++  kept: boolean
++  why: '' | 'slot' | 'queue'
++  queue: number
++  out: number
++  proc: number
+ }
+ 
+ export interface Recorder {
+   // Hand over one rendered frame. The timestamp is derived from how many have
+   // been taken, never from the clock — that is the whole point.
+   frame: (source: CanvasImageSource) => void
++  // Hand over a frame rendered at `renderedAt` (performance.now()), stamped on
++  // the sound's clock and snapped to the frame grid. The recorder owns it.
++  frameAt: (frame: VideoFrame, renderedAt: number) => void
++  stats: () => FrameStat[]
+   // Flush the encoder and mux. Rejects if nothing was recorded.
+   finish: () => Promise<Blob>
+   // Give up without producing a file: an encoder is an OS resource, and a
+@@ -139,13 +161,40 @@ export function isSupported(): boolean {
+ // picture is not a picture anybody can tell was cropped.
+ const even = (n: number): number => Math.max(2, n - (n % 2))
+ 
++// The sound's clock read from the main thread, in seconds, at a given
++// performance.now(). Firefox refreshes `currentTime` about 74 times a second
++// and a read lags the audio thread by 8 ms at the median and up to 56 ms, so a
++// read is a lower bound: the upper envelope of `currentTime - now` is the
++// clock. It is allowed to sink by 200 ppm, far more than two crystals drift,
++// so a slower audio clock is followed too.
++export function audioClock(ctx: BaseAudioContext, smooth = false) {
++  let env = -Infinity
++  let seen = 0
++  const ring = new Float64Array(512)
++  let n = 0
++  let sum = 0
++  const sample = () => {
++    const now = performance.now()
++    const d = ctx.currentTime * 1000 - now
++    env = Math.max(d, env - (now - seen) * 2e-4)
++    seen = now
++    const i = n % ring.length
++    if (n >= ring.length) sum -= ring[i]
++    ring[i] = d
++    sum += d
++    n++
++  }
++  const mean = () => sum / Math.min(n, ring.length)
++  return { sample, at: (p: number) => (p + (smooth ? mean() : env)) / 1000 }
++}
++
+ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
+   const { fps } = spec
+   const width = even(spec.width)
+   const height = even(spec.height)
+   const rate = fps.num / fps.den
+   const samples: Sample[] = []
+-  let avcc: Uint8Array | null = null
++  let avcc: Uint8Array<ArrayBuffer> | null = null
+   let count = 0
+   let failure = ''
+   let closed = false
+@@ -196,19 +245,23 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
+       // belongs to the encoder, which is about to be closed.
+       const description = meta?.decoderConfig?.description
+       if (avcc === null && description !== undefined) {
+-        avcc = new Uint8Array(
++        avcc = (
+           ArrayBuffer.isView(description)
+             ? new Uint8Array(
+                 description.buffer,
+                 description.byteOffset,
+                 description.byteLength,
+               )
+-            : new Uint8Array(description),
+-        )
++            : new Uint8Array(description)
++        ).slice()
+       }
+       const data = new Uint8Array(chunk.byteLength)
+       chunk.copyTo(data)
+-      samples.push({ data, key: chunk.type === 'key' })
++      samples.push({
++        data,
++        key: chunk.type === 'key',
++        pts: Math.round((chunk.timestamp * fps.num) / (1e6 * fps.den)),
++      })
+     },
+     error: e => {
+       failure = e instanceof Error ? e.message : String(e)
+@@ -220,9 +273,68 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
+   const sound =
+     spec.audio === undefined || spec.audio === null
+       ? null
+-      : await startAudio(spec.audio).catch(() => null)
++      : await startAudio(spec.audio, spec.channels ?? 1).catch(() => null)
++  const slots: number[] = []
++  const stats: FrameStat[] = []
++  let origin = -1
++  const clock =
++    sound === null ? null : audioClock(sound.context, spec.clock === 'smooth')
++  const sampler =
++    clock === null ? 0 : setInterval(clock.sample, 2)
++  // The envelope needs a few refreshes of `currentTime` behind it before the
++  // first frame fixes the take's origin.
++  if (clock !== null) await new Promise(r => setTimeout(r, 300))
++  const slotUs = (1e6 * fps.den) / fps.num
++  const keyEvery = Math.max(1, Math.round(rate * KEYFRAME_SECONDS))
+ 
+   return {
++    stats: () => stats,
++    frameAt: (frame, renderedAt) => {
++      const arrivedAt = performance.now()
++      if (closed || encoder.state !== 'configured' || sound === null) {
++        frame.close()
++        return
++      }
++      const ctx = sound.context
++      clock?.sample()
++      const ts = ctx.getOutputTimestamp()
++      const out =
++        (ts.contextTime ?? 0) + (renderedAt - (ts.performanceTime ?? 0)) / 1000
++      const proc = ctx.currentTime + (renderedAt - arrivedAt) / 1000
++      const at =
++        spec.clock === 'process'
++          ? proc
++          : spec.clock === 'latency'
++            ? proc - ctx.outputLatency - ctx.baseLatency
++            : (spec.clock === 'envelope' || spec.clock === 'smooth') &&
++                clock !== null
++              ? clock.at(renderedAt) - ctx.outputLatency - ctx.baseLatency
++              : out
++      if (origin < 0) {
++        origin = at
++        sound.origin(Math.round(at * ctx.sampleRate))
++      }
++      const slot = Math.round((at - origin) * rate)
++      const last = slots.at(-1) ?? -1
++      const queue = encoder.encodeQueueSize
++      const kept = slot > last && queue <= QUEUE_CAP
++      const why = kept ? '' : slot <= last ? 'slot' : 'queue'
++      stats.push({ renderedAt, arrivedAt, slot, kept, why, queue, out, proc })
++      if (!kept) {
++        frame.close()
++        return
++      }
++      const stamped = new VideoFrame(frame, {
++        timestamp: Math.round(slot * slotUs),
++        visibleRect: { x: 0, y: 0, width, height },
++      })
++      frame.close()
++      const key = Math.floor(slot / keyEvery) > Math.floor(last / keyEvery)
++      encoder.encode(stamped, { keyFrame: count === 0 || key })
++      stamped.close()
++      slots.push(slot)
++      count++
++    },
+     frames: () => count,
+     error: () => failure,
+     frame: source => {
+@@ -252,17 +364,21 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
+       count++
+     },
+     abort: () => {
++      clearInterval(sampler)
+       closed = true
+       sound?.abort()
+       if (encoder.state !== 'closed') encoder.close()
+       samples.length = 0
+     },
+     finish: async () => {
++      clearInterval(sampler)
+       closed = true
+       // The sound stops with the last frame, before the picture's flush, which
+       // takes long enough to leave the sound half a second over.
+       const heard = sound === null ? Promise.resolve(null) : sound.finish()
++      console.log('SPIKE finish: video flush', encoder.encodeQueueSize)
+       if (encoder.state === 'configured') await encoder.flush()
++      console.log('SPIKE finish: video flushed', samples.length)
+       if (encoder.state !== 'closed') encoder.close()
+       if (failure !== '') throw new Error(failure)
+       if (samples.length === 0) throw new Error('nothing was recorded')
+@@ -270,13 +386,14 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
+         throw new Error('the encoder produced no parameter sets')
+       }
+       const audio = await heard
++      console.log('SPIKE finish: audio', audio?.samples.length)
+       // Copied into a fresh ArrayBuffer rather than asserted into one. A
+       // `Uint8Array` is a `BlobPart` at runtime in every browser, but its
+       // buffer is typed `ArrayBufferLike` — which could be shared — and the
+       // cast that quiets that is the kind this codebase does not take. One copy
+       // of a file already held whole in memory is not the cost worth arguing
+       // over.
+-      const file = writeMp4({
++      const parts = mp4Parts({
+         width,
+         height,
+         fps,
+@@ -284,9 +401,7 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
+         samples,
+         ...(audio === null ? {} : { audio }),
+       })
+-      const out = new ArrayBuffer(file.length)
+-      new Uint8Array(out).set(file)
+-      return new Blob([out], { type: 'video/mp4' })
++      return new Blob(parts, { type: 'video/mp4' })
+     },
+   }
+ }
+diff --git a/src/ui/recordAudio.ts b/src/ui/recordAudio.ts
+index f88b8e3..7769bf9 100644
+--- a/src/ui/recordAudio.ts
++++ b/src/ui/recordAudio.ts
+@@ -5,7 +5,10 @@ import type { AudioSample, Mp4Audio } from './mp4'
+ 
+ // A take's sound, from the tap's first block to `finish`.
+ export interface AudioTake {
+-  // Start keeping sound. The recorder calls it with the first frame of picture.
++  context: AudioContext
++  // Where the take starts, in context sample frames. Sound processed before it
++  // is dropped. `go` is `origin` at the context's current time.
++  origin: (frame: number) => void
+   go: () => void
+   // Null when nothing was kept, which leaves the take silent.
+   finish: () => Promise<Mp4Audio | null>
+@@ -31,14 +34,18 @@ const OPUS_PRESKIP = 312
+ const preSkipOf = (head: Uint8Array | null): number =>
+   head !== null && head.length >= 12 ? head[10] | (head[11] << 8) : OPUS_PRESKIP
+ 
+-const bytesOf = (d: AllowSharedBufferSource): Uint8Array =>
+-  ArrayBuffer.isView(d)
+-    ? new Uint8Array(d.buffer.slice(d.byteOffset, d.byteOffset + d.byteLength))
+-    : new Uint8Array(d.slice(0))
++const bytesOf = (d: AllowSharedBufferSource): Uint8Array<ArrayBuffer> =>
++  (ArrayBuffer.isView(d)
++    ? new Uint8Array(d.buffer, d.byteOffset, d.byteLength)
++    : new Uint8Array(d)
++  ).slice()
+ 
+ // The mic through the tap into an encoder, or null where the browser encodes
+ // neither codec, which leaves the take silent rather than failing it.
+-export async function startAudio(tap: InputTap): Promise<AudioTake | null> {
++export async function startAudio(
++  tap: InputTap,
++  channels: 1 | 2 = 1,
++): Promise<AudioTake | null> {
+   if (typeof AudioEncoder === 'undefined' || typeof AudioData === 'undefined')
+     return null
+   const ctx = tap.context
+@@ -46,8 +53,8 @@ export async function startAudio(tap: InputTap): Promise<AudioTake | null> {
+   const configFor = (codec: string): AudioEncoderConfig => ({
+     codec,
+     sampleRate: rate,
+-    numberOfChannels: 1,
+-    bitrate: BITRATE,
++    numberOfChannels: channels,
++    bitrate: BITRATE * channels,
+   })
+   let pick: (typeof CODECS)[number] | null = null
+   for (const c of CODECS) {
+@@ -65,7 +72,7 @@ export async function startAudio(tap: InputTap): Promise<AudioTake | null> {
+   const clock = chosen.codec === 'opus' ? 48000 : rate
+ 
+   const samples: AudioSample[] = []
+-  let config: Uint8Array | null = null
++  let config: Uint8Array<ArrayBuffer> | null = null
+   let failure = ''
+   const encoder = new AudioEncoder({
+     output: (chunk, meta) => {
+@@ -90,9 +97,10 @@ export async function startAudio(tap: InputTap): Promise<AudioTake | null> {
+   const node = new AudioWorkletNode(ctx, 'take-tap', {
+     numberOfInputs: 1,
+     numberOfOutputs: 1,
+-    channelCount: 1,
++    channelCount: channels,
+     channelCountMode: 'explicit',
+     channelInterpretation: 'speakers',
++    processorOptions: { channels },
+   })
+   // Nothing pulls a node that leads nowhere, so it feeds a muted gain that
+   // reaches the speakers.
+@@ -101,27 +109,52 @@ export async function startAudio(tap: InputTap): Promise<AudioTake | null> {
+   node.connect(mute).connect(ctx.destination)
+   const unlisten = tap.listen(node)
+ 
+-  let taken = 0
++  let start = -1
+   let ended: (() => void) | null = null
++  const early: { pcm: Float32Array<ArrayBuffer>; frames: number; at: number }[] =
++    []
++  const encode = (pcm: Float32Array<ArrayBuffer>, frames: number, at: number) => {
++    const skip = Math.max(0, start - at)
++    const n = frames - skip
++    if (n <= 0 || encoder.state !== 'configured') return
++    let data = pcm
++    if (skip > 0) {
++      data = new Float32Array(n * channels)
++      for (let c = 0; c < channels; c++)
++        data.set(pcm.subarray(c * frames + skip, (c + 1) * frames), c * n)
++    }
++    const audio = new AudioData({
++      format: 'f32-planar',
++      sampleRate: rate,
++      numberOfFrames: n,
++      numberOfChannels: channels,
++      timestamp: Math.round(((at + skip - start) * 1e6) / rate),
++      data,
++    })
++    encoder.encode(audio)
++    audio.close()
++  }
+   const onBlock = (
+-    e: MessageEvent<{ pcm: Float32Array<ArrayBuffer>; last: boolean }>,
++    e: MessageEvent<{
++      pcm: Float32Array<ArrayBuffer>
++      frames: number
++      at: number
++      last: boolean
++    }>,
+   ) => {
+-    const { pcm, last } = e.data
+-    if (pcm.length > 0 && encoder.state === 'configured') {
+-      const data = new AudioData({
+-        format: 'f32-planar',
+-        sampleRate: rate,
+-        numberOfFrames: pcm.length,
+-        numberOfChannels: 1,
+-        timestamp: Math.round((taken * 1e6) / rate),
+-        data: pcm,
+-      })
+-      encoder.encode(data)
+-      data.close()
+-      taken += pcm.length
++    const { pcm, frames, at, last } = e.data
++    if (frames > 0) {
++      if (start < 0) early.push({ pcm, frames, at })
++      else encode(pcm, frames, at)
+     }
+     if (last) ended?.()
+   }
++  const origin = (frame: number) => {
++    if (start >= 0) return
++    start = frame
++    for (const b of early) encode(b.pcm, b.frames, b.at)
++    early.length = 0
++  }
+   node.port.addEventListener('message', onBlock)
+   node.port.start()
+ 
+@@ -134,7 +167,9 @@ export async function startAudio(tap: InputTap): Promise<AudioTake | null> {
+   }
+ 
+   return {
+-    go: () => node.port.postMessage('go', []),
++    context: ctx,
++    origin,
++    go: () => origin(Math.round(ctx.currentTime * rate)),
+     abort: () => {
+       node.port.postMessage('stop', [])
+       release()
+@@ -146,14 +181,16 @@ export async function startAudio(tap: InputTap): Promise<AudioTake | null> {
+         node.port.postMessage('stop', [])
+         setTimeout(done, 500)
+       })
++      console.log('SPIKE audio: stopped, flushing', encoder.state)
+       if (encoder.state === 'configured') await encoder.flush()
++      console.log('SPIKE audio: flushed', samples.length, failure)
+       release()
+       if (failure !== '' || samples.length === 0) return null
+       if (chosen.codec === 'aac' && config === null) return null
+       return {
+         codec: chosen.codec,
+         sampleRate: clock,
+-        channels: 1,
++        channels,
+         config: chosen.codec === 'aac' ? config : null,
+         preSkip: chosen.codec === 'opus' ? preSkipOf(config) : 0,
+         samples,
+diff --git a/src/ui/tap.worklet.js b/src/ui/tap.worklet.js
+index e3fc304..7dc07b5 100644
+--- a/src/ui/tap.worklet.js
++++ b/src/ui/tap.worklet.js
+@@ -2,46 +2,57 @@
+ // imports, because the audio thread fetches and evaluates an AudioWorklet
+ // module itself.
+ //
+-// It holds everything until the first frame of picture is taken, so the sound
+-// starts where the picture does, then hands the main thread mono blocks. A
+-// quantum with no input connected counts as silence rather than as nothing, so
+-// the sound keeps the picture's length if the mic goes away mid-take.
++// It hands the main thread planar blocks, each stamped with the context frame
++// its first sample was processed at, and the main thread trims them to where
++// the picture starts. A quantum with no input connected counts as silence, so
++// the sound keeps the picture's length if the source goes away mid-take.
+ 
+ const BLOCK = 2048
+ 
+ class TapProcessor extends AudioWorkletProcessor {
+-  constructor() {
++  constructor(options) {
+     super()
+-    this.rolling = false
++    this.channels = options?.processorOptions?.channels ?? 1
+     this.done = false
+-    this.block = new Float32Array(BLOCK)
+-    this.fill = 0
++    this.fresh()
+     this.port.addEventListener('message', e => {
+-      if (e.data === 'go') this.rolling = true
+       if (e.data === 'stop') {
+-        const pcm = this.block.slice(0, this.fill)
+-        this.port.postMessage({ pcm, last: true }, [pcm.buffer])
++        this.post(true)
+         this.done = true
+       }
+     })
+     this.port.start()
+   }
+ 
++  fresh() {
++    this.block = new Float32Array(BLOCK * this.channels)
++    this.fill = 0
++    this.at = -1
++  }
++
++  post(last) {
++    const n = this.fill
++    const pcm =
++      n === BLOCK ? this.block : new Float32Array(n * this.channels)
++    if (n !== BLOCK)
++      for (let c = 0; c < this.channels; c++)
++        pcm.set(this.block.subarray(c * BLOCK, c * BLOCK + n), c * n)
++    this.port.postMessage({ pcm, frames: n, at: this.at, last }, [pcm.buffer])
++    this.fresh()
++  }
++
+   process(inputs) {
+     if (this.done) return false
+-    if (!this.rolling) return true
+     const input = inputs[0]
+-    const channel = input.length > 0 ? input[0] : null
+-    const n = channel === null ? 128 : channel.length
++    const n = input.length > 0 ? input[0].length : 128
+     for (let i = 0; i < n; i++) {
+-      this.block[this.fill++] = channel === null ? 0 : channel[i]
+-      if (this.fill === BLOCK) {
+-        this.port.postMessage({ pcm: this.block, last: false }, [
+-          this.block.buffer,
+-        ])
+-        this.block = new Float32Array(BLOCK)
+-        this.fill = 0
++      if (this.at < 0) this.at = currentFrame + i
++      for (let c = 0; c < this.channels; c++) {
++        const ch = input.length === 0 ? null : input[Math.min(c, input.length - 1)]
++        this.block[c * BLOCK + this.fill] = ch === null ? 0 : ch[i]
+       }
++      this.fill++
++      if (this.fill === BLOCK) this.post(false)
+     }
+     return true
+   }
+diff --git a/src/ui/useCapture.ts b/src/ui/useCapture.ts
+index cfb2a56..3c77237 100644
+--- a/src/ui/useCapture.ts
++++ b/src/ui/useCapture.ts
+@@ -4,6 +4,7 @@ import { fileName, save } from './download'
+ import { isSupported, startRecording } from './record'
+ 
+ import type { InputTap } from '../core/signal/audiostate'
++import type { FrameSink } from '../core/gpu/frameread'
+ import type { Recorder } from './record'
+ import type { RefObject } from 'react'
+ 
+@@ -54,9 +55,14 @@ export function useCapture(
+   name: string,
+   onError: (message: string) => void,
+   deliver: (blob: Blob, name: string) => void = save,
+-  opts: { clock?: boolean; audio?: () => InputTap | null } = {},
++  opts: {
++    clock?: boolean | 'output' | 'process' | 'latency' | 'envelope' | 'smooth'
++    audio?: () => InputTap | null
++    engine?: () => { setFrameSink: (s: FrameSink | null) => unknown } | null
++  } = {},
+ ) {
+   const recRef = useRef<Recorder | null>(null)
++  const sinkOffRef = useRef<(() => void) | null>(null)
+   const rafRef = useRef(0)
+   const [recording, setRecording] = useState(false)
+ 
+@@ -68,6 +74,8 @@ export function useCapture(
+   useEffect(
+     () => () => {
+       cancelAnimationFrame(rafRef.current)
++      sinkOffRef.current?.()
++      sinkOffRef.current = null
+       recRef.current?.abort()
+       recRef.current = null
+     },
+@@ -125,6 +133,8 @@ export function useCapture(
+   const stop = async () => {
+     const rec = recRef.current
+     cancelAnimationFrame(rafRef.current)
++    sinkOffRef.current?.()
++    sinkOffRef.current = null
+     recRef.current = null
+     setRecording(false)
+     if (rec === null) return
+@@ -154,6 +164,35 @@ export function useCapture(
+     // recording started at, which is the behaviour a take actually wants.
+     const width = canvas.width
+     const height = canvas.height
++    const tap = opts.audio?.() ?? null
++    const engine = tap === null ? null : (opts.engine?.() ?? null)
++    if (engine !== null) {
++      startRecording({
++        width,
++        height,
++        fps: FPS,
++        audio: tap,
++        channels: 2,
++        clock:
++          opts.clock === 'process' || opts.clock === 'latency' || opts.clock === 'envelope' || opts.clock === 'smooth'
++            ? opts.clock
++            : 'output',
++      }).then(
++        rec => {
++          recRef.current = rec
++          setRecording(true)
++          ;(window as unknown as { __rec: Recorder }).__rec = rec
++          engine.setFrameSink({ frame: (f, at) => rec.frameAt(f, at) })
++          sinkOffRef.current = () => engine.setFrameSink(null)
++        },
++        (e: unknown) => {
++          onError(
++            `could not start recording: ${e instanceof Error ? e.message : String(e)}`,
++          )
++        },
++      )
++      return
++    }
+     startRecording({
+       width,
+       height,
+@@ -169,7 +208,7 @@ export function useCapture(
+           const live = canvasRef.current
+           const r = recRef.current
+           if (live === null || r === null) return
+-          if (opts.clock === true) {
++          if (opts.clock !== undefined && opts.clock !== false) {
+             const due =
+               Math.floor(
+                 ((performance.now() - start) / 1000) * (FPS.num / FPS.den),
+diff --git a/vite.spike.config.ts b/vite.spike.config.ts
+new file mode 100644
+index 0000000..f39feb8
+--- /dev/null
++++ b/vite.spike.config.ts
+@@ -0,0 +1,12 @@
++import base from './vite.config.ts'
++
++type Env = { command: 'build' | 'serve'; mode: string }
++
++export default (env: Env) => {
++  const c = (base as unknown as (e: Env) => Record<string, unknown>)(env)
++  return {
++    ...c,
++    cacheDir: '.vite-spike',
++    server: { port: 5311, strictPort: true, forwardConsole: false },
++  }
++}
