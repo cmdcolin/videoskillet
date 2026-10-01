@@ -47,6 +47,7 @@ import type { Transition } from '../ui/transitions'
 import type { Layers, Look, Mix } from './looks'
 import type { Layout } from './tape'
 import type { Pattern } from './useCamEngine'
+import type { Facing } from './useCamera'
 import type { ChangeEvent, PointerEvent, ReactNode } from 'react'
 
 type Mode = 'photo' | 'video'
@@ -574,6 +575,13 @@ export function CamPage() {
   const showHelp = on && help
   const mix = scene.mix ?? FIRST_MIX
   const noB = scene.mix === null || !second.loaded
+  const aSources: { key: Facing; label: string }[] =
+    cam.canFlip && cam.sided
+      ? [
+          { key: 'environment', label: 'back camera' },
+          { key: 'user', label: 'front camera' },
+        ]
+      : [{ key: cam.facing, label: 'camera' }]
   const sources: { key: BSource; label: string; title: string }[] = [
     { key: 'none', label: 'none', title: 'nothing on B' },
     ...(cam.canFlip
@@ -789,13 +797,36 @@ export function CamPage() {
 
         {on ? (
           <div className={styles.mixer} aria-label="Mixer">
-            <div className={styles.sources}>
-              <span className={styles.source}>
-                <b>A</b>camera
-              </span>
-              <span className={styles.source}>
-                <b>B</b>
-              </span>
+            <div className={styles.sourceRow}>
+              <span className={styles.sourceName}>source A</span>
+              <div
+                className={styles.mixModes}
+                role="radiogroup"
+                aria-label="Source A"
+              >
+                {aSources.map(src => {
+                  const up = src.key === cam.facing
+                  return (
+                    <button
+                      key={src.key}
+                      role="radio"
+                      aria-checked={up}
+                      className={cx(styles.mixMode, up && styles.mixModeOn)}
+                      disabled={busy}
+                      onClick={() => {
+                        if (up) return
+                        if (second.live) void second.swap()
+                        else cam.flip()
+                      }}
+                    >
+                      {src.label}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+            <div className={styles.sourceRow}>
+              <span className={styles.sourceName}>source B</span>
               <div
                 className={styles.mixModes}
                 role="radiogroup"

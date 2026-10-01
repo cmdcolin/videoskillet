@@ -253,8 +253,9 @@ and **camera** in the ☰ menu reaches the page from the app.
   harder keeps its own settings. While the switch is on, **VIDEO** records the
   sound with the picture, as AAC where the browser can encode it and Opus where
   it cannot.
-- The mixer under the picture shows what is on each source. **A** is the camera,
-  and **B** starts at **none**. B's options scroll sideways.
+- The mixer under the picture has a row for each source. **source A** is the
+  camera, with **back camera** and **front camera** on a phone that has both.
+  **source B** starts at **none**, and its options scroll sideways.
   - **other camera**, on a phone with two, puts the other camera on B: the
     camera on screen goes to B and the other one comes on screen. Point the back
     camera at a scene, press it, and the front camera puts you over the scene. A

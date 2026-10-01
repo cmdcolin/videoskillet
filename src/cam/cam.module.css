@@ -372,13 +372,37 @@
   width: 100%;
   max-width: 560px;
 }
-.sources {
+/* One row per source, named at the left. The options run off the end and
+   scroll, the way the strip of looks does. */
+.sourceRow {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
-/* B's options run off the end and scroll, the way the strip of looks does. */
-.sources .mixModes {
+.sourceName {
+  flex: none;
+  width: 5.6em;
+  color: var(--fg3);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.sourceRow .mixModes {
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+}
+.sourceRow .mixModes::-webkit-scrollbar {
+  display: none;
+}
+.sourceRow .mixMode {
+  flex: none;
+  padding: 6px 12px;
+  white-space: nowrap;
+}
+.mixModes {
   flex: 1;
   min-width: 0;
   overflow-x: auto;
@@ -863,11 +887,9 @@
   .mixer {
     padding: 0 10px;
   }
-  .sources {
+  .sourceRow {
     flex-wrap: wrap;
-  }
-  .sources .mixModes {
-    flex-basis: 100%;
+    gap: 4px;
   }
   .tabs {
     flex-wrap: wrap;

@@ -47,6 +47,9 @@ export interface Opened {
   stream: MediaStream
   video: HTMLVideoElement
   faces: Facing
+  // Whether the browser said which way the camera faces, which a phone does
+  // and a webcam does not.
+  sided: boolean
   cameras: number
 }
 
@@ -90,6 +93,7 @@ async function openCamera(want: Facing, deviceId?: string): Promise<Opened> {
     stream,
     video,
     faces: settings.facingMode === 'environment' ? 'environment' : 'user',
+    sided: settings.facingMode !== undefined && settings.facingMode !== '',
     cameras: devices.filter(d => d.kind === 'videoinput').length,
   }
 }
@@ -108,6 +112,7 @@ export function useCamera(
   const [state, setState] = useState<CameraState>('off')
   const [error, setError] = useState('')
   const [cameras, setCameras] = useState(0)
+  const [sided, setSided] = useState(false)
   const stream = useRef<MediaStream | null>(null)
   const held = useRef<Opened | null>(null)
   // Which open is the latest. A flip pressed twice quickly must not land on the
@@ -126,6 +131,7 @@ export function useCamera(
     show(opened.video, opened.faces === 'user')
     setStored(opened.faces)
     setCameras(opened.cameras)
+    setSided(opened.sided)
     setState('on')
   }
 
@@ -241,6 +247,7 @@ export function useCamera(
     error,
     facing,
     canFlip: cameras > 1,
+    sided,
     start,
     flip: () => void flip(),
     adopt,
