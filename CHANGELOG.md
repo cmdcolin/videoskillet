@@ -2,6 +2,18 @@
 
 All notable changes to videoskillet are documented here.
 
+## [2.8.0](https://github.com/cmdcolin/videoskillet/compare/v2.7.0...v2.8.0) - 2026-10-02
+
+### Fixes
+- *(gpu)* [`ab132d4`](https://github.com/cmdcolin/videoskillet/commit/ab132d4437299fc514736140ee1c6ebd797003f1) give a take started on a held picture its first frame
+- *(gpu)* [`86fcbac`](https://github.com/cmdcolin/videoskillet/commit/86fcbac56ca166d0b9036c7cd9f66b0ddafe5c88) keep a take's canvas usage when the surface is rebuilt
+- *(gpu)* [`260ff6e`](https://github.com/cmdcolin/videoskillet/commit/260ff6e1bee6ab68e06d10753fe842364d792e77) pack a live take's rows before building its VideoFrame
+- *(ui)* [`38ccd1c`](https://github.com/cmdcolin/videoskillet/commit/38ccd1c50a2ab0536170a069039bde3761e6a73f) pnpm dev runs astro and vite in parallel
+- *(ui)* [`b5cfdd0`](https://github.com/cmdcolin/videoskillet/commit/b5cfdd06f525927b1ce58efa8fab489bc2d85335) astro dev redirects the app's pages to vite
+
+### Tests
+- *(gpu)* [`35384cd`](https://github.com/cmdcolin/videoskillet/commit/35384cd5a6788db36c15424b9bcfebe88e46a1b3) check how a browser builds a VideoFrame from padded rows
+
 ## [2.7.0](https://github.com/cmdcolin/videoskillet/compare/v2.6.0...v2.7.0) - 2026-10-01
 
 ### Features
