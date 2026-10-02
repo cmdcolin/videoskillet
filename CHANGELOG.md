@@ -2,6 +2,11 @@
 
 All notable changes to videoskillet are documented here.
 
+## [2.9.0](https://github.com/cmdcolin/videoskillet/compare/v2.8.0...v2.9.0) - 2026-10-02
+
+### Features
+- *(ui)* [`8e1af8d`](https://github.com/cmdcolin/videoskillet/commit/8e1af8dea43ca34086bbf33df2bf0f7d294fbeac) camera page gets a sources switch and random settings
+
 ## [2.8.0](https://github.com/cmdcolin/videoskillet/compare/v2.7.0...v2.8.0) - 2026-10-02
 
 ### Fixes
