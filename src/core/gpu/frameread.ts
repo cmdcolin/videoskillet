@@ -10,6 +10,14 @@
 // The pool is the buzz readback's (buzzread.ts): a frame that finds every
 // buffer still in flight is skipped, and the recorder keeps the frame before it
 // up across the gap.
+//
+// The copy pads each row to 256 bytes, and Firefox Nightly ignores the
+// `layout` stride a VideoFrame is built with: it reads rows at `width * 4`,
+// so every row starts 168 bytes short of the last at 1494 wide and the picture
+// shears into streaks. It also scales a wider coded frame to the encoder's
+// size instead of cropping to `visibleRect`. So `flush` packs the rows into a
+// tight buffer first, 0.5 ms at 1494x902, which the tighter VideoFrame copy
+// wins back.
 
 import rescaleSrc from './shaders/rescale.wgsl?raw'
 
@@ -25,6 +33,7 @@ export class FrameRead {
   private readonly staging: GPUBuffer[]
   private free: GPUBuffer[]
   private readonly stride: number
+  private readonly packed: Uint8Array<ArrayBuffer> | null
   private closed = false
   private copied = false
   // A texture at the take's size and the pass that scales into it, built the
@@ -41,6 +50,8 @@ export class FrameRead {
     private readonly sink: FrameSink,
   ) {
     this.stride = Math.ceil((width * 4) / 256) * 256
+    this.packed =
+      this.stride === width * 4 ? null : new Uint8Array(width * 4 * height)
     this.staging = Array.from({ length: POOL }, () =>
       device.createBuffer({
         size: this.stride * height,
@@ -74,12 +85,11 @@ export class FrameRead {
     void buf.mapAsync(GPUMapMode.READ).then(
       () => {
         if (this.closed) return
-        const frame = new VideoFrame(new Uint8Array(buf.getMappedRange()), {
+        const frame = new VideoFrame(this.tight(buf), {
           format: this.format === 'bgra8unorm' ? 'BGRX' : 'RGBX',
           codedWidth: this.width,
           codedHeight: this.height,
           timestamp: 0,
-          layout: [{ offset: 0, stride: this.stride }],
         })
         buf.unmap()
         this.free.push(buf)
@@ -89,6 +99,18 @@ export class FrameRead {
       // recording is going away.
       () => {},
     )
+  }
+
+  private tight(buf: GPUBuffer): Uint8Array {
+    const mapped = new Uint8Array(buf.getMappedRange())
+    const packed = this.packed
+    if (packed === null) return mapped
+    const row = this.width * 4
+    for (let y = 0; y < this.height; y++) {
+      const from = y * this.stride
+      packed.set(mapped.subarray(from, from + row), y * row)
+    }
+    return packed
   }
 
   private scaled(enc: GPUCommandEncoder, presented: GPUTexture): GPUTexture {
