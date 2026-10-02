@@ -1867,7 +1867,8 @@ export class Engine implements EngineApi {
 
   // Hand each frame this engine renders to a live take, at the take's size, or
   // stop with null. A held present and a frame the lock skips send nothing,
-  // since neither is a new picture. The canvas is reconfigured so its texture
+  // since neither is a new picture, except a held present before the take has
+  // a frame at all. The canvas is reconfigured so its texture
   // can be copied out of, and sampled when the window no longer matches the
   // take's size.
   setFrameSink(
@@ -2464,10 +2465,17 @@ export class Engine implements EngineApi {
     rp.end()
   }
 
+  // A take started on a held picture gets its first frame here, or it would get
+  // none until the picture moves. The recorder holds that frame from then on.
   private presentHeld(): void {
     const enc = this.gpu.device.createCommandEncoder()
     this.presentPass(enc)
+    const grab =
+      this.frameRead?.empty === true
+        ? this.frameRead.copy(enc, this.gpu.context.getCurrentTexture())
+        : null
     this.gpu.device.queue.submit([enc.finish()])
+    if (grab !== null) this.frameRead?.flush(grab, performance.now())
   }
 
   private renderFrame(): void {

@@ -26,6 +26,9 @@ export class FrameRead {
   private free: GPUBuffer[]
   private readonly stride: number
   private closed = false
+  // Whether a frame has been copied out yet. A held picture sends nothing new,
+  // so a take started on one needs its first frame from the held present.
+  private copied = false
   // A texture at the take's size and the pass that scales into it, built the
   // first time the canvas and the take disagree.
   private target: GPUTexture | null = null
@@ -54,6 +57,7 @@ export class FrameRead {
   copy(enc: GPUCommandEncoder, presented: GPUTexture): GPUBuffer | null {
     const buf = this.free.pop()
     if (buf === undefined) return null
+    this.copied = true
     const fits =
       presented.width === this.width && presented.height === this.height
     enc.copyTextureToBuffer(
@@ -62,6 +66,10 @@ export class FrameRead {
       [this.width, this.height],
     )
     return buf
+  }
+
+  get empty(): boolean {
+    return !this.copied
   }
 
   flush(buf: GPUBuffer, renderedAt: number): void {
