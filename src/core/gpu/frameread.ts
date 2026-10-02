@@ -26,8 +26,6 @@ export class FrameRead {
   private free: GPUBuffer[]
   private readonly stride: number
   private closed = false
-  // Whether a frame has been copied out yet. A held picture sends nothing new,
-  // so a take started on one needs its first frame from the held present.
   private copied = false
   // A texture at the take's size and the pass that scales into it, built the
   // first time the canvas and the take disagree.
@@ -68,8 +66,8 @@ export class FrameRead {
     return buf
   }
 
-  get empty(): boolean {
-    return !this.copied
+  get started(): boolean {
+    return this.copied
   }
 
   flush(buf: GPUBuffer, renderedAt: number): void {

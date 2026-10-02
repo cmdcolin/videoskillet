@@ -1856,47 +1856,45 @@ export class Engine implements EngineApi {
   // good. Reconfiguring hands back a fresh swapchain, which is the one thing
   // this side of the boundary can still do about it.
   private recoverSurface(): void {
-    if (!this.destroyed) {
-      this.gpu.context.configure({
-        device: this.gpu.device,
-        format: this.gpu.format,
-        alphaMode: 'opaque',
-      })
-    }
+    if (!this.destroyed) this.configureSurface()
   }
 
-  // Hand each frame this engine renders to a live take, at the take's size, or
-  // stop with null. A held present and a frame the lock skips send nothing,
-  // since neither is a new picture, except a held present before the take has
-  // a frame at all. The canvas is reconfigured so its texture
-  // can be copied out of, and sampled when the window no longer matches the
-  // take's size.
-  setFrameSink(
-    sink: FrameSink | null,
-    size: { width: number; height: number },
-  ): void {
+  // A live take copies the canvas texture out, and samples it when the window
+  // no longer matches the take's size.
+  private configureSurface(): void {
     const { device, context, format } = this.gpu
-    this.frameRead?.destroy()
-    this.frameRead = null
     context.configure({
       device,
       format,
       alphaMode: 'opaque',
       usage:
-        sink === null
+        this.frameRead === null
           ? GPUTextureUsage.RENDER_ATTACHMENT
           : GPUTextureUsage.RENDER_ATTACHMENT |
             GPUTextureUsage.COPY_SRC |
             GPUTextureUsage.TEXTURE_BINDING,
     })
-    if (sink !== null)
-      this.frameRead = new FrameRead(
-        device,
-        size.width,
-        size.height,
-        format,
-        sink,
-      )
+  }
+
+  // Hand each frame this engine renders to a live take, at the take's size, or
+  // stop with null. A frame the lock skips sends nothing, and neither does a
+  // held present once the take has a frame.
+  setFrameSink(
+    sink: FrameSink | null,
+    size: { width: number; height: number },
+  ): void {
+    this.frameRead?.destroy()
+    this.frameRead =
+      sink === null
+        ? null
+        : new FrameRead(
+            this.gpu.device,
+            size.width,
+            size.height,
+            this.gpu.format,
+            sink,
+          )
+    this.configureSurface()
   }
 
   // Frame counter, for the diagnostic recorder and the verification harness.
@@ -2465,13 +2463,13 @@ export class Engine implements EngineApi {
     rp.end()
   }
 
-  // A take started on a held picture gets its first frame here, or it would get
-  // none until the picture moves. The recorder holds that frame from then on.
+  // A take started on a held picture gets its first frame here. The recorder
+  // holds that frame until the picture moves.
   private presentHeld(): void {
     const enc = this.gpu.device.createCommandEncoder()
     this.presentPass(enc)
     const grab =
-      this.frameRead?.empty === true
+      this.frameRead?.started === false
         ? this.frameRead.copy(enc, this.gpu.context.getCurrentTexture())
         : null
     this.gpu.device.queue.submit([enc.finish()])
