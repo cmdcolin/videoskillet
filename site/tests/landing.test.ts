@@ -25,7 +25,10 @@ let stage = ''
 
 beforeAll(async () => {
   const container = await experimental_AstroContainer.create()
-  page = await container.renderToString(Landing)
+  page = (await container.renderToString(Landing)).replace(
+    /\sdata-astro-source-(?:file|loc)="[^"]*"/g,
+    '',
+  )
   stage = page.slice(
     page.indexOf('<div class="stage">'),
     page.indexOf('<div class="slideBar">'),
