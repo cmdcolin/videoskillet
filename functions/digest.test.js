@@ -20,6 +20,11 @@ const report = (over = {}) => ({
   frames: 210,
   held: 40,
   deepest: 3,
+  encoded: 170,
+  chunks: 168,
+  coded: '816x1088',
+  canvas: '822x1096',
+  configs: 1,
   stage: 'recording',
   hidden: false,
   model: 'XQ-DQ54',
@@ -33,6 +38,17 @@ describe('digest', () => {
     expect(subject).toBe('videoskillet: 1 recording failed or crashed')
     expect(text).toContain('XQ-DQ54')
     expect(text).toContain('210 frames, 40 held, queue 3')
+    expect(text).toContain(
+      '170 encoded, 168 chunks back, coded 816x1088 in 1 config, canvas 822x1096',
+    )
+  })
+
+  it('puts the error name in front of the message', () => {
+    const { text } = digest(
+      [report({ error: 'OperationError', message: 'Encoding error.' })],
+      1,
+    )
+    expect(text).toContain('  OperationError: Encoding error.')
   })
 
   it('counts the reports it leaves out', () => {

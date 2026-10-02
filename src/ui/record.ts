@@ -163,9 +163,22 @@ export interface Recorder {
   held: () => number
   // The deepest the encoder's queue has been.
   deepest: () => number
+  // Frames handed to the encoder, and chunks it has handed back.
+  encoded: () => number
+  chunks: () => number
+  // The size the encoder says it coded, as WxH, or '' before its first chunk.
+  // Chrome on Android crops to a multiple of 16 where MediaCodec asks it to.
+  coded: () => string
+  // Decoder configs the encoder has emitted. More than one means it was
+  // rebuilt mid-take.
+  configs: () => number
   // The last error the encoder reported, or ''. Encoding failures arrive on a
   // callback rather than as a rejected call, so they have nowhere else to go.
   error: () => string
+  // The error's DOMException name, or ''. Chrome's message for a failed
+  // platform encode is always "Encoding error.", so the name is most of what
+  // a report learns.
+  errorName: () => string
 }
 
 export function isSupported(): boolean {
@@ -198,7 +211,12 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
   let count = 0
   let held = 0
   let deepest = 0
+  let encoded = 0
+  let chunks = 0
+  let coded = ''
+  let configs = 0
   let failure = ''
+  let failureName = ''
   let closed = false
 
   const configFor = (codec: string): VideoEncoderConfig => ({
@@ -253,7 +271,13 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
       // `description` is typed as a union of every buffer-ish thing, because
       // the spec allows any of them. Copied rather than wrapped either way: it
       // belongs to the encoder, which is about to be closed.
-      const description = meta?.decoderConfig?.description
+      const config = meta?.decoderConfig
+      if (config !== undefined) {
+        configs++
+        if (config.codedWidth !== undefined && config.codedHeight !== undefined)
+          coded = `${config.codedWidth}x${config.codedHeight}`
+      }
+      const description = config?.description
       if (avcc === null && description !== undefined) {
         avcc = (
           ArrayBuffer.isView(description)
@@ -267,6 +291,7 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
       }
       const data = new Uint8Array(chunk.byteLength)
       chunk.copyTo(data)
+      chunks++
       bytes += data.length
       // Presentation time in frame periods, off the frame's own timestamp: the
       // encoder hands chunks over in decode order.
@@ -278,6 +303,7 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
     },
     error: e => {
       failure = e instanceof Error ? e.message : String(e)
+      failureName = e instanceof Error ? e.name : ''
     },
   })
 
@@ -313,7 +339,12 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
     frames: () => count,
     held: () => held,
     deepest: () => deepest,
+    encoded: () => encoded,
+    chunks: () => chunks,
+    coded: () => coded,
+    configs: () => configs,
     error: () => failure,
+    errorName: () => failureName,
     busy: () => encoder.encodeQueueSize >= MAX_QUEUE,
     full: () => bytes >= MAX_BYTES,
     hold: () => {
@@ -347,6 +378,7 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
         keyFrame:
           last < 0 || Math.floor(slot / keyEvery) > Math.floor(last / keyEvery),
       })
+      encoded++
       deepest = Math.max(deepest, encoder.encodeQueueSize)
       stamped.close()
       held += Math.max(0, slot - last - 1)
@@ -372,6 +404,7 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
         keyFrame:
           count % Math.max(1, Math.round(rate * KEYFRAME_SECONDS)) === 0,
       })
+      encoded++
       deepest = Math.max(deepest, encoder.encodeQueueSize)
       // Closed at once rather than left to the collector: a VideoFrame holds a
       // GPU or system buffer, and a few unreleased ones stall the encoder

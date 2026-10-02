@@ -19,6 +19,9 @@ const STRINGS: Record<string, number> = {
   hardware: 8,
   stage: 16,
   message: 100,
+  error: 32,
+  coded: 16,
+  canvas: 16,
   model: 64,
 }
 const NUMBERS = new Set([
@@ -29,6 +32,9 @@ const NUMBERS = new Set([
   'frames',
   'held',
   'deepest',
+  'encoded',
+  'chunks',
+  'configs',
   'memory',
 ])
 
@@ -58,6 +64,16 @@ export interface TakeNote {
   frames: number
   held: number
   deepest: number
+  encoded: number
+  chunks: number
+  // What the encoder coded and what the canvas measured last, as WxH. Either
+  // differing from the take's size is a lead.
+  coded: string
+  canvas: string
+  configs: number
+  // The DOMException name of the encoder's error, which Chrome reports when
+  // its message says nothing.
+  error?: string
   stage: 'recording' | 'finishing'
   // Whether the page was hidden at any point. A phone may kill a hidden tab
   // to reclaim memory, which is not the take's doing.

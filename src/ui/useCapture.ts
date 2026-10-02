@@ -132,6 +132,15 @@ export function useCapture(
     frames: r.frames(),
     held: r.held(),
     deepest: r.deepest(),
+    encoded: r.encoded(),
+    chunks: r.chunks(),
+    coded: r.coded(),
+    configs: r.configs(),
+    canvas:
+      canvasRef.current === null
+        ? ''
+        : `${canvasRef.current.width}x${canvasRef.current.height}`,
+    ...(r.errorName() === '' ? {} : { error: r.errorName() }),
   })
 
   // The encoder and its rAF pump are browser objects that outlive React, so a
@@ -273,6 +282,11 @@ export function useCapture(
           frames: 0,
           held: 0,
           deepest: 0,
+          encoded: 0,
+          chunks: 0,
+          coded: '',
+          canvas: `${width}x${height}`,
+          configs: 0,
           stage: 'recording',
           hidden: false,
         }

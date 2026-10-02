@@ -27,7 +27,14 @@ const block = r =>
     `${r.sat.toISOString()}  ${r.kind}  ${r.model ?? 'unknown device'}  ${r.page ?? ''}`,
     `  ${r.width ?? '?'}x${r.height ?? '?'} @${r.fps ?? '?'}fps ${r.codec ?? ''}, hardware encoder ${r.hardware ?? '?'}`,
     `  ${r.seconds ?? '?'}s, ${r.frames ?? '?'} frames, ${r.held ?? '?'} held, queue ${r.deepest ?? '?'}, ${r.stage ?? '?'}${r.hidden === true ? ', page was hidden' : ''}`,
-    ...(r.message === undefined ? [] : [`  ${r.message}`]),
+    ...(r.encoded === undefined
+      ? []
+      : [
+          `  ${r.encoded} encoded, ${r.chunks ?? '?'} chunks back, coded ${r.coded || '?'} in ${plural(r.configs ?? 0, 'config')}, canvas ${r.canvas || '?'}`,
+        ]),
+    ...(r.message === undefined
+      ? []
+      : [`  ${r.error === undefined ? '' : `${r.error}: `}${r.message}`]),
     ...(r.memory === undefined ? [] : [`  ${r.memory} GB memory`]),
     `  ${r.browser} (v${r.version})`,
   ].join('\n')

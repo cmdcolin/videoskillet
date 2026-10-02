@@ -23,6 +23,11 @@ const NOTE: TakeNote = {
   frames: 210,
   held: 40,
   deepest: 3,
+  encoded: 170,
+  chunks: 168,
+  coded: '816x1088',
+  canvas: '822x1096',
+  configs: 1,
   stage: 'recording',
   hidden: false,
 }
@@ -104,5 +109,19 @@ describe('takeLog', () => {
     expect(event).toBe('take_failed')
     expect(params.message).toHaveLength(100)
     expect(params.stage).toBe('recording')
+  })
+
+  it('carries what the encoder got through and its error name', async () => {
+    reportTakeFailed('Encoding error.', { ...NOTE, error: 'OperationError' })
+    await settle()
+    const [, , params] = gtag.mock.calls[0]
+    expect(params).toMatchObject({
+      encoded: 170,
+      chunks: 168,
+      coded: '816x1088',
+      canvas: '822x1096',
+      configs: 1,
+      error: 'OperationError',
+    })
   })
 })

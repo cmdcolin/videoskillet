@@ -762,6 +762,12 @@ describe.skipIf(EMULATOR === undefined)('firestore.rules', () => {
       frames: 210,
       held: 40,
       deepest: 3,
+      encoded: 170,
+      chunks: 168,
+      coded: '816x1088',
+      canvas: '822x1096',
+      configs: 1,
+      error: 'OperationError',
       stage: 'recording',
       hidden: false,
       model: 'XQ-DQ54',
@@ -791,6 +797,9 @@ describe.skipIf(EMULATOR === undefined)('firestore.rules', () => {
       await add({ message: 'x'.repeat(101) })
       await add({ browser: 'x'.repeat(201) })
       await add({ frames: '210' })
+      await add({ encoded: '170' })
+      await add({ error: 'x'.repeat(33) })
+      await add({ coded: 'x'.repeat(17) })
       await add({ hidden: 'no' })
       await add({ sat: 1_700_000_000_000 })
     })

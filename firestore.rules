@@ -307,6 +307,7 @@ service cloud.firestore {
       return d.keys().hasOnly(
                ['kind', 'version', 'browser', 'page', 'width', 'height', 'fps',
                 'codec', 'hardware', 'seconds', 'frames', 'held', 'deepest',
+                'encoded', 'chunks', 'configs', 'coded', 'canvas', 'error',
                 'stage', 'hidden', 'message', 'model', 'memory', 'sat'])
              && d.kind in ['lost', 'failed']
              && d.version is string && d.version.size() <= 32
@@ -316,6 +317,9 @@ service cloud.firestore {
              && optString(d, 'hardware', 8)
              && optString(d, 'stage', 16)
              && optString(d, 'message', 100)
+             && optString(d, 'error', 32)
+             && optString(d, 'coded', 16)
+             && optString(d, 'canvas', 16)
              && optString(d, 'model', 64)
              && optNumber(d, 'width')
              && optNumber(d, 'height')
@@ -324,6 +328,9 @@ service cloud.firestore {
              && optNumber(d, 'frames')
              && optNumber(d, 'held')
              && optNumber(d, 'deepest')
+             && optNumber(d, 'encoded')
+             && optNumber(d, 'chunks')
+             && optNumber(d, 'configs')
              && optNumber(d, 'memory')
              && (!('hidden' in d) || d.hidden is bool)
              && d.sat == request.time;
