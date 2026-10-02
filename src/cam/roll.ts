@@ -8,47 +8,38 @@ import type { Rand } from '../core/rng'
 import type { SliderDef } from '../ui/controls'
 import type { Layers, Look, Shelf } from './looks'
 
-export const DICE_KINDS = ['look', 'stack', 'nudge', 'throw'] as const
-export type DiceKind = (typeof DICE_KINDS)[number]
+export const ROLLS = ['look', 'stack', 'nudge', 'throw'] as const
+export type Roll = (typeof ROLLS)[number]
 
-export const DICE_REACHES = ['tab', 'every tab'] as const
-export type DiceReach = (typeof DICE_REACHES)[number]
+export const DRAW_FROM = ['this tab', 'all tabs'] as const
+export type DrawFrom = (typeof DRAW_FROM)[number]
 
-export const DICE_AMOUNTS = ['gentle', 'normal', 'wild'] as const
-export type DiceAmount = (typeof DICE_AMOUNTS)[number]
+export const WILDNESS = ['gentle', 'normal', 'wild'] as const
+export type Wildness = (typeof WILDNESS)[number]
 
-export interface Dice {
-  kind: DiceKind
-  reach: DiceReach
-  amount: DiceAmount
+export interface RollSettings {
+  from: DrawFrom
+  wildness: Wildness
 }
 
-export const DEFAULT_DICE: Dice = {
-  kind: 'look',
-  reach: 'tab',
-  amount: 'normal',
+export const DEFAULT_SETTINGS: RollSettings = {
+  from: 'this tab',
+  wildness: 'normal',
 }
 
-const KIND_ABOUT: Record<DiceKind, string> = {
+export const ROLL_LABEL: Record<Roll, string> = {
+  look: 'new look',
+  stack: 'stack',
+  nudge: 'nudge',
+  throw: 'throw',
+}
+
+export const ROLL_ABOUT: Record<Roll, string> = {
   look: 'One look, dropped in whole.',
   stack: 'A look with others mixed in on top at random weights.',
   nudge: 'Every knob of the look moves a little.',
   throw: 'A few knobs of the look go a long way.',
 }
-
-const AMOUNT_ABOUT: Record<Exclude<DiceKind, 'look'>, string> = {
-  stack: 'Gentle adds one look, normal two, wild three.',
-  nudge: 'Gentle moves each knob 4% of its travel, normal 12%, wild 30%.',
-  throw: 'Gentle throws one knob, normal two, wild four.',
-}
-
-export const diceAbout = (dice: Dice): string =>
-  dice.kind === 'look'
-    ? KIND_ABOUT.look
-    : `${KIND_ABOUT[dice.kind]} ${AMOUNT_ABOUT[dice.kind]}`
-
-export const usesReach = (kind: DiceKind) => kind === 'look' || kind === 'stack'
-export const usesAmount = (kind: DiceKind) => kind !== 'look'
 
 const parse = <T extends string>(
   list: readonly T[],
@@ -56,15 +47,14 @@ const parse = <T extends string>(
   fallback: T,
 ): T => list.find(x => x === v) ?? fallback
 
-// A stored dice back from `unknown`, with any field it does not recognise at
+// Stored settings back from `unknown`, with any field it does not recognise at
 // its default.
-export function parseDice(v: unknown): Dice {
+export function parseSettings(v: unknown): RollSettings {
   const o = typeof v === 'object' && v !== null ? v : {}
   const get = (k: string): unknown => (k in o ? Reflect.get(o, k) : undefined)
   return {
-    kind: parse(DICE_KINDS, get('kind'), DEFAULT_DICE.kind),
-    reach: parse(DICE_REACHES, get('reach'), DEFAULT_DICE.reach),
-    amount: parse(DICE_AMOUNTS, get('amount'), DEFAULT_DICE.amount),
+    from: parse(DRAW_FROM, get('from'), DEFAULT_SETTINGS.from),
+    wildness: parse(WILDNESS, get('wildness'), DEFAULT_SETTINGS.wildness),
   }
 }
 
@@ -83,16 +73,16 @@ const EVERY_LOOK_WITH_B: readonly string[] = PRESETS.filter(
 // What a roll draws its looks from: the tab's own families, or the whole set.
 // The whole set takes in the looks that need a second picture only while B has
 // one.
-export function dicePool(
+export function drawPool(
   shelf: Shelf,
-  reach: DiceReach,
+  from: DrawFrom,
   withB: boolean,
 ): readonly string[] {
-  if (reach === 'tab') return rollPool(shelf)
+  if (from === 'this tab') return rollPool(shelf)
   return withB ? EVERY_LOOK_WITH_B : EVERY_LOOK
 }
 
-const LAYER_COUNT: Record<DiceAmount, number> = {
+const LAYER_COUNT: Record<Wildness, number> = {
   gentle: 1,
   normal: 2,
   wild: 3,
@@ -106,12 +96,12 @@ const LAYER_WEIGHT = { min: 0.25, max: 0.75, step: 0.05 }
 export function rollStack(
   current: Look | null,
   pool: readonly string[],
-  amount: DiceAmount,
+  wildness: Wildness,
   rand: Rand = Math.random,
 ): { look: Look; layers: Layers } {
   const rest = pool.filter(name => name !== current?.name)
   const order = [...rest]
-  const count = Math.min(LAYER_COUNT[amount] + 1, order.length)
+  const count = Math.min(LAYER_COUNT[wildness] + 1, order.length)
   for (let i = 0; i < count; i++) {
     const j = i + randomIndex(order.length - i, rand)
     ;[order[i], order[j]] = [order[j], order[i]]
@@ -136,13 +126,13 @@ export function rollTweaks(
   tweaks: Partial<Controls>,
   knobs: readonly SliderDef[],
   kind: 'nudge' | 'throw',
-  amount: DiceAmount,
+  wildness: Wildness,
   rand: Rand = Math.random,
 ): Partial<Controls> {
   const next =
     kind === 'nudge'
-      ? mutate(board, knobs, MUTATE_AMOUNTS[amount], rand)
-      : spike(board, knobs, SPIKE_TARGETS[amount], rand)
+      ? mutate(board, knobs, MUTATE_AMOUNTS[wildness], rand)
+      : spike(board, knobs, SPIKE_TARGETS[wildness], rand)
   const changed = Object.fromEntries(
     knobs
       .filter(s => next[s.key] !== board[s.key])

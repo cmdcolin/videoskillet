@@ -632,6 +632,29 @@
   color: #000;
 }
 
+/* The four ways to roll, in one row across the top of the random sheet. */
+.rolls {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.rollButton {
+  padding: 10px 0;
+  border: 1px solid #ffffff40;
+  border-radius: 999px;
+  background: none;
+  color: #fff;
+  font: inherit;
+  font-size: var(--fs-sm);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.rollButton:active {
+  background: #fff;
+  color: #000;
+}
+
 /* The faults a hand can throw: each breaks the picture and lets it heal. */
 .hits {
   display: flex;

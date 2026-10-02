@@ -2,32 +2,32 @@ import { describe, expect, it } from 'vitest'
 
 import { rngFor } from '../core/rng'
 import { PRESET_BY_NAME, needsSourceB } from '../ui/presets'
+import { MIX_SHELF, SHELVES, lookBoard, lookKnobs, rollPool } from './looks'
 import {
-  DEFAULT_DICE,
-  dicePool,
-  parseDice,
+  DEFAULT_SETTINGS,
+  drawPool,
+  parseSettings,
   rollStack,
   rollTweaks,
-} from './dice'
-import { MIX_SHELF, SHELVES, lookBoard, lookKnobs, rollPool } from './looks'
+} from './roll'
 
 const LOOPS = SHELVES[0]
 const SCAN = SHELVES[3]
 
-describe('dicePool', () => {
+describe('drawPool', () => {
   it('rolls within the tab by default', () => {
-    expect(dicePool(SCAN, 'tab', false)).toEqual(rollPool(SCAN))
+    expect(drawPool(SCAN, 'this tab', false)).toEqual(rollPool(SCAN))
   })
 
   it('reaches every tab, past the families the tab names', () => {
-    const every = dicePool(SCAN, 'every tab', false)
+    const every = drawPool(SCAN, 'all tabs', false)
     expect(every.length).toBeGreaterThan(rollPool(SCAN).length)
     for (const name of rollPool(SCAN)) expect(every).toContain(name)
   })
 
   it('leaves out the looks that need B until B has a picture', () => {
-    const without = dicePool(LOOPS, 'every tab', false)
-    const withB = dicePool(LOOPS, 'every tab', true)
+    const without = drawPool(LOOPS, 'all tabs', false)
+    const withB = drawPool(LOOPS, 'all tabs', true)
     for (const name of without) {
       const def = PRESET_BY_NAME.get(name)
       expect(def !== undefined && needsSourceB(def), name).toBe(false)
@@ -40,7 +40,7 @@ describe('dicePool', () => {
 })
 
 describe('rollStack', () => {
-  const pool = dicePool(SCAN, 'every tab', false)
+  const pool = drawPool(SCAN, 'all tabs', false)
 
   it('stacks one more look per step of amount', () => {
     for (const [amount, layers] of [
@@ -113,18 +113,17 @@ describe('rollTweaks', () => {
   })
 })
 
-describe('parseDice', () => {
+describe('parseSettings', () => {
   it('keeps what it recognises', () => {
-    const dice = { kind: 'throw', reach: 'every tab', amount: 'wild' }
-    expect(parseDice(dice)).toEqual(dice)
+    const settings = { from: 'all tabs', wildness: 'wild' }
+    expect(parseSettings(settings)).toEqual(settings)
   })
 
   it('falls back field by field on a stale or foreign value', () => {
-    expect(parseDice({ kind: 'warp', amount: 'wild' })).toEqual({
-      ...DEFAULT_DICE,
-      amount: 'wild',
-    })
-    expect(parseDice(null)).toEqual(DEFAULT_DICE)
-    expect(parseDice('x')).toEqual(DEFAULT_DICE)
+    expect(
+      parseSettings({ kind: 'throw', from: 'every tab', wildness: 'wild' }),
+    ).toEqual({ ...DEFAULT_SETTINGS, wildness: 'wild' })
+    expect(parseSettings(null)).toEqual(DEFAULT_SETTINGS)
+    expect(parseSettings('x')).toEqual(DEFAULT_SETTINGS)
   })
 })

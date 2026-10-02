@@ -10,14 +10,6 @@ import { useCapture } from '../ui/useCapture'
 import { useWakeLock } from '../ui/useWakeLock'
 import styles from './cam.module.css'
 import {
-  DEFAULT_DICE,
-  dicePool,
-  parseDice,
-  rollStack,
-  rollTweaks,
-} from './dice'
-import { DiceSheet } from './DiceSheet'
-import {
   ShuffleIcon,
   FlipIcon,
   LoopIcon,
@@ -45,6 +37,14 @@ import {
   stackLabel,
 } from './looks'
 import { LOOP_KEYS, Loops } from './Loops'
+import { RandomSheet } from './RandomSheet'
+import {
+  DEFAULT_SETTINGS,
+  drawPool,
+  parseSettings,
+  rollStack,
+  rollTweaks,
+} from './roll'
 import { SLICE } from './tape'
 import { Tune } from './Tune'
 import { PATTERNS, PATTERN_TITLE, useCamEngine } from './useCamEngine'
@@ -57,8 +57,8 @@ import { stopAt, zoomLabel } from './zoom'
 
 import type { ControlKey, Controls } from '../core/controls'
 import type { Transition } from '../ui/transitions'
-import type { Dice } from './dice'
 import type { Layers, Look, Mix } from './looks'
+import type { Roll, RollSettings } from './roll'
 import type { Layout } from './tape'
 import type { Pattern } from './useCamEngine'
 import type { Facing } from './useCamera'
@@ -78,7 +78,7 @@ const HINT_STORE = 'videoskillet_cam_hint_seen'
 const SIDEWAYS_STORE = 'videoskillet_cam_sideways'
 const DECK_STORE = 'videoskillet_cam_deck'
 const SOURCES_STORE = 'videoskillet_cam_sources'
-const DICE_STORE = 'videoskillet_cam_dice'
+const ROLL_STORE = 'videoskillet_cam_roll'
 
 const sliceOf = (layout: Layout) => (layout === 'slice' ? SLICE : 1)
 
@@ -234,12 +234,12 @@ export function CamPage() {
   const [sideways, setSideways] = usePersistedFlag(SIDEWAYS_STORE)
   const [deck, setDeck] = usePersistedFlag(DECK_STORE)
   const [showSources, setShowSources] = usePersistedFlag(SOURCES_STORE)
-  const [dice, setDiceNow] = useState<Dice>(() =>
-    parseDice(readJSON<unknown>(DICE_STORE, DEFAULT_DICE)),
+  const [settings, setSettingsNow] = useState<RollSettings>(() =>
+    parseSettings(readJSON<unknown>(ROLL_STORE, DEFAULT_SETTINGS)),
   )
-  const setDice = (next: Dice) => {
-    setDiceNow(next)
-    writeJSON(DICE_STORE, next)
+  const setSettings = (next: RollSettings) => {
+    setSettingsNow(next)
+    writeJSON(ROLL_STORE, next)
   }
   // The wipe and the inset are laid out across the glass on show, so a new
   // layout lays the board again.
@@ -259,7 +259,7 @@ export function CamPage() {
   const [scene, setScene] = useState<Scene>({ ...CLEAN, mix: null })
   const sceneRef = useRef(scene)
   const [shelfName, setShelfName] = useState(SHELVES[0].name)
-  const [sheet, setSheet] = useState<'tune' | 'loops' | 'dice' | null>(null)
+  const [sheet, setSheet] = useState<'tune' | 'loops' | 'random' | null>(null)
   const [help, setHelp] = useState(false)
   const [hintSeen, setHintSeen] = usePersistedFlag(HINT_STORE)
   const [mode, setMode] = useState<Mode>('photo')
@@ -360,14 +360,14 @@ export function CamPage() {
       paint({ layers: w > 0 ? { ...rest, [name]: w } : rest })
     }
   }
-  const roll = () => {
+  const roll = (kind: Roll) => {
     const cur = sceneRef.current
-    const pool = dicePool(shelf, dice.reach, second.loaded)
-    if (dice.kind === 'look') {
+    const pool = drawPool(shelf, settings.from, second.loaded)
+    if (kind === 'look') {
       land(rollLook(cur.look, pool))
-    } else if (dice.kind === 'stack') {
+    } else if (kind === 'stack') {
       paint({
-        ...rollStack(cur.look, pool, dice.amount),
+        ...rollStack(cur.look, pool, settings.wildness),
         tweaks: {},
         hue: null,
       })
@@ -378,8 +378,8 @@ export function CamPage() {
           board,
           cur.tweaks,
           lookKnobs(cur.look, cur.layers),
-          dice.kind,
-          dice.amount,
+          kind,
+          settings.wildness,
         ),
       })
     }
@@ -632,12 +632,10 @@ export function CamPage() {
   const busy = second.left > 0 || second.opening || capture.recording
   const showHelp = on && help
   const mix = scene.mix ?? FIRST_MIX
-  const diceTitle =
-    dice.kind === 'look'
-      ? dice.reach === 'tab'
-        ? `a look picked at random from every one the ${shelf.name} tab's families hold`
-        : 'a look picked at random from every tab'
-      : `${dice.kind} the look, ${dice.amount}`
+  const randomTitle =
+    settings.from === 'this tab'
+      ? `a look picked at random from every one the ${shelf.name} tab's families hold`
+      : 'a look picked at random from every tab'
   const noB = scene.mix === null || !second.loaded
   const cameras: { key: Facing; label: string }[] =
     cam.canFlip && cam.sided
@@ -1069,24 +1067,19 @@ export function CamPage() {
         <nav className={styles.strip} aria-label="Looks">
           <button
             className={cx(styles.chip, look?.rolled === true && styles.chipOn)}
-            title={diceTitle}
-            onClick={roll}
+            title={randomTitle}
+            onClick={() => roll('look')}
           >
             <ShuffleIcon />
-            {look?.rolled === true
-              ? stackLabel(look, scene.layers)
-              : dice.kind === 'look'
-                ? 'random'
-                : dice.kind}
+            {look?.rolled === true ? stackLabel(look, scene.layers) : 'random'}
           </button>
           <button
-            className={cx(styles.chip, sheet === 'dice' && styles.chipOn)}
-            aria-label="random settings"
-            title="what random picks, how far it reaches and how hard"
-            onClick={() => setSheet(sheet === 'dice' ? null : 'dice')}
+            className={cx(styles.chip, sheet === 'random' && styles.chipOn)}
+            aria-label="more ways to roll"
+            title="stack, nudge and throw, and how wild they go"
+            onClick={() => setSheet(sheet === 'random' ? null : 'random')}
           >
             <MoreIcon />
-            {dice.kind}
           </button>
           <button
             className={cx(styles.chip, look === null && styles.chipOn)}
@@ -1207,10 +1200,10 @@ export function CamPage() {
             onClose={() => setSheet(null)}
           />
         ) : null}
-        {sheet === 'dice' ? (
-          <DiceSheet
-            dice={dice}
-            onChange={setDice}
+        {sheet === 'random' ? (
+          <RandomSheet
+            settings={settings}
+            onChange={setSettings}
             onRoll={roll}
             onClose={() => setSheet(null)}
           />
