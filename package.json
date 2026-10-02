@@ -23,7 +23,8 @@
   ],
   "type": "module",
   "scripts": {
-    "dev": "astro dev --port 4321 && vite",
+    "dev": "pnpm run --parallel \"/:dev$/\"",
+    "app:dev": "vite",
     "build": "tsc -b && node scripts/docgen.mjs --check && node scripts/demogen.mjs --check && astro build && vite build",
     "preview": "vite preview",
     "format": "oxfmt && prettier --write \"site/**/*.astro\"",

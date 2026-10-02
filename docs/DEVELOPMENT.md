@@ -2,7 +2,7 @@
 
 ```
 pnpm install
-pnpm dev        # astro on :4321 (site + guide), vite on :5199 (app)
+pnpm dev        # runs site:dev (astro, :4321, site + guide) and app:dev (vite, :5199, app) in parallel
 pnpm build      # tsc -b + docgen/demogen checks + astro + vite
 pnpm lint --fix # oxlint
 pnpm test       # vitest
