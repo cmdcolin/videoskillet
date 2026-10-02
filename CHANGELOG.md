@@ -2,6 +2,11 @@
 
 All notable changes to videoskillet are documented here.
 
+## [2.11.0](https://github.com/cmdcolin/videoskillet/compare/v2.10.0...v2.11.0) - 2026-10-02
+
+### Features
+- *(ui)* [`140db02`](https://github.com/cmdcolin/videoskillet/commit/140db02977a0fbe433f5d29c1e824711e6b7c4cf) say how far the encoder got in a failed take's report
+
 ## [2.10.0](https://github.com/cmdcolin/videoskillet/compare/v2.9.0...v2.10.0) - 2026-10-02
 
 ### Fixes
