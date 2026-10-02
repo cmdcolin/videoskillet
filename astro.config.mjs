@@ -10,6 +10,8 @@ import { extname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const FIGURES = 'docs/img'
+const APP_PORT = 5199
+const APP_PATHS = /^\/(?:app|cam|vote|stream)(?:\/|$)/
 
 const TYPES = {
   '.jpg': 'image/jpeg',
@@ -32,6 +34,13 @@ const figures = () => ({
         const path = decodeURIComponent(
           new URL(req.url, 'http://guide').pathname,
         )
+        if (APP_PATHS.test(path)) {
+          res.writeHead(302, {
+            location: `http://localhost:${APP_PORT}${req.url}`,
+          })
+          res.end()
+          return
+        }
         const name = /^(?:\/guide)?\/img\/(.+)$/.exec(path)
         const file = name === null ? undefined : join(FIGURES, name[1])
         const type = file === undefined ? undefined : TYPES[extname(file)]
