@@ -225,6 +225,12 @@ it('calls no look normal', () => {
   )
 })
 
+it('does not name a rolled look', () => {
+  const look = { name: 'wornTape', strength: 1, rolled: true }
+  expect(lookLabel(look)).toBe('random')
+  expect(stackLabel(look, { looseConnector: 0.4 })).toBe('random + 1')
+})
+
 describe('the mixer', () => {
   const at = (mix: Mix) => ({ ...DEFAULT_CONTROLS, ...mixControls(mix) })
 

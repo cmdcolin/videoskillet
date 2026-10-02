@@ -185,16 +185,18 @@ export const mixesItself = (name: string): boolean => {
 }
 
 // What is on the picture: a preset at a strength, or `null` for the camera as
-// it comes. `rolled` marks a look the dice picked, which the strip shows on the
-// dice chip because it may be one of the 150 the strip does not list.
+// it comes. `rolled` marks a look the random roll picked, which may be one of
+// the 150 the strip does not list, so no chip on the strip is up for it.
 export interface Look {
   name: string
   strength: number
   rolled: boolean
 }
 
+// A rolled look keeps its name to itself: random is a scramble, and the strip,
+// the tune sheet and the saved file's name all call it so.
 export const lookLabel = (look: Look | null): string =>
-  look === null ? 'normal' : presetLabelFor(look.name)
+  look === null ? 'normal' : look.rolled ? 'random' : presetLabelFor(look.name)
 
 // The name a still or a take is saved under: the look, and how many more are
 // stacked on it.

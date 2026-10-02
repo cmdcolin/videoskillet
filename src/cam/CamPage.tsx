@@ -1071,7 +1071,7 @@ export function CamPage() {
             onClick={() => roll('look')}
           >
             <ShuffleIcon />
-            {look?.rolled === true ? stackLabel(look, scene.layers) : 'random'}
+            random
           </button>
           <button
             className={cx(styles.chip, sheet === 'random' && styles.chipOn)}
