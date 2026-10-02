@@ -12,9 +12,10 @@
 //     picker's "video" does it, and the window narrowed halfway through, so the
 //     frames after it reach the encoder through the rescale pass.
 //
-// The clip is generated here with ffmpeg into public/check/ (ignored): a white
-// field for four frames and a 10 ms 1 kHz click, both on every whole second. A
-// take with sound then says how far apart the picture and the sound came out.
+// The clip is generated here with ffmpeg into public/check/ (ignored): grey
+// bars on black, a white field for four frames and a 10 ms 1 kHz click, both on
+// every whole second. A take with sound then says how far apart the picture and
+// the sound came out, and the bars say whether each take came out upright.
 // The bar is lip sync, 45 ms either way at the median, because the engine
 // samples a `<video>` at render time and that alone spreads single flashes by
 // a frame or two; agent-docs/handoffs/record-clip-audio.md has the
@@ -65,7 +66,7 @@ const check = (name, ok, detail = '') => {
   if (!ok) fail.push(name)
 }
 
-const CLIP = 'public/check/sync.mp4'
+const CLIP = 'public/check/sync-bars.mp4'
 if (!existsSync(CLIP)) {
   mkdirSync('public/check', { recursive: true })
   const click = 'if(lt(mod(t\\,1)\\,0.01)\\,0.8*sin(2*PI*1000*t)\\,0)'
@@ -82,7 +83,11 @@ if (!existsSync(CLIP)) {
     '-i',
     `aevalsrc='${click}|${click}':s=${RATE}:d=120`,
     '-filter_complex',
-    "[0:v]drawbox=x=0:y=0:w=iw:h=ih:c=white:t=fill:enable='lt(mod(t,1),4/60)'[v]",
+    '[0:v]' +
+      [40, 120, 200]
+        .map(x => `drawbox=x=${x}:y=0:w=40:h=ih:c=gray:t=fill`)
+        .join(',') +
+      ",drawbox=x=0:y=0:w=iw:h=ih:c=white:t=fill:enable='lt(mod(t,1),4/60)'[v]",
     '-map',
     '[v]',
     '-map',
@@ -139,7 +144,7 @@ async function take(label, { sound }) {
   const page = await browser.newPage()
   const errors = []
   page.on('pageerror', e => errors.push(String(e).slice(0, 200)))
-  const url = `http://localhost:${port}/app/?vurl=/check/sync.mp4${FLAGS === '' ? '' : `&${decodeURIComponent(FLAGS)}`}`
+  const url = `http://localhost:${port}/app/?vurl=/check/sync-bars.mp4${FLAGS === '' ? '' : `&${decodeURIComponent(FLAGS)}`}`
   await page.goto(url, {
     waitUntil: 'domcontentloaded',
   })
@@ -269,7 +274,60 @@ function judgePicture(label, file, wall) {
     Math.abs(Number(video.duration) - wall) < 0.4,
     `${Number(video.duration).toFixed(2)} s for ${wall.toFixed(2)} s`,
   )
+  upright(label, file)
   return { pts, video }
+}
+
+// Whether each row of a frame between flashes lines up with the row below it.
+// A take whose rows were read at the wrong stride shears every one by the same
+// amount, 42 px at 1494 wide, and the bars come out as diagonal streaks.
+function upright(label, file) {
+  const { width: w, height: h } = JSON.parse(
+    probe(file, [
+      '-select_streams',
+      'v:0',
+      '-show_entries',
+      'stream=width,height',
+    ]),
+  ).streams[0]
+  const px = execFileSync(
+    'ffmpeg',
+    [
+      '-v',
+      'error',
+      '-ss',
+      '1.5',
+      '-i',
+      file,
+      '-frames:v',
+      '1',
+      '-f',
+      'rawvideo',
+      '-pix_fmt',
+      'gray',
+      '-',
+    ],
+    { maxBuffer: 1 << 30 },
+  )
+  const REACH = 64
+  const misfit = s => {
+    let d = 0
+    for (let y = 0; y < h - 1; y++)
+      for (let x = REACH; x < w - REACH; x++)
+        d += Math.abs(px[y * w + x] - px[(y + 1) * w + x + s])
+    return d
+  }
+  let best = 0
+  let bestD = Infinity
+  for (let s = -REACH; s <= REACH; s++) {
+    const d = misfit(s)
+    if (d < bestD) [best, bestD] = [s, d]
+  }
+  check(
+    `${label}: the picture comes out upright`,
+    best === 0,
+    `${w}x${h}, rows line up best ${best} px apart`,
+  )
 }
 
 // Rising edges of the picture's brightness, each with the frame before it, so
