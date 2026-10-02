@@ -2,6 +2,18 @@
 
 All notable changes to videoskillet are documented here.
 
+## [2.10.0](https://github.com/cmdcolin/videoskillet/compare/v2.9.0...v2.10.0) - 2026-10-02
+
+### Fixes
+- *(ui)* [`4c5302c`](https://github.com/cmdcolin/videoskillet/commit/4c5302c1ee7dd449c8fd50d3fb4a775f89d7a27e) random does not name the look it rolled
+
+### Refactor
+- *(ui)* [`28c1df1`](https://github.com/cmdcolin/videoskillet/commit/28c1df1d26b5173befdefcae9bc6412bd19baff5) random chip always rolls a look, other rolls get buttons
+- *(ui)* [`b3cc7d6`](https://github.com/cmdcolin/videoskillet/commit/b3cc7d6dbbf4476e681a14d7139c7844133f93cd) one random chip, no sheet
+
+### Tests
+- *(ui)* [`7b298cb`](https://github.com/cmdcolin/videoskillet/commit/7b298cb6a6fca5a0e3b73f8cae1cc238725fdd46) strip Astro source annotations before slicing the stage
+
 ## [2.9.0](https://github.com/cmdcolin/videoskillet/compare/v2.8.0...v2.9.0) - 2026-10-02
 
 ### Features
