@@ -15,7 +15,28 @@ export function FlipIcon() {
   )
 }
 
-export function DiceIcon() {
+// Two arrows crossing: the shuffle mark.
+export function ShuffleIcon() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M3 7h3c4 0 6 10 11 10h4M3 17h3c1.6 0 2.8-.8 3.8-2M13.4 9.3C14.5 8 15.6 7 17 7h4" />
+      <path d="M18 4l3 3-3 3M18 14l3 3-3 3" />
+    </svg>
+  )
+}
+
+// Three dots: more settings behind a button.
+export function MoreIcon() {
   return (
     <svg
       width="16"
@@ -24,12 +45,9 @@ export function DiceIcon() {
       fill="currentColor"
       aria-hidden
     >
-      <path d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm0 2v14h14V5H5z" />
-      <circle cx="8.5" cy="8.5" r="1.6" />
-      <circle cx="15.5" cy="8.5" r="1.6" />
-      <circle cx="12" cy="12" r="1.6" />
-      <circle cx="8.5" cy="15.5" r="1.6" />
-      <circle cx="15.5" cy="15.5" r="1.6" />
+      <circle cx="5" cy="12" r="2" />
+      <circle cx="12" cy="12" r="2" />
+      <circle cx="19" cy="12" r="2" />
     </svg>
   )
 }

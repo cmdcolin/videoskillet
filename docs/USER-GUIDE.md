@@ -207,9 +207,23 @@ menu reaches the page from the app.
   and do their work in colour, **tape** the deck and its tape, **signal** the
   picture on its way in (reception, cables, the decoder), **scan** the sync, the
   deflection and the tube, and **bent** the circuit-bent boxes and the signal
-  driven past its rails. Each tab lists the looks that read best at phone size,
-  and **random** rolls one from every preset of that kind in the app, including
-  the ones the tab does not list.
+  driven past its rails. Each tab lists the looks that read best at phone size.
+  **random** at the start of the strip rolls with the settings under the
+  **random settings** button beside it.
+- **random settings** opens a sheet with three choices, and the page remembers
+  them.
+  - **roll** picks what a press does. **look** drops in one look, **stack** puts
+    a look up with others mixed in on top at random weights, **nudge** moves
+    every knob of the look a little, and **throw** moves a few knobs a long way.
+    Nudge and throw land as tweaks on the look, so **reset** in the tune sheet
+    takes them back, and a second press nudges from where the first one left the
+    knobs.
+  - **looks from** sets where **look** and **stack** draw from. **tab** takes
+    every preset of the tab's kinds in the app, including the ones the tab does
+    not list. **every tab** takes every preset that works from the camera, and
+    the ones that need B once B has a picture.
+  - **amount** sets how many looks a stack adds (one, two or three) and how hard
+    nudge and throw move the knobs (**gentle**, **normal** or **wild**).
 - A tap puts a look up outright. Dragging a look's chip up mixes it in partway
   and stacks it on the look that is up, the way dragging a preset chip sideways
   does in the app; the chip fills to its weight, and dragging it down takes it
@@ -266,12 +280,14 @@ menu reaches the page from the app.
   harder keeps its own settings. While the switch is on, **VIDEO** records the
   sound with the picture, as AAC where the browser can encode it and Opus where
   it cannot.
-- The mixer under the picture has a row for each source, and each row scrolls
-  sideways. **source A** starts on the camera, with **back camera** and **front
-  camera** on a phone that has both. It also takes a **clip** of yours or one of
-  the set's own patterns, which works without a camera at all; the page lets the
-  camera go while something else is on A, and picking the camera opens it again.
-  **source B** starts at **none**.
+- **sources** opens the mixer under the picture, and the page remembers whether
+  it is open. It starts closed. Once B has a picture, the mixer's modes and
+  fader stay under the picture with **sources** closed. The mixer has a row for
+  each source, and each row scrolls sideways. **source A** starts on the camera,
+  with **back camera** and **front camera** on a phone that has both. It also
+  takes a **clip** of yours or one of the set's own patterns, which works
+  without a camera at all; the page lets the camera go while something else is
+  on A, and picking the camera opens it again. **source B** starts at **none**.
   - **other camera**, on a phone with two, puts the other camera on B: the
     camera on screen goes to B and the other one comes on screen. Point the back
     camera at a scene, press it, and the front camera puts you over the scene. A

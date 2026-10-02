@@ -105,9 +105,11 @@ page.on('pageerror', err =>
   console.log('[pageerror]', String(err).slice(0, 300)),
 )
 
-// The tour's stills leave out the reminder a first visit gets over the picture.
+// The tour's stills leave out the reminder a first visit gets over the picture,
+// and show the mixer, which starts closed.
 await page.evaluateOnNewDocument(() => {
   localStorage.setItem('videoskillet_cam_hint_seen', '1')
+  localStorage.setItem('videoskillet_cam_sources', '1')
 })
 
 // A phone held upright: a tall camera, panning slowly over the sample.
