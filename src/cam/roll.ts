@@ -1,85 +1,20 @@
 import { randomIndex } from '../core/rng'
 import { MUTATE_AMOUNTS, mutate, spike, SPIKE_TARGETS } from '../ui/mutate'
-import { PRESETS, needsSourceB, presetControls } from '../ui/presets'
-import { rollPool, subtleLoop } from './looks'
 
 import type { Controls } from '../core/controls'
 import type { Rand } from '../core/rng'
 import type { SliderDef } from '../ui/controls'
-import type { Layers, Look, Shelf } from './looks'
+import type { Layers, Look } from './looks'
 
 export const ROLLS = ['look', 'stack', 'nudge', 'throw'] as const
 export type Roll = (typeof ROLLS)[number]
 
-export const DRAW_FROM = ['this tab', 'all tabs'] as const
-export type DrawFrom = (typeof DRAW_FROM)[number]
+export type Wildness = 'gentle' | 'normal' | 'wild'
 
-export const WILDNESS = ['gentle', 'normal', 'wild'] as const
-export type Wildness = (typeof WILDNESS)[number]
-
-export interface RollSettings {
-  from: DrawFrom
-  wildness: Wildness
-}
-
-export const DEFAULT_SETTINGS: RollSettings = {
-  from: 'this tab',
-  wildness: 'normal',
-}
-
-export const ROLL_LABEL: Record<Roll, string> = {
-  look: 'new look',
-  stack: 'stack',
-  nudge: 'nudge',
-  throw: 'throw',
-}
-
-export const ROLL_ABOUT: Record<Roll, string> = {
-  look: 'One look, dropped in whole.',
-  stack: 'A look with others mixed in on top at random weights.',
-  nudge: 'Every knob of the look moves a little.',
-  throw: 'A few knobs of the look go a long way.',
-}
-
-const parse = <T extends string>(
-  list: readonly T[],
-  v: unknown,
-  fallback: T,
-): T => list.find(x => x === v) ?? fallback
-
-// Stored settings back from `unknown`, with any field it does not recognise at
-// its default.
-export function parseSettings(v: unknown): RollSettings {
-  const o = typeof v === 'object' && v !== null ? v : {}
-  const get = (k: string): unknown => (k in o ? Reflect.get(o, k) : undefined)
-  return {
-    from: parse(DRAW_FROM, get('from'), DEFAULT_SETTINGS.from),
-    wildness: parse(WILDNESS, get('wildness'), DEFAULT_SETTINGS.wildness),
-  }
-}
-
-// Every look the camera can run without a second picture, from every family.
-// Feedback loops keep to the subtle ones, as the loops tab does.
-const EVERY_LOOK: readonly string[] = PRESETS.filter(
-  p =>
-    !needsSourceB(p) &&
-    (p.group !== 'Feedback loops' || subtleLoop(presetControls(p.patch))),
-).map(p => p.name)
-
-const EVERY_LOOK_WITH_B: readonly string[] = PRESETS.filter(
-  p => p.group !== 'Feedback loops' || subtleLoop(presetControls(p.patch)),
-).map(p => p.name)
-
-// What a roll draws its looks from: the tab's own families, or the whole set.
-// The whole set takes in the looks that need a second picture only while B has
-// one.
-export function drawPool(
-  shelf: Shelf,
-  from: DrawFrom,
-  withB: boolean,
-): readonly string[] {
-  if (from === 'this tab') return rollPool(shelf)
-  return withB ? EVERY_LOOK_WITH_B : EVERY_LOOK
+// What one press of the random chip does. With no look up there is nothing to
+// stack on or nudge, so the press drops a new look in.
+export function pickRoll(hasLook: boolean, rand: Rand = Math.random): Roll {
+  return hasLook ? ROLLS[randomIndex(ROLLS.length, rand)] : 'look'
 }
 
 const LAYER_COUNT: Record<Wildness, number> = {

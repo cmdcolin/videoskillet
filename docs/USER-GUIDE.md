@@ -208,22 +208,13 @@ menu reaches the page from the app.
   picture on its way in (reception, cables, the decoder), **scan** the sync, the
   deflection and the tube, and **bent** the circuit-bent boxes and the signal
   driven past its rails. Each tab lists the looks that read best at phone size.
-  **random** at the start of the strip rolls one new look.
-- The **⋯** button beside **random** opens a sheet of four rolls. Each button
-  rolls on the press, and the sheet stays up for the next one.
-  - **new look** does what **random** does.
-  - **stack** puts a look up with others mixed in on top at random weights.
-  - **nudge** moves every knob of the look a little, and **throw** moves a few
-    knobs a long way. Both land as tweaks on the look, so **reset** in the tune
-    sheet takes them back, and a second press starts from where the first one
-    left the knobs.
-  - **wildness** (**gentle**, **normal** or **wild**) sets how many looks a
-    stack adds, one to three, and how far nudge and throw move the knobs.
-  - **draw from** sets where **random**, **new look** and **stack** pick their
-    looks. **this tab** takes every preset of the tab's kinds in the app,
-    including the ones the tab does not list. **all tabs** takes every preset
-    that works from the camera, and the ones that need B once B has a picture.
-    The page remembers both settings.
+  **random** at the start of the strip scrambles the picture. Each press picks
+  one of four rolls: a new look, a stack of looks mixed in on top at random
+  weights, a nudge that moves every knob of the look a little, or a throw that
+  moves a few knobs a long way. Nudge and throw land as tweaks on the look, so
+  **reset** in the tune sheet takes them back. With nothing up, **random**
+  always puts a new look up. It picks from every preset of the tab's kinds,
+  including the ones the tab does not list.
 - A tap puts a look up outright. Dragging a look's chip up mixes it in partway
   and stacks it on the look that is up, the way dragging a preset chip sideways
   does in the app; the chip fills to its weight, and dragging it down takes it

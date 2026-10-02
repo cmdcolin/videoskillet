@@ -1,46 +1,28 @@
 import { describe, expect, it } from 'vitest'
 
 import { rngFor } from '../core/rng'
-import { PRESET_BY_NAME, needsSourceB } from '../ui/presets'
-import { MIX_SHELF, SHELVES, lookBoard, lookKnobs, rollPool } from './looks'
-import {
-  DEFAULT_SETTINGS,
-  drawPool,
-  parseSettings,
-  rollStack,
-  rollTweaks,
-} from './roll'
+import { SHELVES, lookBoard, lookKnobs, rollPool } from './looks'
+import { ROLLS, pickRoll, rollStack, rollTweaks } from './roll'
 
-const LOOPS = SHELVES[0]
+import type { Roll } from './roll'
+
 const SCAN = SHELVES[3]
 
-describe('drawPool', () => {
-  it('rolls within the tab by default', () => {
-    expect(drawPool(SCAN, 'this tab', false)).toEqual(rollPool(SCAN))
+describe('pickRoll', () => {
+  it('drops in a look when none is up', () => {
+    for (let seed = 1; seed < 20; seed++)
+      expect(pickRoll(false, rngFor(seed))).toBe('look')
   })
 
-  it('reaches every tab, past the families the tab names', () => {
-    const every = drawPool(SCAN, 'all tabs', false)
-    expect(every.length).toBeGreaterThan(rollPool(SCAN).length)
-    for (const name of rollPool(SCAN)) expect(every).toContain(name)
-  })
-
-  it('leaves out the looks that need B until B has a picture', () => {
-    const without = drawPool(LOOPS, 'all tabs', false)
-    const withB = drawPool(LOOPS, 'all tabs', true)
-    for (const name of without) {
-      const def = PRESET_BY_NAME.get(name)
-      expect(def !== undefined && needsSourceB(def), name).toBe(false)
-    }
-    for (const name of MIX_SHELF.looks) {
-      expect(without).not.toContain(name)
-      expect(withB).toContain(name)
-    }
+  it('reaches every kind of roll when a look is up', () => {
+    const seen = new Set<Roll>()
+    for (let seed = 1; seed < 60; seed++) seen.add(pickRoll(true, rngFor(seed)))
+    expect([...seen].toSorted()).toEqual([...ROLLS].toSorted())
   })
 })
 
 describe('rollStack', () => {
-  const pool = drawPool(SCAN, 'all tabs', false)
+  const pool = rollPool(SCAN)
 
   it('stacks one more look per step of amount', () => {
     for (const [amount, layers] of [
@@ -110,20 +92,5 @@ describe('rollTweaks', () => {
     )
     expect(tweaks.wipePos).toBe(0.3)
     expect(Object.keys(tweaks)).toHaveLength(2)
-  })
-})
-
-describe('parseSettings', () => {
-  it('keeps what it recognises', () => {
-    const settings = { from: 'all tabs', wildness: 'wild' }
-    expect(parseSettings(settings)).toEqual(settings)
-  })
-
-  it('falls back field by field on a stale or foreign value', () => {
-    expect(
-      parseSettings({ kind: 'throw', from: 'every tab', wildness: 'wild' }),
-    ).toEqual({ ...DEFAULT_SETTINGS, wildness: 'wild' })
-    expect(parseSettings(null)).toEqual(DEFAULT_SETTINGS)
-    expect(parseSettings('x')).toEqual(DEFAULT_SETTINGS)
   })
 })

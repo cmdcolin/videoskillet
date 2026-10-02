@@ -4,7 +4,7 @@ import { publicUrl } from '../publicUrl'
 import { cx } from '../ui/cx'
 import { save } from '../ui/download'
 import { FatalScreen } from '../ui/FatalScreen'
-import { readJSON, usePersistedFlag, writeJSON } from '../ui/storage'
+import { usePersistedFlag } from '../ui/storage'
 import { TRANSITIONS, faultPlan } from '../ui/transitions'
 import { useCapture } from '../ui/useCapture'
 import { useWakeLock } from '../ui/useWakeLock'
@@ -15,7 +15,6 @@ import {
   LoopIcon,
   MicIcon,
   MixIcon,
-  MoreIcon,
   ShareIcon,
   SideIcon,
   SlidersIcon,
@@ -34,17 +33,11 @@ import {
   mixControls,
   mixesItself,
   rollLook,
+  rollPool,
   stackLabel,
 } from './looks'
 import { LOOP_KEYS, Loops } from './Loops'
-import { RandomSheet } from './RandomSheet'
-import {
-  DEFAULT_SETTINGS,
-  drawPool,
-  parseSettings,
-  rollStack,
-  rollTweaks,
-} from './roll'
+import { pickRoll, rollStack, rollTweaks } from './roll'
 import { SLICE } from './tape'
 import { Tune } from './Tune'
 import { PATTERNS, PATTERN_TITLE, useCamEngine } from './useCamEngine'
@@ -58,7 +51,7 @@ import { stopAt, zoomLabel } from './zoom'
 import type { ControlKey, Controls } from '../core/controls'
 import type { Transition } from '../ui/transitions'
 import type { Layers, Look, Mix } from './looks'
-import type { Roll, RollSettings } from './roll'
+import type { Roll } from './roll'
 import type { Layout } from './tape'
 import type { Pattern } from './useCamEngine'
 import type { Facing } from './useCamera'
@@ -78,7 +71,6 @@ const HINT_STORE = 'videoskillet_cam_hint_seen'
 const SIDEWAYS_STORE = 'videoskillet_cam_sideways'
 const DECK_STORE = 'videoskillet_cam_deck'
 const SOURCES_STORE = 'videoskillet_cam_sources'
-const ROLL_STORE = 'videoskillet_cam_roll'
 
 const sliceOf = (layout: Layout) => (layout === 'slice' ? SLICE : 1)
 
@@ -234,13 +226,6 @@ export function CamPage() {
   const [sideways, setSideways] = usePersistedFlag(SIDEWAYS_STORE)
   const [deck, setDeck] = usePersistedFlag(DECK_STORE)
   const [showSources, setShowSources] = usePersistedFlag(SOURCES_STORE)
-  const [settings, setSettingsNow] = useState<RollSettings>(() =>
-    parseSettings(readJSON<unknown>(ROLL_STORE, DEFAULT_SETTINGS)),
-  )
-  const setSettings = (next: RollSettings) => {
-    setSettingsNow(next)
-    writeJSON(ROLL_STORE, next)
-  }
   // The wipe and the inset are laid out across the glass on show, so a new
   // layout lays the board again.
   const eng = useCamEngine(canvasRef, {
@@ -259,7 +244,7 @@ export function CamPage() {
   const [scene, setScene] = useState<Scene>({ ...CLEAN, mix: null })
   const sceneRef = useRef(scene)
   const [shelfName, setShelfName] = useState(SHELVES[0].name)
-  const [sheet, setSheet] = useState<'tune' | 'loops' | 'random' | null>(null)
+  const [sheet, setSheet] = useState<'tune' | 'loops' | null>(null)
   const [help, setHelp] = useState(false)
   const [hintSeen, setHintSeen] = usePersistedFlag(HINT_STORE)
   const [mode, setMode] = useState<Mode>('photo')
@@ -360,14 +345,15 @@ export function CamPage() {
       paint({ layers: w > 0 ? { ...rest, [name]: w } : rest })
     }
   }
-  const roll = (kind: Roll) => {
+  const roll = () => {
     const cur = sceneRef.current
-    const pool = drawPool(shelf, settings.from, second.loaded)
+    const kind: Roll = pickRoll(cur.look !== null)
+    const pool = rollPool(shelf)
     if (kind === 'look') {
       land(rollLook(cur.look, pool))
     } else if (kind === 'stack') {
       paint({
-        ...rollStack(cur.look, pool, settings.wildness),
+        ...rollStack(cur.look, pool, 'normal'),
         tweaks: {},
         hue: null,
       })
@@ -379,7 +365,7 @@ export function CamPage() {
           cur.tweaks,
           lookKnobs(cur.look, cur.layers),
           kind,
-          settings.wildness,
+          'normal',
         ),
       })
     }
@@ -632,10 +618,6 @@ export function CamPage() {
   const busy = second.left > 0 || second.opening || capture.recording
   const showHelp = on && help
   const mix = scene.mix ?? FIRST_MIX
-  const randomTitle =
-    settings.from === 'this tab'
-      ? `a look picked at random from every one the ${shelf.name} tab's families hold`
-      : 'a look picked at random from every tab'
   const noB = scene.mix === null || !second.loaded
   const cameras: { key: Facing; label: string }[] =
     cam.canFlip && cam.sided
@@ -1067,19 +1049,11 @@ export function CamPage() {
         <nav className={styles.strip} aria-label="Looks">
           <button
             className={cx(styles.chip, look?.rolled === true && styles.chipOn)}
-            title={randomTitle}
-            onClick={() => roll('look')}
+            title="scramble the picture"
+            onClick={roll}
           >
             <ShuffleIcon />
             random
-          </button>
-          <button
-            className={cx(styles.chip, sheet === 'random' && styles.chipOn)}
-            aria-label="more ways to roll"
-            title="stack, nudge and throw, and how wild they go"
-            onClick={() => setSheet(sheet === 'random' ? null : 'random')}
-          >
-            <MoreIcon />
           </button>
           <button
             className={cx(styles.chip, look === null && styles.chipOn)}
@@ -1197,14 +1171,6 @@ export function CamPage() {
                 ),
               })
             }
-            onClose={() => setSheet(null)}
-          />
-        ) : null}
-        {sheet === 'random' ? (
-          <RandomSheet
-            settings={settings}
-            onChange={setSettings}
-            onRoll={roll}
             onClose={() => setSheet(null)}
           />
         ) : null}
