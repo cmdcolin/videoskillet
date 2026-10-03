@@ -226,9 +226,9 @@ menu reaches the page from the app.
   look building on itself. The other sliders move the controls themselves, over
   the whole range the app gives them. **reset** puts the looks back. Pressing
   the look that is on also opens the sheet.
-- **loops** opens a sheet with the knobs of both feedback loops, whatever look
-  is up. The **camera loop** is a camera pointed at the screen and fed back into
-  the input: **mix** and **gain** set how much comes back, and the picture
+- **feedback** opens a sheet with the knobs of both feedback loops, whatever
+  look is up. The **camera loop** is a camera pointed at the screen and fed back
+  into the input: **mix** and **gain** set how much comes back, and the picture
   builds on itself once their product passes unity; **zoom**, **rotate** and
   **shift** set where each lap lands. Their sliders spend most of their travel
   close to no change, ×1 and 0, where the small moves that read best are. The
@@ -271,16 +271,16 @@ menu reaches the page from the app.
   harder keeps its own settings. While the switch is on, **VIDEO** records the
   sound with the picture, as AAC where the browser can encode it and Opus where
   it cannot.
-- Four buttons on the picture open panels: **tune**, **loops**, **sources** and
-  **deck**. One panel is open at a time, and opening one closes the one before
-  it. **sources** and **deck** take the place of the tabs and the strip of looks
-  while they are open, and pressing the button again brings the looks back.
-  **sources** opens the mixer, which has a row for each source, and each row
-  scrolls sideways. **source A** starts on the camera, with **back camera** and
-  **front camera** on a phone that has both. It also takes a **clip** of yours
-  or one of the set's own patterns, which works without a camera at all; the
-  page lets the camera go while something else is on A, and picking the camera
-  opens it again. **source B** starts at **none**.
+- Four buttons on the picture open panels: **tune**, **feedback**, **sources**
+  and **deck**. One panel is open at a time, and opening one closes the one
+  before it. **sources** and **deck** take the place of the tabs and the strip
+  of looks while they are open, and pressing the button again brings the looks
+  back. **sources** opens the mixer, which has a list for each source. **A**
+  starts on the camera, with **back camera** and **front camera** on a phone
+  that has both. It also takes a **clip** of yours or one of the set's own
+  patterns, which works without a camera at all; the page lets the camera go
+  while something else is on A, and picking the camera opens it again. **B**
+  starts at **none**.
   - **other camera**, on a phone with two, puts the other camera on B: the
     camera on screen goes to B and the other one comes on screen. Point the back
     camera at a scene, press it, and the front camera puts you over the scene. A

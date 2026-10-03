@@ -194,6 +194,49 @@ function Switch(props: {
   )
 }
 
+// A native select, so a phone's own list opens.
+function Pick<K extends string>(props: {
+  name: string
+  label?: string
+  value: K | ''
+  placeholder?: string
+  options: { key: K; label: string; title?: string; disabled?: boolean }[]
+  disabled?: boolean
+  onChange: (key: K) => void
+}) {
+  return (
+    <label className={styles.pick}>
+      {props.label === undefined ? null : <span>{props.label}</span>}
+      <select
+        className={styles.pickSelect}
+        aria-label={props.name}
+        value={props.value}
+        disabled={props.disabled}
+        onChange={e => {
+          const hit = props.options.find(o => o.key === e.target.value)
+          if (hit !== undefined) props.onChange(hit.key)
+        }}
+      >
+        {props.placeholder === undefined ? null : (
+          <option value="" disabled>
+            {props.placeholder}
+          </option>
+        )}
+        {props.options.map(o => (
+          <option
+            key={o.key}
+            value={o.key}
+            title={o.title}
+            disabled={o.disabled}
+          >
+            {o.label}
+          </option>
+        ))}
+      </select>
+    </label>
+  )
+}
+
 const HINTS: [string, string][] = [
   ['swipe', 'step to the next or previous look'],
   ['hold', 'see the camera without the look'],
@@ -772,7 +815,7 @@ export function CamPage() {
               </Switch>
               <Switch
                 on={panel === 'loops'}
-                label="loops"
+                label="feedback"
                 title="every knob on the camera loop and the mixer loop"
                 onClick={() => toggle('loops')}
               >
@@ -899,92 +942,37 @@ export function CamPage() {
 
         {mixOpen ? (
           <div className={styles.mixer} aria-label="Mixer">
-            <div className={styles.sourceRow}>
-              <span className={styles.sourceName}>source A</span>
-              <div
-                className={styles.mixModes}
-                role="radiogroup"
-                aria-label="Source A"
-              >
-                {aSources.map(src => {
-                  const up = src.key === onA
-                  return (
-                    <button
-                      key={src.key}
-                      role="radio"
-                      aria-checked={up}
-                      className={cx(styles.mixMode, up && styles.mixModeOn)}
-                      disabled={busy}
-                      title={src.title}
-                      onClick={() => {
-                        if (!up) putOnA(src.key)
-                      }}
-                    >
-                      {src.label}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-            <div className={styles.sourceRow}>
-              <span className={styles.sourceName}>source B</span>
-              <div
-                className={styles.mixModes}
-                role="radiogroup"
-                aria-label="Source B"
-              >
-                {sources.map(src => {
-                  const up = src.key === onB
-                  return (
-                    <button
-                      key={src.label}
-                      role="radio"
-                      aria-checked={up}
-                      className={cx(
-                        styles.mixMode,
-                        up &&
-                          (src.key === 'none'
-                            ? styles.mixModeEmpty
-                            : styles.mixModeOn),
-                      )}
-                      disabled={
-                        busy ||
-                        (!cameraUp &&
-                          (src.key === 'camera' || src.key === 'record'))
-                      }
-                      title={src.title}
-                      onClick={() => {
-                        if (!up) putOnB(src.key)
-                      }}
-                    >
-                      {src.label}
-                    </button>
-                  )
-                })}
-              </div>
+            <div className={styles.mixRow}>
+              <Pick
+                label="A"
+                name="Source A"
+                value={onA}
+                disabled={busy}
+                options={aSources}
+                onChange={putOnA}
+              />
+              <Pick
+                label="B"
+                name="Source B"
+                value={onB}
+                disabled={busy}
+                options={sources.map(src => ({
+                  ...src,
+                  disabled:
+                    !cameraUp && (src.key === 'camera' || src.key === 'record'),
+                }))}
+                onChange={putOnB}
+              />
             </div>
             {noB ? null : (
-              <>
-                <div
-                  className={styles.mixModes}
-                  role="radiogroup"
-                  aria-label="Mix"
-                >
-                  {MIX_MODES.map(m => {
-                    const up = !ownedMixer && mix.mode === m
-                    return (
-                      <button
-                        key={m}
-                        role="radio"
-                        aria-checked={up}
-                        className={cx(styles.mixMode, up && styles.mixModeOn)}
-                        onClick={() => mixWith({ mode: m, fader: mix.fader })}
-                      >
-                        {m}
-                      </button>
-                    )
-                  })}
-                </div>
+              <div className={styles.mixRow}>
+                <Pick
+                  name="Mix"
+                  value={ownedMixer ? '' : mix.mode}
+                  placeholder={ownedMixer ? 'by the look' : undefined}
+                  options={MIX_MODES.map(m => ({ key: m, label: m }))}
+                  onChange={m => mixWith({ mode: m, fader: mix.fader })}
+                />
                 {ownedMixer ? (
                   <p className={styles.mixNote}>
                     The look is working the mixer. Pick a mode to take it back.
@@ -1009,7 +997,7 @@ export function CamPage() {
                     <span>B</span>
                   </label>
                 )}
-              </>
+              </div>
             )}
           </div>
         ) : null}

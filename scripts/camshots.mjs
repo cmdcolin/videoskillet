@@ -248,7 +248,7 @@ try {
   const input = await page.$('input[type=file]')
   await input.uploadFile(clip)
   await settle(3000)
-  await clickText('wipe')
+  await page.select('select[aria-label="Mix"]', 'wipe')
   await settle(3000)
   await shoot('mix')
   await page.evaluate(() => window.vf?.destroy())

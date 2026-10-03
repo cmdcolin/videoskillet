@@ -55,7 +55,7 @@ export function Loops(props: {
   return (
     <section className={styles.sheet} aria-label="Feedback loops">
       <header className={styles.sheetHead}>
-        <span className={styles.sheetTitle}>loops</span>
+        <span className={styles.sheetTitle}>feedback</span>
         <button
           className={styles.sheetButton}
           aria-pressed={more}
