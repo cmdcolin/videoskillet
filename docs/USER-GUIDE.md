@@ -271,14 +271,16 @@ menu reaches the page from the app.
   harder keeps its own settings. While the switch is on, **VIDEO** records the
   sound with the picture, as AAC where the browser can encode it and Opus where
   it cannot.
-- **sources** opens the mixer under the picture, and the page remembers whether
-  it is open. It starts closed. Once B has a picture, the mixer's modes and
-  fader stay under the picture with **sources** closed. The mixer has a row for
-  each source, and each row scrolls sideways. **source A** starts on the camera,
-  with **back camera** and **front camera** on a phone that has both. It also
-  takes a **clip** of yours or one of the set's own patterns, which works
-  without a camera at all; the page lets the camera go while something else is
-  on A, and picking the camera opens it again. **source B** starts at **none**.
+- Four buttons on the picture open panels: **tune**, **loops**, **sources** and
+  **deck**. One panel is open at a time, and opening one closes the one before
+  it. **sources** and **deck** take the place of the tabs and the strip of looks
+  while they are open, and pressing the button again brings the looks back.
+  **sources** opens the mixer, which has a row for each source, and each row
+  scrolls sideways. **source A** starts on the camera, with **back camera** and
+  **front camera** on a phone that has both. It also takes a **clip** of yours
+  or one of the set's own patterns, which works without a camera at all; the
+  page lets the camera go while something else is on A, and picking the camera
+  opens it again. **source B** starts at **none**.
   - **other camera**, on a phone with two, puts the other camera on B: the
     camera on screen goes to B and the other one comes on screen. Point the back
     camera at a scene, press it, and the front camera puts you over the scene. A
@@ -296,15 +298,15 @@ menu reaches the page from the app.
     the set's own patterns on B, the same ones the app's source menus offer.
   - **none** takes B off.
 - B comes up dissolved halfway under the look that is up, and a **mix** tab
-  opens with mixers that have lost their sync, their supply or their plugs. The
-  mixer's modes and fader appear once B has a picture. **dissolve** crossfades
-  the two genlocked, **wipe** splits the screen between them, **inset** squeezes
-  B into a corner, or opens a box of it in the middle of an upright slice,
-  **key** lays B's bright parts over A, and **sum** adds B in with no sync, so
-  the two beat against each other. The fader runs each from A to B. A look from
-  the **mix** tab works the mixer itself, which hides the fader, and pressing a
-  mode takes the mixer back from it.
-- **deck** opens the fault pads, and the page remembers whether it is open.
+  opens with mixers that have lost their sync, their supply or their plugs, and
+  the mixer opens with it. The mixer's modes and fader appear once B has a
+  picture. **dissolve** crossfades the two genlocked, **wipe** splits the screen
+  between them, **inset** squeezes B into a corner, or opens a box of it in the
+  middle of an upright slice, **key** lays B's bright parts over A, and **sum**
+  adds B in with no sync, so the two beat against each other. The fader runs
+  each from A to B. A look from the **mix** tab works the mixer itself, which
+  hides the fader, and pressing a mode takes the mixer back from it.
+- **deck** opens the fault pads.
 - The deck's pads throw a fault that breaks the picture and heals. **track**
   sweeps a band of mistracking up the picture, **roll** loses the vertical hold,
   **collapse** folds the raster to a line, **shuttle** runs the tape at speed,

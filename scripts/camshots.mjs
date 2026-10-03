@@ -43,7 +43,7 @@ const STILLS = {
   looks: { shot: 'look', under: 'nav[aria-label="Looks"]' },
   tune: { shot: 'tune', under: 'section[aria-label="Tune the look"]' },
   loops: { shot: 'loops', under: 'section[aria-label="Feedback loops"]' },
-  mix: { shot: 'mix', under: 'nav[aria-label="Looks"]' },
+  mix: { shot: 'mix', under: '[aria-label="Mixer"]' },
   zoom: { shot: 'zoom', under: '[aria-label="Zoom"]' },
   faults: { shot: 'fault', under: '[aria-label="Faults"]' },
   help: { shot: 'help', under: 'button[class*="hints"]' },
@@ -105,11 +105,9 @@ page.on('pageerror', err =>
   console.log('[pageerror]', String(err).slice(0, 300)),
 )
 
-// The tour's stills leave out the reminder a first visit gets over the picture,
-// and show the mixer, which starts closed.
+// The tour's stills leave out the reminder a first visit gets over the picture.
 await page.evaluateOnNewDocument(() => {
   localStorage.setItem('videoskillet_cam_hint_seen', '1')
-  localStorage.setItem('videoskillet_cam_sources', '1')
 })
 
 // A phone held upright: a tall camera, panning slowly over the sample.
@@ -209,7 +207,7 @@ try {
     timeout: 60000,
   })
   await clickText('Start camera')
-  await page.waitForSelector('[aria-label="Mixer"]', { timeout: 30000 })
+  await page.waitForSelector('nav[aria-label="Looks"]', { timeout: 30000 })
   await settle(3000)
   await click('button[aria-label="how to use the camera"]')
   await shoot('help')

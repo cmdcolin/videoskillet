@@ -60,6 +60,7 @@ import type { ChangeEvent, PointerEvent, ReactNode } from 'react'
 
 type Mode = 'photo' | 'video'
 type BSource = 'none' | 'camera' | 'record' | 'clip' | Pattern
+type Panel = 'tune' | 'loops' | 'mix' | 'deck'
 
 // A press becomes the original after it has been held this long, so a swipe or
 // a tap never flashes it.
@@ -69,8 +70,6 @@ const TAP_PX = 10
 
 const HINT_STORE = 'videoskillet_cam_hint_seen'
 const SIDEWAYS_STORE = 'videoskillet_cam_sideways'
-const DECK_STORE = 'videoskillet_cam_deck'
-const SOURCES_STORE = 'videoskillet_cam_sources'
 
 const sliceOf = (layout: Layout) => (layout === 'slice' ? SLICE : 1)
 
@@ -224,8 +223,6 @@ export function CamPage() {
   const clipRef = useRef<HTMLInputElement>(null)
   const clipARef = useRef<HTMLInputElement>(null)
   const [sideways, setSideways] = usePersistedFlag(SIDEWAYS_STORE)
-  const [deck, setDeck] = usePersistedFlag(DECK_STORE)
-  const [showSources, setShowSources] = usePersistedFlag(SOURCES_STORE)
   // The wipe and the inset are laid out across the glass on show, so a new
   // layout lays the board again.
   const eng = useCamEngine(canvasRef, {
@@ -244,7 +241,7 @@ export function CamPage() {
   const [scene, setScene] = useState<Scene>({ ...CLEAN, mix: null })
   const sceneRef = useRef(scene)
   const [shelfName, setShelfName] = useState(SHELVES[0].name)
-  const [sheet, setSheet] = useState<'tune' | 'loops' | null>(null)
+  const [panel, setPanel] = useState<Panel | null>(null)
   const [help, setHelp] = useState(false)
   const [hintSeen, setHintSeen] = usePersistedFlag(HINT_STORE)
   const [mode, setMode] = useState<Mode>('photo')
@@ -322,11 +319,14 @@ export function CamPage() {
       tweaks: same ? cur.tweaks : {},
     })
   }
+  // One panel is open at a time: opening one closes the one before it.
+  const toggle = (p: Panel) => setPanel(panel === p ? null : p)
+
   // A tap puts a look up outright, the way a photo app's filter does, and a
   // second tap on the look already up opens its knobs.
   const pick = (name: string) => {
     if (look !== null && look.name === name && !look.rolled) {
-      setSheet(sheet === 'tune' ? null : 'tune')
+      toggle('tune')
       return
     }
     paint({ ...CLEAN, look: { name, strength: 1, rolled: false } })
@@ -427,11 +427,13 @@ export function CamPage() {
     setError('')
     void second.loadClip(file).then(ok => (ok ? mixing('clip') : takeOff()))
   }
-  // A second picture opens the mix tab and dissolves halfway to it under the
-  // look that is up. A change of picture on B keeps the mixer where it was.
+  // A second picture opens the mix tab and the mixer, and dissolves halfway to
+  // it under the look that is up. A change of picture on B keeps the mixer
+  // where it was.
   const mixing = (from: BSource) => {
     setPicked(from)
     setShelfName(MIX_SHELF.name)
+    setPanel('mix')
     paint({ mix: sceneRef.current.mix ?? FIRST_MIX })
   }
   // The mixer's own modes take the mixer back from a look that set it.
@@ -619,6 +621,8 @@ export function CamPage() {
   const showHelp = on && help
   const mix = scene.mix ?? FIRST_MIX
   const noB = scene.mix === null || !second.loaded
+  const mixOpen = panel === 'mix' && eng.engine !== null
+  const deckOpen = panel === 'deck' && on
   const cameras: { key: Facing; label: string }[] =
     cam.canFlip && cam.sided
       ? [
@@ -759,34 +763,34 @@ export function CamPage() {
           {on ? (
             <div className={cx(styles.switches, styles.right)}>
               <Switch
-                on={sheet === 'tune'}
+                on={panel === 'tune'}
                 label="tune"
                 title="the look's own knobs"
-                onClick={() => setSheet(sheet === 'tune' ? null : 'tune')}
+                onClick={() => toggle('tune')}
               >
                 <SlidersIcon />
               </Switch>
               <Switch
-                on={sheet === 'loops'}
+                on={panel === 'loops'}
                 label="loops"
                 title="every knob on the camera loop and the mixer loop"
-                onClick={() => setSheet(sheet === 'loops' ? null : 'loops')}
+                onClick={() => toggle('loops')}
               >
                 <LoopIcon />
               </Switch>
               <Switch
-                on={showSources}
+                on={panel === 'mix'}
                 label="sources"
                 title="what is on A and B, and how the two mix"
-                onClick={() => setShowSources(!showSources)}
+                onClick={() => toggle('mix')}
               >
                 <MixIcon />
               </Switch>
               <Switch
-                on={deck}
+                on={panel === 'deck'}
                 label="deck"
                 title="fault pads that break the picture and let it heal"
-                onClick={() => setDeck(!deck)}
+                onClick={() => toggle('deck')}
               >
                 <TapeIcon />
               </Switch>
@@ -893,76 +897,72 @@ export function CamPage() {
       <section className={styles.controls}>
         {error === '' ? null : <p className={styles.error}>{error}</p>}
 
-        {eng.engine === null || !(showSources || !noB) ? null : (
+        {mixOpen ? (
           <div className={styles.mixer} aria-label="Mixer">
-            {showSources ? (
-              <>
-                <div className={styles.sourceRow}>
-                  <span className={styles.sourceName}>source A</span>
-                  <div
-                    className={styles.mixModes}
-                    role="radiogroup"
-                    aria-label="Source A"
-                  >
-                    {aSources.map(src => {
-                      const up = src.key === onA
-                      return (
-                        <button
-                          key={src.key}
-                          role="radio"
-                          aria-checked={up}
-                          className={cx(styles.mixMode, up && styles.mixModeOn)}
-                          disabled={busy}
-                          title={src.title}
-                          onClick={() => {
-                            if (!up) putOnA(src.key)
-                          }}
-                        >
-                          {src.label}
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
-                <div className={styles.sourceRow}>
-                  <span className={styles.sourceName}>source B</span>
-                  <div
-                    className={styles.mixModes}
-                    role="radiogroup"
-                    aria-label="Source B"
-                  >
-                    {sources.map(src => {
-                      const up = src.key === onB
-                      return (
-                        <button
-                          key={src.label}
-                          role="radio"
-                          aria-checked={up}
-                          className={cx(
-                            styles.mixMode,
-                            up &&
-                              (src.key === 'none'
-                                ? styles.mixModeEmpty
-                                : styles.mixModeOn),
-                          )}
-                          disabled={
-                            busy ||
-                            (!cameraUp &&
-                              (src.key === 'camera' || src.key === 'record'))
-                          }
-                          title={src.title}
-                          onClick={() => {
-                            if (!up) putOnB(src.key)
-                          }}
-                        >
-                          {src.label}
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
-              </>
-            ) : null}
+            <div className={styles.sourceRow}>
+              <span className={styles.sourceName}>source A</span>
+              <div
+                className={styles.mixModes}
+                role="radiogroup"
+                aria-label="Source A"
+              >
+                {aSources.map(src => {
+                  const up = src.key === onA
+                  return (
+                    <button
+                      key={src.key}
+                      role="radio"
+                      aria-checked={up}
+                      className={cx(styles.mixMode, up && styles.mixModeOn)}
+                      disabled={busy}
+                      title={src.title}
+                      onClick={() => {
+                        if (!up) putOnA(src.key)
+                      }}
+                    >
+                      {src.label}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+            <div className={styles.sourceRow}>
+              <span className={styles.sourceName}>source B</span>
+              <div
+                className={styles.mixModes}
+                role="radiogroup"
+                aria-label="Source B"
+              >
+                {sources.map(src => {
+                  const up = src.key === onB
+                  return (
+                    <button
+                      key={src.label}
+                      role="radio"
+                      aria-checked={up}
+                      className={cx(
+                        styles.mixMode,
+                        up &&
+                          (src.key === 'none'
+                            ? styles.mixModeEmpty
+                            : styles.mixModeOn),
+                      )}
+                      disabled={
+                        busy ||
+                        (!cameraUp &&
+                          (src.key === 'camera' || src.key === 'record'))
+                      }
+                      title={src.title}
+                      onClick={() => {
+                        if (!up) putOnB(src.key)
+                      }}
+                    >
+                      {src.label}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
             {noB ? null : (
               <>
                 <div
@@ -1012,9 +1012,9 @@ export function CamPage() {
               </>
             )}
           </div>
-        )}
+        ) : null}
 
-        {on && deck ? (
+        {deckOpen ? (
           <div className={styles.hits} aria-label="Faults">
             {TRANSITIONS.map(t => (
               <button
@@ -1032,57 +1032,68 @@ export function CamPage() {
           </div>
         ) : null}
 
-        <div className={styles.tabs} role="tablist" aria-label="Kinds of look">
-          {shelves.map(s => (
-            <button
-              key={s.name}
-              role="tab"
-              aria-selected={s === shelf}
-              className={cx(styles.tab, s === shelf && styles.tabOn)}
-              onClick={() => setShelfName(s.name)}
+        {mixOpen || deckOpen ? null : (
+          <>
+            <div
+              className={styles.tabs}
+              role="tablist"
+              aria-label="Kinds of look"
             >
-              {s.name}
-            </button>
-          ))}
-        </div>
+              {shelves.map(s => (
+                <button
+                  key={s.name}
+                  role="tab"
+                  aria-selected={s === shelf}
+                  className={cx(styles.tab, s === shelf && styles.tabOn)}
+                  onClick={() => setShelfName(s.name)}
+                >
+                  {s.name}
+                </button>
+              ))}
+            </div>
 
-        <nav className={styles.strip} aria-label="Looks">
-          <button
-            className={cx(styles.chip, look?.rolled === true && styles.chipOn)}
-            title="scramble the picture"
-            onClick={roll}
-          >
-            <ShuffleIcon />
-            random
-          </button>
-          <button
-            className={cx(styles.chip, look === null && styles.chipOn)}
-            data-look="normal"
-            onClick={() => land(null)}
-          >
-            normal
-          </button>
-          {shelf.looks.map(name => {
-            const up = look !== null && !look.rolled && look.name === name
-            return (
-              <LookChip
-                key={name}
-                name={name}
-                label={lookLabel({ name, strength: 1, rolled: false })}
-                up={up}
-                weight={up ? look.strength : (scene.layers[name] ?? 0)}
-                onPick={() => pick(name)}
-                onWeigh={w => weigh(name, w)}
+            <nav className={styles.strip} aria-label="Looks">
+              <button
+                className={cx(
+                  styles.chip,
+                  look?.rolled === true && styles.chipOn,
+                )}
+                title="scramble the picture"
+                onClick={roll}
               >
-                {up && (look.strength < 1 || tweaked) ? (
-                  <span className={styles.chipStrength}>
-                    {tweaked ? '•' : strength}
-                  </span>
-                ) : null}
-              </LookChip>
-            )
-          })}
-        </nav>
+                <ShuffleIcon />
+                random
+              </button>
+              <button
+                className={cx(styles.chip, look === null && styles.chipOn)}
+                data-look="normal"
+                onClick={() => land(null)}
+              >
+                normal
+              </button>
+              {shelf.looks.map(name => {
+                const up = look !== null && !look.rolled && look.name === name
+                return (
+                  <LookChip
+                    key={name}
+                    name={name}
+                    label={lookLabel({ name, strength: 1, rolled: false })}
+                    up={up}
+                    weight={up ? look.strength : (scene.layers[name] ?? 0)}
+                    onPick={() => pick(name)}
+                    onWeigh={w => weigh(name, w)}
+                  >
+                    {up && (look.strength < 1 || tweaked) ? (
+                      <span className={styles.chipStrength}>
+                        {tweaked ? '•' : strength}
+                      </span>
+                    ) : null}
+                  </LookChip>
+                )
+              })}
+            </nav>
+          </>
+        )}
 
         <div className={styles.row}>
           {shot === null ? (
@@ -1157,7 +1168,7 @@ export function CamPage() {
           ))}
         </div>
 
-        {sheet === 'loops' ? (
+        {panel === 'loops' ? (
           <Loops
             controls={boardOf(scene, sliceOf(eng.layout)).controls}
             tweaked={Object.keys(scene.tweaks).some(k => LOOP_KEYS.has(k))}
@@ -1171,10 +1182,10 @@ export function CamPage() {
                 ),
               })
             }
-            onClose={() => setSheet(null)}
+            onClose={() => setPanel(null)}
           />
         ) : null}
-        {sheet === 'tune' ? (
+        {panel === 'tune' ? (
           <Tune
             look={look}
             layers={scene.layers}
@@ -1189,7 +1200,7 @@ export function CamPage() {
             }
             onKnob={turnKnob}
             onReset={() => paint({ tweaks: {} })}
-            onClose={() => setSheet(null)}
+            onClose={() => setPanel(null)}
           />
         ) : null}
       </section>
