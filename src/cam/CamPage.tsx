@@ -1,270 +1,73 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 
-import { publicUrl } from '../publicUrl'
 import { cx } from '../ui/cx'
-import { save } from '../ui/download'
 import { FatalScreen } from '../ui/FatalScreen'
 import { usePersistedFlag } from '../ui/storage'
-import { TRANSITIONS, faultPlan } from '../ui/transitions'
-import { useCapture } from '../ui/useCapture'
+import { faultPlan } from '../ui/transitions'
 import { useWakeLock } from '../ui/useWakeLock'
+import { Badges } from './Badges'
 import styles from './cam.module.css'
+import { CameraNotice } from './CameraNotice'
+import { ClipInput } from './ClipInput'
+import { Deck } from './Deck'
+import { Hints } from './Hints'
+import { instrumentHref } from './instrumentHref'
+import { keysOnHue } from './keyed'
+import { KeyRing } from './KeyRing'
 import {
-  ShuffleIcon,
-  FlipIcon,
-  LoopIcon,
-  MicIcon,
-  MixIcon,
-  ShareIcon,
-  SideIcon,
-  SlidersIcon,
-  TapeIcon,
-  TiltIcon,
-} from './icons'
-import { aimKey, chromaHue, colourAt, keysOnHue, sourcePoint } from './keyed'
-import { LookChip } from './LookChip'
-import {
-  MIX_MODES,
   MIX_SHELF,
   SHELVES,
   lookBoard,
   lookKnobs,
   lookLabel,
-  mixControls,
-  mixesItself,
   rollLook,
   rollPool,
   stackLabel,
 } from './looks'
+import { LookStrip } from './LookStrip'
 import { LOOP_KEYS, Loops } from './Loops'
+import { Mixer } from './Mixer'
+import { Modes } from './Modes'
+import { PanelSwitches } from './PanelSwitches'
 import { pickRoll, rollStack, rollTweaks } from './roll'
-import { SLICE } from './tape'
+import {
+  CLEAN,
+  FIRST_MIX,
+  boardOf,
+  mixerOwned,
+  sliceOf,
+  without,
+} from './scene'
+import { SetSwitches } from './SetSwitches'
+import { Shutter } from './Shutter'
+import { TopBar } from './TopBar'
 import { Tune } from './Tune'
-import { PATTERNS, PATTERN_TITLE, useCamEngine } from './useCamEngine'
+import { useCamEngine } from './useCamEngine'
 import { useCamera } from './useCamera'
+import { useFlash } from './useFlash'
+import { useGestures } from './useGestures'
+import { useKeyTap } from './useKeyTap'
 import { useSecond } from './useSecond'
+import { useShutter } from './useShutter'
+import { useSound } from './useSound'
 import { useSourceA } from './useSourceA'
+import { useSourcePicks } from './useSourcePicks'
 import { useTilt } from './useTilt'
-import { useZoom } from './useZoom'
-import { stopAt, zoomLabel } from './zoom'
+import { trackOf, useZoom } from './useZoom'
+import { ZoomStops } from './ZoomStops'
 
-import type { ControlKey, Controls } from '../core/controls'
+import type { ControlKey } from '../core/controls'
 import type { Transition } from '../ui/transitions'
-import type { Layers, Look, Mix } from './looks'
+import type { Look, Mix } from './looks'
+import type { Panel } from './PanelSwitches'
 import type { Roll } from './roll'
-import type { Layout } from './tape'
-import type { Pattern } from './useCamEngine'
-import type { Facing } from './useCamera'
-import type { ASource } from './useSourceA'
-import type { ChangeEvent, PointerEvent, ReactNode } from 'react'
-
-type Mode = 'photo' | 'video'
-type BSource = 'none' | 'camera' | 'record' | 'clip' | Pattern
-type Panel = 'tune' | 'loops' | 'mix' | 'deck'
-
-// A press becomes the original after it has been held this long, so a swipe or
-// a tap never flashes it.
-const HOLD_MS = 180
-const SWIPE_PX = 40
-const TAP_PX = 10
+import type { Scene } from './scene'
 
 const HINT_STORE = 'videoskillet_cam_hint_seen'
 const SIDEWAYS_STORE = 'videoskillet_cam_sideways'
 
-const sliceOf = (layout: Layout) => (layout === 'slice' ? SLICE : 1)
-
-interface Gesture {
-  id: number
-  x: number
-  y: number
-  timer: number
-  kind: 'pending' | 'compare' | 'swipe'
-}
-
-interface Pinch {
-  span: number
-  zoom: number
-}
-
-// The last thing the shutter made, held until the next one replaces it.
-interface Shot {
-  blob: Blob
-  name: string
-  url: string
-  video: boolean
-}
-
-// Everything the board is built from: the look, the presets dragged in partway
-// on top of it, the knobs moved off both, the mixer while B has a picture, and
-// where a tap has aimed the look's keyer.
-interface Scene {
-  look: Look | null
-  layers: Layers
-  tweaks: Partial<Controls>
-  mix: Mix | null
-  hue: number | null
-}
-
-const CLEAN = { look: null, layers: {}, tweaks: {}, hue: null } as const
-
-// A look that sets the mixer itself keeps it; the mixer's own modes run under
-// every other look.
-const mixerOwned = (s: Scene) =>
-  [...(s.look === null ? [] : [s.look.name]), ...Object.keys(s.layers)].some(
-    mixesItself,
-  )
-
-const boardOf = (s: Scene, slice: number) => {
-  const board = lookBoard(s.look, s.layers)
-  const controls = {
-    ...board.controls,
-    ...s.tweaks,
-    ...(s.mix === null || mixerOwned(s) ? {} : mixControls(s.mix, slice)),
-  }
-  return { ...board, controls: aimKey(controls, s.hue) }
-}
-
-const FIRST_MIX: Mix = { mode: 'dissolve', fader: 0.5 }
-
-const without = (layers: Layers, name: string): Layers =>
-  Object.fromEntries(Object.entries(layers).filter(([n]) => n !== name))
-
-const isAbort = (e: unknown) =>
-  e instanceof DOMException && e.name === 'AbortError'
-
-// A phone saves to its photo library through the share sheet; anything without
-// one downloads the file.
-async function deliver(shot: Shot) {
-  const file = new File([shot.blob], shot.name, { type: shot.blob.type })
-  if ('canShare' in navigator && navigator.canShare({ files: [file] })) {
-    try {
-      await navigator.share({ files: [file] })
-    } catch (e) {
-      if (!isAbort(e)) save(shot.blob, shot.name)
-    }
-  } else {
-    save(shot.blob, shot.name)
-  }
-}
-
-const trackOf = (video: HTMLVideoElement | undefined) =>
-  video?.srcObject instanceof MediaStream
-    ? (video.srcObject.getVideoTracks()[0] ?? null)
-    : null
-
-const dist = (a: { x: number; y: number }, b: { x: number; y: number }) =>
-  Math.hypot(a.x - b.x, a.y - b.y)
-
-function Elapsed(props: { since: number }) {
-  const [now, setNow] = useState(() => performance.now())
-  useEffect(() => {
-    const id = setInterval(() => setNow(performance.now()), 500)
-    return () => clearInterval(id)
-  }, [])
-  const s = Math.max(0, Math.floor((now - props.since) / 1000))
-  return (
-    <span>
-      {Math.floor(s / 60)}:{String(s % 60).padStart(2, '0')}
-    </span>
-  )
-}
-
-// A round switch on the picture with its name under it.
-function Switch(props: {
-  on: boolean
-  label: string
-  title: string
-  disabled?: boolean
-  onClick: () => void
-  children: ReactNode
-}) {
-  return (
-    <button
-      className={styles.switch}
-      aria-pressed={props.on}
-      title={props.title}
-      disabled={props.disabled}
-      onClick={props.onClick}
-    >
-      <span className={cx(styles.switchDot, props.on && styles.on)}>
-        {props.children}
-      </span>
-      <span className={styles.switchLabel}>{props.label}</span>
-    </button>
-  )
-}
-
-// A native select, so a phone's own list opens.
-function Pick<K extends string>(props: {
-  name: string
-  label?: string
-  value: K | ''
-  placeholder?: string
-  options: { key: K; label: string; title?: string; disabled?: boolean }[]
-  disabled?: boolean
-  onChange: (key: K) => void
-}) {
-  return (
-    <label className={styles.pick}>
-      {props.label === undefined ? null : <span>{props.label}</span>}
-      <select
-        className={styles.pickSelect}
-        aria-label={props.name}
-        value={props.value}
-        disabled={props.disabled}
-        onChange={e => {
-          const hit = props.options.find(o => o.key === e.target.value)
-          if (hit !== undefined) props.onChange(hit.key)
-        }}
-      >
-        {props.placeholder === undefined ? null : (
-          <option value="" disabled>
-            {props.placeholder}
-          </option>
-        )}
-        {props.options.map(o => (
-          <option
-            key={o.key}
-            value={o.key}
-            title={o.title}
-            disabled={o.disabled}
-          >
-            {o.label}
-          </option>
-        ))}
-      </select>
-    </label>
-  )
-}
-
-const HINTS: [string, string][] = [
-  ['swipe', 'step to the next or previous look'],
-  ['hold', 'see the camera without the look'],
-  ['pinch', 'zoom, or tap a lens stop under the picture'],
-  ['tap', 'aim the key at a colour, on looks that key by colour'],
-  ['drag up', 'on a look, mixes it in partway; stack as many as you like'],
-]
-
-// The instrument, opened on the look this page is showing, asking for the
-// camera again or putting up the same patterns. A look at full strength is a
-// preset the link can name; a weaker one is a blend, which only the
-// instrument's own link format carries. A clip is a file the link cannot carry.
-function instrumentHref(
-  look: Look | null,
-  a: 'webcam' | Pattern | null,
-  b: Pattern | null,
-): string {
-  const q = new URLSearchParams()
-  if (look !== null && look.strength === 1) q.set('preset', look.name)
-  if (a !== null) q.set('src', a)
-  if (b !== null) q.set('srcb', b)
-  return q.size === 0 ? '../app/' : `../app/?${q}`
-}
-
 export function CamPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const clipRef = useRef<HTMLInputElement>(null)
-  const clipARef = useRef<HTMLInputElement>(null)
   const [sideways, setSideways] = usePersistedFlag(SIDEWAYS_STORE)
   // The wipe and the inset are laid out across the glass on show, so a new
   // layout lays the board again.
@@ -281,60 +84,27 @@ export function CamPage() {
     srcA.cameraShown()
   })
   const tilt = useTilt(eng.steer)
+  const sound = useSound(eng.hear, setError)
+  const second = useSecond(eng, cam, setError)
+  const { flash, announce } = useFlash()
   const [scene, setScene] = useState<Scene>({ ...CLEAN, mix: null })
   const sceneRef = useRef(scene)
   const [shelfName, setShelfName] = useState(SHELVES[0].name)
   const [panel, setPanel] = useState<Panel | null>(null)
   const [help, setHelp] = useState(false)
   const [hintSeen, setHintSeen] = usePersistedFlag(HINT_STORE)
-  const [mode, setMode] = useState<Mode>('photo')
   const [comparing, setComparing] = useState(false)
-  const [shot, setShot] = useState<Shot | null>(null)
-  const [recSince, setRecSince] = useState(0)
-  const second = useSecond(eng, cam, setError)
-  const [picked, setPicked] = useState<BSource>('none')
-  const [sound, setSound] = useState(false)
-  const [flash, setFlash] = useState('')
-  const [ring, setRing] = useState<{
-    x: number
-    y: number
-    rgb: string
-  } | null>(null)
-  const gesture = useRef<Gesture | null>(null)
-  const pointers = useRef(new Map<number, { x: number; y: number }>())
-  const pinch = useRef<Pinch | null>(null)
-  const flashTimer = useRef(0)
-  const ringTimer = useRef(0)
   const { look } = scene
   // The mix tab opens while B has a picture to mix.
   const shelves = second.loaded ? [...SHELVES, MIX_SHELF] : SHELVES
   const shelf = shelves.find(s => s.name === shelfName) ?? SHELVES[0]
 
-  const capture = useCapture(
+  const shutter = useShutter(
     canvasRef,
     stackLabel(look, scene.layers),
     setError,
-    (blob, name) =>
-      setShot({
-        blob,
-        name,
-        url: URL.createObjectURL(blob),
-        video: blob.type.startsWith('video/'),
-      }),
-    // 30fps, which is what a phone's own camera records, and half the
-    // encoding a phone's encoder has to keep up with.
-    {
-      clock: true,
-      fps: { num: 30, den: 1 },
-      audio: () => eng.engine?.audioState.tap() ?? null,
-    },
+    () => eng.engine?.audioState.tap() ?? null,
   )
-
-  useEffect(() => {
-    if (shot === null) return undefined
-    const url = shot.url
-    return () => URL.revokeObjectURL(url)
-  }, [shot])
 
   useWakeLock(eng.engine !== null)
 
@@ -362,6 +132,7 @@ export function CamPage() {
       tweaks: same ? cur.tweaks : {},
     })
   }
+
   // One panel is open at a time: opening one closes the one before it.
   const toggle = (p: Panel) => setPanel(panel === p ? null : p)
 
@@ -374,6 +145,7 @@ export function CamPage() {
     }
     paint({ ...CLEAN, look: { name, strength: 1, rolled: false } })
   }
+
   // A chip dragged up mixes its preset in partway: as the look when nothing
   // is up, as the look's strength when it is the look, and stacked on the look
   // otherwise.
@@ -388,6 +160,7 @@ export function CamPage() {
       paint({ layers: w > 0 ? { ...rest, [name]: w } : rest })
     }
   }
+
   const roll = () => {
     const cur = sceneRef.current
     const kind: Roll = pickRoll(cur.look !== null)
@@ -417,71 +190,10 @@ export function CamPage() {
   const turnKnob = (key: ControlKey, value: number) =>
     paint({ tweaks: { ...sceneRef.current.tweaks, [key]: value } })
 
-  const shutter = () => {
-    setError('')
-    if (mode === 'photo') {
-      capture.grabStill()
-    } else {
-      if (!capture.recording) setRecSince(performance.now())
-      capture.toggleRecord()
-    }
-  }
-
-  const flipTilt = () => {
-    setError('')
-    void tilt.toggle().then(ok => {
-      if (!ok)
-        setError(
-          'Motion access was turned down. Allow it in the browser’s site settings and try again.',
-        )
-    })
-  }
-
-  // The other camera goes on screen and the one that was there goes on B, live
-  // or as a tape. The scene behind the phone and the person holding it share
-  // the picture.
-  const mixCamera = () => {
-    second.eject()
-    setError('')
-    void second.load().then(got => {
-      if (got === null) {
-        takeOff()
-        return
-      }
-      if (got === 'tape' && cam.canFlip) cam.flip()
-      mixing('camera')
-    })
-  }
-  const mixTape = () => {
-    second.eject()
-    setError('')
-    void second.record().then(ok => (ok ? mixing('record') : takeOff()))
-  }
-  const mixPattern = (p: Pattern) => {
-    setError('')
-    second.loadPattern(p)
-    mixing(p)
-  }
-  const mixClip = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    e.target.value = ''
-    if (file === undefined) return
-    second.eject()
-    setError('')
-    void second.loadClip(file).then(ok => (ok ? mixing('clip') : takeOff()))
-  }
-  // A second picture opens the mix tab and the mixer, and dissolves halfway to
-  // it under the look that is up. A change of picture on B keeps the mixer
-  // where it was.
-  const mixing = (from: BSource) => {
-    setPicked(from)
-    setShelfName(MIX_SHELF.name)
-    setPanel('mix')
-    paint({ mix: sceneRef.current.mix ?? FIRST_MIX })
-  }
   // The mixer's own modes take the mixer back from a look that set it.
   const mixWith = (mix: Mix) =>
     paint(mixerOwned(sceneRef.current) ? { ...CLEAN, mix } : { mix })
+
   // A pad breaks the picture and lets it heal. With a second picture on B, the
   // cut lands on the frame the picture is least legible and throws the fader to
   // the other end, so the fault carries the change of picture.
@@ -495,29 +207,33 @@ export function CamPage() {
     )
   }
 
-  const takeOff = () => {
-    second.eject()
-    paint(
-      mixerOwned(sceneRef.current) ? { ...CLEAN, mix: null } : { mix: null },
-    )
-  }
+  // A second picture opens the mix tab and the mixer, and dissolves halfway to
+  // it under the look that is up. A change of picture on B keeps the mixer
+  // where it was.
+  const picks = useSourcePicks({
+    cam,
+    srcA,
+    second,
+    onError: setError,
+    onMixing: () => {
+      setShelfName(MIX_SHELF.name)
+      setPanel('mix')
+      paint({ mix: sceneRef.current.mix ?? FIRST_MIX })
+    },
+    onTakeOff: () =>
+      paint(
+        mixerOwned(sceneRef.current) ? { ...CLEAN, mix: null } : { mix: null },
+      ),
+  })
 
-  const flipSound = () => {
+  const flipTilt = () => {
     setError('')
-    const next = !sound
-    eng.hear(next).then(
-      () => setSound(next),
-      () =>
+    void tilt.toggle().then(ok => {
+      if (!ok)
         setError(
-          'Microphone access was turned down. Allow it in the browser’s site settings and try again.',
-        ),
-    )
-  }
-
-  const announce = (text: string) => {
-    setFlash(text)
-    window.clearTimeout(flashTimer.current)
-    flashTimer.current = window.setTimeout(() => setFlash(''), 900)
+          'Motion access was turned down. Allow it in the browser’s site settings and try again.',
+        )
+    })
   }
 
   // A swipe steps along the tab's strip, the way a phone camera steps through
@@ -541,115 +257,26 @@ export function CamPage() {
       })
   }
 
-  // A tap on a look that keys its loop by hue moves the key to the camera's
-  // colour under the finger.
-  const tap = (e: PointerEvent<HTMLCanvasElement>) => {
-    const c = eng.camera()
-    if (c === null || !keysOnHue(lookBoard(look, scene.layers).controls)) return
-    const rect = e.currentTarget.getBoundingClientRect()
-    const at = {
-      x: (e.clientX - rect.left) / rect.width,
-      y: (e.clientY - rect.top) / rect.height,
-    }
-    const rgb = colourAt(
-      c.video,
-      sourcePoint(at, rect, {
-        width: c.video.videoWidth,
-        height: c.video.videoHeight,
-        mirror: c.mirror,
-        crop: zoom.crop,
-      }),
-    )
-    if (rgb === null) return
-    const hue = chromaHue(...rgb)
-    if (hue === null) {
-      announce('no colour there to key on')
-      return
-    }
-    paint({ hue })
-    setRing({
-      ...at,
-      rgb: `rgb(${rgb.map(v => Math.round(v * 255)).join(' ')})`,
-    })
-    window.clearTimeout(ringTimer.current)
-    ringTimer.current = window.setTimeout(() => setRing(null), 800)
-  }
+  const keyTap = useKeyTap({
+    camera: eng.camera,
+    crop: zoom.crop,
+    keyed: () => keysOnHue(lookBoard(look, scene.layers).controls),
+    onAim: hue => paint({ hue }),
+    onMiss: announce,
+  })
 
-  const endCompare = () => {
-    setComparing(false)
-    eng.compare(false)
-  }
-
-  // A second finger turns whatever the first one started into a pinch.
-  const press = (e: PointerEvent<HTMLCanvasElement>) => {
-    if (!hintSeen) setHintSeen(true)
-    e.currentTarget.setPointerCapture(e.pointerId)
-    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
-    if (pointers.current.size === 2) {
-      const g = gesture.current
-      if (g !== null) {
-        window.clearTimeout(g.timer)
-        if (g.kind === 'compare') endCompare()
-        gesture.current = null
-      }
-      const [a, b] = [...pointers.current.values()]
-      pinch.current = { span: dist(a, b), zoom: zoom.zoom }
-      return
-    }
-    if (pointers.current.size > 2) return
-    const timer = window.setTimeout(() => {
-      const g = gesture.current
-      if (g !== null && g.kind === 'pending') {
-        g.kind = 'compare'
-        setComparing(true)
-        eng.compare(true)
-      }
-    }, HOLD_MS)
-    gesture.current = {
-      id: e.pointerId,
-      x: e.clientX,
-      y: e.clientY,
-      timer,
-      kind: 'pending',
-    }
-  }
-  const drag = (e: PointerEvent<HTMLCanvasElement>) => {
-    if (pointers.current.has(e.pointerId))
-      pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
-    const p = pinch.current
-    if (p !== null && pointers.current.size === 2) {
-      const [a, b] = [...pointers.current.values()]
-      zoom.set((p.zoom * dist(a, b)) / Math.max(p.span, 1))
-      return
-    }
-    const g = gesture.current
-    if (g === null || g.id !== e.pointerId || g.kind !== 'pending') return
-    const dx = e.clientX - g.x
-    const dy = e.clientY - g.y
-    if (Math.abs(dx) > SWIPE_PX && Math.abs(dx) > 1.5 * Math.abs(dy)) {
-      window.clearTimeout(g.timer)
-      g.kind = 'swipe'
-      step(dx < 0 ? 1 : -1)
-    }
-  }
-  const release =
-    (cancelled: boolean) => (e: PointerEvent<HTMLCanvasElement>) => {
-      pointers.current.delete(e.pointerId)
-      if (pointers.current.size < 2) pinch.current = null
-      const g = gesture.current
-      if (g === null || g.id !== e.pointerId) return
-      window.clearTimeout(g.timer)
-      gesture.current = null
-      if (g.kind === 'compare') {
-        endCompare()
-      } else if (
-        !cancelled &&
-        g.kind === 'pending' &&
-        Math.hypot(e.clientX - g.x, e.clientY - g.y) < TAP_PX
-      ) {
-        tap(e)
-      }
-    }
+  const gestures = useGestures({
+    zoom,
+    onPress: () => {
+      if (!hintSeen) setHintSeen(true)
+    },
+    onCompare: on => {
+      setComparing(on)
+      eng.compare(on)
+    },
+    onSwipe: step,
+    onTap: keyTap.tap,
+  })
 
   if (eng.fatal !== null) return <FatalScreen fatal={eng.fatal} />
 
@@ -658,101 +285,38 @@ export function CamPage() {
   const tweaked = Object.keys(scene.tweaks).length > 0
   const ownedMixer = mixerOwned(scene)
   const stacked = Object.keys(scene.layers).length > 0
-  const strength = look === null ? 0 : Math.round(look.strength * 100)
-  const stop = stopAt(zoom.zoom, zoom.stops)
-  const busy = second.left > 0 || second.opening || capture.recording
+  const busy = second.left > 0 || second.opening || shutter.recording
   const showHelp = on && help
-  const mix = scene.mix ?? FIRST_MIX
-  const noB = scene.mix === null || !second.loaded
   const mixOpen = panel === 'mix' && eng.engine !== null
   const deckOpen = panel === 'deck' && on
-  const cameras: { key: Facing; label: string }[] =
-    cam.canFlip && cam.sided
-      ? [
-          { key: 'environment', label: 'back camera' },
-          { key: 'user', label: 'front camera' },
-        ]
-      : [{ key: cam.facing, label: 'camera' }]
-  const aSources: { key: Facing | ASource; label: string; title?: string }[] = [
-    ...cameras,
-    { key: 'clip', label: 'clip', title: 'any video of yours, looped' },
-    ...PATTERNS.map(p => ({ key: p, label: p, title: PATTERN_TITLE[p] })),
-  ]
-  const onA = srcA.on === 'camera' ? cam.facing : srcA.on
-  const putOnA = (key: Facing | ASource) => {
-    setError('')
-    if (key === 'clip') clipARef.current?.click()
-    else if (key === 'user' || key === 'environment') {
-      if (srcA.on !== 'camera') cam.start(key)
-      else if (second.live) void second.swap()
-      else cam.flip()
-    } else if (key !== 'camera') {
-      srcA.toPattern(key)
-      cam.stop()
-    }
-  }
-  const sources: { key: BSource; label: string; title: string }[] = [
-    { key: 'none', label: 'none', title: 'nothing on B' },
-    ...(cam.canFlip
-      ? [
-          {
-            key: 'camera' as const,
-            label: 'other camera',
-            title:
-              'the other camera, live where the phone runs both, else a 4 s tape',
-          },
-        ]
-      : []),
-    {
-      key: 'record',
-      label: 'record 4 s',
-      title: 'record 4 s of this camera and loop it on B',
-    },
-    { key: 'clip', label: 'clip', title: 'any video of yours, looped' },
-    ...PATTERNS.map(p => ({ key: p, label: p, title: PATTERN_TITLE[p] })),
-  ]
-  const onB: BSource = second.kind === null ? 'none' : picked
-  const putOnB = (key: BSource) => {
-    if (key === 'none') takeOff()
-    else if (key === 'camera') mixCamera()
-    else if (key === 'record') mixTape()
-    else if (key === 'clip') clipRef.current?.click()
-    else mixPattern(key)
-  }
+  const controls = () => boardOf(scene, sliceOf(eng.layout)).controls
+  const flip =
+    cameraUp && (cam.canFlip || second.live)
+      ? {
+          label: second.live
+            ? 'swap the two cameras'
+            : cam.facing === 'user'
+              ? 'switch to the back camera'
+              : 'switch to the front camera',
+          onClick: second.live ? () => void second.swap() : cam.flip,
+        }
+      : null
 
   return (
     <div className={styles.page}>
-      <header className={styles.top}>
-        <a className={styles.brand} href="../" aria-label="videoskillet home">
-          <img className={styles.mark} src={publicUrl('favicon.svg')} alt="" />
-          <span className={styles.brandName}>videoskillet</span>
-        </a>
-        <span className={styles.topRight}>
-          <button
-            className={styles.help}
-            aria-label="how to use the camera"
-            aria-pressed={help}
-            onClick={() => setHelp(!help)}
-          >
-            ?
-          </button>
-          <a
-            className={styles.full}
-            href={instrumentHref(
-              stacked ? null : look,
-              cameraUp
-                ? 'webcam'
-                : srcA.on === 'camera' || srcA.on === 'clip'
-                  ? null
-                  : srcA.on,
-              second.pattern,
-            )}
-            title="open the whole instrument on this look"
-          >
-            full app ↗
-          </a>
-        </span>
-      </header>
+      <TopBar
+        help={help}
+        onHelp={() => setHelp(!help)}
+        fullHref={instrumentHref(
+          stacked ? null : look,
+          cameraUp
+            ? 'webcam'
+            : srcA.on === 'camera' || srcA.on === 'clip'
+              ? null
+              : srcA.on,
+          second.pattern,
+        )}
+      />
 
       <main className={styles.stage}>
         <div
@@ -762,178 +326,59 @@ export function CamPage() {
             ref={canvasRef}
             className={styles.canvas}
             title="hold to see the camera without the look, swipe for another look, pinch to zoom"
-            onPointerDown={press}
-            onPointerMove={drag}
-            onPointerUp={release(false)}
-            onPointerCancel={release(true)}
+            onPointerDown={gestures.press}
+            onPointerMove={gestures.drag}
+            onPointerUp={gestures.release(false)}
+            onPointerCancel={gestures.release(true)}
             onContextMenu={e => e.preventDefault()}
           />
           {on ? (
-            <div className={cx(styles.switches, styles.left)}>
-              {tilt.supported ? (
-                <Switch
-                  on={tilt.on}
-                  label="tilt"
-                  title="steer the loop by tilting the phone"
-                  onClick={flipTilt}
-                >
-                  <TiltIcon />
-                </Switch>
-              ) : null}
-              {eng.layout === 'whole' ? null : (
-                <Switch
-                  on={sideways}
-                  label="on side"
-                  title="stand the set on its side, so the scan runs down the picture"
-                  onClick={() => {
-                    setSideways(!sideways)
-                    eng.standSideways(!sideways)
-                  }}
-                >
-                  <SideIcon />
-                </Switch>
-              )}
-              <Switch
-                on={sound}
-                label="sound"
-                title="let the room's sound shake the set"
-                onClick={flipSound}
-              >
-                <MicIcon />
-              </Switch>
-            </div>
+            <SetSwitches
+              tilt={{
+                supported: tilt.supported,
+                on: tilt.on,
+                onToggle: flipTilt,
+              }}
+              side={{
+                shown: eng.layout !== 'whole',
+                on: sideways,
+                onToggle: () => {
+                  setSideways(!sideways)
+                  eng.standSideways(!sideways)
+                },
+              }}
+              sound={{ on: sound.on, onToggle: sound.toggle }}
+            />
           ) : null}
-          {on ? (
-            <div className={cx(styles.switches, styles.right)}>
-              <Switch
-                on={panel === 'tune'}
-                label="tune"
-                title="the look's own knobs"
-                onClick={() => toggle('tune')}
-              >
-                <SlidersIcon />
-              </Switch>
-              <Switch
-                on={panel === 'loops'}
-                label="feedback"
-                title="every knob on the camera loop and the mixer loop"
-                onClick={() => toggle('loops')}
-              >
-                <LoopIcon />
-              </Switch>
-              <Switch
-                on={panel === 'mix'}
-                label="sources"
-                title="what is on A and B, and how the two mix"
-                onClick={() => toggle('mix')}
-              >
-                <MixIcon />
-              </Switch>
-              <Switch
-                on={panel === 'deck'}
-                label="deck"
-                title="fault pads that break the picture and let it heal"
-                onClick={() => toggle('deck')}
-              >
-                <TapeIcon />
-              </Switch>
-            </div>
-          ) : null}
-          <input
-            ref={clipRef}
-            type="file"
-            accept="video/*"
-            hidden
-            onChange={mixClip}
-          />
-          <input
-            ref={clipARef}
-            type="file"
-            accept="video/*"
-            hidden
-            onChange={e => {
-              const file = e.target.files?.[0]
-              e.target.value = ''
-              if (file !== undefined)
-                void srcA.toClip(file).then(ok => ok && cam.stop())
-            }}
-          />
+          {on ? <PanelSwitches panel={panel} onToggle={toggle} /> : null}
+          <ClipInput attach={picks.attachB} onFile={picks.clipOnB} />
+          <ClipInput attach={picks.attachA} onFile={picks.clipOnA} />
           {cameraUp && !showHelp ? (
-            <div className={styles.zoom} role="group" aria-label="Zoom">
-              {zoom.stops.map(s => (
-                <button
-                  key={s}
-                  className={cx(styles.zoomStop, s === stop && styles.zoomOn)}
-                  aria-label={`zoom ${zoomLabel(s)}×`}
-                  onClick={() => zoom.set(s)}
-                >
-                  {s === stop ? `${zoomLabel(zoom.zoom)}×` : zoomLabel(s)}
-                </button>
-              ))}
-            </div>
+            <ZoomStops stops={zoom.stops} zoom={zoom.zoom} onZoom={zoom.set} />
           ) : null}
-          {second.left > 0 ? (
-            <span className={cx(styles.badge, styles.rec)}>
-              tape {second.left}
-            </span>
-          ) : second.opening ? (
-            <span className={styles.badge}>second camera</span>
-          ) : null}
-          {comparing ? <span className={styles.badge}>original</span> : null}
+          <Badges
+            tapeLeft={second.left}
+            opening={second.opening}
+            comparing={comparing}
+            recording={shutter.recording}
+            recSince={shutter.recSince}
+          />
           {flash === '' ? null : <span className={styles.flash}>{flash}</span>}
           {on && !hintSeen && !showHelp ? (
             <span className={styles.firstHint}>
               swipe for looks · hold for the original
             </span>
           ) : null}
-          {ring === null ? null : (
-            <span
-              className={styles.ring}
-              style={{
-                left: `${ring.x * 100}%`,
-                top: `${ring.y * 100}%`,
-                background: ring.rgb,
-              }}
-            />
-          )}
-          {capture.recording ? (
-            <span className={cx(styles.badge, styles.rec)}>
-              <Elapsed since={recSince} />
-            </span>
-          ) : null}
-          {showHelp ? (
-            <button className={styles.hints} onClick={() => setHelp(false)}>
-              <dl>
-                {HINTS.map(([k, v]) => (
-                  <div key={k}>
-                    <dt>{k}</dt>
-                    <dd>{v}</dd>
-                  </div>
-                ))}
-              </dl>
-              <span className={styles.hintsClose}>tap to close</span>
-            </button>
-          ) : null}
-          {eng.rebuilding ? (
-            <p className={styles.notice}>Reconnecting to the GPU…</p>
-          ) : eng.frozen ? (
-            <p className={styles.notice}>
-              The picture stopped updating. Reload the page to bring it back.
-            </p>
-          ) : cam.state === 'off' && srcA.on === 'camera' ? (
-            <button className={styles.start} onClick={() => cam.start()}>
-              Start camera
-            </button>
-          ) : cam.state === 'starting' ? (
-            <p className={styles.notice}>Starting the camera…</p>
-          ) : cam.state === 'error' ? (
-            <div className={styles.notice}>
-              <p>{cam.error}</p>
-              <button className={styles.start} onClick={() => cam.start()}>
-                Try again
-              </button>
-            </div>
-          ) : null}
+          {keyTap.ring === null ? null : <KeyRing {...keyTap.ring} />}
+          {showHelp ? <Hints onClose={() => setHelp(false)} /> : null}
+          <CameraNotice
+            rebuilding={eng.rebuilding}
+            frozen={eng.frozen}
+            state={cam.state}
+            error={cam.error}
+            onCamera={srcA.on === 'camera'}
+            onStart={() => cam.start()}
+          />
         </div>
       </main>
 
@@ -941,224 +386,57 @@ export function CamPage() {
         {error === '' ? null : <p className={styles.error}>{error}</p>}
 
         {mixOpen ? (
-          <div className={styles.mixer} aria-label="Mixer">
-            <div className={styles.mixRow}>
-              <Pick
-                label="A"
-                name="Source A"
-                value={onA}
-                disabled={busy}
-                options={aSources}
-                onChange={putOnA}
-              />
-              <Pick
-                label="B"
-                name="Source B"
-                value={onB}
-                disabled={busy}
-                options={sources.map(src => ({
-                  ...src,
-                  disabled:
-                    !cameraUp && (src.key === 'camera' || src.key === 'record'),
-                }))}
-                onChange={putOnB}
-              />
-            </div>
-            {noB ? null : (
-              <div className={styles.mixRow}>
-                <Pick
-                  name="Mix"
-                  value={ownedMixer ? '' : mix.mode}
-                  placeholder={ownedMixer ? 'by the look' : undefined}
-                  options={MIX_MODES.map(m => ({ key: m, label: m }))}
-                  onChange={m => mixWith({ mode: m, fader: mix.fader })}
-                />
-                {ownedMixer ? (
-                  <p className={styles.mixNote}>
-                    The look is working the mixer. Pick a mode to take it back.
-                  </p>
-                ) : (
-                  <label className={styles.fader}>
-                    <span>A</span>
-                    <input
-                      className={styles.slider}
-                      type="range"
-                      min={0}
-                      max={100}
-                      value={Math.round(mix.fader * 100)}
-                      aria-label="fader"
-                      onChange={e =>
-                        mixWith({
-                          mode: mix.mode,
-                          fader: Number(e.target.value) / 100,
-                        })
-                      }
-                    />
-                    <span>B</span>
-                  </label>
-                )}
-              </div>
-            )}
-          </div>
+          <Mixer
+            canFlip={cam.canFlip}
+            sided={cam.sided}
+            facing={cam.facing}
+            onA={picks.onA}
+            onB={picks.onB}
+            busy={busy}
+            cameraUp={cameraUp}
+            hasB={scene.mix !== null && second.loaded}
+            ownedByLook={ownedMixer}
+            mix={scene.mix ?? FIRST_MIX}
+            onPutA={picks.putOnA}
+            onPutB={picks.putOnB}
+            onMix={mixWith}
+          />
         ) : null}
 
-        {deckOpen ? (
-          <div className={styles.hits} aria-label="Faults">
-            {TRANSITIONS.map(t => (
-              <button
-                key={t.name}
-                className={styles.hit}
-                title={t.title}
-                onClick={() => hit(t)}
-              >
-                <span className={styles.hitGlyph} aria-hidden>
-                  {t.glyph}
-                </span>
-                {t.label}
-              </button>
-            ))}
-          </div>
-        ) : null}
+        {deckOpen ? <Deck onHit={hit} /> : null}
 
         {mixOpen || deckOpen ? null : (
-          <>
-            <div
-              className={styles.tabs}
-              role="tablist"
-              aria-label="Kinds of look"
-            >
-              {shelves.map(s => (
-                <button
-                  key={s.name}
-                  role="tab"
-                  aria-selected={s === shelf}
-                  className={cx(styles.tab, s === shelf && styles.tabOn)}
-                  onClick={() => setShelfName(s.name)}
-                >
-                  {s.name}
-                </button>
-              ))}
-            </div>
-
-            <nav className={styles.strip} aria-label="Looks">
-              <button
-                className={cx(
-                  styles.chip,
-                  look?.rolled === true && styles.chipOn,
-                )}
-                title="scramble the picture"
-                onClick={roll}
-              >
-                <ShuffleIcon />
-                random
-              </button>
-              <button
-                className={cx(styles.chip, look === null && styles.chipOn)}
-                data-look="normal"
-                onClick={() => land(null)}
-              >
-                normal
-              </button>
-              {shelf.looks.map(name => {
-                const up = look !== null && !look.rolled && look.name === name
-                return (
-                  <LookChip
-                    key={name}
-                    name={name}
-                    label={lookLabel({ name, strength: 1, rolled: false })}
-                    up={up}
-                    weight={up ? look.strength : (scene.layers[name] ?? 0)}
-                    onPick={() => pick(name)}
-                    onWeigh={w => weigh(name, w)}
-                  >
-                    {up && (look.strength < 1 || tweaked) ? (
-                      <span className={styles.chipStrength}>
-                        {tweaked ? '•' : strength}
-                      </span>
-                    ) : null}
-                  </LookChip>
-                )
-              })}
-            </nav>
-          </>
+          <LookStrip
+            shelves={shelves}
+            shelf={shelf}
+            look={look}
+            layers={scene.layers}
+            tweaked={tweaked}
+            onShelf={setShelfName}
+            onRoll={roll}
+            onNormal={() => land(null)}
+            onPick={pick}
+            onWeigh={weigh}
+          />
         )}
 
-        <div className={styles.row}>
-          {shot === null ? (
-            <span className={styles.thumbSlot} />
-          ) : (
-            <button
-              className={styles.thumb}
-              title={`save or share ${shot.name}`}
-              onClick={() => void deliver(shot)}
-            >
-              {shot.video ? (
-                <video
-                  src={`${shot.url}#t=0.1`}
-                  muted
-                  playsInline
-                  preload="metadata"
-                />
-              ) : (
-                <img src={shot.url} alt="" />
-              )}
-              <span className={styles.thumbShare}>
-                <ShareIcon />
-              </span>
-            </button>
-          )}
-          <button
-            className={cx(
-              styles.shutter,
-              mode === 'video' && styles.shutterVideo,
-              capture.recording && styles.shutterRec,
-            )}
-            aria-label={
-              mode === 'photo'
-                ? 'take a photo'
-                : capture.recording
-                  ? 'stop recording'
-                  : 'start recording'
-            }
-            onClick={shutter}
-          />
-          {cameraUp && (cam.canFlip || second.live) ? (
-            <button
-              className={styles.flip}
-              aria-label={
-                second.live
-                  ? 'swap the two cameras'
-                  : cam.facing === 'user'
-                    ? 'switch to the back camera'
-                    : 'switch to the front camera'
-              }
-              onClick={second.live ? () => void second.swap() : cam.flip}
-            >
-              <FlipIcon />
-            </button>
-          ) : (
-            <span className={styles.thumbSlot} />
-          )}
-        </div>
+        <Shutter
+          shot={shutter.shot}
+          mode={shutter.mode}
+          recording={shutter.recording}
+          flip={flip}
+          onShutter={shutter.press}
+        />
 
-        <div className={styles.modes} role="radiogroup" aria-label="Shutter">
-          {(['photo', 'video'] as const).map(m => (
-            <button
-              key={m}
-              role="radio"
-              aria-checked={mode === m}
-              className={cx(styles.mode, mode === m && styles.modeOn)}
-              disabled={capture.recording}
-              onClick={() => setMode(m)}
-            >
-              {m}
-            </button>
-          ))}
-        </div>
+        <Modes
+          mode={shutter.mode}
+          disabled={shutter.recording}
+          onMode={shutter.setMode}
+        />
 
         {panel === 'loops' ? (
           <Loops
-            controls={boardOf(scene, sliceOf(eng.layout)).controls}
+            controls={controls()}
             tweaked={Object.keys(scene.tweaks).some(k => LOOP_KEYS.has(k))}
             onKnob={turnKnob}
             onReset={() =>
@@ -1177,7 +455,7 @@ export function CamPage() {
           <Tune
             look={look}
             layers={scene.layers}
-            controls={boardOf(scene, sliceOf(eng.layout)).controls}
+            controls={controls()}
             tweaked={tweaked}
             onStrength={s => look !== null && land({ ...look, strength: s })}
             onLayer={(name, w) =>

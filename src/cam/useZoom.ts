@@ -4,6 +4,11 @@ import { lensSpan, zoomSpan, zoomSplit, zoomStops } from './zoom'
 
 import type { Span } from './zoom'
 
+export const trackOf = (video: HTMLVideoElement | undefined) =>
+  video?.srcObject instanceof MediaStream
+    ? (video.srcObject.getVideoTracks()[0] ?? null)
+    : null
+
 // The zoom of the camera on A. `track` is that camera's track and `crop` the
 // engine's crop of A. A pinch asks for a new zoom every frame, and a camera
 // takes a while to answer each one, so only the latest ask waits its turn.
