@@ -2,6 +2,13 @@
 
 All notable changes to videoskillet are documented here.
 
+## [2.12.0](https://github.com/cmdcolin/videoskillet/compare/v2.11.0...v2.12.0) - 2026-10-03
+
+### Refactor
+- *(ui)* [`4432768`](https://github.com/cmdcolin/videoskillet/commit/4432768aa0a83b96b44a07f687e70102ec277b84) one open panel on the cam page
+- *(ui)* [`24dc77d`](https://github.com/cmdcolin/videoskillet/commit/24dc77de9a00f286cc20971d87444d92027cc4a9) two-row mixer, and feedback names the loops sheet
+- *(ui)* [`786d5e1`](https://github.com/cmdcolin/videoskillet/commit/786d5e1628d87c571666e3bebe7626ffa0633602) split the cam page into single-purpose files
+
 ## [2.11.0](https://github.com/cmdcolin/videoskillet/compare/v2.10.0...v2.11.0) - 2026-10-02
 
 ### Features
