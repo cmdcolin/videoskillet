@@ -743,9 +743,12 @@ path. Where a shell earns its keep is the boundary either side:
 - **Writing the file.** A take spills into the browser's blob store as it
   encodes, so this is narrower than it was: the heap no longer holds the file,
   and what is left is that the blob store holds all of it somewhere and that
-  32-bit box offsets cap a take at 3.9 GB. Writing straight to disk as it goes
-  is File System Access `createWritable()`, which is Chromium-only, and the
-  browser this project develops against is Firefox.
+  32-bit box offsets cap a take at 3.9 GB. The browser can do better than that
+  already — `scripts/fsacheck.mjs` measures Nightly 151 as having the
+  origin-private file system, `createWritable`, positional writes that patch an
+  `mdat` length written earlier, and a `getFile()` an object URL downloads. Only
+  the _picker_ is Chromium-only, so a shell buys the user choosing where the
+  file lands, and the streaming itself is reachable here.
 - **Codecs.** A bundled ffmpeg gets ProRes / DNxHR and audio mux. The sharpest
   form of the cost is chroma: the H.264 WebCodecs offers is 4:2:0 only, which
   scores 15.54 dB against a one-pixel chroma source where AV1 4:4:4 scores 43.38

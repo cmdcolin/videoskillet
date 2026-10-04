@@ -193,6 +193,7 @@ node scripts/rendercheck.mjs [port]  # a whole take, twice
 node scripts/enccheck.mjs            # what the encoder costs — a measurement
 node scripts/pullstep.mjs            # what a stepped <video> costs — a measurement
 node scripts/codeccheck.mjs          # what the decoder path costs — a measurement
+node scripts/fsacheck.mjs [port]     # whether a take can stream to disk — a measurement
 node scripts/demuxcheck.mjs [file…]  # the sample table, against ffprobe
 node scripts/pullcheck.mjs           # the right frames, off the real puller
 ```
