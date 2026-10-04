@@ -17,11 +17,19 @@ export function fileName(name: string, ext: string): string {
   return `videoskillet-${slug}-${stamp()}.${ext}`
 }
 
+// How long the object URL outlives the click, which has to cover the browser
+// reading the whole blob into the download. The two seconds this used to wait
+// served a PNG; a take is a gigabyte-scale file, and a revoked URL is a
+// download with nothing behind it. Long enough for a slow disk to write the
+// largest file the app makes, and no longer, so a session of takes does not
+// hold on to every one of them.
+const REVOKE_MS = 120_000
+
 export function save(blob: Blob, name: string) {
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
   a.download = name
   a.click()
-  setTimeout(() => URL.revokeObjectURL(url), 2000)
+  setTimeout(() => URL.revokeObjectURL(url), REVOKE_MS)
 }
