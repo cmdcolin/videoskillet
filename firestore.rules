@@ -307,7 +307,7 @@ service cloud.firestore {
       return d.keys().hasOnly(
                ['kind', 'version', 'browser', 'page', 'width', 'height', 'fps',
                 'codec', 'hardware', 'seconds', 'frames', 'held', 'deepest',
-                'encoded', 'chunks', 'configs', 'coded', 'canvas', 'error',
+                'encoded', 'chunks', 'bytes', 'configs', 'coded', 'canvas', 'error',
                 'stage', 'hidden', 'message', 'model', 'memory', 'sat'])
              && d.kind in ['lost', 'failed']
              && d.version is string && d.version.size() <= 32
@@ -330,6 +330,7 @@ service cloud.firestore {
              && optNumber(d, 'deepest')
              && optNumber(d, 'encoded')
              && optNumber(d, 'chunks')
+             && optNumber(d, 'bytes')
              && optNumber(d, 'configs')
              && optNumber(d, 'memory')
              && (!('hidden' in d) || d.hidden is bool)

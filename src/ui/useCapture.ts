@@ -134,6 +134,7 @@ export function useCapture(
     deepest: r.deepest(),
     encoded: r.encoded(),
     chunks: r.chunks(),
+    bytes: r.bytes(),
     coded: r.coded(),
     configs: r.configs(),
     canvas:
@@ -284,6 +285,7 @@ export function useCapture(
           deepest: 0,
           encoded: 0,
           chunks: 0,
+          bytes: 0,
           coded: '',
           canvas: `${width}x${height}`,
           configs: 0,

@@ -22,6 +22,7 @@ const report = (over = {}) => ({
   deepest: 3,
   encoded: 170,
   chunks: 168,
+  bytes: 21_500_000,
   coded: '816x1088',
   canvas: '822x1096',
   configs: 1,
@@ -37,10 +38,18 @@ describe('digest', () => {
     const { subject, text } = digest([report()], 1)
     expect(subject).toBe('videoskillet: 1 recording failed or crashed')
     expect(text).toContain('XQ-DQ54')
+    expect(text).toContain('take lost  /cam/  XQ-DQ54')
     expect(text).toContain('210 frames, 40 held, queue 3')
     expect(text).toContain(
-      '170 encoded, 168 chunks back, coded 816x1088 in 1 config, canvas 822x1096',
+      '170 encoded, 168 chunks back, 22 MB, coded 816x1088 in 1 config, canvas 822x1096',
     )
+  })
+
+  // How large the file had got is the first thing to know about a take that
+  // killed its tab, and a gigabyte-scale one is not readable in megabytes.
+  it('gives a take over a gigabyte its own unit', () => {
+    const { text } = digest([report({ bytes: 1_957_000_000 })], 1)
+    expect(text).toContain('1.96 GB')
   })
 
   it('puts the error name in front of the message', () => {
@@ -71,7 +80,7 @@ describe('digest', () => {
       1,
     )
     expect(text).toContain('could not start')
-    expect(text).toContain('unknown device')
+    expect(text).toContain('model unknown')
   })
 })
 

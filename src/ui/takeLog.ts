@@ -34,6 +34,7 @@ const NUMBERS = new Set([
   'deepest',
   'encoded',
   'chunks',
+  'bytes',
   'configs',
   'memory',
 ])
@@ -66,6 +67,10 @@ export interface TakeNote {
   deepest: number
   encoded: number
   chunks: number
+  // How large the file had got, in bytes. A take holds its picture in the
+  // browser's blob store as it encodes (`record.ts`), so this is also what it
+  // was costing the tab.
+  bytes: number
   // What the encoder coded and what the canvas measured last, as WxH. Either
   // differing from the take's size is a lead.
   coded: string
