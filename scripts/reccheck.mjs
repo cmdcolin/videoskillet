@@ -88,7 +88,12 @@ const got = await page.evaluate(
     const buf = new Uint8Array(await (await rec.finish()).arrayBuffer())
     let s = ''
     for (const b of buf) s += String.fromCharCode(b)
-    return { b64: btoa(s), frames: rec.frames(), error: rec.error() }
+    return {
+      b64: btoa(s),
+      frames: rec.frames(),
+      bytes: rec.bytes(),
+      error: rec.error(),
+    }
   },
   FRAMES,
   FPS,
@@ -98,8 +103,21 @@ await browser.close()
 check('the encoder reported no failure', got.error === '', got.error)
 check('every frame was handed over', got.frames === FRAMES, String(got.frames))
 
+const bytes = Buffer.from(got.b64, 'base64')
 const file = join(mkdtempSync(join(tmpdir(), 'reccheck-')), 'out.mp4')
-writeFileSync(file, Buffer.from(got.b64, 'base64'))
+writeFileSync(file, bytes)
+
+// A take spills its encoded picture into Blobs as it runs rather than holding
+// the whole file in the heap, and the muxer places those pieces instead of
+// copying them (record.ts, `SPILL_BYTES`). This is the arm that says the
+// spilling loses nothing: the file is the picture the encoder produced, plus a
+// header and a movie box, and nothing else.
+const over = bytes.length - got.bytes
+check(
+  'the file is the picture the encoder produced, plus its tables',
+  over > 0 && over < 500_000,
+  `${(got.bytes / 1e6).toFixed(1)} MB of picture, ${Math.round(over / 1024)} KB over`,
+)
 
 const probe = (entries, streamOnly = true) =>
   execFileSync('ffprobe', [

@@ -71,6 +71,15 @@ const u32 = (v: number): Uint8Array<ArrayBuffer> =>
 const str = (s: string): Uint8Array<ArrayBuffer> =>
   Uint8Array.from(s, c => c.charCodeAt(0) & 0xff)
 
+// A piece of the sample payload. A `Blob` is there for a take long enough that
+// holding its picture in the heap is what kills the tab: `record.ts` rolls the
+// encoded bytes into Blobs as they arrive, so by the time the file is laid out
+// the browser holds the payload already and this writer only places it.
+// Everything the writer builds itself is bytes.
+export type Payload = Uint8Array<ArrayBuffer> | Blob
+
+const sizeOf = (p: Payload): number => (p instanceof Blob ? p.size : p.length)
+
 const join = (parts: Uint8Array<ArrayBuffer>[]): Uint8Array<ArrayBuffer> => {
   const out = new Uint8Array(parts.reduce((n, p) => n + p.length, 0))
   let at = 0
@@ -187,9 +196,11 @@ export function normaliseAvcc(
   ])
 }
 
-// One encoded frame, as it comes off `VideoEncoder`.
+// One encoded frame's entry in the sample table. The bytes are not here: they
+// travel as the spec's `video`, in these samples' order, because the pieces a
+// take spills its picture into are much larger than a frame.
 export interface Sample {
-  data: Uint8Array<ArrayBuffer>
+  size: number
   // Whether an editor can cut here. Every frame the encoder marked a keyframe
   // goes in `stss`; with no `stss` at all a player assumes *every* frame is a
   // sync point, which is wrong the moment the encoder emits a P-frame.
@@ -220,7 +231,7 @@ export interface Mp4Audio {
   samples: readonly AudioSample[]
 }
 
-interface Mp4Spec {
+interface Mp4Spec<P extends Payload = Payload> {
   width: number
   height: number
   // Frames per second, as a rational so 29.97 and 23.976 stay exact rather
@@ -231,6 +242,11 @@ interface Mp4Spec {
   // unplayable; `VideoEncoder` hands it over on the first chunk's metadata.
   avcc: Uint8Array<ArrayBuffer>
   samples: readonly Sample[]
+  // The samples' bytes, in the samples' order, in however many pieces they
+  // arrived in. The tables are built from the sizes in `samples`, so the two
+  // have to agree on the total — `mp4Parts` says so rather than writing a file
+  // whose sample table points past its own `mdat`.
+  video: readonly P[]
   // Where the track ends, in frame periods. The last frame stays up until then;
   // absent, it lasts one period.
   end?: number
@@ -439,13 +455,19 @@ function soundTrak(
 // timing, and it is exact.
 const MOVIE_TIMESCALE = 1000
 
-export function writeMp4(spec: Mp4Spec): Uint8Array<ArrayBuffer> {
+// The file as one array, for a caller that has every sample's bytes to hand:
+// the tests, and anything that measures the output. A take uses `mp4Parts`.
+export function writeMp4(
+  spec: Mp4Spec<Uint8Array<ArrayBuffer>>,
+): Uint8Array<ArrayBuffer> {
   return join(mp4Parts(spec))
 }
 
-// The file as the pieces it is laid out from, sample data untouched, so a Blob
-// can be built without first copying the whole take into one array.
-export function mp4Parts(spec: Mp4Spec): Uint8Array<ArrayBuffer>[] {
+// The file as the pieces it is laid out from, the payload passed through
+// untouched, so a Blob can be built without copying the take again.
+export function mp4Parts<P extends Payload>(
+  spec: Mp4Spec<P>,
+): (Uint8Array<ArrayBuffer> | P)[] {
   const { width, height, fps, samples } = spec
   // The track's timescale *is* the frame rate's numerator, so one frame is
   // exactly `den` ticks and there is no rounding anywhere. 60fps becomes
@@ -481,11 +503,15 @@ export function mp4Parts(spec: Mp4Spec): Uint8Array<ArrayBuffer>[] {
   const movieDuration = Math.max(videoDuration, audioDuration)
 
   // The picture's samples, then the sound's, each track one chunk.
-  const videoBytes = samples.reduce((t, s) => t + s.data.length, 0)
-  const payload = [
-    ...samples.map(s => s.data),
-    ...(audio?.samples.map(s => s.data) ?? []),
-  ]
+  const videoBytes = samples.reduce((t, s) => t + s.size, 0)
+  const carried = spec.video.reduce((t, p) => t + sizeOf(p), 0)
+  if (carried !== videoBytes) {
+    throw new Error(
+      `the sample table says ${videoBytes} bytes of picture, the payload carries ${carried}`,
+    )
+  }
+  const audioBytes = audio?.samples.reduce((t, s) => t + s.data.length, 0) ?? 0
+  const payload = [...spec.video, ...(audio?.samples.map(s => s.data) ?? [])]
   const ftyp = box(
     'ftyp',
     str('isom'),
@@ -498,10 +524,7 @@ export function mp4Parts(spec: Mp4Spec): Uint8Array<ArrayBuffer>[] {
   // Written before `moov` so the offsets in `stco` can be computed without
   // laying the movie box out twice: everything before the samples is `ftyp`
   // plus this box's own 8-byte header.
-  const mdatHead = join([
-    u32(payload.reduce((t, p) => t + p.length, 8)),
-    str('mdat'),
-  ])
+  const mdatHead = join([u32(videoBytes + audioBytes + 8), str('mdat')])
   const sampleStart = ftyp.length + 8
 
   const avc1 = box(
@@ -557,7 +580,7 @@ export function mp4Parts(spec: Mp4Spec): Uint8Array<ArrayBuffer>[] {
     // per frame. The sizes are listed one by one, because encoded frames are
     // not the same length.
     ...oneChunk(
-      samples.map(s => s.data.length),
+      samples.map(s => s.size),
       sampleStart,
     ),
   )

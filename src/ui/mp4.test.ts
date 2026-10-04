@@ -2,8 +2,6 @@ import { describe, expect, it } from 'vitest'
 
 import { mp4Parts, normaliseAvcc, writeMp4 } from './mp4'
 
-import type { Sample } from './mp4'
-
 // Walk the box tree the way a demuxer does: length, four-character type, then
 // either children or a payload. Enough to assert structure without pulling in a
 // parser, and it fails loudly on a length that does not add up — which is the
@@ -47,8 +45,25 @@ const stsdKids = (b: Box): Box[] => boxes(b.body, 8, b.body.length)
 const u32At = (b: Uint8Array, at: number): number =>
   new DataView(b.buffer, b.byteOffset, b.byteLength).getUint32(at)
 
-const sample = (n: number, key = false): Sample => ({
-  data: Uint8Array.from({ length: n }, (_, i) => i & 0xff),
+// A frame of fixture: its bytes, whether it is a keyframe, and when it is
+// shown. The writer takes the sample table and the payload separately, so
+// `laid` splits one list of these into the two the spec wants.
+interface Frame {
+  bytes: Uint8Array<ArrayBuffer>
+  key: boolean
+  pts?: number
+}
+
+const laid = (frames: Frame[]) => ({
+  samples: frames.map(({ bytes, ...rest }) => ({
+    size: bytes.length,
+    ...rest,
+  })),
+  video: frames.map(f => f.bytes),
+})
+
+const sample = (n: number, key = false): Frame => ({
+  bytes: Uint8Array.from({ length: n }, (_, i) => i & 0xff),
   key,
 })
 
@@ -57,8 +72,8 @@ const AVCC = Uint8Array.from([
   0x68, 0xcb, 0x8c, 0xb2,
 ])
 
-const file = (samples: Sample[], fps = { num: 60, den: 1 }) =>
-  writeMp4({ width: 640, height: 480, fps, avcc: AVCC, samples })
+const file = (frames: Frame[], fps = { num: 60, den: 1 }) =>
+  writeMp4({ width: 640, height: 480, fps, avcc: AVCC, ...laid(frames) })
 
 describe('writeMp4', () => {
   const out = file([sample(100, true), sample(60), sample(70), sample(80)])
@@ -168,10 +183,10 @@ describe('writeMp4', () => {
       height: 480,
       fps: { num: 60, den: 1 },
       avcc: AVCC,
-      samples: [
+      ...laid([
         { ...sample(10, true), pts: 0 },
         { ...sample(10), pts: 1 },
-      ],
+      ]),
       end: 6,
     })
     const stts = find(videoStbl(ended), 'stts')
@@ -186,7 +201,7 @@ describe('writeMp4', () => {
       height: 480,
       fps: { num: 60, den: 1 },
       avcc: AVCC,
-      samples: [sample(10, true), sample(20), sample(30)],
+      ...laid([sample(10, true), sample(20), sample(30)]),
     }
     const parts = mp4Parts(spec)
     const joined = new Uint8Array(parts.reduce((n, p) => n + p.length, 0))
@@ -196,8 +211,8 @@ describe('writeMp4', () => {
       at += p.length
     }
     expect(joined).toEqual(writeMp4(spec))
-    // The sample data is handed over as it came, not copied into a new array.
-    expect(parts).toContain(spec.samples[1].data)
+    // The payload is handed over as it came, not copied into a new array.
+    expect(parts).toContain(spec.video[1])
   })
 
   // 60fps is timescale 60 / delta 1; 29.97 has to stay 30000/1001 rather than
@@ -348,6 +363,45 @@ describe('writeMp4', () => {
   })
 })
 
+// What a take actually hands over. `record.ts` rolls the encoded picture into
+// Blobs as it arrives, so the pieces are much larger than a frame and the
+// sample table is the only thing that knows where a frame begins. The file has
+// to come out the same either way, which is what the first case says.
+describe('a payload spilled into pieces', () => {
+  const frames = [
+    sample(40, true),
+    sample(11),
+    sample(12),
+    sample(41, true),
+    sample(13),
+  ]
+  const spec = {
+    width: 640,
+    height: 480,
+    fps: { num: 60, den: 1 },
+    avcc: AVCC,
+    samples: laid(frames).samples,
+    video: [
+      new Blob([frames[0].bytes, frames[1].bytes]),
+      new Blob([frames[2].bytes, frames[3].bytes, frames[4].bytes]),
+    ],
+  }
+
+  it('lays out the same file as one piece per frame', async () => {
+    const blob = new Blob(mp4Parts(spec))
+    expect(new Uint8Array(await blob.arrayBuffer())).toEqual(file(frames))
+  })
+
+  // The sizes in the table and the bytes in the payload are no longer the same
+  // object, so they can disagree — and a sample table pointing past its own
+  // `mdat` is a file that looks fine until something seeks in it.
+  it('declines a payload that disagrees with the sample table', () => {
+    expect(() =>
+      mp4Parts({ ...spec, video: [new Blob([frames[0].bytes])] }),
+    ).toThrow(/sample table says 117 bytes of picture, the payload carries 40/)
+  })
+})
+
 describe('writeMp4 with sound', () => {
   const ASC = Uint8Array.from([0x11, 0x88])
   const withSound = (codec: 'aac' | 'opus', frames: number[]) =>
@@ -356,7 +410,7 @@ describe('writeMp4 with sound', () => {
       height: 480,
       fps: { num: 60, den: 1 },
       avcc: AVCC,
-      samples: [sample(100, true), sample(60)],
+      ...laid([sample(100, true), sample(60)]),
       audio: {
         codec,
         sampleRate: 48000,

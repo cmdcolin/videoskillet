@@ -3,8 +3,6 @@ import { describe, expect, it } from 'vitest'
 import { writeMp4 } from './mp4'
 import { demuxMp4 } from './mp4demux'
 
-import type { Sample } from './mp4'
-
 // **The muxer is the fixture generator**, which is the whole reason this is a
 // vitest file and not a third browser harness. `writeMp4` already produces the
 // exact shape a take's own export has, so a round trip asserts the two halves
@@ -24,13 +22,30 @@ const avcc = Uint8Array.from([
   0xcb,
 ])
 
-const sample = (n: number, key: boolean): Sample => ({
-  data: Uint8Array.from({ length: n }, (_, i) => (i + n) & 0xff),
+// A frame of fixture: its bytes, whether it is a keyframe, and when it is
+// shown. The writer takes the sample table and the payload separately, so
+// `laid` splits one list of these into the two the spec wants.
+interface Frame {
+  bytes: Uint8Array<ArrayBuffer>
+  key: boolean
+  pts?: number
+}
+
+const laid = (frames: Frame[]) => ({
+  samples: frames.map(({ bytes, ...rest }) => ({
+    size: bytes.length,
+    ...rest,
+  })),
+  video: frames.map(f => f.bytes),
+})
+
+const sample = (n: number, key: boolean): Frame => ({
+  bytes: Uint8Array.from({ length: n }, (_, i) => (i + n) & 0xff),
   key,
 })
 
 describe('demuxMp4, against what writeMp4 writes', () => {
-  const samples = [
+  const frames = [
     sample(40, true),
     sample(11, false),
     sample(12, false),
@@ -42,7 +57,7 @@ describe('demuxMp4, against what writeMp4 writes', () => {
     height: 480,
     fps: { num: 60, den: 1 },
     avcc,
-    samples,
+    ...laid(frames),
   })
   const track = demuxMp4(file)
 
@@ -65,9 +80,9 @@ describe('demuxMp4, against what writeMp4 writes', () => {
   })
 
   it('recovers every sample, at the right byte range', () => {
-    expect(track?.samples).toHaveLength(samples.length)
+    expect(track?.samples).toHaveLength(frames.length)
     for (const [i, s] of (track?.samples ?? []).entries()) {
-      const want = samples[i].data
+      const want = frames[i].bytes
       expect(s.size).toBe(want.length)
       expect(file.slice(s.offset, s.offset + s.size)).toEqual(want)
     }
@@ -104,7 +119,7 @@ describe('demuxMp4, on an all-key file', () => {
     height: 240,
     fps: { num: 30, den: 1 },
     avcc,
-    samples: [sample(10, true), sample(10, true), sample(10, true)],
+    ...laid([sample(10, true), sample(10, true), sample(10, true)]),
   })
 
   it('reads a missing stss as every frame being a sync point', () => {
@@ -404,7 +419,7 @@ describe('demuxMp4, on files it should decline', () => {
       height: 64,
       fps: { num: 30, den: 1 },
       avcc,
-      samples: [sample(8, true)],
+      ...laid([sample(8, true)]),
     })
     expect(demuxMp4(file.slice(0, file.length - 40))).toBeNull()
   })
