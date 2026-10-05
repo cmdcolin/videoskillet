@@ -8,6 +8,7 @@ import {
   reportLostTake,
   reportTakeFailed,
 } from './takeLog'
+import { sweepTakes } from './takeSink'
 
 import type { FrameSink } from '../core/gpu/frameread'
 import type { InputTap } from '../core/signal/audiostate'
@@ -135,6 +136,7 @@ export function useCapture(
     encoded: r.encoded(),
     chunks: r.chunks(),
     bytes: r.bytes(),
+    streamed: r.streamed(),
     coded: r.coded(),
     configs: r.configs(),
     canvas:
@@ -154,6 +156,10 @@ export function useCapture(
   // note goes with it.
   useEffect(() => {
     reportLostTake()
+    // A take streamed to a file leaves that file behind, because nothing tells
+    // the page when the download has finished reading it. Whatever an earlier
+    // page left is this one's to clear.
+    void sweepTakes()
     const onHide = () => {
       if (document.visibilityState === 'hidden') jot(noteRef, { hidden: true })
     }
@@ -286,6 +292,7 @@ export function useCapture(
           encoded: 0,
           chunks: 0,
           bytes: 0,
+          streamed: false,
           coded: '',
           canvas: `${width}x${height}`,
           configs: 0,

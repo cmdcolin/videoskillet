@@ -24,9 +24,10 @@
 // BGRA and full of picture. So the mirror is gone, and with it the extra copy
 // per frame it cost.
 
-import { mp4Parts } from './mp4'
+import { mp4Layout } from './mp4'
 import { startAudio } from './recordAudio'
 import { audioClock, wallClock } from './takeClock'
+import { blobSink, fileSink } from './takeSink'
 
 import type { InputTap } from '../core/signal/audiostate'
 import type { Sample } from './mp4'
@@ -107,28 +108,10 @@ const KEYFRAME_SECONDS = 2
 // (scripts/camrec.mjs).
 const MAX_QUEUE = 3
 
-// Where a take stops itself. Box sizes and chunk offsets in `mp4.ts` are 32-bit,
-// so a file past 4 GiB would come out silently corrupt; this leaves room for
-// the sound and the movie box. It is a limit on the file and not on memory —
-// see `SPILL_BYTES`, which is what keeps a take this long from costing the tab
-// its own length in heap.
-const MAX_BYTES = 3_900_000_000
-
-// How much encoded picture is held as arrays before it is rolled into a Blob.
-//
-// A take's payload *is* the file, and the file is large: 1398x1790 at 60fps
-// bitrate-caps at 60 Mbps, so four and a half minutes of it is 2 GB. Held one
-// array per frame to the end, that is 2 GB of heap — and then `finish` hands
-// every one of those arrays to `new Blob`, which copies them, so the moment a
-// take is handed over costs twice what it had already reached. A Safari crash
-// report (261s, 15160 frames, dead inside `finish`, no encoder error and the
-// page never hidden) is what that looks like from outside: the tab is killed
-// and runs no more code, so the only trace is the note it left behind.
-//
-// Rolled in pieces this size, the heap holds one piece and the browser's blob
-// store holds the take. `finish` then places the pieces rather than copying
-// them, and nothing scales with how long the take ran.
-const SPILL_BYTES = 64 * 1024 * 1024
+// How far behind the sink may fall before a take stops handing it frames. A
+// file sink queues its writes, and a queue is heap: at 60 Mbps any disk keeps
+// up, and one that does not drops frames instead of growing without end.
+const MAX_BACKLOG = 64 * 1024 * 1024
 
 // How long a live take with sound reads the audio clock before its first frame,
 // so the average the frame is placed by has something behind it: about seven
@@ -188,6 +171,10 @@ export interface Recorder {
   // of the file's. A take is reported with this, because how large it had got
   // is the first thing to know about one that killed its tab.
   bytes: () => number
+  // Whether the take is being written to a file as it encodes. A take that
+  // fell back to a Blob is one the browser holds entirely, which is the second
+  // thing to know about one that killed its tab.
+  streamed: () => boolean
   // The size the encoder says it coded, as WxH, or '' before its first chunk.
   // Chrome on Android crops to a multiple of 16 where MediaCodec asks it to.
   coded: () => string
@@ -228,11 +215,9 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
   const height = even(spec.height)
   const rate = fps.num / fps.den
   const samples: Sample[] = []
-  // The picture already handed to the browser, and the bytes not yet handed
-  // over. `roll` moves the second into the first.
-  const spilled: Blob[] = []
-  let pending: Uint8Array<ArrayBuffer>[] = []
-  let pendingBytes = 0
+  // Where the picture goes as it is encoded: a file where the browser has one
+  // to write, and a Blob where it does not.
+  const sink = (await fileSink()) ?? blobSink()
   let avcc: Uint8Array<ArrayBuffer> | null = null
   let bytes = 0
   let count = 0
@@ -261,16 +246,6 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
     // deadline: this is a file, not a stream.
     latencyMode: 'quality',
   })
-
-  // Hand the picture encoded so far to the browser and let go of it. One Blob
-  // per piece rather than one per frame: a blob costs a registration with the
-  // browser's store, and a take at 60fps would make 15,000 of them.
-  const roll = () => {
-    if (pendingBytes === 0) return
-    spilled.push(new Blob(pending))
-    pending = []
-    pendingBytes = 0
-  }
 
   // Asked rather than assumed. The level that fits the picture is not always
   // one the platform encoder implements, and `configure` reports that by
@@ -330,9 +305,7 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
       chunk.copyTo(data)
       chunks++
       bytes += data.length
-      pending.push(data)
-      pendingBytes += data.length
-      if (pendingBytes >= SPILL_BYTES) roll()
+      sink.write(data)
       // Presentation time in frame periods, off the frame's own timestamp: the
       // encoder hands chunks over in decode order.
       samples.push({
@@ -382,12 +355,14 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
     encoded: () => encoded,
     chunks: () => chunks,
     bytes: () => bytes,
+    streamed: () => sink.streamed,
     coded: () => coded,
     configs: () => configs,
     error: () => failure,
     errorName: () => failureName,
-    busy: () => encoder.encodeQueueSize >= MAX_QUEUE,
-    full: () => bytes >= MAX_BYTES,
+    busy: () =>
+      encoder.encodeQueueSize >= MAX_QUEUE || sink.backlog() >= MAX_BACKLOG,
+    full: () => sink.room() <= 0,
     hold: () => {
       if (closed) return
       held++
@@ -460,9 +435,7 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
       sound?.abort()
       if (encoder.state !== 'closed') encoder.close()
       samples.length = 0
-      spilled.length = 0
-      pending = []
-      pendingBytes = 0
+      sink.discard()
     },
     finish: async () => {
       clearInterval(sampler)
@@ -487,21 +460,20 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
         throw new Error('the encoder produced no parameter sets')
       }
       const audio = await heard
-      roll()
-      // The Blob takes the file in the pieces it is laid out from, and the
-      // picture among them is Blobs the browser is already holding — so
-      // nothing here copies the take.
-      const parts = mp4Parts({
-        width,
-        height,
-        fps,
-        avcc,
-        samples,
-        video: spilled,
-        end,
-        ...(audio === null ? {} : { audio }),
-      })
-      return new Blob(parts, { type: 'video/mp4' })
+      // The sink has had the picture all along; what it is given now is the
+      // layout either side of it. Nothing here holds or copies the take.
+      return await sink.close(
+        mp4Layout({
+          width,
+          height,
+          fps,
+          avcc,
+          samples,
+          end,
+          streamed: sink.streamed,
+          ...(audio === null ? {} : { audio }),
+        }),
+      )
     },
   }
 }
