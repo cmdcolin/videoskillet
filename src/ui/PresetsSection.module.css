@@ -96,6 +96,13 @@ button.allBtnOn {
 .chip {
   position: relative;
 }
+@media (pointer: fine) {
+  button.chip,
+  button.moreChip {
+    padding-block: 2px;
+    line-height: 1.2;
+  }
+}
 .editedDot {
   position: absolute;
   top: 3px;

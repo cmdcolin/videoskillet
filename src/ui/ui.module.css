@@ -203,7 +203,7 @@
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    padding: 1px 7px;
+    padding: 2px 7px;
     border: 1px solid var(--border-quiet);
     border-radius: 4px;
     background: var(--surface);
@@ -276,7 +276,7 @@ button.filledOn {
   composes: outline;
   display: inline-block;
   width: 22px;
-  padding: 1px 0;
+  padding: 2px 0;
 }
 .chromeBtn svg {
   vertical-align: middle;
