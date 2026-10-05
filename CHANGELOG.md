@@ -2,6 +2,21 @@
 
 All notable changes to videoskillet are documented here.
 
+## [2.13.0](https://github.com/cmdcolin/videoskillet/compare/v2.12.0...v2.13.0) - 2026-10-05
+
+### Features
+- *(ui)* [`0ea7a89`](https://github.com/cmdcolin/videoskillet/commit/0ea7a8907d91f7b9130cc04e93ef122bb266858a) report how large a take had got, and name the fault plainly
+- *(ui)* [`f9a14e4`](https://github.com/cmdcolin/videoskillet/commit/f9a14e4cb8482cd7f910e338c7112b5d0d7ae32a) 64-bit offsets, and the boxes either side of the payload
+- *(ui)* [`4095b41`](https://github.com/cmdcolin/videoskillet/commit/4095b41432ed03a8970448751ab84ba8413fc748) write a take to a file as it encodes
+- *(ui)* [`0f3fec8`](https://github.com/cmdcolin/videoskillet/commit/0f3fec8bfcde2dd2e7b1931e71e2f3f6f8e4fa6d) report whether a take was streaming, and document the path
+
+### Fixes
+- *(ui)* [`0fd6787`](https://github.com/cmdcolin/videoskillet/commit/0fd6787f8bd15cf0a6c4d41c5570dbb2d3ebd988) spill a take's picture into Blobs as it encodes
+- *(ui)* [`5d27b31`](https://github.com/cmdcolin/videoskillet/commit/5d27b31a90810dd10e059723b0d840482d9ddde2) keep a saved take's object URL alive long enough to download
+
+### Documentation
+- *(docs)* [`8883971`](https://github.com/cmdcolin/videoskillet/commit/888397122aaeae313e00d423d575acf498926148) measure what a streamed take would need, and what Firefox has
+
 ## [2.12.0](https://github.com/cmdcolin/videoskillet/compare/v2.11.0...v2.12.0) - 2026-10-03
 
 ### Refactor
