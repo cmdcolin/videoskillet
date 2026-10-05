@@ -1805,6 +1805,46 @@ export const PRESETS: PresetDef[] = [
     },
   },
   {
+    name: 'relayMidFrame',
+    displayName: 'relay mid frame',
+    group: 'A/B mixing',
+    blurb:
+      "A cheap A/B box pressed wherever the scan happened to be. From the seam to the bottom of the frame the whole bus is B's, sync and burst included, so the receiver sees A's timing above the seam and B's below it and has to find lock across the join. The seam hooks sideways, and the lines under it slide as B's clock walks away from the house. A slow drift moves the seam up and down the picture.",
+    patch: {
+      busCut: 0.45,
+      bLineHz: 0.35,
+      bDetuneHz: 60,
+      bRollLps: 0.05,
+    },
+    mod: [{ target: 'busCut', source: 'triangle', rateHz: 0.08, depth: 0.18 }],
+  },
+  {
+    name: 'leakingFader',
+    displayName: 'leaking fader',
+    group: 'A/B mixing',
+    blurb:
+      "B's fader is shut and B is still on the wire. Stray capacitance passes the high end of it, its subcarrier and its edges, and none of its flat areas, so no picture comes through. B's carrier is detuned against the burst, so a band of colour that belongs to nothing on screen crawls across A and the line edges of B ripple along it.",
+    patch: {
+      bLeak: 0.26,
+      bDetuneHz: 380,
+      bLineHz: 0.3,
+      bRollLps: 0.08,
+    },
+  },
+  {
+    name: 'genlockLosesGrip',
+    displayName: 'genlock loses its grip',
+    group: 'A/B mixing',
+    blurb:
+      "A clean dissolve whose genlock has a narrow window. B's own clock wanders, and the lock holds it only while the error stays inside the capture range. Where it does not, the lines are not held: B tears sideways with its colour rotating against the burst, in a band that creeps down the frame and snaps back to a clean dissolve where lock returns.",
+    patch: {
+      bGenlock: 1,
+      bGain: 0.6,
+      bWanderUs: 7,
+      bCaptureUs: 2.5,
+    },
+  },
+  {
     name: 'pirateFeed',
     displayName: 'pirate feed',
     group: 'A/B mixing',
