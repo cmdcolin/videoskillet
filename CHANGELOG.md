@@ -2,6 +2,32 @@
 
 All notable changes to videoskillet are documented here.
 
+## [2.15.0](https://github.com/cmdcolin/videoskillet/compare/v2.14.0...v2.15.0) - 2026-10-05
+
+### Features
+- *(signal)* [`4fd2d03`](https://github.com/cmdcolin/videoskillet/commit/4fd2d03d778bfb320bd085b42f928b1e474ecd46) deck on-screen display that names the transport state
+- *(ui)* [`fb979eb`](https://github.com/cmdcolin/videoskillet/commit/fb979eb085997fa8ac99bfc3f9528430ee6b096b) teletext colour, double height and flash on the teletype card
+- *(signal)* [`2f0a1f0`](https://github.com/cmdcolin/videoskillet/commit/2f0a1f0e1ee95cb578930aa1c1d329467cb89298) tape-in preset, and PLAY unseats the tracking servo
+- *(signal)* [`3c9ea9e`](https://github.com/cmdcolin/videoskillet/commit/3c9ea9e00f336a1aba1eb26bd2c8455ecd63cd5b) place and size the deck display
+- *(signal)* [`c18641d`](https://github.com/cmdcolin/videoskillet/commit/c18641d27155b0eea1d284189f85b41436c9fe9d) bus cut, crosspoint leak and a genlock with a capture range
+- *(ui)* [`094dc65`](https://github.com/cmdcolin/videoskillet/commit/094dc65b42341dd36aae9512f05e79b28adcfcba) relay mid frame, leaking fader and genlock loses its grip
+- *(signal)* [`0185d52`](https://github.com/cmdcolin/videoskillet/commit/0185d527a6444e20f9c2aff5ffaf330f1b4b99cf) blue background, green letters and a Tape in demo
+- *(ui)* [`6fd4d27`](https://github.com/cmdcolin/videoskillet/commit/6fd4d27e863936ea13323aab3b4ce0cf222edf7d) hint that clock wander needs genlock, and mark codes on the draw surface
+
+### Fixes
+- *(ui)* [`bba88e6`](https://github.com/cmdcolin/videoskillet/commit/bba88e6dde6e6b712873fc10c7f5349136fe63aa) size header and look-bar buttons and preset chips to one height
+- *(ui)* [`4906bba`](https://github.com/cmdcolin/videoskillet/commit/4906bba9250695f8f8654ac3965fa4d1beb97723) let the React Compiler optimize Button
+
+### Performance
+- *(signal)* [`872a720`](https://github.com/cmdcolin/videoskillet/commit/872a720f061e0d2c11bb1cd4772912f8acc03639) measure the burst once per workgroup in the deck display
+
+### Refactor
+- *(ui)* [`723acbf`](https://github.com/cmdcolin/videoskillet/commit/723acbfa42019e0f48509f95d11125140df27266) take button height and control radius from tokens
+- *(ui)* [`469cd64`](https://github.com/cmdcolin/videoskillet/commit/469cd6426f619a29f06657ac9f3b6d54f592c667) add Button for the outlined and icon buttons
+
+### Tests
+- *(ui)* [`fdc9543`](https://github.com/cmdcolin/videoskillet/commit/fdc9543d142683a32e66a26e89c57887c664419f) add buttonheights harness
+
 ## [2.14.0](https://github.com/cmdcolin/videoskillet/compare/v2.13.0...v2.14.0) - 2026-10-05
 
 ### Other Changes
