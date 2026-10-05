@@ -71,6 +71,12 @@ const u32 = (v: number): Uint8Array<ArrayBuffer> =>
 const str = (s: string): Uint8Array<ArrayBuffer> =>
   Uint8Array.from(s, c => c.charCodeAt(0) & 0xff)
 
+// Split into two 32-bit halves rather than written through a BigInt, because
+// every size in this writer is a byte count in a number and a take cannot
+// reach 2^53 of them.
+const u64 = (v: number): Uint8Array<ArrayBuffer> =>
+  join([u32(Math.floor(v / 2 ** 32)), u32(v % 2 ** 32)])
+
 // A piece of the sample payload. A `Blob` is there for a take long enough that
 // holding its picture in the heap is what kills the tab: `record.ts` rolls the
 // encoded bytes into Blobs as they arrive, so by the time the file is laid out
@@ -231,7 +237,7 @@ export interface Mp4Audio {
   samples: readonly AudioSample[]
 }
 
-interface Mp4Spec<P extends Payload = Payload> {
+interface Mp4Tables {
   width: number
   height: number
   // Frames per second, as a rational so 29.97 and 23.976 stay exact rather
@@ -242,15 +248,35 @@ interface Mp4Spec<P extends Payload = Payload> {
   // unplayable; `VideoEncoder` hands it over on the first chunk's metadata.
   avcc: Uint8Array<ArrayBuffer>
   samples: readonly Sample[]
+  // Where the track ends, in frame periods. The last frame stays up until then;
+  // absent, it lasts one period.
+  end?: number
+  audio?: Mp4Audio
+  // Whether the payload is being written as it is produced. The `mdat` header
+  // then has to be laid out before its size is known, so it takes the large
+  // form whatever the take turns out to weigh, and the offsets in the sample
+  // tables are measured from `STREAM_HEAD`.
+  streamed?: boolean
+}
+
+interface Mp4Spec<P extends Payload = Payload> extends Mp4Tables {
   // The samples' bytes, in the samples' order, in however many pieces they
   // arrived in. The tables are built from the sizes in `samples`, so the two
   // have to agree on the total — `mp4Parts` says so rather than writing a file
   // whose sample table points past its own `mdat`.
   video: readonly P[]
-  // Where the track ends, in frame periods. The last frame stays up until then;
-  // absent, it lasts one period.
-  end?: number
-  audio?: Mp4Audio
+}
+
+// The file with the picture taken out of the middle of it.
+export interface Mp4Layout {
+  // The brand and the `mdat` header: what the picture follows.
+  head: Uint8Array<ArrayBuffer>
+  // What the picture is followed by: the sound's samples, which share the
+  // picture's `mdat`, and then `moov`. Every table in `moov` is measured from
+  // `head.length` and from the picture being exactly as long as the sample
+  // table says, so a writer that places either anywhere else writes a file
+  // that does not say where its own frames are.
+  tail: Uint8Array<ArrayBuffer>[]
 }
 
 // An MPEG-4 descriptor: a tag, a length and a body. Every one written here is
@@ -365,13 +391,20 @@ const editList = (duration: number, mediaTime: number) =>
   )
 
 // A track's samples as one chunk at `offset` in the file.
+//
+// `stco` holds 32-bit offsets, so a track whose samples begin past 4 GiB needs
+// `co64`, which is the same table with 64-bit entries. Written only where the
+// offset needs it: a reader takes the box it finds as what the file promises
+// about itself, and `stco` is the one every demuxer has always had.
 const oneChunk = (
   sizes: readonly number[],
   offset: number,
 ): Uint8Array<ArrayBuffer>[] => [
   fullBox('stsc', 0, 0, u32(1), u32(1), u32(sizes.length), u32(1)),
   fullBox('stsz', 0, 0, u32(0), u32(sizes.length), join(sizes.map(u32))),
-  fullBox('stco', 0, 0, u32(1), u32(offset)),
+  offset > 0xffffffff
+    ? fullBox('co64', 0, 0, u32(1), u64(offset))
+    : fullBox('stco', 0, 0, u32(1), u32(offset)),
 ]
 
 const dinf = () =>
@@ -455,6 +488,38 @@ function soundTrak(
 // timing, and it is exact.
 const MOVIE_TIMESCALE = 1000
 
+// The brand. Invariant, and hoisted for that reason: it is half of what a
+// streamed take has to reserve in front of its payload before it knows what
+// the other half will say.
+const FTYP = box(
+  'ftyp',
+  str('isom'),
+  u32(512),
+  str('isom'),
+  str('iso2'),
+  str('avc1'),
+  str('mp41'),
+)
+
+// `mdat`'s header. The 32-bit size field caps a box at 4 GiB, and the form
+// past that is a size of 1 followed by a 64-bit `largesize` — eight bytes more
+// of header, which is why the payload's offset is read off this rather than
+// assumed to be 8.
+const mdatHeader = (
+  payload: number,
+  large: boolean,
+): Uint8Array<ArrayBuffer> =>
+  large
+    ? join([u32(1), str('mdat'), u64(payload + 16)])
+    : join([u32(payload + 8), str('mdat')])
+
+// What a streamed take leaves in front of its payload: the brand, and an
+// `mdat` header in the large form. A take being written does not know how
+// large it will be, so it reserves this much, writes its picture after it, and
+// patches the header in once the take is over — see `takeSink.ts`. Fixed,
+// because every byte of it is.
+export const STREAM_HEAD = FTYP.length + 16
+
 // The file as one array, for a caller that has every sample's bytes to hand:
 // the tests, and anything that measures the output. A take uses `mp4Parts`.
 export function writeMp4(
@@ -468,6 +533,21 @@ export function writeMp4(
 export function mp4Parts<P extends Payload>(
   spec: Mp4Spec<P>,
 ): (Uint8Array<ArrayBuffer> | P)[] {
+  const videoBytes = spec.samples.reduce((t, s) => t + s.size, 0)
+  const carried = spec.video.reduce((t, p) => t + sizeOf(p), 0)
+  if (carried !== videoBytes) {
+    throw new Error(
+      `the sample table says ${videoBytes} bytes of picture, the payload carries ${carried}`,
+    )
+  }
+  const { head, tail } = mp4Layout(spec)
+  return [head, ...spec.video, ...tail]
+}
+
+// The boxes either side of the payload, for a writer that places the payload
+// itself — a take streaming to disk, which has to write the front of the file
+// before it has any of it and the back of it only once it is over.
+export function mp4Layout(spec: Mp4Tables): Mp4Layout {
   const { width, height, fps, samples } = spec
   // The track's timescale *is* the frame rate's numerator, so one frame is
   // exactly `den` ticks and there is no rounding anywhere. 60fps becomes
@@ -504,28 +584,19 @@ export function mp4Parts<P extends Payload>(
 
   // The picture's samples, then the sound's, each track one chunk.
   const videoBytes = samples.reduce((t, s) => t + s.size, 0)
-  const carried = spec.video.reduce((t, p) => t + sizeOf(p), 0)
-  if (carried !== videoBytes) {
-    throw new Error(
-      `the sample table says ${videoBytes} bytes of picture, the payload carries ${carried}`,
-    )
-  }
   const audioBytes = audio?.samples.reduce((t, s) => t + s.data.length, 0) ?? 0
-  const payload = [...spec.video, ...(audio?.samples.map(s => s.data) ?? [])]
-  const ftyp = box(
-    'ftyp',
-    str('isom'),
-    u32(512),
-    str('isom'),
-    str('iso2'),
-    str('avc1'),
-    str('mp41'),
-  )
-  // Written before `moov` so the offsets in `stco` can be computed without
-  // laying the movie box out twice: everything before the samples is `ftyp`
-  // plus this box's own 8-byte header.
-  const mdatHead = join([u32(videoBytes + audioBytes + 8), str('mdat')])
-  const sampleStart = ftyp.length + 8
+  const payloadBytes = videoBytes + audioBytes
+  // `mdat` comes before `moov` so the chunk offsets can be computed without
+  // laying the movie box out twice: everything in front of the samples is the
+  // brand plus this box's own header.
+  const head = join([
+    FTYP,
+    mdatHeader(
+      payloadBytes,
+      spec.streamed === true || payloadBytes + 8 > 0xffffffff,
+    ),
+  ])
+  const sampleStart = head.length
 
   const avc1 = box(
     'avc1',
@@ -673,5 +744,5 @@ export function mp4Parts<P extends Payload>(
       : [soundTrak(audio, sampleStart + videoBytes, audioDuration)]),
   )
 
-  return [ftyp, mdatHead, ...payload, moov]
+  return { head, tail: [...(audio?.samples.map(s => s.data) ?? []), moov] }
 }

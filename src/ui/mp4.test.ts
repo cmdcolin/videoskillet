@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
-import { mp4Parts, normaliseAvcc, writeMp4 } from './mp4'
+import {
+  STREAM_HEAD,
+  mp4Layout,
+  mp4Parts,
+  normaliseAvcc,
+  writeMp4,
+} from './mp4'
 
 // Walk the box tree the way a demuxer does: length, four-character type, then
 // either children or a payload. Enough to assert structure without pulling in a
@@ -18,12 +24,21 @@ function boxes(buf: Uint8Array, from = 0, to = buf.length): Box[] {
   const out: Box[] = []
   let at = from
   while (at + 8 <= to) {
-    const size = view.getUint32(at)
     const type = String.fromCharCode(...buf.slice(at + 4, at + 8))
-    if (size < 8 || at + size > to) {
+    // A size of 1 means the real one is the 64 bits after the type, which is
+    // the form `mdat` takes on a take past 4 GiB and on every streamed take.
+    const large = view.getUint32(at) === 1
+    const header = large ? 16 : 8
+    const size = large ? Number(view.getBigUint64(at + 8)) : view.getUint32(at)
+    if (size < header || at + size > to) {
       throw new Error(`bad box ${type} size ${size} at ${at} (limit ${to})`)
     }
-    out.push({ type, start: at, size, body: buf.slice(at + 8, at + size) })
+    out.push({
+      type,
+      start: at,
+      size,
+      body: buf.slice(at + header, at + size),
+    })
     at += size
   }
   if (at !== to) throw new Error(`trailing ${to - at} bytes`)
@@ -399,6 +414,147 @@ describe('a payload spilled into pieces', () => {
     expect(() =>
       mp4Parts({ ...spec, video: [new Blob([frames[0].bytes])] }),
     ).toThrow(/sample table says 117 bytes of picture, the payload carries 40/)
+  })
+})
+
+// A take past 4 GiB, which is where the 32-bit fields in the format run out.
+// None of this materialises a payload: a sample table is the whole of what
+// says where a frame is, and `mp4Layout` builds it from the sizes alone.
+describe('a take too large for 32-bit fields', () => {
+  const GIB = 1024 ** 3
+  // Five samples of a gigabyte each. Absurd as frames, exact as a table.
+  const huge = Array.from({ length: 5 }, (_, i) => ({
+    size: GIB,
+    key: i === 0,
+  }))
+  const sound = {
+    codec: 'aac' as const,
+    sampleRate: 48000,
+    channels: 1,
+    config: Uint8Array.from([0x11, 0x88]),
+    preSkip: 0,
+    samples: [{ data: new Uint8Array(64), frames: 1024 }],
+  }
+  const big = mp4Layout({
+    width: 640,
+    height: 480,
+    fps: { num: 60, den: 1 },
+    avcc: AVCC,
+    samples: huge,
+    audio: sound,
+  })
+  const u64At = (b: Uint8Array, at: number) =>
+    u32At(b, at) * 2 ** 32 + u32At(b, at + 4)
+
+  // `mdat`'s 32-bit size field cannot say 5 GiB. The form that can is a size
+  // of 1 and a 64-bit `largesize` after the type, which is eight bytes more of
+  // header — and every offset in the file is measured from the far side of it.
+  it('writes mdat in the large form, with the size after the type', () => {
+    const head = big.head
+    expect(u32At(head, 32)).toBe(1)
+    expect(String.fromCharCode(...head.slice(36, 40))).toBe('mdat')
+    expect(u64At(head, 40)).toBe(5 * GIB + 64 + 16)
+    expect(head.length).toBe(48)
+  })
+
+  const trakTables = (which: number) => {
+    const moov = boxes(big.tail.at(-1) ?? new Uint8Array())[0]
+    const trak = kids(moov).filter(b => b.type === 'trak')[which]
+    const mdia = find(kids(trak), 'mdia')
+    return kids(find(kids(find(kids(mdia), 'minf')), 'stbl'))
+  }
+
+  // The picture starts 48 bytes in, which `stco` says perfectly well. Writing
+  // `co64` here because the file is large would be the writer making a promise
+  // about a number that fits.
+  it('keeps stco for the picture, whose chunk is at the front', () => {
+    const table = trakTables(0)
+    expect(table.some(b => b.type === 'co64')).toBe(false)
+    expect(u32At(find(table, 'stco').body, 8)).toBe(48)
+  })
+
+  // The sound's chunk follows five gigabytes of picture, so its offset is the
+  // one that does not fit, and `co64` is the same table with 64-bit entries.
+  it('writes co64 for the sound, whose chunk is past 4 GiB', () => {
+    const table = trakTables(1)
+    expect(table.some(b => b.type === 'stco')).toBe(false)
+    const co64 = find(table, 'co64')
+    expect(u32At(co64.body, 4)).toBe(1)
+    expect(u64At(co64.body, 8)).toBe(48 + 5 * GIB)
+  })
+})
+
+// A take being written to a file reserves the front of it before it knows what
+// the front will say, so the header is laid out at its largest whatever the
+// take turns out to weigh.
+describe('a streamed file', () => {
+  const streamed = mp4Parts({
+    width: 640,
+    height: 480,
+    fps: { num: 60, den: 1 },
+    avcc: AVCC,
+    ...laid([sample(40, true), sample(11), sample(12)]),
+    streamed: true,
+  })
+  const whole = new Uint8Array(streamed.reduce((n, p) => n + p.length, 0))
+  let at = 0
+  for (const part of streamed) {
+    whole.set(part, at)
+    at += part.length
+  }
+
+  // If any length did not add up, `boxes` would have thrown.
+  it('accounts for every byte, with mdat in the large form', () => {
+    const top = boxes(whole)
+    expect(top.map(b => b.type)).toEqual(['ftyp', 'mdat', 'moov'])
+    expect(find(top, 'mdat').body.length).toBe(63)
+  })
+
+  // The offset is what a player seeks to, so the file saying 48 while the
+  // picture starts at 40 is the one way this can be wrong and still parse.
+  it('puts the picture where its sample table says', () => {
+    const trak = kids(find(kids(find(boxes(whole), 'moov')), 'trak'))
+    const minf = kids(find(kids(find(trak, 'mdia')), 'minf'))
+    const stbl = kids(find(minf, 'stbl'))
+    const offset = u32At(find(stbl, 'stco').body, 8)
+    expect(offset).toBe(STREAM_HEAD)
+    expect(Array.from(whole.slice(offset, offset + 4))).toEqual([0, 1, 2, 3])
+  })
+})
+
+describe('a streamed layout', () => {
+  const small = (streamed: boolean) =>
+    mp4Layout({
+      width: 640,
+      height: 480,
+      fps: { num: 60, den: 1 },
+      avcc: AVCC,
+      samples: [{ size: 10, key: true }],
+      streamed,
+    })
+
+  it('reserves exactly what the sink was told to leave', () => {
+    expect(small(true).head.length).toBe(STREAM_HEAD)
+  })
+
+  it('takes the large mdat form whatever the take weighs', () => {
+    expect(u32At(small(true).head, 32)).toBe(1)
+    expect(u32At(small(false).head, 32)).toBe(18)
+  })
+
+  // The offsets move with the header, and a sample table measured from the
+  // small form while the sink reserved the large one points eight bytes short
+  // of every frame in the file.
+  it('measures the chunk offset from the header it wrote', () => {
+    const offsetIn = (l: ReturnType<typeof small>) => {
+      const moov = boxes(l.tail.at(-1) ?? new Uint8Array())[0]
+      const trak = find(kids(moov), 'trak')
+      const mdia = find(kids(trak), 'mdia')
+      const stbl = find(kids(find(kids(mdia), 'minf')), 'stbl')
+      return u32At(find(kids(stbl), 'stco').body, 8)
+    }
+    expect(offsetIn(small(true))).toBe(48)
+    expect(offsetIn(small(false))).toBe(40)
   })
 })
 
