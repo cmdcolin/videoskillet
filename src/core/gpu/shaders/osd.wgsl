@@ -72,25 +72,24 @@ fn symbolDot(kind: u32, ux: u32, uy: u32) -> bool {
   return fx > 0.1 && fx < 0.9 && abs(fy - 0.5) < 0.42 * (0.9 - fx) / 0.8;
 }
 
-// The phase this line's burst arrived at, against the house carrier. Whatever
-// sits upstream of the deck's output moves the burst: time-base error shifts
-// the line by fractions of a subcarrier cycle and colour-under rotates it. The
-// set takes hue from the burst, so chroma written at the house phase decodes as
-// a different colour on every line.
+// The rotation this line's burst arrived at against the house carrier, as
+// (cos, sin). Whatever sits upstream of the deck's output moves the burst:
+// time-base error shifts the line by fractions of a subcarrier cycle and
+// colour-under rotates it. The set takes hue from the burst, so chroma written
+// at the house phase decodes as a different colour on every line.
 //
 // A burst sample is -A * carrierRot(...).x, and the four lattice phases make
 // the carrier's two axes orthogonal, so correlating the 36 samples against each
-// axis recovers the cosine and sine of the rotation.
-fn burstPhase(row: u32) -> f32 {
-  var sx = 0.0;
-  var sy = 0.0;
-  for (var k = 0u; k < BURST_LEN; k = k + 1u) {
-    let nb = row * SPL + BURST_START + k;
-    let sc = carrier(nb, P.frame);
-    sx = sx + comp[nb] * sc.x;
-    sy = sy + comp[nb] * sc.y;
-  }
-  return atan2(-sy, -sx);
+// axis recovers the cosine and sine of the rotation, up to the burst's amplitude.
+//
+// The workgroup's lanes each load one sample and one lane sums them. A single
+// lane walking all 36 loads measured 0.3 ms of a 0.37 ms pass.
+var<workgroup> burstTerms: array<vec2f, BURST_LEN>;
+
+// The house carrier turned by a burst rotation: what `carrierRot` computes from
+// an angle, without the cosine and sine per sample.
+fn rotated(sc: vec2f, cs: vec2f) -> vec2f {
+  return vec2f(sc.x * cs.x + sc.y * cs.y, sc.y * cs.x - sc.x * cs.y);
 }
 
 fn ink(dx: i32, dy: i32) -> bool {
@@ -112,30 +111,64 @@ fn ink(dx: i32, dy: i32) -> bool {
   return symbolDot(SYMBOL[label], ux, uy);
 }
 
+// The box the word and its outline can be lit in, in dots and with one dot
+// spare on each side for the outline: the longest word, PAUSE, plus its gap and
+// symbol. A longer word needs this raised or its tail is clipped.
+const BOX_COLS = 7u;
+
+// One burst measurement per line, shared by the workgroup that draws it.
+var<workgroup> lineBurst: vec2f;
+
 @compute @workgroup_size(64, 1, 1)
-fn main(@builtin(global_invocation_id) gid: vec3u) {
+fn main(
+  @builtin(global_invocation_id) gid: vec3u,
+  @builtin(local_invocation_index) lid: u32,
+) {
   let row = gid.y;
-  let s = gid.x;
-  if (s >= SPL) {
+  // A workgroup is one run of samples along one row, so this return is uniform
+  // across it, which keeps the barrier below legal.
+  if (row < ACTIVE_TOP || row >= ACTIVE_TOP + ACTIVE_H) {
     return;
   }
-  if (row < ACTIVE_TOP || row >= ACTIVE_TOP + ACTIVE_H
-      || s < ACTIVE_START || s >= ACTIVE_START + ACTIVE_W) {
+  let y = f32(row - ACTIVE_TOP) - P.osdY * f32(ACTIVE_H);
+  let dy = i32(floor(y / (DOT_Y * P.osdScale)));
+  let inBand = dy >= -1 && dy <= i32(GLYPH_H);
+  let muted = P.osdBlue > 0.5;
+  // The row and the uniform buffer alone decide this, so every lane of every
+  // workgroup takes the same path through the barriers. Letters need the burst
+  // only on the rows they are drawn on.
+  if (muted || (inBand && P.osdColour > 0.5)) {
+    if (lid < BURST_LEN) {
+      let nb = row * SPL + BURST_START + lid;
+      burstTerms[lid] = comp[nb] * carrier(nb, P.frame);
+    }
+    workgroupBarrier();
+    if (lid == 0u) {
+      var sum = vec2f(0.0);
+      for (var k = 0u; k < BURST_LEN; k = k + 1u) {
+        sum = sum + burstTerms[k];
+      }
+      let len = length(sum);
+      lineBurst = select(vec2f(1.0, 0.0), -sum / len, len > 1e-3);
+    }
+    workgroupBarrier();
+  }
+
+  let s = gid.x;
+  if (s < ACTIVE_START || s >= ACTIVE_START + ACTIVE_W) {
     return;
   }
   let x = f32(s - ACTIVE_START) - P.osdX * f32(ACTIVE_W);
-  let y = f32(row - ACTIVE_TOP) - P.osdY * f32(ACTIVE_H);
   let dx = i32(floor(x / (DOT_X * P.osdScale)));
-  let dy = i32(floor(y / (DOT_Y * P.osdScale)));
+  let inBox = inBand && dx >= -1 && dx <= i32(BOX_COLS * GLYPH_W);
 
   let n = row * SPL + s;
-  let lit = ink(dx, dy);
-  let coloured = P.osdBlue > 0.5 || (lit && P.osdColour > 0.5);
+  let lit = inBox && ink(dx, dy);
   var sc = carrier(n, P.frame);
-  if (coloured) {
-    sc = carrierRot(n, P.frame, burstPhase(row));
+  if (muted || (lit && P.osdColour > 0.5)) {
+    sc = rotated(sc, lineBurst);
   }
-  if (P.osdBlue > 0.5) {
+  if (muted) {
     let yuv = yuvOf(BLUE);
     comp[n] = activeComposite(yuv.x, yuv.y, yuv.z, sc, 1.0, 0.0);
   }
@@ -147,7 +180,7 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
     comp[n] = mix(comp[n], letter, P.osdMix);
     return;
   }
-  if (P.osdEdge < 0.5) {
+  if (!inBox || P.osdEdge < 0.5) {
     return;
   }
   var edge = false;

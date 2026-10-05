@@ -32,6 +32,11 @@ In order of what actually moves the number:
   measured by deleting both loops outright. See _Tiering_ below for why tap
   count is the only lever on it.
 - **Per-source feed snow** ~0.9 ms per engaged feed.
+- **The deck display** (`osd`) ~0.04 ms with its word up, and ~0.31 ms during
+  the blue background, which writes the whole active picture. Deleting the burst
+  measurement leaves 0.07 ms, so that measurement is the cost. It started as one
+  lane per sample walking 36 loads (0.86 ms), then one lane per workgroup (0.37
+  ms), and now splits the loads across the workgroup's lanes.
 - **The true-waveform B chain** (`encodeChromaB → encodeCompositeB → mixB`)
   totals ~0.9 ms engaged, and dispatches nothing idle.
 
@@ -185,7 +190,7 @@ accumulator to scratch for the sake of up to three iterations.
 
 ## Workgroup memory does four different jobs here
 
-Nine shaders stage something in `var<workgroup>` before they barrier, and it is
+Ten shaders stage something in `var<workgroup>` before they barrier, and it is
 worth knowing which of four things each one is doing, because the reason decides
 what may change.
 
@@ -233,7 +238,9 @@ rather than a performance one: **the predicate sits ahead of the bounds
 return**, since every invocation in the workgroup has to reach the barrier and
 910 samples do not divide by 64.
 
-`channel` tables the FM fold's 31-tap decay the same way.
+`channel` tables the FM fold's 31-tap decay the same way. `osd` measures each
+line's 36-sample burst once per workgroup, the lanes loading one sample apiece,
+because every sample of the line wants the same rotation.
 
 `crt_face`'s disk taps are the same move made at compile time: golden-angle
 direction × radius plus the beam gaussian weight, tabulated as constants.

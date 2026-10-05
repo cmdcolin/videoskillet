@@ -39,6 +39,7 @@ import { FILTER_STRIDE, NUM_SECTIONS } from '../../src/core/signal/filters'
 import { LineState } from '../../src/core/signal/linestate'
 import { MixState } from '../../src/core/signal/mixstate'
 import { valueNoise } from '../../src/core/signal/noise'
+import { OSD_IDLE } from '../../src/core/signal/osdstate'
 import { RfState } from '../../src/core/signal/rfstate'
 import { TrackingServo } from '../../src/core/signal/servo'
 import { StrobeGate } from '../../src/core/signal/strobe'
@@ -431,6 +432,13 @@ export class Graph {
     ]
     this.post = [
       {
+        label: 'osd',
+        shader: 'osd',
+        variants: one({ P, comp: this.compA, font: ccBuf }),
+        dispatch: perLine,
+        when: () => c.osd > 0,
+      },
+      {
         label: 'enhancer',
         shader: 'enhancer',
         variants: one({ P, comp: this.compA }),
@@ -719,6 +727,10 @@ export class Graph {
         canvasW: 1508,
         canvasH: 1131,
         srcAspect: 4 / 3,
+        srcMirror: 0,
+        tubeTurn: 0,
+        srcZoom: 1,
+        sliceW: 1,
         srcNoise: this.srcNoise,
         srcNoiseB: this.srcNoiseB,
         srcFrame: this.tapeFrame.a,
@@ -733,6 +745,8 @@ export class Graph {
         impulseTrainPos: this.impulseTrainPos,
         impulseTrainStep: this.impulseTrainStep,
         shuttlePhase: this.shuttlePhase,
+        // The display held up, which is the steady state worth timing.
+        osd: { ...OSD_IDLE, visible: c.osd > 0, muted: c.osdBlueS > 0 },
         dbgView: this.dbgView,
       }),
       ...mixU,

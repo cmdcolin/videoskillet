@@ -20,7 +20,7 @@ import { LineState } from '../signal/linestate'
 import { MixState } from '../signal/mixstate'
 import { driveAt, driveSlots, ModState } from '../signal/modstate'
 import { valueNoise } from '../signal/noise'
-import { OsdState } from '../signal/osdstate'
+import { OSD_IDLE, OsdState } from '../signal/osdstate'
 import { RfState } from '../signal/rfstate'
 import { TrackingServo } from '../signal/servo'
 import { StabGate } from '../signal/stab'
@@ -285,12 +285,7 @@ export class Engine implements EngineApi {
   // and travels in presets and links like every other fault.
   private strobeGate = new StrobeGate()
   private osd = new OsdState()
-  private osdStep: OsdStep = {
-    label: 0,
-    visible: false,
-    muted: false,
-    engaged: false,
-  }
+  private osdStep: OsdStep = OSD_IDLE
   private modSlots: ModSlot[] = []
   // Last frame's wire-on-wire drive, keyed `slot * 2 + (depth ? 0 : 1)`. A Map
   // rather than an array so the engine needs no constant for how many slots the
@@ -1855,9 +1850,7 @@ export class Engine implements EngineApi {
       impulseTrainPos: this.impulseTrainPos,
       impulseTrainStep: this.impulseTrainStep,
       shuttlePhase: this.shuttlePhase,
-      osdUp: this.osdStep.visible,
-      osdLabel: this.osdStep.label,
-      osdMuted: this.osdStep.muted,
+      osd: this.osdStep,
       trackPos: this.track.pos,
       trackAmt: this.track.amt,
       flagUs: this.track.flagUs,
@@ -2068,15 +2061,12 @@ export class Engine implements EngineApi {
     this.bayDrive.clear()
     this.rfState = new RfState()
     this.synthState = new SynthState()
-    this.strobeGate = new StrobeGate()
-    this.osd = new OsdState()
-    this.stabGate = new StabGate()
     this.autoLock = new AutoLock()
     // A morph in flight is state stamped on the wall clock, and the take is
     // about to count from zero: left running, `now() - startMs` goes hugely
     // negative and the morph parks on its origin look for the whole render. The
     // board keeps the values it reached; what stops is the walk to the rest.
-    this.endGlide()
+    this.rearmClocked()
     // Same for a transition in flight: it is a span measured in frames, and the
     // counter is about to go back to zero underneath it.
     this.fault.stop()
@@ -2130,10 +2120,15 @@ export class Engine implements EngineApi {
   // The frame-counted clock without a take, for a harness that has paused the
   // loop and steps frames itself: a recording then holds a strobe, a morph or
   // the deck display to the frames it steps, not to how long the box took to
-  // screenshot them. Everything armed on the old clock is dropped, since its
-  // start mark reads in the other one.
+  // screenshot them.
   setVirtualClock(fps: number | null): void {
     this.virtualFps = fps
+    this.rearmClocked()
+  }
+
+  // Everything armed against `now()`, dropped: a start mark read off one clock
+  // means nothing on the other, and a take counts from zero.
+  private rearmClocked(): void {
     this.endGlide()
     this.strobeGate = new StrobeGate()
     this.stabGate = new StabGate()

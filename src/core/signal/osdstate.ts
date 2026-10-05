@@ -32,6 +32,13 @@ export interface OsdStep {
   engaged: boolean
 }
 
+export const OSD_IDLE: OsdStep = {
+  label: OSD_PLAY,
+  visible: false,
+  muted: false,
+  engaged: false,
+}
+
 export class OsdState {
   private lastShuttle = 1
   private wasOn = false

@@ -15,6 +15,7 @@ import {
 import { valueNoise } from '../signal/noise'
 
 import type { Controls } from '../controls'
+import type { OsdStep } from '../signal/osdstate'
 
 // Bent-crystal demod LO: how fast a detuned 3.58 MHz oscillator's phase error
 // grows, per composite sample.
@@ -80,9 +81,7 @@ export interface UniformEnv {
   impulseTrainPos: number
   impulseTrainStep: number
   shuttlePhase: number
-  osdUp: boolean
-  osdLabel: number
-  osdMuted: boolean
+  osd: OsdStep
   // Where the tracking servo has the band this frame, and how badly.
   trackPos: number
   trackAmt: number
@@ -237,9 +236,9 @@ export function uniformValues(c: Controls, env: UniformEnv) {
     cgRomRot: c.cgRomRot,
     cgPageAddr: c.cgPageAddr,
     cgPageSlip: c.cgPageSlip,
-    osdMix: env.osdUp ? c.osd : 0,
-    osdLabel: env.osdLabel,
-    osdBlue: env.osdMuted ? 1 : 0,
+    osdMix: env.osd.visible ? c.osd : 0,
+    osdLabel: env.osd.label,
+    osdBlue: env.osd.muted ? 1 : 0,
     osdColour: c.osdColour,
     osdEdge: c.osdEdge,
     osdX: c.osdX,

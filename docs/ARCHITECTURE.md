@@ -107,6 +107,15 @@ outboard box between the deck and the set — it runs after the last dub
 generation and before anything measures sync, so the pulses it stamps are the
 pulses the receiver has to lock to.
 
+`osd` draws the deck's on-screen display into the output after the last dub,
+ahead of the enhancer. Tape wobble is already behind it, so the word holds
+still, and the receiver then locks to it and decodes it with the rest of the
+line. A pass that writes chroma into the composite from here on has to write it
+at the phase of the line's own burst. Time-base error and colour-under move the
+burst, the set takes hue from it, and chroma written at the house phase decodes
+as a different colour on every line. `osd.wgsl` measures the burst once per
+workgroup and rotates the carrier by it.
+
 **Each input also has its own feed** (`feedA`, `feedB`) — the deck, cable and
 head-end between that one source and the mixer, so a fault there (scramble,
 termination, snow, polarity, a ground loop, a loose plug, the pause button)
