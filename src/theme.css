@@ -78,6 +78,11 @@
      overlay bar sets this height outright rather than hoping its box matches. */
   --ctl-h: 1.625rem; /* 26px */
   --ctl-radius: 3px;
+  /* The panel's button box. Padding and line-height together give 21.6px at the
+     13px base type; every outlined, filled and chip button takes both, so the
+     rows they share stay level. */
+  --btn-pad-y: 2px;
+  --btn-lh: 1.2;
   --ctl-bg: rgba(22, 22, 26, 0.6);
   --ctl-bg-hover: rgba(40, 40, 48, 0.85);
 }

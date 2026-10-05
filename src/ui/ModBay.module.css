@@ -47,7 +47,7 @@
   composes: bare from './ui.module.css';
   min-width: 0;
   padding: 1px 6px;
-  border-radius: 3px;
+  border-radius: var(--ctl-radius);
   border: 1px solid transparent;
   font-size: var(--fs-sm);
   text-align: left;

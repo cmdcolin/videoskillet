@@ -203,9 +203,9 @@
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    padding: 2px 7px;
+    padding: var(--btn-pad-y) 7px;
     border: 1px solid var(--border-quiet);
-    border-radius: 4px;
+    border-radius: var(--ctl-radius);
     background: var(--surface);
     color: var(--fg3);
     font: inherit;
@@ -213,7 +213,7 @@
     font-weight: 400;
     letter-spacing: normal;
     text-transform: none;
-    line-height: 1.2;
+    line-height: var(--btn-lh);
     white-space: nowrap;
   }
   .outline:hover:not(:disabled) {
@@ -234,7 +234,8 @@ button.filledOn {
 }
 .btn {
   composes: filled;
-  padding: 4px 9px;
+  padding: var(--btn-pad-y) 9px;
+  line-height: var(--btn-lh);
   margin: 2px 3px 2px 0;
 }
 /* a .btn standing alone (dialog actions, close) rather than in a flowing row */
@@ -276,7 +277,7 @@ button.filledOn {
   composes: outline;
   display: inline-block;
   width: 22px;
-  padding: 2px 0;
+  padding: var(--btn-pad-y) 0;
 }
 .chromeBtn svg {
   vertical-align: middle;

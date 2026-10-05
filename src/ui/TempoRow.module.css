@@ -17,7 +17,7 @@
   background: var(--surface);
   color: var(--fg);
   border: 1px solid var(--border-quiet);
-  border-radius: 4px;
+  border-radius: var(--ctl-radius);
   padding: 2px 6px;
   font-family: var(--mono);
   font-size: var(--fs-sm);

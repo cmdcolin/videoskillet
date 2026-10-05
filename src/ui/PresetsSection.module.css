@@ -96,13 +96,6 @@ button.allBtnOn {
 .chip {
   position: relative;
 }
-@media (pointer: fine) {
-  button.chip,
-  button.moreChip {
-    padding-block: 2px;
-    line-height: 1.2;
-  }
-}
 .editedDot {
   position: absolute;
   top: 3px;
@@ -115,14 +108,20 @@ button.allBtnOn {
 
 .moreChip {
   margin: 2px 3px 2px 0;
-  padding: 4px 8px;
+  padding: var(--btn-pad-y) 8px;
   border: 1px dashed var(--border-hover);
-  border-radius: 3px;
+  border-radius: var(--ctl-radius);
   background: transparent;
   color: var(--fg3);
   font: inherit;
+  line-height: var(--btn-lh);
 }
 .moreChip:hover {
   border-color: var(--fg4);
   color: var(--fg);
+}
+@media (pointer: coarse) {
+  .moreChip {
+    padding: 8px 11px;
+  }
 }

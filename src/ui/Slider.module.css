@@ -421,7 +421,7 @@
   color: var(--mod);
   background: color-mix(in srgb, var(--mod) 16%, transparent);
   border: 1px solid color-mix(in srgb, var(--mod) 40%, transparent);
-  border-radius: 3px;
+  border-radius: var(--ctl-radius);
   padding: 0 4px;
 }
 .iconModSet:hover {
@@ -439,7 +439,7 @@
   color: var(--fg4);
   background: color-mix(in srgb, var(--fg4) 14%, transparent);
   border: 1px solid color-mix(in srgb, var(--fg4) 35%, transparent);
-  border-radius: 3px;
+  border-radius: var(--ctl-radius);
   padding: 0 4px;
 }
 .iconModOff:hover {
@@ -452,7 +452,7 @@
 .modAdd {
   color: var(--fg3);
   border: 1px solid var(--border-quiet);
-  border-radius: 3px;
+  border-radius: var(--ctl-radius);
   padding: 0 4px;
   white-space: nowrap;
 }
@@ -467,7 +467,7 @@
 .modRun {
   color: var(--mod);
   border: 1px solid color-mix(in srgb, var(--mod) 40%, transparent);
-  border-radius: 3px;
+  border-radius: var(--ctl-radius);
   padding: 0 3px;
   margin-left: 6px;
   font-size: 8px;
