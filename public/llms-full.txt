@@ -859,6 +859,22 @@ headSwitchNoise  (switch noise)
   0..1 step 0.01  default 0
   How much noise hash fills the few lines during the head switch, before the servo settles on the new head. Usually hidden under the overscan.
 
+## Deck display (OSD)
+
+osd  (on-screen display)
+  0..1 step 0.01  default 0
+  The word a deck draws over its picture when the transport moves: PLAY
+          at normal speed, PAUSE when held, SLOW, FF and REW off play. It shows
+          when this is switched on and again each time the shuttle changes.
+
+          The deck mixes it in after the tape, so tape wobble and tracking bars
+          stay out of the letters. The set still locks to it and decodes it
+          with the rest of the line.
+
+osdHoldS  (display hold)
+  0.5..30 step 0.5 s  default 4
+  How long the word stays up after the transport last moved. A deck takes it down by itself after a few seconds.
+
 ## Enhancer (bent)
 
 enhClampUs  (clamp gate)

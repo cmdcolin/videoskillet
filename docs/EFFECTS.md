@@ -262,6 +262,13 @@ What either deck can be fed:
 | **head switch**  | -30–30 us  | A helical-scan VCR swaps between two heads a few lines before the bottom of the picture, and the two do not agree on timing: the torn hook at the bottom of every VHS frame.                                                    |
 | **switch noise** | 0–1        | How much noise hash fills the few lines during the head switch, before the servo settles on the new head. Usually hidden under the overscan.                                                                                    |
 
+### Deck display (OSD)
+
+| Control               | Range    | The fault it models                                                                                                                                                                                                                                                                                                                                                                     |
+| --------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **on-screen display** | 0–1      | The word a deck draws over its picture when the transport moves: PLAY at normal speed, PAUSE when held, SLOW, FF and REW off play. It shows when this is switched on and again each time the shuttle changes.<br><br>The deck mixes it in after the tape, so tape wobble and tracking bars stay out of the letters. The set still locks to it and decodes it with the rest of the line. |
+| **display hold**      | 0.5–30 s | How long the word stays up after the transport last moved. A deck takes it down by itself after a few seconds.                                                                                                                                                                                                                                                                          |
+
 ### Enhancer (bent)
 
 | Control                        | Range      | The fault it models                                                                                                                                                                                                                                                                                                                         |

@@ -4,7 +4,7 @@ Why the render path looks the way it does. [`ARCHITECTURE.md`](ARCHITECTURE.md)
 draws the path itself, and [the FAQ](FAQ.md#how-does-it-actually-work) is the
 one-page version of what a pass is.
 
-One frame is 477,750 f32 samples (910 × 525) through up to twenty-four compute
+One frame is 477,750 f32 samples (910 × 525) through up to twenty-five compute
 dispatches, sixty times a second, and six of those passes are FIR filters 33 to
 55 taps wide. That budget is the reason for everything below. Every built-in
 preset lands **3.3–5.4 ms** against a 3.3 ms always-on floor, and the headroom

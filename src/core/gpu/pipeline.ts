@@ -20,6 +20,7 @@ import { LineState } from '../signal/linestate'
 import { MixState } from '../signal/mixstate'
 import { driveAt, driveSlots, ModState } from '../signal/modstate'
 import { valueNoise } from '../signal/noise'
+import { OsdState } from '../signal/osdstate'
 import { RfState } from '../signal/rfstate'
 import { TrackingServo } from '../signal/servo'
 import { StabGate } from '../signal/stab'
@@ -62,6 +63,7 @@ import feedSrc from './shaders/feed.wgsl?raw'
 import grainBakeSrc from './shaders/grain_bake.wgsl?raw'
 import lineAnalyzeSrc from './shaders/line_analyze.wgsl?raw'
 import mixBSrc from './shaders/mix_b.wgsl?raw'
+import osdSrc from './shaders/osd.wgsl?raw'
 import presentSrc from './shaders/present.wgsl?raw'
 import storePrevSrc from './shaders/store_prev.wgsl?raw'
 import syncSrc from './shaders/sync.wgsl?raw'
@@ -281,6 +283,8 @@ export class Engine implements EngineApi {
   // — a cut gun is a thing the set does — so it takes a row on the Beam stage
   // and travels in presets and links like every other fault.
   private strobeGate = new StrobeGate()
+  private osd = new OsdState()
+  private osdUp = false
   private modSlots: ModSlot[] = []
   // Last frame's wire-on-wire drive, keyed `slot * 2 + (depth ? 0 : 1)`. A Map
   // rather than an array so the engine needs no constant for how many slots the
@@ -640,6 +644,7 @@ export class Engine implements EngineApi {
     const decodePl = compute(decodeSrc)
     const captionPl = compute(captionSrc)
     const chyronPl = compute(chyronSrc)
+    const osdPl = compute(osdSrc)
     const crtFacePl = compute(crtFaceSrc)
 
     // Zero-copy video: where the device can import the decoder's own frame
@@ -961,6 +966,21 @@ export class Engine implements EngineApi {
       y: perPixelT[1],
     }
     this.postPasses = [
+      // The deck's on-screen display, drawn into its output after the tape. The
+      // word stays put while the picture beneath it wobbles, because the
+      // timebase error is already behind it, and the receiver then locks to it
+      // and decodes it like the rest of the line.
+      pass(
+        'osd',
+        osdPl,
+        [
+          { buffer: this.paramsBuf },
+          { buffer: this.compA },
+          { buffer: this.cgBuf },
+        ],
+        perLine,
+        () => this.osdUp,
+      ),
       // The enhancer is an outboard box between the deck and the set, so it
       // sits after the last dub generation and before the receiver measures
       // anything — the pulses it stamps are the pulses the TV has to lock to.
@@ -1804,6 +1824,8 @@ export class Engine implements EngineApi {
 
   private uniformValues() {
     const c = this.controls
+    const osd = this.osd.step(c.osd > 0, c.shuttleX, c.osdHoldS, this.now())
+    this.osdUp = osd.visible
     return uniformValues(c, {
       frame: this.frame,
       canvasW: this.canvas.width,
@@ -1829,6 +1851,8 @@ export class Engine implements EngineApi {
       impulseTrainPos: this.impulseTrainPos,
       impulseTrainStep: this.impulseTrainStep,
       shuttlePhase: this.shuttlePhase,
+      osdUp: osd.visible,
+      osdLabel: osd.label,
       trackPos: this.track.pos,
       trackAmt: this.track.amt,
       flagUs: this.track.flagUs,
@@ -2040,6 +2064,7 @@ export class Engine implements EngineApi {
     this.rfState = new RfState()
     this.synthState = new SynthState()
     this.strobeGate = new StrobeGate()
+    this.osd = new OsdState()
     this.stabGate = new StabGate()
     this.autoLock = new AutoLock()
     // A morph in flight is state stamped on the wall clock, and the take is

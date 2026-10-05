@@ -71,7 +71,7 @@ One frame, driven by `Engine.render()` in `src/core/gpu/pipeline.ts`:
 ```
 prePasses    compose → encodeComposite → [feedA] → [composeB → encodeChromaB → encodeCompositeB → feedB → mixB] → [chyron] → [fbComposite]
 loopPasses   chromaExtract → [underDown] → channel → timebase     (× dubGens, ≤ 4)
-postPasses   [enhancer] → [buzzTap] → syncMeasure → sync → lineAnalyze → [vir] → [caption] → decode → crtFace → [storePrev]
+postPasses   [osd] → [enhancer] → [buzzTap] → syncMeasure → sync → lineAnalyze → [vir] → [caption] → decode → crtFace → [storePrev]
 present      render pass to the swap chain
 ```
 

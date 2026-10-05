@@ -146,6 +146,9 @@ export const DEFAULT_CONTROLS = {
   cgRomRot: 0, // its decayed fraction; negative if the erased cell reads dark
   cgPageAddr: 0, // a line held on its page-address counter
   cgPageSlip: 0, // and that counter slipping, counts per frame
+  // The deck's on-screen display, drawn after the tape
+  osd: 0, // display opacity (0 = the deck draws nothing)
+  osdHoldS: 4, // seconds it stays up after the transport moves
   // bent video enhancer, patched inline between the deck and the set
   enhClampUs: 0, // clamp gate slid off the back porch (0 = correct)
   enhDroopUs: 0, // coupling-capacitor time constant (0 = DC coupled, no droop)

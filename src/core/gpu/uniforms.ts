@@ -80,6 +80,8 @@ export interface UniformEnv {
   impulseTrainPos: number
   impulseTrainStep: number
   shuttlePhase: number
+  osdUp: boolean
+  osdLabel: number
   // Where the tracking servo has the band this frame, and how badly.
   trackPos: number
   trackAmt: number
@@ -234,6 +236,8 @@ export function uniformValues(c: Controls, env: UniformEnv) {
     cgRomRot: c.cgRomRot,
     cgPageAddr: c.cgPageAddr,
     cgPageSlip: c.cgPageSlip,
+    osdMix: env.osdUp ? c.osd : 0,
+    osdLabel: env.osdLabel,
     enhClampOff: c.enhClampUs * 1e-6 * SAMPLE_RATE,
     // RC leak per sample from the coupling time constant; 0 us is the
     // DC-coupled box, which never lets the level move at all.

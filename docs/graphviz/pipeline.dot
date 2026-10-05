@@ -98,6 +98,10 @@ digraph ntsc_js {
                    label="timebase\njitter / wow resample\n525 lines × 910 samples"];
   }
 
+  // The deck draws its own PLAY / PAUSE word into its output, after the tape.
+  osd [passes="osd" fillcolor="@OUT@" style="rounded,filled,dashed"
+       label="osd — deck display\nPLAY · PAUSE · SLOW · FF · REW\n525 lines × 910 samples"];
+
   // Outboard, so it is neither channel nor receiver: it runs after the last dub
   // and before anything measures sync, so the pulses it stamps are the pulses
   // the set has to lock to.
@@ -170,7 +174,8 @@ digraph ntsc_js {
   timebase -> chromaExtract [label="  ×dubGens (≤4)\l" style=bold penwidth=2.2
                              color="@DUB@" fontcolor="@DUB@" constraint=false];
 
-  timebase -> enhancer [label="  compA"];
+  timebase -> osd [label="  compA"];
+  osd -> enhancer [label="  compA"];
   enhancer -> sync [label="  compA" lhead=cluster_rx];
   sync -> lineAnalyze [label="  timing[]"];
   lineAnalyze -> decode [label="  lineInfo[]"];

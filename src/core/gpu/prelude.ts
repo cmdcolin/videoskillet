@@ -313,6 +313,9 @@ export const PARAM_DEFS = [
   ['cgRomRot', 'f32'], // its decayed fraction; sign is the erased state
   ['cgPageAddr', 'f32'], // a line held on its page-address counter
   ['cgPageSlip', 'f32'], // and that counter slipping, counts per frame
+  // the deck's on-screen display, drawn into the output after the tape
+  ['osdMix', 'f32'], // display opacity while it is up, 0 when it is down
+  ['osdLabel', 'f32'], // which word: play, pause, slow, ff, rew
   // bent video enhancer, inline between the deck and the set
   ['enhClampOff', 'f32'], // clamp gate displaced off the back porch, samples
   ['enhDroop', 'f32'], // coupling-capacitor leak per sample (0 = DC coupled)

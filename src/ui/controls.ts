@@ -2709,6 +2709,41 @@ export const GROUPS: Group[] = [
     ],
   },
   {
+    // A deck draws its own on-screen display into its output, so the word is
+    // filed with the tape and not with the set. It stands after the timebase:
+    // the picture behind it shakes and the word does not.
+    name: 'Deck display (OSD)',
+    place: 'Channel',
+    sliders: [
+      {
+        key: 'osd',
+        id: 295,
+        label: 'on-screen display',
+        min: 0,
+        max: 1,
+        step: 0.01,
+        unit: '',
+        help: `The word a deck draws over its picture when the transport moves: PLAY
+          at normal speed, PAUSE when held, SLOW, FF and REW off play. It shows
+          when this is switched on and again each time the shuttle changes.
+
+          The deck mixes it in after the tape, so tape wobble and tracking bars
+          stay out of the letters. The set still locks to it and decodes it
+          with the rest of the line.`,
+      },
+      {
+        key: 'osdHoldS',
+        id: 296,
+        label: 'display hold',
+        min: 0.5,
+        max: 30,
+        step: 0.5,
+        unit: 's',
+        help: 'How long the word stays up after the transport last moved. A deck takes it down by itself after a few seconds.',
+      },
+    ],
+  },
+  {
     name: 'Enhancer (bent)',
     place: 'Channel',
     sliders: [
@@ -3838,6 +3873,12 @@ const chyroning: SliderNeed = {
   fix: 0.9,
   hint: 'the cg faded up',
 }
+const displaying: SliderNeed = {
+  key: 'osd',
+  ok: above0,
+  fix: 1,
+  hint: 'the on-screen display switched on',
+}
 const carrying: SliderNeed = {
   key: 'vbi',
   ok: above0,
@@ -3931,6 +3972,7 @@ export const NEEDS: Partial<Record<ControlKey, SliderNeed>> = {
   ccRomRot: captioned,
   ccPageAddr: captioned,
   ccPageSlip: captioned,
+  osdHoldS: displaying,
   cgX: chyroning,
   cgY: chyroning,
   cgScale: chyroning,
