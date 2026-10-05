@@ -87,6 +87,7 @@ import type { FaultPlan } from '../signal/fault'
 import type { GlidePlan } from '../signal/glide'
 import type { LineStateControls } from '../signal/linestate'
 import type { DeckPause } from '../signal/mixstate'
+import type { OsdStep } from '../signal/osdstate'
 import type { StabPlan } from '../signal/stab'
 import type { Gpu, RenderTarget } from './context'
 import type { DestroyOptions, EngineApi } from './engineapi'
@@ -284,7 +285,7 @@ export class Engine implements EngineApi {
   // and travels in presets and links like every other fault.
   private strobeGate = new StrobeGate()
   private osd = new OsdState()
-  private osdUp = false
+  private osdStep: OsdStep = { label: 0, visible: false, engaged: false }
   private modSlots: ModSlot[] = []
   // Last frame's wire-on-wire drive, keyed `slot * 2 + (depth ? 0 : 1)`. A Map
   // rather than an array so the engine needs no constant for how many slots the
@@ -979,7 +980,7 @@ export class Engine implements EngineApi {
           { buffer: this.cgBuf },
         ],
         perLine,
-        () => this.osdUp,
+        () => this.osdStep.visible,
       ),
       // The enhancer is an outboard box between the deck and the set, so it
       // sits after the last dub generation and before the receiver measures
@@ -1824,8 +1825,6 @@ export class Engine implements EngineApi {
 
   private uniformValues() {
     const c = this.controls
-    const osd = this.osd.step(c.osd > 0, c.shuttleX, c.osdHoldS, this.now())
-    this.osdUp = osd.visible
     return uniformValues(c, {
       frame: this.frame,
       canvasW: this.canvas.width,
@@ -1851,8 +1850,8 @@ export class Engine implements EngineApi {
       impulseTrainPos: this.impulseTrainPos,
       impulseTrainStep: this.impulseTrainStep,
       shuttlePhase: this.shuttlePhase,
-      osdUp: osd.visible,
-      osdLabel: osd.label,
+      osdUp: this.osdStep.visible,
+      osdLabel: this.osdStep.label,
       trackPos: this.track.pos,
       trackAmt: this.track.amt,
       flagUs: this.track.flagUs,
@@ -2370,6 +2369,13 @@ export class Engine implements EngineApi {
     this.cfbCarrierPhase = driftPhase(this.cfbCarrierPhase, c.cfbCarrierKHz)
   }
 
+  // The deck's display, advanced before the servo so that pressing PLAY can
+  // unseat the tracking on the same frame the word appears.
+  private stepOsd(c: Controls): void {
+    this.osdStep = this.osd.step(c.osd > 0, c.shuttleX, c.osdHoldS, this.now())
+    if (this.osdStep.engaged) this.servo.kick(1)
+  }
+
   // What unseated the tracking this frame: the transport changing speed, and a
   // bass hit through the cabinet. Scene changes and transition cuts kick from
   // where they happen.
@@ -2530,6 +2536,7 @@ export class Engine implements EngineApi {
       wipePos: c.wipePos,
       wipeRateHz: c.wipeRate,
     })
+    this.stepOsd(c)
     this.kickServo(c)
     this.track = this.servo.update({
       target: c.trackPos,

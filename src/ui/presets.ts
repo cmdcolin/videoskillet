@@ -2967,6 +2967,28 @@ export const PRESETS: PresetDef[] = [
     },
   },
   {
+    name: 'tapeIn',
+    displayName: 'tape in',
+    group: 'Tape wear',
+    blurb:
+      'A cassette just pushed into the deck and set to play. The deck draws PLAY into its output after the tape, so the word holds still while the tracking servo hunts for the track underneath it. The noise band sweeps the picture and rings out over a second or two.',
+    patch: {
+      osd: 1,
+      osdHoldS: 5,
+      trackHunt: 0.75,
+      trackKick: 0.9,
+      trackAmt: 0.1,
+      lumaMHz: 2.8,
+      lumaPeak: 0.9,
+      noiseIre: 2,
+      colorUnderMix: 1,
+      underJitterDeg: 4,
+      tbJitterNs: 200,
+      headSwitchShiftUs: 0.8,
+      headSwitchNoise: 0.4,
+    },
+  },
+  {
     name: 'tintInASlowHand',
     displayName: 'tint in a slow hand',
     group: 'Decoder',

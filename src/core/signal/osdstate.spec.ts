@@ -29,7 +29,7 @@ describe('OsdState', () => {
 
   it('shows PLAY when switched on, and holds it for the hold time', () => {
     const osd = new OsdState()
-    expect(osd.step(true, 1, 4, 1000)).toEqual({
+    expect(osd.step(true, 1, 4, 1000)).toMatchObject({
       label: OSD_PLAY,
       visible: true,
     })
@@ -41,7 +41,7 @@ describe('OsdState', () => {
     const osd = new OsdState()
     osd.step(true, 1, 4, 0)
     expect(osd.step(true, 1, 4, 5000).visible).toBe(false)
-    expect(osd.step(true, 0, 4, 6000)).toEqual({
+    expect(osd.step(true, 0, 4, 6000)).toMatchObject({
       label: OSD_PAUSE,
       visible: true,
     })
@@ -56,10 +56,22 @@ describe('OsdState', () => {
     expect(osd.step(true, 1, 4, 6000).visible).toBe(true)
   })
 
+  it('reports the frame the display is switched on, and no other', () => {
+    const osd = new OsdState()
+    expect(osd.step(true, 1, 4, 0).engaged).toBe(true)
+    expect(osd.step(true, 1, 4, 16).engaged).toBe(false)
+    expect(osd.step(true, 8, 4, 32).engaged).toBe(false)
+    osd.step(false, 8, 4, 48)
+    expect(osd.step(true, 8, 4, 64).engaged).toBe(true)
+  })
+
   it('does not show a speed change made while the display was off until it is switched on', () => {
     const osd = new OsdState()
     osd.step(false, 1, 4, 0)
     osd.step(false, 8, 4, 100)
-    expect(osd.step(true, 8, 4, 200)).toEqual({ label: OSD_FF, visible: true })
+    expect(osd.step(true, 8, 4, 200)).toMatchObject({
+      label: OSD_FF,
+      visible: true,
+    })
   })
 })

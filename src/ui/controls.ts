@@ -2729,7 +2729,10 @@ export const GROUPS: Group[] = [
 
           The deck mixes it in after the tape, so tape wobble and tracking bars
           stay out of the letters. The set still locks to it and decodes it
-          with the rest of the line.`,
+          with the rest of the line.
+
+          Switching it on is the PLAY button going down, so it also unseats the
+          tracking servo. Servo hunt above 0 lets the band sweep and settle.`,
       },
       {
         key: 'osdHoldS',

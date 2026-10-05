@@ -23,6 +23,10 @@ export function osdLabel(shuttleX: number): number {
 export interface OsdStep {
   label: number
   visible: boolean
+  // The frame the display was switched on, which is the deck's PLAY button
+  // going down. A change of speed is not counted: the engine already treats
+  // that as a tracking event of its own.
+  engaged: boolean
 }
 
 export class OsdState {
@@ -31,7 +35,8 @@ export class OsdState {
   private shownAt = Number.NEGATIVE_INFINITY
 
   step(on: boolean, shuttleX: number, holdS: number, nowMs: number): OsdStep {
-    if ((on && !this.wasOn) || shuttleX !== this.lastShuttle) {
+    const engaged = on && !this.wasOn
+    if (engaged || shuttleX !== this.lastShuttle) {
       this.shownAt = nowMs
     }
     this.wasOn = on
@@ -39,6 +44,7 @@ export class OsdState {
     return {
       label: osdLabel(shuttleX),
       visible: on && nowMs - this.shownAt < holdS * 1000,
+      engaged,
     }
   }
 
