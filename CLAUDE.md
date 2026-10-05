@@ -98,6 +98,29 @@ edits are HMR** — an `src/` write mid-run reloads the page and resets the engi
 under whatever you were measuring. See the traps list in `docs/DEVELOPMENT.md`;
 every one of them cost real time.
 
+## A take is written to a file, not held in memory
+
+`ui/takeSink.ts` streams a take to the origin-private file system as it encodes,
+and `ui/mp4.ts` splits into `mp4Layout` (the boxes either side of the payload)
+and `mp4Parts` (that, with the payload between them) so that it can. Three
+things follow:
+
+- **The `mdat` header is patched in at the end**, because its size is unknown
+  when the file is opened. A streamed take therefore reserves `STREAM_HEAD`
+  bytes and uses the 64-bit `mdat` form whatever it weighs. A layout that
+  disagrees with what the sink reserved points eight bytes short of every frame
+  in the file, so `close` refuses rather than writing one.
+- **What caps a take is the storage the browser grants**, read off
+  `navigator.storage.estimate()`. It is far past the old 3.9 GB on a machine
+  with a disk and under it on a full one — measured at 1.4 GB on a disk 98%
+  full, where writing 3.9 GB would have been the worse answer.
+- **Do not write once per frame.** It measured a quarter of the engine's frames.
+  The sink gathers 4 MB and writes that; `scripts/rectakecheck.mjs` with
+  `--flags=takesink%3Dblob` is the arm that catches a regression here.
+
+`?takesink=blob` takes the Blob path on a browser that would have streamed,
+which is what every browser without `createWritable` gets.
+
 ## Clips live on the bucket, not in the history
 
 Every mp4 this project records — the carousel's slides (`scripts/appreel.mjs`)

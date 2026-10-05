@@ -187,6 +187,7 @@ downscale every third frame.
 
 ```
 node scripts/reccheck.mjs [port]     # the encoder and the muxer
+node scripts/sinkcheck.mjs [port]    # where a take's bytes go while it records
 node scripts/rectakecheck.mjs [port] # a live take: its time, its sound, its cost
 node scripts/clockcheck.mjs [port]   # time counted in frames
 node scripts/rendercheck.mjs [port]  # a whole take, twice

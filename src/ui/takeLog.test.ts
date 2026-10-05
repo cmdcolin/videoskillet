@@ -26,6 +26,7 @@ const NOTE: TakeNote = {
   encoded: 170,
   chunks: 168,
   bytes: 2_100_000,
+  streamed: true,
   coded: '816x1088',
   canvas: '822x1096',
   configs: 1,

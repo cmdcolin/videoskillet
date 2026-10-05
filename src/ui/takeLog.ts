@@ -24,6 +24,9 @@ const STRINGS: Record<string, number> = {
   canvas: 16,
   model: 64,
 }
+// The flags, which are reported the same way the numbers are.
+const BOOLEANS = new Set(['hidden', 'streamed'])
+
 const NUMBERS = new Set([
   'width',
   'height',
@@ -47,7 +50,7 @@ function fields(params: Record<string, unknown>) {
     if (k in STRINGS && typeof v === 'string') out[k] = v.slice(0, STRINGS[k])
     else if (NUMBERS.has(k) && typeof v === 'number' && Number.isFinite(v))
       out[k] = v
-    else if (k === 'hidden' && typeof v === 'boolean') out[k] = v
+    else if (BOOLEANS.has(k) && typeof v === 'boolean') out[k] = v
   }
   return out
 }
@@ -67,10 +70,12 @@ export interface TakeNote {
   deepest: number
   encoded: number
   chunks: number
-  // How large the file had got, in bytes. A take holds its picture in the
-  // browser's blob store as it encodes (`record.ts`), so this is also what it
-  // was costing the tab.
+  // How large the file had got, in bytes.
   bytes: number
+  // Whether the take was being written to a file as it encoded. One that was
+  // not is one the browser was holding whole, so this is what says whether
+  // `bytes` is also what the take was costing the tab.
+  streamed: boolean
   // What the encoder coded and what the canvas measured last, as WxH. Either
   // differing from the take's size is a lead.
   coded: string

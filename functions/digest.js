@@ -44,7 +44,7 @@ const block = r =>
     ...(r.encoded === undefined
       ? []
       : [
-          `  ${r.encoded} encoded, ${r.chunks ?? '?'} chunks back${r.bytes === undefined ? '' : `, ${size(r.bytes)}`}, coded ${r.coded || '?'} in ${plural(r.configs ?? 0, 'config')}, canvas ${r.canvas || '?'}`,
+          `  ${r.encoded} encoded, ${r.chunks ?? '?'} chunks back${r.bytes === undefined ? '' : `, ${size(r.bytes)} ${r.streamed === true ? 'to a file' : 'in memory'}`}, coded ${r.coded || '?'} in ${plural(r.configs ?? 0, 'config')}, canvas ${r.canvas || '?'}`,
         ]),
     ...(r.message === undefined
       ? []

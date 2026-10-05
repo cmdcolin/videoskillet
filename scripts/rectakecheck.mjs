@@ -2,6 +2,7 @@
 // frame rate?
 //
 //   node scripts/rectakecheck.mjs [port] [--seconds=12] [--size=1280x800]
+//                                  [--flags=takesink%3Dblob]
 //
 // Two takes through the app's own record key, each judged by ffprobe:
 //
@@ -47,6 +48,10 @@ const flag = (name, fallback) => {
 const port = argv.find(a => !a.startsWith('--')) ?? '5199'
 const SECONDS = Number(flag('seconds', '12'))
 const [VW, VH] = flag('size', '1280x800').split('x').map(Number)
+// Added to the app's query, for measuring an arm that needs a flag:
+// `--flags=takesink%3Dblob` holds the take in memory instead of streaming it
+// to a file, which is what says whether writing it costs the engine frames.
+const FLAGS = flag('flags', '')
 const STALL_EXIT = 75
 let stalled = false
 const FPS = 60
@@ -134,7 +139,8 @@ async function take(label, { sound }) {
   const page = await browser.newPage()
   const errors = []
   page.on('pageerror', e => errors.push(String(e).slice(0, 200)))
-  await page.goto(`http://localhost:${port}/app/?vurl=/check/sync.mp4`, {
+  const url = `http://localhost:${port}/app/?vurl=/check/sync.mp4${FLAGS === '' ? '' : `&${decodeURIComponent(FLAGS)}`}`
+  await page.goto(url, {
     waitUntil: 'domcontentloaded',
   })
   if (!(await appUp(page, 20000))) throw new Error(`${label}: app not up`)

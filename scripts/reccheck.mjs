@@ -37,6 +37,9 @@ import { join } from 'node:path'
 import process from 'node:process'
 
 const port = process.argv[2] ?? '5199'
+// Appended to the app URL, for an arm that needs a flag: `?takesink=blob` puts
+// the take in memory on a browser that would otherwise have streamed it.
+const query = process.argv[3] ?? ''
 const FRAMES = 90
 const FPS = 60
 
@@ -61,7 +64,7 @@ const page = await browser.newPage()
 await page.setViewport({ width: 1352, height: 900 })
 const errors = []
 page.on('pageerror', e => errors.push(String(e).slice(0, 200)))
-await page.goto(`http://localhost:${port}/app/`, {
+await page.goto(`http://localhost:${port}/app/${query}`, {
   waitUntil: 'domcontentloaded',
 })
 await appUp(page, 6000)
@@ -92,6 +95,7 @@ const got = await page.evaluate(
       b64: btoa(s),
       frames: rec.frames(),
       bytes: rec.bytes(),
+      streamed: rec.streamed(),
       error: rec.error(),
     }
   },
@@ -112,6 +116,17 @@ writeFileSync(file, bytes)
 // copying them (record.ts, `SPILL_BYTES`). This is the arm that says the
 // spilling loses nothing: the file is the picture the encoder produced, plus a
 // header and a movie box, and nothing else.
+// A streamed take reserves the front of the file before it knows how large it
+// will be, so its `mdat` carries the large header whatever it weighs and the
+// sample tables are measured from the far side of it. The two have to agree: a
+// file laid out for one form and written by the other points eight bytes short
+// of every frame in it. `?takesink=blob` runs the other arm.
+check(
+  'the mdat form matches the sink that took it',
+  (bytes.readUInt32BE(32) === 1) === (got.streamed === true),
+  `${got.streamed === true ? 'streamed to a file' : 'held as a Blob'}, mdat size field ${bytes.readUInt32BE(32)}`,
+)
+
 const over = bytes.length - got.bytes
 check(
   'the file is the picture the encoder produced, plus its tables',

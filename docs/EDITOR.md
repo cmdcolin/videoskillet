@@ -653,17 +653,35 @@ the wall clock, with its frames copied off the GPU, so it keeps real time and
 its sound. [`adr/0013`](adr/0013-a-live-take-runs-on-the-wall-clock.md) has why,
 and what it costs a take's constant framerate.
 
-**A take keeps one piece of itself in the heap.** The payload is the file, and
-the file is large: 1398x1790 at 60fps bitrate-caps at 60 Mbps, so four and a
-half minutes of it is 2 GB. Held as one array per frame to the end of the take,
-that is 2 GB of heap — and `new Blob` copies whatever it is handed, so handing
-the take over cost twice what it had already reached, at the one moment it was
-at its largest. `record.ts` rolls the encoded bytes into a Blob every 64 MB and
-drops the arrays, and `mp4.ts` takes the sample sizes and the payload
-separately, so `finish` places pieces the browser already holds. A Safari report
-of a tab killed inside `finish` — 261s, 15,160 frames, no encoder error, the
-page never hidden — is what the old shape looked like from outside: the tab runs
-no more code, so the note the take left in storage is the only trace.
+**A take is written to a file as it encodes, and keeps 4 MB of itself in the
+heap.** The payload is the file, and the file is large: 1398x1790 at 60fps
+bitrate-caps at 60 Mbps, so four and a half minutes of it is 2 GB. Held as one
+array per frame to the end of the take, that is 2 GB of heap — and `new Blob`
+copies whatever it is handed, so handing the take over cost twice what it had
+already reached, at the one moment it was at its largest. A Safari report of a
+tab killed inside `finish` — 261s, 15,160 frames, no encoder error, the page
+never hidden — is what that looked like from outside: the tab runs no more code,
+so the note the take left in storage is the only trace.
+
+`takeSink.ts` has the two sinks a take can go to.
+[`fsacheck.mjs`](../scripts/fsacheck.mjs) measures what a browser offers: a file
+sink needs the origin-private file system and `createWritable`, which Nightly
+151 has and only the _picker_ is Chromium-only. The file is reserved
+`STREAM_HEAD` bytes at the front, the picture is appended as it arrives, and
+`close` seeks back to patch in the `mdat` header whose size was not known when
+the take began — so `mp4.ts` splits into `mp4Layout`, which is the boxes either
+side of the payload, and `mp4Parts`, which is that with the payload in the
+middle. Where there is no file to write, the Blob sink rolls the picture into 64
+MB pieces and the browser holds it, capped at 3.9 GB because it is holding all
+of it.
+
+Two things measurement decided here. **A write per frame costs the engine a
+quarter of its frames** — 32.8 renders/s against 44.8 on the Blob path — so the
+sink gathers 4 MB and writes that, which is one write every half second at the
+bitrate cap (`rectakecheck.mjs`, whose `--flags=takesink%3Dblob` is the other
+arm). And **the file outlives the take**: nothing tells the page when a download
+has finished reading it, so `sweepTakes` clears what an earlier page left rather
+than deleting a file somebody may still be saving.
 
 `ui/render.ts` and `Engine.pauseLoop`/`resumeLoop` own the loop: `renderTake`
 stops it, steps the engine, and hands each frame straight to the encoder, so a
@@ -740,15 +758,12 @@ loop that only listens for output.
 runs identically in the web app, so an Electron decision is not on the critical
 path. Where a shell earns its keep is the boundary either side:
 
-- **Writing the file.** A take spills into the browser's blob store as it
-  encodes, so this is narrower than it was: the heap no longer holds the file,
-  and what is left is that the blob store holds all of it somewhere and that
-  32-bit box offsets cap a take at 3.9 GB. The browser can do better than that
-  already — `scripts/fsacheck.mjs` measures Nightly 151 as having the
-  origin-private file system, `createWritable`, positional writes that patch an
-  `mdat` length written earlier, and a `getFile()` an object URL downloads. Only
-  the _picker_ is Chromium-only, so a shell buys the user choosing where the
-  file lands, and the streaming itself is reachable here.
+- **Writing the file.** Done, in the browser: a take streams to a file as it
+  encodes and the sample tables carry 64-bit offsets, so what caps one is the
+  storage the browser grants rather than the format or the heap. What a shell
+  would still buy is the user choosing where the file lands, since
+  `showSaveFilePicker` is the one part of File System Access that is
+  Chromium-only (`scripts/fsacheck.mjs`).
 - **Codecs.** A bundled ffmpeg gets ProRes / DNxHR and audio mux. The sharpest
   form of the cost is chroma: the H.264 WebCodecs offers is 4:2:0 only, which
   scores 15.54 dB against a one-pixel chroma source where AV1 4:4:4 scores 43.38

@@ -308,7 +308,8 @@ service cloud.firestore {
                ['kind', 'version', 'browser', 'page', 'width', 'height', 'fps',
                 'codec', 'hardware', 'seconds', 'frames', 'held', 'deepest',
                 'encoded', 'chunks', 'bytes', 'configs', 'coded', 'canvas', 'error',
-                'stage', 'hidden', 'message', 'model', 'memory', 'sat'])
+                'stage', 'hidden', 'streamed', 'message', 'model', 'memory',
+                'sat'])
              && d.kind in ['lost', 'failed']
              && d.version is string && d.version.size() <= 32
              && d.browser is string && d.browser.size() <= 200
@@ -334,6 +335,7 @@ service cloud.firestore {
              && optNumber(d, 'configs')
              && optNumber(d, 'memory')
              && (!('hidden' in d) || d.hidden is bool)
+             && (!('streamed' in d) || d.streamed is bool)
              && d.sat == request.time;
     }
 
