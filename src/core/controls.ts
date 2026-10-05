@@ -149,6 +149,9 @@ export const DEFAULT_CONTROLS = {
   // The deck's on-screen display, drawn after the tape
   osd: 0, // display opacity (0 = the deck draws nothing)
   osdHoldS: 4, // seconds it stays up after the transport moves
+  osdX: 0.07, // left edge, active-picture UV
+  osdY: 0.09, // top edge, active-picture UV
+  osdScale: 1, // multiple of the stock dot size
   // bent video enhancer, patched inline between the deck and the set
   enhClampUs: 0, // clamp gate slid off the back porch (0 = correct)
   enhDroopUs: 0, // coupling-capacitor time constant (0 = DC coupled, no droop)

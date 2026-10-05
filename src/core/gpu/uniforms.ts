@@ -238,6 +238,9 @@ export function uniformValues(c: Controls, env: UniformEnv) {
     cgPageSlip: c.cgPageSlip,
     osdMix: env.osdUp ? c.osd : 0,
     osdLabel: env.osdLabel,
+    osdX: c.osdX,
+    osdY: c.osdY,
+    osdScale: c.osdScale,
     enhClampOff: c.enhClampUs * 1e-6 * SAMPLE_RATE,
     // RC leak per sample from the coupling time constant; 0 us is the
     // DC-coupled box, which never lets the level move at all.

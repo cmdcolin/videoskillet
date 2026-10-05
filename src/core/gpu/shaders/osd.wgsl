@@ -19,13 +19,11 @@
 @group(0) @binding(1) var<storage, read_write> comp: array<f32>;
 @group(0) @binding(2) var<storage, read> font: array<u32>;
 
-// One dot of the font is this many samples wide and lines tall. The sample is
-// 0.85 of a line wide on a 4:3 raster, so 4 by 3 keeps the dot close to square.
+// One dot of the font at stock size is this many samples wide and lines tall.
+// The sample is 0.85 of a line wide on a 4:3 raster, so 4 by 3 keeps the dot
+// close to square.
 const DOT_X = 4.0;
 const DOT_Y = 3.0;
-// Where the display's top-left dot sits, as a fraction of the active picture.
-const ORIGIN_X = 0.07;
-const ORIGIN_Y = 0.09;
 // A deck's display is not full white, and the outline is black rather than the
 // blanking level so it stays visible over a dark picture.
 const LETTER_IRE = 90.0;
@@ -91,10 +89,10 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
       || s < ACTIVE_START || s >= ACTIVE_START + ACTIVE_W) {
     return;
   }
-  let x = f32(s - ACTIVE_START) - ORIGIN_X * f32(ACTIVE_W);
-  let y = f32(row - ACTIVE_TOP) - ORIGIN_Y * f32(ACTIVE_H);
-  let dx = i32(floor(x / DOT_X));
-  let dy = i32(floor(y / DOT_Y));
+  let x = f32(s - ACTIVE_START) - P.osdX * f32(ACTIVE_W);
+  let y = f32(row - ACTIVE_TOP) - P.osdY * f32(ACTIVE_H);
+  let dx = i32(floor(x / (DOT_X * P.osdScale)));
+  let dy = i32(floor(y / (DOT_Y * P.osdScale)));
 
   var level = EDGE_IRE;
   var keyed = false;

@@ -878,6 +878,18 @@ osdHoldS  (display hold)
   0.5..30 step 0.5 s  default 4
   How long the word stays up after the transport last moved. A deck takes it down by itself after a few seconds.
 
+osdX  (display x)
+  0..1 step 0.01  default 0.07
+  The word's left edge across the picture.
+
+osdY  (display y)
+  0..1 step 0.01  default 0.09
+  The word's top edge down the picture. Decks put it at the top or the bottom.
+
+osdScale  (display size)
+  0.5..3 step 0.25 x  default 1
+  The size of the letters as a multiple of the stock size. The letters are dots on a grid, so they stay blocky at every size.
+
 ## Enhancer (bent)
 
 enhClampUs  (clamp gate)

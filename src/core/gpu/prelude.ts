@@ -316,6 +316,9 @@ export const PARAM_DEFS = [
   // the deck's on-screen display, drawn into the output after the tape
   ['osdMix', 'f32'], // display opacity while it is up, 0 when it is down
   ['osdLabel', 'f32'], // which word: play, pause, slow, ff, rew
+  ['osdX', 'f32'], // left edge, active-picture UV
+  ['osdY', 'f32'], // top edge, active-picture UV
+  ['osdScale', 'f32'], // multiple of the stock dot size
   // bent video enhancer, inline between the deck and the set
   ['enhClampOff', 'f32'], // clamp gate displaced off the back porch, samples
   ['enhDroop', 'f32'], // coupling-capacitor leak per sample (0 = DC coupled)
