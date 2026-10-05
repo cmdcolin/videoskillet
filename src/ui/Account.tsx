@@ -1,9 +1,9 @@
 import { useState } from 'react'
 
 import styles from './Account.module.css'
+import { Button } from './Button'
 import { warmSignIn } from './cloud'
 import { MenuItem, Popover } from './Popover'
-import ui from './ui.module.css'
 
 import type { CloudUser } from './cloud'
 import type { CloudStatus } from './useSavedProfiles'
@@ -29,8 +29,7 @@ export function Account(props: {
   if (props.user === null) {
     const checking = props.status === 'loading'
     return (
-      <button
-        className={ui.outline}
+      <Button
         disabled={checking}
         title={
           checking
@@ -46,7 +45,7 @@ export function Account(props: {
         onClick={props.onSignIn}
       >
         {checking ? '…' : 'sign in'}
-      </button>
+      </Button>
     )
   }
 

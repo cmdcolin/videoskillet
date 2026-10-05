@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 
+import { Button } from './Button'
 import { ALL_SLIDERS } from './controls'
 import { cx } from './cx'
 import {
@@ -15,7 +16,6 @@ import {
 } from './midi'
 import styles from './MidiPanel.module.css'
 import { PRESETS, presetLabel } from './presets'
-import ui from './ui.module.css'
 
 import type { ActionTarget, BindTarget, MidiStatus } from './midi'
 import type { useMidi } from './useMidi'
@@ -232,9 +232,8 @@ export function MidiPanel(props: {
 
   return (
     <>
-      <button
+      <Button
         className={cx(
-          ui.outline,
           stranded > 0
             ? styles.tabWaiting
             : midi.status === 'ready' && styles.tabOn,
@@ -251,7 +250,7 @@ export function MidiPanel(props: {
       >
         midi
         {note === null ? null : <span className={styles.tabNote}>{note}</span>}
-      </button>
+      </Button>
       {props.open && (
         <MidiDialog
           status={midi.status}

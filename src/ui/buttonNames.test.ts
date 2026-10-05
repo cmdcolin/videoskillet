@@ -39,14 +39,18 @@ interface Button {
   line: number
 }
 
+// `<Button>` is scanned like `<button>`, and a tag that spreads its props takes
+// the name from whoever renders it, which is where this scan catches it.
+//
 // The open tag ends at the first `>` outside a JSX expression: attribute values
 // hold `>` freely (`() => run()` on every handler in here), so counting braces
 // is what separates the tag from its own arrow functions.
 function buttons(src: string): Button[] {
   const out: Button[] = []
-  for (const m of src.matchAll(/<button\b/g)) {
+  for (const m of src.matchAll(/<(button|Button)\b/g)) {
+    const tag = m[1]
     const start = m.index
-    let i = start + '<button'.length
+    let i = start + m[0].length
     let depth = 0
     for (; i < src.length; i++) {
       const c = src[i]
@@ -55,10 +59,10 @@ function buttons(src: string): Button[] {
       else if (c === '>' && depth === 0) break
     }
     const open = src.slice(start, i + 1)
-    const close = src.indexOf('</button>', i)
+    const close = src.indexOf(`</${tag}>`, i)
     out.push({
       body: open.endsWith('/>') || close < 0 ? '' : src.slice(i + 1, close),
-      named: /\baria-label(?:ledby)?[=\s]|\btitle=/.test(open),
+      named: /\baria-label(?:ledby)?[=\s]|\btitle=|\{\.\.\./.test(open),
       line: src.slice(0, start).split('\n').length,
     })
   }

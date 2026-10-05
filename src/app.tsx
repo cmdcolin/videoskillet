@@ -20,6 +20,7 @@ import { AppMenu, ShowMenuButton } from './ui/AppMenu'
 import { AudioHint, AudioInput, SoundOut } from './ui/AudioInput'
 import { boardControls } from './ui/boardText'
 import { BoardTextSheet } from './ui/BoardTextSheet'
+import { Button } from './ui/Button'
 import { CaptionContext } from './ui/CaptionContext'
 import { CAPTION_SEED, wantsWords } from './ui/captionSeed'
 import { ClipLibraryDialog } from './ui/ClipLibraryDialog'
@@ -1507,14 +1508,14 @@ export function App() {
         ) : null}
         <div className={styles.chrome}>
           {searching ? null : (
-            <button
-              className={ui.chromeBtn}
+            <Button
+              variant="icon"
               title="filter the controls (/) — artifact words work: rainbow, ghost, tear, roll (⌘K jumps to one by name)"
               aria-label="filter the controls"
               onClick={openSearch}
             >
               ⌕
-            </button>
+            </Button>
           )}
           <MidiPanel
             midi={midi}
