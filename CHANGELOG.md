@@ -2,6 +2,11 @@
 
 All notable changes to videoskillet are documented here.
 
+## [2.14.0](https://github.com/cmdcolin/videoskillet/compare/v2.13.0...v2.14.0) - 2026-10-05
+
+### Other Changes
+- [`2b9b08b`](https://github.com/cmdcolin/videoskillet/commit/2b9b08b7821d3b69457616fbb5933ebdf1cdbc75) Add agent-docs/CLAUDE.md describing the handoffs layout
+
 ## [2.13.0](https://github.com/cmdcolin/videoskillet/compare/v2.12.0...v2.13.0) - 2026-10-05
 
 ### Features
@@ -16,6 +21,9 @@ All notable changes to videoskillet are documented here.
 
 ### Documentation
 - *(docs)* [`8883971`](https://github.com/cmdcolin/videoskillet/commit/888397122aaeae313e00d423d575acf498926148) measure what a streamed take would need, and what Firefox has
+
+### Other Changes
+- [`c34713a`](https://github.com/cmdcolin/videoskillet/commit/c34713acd474e7fd9234f944b850b7373e179e0c) 2.13.0
 
 ## [2.12.0](https://github.com/cmdcolin/videoskillet/compare/v2.11.0...v2.12.0) - 2026-10-03
 
