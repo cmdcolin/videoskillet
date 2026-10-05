@@ -267,6 +267,9 @@ export interface EngineApi {
   // offline render is made of — see `ui/render.ts`.
   pauseLoop: () => boolean
   resumeLoop: () => void
+  // The take's frame-counted clock on its own, for a harness that steps frames
+  // itself. Drops whatever was armed on the wall clock.
+  setVirtualClock: (fps: number | null) => void
   // One sim step, forced past `timeScale` and the frame lock. On the API rather
   // than only on the concrete class now that something in the app — rather than
   // only a harness — pulls frames by hand.

@@ -8,6 +8,10 @@
 // downstream treats it as video: the set locks to it, decodes it and bends it
 // with the rest of the line.
 //
+// A deck with no lock on its tape mutes its output to a flat blue field, and the
+// word is drawn over that. The field is encoded here the way the encoder would
+// encode a blue source, so the set decodes it as colour.
+//
 // It replaces the composite where it draws, chroma included. A character
 // generator that adds to the video would leave the picture's colour burning
 // through the letters; this one keys, so a letter carries no colour of its own.
@@ -24,10 +28,19 @@
 // close to square.
 const DOT_X = 4.0;
 const DOT_Y = 3.0;
-// A deck's display is not full white, and the outline is black rather than the
-// blanking level so it stays visible over a dark picture.
-const LETTER_IRE = 90.0;
+// The two letter colours: the white a deck draws, a little short of peak, and
+// the bright green a television draws its own channel and volume in. The
+// letters are encoded like any picture, so the green carries chroma.
+const WHITE = vec3f(0.9, 0.9, 0.9);
+const GREEN = vec3f(0.1, 1.0, 0.2);
+// The optional outline is black rather than the blanking level so it stays
+// visible over a dark picture.
 const EDGE_IRE = IRE_BLACK;
+
+// The deck's background. Its chroma swing has to leave the trough of the
+// subcarrier above blanking: a fully saturated blue dips toward the sync
+// separator's slice level, and with any noise on the line the set loses lock.
+const BLUE = vec3f(0.1, 0.2, 0.7);
 
 const SYM_PLAY = 0u;
 const SYM_BARS = 1u;
@@ -57,6 +70,27 @@ fn symbolDot(kind: u32, ux: u32, uy: u32) -> bool {
     fx = 1.0 - fx;
   }
   return fx > 0.1 && fx < 0.9 && abs(fy - 0.5) < 0.42 * (0.9 - fx) / 0.8;
+}
+
+// The phase this line's burst arrived at, against the house carrier. Whatever
+// sits upstream of the deck's output moves the burst: time-base error shifts
+// the line by fractions of a subcarrier cycle and colour-under rotates it. The
+// set takes hue from the burst, so chroma written at the house phase decodes as
+// a different colour on every line.
+//
+// A burst sample is -A * carrierRot(...).x, and the four lattice phases make
+// the carrier's two axes orthogonal, so correlating the 36 samples against each
+// axis recovers the cosine and sine of the rotation.
+fn burstPhase(row: u32) -> f32 {
+  var sx = 0.0;
+  var sy = 0.0;
+  for (var k = 0u; k < BURST_LEN; k = k + 1u) {
+    let nb = row * SPL + BURST_START + k;
+    let sc = carrier(nb, P.frame);
+    sx = sx + comp[nb] * sc.x;
+    sy = sy + comp[nb] * sc.y;
+  }
+  return atan2(-sy, -sx);
 }
 
 fn ink(dx: i32, dy: i32) -> bool {
@@ -94,21 +128,35 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
   let dx = i32(floor(x / (DOT_X * P.osdScale)));
   let dy = i32(floor(y / (DOT_Y * P.osdScale)));
 
-  var level = EDGE_IRE;
-  var keyed = false;
-  if (ink(dx, dy)) {
-    level = LETTER_IRE;
-    keyed = true;
-  } else {
-    for (var j = -1; j <= 1 && !keyed; j = j + 1) {
-      for (var i = -1; i <= 1 && !keyed; i = i + 1) {
-        keyed = ink(dx + i, dy + j);
-      }
-    }
+  let n = row * SPL + s;
+  let lit = ink(dx, dy);
+  let coloured = P.osdBlue > 0.5 || (lit && P.osdColour > 0.5);
+  var sc = carrier(n, P.frame);
+  if (coloured) {
+    sc = carrierRot(n, P.frame, burstPhase(row));
   }
-  if (!keyed) {
+  if (P.osdBlue > 0.5) {
+    let yuv = yuvOf(BLUE);
+    comp[n] = activeComposite(yuv.x, yuv.y, yuv.z, sc, 1.0, 0.0);
+  }
+
+  if (lit) {
+    let rgb = select(WHITE, GREEN, P.osdColour > 0.5);
+    let yuv = yuvOf(rgb);
+    let letter = activeComposite(yuv.x, yuv.y, yuv.z, sc, 1.0, 0.0);
+    comp[n] = mix(comp[n], letter, P.osdMix);
     return;
   }
-  let n = row * SPL + s;
-  comp[n] = mix(comp[n], level, P.osdMix);
+  if (P.osdEdge < 0.5) {
+    return;
+  }
+  var edge = false;
+  for (var j = -1; j <= 1 && !edge; j = j + 1) {
+    for (var i = -1; i <= 1 && !edge; i = i + 1) {
+      edge = ink(dx + i, dy + j);
+    }
+  }
+  if (edge) {
+    comp[n] = mix(comp[n], EDGE_IRE, P.osdMix);
+  }
 }

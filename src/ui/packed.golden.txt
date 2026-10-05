@@ -289,6 +289,9 @@
 301 bLeak step=0.001 default=0
 302 bWanderUs step=0.01 default=0
 303 bCaptureUs step=0.01 default=2
+304 osdBlueS step=0.5 default=0
+305 osdColour step=1 default=0 choices=white|green
+306 osdEdge step=1 default=0 choices=none|black
 
 # ?mod= sources, by name
 sine

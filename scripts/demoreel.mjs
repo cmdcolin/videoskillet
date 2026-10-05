@@ -14,7 +14,7 @@ import { appUp } from './until.mjs'
 // against a worktree's server on another port.
 //
 // Usage: node scripts/demoreel.mjs [--base=URL] [--out=DIR] [--browser=chrome|firefox]
-//        [--keep] [name...]
+//        [--keep] [--no-upload] [name...]
 //   (needs dev server + a browser, ffmpeg and cwebp on PATH). Writes
 //   <slug>.mp4 and <slug>.webp — the still, so the page can show every demo
 //   without fetching a dozen videos. Name demos to record a subset, which is
@@ -64,6 +64,10 @@ const engine = flag('browser', platform === 'darwin' ? 'chrome' : 'firefox')
 // Leave the frames behind, and say where: an encode is a knob worth trying more
 // than once, and driving the browser again for each try is minutes a go.
 const keep = argv.includes('--keep')
+// Record and encode without sending the clip to the bucket, for a look that has
+// not been judged yet. The page reads the clip off the bucket, so a clip that
+// stays local is not reachable from a card until it is uploaded by hand.
+const upload = !argv.includes('--no-upload')
 const only = argv.filter(a => !a.startsWith('--'))
 
 const sleep = ms => new Promise(r => setTimeout(r, ms))
@@ -222,6 +226,12 @@ async function record(demo, tmpDir) {
     // clip of the picture.
     await page.evaluate(() => window.__ds.bareCanvas())
 
+    // The frame-counted clock, switched on here and not before the warm-up: the
+    // warm-up is for the look to settle, and the deck display and the tracking
+    // kick it arms should start with the first frame of the clip, not eight
+    // seconds earlier. Switching restarts whatever the wall clock had armed.
+    await page.evaluate(() => window.vf?.setVirtualClock(60))
+
     const canvas = await page.$('canvas')
     const box = await canvas.boundingBox()
     const frames = SECS * FPS
@@ -249,6 +259,7 @@ async function record(demo, tmpDir) {
     }
     // Left as found: the loop goes back to rAF, the same contract
     // `ui/render.ts` keeps after a take.
+    await page.evaluate(() => window.vf?.setVirtualClock(null))
     await page.evaluate(() => window.vf?.resumeLoop())
     return { frames, box }
   } finally {
@@ -261,7 +272,7 @@ async function record(demo, tmpDir) {
 // list because the clip only exists on the bucket: a run that records fine and
 // then cannot upload has produced a card pointing at a 404, and it should say
 // so before spending the recordings rather than after.
-for (const bin of ['ffmpeg', 'cwebp', 'aws']) {
+for (const bin of upload ? ['ffmpeg', 'cwebp', 'aws'] : ['ffmpeg', 'cwebp']) {
   execFileSync('sh', ['-c', `command -v ${bin}`], { stdio: 'ignore' })
 }
 
@@ -334,6 +345,10 @@ for (const demo of wanted) {
     console.log(
       `  ✓ ${demo.file} — ${frames} frames, ${kb('mp4')}K mp4, ${kb('webp')}K still`,
     )
+    if (!upload) {
+      console.log(`    kept local: ${outDir}/${demo.file}.mp4`)
+      continue
+    }
     // Up it goes, the way `appreel.mjs` sends the carousel's. The still stays
     // on disk and in the history; the mp4 is on the bucket and gitignored, so
     // this is not an extra step at the end of a take but the step that makes

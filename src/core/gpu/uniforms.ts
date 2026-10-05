@@ -82,6 +82,7 @@ export interface UniformEnv {
   shuttlePhase: number
   osdUp: boolean
   osdLabel: number
+  osdMuted: boolean
   // Where the tracking servo has the band this frame, and how badly.
   trackPos: number
   trackAmt: number
@@ -238,6 +239,9 @@ export function uniformValues(c: Controls, env: UniformEnv) {
     cgPageSlip: c.cgPageSlip,
     osdMix: env.osdUp ? c.osd : 0,
     osdLabel: env.osdLabel,
+    osdBlue: env.osdMuted ? 1 : 0,
+    osdColour: c.osdColour,
+    osdEdge: c.osdEdge,
     osdX: c.osdX,
     osdY: c.osdY,
     osdScale: c.osdScale,

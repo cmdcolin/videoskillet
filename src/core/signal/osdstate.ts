@@ -23,6 +23,9 @@ export function osdLabel(shuttleX: number): number {
 export interface OsdStep {
   label: number
   visible: boolean
+  // The deck is still showing its blue background rather than the picture.
+  // Always inside the visible window.
+  muted: boolean
   // The frame the display was switched on, which is the deck's PLAY button
   // going down. A change of speed is not counted: the engine already treats
   // that as a tracking event of its own.
@@ -34,23 +37,26 @@ export class OsdState {
   private wasOn = false
   private shownAt = Number.NEGATIVE_INFINITY
 
-  step(on: boolean, shuttleX: number, holdS: number, nowMs: number): OsdStep {
+  step(
+    on: boolean,
+    shuttleX: number,
+    holdS: number,
+    muteS: number,
+    nowMs: number,
+  ): OsdStep {
     const engaged = on && !this.wasOn
     if (engaged || shuttleX !== this.lastShuttle) {
       this.shownAt = nowMs
     }
     this.wasOn = on
     this.lastShuttle = shuttleX
+    const age = nowMs - this.shownAt
+    const visible = on && age < holdS * 1000
     return {
       label: osdLabel(shuttleX),
-      visible: on && nowMs - this.shownAt < holdS * 1000,
+      visible,
+      muted: visible && age < muteS * 1000,
       engaged,
     }
-  }
-
-  reset(shuttleX: number): void {
-    this.lastShuttle = shuttleX
-    this.wasOn = false
-    this.shownAt = Number.NEGATIVE_INFINITY
   }
 }

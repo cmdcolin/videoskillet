@@ -285,7 +285,12 @@ export class Engine implements EngineApi {
   // and travels in presets and links like every other fault.
   private strobeGate = new StrobeGate()
   private osd = new OsdState()
-  private osdStep: OsdStep = { label: 0, visible: false, engaged: false }
+  private osdStep: OsdStep = {
+    label: 0,
+    visible: false,
+    muted: false,
+    engaged: false,
+  }
   private modSlots: ModSlot[] = []
   // Last frame's wire-on-wire drive, keyed `slot * 2 + (depth ? 0 : 1)`. A Map
   // rather than an array so the engine needs no constant for how many slots the
@@ -1852,6 +1857,7 @@ export class Engine implements EngineApi {
       shuttlePhase: this.shuttlePhase,
       osdUp: this.osdStep.visible,
       osdLabel: this.osdStep.label,
+      osdMuted: this.osdStep.muted,
       trackPos: this.track.pos,
       trackAmt: this.track.amt,
       flagUs: this.track.flagUs,
@@ -2121,6 +2127,19 @@ export class Engine implements EngineApi {
     if (!this.loop.running) this.loop.start()
   }
 
+  // The frame-counted clock without a take, for a harness that has paused the
+  // loop and steps frames itself: a recording then holds a strobe, a morph or
+  // the deck display to the frames it steps, not to how long the box took to
+  // screenshot them. Everything armed on the old clock is dropped, since its
+  // start mark reads in the other one.
+  setVirtualClock(fps: number | null): void {
+    this.virtualFps = fps
+    this.endGlide()
+    this.strobeGate = new StrobeGate()
+    this.stabGate = new StabGate()
+    this.osd = new OsdState()
+  }
+
   // What the clock currently reads, in milliseconds — for a harness that needs
   // to prove the switch took, since every effect of it is otherwise a pixel.
   clockMs(): number {
@@ -2372,7 +2391,13 @@ export class Engine implements EngineApi {
   // The deck's display, advanced before the servo so that pressing PLAY can
   // unseat the tracking on the same frame the word appears.
   private stepOsd(c: Controls): void {
-    this.osdStep = this.osd.step(c.osd > 0, c.shuttleX, c.osdHoldS, this.now())
+    this.osdStep = this.osd.step(
+      c.osd > 0,
+      c.shuttleX,
+      c.osdHoldS,
+      c.osdBlueS,
+      this.now(),
+    )
     if (this.osdStep.engaged) this.servo.kick(1)
   }
 

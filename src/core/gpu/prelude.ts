@@ -321,6 +321,9 @@ export const PARAM_DEFS = [
   // the deck's on-screen display, drawn into the output after the tape
   ['osdMix', 'f32'], // display opacity while it is up, 0 when it is down
   ['osdLabel', 'f32'], // which word: play, pause, slow, ff, rew
+  ['osdBlue', 'f32'], // 1 while the deck outputs its blue background
+  ['osdColour', 'f32'], // letter colour: 0 white, 1 green
+  ['osdEdge', 'f32'], // 1 draws a black outline round the letters
   ['osdX', 'f32'], // left edge, active-picture UV
   ['osdY', 'f32'], // top edge, active-picture UV
   ['osdScale', 'f32'], // multiple of the stock dot size

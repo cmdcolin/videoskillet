@@ -149,6 +149,9 @@ export const DEFAULT_CONTROLS = {
   // The deck's on-screen display, drawn after the tape
   osd: 0, // display opacity (0 = the deck draws nothing)
   osdHoldS: 4, // seconds it stays up after the transport moves
+  osdBlueS: 0, // seconds the deck outputs its blue background first (0 = never)
+  osdColour: 0, // letter colour: 0 white (a deck), 1 green (a television)
+  osdEdge: 0, // 1 outlines the letters in black
   osdX: 0.07, // left edge, active-picture UV
   osdY: 0.09, // top edge, active-picture UV
   osdScale: 1, // multiple of the stock dot size

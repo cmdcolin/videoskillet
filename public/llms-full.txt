@@ -896,6 +896,18 @@ osdHoldS  (display hold)
   0.5..30 step 0.5 s  default 4
   How long the word stays up after the transport last moved. A deck takes it down by itself after a few seconds.
 
+osdColour  (letter colour)
+  0=white 1=green  default 0
+  White is what a deck draws. Green is the bright phosphor green a television draws its own channel and volume in.
+
+osdEdge  (outline)
+  0=none 1=black  default 0
+  A black outline round the letters. Most displays have none; some decks drew one to stay legible over a bright picture.
+
+osdBlueS  (blue background)
+  0..10 step 0.5 s  default 0
+  How long the deck outputs a flat blue field before the picture comes in, counted from when the word appears. A deck with no lock on its tape mutes to blue, and PLAY is drawn over it. 0 leaves the picture up throughout.
+
 osdX  (display x)
   0..1 step 0.01  default 0.07
   The word's left edge across the picture.

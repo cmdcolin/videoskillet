@@ -40,7 +40,7 @@ describe('choicesFitTrack', () => {
     expect(choicesFitTrack(['a', 'b', 'a', 'b', 'a'])).toBe(false)
   })
 
-  it('is what decides the panel: four switches earn a one-line row', () => {
+  it('is what decides the panel: five switches earn a one-line row', () => {
     const inline = ALL_SLIDERS.filter(
       s => s.choices !== undefined && choicesFitTrack(s.choices),
     ).map(s => s.label)
@@ -48,6 +48,7 @@ describe('choicesFitTrack', () => {
       'deinterlace',
       'vbi test signals',
       'B deinterlace',
+      'outline',
       'caption decoder',
     ])
   })

@@ -3011,10 +3011,11 @@ export const PRESETS: PresetDef[] = [
     displayName: 'tape in',
     group: 'Tape wear',
     blurb:
-      'A cassette just pushed into the deck and set to play. The deck draws PLAY into its output after the tape, so the word holds still while the tracking servo hunts for the track underneath it. The noise band sweeps the picture and rings out over a second or two.',
+      'A cassette just pushed into the deck and set to play. The deck outputs its blue background for a second and a half, then the picture comes in with the tracking servo still hunting for the track. The deck draws PLAY into its output after the tape, so the word holds still on the blue and over the picture.',
     patch: {
       osd: 1,
       osdHoldS: 5,
+      osdBlueS: 1.5,
       trackHunt: 0.75,
       trackKick: 0.9,
       trackAmt: 0.1,
