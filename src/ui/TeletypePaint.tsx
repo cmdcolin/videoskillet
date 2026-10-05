@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 
 import {
+  ATTRIBUTE_PALETTE,
   CELL_H,
   CELL_W,
   MAX_COLS,
   PAINT_ROWS,
   SHADE_CHARS,
   cellsToText,
+  colourCss,
   dotGrid,
   mosaicChar,
   sextantRows,
@@ -37,7 +39,12 @@ import type { PointerEvent } from 'react'
 // The brushes, in the order they sit on the toolbar. The pen works at block
 // resolution (a sixth of a cell); everything else fills the cell it is over,
 // which is what makes a drag with one of them a fat stroke.
-const BRUSHES = [
+const BRUSHES: readonly {
+  id: string
+  label: string
+  title: string
+  colour?: number
+}[] = [
   { id: 'pen', label: '✎', title: 'pen — one block at a time' },
   { id: '█', label: '█', title: 'solid — fill the whole cell' },
   ...SHADE_CHARS.map(ch => ({
@@ -45,10 +52,19 @@ const BRUSHES = [
     label: ch,
     title: `shade — fill the cell with ${ch}`,
   })),
+  // A colour brush lays a colour code in the cell, as a teletext editor did:
+  // the cell goes blank and everything to its right is that colour until the
+  // next code or the end of the row.
+  ...ATTRIBUTE_PALETTE.text.map(chip => ({
+    id: chip.char,
+    label: '■',
+    title: `${chip.title} — a code takes a cell and draws as a blank`,
+    colour: chip.colour ?? undefined,
+  })),
   { id: 'erase', label: '⌫', title: 'erase — or drag with the right button' },
-] as const
+]
 
-type Brush = (typeof BRUSHES)[number]['id']
+type Brush = string
 
 const BLANK = ['00', '00', '00']
 
@@ -187,7 +203,22 @@ export function TeletypePaint(props: {
             aria-pressed={brush === b.id}
             onClick={() => setBrush(b.id)}
           >
-            {b.label}
+            <span
+              style={
+                b.colour === undefined
+                  ? undefined
+                  : {
+                      color: colourCss(b.colour),
+                      background: '#080808',
+                      display: 'grid',
+                      placeItems: 'center',
+                      width: '100%',
+                      height: '100%',
+                    }
+              }
+            >
+              {b.label}
+            </span>
           </button>
         ))}
         <button
@@ -225,8 +256,10 @@ export function TeletypePaint(props: {
       </div>
       <p className={ui.hint}>
         Blocks are characters — a drawing is still the card’s text, so it wraps,
-        pastes and shares like the words do. Right-drag erases; ⌘/ctrl+Z undoes
-        a stroke.
+        pastes and shares like the words do. A colour swatch lays a code in the
+        cell, which draws as a blank and colours everything to its right on that
+        row, so lay it to the left of what it should colour. Right-drag erases;
+        ⌘/ctrl+Z undoes a stroke.
       </p>
     </>
   )

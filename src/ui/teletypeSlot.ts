@@ -13,6 +13,7 @@
 import {
   TELETYPE_ASPECT,
   buildTeletype,
+  cardFlashes,
   crawlPeriod,
   drawBuild,
   drawCrawl,
@@ -56,6 +57,10 @@ const BOIL_HZ = 8
 // frame would be static on letterforms rather than a signal being lost.
 const GARBLE_HZ = 4
 
+// Flash is a half-second on and a half-second off, so the grid is rebuilt twice
+// a second.
+const FLASH_HZ = 2
+
 // `reveal` is what makes this a teletype rather than a caption: the card prints
 // a character at a time. It is off for an edit to a card that is already up —
 // retyping a word should change the word, not send the whole card back to the
@@ -93,6 +98,7 @@ export function printCard(
   const animate = () => {
     let boil = card.boil ? 0 : null
     let garble = card.garble ? 0 : null
+    let flash = 0
     let build = buildTeletype(card.text, card.crawl, boil, garble)
     const start = performance.now()
     let last = start
@@ -103,13 +109,21 @@ export function printCard(
         const at = (hz: number) => Math.floor(((now - start) / 1000) * hz)
         const nextBoil = boil === null ? null : at(BOIL_HZ)
         const nextGarble = garble === null ? null : at(GARBLE_HZ)
-        if (nextBoil !== boil || nextGarble !== garble) {
+        const nextFlash = build.flashes ? at(FLASH_HZ) : 0
+        if (nextBoil !== boil || nextGarble !== garble || nextFlash !== flash) {
           boil = nextBoil
           garble = nextGarble
+          flash = nextFlash
           // The rebuild is the hand and the feed both. Dimensions come back
           // identical, so a rolling card keeps its period and its size across
           // redraws.
-          build = buildTeletype(card.text, card.crawl, boil, garble)
+          build = buildTeletype(
+            card.text,
+            card.crawl,
+            boil,
+            garble,
+            flash % 2 === 1,
+          )
         }
         if (card.crawl) {
           offset =
@@ -129,7 +143,11 @@ export function printCard(
       1000 /
         (card.crawl
           ? CRAWL_HZ
-          : Math.max(card.boil ? BOIL_HZ : 0, card.garble ? GARBLE_HZ : 0)),
+          : Math.max(
+              card.boil ? BOIL_HZ : 0,
+              card.garble ? GARBLE_HZ : 0,
+              build.flashes ? FLASH_HZ : 0,
+            )),
     )
   }
 
@@ -138,7 +156,7 @@ export function printCard(
   // vertical squeeze a mid-reveal redraw would have applied.
   const settle = () => {
     stop()
-    if (card.crawl || card.boil || card.garble) {
+    if (card.crawl || card.boil || card.garble || cardFlashes(card.text)) {
       animate()
     } else {
       drawBuild(canvas, buildTeletype(card.text))

@@ -153,12 +153,16 @@ character generator goes wrong.
   true whatever the value — but the dialog would grow its first slider where
   every other thing a card carries is a checkbox. Worth doing when someone
   reaches for it.
-- **The two control codes the card has no attribute for.** A hit on a colour
-  code turned the rest of a row red; a hit on double height doubled a row and
-  ate the line under it. Both are famous garbles and neither is reachable here:
-  this card is one bit deep and white on black, and rendering them means
-  carrying attributes per row through `dotGrid`. Double height is the cheaper
-  and the one you saw more often.
+- **Attributes the card does not decode.** Text colour, mosaic colour, new and
+  black background, double height, flash and separated blocks shipped as control
+  codes in the text, written as their control pictures (U+2400 plus the code),
+  and `decodePage` in `sources/teletype.ts` runs them the way the SAA5050 did. A
+  garbled card gets them for free: a hit on a colour code colours or uncolours
+  the rest of a row, and a hit on a double-height code lets the row below show
+  through. Hold mosaic and conceal are not decoded. The caption decoder and the
+  character generator stay white on black, and both share the card's gap in the
+  sections below.
+
 - **Bending the card's own ROM.** Shipped for both character generators
   (`romAddr` / `romData` / `pageAddr` in `prelude.ts`, called from `decode.wgsl`
   and `chyron.wgsl`) and not for the card, because the caption's font is a ROM

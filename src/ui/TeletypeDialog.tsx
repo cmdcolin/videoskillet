@@ -1,13 +1,18 @@
 import { useEffect, useRef, useState } from 'react'
 
-import { MOSAIC_PALETTE, clampCardText } from '../sources/teletype'
+import {
+  ATTRIBUTE_PALETTE,
+  MOSAIC_PALETTE,
+  clampCardText,
+  colourCss,
+} from '../sources/teletype'
 import { cx } from './cx'
 import { Dialog } from './Dialog'
 import dlg from './dialog.module.css'
 import { TeletypePaint } from './TeletypePaint'
 import ui from './ui.module.css'
 
-import type { TeletypeCard } from '../sources/teletype'
+import type { AttributeChip, TeletypeCard } from '../sources/teletype'
 
 // Starters, mostly so the box is never a blank stare. They are also the three
 // things a text card on this chain is actually for: the slate a station puts up
@@ -171,10 +176,39 @@ export function TeletypeDialog(props: {
                 </button>
               ))}
             </div>
+            {/* Teletext coloured a page with codes that sat in the text, one
+                cell each, and drew as a blank: a colour held to the right
+                until the next one. These insert the same codes, written as
+                their control pictures, so colour travels with the text. */}
+            {(['text', 'mosaic', 'effects'] as const).map(row => (
+              <div key={row} className={dlg.chips}>
+                {ATTRIBUTE_PALETTE[row].map((chip: AttributeChip) => (
+                  <button
+                    key={chip.char}
+                    className={cx(
+                      dlg.chip,
+                      chip.colour === null ? dlg.attr : dlg.swatch,
+                    )}
+                    style={
+                      chip.colour === null
+                        ? undefined
+                        : { color: colourCss(chip.colour) }
+                    }
+                    type="button"
+                    title={chip.title}
+                    onClick={() => insert(chip.char)}
+                  >
+                    {chip.label ?? (row === 'text' ? 'A' : '▚')}
+                  </button>
+                ))}
+              </div>
+            ))}
             <p className={ui.hint}>
               Blocks draw as dots, not glyphs — or use the draw tab and push
               them around with a cursor, which is what a teletext page was made
-              on. Pasted block art works too.
+              on. Pasted block art works too. A coloured chip colours everything
+              to its right on that row; the plain ones set height, background,
+              flash and gaps. A code takes a cell and draws as a blank.
             </p>
           </>
         ) : (

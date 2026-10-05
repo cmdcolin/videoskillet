@@ -1,13 +1,18 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  ATTRIBUTE_PALETTE,
   MAX_COLS,
   MOSAIC_PALETTE,
   PAINT_ROWS,
   TELETYPE_MAX,
   boilOffsets,
   cellsToText,
+  cardFlashes,
   clampCardText,
+  controlChar,
+  decodePage,
+  decodeRow,
   garbleRows,
   graphicsCode,
   mosaicChar,
@@ -339,7 +344,9 @@ describe('garbleRows', () => {
         for (const ch of row) {
           const code = ch.codePointAt(0) ?? 0
           const drawable =
-            (code >= 0x20 && code <= 0x7e) || mosaicRows(ch) !== null
+            (code >= 0x20 && code <= 0x7e) ||
+            mosaicRows(ch) !== null ||
+            (code >= 0x2401 && code <= 0x241f)
           expect(drawable).toBe(true)
         }
       }
@@ -440,6 +447,212 @@ describe('garbleRows', () => {
     }
     expect(worst('X')).toBeLessThan(5)
     expect(worst('0')).toBeGreaterThan(20)
+  })
+})
+
+describe('decodeRow', () => {
+  const red = controlChar(1)
+  const green = controlChar(2)
+  const blue = controlChar(4)
+  const white = controlChar(7)
+  const row = (text: string) => decodeRow(Array.from(text))
+
+  it('starts every row white on black', () => {
+    const { cells, endBg } = row('A')
+    expect(cells[0]).toMatchObject({ ch: 'A', fg: 7, bg: 0, half: 'whole' })
+    expect(endBg).toBe(0)
+  })
+
+  it('colours the cells after a colour code and leaves the code blank', () => {
+    const { cells } = row(`A${red}BC${green}D`)
+    expect(cells.map(c => c.ch)).toEqual(['A', '', 'B', 'C', '', 'D'])
+    expect(cells.map(c => c.fg)).toEqual([7, 7, 1, 1, 1, 2])
+  })
+
+  it('reads the colour out of the code as red, green and blue bits', () => {
+    for (let code = 1; code <= 7; code++) {
+      const { cells } = row(`${controlChar(code)}X`)
+      expect(cells[1].fg).toBe(code)
+    }
+  })
+
+  it('does not carry a colour into the next row', () => {
+    const rows = decodePage([Array.from(`${red}A`), Array.from('B')])
+    expect(rows[1].cells[0].fg).toBe(7)
+  })
+
+  it('takes a new background in its own cell, in the text colour', () => {
+    const { cells, endBg } = row(`${blue}${controlChar(0x1d)}${white}X`)
+    expect(cells[1].bg).toBe(4)
+    expect(cells[3]).toMatchObject({ ch: 'X', fg: 7, bg: 4 })
+    expect(endBg).toBe(4)
+  })
+
+  it('puts the background back with black background', () => {
+    const { cells, endBg } = row(
+      `${blue}${controlChar(0x1d)}A${controlChar(0x1c)}B`,
+    )
+    expect(cells[2].bg).toBe(4)
+    expect(cells[4].bg).toBe(0)
+    expect(endBg).toBe(0)
+  })
+
+  it('turns letters into blocks after a mosaic colour code', () => {
+    const { cells } = row(`${controlChar(0x11)}0A`)
+    expect(cells[1].ch).toBe(mosaicChar(patternRows(0x30)))
+    expect(cells[1].fg).toBe(1)
+    expect(cells[2].ch).toBe('A')
+  })
+
+  it('goes back to letters on an alpha colour code', () => {
+    const { cells } = row(`${controlChar(0x11)}${controlChar(1)}0`)
+    expect(cells[2].ch).toBe('0')
+  })
+
+  it('draws a block of its own whatever the set it is in', () => {
+    const { cells } = row('\u2588')
+    expect(cells[0].ch).toBe('\u2588')
+  })
+
+  it('flashes from the next cell until steady', () => {
+    const { cells } = row(`A${controlChar(8)}B${controlChar(9)}C`)
+    // Steady takes hold in its own cell, so the code is already steady.
+    expect(cells.map(c => c.flash)).toEqual([false, false, true, false, false])
+  })
+
+  it('separates blocks from the code on, in its own cell', () => {
+    const { cells } = row(
+      `${controlChar(0x1a)}\u2588${controlChar(0x19)}\u2588`,
+    )
+    expect(cells.map(c => c.separated)).toEqual([true, true, false, false])
+  })
+
+  it('treats a control picture with no meaning as a blank', () => {
+    const { cells } = row(`${controlChar(0x1b)}A`)
+    expect(cells[0]).toMatchObject({ ch: '', fg: 7 })
+    expect(cells[1].fg).toBe(7)
+  })
+})
+
+describe('decodePage double height', () => {
+  const tall = controlChar(0x0d)
+  const page = (...lines: string[]) => lines.map(line => Array.from(line))
+
+  it('doubles the cells after the code and takes the row below', () => {
+    const rows = decodePage(page(`A${tall}BC`, 'underneath', 'free'))
+    expect(rows[0].cells.map(c => c.half)).toEqual([
+      'whole',
+      'whole',
+      'top',
+      'top',
+    ])
+    expect(rows[1].cells.map(c => c.ch)).toEqual(['', '', 'B', 'C'])
+    expect(rows[1].cells.map(c => c.half)).toEqual([
+      'whole',
+      'whole',
+      'bottom',
+      'bottom',
+    ])
+    expect(rows[2].cells[0].ch).toBe('f')
+  })
+
+  it('keeps the page the same height', () => {
+    const rows = decodePage(page(`${tall}A`, 'x', 'y', `${tall}B`, 'z'))
+    expect(rows).toHaveLength(5)
+  })
+
+  it('ends a row that has no room below it at the top half', () => {
+    const rows = decodePage(page(`${tall}A`))
+    expect(rows).toHaveLength(1)
+    expect(rows[0].cells[1].half).toBe('top')
+  })
+
+  it('lets normal height end the doubling', () => {
+    const { cells } = decodeRow(Array.from(`${tall}A${controlChar(0x0c)}B`))
+    expect(cells.map(c => c.half)).toEqual(['whole', 'top', 'whole', 'whole'])
+  })
+
+  it('carries the background of the row above into the row it takes', () => {
+    const rows = decodePage(
+      page(`${controlChar(4)}${controlChar(0x1d)}${tall}A`, 'ignored'),
+    )
+    expect(rows[1].cells.slice(1).every(c => c.bg === 4)).toBe(true)
+    expect(rows[1].endBg).toBe(4)
+  })
+})
+
+describe('the attribute palette', () => {
+  it('offers seven text colours and seven mosaic colours', () => {
+    expect(ATTRIBUTE_PALETTE.text.map(c => c.colour)).toEqual([
+      1, 2, 3, 4, 5, 6, 7,
+    ])
+    expect(ATTRIBUTE_PALETTE.mosaic.map(c => c.colour)).toEqual([
+      1, 2, 3, 4, 5, 6, 7,
+    ])
+  })
+
+  it('offers only codes the decoder gives a meaning to', () => {
+    for (const chip of Object.values(ATTRIBUTE_PALETTE).flat()) {
+      const { cells } = decodeRow(['0', chip.char, '0'])
+      const before = cells[2]
+      const plain = decodeRow(['0', ' ', '0']).cells[2]
+      const changed =
+        before.fg !== plain.fg ||
+        before.bg !== plain.bg ||
+        before.half !== plain.half ||
+        before.flash !== plain.flash ||
+        before.separated !== plain.separated ||
+        before.ch !== plain.ch
+      // White text, steady, contiguous, normal height and black background are
+      // the state a row starts in, so alone they change nothing.
+      const startingState = [0x07, 0x09, 0x0c, 0x19, 0x1c].includes(
+        (chip.char.codePointAt(0) ?? 0) - 0x2400,
+      )
+      expect(changed || startingState).toBe(true)
+    }
+  })
+
+  it('asks the card to flash only when the text has a flash code', () => {
+    expect(cardFlashes('PLEASE STAND BY')).toBe(false)
+    expect(cardFlashes(`A${controlChar(8)}B`)).toBe(true)
+  })
+})
+
+describe('garbled attributes', () => {
+  const page = (ch: string): string[][] =>
+    Array.from({ length: 24 }, () => Array.from(ch.repeat(40)))
+
+  it('lays a colour change on the rest of a row, which a hit on text can do', () => {
+    // Every row is plain text, so a colour in the decoded page is a control
+    // code a bit flip put there. A capital C is two flips from three of the
+    // colour codes; an X is two flips from none.
+    let coloured = 0
+    for (let phase = 0; phase < 12; phase++) {
+      for (const row of decodePage(garbleRows(page('C'), phase))) {
+        if (row.cells.some(c => c.ch !== '' && c.fg !== 7)) coloured++
+      }
+    }
+    expect(coloured).toBeGreaterThan(0)
+  })
+
+  it('takes the colour off a row when a hit lands on its colour code', () => {
+    const red = Array.from(`${controlChar(1)}${'X'.repeat(39)}`)
+    let lost = 0
+    for (let phase = 0; phase < 40; phase++) {
+      const [row] = garbleRows([red], phase)
+      if (row[0] !== red[0]) lost++
+    }
+    expect(lost).toBeGreaterThan(0)
+  })
+
+  it('leaves a colour code standing when nothing hits it', () => {
+    const red = controlChar(1)
+    let standing = 0
+    for (let phase = 0; phase < 40; phase++) {
+      const [row] = garbleRows([Array.from(`${red}XXXX`)], phase)
+      if (row[0] === red) standing++
+    }
+    expect(standing).toBeGreaterThan(20)
   })
 })
 

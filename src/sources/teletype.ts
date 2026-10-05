@@ -210,6 +210,223 @@ export function mosaicChar(rows: string[]): string {
   return String.fromCodePoint(SEXTANT_FIRST + n - 1)
 }
 
+// Serial attributes. Teletext coloured a page with control codes that sat in
+// the text, one cell each, and drew as a blank: a colour code changed every
+// cell to its right until the next one. The card keeps that, so colour is still
+// part of the string — it goes through the same box, query string and
+// clipboard as the words, and `garbleRows` can flip the very codes a hit on a
+// real page flipped. Each code is written as its Unicode control picture
+// (U+2400 + the code), the one printable stand-in for a C0 control that has
+// the same number in it.
+//
+// A set-at code takes hold in its own cell and a set-after code one cell
+// later, which is why a colour code leaves a gap and a background code does
+// not.
+const CONTROL_BASE = 0x2400
+const CONTROL_LAST = 0x241f
+
+export const controlChar = (code: number): string =>
+  String.fromCharCode(CONTROL_BASE + code)
+
+const controlCode = (ch: string): number | null => {
+  const code = ch.codePointAt(0) ?? 0
+  return code >= CONTROL_BASE && code <= CONTROL_LAST
+    ? code - CONTROL_BASE
+    : null
+}
+
+const CODE_FLASH = 0x08
+const CODE_STEADY = 0x09
+const CODE_NORMAL_HEIGHT = 0x0c
+const CODE_DOUBLE_HEIGHT = 0x0d
+const CODE_CONTIGUOUS = 0x19
+const CODE_SEPARATED = 0x1a
+const CODE_BLACK_BACKGROUND = 0x1c
+const CODE_NEW_BACKGROUND = 0x1d
+
+// Colour codes carry the colour as a mask, red in bit 0, green in bit 1 and
+// blue in bit 2, which is how the set's three guns were wired.
+const isAlphaColour = (code: number): boolean => code >= 0x01 && code <= 0x07
+const isMosaicColour = (code: number): boolean => code >= 0x11 && code <= 0x17
+
+export const isAttribute = (code: number): boolean =>
+  isAlphaColour(code) ||
+  isMosaicColour(code) ||
+  code === CODE_FLASH ||
+  code === CODE_STEADY ||
+  code === CODE_NORMAL_HEIGHT ||
+  code === CODE_DOUBLE_HEIGHT ||
+  code === CODE_CONTIGUOUS ||
+  code === CODE_SEPARATED ||
+  code === CODE_BLACK_BACKGROUND ||
+  code === CODE_NEW_BACKGROUND
+
+const COLOUR_NAMES = [
+  'black',
+  'red',
+  'green',
+  'yellow',
+  'blue',
+  'magenta',
+  'cyan',
+  'white',
+]
+
+const LIT = 242
+const DARK = 8
+
+export const colourRgb = (mask: number): [number, number, number] => [
+  mask & 1 ? LIT : DARK,
+  mask & 2 ? LIT : DARK,
+  mask & 4 ? LIT : DARK,
+]
+
+export const colourCss = (mask: number): string =>
+  `rgb(${colourRgb(mask).join(',')})`
+
+export interface AttributeChip {
+  char: string
+  // The word on a chip for a code with no colour of its own, because a control
+  // picture is too small to read at chip size.
+  label?: string
+  title: string
+  colour: number | null
+}
+
+const EFFECT_CHIPS: [number, string, string][] = [
+  [
+    CODE_DOUBLE_HEIGHT,
+    'tall',
+    'double height from the next cell; the row below shows the lower halves',
+  ],
+  [CODE_NORMAL_HEIGHT, 'short', 'back to normal height'],
+  [CODE_NEW_BACKGROUND, 'bg on', 'background takes the current text colour'],
+  [CODE_BLACK_BACKGROUND, 'bg off', 'background back to black'],
+  [CODE_FLASH, 'flash', 'flash from the next cell'],
+  [CODE_STEADY, 'steady', 'stop flashing'],
+  [CODE_SEPARATED, 'gaps', 'separated blocks, with a gap between them'],
+  [CODE_CONTIGUOUS, 'solid', 'contiguous blocks'],
+]
+
+// What the dialog offers beside the mosaics. Colours first, since they are the
+// reason to reach for any of these.
+export const ATTRIBUTE_PALETTE: {
+  text: AttributeChip[]
+  mosaic: AttributeChip[]
+  effects: AttributeChip[]
+} = {
+  text: [1, 2, 3, 4, 5, 6, 7].map(code => ({
+    char: controlChar(code),
+    title: `${COLOUR_NAMES[code]} text from the next cell`,
+    colour: code,
+  })),
+  mosaic: [1, 2, 3, 4, 5, 6, 7].map(code => ({
+    char: controlChar(0x10 + code),
+    title: `${COLOUR_NAMES[code]} text, drawn as blocks, from the next cell`,
+    colour: code,
+  })),
+  effects: EFFECT_CHIPS.map(([code, label, title]) => ({
+    char: controlChar(code),
+    label,
+    title,
+    colour: null,
+  })),
+}
+
+export interface DecodedCell {
+  // What to draw, or '' for a cell that is only background.
+  ch: string
+  fg: number
+  bg: number
+  half: 'whole' | 'top' | 'bottom'
+  flash: boolean
+  separated: boolean
+}
+
+export interface DecodedRow {
+  cells: DecodedCell[]
+  // Background in force at the end of the row, which fills the cells out to
+  // the page edge the way the chip's background did.
+  endBg: number
+}
+
+// The chip's state at the start of every row: white on black, contiguous and
+// steady, normal height. Nothing carries from one row to the next.
+export function decodeRow(row: string[]): DecodedRow {
+  let fg = 7
+  let bg = 0
+  let blocks = false
+  let tall = false
+  let flash = false
+  let separated = false
+  const cells = row.map((raw): DecodedCell => {
+    const code = controlCode(raw)
+    if (code === null) {
+      const n = raw.codePointAt(0) ?? 0x20
+      const ch =
+        blocks && n >= 0x20 && n <= 0x7f && (n < 0x40 || n >= 0x60)
+          ? mosaicChar(patternRows(n))
+          : raw
+      return {
+        ch: ch === ' ' ? '' : ch,
+        fg,
+        bg,
+        half: tall ? 'top' : 'whole',
+        flash,
+        separated,
+      }
+    }
+    if (code === CODE_STEADY) flash = false
+    else if (code === CODE_NORMAL_HEIGHT) tall = false
+    else if (code === CODE_CONTIGUOUS) separated = false
+    else if (code === CODE_SEPARATED) separated = true
+    else if (code === CODE_BLACK_BACKGROUND) bg = 0
+    else if (code === CODE_NEW_BACKGROUND) bg = fg
+    const here: DecodedCell = {
+      ch: '',
+      fg,
+      bg,
+      half: tall ? 'top' : 'whole',
+      flash,
+      separated,
+    }
+    if (isAlphaColour(code)) {
+      fg = code
+      blocks = false
+    } else if (isMosaicColour(code)) {
+      fg = code - 0x10
+      blocks = true
+    } else if (code === CODE_FLASH) flash = true
+    else if (code === CODE_DOUBLE_HEIGHT) tall = true
+    return here
+  })
+  return { cells, endBg: bg }
+}
+
+// A page as the chip would draw it. A row with double-height cells in it
+// takes over the row below: the chip ignores what that row says and draws the
+// lower halves of the row above, which is how one hit on a double-height code
+// ate the line under it.
+export function decodePage(page: string[][]): DecodedRow[] {
+  const out: DecodedRow[] = []
+  for (let r = 0; r < page.length; r++) {
+    const upper = decodeRow(page[r])
+    out.push(upper)
+    if (r + 1 < page.length && upper.cells.some(c => c.half === 'top')) {
+      out.push({
+        endBg: upper.endBg,
+        cells: upper.cells.map(c =>
+          c.half === 'top'
+            ? { ...c, half: 'bottom' }
+            : { ...c, ch: '', half: 'whole' },
+        ),
+      })
+      r++
+    }
+  }
+  return out
+}
+
 // A page as cells — one character each, wrapped and padded out to a rectangle.
 // Text is ragged and a paint surface is not, so this is the shape drawing wants
 // and `text` never has. Rows past the page are handed back untouched: someone
@@ -399,8 +616,11 @@ export function boilOffsets(
 //     always a letter or two away from the right one.
 //   - A flip carries the code under 0x20, where the *control* codes live, and
 //     a control code owns the rest of its row: 0x11-0x17 put the row into the
-//     mosaic set, where the code that drew a letter draws a block. One hit,
-//     and the back half of the line is graphics.
+//     mosaic set, where the code that drew a letter draws a block, and 0x01-0x07
+//     turn it red, green or any other colour. One hit, and the back half of the
+//     line is graphics or the wrong colour. A hit on a colour code that was
+//     there takes the colour off the rest of the row, and one on a
+//     double-height code lets the row below show through.
 //   - The hit lands not on the text but on the *address* the packet carries,
 //     and a whole row is delivered to the wrong line of the page: one line
 //     printed twice, somewhere else left holding what it had. The address is
@@ -499,7 +719,8 @@ export function garbleRows(page: string[][], phase: number): string[][] {
       const mosaic = sextantRows(ch)
       const drawn = mosaic !== null && ch !== ' '
       const code =
-        mosaic === null ? (ch.codePointAt(0) ?? 0x20) : graphicsCode(mosaic)
+        controlCode(ch) ??
+        (mosaic === null ? (ch.codePointAt(0) ?? 0x20) : graphicsCode(mosaic))
       const h = garbleHash(c, r, epoch)
       let out = code
       if (h >>> 20 < GARBLE_RATE * 0x1000) {
@@ -515,7 +736,7 @@ export function garbleRows(page: string[][], phase: number): string[][] {
       if (out < 0x20 || out === 0x7f) {
         if (out >= 0x10 && out <= 0x17) graphics = true
         else if (out <= 0x07) graphics = false
-        return ' '
+        return isAttribute(out) ? controlChar(out) : ' '
       }
       if (out > 0x7e) return String.fromCharCode(out)
       if ((graphics || drawn) && (out < 0x40 || out >= 0x60))
@@ -528,25 +749,65 @@ export function garbleRows(page: string[][], phase: number): string[][] {
 export const makeTeletypeCard = (): OffscreenCanvas =>
   new OffscreenCanvas(CARD_W, CARD_H)
 
-// The dither tiles, built on first use — this module is imported by tests in
-// node, where OffscreenCanvas does not exist until something asks for one.
-let tiles: OffscreenCanvas[] | null = null
-function shadeTile(level: number): OffscreenCanvas {
-  tiles ??= SHADE_DOTS.map(dots => {
-    const tile = new OffscreenCanvas(2, 2)
-    const g = tile.getContext('2d')
+// The font ROM: one cell's dots per character, made on first use — this module
+// is imported by tests in node, where OffscreenCanvas does not exist until
+// something asks for one. A glyph is rasterised once, knocked down to one bit
+// and kept, so a page redraws by copying bytes.
+let scratch: OffscreenCanvasRenderingContext2D | null = null
+const rom = new Map<string, Uint8Array>()
+
+function glyphBits(ch: string, separated: boolean): Uint8Array {
+  const key = `${separated ? 's' : 'c'}${ch}`
+  const kept = rom.get(key)
+  if (kept !== undefined) return kept
+  if (scratch === null) {
+    const g = new OffscreenCanvas(CELL_W, CELL_H).getContext('2d', {
+      willReadFrequently: true,
+    })
     if (!g) throw new Error('no 2d context')
+    g.font = FONT
+    g.textAlign = 'center'
+    g.textBaseline = 'middle'
     g.fillStyle = '#fff'
-    for (const [x, y] of dots) g.fillRect(x, y, 1, 1)
-    return tile
-  })
-  return tiles[level - 1]
+    scratch = g
+  }
+  scratch.clearRect(0, 0, CELL_W, CELL_H)
+  const mosaic = mosaicRows(ch)
+  if (mosaic !== null) {
+    const bh = CELL_H / mosaic.length
+    const bw = CELL_W / mosaic[0].length
+    mosaic.forEach((blocks, br) => {
+      for (let bc = 0; bc < blocks.length; bc++) {
+        if (blocks[bc] !== '1') continue
+        scratch?.fillRect(
+          bc * bw,
+          br * bh,
+          separated ? bw - 1 : bw,
+          separated ? bh - 1 : bh,
+        )
+      }
+    })
+  } else {
+    scratch.fillText(ch, CELL_W / 2, CELL_H / 2)
+  }
+  const data = scratch.getImageData(0, 0, CELL_W, CELL_H).data
+  const bits = new Uint8Array(CELL_W * CELL_H)
+  for (let i = 0; i < bits.length; i++) bits[i] = data[i * 4 + 3] >= INK ? 1 : 0
+  rom.set(key, bits)
+  return bits
 }
 
+// Which dots of a 2x2 tile each shade lights, indexed by y * 2 + x.
+const SHADE_LIT: number[][] = SHADE_DOTS.map(dots => {
+  const lit = [0, 0, 0, 0]
+  for (const [x, y] of dots) lit[y * 2 + x] = 1
+  return lit
+})
+
 // The character grid at dot resolution: one glyph or mosaic per cell, placed on
-// the cell rather than by the font's own advance, then knocked down to one bit.
-// Every dot comes back either lit or black, which is the state a ROM could be
-// in.
+// the cell rather than by the font's own advance, then set in the colours the
+// page's attributes ask for. Every dot comes back either lit or dark, which is
+// the state a ROM could be in.
 //
 // Exported because the paint surface draws with it too: what you are drawing on
 // is the card's own rasteriser at 1:1, so there is no second renderer to keep
@@ -556,83 +817,90 @@ function shadeTile(level: number): OffscreenCanvas {
 // still under the cursor.
 //
 // `boil` is one frame's worth of per-cell dot offsets (boilOffsets). A cell
-// pushed off the far edge loses a dot column to the canvas bounds; the card
+// pushed off the far edge loses a dot column to the grid bounds; the card
 // keeps 7% of each edge clear anyway, so there is nothing out there to lose.
+// The offset moves a cell's dots and leaves its background where it was, so a
+// boiled glyph can cross into the colour next to it, as a redrawn one would.
+//
+// `flashOff` is the dark half of the flash cycle.
 export function dotGrid(
   rows: string[][],
   cols: number,
   cursor = true,
   boil: Int8Array | null = null,
+  flashOff = false,
 ): OffscreenCanvas {
-  const grid = new OffscreenCanvas(cols * CELL_W, rows.length * CELL_H)
+  const decoded = decodePage(rows)
+  const w = cols * CELL_W
+  const h = rows.length * CELL_H
+  const grid = new OffscreenCanvas(w, h)
   const g = grid.getContext('2d')
   if (!g) throw new Error('no 2d context')
-  g.font = FONT
-  g.textAlign = 'center'
-  g.textBaseline = 'middle'
-  g.fillStyle = '#fff'
-  // Anchored to the grid origin, so a run of shaded cells tiles as one field
-  // instead of restarting its checker at every cell boundary.
-  const dither = new Map<number, CanvasPattern | null>()
-  rows.forEach((row, r) => {
-    // Per character, not per line: the cell grid is the layout, and letting the
-    // font's own advance place them would put the dots between columns.
-    row.forEach((ch, col) => {
-      // A drawn page is mostly holes, and a space is a glyph like any other as
-      // far as the rasteriser is concerned — measuring one 960 times a redraw
-      // is the whole cost of painting on a full page.
-      if (ch === ' ') return
-      // The hand, if there is one. Applied to the cell's origin rather than to
-      // its dots individually: a cell is the unit a character generator places,
-      // so a boiled cell is the same glyph a dot to the left — not a glyph with
-      // its own dots scrambled, which is noise rather than an unsteady hand.
-      const j = boil === null ? 0 : (r * cols + col) * 2
-      const x = col * CELL_W + (boil === null ? 0 : boil[j])
-      const y = r * CELL_H + (boil === null ? 0 : boil[j + 1])
-      const shade = SHADES[ch]
-      const mosaic = mosaicRows(ch)
-      if (shade !== undefined) {
-        if (!dither.has(shade))
-          dither.set(shade, g.createPattern(shadeTile(shade), 'repeat'))
-        const pattern = dither.get(shade)
-        if (pattern) {
-          g.fillStyle = pattern
-          g.fillRect(x, y, CELL_W, CELL_H)
-          g.fillStyle = '#fff'
+  const img = g.createImageData(w, h)
+  const px = img.data
+
+  const set = (x: number, y: number, rgb: [number, number, number]) => {
+    if (x < 0 || y < 0 || x >= w || y >= h) return
+    const i = (y * w + x) * 4
+    px[i] = rgb[0]
+    px[i + 1] = rgb[1]
+    px[i + 2] = rgb[2]
+    px[i + 3] = 255
+  }
+
+  decoded.forEach((row, r) => {
+    for (let col = 0; col < cols; col++) {
+      const rgb = colourRgb(row.cells[col]?.bg ?? row.endBg)
+      for (let y = 0; y < CELL_H; y++) {
+        for (let x = 0; x < CELL_W; x++) {
+          set(col * CELL_W + x, r * CELL_H + y, rgb)
         }
-      } else if (mosaic !== null) {
-        const bh = CELL_H / mosaic.length
-        const bw = CELL_W / mosaic[0].length
-        mosaic.forEach((blocks, br) => {
-          for (let bc = 0; bc < blocks.length; bc++) {
-            if (blocks[bc] === '1') g.fillRect(x + bc * bw, y + br * bh, bw, bh)
-          }
-        })
-      } else {
-        g.fillText(ch, x + CELL_W / 2, y + CELL_H / 2)
+      }
+    }
+  })
+
+  decoded.forEach((row, r) => {
+    row.cells.forEach((cell, col) => {
+      if (cell.ch === '' || (cell.flash && flashOff)) return
+      const j = boil === null ? 0 : (r * cols + col) * 2
+      const ox = col * CELL_W + (boil === null ? 0 : boil[j])
+      const oy = r * CELL_H + (boil === null ? 0 : boil[j + 1])
+      const rgb = colourRgb(cell.fg)
+      const shade = SHADES[cell.ch]
+      const bits =
+        shade === undefined ? glyphBits(cell.ch, cell.separated) : null
+      for (let y = 0; y < CELL_H; y++) {
+        // Doubling a row of dots, not redrawing the glyph twice as tall: the
+        // lower half of a double-height character is the same dots again.
+        const sy =
+          cell.half === 'whole'
+            ? y
+            : (cell.half === 'top' ? 0 : CELL_H / 2) + (y >> 1)
+        for (let x = 0; x < CELL_W; x++) {
+          const lit =
+            bits !== null
+              ? bits[sy * CELL_W + x] === 1
+              : // Anchored to the grid origin, so a run of shaded cells tiles
+                // as one field instead of restarting its checker at every
+                // cell boundary.
+                SHADE_LIT[shade - 1][((oy + y) & 1) * 2 + ((ox + x) & 1)] === 1
+          if (lit) set(ox + x, oy + y, rgb)
+        }
       }
     })
   })
-  // The block cursor a teletype leaves sitting where it stopped printing. It
-  // goes in before the threshold so it is just another lit run of dots.
-  const last = rows.length - 1
+
+  // The block cursor a teletype leaves sitting where it stopped printing.
   if (cursor) {
-    g.fillRect(
-      rows[last].length * CELL_W + 1,
-      last * CELL_H + 1,
-      CELL_W - 2,
-      CELL_H - 2,
-    )
+    const last = rows.length - 1
+    const white = colourRgb(7)
+    for (let y = 1; y < CELL_H - 1; y++) {
+      for (let x = 1; x < CELL_W - 1; x++) {
+        set(rows[last].length * CELL_W + x, last * CELL_H + y, white)
+      }
+    }
   }
 
-  const img = g.getImageData(0, 0, grid.width, grid.height)
-  for (let i = 0; i < img.data.length; i += 4) {
-    const on = img.data[i + 3] >= INK ? 242 : 8
-    img.data[i] = on
-    img.data[i + 1] = on
-    img.data[i + 2] = on
-    img.data[i + 3] = 255
-  }
   g.putImageData(img, 0, 0)
   return grid
 }
@@ -647,6 +915,9 @@ interface TeletypeBuild {
   zoom: number
   w: number
   h: number
+  // Whether any cell on the page flashes, which a garble can add to a card
+  // that asked for none.
+  flashes: boolean
 }
 
 // Rows between the tail of a crawl and its head coming back round. Without a
@@ -658,6 +929,11 @@ const CRAWL_GAP_ROWS = 2
 // asking for a canvas measured in tens of thousands of pixels.
 const CRAWL_MAX_ROWS = 250
 
+// Whether the card as typed asks for a flash, which decides if a still card
+// needs a timer at all.
+export const cardFlashes = (text: string): boolean =>
+  text.includes(controlChar(CODE_FLASH))
+
 // `boilPhase` null is a still hand, `garblePhase` null a clean feed. Anything
 // else is which redraw this is — the dimensions come out identical either way
 // (the offsets move dots inside the grid and a garble swaps a cell for a cell,
@@ -668,6 +944,7 @@ export function buildTeletype(
   crawl = false,
   boilPhase: number | null = null,
   garblePhase: number | null = null,
+  flashOff = false,
 ): TeletypeBuild {
   // A cell holds one character, whatever it took to write it down: a glyph
   // outside the BMP is one cell, not two half-surrogates rendered as tofu.
@@ -684,6 +961,7 @@ export function buildTeletype(
     cols,
     true,
     boilPhase === null ? null : boilOffsets(cols, rows.length, boilPhase),
+    flashOff,
   )
 
   // Whole dots only. A fractional scale would make some dots a pixel wider
@@ -697,7 +975,13 @@ export function buildTeletype(
     ? USABLE_W / grid.width
     : Math.min(USABLE_W / grid.width, USABLE_H / grid.height)
   const zoom = Math.max(1, Math.floor(fit))
-  return { grid, zoom, w: grid.width * zoom, h: grid.height * zoom }
+  return {
+    grid,
+    zoom,
+    w: grid.width * zoom,
+    h: grid.height * zoom,
+    flashes: decodePage(rows).some(row => row.cells.some(c => c.flash)),
+  }
 }
 
 // How far a crawl travels before it is back where it started.

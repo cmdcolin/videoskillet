@@ -123,6 +123,18 @@
 .chip:hover {
   border-color: var(--accent);
 }
+/* a colour code, shown as the colour it sets: on the card's own black, since a
+   white swatch on a light panel would be nothing */
+.swatch {
+  background: #080808;
+}
+/* a word on a chip, since a control picture is a speck at chip size */
+.attr {
+  width: auto;
+  padding: 0 7px;
+  font-family: inherit;
+  font-size: 11px;
+}
 /* a checkbox and its label as one target */
 .check {
   display: flex;

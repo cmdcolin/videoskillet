@@ -16,8 +16,9 @@ table. The headings below are the boxes on the app's chain map.
 
 Two decks take the same list: a still image, a video file, a webcam, a shared
 screen, colour bars, TV or VHS static, a video synth, a teletype card you type
-on, your own clip shelf, or a random pick from Wikimedia Commons or archive.org.
-A capture dongle appears as a webcam on either deck.
+or draw on in teletext colours, your own clip shelf, or a random pick from
+Wikimedia Commons or archive.org. A capture dongle appears as a webcam on either
+deck.
 
 Each input has its own deck and cable ahead of the mixer. Remove sync from one
 and the receiver locks to the other, and the geometry changes between the two
