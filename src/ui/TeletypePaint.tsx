@@ -9,6 +9,7 @@ import {
   SHADE_CHARS,
   cellsToText,
   colourCss,
+  controlCode,
   dotGrid,
   mosaicChar,
   sextantRows,
@@ -139,12 +140,21 @@ export function TeletypePaint(props: {
     const el = canvas.current
     const g = el?.getContext('2d')
     if (!el || !g) return
-    const grid = dotGrid(
-      textToCells(props.text, PAINT_ROWS).cells,
-      MAX_COLS,
-      false,
+    const { cells: page } = textToCells(props.text, PAINT_ROWS)
+    g.drawImage(dotGrid(page, MAX_COLS, false), 0, 0)
+    // A code draws as a blank on the card, so on this surface alone it gets a
+    // strip along the foot of its cell, in the colour it sets or grey for the
+    // rest. Without it nothing says where the codes a stroke laid are.
+    page.forEach((row, r) =>
+      row.forEach((ch, c) => {
+        const code = controlCode(ch)
+        if (code === null) return
+        const colour =
+          (code >= 1 && code <= 7) || (code >= 0x11 && code <= 0x17)
+        g.fillStyle = colour ? colourCss(code & 7) : 'rgb(140,140,140)'
+        g.fillRect(c * CELL_W, (r + 1) * CELL_H - 2, CELL_W, 2)
+      }),
     )
-    g.drawImage(grid, 0, 0)
   }, [props.text])
 
   // Where the last event landed, so a move can be joined to it. Held even when
@@ -257,9 +267,10 @@ export function TeletypePaint(props: {
       <p className={ui.hint}>
         Blocks are characters — a drawing is still the card’s text, so it wraps,
         pastes and shares like the words do. A colour swatch lays a code in the
-        cell, which draws as a blank and colours everything to its right on that
-        row, so lay it to the left of what it should colour. Right-drag erases;
-        ⌘/ctrl+Z undoes a stroke.
+        cell. On the card it is a blank that colours everything to its right on
+        that row, so lay it to the left of what it should colour; here it shows
+        as a strip along the foot of its cell. Right-drag erases; ⌘/ctrl+Z
+        undoes a stroke.
       </p>
     </>
   )

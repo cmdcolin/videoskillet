@@ -228,7 +228,7 @@ const CONTROL_LAST = 0x241f
 export const controlChar = (code: number): string =>
   String.fromCharCode(CONTROL_BASE + code)
 
-const controlCode = (ch: string): number | null => {
+export const controlCode = (ch: string): number | null => {
   const code = ch.codePointAt(0) ?? 0
   return code >= CONTROL_BASE && code <= CONTROL_LAST
     ? code - CONTROL_BASE

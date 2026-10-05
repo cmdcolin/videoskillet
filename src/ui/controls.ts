@@ -3973,6 +3973,14 @@ const cfbKeyed: SliderNeed = {
   fix: 0.6,
   hint: 'luma key nonzero',
 }
+// B's clock wander and the capture range only act on a genlocked B: the lock is
+// what has a window, and the dirty sum has no lock to lose.
+const genlocked: SliderNeed = {
+  key: 'bGenlock',
+  ok: (v: number) => v > 0.5,
+  fix: 1,
+  hint: 'genlock on "clean dissolve"',
+}
 const dirtyPath: SliderNeed = {
   key: 'bGenlock',
   ok: below1,
@@ -4180,6 +4188,8 @@ export const NEEDS: Partial<Record<ControlKey, SliderNeed>> = {
   bLineHz: dirtyPath,
   bDetuneHz: dirtyPath,
   bRollLps: dirtyPath,
+  bWanderUs: genlocked,
+  bCaptureUs: genlocked,
   wipePos: wiping,
   wipeSoft: wiping,
   wipeRate: wiping,
