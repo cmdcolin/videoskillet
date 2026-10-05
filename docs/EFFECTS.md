@@ -129,6 +129,15 @@ What either deck can be fed:
 | **cg page address line** | 0–7                   | A line held on the counter that walks this box's page memory instead of its font. Low lines are the column, high lines the row, so characters keep their shapes and lose their places.                                                                                                                                  |
 | **cg page counter slip** | -4–4 /frame           | The same slip on the page-memory counter, so the block walks diagonally through itself a cell at a time.                                                                                                                                                                                                                |
 
+### Crosspoint
+
+| Control             | Range     | The fault it models                                                                                                                                                                                                                                                                                              |
+| ------------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **bus cut**         | 0–1       | A relay that switches the whole bus to B for this fraction of each frame, counted back from the bottom. Sync and burst switch with the picture, so the receiver meets two signals in one frame and has to find lock across the seam. The seam sits at a point in raster time and can land half way along a line. |
+| **crosspoint leak** | 0–0.3     | B's high frequencies leaking past a closed fader through stray capacitance. Flat areas of B never get through, only its subcarrier and edges, so a faint rainbow moves on the bus with no picture behind it, and B's detune beats against the burst.                                                             |
+| **B clock wander**  | 0–20 µs   | How far source B's own clock strays from the house, as an aperiodic wander that tilts down the frame. With genlock on, the lock absorbs it while it stays inside the capture range and loses B for the lines where it does not.                                                                                  |
+| **capture range**   | 0.1–10 µs | How far off the genlock can still pull B back onto the house raster. Smaller windows lose lock sooner. Lines past it show B torn sideways with its colour rotating against the burst, in a band that moves with B's wander.                                                                                      |
+
 ### Wipe (A/B)
 
 | Control      | Range                                 | The fault it models                                                                                                                                        |

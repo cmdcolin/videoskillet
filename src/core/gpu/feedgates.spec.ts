@@ -42,12 +42,16 @@ const KNOBS: Partial<Controls>[] = [
   { bRing: 0.5 },
   { aGain: 0.5 },
   { pipMix: 0.7 },
+  { busCut: 0.3 },
+  { bLeak: 0.05 },
   { bGenlock: 1 },
   { bGenlock: 1, bGain: 0.5 },
   { bGenlock: 1, bGain: -0.5 },
   { bGenlock: 1, bPause: 0.8 },
   { bGenlock: 1, bRing: 0.5 },
   { bGenlock: 1, bNoiseIre: 5 },
+  { bGenlock: 1, busCut: 0.3 },
+  { bGenlock: 1, bLeak: 0.05 },
   { bGain: 0.5, bPause: 0.8, bScramble: 1 },
 ]
 
@@ -108,6 +112,19 @@ describe('feed gates', () => {
     expect(bWaveOn(at({ bGain: -0.5 }), true)).toBe(true)
     expect(bWaveOn(at({ bGain: -0.5, bGenlock: 1 }), true)).toBe(false)
     expect(bOn(at({ bGain: -0.5, bGenlock: 1 }), true)).toBe(false)
+  })
+
+  // Both reach the bus past a closed fader, on either path, so B's waveform has
+  // to be materialized for them or mix_b resamples a buffer nothing wrote.
+  it('opens B for the bus cut and the crosspoint leak with the fader shut', () => {
+    for (const bGenlock of [0, 1])
+      for (const patch of [{ busCut: 0.3 }, { bLeak: 0.05 }]) {
+        const c = at({ ...patch, bGenlock })
+        expect(c.bGain).toBe(0)
+        expect(bWaveOn(c, true)).toBe(true)
+        expect(bOn(c, true)).toBe(true)
+        expect(bWaveOn(c, false)).toBe(false)
+      }
   })
 
   // The feeds decorrelate their noise from the program bus and from each other

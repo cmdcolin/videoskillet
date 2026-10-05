@@ -99,14 +99,17 @@ export function aFeedOn(c: Controls): boolean {
 
 // Who consumes B's materialized waveform: the dirty sum resamples it, and the
 // genlocked dissolve reads it at the output sample — only the PiP inset still
-// re-encodes from yuvB. B reaches the bus through the fader or (dirty only) the
-// ring mod, so with those at zero the buffer is never read. The genlocked fader
-// is a crossfade the shader clamps to [0,1], so a negative bGain left over from
-// a session on the dirty path is a closed fader, not a reason to re-encode B.
+// re-encodes from yuvB. B reaches the bus through the fader, the bus cut, the
+// crosspoint leak or (dirty only) the ring mod, so with those at zero the buffer
+// is never read. The genlocked fader is a crossfade the shader clamps to [0,1],
+// so a negative bGain left over from a session on the dirty path is a closed
+// fader, not a reason to re-encode B.
 export function bWaveOn(c: Controls, bEnabled: boolean): boolean {
   return (
     bEnabled &&
-    (c.bGenlock < 0.5 ? c.bGain !== 0 || c.bRing !== 0 : c.bGain > 0)
+    (c.busCut > 0 ||
+      c.bLeak > 0 ||
+      (c.bGenlock < 0.5 ? c.bGain !== 0 || c.bRing !== 0 : c.bGain > 0))
   )
 }
 
@@ -131,6 +134,8 @@ export function bOn(c: Controls, bEnabled: boolean): boolean {
   return (
     bEnabled &&
     (c.pipMix !== 0 ||
+      c.busCut > 0 ||
+      c.bLeak > 0 ||
       (c.bGenlock < 0.5
         ? c.bGain !== 0 || c.bRing !== 0 || c.aGain !== 1
         : c.bGain > 0))

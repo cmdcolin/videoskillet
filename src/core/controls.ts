@@ -296,6 +296,10 @@ export const DEFAULT_CONTROLS = {
   bGain: 0, // defaults are the clean baseline; the landing look adds B on top
   bRing: 0,
   busClip: 0, // headroom of the mixer's summing amplifier (0 = it never sees its rails)
+  busCut: 0, // fraction of the frame, from the bottom, the bus is switched to B for
+  bLeak: 0, // high-pass crosstalk of B onto the program bus past a closed fader
+  bWanderUs: 0, // how far B's own clock wanders, so genlock has something to hold
+  bCaptureUs: 2, // how far off the genlock can still pull B back onto the house raster
   bLineHz: 0.15,
   bDetuneHz: 40,
   bRollLps: 0.1,

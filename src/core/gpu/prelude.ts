@@ -125,6 +125,11 @@ export const PARAM_DEFS = [
   ['bGain', 'f32'], // additive mix gain
   ['bRing', 'f32'], // ring modulation amount
   ['busClip', 'f32'], // how little headroom the summing amplifier has, 0 = plenty
+  ['busCut', 'f32'], // the bus is switched to B for this fraction of the frame, from the bottom
+  ['bLeak', 'f32'], // stray-capacitance leak of B onto the bus, whatever the fader says
+  ['bWanderTop', 'f32'], // B's own clock error at the top of the frame, samples
+  ['bWanderBottom', 'f32'], // and at the bottom, samples
+  ['bCapture', 'f32'], // the genlock's capture range, samples
   ['bRowOff', 'f32'], // vertical slip, lines (accumulated)
   ['bShift0', 'f32'], // horizontal slip, samples (accumulated)
   ['bShiftLine', 'f32'], // horizontal skew per line (line-frequency offset)

@@ -2533,6 +2533,7 @@ export class Engine implements EngineApi {
       bDetuneHz: c.bDetuneHz,
       bRollLps: c.bRollLps,
       bPause: c.bPause,
+      bWanderUs: c.bWanderUs,
       wipePos: c.wipePos,
       wipeRateHz: c.wipeRate,
     })

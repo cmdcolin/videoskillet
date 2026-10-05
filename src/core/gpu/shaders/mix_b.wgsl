@@ -135,6 +135,13 @@ fn keyFill(program: f32, n: u32) -> f32 {
   return program;
 }
 
+// Stray capacitance across a closed fader. The leak path is a small capacitor,
+// so what it passes is the derivative of B: its subcarrier and its edges, never
+// its flat areas. `prev` is B one sample earlier, taken the same way as `now`.
+fn leakOf(now: f32, prev: f32) -> f32 {
+  return P.bLeak * 0.5 * (now - prev);
+}
+
 @compute @workgroup_size(64, 1, 1)
 fn main(@builtin(global_invocation_id) gid: vec3u) {
   let s = gid.x;
@@ -143,6 +150,15 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
     return;
   }
   let n = row * SPL + s;
+
+  // The bus cut: a relay, or a cheap A/B box pressed wherever the scan happened
+  // to be. From this sample of the frame to the end, the whole bus — sync,
+  // burst and blanking as well as picture — is B's, so the receiver is handed
+  // two signals' timing in one frame and has to find sync across the seam. It
+  // is a position in raster time on the output, not in the picture, which is
+  // why it can land half way along a line.
+  let cutN = u32(round((1.0 - clamp(P.busCut, 0.0, 1.0)) * f32(SPL * NLINES)));
+  let taken = P.busCut > 0.0 && n >= cutN;
 
   let a = comp[n];
   let inActive = s >= ACTIVE_START && s < ACTIVE_START + ACTIVE_W &&
@@ -184,6 +200,26 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
     if (inActive) {
       var g = gate;
       var fill = bComp[n];
+      // The genlock's capture range. B's own clock wanders, and the lock pulls
+      // it back onto the house raster only while the error is inside the range
+      // — a TBC has a window, not infinite reach. Where the error is past it
+      // the line is not held, and B arrives where its own clock put it: the
+      // waveform is resampled at the displaced position, so the picture tears
+      // sideways and the carrier it brings rotates against the house burst.
+      // The error runs linearly between the top of the frame and the bottom, so
+      // the lines that have lost lock form a band, and the band moves as the
+      // wander does.
+      if (P.bWanderTop != 0.0 || P.bWanderBottom != 0.0) {
+        let e = mix(P.bWanderTop, P.bWanderBottom, v);
+        if (abs(e) > P.bCapture) {
+          let spl = f32(SPL);
+          let at = f32(s) - e;
+          let su = at - floor(at / spl) * spl;
+          let si = u32(su);
+          let np = i32(row * SPL + si);
+          fill = catmull(bComp[clampIdx(np - 1)], bComp[clampIdx(np)], bComp[clampIdx(np + 1)], bComp[clampIdx(np + 2)], su - f32(si));
+        }
+      }
       // What sits behind B. Program A unless the keyer is actually cutting, and
       // that condition is the point: the fill is a connector on the *keyer*, so
       // with the key at zero the mixer is a plain A/B crossfade and the box in
@@ -205,6 +241,12 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
         behind = keyFill(a, n);
       }
       comp[n] = mix(behind, fill, clamp(g * P.bGain, 0.0, 1.0));
+    }
+    // Genlocked, B is on the house raster, so the relay takes it as it stands.
+    if (taken) {
+      comp[n] = bComp[n];
+    } else if (P.bLeak > 0.0) {
+      comp[n] += leakOf(bComp[n], bComp[clampIdx(i32(n) - 1)]);
     }
   } else {
     // Dirty sum: B free-runs. Its raster position for this output sample is the
@@ -289,6 +331,18 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
         mix(-120.0, -45.0, P.busClip),
         15.0,
       );
+    }
+    if (taken) {
+      summed = b;
+    } else if (P.bLeak > 0.0) {
+      let before = catmull(
+        bComp[clampIdx(np - 2)],
+        bComp[clampIdx(np - 1)],
+        bComp[clampIdx(np)],
+        bComp[clampIdx(np + 1)],
+        frac,
+      );
+      summed += leakOf(b, before);
     }
     comp[n] = summed;
   }

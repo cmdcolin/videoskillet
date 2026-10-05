@@ -527,6 +527,24 @@ cgPageSlip  (cg page counter slip)
   -4..4 step 0.05 /frame  default 0
   The same slip on the page-memory counter, so the block walks diagonally through itself a cell at a time.
 
+## Crosspoint
+
+busCut  (bus cut)
+  0..1 step 0.001  default 0
+  A relay that switches the whole bus to B for this fraction of each frame, counted back from the bottom. Sync and burst switch with the picture, so the receiver meets two signals in one frame and has to find lock across the seam. The seam sits at a point in raster time and can land half way along a line.
+
+bLeak  (crosspoint leak)
+  0..0.3 step 0.001  default 0
+  B's high frequencies leaking past a closed fader through stray capacitance. Flat areas of B never get through, only its subcarrier and edges, so a faint rainbow moves on the bus with no picture behind it, and B's detune beats against the burst.
+
+bWanderUs  (B clock wander)
+  0..20 step 0.01 µs  default 0
+  How far source B's own clock strays from the house, as an aperiodic wander that tilts down the frame. With genlock on, the lock absorbs it while it stays inside the capture range and loses B for the lines where it does not.
+
+bCaptureUs  (capture range)
+  0.1..10 step 0.01 µs  default 2
+  How far off the genlock can still pull B back onto the house raster. Smaller windows lose lock sooner. Lines past it show B torn sideways with its colour rotating against the burst, in a band that moves with B's wander.
+
 ## Wipe (A/B)
 
 wipeMode  (pattern)

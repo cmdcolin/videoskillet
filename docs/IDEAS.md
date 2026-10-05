@@ -372,29 +372,29 @@ speckle. Low fringe proves flatness; high fringe does not prove fringing.
   is reachable (`synthAHz` = 15734 lands within a hertz), but a genuine
   drive-locked mode would give a gradient that cannot creep at all.
 
-## The mixer has no hardware model
+## The mixer's hardware, and what is left of it
 
-`mix_b.wgsl` combines the two inputs with arithmetic —
-`aGain * a + gate * (bGain * b + ...)`. Three real mechanisms are missing, all
-cheap:
+`mix_b.wgsl` began as arithmetic — `aGain * a + gate * (bGain * b + ...)` — and
+three mechanisms moved it toward a switcher, all in the Crosspoint group:
 
-- **Crosspoint crosstalk.** A cheap switcher leaks the unselected input at about
-  −40 dB, and the leak path is stray capacitance, so it is _high-pass_: what
-  gets through is B's subcarrier and edges, never B's flat areas. With the fader
-  fully closed you still get a faint moving rainbow from B's detuned carrier
-  beating the burst-locked decoder, and no visible picture — "there's something
-  else on this wire", which is not drawable. It interacts with the gates: a
-  non-zero crosstalk floor has to appear in `bWaveOn`/`bOn` or B's chain is
-  switched off underneath it.
-- **Genlock that can lose lock.** `bGenlock` is an absolute TBC today. Real
-  genlock has a capture range: push B's pause wander or wow past it and lock
-  drops, B rips for a few lines, and it re-hunts. That makes the corrective
-  box's _failure_ a function of how hard B is driven.
-- **Mid-field cut.** A switcher cuts at the vertical interval; a cheap A/B box
-  or a relay cuts wherever you pressed it, tearing one frame into two
-  half-pictures with a broken field sequence. Cheap in `mix_b` (a cut position
-  in raster time rather than a crossfade), and it is the natural performance
-  gesture.
+- **Bus cut** (`busCut`) switches the whole bus, sync included, to B from a
+  point in raster time to the end of the frame. The seam can land mid-line.
+- **Crosspoint leak** (`bLeak`) passes B's derivative past a closed fader, so
+  only its subcarrier and edges get through.
+- **Genlock capture range** (`bWanderUs`, `bCaptureUs`). B's own clock wanders
+  and the lock holds it only inside the window; lines past it read B displaced.
+
+What none of them do:
+
+- **The cut is a position and not an event.** A real relay fires at a press and
+  leaves the bus on B afterwards, so one frame carries the seam. A slider holds
+  the seam where it is put. An envelope or a trigger that fires a cut at a
+  random raster position would model the press.
+- **The leak is one-way.** A leaks into B's path while B is selected, through
+  the same capacitance, and nothing models that.
+- **Lock has no hysteresis.** A real genlock re-acquires at a tighter error than
+  it loses lock at, so a line near the window flickers between held and not.
+  Here the edge of a band is clean.
 
 Considered and left: **a house-reference selector** (letting B be the raster
 instead of A) would double the expressive range of all of the above, but B _is_

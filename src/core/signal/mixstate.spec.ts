@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { rngFor } from '../rng'
-import { LINES, SAMPLES_PER_LINE } from './constants'
+import { LINES, SAMPLES_PER_LINE, SAMPLE_RATE } from './constants'
 import { MixState } from './mixstate'
 
 import type { MixControls } from './mixstate'
@@ -12,6 +12,7 @@ const STILL: MixControls = {
   bDetuneHz: 0,
   bRollLps: 0,
   bPause: 0,
+  bWanderUs: 0,
   wipePos: 0.5,
   wipeRateHz: 0,
 }
@@ -21,6 +22,58 @@ const step = (m: MixState, c: Partial<MixControls>, n: number) => {
   for (let i = 1; i < n; i++) out = m.update({ ...STILL, ...c })
   return out
 }
+
+describe('B clock wander', () => {
+  it('is zero when nothing is asked of it', () => {
+    const out = step(new MixState(), {}, 60)
+    expect(out.bWanderTop).toBe(0)
+    expect(out.bWanderBottom).toBe(0)
+  })
+
+  it('stays inside the amplitude it was given, in samples', () => {
+    const m = new MixState(rngFor(7))
+    const reach = 5 * 1e-6 * SAMPLE_RATE
+    for (let i = 0; i < 600; i++) {
+      const out = m.update({ ...STILL, bWanderUs: 5 })
+      expect(Math.abs(out.bWanderTop)).toBeLessThanOrEqual(reach + 1e-9)
+      expect(Math.abs(out.bWanderBottom)).toBeLessThanOrEqual(reach + 1e-9)
+    }
+  })
+
+  it('wanders rather than sitting still, and does not repeat a frame', () => {
+    const m = new MixState(rngFor(7))
+    const seen = new Set<number>()
+    for (let i = 0; i < 120; i++)
+      seen.add(m.update({ ...STILL, bWanderUs: 5 }).bWanderTop)
+    expect(seen.size).toBeGreaterThan(100)
+  })
+
+  it('tilts down the frame, so the lines that lose lock form a band', () => {
+    const m = new MixState(rngFor(7))
+    let apart = 0
+    for (let i = 0; i < 240; i++) {
+      const out = m.update({ ...STILL, bWanderUs: 5 })
+      if (Math.abs(out.bWanderTop - out.bWanderBottom) > 0.5) apart++
+    }
+    expect(apart).toBeGreaterThan(0)
+  })
+
+  it('draws no dice while it is off, so a take keeps its other rolls', () => {
+    const draws = (wander: number) => {
+      let n = 0
+      const rand = rngFor(3)
+      const m = new MixState(() => {
+        n++
+        return rand()
+      })
+      const before = n
+      for (let i = 0; i < 120; i++) m.update({ ...STILL, bWanderUs: wander })
+      return n - before
+    }
+    expect(draws(0)).toBe(0)
+    expect(draws(5)).toBeGreaterThan(0)
+  })
+})
 
 describe('MixState', () => {
   it('holds source B still when nothing is detuned', () => {

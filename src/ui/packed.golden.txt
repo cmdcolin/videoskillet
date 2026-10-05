@@ -285,6 +285,10 @@
 297 osdX step=0.01 default=0.07
 298 osdY step=0.01 default=0.09
 299 osdScale step=0.25 default=1
+300 busCut step=0.001 default=0
+301 bLeak step=0.001 default=0
+302 bWanderUs step=0.01 default=0
+303 bCaptureUs step=0.01 default=2
 
 # ?mod= sources, by name
 sine

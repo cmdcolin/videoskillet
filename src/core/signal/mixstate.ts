@@ -16,7 +16,7 @@
 // stays B's own, baked into its carrier by encode_composite_b.
 
 import { wrap } from '../math'
-import { F_H, LINES, SAMPLES_PER_LINE } from './constants'
+import { F_H, LINES, SAMPLES_PER_LINE, usToSamples } from './constants'
 import { Wow, valueNoise } from './noise'
 
 const LINE_S = 1 / F_H
@@ -84,6 +84,7 @@ export interface MixControls {
   bDetuneHz: number // B subcarrier detune
   bRollLps: number // B vertical slip, lines per frame
   bPause: number // B deck pause: 0 play, >0 held with this much servo damage
+  bWanderUs: number // how far B's own clock strays from the house, µs
   wipePos: number // wipe position slider
   wipeRateHz: number // auto-sweep rate (ping-pong)
 }
@@ -94,6 +95,10 @@ interface MixUniforms {
   bPhase0: number
   bPhaseLine: number
   bRowOff: number
+  // B's clock error against the house at the top and bottom of the frame,
+  // samples. The genlock holds B only while this stays inside its capture range.
+  bWanderTop: number
+  bWanderBottom: number
   wipePos: number
   // The two paused decks, consumed by the feed uniform packs rather than by
   // PARAM_DEFS — the program-bus params describe no deck at all.
@@ -113,6 +118,11 @@ export class MixState {
   private deckA: PauseDeck
   private deckB: PauseDeck
   private parity = 0
+  // B's own crystal, free of the house. It wanders on its own clock and draws
+  // dice only while it is asked to, so a board with no wander leaves every
+  // other roll of a take where it was.
+  private readonly wander: Wow
+  private wanderT = 0
 
   // The dice the two decks' wow draws from, on the trailing-`rand` convention
   // `rng.ts` states: live it is `Math.random`, and a take hands over a seeded
@@ -121,6 +131,7 @@ export class MixState {
   constructor(rand: () => number = Math.random) {
     this.deckA = new PauseDeck(0.4 * LINES, 5, 29, rand)
     this.deckB = new PauseDeck(0.75 * LINES, 7, 23, rand)
+    this.wander = new Wow(rand)
   }
 
   update(c: MixControls): MixUniforms {
@@ -144,6 +155,16 @@ export class MixState {
     this.wipeLever = c.wipePos
     const wp = wrap(c.wipePos + this.wipeT, 2)
 
+    let wanderTop = 0
+    let wanderBottom = 0
+    if (c.bWanderUs > 0) {
+      this.wanderT += 1 / 60
+      this.wander.advance(1 / 60)
+      const reach = usToSamples(c.bWanderUs)
+      wanderTop = this.wander.at(this.wanderT, 0) * reach
+      wanderBottom = this.wander.at(this.wanderT, 1) * reach
+    }
+
     const a = this.deckA.update(c.aPause)
     const b = this.deckB.update(c.bPause)
     let pausePhase = 0
@@ -163,6 +184,8 @@ export class MixState {
       bPhase0: this.scPhase * 2 * Math.PI + pausePhase,
       bPhaseLine: 2 * Math.PI * c.bDetuneHz * LINE_S,
       bRowOff: Math.floor(this.vRoll),
+      bWanderTop: wanderTop,
+      bWanderBottom: wanderBottom,
       decks: { a, b },
     }
   }
