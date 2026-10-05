@@ -125,6 +125,15 @@ The floor is WCAG 2.2's 24px rather than Apple's 44: this panel is 245 rows in a
 `pnpm harnesses` leaves it out.
 
 ```
+node scripts/buttonheights.mjs [url]
+```
+
+It measures every outlined, filled and chip button on the panel, the unfolded
+preset catalog and the MIDI dialog, and fails when one differs from the median
+by more than half a pixel. `--btn-pad-y` and `--btn-lh` in `theme.css` set the
+shared box, and a button that builds its own padding is the one this catches.
+
+```
 node scripts/bandcheck.mjs [port]
 ```
 

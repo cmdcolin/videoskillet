@@ -82,6 +82,7 @@ const HARNESSES = [
   { name: 'composecheck', args: [`${origin}/app/`] },
   { name: 'panelcheck', args: [`${origin}/app/`] },
   { name: 'chipcheck', args: [`${origin}/app/`] },
+  { name: 'buttonheights', args: [`${origin}/app/`] },
   { name: 'undocheck', args: [`${origin}/app/`] },
   { name: 'palettecheck', args: [`${origin}/app/`] },
   { name: 'linkcheck', args: [`${origin}/app/`] },
