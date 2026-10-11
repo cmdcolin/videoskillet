@@ -1,6 +1,6 @@
 // The stills the home page's phone tour shows: the camera page at a phone's
-// size, driven through a look, the tune sheet, the loops sheet, a zoom, the
-// mixer and the help.
+// size, driven through a look, the tune sheet, the loops sheet, the fault pads
+// and the mixer.
 //
 // No phone is involved. The page's camera is `public/sample.jpg` panning on a
 // canvas, standing in for getUserMedia, and the clip it mixes in is
@@ -44,9 +44,7 @@ const STILLS = {
   tune: { shot: 'tune', under: 'section[aria-label="Tune the look"]' },
   loops: { shot: 'loops', under: 'section[aria-label="Feedback loops"]' },
   mix: { shot: 'mix', under: '[aria-label="Mixer"]' },
-  zoom: { shot: 'zoom', under: '[aria-label="Zoom"]' },
   faults: { shot: 'fault', under: '[aria-label="Faults"]' },
-  help: { shot: 'help', under: 'button[class*="hints"]' },
 }
 const MARGIN = 12
 
@@ -209,9 +207,6 @@ try {
   await clickText('Start camera')
   await page.waitForSelector('nav[aria-label="Looks"]', { timeout: 30000 })
   await settle(3000)
-  await click('button[aria-label="how to use the camera"]')
-  await shoot('help')
-  await click('button[class*="hints"]')
   // A tape look with a second one dragged in under it.
   await click('xpath/.//button[@role="tab" and text()="tape"]')
   await click('[data-look="pictureSearch"]')
@@ -230,10 +225,6 @@ try {
   await shoot('loops')
   await click('button[aria-label="close"]')
   await clickText('normal')
-  await click('button[aria-label="zoom 2×"]')
-  await settle(2500)
-  await shoot('zoom')
-  await click('button[aria-label="zoom 1×"]')
   await click('button[title^="fault pads"]')
   await settle(1500)
   // Taken near the middle of the track fault's second and a half, where the

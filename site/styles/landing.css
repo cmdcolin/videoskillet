@@ -99,7 +99,8 @@
 
 /* A touch screen too small for the instrument's sidebar is a phone, and a
    phone opens the camera. The query uses the two sizes app.module.css restacks
-   the instrument at, and adds touch so a narrow desktop window keeps the app. */
+   the instrument at, and adds touch so a narrow desktop window keeps the app.
+   A phone drops the bar's button, which sits right over the hero's two. */
 .heroCta .onPhone,
 .phoneOnly {
   display: none;
@@ -113,7 +114,8 @@
     display: block;
   }
   .heroCta .offPhone,
-  .deskOnly {
+  .deskOnly,
+  .siteBar .btn.primary {
     display: none;
   }
 }
@@ -137,7 +139,7 @@
 }
 .tour li {
   flex: none;
-  width: min(72vw, 300px);
+  width: min(64vw, 300px);
   scroll-snap-align: start;
 }
 .tour img {
@@ -149,14 +151,8 @@
   background: #000;
 }
 .tour h3 {
-  margin: 0.85rem 0 0.35rem;
-  font-size: 1.05rem;
-}
-.tour p {
-  margin: 0;
-  color: var(--fg3);
-  font-size: 0.92rem;
-  line-height: 1.5;
+  margin: 0.7rem 0 0;
+  font-size: 1rem;
 }
 
 /* A word, not a glyph: a bare ▶ is a guess, and these sit next to each
@@ -576,6 +572,42 @@ code {
 .riffs a:focus-visible {
   color: var(--accent);
 }
+/* On a phone the gallery is a row a thumb swipes, the way the tour is, so
+   fourteen demos take one screen of the page and the riffs stay on desktop. */
+@media (max-width: 34rem) {
+  #galleryHost .grid {
+    display: flex;
+    gap: 0.75rem;
+    margin: 0 -1.25rem;
+    padding: 0 1.25rem 0.5rem;
+    overflow-x: auto;
+    scroll-padding: 0 1.25rem;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+  }
+  #galleryHost .grid::-webkit-scrollbar {
+    display: none;
+  }
+  #galleryHost .grid > li {
+    flex: none;
+    width: 64vw;
+    scroll-snap-align: start;
+  }
+  #galleryHost .riffs,
+  #galleryHost .demo .open {
+    display: none;
+  }
+  #galleryHost .demo .name {
+    display: block;
+    padding: 0.55rem 0.7rem;
+    font-size: 0.88rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
 /* The reader's own looks can number two hundred, so their cards run smaller
    than the gallery's: four across the home column, two on a phone. */
 .grid.looks {

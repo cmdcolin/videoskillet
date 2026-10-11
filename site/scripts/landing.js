@@ -392,7 +392,7 @@ if (!motion.matches && matchMedia('(hover: none)').matches) {
       }
       activate([...band][0])
     },
-    { rootMargin: '-40% 0px -40% 0px' },
+    { rootMargin: '-40%' },
   )
   for (const card of cards) {
     crossing.observe(card)
