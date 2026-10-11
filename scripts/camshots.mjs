@@ -131,9 +131,10 @@ await page.evaluateOnNewDocument(src => {
         w,
         h,
       )
-      requestAnimationFrame(tick)
     }
-    tick()
+    // A timer, because Firefox throttles rAF in an occluded window and the
+    // stream then never delivers a frame.
+    setInterval(tick, 33)
     return c.captureStream(30)
   }
 }, `${APP}/sample.jpg`)
