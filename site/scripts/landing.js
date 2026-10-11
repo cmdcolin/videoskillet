@@ -398,3 +398,57 @@ if (!motion.matches && matchMedia('(hover: none)').matches) {
     crossing.observe(card)
   }
 }
+
+// ---- the buttons ----
+//
+// A button with `data-glitch` has a strip of frames behind it: the button
+// scanned through the program while a fault strikes and heals
+// (scripts/buttonplate.mjs). Hover or focus plays it once, and landing.css
+// does the playing. A reader who asked for reduced motion gets the plain
+// button.
+//
+// The strips wait for the page to settle, like the gallery's clips, and only a
+// button on show fetches one: the hero hides the phone's pair on a desktop and
+// the desktop's pair on a phone. A button starts playing only once its strip
+// has decoded, so the first hover never shows a strip that is still arriving.
+if (!motion.matches) {
+  const glitchy = [...document.querySelectorAll('.btn[data-glitch]')]
+  const play = btn => {
+    if (btn.style.getPropertyValue('--glitch-sheet') !== '') {
+      btn.classList.add('glitching')
+    }
+  }
+  for (const btn of glitchy) {
+    btn.addEventListener('pointerenter', () => play(btn))
+    btn.addEventListener('focus', () => play(btn))
+    btn.addEventListener('animationend', () =>
+      btn.classList.remove('glitching'),
+    )
+  }
+  const fetchStrips = () => {
+    for (const btn of glitchy) {
+      if (btn.offsetParent !== null) {
+        const strip = new Image()
+        strip.src = btn.dataset.glitch
+        strip
+          .decode()
+          .then(() =>
+            btn.style.setProperty('--glitch-sheet', `url("${strip.src}")`),
+          )
+          .catch(() => {})
+      }
+    }
+  }
+  const settled = () => {
+    if (window.requestIdleCallback === undefined) {
+      fetchStrips()
+    } else {
+      requestIdleCallback(() => fetchStrips())
+    }
+  }
+  if (document.readyState === 'complete') {
+    settled()
+  } else {
+    addEventListener('load', () => settled())
+  }
+}

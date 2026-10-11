@@ -1,6 +1,7 @@
 import { experimental_AstroContainer } from 'astro/container'
 import { beforeAll, expect, test } from 'vitest'
 
+import { BUTTONS } from '../../scripts/buttonglitch.mjs'
 import {
   CLIPS as DEMO_CLIPS,
   demos,
@@ -165,4 +166,32 @@ test('there is at least one riff to check the concept against', () => {
 test.each(riffs)('$name is a link under its demo’s card', riff => {
   expect(page).toContain(riff.href.replaceAll('&', '&amp;'))
   expect(page).toContain(`>${riff.name}<`)
+})
+
+// A strip is a picture of the button's own words, so a button whose copy has
+// changed since `scripts/buttonplate.mjs` last ran glitches into the old label.
+test.each(BUTTONS)('$name glitches through a strip of its own label', b => {
+  const tagged = [
+    ...page.matchAll(
+      new RegExp(
+        `<a[^>]+data-glitch="btn/${b.name}\\.webp"[^>]*>([^<]*)</a>`,
+        'g',
+      ),
+    ),
+  ]
+  expect(tagged.length).toBeGreaterThan(0)
+  for (const [, text] of tagged) {
+    expect(text.trim()).toBe(b.label)
+  }
+  expect(bytes(`btn/${b.name}.webp`)).toBeGreaterThan(0)
+})
+
+test('every glitching button on the page has a strip', () => {
+  const named = [...page.matchAll(/data-glitch="btn\/([^.]+)\.webp"/g)].map(
+    m => m[1],
+  )
+  expect(named.length).toBeGreaterThan(0)
+  for (const name of named) {
+    expect(BUTTONS.map(b => b.name)).toContain(name)
+  }
 })

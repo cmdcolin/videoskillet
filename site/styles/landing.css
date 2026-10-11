@@ -97,6 +97,57 @@
   text-align: center;
 }
 
+/* A button with `data-glitch` plays a strip of itself going through a fault on
+   hover: the frames are the button scanned through the program
+   (scripts/buttonplate.mjs), stacked top to bottom. While it plays, the real
+   button paints nothing and the strip stands in for it, reaching PAD_X and PAD_Y
+   past its border box and fading out across that margin. The strip is
+   screen-blended because the frames are light from a tube: the black around the
+   button adds nothing to the page under it, and a fault that throws the picture
+   outside the button lands on the page. */
+.btn[data-glitch] {
+  position: relative;
+}
+.btn.glitching,
+.btn.glitching:hover {
+  color: transparent;
+  background: transparent;
+  border-color: transparent;
+  filter: none;
+}
+.btn.glitching::after {
+  content: '';
+  position: absolute;
+  inset: calc(-1px * var(--glitch-pad-y) - 1px)
+    calc(-1px * var(--glitch-pad-x) - 1px);
+  background: var(--glitch-sheet) 0 0 / 100% calc(100% * var(--glitch-frames))
+    no-repeat;
+  mask:
+    linear-gradient(
+      to right,
+      transparent,
+      #000 calc(1px * var(--glitch-pad-x)),
+      #000 calc(100% - 1px * var(--glitch-pad-x)),
+      transparent
+    ),
+    linear-gradient(
+      transparent,
+      #000 calc(1px * var(--glitch-pad-y)),
+      #000 calc(100% - 1px * var(--glitch-pad-y)),
+      transparent
+    );
+  mask-composite: intersect;
+  mix-blend-mode: screen;
+  pointer-events: none;
+  animation: glitch calc(1s * var(--glitch-secs))
+    steps(var(--glitch-frames), jump-none) forwards;
+}
+@keyframes glitch {
+  to {
+    background-position: 0 100%;
+  }
+}
+
 /* A touch screen too small for the instrument's sidebar is a phone, and a
    phone opens the camera. The query uses the two sizes app.module.css restacks
    the instrument at, and adds touch so a narrow desktop window keeps the app.

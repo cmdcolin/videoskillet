@@ -8,6 +8,7 @@ import SocialMeta from '../components/SocialMeta.astro'
 import WhySignInCard from '../components/WhySignInCard.astro'
 import Page from '../layouts/Page.astro'
 import { ORIGIN } from '../lib/site'
+import { glitchOf } from '../../scripts/buttonglitch.mjs'
 import script from '../scripts/landing.js?raw'
 import css from '../styles/landing.css?raw'
 
@@ -82,19 +83,19 @@ const SHARE_IMAGE_H = 630
              desktop the other way round. The media query in landing.css hides
              the pair that does not apply, so no script rewrites the links. -->
         <p class="heroCta">
-          <a class="btn primary onPhone" href="/cam/">
+          <a class="btn primary onPhone" href="/cam/" {...glitchOf('cam')}>
             Open the camera →
           </a>
-          <a class="btn primary offPhone" href="/app/">
+          <a class="btn primary offPhone" href="/app/" {...glitchOf('app')}>
             Open the app →
           </a>
-          <a class="btn onPhone" href="/app/">
+          <a class="btn onPhone" href="/app/" {...glitchOf('full')}>
             Full instrument
           </a>
-          <a class="btn offPhone" href="/cam/">
+          <a class="btn offPhone" href="/cam/" {...glitchOf('simple')}>
             Simple mode
           </a>
-          <a class="btn offPhone" href="/guide/">
+          <a class="btn offPhone" href="/guide/" {...glitchOf('guide')}>
             User guide
           </a>
         </p>
