@@ -74,6 +74,25 @@ export function useSecond(
     [],
   )
 
+  // The background can pause B's <video> elements as it does A's camera.
+  useEffect(() => {
+    const onVisible = () => {
+      const b = held.current
+      if (document.visibilityState !== 'visible' || b === null) return
+      const videos =
+        b.kind === 'live'
+          ? [b.cam.video, b.relay.video]
+          : b.kind === 'clip'
+            ? [b.video, b.relay.video]
+            : b.kind === 'tape'
+              ? [b.video]
+              : []
+      for (const v of videos) if (v.paused) v.play().catch(() => {})
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => document.removeEventListener('visibilitychange', onVisible)
+  }, [])
+
   const show = (next: Second | null) => {
     held.current = next
     setSecond(next)

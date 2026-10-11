@@ -47,6 +47,17 @@ export function useSourceA(
     [],
   )
 
+  // The background can pause a clip's <video> as it does the camera's.
+  useEffect(() => {
+    const onVisible = () => {
+      const v = clip.current?.video
+      if (document.visibilityState === 'visible' && v?.paused === true)
+        v.play().catch(() => {})
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => document.removeEventListener('visibilitychange', onVisible)
+  }, [])
+
   const cameraShown = () => {
     drop()
     setOn('camera')
