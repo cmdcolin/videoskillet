@@ -17,35 +17,6 @@ const DESCRIPTION =
 const UNFURL =
   'Analog video glitches — dot crawl, dropouts, head-switch wobble, video feedback — that fall out of a simulated NTSC signal path, live in the browser.'
 
-// The camera page's tour, one still per thing it does.
-const TOUR = [
-  {
-    still: 'looks',
-    title: 'Swipe through looks',
-    alt: 'Picture search on the camera with tracking band stacked on it, the tape tab open over the strip of looks',
-  },
-  {
-    still: 'loops',
-    title: 'Feed it back into itself',
-    alt: 'The feedback sheet open over a feedback look, with the camera loop and mixer loop knobs',
-  },
-  {
-    still: 'faults',
-    title: 'Throw a fault',
-    alt: 'A band of mistracking noise across the camera, with the fault pads under the picture',
-  },
-  {
-    still: 'mix',
-    title: 'Mix in a second picture',
-    alt: 'The camera wiped halfway to a clip of pine trees, with the mixer under the picture',
-  },
-  {
-    still: 'tune',
-    title: 'Stack and tune',
-    alt: 'The tune sheet open over the controls, with a weight for each stacked look and a slider for each control',
-  },
-]
-
 const SHARE_IMAGE = `${ORIGIN}og.jpg`
 const SHARE_IMAGE_W = 1200
 const SHARE_IMAGE_H = 630
@@ -105,28 +76,6 @@ const SHARE_IMAGE_H = 630
           Canary or Firefox Nightly or look up how to enable WebGPU in your
           browser!
         </p>
-      </div>
-    </section>
-
-    <section class="phoneOnly">
-      <div class="wrap wide">
-        <h2 class="head">On your phone</h2>
-        <p class="sub">Your camera, through the whole signal path.</p>
-        <ol class="tour">
-          {TOUR.map(card => (
-            <li>
-              <img
-                src={`/phone/${card.still}.webp`}
-                alt={card.alt}
-                width="600"
-                height="800"
-                loading="lazy"
-                decoding="async"
-              />
-              <h3>{card.title}</h3>
-            </li>
-          ))}
-        </ol>
       </div>
     </section>
 
