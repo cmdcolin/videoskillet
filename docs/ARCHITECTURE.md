@@ -206,10 +206,18 @@ fault through `timing[]` will spin hue that should have stayed put.
   the render loop cannot afford to wait. Gated on the buzz being audible — the
   level the controls ask for, and the Sound stage's switch saying anyone is
   listening — so an idle listener pays nothing.
-- **`persistBufs`** — phosphor state (the light still on the glass), packed
-  `rgba8`, ping-ponged by frame parity: `decode` reads one and writes the other,
-  because its lateral scatter reads neighbouring pixels and a single buffer
-  would hand it values the same dispatch is part way through overwriting.
+- **`persistBufs`** — phosphor state (the light still on the glass), two `u32`
+  per pixel holding three `f16` of linear light, ping-ponged by frame parity:
+  `decode` reads one and writes the other, because its lateral scatter reads
+  neighbouring pixels and a single buffer would hand it values the same dispatch
+  is part way through overwriting. The fourth `f16` is the burn-in dose, the
+  beam current the pixel has taken; `decode` copies it across the ping-pong
+  every frame whatever the controls say, so wear stays on the glass until both
+  burn controls sit at zero.
+- **`targetBuf`** — the feedback camera's pickup-tube target, same packing: the
+  charge the reading beam left behind last field. `compose` reads and writes it
+  at the same pixel, so one buffer serves, and drains it each frame while the
+  tube controls are off.
 
 ## Params are generated
 
@@ -366,7 +374,11 @@ Almost everything is comfortably parallel. Two exceptions:
   raster row and stages a contiguous span with a 32-sample halo, so the demod
   FIR reads workgroup memory. Consequence: horizontal offsets must be
   **row-uniform**. Per-pixel horizontal scaling (H size, linearity, pincushion)
-  would read outside the halo and needs the staging restructured first.
+  would read outside the halo and needs the staging restructured first. Vertical
+  geometry is free by the same token: which raster line a screen row shows is a
+  function of the row alone, so `vSize`, `vLin` and `vFold` are an inversion of
+  the yoke's sweep in `decode`, and the fold stages the second line the row
+  shows in the other half of the tile.
 
 ## The React layer
 

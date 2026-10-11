@@ -454,10 +454,6 @@ crosses the source layer, which none of the others did.
 - **Intra-line geometry.** `hSize`, `hLin` (S-correction failure stretching one
   side), pincushion. Blocked on decode's tiling: the workgroup stages one
   contiguous span per row, so only _row-uniform_ horizontal offsets are free.
-- **Vertical linearity.** `vSize` shipped and was nearly free (the raster row
-  remap is a function of the screen row alone, so decode's row-uniform
-  constraint never bites). `vLin` — the top-of-frame stretch of a failing
-  vertical output stage — is a quadratic term in the same remap.
 - **Fractional bend.** `hoff` is `round()`ed to whole samples; at large
   amplitudes adjacent rows stair-step. Resampling the tile with `catmull` would
   smooth it, at the cost of restructuring the staging.

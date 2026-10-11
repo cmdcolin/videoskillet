@@ -418,6 +418,7 @@ export class Engine implements EngineApi {
   // out of one and writes the new state into the other, so its lateral scatter
   // sees settled neighbours rather than a buffer mid-overwrite.
   private persistBufs: [GPUBuffer, GPUBuffer]
+  private targetBuf: GPUBuffer
   // The two encoders carry a bind-group pair like decode's: the second targets
   // the compB scratch so an engaged feed pass can damage the waveform into its
   // real destination. renderFrame swaps them off the same predicates that gate
@@ -562,6 +563,8 @@ export class Engine implements EngineApi {
     const persistBuf = (): GPUBuffer =>
       storage(ACTIVE_WIDTH * ACTIVE_HEIGHT * 8)
     this.persistBufs = [persistBuf(), persistBuf()]
+    // The feedback camera's pickup-tube target, same packing (compose.wgsl).
+    this.targetBuf = persistBuf()
 
     // Resizing A's texture invalidates the view compose's bind group holds, so
     // rebuild it. Only reachable after construction, via a set*Source*.
@@ -1636,6 +1639,7 @@ export class Engine implements EngineApi {
         { binding: 3, resource: this.linearSamp },
         { binding: 4, resource: this.inputTex.createView() },
         { binding: 5, resource: { buffer: this.timingBuf } },
+        { binding: 6, resource: { buffer: this.targetBuf } },
       ],
     })
   }
@@ -1668,6 +1672,7 @@ export class Engine implements EngineApi {
       this.audioBuf,
       this.buzzBuf,
       ...this.persistBufs,
+      this.targetBuf,
     ]
   }
 

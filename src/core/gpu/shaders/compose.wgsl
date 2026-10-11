@@ -1,7 +1,8 @@
 // Camera-at-monitor feedback: the previous frame's CRT face (faceTex, the
 // glowing screen from crt_face — not the raw decode) is re-photographed through
-// a camera model — affine reframe, lens defocus + vignette, then the sensor's
-// black cut and full-well saturation — and mixed with the live source.
+// a camera model — affine reframe, lens defocus + vignette, the pickup tube's
+// target, then the sensor's black cut and full-well saturation — and mixed
+// with the live source.
 // The nonlinearity is what makes the loop organic: bright cores bloom, dim
 // trails decay into black instead of hovering as gray copies. The result is
 // the encoder input, so every generation traverses the full analog chain.
@@ -12,6 +13,49 @@
 @group(0) @binding(3) var samp: sampler;
 @group(0) @binding(4) var inputTex: texture_storage_2d<rgba8unorm, write>;
 @group(0) @binding(5) var<storage, read> timing: array<f32>;
+// The pickup tube's target: the charge the reading beam left behind last
+// field, as linear light, two f16 per pixel pair like the phosphor store in
+// decode. Read and written at the same pixel only, so one buffer serves.
+@group(0) @binding(6) var<storage, read_write> tube: array<u32>;
+
+// A vidicon reads its picture off a photoconductive target by scanning it with
+// an electron beam that discharges each element to cathode potential. The beam
+// does that imperfectly in two ways, and both are the look of a tube camera.
+//
+// Lag: a faintly charged element barely attracts the beam, so the beam lands
+// in full on a bright element and glances off a dim one, leaving charge behind
+// to be read next field, and the next. Dark detail smears behind motion while
+// highlights are read clean. The red tube of a three-tube camera lags most, so
+// what lingers goes orange.
+//
+// Comet tails: the beam can carry only so much current per field. A highlight
+// charges its element past that, the beam takes several fields to drain it,
+// and a moving light leaves a trail that holds the cap's brightness and then
+// collapses. The target itself saturates, which bounds how long a tail a
+// static light can bank.
+const LAG_K = vec3f(0.21, 0.15, 0.12);
+const COMET_CAP = vec3f(0.85, 1.0, 1.2);
+const TARGET_MAX = 24.0;
+
+fn tubeRead(pi: u32, light: vec3f) -> vec3f {
+  let i = pi * 2u;
+  let rg = unpack2x16float(tube[i]);
+  var t = vec3f(rg.x, rg.y, unpack2x16float(tube[i + 1u]).x) + light;
+  let darkEff = 1.0 - 0.95 * P.fbLag;
+  var d = t * (t + darkEff * LAG_K) / (t + LAG_K);
+  if (P.fbComet > 0.0) {
+    // The beam's current against target voltage is a soft knee, so the cap
+    // rounds in and a tail fades out over its last fields where a hard cap
+    // would hold and then cut.
+    let cap = COMET_CAP * 0.4 * pow(20.0, 1.0 - P.fbComet);
+    t = min(t, cap * TARGET_MAX);
+    d = d * cap / sqrt(d * d + cap * cap);
+  }
+  let left = t - d;
+  tube[i] = pack2x16float(left.rg);
+  tube[i + 1u] = pack2x16float(vec2f(left.b, 0.0));
+  return d;
+}
 
 // The slot's picture as the file holds it. Bob-deinterlace: a capture card
 // weaves NTSC's two time-staggered fields into one raster, so motion combs.
@@ -249,6 +293,20 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
     fb = cam(fuv) * P.fbGain * iris;
     // lens vignette, in sensor coordinates
     fb = fb * max(1.0 - P.fbVign * 1.45 * dot(rel0, rel0), 0.0);
+  }
+  // The tube between the lens and the sensor nonlinearities below. It runs
+  // wherever the camera is pointed, inside the glass or off it, because the
+  // target holds charge wherever it was lit a field ago. Idle, it is drained
+  // each frame so that raising the control later reads no stale picture.
+  let pi = gid.y * ACTIVE_W + gid.x;
+  let tubeOn = P.fbLag > 0.0 || P.fbComet > 0.0;
+  if (tubeOn) {
+    fb = pow(tubeRead(pi, pow(fb, vec3f(2.2))), vec3f(1.0 / 2.2));
+  } else {
+    tube[pi * 2u] = 0u;
+    tube[pi * 2u + 1u] = 0u;
+  }
+  if (inside || tubeOn) {
     // sensor black cut, then full-well saturation
     fb = max(fb - vec3f(P.fbBlack), vec3f(0.0)) / (1.0 - P.fbBlack);
     // A photosite has a finite well: highlights roll into a shoulder and

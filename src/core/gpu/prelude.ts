@@ -195,6 +195,8 @@ export const PARAM_DEFS = [
   ['bendShape', 'f32'], // 0 flag, 1 skew, 2 bow, 3 sine
   ['bendPeriod', 'f32'], // flag decay constant / sine period, screen lines
   ['vSize', 'f32'], // vertical deflection amplitude: <1 underscans, raster and retrace come into view
+  ['vLin', 'f32'], // vertical linearity: curvature of the yoke's sawtooth, top compressed and bottom stretched when positive
+  ['vFold', 'f32'], // vertical output saturation: 0 none, 1 the sweep stops a quarter of the way down and folds back over the top
   ['hvSag', 'f32'], // beam-current deflection sag amplitude, samples
   ['hvRing', 'f32'], // supply damping: 0 smooth droop .. 1 ringing / chaotic
   ['hRate', 'f32'], // horizontal oscillator free-run drift, samples/line
@@ -347,6 +349,8 @@ export const PARAM_DEFS = [
   ['fbBlack', 'f32'], // sensor black cut level (trails die into black)
   ['fbKnee', 'f32'], // sensor s-curve amount (bloom + highlight compression)
   ['fbIris', 'f32'], // camera auto-iris: 0 manual exposure .. 1 underdamped servo (hunts)
+  ['fbLag', 'f32'], // pickup-tube lag: the reading beam leaves charge behind on a dim target
+  ['fbComet', 'f32'], // pickup-tube comet tails: beam current cap, highlights drain over several fields
   // CRT faceplate: the emissive screen the camera photographs (and the display
   // shows). Sits between the decoded signal and the camera/lens model above.
   ['crtCutoff', 'f32'], // beam cutoff: drive below the knee emits no light (true black background)
@@ -408,6 +412,8 @@ export const PARAM_DEFS = [
   ['phosphorMode', 'f32'], // tube colour identity: 0 sRGB, 1 P22/SMPTE-C, 2 NTSC-1953, 3 long-persistence green
   ['phosphorSkew', 'f32'], // R/B persistence decay exponent skew relative to G (trails die toward green)
   ['phosphorBleed', 'f32'], // fraction of held light that scatters to the four neighbours per frame
+  ['burnRate', 'f32'], // phosphor burn-in: dose added per field of full white
+  ['burnDepth', 'f32'], // phosphor burn-in: efficiency lost per unit dose
   ['crtSharp', 'f32'], // horizontal Catmull-Rom reconstruction blend (0 bilinear)
   ['maskAmt', 'f32'], // aperture grille strength
   ['maskPitch', 'f32'], // grille triad pitch, canvas pixels

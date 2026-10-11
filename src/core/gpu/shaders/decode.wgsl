@@ -41,9 +41,14 @@ fn heldLight(x: i32, y: i32) -> vec3f {
   return vec3f(rg.x, rg.y, unpack2x16float(held[i + 1u]).x);
 }
 
-fn storeLight(pi: u32, e: vec3f) {
+// The spare half of the second word holds the burn-in dose (see main).
+fn heldDose(pi: u32) -> f32 {
+  return unpack2x16float(held[pi * 2u + 1u]).y;
+}
+
+fn storeLight(pi: u32, e: vec3f, dose: f32) {
   heldNext[pi * 2u] = pack2x16float(vec2f(e.r, e.g));
-  heldNext[pi * 2u + 1u] = pack2x16float(vec2f(e.b, 0.0));
+  heldNext[pi * 2u + 1u] = pack2x16float(vec2f(e.b, dose));
 }
 
 // Gun drive is gamma-encoded; the phosphor layer works in light. Same 2.2 the
@@ -157,9 +162,10 @@ fn loPhaseErr(n: u32, row: u32) -> f32 {
 // comb-filtered chroma source span for this workgroup's row; a whole
 // workgroup shares one raster row (and its sync offset), so the demod FIR
 // reads shared memory instead of 1-3 storage loads per tap
-var<workgroup> tile: array<f32, TILE>;
+var<workgroup> tile: array<f32, TILE * 2u>;
 
-// Synchronous chroma demod centered on tile index ti / global sample n0.
+// Synchronous chroma demod centered on tile index ti / global sample n0, in
+// the half of the tile `toff` names.
 // Offsets stay within the halo for |off| <= HALO - (DEMOD_TAPS-1)/2.
 //
 // Sampling at 4x fsc puts the carrier on the four-phase lattice (0,1) (1,0)
@@ -168,23 +174,23 @@ var<workgroup> tile: array<f32, TILE>;
 // accumulator a tap lands in, and with what sign, depends only on k mod 4, so
 // the taps sum into four buckets and the lattice is applied once at the end as
 // a rotation of those buckets onto (us, vs).
-fn demodAt(ti: i32, n0: i32) -> vec2f {
+fn demodAt(ti: i32, n0: i32, toff: u32) -> vec2f {
   let m = i32((DEMOD_TAPS - 1u) / 2u);
   let f0 = SEC_DEMOD * FILTER_STRIDE;
   var q = vec4f(0.0);
   var k = 0;
   for (; k <= i32(DEMOD_TAPS) - 4; k = k + 4) {
     q = q + vec4f(
-      filters[f0 + u32(k)] * tile[u32(ti + k - m)],
-      filters[f0 + u32(k + 1)] * tile[u32(ti + k + 1 - m)],
-      filters[f0 + u32(k + 2)] * tile[u32(ti + k + 2 - m)],
-      filters[f0 + u32(k + 3)] * tile[u32(ti + k + 3 - m)],
+      filters[f0 + u32(k)] * tile[u32(ti + k - m) + toff],
+      filters[f0 + u32(k + 1)] * tile[u32(ti + k + 1 - m) + toff],
+      filters[f0 + u32(k + 2)] * tile[u32(ti + k + 2 - m) + toff],
+      filters[f0 + u32(k + 3)] * tile[u32(ti + k + 3 - m) + toff],
     );
   }
   // odd tap count leaves up to three; select rather than a dynamic vec index,
   // which would spill q to scratch for the sake of one iteration
   for (; k < i32(DEMOD_TAPS); k = k + 1) {
-    let g = filters[f0 + u32(k)] * tile[u32(ti + k - m)];
+    let g = filters[f0 + u32(k)] * tile[u32(ti + k - m) + toff];
     let b = k & 3;
     q = q + vec4f(
       select(0.0, g, b == 0),
@@ -224,7 +230,87 @@ fn demodAt(ti: i32, n0: i32) -> vec2f {
 // one. A function of y alone, so it stays row-uniform, which is what decode's
 // tiling requires of any offset.
 fn rasterRowF(y: f32) -> f32 {
-  return f32(ACTIVE_TOP) + 240.0 + (y - 240.0) / clamp(P.vSize, 0.2, 4.0);
+  return f32(ACTIVE_TOP) + 240.0 + (y - 240.0) / clamp(P.vSize, 0.05, 4.0);
+}
+
+// The same scan with the vertical output stage misbehaving. The stage drives a
+// sawtooth of current through the yoke and the beam's height follows it, so a
+// curved ramp (vLin) compresses one end of the picture and stretches the other,
+// and a stage that cannot source the current the bottom of the sweep asks for
+// (vFold) saturates: the ramp rounds over, stops, and the yoke's inductance
+// pulls the current back down, so the lines still to come are drawn upward over
+// the picture already on the glass. Both are glass geometry, so they are
+// functions of the raster line alone and hue never moves.
+//
+// `ramp` is the current before saturation in lines from screen centre, `sweep`
+// the screen row it lands on. Neither can be inverted in closed form once the
+// knee is in, so decode bisects them; both are monotone on each side of the
+// knee, which the 0.45 ceiling on vLin (uniforms.ts) guarantees.
+const FOLD_K = 0.6;
+const FOLD_W = 4.0;
+
+fn foldAt() -> f32 {
+  return 302.0 - 420.0 * P.vFold;
+}
+
+fn ramp(r: f32) -> f32 {
+  let u = r - f32(ACTIVE_TOP) - 240.0;
+  return u + P.vLin * (u * u / 262.0 - 87.3);
+}
+
+fn sweep(r: f32) -> f32 {
+  var p = ramp(r);
+  if (P.vFold > 0.0) {
+    let x = p - foldAt();
+    if (x > 0.0) {
+      p = p - x - FOLD_K * x + (1.0 + FOLD_K) * FOLD_W * (1.0 - exp(-x / FOLD_W));
+    }
+  }
+  return 240.0 + p * clamp(P.vSize, 0.05, 4.0);
+}
+
+// The raster line whose ramp reaches `target`.
+fn rampInv(level: f32) -> f32 {
+  var lo = 0.0;
+  var hi = f32(NLINES) - 1.0;
+  for (var i = 0; i < 16; i = i + 1) {
+    let mid = 0.5 * (lo + hi);
+    if (ramp(mid) < level) {
+      lo = mid;
+    } else {
+      hi = mid;
+    }
+  }
+  return 0.5 * (lo + hi);
+}
+
+// The raster line in [lo, hi] whose sweep lands on screen row y, given that the
+// sweep is monotone there; -1 when no line in the stretch reaches the row.
+fn sweepInv(y: f32, lo0: f32, hi0: f32) -> f32 {
+  var lo = lo0;
+  var hi = hi0;
+  let slo = sweep(lo) - y;
+  if (slo * (sweep(hi) - y) > 0.0) {
+    return -1.0;
+  }
+  for (var i = 0; i < 16; i = i + 1) {
+    let mid = 0.5 * (lo + hi);
+    if ((sweep(mid) - y) * slo > 0.0) {
+      lo = mid;
+    } else {
+      hi = mid;
+    }
+  }
+  return 0.5 * (lo + hi);
+}
+
+// How many raster lines land on the screen row line r is on, relative to the
+// plain scan at this amplitude: the slower the beam moves, the more lines pile
+// up and the brighter the row. Capped where the sweep stands still, which is
+// otherwise a division by zero at the knee.
+fn density(r: f32) -> f32 {
+  let amp = clamp(P.vSize, 0.05, 4.0);
+  return amp / max(abs(sweep(r + 0.5) - sweep(r - 0.5)), 0.125 * amp);
 }
 
 // The scope tap (dbgView 6) draws one line of `comp` as a trace, the way a
@@ -319,34 +405,22 @@ fn captionAt(x: u32, y: u32) -> vec2f {
   return vec2f(f32((romRead(cell & 0xffu, gy, y) >> gx) & 1u), 1.0);
 }
 
-@compute @workgroup_size(TILE_WG, 1, 1)
-fn main(
-  @builtin(global_invocation_id) gid: vec3u,
-  @builtin(local_invocation_id) lid: vec3u,
-  @builtin(workgroup_id) wid: vec3u,
-) {
-  // roll wraps over the whole 525-line frame, so the VBI decodes as the
-  // classic rolling black bar instead of the picture wrapping seamlessly
-  let vroll = timing[V_PHASE];
-  let rrF = rasterRowF(f32(gid.y));
-  let offRaster = rrF < 0.0 || rrF > f32(NLINES) - 1.0;
-  let rr = u32(clamp(rrF, 0.0, f32(NLINES) - 1.0));
-  let row = wrapRow(i32(rr) + i32(floor(vroll)));
-  // parametric bend, the signal-driven supply sag, and audio patched straight
-  // at the yoke — all deflection-domain, all indexed by raster line
-  let ry = rr;
-  let sag = P.hvSag * timing[SAG_BASE + ry];
-  let hoff = i32(round(timing[row] + bendAt(f32(gid.y)) + sag + P.audioBend * audio[ry]));
-  let base = i32(row * SPL + ACTIVE_START + wid.x * TILE_WG) + hoff - i32(HALO);
-  for (var i = lid.x; i < TILE; i = i + TILE_WG) {
-    tile[i] = csrc(clampIdx(base + i32(i)));
-  }
-  workgroupBarrier();
+struct Decoded {
+  rgb: vec3f,
+  lum: f32,
+  us: f32,
+  vs: f32,
+  e: f32,
+  g: f32,
+  liz: f32,
+}
 
-  if (gid.x >= ACTIVE_W || gid.y >= ACTIVE_H) {
-    return;
-  }
-  let s = ACTIVE_START + gid.x;
+// One screen pixel decoded off one raster line, the receiver from the
+// demodulator to the matrix. `row` is the line after the roll, `ry` the raster
+// line it is drawn on, `hoff` the line's horizontal offset, and `toff` which
+// half of the tile holds its samples. The extra fields feed the debug views.
+fn decodeAt(row: u32, ry: u32, hoff: i32, toff: u32, lid: u32, gx: u32) -> Decoded {
+  let s = ACTIVE_START + gx;
   let n = clampIdx(i32(row * SPL + s) + hoff);
 
   // Chroma reconstruction lattice: at coarse > 1 the demod runs only at every
@@ -354,17 +428,17 @@ fn main(
   // decoder's chroma-upsampling error. Interpolated U/V re-attach to the wrong
   // subcarrier phase at edges, blooming dither and fine detail into rainbows.
   // Factor 8 keeps the farthest tap within the tile halo (20 + 8 <= 32).
-  let ti = i32(lid.x + HALO);
+  let ti = i32(lid + HALO);
   let coarse = u32(clamp(P.chromaCoarse, 1.0, 8.0));
   var uvd: vec2f;
   if (coarse > 1u) {
-    let x0 = (gid.x / coarse) * coarse;
-    let d0 = i32(x0) - i32(gid.x);
-    let a = demodAt(ti + d0, i32(n) + d0);
-    let b = demodAt(ti + d0 + i32(coarse), i32(n) + d0 + i32(coarse));
-    uvd = mix(a, b, f32(gid.x - x0) / f32(coarse));
+    let x0 = (gx / coarse) * coarse;
+    let d0 = i32(x0) - i32(gx);
+    let a = demodAt(ti + d0, i32(n) + d0, toff);
+    let b = demodAt(ti + d0 + i32(coarse), i32(n) + d0 + i32(coarse), toff);
+    uvd = mix(a, b, f32(gx - x0) / f32(coarse));
   } else {
-    uvd = demodAt(ti, i32(n));
+    uvd = demodAt(ti, i32(n), toff);
   }
   var us = uvd.x;
   var vs = uvd.y;
@@ -458,6 +532,86 @@ fn main(
     // fit again — same hue-preserving desaturation
     outc = gamutFit(phosphorRgb(outc));
   }
+  return Decoded(outc, lum, us, vs, e, g, li.z);
+}
+
+// The horizontal offset of raster line `ry` after the roll put `row` on it:
+// the sync PLL's offset for the line, then the parametric bend, the
+// signal-driven supply sag and audio patched straight at the yoke, all
+// deflection-domain and all indexed by raster line.
+fn lineOffset(row: u32, ry: u32, y: f32) -> i32 {
+  let sag = P.hvSag * timing[SAG_BASE + ry];
+  return i32(round(timing[row] + bendAt(y) + sag + P.audioBend * audio[ry]));
+}
+
+@compute @workgroup_size(TILE_WG, 1, 1)
+fn main(
+  @builtin(global_invocation_id) gid: vec3u,
+  @builtin(local_invocation_id) lid: vec3u,
+  @builtin(workgroup_id) wid: vec3u,
+) {
+  // roll wraps over the whole 525-line frame, so the VBI decodes as the
+  // classic rolling black bar instead of the picture wrapping seamlessly
+  let vroll = timing[V_PHASE];
+  let y = f32(gid.y);
+  let last = f32(NLINES) - 1.0;
+  // Which raster line the yoke puts on this screen row. The plain scan is one
+  // line per row by construction. A curved or saturated sweep is inverted
+  // numerically, and past the knee a second line lands on the same row on its
+  // way back up, from the far side of the knee.
+  let plain = P.vLin == 0.0 && P.vFold <= 0.0;
+  var rrF = 0.0;
+  var rrFB = -1.0;
+  var densA = 1.0;
+  var densB = 0.0;
+  if (plain) {
+    rrF = rasterRowF(y);
+  } else {
+    var split = last;
+    if (P.vFold > 0.0) {
+      let peak = foldAt() + FOLD_W * log((1.0 + FOLD_K) / FOLD_K);
+      if (ramp(last) > peak) {
+        split = rampInv(peak);
+      }
+    }
+    rrF = sweepInv(y, 0.0, split);
+    if (split < last) {
+      rrFB = sweepInv(y, split, last);
+    }
+    densA = density(rrF);
+    densB = density(rrFB);
+  }
+  let offRaster = rrF < 0.0 || rrF > last;
+  let twice = rrFB >= 0.0;
+  let rr = u32(clamp(rrF, 0.0, last));
+  let row = wrapRow(i32(rr) + i32(floor(vroll)));
+  let ry = rr;
+  let hoff = lineOffset(row, ry, y);
+  let base = i32(row * SPL + ACTIVE_START + wid.x * TILE_WG) + hoff - i32(HALO);
+  for (var i = lid.x; i < TILE; i = i + TILE_WG) {
+    tile[i] = csrc(clampIdx(base + i32(i)));
+  }
+  // The folded-back line, in the other half of the tile. Row-uniform like
+  // everything else here, so the whole workgroup stages it or none does.
+  var rowB = 0u;
+  var ryB = 0u;
+  var hoffB = 0;
+  if (twice) {
+    ryB = u32(clamp(rrFB, 0.0, last));
+    rowB = wrapRow(i32(ryB) + i32(floor(vroll)));
+    hoffB = lineOffset(rowB, ryB, y);
+    let baseB = i32(rowB * SPL + ACTIVE_START + wid.x * TILE_WG) + hoffB - i32(HALO);
+    for (var i = lid.x; i < TILE; i = i + TILE_WG) {
+      tile[TILE + i] = csrc(clampIdx(baseB + i32(i)));
+    }
+  }
+  workgroupBarrier();
+
+  if (gid.x >= ACTIVE_W || gid.y >= ACTIVE_H) {
+    return;
+  }
+  let d = decodeAt(row, ry, hoff, 0u, lid.x, gid.x);
+  var outc = d.rgb;
   if (offRaster) {
     // past the vertical retrace the beam never scans: no light, though the
     // phosphor below still owes whatever it was holding there
@@ -483,6 +637,18 @@ fn main(
   // sweep crawled would be the one part of the picture not slowing with it.
   let pi = gid.y * ACTIVE_W + gid.x;
   var emitted = toLight(outc);
+  if (!plain) {
+    // Light is what adds where the sweep slows: a row the yoke lingers on is
+    // drawn by more than one line, and a row scanned twice, on the way down and
+    // folded back, by both. The knee itself is where every line in the bend
+    // piles up, and it goes white.
+    emitted = emitted * densA;
+    if (twice) {
+      let dB = decodeAt(rowB, ryB, hoffB, TILE, lid.x, gid.x);
+      emitted = emitted + toLight(dB.rgb * (1.0 - P.beamBlank)) * densB;
+    }
+    outc = gamutFit(toDrive(emitted));
+  }
   if (P.phosphor > 0.0) {
     // Held just off 1.0: at 1 the rate is zero, the layer never gives the light
     // back, and the screen keeps every field it was ever shown with nothing in
@@ -527,11 +693,6 @@ fn main(
     emitted = drive + max(tail - phosphorDecay(drive, krgb) * 0.9995, vec3f(0.0));
     outc = gamutFit(toDrive(emitted));
   }
-  // Always stored, even with persistence off: the buffer is what the layer is
-  // holding, and if it went stale while the control sat at 0 then turning the
-  // control up would light the glass with whatever field it was parked on.
-  storeLight(pi, emitted);
-
   // Debug views substitute what is displayed, not what is decoded: the
   // persistence state above is still carried, so switching a view on and off
   // does not leave the ping-pong buffer holding a frame from two frames back.
@@ -540,11 +701,11 @@ fn main(
     let sn = (u32(f32(gid.x) / f32(ACTIVE_W) * f32(SPL))) + row * SPL;
     shown = vec3f((comp[sn] + 40.0) / 140.0);
   } else if (P.dbgView == 3.0) {
-    shown = vec3f((lum - IRE_BLACK) / VIDEO_RANGE);
+    shown = vec3f((d.lum - IRE_BLACK) / VIDEO_RANGE);
   } else if (P.dbgView == 4.0) {
-    shown = vec3f(abs(us) / 40.0, abs(vs) / 40.0, 0.0);
+    shown = vec3f(abs(d.us) / 40.0, abs(d.vs) / 40.0, 0.0);
   } else if (P.dbgView == 5.0) {
-    shown = vec3f(li.z / 40.0, abs(e) / PI, g / 2.0);
+    shown = vec3f(d.liz / 40.0, abs(d.e) / PI, d.g / 2.0);
   } else if (P.dbgView == 6.0) {
     if (gid.y < ACTIVE_H - SCOPE_H) {
       // The picture stays, dimmed, above the band: a scope is for watching a
@@ -672,8 +833,47 @@ fn main(
   // crt_face then gathers emitted light and pays no pow per tap. While the
   // transfer is active the byte is sRGB-encoded and crt_face reads the
   // texture through an sRGB view, which decodes it back on the way in.
-  if (gunOn(P.crtCutoff, P.crtGamma)) {
+  let gun = gunOn(P.crtCutoff, P.crtGamma);
+  // Phosphor burn-in. Beam current wears the coating, so a patch's efficiency
+  // falls with the dose it has taken, and the blue phosphor wears fastest, so a
+  // worn patch goes dark and yellow-brown. The dose rides in the spare half of
+  // the phosphor store, and this pass copies it across whatever the controls
+  // say, because nothing in a tube undoes wear: a rate turned back to zero
+  // leaves the glass as it is, and only `resetSignal` clears it. The light the gun actually
+  // puts out is what wears the patch, so the dose is taken after the gun
+  // transfer and on the caption too, which is lit off the same coating.
+  //
+  // The accumulator is an f16, and a field's increment at a low rate is well
+  // under its half-ulp once the dose has grown, so the wear would stall at
+  // whatever level rounds back to itself. Dithering the rounding by a ulp
+  // lands the increment in expectation.
+  var dose = heldDose(pi);
+  if (P.burnDepth <= 0.0 && P.burnRate <= 0.0) {
+    // both controls at zero is the one way to a fresh tube
+    dose = 0.0;
+  }
+  if (dose > 0.0 || P.burnRate > 0.0) {
+    var light = toLight(shown);
+    if (gun) {
+      light = gunTransfer(shown, P.crtCutoff, P.crtGamma);
+    }
+    let eff = 1.0 / (1.0 + P.burnDepth * dose * vec3f(0.75, 1.0, 1.5));
+    if (P.burnRate > 0.0) {
+      let jitter = (rand01(pi ^ (P.frame * 0x9E3779B9u)) - 0.5) * dose * 0.00098;
+      dose = min(dose + P.burnRate * luma(light) + jitter, 64.0);
+    }
+    light = light * eff;
+    if (gun) {
+      shown = srgbEncode(light);
+    } else {
+      shown = toDrive(light);
+    }
+  } else if (gun) {
     shown = srgbEncode(gunTransfer(shown, P.crtCutoff, P.crtGamma));
   }
+  // Always stored, even with persistence off: the buffer is what the layer is
+  // holding, and if it went stale while the control sat at 0 then turning the
+  // control up would light the glass with whatever field it was parked on.
+  storeLight(pi, emitted, dose);
   textureStore(outTex, vec2i(gid.xy), vec4f(shown, 1.0));
 }

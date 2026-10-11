@@ -155,6 +155,10 @@ export function uniformValues(c: Controls, env: UniformEnv) {
     bendShape: c.bendShape,
     bendPeriod: c.bendPeriod,
     vSize: c.vSize,
+    // The curvature stays short of where the ramp would stop rising, so the
+    // sweep is monotone and decode can invert it.
+    vLin: 0.45 * c.vLin,
+    vFold: c.vFold,
     hvSag: (c.hvSagUs + c.audioSagUs * env.audioHit) * 1e-6 * SAMPLE_RATE,
     hvRing: c.hvRing,
     // beat between the free-running H-osc and the incoming line rate, in
@@ -269,6 +273,8 @@ export function uniformValues(c: Controls, env: UniformEnv) {
     fbBlack: c.fbBlack,
     fbKnee: c.fbKnee,
     fbIris: c.fbIris,
+    fbLag: c.fbLag,
+    fbComet: c.fbComet,
     crtCutoff: c.crtCutoff,
     crtGamma: c.crtGamma,
     crtSat: c.crtSat,
@@ -369,6 +375,10 @@ export function uniformValues(c: Controls, env: UniformEnv) {
     phosphorMode: c.phosphorMode,
     phosphorSkew: c.phosphorSkew,
     phosphorBleed: c.phosphorBleed,
+    // A field of full white at rate 1 wears the coating to half efficiency in
+    // a second; the dose is a count of such fields.
+    burnRate: c.burnRate / 60,
+    burnDepth: c.burnDepth,
     crtSharp: c.crtSharp,
     maskAmt: c.maskAmt,
     maskPitch: c.maskPitch,

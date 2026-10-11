@@ -2400,6 +2400,21 @@ export const PRESETS: PresetDef[] = [
     },
   },
   {
+    name: 'burnedIn',
+    displayName: 'burned in',
+    group: 'Phosphor / CRT',
+    blurb:
+      "A set left on the same channel for years, run at a rate of years per second. The deck's display sits still over the picture and wears the blue phosphor under it fastest, so after a few seconds its letters are etched into the glass as a dark yellow-brown ghost. Change the source and the ghost stays. The wear survives every preset after this one; burn-in depth at 0 wipes it.",
+    patch: {
+      burnRate: 0.6,
+      osd: 1,
+      osdHoldS: 30,
+      osdScale: 2,
+      crtBloom: 0.3,
+      crtGlow: 0.12,
+    },
+  },
+  {
     name: 'greenTerminal',
     displayName: 'green terminal',
     group: 'Phosphor / CRT',
@@ -2881,6 +2896,22 @@ export const PRESETS: PresetDef[] = [
     },
   },
   {
+    name: 'foldover',
+    group: 'Sync / Deflection',
+    blurb:
+      'The vertical output stage dying. Its ramp curves, so the top of the picture is squeezed and the bottom stretched, and it saturates a little past the middle: the sweep stops, the yoke pulls the beam back up, and the rest of the frame is drawn upside down over the top half. Every line in the knee lands on one row, which glows white. Deflection-domain, so the picture folds and hue never moves.',
+    patch: {
+      vFold: 0.5,
+      vLin: 0.25,
+      hvSagUs: 2,
+      scanBeam: 0.5,
+      crtBloom: 0.4,
+      phosphor: 0.6,
+      phosphorBleed: 0.2,
+    },
+    mod: [{ target: 'vFold', source: 'smooth', rateHz: 0.07, depth: 0.12 }],
+  },
+  {
     name: 'splitPhase',
     displayName: 'split phase',
     group: 'A/B mixing',
@@ -2928,6 +2959,28 @@ export const PRESETS: PresetDef[] = [
       hvSagUs: 35,
       hvRing: 0.9,
       crtBloom: 0.6,
+    },
+  },
+  {
+    name: 'cometTails',
+    displayName: 'comet tails',
+    group: 'Feedback loops',
+    blurb:
+      "A tube camera on the loop. Its target holds charge the reading beam fails to clear, so dark detail smears behind motion, and a highlight charges it past what the beam can carry in a field, so every bright point drags a trail that holds its brightness and then collapses. The red tube lags most and the trails run orange. Each lap re-photographs the last lap's trails, so they feed themselves.",
+    patch: {
+      fbMix: 0.5,
+      fbGain: 1.25,
+      fbZoom: 1.005,
+      fbFocus: 0.8,
+      fbLag: 0.35,
+      fbComet: 0.7,
+      fbKnee: 0.5,
+      fbBlack: 0.05,
+      crtCutoff: 0.12,
+      crtGamma: 1.6,
+      crtSat: 1.2,
+      crtBloom: 0.5,
+      crtHalation: 0.35,
     },
   },
   {

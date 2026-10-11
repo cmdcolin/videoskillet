@@ -69,6 +69,8 @@ export const DEFAULT_CONTROLS = {
   bendShape: 0, // 0 flag, 1 skew, 2 bow, 3 ripple
   bendPeriod: 60, // flag decay constant / ripple period, screen lines
   vSize: 1, // vertical deflection amplitude: <1 underscans, showing the raster past the picture
+  vLin: 0, // vertical linearity error, -1..1
+  vFold: 0, // vertical output saturation: the sweep stops short and folds back
   hvSagUs: 0, // beam-current deflection sag: bright content bends the scan
   hvRing: 0.5, // supply damping: 0 smooth droop .. 1 ringing / chaotic
   abl: 0, // beam limiter: 0 generous flyback .. 1 undersized and underdamped (pumps)
@@ -217,6 +219,8 @@ export const DEFAULT_CONTROLS = {
   fbVign: 0.2,
   fbBlack: 0.03,
   fbKnee: 0.35,
+  fbLag: 0, // pickup-tube lag: dim detail is read out over several fields
+  fbComet: 0, // pickup-tube comet tails: highlights charge the target past what one field reads
   // CRT faceplate (what the feedback camera and display photograph)
   crtCutoff: 0, // beam cutoff, 0 = off (identity, no black crush)
   crtGamma: 1, // gun gamma, 1 = linear passthrough
@@ -363,6 +367,8 @@ export const DEFAULT_CONTROLS = {
   phosphorMode: 0, // 0 sRGB, 1 P22/SMPTE-C, 2 NTSC-1953, 3 long-persistence green
   phosphorSkew: 0.7, // R/B decay *rate* skew vs green (0.7 = 1.7/1.0/2.4x)
   phosphorBleed: 0.15, // light scattering sideways in the layer: trails soften as they age
+  burnRate: 0, // phosphor burn-in: how fast beam current wears the coating, 0 never
+  burnDepth: 1, // phosphor burn-in: how much a worn patch dims
   crtSharp: 0,
   maskAmt: 0,
   maskPitch: 3,

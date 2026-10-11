@@ -83,7 +83,8 @@ on a parity error.
 
 The beam and the phosphor it lands on. Persistence decays second-order, so a
 trail has a bright leading edge and a long faint tail, and it turns green
-because red and blue decay first.
+because red and blue decay first. Beam current wears the coating, so a display
+that sits still burns in as a dark ghost that stays when the picture moves on.
 
 ## Audio-reactive
 

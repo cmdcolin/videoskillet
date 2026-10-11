@@ -292,6 +292,12 @@
 304 osdBlueS step=0.5 default=0
 305 osdColour step=1 default=0 choices=white|green
 306 osdEdge step=1 default=0 choices=none|black
+307 fbLag step=0.01 default=0
+308 fbComet step=0.01 default=0
+309 vLin step=0.01 default=0
+310 vFold step=0.01 default=0
+311 burnRate step=0.01 default=0
+312 burnDepth step=0.01 default=1
 
 # ?mod= sources, by name
 sine
