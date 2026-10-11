@@ -1592,11 +1592,11 @@ export const PRESETS: PresetDef[] = [
       fbBlack: 0.015,
       fbKnee: 0.75,
     },
-    // Through zero, so the bend reverses and the ribbons unwind. The vignette
-    // and the black cut are nearly out on purpose: a bend pushes content off
-    // the raster and none of it comes back, so this loop loses light every lap
-    // before anything else takes any.
-    mod: [{ target: 'hvSagUs', source: 'sine', rateHz: 0.04, depth: 0.15 }],
+    // The vignette and the black cut are nearly out on purpose: a bend pushes
+    // content off the raster and none of it comes back, so this loop loses
+    // light every lap before anything else takes any. Smooth noise on the
+    // depth, because a supply drifts and never repeats.
+    mod: [{ target: 'hvSagUs', source: 'smooth', rateHz: 0.06, depth: 0.15 }],
   },
   {
     name: 'supplyWiredBackwards',
@@ -1618,9 +1618,7 @@ export const PRESETS: PresetDef[] = [
       fbBlack: 0.015,
       fbKnee: 0.75,
     },
-    // Through zero, so the field passes through flat and comes back the other
-    // way up: the columns dissolve into ribbons and re-form as columns.
-    mod: [{ target: 'hvSagUs', source: 'sine', rateHz: 0.04, depth: 0.15 }],
+    mod: [{ target: 'hvSagUs', source: 'smooth', rateHz: 0.06, depth: 0.15 }],
   },
   {
     name: 'flagOnEveryLap',
