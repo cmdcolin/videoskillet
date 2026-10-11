@@ -1,12 +1,14 @@
 // Static WGSL validation. Every shader is only compiled at runtime inside the
 // browser's WebGPU implementation, so a typo survives until the app runs. Here
-// we prepend the same generated PRELUDE the engine uses and hand each shader to
-// naga (the wgpu validator) for a real type/borrow/entry-point check at test
-// time. Naga is a Rust binary; if it isn't on PATH the suite skips locally but
-// CI installs it, so the check is enforced there.
+// we prepend the same generated PRELUDE the engine uses and compile each shader
+// with both browsers' compilers: naga (Firefox) and Tint (Chrome, headless on
+// SwiftShader). Each check skips locally when its compiler is missing; CI has
+// both, so the checks are enforced there.
 
-import { describe, expect, it } from 'vitest'
+import puppeteer, { type Browser } from 'puppeteer-core'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
+import { CHROME } from '../../../scripts/browser.mjs'
 import { PRELUDE } from './prelude'
 import blitExt from './shaders/blit_ext.wgsl?raw'
 import buzzTap from './shaders/buzz_tap.wgsl?raw'
@@ -37,8 +39,11 @@ import timebase from './shaders/timebase.wgsl?raw'
 import underDown from './shaders/under_down.wgsl?raw'
 import vir from './shaders/vir.wgsl?raw'
 
+import type { AddressInfo } from 'node:net'
+
 import { execFileSync } from 'node:child_process'
-import { mkdtempSync, readdirSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdtempSync, readdirSync, writeFileSync } from 'node:fs'
+import { createServer, type Server } from 'node:http'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
@@ -149,6 +154,85 @@ describe('WGSL shaders pass naga validation', () => {
           `${name}.wgsl failed naga validation:\n${String(err.stderr ?? '')}${String(err.stdout ?? '')}`,
         )
       }
+    })
+  }
+})
+
+const hasChrome = existsSync(CHROME)
+
+// Tint runs a uniformity analysis that naga skips: a `workgroupBarrier` after an
+// early return keyed on `global_invocation_id` passes naga, and in Chrome it
+// fails the module, the pipeline built from it, and every bind group taken from
+// that pipeline's layout. Pipelines are built too, which checks each shader's
+// bindings against the default limits the engine's device runs under.
+describe('WGSL shaders compile in Chrome', () => {
+  it('Chrome must be installed under CI', () => {
+    if (process.env.CI !== undefined)
+      expect(hasChrome, `Chrome not found at ${CHROME} in CI`).toBe(true)
+  })
+
+  let browser: Browser | undefined
+  let server: Server | undefined
+  let failures: Record<string, string> = {}
+
+  beforeAll(async () => {
+    if (!hasChrome) return
+    server = createServer((_, res) => res.end('<!doctype html>'))
+    await new Promise<void>(resolve => server?.listen(0, '127.0.0.1', resolve))
+    const { port } = server.address() as AddressInfo
+    browser = await puppeteer.launch({
+      executablePath: CHROME,
+      headless: true,
+      args: [
+        '--enable-unsafe-webgpu',
+        '--use-webgpu-adapter=swiftshader',
+        '--no-sandbox',
+      ],
+    })
+    const page = await browser.newPage()
+    // WebGPU needs a secure context, which about:blank is not.
+    await page.goto(`http://127.0.0.1:${port}/`)
+    const sources = Object.fromEntries(
+      Object.entries(SHADERS).map(([name, src]) => [name, PRELUDE + src]),
+    )
+    failures = await page.evaluate(async shaders => {
+      const adapter = await navigator.gpu.requestAdapter()
+      if (!adapter) throw new Error('no WebGPU adapter in headless Chrome')
+      const device = await adapter.requestDevice()
+      const out: Record<string, string> = {}
+      for (const [name, code] of Object.entries(shaders)) {
+        device.pushErrorScope('validation')
+        const module = device.createShaderModule({ code })
+        const moduleError = await device.popErrorScope()
+        if (moduleError) {
+          out[name] = moduleError.message
+          continue
+        }
+        for (const [, entryPoint] of code.matchAll(
+          /@compute[^\n]*\n\s*fn\s+(\w+)/g,
+        )) {
+          device.pushErrorScope('validation')
+          device.createComputePipeline({
+            layout: 'auto',
+            compute: { module, entryPoint },
+          })
+          const pipelineError = await device.popErrorScope()
+          if (pipelineError)
+            out[name] = `${entryPoint}: ${pipelineError.message}`
+        }
+      }
+      return out
+    }, sources)
+  }, 60_000)
+
+  afterAll(async () => {
+    await browser?.close()
+    server?.close()
+  })
+
+  for (const name of Object.keys(SHADERS)) {
+    it.runIf(hasChrome)(name, () => {
+      expect(failures[name], `${name}.wgsl failed in Chrome`).toBeUndefined()
     })
   }
 })
