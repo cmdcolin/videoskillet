@@ -372,13 +372,13 @@ export function SignalPath(props: {
   // A stage opened on a phone opens out of sight. Portrait stacks the panel
   // under the picture, and the map alone fills what is left of it, so the stage
   // that unfolds under the map lands below the fold: the box lights and nothing
-  // else on screen changes, which reads as a button that did nothing. So a
-  // heading that opened below the visible panel is brought up to its middle —
-  // half a screen of the map above it, half a screen of its rows below. The
-  // heading and not the row: a stage is taller than the panel it opens in, and
-  // centring the whole of it put the heading off the top and the map with it.
-  // A heading already in view, which is every desktop panel, is left alone,
-  // and so is a press that folds a stage away.
+  // else on screen changes, which reads as a button that did nothing. A heading
+  // that opens in the lower part of the panel, with no room for its rows under
+  // it, is brought up to the middle: half a screen of the map above it, half a
+  // screen of its rows below. The heading and not the row: a stage is taller
+  // than the panel it opens in, and centring the whole of it put the heading
+  // off the top and the map with it. A heading higher up, as on a desktop
+  // panel, is left alone, and so is a press that folds a stage away.
   const reveal = (name: string) => {
     const head = rows.current.get(name)?.firstElementChild
     if (head instanceof HTMLElement) {
@@ -386,10 +386,10 @@ export function SignalPath(props: {
       while (box !== null && box.scrollHeight <= box.clientHeight + 1) {
         box = box.parentElement
       }
+      const view = box?.getBoundingClientRect()
       if (
-        box !== null &&
-        head.getBoundingClientRect().top + 48 >
-          box.getBoundingClientRect().bottom
+        view !== undefined &&
+        head.getBoundingClientRect().top > view.top + view.height * 0.6
       ) {
         head.scrollIntoView({ block: 'center', behavior: 'smooth' })
       }
