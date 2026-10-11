@@ -425,17 +425,14 @@
   text-align: center;
 }
 
-/* The tune sheet rises over the strip and the shutter, so the picture above
-   it keeps its place. */
+/* The tune and feedback sheets cover the strip and the shutter exactly, so
+   the whole picture stays in view and in place. */
 .sheet {
   position: absolute;
-  right: 0;
-  bottom: 0;
-  left: 0;
+  inset: 0;
   z-index: 2;
   display: flex;
   flex-direction: column;
-  max-height: min(60vh, 440px);
   border-radius: 18px 18px 0 0;
   background: #111;
   box-shadow: 0 -8px 30px #000c;
@@ -904,7 +901,6 @@
     top: 0;
     left: auto;
     width: min(380px, 60vw);
-    max-height: none;
     border-radius: 18px 0 0 18px;
   }
 }
