@@ -298,6 +298,8 @@
 310 vFold step=0.01 default=0
 311 burnRate step=0.01 default=0
 312 burnDepth step=0.01 default=1
+313 retraceLines step=0.01 default=0
+314 flybackLines step=1 default=16
 
 # ?mod= sources, by name
 sine

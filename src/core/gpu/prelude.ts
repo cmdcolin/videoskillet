@@ -197,6 +197,8 @@ export const PARAM_DEFS = [
   ['vSize', 'f32'], // vertical deflection amplitude: <1 underscans, raster and retrace come into view
   ['vLin', 'f32'], // vertical linearity: curvature of the yoke's sawtooth, top compressed and bottom stretched when positive
   ['vFold', 'f32'], // vertical output saturation: 0 none, 1 the sweep stops a quarter of the way down and folds back over the top
+  ['retrace', 'f32'], // blanking pulse lost: the vertical flyback draws, at this fraction of the coupling's resting level
+  ['flyback', 'f32'], // line times the vertical flyback takes
   ['hvSag', 'f32'], // beam-current deflection sag amplitude, samples
   ['hvRing', 'f32'], // supply damping: 0 smooth droop .. 1 ringing / chaotic
   ['hRate', 'f32'], // horizontal oscillator free-run drift, samples/line

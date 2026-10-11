@@ -2909,7 +2909,12 @@ export const PRESETS: PresetDef[] = [
       phosphor: 0.6,
       phosphorBleed: 0.2,
     },
-    mod: [{ target: 'vFold', source: 'smooth', rateHz: 0.07, depth: 0.12 }],
+    // The one-shot is the set giving out on cue: a pad folds the picture to the
+    // top quarter and lets it recover.
+    mod: [
+      { target: 'vFold', source: 'smooth', rateHz: 0.07, depth: 0.12 },
+      { target: 'vFold', source: 'trig', rateHz: 1.2, depth: 0.5 },
+    ],
   },
   {
     name: 'splitPhase',
@@ -2981,6 +2986,29 @@ export const PRESETS: PresetDef[] = [
       crtSat: 1.2,
       crtBloom: 0.5,
       crtHalation: 0.35,
+    },
+  },
+  {
+    name: 'nightTube',
+    displayName: 'night tube',
+    group: 'Feedback loops',
+    blurb:
+      'The same tube camera at night. Beam cutoff crushes everything under the highlights to black, so what the target holds is points of light, and each one drags an orange comet behind it that the loop photographs again. Point it at headlights, a candle, or a cartoon with a white skeleton in it.',
+    patch: {
+      fbMix: 0.5,
+      fbGain: 1.3,
+      fbZoom: 1.0,
+      fbFocus: 0.6,
+      fbLag: 0.25,
+      fbComet: 0.85,
+      fbKnee: 0.4,
+      fbBlack: 0.06,
+      crtCutoff: 0.15,
+      crtGamma: 1.6,
+      crtSat: 1.3,
+      crtBloom: 0.9,
+      crtHalation: 0.6,
+      crtGlow: 0.04,
     },
   },
   {

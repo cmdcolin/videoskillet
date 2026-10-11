@@ -71,6 +71,8 @@ export const DEFAULT_CONTROLS = {
   vSize: 1, // vertical deflection amplitude: <1 underscans, showing the raster past the picture
   vLin: 0, // vertical linearity error, -1..1
   vFold: 0, // vertical output saturation: the sweep stops short and folds back
+  retraceLines: 0, // the blanking pulse lost, so the vertical flyback draws
+  flybackLines: 16, // line times the vertical flyback takes
   hvSagUs: 0, // beam-current deflection sag: bright content bends the scan
   hvRing: 0.5, // supply damping: 0 smooth droop .. 1 ringing / chaotic
   abl: 0, // beam limiter: 0 generous flyback .. 1 undersized and underdamped (pumps)

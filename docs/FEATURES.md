@@ -73,7 +73,10 @@ raised into picture content lets dark content generate sync.
 
 Sync faults move the picture and decoding faults change its colour. Deflection
 bend applies after decoding, so it distorts geometry without changing hue —
-whether a wobble carries colour with it identifies the stage it comes from.
+whether a wobble carries colour with it identifies the stage it comes from. The
+vertical sweep is a real yoke current, so it can curve, saturate and fold the
+bottom of the frame back over the top, and with the blanking pulse lost the
+flyback draws its slanted lines across the picture.
 
 A caption decoder reads line 21 as data, so noise, limited bandwidth and
 generation loss produce dropped characters and the solid block a decoder draws

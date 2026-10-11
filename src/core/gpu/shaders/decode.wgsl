@@ -544,6 +544,53 @@ fn lineOffset(row: u32, ry: u32, y: f32) -> i32 {
   return i32(round(timing[row] + bendAt(y) + sag + P.audioBend * audio[ry]));
 }
 
+// Vertical retrace. The yoke's current collapses from the bottom of the sweep
+// back to the top in a few line times while the horizontal sweep keeps going,
+// so the beam crosses the screen on a diagonal once per line of flyback, fast
+// out of the bottom and slowing toward the top. A blanking pulse holds the grid
+// below cutoff for the trip and clamps the video to black while it does. With
+// the pulse gone the clamp goes too: the coupling drifts to its resting level
+// and the beam draws the trip in grey, with whatever those lines of the
+// vertical interval carry on top, sync tips as notches, test signals and
+// captions as bright dashes. The forward scan adds its own light afterwards,
+// because the glass is drawn twice.
+const RETRACE_LEVEL = 0.5;
+// The vertical oscillator fires on the broad pulses, a few lines into the
+// interval, so the flyback starts there and runs on through the test lines.
+const RETRACE_START = 6u;
+
+fn flybackRow(tau: f32, yBot: f32, yTop: f32) -> f32 {
+  let p = clamp(tau / P.flyback, 0.0, 1.0);
+  return mix(yBot, yTop, 1.0 - (1.0 - p) * (1.0 - p));
+}
+
+// Light the flyback lays on screen pixel (x, y), as emitted light. `t` is how
+// far along its line the beam is at this column, the same for every flyback
+// line, so each one is a candidate at its own height and a few rows of spot
+// decide which of them lands here.
+fn retraceLight(x: u32, y: f32, vroll: f32) -> vec3f {
+  let s = ACTIVE_START + x;
+  let t = f32(s) / f32(SPL);
+  let yBot = sweep(f32(NLINES) - 1.0);
+  let yTop = sweep(f32(RETRACE_START) + P.flyback);
+  let lines = u32(clamp(P.flyback, 1.0, 30.0));
+  var acc = 0.0;
+  for (var r = RETRACE_START; r < RETRACE_START + lines; r = r + 1u) {
+    let w = max(0.0, 1.0 - abs(flybackRow(f32(r - RETRACE_START) + t, yBot, yTop) - y));
+    if (w > 0.0) {
+      let row = wrapRow(i32(r) + i32(floor(vroll)));
+      let n0 = i32(row * SPL + s) + i32(round(timing[row]));
+      // one subcarrier cycle averaged, so chroma cancels and the line's luma
+      // is what draws
+      let v = 0.25 * (comp[clampIdx(n0)] + comp[clampIdx(n0 + 1)]
+        + comp[clampIdx(n0 + 2)] + comp[clampIdx(n0 + 3)]);
+      let drive = max((v - IRE_BLACK) / VIDEO_RANGE, 0.0) + P.retrace * RETRACE_LEVEL;
+      acc = acc + w * pow(drive * timing[ABL_GAIN], 2.2);
+    }
+  }
+  return vec3f(acc);
+}
+
 @compute @workgroup_size(TILE_WG, 1, 1)
 fn main(
   @builtin(global_invocation_id) gid: vec3u,
@@ -647,6 +694,10 @@ fn main(
       let dB = decodeAt(rowB, ryB, hoffB, TILE, lid.x, gid.x);
       emitted = emitted + toLight(dB.rgb * (1.0 - P.beamBlank)) * densB;
     }
+    outc = gamutFit(toDrive(emitted));
+  }
+  if (P.retrace > 0.0) {
+    emitted = emitted + retraceLight(gid.x, y, vroll) * (1.0 - P.beamBlank);
     outc = gamutFit(toDrive(emitted));
   }
   if (P.phosphor > 0.0) {

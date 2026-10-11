@@ -159,6 +159,8 @@ export function uniformValues(c: Controls, env: UniformEnv) {
     // sweep is monotone and decode can invert it.
     vLin: 0.45 * c.vLin,
     vFold: c.vFold,
+    retrace: c.retraceLines,
+    flyback: c.flybackLines,
     hvSag: (c.hvSagUs + c.audioSagUs * env.audioHit) * 1e-6 * SAMPLE_RATE,
     hvRing: c.hvRing,
     // beat between the free-running H-osc and the incoming line rate, in
