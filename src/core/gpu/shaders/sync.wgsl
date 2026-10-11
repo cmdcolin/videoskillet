@@ -127,8 +127,12 @@ fn main(@builtin(local_invocation_id) lid: vec3u) {
       let w = mix(0.35, 0.08, ring); // tank frequency, rad/line
       let damp = mix(0.55, 0.015, ring); // loss per line
       let roll = i32(floor(vroll));
-      var sag = 0.0;
-      var vel = 0.0;
+      // The tank rings on from where the last frame left it, and the flyback
+      // pulse is the largest transient it sees, so the ringing's phase at the
+      // top of the frame depends on the frame before and the ripple crawls
+      // instead of standing still.
+      var sag = timing[SAG_HOLD];
+      var vel = timing[SAG_VEL] - 0.4 * (0.5 + ring);
       for (var ry = 0u; ry < NLINES; ry = ry + 1u) {
         // the roll offset is within half a frame either way, so one
         // conditional step lands the same row wrapRow's two divisions would
@@ -141,9 +145,16 @@ fn main(@builtin(local_invocation_id) lid: vec3u) {
         let load = (measure[u32(r) * 2u].z * ablHeld - 50.0) / 50.0
           + P.audioLoad * audio[ry];
         vel = vel + w * (load - sag) - damp * vel;
-        sag = clamp(sag + w * vel, -3.0, 3.0);
+        // the core saturates instead of hitting a stop, so the velocity never
+        // winds up against a clamp
+        sag = 3.0 * tanh((sag + w * vel) / 3.0);
         timing[SAG_BASE + ry] = sag;
       }
+      timing[SAG_HOLD] = sag;
+      timing[SAG_VEL] = vel;
+    } else {
+      timing[SAG_HOLD] = 0.0;
+      timing[SAG_VEL] = 0.0;
     }
     return;
   }

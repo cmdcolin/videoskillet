@@ -220,6 +220,7 @@ export const PARAM_DEFS = [
   ['vir', 'f32'], // how far the set trusts the reference, 0 = not a VIR set
   ['virLag', 'f32'], // the corrector's time constant, frames
   ['accLines', 'f32'], // chroma AGC time constant, lines of burst memory (0 = instantaneous)
+  ['afpcLines', 'f32'], // burst phase lock time constant, lines (0 = per line)
   ['svideoBleed', 'f32'], // Y/C cross-wire: chroma bled into luma (0.5 defeats the trap)
   ['chromaCoarse', 'f32'], // chroma demod decimation factor; >1 lerps between lattice points (CUE rainbows)
   // channel / tape
@@ -541,6 +542,11 @@ const VIR_GAIN = ${LINES * 2 + 9}u;
 const TIP_LEVEL = ${LINES * 2 + 10}u;
 const BLACK_SHIFT = ${LINES * 2 + 11}u;
 const GATE_WIDE = ${LINES * 2 + 12}u;
+// The deflection sag tank's state between frames: the sag and its velocity
+// as the last line left them, so the ringing carries through the flyback
+// instead of restarting from rest at the top of every frame.
+const SAG_HOLD = ${LINES * 2 + 13}u;
+const SAG_VEL = ${LINES * 2 + 14}u;
 // Frames the separator must go without pulses before its gate opens to the
 // whole line. A flywheel coasts through a hum trough or an AGC dip; it only
 // starts hunting once the pulses have genuinely gone.
@@ -676,7 +682,9 @@ fn ntscLineSlot(row: u32, s: u32, n: u32, frame: u32, delta: f32) -> LineSlot {
     slot.value = select(IRE_BLANK, IRE_SYNC, (s % 455u) < 33u);
   } else if (row >= VSYNC_FIRST && row <= VSYNC_LAST) {
     // serrated broad pulses: mostly sync level, rising near each half-line end
-    let serration = (s >= 430u && s < 498u) || s >= 880u;
+    // 4.7 us of blanking ending at each half line, so the separator's
+    // falling edges land at 0 and 455 where it expects a line to start
+    let serration = (s >= 388u && s < 455u) || s >= 843u;
     slot.value = select(IRE_SYNC, IRE_BLANK, serration);
   } else if (s < SYNC_LEN) {
     slot.value = IRE_SYNC;

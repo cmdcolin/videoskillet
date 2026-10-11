@@ -6,9 +6,18 @@
 //
 // The lagged amplitude is the chroma AGC's real time constant: an ACC's
 // control voltage sits on an RC, so it answers what the last few dozen bursts
-// did, not what this one is doing. Phase (x, y) stays instantaneous — the hue
-// AFPC is a much faster loop than the gain leg. Decode's gain and killer read
-// .w; at accLines 0 it equals .z and the set is ideal again.
+// did, not what this one is doing. Decode's gain and killer read .w; at
+// accLines 0 it equals .z and the set is ideal again.
+//
+// The phase (x, y) has a time constant of its own, afpcLines: the burst-locked
+// oscillator is a crystal pulled by an integrated error, so it follows a step
+// in burst phase over tens of lines, and line-to-line time-base error faster
+// than that reaches the picture as hue. At 0 it is per-line, which no set is.
+// The vector is averaged, which handles wrap and lets a jittering burst shrink
+// the average instead of pulling it.
+//
+// Measured after the IF gain, where a receiver's burst gate sits, so the ACC
+// corrects what the AGC left and not what the AGC already put back.
 
 @group(0) @binding(0) var<uniform> P: Params;
 @group(0) @binding(1) var<storage, read> comp: array<f32>;
@@ -28,7 +37,7 @@ fn burstUV(row: u32) -> vec2f {
     sv = sv + comp[n] * sc.y;
     cnt = cnt + 1.0;
   }
-  return vec2f(2.0 * su / cnt, 2.0 * sv / cnt);
+  return vec2f(2.0 * su / cnt, 2.0 * sv / cnt) * mix(1.0, timing[AGC_GAIN], P.agc);
 }
 
 const WG = 64u;
@@ -51,8 +60,9 @@ const LAG_MAX = 96u; // deepest RC window, in lines
 // 63-lid upward and the staged count follows the span rather than the ceiling.
 // The RC weights are staged the same way and for the same reason — they are a
 // function of k and the time constant, identical for every row in the frame.
-var<workgroup> ampTile: array<f32, WG + LAG_MAX>;
+var<workgroup> uvTile: array<vec2f, WG + LAG_MAX>;
 var<workgroup> lagW: array<f32, LAG_MAX + 1u>;
+var<workgroup> pullW: array<f32, LAG_MAX + 1u>;
 
 @compute @workgroup_size(WG, 1, 1)
 fn main(
@@ -61,15 +71,20 @@ fn main(
   @builtin(workgroup_id) wid: vec3u,
 ) {
   let tau = P.accLines;
+  let tauP = P.afpcLines;
   let lagging = tau >= 1.0;
-  let span = min(u32(ceil(3.0 * tau)), LAG_MAX);
-  if (lagging) {
+  let pulling = tauP >= 1.0;
+  let spanA = select(0u, min(u32(ceil(3.0 * tau)), LAG_MAX), lagging);
+  let spanP = select(0u, min(u32(ceil(3.0 * tauP)), LAG_MAX), pulling);
+  let span = max(spanA, spanP);
+  if (lagging || pulling) {
     let top = i32(wid.x * WG + WG - 1u);
     for (var i = lid.x; i < WG + span; i = i + WG) {
-      ampTile[i] = length(burstUV(wrapRow(top - i32(i))));
+      uvTile[i] = burstUV(wrapRow(top - i32(i)));
     }
     for (var k = lid.x; k <= span; k = k + WG) {
-      lagW[k] = exp(-f32(k) / tau);
+      lagW[k] = exp(-f32(k) / max(tau, 1.0));
+      pullW[k] = exp(-f32(k) / max(tauP, 1.0));
     }
   }
   workgroupBarrier();
@@ -84,22 +99,36 @@ fn main(
   // carried serially — the bounded-FIR shape ARCHITECTURE.md asks recurrences
   // to take instead of another single-thread loop in sync.wgsl.
   var lag = amp;
-  if (lagging) {
+  var held = uv;
+  if (lagging || pulling) {
     let ti = WG - 1u - lid.x;
     var asum = 0.0;
     var wsum = 0.0;
+    var vsum = vec2f(0.0);
+    var vw = 0.0;
     for (var k = 0u; k <= span; k = k + 1u) {
       let r = wrapRow(i32(row) - i32(k));
       // only lines that carry burst charge the RC; through the VBI it holds
       if (r > VSYNC_LAST + 1u) {
-        let w = lagW[k];
-        asum = asum + w * ampTile[ti + k];
-        wsum = wsum + w;
+        let b = uvTile[ti + k];
+        if (k <= spanA) {
+          let w = lagW[k];
+          asum = asum + w * length(b);
+          wsum = wsum + w;
+        }
+        if (k <= spanP) {
+          let w = pullW[k];
+          vsum = vsum + w * b;
+          vw = vw + w;
+        }
       }
     }
-    if (wsum > 1e-4) {
+    if (lagging && wsum > 1e-4) {
       lag = asum / wsum;
     }
+    if (pulling && vw > 1e-4) {
+      held = vsum / vw;
+    }
   }
-  lineInfo[row] = vec4f(uv.x, uv.y, amp, lag);
+  lineInfo[row] = vec4f(held.x, held.y, amp, lag);
 }

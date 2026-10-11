@@ -52,7 +52,7 @@ import type { LineStateControls } from '../../src/core/signal/linestate'
 import type { DeckPause } from '../../src/core/signal/mixstate'
 
 const N = SAMPLES_PER_LINE * LINES
-const LINE_PARAM_BYTES = LINES * 16
+const LINE_PARAM_BYTES = LINES * 32
 const MAX_GENS = 4
 
 type Res = GPUBuffer | GPUTextureView | GPUSampler
@@ -206,7 +206,7 @@ export class Graph {
     // floats short and `vir` writes out of bounds, which a storage buffer
     // discards silently — the corrector then does nothing here and everything
     // in the app.
-    const timingBuf = storage((LINES * 2 + 13) * 4, GPUBufferUsage.COPY_SRC)
+    const timingBuf = storage((LINES * 2 + 15) * 4, GPUBufferUsage.COPY_SRC)
     this.timingBuf = timingBuf
     const syncMeasureBuf = storage(LINES * 32, GPUBufferUsage.COPY_SRC)
     this.syncMeasureBuf = syncMeasureBuf

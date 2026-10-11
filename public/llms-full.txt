@@ -1138,6 +1138,10 @@ accLagLines  (chroma AGC lag)
   0..240 step 1 lines  default 0
   The time constant of the chroma AGC's control voltage, in scan lines of burst memory. At 0 the set corrects colour gain instantly per line, which no real ACC can. Raised, gain and the colour killer respond to burst damage tens of lines late, so colour blooms back after a dropout band and the killer chatters down the frame.
 
+afpcLagLines  (burst lock lag)
+  0..120 step 1 lines  default 0
+  The time constant of the burst phase lock, in scan lines. The reference oscillator is a crystal pulled by an integrated error, so it takes this many lines to follow a step in burst phase: hue skews back into place below the head switch, and line-to-line time-base error faster than the loop reaches the picture as hue striping. At 0 the set corrects every line on its own burst, which no crystal can.
+
 vir  (VIR correction)
   0..1 step 0.01  default 0
   How far the set trusts the reference stamped on line 19. A VIR receiver decoded that line, compared it against what it knew was sent, and trimmed its own hue and saturation until the two agreed — a closed loop only as accurate as the reference arriving. A weak reference makes the set turn colour up. Needs the VBI test signals on.

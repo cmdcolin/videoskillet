@@ -100,7 +100,7 @@ import type { PullOpener, PumpedFrame, Relay, WrapHealth } from './videopump'
 const N = SAMPLES_PER_LINE * LINES
 const driftPhase = (phase: number, detuneKHz: number) =>
   (phase + loRadPerSample(detuneKHz) * N) % (2 * Math.PI)
-const LINE_PARAM_BYTES = LINES * 16
+const LINE_PARAM_BYTES = LINES * 32
 const MAX_GENS = 4
 
 // frameLock's last choice: pick the divisor from the loop's own cadence —
@@ -538,7 +538,7 @@ export class Engine implements EngineApi {
     // VIR corrector's two integrators
     // Readable back through window.vf, so a harness can watch the receiver's
     // sync and restorer state settle instead of inferring it from the picture.
-    this.timingBuf = storage((LINES * 2 + 13) * 4, GPUBufferUsage.COPY_SRC)
+    this.timingBuf = storage((LINES * 2 + 15) * 4, GPUBufferUsage.COPY_SRC)
     this.syncMeasureBuf = storage(LINES * 32, GPUBufferUsage.COPY_SRC)
     // one audio sample per line, uploaded each frame
     this.audioBuf = storage(LINES * 4)

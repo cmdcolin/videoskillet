@@ -142,6 +142,7 @@ export function uniformValues(c: Controls, env: UniformEnv) {
     virLag: c.virLag,
     killThresh: c.killThresh,
     accLines: c.accLagLines,
+    afpcLines: c.afpcLagLines,
     svideoBleed: c.svideoBleed,
     combMode: c.combMode,
     hHold: c.hHold,

@@ -44,7 +44,7 @@ function hash01(v: number) {
 }
 
 export class LineState {
-  readonly data = new Float32Array(LINES * 4)
+  readonly data = new Float32Array(LINES * 8)
   private flutter = 0
   private underWalk = 0
   private t = 0
@@ -153,11 +153,15 @@ export class LineState {
       this.underWalk += (this.rand() - 0.5) * underStep
       this.underWalk *= 0.99
 
-      const o = row * 4
+      const o = row * 8
       this.data[o] = this.flutter + wander + stick + hs + track + shuttle
       this.data[o + 1] = base * 2 * Math.PI
       this.data[o + 2] = this.underWalk + (headSwitched ? 0.9 : 0) + shuttleHue
       this.data[o + 3] = this.rand()
+      // the second half is the smooth part of the two offsets above, what the
+      // shaders ramp along the line toward the next line's value
+      this.data[o + 4] = this.flutter + wander
+      this.data[o + 5] = this.underWalk
     }
     return this.data
   }

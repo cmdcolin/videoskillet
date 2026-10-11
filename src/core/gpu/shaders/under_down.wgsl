@@ -19,7 +19,7 @@
 // the coefficient loads and no per-tap cos(). The step itself is `stepPhasor`
 // in the prelude, shared with the playback up-conversion in channel.
 fn downPhasor(row: u32, s: f32) -> vec2f {
-  let th = lineParams[row].y + 2.0 * PI * fract(DOWN_PER_SAMPLE * s);
+  let th = lineParams[row * 2u].y + 2.0 * PI * fract(DOWN_PER_SAMPLE * s);
   return vec2f(cos(th), sin(th));
 }
 

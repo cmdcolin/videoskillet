@@ -3466,6 +3466,18 @@ export const GROUPS: Group[] = [
         help: "The time constant of the chroma AGC's control voltage, in scan lines of burst memory. At 0 the set corrects colour gain instantly per line, which no real ACC can. Raised, gain and the colour killer respond to burst damage tens of lines late, so colour blooms back after a dropout band and the killer chatters down the frame.",
       },
       {
+        key: 'afpcLagLines',
+        id: 315,
+        label: 'burst lock lag',
+        min: 0,
+        max: 120,
+        step: 1,
+        redline: [0, 24],
+        unit: 'lines',
+        fine: true,
+        help: 'The time constant of the burst phase lock, in scan lines. The reference oscillator is a crystal pulled by an integrated error, so it takes this many lines to follow a step in burst phase: hue skews back into place below the head switch, and line-to-line time-base error faster than the loop reaches the picture as hue striping. At 0 the set corrects every line on its own burst, which no crystal can.',
+      },
+      {
         key: 'vir',
         id: 264,
         label: 'VIR correction',

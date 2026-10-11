@@ -300,6 +300,7 @@
 312 burnDepth step=0.01 default=1
 313 retraceLines step=0.01 default=0
 314 flybackLines step=1 default=16
+315 afpcLagLines step=1 default=0
 
 # ?mod= sources, by name
 sine

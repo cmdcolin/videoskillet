@@ -58,6 +58,7 @@ export const DEFAULT_CONTROLS = {
   virLag: 45, // the corrector's time constant, frames
   killThresh: 2, // IRE
   accLagLines: 0, // chroma AGC time constant, lines of burst memory (0 = instantaneous)
+  afpcLagLines: 0, // burst phase lock time constant, lines (0 = per line)
   svideoBleed: 0, // Y/C miswire: bleed chroma into luma (S-video pins into composite)
   combMode: 0,
   hHold: 0.35,

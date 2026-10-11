@@ -29,9 +29,25 @@
 //
 // The extra lp.z over the record side's phase is this playback pass's own
 // jitter — the head is not put back exactly where it wrote.
+//
+// The time-base error reaches the composite after this pass (timebase.wgsl),
+// and every sample of it is a quarter turn of subcarrier. A deck's APC
+// re-locks the up-converted chroma to the burst each line, so the line's own
+// offset never reaches the colour; what survives is the within-line part, the
+// velocity error, at the ratio of the under carrier to fsc, which is the
+// hue that drifts across a line on tape and nowhere else. Pre-rotating by the
+// rest is how the colour-under path arrives at that after the resample.
+const UNDER_RATIO = 1.0 - 4.0 * DOWN_PER_SAMPLE;
+
 fn upPhasor(row: u32, s: f32) -> vec2f {
-  let lp = lineParams[row];
-  let th = lp.y + lp.z + 2.0 * PI * fract(DOWN_PER_SAMPLE * s);
+  let lp = lineParams[row * 2u];
+  let sm = lineParams[row * 2u + 1u];
+  let smNext = lineParams[min(row + 1u, NLINES - 1u) * 2u + 1u];
+  let t = s / f32(SPL);
+  let ramp = (smNext.x - sm.x) * t;
+  let cancel = lp.x + ramp * (1.0 - UNDER_RATIO);
+  let th = lp.y + lp.z + (smNext.y - sm.y) * t + 2.0 * PI * fract(DOWN_PER_SAMPLE * s)
+    - 0.5 * PI * cancel;
   return vec2f(cos(th), sin(th));
 }
 
@@ -51,7 +67,7 @@ fn underAt(ci: u32) -> f32 {
 // nothing? Factored out of main because the compensator has to ask the same
 // question of the line its delay line is holding.
 fn droppedAt(row: u32, s: u32) -> bool {
-  let lp = lineParams[row];
+  let lp = lineParams[row * 2u];
   if (lp.w >= P.dropoutRate / f32(NLINES)) {
     return false;
   }
@@ -439,10 +455,16 @@ fn main(
   // that FM leaking past the trap, so drive it from the program audio: the
   // carrier deviates with content — aperiodic for free — and silence leaves a
   // clean stationary weave rather than a coupled-to-nothing sweep.
+  //
+  // It is an intercarrier beat, vision carrier times sound carrier, and
+  // negative modulation puts the vision carrier at full on sync and blanking
+  // and at an eighth on peak white: the weave is strongest in the dark and
+  // fades out of the highlights.
   if (P.soundIre > 0.0) {
     let ph = f32((11u * s) % 35u) / 35.0;
     let buzz = 2.2 * audio[row];
-    out = out + P.soundIre * sin(2.0 * PI * ph + buzz);
+    let vis = max(1.0 - 0.00625 * (out + 40.0), 0.12) / 0.75;
+    out = out + P.soundIre * vis * sin(2.0 * PI * ph + buzz);
   }
 
   // Detector intermodulation, the other half of a mistuned tuner: with the

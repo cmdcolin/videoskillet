@@ -170,28 +170,32 @@ fault through `timing[]` will spin hue that should have stayed put.
 
 ## Buffer layouts worth knowing
 
-- **`timingBuf`** (`(LINES * 2 + 13)` floats) — `[0..524]` per-line horizontal
+- **`timingBuf`** (`(LINES * 2 + 15)` floats) — `[0..524]` per-line horizontal
   offset; `[525]` vertical oscillator phase, signed and fractional; `[526]` PLL
   state; `[527]` AGC gain; `[528..531]` the two second-order gain servos (beam
   limiter and camera auto-iris, gain + velocity each — `sync` updates them,
   `decode` applies the ABL drive, `compose` applies the iris a frame late);
   `[532]` the sync separator's lock age, lines since the last real edge, which
   scales the free-running H-osc's phase noise so lock decays instead of
-  coasting; `[SAG_BASE..]` normalized deflection sag per raster line;
-  `[VIR_HUE]` and `[VIR_GAIN]`, past the sag region, the VIR corrector's two
-  integrators — `vir` writes them, `decode` adds them to the demodulator's
-  reference and to its chroma gain; `[TIP_LEVEL]`, `[BLACK_SHIFT]` and
-  `[GATE_WIDE]` after them, the sync separator's peak-detector reference, the DC
-  restorer's offset from nominal black, and whether the separator's gate is open
-  to the whole line — `sync` updates them, `sync_measure` slices against the
-  first and hunts as far as the third says, `decode` subtracts the second (see
-  ADR 0009). Indices 525–532, the two VIR slots and those three are persistent
-  across frames; treat them as state. A zeroed `VIR_GAIN` means the servo has
-  never run, which is what lets `resetSignal` clear the whole buffer and still
-  hand the loop a sane start.
-- **`lineParamsBuf`** — one `vec4f` per line from `LineState`:
-  `(tbOffsetSamples, underBasePhase, underJitterPhase, seed)`. All four slots
-  are taken; a new per-line CPU quantity needs its own buffer.
+  coasting; `[SAG_BASE..]` normalized deflection sag per raster line, with
+  `[SAG_HOLD]` and `[SAG_VEL]` past everything else carrying the tank's state
+  through the flyback; `[VIR_HUE]` and `[VIR_GAIN]`, past the sag region, the
+  VIR corrector's two integrators — `vir` writes them, `decode` adds them to the
+  demodulator's reference and to its chroma gain; `[TIP_LEVEL]`, `[BLACK_SHIFT]`
+  and `[GATE_WIDE]` after them, the sync separator's peak-detector reference,
+  the DC restorer's offset from nominal black, and whether the separator's gate
+  is open to the whole line — `sync` updates them, `sync_measure` slices against
+  the first and hunts as far as the third says, `decode` subtracts the second
+  (see ADR 0009). Indices 525–532, the two VIR slots and those three are
+  persistent across frames; treat them as state. A zeroed `VIR_GAIN` means the
+  servo has never run, which is what lets `resetSignal` clear the whole buffer
+  and still hand the loop a sane start.
+- **`lineParamsBuf`** — two `vec4f` per line from `LineState`. The first is
+  `(tbOffsetSamples, underBasePhase, underJitterPhase, seed)`; the second holds
+  the smooth part of the first and third, which `timebase` and `channel` ramp
+  along the line toward the next line's value so that the burst and the right
+  edge of a line see different time-base error. Two slots of the second are
+  spare.
 - **`syncMeasureBuf`** — two `vec4f` per line from `sync_measure`, interleaved:
   `(sync edge or −1000, sync depth, mean beam load, broad-pulse flag)` then
   `(the line's deepest excursion inside active video, 0, 0, 0)`, all

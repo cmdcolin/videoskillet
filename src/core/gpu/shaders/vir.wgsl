@@ -35,7 +35,11 @@ fn main() {
   if (P.vir == 0.0) {
     return;
   }
-  let hoff = i32(round(timing[VIR_LINE]));
+  // The set counts to line 19 from its own vertical trigger, so a rolled
+  // picture hands the corrector whatever picture line sits there, and it
+  // drives hue and saturation toward that colour's idea of the reference.
+  let line = wrapRow(i32(VIR_LINE) + i32(floor(timing[V_PHASE])));
+  let hoff = i32(round(timing[line]));
 
   // Demodulated against the same carrier `line_analyze` gates burst with, and
   // accumulated the same way, because the whole measurement is a difference
@@ -48,7 +52,7 @@ fn main() {
   var sv = 0.0;
   var cnt = 0.0;
   for (var x = VIR_FIRST; x < VIR_LAST; x = x + 1u) {
-    let n = clampIdx(i32(VIR_LINE * SPL + ACTIVE_START + x) + hoff);
+    let n = clampIdx(i32(line * SPL + ACTIVE_START + x) + hoff);
     let sc = carrier(n, P.frame);
     let v = comp[n];
     su = su + v * sc.x;
@@ -60,7 +64,7 @@ fn main() {
   // What the burst loop already took out of this line, on this line's own
   // burst. Both angles are measured about the expected 180 degrees the way
   // decode measures its own, so subtracting them is honest.
-  let li = lineInfo[VIR_LINE];
+  let li = lineInfo[line];
   let locked = li.w > P.killThresh;
   let phBurst = select(0.0, atan2(-li.y, -li.x), locked);
   let resid = wrapPi(atan2(-uv.y, -uv.x) - phBurst * P.burstLock);

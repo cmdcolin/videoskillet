@@ -21,8 +21,8 @@ const CLEAN: LineStateControls = {
 // anything that still moves is the deterministic part of the model.
 const mid = () => 0.5
 const offsets = (data: Float32Array) =>
-  Array.from({ length: LINES }, (_, row) => data[row * 4]!)
-const phase = (data: Float32Array, row: number) => data[row * 4 + 1]
+  Array.from({ length: LINES }, (_, row) => data[row * 8]!)
+const phase = (data: Float32Array, row: number) => data[row * 8 + 1]
 
 describe('LineState', () => {
   it('leaves every line untouched with a clean transport', () => {
@@ -43,8 +43,8 @@ describe('LineState', () => {
   it('marks the head-switch lines with a color-under phase step', () => {
     const ls = new LineState(mid)
     const data = ls.update(CLEAN, 0)
-    expect(data[(HEAD_SWITCH_LINE - 1) * 4 + 2]).toBeCloseTo(0, 6)
-    expect(data[HEAD_SWITCH_LINE * 4 + 2]).toBeCloseTo(0.9, 6)
+    expect(data[(HEAD_SWITCH_LINE - 1) * 8 + 2]).toBeCloseTo(0, 6)
+    expect(data[HEAD_SWITCH_LINE * 8 + 2]).toBeCloseTo(0.9, 6)
   })
 
   it('confines the tracking tear to a band around its position', () => {
