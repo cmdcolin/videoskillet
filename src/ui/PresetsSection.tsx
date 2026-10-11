@@ -462,6 +462,31 @@ function PresetCatalog(props: {
   )
 }
 
+// The presets a live filter names, as plain chips above the matching rows.
+// The catalog drops out under a filter, so without these "rainbow" found the
+// rainbow controls and hid the rainbow storm preset.
+export function PresetMatches(props: {
+  hits: readonly PresetDef[]
+  onApplyPreset: (name: string, patch: Partial<Controls>) => void
+}) {
+  if (props.hits.length === 0) return null
+  return (
+    <div className={styles.presetGroup}>
+      <div className={styles.grpLabel}>presets</div>
+      {props.hits.map(def => (
+        <button
+          key={def.name}
+          className={cx(ui.btn, styles.chip)}
+          title={def.blurb}
+          onClick={() => props.onApplyPreset(def.name, def.patch)}
+        >
+          {presetLabel(def)}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 export function PresetsSection(props: {
   controls: Controls
   lastPreset: string | null

@@ -83,8 +83,13 @@ import { panelChain } from './ui/panelChain'
 import { PanelResizer } from './ui/PanelResizer'
 import { BENCH_W, PANEL_W } from './ui/panelWidth'
 import { slotPatched, soundPatched } from './ui/patched'
-import { matchPreset, presetControls, presetLabelFor } from './ui/presets'
-import { PresetsSection } from './ui/PresetsSection'
+import {
+  matchPreset,
+  presetControls,
+  presetLabelFor,
+  presetsMatching,
+} from './ui/presets'
+import { PresetMatches, PresetsSection } from './ui/PresetsSection'
 import { profileAtSlot, suggestProfileName } from './ui/profileModel'
 import { sameList } from './ui/sameList'
 import { SavedProfiles } from './ui/SavedProfiles'
@@ -1116,6 +1121,7 @@ export function App() {
   const toggleLook = () => setLookKeys(lookKeys === null ? editedKeys() : null)
   const query = readFilter(filter, movingOnly, lookKeys)
   const filtering = filterActive(query)
+  const presetHits = presetsMatching(query.text)
   // A query set from anywhere else — the Modulation section's count, a palette jump — opens
   // the box too, so the panel is never filtered by something with nothing on
   // screen saying so and no way to clear it.
@@ -1593,12 +1599,15 @@ export function App() {
         onRedo={mix.redo}
       />
 
-      {/* The catalog. It drops out under a live filter, for the same reason
-          Modulation below already does: it holds no control the query can
-          match, the panel below the box is meant to be the result set, and at
-          180px of chips and caption it is the largest thing in it — with it up,
-          the first row that actually matched landed halfway down the panel. */}
-      {filtering ? null : (
+      {/* The catalog. Under a live filter the presets the query names take
+          its place. The catalog is 180px of chips and caption, and with it up
+          the first matching row landed halfway down the panel. */}
+      {filtering ? (
+        <PresetMatches
+          hits={presetHits}
+          onApplyPreset={(name, patch) => applyPreset(name, patch)}
+        />
+      ) : (
         <PresetsSection
           controls={controls}
           lastPreset={mix.lastPreset}
@@ -1713,7 +1722,7 @@ export function App() {
         onHoldStock={holdStock}
         onReleaseStock={releaseStock}
       />
-      {!filtering || anyResult ? null : (
+      {!filtering || anyResult || presetHits.length > 0 ? null : (
         <div className={ui.hint}>
           {query.look !== null && query.look.size === 0
             ? 'every control is at its default — move one and it turns up here'

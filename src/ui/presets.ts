@@ -36,6 +36,17 @@ export interface PresetDef {
 // identifier when a preset has words that didn't fit in it.
 export const presetLabel = (p: PresetDef): string => p.displayName ?? p.name
 
+// The presets whose name holds a panel filter's text, for the chips that head
+// its results.
+const MATCH_MAX = 8
+export const presetsMatching = (text: string): PresetDef[] =>
+  text === ''
+    ? []
+    : PRESETS.filter(p => presetLabel(p).toLowerCase().includes(text)).slice(
+        0,
+        MATCH_MAX,
+      )
+
 // The same, from a name rather than the preset itself — for the callers that
 // hold only what `?preset=` or `mix.lastPreset` carries, which is the
 // identifier. Falls back to the name it was given, so a stored look naming a
