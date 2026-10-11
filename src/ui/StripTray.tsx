@@ -198,6 +198,7 @@ export function StripTray(props: {
                 exactly the recording and nothing else. */}
             <button
               className={cx(ui.btn, props.record.rolling && ui.active)}
+              aria-pressed={props.record.rolling}
               onClick={() =>
                 props.record.rolling
                   ? props.record.stop()
@@ -209,7 +210,7 @@ export function StripTray(props: {
                   : 'record every control move — with the rundown, if there is one'
               }
             >
-              ● rec
+              ● rec moves
             </button>
             {/* The tape, once there is one: what ⎙ is going to replay, and the
                 only way to throw it away without recording over it. A bare
@@ -256,6 +257,7 @@ export function StripTray(props: {
             </button>
             <button
               className={cx(ui.btn, api.strip.loop && ui.active)}
+              aria-pressed={api.strip.loop}
               onClick={() => api.setLoop(!api.strip.loop)}
               title="come back round at the end, or stop there"
             >

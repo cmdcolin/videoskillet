@@ -500,8 +500,8 @@ const bar = () =>
       on: b.className.includes('active'),
     })),
   )
-await click('● rec')
-const rolling = (await bar()).find(b => b.text === '● rec')
+await click('● rec moves')
+const rolling = (await bar()).find(b => b.text === '● rec moves')
 check('● lights up and the walk goes with it', rolling?.on === true)
 check(
   'and the transport says the rundown is running',
@@ -520,7 +520,7 @@ await page.evaluate(async () => {
   set?.call(hit, String(Number(hit.max) / 2))
   hit.dispatchEvent(new Event('input', { bubbles: true }))
 })
-await click('● rec')
+await click('● rec moves')
 const readout = (await bar()).find(b => b.text.startsWith('⏺'))
 // A non-zero number, deliberately: this arm rolls the tape for a fraction of a
 // second, and a readout that rounds to nearest called that `0s` — a take that
