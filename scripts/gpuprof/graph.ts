@@ -235,8 +235,15 @@ export class Graph {
     const srcTexB = tex()
     const inputTex = tex()
     this.outTex = tex(['rgba8unorm-srgb'])
-    const faceTex = tex()
+    const faceTex = tex(['rgba8unorm-srgb'])
     this.faceTex = faceTex
+    // The screen holds light as sRGB bytes (docs/adr/0014); the passes that
+    // sample it read through this view.
+    const lightView = (t: GPUTexture) =>
+      t.createView({
+        format: 'rgba8unorm-srgb',
+        usage: GPUTextureUsage.TEXTURE_BINDING,
+      })
     const grainTex = d.createTexture({
       size: [ACTIVE_WIDTH, ACTIVE_HEIGHT],
       format: 'r32float',
@@ -291,7 +298,7 @@ export class Graph {
         variants: one({
           P,
           srcTex: srcTexA.createView(),
-          prevTex: faceTex.createView(),
+          prevTex: lightView(faceTex),
           samp,
           inputTex: inputTex.createView(),
           timing: timingBuf,
@@ -519,28 +526,14 @@ export class Graph {
       {
         label: 'crtFace',
         shader: 'crt_face',
-        variants: {
-          plain: {
-            P,
-            srcTex: this.outTex.createView(),
-            samp,
-            faceTex: faceTex.createView(),
-            timing: timingBuf,
-            grainTex: grainTex.createView(),
-          },
-          srgb: {
-            P,
-            srcTex: this.outTex.createView({
-              format: 'rgba8unorm-srgb',
-              usage: GPUTextureUsage.TEXTURE_BINDING,
-            }),
-            samp,
-            faceTex: faceTex.createView(),
-            timing: timingBuf,
-            grainTex: grainTex.createView(),
-          },
-        },
-        pick: () => (c.crtCutoff > 0 || c.crtGamma !== 1 ? 'srgb' : 'plain'),
+        variants: one({
+          P,
+          srcTex: lightView(this.outTex),
+          samp,
+          faceTex: faceTex.createView(),
+          timing: timingBuf,
+          grainTex: grainTex.createView(),
+        }),
         dispatch: perTile,
       },
       {

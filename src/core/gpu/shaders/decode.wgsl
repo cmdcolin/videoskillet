@@ -51,16 +51,6 @@ fn storeLight(pi: u32, e: vec3f, dose: f32) {
   heldNext[pi * 2u + 1u] = pack2x16float(vec2f(e.b, dose));
 }
 
-// Gun drive is gamma-encoded; the phosphor layer works in light. Same 2.2 the
-// tube identity matrix above uses, for the same reason.
-fn toLight(c: vec3f) -> vec3f {
-  return pow(max(c, vec3f(0.0)), vec3f(2.2));
-}
-
-fn toDrive(c: vec3f) -> vec3f {
-  return pow(max(c, vec3f(0.0)), vec3f(1.0 / 2.2));
-}
-
 // Second-order (bimolecular) decay, integrated over one field.
 //
 // An exponential is what you get when each excited centre relaxes on its own
@@ -893,10 +883,10 @@ fn main(
     }
   }
   // The gun's cutoff and gamma, applied as the screen is written (prelude):
-  // crt_face then gathers emitted light and pays no pow per tap. While the
-  // transfer is active the byte is sRGB-encoded and crt_face reads the
-  // texture through an sRGB view, which decodes it back on the way in.
-  let gun = gunOn(P.crtCutoff, P.crtGamma);
+  // crt_face then gathers emitted light and pays no pow per tap. The transfer
+  // shapes the drive, so a gamma of 2 is a tube twice as steep as the one the
+  // display expects, which is the look every preset was set up on.
+  var light = toLight(gunTransfer(shown, P.crtCutoff, P.crtGamma));
   // Phosphor burn-in. Beam current wears the coating, so a patch's efficiency
   // falls with the dose it has taken, and the blue phosphor wears fastest, so a
   // worn patch goes dark and yellow-brown. The dose rides in the spare half of
@@ -916,27 +906,18 @@ fn main(
     dose = 0.0;
   }
   if (dose > 0.0 || P.burnRate > 0.0) {
-    var light = toLight(shown);
-    if (gun) {
-      light = gunTransfer(shown, P.crtCutoff, P.crtGamma);
-    }
     let eff = 1.0 / (1.0 + P.burnDepth * dose * vec3f(0.75, 1.0, 1.5));
     if (P.burnRate > 0.0) {
       let jitter = (rand01(pi ^ (P.frame * 0x9E3779B9u)) - 0.5) * dose * 0.00098;
       dose = min(dose + P.burnRate * luma(light) + jitter, 64.0);
     }
     light = light * eff;
-    if (gun) {
-      shown = srgbEncode(light);
-    } else {
-      shown = toDrive(light);
-    }
-  } else if (gun) {
-    shown = srgbEncode(gunTransfer(shown, P.crtCutoff, P.crtGamma));
   }
   // Always stored, even with persistence off: the buffer is what the layer is
   // holding, and if it went stale while the control sat at 0 then turning the
   // control up would light the glass with whatever field it was parked on.
   storeLight(pi, emitted, dose);
-  textureStore(outTex, vec2i(gid.xy), vec4f(shown, 1.0));
+  // The screen is light from here on, as an sRGB byte: crt_face reads it
+  // through an sRGB view, so its gathers get linear light off the sampler.
+  textureStore(outTex, vec2i(gid.xy), vec4f(toDrive(light), 1.0));
 }

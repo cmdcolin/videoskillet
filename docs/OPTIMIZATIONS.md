@@ -103,14 +103,17 @@ otherwise.
 The gamma one is the trade. `crt_face` was running the beam transfer per tap —
 three `pow` a tap across spot, bloom and halation, a millisecond a frame on a
 look with all of them up. `decode` now applies cutoff and gamma as it writes
-`outTex`, sRGB-encoded while they are active so the byte keeps fine steps where
-gamma pushes the light (an `rgba16float` store was tried first and halved the
-sampler's rate, giving back most of the win). Stock is bit-exact; gamma looks
-change at hard edges, where a tap between two pixels now interpolates light
-rather than drive — lightThatStays mean 0.13/255, misconverged mean 0.43
-concentrated in the SVM notch. Invisible at 1×, and a millisecond. Confirmed in
-Firefox with `perf.mjs`: stock 2.88 → 2.50 ms/frame, lightThatStays 4.18 → 2.57,
-colourLate 3.03 → 2.56, fullCollapse 4.18 → 2.82.
+`outTex`, sRGB-encoded so the byte keeps fine steps where gamma pushes the light
+(an `rgba16float` store was tried first and halved the sampler's rate, giving
+back most of the win). Gamma looks change at hard edges, where a tap between two
+pixels now interpolates light rather than drive — lightThatStays mean 0.13/255,
+misconverged mean 0.43 concentrated in the SVM notch. Invisible at 1×, and a
+millisecond. Confirmed in Firefox with `perf.mjs`: stock 2.88 → 2.50 ms/frame,
+lightThatStays 4.18 → 2.57, colourLate 3.03 → 2.56, fullCollapse 4.18 → 2.82.
+The sRGB byte has since become the screen's one format
+([ADR 0014](adr/0014-the-screen-is-light-in-srgb-bytes.md)): `faceTex` holds
+light the same way, and `present` and `compose` read it through the same kind of
+view, so the whole screen stage works in light at 8-bit bandwidth.
 
 Three arms were reverted, and all three are worth knowing.
 

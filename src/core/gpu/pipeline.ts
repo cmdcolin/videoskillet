@@ -158,6 +158,16 @@ const texDesc = (
   viewFormats,
 })
 
+// The view a pass samples a light-carrying texture through: the sampler
+// decodes the sRGB byte to linear light on the way in. Narrowed to
+// TEXTURE_BINDING, which is what lets wgpu accept an sRGB view over a storage
+// texture.
+const lightView = (tex: GPUTexture): GPUTextureView =>
+  tex.createView({
+    format: 'rgba8unorm-srgb',
+    usage: GPUTextureUsage.TEXTURE_BINDING,
+  })
+
 interface EngineOptions {
   // An audio graph to adopt rather than build. A media element binds to one
   // AudioContext for life, so an engine rebuilt under playing clips has to
@@ -434,8 +444,6 @@ export class Engine implements EngineApi {
   private encodeCompositeBPass: Pass
   private encodeCompositeBBgs: [GPUBindGroup, GPUBindGroup]
   private decodePass: Pass
-  private crtFacePass: Pass
-  private crtFaceBgs: GPUBindGroup[]
   private decodeBgs: [GPUBindGroup, GPUBindGroup]
 
   // The two input slots: staging, capping, aspect and the noise generators all
@@ -601,10 +609,9 @@ export class Engine implements EngineApi {
         ),
       )
     this.inputTex = stateTex()
-    // The decoded screen carries the gun's cutoff and gamma sRGB-encoded while
-    // they are active (decode.wgsl), and crtFace reads it through the sRGB
-    // view so the sampler decodes it: the gathers then pay no pow per tap and
-    // the byte keeps fine steps in the dark, where gamma puts the light.
+    // The screen is linear light from decode's store on, held as sRGB bytes
+    // (docs/adr/0014). Each pass that samples one of these binds `lightView`,
+    // so the sampler decodes the byte and the gathers pay no pow per tap.
     this.outTex = stateTex(['rgba8unorm-srgb'])
     // `COPY_SRC` on this one alone, because this is the finished tube face —
     // what `present` samples, and so the only texture here that is the picture
@@ -616,6 +623,7 @@ export class Engine implements EngineApi {
           GPUTextureUsage.STORAGE_BINDING |
           GPUTextureUsage.RENDER_ATTACHMENT |
           GPUTextureUsage.COPY_SRC,
+        ['rgba8unorm-srgb'],
       ),
     )
     this.linearSamp = d.createSampler({
@@ -1102,7 +1110,7 @@ export class Engine implements EngineApi {
         crtFacePl,
         [
           { buffer: this.paramsBuf },
-          this.outTex.createView(),
+          lightView(this.outTex),
           this.linearSamp,
           this.faceTex.createView(),
           { buffer: this.timingBuf },
@@ -1134,29 +1142,12 @@ export class Engine implements EngineApi {
         },
       ),
     ]
-    // Plain view while the gun transfer is off, sRGB view while it is on —
-    // the same predicate decode encodes by (prelude gunOn).
-    this.crtFacePass = byLabel(this.postPasses, 'crtFace')
-    this.crtFaceBgs = [
-      this.crtFacePass.bg,
-      bindGroup(crtFacePl, [
-        { buffer: this.paramsBuf },
-        this.outTex.createView({
-          format: 'rgba8unorm-srgb',
-          usage: GPUTextureUsage.TEXTURE_BINDING,
-        }),
-        this.linearSamp,
-        this.faceTex.createView(),
-        { buffer: this.timingBuf },
-        this.grainTex.createView(),
-      ]),
-    ]
     this.presentBg = d.createBindGroup({
       label: 'present',
       layout: this.presentPl.getBindGroupLayout(0),
       entries: [
         { binding: 0, resource: { buffer: this.paramsBuf } },
-        { binding: 1, resource: this.faceTex.createView() },
+        { binding: 1, resource: lightView(this.faceTex) },
         { binding: 2, resource: this.linearSamp },
       ],
     })
@@ -1657,7 +1648,7 @@ export class Engine implements EngineApi {
       entries: [
         { binding: 0, resource: { buffer: this.paramsBuf } },
         { binding: 1, resource: this.sources.viewA() },
-        { binding: 2, resource: this.faceTex.createView() },
+        { binding: 2, resource: lightView(this.faceTex) },
         { binding: 3, resource: this.linearSamp },
         { binding: 4, resource: this.inputTex.createView() },
         { binding: 5, resource: { buffer: this.timingBuf } },
@@ -1961,7 +1952,8 @@ export class Engine implements EngineApi {
   // no `VideoFrame` to build either, so an offline render has no way to see
   // what it just drew. It reads `faceTex` rather than the swapchain for the
   // same reason `present` samples it — that is the tube face, and everything
-  // between it and the window is scaling.
+  // between it and the window is scaling. Its bytes are the face's light
+  // sRGB-encoded, which is a display picture as it stands.
   //
   // **Call it after `step()`, not after `render()` on a running loop.** It
   // reads whatever is in the texture now, which on a live loop is a race with
@@ -2750,8 +2742,6 @@ export class Engine implements EngineApi {
     // One decode dispatch per rendered frame, so frame parity is what alternates
     // the phosphor state buffers.
     this.decodePass.bg = this.decodeBgs[this.frame % 2]!
-    this.crtFacePass.bg =
-      this.crtFaceBgs[c.crtCutoff > 0 || c.crtGamma !== 1 ? 1 : 0]!
     for (const p of this.postPasses) run(p)
     const buzz = this.buzzDrive()
     if (buzz > 0) this.buzzRead.copy(enc, this.buzzBuf)

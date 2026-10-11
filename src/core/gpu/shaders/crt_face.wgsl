@@ -8,6 +8,13 @@
 // Beam/scanline/mask geometry stays in present — it is sub-raster here; this
 // pass is the photographic light behaviour that makes the loop read as a camera
 // pointed at a monitor rather than a signal fed back on itself.
+//
+// Everything here is linear light (docs/adr/0014). srcTex is bound through an
+// sRGB view, so the sampler hands back light, and the store encodes it again
+// for present and compose to read the same way. Light is what adds: a halo
+// that is a few percent of a white's light is a visible glow on black and
+// nothing on a mid grey, which is how a halo looks on a tube. The same few
+// percent added to display bytes lifted every tone alike, and read as a veil.
 
 @group(0) @binding(0) var<uniform> P: Params;
 @group(0) @binding(1) var srcTex: texture_2d<f32>;
@@ -79,13 +86,10 @@ const DISK16 = array<vec3f, 16>(
   vec3f(-0.547507, 0.778772, 0.163246),
   vec3f(-0.126487, -0.976090, 0.144064),
 );
-
-// over-threshold colour, hue preserved: only the part of a pixel brighter than
-// t contributes light to its neighbours.
-fn bright(c: vec3f, t: f32) -> vec3f {
-  let l = luma(c);
-  return c * max(l - t, 0.0) / max(l, 1e-3);
-}
+// Sum of the gaussian weights in each table: what a gather over it divides by
+// so a flat field comes back at its own level.
+const W8 = 3.449668;
+const W16 = 6.912818;
 
 // One gun's direct emission: the beam-spot integral around a landing point.
 // Factored out of main because convergence re-runs it per channel — each gun
@@ -120,6 +124,14 @@ fn spotAt(uv: vec2f, dim: vec2f) -> vec3f {
   return beam(acc / w);
 }
 
+// The share of a pixel's light the spot pushes into the coating around it. The
+// spot is space-charge limited, so it grows with beam current: a white core
+// spreads, a dim one holds its edge. Saturating in the light so the fraction
+// never passes the control's own ceiling.
+fn spill(l: f32, fb: f32) -> f32 {
+  return fb * l * l / (l * l + 0.1);
+}
+
 @compute @workgroup_size(8, 8, 1)
 fn main(@builtin(global_invocation_id) gid: vec3u) {
   if (gid.x >= ACTIVE_W || gid.y >= ACTIVE_H) {
@@ -145,7 +157,7 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
   // SVM coil are as real as the nominal polarity.
   if (P.crtSpot + P.crtGrain + P.crtBloom + P.crtHalation + P.crtGlow
       + abs(P.crtConverge) + abs(P.crtPurity) + abs(P.crtSvm) <= 0.0) {
-    textureStore(faceTex, vec2i(gid.xy), vec4f(col, 1.0));
+    textureStore(faceTex, vec2i(gid.xy), vec4f(toDrive(col), 1.0));
     return;
   }
 
@@ -236,73 +248,96 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
   // and check nothing else is holding a WebGPU tab open — an ablate delta taken
   // in the slow mode against one taken clean is how the numbers this comment used
   // to carry came out 8x too large.
-  var bloom = vec3f(0.0);
+  //
+  // Both scatters add light. The phosphor emits into the glass, and only the
+  // part inside the escape cone leaves straight away; the rest is trapped
+  // between the faces until it is absorbed or finds its way out somewhere
+  // else, and a clear faceplate gives a lot of it back. So the halo is light on
+  // top of the direct emission, and a tinted faceplate is a lower control. The
+  // coefficients are small because they are light: a few percent of a white
+  // next to black is a visible glow there and nothing on a mid grey.
+  col = gamutFit(direct);
   let rb = 3.5;
   if (P.crtBloom > 0.0) {
     // Tap count tiered on strength, the way spotAt tiers it on radius. The disk
     // is a fixed 3.5 px, so what decides whether sixteen taps are visible is not
-    // how far they reach but how hard the result gets multiplied in. Against a
-    // pinned frame (bars, feedback off, field parity cancelled), 8 taps differ
-    // from 16 by at most 3/255 at the default 0.2 and 8/255 at 0.6, with under
-    // 0.03% of pixels off by more than 4 — and by 18/255 at 1.0 and 65/255 at
-    // 3.0, where it does show. 78 of the 80 presets sit at 0.6 or below and take
-    // the cheap path; the two that lean on bloom keep the full disk. Worth 0.08
-    // ms of a 4.90 ms frame (4.90 -> 4.82, three interleaved rounds).
-    //
-    // The threshold is a hard step, so sweeping the control through 0.6 pops the
-    // bloom by that 8/255. Same bargain spotAt already makes at 0.8 and 2.0.
+    // how far they reach but how hard the result gets multiplied in. 78 of the
+    // 80 presets sit at 0.6 or below and take the cheap path; the two that lean
+    // on bloom keep the full disk. The threshold is a hard step, so sweeping
+    // the control through 0.6 pops the bloom a little. Same bargain spotAt
+    // already makes at 0.8 and 2.0.
+    let fb = 0.04 * P.crtBloom;
+    var bloom = vec3f(0.0);
     if (P.crtBloom <= 0.6) {
       for (var i = 0u; i < 8u; i = i + 1u) {
-        bloom = bloom + bright(textureSampleLevel(srcTex, samp, uv + DISK8[i].xy * rb / dim, 0.0).rgb, 0.55) * 2.0;
+        let t = DISK8[i];
+        let c = textureSampleLevel(srcTex, samp, uv + t.xy * rb / dim, 0.0).rgb;
+        bloom = bloom + c * (t.z * spill(luma(c), fb));
       }
+      bloom = bloom / W8;
     } else {
       for (var i = 0u; i < 16u; i = i + 1u) {
-        bloom = bloom + bright(textureSampleLevel(srcTex, samp, uv + DISK16[i].xy * rb / dim, 0.0).rgb, 0.55);
+        let t = DISK16[i];
+        let c = textureSampleLevel(srcTex, samp, uv + t.xy * rb / dim, 0.0).rgb;
+        bloom = bloom + c * (t.z * spill(luma(c), fb));
       }
+      bloom = bloom / W16;
     }
+    col = col + beam(bloom);
   }
 
-  // Glass scatter grows with beam current: a peak white drives far more light
-  // into the faceplate than a mid grey does, and it spreads further before it
-  // finds its way back out. Keying the halo radius off the local drive is what
-  // stops halation reading as a fixed-width outline traced round anything
-  // bright, which is the one way the shipped fixed radius gives itself away.
-  var halo = vec3f(0.0);
+  // Glass scatter: light into the faceplate, bounced off the back, and back
+  // out through the phosphor some way from where it went in. The spread grows
+  // with beam current, so each tap's kernel is keyed off the light at the tap
+  // — the emitter — and a dim emitter's share lands close in while a white's
+  // reaches the full radius. Keying it off the receiving pixel instead traced a
+  // fixed-width outline round anything bright and never reached into the dark,
+  // which is exactly where a halo shows. Each kernel is normalised by its own
+  // area, so a narrower one carries the same light, closer.
   if (P.crtHalation > 0.0) {
-    let rh = 15.0 * (1.0 + P.crtHaloKey * luma(center));
+    let fh = 0.08 * P.crtHalation;
+    let rh = 15.0 * (1.0 + P.crtHaloKey);
+    var halo = 0.0;
     if (P.crtHalation <= HALO_TIER) {
       for (var i = 0u; i < 8u; i = i + 1u) {
-        halo = halo + bright(textureSampleLevel(srcTex, samp, uv + DISK8[i].xy * rh / dim, 0.0).rgb, 0.35) * 2.0;
+        let t = DISK8[i];
+        let l = luma(textureSampleLevel(srcTex, samp, uv + t.xy * rh / dim, 0.0).rgb);
+        let s = (1.0 + P.crtHaloKey * min(l, 1.0)) / (1.0 + P.crtHaloKey);
+        halo = halo + l * exp(-2.0 * dot(t.xy, t.xy) / (s * s)) / (s * s);
       }
+      halo = halo / W8;
     } else {
       for (var i = 0u; i < 16u; i = i + 1u) {
-        halo = halo + bright(textureSampleLevel(srcTex, samp, uv + DISK16[i].xy * rh / dim, 0.0).rgb, 0.35);
+        let t = DISK16[i];
+        let l = luma(textureSampleLevel(srcTex, samp, uv + t.xy * rh / dim, 0.0).rgb);
+        let s = (1.0 + P.crtHaloKey * min(l, 1.0)) / (1.0 + P.crtHaloKey);
+        halo = halo + l * exp(-2.0 * dot(t.xy, t.xy) / (s * s)) / (s * s);
       }
+      halo = halo / W16;
     }
+    col = col + fh * halo * WARM;
   }
-  bloom = beam(bloom);
-  col = gamutFit(direct);
 
   // Granular deposit: the coating is a layer of crystallites, not a uniform
   // film, so emission is mottled. The modulation peaks in the mids — black
   // grains emit nothing to vary, and a fully driven grain has no headroom left
   // to vary in — which is why grain reads as screen texture rather than noise.
   // Direct emission only: the scattered light added below integrates over many
-  // grains on its way through the glass and comes out smooth.
+  // grains on its way through the glass and comes out smooth. The mids are
+  // the eye's mids, so the shape is taken on the encoded level, and the depth
+  // is scaled by the slope of the curve so the same control reads the same.
   if (P.crtGrain > 0.0) {
-    let l = luma(col);
-    col = col * (1.0 + P.crtGrain * (textureLoad(grainTex, vec2i(gid.xy), 0).r - 0.5) * 4.0 * l * (1.0 - l));
+    let l = luma(toDrive(col));
+    col = col * (1.0 + P.crtGrain * (textureLoad(grainTex, vec2i(gid.xy), 0).r - 0.5) * 8.8 * l * (1.0 - l));
   }
-
-  col = col + P.crtBloom * bloom / 16.0 + P.crtHalation * luma(halo / 16.0) * WARM;
 
   // Phosphor glow floor: the glass is never truly black — a faint warm haze
   // that lifts with nearby light, plus a small ambient pedestal.
-  col = col + P.crtGlow * WARM * (0.02 + 0.10 * luma(col));
+  col = col + P.crtGlow * WARM * (0.002 + 0.2 * luma(col));
 
   // Overbright phosphors desaturate toward white as the beam saturates.
   let l = luma(col);
-  col = mix(col, vec3f(l), clamp((l - 0.85) * 3.0, 0.0, 0.6));
+  col = mix(col, vec3f(l), clamp((l - 0.7) * 2.5, 0.0, 0.6));
 
-  textureStore(faceTex, vec2i(gid.xy), vec4f(clamp(col, vec3f(0.0), vec3f(1.0)), 1.0));
+  textureStore(faceTex, vec2i(gid.xy), vec4f(toDrive(clamp(col, vec3f(0.0), vec3f(1.0))), 1.0));
 }

@@ -38,3 +38,4 @@ readable without it.
 | [0011](0011-app-check-attests-the-client.md)         | App Check attests the client, and the rules do not rate limit                       |
 | [0012](0012-the-account-keeps-recent-sessions.md)    | The account keeps one session per visit, up to a cap                                |
 | [0013](0013-a-live-take-runs-on-the-wall-clock.md)   | A live take runs on the wall clock, and its frames come off the GPU                 |
+| [0014](0014-the-screen-is-light-in-srgb-bytes.md)    | The screen is linear light, held as sRGB bytes                                      |

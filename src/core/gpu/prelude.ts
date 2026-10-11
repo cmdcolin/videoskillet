@@ -1013,6 +1013,24 @@ fn luma(c: vec3f) -> f32 {
   return dot(c, vec3f(0.299, 0.587, 0.114));
 }
 
+// The screen is light from decode's store onward (docs/adr/0014). Drive, the
+// decoded signal, is gamma-encoded; the phosphor layer, crt_face and present
+// all work in linear light, held in rgba8unorm textures as sRGB bytes so the
+// sampler decodes them for free through an rgba8unorm-srgb view. toLight
+// and toDrive are that same transfer, so a byte written through them and read
+// back through the view is the byte it was.
+fn toLight(c: vec3f) -> vec3f {
+  let lo = c / 12.92;
+  let hi = pow((max(c, vec3f(0.0)) + 0.055) / 1.055, vec3f(2.4));
+  return select(hi, lo, c <= vec3f(0.04045));
+}
+
+fn toDrive(c: vec3f) -> vec3f {
+  let lo = c * 12.92;
+  let hi = 1.055 * pow(max(c, vec3f(0.0)), vec3f(1.0 / 2.4)) - 0.055;
+  return clamp(select(hi, lo, c <= vec3f(0.0031308)), vec3f(0.0), vec3f(1.0));
+}
+
 // The gun's transfer: cutoff makes the background true black (drive below
 // the knee emits nothing) and gamma is the gun's luminance response
 // (highlights bloom, shadows recede). Applied once, where decode writes the
@@ -1021,21 +1039,6 @@ fn luma(c: vec3f) -> f32 {
 // gamma, spot, bloom and halation all up. Identity at cutoff 0, gamma 1. The
 // saturation stage stays in crt_face: it can leave 0..1, which an 8-bit store
 // would clip, and it is a dot and a mix, not a transcendental.
-// Whether the gun transfer is doing anything; when it is, decode stores the
-// screen sRGB-encoded and crt_face samples it through an sRGB view, so the
-// 8-bit texture keeps its steps fine where gamma has pushed the light down.
-// Stock stays a plain byte of drive, bit for bit.
-fn gunOn(cutoff: f32, gamma: f32) -> bool {
-  return cutoff > 0.0 || gamma != 1.0;
-}
-
-// The sRGB transfer, the inverse of what an rgba8unorm-srgb view decodes.
-fn srgbEncode(c: vec3f) -> vec3f {
-  let lo = c * 12.92;
-  let hi = 1.055 * pow(max(c, vec3f(0.0)), vec3f(1.0 / 2.4)) - 0.055;
-  return clamp(select(hi, lo, c <= vec3f(0.0031308)), vec3f(0.0), vec3f(1.0));
-}
-
 fn gunTransfer(c: vec3f, cutoff: f32, gamma: f32) -> vec3f {
   if (cutoff <= 0.0 && gamma == 1.0) {
     return c;

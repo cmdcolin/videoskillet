@@ -233,17 +233,17 @@ export const DEFAULT_CONTROLS = {
   // A tube always scatters some of its own light — these are a floor, not an
   // effect. At zero the baseline is not a clean set, it is a framebuffer with
   // no glass in front of it, and every preset that did not name these inherited
-  // that. Thresholded well above mid grey, so what they touch is highlights.
+  // that. They add light (docs/adr/0014), so what they show on is the dark
+  // beside a highlight, and a mid grey takes them without visible change.
   crtBloom: 0.2, // beam core spilling into the coating around it
   crtHalation: 0.15, // light into the faceplate, bounced off the back, back out
   crtGlow: 0.08, // faint warm haze; the glass is never truly black
-  // Halation radius keyed off beam current. At 0 the halo is one fixed width
-  // traced round anything bright, which crt_face calls out as the one way the
-  // scatter gives itself away — harmless while halation was off by default,
-  // and shipped library-wide the moment it wasn't.
+  // Halation reach keyed off beam current: each emitter's share lands within a
+  // radius set by its own drive, so a white throws light the full distance and
+  // a mid grey keeps its close. At 0 every emitter reaches the same distance.
   //
-  // Not free, though the arithmetic is: rh is a multiply-add computed per pixel
-  // whatever this holds, but widening the halo spreads that ring of 16 samples
+  // Not free, though the arithmetic is: the radius is a multiply-add per pixel
+  // whatever this holds, but widening the halo spreads the ring of 16 samples
   // further apart and the texture cache notices. Measured at 2.7% of a step.
   crtHaloKey: 0.8,
   crtSvm: 0, // scan velocity modulation depth, signed (coil polarity)

@@ -4,6 +4,11 @@
 // pulls back off the set, and what surrounds the picture is the object holding
 // the glass — a small tube TV on a stand, lit by nothing but its own screen.
 // No geometry/vignette kitsch.
+//
+// screenTex is bound through an sRGB view, so every sample here is linear
+// light (docs/adr/0014): the beam profile and the grille multiply light, which
+// is what a dark gap between two lines is, and the one encode to display bytes
+// is the last line of the glass path.
 
 @group(0) @binding(0) var<uniform> P: Params;
 @group(0) @binding(1) var screenTex: texture_2d<f32>;
@@ -55,7 +60,9 @@ fn spillAt(tuv: vec2f, dist: f32, phase: f32) -> vec3f {
     let p = clamp(tuv + vec2f(cos(a), sin(a)) * rr * w, vec2f(0.0), vec2f(1.0));
     acc = acc + textureSampleLevel(screenTex, samp, p, 0.0).rgb;
   }
-  return acc / 6.0;
+  // The cabinet's shading below is written in display terms, so the wash is
+  // handed over encoded.
+  return toDrive(acc / 6.0);
 }
 
 // The moulded plastic, and the light its own screen throws on it. `spill` is the
@@ -221,5 +228,5 @@ fn fs(in: VOut) -> @location(0) vec4f {
   // the picture meets the letterbox edge-on, as it always has, and this would
   // otherwise soften the outer couple of pixels of every frame.
   let feather = select(1.0, smoothstep(0.0, -0.008, glassDist), back > 0.0);
-  return vec4f(col * feather, 1.0);
+  return vec4f(toDrive(col * feather), 1.0);
 }

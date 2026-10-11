@@ -177,7 +177,9 @@ fn colorInput(suv: vec2f, sharp: f32, step: vec2f) -> f32 {
   return acc;
 }
 
-// lens defocus: center tap + 6-point ring at the focus radius
+// lens defocus: center tap + 6-point ring at the focus radius. prevTex is the
+// glass through an sRGB view, so the lens blurs light; the camera's own gamma
+// then hands the sensor chain below the signal it was tuned on.
 fn cam(uv: vec2f) -> vec3f {
   let r = vec2f(P.fbFocus / f32(ACTIVE_W), P.fbFocus / f32(ACTIVE_H));
   var acc = textureSampleLevel(prevTex, samp, uv, 0.0).rgb * 0.25;
@@ -185,7 +187,7 @@ fn cam(uv: vec2f) -> vec3f {
     let a = f32(i) * PI / 3.0;
     acc = acc + textureSampleLevel(prevTex, samp, uv + vec2f(cos(a), sin(a)) * r, 0.0).rgb * 0.125;
   }
-  return acc;
+  return toDrive(acc);
 }
 
 @compute @workgroup_size(8, 8, 1)
