@@ -732,6 +732,9 @@ export const PRESETS: PresetDef[] = [
       fbGain: 1.13,
       fbZoom: 1.02,
       fbBlack: 0.05,
+      // The glass's warm floor, compounding a lap at a time, is what gives the
+      // bloom its sepia; the stock floor is too faint to survive the black cut.
+      crtGlow: 0.5,
     },
     // The gain is the one thing standing between this and a white field, so
     // walking it is walking how close to the edge the loop runs — slow, and

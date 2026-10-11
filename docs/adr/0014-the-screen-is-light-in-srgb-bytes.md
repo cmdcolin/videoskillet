@@ -55,18 +55,21 @@ on top of the direct emission, and a tinted faceplate is a lower control.
 ## Consequences
 
 - A look that leaned on the haze changed. `nightMonitor` and `cometTails` were
-  retuned to glow again under the new scale; the two "past the redline" screen
-  looks are different pictures and were left as they came out.
+  retuned to glow again under the new scale, and `zoomBloom` carries its own
+  glow floor, since the sepia it had was the stock floor's amber compounding a
+  lap at a time; the two "past the redline" screen looks are different pictures
+  and were left as they came out.
 - Scanlines at the same `scanBeam` are lighter, because the gap is now a dip in
   light, and `scanBloom` fattens a line by its light, so a mid grey fattens
   less. Both controls' numbers were left alone.
 - The phosphor layer, the retrace lines and the loop's lens now run on the sRGB
   curve. Its toe is linear, so the faint end of a long phosphor tail leaves the
   byte sooner than it did on the 2.2 curve, and the camera blurs light before it
-  encodes, so every loop preset's edge gain moved a little. The loop and
-  phosphor looks shot for this change (fbBloom, strobeTrails, nightTube,
-  cometTails, greenTerminal, lightThatStays) hold up; the rest were not surveyed
-  one by one.
+  encodes, so every loop preset's edge gain moved a little. A survey of all 75
+  loop and phosphor presets on the haunted-house clip found no look that broke.
+  Most optical loops run cooler, because the warm wash that compounded a lap at
+  a time was the stock halation on mid grey; `strobeBloom`'s dark gaps are a
+  little darker, from the tail leaving the byte sooner.
 - The frame costs 0.04 to 0.08 ms more (2 to 3% at stock), measured best-of over
   three interleaved rounds against the previous tree. The sRGB view costs the
   sampler nothing; the whole of it is the encodes, and present's one encode per
