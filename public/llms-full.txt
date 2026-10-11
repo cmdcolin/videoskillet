@@ -1064,7 +1064,7 @@ vFold  (v foldover)
 
 retraceLines  (retrace lines)
   0..1 step 0.01  default 0
-  The blanking pulse that holds the beam off through the vertical flyback is lost, and with it the clamp that held the video at black for the trip, so the beam draws the flyback at the coupling's resting grey. The yoke's current collapses from the bottom of the sweep to the top in a few line times while the horizontal sweep keeps going, so each of those lines lands as a slanted line rising to the right, with whatever the vertical interval carries on it: sync tips as notches, test signals and captions as bright dashes.
+  The blanking pulse that holds the beam off through the vertical flyback is lost, and with it the clamp that held the video at black for the trip, so the beam draws the flyback at the coupling's resting grey: a few line times of slanted lines rising to the right, with the vertical interval's sync notches and test-signal dashes on them. The flyback is the yoke ringing against its retrace capacitor, so supply ring lets it overshoot the top and swing back down across the first lines, and the deflection bends move the retrace with the picture.
 
 flybackLines  (flyback time)
   4..30 step 1 lines  default 16

@@ -559,27 +559,35 @@ const RETRACE_LEVEL = 0.5;
 // interval, so the flyback starts there and runs on through the test lines.
 const RETRACE_START = 6u;
 
-fn flybackRow(tau: f32, yBot: f32, yTop: f32) -> f32 {
-  let p = clamp(tau / P.flyback, 0.0, 1.0);
-  return mix(yBot, yTop, 1.0 - (1.0 - p) * (1.0 - p));
+// The flyback is a half cycle of the yoke ringing against its retrace
+// capacitor, so the beam does not glide to the top: it arrives on a damped
+// swing, fast out of the bottom and slowing in. A supply with its damping
+// stripped (hvRing) lets the swing overshoot the top edge and come back down
+// into the picture, so the last lines of the trip cross the first ones.
+fn flybackSwing(p: f32) -> f32 {
+  let a = mix(3.0, 0.8, clamp(P.hvRing, 0.0, 1.0));
+  return 1.0 - exp(-a * p) * (cos(PI * p) + (a / PI) * sin(PI * p));
 }
 
-// Light the flyback lays on screen pixel (x, y), as emitted light. `t` is how
-// far along its line the beam is at this column, the same for every flyback
-// line, so each one is a candidate at its own height and a few rows of spot
-// decide which of them lands here.
+// Light the flyback lays on screen pixel (x, y), as emitted light. Each line
+// of the trip is a candidate at its own height, and a row or so of spot
+// decides which of them lands here. The beam is bent, sagged and kicked on the
+// way exactly as it is for the picture, so a rippled scan ripples its retrace.
 fn retraceLight(x: u32, y: f32, vroll: f32) -> vec3f {
   let s = ACTIVE_START + x;
-  let t = f32(s) / f32(SPL);
   let yBot = sweep(f32(NLINES) - 1.0);
   let yTop = sweep(f32(RETRACE_START) + P.flyback);
-  let lines = u32(clamp(P.flyback, 1.0, 30.0));
+  let span = 1.0 + 0.8 * clamp(P.hvRing, 0.0, 1.0);
+  let lines = u32(ceil(clamp(P.flyback, 1.0, 30.0) * span));
   var acc = 0.0;
   for (var r = RETRACE_START; r < RETRACE_START + lines; r = r + 1u) {
-    let w = max(0.0, 1.0 - abs(flybackRow(f32(r - RETRACE_START) + t, yBot, yTop) - y));
+    let row = wrapRow(i32(r) + i32(floor(vroll)));
+    let hoff = lineOffset(row, r, y);
+    let t = f32(i32(s) + hoff) / f32(SPL);
+    let p = (f32(r - RETRACE_START) + t) / P.flyback;
+    let w = max(0.0, 1.0 - abs(mix(yBot, yTop, flybackSwing(p)) - y));
     if (w > 0.0) {
-      let row = wrapRow(i32(r) + i32(floor(vroll)));
-      let n0 = i32(row * SPL + s) + i32(round(timing[row]));
+      let n0 = i32(row * SPL + s) + hoff;
       // one subcarrier cycle averaged, so chroma cancels and the line's luma
       // is what draws
       let v = 0.25 * (comp[clampIdx(n0)] + comp[clampIdx(n0 + 1)]
