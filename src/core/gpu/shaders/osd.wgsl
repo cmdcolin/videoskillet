@@ -122,11 +122,13 @@ var<workgroup> lineBurst: vec2f;
 @compute @workgroup_size(64, 1, 1)
 fn main(
   @builtin(global_invocation_id) gid: vec3u,
+  @builtin(workgroup_id) wid: vec3u,
   @builtin(local_invocation_index) lid: u32,
 ) {
-  let row = gid.y;
-  // A workgroup is one run of samples along one row, so this return is uniform
-  // across it, which keeps the barrier below legal.
+  // A workgroup covers part of one row, so `wid.y` and `gid.y` agree, but only
+  // `wid.y` lets Chrome's uniformity analysis prove this return uniform, which
+  // the barriers below need. Naga skips that check, so Firefox accepts either.
+  let row = wid.y;
   if (row < ACTIVE_TOP || row >= ACTIVE_TOP + ACTIVE_H) {
     return;
   }
