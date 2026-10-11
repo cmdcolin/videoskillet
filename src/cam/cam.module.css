@@ -345,6 +345,15 @@
   padding: 14px 0 18px;
 }
 
+/* The tabs over the looks, the fault pads or the mixer, held at one height
+   so changing between them leaves the picture's size alone. */
+.tray {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 71px;
+}
+
 .error {
   margin: 0 16px;
   color: var(--danger);
@@ -433,10 +442,17 @@
   z-index: 2;
   display: flex;
   flex-direction: column;
+  align-items: center;
   border-radius: 18px 18px 0 0;
   background: #111;
   box-shadow: 0 -8px 30px #000c;
   padding-bottom: env(safe-area-inset-bottom);
+}
+.sheetHead,
+.knobs {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 560px;
 }
 .sheetHead {
   flex: none;
@@ -833,9 +849,14 @@
 /* A desktop window has the width for every look at once, and a mouse has no
    easy way to scroll a row sideways. */
 @media (min-width: 1000px) and (min-height: 561px) {
+  .tray {
+    min-height: 107px;
+  }
   .strip {
     flex-wrap: wrap;
     justify-content: center;
+    max-height: 76px;
+    scrollbar-width: thin;
   }
 }
 
@@ -863,6 +884,11 @@
     padding: 0 0 10px;
     gap: 10px;
   }
+  .tray {
+    flex: 1;
+    justify-content: flex-end;
+    min-height: 0;
+  }
   .strip {
     flex-wrap: wrap;
     align-content: flex-start;
@@ -884,6 +910,9 @@
   .mixRow {
     flex-wrap: wrap;
     gap: 4px;
+  }
+  .pick {
+    flex-basis: 100%;
   }
   .tabs {
     flex-wrap: wrap;

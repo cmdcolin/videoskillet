@@ -425,46 +425,46 @@ export function CamPage(props: { link: CamLink | null }) {
       <section className={styles.controls}>
         {error === '' ? null : <p className={styles.error}>{error}</p>}
 
-        {mixOpen ? (
-          <Mixer
-            canFlip={cam.canFlip}
-            sided={cam.sided}
-            facing={cam.facing}
-            onA={picks.onA}
-            onB={picks.onB}
-            busy={busy}
-            cameraUp={cameraUp}
-            hasB={scene.mix !== null && second.loaded}
-            ownedByLook={ownedMixer}
-            mix={scene.mix ?? FIRST_MIX}
-            onPutA={picks.putOnA}
-            onPutB={picks.putOnB}
-            onMix={mixWith}
-          />
-        ) : null}
-
-        {mixOpen ? null : (
-          <LookStrip
-            shelves={shelves}
-            shelf={shelf}
-            faults={faults}
-            normal={look === null && linked === null}
-            look={look}
-            layers={scene.layers}
-            tweaked={tweaked}
-            onShelf={name => {
-              setShelfName(name)
-              setFaults(false)
-            }}
-            onFaults={() => setFaults(true)}
-            onRoll={roll}
-            onNormal={() => land(null)}
-            onPick={pick}
-            onWeigh={weigh}
-          >
-            <Deck onHit={hit} />
-          </LookStrip>
-        )}
+        <div className={styles.tray}>
+          {mixOpen ? (
+            <Mixer
+              canFlip={cam.canFlip}
+              sided={cam.sided}
+              facing={cam.facing}
+              onA={picks.onA}
+              onB={picks.onB}
+              busy={busy}
+              cameraUp={cameraUp}
+              hasB={scene.mix !== null && second.loaded}
+              ownedByLook={ownedMixer}
+              mix={scene.mix ?? FIRST_MIX}
+              onPutA={picks.putOnA}
+              onPutB={picks.putOnB}
+              onMix={mixWith}
+            />
+          ) : (
+            <LookStrip
+              shelves={shelves}
+              shelf={shelf}
+              faults={faults}
+              normal={look === null && linked === null}
+              look={look}
+              layers={scene.layers}
+              tweaked={tweaked}
+              onShelf={name => {
+                setShelfName(name)
+                setFaults(false)
+              }}
+              onFaults={() => setFaults(true)}
+              onRoll={roll}
+              onNormal={() => land(null)}
+              onPick={pick}
+              onWeigh={weigh}
+            >
+              <Deck onHit={hit} />
+            </LookStrip>
+          )}
+        </div>
 
         <Shutter
           shot={shutter.shot}
