@@ -1,0 +1,33 @@
+---
+// A hero button shown as a still of itself after a pass through the program
+// (scripts/buttonplate.mjs). The words stay in the link for screen readers and
+// for a browser that never loads the still, and the `onload` is what lets the
+// still cover them once it has arrived.
+import { BUTTONS, PAD_X, PAD_Y } from '../../scripts/buttonglitch.mjs'
+
+interface Props {
+  name: string
+  href: string
+  class?: string
+}
+const { name, href, class: extra } = Astro.props
+const button = BUTTONS.find(b => b.name === name)
+if (button === undefined) {
+  throw new Error(`GlitchButton: no button named ${name}`)
+}
+---
+
+<a
+  class:list={['btn', { primary: button.primary }, extra]}
+  href={href}
+  data-still
+  style={`--still-pad-x: ${PAD_X}; --still-pad-y: ${PAD_Y}`}
+>
+  {button.label}
+  <img
+    class="btnStill"
+    src={`btn/${name}.webp`}
+    alt=""
+    onload="this.parentNode.classList.add('lit')"
+  />
+</a>

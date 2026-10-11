@@ -97,55 +97,53 @@
   text-align: center;
 }
 
-/* A button with `data-glitch` plays a strip of itself going through a fault on
-   hover: the frames are the button scanned through the program
-   (scripts/buttonplate.mjs), stacked top to bottom. While it plays, the real
-   button paints nothing and the strip stands in for it, reaching PAD_X and PAD_Y
-   past its border box and fading out across that margin. The strip is
-   screen-blended because the frames are light from a tube: the black around the
-   button adds nothing to the page under it, and a fault that throws the picture
-   outside the button lands on the page. */
-.btn[data-glitch] {
+/* The hero's buttons are stills of themselves after a pass through the
+   program (scripts/buttonplate.mjs, GlitchButton.astro). Once its still has
+   loaded, a button paints nothing and the still covers it, reaching
+   --still-pad past the border box and fading out across that margin. The still
+   is screen-blended because it is light from a tube: the black around the
+   button adds nothing to the page under it. Until the still loads, and if it
+   never does, the button paints itself. */
+.btn[data-still] {
   position: relative;
 }
-.btn.glitching,
-.btn.glitching:hover {
+.btnStill {
+  display: none;
+}
+.btn.lit,
+.btn.lit:hover {
   color: transparent;
   background: transparent;
   border-color: transparent;
   filter: none;
 }
-.btn.glitching::after {
-  content: '';
+.btn.lit .btnStill {
+  display: block;
   position: absolute;
-  inset: calc(-1px * var(--glitch-pad-y) - 1px)
-    calc(-1px * var(--glitch-pad-x) - 1px);
-  background: var(--glitch-sheet) 0 0 / 100% calc(100% * var(--glitch-frames))
-    no-repeat;
+  left: calc(-1px * var(--still-pad-x) - 1px);
+  top: calc(-1px * var(--still-pad-y) - 1px);
+  width: calc(100% + 2px * var(--still-pad-x) + 2px);
+  height: calc(100% + 2px * var(--still-pad-y) + 2px);
   mask:
     linear-gradient(
       to right,
       transparent,
-      #000 calc(1px * var(--glitch-pad-x)),
-      #000 calc(100% - 1px * var(--glitch-pad-x)),
+      #000 calc(1px * var(--still-pad-x)),
+      #000 calc(100% - 1px * var(--still-pad-x)),
       transparent
     ),
     linear-gradient(
       transparent,
-      #000 calc(1px * var(--glitch-pad-y)),
-      #000 calc(100% - 1px * var(--glitch-pad-y)),
+      #000 calc(1px * var(--still-pad-y)),
+      #000 calc(100% - 1px * var(--still-pad-y)),
       transparent
     );
   mask-composite: intersect;
   mix-blend-mode: screen;
   pointer-events: none;
-  animation: glitch calc(1s * var(--glitch-secs))
-    steps(var(--glitch-frames), jump-none) forwards;
 }
-@keyframes glitch {
-  to {
-    background-position: 0 100%;
-  }
+.btn.lit:hover .btnStill {
+  filter: brightness(1.15);
 }
 
 /* A touch screen too small for the instrument's sidebar is a phone, and a

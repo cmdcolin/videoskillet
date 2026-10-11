@@ -5,24 +5,24 @@ import { createServer as createVite } from 'vite'
 import { CHROME, FIREFOX } from './browser.mjs'
 import {
   BUTTONS,
+  CANDIDATES,
+  GAP,
   PAD_X,
   PAD_Y,
   SCALE,
-  STRIDE,
-  framesOf,
 } from './buttonglitch.mjs'
 import { PRESET, SET } from './herolook.mjs'
 import { appUp } from './until.mjs'
 
-// Renders the landing page's buttons through the program, one fault each, as
-// strips of frames the page plays on hover. Each button is drawn with the site's
-// own stylesheets, scaled up onto a plate, handed to the app as source A, and
-// stepped through the fault in scripts/buttonglitch.mjs while the harness keeps
-// every other frame.
+// Renders the landing page's buttons through the program as stills. Each
+// button is drawn with the site's own stylesheets, scaled up onto a plate,
+// handed to the app as source A on the hero's look with the button's own faults
+// held on the board, and photographed off the canvas once the picture has
+// settled. scripts/buttonglitch.mjs says which faults and which frame.
 //
 //   node scripts/buttonplate.mjs              # public/btn/*.webp
 //   node scripts/buttonplate.mjs --only=app   # one button
-//   node scripts/buttonplate.mjs --sheet=DIR  # also a contact sheet per button
+//   node scripts/buttonplate.mjs --sheet=DIR  # also every candidate frame, numbered
 //
 // Needs Firefox Nightly (WebGPU), Chrome (the plate) and ImageMagick's `magick`.
 import { execFileSync } from 'node:child_process'
@@ -39,8 +39,7 @@ import { join } from 'node:path'
 
 // The hero's look without its mixer loop. The ring modulator in that loop is
 // what turns the headline violet, and a button has a colour of its own to keep:
-// the page swaps the sprite in over the real button, so its first frame has to
-// be the same green.
+// the still stands in for a green button and has to stay green.
 const BUTTON_LOOK = 'cfbMix:0'
 
 const PLATE_W = 1600
@@ -122,36 +121,43 @@ const vite = await createVite({ server: { port: 0 }, logLevel: 'warn' })
 await vite.listen()
 const appPort = vite.httpServer.address().port
 
-const firefox = await puppeteer.launch({
-  browser: 'firefox',
-  executablePath: FIREFOX,
-  headless: false,
-  protocolTimeout: 480_000,
-  extraPrefsFirefox: {
-    'dom.webgpu.enabled': true,
-    'gfx.webgpu.ignore-blocklist': true,
-  },
-})
-const page = await firefox.newPage()
-await page.setViewport({ width: 1352, height: 900 })
-let failure = ''
-page.on('pageerror', err => {
-  failure ||= String(err).slice(0, 200)
-})
+// Firefox Nightly's WebGPU process goes down now and then partway through a
+// run, and takes the browser with it. Each button gets a browser of its own and
+// three goes, so one crash costs a retry rather than the run.
+const capture = async (b, box) => {
+  const firefox = await puppeteer.launch({
+    browser: 'firefox',
+    executablePath: FIREFOX,
+    headless: false,
+    protocolTimeout: 480_000,
+    extraPrefsFirefox: {
+      'dom.webgpu.enabled': true,
+      'gfx.webgpu.ignore-blocklist': true,
+    },
+  })
+  try {
+    const page = await firefox.newPage()
+    await page.setViewport({ width: 1352, height: 900 })
+    return await shoot(page, b, box)
+  } finally {
+    await firefox.close().catch(() => {})
+  }
+}
 
 const iurl = encodeURIComponent(`http://localhost:${platePort}/plate.png`)
-for (const b of buttons) {
-  const { png, box } = plates.get(b.name)
-  serving = png
+const shoot = async (page, b, box) => {
   await page.goto(
-    `http://localhost:${appPort}/app/?iurl=${iurl}&srcb=none&preset=${PRESET}&set=${SET},${BUTTON_LOOK}`,
+    `http://localhost:${appPort}/app/?iurl=${iurl}&srcb=none&preset=${PRESET}&set=${SET},${BUTTON_LOOK},${Object.entries(
+      b.set,
+    )
+      .map(([k, v]) => `${k}:${v}`)
+      .join(',')}`,
     {
       waitUntil: 'domcontentloaded',
     },
   )
   if (!(await appUp(page, 20000))) {
-    failure ||= 'the app never came up'
-    break
+    throw new Error('the app never came up')
   }
   await page.bringToFront()
   const lit = () => {
@@ -174,8 +180,7 @@ for (const b of buttons) {
       () => false,
     )
   if (!landed) {
-    failure ||= `the plate for ${b.name} never reached the canvas`
-    break
+    throw new Error(`the plate for ${b.name} never reached the canvas`)
   }
   // The plate's box, as a share of the plate: the page maps it onto the raster.
   const crop = {
@@ -188,8 +193,8 @@ for (const b of buttons) {
     w: Math.round((box.w + 2 * PAD_X) * SCALE),
     h: Math.round((box.h + 2 * PAD_Y) * SCALE),
   }
-  const frames = await page.evaluate(
-    async (peak, seconds, crop, out, stride) => {
+  return page.evaluate(
+    async (crop, out, candidates, gap) => {
       const vf = window.vf
       vf.pauseLoop()
       await new Promise(r =>
@@ -202,40 +207,52 @@ for (const b of buttons) {
       // onto the raster's band of it.
       const rasterH = (canvas.width * 3) / 4
       const rasterY = (canvas.height - rasterH) / 2
-      const sx = crop.x * canvas.width
-      const sy = rasterY + crop.y * rasterH
-      const sw = crop.w * canvas.width
-      const sh = crop.h * rasterH
       const off = document.createElement('canvas')
       off.width = out.w
       off.height = out.h
       const ctx = off.getContext('2d')
-      const grab = () => {
-        ctx.drawImage(canvas, sx, sy, sw, sh, 0, 0, out.w, out.h)
-        return off.toDataURL('image/png')
-      }
-      const plan = {
-        peak,
-        frames: seconds * 60,
-        cut: 0.5,
-        onCut: () => {},
-      }
       const grabbed = []
-      vf.startFault(plan)
-      for (let i = 0; i <= plan.frames; i++) {
-        if (i % stride === 0) grabbed.push(grab())
-        vf.step()
+      for (let i = 0; i < candidates; i++) {
+        for (let j = 0; j < gap; j++) vf.step()
+        ctx.drawImage(
+          canvas,
+          crop.x * canvas.width,
+          rasterY + crop.y * rasterH,
+          crop.w * canvas.width,
+          crop.h * rasterH,
+          0,
+          0,
+          out.w,
+          out.h,
+        )
+        grabbed.push(off.toDataURL('image/png'))
       }
       vf.endTake()
       vf.resumeLoop()
       return grabbed
     },
-    b.peak,
-    b.seconds,
     crop,
     out,
-    STRIDE,
+    CANDIDATES,
+    GAP,
   )
+}
+
+let failure = ''
+for (const b of buttons) {
+  const { png, box } = plates.get(b.name)
+  serving = png
+  let frames = null
+  for (let tries = 0; tries < 3 && frames === null; tries++) {
+    frames = await capture(b, box).catch(err => {
+      console.error(`buttonplate: ${b.name}: ${String(err).slice(0, 200)}`)
+      return null
+    })
+  }
+  if (frames === null) {
+    failure ||= `${b.name} failed three times`
+    continue
+  }
   const dir = join(scratch, b.name)
   mkdirSync(dir, { recursive: true })
   const files = frames.map((f, i) => {
@@ -245,28 +262,28 @@ for (const b of buttons) {
   })
   mkdirSync('public/btn', { recursive: true })
   const target = `public/btn/${b.name}.webp`
-  execFileSync('magick', [...files, '-append', '-quality', '55', target])
+  execFileSync('magick', [files[b.frame], '-quality', '80', target])
   if (sheet !== undefined) {
     mkdirSync(sheet, { recursive: true })
     execFileSync('magick', [
       'montage',
-      ...files.filter((_, i) => i % 2 === 0),
+      '-label',
+      '%t',
+      ...files,
       '-tile',
       '4x',
       '-geometry',
       '+4+4',
       '-background',
       '#0e0e11',
+      '-fill',
+      '#ccc',
       join(sheet, `${b.name}.png`),
     ])
   }
-  if (files.length !== framesOf(b)) {
-    failure ||= `${b.name}: ${files.length} frames, the page expects ${framesOf(b)}`
-  }
-  console.log(`wrote ${target}: ${files.length} frames`)
+  console.log(`wrote ${target}`)
 }
 
-await firefox.close()
 await vite.close()
 plateServer.close()
 rmSync(scratch, { recursive: true, force: true })

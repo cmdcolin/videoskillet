@@ -1,93 +1,64 @@
-// The landing page's glitching buttons: which fault each one is scanned
-// through, and how the strip that scripts/buttonplate.mjs renders from it is
-// laid out. The page reads this table too, so a strip and the CSS that plays it
-// cannot disagree about how many frames it holds.
+// The landing page's glitched buttons: what each one says, which faults it is
+// scanned through, and which frame of the result the page shows. The page
+// reads the labels from here too, so a still and the words of the link under it
+// cannot drift apart without `pnpm buttonplate` being run.
 
-// `name` is what the page's `data-glitch` says. Each `peak` is a fault the way
-// the deck's shelf writes one (src/ui/transitions.ts): the board at full depth,
-// run up and back down by the engine's own envelope. The shelf's entries break
-// one mechanism each so a cut can hide under them; a button has no cut to hide,
-// so these stack two or three mechanisms that fail together on real equipment.
+// `name` is the still's filename in public/btn. Each `set` holds a fault on the
+// board at a fraction of what the deck's shelf would drive it to: enough to
+// mark the button as having come through the program, little enough to read.
+// `frame` is the candidate the harness keeps (`--sheet` lays them all out).
 export const BUTTONS = [
   {
     name: 'app',
     label: 'Open the app →',
     primary: true,
-    // The set power-cycling: the raster folds to a line, the supply rings
-    // and the beam limiter pumps as it opens back out.
-    peak: { vSize: 0.12, hvSagUs: -80, hvRing: 1, abl: 1, crtConverge: 6 },
-    seconds: 1,
+    // Timebase jitter, which shears the stems line by line, and the guns
+    // landing a few pixels apart.
+    set: { tbJitterNs: 250, crtConverge: 3 },
+    frame: 6,
   },
   {
     name: 'cam',
     label: 'Open the camera →',
     primary: true,
-    // The receiver losing hold: the picture tears and rolls, and the colour
-    // oscillator loses the burst, so the hue spins as it goes.
-    peak: { hHold: 0.02, vHold: 0, vFreqHz: 50, syncBendUs: 6, burstLock: 0 },
-    seconds: 1,
+    // A loose horizontal hold, bending the top of the button, and the guns
+    // landing a few pixels apart. Any burst-lock error tints the whole button,
+    // which takes the green away.
+    set: { hHold: 0.12, syncBendUs: 3, crtConverge: 3 },
+    frame: 1,
   },
   {
     name: 'full',
     label: 'Full instrument',
-    // The head coming off track, with the dropouts and the stick-slip shear
-    // that ride along with it. The band parks on the middle of the raster,
-    // which is where the button is.
-    peak: {
-      trackAmt: 1,
-      trackPos: 0.5,
-      dropoutRate: 150,
-      dropoutLenUs: 20,
-      tbStickNs: 400,
-      tbJitterNs: 400,
-    },
-    seconds: 1.2,
+    // A few dropouts and stick-slip shear off a worn tape.
+    set: { dropoutRate: 10, dropoutLenUs: 15, tbStickNs: 150 },
+    frame: 2,
   },
   {
     name: 'simple',
     label: 'Simple mode',
-    // The tuner sliding off the channel and back: snow, then the picture.
-    peak: { rfSnow: 1, rfMistuneMHz: -1.5, noiseIre: 20 },
-    seconds: 1,
+    // The tuner a little off the channel: light snow.
+    set: { rfSnow: 0.3, rfMistuneMHz: -0.4 },
+    frame: 3,
   },
   {
     name: 'guide',
     label: 'User guide',
-    // Rewind with the picture on: head-crossing bars, FM streaks and the
-    // timebase thrown about by the tape running backwards.
-    peak: { shuttleX: -12, fmOverdev: 1, tbJitterNs: 800, tbWowNs: 2000 },
-    seconds: 1.2,
+    // Tape wow and jitter, so the lines of the button wander.
+    set: { tbWowNs: 600, tbJitterNs: 300 },
+    frame: 1,
   },
 ]
 
-// How far past the button's own box the sprite reaches, in CSS px, so a fault
-// that throws the picture outside the button still lands somewhere.
-export const PAD_X = 18
-export const PAD_Y = 16
+// How far past the button's own box the still reaches, in CSS px, so a fault
+// that throws light outside the button lands on the page around it.
+export const PAD_X = 12
+export const PAD_Y = 10
 
-// Every other sim frame: 30 fps, half the bytes.
-export const STRIDE = 2
-// Sprite pixels per CSS px. The button is scanned at about three samples per
-// CSS px, so past this the file is spending its bytes on grain.
-export const SCALE = 1.5
+// Still pixels per CSS px: a 2x screen shows it at its own size.
+export const SCALE = 2
 
-// The frames a strip holds: the fault's first frame, then every STRIDE-th one
-// up to and including its last. `seconds` must come to a whole number of sim
-// frames at 60 fps.
-export const framesOf = b => Math.floor((b.seconds * 60) / STRIDE) + 1
-
-// What the page sets on a button so landing.js and landing.css can play its
-// strip. The path is page-relative for the reason landing.js gives for
-// `data-src`.
-export const glitchOf = name => {
-  const b = BUTTONS.find(x => x.name === name)
-  return {
-    'data-glitch': `btn/${b.name}.webp`,
-    style: [
-      `--glitch-frames: ${framesOf(b)}`,
-      `--glitch-secs: ${Number(((framesOf(b) * STRIDE) / 60).toFixed(3))}`,
-      `--glitch-pad-x: ${PAD_X}`,
-      `--glitch-pad-y: ${PAD_Y}`,
-    ].join('; '),
-  }
-}
+// The harness grabs this many frames, this many sim frames apart, and keeps
+// the one each button's `frame` names.
+export const CANDIDATES = 12
+export const GAP = 7

@@ -168,30 +168,12 @@ test.each(riffs)('$name is a link under its demo’s card', riff => {
   expect(page).toContain(`>${riff.name}<`)
 })
 
-// A strip is a picture of the button's own words, so a button whose copy has
-// changed since `scripts/buttonplate.mjs` last ran glitches into the old label.
-test.each(BUTTONS)('$name glitches through a strip of its own label', b => {
-  const tagged = [
-    ...page.matchAll(
-      new RegExp(
-        `<a[^>]+data-glitch="btn/${b.name}\\.webp"[^>]*>([^<]*)</a>`,
-        'g',
-      ),
-    ),
-  ]
-  expect(tagged.length).toBeGreaterThan(0)
-  for (const [, text] of tagged) {
-    expect(text.trim()).toBe(b.label)
-  }
-  expect(bytes(`btn/${b.name}.webp`)).toBeGreaterThan(0)
-})
-
-test('every glitching button on the page has a strip', () => {
-  const named = [...page.matchAll(/data-glitch="btn\/([^.]+)\.webp"/g)].map(
-    m => m[1],
+// A still is a picture of the button's own words, and the page takes those
+// words from the same table, so what can drift is only the file itself.
+test.each(BUTTONS)('$name is a button on the page, over its own still', b => {
+  const link = new RegExp(
+    `<a[^>]+data-still[^>]*>\\s*${b.label}\\s*<img[^>]+src="btn/${b.name}\\.webp"`,
   )
-  expect(named.length).toBeGreaterThan(0)
-  for (const name of named) {
-    expect(BUTTONS.map(b => b.name)).toContain(name)
-  }
+  expect(page).toMatch(link)
+  expect(bytes(`btn/${b.name}.webp`)).toBeGreaterThan(0)
 })
