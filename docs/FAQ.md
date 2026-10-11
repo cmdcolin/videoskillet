@@ -110,15 +110,10 @@ OpenFX builds.
 
 ## Then how do I get a result into an edit?
 
-Render a file. Open the **strip** tray at the bottom and press **⎙ render**. The
-take plays on a virtual clock instead of wall time, and you get a
-constant-framerate H.264 MP4 that Resolve and Premiere import directly. **●**
-records every move against the frame it happened on, and **⎙** replays it into
-the render at a steady framerate.
-
-Run the project locally when the colour matters. `pnpm render` takes a link and
-a file and writes ProRes 4444, where a browser's 4:2:0 encode loses most of the
-chroma artifacts. [CLI](CLI.md) covers it.
+Render a file: **⎙ render** in the strip tray writes a constant-framerate MP4
+that Resolve and Premiere import directly.
+[Getting it out](USER-GUIDE.md#getting-it-out) covers it, along with the ProRes
+render for when the colour matters.
 
 ## Can I feed it a real composite signal off a yellow RCA cable?
 

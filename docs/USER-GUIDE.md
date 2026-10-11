@@ -192,128 +192,68 @@ can capture the picture window alone.
 
 ## Camera
 
-The camera page at `/cam/` puts a phone's camera through the set. It shows the
-picture, a mixer, a strip of looks and a shutter. A phone opening the home page
-gets **Open the camera** as its first button and a tour of the page under it. A
-desktop gets **Simple mode** beside **Open the app**, and **camera** in the ☰
-menu reaches the page from the app.
+The camera page at `/cam/` puts a phone's camera through the set. A phone
+opening the home page gets **Open the camera** as its first button, and
+**camera** in the ☰ menu reaches the page from the app.
 
-- **Start camera** asks the browser for the camera. Once the browser has said
-  yes, the page opens the camera by itself on later visits. Until the first
-  touch on the picture, a line over it names the swipe and the hold. **?** in
-  the top bar opens a card naming each gesture.
-- The tabs over the strip sort the looks by which part of the set goes wrong:
-  **loops** holds feedback loops that move the picture only a little each lap
-  and do their work in colour, **tape** the deck and its tape, **signal** the
-  picture on its way in (reception, cables, the decoder), **scan** the sync, the
-  deflection and the tube, and **bent** the circuit-bent boxes and the signal
-  driven past its rails. Each tab lists the looks that read best at phone size.
-  **random** at the start of the strip scrambles the picture. Each press picks
-  one of four rolls: a new look, a stack of looks mixed in on top at random
-  weights, a nudge that moves every knob of the look a little, or a throw that
-  moves a few knobs a long way. Nudge and throw land as tweaks on the look, so
-  **reset** in the tune sheet takes them back. With nothing up, **random**
-  always puts a new look up. It picks from every preset of the tab's kinds,
-  including the ones the tab does not list.
-- A tap puts a look up outright. Dragging a look's chip up mixes it in partway
-  and stacks it on the look that is up, the way dragging a preset chip sideways
-  does in the app; the chip fills to its weight, and dragging it down takes it
-  back out. Any number of looks, from any tab, can be stacked.
-- **tune** opens a sheet with the strength of the look, the weight of each look
-  stacked on it, and every control any of them sets, then colour, tint, noise
-  and a ghost. On a loop the strength opens the loop's mix and leaves its gain
-  alone, so the bottom of the slider gives echo trails and the top gives the
-  look building on itself. The other sliders move the controls themselves, over
-  the whole range the app gives them. **reset** puts the looks back. Pressing
-  the look that is on also opens the sheet.
-- **feedback** opens a sheet with the knobs of both feedback loops, whatever
-  look is up. The **camera loop** is a camera pointed at the screen and fed back
-  into the input: **mix** and **gain** set how much comes back, and the picture
-  builds on itself once their product passes unity; **zoom**, **rotate** and
-  **shift** set where each lap lands. Their sliders spend most of their travel
-  close to no change, ×1 and 0, where the small moves that read best are. The
-  **mixer loop** is the mixer's output patched into its own input, with its own
-  mix, gain and delay. **more** adds the rest of each loop's knobs, and
-  **reset** takes back what the sheet moved and leaves the look's other knobs
-  alone.
-- Holding a finger on the picture shows the camera without the look. Swiping
-  across it steps to the next or previous look on the strip.
-- Pinching the picture zooms, and the stops under the picture jump to 1× and 2×,
-  and to the ultrawide where the phone has one. Where the browser exposes the
-  camera's own zoom, the page drives the lens and crops only past its longest
-  reach. Elsewhere it crops the camera before the encoder, up to 4×.
-- On a look that keys its loop by colour, such as **it only eats the red** or
-  **the face stays out of it**, a tap on the picture moves the key to the
-  camera's colour under the finger.
-- **tilt** lets the phone steer the loop. The phone stands in for the feedback
-  camera: turning it turns the loop, and tipping it moves where each lap lands.
-  On a loop with no camera in it, turning the phone trims the delay, which
-  slides the echoes and turns their hue. A turn fades back over a few seconds,
-  so a hand that holds still gets the look as tuned, and no turn takes a loop
-  past a degree of spin or 2% of shift per lap.
-- **PHOTO** takes a PNG still and **VIDEO** records an MP4. The thumbnail beside
-  the shutter opens the phone's share sheet, which is where **Save Image** and
-  **Save Video** put the file in the photo library. A browser without a share
+|                                                                                                                                                                                                                                                                            |                                                                                                                                                                                                                      |                                                                                                                                                                                               |
+| :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+| ![The camera page on a phone: a cat photo torn by a tracking band, the feedback, sources and deck buttons down the right, and under the picture the tabs loops, tape, signal, scan and bent over a strip of look chips with tracking band lit](../public/phone/looks.webp) | ![The feedback sheet over the picture: a camera loop with mix, gain, zoom, rotate and two shift sliders, and a mixer loop under it with its own mix and gain, more and reset at the top](../public/phone/loops.webp) | ![The help card: swipe steps to the next or previous look, hold shows the camera without the look, pinch zooms, tap aims the key, drag up mixes a look in partway](../public/phone/help.webp) |
+
+The tabs sort the looks by which part of the set goes wrong. A tap puts a look
+up, and dragging its chip up stacks it on the look that is up, partway. **?** in
+the top bar opens the card on the right.
+
+- **random** picks one of four rolls: a new look, a stack of looks, a nudge to
+  every knob, or a throw of a few knobs a long way. A nudge or a throw lands as
+  tweaks, so **reset** in **tune** takes it back.
+- **tune** holds the strength of the look and every control it sets. On a loop
+  the strength opens the loop's mix and leaves its gain alone, so the bottom of
+  the slider gives echo trails and the top gives the look building on itself.
+- In **feedback**, the camera loop builds on itself once **mix** times **gain**
+  passes unity. Its sliders spend most of their travel near ×1 and 0, where the
+  small moves read best.
+- Where the browser exposes the camera's own zoom, a pinch drives the lens and
+  crops only past its longest reach. Elsewhere the page crops before the
+  encoder, up to 4×.
+- **tilt** lets the phone stand in for the feedback camera. A turn fades back
+  over a few seconds and never takes a loop past a degree of spin or 2% of shift
+  per lap. On a loop with no camera in it, a turn trims the delay, which slides
+  the echoes and turns their hue.
+- The front camera is mirrored before the encoder, so a ghost still trails to
+  the right the way a set draws it.
+- A phone held upright shows an upright slice of the glass. **on side** stands
+  the whole set on its side, the way an arcade cabinet mounts its tube.
+- **sound** lets the room jolt the picture through the set's supply, and
+  **VIDEO** then records that sound too.
+- The thumbnail beside the shutter opens the share sheet, where **Save Image**
+  and **Save Video** put the file in the photo library. A browser with no share
   sheet downloads the file.
-- The button with the turning arrows switches between the front and back
-  cameras. The front camera is mirrored at the source, before the encoder, so a
-  ghost or a smear still trails to the right the way a set draws it.
-- A phone held upright shows an upright slice down the middle of the set's
-  glass, with the camera's tall picture fitted into it. The scanlines run across
-  the picture, a tracking band sweeps up it and a roll rolls, and stills and
-  videos come out tall. The set carries black either side of the slice, so a
-  picture torn or pulled sideways brings black in with it. **on side** stands
-  the set on its side instead, the way an arcade cabinet mounts its tube: the
-  whole glass is on show, and the scanlines run down the picture.
-- **sound** lets the room's sound into the set. A cheap set runs its audio
-  amplifier off the same supply as the scan, so each kick drum loads the supply
-  and the picture jolts and rings back. A look that already works the supply
-  harder keeps its own settings. While the switch is on, **VIDEO** records the
-  sound with the picture, as AAC where the browser can encode it and Opus where
-  it cannot.
-- Four buttons on the picture open panels: **tune**, **feedback**, **sources**
-  and **deck**. One panel is open at a time, and opening one closes the one
-  before it. **sources** and **deck** take the place of the tabs and the strip
-  of looks while they are open, and pressing the button again brings the looks
-  back. **sources** opens the mixer, which has a list for each source. **A**
-  starts on the camera, with **back camera** and **front camera** on a phone
-  that has both. It also takes a **clip** of yours or one of the set's own
-  patterns, which works without a camera at all; the page lets the camera go
-  while something else is on A, and picking the camera opens it again. **B**
-  starts at **none**.
-  - **other camera**, on a phone with two, puts the other camera on B: the
-    camera on screen goes to B and the other one comes on screen. Point the back
-    camera at a scene, press it, and the front camera puts you over the scene. A
-    phone that runs both cameras at once keeps both live, and the flip button
-    then swaps them between the screen and B. On a phone that cannot, the page
-    records four seconds of the camera on screen to a tape, loops it on B and
-    flips to the other camera. The page asks each phone once and remembers the
-    answer.
-  - **record 4 s** records four seconds of the camera on screen and loops it on
-    B, the way a studio rolled a deck into a mixer's second input. The camera
-    stays on screen, so the tape plays back as an echo of a few seconds ago. It
-    and **other camera** need the camera on A.
-  - **clip** loops a video of yours on B.
-  - **bars**, **tv static**, **vhs static**, **synth** and **sweep** put one of
-    the set's own patterns on B, the same ones the app's source menus offer.
-  - **none** takes B off.
-- B comes up dissolved halfway under the look that is up, and a **mix** tab
-  opens with mixers that have lost their sync, their supply or their plugs, and
-  the mixer opens with it. The mixer's modes and fader appear once B has a
-  picture. **dissolve** crossfades the two genlocked, **wipe** splits the screen
-  between them, **inset** squeezes B into a corner, or opens a box of it in the
-  middle of an upright slice, **key** lays B's bright parts over A, and **sum**
-  adds B in with no sync, so the two beat against each other. The fader runs
-  each from A to B. A look from the **mix** tab works the mixer itself, which
-  hides the fader, and pressing a mode takes the mixer back from it.
-- **deck** opens the fault pads.
-- The deck's pads throw a fault that breaks the picture and heals. **track**
-  sweeps a band of mistracking up the picture, **roll** loses the vertical hold,
-  **collapse** folds the raster to a line, **shuttle** runs the tape at speed,
-  and **dub** piles up generations of copying. With a second picture on B, the
-  fader flips to the other end on the frame the picture is least legible, so the
-  fault carries the change of camera the way a transition does in the app.
-- **full app** opens the app on the same preset, asking for the camera again.
+
+### A second picture
+
+|                                                                                                                                                                                              |                                                                                                                                 |
+| :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------------------------------: |
+| ![The mixer open under the picture: A set to camera, B set to clip, the mode on wipe and the fader between A and B, the picture split down the middle by the wipe](../public/phone/mix.webp) | ![The deck open under the picture: five fault pads reading track, roll, collapse, shuttle and dub](../public/phone/faults.webp) |
+
+**sources** opens the mixer on the left. A clip or one of the set's patterns on
+A works with no camera at all.
+
+- **other camera** puts the phone's other camera on B. A phone that cannot run
+  both at once gets four seconds of the first camera recorded to a tape and
+  looped on B instead.
+- **record 4 s** loops four seconds of the camera on B, so the tape plays back
+  as an echo of a few seconds ago.
+- **sum** adds B in with no sync, so the two beat against each other. A look
+  from the **mix** tab works the mixer itself and hides the fader, and picking a
+  mode takes the mixer back.
+
+**deck** opens the fault pads on the right. Each pad breaks the picture and
+heals it. With a picture on B, the fader flips to the other end on the frame
+where the picture is least legible, so the cut to the other picture lands inside
+the fault.
+
+**full app** opens the app on the same preset.
 
 ## Keyboard
 
