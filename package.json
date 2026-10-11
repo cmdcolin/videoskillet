@@ -32,7 +32,7 @@
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
     "compiler": "node scripts/compilercheck.mjs",
-    "typecheck": "tsc -b && tsc --noEmit -p tsconfig.test.json",
+    "typecheck": "tsc -b && tsc --noEmit -p tsconfig.app.json",
     "test": "vitest run",
     "test:watch": "vitest",
     "harnesses": "node scripts/sweep.mjs",

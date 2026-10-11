@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "ES2022",
     "lib": ["ES2022", "DOM", "DOM.Iterable", "es2023.array", "esnext.iterator"],
-    "types": ["@webgpu/types", "vite/client"],
+    "types": ["@webgpu/types", "vite/client", "node"],
     "module": "ESNext",
     "moduleResolution": "bundler",
     "jsx": "react-jsx",
@@ -18,14 +18,18 @@
     // also removes the guesswork isolatedModules otherwise leaves a bundler —
     // an elided import is elided because the source said so, not because a
     // transpiler inferred it.
-    "verbatimModuleSyntax": true
+    "verbatimModuleSyntax": true,
+    // `scripts/demos.mjs` is the demo list and `scripts/reel.mjs` the carousel's
+    // slides, and the landing-page tests that read them are the only things in
+    // `src/` that import out of `scripts/`. Inferring their shape from the
+    // modules themselves keeps that shape in one place.
+    "allowJs": true
   },
+  // Everything, tests included, with node's globals for the third of the tests
+  // that shell out or read files. Editors and oxlint's type-aware rules find
+  // this file, so it has to cover the tests: a file outside it gets checked with
+  // default options. tsconfig.app.json checks the app again without node.
   "include": ["src", "site/**/*.ts"],
-  // Tests are checked by tsconfig.test.json, which adds node's globals for the
-  // third of them that shell out. They are excluded here rather than unchecked:
-  // `pnpm typecheck` runs both projects. Excluding only `*.test.ts` — while the
-  // twelve `*.spec.ts` files stayed in — is what let a filename decide whether a
-  // test was typechecked at all.
-  "exclude": ["src/**/*.test.ts", "src/**/*.spec.ts", "site/**/*.test.ts"],
+  "exclude": ["site/**/*.test.ts"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

@@ -1,0 +1,11 @@
+{
+  // The app without the tests and without node's globals, which browser code
+  // must not see.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": ["@webgpu/types", "vite/client"],
+    "allowJs": false
+  },
+  "include": ["src", "site/**/*.ts"],
+  "exclude": ["src/**/*.test.ts", "src/**/*.spec.ts", "site/**/*.test.ts"]
+}
