@@ -2637,8 +2637,6 @@ export const PRESETS: PresetDef[] = [
       crtConverge: 2.6,
       crtSvm: 1.2,
       crtSvmWidth: 3,
-      maskAmt: 0.5,
-      maskPitch: 3.5,
       crtSpot: 1.4,
       scanBeam: 0.45,
       scanBloom: 0.55,
