@@ -9,6 +9,13 @@ button.tabWaiting {
   color: var(--edit-hi);
   border-color: var(--edit-hi);
 }
+/* Few phones and tablets can reach a MIDI controller, so a touch screen
+   leaves the button out until the palette's midi has turned the wire on. */
+@media (pointer: coarse) {
+  button.tabIdle {
+    display: none;
+  }
+}
 .tabNote {
   font-size: var(--fs-xs);
   font-family: var(--mono);

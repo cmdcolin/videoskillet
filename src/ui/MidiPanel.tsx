@@ -237,6 +237,8 @@ export function MidiPanel(props: {
           stranded > 0
             ? styles.tabWaiting
             : midi.status === 'ready' && styles.tabOn,
+          (midi.status === 'idle' || midi.status === 'unsupported') &&
+            styles.tabIdle,
         )}
         title={
           midi.status === 'ready'
