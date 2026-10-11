@@ -133,7 +133,7 @@ aDropoutRate  (A dropouts)
   Dropout events per frame on input A's tape alone. Shed oxide leaves the head reading nothing, with no compensator to hide the gap.
 
 aDropoutLenUs  (A dropout len)
-  1..60 step 0.5 us  default 5
+  1..60 step 0.5 µs  default 5
   How long each of A's dropouts lasts, in microseconds of the 63.5 µs line.
 
 aScramble  (A sync suppression)
@@ -265,11 +265,11 @@ cfbGain  (loop gain)
   Proc-amp trim on the loop return. Past ±1 the round trip exceeds unity and the loop builds until it clips. Negative inverts each pass.
 
 cfbDelayUs  (loop delay)
-  0..63 step 0.001 us  default 0.15
+  0..63 step 0.001 µs  default 0.15
   Delay on the loop return. The subcarrier rides the same waveform, so delay is also a hue rotation: one sample, 70 ns, is a 90° spin.
 
 cfbServoUs  (loop timebase pull)
-  -60..60 step 0.01 us  default 0
+  -60..60 step 0.01 µs  default 0
   The loop's delay trimmer replaced by a varactor hanging off the video bus, so the fed-back waveform tunes its own delay. Bright content and sync tips pull opposite ways, and every 70 ns of pull is another 90° of hue.
 
 cfbLines  (v offset)
@@ -411,7 +411,7 @@ bDropoutRate  (B dropouts)
   Dropout events per frame on B's own tape. The streaks land on B's raster, so they slip and roll with B's picture.
 
 bDropoutLenUs  (B dropout len)
-  1..60 step 0.5 us  default 5
+  1..60 step 0.5 µs  default 5
   How long each of B's dropouts lasts, in microseconds of the 63.5 µs line.
 
 bScramble  (B sync suppression)
@@ -640,7 +640,7 @@ bKeySpill  (spill kill)
   Cancels the backing colour reflecting off the subject. Luma and chroma are the same wire, so the box reinjects the backing's own subcarrier in antiphase. It nulls fully on the genlocked path; on the dirty path B's carrier drifts, so the cancellation runs late and leaves a residue.
 
 bKeyDelayUs  (key delay)
-  -1.5..1.5 step 0.01 us  default 0
+  -1.5..1.5 step 0.01 µs  default 0
   The registration trim, because the key path and the video path are different lengths of circuit. Off zero the matte lies beside the subject: one edge keeps a rim of backing colour, the other removes a rim of subject.
 
 bKeyFill  (fill)
@@ -682,7 +682,7 @@ fmOverdev  (FM over-deviation)
   A VHS deck records brightness as pre-emphasized FM, and a white-clip circuit is supposed to stop bright edges overshooting the deviation the tape can carry. Set too hot, the overshoot runs past the response cliff and the discriminator folds back: more frequency out as less video. Colour-under passes through untouched, carrying saturated colour over black.
 
 fmStreakUs  (inversion streak)
-  0.1..0.7 step 0.01 us  default 0.4
+  0.1..0.7 step 0.01 µs  default 0.4
   How long the demodulator takes to recover from a fold: the deemphasis time constant, which smears the inversion rightward.
 
 ## Noise & interference
@@ -718,7 +718,7 @@ impulseMains  (dimmer lock)
 ## Ghosting & leakage
 
 ghostDelayUs  (ghost delay)
-  0..50 step 0.05 us  default 0
+  0..50 step 0.05 µs  default 0
   Multipath: a reflected copy of the broadcast arriving this many microseconds late, as an echo to the right. The reflection carries its own subcarrier, so every 70 ns of delay turns the ghost's hue 90°.
 
 ghostGain  (ghost gain)
@@ -752,7 +752,7 @@ dropoutComp  (dropout compensator)
   The circuit that patches a dropout from a delay line holding what played a line or two ago. A line of NTSC is 227.5 subcarrier cycles, so one line back arrives exactly out of phase: invisible in brightness and in the complementary hue. Two lines back is a whole number of cycles, so the hue is right and the patch is two lines stale.
 
 dropoutLenUs  (dropout len)
-  1..60 step 0.5 us  default 5
+  1..60 step 0.5 µs  default 5
   How long each dropout lasts. A line is 63.5 µs, so 25 µs is a streak across a third of the picture.
 
 dubGens  (dub generations)
@@ -878,7 +878,7 @@ tbStickNs  (sticky shed)
   Binder hydrolysis making the tape grab the head drum. Tension builds until the patch breaks free, snaps forward and re-sticks: a relaxation oscillator, chaotic rather than periodic, and the mechanism behind squealing tapes.
 
 headSwitchShiftUs  (head switch)
-  -30..30 step 0.05 us  default 0
+  -30..30 step 0.05 µs  default 0
   A helical-scan VCR swaps between two heads a few lines before the bottom of the picture, and the two do not agree on timing: the torn hook at the bottom of every VHS frame.
 
 headSwitchNoise  (switch noise)
@@ -931,11 +931,11 @@ osdScale  (display size)
 ## Enhancer (bent)
 
 enhClampUs  (clamp gate)
-  -60..600 step 0.1 us  default 0
+  -60..600 step 0.1 µs  default 0
   How far the box's DC-restoration gate has slid off the back porch. A clamp pins one sample per line to blanking and the rest of the line rides on that, so dragged into active video the black level bounces line to line with the picture. Negative puts the gate on the sync tip, lifting the whole line.
 
 enhDroopUs  (clamp droop)
-  0..2000 step 1 us  default 0
+  0..2000 step 1 µs  default 0
   Time constant of the coupling capacitor between the gates. Short enough and the level sags back toward blanking within the line, so bright content drags a dark streak to the right edge. Vertical edges are untouched.
 
 enhPeakMHz  (detail freq (0 off))
@@ -973,7 +973,7 @@ vFreqHz  (vertical osc (60 = locked))
   The free-running frequency of the receiver's vertical oscillator. At 60 Hz it agrees with the signal; detuned, the frame rolls at the difference. Only bites once vertical hold is loose.
 
 syncBendUs  (retrace flag)
-  0..60 step 0.05 us  default 0
+  0..60 step 0.05 µs  default 0
   A kick to the horizontal PLL at the vertical seam, where the equalizing pulses upset it. The first few lines start late and settle back over the next dozen: the flagging top edge.
 
 hDetuneHz  (horizontal osc detune)
@@ -1013,11 +1013,11 @@ audioTear  (level → horizontal hold)
   Overall audio level pulls the horizontal oscillator off frequency, so loud passages skew and tear the picture sideways. Negative leans the tear the other way.
 
 audioSagUs  (bass → HV sag)
-  0..160 step 0.5 us  default 0
+  0..160 step 0.5 µs  default 0
   Bass loads the high-voltage supply as if the beam were drawing current, so the scan collapses on each hit and springs back. Needs supply ring (in Deflection) above zero.
 
 audioBendUs  (waveform into deflection)
-  -80..80 step 0.1 us  default 0
+  -80..80 step 0.1 µs  default 0
   The audio waveform patched into the horizontal deflection, one sample per scan line. Deflection-domain, so hue stays put while the glass bends.
 
 audioLoad  (audio into HV tank)
@@ -1039,7 +1039,7 @@ audioGain  (input trim)
 ## Deflection
 
 bendUs  (bend amount)
-  -120..120 step 0.1 us  default 0
+  -120..120 step 0.1 µs  default 0
   How far the tube's own scan is displaced sideways, in microseconds of line time. Deflection-domain: the beam bends after decoding, so geometry warps while hue stays put.
 
 bendShape  (shape)
@@ -1071,7 +1071,7 @@ flybackLines  (flyback time)
   How many line times the vertical flyback takes. The lines fan out from the bottom, where the yoke's current collapses fastest, and bunch toward the top. Sixteen reaches the test signals and the caption line, so their dashes ride the last few lines; fewer is a steeper fan with nothing on it.
 
 hvSagUs  (HV sag)
-  -100..100 step 0.1 us  default 0
+  -100..100 step 0.1 µs  default 0
   A bright picture draws beam current, which loads the high-voltage supply and lets the scan widen, so bright content stretches the geometry around it.
 
 hvRing  (supply ring (0 droop, 1 chaos))
