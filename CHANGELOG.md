@@ -2,6 +2,11 @@
 
 All notable changes to videoskillet are documented here.
 
+## [2.18.0](https://github.com/cmdcolin/videoskillet/compare/v2.17.0...v2.18.0) - 2026-10-11
+
+### Features
+- *(deflection)* [`d1cfb37`](https://github.com/cmdcolin/videoskillet/commit/d1cfb37d8c2c6ecca610e344f6d99ab48da49dbd) power off and degauss as one-shot gestures
+
 ## [2.17.0](https://github.com/cmdcolin/videoskillet/compare/v2.16.0...v2.17.0) - 2026-10-11
 
 ### Features
