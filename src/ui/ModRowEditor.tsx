@@ -133,7 +133,7 @@ function KnobRow(props: { i: number; slot: UiSlot; field: BayField }) {
               label:
                 s.syncDiv === undefined
                   ? null
-                  : SYNC_DIVISIONS[s.syncDiv].label,
+                  : SYNC_DIVISIONS[s.syncDiv]!.label,
               live: mod.bpm !== null,
               onCycle: () => mod.cycleSlotSync(props.i),
             }
@@ -201,7 +201,7 @@ export function ModRowEditor(props: {
     const claim = props.claim
     const holders = mod.slots.flatMap((s, j) =>
       s.target === '' ||
-      (own !== -1 && unpatch(mod.slots, j)[own].target === '')
+      (own !== -1 && unpatch(mod.slots, j)[own]!.target === '')
         ? []
         : [s.target],
     )
@@ -237,7 +237,7 @@ export function ModRowEditor(props: {
     )
   }
 
-  const slot = mod.slots[i]
+  const slot = mod.slots[i]!
   const swing = slot.depth * depthSign(slot.source) * (def.max - def.min)
   const timed = !PASS_THROUGH.has(slot.source)
 
@@ -288,7 +288,7 @@ export function ModRowEditor(props: {
           the top of the MODULATION box, a stage away from most of these rows. */}
       {slot.syncDiv === undefined ? null : (
         <div className={ui.hint}>
-          ♩{SYNC_DIVISIONS[slot.syncDiv].label} of{' '}
+          ♩{SYNC_DIVISIONS[slot.syncDiv]!.label} of{' '}
           {mod.bpm === null
             ? 'a tempo not set yet'
             : `${mod.bpm.toFixed(1)} BPM`}{' '}
@@ -321,13 +321,13 @@ export function ModRowEditor(props: {
             title={
               slot.syncDiv === undefined
                 ? 'lock the rate to the tempo — each press steps through 1/1, 1/2, 1/4, 1/8, 1/16 and back to free-running'
-                : `locked to ♩${SYNC_DIVISIONS[slot.syncDiv].label} — press for the next division, or on past 1/16 to run free again`
+                : `locked to ♩${SYNC_DIVISIONS[slot.syncDiv]!.label} — press for the next division, or on past 1/16 to run free again`
             }
             onClick={() => mod.cycleSlotSync(i)}
           >
             {slot.syncDiv === undefined
               ? '♩ lock to beat'
-              : `♩ ${SYNC_DIVISIONS[slot.syncDiv].label} of the beat`}
+              : `♩ ${SYNC_DIVISIONS[slot.syncDiv]!.label} of the beat`}
           </button>
         )}
         <button

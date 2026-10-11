@@ -46,7 +46,7 @@ describe('normalizeSlots', () => {
   it('pads a short bay out to the full count', () => {
     const out = normalizeSlots([slot()])
     expect(out).toHaveLength(N_SLOTS)
-    expect(out[0].target).toBe('fbMix')
+    expect(out[0]!.target).toBe('fbMix')
     expect(out[1]).toEqual(EMPTY_SLOT)
   })
 
@@ -58,7 +58,7 @@ describe('normalizeSlots', () => {
       slot({ target: 'cfbMix' }),
     ])
     expect(out[0]).toEqual(EMPTY_SLOT)
-    expect(out[1].target).toBe('cfbMix')
+    expect(out[1]!.target).toBe('cfbMix')
   })
 
   it('survives the shapes a stored bay can actually be', () => {
@@ -69,8 +69,8 @@ describe('normalizeSlots', () => {
 
   it('clamps a rate or depth that arrived out of range', () => {
     const out = normalizeSlots([slot({ rateHz: 900, depth: 40 })])
-    expect(out[0].rateHz).toBe(10)
-    expect(out[0].depth).toBe(1)
+    expect(out[0]!.rateHz).toBe(10)
+    expect(out[0]!.depth).toBe(1)
   })
 
   it('takes an old four-slot bay unchanged', () => {
@@ -86,7 +86,7 @@ describe('normalizeSlots', () => {
     const out = normalizeSlots([
       { target: 'fbMix', source: 'sine', rateHz: 1, depth: 0.5 },
     ])
-    expect(out[0].on).toBe(true)
+    expect(out[0]!.on).toBe(true)
   })
 
   it('parks a slot only on an explicit false', () => {
@@ -116,8 +116,8 @@ describe('toEngineSlots', () => {
     // widened, and failed for the one reason it should not have.
     const def = SLIDER_BY_KEY.get('fbZoom')
     const [out] = toEngineSlots([slot({ target: 'fbZoom' })])
-    expect(out.min).toBe(def?.min)
-    expect(out.max).toBe(def?.max)
+    expect(out!.min).toBe(def?.min)
+    expect(out!.max).toBe(def?.max)
   })
 
   it('drops off and zero-depth slots', () => {
@@ -133,7 +133,7 @@ describe('toEngineSlots', () => {
 
   it('scales every depth by the motion amount', () => {
     const [out] = toEngineSlots([slot({ depth: 0.5 })], 0.5)
-    expect(out.depth).toBe(0.25)
+    expect(out!.depth).toBe(0.25)
   })
 
   it('routes nothing at all when motion is frozen', () => {
@@ -153,30 +153,30 @@ describe('a rate locked to the beat', () => {
       1,
       120,
     )
-    expect(out.rateHz).toBe(2)
+    expect(out!.rateHz).toBe(2)
   })
 
   it('follows the tempo without the bay being rewritten', () => {
     const bay = [slot({ rateHz: 0.5, syncDiv: QUARTER })]
-    expect(toEngineSlots(bay, 1, 60)[0].rateHz).toBe(1)
-    expect(toEngineSlots(bay, 1, 180)[0].rateHz).toBe(3)
+    expect(toEngineSlots(bay, 1, 60)[0]!.rateHz).toBe(1)
+    expect(toEngineSlots(bay, 1, 180)[0]!.rateHz).toBe(3)
     // The slot itself never moved: the dialed rate is what comes back when the
     // lock cycles off.
-    expect(bay[0].rateHz).toBe(0.5)
+    expect(bay[0]!.rateHz).toBe(0.5)
   })
 
   it('holds the dialed rate while nothing is providing a tempo', () => {
     // Unplugging the clock leaves the wobble where it was rather than stopping
     // it, which is the only reading that doesn't look like a broken patch.
     expect(
-      toEngineSlots([slot({ rateHz: 0.5, syncDiv: QUARTER })])[0].rateHz,
+      toEngineSlots([slot({ rateHz: 0.5, syncDiv: QUARTER })])[0]!.rateHz,
     ).toBe(0.5)
   })
 
   it('clamps a division the rate slider cannot reach', () => {
     const fastest = SYNC_DIVISIONS.length - 1
     const [out] = toEngineSlots([slot({ syncDiv: fastest })], 1, 300)
-    expect(out.rateHz).toBe(RATE_MAX)
+    expect(out!.rateHz).toBe(RATE_MAX)
   })
 
   it('cycles off → every division → off, keeping the rate underneath', () => {
@@ -198,8 +198,8 @@ describe('a rate locked to the beat', () => {
 
   it('drops a stored lock on a division this build no longer has', () => {
     const [out] = normalizeSlots([{ ...slot(), syncDiv: 99 }])
-    expect(out.target).toBe('fbMix')
-    expect(out.syncDiv).toBeUndefined()
+    expect(out!.target).toBe('fbMix')
+    expect(out!.syncDiv).toBeUndefined()
   })
 
   it('carries the lock onto a link, since it is part of the look', () => {
@@ -245,7 +245,7 @@ describe('routings', () => {
     expect(
       routingsToSlots([
         { target: 'fbMix', source: 'sine', rateHz: 1, depth: 0.3 },
-      ])[0].on,
+      ])[0]!.on,
     ).toBe(true)
   })
 })
@@ -484,7 +484,7 @@ describe('the stab gate', () => {
     const locked = { hz: 2, ms: 60, syncDiv: 0 }
     // Division 0 is 1/1: one stab a whole note, which is a bar of four.
     expect(stabRate(locked, 120)).toBeCloseTo(
-      120 / 60 / SYNC_DIVISIONS[0].beats,
+      120 / 60 / SYNC_DIVISIONS[0]!.beats,
     )
     // No tempo on the wire leaves the dialed rate running rather than stopping
     // the train — the same rule slotRate follows.

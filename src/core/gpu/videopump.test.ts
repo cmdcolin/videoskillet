@@ -118,7 +118,7 @@ describe('VideoPump', () => {
 
     await cycle(pump, s)
     expect(s.a).toHaveLength(1)
-    expect(s.a[0].aspect).toBeCloseTo(640 / 480, 6)
+    expect(s.a[0]!.aspect).toBeCloseTo(640 / 480, 6)
   })
 
   it('does not re-decode a frame the texture already holds', async () => {
@@ -147,7 +147,7 @@ describe('VideoPump', () => {
     await cycle(pump, s)
 
     // The resize is the point: uncapped, a 4K clip re-uploads 33MB a frame.
-    const opts = bmps.calls[0][1] as ImageBitmapOptions
+    const opts = bmps.calls[0]![1] as ImageBitmapOptions
     expect(Math.max(opts.resizeWidth ?? 0, opts.resizeHeight ?? 0)).toBe(1536)
   })
 
@@ -190,7 +190,7 @@ describe('VideoPump', () => {
     // Landing it would put one frame of the previous clip in the new one's
     // texture — a flash near-impossible to attribute afterwards.
     expect(s.a).toHaveLength(0)
-    expect(bmps.made[0].closed).toBe(true)
+    expect(bmps.made[0]!.closed).toBe(true)
   })
 
   it('asks again after a decode that failed on a paused source', async () => {
@@ -242,7 +242,7 @@ describe('VideoPump', () => {
     await cycle(pump, s) // one decoded and parked, undelivered
 
     pump.destroy()
-    expect(bmps.made[0].closed).toBe(true)
+    expect(bmps.made[0]!.closed).toBe(true)
   })
 
   it('closes a bitmap that lands after teardown', async () => {
@@ -257,7 +257,7 @@ describe('VideoPump', () => {
     await Promise.resolve()
     // An ImageBitmap holds a decoded frame's worth of memory until closed, and
     // nothing downstream survives teardown to do it.
-    expect(bmps.made[0].closed).toBe(true)
+    expect(bmps.made[0]!.closed).toBe(true)
   })
 
   it('reports whether a slot is rolling, not just attached', () => {
@@ -824,9 +824,9 @@ describe('VideoPump', () => {
       pump.setTakeFps(60)
       await pump.pullFrames(0)
       pump.pump(s)
-      expect(s.b[0].w).toBe(ACTIVE_WIDTH)
-      expect(s.b[0].h).toBe(ACTIVE_HEIGHT)
-      expect(s.b[0].aspect).toBe(4 / 3)
+      expect(s.b[0]!.w).toBe(ACTIVE_WIDTH)
+      expect(s.b[0]!.h).toBe(ACTIVE_HEIGHT)
+      expect(s.b[0]!.aspect).toBe(4 / 3)
     })
 
     it('starts a clip that arrives mid-take at its own beginning', async () => {
@@ -868,7 +868,7 @@ describe('VideoPump', () => {
       pump.setTakeFps(60)
       await pump.pullFrames(0)
       await cycle(pump, s)
-      expect(bmps.calls[0][0]).toBe(el)
+      expect(bmps.calls[0]![0]).toBe(el)
     })
 
     it('waits for an open that has not landed rather than rendering without it', async () => {

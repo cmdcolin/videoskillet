@@ -60,7 +60,7 @@ describe('profile store', () => {
     ])
     const over = upsertProfile(looks, 'b', 'set=x')
     expect(over.map(l => l.name)).toEqual(['a', 'b', 'c'])
-    expect(over[1].query).toBe('set=x')
+    expect(over[1]!.query).toBe('set=x')
   })
 
   it('matches an overwrite against the cleaned name', () => {
@@ -98,16 +98,16 @@ describe('profile store', () => {
 describe('profile metadata', () => {
   it('mints an id on the first stamped save and keeps it on an overwrite', () => {
     const first = upsertProfile([], 'a', 'set=1', 1000)
-    expect(first[0].id).toMatch(/^[a-z0-9]+$/)
-    expect(first[0].savedAt).toBe(1000)
+    expect(first[0]!.id).toMatch(/^[a-z0-9]+$/)
+    expect(first[0]!.savedAt).toBe(1000)
     const again = upsertProfile(first, 'a', 'set=2', 2000)
-    expect(again[0].id).toBe(first[0].id)
-    expect(again[0].savedAt).toBe(2000)
+    expect(again[0]!.id).toBe(first[0]!.id)
+    expect(again[0]!.savedAt).toBe(2000)
   })
 
   it('gives two profiles ids of their own', () => {
     const two = upsertProfile(upsertProfile([], 'a', 'q', 1), 'b', 'q', 2)
-    expect(two[0].id).not.toBe(two[1].id)
+    expect(two[0]!.id).not.toBe(two[1]!.id)
   })
 
   it('stamps nothing when the caller has no clock', () => {
@@ -178,7 +178,7 @@ describe('the recent sessions', () => {
     const full = Array.from({ length: RECENT_MAX }, (_, i) => r(`s${i}`))
     const { recent, dropped } = pushRecent(full, r('new'))
     expect(recent).toHaveLength(RECENT_MAX)
-    expect(recent[0].id).toBe('new')
+    expect(recent[0]!.id).toBe('new')
     expect(dropped).toEqual([`s${RECENT_MAX - 1}`])
   })
 

@@ -139,11 +139,14 @@ describe('the row the app draws', () => {
       [VIEW_STAGE, 273.8],
     ])
     // B under the head of the trunk; the other two under the stage they meet.
-    expect(l.branches[0].x - l.branches[0].w / 2).toBeCloseTo(
-      l.boxes[0].x - l.boxes[0].w / 2,
+    expect(l.branches[0]!.x - l.branches[0]!.w / 2).toBeCloseTo(
+      l.boxes[0]!.x - l.boxes[0]!.w / 2,
       6,
     )
-    expect(l.branches[1].x).toBeCloseTo(l.centers[FULL.indexOf(SOUND_JOIN)], 6)
+    expect(l.branches[1]!.x).toBeCloseTo(
+      l.centers[FULL.indexOf(SOUND_JOIN)]!,
+      6,
+    )
   })
 })
 
@@ -156,8 +159,8 @@ describe('chain map geometry', () => {
     expect(l.wires.at(-1)?.x1).toBe(W)
     // Boxes run left to right and never touch.
     for (let i = 1; i < l.boxes.length; i++)
-      expect(l.boxes[i].x - l.boxes[i].w / 2).toBeGreaterThan(
-        l.boxes[i - 1].x + l.boxes[i - 1].w / 2,
+      expect(l.boxes[i]!.x - l.boxes[i]!.w / 2).toBeGreaterThan(
+        l.boxes[i - 1]!.x + l.boxes[i - 1]!.w / 2,
       )
   })
 
@@ -166,7 +169,7 @@ describe('chain map geometry', () => {
   // RECEIVER.
   it('sizes each box to its label', () => {
     const l = chainLayout(FULL)
-    const w = (name: Phase) => l.boxes[FULL.indexOf(name)].w
+    const w = (name: Phase) => l.boxes[FULL.indexOf(name)]!.w
     expect(w('Mix')).toBeLessThan(w('Screen'))
     expect(w('Channel')).toBeLessThan(w('Receiver'))
     expect(w('Source A')).toBeCloseTo(w('Receiver'), 5)
@@ -182,7 +185,7 @@ describe('chain map geometry', () => {
       for (const box of l.boxes)
         expect(box.w).toBeLessThanOrEqual(boxWidth(box.name) + 1e-9)
     }
-    expect(chainLayout(['Channel']).boxes[0].w).toBe(boxWidth('Channel'))
+    expect(chainLayout(['Channel']).boxes[0]!.w).toBe(boxWidth('Channel'))
   })
 
   // The other half of fitting: the row cannot run off the right edge either,
@@ -194,7 +197,7 @@ describe('chain map geometry', () => {
       expect(last === undefined ? 0 : last.x + last.w / 2).toBeLessThanOrEqual(
         W - OUT + 1e-9,
       )
-      expect(l.boxes[0].x - l.boxes[0].w / 2).toBeGreaterThanOrEqual(
+      expect(l.boxes[0]!.x - l.boxes[0]!.w / 2).toBeGreaterThanOrEqual(
         LEAD - 1e-9,
       )
     }
@@ -212,9 +215,9 @@ describe('chain map geometry', () => {
   // the trunk, sharing its left edge so the two inputs read as a column.
   it('runs B up into the Mix box', () => {
     const [b] = chainLayout(FULL, [B]).branches
-    expect(b.join).toBe(chainLayout(FULL).centers[FULL.indexOf('Mix')])
-    expect(b.x - b.w / 2).toBeCloseTo(
-      chainLayout(FULL).boxes[0].x - chainLayout(FULL).boxes[0].w / 2,
+    expect(b!.join).toBe(chainLayout(FULL).centers[FULL.indexOf('Mix')])
+    expect(b!.x - b!.w / 2).toBeCloseTo(
+      chainLayout(FULL).boxes[0]!.x - chainLayout(FULL).boxes[0]!.w / 2,
       5,
     )
   })
@@ -224,12 +227,12 @@ describe('chain map geometry', () => {
   // one thing that says "this joins here" rather than "this is a third signal".
   it('rises straight into the stage the sound is patched into', () => {
     const l = chainLayout(FULL, BOTH)
-    const sound = l.branches[1]
+    const sound = l.branches[1]!
     expect(sound.join).toBe(l.centers[FULL.indexOf(SOUND_JOIN)])
     expect(sound.x).toBe(sound.join)
     // Its own lead-in, not a run from the left edge: that is B's, and two wires
     // the length of the row under the trunk read as two more signals.
-    expect(sound.stub).toBeGreaterThan(l.branches[0].x)
+    expect(sound.stub).toBeGreaterThan(l.branches[0]!.x)
   })
 
   // The one thing that separates the view from the two inputs, drawn on the
@@ -240,10 +243,10 @@ describe('chain map geometry', () => {
     const l = chainLayout(FULL, [SOUND, VIEW])
     const [sound, view] = l.branches.map(branchHead).map(tipOf)
     // In: at the bottom edge of the trunk box it joins.
-    expect(sound[0]).toBe(l.centers[FULL.indexOf(SOUND_JOIN)])
+    expect(sound![0]).toBe(l.centers[FULL.indexOf(SOUND_JOIN)])
     // Out: at the top edge of its own box, which is further down the drawing.
-    expect(view[0]).toBe(l.branches[1].x)
-    expect(view[1]).toBeGreaterThan(sound[1])
+    expect(view![0]).toBe(l.branches[1]!.x)
+    expect(view![1]).toBeGreaterThan(sound![1])
   })
 
   // A filter can drop the stage a branch joins. It still has to arrive
@@ -253,7 +256,7 @@ describe('chain map geometry', () => {
   it('rises where it stands when the joined stage is filtered out', () => {
     for (const spec of BOTH) {
       const [b] = chainLayout(['Channel', 'Screen'], [spec]).branches
-      expect(b.join).toBe(b.x)
+      expect(b!.join).toBe(b!.x)
     }
   })
 
@@ -269,8 +272,8 @@ describe('chain map geometry', () => {
       expect(branches).toHaveLength(ALL.length)
       for (const b of branches) expect(b.y).toBe(BRANCH_Y)
       for (let i = 1; i < branches.length; i++)
-        expect(branches[i].x - branches[i].w / 2).toBeGreaterThan(
-          branches[i - 1].x + branches[i - 1].w / 2,
+        expect(branches[i]!.x - branches[i]!.w / 2).toBeGreaterThan(
+          branches[i - 1]!.x + branches[i - 1]!.w / 2,
         )
     }
   })
@@ -426,8 +429,8 @@ describe('the free row', () => {
 
   it('fits inside the drawing', () => {
     const boxes = freeRow(FREE)
-    expect(boxes[0].x - boxes[0].w / 2).toBeGreaterThanOrEqual(0)
-    const last = boxes[boxes.length - 1]
+    expect(boxes[0]!.x - boxes[0]!.w / 2).toBeGreaterThanOrEqual(0)
+    const last = boxes[boxes.length - 1]!
     expect(last.x + last.w / 2).toBeLessThanOrEqual(W)
   })
 
@@ -438,7 +441,7 @@ describe('the free row', () => {
 
   it('leaves the row’s own gap between boxes', () => {
     const [a, b] = freeRow(FREE)
-    expect(b.x - b.w / 2 - (a.x + a.w / 2)).toBe(GAP)
+    expect(b!.x - b!.w / 2 - (a!.x + a!.w / 2)).toBe(GAP)
   })
 
   // The row sits under the branches and inside the viewBox, which is the pair

@@ -499,7 +499,7 @@ export interface Step {
 // row — starting, running on, a hand jumping — resolves its hold and draws its
 // seed identically.
 function land(strip: Strip, index: number, lap: number, clock: Clock): Step {
-  const row = strip.rows[index]
+  const row = strip.rows[index]!
   const seed = seedFor(strip.seed, index, lap)
   // The lookahead, and *which clip* it is belongs here rather than in
   // `fireEffects` because it is a fact about the rundown and not about the row:
@@ -789,12 +789,12 @@ export const cycleHold = (hold: Hold): Hold => {
   // `findIndex` rather than `indexOf`, which would want a cast: a stored hold is
   // any number, and the ring holds six particular ones.
   const at = HOLD_BARS.findIndex(b => b === hold.bars)
-  return { ...hold, bars: HOLD_BARS[(at + 1) % HOLD_BARS.length] }
+  return { ...hold, bars: HOLD_BARS[(at + 1) % HOLD_BARS.length]! }
 }
 
 export const cycleArrive = (seconds: MorphSeconds): MorphSeconds => {
   const at = MORPH_SECONDS.indexOf(seconds)
-  return MORPH_SECONDS[(at + 1) % MORPH_SECONDS.length]
+  return MORPH_SECONDS[(at + 1) % MORPH_SECONDS.length]!
 }
 
 // Unique within this strip, which is all a row id has to be — nothing else keys
@@ -906,7 +906,7 @@ export function moveRow(strip: Strip, from: number, to: number): Strip {
   if (from < 0 || from >= n || to < 0 || to >= n || from === to) return strip
   const rows = [...strip.rows]
   const [row] = rows.splice(from, 1)
-  rows.splice(to, 0, row)
+  rows.splice(to, 0, row!)
   return { ...strip, rows }
 }
 
@@ -951,7 +951,7 @@ export const cycleTransition = (
   // `indexOf` answers -1 for a name off the ring — a hand-edited file, an older
   // build's shelf — and -1 + 1 is 0, which is the plain cut. Nothing to guard.
   const i = TRANSITION_RING.indexOf(at)
-  return TRANSITION_RING[(i + 1) % TRANSITION_RING.length]
+  return TRANSITION_RING[(i + 1) % TRANSITION_RING.length]!
 }
 
 export const stepTransition = (strip: Strip, index: number): Strip => {

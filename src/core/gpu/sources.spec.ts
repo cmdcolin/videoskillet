@@ -63,7 +63,7 @@ describe('coverFit43', () => {
       [30, 1000],
       [754, 480],
       [16, 9],
-    ]) {
+    ] satisfies [number, number][]) {
       const [sx, sy, sw, sh] = coverFit43(w, h)
       expect(sw / sh).toBeCloseTo(4 / 3, 6)
       expect(sx).toBeGreaterThanOrEqual(0)

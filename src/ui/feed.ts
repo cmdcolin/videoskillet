@@ -78,7 +78,7 @@ export function shuffled<T>(xs: readonly T[], rand: Rand = Math.random): T[] {
   const out = [...xs]
   for (let i = out.length - 1; i > 0; i--) {
     const j = randomIndex(i + 1, rand)
-    ;[out[i], out[j]] = [out[j], out[i]]
+    ;[out[i], out[j]] = [out[j]!, out[i]!]
   }
   return out
 }
@@ -99,7 +99,7 @@ export function drawList(
   const items =
     list.next >= list.items.length ? shuffled(list.items, rand) : list.items
   const at = list.next >= list.items.length ? 0 : list.next
-  return { item: items[at], list: { ...list, items, next: at + 1 } }
+  return { item: items[at]!, list: { ...list, items, next: at + 1 } }
 }
 
 // A newly shown item onto the trail. Anything ahead of the cursor is dropped:

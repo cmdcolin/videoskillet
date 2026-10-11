@@ -20,8 +20,8 @@ function response(h: Float32Array, freqHz: number): number {
   let re = 0
   let im = 0
   for (let k = 0; k < h.length; k++) {
-    re += h[k] * Math.cos(w * k)
-    im -= h[k] * Math.sin(w * k)
+    re += h[k]! * Math.cos(w * k)
+    im -= h[k]! * Math.sin(w * k)
   }
   return Math.hypot(re, im)
 }
@@ -29,7 +29,7 @@ function response(h: Float32Array, freqHz: number): number {
 function isSymmetric(h: Float32Array): boolean {
   const n = h.length
   for (let k = 0; k < n >> 1; k++) {
-    if (Math.abs(h[k] - h[n - 1 - k]) > 1e-12) return false
+    if (Math.abs(h[k]! - h[n - 1 - k]!) > 1e-12) return false
   }
   return true
 }
@@ -79,7 +79,7 @@ describe('lowpassPeaked', () => {
     const plain = lowpass(4.2e6, 49)
     const peaked = lowpassPeaked(4.2e6, 0, 3.15e6, 49)
     for (let k = 0; k < plain.length; k++)
-      expect(peaked[k]).toBeCloseTo(plain[k], 12)
+      expect(peaked[k]).toBeCloseTo(plain[k]!, 12)
   })
 
   it('boosts high frequencies relative to the plain lowpass', () => {
@@ -132,8 +132,8 @@ describe('lowpassCausal', () => {
     const m = (41 - 1) / 2
     for (let k = m + 1; k < h.length; k++) expect(h[k]).toBe(0)
     // energy sits behind the center: peak tap is the center, tail decays back
-    expect(h[m]).toBeGreaterThan(h[m - 1])
-    expect(h[m - 1]).toBeGreaterThan(h[0])
+    expect(h[m]).toBeGreaterThan(h[m - 1]!)
+    expect(h[m - 1]).toBeGreaterThan(h[0]!)
   })
 
   it('low-passes: rejects above the cutoff', () => {
@@ -148,8 +148,8 @@ describe('mixTaps', () => {
     const at0 = mixTaps(a, b, 0)
     const at1 = mixTaps(a, b, 1)
     for (let k = 0; k < a.length; k++) {
-      expect(at0[k]).toBeCloseTo(a[k], 12)
-      expect(at1[k]).toBeCloseTo(b[k], 12)
+      expect(at0[k]).toBeCloseTo(a[k]!, 12)
+      expect(at1[k]).toBeCloseTo(b[k]!, 12)
     }
   })
 

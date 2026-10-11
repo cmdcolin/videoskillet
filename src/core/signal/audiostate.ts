@@ -85,7 +85,7 @@ export function hallTail(
     energy += v * v
   }
   const scale = energy > 0 ? 1 / Math.sqrt(energy) : 0
-  for (let i = 0; i < out.length; i++) out[i] *= scale
+  for (let i = 0; i < out.length; i++) out[i]! *= scale
   return out
 }
 
@@ -511,7 +511,7 @@ export class AudioState {
       let hi = 0
       let sum = 0
       for (let row = 0; row < LINES; row++) {
-        const v = this.scratch[start + Math.floor((row / LINES) * span)]
+        const v = this.scratch[start + Math.floor((row / LINES) * span)]!
         this.data[row] = v
         hi = Math.max(hi, Math.abs(v))
         sum += v * v
@@ -525,7 +525,7 @@ export class AudioState {
       this.peak = Math.max(hi, this.peak * 0.995, PEAK_FLOOR)
       const norm = gain / this.peak
       for (let row = 0; row < LINES; row++) {
-        this.data[row] = Math.max(-2, Math.min(2, this.data[row] * norm))
+        this.data[row] = Math.max(-2, Math.min(2, this.data[row]! * norm))
       }
       this.level = Math.min(Math.sqrt(sum / LINES) / this.peak, 2)
       this.updateHit()
@@ -555,7 +555,7 @@ export class AudioState {
       const bins = Math.max(1, Math.round(200 / hz))
       for (let i = 0; i < bins; i++) {
         // dB (-Inf..0) to a 0..1 weighting over the bottom 60 dB
-        acc += Math.max(0, (this.spectrum[i] + 60) / 60)
+        acc += Math.max(0, (this.spectrum[i]! + 60) / 60)
       }
       acc /= bins
     }

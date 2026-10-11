@@ -6,7 +6,7 @@ import { ROLLS, pickRoll, rollStack, rollTweaks } from './roll'
 
 import type { Roll } from './roll'
 
-const SCAN = SHELVES[3]
+const SCAN = SHELVES[3]!
 
 describe('pickRoll', () => {
   it('drops in a look when none is up', () => {
@@ -36,7 +36,7 @@ describe('rollStack', () => {
   })
 
   it('never repeats a look or lands on the one that is up', () => {
-    const current = { name: pool[0], strength: 1, rolled: false }
+    const current = { name: pool[0]!, strength: 1, rolled: false }
     for (let seed = 1; seed < 40; seed++) {
       const { look, layers } = rollStack(current, pool, 'wild', rngFor(seed))
       const names = [look.name, ...Object.keys(layers)]

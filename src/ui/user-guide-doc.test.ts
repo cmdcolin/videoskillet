@@ -109,7 +109,7 @@ test('the guide offers the devices source A actually ships', () => {
 // assertions strip the leading character rather than requiring one.
 test('the guide quotes two links that open the look it says they do', () => {
   const worn = presetControls(PRESETS.find(p => p.name === 'wornTape')!.patch)
-  const quoted = doc.slice(doc.indexOf('#p=')).split(/\s|`/)[0]
+  const quoted = doc.slice(doc.indexOf('#p=')).split(/\s|`/)[0]!
   const packed = new URLSearchParams(quoted.slice(1)).get('p')
 
   expect(unpackControls(packed ?? '')).toEqual(

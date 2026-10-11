@@ -86,7 +86,7 @@ describe('pressing one', () => {
       noiseIre: 12,
       crtGamma: 2.2,
     }
-    const after = applyCardPreset(chips[0], tape, before)
+    const after = applyCardPreset(chips[0]!, tape, before)
     for (const k of Object.keys(before) as (keyof Controls)[]) {
       if (tape.sliders.some(s => s.key === k)) continue
       expect(after[k]).toBe(before[k])
@@ -96,22 +96,22 @@ describe('pressing one', () => {
   // Composing rather than stacking: the card goes back to stock first, so the
   // second chip is the second chip and not a deck carrying both faults.
   it('does not leave the last chip behind', () => {
-    const wow = applyCardPreset(chips[0], tape, { ...DEFAULT_CONTROLS })
-    const sticky = applyCardPreset(chips[2], tape, wow)
-    const fresh = applyCardPreset(chips[2], tape, { ...DEFAULT_CONTROLS })
+    const wow = applyCardPreset(chips[0]!, tape, { ...DEFAULT_CONTROLS })
+    const sticky = applyCardPreset(chips[2]!, tape, wow)
+    const fresh = applyCardPreset(chips[2]!, tape, { ...DEFAULT_CONTROLS })
     for (const s of tape.sliders) expect(sticky[s.key]).toBe(fresh[s.key])
   })
 
   it('lights the chip the card is standing on, and only that one', () => {
-    const at = applyCardPreset(chips[1], tape, { ...DEFAULT_CONTROLS })
-    expect(activeCardPreset(tape, at)?.name).toBe(chips[1].name)
+    const at = applyCardPreset(chips[1]!, tape, { ...DEFAULT_CONTROLS })
+    expect(activeCardPreset(tape, at)?.name).toBe(chips[1]!.name)
     // …and stops claiming it the moment a slider on the card moves.
     expect(
       activeCardPreset(tape, { ...at, tbJitterNs: at.tbJitterNs + 100 }),
     ).toBeUndefined()
     // A control on another card is not this card's business.
     expect(activeCardPreset(tape, { ...at, crtGamma: 1.8 })?.name).toBe(
-      chips[1].name,
+      chips[1]!.name,
     )
     expect(activeCardPreset(tape, { ...DEFAULT_CONTROLS })).toBeUndefined()
   })

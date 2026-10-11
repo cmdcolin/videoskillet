@@ -203,7 +203,7 @@ describe('the pending queue', () => {
     queueVote(aVote({ at: 1004 }))
     const kept = readPendingVotes()
     expect(kept).toHaveLength(1000)
-    expect(kept[0].at).toBe(5)
+    expect(kept[0]!.at).toBe(5)
     expect(kept.at(-1)?.at).toBe(1004)
   })
 })

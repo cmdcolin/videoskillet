@@ -164,12 +164,12 @@ export class LineState {
 
   private wowFor(gen: number): Wow {
     while (this.wows.length <= gen) this.wows.push(new Wow(this.rand))
-    return this.wows[gen]
+    return this.wows[gen]!
   }
 
   private slipFor(gen: number): StickSlip {
     while (this.slips.length <= gen) this.slips.push(new StickSlip(this.rand))
-    return this.slips[gen]
+    return this.slips[gen]!
   }
 }
 

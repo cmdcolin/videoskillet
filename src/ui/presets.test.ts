@@ -75,8 +75,8 @@ describe('matchPreset', () => {
       return seed / 4294967296
     }
     for (let i = 0; i < 200; i++) {
-      const a = PRESETS[Math.floor(rand() * PRESETS.length)]
-      const b = PRESETS[Math.floor(rand() * PRESETS.length)]
+      const a = PRESETS[Math.floor(rand() * PRESETS.length)]!
+      const b = PRESETS[Math.floor(rand() * PRESETS.length)]!
       agree(blendPresets(DEFAULT_CONTROLS, new Map([[a.name, rand()]])), 'one')
       agree(
         blendPresets(
@@ -310,9 +310,9 @@ describe('blendMod', () => {
 
   it('scales depth by how much of the preset is in', () => {
     const [p] = moving
-    const half = blendMod(new Map([[p.name, 0.5]])) ?? []
+    const half = blendMod(new Map([[p!.name, 0.5]])) ?? []
     expect(half.map(m => m.depth)).toEqual(
-      (p.mod ?? []).map(m => m.depth * 0.5),
+      (p!.mod ?? []).map(m => m.depth * 0.5),
     )
   })
 
@@ -322,13 +322,13 @@ describe('blendMod', () => {
     const [a, b] = moving
     const out = blendMod(
       new Map([
-        [a.name, 0.4],
-        [b.name, 0.9],
+        [a!.name, 0.4],
+        [b!.name, 0.9],
       ]),
     )
-    expect(out?.map(m => m.target)).toEqual((b.mod ?? []).map(m => m.target))
+    expect(out?.map(m => m.target)).toEqual((b!.mod ?? []).map(m => m.target))
     expect(out?.map(m => m.depth)).toEqual(
-      (b.mod ?? []).map(m => m.depth * 0.9),
+      (b!.mod ?? []).map(m => m.depth * 0.9),
     )
   })
 
@@ -341,7 +341,7 @@ describe('blendMod', () => {
 
   it('ignores a preset that is dialed all the way out', () => {
     const [p] = moving
-    expect(blendMod(new Map([[p.name, 0]]))).toBe(null)
+    expect(blendMod(new Map([[p!.name, 0]]))).toBe(null)
   })
 })
 
@@ -368,7 +368,7 @@ describe('controlsEqual', () => {
 // somebody can reproduce.
 const seq = (values: number[]) => {
   let i = 0
-  return () => values[i++ % values.length]
+  return () => values[i++ % values.length]!
 }
 
 const movedBy = (name: string) => {
@@ -404,7 +404,7 @@ describe('randomPresetMix', () => {
   it('will not stack a follower that treads on what is already claimed', () => {
     for (let s = 0; s < 300; s++) {
       const names = [...randomPresetMix(true).keys()]
-      const claimed = new Set(movedBy(names[0]))
+      const claimed = new Set(movedBy(names[0]!))
       for (const n of names.slice(1)) {
         const keys = movedBy(n)
         expect(keys.filter(k => claimed.has(k)).length).toBeLessThanOrEqual(2)
@@ -448,8 +448,8 @@ describe('randomSinglePreset', () => {
     for (let s = 0; s < 300; s++) {
       const roll = [...randomSinglePreset(true).entries()]
       expect(roll.length).toBe(1)
-      expect(roll[0][1]).toBe(1)
-      expect(PRESETS.some(p => p.name === roll[0][0])).toBe(true)
+      expect(roll[0]![1]).toBe(1)
+      expect(PRESETS.some(p => p.name === roll[0]![0])).toBe(true)
     }
   })
 
@@ -475,7 +475,7 @@ describe('randomSinglePreset', () => {
   it('never draws the preset that is already on the board', () => {
     let held = 'vhs'
     for (let s = 0; s < 400; s++) {
-      const drawn = [...randomSinglePreset(true, Math.random, held).keys()][0]
+      const drawn = [...randomSinglePreset(true, Math.random, held).keys()][0]!
       expect(drawn).not.toBe(held)
       held = drawn
     }

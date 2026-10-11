@@ -27,7 +27,7 @@ const balanced = (text: string, open: string) => {
   let depth = 1
   let quote = ''
   for (let i = start; i < text.length; i++) {
-    const ch = text[i]
+    const ch = text[i]!
     if (quote !== '') {
       if (ch === '\\') i++
       else if (ch === quote) quote = ''
@@ -77,7 +77,7 @@ const namedPass = (property: string) => {
   const body = balanced(clean.slice(clean.indexOf(`this.${property} = {`)), '{')
   const label = /label: '([^']+)'/.exec(body)
   if (label === null) throw new Error(`no label on this.${property}`)
-  return label[1]
+  return label[1]!
 }
 
 // `pass(label, pipeline, resources, [x, y], when?)` — the optional fifth
@@ -89,13 +89,13 @@ const readArray = (property: string): EnginePass[] =>
   ).map(element => {
     const reference = /^this\.(\w+)$/.exec(element)
     if (reference !== null) {
-      return { name: namedPass(reference[1]), gated: false }
+      return { name: namedPass(reference[1]!), gated: false }
     }
     const args = topLevelParts(balanced(element, '('))
-    const label = /^'([^']+)'$/.exec(args[0])
+    const label = /^'([^']+)'$/.exec(args[0]!)
     if (label === null)
       throw new Error(`unparsed pass: ${element.slice(0, 40)}`)
-    return { name: label[1], gated: args.length >= 5 }
+    return { name: label[1]!, gated: args.length >= 5 }
   })
 
 const enginePasses = [
@@ -113,8 +113,8 @@ const gatedInEngine = new Set(
 const drawnNodes = [
   ...dot.matchAll(/(\w+)\s+\[([^\]]*passes="([^"]+)"[^\]]*)\]/g),
 ].map(m => ({
-  passes: m[3].split(','),
-  dashed: m[2].includes('dashed'),
+  passes: m[3]!.split(','),
+  dashed: m[2]!.includes('dashed'),
 }))
 
 // Sorted by name, said explicitly. toSorted()'s default compares stringified
@@ -156,7 +156,7 @@ const documentedOrder = () => {
     const line = new RegExp(`^${stage} +(.+)$`, 'm').exec(architecture)
     if (line === null) throw new Error(`no ${stage} line in ARCHITECTURE.md`)
     // Drop the trailing "(× dubGens, ≤ 4)" aside.
-    const text = line[1].replace(/\([^)]*\)\s*$/, '')
+    const text = line[1]!.replace(/\([^)]*\)\s*$/, '')
     let depth = 0
     let token = ''
     const flush = () => {

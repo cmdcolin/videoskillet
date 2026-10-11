@@ -89,9 +89,9 @@ describe('runEffect', () => {
       f.sink,
     )
     expect(f.sessions).toHaveLength(1)
-    expect(f.sessions[0].seconds).toBe(4)
-    expect(f.sessions[0].params.src).toBe('sweep')
-    expect(f.sessions[0].params.controls.vSize).toBe(0.5)
+    expect(f.sessions[0]!.seconds).toBe(4)
+    expect(f.sessions[0]!.params.src).toBe('sweep')
+    expect(f.sessions[0]!.params.controls.vSize).toBe(0.5)
   })
 
   // It is the real reader, not a lookalike, and that is worth pinning: `bars`
@@ -101,7 +101,7 @@ describe('runEffect', () => {
   it('inherits the link contract, including what it refuses', () => {
     const f = fakeSink()
     runEffect({ kind: 'session', session: 'src=bars', seconds: 0 }, f.sink)
-    expect(f.sessions[0].params.src).toBeNull()
+    expect(f.sessions[0]!.params.src).toBeNull()
   })
 
   // The seam rng.ts exists for: what reaches the sink is a generator, and the
@@ -111,15 +111,15 @@ describe('runEffect', () => {
     const b = fakeSink()
     runEffect({ kind: 'roll', origin: 'archive', seed: 77 }, a.sink)
     runEffect({ kind: 'roll', origin: 'archive', seed: 77 }, b.sink)
-    expect(a.rolls[0].origin).toBe('archive')
-    expect(a.rolls[0].rand()).toBe(b.rolls[0].rand())
+    expect(a.rolls[0]!.origin).toBe('archive')
+    expect(a.rolls[0]!.rand()).toBe(b.rolls[0]!.rand())
   })
 
   it('hands a jitter its amount and a generator', () => {
     const f = fakeSink()
     runEffect({ kind: 'jitter', amount: 'wild', seed: 5 }, f.sink)
-    expect(f.jitters[0].amount).toBe('wild')
-    expect(typeof f.jitters[0].rand()).toBe('number')
+    expect(f.jitters[0]!.amount).toBe('wild')
+    expect(typeof f.jitters[0]!.rand()).toBe('number')
   })
 })
 
@@ -222,7 +222,7 @@ describe('makeStripRunner', () => {
     const h = harness([row()])
     h.runner.start()
     expect(h.showSession).toHaveBeenCalledTimes(1)
-    expect(h.showSession.mock.calls[0][1]).toBe(1)
+    expect(h.showSession.mock.calls[0]![1]).toBe(1)
   })
 
   it('asks for a tempo when a walk starts, not when it is built', () => {
@@ -246,8 +246,8 @@ describe('makeStripRunner', () => {
     const h = harness([row({ fill: { kind: 'roll', origin: 'commons' } })])
     h.runner.start()
     expect(h.rollOn).toHaveBeenCalledTimes(1)
-    expect(h.rollOn.mock.calls[0][0]).toBe('commons')
-    expect(typeof h.rollOn.mock.calls[0][1]()).toBe('number')
+    expect(h.rollOn.mock.calls[0]![0]).toBe('commons')
+    expect(typeof h.rollOn.mock.calls[0]![1]()).toBe('number')
   })
 
   it('jitters a jitter row against whatever is live', () => {
@@ -449,7 +449,7 @@ describe('makeStripRunner', () => {
       ])
       const before = h.runner.getDepth()
       h.runner.learnClipSeconds('c7', 12)
-      expect(h.runner.getStrip().rows[0].clip?.seconds).toBe(12)
+      expect(h.runner.getStrip().rows[0]!.clip?.seconds).toBe(12)
       expect(h.runner.getDepth()).toEqual(before)
       h.runner.undo()
       // Straight past it, to the rundown as it was before the row existed.
@@ -482,12 +482,12 @@ describe('makeStripRunner', () => {
       const h = harness([row({ id: 'a' })])
       for (const name of ['one', 'two', 'three']) {
         const s = h.runner.getStrip()
-        h.runner.setStrip({ ...s, rows: [{ ...s.rows[0], name }] })
+        h.runner.setStrip({ ...s, rows: [{ ...s.rows[0]!, name }] })
       }
       const seen: string[] = []
       for (let i = 0; i < 3; i++) {
         h.runner.undo()
-        seen.push(h.runner.getStrip().rows[0].name)
+        seen.push(h.runner.getStrip().rows[0]!.name)
       }
       expect(seen).toEqual(['two', 'one', ''])
     })
@@ -533,12 +533,12 @@ describe('makeStripRunner', () => {
     h.runner.start()
     expect(h.showSession).not.toHaveBeenCalled()
     expect(h.faultTo).toHaveBeenCalledTimes(1)
-    expect(h.faultTo.mock.calls[0][0]).toBe('roll')
+    expect(h.faultTo.mock.calls[0]![0]).toBe('roll')
     // And the session lands when the engine says the picture is least legible,
     // which the driver cannot see and must not try to time.
-    h.faultTo.mock.calls[0][1]()
+    h.faultTo.mock.calls[0]![1]()
     expect(h.showSession).toHaveBeenCalledTimes(1)
-    expect(h.showSession.mock.calls[0][1]).toBe(4)
+    expect(h.showSession.mock.calls[0]![1]).toBe(4)
   })
 
   it('and a plain row still goes straight up', () => {
@@ -565,11 +565,11 @@ describe('makeStripRunner', () => {
     ])
     h.runner.start()
     expect(h.rollOn).not.toHaveBeenCalled()
-    h.faultTo.mock.calls[0][1]()
+    h.faultTo.mock.calls[0]![1]()
     expect(h.showSession).toHaveBeenCalledTimes(1)
     expect(h.rollOn).toHaveBeenCalledTimes(1)
     expect(h.showSession.mock.invocationCallOrder[0]).toBeLessThan(
-      h.rollOn.mock.invocationCallOrder[0],
+      h.rollOn.mock.invocationCallOrder[0]!,
     )
   })
 
@@ -587,10 +587,10 @@ describe('makeStripRunner', () => {
       row({ id: 'b', session: 'set=vSize:0.9' }),
     ])
     h.runner.start()
-    const stale = h.faultTo.mock.calls[0][1]
+    const stale = h.faultTo.mock.calls[0]![1]
     h.runner.fireRow(1)
     expect(h.showSession).toHaveBeenCalledTimes(1)
-    expect(h.showSession.mock.calls[0][0].controls.vSize).toBe(0.9)
+    expect(h.showSession.mock.calls[0]![0].controls.vSize).toBe(0.9)
     stale()
     expect(h.showSession).toHaveBeenCalledTimes(1)
   })
@@ -601,7 +601,7 @@ describe('makeStripRunner', () => {
   it('drops a pending cut when the transport stops', () => {
     const h = harness([row({ arrive: { seconds: 0, transition: 'collapse' } })])
     h.runner.start()
-    const stale = h.faultTo.mock.calls[0][1]
+    const stale = h.faultTo.mock.calls[0]![1]
     h.runner.stop()
     stale()
     expect(h.showSession).not.toHaveBeenCalled()
@@ -624,14 +624,14 @@ describe('makeStripRunner', () => {
       }),
     ])
     h.runner.start()
-    const stale = h.faultTo.mock.calls[0][1]
+    const stale = h.faultTo.mock.calls[0]![1]
     h.runner.fireRow(1)
-    const fresh = h.faultTo.mock.calls[1][1]
+    const fresh = h.faultTo.mock.calls[1]![1]
     stale()
     expect(h.showSession).not.toHaveBeenCalled()
     fresh()
     expect(h.showSession).toHaveBeenCalledTimes(1)
-    expect(h.showSession.mock.calls[0][0].controls.vSize).toBe(0.9)
+    expect(h.showSession.mock.calls[0]![0].controls.vSize).toBe(0.9)
   })
 
   // The other half of the same fault, and the one preroll was built for. A slot
@@ -649,11 +649,11 @@ describe('makeStripRunner', () => {
     ])
     h.runner.start()
     expect(h.prerollOn).not.toHaveBeenCalled()
-    h.faultTo.mock.calls[0][1]()
+    h.faultTo.mock.calls[0]![1]()
     expect(h.showSession).toHaveBeenCalledTimes(1)
     expect(h.prerollOn).toHaveBeenCalledWith('https://example.test/b.mp4', 0)
     expect(h.showSession.mock.invocationCallOrder[0]).toBeLessThan(
-      h.prerollOn.mock.invocationCallOrder[0],
+      h.prerollOn.mock.invocationCallOrder[0]!,
     )
   })
 

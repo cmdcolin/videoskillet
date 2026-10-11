@@ -37,7 +37,7 @@ describe('StickSlip', () => {
     const xs: number[] = []
     for (let i = 0; i < 2000; i++) xs.push(s.step())
     expect(Math.max(...xs.map(Math.abs))).toBeLessThan(1.5)
-    const diffs = xs.slice(1).map((v, i) => v - xs[i])
+    const diffs = xs.slice(1).map((v, i) => v - xs[i]!)
     // a relaxation oscillator is asymmetric: most lines are the slow build...
     expect(
       diffs.filter(d => d > 0 && d <= 0.008 + 1e-9).length,
@@ -59,12 +59,12 @@ describe('StickSlip', () => {
     for (let i = 0; i < 6000; i++) xs.push(s.step())
     const snaps: number[] = []
     for (let i = 1; i < xs.length; i++) {
-      if (xs[i] - xs[i - 1] < -0.05) snaps.push(i)
+      if (xs[i]! - xs[i - 1]! < -0.05) snaps.push(i)
     }
     const gaps = new Set(
       snaps
         .slice(1)
-        .map((v, i) => v - snaps[i])
+        .map((v, i) => v - snaps[i]!)
         .filter(g => g > 3),
     )
     expect(gaps.size).toBeGreaterThan(3)
@@ -85,7 +85,7 @@ describe('Wow', () => {
     const period = 100
     let err = 0
     for (let i = 0; i < samples.length - period; i++) {
-      err += Math.abs(samples[i] - samples[i + period])
+      err += Math.abs(samples[i]! - samples[i + period]!)
     }
     expect(err / (samples.length - period)).toBeGreaterThan(0.1)
   })

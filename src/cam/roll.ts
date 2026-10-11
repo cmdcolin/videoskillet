@@ -14,7 +14,7 @@ export type Wildness = 'gentle' | 'normal' | 'wild'
 // What one press of the random chip does. With no look up there is nothing to
 // stack on or nudge, so the press drops a new look in.
 export function pickRoll(hasLook: boolean, rand: Rand = Math.random): Roll {
-  return hasLook ? ROLLS[randomIndex(ROLLS.length, rand)] : 'look'
+  return hasLook ? ROLLS[randomIndex(ROLLS.length, rand)]! : 'look'
 }
 
 const LAYER_COUNT: Record<Wildness, number> = {
@@ -39,12 +39,12 @@ export function rollStack(
   const count = Math.min(LAYER_COUNT[wildness] + 1, order.length)
   for (let i = 0; i < count; i++) {
     const j = i + randomIndex(order.length - i, rand)
-    ;[order[i], order[j]] = [order[j], order[i]]
+    ;[order[i], order[j]] = [order[j]!, order[i]!]
   }
   const [name, ...more] = order.slice(0, count)
   const span = (LAYER_WEIGHT.max - LAYER_WEIGHT.min) / LAYER_WEIGHT.step
   return {
-    look: { name, strength: 1, rolled: true },
+    look: { name: name!, strength: 1, rolled: true },
     layers: Object.fromEntries(
       more.map(layer => [
         layer,

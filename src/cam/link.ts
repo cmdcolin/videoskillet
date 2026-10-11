@@ -33,7 +33,7 @@ const weight = (raw: string | null): number => {
 export function readLink(search: string): CamLink | null {
   const q = new URLSearchParams(search)
   const b = PATTERNS.find(p => p === q.get('srcb')) ?? null
-  const [mode, fader] = (q.get('mix') ?? '').split(':')
+  const [mode, fader = null] = (q.get('mix') ?? '').split(':')
   const mixMode = MIX_MODES.find(m => m === mode)
   const mix =
     b === null || mixMode === undefined
@@ -45,7 +45,7 @@ export function readLink(search: string): CamLink | null {
   if (named !== null || q.has('tweak')) {
     const layers: Record<string, number> = {}
     for (const pair of (q.get('stack') ?? '').split(',')) {
-      const [name, w] = pair.split(':')
+      const [name = '', w = null] = pair.split(':')
       if (usable(name) && name !== named) layers[name] = weight(w)
     }
     return {

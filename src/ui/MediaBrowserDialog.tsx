@@ -99,7 +99,7 @@ function Result(props: {
           slot={slot}
           label={hit.label}
           onPlay={to => props.onPlay(hit, to)}
-          className={styles.act}
+          className={styles.act!}
         />
         <button
           className={cx(styles.act, props.kept && styles.actOn)}
@@ -117,7 +117,7 @@ function Result(props: {
           origin={hit.origin}
           href={hit.page}
           label={hit.label}
-          className={styles.act}
+          className={styles.act!}
         />
       </div>
     </div>

@@ -552,7 +552,7 @@ export function groupPicked<T extends { name: string; path: string }>(
   for (const file of files) {
     const parts = file.path === '' ? [] : file.path.split('/')
     if (parts.length > 2) continue
-    const folder = parts.length === 2 ? parts[0] : ''
+    const folder = parts.length === 2 ? parts[0]! : ''
     const bucket = groups.get(folder)
     if (bucket === undefined) groups.set(folder, [file])
     else bucket.push(file)
@@ -847,7 +847,7 @@ const remember = (
   added: { clip: Clip; at: number }[],
   files: readonly File[],
 ) => {
-  for (const { clip, at } of added) session.set(clip.id, files[at])
+  for (const { clip, at } of added) session.set(clip.id, files[at]!)
 }
 
 // A multi-pick through the disk picker: each file remembered by its own handle,
@@ -863,7 +863,7 @@ export async function addPickedFiles(
   )
   await Promise.all(
     grown.added.map(({ clip, at }) =>
-      idbPut(clipRecord(clip.id), picked[at].handle),
+      idbPut(clipRecord(clip.id), picked[at]!.handle),
     ),
   )
   remember(
@@ -909,7 +909,7 @@ export function adoptLocalFiles(
       size: f.size,
     })),
   )
-  for (const { id, at } of relinked) session.set(id, files[at])
+  for (const { id, at } of relinked) session.set(id, files[at]!)
 
   let next = lib
   let added = 0

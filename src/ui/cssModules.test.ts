@@ -48,14 +48,14 @@ function stripComposes(css: string): string {
 // prose doesn't count as a definition.
 function definedClasses(css: string): Set<string> {
   const code = stripComposes(css.replaceAll(/\/\*[\s\S]*?\*\//g, ''))
-  return new Set([...code.matchAll(/\.(-?[A-Za-z_][\w-]*)/g)].map(m => m[1]))
+  return new Set([...code.matchAll(/\.(-?[A-Za-z_][\w-]*)/g)].map(m => m[1]!))
 }
 
 // What a sheet reaches for in another sheet, as `<abs path>:<class>` — the same
 // key the tsx scan produces, so a composed primitive counts as referenced.
 function composedClasses(css: string, file: string): string[] {
   return [...css.matchAll(COMPOSES)].flatMap(m =>
-    m[1].split(/\s+/).map(name => `${resolve(dirname(file), m[2])}:${name}`),
+    m[1]!.split(/\s+/).map(name => `${resolve(dirname(file), m[2]!)}:${name}`),
   )
 }
 
@@ -63,7 +63,7 @@ function composedClasses(css: string, file: string): string[] {
 function moduleImports(src: string, file: string) {
   return [
     ...src.matchAll(/import\s+(\w+)\s+from\s+'([^']+\.module\.css)'/g),
-  ].map(m => ({ ident: m[1], path: resolve(dirname(file), m[2]) }))
+  ].map(m => ({ ident: m[1], path: resolve(dirname(file), m[2]!) }))
 }
 
 // Usage scanning has to skip the import lines, or `from './ui.module.css'`
@@ -94,7 +94,7 @@ describe('css modules', () => {
         const defined = definedClasses(readFileSync(path, 'utf8'))
         const used = [
           ...src.matchAll(new RegExp(String.raw`\b${ident}\.(\w+)\b`, 'g')),
-        ].map(m => m[1])
+        ].map(m => m[1]!)
         for (const name of used) {
           if (!defined.has(name))
             missing.push(`${ident}.${name} (${relative(SRC, path)})`)
@@ -206,8 +206,8 @@ describe('css modules', () => {
       const found =
         rule === null
           ? null
-          : new RegExp(String.raw`\b${prop}:\s*([^;]+);`).exec(rule[1])
-      return found === null ? null : found[1].replaceAll(/\s+/g, ' ').trim()
+          : new RegExp(String.raw`\b${prop}:\s*([^;]+);`).exec(rule[1]!)
+      return found === null ? null : found[1]!.replaceAll(/\s+/g, ' ').trim()
     }
     const px = (value: string | null) => {
       const m = value === null ? null : /(-?[\d.]+)px/.exec(value)

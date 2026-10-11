@@ -278,7 +278,7 @@ export class Sources {
       if (g !== null) {
         g.drawImage(src, src.width >> 1, src.height >> 1, 1, 1, 0, 0, 1, 1)
         const d = g.getImageData(0, 0, 1, 1).data
-        this.lastPixelA = [d[0], d[1], d[2]]
+        this.lastPixelA = [d[0]!, d[1]!, d[2]!]
       }
     }
   }

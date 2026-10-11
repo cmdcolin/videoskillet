@@ -582,7 +582,7 @@ export function Slider(props: {
         {help === undefined ? null : (
           <IconButton
             title="what does this do?"
-            className={styles.what}
+            className={styles.what!}
             onClick={() => setShowHelp(true)}
             onMouseEnter={() => setHoverHelp(true)}
             onMouseLeave={() => setHoverHelp(false)}

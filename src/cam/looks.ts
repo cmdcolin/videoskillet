@@ -197,13 +197,13 @@ export const OPENERS: readonly string[] = [
 ]
 
 export const openingLook = (rand = Math.random): Look => ({
-  name: OPENERS[randomIndex(OPENERS.length, rand)],
+  name: OPENERS[randomIndex(OPENERS.length, rand)]!,
   strength: 1,
   rolled: false,
 })
 
 export const shelfOf = (look: Look | null): Shelf =>
-  SHELVES.find(s => look !== null && s.looks.includes(look.name)) ?? SHELVES[0]
+  SHELVES.find(s => look !== null && s.looks.includes(look.name)) ?? SHELVES[0]!
 
 // What is on the picture: a preset at a strength, or `null` for the camera as
 // it comes. `rolled` marks a look the random roll picked, which may be one of
@@ -317,7 +317,7 @@ export function rollLook(
   pool: readonly string[] = ROLL_POOL,
 ): Look {
   const rest = pool.filter(name => name !== current?.name)
-  return { name: rest[randomIndex(rest.length)], strength: 1, rolled: true }
+  return { name: rest[randomIndex(rest.length)]!, strength: 1, rolled: true }
 }
 
 // How the mixer puts B with A. Each is a switcher's own tool: a genlocked

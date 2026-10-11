@@ -218,10 +218,10 @@ export function parseCue(raw: string | null): Cue | null {
   if (parts.length > 2 || parts.some(n => !Number.isFinite(n) || n < 0))
     return null
   const [a, b] = parts
-  if (parts.length === 1) return { in: a, out: null }
+  if (parts.length === 1) return { in: a!, out: null }
   // Sorted and length-checked on the way in as well, so a hand-edited link
   // cannot install a region the tap gesture would never have produced.
-  const lo = Math.min(a, b)
-  const hi = Math.max(a, b)
+  const lo = Math.min(a!, b!)
+  const hi = Math.max(a!, b!)
   return { in: lo, out: Math.max(hi, lo + MIN_CUE_LOOP) }
 }

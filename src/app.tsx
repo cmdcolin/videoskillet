@@ -217,7 +217,7 @@ const stageSet = (b: boolean, sound: boolean): ReadonlySet<string> =>
 const OPEN_STAGES = [
   [stageSet(false, false), stageSet(false, true)],
   [stageSet(true, false), stageSet(true, true)],
-]
+] as const
 
 const toggleFullscreen = () => {
   if (document.fullscreenElement) {
@@ -2006,8 +2006,8 @@ export function App() {
               is a CSS fact, and asking it here would be a second copy of the
               breakpoint. */}
           <PanelResizer
-            className={styles.resizer}
-            onClassName={styles.resizerOn}
+            className={styles.resizer!}
+            onClassName={styles.resizerOn!}
             width={panelW}
             onWidth={setPanelW}
           />

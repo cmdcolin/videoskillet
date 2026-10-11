@@ -124,7 +124,7 @@ export function CommandPalette(props: {
         : search(q)
 
   const selected =
-    results.length === 0 ? null : results[Math.min(cursor, results.length - 1)]
+    results.length === 0 ? null : results[Math.min(cursor, results.length - 1)]!
   // Where the tail sends one row, and null on every row it says nothing about.
   // Asked per row rather than of the cursor, because a click can land on a row
   // the cursor is not on — and because each row shows its own answer.

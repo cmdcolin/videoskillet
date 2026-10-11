@@ -66,7 +66,7 @@ function StabRows() {
           label:
             stab.syncDiv === undefined
               ? null
-              : SYNC_DIVISIONS[stab.syncDiv].label,
+              : SYNC_DIVISIONS[stab.syncDiv]!.label,
           live: bpm !== null,
           onCycle: cycleStabSync,
         }}

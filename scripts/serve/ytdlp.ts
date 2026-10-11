@@ -113,8 +113,8 @@ export const readFetchLine = (state: FetchState, line: string): FetchState => {
       ? { ...state, stage: 'merging' }
       : state
     : status === 'finished'
-      ? { ...state, base: state.base + bytes(loaded), loaded: 0, total: 0 }
-      : { ...state, loaded: bytes(loaded), total: bytes(total) }
+      ? { ...state, base: state.base + bytes(loaded!), loaded: 0, total: 0 }
+      : { ...state, loaded: bytes(loaded!), total: bytes(total!) }
 }
 
 // What the caption is drawn from: bytes so far against bytes expected, or 0 for

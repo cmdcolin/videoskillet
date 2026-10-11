@@ -247,7 +247,7 @@ const emptySlot = (): Slot => ({
 const median = (xs: readonly number[]): number => {
   if (xs.length === 0) return 0
   const s = xs.toSorted((a, b) => a - b)
-  return s[Math.floor((s.length - 1) / 2)]
+  return s[Math.floor((s.length - 1) / 2)]!
 }
 
 const wrapHealth = (s: Slot): WrapHealth => ({

@@ -14,7 +14,7 @@ import {
 } from './controls'
 import { holdable, stockIn } from './stageStock'
 
-const firstKeyIn = (stage: string) => stageGroups(stage)[0].sliders[0].key
+const firstKeyIn = (stage: string) => stageGroups(stage)[0]!.sliders[0]!.key
 
 describe('a stage held at stock', () => {
   const inChannel = firstKeyIn(CHANNEL_STAGE)

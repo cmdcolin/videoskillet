@@ -45,16 +45,16 @@ const toward = (from: Point, to: Point, by: number): Point => {
  */
 export function route(pts: readonly Point[], radius: number): string {
   if (pts.length === 0) return ''
-  const d = [`M${at(pts[0])}`]
+  const d = [`M${at(pts[0]!)}`]
   for (let i = 1; i < pts.length - 1; i++) {
-    const prev = pts[i - 1]
-    const corner = pts[i]
-    const next = pts[i + 1]
+    const prev = pts[i - 1]!
+    const corner = pts[i]!
+    const next = pts[i + 1]!
     const r = Math.min(radius, dist(prev, corner) / 2, dist(corner, next) / 2)
     d.push(`L${at(toward(corner, prev, r))}`)
     d.push(`Q${at(corner)} ${at(toward(corner, next, r))}`)
   }
-  d.push(`L${at(pts[pts.length - 1])}`)
+  d.push(`L${at(pts[pts.length - 1]!)}`)
   return d.join('')
 }
 
@@ -73,8 +73,8 @@ export function arrowhead(
   half: number,
 ): string {
   if (pts.length < 2) return ''
-  const tip = pts[pts.length - 1]
-  const back = toward(tip, pts[pts.length - 2], len)
+  const tip = pts[pts.length - 1]!
+  const back = toward(tip, pts[pts.length - 2]!, len)
   // The perpendicular to the last leg, at unit length times `half`.
   const [dx, dy] = [tip[0] - back[0], tip[1] - back[1]]
   const n = Math.hypot(dx, dy)

@@ -52,7 +52,7 @@ export const zoomStops = (lens: Span | null): number[] =>
 
 // The stop a zoom belongs to: the longest one it has reached.
 export function stopAt(zoom: number, stops: readonly number[]): number {
-  let at = stops[0]
+  let at = stops[0]!
   for (const s of stops) if (zoom >= s - 0.01) at = s
   return at
 }

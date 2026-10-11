@@ -122,7 +122,7 @@ export function CamPage(props: { link: CamLink | null }) {
   const label = linked === null ? stackLabel(look, scene.layers) : linked.name
   // The mix tab opens while B has a picture to mix.
   const shelves = second.loaded ? [...SHELVES, MIX_SHELF] : SHELVES
-  const shelf = shelves.find(s => s.name === shelfName) ?? SHELVES[0]
+  const shelf = shelves.find(s => s.name === shelfName) ?? SHELVES[0]!
 
   const shutter = useShutter(
     canvasRef,
@@ -277,7 +277,7 @@ export function CamPage(props: { link: CamLink | null }) {
   const step = (dir: 1 | -1) => {
     const order: (string | null)[] = [null, ...shelf.looks]
     const at = look === null || look.rolled ? 0 : order.indexOf(look.name)
-    const name = order[(Math.max(at, 0) + dir + order.length) % order.length]
+    const name = order[(Math.max(at, 0) + dir + order.length) % order.length]!
     land(name === null ? null : { name, strength: 1, rolled: false })
     announce(
       name === null

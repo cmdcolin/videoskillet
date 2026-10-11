@@ -273,7 +273,7 @@ function SignalTapControl() {
 
         Advanced settings has the same picker with a longer note; the ☰ trigger
         only badges whichever tap is live.`}
-      onChange={i => onTap(SIGNAL_TAPS[i].value)}
+      onChange={i => onTap(SIGNAL_TAPS[i]!.value)}
     />
   )
 }

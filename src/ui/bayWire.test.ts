@@ -105,14 +105,14 @@ describe('what a link carries', () => {
     slots[6] = slot({ target: 'bendUs', depth: 0.3 })
     const back = routingsToSlots(slotsToRoutings(slots))
     // Both moved to the top of the bay, and the wire still names the routing.
-    expect(back[1].target).toBe('bendUs')
-    expect(back[0].target).toBe(bayKeyFor(1, 'depth'))
+    expect(back[1]!.target).toBe('bendUs')
+    expect(back[0]!.target).toBe(bayKeyFor(1, 'depth'))
   })
 
   it('keeps a driven routing that rests at zero depth', () => {
     const back = routingsToSlots(slotsToRoutings(wired({ depth: 0 })))
-    expect(back[1].target).toBe('bendUs')
-    expect(back[0].target).toBe(bayKeyFor(1, 'depth'))
+    expect(back[1]!.target).toBe('bendUs')
+    expect(back[0]!.target).toBe(bayKeyFor(1, 'depth'))
   })
 
   it('drops a wire whose routing did not survive', () => {
@@ -146,14 +146,14 @@ describe('resolving a wire, a frame later', () => {
 
   it('folds a drive into the knob it landed on', () => {
     const drive = new Map([[driveAt(0, 'depth'), 0.25]])
-    expect(driveSlots(eng, drive)[0].depth).toBeCloseTo(0.65)
+    expect(driveSlots(eng, drive)[0]!.depth).toBeCloseTo(0.65)
   })
 
   it('parks a deep wire at the end of the knob rather than inverting it', () => {
     const deep = new Map([[driveAt(0, 'depth'), 5]])
-    expect(driveSlots(eng, deep)[0].depth).toBe(1)
+    expect(driveSlots(eng, deep)[0]!.depth).toBe(1)
     const back = new Map([[driveAt(0, 'depth'), -5]])
-    expect(driveSlots(eng, back)[0].depth).toBe(0)
+    expect(driveSlots(eng, back)[0]!.depth).toBe(0)
   })
 
   it('lets a wire stop an LFO dead but never run it backwards', () => {
@@ -161,7 +161,7 @@ describe('resolving a wire, a frame later', () => {
     // completed cycle off, which would leave `walk` and `hold` re-rolling every
     // frame instead of once a cycle.
     const stop = new Map([[driveAt(0, 'rate'), -4]])
-    expect(driveSlots(eng, stop)[0].rateHz).toBe(0)
+    expect(driveSlots(eng, stop)[0]!.rateHz).toBe(0)
   })
 
   it('leaves a slot no wire landed on exactly as it was', () => {

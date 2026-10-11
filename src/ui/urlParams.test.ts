@@ -264,7 +264,7 @@ describe('session round trip', () => {
     const looks = [
       DEFAULT_CONTROLS,
       ...PRESETS.map(p => presetControls(p.patch)),
-      mutate(presetControls(PRESETS[3].patch), ALL_SLIDERS, 0.4, () => 0.37),
+      mutate(presetControls(PRESETS[3]!.patch), ALL_SLIDERS, 0.4, () => 0.37),
     ]
     for (const controls of looks) {
       const back = roundTrip(state({ controls }))
@@ -701,7 +701,7 @@ describe('motion on a link', () => {
   })
 
   it('carries a beat lock, and leaves a free-running rate four fields wide', () => {
-    const locked = [{ ...mod[0], syncDiv: 3 }, mod[1]]
+    const locked = [{ ...mod[0]!, syncDiv: 3 }, mod[1]!]
     const q = writeSessionParams(
       new URLSearchParams(),
       state({ mod: locked }),

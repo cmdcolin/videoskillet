@@ -71,14 +71,14 @@ export function wgsl(): Plugin {
     // — which builds clean, ships a chunk 150 kB lighter, and leaves the app
     // with 26 undefined shaders.
     load(id) {
-      const [file, query] = id.split('?')
+      const [file = '', query] = id.split('?')
       if (!file.endsWith('.wgsl') || query !== 'raw') {
         return null
       }
       return `export default ${JSON.stringify(stripWgslComments(readFileSync(file, 'utf8')))}`
     },
     transform(code, id) {
-      const file = id.split('?')[0]
+      const file = id.split('?')[0]!
       if (!LITERAL_MODULES.some(m => file.endsWith(m))) {
         return null
       }

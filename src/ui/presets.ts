@@ -3400,7 +3400,7 @@ function shuffled<T>(items: readonly T[], rand: () => number): T[] {
   const out = [...items]
   for (let i = out.length - 1; i > 0; i--) {
     const j = Math.floor(rand() * (i + 1))
-    ;[out[i], out[j]] = [out[j], out[i]]
+    ;[out[i], out[j]] = [out[j]!, out[i]!]
   }
   return out
 }
@@ -3449,7 +3449,7 @@ export function randomPresetMix(
   // the third is the one most likely to be the fault that tipped it over.
   const wanted = rand() < 0.3 ? 3 : 2
   const lead = pool.filter(p => p.group === groups[0])
-  const first = lead[randomIndex(lead.length, rand)]
+  const first = lead[randomIndex(lead.length, rand)]!
   const weights = new Map<string, number>([[first.name, 1]])
   const claimed = new Set(PRESET_KEYS.get(first.name))
   for (const g of groups.slice(1)) {
@@ -3480,7 +3480,7 @@ export function randomPresetMix(
         tread: [...(PRESET_KEYS.get(p.name) ?? [])].filter(k => claimed.has(k))
           .length,
       }))
-      .toSorted((a, b) => a.tread - b.tread)[0]
+      .toSorted((a, b) => a.tread - b.tread)[0]!
     if (best.tread > MAX_TREAD) continue
     // Lower than the 0.3-0.8 this used to roll. A follower at 0.8 is not a
     // seasoning on the lead, it is a second look at nearly full strength, and
@@ -3525,7 +3525,7 @@ export function randomSinglePreset(
   )
   const group = shuffled([...new Set(pool.map(p => p.group))], rand)[0]
   const lead = pool.filter(p => p.group === group)
-  return new Map([[lead[randomIndex(lead.length, rand)].name, 1]])
+  return new Map([[lead[randomIndex(lead.length, rand)]!.name, 1]])
 }
 
 // Controls holding a mode rather than a quantity: halfway between phosphor 0
@@ -3619,7 +3619,7 @@ export function blendPresets(
       // from what the board already holds.
       const from = DEFAULT_CONTROLS[k]
       out[k] = ENUM_KEYS.has(k)
-        ? moved[0].full[k]
+        ? moved[0]!.full[k]
         : quantize(
             k,
             HOLD_KEYS.has(k)

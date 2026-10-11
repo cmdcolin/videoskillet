@@ -182,8 +182,8 @@ describe('lookBoard on a feedback loop', () => {
         strength =>
           lookBoard({ name, strength, rolled: false }).controls[loopMix],
       )
-      expect(mixes[0], name).toBeLessThan(mixes[1])
-      expect(mixes[1], name).toBeLessThan(mixes[2])
+      expect(mixes[0], name).toBeLessThan(mixes[1]!)
+      expect(mixes[1], name).toBeLessThan(mixes[2]!)
     }
   })
 })

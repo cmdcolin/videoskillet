@@ -50,7 +50,7 @@ export function useGestures(opts: {
         gesture.current = null
       }
       const [a, b] = [...pointers.current.values()]
-      pinch.current = { span: dist(a, b), zoom: opts.zoom.zoom }
+      pinch.current = { span: dist(a!, b!), zoom: opts.zoom.zoom }
       return
     }
     if (pointers.current.size > 2) return
@@ -76,7 +76,7 @@ export function useGestures(opts: {
     const p = pinch.current
     if (p !== null && pointers.current.size === 2) {
       const [a, b] = [...pointers.current.values()]
-      opts.zoom.set((p.zoom * dist(a, b)) / Math.max(p.span, 1))
+      opts.zoom.set((p.zoom * dist(a!, b!)) / Math.max(p.span, 1))
       return
     }
     const g = gesture.current

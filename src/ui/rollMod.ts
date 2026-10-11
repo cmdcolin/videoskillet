@@ -256,10 +256,10 @@ function drawWeighted<T>(pool: { item: T; w: number }[], rand: Rand): T | null {
   if (total <= 0) return null
   let r = rand() * total
   for (let i = 0; i < pool.length; i++) {
-    r -= pool[i].w
-    if (r <= 0) return pool.splice(i, 1)[0].item
+    r -= pool[i]!.w
+    if (r <= 0) return pool.splice(i, 1)[0]!.item
   }
-  return pool.splice(pool.length - 1, 1)[0].item
+  return pool.splice(pool.length - 1, 1)[0]!.item
 }
 
 // Log-uniform, so the draw spends as much of itself between 0.03 and 0.3Hz as

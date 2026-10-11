@@ -124,7 +124,7 @@ describe('addClips', () => {
 
   it('recognises what is already on the shelf rather than adding it twice', () => {
     const lib = shelf([{ name: 'rips', files: ['a.mp4'] }])
-    const folder = lib.folders[0].id
+    const folder = lib.folders[0]!.id
     const again = addClips(lib, folder, [
       { name: 'a.mp4', size: 0 },
       { name: 'b.mp4', size: 0 },
@@ -162,7 +162,7 @@ describe('addFolder', () => {
 describe('syncFolder', () => {
   it('adds what appeared and drops what has gone', () => {
     const lib = shelf([{ name: 'rips', files: ['a.mp4', 'b.mp4'] }])
-    const folder = lib.folders[0].id
+    const folder = lib.folders[0]!.id
     const synced = syncFolder(lib, folder, ['a.mp4', 'c.mp4'])
     expect(names(synced.lib)).toEqual(['a.mp4', 'c.mp4'])
     expect(synced.added).toBe(1)
@@ -177,7 +177,7 @@ describe('syncFolder', () => {
       ],
       [{ name: 'c.mp4', size: 3 }],
     )
-    const synced = syncFolder(lib, lib.folders[0].id, [])
+    const synced = syncFolder(lib, lib.folders[0]!.id, [])
     expect(names(synced.lib).toSorted()).toEqual(['b.mp4', 'c.mp4'])
     expect(synced.gone).toBe(1)
   })
@@ -192,7 +192,7 @@ describe('syncFolder', () => {
       { name: 'old', files: full },
       { name: 'rips', files: [] },
     ])
-    const synced = syncFolder(lib, lib.folders[1].id, [
+    const synced = syncFolder(lib, lib.folders[1]!.id, [
       'a.mp4',
       'b.mp4',
       'c.mp4',
@@ -206,7 +206,7 @@ describe('syncFolder', () => {
     // surviving row at a record that is no longer its own.
     const lib = shelf([{ name: 'rips', files: ['a.mp4', 'b.mp4'] }])
     const before = lib.clips.find(c => c.name === 'b.mp4')?.id
-    const synced = syncFolder(lib, lib.folders[0].id, ['b.mp4'])
+    const synced = syncFolder(lib, lib.folders[0]!.id, ['b.mp4'])
     expect(synced.lib.clips.find(c => c.name === 'b.mp4')?.id).toBe(before)
   })
 })
@@ -219,7 +219,7 @@ describe('libraryGroups', () => {
     )
     const groups = libraryGroups(lib)
     expect(groups.map(g => g.folder?.name ?? null)).toEqual(['rips', null])
-    expect(groups[1].clips.map(c => c.name)).toEqual(['c.mp4'])
+    expect(groups[1]!.clips.map(c => c.name)).toEqual(['c.mp4'])
   })
 
   it('offers no loose group when there is nothing loose', () => {
@@ -237,7 +237,7 @@ describe('libraryGroups', () => {
     const orphaned: Library = { ...lib, folders: [] }
     const groups = libraryGroups(orphaned)
     expect(groups.map(g => g.folder)).toEqual([null])
-    expect(groups[0].clips.map(c => c.name)).toEqual(['a.mp4'])
+    expect(groups[0]!.clips.map(c => c.name)).toEqual(['a.mp4'])
   })
 })
 
@@ -306,7 +306,7 @@ describe('matchPicked', () => {
       lib,
       picked([{ name: 'b.mp4', path: 'rips/b.mp4' }]),
     )
-    expect(got).toEqual([{ id: lib.clips[1].id, at: 0 }])
+    expect(got).toEqual([{ id: lib.clips[1]!.id, at: 0 }])
   })
 
   it('prefers the file whose folder segment matches', () => {
@@ -324,8 +324,8 @@ describe('matchPicked', () => {
     // Each clip takes the file from its own folder, whichever order they came
     // out of the picker in.
     expect(got).toEqual([
-      { id: lib.clips[0].id, at: 1 },
-      { id: lib.clips[1].id, at: 0 },
+      { id: lib.clips[0]!.id, at: 1 },
+      { id: lib.clips[1]!.id, at: 0 },
     ])
   })
 
@@ -338,7 +338,7 @@ describe('matchPicked', () => {
         { name: '01.mp4', size: 90 },
       ]),
     )
-    expect(got).toEqual([{ id: lib.clips[0].id, at: 1 }])
+    expect(got).toEqual([{ id: lib.clips[0]!.id, at: 1 }])
   })
 
   it('answers for at most one clip with each picked file', () => {
@@ -490,7 +490,7 @@ describe('readLibrary', () => {
     })
     expect(got.seq).toBe(14)
     const grown = addClips(got, '', [{ name: 'b.mp4', size: 0 }])
-    expect(grown.added[0].clip.id).toBe('c15')
+    expect(grown.added[0]!.clip.id).toBe('c15')
   })
 })
 
@@ -513,11 +513,11 @@ describe('how long a clip runs', () => {
         },
       ],
       seq: 1,
-    }).clips[0]
+    }).clips[0]!
 
   it('arrives unmeasured, because measuring costs opening the file', () => {
     const added = addClips(EMPTY_LIBRARY, '', [{ name: 'a.mp4', size: 1 }])
-    expect(added.lib.clips[0].seconds).toBe(0)
+    expect(added.lib.clips[0]!.seconds).toBe(0)
     // And a kept roll stays that way: measuring one means downloading the
     // whole file, so it keeps the bar-count fallback.
     expect(addPick(EMPTY_LIBRARY, ident, 'a clip').clip.seconds).toBe(0)
@@ -557,7 +557,7 @@ describe('how long a clip runs', () => {
   it('is learned once and then left alone', () => {
     const lib = addClips(EMPTY_LIBRARY, '', [{ name: 'a.mp4', size: 1 }]).lib
     const known = learnSeconds(lib, 'c1', 12)
-    expect(known.clips[0].seconds).toBe(12)
+    expect(known.clips[0]!.seconds).toBe(12)
     // A second measurement does not overwrite the first, and a shelf with
     // nothing to learn is the same object — this list is React state, and a new
     // one re-renders every row on it.
@@ -570,7 +570,7 @@ describe('how long a clip runs', () => {
 describe('dropping', () => {
   it('takes one clip off and leaves the rest', () => {
     const lib = shelf([{ name: 'rips', files: ['a.mp4', 'b.mp4'] }])
-    expect(names(dropClip(lib, lib.clips[0].id))).toEqual(['b.mp4'])
+    expect(names(dropClip(lib, lib.clips[0]!.id))).toEqual(['b.mp4'])
   })
 
   it('takes a folder and everything under it, and nothing else', () => {
@@ -581,7 +581,7 @@ describe('dropping', () => {
       ],
       [{ name: 'c.mp4', size: 3 }],
     )
-    const next = dropFolder(lib, lib.folders[0].id)
+    const next = dropFolder(lib, lib.folders[0]!.id)
     expect(names(next).toSorted()).toEqual(['b.mp4', 'c.mp4'])
     expect(next.folders.map(f => f.name)).toEqual(['more'])
   })
@@ -623,7 +623,7 @@ describe('addPick', () => {
       ident,
       'gold key',
     ).lib
-    expect(lib.clips[0].ref).toBe(ident.title)
+    expect(lib.clips[0]!.ref).toBe(ident.title)
   })
 
   // The ★ under the caption is a toggle and the browser's is a button; either
@@ -632,7 +632,7 @@ describe('addPick', () => {
     const once = addPick(EMPTY_LIBRARY, bust, 'Agrippa').lib
     const twice = addPick(once, bust, 'Agrippa')
     expect(twice.lib.clips).toHaveLength(1)
-    expect(twice.clip.id).toBe(once.clips[0].id)
+    expect(twice.clip.id).toBe(once.clips[0]!.id)
   })
 
   // Nothing stops an archive.org identifier from reading like a Commons title,
@@ -648,7 +648,7 @@ describe('addPick', () => {
 
   it('reads back as the ref it was given', () => {
     const lib = addPick(EMPTY_LIBRARY, bust, 'Agrippa').lib
-    expect(clipRef(lib.clips[0])).toEqual(bust)
+    expect(clipRef(lib.clips[0]!)).toEqual(bust)
   })
 })
 
@@ -678,7 +678,7 @@ describe('libraryGroups with kept rolls', () => {
     lib = addPick(lib, bust, 'Agrippa').lib
     lib = addPick(lib, ident, 'gold key').lib
     expect(libraryGroups(lib).map(g => g.id)).toEqual([
-      lib.folders[0].id,
+      lib.folders[0]!.id,
       'commons',
       'archive',
     ])
@@ -717,7 +717,7 @@ describe('syncFolder with kept rolls', () => {
   it('leaves them alone', () => {
     let lib = shelf([{ name: 'rips', files: ['a.mp4', 'b.mp4'] }])
     lib = addPick(lib, bust, 'Agrippa').lib
-    const after = syncFolder(lib, lib.folders[0].id, ['a.mp4'])
+    const after = syncFolder(lib, lib.folders[0]!.id, ['a.mp4'])
     expect(after.gone).toBe(1)
     expect(after.lib.clips.filter(c => c.at === 'commons')).toHaveLength(1)
   })
@@ -749,7 +749,7 @@ describe('the kept rolls have a bound of their own', () => {
   it('drops the oldest rather than refusing the newest', () => {
     const lib = many(KEPT_LIMIT + 3)
     expect(lib.clips).toHaveLength(KEPT_LIMIT)
-    expect(lib.clips[0].ref).toBe(`File:${KEPT_LIMIT + 2}.jpg`)
+    expect(lib.clips[0]!.ref).toBe(`File:${KEPT_LIMIT + 2}.jpg`)
     expect(lib.clips.map(c => c.ref)).not.toContain('File:0.jpg')
     // And the one just kept is on the shelf, which is what the ★ renders from.
     expect(hasPick(lib, { ...bust, title: `File:${KEPT_LIMIT + 2}.jpg` })).toBe(
@@ -799,17 +799,17 @@ describe('addFetched', () => {
 
   it('keeps a fetched clip with no bytes and no folder', () => {
     const lib = addFetched(EMPTY_LIBRARY, clip, 0, 'bunny').lib
-    expect(lib.clips[0].at).toBe('ytdlp')
-    expect(lib.clips[0].folder).toBe('')
-    expect(lib.clips[0].size).toBe(0)
-    expect(clipFetch(lib.clips[0])).toEqual({ url: clip, secs: 0 })
+    expect(lib.clips[0]!.at).toBe('ytdlp')
+    expect(lib.clips[0]!.folder).toBe('')
+    expect(lib.clips[0]!.size).toBe(0)
+    expect(clipFetch(lib.clips[0]!)).toEqual({ url: clip, secs: 0 })
   })
 
   it('recognises what it already holds', () => {
     const once = addFetched(EMPTY_LIBRARY, clip, 0, 'bunny').lib
     const twice = addFetched(once, clip, 0, 'bunny')
     expect(twice.lib.clips).toHaveLength(1)
-    expect(twice.clip.id).toBe(once.clips[0].id)
+    expect(twice.clip.id).toBe(once.clips[0]!.id)
   })
 
   // Two different files, so two rows: the whole thing is not the front of it.
@@ -831,14 +831,14 @@ describe('addFetched', () => {
       0,
       'vimeo',
     ).lib
-    expect(clipFetch(lib.clips[0])?.url).toBe(other)
+    expect(clipFetch(lib.clips[0]!)?.url).toBe(other)
   })
 
   // `clipRef` is what decides whether a row is asked of an archive, and a
   // fetched clip is not: it would be handed a url where a title belongs.
   it('is never mistaken for a kept roll', () => {
     const lib = addFetched(EMPTY_LIBRARY, clip, 0, 'bunny').lib
-    expect(clipRef(lib.clips[0])).toBeNull()
+    expect(clipRef(lib.clips[0]!)).toBeNull()
   })
 
   it('is under its own heading, after the archives', () => {
@@ -846,7 +846,7 @@ describe('addFetched', () => {
     lib = addPick(lib, bust, 'Agrippa').lib
     lib = addFetched(lib, clip, 0, 'bunny').lib
     expect(libraryGroups(lib).map(g => g.id)).toEqual([
-      lib.folders[0].id,
+      lib.folders[0]!.id,
       'commons',
       'ytdlp',
     ])
@@ -867,7 +867,7 @@ describe('addFetched', () => {
   it('survives the round trip through storage', () => {
     const lib = addFetched(EMPTY_LIBRARY, clip, 180, 'bunny').lib
     const back = readLibrary(JSON.parse(JSON.stringify(lib)))
-    expect(clipFetch(back.clips[0])).toEqual({ url: clip, secs: 180 })
+    expect(clipFetch(back.clips[0]!)).toEqual({ url: clip, secs: 180 })
   })
 
   it("shares the kept rolls' bound, since neither costs anything on disk", () => {
@@ -876,7 +876,7 @@ describe('addFetched', () => {
       lib = addFetched(lib, `https://example.com/${i}.mp4`, 0, `clip ${i}`).lib
     }
     expect(lib.clips).toHaveLength(KEPT_LIMIT)
-    expect(clipFetch(lib.clips[0])?.url).toBe(
+    expect(clipFetch(lib.clips[0]!)?.url).toBe(
       `https://example.com/${KEPT_LIMIT + 4}.mp4`,
     )
   })

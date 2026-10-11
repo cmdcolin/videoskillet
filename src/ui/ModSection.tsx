@@ -171,7 +171,7 @@ export function ModSection(props: {
 // Which of slot `i`'s knobs another routing drives.
 const wiredKnobs = (slots: readonly UiSlot[], i: number) => ({
   rate:
-    !PASS_THROUGH.has(slots[i].source) &&
+    !PASS_THROUGH.has(slots[i]!.source) &&
     slots.some(s => s.target === bayKeyFor(i, 'rate')),
   depth: slots.some(s => s.target === bayKeyFor(i, 'depth')),
 })

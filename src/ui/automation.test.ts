@@ -47,7 +47,7 @@ describe('runAuto', () => {
     runAuto({ kind: 'glide', at: 0, to: look(0.9), seconds: 4 }, f.sink)
     expect(f.order).toEqual(['set:vSize', 'apply', 'glide'])
     expect(f.sets[0]).toEqual({ key: 'vSize', value: 0.5 })
-    expect(f.applies[0].vSize).toBe(0.2)
+    expect(f.applies[0]!.vSize).toBe(0.2)
     expect(f.glides[0]).toEqual({ to: look(0.9), seconds: 4 })
   })
 })
@@ -303,7 +303,7 @@ describe('makeAutomationRunner', () => {
     h.runner.tap.apply(board)
     board.vSize = 0.9
     h.runner.stop()
-    const first = h.runner.getTape().events[0]
+    const first = h.runner.getTape().events[0]!
     expect(first.kind === 'apply' && first.controls.vSize).toBe(0.4)
   })
 

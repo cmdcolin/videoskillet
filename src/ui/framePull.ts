@@ -175,13 +175,13 @@ function makePull(
   // with them — see `DemuxedTrack.samples` for why the sort lives here rather
   // than in the demuxer.
   const shown = samples.map((_, i) => i)
-  shown.sort((a, b) => samples[a].cts - samples[b].cts)
+  shown.sort((a, b) => samples[a]!.cts - samples[b]!.cts)
 
   const tickToUs = (ticks: number) => Math.round((ticks * 1e6) / timescale)
   // What each sample's frame will come back stamped with. Matching in whole
   // microseconds rather than in seconds is what makes "is this the frame I
   // asked for" an equality rather than a tolerance.
-  const stampOf = (i: number) => tickToUs(samples[i].cts)
+  const stampOf = (i: number) => tickToUs(samples[i]!.cts)
 
   let decoder: VideoDecoder | null = null
   let broken = false
@@ -272,37 +272,37 @@ function makePull(
   // Binary search over presentation order, which is the one place the sort above
   // is spent.
   const shownAt = (ticks: number): number | null => {
-    if (samples[shown[0]].cts > ticks) return null
+    if (samples[shown[0]!]!.cts > ticks) return null
     let lo = 0
     let hi = shown.length - 1
     while (lo < hi) {
       const mid = Math.ceil((lo + hi) / 2)
-      if (samples[shown[mid]].cts <= ticks) lo = mid
+      if (samples[shown[mid]!]!.cts <= ticks) lo = mid
       else hi = mid - 1
     }
-    return shown[lo]
+    return shown[lo]!
   }
 
   // The sync sample at or before `index`, in decode order — where the decoder
   // has to be started for `index` to come out of it.
   const keyAtOrBefore = (index: number): number => {
     for (let i = index; i >= 0; i--) {
-      if (samples[i].key) return i
+      if (samples[i]!.key) return i
     }
     return 0
   }
 
   const chunkFor = (i: number): EncodedVideoChunk =>
     new EncodedVideoChunk({
-      type: samples[i].key ? 'key' : 'delta',
+      type: samples[i]!.key ? 'key' : 'delta',
       // **The presentation time, not the decode time.** It is what comes back
       // on the frame, so it is what "did I get the one I asked for" is answered
       // with; feeding `dts` here would look right on every clip without
       // B-frames and mismatch on every clip with them.
       timestamp: stampOf(i),
       data: bytes.subarray(
-        samples[i].offset,
-        samples[i].offset + samples[i].size,
+        samples[i]!.offset,
+        samples[i]!.offset + samples[i]!.size,
       ),
     })
 

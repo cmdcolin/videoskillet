@@ -22,8 +22,8 @@ describe('faultDepth', () => {
     const at = cutFrameOf(frames, 0.5)
     const d = run(frames, 0.5)
     expect(at).toBe(10)
-    for (let f = 1; f <= at; f++) expect(d[f]).toBeGreaterThan(d[f - 1])
-    for (let f = at + 1; f < frames; f++) expect(d[f]).toBeLessThan(d[f - 1])
+    for (let f = 1; f <= at; f++) expect(d[f]).toBeGreaterThan(d[f - 1]!)
+    for (let f = at + 1; f < frames; f++) expect(d[f]).toBeLessThan(d[f - 1]!)
   })
 
   // The half that makes it two curves rather than one shape slid sideways: an
@@ -106,7 +106,7 @@ describe('Fault', () => {
     })
     expect(onCut).toHaveBeenCalledTimes(1)
     const cutAt = depths.findIndex(d => d.fired)
-    expect(depths[cutAt].depth).toBe(1)
+    expect(depths[cutAt]!.depth).toBe(1)
   })
 
   it('hands back the peak so the caller never reaches into the plan', () => {

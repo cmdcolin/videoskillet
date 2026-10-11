@@ -503,7 +503,7 @@ export function createMidi(cb: MidiCallbacks): MidiManager {
     lastPulse = now
     if (pulses.length >= 7) {
       const perPulse =
-        (pulses[pulses.length - 1] - pulses[0]) / (pulses.length - 1)
+        (pulses[pulses.length - 1]! - pulses[0]!) / (pulses.length - 1)
       const bpm = Math.round((60000 / (perPulse * 24)) * 2) / 2
       if (Number.isFinite(bpm) && bpm !== reportedBpm) {
         reportedBpm = bpm
@@ -628,9 +628,9 @@ export function createMidi(cb: MidiCallbacks): MidiManager {
     // for it are both ignored on purpose: a one-shot is struck and then decays
     // on its own clock, so a key lift has nothing to say to it. That is also
     // why nothing here tracks which notes are held.
-    if (data?.length === 3 && (data[0] & 0xf0) === 0x90 && data[2] > 0) {
-      const b = { channel: data[0] & 0x0f, note: data[1] }
-      const velocity = data[2] / 127
+    if (data?.length === 3 && (data[0]! & 0xf0) === 0x90 && data[2]! > 0) {
+      const b = { channel: data[0]! & 0x0f, note: data[1]! }
+      const velocity = data[2]! / 127
       if (armedNote !== null) {
         bindNote(armedNote, b)
         armedNote = null
@@ -644,15 +644,15 @@ export function createMidi(cb: MidiCallbacks): MidiManager {
       }
     }
     // Control Change is status 0xB0..0xBF; three bytes: status, controller, value.
-    if (data?.length === 3 && (data[0] & 0xf0) === 0xb0) {
-      const b = { channel: data[0] & 0x0f, controller: data[1] }
+    if (data?.length === 3 && (data[0]! & 0xf0) === 0xb0) {
+      const b = { channel: data[0]! & 0x0f, controller: data[1]! }
       const id = bindingId(b)
       if (learn !== null) {
         // A knob already claimed this sweep keeps streaming as it turns — only a
         // fresh source advances to the next target.
         if (!learn.seen.has(id)) {
           learn.seen.add(id)
-          bind(learn.targets[learn.index], b)
+          bind(learn.targets[learn.index]!, b)
           learn.index += 1
           if (learn.index >= learn.targets.length) learn = null
           reportLearn()
@@ -663,7 +663,7 @@ export function createMidi(cb: MidiCallbacks): MidiManager {
         cb.onArmed(null)
       } else {
         const target = targetByBinding.get(id)
-        if (target !== undefined) drive(target, data[2])
+        if (target !== undefined) drive(target, data[2]!)
       }
     }
   }
@@ -733,9 +733,9 @@ export function createMidi(cb: MidiCallbacks): MidiManager {
       const n = Math.min(profile.ccs.length, AUTOMAP_TARGETS.length)
       const next: BindingMap = {}
       for (let i = 0; i < n; i++)
-        next[AUTOMAP_TARGETS[i]] = {
+        next[AUTOMAP_TARGETS[i]!] = {
           channel: profile.channel,
-          controller: profile.ccs[i],
+          controller: profile.ccs[i]!,
         }
       bindings = next
       engaged.clear()

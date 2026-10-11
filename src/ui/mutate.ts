@@ -253,8 +253,8 @@ export function spike(
       order.length - 1,
       i + Math.floor(rand() * (order.length - i)),
     )
-    ;[order[i], order[j]] = [order[j], order[i]]
-    const s = order[i]
+    ;[order[i], order[j]] = [order[j]!, order[i]!]
+    const s = order[i]!
     const from = toTravel(s, controls[s.key])
     // The track minus the band around where the control already is, as two
     // stretches measured end to end: draw along their total length and the
@@ -301,7 +301,7 @@ export function crossover(
       ? taken
       : changing.length === 0
         ? []
-        : [changing[Math.floor(rand() * changing.length)]]
+        : [changing[Math.floor(rand() * changing.length)]!]
   const next = { ...current }
   for (const c of from) for (const s of c) next[s.key] = rolled[s.key]
   return next

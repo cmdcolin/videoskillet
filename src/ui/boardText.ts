@@ -76,7 +76,9 @@ const table = (rows: readonly (readonly string[])[]): string[] => {
   )
   return rows.map(r =>
     r
-      .map((cell, i) => (i === r.length - 1 ? cell : cell.padEnd(widths[i])))
+      .map((cell, i) =>
+        i === r.length - 1 ? cell : cell.padEnd(widths[i] ?? 0),
+      )
       .join('  ')
       .trimEnd(),
   )

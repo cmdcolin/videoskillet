@@ -70,7 +70,7 @@ export function buildCaptionRom(): Uint32Array {
     for (let y = 0; y < GLYPH_H; y++) {
       let bits = 0
       for (let x = 0; x < GLYPH_W; x++) {
-        if (img.data[(y * GLYPH_W + x) * 4 + 3] >= INK) bits |= 1 << x
+        if (img.data[(y * GLYPH_W + x) * 4 + 3]! >= INK) bits |= 1 << x
       }
       rom[i * GLYPH_H + y] = bits
     }

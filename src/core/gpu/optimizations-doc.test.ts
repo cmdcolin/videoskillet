@@ -52,8 +52,8 @@ const WORDS = [
 ]
 const TENS = ['', '', 'twenty', 'thirty']
 const word = (n: number): string => {
-  if (n < WORDS.length) return WORDS[n]
-  const tens = TENS[Math.floor(n / 10)]
+  if (n < WORDS.length) return WORDS[n]!
+  const tens = TENS[Math.floor(n / 10)]!
   if (tens === '') throw new Error(`no word for ${n}`)
   return n % 10 === 0 ? tens : `${tens}-${WORDS[n % 10]}`
 }
@@ -74,12 +74,12 @@ test('the doc names exactly the passes that filter through the tap bank', () => 
     .toSorted()
   const sentence = /(\w+) passes filter the waveform \(([^)]+)\)/.exec(doc)
   if (sentence === null) throw new Error('no FIR-pass sentence in the doc')
-  const named = [...sentence[2].matchAll(/`([\w_]+)`/g)]
-    .map(m => m[1])
+  const named = [...sentence[2]!.matchAll(/`([\w_]+)`/g)]
+    .map(m => m[1]!)
     .toSorted()
 
   expect(named).toEqual(filtering)
-  expect(sentence[1].toLowerCase()).toBe(word(filtering.length))
+  expect(sentence[1]!.toLowerCase()).toBe(word(filtering.length))
 })
 
 test('the doc counts the shaders that stage workgroup memory', () => {
@@ -87,7 +87,7 @@ test('the doc counts the shaders that stage workgroup memory', () => {
   const sentence = /(\w+) shaders stage something in `var<workgroup>`/.exec(doc)
   if (sentence === null) throw new Error('no workgroup-staging sentence')
 
-  expect(sentence[1].toLowerCase()).toBe(word(staging.length))
+  expect(sentence[1]!.toLowerCase()).toBe(word(staging.length))
 })
 
 test('the doc quotes the tap range the filter bank actually designs', () => {
@@ -117,14 +117,14 @@ test('the doc quotes the tile width and the halo the kernels have to fit', () =>
 test('the doc names exactly the controls that rebuild the filter bank', () => {
   const keys = [
     .../const FILTER_KEYS[^[]+\[([^\]]+)\]/
-      .exec(pipeline)![1]
+      .exec(pipeline)![1]!
       .matchAll(/'(\w+)'/g),
   ].map(m => m[1])
   const sentence = /Only (\w+) control keys touch it \(([^)]+)\)/.exec(doc)
   if (sentence === null) throw new Error('no filter-key sentence in the doc')
 
-  expect([...sentence[2].matchAll(/`(\w+)`/g)].map(m => m[1])).toEqual(keys)
-  expect(sentence[1].toLowerCase()).toBe(word(keys.length))
+  expect([...sentence[2]!.matchAll(/`(\w+)`/g)].map(m => m[1])).toEqual(keys)
+  expect(sentence[1]!.toLowerCase()).toBe(word(keys.length))
 })
 
 test('the doc quotes the readback pool depth', () => {
@@ -145,7 +145,7 @@ test('the doc quotes how many dispatches a frame can run', () => {
     (n, stage) =>
       n +
       new RegExp(`^${stage} +(.+)$`, 'm')
-        .exec(architecture)![1]
+        .exec(architecture)![1]!
         .replace(/\([^)]*\)\s*$/, '')
         .split('→').length,
     0,

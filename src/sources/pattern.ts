@@ -67,7 +67,7 @@ export function sweepPixels(): Uint8ClampedArray<ArrayBuffer> {
               Math.floor((y - H * 0.15) / ((H * 0.65) / bands.length)),
               bands.length - 1,
             )
-          ]
+          ]!
         // band MHz -> cycles per sample at 14.318 MHz raster
         v = 128 + 100 * Math.sin(2 * Math.PI * (band / 14.318182) * x)
       } else {

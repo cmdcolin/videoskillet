@@ -50,7 +50,9 @@ function useFps(engine: EngineApi | undefined) {
   ).fps
 }
 
-function useEngineFps(engines: readonly [EngineApi, EngineApi] | null) {
+function useEngineFps(
+  engines: readonly [EngineApi, EngineApi] | null,
+): [number, number] {
   return [useFps(engines?.[0]), useFps(engines?.[1])]
 }
 

@@ -44,7 +44,7 @@ const loadManual = (): number | null => {
 // with arithmetic in it that a browser is a bad place to find out is wrong.
 export function bpmFromTaps(times: readonly number[]): number | null {
   if (times.length < 2) return null
-  const span = times[times.length - 1] - times[0]
+  const span = times[times.length - 1]! - times[0]!
   if (span <= 0) return null
   // To 0.1 BPM, which is what the readout shows and what MIDI clock is rounded
   // to as well — a tap that stored 128.03 would render as 128.0 and then not
@@ -96,7 +96,8 @@ export function useTempo(clockBpm: number | null): Tempo {
     tap: () => {
       const now = performance.now()
       const run = taps.current
-      const stale = run.length > 0 && now - run[run.length - 1] > TAP_GAP_MAX_MS
+      const stale =
+        run.length > 0 && now - run[run.length - 1]! > TAP_GAP_MAX_MS
       // One more than the gaps: N taps make N-1 of them.
       const next = [...(stale ? [] : run), now].slice(-(TAP_GAPS + 1))
       taps.current = next

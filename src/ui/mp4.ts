@@ -164,7 +164,7 @@ export function normaliseAvcc(
   let at = 6
   const take = (count: number, expect: number) => {
     for (let i = 0; i < count && at + 2 <= raw.length; i++) {
-      const len = (raw[at] << 8) | raw[at + 1]
+      const len = (raw[at]! << 8) | raw[at + 1]!
       at += 2
       if (len === 0 || at + len > raw.length) return
       let data = raw.slice(at, at + len)
@@ -173,26 +173,27 @@ export function normaliseAvcc(
       if (
         data.length > 2 &&
         data[0] === data[1] &&
-        (data[0] & 0x1f) === expect
+        (data[0]! & 0x1f) === expect
       ) {
         data = data.slice(1)
       }
       sets.push({ type: expect, data })
     }
   }
-  take(raw[5] & 0x1f, 7)
-  if (at < raw.length) take(raw[at++], 8)
+  take(raw[5]! & 0x1f, 7)
+  if (at < raw.length) take(raw[at++]!, 8)
 
   const sps = sets.filter(s => s.type === 7)
   const pps = sets.filter(s => s.type === 8)
-  if (sps.length === 0) return raw
+  const first = sps[0]
+  if (first === undefined) return raw
 
   return join([
     // Version, and the profile/compat/level triplet, which are the first three
     // bytes of the SPS itself and are taken from there rather than from the
     // header — a browser that got the header wrong has not earned the benefit
     // of the doubt about these.
-    u8(1, sps[0].data[1], sps[0].data[2], sps[0].data[3]),
+    u8(1, first.data[1] ?? 0, first.data[2] ?? 0, first.data[3] ?? 0),
     // Reserved bits set, and a four-byte NAL length, which is what `record.ts`
     // configures the encoder for.
     u8(0xff, 0xe0 | sps.length),
@@ -563,11 +564,11 @@ export function mp4Layout(spec: Mp4Tables): Mp4Layout {
   const sorted = pts.toSorted((a, b) => a - b)
   let shift = 0
   for (let i = 0; i < pts.length; i++)
-    shift = Math.max(shift, sorted[i] - pts[i])
+    shift = Math.max(shift, sorted[i]! - pts[i]!)
   const last = sorted.at(-1) ?? 0
   const end = Math.max(last + delta, (spec.end ?? 0) * delta)
   const durations = sorted.map((v, i) => (sorted[i + 1] ?? end) - v)
-  const offsets = pts.map((p, i) => p - sorted[i] + shift)
+  const offsets = pts.map((p, i) => p - sorted[i]! + shift)
   const trackDuration = end - (sorted[0] ?? 0)
   const videoDuration = Math.round(
     (trackDuration / timescale) * MOVIE_TIMESCALE,

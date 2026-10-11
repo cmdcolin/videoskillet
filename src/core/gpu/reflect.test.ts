@@ -8,7 +8,7 @@ const shaders = import.meta.glob('./shaders/*.wgsl', {
   query: '?raw',
   import: 'default',
   eager: true,
-}) as Record<string, string>
+})
 
 describe('reflectBindings', () => {
   it('reads every shader as one dense group-0 binding list', () => {

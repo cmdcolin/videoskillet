@@ -35,11 +35,11 @@ describe('ModState', () => {
     const wave = [{ id: 0, source: 'walk', rateHz: 2 } as const]
     const vals = Array.from(
       { length: 120 },
-      () => m.update(wave, 0, 0, () => 1)[0], // dest pinned at +1
+      () => m.update(wave, 0, 0, () => 1)[0]!, // dest pinned at +1
     )
     expect(Math.max(...vals.map(Math.abs))).toBeLessThanOrEqual(1)
     expect(vals[119]).toBeGreaterThan(0.9) // converged toward +1
-    expect(vals[10]).toBeLessThan(vals[60]) // monotone-ish approach
+    expect(vals[10]).toBeLessThan(vals[60]!) // monotone-ish approach
   })
 
   it('audio followers pass the envelope through', () => {
@@ -70,9 +70,9 @@ describe('ModState', () => {
   it('smooth noise is bounded and continuous', () => {
     const m = new ModState()
     const wave = [{ id: 0, source: 'smooth', rateHz: 3 } as const]
-    let prev = m.update(wave, 0, 0)[0]
+    let prev = m.update(wave, 0, 0)[0]!
     for (let i = 0; i < 200; i++) {
-      const v = m.update(wave, 0, 0)[0]
+      const v = m.update(wave, 0, 0)[0]!
       expect(Math.abs(v)).toBeLessThanOrEqual(1)
       expect(Math.abs(v - prev)).toBeLessThan(0.5) // no jumps
       prev = v
@@ -82,7 +82,7 @@ describe('ModState', () => {
   it('lorenz stays bounded and is aperiodic', () => {
     const m = new ModState()
     const wave = [{ id: 0, source: 'lorenz', rateHz: 4 } as const]
-    const vals = Array.from({ length: 400 }, () => m.update(wave, 0, 0)[0])
+    const vals = Array.from({ length: 400 }, () => m.update(wave, 0, 0)[0]!)
     expect(Math.max(...vals.map(Math.abs))).toBeLessThanOrEqual(1)
     // never settles: the second half keeps moving as much as the first
     expect(spread(vals.slice(200))).toBeGreaterThan(0.3)
@@ -180,7 +180,7 @@ describe('ModState', () => {
       expect(out[2]).toBeGreaterThan(0.9)
       // the faster decay is already further down, which is what makes two
       // rates fired together read as one gesture with a tail
-      expect(out[2]).toBeLessThan(out[0])
+      expect(out[2]).toBeLessThan(out[0]!)
     })
 
     // Slot position is identity everywhere else in this file, and a trigger is

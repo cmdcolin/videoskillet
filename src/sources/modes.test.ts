@@ -106,8 +106,8 @@ describe('source pickers', () => {
 
   it('puts B’s off switch above every band, unheaded', () => {
     const options = sourceOptions(SOURCE_B_MODES)
-    expect(options[0].value).toBe('none')
-    expect(options[0].group).toBe(null)
+    expect(options[0]!.value).toBe('none')
+    expect(options[0]!.group).toBe(null)
     expect(options.filter(o => o.group === null)).toHaveLength(1)
   })
 })

@@ -33,7 +33,7 @@ import { readFileSync } from 'node:fs'
 const links = (path: string): string[] =>
   [
     ...readFileSync(path, 'utf8').matchAll(/https:\/\/\S*?[?#](\S+?)[)\s]/g),
-  ].map(m => m[1])
+  ].map(m => m[1]!)
 
 const readme = links('README.md')
 

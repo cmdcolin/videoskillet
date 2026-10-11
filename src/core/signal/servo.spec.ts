@@ -35,10 +35,10 @@ describe('TrackingServo', () => {
     const far = Math.max(...path.map(p => Math.abs(p - 0.85)))
     expect(far).toBeGreaterThan(0.2)
     const crossings = path.filter(
-      (p, i) => i > 0 && Math.sign(p - 0.85) !== Math.sign(path[i - 1] - 0.85),
+      (p, i) => i > 0 && Math.sign(p - 0.85) !== Math.sign(path[i - 1]! - 0.85),
     ).length
     expect(crossings).toBeGreaterThan(1)
-    expect(Math.abs(path[path.length - 1] - 0.85)).toBeLessThan(far)
+    expect(Math.abs(path[path.length - 1]! - 0.85)).toBeLessThan(far)
   })
 
   it('raises the mistrack severity while moving and flags the seam under tension', () => {

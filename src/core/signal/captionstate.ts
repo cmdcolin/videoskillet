@@ -88,7 +88,7 @@ export class CaptionState {
   }
 
   private next(): number {
-    const code = this.codes[this.at]
+    const code = this.codes[this.at]!
     this.at += 1
     if (this.at >= this.codes.length) {
       this.at = 0

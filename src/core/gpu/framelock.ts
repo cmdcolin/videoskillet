@@ -97,7 +97,7 @@ export class AutoLock {
     // that used to sit here was only ever buying `Array`'s lexicographic
     // default something to be talked out of.
     const sorted = this.dts.toSorted()
-    if (sorted[LOCK_P_HI] > sorted[LOCK_P_LO] * LOCK_SPREAD) {
+    if (sorted[LOCK_P_HI]! > sorted[LOCK_P_LO]! * LOCK_SPREAD) {
       this.divisor = 2
       // A probe that failed doubles the wait; wavering that arrived on its
       // own starts the backoff over.

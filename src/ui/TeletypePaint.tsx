@@ -193,9 +193,10 @@ export function TeletypePaint(props: {
     for (const [x, y] of blockLine(start[0], start[1], to[0], to[1])) {
       if (x < 0 || y < 0 || x >= MAX_COLS * 2 || y >= PAINT_ROWS * 3) continue
       const [c, r] = [x >> 1, Math.floor(y / 3)]
-      const next = paintCell(painted[r][c], b, x & 1, y % 3)
-      if (next === painted[r][c]) continue
-      painted[r][c] = next
+      const row = painted[r]!
+      const next = paintCell(row[c]!, b, x & 1, y % 3)
+      if (next === row[c]) continue
+      row[c] = next
       changed = true
     }
     if (changed) props.onChange(cellsToText(painted, tail))

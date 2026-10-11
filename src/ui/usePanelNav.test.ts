@@ -52,8 +52,8 @@ describe('the open stage, across a reload', () => {
 // single name older builds wrote, which says which group without saying where.
 
 describe('the open group, per stage', () => {
-  const first = stageGroups(CHANNEL_STAGE)[0].name
-  const second = stageGroups(CHANNEL_STAGE)[1].name
+  const first = stageGroups(CHANNEL_STAGE)[0]!.name
+  const second = stageGroups(CHANNEL_STAGE)[1]!.name
 
   it('reopens the group that stage was left at', () => {
     expect(groupOpenIn({ [CHANNEL_STAGE]: second }, CHANNEL_STAGE)).toBe(second)

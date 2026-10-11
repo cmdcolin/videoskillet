@@ -97,7 +97,7 @@ export function sampleRecipe(seed: number): Recipe {
 // so the pair it came from still reproduces.
 export function anchorRecipe(seed: number): Recipe {
   const rand = rngFor(seed)
-  const name = ANCHOR_PRESETS[randomIndex(ANCHOR_PRESETS.length, rand)]
+  const name = ANCHOR_PRESETS[randomIndex(ANCHOR_PRESETS.length, rand)]!
   return { seed, weights: { [name]: 1 }, kind: 'anchor' }
 }
 
@@ -130,7 +130,9 @@ export function sampleOne(seed: number): Recipe {
 // The authored preset a recipe is, when it is one whole and nothing else.
 export function anchorName(recipe: Recipe): string | null {
   const entries = Object.entries(recipe.weights)
-  return recipe.kind === 'anchor' && entries.length === 1 ? entries[0][0] : null
+  return recipe.kind === 'anchor' && entries.length === 1
+    ? entries[0]![0]
+    : null
 }
 
 const asWeights = (recipe: Recipe): PresetWeights =>

@@ -37,7 +37,7 @@ export function useClockSync(args: {
 
   const syncLabel = (key: ControlKey): string | null => {
     const div = syncMap[key]
-    return div === undefined ? null : SYNC_DIVISIONS[div].label
+    return div === undefined ? null : SYNC_DIVISIONS[div]!.label
   }
 
   // What tempo says this control is — and nothing about what it is otherwise.
@@ -47,7 +47,7 @@ export function useClockSync(args: {
   const lockedValue = (key: ControlKey): number | null => {
     const div = syncMap[key]
     return div !== undefined && bpm !== null
-      ? syncedValue(key, bpm, SYNC_DIVISIONS[div].beats)
+      ? syncedValue(key, bpm, SYNC_DIVISIONS[div]!.beats)
       : null
   }
 

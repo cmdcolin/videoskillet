@@ -410,7 +410,7 @@ export function decodeRow(row: string[]): DecodedRow {
 export function decodePage(page: string[][]): DecodedRow[] {
   const out: DecodedRow[] = []
   for (let r = 0; r < page.length; r++) {
-    const upper = decodeRow(page[r])
+    const upper = decodeRow(page[r]!)
     out.push(upper)
     if (r + 1 < page.length && upper.cells.some(c => c.half === 'top')) {
       out.push({
@@ -670,7 +670,7 @@ export const patternRows = (code: number): string[] => {
 }
 
 export const graphicsCode = (rows: string[]): number => {
-  const bit = (r: number, c: number) => (rows[r][c] === '1' ? 1 : 0)
+  const bit = (r: number, c: number) => (rows[r]![c] === '1' ? 1 : 0)
   return (
     0x20 |
     bit(0, 0) |
@@ -707,7 +707,10 @@ export function garbleRows(page: string[][], phase: number): string[][] {
     // than it went would resize the card.
     const sent =
       addr >>> 20 < ADDRESS_RATE * 0x1000 && from >= 0 && from < page.length
-        ? Array.from({ length: row.length }, (_cell, c) => page[from][c] ?? ' ')
+        ? Array.from(
+            { length: row.length },
+            (_cell, c) => page[from]![c] ?? ' ',
+          )
         : row
     // Set the row is in, which a hit on a control code can change part way
     // along it — so this is carried left to right and never reset per cell.
@@ -775,7 +778,7 @@ function glyphBits(ch: string, separated: boolean): Uint8Array {
   const mosaic = mosaicRows(ch)
   if (mosaic !== null) {
     const bh = CELL_H / mosaic.length
-    const bw = CELL_W / mosaic[0].length
+    const bw = CELL_W / mosaic[0]!.length
     mosaic.forEach((blocks, br) => {
       for (let bc = 0; bc < blocks.length; bc++) {
         if (blocks[bc] !== '1') continue
@@ -792,7 +795,8 @@ function glyphBits(ch: string, separated: boolean): Uint8Array {
   }
   const data = scratch.getImageData(0, 0, CELL_W, CELL_H).data
   const bits = new Uint8Array(CELL_W * CELL_H)
-  for (let i = 0; i < bits.length; i++) bits[i] = data[i * 4 + 3] >= INK ? 1 : 0
+  for (let i = 0; i < bits.length; i++)
+    bits[i] = data[i * 4 + 3]! >= INK ? 1 : 0
   rom.set(key, bits)
   return bits
 }
@@ -863,8 +867,8 @@ export function dotGrid(
     row.cells.forEach((cell, col) => {
       if (cell.ch === '' || (cell.flash && flashOff)) return
       const j = boil === null ? 0 : (r * cols + col) * 2
-      const ox = col * CELL_W + (boil === null ? 0 : boil[j])
-      const oy = r * CELL_H + (boil === null ? 0 : boil[j + 1])
+      const ox = col * CELL_W + (boil === null ? 0 : boil[j]!)
+      const oy = r * CELL_H + (boil === null ? 0 : boil[j + 1]!)
       const rgb = colourRgb(cell.fg)
       const shade = SHADES[cell.ch]
       const bits =
@@ -883,7 +887,8 @@ export function dotGrid(
               : // Anchored to the grid origin, so a run of shaded cells tiles
                 // as one field instead of restarting its checker at every
                 // cell boundary.
-                SHADE_LIT[shade - 1][((oy + y) & 1) * 2 + ((ox + x) & 1)] === 1
+                SHADE_LIT[shade! - 1]![((oy + y) & 1) * 2 + ((ox + x) & 1)] ===
+                1
           if (lit) set(ox + x, oy + y, rgb)
         }
       }
@@ -896,7 +901,7 @@ export function dotGrid(
     const white = colourRgb(7)
     for (let y = 1; y < CELL_H - 1; y++) {
       for (let x = 1; x < CELL_W - 1; x++) {
-        set(rows[last].length * CELL_W + x, last * CELL_H + y, white)
+        set(rows[last]!.length * CELL_W + x, last * CELL_H + y, white)
       }
     }
   }

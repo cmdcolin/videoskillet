@@ -153,8 +153,8 @@ export function push(events: AutoEvent[], next: AutoEvent): void {
 export function playTape(tape: Tape, sink: AutoSink): (frame: number) => void {
   let next = 0
   return frame => {
-    while (next < tape.events.length && tape.events[next].at <= frame) {
-      runAuto(tape.events[next], sink)
+    while (next < tape.events.length && tape.events[next]!.at <= frame) {
+      runAuto(tape.events[next]!, sink)
       next += 1
     }
   }

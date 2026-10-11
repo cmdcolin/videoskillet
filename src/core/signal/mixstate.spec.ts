@@ -136,8 +136,8 @@ describe('MixState', () => {
     expect(Math.min(...seen)).toBeGreaterThanOrEqual(0)
     expect(Math.max(...seen)).toBeLessThanOrEqual(1)
     // a pure sawtooth would never decrease; the fold has to send it back down
-    expect(seen.some((v, i) => i > 0 && v < seen[i - 1])).toBe(true)
-    expect(seen.some((v, i) => i > 0 && v > seen[i - 1])).toBe(true)
+    expect(seen.some((v, i) => i > 0 && v < seen[i - 1]!)).toBe(true)
+    expect(seen.some((v, i) => i > 0 && v > seen[i - 1]!)).toBe(true)
   })
 
   it('wanders the timing and walks the stripe only while paused', () => {

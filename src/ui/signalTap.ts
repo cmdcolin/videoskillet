@@ -29,4 +29,4 @@ export const SIGNAL_TAPS: SignalTap[] = [
 // `?dbg=` can name any number, including one no tap uses, so this is a lookup
 // that reports what it found rather than an assertion that it found something.
 export const tapFor = (value: number): SignalTap =>
-  SIGNAL_TAPS.find(t => t.value === value) ?? SIGNAL_TAPS[0]
+  SIGNAL_TAPS.find(t => t.value === value) ?? SIGNAL_TAPS[0]!

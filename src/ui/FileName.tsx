@@ -128,7 +128,7 @@ export function PickCaption(props: {
         origin={props.origin}
         href={props.page}
         label="this file"
-        className={styles.captionBtn}
+        className={styles.captionBtn!}
       />
     </>
   )

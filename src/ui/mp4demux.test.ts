@@ -82,7 +82,7 @@ describe('demuxMp4, against what writeMp4 writes', () => {
   it('recovers every sample, at the right byte range', () => {
     expect(track?.samples).toHaveLength(frames.length)
     for (const [i, s] of (track?.samples ?? []).entries()) {
-      const want = frames[i].bytes
+      const want = frames[i]!.bytes
       expect(s.size).toBe(want.length)
       expect(file.slice(s.offset, s.offset + s.size)).toEqual(want)
     }
@@ -314,7 +314,7 @@ describe('demuxMp4, on what writeMp4 never writes', () => {
     ])
     // The point is that it reads eight bytes rather than four; the value itself
     // is only interesting in that a 32-bit read would return the high word.
-    expect(demuxMp4(bytes)?.samples[0].offset).toBe(5_000_000_000 % 2 ** 32)
+    expect(demuxMp4(bytes)?.samples[0]!.offset).toBe(5_000_000_000 % 2 ** 32)
   })
 
   // The three sample stbl used by the edit-list cases: dts 0, 100, 200.
@@ -403,7 +403,7 @@ describe('demuxMp4, on what writeMp4 never writes', () => {
     // wrong one had been picked — they are built from one `stbl` precisely so
     // that the handler is the only thing telling them apart.
     expect(t).not.toBeNull()
-    expect(t?.samples[0].offset).toBe(4242)
+    expect(t?.samples[0]!.offset).toBe(4242)
   })
 })
 

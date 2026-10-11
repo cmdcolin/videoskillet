@@ -304,7 +304,7 @@ describe('writeMp4', () => {
 
     it('drops the duplicated NAL header off each set', () => {
       const fixed = normaliseAvcc(firefox)
-      const spsLen = (fixed[6] << 8) | fixed[7]
+      const spsLen = (fixed[6]! << 8) | fixed[7]!
       expect(Array.from(fixed.slice(8, 8 + spsLen))).toEqual([
         0x67, 0x42, 0xc0, 0x2a, 0xd9,
       ])
@@ -397,8 +397,8 @@ describe('a payload spilled into pieces', () => {
     avcc: AVCC,
     samples: laid(frames).samples,
     video: [
-      new Blob([frames[0].bytes, frames[1].bytes]),
-      new Blob([frames[2].bytes, frames[3].bytes, frames[4].bytes]),
+      new Blob([frames[0]!.bytes, frames[1]!.bytes]),
+      new Blob([frames[2]!.bytes, frames[3]!.bytes, frames[4]!.bytes]),
     ],
   }
 
@@ -412,7 +412,7 @@ describe('a payload spilled into pieces', () => {
   // `mdat` is a file that looks fine until something seeks in it.
   it('declines a payload that disagrees with the sample table', () => {
     expect(() =>
-      mp4Parts({ ...spec, video: [new Blob([frames[0].bytes])] }),
+      mp4Parts({ ...spec, video: [new Blob([frames[0]!.bytes])] }),
     ).toThrow(/sample table says 117 bytes of picture, the payload carries 40/)
   })
 })
@@ -458,8 +458,8 @@ describe('a take too large for 32-bit fields', () => {
   })
 
   const trakTables = (which: number) => {
-    const moov = boxes(big.tail.at(-1) ?? new Uint8Array())[0]
-    const trak = kids(moov).filter(b => b.type === 'trak')[which]
+    const moov = boxes(big.tail.at(-1) ?? new Uint8Array())[0]!
+    const trak = kids(moov).filter(b => b.type === 'trak')[which]!
     const mdia = find(kids(trak), 'mdia')
     return kids(find(kids(find(kids(mdia), 'minf')), 'stbl'))
   }
@@ -547,7 +547,7 @@ describe('a streamed layout', () => {
   // of every frame in the file.
   it('measures the chunk offset from the header it wrote', () => {
     const offsetIn = (l: ReturnType<typeof small>) => {
-      const moov = boxes(l.tail.at(-1) ?? new Uint8Array())[0]
+      const moov = boxes(l.tail.at(-1) ?? new Uint8Array())[0]!
       const trak = find(kids(moov), 'trak')
       const mdia = find(kids(trak), 'mdia')
       const stbl = find(kids(find(kids(mdia), 'minf')), 'stbl')
@@ -601,7 +601,7 @@ describe('writeMp4 with sound', () => {
   // The sound's chunk sits straight after the picture's samples in mdat.
   it('points the sound at its own bytes', () => {
     const out = withSound('aac', [1024, 1024])
-    const stco = find(kids(stblOf(traks(out)[1])), 'stco')
+    const stco = find(kids(stblOf(traks(out)[1]!)), 'stco')
     const offset = u32At(stco.body, 8)
     expect(offset).toBe(find(boxes(out), 'mdat').start + 8 + 160)
     expect(out[offset]).toBe(0xa0)
@@ -609,21 +609,21 @@ describe('writeMp4 with sound', () => {
   })
 
   it('carries the AudioSpecificConfig in esds', () => {
-    const stbl = stblOf(traks(withSound('aac', [1024]))[1])
+    const stbl = stblOf(traks(withSound('aac', [1024]))[1]!)
     const [entry] = stsdKids(find(kids(stbl), 'stsd'))
-    expect(entry.type).toBe('mp4a')
-    const body = Array.from(find(entryKids(entry), 'esds').body)
+    expect(entry!.type).toBe('mp4a')
+    const body = Array.from(find(entryKids(entry!), 'esds').body)
     const at = body.indexOf(0x05)
     expect(body.slice(at, at + 4)).toEqual([0x05, 2, 0x11, 0x88])
   })
 
   it('states Opus with its pre-skip and runs of frame sizes', () => {
-    const stbl = stblOf(traks(withSound('opus', [960, 960, 480]))[1])
+    const stbl = stblOf(traks(withSound('opus', [960, 960, 480]))[1]!)
     const [entry] = stsdKids(find(kids(stbl), 'stsd'))
-    expect(entry.type).toBe('Opus')
-    const dops = find(entryKids(entry), 'dOps')
+    expect(entry!.type).toBe('Opus')
+    const dops = find(entryKids(entry!), 'dOps')
     expect(dops.body[1]).toBe(1) // channels
-    expect((dops.body[2] << 8) | dops.body[3]).toBe(312)
+    expect((dops.body[2]! << 8) | dops.body[3]!).toBe(312)
     const stts = find(kids(stbl), 'stts')
     expect(u32At(stts.body, 4)).toBe(2) // two runs
     expect([8, 12, 16, 20].map(i => u32At(stts.body, i))).toEqual([

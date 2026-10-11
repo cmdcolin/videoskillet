@@ -180,14 +180,14 @@ describe('the paint grid', () => {
     const { cells, tail } = textToCells('HI', 3)
     expect(cells.length).toBe(3)
     expect(cells.every(row => row.length === MAX_COLS)).toBe(true)
-    expect(cells[0].slice(0, 3)).toEqual(['H', 'I', ' '])
-    expect(cells[2].every(c => c === ' ')).toBe(true)
+    expect(cells[0]!.slice(0, 3)).toEqual(['H', 'I', ' '])
+    expect(cells[2]!.every(c => c === ' ')).toBe(true)
     expect(tail).toEqual([])
   })
 
   it('keeps a mosaic whole, rather than as two halves of a code point', () => {
     const { cells } = textToCells('\u{1FB00}\u{1FB01}', 1)
-    expect(cells[0].slice(0, 2)).toEqual(['\u{1FB00}', '\u{1FB01}'])
+    expect(cells[0]!.slice(0, 2)).toEqual(['\u{1FB00}', '\u{1FB01}'])
   })
 
   it('comes back as the text it went in as', () => {
@@ -214,9 +214,9 @@ describe('the paint grid', () => {
     // trip moves gets moved again on the next sample: a page that does not come
     // back identical does not wobble, it walks away.
     const { cells, tail } = textToCells('', PAINT_ROWS)
-    for (let c = 0; c < MAX_COLS; c += 3) cells[0][c] = '\u{1FB00}'
-    for (let c = 0; c < MAX_COLS; c++) cells[5][c] = '█'
-    cells[9][20] = 'X'
+    for (let c = 0; c < MAX_COLS; c += 3) cells[0]![c] = '\u{1FB00}'
+    for (let c = 0; c < MAX_COLS; c++) cells[5]![c] = '█'
+    cells[9]![20] = 'X'
     const back = textToCells(cellsToText(cells, tail), PAINT_ROWS)
     expect(back.cells).toEqual(cells)
   })
@@ -237,8 +237,8 @@ describe('boilOffsets', () => {
   const COLS = 40
   const ROWS = 24
   const at = (o: Int8Array, c: number, r: number): [number, number] => [
-    o[(r * COLS + c) * 2],
-    o[(r * COLS + c) * 2 + 1],
+    o[(r * COLS + c) * 2]!,
+    o[(r * COLS + c) * 2 + 1]!,
   ]
 
   it('offsets every cell by at most one dot', () => {
@@ -308,7 +308,7 @@ describe('garbleRows', () => {
     let n = 0
     before.forEach((row, r) =>
       row.forEach((ch, c) => {
-        if (after[r][c] !== ch) n++
+        if (after[r]![c] !== ch) n++
       }),
     )
     return n
@@ -381,7 +381,7 @@ describe('garbleRows', () => {
       const before = garbleRows(clean, phase)
       const after = garbleRows(clean, phase + 1)
       const moved = before.filter(
-        (row, r) => row.join('') !== after[r].join(''),
+        (row, r) => row.join('') !== after[r]!.join(''),
       )
       expect(moved.length).toBeGreaterThan(0)
       expect(moved.length).toBeLessThan(before.length)
@@ -414,7 +414,7 @@ describe('garbleRows', () => {
     const mostly = (row: string[]): string => {
       const seen = new Map<string, number>()
       for (const ch of row) seen.set(ch, (seen.get(ch) ?? 0) + 1)
-      return [...seen].toSorted((a, b) => b[1] - a[1])[0][0]
+      return [...seen].toSorted((a, b) => b[1] - a[1])[0]![0]
     }
     let displaced = 0
     for (let phase = 0; phase < 60; phase++) {
@@ -472,18 +472,18 @@ describe('decodeRow', () => {
   it('reads the colour out of the code as red, green and blue bits', () => {
     for (let code = 1; code <= 7; code++) {
       const { cells } = row(`${controlChar(code)}X`)
-      expect(cells[1].fg).toBe(code)
+      expect(cells[1]!.fg).toBe(code)
     }
   })
 
   it('does not carry a colour into the next row', () => {
     const rows = decodePage([Array.from(`${red}A`), Array.from('B')])
-    expect(rows[1].cells[0].fg).toBe(7)
+    expect(rows[1]!.cells[0]!.fg).toBe(7)
   })
 
   it('takes a new background in its own cell, in the text colour', () => {
     const { cells, endBg } = row(`${blue}${controlChar(0x1d)}${white}X`)
-    expect(cells[1].bg).toBe(4)
+    expect(cells[1]!.bg).toBe(4)
     expect(cells[3]).toMatchObject({ ch: 'X', fg: 7, bg: 4 })
     expect(endBg).toBe(4)
   })
@@ -492,26 +492,26 @@ describe('decodeRow', () => {
     const { cells, endBg } = row(
       `${blue}${controlChar(0x1d)}A${controlChar(0x1c)}B`,
     )
-    expect(cells[2].bg).toBe(4)
-    expect(cells[4].bg).toBe(0)
+    expect(cells[2]!.bg).toBe(4)
+    expect(cells[4]!.bg).toBe(0)
     expect(endBg).toBe(0)
   })
 
   it('turns letters into blocks after a mosaic colour code', () => {
     const { cells } = row(`${controlChar(0x11)}0A`)
-    expect(cells[1].ch).toBe(mosaicChar(patternRows(0x30)))
-    expect(cells[1].fg).toBe(1)
-    expect(cells[2].ch).toBe('A')
+    expect(cells[1]!.ch).toBe(mosaicChar(patternRows(0x30)))
+    expect(cells[1]!.fg).toBe(1)
+    expect(cells[2]!.ch).toBe('A')
   })
 
   it('goes back to letters on an alpha colour code', () => {
     const { cells } = row(`${controlChar(0x11)}${controlChar(1)}0`)
-    expect(cells[2].ch).toBe('0')
+    expect(cells[2]!.ch).toBe('0')
   })
 
   it('draws a block of its own whatever the set it is in', () => {
     const { cells } = row('\u2588')
-    expect(cells[0].ch).toBe('\u2588')
+    expect(cells[0]!.ch).toBe('\u2588')
   })
 
   it('flashes from the next cell until steady', () => {
@@ -530,7 +530,7 @@ describe('decodeRow', () => {
   it('treats a control picture with no meaning as a blank', () => {
     const { cells } = row(`${controlChar(0x1b)}A`)
     expect(cells[0]).toMatchObject({ ch: '', fg: 7 })
-    expect(cells[1].fg).toBe(7)
+    expect(cells[1]!.fg).toBe(7)
   })
 })
 
@@ -540,20 +540,20 @@ describe('decodePage double height', () => {
 
   it('doubles the cells after the code and takes the row below', () => {
     const rows = decodePage(page(`A${tall}BC`, 'underneath', 'free'))
-    expect(rows[0].cells.map(c => c.half)).toEqual([
+    expect(rows[0]!.cells.map(c => c.half)).toEqual([
       'whole',
       'whole',
       'top',
       'top',
     ])
-    expect(rows[1].cells.map(c => c.ch)).toEqual(['', '', 'B', 'C'])
-    expect(rows[1].cells.map(c => c.half)).toEqual([
+    expect(rows[1]!.cells.map(c => c.ch)).toEqual(['', '', 'B', 'C'])
+    expect(rows[1]!.cells.map(c => c.half)).toEqual([
       'whole',
       'whole',
       'bottom',
       'bottom',
     ])
-    expect(rows[2].cells[0].ch).toBe('f')
+    expect(rows[2]!.cells[0]!.ch).toBe('f')
   })
 
   it('keeps the page the same height', () => {
@@ -564,7 +564,7 @@ describe('decodePage double height', () => {
   it('ends a row that has no room below it at the top half', () => {
     const rows = decodePage(page(`${tall}A`))
     expect(rows).toHaveLength(1)
-    expect(rows[0].cells[1].half).toBe('top')
+    expect(rows[0]!.cells[1]!.half).toBe('top')
   })
 
   it('lets normal height end the doubling', () => {
@@ -576,8 +576,8 @@ describe('decodePage double height', () => {
     const rows = decodePage(
       page(`${controlChar(4)}${controlChar(0x1d)}${tall}A`, 'ignored'),
     )
-    expect(rows[1].cells.slice(1).every(c => c.bg === 4)).toBe(true)
-    expect(rows[1].endBg).toBe(4)
+    expect(rows[1]!.cells.slice(1).every(c => c.bg === 4)).toBe(true)
+    expect(rows[1]!.endBg).toBe(4)
   })
 })
 
@@ -594,8 +594,8 @@ describe('the attribute palette', () => {
   it('offers only codes the decoder gives a meaning to', () => {
     for (const chip of Object.values(ATTRIBUTE_PALETTE).flat()) {
       const { cells } = decodeRow(['0', chip.char, '0'])
-      const before = cells[2]
-      const plain = decodeRow(['0', ' ', '0']).cells[2]
+      const before = cells[2]!
+      const plain = decodeRow(['0', ' ', '0']).cells[2]!
       const changed =
         before.fg !== plain.fg ||
         before.bg !== plain.bg ||
@@ -640,7 +640,7 @@ describe('garbled attributes', () => {
     let lost = 0
     for (let phase = 0; phase < 40; phase++) {
       const [row] = garbleRows([red], phase)
-      if (row[0] !== red[0]) lost++
+      if (row![0] !== red[0]) lost++
     }
     expect(lost).toBeGreaterThan(0)
   })
@@ -650,7 +650,7 @@ describe('garbled attributes', () => {
     let standing = 0
     for (let phase = 0; phase < 40; phase++) {
       const [row] = garbleRows([Array.from(`${red}XXXX`)], phase)
-      if (row[0] === red) standing++
+      if (row![0] === red) standing++
     }
     expect(standing).toBeGreaterThan(20)
   })

@@ -20,9 +20,9 @@ export function lowpass(cutoffHz: number, taps: number): Float32Array {
     const sinc =
       n === 0 ? 2 * fc : Math.sin(2 * Math.PI * fc * n) / (Math.PI * n)
     h[k] = sinc * blackman(k, taps)
-    sum += h[k]
+    sum += h[k]!
   }
-  for (let k = 0; k < taps; k++) h[k] = h[k] / sum
+  for (let k = 0; k < taps; k++) h[k] = h[k]! / sum
   return h
 }
 
@@ -36,7 +36,7 @@ export function bandpass(
   const m = (taps - 1) / 2
   const w = (2 * Math.PI * centerHz) / SAMPLE_RATE
   const h = new Float32Array(taps)
-  for (let k = 0; k < taps; k++) h[k] = 2 * lp[k] * Math.cos(w * (k - m))
+  for (let k = 0; k < taps; k++) h[k] = 2 * lp[k]! * Math.cos(w * (k - m))
   return h
 }
 
@@ -51,9 +51,9 @@ export function lowpassCausal(cutoffHz: number, taps: number): Float32Array {
   let sum = 0
   for (let k = 0; k <= m; k++) {
     h[k] = Math.pow(a, m - k)
-    sum += h[k]
+    sum += h[k]!
   }
-  for (let k = 0; k <= m; k++) h[k] = h[k] / sum
+  for (let k = 0; k <= m; k++) h[k] = h[k]! / sum
   return h
 }
 
@@ -64,7 +64,7 @@ export function mixTaps(
   t: number,
 ): Float32Array {
   const h = new Float32Array(a.length)
-  for (let k = 0; k < a.length; k++) h[k] = a[k] + (b[k] - a[k]) * t
+  for (let k = 0; k < a.length; k++) h[k] = a[k]! + (b[k]! - a[k]!) * t
   return h
 }
 
@@ -82,7 +82,7 @@ export function lowpassPeaked(
   const h = new Float32Array(taps)
   for (let k = 0; k < taps; k++) {
     const delta = k === m ? 1 : 0
-    h[k] = lp[k] + peak * (delta - lp2[k])
+    h[k] = lp[k]! + peak * (delta - lp2[k]!)
   }
   return h
 }

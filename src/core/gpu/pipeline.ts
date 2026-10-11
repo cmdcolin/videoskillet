@@ -2297,8 +2297,8 @@ export class Engine implements EngineApi {
     // control — the second stacks on the first by design, and SavedBoard restores
     // backwards so the resting value is still the one that lands.
     for (let i = 0; i < eff.length; i++) {
-      const s = eff[i]
-      const swing = s.depth * (s.max - s.min) * vals[i]
+      const s = eff[i]!
+      const swing = s.depth * (s.max - s.min) * vals[i]!
       if (s.bay !== undefined) {
         // Onto the bay rather than onto the board: nothing here reaches a
         // uniform this frame, so there is nothing for the mod layer to save and
@@ -2727,9 +2727,9 @@ export class Engine implements EngineApi {
     }
     // One decode dispatch per rendered frame, so frame parity is what alternates
     // the phosphor state buffers.
-    this.decodePass.bg = this.decodeBgs[this.frame % 2]
+    this.decodePass.bg = this.decodeBgs[this.frame % 2]!
     this.crtFacePass.bg =
-      this.crtFaceBgs[c.crtCutoff > 0 || c.crtGamma !== 1 ? 1 : 0]
+      this.crtFaceBgs[c.crtCutoff > 0 || c.crtGamma !== 1 ? 1 : 0]!
     for (const p of this.postPasses) run(p)
     const buzz = this.buzzDrive()
     if (buzz > 0) this.buzzRead.copy(enc, this.buzzBuf)

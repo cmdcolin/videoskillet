@@ -163,23 +163,23 @@ function codecString(
 ): string | null {
   if (entryType === 'avc1' || entryType === 'avc3') {
     if (description === null || description.length < 4) return null
-    return `${entryType}.${hex2(description[1])}${hex2(description[2])}${hex2(description[3])}`
+    return `${entryType}.${hex2(description[1]!)}${hex2(description[2]!)}${hex2(description[3]!)}`
   }
   if (entryType === 'vp09') {
     // vpcC is a full box: version and flags, then profile, level, and a byte
     // whose top five bits are the bit depth.
     if (description === null || description.length < 7) return null
-    const profile = description[4]
-    const level = description[5]
-    const depth = description[6] >> 4
+    const profile = description[4]!
+    const level = description[5]!
+    const depth = description[6]! >> 4
     return `vp09.${String(profile).padStart(2, '0')}.${String(level).padStart(2, '0')}.${String(depth).padStart(2, '0')}`
   }
   if (entryType === 'av01') {
     if (description === null || description.length < 4) return null
-    const profile = description[1] >> 5
-    const level = description[1] & 0x1f
-    const tier = (description[2] >> 7) & 1
-    const depth = (description[2] >> 6) & 1 ? 10 : 8
+    const profile = description[1]! >> 5
+    const level = description[1]! & 0x1f
+    const tier = (description[2]! >> 7) & 1
+    const depth = (description[2]! >> 6) & 1 ? 10 : 8
     return `av01.${profile}.${String(level).padStart(2, '0')}${tier === 1 ? 'H' : 'M'}.${String(depth).padStart(2, '0')}`
   }
   // hvc1/hev1 and the rest: the string needs the whole general_profile_space /
@@ -403,14 +403,14 @@ export function demuxMp4(bytes: Uint8Array): DemuxedTrack | null {
     // per frame of the movie.
     let cur = 0
     for (let c = 0; c < chunkOffsets.length && sample < count; c++) {
-      while (cur + 1 < chunkRuns.length && chunkRuns[cur + 1].first <= c + 1) {
+      while (cur + 1 < chunkRuns.length && chunkRuns[cur + 1]!.first <= c + 1) {
         cur++
       }
-      const per = chunkRuns.length === 0 ? 0 : chunkRuns[cur].per
-      let at = chunkOffsets[c]
+      const per = chunkRuns.length === 0 ? 0 : chunkRuns[cur]!.per
+      let at = chunkOffsets[c]!
       for (let i = 0; i < per && sample < count; i++) {
         offsets.push(at)
-        at += sizes[sample]
+        at += sizes[sample]!
         sample++
       }
     }
@@ -439,7 +439,7 @@ export function demuxMp4(bytes: Uint8Array): DemuxedTrack | null {
       let i = 0
       for (const run of readRuns(view, cttsBox, signed)) {
         for (let k = 0; k < run.count && i < count; k++, i++) {
-          cts[i] = dts[i] + run.value
+          cts[i] = dts[i]! + run.value
         }
       }
     }
@@ -464,10 +464,10 @@ export function demuxMp4(bytes: Uint8Array): DemuxedTrack | null {
     const samples: DemuxedSample[] = []
     for (let i = 0; i < count; i++) {
       samples.push({
-        offset: offsets[i],
-        size: sizes[i],
-        dts: dts[i] - edit.shift,
-        cts: cts[i] - edit.shift,
+        offset: offsets[i]!,
+        size: sizes[i]!,
+        dts: dts[i]! - edit.shift,
+        cts: cts[i]! - edit.shift,
         key: stss === null || keys.has(i),
       })
     }

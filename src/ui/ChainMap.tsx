@@ -286,8 +286,8 @@ export function ChainMap(props: {
         <g
           key={branch.name}
           className={cx(
-            props.branches[i].off === true && styles.mapBranchOff,
-            props.branches[i].dim === true && styles.mapBranchDim,
+            props.branches[i]!.off === true && styles.mapBranchOff,
+            props.branches[i]!.dim === true && styles.mapBranchDim,
           )}
         >
           <line
@@ -300,7 +300,7 @@ export function ChainMap(props: {
           <path className={styles.mapWire} d={branchPath(branch)} />
           <path className={styles.mapArrow} d={branchHead(branch)} />
           <Node
-            stage={props.branches[i]}
+            stage={props.branches[i]!}
             x={branch.x}
             y={branch.y}
             boxW={branch.w}
@@ -314,9 +314,9 @@ export function ChainMap(props: {
         <Node
           key={stage.name}
           stage={stage}
-          x={boxes[i].x}
+          x={boxes[i]!.x}
           y={MID_Y}
-          boxW={boxes[i].w}
+          boxW={boxes[i]!.w}
           open={props.open === stage.name}
           folds={props.folds}
           onOpen={props.onOpen}
@@ -329,11 +329,11 @@ export function ChainMap(props: {
            pressable as any on the trunk. */
         <g key={box.name} className={styles.mapFree}>
           <Node
-            stage={props.free[i]}
+            stage={props.free[i]!}
             x={box.x}
             y={FREE_Y}
             boxW={box.w}
-            open={props.open === props.free[i].name}
+            open={props.open === props.free[i]!.name}
             folds={props.folds}
             onOpen={props.onOpen}
           />

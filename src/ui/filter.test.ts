@@ -39,7 +39,7 @@ describe('text matching', () => {
   })
 
   it('takes a whole group on a name hit', () => {
-    const group = GROUPS[0]
+    const group = GROUPS[0]!
     expect(matchedSliders(group, text(group.name.toLowerCase()))).toEqual(
       group.sliders,
     )

@@ -164,7 +164,7 @@ export function useModSlots(
   // no clock on the wire: the lock is being asked for, so a tempo appears for it
   // to read rather than a ♩ that lights up and changes nothing.
   const cycleAt = (i: number) => {
-    const next = withNextSync(slots[i])
+    const next = withNextSync(slots[i]!)
     commit(slots.map((s, j) => (j === i ? next : s)))
     // Only on the way in — landing back on a free-running rate is not a request
     // for a beat, so switching the last division off cannot leave a tempo behind

@@ -87,7 +87,7 @@ export function LookPopover(props: {
             <Rack sliders={list}>
               {list.map((s, i) => {
                 const group = groupOf(s.key)
-                const prev = i === 0 ? undefined : groupOf(list[i - 1].key)
+                const prev = i === 0 ? undefined : groupOf(list[i - 1]!.key)
                 return (
                   <div key={s.key}>
                     {group === prev ? null : (

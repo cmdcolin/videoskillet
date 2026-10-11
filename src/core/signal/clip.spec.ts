@@ -60,7 +60,7 @@ describe('a contact', () => {
     expect(after.filter(d => d > 0.05).length).toBeGreaterThan(peak + 1)
     // Monotone down, so the tail is a recovery and not a second bite.
     for (let i = 1; i < after.length; i++) {
-      expect(after[i]).toBeLessThanOrEqual(after[i - 1])
+      expect(after[i]).toBeLessThanOrEqual(after[i - 1]!)
     }
   })
 
@@ -118,16 +118,16 @@ describe('where the metal lands', () => {
   })
 
   it('picks a point off the slider position, whatever lands on it', () => {
-    expect(clipPointAt(0)).toBe(CLIP_POINTS[0].value)
+    expect(clipPointAt(0)).toBe(CLIP_POINTS[0]!.value)
     expect(clipPointAt(CLIP_POINTS.length - 1)).toBe(
-      CLIP_POINTS[CLIP_POINTS.length - 1].value,
+      CLIP_POINTS[CLIP_POINTS.length - 1]!.value,
     )
     // A preset blend, a link and the mutator all write this key, and none of
     // them owes it an integer inside the range.
-    expect(clipPointAt(-3)).toBe(CLIP_POINTS[0].value)
-    expect(clipPointAt(99)).toBe(CLIP_POINTS[CLIP_POINTS.length - 1].value)
-    expect(clipPointAt(1.4)).toBe(CLIP_POINTS[1].value)
-    expect(clipPointAt(Number.NaN)).toBe(CLIP_POINTS[0].value)
+    expect(clipPointAt(-3)).toBe(CLIP_POINTS[0]!.value)
+    expect(clipPointAt(99)).toBe(CLIP_POINTS[CLIP_POINTS.length - 1]!.value)
+    expect(clipPointAt(1.4)).toBe(CLIP_POINTS[1]!.value)
+    expect(clipPointAt(Number.NaN)).toBe(CLIP_POINTS[0]!.value)
   })
 
   it('keeps each point inside one domain', () => {

@@ -42,7 +42,7 @@ export class SavedBoard {
   // Put every saved value back. Backwards — see above.
   restore(controls: Controls): void {
     for (let i = this.n - 1; i >= 0; i--) {
-      controls[this.keys[i]] = this.vals[i]
+      controls[this.keys[i]!] = this.vals[i]!
     }
   }
 }

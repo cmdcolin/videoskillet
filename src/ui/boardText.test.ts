@@ -31,8 +31,8 @@ describe('boardControls', () => {
       label: def.label,
       value: `9.00${def.unit}`,
     })
-    expect(rows[0].group).not.toBe('')
-    expect(rows[0].stock).toBe(`0.00${def.unit}`)
+    expect(rows[0]!.group).not.toBe('')
+    expect(rows[0]!.stock).toBe(`0.00${def.unit}`)
   })
 
   // The palette's list, the slider's readout and this all read a mode switch
@@ -41,7 +41,7 @@ describe('boardControls', () => {
   it('reads a mode switch as its option name, not its index', () => {
     const def = sliderFor('frameLock')
     const rows = boardControls({ ...DEFAULT_CONTROLS, frameLock: 1 })
-    expect(rows[0].value).toBe(def.choices?.[1])
+    expect(rows[0]!.value).toBe(def.choices?.[1])
   })
 
   // atRest, not DEFAULT_CONTROLS: the landing look moves bGain before anyone
@@ -111,8 +111,8 @@ describe('boardText', () => {
       .split('\n')
       .filter(l => l.includes('dropoutRate') || l.includes('headSwitchShiftUs'))
     expect(rows).toHaveLength(2)
-    expect(rows[0].indexOf('dropoutRate')).toBe(
-      rows[1].indexOf('headSwitchShiftUs'),
+    expect(rows[0]!.indexOf('dropoutRate')).toBe(
+      rows[1]!.indexOf('headSwitchShiftUs'),
     )
   })
 

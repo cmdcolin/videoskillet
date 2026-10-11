@@ -91,7 +91,7 @@ function ClipRow(props: {
         slot={slot}
         label={clip.name}
         onPlay={to => props.onPlay(clip, to)}
-        className={styles.rowBtn}
+        className={styles.rowBtn!}
       />
       {/* Into the rundown, rather than onto a deck.
 
@@ -123,7 +123,7 @@ function ClipRow(props: {
           origin={remote.origin}
           href={poolPageUrl(remote)}
           label={clip.name}
-          className={styles.rowBtn}
+          className={styles.rowBtn!}
         />
       )}
       <button

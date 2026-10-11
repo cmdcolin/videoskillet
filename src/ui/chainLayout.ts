@@ -474,7 +474,7 @@ export function chainLayout(names: string[], specs: WiredBranch[] = []) {
     spare < GAP * runs ? Math.min(1, (W - LEAD - OUT - gap * runs) / total) : 1
   let cursor = LEAD
   const boxes: ChainBox[] = names.map((name, i) => {
-    const w = asked[i] * fit
+    const w = asked[i]! * fit
     const box = { name, x: cursor + w / 2, w }
     cursor += w + gap
     return box
@@ -487,15 +487,15 @@ export function chainLayout(names: string[], specs: WiredBranch[] = []) {
   const wires = [
     ...(boxes.length === 0
       ? []
-      : [{ key: 'in', x0: 0, x1: boxes[0].x - boxes[0].w / 2 }]),
+      : [{ key: 'in', x0: 0, x1: boxes[0]!.x - boxes[0]!.w / 2 }]),
     ...boxes.slice(0, -1).map((b, i) => ({
       key: b.name,
       x0: b.x + b.w / 2,
-      x1: boxes[i + 1].x - boxes[i + 1].w / 2,
+      x1: boxes[i + 1]!.x - boxes[i + 1]!.w / 2,
     })),
     ...(boxes.length === 0
       ? []
-      : [{ key: 'out', x0: boxes[last].x + boxes[last].w / 2, x1: W }]),
+      : [{ key: 'out', x0: boxes[last]!.x + boxes[last]!.w / 2, x1: W }]),
   ]
   // A return only reads as a return if it comes back from somewhere downstream
   // of where it re-enters — except a self loop, which taps the box it returns
@@ -510,9 +510,9 @@ export function chainLayout(names: string[], specs: WiredBranch[] = []) {
     const tap = at(r.tap)
     const back = at(r.into)
     if (tap < 0 || back < 0 || (r.self ? tap !== back : tap <= back)) return []
-    const straddle = boxes[back].w / 2 + SELF_STRADDLE
-    const to = r.self ? centers[back] - straddle : centers[back]
-    const from = r.self ? centers[tap] + straddle : centers[tap]
+    const straddle = boxes[back]!.w / 2 + SELF_STRADDLE
+    const to = r.self ? centers[back]! - straddle : centers[back]!
+    const from = r.self ? centers[tap]! + straddle : centers[tap]!
     // Where the run's own name rides it. A run that reaches back across the map
     // has its whole horizontal length to offer, and the name goes at the near
     // end of it — just clear of the box it lands on, so a name sits beside its
@@ -528,7 +528,7 @@ export function chainLayout(names: string[], specs: WiredBranch[] = []) {
     // before the box is the wider of the two on a full row, and right when a
     // squeezed row has left no room there — and `room` below takes the first
     // that holds the name.
-    const edge = boxes[back].x + boxes[back].w / 2
+    const edge = boxes[back]!.x + boxes[back]!.w / 2
     const places = r.self
       ? [
           { x: Math.min(from, to) - 4, anchor: 'end' as const },
@@ -615,9 +615,11 @@ export function chainLayout(names: string[], specs: WiredBranch[] = []) {
       : specs.map(spec => {
           const w = boxWidth(spec.name) * fit
           const joinAt = at(spec.join)
-          const target = joinAt >= 0 ? centers[joinAt] : centers[last]
+          const target = joinAt >= 0 ? centers[joinAt]! : centers[last]!
           const want =
-            spec.under === 'head' ? boxes[0].x - boxes[0].w / 2 + w / 2 : target
+            spec.under === 'head'
+              ? boxes[0]!.x - boxes[0]!.w / 2 + w / 2
+              : target
           const x = Math.max(want, edge + GAP + w / 2)
           edge = x + w / 2
           const dir = spec.dir ?? 'in'

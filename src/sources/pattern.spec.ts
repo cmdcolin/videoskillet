@@ -83,8 +83,8 @@ describe('sweep', () => {
     const crossings = (y: number) => {
       let n = 0
       for (let x = 1; x < W; x++) {
-        const a = at(px, x - 1, y)[0] - 128
-        const b = at(px, x, y)[0] - 128
+        const a = at(px, x - 1, y)[0]! - 128
+        const b = at(px, x, y)[0]! - 128
         if (a < 0 !== b < 0) n++
       }
       return n

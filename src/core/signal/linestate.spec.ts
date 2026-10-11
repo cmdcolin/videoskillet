@@ -21,7 +21,7 @@ const CLEAN: LineStateControls = {
 // anything that still moves is the deterministic part of the model.
 const mid = () => 0.5
 const offsets = (data: Float32Array) =>
-  Array.from({ length: LINES }, (_, row) => data[row * 4])
+  Array.from({ length: LINES }, (_, row) => data[row * 4]!)
 const phase = (data: Float32Array, row: number) => data[row * 4 + 1]
 
 describe('LineState', () => {
@@ -59,7 +59,7 @@ describe('LineState', () => {
     expect(out[centre - 40]).toBe(0)
     expect(out[centre + 40]).toBe(0)
     // strongest at the middle of the band, tapering to its edges
-    expect(out[centre]).toBeGreaterThan(out[centre + 8])
+    expect(out[centre]).toBeGreaterThan(out[centre + 8]!)
   })
 
   it('gives each shuttle strip its own offset, repeating per crossing', () => {
@@ -133,7 +133,7 @@ describe('LineState', () => {
     const ls = new LineState(mid)
     const amp = usToSamples(1)
     const out = offsets(ls.update({ ...CLEAN, tbStickNs: 1000 }, 0))
-    const diffs = out.slice(1).map((v, i) => v - out[i])
+    const diffs = out.slice(1).map((v, i) => v - out[i]!)
     // stick: runs of lines leaning further by exactly the build step
     const build = amp * 0.008
     // f32 storage rounds each line, so allow a hair over the exact step
@@ -145,7 +145,7 @@ describe('LineState', () => {
     // the walk is continuous across the frame boundary — the next frame picks
     // the oscillator up mid-cycle rather than restarting the ramp
     const next = offsets(ls.update({ ...CLEAN, tbStickNs: 1000 }, 1))
-    expect(Math.abs(next[0] - out[LINES - 1])).toBeLessThan(amp * 0.5)
+    expect(Math.abs(next[0]! - out[LINES - 1]!)).toBeLessThan(amp * 0.5)
     // and bounded: stick only ever delays, recoil overshoots a little
     for (const v of [...out, ...next]) {
       expect(v).toBeGreaterThan(-amp)

@@ -40,11 +40,11 @@ export function reflectBindings(wgsl: string): Binding[] {
   const src = wgsl.replace(/\/\/[^\n]*/g, '')
   const out: Binding[] = []
   for (const m of src.matchAll(DECL)) {
-    const type = m[5].trim()
+    const type = m[5]!.trim()
     out.push({
       group: Number(m[1]),
       binding: Number(m[2]),
-      name: m[4],
+      name: m[4]!,
       space: spaceOf(m[3], type),
       type,
     })

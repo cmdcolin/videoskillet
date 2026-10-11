@@ -183,7 +183,7 @@ const RATE_KEYS = [
 ] as const
 
 export const bayKeyFor = (slot: number, field: BayField): BayKey =>
-  field === 'depth' ? DEPTH_KEYS[slot] : RATE_KEYS[slot]
+  field === 'depth' ? DEPTH_KEYS[slot]! : RATE_KEYS[slot]!
 
 export const BAY_TARGETS: readonly BayTargetDef[] = DEPTH_KEYS.flatMap(
   (depthKey, i) => [
@@ -196,7 +196,7 @@ export const BAY_TARGETS: readonly BayTargetDef[] = DEPTH_KEYS.flatMap(
       max: 1,
     },
     {
-      key: RATE_KEYS[i],
+      key: RATE_KEYS[i]!,
       slot: i,
       field: 'rate' as const,
       label: `slot ${i + 1} rate`,
@@ -236,7 +236,7 @@ export function dropOrphans(slots: readonly UiSlot[]): UiSlot[] {
     grew = false
     out = out.map(s => {
       const bay = s.target === '' ? undefined : bayDefFor(s.target)
-      if (bay === undefined || out[bay.slot].target !== '') return s
+      if (bay === undefined || out[bay.slot]!.target !== '') return s
       grew = true
       return EMPTY_SLOT
     })
@@ -424,7 +424,7 @@ export function stabRate(stab: Stab, bpm: number | null): number {
   const div = stab.syncDiv
   return div === undefined || bpm === null || stab.hz === 0
     ? stab.hz
-    : clamp(bpm / 60 / SYNC_DIVISIONS[div].beats, 0, STAB_HZ_MAX)
+    : clamp(bpm / 60 / SYNC_DIVISIONS[div]!.beats, 0, STAB_HZ_MAX)
 }
 
 // What the gate is running at once the freeze has had its say — which is the
@@ -567,7 +567,7 @@ export function slotRate(slot: UiSlot, bpm: number | null): number {
   const div = slot.syncDiv
   return div === undefined || bpm === null
     ? slot.rateHz
-    : clamp(bpm / 60 / SYNC_DIVISIONS[div].beats, RATE_MIN, RATE_MAX)
+    : clamp(bpm / 60 / SYNC_DIVISIONS[div]!.beats, RATE_MIN, RATE_MAX)
 }
 
 export const withNextSync = (slot: UiSlot): UiSlot => withNextDivision(slot)
@@ -626,7 +626,7 @@ export function modReading(slot: UiSlot, bpm: number | null) {
   return PASS_THROUGH.has(slot.source)
     ? short
     : div !== undefined && bpm !== null
-      ? `${short} ♩${SYNC_DIVISIONS[div].label}`
+      ? `${short} ♩${SYNC_DIVISIONS[div]!.label}`
       : `${short} ${hzText(slot.rateHz)}`
 }
 
@@ -638,7 +638,7 @@ export function modDetail(slot: UiSlot, bpm: number | null) {
   const rate = PASS_THROUGH.has(slot.source)
     ? ''
     : div !== undefined && bpm !== null
-      ? ` at ♩${SYNC_DIVISIONS[div].label} of ${bpm.toFixed(1)} BPM (${hzText(slotRate(slot, bpm))})`
+      ? ` at ♩${SYNC_DIVISIONS[div]!.label} of ${bpm.toFixed(1)} BPM (${hzText(slotRate(slot, bpm))})`
       : ` at ${hzText(slot.rateHz)}`
   return `${SOURCES[slot.source].label}${rate}, swinging ${Math.round(slot.depth * 100)}% of the row’s range`
 }
@@ -796,7 +796,7 @@ export function sameBay(a: readonly UiSlot[], b: readonly UiSlot[]): boolean {
   return (
     a.length === b.length &&
     a.every((s, i) => {
-      const o = b[i]
+      const o = b[i]!
       return (
         s.target === o.target &&
         s.source === o.source &&

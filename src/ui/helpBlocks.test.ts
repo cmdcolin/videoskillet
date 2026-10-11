@@ -77,7 +77,7 @@ describe('mode switch blurbs', () => {
   for (const s of modes) {
     const choices = s.choices ?? []
     const bold = new Set(
-      [...(s.help ?? '').matchAll(BOLD)].map(m => m[1].toLowerCase()),
+      [...(s.help ?? '').matchAll(BOLD)].map(m => m[1]!.toLowerCase()),
     )
     const named = choices.filter(c => bold.has(c.toLowerCase()))
     if (named.length === 0) continue

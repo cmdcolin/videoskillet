@@ -49,7 +49,7 @@ export function HelpProse(props: {
           </ul>
         ) : (
           <p className={styles.para} key={i}>
-            {inline(b.items[0])}
+            {inline(b.items[0]!)}
           </p>
         ),
       )}

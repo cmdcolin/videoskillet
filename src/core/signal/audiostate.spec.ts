@@ -68,7 +68,7 @@ describe('hall tail', () => {
     let wetEnergy = 0
     for (let i = tail.length; i < dry.length; i++) {
       let acc = 0
-      for (let k = 0; k < tail.length; k++) acc += tail[k] * dry[i - k]
+      for (let k = 0; k < tail.length; k++) acc += tail[k]! * dry[i - k]!
       wetEnergy += acc * acc
     }
     const span = dry.length - tail.length

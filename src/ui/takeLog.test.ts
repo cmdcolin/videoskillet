@@ -45,7 +45,7 @@ describe('takeLog', () => {
     vi.unstubAllGlobals()
   })
 
-  const sent = () => putTakeReport.mock.calls[0][0]
+  const sent = () => putTakeReport.mock.calls[0]![0]
 
   it('reports nothing when no take was left behind', async () => {
     reportLostTake()

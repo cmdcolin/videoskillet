@@ -28,7 +28,7 @@ async function nextDevice(current: string): Promise<string | null> {
     .filter(d => d.kind === 'videoinput')
     .map(d => d.deviceId)
   if (ids.length < 2) return null
-  return ids[(ids.indexOf(current) + 1) % ids.length]
+  return ids[(ids.indexOf(current) + 1) % ids.length]!
 }
 
 export const stopAll = (stream: MediaStream | null) => {

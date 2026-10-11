@@ -64,9 +64,9 @@ export function colourAt(
   let gr = 0
   let b = 0
   for (let i = 0; i < d.length; i += 4) {
-    r += d[i]
-    gr += d[i + 1]
-    b += d[i + 2]
+    r += d[i]!
+    gr += d[i + 1]!
+    b += d[i + 2]!
   }
   const k = 255 * n * n
   return [r / k, gr / k, b / k]

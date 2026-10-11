@@ -116,7 +116,7 @@ export class Wow {
       if (this.rand() < 0.01) {
         this.ampTarget[k] = 0.2 + this.rand()
       }
-      this.amps[k] += (this.ampTarget[k] - this.amps[k]) * 0.02
+      this.amps[k]! += (this.ampTarget[k]! - this.amps[k]!) * 0.02
     }
     this.reelRate += (0.31 - this.reelRate) * 0.01 + (this.rand() - 0.5) * 0.004
     this.reelPhase += 2 * Math.PI * this.reelRate * dt
@@ -130,9 +130,9 @@ export class Wow {
     let norm = 0.4
     for (let k = 0; k < this.rates.length; k++) {
       sum +=
-        this.amps[k] *
-        Math.sin(2 * Math.PI * this.rates[k] * t + rowFrac * this.spreads[k])
-      norm += this.amps[k]
+        this.amps[k]! *
+        Math.sin(2 * Math.PI * this.rates[k]! * t + rowFrac * this.spreads[k]!)
+      norm += this.amps[k]!
     }
     return sum / norm
   }

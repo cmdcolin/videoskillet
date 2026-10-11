@@ -415,7 +415,7 @@ const PAGE_SPAN = 200
 // retry list: a roll here already opens up to ATTEMPTS *items* out of the pool it
 // landed on, which is the retry, and each one costs a metadata request.
 export const chosenPool = (pools: readonly Pool[], start: number): Pool =>
-  rotate(pools, start)[0] ?? pools[0]
+  rotate(pools, start)[0] ?? pools[0]!
 
 // A search over the collections, ranked or shuffled. `rows` and `sort` differ
 // between the two callers and nothing else does — a roll wants a disjoint dozen

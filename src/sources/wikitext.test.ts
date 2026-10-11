@@ -10,7 +10,7 @@ import {
 
 const seq = (...xs: number[]) => {
   let i = 0
-  return () => xs[i++ % xs.length]
+  return () => xs[i++ % xs.length]!
 }
 
 describe('searchPhrase', () => {
@@ -85,7 +85,7 @@ describe('proseParagraphs', () => {
   test('skips headings and keeps paragraphs that end a sentence', () => {
     const paras = proseParagraphs(EXTRACT)
     expect(paras).toHaveLength(2)
-    expect(paras[1].startsWith('The first neon sign')).toBe(true)
+    expect(paras[1]!.startsWith('The first neon sign')).toBe(true)
   })
 })
 

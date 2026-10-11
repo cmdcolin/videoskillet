@@ -81,7 +81,7 @@ export function TBar() {
   const startTake = () => {
     const from = barPosition(store.get())
     const to = from < 0.5 ? 1 : 0
-    const seconds = TAKE_SECONDS[takeIndex]
+    const seconds = TAKE_SECONDS[takeIndex]!
     const began = performance.now()
     const step = (now: number) => {
       const pos = takeAt(from, to, (now - began) / 1000, seconds)

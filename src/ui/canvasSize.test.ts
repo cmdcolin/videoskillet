@@ -18,7 +18,7 @@ describe('backingStoreSize', () => {
       [800, 0],
       [0.2, 0.2],
     ]) {
-      const [bw, bh] = backingStoreSize(w, h, 2, 1)
+      const [bw, bh] = backingStoreSize(w!, h!, 2, 1)
       expect(bw).toBeGreaterThanOrEqual(1)
       expect(bh).toBeGreaterThanOrEqual(1)
     }

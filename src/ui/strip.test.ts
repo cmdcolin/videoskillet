@@ -199,9 +199,9 @@ describe('fireEffects', () => {
       3,
     )
     expect(out).toHaveLength(1)
-    expect(out[0].kind).toBe('fault')
-    if (out[0].kind === 'fault')
-      expect(out[0].atCut.map(e => e.kind)).toEqual(['session', 'clip'])
+    expect(out[0]!.kind).toBe('fault')
+    if (out[0]!.kind === 'fault')
+      expect(out[0]!.atCut.map(e => e.kind)).toEqual(['session', 'clip'])
   })
 
   // Ordered, and the order is the point: both of the other fillings are
@@ -352,15 +352,15 @@ describe('the transition ring', () => {
   it('steps one row only, and leaves the look’s arrival alone', () => {
     const s = strip([row({ id: 'a' }), row({ id: 'b' })])
     const out = stepTransition(s, 0)
-    expect(out.rows[0].arrive.transition).toBe(TRANSITION_RING[1])
-    expect(out.rows[0].arrive.seconds).toBe(s.rows[0].arrive.seconds)
-    expect(out.rows[1].arrive.transition).toBeNull()
+    expect(out.rows[0]!.arrive.transition).toBe(TRANSITION_RING[1])
+    expect(out.rows[0]!.arrive.seconds).toBe(s.rows[0]!.arrive.seconds)
+    expect(out.rows[1]!.arrive.transition).toBeNull()
   })
 
   it('and the look’s arrival steps without disturbing the transition', () => {
     const s = stepTransition(strip([row()]), 0)
     const out = stepArrive(s, 0)
-    expect(out.rows[0].arrive.transition).toBe(s.rows[0].arrive.transition)
+    expect(out.rows[0]!.arrive.transition).toBe(s.rows[0]!.arrive.transition)
   })
 })
 
@@ -577,8 +577,8 @@ describe("a hold of 'clip'", () => {
     const withClip = addRow(EMPTY_STRIP, 'set=', {
       clip: { id: 'c3', name: 'n.mp4', seconds: 4 },
     })
-    expect(withClip.rows[0].hold).toEqual(CLIP_HOLD)
-    expect(addRow(EMPTY_STRIP, 'set=').rows[0].hold).toEqual(DEFAULT_HOLD)
+    expect(withClip.rows[0]!.hold).toEqual(CLIP_HOLD)
+    expect(addRow(EMPTY_STRIP, 'set=').rows[0]!.hold).toEqual(DEFAULT_HOLD)
   })
 })
 
@@ -678,13 +678,13 @@ describe('learning how long a clip is', () => {
   // the real duration in between. The one that was there wins.
   it('does not overwrite a length something already knew', () => {
     const s = strip([row({ clip: { id: 'c1', name: 'a.mp4', seconds: 30 } })])
-    expect(learnClipSeconds(s, 'c1', 12).rows[0].clip?.seconds).toBe(30)
+    expect(learnClipSeconds(s, 'c1', 12).rows[0]!.clip?.seconds).toBe(30)
   })
 
   it('a clip that could not be measured changes nothing', () => {
     const s = strip([unmeasured('a', 'c1')])
     expect(learnClipSeconds(s, 'c1', 0)).toBe(s)
-    expect(learnClipSeconds(s, 'nobody', 12).rows[0].clip?.seconds).toBe(0)
+    expect(learnClipSeconds(s, 'nobody', 12).rows[0]!.clip?.seconds).toBe(0)
   })
 
   // `undefined` is not `null`, third time — the same field and the same shape
@@ -738,7 +738,11 @@ describe('a row that names a clip', () => {
     const got = addRow(EMPTY_STRIP, 'set=', {
       clip: { id: 'c3', name: 'neon.mp4', seconds: 0 },
     })
-    expect(got.rows[0].clip).toEqual({ id: 'c3', name: 'neon.mp4', seconds: 0 })
+    expect(got.rows[0]!.clip).toEqual({
+      id: 'c3',
+      name: 'neon.mp4',
+      seconds: 0,
+    })
   })
 
   // A shake is a departure from whatever is live, so hauling a clip onto the
@@ -748,14 +752,14 @@ describe('a row that names a clip', () => {
       jitter: 'normal',
       clip: { id: 'c3', name: 'neon.mp4', seconds: 0 },
     })
-    expect(got.rows[0].clip).toBeNull()
+    expect(got.rows[0]!.clip).toBeNull()
   })
 
   it('a duplicate carries the clip with it', () => {
     const one = addRow(EMPTY_STRIP, 'set=', {
       clip: { id: 'c3', name: 'n', seconds: 0 },
     })
-    expect(duplicateRow(one, 0).rows[1].clip).toEqual({
+    expect(duplicateRow(one, 0).rows[1]!.clip).toEqual({
       id: 'c3',
       name: 'n',
       seconds: 0,
@@ -783,7 +787,7 @@ describe('readStrip', () => {
   // already has: a rundown must not lose its rows to a schema that grew.
   it('reads a row stored without a clip as having none', () => {
     const got = readStrip({ rows: [{ session: 'set=' }], seed: 3 })
-    expect(got.rows[0].clip).toBeNull()
+    expect(got.rows[0]!.clip).toBeNull()
   })
 
   // An id that names nothing the shelf could answer for is not a clip. A row
@@ -813,7 +817,7 @@ describe('readStrip', () => {
 
   it('mints an id for a row that lost one', () => {
     const got = readStrip({ rows: [{ session: 'set=' }], seed: 3 })
-    expect(got.rows[0].id).not.toBe('')
+    expect(got.rows[0]!.id).not.toBe('')
   })
 
   it('falls back rather than dropping when only a field is bad', () => {
@@ -828,15 +832,15 @@ describe('readStrip', () => {
       ],
       seed: 3,
     })
-    expect(got.rows[0].fill).toEqual({ kind: 'clip' })
-    expect(got.rows[0].hold.bars).toBe(DEFAULT_HOLD.bars)
-    expect(got.rows[0].hold.drift).toBe(MAX_DRIFT)
+    expect(got.rows[0]!.fill).toEqual({ kind: 'clip' })
+    expect(got.rows[0]!.hold.bars).toBe(DEFAULT_HOLD.bars)
+    expect(got.rows[0]!.hold.drift).toBe(MAX_DRIFT)
     // Not a member of MORPH_SECONDS, so it lands on the same 1s a stored morph
     // duration falls back to.
-    expect(got.rows[0].arrive.seconds).toBe(1)
+    expect(got.rows[0]!.arrive.seconds).toBe(1)
     // And a transition this build's shelf does not have arrives plainly rather
     // than handing an unknown name to the engine.
-    expect(got.rows[0].arrive.transition).toBeNull()
+    expect(got.rows[0]!.arrive.transition).toBeNull()
   })
 
   // The one field that must never be a shared constant: every browser falling
@@ -862,13 +866,13 @@ describe('editing the rundown', () => {
   it('adds a row from a captured session, reading its kind off it', () => {
     const got = addRow(strip([]), 'src=ia-random&set=')
     expect(got.rows).toHaveLength(1)
-    expect(got.rows[0].fill).toEqual({ kind: 'roll', origin: 'archive' })
-    expect(got.rows[0].hold).toEqual(DEFAULT_HOLD)
+    expect(got.rows[0]!.fill).toEqual({ kind: 'roll', origin: 'archive' })
+    expect(got.rows[0]!.hold).toEqual(DEFAULT_HOLD)
   })
 
   it('takes a jitter over what the session names', () => {
     const got = addRow(strip([]), 'src=wiki-random', { jitter: 'wild' })
-    expect(got.rows[0].fill).toEqual({ kind: 'jitter', amount: 'wild' })
+    expect(got.rows[0]!.fill).toEqual({ kind: 'jitter', amount: 'wild' })
   })
 
   // Ids only have to be unique within the strip, but they do have to be that:
@@ -882,7 +886,7 @@ describe('editing the rundown', () => {
 
   it('mints past the highest, not past the count', () => {
     const s = addRow(strip([row({ id: 'r9' })]), 'set=')
-    expect(s.rows[1].id).not.toBe('r9')
+    expect(s.rows[1]!.id).not.toBe('r9')
   })
 
   it('removes by index', () => {
@@ -903,7 +907,7 @@ describe('editing the rundown', () => {
       [1, 9],
       [9, 1],
     ]) {
-      expect(moveRow(three, from, to)).toBe(three)
+      expect(moveRow(three, from!, to!)).toBe(three)
     }
   })
 
@@ -912,7 +916,7 @@ describe('editing the rundown', () => {
   it('duplicates a row next to itself, not at the end', () => {
     const got = duplicateRow(three, 0)
     expect(got.rows).toHaveLength(4)
-    expect(ids(got).filter(id => id !== got.rows[1].id)).toEqual([
+    expect(ids(got).filter(id => id !== got.rows[1]!.id)).toEqual([
       'a',
       'b',
       'c',
@@ -923,8 +927,8 @@ describe('editing the rundown', () => {
   it('gives the copy everything but the identity', () => {
     const s = strip([row({ id: 'a', hold: { bars: 8, drift: 0 } })])
     const got = duplicateRow(s, 0)
-    expect(got.rows[1].hold).toEqual({ bars: 8, drift: 0 })
-    expect(got.rows[1].id).not.toBe('a')
+    expect(got.rows[1]!.hold).toEqual({ bars: 8, drift: 0 })
+    expect(got.rows[1]!.id).not.toBe('a')
   })
 
   it('numbers the copy off the original rather than repeating its name', () => {
@@ -935,7 +939,7 @@ describe('editing the rundown', () => {
 
   it('leaves an unnamed copy unnamed', () => {
     const got = duplicateRow(three, 0)
-    expect(got.rows[1].name).toBe('')
+    expect(got.rows[1]!.name).toBe('')
   })
 
   it('leaves the strip alone for a row that is not there', () => {
@@ -967,7 +971,7 @@ describe('editing the rundown', () => {
 
   it('steps the arrival around the morph durations', () => {
     expect(cycleArrive(0)).toBe(MORPH_SECONDS[1])
-    expect(cycleArrive(MORPH_SECONDS[MORPH_SECONDS.length - 1])).toBe(
+    expect(cycleArrive(MORPH_SECONDS[MORPH_SECONDS.length - 1]!)).toBe(
       MORPH_SECONDS[0],
     )
   })
@@ -975,7 +979,7 @@ describe('editing the rundown', () => {
   it('steps a row in place, and only that row', () => {
     const got = stepHold(three, 1)
     expect(got.rows[0]).toBe(three.rows[0])
-    expect(got.rows[1].hold.bars).not.toBe(three.rows[1].hold.bars)
+    expect(got.rows[1]!.hold.bars).not.toBe(three.rows[1]!.hold.bars)
   })
 
   it('leaves the strip alone when the row is not there', () => {
@@ -1002,7 +1006,7 @@ describe('a row that carries a name', () => {
 
   it('takes the suggestion a capture offers', () => {
     const got = addRow(strip([]), 'set=', { name: 'vhs' })
-    expect(got.rows[0].name).toBe('vhs')
+    expect(got.rows[0]!.name).toBe('vhs')
   })
 
   // Two rows called "vhs" in one rundown is the case a name exists to prevent,
@@ -1023,8 +1027,8 @@ describe('a row that carries a name', () => {
 
   it('renames, and clears back to the derived label', () => {
     const s = addRow(strip([]), 'src=sweep', { name: 'first' })
-    expect(rowLabel(renameRow(s, 0, 'second').rows[0])).toBe('second')
-    expect(rowLabel(renameRow(s, 0, '').rows[0])).toBe('Sweep')
+    expect(rowLabel(renameRow(s, 0, 'second').rows[0]!)).toBe('second')
+    expect(rowLabel(renameRow(s, 0, '').rows[0]!)).toBe('Sweep')
   })
 
   // A hand typing the same name onto two rows has said what it meant; appending
@@ -1032,20 +1036,20 @@ describe('a row that carries a name', () => {
   it('does not deduplicate a rename the way it does a capture', () => {
     let s = addRow(strip([]), 'set=', { name: 'vhs' })
     s = addRow(s, 'set=', { name: 'other' })
-    expect(renameRow(s, 1, 'vhs').rows[1].name).toBe('vhs')
+    expect(renameRow(s, 1, 'vhs').rows[1]!.name).toBe('vhs')
   })
 
   it('collapses the whitespace a paste brings, and caps the length', () => {
     const s = addRow(strip([]), 'set=')
-    expect(renameRow(s, 0, '  the   drop \n').rows[0].name).toBe('the drop')
-    expect(renameRow(s, 0, 'x'.repeat(200)).rows[0].name.length).toBe(
+    expect(renameRow(s, 0, '  the   drop \n').rows[0]!.name).toBe('the drop')
+    expect(renameRow(s, 0, 'x'.repeat(200)).rows[0]!.name.length).toBe(
       PROFILE_NAME_MAX,
     )
   })
 
   it('leaves the strip alone for a row that is not there', () => {
     const s = addRow(strip([]), 'set=')
-    expect(renameRow(s, 9, 'nope').rows[0].name).toBe('')
+    expect(renameRow(s, 9, 'nope').rows[0]!.name).toBe('')
   })
 
   it('reads a stored name back, and anything else as unnamed', () => {
@@ -1252,7 +1256,7 @@ describe('what a row loads ahead', () => {
     ]
     const effects = start(strip(rows), CLOCK(0)).effects
     expect(effects.map((e: Effect) => e.kind)).toEqual(['fault'])
-    const fault = effects[0]
+    const fault = effects[0]!
     if (fault.kind !== 'fault') throw new Error('expected a fault')
     expect(fault.atCut.map(e => e.kind)).toEqual(['session', 'preroll'])
     expect(fault.atCut.at(-1)).toEqual({ kind: 'preroll', url: CLIP, start: 0 })

@@ -35,7 +35,9 @@ const OPUS_PRESKIP = 312
 // The OpusHead the encoder may hand over carries the true pre-skip,
 // little-endian at byte 10.
 const preSkipOf = (head: Uint8Array<ArrayBuffer> | null): number =>
-  head !== null && head.length >= 12 ? head[10] | (head[11] << 8) : OPUS_PRESKIP
+  head !== null && head.length >= 12
+    ? head[10]! | (head[11]! << 8)
+    : OPUS_PRESKIP
 
 const bytesOf = (d: AllowSharedBufferSource): Uint8Array<ArrayBuffer> =>
   (ArrayBuffer.isView(d)

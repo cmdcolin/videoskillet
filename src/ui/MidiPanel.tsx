@@ -29,11 +29,11 @@ const MIXABLE = PRESETS.filter(p => Object.keys(p.patch).length > 0)
 
 function Wired({ midi }: { midi: Midi }) {
   const { armed, armedNote, learn, bpm, bindings, notes, pickups } = midi
-  const [deviceName, setDeviceName] = useState(DEVICE_PROFILES[0].name)
+  const [deviceName, setDeviceName] = useState(DEVICE_PROFILES[0]!.name)
   const device =
-    DEVICE_PROFILES.find(d => d.name === deviceName) ?? DEVICE_PROFILES[0]
-  const [presetName, setPresetName] = useState(MIXABLE[0].name)
-  const [action, setAction] = useState<ActionTarget>(ACTIONS[0].target)
+    DEVICE_PROFILES.find(d => d.name === deviceName) ?? DEVICE_PROFILES[0]!
+  const [presetName, setPresetName] = useState(MIXABLE[0]!.name)
+  const [action, setAction] = useState<ActionTarget>(ACTIONS[0]!.target)
   const presetArm = presetTarget(presetName)
 
   // A fixed order, so a row stays under the pointer as bindings come and go.
@@ -126,7 +126,7 @@ function Wired({ midi }: { midi: Midi }) {
           className={styles.select}
           value={action}
           onChange={e =>
-            setAction(parseAction(e.target.value) ?? ACTIONS[0].target)
+            setAction(parseAction(e.target.value) ?? ACTIONS[0]!.target)
           }
         >
           {ACTIONS.map(a => (

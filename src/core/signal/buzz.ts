@@ -66,7 +66,7 @@ export function detect(
   rand: () => number,
 ): Float32Array {
   for (let i = 0; i < out.length; i++) {
-    const x = tap[i * 2] + HISS * tap[i * 2 + 1] * (rand() * 2 - 1)
+    const x = tap[i * 2]! + HISS * tap[i * 2 + 1]! * (rand() * 2 - 1)
     s.y = DC_POLE * (s.y + x - s.x)
     s.x = x
     out[i] = Math.tanh((drive * s.y) / FULL_SCALE_IRE)

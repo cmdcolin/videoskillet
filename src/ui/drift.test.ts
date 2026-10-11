@@ -215,7 +215,9 @@ const stage = (name: string): DriftScope => ({
   wake: 1,
   mode: 'wander',
 })
-const [FIRST, SECOND] = [...MUTATE_CIRCUIT_BY_GROUP.keys()].map(stage)
+const stageNames = [...MUTATE_CIRCUIT_BY_GROUP.keys()]
+const FIRST = stage(stageNames[0]!)
+const SECOND = stage(stageNames[1]!)
 
 describe('the walk', () => {
   // A board the drift is the only thing writing to: `land` records where it was
@@ -267,7 +269,7 @@ describe('the walk', () => {
     const b = board()
     makeDrift(b.deps).add(BOARD)
 
-    expect(b.legs[0].seconds).toBe(driftLegSeconds(DRIFT_SECONDS))
+    expect(b.legs[0]!.seconds).toBe(driftLegSeconds(DRIFT_SECONDS))
     vi.useRealTimers()
   })
 
@@ -290,9 +292,9 @@ describe('the walk', () => {
     // sliders is what the rolls are drawn over. Eight legs are seven nudges from
     // stock and still one from the leg before.
     const last = b.legs.length - 1
-    expect(b.legs[last].to).not.toEqual(b.legs[last - 1].to)
-    expect(spread(b.legs[last].to, b.legs[last - 1].to)).toBeLessThan(
-      spread(b.legs[last].to, DEFAULT_CONTROLS),
+    expect(b.legs[last]!.to).not.toEqual(b.legs[last - 1]!.to)
+    expect(spread(b.legs[last]!.to, b.legs[last - 1]!.to)).toBeLessThan(
+      spread(b.legs[last]!.to, DEFAULT_CONTROLS),
     )
     vi.useRealTimers()
   })
@@ -451,8 +453,8 @@ describe('a round trip', () => {
     expect(b.legs[1]).toEqual(elsewhere)
     expect(b.legs[3]).toEqual(elsewhere)
     expect(b.legs[2]).not.toEqual(first)
-    expect(spread(b.legs[2], elsewhere)).toBeLessThan(
-      spread(b.legs[2], DEFAULT_CONTROLS),
+    expect(spread(b.legs[2]!, elsewhere)).toBeLessThan(
+      spread(b.legs[2]!, DEFAULT_CONTROLS),
     )
     vi.useRealTimers()
   })
@@ -561,7 +563,7 @@ describe('a scope', () => {
     // jitter on one snaps back to the mode it was already on.
     const woke = (from: Controls, to: Controls) =>
       FIRST.sliders.filter(s => to[s.key] !== from[s.key]).length
-    const first = b.legs[0]
+    const first = b.legs[0]!
     expect(woke(DEFAULT_CONTROLS, first)).toBeGreaterThan(
       FIRST.sliders.length / 2,
     )
@@ -569,7 +571,7 @@ describe('a scope', () => {
     // The second leg is a wander again, and leaves alone most of what the first
     // one has not already moved.
     vi.advanceTimersByTime(DRIFT_SECONDS * 1000)
-    expect(woke(first, b.legs[1])).toBeLessThan(woke(DEFAULT_CONTROLS, first))
+    expect(woke(first, b.legs[1]!)).toBeLessThan(woke(DEFAULT_CONTROLS, first))
 
     drift.stop()
     vi.useRealTimers()
@@ -633,7 +635,7 @@ describe('a scope', () => {
     expect(b.legs).toHaveLength(before + 1)
 
     const landed = b.legs.at(-1)!
-    const parked = b.legs[before - 1]
+    const parked = b.legs[before - 1]!
     for (const s of FIRST.sliders)
       expect(landed[s.key], s.key).toBe(parked[s.key])
 

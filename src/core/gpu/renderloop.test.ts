@@ -786,7 +786,7 @@ describe('RenderLoop', () => {
     // previous run's ten made it report 41.7 — a rate the user never saw, in
     // the one readout that says the signal path has outgrown the device.
     expect(h.stats()).toHaveLength(1)
-    expect(h.stats()[0].fps).toBe(0)
+    expect(h.stats()[0]!.fps).toBe(0)
   })
 
   it('keeps driving frames where there is no document at all', async () => {

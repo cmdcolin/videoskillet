@@ -45,7 +45,7 @@ export function audioClock(
   const sample = () => {
     const d = ctx.currentTime * 1000 - read()
     const i = n % WINDOW
-    if (n >= WINDOW) sum -= ring[i]
+    if (n >= WINDOW) sum -= ring[i]!
     ring[i] = d
     sum += d
     n++
