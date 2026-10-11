@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { usePersistedString } from '../ui/storage'
 import { TAPE_SECONDS, playLoop, recordTape, relayCamera } from './tape'
 import { stopAll } from './useCamera'
+import { useReplayOnReturn } from './useReplay'
 
 import type { Pattern } from './patterns'
 import type { Camera, Layout, Relay } from './tape'
@@ -35,6 +36,13 @@ const unload = (b: Second) => {
   b.video.removeAttribute('src')
   b.video.load()
   URL.revokeObjectURL(b.url)
+}
+
+const videosOf = (b: Second | null): HTMLVideoElement[] => {
+  if (b === null || b.kind === 'pattern') return []
+  if (b.kind === 'live') return [b.cam.video, b.relay.video]
+  if (b.kind === 'clip') return [b.video, b.relay.video]
+  return [b.video]
 }
 
 // The second picture on source B. `load` puts the other camera there live where
@@ -74,24 +82,7 @@ export function useSecond(
     [],
   )
 
-  // The background can pause B's <video> elements as it does A's camera.
-  useEffect(() => {
-    const onVisible = () => {
-      const b = held.current
-      if (document.visibilityState !== 'visible' || b === null) return
-      const videos =
-        b.kind === 'live'
-          ? [b.cam.video, b.relay.video]
-          : b.kind === 'clip'
-            ? [b.video, b.relay.video]
-            : b.kind === 'tape'
-              ? [b.video]
-              : []
-      for (const v of videos) if (v.paused) v.play().catch(() => {})
-    }
-    document.addEventListener('visibilitychange', onVisible)
-    return () => document.removeEventListener('visibilitychange', onVisible)
-  }, [])
+  useReplayOnReturn(() => videosOf(held.current))
 
   const show = (next: Second | null) => {
     held.current = next

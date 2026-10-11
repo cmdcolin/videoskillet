@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 
 import { playLoop } from './tape'
+import { useReplayOnReturn } from './useReplay'
 
 import type { Pattern } from './patterns'
 
@@ -47,16 +48,7 @@ export function useSourceA(
     [],
   )
 
-  // The background can pause a clip's <video> as it does the camera's.
-  useEffect(() => {
-    const onVisible = () => {
-      const v = clip.current?.video
-      if (document.visibilityState === 'visible' && v?.paused === true)
-        v.play().catch(() => {})
-    }
-    document.addEventListener('visibilitychange', onVisible)
-    return () => document.removeEventListener('visibilitychange', onVisible)
-  }, [])
+  useReplayOnReturn(() => (clip.current === null ? [] : [clip.current.video]))
 
   const cameraShown = () => {
     drop()

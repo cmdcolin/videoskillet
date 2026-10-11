@@ -43,8 +43,9 @@ const delivering = (stream: MediaStream) =>
 // How long a second camera is given to take the first one down.
 const SETTLE_MS = 600
 
-// How long a camera that comes back from the background muted or paused is
-// given to start delivering again before it is reopened.
+// How long a camera back from the background is given to deliver again before
+// it is reopened. A track can also end a moment after the page returns, and
+// the same check catches that.
 const REVIVE_MS = 1500
 
 export interface Opened {
@@ -128,13 +129,9 @@ export function useCamera(
     stream.current = got
     held.current = opened
     // Another app taking the camera, or the phone ending it in the background,
-    // leaves the last frame standing unless something says so. An end that
-    // arrives after the page is back is reopened here, since the visibility
-    // handler has already run.
+    // leaves the last frame standing unless something says so.
     got.getVideoTracks()[0]?.addEventListener('ended', () => {
-      if (stream.current !== got) return
-      if (document.visibilityState === 'visible') void open(opened.faces)
-      else setState('off')
+      if (stream.current === got) setState('off')
     })
     show(opened.video, opened.faces === 'user')
     setStored(opened.faces)
