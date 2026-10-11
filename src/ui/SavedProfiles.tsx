@@ -59,6 +59,9 @@ export function SavedProfiles(props: {
   // Which row's link just went to the clipboard. A copy is otherwise silent —
   // nothing on screen changes — so the glyph answers for a second.
   const [copied, setCopied] = useState<string | null>(null)
+  // The row whose × has been pressed once. A delete removes the profile from
+  // the account for good, so it takes a second press within three seconds.
+  const [arming, setArming] = useState<string | null>(null)
 
   // Typing nothing saves under the suggestion, which is what the placeholder is
   // already showing. That is the whole "easy" of this: open, press save, done.
@@ -67,6 +70,15 @@ export function SavedProfiles(props: {
       given ?? (cleanProfileName(name) === '' ? props.suggestedName : name),
     )
     setName('')
+  }
+  const remove = (target: string) => {
+    if (arming === target) {
+      setArming(null)
+      props.onDelete(target)
+      return
+    }
+    setArming(target)
+    setTimeout(() => setArming(cur => (cur === target ? null : cur)), 3000)
   }
   const copy = (profile: SavedProfile) => {
     void props.onCopyLink(profile).then(ok => {
@@ -212,12 +224,23 @@ export function SavedProfiles(props: {
                           {copied === profile.name ? '✓' : '⧉'}
                         </button>
                         <button
-                          className={styles.rowBtn}
-                          title={`delete “${profile.name}”`}
-                          aria-label={`delete ${profile.name}`}
-                          onClick={() => props.onDelete(profile.name)}
+                          className={cx(
+                            styles.rowBtn,
+                            arming === profile.name && styles.armed,
+                          )}
+                          title={
+                            arming === profile.name
+                              ? `press again to delete “${profile.name}” for good`
+                              : `delete “${profile.name}”`
+                          }
+                          aria-label={
+                            arming === profile.name
+                              ? `confirm deleting ${profile.name}`
+                              : `delete ${profile.name}`
+                          }
+                          onClick={() => remove(profile.name)}
                         >
-                          ×
+                          {arming === profile.name ? 'delete?' : '×'}
                         </button>
                       </div>
                     ))}

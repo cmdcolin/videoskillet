@@ -115,6 +115,13 @@ button.justSaved {
   background: rgba(60, 60, 70, 0.6);
 }
 
+.rowBtn.armed {
+  width: auto;
+  padding-inline: var(--space-xs);
+  color: var(--danger);
+  font-size: var(--fs-sm);
+}
+
 /* Touch: the same fingertip height the panel's own rows take. */
 @media (pointer: coarse) {
   .recall {
