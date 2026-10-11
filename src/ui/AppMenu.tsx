@@ -82,6 +82,9 @@ export function AppMenu(props: {
   /** Opens the why-sign-in card. Undefined once there is an account behind the
       session, which is what keeps the row out of a signed-in menu. */
   onWhySignIn?: () => void
+  /** Opens the MIDI card. Defined only where the masthead leaves its midi
+      button out: a touch screen with the wire off. */
+  onMidi?: () => void
   // Only the stage's copy has this: the bar being hidden is the one it is in,
   // and the masthead has no bar to hide.
   onHideBar?: () => void
@@ -227,6 +230,16 @@ export function AppMenu(props: {
             closes={id}
             onClick={() => props.onShowAdvanced()}
           />
+          {props.onMidi === undefined ? null : (
+            <MenuItem
+              icon="⚟"
+              label="midi"
+              hint=""
+              title="play the board from a MIDI controller"
+              closes={id}
+              onClick={() => props.onMidi?.()}
+            />
+          )}
           {/* The docs, one press from the masthead. They were reachable only
               through About, whose own link pointed at the app rather than at
               the guide, so nothing in here led to them at all. */}

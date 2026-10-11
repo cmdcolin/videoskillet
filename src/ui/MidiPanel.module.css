@@ -9,8 +9,9 @@ button.tabWaiting {
   color: var(--edit-hi);
   border-color: var(--edit-hi);
 }
-/* Few phones and tablets can reach a MIDI controller, so a touch screen
-   leaves the button out until the palette's midi has turned the wire on. */
+/* Few phones and tablets can reach a MIDI controller, and iOS has no Web MIDI
+   at all, so a touch screen moves the button into the ☰ menu until the wire
+   is on. */
 @media (pointer: coarse) {
   button.tabIdle {
     display: none;
