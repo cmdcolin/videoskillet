@@ -97,55 +97,6 @@
   text-align: center;
 }
 
-/* The hero's buttons are stills of themselves after a pass through the
-   program (scripts/buttonplate.mjs, GlitchButton.astro). Once its still has
-   loaded, a button paints nothing and the still covers it, reaching
-   --still-pad past the border box and fading out across that margin. The still
-   is screen-blended because it is light from a tube: the black around the
-   button adds nothing to the page under it. Until the still loads, and if it
-   never does, the button paints itself. */
-.btn[data-still] {
-  position: relative;
-}
-.btnStill {
-  display: none;
-}
-.btn.lit,
-.btn.lit:hover {
-  color: transparent;
-  background: transparent;
-  border-color: transparent;
-  filter: none;
-}
-.btn.lit .btnStill {
-  display: block;
-  position: absolute;
-  left: calc(-1px * var(--still-pad-x) - 1px);
-  top: calc(-1px * var(--still-pad-y) - 1px);
-  width: calc(100% + 2px * var(--still-pad-x) + 2px);
-  height: calc(100% + 2px * var(--still-pad-y) + 2px);
-  mask:
-    linear-gradient(
-      to right,
-      transparent,
-      #000 calc(1px * var(--still-pad-x)),
-      #000 calc(100% - 1px * var(--still-pad-x)),
-      transparent
-    ),
-    linear-gradient(
-      transparent,
-      #000 calc(1px * var(--still-pad-y)),
-      #000 calc(100% - 1px * var(--still-pad-y)),
-      transparent
-    );
-  mask-composite: intersect;
-  mix-blend-mode: screen;
-  pointer-events: none;
-}
-.btn.lit:hover .btnStill {
-  filter: brightness(1.15);
-}
-
 /* A touch screen too small for the instrument's sidebar is a phone, and a
    phone opens the camera. The query uses the two sizes app.module.css restacks
    the instrument at, and adds touch so a narrow desktop window keeps the app.

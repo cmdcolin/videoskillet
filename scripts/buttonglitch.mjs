@@ -1,7 +1,9 @@
-// The landing page's glitched buttons: what each one says, which faults it is
-// scanned through, and which frame of the result the page shows. The page
-// reads the labels from here too, so a still and the words of the link under it
-// cannot drift apart without `pnpm buttonplate` being run.
+// Stills of the landing page's hero buttons after a pass through the program:
+// what each button says, which faults it is scanned through, and which frame
+// to keep. The page does not show them. The hero used them as its buttons for a
+// while (2c22c75) and went back to plain ones; this and public/btn are kept so
+// the idea can be tried again without rebuilding the harness. Copy the labels
+// from site/pages/index.astro before a re-render.
 
 // `name` is the still's filename in public/btn. Each `set` holds a fault on the
 // board at a fraction of what the deck's shelf would drive it to: enough to

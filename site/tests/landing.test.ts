@@ -1,7 +1,6 @@
 import { experimental_AstroContainer } from 'astro/container'
 import { beforeAll, expect, test } from 'vitest'
 
-import { BUTTONS } from '../../scripts/buttonglitch.mjs'
 import {
   CLIPS as DEMO_CLIPS,
   demos,
@@ -166,14 +165,4 @@ test('there is at least one riff to check the concept against', () => {
 test.each(riffs)('$name is a link under its demo’s card', riff => {
   expect(page).toContain(riff.href.replaceAll('&', '&amp;'))
   expect(page).toContain(`>${riff.name}<`)
-})
-
-// A still is a picture of the button's own words, and the page takes those
-// words from the same table, so what can drift is only the file itself.
-test.each(BUTTONS)('$name is a button on the page, over its own still', b => {
-  const link = new RegExp(
-    `<a[^>]+data-still[^>]*>\\s*${b.label}\\s*<img[^>]+src="btn/${b.name}\\.webp"`,
-  )
-  expect(page).toMatch(link)
-  expect(bytes(`btn/${b.name}.webp`)).toBeGreaterThan(0)
 })

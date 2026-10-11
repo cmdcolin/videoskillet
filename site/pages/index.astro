@@ -1,7 +1,6 @@
 ---
 import Carousel from '../components/Carousel.astro'
 import Gallery from '../components/Gallery.astro'
-import GlitchButton from '../components/GlitchButton.astro'
 import Hero from '../components/Hero.astro'
 import HomeSkeleton from '../components/HomeSkeleton.astro'
 import SignedInHint from '../components/SignedInHint.astro'
@@ -83,11 +82,21 @@ const SHARE_IMAGE_H = 630
              desktop the other way round. The media query in landing.css hides
              the pair that does not apply, so no script rewrites the links. -->
         <p class="heroCta">
-          <GlitchButton name="cam" href="/cam/" class="onPhone" />
-          <GlitchButton name="app" href="/app/" class="offPhone" />
-          <GlitchButton name="full" href="/app/" class="onPhone" />
-          <GlitchButton name="simple" href="/cam/" class="offPhone" />
-          <GlitchButton name="guide" href="/guide/" class="offPhone" />
+          <a class="btn primary onPhone" href="/cam/">
+            Open the camera →
+          </a>
+          <a class="btn primary offPhone" href="/app/">
+            Open the app →
+          </a>
+          <a class="btn onPhone" href="/app/">
+            Full instrument
+          </a>
+          <a class="btn offPhone" href="/cam/">
+            Simple mode
+          </a>
+          <a class="btn offPhone" href="/guide/">
+            User guide
+          </a>
         </p>
 
         <p class="req gpuwarn" hidden>
