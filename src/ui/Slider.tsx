@@ -15,6 +15,7 @@ import styles from './Slider.module.css'
 import { SliderHelpDialog } from './SliderHelpDialog'
 import { ToggleButtonGroup } from './ToggleButtonGroup'
 import { fromTravel, toTravel, TRAVEL_STEP } from './travel'
+import { useClickWord } from './useMediaQuery'
 import {
   atCents,
   atOffset,
@@ -478,6 +479,7 @@ export function Slider(props: {
   // Offer the minor-adjustment card under the row. See vernier.ts.
   vernier?: true | { span: number; step?: number }
 }) {
+  const click = useClickWord()
   const inputId = useId()
   const [showHelp, setShowHelp] = useState(false)
   // Hovering the ? shows the text in place, so the help column can be skimmed
@@ -1010,7 +1012,7 @@ export function Slider(props: {
           title={needs.title}
           onClick={needs.onFix}
         >
-          inert — needs {needs.hint} · click to set
+          inert — needs {needs.hint} · {click} to set
         </button>
       ) : null}
       {vernier === undefined || choices !== undefined ? null : (

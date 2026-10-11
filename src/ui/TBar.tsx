@@ -19,6 +19,7 @@ import {
   wipeEngaged,
 } from './deckModel'
 import { useGrabRect } from './useGrabRect'
+import { useClickWord } from './useMediaQuery'
 
 import type { KeyboardEvent, PointerEvent as ReactPointerEvent } from 'react'
 
@@ -49,6 +50,7 @@ const posFrom = (e: ReactPointerEvent<HTMLDivElement>, box: DOMRect) =>
 // survive: a fader you can let go of mid-throw is what makes a half-dissolve a
 // place you can sit rather than a moment you pass through.
 export function TBar() {
+  const click = useClickWord()
   const controls = useControls()
   const { writeControl, writeControls } = useControlsApi()
   // The store, not this render's snapshot, is what an auto-take reads: the
@@ -177,7 +179,7 @@ export function TBar() {
           title="mix_b multiplies the wipe gate into B's level, so the boundary moves and nothing appears"
           onClick={() => writeControl('bGain', B_ON_AIR)}
         >
-          B is at 0 — click to open the fader
+          B is at 0 — {click} to open the fader
         </button>
       ) : null}
     </>

@@ -9,6 +9,7 @@ import styles from './PresetsSection.module.css'
 import { Section } from './Section'
 import { usePersistedFlag } from './storage'
 import ui from './ui.module.css'
+import { useClickWord } from './useMediaQuery'
 import { useRecentPresets } from './useRecentPresets'
 
 import type { Controls } from '../core/controls'
@@ -310,6 +311,7 @@ function PresetCatalog(props: {
   onMixStart: () => void
   onMix: (name: string, w: number) => void
 }) {
+  const click = useClickWord()
   const [hintDismissed, setHintDismissed] = usePersistedFlag(HINT_STORE)
   const { recent, noteUse } = useRecentPresets()
   // The hovered preset's blurb takes over the caption line: faster to browse
@@ -368,7 +370,7 @@ function PresetCatalog(props: {
           // every hover teaches by itself.
           // Short enough to hold one line at the panel's docked width, which is
           // the whole point of the rewrite: at two lines it saved nothing.
-          'a bank of controls at once — click one'
+          `a bank of controls at once — ${click} one`
         : `modified from "${presetLabelFor(props.lastPreset)}"`
   // The count rides the caption whenever the caption is describing a particular
   // preset, so browsing the chips teaches the thing the chips cannot say: this

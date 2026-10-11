@@ -7,6 +7,7 @@ import { Accordion, NestedSections } from './Section'
 import styles from './SignalPath.module.css'
 import { hasBody, stageBody } from './stageBody'
 import { holdable } from './stageStock'
+import { useClickWord } from './useMediaQuery'
 
 import type { BranchSpec, FreeBox, WiredBranch } from './chainLayout'
 import type { ChainStage } from './ChainMap'
@@ -233,6 +234,7 @@ function StageHead(props: {
 // stage is persisted, so a returning session never saw it at all. Here it costs
 // no row of its own and it is still there on the visit where you have forgotten.
 function PathHead() {
+  const click = useClickWord()
   return (
     <div className={styles.pathHead}>
       <span className={styles.pathTitle}>Signal path</span>
@@ -242,7 +244,7 @@ function PathHead() {
           standing instruction would have been pointing at nothing. A query dims
           the trunk now instead of emptying it, so there is always a map under
           this line and always a stage to click. */}
-      <span className={styles.pathHint}>click a stage</span>
+      <span className={styles.pathHint}>{click} a stage</span>
     </div>
   )
 }

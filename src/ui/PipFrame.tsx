@@ -4,6 +4,7 @@ import { clamp01 } from '../core/math'
 import { cx } from './cx'
 import { clampSize, cqw, nudgeFor, resizeAxis, snapOffset } from './miniFrame'
 import styles from './MiniFrame.module.css'
+import { useClickWord } from './useMediaQuery'
 
 import type { KeyboardEvent, PointerEvent } from 'react'
 
@@ -58,6 +59,7 @@ export function PipFrame(props: {
   onFix: () => void
   onChange: (box: PipBox) => void
 }) {
+  const click = useClickWord()
   const [drag, setDrag] = useState<Drag | null>(null)
   const { x, y, w, h } = props.box
   const winStyle = {
@@ -209,7 +211,7 @@ export function PipFrame(props: {
       <div className={styles.readout}>
         {props.inert ? (
           <button className={styles.fix} onClick={() => props.onFix()}>
-            inset key is at 0 — click to put it on air
+            inset key is at 0 — {click} to put it on air
           </button>
         ) : (
           <span>drag · grips resize · ⇧ locks</span>

@@ -36,3 +36,8 @@ export function useMediaQuery(query: string): boolean {
   const store = storeFor(query)
   return useSyncExternalStore(store.subscribe, store.getSnapshot)
 }
+
+// The verb a caption uses for pressing something: a finger taps.
+export function useClickWord(): 'tap' | 'click' {
+  return useMediaQuery('(pointer: coarse)') ? 'tap' : 'click'
+}
