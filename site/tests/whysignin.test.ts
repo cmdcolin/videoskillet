@@ -46,7 +46,7 @@ test('the question is asked where the ask is, and the card can be opened', () =>
 
 test('the card sends anyone who wants the rest to the privacy page', () => {
   expect(landing).toContain(privacyHref)
-  expect(privacy).toContain('Google Analytics')
+  expect(privacy).toContain('GoatCounter')
   expect(privacy).toContain('Firebase')
 })
 
@@ -57,7 +57,7 @@ test('the privacy page leaves out the account controls it cannot work', () => {
   expect(privacy).toContain('Open the app')
 })
 
-test('no page loads Google Analytics before the visitor says yes', () => {
+test('no page loads Google Analytics', () => {
   for (const page of [landing, privacy])
     expect(page).not.toContain('googletagmanager.com')
 })

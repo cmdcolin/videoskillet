@@ -6,12 +6,12 @@ import css from '../styles/landing.css?raw'
 
 const NAME = 'videoskillet'
 const ANALYTICS_EXTRA =
-  'When a recording fails or crashes the page, we also send a short report to Google Analytics and to our Firebase database, which emails it to us: the device’s model, memory and browser, the recording’s size, frame rate and encoder, how far it got, and any error message.'
+  'When a recording fails or crashes the page, we also send a short report to our Firebase database, which emails it to us: the device’s model, memory and browser, the recording’s size, frame rate and encoder, how far it got, and any error message.'
 ---
 
 <Page
   title="Privacy — videoskillet"
-  description="videoskillet uses Google Analytics to count visits, Firebase to store your saved looks and any ratings you give, and both to hear about failed recordings. Nothing else."
+  description="videoskillet uses GoatCounter to count visits, and Firebase to store your saved looks and any ratings you give and to hear about failed recordings. Nothing else."
   css={css}
   canonical={`${ORIGIN}privacy/`}
   account={false}
@@ -21,26 +21,10 @@ const ANALYTICS_EXTRA =
     <h1>Privacy</h1>
     <p class="privacyLead">
       We use Firebase for logins, and storing some of the settings you make
-      there, and Google Analytics to see if anyone is actually using this.
-      {ANALYTICS_EXTRA} That is all. Please contact colin.diesh@gmail.com for
-      concerns.
+      there, and GoatCounter to count page views, without cookies, to see if
+      anyone is actually using this. {ANALYTICS_EXTRA} That is all. Please
+      contact colin.diesh@gmail.com for concerns.
     </p>
     <!-- CROSS_REPO_SYNC_END(privacy-analytics) -->
   </main>
-
-  <Fragment slot="scripts">
-    <script>
-      import { forgetAnalyticsAnswer } from '../../src/analytics'
-
-      // CROSS_REPO_SYNC(privacy-analytics-reset)
-      // A reload, so the notice asks again on a page that has not loaded the tag.
-      document
-        .getElementById('analyticsAgain')
-        ?.addEventListener('click', () => {
-          forgetAnalyticsAnswer()
-          location.reload()
-        })
-      // CROSS_REPO_SYNC_END(privacy-analytics-reset)
-    </script>
-  </Fragment>
 </Page>

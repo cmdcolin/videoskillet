@@ -37,22 +37,20 @@ const NOTE: TakeNote = {
 const settle = () => new Promise(r => setTimeout(r, 0))
 
 describe('takeLog', () => {
-  const gtag = vi.fn()
-
   beforeEach(() => {
-    gtag.mockReset()
     putTakeReport.mockReset()
-    vi.stubGlobal('window', { gtag })
-    localStorage.setItem('videoskillet_analytics', 'yes')
+    localStorage.clear()
   })
   afterEach(() => {
     vi.unstubAllGlobals()
   })
 
+  const sent = () => putTakeReport.mock.calls[0][0]
+
   it('reports nothing when no take was left behind', async () => {
     reportLostTake()
     await settle()
-    expect(gtag).not.toHaveBeenCalled()
+    expect(putTakeReport).not.toHaveBeenCalled()
   })
 
   it('reports a take a crashed page left, once', async () => {
@@ -60,15 +58,14 @@ describe('takeLog', () => {
     reportLostTake()
     reportLostTake()
     await settle()
-    expect(gtag).toHaveBeenCalledTimes(1)
-    expect(gtag).toHaveBeenCalledWith(
-      'event',
-      'take_lost',
-      expect.objectContaining({ codec: 'avc1.64001f', frames: 210 }),
-    )
     expect(putTakeReport).toHaveBeenCalledTimes(1)
     expect(putTakeReport).toHaveBeenCalledWith(
-      expect.objectContaining({ kind: 'lost', frames: 210, hidden: false }),
+      expect.objectContaining({
+        kind: 'lost',
+        codec: 'avc1.64001f',
+        frames: 210,
+        hidden: false,
+      }),
     )
   })
 
@@ -79,10 +76,9 @@ describe('takeLog', () => {
     )
     reportLostTake()
     await settle()
-    const [sent] = putTakeReport.mock.calls[0]
-    expect(sent).not.toHaveProperty('extra')
-    expect(sent).not.toHaveProperty('frames')
-    expect(sent.codec).toBe('avc1.64001f')
+    expect(sent()).not.toHaveProperty('extra')
+    expect(sent()).not.toHaveProperty('frames')
+    expect(sent().codec).toBe('avc1.64001f')
   })
 
   it('forgets a take that finished', async () => {
@@ -90,34 +86,21 @@ describe('takeLog', () => {
     clearTake()
     reportLostTake()
     await settle()
-    expect(gtag).not.toHaveBeenCalled()
-  })
-
-  it('clears a lost take without analytics, and sends nothing', async () => {
-    localStorage.setItem('videoskillet_analytics', 'no')
-    noteTake(NOTE)
-    reportLostTake()
-    localStorage.setItem('videoskillet_analytics', 'yes')
-    reportLostTake()
-    await settle()
-    expect(gtag).not.toHaveBeenCalled()
     expect(putTakeReport).not.toHaveBeenCalled()
   })
 
-  it('cuts a failure message to what GA keeps', async () => {
+  it('cuts a failure message to what the rule admits', async () => {
     reportTakeFailed('x'.repeat(300), NOTE)
     await settle()
-    const [, event, params] = gtag.mock.calls[0]
-    expect(event).toBe('take_failed')
-    expect(params.message).toHaveLength(100)
-    expect(params.stage).toBe('recording')
+    expect(sent().kind).toBe('failed')
+    expect(sent().message).toHaveLength(100)
+    expect(sent().stage).toBe('recording')
   })
 
   it('carries what the encoder got through and its error name', async () => {
     reportTakeFailed('Encoding error.', { ...NOTE, error: 'OperationError' })
     await settle()
-    const [, , params] = gtag.mock.calls[0]
-    expect(params).toMatchObject({
+    expect(sent()).toMatchObject({
       encoded: 170,
       chunks: 168,
       coded: '816x1088',

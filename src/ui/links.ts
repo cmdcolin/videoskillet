@@ -8,7 +8,7 @@ const SITE = 'https://videoskillet.com/'
 
 export const HOME_URL = SITE
 export const GUIDE_URL = `${SITE}guide/`
-// What Google Analytics and Firebase hold, linked from the why-sign-in card and
+// What GoatCounter and Firebase hold, linked from the why-sign-in card and
 // from the about card.
 export const PRIVACY_URL = `${SITE}privacy/`
 export const REPO_URL = 'https://github.com/cmdcolin/videoskillet'

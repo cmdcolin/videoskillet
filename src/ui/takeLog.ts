@@ -1,18 +1,15 @@
-import { analyticsAnswer } from '../analytics'
 import { version } from '../version'
 import { putTakeReport } from './cloud'
 import { readRecord, readStored, removeStored, writeJSON } from './storage'
 
 // A recording in progress keeps a note of how far it has got, and the next
-// page load reports a note it finds to Google Analytics and to the
-// `takeReports` collection, which functions/ emails out hourly. A crashed tab
-// runs no code, so a note left behind is the only trace of a take that killed
-// it. Both reports go out only where the visitor said yes to analytics;
-// /privacy/ says what they carry.
+// page load reports a note it finds to the `takeReports` collection, which
+// functions/ emails out hourly. A crashed tab runs no code, so a note left
+// behind is the only trace of a take that killed it. /privacy/ says what a
+// report carries.
 const KEY = 'videoskillet_take'
 
-// The longest each string field may be, which firestore.rules enforces. GA
-// drops a value over 100.
+// The longest each string field may be, which firestore.rules enforces.
 const STRINGS: Record<string, number> = {
   page: 64,
   codec: 32,
@@ -116,10 +113,8 @@ async function device(): Promise<Record<string, string | number>> {
 }
 
 function send(kind: 'lost' | 'failed', params: Record<string, unknown>) {
-  if (analyticsAnswer() !== 'yes') return
   void device().then(d => {
     const report = fields({ ...params, ...d })
-    window.gtag?.('event', `take_${kind}`, report)
     void putTakeReport({
       kind,
       version,
