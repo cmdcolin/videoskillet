@@ -2,6 +2,34 @@
 
 All notable changes to videoskillet are documented here.
 
+## [2.16.0](https://github.com/cmdcolin/videoskillet/compare/v2.15.0...v2.16.0) - 2026-10-11
+
+### Features
+- *(ui)* [`9cd0a13`](https://github.com/cmdcolin/videoskillet/commit/9cd0a13d9ec0780fc194b4368036bffe5fa9285d) cut the phone homepage down to one screen per idea
+- *(ui)* [`2702907`](https://github.com/cmdcolin/videoskillet/commit/2702907de0c6c96d1aa51533d53bc7674745ae0b) keep random pinned at the start of the camera's look strip
+- *(ui)* [`004d9ab`](https://github.com/cmdcolin/videoskillet/commit/004d9abb886537cd1d4b823d11f6f59e1df07f15) glitch the homepage buttons through the program on hover
+- *(docs)* [`7633b9b`](https://github.com/cmdcolin/videoskillet/commit/7633b9b414b10ccd234fe41dcb5b0a3ccb45b0d9) let a guide page show a still from public/
+- *(ui)* [`52041cf`](https://github.com/cmdcolin/videoskillet/commit/52041cf6eaf93c17b2497a7ffe5327c12c773005) play the button glitch whatever the motion preference says
+- [`1782bc0`](https://github.com/cmdcolin/videoskillet/commit/1782bc050bfe230e0f8c4a6a688759626f57d4a3) tube camera lag, vertical foldover and phosphor burn-in
+- *(ui)* [`6911477`](https://github.com/cmdcolin/videoskillet/commit/6911477c74e87320c7410ae8fdd194a9a9c4fd13) open the camera on a strong look and fold away its side switches
+- *(ui)* [`2c22c75`](https://github.com/cmdcolin/videoskillet/commit/2c22c75ad62b323418d3691ea548116da7776553) show the hero buttons as stills from the program
+- *(deflection)* [`b9fecc3`](https://github.com/cmdcolin/videoskillet/commit/b9fecc3675299a82276e557cfe611e2d2d64ebf3) retrace lines, a night tube preset, and a pad for foldover
+- *(ui)* [`dcdce83`](https://github.com/cmdcolin/videoskillet/commit/dcdce83d6c1bb2b50553f6c670ac5189f8233e13) open the camera page from a link, and share one from it
+- *(deflection)* [`926ef9d`](https://github.com/cmdcolin/videoskillet/commit/926ef9dc927d3169ea5fb92aa661f21f3d852004) ring the flyback and bend the retrace with the picture
+
+### Documentation
+- [`5e49214`](https://github.com/cmdcolin/videoskillet/commit/5e49214c367a4034b24956f92732c5f175668ab8) show the camera page in the guide, and cut its tour
+- [`6fa8f9f`](https://github.com/cmdcolin/videoskillet/commit/6fa8f9f52763218e753eb2b34514f1285421d32c) show the tune sheet where the guide showed the camera's help card
+
+### Chores
+- *(ui)* [`1108bf2`](https://github.com/cmdcolin/videoskillet/commit/1108bf23af5b9c345b6a7f3aaf9afba8c59614cc) rename the Purple woman demo's files to Purplady
+
+### Reverts
+- *(ui)* [`d548bff`](https://github.com/cmdcolin/videoskillet/commit/d548bfff872e4ef950c0bef243358aedaf725f9d) put the plain buttons back on the hero
+
+### Other Changes
+- [`ae9c8b5`](https://github.com/cmdcolin/videoskillet/commit/ae9c8b55c4cf89b57eecd16bb87ca2f90f1ba37a) Purplady
+
 ## [2.15.0](https://github.com/cmdcolin/videoskillet/compare/v2.14.0...v2.15.0) - 2026-10-05
 
 ### Features
