@@ -607,15 +607,27 @@
 }
 
 /* Which part of the set the strip breaks. */
+/* Centred while the tabs fit, and scrolled sideways once B adds the mix tab. */
 .tabs {
   display: flex;
-  justify-content: center;
-  gap: 4px;
+  gap: 2px;
   margin-bottom: -6px;
   padding: 0 12px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.tabs::-webkit-scrollbar {
+  display: none;
+}
+.tabs > :first-child {
+  margin-left: auto;
+}
+.tabs > :last-child {
+  margin-right: auto;
 }
 .tab {
-  padding: 4px 10px;
+  flex: none;
+  padding: 4px 8px;
   border: 0;
   border-bottom: 2px solid transparent;
   background: none;
@@ -631,14 +643,18 @@
   border-bottom-color: #fc3;
   color: #fff;
 }
+.faultsTab {
+  color: #f87;
+}
 
-/* The looks sit in one row that scrolls sideways. */
+/* The looks sit in one row that scrolls sideways. A chip snaps to the right
+   of random, which stays pinned over the row's start. */
 .strip {
   display: flex;
   gap: 8px;
   overflow-x: auto;
   padding: 0 16px 0 0;
-  scroll-padding: 0 16px;
+  scroll-padding: 0 16px 0 9.5rem;
   scroll-snap-type: x proximity;
   scrollbar-width: none;
   overscroll-behavior-x: contain;

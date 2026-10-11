@@ -20,8 +20,10 @@ import {
   lookBoard,
   lookKnobs,
   lookLabel,
+  openingLook,
   rollLook,
   rollPool,
+  shelfOf,
   stackLabel,
 } from './looks'
 import { LookStrip } from './LookStrip'
@@ -69,10 +71,17 @@ const SIDEWAYS_STORE = 'videoskillet_cam_sideways'
 export function CamPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [sideways, setSideways] = usePersistedFlag(SIDEWAYS_STORE)
+  const [scene, setScene] = useState<Scene>(() => ({
+    ...CLEAN,
+    look: openingLook(),
+    mix: null,
+  }))
+  const sceneRef = useRef(scene)
   // The wipe and the inset are laid out across the glass on show, so a new
   // layout lays the board again.
   const eng = useCamEngine(canvasRef, {
     sideways,
+    firstBoard: () => boardOf(scene, sliceOf('whole')),
     onLayout: () => paint({}),
   })
   const zoom = useZoom(() => trackOf(eng.camera()?.video), eng.zoomA)
@@ -87,9 +96,8 @@ export function CamPage() {
   const sound = useSound(eng.hear, setError)
   const second = useSecond(eng, cam, setError)
   const { flash, announce } = useFlash()
-  const [scene, setScene] = useState<Scene>({ ...CLEAN, mix: null })
-  const sceneRef = useRef(scene)
-  const [shelfName, setShelfName] = useState(SHELVES[0].name)
+  const [shelfName, setShelfName] = useState(() => shelfOf(scene.look).name)
+  const [faults, setFaults] = useState(false)
   const [panel, setPanel] = useState<Panel | null>(null)
   const [help, setHelp] = useState(false)
   const [hintSeen, setHintSeen] = usePersistedFlag(HINT_STORE)
@@ -288,7 +296,6 @@ export function CamPage() {
   const busy = second.left > 0 || second.opening || shutter.recording
   const showHelp = on && help
   const mixOpen = panel === 'mix' && eng.engine !== null
-  const deckOpen = panel === 'deck' && on
   const controls = () => boardOf(scene, sliceOf(eng.layout)).controls
   const flip =
     cameraUp && (cam.canFlip || second.live)
@@ -403,21 +410,26 @@ export function CamPage() {
           />
         ) : null}
 
-        {deckOpen ? <Deck onHit={hit} /> : null}
-
-        {mixOpen || deckOpen ? null : (
+        {mixOpen ? null : (
           <LookStrip
             shelves={shelves}
             shelf={shelf}
+            faults={faults}
             look={look}
             layers={scene.layers}
             tweaked={tweaked}
-            onShelf={setShelfName}
+            onShelf={name => {
+              setShelfName(name)
+              setFaults(false)
+            }}
+            onFaults={() => setFaults(true)}
             onRoll={roll}
             onNormal={() => land(null)}
             onPick={pick}
             onWeigh={weigh}
-          />
+          >
+            <Deck onHit={hit} />
+          </LookStrip>
         )}
 
         <Shutter

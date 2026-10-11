@@ -11,6 +11,7 @@ import {
 import {
   MIX_MODES,
   MIX_SHELF,
+  OPENERS,
   ROLL_POOL,
   SHELVES,
   lookBoard,
@@ -18,8 +19,10 @@ import {
   lookLabel,
   mixControls,
   mixesItself,
+  openingLook,
   rollLook,
   rollPool,
+  shelfOf,
   stackLabel,
   subtleLoop,
 } from './looks'
@@ -62,6 +65,23 @@ describe('the camera strip', () => {
       const next = rollLook(null, pool)
       expect(pool).toContain(next.name)
     }
+  })
+})
+
+// The page opens on one of these with its tab showing and its chip up, so
+// each has to be on a tab the strip shows before a second picture is on B.
+describe('the opening look', () => {
+  it('is on a tab', () => {
+    for (const name of OPENERS)
+      expect(
+        SHELVES.flatMap(sh => sh.looks),
+        name,
+      ).toContain(name)
+  })
+
+  it('opens the tab it is on', () => {
+    const look = openingLook(() => 0.99)
+    expect(shelfOf(look).looks).toContain(look.name)
   })
 })
 

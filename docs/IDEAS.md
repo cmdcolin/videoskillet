@@ -702,6 +702,15 @@ move is the arithmetic, either into the audio worklet or into a `buzz_detect`
 pass beside `sync.wgsl`. Neither is worth doing until someone measures
 `mapAsync`'s own main-thread cost, which is the half that stays put either way.
 
+## Camera page: preview thumbnails on the look chips
+
+The camera page labels each look chip with its name alone, and a reader learns
+little from a name such as "hue rides the light". A photo app shows each filter
+as a small picture of itself. The cheap version is one still per look, rendered
+by a harness in the way `scripts/camshots.mjs` renders the tour's stills, and
+shown on the chip. A live preview of each look on the camera would need a render
+per chip per frame.
+
 ## Not worth building
 
 - **Cochannel interference.** Already reachable: source B's dirty-sum path is a

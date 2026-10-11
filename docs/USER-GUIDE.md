@@ -196,13 +196,14 @@ The camera page at `/cam/` puts a phone's camera through the set. A phone
 opening the home page gets **Open the camera** as its first button, and
 **camera** in the ☰ menu reaches the page from the app.
 
-|                                                                                                                                                                                                                                                                |                                                                                                                                                                                                                     |                                                                                                                                                                                                                      |
-| :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
-| ![The camera page on a phone: a cat photo torn by tape noise, the feedback, sources and deck buttons down the right, and under the picture the tabs loops, tape, signal, scan and bent over a strip of chips starting with random](../public/phone/looks.webp) | ![The tune sheet for picture search: strength at 100, then shuttle, luma bandwidth, peaking, noise, color-under, phase jitter, flutter and head switch, with reset and close at the top](../public/phone/tune.webp) | ![The feedback sheet over the picture: a camera loop with mix, gain, zoom, rotate and two shift sliders, and a mixer loop under it with its own mix and gain, more and reset at the top](../public/phone/loops.webp) |
+|                                                                                                                                                                                                                                                                                  |                                                                                                                                                                                                                     |                                                                                                                                                                                                                      |
+| :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+| ![The camera page on a phone: a cat photo torn by tape noise, more at the top left, tune, feedback and sources down the right, and under the picture the tabs loops, tape, signal, scan, bent and faults over a strip of chips starting with random](../public/phone/looks.webp) | ![The tune sheet for picture search: strength at 100, then shuttle, luma bandwidth, peaking, noise, color-under, phase jitter, flutter and head switch, with reset and close at the top](../public/phone/tune.webp) | ![The feedback sheet over the picture: a camera loop with mix, gain, zoom, rotate and two shift sliders, and a mixer loop under it with its own mix and gain, more and reset at the top](../public/phone/loops.webp) |
 
 The tabs sort the looks by which part of the set goes wrong. A tap puts a look
 up, and dragging its chip up stacks it on the look that is up, partway. **?** in
-the top bar lists the gestures.
+the top bar lists the gestures. The page opens on a strong look, picked at
+random, with its tab showing; **normal** shows the camera as it comes.
 
 - **random** picks one of four rolls: a new look, a stack of looks, a nudge to
   every knob, or a throw of a few knobs a long way. A nudge or a throw lands as
@@ -216,6 +217,8 @@ the top bar lists the gestures.
 - Where the browser exposes the camera's own zoom, a pinch drives the lens and
   crops only past its longest reach. Elsewhere the page crops before the
   encoder, up to 4×.
+- **more**, at the top left, holds **tilt**, **on side** and **sound**. A switch
+  that is on stays out when **more** closes.
 - **tilt** lets the phone stand in for the feedback camera. A turn fades back
   over a few seconds and never takes a loop past a degree of spin or 2% of shift
   per lap. On a loop with no camera in it, a turn trims the delay, which slides
@@ -232,9 +235,9 @@ the top bar lists the gestures.
 
 ### A second picture
 
-|                                                                                                                                                                                              |                                                                                                                                 |
-| :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------------------------------: |
-| ![The mixer open under the picture: A set to camera, B set to clip, the mode on wipe and the fader between A and B, the picture split down the middle by the wipe](../public/phone/mix.webp) | ![The deck open under the picture: five fault pads reading track, roll, collapse, shuttle and dub](../public/phone/faults.webp) |
+|                                                                                                                                                                                              |                                                                                                                                       |
+| :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------------------------------------: |
+| ![The mixer open under the picture: A set to camera, B set to clip, the mode on wipe and the fader between A and B, the picture split down the middle by the wipe](../public/phone/mix.webp) | ![The faults tab open under the picture: five fault pads reading track, roll, collapse, shuttle and dub](../public/phone/faults.webp) |
 
 **sources** opens the mixer on the left. A clip or one of the set's patterns on
 A works with no camera at all.
@@ -248,10 +251,10 @@ A works with no camera at all.
   from the **mix** tab works the mixer itself and hides the fader, and picking a
   mode takes the mixer back.
 
-**deck** opens the fault pads on the right. Each pad breaks the picture and
-heals it. With a picture on B, the fader flips to the other end on the frame
-where the picture is least legible, so the cut to the other picture lands inside
-the fault.
+The **faults** tab, on the right, holds the fault pads. Each pad breaks the
+picture and heals it. With a picture on B, the fader flips to the other end on
+the frame where the picture is least legible, so the cut to the other picture
+lands inside the fault.
 
 **full app** opens the app on the same preset.
 

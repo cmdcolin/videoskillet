@@ -184,6 +184,27 @@ export const mixesItself = (name: string): boolean => {
   return def !== undefined && needsSourceB(def)
 }
 
+// The looks the page opens on, one at random per visit. Each breaks the
+// picture hard and leaves the subject in it.
+export const OPENERS: readonly string[] = [
+  'rainbowStorm',
+  'theLightIsALapBehind',
+  'chasingItsOwnColour',
+  'collapsedAxes',
+  'pictureSearch',
+  'verticalHoldGone',
+  'supplyChaos',
+]
+
+export const openingLook = (rand = Math.random): Look => ({
+  name: OPENERS[randomIndex(OPENERS.length, rand)],
+  strength: 1,
+  rolled: false,
+})
+
+export const shelfOf = (look: Look | null): Shelf =>
+  SHELVES.find(s => look !== null && s.looks.includes(look.name)) ?? SHELVES[0]
+
 // What is on the picture: a preset at a strength, or `null` for the camera as
 // it comes. `rolled` marks a look the random roll picked, which may be one of
 // the 150 the strip does not list, so no chip on the strip is up for it.

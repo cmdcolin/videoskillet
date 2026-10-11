@@ -118,7 +118,11 @@ const reason = (e: unknown) => (e instanceof Error ? e.message : String(e))
 // change of layout once it has reached the engine.
 export function useCamEngine(
   canvasRef: RefObject<HTMLCanvasElement | null>,
-  opts: { sideways: boolean; onLayout: (layout: Layout) => void },
+  opts: {
+    sideways: boolean
+    firstBoard: () => Board
+    onLayout: (layout: Layout) => void
+  },
 ) {
   const engineRef = useRef<Engine | null>(null)
   const [engine, setEngine] = useState<Engine | null>(null)
@@ -135,7 +139,8 @@ export function useCamEngine(
     sideways: opts.sideways,
   })
   const laid = useRef<Layout>('whole')
-  const board = useRef<Board>({ controls: DEFAULT_CONTROLS, mod: [] })
+  const [first] = useState(opts.firstBoard)
+  const board = useRef<Board>(first)
   const comparing = useRef(false)
   const heard = useRef(false)
   const onSet = (c: Controls) => (heard.current ? sounded(c) : c)

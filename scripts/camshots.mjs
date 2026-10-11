@@ -225,7 +225,7 @@ try {
   await shoot('loops')
   await click('button[aria-label="close"]')
   await clickText('normal')
-  await click('button[title^="fault pads"]')
+  await click('xpath/.//button[@role="tab" and text()="faults"]')
   await settle(1500)
   // Taken near the middle of the track fault's second and a half, where the
   // band is widest.
@@ -235,7 +235,7 @@ try {
   // A fault advances once per rendered frame, so under a slow browser its cut
   // can land after B arrives and throw the fader.
   await settle(5000)
-  await click('button[title^="fault pads"]')
+  await click('xpath/.//button[@role="tab" and text()="tape"]')
   const input = await page.$('input[type=file]')
   await input.uploadFile(clip)
   await settle(3000)

@@ -1,9 +1,9 @@
 import { cx } from '../ui/cx'
 import styles from './cam.module.css'
-import { LoopIcon, MixIcon, SlidersIcon, TapeIcon } from './icons'
+import { LoopIcon, MixIcon, SlidersIcon } from './icons'
 import { Switch } from './Switch'
 
-export type Panel = 'tune' | 'loops' | 'mix' | 'deck'
+export type Panel = 'tune' | 'loops' | 'mix'
 
 // The switches that open a panel, down the picture's right edge.
 export function PanelSwitches(props: {
@@ -36,14 +36,6 @@ export function PanelSwitches(props: {
         onClick={() => onToggle('mix')}
       >
         <MixIcon />
-      </Switch>
-      <Switch
-        on={panel === 'deck'}
-        label="deck"
-        title="fault pads that break the picture and let it heal"
-        onClick={() => onToggle('deck')}
-      >
-        <TapeIcon />
       </Switch>
     </div>
   )
