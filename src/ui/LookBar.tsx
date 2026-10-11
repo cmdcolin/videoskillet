@@ -116,9 +116,20 @@ export function LookBar(props: {
           are in, since the button is under your finger while it happens. */}
       <button
         className={cx(styles.btn, props.comparing && styles.btnOn)}
+        aria-pressed={props.comparing}
         onPointerDown={props.onStartCompare}
         onPointerUp={props.onEndCompare}
         onPointerLeave={props.onEndCompare}
+        onKeyDown={e => {
+          if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) {
+            e.preventDefault()
+            props.onStartCompare()
+          }
+        }}
+        onKeyUp={e => {
+          if (e.key === ' ' || e.key === 'Enter') props.onEndCompare()
+        }}
+        onBlur={() => props.comparing && props.onEndCompare()}
         title="hold to preview the clean signal, release to return (or hold C)"
       >
         {props.comparing ? 'showing clean…' : 'compare'}
