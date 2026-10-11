@@ -212,9 +212,10 @@ granularity likes it.
 
 **This is where the row-uniform invariant comes from.** `decode` stages a
 contiguous span of one raster row, so a horizontal offset applies to the whole
-workgroup or it reads outside the halo. Per-pixel horizontal scaling — H size,
-linearity, pincushion — needs the staging restructured first, and no amount of
-care in the shader gets around it.
+workgroup or it reads outside the halo. A width that is uniform across the row
+fits within the halo's spare 12 samples, which is how `lineEht` breathes the
+raster. Per-pixel horizontal scaling (linearity, pincushion) needs the staging
+restructured first, and no amount of care in the shader gets around it.
 
 **Sharing a deviate that is expensive to draw.** Snow is one Gaussian deviate
 per sample, and the 1-2-1 band-limit over it reads each neighbour's deviate —

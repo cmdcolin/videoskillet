@@ -3298,7 +3298,7 @@ export const GROUPS: Group[] = [
         curve: 'zero',
         redline: [-25, 25],
         unit: 'µs',
-        help: 'A bright picture draws beam current, which loads the high-voltage supply and lets the scan widen, so bright content stretches the geometry around it.',
+        help: 'A bright picture draws beam current, which loads the high-voltage supply. The softer beam deflects further and lands with less energy, so the lines around bright content widen, dim and pull sideways.',
       },
       {
         key: 'hvRing',

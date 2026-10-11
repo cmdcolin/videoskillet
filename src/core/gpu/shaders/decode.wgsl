@@ -409,26 +409,26 @@ struct Decoded {
 
 // One screen pixel decoded off one raster line, the receiver from the
 // demodulator to the matrix. `row` is the line after the roll, `ry` the raster
-// line it is drawn on, `hoff` the line's horizontal offset, and `toff` which
-// half of the tile holds its samples. The extra fields feed the debug views.
-fn decodeAt(row: u32, ry: u32, hoff: i32, toff: u32, lid: u32, gx: u32) -> Decoded {
-  let s = ACTIVE_START + gx;
-  let n = clampIdx(i32(row * SPL + s) + hoff);
+// line it is drawn on, `hoff` the line's horizontal offset, `toff` which half
+// of the tile holds its samples, `col` the picture sample the pixel lands on
+// and `tj` where that sample sits in the staged span. The extra fields feed the
+// debug views.
+fn decodeAt(row: u32, ry: u32, hoff: i32, toff: u32, tj: i32, col: i32) -> Decoded {
+  let n = clampIdx(i32(row * SPL + ACTIVE_START) + col + hoff);
 
   // Chroma reconstruction lattice: at coarse > 1 the demod runs only at every
   // coarse-th sample and pixels between get linear interpolation — the digital
   // decoder's chroma-upsampling error. Interpolated U/V re-attach to the wrong
   // subcarrier phase at edges, blooming dither and fine detail into rainbows.
   // Factor 8 keeps the farthest tap within the tile halo (20 + 8 <= 32).
-  let ti = i32(lid + HALO);
-  let coarse = u32(clamp(P.chromaCoarse, 1.0, 8.0));
+  let ti = tj + i32(HALO);
+  let coarse = i32(clamp(P.chromaCoarse, 1.0, 8.0));
   var uvd: vec2f;
-  if (coarse > 1u) {
-    let x0 = (gx / coarse) * coarse;
-    let d0 = i32(x0) - i32(gx);
+  if (coarse > 1) {
+    let d0 = -(((col % coarse) + coarse) % coarse);
     let a = demodAt(ti + d0, i32(n) + d0, toff);
-    let b = demodAt(ti + d0 + i32(coarse), i32(n) + d0 + i32(coarse), toff);
-    uvd = mix(a, b, f32(gx - x0) / f32(coarse));
+    let b = demodAt(ti + d0 + coarse, i32(n) + d0 + coarse, toff);
+    uvd = mix(a, b, f32(-d0) / f32(coarse));
   } else {
     uvd = demodAt(ti, i32(n), toff);
   }
@@ -536,6 +536,35 @@ fn lineOffset(row: u32, ry: u32, y: f32) -> i32 {
   return i32(round(timing[row] + bendAt(y) + sag + P.audioBend * audio[ry]));
 }
 
+// The fraction the EHT has fallen under the beam load on line `ry`, read off
+// the sag tank. The yoke throws a softer beam further, so the line widens about
+// the centre, and the beam lands with less energy, so it gives less light. A
+// supply sags a long way under load and rises only a little above its unloaded
+// voltage. The polarity belongs to the tube, so a sag wired backwards still
+// widens on bright content. EHT_KNEE puts most of the drop within the first few
+// microseconds of lateral pull.
+const EHT_MAX = 0.15;
+const EHT_KNEE = 0.12 * f32(SPL);
+const SCAN_MID = f32(ACTIVE_W) * 0.5;
+
+fn lineEht(ry: u32) -> f32 {
+  let e = EHT_MAX * tanh(abs(P.hvSag) / EHT_KNEE) * timing[SAG_BASE + ry];
+  return clamp(e, -0.1, 0.25);
+}
+
+// Picture samples per screen pixel: the deflection angle goes as 1/sqrt(EHT).
+// Capped below 1.05 by the tile, which stages a span 12 samples wider than the
+// workgroup past what the demod and chromaCoarse can reach.
+fn ehtScan(e: f32) -> f32 {
+  return sqrt(1.0 - e);
+}
+
+// Light per unit glass: the beam's energy falls with the voltage, and a wider
+// line spreads what is left over more phosphor.
+fn ehtLight(e: f32) -> f32 {
+  return (1.0 - e) * ehtScan(e);
+}
+
 // Vertical retrace. The yoke's current collapses from the bottom of the sweep
 // back to the top in a few line times while the horizontal sweep keeps going,
 // so the beam crosses the screen on a diagonal once per line of flyback, fast
@@ -635,7 +664,13 @@ fn main(
   let row = wrapRow(i32(rr) + i32(floor(vroll)));
   let ry = rr;
   let hoff = lineOffset(row, ry, y);
-  let base = i32(row * SPL + ACTIVE_START + wid.x * TILE_WG) + hoff - i32(HALO);
+  let x0 = f32(wid.x * TILE_WG);
+  let ehtA = lineEht(ry);
+  let scanA = ehtScan(ehtA);
+  let s0A = SCAN_MID + (x0 - SCAN_MID) * scanA;
+  let b0A = i32(round(s0A));
+  densA = densA * ehtLight(ehtA);
+  let base = i32(row * SPL + ACTIVE_START) + b0A + hoff - i32(HALO);
   for (var i = lid.x; i < TILE; i = i + TILE_WG) {
     tile[i] = csrc(clampIdx(base + i32(i)));
   }
@@ -644,11 +679,19 @@ fn main(
   var rowB = 0u;
   var ryB = 0u;
   var hoffB = 0;
+  var s0B = 0.0;
+  var scanB = 1.0;
+  var b0B = 0;
   if (twice) {
     ryB = u32(clamp(rrFB, 0.0, last));
     rowB = wrapRow(i32(ryB) + i32(floor(vroll)));
     hoffB = lineOffset(rowB, ryB, y);
-    let baseB = i32(rowB * SPL + ACTIVE_START + wid.x * TILE_WG) + hoffB - i32(HALO);
+    let ehtB = lineEht(ryB);
+    scanB = ehtScan(ehtB);
+    s0B = SCAN_MID + (x0 - SCAN_MID) * scanB;
+    b0B = i32(round(s0B));
+    densB = densB * ehtLight(ehtB);
+    let baseB = i32(rowB * SPL + ACTIVE_START) + b0B + hoffB - i32(HALO);
     for (var i = lid.x; i < TILE; i = i + TILE_WG) {
       tile[TILE + i] = csrc(clampIdx(baseB + i32(i)));
     }
@@ -658,7 +701,8 @@ fn main(
   if (gid.x >= ACTIVE_W || gid.y >= ACTIVE_H) {
     return;
   }
-  let d = decodeAt(row, ry, hoff, 0u, lid.x, gid.x);
+  let tjA = i32(round(s0A + f32(lid.x) * scanA)) - b0A;
+  let d = decodeAt(row, ry, hoff, 0u, tjA, b0A + tjA);
   var outc = d.rgb;
   if (offRaster) {
     // past the vertical retrace the beam never scans: no light, though the
@@ -693,7 +737,8 @@ fn main(
     // white; a scan collapsed to a line is the whole frame on a few rows.
     emitted = emitted * densA;
     if (twice) {
-      let dB = decodeAt(rowB, ryB, hoffB, TILE, lid.x, gid.x);
+      let tjB = i32(round(s0B + f32(lid.x) * scanB)) - b0B;
+      let dB = decodeAt(rowB, ryB, hoffB, TILE, tjB, b0B + tjB);
       emitted = emitted + toLight(dB.rgb * (1.0 - P.beamBlank)) * densB;
     }
     outc = gamutFit(toDrive(emitted));

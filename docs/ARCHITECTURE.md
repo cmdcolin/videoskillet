@@ -377,8 +377,11 @@ Almost everything is comfortably parallel. Two exceptions:
 - **`decode` stages a shared tile per row.** A workgroup covers 64 pixels of one
   raster row and stages a contiguous span with a 32-sample halo, so the demod
   FIR reads workgroup memory. Consequence: horizontal offsets must be
-  **row-uniform**. Per-pixel horizontal scaling (H size, linearity, pincushion)
-  would read outside the halo and needs the staging restructured first. Vertical
+  **row-uniform**. A row-uniform width fits too: the EHT breathing in
+  `lineEht` widens a line about the centre by up to 15% and narrows it by at
+  most 5%, which is what the halo has spare past the demod and `chromaCoarse`.
+  Per-pixel horizontal scaling (linearity, pincushion) would read outside the
+  halo and needs the staging restructured first. Vertical
   geometry is free by the same token: which raster line a screen row shows is a
   function of the row alone, so `vSize`, `vLin` and `vFold` are an inversion of
   the yoke's sweep in `decode`, and the fold stages the second line the row
