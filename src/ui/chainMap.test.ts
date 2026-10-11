@@ -108,18 +108,18 @@ describe('the row the app draws', () => {
 
   it('leaves every box at the width its own label asks for', () => {
     const l = live()
-    // Roomy, not squeezed: 196.6 of the 286 between the leads.
+    // Roomy, not squeezed: 241.6 of the 286 between the leads.
     expect(l.fit).toBe(1)
     // Spare over runs, inside both GAP and GAP_MAX rather than clamped to either.
-    expect(l.gap).toBeCloseTo(18.3, 6)
+    expect(l.gap).toBeCloseTo(11.1, 6)
     expect(
       l.boxes.map(b => [b.name, +b.x.toFixed(1), +b.w.toFixed(1)]),
     ).toEqual([
-      ['Source A', 33.6, 51.2],
-      ['Mix', 89.6, 24.2],
-      ['Channel', 142.9, 45.8],
-      ['Receiver', 209.7, 51.2],
-      ['Screen', 273.8, 40.4],
+      ['Source A', 37.2, 58.4],
+      ['Mix', 91, 26.9],
+      ['Channel', 141.6, 52.1],
+      ['Receiver', 207.9, 58.4],
+      ['Screen', 271.1, 45.8],
     ])
   })
 
@@ -134,9 +134,9 @@ describe('the row the app draws', () => {
   it('places every branch where its anchor asks, unpushed', () => {
     const l = live()
     expect(l.branches.map(b => [b.name, +b.x.toFixed(1)])).toEqual([
-      [SOURCE_B_STAGE, 33.6],
-      [SOUND_STAGE, 209.7],
-      [VIEW_STAGE, 273.8],
+      [SOURCE_B_STAGE, 37.2],
+      [SOUND_STAGE, 207.9],
+      [VIEW_STAGE, 271.1],
     ])
     // B under the head of the trunk; the other two under the stage they meet.
     expect(l.branches[0]!.x - l.branches[0]!.w / 2).toBeCloseTo(
@@ -243,9 +243,9 @@ describe('chain map geometry', () => {
     const l = chainLayout(FULL, [SOUND, VIEW])
     const [sound, view] = l.branches.map(branchHead).map(tipOf)
     // In: at the bottom edge of the trunk box it joins.
-    expect(sound![0]).toBe(l.centers[FULL.indexOf(SOUND_JOIN)])
+    expect(sound![0]).toBeCloseTo(l.centers[FULL.indexOf(SOUND_JOIN)]!, 9)
     // Out: at the top edge of its own box, which is further down the drawing.
-    expect(view![0]).toBe(l.branches[1]!.x)
+    expect(view![0]).toBeCloseTo(l.branches[1]!.x, 9)
     expect(view![1]).toBeGreaterThan(sound![1])
   })
 

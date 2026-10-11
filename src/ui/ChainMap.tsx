@@ -419,10 +419,10 @@ function Node(props: {
         x={props.x}
         // A captioned box sets its name off centre to make room; the other five
         // are one line in the middle of a chip and stay there. The pair rides
-        // 4 above and 6 below the centre rather than splitting the box evenly:
-        // the caption is 7px to the name's 9, and optical centring puts the
+        // 5 above and 7 below the centre rather than splitting the box evenly:
+        // the caption is 8px to the name's 10, and optical centring puts the
         // heavier line nearer the middle.
-        y={sub === undefined ? props.y : props.y - 4}
+        y={sub === undefined ? props.y : props.y - 5}
         textAnchor="middle"
         dominantBaseline="central"
       >
@@ -432,7 +432,7 @@ function Node(props: {
         <text
           className={styles.mapSub}
           x={props.x}
-          y={props.y + 6}
+          y={props.y + 7}
           textAnchor="middle"
           dominantBaseline="central"
         >

@@ -130,7 +130,7 @@
   stroke-width: 8;
 }
 /* A run's own name, on the chip below. Lowercase at 7.5px against the boxes'
-   uppercase 8px, because a wire and a stage are not the same kind of thing and
+   uppercase 10px, because a wire and a stage are not the same kind of thing and
    the map has no room to say so twice.
 
    It does *not* take the run's colour, which is the one thing here that is not
@@ -286,12 +286,11 @@
 .mapNodeOn .mapBox {
   stroke: currentColor;
 }
-/* svg user units, which are px at the sidebar's width. 9 rather than 8: the box
-   under it is 22 units now instead of 16, and 8px caps in a 22-unit box is a
-   label rattling around in a target. */
+/* svg user units, which are px at the sidebar's width: 10px caps in a 26-unit
+   box. */
 .mapLabel {
   fill: currentColor;
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 0.02em;
   text-transform: uppercase;
   /* the box is the target, and a drag that starts on a label should not select
@@ -300,7 +299,7 @@
 }
 /* What is standing in a box that has a picker, captioned under its name. Three
    boxes wear one — the two sources and the sound — and the register is the whole
-   reason it does not turn the map into a wall of text: 7px mixed case under 9px
+   reason it does not turn the map into a wall of text: 8px mixed case under 10px
    caps, at --fg3, so the row still reads as six names with something written
    under three of them rather than as twelve labels.
 
@@ -309,7 +308,7 @@
    in amber beside a name in amber and double the mark. */
 .mapSub {
   fill: var(--fg3);
-  font-size: 7px;
+  font-size: 8px;
   letter-spacing: 0.01em;
   user-select: none;
 }

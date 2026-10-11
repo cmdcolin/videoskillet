@@ -61,7 +61,7 @@ export const W = 304
 // row of html chips it became cost the panel about as much height as the row
 // costs the svg, while being the one thing in the map's own picture set to the
 // panel's type rather than the map's. One drawing, one scale.
-export const H = 130
+export const H = 138
 // Gap between boxes — the run each wire has to cross — and how far one opens
 // when a filter leaves the row with room to spare.
 export const GAP = 10
@@ -70,53 +70,41 @@ export const GAP_MAX = 26
 // fed and something delivered rather than a row of stages that begins nowhere.
 export const LEAD = 8
 export const OUT = 10
-export const MID_Y = 47
+export const MID_Y = 49
 // The branch row, under the trunk: input B at its head and the sound under the
 // receiver, both joining from below.
-export const BRANCH_Y = 81
+export const BRANCH_Y = 87
 // The free row, under the branches: the boxes nothing is wired to. Same 34
 // units below its neighbour that the branch row sits below the trunk, so the
 // three rows are one rhythm and the gap under the last wire is not read as the
 // drawing having ended. Nothing is drawn to these boxes and nothing needs to
 // be: on a row of their own with no wire on it, the emptiness is the row.
-export const FREE_Y = 115
-// Taller than the 13 the map shipped with, and than the 16 that replaced it: at
-// 16 units a box is 17.5 screen pixels at the sidebar's width, and a target is
-// meant to be 24. This is 22, which is 24px at 332 — and it is why MID_Y and
-// BRANCH_Y moved with it. See ChainMap.module.css for the other half.
-//
-// MID_Y moved by exactly the growth, so `MID_Y - BOX_H / 2` is still 36 and the
-// runs above the chain are untouched: they still ride at 7 and 18 and still
-// drop 7 units onto the trunk. The band over the chain was never the part
-// short of room, and re-tuning it would have been change for its own sake.
-export const BOX_H = 22
+export const FREE_Y = 121
+// 26 units, which is 28px at the sidebar's 332: a 24px target with room for a
+// 10px name over an 8px caption. MID_Y moves by half of any growth, so
+// `MID_Y - BOX_H / 2` stays 36 and the runs above the chain still ride at 7 and
+// 18. BRANCH_Y and FREE_Y move with it to keep the rows 12 units apart.
+export const BOX_H = 26
 // Half-width of a wire's arrowhead.
 export const HEAD = 2.5
 // Corner radius on a routed wire.
 export const TURN = 4
 
-// What a label costs, per uppercase character. Still measured at 8px while the
-// labels are set at 9 (.mapLabel), and deliberately: raising it widens every
-// box, which walks the head of the chain to the right and moves the gaps a run
-// label is fitted into — so a purely typographic change would move type the
-// layout had already placed. The estimate has room to absorb this. The widest real label runs 5.07 units a
-// character at 8px, so 5.70 at 9px, and 'RECEIVER' is 45.6 of the 51.2 its box
-// asks for — less breathing room than PAD promises and still not a squeeze.
-//
-// Measured in Firefox against .mapLabel's own rules (system-ui, .02em):
-// the widest real label averages 5.07 units a character and a lone 'A' costs
-// 5.28, so 5.4 buys slack on a platform whose system font is wider than this
-// one's. It only has to be *proportionally* right in any case — `fit` below
-// scales the whole row to the width available, so a generous estimate spends
-// padding rather than overflowing the map.
-const CHAR = 5.4
+// What a label costs, per uppercase character, at the 10px .mapLabel sets.
+// Measured in Firefox against .mapLabel's own rules (system-ui, .02em), the
+// widest real label averages 5.07 units a character at 8px, which is 6.34 at
+// 10px, so 'RECEIVER' takes 50.7 of the 58.4 its box asks for. The estimate only
+// has to be proportionally right: `fit` below scales the whole row to the width
+// available, so an estimate that runs over spends padding and the map never
+// overflows.
+const CHAR = 6.3
 // Breathing room inside a box, both sides together.
 const PAD = 8
 // A short label still needs to read as a box rather than a dot on the wire.
 const MIN_BOX = 20
 
 // The same estimate for a run's label, which is a different number because it
-// is different type: 7.5px and lowercase against the boxes' 8px uppercase (see
+// is different type: 7.5px and lowercase against the boxes' 10px uppercase (see
 // .mapLoopLabel and .mapLabel).
 //
 // A flat average per character will not do here, where CHAR gets away with one.
@@ -157,19 +145,20 @@ export const runChipWidth = (s: string) => runLabelWidth(s) + RUN_PAD
 export const boxWidth = (name: string) =>
   Math.max(MIN_BOX, name.length * CHAR + PAD)
 
-// A caption's cost per character: 7px mixed case against the label's 9px caps
+// A caption's cost per character: 8px mixed case against the label's 10px caps
 // (.mapSub), with the same doubling of m and w that a run's label needs — a
 // caption is a filename as often as it is a word, so the spread between 'iiii'
 // and 'wwww' is real rather than theoretical.
 //
-// Measured off the rendered map in Firefox: 'Color bars' comes out at 3.20 units
-// a character and 'Minnie th…', which is most of the wide glyphs there are, at
-// 3.60. This is that worst case *before* the doubling, so the estimate keeps
+// Measured off the rendered map in Firefox at 7px: 'Color bars' came out at 3.20
+// units a character and 'Minnie th…', which is most of the wide glyphs there
+// are, at 3.60, which is 4.1 at 8px. This is that worst case *before* the doubling, so
+// the estimate keeps
 // about a tenth in hand on real text. Held tighter than CHAR is, and for the
 // opposite reason: a box is sized from CHAR, so a generous estimate there buys
 // padding, while a caption is cut to fit a box that is already placed — every
 // unit of slack here is a character of someone's filename that goes missing.
-const SUB_CHAR = 3.6
+const SUB_CHAR = 4.1
 
 // A caption cut to this map's boxes. The cutting is `fitCaption` (patched.ts),
 // which the card shares; what is the miniature's own is the two numbers — its
@@ -459,8 +448,8 @@ export function chainLayout(names: string[], specs: WiredBranch[] = []) {
   // by the same factor. One of the two is always in play, so the drawing can
   // never run off the right edge however the estimate above lands.
   //
-  // The five real stages ask for 196.6 of the 286 between the leads, so the
-  // trunk the app draws is the roomy case: 89.4 spare over 4 runs is a 22.35 gap,
+  // The five real stages ask for 241.6 of the 286 between the leads, so the
+  // trunk the app draws is the roomy case: 44.4 spare over 4 runs is an 11.1 gap,
   // inside both clamps, and `fit` stays at 1. Neither clamp nor the squeeze has
   // fired since the trunk stopped being filtered.
   const spare = W - LEAD - OUT - total
