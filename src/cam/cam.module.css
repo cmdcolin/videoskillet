@@ -12,6 +12,7 @@
   font-family: var(--font);
   padding: env(safe-area-inset-top) env(safe-area-inset-right)
     env(safe-area-inset-bottom) env(safe-area-inset-left);
+  container-type: inline-size;
   /* a long press on the picture is the compare gesture, not a text selection
      or the phone's image menu */
   user-select: none;
@@ -19,8 +20,16 @@
   -webkit-touch-callout: none;
   -webkit-tap-highlight-color: transparent;
 }
+/* Above the picture, as much room as the controls take under it, so the
+   picture sits centred between the top bar and the strip. */
+.page::before {
+  content: '';
+  order: -1;
+  flex: 1 1 0;
+}
 
 .top {
+  order: -2;
   flex: none;
   display: flex;
   align-items: center;
@@ -48,6 +57,7 @@
   gap: 10px;
 }
 .help {
+  position: relative;
   display: grid;
   place-items: center;
   width: 30px;
@@ -62,11 +72,19 @@
   font-weight: 700;
   cursor: pointer;
 }
+/* A button's press area fills the 44px bar around the 30px button. */
+.help::after,
+.full::after {
+  content: '';
+  position: absolute;
+  inset: -8px -5px;
+}
 .help[aria-pressed='true'] {
   background: #fff;
   color: #000;
 }
 .full {
+  position: relative;
   padding: 5px 12px;
   border: 1px solid #ffffff50;
   border-radius: 999px;
@@ -80,9 +98,14 @@
 /* The stage is a size container, so the frame can be the largest 4:3 box,
    or 3:4 with the set on its side, that fits the height the controls leave.
    The canvas is then exactly the picture, and a still or a recording has no
-   letterbox in it. */
+   letterbox in it.
+
+   The stage asks for the height of a full-width picture and shrinks when the
+   screen is too short for one, so it hugs the picture. The controls take half
+   the height left over, which gives a sheet room to open from the picture's
+   bottom edge. */
 .stage {
-  flex: 1;
+  flex: 0 1 calc(100cqw * 3 / 4);
   min-height: 0;
   display: grid;
   place-items: center;
@@ -98,6 +121,9 @@
 .turned {
   width: min(100cqw, calc(100cqh * 3 / 4));
   aspect-ratio: 3 / 4;
+}
+.stage:has(.turned) {
+  flex-basis: calc(100cqw * 4 / 3);
 }
 .canvas {
   position: absolute;
@@ -173,6 +199,7 @@
   transform: translateX(-50%);
 }
 .zoomStop {
+  position: relative;
   display: grid;
   place-items: center;
   min-width: 32px;
@@ -186,6 +213,11 @@
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
+}
+.zoomStop::after {
+  content: '';
+  position: absolute;
+  inset: -8px -2px;
 }
 .zoomOn {
   min-width: 40px;
@@ -338,9 +370,10 @@
 
 .controls {
   position: relative;
-  flex: none;
+  flex: 1 0 auto;
   display: flex;
   flex-direction: column;
+  justify-content: flex-end;
   gap: 14px;
   padding: 14px 0 18px;
 }
@@ -434,8 +467,8 @@
   text-align: center;
 }
 
-/* The tune and feedback sheets cover the strip and the shutter exactly, so
-   the whole picture stays in view and in place. */
+/* The tune and feedback sheets cover everything under the picture, so the
+   whole picture stays in view and in place. */
 .sheet {
   position: absolute;
   inset: 0;
@@ -624,7 +657,7 @@
 .tabs {
   display: flex;
   gap: 2px;
-  margin-bottom: -6px;
+  margin: -6px 0 -12px;
   padding: 0 12px;
   overflow-x: auto;
   scrollbar-width: none;
@@ -640,9 +673,8 @@
 }
 .tab {
   flex: none;
-  padding: 4px 8px;
+  padding: 10px 8px 12px;
   border: 0;
-  border-bottom: 2px solid transparent;
   background: none;
   color: var(--fg3);
   font: inherit;
@@ -653,7 +685,7 @@
   cursor: pointer;
 }
 .tabOn {
-  border-bottom-color: #fc3;
+  background: linear-gradient(#fc3, #fc3) left 0 bottom 6px / 100% 2px no-repeat;
   color: #fff;
 }
 .faultsTab {
@@ -693,14 +725,16 @@
   /* Sideways scrolls the strip; up and down weigh the chip's look in. */
   touch-action: pan-x;
 }
-/* Random stays at the strip's left edge while the looks scroll under it. */
+/* Random stays at the strip's left edge while the looks scroll under it. Its
+   black margin and the fade across the strip's gap hide a chip sliding under
+   it, which would otherwise show a letter or two beside random. */
 .roll {
   position: sticky;
   left: 0;
   z-index: 1;
   flex: none;
   display: flex;
-  padding-left: 16px;
+  padding: 0 12px 0 16px;
   background: #000;
 }
 .roll::after {
@@ -709,7 +743,7 @@
   top: 0;
   bottom: 0;
   left: 100%;
-  width: 14px;
+  width: 8px;
   background: linear-gradient(to right, #000, transparent);
   pointer-events: none;
 }
@@ -825,10 +859,11 @@
 .modes {
   display: flex;
   justify-content: center;
-  gap: 24px;
+  gap: 8px;
+  margin: -8px 0;
 }
 .mode {
-  padding: 4px 2px;
+  padding: 12px 10px;
   border: 0;
   background: none;
   color: var(--fg4);
@@ -867,6 +902,9 @@
     display: grid;
     grid-template-columns: 1fr 230px;
     grid-template-rows: auto 1fr;
+  }
+  .page::before {
+    display: none;
   }
   .top {
     grid-column: 2;
