@@ -1,8 +1,8 @@
 /* CROSS_REPO_SYNC_FILE(site-css) */
 /* The static site's shared components, identical in videoskillet and bender:
    the page base, buttons, the site bar, the account menu, the why-sign-in card,
-   the privacy page, the signed-in home and its skeleton. Colours come from
-   tokens.css and each product's --accent and --accent-ink. */
+   the privacy, about and blog pages, the signed-in home and its skeleton.
+   Colours come from tokens.css and each product's --accent and --accent-ink. */
 :root {
   --measure: 46rem;
 }
@@ -341,6 +341,85 @@ section {
 }
 .privacyLead {
   font-size: 1.1rem;
+}
+
+/* ── the about page and the blog ───────────────────────────────────────── */
+.about,
+.blog {
+  padding-top: 2.5rem;
+  padding-bottom: 4rem;
+}
+.about h1,
+.blog h1 {
+  margin: 0 0 0.6rem;
+  font-size: 2rem;
+}
+.about p,
+.blog p,
+.blog li {
+  color: var(--fg3);
+}
+.about p {
+  margin: 0 0 0.8rem;
+}
+.aboutLead,
+.blogLead {
+  font-size: 1.1rem;
+}
+.aboutLinks {
+  margin: 1.5rem 0 0;
+  padding-left: 1.2rem;
+}
+.aboutLinks li {
+  margin-bottom: 0.4rem;
+}
+.post {
+  margin-top: 2.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-faint);
+}
+.post h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+.post h2 a {
+  color: var(--fg);
+  text-decoration: none;
+}
+.post h2 a:hover {
+  text-decoration: underline;
+}
+.postMeta {
+  margin: 0.2rem 0 0;
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  color: var(--fg4);
+}
+.post h3 {
+  margin: 1.2rem 0 0.4rem;
+  font-size: 0.95rem;
+  color: var(--fg2);
+}
+.post ul {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+.post li {
+  margin-bottom: 0.35rem;
+}
+.postScope {
+  margin-right: 0.45rem;
+  padding: 0.05em 0.4em;
+  border: 1px solid var(--border-quiet);
+  border-radius: 3px;
+  font-family: var(--mono);
+  font-size: 0.8em;
+  color: var(--fg4);
+}
+.postSha {
+  font-family: var(--mono);
+  font-size: 0.8em;
+  color: var(--fg4);
 }
 
 /* ── the signed-in home ────────────────────────────────────────────────────

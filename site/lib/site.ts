@@ -11,10 +11,14 @@ export const SITE = {
   nav: [
     ['/#gallery', 'Gallery'],
     ['/guide/', 'User guide'],
+    ['/blog/', 'Blog'],
+    ['/about/', 'About'],
   ],
   footer: [
     ['/app/', 'Open the app ↗'],
     ['/guide/', 'Guide'],
+    ['/blog/', 'Blog'],
+    ['/about/', 'About'],
     ['https://github.com/cmdcolin/videoskillet', 'GitHub ↗'],
     ['/privacy/', 'Privacy'],
     ['https://cmdcolin.github.io/bender/', "videoskillet's sibling: bender ↗"],

@@ -1,0 +1,42 @@
+---
+import Page from '../layouts/Page.astro'
+import { ORIGIN } from '../lib/site'
+import css from '../styles/landing.css?raw'
+
+const NAME = 'videoskillet'
+const LEAD =
+  'videoskillet emulates analog video at the signal level, on WebGPU. The picture faults come out of a simulated NTSC signal, the way a real tube and tape deck would mangle it, rather than being drawn on top of the picture.'
+const MAKER =
+  'Colin Diesh builds videoskillet, alongside its sibling bender, a circuit bender for sound.'
+const LINKS = [
+  ['/guide/', 'User guide: how to use it'],
+  ['/blog/', 'Blog: what changed, day by day'],
+  ['https://github.com/cmdcolin/videoskillet', 'Source on GitHub ↗'],
+  ['https://cmdcolin.github.io/bender/', 'bender ↗'],
+  ['/privacy/', 'Privacy: what an account stores'],
+]
+---
+
+<Page
+  title="About — videoskillet"
+  description="videoskillet emulates analog video at the signal level, in the browser."
+  css={css}
+  canonical={`${ORIGIN}about/`}
+  account={false}
+  current="/about/"
+>
+  <main class="wrap about">
+    <!-- CROSS_REPO_SYNC(about-page) -->
+    <h1>About {NAME}</h1>
+    <p class="aboutLead">{LEAD}</p>
+    <p>{MAKER}</p>
+    <ul class="aboutLinks">
+      {LINKS.map(([href, label]) => (
+        <li>
+          <a href={href}>{label}</a>
+        </li>
+      ))}
+    </ul>
+    <!-- CROSS_REPO_SYNC_END(about-page) -->
+  </main>
+</Page>

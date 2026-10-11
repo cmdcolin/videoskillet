@@ -1,0 +1,59 @@
+---
+import changelog from '../../CHANGELOG.md?raw'
+import Page from '../layouts/Page.astro'
+import {
+  longDate,
+  parseChangelog,
+  postsByDay,
+  versionSpan,
+} from '../lib/changelog'
+import { ORIGIN } from '../lib/site'
+import css from '../styles/landing.css?raw'
+
+const NAME = 'videoskillet'
+const posts = postsByDay(parseChangelog(changelog))
+---
+
+<Page
+  title="Blog — videoskillet"
+  description="What changed in videoskillet, day by day, from the changelog."
+  css={css}
+  canonical={`${ORIGIN}blog/`}
+  account={false}
+  current="/blog/"
+>
+  <main class="wrap blog">
+    <!-- CROSS_REPO_SYNC(blog-posts) -->
+    <h1>Blog</h1>
+    <p class="blogLead">
+      What changed in {NAME}, one post per day, from the changelog.
+    </p>
+    {posts.map(post => (
+      <article class="post" id={post.date}>
+        <h2>
+          <a href={`#${post.date}`}>{longDate(post.date)}</a>
+        </h2>
+        <p class="postMeta">{versionSpan(post.versions)}</p>
+        {post.groups.map(([name, changes]) => (
+          <Fragment>
+            <h3>{name}</h3>
+            <ul>
+              {changes.map(change => (
+                <li>
+                  {change.scope && (
+                    <span class="postScope">{change.scope}</span>
+                  )}
+                  {change.text}{' '}
+                  <a class="postSha" href={change.url}>
+                    {change.sha}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </Fragment>
+        ))}
+      </article>
+    ))}
+    <!-- CROSS_REPO_SYNC_END(blog-posts) -->
+  </main>
+</Page>
