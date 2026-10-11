@@ -1,5 +1,5 @@
 import type { Look } from './looks'
-import type { Pattern } from './useCamEngine'
+import type { Pattern } from './patterns'
 
 // The instrument, opened on the look this page is showing, asking for the
 // camera again or putting up the same patterns. A look at full strength is a

@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 
+import type { Pattern } from './patterns'
 import type { BSource } from './sources'
-import type { Pattern } from './useCamEngine'
 import type { Facing, useCamera } from './useCamera'
 import type { useSecond } from './useSecond'
 import type { ASource, useSourceA } from './useSourceA'
@@ -13,6 +13,7 @@ export function useSourcePicks(opts: {
   cam: ReturnType<typeof useCamera>
   srcA: ReturnType<typeof useSourceA>
   second: ReturnType<typeof useSecond>
+  firstB: Pattern | null
   onError: (message: string) => void
   onMixing: () => void
   onTakeOff: () => void
@@ -20,7 +21,7 @@ export function useSourcePicks(opts: {
   const { cam, srcA, second, onError } = opts
   const clipA = useRef<HTMLInputElement>(null)
   const clipB = useRef<HTMLInputElement>(null)
-  const [picked, setPicked] = useState<BSource>('none')
+  const [picked, setPicked] = useState<BSource>(opts.firstB ?? 'none')
 
   const mixing = (from: BSource) => {
     setPicked(from)

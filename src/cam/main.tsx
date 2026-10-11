@@ -1,9 +1,11 @@
 import { createRoot } from 'react-dom/client'
 
 import { startAnalytics } from '../analytics'
+import { paramsOf } from '../core/gpu/env'
 import { registerServiceWorker } from '../registerSW'
 import '../theme.css'
 import { CamPage } from './CamPage'
+import { readLink } from './link'
 
 // The camera page's entry. The camera is a page of its own because a phone
 // needs the picture and a shutter, and the instrument's panel would need a
@@ -12,7 +14,7 @@ import { CamPage } from './CamPage'
 const root = document.getElementById('root')
 if (root) {
   document.body.style.margin = '0'
-  createRoot(root).render(<CamPage />)
+  createRoot(root).render(<CamPage link={readLink(paramsOf(location))} />)
 }
 
 registerServiceWorker()

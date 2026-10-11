@@ -10,6 +10,17 @@
 // Everything degrades to the stills if it does not run.
 const motion = matchMedia('(prefers-reduced-motion: reduce)')
 
+// ---- a phone opens the gallery on its camera ----
+//
+// The query is landing.css's own test for a phone.
+const PHONE =
+  '(pointer: coarse) and (orientation: portrait) and (max-width: 900px), (pointer: coarse) and (orientation: landscape) and (max-height: 560px)'
+if (matchMedia(PHONE).matches) {
+  for (const link of document.querySelectorAll('a[data-cam]')) {
+    link.href = link.dataset.cam
+  }
+}
+
 // ---- can this browser run it at all ----
 //
 // Two questions, not one. `navigator.gpu` is whether the browser has the

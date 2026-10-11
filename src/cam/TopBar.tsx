@@ -1,10 +1,12 @@
 import { publicUrl } from '../publicUrl'
 import styles from './cam.module.css'
+import { ShareIcon } from './icons'
 
 export function TopBar(props: {
   help: boolean
   fullHref: string
   onHelp: () => void
+  onShare: () => void
 }) {
   return (
     <header className={styles.top}>
@@ -13,6 +15,13 @@ export function TopBar(props: {
         <span className={styles.brandName}>videoskillet</span>
       </a>
       <span className={styles.topRight}>
+        <button
+          className={styles.help}
+          aria-label="share a link to this look"
+          onClick={props.onShare}
+        >
+          <ShareIcon />
+        </button>
         <button
           className={styles.help}
           aria-label="how to use the camera"

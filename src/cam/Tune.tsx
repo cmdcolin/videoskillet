@@ -5,7 +5,7 @@ import { presetLabelFor } from '../ui/presets'
 import { fromTravel, toTravel } from '../ui/travel'
 import styles from './cam.module.css'
 import { CloseIcon } from './icons'
-import { lookKnobs, lookLabel, stackLabel } from './looks'
+import { lookKnobs, lookLabel } from './looks'
 
 import type { Controls } from '../core/controls'
 import type { SliderDef } from '../ui/controls'
@@ -100,6 +100,7 @@ function Weight(props: {
 // picture stays where it is. `controls` is the board as the looks and the
 // knobs make it; `tweaked` says whether a knob has moved off the looks.
 export function Tune(props: {
+  title: string
   look: Look | null
   layers: Layers
   controls: Controls
@@ -115,7 +116,7 @@ export function Tune(props: {
   return (
     <section className={styles.sheet} aria-label="Tune the look">
       <header className={styles.sheetHead}>
-        <span className={styles.sheetTitle}>{stackLabel(look, layers)}</span>
+        <span className={styles.sheetTitle}>{props.title}</span>
         <button
           className={styles.sheetButton}
           disabled={!props.tweaked}

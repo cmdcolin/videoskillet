@@ -10,10 +10,12 @@ import styles from './cam.module.css'
 import { CameraNotice } from './CameraNotice'
 import { ClipInput } from './ClipInput'
 import { Deck } from './Deck'
+import { shareLink } from './deliver'
 import { Hints } from './Hints'
 import { instrumentHref } from './instrumentHref'
 import { keysOnHue } from './keyed'
 import { KeyRing } from './KeyRing'
+import { writeLink } from './link'
 import {
   MIX_SHELF,
   SHELVES,
@@ -60,6 +62,7 @@ import { ZoomStops } from './ZoomStops'
 
 import type { ControlKey } from '../core/controls'
 import type { Transition } from '../ui/transitions'
+import type { CamLink } from './link'
 import type { Look, Mix } from './looks'
 import type { Panel } from './PanelSwitches'
 import type { Roll } from './roll'
@@ -68,20 +71,32 @@ import type { Scene } from './scene'
 const HINT_STORE = 'videoskillet_cam_hint_seen'
 const SIDEWAYS_STORE = 'videoskillet_cam_sideways'
 
-export function CamPage() {
+// A link opens on what it names, with its pattern on B. Anything else opens on
+// a strong look.
+const firstScene = (link: CamLink | null): Scene =>
+  link === null
+    ? { ...CLEAN, look: openingLook(), mix: null }
+    : {
+        ...CLEAN,
+        base: link.base,
+        look: link.look,
+        layers: link.layers,
+        tweaks: link.tweaks,
+        mix: link.mix,
+      }
+
+export function CamPage(props: { link: CamLink | null }) {
+  const firstB = props.link?.b ?? null
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [sideways, setSideways] = usePersistedFlag(SIDEWAYS_STORE)
-  const [scene, setScene] = useState<Scene>(() => ({
-    ...CLEAN,
-    look: openingLook(),
-    mix: null,
-  }))
+  const [scene, setScene] = useState(() => firstScene(props.link))
   const sceneRef = useRef(scene)
   // The wipe and the inset are laid out across the glass on show, so a new
   // layout lays the board again.
   const eng = useCamEngine(canvasRef, {
     sideways,
     firstBoard: () => boardOf(scene, sliceOf('whole')),
+    firstB,
     onLayout: () => paint({}),
   })
   const zoom = useZoom(() => trackOf(eng.camera()?.video), eng.zoomA)
@@ -94,7 +109,7 @@ export function CamPage() {
   })
   const tilt = useTilt(eng.steer)
   const sound = useSound(eng.hear, setError)
-  const second = useSecond(eng, cam, setError)
+  const second = useSecond(eng, cam, setError, firstB)
   const { flash, announce } = useFlash()
   const [shelfName, setShelfName] = useState(() => shelfOf(scene.look).name)
   const [faults, setFaults] = useState(false)
@@ -103,13 +118,15 @@ export function CamPage() {
   const [hintSeen, setHintSeen] = usePersistedFlag(HINT_STORE)
   const [comparing, setComparing] = useState(false)
   const { look } = scene
+  const linked = look === null ? scene.base : null
+  const label = linked === null ? stackLabel(look, scene.layers) : linked.name
   // The mix tab opens while B has a picture to mix.
   const shelves = second.loaded ? [...SHELVES, MIX_SHELF] : SHELVES
   const shelf = shelves.find(s => s.name === shelfName) ?? SHELVES[0]
 
   const shutter = useShutter(
     canvasRef,
-    stackLabel(look, scene.layers),
+    label,
     setError,
     () => eng.engine?.audioState.tap() ?? null,
   )
@@ -134,6 +151,7 @@ export function CamPage() {
     }
     const same = cur.look !== null && next.name === cur.look.name
     paint({
+      base: null,
       look: next,
       layers: without(cur.layers, next.name),
       hue: same ? cur.hue : null,
@@ -178,6 +196,7 @@ export function CamPage() {
     } else if (kind === 'stack') {
       paint({
         ...rollStack(cur.look, pool, 'normal'),
+        base: null,
         tweaks: {},
         hue: null,
       })
@@ -219,6 +238,7 @@ export function CamPage() {
   // it under the look that is up. A change of picture on B keeps the mixer
   // where it was.
   const picks = useSourcePicks({
+    firstB,
     cam,
     srcA,
     second,
@@ -233,6 +253,14 @@ export function CamPage() {
         mixerOwned(sceneRef.current) ? { ...CLEAN, mix: null } : { mix: null },
       ),
   })
+
+  const share = () => {
+    const url = new URL(location.pathname, location.origin)
+    url.hash = writeLink(sceneRef.current, second.pattern).toString()
+    void shareLink(url.href, `videoskillet: ${label}`).then(
+      word => word !== '' && announce(word),
+    )
+  }
 
   const flipTilt = () => {
     setError('')
@@ -314,15 +342,20 @@ export function CamPage() {
       <TopBar
         help={help}
         onHelp={() => setHelp(!help)}
-        fullHref={instrumentHref(
-          stacked ? null : look,
-          cameraUp
-            ? 'webcam'
-            : srcA.on === 'camera' || srcA.on === 'clip'
-              ? null
-              : srcA.on,
-          second.pattern,
-        )}
+        onShare={share}
+        fullHref={
+          linked === null
+            ? instrumentHref(
+                stacked ? null : look,
+                cameraUp
+                  ? 'webcam'
+                  : srcA.on === 'camera' || srcA.on === 'clip'
+                    ? null
+                    : srcA.on,
+                second.pattern,
+              )
+            : `../app/#${writeLink(scene, second.pattern)}${cameraUp ? '&src=webcam' : ''}`
+        }
       />
 
       <main className={styles.stage}>
@@ -415,6 +448,7 @@ export function CamPage() {
             shelves={shelves}
             shelf={shelf}
             faults={faults}
+            normal={look === null && linked === null}
             look={look}
             layers={scene.layers}
             tweaked={tweaked}
@@ -465,6 +499,7 @@ export function CamPage() {
         ) : null}
         {panel === 'tune' ? (
           <Tune
+            title={label}
             look={look}
             layers={scene.layers}
             controls={controls()}

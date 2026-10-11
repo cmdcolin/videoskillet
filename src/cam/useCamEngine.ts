@@ -11,27 +11,10 @@ import { steered } from './tilt'
 
 import type { Controls, ModSlot } from '../core/controls'
 import type { Fatal } from '../ui/FatalScreen'
+import type { Pattern } from './patterns'
 import type { Camera, Layout } from './tape'
 import type { Tilt } from './tilt'
 import type { RefObject } from 'react'
-
-// The pictures the set makes itself, the same ones the app's source menus
-// offer, and what each one is.
-export const PATTERNS = [
-  'bars',
-  'tv static',
-  'vhs static',
-  'synth',
-  'sweep',
-] as const
-export type Pattern = (typeof PATTERNS)[number]
-export const PATTERN_TITLE: Record<Pattern, string> = {
-  bars: 'SMPTE colour bars',
-  'tv static': 'snow from a channel with no station on it',
-  'vhs static': 'the noise off a blank tape',
-  synth: 'oscillators patched into the input',
-  sweep: 'a frequency zone plate',
-}
 
 const NOISE: Record<Exclude<Pattern, 'bars' | 'sweep'>, number> = {
   'tv static': 1,
@@ -121,6 +104,7 @@ export function useCamEngine(
   opts: {
     sideways: boolean
     firstBoard: () => Board
+    firstB: Pattern | null
     onLayout: (layout: Layout) => void
   },
 ) {
@@ -134,7 +118,7 @@ export function useCamEngine(
     video: null,
     pattern: null,
     mirror: false,
-    second: null,
+    second: opts.firstB,
     zoom: 1,
     sideways: opts.sideways,
   })

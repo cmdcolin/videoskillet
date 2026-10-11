@@ -15,7 +15,7 @@ import { gallery } from '../../scripts/demos.mjs'
 <ul class="grid">
   {gallery.map(demo => (
     <li>
-      <a class="demo" href={demo.href}>
+      <a class="demo" href={demo.href} data-cam={demo.cam}>
         <span class="shot">
           <img
             class="still"
@@ -46,7 +46,7 @@ import { gallery } from '../../scripts/demos.mjs'
           {demo.riffs.map((riff, i) => (
             <>
               {i > 0 && ' '}
-              <a href={riff.href}>{riff.name}</a>
+              <a {...riff.link}>{riff.name}</a>
             </>
           ))}
         </p>

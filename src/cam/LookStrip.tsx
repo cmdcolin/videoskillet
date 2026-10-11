@@ -20,6 +20,7 @@ export function LookStrip(props: {
   shelves: readonly Shelf[]
   shelf: Shelf
   faults: boolean
+  normal: boolean
   look: Look | null
   layers: Layers
   tweaked: boolean
@@ -80,7 +81,7 @@ export function LookStrip(props: {
             </button>
           </span>
           <button
-            className={cx(styles.chip, look === null && styles.chipOn)}
+            className={cx(styles.chip, props.normal && styles.chipOn)}
             data-look="normal"
             onClick={props.onNormal}
           >

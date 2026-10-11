@@ -166,3 +166,12 @@ test.each(riffs)('$name is a link under its demo’s card', riff => {
   expect(page).toContain(riff.href.replaceAll('&', '&amp;'))
   expect(page).toContain(`>${riff.name}<`)
 })
+
+// A phone's script swaps each gallery link for this one, so it has to be on the
+// card and open the same board on the camera page.
+test.each(gallery)('$name has a camera link on its card', demo => {
+  expect(page).toContain(`data-cam="${demo.cam.replaceAll('&', '&amp;')}"`)
+  expect(demo.cam).toBe(
+    `/cam/#${demo.query.slice(1)}&name=${encodeURIComponent(demo.name)}`,
+  )
+})

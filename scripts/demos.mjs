@@ -88,6 +88,11 @@ const checkQuery = (name, query) => {
   }
 }
 
+// The same board on the camera page, for a phone. It takes the app's own link
+// format and the name the page shows for it.
+const camHref = (name, query) =>
+  `/cam/#${query.slice(1)}&name=${encodeURIComponent(name)}`
+
 // `still` is page-relative and `poster` is not, which is not an oversight: vite
 // rewrites the asset attributes it knows — `src` and `poster` become
 // `./demos/…` under this project's relative base — and it has never heard of a
@@ -112,13 +117,19 @@ export const demos = listed.map(demo => {
   checkQuery(demo.name, demo.query)
   const riffs = (demo.riffs ?? []).map(riff => {
     checkQuery(`${demo.name}: ${riff.name}`, riff.query)
-    return { ...riff, href: `/app/${riff.query}` }
+    const href = `/app/${riff.query}`
+    return {
+      ...riff,
+      href,
+      link: { href, 'data-cam': camHref(riff.name, riff.query) },
+    }
   })
   return {
     ...demo,
     file,
     url: `${APP}${demo.query}`,
     href: `/app/${demo.query}`,
+    cam: camHref(demo.name, demo.query),
     clip: `${CLIPS}${file}.mp4`,
     still: `demos/${file}.webp`,
     poster: `/demos/${file}.webp`,

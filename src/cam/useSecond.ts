@@ -4,8 +4,9 @@ import { usePersistedString } from '../ui/storage'
 import { TAPE_SECONDS, playLoop, recordTape, relayCamera } from './tape'
 import { stopAll } from './useCamera'
 
+import type { Pattern } from './patterns'
 import type { Camera, Layout, Relay } from './tape'
-import type { Pattern, Shown } from './useCamEngine'
+import type { Shown } from './useCamEngine'
 import type { Opened } from './useCamera'
 
 // What is on source B: a tape of one camera, the other camera live, a clip
@@ -53,15 +54,18 @@ export function useSecond(
     adopt: (next: Opened) => Opened | null
   },
   onError: (message: string) => void,
+  first: Pattern | null,
 ) {
-  const [second, setSecond] = useState<Second | null>(null)
+  const [second, setSecond] = useState<Second | null>(
+    first === null ? null : { kind: 'pattern', pattern: first },
+  )
   const [left, setLeft] = useState(0)
   const [opening, setOpening] = useState(false)
   const [dual, setDual] = usePersistedString(DUAL_STORE)
   // The same as `second`, for the teardown on the way out. A swap moves a live
   // camera between A and B, so B is unloaded by hand where it changes and
   // never by an effect that cannot tell a moved camera from a dropped one.
-  const held = useRef<Second | null>(null)
+  const held = useRef<Second | null>(second)
 
   useEffect(
     () => () => {

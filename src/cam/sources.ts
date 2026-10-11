@@ -1,6 +1,6 @@
-import { PATTERNS, PATTERN_TITLE } from './useCamEngine'
+import { PATTERNS, PATTERN_TITLE } from './patterns'
 
-import type { Pattern } from './useCamEngine'
+import type { Pattern } from './patterns'
 import type { Facing } from './useCamera'
 import type { ASource } from './useSourceA'
 

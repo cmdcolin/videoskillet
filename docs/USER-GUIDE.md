@@ -193,8 +193,9 @@ can capture the picture window alone.
 ## Camera
 
 The camera page at `/cam/` puts a phone's camera through the set. A phone
-opening the home page gets **Open the camera** as its first button, and
-**camera** in the ☰ menu reaches the page from the app.
+opening the home page gets **Open the camera** as its first button, and its
+gallery cards open each demo's board on the camera. **camera** in the ☰ menu
+reaches the page from the app.
 
 |                                                                                                                                                                                                                                                                                  |                                                                                                                                                                                                                     |                                                                                                                                                                                                                      |
 | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
@@ -256,7 +257,9 @@ picture and heals it. With a picture on B, the fader flips to the other end on
 the frame where the picture is least legible, so the cut to the other picture
 lands inside the fault.
 
-**full app** opens the app on the same preset.
+**full app** opens the app on the same preset. The share button beside **?**
+sends a link that opens the camera page on the same look, its stack, its knobs
+and the pattern on B, or copies the link where the phone has no share sheet.
 
 ## Keyboard
 

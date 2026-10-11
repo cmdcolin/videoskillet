@@ -25,3 +25,22 @@ export async function deliver(shot: Shot) {
     save(shot.blob, shot.name)
   }
 }
+
+// A link goes out through the share sheet, or onto the clipboard where there is
+// none. Resolves to a word for the picture, or '' when the sheet was closed.
+export async function shareLink(url: string, title: string): Promise<string> {
+  if ('share' in navigator) {
+    try {
+      await navigator.share({ url, title })
+      return ''
+    } catch (e) {
+      if (isAbort(e)) return ''
+    }
+  }
+  try {
+    await navigator.clipboard.writeText(url)
+    return 'link copied'
+  } catch {
+    return 'could not copy the link'
+  }
+}

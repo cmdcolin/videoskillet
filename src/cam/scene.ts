@@ -1,15 +1,25 @@
+import { routingsToSlots, toEngineSlots } from '../ui/modSlots'
 import { aimKey } from './keyed'
 import { lookBoard, mixControls, mixesItself } from './looks'
 import { SLICE } from './tape'
 
 import type { Controls } from '../core/controls'
+import type { ModRouting } from '../ui/modSlots'
 import type { Layers, Look, Mix } from './looks'
 import type { Layout } from './tape'
 
-// Everything the board is built from: the look, the presets dragged in partway
-// on top of it, the knobs moved off both, the mixer while B has a picture, and
+// A whole board from a link, such as a gallery demo, shown while no look is up.
+export interface Base {
+  name: string
+  controls: Controls
+  mod: readonly ModRouting[]
+}
+
+// Everything the board is built from: a linked board or the look, the presets
+// dragged in partway on top of the look, the knobs moved off both, the mixer while B has a picture, and
 // where a tap has aimed the look's keyer.
 export interface Scene {
+  base: Base | null
   look: Look | null
   layers: Layers
   tweaks: Partial<Controls>
@@ -17,7 +27,13 @@ export interface Scene {
   hue: number | null
 }
 
-export const CLEAN = { look: null, layers: {}, tweaks: {}, hue: null } as const
+export const CLEAN = {
+  base: null,
+  look: null,
+  layers: {},
+  tweaks: {},
+  hue: null,
+} as const
 
 export const FIRST_MIX: Mix = { mode: 'dissolve', fader: 0.5 }
 
@@ -31,7 +47,13 @@ export const mixerOwned = (s: Scene) =>
   )
 
 export const boardOf = (s: Scene, slice: number) => {
-  const board = lookBoard(s.look, s.layers)
+  const board =
+    s.base !== null && s.look === null
+      ? {
+          controls: s.base.controls,
+          mod: toEngineSlots(routingsToSlots(s.base.mod)),
+        }
+      : lookBoard(s.look, s.layers)
   const controls = {
     ...board.controls,
     ...s.tweaks,

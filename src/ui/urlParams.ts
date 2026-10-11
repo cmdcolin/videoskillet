@@ -214,7 +214,7 @@ export interface SessionParams {
 // Clamped rather than snapped to the step grid: clamping is the safety
 // property, while snapping would quietly move values in existing links that
 // were doing no harm.
-function parseSet(raw: string): Partial<Controls> {
+export function parseSet(raw: string): Partial<Controls> {
   const patch: Partial<Controls> = {}
   for (const pair of raw.split(',')) {
     const [k, v] = pair.split(':')
@@ -440,6 +440,17 @@ const pinsAddress = (
   clip: string,
 ): boolean => isPoolMode(mode) && (img !== '' || clip !== '')
 
+// The `?mod=` value for these routings, which `parseMod` reads back.
+export const modParam = (mod: readonly ModRouting[]): string =>
+  mod
+    .map(
+      m =>
+        `${m.target}:${m.source}:${short(m.rateHz)}:${short(m.depth)}${
+          m.syncDiv === undefined ? '' : `:${m.syncDiv}`
+        }`,
+    )
+    .join(',')
+
 // Rewrite the managed keys from live state, leaving every other param alone —
 // the loader also reads iurl, iurlb, vurl, preset and debug, and a URL-loaded
 // source has to survive the user then touching a slider.
@@ -472,17 +483,7 @@ export function writeSessionParams(
   // session, so "nothing is moving" has to be sayable. Without the marker,
   // copying a link while the bay is empty would hand the reader whatever their
   // own browser had patched, over a look that was authored still.
-  q.set(
-    'mod',
-    state.mod
-      .map(
-        m =>
-          `${m.target}:${m.source}:${short(m.rateHz)}:${short(m.depth)}${
-            m.syncDiv === undefined ? '' : `:${m.syncDiv}`
-          }`,
-      )
-      .join(','),
-  )
+  q.set('mod', modParam(state.mod))
   // A one-shot instruction, not part of the look: once the roll has happened,
   // `?set=` above IS what it rolled. Leaving it on would make the link reroll
   // over its own recorded look every time someone opened it.

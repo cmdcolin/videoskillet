@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 
 import { playLoop } from './tape'
 
-import type { Pattern } from './useCamEngine'
+import type { Pattern } from './patterns'
 
 // What is on source A: the camera, a clip of yours, or one of the set's own
 // patterns.
