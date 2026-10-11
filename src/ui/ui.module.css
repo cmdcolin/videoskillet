@@ -54,9 +54,9 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 6px;
-    margin: 9px 0 4px;
-    padding: 2px 2px;
+    gap: var(--space-sm);
+    margin: 9px 0 var(--space-xs);
+    padding: var(--space-2xs) var(--space-2xs);
     border-bottom: 1px solid var(--border);
     color: var(--fg);
     font-size: var(--fs-md);
@@ -202,7 +202,7 @@
     flex-shrink: 0;
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: var(--space-xs);
     padding: var(--btn-pad-y) 7px;
     border: 1px solid var(--border-quiet);
     border-radius: var(--ctl-radius);
@@ -236,7 +236,7 @@ button.filledOn {
   composes: filled;
   padding: var(--btn-pad-y) 9px;
   line-height: var(--btn-lh);
-  margin: 2px 3px 2px 0;
+  margin: var(--space-2xs) 3px var(--space-2xs) 0;
 }
 /* a .btn standing alone (dialog actions, close) rather than in a flowing row */
 .btnFlush {
@@ -321,7 +321,7 @@ button.filledOn {
 .dismissHint {
   display: flex;
   align-items: flex-start;
-  gap: 6px;
+  gap: var(--space-sm);
 }
 .hintIcon {
   flex-shrink: 0;
@@ -332,7 +332,7 @@ button.filledOn {
 .hintX {
   composes: bare tap;
   flex-shrink: 0;
-  padding: 0 2px;
+  padding: 0 var(--space-2xs);
   color: var(--fg3);
   font-size: var(--fs-lg);
   line-height: 1;
@@ -342,7 +342,7 @@ button.filledOn {
 }
 .helpText {
   color: var(--fg);
-  margin: 0 0 12px;
+  margin: 0 0 var(--space-lg);
   line-height: var(--prose-lh);
 }
 
@@ -356,7 +356,7 @@ button.filledOn {
 .aboutTitle {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-md);
 }
 .aboutMark {
   composes: appMark;
@@ -402,6 +402,6 @@ button.filledOn {
    stage overlay; this covers the panel. */
 @media (pointer: coarse) {
   .btn {
-    padding: 8px 11px;
+    padding: var(--space-md) 11px;
   }
 }

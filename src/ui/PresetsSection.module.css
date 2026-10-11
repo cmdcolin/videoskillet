@@ -70,7 +70,7 @@ button.allBtnOn {
   overflow: hidden;
   min-height: 20px;
   color: var(--fg2);
-  margin: 3px 0 2px;
+  margin: 3px 0 var(--space-2xs);
   line-height: var(--prose-lh);
 }
 /* How many controls the described preset moves, leading the caption. In the
@@ -85,7 +85,7 @@ button.allBtnOn {
 
 /* a preset group in the unfolded catalog */
 .presetGroup {
-  margin: 2px 0 4px;
+  margin: var(--space-2xs) 0 var(--space-xs);
 }
 
 /* The chip carries its "moved since" mark in its own top-right corner, so the
@@ -107,8 +107,8 @@ button.allBtnOn {
 }
 
 .moreChip {
-  margin: 2px 3px 2px 0;
-  padding: var(--btn-pad-y) 8px;
+  margin: var(--space-2xs) 3px var(--space-2xs) 0;
+  padding: var(--btn-pad-y) var(--space-md);
   border: 1px dashed var(--border-hover);
   border-radius: var(--ctl-radius);
   background: transparent;
@@ -122,6 +122,6 @@ button.allBtnOn {
 }
 @media (pointer: coarse) {
   .moreChip {
-    padding: 8px 11px;
+    padding: var(--space-md) 11px;
   }
 }

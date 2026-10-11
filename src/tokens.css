@@ -1,7 +1,8 @@
 /* CROSS_REPO_SYNC_FILE(design-tokens) */
-/* The design system videoskillet and bender share: neutrals, borders and type,
-   for the static site and the app alike. Each product adds its own accent,
-   signal colours and reset in its own sheet, and nothing here names one.
+/* The design system videoskillet and bender share: neutrals, borders, type,
+   spacing and corners, for the static site and the app alike. Each product
+   adds its own accent, signal colours and reset in its own sheet, and nothing
+   here names one.
 
    Four text tiers: primary reading text, secondary (headers, labels about
    labels), tertiary (prose, meta), and faint (icon affordances, placeholders).
@@ -48,4 +49,18 @@
   /* Prose wraps to three to five lines in a narrow panel, where 1.2 is
      unreadable. */
   --prose-lh: 1.45;
+
+  /* The spacing scale, for gaps, padding and margins, in px because a panel's
+     density stays put when the reader scales their text. */
+  --space-2xs: 2px;
+  --space-xs: 4px;
+  --space-sm: 6px;
+  --space-md: 8px;
+  --space-lg: 12px;
+  --space-xl: 16px;
+  --space-2xl: 24px;
+
+  /* A control's corner, and a pill's at any height. */
+  --ctl-radius: 3px;
+  --pill-radius: 999px;
 }

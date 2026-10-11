@@ -51,7 +51,7 @@
   display: flex;
   align-items: baseline;
   gap: 10px;
-  padding: 8px 10px;
+  padding: var(--space-md) 10px;
   border-radius: 6px;
   background: #000000d8;
   color: #f66;
@@ -74,7 +74,7 @@
   align-items: start;
   gap: 10px;
   max-width: min(420px, 80%);
-  padding: 16px 18px;
+  padding: var(--space-xl) 18px;
   border: 1px solid #a86;
   border-radius: 8px;
   background: #000000d8;
@@ -105,7 +105,7 @@
   align-items: center;
   gap: 10px;
   max-width: min(560px, 92%);
-  padding: 8px 10px;
+  padding: var(--space-md) 10px;
   border: 1px solid #a86;
   border-radius: 8px;
   background: #000000d8;
@@ -115,7 +115,7 @@
 }
 .budgetDismiss {
   flex: none;
-  padding: 0 4px;
+  padding: 0 var(--space-xs);
   background: none;
   border: 0;
   color: inherit;
@@ -136,7 +136,7 @@
   right: 12px;
   display: flex;
   align-items: start;
-  gap: 6px;
+  gap: var(--space-sm);
 }
 /* the region being chosen by a drag on the picture */
 .marquee {

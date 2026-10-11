@@ -5,8 +5,8 @@
   display: block;
   width: 100%;
   text-align: left;
-  padding: 2px 0;
-  margin: 2px 0;
+  padding: var(--space-2xs) 0;
+  margin: var(--space-2xs) 0;
   font-size: var(--fs-sm);
   color: var(--gate);
 }
@@ -37,7 +37,7 @@
    nothing else is claiming. */
 .revert {
   composes: bare from './ui.module.css';
-  padding: 0 2px;
+  padding: 0 var(--space-2xs);
   font-size: var(--fs-sm);
   line-height: 1;
   color: var(--edit);
@@ -60,7 +60,7 @@
    A row of panel height, spent to say twice what one button already says. */
 .dice {
   composes: bare tap from './ui.module.css';
-  padding: 0 2px;
+  padding: 0 var(--space-2xs);
   line-height: 1;
   color: var(--fg3);
 }
@@ -74,7 +74,7 @@
    drifting stage is — something is moving its controls and it was not you. */
 .drift {
   composes: bare tap from './ui.module.css';
-  padding: 0 2px;
+  padding: 0 var(--space-2xs);
   line-height: 1;
   color: var(--fg3);
 }
@@ -99,7 +99,7 @@
 .sliderToggle {
   composes: bare from './ui.module.css';
   display: block;
-  margin: -4px 0 6px;
+  margin: -4px 0 var(--space-sm);
   font-size: var(--fs-sm);
   color: var(--fg3);
 }
@@ -114,8 +114,8 @@
 .captionField {
   box-sizing: border-box;
   width: 100%;
-  margin: 4px 0 8px;
-  padding: 6px 8px;
+  margin: var(--space-xs) 0 var(--space-md);
+  padding: var(--space-sm) var(--space-md);
   /* The app's ground rather than the panel's, because the group around it is
      the panel's now (Section.module.css .sec): a field filled to match the
      block it sits in is a border and nothing else. */
@@ -133,14 +133,14 @@
   outline: none;
 }
 .captionNote {
-  margin: 0 0 8px;
+  margin: 0 0 var(--space-md);
   color: var(--fg4);
   font-size: var(--fs-sm);
 }
 .captionCheck {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--space-xs);
   color: var(--fg3);
   font-size: var(--fs-sm);
   cursor: pointer;
@@ -155,16 +155,16 @@
 .cardChips {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
-  padding: 2px 0 8px;
+  gap: var(--space-xs);
+  padding: var(--space-2xs) 0 var(--space-md);
 }
 
 .cardChip {
   background: var(--surface-raised);
   color: var(--fg);
   border: 1px solid var(--border);
-  border-radius: 3px;
-  padding: 2px 7px;
+  border-radius: var(--ctl-radius);
+  padding: var(--space-2xs) 7px;
   font: inherit;
   font-size: var(--fs-sm);
 }

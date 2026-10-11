@@ -30,7 +30,7 @@
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 20px 24px;
+  padding: 20px var(--space-2xl);
   line-height: var(--prose-lh);
 }
 /* prose dialogs (help, a control's explainer): a measure that stays under ~80
@@ -66,7 +66,7 @@
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  margin-bottom: 8px;
+  margin-bottom: var(--space-md);
 }
 /* the teletype card's text box: monospace and full width, because what is
    typed here lands on a 40-column grid and both the wrap and the shape of a
@@ -81,8 +81,8 @@
 .textArea {
   box-sizing: border-box;
   width: 100%;
-  margin-bottom: 8px;
-  padding: 6px 8px;
+  margin-bottom: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
   background: var(--surface);
   color: var(--fg);
   border: 1px solid var(--border);
@@ -101,7 +101,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 3px;
-  margin-bottom: 8px;
+  margin-bottom: var(--space-md);
 }
 .chip {
   /* The proportions of a character cell, not a square: a block glyph is about
@@ -115,7 +115,7 @@
   background: var(--surface);
   color: var(--fg);
   border: 1px solid var(--border);
-  border-radius: 3px;
+  border-radius: var(--ctl-radius);
   font-family: var(--mono-blocks);
   font-size: 28px;
   line-height: 1;
@@ -139,7 +139,7 @@
 .check {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-sm);
   margin-bottom: 10px;
   color: var(--fg2);
   cursor: pointer;
@@ -151,5 +151,5 @@
 .subhead {
   font-weight: 600;
   color: var(--fg2);
-  margin: 0 0 4px;
+  margin: 0 0 var(--space-xs);
 }

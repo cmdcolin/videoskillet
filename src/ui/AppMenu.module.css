@@ -12,7 +12,7 @@
 .stageTrigger {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-sm);
   box-sizing: border-box;
   height: var(--ctl-h);
   background: var(--ctl-bg);
@@ -94,8 +94,8 @@ button.recording {
 .zoomRow {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 4px 8px;
+  gap: var(--space-md);
+  padding: var(--space-xs) var(--space-md);
 }
 .zoomLabel {
   color: var(--fg3);

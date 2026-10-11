@@ -4,8 +4,8 @@
 .scrubRow {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin: 2px 0 4px 19px;
+  gap: var(--space-sm);
+  margin: var(--space-2xs) 0 var(--space-xs) 19px;
 }
 /* The cue buttons, sitting under the bar they mark up. Same left indent as
    .scrubRow so the transport reads as one block rather than two rows that
@@ -13,15 +13,15 @@
 .cueRow {
   display: flex;
   align-items: center;
-  gap: 4px;
-  margin: 0 0 4px 19px;
+  gap: var(--space-xs);
+  margin: 0 0 var(--space-xs) 19px;
 }
 /* The deck's button, at the deck's size — this is the same kind of thing as the
    transport stops in Deck.module.css, and two button shapes for two transports
    would be a difference that means nothing. Not `composes`, because that would
    couple this sheet to the deck's file for four declarations. */
 .cueBtn {
-  padding: 2px 5px;
+  padding: var(--space-2xs) 5px;
   min-width: 22px;
   font-family: inherit;
   font-size: var(--fs-xs);

@@ -7,7 +7,7 @@
   gap: 5px;
   align-items: center;
   margin-left: auto;
-  padding-right: 8px;
+  padding-right: var(--space-md);
 }
 .readout {
   color: #6ec98a;

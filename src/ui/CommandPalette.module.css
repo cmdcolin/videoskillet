@@ -26,7 +26,7 @@
   flex: none;
   width: 100%;
   box-sizing: border-box;
-  padding: 8px 12px;
+  padding: var(--space-md) var(--space-lg);
   border: 0;
   border-bottom: 1px solid var(--border);
   background: transparent;
@@ -55,9 +55,9 @@
   display: grid;
   grid-template-columns: 1fr auto;
   align-items: baseline;
-  gap: 0 8px;
+  gap: 0 var(--space-md);
   width: 100%;
-  padding: 5px 12px;
+  padding: 5px var(--space-lg);
   color: var(--fg);
   text-align: left;
 }
@@ -81,7 +81,7 @@
 .paletteMeta {
   grid-column: 1 / -1;
   display: flex;
-  gap: 6px;
+  gap: var(--space-sm);
   min-width: 0;
   color: var(--fg3);
   font-size: var(--fs-sm);
@@ -98,12 +98,12 @@
   white-space: nowrap;
 }
 .paletteEmpty {
-  padding: 10px 12px;
+  padding: 10px var(--space-lg);
   color: var(--fg3);
 }
 .paletteFoot {
   flex: none;
-  padding: 6px 12px;
+  padding: var(--space-sm) var(--space-lg);
   border-top: 1px solid var(--border);
   color: var(--fg3);
   font-size: var(--fs-sm);

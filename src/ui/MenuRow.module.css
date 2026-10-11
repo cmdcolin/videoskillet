@@ -19,12 +19,12 @@
   min-width: 0;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-sm);
   background: var(--surface-raised);
   color: var(--fg);
   border: 1px solid var(--border);
   border-radius: var(--ctl-radius);
-  padding: 3px 6px;
+  padding: 3px var(--space-sm);
   font: inherit;
   text-align: left;
 }
@@ -50,7 +50,7 @@
 }
 
 .head {
-  padding: 5px 6px 1px;
+  padding: 5px var(--space-sm) 1px;
   color: var(--fg4);
   font-size: var(--fs-sm);
 }
@@ -59,10 +59,10 @@
   composes: bare from './ui.module.css';
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--space-xs);
   width: 100%;
-  border-radius: 3px;
-  padding: 4px 6px;
+  border-radius: var(--ctl-radius);
+  padding: var(--space-xs) var(--space-sm);
   color: var(--fg);
   text-align: left;
   font-size: var(--fs-sm);
@@ -100,6 +100,6 @@
 /* Touch: the same fingertip height the shelf's menu takes. */
 @media (pointer: coarse) {
   .item {
-    padding: 9px 6px;
+    padding: 9px var(--space-sm);
   }
 }

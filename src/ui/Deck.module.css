@@ -17,8 +17,8 @@
 .deck {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin: 2px 0 6px;
+  gap: var(--space-md);
+  margin: var(--space-2xs) 0 var(--space-sm);
 }
 
 /* One division of the deck. A rule above the label rather than a box around
@@ -28,7 +28,7 @@
   display: flex;
   flex-direction: column;
   gap: 3px;
-  padding-top: 6px;
+  padding-top: var(--space-sm);
   border-top: 1px solid var(--border-faint);
 }
 .block:first-child {
@@ -128,7 +128,7 @@
    row of them reads as a keyboard rather than as three kinds of button. */
 .deckBtn {
   composes: filled from './ui.module.css';
-  padding: 3px 6px;
+  padding: 3px var(--space-sm);
   min-width: 24px;
   font-size: var(--fs-xs);
   line-height: 1.2;
@@ -152,7 +152,7 @@
   composes: tap from './ui.module.css';
   composes: bare from './ui.module.css';
   margin-left: auto;
-  padding: 4px 2px;
+  padding: var(--space-xs) var(--space-2xs);
   font-family: var(--mono);
   font-size: var(--fs-xs);
   color: var(--fg4);
@@ -168,8 +168,8 @@
 .shelf {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
-  margin-top: 4px;
+  gap: var(--space-xs);
+  margin-top: var(--space-xs);
 }
 /* Same key as the deck's, in the edit face: these do not set anything and do
    not stay pressed — each one is a gesture that runs for a couple of seconds
@@ -188,7 +188,7 @@
 .deckRow {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--space-2xs);
 }
 .deckLabel {
   font-size: var(--fs-sm);
@@ -198,7 +198,7 @@
    machine, so the shuttle has no reason to take a line of its own */
 .stops {
   display: flex;
-  gap: 4px;
+  gap: var(--space-xs);
   align-items: center;
 }
 
@@ -276,12 +276,12 @@
    realtime)" wrapped to three lines for a control that is one number. */
 .holdRow {
   display: flex;
-  gap: 8px;
+  gap: var(--space-md);
   align-items: center;
   justify-content: space-between;
 }
 .holdBtn {
-  padding: 3px 8px;
+  padding: 3px var(--space-md);
   font-family: inherit;
   font-size: var(--fs-sm);
   color: var(--fg2);
@@ -307,7 +307,7 @@
    rule the slider rows do */
 @media (pointer: coarse) {
   .deckBtn {
-    padding: 8px 10px;
+    padding: var(--space-md) 10px;
   }
   /* --thumb-size carries into both engines' rules and re-centres the webkit one
      on its own, the same way a control row grows its handle */

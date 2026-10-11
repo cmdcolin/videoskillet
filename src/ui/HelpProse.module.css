@@ -10,17 +10,17 @@
   margin-bottom: 0;
 }
 .para {
-  margin: 0 0 8px;
+  margin: 0 0 var(--space-md);
 }
 /* Marker outside the text column, so a wrapped item's second line lines up
    under its first rather than under the bullet — which is the whole reason a
    list reads faster than the sentence it came from. */
 .list {
-  margin: 0 0 8px;
+  margin: 0 0 var(--space-md);
   padding-left: 15px;
 }
 .list li {
-  margin: 0 0 4px;
+  margin: 0 0 var(--space-xs);
 }
 .list li::marker {
   color: var(--fg3);

@@ -2,7 +2,7 @@
   display: flex;
   align-items: center;
   gap: 7px;
-  padding: 2px 0;
+  padding: var(--space-2xs) 0;
 }
 
 .label {
@@ -34,7 +34,7 @@
 
 .freeze {
   composes: bare from './ui.module.css';
-  padding: 0 2px;
+  padding: 0 var(--space-2xs);
   font-size: var(--fs-sm);
   line-height: 1;
   color: var(--fg4);
@@ -49,14 +49,14 @@
 
 .list {
   list-style: none;
-  margin: 4px 0 2px;
+  margin: var(--space-xs) 0 var(--space-2xs);
   padding: 0;
 }
 .item {
   display: flex;
   align-items: baseline;
-  gap: 8px;
-  padding: 2px 0;
+  gap: var(--space-md);
+  padding: var(--space-2xs) 0;
   font-size: var(--fs-sm);
 }
 .target {
@@ -73,7 +73,7 @@ button.target:hover {
   color: var(--mod);
 }
 .group {
-  margin-left: 6px;
+  margin-left: var(--space-sm);
   color: var(--fg4);
 }
 .reading {
@@ -102,7 +102,7 @@ button.target:hover {
 }
 .drive {
   display: inline-block;
-  margin-left: 4px;
+  margin-left: var(--space-xs);
   white-space: pre;
   color: var(--edit-hi);
 }
@@ -130,16 +130,16 @@ button.target:hover {
   letter-spacing: normal;
   text-transform: none;
   color: var(--fg3);
-  padding: 0 4px;
+  padding: 0 var(--space-xs);
   border: 1px solid var(--border-quiet);
-  border-radius: 3px;
+  border-radius: var(--ctl-radius);
 }
 .count:hover {
   color: var(--mod);
   border-color: color-mix(in srgb, var(--mod) 45%, transparent);
 }
 .parked {
-  margin-left: 2px;
+  margin-left: var(--space-2xs);
   color: var(--fg4);
 }
 .countOn,
@@ -165,21 +165,21 @@ button.target:hover {
 @media (pointer: coarse) {
   .strip {
     gap: 10px;
-    padding: 6px 0;
+    padding: var(--space-sm) 0;
   }
   .freeze {
-    padding: 4px 6px;
+    padding: var(--space-xs) var(--space-sm);
   }
   .count {
-    padding: 4px 5px;
+    padding: var(--space-xs) 5px;
   }
   .bind {
-    padding: 4px 2px;
+    padding: var(--space-xs) var(--space-2xs);
   }
   .item {
-    padding: 6px 0;
+    padding: var(--space-sm) 0;
   }
   .open {
-    padding: 6px 0;
+    padding: var(--space-sm) 0;
   }
 }

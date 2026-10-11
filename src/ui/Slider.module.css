@@ -136,7 +136,7 @@
   left: 0;
   right: 0;
   top: 100%;
-  margin-top: 2px;
+  margin-top: var(--space-2xs);
   pointer-events: none;
   background: #1a1a22;
   border: 1px solid var(--border);
@@ -376,7 +376,7 @@
    than marks (a routed row's `mod`, an armed ⚟) and take the same box. */
 .badge {
   composes: bare from './ui.module.css';
-  padding: 0 0 0 6px;
+  padding: 0 0 0 var(--space-sm);
   font-size: var(--fs-xs);
   color: var(--fg4);
 }
@@ -422,7 +422,7 @@
   background: color-mix(in srgb, var(--mod) 16%, transparent);
   border: 1px solid color-mix(in srgb, var(--mod) 40%, transparent);
   border-radius: var(--ctl-radius);
-  padding: 0 4px;
+  padding: 0 var(--space-xs);
 }
 .iconModSet:hover {
   background: color-mix(in srgb, var(--mod) 30%, transparent);
@@ -440,7 +440,7 @@
   background: color-mix(in srgb, var(--fg4) 14%, transparent);
   border: 1px solid color-mix(in srgb, var(--fg4) 35%, transparent);
   border-radius: var(--ctl-radius);
-  padding: 0 4px;
+  padding: 0 var(--space-xs);
 }
 .iconModOff:hover {
   background: color-mix(in srgb, var(--fg4) 26%, transparent);
@@ -453,7 +453,7 @@
   color: var(--fg3);
   border: 1px solid var(--border-quiet);
   border-radius: var(--ctl-radius);
-  padding: 0 4px;
+  padding: 0 var(--space-xs);
   white-space: nowrap;
 }
 .modAdd:hover {
@@ -469,7 +469,7 @@
   border: 1px solid color-mix(in srgb, var(--mod) 40%, transparent);
   border-radius: var(--ctl-radius);
   padding: 0 3px;
-  margin-left: 6px;
+  margin-left: var(--space-sm);
   font-size: 8px;
   line-height: 14px;
 }
@@ -486,8 +486,8 @@
 }
 /* The chip and its transport sit flush, one gap in from the reading. */
 .modChip {
-  margin-left: 2px;
-  padding-left: 6px;
+  margin-left: var(--space-2xs);
+  padding-left: var(--space-sm);
 }
 .modCaret {
   padding-left: 3px;
@@ -496,7 +496,7 @@
 }
 /* Hand the slot back: quiet until pointed at, the same as the bay's own × */
 .modRemove {
-  padding: 0 1px 0 4px;
+  padding: 0 1px 0 var(--space-xs);
 }
 .modRemove:hover {
   color: var(--danger);
@@ -508,7 +508,7 @@
 .what {
   composes: bare from './ui.module.css';
   position: relative;
-  padding: 0 0 0 4px;
+  padding: 0 0 0 var(--space-xs);
   font-size: var(--fs-xs);
   color: var(--fg4);
 }
@@ -555,7 +555,7 @@
   }
   .badge,
   .what {
-    padding: 4px 0 4px 10px;
+    padding: var(--space-xs) 0 var(--space-xs) 10px;
   }
   /* …except the one badge that is a button. The rule above grows a *mark* into
      a fingertip's target by padding the side it is read from, which on a chip
@@ -565,25 +565,25 @@
   .iconModSet,
   .iconModOff,
   .modAdd {
-    margin-left: 6px;
-    padding: 4px 6px;
+    margin-left: var(--space-sm);
+    padding: var(--space-xs) var(--space-sm);
   }
   .modRun {
-    padding: 4px 6px;
+    padding: var(--space-xs) var(--space-sm);
   }
   .modChip {
-    margin-left: 2px;
+    margin-left: var(--space-2xs);
   }
   .modRemove {
-    padding: 4px 4px 4px 8px;
+    padding: var(--space-xs) var(--space-xs) var(--space-xs) var(--space-md);
   }
   /* the reading doubles as the reset, so it needs a fingertip's height — and
      no side padding, which would push the column off the row's right edge */
   .revert {
-    padding: 6px 0;
+    padding: var(--space-sm) 0;
   }
   .rowMenu {
-    padding: 6px 2px 6px 10px;
+    padding: var(--space-sm) var(--space-2xs) var(--space-sm) 10px;
   }
 }
 
@@ -595,7 +595,7 @@
 .needs {
   composes: bare from './ui.module.css';
   display: block;
-  margin: -2px 0 2px;
+  margin: -2px 0 var(--space-2xs);
   font-size: var(--fs-sm);
   text-align: left;
   color: var(--gate);
@@ -637,12 +637,12 @@
   left: anchor(left);
   box-sizing: border-box;
   width: anchor-size(width);
-  margin-top: 2px;
+  margin-top: var(--space-2xs);
   max-width: 34rem;
   background: #1a1a22;
   border: 1px solid var(--border);
   border-radius: 4px;
-  padding: 5px 8px 6px;
+  padding: 5px var(--space-md) var(--space-sm);
   box-shadow: 0 4px 14px rgb(0 0 0 / 0.5);
 }
 .vernier:popover-open {
@@ -661,7 +661,7 @@
 .vernierHead {
   display: flex;
   align-items: baseline;
-  gap: 8px;
+  gap: var(--space-md);
   font-size: var(--fs-xs);
   color: var(--muted);
   margin-bottom: 3px;
@@ -686,7 +686,7 @@
 .vernierBody {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-md);
 }
 .vernierRange {
   composes: track from './ui.module.css';

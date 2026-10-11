@@ -18,11 +18,11 @@
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 24px 28px;
+  padding: var(--space-2xl) 28px;
 }
 .fatalTitle {
   font-size: var(--fs-xl);
-  margin: 0 0 12px;
+  margin: 0 0 var(--space-lg);
   color: #f66;
 }
 /* The unavailable screen is not a diagnostic. It is the first thing a stranger
@@ -33,7 +33,7 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 16px;
+  gap: var(--space-xl);
   margin: 0 0 14px;
 }
 .fatalMark {
@@ -60,7 +60,7 @@
   font-size: clamp(1.05rem, 3vw, 1.25rem);
   font-weight: 600;
   text-decoration: none;
-  padding: 12px 22px;
+  padding: var(--space-lg) 22px;
   border-radius: 8px;
   background: var(--accent);
   color: #0b160f;
@@ -81,7 +81,7 @@
 .fatalVideo {
   display: block;
   width: 100%;
-  margin: 0 0 16px;
+  margin: 0 0 var(--space-xl);
   border: 1px solid var(--border);
   border-radius: 6px;
   background: #000;

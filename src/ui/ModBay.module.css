@@ -5,8 +5,8 @@
 .slotHead {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin: 8px 0 3px;
+  gap: var(--space-sm);
+  margin: var(--space-md) 0 3px;
 }
 .tag {
   width: 13px;
@@ -46,7 +46,7 @@
 .chip {
   composes: bare from './ui.module.css';
   min-width: 0;
-  padding: 1px 6px;
+  padding: 1px var(--space-sm);
   border-radius: var(--ctl-radius);
   border: 1px solid transparent;
   font-size: var(--fs-sm);
@@ -103,7 +103,7 @@ button.destChip.chipOff:hover {
   composes: bare from './ui.module.css';
   flex-shrink: 0;
   min-width: 18px;
-  padding: 0 2px;
+  padding: 0 var(--space-2xs);
   color: var(--fg4);
   font-size: var(--fs-sm);
   text-align: center;
@@ -115,7 +115,7 @@ button.destChip.chipOff:hover {
 @media (pointer: coarse) {
   .remove {
     min-width: 30px;
-    padding: 6px 2px;
+    padding: var(--space-sm) var(--space-2xs);
   }
 }
 
@@ -126,8 +126,8 @@ button.destChip.chipOff:hover {
 .farEnd {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin: 3px 0 8px;
+  gap: var(--space-sm);
+  margin: 3px 0 var(--space-md);
 }
 /* Same rule the slot's × follows: destructive, so quiet until pointed at.
    Louder than that one only in that it carries a word — there is one of these

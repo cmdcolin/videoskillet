@@ -2,7 +2,7 @@
    a 4:3 stand-in for the active picture, driven in the same 0..1 UV space the
    shaders read. */
 .wrap {
-  margin: 8px 0 10px;
+  margin: var(--space-md) 0 10px;
 }
 .aim {
   cursor: crosshair;
@@ -15,7 +15,7 @@
      frame-relative units at any panel width */
   container-type: inline-size;
   border: 1px solid var(--border);
-  border-radius: 3px;
+  border-radius: var(--ctl-radius);
   background: repeating-linear-gradient(0deg, #16161c 0 2px, #1b1b22 2px 4px);
   touch-action: none;
   overflow: hidden;
@@ -106,8 +106,8 @@
 .readout {
   display: flex;
   justify-content: space-between;
-  gap: 8px;
-  margin-top: 4px;
+  gap: var(--space-md);
+  margin-top: var(--space-xs);
   font-size: var(--fs-sm);
   color: var(--fg3);
 }

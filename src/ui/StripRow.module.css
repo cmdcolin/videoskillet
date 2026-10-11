@@ -76,8 +76,8 @@
   text-align: left;
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding: 5px 6px 4px;
+  gap: var(--space-2xs);
+  padding: 5px var(--space-sm) var(--space-xs);
   min-width: 0;
 }
 .fire:hover {
@@ -142,7 +142,7 @@
   background: var(--surface-raised);
   border: 1px solid var(--edit);
   border-radius: 2px;
-  padding: 4px 5px;
+  padding: var(--space-xs) 5px;
   min-width: 0;
 }
 .field:focus {
@@ -160,7 +160,7 @@
   display: flex;
   align-items: center;
   gap: 3px;
-  padding: 0 4px 4px;
+  padding: 0 var(--space-xs) var(--space-xs);
 }
 
 /* The hold, and the arrival. On the card rather than behind a menu because the

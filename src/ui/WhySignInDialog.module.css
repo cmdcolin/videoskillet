@@ -4,12 +4,12 @@
 /* The save waiting on the button below, called out because it is the only thing
    in the card about this press rather than about accounts. */
 .pending {
-  margin: 0 0 12px;
-  padding: 6px 8px;
+  margin: 0 0 var(--space-lg);
+  padding: var(--space-sm) var(--space-md);
   color: var(--fg);
   background: var(--surface-raised);
   border-left: 2px solid var(--accent);
-  border-radius: 3px;
+  border-radius: var(--ctl-radius);
   line-height: var(--prose-lh);
 }
 
@@ -36,11 +36,11 @@
   width: 100%;
   height: auto;
   border: 1px solid var(--border-faint);
-  border-radius: 3px;
+  border-radius: var(--ctl-radius);
 }
 
 .caption {
-  padding-top: 4px;
+  padding-top: var(--space-xs);
   font-size: var(--fs-xs);
   color: var(--fg4);
 }
@@ -50,8 +50,8 @@
 .row {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  margin: 12px 0 10px;
+  gap: var(--space-sm);
+  margin: var(--space-lg) 0 10px;
 }
 
 .go {

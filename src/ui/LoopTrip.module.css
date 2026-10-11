@@ -2,8 +2,8 @@
    other asides use — a reading, not a warning, since which side of unity a
    look wants is the look's business. */
 .trip {
-  padding: 2px 0;
-  margin: 2px 0;
+  padding: var(--space-2xs) 0;
+  margin: var(--space-2xs) 0;
   font-size: var(--fs-sm);
   color: var(--gate);
   font-variant-numeric: tabular-nums;

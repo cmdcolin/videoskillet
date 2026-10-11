@@ -12,7 +12,7 @@
 .meterH {
   --meter-dir: to right;
   height: 4px;
-  margin: 6px 0;
+  margin: var(--space-sm) 0;
 }
 /* the vertical twin sits beside the scrub slider, so it fills bottom-up */
 .meterV {

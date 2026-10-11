@@ -36,7 +36,7 @@
    them to the box you pressed was the accent on the stage name alone, which is
    at the top of a panel you have to scroll to reach a slider. */
 .stages {
-  margin: 2px 0 0;
+  margin: var(--space-2xs) 0 0;
 }
 /* One stage as one object. The rail is the cheap half of that: a full card
    (.groupCard below, which is what the bench got and the spine never did) costs
@@ -55,7 +55,7 @@
      bottom of the drawing by 4 — lost their bottom edge to it. */
   --stage-lid: 14px;
   margin: var(--stage-lid) 0 10px;
-  padding: 0 0 6px 8px;
+  padding: 0 0 var(--space-sm) var(--space-md);
   border-left: 2px solid var(--rail);
 }
 /* The heading row: the stage's name with its count, and the way out at the far
@@ -67,8 +67,8 @@
 .stageHead {
   display: flex;
   align-items: center;
-  gap: 2px;
-  margin: 8px 0 2px;
+  gap: var(--space-2xs);
+  margin: var(--space-md) 0 var(--space-2xs);
 }
 /* The name and its count as one object. The count is smaller type and sits on
    the name's baseline — centring the two against each other instead would lift
@@ -76,7 +76,7 @@
 .stageTitle {
   display: flex;
   align-items: baseline;
-  gap: 2px;
+  gap: var(--space-2xs);
   min-width: 0;
 }
 /* The same heading as a strip, on the spine only — the bench renders StageHead
@@ -107,7 +107,7 @@
      scrollport, and the panel has no background of its own to fill the gap —
      rows would scroll through the sliver between the strip and the top edge. */
   margin: 0 0 0 -10px;
-  padding: 3px 4px 3px 8px;
+  padding: 3px var(--space-xs) 3px var(--space-md);
   /* The lid, and the corner the rail turns into it. The strip was carrying the
      top of the object on its fill alone, which from the outside is a box with
      no top: the rail ran down out of a band that started from nothing. So the
@@ -156,7 +156,7 @@
    get here, so nothing is only knowable from the part that got cut. */
 .stageBlurb {
   color: var(--fg3);
-  margin: 0 0 4px;
+  margin: 0 0 var(--space-xs);
   line-height: var(--prose-lh);
   display: -webkit-box;
   -webkit-box-orient: vertical;
@@ -167,7 +167,7 @@
 /* the stage's touched-control count; clicking opens the first touched group */
 .phaseDot {
   composes: bare from './ui.module.css';
-  padding: 0 0 0 4px;
+  padding: 0 0 0 var(--space-xs);
   letter-spacing: normal;
   color: var(--edit);
 }
@@ -175,7 +175,7 @@
    bay, whose contents are already on screen the moment it is open. Same mark,
    without the pointer and the hover that would promise a press. */
 .phaseCount {
-  padding: 0 0 0 4px;
+  padding: 0 0 0 var(--space-xs);
   color: var(--edit);
 }
 .phaseDot:hover {
@@ -183,13 +183,7 @@
 }
 /* The way back to the map alone, at the far end of the stage's own heading row
    so it reads as "close this" rather than as another control of the stage.
-   margin-left: auto is what puts it there — the name and its count stay
-   together on the left.
-
-   Boxed, like the search box's clear button (app.module.css .filterClear) and
-   for the same reason: a bare glyph in the panel's dim prose colour is a mark
-   on the heading, not a thing to press, and at hint size it was also a target
-   you had to aim at. The border is what makes it a button; the fixed square is
+   margin-left: auto is what puts it there — the name and its count stay together on the left. Boxed, like the search box's clear button (app.module.css .filterClear) and for the same reason: a bare glyph in the panel's dim prose colour is a mark on the heading, not a thing to press, and at hint size it was also a target you had to aim at. The border is what makes it a button; the fixed square is
    what makes it hittable without aiming. Bigger than .filterClear's because
    that one sits inside a field that already draws its own box, while this one
    stands alone on a heading row with nothing around it to say where it ends. */
@@ -209,9 +203,9 @@
   composes: bare tap from './ui.module.css';
   margin-left: auto;
   flex-shrink: 0;
-  padding: 1px 6px;
+  padding: 1px var(--space-sm);
   border: 1px solid var(--border-quiet);
-  border-radius: 3px;
+  border-radius: var(--ctl-radius);
   font-size: var(--fs-xs);
   line-height: 1.4;
   color: var(--fg3);
@@ -231,7 +225,7 @@
   margin-left: auto;
 }
 .stageStock + .stageAll {
-  margin-left: 4px;
+  margin-left: var(--space-xs);
 }
 
 .stageClose {
@@ -269,7 +263,7 @@
    on the panel container, not the viewport, because the popout window is sized
    by whoever dragged its edge. */
 .bench {
-  margin: 2px 0 0;
+  margin: var(--space-2xs) 0 0;
 }
 @container panel (min-width: 540px) {
   .bench {
@@ -297,5 +291,5 @@
    and the margin that spaces the cards down it. */
 .groupCard {
   min-width: 0;
-  margin: 6px 0;
+  margin: var(--space-sm) 0;
 }

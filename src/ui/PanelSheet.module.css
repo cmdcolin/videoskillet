@@ -10,8 +10,8 @@
 .head {
   display: flex;
   align-items: baseline;
-  gap: 8px;
-  margin-bottom: 8px;
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
 }
 .title {
   flex: 1;

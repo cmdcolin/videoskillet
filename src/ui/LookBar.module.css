@@ -2,8 +2,8 @@
 .bar {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
-  margin: 0 0 2px;
+  gap: var(--space-xs);
+  margin: 0 0 var(--space-2xs);
 }
 .btn {
   composes: outline from './ui.module.css';
@@ -58,7 +58,7 @@ button.btnOff {
    sized to add back less than the native arrow's own reserved width. */
 .morphSelect {
   appearance: none;
-  padding-right: 16px;
+  padding-right: var(--space-xl);
   background-image:
     linear-gradient(45deg, transparent 50%, currentColor 50%),
     linear-gradient(135deg, currentColor 50%, transparent 50%);
@@ -143,7 +143,7 @@ button.btnOff {
    fingertip-tall buttons is 40px of panel spent above the first control. */
 @media (pointer: coarse) {
   .btn {
-    padding: 7px 8px;
+    padding: 7px var(--space-md);
   }
 }
 

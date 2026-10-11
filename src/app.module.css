@@ -167,7 +167,8 @@
 @media (orientation: landscape) and (max-height: 560px) {
   .app .panel {
     width: min(300px, 40vw);
-    padding: 8px max(10px, env(safe-area-inset-right)) 8px 10px;
+    padding: var(--space-md) max(10px, env(safe-area-inset-right))
+      var(--space-md) 10px;
   }
   /* The width here is the phone's, not the session's: this rule wins over
      --panel-w by weight, so a rail left on screen would be a grip that moves
@@ -228,7 +229,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin: 2px 0 4px;
+  margin: var(--space-2xs) 0 var(--space-xs);
 }
 /* color-bars glyph + wordmark + version, doubling as the help trigger */
 .brand {
@@ -280,7 +281,7 @@
   min-width: 0;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--space-xs);
 }
 .filter {
   width: 100%;
@@ -312,7 +313,7 @@
   composes: bare from './ui/ui.module.css';
   flex-shrink: 0;
   padding: 0 5px;
-  border-radius: 3px;
+  border-radius: var(--ctl-radius);
   background: color-mix(in srgb, var(--mod) 18%, transparent);
   color: var(--mod);
   font-size: var(--fs-xs);
@@ -327,5 +328,5 @@
    too (useShortcuts), but the × is the only one of the two that is visible. */
 .filterClear {
   composes: outline from './ui/ui.module.css';
-  padding: 0 4px;
+  padding: 0 var(--space-xs);
 }

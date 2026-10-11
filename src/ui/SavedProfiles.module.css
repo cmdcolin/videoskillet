@@ -15,8 +15,8 @@ button.justSaved {
    half of the same gesture. */
 .saveRow {
   display: flex;
-  gap: 4px;
-  padding: 2px 2px 4px;
+  gap: var(--space-xs);
+  padding: var(--space-2xs) var(--space-2xs) var(--space-xs);
 }
 .nameInput {
   flex: 1;
@@ -26,7 +26,7 @@ button.justSaved {
   color: var(--fg);
   border: 1px solid var(--border-quiet);
   border-radius: 4px;
-  padding: 2px 7px;
+  padding: var(--space-2xs) 7px;
   font: inherit;
   font-size: var(--fs-sm);
 }
@@ -59,7 +59,7 @@ button.justSaved {
 .row {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: var(--space-2xs);
 }
 /* Takes the whole row's width so the click target is the name and everything
    after it — the list is read down the left edge, and a hit area that stopped at
@@ -68,7 +68,7 @@ button.justSaved {
   composes: bare from './ui.module.css';
   flex: 1;
   min-width: 0;
-  border-radius: 3px;
+  border-radius: var(--ctl-radius);
   padding: 5px 7px;
   color: var(--fg);
   text-align: left;
@@ -104,8 +104,8 @@ button.justSaved {
   composes: bare from './ui.module.css';
   flex-shrink: 0;
   width: 20px;
-  border-radius: 3px;
-  padding: 4px 0;
+  border-radius: var(--ctl-radius);
+  padding: var(--space-xs) 0;
   color: var(--fg4);
   font-size: var(--fs-md);
   line-height: 1;
@@ -142,8 +142,8 @@ button.needsAuth {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 2px;
-  padding: 2px 4px 4px;
+  gap: var(--space-2xs);
+  padding: var(--space-2xs) var(--space-xs) var(--space-xs);
   max-width: 300px;
 }
 
@@ -151,7 +151,7 @@ button.needsAuth {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-sm);
 }
 
 /* A question, drawn as one: text beside the button it is about. */

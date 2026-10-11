@@ -4,13 +4,13 @@
 .feed {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--space-xs);
   margin: 0 0 5px 19px;
 }
 .row {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--space-xs);
 }
 .topic {
   font-size: var(--fs-xs);
@@ -18,7 +18,7 @@
 /* The deck's button, at the deck's size, matching the cue row in
    Scrub.module.css and the transport stops in Deck.module.css. */
 .btn {
-  padding: 2px 6px;
+  padding: var(--space-2xs) var(--space-sm);
   font-family: inherit;
   font-size: var(--fs-xs);
   line-height: 1.2;
@@ -41,7 +41,7 @@
 .every {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--space-xs);
   font-size: var(--fs-xs);
   color: var(--fg3);
 }

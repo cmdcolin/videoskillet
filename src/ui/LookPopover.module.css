@@ -10,7 +10,7 @@
   max-height: 70vh;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 0 6px 4px;
+  padding: 0 var(--space-sm) var(--space-xs);
 }
 
 /* Which module the rows under it came from. Quieter and smaller than the group
@@ -19,7 +19,7 @@
 .from {
   display: block;
   width: 100%;
-  margin: 8px 0 1px;
+  margin: var(--space-md) 0 1px;
   padding: 0;
   background: none;
   border: none;
@@ -35,7 +35,7 @@ button.from:hover {
 }
 
 .empty {
-  margin: 6px 0;
+  margin: var(--space-sm) 0;
   font-size: var(--fs-sm);
   color: var(--fg3);
 }

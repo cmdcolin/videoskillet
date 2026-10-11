@@ -7,7 +7,7 @@
    why the panel is `overflow-x: hidden` and this is not. */
 .dump {
   margin: 0;
-  padding: 10px 12px;
+  padding: 10px var(--space-lg);
   flex: 1;
   min-height: 0;
   overflow: auto;

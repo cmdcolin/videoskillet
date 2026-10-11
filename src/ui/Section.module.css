@@ -26,7 +26,7 @@
    the header alone and five of them read as five doors; open, the header is the
    lid over its own rows and the rows end where the fill does. */
 .sec {
-  margin: 4px 0;
+  margin: var(--space-xs) 0;
   border-radius: 4px;
   background: var(--surface);
 }
@@ -35,7 +35,7 @@
    rail. Its ground lifts off the folded ones, so the block you are working in
    is the lit thing in the column. */
 .sec.secOpen {
-  padding: 0 6px 6px;
+  padding: 0 var(--space-sm) var(--space-sm);
   background: color-mix(in srgb, var(--surface-raised) 35%, var(--surface));
 }
 
@@ -47,7 +47,7 @@
   font-weight: 600;
   color: var(--fg2);
   margin: 0;
-  padding: 5px 8px;
+  padding: 5px var(--space-md);
   border-bottom: 0;
   border-radius: 4px;
   background: var(--surface-raised);
@@ -84,7 +84,7 @@
 .helpSlot {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-sm);
   margin-left: auto;
 }
 .sec:not(.secOpen) .helpSlot {

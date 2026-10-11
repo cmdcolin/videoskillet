@@ -9,13 +9,13 @@
    would double every wait to show half as much of each. */
 .tabs {
   display: flex;
-  gap: 6px;
-  margin-bottom: 8px;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
 }
 .tab {
   composes: bare from './ui.module.css';
   border: 1px solid var(--border);
-  border-radius: 3px;
+  border-radius: var(--ctl-radius);
   padding: 5px 10px;
   color: var(--fg3);
 }
@@ -31,8 +31,8 @@
 
 .search {
   display: flex;
-  gap: 6px;
-  margin-bottom: 8px;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
 }
 .field {
   flex: 1;
@@ -42,7 +42,7 @@
   color: var(--fg);
   border: 1px solid var(--border);
   border-radius: 4px;
-  padding: 4px 6px;
+  padding: var(--space-xs) var(--space-sm);
   /* The app's face, like the shelf's filter: what is typed here is a search
      phrase and the results it fetches are captioned in the app's face too. */
   font-family: inherit;
@@ -55,8 +55,8 @@
 .presets {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
-  margin-bottom: 8px;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-md);
 }
 .preset {
   composes: bare from './ui.module.css';
@@ -77,13 +77,13 @@
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
-  gap: 8px;
+  gap: var(--space-md);
   overflow-y: auto;
   max-height: min(52vh, 460px);
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
-  padding: 8px 0;
-  margin-bottom: 8px;
+  padding: var(--space-md) 0;
+  margin-bottom: var(--space-md);
 }
 
 .cell {
@@ -103,7 +103,7 @@
   width: 100%;
   height: 84px;
   border: 1px solid var(--border);
-  border-radius: 3px;
+  border-radius: var(--ctl-radius);
   overflow: hidden;
   background: var(--ctl-bg);
   padding: 0;
@@ -138,14 +138,14 @@
 .acts {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: var(--space-2xs);
 }
 .act {
   composes: bare from './ui.module.css';
   flex-shrink: 0;
   min-width: 20px;
-  border-radius: 3px;
-  padding: 2px 3px;
+  border-radius: var(--ctl-radius);
+  padding: var(--space-2xs) 3px;
   color: var(--fg4);
   font-size: var(--fs-sm);
   line-height: 1;
@@ -174,7 +174,7 @@
 @media (pointer: coarse) {
   .act {
     min-width: 30px;
-    padding: 8px 3px;
+    padding: var(--space-md) 3px;
   }
   .preset {
     padding: 7px 11px;
@@ -185,5 +185,5 @@
 .feedBar {
   display: flex;
   justify-content: flex-end;
-  margin-bottom: 6px;
+  margin-bottom: var(--space-sm);
 }
