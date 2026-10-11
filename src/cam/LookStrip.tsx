@@ -38,14 +38,16 @@ export function LookStrip(props: {
       </div>
 
       <nav className={styles.strip} aria-label="Looks">
-        <button
-          className={cx(styles.chip, look?.rolled === true && styles.chipOn)}
-          title="scramble the picture"
-          onClick={props.onRoll}
-        >
-          <ShuffleIcon />
-          random
-        </button>
+        <span className={styles.roll}>
+          <button
+            className={cx(styles.chip, look?.rolled === true && styles.chipOn)}
+            title="scramble the picture"
+            onClick={props.onRoll}
+          >
+            <ShuffleIcon />
+            random
+          </button>
+        </span>
         <button
           className={cx(styles.chip, look === null && styles.chipOn)}
           data-look="normal"

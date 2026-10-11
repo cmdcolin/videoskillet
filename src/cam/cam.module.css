@@ -637,7 +637,7 @@
   display: flex;
   gap: 8px;
   overflow-x: auto;
-  padding: 0 16px;
+  padding: 0 16px 0 0;
   scroll-padding: 0 16px;
   scroll-snap-type: x proximity;
   scrollbar-width: none;
@@ -663,6 +663,26 @@
   cursor: pointer;
   /* Sideways scrolls the strip; up and down weigh the chip's look in. */
   touch-action: pan-x;
+}
+/* Random stays at the strip's left edge while the looks scroll under it. */
+.roll {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  flex: none;
+  display: flex;
+  padding-left: 16px;
+  background: #000;
+}
+.roll::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 100%;
+  width: 14px;
+  background: linear-gradient(to right, #000, transparent);
+  pointer-events: none;
 }
 .chipOn {
   border-color: #fff;
