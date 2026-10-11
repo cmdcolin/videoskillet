@@ -2,6 +2,11 @@
 
 All notable changes to videoskillet are documented here.
 
+## [2.17.0](https://github.com/cmdcolin/videoskillet/compare/v2.16.0...v2.17.0) - 2026-10-11
+
+### Features
+- *(ui)* [`19553fe`](https://github.com/cmdcolin/videoskillet/commit/19553fe4f7d47c00bc6626b1c5df6f22dbf57c49) drop the On your phone section from the home page
+
 ## [2.16.0](https://github.com/cmdcolin/videoskillet/compare/v2.15.0...v2.16.0) - 2026-10-11
 
 ### Features
