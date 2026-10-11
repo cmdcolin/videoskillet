@@ -9,7 +9,7 @@
 
 import { CONTROL_KEYS, DEFAULT_CONTROLS } from '../core/controls'
 import { clamp } from '../core/math'
-import { PASS_THROUGH, UNIPOLAR } from '../core/signal/modstate'
+import { PASS_THROUGH, PULLS, UNIPOLAR } from '../core/signal/modstate'
 import { SLIDER_BY_KEY, sliderFor } from './controls'
 import { SYNC_DIVISIONS } from './midi'
 
@@ -96,11 +96,14 @@ const SOURCES: Record<ModSource, { label: string; short: string }> = {
   level: { label: 'audio level', short: 'audio level' },
   hit: { label: 'audio hit', short: 'audio hit' },
   trig: { label: 'one-shot (fire)', short: 'one-shot' },
+  pull: { label: 'one-shot (pull)', short: 'pull' },
 }
 
-// The order the picker offers them in. `trig` last: everything above it answers
-// "what is this knob doing" continuously, and it answers "what did you just do"
-// — a different kind of thing from the eight drifts above it.
+// The order the picker offers them in. The two one-shots last: everything
+// above them answers "what is this knob doing" continuously, and they answer
+// "what did you just do" — a different kind of thing from the eight drifts
+// above them. `pull` is the same strike sent the other way, for the controls
+// whose fault is a drop: a scan collapsing, a hold letting go.
 const SOURCE_ORDER: ModSource[] = [
   'sine',
   'triangle',
@@ -111,7 +114,12 @@ const SOURCE_ORDER: ModSource[] = [
   'level',
   'hit',
   'trig',
+  'pull',
 ]
+
+// Which way a routing's depth is sent to the engine.
+export const depthSign = (source: ModSource): number =>
+  PULLS.has(source) ? -1 : 1
 
 export const MOD_SOURCES = SOURCE_ORDER.map(value => ({
   value,
@@ -595,7 +603,7 @@ export const modPatch = (
 ): ModPatch => ({
   reading: modReading(slot, bpm),
   detail: modDetail(slot, bpm),
-  depth: slot.depth * master,
+  depth: slot.depth * master * depthSign(slot.source),
   bipolar: !UNIPOLAR.has(slot.source),
 })
 
@@ -718,7 +726,7 @@ export function toEngineSlots(
   )
   return slots.flatMap((s, id): ModSlot[] => {
     if (s.target === '' || !s.on) return []
-    const depth = s.depth * master
+    const depth = s.depth * master * depthSign(s.source)
     const bay = bayDefFor(s.target)
     if (bay !== undefined) {
       // A wire onto its own slot would be a routing driving how far it swings

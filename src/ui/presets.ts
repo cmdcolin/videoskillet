@@ -2954,6 +2954,41 @@ export const PRESETS: PresetDef[] = [
     ],
   },
   {
+    name: 'powerOn',
+    displayName: 'power on',
+    group: 'Sync / Deflection',
+    blurb:
+      'Hit a pad and the set is switched on cold. The scan starts as one line carrying the whole beam current, the beam limiter reads the surge and throttles the gun, and over half a second the vertical stage comes up and the picture opens out of the line, the HV sagging under it as it fills.',
+    patch: {
+      phosphor: 0.9,
+      phosphorBleed: 0.25,
+      crtBloom: 0.8,
+      crtHalation: 0.6,
+      scanBeam: 0.5,
+    },
+    mod: [
+      { target: 'vSize', source: 'pull', rateHz: 3.5, depth: 0.248 },
+      { target: 'abl', source: 'trig', rateHz: 0.6, depth: 0.9 },
+      { target: 'hvSagUs', source: 'trig', rateHz: 2.5, depth: 0.06 },
+    ],
+  },
+  {
+    name: 'channelChange',
+    displayName: 'channel change',
+    group: 'Sync / Deflection',
+    blurb:
+      'Hit a pad and the tuner changes channel. The new carrier arrives off-tune in a burst of snow, both holds let go, so the picture rolls and tears while the oscillators hunt for the new sync, and over a second the AFC pulls the carrier in and the holds tighten until it locks clean.',
+    patch: {
+      vFreqHz: 58,
+    },
+    mod: [
+      { target: 'rfSnow', source: 'trig', rateHz: 3, depth: 1 },
+      { target: 'rfMistuneMHz', source: 'trig', rateHz: 2.5, depth: 0.3 },
+      { target: 'vHold', source: 'pull', rateHz: 1.2, depth: 0.85 },
+      { target: 'hHold', source: 'pull', rateHz: 2, depth: 0.16 },
+    ],
+  },
+  {
     name: 'splitPhase',
     displayName: 'split phase',
     group: 'A/B mixing',

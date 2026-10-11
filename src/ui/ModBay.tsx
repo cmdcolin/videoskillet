@@ -1,3 +1,4 @@
+import { isOneShot } from '../core/signal/modstate'
 import { cx } from './cx'
 import { SYNC_DIVISIONS } from './midi'
 import styles from './ModBay.module.css'
@@ -340,7 +341,7 @@ export function ModBay(props: {
   const free = slots.length - patchedSlots.length
   // Whether anything in the bay is playable, which is what decides if the
   // fire-everything button is worth a row.
-  const anyTrig = slots.some(s => s.target !== '' && s.source === 'trig')
+  const anyTrig = slots.some(s => s.target !== '' && isOneShot(s.source))
   return (
     <>
       {/* What the stage's own heading does not already say. It used to open on

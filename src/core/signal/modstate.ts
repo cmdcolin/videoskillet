@@ -19,6 +19,7 @@ export type ModSource =
   | 'level'
   | 'hit'
   | 'trig'
+  | 'pull'
 
 // Sources with no oscillator behind them: the audio followers hand their
 // current value straight through, so `rateHz` addresses nothing and the UI
@@ -41,7 +42,17 @@ export const UNIPOLAR: ReadonlySet<ModSource> = new Set<ModSource>([
   'level',
   'hit',
   'trig',
+  'pull',
 ])
+
+// The one-shot that pulls instead of pushes. Same envelope, same strike, same
+// decay; the bay hands it to the engine with its depth negated (modSlots ›
+// toEngineSlots), so everything from the swing to the link format carries one
+// number and this set is the only place the direction is named.
+export const PULLS: ReadonlySet<ModSource> = new Set<ModSource>(['pull'])
+
+export const isOneShot = (source: ModSource): boolean =>
+  source === 'trig' || source === 'pull'
 
 export interface ModWave {
   // Stable identity of the routing this wave belongs to. The caller compacts
@@ -96,8 +107,10 @@ export function driveSlots(
       ...s,
       // Clamped to the driven knob's own range, so a wire deep enough to push
       // depth past 1 parks there rather than inverting the wobble — the same
-      // bargain a control row makes with a slider already at its end.
-      depth: clamp01(s.depth + dDepth),
+      // bargain a control row makes with a slider already at its end. A pull
+      // carries its depth negated, and the wire drives its magnitude.
+      depth:
+        s.depth < 0 ? -clamp01(-s.depth + dDepth) : clamp01(s.depth + dDepth),
       // Floors at 0 rather than at the row's minimum: a wire is allowed to stop
       // an LFO dead, and a negative rate would walk the phase backwards past the
       // wrap `sample` detects a completed cycle with.
@@ -140,7 +153,7 @@ export class ModState {
   // Fire every routing that has an envelope on it. The performance gesture: one
   // key, and everything patched to a trigger hits together.
   fireAll(waves: readonly ModWave[], level = 1): void {
-    for (const w of waves) if (w.source === 'trig') this.fire(w.id, level)
+    for (const w of waves) if (isOneShot(w.source)) this.fire(w.id, level)
   }
 
   // One value per wave: LFOs are bipolar [-1, 1] (a hand wiggling around the
@@ -211,7 +224,7 @@ export class ModState {
       } else if (w.source === 'lorenz') {
         // strange-attractor coordinate: aperiodic but structured
         v = s.lorenz.step(w.rateHz * DT)
-      } else if (w.source === 'trig') {
+      } else if (isOneShot(w.source)) {
         // One-shot envelope: struck to full on a trigger, decaying back to rest
         // on its own. The bay's other seven sources all answer "what is this
         // knob doing" continuously; this is the only one that answers "what did

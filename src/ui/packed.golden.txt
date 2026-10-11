@@ -311,6 +311,7 @@ lorenz
 level
 hit
 trig
+pull
 
 # ?mod= beat divisions, by index
 0 1/1 beats=4

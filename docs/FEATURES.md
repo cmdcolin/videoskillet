@@ -112,9 +112,10 @@ preset or a shared link can raise either level control.
 ## The rig
 
 - **Modulation**: any control can be driven by an LFO, random walk, noise,
-  sample-and-hold, a Lorenz attractor, audio, or a one-shot envelope. Depth is a
-  fraction of the control's range, so the slider value stays the centre and
-  presets still apply. Rates lock to a tapped BPM or MIDI clock.
+  sample-and-hold, a Lorenz attractor, audio, or a one-shot envelope that pushes
+  or pulls. Depth is a fraction of the control's range, so the slider value
+  stays the centre and presets still apply. Rates lock to a tapped BPM or MIDI
+  clock.
 - **MIDI**: any controller sending CC, with learn, auto-map and soft takeover.
   See [Using a MIDI controller](MIDI.md).
 - **Presets** also work as faders you can drag partway, with morph, random

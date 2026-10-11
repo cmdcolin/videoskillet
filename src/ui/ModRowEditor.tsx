@@ -1,4 +1,4 @@
-import { PASS_THROUGH, UNIPOLAR } from '../core/signal/modstate'
+import { PASS_THROUGH, UNIPOLAR, isOneShot } from '../core/signal/modstate'
 import { sliderFor } from './controls'
 import { useControlValue } from './ControlsContext'
 import { cx } from './cx'
@@ -12,6 +12,7 @@ import {
   MOD_SOURCES,
   RATE_MAX,
   RATE_MIN,
+  depthSign,
   modPatch,
   slotRate,
   unpatch,
@@ -49,9 +50,9 @@ function ClippedNote(props: {
   const rest = useControlValue(props.controlKey)
   const def = sliderFor(props.controlKey)
   const clipped =
-    props.bipolar && rest - props.swing < def.min
+    (props.bipolar || props.swing < 0) && rest - Math.abs(props.swing) < def.min
       ? 'bottom'
-      : rest + props.swing > def.max
+      : (props.bipolar || props.swing > 0) && rest + props.swing > def.max
         ? 'top'
         : null
   return clipped === null ? null : (
@@ -237,7 +238,7 @@ export function ModRowEditor(props: {
   }
 
   const slot = mod.slots[i]
-  const swing = slot.depth * (def.max - def.min)
+  const swing = slot.depth * depthSign(slot.source) * (def.max - def.min)
   const timed = !PASS_THROUGH.has(slot.source)
 
   return (
@@ -265,7 +266,7 @@ export function ModRowEditor(props: {
           Gone while the slot is parked, because ❚❚ means it: a parked
           routing is not on the engine's list, so the strike would land on
           nothing. */}
-      {slot.source === 'trig' && slot.on ? (
+      {isOneShot(slot.source) && slot.on ? (
         <button
           className={ui.btn}
           title={`strike slot ${i + 1}'s envelope — or press t to strike every one`}

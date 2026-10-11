@@ -551,13 +551,14 @@ export function Slider(props: {
   const patch =
     props.mod === undefined || !props.mod.on ? null : props.mod.patch
   const reach = patch === null ? 0 : patch.depth * (props.max - props.min)
+  // `reach` is signed: a pull's band hangs below the thumb.
+  const near =
+    patch === null || !patch.bipolar ? props.value : props.value - reach
+  const far = props.value + reach
   const swing =
     patch === null || reach === 0
       ? null
-      : {
-          lo: pct(patch.bipolar ? props.value - reach : props.value),
-          hi: pct(props.value + reach),
-        }
+      : { lo: pct(Math.min(near, far)), hi: pct(Math.max(near, far)) }
   // The row's three parts, built once and then arranged two ways below. The
   // label names the input beside it rather than wrapping it: with the accessory
   // buttons inside a wrapping <label>, every one of their clicks forwarded to
