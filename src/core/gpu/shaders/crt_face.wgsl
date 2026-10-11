@@ -292,8 +292,10 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
   // — the emitter — and a dim emitter's share lands close in while a white's
   // reaches the full radius. Keying it off the receiving pixel instead traced a
   // fixed-width outline round anything bright and never reached into the dark,
-  // which is exactly where a halo shows. Each kernel is normalised by its own
-  // area, so a narrower one carries the same light, closer.
+  // which is exactly where a halo shows. Each kernel is divided by its own
+  // area, so a narrower one carries about the same light, closer: the fixed
+  // disk undersamples a narrow kernel, and a dim emitter's share comes out
+  // 13% over a white's at the default key.
   if (P.crtHalation > 0.0) {
     let fh = 0.08 * P.crtHalation;
     let rh = 15.0 * (1.0 + P.crtHaloKey);
@@ -333,7 +335,7 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
 
   // Phosphor glow floor: the glass is never truly black — a faint warm haze
   // that lifts with nearby light, plus a small ambient pedestal.
-  col = col + P.crtGlow * WARM * (0.002 + 0.2 * luma(col));
+  col = col + P.crtGlow * WARM * (0.001 + 0.2 * luma(col));
 
   // Overbright phosphors desaturate toward white as the beam saturates.
   let l = luma(col);

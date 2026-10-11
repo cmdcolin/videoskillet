@@ -58,7 +58,19 @@ on top of the direct emission, and a tinted faceplate is a lower control.
   retuned to glow again under the new scale; the two "past the redline" screen
   looks are different pictures and were left as they came out.
 - Scanlines at the same `scanBeam` are lighter, because the gap is now a dip in
-  light; the control's number was left alone.
+  light, and `scanBloom` fattens a line by its light, so a mid grey fattens
+  less. Both controls' numbers were left alone.
+- The phosphor layer, the retrace lines and the loop's lens now run on the sRGB
+  curve. Its toe is linear, so the faint end of a long phosphor tail leaves the
+  byte sooner than it did on the 2.2 curve, and the camera blurs light before it
+  encodes, so every loop preset's edge gain moved a little. The loop and
+  phosphor looks shot for this change (fbBloom, strobeTrails, nightTube,
+  cometTails, greenTerminal, lightThatStays) hold up; the rest were not surveyed
+  one by one.
+- The frame costs 0.04 to 0.08 ms more (2 to 3% at stock), measured best-of over
+  three interleaved rounds against the previous tree. The sRGB view costs the
+  sampler nothing; the whole of it is the encodes, and present's one encode per
+  canvas pixel is the largest single item.
 - Forbidden: a 16-bit screen texture without a fresh measurement of the
   sampler's rate on `crt_face`; adding bloom, halation or glow in display terms;
   and sampling `outTex` or `faceTex` through a plain view, which hands a pass

@@ -585,7 +585,7 @@ fn retraceLight(x: u32, y: f32, vroll: f32) -> vec3f {
       let v = 0.25 * (comp[clampIdx(n0)] + comp[clampIdx(n0 + 1)]
         + comp[clampIdx(n0 + 2)] + comp[clampIdx(n0 + 3)]);
       let drive = max((v - IRE_BLACK) / VIDEO_RANGE, 0.0) + P.retrace * RETRACE_LEVEL;
-      acc = acc + w * pow(drive * timing[ABL_GAIN], 2.2);
+      acc = acc + w * toLight(vec3f(drive * timing[ABL_GAIN])).x;
     }
   }
   return vec3f(acc);
