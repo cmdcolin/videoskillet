@@ -144,3 +144,11 @@ test('a marker with a typo in it fails rather than vanishing', async () => {
     ).rejects.toThrow(/not a tabs marker/)
   }
 })
+
+test('a figure in docs/img or public/ gets the address the site serves it at', async () => {
+  const { html } = await render(
+    '![a](img/chain.jpg)\n\n![b](../public/phone/looks.webp)\n',
+  )
+  expect(html).toContain('src="/guide/img/chain.jpg"')
+  expect(html).toContain('src="/phone/looks.webp"')
+})

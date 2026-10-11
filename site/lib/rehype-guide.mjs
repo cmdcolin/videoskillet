@@ -46,7 +46,10 @@ const summarise = tree => {
 // paths are relative to `docs/`, which is where GitHub reads them. Here every
 // page is a directory of its own, so nothing relative would find the figures:
 // they are copied to one place and addressed from it.
+// A still the app's own pages also show stays in `public/`, which the site
+// serves from its root.
 const FIGURE_ATTRS = ['src', 'srcSet', 'srcset', 'poster']
+const PUBLIC = '../public/'
 
 const absoluteFigures = tree => {
   visit(tree, 'element', node => {
@@ -54,6 +57,8 @@ const absoluteFigures = tree => {
       const value = node.properties[attr]
       if (typeof value === 'string' && value.startsWith('img/')) {
         node.properties[attr] = IMG + value.slice('img/'.length)
+      } else if (typeof value === 'string' && value.startsWith(PUBLIC)) {
+        node.properties[attr] = `/${value.slice(PUBLIC.length)}`
       }
     }
   })
