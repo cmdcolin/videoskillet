@@ -230,7 +230,7 @@ fn demodAt(ti: i32, n0: i32, toff: u32) -> vec2f {
 // one. A function of y alone, so it stays row-uniform, which is what decode's
 // tiling requires of any offset.
 fn rasterRowF(y: f32) -> f32 {
-  return f32(ACTIVE_TOP) + 240.0 + (y - 240.0) / clamp(P.vSize, 0.05, 4.0);
+  return f32(ACTIVE_TOP) + 240.0 + (y - 240.0) / clamp(P.vSize, 0.01, 4.0);
 }
 
 // The same scan with the vertical output stage misbehaving. The stage drives a
@@ -266,7 +266,7 @@ fn sweep(r: f32) -> f32 {
       p = p - x - FOLD_K * x + (1.0 + FOLD_K) * FOLD_W * (1.0 - exp(-x / FOLD_W));
     }
   }
-  return 240.0 + p * clamp(P.vSize, 0.05, 4.0);
+  return 240.0 + p * clamp(P.vSize, 0.01, 4.0);
 }
 
 // The raster line whose ramp reaches `target`.
@@ -304,12 +304,14 @@ fn sweepInv(y: f32, lo0: f32, hi0: f32) -> f32 {
   return 0.5 * (lo + hi);
 }
 
-// How many raster lines land on the screen row line r is on, relative to the
-// plain scan at this amplitude: the slower the beam moves, the more lines pile
-// up and the brighter the row. Capped where the sweep stands still, which is
+// How many raster lines land on the screen row line r is on: the slower the
+// beam moves, the more lines pile up and the brighter the row, and a scan
+// collapsed to a line puts the whole beam current on it. Relative to the plain
+// scan above full size, where the brightness control was set against the
+// overscan the set shipped with. Capped where the sweep stands still, which is
 // otherwise a division by zero at the knee.
 fn density(r: f32) -> f32 {
-  let amp = clamp(P.vSize, 0.05, 4.0);
+  let amp = max(clamp(P.vSize, 0.01, 4.0), 1.0);
   return amp / max(abs(sweep(r + 0.5) - sweep(r - 0.5)), 0.125 * amp);
 }
 
@@ -621,6 +623,7 @@ fn main(
   var densB = 0.0;
   if (plain) {
     rrF = rasterRowF(y);
+    densA = 1.0 / min(clamp(P.vSize, 0.01, 4.0), 1.0);
   } else {
     var split = last;
     if (P.vFold > 0.0) {
@@ -692,11 +695,12 @@ fn main(
   // sweep crawled would be the one part of the picture not slowing with it.
   let pi = gid.y * ACTIVE_W + gid.x;
   var emitted = toLight(outc);
-  if (!plain) {
+  if (densA != 1.0 || twice) {
     // Light is what adds where the sweep slows: a row the yoke lingers on is
-    // drawn by more than one line, and a row scanned twice, on the way down and
-    // folded back, by both. The knee itself is where every line in the bend
-    // piles up, and it goes white.
+    // drawn by more than one line, a row scanned twice, on the way down and
+    // folded back, by both, and an underscanned raster by all of them at once.
+    // The knee of a fold is where every line in the bend piles up, and it goes
+    // white; a scan collapsed to a line is the whole frame on a few rows.
     emitted = emitted * densA;
     if (twice) {
       let dB = decodeAt(rowB, ryB, hoffB, TILE, lid.x, gid.x);

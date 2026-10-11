@@ -2415,6 +2415,24 @@ export const PRESETS: PresetDef[] = [
     },
   },
   {
+    name: 'degauss',
+    group: 'Phosphor / CRT',
+    blurb:
+      'The degaussing coil at switch-on. The mask is magnetised across most of the glass, so the three beams land on the wrong phosphors and the picture is a stain whose hue turns through it, and the coil shakes the raster as it fires. Hit a pad: the field collapses over a second and the colours settle back, the scan bouncing as it goes.',
+    patch: {
+      crtPurityX: 0.5,
+      crtPurityY: 0.5,
+      crtPuritySize: 1.8,
+      bendShape: 2,
+      crtBloom: 0.3,
+    },
+    mod: [
+      { target: 'crtPurity', source: 'trig', rateHz: 1.2, depth: 0.5 },
+      { target: 'vSize', source: 'trig', rateHz: 2.5, depth: 0.03 },
+      { target: 'bendUs', source: 'trig', rateHz: 3, depth: 0.05 },
+    ],
+  },
+  {
     name: 'greenTerminal',
     displayName: 'green terminal',
     group: 'Phosphor / CRT',
@@ -2914,6 +2932,25 @@ export const PRESETS: PresetDef[] = [
     mod: [
       { target: 'vFold', source: 'smooth', rateHz: 0.07, depth: 0.12 },
       { target: 'vFold', source: 'trig', rateHz: 1.2, depth: 0.5 },
+    ],
+  },
+  {
+    name: 'powerOff',
+    displayName: 'power off',
+    group: 'Sync / Deflection',
+    blurb:
+      'A set whose vertical stage has died: the whole frame lands on one line, and the beam current that used to light a screen lights that. Hit a pad and the supply comes back for a moment. The scan opens to a full picture, the HV sags under it, and it collapses again into the line with the afterglow of the picture still on the glass. Each hit is the set switching off.',
+    patch: {
+      vSize: 0.01,
+      phosphor: 0.9,
+      phosphorBleed: 0.25,
+      crtBloom: 0.8,
+      crtHalation: 0.6,
+      scanBeam: 0.5,
+    },
+    mod: [
+      { target: 'vSize', source: 'trig', rateHz: 3.5, depth: 0.248 },
+      { target: 'hvSagUs', source: 'trig', rateHz: 2.5, depth: 0.06 },
     ],
   },
   {
