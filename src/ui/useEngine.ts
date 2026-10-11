@@ -8,7 +8,7 @@ import {
   outOfGpuBudget,
 } from '../core/gpu/context'
 import { debugLog, pageSearch } from '../core/gpu/env'
-import { Engine } from '../core/gpu/pipeline'
+import { Engine, EngineBuildError } from '../core/gpu/pipeline'
 import { MAX_SRC_EDGE } from '../core/gpu/sources'
 import { reportPreviousTrace, trace } from '../core/gpu/trace'
 import { publicUrl } from '../publicUrl'
@@ -2700,11 +2700,19 @@ export function useEngine(args: { rand: Rand }) {
             }
           },
           (e: unknown) =>
-            setFatal({
-              title: 'WebGPU unavailable',
-              body: e instanceof Error ? e.message : String(e),
-              kind: 'unavailable',
-            }),
+            setFatal(
+              e instanceof EngineBuildError
+                ? {
+                    title: 'The signal path failed to build',
+                    body: e.message,
+                    kind: 'build',
+                  }
+                : {
+                    title: 'WebGPU unavailable',
+                    body: e instanceof Error ? e.message : String(e),
+                    kind: 'unavailable',
+                  },
+            ),
         )
       }
 

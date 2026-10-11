@@ -1363,3 +1363,16 @@ fn videoSynth(xy: vec2u, sp: SynthPatch, pic: f32, colorPic: f32) -> vec3f {
   return clamp(mix(vec3f(lvl), tint, sp.color), vec3f(0.0), vec3f(1.0));
 }
 `
+
+const PRELUDE_LINES = PRELUDE.split('\n').length - 1
+
+// Every module is PRELUDE + the shader, so this subtracts the prelude's lines to
+// point a compiler message at the shader file.
+export function wgslLine(
+  label: string,
+  { lineNum, linePos }: Pick<GPUCompilationMessage, 'lineNum' | 'linePos'>,
+): string {
+  return lineNum <= PRELUDE_LINES
+    ? `prelude:${lineNum}:${linePos}`
+    : `${label}.wgsl:${lineNum - PRELUDE_LINES}:${linePos}`
+}

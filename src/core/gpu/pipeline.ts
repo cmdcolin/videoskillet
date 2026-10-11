@@ -41,6 +41,7 @@ import {
   TILE_WG,
   packParams,
   patchParams,
+  wgslLine,
 } from './prelude'
 import { RenderLoop } from './renderloop'
 import { Overlay } from './savedBoard'
@@ -165,6 +166,10 @@ interface EngineOptions {
   // routeMedia. See the device-loss rebuild in useEngine.
   audio?: AudioState
 }
+
+// A shader or pipeline this browser's WebGPU rejects. The device works, so the
+// error screen reports an app bug.
+export class EngineBuildError extends Error {}
 
 export class Engine implements EngineApi {
   readonly controls: Controls = { ...DEFAULT_CONTROLS }
@@ -470,7 +475,14 @@ export class Engine implements EngineApi {
     opts: EngineOptions = {},
   ): Promise<Engine> {
     const gpu = await initGpu(canvas, gpuPowerFromSearch(pageSearch()))
-    return new Engine(gpu, canvas, opts.audio ?? new AudioState())
+    gpu.device.pushErrorScope('validation')
+    const engine = new Engine(gpu, canvas, opts.audio ?? new AudioState())
+    const error = await gpu.device.popErrorScope()
+    if (error) {
+      engine.destroy({ keepDevice: true })
+      throw new EngineBuildError(error.message)
+    }
+    return engine
   }
 
   private constructor(gpu: Gpu, canvas: RenderTarget, audio: AudioState) {
@@ -611,45 +623,49 @@ export class Engine implements EngineApi {
       minFilter: 'linear',
     })
 
-    const module = (src: string) => {
-      const m = d.createShaderModule({ code: PRELUDE + src })
+    const module = (label: string, src: string) => {
+      const m = d.createShaderModule({ label, code: PRELUDE + src })
       void m.getCompilationInfo().then(info => {
         for (const msg of info.messages) {
           if (msg.type === 'error')
-            console.error(`WGSL ${msg.lineNum}:${msg.linePos} ${msg.message}`)
+            console.error(`${wgslLine(label, msg)} ${msg.message}`)
         }
       })
       return m
     }
-    const compute = (src: string) =>
+    const compute = (label: string, src: string) =>
       d.createComputePipeline({
+        label,
         layout: 'auto',
-        compute: { module: module(src), entryPoint: 'main' },
+        compute: { module: module(label, src), entryPoint: 'main' },
       })
-    this.composePl = compute(composeSrc)
-    const composeBPl = compute(composeBSrc)
-    const encodeChromaBPl = compute(encodeChromaBSrc)
-    const encodeCompositePl = compute(encodeCompositeSrc)
-    const encodeCompositeBPl = compute(encodeCompositeBSrc)
-    const feedPl = compute(feedSrc)
-    const mixBPl = compute(mixBSrc)
-    const fbCompositePl = compute(fbCompositeSrc)
-    const storePrevPl = compute(storePrevSrc)
-    const chromaExtractPl = compute(chromaExtractSrc)
-    const underDownPl = compute(underDownSrc)
-    const channelPl = compute(channelSrc)
-    const timebasePl = compute(timebaseSrc)
-    const enhancerPl = compute(enhancerSrc)
-    const syncMeasurePl = compute(syncMeasureSrc)
-    const buzzTapPl = compute(buzzTapSrc)
-    const syncPl = compute(syncSrc)
-    const lineAnalyzePl = compute(lineAnalyzeSrc)
-    const virPl = compute(virSrc)
-    const decodePl = compute(decodeSrc)
-    const captionPl = compute(captionSrc)
-    const chyronPl = compute(chyronSrc)
-    const osdPl = compute(osdSrc)
-    const crtFacePl = compute(crtFaceSrc)
+    this.composePl = compute('compose', composeSrc)
+    const composeBPl = compute('compose_b', composeBSrc)
+    const encodeChromaBPl = compute('encode_chroma_b', encodeChromaBSrc)
+    const encodeCompositePl = compute('encode_composite', encodeCompositeSrc)
+    const encodeCompositeBPl = compute(
+      'encode_composite_b',
+      encodeCompositeBSrc,
+    )
+    const feedPl = compute('feed', feedSrc)
+    const mixBPl = compute('mix_b', mixBSrc)
+    const fbCompositePl = compute('fb_composite', fbCompositeSrc)
+    const storePrevPl = compute('store_prev', storePrevSrc)
+    const chromaExtractPl = compute('chroma_extract', chromaExtractSrc)
+    const underDownPl = compute('under_down', underDownSrc)
+    const channelPl = compute('channel', channelSrc)
+    const timebasePl = compute('timebase', timebaseSrc)
+    const enhancerPl = compute('enhancer', enhancerSrc)
+    const syncMeasurePl = compute('sync_measure', syncMeasureSrc)
+    const buzzTapPl = compute('buzz_tap', buzzTapSrc)
+    const syncPl = compute('sync', syncSrc)
+    const lineAnalyzePl = compute('line_analyze', lineAnalyzeSrc)
+    const virPl = compute('vir', virSrc)
+    const decodePl = compute('decode', decodeSrc)
+    const captionPl = compute('caption', captionSrc)
+    const chyronPl = compute('chyron', chyronSrc)
+    const osdPl = compute('osd', osdSrc)
+    const crtFacePl = compute('crt_face', crtFaceSrc)
 
     // Zero-copy video: where the device can import the decoder's own frame
     // (Chrome), the pump skips createImageBitmap entirely and blit_ext samples
@@ -659,9 +675,10 @@ export class Engine implements EngineApi {
       typeof d.importExternalTexture === 'function' &&
       !pageSearch().includes('vidbitmap')
     if (directVideo) {
-      const blitModule = module(blitExtSrc)
+      const blitModule = module('blit_ext', blitExtSrc)
       const blit = (entryPoint: string) =>
         d.createComputePipeline({
+          label: entryPoint,
           layout: 'auto',
           compute: { module: blitModule, entryPoint },
         })
@@ -670,8 +687,9 @@ export class Engine implements EngineApi {
     }
     this.pump = new VideoPump(directVideo)
 
-    const presentModule = module(presentSrc)
+    const presentModule = module('present', presentSrc)
     this.presentPl = d.createRenderPipeline({
+      label: 'present',
       layout: 'auto',
       vertex: { module: presentModule, entryPoint: 'vs' },
       fragment: {
@@ -687,6 +705,7 @@ export class Engine implements EngineApi {
       resources: GPUBindingResource[],
     ): GPUBindGroup =>
       d.createBindGroup({
+        label: pl.label,
         layout: pl.getBindGroupLayout(0),
         entries: resources.map((resource, binding) => ({ binding, resource })),
       })
@@ -726,7 +745,7 @@ export class Engine implements EngineApi {
       usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.STORAGE_BINDING,
     })
     {
-      const grainBakePl = compute(grainBakeSrc)
+      const grainBakePl = compute('grain_bake', grainBakeSrc)
       const enc = d.createCommandEncoder()
       const cp = enc.beginComputePass()
       cp.setPipeline(grainBakePl)
@@ -1133,6 +1152,7 @@ export class Engine implements EngineApi {
       ]),
     ]
     this.presentBg = d.createBindGroup({
+      label: 'present',
       layout: this.presentPl.getBindGroupLayout(0),
       entries: [
         { binding: 0, resource: { buffer: this.paramsBuf } },
@@ -1614,6 +1634,7 @@ export class Engine implements EngineApi {
   ): void {
     const d = this.gpu.device
     const bg = d.createBindGroup({
+      label: pl.label,
       layout: pl.getBindGroupLayout(0),
       entries: [
         { binding: 0, resource: d.importExternalTexture({ source: el }) },
@@ -1631,6 +1652,7 @@ export class Engine implements EngineApi {
   // Slot A's view is the only binding that changes when its raster resizes.
   private makeComposeBg(): GPUBindGroup {
     return this.gpu.device.createBindGroup({
+      label: 'compose',
       layout: this.composePl.getBindGroupLayout(0),
       entries: [
         { binding: 0, resource: { buffer: this.paramsBuf } },
@@ -2755,12 +2777,15 @@ export class Engine implements EngineApi {
       )
     if (this.frame < 3) {
       const f = this.frame
+      // A device dropped mid-frame rejects these, and has nothing to report.
       void d
         .popErrorScope()
         .then(e => e && console.error(`frame ${f} internal:`, e.message))
+        .catch(NOOP)
       void d
         .popErrorScope()
         .then(e => e && console.error(`frame ${f} validation:`, e.message))
+        .catch(NOOP)
     }
     if (this.debug) {
       if (this.frame < 3) console.log('DEBUG rendered frame', this.frame)

@@ -19,7 +19,10 @@ export interface Fatal {
   // back here, in a tab that is no better off. Under 0004 that state is reachable
   // only through `?gpudestroy=1`, so in practice this screen belongs to whoever is
   // re-measuring the browser bug.
-  kind: 'unavailable' | 'lost' | 'hung' | 'budget'
+  //
+  // 'build' is a shader or pipeline this browser rejects. WebGPU works and the
+  // app is at fault, so the screen asks for a report and offers no reload.
+  kind: 'unavailable' | 'lost' | 'hung' | 'budget' | 'build'
   // 'budget' only: spend the session anyway. The ceiling is measured from one
   // browser on one OS, so the gate has to be arguable with — see declineDevice.
   onOverride?: () => void
@@ -32,7 +35,18 @@ export function FatalScreen({ fatal }: { fatal: Fatal }) {
         {fatal.kind === 'unavailable' ? null : (
           <>
             <h1 className={styles.fatalTitle}>{fatal.title}</h1>
-            <p style={{ margin: '0 0 14px' }}>{fatal.body}</p>
+            <p
+              style={{
+                margin: '0 0 14px',
+                ...(fatal.kind === 'build' && {
+                  whiteSpace: 'pre-wrap',
+                  fontFamily: 'monospace',
+                  fontSize: 12,
+                }),
+              }}
+            >
+              {fatal.body}
+            </p>
           </>
         )}
         {fatal.kind === 'unavailable' ? (
@@ -126,6 +140,19 @@ export function FatalScreen({ fatal }: { fatal: Fatal }) {
               </p>
             )}
           </>
+        ) : fatal.kind === 'build' ? (
+          <p className={ui.muted} style={{ margin: 0 }}>
+            This is a bug in videoskillet. Please{' '}
+            <a
+              className={styles.fatalLink}
+              href="https://github.com/cmdcolin/videoskillet/issues"
+              target="_blank"
+              rel="noreferrer"
+            >
+              report it
+            </a>{' '}
+            with the message above and the name of your browser.
+          </p>
         ) : fatal.kind === 'hung' ? (
           <>
             <p style={{ margin: '0 0 14px' }}>
