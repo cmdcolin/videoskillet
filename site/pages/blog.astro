@@ -1,59 +1,57 @@
 ---
-import changelog from '../../CHANGELOG.md?raw'
+import { getCollection } from 'astro:content'
+
 import Page from '../layouts/Page.astro'
-import {
-  longDate,
-  parseChangelog,
-  postsByDay,
-  versionSpan,
-} from '../lib/changelog'
+import { isoDay, longDate, newestFirst, published } from '../lib/posts'
 import { ORIGIN } from '../lib/site'
 import css from '../styles/landing.css?raw'
 
 const NAME = 'videoskillet'
-const posts = postsByDay(parseChangelog(changelog))
+const changelogHref =
+  'https://github.com/cmdcolin/videoskillet/blob/main/CHANGELOG.md'
+const postHref = (id: string) => `/blog/${id}/`
+const assetHref = (path: string) => path
+const posts = newestFirst(await getCollection('posts', published))
 ---
 
 <Page
   title="Blog — videoskillet"
-  description="What changed in videoskillet, day by day, from the changelog."
+  description="New looks and features in videoskillet, and how they work."
   css={css}
   canonical={`${ORIGIN}blog/`}
   account={false}
   current="/blog/"
 >
   <main class="wrap blog">
-    <!-- CROSS_REPO_SYNC(blog-posts) -->
+    <!-- CROSS_REPO_SYNC(blog-index) -->
     <h1>Blog</h1>
     <p class="blogLead">
-      What changed in {NAME}, one post per day, from the changelog.
+      Each post shows something new in {NAME} and explains how it works. The{' '}
+      <a href={changelogHref}>changelog</a> lists every change.
     </p>
+    {posts.length === 0 && <p>There are no posts yet.</p>}
     {posts.map(post => (
-      <article class="post" id={post.date}>
-        <h2>
-          <a href={`#${post.date}`}>{longDate(post.date)}</a>
-        </h2>
-        <p class="postMeta">{versionSpan(post.versions)}</p>
-        {post.groups.map(([name, changes]) => (
-          <Fragment>
-            <h3>{name}</h3>
-            <ul>
-              {changes.map(change => (
-                <li>
-                  {change.scope && (
-                    <span class="postScope">{change.scope}</span>
-                  )}
-                  {change.text}{' '}
-                  <a class="postSha" href={change.url}>
-                    {change.sha}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </Fragment>
-        ))}
+      <article class="postCard" id={post.id}>
+        <a class="postCardImage" href={postHref(post.id)} tabindex="-1">
+          <img
+            src={assetHref(post.data.image)}
+            alt={post.data.imageAlt}
+            loading="lazy"
+          />
+        </a>
+        <div>
+          <h2>
+            <a href={postHref(post.id)}>{post.data.title}</a>
+          </h2>
+          <p class="postMeta">
+            <time datetime={isoDay(post.data.date)}>
+              {longDate(post.data.date)}
+            </time>
+          </p>
+          <p>{post.data.summary}</p>
+        </div>
       </article>
     ))}
-    <!-- CROSS_REPO_SYNC_END(blog-posts) -->
+    <!-- CROSS_REPO_SYNC_END(blog-index) -->
   </main>
 </Page>

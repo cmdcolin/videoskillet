@@ -1,0 +1,62 @@
+---
+import { getCollection, render } from 'astro:content'
+
+import Page from '../../layouts/Page.astro'
+import { isoDay, longDate, published } from '../../lib/posts'
+import { ORIGIN } from '../../lib/site'
+import css from '../../styles/landing.css?raw'
+
+export async function getStaticPaths() {
+  const posts = await getCollection('posts', published)
+  return posts.map(post => ({ params: { post: post.id }, props: { post } }))
+}
+
+const { post } = Astro.props
+const { Content } = await render(post)
+const blogHref = '/blog/'
+const changelogHref =
+  'https://github.com/cmdcolin/videoskillet/blob/main/CHANGELOG.md'
+const assetHref = (path: string) => path
+const lookHref = (look: string) => `/app/${look}`
+---
+
+<Page
+  title={`${post.data.title} — videoskillet`}
+  description={post.data.summary}
+  css={css}
+  canonical={`${ORIGIN}blog/${post.id}/`}
+  account={false}
+  current="/blog/"
+>
+  <main class="wrap blog">
+    <!-- CROSS_REPO_SYNC(blog-post) -->
+    <article class="postFull">
+      <p class="postMeta">
+        <a href={blogHref}>Blog</a> ·{' '}
+        <time datetime={isoDay(post.data.date)}>
+          {longDate(post.data.date)}
+        </time>
+      </p>
+      <h1>{post.data.title}</h1>
+      <img
+        class="postHero"
+        src={assetHref(post.data.image)}
+        alt={post.data.imageAlt}
+      />
+      {post.data.look && (
+        <p>
+          <a class="postLook" href={lookHref(post.data.look)}>
+            Open this look in the app ↗
+          </a>
+        </p>
+      )}
+      <div class="postBody">
+        <Content />
+      </div>
+      <p class="postMeta">
+        The <a href={changelogHref}>changelog</a> lists every change.
+      </p>
+    </article>
+    <!-- CROSS_REPO_SYNC_END(blog-post) -->
+  </main>
+</Page>

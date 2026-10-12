@@ -22,7 +22,7 @@ const rewriteLink = (href, dir) => {
   const isDir = target.endsWith('/')
   const file = isDir ? target.slice(0, -1) : target
   const page = LINKS.get(file)
-  return /^[a-z]+:/.test(href) || href.startsWith('#')
+  return /^[a-z]+:/.test(href) || /^[#/]/.test(href)
     ? href
     : file.startsWith(IMG)
       ? `/guide/img/${file.slice(IMG.length)}${anchor}`

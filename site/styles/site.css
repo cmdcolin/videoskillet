@@ -373,53 +373,76 @@ section {
 .aboutLinks li {
   margin-bottom: 0.4rem;
 }
-.post {
-  margin-top: 2.5rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--border-faint);
-}
-.post h2 {
-  margin: 0;
-  font-size: 1.25rem;
-}
-.post h2 a {
-  color: var(--fg);
-  text-decoration: none;
-}
-.post h2 a:hover {
-  text-decoration: underline;
-}
 .postMeta {
   margin: 0.2rem 0 0;
   font-family: var(--mono);
   font-size: 0.85rem;
   color: var(--fg4);
 }
-.post h3 {
-  margin: 1.2rem 0 0.4rem;
-  font-size: 0.95rem;
-  color: var(--fg2);
+.postCard {
+  display: grid;
+  grid-template-columns: 14rem minmax(0, 1fr);
+  gap: 1.2rem;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-faint);
 }
-.post ul {
+.postCard img,
+.postHero,
+.postBody img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 4px;
+}
+.postCard h2 {
   margin: 0;
-  padding-left: 1.2rem;
+  font-size: 1.25rem;
 }
-.post li {
-  margin-bottom: 0.35rem;
+.postCard h2 a {
+  color: var(--fg);
+  text-decoration: none;
 }
-.postScope {
-  margin-right: 0.45rem;
-  padding: 0.05em 0.4em;
-  border: 1px solid var(--border-quiet);
-  border-radius: 3px;
-  font-family: var(--mono);
-  font-size: 0.8em;
+.postCard h2 a:hover {
+  text-decoration: underline;
+}
+.postCard p {
+  margin: 0.4rem 0 0;
+}
+@media (max-width: 560px) {
+  .postCard {
+    grid-template-columns: 1fr;
+  }
+}
+.postFull h1 {
+  margin: 0.4rem 0 1rem;
+}
+.postLook {
+  font-weight: 600;
+}
+.postBody {
+  line-height: 1.6;
+}
+.postBody h2 {
+  margin: 2rem 0 0.6rem;
+  font-size: 1.25rem;
+}
+.postBody p {
+  margin: 0 0 0.9rem;
+}
+.postBody .anchor {
+  margin-left: 0.45em;
   color: var(--fg4);
+  text-decoration: none;
+  font-weight: 400;
+  opacity: 0;
 }
-.postSha {
-  font-family: var(--mono);
-  font-size: 0.8em;
-  color: var(--fg4);
+.postBody h2:hover .anchor,
+.postBody .anchor:focus-visible {
+  opacity: 1;
+}
+.postBody img {
+  margin: 0.4rem 0 1rem;
 }
 
 /* ── the signed-in home ────────────────────────────────────────────────────
