@@ -218,7 +218,7 @@
 230 shuttleX step=0.05 default=1
 231 strobeHz step=0.1 default=0
 232 strobeMs step=1 default=40
-233 scanBeam step=0.01 default=0.3
+233 scanBeam step=0.01 default=0.55
 234 scanBloom step=0.01 default=0
 235 phosphor step=0.0001 default=0
 236 phosphorMode step=1 default=0 choices=sRGB|P22|1953|green
