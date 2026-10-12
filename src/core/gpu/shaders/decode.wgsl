@@ -303,10 +303,11 @@ fn sweepInv(y: f32, lo0: f32, hi0: f32) -> f32 {
 // beam moves, the more lines pile up and the brighter the row, and a scan
 // collapsed to a line puts the whole beam current on it. Relative to the plain
 // scan above full size, where the brightness control was set against the
-// overscan the set shipped with. Capped where the sweep stands still, which is
-// otherwise a division by zero at the knee.
+// overscan the set shipped with, which the size control sets and the EHT does
+// not, so a frame the supply has stretched dims by the stretch. Capped where
+// the sweep stands still, which is otherwise a division by zero at the knee.
 fn density(r: f32) -> f32 {
-  let amp = max(vAmp, 1.0);
+  let amp = max(clamp(P.vSize, 0.01, 4.0), 1.0);
   return amp / max(abs(sweep(r + 0.5) - sweep(r - 0.5)), 0.125 * amp);
 }
 
@@ -543,9 +544,10 @@ fn lineOffset(row: u32, ry: u32, y: f32) -> i32 {
 
 // The fraction the EHT has fallen under the beam load on line `ry`, read off
 // the sag tank. The yoke throws a softer beam further, so the line widens about
-// the centre, and the beam lands with less energy, so it gives less light. A
-// supply sags a long way under load and rises only a little above its unloaded
-// voltage. The polarity belongs to the tube, so a sag wired backwards still
+// the centre, and the beam lands with less energy, so it gives less light. The
+// regulator holds the unloaded voltage, so only a load moves it and a dark
+// scene leaves the raster where it was set. The polarity belongs to the tube,
+// so a sag wired backwards still
 // widens on bright content. EHT_KNEE puts most of the drop within the first few
 // microseconds of lateral pull.
 const EHT_MAX = 0.15;
@@ -553,7 +555,7 @@ const EHT_KNEE = 0.12 * f32(SPL);
 const SCAN_MID = f32(ACTIVE_W) * 0.5;
 
 fn ehtOf(sag: f32) -> f32 {
-  return clamp(EHT_MAX * tanh(abs(P.hvSag) / EHT_KNEE) * sag, -0.1, 0.25);
+  return clamp(EHT_MAX * tanh(abs(P.hvSag) / EHT_KNEE) * sag, 0.0, 0.25);
 }
 
 fn lineEht(ry: u32) -> f32 {
@@ -561,15 +563,13 @@ fn lineEht(ry: u32) -> f32 {
 }
 
 // Picture samples per screen pixel: the deflection angle goes as 1/sqrt(EHT).
-// Capped below 1.05 by the tile, which stages a span 12 samples wider than the
-// workgroup past what the demod and chromaCoarse can reach.
+// Never above 1, so a line only widens and its span always fits the tile.
 fn ehtScan(e: f32) -> f32 {
   return sqrt(1.0 - e);
 }
 
 // Light per unit glass along the line: the beam's energy falls with the
-// voltage, and a wider line spreads what is left over more phosphor. A taller
-// frame spreads it again, by the share vAmp grows.
+// voltage, and a wider line spreads what is left over more phosphor.
 fn ehtLight(e: f32) -> f32 {
   return (1.0 - e) * ehtScan(e);
 }
@@ -604,7 +604,6 @@ fn flybackSwing(p: f32) -> f32 {
 // decides which of them lands here. The beam is bent, sagged and kicked on the
 // way exactly as it is for the picture, so a rippled scan ripples its retrace.
 fn retraceLight(x: u32, y: f32, vroll: f32) -> vec3f {
-  let s = ACTIVE_START + x;
   let yBot = sweep(f32(NLINES) - 1.0);
   let yTop = sweep(f32(RETRACE_START) + P.flyback);
   let span = 1.0 + 0.8 * clamp(P.hvRing, 0.0, 1.0);
@@ -613,17 +612,19 @@ fn retraceLight(x: u32, y: f32, vroll: f32) -> vec3f {
   for (var r = RETRACE_START; r < RETRACE_START + lines; r = r + 1u) {
     let row = wrapRow(i32(r) + i32(floor(vroll)));
     let hoff = lineOffset(row, r, y);
-    let t = f32(i32(s) + hoff) / f32(SPL);
+    let e = lineEht(r);
+    let s = i32(ACTIVE_START) + i32(round(SCAN_MID + (f32(x) - SCAN_MID) * ehtScan(e)));
+    let t = f32(s + hoff) / f32(SPL);
     let p = (f32(r - RETRACE_START) + t) / P.flyback;
     let w = max(0.0, 1.0 - abs(mix(yBot, yTop, flybackSwing(p)) - y));
     if (w > 0.0) {
-      let n0 = i32(row * SPL + s) + hoff;
+      let n0 = i32(row * SPL) + s + hoff;
       // one subcarrier cycle averaged, so chroma cancels and the line's luma
       // is what draws
       let v = 0.25 * (comp[clampIdx(n0)] + comp[clampIdx(n0 + 1)]
         + comp[clampIdx(n0 + 2)] + comp[clampIdx(n0 + 3)]);
       let drive = max((v - IRE_BLACK) / VIDEO_RANGE, 0.0) + P.retrace * RETRACE_LEVEL;
-      acc = acc + w * toLight(vec3f(drive * timing[ABL_GAIN])).x;
+      acc = acc + w * toLight(vec3f(drive * timing[ABL_GAIN])).x * ehtLight(e);
     }
   }
   return vec3f(acc);
@@ -638,8 +639,8 @@ fn main(
   // roll wraps over the whole 525-line frame, so the VBI decodes as the
   // classic rolling black bar instead of the picture wrapping seamlessly
   let vroll = timing[V_PHASE];
-  let vSpread = sqrt(1.0 - ehtOf(timing[SAG_MEAN]));
-  vAmp = clamp(P.vSize, 0.01, 4.0) / vSpread;
+  let vSizeC = clamp(P.vSize, 0.01, 4.0);
+  vAmp = vSizeC / ehtScan(ehtOf(timing[SAG_MEAN]));
   let y = f32(gid.y);
   let last = f32(NLINES) - 1.0;
   // Which raster line the yoke puts on this screen row. The plain scan is one
@@ -653,7 +654,7 @@ fn main(
   var densB = 0.0;
   if (plain) {
     rrF = rasterRowF(y);
-    densA = 1.0 / min(vAmp, 1.0);
+    densA = max(vSizeC, 1.0) / vAmp;
   } else {
     var split = last;
     if (P.vFold > 0.0) {
@@ -680,7 +681,7 @@ fn main(
   let scanA = ehtScan(ehtA);
   let s0A = SCAN_MID + (x0 - SCAN_MID) * scanA;
   let b0A = i32(round(s0A));
-  densA = densA * ehtLight(ehtA) * vSpread;
+  densA = densA * ehtLight(ehtA);
   let base = i32(row * SPL + ACTIVE_START) + b0A + hoff - i32(HALO);
   for (var i = lid.x; i < TILE; i = i + TILE_WG) {
     tile[i] = csrc(clampIdx(base + i32(i)));
@@ -701,7 +702,7 @@ fn main(
     scanB = ehtScan(ehtB);
     s0B = SCAN_MID + (x0 - SCAN_MID) * scanB;
     b0B = i32(round(s0B));
-    densB = densB * ehtLight(ehtB) * vSpread;
+    densB = densB * ehtLight(ehtB);
     let baseB = i32(rowB * SPL + ACTIVE_START) + b0B + hoffB - i32(HALO);
     for (var i = lid.x; i < TILE; i = i + TILE_WG) {
       tile[TILE + i] = csrc(clampIdx(baseB + i32(i)));

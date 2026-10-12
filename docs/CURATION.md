@@ -664,7 +664,8 @@ merely accumulates. Nine arms tried to find more of that.
   pixel: it lives in `present.wgsl`, downstream of `crt_face` and therefore
   outside the loop, so it cannot compound. Checked before rendering.
 
-What shipped is `supplyWiredBackwards`: the same tank with `hvSagUs` negated.
+What shipped, and was later retired (below), is `supplyWiredBackwards`: the
+same tank with `hvSagUs` negated.
 The sag is a horizontal displacement per raster line, so the sign flip mirrors
 the field, which on a still picture is the same bend reflected. In a loop it
 changes what the field does to what it built — the structure changes axis, from

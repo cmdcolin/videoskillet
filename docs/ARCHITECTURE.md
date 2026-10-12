@@ -379,8 +379,8 @@ Almost everything is comfortably parallel. Two exceptions:
   raster row and stages a contiguous span with a 32-sample halo, so the demod
   FIR reads workgroup memory. Consequence: horizontal offsets must be
   **row-uniform**. A row-uniform width fits too: the EHT breathing in
-  `lineEht` widens a line about the centre by up to 15% and narrows it by at
-  most 5%, which is what the halo has spare past the demod and `chromaCoarse`.
+  `lineEht` widens a line about the centre by up to 15% and never narrows
+  one, so the span a workgroup reads only ever shrinks.
   Per-pixel horizontal scaling (linearity, pincushion) would read outside the
   halo and needs the staging restructured first. Vertical
   geometry is free by the same token: which raster line a screen row shows is a

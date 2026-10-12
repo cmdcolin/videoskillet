@@ -138,7 +138,7 @@ export const candidates: Candidate[] = [
 
   // the shipped one, unchanged, as the bar
   {
-    name: 'beamBendsItsOwnScan, as shipped',
+    name: 'beamBendsItsOwnScan at 45 µs, as it shipped then',
     blurb: 'For comparison.',
     patch: { ...RIG, hvSagUs: 45, hvRing: 0.55, abl: 0.2 },
     mod: [{ target: 'hvSagUs', source: 'sine', rateHz: 0.04, depth: 0.15 }],

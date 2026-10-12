@@ -120,7 +120,7 @@ export const candidates: Candidate[] = [
     mod: [{ target: 'crtSvm', source: 'sine', rateHz: 0.05, depth: 0.12 }],
   },
   {
-    name: 'beamBendsItsOwnScan, as shipped',
+    name: 'beamBendsItsOwnScan at 45 µs, as it shipped then',
     blurb: 'For comparison.',
     patch: { ...RIG, hvSagUs: 45, hvRing: 0.55, abl: 0.2 },
     mod: [{ target: 'hvSagUs', source: 'sine', rateHz: 0.04, depth: 0.15 }],
