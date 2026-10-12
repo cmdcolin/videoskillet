@@ -180,17 +180,17 @@ fault through `timing[]` will spin hue that should have stayed put.
   coasting; `[SAG_BASE..]` normalized deflection sag per raster line, with
   `[SAG_HOLD]` and `[SAG_VEL]` past everything else carrying the tank's state
   through the flyback and `[SAG_MEAN]` its average over the frame, which sets
-  the vertical scan's EHT; `[VIR_HUE]` and `[VIR_GAIN]`, past the sag region, the
-  VIR corrector's two integrators — `vir` writes them, `decode` adds them to the
-  demodulator's reference and to its chroma gain; `[TIP_LEVEL]`, `[BLACK_SHIFT]`
-  and `[GATE_WIDE]` after them, the sync separator's peak-detector reference,
-  the DC restorer's offset from nominal black, and whether the separator's gate
-  is open to the whole line — `sync` updates them, `sync_measure` slices against
-  the first and hunts as far as the third says, `decode` subtracts the second
-  (see ADR 0009). Indices 525–532, the two VIR slots and those three are
-  persistent across frames; treat them as state. A zeroed `VIR_GAIN` means the
-  servo has never run, which is what lets `resetSignal` clear the whole buffer
-  and still hand the loop a sane start.
+  the vertical scan's EHT; `[VIR_HUE]` and `[VIR_GAIN]`, past the sag region,
+  the VIR corrector's two integrators — `vir` writes them, `decode` adds them to
+  the demodulator's reference and to its chroma gain; `[TIP_LEVEL]`,
+  `[BLACK_SHIFT]` and `[GATE_WIDE]` after them, the sync separator's
+  peak-detector reference, the DC restorer's offset from nominal black, and
+  whether the separator's gate is open to the whole line — `sync` updates them,
+  `sync_measure` slices against the first and hunts as far as the third says,
+  `decode` subtracts the second (see ADR 0009). Indices 525–532, the two VIR
+  slots and those three are persistent across frames; treat them as state. A
+  zeroed `VIR_GAIN` means the servo has never run, which is what lets
+  `resetSignal` clear the whole buffer and still hand the loop a sane start.
 - **`lineParamsBuf`** — two `vec4f` per line from `LineState`. The first is
   `(tbOffsetSamples, underBasePhase, underJitterPhase, seed)`; the second holds
   the smooth part of the first and third, which `timebase` and `channel` ramp
@@ -378,15 +378,14 @@ Almost everything is comfortably parallel. Two exceptions:
 - **`decode` stages a shared tile per row.** A workgroup covers 64 pixels of one
   raster row and stages a contiguous span with a 32-sample halo, so the demod
   FIR reads workgroup memory. Consequence: horizontal offsets must be
-  **row-uniform**. A row-uniform width fits too: the EHT breathing in
-  `lineEht` widens a line about the centre by up to 15% and never narrows
-  one, so the span a workgroup reads only ever shrinks.
-  Per-pixel horizontal scaling (linearity, pincushion) would read outside the
-  halo and needs the staging restructured first. Vertical
-  geometry is free by the same token: which raster line a screen row shows is a
-  function of the row alone, so `vSize`, `vLin` and `vFold` are an inversion of
-  the yoke's sweep in `decode`, and the fold stages the second line the row
-  shows in the other half of the tile.
+  **row-uniform**. A row-uniform width fits too: the EHT breathing in `lineEht`
+  widens a line about the centre by up to 15% and never narrows one, so the span
+  a workgroup reads only ever shrinks. Per-pixel horizontal scaling (linearity,
+  pincushion) would read outside the halo and needs the staging restructured
+  first. Vertical geometry is free by the same token: which raster line a screen
+  row shows is a function of the row alone, so `vSize`, `vLin` and `vFold` are
+  an inversion of the yoke's sweep in `decode`, and the fold stages the second
+  line the row shows in the other half of the tile.
 
 ## The React layer
 
