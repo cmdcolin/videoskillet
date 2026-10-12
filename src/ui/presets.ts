@@ -1580,9 +1580,9 @@ export const PRESETS: PresetDef[] = [
     displayName: 'the beam bends its own scan',
     group: 'Feedback loops',
     blurb:
-      'Beam-current sag inside the optical loop. Bright picture loads the supply and drags the scan sideways, the camera photographs the bent frame, and the brightness of that frame decides where the next lap bends. Zoom, rotation and shift are the only geometry a camera loop is usually given, and all three are affine: a generation lands scaled and turned, so what it settles into is a tunnel or a spiral. A supply under load is not affine. The displacement field here is the picture one generation back, so the loop finds ribbons that wander and never close.',
+      'Beam-current sag inside the optical loop. Bright picture loads the supply, which drags the scan sideways and lets the raster swell around the load. The camera photographs the bent frame, and the brightness of that frame decides where the next lap bends. Zoom, rotation and shift are the only geometry a camera loop is usually given, and all three are affine: a generation lands scaled and turned, so what it settles into is a tunnel or a spiral. A supply under load is not affine. The displacement field here is the picture one generation back, so the raster bows around whatever was bright a lap ago and never settles into a tunnel.',
     patch: {
-      hvSagUs: 45,
+      hvSagUs: 25,
       hvRing: 0.55,
       abl: 0.2,
       fbMix: 0.9,
@@ -1596,28 +1596,6 @@ export const PRESETS: PresetDef[] = [
     // content off the raster and none of it comes back, so this loop loses
     // light every lap before anything else takes any. Smooth noise on the
     // depth, because a supply drifts and never repeats.
-    mod: [{ target: 'hvSagUs', source: 'smooth', rateHz: 0.06, depth: 0.15 }],
-  },
-  {
-    name: 'supplyWiredBackwards',
-    displayName: 'the supply wired backwards',
-    group: 'Feedback loops',
-    blurb:
-      "The same tank as `the beam bends its own scan`, with its polarity reversed. The sag is a horizontal displacement per raster line, set by that line's own beam current, so flipping the sign mirrors the whole field: what was thrown right is thrown left. On a still picture that is the same bend reflected. Inside a loop it is a different machine, because the sign decides whether the displacement gathers content or separates it — and what accumulates is a curtain of vertical columns where the same tank the other way up builds horizontal ribbons. One sign, and the structure changes axis.",
-    patch: {
-      hvSagUs: -55,
-      hvRing: 0.5,
-      abl: 0.15,
-      fbMix: 0.9,
-      // Brighter than the forward-bend sibling's 1.28: a reversed field
-      // evacuates the raster just as hard, and a shallower bend buys the light
-      // back by losing the columns (-42 renders as soft horizontal bands).
-      fbGain: 1.36,
-      fbZoom: 0.965,
-      fbVign: 0.08,
-      fbBlack: 0.015,
-      fbKnee: 0.75,
-    },
     mod: [{ target: 'hvSagUs', source: 'smooth', rateHz: 0.06, depth: 0.15 }],
   },
   {

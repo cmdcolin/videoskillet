@@ -673,6 +673,21 @@ forward bend's 83.4. The columns need the depth: at `hvSagUs` -42 they dissolve
 into soft horizontal bands, so the light it loses is bought back with gain (1.36
 against the sibling's 1.28) rather than with a shallower bend.
 
+**Both self-bending loops were revisited once the sag learned to breathe**
+(`lineEht` in decode widens, dims and lengthens the raster with the same tank).
+The backwards loop read as a sine-wave filter on review, and stills on the
+haunted-house clip agreed:
+
+- **`supplyWiredBackwards` is retired.** Its curtain of columns is the tank's
+  own resonance: with the sign reversed the loop is negative feedback around a
+  resonant tank, which oscillates at the tank's frequency. Every arm from -55 to
+  -12 µs, at gain 1.28 to 1.45 and `hvRing` 0.2, still rippled at that period.
+- **`beamBendsItsOwnScan` moved from 45 to 25 µs.** At 45 the bend throws a line
+  most of its own width, and the loop settles into even ribbons. At 25 the skeletons stay readable inside a raster that bows around
+  whatever was bright a lap ago, which is the look a supply under load gives.
+- `looplock.ts` could not measure either: the headless graph no longer supplies
+  `compose.wgsl`'s `tube` binding.
+
 Both harnesses grew what this round needed. `looplock.ts --spec=` reads a
 candidate file in `sheet.ts`'s format, so the two columns that decide a feedback
 look can be read before it is authored rather than after. And `Runner.run`
