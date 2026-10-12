@@ -11,8 +11,8 @@ look: '#preset=cometTails&src=clip-haunted-house'
 ---
 
 Version 2.16 adds lag to the feedback camera's tube, foldover to the vertical
-deflection and burn-in to the phosphor. Each fault happens in the part of the set
-that causes it.
+deflection and burn-in to the phosphor. Each fault happens in the part of the
+set that causes it.
 
 ## Comet tails
 
@@ -37,8 +37,8 @@ camera with beam cutoff crushing the shadows to black.
 The vertical output stage can now fail. Its ramp curves, which squeezes the top
 of the picture and stretches the bottom. Past the middle of the frame the stage
 saturates. The sweep stops, the yoke pulls the beam back up, and the beam draws
-the rest of the frame upside down over the top half. Every line in the knee lands on
-the same row, so that row glows white.
+the rest of the frame upside down over the top half. Every line in the knee
+lands on the same row, so that row glows white.
 
 The fault is in the deflection, so the picture folds and its colours stay where
 they are. The [foldover](/app/#preset=foldover&src=clip-haunted-house) preset
