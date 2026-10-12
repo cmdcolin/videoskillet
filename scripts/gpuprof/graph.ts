@@ -201,11 +201,9 @@ export class Graph {
     const chromaBuf = storage(N * 4)
     const underBuf = storage(N * 4)
     const lineInfoBuf = storage(LINES * 16)
-    // LINES*2 + 10: the sag region runs to LINES*2 + 7 and the VIR corrector's
-    // two integrators sit past it (VIR_HUE, VIR_GAIN in the prelude). Two
-    // floats short and `vir` writes out of bounds, which a storage buffer
-    // discards silently — the corrector then does nothing here and everything
-    // in the app.
+    // The same length as pipeline.ts: the last slot is SAG_MEAN in the
+    // prelude. A buffer short of a slot drops that write silently, and the
+    // stage that reads it does nothing here and everything in the app.
     const timingBuf = storage((LINES * 2 + 16) * 4, GPUBufferUsage.COPY_SRC)
     this.timingBuf = timingBuf
     const syncMeasureBuf = storage(LINES * 32, GPUBufferUsage.COPY_SRC)
@@ -219,6 +217,8 @@ export class Graph {
       storage(ACTIVE_WIDTH * ACTIVE_HEIGHT * 8),
       storage(ACTIVE_WIDTH * ACTIVE_HEIGHT * 8),
     ]
+    // The feedback camera's pickup-tube target, packed like the phosphor.
+    const tube = storage(ACTIVE_WIDTH * ACTIVE_HEIGHT * 8)
     const tex = (viewFormats: GPUTextureFormat[] = []) =>
       d.createTexture({
         size: [ACTIVE_WIDTH, ACTIVE_HEIGHT],
@@ -302,6 +302,7 @@ export class Graph {
           samp,
           inputTex: inputTex.createView(),
           timing: timingBuf,
+          tube,
         }),
         dispatch: perTile,
       },
@@ -702,6 +703,7 @@ export class Graph {
       bDetuneHz: c.bDetuneHz,
       bRollLps: c.bRollLps,
       bPause: c.bPause,
+      bWanderUs: c.bWanderUs,
       wipePos: c.wipePos,
       wipeRateHz: c.wipeRate,
     })

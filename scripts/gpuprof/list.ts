@@ -3,16 +3,34 @@
 // `survey presets`; this is the one that does not need a GPU.
 import { DEFAULT_CONTROLS } from '../../src/core/controls'
 
-const m = await import(new URL('../../src/ui/presets.ts', import.meta.url).href)
-const ui = await import(
+import type { ControlKey, Controls } from '../../src/core/controls'
+
+const m = (await import(
+  new URL('../../src/ui/presets.ts', import.meta.url).href
+)) as {
+  PRESETS: {
+    name: string
+    displayName?: string
+    group?: string
+    blurb: string
+    patch: Partial<Controls>
+    mod?: readonly { target: string; source: string }[]
+  }[]
+  presetControls: (patch: Partial<Controls>) => Controls
+}
+const ui = (await import(
   new URL('../../src/ui/controls.ts', import.meta.url).href
-)
+)) as {
+  ALL_SLIDERS: readonly { key: ControlKey; min: number; max: number }[]
+}
 const span = new Map(
   ui.ALL_SLIDERS.map(s => [s.key, Math.max(s.max - s.min, 1e-9)]),
 )
 const rows = m.PRESETS.map(p => {
   const full = m.presetControls(p.patch)
-  const keys = Object.keys(full).filter(k => full[k] !== DEFAULT_CONTROLS[k])
+  const keys = (Object.keys(full) as ControlKey[]).filter(
+    k => full[k] !== DEFAULT_CONTROLS[k],
+  )
   return {
     name: p.name,
     display: p.displayName ?? p.name,

@@ -686,8 +686,9 @@ haunted-house clip agreed:
 - **`beamBendsItsOwnScan` moved from 45 to 25 µs.** At 45 the bend throws a line
   most of its own width, and the loop settles into even ribbons. At 25 the skeletons stay readable inside a raster that bows around
   whatever was bright a lap ago, which is the look a supply under load gives.
-- `looplock.ts` could not measure either: the headless graph no longer supplies
-  `compose.wgsl`'s `tube` binding.
+- At 25 µs `looplock.ts` measures `loop` 72.1, `mean` 101 and `sd` 65, against
+  the earlier round's `loop` 83.4 at 45. The loop still accounts for most of
+  the frame, and the frame keeps its light.
 
 Both harnesses grew what this round needed. `looplock.ts --spec=` reads a
 candidate file in `sheet.ts`'s format, so the two columns that decide a feedback
