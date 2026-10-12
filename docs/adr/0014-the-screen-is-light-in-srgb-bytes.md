@@ -60,8 +60,14 @@ on top of the direct emission, and a tinted faceplate is a lower control.
   lap at a time; the two "past the redline" screen looks are different pictures
   and were left as they came out.
 - Scanlines at the same `scanBeam` are lighter, because the gap is now a dip in
-  light, and `scanBloom` fattens a line by its light, so a mid grey fattens
-  less. Both controls' numbers were left alone.
+  light. Measured under the magnifier on colour bars, the dip's shape is
+  unchanged and its depth on white at 0.3 is what 0.58 gives now, so the default
+  and every preset's value moved by `1 - toLight(1 - old)`: 0.3 became 0.55 and
+  0.5 became 0.8. The dip deepens as the picture darkens, because the encode is
+  steeper there, so dim lines are now more separated than bright ones, which is
+  what a beam spot that shrinks at low current does. `scanBloom` fattens a line
+  by its light, so a mid grey fattens less; 0.42 now matches the old 0.5 on
+  white, and the presets' values were left alone.
 - The phosphor layer, the retrace lines and the loop's lens now run on the sRGB
   curve. Its toe is linear, so the faint end of a long phosphor tail leaves the
   byte sooner than it did on the 2.2 curve, and the camera blurs light before it

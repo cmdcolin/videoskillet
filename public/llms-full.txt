@@ -1072,7 +1072,7 @@ flybackLines  (flyback time)
 
 hvSagUs  (HV sag)
   -100..100 step 0.1 µs  default 0
-  A bright picture draws beam current, which loads the high-voltage supply and lets the scan widen, so bright content stretches the geometry around it.
+  A bright picture draws beam current, which loads the high-voltage supply. The softer beam deflects further and lands with less energy, so the lines around bright content widen, dim and pull sideways.
 
 hvRing  (supply ring (0 droop, 1 chaos))
   0..1 step 0.01  default 0.5
@@ -1235,7 +1235,7 @@ strobeMs  (flash length)
   How long the beam is let through each cycle. An absolute length, so speeding the strobe up does not shorten the flash. Under one frame it is one frame.
 
 scanBeam  (beam profile)
-  0..1 step 0.01  default 0.3
+  0..1 step 0.01  default 0.55
   The electron beam is a spot of finite height, so it does not quite fill the gap between scan lines. Raise it for a tighter spot and visible dark gaps.
 
 scanBloom  (beam bloom)

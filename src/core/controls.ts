@@ -364,7 +364,7 @@ export const DEFAULT_CONTROLS = {
   // length, so doubling the rate does not halve the hit (see signal/stab.ts).
   strobeHz: 0,
   strobeMs: 40,
-  scanBeam: 0.3,
+  scanBeam: 0.55, // dip between lines, as a share of the light; the old 0.3 on display bytes (docs/adr/0014)
   scanBloom: 0, // beam-spot growth with beam current: bright lines fatten
   phosphor: 0, // persistence: green retention per field; red/blue decay faster
   phosphorMode: 0, // 0 sRGB, 1 P22/SMPTE-C, 2 NTSC-1953, 3 long-persistence green
