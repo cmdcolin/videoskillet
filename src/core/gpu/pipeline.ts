@@ -558,7 +558,7 @@ export class Engine implements EngineApi {
     // VIR corrector's two integrators
     // Readable back through window.vf, so a harness can watch the receiver's
     // sync and restorer state settle instead of inferring it from the picture.
-    this.timingBuf = storage((LINES * 2 + 15) * 4, GPUBufferUsage.COPY_SRC)
+    this.timingBuf = storage((LINES * 2 + 16) * 4, GPUBufferUsage.COPY_SRC)
     this.syncMeasureBuf = storage(LINES * 32, GPUBufferUsage.COPY_SRC)
     // one audio sample per line, uploaded each frame
     this.audioBuf = storage(LINES * 4)

@@ -547,6 +547,9 @@ const GATE_WIDE = ${LINES * 2 + 12}u;
 // instead of restarting from rest at the top of every frame.
 const SAG_HOLD = ${LINES * 2 + 13}u;
 const SAG_VEL = ${LINES * 2 + 14}u;
+// The sag averaged over the frame just walked, which sets the EHT the vertical
+// scan sees: the reservoir is far too slow to follow one line.
+const SAG_MEAN = ${LINES * 2 + 15}u;
 // Frames the separator must go without pulses before its gate opens to the
 // whole line. A flywheel coasts through a hum trough or an AGC dip; it only
 // starts hunting once the pulses have genuinely gone.

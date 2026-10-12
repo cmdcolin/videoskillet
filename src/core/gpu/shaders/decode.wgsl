@@ -209,6 +209,11 @@ fn demodAt(ti: i32, n0: i32, toff: u32) -> vec2f {
   return vec2f(dot(q, mu), dot(q, mv));
 }
 
+// Vertical deflection amplitude: the size control, and the same 1/sqrt(EHT)
+// the width breathes by, off the frame's mean sag. Set once at the top of main,
+// since the sweep inversion reads it dozens of times a pixel.
+var<private> vAmp: f32;
+
 // Which raster line a screen row is scanning, before the roll offset is
 // applied. Vertical size is the deflection amplitude, so it is glass geometry:
 // shrinking the scan squeezes all 525 raster lines onto less screen, and what
@@ -220,7 +225,7 @@ fn demodAt(ti: i32, n0: i32, toff: u32) -> vec2f {
 // one. A function of y alone, so it stays row-uniform, which is what decode's
 // tiling requires of any offset.
 fn rasterRowF(y: f32) -> f32 {
-  return f32(ACTIVE_TOP) + 240.0 + (y - 240.0) / clamp(P.vSize, 0.01, 4.0);
+  return f32(ACTIVE_TOP) + 240.0 + (y - 240.0) / vAmp;
 }
 
 // The same scan with the vertical output stage misbehaving. The stage drives a
@@ -256,7 +261,7 @@ fn sweep(r: f32) -> f32 {
       p = p - x - FOLD_K * x + (1.0 + FOLD_K) * FOLD_W * (1.0 - exp(-x / FOLD_W));
     }
   }
-  return 240.0 + p * clamp(P.vSize, 0.01, 4.0);
+  return 240.0 + p * vAmp;
 }
 
 // The raster line whose ramp reaches `target`.
@@ -301,7 +306,7 @@ fn sweepInv(y: f32, lo0: f32, hi0: f32) -> f32 {
 // overscan the set shipped with. Capped where the sweep stands still, which is
 // otherwise a division by zero at the knee.
 fn density(r: f32) -> f32 {
-  let amp = max(clamp(P.vSize, 0.01, 4.0), 1.0);
+  let amp = max(vAmp, 1.0);
   return amp / max(abs(sweep(r + 0.5) - sweep(r - 0.5)), 0.125 * amp);
 }
 
@@ -547,9 +552,12 @@ const EHT_MAX = 0.15;
 const EHT_KNEE = 0.12 * f32(SPL);
 const SCAN_MID = f32(ACTIVE_W) * 0.5;
 
+fn ehtOf(sag: f32) -> f32 {
+  return clamp(EHT_MAX * tanh(abs(P.hvSag) / EHT_KNEE) * sag, -0.1, 0.25);
+}
+
 fn lineEht(ry: u32) -> f32 {
-  let e = EHT_MAX * tanh(abs(P.hvSag) / EHT_KNEE) * timing[SAG_BASE + ry];
-  return clamp(e, -0.1, 0.25);
+  return ehtOf(timing[SAG_BASE + ry]);
 }
 
 // Picture samples per screen pixel: the deflection angle goes as 1/sqrt(EHT).
@@ -559,8 +567,9 @@ fn ehtScan(e: f32) -> f32 {
   return sqrt(1.0 - e);
 }
 
-// Light per unit glass: the beam's energy falls with the voltage, and a wider
-// line spreads what is left over more phosphor.
+// Light per unit glass along the line: the beam's energy falls with the
+// voltage, and a wider line spreads what is left over more phosphor. A taller
+// frame spreads it again, by the share vAmp grows.
 fn ehtLight(e: f32) -> f32 {
   return (1.0 - e) * ehtScan(e);
 }
@@ -629,6 +638,8 @@ fn main(
   // roll wraps over the whole 525-line frame, so the VBI decodes as the
   // classic rolling black bar instead of the picture wrapping seamlessly
   let vroll = timing[V_PHASE];
+  let vSpread = sqrt(1.0 - ehtOf(timing[SAG_MEAN]));
+  vAmp = clamp(P.vSize, 0.01, 4.0) / vSpread;
   let y = f32(gid.y);
   let last = f32(NLINES) - 1.0;
   // Which raster line the yoke puts on this screen row. The plain scan is one
@@ -642,7 +653,7 @@ fn main(
   var densB = 0.0;
   if (plain) {
     rrF = rasterRowF(y);
-    densA = 1.0 / min(clamp(P.vSize, 0.01, 4.0), 1.0);
+    densA = 1.0 / min(vAmp, 1.0);
   } else {
     var split = last;
     if (P.vFold > 0.0) {
@@ -669,7 +680,7 @@ fn main(
   let scanA = ehtScan(ehtA);
   let s0A = SCAN_MID + (x0 - SCAN_MID) * scanA;
   let b0A = i32(round(s0A));
-  densA = densA * ehtLight(ehtA);
+  densA = densA * ehtLight(ehtA) * vSpread;
   let base = i32(row * SPL + ACTIVE_START) + b0A + hoff - i32(HALO);
   for (var i = lid.x; i < TILE; i = i + TILE_WG) {
     tile[i] = csrc(clampIdx(base + i32(i)));
@@ -690,7 +701,7 @@ fn main(
     scanB = ehtScan(ehtB);
     s0B = SCAN_MID + (x0 - SCAN_MID) * scanB;
     b0B = i32(round(s0B));
-    densB = densB * ehtLight(ehtB);
+    densB = densB * ehtLight(ehtB) * vSpread;
     let baseB = i32(rowB * SPL + ACTIVE_START) + b0B + hoffB - i32(HALO);
     for (var i = lid.x; i < TILE; i = i + TILE_WG) {
       tile[TILE + i] = csrc(clampIdx(baseB + i32(i)));

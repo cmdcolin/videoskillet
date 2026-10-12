@@ -206,7 +206,7 @@ export class Graph {
     // floats short and `vir` writes out of bounds, which a storage buffer
     // discards silently — the corrector then does nothing here and everything
     // in the app.
-    const timingBuf = storage((LINES * 2 + 15) * 4, GPUBufferUsage.COPY_SRC)
+    const timingBuf = storage((LINES * 2 + 16) * 4, GPUBufferUsage.COPY_SRC)
     this.timingBuf = timingBuf
     const syncMeasureBuf = storage(LINES * 32, GPUBufferUsage.COPY_SRC)
     this.syncMeasureBuf = syncMeasureBuf

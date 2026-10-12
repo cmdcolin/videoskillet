@@ -133,6 +133,7 @@ fn main(@builtin(local_invocation_id) lid: vec3u) {
       // instead of standing still.
       var sag = timing[SAG_HOLD];
       var vel = timing[SAG_VEL] - 0.4 * (0.5 + ring);
+      var total = 0.0;
       for (var ry = 0u; ry < NLINES; ry = ry + 1u) {
         // the roll offset is within half a frame either way, so one
         // conditional step lands the same row wrapRow's two divisions would
@@ -149,12 +150,15 @@ fn main(@builtin(local_invocation_id) lid: vec3u) {
         // winds up against a clamp
         sag = 3.0 * tanh((sag + w * vel) / 3.0);
         timing[SAG_BASE + ry] = sag;
+        total = total + sag;
       }
       timing[SAG_HOLD] = sag;
       timing[SAG_VEL] = vel;
+      timing[SAG_MEAN] = total / f32(NLINES);
     } else {
       timing[SAG_HOLD] = 0.0;
       timing[SAG_VEL] = 0.0;
+      timing[SAG_MEAN] = 0.0;
     }
     return;
   }

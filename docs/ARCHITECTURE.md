@@ -170,7 +170,7 @@ fault through `timing[]` will spin hue that should have stayed put.
 
 ## Buffer layouts worth knowing
 
-- **`timingBuf`** (`(LINES * 2 + 15)` floats) — `[0..524]` per-line horizontal
+- **`timingBuf`** (`(LINES * 2 + 16)` floats) — `[0..524]` per-line horizontal
   offset; `[525]` vertical oscillator phase, signed and fractional; `[526]` PLL
   state; `[527]` AGC gain; `[528..531]` the two second-order gain servos (beam
   limiter and camera auto-iris, gain + velocity each — `sync` updates them,
@@ -179,7 +179,8 @@ fault through `timing[]` will spin hue that should have stayed put.
   scales the free-running H-osc's phase noise so lock decays instead of
   coasting; `[SAG_BASE..]` normalized deflection sag per raster line, with
   `[SAG_HOLD]` and `[SAG_VEL]` past everything else carrying the tank's state
-  through the flyback; `[VIR_HUE]` and `[VIR_GAIN]`, past the sag region, the
+  through the flyback and `[SAG_MEAN]` its average over the frame, which sets
+  the vertical scan's EHT; `[VIR_HUE]` and `[VIR_GAIN]`, past the sag region, the
   VIR corrector's two integrators — `vir` writes them, `decode` adds them to the
   demodulator's reference and to its chroma gain; `[TIP_LEVEL]`, `[BLACK_SHIFT]`
   and `[GATE_WIDE]` after them, the sync separator's peak-detector reference,
