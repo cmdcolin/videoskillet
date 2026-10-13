@@ -93,6 +93,11 @@ the rundown, recording, and the URL that carries the whole look. The clip
 library, the rundown and the pinned sliders stay on the machine that made them.
 [ADR 0010](adr/0010-the-account-holds-the-session.md) has the reasoning.
 
+## Is there a resolume plugin?
+
+Yes! after I posted this on Reddit xhzrdx ported it to resolume!
+https://hzrdarchive.com/pages/skillet#skillet-ui
+
 ## Will there be a plugin for After Effects, Premiere or Resolve?
 
 Not yet, and it is a bigger job than moving the shaders across. The shaders are
