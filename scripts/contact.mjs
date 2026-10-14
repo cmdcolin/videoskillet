@@ -72,7 +72,9 @@ const slug = name => name.replaceAll(/[^a-z0-9]+/gi, '-').toLowerCase()
 const patchUrl = item => {
   const q = new URLSearchParams()
   q.set('src', item.src)
-  if (item.srcb !== 'none') q.set('srcb', item.srcb)
+  // Always sent: without it the app boots B on bars, so `none` screened a
+  // look over bars wherever it raised `bGain`.
+  q.set('srcb', item.srcb)
   q.set('set', item.set)
   if (item.mod) q.set('mod', item.mod)
   if (item.caption) q.set('caption', item.caption)
