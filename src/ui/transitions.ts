@@ -135,11 +135,20 @@ export const TRANSITIONS: readonly Transition[] = [
     key: 'j',
     title:
       'the CRT power-cycle — the raster folds toward a line, the clip changes inside it, and the scan opens back out',
-    // The one everybody recognises, and the reason it needs both keys: `vSize`
-    // alone shrinks the picture tidily, and it is `hvSagUs` bending the scan on
-    // the way down that makes it read as a supply failing rather than as a
-    // zoom.
-    peak: { vSize: 0.2, hvSagUs: -60, hvRing: 1 },
+    // `vSize` alone shrinks the picture tidily, like a zoom. A dying vertical
+    // stage also curves its ramp (`vLin`) and piles the whole beam current
+    // onto a band of glass, which blazes, blooms and leaves an afterglow as it
+    // opens. The supply sags a little under that band and stays damped: with
+    // `hvRing` near 1 every bright edge set off a sine wave down the lines,
+    // which read as a filter.
+    peak: {
+      vSize: 0.06,
+      vLin: 0.25,
+      hvSagUs: -8,
+      hvRing: 0.3,
+      crtBloom: 0.6,
+      phosphor: 0.4,
+    },
     cut: 0.5,
     // A tube takes about a second to let go and come back, and it is the one
     // entry where the audience already knows how long it should take.
