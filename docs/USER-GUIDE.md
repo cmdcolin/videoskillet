@@ -220,6 +220,9 @@ random, with its tab showing; **normal** shows the camera as it comes.
   encoder, up to 4×.
 - **more**, at the top left, holds **tilt**, **on side** and **sound**. A switch
   that is on stays out when **more** closes.
+- A look that waits for a hit, such as **power on**, **channel change** or
+  **degauss** on the scan tab, shows **tap to fire** over the picture. A tap
+  sets it off, and the set recovers on its own.
 - **tilt** lets the phone stand in for the feedback camera. A turn fades back
   over a few seconds and never takes a loop past a degree of spin or 2% of shift
   per lap. On a loop with no camera in it, a turn trims the delay, which slides

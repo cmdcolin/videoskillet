@@ -19,6 +19,7 @@ import { writeLink } from './link'
 import {
   MIX_SHELF,
   SHELVES,
+  firesOnTap,
   lookBoard,
   lookKnobs,
   lookLabel,
@@ -67,6 +68,7 @@ import type { Look, Mix } from './looks'
 import type { Panel } from './PanelSwitches'
 import type { Roll } from './roll'
 import type { Scene } from './scene'
+import type { PointerEvent } from 'react'
 
 const HINT_STORE = 'videoskillet_cam_hint_seen'
 const SIDEWAYS_STORE = 'videoskillet_cam_sideways'
@@ -117,6 +119,7 @@ export function CamPage(props: { link: CamLink | null }) {
   const [help, setHelp] = useState(false)
   const [hintSeen, setHintSeen] = usePersistedFlag(HINT_STORE)
   const [comparing, setComparing] = useState(false)
+  const [firedOn, setFiredOn] = useState<string | null>(null)
   const { look } = scene
   const linked = look === null ? scene.base : null
   const label = linked === null ? stackLabel(look, scene.layers) : linked.name
@@ -305,6 +308,20 @@ export function CamPage(props: { link: CamLink | null }) {
     onMiss: announce,
   })
 
+  const fires = firesOnTap(boardOf(scene, sliceOf(eng.layout)).mod)
+  const firing =
+    linked?.name ?? [look?.name, ...Object.keys(scene.layers)].join('+')
+
+  // A tap fires the look's one-shots, and aims a colour key where the look has
+  // one.
+  const tap = (e: PointerEvent<HTMLCanvasElement>) => {
+    if (fires) {
+      eng.engine?.fireMod()
+      setFiredOn(firing)
+    }
+    keyTap.tap(e)
+  }
+
   const gestures = useGestures({
     zoom,
     onPress: () => {
@@ -315,7 +332,7 @@ export function CamPage(props: { link: CamLink | null }) {
       eng.compare(on)
     },
     onSwipe: step,
-    onTap: keyTap.tap,
+    onTap: tap,
   })
 
   if (eng.fatal !== null) return <FatalScreen fatal={eng.fatal} />
@@ -404,6 +421,7 @@ export function CamPage(props: { link: CamLink | null }) {
             tapeLeft={second.left}
             opening={second.opening}
             comparing={comparing}
+            waiting={fires && firedOn !== firing}
             recording={shutter.recording}
             recSince={shutter.recSince}
           />

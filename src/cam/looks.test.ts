@@ -14,6 +14,7 @@ import {
   OPENERS,
   ROLL_POOL,
   SHELVES,
+  firesOnTap,
   lookBoard,
   lookKnobs,
   lookLabel,
@@ -113,6 +114,25 @@ describe('lookBoard', () => {
     if (moving === undefined) return
     const { mod } = lookBoard({ name: moving.name, strength: 1, rolled: false })
     expect(mod.length).toBeGreaterThan(0)
+  })
+})
+
+describe('firesOnTap', () => {
+  const fires = (name: string, layers: Layers = {}) =>
+    firesOnTap(lookBoard({ name, strength: 1, rolled: false }, layers).mod)
+
+  it('fires the looks that wait for a hit', () => {
+    for (const name of ['powerOn', 'channelChange', 'degauss'])
+      expect(fires(name), name).toBe(true)
+  })
+
+  it('leaves a look with only steady motion alone', () => {
+    expect(fires('rainbowStorm')).toBe(false)
+    expect(firesOnTap(lookBoard(null).mod)).toBe(false)
+  })
+
+  it('fires a hit stacked under another look', () => {
+    expect(fires('negative', { degauss: 0.5 })).toBe(true)
   })
 })
 

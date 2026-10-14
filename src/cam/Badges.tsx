@@ -6,6 +6,7 @@ export function Badges(props: {
   tapeLeft: number
   opening: boolean
   comparing: boolean
+  waiting: boolean
   recording: boolean
   recSince: number
 }) {
@@ -18,11 +19,14 @@ export function Badges(props: {
       ) : props.opening ? (
         <span className={styles.badge}>second camera</span>
       ) : null}
-      {props.comparing ? <span className={styles.badge}>original</span> : null}
       {props.recording ? (
         <span className={cx(styles.badge, styles.rec)}>
           <Elapsed since={props.recSince} />
         </span>
+      ) : props.comparing ? (
+        <span className={styles.badge}>original</span>
+      ) : props.waiting && props.tapeLeft === 0 && !props.opening ? (
+        <span className={styles.badge}>tap to fire</span>
       ) : null}
     </>
   )

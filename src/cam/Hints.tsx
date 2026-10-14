@@ -4,7 +4,10 @@ const HINTS: [string, string][] = [
   ['swipe', 'step to the next or previous look'],
   ['hold', 'see the camera without the look'],
   ['pinch', 'zoom, or tap a lens stop under the picture'],
-  ['tap', 'aim the key at a colour, on looks that key by colour'],
+  [
+    'tap',
+    'fire a look marked tap to fire, or aim the key on looks that key by colour',
+  ],
   ['drag up', 'on a look, mixes it in partway; stack as many as you like'],
 ]
 

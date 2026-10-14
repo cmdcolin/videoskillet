@@ -1,5 +1,6 @@
 import { DEFAULT_CONTROLS } from '../core/controls'
 import { randomIndex } from '../core/rng'
+import { isOneShot } from '../core/signal/modstate'
 import {
   LOOP_STAGES,
   SLIDER_BY_KEY,
@@ -138,6 +139,9 @@ export const SHELVES: readonly Shelf[] = [
       'noseAgainstTheGlass',
       'greenTerminal',
       'magnetised',
+      'powerOn',
+      'channelChange',
+      'degauss',
     ],
   },
   {
@@ -290,6 +294,12 @@ export function lookBoard(
     mod: mod === null ? [] : toEngineSlots(routingsToSlots(mod)),
   }
 }
+
+// Whether a board waits for a hit: a one-shot in its bay, which a tap on the
+// picture fires. Power on, channel change and degauss rest on their resting
+// state until one lands.
+export const firesOnTap = (mod: readonly ModSlot[]): boolean =>
+  mod.some(s => isOneShot(s.source))
 
 // What the dice rolls on the loops tab: every subtle feedback loop the camera
 // can run on its own.
