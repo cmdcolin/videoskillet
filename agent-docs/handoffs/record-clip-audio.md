@@ -18,9 +18,9 @@ sync median of 7-25 ms across runs.
 
 Still open, in the order they matter:
 
-1. **Chrome**, on the MacBook: AAC priming (bug 5 below), whether
-   `outputLatency` there moves the sync median, and `rectakecheck.mjs` itself,
-   which launches Firefox only.
+1. **Chrome**, on the MacBook: AAC priming (below), whether `outputLatency`
+   there moves the sync median, and `rectakecheck.mjs` itself, which launches
+   Firefox only.
 2. **Editors and players on a take with held frames**: see _Why live takes leave
    strict constant framerate_.
 3. **The recording-size setting** (design step 8). Takes record the canvas at
@@ -78,30 +78,11 @@ The encoder caps a full-window take near 34 fps on this box. Encoding runs off
 the main thread (`encode()` returns in ~0 ms), so the cap costs frames in the
 file and nothing in the live picture.
 
-## Bugs in the shipping recorder
+## AAC priming
 
-These exist on `main` today, independent of sound.
-
-1. **Firefox's H.264 encoder emits B-frames, and the muxer writes no `ctts`.** A
-   silent take from today's path decodes in the presentation order 1, 4, 3, 5,
-   2, …, so players can show frames out of order. `mp4.ts`'s header says
-   B-frames "don't apply here", and in Firefox they do, in both latency modes.
-   The spike fixes it with a presentation time per sample (from
-   `chunk.timestamp`), a `ctts` box and an edit list. `a90ecfb`'s per-sample
-   `frames` counts holds in decode order, so it lengthens the wrong frame once
-   B-frames reorder.
-2. **Main-app takes play fast.** The rAF path stamps each recorded tick at 1/60
-   s and skips ticks while the encoder is busy. On this 48 Hz panel at a full
-   window, 10.03 s of recording made a 6.3 s file, which plays at 1.6x.
-3. **`finish` copies the file about five times.** `writeMp4` joins everything,
-   then `record.ts` copies into a fresh `ArrayBuffer`. The spike's `mp4Parts`
-   hands the Blob the parts and drops the copies.
-4. **Box sizes and `stco` are 32-bit**, so a file over 4 GiB comes out silently
-   corrupt. That is roughly four minutes at a retina canvas and 0008's measured
-   143 Mbps. Nothing guards it yet.
-5. **AAC takes start 21-48 ms late.** `recordAudio.ts` ignores the encoder's
-   priming and the muxer writes no edit list for the sound track. Opus carries
-   its pre-skip in `dOps`. Only Chrome encodes AAC, so this is untested.
+AAC takes start 21-48 ms late. `recordAudio.ts` ignores the encoder's priming,
+and `mp4.ts` writes an edit list for the picture only. Opus carries its pre-skip
+in `dOps`. Only Chrome encodes AAC, so this is untested.
 
 ## Recommended design
 
@@ -199,11 +180,6 @@ stay in sync, and nothing should resample the file.
   switched on, and has never run.
 - **Bluetooth output.** A large `outputLatency` should still subtract cleanly.
   Measure it with the sync clip.
-- **A canvas resize mid-take.** `FrameRead.copy` skips frames of the wrong size,
-  so going fullscreen during a take freezes the picture. The real implementation
-  needs a fixed-size target or a rebuilt pool.
-- **Device loss and HMR during a take.** The engine handoff does not carry a
-  frame sink across.
 
 ## Running the spike
 
