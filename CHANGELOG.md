@@ -2,6 +2,78 @@
 
 All notable changes to videoskillet are documented here.
 
+## [2.19.0](https://github.com/cmdcolin/videoskillet/compare/v2.18.0...v2.19.0) - 2026-10-14
+
+### Features
+- [`e127c9f`](https://github.com/cmdcolin/videoskillet/commit/e127c9fbb4ab24993b86fce51178dab00e651402) count visits with GoatCounter and drop the cookie notice
+- *(ui)* [`0b91035`](https://github.com/cmdcolin/videoskillet/commit/0b91035794e20fbe79ef3f5a331e6016eef45968) a one-shot that pulls, with power on and channel change
+- *(ui)* [`c89cd0f`](https://github.com/cmdcolin/videoskillet/commit/c89cd0f120415b7083dd9f776270dc99fdd7709d) an about page and a blog built from the changelog
+- *(ui)* [`cd44401`](https://github.com/cmdcolin/videoskillet/commit/cd444014ecd81d17898dfa43fcd97480aa4f4983) share a spacing scale and corner tokens with bender
+- *(ui)* [`88ad569`](https://github.com/cmdcolin/videoskillet/commit/88ad569ff0cdf47c9cb91374cf101dfdc0266102) draw the signal path map at a larger size
+- *(gpu)* [`a01f991`](https://github.com/cmdcolin/videoskillet/commit/a01f991629f07a9cd8a917990fb7359d2748ec73) name the shader that fails to build, and stop at boot when one does
+- *(ui)* [`23c9e73`](https://github.com/cmdcolin/videoskillet/commit/23c9e7350f63439dddaaa1a3335493c4e4536cf0) leave the midi button off a touch screen until MIDI is on
+- *(ui)* [`2f1085c`](https://github.com/cmdcolin/videoskillet/commit/2f1085c9c753bc45a4529eddba8c3af56fc8ee84) say tap on a touch screen where a caption says click
+- *(ui)* [`fc86cdf`](https://github.com/cmdcolin/videoskillet/commit/fc86cdf50bbaf6c8d9a196d49929af39c6f8f33c) offer midi in the ☰ menu where a touch screen hides the button
+- *(gpu)* [`deb7606`](https://github.com/cmdcolin/videoskillet/commit/deb760612b931a666d2b74fe67ad0e60255fc7b2) run the screen stage in linear light, held as sRGB bytes
+- *(deflection)* [`d6254eb`](https://github.com/cmdcolin/videoskillet/commit/d6254ebb9068795941a69ccff62fb7d121f5a543) let the supply sag widen and dim the line it bends
+- *(deflection)* [`661e1a3`](https://github.com/cmdcolin/videoskillet/commit/661e1a38488bb398605de03e22503b5c3e63d0ea) breathe the raster's height with the frame's mean sag
+- *(ui)* [`dd813fd`](https://github.com/cmdcolin/videoskillet/commit/dd813fdaeeeeda2904d922063569e901a362f802) a blog of written posts in place of the raw changelog
+- *(ui)* [`312c0f0`](https://github.com/cmdcolin/videoskillet/commit/312c0f037efa5d5631efe450578be978ccabe7b6) hold a fault pad to keep the picture broken
+- *(ui)* [`1d8a363`](https://github.com/cmdcolin/videoskillet/commit/1d8a36356bb7ca3cfe9e3253e7a7ae3a67a83bc0) tap the camera picture to fire a look's one-shots
+- *(ui)* [`9b31894`](https://github.com/cmdcolin/videoskillet/commit/9b318940c824d8cf9d2240266df6c0120de4e466) hold the fault shelf from the keyboard and MIDI pads
+- *(ui)* [`fdd66a9`](https://github.com/cmdcolin/videoskillet/commit/fdd66a95938b0eeb890054df6209412f37ea0c01) swap spiral and tunnel out off the first-visit shortlist
+- *(signal)* [`45c8aab`](https://github.com/cmdcolin/videoskillet/commit/45c8aab07f727a9aa714baef00916a04b0512adb) scramble supply chaos and full collapse at the head-end
+
+### Fixes
+- *(ui)* [`e3f4ada`](https://github.com/cmdcolin/videoskillet/commit/e3f4adaed1b6c35516c754e309270fca9d74a770) keep the cam settings sheets off the picture
+- *(signal)* [`c177b6d`](https://github.com/cmdcolin/videoskillet/commit/c177b6dd7bf698045629a07e14e9a17c42ce015f) take the deck display's row from workgroup_id so Chrome compiles it
+- *(signal)* [`7d1014e`](https://github.com/cmdcolin/videoskillet/commit/7d1014eb702bfb52590af009e809ff9b89e118f1) velocity error, burst-lock lag, and four receiver corrections
+- *(ui)* [`a66dfc4`](https://github.com/cmdcolin/videoskillet/commit/a66dfc4d79a12bc08fcf53f178b33ce9d87df840) bring the camera back after the phone backgrounds the page
+- *(ui)* [`4bcf46a`](https://github.com/cmdcolin/videoskillet/commit/4bcf46ac9f67dc8d322ebb93f2aa4ebca737a2b8) spell microseconds µs on every control
+- *(ui)* [`be15a9c`](https://github.com/cmdcolin/videoskillet/commit/be15a9c126892b7e3f353df5888da57529165af9) name the strip's recorder for what it records
+- *(ui)* [`931719c`](https://github.com/cmdcolin/videoskillet/commit/931719c8da4a43a528460b00839299a0ea749960) hold compare from the keyboard
+- *(ui)* [`6399265`](https://github.com/cmdcolin/videoskillet/commit/6399265f8f47c0465535b5e9c5cce4add982e969) ask twice before deleting a saved look
+- *(ui)* [`8c5f662`](https://github.com/cmdcolin/videoskillet/commit/8c5f662594870bb82a5f7dd0bf8914d924adbef2) list the presets a panel filter names
+- *(ui)* [`83bebd8`](https://github.com/cmdcolin/videoskillet/commit/83bebd81b4f949c0cb0d59965dd3dcba2fb0fd50) hold the cam controls at one height across tabs and panels
+- *(ui)* [`33ef3e8`](https://github.com/cmdcolin/videoskillet/commit/33ef3e80f7a088e31a5e6beba32489918c8ed70e) open the cam sheets from the picture's edge and widen its presses
+- *(ui)* [`c4d4309`](https://github.com/cmdcolin/videoskillet/commit/c4d4309ca97ebd5a6d815f31f8127fa46ae832b8) bring a stage opened low in the panel up to its middle
+- *(ui)* [`4150f44`](https://github.com/cmdcolin/videoskillet/commit/4150f44d8775f7a1b85976af8b3ee5e7274c72fa) take the aperture grille out of the misconverged preset
+- *(gpu)* [`0231480`](https://github.com/cmdcolin/videoskillet/commit/023148050d6695ee5da25dac06331f709a6eec0d) put the retrace lines on the screen's curve, record what the review measured
+- *(ui)* [`3deb7a8`](https://github.com/cmdcolin/videoskillet/commit/3deb7a8a7f7a4a13bd7c9943605f140eceace742) give zoom bloom its own glow floor, record the loop survey
+- *(ui)* [`29e888c`](https://github.com/cmdcolin/videoskillet/commit/29e888cd2a7884f23bc303e565eb9ad16da3e4eb) drift the self-bending loops on smooth noise
+- *(ui)* [`2afe396`](https://github.com/cmdcolin/videoskillet/commit/2afe3960a5f3ecc66c8aca25dcaf58e8eda20ea4) rescale scanBeam onto the light-domain curve
+- *(ui)* [`71a5200`](https://github.com/cmdcolin/videoskillet/commit/71a52001c2fd0dc5e007c0f0fc79505e7f688b51) retire the backwards supply loop, bend the forward one at 25 µs
+- *(deflection)* [`0fcb00c`](https://github.com/cmdcolin/videoskillet/commit/0fcb00cd8a65e529efd53192b996e900e6d8f35c) breathe the raster only under load, count its spread once
+- *(gpu)* [`86487c4`](https://github.com/cmdcolin/videoskillet/commit/86487c45fb4802cc4f00860a5e9c48ec945ec9d7) bring the headless graph back in step with the app
+- *(ui)* [`e18f4b3`](https://github.com/cmdcolin/videoskillet/commit/e18f4b3299c19ecbc607670d5c530c60e4957af5) keep power off out of the camera page's rolls
+- *(ui)* [`d1242e6`](https://github.com/cmdcolin/videoskillet/commit/d1242e6cbfedb25919c98e40e92aac7986550461) make the collapse fault read as a dying tube
+- [`19e5531`](https://github.com/cmdcolin/videoskillet/commit/19e5531723be4baeea0bf56793e00b387a63588c) send srcb=none from the contact sheet harness
+
+### Refactor
+- [`3eb04e6`](https://github.com/cmdcolin/videoskillet/commit/3eb04e629908005842cdef7a4e78f197a255c3a9) turn on noUncheckedIndexedAccess, as bender has
+- *(ui)* [`3a614d1`](https://github.com/cmdcolin/videoskillet/commit/3a614d12b35202c7897b5cc2b14992e1b45cfa89) share the replay-on-return hook, drop the reopen on end
+
+### Documentation
+- *(ui)* [`f7e357c`](https://github.com/cmdcolin/videoskillet/commit/f7e357c105d908b16e198bdd8b30702e6c34d5eb) retake the phone stills with the sheets under the picture
+- *(ui)* [`33f8e51`](https://github.com/cmdcolin/videoskillet/commit/33f8e51dd58b05222879758eb289751560a82906) retake the phone stills with the taller cam sheets
+- *(ui)* [`5ac67bf`](https://github.com/cmdcolin/videoskillet/commit/5ac67bffce6ab320fafa791a8ed80630732070e1) backfill blog posts on the paperclip, captions and tape in
+- [`0fee848`](https://github.com/cmdcolin/videoskillet/commit/0fee848d7d940db48514cef99b77a57f57521c50) drop the record-clip-audio handoff's items that have landed
+- [`3a1cddf`](https://github.com/cmdcolin/videoskillet/commit/3a1cddf072bd02278316eac00c15b6cde02eb6b2) close out the record-clip-audio spike patch
+- [`8b7c717`](https://github.com/cmdcolin/videoskillet/commit/8b7c7170db09fd61f4da8a69eb0726c2c1782959) point the take-stride handoff at rectakecheck's upright check
+
+### Tests
+- *(gpu)* [`d5ee098`](https://github.com/cmdcolin/videoskillet/commit/d5ee098ae2eeca8ef5566a9cb2623a994f28f9d0) compile every shader in headless Chrome as well as naga
+- *(ui)* [`7ca2a33`](https://github.com/cmdcolin/videoskillet/commit/7ca2a33c4b8e73df01239e855899ef49ba50babe) admit the scanBeam default move to the wire schema
+- *(ui)* [`52475b8`](https://github.com/cmdcolin/videoskillet/commit/52475b8e9eae40aca0e6f226d9d2bb69f55d7462) check that a live take comes out upright
+- *(ui)* [`b29344a`](https://github.com/cmdcolin/videoskillet/commit/b29344a140d33766789b693e4dfa0532caed77c3) cover what a fault pad's presses mean
+
+### Chores
+- [`29963b1`](https://github.com/cmdcolin/videoskillet/commit/29963b12537fe913e00a46884d5500e31363282c) check the tests in tsconfig.json, the app alone in tsconfig.app.json
+
+### Other Changes
+- [`8155875`](https://github.com/cmdcolin/videoskillet/commit/81558751e3a167809042efe5dc0cbe9f4e73a85a) Format
+- [`1227839`](https://github.com/cmdcolin/videoskillet/commit/1227839745d33e0f9dcbfc4c51c6358d940f64cc) Add resolume
+
 ## [2.18.0](https://github.com/cmdcolin/videoskillet/compare/v2.17.0...v2.18.0) - 2026-10-11
 
 ### Features
