@@ -2,46 +2,46 @@
 
 Written 2026-09-30, after two design reviews and a spike in Firefox Nightly on
 the Linux dev box. A user asked for recordings to carry the audio of the video
-they were playing with. The owner asked for the feature to work and to be
-extremely fast.
+they were playing with.
 
 ## Status
 
-The feature is built and tested in Firefox Nightly. It follows the recommended
-design below, steps 1-7, 9 and 10, and
+The feature is on main and passes in Firefox Nightly.
 [ADR 0013](../../docs/adr/0013-a-live-take-runs-on-the-wall-clock.md) records
-the timing decision. `scripts/rectakecheck.mjs` checks a silent take and a take
-with sound through the app's own record key, and passes at 1280x800 and
-1920x1080 on the dev box: renders per second unchanged while recording, file
-length within 0.2 s of the take, stereo sound within 0.1 s of the picture, and a
-sync median of 7-25 ms across runs.
+the design. `scripts/rectakecheck.mjs` checks a silent take and a take with
+sound through the app's own record key at 1280x800 and 1920x1080: renders per
+second unchanged while recording, file length within 0.2 s of the take, stereo
+sound within 0.1 s of the picture, and a sync median of 7-25 ms across runs.
 
-Still open, in the order they matter:
+The spike that produced the measurements below is the patch committed in
+`c7a126b`, a diff against `1e4dd29`:
+`git show c7a126b:agent-docs/handoffs/record-clip-audio.spike.patch`.
 
-1. **Chrome**, on the MacBook: AAC priming (below), whether `outputLatency`
-   there moves the sync median, and `rectakecheck.mjs` itself, which launches
-   Firefox only.
-2. **Editors and players on a take with held frames**: see _Why live takes leave
-   strict constant framerate_.
-3. **The recording-size setting** (design step 8). Takes record the canvas at
-   its size when the take starts, which is the default the owner chose.
-4. **The camera page** still reads its canvas per frame. ADR 0013 names moving
-   it onto the engine's frame sink.
-5. **Bluetooth output**: a large `outputLatency` should subtract cleanly.
+## Still open
 
-The spike stays for reference as
-`agent-docs/handoffs/record-clip-audio.spike.patch`, a diff against `1e4dd29`,
-and on the local branch `spike/record-clip-audio`. Its harnesses
-(`spike-take.mjs`, `spike-avsync.mjs`) produced the measurements below.
+In the order they matter:
 
-## What the main app recorded before
-
-`src/app.tsx` called `useCapture` with no `audio`, so every main-app take was
-silent. The camera page passes `audioState.tap()`, which carries the microphone
-only. `AudioState.tap()` exposes `input` (mic, screen share, picked file). A
-clip's sound travels through `routeMedia` into `dry`, the reverb send and the
-analyser, so no tap reaches it. `BuzzOut` and a picked file connect straight to
-`ctx.destination`.
+1. **Chrome, on the MacBook.** This box's Chrome has no WebGPU.
+   - AAC takes probably start 21-48 ms late. `recordAudio.ts` ignores the
+     encoder's priming, and `mp4.ts` writes an edit list for the picture only.
+     Only Chrome encodes AAC. Opus carries its pre-skip in `dOps`.
+   - Measure what `outputLatency` returns and whether it moves the sync median.
+   - `rectakecheck.mjs` launches Firefox only, so it needs a Chrome arm first.
+2. **Editors and players on a take with held frames.** A live take holds a frame
+   as one longer sample on the 1/60 s grid (ADR 0013). Import one into Resolve
+   and Premiere, and open it in Photos and QuickTime: holds should keep their
+   length, sound should stay in sync, and nothing should resample the file.
+3. **A recording-size setting.** Takes record at full size, the default the
+   owner chose. The setting goes in the Advanced dialog beside render scale and
+   frame lock. Smaller sizes (1080p, 720p) encode faster: at a full window
+   Firefox encodes about 34 fps at full size and 49 fps at 720p. `FrameRead`
+   already scales a resized window into the take's size, which is the pass a
+   smaller size would reuse.
+4. **The camera page** still reads its canvas per frame: `cam/useShutter.ts`
+   passes no `engine` to `useCapture`. ADR 0013 names moving it onto the
+   engine's frame sink.
+5. **Bluetooth output.** A large `outputLatency` should subtract cleanly.
+   `rectakecheck.mjs`'s sync clip measures it.
 
 ## Measurements
 
@@ -77,124 +77,3 @@ lip-sync tolerance (the EBU recommends at most 40 ms of audio lead).
 The encoder caps a full-window take near 34 fps on this box. Encoding runs off
 the main thread (`encode()` returns in ~0 ms), so the cap costs frames in the
 file and nothing in the live picture.
-
-## AAC priming
-
-AAC takes start 21-48 ms late. `recordAudio.ts` ignores the encoder's priming,
-and `mp4.ts` writes an edit list for the picture only. Opus carries its pre-skip
-in `dOps`. Only Chrome encodes AAC, so this is untested.
-
-## Recommended design
-
-1. **A bus for what the speakers play.** `ensureGraph` builds a `bus` gain into
-   `ctx.destination`. `dry`, `wet`, the picked-file source and `BuzzOut`
-   (constructor takes the output node) connect to it. The spike does this in
-   `audiostate.ts` and `buzz.ts`.
-2. **`heard()` beside `tap()`.** Both come from one `tapOf(node)`. The camera
-   page keeps `tap()`.
-3. **A stereo tap stamped with context frames.** The worklet takes
-   `processorOptions.channels`, posts planar blocks in one transfer and stamps
-   each with the `currentFrame` of its first sample. The main thread trims
-   everything before the take's origin. The `go` message goes away.
-4. **Frames from the engine after it renders.** `Engine.setFrameSink`
-   reconfigures the canvas with `COPY_SRC` and copies each rendered frame into a
-   pool of mappable buffers in the same submit (`frameread.ts`, modelled on
-   `buzzread.ts`). A landed map becomes a `VideoFrame`. The sink sees only
-   frames `renderFrame` produced. A held present or a frame-lock skip sends
-   nothing. Use this path for silent takes too: it takes the 16 ms readback off
-   every recorded frame.
-5. **Time frames on the sound's clock, snapped to the 1/60 s grid.** Map a
-   frame's render time onto the audio clock with a 1-second windowed mean of
-   `currentTime * 1000 - performance.now()`, sampled every 2 ms. Subtract
-   `outputLatency + baseLatency`, and warm the window for 300 ms before the
-   first frame fixes the origin. The spike's per-frame `currentTime` read put
-   frames up to a slot off. The windowed mean lands every frame within ±0.5
-   slot, which is rounding. `getOutputTimestamp` spread its pairs over 62 ms in
-   Firefox, so the spike dropped it. A frame whose slot is taken, or that
-   arrives while the encoder is `busy()`, is dropped, and its predecessor stays
-   up.
-6. **Every live take runs on the wall clock.** A silent take snaps frames to the
-   same grid from `performance.now()`, since it has no audio clock to follow,
-   and holds frames the same way. The file then lasts as long as the take did,
-   and turning sound on does not change its speed. This reverses `record.ts`'s
-   count-based timing for live takes; see _Why live takes leave strict constant
-   framerate_ below.
-7. **Mux from presentation times.** Each sample carries its pts in frames; the
-   muxer sorts them for decode times, writes `ctts` when any offset is nonzero,
-   and adds an edit list for the reorder delay. A held frame is then whatever
-   gap its pts leaves, which supersedes `frames`. Build the Blob from parts. Add
-   an edit list for AAC priming once Chrome can test it.
-8. **Recording size is a setting, and full size is the default.** The owner
-   chose maximum quality: a take is worth keeping for its fine detail. The
-   setting goes in the Advanced dialog beside render scale and frame lock, which
-   trade picture against cadence the same way. Full records the canvas as it is
-   when the take starts. Smaller sizes (1080p, 720p) render the present pass a
-   second time into a fixed-size texture for the recorder, which encodes faster:
-   on the dev box at a full window, Firefox encodes about 34 fps at full size
-   and 49 fps at 720p. A full-size take holds a frame wherever the encoder falls
-   behind, so the file stays in step with the sound at a lower frame rate. A
-   fixed-size texture also survives a resize mid-take, which the full-size path
-   has to handle separately.
-9. **Guard the 4 GiB limit**, by stopping the take or by writing `co64` and
-   `largesize`.
-10. **Harness.** `reccheck.mjs` gains an arm with sound that asserts both
-    tracks, monotonic pts and the A/V median from `spike-avsync.mjs`. Its
-    `r_frame_rate == avg_frame_rate` assertion becomes "every pts lies on the
-    1/60 s grid", which a take with held frames still meets.
-
-## Why live takes leave strict constant framerate
-
-`record.ts` stamps frames by count because `MediaRecorder`'s wall-clock
-timestamps made files an editor conforms unevenly, which ruins a piece cut to
-music. That argument still holds for arbitrary timestamps. A wall-clock take
-snapped to the 1/60 s grid keeps every frame on a frame boundary and differs
-only where a frame is held, as a longer sample. `a90ecfb` already writes camera
-takes this way.
-
-Writing a held frame as repeated samples would keep the file strictly
-constant-framerate, and `scripts/repeatcost.mjs` measured what that costs. A run
-of repeats is nearly free, but a repeat between fresh frames costs the encoder
-about two thirds of a fresh one, because its B-frames code the repeat against
-neighbours it does not match. At a full window (1494x932) that cuts a take from
-31.4 fresh frames a second to 19.2.
-
-Frame-exact, strictly constant output is the offline render's job (`render.ts`),
-which steps the engine at a full 60 fps and drops nothing. So the live recorder
-offers one timing, the wall clock, and there is no setting for count-based
-takes. The owner left this call to the spike on 2026-09-30, and the repeat
-measurement made it.
-
-The assumption still to check is that editors treat an on-grid held frame as one
-frame shown for longer. Import a take with holds into Resolve and Premiere, and
-open it in Photos and QuickTime: holds should keep their length, sound should
-stay in sync, and nothing should resample the file.
-
-## Still untested
-
-- **Editors and players on a take with held frames.** See the end of the section
-  above.
-- **Chrome.** This box's Chrome has no WebGPU. On the MacBook, check AAC
-  priming, whether `new VideoFrame(canvas)` is cheap there, what
-  `getOutputTimestamp` and `outputLatency` return, and the A/V median.
-  `spike-take.mjs --browser=chrome` launches Chrome with WebGPU and autoplay
-  switched on, and has never run.
-- **Bluetooth output.** A large `outputLatency` should still subtract cleanly.
-  Measure it with the sync clip.
-
-## Running the spike
-
-On a checkout of `1e4dd29` with the patch applied:
-
-```
-pnpm install
-sh scripts/spike-syncclip.sh                  # public/spike/sync.mp4, needs ffmpeg
-node_modules/.bin/vite --config vite.spike.config.ts   # port 5311, own cacheDir
-node scripts/spike-take.mjs --secs=20 --clock=smooth --q=4 | python3 scripts/spike-sum.py run1
-```
-
-`spike-take.mjs` turns on the clip's sound through the audio picker, presses
-record through the app's own hook, and POSTs the finished file to a server on
-port 5399. Then it runs `spike-avsync.mjs` on the file. `spike-sum.py` prints
-one line for the take and one for the sync. In the sync line, `MID` is the
-per-flash offset in milliseconds (positive means the click comes after the
-flash) and `q1/q4` compares the first and last quarter for drift.
