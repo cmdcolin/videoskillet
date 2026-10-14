@@ -20,6 +20,7 @@ import {
 
 import type { ControlKey, Controls, ModSlot } from '../core/controls'
 import type { SliderDef } from '../ui/controls'
+import type { PresetDef } from '../ui/presets'
 
 // How far a loop may move the picture each lap and still count as subtle: a
 // camera within 4.5% of unity zoom, turning at most a degree and shifting at
@@ -310,14 +311,22 @@ export const ROLL_POOL: readonly string[] = PRESETS.filter(
     subtleLoop(presetControls(p.patch)),
 ).map(p => p.name)
 
-// What the dice rolls on a tab: every preset in the tab's families, so the
-// dice reaches the looks the tab does not list. Only the mix tab rolls looks
-// that need B.
+// Whether a look leaves the subject in the picture at rest. Power off folds
+// the raster to one line until a hit opens it.
+const showsPicture = (p: PresetDef): boolean =>
+  presetControls(p.patch).vSize >= 0.1
+
+// What the dice rolls on a tab: every preset in the tab's families that shows
+// the picture, so the dice reaches the looks the tab does not list. Only the
+// mix tab rolls looks that need B.
 export function rollPool(shelf: Shelf): readonly string[] {
   if (shelf.name === 'loops') return ROLL_POOL
   const mix = shelf === MIX_SHELF
   return PRESETS.filter(
-    p => shelf.groups.includes(p.group) && needsSourceB(p) === mix,
+    p =>
+      shelf.groups.includes(p.group) &&
+      needsSourceB(p) === mix &&
+      showsPicture(p),
   ).map(p => p.name)
 }
 

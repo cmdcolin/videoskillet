@@ -117,6 +117,10 @@ describe('lookBoard', () => {
   })
 })
 
+it('never rolls a look that rests on one line', () => {
+  for (const shelf of SHELVES) expect(rollPool(shelf)).not.toContain('powerOff')
+})
+
 describe('firesOnTap', () => {
   const fires = (name: string, layers: Layers = {}) =>
     firesOnTap(lookBoard({ name, strength: 1, rolled: false }, layers).mod)
