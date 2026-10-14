@@ -159,6 +159,7 @@ import type { SavedProfile } from './ui/profileModel'
 import type { AnySlotView } from './ui/slotView'
 import type { PickSlot } from './ui/SourceSlot'
 import type { RenderFrom } from './ui/StripTray'
+import type { TransitionName } from './ui/transitions'
 import type { LookContext } from './ui/useLookLabels'
 import type { SourcePrompt } from './ui/useSourcePrompt'
 import type { CSSProperties, ReactNode } from 'react'
@@ -592,6 +593,20 @@ export function App() {
   // component's memoization when it does (scripts/compilercheck.mjs).
   const slotFor = (key: StashSlot): AnySlotView => (key === 'a' ? eng.a : eng.b)
 
+  // A fault off the shelf, held until its release: a MIDI pad lets go on its
+  // note off and a key on its key up. With `cut` it is the shelf's transition
+  // and throws the bar at the peak, as the shelf's own buttons do
+  // (ui/transitions.ts).
+  const holdFault = (name: TransitionName, cut: boolean) => {
+    const t = transitionOf(name)
+    const onCut = () => {
+      if (cut) writeControls(barCut(controlStore.get()))
+    }
+    return t === undefined
+      ? undefined
+      : engineRef.current?.startFault(faultPlan(t, onCut, true))
+  }
+
   // Everything MIDI drives that the engine doesn't own. Registered from an
   // effect rather than passed into useMidi, which is built before any of it
   // exists — useMix needs the write path that hook owns. No dep array: all
@@ -611,17 +626,8 @@ export function App() {
       retrigger: deck => slotFor(deck).retrigger(),
       // The same transition the shelf's button runs, down to the frame count
       // and the cut — the entry carries both, so a pad and a click cannot mean
-      // two different things (ui/transitions.ts).
-      runFault: name => {
-        const t = transitionOf(name)
-        if (t !== undefined) {
-          engineRef.current?.startFault(
-            faultPlan(t, () => {
-              writeControls(barCut(controlStore.get()))
-            }),
-          )
-        }
-      },
+      // two different things.
+      runFault: name => holdFault(name, true),
     })
   })
 
@@ -995,6 +1001,7 @@ export function App() {
     // depending on which surface it came from. A pad has one and passes it.
     onFire: () => modApi.fire(),
     onToggleDrift: toggleDrift,
+    onFault: holdFault,
     onSaveSlot: saveSlot,
     onRecallSlot: recallSlot,
     // ctrl+S keeps the board under the name the menu would have offered. The

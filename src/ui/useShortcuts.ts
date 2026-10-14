@@ -1,5 +1,9 @@
 import { useEffect, useRef } from 'react'
 
+import { TRANSITIONS } from './transitions'
+
+import type { TransitionName } from './transitions'
+
 // The panel can live in the popout window, whose elements belong to a foreign
 // realm — `instanceof HTMLInputElement` is always false there — so sniff the
 // shape instead. Range sliders don't count: they should not swallow shortcuts.
@@ -32,6 +36,7 @@ type Shortcut =
   | { do: 'retrigger'; slot: 'a' | 'b' }
   | { do: 'fire' }
   | { do: 'drift' }
+  | { do: 'fault'; name: TransitionName; cut: boolean }
   | { do: 'saveSlot'; n: number }
   | { do: 'recallSlot'; n: number }
 
@@ -111,6 +116,13 @@ export function resolveShortcut(e: Keystroke): Shortcut | null {
   // switch: a held key would toggle it at the OS rate and leave whether the
   // board is drifting down to how long the finger stayed on.
   if (key === 'd') return e.repeat ? null : { do: 'drift' }
+  // The fault shelf, held: the key breaks the picture and keeps it broken until
+  // it comes up. Bare, it breaks whatever is on air; with shift it is the
+  // shelf's transition and cuts to the other source at the peak. Guarded
+  // against repeat, which would restart the fault from clean at the OS rate.
+  const fault = TRANSITIONS.find(t => t.key === key)
+  if (fault !== undefined)
+    return e.repeat ? null : { do: 'fault', name: fault.name, cut: e.shiftKey }
   // The saved library's first nine, by position in the list. Read from `code`
   // rather than `key` so shift+1 is still slot 1 and not `!`.
   const m = /^(?:Digit|Numpad)([1-9])$/.exec(e.code)
@@ -155,6 +167,9 @@ interface Handlers {
   // are in a window on another screen — and a mode you can only reach by finding
   // a button in the sidebar is one that has to be armed before you need it.
   onToggleDrift: () => void
+  // Run a fault off the shelf, held, cutting to the other source at its peak
+  // or not, and return its release.
+  onFault: (name: TransitionName, cut: boolean) => (() => void) | undefined
 }
 
 // Global keyboard shortcuts, bound wherever the panel lives (main window and the
@@ -169,6 +184,11 @@ export function useShortcuts(popout: Window | null, handlers: Handlers) {
   })
 
   useEffect(() => {
+    const held = new Map<string, () => void>()
+    const release = (key: string) => {
+      held.get(key)?.()
+      held.delete(key)
+    }
     const onKey = (e: KeyboardEvent) => {
       const h = ref.current
       const hit = resolveShortcut({
@@ -231,6 +251,13 @@ export function useShortcuts(popout: Window | null, handlers: Handlers) {
         case 'drift':
           h.onToggleDrift()
           break
+        case 'fault': {
+          const key = e.key.toLowerCase()
+          release(key)
+          const r = h.onFault(hit.name, hit.cut)
+          if (r !== undefined) held.set(key, r)
+          break
+        }
         case 'saveSlot':
           h.onSaveSlot(hit.n)
           break
@@ -250,15 +277,24 @@ export function useShortcuts(popout: Window | null, handlers: Handlers) {
     // showing the real value — the exact stuck hold the blur handler below
     // exists to clean up. Ending a compare that never started is harmless, so
     // the release is always taken.
+    //
+    // A held fault's release is taken from anywhere for the same reason: focus
+    // that moved into a text box mid-hold must not strand the picture broken.
     const onKeyUp = (e: KeyboardEvent) => {
-      if (!isTextEntry(e.target) && e.key.toLowerCase() === 'c')
-        ref.current.onEndCompare()
+      const key = e.key.toLowerCase()
+      release(key)
+      if (!isTextEntry(e.target) && key === 'c') ref.current.onEndCompare()
     }
     // Compare is a hold, and a window that loses focus mid-hold never delivers
     // the keyup: alt-tab away with `c` down and the engine stays previewing the
     // defaults while every slider shows the real value. End it on blur too —
-    // ending a compare that never started is already harmless.
-    const onBlur = () => ref.current.onEndCompare()
+    // ending a compare that never started is already harmless. A held fault
+    // heals on blur for the same reason.
+    const onBlur = () => {
+      ref.current.onEndCompare()
+      for (const r of held.values()) r()
+      held.clear()
+    }
     const targets = popout === null ? [window] : [window, popout]
     for (const t of targets) {
       t.addEventListener('keydown', onKey)

@@ -46,11 +46,12 @@ interface MidiSinks {
   fire: (slot: number | undefined, velocity: number) => void
   tapCue: (deck: DeckTag) => void
   retrigger: (deck: DeckTag) => void
-  // Run a named transition off the shelf (ui/transitions.ts). No velocity: the
-  // entry carries its own depth and its own duration, and a pad struck softly
-  // wanting a shallower fault is a different feature — half a fault does not
-  // hide a cut, which is the one thing a transition has to do.
-  runFault: (name: TransitionName) => void
+  // Run a named transition off the shelf (ui/transitions.ts), held until the
+  // release it returns is called on the note off. No velocity: the entry
+  // carries its own depth and its own duration, and a pad struck softly wanting
+  // a shallower fault is a different feature — half a fault does not hide a
+  // cut, which is the one thing a transition has to do.
+  runFault: (name: TransitionName) => (() => void) | undefined
 }
 
 const NO_SINKS: MidiSinks = {
@@ -59,7 +60,7 @@ const NO_SINKS: MidiSinks = {
   fire: () => {},
   tapCue: () => {},
   retrigger: () => {},
-  runFault: () => {},
+  runFault: () => undefined,
 }
 
 // Owns the MIDI manager (an imperative Web MIDI subsystem living outside React)
@@ -92,6 +93,7 @@ export function useMidi(
   const [pickups, setPickups] = useState<PickupMap>({})
 
   useEffect(() => {
+    const held = new Map<ActionTarget, () => void>()
     // A MIDI-origin change drives the engine only: the physical knob move IS
     // the takeover, so it must not reset its own soft-takeover state.
     const midi = createMidi({
@@ -128,10 +130,20 @@ export function useMidi(
           return
         }
         const fault = faultOf(target)
-        if (fault !== null) sinks.runFault(fault)
+        if (fault !== null) {
+          held.get(target)?.()
+          const release = sinks.runFault(fault)
+          if (release === undefined) held.delete(target)
+          else held.set(target, release)
+          return
+        }
         // Everything left is the whole bay: `fire` is the only action that
         // narrows to none of the four, and it is what an unbound note sends.
-        else sinks.fire(undefined, velocity)
+        sinks.fire(undefined, velocity)
+      },
+      onActionEnd: target => {
+        held.get(target)?.()
+        held.delete(target)
       },
       onStatus: setStatus,
       onBindings: setBindings,

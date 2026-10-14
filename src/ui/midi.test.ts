@@ -19,6 +19,7 @@ import {
   parseTarget,
   presetOf,
   presetTarget,
+  readNote,
   spanFor,
   targetLabel,
 } from './midi'
@@ -160,6 +161,27 @@ describe('note actions', () => {
 })
 
 // The one condition that changes what every pad on the device does.
+describe('readNote', () => {
+  it('reads a Note On with its channel and velocity', () => {
+    expect(readNote([0x93, 36, 127])).toEqual({
+      on: true,
+      channel: 3,
+      note: 36,
+      velocity: 1,
+    })
+  })
+
+  it('reads a Note Off in both spellings', () => {
+    expect(readNote([0x83, 36, 64])?.on).toBe(false)
+    expect(readNote([0x93, 36, 0])?.on).toBe(false)
+  })
+
+  it('answers nothing for a knob or a clock tick', () => {
+    expect(readNote([0xb0, 1, 64])).toBeNull()
+    expect(readNote([0xf8])).toBeNull()
+  })
+})
+
 describe('what a struck note fires', () => {
   it('fires the whole bay while nothing is bound', () => {
     expect(noteAction(undefined, false)).toBe('fire')
@@ -226,6 +248,7 @@ describe('a browser with storage switched off', () => {
           onArmed: () => {},
           onPickup: () => {},
           onAction: () => {},
+          onActionEnd: () => {},
           onNotes: () => {},
           onArmedNote: () => {},
           onLearn: () => {},

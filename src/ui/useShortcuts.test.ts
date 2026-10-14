@@ -13,6 +13,7 @@
 
 import { describe, expect, it } from 'vitest'
 
+import { TRANSITIONS } from './transitions'
 import { resolveShortcut } from './useShortcuts'
 
 import type { Keystroke } from './useShortcuts'
@@ -42,6 +43,8 @@ const BARE: [string, string][] = [
   ['o', 'retrigger'],
   ['t', 'fire'],
   ['d', 'drift'],
+  ['g', 'fault'],
+  ['l', 'fault'],
   ['1', 'recallSlot'],
   ['9', 'recallSlot'],
 ]
@@ -137,6 +140,24 @@ describe('auto-repeat', () => {
     for (const key of ['c', 'r', 's', 'o', 't', 'd', '1']) {
       expect(resolveShortcut(press(key, { repeat: true }))).toBeNull()
     }
+  })
+
+  it('holds each fault on the shelf under its own key', () => {
+    for (const t of TRANSITIONS) {
+      expect(resolveShortcut(press(t.key))).toEqual({
+        do: 'fault',
+        name: t.name,
+        cut: false,
+      })
+      expect(resolveShortcut(press(t.key, { repeat: true }))).toBeNull()
+    }
+  })
+
+  it('cuts to the other source on a shifted fault key', () => {
+    const t = TRANSITIONS[0]!
+    expect(
+      resolveShortcut(press(t.key.toUpperCase(), { shiftKey: true })),
+    ).toEqual({ do: 'fault', name: t.name, cut: true })
   })
 
   it('lets `i` repeat, so leaning on it gives a run of short loops', () => {

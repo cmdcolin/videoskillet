@@ -258,8 +258,8 @@ A works with no camera at all.
 The **faults** tab, on the right, holds the fault pads. A tap on a pad breaks
 the picture and heals it. A held pad keeps the picture broken until you let go,
 so **roll** keeps rolling for as long as you hold it. With a picture on B, the
-fader flips to the other end on the frame where the picture is least legible,
-so the cut to the other picture lands inside the fault.
+fader flips to the other end on the frame where the picture is least legible, so
+the cut to the other picture lands inside the fault.
 
 **full app** opens the app on the same preset. The share button beside **?**
 sends a link that opens the camera page on the same look, its stack, its knobs
@@ -267,21 +267,22 @@ and the pattern on B, or copies the link where the phone has no share sheet.
 
 ## Keyboard
 
-| Key                     | Action                                                              |
-| ----------------------- | ------------------------------------------------------------------- |
-| `ctrl/⌘+k`              | command palette                                                     |
-| `/`                     | filter the controls                                                 |
-| `c` (hold)              | preview the clean signal                                            |
-| `r` / `s`               | record a clip / save a still                                        |
-| `f`                     | fullscreen                                                          |
-| `i`                     | cue a clip · press again to loop from there · `+shift` for source B |
-| `o`                     | stab back to the cue · `+shift` for source B                        |
-| `t`                     | strike every one-shot envelope in the bay                           |
-| `d`                     | set the whole board drifting · press again to stop where it got to  |
-| `ctrl/⌘+s`              | save this look to your library                                      |
-| `1`–`9` / `shift+1`–`9` | recall / overwrite one of your first nine saves                     |
-| `ctrl/⌘+z`              | step back a look · `+shift` or `ctrl/⌘+y` steps forward again       |
-| `esc`                   | close a dialog, cancel a MIDI arm, clear the filter                 |
+| Key                        | Action                                                                                                     |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `ctrl/⌘+k`                 | command palette                                                                                            |
+| `/`                        | filter the controls                                                                                        |
+| `c` (hold)                 | preview the clean signal                                                                                   |
+| `r` / `s`                  | record a clip / save a still                                                                               |
+| `f`                        | fullscreen                                                                                                 |
+| `i`                        | cue a clip · press again to loop from there · `+shift` for source B                                        |
+| `o`                        | stab back to the cue · `+shift` for source B                                                               |
+| `t`                        | strike every one-shot envelope in the bay                                                                  |
+| `d`                        | set the whole board drifting · press again to stop where it got to                                         |
+| `g` `h` `j` `k` `l` (hold) | track, roll, collapse, shuttle, dub, held until you let go · `+shift` cuts to the other source at the peak |
+| `ctrl/⌘+s`                 | save this look to your library                                                                             |
+| `1`–`9` / `shift+1`–`9`    | recall / overwrite one of your first nine saves                                                            |
+| `ctrl/⌘+z`                 | step back a look · `+shift` or `ctrl/⌘+y` steps forward again                                              |
+| `esc`                      | close a dialog, cancel a MIDI arm, clear the filter                                                        |
 
 ---
 

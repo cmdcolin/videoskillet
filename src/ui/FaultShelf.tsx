@@ -43,7 +43,7 @@ export function FaultShelf() {
         <button
           key={t.name}
           className={styles.faultBtn}
-          title={`${t.title} — over ${t.seconds}s, or for as long as you hold it`}
+          title={`${t.title} — over ${t.seconds}s, or for as long as you hold it (shift+${t.key})`}
           {...pad(held =>
             startFault(
               faultPlan(

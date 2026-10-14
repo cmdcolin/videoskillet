@@ -55,6 +55,10 @@ it that `i` and `o` do from the keyboard; and the transitions. Velocity carries,
 so a soft hit is a small envelope, and pads do no soft takeover, since there is
 no value to catch up to.
 
+A pad bound to a transition holds the fault while it is down and heals it on the
+note off, the same as a held fault key. A pad that sends its note off at once
+plays the whole fault.
+
 **With nothing bound, any note fires the whole bay.** Bind one pad and notes
 then fire only what the card lists.
 

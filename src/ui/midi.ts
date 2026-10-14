@@ -192,6 +192,22 @@ export function noteAction(
   return bound ?? (anyBound ? null : 'fire')
 }
 
+// A Note On or Note Off off the wire, or null for anything else. A Note On at
+// velocity zero is a Note Off, the spelling running status uses.
+export function readNote(
+  data: ArrayLike<number>,
+): { on: boolean; channel: number; note: number; velocity: number } | null {
+  if (data.length !== 3) return null
+  const kind = data[0]! & 0xf0
+  if (kind !== 0x90 && kind !== 0x80) return null
+  return {
+    on: kind === 0x90 && data[2]! > 0,
+    channel: data[0]! & 0x0f,
+    note: data[1]!,
+    velocity: data[2]! / 127,
+  }
+}
+
 // Knob positions for controls waiting to be caught, in control units. Keyed by
 // control, not target: soft takeover applies to controls alone (see `drive`).
 export type PickupMap = Partial<Record<ControlKey, number>>
@@ -428,6 +444,9 @@ interface MidiCallbacks {
   // messages, which is the whole reason actions are their own family — see
   // ActionTarget.
   onAction: (target: ActionTarget, velocity: number) => void
+  // The note that struck an action has come up. Only a held transition has
+  // anything to do with it.
+  onActionEnd: (target: ActionTarget) => void
   onNotes: (notes: NoteMap) => void
   onArmedNote: (target: ActionTarget | null) => void
   // Progress of a learn-in-order sweep, or null when none is running.
@@ -623,25 +642,28 @@ export function createMidi(cb: MidiCallbacks): MidiManager {
       if (data[0] === 0xf8) onPulse()
       else if (data[0] === 0xfc) stopClock()
     }
-    // Note On is status 0x90..0x9F; three bytes: status, note, velocity. Note
-    // Off (0x80) and the running-status zero-velocity Note On that stands in
-    // for it are both ignored on purpose: a one-shot is struck and then decays
-    // on its own clock, so a key lift has nothing to say to it. That is also
-    // why nothing here tracks which notes are held.
-    if (data?.length === 3 && (data[0]! & 0xf0) === 0x90 && data[2]! > 0) {
-      const b = { channel: data[0]! & 0x0f, note: data[1]! }
-      const velocity = data[2]! / 127
+    // A Note Off goes to the action its note is bound to, which lets a held
+    // transition heal. A one-shot is struck and decays on its own clock, so a
+    // key lift has nothing to say to it.
+    const n = data === null || data === undefined ? null : readNote(data)
+    if (n?.on === true) {
       if (armedNote !== null) {
-        bindNote(armedNote, b)
+        bindNote(armedNote, { channel: n.channel, note: n.note })
         armedNote = null
         cb.onArmedNote(null)
       } else {
         const target = noteAction(
-          actionByNote.get(noteId(b)),
+          actionByNote.get(noteId(n)),
           actionByNote.size > 0,
         )
-        if (target !== null) cb.onAction(target, velocity)
+        if (target !== null) cb.onAction(target, n.velocity)
       }
+    } else if (n !== null) {
+      const target = noteAction(
+        actionByNote.get(noteId(n)),
+        actionByNote.size > 0,
+      )
+      if (target !== null) cb.onActionEnd(target)
     }
     // Control Change is status 0xB0..0xBF; three bytes: status, controller, value.
     if (data?.length === 3 && (data[0]! & 0xf0) === 0xb0) {
