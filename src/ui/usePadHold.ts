@@ -1,38 +1,51 @@
-import { useRef } from 'react'
+import { useState } from 'react'
 
 import type { MouseEvent, PointerEvent } from 'react'
 
-// A fault pad's button: a press breaks the picture and keeps it broken while
-// the pointer stays down, and lifting heals it. A quick tap runs the whole
-// fault, so the pad still works as a one-shot. A click with no press before
-// it, from the keyboard or a screen reader, runs the fault as a tap.
-//
-// `start` fires the fault, held or not, and returns its release.
-export function usePadHold() {
-  const releases = useRef(new Map<number, () => void>())
-  const pressed = useRef(false)
+// Fires the fault, held or not, and returns its release.
+type Start = (held: boolean) => (() => void) | undefined
 
-  const lift = (e: PointerEvent<HTMLElement>) => {
-    releases.current.get(e.pointerId)?.()
-    releases.current.delete(e.pointerId)
+// What a fault pad's presses mean, split out of the hook so it has a test. A
+// pointer down breaks the picture and keeps it broken until that pointer comes
+// up, so a quick tap still runs the whole fault. A click with no press before
+// it, from the keyboard or a screen reader, runs the fault as a tap.
+export class PadPresses {
+  private releases = new Map<number, () => void>()
+  private pressed = false
+
+  down(id: number, start: Start): void {
+    const release = start(true)
+    if (release !== undefined) this.releases.set(id, release)
   }
 
-  return (start: (held: boolean) => (() => void) | undefined) => ({
+  up(id: number): void {
+    if (this.releases.has(id)) this.pressed = true
+    this.cancel(id)
+  }
+
+  cancel(id: number): void {
+    this.releases.get(id)?.()
+    this.releases.delete(id)
+  }
+
+  click(start: Start): void {
+    if (this.pressed) this.pressed = false
+    else start(false)
+  }
+}
+
+export function usePadHold() {
+  const [presses] = useState(() => new PadPresses())
+  return (start: Start) => ({
     onPointerDown: (e: PointerEvent<HTMLElement>) => {
       if (e.button !== 0) return
       e.currentTarget.setPointerCapture(e.pointerId)
-      const release = start(true)
-      if (release !== undefined) releases.current.set(e.pointerId, release)
+      presses.down(e.pointerId, start)
     },
-    onPointerUp: (e: PointerEvent<HTMLElement>) => {
-      if (releases.current.has(e.pointerId)) pressed.current = true
-      lift(e)
-    },
-    onPointerCancel: lift,
-    onClick: () => {
-      if (pressed.current) pressed.current = false
-      else start(false)
-    },
+    onPointerUp: (e: PointerEvent<HTMLElement>) => presses.up(e.pointerId),
+    onPointerCancel: (e: PointerEvent<HTMLElement>) =>
+      presses.cancel(e.pointerId),
+    onClick: () => presses.click(start),
     onContextMenu: (e: MouseEvent<HTMLElement>) => e.preventDefault(),
   })
 }
