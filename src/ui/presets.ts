@@ -436,10 +436,13 @@ export const PRESETS: PresetDef[] = [
     displayName: 'supply chaos',
     group: 'Sync / Deflection',
     blurb:
-      'Beam current bending its own scan through a ringing HV supply: geometry driven by picture content, never repeating.',
+      'Beam current bending its own scan through a ringing HV supply, on a channel scrambled at the head-end. Every line lands at its own offset, and an unsynced second deck beats its colour across the slabs.',
     patch: {
       hvSagUs: 16,
       hvRing: 0.85,
+      scramble: 0.6,
+      hDetuneHz: 18,
+      chromaGain: 1.8,
       bGain: 0.55,
       bLineHz: 0.9,
       bDetuneHz: 130,
@@ -453,10 +456,14 @@ export const PRESETS: PresetDef[] = [
     displayName: 'full collapse',
     group: 'Sync / Deflection',
     blurb:
-      'Every deflection fault at once, feeding the mixer loop. Bend, roll and beam load chase each other frame to frame.',
+      'Every deflection fault at once, feeding the mixer loop, on an SSAVI channel with no decoder: sync suppressed and the video inverted. Bend, roll and beam load chase each other frame to frame.',
     patch: {
       hvSagUs: 20,
       hvRing: 0.9,
+      scramble: 0.8,
+      scrambleMode: 2,
+      hDetuneHz: 22,
+      chromaGain: 1.8,
       bendUs: 12,
       bendShape: 2,
       vFreqHz: 58.5,
