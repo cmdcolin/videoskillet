@@ -48,9 +48,9 @@ crops correctly on every route, so the old code was most likely correct there.
 
 1. `node scripts/stridecheck.mjs --browser=chrome` should still match the table.
 2. Record a take in Chrome at a window whose canvas is not a multiple of 64
-   wide, and confirm it plays upright. `rectakecheck.mjs` launches Firefox only
-   (open item 1 in `record-clip-audio.md`), so this is a manual take or a Chrome
-   arm for that harness.
+   wide, and confirm it plays upright. `rectakecheck.mjs --size=1500x950` checks
+   exactly this, with a 1134-wide canvas, but launches Firefox only (open item 1
+   in `record-clip-audio.md`). A Chrome arm for it would cover this step.
 3. Watch the console during the take for
    `[Invalid CommandBuffer] is invalid due to a previous error`. The owner saw
    it in Firefox around the same time, and the cause is not pinned down. One way
