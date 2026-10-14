@@ -62,11 +62,12 @@ const ALL_STORE = 'video_feedback_presets_expanded'
 //   saturation of anything screened and is the only loud one that leaves the
 //   subject photographic, since the key means the trails can only grow where
 //   the picture is already lit.
-// - `spiral` earns its place on the landing screen specifically. Bars are
-//   full-height vertical bands, so a loop that only scales them gives bands
-//   back and `tunnelOut` renders as very nearly nothing there; rotation breaks
-//   that symmetry, so `spiral` is the one loop whose geometry shows before
-//   anyone has loaded a clip.
+// - The loops here change colour or time, not scale. Bars are full-height
+//   vertical bands, so a loop that only scales them gives bands back, and the
+//   big zooms and spins (`tunnelOut`, `spiral`) wipe the subject out of a
+//   photo. `clockAndCrystal` tears bars diagonally and keeps moving on them;
+//   `theLightIsALapBehind` turns their hues on bars and on a photo alike.
+//   Both are on the camera page's screened shortlist too.
 // - `broadcast` came off. It is a near-clean baseline by design, and with
 //   `clean` pinned at the head of the row it was the second chip that looks
 //   like nothing happened.
@@ -74,9 +75,9 @@ const STARTERS = [
   'vhs',
   'ringInTheHighlights',
   'rainbowStorm',
-  'spiral',
+  'clockAndCrystal',
   'verticalHoldGone',
-  'tunnelOut',
+  'theLightIsALapBehind',
 ]
 const SHORTLIST_MAX = 8
 
