@@ -224,7 +224,8 @@ export interface EngineApi {
   // (signal/fault.ts; docs/EDITOR.md › _Transitions_). Same contract as the two
   // above — handed over once, applied and undone inside each frame, never read
   // back — and frame-clocked, so it is already right under a take's clock.
-  startFault: (plan: FaultPlan) => void
+  // Returns the release for a held plan (`FaultPlan.held`).
+  startFault: (plan: FaultPlan) => () => void
   // Which decode-stage tap is on the glass. The engine owns the value (it reads
   // `?dbg=` at construction), so React mirrors it rather than the reverse.
   setDbgView: (view: number) => void

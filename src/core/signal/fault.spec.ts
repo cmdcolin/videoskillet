@@ -134,6 +134,38 @@ describe('Fault', () => {
     expect(f.step()).toBeNull()
   })
 
+  it('waits at the peak while held, and heals once released', () => {
+    const onCut = vi.fn()
+    const f = new Fault()
+    const release = f.start({ ...plan(11, 0.5, onCut), held: true })
+    const depths = Array.from({ length: 40 }, () => f.step()?.depth)
+    expect(depths.slice(5)).toEqual(Array(35).fill(1))
+    expect(onCut).toHaveBeenCalledTimes(1)
+    release()
+    const rest = Array.from({ length: 7 }, () => f.step()?.depth)
+    expect(rest[0]).toBe(1)
+    expect(rest[5]).toBe(0)
+    expect(rest[6]).toBeUndefined()
+  })
+
+  it('runs the whole span when released before the peak', () => {
+    const f = new Fault()
+    const release = f.start({ ...plan(11, 0.5), held: true })
+    f.step()
+    release()
+    for (let i = 1; i < 11; i++) expect(f.step()).not.toBeNull()
+    expect(f.step()).toBeNull()
+  })
+
+  it('leaves a newer fault alone when an older one is released', () => {
+    const f = new Fault()
+    const releaseOld = f.start({ ...plan(11, 0.5), held: true })
+    f.start({ ...plan(11, 0.5), held: true })
+    releaseOld()
+    const depths = Array.from({ length: 20 }, () => f.step()?.depth)
+    expect(depths.at(-1)).toBe(1)
+  })
+
   // Rounded and floored on the way in, so a span asked for in a hurry is brief
   // rather than absent and a fractional one cannot land between two frames.
   it('is at least one frame long', () => {

@@ -188,12 +188,17 @@ export const TRANSITIONS: readonly Transition[] = [
 // from: the shelf throws the deck's bar, and a rundown will swap the row's
 // source. The fault is the same either way, which is the whole point of the
 // shelf being a table.
-export const faultPlan = (t: Transition, onCut: () => void): FaultPlan => ({
+export const faultPlan = (
+  t: Transition,
+  onCut: () => void,
+  held = false,
+): FaultPlan => ({
   peak: t.peak,
   // The sim's own rate, which is what `FaultPlan.frames` counts in.
   frames: Math.round(t.seconds * 60),
   cut: t.cut,
   onCut,
+  held,
 })
 
 export const transitionOf = (name: string): Transition | undefined =>

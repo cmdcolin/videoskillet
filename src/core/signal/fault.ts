@@ -50,6 +50,10 @@ export interface FaultPlan {
   // to land on that frame and nothing in React runs that often — the same
   // argument `setVideoRegion` already carries for living on the engine.
   onCut: () => void
+  // Whether the fault waits at its peak until the release `start` returns is
+  // called: a pad held down keeps the picture broken, and lifting it heals.
+  // Released before the peak, it runs the whole span as if tapped.
+  held?: boolean
 }
 
 interface FaultStep {
@@ -104,6 +108,8 @@ export class Fault {
   private plan: FaultPlan | null = null
   private cutFrame = 0
   private frame = 0
+  private held = false
+  private cut = false
 
   get running(): boolean {
     return this.plan !== null
@@ -115,11 +121,20 @@ export class Fault {
   //
   // A span under one frame is one frame, on `PulseGate`'s rule and for the same
   // reason — a transition asked for in a hurry should be brief, not absent.
-  start(plan: FaultPlan): void {
+  //
+  // The release it returns lets go of this fault only, so lifting a pad whose
+  // fault another press has replaced leaves the new one alone.
+  start(plan: FaultPlan): () => void {
     const frames = Math.max(1, Math.round(plan.frames))
-    this.plan = { ...plan, frames }
+    const running = { ...plan, frames }
+    this.plan = running
     this.cutFrame = cutFrameOf(frames, plan.cut)
     this.frame = 0
+    this.held = plan.held === true
+    this.cut = false
+    return () => {
+      if (this.plan === running) this.held = false
+    }
   }
 
   stop(): void {
@@ -138,12 +153,15 @@ export class Fault {
     const plan = this.plan
     if (plan === null) return null
     const frame = this.frame
-    this.frame++
     if (frame >= plan.frames) {
       this.plan = null
       return null
     }
-    if (frame === this.cutFrame) plan.onCut()
+    if (!(this.held && frame === this.cutFrame)) this.frame++
+    if (frame === this.cutFrame && !this.cut) {
+      this.cut = true
+      plan.onCut()
+    }
     return {
       peak: plan.peak,
       depth: faultDepth(frame, plan.frames, this.cutFrame),

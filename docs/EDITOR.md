@@ -392,8 +392,14 @@ startFault(plan: {
   frames: number           // its span
   cut: number              // where the source swap lands, 0..1
   onCut: () => void        // fired once, on the peak frame
-}): void
+  held?: boolean           // wait at the peak until released
+}): () => void             // the release
 ```
+
+A held plan is a pad under a finger: the fault climbs to its peak and stays
+there until the release is called, then heals over the rest of its span. A
+release before the peak runs the whole span, so a quick tap is the fixed-length
+fault.
 
 Evaluated where the bay is evaluated: additively over the resting controls,
 inside the frame, never touching what React renders from. That makes it

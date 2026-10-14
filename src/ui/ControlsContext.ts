@@ -139,7 +139,7 @@ export interface ControlsApi {
   // anything React owns — and a thin forward rather than a transition name,
   // because what to break, how long for and what the cut does are all the
   // deck's to decide and none of them are App's.
-  startFault: (plan: FaultPlan) => void
+  startFault: (plan: FaultPlan) => (() => void) | undefined
 }
 
 export const ControlsContext = createContext<ControlsApi | null>(null)

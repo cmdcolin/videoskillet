@@ -4,6 +4,7 @@ import { ControlStoreContext, useControlsApi } from './ControlsContext'
 import styles from './Deck.module.css'
 import { barCut } from './deckModel'
 import { TRANSITIONS, faultPlan } from './transitions'
+import { usePadHold } from './usePadHold'
 
 // The shelf of named transitions, under the lever they replace.
 //
@@ -15,11 +16,12 @@ import { TRANSITIONS, faultPlan } from './transitions'
 // it heal onto the new source (docs/EDITOR.md › _Transitions_). So the two rows
 // are two different verbs and they read as two rows.
 //
-// A press is one gesture and the whole transition: the engine runs the fault on
+// A tap is one gesture and the whole transition: the engine runs the fault on
 // its own clock and calls back on the frame the picture is least legible, and
-// the callback is the cut. Nothing here polls, animates, or holds a timer —
-// which is the point of `startFault` living on the engine, since the panel
-// cannot be trusted with anything that has to land on a particular frame.
+// the callback is the cut. A press held down waits at that frame until the
+// button is let go. Nothing here polls, animates, or holds a timer — which is
+// the point of `startFault` living on the engine, since the panel cannot be
+// trusted with anything that has to land on a particular frame.
 
 export function FaultShelf() {
   const { startFault, writeControls } = useControlsApi()
@@ -29,6 +31,7 @@ export function FaultShelf() {
   // A position read at press time would send it back the way it came whenever
   // anything moved the fader in between — a preset, a MIDI knob, a patched LFO.
   const store = use(ControlStoreContext)
+  const pad = usePadHold()
   return (
     // `data-shelf` is a harness hook, the way the tray's cards carry
     // `data-index`: the labels here are ordinary words ("track", "roll") that
@@ -40,14 +43,18 @@ export function FaultShelf() {
         <button
           key={t.name}
           className={styles.faultBtn}
-          title={`${t.title} — over ${t.seconds}s`}
-          onClick={() =>
+          title={`${t.title} — over ${t.seconds}s, or for as long as you hold it`}
+          {...pad(held =>
             startFault(
-              faultPlan(t, () => {
-                writeControls(barCut(store.get()))
-              }),
-            )
-          }
+              faultPlan(
+                t,
+                () => {
+                  writeControls(barCut(store.get()))
+                },
+                held,
+              ),
+            ),
+          )}
         >
           {t.label}
         </button>

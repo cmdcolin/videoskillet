@@ -252,10 +252,11 @@ A works with no camera at all.
   from the **mix** tab works the mixer itself and hides the fader, and picking a
   mode takes the mixer back.
 
-The **faults** tab, on the right, holds the fault pads. Each pad breaks the
-picture and heals it. With a picture on B, the fader flips to the other end on
-the frame where the picture is least legible, so the cut to the other picture
-lands inside the fault.
+The **faults** tab, on the right, holds the fault pads. A tap on a pad breaks
+the picture and heals it. A held pad keeps the picture broken until you let go,
+so **roll** keeps rolling for as long as you hold it. With a picture on B, the
+fader flips to the other end on the frame where the picture is least legible,
+so the cut to the other picture lands inside the fault.
 
 **full app** opens the app on the same preset. The share button beside **?**
 sends a link that opens the camera page on the same look, its stack, its knobs

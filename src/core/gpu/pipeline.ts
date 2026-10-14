@@ -2217,9 +2217,9 @@ export class Engine implements EngineApi {
   // have any. It is also wrong offline, where there is no rAF and a frame is not
   // a millisecond — here it is frame-clocked, so it is already right under a
   // take's virtual clock with no second code path.
-  startFault(plan: FaultPlan): void {
+  startFault(plan: FaultPlan): () => void {
     // The cut is an edit on the tape; the servo re-finds the track after it.
-    this.fault.start({
+    return this.fault.start({
       ...plan,
       onCut: () => {
         this.servo.kick(1)

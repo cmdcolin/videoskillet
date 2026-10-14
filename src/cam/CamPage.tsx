@@ -221,18 +221,22 @@ export function CamPage(props: { link: CamLink | null }) {
   const mixWith = (mix: Mix) =>
     paint(mixerOwned(sceneRef.current) ? { ...CLEAN, mix } : { mix })
 
-  // A pad breaks the picture and lets it heal. With a second picture on B, the
-  // cut lands on the frame the picture is least legible and throws the fader to
-  // the other end, so the fault carries the change of picture.
-  const hit = (t: Transition) => {
+  // A pad breaks the picture and lets it heal, and a held pad keeps it broken.
+  // With a second picture on B, the cut lands on the frame the picture is least
+  // legible and throws the fader to the other end, so the fault carries the
+  // change of picture.
+  const hit = (t: Transition, held: boolean) =>
     eng.engine?.startFault(
-      faultPlan(t, () => {
-        const s = sceneRef.current
-        if (s.mix !== null && !mixerOwned(s))
-          paint({ mix: { ...s.mix, fader: s.mix.fader < 0.5 ? 1 : 0 } })
-      }),
+      faultPlan(
+        t,
+        () => {
+          const s = sceneRef.current
+          if (s.mix !== null && !mixerOwned(s))
+            paint({ mix: { ...s.mix, fader: s.mix.fader < 0.5 ? 1 : 0 } })
+        },
+        held,
+      ),
     )
-  }
 
   // A second picture opens the mix tab and the mixer, and dissolves halfway to
   // it under the look that is up. A change of picture on B keeps the mixer
