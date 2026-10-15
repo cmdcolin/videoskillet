@@ -212,7 +212,7 @@ describe('blendPresets', () => {
       DEFAULT_CONTROLS,
       new Map([['supplyChaos', 1]]),
     )
-    expect(clicked.hvRing).toBe(0.85)
+    expect(clicked.hvRing).toBe(0.25)
     expect(clicked.hvSagUs).toBe(16)
   })
 
