@@ -1,5 +1,4 @@
-import babel from '@rolldown/plugin-babel'
-import react, { reactCompilerPreset } from '@vitejs/plugin-react'
+import react from '@vitejs/plugin-react'
 import { configDefaults, defineConfig } from 'vitest/config'
 
 import pkg from './package.json' with { type: 'json' }
@@ -24,10 +23,15 @@ export default defineConfig(({ command }) => ({
   // React Compiler memoizes components and hook results itself, so the UI
   // doesn't hand-maintain useMemo/useCallback around the engine handoffs.
   plugins: [
-    react(),
-    babel({ presets: [reactCompilerPreset()] }),
-    ytdlp(),
     wgsl(),
+    react({
+      compiler: {
+        logDiagnostics: true,
+        reportDiagnostics: true,
+        eslintSuppressionRules: [],
+      },
+    }),
+    ytdlp(),
     site(),
   ],
   define: {

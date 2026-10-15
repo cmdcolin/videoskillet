@@ -450,8 +450,26 @@ session and the stills joined it.
 
 ### React Compiler is on
 
-Via `reactCompilerPreset` and `@rolldown/plugin-babel` in `vite.config.ts`.
-Don't add `useMemo`/`useCallback` — memoization is the compiler's job. Two
+`react({ compiler })` in `vite.config.ts` runs `oxc-transform-react`, Oxc's Rust
+port of the compiler, in dev and in the build. Don't add `useMemo`/`useCallback`
+— memoization is the compiler's job. Three settings in that block:
+
+- **`eslintSuppressionRules: []`.** By default the port skips any function under
+  an `oxlint-disable … react-hooks/exhaustive-deps` comment, and this repo has
+  several. The Babel compiler ignored `oxlint-` comments and compiled those
+  hooks, so the empty list keeps them compiled.
+- **`reportDiagnostics` and `logDiagnostics`.** The port reports a skipped
+  function only with both on, and then as a Vite warning in the dev server.
+- **`wgsl()` sits before `react()` in `plugins`.** The compiler regenerates the
+  file and drops the `/* wgsl */` tag the wgsl plugin looks for.
+
+The port ignores `enableResetCacheOnSourceFileChanges`, so a dev edit to a
+custom hook that an unedited component calls can log "Expected a constant size
+argument for each invocation of useMemoCache" until a reload. Edited components
+reset their cache through React's own hot-reload path.
+
+`pnpm compiler` still runs the Babel compiler (`babel-plugin-react-compiler`),
+because it is the reference and `KNOWN` below is a list of its bail-outs. Two
 consequences worth knowing:
 
 - **The ref-during-render pattern above is exactly what the compiler refuses.**
