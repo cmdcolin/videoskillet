@@ -90,23 +90,35 @@ fn rotated(sc: vec2f, cs: vec2f) -> vec2f {
   return vec2f(sc.x * cs.x + sc.y * cs.y, sc.y * cs.x - sc.x * cs.y);
 }
 
+fn fontDot(label: u32, dx: i32, dy: i32) -> bool {
+  if (dx < 0) {
+    return false;
+  }
+  let col = u32(dx) / GLYPH_W;
+  if (col >= TEXT_LEN[label]) {
+    return false;
+  }
+  let glyph = TEXT[label * 5u + col] - 0x20u;
+  return ((font[glyph * GLYPH_H + u32(dy)] >> (u32(dx) % GLYPH_W)) & 1u) != 0u;
+}
+
+// A letter's dot is also lit by the dot to its left, so every stroke is two dots
+// wide. The symbols are already solid.
 fn ink(dx: i32, dy: i32) -> bool {
   if (dx < 0 || dy < 0 || dy >= i32(GLYPH_H)) {
     return false;
   }
   let col = u32(dx) / GLYPH_W;
   let ux = u32(dx) % GLYPH_W;
-  let uy = u32(dy);
   let label = u32(P.osdLabel + 0.5);
   let len = TEXT_LEN[label];
-  if (col < len) {
-    let glyph = TEXT[label * 5u + col] - 0x20u;
-    return ((font[glyph * GLYPH_H + uy] >> ux) & 1u) != 0u;
+  if (col <= len) {
+    return fontDot(label, dx, dy) || fontDot(label, dx - 1, dy);
   }
-  if (col <= len || col - len - 1u >= SYMBOL_CELLS[label]) {
+  if (col - len - 1u >= SYMBOL_CELLS[label]) {
     return false;
   }
-  return symbolDot(SYMBOL[label], ux, uy);
+  return symbolDot(SYMBOL[label], ux, u32(dy));
 }
 
 // The box the word and its outline can be lit in, in dots and with one dot
