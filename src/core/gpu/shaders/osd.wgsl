@@ -58,18 +58,16 @@ const TEXT_LEN = array<u32, 5>(4u, 5u, 4u, 2u, 3u);
 const SYMBOL = array<u32, 5>(SYM_PLAY, SYM_BARS, SYM_PLAY, SYM_PLAY, SYM_REW);
 const SYMBOL_CELLS = array<u32, 5>(1u, 1u, 1u, 2u, 2u);
 
-// A transport symbol's dot, in the cell's own 8 by 12 grid.
+// A transport symbol's dot, in the cell's own 8 by 12 grid. The arrow is a
+// triangle ten dots tall and seven wide, so its edge steps one dot every
+// column and it reads as a point, not a wedge.
 fn symbolDot(kind: u32, ux: u32, uy: u32) -> bool {
-  var fx = (f32(ux) + 0.5) / f32(GLYPH_W);
-  let fy = (f32(uy) + 0.5) / f32(GLYPH_H);
   if (kind == SYM_BARS) {
-    return fy > 0.1 && fy < 0.9
-      && ((fx > 0.15 && fx < 0.4) || (fx > 0.6 && fx < 0.85));
+    return uy >= 1u && uy <= 10u && (ux == 1u || ux == 2u || ux == 5u || ux == 6u);
   }
-  if (kind == SYM_REW) {
-    fx = 1.0 - fx;
-  }
-  return fx > 0.1 && fx < 0.9 && abs(fy - 0.5) < 0.42 * (0.9 - fx) / 0.8;
+  let col = select(ux, GLYPH_W - 1u - ux, kind == SYM_REW);
+  let reach = 5.0 - f32(col) * (4.0 / 6.0);
+  return col <= 6u && abs(f32(uy) + 0.5 - 6.0) <= reach;
 }
 
 // The rotation this line's burst arrived at against the house carrier, as
