@@ -12,11 +12,13 @@
 // solid block rather than guessing, so the flag has to survive as far as the
 // painter.
 
+import { CC_COLS, wrapCaption } from '../signal/captionwrap'
+
 // Cells on the wire per line: seven of run-in, two blank, three start bits and
 // two eight-bit characters. Both ends index the same grid off this.
 export const CC_CELLS = 28
 
-export const CC_COLS = 32 // what line 21 carries, and what every caption was
+export { CC_COLS }
 export const CC_ROWS = 4 // roll-up depth: the rows that scroll as one
 export const GLYPH_W = 8
 export const GLYPH_H = 12
@@ -82,29 +84,13 @@ export function buildCaptionRom(): Uint32Array {
 // anything: the page written straight from the text, because a box standing at
 // the switcher has the words in hand rather than recovering them off a wire.
 //
-// Wrapped rather than truncated, and wrapped here rather than borrowed from the
-// teletype card's `wrapText`, because core cannot import the app. Eight lines is
-// cheaper than the indirection that would avoid them.
+// The rows come from the same wrap the encoder rolls the page by, so the open
+// and closed caption show the same words.
 export function buildPage(text: string): Uint32Array {
   const page = new Uint32Array(CC_ROWS * CC_COLS)
-  const lines: string[] = []
-  for (const para of text.split('\n')) {
-    let line = ''
-    for (const word of para.split(' ')) {
-      if (line === '') {
-        line = word.slice(0, CC_COLS)
-      } else if (line.length + 1 + word.length <= CC_COLS) {
-        line += ` ${word}`
-      } else {
-        lines.push(line)
-        line = word.slice(0, CC_COLS)
-      }
-    }
-    lines.push(line)
-  }
   // The last rows rather than the first: a lower third that overran should show
   // where the text got to, the same way the roll-up page does.
-  const shown = lines.slice(-CC_ROWS)
+  const shown = wrapCaption(text).slice(-CC_ROWS)
   shown.forEach((line, r) => {
     const row = r + CC_ROWS - shown.length
     Array.from(line).forEach((ch, c) => {

@@ -49,6 +49,20 @@ describe('the caption encoder', () => {
     expect(text(sent(cc, 60))).toBe('ONE\nTWO\n')
   })
 
+  // A decoder's row stops taking characters at thirty-two, so a long string has
+  // to reach it as several rows or the page never rolls and the first row plays
+  // over and over.
+  it('rolls the page between the rows of a string longer than one', () => {
+    const cc = new CaptionState()
+    cc.setText('the quick brown fox jumps over the lazy dog and runs away')
+    const rows = text(sent(cc, 140)).split('\n')
+    expect(rows.length).toBeGreaterThan(2)
+    expect(rows.every(r => r.length <= 32)).toBe(true)
+    expect(rows.join(' ').trim()).toBe(
+      'the quick brown fox jumps over the lazy dog and runs away',
+    )
+  })
+
   // A caption is written far faster than it is read, so the gap after the last
   // character is not padding — it is what leaves the page up long enough to read.
   it('holds before it starts over', () => {

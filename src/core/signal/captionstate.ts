@@ -12,6 +12,8 @@
 // it is why a signal that dies mid-hold leaves the last caption sitting there
 // rather than blanking.
 
+import { wrapCaption } from './captionwrap'
+
 // Characters a second on the wire. Real line 21 can burst at 120 and rarely
 // does; this is roughly the rate a roll-up caption actually filled at, and slow
 // enough that a fault lands on a caption you are still watching arrive.
@@ -50,14 +52,16 @@ export class CaptionState {
     this.carry = 0
   }
 
-  // Lines become rows, and a row ends with the code that rolls the page. Text
-  // the ROM has no glyph for becomes a space rather than a hole: the encoder is
-  // seven-bit, so this is the cut a real one made too.
+  // Rows are the text wrapped to the page, and a row ends with the code that
+  // rolls the page. A decoder stops taking characters at the end of a row, so a
+  // long string sent as one row would show its first thirty-two characters and
+  // never scroll. Text the ROM has no glyph for becomes a space rather than a
+  // hole: the encoder is seven-bit, so this is the cut a real one made too.
   private static encode(text: string): number[] {
     if (text === '') return []
     const out: number[] = []
-    for (const line of text.split('\n')) {
-      for (const ch of line) {
+    for (const row of wrapCaption(text)) {
+      for (const ch of row) {
         const code = ch.codePointAt(0) ?? 0x20
         out.push(code >= 0x20 && code <= 0x7f ? code : 0x20)
       }
