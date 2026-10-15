@@ -382,7 +382,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'scrambled channel',
     group: 'RF / Broadcast',
     blurb:
-      'Premium channel with no decoder box, on a set with slow colour loops and a soft supply. Sync is suppressed at the head-end, so the line oscillator wanders and the blanking bar drifts into the picture. The burst gate rides the lost flyback and catches burst on some lines and picture on others, the colour loops hold what they averaged across whole bands of lines, and the burst itself shows as colour in the bar.',
+      'Premium channel with no decoder box, on a set with slow colour loops, a drifting colour crystal and a fine tuner that will not settle. Sync is suppressed at the head-end, so the blanking bar drifts into the picture. The burst gate rides the lost flyback and catches burst on some lines and picture on others, so the APC barely pulls the crystal and its error winds rainbow bands down the screen. The tuner wanders either side of the channel: on one side the burst sinks under the killer and colour drops out in bands, on the other the sound carrier beats against the chroma.',
     patch: {
       scramble: 0.7,
       hDetuneHz: 4,
@@ -390,13 +390,21 @@ export const PRESETS: PresetDef[] = [
       hHold: 0.3,
       hvSagUs: 14,
       hvRing: 0.2,
-      killThresh: 0,
+      killThresh: 8,
       accLagLines: 30,
       afpcLagLines: 40,
       chromaGain: 1.8,
       matrixClip: 1,
+      scDetuneKHz: 0.06,
+      burstLock: 0.3,
       noiseIre: 2,
     },
+    // Both wander on the attractor: a crystal and a tuner drift with heat and
+    // never repeat, and a steady roll reads as a filter laid over the picture.
+    mod: [
+      { target: 'scDetuneKHz', source: 'lorenz', rateHz: 0.2, depth: 0.00005 },
+      { target: 'rfMistuneMHz', source: 'lorenz', rateHz: 0.3, depth: 0.1 },
+    ],
   },
   {
     name: 'ssavi',
