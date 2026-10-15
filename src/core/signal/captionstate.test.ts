@@ -46,7 +46,15 @@ describe('the caption encoder', () => {
   it('ends every line with the code that rolls the page', () => {
     const cc = new CaptionState()
     cc.setText('ONE\nTWO')
-    expect(text(sent(cc, 60))).toBe('ONE\nTWO\n')
+    expect(text(sent(cc, 150))).toBe('ONE\nTWO\n')
+  })
+
+  it('leaves a row up before it rolls the next one in', () => {
+    const cc = new CaptionState()
+    cc.setText('ONE\nTWO')
+    expect(text(sent(cc, 30))).toBe('ONE\n')
+    expect(sent(cc, 40)).toEqual([])
+    expect(text(sent(cc, 40))).toBe('TWO\n')
   })
 
   // A decoder's row stops taking characters at thirty-two, so a long string has
@@ -55,7 +63,7 @@ describe('the caption encoder', () => {
   it('rolls the page between the rows of a string longer than one', () => {
     const cc = new CaptionState()
     cc.setText('the quick brown fox jumps over the lazy dog and runs away')
-    const rows = text(sent(cc, 140)).split('\n')
+    const rows = text(sent(cc, 300)).split('\n')
     expect(rows.length).toBeGreaterThan(2)
     expect(rows.every(r => r.length <= 32)).toBe(true)
     expect(rows.join(' ').trim()).toBe(
@@ -75,10 +83,11 @@ describe('the caption encoder', () => {
 
   it('spends the wire at the rate it claims, not per frame', () => {
     const cc = new CaptionState()
-    cc.setText('X'.repeat(200))
+    cc.setText('X'.repeat(30))
     // 30 characters a second at 60 frames, so a second of frames buys about 30.
-    expect(sent(cc, 60).length).toBeGreaterThan(24)
-    expect(sent(cc, 60).length).toBeLessThan(36)
+    const n = sent(cc, 60).length
+    expect(n).toBeGreaterThan(24)
+    expect(n).toBeLessThan(36)
   })
 
   it('cuts what a seven-bit encoder cannot carry down to a space', () => {

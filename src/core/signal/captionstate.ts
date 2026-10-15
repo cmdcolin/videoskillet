@@ -22,6 +22,11 @@ const CPS = 30
 // to be read, and a page that started again the moment it finished would never
 // hold still long enough.
 const HOLD_S = 2.5
+// Nulls after each row that has another behind it. A row of thirty-two
+// characters takes a second to write, and the next row starting at once rolls
+// the page faster than anyone reads it. With the hold, a row of five or six
+// words goes by in about two seconds, 150 words a minute.
+const ROW_HOLD_S = 1.2
 
 // Carriage return. On a real decoder this is one of a pair of control bytes;
 // here it is the single code that rolls the page up, because roll-up is the one
@@ -97,6 +102,8 @@ export class CaptionState {
     if (this.at >= this.codes.length) {
       this.at = 0
       this.hold = Math.round(HOLD_S * 60)
+    } else if (code === CC_CR) {
+      this.hold = Math.round(ROW_HOLD_S * 60)
     }
     return code
   }
