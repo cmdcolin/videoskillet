@@ -14,7 +14,8 @@ look: '#preset=scrambledChannel&src=clip-haunted-house'
 
 _Above: the cover of LIZ fashion's 1984 swimwear catalogue
 ([Wikimedia Commons](https://commons.wikimedia.org/wiki/File:%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg),
-CC BY-SA 3.0). Below: the model Tami Ben Ami in a Gottex swimsuit, photographed
+CC BY-SA 3.0), which is also the animation in the last section. The first two
+stills below show the model Tami Ben Ami in a Gottex swimsuit, photographed
 by Yaakov Saar for the Israeli Government Press Office in 1980
 ([Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Flickr_-_Government_Press_Office_(GPO)_-_Tami_Ben_Ami_in_a_Gottex_Bathing_Suit.jpg),
 CC BY-SA 3.0). Both are cropped and run through the presets this post
@@ -58,7 +59,7 @@ shows as a stripe of colour.
 
 ## Chroma chaos
 
-![Four frames of the same model over two seconds. The tears are the same in all four, and the wall goes from violet to green to blue while her belt turns orange, then blue.](/blog/scramble-chroma-chaos.webp)
+![Three seconds of the 1984 catalogue cover through the scrambled channel. The torn shape of the model holds still while her face, arms and legs cycle through green, violet, magenta and yellow, and bands of colour drop out and come back across the frame.](https://myloveydove.com/videoskillet/blog/scramble-chroma-chaos.webp)
 
 Two more faults keep the colour moving while the picture holds still. The
 colour crystal is pulled 60 Hz off frequency, and the burst lock is weak because
