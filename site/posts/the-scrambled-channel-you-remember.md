@@ -12,74 +12,32 @@ imageAlt:
 look: '#preset=scrambledChannel&src=clip-haunted-house'
 ---
 
-_Above: the cover of LIZ fashion's 1984 swimwear catalogue
-([Wikimedia Commons](https://commons.wikimedia.org/wiki/File:%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg),
-CC BY-SA 3.0), which is also the animation in the last section. The first two
-stills below show the model Tami Ben Ami in a Gottex swimsuit, photographed
-by Yaakov Saar for the Israeli Government Press Office in 1980
-([Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Flickr_-_Government_Press_Office_(GPO)_-_Tami_Ben_Ami_in_a_Gottex_Bathing_Suit.jpg),
-CC BY-SA 3.0). Both are cropped and run through the presets this post
-describes, and the stills are under the same licence._
-
-Photographs of real undecoded premium channels show a picture that roughly
-holds while its edges tear, and colour that floods across it in bands. The
-[scrambled channel](/app/#preset=scrambledChannel&src=clip-haunted-house) preset
-used to show a washed-out but steady picture. It now tears and floods the way
-the photographs do, and the colour keeps changing while the picture stays put.
-Each part of the look comes from a fault in the receiver.
-
-## Deeper sync suppression
+Try it: [scrambled channel](/app/#preset=scrambledChannel&src=clip-haunted-house).
 
 ![A 1980 swimwear model in a zebra-print swimsuit and a white cape, arms spread against wood panelling, clean apart from noise and a soft cast.](/blog/scramble-before.webp)
 
-A head-end scrambler lifts the sync tips toward blanking, so a set without a
-decoder box has no line start to slice. The old preset suppressed sync to 55%
-depth. At that depth the set's AGC turned the gain up until the shallow tips
-crossed the separator's slicing level again, so the set relocked and the picture
-only washed out. The preset now suppresses to 70%. The line oscillator drifts,
-the blanking bar wanders into the picture, and the edges tear.
-
-## Slow colour loops
+Before: the set found its sync again, and the picture only washed out.
 
 ![The same model with the cape torn into wavy slabs, the cape pink, the wall behind her bright green and a band of red across her legs.](/blog/scramble-colour-loops.webp)
 
-A receiver keys its burst gate from its own flyback. Once the line oscillator
-has lost the line, the gate opens on the colour burst on some lines and on the
-picture on others. The preset gives the set slow colour loops: the burst phase
-lock averages over 40 lines, the chroma gain control over 30, and the colour
-killer is set low. The phase lock holds whatever hue it averaged across a band
-of lines, so the picture fills with bands of hue. The gain control averages
-good bursts together with missed ones, which keeps the gain high and the colour
-saturated.
-
-The set's output stage also clips each gun separately now. The burst sits below
-black level, and a stage that fits the colour into gamut as a whole drew it
-black. With each gun clipped on its own, the burst in the drifting blanking bar
-shows as a stripe of colour.
-
-## Chroma chaos
+After: the picture tears, and the colour comes in bands.
 
 ![Three seconds of the 1984 catalogue cover through the scrambled channel. The torn shape of the model holds still while her face, arms and legs cycle through green, violet, magenta and yellow, and bands of colour drop out and come back across the frame.](https://myloveydove.com/videoskillet/blog/scramble-chroma-chaos.webp)
 
-Two more faults keep the colour moving while the picture holds still. The
-colour crystal is pulled 60 Hz off frequency, and the burst lock is weak because
-the gate keeps missing the burst. The phase error grows by about two turns of
-hue over each frame, which lays rainbow bands down the screen. The fine tuning
-drifts either side of the channel. On one side the burst sinks under the colour
-killer and colour drops out in bands. On the other side the sound carrier beats
-against the chroma.
+The picture holds still while the colour fights to stay on the screen.
 
-The crystal and the tuner drift along a Lorenz attractor, which never repeats.
-The bands keep changing count and direction and never settle into a regular
-roll. A drift on the line oscillator lost sync within seconds, so the preset
-leaves the oscillator alone.
+## Where the colour comes from
 
-The crystal error rotates the chroma already in the signal, so the effect needs
-a colour source. A black-and-white photograph through the same preset stays
-grey apart from the noise.
+The scrambler never touches the colour. It removes the sync pulses, and the
+set's colour circuit times itself off those same pulses. Without them, the
+circuit keeps sampling the wrong part of each line for its colour reference,
+and it holds whatever it last saw for dozens of lines. Once the simulated set
+was allowed to miss its reference like that, the bands from the old photographs
+appeared without anything being drawn.
 
-The slow colour loops and per-gun clipping are also in
-[ssavi](/app/#preset=ssavi&src=clip-haunted-house),
-[supply chaos](/app/#preset=supplyChaos&src=clip-haunted-house) and
-[full collapse](/app/#preset=fullCollapse&src=clip-haunted-house), which now
-tear more slowly and ring less than before.
+_Photos from Wikimedia Commons under CC BY-SA 3.0, and the stills here carry the
+same licence: LIZ fashion's
+[1984 catalogue cover](https://commons.wikimedia.org/wiki/File:%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg)
+(top and animation), and
+[Tami Ben Ami in Gottex](https://commons.wikimedia.org/wiki/File:Flickr_-_Government_Press_Office_(GPO)_-_Tami_Ben_Ami_in_a_Gottex_Bathing_Suit.jpg)
+by Yaakov Saar for the Israeli Government Press Office, 1980._
