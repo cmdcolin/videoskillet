@@ -17,7 +17,7 @@ Try it:
 
 ![A 1980 swimwear model in a zebra-print swimsuit and a white cape, arms spread against wood panelling, clean apart from noise and a soft cast.](/blog/scramble-before.webp)
 
-Before: the set found its sync again, and the picture only washed out.
+Before: the TV found its timing marks again, and the picture only washed out.
 
 ![The same model with the cape torn into wavy slabs, the cape pink, the wall behind her bright green and a band of red across her legs.](/blog/scramble-colour-loops.webp)
 
@@ -25,19 +25,23 @@ After: the picture tears, and the colour comes in bands.
 
 ![Three seconds of the 1984 catalogue cover through the scrambled channel. The torn shape of the model holds still while her face, arms and legs cycle through green, violet, magenta and yellow, and bands of colour drop out and come back across the frame.](https://myloveydove.com/videoskillet/blog/scramble-chroma-chaos.webp)
 
-The picture holds still while the colour fights to stay on the screen.
+The picture holds still while the colour floods, changes and drops out in bands.
 
-## Where the colour comes from
+## What made the colour look right
 
-The scrambler never touches the colour. It removes the sync pulses, and the
-set's colour circuit times itself off those same pulses. Without them, the
-circuit keeps sampling the wrong part of each line for its colour reference, and
-it holds whatever it last saw for dozens of lines. Once the simulated set was
-allowed to miss its reference like that, the bands from the old photographs
-appeared without anything being drawn.
+The cable company scrambled a channel by removing the timing marks that tell a
+TV where each line of the picture starts, and it left the colour alone. Our
+first attempts added faults to the colour directly, and they looked fake.
 
-_Photos from Wikimedia Commons under CC BY-SA 3.0, and the stills here carry the
-same licence: LIZ fashion's
+Each line of a broadcast starts with a short colour reference, and the TV uses
+the timing marks to find it. Without the marks, the TV often reads the wrong
+spot. It averages that reference over dozens of lines, so one wrong reading
+tints a whole band of the picture. Once the simulated TV could make that
+mistake, the bands showed up with no code written to draw them. We also made the
+TV's colour timing wander slowly, which keeps the bands moving.
+
+_Photos from Wikimedia Commons under CC BY-SA 3.0, and the stills here are under
+the same licence: LIZ fashion's
 [1984 catalogue cover](https://commons.wikimedia.org/wiki/File:%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg)
 (top and animation), and
 [Tami Ben Ami in Gottex](<https://commons.wikimedia.org/wiki/File:Flickr_-_Government_Press_Office_(GPO)_-_Tami_Ben_Ami_in_a_Gottex_Bathing_Suit.jpg>)
