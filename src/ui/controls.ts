@@ -2875,7 +2875,7 @@ export const GROUPS: Group[] = [
         max: 3,
         step: 0.25,
         unit: 'x',
-        help: 'The size of the letters as a multiple of the stock size. The letters are dots on a grid, so they stay blocky at every size.',
+        help: 'The size of the letters as a multiple of the base dot, 4 samples by 3 lines. The letters are dots on a grid, so they stay blocky at every size.',
       },
     ],
   },

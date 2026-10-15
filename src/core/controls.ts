@@ -159,7 +159,7 @@ export const DEFAULT_CONTROLS = {
   osdEdge: 0, // 1 outlines the letters in black
   osdX: 0.07, // left edge, active-picture UV
   osdY: 0.09, // top edge, active-picture UV
-  osdScale: 1, // multiple of the stock dot size
+  osdScale: 1.5, // multiple of the base dot size
   // bent video enhancer, patched inline between the deck and the set
   enhClampUs: 0, // clamp gate slid off the back porch (0 = correct)
   enhDroopUs: 0, // coupling-capacitor time constant (0 = DC coupled, no droop)
