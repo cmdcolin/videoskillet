@@ -116,6 +116,7 @@ export const SHELVES: readonly Shelf[] = [
       'Full board',
     ],
     looks: [
+      'scrambledChannel',
       'looseConnector',
       'signalAndGroundSwapped',
       'ignitionStorm',
@@ -199,6 +200,7 @@ export const OPENERS: readonly string[] = [
   'pictureSearch',
   'verticalHoldGone',
   'supplyChaos',
+  'scrambledChannel',
 ]
 
 export const openingLook = (rand = Math.random): Look => ({
