@@ -2,6 +2,35 @@
 
 All notable changes to videoskillet are documented here.
 
+## [2.20.0](https://github.com/cmdcolin/videoskillet/compare/v2.19.0...v2.20.0) - 2026-10-15
+
+### Features
+- *(signal)* [`3661773`](https://github.com/cmdcolin/videoskillet/commit/366177393070f33755e5302a1f734a68411bd348) wild colour on the scrambled-channel looks, with the picture held
+- *(signal)* [`ff469f8`](https://github.com/cmdcolin/videoskillet/commit/ff469f855a9e30baa5596ec5f599af9a53b86540) chroma chaos on the scrambled channel
+- *(ui)* [`90a2aac`](https://github.com/cmdcolin/videoskillet/commit/90a2aacd2489987b2fcadfd41c44b0bc810a54f2) bigger play buttons that scale with the video
+- *(signal)* [`e8ce409`](https://github.com/cmdcolin/videoskillet/commit/e8ce409ae6283c8479537762e4d7895f93b0d1c3) draw the deck display's arrow as a ten-dot triangle
+- *(signal)* [`a55cc2d`](https://github.com/cmdcolin/videoskillet/commit/a55cc2d8834bada187e755456c9eb89372d47ff0) draw the deck display at 1.5x by default
+- *(ui)* [`55c9122`](https://github.com/cmdcolin/videoskillet/commit/55c912249bbc309fa28c134bb9d1b969f181ba85) put the scrambled channel on the camera page
+- *(signal)* [`3aa05b5`](https://github.com/cmdcolin/videoskillet/commit/3aa05b5bcdd261da21315818cf390d77f1109bb1) draw the deck display's letters two dots wide
+- *(signal)* [`37a38e9`](https://github.com/cmdcolin/videoskillet/commit/37a38e91cf3fccc83a38da9d99508dbb40c47c7d) hold each caption row before rolling the next
+- *(sync)* [`6ea3e93`](https://github.com/cmdcolin/videoskillet/commit/6ea3e93ef7669e2436bc3c98978f03d91aa4e4ea) an adaptive sync slicer, and the almost decoded look
+- *(ui)* [`76e3257`](https://github.com/cmdcolin/videoskillet/commit/76e32577dea68135490c0affd5d6e790196d7ad4) remove the bundled Haunted House and Minnie the Moocher clips
+
+### Fixes
+- *(ui)* [`78f5e22`](https://github.com/cmdcolin/videoskillet/commit/78f5e22578e504c81762933d34fc665b15fee379) astro dev ignores .claude, so a worktree's astro.config no longer restarts it
+- *(signal)* [`7ec4cfa`](https://github.com/cmdcolin/videoskillet/commit/7ec4cfa8a29550d8299cdc47dd6262db75bdfc3c) wrap a long caption into rows so the page rolls
+- *(ui)* [`e049e47`](https://github.com/cmdcolin/videoskillet/commit/e049e472c3779d429f2f3efa473c2fe3476ef034) quote a tiny mod depth instead of rounding it to 0%
+
+### Performance
+- [`99785e5`](https://github.com/cmdcolin/videoskillet/commit/99785e52bd0b3bcfa54e1fee321b83c0a8a5e43e) compile React with the Rust React Compiler in dev and build
+
+### Documentation
+- [`d174097`](https://github.com/cmdcolin/videoskillet/commit/d1740979a1d0719bafa770c195978fcfc9c78fdd) blog post on the scrambled channel's colour
+- [`0852933`](https://github.com/cmdcolin/videoskillet/commit/0852933a069bb97d8e12cfe1ae3ed6df4e565a33) retitle the scrambled channel post and give it a catalogue hero
+- [`8c6d724`](https://github.com/cmdcolin/videoskillet/commit/8c6d7249784bf7f68f4f4b0dc8ac71fa35f82147) swimsuit stills throughout the scrambled channel post
+- [`c9a2386`](https://github.com/cmdcolin/videoskillet/commit/c9a238637ce2ff8aae57641379060cb05316b966) animate the chroma chaos in the scrambled channel post
+- [`3120258`](https://github.com/cmdcolin/videoskillet/commit/31202589dd69999424c507ec4e195c518431afb3) cut the scrambled channel post down to the pictures and one finding
+
 ## [2.19.0](https://github.com/cmdcolin/videoskillet/compare/v2.18.0...v2.19.0) - 2026-10-14
 
 ### Features
