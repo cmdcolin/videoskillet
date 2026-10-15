@@ -14,11 +14,10 @@
 // one agent at a time and an uncommitted edit here does not reliably survive
 // somebody else's commit — keep the sheet in a scratch directory instead.
 //
-// Pick the source to suit the claim. A monochrome one settles the strong form
-// of the question outright: `clip-haunted-house` is a 1929 film, so any hue on
-// screen was made by the chain and `sat` on a clean arm reads 0.018. Against
-// `clip-test` (colour bars at 0.487) the same patch cannot show a gain, and a
-// harness that only ever ran there would call a colour mechanism inert.
+// Pick the source to suit the claim. A monochrome file settles the strong form
+// of the question outright, since any hue on screen was made by the chain.
+// Against `clip-test` (colour bars at 0.487) the same patch cannot show a gain,
+// and a harness that only ever ran there would call a colour mechanism inert.
 //
 // Four numbers per arm, off a 256x192 downscale of the canvas:
 //
@@ -68,7 +67,7 @@ const flag = name => args.find(a => a.startsWith(`--${name}=`))?.split('=')[1]
 const positional = args.filter(a => !a.startsWith('--'))
 const url = positional[0] ?? 'http://localhost:5199/app/'
 const outDir = positional[1] ?? 'colourcheck'
-const src = flag('src') ?? 'clip-haunted-house'
+const src = flag('src') ?? 'clip-test'
 const srcb = flag('srcb') ?? 'none'
 
 // A patch as `key:value,key:value`, the same spelling `?set=` takes.

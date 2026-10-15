@@ -31,7 +31,7 @@ its parameters on the `?` query instead and still opens.
 - `#mod=target:source:rateHz:depth[:division]` — what is moving, comma-
   separated. `target` is a control key, `source` one of the modulation
   sources, up to 8 of them.
-- `#src=` / `#srcb=` — what each deck is fed: bars, sweep, tv static, vhs static, synth, cat, clip-test, clip-haunted-house, clip-minnie-moocher, wiki-random, ia-random, browse, teletype, file, library, url, webcam, screen.
+- `#src=` / `#srcb=` — what each deck is fed: bars, sweep, tv static, vhs static, synth, cat, clip-test, wiki-random, ia-random, browse, teletype, file, library, url, webcam, screen.
 - `#vurl=` / `#iurl=` / `#yt=` (and `#vurlb=`, `#iurlb=`, `#ytb=`) — a video,
   image or YouTube clip on each deck.
 - `#text=` with `#crawl`, `#boil`, `#garble` — the teletype card; `#caption=`

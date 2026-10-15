@@ -9,11 +9,11 @@ imageAlt:
   A 1984 swimwear catalogue cover through the scrambled channel. The model and
   the grid of swimsuit photos beside her are torn into wavy slabs, with her arms
   acid green, her face violet and her legs magenta.
-look: '#preset=scrambledChannel&src=clip-haunted-house'
+look: '#preset=scrambledChannel&iurl=https://upload.wikimedia.org/wikipedia/commons/f/f9/%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg'
 ---
 
 Try it:
-[scrambled channel](/app/#preset=scrambledChannel&src=clip-haunted-house).
+[scrambled channel](/app/#preset=scrambledChannel&iurl=https://upload.wikimedia.org/wikipedia/commons/f/f9/%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg).
 
 ![A 1980 swimwear model in a zebra-print swimsuit and a white cape, arms spread against wood panelling, clean apart from noise and a soft cast.](/blog/scramble-before.webp)
 
