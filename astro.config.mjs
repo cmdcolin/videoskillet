@@ -85,6 +85,15 @@ export default defineConfig({
   // costs are nothing against a handful of static pages.
   compressHTML: false,
   integrations: [figures()],
+  vite: {
+    server: {
+      // Astro restarts on any changed file named `astro.config.*`, and agent
+      // worktrees under `.claude/` each hold a copy.
+      watch: {
+        ignored: [fileURLToPath(new URL('.claude/**', import.meta.url))],
+      },
+    },
+  },
   markdown: {
     // `build-guide.mjs` emitted plain <pre>, styled by the guide's own palette.
     // Astro's highlighter paints its own near-black background over that.
