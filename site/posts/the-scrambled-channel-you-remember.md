@@ -1,15 +1,21 @@
 ---
-title: A scrambled channel that tears in colour
+title: A more realistic scrambled channel, just like you remember it from childhood
 date: 2026-10-15
 summary:
   The scrambled channel preset now tears like an undecoded premium channel on a
   real set, and its colour floods, bands and drops out while the picture holds.
-image: /blog/scrambled-channel.webp
+image: /blog/scramble-catalogue.webp
 imageAlt:
-  A calico cat on a chair, its outline torn into ragged steps at the right edge,
-  with bands of red, green, blue and magenta running across the chair.
+  A 1984 swimwear catalogue cover through the scrambled channel. The model and
+  the grid of swimsuit photos beside her are torn into wavy slabs, with her arms
+  acid green, her face violet and her legs magenta.
 look: '#preset=scrambledChannel&src=clip-haunted-house'
 ---
+
+_Above: the cover of LIZ fashion's 1984 swimwear catalogue
+([Wikimedia Commons](https://commons.wikimedia.org/wiki/File:%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg),
+CC BY-SA 3.0), cropped and run through the scrambled channel preset. The still
+is under the same licence._
 
 Photographs of real undecoded premium channels show a picture that roughly
 holds while its edges tear, and colour that floods across it in bands. The
@@ -63,6 +69,10 @@ The crystal and the tuner drift along a Lorenz attractor, which never repeats.
 The bands keep changing count and direction and never settle into a regular
 roll. A drift on the line oscillator lost sync within seconds, so the preset
 leaves the oscillator alone.
+
+The crystal error rotates the chroma already in the signal, so the effect needs
+a colour source. A black-and-white photograph through the same preset stays
+grey apart from the noise.
 
 The slow colour loops and per-gun clipping are also in
 [ssavi](/app/#preset=ssavi&src=clip-haunted-house),
