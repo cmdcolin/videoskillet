@@ -62,6 +62,7 @@ export const DEFAULT_CONTROLS = {
   svideoBleed: 0, // Y/C miswire: bleed chroma into luma (S-video pins into composite)
   combMode: 0,
   hHold: 0.35,
+  syncSlicer: 0, // 0 fixed slice at -20 IRE, 1 peak-following (halfway to the deepest level on the line)
   vHold: 1, // vertical hold: pull-in authority of the v-osc trigger
   vFreqHz: 60, // free-running vertical oscillator rate; off 60 the picture rolls
   syncBendUs: 0, // horizontal PLL kick out of vertical retrace (top-of-picture flag)

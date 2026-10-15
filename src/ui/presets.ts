@@ -407,6 +407,34 @@ export const PRESETS: PresetDef[] = [
     ],
   },
   {
+    name: 'almostDecoded',
+    displayName: 'almost decoded',
+    group: 'RF / Broadcast',
+    blurb:
+      'The scrambled channel on a set with an adaptive sync separator. The separator follows the lifted pulses down and locks the picture, and the AGC turns the gain up to chase them, so the picture holds still, blown out to pastel, while the colour keeps fighting.',
+    patch: {
+      scramble: 0.7,
+      hDetuneHz: 4,
+      agc: 0.7,
+      hHold: 0.3,
+      syncSlicer: 1,
+      hvSagUs: 14,
+      hvRing: 0.2,
+      killThresh: 8,
+      accLagLines: 30,
+      afpcLagLines: 40,
+      chromaGain: 1.8,
+      matrixClip: 1,
+      scDetuneKHz: 0.06,
+      burstLock: 0.3,
+      noiseIre: 2,
+    },
+    mod: [
+      { target: 'scDetuneKHz', source: 'lorenz', rateHz: 0.2, depth: 0.00005 },
+      { target: 'rfMistuneMHz', source: 'lorenz', rateHz: 0.3, depth: 0.1 },
+    ],
+  },
+  {
     name: 'ssavi',
     group: 'RF / Broadcast',
     blurb:

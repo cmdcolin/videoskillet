@@ -146,6 +146,7 @@ export function uniformValues(c: Controls, env: UniformEnv) {
     svideoBleed: c.svideoBleed,
     combMode: c.combMode,
     hHold: c.hHold,
+    syncSlicer: c.syncSlicer,
     vHold: c.vHold,
     // beat between the free-running v-osc and the incoming field rate: a
     // slower oscillator retraces late, so the raster start creeps down the

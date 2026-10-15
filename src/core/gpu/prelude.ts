@@ -186,6 +186,7 @@ export const PARAM_DEFS = [
   // decoder
   ['combMode', 'f32'], // 0 chroma trap, 1 two-line comb, 2 three-line comb
   ['hHold', 'f32'], // sync PLL gain (horizontal hold)
+  ['syncSlicer', 'f32'], // 0 fixed slice, 1 peak-following slice
   ['vHold', 'f32'], // vertical oscillator pull-in gain (vertical hold lock strength)
   ['vRollRate', 'f32'], // free-run roll velocity, lines/frame, from the v-osc detune
   ['syncBend', 'f32'], // PLL kick at the vertical seam, samples (flagging)

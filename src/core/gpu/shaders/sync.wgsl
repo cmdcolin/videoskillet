@@ -200,7 +200,7 @@ fn main(@builtin(local_invocation_id) lid: vec3u) {
     if (row > VSYNC_LAST + 3u) {
       loadSum = loadSum + m.z;
       loadCount = loadCount + 1.0;
-      minSum = minSum + min(IRE_SYNC, aux.x);
+      minSum = minSum + select(min(IRE_SYNC, aux.x), aux.x, P.syncSlicer > 0.5);
       if (m.x > -999.0) {
         foundCount = foundCount + 1.0;
         if (m.x <= 55.0) {

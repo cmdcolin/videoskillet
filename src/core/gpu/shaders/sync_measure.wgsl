@@ -14,10 +14,13 @@
 //
 // The slicer sits halfway down to the peak the separator has been charging to,
 // the way a capacitor-coupled separator's does, rather than at a fixed level.
-// Nominal sync is the floor of that peak, so on any line whose picture stays
-// above blanking the slice is the -20 IRE it always was. A line arriving
-// negated has its old peak whites as the deepest thing on it, and the slice
-// follows them down into the picture, where the set then finds its "sync".
+// With the fixed slicer, nominal sync is the floor of that peak, so on any line
+// whose picture stays above blanking the slice is the -20 IRE it always was. A
+// line arriving negated has its old peak whites as the deepest thing on it, and
+// the slice follows them down into the picture, where the set then finds its
+// "sync". The peak slicer (syncSlicer 1) has no floor and charges to the whole
+// line, sync interval included, so it follows a tip a scrambler has lifted
+// toward blanking and locks to it.
 // Its gate is the narrow window round the expected line start while the
 // flywheel is locked, and the whole line once it has lost the pulses.
 
@@ -62,7 +65,8 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
   if (tipRef == 0.0) {
     tipRef = IRE_SYNC;
   }
-  let slice = min(0.5 * tipRef, SLICE);
+  let peak = P.syncSlicer > 0.5;
+  let slice = select(min(0.5 * tipRef, SLICE), 0.5 * tipRef, peak);
   let gateEnd = select(GATE_NARROW, i32(SPL) - 40, timing[GATE_WIDE] >= GATE_OPEN_FRAMES);
 
   // hunt for the falling edge through the slice, from just ahead of the
@@ -86,13 +90,15 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
     depth = porch - tip;
   }
 
-  // The deepest excursion inside active video. A peak detector charges to the
-  // most negative thing on the line, which on a nominal line is the tip; only
-  // picture that reaches below blanking can pull it further. Coarse stride:
-  // the separator's RC filter is already five samples wide.
+  // The deepest excursion the peak detector charges to: inside active video for
+  // the fixed slicer, whose floor stands in for the tip, and the whole line for
+  // the peak slicer, which has to see the tip itself. Coarse stride: the
+  // separator's RC filter is already five samples wide.
+  let lineFrom = select(i32(ACTIVE_START), 0, peak);
+  let span = select(i32(ACTIVE_W), i32(SPL), peak);
   var activeMin = 1000.0;
-  for (var k = 0; k < i32(ACTIVE_W); k = k + 4) {
-    activeMin = min(activeMin, levelAt(base + i32(ACTIVE_START) + k));
+  for (var k = 0; k < span; k = k + 4) {
+    activeMin = min(activeMin, levelAt(base + lineFrom + k));
   }
 
   // Beam load: mean active-picture level on this line, i.e. how much current

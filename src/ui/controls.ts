@@ -2978,6 +2978,17 @@ export const GROUPS: Group[] = [
         help: "How hard the receiver's horizontal PLL pulls toward each sync pulse it finds. Low is a loose flywheel that ignores noise but drifts and skews; high snaps to every edge including the false ones. Sync-domain, so the burst gate moves with it.",
       },
       {
+        key: 'syncSlicer',
+        id: 316,
+        label: 'sync slicer',
+        min: 0,
+        max: 1,
+        step: 1,
+        unit: '',
+        choices: ['fixed', 'peak'],
+        help: 'How the separator decides where sync is. Fixed slices at -20 IRE, so a pulse a scrambler has lifted above that level is never found and the line oscillator drifts. Peak follows the deepest level on each line and slices halfway to it, the way an adaptive separator does: it finds a lifted pulse and locks, and the AGC then turns the gain up to chase the weak pulse and washes the picture out.',
+      },
+      {
         key: 'vHold',
         id: 35,
         label: 'vertical hold',
