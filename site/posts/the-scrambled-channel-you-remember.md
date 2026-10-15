@@ -14,8 +14,11 @@ look: '#preset=scrambledChannel&src=clip-haunted-house'
 
 _Above: the cover of LIZ fashion's 1984 swimwear catalogue
 ([Wikimedia Commons](https://commons.wikimedia.org/wiki/File:%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg),
-CC BY-SA 3.0), cropped and run through the scrambled channel preset. The still
-is under the same licence._
+CC BY-SA 3.0). Below: the model Tami Ben Ami in a Gottex swimsuit, photographed
+by Yaakov Saar for the Israeli Government Press Office in 1980
+([Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Flickr_-_Government_Press_Office_(GPO)_-_Tami_Ben_Ami_in_a_Gottex_Bathing_Suit.jpg),
+CC BY-SA 3.0). Both are cropped and run through the presets this post
+describes, and the stills are under the same licence._
 
 Photographs of real undecoded premium channels show a picture that roughly
 holds while its edges tear, and colour that floods across it in bands. The
@@ -26,7 +29,7 @@ Each part of the look comes from a fault in the receiver.
 
 ## Deeper sync suppression
 
-![The calico cat on a red chair, clean apart from a pale, washed-out cast.](/blog/scramble-before.webp)
+![A 1980 swimwear model in a zebra-print swimsuit and a white cape, arms spread against wood panelling, clean apart from noise and a soft cast.](/blog/scramble-before.webp)
 
 A head-end scrambler lifts the sync tips toward blanking, so a set without a
 decoder box has no line start to slice. The old preset suppressed sync to 55%
@@ -37,7 +40,7 @@ the blanking bar wanders into the picture, and the edges tear.
 
 ## Slow colour loops
 
-![The cat with its outline torn into steps, the window behind it blue and violet, the chair red and the toy bright green.](/blog/scramble-colour-loops.webp)
+![The same model with the cape torn into wavy slabs, the cape pink, the wall behind her bright green and a band of red across her legs.](/blog/scramble-colour-loops.webp)
 
 A receiver keys its burst gate from its own flyback. Once the line oscillator
 has lost the line, the gate opens on the colour burst on some lines and on the
@@ -55,7 +58,7 @@ shows as a stripe of colour.
 
 ## Chroma chaos
 
-![Four frames of the cat half a second apart. The outline is the same in all four, and the chair goes from red and violet to green, then to blue and magenta.](/blog/scramble-chroma-chaos.webp)
+![Four frames of the same model over two seconds. The tears are the same in all four, and the wall goes from violet to green to blue while her belt turns orange, then blue.](/blog/scramble-chroma-chaos.webp)
 
 Two more faults keep the colour moving while the picture holds still. The
 colour crystal is pulled 60 Hz off frequency, and the burst lock is weak because
