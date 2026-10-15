@@ -16,6 +16,7 @@ import {
   gateFlips,
   gatePlan,
   gateRate,
+  depthPct,
   modDetail,
   modPatch,
   modReading,
@@ -601,16 +602,37 @@ describe('what a routed row says about its routing', () => {
       'audio level',
     )
     expect(modDetail({ ...routing, source: 'hit' }, null)).toBe(
-      'audio hit, swinging 20% of the row’s range',
+      'audio hit, swinging 20% of the row’s range (+48µs)',
     )
   })
 
   it('spells the source out at tooltip length, with the depth a badge has no room for', () => {
     expect(modDetail(routing, null)).toBe(
-      'sine LFO at 0.5Hz, swinging 20% of the row’s range',
+      'sine LFO at 0.5Hz, swinging 20% of the row’s range (±48µs)',
     )
     expect(modDetail({ ...routing, syncDiv: 3 }, 120)).toBe(
-      'sine LFO at ♩1/8 of 120.0 BPM (4Hz), swinging 20% of the row’s range',
+      'sine LFO at ♩1/8 of 120.0 BPM (4Hz), swinging 20% of the row’s range (±48µs)',
+    )
+  })
+})
+
+describe('the depth a routed row quotes', () => {
+  it('keeps two significant digits under 1%, where whole percent reads 0', () => {
+    expect(depthPct(0.2)).toBe('20%')
+    expect(depthPct(0)).toBe('0%')
+    expect(depthPct(0.00005)).toBe('0.005%')
+  })
+
+  it('names the swing in the control’s own units', () => {
+    // The scrambled channel's crystal wander: ±20 Hz of a ±200 kHz slider.
+    const crystal = {
+      ...EMPTY_SLOT,
+      target: 'scDetuneKHz' as const,
+      source: 'lorenz' as const,
+      depth: 0.00005,
+    }
+    expect(modDetail(crystal, null)).toBe(
+      'lorenz chaos at 0.5Hz, swinging 0.005% of the row’s range (±0.02kHz)',
     )
   })
 })

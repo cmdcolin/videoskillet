@@ -9,6 +9,7 @@ import styles from './ModSection.module.css'
 import {
   bayDef,
   bayKeyFor,
+  depthPct,
   gateFlips,
   isBayKey,
   modDetail,
@@ -302,7 +303,7 @@ function RoutingList(props: {
                   ? 'held'
                   : master === 0
                     ? 'frozen'
-                    : `${Math.round(s.depth * master * 100)}%`
+                    : depthPct(s.depth * master)
               }`}
               <span
                 ref={keep(drives, i)}

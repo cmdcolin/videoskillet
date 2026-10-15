@@ -640,8 +640,25 @@ export function modDetail(slot: UiSlot, bpm: number | null) {
     : div !== undefined && bpm !== null
       ? ` at ♩${SYNC_DIVISIONS[div]!.label} of ${bpm.toFixed(1)} BPM (${hzText(slotRate(slot, bpm))})`
       : ` at ${hzText(slot.rateHz)}`
-  return `${SOURCES[slot.source].label}${rate}, swinging ${Math.round(slot.depth * 100)}% of the row’s range`
+  const def =
+    slot.target === '' || isBayKey(slot.target)
+      ? undefined
+      : SLIDER_BY_KEY.get(slot.target)
+  const reach =
+    def === undefined || slot.depth === 0
+      ? ''
+      : ` (${UNIPOLAR.has(slot.source) ? (PULLS.has(slot.source) ? '−' : '+') : '±'}${sig(slot.depth * (def.max - def.min))}${def.unit})`
+  return `${SOURCES[slot.source].label}${rate}, swinging ${depthPct(slot.depth)} of the row’s range${reach}`
 }
+
+const sig = (v: number) => String(Number(v.toPrecision(2)))
+
+// Whole percent reads a crystal wander of ±20 Hz on the ±200 kHz detune
+// slider as 0%, so a depth under 1% keeps two significant digits.
+export const depthPct = (depth: number) =>
+  depth === 0 || Math.abs(depth) >= 0.01
+    ? `${Math.round(depth * 100)}%`
+    : `${sig(depth * 100)}%`
 
 // One stored/pasted entry, or null if it isn't one. Field-checked rather than
 // trusted: `readArray` guards the parse, not the shape, and a stored `[null]`
