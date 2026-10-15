@@ -344,8 +344,9 @@ video {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 4.5rem;
-  height: 4.5rem;
+  font-size: clamp(4.5rem, 12vw, 6.5rem);
+  width: 1em;
+  height: 1em;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.94);
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5);
@@ -355,14 +356,14 @@ video {
 .videoplay:focus-visible .videoplayicon {
   transform: scale(1.07);
 }
-/* A border triangle rather than a glyph: crisp at any size, and it paints
-   without waiting for a font. Nudged right by a third of its own width, because
-   a triangle centred on its bounding box reads as sitting left of centre. */
+/* A border triangle sized in em of the circle: half its height, 38% of its
+   width. The margin shifts it right by the sixth of its width that a
+   bounding-box centre leaves it short of the centroid. */
 .videoplayicon::before {
   content: '';
-  margin-left: 0.4rem;
+  margin-left: 0.12em;
   border-style: solid;
-  border-width: 0.85rem 0 0.85rem 1.35rem;
+  border-width: 0.25em 0 0.25em 0.38em;
   border-color: transparent transparent transparent #0e0e11;
 }
 

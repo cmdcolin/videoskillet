@@ -356,8 +356,8 @@
    to be taught, and the button carries the sentence on `aria-label` for
    anyone not being shown it. */
 .stageIcon {
-  width: 5.5rem;
-  height: 5.5rem;
+  width: clamp(5.5rem, 16%, 9rem);
+  aspect-ratio: 1;
   transition: opacity 0.3s ease;
 }
 .stageIcon circle {

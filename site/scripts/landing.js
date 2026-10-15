@@ -260,8 +260,8 @@ if (matchMedia(PHONE).matches) {
   veil.innerHTML =
     '<svg class="stageIcon" viewBox="0 0 100 100" aria-hidden="true">' +
     '<circle cx="50" cy="50" r="46" />' +
-    '<path class="stagePlayMark" d="M41 31 L72 50 L41 69 Z" />' +
-    '<path class="stagePauseMark" d="M38 32h10v36h-10zM52 32h10v36h-10z" />' +
+    '<path class="stagePlayMark" d="M38 26 L76 50 L38 74 Z" />' +
+    '<path class="stagePauseMark" d="M36 28h11v44h-11zM53 28h11v44h-11z" />' +
     '</svg>'
   const name = () => {
     veil.setAttribute('aria-label', asked ? 'Pause the reel' : 'Play the reel')
