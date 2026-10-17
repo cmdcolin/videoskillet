@@ -33,8 +33,8 @@ Footage of a real scrambled channel on YouTube loses sync far harder than the
 preset above. Whole bands of the picture slide across the screen and wrap round
 the edge. The
 [turbo sync loss](/app/#preset=turboSyncLoss&iurl=https://upload.wikimedia.org/wikipedia/commons/f/f9/%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg)
-preset swings the line oscillator's frequency a few tens of hertz either side
-of the line rate, and loosens the horizontal and vertical hold.
+preset swings the line oscillator's frequency a few tens of hertz either side of
+the line rate, and loosens the horizontal and vertical hold.
 
 ![The 1984 catalogue cover with bands of the picture slid sideways and wrapped round the edge. The grid of swimsuit photos is torn into wavy columns, and the colour is flooded pink, green and violet.](/blog/scramble-turbo-sync-loss.webp)
 

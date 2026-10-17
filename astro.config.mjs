@@ -3,24 +3,13 @@ import react from '@astrojs/react'
 import { defineConfig } from 'astro/config'
 import rehypeRaw from 'rehype-raw'
 
-import pkg from './package.json' with { type: 'json' }
 import { rehypeGuide } from './site/lib/rehype-guide.mjs'
 import { remarkGuide } from './site/lib/remark-guide.mjs'
-import { wgsl } from './vite-plugin-wgsl.ts'
-import { ytdlp } from './vite-plugin-ytdlp.ts'
+import { appDefine, appPlugins, reactCompiler } from './vite.shared.ts'
 
-import { execSync } from 'node:child_process'
 import { copyFileSync, mkdirSync, readFileSync, readdirSync } from 'node:fs'
 import { extname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-
-function gitSha() {
-  try {
-    return execSync('git rev-parse --short HEAD').toString().trim()
-  } catch {
-    return 'unknown'
-  }
-}
 
 const FIGURES = 'docs/img'
 
@@ -90,23 +79,11 @@ export default defineConfig({
   // collapses the newline to the one space that was written; the bytes it
   // costs are nothing against a handful of static pages.
   compressHTML: false,
-  integrations: [
-    figures(),
-    react({
-      compiler: {
-        logDiagnostics: true,
-        reportDiagnostics: true,
-        eslintSuppressionRules: [],
-      },
-    }),
-  ],
+  integrations: [figures(), react({ compiler: reactCompiler })],
   server: { port: 5199 },
   vite: {
-    plugins: [wgsl(), ytdlp()],
-    define: {
-      __APP_VERSION__: JSON.stringify(pkg.version),
-      __GIT_SHA__: JSON.stringify(gitSha()),
-    },
+    plugins: appPlugins(),
+    define: appDefine,
     server: {
       // forwardConsole relays console.* through the dev server, which reports
       // each message at the patch site rather than where it was logged; the

@@ -55,6 +55,17 @@ existing regions show the pattern:
 - bender imports its storage helpers under videoskillet's names
   (`read as readStored`), so `firebase-auth` reads the same on both sides.
 
+## Dev server and build
+
+Both repos run on Astro, shaped the same way:
+
+- `astro dev` is the only dev server and `astro build` is the whole build.
+- Each app page is an `.astro` file holding a `client:only="react"` island, so
+  Astro serves the page and React Fast Refresh handles edits to the island.
+- `vite.config.ts` or `vitest.config.ts` serves tests and scripts only.
+- Code that Vite loads outside the page's module graph, such as bender's audio
+  worklet, gets a `hotUpdate` plugin in `astro.config.ts` that reloads the page.
+
 ## Running it
 
 - `pnpm sync:check` compares with the sibling checkout. `--list` prints every id

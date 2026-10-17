@@ -18,6 +18,7 @@
   },
   "include": [
     "vite.config.ts",
+    "vite.shared.ts",
     "vite-plugin-wgsl.ts",
     "vite-plugin-ytdlp.ts",
     "scripts/serve/ytdlp.ts",

@@ -1,40 +1,13 @@
 import react from '@vitejs/plugin-react'
 import { configDefaults, defineConfig } from 'vitest/config'
 
-import pkg from './package.json' with { type: 'json' }
-import { wgsl } from './vite-plugin-wgsl.ts'
-import { ytdlp } from './vite-plugin-ytdlp.ts'
-
-import { execSync } from 'node:child_process'
-
-function gitSha() {
-  try {
-    return execSync('git rev-parse --short HEAD').toString().trim()
-  } catch {
-    return 'unknown'
-  }
-}
+import { appDefine, appPlugins, reactCompiler } from './vite.shared.ts'
 
 // The app's plugins and tests. Astro (astro.config.mjs) owns the dev server and
-// the build; `vitest` and `scripts/docgen.mjs` read this file for the plugins.
+// the build; `vitest` and `scripts/docgen.mjs` read this file.
 export default defineConfig({
-  // React Compiler memoizes components and hook results itself, so the UI
-  // doesn't hand-maintain useMemo/useCallback around the engine handoffs.
-  plugins: [
-    wgsl(),
-    react({
-      compiler: {
-        logDiagnostics: true,
-        reportDiagnostics: true,
-        eslintSuppressionRules: [],
-      },
-    }),
-    ytdlp(),
-  ],
-  define: {
-    __APP_VERSION__: JSON.stringify(pkg.version),
-    __GIT_SHA__: JSON.stringify(gitSha()),
-  },
+  plugins: [...appPlugins(), react({ compiler: reactCompiler })],
+  define: appDefine,
   // **`pnpm test` must not run other checkouts' tests.** Work here happens in
   // `git worktree` copies under `.claude/worktrees/`, which are full checkouts
   // with their own `src/` — and vitest's default `include` is a glob over the
