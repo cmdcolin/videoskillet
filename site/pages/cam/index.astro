@@ -1,3 +1,7 @@
+---
+import Island from '../../../src/cam/main.tsx'
+---
+
 <!doctype html>
 <html lang="en">
   <head>
@@ -27,7 +31,8 @@
     <link rel="canonical" href="https://videoskillet.com/cam/" />
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/cam/main.tsx"></script>
+    <div id="root">
+      <Island client:only="react" />
+    </div>
   </body>
 </html>

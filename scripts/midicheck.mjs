@@ -12,7 +12,7 @@
 //
 // Usage: node scripts/midicheck.mjs [url]
 //
-// Point it at a production build (`vite build` + `vite preview`) rather than the
+// Point it at a production build (`pnpm build` + `pnpm preview`) rather than the
 // dev server if anything else is editing the tree — an HMR reload mid-run
 // remounts the app and takes the bindings with it. Class names are hashed in a
 // build, so every selector below reaches for an id, a title or the text.

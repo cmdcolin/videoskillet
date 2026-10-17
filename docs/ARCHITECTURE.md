@@ -602,7 +602,8 @@ that cleans itself twice a second stops being one.
 To check what compiled, build unminified and look for the memo-cache preamble:
 
 ```sh
-pnpm exec vite build --minify false
+# set vite.build.minify to false in astro.config.mjs, then:
+pnpm exec astro build
 grep -n "import_compiler_runtime.c)(" dist/assets/*.js   # one per compiled fn
 ```
 

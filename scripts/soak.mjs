@@ -8,8 +8,8 @@
 // the parked worker engine gets finished or deleted, and it was a manual "run it
 // for a bit and see", which is not a thing anyone re-runs or can compare against.
 //
-//   npx vite build --outDir /var/tmp/soak-build
-//   npx vite preview --outDir /var/tmp/soak-build --port 5382
+//   pnpm build
+//   pnpm exec astro preview --port 5382
 //   node scripts/soak.mjs http://localhost:5382/app/ [minutes] [out.json]
 //     --src=webcam   the other half of the trigger; a camera is not a clip
 //     --cycle        hide and show the tab on a timer instead of holding it

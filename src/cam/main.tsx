@@ -1,5 +1,3 @@
-import { createRoot } from 'react-dom/client'
-
 import { startAnalytics } from '../analytics'
 import { paramsOf } from '../core/gpu/env'
 import { registerServiceWorker } from '../registerSW'
@@ -11,14 +9,13 @@ import { readLink } from './link'
 // needs the picture and a shutter, and the instrument's panel would need a
 // second layout to offer them. It renders without <StrictMode> for the reason
 // src/main.tsx gives.
-const root = document.getElementById('root')
-if (root) {
-  document.body.style.margin = '0'
-  createRoot(root).render(<CamPage link={readLink(paramsOf(location))} />)
-}
-
+document.body.style.margin = '0'
 registerServiceWorker()
 startAnalytics()
+
+export default function Cam() {
+  return <CamPage link={readLink(paramsOf(location))} />
+}
 
 // A hot update hands the device on to the next engine; see src/app.tsx.
 if (import.meta.hot) {

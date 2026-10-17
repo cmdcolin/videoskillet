@@ -23,10 +23,9 @@
   ],
   "type": "module",
   "scripts": {
-    "dev": "pnpm run --parallel \"/:dev$/\"",
-    "app:dev": "vite",
-    "build": "tsc -b && node scripts/docgen.mjs --check && node scripts/demogen.mjs --check && astro build && vite build",
-    "preview": "vite preview",
+    "dev": "astro dev",
+    "build": "tsc -b && node scripts/docgen.mjs --check && node scripts/demogen.mjs --check && astro build",
+    "preview": "astro preview",
     "format": "oxfmt && prettier --write \"site/**/*.astro\"",
     "format:check": "oxfmt --check && prettier --check \"site/**/*.astro\"",
     "lint": "oxlint",
@@ -60,7 +59,6 @@
     "heroplate:check": "node scripts/heroplate.mjs --check",
     "buttonplate": "node scripts/buttonplate.mjs",
     "guide": "astro build",
-    "site:dev": "astro dev --port 4321",
     "blog:draft": "node scripts/blogdraft.mjs",
     "docgen": "node scripts/docgen.mjs",
     "docgen:check": "node scripts/docgen.mjs --check",
@@ -94,6 +92,7 @@
     ]
   },
   "dependencies": {
+    "@astrojs/react": "7.1.0",
     "firebase": "^12.19.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"

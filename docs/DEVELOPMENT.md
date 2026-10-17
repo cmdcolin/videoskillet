@@ -2,8 +2,8 @@
 
 ```
 pnpm install
-pnpm dev        # runs site:dev (astro, :4321, site + guide) and app:dev (vite, :5199, app) in parallel
-pnpm build      # tsc -b + docgen/demogen checks + astro + vite
+pnpm dev        # astro on :5199: site, guide and the app pages (/app/, /cam/, /vote/, /stream/)
+pnpm build      # tsc -b + docgen/demogen checks + astro build
 pnpm lint --fix # oxlint
 pnpm test       # vitest
 ```
@@ -263,8 +263,8 @@ ms, faster than a puppeteer round trip, so the banner check fires the loss and
 watches for it inside a single `page.evaluate`.
 
 ```
-npx vite build --outDir /var/tmp/soak-build
-npx vite preview --outDir /var/tmp/soak-build --port 5382
+pnpm build
+pnpm preview --port 5382
 node scripts/soak.mjs http://localhost:5382/ [minutes] [out.json]
 ```
 
@@ -857,18 +857,16 @@ as a content collection. To add a page, add it to `GUIDE` or `NOTES` in
 handoffs are read off their own directories, so one of those is a page as soon
 as it is a file.
 
-Astro builds `dist/` first and vite adds the app entries to what it left, which
-is why vite's `emptyOutDir` is off.
+Astro builds everything in `dist/`: the site, the guide and the four app pages
+(`site/pages/{app,cam,vote,stream}/`). Each app page is an `.astro` shell around
+a `client:only="react"` island (`src/main.tsx`, `src/cam/main.tsx`,
+`src/vote/main.tsx`, `src/vote/stream.tsx`), the same shape bender uses.
+`vite.config.ts` stays for vitest and `scripts/docgen.mjs`; Astro's own config
+carries the same plugins for the dev server and the build.
 
-**Two dev servers, one front door.** `pnpm dev` starts both: Astro on 4321 and
-vite on 5199. They are two servers because each only knows how to serve its own
-half — vite cannot render an `.astro` page, and Astro's dev server injects
-`/@vite/client` into every page it serves, which is a path that means something
-else on vite's. Proxying the document alone hands the browser a page whose
-scripts resolve against the wrong server, so
-[`../vite-plugin-site.ts`](../vite-plugin-site.ts) redirects `/` and `/guide/…`
-from 5199 to 4321 instead. `pnpm site:dev` starts Astro's alone. The harnesses
-point at 5199 and drive `/app/`, which is unaffected.
+**One dev server.** `pnpm dev` runs Astro on 5199, so the harnesses that drive
+`/app/` need no change. `build.assets` is `assets`, which is the directory
+`scripts/render/compile.mjs` bundles into the `serve` binary.
 
 Everything the site chrome shows is **derived from the markdown, never authored
 twice**: the "on this page" nav from the h2/h3 outline

@@ -1,5 +1,3 @@
-import { createRoot } from 'react-dom/client'
-
 import { startAnalytics } from './analytics'
 import { App } from './app'
 import { registerServiceWorker } from './registerSW'
@@ -22,11 +20,8 @@ import './theme.css'
 // a module-level device behind a promise that serialises concurrent asks, the
 // way `packages/render-core/src/gpuDevice.ts` in jbrowse-components does it.
 // See docs/adr/0002.
-const root = document.getElementById('root')
-if (root) {
-  document.body.style.margin = '0'
-  createRoot(root).render(<App />)
-}
-
+document.body.style.margin = '0'
 registerServiceWorker()
 startAnalytics()
+
+export default App

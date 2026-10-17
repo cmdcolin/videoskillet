@@ -2,7 +2,6 @@ import react from '@vitejs/plugin-react'
 import { configDefaults, defineConfig } from 'vitest/config'
 
 import pkg from './package.json' with { type: 'json' }
-import { site } from './vite-plugin-site.ts'
 import { wgsl } from './vite-plugin-wgsl.ts'
 import { ytdlp } from './vite-plugin-ytdlp.ts'
 
@@ -16,10 +15,9 @@ function gitSha() {
   }
 }
 
-// Relative base so the build runs from any sub-path (Pages project site, a
-// moved/renamed repo, a subfolder). Dev + screenshot harness stay at root.
-export default defineConfig(({ command }) => ({
-  base: command === 'build' ? './' : '/',
+// The app's plugins and tests. Astro (astro.config.mjs) owns the dev server and
+// the build; `vitest` and `scripts/docgen.mjs` read this file for the plugins.
+export default defineConfig({
   // React Compiler memoizes components and hook results itself, so the UI
   // doesn't hand-maintain useMemo/useCallback around the engine handoffs.
   plugins: [
@@ -32,55 +30,11 @@ export default defineConfig(({ command }) => ({
       },
     }),
     ytdlp(),
-    site(),
   ],
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
     __GIT_SHA__: JSON.stringify(gitSha()),
   },
-  // Three pages, each its own engine on a whole screen: the instrument, and the
-  // two labelling tools that build a preference dataset out of it (src/vote) —
-  // pairs, and the stream. Each is its own entry rather than a dialog because it
-  // wants the whole screen, and because nothing in it should cost the app a byte
-  // — a visitor to the landing page downloads none of them.
-  //
-  // The landing page is Astro's (`site/pages/index.astro`) and is not an entry
-  // here. It ships no bundle: its stylesheet and its script are inlined, so a
-  // stranger arriving pays for one document and the picture in it.
-  //
-  // **Every page is a directory one level below the root, and that is load-
-  // bearing.** `public/` lands at the root, the base is relative (above), so a
-  // page reaches a bundled asset as `../name` — see src/publicUrl.ts, which is
-  // the one place that spells it. Flattening any of these back to a root-level
-  // `foo.html` would take that page a level up and leave the rule true for its
-  // siblings and false for it.
-  build: {
-    // Astro builds the site shell into `dist/` first (astro.config.mjs, and the
-    // order in package.json's `build`), and vite adds the app entries to what it
-    // left. Emptying here would take the landing page and the whole guide with
-    // it.
-    emptyOutDir: false,
-    rollupOptions: {
-      input: {
-        app: 'app/index.html',
-        cam: 'cam/index.html',
-        vote: 'vote/index.html',
-        stream: 'stream/index.html',
-      },
-    },
-  },
-  // Astro copies `public/` into `dist/` on its way past, so a second copy here
-  // would be the same bytes written twice. The dev server still serves it: this
-  // is the app's own `sample.jpg`, `demos/` and `reel/`.
-  publicDir: command === 'build' ? false : 'public',
-  // Preferred port for the screenshot harness (scripts/shot.mjs, README);
-  // falls back to the next free port if it's taken.
-  //
-  // forwardConsole patches console.* to relay logs to the dev server, which
-  // reports every message at the patch site inside Vite's client instead of
-  // where it was logged. The render loop's whole diagnostic story is console
-  // breadcrumbs, so the real source location is worth more than the relay.
-  server: { port: 5199, forwardConsole: false },
   // **`pnpm test` must not run other checkouts' tests.** Work here happens in
   // `git worktree` copies under `.claude/worktrees/`, which are full checkouts
   // with their own `src/` — and vitest's default `include` is a glob over the
@@ -108,4 +62,4 @@ export default defineConfig(({ command }) => ({
     setupFiles: ['./src/testSetup.ts'],
     testTimeout: 30000,
   },
-}))
+})

@@ -1,3 +1,7 @@
+---
+import Island from '../../../src/main.tsx'
+---
+
 <!doctype html>
 <html lang="en">
   <head>
@@ -9,9 +13,9 @@
       content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <!-- Relative, like every other reference out of a page directory: the build
-         has to run from a sub-path as well as from the root (src/publicUrl.ts).
-         Everything inside the manifest is in turn relative to the manifest. -->
+    <!-- Relative, like every other reference out of a page directory
+         (src/publicUrl.ts). Everything inside the manifest is in turn relative
+         to the manifest. -->
     <link rel="manifest" href="../manifest.webmanifest" />
     <!-- iOS reads neither the manifest's icons nor an SVG, so the home-screen
          icon is this tag or it is a screenshot of the page. -->
@@ -59,7 +63,8 @@
     <meta name="twitter:image" content="https://videoskillet.com/og.jpg" />
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <div id="root">
+      <Island client:only="react" />
+    </div>
   </body>
 </html>

@@ -1,3 +1,7 @@
+---
+import Island from '../../../src/vote/stream.tsx'
+---
+
 <!doctype html>
 <html lang="en">
   <head>
@@ -7,10 +11,10 @@
       content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <title>videoskillet — which look is cooler?</title>
+    <title>videoskillet — cool or not?</title>
     <meta
       name="description"
-      content="Judge pairs of randomly rolled videoskillet looks, to build a training set for finding the good ones automatically."
+      content="Rate randomly rolled videoskillet looks one at a time, to build a training set for finding the good ones automatically."
     />
     <!-- Deliberately not indexed and not unfurled: this is a labelling tool for
          building a preference dataset, not a page anyone should land on from a
@@ -18,7 +22,8 @@
     <meta name="robots" content="noindex" />
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/vote/main.tsx"></script>
+    <div id="root">
+      <Island client:only="react" />
+    </div>
   </body>
 </html>

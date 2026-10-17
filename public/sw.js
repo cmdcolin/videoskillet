@@ -4,9 +4,7 @@
 //
 // Not generated and not bundled — a plain file in public/, so its URL is stable
 // and its scope is the deploy root. src/registerSW.ts registers it relative to
-// the page for the same reason the rest of the app is: a build runs from any
-// sub-path (vite.config.ts), and a hard-coded /sw.js would only ever be right
-// on videoskillet.com.
+// the page (src/publicUrl.ts), so the scope follows wherever the pages are.
 
 const CACHE = 'videoskillet-v1'
 // Where a file arriving from the OS share sheet is parked. Its own cache rather

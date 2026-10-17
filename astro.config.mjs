@@ -1,17 +1,28 @@
 import { unified } from '@astrojs/markdown-remark'
+import react from '@astrojs/react'
 import { defineConfig } from 'astro/config'
 import rehypeRaw from 'rehype-raw'
 
+import pkg from './package.json' with { type: 'json' }
 import { rehypeGuide } from './site/lib/rehype-guide.mjs'
 import { remarkGuide } from './site/lib/remark-guide.mjs'
+import { wgsl } from './vite-plugin-wgsl.ts'
+import { ytdlp } from './vite-plugin-ytdlp.ts'
 
+import { execSync } from 'node:child_process'
 import { copyFileSync, mkdirSync, readFileSync, readdirSync } from 'node:fs'
 import { extname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+function gitSha() {
+  try {
+    return execSync('git rev-parse --short HEAD').toString().trim()
+  } catch {
+    return 'unknown'
+  }
+}
+
 const FIGURES = 'docs/img'
-const APP_PORT = 5199
-const APP_PATHS = /^\/(?:app|cam|vote|stream)(?:\/|$)/
 
 const TYPES = {
   '.jpg': 'image/jpeg',
@@ -34,13 +45,6 @@ const figures = () => ({
         const path = decodeURIComponent(
           new URL(req.url, 'http://guide').pathname,
         )
-        if (APP_PATHS.test(path)) {
-          res.writeHead(302, {
-            location: `http://localhost:${APP_PORT}${req.url}`,
-          })
-          res.end()
-          return
-        }
         const name = /^(?:\/guide)?\/img\/(.+)$/.exec(path)
         const file = name === null ? undefined : join(FIGURES, name[1])
         const type = file === undefined ? undefined : TYPES[extname(file)]
@@ -77,16 +81,37 @@ export default defineConfig({
   // emitted `faq.html` and put that filename in the address bar. The slugs stay
   // flat (`adr-0004-…`), so every page is one level deep and the figures are at
   // `/guide/img/` from all of them.
-  build: { format: 'directory' },
+  // `assets` rather than `_astro`: `scripts/render/compile.mjs` bundles
+  // `dist/assets` into the `serve` binary.
+  build: { format: 'directory', assets: 'assets' },
   // Astro's HTML minifier strips whitespace-only text nodes between elements,
   // so `Built by\n<a>cmdcolin</a>.` renders as "Built bycmdcolin." and the
   // markup needs `{' '}` spacers to read as a sentence. Off, the browser
   // collapses the newline to the one space that was written; the bytes it
   // costs are nothing against a handful of static pages.
   compressHTML: false,
-  integrations: [figures()],
+  integrations: [
+    figures(),
+    react({
+      compiler: {
+        logDiagnostics: true,
+        reportDiagnostics: true,
+        eslintSuppressionRules: [],
+      },
+    }),
+  ],
+  server: { port: 5199 },
   vite: {
+    plugins: [wgsl(), ytdlp()],
+    define: {
+      __APP_VERSION__: JSON.stringify(pkg.version),
+      __GIT_SHA__: JSON.stringify(gitSha()),
+    },
     server: {
+      // forwardConsole relays console.* through the dev server, which reports
+      // each message at the patch site rather than where it was logged; the
+      // render loop's diagnostics are console breadcrumbs.
+      forwardConsole: false,
       // Astro restarts on any changed file named `astro.config.*`, and agent
       // worktrees under `.claude/` each hold a copy.
       watch: {
