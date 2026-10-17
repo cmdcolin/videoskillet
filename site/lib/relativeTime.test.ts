@@ -1,7 +1,7 @@
 // CROSS_REPO_SYNC_FILE(relative-time-test)
 import { expect, test } from 'vitest'
 
-import { sinceWords } from './relativeTime'
+import { sinceWords } from './relativeTime.ts'
 
 const NOW = 1_700_000_000_000
 const ago = (ms: number) => sinceWords(NOW - ms, NOW)

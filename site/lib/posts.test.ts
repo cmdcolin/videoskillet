@@ -1,7 +1,7 @@
 // CROSS_REPO_SYNC_FILE(posts-test)
 import { expect, test } from 'vitest'
 
-import { isoDay, longDate, newestFirst, postSchema } from './posts'
+import { isoDay, longDate, newestFirst, postSchema } from './posts.ts'
 
 const post = (id: string, date: string | Date) => ({
   id,
