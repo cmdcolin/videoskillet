@@ -433,6 +433,42 @@ describe.skipIf(EMULATOR === undefined)('firestore.rules', () => {
       )
     })
 
+    it('lets the owner keep the setup beside the voices', async () => {
+      const prefs = {
+        at: 1,
+        bench: { all: true, closed: ['FM chip'] },
+        morph: 4,
+        keys: ['a', 'b'],
+      }
+      await assertSucceeds(
+        asOwner()
+          .doc(doc)
+          .set({ voices: [voice] }),
+      )
+      await assertSucceeds(asOwner().doc(doc).set({ prefs }, { merge: true }))
+      await assertSucceeds(
+        asOwner()
+          .doc(doc)
+          .set({ prefs: { at: 2 } }, { mergeFields: ['prefs'] }),
+      )
+      const snap = await asOwner().doc(doc).get()
+      expect(snap.data()).toEqual({ voices: [voice], prefs: { at: 2 } })
+    })
+
+    it('refuses a setup of the wrong shape', async () => {
+      const bad = (prefs: unknown) =>
+        assertFails(asOwner().doc(doc).set({ prefs }))
+      await bad('nope')
+      await bad({ bench: { all: true, closed: [] } })
+      await bad({ at: 'now' })
+      await bad({ at: 1, extra: true })
+      await bad({ at: 1, morph: 3 })
+      await bad({ at: 1, bench: { all: 'yes', closed: [] } })
+      await bad({ at: 1, bench: { all: true, closed: Array(9).fill('x') } })
+      await bad({ at: 1, bench: { all: true, closed: [], extra: 1 } })
+      await bad({ at: 1, keys: Array(65).fill('a') })
+    })
+
     it('keeps a bender uid out of the videoskillet document', async () => {
       await assertFails(
         asOwner()

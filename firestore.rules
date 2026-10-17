@@ -109,9 +109,32 @@ service cloud.firestore {
     // authorized domains are set up once, and its rules live here because a
     // project has one rules file. The document is the same shape as /users
     // with `voices` for `profiles`, and no stills: a board has no picture.
+    //
+    // `prefs` is the setup rather than the sound: how the instruments sit, how
+    // long a new board takes to arrive, which computer keys play what. A map,
+    // so unlike the lists its keys and value types are checked here. `at` is
+    // the clock of the last change, which is how two machines pick a winner;
+    // `bench.closed` and `keys` are lists, so their entries are the client's to
+    // sanitise.
+    function isValidPrefs(prefs) {
+      return prefs is map
+             && prefs.keys().hasOnly(['at', 'bench', 'morph', 'keys'])
+             && prefs.at is number
+             && (!('bench' in prefs)
+                 || (prefs.bench is map
+                     && prefs.bench.keys().hasOnly(['all', 'closed'])
+                     && prefs.bench.all is bool
+                     && prefs.bench.closed is list
+                     && prefs.bench.closed.size() <= 8))
+             && (!('morph' in prefs) || prefs.morph in [0, 1, 4, 8, 30])
+             && (!('keys' in prefs)
+                 || (prefs.keys is list && prefs.keys.size() <= 64));
+    }
+
     function isValidVoiceDoc() {
       let data = request.resource.data;
-      return data.keys().hasOnly(['voices', 'recent', 'current'])
+      return data.keys().hasOnly(['voices', 'recent', 'current', 'prefs'])
+             && (!('prefs' in data) || isValidPrefs(data.prefs))
              && (!('voices' in data)
                  || (data.voices is list && data.voices.size() <= 200))
              && (!('recent' in data)
