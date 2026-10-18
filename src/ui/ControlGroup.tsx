@@ -46,6 +46,8 @@ import { SIGNAL_TAPS, tapFor } from './signalTap'
 import { useSignalTapApi } from './SignalTapContext'
 import { Rack, Slider } from './Slider'
 import { SyncDiagram } from './SyncDiagram'
+import { TimebaseDiagram } from './TimebaseDiagram'
+import { VhsDiagram } from './VhsDiagram'
 import { WipeFrame } from './WipeFrame'
 
 import type { ControlKey } from '../core/controls'
@@ -386,6 +388,8 @@ const SCHEMATIC_FRAMES: Record<SchematicGroup, () => ReactElement> = {
   Decoder: DecoderDiagram,
   Sync: SyncDiagram,
   Deflection: DeflectionDiagram,
+  Timebase: TimebaseDiagram,
+  'VHS colour & tracking': VhsDiagram,
 }
 
 const FRAMES: {

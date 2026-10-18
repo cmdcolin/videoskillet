@@ -1,0 +1,28 @@
+.tape {
+  fill: none;
+  stroke: var(--border);
+}
+
+.trackB {
+  fill: var(--fg4);
+  opacity: 0.25;
+}
+
+.dead {
+  fill: var(--fg3);
+  opacity: 0.6;
+}
+
+.edge {
+  stroke: var(--border-quiet);
+  stroke-width: 0.5;
+}
+
+.scan {
+  stroke: var(--fg3);
+  stroke-width: 0.7;
+}
+
+.snow {
+  fill: var(--danger);
+}

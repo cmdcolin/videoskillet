@@ -241,6 +241,27 @@ export const SYNC_OPENS = {
   vosc: ['vFreqHz', 'vHold'],
 } as const satisfies Opens
 
+export const TIMEBASE_OPENS = {
+  capstan: ['tbWowNs', 'tbJitterNs'],
+  shed: ['tbStickNs'],
+  drum: ['headSwitchShiftUs', 'headSwitchNoise'],
+} as const satisfies Opens
+
+export const TIMEBASE_KEYS = Object.values(TIMEBASE_OPENS).flat()
+
+export const VHS_OPENS = {
+  tape: ['chromaNoiseIre'],
+  up: ['underJitterDeg'],
+  mix: ['colorUnderMix'],
+  delay: ['ycDelayNs'],
+  tracking: ['trackAmt', 'trackPos'],
+  servo: ['trackHunt', 'trackKick'],
+  capstan: ['shuttleX'],
+  heads: ['headClog'],
+} as const satisfies Opens
+
+export const VHS_KEYS = Object.values(VHS_OPENS).flat()
+
 export const SCHEMATICS = [
   {
     group: CAMERA_LOOP_GROUP,
@@ -258,6 +279,8 @@ export const SCHEMATICS = [
   { group: 'Decoder', keys: DECODER_KEYS, opens: DECODER_OPENS },
   { group: 'Sync', keys: SYNC_KEYS, opens: SYNC_OPENS },
   { group: 'Deflection', keys: DEFLECTION_KEYS, opens: DEFLECTION_OPENS },
+  { group: 'Timebase', keys: TIMEBASE_KEYS, opens: TIMEBASE_OPENS },
+  { group: 'VHS colour & tracking', keys: VHS_KEYS, opens: VHS_OPENS },
 ] as const satisfies readonly {
   group: string
   keys: readonly ControlKey[]
