@@ -1,10 +1,11 @@
 import { beforeEach } from 'vitest'
 
-// The suite runs on bare node — there is no jsdom in this project and every
-// test here is pure logic — so `localStorage` gets a shim rather than the whole
-// suite getting a DOM. Only the four methods storage.ts calls. Without it any
-// code path that persists writes a ReferenceError through storage.ts's guard,
-// which is noise a passing test should not print.
+// Most of the suite runs on bare node, so `localStorage` gets a shim rather
+// than the whole suite getting a DOM. Only the four methods storage.ts calls.
+// Without it any code path that persists writes a ReferenceError through
+// storage.ts's guard, which is noise a passing test should not print. The
+// `*.dom.test.tsx` files run in jsdom and get the same shim in place of
+// jsdom's own, so both kinds start each test with nothing stored.
 const map = new Map<string, string>()
 
 Object.defineProperty(globalThis, 'localStorage', {
