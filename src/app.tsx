@@ -1602,6 +1602,16 @@ export function App() {
             onSignIn={profiles.signIn}
             onSignOut={profiles.signOut}
           />
+          {fullscreen || popout !== null ? null : (
+            <Button
+              variant="icon"
+              title="hide the sidebar (b)"
+              aria-label="hide the sidebar"
+              onClick={toggleSidebar}
+            >
+              ◧
+            </Button>
+          )}
           <AppMenu variant="masthead" {...menuProps} />
         </div>
       </div>
