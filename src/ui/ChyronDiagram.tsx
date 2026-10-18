@@ -76,9 +76,9 @@ function Bus({
       <title>{`${id} — ${help}`}</title>
       <rect
         x={x}
-        y={top - 16}
+        y={top - 15}
         width={len}
-        height={bottom - top + 32}
+        height={bottom - top + 30}
         rx={3}
         className={selected ? own.hitOpen : own.hit}
       />
@@ -129,17 +129,19 @@ function Slash({ x, y, n }: { x: number; y: number; n: number }) {
   )
 }
 
-const M1 = 28
-const M2 = 92
-const C1 = 58
-const C2 = 128
-const R3 = 140
-const ONE = 22
+const M1 = 25
+const C1 = 54
+const M2 = 89
+const ONE = 20
 const TWO = 33
-const FILL = R3 + ONE / 2
-const KEY = R3 + 32 + ONE / 2
-const SPLIT = (FILL + KEY) / 2
-const PROGRAM = R3 + 66
+const SHIFT = { x: 242, y: M2 - 20, w: 66, h: 40 }
+const DOTS_X = SHIFT.x + SHIFT.w / 2
+const KEY_R = 132
+const KEYER = { x: DOTS_X - 25, w: 50 }
+const MIX = { x: 150, w: 40 }
+const CC_C2 = 120
+const CC_R = 140
+const CAPTION = { x: 120, w: 78 }
 
 // The character generator's data path, from the page memory that holds the
 // text to the mixer that lays it on the picture, with each bend wired into the
@@ -238,105 +240,53 @@ function CharGen({ cg }: { cg: boolean }) {
   if (cg) {
     boxes.push(
       box(
-        'key amp',
-        'key\namp',
-        0,
-        SPLIT,
-        38,
-        TWO,
-        CHYRON_OPENS['key amp'],
-        'The key-processing amplifier. Its bandwidth is what softens the edge of the key.',
-      ),
-      box(
-        'slicer',
-        'slicer',
-        48,
-        SPLIT,
-        50,
+        'keyer',
+        'keyer',
+        KEYER.x,
+        KEY_R,
+        KEYER.w,
         ONE,
-        CHYRON_OPENS.slicer,
-        'Cuts the processed key at the clip level, which sets the stroke weight.',
-      ),
-      box(
-        'fill',
-        'fill',
-        114,
-        FILL,
-        38,
-        ONE,
-        CHYRON_OPENS.fill,
-        'The characters as video, at the fill level.',
-      ),
-      box(
-        'timing',
-        'timing',
-        114,
-        KEY,
-        50,
-        ONE,
-        CHYRON_OPENS.timing,
-        'The trim between key and fill. Off zero, the matte slides off the letters.',
-      ),
-      box(
-        'edge',
-        'edge',
-        174,
-        KEY,
-        38,
-        ONE,
-        CHYRON_OPENS.edge,
-        'A copy of the key delayed by samples and lines and OR-ed into it: the border and drop shadow.',
-      ),
-      box(
-        'invert',
-        'invert',
-        222,
-        KEY,
-        50,
-        ONE,
-        CHYRON_OPENS.invert,
-        'Cuts the other way: letter-shaped holes in a full-frame fill.',
+        CHYRON_OPENS.keyer,
+        "Turns the dots into a key. The key-processing amplifier's bandwidth softens its edge, and the slicer cuts it at the clip level, which sets the stroke weight. Timing trims the key against the fill, so off zero the matte slides off the letters. Edge ORs in a copy of the key delayed by samples and lines, for the border and drop shadow. Invert cuts the key the other way, which leaves letter-shaped holes in a full-frame fill.",
       ),
       box(
         'mix',
         'mix',
-        298,
-        R3 + 38,
-        38,
-        76,
+        MIX.x,
+        KEY_R,
+        MIX.w,
+        ONE,
         CHYRON_OPENS.mix,
-        'Lays the fill over program wherever the key is open.',
+        'Lays the fill, the characters as video at the fill level, over program wherever the key is open.',
       ),
     )
   } else {
     boxes.push(
       box(
         'caption box',
-        'caption\nbox',
-        110,
-        R3 + TWO / 2,
-        56,
-        TWO,
+        'caption box',
+        CAPTION.x,
+        CC_R,
+        CAPTION.w,
+        ONE,
         CAPTION_OPENS['caption box'],
         'A black box behind the cells the decoder received, and the characters in white over it.',
       ),
     )
   }
-  const busKeys: Record<string, readonly ControlKey[]> = opens
-  const open =
-    boxes.find(x => x.id === pick.selected)?.keys ??
-    busKeys[pick.selected ?? '']
+  const open = (opens as Record<string, readonly ControlKey[]>)[
+    pick.selected ?? ''
+  ]
   const bus = (id: string) => ({
     id,
     selected: pick.selected === id,
     onSelect: pick.toggle,
   })
-  const shift = { x: 242, y: M2 - 20, w: 66, h: 40 }
   return (
     <>
       <Diagram
         width={336}
-        height={cg ? 246 : 182}
+        height={cg ? KEY_R + 28 : CC_R + 18}
         label={
           cg ? 'character generator data path' : 'caption decoder data path'
         }
@@ -364,11 +314,11 @@ function CharGen({ cg }: { cg: boolean }) {
               arrow={arrow}
               d={
                 cg
-                  ? `M308 ${M2} H320 V${C2} H19 V${SPLIT - TWO / 2}`
-                  : `M308 ${M2} H320 V${C2} H138 V${R3}`
+                  ? `M${DOTS_X} ${SHIFT.y + SHIFT.h} V${KEY_R - ONE / 2}`
+                  : `M${DOTS_X} ${SHIFT.y + SHIFT.h} V${CC_C2} H${CAPTION.x + CAPTION.w / 2} V${CC_R - ONE / 2}`
               }
             />
-            <Label x={262} y={C2 - 4}>
+            <Label x={DOTS_X + 5} y={SHIFT.y + SHIFT.h + 11}>
               dots
             </Label>
             <Bus
@@ -409,10 +359,10 @@ function CharGen({ cg }: { cg: boolean }) {
                 shift reg — Loads a row of eight dots and clocks them out one
                 per dot.
               </title>
-              <Plate x={shift.x} y={shift.y} w={shift.w} h={shift.h} inert />
+              <Plate x={SHIFT.x} y={SHIFT.y} w={SHIFT.w} h={SHIFT.h} inert />
               <text
-                x={shift.x + shift.w / 2}
-                y={shift.y + 15}
+                x={SHIFT.x + SHIFT.w / 2}
+                y={SHIFT.y + 15}
                 textAnchor="middle"
                 className={styles.name}
               >
@@ -430,8 +380,8 @@ function CharGen({ cg }: { cg: boolean }) {
                 return (
                   <rect
                     key={i}
-                    x={shift.x + 13 + i * 5}
-                    y={shift.y + 23}
+                    x={SHIFT.x + 13 + i * 5}
+                    y={SHIFT.y + 23}
                     width={5}
                     height={8}
                     className={look}
@@ -441,32 +391,40 @@ function CharGen({ cg }: { cg: boolean }) {
             </g>
             {cg ? (
               <>
-                <Wire arrow={arrow} d={`M38 ${SPLIT} H48`} />
-                <Wire d={`M98 ${SPLIT} H106`} />
-                <circle cx={106} cy={SPLIT} r={1.8} className={styles.head} />
-                <Wire arrow={arrow} d={`M106 ${SPLIT} V${FILL} H114`} />
-                <Wire arrow={arrow} d={`M106 ${SPLIT} V${KEY} H114`} />
-                <Wire arrow={arrow} d={`M152 ${FILL} H298`} />
-                <Wire arrow={arrow} d={`M164 ${KEY} H174`} />
-                <Wire arrow={arrow} d={`M212 ${KEY} H222`} />
-                <Wire arrow={arrow} d={`M272 ${KEY} H298`} />
-                <Wire arrow={arrow} d={`M114 ${PROGRAM} H298`} />
-                <Label x={110} y={PROGRAM + 4} anchor="end">
+                <Label x={0} y={KEY_R + 4}>
                   program
                 </Label>
-                <Wire arrow={arrow} d={`M317 ${R3 + 76} V${R3 + 92}`} />
-                <Label x={312} y={R3 + 102} anchor="end">
+                <Wire arrow={arrow} d={`M44 ${KEY_R} H${MIX.x}`} />
+                <Wire
+                  arrow={arrow}
+                  d={`M${KEYER.x} ${KEY_R} H${MIX.x + MIX.w}`}
+                />
+                <Label
+                  x={(KEYER.x + MIX.x + MIX.w) / 2}
+                  y={KEY_R - 4}
+                  anchor="middle"
+                >
+                  key and fill
+                </Label>
+                <Wire
+                  arrow={arrow}
+                  d={`M${MIX.x + MIX.w / 2} ${KEY_R + ONE / 2} V${KEY_R + 24}`}
+                />
+                <Label x={MIX.x + MIX.w / 2 + 6} y={KEY_R + 25}>
                   out
                 </Label>
               </>
             ) : (
               <>
-                <Wire arrow={arrow} d={`M44 ${R3 + TWO / 2} H110`} />
-                <Label x={0} y={R3 + TWO / 2 + 4}>
+                <Label x={0} y={CC_R + 4}>
                   picture
                 </Label>
-                <Wire arrow={arrow} d={`M166 ${R3 + TWO / 2} H204`} />
-                <Label x={208} y={R3 + TWO / 2 + 4}>
+                <Wire arrow={arrow} d={`M44 ${CC_R} H${CAPTION.x}`} />
+                <Wire
+                  arrow={arrow}
+                  d={`M${CAPTION.x + CAPTION.w} ${CC_R} H${CAPTION.x + CAPTION.w + 34}`}
+                />
+                <Label x={CAPTION.x + CAPTION.w + 38} y={CC_R + 4}>
                   to the tube
                 </Label>
               </>
