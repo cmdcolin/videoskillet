@@ -225,6 +225,22 @@ export const DEFLECTION_OPENS = {
   flyback: ['flybackLines', 'retraceLines'],
 } as const satisfies Opens
 
+export const SYNC_KEYS = [
+  'hHold',
+  'syncSlicer',
+  'vHold',
+  'vFreqHz',
+  'syncBendUs',
+  'hDetuneHz',
+] as const satisfies readonly ControlKey[]
+
+export const SYNC_OPENS = {
+  separator: ['syncSlicer'],
+  flywheel: ['hHold', 'syncBendUs'],
+  hosc: ['hDetuneHz'],
+  vosc: ['vFreqHz', 'vHold'],
+} as const satisfies Opens
+
 export const SCHEMATICS = [
   {
     group: CAMERA_LOOP_GROUP,
@@ -240,6 +256,7 @@ export const SCHEMATICS = [
   },
   { group: 'Captions', keys: CAPTION_KEYS, opens: CAPTION_OPENS },
   { group: 'Decoder', keys: DECODER_KEYS, opens: DECODER_OPENS },
+  { group: 'Sync', keys: SYNC_KEYS, opens: SYNC_OPENS },
   { group: 'Deflection', keys: DEFLECTION_KEYS, opens: DEFLECTION_OPENS },
 ] as const satisfies readonly {
   group: string

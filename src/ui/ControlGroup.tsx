@@ -45,6 +45,7 @@ import { Section } from './Section'
 import { SIGNAL_TAPS, tapFor } from './signalTap'
 import { useSignalTapApi } from './SignalTapContext'
 import { Rack, Slider } from './Slider'
+import { SyncDiagram } from './SyncDiagram'
 import { WipeFrame } from './WipeFrame'
 
 import type { ControlKey } from '../core/controls'
@@ -383,6 +384,7 @@ const SCHEMATIC_FRAMES: Record<SchematicGroup, () => ReactElement> = {
   'Character generator (chyron)': ChyronDiagram,
   Captions: CaptionDiagram,
   Decoder: DecoderDiagram,
+  Sync: SyncDiagram,
   Deflection: DeflectionDiagram,
 }
 
