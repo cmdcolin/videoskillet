@@ -8,7 +8,6 @@ import {
   BoxView,
   Diagram,
   Label,
-  Pressable,
   Wire,
   type WireLook,
 } from './DiagramParts'
@@ -19,8 +18,7 @@ import { MIXER_LOOP_KEYS } from './schematicKeys'
 type Key = (typeof MIXER_LOOP_KEYS)[number]
 
 const OPENS = {
-  fader: ['cfbMix'],
-  trim: ['cfbGain'],
+  fader: ['cfbMix', 'cfbGain'],
   keyer: [
     'cfbKey',
     'cfbKeyExt',
@@ -29,11 +27,9 @@ const OPENS = {
     'cfbKeyAcceptDeg',
     'cfbKeyHueDeg',
   ],
-  store: ['cfbHold', 'cfbTrail', 'cfbGenlock'],
-  read: ['cfbClockPct', 'cfbLines'],
+  store: ['cfbHold', 'cfbTrail', 'cfbGenlock', 'cfbClockPct', 'cfbLines'],
   delay: ['cfbDelayUs', 'cfbServoUs'],
-  return: ['cfbReturn'],
-  noise: ['cfbNoiseIre'],
+  return: ['cfbReturn', 'cfbNoiseIre'],
   resonance: ['cfbFilterMHz', 'cfbFilterQ', 'cfbFilterBoost'],
   ring: ['cfbRing', 'cfbRingSrc', 'cfbCarrierKHz'],
 } as const satisfies Record<string, readonly Key[]>
@@ -41,29 +37,17 @@ const OPENS = {
 type Part = keyof typeof OPENS
 
 const WIDTH = 336
-const PROG_Y = 22
-const COL_X = 120
-const RIGHT_X = 300
-const BOT_Y = 200
-const SELF_Y = 222
-const TAP_X = 180
-const RING_Y = 88
-const RES_Y = 128
-const NOISE_Y = 166
-const JUNCTION_R = 7
-const TRIM_TOP = 40
-const TRIM_BASE = 56
-const KEY_X = 6
-const KEY_W = 48
-const KEY_IN_X = KEY_X + KEY_W / 2
-const KEY_CTRL_X = 102
-const KEY_Y = 120
-const BOX_H = 20
+const TOP_Y = 20
+const BOT_Y = 160
+const UP_X = 100
+const RIGHT_X = 306
+const STORE_Y = 62
+const DELAY_Y = 112
+const KEY_Y = 86
+const H = 20
 const TALL_H = 33
-const FADER_W = 48
-const CARRIER_X = 228
 
-const PLOT = { left: 22, right: 330, top: 252, bottom: 322 }
+const PLOT = { left: 22, right: 330, top: 200, bottom: 270 }
 const HEIGHT = PLOT.bottom + 14
 const GAIN_TOP = 2
 const FSC_MHZ = FSC / 1e6
@@ -76,42 +60,11 @@ const plotY = (g: number) =>
   PLOT.bottom -
   ((PLOT.bottom - PLOT.top) * Math.min(Math.max(g, 0), GAIN_TOP)) / GAIN_TOP
 
-function Junction({
-  y,
-  symbol,
-  on,
-}: {
-  y: number
-  symbol: string
-  on: boolean
-}) {
-  return (
-    <g>
-      <circle
-        cx={COL_X}
-        cy={y}
-        r={JUNCTION_R}
-        className={on ? styles.boxOn : styles.box}
-      />
-      <text
-        x={COL_X}
-        y={y + 3.5}
-        textAnchor="middle"
-        className={on ? own.symbolOn : own.symbol}
-      >
-        {symbol}
-      </text>
-    </g>
-  )
-}
-
-// The mixer loop as fb_composite.wgsl runs it. The program crosses the fader
-// and the output rails into the rest of the chain, the frame store captures
-// what came out, and the return climbs back to the fader through the store's
-// read, the cable, the Y/C split, the noise floor, the resonance, the ring
-// modulator and the trim. The resonance and the keyer's self input tap the
-// same read as the Y/C split. Under the loop, what one lap hands back at each
-// frequency.
+// The mixer loop as fb_composite.wgsl runs it, one box per stage. The program
+// crosses the fader into the rest of the chain, the frame store captures what
+// came out, and the return comes back through the delay, the Y/C split, the
+// resonance and the ring modulator into the fader, which the keyer gates.
+// Under the loop, what one lap hands back at each frequency.
 export function MixerLoopDiagram() {
   const r = useReadings(MIXER_LOOP_KEYS)
   const pick = useSelectedBox()
@@ -126,274 +79,147 @@ export function MixerLoopDiagram() {
     filterBoost: v('cfbFilterBoost'),
   }
   const off = loop.mix === 0
-  const trip = loop.mix * loop.gain
-  const loopLook: WireLook = off ? 'dash' : Math.abs(trip) > 1 ? 'alarm' : 'on'
-
   const gains = lapGains(loop, CURVE_MHZ)
   const peak = Math.max(...gains)
+  const look: WireLook = off ? 'dash' : peak > 1 ? 'alarm' : 'on'
+  const keyLook: WireLook = v('cfbKey') !== 0 && !off ? 'on' : 'dash'
   const curve = gains
     .map(
       (g, i) =>
         `${i === 0 ? 'M' : 'L'}${plotX(CURVE_MHZ[i]!).toFixed(1)} ${plotY(g).toFixed(1)}`,
     )
     .join(' ')
-  const resonating = loop.filterMHz > 0 && loop.filterBoost !== 0
-  const resLook: WireLook =
-    !resonating || off ? 'dash' : peak > 1 ? 'alarm' : 'on'
-
-  const keyLook: WireLook = v('cfbKey') !== 0 && !off ? 'on' : 'dash'
-  const keyExt = Math.round(v('cfbKeyExt')) === 1
-  const ringing = v('cfbRing') !== 0
-  const ringLook: WireLook = ringing && !off ? 'on' : 'dash'
-  const osc = Math.round(v('cfbRingSrc')) === 1
-  const noisy = v('cfbNoiseIre') > 0
 
   const box = (
     id: Part,
-    x: number,
-    midY: number,
+    cx: number,
+    cy: number,
     w: number,
     name: string,
     help: string,
-    h = BOX_H,
-    dim = off,
+    h = H,
   ): BoxSpec => ({
     id,
     keys: OPENS[id],
-    x,
-    y: midY - h / 2,
+    x: cx - w / 2,
+    y: cy - h / 2,
     w,
     h,
     name,
-    off: dim,
+    off: off && id !== 'fader',
     touched: r.touched(...OPENS[id]),
     help,
   })
   const boxes = [
     box(
       'fader',
-      COL_X - FADER_W / 2,
-      PROG_Y,
-      FADER_W,
+      UP_X,
+      TOP_Y,
+      56,
       'fader',
-      'The crossfader between the program and the loop return. It takes from the program what it gives the loop, so a loop regresses before it whites out.',
-      BOX_H,
-      false,
+      'The crossfader between the program and the loop return, and the trim on the return. Together they set the round trip; a negative trim inverts every lap.',
+    ),
+    box(
+      'keyer',
+      30,
+      KEY_Y,
+      52,
+      'keyer',
+      'Gates the fader with a slice of the return or of the program, by level or, with an acceptance angle, by hue.',
     ),
     box(
       'store',
-      RIGHT_X - 24,
-      62.5,
-      48,
+      RIGHT_X,
+      STORE_Y,
+      52,
       'frame\nstore',
-      'Captures what the decoder saw, every frame or every few with hold. Trails keep the brighter of the new frame and the decaying old one. A genlocked store writes its own sync and burst on the way out.',
-      TALL_H,
-    ),
-    box(
-      'read',
-      RIGHT_X - 24,
-      111.5,
-      48,
-      'store\nread',
-      "The store's read clock against its write clock, and how many lines down it reads.",
+      'Captures what the decoder saw and reads it back a frame later: hold, trails, frame sync, and the read clock and line offset against the write.',
       TALL_H,
     ),
     box(
       'delay',
-      RIGHT_X - 86,
-      BOT_Y,
-      48,
+      RIGHT_X,
+      DELAY_Y,
+      52,
       'delay',
       'The cable on the return, and the varactor that lets the video pull its own delay. Every 70 ns is 90° of subcarrier.',
     ),
     box(
       'return',
-      COL_X - 34,
+      258,
       BOT_Y,
-      68,
+      66,
       'Y/C split',
-      'Which half of the return goes round. The other half comes from the live program.',
+      'Which half of the return goes round, and the noise it picks up on the way.',
     ),
     box(
       'resonance',
-      TAP_X - 34,
-      RES_Y,
-      68,
+      178,
+      BOT_Y,
+      70,
       'resonance',
-      'A bandpass bridged across the return from the same read. The loop gain rises in its band by the boost.',
+      'A bandpass bridged across the return. The loop gain rises in its band by the boost.',
     ),
     box(
       'ring',
-      COL_X + 20,
-      RING_Y,
-      64,
+      UP_X,
+      BOT_Y,
+      62,
       'ring mod',
       "A balanced bridge multiplying the return by the live program or by the box's own subcarrier oscillator.",
     ),
-    box(
-      'keyer',
-      KEY_X,
-      KEY_Y,
-      KEY_W,
-      'keyer',
-      'Gates the fader with a slice of the return or of the program, by level or, with an acceptance angle, by hue.',
-    ),
   ]
   const open = Object.entries(OPENS).find(([id]) => id === pick.selected)?.[1]
-  const pickOf = (id: Part) => ({
-    id,
-    selected: pick.selected === id,
-    onSelect: pick.toggle,
-  })
+  const edge = (id: Part) => boxes.find(b => b.id === id)!
 
   return (
     <>
       <Diagram width={WIDTH} height={HEIGHT} label="mixer feedback loop">
         {arrow => (
           <>
-            <Label x={0} y={PROG_Y - 5}>
+            <Label x={0} y={TOP_Y - 6}>
               program
             </Label>
-            <Wire arrow={arrow} d={`M0 ${PROG_Y} H${COL_X - FADER_W / 2}`} />
-            <Wire arrow={arrow} d={`M${COL_X + FADER_W / 2} ${PROG_Y} H160`} />
-            <BoxView
-              box={{
-                x: 160,
-                y: PROG_Y - BOX_H / 2,
-                w: 48,
-                h: BOX_H,
-                name: 'rails',
-                touched: false,
-                help: 'The output stage. It compresses into its rails past 110 IRE and below −50, and leaves anything inside them alone.',
-              }}
+            <Wire arrow={arrow} d={`M0 ${TOP_Y} H${edge('fader').x}`} />
+            <Wire
+              arrow={arrow}
+              d={`M${UP_X + 28} ${TOP_Y} H${RIGHT_X} V${edge('store').y}`}
             />
-            <Wire arrow={arrow} d={`M208 ${PROG_Y} H${RIGHT_X} V46`} />
-            <Label x={RIGHT_X} y={PROG_Y - 5} anchor="end">
+            <Label x={RIGHT_X - 6} y={TOP_Y - 6} anchor="end">
               to the chain
             </Label>
 
             <g opacity={off ? 0.55 : 1}>
-              <Wire arrow={arrow} d={`M${RIGHT_X} 79 V95`} look={loopLook} />
               <Wire
                 arrow={arrow}
-                d={`M${RIGHT_X} 128 V${BOT_Y} H${RIGHT_X - 38}`}
-                look={loopLook}
+                d={`M${RIGHT_X} ${STORE_Y + TALL_H / 2} V${DELAY_Y - H / 2}`}
+                look={look}
               />
               <Wire
                 arrow={arrow}
-                d={`M${RIGHT_X - 86} ${BOT_Y} H${COL_X + 34}`}
-                look={loopLook}
-              />
-              {[
-                [BOT_Y - BOX_H / 2, NOISE_Y + JUNCTION_R],
-                [NOISE_Y - JUNCTION_R, RES_Y + JUNCTION_R],
-                [RES_Y - JUNCTION_R, RING_Y + JUNCTION_R],
-                [RING_Y - JUNCTION_R, TRIM_BASE],
-                [TRIM_TOP, PROG_Y + BOX_H / 2],
-              ].map(([from, to]) => (
-                <Wire
-                  key={from}
-                  arrow={arrow}
-                  d={`M${COL_X} ${from} V${to}`}
-                  look={loopLook}
-                />
-              ))}
-
-              <Wire
-                arrow={arrow}
-                d={`M${TAP_X} ${BOT_Y} V${RES_Y + BOX_H / 2}`}
-                look={resLook}
+                d={`M${RIGHT_X} ${DELAY_Y + H / 2} V${BOT_Y} H${258 + 33}`}
+                look={look}
               />
               <Wire
                 arrow={arrow}
-                d={`M${TAP_X - 34} ${RES_Y} H${COL_X + JUNCTION_R}`}
-                look={resLook}
+                d={`M${258 - 33} ${BOT_Y} H${178 + 35}`}
+                look={look}
               />
               <Wire
                 arrow={arrow}
-                d={`M${COL_X + 20} ${RING_Y} H${COL_X + JUNCTION_R}`}
-                look={ringLook}
+                d={`M${178 - 35} ${BOT_Y} H${UP_X + 31}`}
+                look={look}
               />
               <Wire
                 arrow={arrow}
-                d={`M${CARRIER_X} ${RING_Y} H${COL_X + 84}`}
-                look={ringLook}
+                d={`M${UP_X} ${BOT_Y - H / 2} V${TOP_Y + H / 2}`}
+                look={look}
               />
-              <Label x={CARRIER_X + 4} y={RING_Y + 3.5} on={ringing}>
-                {osc ? 'osc' : 'program'}
-              </Label>
               <Wire
                 arrow={arrow}
-                d={`M${KEY_CTRL_X} ${NOISE_Y} H${COL_X - JUNCTION_R}`}
-                look={noisy && !off ? 'on' : 'dash'}
-              />
-              <Label
-                x={KEY_CTRL_X - 4}
-                y={NOISE_Y + 3.5}
-                anchor="end"
-                on={r.touched('cfbNoiseIre')}
-                pick={pickOf('noise')}
-              >
-                noise
-              </Label>
-              <circle
-                cx={TAP_X}
-                cy={BOT_Y}
-                r={2.5}
-                className={off ? own.tap : own.tapOn}
-              />
-
-              <g className={keyExt ? own.unpatched : undefined}>
-                <Wire
-                  arrow={arrow}
-                  d={`M${TAP_X} ${BOT_Y} V${SELF_Y} H${KEY_IN_X} V${KEY_Y + BOX_H / 2}`}
-                  look={keyExt ? 'dash' : keyLook}
-                />
-                <Label x={KEY_IN_X + 5} y={KEY_Y + 34}>
-                  self
-                </Label>
-              </g>
-              <g className={keyExt ? undefined : own.unpatched}>
-                <Wire
-                  arrow={arrow}
-                  d={`M${KEY_IN_X} ${PROG_Y} V${KEY_Y - BOX_H / 2}`}
-                  look={keyExt ? keyLook : 'dash'}
-                />
-                <Label x={KEY_IN_X + 5} y={KEY_Y - 24}>
-                  program
-                </Label>
-              </g>
-              <Wire
-                arrow={arrow}
-                d={`M${KEY_X + KEY_W} ${KEY_Y} H${KEY_CTRL_X} V${PROG_Y + BOX_H / 2}`}
+                d={`M56 ${KEY_Y} H${UP_X - 18} V${TOP_Y + H / 2}`}
                 look={keyLook}
               />
-
-              <Junction y={NOISE_Y} symbol="+" on={noisy} />
-              <Junction y={RES_Y} symbol="+" on={resonating} />
-              <Junction y={RING_Y} symbol="×" on={ringing} />
-
-              <Pressable
-                name="trim"
-                selected={pick.selected === 'trim'}
-                onSelect={() => pick.toggle('trim')}
-              >
-                <title>
-                  trim — The proc amp on the return. With the fader it sets the
-                  round trip; negative inverts every lap.
-                </title>
-                <path
-                  d={`M${COL_X - 9} ${TRIM_BASE} L${COL_X + 9} ${TRIM_BASE} L${COL_X} ${TRIM_TOP} Z`}
-                  className={`${r.touched('cfbGain') ? styles.boxOn : styles.box} ${pick.selected === 'trim' ? styles.selected : ''}`}
-                />
-                <text
-                  x={COL_X + 14}
-                  y={TRIM_BASE - 3}
-                  className={r.touched('cfbGain') ? styles.nameOn : styles.name}
-                >
-                  trim
-                </text>
-              </Pressable>
             </g>
 
             {boxes.map(b => (

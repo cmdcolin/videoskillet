@@ -1,24 +1,3 @@
-.symbol,
-.symbolOn {
-  font-family: var(--mono);
-  font-size: 11px;
-  fill: var(--fg2);
-  pointer-events: none;
-}
-
-.symbolOn {
-  fill: var(--accent);
-}
-
-.tap,
-.tapOn {
-  fill: var(--fg4);
-}
-
-.tapOn {
-  fill: var(--accent);
-}
-
 .unity {
   stroke: var(--fg3);
   stroke-width: 1;
@@ -35,8 +14,4 @@
   fill: none;
   stroke: var(--danger);
   stroke-width: 1.5;
-}
-
-.unpatched {
-  opacity: 0.35;
 }
