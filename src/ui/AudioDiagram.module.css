@@ -1,0 +1,12 @@
+.dot {
+  fill: var(--fg4);
+}
+
+.dotOn {
+  fill: var(--accent);
+}
+
+.domain {
+  fill: none;
+  stroke: var(--border);
+}

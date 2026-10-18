@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { DEFAULT_CONTROLS, atRest } from '../core/controls'
 import { clampCardText } from '../sources/teletype'
 import { WIKI_PAGE } from '../sources/wikitext'
+import { AudioDiagram } from './AudioDiagram'
 import { CableDiagram } from './CableDiagram'
 import { CameraLoopDiagram, TubeFaceDiagram } from './CameraLoopDiagram'
 import { useCaptionApi } from './CaptionContext'
@@ -404,6 +405,7 @@ const SCHEMATIC_FRAMES: Record<SchematicGroup, () => ReactElement> = {
   'Enhancer (bent)': EnhancerDiagram,
   'Noise & interference': NoiseDiagram,
   'Cable / Wiring': CableDiagram,
+  'Audio routings': AudioDiagram,
   [FEED_A_CABLE_GROUP]: FeedACableDiagram,
   [FEED_B_CABLE_GROUP]: FeedBCableDiagram,
   'Ghosting & leakage': LeakDiagram,

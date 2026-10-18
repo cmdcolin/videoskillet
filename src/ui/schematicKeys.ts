@@ -333,6 +333,19 @@ export const FEED_CABLE_KEYS = {
   b: Object.values(FEED_CABLE_OPENS.b).flat(),
 }
 
+export const AUDIO_OPENS = {
+  wave: ['audioGain'],
+  video: ['audioIre'],
+  roll: ['audioRoll'],
+  tear: ['audioTear'],
+  sag: ['audioSagUs'],
+  tank: ['audioLoad'],
+  bend: ['audioBendUs'],
+  hue: ['audioHueDeg'],
+} as const satisfies Opens
+
+export const AUDIO_KEYS = Object.values(AUDIO_OPENS).flat()
+
 export const CHROMA_KEY_OPENS = {
   spill: ['bKeySpill'],
   delay: ['bKeyDelayUs'],
@@ -379,6 +392,7 @@ export const SCHEMATICS = [
   { group: 'Enhancer (bent)', keys: ENHANCER_KEYS, opens: ENHANCER_OPENS },
   { group: 'Noise & interference', keys: NOISE_KEYS, opens: NOISE_OPENS },
   { group: 'Cable / Wiring', keys: CABLE_KEYS, opens: CABLE_OPENS },
+  { group: 'Audio routings', keys: AUDIO_KEYS, opens: AUDIO_OPENS },
   {
     group: FEED_A_CABLE_GROUP,
     keys: FEED_CABLE_KEYS.a,
