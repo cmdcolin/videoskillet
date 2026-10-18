@@ -1,0 +1,6 @@
+.dark {
+  fill: none;
+  stroke: var(--fg3);
+  stroke-width: 1;
+  stroke-dasharray: 3 2;
+}

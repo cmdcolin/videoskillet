@@ -4,6 +4,7 @@ import { DEFAULT_CONTROLS, atRest } from '../core/controls'
 import { clampCardText } from '../sources/teletype'
 import { WIKI_PAGE } from '../sources/wikitext'
 import { AudioDiagram } from './AudioDiagram'
+import { BeamDiagram } from './BeamDiagram'
 import { BusDiagram } from './BusDiagram'
 import { CableDiagram } from './CableDiagram'
 import { CameraLoopDiagram, TubeFaceDiagram } from './CameraLoopDiagram'
@@ -419,6 +420,7 @@ const SCHEMATIC_FRAMES: Record<SchematicGroup, () => ReactElement> = {
   [FEED_B_CABLE_GROUP]: FeedBCableDiagram,
   'Ghosting & leakage': LeakDiagram,
   'Chroma key (A through B)': ChromaKeyDiagram,
+  Beam: BeamDiagram,
   Phosphor: PhosphorDiagram,
 }
 

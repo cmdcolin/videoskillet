@@ -394,6 +394,16 @@ export const DUB_OPENS = {
 
 export const DUB_KEYS = Object.values(DUB_OPENS).flat()
 
+export const BEAM_OPENS = {
+  strobe: ['strobeHz', 'strobeMs'],
+  spot: ['crtSpot', 'crtGrain'],
+  svm: ['crtSvm', 'crtSvmWidth'],
+  recon: ['crtSharp'],
+  lines: ['scanBeam', 'scanBloom'],
+} as const satisfies Opens
+
+export const BEAM_KEYS = Object.values(BEAM_OPENS).flat()
+
 export const CHROMA_KEY_OPENS = {
   spill: ['bKeySpill'],
   delay: ['bKeyDelayUs'],
@@ -461,6 +471,7 @@ export const SCHEMATICS = [
     keys: CHROMA_KEY_KEYS,
     opens: CHROMA_KEY_OPENS,
   },
+  { group: 'Beam', keys: BEAM_KEYS, opens: BEAM_OPENS },
   { group: 'Phosphor', keys: PHOSPHOR_KEYS, opens: PHOSPHOR_OPENS },
 ] as const satisfies readonly {
   group: string
