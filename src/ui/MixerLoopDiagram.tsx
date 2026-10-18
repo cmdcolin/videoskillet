@@ -46,6 +46,14 @@ const plotY = (g: number) =>
   PLOT.bottom -
   ((PLOT.bottom - PLOT.top) * Math.min(Math.max(g, 0), GAIN_TOP)) / GAIN_TOP
 
+const trace = (gains: readonly number[]) =>
+  gains
+    .map(
+      (g, i) =>
+        `${i === 0 ? 'M' : 'L'}${plotX(CURVE_MHZ[i]!).toFixed(1)} ${plotY(g).toFixed(1)}`,
+    )
+    .join(' ')
+
 // The mixer loop as fb_composite.wgsl runs it, one box per stage. The program
 // crosses the fader into the rest of the chain, the frame store captures what
 // came out and reads it back late, and the return runs back along the bottom
@@ -70,12 +78,9 @@ export function MixerLoopDiagram() {
   const peak = Math.max(...gains)
   const look: WireLook = off ? 'dash' : peak > 1 ? 'alarm' : 'on'
   const keyLook: WireLook = v('cfbKey') !== 0 && !off ? 'on' : 'dash'
-  const curve = gains
-    .map(
-      (g, i) =>
-        `${i === 0 ? 'M' : 'L'}${plotX(CURVE_MHZ[i]!).toFixed(1)} ${plotY(g).toFixed(1)}`,
-    )
-    .join(' ')
+  const curve = trace(gains)
+  // With the fader down, the lap at its full travel, where mix is 1.
+  const upGains = off ? lapGains({ ...loop, mix: 1 }, CURVE_MHZ) : null
 
   const box = (
     id: Part,
@@ -256,6 +261,18 @@ export function MixerLoopDiagram() {
                   : styles.curve
               }
             />
+            {upGains && (
+              <>
+                <path d={trace(upGains)} className={own.faderUp} />
+                <Label
+                  x={PLOT.right}
+                  y={Math.min(plotY(upGains.at(-1)!) + 11, PLOT.bottom - 4)}
+                  anchor="end"
+                >
+                  fader up
+                </Label>
+              </>
+            )}
             <path
               d={curve}
               className={styles.curveAlarm}

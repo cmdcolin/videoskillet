@@ -49,6 +49,14 @@ const plotY = (g: number) =>
   PLOT.bottom -
   ((PLOT.bottom - PLOT.top) * Math.min(Math.max(g, 0), GAIN_TOP)) / GAIN_TOP
 
+const trace = (gains: readonly number[]) =>
+  gains
+    .map(
+      (g, i) =>
+        `${i === 0 ? 'M' : 'L'}${plotX(LEVELS[i]!).toFixed(1)} ${plotY(g).toFixed(1)}`,
+    )
+    .join(' ')
+
 // The camera loop as compose.wgsl closes it, drawn as the mixer loop's sibling.
 // The program crosses the fader into the chain, which ends on the tube's face.
 // Light from the face crosses to the lens, the pickup tube reads it, and its
@@ -75,12 +83,9 @@ function CameraLoop({ initial }: { initial: Part | null }) {
   const peak = Math.max(...gains)
   const look: WireLook = off ? 'dash' : peak > 1 ? 'alarm' : 'on'
   const irisLook: WireLook = v('fbIris') !== 0 && !off ? 'on' : 'dash'
-  const curve = gains
-    .map(
-      (g, i) =>
-        `${i === 0 ? 'M' : 'L'}${plotX(LEVELS[i]!).toFixed(1)} ${plotY(g).toFixed(1)}`,
-    )
-    .join(' ')
+  const curve = trace(gains)
+  // With the fader down, the lap at its full travel, where mix is 1.
+  const upGains = off ? cameraLapGains({ ...loop, mix: 1 }, LEVELS) : null
 
   const box = (
     id: Part,
@@ -253,6 +258,18 @@ function CameraLoop({ initial }: { initial: Part | null }) {
                   : styles.curve
               }
             />
+            {upGains && (
+              <>
+                <path d={trace(upGains)} className={own.faderUp} />
+                <Label
+                  x={PLOT.right}
+                  y={Math.min(plotY(upGains.at(-1)!) + 11, PLOT.bottom - 4)}
+                  anchor="end"
+                >
+                  fader up
+                </Label>
+              </>
+            )}
             <path
               d={curve}
               className={styles.curveAlarm}
