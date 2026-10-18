@@ -36,6 +36,7 @@ const press = (key: string, over: Partial<Keystroke> = {}): Keystroke => ({
 const BARE: [string, string][] = [
   ['/', 'search'],
   ['f', 'fullscreen'],
+  ['b', 'sidebar'],
   ['c', 'compare'],
   ['r', 'record'],
   ['s', 'still'],

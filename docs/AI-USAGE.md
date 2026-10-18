@@ -92,9 +92,9 @@ the build on a button whose whole content is a glyph, because a screen reader
 and a browsing agent reach for the same thing — the accessible name. So clicking
 by name works across the panel, not only in the palette.
 
-Single keys are verbs while the palette is closed: `f` fullscreen, `c`
-hold-to-compare, `r` record, `s` still, `t` fire, `d` drift, `i` cue, `/`
-search, `ctrl+z` undo.
+Single keys are verbs while the palette is closed: `f` fullscreen, `b`
+sidebar, `c` hold-to-compare, `r` record, `s` still, `t` fire, `d` drift, `i`
+cue, `/` search, `ctrl+z` undo.
 
 Three things to know before trusting what comes back:
 

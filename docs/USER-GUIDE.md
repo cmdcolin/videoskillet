@@ -280,6 +280,7 @@ and the pattern on B, or copies the link where the phone has no share sheet.
 | `c` (hold)                 | preview the clean signal                                                                                   |
 | `r` / `s`                  | record a clip / save a still                                                                               |
 | `f`                        | fullscreen                                                                                                 |
+| `b`                        | hide or show the sidebar                                                                                   |
 | `i`                        | cue a clip · press again to loop from there · `+shift` for source B                                        |
 | `o`                        | stab back to the cue · `+shift` for source B                                                               |
 | `t`                        | strike every one-shot envelope in the bay                                                                  |

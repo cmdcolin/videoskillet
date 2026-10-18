@@ -18,7 +18,7 @@ import { AboutDialog } from './ui/AboutDialog'
 import { Account } from './ui/Account'
 import { AdvancedDialog } from './ui/AdvancedDialog'
 import { AllSettingsSheet } from './ui/AllSettingsSheet'
-import { AppMenu, ShowMenuButton } from './ui/AppMenu'
+import { AppMenu, ShowMenuButton, ShowSidebarButton } from './ui/AppMenu'
 import { AudioHint, AudioInput, SoundOut } from './ui/AudioInput'
 import { boardControls } from './ui/boardText'
 import { BoardTextSheet } from './ui/BoardTextSheet'
@@ -171,6 +171,7 @@ import type { CSSProperties, ReactNode } from 'react'
 // screen (fullscreen, the popout), which is where somebody clearing the picture
 // off for a projector is likely to be.
 const BAR_HIDDEN_STORE = 'videoskillet_overlay_bar_hidden'
+const SIDEBAR_HIDDEN_STORE = 'videoskillet_sidebar_hidden'
 
 const ALL_OFF_ONLY_STORE = 'videoskillet_all_settings_off_stock'
 
@@ -395,6 +396,12 @@ export function App() {
   // into, the hand pans, and shift swaps them. Off by default and not persisted.
   const [boxZoom, setBoxZoom] = useState(false)
   const [barHidden, setBarHidden] = usePersistedFlag(BAR_HIDDEN_STORE)
+  const [sidebarHidden, setSidebarHidden] =
+    usePersistedFlag(SIDEBAR_HIDDEN_STORE)
+  const dockedHidden = sidebarHidden && !fullscreen && popout === null
+  const toggleSidebar = () => {
+    if (!fullscreen && popout === null) setSidebarHidden(!sidebarHidden)
+  }
   const [filter, setFilter] = useState('')
   // The other half of the filter, and a mode rather than a word: which controls
   // the bay is driving is a question the box cannot hold, because a routing
@@ -416,6 +423,7 @@ export function App() {
   // the key and do nothing visible with it.
   const filterBox = useRef<HTMLInputElement>(null)
   const openSearch = () => {
+    setSidebarHidden(false)
     setSearchOpen(true)
     filterBox.current?.focus()
   }
@@ -432,6 +440,7 @@ export function App() {
   // Landing on "nothing matches" because the bay happens not to be driving what
   // you looked up is not an answer to what was asked.
   const revealText = (text: string) => {
+    setSidebarHidden(false)
     setFilter(text)
     setMovingOnly(false)
     setLookKeys(null)
@@ -1031,6 +1040,7 @@ export function App() {
     onRedo: mix.redo,
     canRedo: mix.canRedo,
     onToggleFullscreen: toggleFullscreen,
+    onToggleSidebar: toggleSidebar,
     onStartCompare: startCompare,
     onEndCompare: endCompare,
     onToggleRecord: capture.toggleRecord,
@@ -1145,6 +1155,7 @@ export function App() {
     onRecord: capture.toggleRecord,
     onStill: capture.grabStill,
     onFullscreen: toggleFullscreen,
+    onSidebar: toggleSidebar,
     onBench: toggleBench,
     onPopout: () => openPopout(benchOn),
     onFilter: revealText,
@@ -1458,6 +1469,8 @@ export function App() {
     bench: benchOn,
     canBench: wideEnough,
     onToggleBench: toggleBench,
+    sidebarHidden,
+    onToggleSidebar: toggleSidebar,
     onPopout: () => openPopout(benchOn),
     showFps,
     onToggleFps: () => setShowFps(!showFps),
@@ -1945,14 +1958,21 @@ export function App() {
           // is the only one that can be dismissed, since it is the only one
           // sitting on top of what you are watching).
           chrome={
-            !fullscreen && popout === null ? null : barHidden ? (
-              <ShowMenuButton onClick={() => setBarHidden(false)} />
-            ) : (
-              <AppMenu
-                variant="stage"
-                {...menuProps}
-                onHideBar={() => setBarHidden(true)}
-              />
+            !fullscreen && popout === null && !sidebarHidden ? null : (
+              <>
+                {barHidden ? (
+                  <ShowMenuButton onClick={() => setBarHidden(false)} />
+                ) : (
+                  <AppMenu
+                    variant="stage"
+                    {...menuProps}
+                    onHideBar={() => setBarHidden(true)}
+                  />
+                )}
+                {dockedHidden ? (
+                  <ShowSidebarButton onClick={() => setSidebarHidden(false)} />
+                ) : null}
+              </>
             )
           }
         />
@@ -2082,7 +2102,7 @@ export function App() {
           </StripContext>
         )}
       </div>
-      {fullscreen || popout !== null ? null : (
+      {fullscreen || popout !== null || sidebarHidden ? null : (
         <>
           {/* Between the two panes, so the edge a drag moves is the edge under
               the pointer. It is drawn in every docked layout and hidden by the
@@ -2128,7 +2148,7 @@ export function App() {
           carries the row. So the sidebar comes back for as long as the sheet is
           up, over the right edge of a picture that is otherwise the whole
           window. */}
-      {fullscreen && sheet !== null ? (
+      {(fullscreen || dockedHidden) && sheet !== null ? (
         <div className={cx(styles.panel, styles.panelSheet, styles.panelOver)}>
           {panel}
         </div>

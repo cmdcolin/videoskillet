@@ -136,6 +136,7 @@ export function paletteActions(o: {
   onStill: () => void
   // Where the picture and the panel are.
   onFullscreen: () => void
+  onSidebar: () => void
   onBench: () => void
   onPopout: () => void
   // The doors. `onShowMoving` is the one entry that can see a routing: the
@@ -376,6 +377,11 @@ export function paletteActions(o: {
       name: 'fullscreen',
       blurb: 'give the picture the whole screen',
       run: o.onFullscreen,
+    },
+    {
+      name: 'toggle sidebar',
+      blurb: 'hide or show the controls beside the picture',
+      run: o.onSidebar,
     },
     {
       name: 'wide bench',

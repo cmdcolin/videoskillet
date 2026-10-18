@@ -73,6 +73,8 @@ export function AppMenu(props: {
   // query, and moving it into the menu must not lose that.
   canBench: boolean
   onToggleBench: () => void
+  sidebarHidden: boolean
+  onToggleSidebar: () => void
   onPopout: () => void
   showFps: boolean
   onToggleFps: () => void
@@ -189,6 +191,15 @@ export function AppMenu(props: {
             closes={id}
             onClick={() => props.onToggleFullscreen()}
           />
+          {props.fullscreen || props.poppedOut ? null : (
+            <MenuItem
+              icon="◧"
+              label={props.sidebarHidden ? 'show sidebar' : 'hide sidebar'}
+              hint="b"
+              closes={id}
+              onClick={props.onToggleSidebar}
+            />
+          )}
           {/* Stays open: this is the one row whose effect is visible behind the
               menu, and pressing it twice to compare the two widths should not
               cost re-opening the menu in between. */}
@@ -317,6 +328,19 @@ export function ShowMenuButton(props: { onClick: () => void }) {
       onClick={() => props.onClick()}
     >
       ⋯
+    </button>
+  )
+}
+
+export function ShowSidebarButton(props: { onClick: () => void }) {
+  return (
+    <button
+      className={styles.stageTrigger}
+      title="show the sidebar (b)"
+      aria-label="show the sidebar"
+      onClick={() => props.onClick()}
+    >
+      ◧
     </button>
   )
 }

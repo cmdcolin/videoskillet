@@ -45,6 +45,7 @@ const actions = () => {
     onRecord: noop,
     onStill: noop,
     onFullscreen: noop,
+    onSidebar: noop,
     onBench: noop,
     onPopout: noop,
     onFilter: noop,

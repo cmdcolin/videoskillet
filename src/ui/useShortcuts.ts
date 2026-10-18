@@ -29,6 +29,7 @@ type Shortcut =
   | { do: 'undo' }
   | { do: 'redo' }
   | { do: 'fullscreen' }
+  | { do: 'sidebar' }
   | { do: 'compare' }
   | { do: 'record' }
   | { do: 'still' }
@@ -93,6 +94,7 @@ export function resolveShortcut(e: Keystroke): Shortcut | null {
   // key at all, reachable only by clicking the ⌕.
   if (key === '/') return { do: 'search' }
   if (key === 'f') return { do: 'fullscreen' }
+  if (key === 'b') return e.repeat ? null : { do: 'sidebar' }
   if (key === 'c') return e.repeat ? null : { do: 'compare' }
   if (key === 'r') return e.repeat ? null : { do: 'record' }
   if (key === 's') return e.repeat ? null : { do: 'still' }
@@ -145,6 +147,7 @@ interface Handlers {
   onRedo: () => void
   canRedo: boolean
   onToggleFullscreen: () => void
+  onToggleSidebar: () => void
   onStartCompare: () => void
   onEndCompare: () => void
   onToggleRecord: () => void
@@ -229,6 +232,9 @@ export function useShortcuts(popout: Window | null, handlers: Handlers) {
           break
         case 'fullscreen':
           h.onToggleFullscreen()
+          break
+        case 'sidebar':
+          h.onToggleSidebar()
           break
         case 'compare':
           h.onStartCompare()
