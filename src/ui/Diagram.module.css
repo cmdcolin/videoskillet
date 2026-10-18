@@ -128,3 +128,16 @@
 .curveOn {
   stroke: var(--accent);
 }
+
+/* A plot's unity line, and the part of its curve above it. */
+.unity {
+  stroke: var(--fg3);
+  stroke-width: 1;
+  stroke-dasharray: 4 2;
+}
+
+.curveAlarm {
+  fill: none;
+  stroke: var(--danger);
+  stroke-width: 1.5;
+}

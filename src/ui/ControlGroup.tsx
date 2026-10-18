@@ -3,16 +3,19 @@ import { useEffect, useRef, useState } from 'react'
 import { DEFAULT_CONTROLS, atRest } from '../core/controls'
 import { clampCardText } from '../sources/teletype'
 import { WIKI_PAGE } from '../sources/wikitext'
+import { CameraLoopDiagram, TubeFaceDiagram } from './CameraLoopDiagram'
 import { useCaptionApi } from './CaptionContext'
 import { activeCardPreset, cardPresetsFor } from './cardPresets'
 import { CaptionDiagram, ChyronDiagram } from './ChyronDiagram'
 import styles from './ControlGroup.module.css'
 import {
+  CAMERA_LOOP_GROUP,
   GROUPS,
   MIXER_LOOP_GROUP,
   MUTATE_CIRCUIT_BY_GROUP,
   NEEDS,
   sliderFor,
+  TUBE_FACE_GROUP,
 } from './controls'
 import {
   useControlReading,
@@ -373,6 +376,8 @@ function WikiCaptionRow() {
 }
 
 const SCHEMATIC_FRAMES: Record<SchematicGroup, () => ReactElement> = {
+  [CAMERA_LOOP_GROUP]: CameraLoopDiagram,
+  [TUBE_FACE_GROUP]: TubeFaceDiagram,
   [MIXER_LOOP_GROUP]: MixerLoopDiagram,
   'Character generator (chyron)': ChyronDiagram,
   Captions: CaptionDiagram,

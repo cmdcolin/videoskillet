@@ -1,0 +1,5 @@
+/* The return from the glass to the lens is light, so it is dashed in every
+   state, the way the chain map draws the optical loop. */
+.light path {
+  stroke-dasharray: 2 2;
+}

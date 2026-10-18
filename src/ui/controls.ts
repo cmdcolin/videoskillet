@@ -210,6 +210,7 @@ export const generatorsLive = (
 // one thing that tells the three apart once more than one is running.
 export const CAMERA_LOOP_GROUP = 'Camera feedback (optical)'
 export const MIXER_LOOP_GROUP = 'Mixer feedback (electrical)'
+export const TUBE_FACE_GROUP = 'Tube face (what the camera shoots)'
 
 // Which of the three are actually carrying signal, so a drawing can show a
 // running loop rather than only the three that exist in principle. One shape
@@ -918,7 +919,7 @@ export const GROUPS: Group[] = [
   // together under one 'Feedback' header, the faceplate read as something all
   // three loops went through.
   {
-    name: 'Tube face (what the camera shoots)',
+    name: TUBE_FACE_GROUP,
     place: 'camera',
     sliders: [
       {

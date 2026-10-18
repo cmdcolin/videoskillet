@@ -1,4 +1,8 @@
-import { MIXER_LOOP_GROUP } from './controls'
+import {
+  CAMERA_LOOP_GROUP,
+  MIXER_LOOP_GROUP,
+  TUBE_FACE_GROUP,
+} from './controls'
 
 import type { ControlKey } from '../core/controls'
 
@@ -57,6 +61,29 @@ export const MIXER_LOOP_OPENS = {
   resonance: ['cfbFilterMHz', 'cfbFilterQ', 'cfbFilterBoost'],
   ring: ['cfbRing', 'cfbRingSrc', 'cfbCarrierKHz'],
 } as const satisfies Record<string, readonly (typeof MIXER_LOOP_KEYS)[number][]>
+
+export const CAMERA_LOOP_OPENS = {
+  fader: ['fbMix', 'fbGain'],
+  iris: ['fbIris'],
+  lens: ['fbZoom', 'fbRotateDeg', 'fbShiftX', 'fbShiftY', 'fbFocus', 'fbVign'],
+  pickup: ['fbLag', 'fbComet', 'fbBlack', 'fbKnee'],
+} as const satisfies Opens
+
+export const CAMERA_LOOP_KEYS = Object.values(CAMERA_LOOP_OPENS).flat()
+
+export const TUBE_FACE_OPENS = {
+  face: [
+    'crtCutoff',
+    'crtGamma',
+    'crtSat',
+    'crtBloom',
+    'crtHalation',
+    'crtHaloKey',
+    'crtGlow',
+  ],
+} as const satisfies Opens
+
+export const TUBE_FACE_KEYS = TUBE_FACE_OPENS.face
 
 export const DECODER_KEYS = [
   'combMode',
@@ -180,6 +207,12 @@ export const CAPTION_OPENS = {
 } as const satisfies Opens
 
 export const SCHEMATICS = [
+  {
+    group: CAMERA_LOOP_GROUP,
+    keys: CAMERA_LOOP_KEYS,
+    opens: CAMERA_LOOP_OPENS,
+  },
+  { group: TUBE_FACE_GROUP, keys: TUBE_FACE_KEYS, opens: TUBE_FACE_OPENS },
   { group: MIXER_LOOP_GROUP, keys: MIXER_LOOP_KEYS, opens: MIXER_LOOP_OPENS },
   {
     group: 'Character generator (chyron)',

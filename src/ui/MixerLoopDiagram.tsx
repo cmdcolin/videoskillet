@@ -213,7 +213,7 @@ export function MixerLoopDiagram() {
               x2={PLOT.right}
               y1={plotY(1)}
               y2={plotY(1)}
-              className={own.unity}
+              className={styles.unity}
             />
             {[0, 1, 2].map(g => (
               <Label key={g} x={PLOT.left - 4} y={plotY(g) + 3} anchor="end">
@@ -258,7 +258,7 @@ export function MixerLoopDiagram() {
             />
             <path
               d={curve}
-              className={own.curveAlarm}
+              className={styles.curveAlarm}
               clipPath={`url(#${clip})`}
             />
           </>

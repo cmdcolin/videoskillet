@@ -1,17 +1,5 @@
-.unity {
-  stroke: var(--fg3);
-  stroke-width: 1;
-  stroke-dasharray: 4 2;
-}
-
 .fsc {
   stroke: var(--border);
   stroke-width: 1;
   stroke-dasharray: 1 2;
-}
-
-.curveAlarm {
-  fill: none;
-  stroke: var(--danger);
-  stroke-width: 1.5;
 }
