@@ -38,9 +38,17 @@ value changed identity on the write.
   Commit a7f26018 fixed one such bug. With that commit reverted, every mounted
   row re-renders, and on the sheet the `rows` diff ends in "and 295 more".
 - A change under `others` means a different set of components outside the rows
-  re-renders on a write. `SHEET_CHROME` and `GROUP_CHROME` in the test list the
-  current set and why each re-renders. Add a new name with its reason, or remove
-  a name that stopped re-rendering.
+  re-renders, counted per component. A write that crosses no stock re-renders
+  nothing in the app but its row and `CurrentSession` (`MID_DRAG`), so App, the
+  stage, the map, the look bar and the menus all skip it. A write that takes a
+  control off stock re-renders the headings that count it (`SHEET_CROSSING`,
+  `GROUP_CROSSING`). Each list gives the reason for every name on it. Add a name
+  with its reason, or remove one that stopped re-rendering.
+- A press on a track banks an undo step, so App re-renders for the undo button.
+  The test asserts that nothing in the sheet or the open group re-renders with
+  it. Outside those, the stage, the tray, the map and the look bar re-render on
+  the press too, because several verbs from `useEngine`, `useAudio`,
+  `useClipLibrary` and `useSavedProfiles` are new on every render of App.
 - A failure in "the React Compiler has compiled every component under test"
   means plugin-react did not compile the app under vitest, so the other tests in
   the file measured components without the compiler's memoization. plugin-react

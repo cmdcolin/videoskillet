@@ -350,6 +350,11 @@ test('the React Compiler has compiled every component under test', () => {
 // Expected `others` when a gesture re-renders nothing outside the rows.
 const NOTHING = {}
 
+// What a write that crosses no stock re-renders anywhere in the app, besides
+// its row. CurrentSession follows the settled board to keep the account's copy
+// of the look current, and renders nothing.
+const MID_DRAG = { CurrentSession: 1 }
+
 // What re-renders in the sheet when a write takes a control off stock or puts
 // it back. AllSettingsSheet counts the controls off stock in its lead line, and
 // PanelSheet frames that line. StageHead and GroupBlock are the headings over
@@ -414,6 +419,18 @@ describe('All settings', () => {
     })
   })
 
+  test('a write that crosses no stock re-renders nothing in the app but its row', async () => {
+    const key = 'noiseIre'
+    await drag(key, AllSettingsSheet, [1])
+    const { moves } = await drag(key, AllSettingsSheet, [0.5, 0.7, 0.3])
+    expect(cost(moves, App)).toEqual({
+      rows: [key],
+      others: MID_DRAG,
+      mounted: [],
+      unmounted: [],
+    })
+  })
+
   test('off stock only keeps every row mounted through a write', async () => {
     const key = 'noiseIre'
     await act(async () =>
@@ -443,8 +460,10 @@ describe('All settings', () => {
 
 // The map labels each box with the stage name, which can differ from the
 // group's `place`: the mixer loop's group has place `mixer`, and its box is
-// labelled "Mixer feedback".
+// labelled "Mixer feedback". A group already open is left open, since a second
+// press on its box would fold the stage.
 async function openGroup(key: ControlKey, box: string) {
+  if (rowsUnder(ControlGroup).includes(key)) return
   const group = groupOf(key)
   await act(async () => {
     fireEvent.click(
@@ -490,6 +509,19 @@ describe('a stage in the panel', () => {
       rows: [key],
       others: GROUP_CROSSING,
       mounted: [key],
+      unmounted: [],
+    })
+  })
+
+  test('a write that crosses no stock re-renders nothing in the app but its row', async () => {
+    const key = 'rfAdjacent'
+    await openGroup(key, 'Channel')
+    await drag(key, ControlGroup, [1])
+    const { moves } = await drag(key, ControlGroup, [0.5, 0.6, 0.4])
+    expect(cost(moves, App)).toEqual({
+      rows: [key],
+      others: MID_DRAG,
+      mounted: [],
       unmounted: [],
     })
   })
