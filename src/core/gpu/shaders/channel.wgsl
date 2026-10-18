@@ -120,6 +120,19 @@ var<workgroup> tileNq: array<f32, TILE_WG + 2u>;
 // of that table, it stays a hash per tap.
 const FM_SPAN = 30u;
 var<workgroup> fmDecay: array<f32, FM_SPAN + 1u>;
+// The deck demodulates before it filters, so the fold goes in ahead of the
+// luma FIR: the folded luma is staged for this workgroup's samples and the
+// FIR's reach either side, from a source tile that also holds each one's
+// streak history. The pass stages them only while the fold is on.
+const LUMA_REACH = (LUMA_TAPS - 1u) / 2u;
+const FM_BACK = FM_SPAN + 2u;
+const FM_SRC = TILE_WG + 2u * LUMA_REACH + FM_BACK;
+var<workgroup> tileFmSrc: array<f32, FM_SRC>;
+// How far each source sample's emphasized edge overruns its threshold. It
+// depends on the source sample alone, so it is worked out once here and the
+// fold below is a plain decay-weighted sum over it.
+var<workgroup> tileFmOver: array<f32, FM_SRC>;
+var<workgroup> tileFm: array<f32, TILE_WG + 2u * LUMA_REACH>;
 
 @compute @workgroup_size(TILE_WG, 1, 1)
 fn main(
@@ -149,13 +162,20 @@ fn main(
       tileUn[i] = underAt(clampIdx(base - ycd + i32(i)));
     }
   }
-  if (P.fmOverdev > 0.0 && lid.x <= FM_SPAN) {
-    fmDecay[lid.x] = exp(-f32(lid.x) / P.fmStreak);
+  let n0 = row * SPL + wid.x * TILE_WG;
+  if (P.fmOverdev > 0.0) {
+    if (lid.x <= FM_SPAN) {
+      fmDecay[lid.x] = exp(-f32(lid.x) / P.fmStreak);
+    }
+    let fmBase = i32(n0) - i32(LUMA_REACH + FM_BACK);
+    for (var i = lid.x; i < FM_SRC; i = i + TILE_WG) {
+      let ci = clampIdx(fmBase + i32(i));
+      tileFmSrc[i] = comp[ci] - chroma[ci];
+    }
   }
   if (P.noiseSigma > 0.0 || P.rfSnow > 0.0) {
     let ns = pcg(P.frame * 2654435761u + P.gen * 2246822519u);
     // slot 1 is this workgroup's first sample, so slot i is global index n0+i-1
-    let n0 = row * SPL + wid.x * TILE_WG;
     for (var i = lid.x; i < TILE_WG + 2u; i = i + TILE_WG) {
       tileNs[i] = gauss((n0 + i - 1u) ^ ns);
     }
@@ -167,30 +187,6 @@ fn main(
     }
   }
   workgroupBarrier();
-
-  let s = gid.x;
-  if (s >= SPL) {
-    return;
-  }
-  let n = row * SPL + s;
-
-  // luma through the channel FIR, folded on the kernel's symmetry
-  let ml = (LUMA_TAPS - 1u) / 2u;
-  let cl = lid.x + HALO;
-  var luma = filters[SEC_LUMA * FILTER_STRIDE + ml] * tileLc[cl];
-  for (var k = 0u; k < ml; k = k + 1u) {
-    luma = luma + filters[SEC_LUMA * FILTER_STRIDE + k] * (tileLc[cl + k - ml] + tileLc[cl + ml - k]);
-  }
-
-  // Tuner mistuned toward the low side: the picture carrier slides down the
-  // IF's Nyquist slope and the upper sideband goes first — fine luma detail
-  // here, and the chroma sitting at 3.58 MHz where `chr` is scaled below. A
-  // 1-4-6-4-1 smear on top of the channel FIR is the slope's high cut.
-  if (P.rfSoften > 0.0) {
-    let soft = 0.0625 * (tileLc[cl - 2u] + 4.0 * tileLc[cl - 1u]
-      + 6.0 * tileLc[cl] + 4.0 * tileLc[cl + 1u] + tileLc[cl + 2u]);
-    luma = mix(luma, soft, P.rfSoften);
-  }
 
   // FM over-deviation. The deck records luma as FM with the video pre-
   // emphasized, so a hard dark->bright edge overshoots the deviation the
@@ -206,7 +202,8 @@ fn main(
   // fold and the streak carries saturated colour over black, which is
   // exactly what an over-deviated deck hands a TV. Only the bright side
   // folds: the deviation floor under sync has margin, the response cliff
-  // above white does not.
+  // above white does not. The playback luma filter comes after the
+  // discriminator, so it softens and rings the fold's edges like any other.
   if (P.fmOverdev > 0.0) {
     // Ceiling of the emphasized signal, IRE: slides from beyond any real
     // edge down toward the picture as the knob advances — but never below
@@ -216,21 +213,75 @@ fn main(
     // of any brightness never do.
     let ceilIre = mix(240.0, 112.0, P.fmOverdev);
     let fseed = pcg(P.frame * 48271u + P.gen * 2246822519u + 0x0f37u);
-    var streak = 0.0;
-    for (var d = 0u; d <= FM_SPAN; d = d + 1u) {
+    let srcStart = n0 - LUMA_REACH - FM_BACK;
+    for (var i = lid.x + 2u; i < FM_SRC; i = i + TILE_WG) {
       // record-side pre-emphasis: the edge boost that makes overshoot
-      let e = tileLc[cl - d] + 1.3 * (tileLc[cl - d] - tileLc[cl - d - 2u]);
+      let e = tileFmSrc[i] + 1.3 * (tileFmSrc[i] - tileFmSrc[i - 2u]);
       // threshold noise keyed to the *source* sample, so one edge's fold is
       // one decision per frame however many outputs its tail crosses
-      let th = ceilIre + 9.0 * (rand01((n - d) ^ fseed) - 0.5);
-      streak = streak + max(e - th, 0.0) * fmDecay[d];
+      let th = ceilIre + 9.0 * (rand01((srcStart + i) ^ fseed) - 0.5);
+      tileFmOver[i] = max(e - th, 0.0);
     }
-    if (streak > 0.0) {
-      // the fold bottoms out at the deviation floor, not at sync level, so
-      // a slammed streak reads black without handing the separator edges
-      let writhe = 1.0 + 0.4 * gauss(n ^ pcg(fseed ^ 0x6b8bu));
-      luma = max(luma - 0.6 * streak * writhe, -15.0);
+  }
+  workgroupBarrier();
+  if (P.fmOverdev > 0.0) {
+    let fseed = pcg(P.frame * 48271u + P.gen * 2246822519u + 0x0f37u);
+    for (var j = lid.x; j < TILE_WG + 2u * LUMA_REACH; j = j + TILE_WG) {
+      let k = j + FM_BACK;
+      let g = n0 + j - LUMA_REACH;
+      var streak = 0.0;
+      for (var d = 0u; d <= FM_SPAN; d = d + 1u) {
+        streak = streak + tileFmOver[k - d] * fmDecay[d];
+      }
+      var v = tileFmSrc[k];
+      if (streak > 0.0) {
+        // the fold bottoms out at the deviation floor, not at sync level, so
+        // a slammed streak reads black without handing the separator edges
+        let writhe = 1.0 + 0.4 * gauss(g ^ pcg(fseed ^ 0x6b8bu));
+        v = max(v - 0.6 * streak * writhe, -15.0);
+      }
+      tileFm[j] = v;
     }
+  }
+  workgroupBarrier();
+
+  let s = gid.x;
+  if (s >= SPL) {
+    return;
+  }
+  let n = row * SPL + s;
+
+  // luma through the channel FIR, folded on the kernel's symmetry, reading the
+  // FM-folded tile while the fold is on
+  let ml = LUMA_REACH;
+  let cl = lid.x + HALO;
+  let cf = lid.x + LUMA_REACH;
+  let fm = P.fmOverdev > 0.0;
+  var luma = filters[SEC_LUMA * FILTER_STRIDE + ml] * select(tileLc[cl], tileFm[cf], fm);
+  if (fm) {
+    for (var k = 0u; k < ml; k = k + 1u) {
+      luma = luma + filters[SEC_LUMA * FILTER_STRIDE + k] * (tileFm[cf + k - ml] + tileFm[cf + ml - k]);
+    }
+  } else {
+    for (var k = 0u; k < ml; k = k + 1u) {
+      luma = luma + filters[SEC_LUMA * FILTER_STRIDE + k] * (tileLc[cl + k - ml] + tileLc[cl + ml - k]);
+    }
+  }
+
+  // Tuner mistuned toward the low side: the picture carrier slides down the
+  // IF's Nyquist slope and the upper sideband goes first — fine luma detail
+  // here, and the chroma sitting at 3.58 MHz where `chr` is scaled below. A
+  // 1-4-6-4-1 smear on top of the channel FIR is the slope's high cut.
+  if (P.rfSoften > 0.0) {
+    var soft = 0.0;
+    if (fm) {
+      soft = 0.0625 * (tileFm[cf - 2u] + 4.0 * tileFm[cf - 1u]
+        + 6.0 * tileFm[cf] + 4.0 * tileFm[cf + 1u] + tileFm[cf + 2u]);
+    } else {
+      soft = 0.0625 * (tileLc[cl - 2u] + 4.0 * tileLc[cl - 1u]
+        + 6.0 * tileLc[cl] + 4.0 * tileLc[cl + 1u] + tileLc[cl + 2u]);
+    }
+    luma = mix(luma, soft, P.rfSoften);
   }
 
   // Differential gain and phase: the video amplifier's gain and delay are not

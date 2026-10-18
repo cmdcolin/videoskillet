@@ -9,10 +9,10 @@ import {
 import type { Controls } from '../core/controls'
 
 // The recording's luma path as channel.wgsl runs it, on one line of picture:
-// the luma FIR, then the FM fold subtracted from it. The fold reads the
-// pre-emphasized input, and its streak decays through the deemphasis time
-// constant. The threshold noise and the writhe on the streak average to zero
-// and to one, so they are left out.
+// the FM fold subtracted from the input, then the luma FIR over the result. The
+// fold reads the pre-emphasized input, and its streak decays through the
+// deemphasis time constant. The threshold noise and the writhe on the streak
+// average to zero and to one, so they are left out.
 
 export type Recording = Pick<
   Controls,
@@ -48,25 +48,28 @@ export function barLine() {
   )
 }
 
-// The luma a line plays back as, sample for sample, and the emphasized signal
-// the fold compares with the ceiling.
+// The luma a line plays back as, sample for sample, with the emphasized signal
+// the fold compares with the ceiling and the folded signal the filter reads.
 export function playBack(rec: Recording, x: readonly number[]) {
   const h = lumaKernel(rec)
   const m = (h.length - 1) / 2
   const e = emphasize(x)
   const ceiling = fmCeiling(rec.fmOverdev)
   const tau = Math.max(rec.fmStreakUs * 1e-6 * SAMPLE_RATE, 1)
-  const out = x.map((_, n) => {
-    let luma = 0
-    for (let k = 0; k < h.length; k++) luma += h[k]! * at(x, n + k - m)
-    if (rec.fmOverdev <= 0) return luma
+  const folded = x.map((v, n) => {
+    if (rec.fmOverdev <= 0) return v
     let streak = 0
     for (let d = 0; d <= FM_SPAN; d++) {
       streak += Math.max(at(e, n - d) - ceiling, 0) * Math.exp(-d / tau)
     }
-    return streak > 0 ? Math.max(luma - 0.6 * streak, FOLD_FLOOR) : luma
+    return streak > 0 ? Math.max(v - 0.6 * streak, FOLD_FLOOR) : v
   })
-  return { emphasized: e, out }
+  const out = folded.map((_, n) => {
+    let luma = 0
+    for (let k = 0; k < h.length; k++) luma += h[k]! * at(folded, n + k - m)
+    return luma
+  })
+  return { emphasized: e, folded, out }
 }
 
 // What differential gain and phase do to chroma riding luma at `ire`: the

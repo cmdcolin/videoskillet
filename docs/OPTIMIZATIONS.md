@@ -94,6 +94,8 @@ otherwise.
 | B's three encoders read its texel; `encode_yuv.wgsl` deleted                        | dirtyMix + PiP            | frame   | 2.80   | 2.32  |
 | colour-under tile staged behind the Y/C delay (was 55 storage taps, a deviate each) | colourLate + chroma noise | channel | 2.99   | 0.62  |
 | FM fold's decay tabled per workgroup                                                | fmFold                    | channel | 1.43   | 1.23  |
+| FM fold staged ahead of the luma FIR, its overrun tabled per source sample          | fmOverdev 1               | channel | 0.99   | 0.82  |
+|                                                                                     | overDeviatedWhite         | channel | 1.31   | 1.23  |
 | flywheel and HV sag walked in two waves                                             | fullCollapse              | sync    | 0.31   | 0.14  |
 | gun cutoff + gamma applied where decode writes the screen (not exact)               | lightThatStays            | crtFace | 1.75   | 0.74  |
 |                                                                                     | misconverged              | crtFace | 1.43   | 0.67  |
@@ -124,7 +126,10 @@ Three arms were reverted, and all three are worth knowing.
 - **Tabling the FM fold's per-source threshold noise** alongside its decay cost
   0.2 ms at stock, where none of it runs; a padding array of the same size cost
   nothing, so it is not shared memory. The compiler does something with that
-  table the profiler can see and the source cannot, and the hash stays per tap.
+  table the profiler can see and the source cannot. The fold has since moved
+  ahead of the luma FIR, where it stages its own tile and tables how far each
+  source sample overruns its threshold, hash included. That table measured
+  0.311 → 0.305 ms at stock, so whatever cost 0.2 ms did not come back.
 - **Staging `sync.wgsl` into workgroup memory** was 0.174 → 0.166 ms, bit exact
   and not worth the shared memory, and prefetching the next line's measurement
   did nothing either. That pass is bound by the issue latency of one lane

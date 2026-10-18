@@ -38,20 +38,18 @@ describe('recording', () => {
     const quiet = playBack(STOCK, BAR).out
     const hot = playBack({ ...STOCK, fmOverdev: 1 }, BAR).out
     expect(Math.min(...hot.slice(RISE, RISE + 4))).toBeLessThan(0)
-    expect(hot[RISE + 32]).toBeCloseTo(quiet[RISE + 32]!, 6)
+    expect(hot[RISE + 32]).toBeCloseTo(quiet[RISE + 32]!, 1)
   })
 
-  it('bottoms the fold out at -15 IRE', () => {
+  it('bottoms the fold out at -15 IRE ahead of the luma filter', () => {
     const fromSync = BAR.map(v => (v === IRE_BLACK ? -40 : v))
-    const { out } = playBack({ ...STOCK, fmOverdev: 1 }, fromSync)
-    expect(Math.min(...out.slice(RISE, RISE + 10))).toBe(-15)
+    const { folded } = playBack({ ...STOCK, fmOverdev: 1 }, fromSync)
+    expect(Math.min(...folded.slice(RISE, RISE + 10))).toBe(-15)
   })
 
-  it('leaves the falling edge alone', () => {
-    const quiet = playBack(STOCK, BAR).out
-    const hot = playBack({ ...STOCK, fmOverdev: 1 }, BAR).out
-    for (let n = FALL - 2; n < BAR.length; n++)
-      expect(hot[n]).toBeCloseTo(quiet[n]!, 6)
+  it('folds nothing at the falling edge', () => {
+    const { folded } = playBack({ ...STOCK, fmOverdev: 1 }, BAR)
+    for (let n = FALL - 2; n < BAR.length; n++) expect(folded[n]).toBe(BAR[n])
   })
 
   it('streaks longer with a longer recovery', () => {

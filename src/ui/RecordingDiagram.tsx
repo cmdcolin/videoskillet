@@ -61,10 +61,8 @@ const signed = (v: number) => {
 // The recording as channel.wgsl runs it, drawn in the deck's order: the
 // pre-emphasis, the FM modulator whose deviation ceiling the emphasized edge
 // can overrun, and the playback luma filter. The chroma rides through an
-// amplifier whose gain and phase the luma keys. The shader filters the
-// unemphasized luma and subtracts the fold after the filter, which gives the
-// same line. Underneath, a white bar recorded and played back, and the luma
-// filter's response.
+// amplifier whose gain and phase the luma keys. Underneath, a white bar
+// recorded and played back, and the luma filter's response.
 export function RecordingDiagram() {
   const r = useReadings(RECORDING_KEYS)
   const pick = useSelectedBox()
