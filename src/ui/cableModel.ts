@@ -81,3 +81,9 @@ export function stripeBands(degrees: number): Band[] {
 }
 
 export const GUARD_ROWS: Band = { row: 12, rows: 8 }
+
+export const humColumn = (ire: number, points = 64): number[] =>
+  Array.from(
+    { length: points },
+    (_, i) => ire * Math.sin((2 * Math.PI * i) / (points - 1)),
+  )

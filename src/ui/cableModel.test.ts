@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest'
 
 import { IRE_BLANK, IRE_SYNC, IRE_WHITE } from '../core/signal/constants'
-import { cableLine, contactBands, stripeBands, type Cable } from './cableModel'
+import {
+  cableLine,
+  contactBands,
+  humColumn,
+  stripeBands,
+  type Cable,
+} from './cableModel'
 
 const STOCK: Cable = {
   polarityFlip: 0,
@@ -85,5 +91,15 @@ describe('stripeBands', () => {
     const [first, second] = stripeBands(90)
     expect(first!.rows).toBe(12)
     expect(second!.row - first!.row).toBe(24)
+  })
+})
+
+describe('humColumn', () => {
+  it('runs one mains cycle down the frame at the given amplitude', () => {
+    const hum = humColumn(-20)
+    expect(Math.max(...hum.map(Math.abs))).toBeCloseTo(20, 0)
+    expect(hum[0]).toBeCloseTo(0)
+    expect(hum.at(-1)).toBeCloseTo(0)
+    expect(Math.min(...hum)).toBeLessThan(0)
   })
 })

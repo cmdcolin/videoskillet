@@ -12,6 +12,8 @@ import { CaptionDiagram, ChyronDiagram } from './ChyronDiagram'
 import styles from './ControlGroup.module.css'
 import {
   CAMERA_LOOP_GROUP,
+  FEED_A_CABLE_GROUP,
+  FEED_B_CABLE_GROUP,
   GROUPS,
   MIXER_LOOP_GROUP,
   MUTATE_CIRCUIT_BY_GROUP,
@@ -30,6 +32,7 @@ import { DecoderDiagram } from './DecoderDiagram'
 import { DeflectionDiagram } from './DeflectionDiagram'
 import { DRIFT_MODE_WORDS, DRIFT_SECONDS } from './drift'
 import { EnhancerDiagram } from './EnhancerDiagram'
+import { FeedACableDiagram, FeedBCableDiagram } from './FeedCableDiagram'
 import { filterActive, matchedSliders, useFilter } from './filter'
 import { LeakDiagram } from './LeakDiagram'
 import { LoopTrip } from './LoopTrip'
@@ -401,6 +404,8 @@ const SCHEMATIC_FRAMES: Record<SchematicGroup, () => ReactElement> = {
   'Enhancer (bent)': EnhancerDiagram,
   'Noise & interference': NoiseDiagram,
   'Cable / Wiring': CableDiagram,
+  [FEED_A_CABLE_GROUP]: FeedACableDiagram,
+  [FEED_B_CABLE_GROUP]: FeedBCableDiagram,
   'Ghosting & leakage': LeakDiagram,
   'Chroma key (A through B)': ChromaKeyDiagram,
   Phosphor: PhosphorDiagram,

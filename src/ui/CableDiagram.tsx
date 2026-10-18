@@ -1,4 +1,4 @@
-import { LINES } from '../core/signal/constants'
+import { BandLane } from './BandLane'
 import styles from './CableDiagram.module.css'
 import {
   cableLine,
@@ -56,8 +56,6 @@ const IRE_SCALE = { lo: -110, hi: 210, ticks: [0, 100], reference: 0 }
 const ire = (v: number) => (v < 0 ? `−${-v}` : String(v))
 const after = (id: Part) => COL[id].x + COL[id].w
 const look = (on: boolean): WireLook => (on ? 'on' : 'plain')
-const rasterY = (row: number) =>
-  RASTER.top + ((RASTER.bottom - RASTER.top) * row) / LINES
 const laneX = (lane: keyof typeof LANES, at: 0 | 1) =>
   RASTER.left + (RASTER.right - RASTER.left) * LANES[lane][at]
 
@@ -70,16 +68,16 @@ function Lane({
   bands: readonly Band[]
   className: string
 }) {
-  return bands.map(b => (
-    <rect
-      key={b.row}
-      x={laneX(lane, 0)}
-      y={rasterY(b.row)}
-      width={laneX(lane, 1) - laneX(lane, 0)}
-      height={Math.max(rasterY(b.rows) - rasterY(0), 1)}
+  return (
+    <BandLane
+      x0={laneX(lane, 0)}
+      x1={laneX(lane, 1)}
+      top={RASTER.top}
+      bottom={RASTER.bottom}
+      bands={bands}
       className={className}
     />
-  ))
+  )
 }
 
 export function CableDiagram() {

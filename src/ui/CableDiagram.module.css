@@ -21,3 +21,9 @@
 .guard {
   fill: var(--accent);
 }
+
+.trace {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.5;
+}
