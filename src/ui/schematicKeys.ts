@@ -404,6 +404,15 @@ export const BEAM_OPENS = {
 
 export const BEAM_KEYS = Object.values(BEAM_OPENS).flat()
 
+export const CROSSPOINT_OPENS = {
+  wander: ['bWanderUs'],
+  capture: ['bCaptureUs'],
+  leak: ['bLeak'],
+  cut: ['busCut'],
+} as const satisfies Opens
+
+export const CROSSPOINT_KEYS = Object.values(CROSSPOINT_OPENS).flat()
+
 export const CHROMA_KEY_OPENS = {
   spill: ['bKeySpill'],
   delay: ['bKeyDelayUs'],
@@ -450,6 +459,7 @@ export const SCHEMATICS = [
   { group: 'Enhancer (bent)', keys: ENHANCER_KEYS, opens: ENHANCER_OPENS },
   { group: 'Noise & interference', keys: NOISE_KEYS, opens: NOISE_OPENS },
   { group: 'A/B Mixer', keys: BUS_KEYS, opens: BUS_OPENS },
+  { group: 'Crosspoint', keys: CROSSPOINT_KEYS, opens: CROSSPOINT_OPENS },
   { group: SYNTH_GROUP, keys: SYNTH_KEYS, opens: SYNTH_OPENS },
   { group: 'Dropouts & dubs', keys: DUB_KEYS, opens: DUB_OPENS },
   { group: 'RF / Tuner', keys: RF_KEYS, opens: RF_OPENS },

@@ -31,6 +31,7 @@ import {
   useControlsApi,
   useControlValue,
 } from './ControlsContext'
+import { CrosspointDiagram } from './CrosspointDiagram'
 import { cx } from './cx'
 import { DecoderDiagram } from './DecoderDiagram'
 import { DeflectionDiagram } from './DeflectionDiagram'
@@ -411,6 +412,7 @@ const SCHEMATIC_FRAMES: Record<SchematicGroup, () => ReactElement> = {
   'Enhancer (bent)': EnhancerDiagram,
   'Noise & interference': NoiseDiagram,
   'A/B Mixer': BusDiagram,
+  Crosspoint: CrosspointDiagram,
   [SYNTH_GROUP]: SynthDiagram,
   'Dropouts & dubs': DubDiagram,
   'RF / Tuner': RfDiagram,
