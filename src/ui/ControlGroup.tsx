@@ -4,6 +4,7 @@ import { DEFAULT_CONTROLS, atRest } from '../core/controls'
 import { clampCardText } from '../sources/teletype'
 import { WIKI_PAGE } from '../sources/wikitext'
 import { AudioDiagram } from './AudioDiagram'
+import { BusDiagram } from './BusDiagram'
 import { CableDiagram } from './CableDiagram'
 import { CameraLoopDiagram, TubeFaceDiagram } from './CameraLoopDiagram'
 import { useCaptionApi } from './CaptionContext'
@@ -404,6 +405,7 @@ const SCHEMATIC_FRAMES: Record<SchematicGroup, () => ReactElement> = {
   'VHS colour & tracking': VhsDiagram,
   'Enhancer (bent)': EnhancerDiagram,
   'Noise & interference': NoiseDiagram,
+  'A/B Mixer': BusDiagram,
   'Cable / Wiring': CableDiagram,
   'Audio routings': AudioDiagram,
   [FEED_A_CABLE_GROUP]: FeedACableDiagram,

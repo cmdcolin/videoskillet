@@ -346,6 +346,17 @@ export const AUDIO_OPENS = {
 
 export const AUDIO_KEYS = Object.values(AUDIO_OPENS).flat()
 
+export const BUS_OPENS = {
+  gainA: ['aGain'],
+  timing: ['bLineHz', 'bRollLps', 'bDetuneHz'],
+  lock: ['bGenlock'],
+  gainB: ['bGain'],
+  ring: ['bRing'],
+  clip: ['busClip'],
+} as const satisfies Opens
+
+export const BUS_KEYS = Object.values(BUS_OPENS).flat()
+
 export const CHROMA_KEY_OPENS = {
   spill: ['bKeySpill'],
   delay: ['bKeyDelayUs'],
@@ -391,6 +402,7 @@ export const SCHEMATICS = [
   { group: 'VHS colour & tracking', keys: VHS_KEYS, opens: VHS_OPENS },
   { group: 'Enhancer (bent)', keys: ENHANCER_KEYS, opens: ENHANCER_OPENS },
   { group: 'Noise & interference', keys: NOISE_KEYS, opens: NOISE_OPENS },
+  { group: 'A/B Mixer', keys: BUS_KEYS, opens: BUS_OPENS },
   { group: 'Cable / Wiring', keys: CABLE_KEYS, opens: CABLE_OPENS },
   { group: 'Audio routings', keys: AUDIO_KEYS, opens: AUDIO_OPENS },
   {
