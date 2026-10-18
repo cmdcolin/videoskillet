@@ -377,15 +377,16 @@ Almost everything is comfortably parallel. Two exceptions:
   prefix scan instead of a third loop here.
 - **`decode` stages a shared tile per row.** A workgroup covers 64 pixels of one
   raster row and stages a contiguous span with a halo as wide as the demod
-  kernel needs (`DEMOD_HALO`), so the demod FIR reads workgroup memory. Consequence: horizontal offsets must be
-  **row-uniform**. A row-uniform width fits too: the EHT breathing in `lineEht`
-  widens a line about the centre by up to 15% and never narrows one, so the span
-  a workgroup reads only ever shrinks. Per-pixel horizontal scaling (linearity,
-  pincushion) would read outside the halo and needs the staging restructured
-  first. Vertical geometry is free by the same token: which raster line a screen
-  row shows is a function of the row alone, so `vSize`, `vLin` and `vFold` are
-  an inversion of the yoke's sweep in `decode`, and the fold stages the second
-  line the row shows in the other half of the tile.
+  kernel needs (`DEMOD_HALO`), so the demod FIR reads workgroup memory.
+  Consequence: horizontal offsets must be **row-uniform**. A row-uniform width
+  fits too: the EHT breathing in `lineEht` widens a line about the centre by up
+  to 15% and never narrows one, so the span a workgroup reads only ever shrinks.
+  Per-pixel horizontal scaling (linearity, pincushion) would read outside the
+  halo and needs the staging restructured first. Vertical geometry is free by
+  the same token: which raster line a screen row shows is a function of the row
+  alone, so `vSize`, `vLin` and `vFold` are an inversion of the yoke's sweep in
+  `decode`, and the fold stages the second line the row shows in the other half
+  of the tile.
 
 ## The React layer
 

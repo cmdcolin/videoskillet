@@ -13,7 +13,7 @@ export function Pressable({
   name,
   selected,
   onSelect,
-  className = '',
+  className,
   opacity,
   children,
 }: {
@@ -27,7 +27,7 @@ export function Pressable({
   return (
     <g
       opacity={opacity}
-      className={onSelect ? `${styles.pick} ${className}` : className}
+      className={onSelect ? `${styles.pick} ${className ?? ''}` : className}
       role={onSelect ? 'button' : undefined}
       tabIndex={onSelect ? 0 : undefined}
       aria-pressed={onSelect ? selected : undefined}
@@ -56,9 +56,9 @@ export function Plate({
   y,
   w,
   h,
-  touched = false,
-  selected = false,
-  inert = false,
+  touched,
+  selected,
+  inert,
 }: {
   x: number
   y: number
@@ -76,7 +76,7 @@ export function Plate({
 // grey when nothing passes through it. The title is the browser's own tooltip.
 export function BoxView({
   box,
-  selected = false,
+  selected,
   onSelect,
 }: {
   box: BoxSpec
@@ -91,7 +91,7 @@ export function BoxView({
   return (
     <Pressable
       name={label}
-      selected={selected}
+      selected={selected ?? false}
       onSelect={pick ? () => onSelect(box.id!) : undefined}
       opacity={box.off ? 0.55 : 1}
     >
@@ -139,7 +139,7 @@ const HEAD_CLASS: Record<WireLook, string> = {
 export function Wire({
   d,
   arrow,
-  look = 'plain',
+  look,
 }: {
   d: string
   arrow?: string
@@ -148,8 +148,8 @@ export function Wire({
   return (
     <path
       d={d}
-      className={WIRE_CLASS[look]}
-      markerEnd={arrow && `url(#${arrow}-${look})`}
+      className={WIRE_CLASS[look ?? 'plain']}
+      markerEnd={arrow && `url(#${arrow}-${look ?? 'plain'})`}
     />
   )
 }
@@ -157,8 +157,8 @@ export function Wire({
 export function Label({
   x,
   y,
-  anchor = 'start',
-  on = false,
+  anchor,
+  on,
   pick,
   children,
 }: {
@@ -174,7 +174,7 @@ export function Label({
     <text
       x={x}
       y={y}
-      textAnchor={anchor}
+      textAnchor={anchor ?? 'start'}
       className={on ? styles.noteOn : styles.note}
     >
       {children}
@@ -196,7 +196,7 @@ export function Label({
 // The drawing's frame: an arrowhead in each wire look's colour, and the width
 // the drawing scales from.
 export function Diagram({
-  left = 0,
+  left,
   width,
   height,
   label,
@@ -213,7 +213,7 @@ export function Diagram({
   return (
     <svg
       className={styles.diagram}
-      viewBox={`${-left} 0 ${width} ${height}`}
+      viewBox={`${-(left ?? 0)} 0 ${width} ${height}`}
       role="img"
       aria-label={label}
     >

@@ -371,19 +371,19 @@ and each tiers on whatever decides visibility for it:
   or above and keeps the full disk. Worth 0.12 ms — the single largest cost left
   in `crt_face` at stock.
 
-- **The chroma demod tiers on its own length.** The kernel grows as
-  `demodMHz` falls (`filters.ts`, `demodKernel`), so the bank slot holds 63
-  taps while the 0.6 MHz stock kernel fills only 41 of them. `decode` runs a
-  41-tap loop and stages the matching halo whenever `demodReach` fits in it,
-  and the full 63 otherwise. Stock is bit-exact to the old fixed 41 taps and
-  costs what it did, 0.39 ms; a narrow band or any chroma trail costs 0.45 ms.
-  A loop bounded by the uniform alone measured 0.46 ms at stock, worse than the
-  full 63, because its trip count stops being a compile-time constant and the
-  loop no longer unrolls.
+- **The chroma demod tiers on its own length.** The kernel grows as `demodMHz`
+  falls (`filters.ts`, `demodKernel`), so the bank slot holds 63 taps while the
+  0.6 MHz stock kernel fills only 41 of them. `decode` runs a 41-tap loop and
+  stages the matching halo whenever `demodReach` fits in it, and the full 63
+  otherwise. Stock is bit-exact to the old fixed 41 taps and costs what it did,
+  0.39 ms; a narrow band or any chroma trail costs 0.45 ms. A loop bounded by
+  the uniform alone measured 0.46 ms at stock, worse than the full 63, because
+  its trip count stops being a compile-time constant and the loop no longer
+  unrolls.
 
-All four thresholds are hard steps, so sweeping the control through one pops
-the result by that difference. That is the trade, written down beside the step
-that makes it.
+All four thresholds are hard steps, so sweeping the control through one pops the
+result by that difference. That is the trade, written down beside the step that
+makes it.
 
 `crt_face`'s grain is the other kind of saving: the mottle is fixed to the
 glass, so sixteen hashes a pixel were reproducing the same field every frame.

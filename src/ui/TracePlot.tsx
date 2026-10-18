@@ -42,11 +42,11 @@ export function TracePlot({
   title,
   values,
   scale,
-  format = signed,
+  format,
   ends,
   look,
   band,
-  breakOver = Infinity,
+  breakOver,
 }: {
   left: number
   right: number
@@ -72,7 +72,8 @@ export function TracePlot({
     bottom - ((bottom - top) * (Math.min(Math.max(v, lo), hi) - lo)) / (hi - lo)
   const path = values
     .map((v, i) => {
-      const lift = i === 0 || Math.abs(v - values[i - 1]!) > breakOver
+      const lift =
+        i === 0 || Math.abs(v - values[i - 1]!) > (breakOver ?? Infinity)
       return `${lift ? 'M' : 'L'}${x(i).toFixed(1)} ${y(v).toFixed(1)}`
     })
     .join(' ')
@@ -102,7 +103,7 @@ export function TracePlot({
       ))}
       {ticks.map(t => (
         <Label key={t} x={left - 3} y={y(t) + 3} anchor="end">
-          {format(t)}
+          {(format ?? signed)(t)}
         </Label>
       ))}
       <Label x={left} y={bottom + 11}>
