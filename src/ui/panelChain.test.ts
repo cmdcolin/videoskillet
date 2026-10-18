@@ -6,8 +6,9 @@
 
 import { describe, expect, it } from 'vitest'
 
-import { DEFAULT_CONTROLS } from '../core/controls'
+import { DEFAULT_CONTROLS, atRest } from '../core/controls'
 import {
+  ALL_SLIDERS,
   CAMERA_LOOP_STAGE,
   DECK_STAGE,
   FEED_A_GROUP,
@@ -59,7 +60,11 @@ const chain = (
   } = {},
 ) =>
   panelChain({
-    controls: over.controls ?? DEFAULT_CONTROLS,
+    offStock: new Set(
+      ALL_SLIDERS.filter(
+        s => !atRest((over.controls ?? DEFAULT_CONTROLS)[s.key], s.key),
+      ).map(s => s.key),
+    ),
     filter: {
       text: over.query ?? '',
       moving: over.moving ?? false,

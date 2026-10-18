@@ -437,8 +437,8 @@ const FRAMES: {
 // A list of rows, and the component boundary is the point of it.
 //
 // The group header around it reads the controls — it has counts to show and
-// gates to check — so its own JSX is rebuilt on every write, and rows built
-// inline there would be rebuilt with it. Behind this boundary the compiler
+// gates to check — so its own JSX is rebuilt whenever a count changes, and rows
+// built inline there would be rebuilt with it. Behind this boundary the compiler
 // memoizes on two props that a write does not touch, so React skips the lot.
 // Both props therefore have to keep their identity across a write: `sliders`
 // comes through sameList, `muted` through sameKeySet.
@@ -456,6 +456,18 @@ export function ControlRows(props: {
       ))}
     </>
   )
+}
+
+// A group's gates, one entry per distinct gate. Two rows can sit behind the
+// same control with different conditions on it, so an entry is a SliderNeed
+// rather than a key.
+const NEEDS_OF = new WeakMap<Group, readonly SliderNeed[]>()
+function needsOf(group: Group): readonly SliderNeed[] {
+  const known = NEEDS_OF.get(group)
+  if (known !== undefined) return known
+  const needs = [...new Set(group.sliders.flatMap(s => NEEDS[s.key] ?? []))]
+  NEEDS_OF.set(group, needs)
+  return needs
 }
 
 // Every gate the rows on screen sit behind, and how many of them sit behind
@@ -483,15 +495,14 @@ function gatesBehind(
 const ROLL_HOLD_MS = 500
 const ROLL_TRAIN_MS = 800
 
-// The row of chips over a card's rows. A component rather than inline JSX
-// because it subscribes to the whole board to know which chip is lit, and the
-// card around it is memoized on its rows — reading the controls inline would
-// rebuild every row on every write.
+// The row of chips over a card's rows. A component of its own because it reads
+// which chip is lit, which changes on a write the header does not care about.
+// The reading is the lit chip's name, so a write that lights no other chip
+// re-renders nothing here.
 function CardChips(props: { group: Group; chips: CardPreset[] }) {
   const { group, chips } = props
   const { landCard } = useControlsApi()
-  const controls = useControls()
-  const active = activeCardPreset(group, controls)
+  const lit = useControlReading(c => activeCardPreset(group, c)?.name ?? '')
   return (
     <div className={styles.cardChips}>
       {chips.map(chip => (
@@ -500,9 +511,9 @@ function CardChips(props: { group: Group; chips: CardPreset[] }) {
           type="button"
           className={cx(
             styles.cardChip,
-            active?.name === chip.name ? styles.cardChipOn : undefined,
+            lit === chip.name ? styles.cardChipOn : undefined,
           )}
-          aria-pressed={active?.name === chip.name}
+          aria-pressed={lit === chip.name}
           title={`${chip.blurb} — puts this card back to stock first, and leaves the rest of the look alone`}
           onClick={() => {
             landCard(chip, group)
@@ -512,6 +523,42 @@ function CardChips(props: { group: Group; chips: CardPreset[] }) {
         </button>
       ))}
     </div>
+  )
+}
+
+// The fold over a group's fine tier. A component of its own because it counts
+// the touched trims behind it, which changes on a write the rest of the group
+// does not care about.
+function FineToggle(props: {
+  fine: readonly SliderDef[]
+  open: boolean
+  mod: boolean
+  onToggle: () => void
+}) {
+  const { fine } = props
+  const touched = useControlReading(
+    c => fine.filter(s => !atRest(c[s.key], s.key)).length,
+  )
+  return (
+    <button
+      className={styles.sliderToggle}
+      onClick={props.onToggle}
+      title="trims that shape an effect something else turns on"
+    >
+      {props.open ? (
+        '▾ fine tweaks'
+      ) : (
+        <>
+          {`▸ ${fine.length} fine tweaks`}
+          {touched === 0 ? null : (
+            <span className={styles.fineTouched}>
+              {` · ${touched} touched`}
+            </span>
+          )}
+          {props.mod ? <span className={styles.fineMod}> · mod</span> : null}
+        </>
+      )}
+    </button>
   )
 }
 
@@ -525,9 +572,6 @@ export function ControlGroup(props: { group: Group; defaultOpen?: boolean }) {
     driftMode,
     toggleGroupDrift,
   } = useControlsApi()
-  const driftable = MUTATE_CIRCUIT_BY_GROUP.has(group.name)
-  const drifting = driftingGroups.has(group.name)
-  const driftWords = DRIFT_MODE_WORDS[driftMode]
   const mod = useModSlotsApi()
   const filter = useFilter()
   // Randomize's timers, while it is held: the wait before a hold becomes a
@@ -554,6 +598,34 @@ export function ControlGroup(props: { group: Group; defaultOpen?: boolean }) {
   // stands in for.
   const [showFramed, setShowFramed] = useState(false)
   const [showFine, setShowFine] = useState(false)
+  // The group reads two primitives off the controls. This component builds
+  // every row in the group, and a component that reads the whole board
+  // re-renders on every write. With two primitives, a write to some other
+  // control returns the same answers and React skips the group entirely.
+  //
+  // Both are read before anything below is built. The React Compiler cannot
+  // memoize a value built before a hook call and used after it, and a reading
+  // taken further down left the whole group, header and rows, unmemoized.
+  //
+  // `touched` is a count, which the header shows (Section's `dot`). The stage's
+  // heading sums the same predicate, so the two agree by construction.
+  const touched = useControlReading(
+    c => group.sliders.filter(s => !atRest(c[s.key], s.key)).length,
+  )
+  // Which of the group's gates are shut, one character per entry in
+  // `needsOf(group)`. Read over the whole group, so the reading does not depend
+  // on which rows are showing; `banners` below narrows it to the rows on screen.
+  const shut = useControlReading(c =>
+    needsOf(group)
+      .map(need => (need.ok(c[need.key]) ? '-' : 'x'))
+      .join(''),
+  )
+  // Below the readings for the reason they sit above everything else: the
+  // compiler cannot tell `drifting` is a boolean, and treats it as handed to
+  // `cx` to change, so read above a hook it cost the group its memoization.
+  const driftable = MUTATE_CIRCUIT_BY_GROUP.has(group.name)
+  const drifting = driftingGroups.has(group.name)
+  const driftWords = DRIFT_MODE_WORDS[driftMode]
   const frame = filterActive(filter)
     ? undefined
     : FRAMES.find(f => f.group === group.name)
@@ -583,25 +655,6 @@ export function ControlGroup(props: { group: Group; defaultOpen?: boolean }) {
   // banner is a summary of the notes it replaces, so a trim folded behind the
   // fine tier must not be one of the three that raises it.
   const onScreen = showFine ? [...shown, ...fine] : shown
-  // Three readings, not a copy of the controls. This component builds every row
-  // in the group, so what it reads decides what re-renders: reading the object
-  // hands the compiler a dependency that changes on every write, and the rows go
-  // with it. Reading three primitives means a write to some other control
-  // returns the same three answers, the memo block holds, and React skips the
-  // rows entirely — which is the difference between 19ms a write and a frame
-  // that never notices.
-  // A count, not a `some` — the header shows it (Section's `dot`), and the same
-  // sum over the same predicate is what the stage's heading counts, so the two
-  // agree by construction. It costs a re-render of the group's rows on each
-  // *crossing* of stock, where the boolean only paid on the first; a drag
-  // crosses once, and `fineTouched` below has always been a count on the same
-  // terms, so the reading budget this block is written for is unchanged.
-  const touched = useControlReading(
-    c => group.sliders.filter(s => !atRest(c[s.key], s.key)).length,
-  )
-  const fineTouched = useControlReading(
-    c => fine.filter(s => !atRest(c[s.key], s.key)).length,
-  )
   // The touched count can't cover motion: a routing never moves the resting
   // value, so a folded trim being driven by an LFO looks untouched from here.
   const fineMod = fine.some(s => mod.modFor(s.key) !== null)
@@ -612,119 +665,19 @@ export function ControlGroup(props: { group: Group; defaultOpen?: boolean }) {
   //
   // How many rows sit behind each gate is a property of which rows are showing,
   // so it is counted here, off the controls entirely; where the controls come in
-  // is only *which* of those gates are shut, and that is the reading below.
+  // is only *which* of those gates are shut, and that is `shut` above.
   const behind = gatesBehind(onScreen)
-  const shut = useControlReading(c =>
-    behind
-      .filter(g => !g.need.ok(c[g.need.key]))
-      .map(g => g.need.key)
-      .join(' '),
+  const needs = needsOf(group)
+  const banners = behind.filter(
+    g => g.n >= 3 && shut[needs.indexOf(g.need)] === 'x',
   )
-  const shutKeys = new Set(shut === '' ? [] : shut.split(' '))
-  const banners = behind.filter(g => g.n >= 3 && shutKeys.has(g.need.key))
   // Through sameKeySet, not `new Set(...)`: this is a prop on every row in the
   // group, and a fresh Set on each write would be enough on its own to re-render
   // all of them.
   const muted = sameKeySet(banners.map(e => e.need.key))
 
-  // A group the query left with nothing — no rows, no folded trims to offer,
-  // and no miniature — is a header over an empty body, so it drops out entirely.
-  return shown.length === 0 &&
-    fine.length === 0 &&
-    frame === undefined ? null : (
-    <Section
-      title={group.name}
-      defaultOpen={props.defaultOpen}
-      openOnFilter
-      dot={touched}
-      // A folded door keeps its accessories out of the way, and a stage left
-      // wandering has to say so from the outside: the count beside it cannot,
-      // since a hand on a slider moves it the same way drift does.
-      mark={
-        drifting ? (
-          <span className={styles.driftMark}>drifting</span>
-        ) : undefined
-      }
-      help={
-        <>
-          {/* Only on a group that has something to put back — the same rule the
-              row's own ↺ follows, and the reason neither costs anything on the
-              majority of headers that are still at stock. It sits before the
-              other two because the three read as "back / further / further, on
-              its own" in that order. */}
-          {touched > 0 ? (
-            <button
-              className={styles.revert}
-              title={`put this stage's controls back to stock, and leave the rest of the look alone (ctrl+z takes it back)`}
-              aria-label={`reset ${group.name} to defaults`}
-              onClick={() => resetGroup(group.sliders)}
-            >
-              reset defaults
-            </button>
-          ) : null}
-          {/* One nudge on press; a hold turns into a train of them only after
-              ROLL_HOLD_MS, so a click is a single roll you can look at and the
-              train runs slowly enough to let go on the look you wanted. It
-              stops the instant the button is not down — a pointer that slips
-              off it (or a window that loses focus mid-hold) has to stop it
-              exactly as a release would, which is why both onPointerLeave and
-              onBlur clear it alongside onPointerUp.
-
-              The roll is on the pointer rather than on the click because the
-              hold has to start with it, and the click is then only for the
-              press that sends no pointer event at all: `detail` is 0 on a
-              keyboard activation and never on a mouse one, which is what keeps
-              the button reachable from the keyboard without rolling twice for
-              every press of it. */}
-          <button
-            className={styles.dice}
-            title={`nudge only this stage's controls randomly around where they sit, and keep nudging while you hold it down — shift for a wilder roll, alt for a gentler one, ctrl (or cmd) for turbo (${group.name})`}
-            aria-label={`nudge ${group.name} randomly — press for one, hold to keep going`}
-            onPointerDown={e => {
-              const amount = mutateAmountFor(e)
-              stopRoll()
-              mutateGroup(group.sliders, amount)
-              rollDelay.current = setTimeout(() => {
-                rollTrain.current = setInterval(
-                  () => mutateGroup(group.sliders, amount),
-                  ROLL_TRAIN_MS,
-                )
-              }, ROLL_HOLD_MS)
-            }}
-            onPointerUp={stopRoll}
-            onPointerLeave={stopRoll}
-            onBlur={stopRoll}
-            onClick={e => {
-              if (e.detail === 0) mutateGroup(group.sliders, mutateAmountFor(e))
-            }}
-          >
-            randomize
-          </button>
-          {/* The same nudge with nobody pressing it, aimed at this stage alone
-              (ui/drift.ts). Lit rather than reworded while it runs: the look
-              bar's switch has a row to itself and can afford "drifting…", where
-              a heading has one line to share with a stage name that can be 33
-              characters long.
-
-              Absent from a stage the drift may not touch — the view group is
-              nothing but the magnifier, which no roll and no drift moves. */}
-          {driftable ? (
-            <button
-              className={cx(styles.drift, drifting && styles.driftOn)}
-              aria-pressed={drifting}
-              title={
-                drifting
-                  ? `stop here and keep ${group.name} wherever it has got to (the rest of the board carries on)`
-                  : `let this stage ${driftWords.does}: a leg every ${DRIFT_SECONDS} seconds, travelling most of the way there so nothing cuts. The rest of the board holds still (${group.name}). The look bar's ▾ is where the three shapes are picked`
-              }
-              onClick={() => toggleGroupDrift(group)}
-            >
-              {driftWords.label}
-            </button>
-          ) : null}
-        </>
-      }
-    >
+  const body = (
+    <>
       {chips.length === 0 ? null : <CardChips group={group} chips={chips} />}
       {frame === undefined ? null : (
         <>
@@ -748,8 +701,8 @@ export function ControlGroup(props: { group: Group; defaultOpen?: boolean }) {
         </button>
       ))}
       {/* Sized off the whole group rather than off what is currently on screen,
-          so unfolding the fine tier doesn't re-align the rows above it — the
-          reserve is the same whichever rows are showing. */}
+        so unfolding the fine tier doesn't re-align the rows above it — the
+        reserve is the same whichever rows are showing. */}
       <Rack sliders={group.sliders}>
         <ControlRows sliders={shown} muted={muted} />
         {group.name === TAP_HOST_GROUP ? <SignalTapControl /> : null}
@@ -757,31 +710,124 @@ export function ControlGroup(props: { group: Group; defaultOpen?: boolean }) {
         <LoopTrip group={group.name} />
         {fine.length === 0 ? null : (
           <>
-            <button
-              className={styles.sliderToggle}
-              onClick={() => setShowFine(!showFine)}
-              title="trims that shape an effect something else turns on"
-            >
-              {showFine ? (
-                '▾ fine tweaks'
-              ) : (
-                <>
-                  {`▸ ${fine.length} fine tweaks`}
-                  {fineTouched === 0 ? null : (
-                    <span className={styles.fineTouched}>
-                      {` · ${fineTouched} touched`}
-                    </span>
-                  )}
-                  {fineMod ? (
-                    <span className={styles.fineMod}> · mod</span>
-                  ) : null}
-                </>
-              )}
-            </button>
+            <FineToggle
+              fine={fine}
+              open={showFine}
+              mod={fineMod}
+              onToggle={() => setShowFine(!showFine)}
+            />
             {showFine ? <ControlRows sliders={fine} muted={muted} /> : null}
           </>
         )}
       </Rack>
+    </>
+  )
+  // The header's verbs. Built apart from the rows above, so a write that
+  // changes the count rebuilds this and leaves the rows' element as it was.
+  // Built after them, too: `body` maps over `banners`, and the compiler keeps a
+  // value open until its last call, so anything built in between would share
+  // its memo block.
+  const help = (
+    <>
+      {/* Only on a group that has something to put back — the same rule the
+          row's own ↺ follows, and the reason neither costs anything on the
+          majority of headers that are still at stock. It sits before the
+          other two because the three read as "back / further / further, on
+          its own" in that order. */}
+      {touched > 0 ? (
+        <button
+          className={styles.revert}
+          title={`put this stage's controls back to stock, and leave the rest of the look alone (ctrl+z takes it back)`}
+          aria-label={`reset ${group.name} to defaults`}
+          onClick={() => resetGroup(group.sliders)}
+        >
+          reset defaults
+        </button>
+      ) : null}
+      {/* One nudge on press; a hold turns into a train of them only after
+          ROLL_HOLD_MS, so a click is a single roll you can look at and the
+          train runs slowly enough to let go on the look you wanted. It
+          stops the instant the button is not down — a pointer that slips
+          off it (or a window that loses focus mid-hold) has to stop it
+          exactly as a release would, which is why both onPointerLeave and
+          onBlur clear it alongside onPointerUp.
+
+          The roll is on the pointer rather than on the click because the
+          hold has to start with it, and the click is then only for the
+          press that sends no pointer event at all: `detail` is 0 on a
+          keyboard activation and never on a mouse one, which is what keeps
+          the button reachable from the keyboard without rolling twice for
+          every press of it. */}
+      <button
+        className={styles.dice}
+        title={`nudge only this stage's controls randomly around where they sit, and keep nudging while you hold it down — shift for a wilder roll, alt for a gentler one, ctrl (or cmd) for turbo (${group.name})`}
+        aria-label={`nudge ${group.name} randomly — press for one, hold to keep going`}
+        onPointerDown={e => {
+          const amount = mutateAmountFor(e)
+          stopRoll()
+          mutateGroup(group.sliders, amount)
+          rollDelay.current = setTimeout(() => {
+            rollTrain.current = setInterval(
+              () => mutateGroup(group.sliders, amount),
+              ROLL_TRAIN_MS,
+            )
+          }, ROLL_HOLD_MS)
+        }}
+        onPointerUp={stopRoll}
+        onPointerLeave={stopRoll}
+        onBlur={stopRoll}
+        onClick={e => {
+          if (e.detail === 0) mutateGroup(group.sliders, mutateAmountFor(e))
+        }}
+      >
+        randomize
+      </button>
+      {/* The same nudge with nobody pressing it, aimed at this stage alone
+          (ui/drift.ts). Lit rather than reworded while it runs: the look
+          bar's switch has a row to itself and can afford "drifting…", where
+          a heading has one line to share with a stage name that can be 33
+          characters long.
+
+          Absent from a stage the drift may not touch — the view group is
+          nothing but the magnifier, which no roll and no drift moves. */}
+      {driftable ? (
+        <button
+          className={cx(styles.drift, drifting && styles.driftOn)}
+          aria-pressed={drifting}
+          title={
+            drifting
+              ? `stop here and keep ${group.name} wherever it has got to (the rest of the board carries on)`
+              : `let this stage ${driftWords.does}: a leg every ${DRIFT_SECONDS} seconds, travelling most of the way there so nothing cuts. The rest of the board holds still (${group.name}). The look bar's ▾ is where the three shapes are picked`
+          }
+          onClick={() => toggleGroupDrift(group)}
+        >
+          {driftWords.label}
+        </button>
+      ) : null}
+    </>
+  )
+
+  // A group the query left with nothing — no rows, no folded trims to offer,
+  // and no miniature — is a header over an empty body, so it drops out entirely.
+  return shown.length === 0 &&
+    fine.length === 0 &&
+    frame === undefined ? null : (
+    <Section
+      title={group.name}
+      defaultOpen={props.defaultOpen}
+      openOnFilter
+      dot={touched}
+      // A folded door keeps its accessories out of the way, and a stage left
+      // wandering has to say so from the outside: the count beside it cannot,
+      // since a hand on a slider moves it the same way drift does.
+      mark={
+        drifting ? (
+          <span className={styles.driftMark}>drifting</span>
+        ) : undefined
+      }
+      help={help}
+    >
+      {body}
     </Section>
   )
 }

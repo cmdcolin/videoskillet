@@ -26,9 +26,9 @@ import type { GeneratorsLive, Group } from './controls'
 // rows the look has moved.
 //
 // The rows are the panel's own ControlSlider, so drag, reset, MIDI and the mod
-// badge all work here. Each group's rows sit behind ControlRows, which React
-// skips on a write unless the group's list of rows changes, so a drag costs the
-// row it moves and the counts in two headings.
+// badge all work here. A drag re-renders the row it moves. A write that takes a
+// control off stock or puts it back also re-renders this component for the
+// count in its lead line, and the two headings over the row for theirs.
 export function AllSettingsSheet(props: {
   offOnly: boolean
   onToggleOffOnly: () => void
@@ -47,7 +47,6 @@ export function AllSettingsSheet(props: {
   const heldKeys = words(held)
   const keys = props.offOnly ? restick(heldKeys, words(now)) : null
   if (held !== now && keys !== heldKeys) setHeld(now)
-  const index = settingsIndex(keys === null ? null : new Set(keys))
   const off = words(now).length
   return (
     <PanelSheet
@@ -75,44 +74,75 @@ export function AllSettingsSheet(props: {
           : `${ALL_SLIDERS.length} controls, ${off} off stock.`}{' '}
         A group’s name opens it in the panel.
       </p>
-      <div className={styles.list}>
-        {index.length === 0 ? (
-          <div className={styles.empty}>
-            every control is at its default — move one and it turns up here
-          </div>
-        ) : (
-          index.map(stage => (
-            <section key={stage.name} className={styles.stage}>
-              <StageHead
-                name={stage.name}
-                open={props.openStages.has(stage.name)}
-                onOpen={() => props.onOpenStage(stage.name)}
-              />
-              {stage.groups.map(g => (
-                <GroupBlock
-                  key={g.group.name}
-                  stage={stage.name}
-                  group={g.group}
-                  rows={sameList(g.rows)}
-                  fine={sameList(g.fine)}
-                  reach={opensInPanel(
-                    stage.name,
-                    g.group,
-                    props.openStages,
-                    props.generators,
-                  )}
-                  onOpen={props.onOpenGroup}
-                />
-              ))}
-            </section>
-          ))
-        )}
-      </div>
+      <SettingsList
+        shown={keys === null ? null : keys.join(' ')}
+        openStages={props.openStages}
+        generators={props.generators}
+        onOpenStage={props.onOpenStage}
+        onOpenGroup={props.onOpenGroup}
+      />
     </PanelSheet>
   )
 }
 
 const words = (s: string): readonly string[] => (s === '' ? [] : s.split(' '))
+
+const EVERY_ROW = settingsIndex(null)
+
+// The list under the lead line, as its own component so the compiler memoizes
+// it on `shown`, a string of the keys the list holds or null for every control.
+// A write that crosses stock changes the count in the lead line and, with "off
+// stock only" on, may change `shown`. Only the second rebuilds the list.
+function SettingsList(props: {
+  shown: string | null
+  openStages: ReadonlySet<string>
+  generators: GeneratorsLive
+  onOpenStage: (stage: string) => void
+  onOpenGroup: (stage: string, group: string) => void
+}) {
+  // Taken off `props` by name: a call written `props.onOpenStage(…)` keys the
+  // closure on `props`, which is new on every render.
+  const { onOpenStage, onOpenGroup } = props
+  const index =
+    props.shown === null
+      ? EVERY_ROW
+      : settingsIndex(new Set(words(props.shown)))
+  return (
+    <div className={styles.list}>
+      {index.length === 0 ? (
+        <div className={styles.empty}>
+          every control is at its default — move one and it turns up here
+        </div>
+      ) : (
+        index.map(stage => (
+          <section key={stage.name} className={styles.stage}>
+            <StageHead
+              name={stage.name}
+              open={props.openStages.has(stage.name)}
+              onOpen={() => onOpenStage(stage.name)}
+            />
+            {stage.groups.map(g => (
+              <GroupBlock
+                key={g.group.name}
+                stage={stage.name}
+                group={g.group}
+                rows={sameList(g.rows)}
+                fine={sameList(g.fine)}
+                reach={opensInPanel(
+                  stage.name,
+                  g.group,
+                  props.openStages,
+                  props.generators,
+                )}
+                onOpen={onOpenGroup}
+              />
+            ))}
+          </section>
+        ))
+      )}
+    </div>
+  )
+}
 
 function StageHead(props: { name: string; open: boolean; onOpen: () => void }) {
   const touched = useControlReading(c =>

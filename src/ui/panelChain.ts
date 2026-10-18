@@ -1,4 +1,3 @@
-import { atRest } from '../core/controls'
 import {
   AUDIO_GROUPS,
   B_GROUPS,
@@ -19,18 +18,18 @@ import {
 } from './controls'
 import { filterActive, freeMatches, groupMatches } from './filter'
 
-import type { Controls } from '../core/controls'
+import type { ControlKey } from '../core/controls'
 import type { GeneratorsLive, Group } from './controls'
 import type { Filter, IsRouted } from './filter'
 import type { BranchNode, LoopNode, PathNode } from './SignalPath'
 import type { ReactNode } from 'react'
 
-// Every box the panel's map draws, worked out from the control tables, the live
-// look and the filter — and nothing else. Its own module because it is the
-// sidebar's whole structure and it is arithmetic over data: which stages are on
-// the map, which of them can act on anything, and which of them a query has left
-// with nothing. That last question is the one this file exists for; see
-// `anyStage` at the bottom.
+// Every box the panel's map draws, worked out from the control tables, which
+// controls the look moves off stock, and the filter — and nothing else. Its own
+// module because it is the sidebar's whole structure and it is arithmetic over
+// data: which stages are on the map, which of them can act on anything, and
+// which of them a query has left with nothing. That last question is the one
+// this file exists for; see `anyStage` at the bottom.
 //
 // It builds three lists rather than one because the drawing does: the trunk the
 // picture passes along, the loops patched over it, and the branches hanging
@@ -169,7 +168,9 @@ const BRANCHES: readonly {
 ]
 
 export function panelChain(o: {
-  controls: Controls
+  // The controls the look moves off stock. A set rather than the board, so the
+  // caller rebuilds the chain only when a control crosses stock.
+  offStock: ReadonlySet<ControlKey>
   // The live filter, as the panel is asking it: text, motion mode, or both.
   filter: Filter
   isRouted: IsRouted
@@ -204,7 +205,7 @@ export function panelChain(o: {
   // under it.
   generators: GeneratorsLive
 }): PanelChain {
-  const { controls } = o
+  const { offStock } = o
   // The groups a stage offers, which is all of them except a generator nothing
   // is running.
   //
@@ -230,8 +231,7 @@ export function panelChain(o: {
   // stage builds its own sections.
   const node = (name: string, blurb: string, groups: Group[]): PathNode => {
     const parts = groups.map(group => ({
-      touched: group.sliders.filter(s => !atRest(controls[s.key], s.key))
-        .length,
+      touched: group.sliders.filter(s => offStock.has(s.key)).length,
       onOpen: () => o.onOpenGroup(name, group.name),
     }))
     return {

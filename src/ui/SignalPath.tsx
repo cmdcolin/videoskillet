@@ -3,6 +3,7 @@ import { Fragment, useEffect, useRef } from 'react'
 import { ChainMap } from './ChainMap'
 import { ControlGroup } from './ControlGroup'
 import { cx } from './cx'
+import { sameGroups } from './sameList'
 import { Accordion, NestedSections } from './Section'
 import styles from './SignalPath.module.css'
 import { hasBody, stageBody } from './stageBody'
@@ -478,59 +479,121 @@ export function SignalPath(props: {
           the header line, where it costs no row and survives the first click. */}
       <div className={styles.stages}>
         {shown.map(({ node, body }) => (
-          <div
+          <StageRow
             key={node.name}
-            className={styles.stageRow}
-            ref={el => {
-              if (el === null) rows.current.delete(node.name)
-              else rows.current.set(node.name, el)
-            }}
-          >
-            <StageHead
-              node={node}
-              nameHint="click to fold this stage"
-              countHint="click to see"
-              onName={() => props.onOpen(node.name)}
-              onCount={node.onJumpTouched}
-              // onOpen toggles, so closing is opening the stage that is
-              // already open. Not offered under a live filter: there the row
-              // is shown because it matches, and an × that left it on screen
-              // would be a button that did nothing.
-              onClose={
-                props.expandAll ? undefined : () => props.onOpen(node.name)
-              }
-              stock={stockFor(node)}
-              all={
-                props.expandAll || body.groups.length < 2
-                  ? undefined
-                  : {
-                      on: props.allGroups(node.name),
-                      onToggle: () => props.onToggleAllGroups(node.name),
-                    }
-              }
-            />
-            {/* The picker first, because it is what the rest of the stage is
-                downstream of. */}
-            {body.picker?.()}
-            {/* And a stage that is not made of groups, handed over whole. */}
-            {body.body?.()}
-            {body.groups.length === 0 ? null : (
-              <NestedSections>
-                <Accordion
-                  openId={props.openGroup(node.name)}
-                  all={props.allGroups(node.name)}
-                  onToggle={name => props.onOpenGroup(node.name, name)}
-                >
-                  {body.groups.map(group => (
-                    <ControlGroup key={group.name} group={group} />
-                  ))}
-                </Accordion>
-              </NestedSections>
-            )}
-          </div>
+            node={node}
+            body={body}
+            expandAll={props.expandAll}
+            stock={stockFor(node)}
+            openId={props.openGroup(node.name)}
+            all={props.allGroups(node.name)}
+            onOpen={props.onOpen}
+            onOpenGroup={props.onOpenGroup}
+            onToggleAllGroups={props.onToggleAllGroups}
+            rows={rows}
+          />
         ))}
       </div>
     </>
+  )
+}
+
+// One open stage under the map: its heading, its picker or body, and its groups.
+// A component of its own so that each stage keeps a memo of its groups. A
+// write that changes the count on the map re-renders SignalPath, and with the
+// groups built inline in its loop, that rebuilt every group in the open stage.
+// Here the groups are one element keyed on the list, the open group and the
+// fold, none of which a write changes, so React skips them.
+function StageRow(props: {
+  node: MapNode<PathNode>
+  body: ReturnType<typeof stageBody>
+  expandAll: boolean
+  stock: StageStock | undefined
+  openId: string | null
+  all: boolean
+  onOpen: (name: string) => void
+  onOpenGroup: (stage: string, name: string) => void
+  onToggleAllGroups: (stage: string) => void
+  rows: RefObject<Map<string, HTMLDivElement>>
+}) {
+  // Taken off `props` by name: a call written `props.onOpenGroup(…)` passes
+  // `props` as `this`, so the compiler keys the closure on `props`, which is new
+  // on every render, and the groups would come back down with it.
+  const { node, body, rows, onOpen, onOpenGroup, onToggleAllGroups } = props
+  const groups = sameGroups(body.groups)
+  const groupList =
+    groups.length === 0 ? null : (
+      <StageGroups
+        stage={node.name}
+        groups={groups}
+        openId={props.openId}
+        all={props.all}
+        onOpenGroup={onOpenGroup}
+      />
+    )
+  return (
+    <div
+      className={styles.stageRow}
+      ref={el => {
+        if (el === null) rows.current.delete(node.name)
+        else rows.current.set(node.name, el)
+      }}
+    >
+      <StageHead
+        node={node}
+        nameHint="click to fold this stage"
+        countHint="click to see"
+        onName={() => onOpen(node.name)}
+        onCount={node.onJumpTouched}
+        // onOpen toggles, so closing is opening the stage that is already
+        // open. Not offered under a live filter: there the row is shown
+        // because it matches, and an × that left it on screen would be a
+        // button that did nothing.
+        onClose={props.expandAll ? undefined : () => onOpen(node.name)}
+        stock={props.stock}
+        all={
+          props.expandAll || groups.length < 2
+            ? undefined
+            : {
+                on: props.all,
+                onToggle: () => onToggleAllGroups(node.name),
+              }
+        }
+      />
+      {/* The picker first, because it is what the rest of the stage is
+          downstream of. */}
+      {body.picker?.()}
+      {/* And a stage that is not made of groups, handed over whole. */}
+      {body.body?.()}
+      {groupList}
+    </div>
+  )
+}
+
+// The groups of one open stage. A component of its own so that StageRow hands
+// it the list whole: the compiler cannot see into `sameGroups`, so a `.map` over
+// its result in StageRow would share a memo block with the list, and rebuild
+// whenever the stage's node did.
+function StageGroups(props: {
+  stage: string
+  groups: readonly Group[]
+  openId: string | null
+  all: boolean
+  onOpenGroup: (stage: string, name: string) => void
+}) {
+  const { stage, onOpenGroup } = props
+  return (
+    <NestedSections>
+      <Accordion
+        openId={props.openId}
+        all={props.all}
+        onToggle={name => onOpenGroup(stage, name)}
+      >
+        {props.groups.map(group => (
+          <ControlGroup key={group.name} group={group} />
+        ))}
+      </Accordion>
+    </NestedSections>
   )
 }
 

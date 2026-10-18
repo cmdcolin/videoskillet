@@ -4,7 +4,7 @@ import { clamp01 } from '../core/math'
 import { cx } from './cx'
 import { Dialog } from './Dialog'
 import { BulbIcon } from './icons'
-import { PRESETS, matchPreset, presetLabel, presetLabelFor } from './presets'
+import { PRESETS, presetLabel, presetLabelFor } from './presets'
 import styles from './PresetsSection.module.css'
 import { Section } from './Section'
 import { usePersistedFlag } from './storage'
@@ -491,7 +491,8 @@ export function PresetMatches(props: {
 }
 
 export function PresetsSection(props: {
-  controls: Controls
+  // The preset the settled board matches, if any.
+  active: PresetDef | undefined
   lastPreset: string | null
   weights: PresetWeights
   // The stage the panel has open, as a token for "browsing is over" — see
@@ -505,7 +506,7 @@ export function PresetsSection(props: {
 }) {
   const [showHelp, setShowHelp] = useState(false)
   const [showAll, setShowAll] = usePersistedFlag(ALL_STORE)
-  const active = matchPreset(props.controls)
+  const { active } = props
 
   return (
     <>

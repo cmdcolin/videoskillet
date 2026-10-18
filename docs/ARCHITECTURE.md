@@ -496,6 +496,28 @@ consequences worth knowing:
   inferred from build output. The consumer's own status is irrelevant: a
   compiled consumer still re-fires on a changed identity.
 
+Four shapes cost a component its memoization without a bail-out, so neither
+`pnpm compiler` nor the build reports them. `src/ui/rerender.dom.test.tsx` fails
+on the re-renders they cause.
+
+- **A hook called between building a value and using it.** The compiler cannot
+  memoize a value whose life spans a hook call, and drops everything built from
+  it too. Call every hook first. A reading that depends on a derived list goes
+  into a child component that takes the list as a prop (`FineToggle` in
+  `ControlGroup.tsx`).
+- **A value handed to a function the compiler cannot see into.** The compiler
+  assumes `panelChain(o)` or `sameList(xs)` may change what it is handed, so the
+  value stays open until that call, and everything built in between joins one
+  memo block with it. Keep such a block short and end it in primitives, as App's
+  panel structure does, or take the value off a hook, whose result the compiler
+  treats as frozen (`usePanelFilter`).
+- **A call written `obj.fn()`.** The call passes `obj` as `this`, so the closure
+  around it is keyed on `obj`. A closure that calls `props.onOpen(x)` changes on
+  every render, and one that calls `mix.rollMotion()` on every change to `mix`.
+  Take the function off by name first.
+- **JSX in a conditional inside other JSX.** The compiler memoizes it with its
+  parent. Build it as its own `const` first, as `StageRow` does with its groups.
+
 ### Two panel contexts
 
 `ControlsContext` carries the controls and the verbs a row needs;
@@ -547,9 +569,12 @@ Three things it has to get right, and together they are why it is not a
   and that beat is what a morph looks chunky as.
 
   What the panel _does_ with a notify matters as much as how often it gets one.
-  App reads the settled board rather than the live one, so the sidebar's
-  structure, the walk over every slider and the state URL all sit out a flight
-  the rows are travelling through. The rows read the live store key by key.
+  App reads the settled board, so the sidebar's structure, the walk over every
+  slider and the state URL all sit out a flight the rows are travelling through.
+  It reads that board only through readings, one primitive per question (which
+  controls are off stock, which preset it matches), so a hand write that changes
+  no answer does not re-render App either. The rows read the live store key by
+  key.
 
 - **The landing frame assigns the destination** rather than evaluating the path
   at `t=1`: `from + (to - from) * 1` is not bit-identical to `to`, and

@@ -10,13 +10,14 @@ import {
 import { createPortal } from 'react-dom'
 
 import styles from './app.module.css'
-import { DEFAULT_CONTROLS, atRest } from './core/controls'
+import { DEFAULT_CONTROLS } from './core/controls'
 import { publicUrl } from './publicUrl'
 import { A_OPTIONS, B_OPTIONS } from './sources/modes'
 import { poolCaption } from './sources/pools'
 import { AboutDialog } from './ui/AboutDialog'
 import { Account } from './ui/Account'
 import { AdvancedDialog } from './ui/AdvancedDialog'
+import { offStockKeys } from './ui/allSettings'
 import { AllSettingsSheet } from './ui/AllSettingsSheet'
 import { AppMenu, ShowMenuButton, ShowSidebarButton } from './ui/AppMenu'
 import { AudioHint, AudioInput, SoundOut } from './ui/AudioInput'
@@ -57,12 +58,7 @@ import { Deck } from './ui/Deck'
 import { barCut, deckLoad } from './ui/deckModel'
 import { DRIFT_BOARD, DRIFT_WAKE } from './ui/drift'
 import { FatalScreen } from './ui/FatalScreen'
-import {
-  FilterContext,
-  filterActive,
-  readFilter,
-  sliderMatches,
-} from './ui/filter'
+import { FilterContext, filterActive, sliderMatches } from './ui/filter'
 import { FpsMonitor } from './ui/FpsMonitor'
 import { LookBar } from './ui/LookBar'
 import { LookPopover } from './ui/LookPopover'
@@ -87,6 +83,7 @@ import { BENCH_W, PANEL_W } from './ui/panelWidth'
 import { slotPatched, soundPatched } from './ui/patched'
 import {
   matchPreset,
+  PRESET_BY_NAME,
   presetControls,
   presetLabelFor,
   presetsMatching,
@@ -130,6 +127,7 @@ import { useMidi } from './ui/useMidi'
 import { useMix } from './ui/useMix'
 import { useModSlots } from './ui/useModSlots'
 import { usePageLifecycle } from './ui/usePageLifecycle'
+import { usePanelFilter } from './ui/usePanelFilter'
 import { usePanelNav } from './ui/usePanelNav'
 import { usePopout } from './ui/usePopout'
 import { useRender } from './ui/useRender'
@@ -151,12 +149,19 @@ import { gitSha, versionLabel } from './version'
 import type { ControlKey, Controls } from './core/controls'
 import type { FaultPlan } from './core/signal/fault'
 import type { GlidePlan } from './core/signal/glide'
-import type { Group, PickerStage } from './ui/controls'
+import type { SourceBMode, SourceMode } from './sources/modes'
+import type {
+  GeneratorsLive,
+  Group,
+  LoopsLive,
+  PickerStage,
+} from './ui/controls'
 import type { ControlsApi, ControlStore } from './ui/ControlsContext'
 import type { DriftMode, DriftScope } from './ui/drift'
 import type { StashSlot } from './ui/fileStash'
 import type { Lens } from './ui/lens'
 import type { ModSlotsApi } from './ui/ModSlotsContext'
+import type { FreeStage } from './ui/panelChain'
 import type { SavedProfile } from './ui/profileModel'
 import type { AnySlotView } from './ui/slotView'
 import type { PickSlot } from './ui/SourceSlot'
@@ -182,28 +187,93 @@ const PANEL_W_STORE = 'videoskillet_panel_width'
 
 // useSyncExternalStore fallbacks for the window before the async engine exists.
 const subscribeNever = () => () => {}
-const getDefaultControls = (): Controls => DEFAULT_CONTROLS
 
-// A reading of the *live* board, for the few answers App has to keep current
-// while a morph is in flight. App otherwise reads the settled board, which is
-// what keeps a morph off its render budget; these are the exceptions, and they
-// are all thresholds — is a loop carrying signal, is the tape off play — so the
-// answer changes a handful of times across a morph rather than ten times a
-// second.
+// A reading of the board: one primitive answering one question, such as which
+// controls are off stock or which preset the board matches. App reads the board
+// only through these, so a write re-renders App only when an answer changes,
+// and a mid-drag write that crosses no threshold does not re-render it at all.
 //
 // Primitive only, and the restriction is what does the work: two equal
 // primitives are `===`, so `useSyncExternalStore` bails out and App does not
-// re-render. Return an object here and every notify rebuilds the panel again,
-// which is the whole thing this file just stopped doing. Same rule, and the
-// same reasoning, as `useControlReading` in ui/ControlsContext.ts — separate
-// only because App sits above the provider that one reads from.
-function useLiveReading<T extends string | number | boolean>(
+// re-render. Return an object here and every write rebuilds the panel again.
+// Same rule, and the same reasoning, as `useControlReading` in
+// ui/ControlsContext.ts. This one takes the store as an argument because App
+// sits above the provider that one reads from, and because App reads both the
+// live board and the settled one.
+function useReading<T extends string | number | boolean>(
   store: ControlStore,
   read: (controls: Controls) => T,
 ): T {
   return useSyncExternalStore(store.subscribe, () => read(store.get()))
 }
 const getNoMorph = (): number | null => null
+
+// What the look moves off stock: the keys, for the map's counts, and the rows,
+// for the look menu and the filter's look mode. App reads one string off the
+// board, so a write re-renders App only when a control crosses stock.
+function useOffStock(store: ControlStore) {
+  const off = useReading(store, offStockKeys)
+  const listed = new Set(off.split(' '))
+  const sliders = ALL_SLIDERS.filter(s => listed.has(s.key))
+  const keys: ReadonlySet<ControlKey> = new Set(sliders.map(s => s.key))
+  return { keys, sliders }
+}
+
+// The thresholds App keeps current off the live board while a morph is in
+// flight: what the deck is holding, which loops carry signal, and which bench
+// generators run. Each changes a handful of times across a morph, where the
+// board changes ten times a second.
+function useLiveThresholds(
+  store: ControlStore,
+  a: SourceMode,
+  b: SourceBMode,
+): { deck: FreeStage['load']; loops: LoopsLive; generators: GeneratorsLive } {
+  const deckN = useReading(store, c => deckLoad(c).n)
+  const deckSay = useReading(store, c => deckLoad(c).say)
+  // Read off each loop's own mix rather than the whole stage: a loop with its
+  // mix at zero is patched but silent, and both drawings are answering "is it
+  // running". The same two predicates gate the passes that close them (compose
+  // and fbComposite in gpu/pipeline.ts), so a lit run and a dispatched pass
+  // mean the same thing.
+  const camera = useReading(store, c => c.fbMix > 0)
+  const mixer = useReading(store, c => c.cfbMix > 0)
+  const noise = useReading(store, c => generatorsLive(a, b, c).noise)
+  const synth = useReading(store, c => generatorsLive(a, b, c).synth)
+  return {
+    deck: { n: deckN, say: deckSay },
+    loops: { camera, mixer },
+    generators: { noise, synth },
+  }
+}
+
+// The whole settled board, for a component App renders that shows it: the
+// palette's readouts, the board as text, and the links in the share dialog.
+// The subscription lives here so a write re-renders the sheet or dialog that
+// shows the board and leaves App alone.
+function WithBoard(props: {
+  store: ControlStore
+  children: (board: Controls) => ReactNode
+}) {
+  const board = useSyncExternalStore(props.store.subscribe, props.store.get)
+  return <>{props.children(board)}</>
+}
+
+// The account's copy of the session, which follows the settled board. Its own
+// component for the reason `WithBoard` is one.
+function CurrentSession(props: {
+  store: ControlStore
+  uid: string | null
+  query: ((board: Controls) => string) | null
+  grabThumb: (max: number) => Promise<string | null>
+}) {
+  const board = useSyncExternalStore(props.store.subscribe, props.store.get)
+  useCurrentSession(
+    props.uid,
+    props.query === null ? null : props.query(board),
+    props.grabThumb,
+  )
+  return null
+}
 
 // Which stages are open to a jump, in the only four arrangements there are: a
 // second source patched in or not, an audio input picked or not. Built once
@@ -278,6 +348,10 @@ export function App() {
   // render" — one error, and the compiler drops *all* memoization for this
   // component, which is the one that builds the entire panel.
   const { engine, engineRef } = eng
+  // Taken off `eng` by name for the reason `mix`'s verbs are below: several of
+  // the engine's verbs are new on every render, so a closure keyed on `eng` is
+  // too.
+  const { setError } = eng
   // The automation tape, built before the write path because the write path
   // taps it (docs/EDITOR.md › _Live input has no offline meaning_). It is inert
   // until ● is pressed: every verb on the tap checks whether anything is
@@ -305,26 +379,12 @@ export function App() {
   // The engine IS the store: React reads controls straight from it via
   // useSyncExternalStore, so there's no separate `values` copy to keep in sync.
   //
-  // The *settled* board, and that is the point. What App does with the whole
-  // object is expensive and is all about the resting look: it builds the
-  // sidebar's entire structure (`panelChain`), walks all 253 sliders to find
-  // what is off stock (`edited`), matches the recipe chips, and rebuilds the
-  // state URL. None of those answers change usefully halfway between two looks,
-  // and paying for them ten times a second during a morph was costing the
-  // render loop frames — the picture's own stutter, bought by the panel
-  // describing it. The rows travel: they read the live store key by key through
-  // `controlStore` below.
-  const controls = useSyncExternalStore(
-    engine === null ? subscribeNever : engine.subscribeSettledControls,
-    engine === null ? getDefaultControls : engine.getSettledControls,
-  )
-  // The same store, handed to the rows so each can subscribe to its own key
-  // instead of taking the whole object off this render. Hand-memoized, and this
-  // is the one case where that is correctness rather than tuning: the object
-  // goes into a context, so a fresh identity per render re-renders every row
-  // that reads it, which is precisely what this exists to stop. The React
-  // Compiler would very likely get it right, and "very likely" is not the bar
-  // for the thing the panel's whole render budget rests on.
+  // The live board, handed to the rows so each can subscribe to its own key.
+  // Hand-memoized, and this is the one case where that is correctness rather
+  // than tuning: the object goes into a context, so a fresh identity per render
+  // re-renders every row that reads it, which is precisely what this exists to
+  // stop. The React Compiler would very likely get it right, and "very likely"
+  // is not the bar for the thing the panel's whole render budget rests on.
   const controlStore = useMemo<ControlStore>(
     () =>
       engine === null
@@ -332,6 +392,34 @@ export function App() {
         : { subscribe: engine.subscribeControls, get: engine.getControls },
     [engine],
   )
+  // The settled board: every hand write and landing, and nothing from inside a
+  // morph. What App asks of the board is about the resting look — what is off
+  // stock, which preset it matches, the state URL — and none of those answers
+  // changes usefully halfway between two looks. App reads it through
+  // `useReading` and never whole, because a component that reads the whole
+  // board re-renders on every write, and App builds the entire panel.
+  // Hand-memoized for the reason `controlStore` is.
+  const settledStore = useMemo<ControlStore>(
+    () =>
+      engine === null
+        ? NO_CONTROL_STORE
+        : {
+            subscribe: engine.subscribeSettledControls,
+            get: engine.getSettledControls,
+          },
+    [engine],
+  )
+  const offStock = useOffStock(settledStore)
+  // The preset the board matches, by name, or '' for none.
+  const matched = useReading(settledStore, c => matchPreset(c)?.name ?? '')
+  // The magnifier and the frame lock, which the menu and the stage draw.
+  const lensZoom = useReading(settledStore, c => c.crtZoom)
+  const lensX = useReading(settledStore, c => c.crtZoomX)
+  const lensY = useReading(settledStore, c => c.crtZoomY)
+  const frameLock = useReading(settledStore, c => c.frameLock)
+  // Off the live board: a morph that puts the tape off play or brings a loop
+  // up should say so while it is happening, not once it has landed.
+  const live = useLiveThresholds(controlStore, eng.a.mode, eng.b.mode)
   // MIDI clock when there is one, the hand-set tempo under it when there isn't.
   // Every ♩ in the panel — the rate control rows, and a modulation slot's rate —
   // reads this one number.
@@ -402,17 +490,18 @@ export function App() {
   const toggleSidebar = () => {
     if (!fullscreen && popout === null) setSidebarHidden(!sidebarHidden)
   }
-  const [filter, setFilter] = useState('')
-  // The other half of the filter, and a mode rather than a word: which controls
-  // the bay is driving is a question the box cannot hold, because a routing
-  // leaves the resting value alone and there is nothing to type. It rode in the
-  // box as a pasted `∿` once, which made the two alternatives — you could ask
-  // for moving rows or for "ghost", never both — and left the ✕ clearing a mode
-  // it could not tell from a search.
-  const [movingOnly, setMovingOnly] = useState(false)
-  // The third half, raised from the look bar on a phone (see LookPopover): the
-  // controls the look moves off stock, or null for the whole panel.
-  const [lookKeys, setLookKeys] = useState<ReadonlySet<ControlKey> | null>(null)
+  const {
+    text: filter,
+    setText: setFilter,
+    moving: movingOnly,
+    look: lookKeys,
+    query,
+    clear: clearFilter,
+    reveal: revealFilter,
+    toggleMoving,
+    showMoving,
+    toggleLook,
+  } = usePanelFilter(offStock.sliders)
   // Whether the masthead is showing the filter box rather than the wordmark.
   // Held open by a live query as well as by the ⌕, so the box can't disappear
   // out from under a filter that is still narrowing the panel — which is what
@@ -427,23 +516,10 @@ export function App() {
     setSearchOpen(true)
     filterBox.current?.focus()
   }
-  // The three ways the filter moves from outside the box. Together here because
-  // each has to speak for both halves of it: a mode the ✕ leaves standing is a
-  // panel still narrowed by something with nothing on screen explaining it.
-  const clearFilter = () => {
-    setFilter('')
-    setMovingOnly(false)
-    setLookKeys(null)
-  }
-  // A jump — the palette revealing a control, a door into a free box — asks for
-  // one named thing, so it drops the mode rather than intersecting with it.
-  // Landing on "nothing matches" because the bay happens not to be driving what
-  // you looked up is not an answer to what was asked.
+  // A jump asks for one named thing, so it also brings back a hidden sidebar.
   const revealText = (text: string) => {
     setSidebarHidden(false)
-    setFilter(text)
-    setMovingOnly(false)
-    setLookKeys(null)
+    revealFilter(text)
   }
   // The stage a jump out of the sheet opened, for the panel to scroll to.
   const [revealStage, setRevealStage] = useState<string | null>(null)
@@ -453,9 +529,6 @@ export function App() {
     setSearchOpen(false)
     setRevealStage(stage)
   }
-  // One switch wherever it is pressed — the Modulation section's count, the palette, the chip
-  // in the box. Nothing typed can reach the mode, so this is the whole of it.
-  const toggleMoving = () => setMovingOnly(!movingOnly)
   const nav = usePanelNav()
   const { favorites, toggleFavorite } = useFavorites()
   // The modulation bay, owned here so the panel, the rows and the mix all see
@@ -499,11 +572,9 @@ export function App() {
   // store and the button subscribes, the same shape `useControlValue` uses to
   // put one slider on one key.
   //
-  // App now genuinely does not re-render for a morph: it reads the settled
-  // board (`subscribeSettledControls`), so the only thing that can bring it
-  // back down mid-flight is one of the three threshold readings above crossing
-  // its threshold. This comment used to claim as much and be wrong, because the
-  // whole controls object was one subscription away at the top of the file.
+  // App does not re-render for a morph: it reads the settled board, and only
+  // through readings, so the only thing that can bring it back down mid-flight
+  // is one of the live thresholds above (`useLiveThresholds`) changing.
   const morphStore = {
     subscribe: engine === null ? subscribeNever : engine.subscribeGlide,
     get: engine === null ? getNoMorph : engine.getGlide,
@@ -518,7 +589,7 @@ export function App() {
   const [morphStored, setMorphStored] = usePersistedString('videoskillet_morph')
   const morphSeconds = parseMorph(morphStored)
   const mix = useMix({
-    controls,
+    settledStore,
     getControls: controlStore.get,
     writeControls,
     startGlide,
@@ -528,11 +599,19 @@ export function App() {
     rand: rollRand,
     mod: modApi,
   })
-  // The verbs a row reaches, taken off `mix` and `modApi` by name. A call
-  // written `mix.snapshotForUndo()` keys the closure on `mix`, which is a fresh
-  // object on every write, and a closure that changes on every write takes
-  // every mounted control row with it.
-  const { snapshotForUndo, snapshotBayForUndo, landDrift } = mix
+  // The verbs a row or a panel element reaches, taken off `mix` and `modApi` by
+  // name. A call written `mix.snapshotForUndo()` keys the closure on `mix`,
+  // which changes whenever anything in it does, such as `canUndo` on the press
+  // that starts a drag. A closure that changes then takes every element built
+  // from it along.
+  const {
+    snapshotForUndo,
+    snapshotBayForUndo,
+    landDrift,
+    landLook,
+    rollMotion,
+    applyPreset: applyMixPreset,
+  } = mix
   const { modFor, setSlotForKey, handOver } = modApi
   // The bay as the panel reaches it, where patching a routing onto a row or
   // handing one back is a step undo can take back.
@@ -553,7 +632,7 @@ export function App() {
   // A chip that turns on the caption decoder or the chyron has nothing to show
   // until line 21 carries words, so it brings some when the caption is blank.
   const applyPreset = (name: string, patch: Partial<Controls>) => {
-    mix.applyPreset(name, patch)
+    applyMixPreset(name, patch)
     if (wantsWords(patch) && eng.caption === '') eng.changeCaption(CAPTION_SEED)
   }
 
@@ -700,7 +779,7 @@ export function App() {
   // What it holds is the controls, which is why it costs nothing but a patch:
   // the engine already keeps its own snapshot to restore from.
   const holdStock = (stage: string) => {
-    engineRef.current?.preview(stockIn(controls, stage))
+    engineRef.current?.preview(stockIn(settledStore.get(), stage))
     setHeldStage(stage)
   }
   // Called by a pointer leaving the button as well as by one lifting off it, so
@@ -718,7 +797,7 @@ export function App() {
   // from stock has no name until someone gives it one, and the two things that
   // ask (a capture's filename, the save box's placeholder) fill that blank
   // differently. matchPreset returns undefined for "matches nothing authored".
-  const activePreset = matchPreset(controls)
+  const activePreset = matched === '' ? undefined : PRESET_BY_NAME.get(matched)
   const lookName = activePreset ? activePreset.name : mix.lastPreset
   // A take records what the speakers play, and its frames come off the GPU
   // without blocking the page.
@@ -807,7 +886,7 @@ export function App() {
   // Unpacked here, next to each other, rather than left as thirty fields on the
   // engine for everything else to unpack too.
   const { copyQuery, copyUrl, profileQuery, shareUrl, stateUrl } = useUrlState({
-    controls,
+    settled: settledStore,
     mod: slotsToRoutings(modApi.slots),
     engineReady: engine !== null,
     sourceMode: eng.a.mode,
@@ -830,10 +909,6 @@ export function App() {
     getGlideTarget,
     onError: eng.setError,
   })
-
-  // The packed look as a value, so the account's copy of it depends on the
-  // string and not on the identity of the closure that builds it.
-  const sessionQuery = profileQuery()
 
   // The saved-profile library, which is the query string above kept under a name.
   // Recall snapshots for undo, lands the controls, re-cables the bay — and stops
@@ -956,8 +1031,8 @@ export function App() {
   // been written apart, not anything either meant.
   const recallProfile = (profile: SavedProfile) => {
     const session = parseSessionParams(`?${profile.query}`)
-    mix.snapshotForUndo()
-    mix.landLook(presetControls(session.controls))
+    snapshotForUndo()
+    landLook(presetControls(session.controls))
     if (session.mod !== null) modApi.setRoutings(session.mod)
     profiles.markRecalled(profile.name)
   }
@@ -1126,7 +1201,7 @@ export function App() {
     onPickDriftMode: pickDriftMode,
     gated: modApi.stab.hz > 0,
     onToggleStab: toggleStab,
-    onRollMotion: amount => mix.rollMotion(amount, { audioLive: audio.active }),
+    onRollMotion: amount => rollMotion(amount, { audioLive: audio.active }),
     onReset: mix.reset,
     onUndo: mix.undo,
     onRedo: mix.redo,
@@ -1159,7 +1234,7 @@ export function App() {
     onBench: toggleBench,
     onPopout: () => openPopout(benchOn),
     onFilter: revealText,
-    onShowMoving: () => setMovingOnly(true),
+    onShowMoving: showMoving,
     onOpenStage: nav.jumpPhase,
     onAdvanced: () => setShowAdvanced(true),
     onMidi: () => setShowMidi(true),
@@ -1169,18 +1244,7 @@ export function App() {
   // Everything the current look actually moves, gathered out of the six stages
   // it is scattered across. The same walk the chain map's `• N` does, kept as
   // rows rather than reduced to a count — see LookPopover.
-  const edited = ALL_SLIDERS.filter(s => !atRest(controls[s.key], s.key))
-  const editedKeys = () => new Set(edited.map(s => s.key))
-  // The same sticky membership LookPopover holds, for the same reason: a row
-  // dragged back to stock stays put under the finger.
-  if (
-    lookKeys !== null &&
-    (edited.some(s => !lookKeys.has(s.key)) ||
-      (edited.length === 0 && lookKeys.size > 0))
-  )
-    setLookKeys(editedKeys())
-  const toggleLook = () => setLookKeys(lookKeys === null ? editedKeys() : null)
-  const query = readFilter(filter, movingOnly, lookKeys)
+  const edited = offStock.sliders
   const filtering = filterActive(query)
   const presetHits = presetsMatching(query.text)
   // A query set from anywhere else — the Modulation section's count, a palette jump — opens
@@ -1191,24 +1255,6 @@ export function App() {
   // mode asks exactly this and nothing else, so the whole panel — pinned rows,
   // contextual sections, the spine — has to be able to answer it.
   const isRouted = (key: ControlKey) => modApi.modFor(key) !== null
-  const pinned = sameList(
-    ALL_SLIDERS.filter(
-      s =>
-        favorites.has(s.key) &&
-        (!filtering || sliderMatches(s, query, isRouted(s.key))),
-    ),
-  )
-  // The address bar's look, mirrored onto the account behind it. Signed out the
-  // hook writes nothing; signed in it writes the packed query a few seconds
-  // after the board settles, which is what the home page's resume card reads.
-  // Nothing is written while the engine is absent, when `controls` is the
-  // default fallback and not the board, or before the board has moved off the
-  // one the page opened on.
-  useCurrentSession(
-    profiles.user === null ? null : profiles.user.uid,
-    engine === null ? null : sessionQuery,
-    capture.grabThumb,
-  )
   // Nothing patched into B leaves two stages with nothing to act on: B itself,
   // and the mixer beside it, whose every control needs a second signal. Both
   // are still drawn — together they are the one thing on screen saying a second
@@ -1223,26 +1269,37 @@ export function App() {
   // own, a clip could be driving the receiver with the picker on 'off', and this
   // branch would have called itself dead while it was working.
   const soundOn = audio.active
-  // What the modulation bay is holding, for the two drawings that mark it: the
-  // map's floating box and the full diagram's. Read once, so the miniature and
-  // the card cannot disagree about a bay neither of them can count for itself.
-  const bay = bayLoad(modApi.slots, modApi.stab)
-  // And what the deck is holding, for the same two drawings and the same reason.
-  // Off the live board: a morph that puts the tape off play should say so while
-  // it is happening, not once it has landed.
-  const deck = {
-    n: useLiveReading(controlStore, c => deckLoad(c).n),
-    say: useLiveReading(controlStore, c => deckLoad(c).say),
-  }
-  // Which of the returns is actually carrying signal. Read off each loop's own
-  // mix rather than the whole stage: a loop with its mix at zero is patched but
-  // silent, and both drawings are answering "is it running". The same two
-  // predicates gate the passes that close them (compose and fbComposite in
-  // gpu/pipeline.ts), so a lit run and a dispatched pass mean the same thing.
-  const loopsLive = {
-    camera: useLiveReading(controlStore, c => c.fbMix > 0),
-    mixer: useLiveReading(controlStore, c => c.cfbMix > 0),
-  }
+  // Which stages something outside the map can jump to. Not read off the chain
+  // below: a live filter drops stages from the map, and a caption in the look
+  // menu is still a way back to the module it came from.
+  const openStages = OPEN_STAGES[bOn ? 1 : 0][soundOn ? 1 : 0]
+  const { generators } = live
+  const modBay = () => (
+    <ModBay
+      tempo={tempo}
+      // A patched slot names the control it drives and opens the module that
+      // control lives in — the same jump the look menu's captions make, and the
+      // reason the bay no longer needs a picker listing every slider in the app.
+      openStages={openStages}
+      onOpenGroup={nav.openAt}
+      // The one-press start for an empty bay: the gentle motion roll, which
+      // patches one slow routing onto a control this look uses.
+      onStart={() => rollMotion('gentle', { audioLive: audio.active })}
+    />
+  )
+
+  // From here to `blocked`, the panel's structure. The React Compiler assumes a
+  // function it cannot see into may change what it is handed, so each value
+  // handed to `sliderMatches` or `panelChain` stays open until that call, and
+  // anything built in between shares its memo block. The block is kept short
+  // and ends in primitives, so nothing outside it is rebuilt with it.
+  const pinned = sameList(
+    ALL_SLIDERS.filter(
+      s =>
+        favorites.has(s.key) &&
+        (!filtering || sliderMatches(s, query, isRouted(s.key))),
+    ),
+  )
   // What is standing in each of the three boxes with a picker, for the caption
   // under its name on the map (patched.ts). Keyed by `PickerStage`, the same
   // list `stageTop` below is keyed by: a fourth picker added to one and not the
@@ -1252,28 +1309,13 @@ export function App() {
     [SOURCE_B_STAGE]: slotPatched(eng.b),
     [SOUND_STAGE]: soundPatched(audio.mode, audio.name),
   }
-  // Which stages something outside the map can jump to. Not read off the chain
-  // below: a live filter drops stages from the map, and a caption in the look
-  // menu
-  // is still a way back to the module it came from.
-  const openStages = OPEN_STAGES[bOn ? 1 : 0][soundOn ? 1 : 0]
-  const generators = {
-    noise: useLiveReading(
-      controlStore,
-      c => generatorsLive(eng.a.mode, eng.b.mode, c).noise,
-    ),
-    synth: useLiveReading(
-      controlStore,
-      c => generatorsLive(eng.a.mode, eng.b.mode, c).synth,
-    ),
-  }
   // Every box on the map, and whether the query reached one that will draw
   // anything — the whole of the sidebar's structure, worked out in one place
   // over the control tables (panelChain.ts). The two free boxes are the only
   // part App has to supply, because their bodies are components rather than
   // control groups.
   const chain = panelChain({
-    controls,
+    offStock: offStock.keys,
     filter: query,
     isRouted,
     bOn,
@@ -1291,27 +1333,35 @@ export function App() {
         // controls that live nowhere else — the deck's are all borrowed from
         // stages already in the results. See `freeMatches`.
         keywords: MOD_KEYWORDS,
-        load: bay,
-        body: () => (
-          <ModBay
-            tempo={tempo}
-            // A patched slot names the control it drives and opens the module
-            // that control lives in — the same jump the look menu's captions
-            // make, and the reason the bay no longer needs a picker listing
-            // every slider in the app.
-            openStages={openStages}
-            onOpenGroup={nav.openAt}
-            // The one-press start for an empty bay: the gentle motion roll,
-            // which patches one slow routing onto a control this look uses.
-            onStart={() =>
-              mix.rollMotion('gentle', { audioLive: audio.active })
-            }
-          />
-        ),
+        // What the modulation bay is holding, for the two drawings that mark
+        // it: the map's floating box and the full diagram's. Read once, so the
+        // miniature and the card cannot disagree about a bay neither of them
+        // can count for itself.
+        load: bayLoad(modApi.slots, modApi.stab),
+        body: modBay,
       },
-      { name: DECK_STAGE, blurb: DECK_BLURB, load: deck, body: () => <Deck /> },
+      // And what the deck is holding, for the same two drawings and the same
+      // reason.
+      {
+        name: DECK_STAGE,
+        blurb: DECK_BLURB,
+        load: live.deck,
+        body: () => <Deck />,
+      },
     ],
   })
+  // Whether the query reached anything at all, across every place a result can
+  // land — not the trunk alone. A routed mixer control lives on B's branch, a
+  // routed pin lives in Favorites and 37 of the app's controls live in a loop,
+  // so keying "nothing matches" off the trunk denied results the panel was
+  // showing right above the message. `anyStage` is the map's own answer, off the
+  // same nodes it draws, rather than a second list of render conditions kept
+  // agreeing with them by hand.
+  const anyResult =
+    chain.anyStage ||
+    pinned.length > 0 ||
+    edited.some(s => sliderMatches(s, query, isRouted(s.key)))
+  const blocked = chain.blocked.join(' and ')
 
   // This slot's clip menu. Asked for one slot at a time, so the name on the menu
   // and the slot the shelf opens for both come off the same object. As a `…A`/
@@ -1421,28 +1471,12 @@ export function App() {
     ),
   }
 
-  // Whether the query reached anything at all, across every place a result can
-  // land — not the trunk alone. A routed mixer control lives on B's branch, a
-  // routed pin lives in Favorites and 37 of the app's controls live in a loop,
-  // so keying "nothing matches" off the trunk denied results the panel was
-  // showing right above the message. `anyStage` is the map's own answer, off the
-  // same nodes it draws, rather than a second list of render conditions kept
-  // agreeing with them by hand.
-  const anyResult =
-    chain.anyStage ||
-    pinned.length > 0 ||
-    edited.some(s => sliderMatches(s, query, isRouted(s.key)))
-
   // The magnifier, as the stage's gestures and the menu's zoom row both see it.
   // One write for all three, so a gesture notifies the engine once.
-  const lens: Lens = {
-    zoom: controls.crtZoom,
-    x: controls.crtZoomX,
-    y: controls.crtZoomY,
-  }
+  const lens: Lens = { zoom: lensZoom, x: lensX, y: lensY }
   const setLens = (next: Lens) =>
     writeControls({
-      ...controls,
+      ...settledStore.get(),
       crtZoom: next.zoom,
       crtZoomX: next.x,
       crtZoomY: next.y,
@@ -1461,7 +1495,7 @@ export function App() {
     boxZoom,
     onToggleBoxZoom: () => setBoxZoom(!boxZoom),
     tap: eng.tap,
-    frameLock: controls.frameLock,
+    frameLock,
     onFrameLock: (v: number) => writeControl('frameLock', v),
     onGrabStill: capture.grabStill,
     onToggleRecord: capture.toggleRecord,
@@ -1646,9 +1680,7 @@ export function App() {
         // the wire they are slots that will never move, which is the one way a
         // roll can look like it did nothing. App is where that is known — the
         // picker owns it, and the bay cannot see it.
-        onRollMotion={amount =>
-          mix.rollMotion(amount, { audioLive: audio.active })
-        }
+        onRollMotion={amount => rollMotion(amount, { audioLive: audio.active })}
         onShare={() => setShowShare(true)}
         morphSeconds={morphSeconds}
         onSetMorph={s => setMorphStored(String(s))}
@@ -1686,7 +1718,7 @@ export function App() {
         />
       ) : (
         <PresetsSection
-          controls={controls}
+          active={activePreset}
           lastPreset={mix.lastPreset}
           weights={mix.weights}
           openStage={nav.openPhase}
@@ -1779,7 +1811,7 @@ export function App() {
         open={nav.openPhase}
         expandAll={filtering}
         bench={bench}
-        live={loopsLive}
+        live={live.loops}
         // On the bench nothing is folded, so the map marks a stage and scrolls
         // to it rather than unfolding one and closing another.
         onOpen={bench ? nav.jumpPhase : nav.togglePhase}
@@ -1814,8 +1846,8 @@ export function App() {
                 // not the same answer as no match at all: "bass" is seven routings
                 // in Sound, and what is missing is the input, not the control.
                 // Saying so is the difference between a dead end and one press.
-                chain.blocked.length > 0
-                ? `“${filter.trim()}” is in ${chain.blocked.join(' and ')}, with nothing patched in — clear the filter and press that box on the map`
+                blocked !== ''
+                ? `“${filter.trim()}” is in ${blocked}, with nothing patched in — clear the filter and press that box on the map`
                 : `nothing matches “${filter.trim()}” — try an artifact: rainbow, ghost, tear`}
         </div>
       )}
@@ -1834,50 +1866,66 @@ export function App() {
   // the thing its own ←→ nudge is aimed at, so a card that landed on it hid the
   // result of the gesture it was offering. Only one is ever up: `board as text`
   // is a palette action, and running one closes the palette.
-  const sheet = showPalette ? (
-    <CommandPalette
-      controls={controls}
-      actions={palette}
-      onApplyPreset={(name, patch) => applyPreset(name, patch)}
-      onMixStart={mix.startMix}
-      onWriteControl={writeControl}
-      onRevealControl={revealText}
-      onClose={() => setShowPalette(false)}
-    />
-  ) : showBoardText ? (
-    <BoardTextSheet
-      board={{
-        look:
-          activePreset !== undefined
-            ? `“${lookLabel}”`
-            : lookName === null
-              ? 'dialed in from stock — no preset behind it'
-              : `modified from “${lookLabel}”`,
-        sources: [eng.a, eng.b].map(slot => ({
-          tag: slot.tag,
-          what: slotPatched(slot) ?? 'nothing patched in',
-        })),
-        controls: boardControls(controls),
-        // Every slot holding a target, parked ones included: the link carries a
-        // patch whether or not it is running, so a dump that dropped the parked
-        // ones would describe a different board from the one the link rebuilds.
-        motion: modApi.slots.flatMap(slot =>
-          slot.target === ''
-            ? []
-            : [
-                {
-                  target: targetLabel(slot.target),
-                  detail: modDetail(slot, modApi.bpm),
-                  still: !slot.on,
-                },
-              ],
-        ),
-        link: stateUrl,
-      }}
-      onCopy={copyUrl}
-      onClose={() => setShowBoardText(false)}
-    />
-  ) : showAll ? (
+  //
+  // Each sheet is its own element, built whether or not it is up, so the React
+  // Compiler memoizes each on its own props. In one ternary, the three shared a
+  // memo block, and a prop of the palette that changes on every render rebuilt
+  // All settings with it.
+  const paletteSheet = (
+    <WithBoard store={settledStore}>
+      {board => (
+        <CommandPalette
+          controls={board}
+          actions={palette}
+          onApplyPreset={(name, patch) => applyPreset(name, patch)}
+          onMixStart={mix.startMix}
+          onWriteControl={writeControl}
+          onRevealControl={revealText}
+          onClose={() => setShowPalette(false)}
+        />
+      )}
+    </WithBoard>
+  )
+  const boardSheet = (
+    <WithBoard store={settledStore}>
+      {board => (
+        <BoardTextSheet
+          board={{
+            look:
+              activePreset !== undefined
+                ? `“${lookLabel}”`
+                : lookName === null
+                  ? 'dialed in from stock — no preset behind it'
+                  : `modified from “${lookLabel}”`,
+            sources: [eng.a, eng.b].map(slot => ({
+              tag: slot.tag,
+              what: slotPatched(slot) ?? 'nothing patched in',
+            })),
+            controls: boardControls(board),
+            // Every slot holding a target, parked ones included: the link
+            // carries a patch whether or not it is running, so a dump that
+            // dropped the parked ones would describe a different board from
+            // the one the link rebuilds.
+            motion: modApi.slots.flatMap(slot =>
+              slot.target === ''
+                ? []
+                : [
+                    {
+                      target: targetLabel(slot.target),
+                      detail: modDetail(slot, modApi.bpm),
+                      still: !slot.on,
+                    },
+                  ],
+            ),
+            link: stateUrl(board),
+          }}
+          onCopy={copyUrl}
+          onClose={() => setShowBoardText(false)}
+        />
+      )}
+    </WithBoard>
+  )
+  const allSheet = (
     <AllSettingsSheet
       offOnly={allOffOnly}
       onToggleOffOnly={() => startTransition(() => setAllOffOnly(!allOffOnly))}
@@ -1896,7 +1944,14 @@ export function App() {
       }}
       onClose={() => setShowAll(false)}
     />
-  ) : null
+  )
+  const sheet = showPalette
+    ? paletteSheet
+    : showBoardText
+      ? boardSheet
+      : showAll
+        ? allSheet
+        : null
 
   // The filter and the control API reach the rows through the tree, so a group
   // renders the same whether the panel is docked or in the popout window.
@@ -1944,382 +1999,418 @@ export function App() {
     '--panel-w': `${panelW}px`,
   }
 
-  return eng.fatal !== null ? (
-    <FatalScreen fatal={eng.fatal} />
-  ) : (
-    <div className={styles.app} style={shellStyle}>
-      {/* The stage and the strip share a column, so the tray sits under the
-          picture rather than beside it; the panel is untouched either way. */}
-      <div className={styles.left}>
-        <Stage
-          canvasRef={eng.canvasRef}
-          error={eng.error}
-          onDismissError={() => eng.setError('')}
-          frozen={eng.frozen}
-          rebuilding={eng.rebuilding}
-          budget={eng.budget}
-          lens={lens}
-          onLens={setLens}
-          boxZoom={boxZoom}
-          // Nothing over the picture while the masthead is on screen beside it —
-          // one ☰ per window, and in the ordinary layout the panel's is already at
-          // the top right of it. Fullscreen and the popout are the two states that
-          // take the panel away, and there the picture keeps its own copy (which
-          // is the only one that can be dismissed, since it is the only one
-          // sitting on top of what you are watching).
-          chrome={
-            !fullscreen && popout === null && !sidebarHidden ? null : (
-              <>
-                {barHidden ? (
-                  <ShowMenuButton onClick={() => setBarHidden(false)} />
-                ) : (
-                  <AppMenu
-                    variant="stage"
-                    {...menuProps}
-                    onHideBar={() => setBarHidden(true)}
-                  />
-                )}
-                {dockedHidden ? (
-                  <ShowSidebarButton onClick={() => setSidebarHidden(false)} />
-                ) : null}
-              </>
+  const stage = (
+    <Stage
+      canvasRef={eng.canvasRef}
+      error={eng.error}
+      onDismissError={() => setError('')}
+      frozen={eng.frozen}
+      rebuilding={eng.rebuilding}
+      budget={eng.budget}
+      lens={lens}
+      onLens={setLens}
+      boxZoom={boxZoom}
+      // Nothing over the picture while the masthead is on screen beside it —
+      // one ☰ per window, and in the ordinary layout the panel's is already at
+      // the top right of it. Fullscreen and the popout are the two states that
+      // take the panel away, and there the picture keeps its own copy (which
+      // is the only one that can be dismissed, since it is the only one
+      // sitting on top of what you are watching).
+      chrome={
+        !fullscreen && popout === null && !sidebarHidden ? null : (
+          <>
+            {barHidden ? (
+              <ShowMenuButton onClick={() => setBarHidden(false)} />
+            ) : (
+              <AppMenu
+                variant="stage"
+                {...menuProps}
+                onHideBar={() => setBarHidden(true)}
+              />
+            )}
+            {dockedHidden ? (
+              <ShowSidebarButton onClick={() => setSidebarHidden(false)} />
+            ) : null}
+          </>
+        )
+      }
+    />
+  )
+  {
+    /* Not in fullscreen: that state is the picture and nothing else, and a
+      shelf of cards over a projector feed is the one place this must not
+      appear. */
+  }
+  const tray = fullscreen ? null : (
+    <StripContext value={strip}>
+      {/* The same name the save box offers, for the same reason: the
+          preset the controls still match is the best short answer to
+          "what is this board", and a row that arrives already called
+          "vhs" is a rundown you can read. It is a suggestion — the moment
+          someone edits it, it is theirs. */}
+      <StripTray
+        onCapture={jitter =>
+          strip.addRow(profileQuery(), {
+            jitter,
+            // The clip on deck A, which the session string cannot carry:
+            // `writeProfileParams` drops every source mode a URL cannot
+            // name, and a shelf clip is one of them. Without this a row
+            // captured over a clip recorded the look and nothing about
+            // the picture, which is why a rundown could not be a sequence
+            // of clips (docs/EDITOR.md › _A row names its clip_).
+            clip: eng.deckClipA,
+            // A shake row departs from whatever is live rather than
+            // landing on the board it was captured from, so the look's
+            // name would be a lie on it. `derivedLabel` says "shake ·
+            // normal", which is what it does.
+            //
+            // A row carrying a clip is left unnamed too, and for the
+            // reason the name field already gives about staleness: what
+            // identifies it is the picture, `derivedLabel` reads that off
+            // the clip, and a name frozen at capture would go on claiming
+            // a clip the shelf has since renamed. The look's name is the
+            // right answer only for the rundown of look changes over one
+            // source that this used to be the only kind of.
+            name:
+              jitter !== undefined || eng.deckClipA !== null ? '' : lookLabel,
+          })
+        }
+        track={{
+          name: audio.track.loaded ? audio.name : '',
+          onPick: () => audio.select('file'),
+        }}
+        record={{
+          rolling: auto.rolling,
+          seconds: auto.seconds,
+          // ● is ▶ with the tape rolling, which is why it starts the walk
+          // rather than sitting beside it: the tape stamps from the frame
+          // recording began and the offline walk counts from its own zero,
+          // so the two agree about what frame 300 is only if they started
+          // together. The same one-sentence rule the music already
+          // follows, with a third thing on the end of it — the track, the
+          // walk and the tape all run while the walk runs.
+          start: () => {
+            auto.start()
+            strip.start()
+          },
+          stop: () => {
+            auto.stop()
+            strip.stop()
+          },
+          clear: auto.clear,
+        }}
+        render={{
+          progress: render.progress,
+          seconds: take.seconds,
+          from: take.from,
+          start: () => {
+            // **A render is not a performance**, so it takes the walk
+            // away from the tray rather than running beside it. The live
+            // one ticks on rAF off the engine's counter, which a take
+            // rewinds to zero underneath it; leaving it running would be
+            // two walks over one rundown disagreeing about where the
+            // piece is, and stopping it is also what a hand would do.
+            strip.stop()
+            // And the tape with it, for a sharper reason than symmetry: a
+            // recording still rolling would write down the replay's own
+            // writes and hand back a take with everything on it twice.
+            // The tap declines them anyway — a replay goes straight to the
+            // engine — and this is the half of that guard a reader can see.
+            auto.stop()
+            const walk = strip.offlineWalk()
+            const play = auto.replay()
+            render.render(
+              take.seconds,
+              // The rundown's seed, so ⟳ reseed gives a different take of
+              // the same piece and rendering twice without it gives the
+              // same one.
+              strip.strip.seed,
+              // The rundown a frame at a time, and then the tape. An empty
+              // tray hands over a walk that finds nothing to start and the
+              // render is a take of whatever is on the board, which is
+              // what ⎙ meant before there was a rundown to render; an
+              // empty tape is the same, one line down.
+              //
+              // **The walk first, the hand second**, and the order is the
+              // rule rather than a detail: a row puts a look up and a hand
+              // moves a knob on top of it, so replaying them the other way
+              // round would have the row overwrite the gesture that was
+              // made against it. It is also what makes the overlap
+              // harmless where the two do touch the same frame — the
+              // tape's copy is the later word, and it is the word that
+              // was performed.
+              // **The walk's promise is handed back, and dropping it is
+              // the whole of what this line is for.** `offlineWalk`
+              // resolves when the row's source is actually on the deck,
+              // and `renderTake` awaits it before stepping — so a
+              // composition that called it for effect and returned
+              // nothing would silently put the render back to landing
+              // rows whenever their fetch happened to finish. It is
+              // invisible in a rundown of look changes and wrong in every
+              // rundown of clips, which is the half nothing would have
+              // caught until the file came out.
+              frame => {
+                const settled = walk(frame)
+                play(frame)
+                return settled
+              },
             )
-          }
-        />
-        {/* Not in fullscreen: that state is the picture and nothing else, and a
-            shelf of cards over a projector feed is the one place this must not
-            appear. */}
-        {fullscreen ? null : (
-          <StripContext value={strip}>
-            {/* The same name the save box offers, for the same reason: the
-                preset the controls still match is the best short answer to
-                "what is this board", and a row that arrives already called
-                "vhs" is a rundown you can read. It is a suggestion — the moment
-                someone edits it, it is theirs. */}
-            <StripTray
-              onCapture={jitter =>
-                strip.addRow(profileQuery(), {
-                  jitter,
-                  // The clip on deck A, which the session string cannot carry:
-                  // `writeProfileParams` drops every source mode a URL cannot
-                  // name, and a shelf clip is one of them. Without this a row
-                  // captured over a clip recorded the look and nothing about
-                  // the picture, which is why a rundown could not be a sequence
-                  // of clips (docs/EDITOR.md › _A row names its clip_).
-                  clip: eng.deckClipA,
-                  // A shake row departs from whatever is live rather than
-                  // landing on the board it was captured from, so the look's
-                  // name would be a lie on it. `derivedLabel` says "shake ·
-                  // normal", which is what it does.
-                  //
-                  // A row carrying a clip is left unnamed too, and for the
-                  // reason the name field already gives about staleness: what
-                  // identifies it is the picture, `derivedLabel` reads that off
-                  // the clip, and a name frozen at capture would go on claiming
-                  // a clip the shelf has since renamed. The look's name is the
-                  // right answer only for the rundown of look changes over one
-                  // source that this used to be the only kind of.
-                  name:
-                    jitter !== undefined || eng.deckClipA !== null
-                      ? ''
-                      : lookLabel,
-                })
-              }
-              track={{
-                name: audio.track.loaded ? audio.name : '',
-                onPick: () => audio.select('file'),
-              }}
-              record={{
-                rolling: auto.rolling,
-                seconds: auto.seconds,
-                // ● is ▶ with the tape rolling, which is why it starts the walk
-                // rather than sitting beside it: the tape stamps from the frame
-                // recording began and the offline walk counts from its own zero,
-                // so the two agree about what frame 300 is only if they started
-                // together. The same one-sentence rule the music already
-                // follows, with a third thing on the end of it — the track, the
-                // walk and the tape all run while the walk runs.
-                start: () => {
-                  auto.start()
-                  strip.start()
-                },
-                stop: () => {
-                  auto.stop()
-                  strip.stop()
-                },
-                clear: auto.clear,
-              }}
-              render={{
-                progress: render.progress,
-                seconds: take.seconds,
-                from: take.from,
-                start: () => {
-                  // **A render is not a performance**, so it takes the walk
-                  // away from the tray rather than running beside it. The live
-                  // one ticks on rAF off the engine's counter, which a take
-                  // rewinds to zero underneath it; leaving it running would be
-                  // two walks over one rundown disagreeing about where the
-                  // piece is, and stopping it is also what a hand would do.
-                  strip.stop()
-                  // And the tape with it, for a sharper reason than symmetry: a
-                  // recording still rolling would write down the replay's own
-                  // writes and hand back a take with everything on it twice.
-                  // The tap declines them anyway — a replay goes straight to the
-                  // engine — and this is the half of that guard a reader can see.
-                  auto.stop()
-                  const walk = strip.offlineWalk()
-                  const play = auto.replay()
-                  render.render(
-                    take.seconds,
-                    // The rundown's seed, so ⟳ reseed gives a different take of
-                    // the same piece and rendering twice without it gives the
-                    // same one.
-                    strip.strip.seed,
-                    // The rundown a frame at a time, and then the tape. An empty
-                    // tray hands over a walk that finds nothing to start and the
-                    // render is a take of whatever is on the board, which is
-                    // what ⎙ meant before there was a rundown to render; an
-                    // empty tape is the same, one line down.
-                    //
-                    // **The walk first, the hand second**, and the order is the
-                    // rule rather than a detail: a row puts a look up and a hand
-                    // moves a knob on top of it, so replaying them the other way
-                    // round would have the row overwrite the gesture that was
-                    // made against it. It is also what makes the overlap
-                    // harmless where the two do touch the same frame — the
-                    // tape's copy is the later word, and it is the word that
-                    // was performed.
-                    // **The walk's promise is handed back, and dropping it is
-                    // the whole of what this line is for.** `offlineWalk`
-                    // resolves when the row's source is actually on the deck,
-                    // and `renderTake` awaits it before stepping — so a
-                    // composition that called it for effect and returned
-                    // nothing would silently put the render back to landing
-                    // rows whenever their fetch happened to finish. It is
-                    // invisible in a rundown of look changes and wrong in every
-                    // rundown of clips, which is the half nothing would have
-                    // caught until the file came out.
-                    frame => {
-                      const settled = walk(frame)
-                      play(frame)
-                      return settled
-                    },
-                  )
-                },
-                cancel: render.cancel,
-              }}
-            />
-          </StripContext>
-        )}
-      </div>
-      {fullscreen || popout !== null || sidebarHidden ? null : (
-        <>
-          {/* Between the two panes, so the edge a drag moves is the edge under
+          },
+          cancel: render.cancel,
+        }}
+      />
+    </StripContext>
+  )
+  const resizer = (
+    <PanelResizer
+      className={styles.resizer!}
+      onClassName={styles.resizerOn!}
+      width={panelW}
+      onWidth={setPanelW}
+    />
+  )
+
+  return (
+    <>
+      {/* The address bar's look, mirrored onto the account behind it. Signed
+          out the hook writes nothing; signed in it writes the packed query a
+          few seconds after the board settles, which is what the home page's
+          resume card reads. Nothing is written while the engine is absent,
+          when the board is the default fallback, or before the board has moved
+          off the one the page opened on. */}
+      <CurrentSession
+        store={settledStore}
+        uid={profiles.user === null ? null : profiles.user.uid}
+        query={engine === null ? null : profileQuery}
+        grabThumb={capture.grabThumb}
+      />
+      {eng.fatal !== null ? (
+        <FatalScreen fatal={eng.fatal} />
+      ) : (
+        <div className={styles.app} style={shellStyle}>
+          {/* The stage and the strip share a column, so the tray sits under the
+          picture rather than beside it; the panel is untouched either way. */}
+          <div className={styles.left}>
+            {stage}
+            {tray}
+          </div>
+          {fullscreen || popout !== null || sidebarHidden ? null : (
+            <>
+              {/* Between the two panes, so the edge a drag moves is the edge under
               the pointer. It is drawn in every docked layout and hidden by the
               same media queries that take the width off the panel — see
               .resizer, which is where that decision belongs: the stacked shell
               is a CSS fact, and asking it here would be a second copy of the
               breakpoint. */}
-          <PanelResizer
-            className={styles.resizer!}
-            onClassName={styles.resizerOn!}
-            width={panelW}
-            onWidth={setPanelW}
-          />
-          <div
-            className={cx(
-              styles.panel,
-              benchOn && styles.panelWide,
-              sheet !== null && styles.panelSheet,
-            )}
-          >
-            {panel}
-          </div>
-        </>
-      )}
-      {popout === null
-        ? null
-        : createPortal(
-            <div className={styles.appPop}>
+              {resizer}
               <div
                 className={cx(
                   styles.panel,
-                  styles.panelPop,
+                  benchOn && styles.panelWide,
                   sheet !== null && styles.panelSheet,
                 )}
               >
                 {panel}
               </div>
-            </div>,
-            popout.document.body,
+            </>
           )}
-      {/* Fullscreen is the one state with no sidebar to stand in, and both
+          {popout === null
+            ? null
+            : createPortal(
+                <div className={styles.appPop}>
+                  <div
+                    className={cx(
+                      styles.panel,
+                      styles.panelPop,
+                      sheet !== null && styles.panelSheet,
+                    )}
+                  >
+                    {panel}
+                  </div>
+                </div>,
+                popout.document.body,
+              )}
+          {/* Fullscreen is the one state with no sidebar to stand in, and both
           sheets are still reachable there — ⌘K is bound, and the stage's own ☰
           carries the row. So the sidebar comes back for as long as the sheet is
           up, over the right edge of a picture that is otherwise the whole
           window. */}
-      {(fullscreen || dockedHidden) && sheet !== null ? (
-        <div className={cx(styles.panel, styles.panelSheet, styles.panelOver)}>
-          {panel}
-        </div>
-      ) : null}
-      {showAdvanced ? (
-        <AdvancedDialog
-          renderScale={eng.renderScale}
-          onScaleChange={eng.setScale}
-          res={eng.res}
-          tap={eng.tap}
-          onTapChange={eng.changeTap}
-          frameLock={controls.frameLock}
-          onFrameLockChange={v => writeControl('frameLock', v)}
-          onClose={() => setShowAdvanced(false)}
-        />
-      ) : null}
-      {/* None of these six closes itself on a successful pick: committing a
+          {(fullscreen || dockedHidden) && sheet !== null ? (
+            <div
+              className={cx(styles.panel, styles.panelSheet, styles.panelOver)}
+            >
+              {panel}
+            </div>
+          ) : null}
+          {showAdvanced ? (
+            <AdvancedDialog
+              renderScale={eng.renderScale}
+              onScaleChange={eng.setScale}
+              res={eng.res}
+              tap={eng.tap}
+              onTapChange={eng.changeTap}
+              frameLock={frameLock}
+              onFrameLockChange={v => writeControl('frameLock', v)}
+              onClose={() => setShowAdvanced(false)}
+            />
+          ) : null}
+          {/* None of these six closes itself on a successful pick: committing a
           source is what dismisses the question, from `beginLoad` in useEngine
           (useSourcePrompt.ts says why that is the only place it can go). What
           is left here is Escape and the × — the ways out that pick nothing. */}
-      {webcamFor === null ? null : (
-        <WebcamDialog
-          onContinue={() => eng.startWebcam(webcamFor, '')}
-          onClose={eng.prompt.dismiss}
-        />
-      )}
-      {youTubeSlot === null ? null : (
-        <YouTubeDialog
-          slot={youTubeSlot.key}
-          onSubmit={(url, secs) =>
-            youTubeSlot.loadYouTube(url, secs, () => clips.fetched(url, secs))
-          }
-          onClose={eng.prompt.dismiss}
-        />
-      )}
-      {urlSlot === null ? null : (
-        <VideoUrlDialog
-          slot={urlSlot.key}
-          // Opens on the address this deck is already playing, so re-picking the
-          // entry is a way to edit one rather than to retype it.
-          url={urlSlot.srcUrl}
-          onSubmit={url => urlSlot.loadUrl(url)}
-          onClose={eng.prompt.dismiss}
-        />
-      )}
-      {libraryFor === null ? null : (
-        <ClipLibraryDialog
-          slot={libraryFor}
-          lib={clips.lib}
-          access={clips.access}
-          note={clips.note}
-          canRemember={clips.canRemember}
-          filesRef={clips.filesRef}
-          folderRef={clips.folderRef}
-          onAddFiles={clips.addFiles}
-          onAddFolder={clips.addFolder}
-          onAdopt={clips.adopt}
-          onRescan={clips.rescan}
-          onPlay={clips.play}
-          onSlideshow={(label, shelved) =>
-            eng.startFeed(
-              libraryFor,
-              label,
-              'library',
-              shelved.map(c => ({ at: 'clip', id: c.id, name: c.name })),
-            )
-          }
-          // Into the rundown rather than onto a deck. The look it lands with is
-          // whatever is on the board now, the same snapshot `+ row` takes —
-          // building a rundown of clips is picking the look once and then
-          // choosing the pictures, and a row that arrived with a stock board
-          // would throw that away.
-          //
-          // Left off in fullscreen, where the tray is not drawn: a ＋ that
-          // silently appends to a list nobody can see is worse than no ＋.
-          onAddRow={
-            fullscreen
-              ? undefined
-              : clip => {
-                  strip.addRow(profileQuery(), {
-                    clip: {
-                      id: clip.id,
-                      name: clip.name,
-                      // Whatever the shelf knows, which is the answer outright
-                      // for a clip that has been auditioned or added before.
-                      seconds: clip.seconds,
-                    },
-                  })
-                  // And otherwise measure it, which is a header read rather
-                  // than a load — the row is already in the tray by the time
-                  // this is asked, and gains its length a moment later.
-                  //
-                  // The row is not what gets patched: `learnClipSeconds` keys
-                  // on the shelf id, so pressing ＋ twice on one clip teaches
-                  // both rows from one measurement. A clip the shelf cannot
-                  // open, and every kept roll, answers 0 and keeps the bar
-                  // count — see `useClipLibrary.measure`.
-                  if (clip.seconds === 0) {
-                    void clips
-                      .measure(clip)
-                      .then(seconds => strip.learnClipSeconds(clip.id, seconds))
-                  }
-                }
-          }
-          onForgetClip={clips.forgetClip}
-          onForgetFolder={clips.forgetFolder}
-          onClose={eng.prompt.dismiss}
-        />
-      )}
-      {browseFor === null ? null : (
-        <MediaBrowserDialog
-          slot={browseFor}
-          kept={clips.kept}
-          onPlay={(ref, slot) => void eng.showRef(slot, ref, 'browse')}
-          onKeep={clips.keep}
-          onSlideshow={(label, refs) =>
-            eng.startFeed(
-              browseFor,
-              label,
-              'browse',
-              refs.map(ref => ({ at: 'ref', ref })),
-            )
-          }
-          onClose={eng.prompt.dismiss}
-        />
-      )}
-      {teletypeSlot === null ? null : (
-        <TeletypeDialog
-          slot={teletypeSlot.key}
-          initial={teletypeSlot.teletype}
-          onLive={teletypeSlot.retype}
-          onSubmit={teletypeSlot.loadTeletype}
-          onClose={eng.prompt.dismiss}
-        />
-      )}
-      {showAbout ? <AboutDialog onClose={() => setShowAbout(false)} /> : null}
-      {/* Closing on the way to the popup leaves the Google window clear. The
+          {webcamFor === null ? null : (
+            <WebcamDialog
+              onContinue={() => eng.startWebcam(webcamFor, '')}
+              onClose={eng.prompt.dismiss}
+            />
+          )}
+          {youTubeSlot === null ? null : (
+            <YouTubeDialog
+              slot={youTubeSlot.key}
+              onSubmit={(url, secs) =>
+                youTubeSlot.loadYouTube(url, secs, () =>
+                  clips.fetched(url, secs),
+                )
+              }
+              onClose={eng.prompt.dismiss}
+            />
+          )}
+          {urlSlot === null ? null : (
+            <VideoUrlDialog
+              slot={urlSlot.key}
+              // Opens on the address this deck is already playing, so re-picking the
+              // entry is a way to edit one rather than to retype it.
+              url={urlSlot.srcUrl}
+              onSubmit={url => urlSlot.loadUrl(url)}
+              onClose={eng.prompt.dismiss}
+            />
+          )}
+          {libraryFor === null ? null : (
+            <ClipLibraryDialog
+              slot={libraryFor}
+              lib={clips.lib}
+              access={clips.access}
+              note={clips.note}
+              canRemember={clips.canRemember}
+              filesRef={clips.filesRef}
+              folderRef={clips.folderRef}
+              onAddFiles={clips.addFiles}
+              onAddFolder={clips.addFolder}
+              onAdopt={clips.adopt}
+              onRescan={clips.rescan}
+              onPlay={clips.play}
+              onSlideshow={(label, shelved) =>
+                eng.startFeed(
+                  libraryFor,
+                  label,
+                  'library',
+                  shelved.map(c => ({ at: 'clip', id: c.id, name: c.name })),
+                )
+              }
+              // Into the rundown rather than onto a deck. The look it lands with is
+              // whatever is on the board now, the same snapshot `+ row` takes —
+              // building a rundown of clips is picking the look once and then
+              // choosing the pictures, and a row that arrived with a stock board
+              // would throw that away.
+              //
+              // Left off in fullscreen, where the tray is not drawn: a ＋ that
+              // silently appends to a list nobody can see is worse than no ＋.
+              onAddRow={
+                fullscreen
+                  ? undefined
+                  : clip => {
+                      strip.addRow(profileQuery(), {
+                        clip: {
+                          id: clip.id,
+                          name: clip.name,
+                          // Whatever the shelf knows, which is the answer outright
+                          // for a clip that has been auditioned or added before.
+                          seconds: clip.seconds,
+                        },
+                      })
+                      // And otherwise measure it, which is a header read rather
+                      // than a load — the row is already in the tray by the time
+                      // this is asked, and gains its length a moment later.
+                      //
+                      // The row is not what gets patched: `learnClipSeconds` keys
+                      // on the shelf id, so pressing ＋ twice on one clip teaches
+                      // both rows from one measurement. A clip the shelf cannot
+                      // open, and every kept roll, answers 0 and keeps the bar
+                      // count — see `useClipLibrary.measure`.
+                      if (clip.seconds === 0) {
+                        void clips
+                          .measure(clip)
+                          .then(seconds =>
+                            strip.learnClipSeconds(clip.id, seconds),
+                          )
+                      }
+                    }
+              }
+              onForgetClip={clips.forgetClip}
+              onForgetFolder={clips.forgetFolder}
+              onClose={eng.prompt.dismiss}
+            />
+          )}
+          {browseFor === null ? null : (
+            <MediaBrowserDialog
+              slot={browseFor}
+              kept={clips.kept}
+              onPlay={(ref, slot) => void eng.showRef(slot, ref, 'browse')}
+              onKeep={clips.keep}
+              onSlideshow={(label, refs) =>
+                eng.startFeed(
+                  browseFor,
+                  label,
+                  'browse',
+                  refs.map(ref => ({ at: 'ref', ref })),
+                )
+              }
+              onClose={eng.prompt.dismiss}
+            />
+          )}
+          {teletypeSlot === null ? null : (
+            <TeletypeDialog
+              slot={teletypeSlot.key}
+              initial={teletypeSlot.teletype}
+              onLive={teletypeSlot.retype}
+              onSubmit={teletypeSlot.loadTeletype}
+              onClose={eng.prompt.dismiss}
+            />
+          )}
+          {showAbout ? (
+            <AboutDialog onClose={() => setShowAbout(false)} />
+          ) : null}
+          {/* Closing on the way to the popup leaves the Google window clear. The
           save the card was holding lands on the button in the masthead. */}
-      {why === null ? null : (
-        <WhySignInDialog
-          pendingName={why.pending}
-          onClose={() => {
-            setWhy(null)
-            profiles.dropPending()
-          }}
-          onSignIn={() => {
-            setWhy(null)
-            profiles.signIn()
-          }}
-          onCopyLink={() => copyQuery(profileQuery())}
-        />
+          {why === null ? null : (
+            <WhySignInDialog
+              pendingName={why.pending}
+              onClose={() => {
+                setWhy(null)
+                profiles.dropPending()
+              }}
+              onSignIn={() => {
+                setWhy(null)
+                profiles.signIn()
+              }}
+              onCopyLink={() => copyQuery(profileQuery())}
+            />
+          )}
+          {showShare ? (
+            <WithBoard store={settledStore}>
+              {board => (
+                <ShareDialog
+                  shareUrl={shareUrl(board)}
+                  readableUrl={stateUrl(board)}
+                  onCopy={copyUrl}
+                  onClose={() => setShowShare(false)}
+                />
+              )}
+            </WithBoard>
+          ) : null}
+        </div>
       )}
-      {showShare ? (
-        <ShareDialog
-          shareUrl={shareUrl}
-          readableUrl={stateUrl}
-          onCopy={copyUrl}
-          onClose={() => setShowShare(false)}
-        />
-      ) : null}
-    </div>
+    </>
   )
 }
 

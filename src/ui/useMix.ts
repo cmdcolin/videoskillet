@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useSyncExternalStore } from 'react'
 
 import { DEFAULT_CONTROLS } from '../core/controls'
 import { applyCardPreset } from './cardPresets'
@@ -29,6 +29,7 @@ import type { GlidePlan } from '../core/signal/glide'
 import type { Provenance } from '../labels'
 import type { CardPreset } from './cardPresets'
 import type { Group, SliderDef } from './controls'
+import type { ControlStore } from './ControlsContext'
 import type { History } from './history'
 import type { Stab, UiSlot } from './modSlots'
 import type { ModSlotsApi } from './ModSlotsContext'
@@ -95,13 +96,13 @@ const NO_WEIGHTS: PresetWeights = new Map()
 // patches that drift as presets are retuned. A recalled look can still be
 // re-mixed — startMix rebaselines from whatever is live.
 export function useMix(args: {
-  controls: Controls
-  // The same controls, read at the moment a verb runs rather than closed over
-  // from the render that built it. Two of the verbs below (`mutateGroup`,
-  // `resetGroup`) are handed to every control row through ControlsApi, and a
-  // verb that captures `controls` changes identity on every write — which puts
-  // all 202 rows back on the write path. The render-time `controls` above is
-  // still what the mix compares against, because that is a render-time question.
+  // The settled board. The hook reads two answers off it, whether the board
+  // still matches the recipe and what put it there, so a slider write
+  // re-renders App only when one of them changes.
+  settledStore: ControlStore
+  // The live board, read at the moment a verb runs. Several verbs below reach
+  // every control row through ControlsApi, and a verb that captured a board
+  // would change identity on every write and take every mounted row with it.
   getControls: () => Controls
   writeControls: (controls: Controls) => void
   // Hand a look to the engine to travel to over a span of seconds rather than
@@ -139,7 +140,7 @@ export function useMix(args: {
   // render. Every row verb then changed identity on every write and took every
   // mounted row with it, so every argument is destructured here.
   const {
-    controls,
+    settledStore,
     getControls,
     writeControls,
     startGlide,
@@ -175,7 +176,10 @@ export function useMix(args: {
   // list: it moves controls only inside the engine's own frame and restores
   // them, so a running LFO never invalidates a recipe.
   const mixed = blendPresets(mix.base, mix.weights)
-  const weights = controlsEqual(controls, mixed) ? mix.weights : NO_WEIGHTS
+  const onRecipe = useSyncExternalStore(settledStore.subscribe, () =>
+    controlsEqual(settledStore.get(), mixed),
+  )
+  const weights = onRecipe ? mix.weights : NO_WEIGHTS
 
   // What a given board was arrived at by, gated the same way the fills are and
   // for the same reason: a gesture speaks only for the look it actually landed.
@@ -187,7 +191,9 @@ export function useMix(args: {
       : 'hand'
 
   // The live board's, which is what a rating files with.
-  const provenance = kindOf(controls)
+  const provenance = useSyncExternalStore(settledStore.subscribe, () =>
+    kindOf(settledStore.get()),
+  )
 
   // The look to bank: where the board has settled, or where a morph in flight is
   // taking it. The two differ only mid-morph, and there the destination is the
@@ -422,6 +428,7 @@ export function useMix(args: {
     // the new baseline, so the next drag layers onto it instead of silently
     // reverting it.
     startMix: () => {
+      const controls = settledStore.get()
       if (!controlsEqual(controls, mixed)) {
         setMix({ base: controls, weights: new Map() })
       }
@@ -435,6 +442,7 @@ export function useMix(args: {
     // the walk is recorded only there, so a sweep banks one step to undo rather
     // than one per MIDI message.
     midiPresetWeight: (name: string, w: number) => {
+      const controls = settledStore.get()
       const drifted = !controlsEqual(controls, mixed)
       if (drifted) bank(sameLook)
       writeWeight(

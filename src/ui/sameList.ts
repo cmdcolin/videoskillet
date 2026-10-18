@@ -1,5 +1,5 @@
 import type { ControlKey } from '../core/controls'
-import type { SliderDef } from './controls'
+import type { Group, SliderDef } from './controls'
 
 // Derived lists, handed back with the identity they had the last time the same
 // members came through.
@@ -48,4 +48,11 @@ export function sameKeySet(
   keys: readonly ControlKey[],
 ): ReadonlySet<ControlKey> {
   return keep(KEY_SETS, keys.join(' '), () => new Set(keys))
+}
+
+const GROUP_LISTS = new Map<string, readonly Group[]>()
+
+// Groups are static as well, so a stage's list of them is keyed on the names.
+export function sameGroups(list: readonly Group[]): readonly Group[] {
+  return keep(GROUP_LISTS, list.map(g => g.name).join('\n'), () => list)
 }

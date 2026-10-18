@@ -204,16 +204,19 @@ function* down(f: Fiber): Generator<Fiber> {
 }
 
 // `cost` reports the control rows a gesture re-rendered, mounted or unmounted
-// anywhere in the app, and the names of the other components it re-rendered
-// inside `scope`. A component inside a row counts as that row, and one inside a
-// drawing named in `drawings` counts as the drawing.
+// anywhere in the app, and how many instances of each other component it
+// re-rendered inside `scope`. A component inside a row counts as that row, and
+// one inside a drawing named in `drawings` counts as the drawing. React renders
+// an instance into one of two fibers that point at each other through
+// `alternate`, so an instance rendered twice in a burst counts once.
 function cost(
   commits: Commit[],
   scope: unknown,
   drawings: readonly string[] = [],
 ) {
   const rows = new Set<string>()
-  const others = new Set<string>()
+  const seen = new WeakSet<Fiber>()
+  const others: Record<string, number> = {}
   const mounted: string[] = []
   const unmounted: string[] = []
   for (const { rendered, unmounted: gone } of commits) {
@@ -224,8 +227,15 @@ function cost(
         rows.add(rowKey(row))
         if (f === row && f.alternate === null) mounted.push(rowKey(f))
       } else if (chain.some(a => a.type === scope)) {
-        const drawing = chain.find(a => drawings.includes(nameOf(a)))
-        others.add(nameOf(drawing ?? f))
+        const drawing = chain.find(a => drawings.includes(nameOf(a))) ?? f
+        if (
+          !seen.has(drawing) &&
+          (drawing.alternate === null || !seen.has(drawing.alternate))
+        ) {
+          seen.add(drawing)
+          const name = nameOf(drawing)
+          others[name] = (others[name] ?? 0) + 1
+        }
       }
     }
     for (const f of gone) {
@@ -234,7 +244,7 @@ function cost(
   }
   return {
     rows: brief([...rows].toSorted()),
-    others: [...others].toSorted(),
+    others,
     mounted,
     unmounted,
   }
@@ -337,18 +347,24 @@ test('the React Compiler has compiled every component under test', () => {
   }
 })
 
-// These components re-render on every write today, and none of them draws a
-// row. App re-renders on each settled write by design (app.tsx reads the
-// settled board), and the compiler leaves App's `sheet` element unmemoized, so
-// the sheet's callbacks are new each time and the sheet and all 47 of its
-// headings run again. Each heading draws a name and a count. Take a name off
-// this list when it stops re-rendering, because the test fails until you do.
-const SHEET_CHROME = [
-  'AllSettingsSheet',
-  'GroupBlock',
-  'PanelSheet',
-  'StageHead',
-]
+// Expected `others` when a gesture re-renders nothing outside the rows.
+const NOTHING = {}
+
+// What re-renders in the sheet when a write takes a control off stock or puts
+// it back. AllSettingsSheet counts the controls off stock in its lead line, and
+// PanelSheet frames that line. StageHead and GroupBlock are the headings over
+// the dragged row, and each counts the controls under it off stock.
+const SHEET_CROSSING = {
+  AllSettingsSheet: 1,
+  GroupBlock: 1,
+  PanelSheet: 1,
+  StageHead: 1,
+}
+
+// What re-renders in the open stage when a write takes a control off stock.
+// ControlGroup counts the controls off stock in the dragged row's group, and
+// Section draws that count in the group's header.
+const GROUP_CROSSING = { ControlGroup: 1, Section: 1 }
 
 describe('All settings', () => {
   beforeAll(async () => {
@@ -365,18 +381,18 @@ describe('All settings', () => {
     }),
   )
 
-  test('a drag re-renders the row it moves and no other', async () => {
+  test('a drag re-renders the row it moves and the counts it changes', async () => {
     const key = 'noiseIre'
     const { press, moves } = await drag(key, AllSettingsSheet, [1])
     expect(cost(press, AllSettingsSheet)).toEqual({
       rows: [],
-      others: SHEET_CHROME,
+      others: NOTHING,
       mounted: [],
       unmounted: [],
     })
     expect(cost(moves, AllSettingsSheet)).toEqual({
       rows: [key],
-      others: SHEET_CHROME,
+      others: SHEET_CROSSING,
       mounted: [],
       unmounted: [],
     })
@@ -392,7 +408,7 @@ describe('All settings', () => {
     expect(moves.length).toBeGreaterThan(1)
     expect(cost(moves, AllSettingsSheet)).toEqual({
       rows: [key],
-      others: SHEET_CHROME,
+      others: SHEET_CROSSING,
       mounted: [],
       unmounted: [],
     })
@@ -418,7 +434,7 @@ describe('All settings', () => {
     const { moves } = await drag(key, AllSettingsSheet, [0, 0.1])
     expect(cost(moves, AllSettingsSheet)).toEqual({
       rows: [key],
-      others: SHEET_CHROME,
+      others: SHEET_CROSSING,
       mounted: [],
       unmounted: [],
     })
@@ -449,23 +465,6 @@ async function openGroup(key: ControlKey, box: string) {
   await settle()
 }
 
-// These components re-render on every write in the open stage, and none of
-// them draws a row. App rebuilds the panel's structure (`panelChain`) from the
-// settled board on each write, by design, so SignalPath hands every group in
-// the open stage a new element and each ControlGroup runs again. It rebuilds
-// its header (Section, NestedSections), the frame around its rows (Rack,
-// ControlRows) and its readouts (CardChips, LoopTrip). ControlRows returns its
-// cached rows, so no row runs with it.
-const GROUP_CHROME = [
-  'CardChips',
-  'ControlGroup',
-  'ControlRows',
-  'LoopTrip',
-  'NestedSections',
-  'Rack',
-  'Section',
-]
-
 describe('a stage in the panel', () => {
   beforeAll(mountApp)
   afterAll(cleanup)
@@ -475,23 +474,22 @@ describe('a stage in the panel', () => {
     }),
   )
 
-  test('a drag re-renders the row it moves and no other', async () => {
+  test('a drag re-renders the row it moves and the counts it changes', async () => {
     const key = 'rfAdjacent'
     await openGroup(key, 'Channel')
-    const { moves } = await drag(key, ControlGroup, [1])
+    const { press, moves } = await drag(key, ControlGroup, [1])
+    expect(cost(press, ControlGroup)).toEqual({
+      rows: [],
+      others: NOTHING,
+      mounted: [],
+      unmounted: [],
+    })
     // The look bar shows a row for every control off stock, so the write that
     // takes this control off stock mounts a second row for it there.
     expect(cost(moves, ControlGroup)).toEqual({
       rows: [key],
-      others: GROUP_CHROME,
+      others: GROUP_CROSSING,
       mounted: [key],
-      unmounted: [],
-    })
-    const again = await drag(key, ControlGroup, [0.5])
-    expect(cost(again.moves, ControlGroup)).toEqual({
-      rows: [key],
-      others: GROUP_CHROME,
-      mounted: [],
       unmounted: [],
     })
   })
@@ -503,11 +501,13 @@ describe('a stage in the panel', () => {
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: '▸ sliders' }))
     })
-    const { moves } = await drag(key, ControlGroup, [1])
+    await drag(key, ControlGroup, [1])
+    const { moves } = await drag(key, ControlGroup, [0.5])
+    // The schematic draws the loop's gain.
     expect(cost(moves, ControlGroup, ['MixerLoopDiagram'])).toEqual({
       rows: [key],
-      others: [...GROUP_CHROME, 'MixerLoopDiagram'].toSorted(),
-      mounted: [key],
+      others: { MixerLoopDiagram: 1 },
+      mounted: [],
       unmounted: [],
     })
   })

@@ -9,7 +9,8 @@ import {
 } from './urlParams'
 
 import type { Controls } from '../core/controls'
-import type { SessionState } from './urlParams'
+import type { ControlStore } from './ControlsContext'
+import type { LookForm, SessionState } from './urlParams'
 
 // The session, plus the three things that are about *mirroring* one rather than
 // about what a session is.
@@ -19,8 +20,11 @@ import type { SessionState } from './urlParams'
 // urlParams.ts records at the interface itself — the writer and the reader kept
 // apart until they disagreed. Adding a field to a link is now one edit there,
 // and this hook stops compiling until the caller supplies it.
-interface UrlStateArgs extends SessionState {
-  // Gated on the engine existing: before it does, `controls` is the default
+interface UrlStateArgs extends Omit<SessionState, 'controls'> {
+  // The settled board. The hook subscribes to it for the address bar, so a
+  // slider write does not re-render the component that calls this.
+  settled: ControlStore
+  // Gated on the engine existing: before it does, the board is the default
   // fallback and syncing would wipe the very params the loader is about to read.
   engineReady: boolean
   // Where a morph in flight is heading, or null when none is — the same
@@ -83,55 +87,70 @@ export const hasSnow = (url: string): boolean => {
   return cut !== -1 && new URLSearchParams(url.slice(cut + 1)).has('snow')
 }
 
+// The link to a session on a board. The whole query-string rule lives in
+// urlParams beside the parser that has to read it back; what is left here is
+// the browser half — which params are already on the address bar, and where the
+// link points. `pageSearch()` rather than `location.search` is what carries a
+// session across the move: the first write of a session that arrived on a query
+// takes everything it found there into the hash, and every write after that
+// reads its own.
+const sessionLink = (
+  session: Omit<SessionState, 'controls'>,
+  controls: Controls,
+  form: LookForm,
+) =>
+  linkFor(
+    queryString(
+      writeSessionParams(
+        new URLSearchParams(pageSearch()),
+        { ...session, controls },
+        form,
+      ),
+    ),
+  )
+
 // Mirrors the live look into the query string so a reload or shared link
 // restores it, and hands back a copy-to-clipboard action — plus the two halves
 // the saved-look library needs: the query string for the look on screen, and the
 // link for a query string it kept.
 export function useUrlState(args: UrlStateArgs) {
-  // The session is the rest: whatever is left once the three above are taken
+  // The session is the rest: whatever is left once the four above are taken
   // off. Nothing here lists its fields, which is the point — the list lives at
   // `SessionState` and this hook reads it by subtraction.
-  const { engineReady, getGlideTarget, onError, ...session } = args
-  // The whole query-string rule lives in urlParams beside the parser that has
-  // to read it back; what is left here is the browser half — which params are
-  // already on the address bar, and where the link points.
-  //
-  // Named, so the bar reads back. `pageSearch()` rather than `location.search`
-  // is what carries a session across the move: the first write of a session that
-  // arrived on a query takes everything it found there into the hash, and every
-  // write after that reads its own.
-  const stateUrl = linkFor(
-    queryString(
-      writeSessionParams(new URLSearchParams(pageSearch()), session, 'named'),
-    ),
-  )
+  const { engineReady, getGlideTarget, onError, settled, ...session } = args
+  // Named, so the bar reads back.
+  const stateUrl = (controls: Controls) =>
+    sessionLink(session, controls, 'named')
   // The same look packed, for the share dialog. Built here beside the other so
   // the two cannot describe different boards.
-  const shareUrl = linkFor(
-    queryString(
-      writeSessionParams(new URLSearchParams(pageSearch()), session, 'packed'),
-    ),
-  )
+  const shareUrl = (controls: Controls) =>
+    sessionLink(session, controls, 'packed')
 
-  // Keep the address bar current on every change (replaceState, so it doesn't
-  // flood history). Trailing-debounced: a slider drag emits a move per frame,
-  // and the browser rate-limits the history API — so coalesce to one write once
-  // the value settles.
-  //
-  // The dependency is the finished URL rather than a memoized closure over the
-  // session's thirteen fields, and that is the better dep as well as the shorter
-  // one: a string compares by value, so a render that rebuilds `controls` into
-  // an identical board does not restart the debounce. Which also means no
-  // hand-written `useCallback` — the React Compiler holds the identity of
-  // everything above (see ARCHITECTURE.md › React Compiler is on).
+  // Keep the address bar current on every settled write (replaceState, so it
+  // doesn't flood history). Trailing-debounced: a slider drag emits a move per
+  // frame, and the browser rate-limits the history API, so the writes coalesce
+  // to one once the value settles. A URL the bar already shows schedules
+  // nothing.
   // An effect's cleanup return is conditional by nature (React's own documented pattern).
   // oxlint-disable-next-line typescript/consistent-return
   useEffect(() => {
     if (engineReady) {
-      const id = setTimeout(() => history.replaceState(null, '', stateUrl), 250)
-      return () => clearTimeout(id)
+      let id: ReturnType<typeof setTimeout> | undefined
+      const mirror = () => {
+        clearTimeout(id)
+        const url = sessionLink(session, settled.get(), 'named')
+        if (url !== location.href) {
+          id = setTimeout(() => history.replaceState(null, '', url), 250)
+        }
+      }
+      mirror()
+      const off = settled.subscribe(mirror)
+      return () => {
+        off()
+        clearTimeout(id)
+      }
     }
-  }, [engineReady, stateUrl])
+  }, [engineReady, settled, session])
 
   // A hash arriving from outside: someone pasting a link into the bar of a tab
   // that is already open, back or forward across one, an agent navigating.
@@ -186,12 +205,14 @@ export function useUrlState(args: UrlStateArgs) {
 
   // What a saved look records — the same serialization, minus the params that
   // only make sense for the session that is running (see writeProfileParams).
-  const profileQuery = () =>
+  // A caller that subscribes to the settled board passes it in, so the query
+  // changes with the board it rendered.
+  const profileQuery = (board?: Controls) =>
     queryString(
       writeProfileParams({
         ...session,
         // The destination when a morph is running, per `getGlideTarget` above.
-        controls: getGlideTarget() ?? session.controls,
+        controls: getGlideTarget() ?? board ?? settled.get(),
       }),
     )
 
