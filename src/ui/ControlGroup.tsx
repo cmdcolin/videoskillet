@@ -34,6 +34,7 @@ import { cx } from './cx'
 import { DecoderDiagram } from './DecoderDiagram'
 import { DeflectionDiagram } from './DeflectionDiagram'
 import { DRIFT_MODE_WORDS, DRIFT_SECONDS } from './drift'
+import { DubDiagram } from './DubDiagram'
 import { EnhancerDiagram } from './EnhancerDiagram'
 import { FeedACableDiagram, FeedBCableDiagram } from './FeedCableDiagram'
 import { filterActive, matchedSliders, useFilter } from './filter'
@@ -410,6 +411,7 @@ const SCHEMATIC_FRAMES: Record<SchematicGroup, () => ReactElement> = {
   'Noise & interference': NoiseDiagram,
   'A/B Mixer': BusDiagram,
   [SYNTH_GROUP]: SynthDiagram,
+  'Dropouts & dubs': DubDiagram,
   'RF / Tuner': RfDiagram,
   'Cable / Wiring': CableDiagram,
   'Audio routings': AudioDiagram,

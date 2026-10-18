@@ -386,6 +386,14 @@ export const RF_OPENS = {
 
 export const RF_KEYS = Object.values(RF_OPENS).flat()
 
+export const DUB_OPENS = {
+  drops: ['dropoutRate', 'dropoutLenUs'],
+  patch: ['dropoutComp'],
+  dub: ['dubGens'],
+} as const satisfies Opens
+
+export const DUB_KEYS = Object.values(DUB_OPENS).flat()
+
 export const CHROMA_KEY_OPENS = {
   spill: ['bKeySpill'],
   delay: ['bKeyDelayUs'],
@@ -433,6 +441,7 @@ export const SCHEMATICS = [
   { group: 'Noise & interference', keys: NOISE_KEYS, opens: NOISE_OPENS },
   { group: 'A/B Mixer', keys: BUS_KEYS, opens: BUS_OPENS },
   { group: SYNTH_GROUP, keys: SYNTH_KEYS, opens: SYNTH_OPENS },
+  { group: 'Dropouts & dubs', keys: DUB_KEYS, opens: DUB_OPENS },
   { group: 'RF / Tuner', keys: RF_KEYS, opens: RF_OPENS },
   { group: 'Cable / Wiring', keys: CABLE_KEYS, opens: CABLE_OPENS },
   { group: 'Audio routings', keys: AUDIO_KEYS, opens: AUDIO_OPENS },
