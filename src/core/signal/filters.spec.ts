@@ -238,6 +238,32 @@ describe('demodKernel', () => {
   })
 })
 
+// Stock is a trap set: the encoder's chroma reaches 1.3 MHz either side of the
+// subcarrier and the 0.6 MHz demod takes back only the inner part, so the luma
+// the trap leaves still carries the outer sidebands. That residue is the dot
+// crawl a notch-filter set shows along colour edges, and stock keeps it.
+describe('the stock trap', () => {
+  const demod = demodKernel(0.6e6, 0)
+  const encoder = lowpass(1.3e6, TAPS.encChroma)
+  const leftInLuma = (lumaHz: number) => {
+    const sent = Math.abs(
+      at(encoder, lumaHz - FSC)[0] + at(encoder, lumaHz + FSC)[0],
+    )
+    const lo = at(demod, lumaHz - FSC)
+    const hi = at(demod, lumaHz + FSC)
+    return sent * Math.hypot(1 - lo[0] - hi[0], lo[1] + hi[1])
+  }
+
+  it('removes flat colour from luma', () => {
+    expect(leftInLuma(FSC)).toBeLessThan(0.01)
+  })
+
+  it('leaves the outer chroma sidebands in luma as dot crawl', () => {
+    expect(leftInLuma(FSC - 1e6)).toBeGreaterThan(0.6)
+    expect(leftInLuma(FSC + 1e6)).toBeGreaterThan(0.6)
+  })
+})
+
 describe('mixTaps', () => {
   it('returns the endpoints at t=0 and t=1', () => {
     const a = lowpass(0.6e6, 41)
