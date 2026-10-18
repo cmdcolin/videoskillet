@@ -24,6 +24,31 @@ you have never opened, at paths that look like yours. The exclude spreads
 `configDefaults.exclude` in `vite.config.ts`; replacing that array rather than
 extending it silently un-excludes `node_modules`.
 
+**A slider drag re-renders the row it moves and no other row, and
+`src/ui/rerender.dom.test.tsx` fails when that stops being true.**
+`pnpm compiler` reports a component the compiler could not memoize, and this
+test reports a memoized row that re-renders anyway because a prop or context
+value changed identity on the write.
+
+- The test mounts the real App in jsdom on a fake GPU engine, drags rows on the
+  All settings sheet (303 rows) and in an open stage of the panel, and reads
+  each commit off React's DevTools hook.
+- A key other than the dragged one under `rows` means a verb on `ControlsApi` or
+  `ModSlotsApi`, or a prop into `ControlRows`, changed identity on the write.
+  Commit a7f26018 fixed one such bug. With that commit reverted, every mounted
+  row re-renders, and on the sheet the `rows` diff ends in "and 295 more".
+- A change under `others` means a different set of components outside the rows
+  re-renders on a write. `SHEET_CHROME` and `GROUP_CHROME` in the test list the
+  current set and why each re-renders. Add a new name with its reason, or remove
+  a name that stopped re-rendering.
+- A failure in "the React Compiler has compiled every component under test"
+  means plugin-react did not compile the app under vitest, so the other tests in
+  the file measured components without the compiler's memoization. plugin-react
+  compiles a module for a client environment and skips a server one. Vitest
+  gives the jsdom project a client environment and the node project, which runs
+  every other test, a server one, so a test that mounts components has to be
+  named `*.dom.test.tsx`.
+
 `pnpm run docs` regenerates every diagram in `docs/graphviz/*.dot` into light
 and dark SVGs under `docs/img/` (needs Graphviz `dot` on PATH). The `.dot`
 sources hold `@TOKEN@` colour placeholders rather than hex, so one definition
