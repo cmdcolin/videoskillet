@@ -21,26 +21,26 @@ import { MIXER_LOOP_KEYS, MIXER_LOOP_OPENS as OPENS } from './schematicKeys'
 type Part = keyof typeof OPENS
 
 const WIDTH = 340
-const TOP_Y = 14
-const BOT_Y = 50
-const H = 20
-const FADER = { x: 52, w: 52 }
-const KEY_UP_X = 60
-const RING_UP_X = 92
-const DROP_X = 317
+const TOP_Y = 16
+const BOT_Y = 56
+const H = 24
+const FADER = { x: 50, w: 76 }
+const KEY_UP_X = 58
+const RING_UP_X = 116
+const DROP_X = 316
 const ROW = {
-  keyer: { x: 0, w: 43 },
-  ring: { x: 70, w: 60 },
-  resonance: { x: 142, w: 66 },
-  return: { x: 220, w: 66 },
-  store: { x: 296, w: 43 },
+  keyer: { x: 0, w: 42 },
+  ring: { x: 64, w: 58 },
+  resonance: { x: 137, w: 68 },
+  return: { x: 220, w: 56 },
+  store: { x: 292, w: 48 },
 }
 
-const PLOT = { left: 22, right: 236, top: 84, bottom: 128 }
+const PLOT = { left: 22, right: 236, top: 92, bottom: 130 }
 const WIDE_RIGHT = WIDTH - 6
 const HEIGHT = PLOT.bottom + 14
 const SLICE_X = 298
-const WHEEL = { cx: SLICE_X, cy: 108, radius: 30 }
+const WHEEL = { cx: SLICE_X, cy: 112, radius: 26 }
 const GAIN_TOP = 2
 const FSC_MHZ = FSC / 1e6
 const MHZ_TICKS = [0, 2, 4, BAND_MHZ]
@@ -182,7 +182,7 @@ export function MixerLoopDiagram() {
     <>
       <Diagram width={WIDTH} height={HEIGHT} label="mixer feedback loop">
         {arrow => (
-          <>
+          <g className={own.caps}>
             <Label x={0} y={TOP_Y - 6}>
               program
             </Label>
@@ -219,14 +219,16 @@ export function MixerLoopDiagram() {
               />
             </g>
 
-            {boxes.map(b => (
-              <BoxView
-                key={b.id}
-                box={b}
-                selected={b.id === pick.selected}
-                onSelect={pick.toggle}
-              />
-            ))}
+            <g className={own.names}>
+              {boxes.map(b => (
+                <BoxView
+                  key={b.id}
+                  box={b}
+                  selected={b.id === pick.selected}
+                  onSelect={pick.toggle}
+                />
+              ))}
+            </g>
 
             <Label x={PLOT.left + 4} y={PLOT.top - 8}>
               loop gain per lap
@@ -260,16 +262,18 @@ export function MixerLoopDiagram() {
             <Label x={x(FSC_MHZ)} y={PLOT.top - 8} anchor="middle">
               fsc
             </Label>
-            {MHZ_TICKS.map(n => (
-              <Label
-                key={n}
-                x={x(n)}
-                y={PLOT.bottom + 12}
-                anchor={n === BAND_MHZ ? 'end' : 'middle'}
-              >
-                {n === BAND_MHZ ? `${n} MHz` : String(n)}
-              </Label>
-            ))}
+            <g className={own.units}>
+              {MHZ_TICKS.map(n => (
+                <Label
+                  key={n}
+                  x={x(n)}
+                  y={PLOT.bottom + 12}
+                  anchor={n === BAND_MHZ ? 'end' : 'middle'}
+                >
+                  {n === BAND_MHZ ? `${n} MHz` : String(n)}
+                </Label>
+              ))}
+            </g>
             <clipPath id={clip}>
               <rect
                 x={PLOT.left}
@@ -345,7 +349,7 @@ export function MixerLoopDiagram() {
                 strength={Math.min(Math.abs(key), 1)}
               />
             )}
-          </>
+          </g>
         )}
       </Diagram>
       <BoxRows keys={open} />

@@ -11,3 +11,18 @@
   stroke-width: 1;
   stroke-dasharray: 2 2;
 }
+
+.caps text {
+  font-size: 9px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.caps .names text {
+  font-size: 9.5px;
+}
+
+.caps .units text {
+  letter-spacing: normal;
+  text-transform: none;
+}
