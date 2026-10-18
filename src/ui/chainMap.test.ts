@@ -311,8 +311,8 @@ describe('chain map geometry', () => {
     ).toEqual([])
   })
 
-  // A long return lands on the centre of the box it re-enters and leaves from
-  // the centre of the box it taps. A self loop is the one that can silently
+  // A long return lands `landing` of the way across the box it re-enters and
+  // leaves from the centre of the box it taps. A self loop is the one that can silently
   // stop being drawable: it straddles its box, so its ends have to sit *outside*
   // that box and still inside the runs either side — and the box under them
   // narrows with `fit` while the runs do not. Every subset, because only the
@@ -326,7 +326,10 @@ describe('chain map geometry', () => {
         const tap = boxes.find(b => b.name === r.tap)
         if (tap === undefined) throw new Error(`${r.loop}: no ${r.tap} box`)
         if (!r.self) {
-          expect(r.to, r.loop).toBeCloseTo(box.x, 9)
+          expect(r.to, r.loop).toBeCloseTo(
+            box.x - box.w / 2 + box.w * r.landing,
+            9,
+          )
           expect(r.from, r.loop).toBeCloseTo(tap.x, 9)
           continue
         }

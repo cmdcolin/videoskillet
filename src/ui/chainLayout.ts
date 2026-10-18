@@ -193,9 +193,14 @@ interface ReturnSpec {
   y: number
   turn: number
   // A return whose two ends are the same box, drawn straddling it — see
-  // SELF_STRADDLE. The other two land on the centre of what they tap and what
-  // they re-enter, so they need no offsets at all.
+  // SELF_STRADDLE. The other two leave from the centre of what they tap and
+  // land `landing` of the way across what they re-enter.
   self: boolean
+  // Where across the re-entered box the arrowhead lands, 0 at its left edge and
+  // 1 at its right. The camera joins after the source is picked and ahead of the
+  // encoder, which is the back half of Source A; the mixer loop meets the whole
+  // of Mix.
+  landing: number
 }
 
 // How far outside its box a self loop's two ends sit — unreached while RETURNS
@@ -218,6 +223,7 @@ const RETURNS: readonly ReturnSpec[] = [
     y: 9,
     turn: 4,
     self: false,
+    landing: 0.75,
   },
   {
     tap: 'Receiver',
@@ -228,6 +234,7 @@ const RETURNS: readonly ReturnSpec[] = [
     y: 27,
     turn: 4,
     self: false,
+    landing: 0.5,
   },
 ]
 
@@ -476,7 +483,10 @@ export function chainLayout(names: string[], specs: WiredBranch[] = []) {
     const back = at(r.into)
     if (tap < 0 || back < 0 || (r.self ? tap !== back : tap <= back)) return []
     const straddle = boxes[back]!.w / 2 + SELF_STRADDLE
-    const to = r.self ? centers[back]! - straddle : centers[back]!
+    const into = boxes[back]!
+    const to = r.self
+      ? centers[back]! - straddle
+      : into.x - into.w / 2 + into.w * r.landing
     const from = r.self ? centers[tap]! + straddle : centers[tap]!
     // Where the run's own name rides it. A run that reaches back across the map
     // has its whole horizontal length to offer, and the name goes at the near
