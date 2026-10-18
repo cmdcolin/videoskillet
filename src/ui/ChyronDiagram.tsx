@@ -10,7 +10,14 @@ import {
   Pressable,
   Wire,
 } from './DiagramParts'
-import { CAPTION_KEYS, CC_BENDS, CG_BENDS, CHYRON_KEYS } from './schematicKeys'
+import {
+  CAPTION_KEYS,
+  CAPTION_OPENS,
+  CC_BENDS,
+  CG_BENDS,
+  CHYRON_KEYS,
+  CHYRON_OPENS,
+} from './schematicKeys'
 
 import type { ControlKey } from '../core/controls'
 
@@ -140,6 +147,7 @@ const PROGRAM = R3 + 66
 // so it draws the same chip and swaps the keyer for the box it paints.
 function CharGen({ cg }: { cg: boolean }) {
   const b = cg ? CG_BENDS : CC_BENDS
+  const opens = cg ? CHYRON_OPENS : CAPTION_OPENS
   const r = useReadings<ControlKey>(cg ? CHYRON_KEYS : CAPTION_READS)
   const pick = useSelectedBox(cg ? 'mix' : null)
   const off = r.value(cg ? 'cgMix' : 'cc') <= 0
@@ -181,7 +189,7 @@ function CharGen({ cg }: { cg: boolean }) {
       M1,
       50,
       TWO,
-      cg ? ['cgX', 'cgY', 'cgScale'] : [],
+      opens.raster,
       cg
         ? 'Where the block starts on the picture and how many samples each font dot takes. The raster position drives both counters.'
         : 'The decoder paints on the set’s own raster, at a fixed place and size.',
@@ -193,7 +201,7 @@ function CharGen({ cg }: { cg: boolean }) {
       M1,
       56,
       TWO,
-      [b.pageSlip],
+      opens['page counter'],
       'Walks the page memory as the raster crosses the block. A slipping counter walks the page through itself a cell at a time.',
     ),
     box(
@@ -203,7 +211,7 @@ function CharGen({ cg }: { cg: boolean }) {
       M1,
       46,
       TWO,
-      [],
+      opens['page ram'],
       'Four rows of thirty-two character codes.',
     ),
     box(
@@ -213,7 +221,7 @@ function CharGen({ cg }: { cg: boolean }) {
       M2,
       56,
       TWO,
-      [b.romStride, b.romSlip, b.romLineSlip],
+      opens['char counter'],
       'Forms the font address: the character code times the cell-height strap, plus the dot row. Its count slips when a frame or line reset arrives late.',
     ),
     box(
@@ -223,7 +231,7 @@ function CharGen({ cg }: { cg: boolean }) {
       M2,
       62,
       TWO,
-      [b.romRot],
+      opens['font rom'],
       'A 2 KiB EPROM: eleven address lines in, eight data lines out. Cells that have lost their charge read back as the erased state.',
     ),
   ]
@@ -236,7 +244,7 @@ function CharGen({ cg }: { cg: boolean }) {
         SPLIT,
         38,
         TWO,
-        ['cgKeyMHz'],
+        CHYRON_OPENS['key amp'],
         'The key-processing amplifier. Its bandwidth is what softens the edge of the key.',
       ),
       box(
@@ -246,7 +254,7 @@ function CharGen({ cg }: { cg: boolean }) {
         SPLIT,
         50,
         ONE,
-        ['cgClip'],
+        CHYRON_OPENS.slicer,
         'Cuts the processed key at the clip level, which sets the stroke weight.',
       ),
       box(
@@ -256,7 +264,7 @@ function CharGen({ cg }: { cg: boolean }) {
         FILL,
         38,
         ONE,
-        ['cgFill'],
+        CHYRON_OPENS.fill,
         'The characters as video, at the fill level.',
       ),
       box(
@@ -266,7 +274,7 @@ function CharGen({ cg }: { cg: boolean }) {
         KEY,
         50,
         ONE,
-        ['cgKeyDelayNs'],
+        CHYRON_OPENS.timing,
         'The trim between key and fill. Off zero, the matte slides off the letters.',
       ),
       box(
@@ -276,7 +284,7 @@ function CharGen({ cg }: { cg: boolean }) {
         KEY,
         38,
         ONE,
-        ['cgEdgeX', 'cgEdgeY'],
+        CHYRON_OPENS.edge,
         'A copy of the key delayed by samples and lines and OR-ed into it: the border and drop shadow.',
       ),
       box(
@@ -286,7 +294,7 @@ function CharGen({ cg }: { cg: boolean }) {
         KEY,
         50,
         ONE,
-        ['cgInvert'],
+        CHYRON_OPENS.invert,
         'Cuts the other way: letter-shaped holes in a full-frame fill.',
       ),
       box(
@@ -296,7 +304,7 @@ function CharGen({ cg }: { cg: boolean }) {
         R3 + 38,
         38,
         76,
-        ['cgMix'],
+        CHYRON_OPENS.mix,
         'Lays the fill over program wherever the key is open.',
       ),
     )
@@ -309,16 +317,12 @@ function CharGen({ cg }: { cg: boolean }) {
         R3 + TWO / 2,
         56,
         TWO,
-        ['ccBox'],
+        CAPTION_OPENS['caption box'],
         'A black box behind the cells the decoder received, and the characters in white over it.',
       ),
     )
   }
-  const busKeys: Record<string, readonly ControlKey[]> = {
-    'page bus': [b.pageAddr],
-    'address bus': [b.romAddr, b.romCross],
-    'data bus': [b.romData],
-  }
+  const busKeys: Record<string, readonly ControlKey[]> = opens
   const open =
     boxes.find(x => x.id === pick.selected)?.keys ??
     busKeys[pick.selected ?? '']

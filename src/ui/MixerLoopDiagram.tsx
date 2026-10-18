@@ -13,33 +13,7 @@ import {
 } from './DiagramParts'
 import { BAND_MHZ, bandMHz, lapGains, type MixerLoop } from './loopGain'
 import own from './MixerLoopDiagram.module.css'
-import { MIXER_LOOP_KEYS } from './schematicKeys'
-
-type Key = (typeof MIXER_LOOP_KEYS)[number]
-
-const OPENS = {
-  fader: ['cfbMix', 'cfbGain'],
-  keyer: [
-    'cfbKey',
-    'cfbKeyExt',
-    'cfbKeyLevel',
-    'cfbKeySoft',
-    'cfbKeyAcceptDeg',
-    'cfbKeyHueDeg',
-  ],
-  store: [
-    'cfbHold',
-    'cfbTrail',
-    'cfbGenlock',
-    'cfbClockPct',
-    'cfbLines',
-    'cfbDelayUs',
-    'cfbServoUs',
-  ],
-  return: ['cfbReturn', 'cfbNoiseIre'],
-  resonance: ['cfbFilterMHz', 'cfbFilterQ', 'cfbFilterBoost'],
-  ring: ['cfbRing', 'cfbRingSrc', 'cfbCarrierKHz'],
-} as const satisfies Record<string, readonly Key[]>
+import { MIXER_LOOP_KEYS, MIXER_LOOP_OPENS as OPENS } from './schematicKeys'
 
 type Part = keyof typeof OPENS
 

@@ -11,7 +11,7 @@ import local from './DecoderDiagram.module.css'
 import { boxWidth, useReadings, useSelectedBox, type BoxSpec } from './diagram'
 import styles from './Diagram.module.css'
 import { BoxRows, BoxView, Diagram, Label, Wire } from './DiagramParts'
-import { DECODER_KEYS } from './schematicKeys'
+import { DECODER_KEYS, DECODER_OPENS as OPENS } from './schematicKeys'
 
 const READ = [...DECODER_KEYS, 'lumaMHz', 'lumaPeak', 'vbi'] as const
 type Key = (typeof READ)[number]
@@ -166,7 +166,7 @@ export function DecoderDiagram() {
     lane: Lane,
     name: string,
     help: string,
-    keys: Key[],
+    keys: readonly Key[],
     extra: Partial<BoxSpec> = {},
   ): BoxSpec => {
     const w = extra.w ?? boxWidth(name)
@@ -190,14 +190,14 @@ export function DecoderDiagram() {
       LANE.luma,
       'encoder',
       "The encoder's colour bandwidth at the camera end, upstream of the channel and the receiver. It sets how wide the chroma sidebands are when they reach the set.",
-      ['encChromaMHz'],
+      OPENS.encoder,
     ),
     box(
       COL.front,
       LANE.luma,
       'AGC',
       'The IF gain, set off the sync tip. It scales the whole composite ahead of everything else, so luma, chroma and the burst all move together. Dim while the gain is fixed.',
-      ['agc'],
+      OPENS.AGC,
       { off: !agcOn },
     ),
     box(
@@ -205,14 +205,14 @@ export function DecoderDiagram() {
       LANE.luma,
       'luma',
       'The luma channel: the composite minus the chroma the demodulator recovered, remodulated onto the subcarrier. S-video bleed scales that subtraction down, and past 0.5 adds the chroma back.',
-      ['svideoBleed'],
+      OPENS.luma,
     ),
     box(
       COL.matrix,
       { y: LANE.luma.y, h: bottom(LANE.chroma) - LANE.luma.y },
       'matrix',
       'The YUV to RGB matrix and the three output amplifiers. Clip 0 fits the result into gamut without moving hue; clip 1 lets each gun hit its rail on its own.',
-      ['matrixClip'],
+      OPENS.matrix,
       { w: MATRIX_W },
     ),
     box(
@@ -220,35 +220,35 @@ export function DecoderDiagram() {
       LANE.chroma,
       'Y/C comb',
       'What feeds the chroma demodulator. The trap passes the composite as it is; the combs subtract the line above, or the lines above and below, so only what alternates line to line reaches it.',
-      ['combMode'],
+      OPENS['Y/C comb'],
     ),
     box(
       COL.demod,
       LANE.chroma,
       'demodulator',
       'Two synchronous detectors on the subcarrier, each followed by the chroma lowpass. Bandwidth and trail shape that lowpass; axis is the angle between the detectors; upsample error is how often the demodulator samples before interpolating.',
-      ['demodMHz', 'demodAxisDeg', 'chromaTail', 'chromaCoarse'],
+      OPENS.demodulator,
     ),
     box(
       COL.late,
       LANE.chroma,
       'ACC',
       "Chroma gain: the burst's amplitude, weighted by burst lock, times the colour control. Its lag is the RC on the burst amplitude that both this gain and the colour killer read. The code applies the gain after the demodulator, which gives the same product.",
-      ['chromaGain', 'accLagLines'],
+      OPENS.ACC,
     ),
     box(
       COL.front,
       LANE.burst,
       'burst\ngate',
       'line_analyze gates the nine cycles of burst off the sync timing, after the AGC. Its phase feeds the reference oscillator and its amplitude feeds the ACC and the colour killer.',
-      [],
+      OPENS['burst\ngate'],
     ),
     box(
       COL.demod,
       LANE.burst,
       'reference',
       "The 3.58 MHz crystal oscillator the demodulator detects against, pulled toward the burst's phase by burst lock. Tint and the VIR hue trim turn it; detune pulls the crystal off frequency. Dim while it runs free at burst lock 0.",
-      ['burstLock', 'afpcLagLines', 'tintDeg', 'scDetuneKHz'],
+      OPENS.reference,
       { off: lock <= 0 },
     ),
     box(
@@ -256,7 +256,7 @@ export function DecoderDiagram() {
       LANE.burst,
       'colour\nkiller',
       'The colour killer zeroes the burst-derived gain when the lagged burst amplitude falls below its threshold. It acts through the ACC, so at burst lock 0 it does nothing.',
-      ['killThresh'],
+      OPENS['colour\nkiller'],
       { off: !killerLive },
     ),
     box(
@@ -264,7 +264,7 @@ export function DecoderDiagram() {
       LANE.vir,
       'VIR',
       'The VIR corrector reads the reference on line 19 and integrates a hue trim into the reference oscillator and a saturation trim into the ACC.',
-      ['vir', 'virLag'],
+      OPENS.VIR,
       {
         off: !virOn,
         note: v('vbi') > 0 ? undefined : 'Needs the VBI test signals on.',

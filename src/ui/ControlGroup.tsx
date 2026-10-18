@@ -36,12 +36,7 @@ import { PipControl } from './PipControl'
 import { PurityFrame } from './PurityFrame'
 import { rowClaim } from './rollMod'
 import { sameKeySet, sameList } from './sameList'
-import {
-  CAPTION_KEYS,
-  CHYRON_KEYS,
-  DECODER_KEYS,
-  MIXER_LOOP_KEYS,
-} from './schematicKeys'
+import { SCHEMATICS, type SchematicGroup } from './schematicKeys'
 import { Section } from './Section'
 import { SIGNAL_TAPS, tapFor } from './signalTap'
 import { useSignalTapApi } from './SignalTapContext'
@@ -377,6 +372,13 @@ function WikiCaptionRow() {
   )
 }
 
+const SCHEMATIC_FRAMES: Record<SchematicGroup, () => ReactElement> = {
+  [MIXER_LOOP_GROUP]: MixerLoopDiagram,
+  'Character generator (chyron)': ChyronDiagram,
+  Captions: CaptionDiagram,
+  Decoder: DecoderDiagram,
+}
+
 const FRAMES: {
   group: string
   keys: ReadonlySet<ControlKey>
@@ -402,26 +404,11 @@ const FRAMES: {
     keys: new Set<ControlKey>(['crtZoomX', 'crtZoomY']),
     Frame: ZoomControl,
   },
-  {
-    group: MIXER_LOOP_GROUP,
-    keys: new Set<ControlKey>(MIXER_LOOP_KEYS),
-    Frame: MixerLoopDiagram,
-  },
-  {
-    group: 'Character generator (chyron)',
-    keys: new Set<ControlKey>(CHYRON_KEYS),
-    Frame: ChyronDiagram,
-  },
-  {
-    group: 'Captions',
-    keys: new Set<ControlKey>(CAPTION_KEYS),
-    Frame: CaptionDiagram,
-  },
-  {
-    group: 'Decoder',
-    keys: new Set<ControlKey>(DECODER_KEYS),
-    Frame: DecoderDiagram,
-  },
+  ...SCHEMATICS.map(({ group, keys }) => ({
+    group,
+    keys: new Set<ControlKey>(keys),
+    Frame: SCHEMATIC_FRAMES[group],
+  })),
 ]
 
 // A list of rows, and the component boundary is the point of it.
