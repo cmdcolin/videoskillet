@@ -39,6 +39,7 @@ import { ModRowEditor } from './ModRowEditor'
 import { modPatch } from './modSlots'
 import { useModSlotsApi } from './ModSlotsContext'
 import { mutateAmountFor } from './mutate'
+import { NoiseDiagram } from './NoiseDiagram'
 import { PhosphorDiagram } from './PhosphorDiagram'
 import { PipControl } from './PipControl'
 import { PurityFrame } from './PurityFrame'
@@ -397,6 +398,7 @@ const SCHEMATIC_FRAMES: Record<SchematicGroup, () => ReactElement> = {
   Timebase: TimebaseDiagram,
   'VHS colour & tracking': VhsDiagram,
   'Enhancer (bent)': EnhancerDiagram,
+  'Noise & interference': NoiseDiagram,
   'Ghosting & leakage': LeakDiagram,
   'Chroma key (A through B)': ChromaKeyDiagram,
   Phosphor: PhosphorDiagram,

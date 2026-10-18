@@ -1,0 +1,15 @@
+.frame {
+  fill: none;
+  stroke: var(--border);
+}
+
+.mark {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.5;
+}
+
+.slab {
+  fill: var(--accent);
+  opacity: 0.35;
+}

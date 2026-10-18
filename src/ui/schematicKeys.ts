@@ -289,6 +289,15 @@ export const LEAK_OPENS = {
 
 export const LEAK_KEYS = Object.values(LEAK_OPENS).flat()
 
+export const NOISE_OPENS = {
+  floor: ['noiseIre', 'noiseTilt'],
+  arcs: ['impulseRate', 'impulseIre', 'impulseMains'],
+  ignition: ['impulseHz'],
+  strikes: ['strikeRate'],
+} as const satisfies Opens
+
+export const NOISE_KEYS = Object.values(NOISE_OPENS).flat()
+
 export const CHROMA_KEY_OPENS = {
   spill: ['bKeySpill'],
   delay: ['bKeyDelayUs'],
@@ -333,6 +342,7 @@ export const SCHEMATICS = [
   { group: 'Timebase', keys: TIMEBASE_KEYS, opens: TIMEBASE_OPENS },
   { group: 'VHS colour & tracking', keys: VHS_KEYS, opens: VHS_OPENS },
   { group: 'Enhancer (bent)', keys: ENHANCER_KEYS, opens: ENHANCER_OPENS },
+  { group: 'Noise & interference', keys: NOISE_KEYS, opens: NOISE_OPENS },
   { group: 'Ghosting & leakage', keys: LEAK_KEYS, opens: LEAK_OPENS },
   {
     group: 'Chroma key (A through B)',

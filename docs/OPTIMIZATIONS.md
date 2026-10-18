@@ -128,8 +128,8 @@ Three arms were reverted, and all three are worth knowing.
   nothing, so it is not shared memory. The compiler does something with that
   table the profiler can see and the source cannot. The fold has since moved
   ahead of the luma FIR, where it stages its own tile and tables how far each
-  source sample overruns its threshold, hash included. That table measured
-  0.311 → 0.305 ms at stock, so whatever cost 0.2 ms did not come back.
+  source sample overruns its threshold, hash included. That table measured 0.311
+  → 0.305 ms at stock, so whatever cost 0.2 ms did not come back.
 - **Staging `sync.wgsl` into workgroup memory** was 0.174 → 0.166 ms, bit exact
   and not worth the shared memory, and prefetching the next line's measurement
   did nothing either. That pass is bound by the issue latency of one lane
