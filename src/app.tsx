@@ -1,4 +1,5 @@
 import {
+  startTransition,
   useCallback,
   useEffect,
   useMemo,
@@ -16,6 +17,7 @@ import { poolCaption } from './sources/pools'
 import { AboutDialog } from './ui/AboutDialog'
 import { Account } from './ui/Account'
 import { AdvancedDialog } from './ui/AdvancedDialog'
+import { AllSettingsSheet } from './ui/AllSettingsSheet'
 import { AppMenu, ShowMenuButton } from './ui/AppMenu'
 import { AudioHint, AudioInput, SoundOut } from './ui/AudioInput'
 import { boardControls } from './ui/boardText'
@@ -169,6 +171,8 @@ import type { CSSProperties, ReactNode } from 'react'
 // screen (fullscreen, the popout), which is where somebody clearing the picture
 // off for a projector is likely to be.
 const BAR_HIDDEN_STORE = 'videoskillet_overlay_bar_hidden'
+
+const ALL_OFF_ONLY_STORE = 'videoskillet_all_settings_off_stock'
 
 // How wide the sidebar was left. Persisted for the same reason the bench flag
 // is: it is how this session reads the panel, not something it re-decides every
@@ -371,6 +375,19 @@ export function App() {
   const [showShare, setShowShare] = useState(false)
   const [showBoardText, setShowBoardText] = useState(false)
   const [showPalette, setShowPalette] = useState(false)
+  const [showAll, setShowAll] = useState(false)
+  // The "off stock only" switch on All settings, persisted because the sheet
+  // is usually reopened for the question it was last opened for.
+  const [allOffOnly, setAllOffOnly] = usePersistedFlag(ALL_OFF_ONLY_STORE)
+  // The sheet takes the sidebar, so opening it closes the other two. Mounting
+  // three hundred rows is a long render, so it runs as a transition, which
+  // yields to the frame loop while it works.
+  const openAll = () =>
+    startTransition(() => {
+      setShowPalette(false)
+      setShowBoardText(false)
+      setShowAll(true)
+    })
   const [comparing, setComparing] = useState(false)
   // Which stage is being held at stock, if any — see holdStock.
   const [heldStage, setHeldStage] = useState<string | null>(null)
@@ -418,6 +435,14 @@ export function App() {
     setFilter(text)
     setMovingOnly(false)
     setLookKeys(null)
+  }
+  // The stage a jump out of the sheet opened, for the panel to scroll to.
+  const [revealStage, setRevealStage] = useState<string | null>(null)
+  const leaveAll = (stage: string) => {
+    setShowAll(false)
+    clearFilter()
+    setSearchOpen(false)
+    setRevealStage(stage)
   }
   // One switch wherever it is pressed — the Modulation section's count, the palette, the chip
   // in the box. Nothing typed can reach the mode, so this is the whole of it.
@@ -978,9 +1003,10 @@ export function App() {
     // on the map rather than a thing on screen to back out of.
     onSearch: openSearch,
     onEscape: () => {
-      if (showPalette || showBoardText) {
+      if (showPalette || showBoardText || showAll) {
         setShowPalette(false)
         setShowBoardText(false)
+        setShowAll(false)
         return
       }
       const mode =
@@ -1115,6 +1141,7 @@ export function App() {
     },
     onCopyLink: () => setShowShare(true),
     onBoardText: () => setShowBoardText(true),
+    onAllSettings: openAll,
     onRecord: capture.toggleRecord,
     onStill: capture.grabStill,
     onFullscreen: toggleFullscreen,
@@ -1219,6 +1246,16 @@ export function App() {
   // menu
   // is still a way back to the module it came from.
   const openStages = OPEN_STAGES[bOn ? 1 : 0][soundOn ? 1 : 0]
+  const generators = {
+    noise: useLiveReading(
+      controlStore,
+      c => generatorsLive(eng.a.mode, eng.b.mode, c).noise,
+    ),
+    synth: useLiveReading(
+      controlStore,
+      c => generatorsLive(eng.a.mode, eng.b.mode, c).synth,
+    ),
+  }
   // Every box on the map, and whether the query reached one that will draw
   // anything — the whole of the sidebar's structure, worked out in one place
   // over the control tables (panelChain.ts). The two free boxes are the only
@@ -1233,16 +1270,7 @@ export function App() {
     patched,
     // Which of the two bench generators is running, so neither one's group is
     // offered under a stage that is showing a webcam.
-    generators: {
-      noise: useLiveReading(
-        controlStore,
-        c => generatorsLive(eng.a.mode, eng.b.mode, c).noise,
-      ),
-      synth: useLiveReading(
-        controlStore,
-        c => generatorsLive(eng.a.mode, eng.b.mode, c).synth,
-      ),
-    },
+    generators,
     onOpenGroup: nav.openAt,
     free: [
       {
@@ -1434,6 +1462,7 @@ export function App() {
     showFps,
     onToggleFps: () => setShowFps(!showFps),
     onShowPalette: () => setShowPalette(true),
+    onShowAllSettings: openAll,
     onShowAdvanced: () => setShowAdvanced(true),
     onShowAbout: () => setShowAbout(true),
     // Only offered with nobody signed in; a signed-in reader has the answer
@@ -1746,6 +1775,9 @@ export function App() {
         heldStage={heldStage}
         onHoldStock={holdStock}
         onReleaseStock={releaseStock}
+        onShowAll={openAll}
+        reveal={revealStage}
+        onRevealed={() => setRevealStage(null)}
       />
       {!filtering || anyResult || presetHits.length > 0 ? null : (
         <div className={ui.hint}>
@@ -1821,6 +1853,25 @@ export function App() {
       }}
       onCopy={copyUrl}
       onClose={() => setShowBoardText(false)}
+    />
+  ) : showAll ? (
+    <AllSettingsSheet
+      offOnly={allOffOnly}
+      onToggleOffOnly={() => startTransition(() => setAllOffOnly(!allOffOnly))}
+      openStages={openStages}
+      generators={generators}
+      // A jump asks for one named place. The filter comes off with the sheet,
+      // because a query that missed the group would leave that place empty.
+      onOpenStage={stage => {
+        leaveAll(stage)
+        if (bench) nav.jumpPhase(stage)
+        else if (nav.openPhase !== stage) nav.togglePhase(stage)
+      }}
+      onOpenGroup={(stage, group) => {
+        leaveAll(stage)
+        nav.openAt(stage, group)
+      }}
+      onClose={() => setShowAll(false)}
     />
   ) : null
 

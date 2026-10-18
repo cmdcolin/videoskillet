@@ -131,6 +131,7 @@ export function paletteActions(o: {
   save: { can: boolean; as: string; run: () => void }
   onCopyLink: () => void
   onBoardText: () => void
+  onAllSettings: () => void
   onRecord: () => void
   onStill: () => void
   // Where the picture and the panel are.
@@ -325,6 +326,12 @@ export function paletteActions(o: {
       name: 'redo',
       blurb: 'step forward again after an undo',
       run: o.onRedo,
+    },
+    {
+      name: 'all settings',
+      blurb:
+        'every control in every stage on one page, in signal order, with nothing folded — or only the ones off stock',
+      run: o.onAllSettings,
     },
     {
       name: 'show what is moving',

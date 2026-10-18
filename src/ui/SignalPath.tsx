@@ -1,4 +1,4 @@
-import { Fragment, useRef } from 'react'
+import { Fragment, useEffect, useRef } from 'react'
 
 import { ChainMap } from './ChainMap'
 import { ControlGroup } from './ControlGroup'
@@ -12,7 +12,7 @@ import { useClickWord } from './useMediaQuery'
 import type { BranchSpec, FreeBox, WiredBranch } from './chainLayout'
 import type { ChainStage } from './ChainMap'
 import type { Group, LoopPlace, LoopsLive } from './controls'
-import type { ReactNode } from 'react'
+import type { ReactNode, RefObject } from 'react'
 
 // A stage as the panel needs it: what the map draws, plus its groups as data.
 // Only the open stage builds sections — building all six to throw five away
@@ -233,7 +233,7 @@ function StageHead(props: {
 // graphic it was about and gone for good after the first click — and the open
 // stage is persisted, so a returning session never saw it at all. Here it costs
 // no row of its own and it is still there on the visit where you have forgotten.
-function PathHead() {
+function PathHead(props: { onShowAll: () => void }) {
   const click = useClickWord()
   return (
     <div className={styles.pathHead}>
@@ -245,6 +245,15 @@ function PathHead() {
           the trunk now instead of emptying it, so there is always a map under
           this line and always a stage to click. */}
       <span className={styles.pathHint}>{click} a stage</span>
+      {/* The map opens one stage at a time, and this button on its heading
+          lists every stage at once. */}
+      <button
+        className={styles.pathAll}
+        title="every control in every stage on one page, with nothing folded — or only the ones off stock"
+        onClick={props.onShowAll}
+      >
+        all settings
+      </button>
     </div>
   )
 }
@@ -303,6 +312,11 @@ export function SignalPath(props: {
   heldStage: string | null
   onHoldStock: (stage: string) => void
   onReleaseStock: () => void
+  onShowAll: () => void
+  // The stage a jump from outside the panel just opened. The panel scrolls it
+  // into view when it mounts, then calls onRevealed.
+  reveal: string | null
+  onRevealed: () => void
 }) {
   // Whether a stage's box is a door, stamped on here rather than handed in.
   // A stage opens if its controls can act on something, or if it has a picker at
@@ -369,6 +383,7 @@ export function SignalPath(props: {
   // The stage rows under the map, by name, as scroll targets — the Bench keeps
   // the same map of its headings for the same reason.
   const rows = useRef(new Map<string, HTMLDivElement>())
+  useReveal(props.bench ? null : props.reveal, props.onRevealed, rows)
   // A stage opened on a phone opens out of sight. Portrait stacks the panel
   // under the picture, and the map alone fills what is left of it, so the stage
   // that unfolds under the map lands below the fold: the box lights and nothing
@@ -414,6 +429,9 @@ export function SignalPath(props: {
         onOpen={openStage}
         stageTop={props.stageTop}
         stockFor={stockFor}
+        onShowAll={props.onShowAll}
+        reveal={props.reveal}
+        onRevealed={props.onRevealed}
       />
     )
   }
@@ -437,7 +455,7 @@ export function SignalPath(props: {
   // them.
   return (
     <>
-      <PathHead />
+      <PathHead onShowAll={props.onShowAll} />
       <ChainMap
         stages={nodes}
         branches={wired}
@@ -541,11 +559,15 @@ function Bench(props: {
   // Built by SignalPath, so the bench's headings and the spine's offer the hold
   // on the same terms.
   stockFor: (node: PathNode) => StageStock | undefined
+  onShowAll: () => void
+  reveal: string | null
+  onRevealed: () => void
 }) {
   // The stage headings, by name, as scroll targets. Element-relative
   // scrollIntoView only: the panel also renders inside the popout's document,
   // where this window's scrolling APIs address the wrong realm.
   const heads = useRef(new Map<string, HTMLDivElement>())
+  useReveal(props.reveal, props.onRevealed, heads)
   const scrollTo = (name: string) =>
     heads.current
       .get(name)
@@ -559,7 +581,7 @@ function Bench(props: {
   }
   return (
     <>
-      <PathHead />
+      <PathHead onShowAll={props.onShowAll} />
       <ChainMap
         stages={props.nodes}
         branches={props.wired}
@@ -617,4 +639,20 @@ function Bench(props: {
       </div>
     </>
   )
+}
+
+// Brings a stage into view after a jump from outside the panel. The "All
+// settings" sheet closes as it jumps, so the panel mounts with its scroll at the
+// top, and the stage it opened sits under the map, below the fold on a short
+// panel.
+function useReveal(
+  reveal: string | null,
+  onRevealed: () => void,
+  at: RefObject<Map<string, HTMLDivElement>>,
+) {
+  useEffect(() => {
+    if (reveal === null) return
+    at.current.get(reveal)?.scrollIntoView({ block: 'start' })
+    onRevealed()
+  }, [reveal, onRevealed, at])
 }

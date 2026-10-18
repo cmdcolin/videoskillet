@@ -1,0 +1,138 @@
+/* The sheet's own scroller, under the title row, the way the board dump's <pre>
+   is: the panel stops scrolling while a sheet is up (app.module.css
+   .panelSheet). */
+.list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  padding-right: var(--space-2xs);
+}
+
+.lead {
+  margin: 0 0 var(--space-sm);
+  color: var(--fg3);
+  font-size: var(--fs-sm);
+  line-height: var(--prose-lh);
+}
+
+.empty {
+  margin: var(--space-sm) 0;
+  color: var(--fg3);
+  font-size: var(--fs-sm);
+  line-height: var(--prose-lh);
+}
+
+/* The toggle in the title row wears the stage heading's "at stock" chip, lit
+   amber while it narrows the sheet, since amber is the panel's colour for
+   "off stock". */
+.only {
+  composes: bare tap from './ui.module.css';
+  flex-shrink: 0;
+  padding: 1px var(--space-sm);
+  border: 1px solid var(--border-quiet);
+  border-radius: var(--ctl-radius);
+  font-size: var(--fs-xs);
+  line-height: 1.4;
+  color: var(--fg3);
+}
+.only:hover {
+  border-color: var(--edit);
+  color: var(--edit);
+}
+.onlyOn {
+  border-color: var(--edit);
+  background: color-mix(in srgb, var(--edit) 24%, transparent);
+  color: var(--edit-hi);
+}
+
+/* A stage draws the panel's rail down its left edge, so where one stage ends
+   is as plain here as in the panel (SignalPath.module.css .stageRow). */
+.stage {
+  margin: 0 0 var(--space-md);
+  padding: 0 0 var(--space-xs) var(--space-md);
+  border-left: 2px solid var(--rail);
+}
+
+/* The stage's name sticks while its rows scroll under it, so the stage a row
+   belongs to is on screen with the row. The tint is the panel's open-stage
+   strip. */
+.stageHead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-xs);
+  margin: 0 0 var(--space-xs) -10px;
+  padding: 3px var(--space-xs) 3px var(--space-md);
+  border-left: 2px solid var(--rail);
+  border-bottom: 1px solid var(--border-faint);
+  background: color-mix(in srgb, var(--accent) 22%, var(--surface-raised));
+  font-size: var(--fs-md);
+  font-weight: 700;
+}
+.stageName {
+  composes: bare from './ui.module.css';
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+button.stageName:hover {
+  color: var(--fg);
+}
+.inert {
+  margin-left: auto;
+  color: var(--fg3);
+  font-size: var(--fs-xs);
+  font-weight: 400;
+}
+
+.group {
+  margin: var(--space-xs) 0 var(--space-sm);
+  padding: 0 var(--space-sm) var(--space-xs);
+  border-radius: 4px;
+  background: var(--surface);
+}
+/* A group's name, in the panel's group-header face (Section.module.css
+   .headSub). A button when the panel lists the group right now. */
+.groupHead {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-xs);
+  margin: 0 calc(-1 * var(--space-sm)) var(--space-2xs);
+  padding: 4px var(--space-sm);
+  border-radius: 4px 4px 0 0;
+  background: var(--surface-raised);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+.groupName {
+  composes: bare from './ui.module.css';
+  min-width: 0;
+  text-align: left;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--fg2);
+}
+button.groupName:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.dot {
+  color: var(--edit);
+  white-space: nowrap;
+  letter-spacing: normal;
+}
+
+/* The trims the panel folds behind "▸ N fine tweaks", unfolded under a caption
+   so the split the panel makes is still visible. */
+.fine {
+  margin: var(--space-xs) 0 1px;
+  color: var(--fg4);
+  font-size: var(--fs-xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}

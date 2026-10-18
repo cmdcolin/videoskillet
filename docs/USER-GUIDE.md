@@ -52,6 +52,12 @@ button.
 at stock while the rest of the look stays where it is, so you can find which of
 several faults is making the artifact.
 
+**all settings**, at the right of the map's header, lists every control in every
+stage on one page, in signal order, with nothing folded. Its **off stock only**
+switch narrows the list to the controls the look has moved, and a group's name
+opens that group in the panel. The ☰ menu and the `ctrl+k` palette open the
+same list.
+
 ![The app window with a slider's help card open, boxed in red](img/slider-help.jpg)
 
 **?** on any slider explains the fault that control models, and both the filter

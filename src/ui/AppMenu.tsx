@@ -77,6 +77,7 @@ export function AppMenu(props: {
   showFps: boolean
   onToggleFps: () => void
   onShowPalette: () => void
+  onShowAllSettings: () => void
   onShowAdvanced: () => void
   onShowAbout: () => void
   /** Opens the why-sign-in card. Undefined once there is an account behind the
@@ -139,6 +140,14 @@ export function AppMenu(props: {
             hint="⌘K"
             closes={id}
             onClick={props.onShowPalette}
+          />
+          <MenuItem
+            icon="≡"
+            label="all settings"
+            hint=""
+            title="every control in every stage on one page, with nothing folded"
+            closes={id}
+            onClick={props.onShowAllSettings}
           />
           <div className={popoverStyles.menuSep} />
           <ZoomRow lens={props.lens} onChange={props.onLens} />

@@ -227,6 +227,14 @@
 .stageStock + .stageAll {
   margin-left: var(--space-xs);
 }
+/* The stage heading's chip (.stageStock above), at the far end of the map's heading. */
+.pathAll {
+  composes: stageStock;
+  align-self: center;
+  font-weight: 400;
+  letter-spacing: normal;
+  text-transform: none;
+}
 
 .stageClose {
   composes: bare tap from './ui.module.css';

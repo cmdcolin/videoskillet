@@ -41,6 +41,7 @@ const actions = () => {
     save: { can: true, as: 'my look', run: noop },
     onCopyLink: noop,
     onBoardText: noop,
+    onAllSettings: noop,
     onRecord: noop,
     onStill: noop,
     onFullscreen: noop,
