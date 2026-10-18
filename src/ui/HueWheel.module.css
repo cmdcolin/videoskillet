@@ -1,0 +1,58 @@
+.face {
+  fill: none;
+  stroke: var(--border);
+}
+
+.band,
+.bandOff {
+  fill: var(--accent);
+  fill-opacity: 0.1;
+  stroke: none;
+}
+
+.bandOff {
+  fill: var(--fg3);
+  fill-opacity: 0.08;
+}
+
+.edge,
+.edgeOff {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1;
+}
+
+.edgeOff {
+  stroke: var(--fg3);
+}
+
+.clip {
+  fill: none;
+  stroke: var(--fg3);
+  stroke-width: 1;
+  stroke-dasharray: 2 2;
+}
+
+.hue,
+.hueOn {
+  stroke: var(--fg3);
+  stroke-width: 1;
+}
+
+.hueOn {
+  stroke: var(--accent);
+}
+
+.bar {
+  fill: var(--fg2);
+}
+
+.tick {
+  stroke: var(--fg3);
+}
+
+.dot {
+  fill: var(--surface);
+  stroke: var(--accent);
+  stroke-width: 1.5;
+}

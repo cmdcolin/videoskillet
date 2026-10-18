@@ -1,0 +1,12 @@
+.red {
+  stroke-dasharray: 5 2;
+}
+
+.blue {
+  stroke-dasharray: 1.5 2;
+}
+
+.tick {
+  stroke: var(--fg4);
+  stroke-width: 1;
+}

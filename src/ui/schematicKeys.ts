@@ -289,6 +289,25 @@ export const LEAK_OPENS = {
 
 export const LEAK_KEYS = Object.values(LEAK_OPENS).flat()
 
+export const CHROMA_KEY_OPENS = {
+  spill: ['bKeySpill'],
+  delay: ['bKeyDelayUs'],
+  keyer: ['bKeyHueDeg', 'bKeyAcceptDeg', 'bKeyClip', 'bKeySoft'],
+  fill: ['bKeyFill', 'bKeyMatteY', 'bKeyMatteHueDeg', 'bKeyMatteSat'],
+  mix: ['bKey'],
+} as const satisfies Opens
+
+export const CHROMA_KEY_KEYS = Object.values(CHROMA_KEY_OPENS).flat()
+
+export const PHOSPHOR_OPENS = {
+  primaries: ['phosphorMode'],
+  persistence: ['phosphor', 'phosphorSkew'],
+  scatter: ['phosphorBleed'],
+  burn: ['burnRate', 'burnDepth'],
+} as const satisfies Opens
+
+export const PHOSPHOR_KEYS = Object.values(PHOSPHOR_OPENS).flat()
+
 export const SCHEMATICS = [
   {
     group: CAMERA_LOOP_GROUP,
@@ -315,6 +334,12 @@ export const SCHEMATICS = [
   { group: 'VHS colour & tracking', keys: VHS_KEYS, opens: VHS_OPENS },
   { group: 'Enhancer (bent)', keys: ENHANCER_KEYS, opens: ENHANCER_OPENS },
   { group: 'Ghosting & leakage', keys: LEAK_KEYS, opens: LEAK_OPENS },
+  {
+    group: 'Chroma key (A through B)',
+    keys: CHROMA_KEY_KEYS,
+    opens: CHROMA_KEY_OPENS,
+  },
+  { group: 'Phosphor', keys: PHOSPHOR_KEYS, opens: PHOSPHOR_OPENS },
 ] as const satisfies readonly {
   group: string
   keys: readonly ControlKey[]

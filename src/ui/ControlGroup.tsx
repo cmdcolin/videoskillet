@@ -6,6 +6,7 @@ import { WIKI_PAGE } from '../sources/wikitext'
 import { CameraLoopDiagram, TubeFaceDiagram } from './CameraLoopDiagram'
 import { useCaptionApi } from './CaptionContext'
 import { activeCardPreset, cardPresetsFor } from './cardPresets'
+import { ChromaKeyDiagram } from './ChromaKeyDiagram'
 import { CaptionDiagram, ChyronDiagram } from './ChyronDiagram'
 import styles from './ControlGroup.module.css'
 import {
@@ -38,6 +39,7 @@ import { ModRowEditor } from './ModRowEditor'
 import { modPatch } from './modSlots'
 import { useModSlotsApi } from './ModSlotsContext'
 import { mutateAmountFor } from './mutate'
+import { PhosphorDiagram } from './PhosphorDiagram'
 import { PipControl } from './PipControl'
 import { PurityFrame } from './PurityFrame'
 import { RecordingDiagram } from './RecordingDiagram'
@@ -396,6 +398,8 @@ const SCHEMATIC_FRAMES: Record<SchematicGroup, () => ReactElement> = {
   'VHS colour & tracking': VhsDiagram,
   'Enhancer (bent)': EnhancerDiagram,
   'Ghosting & leakage': LeakDiagram,
+  'Chroma key (A through B)': ChromaKeyDiagram,
+  Phosphor: PhosphorDiagram,
 }
 
 const FRAMES: {
