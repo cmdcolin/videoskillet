@@ -27,8 +27,15 @@ const OPENS = {
     'cfbKeyAcceptDeg',
     'cfbKeyHueDeg',
   ],
-  store: ['cfbHold', 'cfbTrail', 'cfbGenlock', 'cfbClockPct', 'cfbLines'],
-  delay: ['cfbDelayUs', 'cfbServoUs'],
+  store: [
+    'cfbHold',
+    'cfbTrail',
+    'cfbGenlock',
+    'cfbClockPct',
+    'cfbLines',
+    'cfbDelayUs',
+    'cfbServoUs',
+  ],
   return: ['cfbReturn', 'cfbNoiseIre'],
   resonance: ['cfbFilterMHz', 'cfbFilterQ', 'cfbFilterBoost'],
   ring: ['cfbRing', 'cfbRingSrc', 'cfbCarrierKHz'],
@@ -36,18 +43,23 @@ const OPENS = {
 
 type Part = keyof typeof OPENS
 
-const WIDTH = 336
-const TOP_Y = 20
-const BOT_Y = 160
-const UP_X = 100
-const RIGHT_X = 306
-const STORE_Y = 62
-const DELAY_Y = 112
-const KEY_Y = 86
+const WIDTH = 340
+const TOP_Y = 14
+const BOT_Y = 50
 const H = 20
-const TALL_H = 33
+const FADER = { x: 52, w: 52 }
+const KEY_UP_X = 60
+const RING_UP_X = 92
+const DROP_X = 317
+const ROW = {
+  keyer: { x: 0, w: 43 },
+  ring: { x: 70, w: 60 },
+  resonance: { x: 142, w: 66 },
+  return: { x: 220, w: 66 },
+  store: { x: 296, w: 43 },
+}
 
-const PLOT = { left: 22, right: 330, top: 200, bottom: 270 }
+const PLOT = { left: 22, right: 334, top: 92, bottom: 148 }
 const HEIGHT = PLOT.bottom + 14
 const GAIN_TOP = 2
 const FSC_MHZ = FSC / 1e6
@@ -62,9 +74,10 @@ const plotY = (g: number) =>
 
 // The mixer loop as fb_composite.wgsl runs it, one box per stage. The program
 // crosses the fader into the rest of the chain, the frame store captures what
-// came out, and the return comes back through the delay, the Y/C split, the
-// resonance and the ring modulator into the fader, which the keyer gates.
-// Under the loop, what one lap hands back at each frequency.
+// came out and reads it back late, and the return runs back along the bottom
+// through the Y/C split, the resonance and the ring modulator into the fader,
+// which the keyer gates. Under the loop, what one lap hands back at each
+// frequency.
 export function MixerLoopDiagram() {
   const r = useReadings(MIXER_LOOP_KEYS)
   const pick = useSelectedBox()
@@ -92,19 +105,17 @@ export function MixerLoopDiagram() {
 
   const box = (
     id: Part,
-    cx: number,
-    cy: number,
-    w: number,
+    at: { x: number; w: number },
+    y: number,
     name: string,
     help: string,
-    h = H,
   ): BoxSpec => ({
     id,
     keys: OPENS[id],
-    x: cx - w / 2,
-    y: cy - h / 2,
-    w,
-    h,
+    x: at.x,
+    y: y - H / 2,
+    w: at.w,
+    h: H,
     name,
     off: off && id !== 'fader',
     touched: r.touched(...OPENS[id]),
@@ -113,64 +124,52 @@ export function MixerLoopDiagram() {
   const boxes = [
     box(
       'fader',
-      UP_X,
+      FADER,
       TOP_Y,
-      56,
       'fader',
       'The crossfader between the program and the loop return, and the trim on the return. Together they set the round trip; a negative trim inverts every lap.',
     ),
     box(
       'keyer',
-      30,
-      KEY_Y,
-      52,
+      ROW.keyer,
+      BOT_Y,
       'keyer',
       'Gates the fader with a slice of the return or of the program, by level or, with an acceptance angle, by hue.',
     ),
     box(
       'store',
-      RIGHT_X,
-      STORE_Y,
-      52,
-      'frame\nstore',
-      'Captures what the decoder saw and reads it back a frame later: hold, trails, frame sync, and the read clock and line offset against the write.',
-      TALL_H,
-    ),
-    box(
-      'delay',
-      RIGHT_X,
-      DELAY_Y,
-      52,
-      'delay',
-      'The cable on the return, and the varactor that lets the video pull its own delay. Every 70 ns is 90° of subcarrier.',
+      ROW.store,
+      BOT_Y,
+      'store',
+      'The frame store: captures what the decoder saw and reads it back a frame later. Hold, trails and frame sync act on the write; the read clock, line offset and the cable delay with its varactor pull set where the read lands. Every 70 ns of delay is 90° of subcarrier.',
     ),
     box(
       'return',
-      258,
+      ROW.return,
       BOT_Y,
-      66,
       'Y/C split',
       'Which half of the return goes round, and the noise it picks up on the way.',
     ),
     box(
       'resonance',
-      178,
+      ROW.resonance,
       BOT_Y,
-      70,
       'resonance',
       'A bandpass bridged across the return. The loop gain rises in its band by the boost.',
     ),
     box(
       'ring',
-      UP_X,
+      ROW.ring,
       BOT_Y,
-      62,
       'ring mod',
       "A balanced bridge multiplying the return by the live program or by the box's own subcarrier oscillator.",
     ),
   ]
   const open = Object.entries(OPENS).find(([id]) => id === pick.selected)?.[1]
-  const edge = (id: Part) => boxes.find(b => b.id === id)!
+  const bottom = BOT_Y - H / 2
+  const under = TOP_Y + H / 2
+  const back = (from: { x: number }, to: { x: number; w: number }) =>
+    `M${from.x} ${BOT_Y} H${to.x + to.w}`
 
   return (
     <>
@@ -180,44 +179,35 @@ export function MixerLoopDiagram() {
             <Label x={0} y={TOP_Y - 6}>
               program
             </Label>
-            <Wire arrow={arrow} d={`M0 ${TOP_Y} H${edge('fader').x}`} />
+            <Wire arrow={arrow} d={`M0 ${TOP_Y} H${FADER.x}`} />
             <Wire
               arrow={arrow}
-              d={`M${UP_X + 28} ${TOP_Y} H${RIGHT_X} V${edge('store').y}`}
+              d={`M${FADER.x + FADER.w} ${TOP_Y} H${DROP_X} V${bottom}`}
             />
-            <Label x={RIGHT_X - 6} y={TOP_Y - 6} anchor="end">
+            <Label x={DROP_X - 6} y={TOP_Y - 6} anchor="end">
               to the chain
             </Label>
 
             <g opacity={off ? 0.55 : 1}>
+              <Wire arrow={arrow} d={back(ROW.store, ROW.return)} look={look} />
               <Wire
                 arrow={arrow}
-                d={`M${RIGHT_X} ${STORE_Y + TALL_H / 2} V${DELAY_Y - H / 2}`}
+                d={back(ROW.return, ROW.resonance)}
                 look={look}
               />
               <Wire
                 arrow={arrow}
-                d={`M${RIGHT_X} ${DELAY_Y + H / 2} V${BOT_Y} H${258 + 33}`}
+                d={back(ROW.resonance, ROW.ring)}
                 look={look}
               />
               <Wire
                 arrow={arrow}
-                d={`M${258 - 33} ${BOT_Y} H${178 + 35}`}
+                d={`M${RING_UP_X} ${bottom} V${under}`}
                 look={look}
               />
               <Wire
                 arrow={arrow}
-                d={`M${178 - 35} ${BOT_Y} H${UP_X + 31}`}
-                look={look}
-              />
-              <Wire
-                arrow={arrow}
-                d={`M${UP_X} ${BOT_Y - H / 2} V${TOP_Y + H / 2}`}
-                look={look}
-              />
-              <Wire
-                arrow={arrow}
-                d={`M56 ${KEY_Y} H${UP_X - 18} V${TOP_Y + H / 2}`}
+                d={`M${ROW.keyer.w} ${BOT_Y} H${KEY_UP_X} V${under}`}
                 look={keyLook}
               />
             </g>
