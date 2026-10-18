@@ -49,11 +49,25 @@ try {
   await page.waitForFunction(`(${find})(${JSON.stringify(group)})`, {
     timeout: 20000,
   })
-  await new Promise(r => setTimeout(r, 1500))
   const rect = await page.evaluate(
     async (findSrc, name, clicks) => {
-      const section = eval(findSrc)(name)
-      if (!section) return null
+      const find = eval(findSrc)
+      // The group can still be growing (a note under the drawing arrives a
+      // render late) or briefly collapsed when the wait above lets go, so the
+      // shot waits for a second of one height that is a whole group.
+      const heights = []
+      const settled = () => {
+        const last = heights.slice(-4)
+        return last.length === 4 && last.every(h => h >= 120 && h === last[0])
+      }
+      let section = null
+      while (heights.length < 60 && !settled()) {
+        await new Promise(r => setTimeout(r, 250))
+        section = find(name)
+        heights.push(Math.round(section?.getBoundingClientRect().height ?? 0))
+      }
+      if (!settled())
+        throw new Error(`${name} never settled: ${heights.join(' ')}`)
       for (const text of clicks) {
         const hit = [
           ...section.querySelectorAll('[aria-label], button, g[role="button"]'),
