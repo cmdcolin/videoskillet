@@ -24,7 +24,7 @@ const STRIP_OFFSET = usToSamples(2.5)
 const BAR_HOOK = usToSamples(4)
 
 export interface LineStateControls {
-  tbJitterNs: number // flutter: rms of per-line random walk step
+  tbJitterNs: number // flutter: the walk settles at about twice this rms, over ~200 lines
   tbWowNs: number // wow: slow sinusoidal wander amplitude
   tbStickNs: number // sticky shed: stick-slip shear amplitude
   underJitterDeg: number // color-under phase wander per line

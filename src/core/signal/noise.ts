@@ -53,10 +53,10 @@ export class Lorenz {
 // than periodic: hydrolysis is patchy along the tape so every grab's grip is
 // random, and a re-grab caught mid-ring strands tension in the span, so each
 // ramp starts from an irregular baseline and no two cycles match. Stepped once
-// per scan line. Output is the stretch — how late the tape is — building
-// slowly, snapping back fast, hanging where a strong patch holds; ~[-0.5, 1.4].
+// per scan line. Output is the span's stretch, which builds slowly, snaps
+// back fast and hangs where a strong patch holds; ~[-0.5, 1.4].
 export class StickSlip {
-  private x = 0 // span stretch: the timing delay the stuck patch causes
+  private x = 0 // span stretch
   private v = 0 // slip velocity once the patch is free
   private stuck = true
   private grip: number
