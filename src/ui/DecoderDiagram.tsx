@@ -11,6 +11,7 @@ import local from './DecoderDiagram.module.css'
 import { useReadings, useSelectedBox, type BoxSpec } from './diagram'
 import styles from './Diagram.module.css'
 import { BoxRows, BoxView, Diagram, Label, Wire } from './DiagramParts'
+import { magnitude, response, type Complex } from './response'
 import { DECODER_KEYS, DECODER_OPENS as OPENS } from './schematicKeys'
 
 const READ = [...DECODER_KEYS, 'lumaMHz', 'lumaPeak', 'vbi'] as const
@@ -58,22 +59,6 @@ const plotY = (gain: number) =>
       (PLOT.zero - PLOT.ceiling) / (PLOT.zero - PLOT.one),
     )
 
-type Complex = [number, number]
-
-// A kernel's response to e^{jωn} when the shader reads tap k at offset k − m,
-// as every bank section in decode and channel does.
-function response(h: Float32Array, hz: number): Complex {
-  const m = (h.length - 1) / 2
-  const w = (2 * Math.PI * hz) / SAMPLE_RATE
-  let re = 0
-  let im = 0
-  for (let k = 0; k < h.length; k++) {
-    re += h[k]! * Math.cos(w * (k - m))
-    im += h[k]! * Math.sin(w * (k - m))
-  }
-  return [re, im]
-}
-
 // Linear interpolation between demod outputs taken every `step` samples, as
 // its magnitude on the baseband. The aliases the decimation folds in are left
 // out.
@@ -83,8 +68,6 @@ function lattice(hz: number, step: number): number {
   const r = Math.sin(step * x) / (step * Math.sin(x))
   return r * r
 }
-
-const abs = ([re, im]: Complex) => Math.hypot(re, im)
 
 interface Split {
   luma: number
@@ -121,14 +104,14 @@ function split(
   const g: Complex = [lo[0] * wl + hi[0] * wh, lo[1] * wl + hi[1] * wh]
   const k = 1 - 2 * r.bleed
   const residue = r.trap
-    ? abs([1 - k * g[0], -k * g[1]])
+    ? magnitude([1 - k * g[0], -k * g[1]])
     : Math.abs(1 - k * response(takeoff, hz)[0])
   const sent =
     Math.abs(response(encoder, hz - FSC)[0] + response(encoder, hz + FSC)[0]) *
     channel
   return {
     luma: channel * (r.trap ? residue : 1),
-    chroma: channel * abs(g),
+    chroma: channel * magnitude(g),
     sent,
     leak: sent * residue,
   }
