@@ -71,6 +71,8 @@ const ALL_STORE = 'video_feedback_presets_expanded'
 // - `broadcast` came off. It is a near-clean baseline by design, and with
 //   `clean` pinned at the head of the row it was the second chip that looks
 //   like nothing happened.
+// - The owner picked `overDeviatedWhite` by eye on the haunted-house clip,
+//   where its streaks boil on moving detail and carry colour over black.
 const STARTERS = [
   'vhs',
   'ringInTheHighlights',
@@ -78,6 +80,7 @@ const STARTERS = [
   'clockAndCrystal',
   'verticalHoldGone',
   'theLightIsALapBehind',
+  'overDeviatedWhite',
 ]
 const SHORTLIST_MAX = 8
 

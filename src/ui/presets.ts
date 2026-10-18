@@ -246,16 +246,15 @@ export const PRESETS: PresetDef[] = [
     displayName: 'over-deviated white',
     group: 'Tape wear',
     blurb:
-      "A deck whose white clip is set too hot, with its own sharpener making the edges that trigger it. Brightness is recorded as FM with the video pre-emphasized, so a hard dark-to-bright edge overshoots the deviation the head and tape can carry. Past the response cliff the discriminator folds back and more frequency comes out as less video: a black streak trailing every bright edge, smearing a microsecond rightward as the deemphasis recovers. Colour is a separate recording on its own carrier, so it passes straight through the fold and the streaks come out saturated over black. The threshold is re-decided per sample per frame by the demod's own noise, so the streaks boil where the picture has detail and hold still where it does not.",
+      "A deck whose white clip is set too hot, and whose playback sharpener rings every streak it leaves. Brightness is recorded as FM with the video pre-emphasized, so a hard dark-to-bright edge overshoots the deviation the head and tape can carry. Past the response cliff the discriminator folds back and more frequency comes out as less video: a black streak trailing every bright edge, smearing a microsecond rightward as the deemphasis recovers. Colour is a separate recording on its own carrier, so it passes straight through the fold and the streaks come out saturated over black. The threshold is re-decided per sample per frame by the demod's own noise, so the streaks boil where the picture has detail and hold still where it does not.",
     patch: {
       fmOverdev: 0.92,
       fmStreakUs: 0.7,
       colorUnderMix: 1,
       dubGens: 2,
       lumaMHz: 3,
-      // Past the redline, and it is the sharpener that feeds the fold: the
-      // overshoot it lays on every edge is what runs past the deviation the
-      // tape can carry, so the two mechanisms are one fault at two stages.
+      // Past the redline. The playback filter follows the discriminator, so
+      // the sharpener rings the edges of every streak the fold leaves.
       lumaPeak: 4,
       chromaGain: 1.7,
       chromaNoiseIre: 14,
