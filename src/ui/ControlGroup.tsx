@@ -25,6 +25,7 @@ import {
 } from './ControlsContext'
 import { cx } from './cx'
 import { DecoderDiagram } from './DecoderDiagram'
+import { DeflectionDiagram } from './DeflectionDiagram'
 import { DRIFT_MODE_WORDS, DRIFT_SECONDS } from './drift'
 import { filterActive, matchedSliders, useFilter } from './filter'
 import { LoopTrip } from './LoopTrip'
@@ -382,6 +383,7 @@ const SCHEMATIC_FRAMES: Record<SchematicGroup, () => ReactElement> = {
   'Character generator (chyron)': ChyronDiagram,
   Captions: CaptionDiagram,
   Decoder: DecoderDiagram,
+  Deflection: DeflectionDiagram,
 }
 
 const FRAMES: {

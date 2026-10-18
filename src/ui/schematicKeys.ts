@@ -203,6 +203,28 @@ export const CAPTION_OPENS = {
   'data bus': [CC_BENDS.romData],
 } as const satisfies Opens
 
+export const DEFLECTION_KEYS = [
+  'bendUs',
+  'bendShape',
+  'bendPeriod',
+  'vSize',
+  'vLin',
+  'vFold',
+  'retraceLines',
+  'flybackLines',
+  'hvSagUs',
+  'hvRing',
+  'abl',
+] as const satisfies readonly ControlKey[]
+
+export const DEFLECTION_OPENS = {
+  limiter: ['abl'],
+  tank: ['hvSagUs', 'hvRing'],
+  bend: ['bendUs', 'bendShape', 'bendPeriod'],
+  output: ['vSize', 'vLin', 'vFold'],
+  flyback: ['flybackLines', 'retraceLines'],
+} as const satisfies Opens
+
 export const SCHEMATICS = [
   {
     group: CAMERA_LOOP_GROUP,
@@ -218,6 +240,7 @@ export const SCHEMATICS = [
   },
   { group: 'Captions', keys: CAPTION_KEYS, opens: CAPTION_OPENS },
   { group: 'Decoder', keys: DECODER_KEYS, opens: DECODER_OPENS },
+  { group: 'Deflection', keys: DEFLECTION_KEYS, opens: DEFLECTION_OPENS },
 ] as const satisfies readonly {
   group: string
   keys: readonly ControlKey[]
