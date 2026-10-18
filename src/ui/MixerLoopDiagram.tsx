@@ -36,7 +36,12 @@ const ROW = {
   store: { x: 292, w: 48 },
 }
 
+const KEY_IN_X = ROW.keyer.x + ROW.keyer.w / 2
+const TAP_X = ROW.store.x - 4
+const UNDER_Y = 73
 const PLOT = { left: 22, right: 236, top: 92, bottom: 130 }
+const FOLD_LO_MHZ = 1
+const FOLD_DC_MHZ = 0.25
 const WIDE_RIGHT = WIDTH - 6
 const HEIGHT = PLOT.bottom + 14
 const SLICE_X = 298
@@ -70,7 +75,11 @@ const trace = (gains: readonly number[], right: number) =>
 // frequency. Beside it, with the store open, how far one lap turns the hue;
 // otherwise, while the key is in use or the keyer is open, the slice the keyer
 // lets round, drawn on the U/V plane for a hue key and on the luma scale for a
-// level key.
+// level key. A wire runs into the keyer from the store's raw read for a self
+// key and from the program for an external one. With the ring modulator open,
+// arcs on the frequency axis show where its products land. On its own
+// oscillator the bridge moves brightness up onto the subcarrier and chroma down
+// to brightness. On the program, the bridge moves chroma down to DC.
 export function MixerLoopDiagram() {
   const r = useReadings(MIXER_LOOP_KEYS)
   const pick = useSelectedBox()
@@ -106,6 +115,9 @@ export function MixerLoopDiagram() {
   })
   const right = inset ? PLOT.right : WIDE_RIGHT
   const x = (mhz: number) => plotX(mhz, right)
+  const byProgram = v('cfbKeyExt') > 0.5
+  const ringLook: WireLook = v('cfbRing') > 0 && !off ? 'on' : 'dash'
+  const byOscillator = v('cfbRingSrc') > 0.5
   const curve = trace(gains, right)
   // With the fader down, the lap at its full travel, where mix is 1.
   const upGains = off ? lapGains({ ...loop, mix: 1 }, CURVE_MHZ) : null
@@ -217,6 +229,31 @@ export function MixerLoopDiagram() {
                 d={`M${ROW.keyer.w} ${BOT_Y} H${KEY_UP_X} V${under}`}
                 look={keyLook}
               />
+              {inset === 'slice' &&
+                (byProgram ? (
+                  <>
+                    <circle
+                      cx={KEY_IN_X}
+                      cy={TOP_Y}
+                      r={1.8}
+                      className={own.dot}
+                    />
+                    <Wire
+                      arrow={arrow}
+                      d={`M${KEY_IN_X} ${TOP_Y} V${bottom}`}
+                      look={keyLook}
+                    />
+                  </>
+                ) : (
+                  <>
+                    <circle cx={TAP_X} cy={BOT_Y} r={1.8} className={own.dot} />
+                    <Wire
+                      arrow={arrow}
+                      d={`M${TAP_X} ${BOT_Y} V${UNDER_Y} H${KEY_IN_X} V${BOT_Y + H / 2}`}
+                      look={keyLook}
+                    />
+                  </>
+                ))}
             </g>
 
             <g className={own.names}>
@@ -307,6 +344,36 @@ export function MixerLoopDiagram() {
               className={styles.curveAlarm}
               clipPath={`url(#${clip})`}
             />
+
+            {pick.selected === 'ring' &&
+              (byOscillator ? (
+                <>
+                  <Wire
+                    arrow={arrow}
+                    look={ringLook}
+                    d={`M${x(FOLD_LO_MHZ)} 103 Q${(x(FOLD_LO_MHZ) + x(FSC_MHZ)) / 2} 86 ${x(FSC_MHZ)} 101`}
+                  />
+                  <Wire
+                    arrow={arrow}
+                    look={ringLook}
+                    d={`M${x(FSC_MHZ)} 105 Q${(x(FOLD_LO_MHZ) + x(FSC_MHZ)) / 2} 113 ${x(FOLD_LO_MHZ)} 106`}
+                  />
+                  <Label x={x(FSC_MHZ) + 6} y={104}>
+                    light ⇄ hue
+                  </Label>
+                </>
+              ) : (
+                <>
+                  <Wire
+                    arrow={arrow}
+                    look={ringLook}
+                    d={`M${x(FSC_MHZ)} 103 Q${(x(FOLD_DC_MHZ) + x(FSC_MHZ)) / 2} 86 ${x(FOLD_DC_MHZ)} 103`}
+                  />
+                  <Label x={x(FSC_MHZ) + 6} y={104}>
+                    hue × hue → light
+                  </Label>
+                </>
+              ))}
 
             {inset && (
               <Label

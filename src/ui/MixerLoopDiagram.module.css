@@ -26,3 +26,7 @@
   letter-spacing: normal;
   text-transform: none;
 }
+
+.dot {
+  fill: var(--fg4);
+}
