@@ -51,6 +51,7 @@ import { PhosphorDiagram } from './PhosphorDiagram'
 import { PipControl } from './PipControl'
 import { PurityFrame } from './PurityFrame'
 import { RecordingDiagram } from './RecordingDiagram'
+import { RfDiagram } from './RfDiagram'
 import { rowClaim } from './rollMod'
 import { sameKeySet, sameList } from './sameList'
 import { SCHEMATICS, type SchematicGroup } from './schematicKeys'
@@ -409,6 +410,7 @@ const SCHEMATIC_FRAMES: Record<SchematicGroup, () => ReactElement> = {
   'Noise & interference': NoiseDiagram,
   'A/B Mixer': BusDiagram,
   [SYNTH_GROUP]: SynthDiagram,
+  'RF / Tuner': RfDiagram,
   'Cable / Wiring': CableDiagram,
   'Audio routings': AudioDiagram,
   [FEED_A_CABLE_GROUP]: FeedACableDiagram,

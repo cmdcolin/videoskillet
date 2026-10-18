@@ -1,0 +1,15 @@
+.marker,
+.markerOn {
+  stroke: var(--fg4);
+  stroke-width: 1;
+  stroke-dasharray: 2 2;
+}
+
+.markerOn {
+  stroke: var(--accent);
+}
+
+.leak {
+  stroke: var(--accent);
+  stroke-width: 3;
+}

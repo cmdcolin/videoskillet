@@ -377,6 +377,15 @@ export const SYNTH_OPENS = {
 
 export const SYNTH_KEYS = Object.values(SYNTH_OPENS).flat()
 
+export const RF_OPENS = {
+  adjacent: ['rfAdjacent'],
+  tuning: ['rfMistuneMHz'],
+  snow: ['rfSnow'],
+  ingress: ['ingress'],
+} as const satisfies Opens
+
+export const RF_KEYS = Object.values(RF_OPENS).flat()
+
 export const CHROMA_KEY_OPENS = {
   spill: ['bKeySpill'],
   delay: ['bKeyDelayUs'],
@@ -424,6 +433,7 @@ export const SCHEMATICS = [
   { group: 'Noise & interference', keys: NOISE_KEYS, opens: NOISE_OPENS },
   { group: 'A/B Mixer', keys: BUS_KEYS, opens: BUS_OPENS },
   { group: SYNTH_GROUP, keys: SYNTH_KEYS, opens: SYNTH_OPENS },
+  { group: 'RF / Tuner', keys: RF_KEYS, opens: RF_OPENS },
   { group: 'Cable / Wiring', keys: CABLE_KEYS, opens: CABLE_OPENS },
   { group: 'Audio routings', keys: AUDIO_KEYS, opens: AUDIO_OPENS },
   {

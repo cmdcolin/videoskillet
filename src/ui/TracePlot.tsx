@@ -46,6 +46,7 @@ export function TracePlot({
   ends,
   look,
   band,
+  spread,
   breakOver,
 }: {
   left: number
@@ -63,6 +64,9 @@ export function TracePlot({
   look: TraceLook
   /** The stretch of the axis, as fractions of it, that the plot shades. */
   band?: readonly [number, number]
+  /** How far the trace spreads either side of each value, drawn as a shaded
+      area behind it. */
+  spread?: readonly number[]
   breakOver?: number
 }) {
   const { lo, hi, ticks, reference } = axisOf(scale, values)
@@ -77,6 +81,13 @@ export function TracePlot({
       return `${lift ? 'M' : 'L'}${x(i).toFixed(1)} ${y(v).toFixed(1)}`
     })
     .join(' ')
+  const point = (i: number, sign: number) =>
+    `${x(i).toFixed(1)} ${y(values[i]! + sign * spread![i]!).toFixed(1)}`
+  const area = spread
+    ? `M${values.map((_, i) => point(i, 1)).join(' L')} L${values
+        .map((_, i) => point(values.length - 1 - i, -1))
+        .join(' L')} Z`
+    : null
   return (
     <>
       <Label x={left} y={top - 6}>
@@ -112,6 +123,7 @@ export function TracePlot({
       <Label x={right} y={bottom + 11} anchor="end">
         {ends[1]}
       </Label>
+      {area && <path d={area} className={own.spread} />}
       <path d={path} className={CURVE[look]} />
     </>
   )

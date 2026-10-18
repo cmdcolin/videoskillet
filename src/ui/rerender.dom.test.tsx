@@ -494,7 +494,7 @@ describe('a stage in the panel', () => {
   )
 
   test('a drag re-renders the row it moves and the counts it changes', async () => {
-    const key = 'rfAdjacent'
+    const key = 'osdHoldS'
     await openGroup(key, 'Channel')
     const { press, moves } = await drag(key, ControlGroup, [1])
     expect(cost(press, ControlGroup)).toEqual({
@@ -514,7 +514,7 @@ describe('a stage in the panel', () => {
   })
 
   test('a write that crosses no stock re-renders nothing in the app but its row', async () => {
-    const key = 'rfAdjacent'
+    const key = 'osdHoldS'
     await openGroup(key, 'Channel')
     await drag(key, ControlGroup, [1])
     const { moves } = await drag(key, ControlGroup, [0.5, 0.6, 0.4])
