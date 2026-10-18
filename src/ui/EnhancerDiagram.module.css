@@ -1,0 +1,20 @@
+.fsc {
+  stroke: var(--border);
+  stroke-width: 1;
+  stroke-dasharray: 1 2;
+}
+
+.alarm {
+  font-size: 10px;
+  fill: var(--danger);
+}
+
+.gate,
+.gateOn {
+  stroke: var(--fg3);
+  stroke-width: 1.5;
+}
+
+.gateOn {
+  stroke: var(--accent);
+}

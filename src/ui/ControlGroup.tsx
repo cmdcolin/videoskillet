@@ -27,7 +27,9 @@ import { cx } from './cx'
 import { DecoderDiagram } from './DecoderDiagram'
 import { DeflectionDiagram } from './DeflectionDiagram'
 import { DRIFT_MODE_WORDS, DRIFT_SECONDS } from './drift'
+import { EnhancerDiagram } from './EnhancerDiagram'
 import { filterActive, matchedSliders, useFilter } from './filter'
+import { LeakDiagram } from './LeakDiagram'
 import { LoopTrip } from './LoopTrip'
 import { MagnifierFrame } from './MagnifierFrame'
 import { SYNCABLE_KEYS } from './midi'
@@ -390,6 +392,8 @@ const SCHEMATIC_FRAMES: Record<SchematicGroup, () => ReactElement> = {
   Deflection: DeflectionDiagram,
   Timebase: TimebaseDiagram,
   'VHS colour & tracking': VhsDiagram,
+  'Enhancer (bent)': EnhancerDiagram,
+  'Ghosting & leakage': LeakDiagram,
 }
 
 const FRAMES: {

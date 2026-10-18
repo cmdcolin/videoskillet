@@ -262,6 +262,24 @@ export const VHS_OPENS = {
 
 export const VHS_KEYS = Object.values(VHS_OPENS).flat()
 
+export const ENHANCER_OPENS = {
+  clamp: ['enhClampUs'],
+  droop: ['enhDroopUs'],
+  peaking: ['enhPeakMHz', 'enhPeakQ', 'enhPeakBoost'],
+  regen: ['enhSync', 'enhSliceIre'],
+} as const satisfies Opens
+
+export const ENHANCER_KEYS = Object.values(ENHANCER_OPENS).flat()
+
+export const LEAK_OPENS = {
+  ghost: ['ghostDelayUs', 'ghostGain'],
+  hum: ['humAmp', 'humMod'],
+  sound: ['soundIre'],
+  buzz: ['buzzLevel'],
+} as const satisfies Opens
+
+export const LEAK_KEYS = Object.values(LEAK_OPENS).flat()
+
 export const SCHEMATICS = [
   {
     group: CAMERA_LOOP_GROUP,
@@ -281,6 +299,8 @@ export const SCHEMATICS = [
   { group: 'Deflection', keys: DEFLECTION_KEYS, opens: DEFLECTION_OPENS },
   { group: 'Timebase', keys: TIMEBASE_KEYS, opens: TIMEBASE_OPENS },
   { group: 'VHS colour & tracking', keys: VHS_KEYS, opens: VHS_OPENS },
+  { group: 'Enhancer (bent)', keys: ENHANCER_KEYS, opens: ENHANCER_OPENS },
+  { group: 'Ghosting & leakage', keys: LEAK_KEYS, opens: LEAK_OPENS },
 ] as const satisfies readonly {
   group: string
   keys: readonly ControlKey[]
