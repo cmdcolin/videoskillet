@@ -107,17 +107,12 @@ export const DECODER_KEYS = [
 ] as const satisfies readonly ControlKey[]
 
 export const DECODER_OPENS = {
-  encoder: ['encChromaMHz'],
-  AGC: ['agc'],
-  luma: ['svideoBleed'],
-  matrix: ['matrixClip'],
-  'Y/C comb': ['combMode'],
-  demodulator: ['demodMHz', 'demodAxisDeg', 'chromaTail', 'chromaCoarse'],
-  ACC: ['chromaGain', 'accLagLines'],
-  'burst\ngate': [],
+  input: ['encChromaMHz', 'agc'],
+  split: ['combMode', 'svideoBleed'],
+  demod: ['demodMHz', 'demodAxisDeg', 'chromaTail', 'chromaCoarse'],
   reference: ['burstLock', 'afpcLagLines', 'tintDeg', 'scDetuneKHz'],
-  'colour\nkiller': ['killThresh'],
-  VIR: ['vir', 'virLag'],
+  acc: ['chromaGain', 'accLagLines', 'killThresh', 'vir', 'virLag'],
+  matrix: ['matrixClip'],
 } as const satisfies Opens
 
 export interface Bends {

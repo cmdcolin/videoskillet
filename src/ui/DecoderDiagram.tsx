@@ -8,46 +8,44 @@ import {
   TAPS,
 } from '../core/signal/filters'
 import local from './DecoderDiagram.module.css'
-import { boxWidth, useReadings, useSelectedBox, type BoxSpec } from './diagram'
+import { useReadings, useSelectedBox, type BoxSpec } from './diagram'
 import styles from './Diagram.module.css'
 import { BoxRows, BoxView, Diagram, Label, Wire } from './DiagramParts'
 import { DECODER_KEYS, DECODER_OPENS as OPENS } from './schematicKeys'
 
 const READ = [...DECODER_KEYS, 'lumaMHz', 'lumaPeak', 'vbi'] as const
-type Key = (typeof READ)[number]
 
-interface Lane {
-  y: number
-  h: number
+type Part = keyof typeof OPENS
+
+interface Span {
+  x: number
+  w: number
 }
+const right = (s: Span) => s.x + s.w
+const centre = (s: Span) => s.x + s.w / 2
 
-const LANE = {
-  luma: { y: 18, h: 24 },
-  chroma: { y: 62, h: 24 },
-  burst: { y: 110, h: 33 },
-  vir: { y: 162, h: 24 },
-} satisfies Record<string, Lane>
-const mid = (lane: Lane) => lane.y + lane.h / 2
-const bottom = (lane: Lane) => lane.y + lane.h
+const WIDTH = 340
+const LUMA_Y = 6
+const TOP_Y = 30
+const BOT_Y = 64
+const H = 20
+const TAP_X = 54
+const ROW = {
+  input: { x: 0, w: 44 },
+  split: { x: 64, w: 67 },
+  demod: { x: 150, w: 78 },
+  matrix: { x: 250, w: 46 },
+  reference: { x: 100, w: 67 },
+  acc: { x: 185, w: 72 },
+} satisfies Record<Part, Span>
+const REF_UP_X = 158
+const ACC_UP_X = 210
 
-// Column centres: the encoder, the front end, the demodulator's column, the
-// gain stages after it, and the matrix.
-const COL = { enc: 28, front: 103, demod: 189, late: 265, matrix: 317 }
-const MATRIX_W = 46
-
-const BURST_X = 66
-const TAP_X = 238
-const SUB_Y = 51
-const AMP_Y = 153
-const GAIN_X = 300
-const GAIN_Y = 96
-
-const PLOT = { left: 14, right: 232, zero: 272, one: 228, ceiling: 210 }
-const VPLOT = { left: 250, right: 336 }
+const PLOT = { left: 14, right: 334, ceiling: 94, one: 108, zero: 140 }
 const LEGEND_Y = PLOT.zero + 28
+const HEIGHT = LEGEND_Y + 6
 const MHZ_MAX = 6
 const POINTS = 241
-const HEIGHT = LEGEND_Y + 22
 
 const plotX = (hz: number) =>
   PLOT.left + ((PLOT.right - PLOT.left) * hz) / (MHZ_MAX * 1e6)
@@ -58,7 +56,6 @@ const plotY = (gain: number) =>
       Math.max(gain, 0),
       (PLOT.zero - PLOT.ceiling) / (PLOT.zero - PLOT.one),
     )
-const vplotX = (nu: number) => VPLOT.left + (VPLOT.right - VPLOT.left) * 2 * nu
 
 type Complex = [number, number]
 
@@ -130,12 +127,7 @@ function split(
   }
 }
 
-const COMB_GAIN = [
-  () => 1,
-  (nu: number) => Math.abs(Math.sin(Math.PI * nu)),
-  (nu: number) => Math.sin(Math.PI * nu) ** 2,
-]
-const COMB_NAME = ['trap', '2-line', '3-line']
+const COMB_NAME = ['trap', '2-line comb', '3-line comb']
 
 const line = (pts: [number, number][]) =>
   pts
@@ -145,136 +137,84 @@ const line = (pts: [number, number][]) =>
 const area = (pts: [number, number][]) =>
   `${line(pts)} L${pts.at(-1)![0].toFixed(1)} ${PLOT.zero} L${pts[0]![0].toFixed(1)} ${PLOT.zero} Z`
 
-// The receiver's colour decoder as decode.wgsl runs it, with what reaches the
-// luma channel and the chroma demodulator plotted underneath from the taps the
-// filter bank uploads. The burst gate and its two RC memories are
-// line_analyze.wgsl; the VIR corrector is vir.wgsl.
+// The receiver's colour decoder as decode.wgsl runs it. The composite splits
+// into luma, which runs over the top to the matrix, and chroma, which the
+// demodulator detects against the reference; the burst gated off line_analyze
+// pulls the reference and sets the ACC. Underneath, what reaches luma and the
+// demodulator across the line, from the taps the filter bank uploads.
 export function DecoderDiagram() {
   const r = useReadings(READ)
   const pick = useSelectedBox()
   const v = r.value
 
-  const agcOn = v('agc') > 0
   const lock = v('burstLock')
-  const virOn = v('vir') > 0 && v('vbi') > 0
-  const killerLive = v('killThresh') > 0 && lock > 0
   const comb = Math.round(v('combMode'))
   const bleed = v('svideoBleed')
 
   const box = (
-    x: number,
-    lane: Lane,
+    id: Part,
+    y: number,
     name: string,
     help: string,
-    keys: readonly Key[],
     extra: Partial<BoxSpec> = {},
-  ): BoxSpec => {
-    const w = extra.w ?? boxWidth(name)
-    return {
-      x: x - w / 2,
-      y: lane.y,
-      w,
-      h: lane.h,
-      name,
-      touched: r.touched(...keys),
-      help,
-      id: name,
-      keys,
-      ...extra,
-    }
-  }
+  ): BoxSpec => ({
+    id,
+    keys: OPENS[id],
+    x: ROW[id].x,
+    y: y - H / 2,
+    w: ROW[id].w,
+    h: H,
+    name,
+    touched: r.touched(...OPENS[id]),
+    help,
+    ...extra,
+  })
 
   const boxes: BoxSpec[] = [
     box(
-      COL.enc,
-      LANE.luma,
-      'encoder',
-      "The encoder's colour bandwidth at the camera end, upstream of the channel and the receiver. It sets how wide the chroma sidebands are when they reach the set.",
-      OPENS.encoder,
+      'input',
+      TOP_Y,
+      'input',
+      "The composite as it reaches the decoder. The encoder's colour bandwidth at the camera end sets how wide the chroma sidebands are; the receiver's AGC sets the IF gain off the sync tip, so luma, chroma and the burst all move together.",
     ),
     box(
-      COL.front,
-      LANE.luma,
-      'AGC',
-      'The IF gain, set off the sync tip. It scales the whole composite ahead of everything else, so luma, chroma and the burst all move together. Dim while the gain is fixed.',
-      OPENS.AGC,
-      { off: !agcOn },
+      'split',
+      TOP_Y,
+      'Y/C split',
+      'What feeds the chroma demodulator. The trap passes the composite as it is, so still detail in the colour band decodes as colour. The 2-line and 3-line combs subtract the line above, or the lines above and below, so only what alternates line to line reaches it. Luma is the composite minus the chroma the demodulator recovered, remodulated onto the subcarrier; S-video bleed scales that subtraction down, and past 0.5 adds the chroma back.',
     ),
     box(
-      COL.late,
-      LANE.luma,
-      'luma',
-      'The luma channel: the composite minus the chroma the demodulator recovered, remodulated onto the subcarrier. S-video bleed scales that subtraction down, and past 0.5 adds the chroma back.',
-      OPENS.luma,
-    ),
-    box(
-      COL.matrix,
-      { y: LANE.luma.y, h: bottom(LANE.chroma) - LANE.luma.y },
-      'matrix',
-      'The YUV to RGB matrix and the three output amplifiers. Clip 0 fits the result into gamut without moving hue; clip 1 lets each gun hit its rail on its own.',
-      OPENS.matrix,
-      { w: MATRIX_W },
-    ),
-    box(
-      COL.front,
-      LANE.chroma,
-      'Y/C comb',
-      'What feeds the chroma demodulator. The trap passes the composite as it is; the combs subtract the line above, or the lines above and below, so only what alternates line to line reaches it.',
-      OPENS['Y/C comb'],
-    ),
-    box(
-      COL.demod,
-      LANE.chroma,
+      'demod',
+      TOP_Y,
       'demodulator',
       'Two synchronous detectors on the subcarrier, each followed by the chroma lowpass. Bandwidth and trail shape that lowpass; axis is the angle between the detectors; upsample error is how often the demodulator samples before interpolating.',
-      OPENS.demodulator,
     ),
     box(
-      COL.late,
-      LANE.chroma,
-      'ACC',
-      "Chroma gain: the burst's amplitude, weighted by burst lock, times the colour control. Its lag is the RC on the burst amplitude that both this gain and the colour killer read. The code applies the gain after the demodulator, which gives the same product.",
-      OPENS.ACC,
+      'matrix',
+      TOP_Y,
+      'matrix',
+      'The YUV to RGB matrix and the three output amplifiers. Clip 0 fits the result into gamut without moving hue; clip 1 lets each gun hit its rail on its own.',
     ),
     box(
-      COL.front,
-      LANE.burst,
-      'burst\ngate',
-      'line_analyze gates the nine cycles of burst off the sync timing, after the AGC. Its phase feeds the reference oscillator and its amplitude feeds the ACC and the colour killer.',
-      OPENS['burst\ngate'],
-    ),
-    box(
-      COL.demod,
-      LANE.burst,
       'reference',
-      "The 3.58 MHz crystal oscillator the demodulator detects against, pulled toward the burst's phase by burst lock. Tint and the VIR hue trim turn it; detune pulls the crystal off frequency. Dim while it runs free at burst lock 0.",
-      OPENS.reference,
+      BOT_Y,
+      'reference',
+      "The 3.58 MHz crystal oscillator the demodulator detects against, pulled toward the burst's phase by burst lock with the lag of its phase loop. Tint and the VIR hue trim turn it; detune pulls the crystal off frequency. Dim while it runs free at burst lock 0.",
       { off: lock <= 0 },
     ),
     box(
-      COL.late,
-      LANE.burst,
-      'colour\nkiller',
-      'The colour killer zeroes the burst-derived gain when the lagged burst amplitude falls below its threshold. It acts through the ACC, so at burst lock 0 it does nothing.',
-      OPENS['colour\nkiller'],
-      { off: !killerLive },
-    ),
-    box(
-      COL.demod,
-      LANE.vir,
-      'VIR',
-      'The VIR corrector reads the reference on line 19 and integrates a hue trim into the reference oscillator and a saturation trim into the ACC.',
-      OPENS.VIR,
+      'acc',
+      BOT_Y,
+      'ACC/killer',
+      "Chroma gain: the burst's amplitude, weighted by burst lock, times the colour control. Its lag is the RC on the burst amplitude that both this gain and the colour killer read, and the killer zeroes the gain when that amplitude falls below its threshold. The VIR corrector reads the reference on line 19 and integrates a saturation trim into this gain and a hue trim into the reference. The code applies the gain after the demodulator, which gives the same product.",
       {
-        off: !virOn,
-        note: v('vbi') > 0 ? undefined : 'Needs the VBI test signals on.',
+        note:
+          v('vbi') > 0
+            ? undefined
+            : 'VIR correction needs the VBI test signals on.',
       },
     ),
   ]
-  const edge = (id: string) => {
-    const found = boxes.find(b => b.id === id)!
-    return { left: found.x, right: found.x + found.w }
-  }
 
   const demod = mixTaps(
     lowpass(v('demodMHz') * 1e6, TAPS.demod),
@@ -302,122 +242,75 @@ export function DecoderDiagram() {
   })
   const trace = (f: (s: Split) => number) =>
     at.map(({ x, s }): [number, number] => [x, plotY(f(s))])
-  const combGain = COMB_GAIN[comb] ?? COMB_GAIN[0]!
-  const vertical = Array.from({ length: 41 }, (_, i): [number, number] => {
-    const nu = i / 80
-    return [vplotX(nu), plotY(combGain(nu))]
-  })
 
   const open = boxes.find(b => b.id === pick.selected)
-  const enc = edge('encoder')
-  const agc = edge('AGC')
-  const luma = edge('luma')
-  const matrix = edge('matrix')
-  const yc = edge('Y/C comb')
-  const dem = edge('demodulator')
-  const acc = edge('ACC')
-  const gate = edge('burst\ngate')
-  const ref = edge('reference')
-  const vir = edge('VIR')
-  const y = {
-    luma: mid(LANE.luma),
-    chroma: mid(LANE.chroma),
-    burst: mid(LANE.burst),
-    vir: mid(LANE.vir),
-  }
-  const tapY = bottom(LANE.luma) + 10
+  const top = TOP_Y - H / 2
+  const under = TOP_Y + H / 2
+  const lockLook = lock > 0 ? 'plain' : 'dash'
   return (
     <>
       <Diagram
-        width={340}
+        width={WIDTH}
         height={HEIGHT}
         label="receiver colour decoder signal path and Y/C split"
       >
         {arrow => (
           <>
-            <Label x={COL.enc} y={11} anchor="middle">
-              camera
+            <Wire
+              arrow={arrow}
+              d={`M${right(ROW.input)} ${TOP_Y} H${ROW.split.x}`}
+            />
+            <Wire
+              arrow={arrow}
+              d={`M${right(ROW.split)} ${TOP_Y} H${ROW.demod.x}`}
+            />
+            <Label
+              x={(right(ROW.split) + ROW.demod.x) / 2}
+              y={TOP_Y - 4}
+              anchor="middle"
+            >
+              C
             </Label>
-            <Label x={COL.front} y={11} anchor="middle">
-              receiver
-            </Label>
-            <Wire
-              look="dash"
-              arrow={arrow}
-              d={`M${enc.right} ${y.luma} H${agc.left}`}
-            />
-            <Wire arrow={arrow} d={`M${agc.right} ${y.luma} H${luma.left}`} />
-            <Wire
-              arrow={arrow}
-              d={`M${luma.right} ${y.luma} H${matrix.left}`}
-            />
-            <Wire
-              arrow={arrow}
-              d={`M${COL.front} ${bottom(LANE.luma)} V${LANE.chroma.y}`}
-            />
-            <Wire arrow={arrow} d={`M${yc.right} ${y.chroma} H${dem.left}`} />
-            <Wire arrow={arrow} d={`M${dem.right} ${y.chroma} H${acc.left}`} />
-            <circle cx={TAP_X} cy={y.chroma} r={1.8} className={local.dot} />
             <Wire
               arrow={arrow}
               look={bleed > 0.5 ? 'alarm' : 'plain'}
-              d={`M${TAP_X} ${y.chroma} V${SUB_Y} H${COL.late} V${bottom(LANE.luma)}`}
+              d={`M${centre(ROW.split)} ${top} V${LUMA_Y} H${centre(ROW.matrix)} V${top}`}
             />
-            <Label x={TAP_X + 3} y={SUB_Y - 3}>
-              −C
+            <Label
+              x={(right(ROW.demod) + ROW.matrix.x) / 2}
+              y={LUMA_Y + 11}
+              anchor="middle"
+            >
+              Y
             </Label>
             <Wire
               arrow={arrow}
-              d={`M${acc.right} ${y.chroma} H${matrix.left}`}
+              d={`M${right(ROW.demod)} ${TOP_Y} H${ROW.matrix.x}`}
             />
             <Wire
               arrow={arrow}
-              d={`M${COL.matrix} ${bottom(LANE.chroma)} V${bottom(LANE.chroma) + 12}`}
+              d={`M${right(ROW.matrix)} ${TOP_Y} H${WIDTH - 26}`}
             />
-            <Label x={COL.matrix} y={bottom(LANE.chroma) + 23} anchor="middle">
+            <Label x={WIDTH - 23} y={TOP_Y + 3}>
               RGB
             </Label>
 
-            <circle cx={COL.front} cy={tapY} r={1.8} className={local.dot} />
+            <circle cx={TAP_X} cy={TOP_Y} r={1.8} className={local.dot} />
             <Wire
               arrow={arrow}
-              d={`M${COL.front} ${tapY} H${BURST_X} V${y.burst} H${gate.left}`}
+              look={lockLook}
+              d={`M${TAP_X} ${TOP_Y} V${BOT_Y} H${ROW.reference.x}`}
             />
-            <Wire
-              arrow={arrow}
-              look={lock > 0 ? 'plain' : 'dash'}
-              d={`M${gate.right} ${y.burst} H${ref.left}`}
-            />
-            <Wire
-              arrow={arrow}
-              d={`M${COL.demod} ${LANE.burst.y} V${bottom(LANE.chroma)}`}
-            />
-            <Label x={COL.demod + 4} y={LANE.burst.y - 8}>
-              ref
+            <Label x={TAP_X + 6} y={BOT_Y - 4}>
+              burst
             </Label>
+            <Wire arrow={arrow} d={`M${REF_UP_X} ${BOT_Y - H / 2} V${under}`} />
             <Wire
               arrow={arrow}
-              look={lock > 0 ? 'plain' : 'dash'}
-              d={`M${COL.front} ${bottom(LANE.burst)} V${AMP_Y} H${COL.demod - 4} a4 4 0 0 1 8 0 H${COL.late} V${bottom(LANE.burst)}`}
+              look={lockLook}
+              d={`M${right(ROW.reference)} ${BOT_Y} H${ROW.acc.x}`}
             />
-            <Label x={COL.front + 4} y={AMP_Y + 12}>
-              amp
-            </Label>
-            <Wire
-              arrow={arrow}
-              look={killerLive ? 'plain' : 'dash'}
-              d={`M${COL.late} ${LANE.burst.y} V${bottom(LANE.chroma)}`}
-            />
-            <Wire
-              arrow={arrow}
-              look={virOn ? 'plain' : 'dash'}
-              d={`M${COL.demod} ${LANE.vir.y} V${bottom(LANE.burst)}`}
-            />
-            <Wire
-              arrow={arrow}
-              look={virOn ? 'plain' : 'dash'}
-              d={`M${vir.right} ${y.vir} H${GAIN_X} V${GAIN_Y} H${acc.right - 6} V${bottom(LANE.chroma)}`}
-            />
+            <Wire arrow={arrow} d={`M${ACC_UP_X} ${BOT_Y - H / 2} V${under}`} />
             {boxes.map(b => (
               <BoxView
                 key={b.id}
@@ -430,21 +323,21 @@ export function DecoderDiagram() {
             <Label x={PLOT.left} y={PLOT.ceiling - 6}>
               across the line
             </Label>
-            <Label x={VPLOT.left} y={PLOT.ceiling - 6}>
-              down the frame
+            <Label
+              x={PLOT.right}
+              y={PLOT.ceiling - 6}
+              anchor="end"
+              on={comb > 0}
+            >
+              {comb === 0
+                ? 'trap: still detail decodes as colour'
+                : `${COMB_NAME[comb] ?? 'comb'}: still detail cancels`}
             </Label>
             {[0, 1].map(g => (
               <g key={g}>
                 <line
                   x1={PLOT.left}
                   x2={PLOT.right}
-                  y1={plotY(g)}
-                  y2={plotY(g)}
-                  className={styles.grid}
-                />
-                <line
-                  x1={VPLOT.left}
-                  x2={VPLOT.right}
                   y1={plotY(g)}
                   y2={plotY(g)}
                   className={styles.grid}
@@ -480,17 +373,6 @@ export function DecoderDiagram() {
             </Label>
             <Label x={PLOT.right} y={PLOT.zero + 12} anchor="end">
               6 MHz
-            </Label>
-
-            <path d={line(vertical)} className={local.chroma} />
-            <Label x={VPLOT.right} y={PLOT.one - 5} anchor="end">
-              {COMB_NAME[comb] ?? 'trap'}
-            </Label>
-            <Label x={VPLOT.left} y={PLOT.zero + 12}>
-              still
-            </Label>
-            <Label x={VPLOT.right} y={PLOT.zero + 12} anchor="end">
-              alternate
             </Label>
 
             <line
@@ -532,11 +414,6 @@ export function DecoderDiagram() {
             />
             <Label x={227} y={LEGEND_Y}>
               chroma left in Y
-            </Label>
-            <Label x={0} y={LEGEND_Y + 15}>
-              {comb === 0
-                ? 'trap: still detail in the C band decodes as colour'
-                : 'comb: still detail cancels before it reaches C'}
             </Label>
           </>
         )}
