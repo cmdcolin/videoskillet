@@ -28,7 +28,7 @@ export function HueWheel({
   on,
   strength,
   dot,
-  names = true,
+  names,
 }: {
   cx: number
   cy: number
@@ -132,7 +132,7 @@ export function HueWheel({
         return (
           <g key={b.name}>
             <circle cx={x} cy={y} r={1.6} className={own.bar} />
-            {names && (
+            {names !== false && (
               <Label x={at.x} y={at.y} anchor={at.anchor}>
                 {b.name}
               </Label>
@@ -147,7 +147,7 @@ export function HueWheel({
         y2={cy}
         className={own.tick}
       />
-      {names && (
+      {names !== false && (
         <Label x={burst.x - 2} y={burst.y} anchor="end">
           burst
         </Label>
