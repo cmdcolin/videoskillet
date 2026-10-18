@@ -1,5 +1,5 @@
 import styles from './Diagram.module.css'
-import { Label } from './DiagramParts'
+import { Label, Wire } from './DiagramParts'
 import {
   BARS,
   BURST_ANGLE,
@@ -9,6 +9,7 @@ import {
   type PolarPoint,
 } from './hueKey'
 import own from './HueWheel.module.css'
+import { SPREAD_MIN, type LapTurn } from './lapTurn'
 
 const LEVELS = [0.06, 0.18, 0.3, 0.42, 0.54, 0.66, 0.78, 0.9]
 const STEPS = 96
@@ -232,6 +233,91 @@ export function LevelBar({
       <Label x={x + w + 5} y={y(level) + 3}>
         {String(Math.round(level))}
       </Label>
+    </>
+  )
+}
+
+const ARC_MIN = 25
+
+// One lap's hue turn on the same U/V plane. The turn starts from the live
+// burst on the left, the spoke marks where the lap leaves the return's burst,
+// and a wedge spans the range when the read clock or the varactor spreads it.
+export function TurnDial({
+  cx,
+  cy,
+  radius,
+  turn,
+  on,
+  arrow,
+}: {
+  cx: number
+  cy: number
+  radius: number
+  turn: LapTurn
+  on: boolean
+  arrow: string
+}) {
+  const spread = turn.from - turn.to
+  const mid = (turn.from + turn.to) / 2
+  const at = (deg: number, r: number) => {
+    const a = BURST_ANGLE + (deg * Math.PI) / 180
+    return `${(cx + r * Math.cos(a)).toFixed(1)} ${(cy - r * Math.sin(a)).toFixed(1)}`
+  }
+  const disk = `M${cx + radius} ${cy} A${radius} ${radius} 0 1 0 ${cx - radius} ${cy} A${radius} ${radius} 0 1 0 ${cx + radius} ${cy} Z`
+  const arc = radius * 0.55
+  const spoke = (deg: number) => (
+    <path
+      d={`M${cx} ${cy} L${at(deg, radius)}`}
+      className={on ? own.hueOn : own.hue}
+    />
+  )
+  return (
+    <>
+      <path d={disk} className={own.face} />
+      <line
+        x1={cx - radius}
+        x2={cx + radius}
+        y1={cy}
+        y2={cy}
+        className={styles.grid}
+      />
+      <line
+        x1={cx}
+        x2={cx}
+        y1={cy - radius}
+        y2={cy + radius}
+        className={styles.grid}
+      />
+      <line
+        x1={cx - radius}
+        x2={cx - radius - 4}
+        y1={cy}
+        y2={cy}
+        className={own.tick}
+      />
+      {spread >= 360 ? (
+        <path d={disk} className={on ? own.band : own.bandOff} />
+      ) : spread > SPREAD_MIN ? (
+        <>
+          <path
+            d={`M${cx} ${cy} L${at(turn.from, radius)} A${radius} ${radius} 0 ${spread > 180 ? 1 : 0} 1 ${at(turn.to, radius)} Z`}
+            className={on ? own.band : own.bandOff}
+          />
+          {spoke(turn.from)}
+          {spoke(turn.to)}
+        </>
+      ) : (
+        <>
+          {Math.abs(mid) > ARC_MIN && (
+            <Wire
+              arrow={arrow}
+              look={on ? 'on' : 'dash'}
+              d={`M${at(0, arc)} A${arc} ${arc} 0 0 ${mid < 0 ? 1 : 0} ${at(mid, arc)}`}
+            />
+          )}
+          {spoke(mid)}
+        </>
+      )}
     </>
   )
 }

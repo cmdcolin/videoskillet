@@ -12,7 +12,8 @@ import {
   type WireLook,
 } from './DiagramParts'
 import { loopSlice } from './hueKey'
-import { HueWheel, LevelBar } from './HueWheel'
+import { HueWheel, LevelBar, TurnDial } from './HueWheel'
+import { lapTurn, turnWords } from './lapTurn'
 import { BAND_MHZ, bandMHz, lapGains, type MixerLoop } from './loopGain'
 import own from './MixerLoopDiagram.module.css'
 import { MIXER_LOOP_KEYS, MIXER_LOOP_OPENS as OPENS } from './schematicKeys'
@@ -66,9 +67,10 @@ const trace = (gains: readonly number[], right: number) =>
 // came out and reads it back late, and the return runs back along the bottom
 // through the Y/C split, the resonance and the ring modulator into the fader,
 // which the keyer gates. Under the loop, what one lap hands back at each
-// frequency, and beside it, while the key is in use or the keyer is open, the
-// slice the keyer lets round, drawn on the U/V plane for a hue key and on the
-// luma scale for a level key.
+// frequency. Beside it, with the store open, how far one lap turns the hue;
+// otherwise, while the key is in use or the keyer is open, the slice the keyer
+// lets round, drawn on the U/V plane for a hue key and on the luma scale for a
+// level key.
 export function MixerLoopDiagram() {
   const r = useReadings(MIXER_LOOP_KEYS)
   const pick = useSelectedBox()
@@ -90,8 +92,19 @@ export function MixerLoopDiagram() {
   const keyOn = key !== 0 && !off
   const keyLook: WireLook = keyOn ? 'on' : 'dash'
   const byHue = v('cfbKeyAcceptDeg') > 0
-  const slice = key !== 0 || pick.selected === 'keyer'
-  const right = slice ? PLOT.right : WIDE_RIGHT
+  const inset =
+    pick.selected === 'store'
+      ? 'turn'
+      : key !== 0 || pick.selected === 'keyer'
+        ? 'slice'
+        : null
+  const turn = lapTurn({
+    cfbDelayUs: v('cfbDelayUs'),
+    cfbLines: v('cfbLines'),
+    cfbClockPct: v('cfbClockPct'),
+    cfbServoUs: v('cfbServoUs'),
+  })
+  const right = inset ? PLOT.right : WIDE_RIGHT
   const x = (mhz: number) => plotX(mhz, right)
   const curve = trace(gains, right)
   // With the fader down, the lap at its full travel, where mix is 1.
@@ -291,16 +304,22 @@ export function MixerLoopDiagram() {
               clipPath={`url(#${clip})`}
             />
 
-            {slice && (
+            {inset && (
               <Label
                 x={SLICE_X}
                 y={WHEEL.cy - WHEEL.radius - 6}
                 anchor="middle"
               >
-                {byHue ? 'keyed by hue' : 'keyed by level'}
+                {inset === 'turn'
+                  ? turnWords(turn)
+                  : byHue
+                    ? 'keyed by hue'
+                    : 'keyed by level'}
               </Label>
             )}
-            {!slice ? null : byHue ? (
+            {inset === 'turn' ? (
+              <TurnDial {...WHEEL} turn={turn} on={!off} arrow={arrow} />
+            ) : inset !== 'slice' ? null : byHue ? (
               <HueWheel
                 {...WHEEL}
                 rim={RIM}
