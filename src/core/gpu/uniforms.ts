@@ -12,6 +12,7 @@ import {
   SAMPLE_RATE,
   SAMPLES_PER_LINE,
 } from '../signal/constants'
+import { demodReach } from '../signal/filters'
 import { valueNoise } from '../signal/noise'
 
 import type { Controls } from '../controls'
@@ -373,6 +374,7 @@ export function uniformValues(c: Controls, env: UniformEnv) {
     agc: c.agc,
     abl: c.abl,
     chromaCoarse: c.chromaCoarse,
+    demodReach: demodReach(c.demodMHz * 1e6, c.chromaTail),
     scanBeam: c.scanBeam,
     scanBloom: c.scanBloom,
     phosphor: c.phosphor,

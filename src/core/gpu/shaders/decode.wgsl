@@ -151,12 +151,17 @@ fn loPhaseErr(n: u32, row: u32) -> f32 {
 
 // comb-filtered chroma source span for this workgroup's row; a whole
 // workgroup shares one raster row (and its sync offset), so the demod FIR
-// reads shared memory instead of 1-3 storage loads per tap
-var<workgroup> tile: array<f32, TILE * 2u>;
+// reads shared memory instead of 1-3 storage loads per tap. The halo is the
+// demod kernel's half-width plus the farthest lattice point chromaCoarse
+// interpolates from.
+const COARSE_MAX = 8;
+const DEMOD_HALO = (DEMOD_TAPS - 1u) / 2u + u32(COARSE_MAX);
+const DEMOD_TILE = TILE_WG + 2u * DEMOD_HALO;
+const DEMOD_SHORT_HALO = (DEMOD_SHORT_TAPS - 1u) / 2u + u32(COARSE_MAX);
+var<workgroup> tile: array<f32, DEMOD_TILE * 2u>;
 
 // Synchronous chroma demod centered on tile index ti / global sample n0, in
 // the half of the tile `toff` names.
-// Offsets stay within the halo for |off| <= HALO - (DEMOD_TAPS-1)/2.
 //
 // Sampling at 4x fsc puts the carrier on the four-phase lattice (0,1) (1,0)
 // (0,-1) (-1,0), so at any tap exactly one of the U and V multiplies is against
@@ -164,12 +169,13 @@ var<workgroup> tile: array<f32, TILE * 2u>;
 // accumulator a tap lands in, and with what sign, depends only on k mod 4, so
 // the taps sum into four buckets and the lattice is applied once at the end as
 // a rotation of those buckets onto (us, vs).
-fn demodAt(ti: i32, n0: i32, toff: u32) -> vec2f {
+fn demodBuckets(ti: i32, toff: u32, k0: i32, taps: i32) -> vec4f {
   let m = i32((DEMOD_TAPS - 1u) / 2u);
   let f0 = SEC_DEMOD * FILTER_STRIDE;
   var q = vec4f(0.0);
-  var k = 0;
-  for (; k <= i32(DEMOD_TAPS) - 4; k = k + 4) {
+  var j = 0;
+  for (; j <= taps - 4; j = j + 4) {
+    let k = k0 + j;
     q = q + vec4f(
       filters[f0 + u32(k)] * tile[u32(ti + k - m) + toff],
       filters[f0 + u32(k + 1)] * tile[u32(ti + k + 1 - m) + toff],
@@ -179,9 +185,10 @@ fn demodAt(ti: i32, n0: i32, toff: u32) -> vec2f {
   }
   // odd tap count leaves up to three; select rather than a dynamic vec index,
   // which would spill q to scratch for the sake of one iteration
-  for (; k < i32(DEMOD_TAPS); k = k + 1) {
+  for (; j < taps; j = j + 1) {
+    let k = k0 + j;
     let g = filters[f0 + u32(k)] * tile[u32(ti + k - m) + toff];
-    let b = k & 3;
+    let b = j & 3;
     q = q + vec4f(
       select(0.0, g, b == 0),
       select(0.0, g, b == 1),
@@ -189,11 +196,24 @@ fn demodAt(ti: i32, n0: i32, toff: u32) -> vec2f {
       select(0.0, g, b == 3),
     );
   }
+  return q;
+}
+
+fn demodAt(ti: i32, n0: i32, toff: u32) -> vec2f {
+  let m = i32((DEMOD_TAPS - 1u) / 2u);
+  let short = P.demodReach <= (DEMOD_SHORT_TAPS - 1u) / 2u;
+  let k0 = select(0, m - i32((DEMOD_SHORT_TAPS - 1u) / 2u), short);
+  var q: vec4f;
+  if (short) {
+    q = demodBuckets(ti, toff, k0, i32(DEMOD_SHORT_TAPS));
+  } else {
+    q = demodBuckets(ti, toff, k0, i32(DEMOD_TAPS));
+  }
   // Lattice phase of the first tap. Unlike the per-tap carrier() this replaces,
   // the phase is stepped arithmetically rather than read off a clamped index,
   // so the two differ only where the tap span runs past an end of the buffer —
   // the outermost row of a picture torn far enough to reach it.
-  let r = u32(n0 - m + i32(2u * (P.frame & 1u)) + 1024) & 3u;
+  let r = u32(n0 - m + k0 + i32(2u * (P.frame & 1u)) + 1024) & 3u;
   var mu = vec4f(0.0, 1.0, 0.0, -1.0);
   var mv = vec4f(1.0, 0.0, -1.0, 0.0);
   if (r == 1u) {
@@ -426,9 +446,8 @@ fn decodeAt(row: u32, ry: u32, hoff: i32, toff: u32, tj: i32, col: i32) -> Decod
   // coarse-th sample and pixels between get linear interpolation — the digital
   // decoder's chroma-upsampling error. Interpolated U/V re-attach to the wrong
   // subcarrier phase at edges, blooming dither and fine detail into rainbows.
-  // Factor 8 keeps the farthest tap within the tile halo (20 + 8 <= 32).
-  let ti = tj + i32(HALO);
-  let coarse = i32(clamp(P.chromaCoarse, 1.0, 8.0));
+  let ti = tj + i32(DEMOD_HALO);
+  let coarse = i32(clamp(P.chromaCoarse, 1.0, f32(COARSE_MAX)));
   var uvd: vec2f;
   if (coarse > 1) {
     let d0 = -(((col % coarse) + coarse) % coarse);
@@ -682,8 +701,9 @@ fn main(
   let s0A = SCAN_MID + (x0 - SCAN_MID) * scanA;
   let b0A = i32(round(s0A));
   densA = densA * ehtLight(ehtA);
-  let base = i32(row * SPL + ACTIVE_START) + b0A + hoff - i32(HALO);
-  for (var i = lid.x; i < TILE; i = i + TILE_WG) {
+  let base = i32(row * SPL + ACTIVE_START) + b0A + hoff - i32(DEMOD_HALO);
+  let skip = select(0u, DEMOD_HALO - DEMOD_SHORT_HALO, P.demodReach <= (DEMOD_SHORT_TAPS - 1u) / 2u);
+  for (var i = lid.x + skip; i < DEMOD_TILE - skip; i = i + TILE_WG) {
     tile[i] = csrc(clampIdx(base + i32(i)));
   }
   // The folded-back line, in the other half of the tile. Row-uniform like
@@ -703,9 +723,9 @@ fn main(
     s0B = SCAN_MID + (x0 - SCAN_MID) * scanB;
     b0B = i32(round(s0B));
     densB = densB * ehtLight(ehtB);
-    let baseB = i32(rowB * SPL + ACTIVE_START) + b0B + hoffB - i32(HALO);
-    for (var i = lid.x; i < TILE; i = i + TILE_WG) {
-      tile[TILE + i] = csrc(clampIdx(baseB + i32(i)));
+    let baseB = i32(rowB * SPL + ACTIVE_START) + b0B + hoffB - i32(DEMOD_HALO);
+    for (var i = lid.x + skip; i < DEMOD_TILE - skip; i = i + TILE_WG) {
+      tile[DEMOD_TILE + i] = csrc(clampIdx(baseB + i32(i)));
     }
   }
   workgroupBarrier();
@@ -750,7 +770,7 @@ fn main(
     emitted = emitted * densA;
     if (twice) {
       let tjB = i32(round(s0B + f32(lid.x) * scanB)) - b0B;
-      let dB = decodeAt(rowB, ryB, hoffB, TILE, tjB, b0B + tjB);
+      let dB = decodeAt(rowB, ryB, hoffB, DEMOD_TILE, tjB, b0B + tjB);
       emitted = emitted + toLight(dB.rgb * (1.0 - P.beamBlank)) * densB;
     }
     outc = gamutFit(toDrive(emitted));

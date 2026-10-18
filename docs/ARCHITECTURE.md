@@ -376,8 +376,8 @@ Almost everything is comfortably parallel. Two exceptions:
   one pass that cannot scale. Another per-line recurrence should be a parallel
   prefix scan instead of a third loop here.
 - **`decode` stages a shared tile per row.** A workgroup covers 64 pixels of one
-  raster row and stages a contiguous span with a 32-sample halo, so the demod
-  FIR reads workgroup memory. Consequence: horizontal offsets must be
+  raster row and stages a contiguous span with a halo as wide as the demod
+  kernel needs (`DEMOD_HALO`), so the demod FIR reads workgroup memory. Consequence: horizontal offsets must be
   **row-uniform**. A row-uniform width fits too: the EHT breathing in `lineEht`
   widens a line about the centre by up to 15% and never narrows one, so the span
   a workgroup reads only ever shrinks. Per-pixel horizontal scaling (linearity,

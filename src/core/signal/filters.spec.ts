@@ -5,6 +5,9 @@ import {
   FILTER_STRIDE,
   TAPS,
   bandpass,
+  centred,
+  demodKernel,
+  demodReach,
   lowpass,
   lowpassCausal,
   lowpassPeaked,
@@ -110,12 +113,7 @@ describe('the bank sections the shader loops fold', () => {
   })
 
   it('exclude the demod kernel, whose causal tail is asymmetric', () => {
-    const demod = mixTaps(
-      lowpass(0.6e6, TAPS.demod),
-      lowpassCausal(0.6e6, TAPS.demod),
-      0.5,
-    )
-    expect(isSymmetric(demod)).toBe(false)
+    expect(isSymmetric(demodKernel(0.6e6, 0.5))).toBe(false)
   })
 })
 
@@ -138,6 +136,58 @@ describe('lowpassCausal', () => {
 
   it('low-passes: rejects above the cutoff', () => {
     expect(response(lowpassCausal(0.6e6, 41), 4e6)).toBeLessThan(0.2)
+  })
+})
+
+function halfAmplitudeHz(h: Float32Array): number {
+  let f = 0
+  while (response(h, f) > 0.5) f += 1e3
+  return f
+}
+
+describe('demodKernel', () => {
+  it('is the 41-tap lowpass at the stock setting, so stock decodes as before', () => {
+    expect(Array.from(demodKernel(0.6e6, 0))).toEqual(
+      Array.from(centred(lowpass(0.6e6, 41), TAPS.demod)),
+    )
+  })
+
+  it('puts its half-amplitude point within 5% of the cutoff down to 0.4 MHz', () => {
+    for (const mhz of [0.4, 0.45, 0.5, 0.6, 0.8, 1, 1.4, 2]) {
+      const f = halfAmplitudeHz(demodKernel(mhz * 1e6, 0))
+      expect(f / (mhz * 1e6), `${mhz} MHz`).toBeGreaterThan(0.99)
+      expect(f / (mhz * 1e6), `${mhz} MHz`).toBeLessThan(1.05)
+    }
+  })
+
+  it('keeps narrowing below 0.4 MHz until the slot runs out', () => {
+    const f = [0.05, 0.3, 0.4].map(mhz =>
+      halfAmplitudeHz(demodKernel(mhz * 1e6, 0)),
+    )
+    expect(f[0]!).toBeLessThan(f[1]!)
+    expect(f[1]!).toBeLessThan(f[2]!)
+    expect(f[0]!).toBeLessThan(0.275e6)
+  })
+
+  it('has unity DC gain at every cutoff and trail', () => {
+    for (const mhz of [0.05, 0.4, 0.6, 1.4, 3])
+      for (const tail of [0, 0.5, 1]) {
+        let sum = 0
+        for (const v of demodKernel(mhz * 1e6, tail)) sum += v
+        expect(sum).toBeCloseTo(1, 5)
+      }
+  })
+
+  it('has no tap past the reach decode loops over', () => {
+    for (const mhz of [0.05, 0.3, 0.39, 0.45, 0.6, 1.4, 6])
+      for (const tail of [0, 0.01, 1]) {
+        const h = demodKernel(mhz * 1e6, tail)
+        const m = (h.length - 1) / 2
+        const r = demodReach(mhz * 1e6, tail)
+        h.forEach((v, k) => {
+          if (Math.abs(k - m) > r) expect(v, `${mhz} MHz tail ${tail}`).toBe(0)
+        })
+      }
   })
 })
 

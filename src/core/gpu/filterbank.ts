@@ -4,10 +4,9 @@
 import { FSC } from '../signal/constants'
 import {
   bandpass,
+  demodKernel,
   lowpass,
-  lowpassCausal,
   lowpassPeaked,
-  mixTaps,
   packFilterBank,
   SEC_CHROMA_BP,
   SEC_DEMOD,
@@ -28,14 +27,7 @@ export function designFilterBank(c: FilterControls): Float32Array<ArrayBuffer> {
   return packFilterBank(
     new Map([
       [SEC_ENC_CHROMA, lowpass(c.encChromaMHz * 1e6, TAPS.encChroma)],
-      [
-        SEC_DEMOD,
-        mixTaps(
-          lowpass(c.demodMHz * 1e6, TAPS.demod),
-          lowpassCausal(c.demodMHz * 1e6, TAPS.demod),
-          c.chromaTail,
-        ),
-      ],
+      [SEC_DEMOD, demodKernel(c.demodMHz * 1e6, c.chromaTail)],
       [
         SEC_LUMA,
         lowpassPeaked(

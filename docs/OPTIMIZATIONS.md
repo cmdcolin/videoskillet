@@ -6,7 +6,7 @@ one-page version of what a pass is.
 
 One frame is 477,750 f32 samples (910 × 525) through up to twenty-five compute
 dispatches, sixty times a second, and six of those passes are FIR filters 33 to
-55 taps wide. That budget is the reason for everything below. Every built-in
+63 taps wide. That budget is the reason for everything below. Every built-in
 preset lands **3.3–5.4 ms** against a 3.3 ms always-on floor, and the headroom
 exists because the expensive things are gated, tiled, tiered, or not dispatched
 at all.
@@ -201,8 +201,9 @@ what may change.
 tap.** Six passes filter the waveform (`encode_composite`, `encode_chroma_b`,
 `chroma_extract`, `under_down`, `channel`, `decode`), and each stages its own
 64-sample span plus a **32-sample halo per side**, barriers once, and filters
-out of shared memory. The kernels in the bank run 33 to 55 taps, comfortably
-inside the 65 a 32-sample halo allows.
+out of shared memory. The kernels in the bank run 33 to 63 taps, inside the 65 a
+32-sample halo allows. `decode` sizes its own halo: the demod slot's 31-sample
+half-width plus the eight samples `chromaCoarse` interpolates across, so 39.
 
 The 64-thread width was measured rather than assumed. Staging costs
 `(TILE_WG + 64) / TILE_WG` loads per output, so wider workgroups re-stage less —
@@ -370,7 +371,17 @@ and each tiers on whatever decides visibility for it:
   or above and keeps the full disk. Worth 0.12 ms — the single largest cost left
   in `crt_face` at stock.
 
-All three thresholds are hard steps, so sweeping the control through one pops
+- **The chroma demod tiers on its own length.** The kernel grows as
+  `demodMHz` falls (`filters.ts`, `demodKernel`), so the bank slot holds 63
+  taps while the 0.6 MHz stock kernel fills only 41 of them. `decode` runs a
+  41-tap loop and stages the matching halo whenever `demodReach` fits in it,
+  and the full 63 otherwise. Stock is bit-exact to the old fixed 41 taps and
+  costs what it did, 0.39 ms; a narrow band or any chroma trail costs 0.45 ms.
+  A loop bounded by the uniform alone measured 0.46 ms at stock, worse than the
+  full 63, because its trip count stops being a compile-time constant and the
+  loop no longer unrolls.
+
+All four thresholds are hard steps, so sweeping the control through one pops
 the result by that difference. That is the trade, written down beside the step
 that makes it.
 

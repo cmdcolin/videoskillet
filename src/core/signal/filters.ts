@@ -57,6 +57,13 @@ export function lowpassCausal(cutoffHz: number, taps: number): Float32Array {
   return h
 }
 
+// A kernel zero-padded on both sides to `taps`, keeping its centre.
+export function centred(h: Float32Array, taps: number): Float32Array {
+  const out = new Float32Array(taps)
+  out.set(h, (taps - h.length) / 2)
+  return out
+}
+
 // Pointwise blend of two same-length kernels (both unity-DC stays unity-DC).
 export function mixTaps(
   a: Float32Array,
@@ -87,14 +94,49 @@ export function lowpassPeaked(
   return h
 }
 
-// Fixed kernel lengths per section, baked into the WGSL prelude as constants
-// so every convolution loop has a compile-time trip count and can unroll.
+// Kernel lengths per section, baked into the WGSL prelude as constants so every
+// convolution loop has a compile-time trip count and can unroll. The demod is
+// the exception: its length is the bank slot, and decode loops over only the
+// taps demodReach says the kernel uses.
 export const TAPS = {
   encChroma: 33,
-  demod: 41,
+  demod: 63,
+  demodShort: 41,
   luma: 49,
   chromaBp: 55,
   under: 55,
+}
+
+// A Blackman lowpass passes no band much narrower than its length resolves. At
+// a fixed 41 taps, every demod setting below 0.4 MHz decoded with its -6 dB
+// point between 0.41 and 0.50 MHz. The kernel's half-width in samples therefore
+// grows as DEMOD_SPAN_HZ over the cutoff, which scales one response shape along
+// the frequency axis: 20 samples at the 0.6 MHz stock setting, and the full
+// slot from 0.39 MHz down. Below that the length stays fixed, so the band
+// narrows more slowly than the setting asks, and the slider's 0.05 MHz decodes
+// with its -6 dB point at 0.27 MHz.
+const DEMOD_SPAN_HZ = 12e6
+const DEMOD_MIN_HALF = (TAPS.demodShort - 1) / 2
+
+export function demodHalfWidth(cutoffHz: number): number {
+  const half = Math.round(DEMOD_SPAN_HZ / Math.max(cutoffHz, 1))
+  return Math.min(Math.max(half, DEMOD_MIN_HALF), (TAPS.demod - 1) / 2)
+}
+
+// The decoder's chroma demod lowpass, blended toward a one-pole trail.
+export function demodKernel(cutoffHz: number, tail: number): Float32Array {
+  const symmetric = centred(
+    lowpass(cutoffHz, 2 * demodHalfWidth(cutoffHz) + 1),
+    TAPS.demod,
+  )
+  if (tail <= 0) return symmetric
+  const trail = centred(lowpassCausal(cutoffHz, TAPS.demodShort), TAPS.demod)
+  return mixTaps(symmetric, trail, tail)
+}
+
+// How many taps either side of the centre demodKernel can make nonzero.
+export function demodReach(cutoffHz: number, _tail: number): number {
+  return demodHalfWidth(cutoffHz)
 }
 
 // The GPU filter bank: fixed-stride sections so shaders index kernels by slot.

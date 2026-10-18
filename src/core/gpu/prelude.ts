@@ -224,6 +224,7 @@ export const PARAM_DEFS = [
   ['afpcLines', 'f32'], // burst phase lock time constant, lines (0 = per line)
   ['svideoBleed', 'f32'], // Y/C cross-wire: chroma bled into luma (0.5 defeats the trap)
   ['chromaCoarse', 'f32'], // chroma demod decimation factor; >1 lerps between lattice points (CUE rainbows)
+  ['demodReach', 'u32'], // taps either side of the demod kernel's centre that can be nonzero (filters.ts demodReach)
   // channel / tape
   ['soundIre', 'f32'], // 4.5 MHz sound carrier leaking past the trap, IRE
   // RF front end: what the tuner hands the detector besides our own channel
@@ -597,6 +598,7 @@ const SEC_CHROMA_BP = ${SEC_CHROMA_BP}u;
 const SEC_UNDER = ${SEC_UNDER}u;
 const ENC_CHROMA_TAPS = ${TAPS.encChroma}u;
 const DEMOD_TAPS = ${TAPS.demod}u;
+const DEMOD_SHORT_TAPS = ${TAPS.demodShort}u;
 const LUMA_TAPS = ${TAPS.luma}u;
 const CHROMA_BP_TAPS = ${TAPS.chromaBp}u;
 const UNDER_TAPS = ${TAPS.under}u;

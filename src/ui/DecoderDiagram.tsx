@@ -1,10 +1,9 @@
 import { FSC, SAMPLE_RATE } from '../core/signal/constants'
 import {
   bandpass,
+  demodKernel,
   lowpass,
-  lowpassCausal,
   lowpassPeaked,
-  mixTaps,
   TAPS,
 } from '../core/signal/filters'
 import local from './DecoderDiagram.module.css'
@@ -216,11 +215,7 @@ export function DecoderDiagram() {
     ),
   ]
 
-  const demod = mixTaps(
-    lowpass(v('demodMHz') * 1e6, TAPS.demod),
-    lowpassCausal(v('demodMHz') * 1e6, TAPS.demod),
-    v('chromaTail'),
-  )
+  const demod = demodKernel(v('demodMHz') * 1e6, v('chromaTail'))
   const channelLuma = lowpassPeaked(
     v('lumaMHz') * 1e6,
     v('lumaPeak'),
