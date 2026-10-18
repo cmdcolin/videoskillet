@@ -31,12 +31,14 @@ subcarrier included.
 
 <!-- generated:loops — from LOOP_STAGES in src/ui/controls.ts, via scripts/docgen.mjs -->
 
-**Camera feedback**: an optical loop. A camera points at the tube and the mixer
-feeds its picture back into the input ahead of the encoder. The camera itself
-can only do what a lens does — zoom, shift, defocus, black level — but the
-return re-enters ahead of the encoder, so a lap is a whole encode/decode
-generation and every fault between there and the glass is inside it, applied
-once per generation. Above unity gain it builds structure on its own.
+**Camera feedback**: an optical loop. A camera points at the tube and its
+picture is mixed into source A once the source is picked, ahead of the encoder.
+Source B and the A/B mixer never see it, so wherever B covers A, B covers the
+camera too. The camera itself can only do what a lens does — zoom, shift,
+defocus, black level — but the return re-enters ahead of the encoder, so a lap
+is a whole encode/decode generation and every fault between there and the glass
+is inside it, applied once per generation. Above unity gain it builds structure
+on its own.
 
 **Mixer feedback**: an electrical loop. The mixer takes the composite signal off
 the bus into an input and crossfades it against the live signal. The subcarrier
