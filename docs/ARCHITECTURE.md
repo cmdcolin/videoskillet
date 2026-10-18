@@ -263,7 +263,7 @@ looks. Keep that mirroring honest: change the transform in the shader and
 `lens.ts` moves with it, or `lens.test.ts` starts lying.
 
 **Every control keeps its slider.** The miniature only hides the ones it
-duplicates, behind the group's `▸ sliders` toggle, which is what keeps MIDI
+duplicates, behind the group's `▸ N sliders` toggle, which is what keeps MIDI
 binding, clock sync, presets, scenes and URL state working untouched. A
 miniature is another writer of a normal control, never the only one.
 

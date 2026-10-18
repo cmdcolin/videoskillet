@@ -531,7 +531,7 @@ describe('a stage in the panel', () => {
     expect(groupOf(key).name).toBe(MIXER_LOOP_GROUP)
     await openGroup(key, 'Mixer feedback')
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: '▸ sliders' }))
+      fireEvent.click(screen.getByRole('button', { name: /^▸ \d+ sliders$/ }))
     })
     await drag(key, ControlGroup, [1])
     const { moves } = await drag(key, ControlGroup, [0.5])

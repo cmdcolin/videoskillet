@@ -36,6 +36,7 @@ const ROW = {
 }
 
 const PLOT = { left: 22, right: 236, top: 84, bottom: 128 }
+const WIDE_RIGHT = WIDTH - 6
 const HEIGHT = PLOT.bottom + 14
 const SLICE_X = 298
 const WHEEL = { cx: SLICE_X, cy: 108, radius: 30 }
@@ -46,17 +47,17 @@ const RIM = 0.7
 const POINTS = 121
 const CURVE_MHZ = bandMHz(POINTS)
 
-const plotX = (mhz: number) =>
-  PLOT.left + ((PLOT.right - PLOT.left) * mhz) / BAND_MHZ
+const plotX = (mhz: number, right: number) =>
+  PLOT.left + ((right - PLOT.left) * mhz) / BAND_MHZ
 const plotY = (g: number) =>
   PLOT.bottom -
   ((PLOT.bottom - PLOT.top) * Math.min(Math.max(g, 0), GAIN_TOP)) / GAIN_TOP
 
-const trace = (gains: readonly number[]) =>
+const trace = (gains: readonly number[], right: number) =>
   gains
     .map(
       (g, i) =>
-        `${i === 0 ? 'M' : 'L'}${plotX(CURVE_MHZ[i]!).toFixed(1)} ${plotY(g).toFixed(1)}`,
+        `${i === 0 ? 'M' : 'L'}${plotX(CURVE_MHZ[i]!, right).toFixed(1)} ${plotY(g).toFixed(1)}`,
     )
     .join(' ')
 
@@ -65,8 +66,9 @@ const trace = (gains: readonly number[]) =>
 // came out and reads it back late, and the return runs back along the bottom
 // through the Y/C split, the resonance and the ring modulator into the fader,
 // which the keyer gates. Under the loop, what one lap hands back at each
-// frequency, and beside it the slice the keyer lets round, drawn on the U/V
-// plane for a hue key and on the luma scale for a level key.
+// frequency, and beside it, while the key is in use or the keyer is open, the
+// slice the keyer lets round, drawn on the U/V plane for a hue key and on the
+// luma scale for a level key.
 export function MixerLoopDiagram() {
   const r = useReadings(MIXER_LOOP_KEYS)
   const pick = useSelectedBox()
@@ -88,7 +90,10 @@ export function MixerLoopDiagram() {
   const keyOn = key !== 0 && !off
   const keyLook: WireLook = keyOn ? 'on' : 'dash'
   const byHue = v('cfbKeyAcceptDeg') > 0
-  const curve = trace(gains)
+  const slice = key !== 0 || pick.selected === 'keyer'
+  const right = slice ? PLOT.right : WIDE_RIGHT
+  const x = (mhz: number) => plotX(mhz, right)
+  const curve = trace(gains, right)
   // With the fader down, the lap at its full travel, where mix is 1.
   const upGains = off ? lapGains({ ...loop, mix: 1 }, CURVE_MHZ) : null
 
@@ -213,19 +218,16 @@ export function MixerLoopDiagram() {
             <Label x={PLOT.left + 4} y={PLOT.top - 8}>
               loop gain per lap
             </Label>
-            {[0, 2].map(g => (
-              <line
-                key={g}
-                x1={PLOT.left}
-                x2={PLOT.right}
-                y1={plotY(g)}
-                y2={plotY(g)}
-                className={styles.grid}
-              />
-            ))}
             <line
               x1={PLOT.left}
-              x2={PLOT.right}
+              x2={right}
+              y1={plotY(0)}
+              y2={plotY(0)}
+              className={styles.grid}
+            />
+            <line
+              x1={PLOT.left}
+              x2={right}
               y1={plotY(1)}
               y2={plotY(1)}
               className={styles.unity}
@@ -236,19 +238,19 @@ export function MixerLoopDiagram() {
               </Label>
             ))}
             <line
-              x1={plotX(FSC_MHZ)}
-              x2={plotX(FSC_MHZ)}
+              x1={x(FSC_MHZ)}
+              x2={x(FSC_MHZ)}
               y1={PLOT.top}
               y2={PLOT.bottom}
               className={own.fsc}
             />
-            <Label x={plotX(FSC_MHZ)} y={PLOT.top - 8} anchor="middle">
+            <Label x={x(FSC_MHZ)} y={PLOT.top - 8} anchor="middle">
               fsc
             </Label>
             {MHZ_TICKS.map(n => (
               <Label
                 key={n}
-                x={plotX(n)}
+                x={x(n)}
                 y={PLOT.bottom + 12}
                 anchor={n === BAND_MHZ ? 'end' : 'middle'}
               >
@@ -259,7 +261,7 @@ export function MixerLoopDiagram() {
               <rect
                 x={PLOT.left}
                 y={PLOT.top - 2}
-                width={PLOT.right - PLOT.left}
+                width={right - PLOT.left}
                 height={plotY(1) - PLOT.top + 2}
               />
             </clipPath>
@@ -273,9 +275,9 @@ export function MixerLoopDiagram() {
             />
             {upGains && (
               <>
-                <path d={trace(upGains)} className={own.faderUp} />
+                <path d={trace(upGains, right)} className={own.faderUp} />
                 <Label
-                  x={PLOT.right}
+                  x={right}
                   y={Math.min(plotY(upGains.at(-1)!) + 11, PLOT.bottom - 4)}
                   anchor="end"
                 >
@@ -289,10 +291,16 @@ export function MixerLoopDiagram() {
               clipPath={`url(#${clip})`}
             />
 
-            <Label x={SLICE_X} y={WHEEL.cy - WHEEL.radius - 6} anchor="middle">
-              {byHue ? 'keyed by hue' : 'keyed by level'}
-            </Label>
-            {byHue ? (
+            {slice && (
+              <Label
+                x={SLICE_X}
+                y={WHEEL.cy - WHEEL.radius - 6}
+                anchor="middle"
+              >
+                {byHue ? 'keyed by hue' : 'keyed by level'}
+              </Label>
+            )}
+            {!slice ? null : byHue ? (
               <HueWheel
                 {...WHEEL}
                 rim={RIM}

@@ -697,7 +697,7 @@ export function ControlGroup(props: { group: Group; defaultOpen?: boolean }) {
             className={styles.sliderToggle}
             onClick={() => setShowFramed(!showFramed)}
           >
-            {showFramed ? '▾ sliders' : '▸ sliders'}
+            {`${showFramed ? '▾' : '▸'} ${frame.keys.size} ${frame.keys.size === 1 ? 'slider' : 'sliders'}`}
           </button>
         </>
       )}
