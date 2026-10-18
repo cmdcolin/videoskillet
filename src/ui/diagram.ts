@@ -1,0 +1,64 @@
+import { useState } from 'react'
+
+import { atRest } from '../core/controls'
+import { sliderFor } from './controls'
+import { useControlReading } from './ControlsContext'
+import { readingOf } from './format'
+
+import type { ControlKey } from '../core/controls'
+
+export const LINE_H = 13
+const PAD = 7
+
+export interface BoxSpec {
+  x: number
+  y: number
+  w: number
+  /** Taller than its text needs, so a row of boxes shares one height. */
+  h?: number
+  /** A `\n` breaks the name over two lines. */
+  name: string
+  off?: boolean
+  touched: boolean
+  help: string
+  /** Pressing the box picks it, and the rows under the drawing become its
+      `keys`. A box with no keys is drawn and does nothing. */
+  id?: string
+  keys?: readonly ControlKey[]
+  note?: string
+}
+
+// Which box the drawing has open. A second press on it puts the rows away.
+export function useSelectedBox(initial: string | null = null) {
+  const [selected, setSelected] = useState<string | null>(initial)
+  return {
+    selected,
+    toggle: (id: string) => setSelected(now => (now === id ? null : id)),
+  }
+}
+
+export const CHAR_W = 5.8
+
+export const boxWidth = (name: string) =>
+  Math.ceil(
+    Math.max(...name.split('\n').map(line => line.length * CHAR_W)) + 2 * PAD,
+  )
+
+export const boxHeight = (name: string) =>
+  PAD + LINE_H * name.split('\n').length
+
+// The figures a drawing prints, read off the board as one string so the drawing
+// redraws only for a write that moved one of them.
+export function useReadings<K extends ControlKey>(keys: readonly K[]) {
+  const joined = useControlReading(c => keys.map(k => c[k]).join('|'))
+  const values = joined.split('|').map(Number)
+  const value = (key: K) => values[keys.indexOf(key)]!
+  return {
+    value,
+    read: (key: K) => {
+      const s = sliderFor(key)
+      return readingOf(value(key), s.step, s.unit, s.choices)
+    },
+    touched: (...ks: K[]) => ks.some(k => !atRest(value(k), k)),
+  }
+}

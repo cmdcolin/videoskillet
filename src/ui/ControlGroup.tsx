@@ -5,8 +5,15 @@ import { clampCardText } from '../sources/teletype'
 import { WIKI_PAGE } from '../sources/wikitext'
 import { useCaptionApi } from './CaptionContext'
 import { activeCardPreset, cardPresetsFor } from './cardPresets'
+import { CaptionDiagram, ChyronDiagram } from './ChyronDiagram'
 import styles from './ControlGroup.module.css'
-import { GROUPS, MUTATE_CIRCUIT_BY_GROUP, NEEDS, sliderFor } from './controls'
+import {
+  GROUPS,
+  MIXER_LOOP_GROUP,
+  MUTATE_CIRCUIT_BY_GROUP,
+  NEEDS,
+  sliderFor,
+} from './controls'
 import {
   useControlReading,
   useControls,
@@ -14,11 +21,13 @@ import {
   useControlValue,
 } from './ControlsContext'
 import { cx } from './cx'
+import { DecoderDiagram } from './DecoderDiagram'
 import { DRIFT_MODE_WORDS, DRIFT_SECONDS } from './drift'
 import { filterActive, matchedSliders, useFilter } from './filter'
 import { LoopTrip } from './LoopTrip'
 import { MagnifierFrame } from './MagnifierFrame'
 import { SYNCABLE_KEYS } from './midi'
+import { MixerLoopDiagram } from './MixerLoopDiagram'
 import { ModRowEditor } from './ModRowEditor'
 import { modPatch } from './modSlots'
 import { useModSlotsApi } from './ModSlotsContext'
@@ -27,6 +36,12 @@ import { PipControl } from './PipControl'
 import { PurityFrame } from './PurityFrame'
 import { rowClaim } from './rollMod'
 import { sameKeySet, sameList } from './sameList'
+import {
+  CAPTION_KEYS,
+  CHYRON_KEYS,
+  DECODER_KEYS,
+  MIXER_LOOP_KEYS,
+} from './schematicKeys'
 import { Section } from './Section'
 import { SIGNAL_TAPS, tapFor } from './signalTap'
 import { useSignalTapApi } from './SignalTapContext'
@@ -386,6 +401,26 @@ const FRAMES: {
     group: 'View',
     keys: new Set<ControlKey>(['crtZoomX', 'crtZoomY']),
     Frame: ZoomControl,
+  },
+  {
+    group: MIXER_LOOP_GROUP,
+    keys: new Set<ControlKey>(MIXER_LOOP_KEYS),
+    Frame: MixerLoopDiagram,
+  },
+  {
+    group: 'Character generator (chyron)',
+    keys: new Set<ControlKey>(CHYRON_KEYS),
+    Frame: ChyronDiagram,
+  },
+  {
+    group: 'Captions',
+    keys: new Set<ControlKey>(CAPTION_KEYS),
+    Frame: CaptionDiagram,
+  },
+  {
+    group: 'Decoder',
+    keys: new Set<ControlKey>(DECODER_KEYS),
+    Frame: DecoderDiagram,
   },
 ]
 

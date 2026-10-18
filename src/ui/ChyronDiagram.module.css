@@ -1,0 +1,59 @@
+.hit {
+  fill: transparent;
+  stroke: none;
+}
+
+.hitOpen {
+  fill: var(--surface-raised);
+  stroke: var(--border);
+  stroke-width: 1.5;
+}
+
+.junction {
+  fill: var(--accent);
+}
+
+.rail {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.5;
+}
+
+.slash {
+  fill: none;
+  stroke: var(--fg4);
+  stroke-width: 1;
+}
+
+.width {
+  font-family: var(--mono);
+  font-size: 7px;
+  fill: var(--fg3);
+}
+
+.cell,
+.cellLit,
+.cellHigh,
+.cellLow {
+  stroke: var(--fg4);
+  stroke-width: 0.75;
+}
+
+.cell {
+  fill: none;
+}
+
+.cellLit {
+  fill: var(--fg3);
+}
+
+.cellHigh {
+  fill: var(--accent);
+  stroke: var(--accent);
+}
+
+.cellLow {
+  fill: none;
+  stroke: var(--accent);
+  stroke-dasharray: 1 1;
+}

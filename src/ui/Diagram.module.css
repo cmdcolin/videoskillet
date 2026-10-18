@@ -1,0 +1,130 @@
+.diagram {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: var(--space-xs) 0 var(--space-sm);
+}
+
+.box {
+  fill: none;
+  stroke: var(--border);
+}
+
+.boxOn {
+  fill: none;
+  stroke: var(--accent);
+}
+
+.name,
+.nameOn {
+  font-size: 11px;
+  fill: var(--fg2);
+}
+
+.note,
+.noteOn {
+  font-size: 10px;
+  fill: var(--fg3);
+}
+
+.nameOn,
+.noteOn {
+  fill: var(--accent);
+}
+
+.wire,
+.wireOn,
+.wireDash,
+.wireAlarm {
+  fill: none;
+  stroke: var(--fg4);
+  stroke-width: 1;
+}
+
+.wireOn {
+  stroke: var(--accent);
+  stroke-width: 1.5;
+}
+
+.wireAlarm {
+  stroke: var(--danger);
+  stroke-width: 2;
+  stroke-dasharray: 3 2;
+}
+
+.wireDash {
+  stroke-dasharray: 3 3;
+}
+
+.head {
+  fill: var(--fg4);
+}
+
+.headOn {
+  fill: var(--accent);
+}
+
+.headAlarm {
+  fill: var(--danger);
+}
+
+/* A box you can press: the pointer says so, a hair of fill says which one is
+   open, and the focus ring is the browser's own on the group. */
+.pick {
+  cursor: pointer;
+  outline: none;
+}
+
+.pick:hover rect,
+.pick:focus-visible rect {
+  stroke: var(--fg2);
+}
+
+.selected {
+  fill: var(--surface-raised);
+  stroke-width: 1.5;
+}
+
+.rows {
+  margin: 0 0 var(--space-xs);
+  padding-top: var(--space-2xs);
+  border-top: 1px solid var(--border-quiet);
+}
+
+.noteLine {
+  margin: var(--space-2xs) 0;
+  font-size: var(--fs-xs);
+  color: var(--danger);
+}
+
+.pick text {
+  text-decoration: underline dotted;
+  text-underline-offset: 2px;
+}
+
+.pick:hover text,
+.pickedLabel text {
+  text-decoration: underline solid;
+}
+
+/* A box with no knobs behind it is drawn, and does nothing when pressed — the
+   dashed outline is the panel's word for that. */
+.inert {
+  stroke-dasharray: 2 2;
+}
+
+.grid {
+  stroke: var(--border-quiet);
+  stroke-width: 1;
+}
+
+.curve,
+.curveOn {
+  fill: none;
+  stroke: var(--fg2);
+  stroke-width: 1.5;
+}
+
+.curveOn {
+  stroke: var(--accent);
+}

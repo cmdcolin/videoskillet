@@ -1,0 +1,34 @@
+.dot {
+  fill: var(--fg4);
+}
+
+.luma,
+.chroma {
+  fill: none;
+  stroke-width: 1.5;
+}
+
+.luma {
+  stroke: var(--fg2);
+}
+
+.chroma {
+  stroke: var(--accent);
+}
+
+.sent {
+  fill: var(--fg4);
+  opacity: 0.25;
+}
+
+.leak {
+  fill: var(--danger);
+  opacity: 0.45;
+}
+
+.fsc {
+  stroke: var(--accent);
+  stroke-width: 1;
+  stroke-dasharray: 2 2;
+  opacity: 0.6;
+}
