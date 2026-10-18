@@ -298,6 +298,17 @@ export const NOISE_OPENS = {
 
 export const NOISE_KEYS = Object.values(NOISE_OPENS).flat()
 
+export const CABLE_OPENS = {
+  guard: ['macrovision', 'mvStripeDeg'],
+  scramble: ['scramble', 'scrambleMode'],
+  chroma: ['chromaPinOnly'],
+  plug: ['connectorGlitch', 'connectorMode'],
+  flip: ['polarityFlip'],
+  load: ['termination'],
+} as const satisfies Opens
+
+export const CABLE_KEYS = Object.values(CABLE_OPENS).flat()
+
 export const CHROMA_KEY_OPENS = {
   spill: ['bKeySpill'],
   delay: ['bKeyDelayUs'],
@@ -343,6 +354,7 @@ export const SCHEMATICS = [
   { group: 'VHS colour & tracking', keys: VHS_KEYS, opens: VHS_OPENS },
   { group: 'Enhancer (bent)', keys: ENHANCER_KEYS, opens: ENHANCER_OPENS },
   { group: 'Noise & interference', keys: NOISE_KEYS, opens: NOISE_OPENS },
+  { group: 'Cable / Wiring', keys: CABLE_KEYS, opens: CABLE_OPENS },
   { group: 'Ghosting & leakage', keys: LEAK_KEYS, opens: LEAK_OPENS },
   {
     group: 'Chroma key (A through B)',

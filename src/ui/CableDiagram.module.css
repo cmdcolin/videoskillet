@@ -1,0 +1,23 @@
+.frame {
+  fill: none;
+  stroke: var(--border);
+}
+
+.pin {
+  fill: var(--accent);
+  opacity: 0.55;
+}
+
+.shield {
+  fill: var(--accent);
+  opacity: 0.25;
+}
+
+.stripe {
+  fill: var(--accent);
+  opacity: 0.3;
+}
+
+.guard {
+  fill: var(--accent);
+}

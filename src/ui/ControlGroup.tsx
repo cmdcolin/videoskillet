@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { DEFAULT_CONTROLS, atRest } from '../core/controls'
 import { clampCardText } from '../sources/teletype'
 import { WIKI_PAGE } from '../sources/wikitext'
+import { CableDiagram } from './CableDiagram'
 import { CameraLoopDiagram, TubeFaceDiagram } from './CameraLoopDiagram'
 import { useCaptionApi } from './CaptionContext'
 import { activeCardPreset, cardPresetsFor } from './cardPresets'
@@ -399,6 +400,7 @@ const SCHEMATIC_FRAMES: Record<SchematicGroup, () => ReactElement> = {
   'VHS colour & tracking': VhsDiagram,
   'Enhancer (bent)': EnhancerDiagram,
   'Noise & interference': NoiseDiagram,
+  'Cable / Wiring': CableDiagram,
   'Ghosting & leakage': LeakDiagram,
   'Chroma key (A through B)': ChromaKeyDiagram,
   Phosphor: PhosphorDiagram,
