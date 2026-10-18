@@ -191,6 +191,12 @@ per tap. The loop is unrolled by four into a `vec4f` accumulator; the odd tail
 uses `select` rather than a dynamic vector index, which would spill the
 accumulator to scratch for the sake of up to three iterations.
 
+A comb set forms luma from the same staged tile: `takeoffAt` runs the comb's
+line difference through the 21-tap takeoff bandpass. The band is centred on the
+subcarrier, so at 4x fsc every odd tap is zero, and the loop reads eleven
+samples against six coefficients. It adds 0.02 ms to `decode` in either comb
+mode (0.39 to 0.41 ms on the WX 3200) and nothing on the trap.
+
 ## Workgroup memory does four different jobs here
 
 Ten shaders stage something in `var<workgroup>` before they barrier, and it is
@@ -201,7 +207,7 @@ what may change.
 tap.** Six passes filter the waveform (`encode_composite`, `encode_chroma_b`,
 `chroma_extract`, `under_down`, `channel`, `decode`), and each stages its own
 64-sample span plus a **32-sample halo per side**, barriers once, and filters
-out of shared memory. The kernels in the bank run 33 to 63 taps, inside the 65 a
+out of shared memory. The kernels in the bank run 21 to 63 taps, inside the 65 a
 32-sample halo allows. `decode` sizes its own halo: the demod slot's 31-sample
 half-width plus the eight samples `chromaCoarse` interpolates across, so 39.
 

@@ -4,6 +4,7 @@ import {
   demodKernel,
   lowpass,
   lowpassPeaked,
+  takeoffBandpass,
   TAPS,
 } from '../core/signal/filters'
 import local from './DecoderDiagram.module.css'
@@ -45,6 +46,7 @@ const LEGEND_Y = PLOT.zero + 28
 const HEIGHT = LEGEND_Y + 6
 const MHZ_MAX = 6
 const POINTS = 241
+const TAKEOFF = takeoffBandpass()
 
 const plotX = (hz: number) =>
   PLOT.left + ((PLOT.right - PLOT.left) * hz) / (MHZ_MAX * 1e6)
@@ -92,14 +94,18 @@ interface Split {
 }
 
 // What the receiver does to a horizontal frequency, end to end from the
-// encoder: the channel's luma section and chroma bandpass (channel.wgsl), the
-// demodulator's lowpass heterodyned to fsc and remodulated (decode.wgsl
-// demodAt and chromaRecon), and luma as the input minus that remodulated
-// chroma. Still detail reaches the chroma path only through the trap; a comb
-// cancels it between lines.
+// encoder: the channel's luma section and chroma bandpass (channel.wgsl), and
+// the demodulator's lowpass heterodyned to fsc (decode.wgsl demodAt). Luma is
+// the input minus chroma (decode.wgsl chromaRecon). The trap subtracts the
+// demodulator's output remodulated onto the subcarrier; a comb subtracts its
+// line difference through the takeoff bandpass, so for colour that holds still
+// down the picture the takeoff alone decides what stays in luma. Still detail
+// reaches the chroma path only through the trap; a comb cancels it between
+// lines.
 function split(
   hz: number,
   demod: Float32Array,
+  takeoff: Float32Array,
   channelLuma: Float32Array,
   channelChroma: Float32Array,
   encoder: Float32Array,
@@ -114,7 +120,9 @@ function split(
   const wh = lattice(hz + FSC, r.step)
   const g: Complex = [lo[0] * wl + hi[0] * wh, lo[1] * wl + hi[1] * wh]
   const k = 1 - 2 * r.bleed
-  const residue = abs([1 - k * g[0], -k * g[1]])
+  const residue = r.trap
+    ? abs([1 - k * g[0], -k * g[1]])
+    : Math.abs(1 - k * response(takeoff, hz)[0])
   const sent =
     Math.abs(response(encoder, hz - FSC)[0] + response(encoder, hz + FSC)[0]) *
     channel
@@ -180,7 +188,7 @@ export function DecoderDiagram() {
       'split',
       TOP_Y,
       'Y/C split',
-      'What feeds the chroma demodulator. The trap passes the composite as it is, so still detail in the colour band decodes as colour. The 2-line and 3-line combs subtract the line above, or the lines above and below, so only what alternates line to line reaches it. Luma is the composite minus the chroma the demodulator recovered, remodulated onto the subcarrier; S-video bleed scales that subtraction down, and past 0.5 adds the chroma back.',
+      'What feeds the chroma demodulator. The trap passes the composite as it is, so still detail in the colour band decodes as colour. The 2-line and 3-line combs subtract the line above, or the lines above and below, so only what alternates line to line reaches it. Luma is the composite minus chroma: on the trap, the chroma the demodulator recovered, remodulated onto the subcarrier; on a comb, its line difference through a 1.5 MHz bandpass about the subcarrier. S-video bleed scales that subtraction down, and past 0.5 adds the chroma back.',
     ),
     box(
       'demod',
@@ -228,7 +236,7 @@ export function DecoderDiagram() {
     const hz = (MHZ_MAX * 1e6 * i) / (POINTS - 1)
     return {
       x: plotX(hz),
-      s: split(hz, demod, channelLuma, channelChroma, encoder, {
+      s: split(hz, demod, TAKEOFF, channelLuma, channelChroma, encoder, {
         step: Math.round(v('chromaCoarse')),
         bleed,
         trap: comb === 0,

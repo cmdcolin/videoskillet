@@ -28,6 +28,7 @@ import {
   SEC_DEMOD,
   SEC_ENC_CHROMA,
   SEC_LUMA,
+  SEC_TAKEOFF,
   SEC_UNDER,
   TAPS,
 } from '../signal/filters'
@@ -596,12 +597,14 @@ const SEC_DEMOD = ${SEC_DEMOD}u;
 const SEC_LUMA = ${SEC_LUMA}u;
 const SEC_CHROMA_BP = ${SEC_CHROMA_BP}u;
 const SEC_UNDER = ${SEC_UNDER}u;
+const SEC_TAKEOFF = ${SEC_TAKEOFF}u;
 const ENC_CHROMA_TAPS = ${TAPS.encChroma}u;
 const DEMOD_TAPS = ${TAPS.demod}u;
 const DEMOD_SHORT_TAPS = ${TAPS.demodShort}u;
 const LUMA_TAPS = ${TAPS.luma}u;
 const CHROMA_BP_TAPS = ${TAPS.chromaBp}u;
 const UNDER_TAPS = ${TAPS.under}u;
+const TAKEOFF_TAPS = ${TAPS.takeoff}u;
 const DOWN_PER_SAMPLE = ${DOWN_PER_SAMPLE}; // (fsc - f_under) / sample_rate
 const PI = 3.14159265359;
 // FIR tiling: each TILE_WG-thread workgroup stages its input span plus a

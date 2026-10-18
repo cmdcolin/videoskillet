@@ -13,6 +13,7 @@ import {
   lowpassPeaked,
   mixTaps,
   packFilterBank,
+  takeoffBandpass,
 } from './filters'
 
 // Evaluate a real FIR's frequency response magnitude at freqHz.
@@ -110,6 +111,17 @@ describe('the bank sections the shader loops fold', () => {
     expect(isSymmetric(lowpassPeaked(2.8e6, 0.8, 2.1e6, TAPS.luma))).toBe(true)
     expect(isSymmetric(bandpass(FSC, 0.6e6, TAPS.chromaBp))).toBe(true)
     expect(isSymmetric(lowpass(1.2e6, TAPS.under))).toBe(true)
+    expect(isSymmetric(takeoffBandpass())).toBe(true)
+  })
+
+  // decode's takeoffAt reads only every second tap either side of the centre.
+  it('leave every odd takeoff tap at zero, as decode skips them', () => {
+    const h = takeoffBandpass()
+    const m = (h.length - 1) / 2
+    for (let k = 1; k <= m; k += 2) {
+      expect(Math.abs(h[m - k]!)).toBeLessThan(1e-9)
+      expect(Math.abs(h[m + k]!)).toBeLessThan(1e-9)
+    }
   })
 
   it('exclude the demod kernel, whose causal tail is asymmetric', () => {
@@ -261,6 +273,107 @@ describe('the stock trap', () => {
   it('leaves the outer chroma sidebands in luma as dot crawl', () => {
     expect(leftInLuma(FSC - 1e6)).toBeGreaterThan(0.6)
     expect(leftInLuma(FSC + 1e6)).toBeGreaterThan(0.6)
+  })
+})
+
+// A comb set subtracts its line difference from the composite through the
+// takeoff bandpass. For colour that holds still down the picture the line
+// difference is the chroma itself, so the takeoff alone decides how much of it
+// stays in luma.
+describe('the comb', () => {
+  const demod = demodKernel(0.6e6, 0)
+  const takeoff = takeoffBandpass()
+  const encoder = lowpass(1.3e6, TAPS.encChroma)
+  const sent = (lumaHz: number) =>
+    Math.abs(at(encoder, lumaHz - FSC)[0] + at(encoder, lumaHz + FSC)[0])
+  const trapResidue = (lumaHz: number) => {
+    const lo = at(demod, lumaHz - FSC)
+    const hi = at(demod, lumaHz + FSC)
+    return sent(lumaHz) * Math.hypot(1 - lo[0] - hi[0], lo[1] + hi[1])
+  }
+  const combResidue = (lumaHz: number) =>
+    sent(lumaHz) * Math.abs(1 - at(takeoff, lumaHz)[0])
+
+  it('leaves less chroma in luma than the trap across the chroma band', () => {
+    for (let off = 0.2e6; off <= 1.3e6; off += 0.1e6) {
+      expect(combResidue(FSC - off)).toBeLessThan(trapResidue(FSC - off))
+      expect(combResidue(FSC + off)).toBeLessThan(trapResidue(FSC + off))
+    }
+    expect(combResidue(FSC - 1e6)).toBeLessThan(0.25)
+    expect(combResidue(FSC + 1e6)).toBeLessThan(0.25)
+  })
+
+  // A line difference also contains luma that changes from line to line. The
+  // takeoff passes little of it below the chroma band, so a comb set keeps
+  // that vertical detail in luma.
+  it('passes little below 1 MHz, so line-to-line luma stays in luma', () => {
+    expect(Math.abs(at(takeoff, 0)[0])).toBeLessThan(0.002)
+    expect(Math.abs(at(takeoff, 0.5e6)[0])).toBeLessThan(0.01)
+    expect(Math.abs(at(takeoff, 1e6)[0])).toBeLessThan(0.06)
+  })
+
+  // One line of 75% colour bars on the 4x fsc lattice, through the encoder's
+  // chroma lowpass, then luma as each receiver forms it: the trap subtracts
+  // the 0.6 MHz demod's output remodulated, the comb subtracts the chroma
+  // through the takeoff.
+  it('pins the luma ripple on colour bars below the trap', () => {
+    const bars: [number, number, number][] = [
+      [0.75, 0.75, 0.75],
+      [0.75, 0.75, 0],
+      [0, 0.75, 0.75],
+      [0, 0.75, 0],
+      [0.75, 0, 0.75],
+      [0.75, 0, 0],
+      [0, 0, 0.75],
+    ]
+    const width = 7 * 112
+    const y = new Float64Array(width)
+    const uRaw = new Float64Array(width)
+    const vRaw = new Float64Array(width)
+    for (let n = 0; n < width; n++) {
+      const [r, g, b] = bars[Math.floor(n / 112)]!
+      y[n] = 0.299 * r + 0.587 * g + 0.114 * b
+      uRaw[n] = 0.492 * (b - y[n]!)
+      vRaw[n] = 0.877 * (r - y[n]!)
+    }
+    const fir = (x: ArrayLike<number>, h: Float32Array) => {
+      const m = (h.length - 1) / 2
+      const out = new Float64Array(x.length)
+      for (let n = 0; n < x.length; n++) {
+        let acc = 0
+        for (let k = 0; k < h.length; k++)
+          acc += h[k]! * x[Math.min(Math.max(n + k - m, 0), x.length - 1)]!
+        out[n] = acc
+      }
+      return out
+    }
+    const sin = (n: number) => [0, 1, 0, -1][n & 3]!
+    const cos = (n: number) => [1, 0, -1, 0][n & 3]!
+    const u = fir(uRaw, encoder)
+    const v = fir(vRaw, encoder)
+    const chroma = Array.from(y, (_, n) => u[n]! * sin(n) + v[n]! * cos(n))
+    const composite = Array.from(y, (yn, n) => yn + chroma[n]!)
+    const uHat = fir(
+      composite.map((c, n) => 2 * c * sin(n)),
+      demod,
+    )
+    const vHat = fir(
+      composite.map((c, n) => 2 * c * cos(n)),
+      demod,
+    )
+    const combChroma = fir(chroma, takeoff)
+    const trapLuma = composite.map(
+      (c, n) => c - uHat[n]! * sin(n) - vHat[n]! * cos(n),
+    )
+    const combLuma = composite.map((c, n) => c - combChroma[n]!)
+    const ripple = (luma: number[]) => {
+      let peak = 0
+      for (let n = 40; n < width - 40; n++)
+        peak = Math.max(peak, Math.abs(luma[n]! - y[n]!))
+      return peak
+    }
+    expect(ripple(trapLuma)).toBeGreaterThan(0.1)
+    expect(ripple(combLuma)).toBeLessThan(0.35 * ripple(trapLuma))
   })
 })
 

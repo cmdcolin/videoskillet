@@ -12,7 +12,9 @@ import {
   SEC_DEMOD,
   SEC_ENC_CHROMA,
   SEC_LUMA,
+  SEC_TAKEOFF,
   SEC_UNDER,
+  takeoffBandpass,
   TAPS,
 } from '../signal/filters'
 
@@ -39,6 +41,7 @@ export function designFilterBank(c: FilterControls): Float32Array<ArrayBuffer> {
       ],
       [SEC_CHROMA_BP, bandpass(FSC, 0.6e6, TAPS.chromaBp)],
       [SEC_UNDER, lowpass(1.2e6, TAPS.under)],
+      [SEC_TAKEOFF, takeoffBandpass()],
     ]),
   )
 }

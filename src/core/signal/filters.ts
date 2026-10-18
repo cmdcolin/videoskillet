@@ -1,7 +1,7 @@
 // Windowed-sinc FIR design. Every filter in the signal path is designed here
 // from real frequency specs and uploaded to the GPU as taps — no ad-hoc blurs.
 
-import { SAMPLE_RATE } from './constants'
+import { FSC, SAMPLE_RATE } from './constants'
 
 // Blackman window: good stopband for short kernels, modest transition width.
 function blackman(k: number, taps: number): number {
@@ -113,6 +113,7 @@ export const TAPS = {
   luma: 49,
   chromaBp: 55,
   under: 55,
+  takeoff: 21,
 }
 
 // A Blackman lowpass passes no band much narrower than its length resolves. At
@@ -136,7 +137,14 @@ export function demodHalfWidth(cutoffHz: number): number {
 // path, so the lowpass after the detectors only decides how fast colour may
 // change.
 const TAKEOFF_HZ = 1.5e6
-const TAKEOFF_TAPS = 21
+
+// The takeoff on the composite, centred on the subcarrier. A comb set makes
+// luma by subtracting its line difference through this bandpass from the
+// composite. Luma that changes from line to line reaches the line difference
+// too, and the bandpass leaves the part of it below the chroma band in luma.
+export function takeoffBandpass(): Float32Array {
+  return bandpass(FSC, TAKEOFF_HZ, TAPS.takeoff)
+}
 
 // The decoder's chroma demod lowpass. At chromaTail 0 it is the symmetric
 // lowpass above. The trail blends in a lagging RC after the detectors: a
@@ -150,8 +158,8 @@ export function demodKernel(cutoffHz: number, tail: number): Float32Array {
   )
   if (tail <= 0) return symmetric
   const trail = convolve(
-    lowpass(Math.max(cutoffHz, TAKEOFF_HZ), TAKEOFF_TAPS),
-    lowpassCausal(cutoffHz, TAPS.demod - TAKEOFF_TAPS + 1),
+    lowpass(Math.max(cutoffHz, TAKEOFF_HZ), TAPS.takeoff),
+    lowpassCausal(cutoffHz, TAPS.demod - TAPS.takeoff + 1),
   )
   return mixTaps(symmetric, trail, tail)
 }
@@ -168,7 +176,8 @@ export const SEC_DEMOD = 1 // decoder chroma demod lowpass
 export const SEC_LUMA = 2 // channel/tape luma bandwidth (with peaking)
 export const SEC_CHROMA_BP = 3 // chroma extraction bandpass at fsc
 export const SEC_UNDER = 4 // color-under lowpass after down-conversion
-export const NUM_SECTIONS = 5
+export const SEC_TAKEOFF = 5 // comb chroma bandpass that luma subtracts
+export const NUM_SECTIONS = 6
 
 export function packFilterBank(
   sections: Map<number, Float32Array>,

@@ -229,6 +229,21 @@ fn demodAt(ti: i32, n0: i32, toff: u32) -> vec2f {
   return vec2f(dot(q, mu), dot(q, mv));
 }
 
+// A comb set's chroma for its luma subtraction: the staged line difference
+// through the takeoff bandpass, at tile index ti. The band is centred on the
+// subcarrier, so at 4x fsc every odd tap is zero and only every second sample
+// either side contributes.
+fn takeoffAt(ti: i32, toff: u32) -> f32 {
+  let m = (TAKEOFF_TAPS - 1u) / 2u;
+  let f0 = SEC_TAKEOFF * FILTER_STRIDE + m;
+  let c = u32(ti) + toff;
+  var acc = filters[f0] * tile[c];
+  for (var j = 2u; j <= m; j = j + 2u) {
+    acc = acc + filters[f0 + j] * (tile[c - j] + tile[c + j]);
+  }
+  return acc;
+}
+
 // Vertical deflection amplitude: the size control, and the same 1/sqrt(EHT)
 // the width breathes by, off the frame's mean sag. Set once at the top of main,
 // since the sweep inversion reads it dozens of times a pixel.
@@ -465,13 +480,21 @@ fn decodeAt(row: u32, ry: u32, hoff: i32, toff: u32, tj: i32, col: i32) -> Decod
   us = us * 2.0 * gif;
   vs = vs * 2.0 * gif;
 
-  let sc0 = carrier(n, P.frame);
-  // S-video miswire: the chroma trap normally subtracts reconstructed chroma to
-  // recover clean luma. Cross-wiring the Y and C pins bleeds the color
-  // subcarrier back into brightness — at 0.5 the trap is defeated (raw
+  // Luma is the composite minus chroma. The trap subtracts the chroma the
+  // demodulator recovered, remodulated onto the subcarrier, so the sidebands
+  // past the demod lowpass stay in luma as dot crawl. A comb subtracts its own
+  // line difference through the takeoff bandpass, which passes most of the
+  // chroma band of colour that holds still down the picture.
+  //
+  // S-video miswire: cross-wiring the Y and C pins bleeds the color
+  // subcarrier back into brightness — at 0.5 the subtraction is defeated (raw
   // composite as luma, dot crawl everywhere), past it the chroma re-adds and
   // the subcarrier crawls as a herringbone while colored detail smears into Y.
-  let chromaRecon = us * sc0.x + vs * sc0.y;
+  let sc0 = carrier(n, P.frame);
+  var chromaRecon = us * sc0.x + vs * sc0.y;
+  if (P.combMode >= 0.5) {
+    chromaRecon = takeoffAt(ti, toff) * gif;
+  }
   let lum = comp[n] * gif - chromaRecon * (1.0 - 2.0 * P.svideoBleed);
 
   // burst lock: hue from burst phase error, gain from burst amplitude (ACC),
