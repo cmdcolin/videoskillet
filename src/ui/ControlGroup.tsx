@@ -40,6 +40,7 @@ import { useModSlotsApi } from './ModSlotsContext'
 import { mutateAmountFor } from './mutate'
 import { PipControl } from './PipControl'
 import { PurityFrame } from './PurityFrame'
+import { RecordingDiagram } from './RecordingDiagram'
 import { rowClaim } from './rollMod'
 import { sameKeySet, sameList } from './sameList'
 import { SCHEMATICS, type SchematicGroup } from './schematicKeys'
@@ -388,6 +389,7 @@ const SCHEMATIC_FRAMES: Record<SchematicGroup, () => ReactElement> = {
   'Character generator (chyron)': ChyronDiagram,
   Captions: CaptionDiagram,
   Decoder: DecoderDiagram,
+  'Recording (luma & FM)': RecordingDiagram,
   Sync: SyncDiagram,
   Deflection: DeflectionDiagram,
   Timebase: TimebaseDiagram,

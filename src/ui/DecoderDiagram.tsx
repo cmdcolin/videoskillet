@@ -1,9 +1,9 @@
+import { lumaKernel } from '../core/gpu/filterbank'
 import { FSC, SAMPLE_RATE } from '../core/signal/constants'
 import {
   bandpass,
   demodKernel,
   lowpass,
-  lowpassPeaked,
   takeoffBandpass,
   TAPS,
 } from '../core/signal/filters'
@@ -207,12 +207,10 @@ export function DecoderDiagram() {
   ]
 
   const demod = demodKernel(v('demodMHz') * 1e6, v('chromaTail'))
-  const channelLuma = lowpassPeaked(
-    v('lumaMHz') * 1e6,
-    v('lumaPeak'),
-    v('lumaMHz') * 0.75e6,
-    TAPS.luma,
-  )
+  const channelLuma = lumaKernel({
+    lumaMHz: v('lumaMHz'),
+    lumaPeak: v('lumaPeak'),
+  })
   const channelChroma = bandpass(FSC, 0.6e6, TAPS.chromaBp)
   const encoder = lowpass(v('encChromaMHz') * 1e6, TAPS.encChroma)
   const at = Array.from({ length: POINTS }, (_, i) => {

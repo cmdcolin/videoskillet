@@ -115,6 +115,15 @@ export const DECODER_OPENS = {
   matrix: ['matrixClip'],
 } as const satisfies Opens
 
+export const RECORDING_OPENS = {
+  emphasis: [],
+  fm: ['fmOverdev', 'fmStreakUs'],
+  filter: ['lumaMHz', 'lumaPeak'],
+  differential: ['diffGain', 'diffPhaseDeg'],
+} as const satisfies Opens
+
+export const RECORDING_KEYS = Object.values(RECORDING_OPENS).flat()
+
 export interface Bends {
   romAddr: ControlKey
   romData: ControlKey
@@ -295,6 +304,11 @@ export const SCHEMATICS = [
   },
   { group: 'Captions', keys: CAPTION_KEYS, opens: CAPTION_OPENS },
   { group: 'Decoder', keys: DECODER_KEYS, opens: DECODER_OPENS },
+  {
+    group: 'Recording (luma & FM)',
+    keys: RECORDING_KEYS,
+    opens: RECORDING_OPENS,
+  },
   { group: 'Sync', keys: SYNC_KEYS, opens: SYNC_OPENS },
   { group: 'Deflection', keys: DEFLECTION_KEYS, opens: DEFLECTION_OPENS },
   { group: 'Timebase', keys: TIMEBASE_KEYS, opens: TIMEBASE_OPENS },

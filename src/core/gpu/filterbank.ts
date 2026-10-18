@@ -25,20 +25,17 @@ export type FilterControls = Pick<
   'encChromaMHz' | 'demodMHz' | 'chromaTail' | 'lumaMHz' | 'lumaPeak'
 >
 
+// The channel's luma section: the bandwidth lowpass, peaked from three quarters
+// of the bandwidth up.
+export const lumaKernel = (c: Pick<Controls, 'lumaMHz' | 'lumaPeak'>) =>
+  lowpassPeaked(c.lumaMHz * 1e6, c.lumaPeak, c.lumaMHz * 0.75e6, TAPS.luma)
+
 export function designFilterBank(c: FilterControls): Float32Array<ArrayBuffer> {
   return packFilterBank(
     new Map([
       [SEC_ENC_CHROMA, lowpass(c.encChromaMHz * 1e6, TAPS.encChroma)],
       [SEC_DEMOD, demodKernel(c.demodMHz * 1e6, c.chromaTail)],
-      [
-        SEC_LUMA,
-        lowpassPeaked(
-          c.lumaMHz * 1e6,
-          c.lumaPeak,
-          c.lumaMHz * 0.75e6,
-          TAPS.luma,
-        ),
-      ],
+      [SEC_LUMA, lumaKernel(c)],
       [SEC_CHROMA_BP, bandpass(FSC, 0.6e6, TAPS.chromaBp)],
       [SEC_UNDER, lowpass(1.2e6, TAPS.under)],
       [SEC_TAKEOFF, takeoffBandpass()],

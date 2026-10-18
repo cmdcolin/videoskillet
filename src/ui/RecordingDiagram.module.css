@@ -1,0 +1,16 @@
+.dot {
+  fill: var(--fg4);
+}
+
+.toTape {
+  fill: none;
+  stroke: var(--fg3);
+  stroke-width: 1;
+  stroke-dasharray: 2 2;
+}
+
+.ceilingHot {
+  stroke: var(--danger);
+  stroke-width: 1;
+  stroke-dasharray: 4 2;
+}
