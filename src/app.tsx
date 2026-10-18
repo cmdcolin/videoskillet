@@ -451,7 +451,13 @@ export function App() {
   )
   // Where a morph in flight is heading, for the undo walk — the engine is asked
   // because it is the only one that knows a morph was cancelled.
-  const getGlideTarget = () => engineRef.current?.glideTarget() ?? null
+  // The compiler rebuilt this closure on every render, and every row verb the
+  // mix hands out closes over it, so it is a hand-written useCallback like
+  // startGlide.
+  const getGlideTarget = useCallback(
+    () => engineRef.current?.glideTarget() ?? null,
+    [engineRef],
+  )
   // Whether a morph is running, and how far along, is deliberately *not* state
   // here. It changes every frame, and this component builds the entire panel —
   // holding it would reconcile ~200 control rows sixty times a second for a
@@ -471,7 +477,10 @@ export function App() {
   // Stop where it stands: the half-way look is a look. Nothing to reset here —
   // the store is the engine's, so the readout goes down when the engine says a
   // morph is over, however it ended.
-  const stopMorph = () => engineRef.current?.stopGlide()
+  const stopMorph = useCallback(
+    () => engineRef.current?.stopGlide(),
+    [engineRef],
+  )
   const [morphStored, setMorphStored] = usePersistedString('videoskillet_morph')
   const morphSeconds = parseMorph(morphStored)
   const mix = useMix({
@@ -485,19 +494,25 @@ export function App() {
     rand: rollRand,
     mod: modApi,
   })
+  // The verbs a row reaches, taken off `mix` and `modApi` by name. A call
+  // written `mix.snapshotForUndo()` keys the closure on `mix`, which is a fresh
+  // object on every write, and a closure that changes on every write takes
+  // every mounted control row with it.
+  const { snapshotForUndo, snapshotBayForUndo, landDrift } = mix
+  const { modFor, setSlotForKey, handOver } = modApi
   // The bay as the panel reaches it, where patching a routing onto a row or
   // handing one back is a step undo can take back.
   const panelModApi: ModSlotsApi = {
     ...modApi,
     setSlotForKey: (key, routing) => {
-      const routed = modApi.modFor(key) !== null
+      const routed = modFor(key) !== null
       const free = modApi.slots.some(s => s.target === '')
-      if (routing === null ? routed : !routed && free) mix.snapshotBayForUndo()
-      modApi.setSlotForKey(key, routing)
+      if (routing === null ? routed : !routed && free) snapshotBayForUndo()
+      setSlotForKey(key, routing)
     },
     handOver: (from, to, routing) => {
-      mix.snapshotBayForUndo()
-      modApi.handOver(from, to, routing)
+      snapshotBayForUndo()
+      handOver(from, to, routing)
     },
   }
 
@@ -524,11 +539,11 @@ export function App() {
     // what a hand reaching for ctrl+z wants back is the look it set drifting,
     // and a second switch flipped ten minutes in would bank a look the mode
     // itself had made.
-    if (drift.scopes.size === 0) mix.snapshotForUndo()
+    if (drift.scopes.size === 0) snapshotForUndo()
     drift.start(
       {
         getSettled: () => getGlideTarget() ?? controlStore.get(),
-        land: mix.landDrift,
+        land: landDrift,
       },
       scope,
     )

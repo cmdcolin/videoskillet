@@ -134,7 +134,21 @@ export function useMix(args: {
     | 'setStab'
   >
 }) {
-  const { controls, getControls, writeControls, morphSeconds, mod } = args
+  // A verb that calls `args.startGlide(…)` passes `args` as `this`, so the
+  // compiler keys the verb on `args`, which the caller builds fresh each
+  // render. Every row verb then changed identity on every write and took every
+  // mounted row with it, so every argument is destructured here.
+  const {
+    controls,
+    getControls,
+    writeControls,
+    startGlide,
+    getGlideTarget,
+    morphSeconds,
+    sourceBOn,
+    rand,
+    mod,
+  } = args
   const [lastPreset, setLastPreset] = useState<string | null>(null)
   const [history, setHistory] = useState<History<Look>>(EMPTY_HISTORY)
   const [mix, setMix] = useState<{ base: Controls; weights: PresetWeights }>(
@@ -188,7 +202,7 @@ export function useMix(args: {
   // read `getControls()` for that, deliberately, because chaining off the tween
   // is the point of a long morph.
   const banked = (): Look => {
-    const settled = args.getGlideTarget() ?? getControls()
+    const settled = getGlideTarget() ?? getControls()
     return {
       controls: settled,
       slots: mod.slots,
@@ -212,7 +226,7 @@ export function useMix(args: {
   // a stack of three presets is not 100% of any of them.
   const land = (next: Controls) => {
     if (morphSeconds <= 0) writeControls(next)
-    else args.startGlide(morphTo(next, morphSeconds))
+    else startGlide(morphTo(next, morphSeconds))
   }
 
   // Bank the look on the board, read now rather than when React gets round to
@@ -362,7 +376,7 @@ export function useMix(args: {
     // it for the same reason a nudge clears it.
     landDrift: (to: Controls, seconds: number) => {
       setGesture({ kind: 'mutate', look: to })
-      args.startGlide(morphTo(to, seconds))
+      startGlide(morphTo(to, seconds))
       setLastPreset(null)
     },
     canUndo: history.past.length > 0,
@@ -441,14 +455,14 @@ export function useMix(args: {
     // button down at 8s and the look wanders continuously through the space
     // between the authored presets, which is where the ones worth keeping are.
     surprise: () => {
-      landRecipe(randomPresetMix(args.sourceBOn, args.rand), null, 'surprise')
+      landRecipe(randomPresetMix(sourceBOn, rand), null, 'surprise')
     },
     // The same landing, one authored preset in it. `lastPreset` is the name
     // rather than null because here it is true: the board *is* that preset, so
     // the chip lights up as its own and the caption says which look you are
     // looking at — which is most of what this roll is for.
     surpriseOne: () => {
-      const next = randomSinglePreset(args.sourceBOn, args.rand, lastPreset)
+      const next = randomSinglePreset(sourceBOn, rand, lastPreset)
       // `preset` rather than `surprise`, and the distinction matters to the one
       // slice the label vocabulary exists for: `surprise` means a look drawn
       // from the same distribution the labelling page samples, and this draws
@@ -459,7 +473,7 @@ export function useMix(args: {
     // Sparse and hard, where `mutateLook` is dense and soft. See `spike`.
     spikeLook: (amount: MutateAmount = 'normal') => {
       apply(
-        spike(getControls(), MUTATE_SLIDERS, SPIKE_TARGETS[amount], args.rand),
+        spike(getControls(), MUTATE_SLIDERS, SPIKE_TARGETS[amount], rand),
         'mutate',
       )
       setLastPreset(null)
@@ -473,22 +487,17 @@ export function useMix(args: {
     // thing — there is no recipe for this look, because it is half of one and
     // half of whatever you had.
     crossLook: () => {
-      const recipe = randomPresetMix(args.sourceBOn, args.rand)
+      const recipe = randomPresetMix(sourceBOn, rand)
       const from = getControls()
       apply(
-        crossover(from, rollControls(recipe, from), MUTATE_CIRCUITS, args.rand),
+        crossover(from, rollControls(recipe, from), MUTATE_CIRCUITS, rand),
         'mutate',
       )
       setLastPreset(null)
     },
     mutateLook: (amount: MutateAmount = 'normal') => {
       apply(
-        mutate(
-          getControls(),
-          MUTATE_SLIDERS,
-          MUTATE_AMOUNTS[amount],
-          args.rand,
-        ),
+        mutate(getControls(), MUTATE_SLIDERS, MUTATE_AMOUNTS[amount], rand),
         'mutate',
       )
       setLastPreset(null)
@@ -520,7 +529,7 @@ export function useMix(args: {
             controls: getControls(),
             audioLive: opts.audioLive === true,
           },
-          args.rand,
+          rand,
         ),
       )
       // The same rule a claim from a control row's ⋮ follows, and this button
@@ -581,7 +590,7 @@ export function useMix(args: {
       amount: MutateAmount = 'normal',
     ) => {
       apply(
-        mutate(getControls(), sliders, MUTATE_AMOUNTS[amount], args.rand, 1),
+        mutate(getControls(), sliders, MUTATE_AMOUNTS[amount], rand, 1),
         'mutate',
       )
       setLastPreset(null)
