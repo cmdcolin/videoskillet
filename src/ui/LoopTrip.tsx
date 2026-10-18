@@ -1,7 +1,8 @@
+import { cameraLapReading, cameraLoopOf } from './cameraLap'
 import { CAMERA_LOOP_GROUP, MIXER_LOOP_GROUP } from './controls'
 import { useControlReading } from './ControlsContext'
 import { mixerLoopOf, peakLapGain } from './loopGain'
-import { loopTripSays, mixerLoopSays } from './loopReading'
+import { cameraLoopSays, mixerLoopSays } from './loopReading'
 import styles from './LoopTrip.module.css'
 
 import type { ControlKey } from '../core/controls'
@@ -27,21 +28,34 @@ export function LoopTrip({ group }: { group: string }) {
   const trip = useControlReading(c =>
     loop === undefined ? 0 : c[loop.mix] * c[loop.gain],
   )
-  // Read unconditionally — a hook cannot be skipped, and the mixer loop has no
-  // transport to escape a runaway through, so its reading ignores this.
+  // Read unconditionally — a hook cannot be skipped.
   const camZoom = useControlReading(c => c.fbZoom)
   const mixer = group === MIXER_LOOP_GROUP
   // The peak as one string, so a write that does not move it does not redraw.
   const peak = useControlReading(c => {
-    if (!mixer || c.cfbMix === 0) return ''
-    const p = peakLapGain(mixerLoopOf(c))
-    return `${p.gain}|${p.mhz}`
+    if (loop === undefined) return ''
+    if (mixer) {
+      if (c.cfbMix === 0) return ''
+      const p = peakLapGain(mixerLoopOf(c))
+      return `${p.gain}|${p.mhz}`
+    }
+    if (c.fbMix === 0) return ''
+    const p = cameraLapReading(cameraLoopOf(c))
+    return `${p.gain}|${p.level}|${p.settle ?? ''}`
   })
   if (loop === undefined || trip === 0) return null
-  const [gain, mhz] = peak.split('|').map(Number)
+  const [a, b, settle] = peak.split('|')
   const says = mixer
-    ? mixerLoopSays(trip, { gain: gain!, mhz: mhz! })
-    : loopTripSays(trip, group === CAMERA_LOOP_GROUP ? camZoom : undefined)
+    ? mixerLoopSays(trip, { gain: Number(a), mhz: Number(b) })
+    : cameraLoopSays(
+        trip,
+        {
+          gain: Number(a),
+          level: Number(b),
+          settle: settle ? Number(settle) : null,
+        },
+        camZoom,
+      )
   return (
     <div
       className={styles.trip}

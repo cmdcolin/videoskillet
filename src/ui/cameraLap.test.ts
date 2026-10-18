@@ -4,6 +4,7 @@ import { DEFAULT_CONTROLS } from '../core/controls'
 import {
   cameraLap,
   cameraLapGains,
+  cameraLapReading,
   cameraLoopOf,
   type CameraLoop,
 } from './cameraLap'
@@ -53,5 +54,28 @@ describe('camera loop gain per lap', () => {
     const [g] = cameraLapGains(stock, [0.5])
     expect(g).toBeGreaterThan(0.95)
     expect(g).toBeLessThan(1)
+  })
+
+  it('settles a loop above unity where the shoulder brings it back to 1', () => {
+    const building = { ...cameraLoopOf(DEFAULT_CONTROLS), mix: 0.8, gain: 1.6 }
+    const read = cameraLapReading(building)
+    expect(read.gain).toBeGreaterThan(1.2)
+    expect(read.settle).toBeGreaterThan(0.65)
+    expect(read.settle).toBeLessThan(0.9)
+    expect(cameraLap(building, read.settle!) / read.settle!).toBeCloseTo(1, 2)
+  })
+
+  it('finds no settling level for a hard clip with the fader full up', () => {
+    expect(cameraLapReading({ ...bare, mix: 1, gain: 1.5 }).settle).toBeNull()
+  })
+
+  it('reads the gamma-heavy look as under unity everywhere', () => {
+    const steep = {
+      ...cameraLoopOf(DEFAULT_CONTROLS),
+      mix: 0.8,
+      gain: 1.5,
+      gamma: 1.6,
+    }
+    expect(cameraLapReading(steep).gain).toBeLessThan(1)
   })
 })

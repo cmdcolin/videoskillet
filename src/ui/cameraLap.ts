@@ -78,3 +78,30 @@ export const cameraLapGains = (loop: CameraLoop, levels: readonly number[]) =>
 // gain is a division by zero.
 export const greyLevels = (points: number) =>
   Array.from({ length: points }, (_, i) => (i + 1) / points)
+
+const READ_POINTS = 240
+
+// The highest lap gain at any level and where it is, and the level a loop above
+// unity settles at: the brightest place the gain falls back through 1, where a
+// level that has grown stops growing. None when the gain never falls back
+// through 1, which is a loop that walks to white.
+export function cameraLapReading(loop: CameraLoop) {
+  const levels = greyLevels(READ_POINTS)
+  const gains = cameraLapGains(loop, levels)
+  let at = 0
+  gains.forEach((g, i) => {
+    if (g > gains[at]!) at = i
+  })
+  let settle: number | null = null
+  for (let i = gains.length - 1; i > 0 && settle === null; i--) {
+    const above = gains[i - 1]!
+    const below = gains[i]!
+    if (above >= 1 && below < 1) {
+      const step = levels[i]! - levels[i - 1]!
+      settle = levels[i - 1]! + (step * (above - 1)) / (above - below)
+    }
+  }
+  return { gain: gains[at]!, level: levels[at]!, settle }
+}
+
+export type CameraLapReading = ReturnType<typeof cameraLapReading>
