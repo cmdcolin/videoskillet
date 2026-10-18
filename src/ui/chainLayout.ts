@@ -47,13 +47,8 @@ import type { Point } from './wire'
 // the units are px at the sidebar's width, so the labels come out at the size
 // they say.
 export const W = 304
-// The band above the trunk holds the loops, and it grew from 18 units to 36 so
-// each of them can carry its own name. Two unlabelled runs 8 apart said there
-// were two loops and nothing about which; a hover said the rest, which is an
-// answer you have to already suspect the question of. The whole map costs 18
-// more units of sidebar — about 18 screen px at the panel's width — and it is
-// the same 18 that let the third loop in, so the miniature stops disagreeing
-// with the full diagram about how many there are.
+// The band above the trunk holds the loops, 44 units deep so each run carries
+// a chip with its name at a size that reads beside the boxes.
 //
 // Under the branches is the free row, which left the drawing for a while and is
 // back — see FREE_Y. It went out to buy the trunk and branch rows a hittable
@@ -61,7 +56,7 @@ export const W = 304
 // row of html chips it became cost the panel about as much height as the row
 // costs the svg, while being the one thing in the map's own picture set to the
 // panel's type rather than the map's. One drawing, one scale.
-export const H = 138
+export const H = 146
 // Gap between boxes — the run each wire has to cross — and how far one opens
 // when a filter leaves the row with room to spare.
 export const GAP = 10
@@ -70,20 +65,19 @@ export const GAP_MAX = 26
 // fed and something delivered rather than a row of stages that begins nowhere.
 export const LEAD = 8
 export const OUT = 10
-export const MID_Y = 49
+export const MID_Y = 57
 // The branch row, under the trunk: input B at its head and the sound under the
 // receiver, both joining from below.
-export const BRANCH_Y = 87
+export const BRANCH_Y = 95
 // The free row, under the branches: the boxes nothing is wired to. Same 34
 // units below its neighbour that the branch row sits below the trunk, so the
 // three rows are one rhythm and the gap under the last wire is not read as the
 // drawing having ended. Nothing is drawn to these boxes and nothing needs to
 // be: on a row of their own with no wire on it, the emptiness is the row.
-export const FREE_Y = 121
+export const FREE_Y = 129
 // 26 units, which is 28px at the sidebar's 332: a 24px target with room for a
-// 10px name over an 8px caption. MID_Y moves by half of any growth, so
-// `MID_Y - BOX_H / 2` stays 36 and the runs above the chain still ride at 7 and
-// 18. BRANCH_Y and FREE_Y move with it to keep the rows 12 units apart.
+// 10px name over an 8px caption. The trunk's top edge sits at 44, under the
+// runs at 9 and 27; MID_Y, BRANCH_Y and FREE_Y move together to keep that.
 export const BOX_H = 26
 // Half-width of a wire's arrowhead.
 export const HEAD = 2.5
@@ -103,38 +97,20 @@ const PAD = 8
 // A short label still needs to read as a box rather than a dot on the wire.
 const MIN_BOX = 20
 
-// The same estimate for a run's label, which is a different number because it
-// is different type: 7.5px and lowercase against the boxes' 10px uppercase (see
-// .mapLoopLabel and .mapLabel).
-//
-// A flat average per character will not do here, where CHAR gets away with one.
-// A box is *sized* from its estimate, so being 20% over on one name only buys
-// that box padding; a run's label is sized by nothing and measured against a
-// gap it has to fit in, so the same 20% is the difference between a label that
-// clears the drop of the run above it and one written across that wire. Measured
-// in Firefox, the labels run 3.78 to 4.51 units a character, and the whole of
-// that spread is one letter: 'm' is about twice the width of the average glyph
-// and 'camera' is a sixth m.
-//
-// So count those two twice and the spread closes to 3.47-4.08, which 4.15
-// clears by the margin CHAR keeps over its own measurement. Still deliberately
-// over rather than under: an over-estimate spends clearance a label did not
-// need, an under-estimate writes it across a wire.
-const RUN_CHAR = 4.15
-const WIDE = /[mw]/g
-// Exported for the test that holds a label clear of the wires over it: it has
-// to measure what the layout measured, or it is checking a second estimate.
-export const runLabelWidth = (s: string) =>
-  (s.length + (s.toLowerCase().match(WIDE)?.length ?? 0)) * RUN_CHAR
+// A run's label is set in the boxes' type (.mapLoopLabel matches .mapLabel), so
+// it takes the boxes' estimate. Exported for the test that holds a label clear
+// of the wires over it: it has to measure what the layout measured, or it is
+// checking a second estimate.
+export const runLabelWidth = (s: string) => s.length * CHAR
 
 // The chip a run's name rides, which is the whole of the run's own box: a loop
 // has no place on the trunk to stand one, so this is what makes it look like
 // the door it is rather than a word laid over a hairline. Padding either side
 // of the name, as PAD is to a box's, and a height that is what the band can
-// spare — the runs ride 11 apart, so two chips on neighbouring bands meet edge
-// to edge at 11 and would overlap at anything more.
-export const RUN_PAD = 7
-export const RUN_H = 11
+// spare — the runs ride 18 apart, so two chips on neighbouring bands keep a
+// 2-unit gap.
+export const RUN_PAD = 10
+export const RUN_H = 16
 export const runChipWidth = (s: string) => runLabelWidth(s) + RUN_PAD
 
 // Boxes are sized to what they say rather than to an equal share of the width.
@@ -239,7 +215,7 @@ const RETURNS: readonly ReturnSpec[] = [
     loop: 'camera',
     stage: CAMERA_LOOP_STAGE,
     optical: true,
-    y: 7,
+    y: 9,
     turn: 4,
     self: false,
   },
@@ -249,7 +225,7 @@ const RETURNS: readonly ReturnSpec[] = [
     loop: 'mixer',
     stage: MIXER_LOOP_STAGE,
     optical: false,
-    y: 18,
+    y: 27,
     turn: 4,
     self: false,
   },
@@ -518,12 +494,13 @@ export function chainLayout(names: string[], specs: WiredBranch[] = []) {
     // squeezed row has left no room there — and `room` below takes the first
     // that holds the name.
     const edge = boxes[back]!.x + boxes[back]!.w / 2
+    const clear = RUN_PAD / 2 + 1.5
     const places = r.self
       ? [
-          { x: Math.min(from, to) - 4, anchor: 'end' as const },
-          { x: Math.max(from, to) + 4, anchor: 'start' as const },
+          { x: Math.min(from, to) - clear, anchor: 'end' as const },
+          { x: Math.max(from, to) + clear, anchor: 'start' as const },
         ]
-      : [{ x: edge + 5, anchor: 'start' as const }]
+      : [{ x: edge + clear, anchor: 'start' as const }]
     return [{ ...r, from, to, places }]
   })
   // How much clear width a label has where it wants to sit, and so which of the
@@ -543,10 +520,10 @@ export function chainLayout(names: string[], specs: WiredBranch[] = []) {
   // fallback below is what picks.
   //
   // What the clearance does and does not buy, wherever it is measured. `want`
-  // is the estimate (RUN_CHAR), not the rendered text, so a platform whose
+  // is the estimate (CHAR), not the rendered text, so a platform whose
   // system font runs wider than the estimate does not trip this and move a
   // label — it overflows into the drop. The margin is against the *layout*
-  // being wrong, not the metrics; widening RUN_CHAR is what guards those.
+  // being wrong, not the metrics; widening CHAR is what guards those.
   const room = (r: (typeof drawn)[number], spot: (typeof r.places)[number]) => {
     const drops = drawn.filter(o => o.y < r.y).flatMap(o => [o.from, o.to])
     if (spot.anchor === 'end')
@@ -572,7 +549,7 @@ export function chainLayout(names: string[], specs: WiredBranch[] = []) {
     // The chip is the whole of where the name goes: it takes the spot the name
     // was offered, padded, and the word is then centred *in the chip* rather
     // than set against the spot itself. That last part is not a detail. The
-    // width here is the estimate (RUN_CHAR), which is deliberately over — so a
+    // width here is the estimate (CHAR), which is deliberately over — so a
     // name anchored to one edge sits as far off centre as the estimate is
     // generous, which on 'mixer' was two units in a thirty-two unit chip and
     // read as a word that had slipped. Centred, the same slack falls evenly on

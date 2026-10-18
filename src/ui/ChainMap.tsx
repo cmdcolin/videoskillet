@@ -260,7 +260,7 @@ export function ChainMap(props: {
               y={r.y - RUN_H / 2}
               width={r.chip.w}
               height={RUN_H}
-              rx={RUN_H / 2}
+              rx={3}
             />
             <text
               className={styles.mapLoopLabel}

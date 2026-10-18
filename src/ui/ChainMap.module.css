@@ -129,34 +129,26 @@
   stroke: transparent;
   stroke-width: 8;
 }
-/* A run's own name, on the chip below. Lowercase at 7.5px against the boxes'
-   uppercase 10px, because a wire and a stage are not the same kind of thing and
-   the map has no room to say so twice.
+/* A run's own name, on the chip below, set like a box's name.
 
    It does *not* take the run's colour, which is the one thing here that is not
    currentColor. An idle run is --border, and theme.css draws the line at --fg4:
-   anything dimmer is decoration. A name is not decoration — it is the whole
-   reason the band grew — so it sits at --fg3, one step under the stage names so
-   a wire still reads as subordinate to a box. The two states that mean
-   something do follow the run, and they are spelled out below because the fill
-   above stops them arriving on their own. */
+   anything dimmer is decoration. A name is not decoration, so it sits at --fg3,
+   one step under the stage names so a wire still reads as subordinate to a
+   box. The two states that mean something do follow the run, and they are
+   spelled out below because the fill above stops them arriving on their own. */
 .mapLoopLabel {
   fill: var(--fg3);
-  font-size: 7.5px;
+  font-size: 10px;
   letter-spacing: 0.02em;
-  /* The runs carry the same names the panel does, set down a register: the
-     boxes are the chain and shout, the loops are patched over it and murmur.
-     Cased here rather than in the loop table for the reason the boxes are
-     upper-cased here — one spelling, and the drawing decides how it is set. */
-  text-transform: lowercase;
+  text-transform: uppercase;
   user-select: none;
 }
 /* The chip that name rides — the run's own box, and the only one a loop gets:
    none of them is a stage of the trunk, so there is no point on the wire to
    stand one. Drawn like every box here (see .mapBox) because it is the same
-   kind of thing to press, and rounded to its full height because what it is on
-   is a machine patched *across* the chain rather than a stage standing in it.
-   Its edge follows the run, so a chip lights with the loop it names.
+   kind of thing to press. Its edge follows the run, so a chip lights with the
+   loop it names.
 
    Its fill also does what the label used to do for itself: the name carried a
    stroke of the panel colour, painted first, to knock the wire out around the
