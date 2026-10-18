@@ -11,6 +11,8 @@ import {
   Wire,
   type WireLook,
 } from './DiagramParts'
+import { loopSlice } from './hueKey'
+import { HueWheel, LevelBar } from './HueWheel'
 import { BAND_MHZ, bandMHz, lapGains, type MixerLoop } from './loopGain'
 import own from './MixerLoopDiagram.module.css'
 import { MIXER_LOOP_KEYS, MIXER_LOOP_OPENS as OPENS } from './schematicKeys'
@@ -33,10 +35,14 @@ const ROW = {
   store: { x: 296, w: 43 },
 }
 
-const PLOT = { left: 22, right: 334, top: 92, bottom: 148 }
+const PLOT = { left: 22, right: 236, top: 84, bottom: 128 }
 const HEIGHT = PLOT.bottom + 14
+const SLICE_X = 298
+const WHEEL = { cx: SLICE_X, cy: 108, radius: 30 }
 const GAIN_TOP = 2
 const FSC_MHZ = FSC / 1e6
+const MHZ_TICKS = [0, 2, 4, BAND_MHZ]
+const RIM = 0.7
 const POINTS = 121
 const CURVE_MHZ = bandMHz(POINTS)
 
@@ -59,7 +65,8 @@ const trace = (gains: readonly number[]) =>
 // came out and reads it back late, and the return runs back along the bottom
 // through the Y/C split, the resonance and the ring modulator into the fader,
 // which the keyer gates. Under the loop, what one lap hands back at each
-// frequency.
+// frequency, and beside it the slice the keyer lets round, drawn on the U/V
+// plane for a hue key and on the luma scale for a level key.
 export function MixerLoopDiagram() {
   const r = useReadings(MIXER_LOOP_KEYS)
   const pick = useSelectedBox()
@@ -77,7 +84,10 @@ export function MixerLoopDiagram() {
   const gains = lapGains(loop, CURVE_MHZ)
   const peak = Math.max(...gains)
   const look: WireLook = off ? 'dash' : peak > 1 ? 'alarm' : 'on'
-  const keyLook: WireLook = v('cfbKey') !== 0 && !off ? 'on' : 'dash'
+  const key = v('cfbKey')
+  const keyOn = key !== 0 && !off
+  const keyLook: WireLook = keyOn ? 'on' : 'dash'
+  const byHue = v('cfbKeyAcceptDeg') > 0
   const curve = trace(gains)
   // With the fader down, the lap at its full travel, where mix is 1.
   const upGains = off ? lapGains({ ...loop, mix: 1 }, CURVE_MHZ) : null
@@ -235,7 +245,7 @@ export function MixerLoopDiagram() {
             <Label x={plotX(FSC_MHZ)} y={PLOT.top - 8} anchor="middle">
               fsc
             </Label>
-            {Array.from({ length: BAND_MHZ + 1 }, (_, n) => (
+            {MHZ_TICKS.map(n => (
               <Label
                 key={n}
                 x={plotX(n)}
@@ -278,6 +288,36 @@ export function MixerLoopDiagram() {
               className={styles.curveAlarm}
               clipPath={`url(#${clip})`}
             />
+
+            <Label x={SLICE_X} y={WHEEL.cy - WHEEL.radius - 6} anchor="middle">
+              {byHue ? 'keyed by hue' : 'keyed by level'}
+            </Label>
+            {byHue ? (
+              <HueWheel
+                {...WHEEL}
+                rim={RIM}
+                slice={loopSlice({
+                  cfbKeyHueDeg: v('cfbKeyHueDeg'),
+                  cfbKeyAcceptDeg: v('cfbKeyAcceptDeg'),
+                  cfbKeySoft: v('cfbKeySoft'),
+                })}
+                invert={key < 0}
+                on={keyOn}
+                strength={Math.min(Math.abs(key), 1)}
+                names={false}
+              />
+            ) : (
+              <LevelBar
+                x={SLICE_X - 5}
+                top={PLOT.top}
+                bottom={PLOT.bottom}
+                level={v('cfbKeyLevel')}
+                soft={v('cfbKeySoft')}
+                invert={key < 0}
+                on={keyOn}
+                strength={Math.min(Math.abs(key), 1)}
+              />
+            )}
           </>
         )}
       </Diagram>

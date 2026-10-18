@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import { IRE_VIDEO_RANGE } from '../core/signal/constants'
 import {
   BARS,
   loopSlice,
@@ -105,7 +106,7 @@ describe('hue key slice', () => {
       cfbKeySoft: 10,
     })
     expect(s.edge).toBeCloseTo(0.1 * Math.PI, 9)
-    expect(satGate(s, 3)).toBe(0)
-    expect(satGate(s, 6)).toBe(1)
+    expect(satGate(s, 3 / IRE_VIDEO_RANGE)).toBe(0)
+    expect(satGate(s, 6 / IRE_VIDEO_RANGE)).toBe(1)
   })
 })

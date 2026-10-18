@@ -1,3 +1,5 @@
+import { IRE_VIDEO_RANGE } from '../core/signal/constants'
+
 import type { Controls } from '../core/controls'
 
 // A hue keyer's slice of the U/V plane, as the two chroma keyers in the shaders
@@ -44,11 +46,12 @@ export function mixerSlice(
   }
 }
 
-const LOOP_KEY_CLIP = 3
+const LOOP_KEY_CLIP = 3 / IRE_VIDEO_RANGE
 
 // fb_composite.wgsl keyGate's hue branch: the softness is IRE of a 100 IRE
 // slice, read as the same fraction of π, and the clip is fixed at 3 IRE of
-// demodulated chroma on the bus.
+// demodulated chroma on the bus, which the slice holds in the encoder's chroma
+// units so it shares a wheel with the bars.
 export function loopSlice(
   c: Pick<Controls, 'cfbKeyHueDeg' | 'cfbKeyAcceptDeg' | 'cfbKeySoft'>,
 ): HueSlice {

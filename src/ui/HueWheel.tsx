@@ -4,6 +4,7 @@ import {
   BARS,
   BURST_ANGLE,
   sliceContour,
+  unsmooth,
   type HueSlice,
   type PolarPoint,
 } from './hueKey'
@@ -27,6 +28,7 @@ export function HueWheel({
   on,
   strength,
   dot,
+  names = true,
 }: {
   cx: number
   cy: number
@@ -40,6 +42,8 @@ export function HueWheel({
   /** How much of the slice acts, 0 to 1. */
   strength?: number
   dot?: PolarPoint & { label: string }
+  /** Names the bars and the burst, which a small wheel has no room for. */
+  names?: boolean
 }) {
   const k = radius / rim
   const point = (angle: number, r: number) => {
@@ -128,9 +132,11 @@ export function HueWheel({
         return (
           <g key={b.name}>
             <circle cx={x} cy={y} r={1.6} className={own.bar} />
-            <Label x={at.x} y={at.y} anchor={at.anchor}>
-              {b.name}
-            </Label>
+            {names && (
+              <Label x={at.x} y={at.y} anchor={at.anchor}>
+                {b.name}
+              </Label>
+            )}
           </g>
         )
       })}
@@ -141,9 +147,11 @@ export function HueWheel({
         y2={cy}
         className={own.tick}
       />
-      <Label x={burst.x - 2} y={burst.y} anchor="end">
-        burst
-      </Label>
+      {names && (
+        <Label x={burst.x - 2} y={burst.y} anchor="end">
+          burst
+        </Label>
+      )}
       {dotAt && dot && (
         <>
           <circle cx={dotAt[0]} cy={dotAt[1]} r={3} className={own.dot} />
@@ -152,6 +160,78 @@ export function HueWheel({
           </Label>
         </>
       )}
+    </>
+  )
+}
+
+// A luma keyer's slice on a 0-100 IRE scale, shaded the same way as the wheel:
+// fb_composite.wgsl keyGate's level branch rises from level − soft to
+// level + soft, so the slice is everything above it, or below it inverted.
+export function LevelBar({
+  x,
+  top,
+  bottom,
+  level,
+  soft,
+  invert,
+  on,
+  strength,
+}: {
+  x: number
+  top: number
+  bottom: number
+  level: number
+  soft: number
+  invert?: boolean
+  on: boolean
+  strength?: number
+}) {
+  const w = 10
+  const y = (ire: number) =>
+    bottom - ((bottom - top) * Math.min(Math.max(ire, 0), 100)) / 100
+  const reach = (lv: number) => level - soft + 2 * soft * unsmooth(lv)
+  const band = (lv: number) => {
+    const edge = y(invert ? reach(1 - lv) : reach(lv))
+    return invert
+      ? { y: edge, height: bottom - edge }
+      : { y: top, height: edge - top }
+  }
+  return (
+    <>
+      <rect
+        x={x}
+        y={top}
+        width={w}
+        height={bottom - top}
+        className={own.face}
+      />
+      <g opacity={on ? 0.35 + 0.65 * (strength ?? 1) : 1}>
+        {LEVELS.map(lv => (
+          <rect
+            key={lv}
+            x={x}
+            width={w}
+            {...band(lv)}
+            className={on ? own.band : own.bandOff}
+          />
+        ))}
+      </g>
+      <line
+        x1={x - 3}
+        x2={x + w + 3}
+        y1={y(level)}
+        y2={y(level)}
+        className={on ? own.hueOn : own.hue}
+      />
+      <Label x={x - 4} y={top + 3} anchor="end">
+        100
+      </Label>
+      <Label x={x - 4} y={bottom + 3} anchor="end">
+        0
+      </Label>
+      <Label x={x + w + 5} y={y(level) + 3}>
+        {String(Math.round(level))}
+      </Label>
     </>
   )
 }
