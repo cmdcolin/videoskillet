@@ -81,8 +81,9 @@ const BUS_MID = 40.0;
 
 // Below this much chroma amplitude there is no phase to slice: a demodulator
 // handed an unsaturated sample reports an essentially arbitrary angle, and a
-// loop keyed on that would flicker its own territory out of noise. 3 IRE
-// against a saturated primary's ~30 on this bus.
+// loop keyed on that would flicker its own territory out of noise. A bar's
+// chroma on this bus runs from 31 IRE for 75% yellow to 58 for full red, so
+// the 3 IRE clip sits under a tenth of the weakest bar.
 const KEY_CLIP = 3.0;
 
 fn keyGate(tap: KeyTap) -> f32 {
