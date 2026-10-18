@@ -1,8 +1,9 @@
-import { useId, type ReactNode } from 'react'
+import { Fragment, useId, type ReactNode } from 'react'
 
-import { ControlRows } from './ControlGroup'
-import { sliderFor } from './controls'
-import { boxHeight, LINE_H, type BoxSpec } from './diagram'
+import { ControlSlider } from './ControlGroup'
+import { NEEDS, sliderFor, type SliderNeed } from './controls'
+import { useControlReading, useControlsApi } from './ControlsContext'
+import { boxFold, boxHeight, LINE_H, type BoxSpec } from './diagram'
 import styles from './Diagram.module.css'
 
 import type { ControlKey } from '../core/controls'
@@ -239,8 +240,12 @@ export function Diagram({
 }
 // CROSS_REPO_SYNC_END(diagram-parts)
 
+const NEED_OF = new Map<string, SliderNeed | undefined>(Object.entries(NEEDS))
+
 // The rows of the box that is open: the same rows the panel draws anywhere
-// else, so a drag, a reset and a mod wire all work from here.
+// else, so a drag, a reset and a mod wire all work from here. Rows behind a shut
+// gate fold into one line that opens it, drawn under the gate's own row when the
+// box has it.
 export function BoxRows({
   keys,
   note,
@@ -248,11 +253,45 @@ export function BoxRows({
   keys: readonly ControlKey[] | undefined
   note?: string
 }) {
+  const fold = useControlReading(c => boxFold(keys ?? [], c)).split(',')
   if (!keys) return null
+  const shown = keys.filter((_, i) => fold[i] === '')
+  const folds = new Map<SliderNeed, number>()
+  for (const owner of fold) {
+    const need = NEED_OF.get(owner)
+    if (need) folds.set(need, (folds.get(need) ?? 0) + 1)
+  }
+  const under = (key: ControlKey | undefined) =>
+    [...folds]
+      .filter(([need]) =>
+        key === undefined ? !shown.includes(need.key) : need.key === key,
+      )
+      .map(([need, n]) => <FoldLine key={need.hint} need={need} n={n} />)
   return (
     <div className={styles.rows}>
       {note && <p className={styles.noteLine}>{note}</p>}
-      <ControlRows sliders={keys.map(sliderFor)} />
+      {under(undefined)}
+      {shown.map(key => (
+        <Fragment key={key}>
+          <ControlSlider slider={sliderFor(key)} />
+          {under(key)}
+        </Fragment>
+      ))}
     </div>
+  )
+}
+
+function FoldLine({ need, n }: { need: SliderNeed; n: number }) {
+  const { writeControl } = useControlsApi()
+  const gate = sliderFor(need.key)
+  return (
+    <button
+      className={styles.fold}
+      title={`click to set "${gate.label}" to ${need.fix}${gate.unit}`}
+      onClick={() => writeControl(need.key, need.fix)}
+    >
+      {n === 1 ? '1 more control needs' : `${n} more controls need`} {need.hint}{' '}
+      · click to set
+    </button>
   )
 }

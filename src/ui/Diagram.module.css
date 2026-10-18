@@ -91,6 +91,10 @@
   border-top: 1px solid var(--border-quiet);
 }
 
+.fold {
+  composes: groupNeeds from './ControlGroup.module.css';
+}
+
 .noteLine {
   margin: var(--space-2xs) 0;
   font-size: var(--fs-xs);

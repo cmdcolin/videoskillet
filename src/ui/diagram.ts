@@ -1,11 +1,11 @@
 import { useState } from 'react'
 
 import { atRest } from '../core/controls'
-import { sliderFor } from './controls'
+import { NEEDS, sliderFor } from './controls'
 import { useControlReading } from './ControlsContext'
 import { readingOf } from './format'
 
-import type { ControlKey } from '../core/controls'
+import type { ControlKey, Controls } from '../core/controls'
 
 // CROSS_REPO_SYNC(diagram-boxes)
 export const LINE_H = 13
@@ -64,3 +64,18 @@ export function useReadings<K extends ControlKey>(keys: readonly K[]) {
     touched: (...ks: K[]) => ks.some(k => !atRest(value(k), k)),
   }
 }
+
+// The row whose need is the outermost shut gate on a key's chain of needs, or
+// undefined when every gate up the chain is open. Opening a nearer gate leaves
+// the key inert, so BoxRows names the outermost one.
+export function shutBy(key: ControlKey, c: Controls): ControlKey | undefined {
+  let owner: ControlKey | undefined
+  for (let k = key, need = NEEDS[k]; need; k = need.key, need = NEEDS[k])
+    if (!need.ok(c[need.key])) owner = k
+  return owner
+}
+
+// An open box's rows, each either '' to draw it or the key `shutBy` names. A
+// row moved off its default always draws, so no setting goes out of sight.
+export const boxFold = (keys: readonly ControlKey[], c: Controls) =>
+  keys.map(k => (atRest(c[k], k) ? (shutBy(k, c) ?? '') : '')).join(',')
