@@ -112,6 +112,8 @@ fn main(@builtin(local_invocation_id) lid: vec3u) {
   if (ablHeld < 0.05) {
     ablHeld = 1.0;
   }
+  // Last frame's DC restorer offset, which sets the level the guns cut off at.
+  let blackHeld = timing[BLACK_SHIFT];
   var pll = timing[PLL_STATE];
   var lockAge = timing[LOCK_AGE];
   var agc = timing[AGC_GAIN];
@@ -140,11 +142,13 @@ fn main(@builtin(local_invocation_id) lid: vec3u) {
         var r = i32(ry) + roll;
         r = select(r, r + i32(NLINES), r < 0);
         r = select(r, r - i32(NLINES), r >= i32(NLINES));
-        // beam current plus whatever audio is patched in: the tank cannot tell
-        // them apart, so a bass transient rings the geometry exactly like a
-        // bright band does
-        let load = (measure[u32(r) * 2u].z * ablHeld - 50.0) / 50.0
-          + P.audioLoad * audio[ry];
+        // The load is the beam current, which the guns draw only above
+        // cutoff. A black or blanked line draws none and leaves the scan where
+        // it was set, and a white line at full drive loads the tank by 1.
+        // Patched-in audio adds to it, and the tank cannot tell the two apart,
+        // so a bass transient rings the geometry exactly like a bright band.
+        let beam = max(measure[u32(r) * 2u].z - IRE_BLACK - blackHeld, 0.0) / VIDEO_RANGE;
+        let load = beam * ablHeld + P.audioLoad * audio[ry];
         vel = vel + w * (load - sag) - damp * vel;
         // the core saturates instead of hitting a stop, so the velocity never
         // winds up against a clamp

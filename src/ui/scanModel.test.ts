@@ -12,6 +12,7 @@ import {
   lineShifts,
   vLocks,
   vRateOf,
+  WHITE_BAR,
 } from './scanModel'
 
 const STOCK_HOLD = {
@@ -36,10 +37,18 @@ describe('deflection', () => {
     expect(leftEdges(stock).every(v => v === 0)).toBe(true)
   })
 
-  it('pulls the white bar and its black surround apart', () => {
+  it('pulls the white bar and leaves the black above it where it was set', () => {
     const edges = leftEdges({ ...stock, hvSagUs: 25, hvRing: 0 })
     expect(edges[240]).toBeLessThan(-20)
-    expect(edges[60]).toBeGreaterThan(15)
+    expect(Math.abs(edges[60]!)).toBeLessThan(0.5)
+    expect(Math.abs(edges[470]!)).toBeLessThan(0.5)
+  })
+
+  it('rings past where it was set below the bar when wound up', () => {
+    const below = leftEdges({ ...stock, hvSagUs: 25, hvRing: 0.9 }).slice(
+      WHITE_BAR[1],
+    )
+    expect(Math.max(...below)).toBeGreaterThan(2)
   })
 
   it('settles the limiter on the ceiling over the beam it senses', () => {

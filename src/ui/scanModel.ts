@@ -7,6 +7,7 @@ import {
   IRE_BLACK,
   IRE_BLANK,
   IRE_SYNC,
+  IRE_VIDEO_RANGE,
   IRE_WHITE,
   LINES,
   SAMPLE_RATE,
@@ -21,7 +22,8 @@ import {
 // vertical trigger, sag tank and beam limiter are repeated here line for line;
 // decode.wgsl's bend and EHT widening turn their state into where the picture
 // lands. Noise, the free-run walk of an unlocked oscillator, the roll and the
-// AGC are left out, because a clean signal never reaches them.
+// AGC are left out, because a clean signal never reaches them, and so is the DC
+// restorer's offset, which a clean signal holds at zero.
 
 const SPL = SAMPLES_PER_LINE
 const PICTURE_ROWS = (row: number) =>
@@ -118,7 +120,8 @@ export function sagLines(
   for (let frame = 0; frame < 6; frame++) {
     vel -= 0.4 * (0.5 + r)
     for (let ry = 0; ry < LINES; ry++) {
-      const load = (loads[ry]! * ablHeld - 50) / 50
+      const load =
+        (Math.max(loads[ry]! - IRE_BLACK, 0) / IRE_VIDEO_RANGE) * ablHeld
       vel = vel + w * (load - sag) - damp * vel
       sag = 3 * Math.tanh((sag + w * vel) / 3)
       out[ry] = sag
