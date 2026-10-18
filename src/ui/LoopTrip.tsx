@@ -1,6 +1,7 @@
 import { CAMERA_LOOP_GROUP, MIXER_LOOP_GROUP } from './controls'
 import { useControlReading } from './ControlsContext'
-import { loopTripSays } from './loopReading'
+import { mixerLoopOf, peakLapGain } from './loopGain'
+import { loopTripSays, mixerLoopSays } from './loopReading'
 import styles from './LoopTrip.module.css'
 
 import type { ControlKey } from '../core/controls'
@@ -29,13 +30,24 @@ export function LoopTrip({ group }: { group: string }) {
   // Read unconditionally — a hook cannot be skipped, and the mixer loop has no
   // transport to escape a runaway through, so its reading ignores this.
   const camZoom = useControlReading(c => c.fbZoom)
-  const zoom = group === CAMERA_LOOP_GROUP ? camZoom : undefined
-  return loop === undefined || trip === 0 ? null : (
+  const mixer = group === MIXER_LOOP_GROUP
+  // The peak as one string, so a write that does not move it does not redraw.
+  const peak = useControlReading(c => {
+    if (!mixer || c.cfbMix === 0) return ''
+    const p = peakLapGain(mixerLoopOf(c))
+    return `${p.gain}|${p.mhz}`
+  })
+  if (loop === undefined || trip === 0) return null
+  const [gain, mhz] = peak.split('|').map(Number)
+  const says = mixer
+    ? mixerLoopSays(trip, { gain: gain!, mhz: mhz! })
+    : loopTripSays(trip, group === CAMERA_LOOP_GROUP ? camZoom : undefined)
+  return (
     <div
       className={styles.trip}
       title="the fader and the trim multiply: what one lap of the loop makes back of what it was handed"
     >
-      {`round trip ${trip.toFixed(2)}× · ${loopTripSays(trip, zoom)}`}
+      {`round trip ${trip.toFixed(2)}× · ${says}`}
     </div>
   )
 }

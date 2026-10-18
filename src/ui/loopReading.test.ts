@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { loopTripSays } from './loopReading'
+import { loopTripSays, mixerLoopSays } from './loopReading'
 
 // The reading exists because the two sliders cannot say this apart: a fader at
 // 0.6 and a trim at 1.07 both read as "up" and multiply to 0.66, which is a
@@ -36,5 +36,25 @@ describe('a trim the far side of zero', () => {
     expect(loopTripSays(-1.14, undefined)).toBe('building, inverting')
     expect(loopTripSays(-0.4, undefined)).toContain('decays')
     expect(loopTripSays(-0.4, undefined)).toContain('inverting')
+  })
+})
+
+// The resonance lifts the mixer loop's gain in one band, and the loop builds
+// there while the broadband round trip still reads as under unity.
+describe('the mixer loop reads its peak', () => {
+  it('reads a flat loop as its round trip', () => {
+    expect(mixerLoopSays(0.78, { gain: 0.78, mhz: 0 })).toBe(
+      loopTripSays(0.78, undefined),
+    )
+  })
+
+  it('reads a resonance above unity as building, and says where', () => {
+    const says = mixerLoopSays(0.78, { gain: 1.4, mhz: 2 })
+    expect(says).toBe('peak 1.40× at 2.0 MHz · building')
+    expect(says).not.toContain('does not build')
+  })
+
+  it('keeps the inversion', () => {
+    expect(mixerLoopSays(-0.78, { gain: 1.4, mhz: 2 })).toContain('inverting')
   })
 })

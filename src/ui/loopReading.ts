@@ -30,3 +30,17 @@ export function loopTripSays(signed: number, zoom: number | undefined): string {
   }
   return `building${flips}`
 }
+
+// The mixer loop's gain is not flat once the resonance or the Y/C split is in
+// the return, and a loop builds wherever its gain is highest. So the verdict
+// reads the peak across the band, and names where it is when the peak stands
+// clear of the broadband round trip.
+export function mixerLoopSays(
+  trip: number,
+  peak: { gain: number; mhz: number },
+): string {
+  const says = loopTripSays(Math.sign(trip) * peak.gain, undefined)
+  return Math.abs(peak.gain - Math.abs(trip)) < 0.005
+    ? says
+    : `peak ${peak.gain.toFixed(2)}× at ${peak.mhz.toFixed(1)} MHz · ${says}`
+}
