@@ -3,6 +3,7 @@ import {
   FEED_A_CABLE_GROUP,
   FEED_B_CABLE_GROUP,
   MIXER_LOOP_GROUP,
+  SYNTH_GROUP,
   TUBE_FACE_GROUP,
 } from './controls'
 
@@ -357,6 +358,25 @@ export const BUS_OPENS = {
 
 export const BUS_KEYS = Object.values(BUS_OPENS).flat()
 
+export const SYNTH_OPENS = {
+  luma: ['synthFm', 'synthFmSrc'],
+  oscA: ['synthAHz'],
+  oscB: ['synthBHz'],
+  shape: ['synthShape'],
+  mix: ['synthMix'],
+  level: ['synthLevel'],
+  colour: [
+    'synthColor',
+    'synthHueDeg',
+    'synthColorSoftPx',
+    'synthColorSrc',
+    'synthColorMode',
+  ],
+  over: ['synthOver'],
+} as const satisfies Opens
+
+export const SYNTH_KEYS = Object.values(SYNTH_OPENS).flat()
+
 export const CHROMA_KEY_OPENS = {
   spill: ['bKeySpill'],
   delay: ['bKeyDelayUs'],
@@ -403,6 +423,7 @@ export const SCHEMATICS = [
   { group: 'Enhancer (bent)', keys: ENHANCER_KEYS, opens: ENHANCER_OPENS },
   { group: 'Noise & interference', keys: NOISE_KEYS, opens: NOISE_OPENS },
   { group: 'A/B Mixer', keys: BUS_KEYS, opens: BUS_OPENS },
+  { group: SYNTH_GROUP, keys: SYNTH_KEYS, opens: SYNTH_OPENS },
   { group: 'Cable / Wiring', keys: CABLE_KEYS, opens: CABLE_OPENS },
   { group: 'Audio routings', keys: AUDIO_KEYS, opens: AUDIO_OPENS },
   {

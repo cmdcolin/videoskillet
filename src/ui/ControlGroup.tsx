@@ -21,6 +21,7 @@ import {
   MUTATE_CIRCUIT_BY_GROUP,
   NEEDS,
   sliderFor,
+  SYNTH_GROUP,
   TUBE_FACE_GROUP,
 } from './controls'
 import {
@@ -58,6 +59,7 @@ import { SIGNAL_TAPS, tapFor } from './signalTap'
 import { useSignalTapApi } from './SignalTapContext'
 import { Rack, Slider } from './Slider'
 import { SyncDiagram } from './SyncDiagram'
+import { SynthDiagram } from './SynthDiagram'
 import { TimebaseDiagram } from './TimebaseDiagram'
 import { VhsDiagram } from './VhsDiagram'
 import { WipeFrame } from './WipeFrame'
@@ -406,6 +408,7 @@ const SCHEMATIC_FRAMES: Record<SchematicGroup, () => ReactElement> = {
   'Enhancer (bent)': EnhancerDiagram,
   'Noise & interference': NoiseDiagram,
   'A/B Mixer': BusDiagram,
+  [SYNTH_GROUP]: SynthDiagram,
   'Cable / Wiring': CableDiagram,
   'Audio routings': AudioDiagram,
   [FEED_A_CABLE_GROUP]: FeedACableDiagram,
