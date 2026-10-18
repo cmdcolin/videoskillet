@@ -41,9 +41,9 @@ export function bandpass(
 }
 
 // Causal one-pole lowpass truncated to an FIR: an exponential tail over the
-// preceding samples only (taps past the center are zero). Models a delay-line
-// chroma decoder whose color trails rightward past an edge instead of smearing
-// symmetrically. Same -3 dB point as the one-pole with this cutoff.
+// preceding samples only (taps past the center are zero), with the -3 dB point
+// of the one-pole at this cutoff. Its stopband falls at only 6 dB an octave, so
+// on its own it cannot keep luma out of a demodulator (see demodKernel).
 export function lowpassCausal(cutoffHz: number, taps: number): Float32Array {
   const m = (taps - 1) / 2
   const a = Math.exp((-2 * Math.PI * cutoffHz) / SAMPLE_RATE)
@@ -55,6 +55,14 @@ export function lowpassCausal(cutoffHz: number, taps: number): Float32Array {
   }
   for (let k = 0; k <= m; k++) h[k] = h[k]! / sum
   return h
+}
+
+// Two centred kernels in cascade, centred on the sum of their centres.
+export function convolve(a: Float32Array, b: Float32Array): Float32Array {
+  const h = new Float64Array(a.length + b.length - 1)
+  for (let i = 0; i < a.length; i++)
+    for (let j = 0; j < b.length; j++) h[i + j]! += a[i]! * b[j]!
+  return Float32Array.from(h)
 }
 
 // A kernel zero-padded on both sides to `taps`, keeping its centre.
@@ -123,20 +131,34 @@ export function demodHalfWidth(cutoffHz: number): number {
   return Math.min(Math.max(half, DEMOD_MIN_HALF), (TAPS.demod - 1) / 2)
 }
 
-// The decoder's chroma demod lowpass, blended toward a one-pole trail.
+// The set's chroma takeoff bandpass ahead of the two detectors, as its
+// half-width about the subcarrier. The takeoff keeps luma out of the colour
+// path, so the lowpass after the detectors only decides how fast colour may
+// change.
+const TAKEOFF_HZ = 1.5e6
+const TAKEOFF_TAPS = 21
+
+// The decoder's chroma demod lowpass. At chromaTail 0 it is the symmetric
+// lowpass above. The trail blends in a lagging RC after the detectors: a
+// one-pole at the same cutoff, behind the takeoff filter. The bare one-pole
+// passed 0.35 of a flat field's luma into U and V at trail 0.5 and 1.4 MHz,
+// and the trap then subtracted that luma back out of the picture's brightness.
 export function demodKernel(cutoffHz: number, tail: number): Float32Array {
   const symmetric = centred(
     lowpass(cutoffHz, 2 * demodHalfWidth(cutoffHz) + 1),
     TAPS.demod,
   )
   if (tail <= 0) return symmetric
-  const trail = centred(lowpassCausal(cutoffHz, TAPS.demodShort), TAPS.demod)
+  const trail = convolve(
+    lowpass(Math.max(cutoffHz, TAKEOFF_HZ), TAKEOFF_TAPS),
+    lowpassCausal(cutoffHz, TAPS.demod - TAKEOFF_TAPS + 1),
+  )
   return mixTaps(symmetric, trail, tail)
 }
 
 // How many taps either side of the centre demodKernel can make nonzero.
-export function demodReach(cutoffHz: number, _tail: number): number {
-  return demodHalfWidth(cutoffHz)
+export function demodReach(cutoffHz: number, tail: number): number {
+  return tail > 0 ? (TAPS.demod - 1) / 2 : demodHalfWidth(cutoffHz)
 }
 
 // The GPU filter bank: fixed-stride sections so shaders index kernels by slot.

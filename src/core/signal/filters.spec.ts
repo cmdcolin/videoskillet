@@ -139,6 +139,27 @@ describe('lowpassCausal', () => {
   })
 })
 
+// The demod kernel as decode reads it: tap k against the sample k - m away.
+function at(h: Float32Array, hz: number): [number, number] {
+  const m = (h.length - 1) / 2
+  const w = (2 * Math.PI * hz) / SAMPLE_RATE
+  let re = 0
+  let im = 0
+  for (let k = 0; k < h.length; k++) {
+    re += h[k]! * Math.cos(w * (k - m))
+    im += h[k]! * Math.sin(w * (k - m))
+  }
+  return [re, im]
+}
+
+// How much of a luma component at lumaHz the synchronous detectors pass into U
+// and V: the lowpass heterodyned to the subcarrier from both sides.
+function intoChroma(h: Float32Array, lumaHz: number): number {
+  const lo = at(h, lumaHz - FSC)
+  const hi = at(h, lumaHz + FSC)
+  return Math.hypot(lo[0] + hi[0], lo[1] + hi[1])
+}
+
 function halfAmplitudeHz(h: Float32Array): number {
   let f = 0
   while (response(h, f) > 0.5) f += 1e3
@@ -188,6 +209,32 @@ describe('demodKernel', () => {
           if (Math.abs(k - m) > r) expect(v, `${mhz} MHz tail ${tail}`).toBe(0)
         })
       }
+  })
+
+  // A real set's chroma takeoff bandpass keeps luma out of the detectors
+  // whatever the post-detector lowpass does. The bare one-pole blend passed
+  // 0.35 of a flat field into U and V at trail 0.5 and 1.4 MHz.
+  it('keeps flat luma out of the colour path at any trail', () => {
+    for (const mhz of [0.6, 1, 1.4])
+      for (const tail of [0.5, 1]) {
+        const h = demodKernel(mhz * 1e6, tail)
+        expect(intoChroma(h, 0), `${mhz} MHz tail ${tail}`).toBeLessThan(0.002)
+        expect(intoChroma(h, 0.5e6)).toBeLessThan(0.01)
+        expect(intoChroma(h, 1e6)).toBeLessThan(0.03)
+      }
+  })
+
+  it("trails by the one-pole's lag", () => {
+    const lag = (h: Float32Array) => {
+      const m = (h.length - 1) / 2
+      return h.reduce((acc, v, k) => acc + v * (k - m), 0)
+    }
+    for (const mhz of [0.6, 1.4]) {
+      const bare = lag(lowpassCausal(mhz * 1e6, TAPS.demod))
+      const trail = lag(demodKernel(mhz * 1e6, 1))
+      expect(trail / bare).toBeGreaterThan(0.9)
+      expect(trail / bare).toBeLessThan(1.05)
+    }
   })
 })
 
