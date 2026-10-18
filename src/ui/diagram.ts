@@ -7,6 +7,7 @@ import { readingOf } from './format'
 
 import type { ControlKey } from '../core/controls'
 
+// CROSS_REPO_SYNC(diagram-boxes)
 export const LINE_H = 13
 const PAD = 7
 
@@ -46,6 +47,7 @@ export const boxWidth = (name: string) =>
 
 export const boxHeight = (name: string) =>
   PAD + LINE_H * name.split('\n').length
+// CROSS_REPO_SYNC_END(diagram-boxes)
 
 // The figures a drawing prints, read off the board as one string so the drawing
 // redraws only for a write that moved one of them.

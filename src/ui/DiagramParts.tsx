@@ -7,6 +7,7 @@ import styles from './Diagram.module.css'
 
 import type { ControlKey } from '../core/controls'
 
+// CROSS_REPO_SYNC(diagram-parts)
 // A group the pointer and keyboard press to pick a box.
 export function Pressable({
   name,
@@ -236,6 +237,7 @@ export function Diagram({
     </svg>
   )
 }
+// CROSS_REPO_SYNC_END(diagram-parts)
 
 // The rows of the box that is open: the same rows the panel draws anywhere
 // else, so a drag, a reset and a mod wire all work from here.
