@@ -548,7 +548,7 @@ describe('a stage in the panel', () => {
   test('switching the signal diagrams off leaves the rows and no schematic', async () => {
     const key = 'cfbGain'
     const drawing = () =>
-      screen.queryByRole('img', { name: 'mixer feedback loop' })
+      screen.queryByRole('group', { name: 'mixer feedback loop' })
     expect(drawing()).not.toBe(null)
     await act(async () => {
       setSignalDiagrams(false)

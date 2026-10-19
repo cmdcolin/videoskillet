@@ -231,7 +231,7 @@ export function Diagram({
     <svg
       className={styles.diagram}
       viewBox={`${-(left ?? 0)} 0 ${width} ${height}`}
-      role="img"
+      role="group"
       aria-label={label}
     >
       <defs>
