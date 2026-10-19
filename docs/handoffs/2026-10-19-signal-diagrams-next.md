@@ -35,6 +35,12 @@ them off.
   `useSelectedBox` keeps the open box per scope in module state. bender provides
   no scope, so its drawings behave as before. `ControlGroup` holds `showFramed`
   above the `Section`, so a fold keeps it and a stage switch resets it.
+- **Touch targets** (`a78d0735`, bender `a39dd03`): `BoxView` draws a
+  transparent rect 3 units above and below a pressable box, about 25px in all.
+  - Two margins overlap where stacked boxes sit less than 6 units apart. Synth
+    was the only such drawing, and its rows now sit 6 apart.
+  - A touch screen never shows a box's `<title>` tooltip, so its help text
+    appears once the box is open.
 
 ## Next, in the order worth doing
 
@@ -43,9 +49,6 @@ them off.
   plot away until a knob moves saves that height. The flat shape also shows what
   the plot measures, and it conflicts with the plots-side-by-side rule in the
   compact-schematics memory. Ask first.
-- **Touch targets.** Boxes are 20-24 units tall, roughly 24px. A taller hit area
-  drawn the same size would help. Box `<title>` tooltips never show on touch, so
-  help text appears only once a box is open.
 - **Group names** repeat in `schematicKeys.ts`, `SCHEMATIC_FRAMES` and
   `HEADING`. The `Record<SchematicGroup, ...>` type already catches a missing
   entry, so this is low value.
