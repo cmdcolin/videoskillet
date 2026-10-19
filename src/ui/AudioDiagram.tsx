@@ -1,5 +1,11 @@
 import styles from './AudioDiagram.module.css'
-import { boxWidth, useReadings, useSelectedBox, type BoxSpec } from './diagram'
+import {
+  openBox,
+  boxWidth,
+  useReadings,
+  useSelectedBox,
+  type BoxSpec,
+} from './diagram'
 import {
   BoxRows,
   BoxView,
@@ -98,7 +104,6 @@ export function AudioDiagram() {
   })
   const reach = (tap: Tap) =>
     Math.max(...placed.filter(d => d.tap === tap).map(mid))
-  const open = Object.entries(OPENS).find(([id]) => id === pick.selected)?.[1]
 
   return (
     <>
@@ -169,10 +174,7 @@ export function AudioDiagram() {
           </>
         )}
       </Diagram>
-      <BoxRows
-        keys={open}
-        help={boxes.find(b => b.id === pick.selected)?.help}
-      />
+      <BoxRows {...openBox(boxes, pick.selected)} />
     </>
   )
 }

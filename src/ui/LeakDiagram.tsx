@@ -1,5 +1,5 @@
 import { FSC, SAMPLE_RATE } from '../core/signal/constants'
-import { useReadings, useSelectedBox, type BoxSpec } from './diagram'
+import { openBox, useReadings, useSelectedBox, type BoxSpec } from './diagram'
 import {
   BoxRows,
   BoxView,
@@ -126,7 +126,6 @@ export function LeakDiagram() {
       "The same leak heard through the set's sound detector: the picture arrives on the audio line and plays out of the speakers.",
     ),
   ]
-  const open = Object.entries(OPENS).find(([id]) => id === pick.selected)?.[1]
 
   return (
     <>
@@ -270,10 +269,7 @@ export function LeakDiagram() {
           </>
         )}
       </Diagram>
-      <BoxRows
-        keys={open}
-        help={boxes.find(b => b.id === pick.selected)?.help}
-      />
+      <BoxRows {...openBox(boxes, pick.selected)} />
     </>
   )
 }

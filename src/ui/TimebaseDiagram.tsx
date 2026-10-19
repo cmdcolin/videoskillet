@@ -1,5 +1,5 @@
 import { HEAD_SWITCH_LINE, LINES } from '../core/signal/constants'
-import { useReadings, useSelectedBox, type BoxSpec } from './diagram'
+import { openBox, useReadings, useSelectedBox, type BoxSpec } from './diagram'
 import {
   BoxRows,
   BoxView,
@@ -104,7 +104,6 @@ export function TimebaseDiagram() {
       help: 'This deck has no time-base corrector, so every timing error above leaves it on the lines it hit. The burst moves with its line, so hue wobbles with the timing.',
     },
   ]
-  const open = Object.entries(OPENS).find(([id]) => id === pick.selected)?.[1]
   const speedLook: WireLook = r.touched(...OPENS.capstan) ? 'on' : 'plain'
   const shedLook: WireLook = r.touched(...OPENS.shed) ? 'on' : 'dash'
   const outLook: WireLook = r.touched(...TIMEBASE_KEYS) ? 'on' : 'plain'
@@ -201,10 +200,7 @@ export function TimebaseDiagram() {
           </>
         )}
       </Diagram>
-      <BoxRows
-        keys={open}
-        help={boxes.find(b => b.id === pick.selected)?.help}
-      />
+      <BoxRows {...openBox(boxes, pick.selected)} />
     </>
   )
 }

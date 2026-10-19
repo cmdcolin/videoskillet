@@ -1,5 +1,5 @@
 import { LINES } from '../core/signal/constants'
-import { useReadings, useSelectedBox, type BoxSpec } from './diagram'
+import { openBox, useReadings, useSelectedBox, type BoxSpec } from './diagram'
 import {
   BoxRows,
   BoxView,
@@ -114,7 +114,6 @@ export function SyncDiagram() {
       'The field oscillator, free-running at its own rate. The broad pulses trigger it early by as much as the hold allows each frame; past that the frame rolls.',
     ),
   ]
-  const open = Object.entries(OPENS).find(([id]) => id === pick.selected)?.[1]
 
   return (
     <>
@@ -210,10 +209,7 @@ export function SyncDiagram() {
           </>
         )}
       </Diagram>
-      <BoxRows
-        keys={open}
-        help={boxes.find(b => b.id === pick.selected)?.help}
-      />
+      <BoxRows {...openBox(boxes, pick.selected)} />
     </>
   )
 }

@@ -1,7 +1,7 @@
 import { BandLane } from './BandLane'
 import styles from './CableDiagram.module.css'
 import { cableLine, contactBands, humColumn } from './cableModel'
-import { useReadings, useSelectedBox, type BoxSpec } from './diagram'
+import { openBox, useReadings, useSelectedBox, type BoxSpec } from './diagram'
 import {
   BoxRows,
   BoxView,
@@ -116,7 +116,6 @@ function FeedCableDiagram({ feed }: { feed: Feed }) {
       `Termination on ${who}'s cable alone: negative is double-terminated and arrives dim, positive is open and runs hot with ringing.`,
     ),
   ]
-  const open = Object.entries(OPENS).find(([id]) => id === pick.selected)?.[1]
 
   return (
     <>
@@ -212,10 +211,7 @@ function FeedCableDiagram({ feed }: { feed: Feed }) {
           </>
         )}
       </Diagram>
-      <BoxRows
-        keys={open}
-        help={boxes.find(b => b.id === pick.selected)?.help}
-      />
+      <BoxRows {...openBox(boxes, pick.selected)} />
     </>
   )
 }

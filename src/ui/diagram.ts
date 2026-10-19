@@ -49,6 +49,13 @@ export const boxHeight = (name: string) =>
   PAD + LINE_H * name.split('\n').length
 // CROSS_REPO_SYNC_END(diagram-boxes)
 
+// What `BoxRows` draws under a drawing: the rows, note and help of the box that
+// is open, and nothing while none is.
+export function openBox(boxes: readonly BoxSpec[], selected: string | null) {
+  const box = boxes.find(b => b.id === selected)
+  return { keys: box?.keys, note: box?.note, help: box?.help }
+}
+
 // The figures a drawing prints, read off the board as one string so the drawing
 // redraws only for a write that moved one of them.
 export function useReadings<K extends ControlKey>(keys: readonly K[]) {

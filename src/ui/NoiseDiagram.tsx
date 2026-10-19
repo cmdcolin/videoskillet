@@ -1,5 +1,5 @@
 import { LINES } from '../core/signal/constants'
-import { useReadings, useSelectedBox, type BoxSpec } from './diagram'
+import { openBox, useReadings, useSelectedBox, type BoxSpec } from './diagram'
 import {
   BoxRows,
   BoxView,
@@ -103,7 +103,6 @@ export function NoiseDiagram() {
       'Lightning, a breaker arcing, a compressor kicking on: dozens of lines of dense hash that decays down the raster. It lands on sync tips, so the sync loop tears and the beam load spikes.',
     ),
   ]
-  const open = Object.entries(OPENS).find(([id]) => id === pick.selected)?.[1]
 
   return (
     <>
@@ -188,10 +187,7 @@ export function NoiseDiagram() {
           </>
         )}
       </Diagram>
-      <BoxRows
-        keys={open}
-        help={boxes.find(b => b.id === pick.selected)?.help}
-      />
+      <BoxRows {...openBox(boxes, pick.selected)} />
     </>
   )
 }

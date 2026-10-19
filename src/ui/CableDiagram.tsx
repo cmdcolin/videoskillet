@@ -7,7 +7,7 @@ import {
   stripeBands,
   type Band,
 } from './cableModel'
-import { useReadings, useSelectedBox, type BoxSpec } from './diagram'
+import { openBox, useReadings, useSelectedBox, type BoxSpec } from './diagram'
 import {
   BoxRows,
   BoxView,
@@ -147,7 +147,6 @@ export function CableDiagram() {
       'One 75 Ω terminator is correct. Negative double-terminates and halves the signal; positive leaves the line open, so it runs hot and each edge rings with a short echo.',
     ),
   ]
-  const open = Object.entries(OPENS).find(([id]) => id === pick.selected)?.[1]
 
   return (
     <>
@@ -228,10 +227,7 @@ export function CableDiagram() {
           </>
         )}
       </Diagram>
-      <BoxRows
-        keys={open}
-        help={boxes.find(b => b.id === pick.selected)?.help}
-      />
+      <BoxRows {...openBox(boxes, pick.selected)} />
     </>
   )
 }

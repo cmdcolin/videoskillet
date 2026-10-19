@@ -2,7 +2,7 @@ import { useId } from 'react'
 
 import { lumaKernel } from '../core/gpu/filterbank'
 import { IRE_WHITE, SAMPLE_RATE } from '../core/signal/constants'
-import { useReadings, useSelectedBox, type BoxSpec } from './diagram'
+import { openBox, useReadings, useSelectedBox, type BoxSpec } from './diagram'
 import styles from './Diagram.module.css'
 import { BoxRows, BoxView, Diagram, Label, Wire } from './DiagramParts'
 import { PlotProbe } from './PlotProbe'
@@ -129,7 +129,6 @@ export function RecordingDiagram() {
       'The video amplifier the chroma rides through. Its gain falls and its phase advances in step with the luma underneath, from nothing at black to the full setting at white. The burst sits at blanking, so the decoder reference keeps its phase.',
     ),
   ]
-  const open = boxes.find(b => b.id === pick.selected)
   const keyLook = r.touched(...OPENS.differential) ? 'on' : 'dash'
 
   return (
@@ -358,7 +357,7 @@ export function RecordingDiagram() {
           </>
         )}
       </Diagram>
-      <BoxRows keys={open?.keys} note={open?.note} help={open?.help} />
+      <BoxRows {...openBox(boxes, pick.selected)} />
     </>
   )
 }

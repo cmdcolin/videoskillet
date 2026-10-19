@@ -3,7 +3,7 @@ import { use, useId } from 'react'
 import { FSC } from '../core/signal/constants'
 import { sliderFor, snapToStep } from './controls'
 import { ControlStoreContext, useControlsApi } from './ControlsContext'
-import { useReadings, useSelectedBox, type BoxSpec } from './diagram'
+import { openBox, useReadings, useSelectedBox, type BoxSpec } from './diagram'
 import styles from './Diagram.module.css'
 import {
   BoxRows,
@@ -211,7 +211,6 @@ export function MixerLoopDiagram() {
       "A balanced bridge multiplying the return by the live program or by the box's own subcarrier oscillator.",
     ),
   ]
-  const open = Object.entries(OPENS).find(([id]) => id === pick.selected)?.[1]
   const bottom = BOT_Y - H / 2
   const under = TOP_Y + H / 2
   const back = (from: { x: number }, to: { x: number; w: number }) =>
@@ -478,10 +477,7 @@ export function MixerLoopDiagram() {
           </>
         )}
       </Diagram>
-      <BoxRows
-        keys={open}
-        help={boxes.find(b => b.id === pick.selected)?.help}
-      />
+      <BoxRows {...openBox(boxes, pick.selected)} />
     </>
   )
 }

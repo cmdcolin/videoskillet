@@ -1,5 +1,5 @@
 import { ACTIVE_HEIGHT } from '../core/signal/constants'
-import { useReadings, useSelectedBox, type BoxSpec } from './diagram'
+import { openBox, useReadings, useSelectedBox, type BoxSpec } from './diagram'
 import {
   BoxRows,
   BoxView,
@@ -117,7 +117,6 @@ export function DeflectionDiagram() {
       'The vertical retrace: how many line times it takes, and whether the blanking pulse that hides it is there.',
     ),
   ]
-  const open = Object.entries(OPENS).find(([id]) => id === pick.selected)?.[1]
   const sagLook: WireLook = sagOn ? 'on' : 'dash'
   const ablLook: WireLook = ablOn ? 'on' : 'plain'
   const into = (y: number, look: WireLook) => ({
@@ -218,10 +217,7 @@ export function DeflectionDiagram() {
           </>
         )}
       </Diagram>
-      <BoxRows
-        keys={open}
-        help={boxes.find(b => b.id === pick.selected)?.help}
-      />
+      <BoxRows {...openBox(boxes, pick.selected)} />
     </>
   )
 }

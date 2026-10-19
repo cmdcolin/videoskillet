@@ -1,4 +1,4 @@
-import { useReadings, useSelectedBox, type BoxSpec } from './diagram'
+import { openBox, useReadings, useSelectedBox, type BoxSpec } from './diagram'
 import styles from './Diagram.module.css'
 import { BoxRows, BoxView, Diagram, Label, Wire } from './DiagramParts'
 import own from './PhosphorDiagram.module.css'
@@ -267,7 +267,6 @@ export function PhosphorDiagram() {
       'Each field adds wear to the coating by the light it carried, and a worn patch gives back less light, blue least of all.',
     ),
   ]
-  const open = Object.entries(OPENS).find(([id]) => id === pick.selected)?.[1]
   const at = (id: keyof typeof COL) => COL[id].x
   const end = (id: keyof typeof COL) => COL[id].x + COL[id].w
   const loopLook = held ? (r.touched('phosphorBleed') ? 'on' : 'plain') : 'dash'
@@ -340,10 +339,7 @@ export function PhosphorDiagram() {
           </>
         )}
       </Diagram>
-      <BoxRows
-        keys={open}
-        help={boxes.find(b => b.id === pick.selected)?.help}
-      />
+      <BoxRows {...openBox(boxes, pick.selected)} />
     </>
   )
 }

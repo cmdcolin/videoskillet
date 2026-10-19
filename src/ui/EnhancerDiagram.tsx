@@ -1,5 +1,5 @@
 import { FSC, SAMPLES_PER_LINE } from '../core/signal/constants'
-import { useReadings, useSelectedBox, type BoxSpec } from './diagram'
+import { openBox, useReadings, useSelectedBox, type BoxSpec } from './diagram'
 import styles from './Diagram.module.css'
 import {
   BoxRows,
@@ -136,7 +136,6 @@ export function EnhancerDiagram() {
       'The stabilizer: a lowpass separator slices the video at the slice level and stamps a 4.7 µs pulse at every crossing, everywhere except over burst. Above blanking, dark picture trips it mid-line.',
     ),
   ]
-  const open = Object.entries(OPENS).find(([id]) => id === pick.selected)?.[1]
 
   return (
     <>
@@ -289,10 +288,7 @@ export function EnhancerDiagram() {
           </>
         )}
       </Diagram>
-      <BoxRows
-        keys={open}
-        help={boxes.find(b => b.id === pick.selected)?.help}
-      />
+      <BoxRows {...openBox(boxes, pick.selected)} />
     </>
   )
 }

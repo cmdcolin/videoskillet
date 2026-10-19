@@ -10,7 +10,7 @@ import {
 import { sliderFor, snapToStep } from './controls'
 import { useControlsApi } from './ControlsContext'
 import local from './DecoderDiagram.module.css'
-import { useReadings, useSelectedBox, type BoxSpec } from './diagram'
+import { openBox, useReadings, useSelectedBox, type BoxSpec } from './diagram'
 import styles from './Diagram.module.css'
 import { BoxRows, BoxView, Diagram, Label, Wire } from './DiagramParts'
 import { PlotHandle } from './PlotHandle'
@@ -232,7 +232,6 @@ export function DecoderDiagram() {
   const trace = (f: (s: Split) => number) =>
     at.map(({ x, s }): [number, number] => [x, plotY(f(s))])
 
-  const open = boxes.find(b => b.id === pick.selected)
   const bandwidth = sliderFor('demodMHz')
   const corner = FSC / 1e6 + v('demodMHz')
   const cornerAt = at[Math.round((corner / MHZ_MAX) * (POINTS - 1))]
@@ -443,7 +442,7 @@ export function DecoderDiagram() {
           </>
         )}
       </Diagram>
-      <BoxRows keys={open?.keys} note={open?.note} help={open?.help} />
+      <BoxRows {...openBox(boxes, pick.selected)} />
     </>
   )
 }

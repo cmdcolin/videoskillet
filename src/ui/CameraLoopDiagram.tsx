@@ -2,7 +2,7 @@ import { useId } from 'react'
 
 import { cameraLapGains, greyLevels, type CameraLoop } from './cameraLap'
 import own from './CameraLoopDiagram.module.css'
-import { useReadings, useSelectedBox, type BoxSpec } from './diagram'
+import { openBox, useReadings, useSelectedBox, type BoxSpec } from './diagram'
 import styles from './Diagram.module.css'
 import {
   BoxRows,
@@ -143,7 +143,6 @@ function CameraLoop({ initial }: { initial: Part | null }) {
       "The pickup tube: lag and comet tails on its target, then the sensor's black cut and highlight shoulder.",
     ),
   ]
-  const open = Object.entries(OPENS).find(([id]) => id === pick.selected)?.[1]
   const bottom = BOT_Y - H / 2
   const under = TOP_Y + H / 2
   const back = (from: { x: number }, to: { x: number; w: number }) =>
@@ -290,10 +289,7 @@ function CameraLoop({ initial }: { initial: Part | null }) {
           </>
         )}
       </Diagram>
-      <BoxRows
-        keys={open}
-        help={boxes.find(b => b.id === pick.selected)?.help}
-      />
+      <BoxRows {...openBox(boxes, pick.selected)} />
     </>
   )
 }

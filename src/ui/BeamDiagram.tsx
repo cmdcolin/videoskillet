@@ -1,6 +1,6 @@
 import styles from './BeamDiagram.module.css'
 import { edgeProfile, lineProfile } from './beamModel'
-import { useReadings, useSelectedBox, type BoxSpec } from './diagram'
+import { openBox, useReadings, useSelectedBox, type BoxSpec } from './diagram'
 import {
   BoxRows,
   BoxView,
@@ -103,7 +103,6 @@ export function BeamDiagram() {
       'The beam is a spot of finite height, so it does not quite fill the gap between scan lines. The spot grows with beam current, so bright lines are fatter than dark ones: scanlines show in the shadows and close up in the highlights.',
     ),
   ]
-  const open = Object.entries(OPENS).find(([id]) => id === pick.selected)?.[1]
 
   return (
     <>
@@ -171,10 +170,7 @@ export function BeamDiagram() {
           </>
         )}
       </Diagram>
-      <BoxRows
-        keys={open}
-        help={boxes.find(b => b.id === pick.selected)?.help}
-      />
+      <BoxRows {...openBox(boxes, pick.selected)} />
     </>
   )
 }

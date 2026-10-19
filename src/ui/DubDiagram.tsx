@@ -1,4 +1,4 @@
-import { useReadings, useSelectedBox, type BoxSpec } from './diagram'
+import { openBox, useReadings, useSelectedBox, type BoxSpec } from './diagram'
 import {
   BoxRows,
   BoxView,
@@ -91,7 +91,6 @@ export function DubDiagram() {
       'Runs the whole tape and channel stage this many times over: a copy of a copy. Each generation adds its own noise, dropouts and timebase wander on top of the last, and narrows the bandwidth again.',
     ),
   ]
-  const open = Object.entries(OPENS).find(([id]) => id === pick.selected)?.[1]
 
   return (
     <>
@@ -185,10 +184,7 @@ export function DubDiagram() {
           </>
         )}
       </Diagram>
-      <BoxRows
-        keys={open}
-        help={boxes.find(b => b.id === pick.selected)?.help}
-      />
+      <BoxRows {...openBox(boxes, pick.selected)} />
     </>
   )
 }

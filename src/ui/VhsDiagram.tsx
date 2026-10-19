@@ -7,7 +7,7 @@ import {
   LINES,
   SAMPLE_RATE,
 } from '../core/signal/constants'
-import { useReadings, useSelectedBox, type BoxSpec } from './diagram'
+import { openBox, useReadings, useSelectedBox, type BoxSpec } from './diagram'
 import styles from './Diagram.module.css'
 import {
   BoxRows,
@@ -172,7 +172,6 @@ export function VhsDiagram() {
       'Two heads take alternate sweeps, head A over the A tracks and head B over the B tracks. A clogged head reads snow for its whole sweep, so picture and snow alternate at field rate.',
     ),
   ]
-  const open = boxes.find(b => b.id === pick.selected)
 
   const severity = (row: number) =>
     lost(trackNull(row, amt, pos), shuttleNull(row, bars, SHUTTLE_STILL))
@@ -464,7 +463,7 @@ export function VhsDiagram() {
           </>
         )}
       </Diagram>
-      <BoxRows keys={open?.keys} note={open?.note} help={open?.help} />
+      <BoxRows {...openBox(boxes, pick.selected)} />
     </>
   )
 }

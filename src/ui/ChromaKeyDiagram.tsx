@@ -1,4 +1,4 @@
-import { useReadings, useSelectedBox, type BoxSpec } from './diagram'
+import { openBox, useReadings, useSelectedBox, type BoxSpec } from './diagram'
 import {
   BoxRows,
   BoxView,
@@ -109,7 +109,6 @@ export function ChromaKeyDiagram() {
         : 'The dirty sum: the gate cuts B, and program A stays on the bus everywhere. A negative key cuts the subject and keeps the backing.',
     ),
   ]
-  const open = Object.entries(OPENS).find(([id]) => id === pick.selected)?.[1]
   const up = (x: number) => `M${x} ${BOT_Y - H / 2} V${TOP_Y + H / 2}`
 
   return (
@@ -193,10 +192,7 @@ export function ChromaKeyDiagram() {
           </>
         )}
       </Diagram>
-      <BoxRows
-        keys={open}
-        help={boxes.find(b => b.id === pick.selected)?.help}
-      />
+      <BoxRows {...openBox(boxes, pick.selected)} />
     </>
   )
 }

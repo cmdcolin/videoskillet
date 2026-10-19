@@ -1,5 +1,5 @@
 import { IRE_SYNC, IRE_WHITE } from '../core/signal/constants'
-import { useReadings, useSelectedBox, type BoxSpec } from './diagram'
+import { openBox, useReadings, useSelectedBox, type BoxSpec } from './diagram'
 import {
   BoxRows,
   BoxView,
@@ -104,7 +104,6 @@ export function RfDiagram() {
       'A two-way radio getting into the cable through a cracked shield. The carrier is unrelated to any NTSC frequency, so its beat draws a herringbone at no fixed angle, and the program audio stands in for the speech.',
     ),
   ]
-  const open = Object.entries(OPENS).find(([id]) => id === pick.selected)?.[1]
   return (
     <>
       <Diagram width={WIDTH} height={HEIGHT} label="RF and tuner">
@@ -186,10 +185,7 @@ export function RfDiagram() {
           </>
         )}
       </Diagram>
-      <BoxRows
-        keys={open}
-        help={boxes.find(b => b.id === pick.selected)?.help}
-      />
+      <BoxRows {...openBox(boxes, pick.selected)} />
     </>
   )
 }
