@@ -25,7 +25,7 @@ const COL = {
   burn: { x: 250, w: 40 },
 }
 const LOOP = { out: 188, back: 102 }
-const PLOT = { top: 84, bottom: 128 }
+const PLOT = { top: 72, bottom: 112 }
 const LEFT_PLOT = { left: 26, right: 150 }
 const RIGHT_PLOT = { left: 196, right: 326 }
 const HEIGHT = PLOT.bottom + 14

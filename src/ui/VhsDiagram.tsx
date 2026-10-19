@@ -57,13 +57,13 @@ const ROW = {
   heads: { x: 252, w: 46 },
 } satisfies Record<Part | 'down', Span>
 
-const FOOT = { left: 0, right: 118, top: 96, bottom: 142 }
+const FOOT = { left: 0, right: 118, top: 90, bottom: 130 }
 const PICTURE = { left: 128, right: 170 }
 const SLANT = 22
 const PATH_STEP = 3
 const SCAN_STEP = 24
 const SNOW_STEP = 3
-const PLOT = { left: 204, right: 336, top: 96, bottom: 142 }
+const PLOT = { left: 204, right: 336, top: 90, bottom: 130 }
 const HEIGHT = PLOT.bottom + 14
 const FRAMES = 180
 

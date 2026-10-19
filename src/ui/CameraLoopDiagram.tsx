@@ -39,7 +39,7 @@ const ROW = {
 }
 const DROP_X = ROW.face.x + ROW.face.w / 2
 
-const PLOT = { left: 22, right: 334, top: 92, bottom: 148 }
+const PLOT = { left: 22, right: 334, top: 82, bottom: 126 }
 const HEIGHT = PLOT.bottom + 14
 const GAIN_TOP = 2
 const LEVELS = greyLevels(120)

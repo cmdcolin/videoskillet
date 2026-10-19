@@ -40,7 +40,11 @@ try {
     if (name.startsWith('css:')) return document.querySelector(name.slice(4))
     const heads = [
       ...document.querySelectorAll('h2, h3, button, summary'),
-    ].filter(e => e.textContent?.includes(name))
+    ].filter(
+      e =>
+        e.textContent?.includes(name) ||
+        [...e.querySelectorAll('[title]')].some(t => t.title === name),
+    )
     let section = heads.at(-1)
     while (section && section.getBoundingClientRect().height < 120)
       section = section.parentElement

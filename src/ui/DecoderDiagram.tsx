@@ -42,9 +42,9 @@ const ROW = {
 const REF_UP_X = 158
 const ACC_UP_X = 210
 
-const PLOT = { left: 14, right: 334, ceiling: 94, one: 108, zero: 140 }
-const LEGEND_Y = PLOT.zero + 28
-const HEIGHT = LEGEND_Y + 6
+const PLOT = { left: 14, right: 334, ceiling: 88, one: 99, zero: 123 }
+const LEGEND_Y = PLOT.zero + 24
+const HEIGHT = LEGEND_Y + 4
 const MHZ_MAX = 6
 const POINTS = 241
 const TAKEOFF = takeoffBandpass()

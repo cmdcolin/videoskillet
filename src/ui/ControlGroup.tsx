@@ -397,6 +397,14 @@ function WikiCaptionRow() {
   )
 }
 
+// Headers that would wrap to three lines beside the three verbs.
+const HEADING: Partial<Record<string, string>> = {
+  [CAMERA_LOOP_GROUP]: 'Camera loop (optical)',
+  [MIXER_LOOP_GROUP]: 'Mixer loop (electrical)',
+  [TUBE_FACE_GROUP]: 'Tube face',
+  'Character generator (chyron)': 'Chyron',
+}
+
 const SCHEMATIC_FRAMES: Record<SchematicGroup, () => ReactElement> = {
   [CAMERA_LOOP_GROUP]: CameraLoopDiagram,
   [TUBE_FACE_GROUP]: TubeFaceDiagram,
@@ -838,6 +846,7 @@ export function ControlGroup(props: { group: Group; defaultOpen?: boolean }) {
     frame === undefined ? null : (
     <Section
       title={group.name}
+      label={HEADING[group.name]}
       defaultOpen={props.defaultOpen}
       openOnFilter
       dot={touched}

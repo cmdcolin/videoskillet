@@ -28,7 +28,7 @@ const KEY_X = 240
 const KEY_Y = 32
 const SUM_X = 304
 
-const PLOT = { top: 84, bottom: 128 }
+const PLOT = { top: 76, bottom: 116 }
 const BAR_PLOT = { left: 24, right: 196 }
 const RESPONSE_PLOT = { left: 226, right: 336 }
 const HEIGHT = PLOT.bottom + 14

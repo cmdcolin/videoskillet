@@ -69,6 +69,9 @@ type SectionHelpApi = { open: boolean; openSection: () => void }
 
 export function Section(props: {
   title: string
+  // The words the header shows when the title is too long for the row. The
+  // title stays the key the open state is stored under, and the tooltip.
+  label?: string
   children: ReactNode
   defaultOpen?: boolean
   // Filtering reaches inside this section, so a match must not stay hidden
@@ -156,8 +159,11 @@ export function Section(props: {
               punctuation on a heading — the panel's headers announced no fold
               at all, and the three verbs beside them made the row a toolbar. */}
           <span className={styles.caret}>{shown ? '▾' : '▸'}</span>
-          <span className={styles.headTitle}>
-            {props.title}
+          <span
+            className={styles.headTitle}
+            title={props.label === undefined ? undefined : props.title}
+          >
+            {props.label ?? props.title}
             {props.dot === undefined || props.dot === 0 ? null : (
               <span className={styles.dot}> • {props.dot}</span>
             )}

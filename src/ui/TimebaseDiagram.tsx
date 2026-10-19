@@ -26,7 +26,7 @@ const COL = {
 }
 const DRUM_MID = COL.drum.x + COL.drum.w / 2
 
-const PLOT = { top: 84, bottom: 128 }
+const PLOT = { top: 76, bottom: 116 }
 const LEFT_PLOT = { left: 24, right: 164 }
 const RIGHT_PLOT = { left: 200, right: 336 }
 const HEIGHT = PLOT.bottom + 14
