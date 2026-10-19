@@ -15,32 +15,6 @@ import type { ControlKey } from '../core/controls'
 
 type Opens = Record<string, readonly ControlKey[]>
 
-export const MIXER_LOOP_KEYS = [
-  'cfbMix',
-  'cfbGain',
-  'cfbDelayUs',
-  'cfbServoUs',
-  'cfbLines',
-  'cfbKey',
-  'cfbKeyLevel',
-  'cfbKeySoft',
-  'cfbKeyExt',
-  'cfbKeyHueDeg',
-  'cfbKeyAcceptDeg',
-  'cfbHold',
-  'cfbTrail',
-  'cfbFilterMHz',
-  'cfbFilterQ',
-  'cfbFilterBoost',
-  'cfbRing',
-  'cfbClockPct',
-  'cfbNoiseIre',
-  'cfbGenlock',
-  'cfbReturn',
-  'cfbRingSrc',
-  'cfbCarrierKHz',
-] as const satisfies readonly ControlKey[]
-
 export const MIXER_LOOP_OPENS = {
   fader: ['cfbMix', 'cfbGain'],
   keyer: [
@@ -63,7 +37,9 @@ export const MIXER_LOOP_OPENS = {
   return: ['cfbReturn', 'cfbNoiseIre'],
   resonance: ['cfbFilterMHz', 'cfbFilterQ', 'cfbFilterBoost'],
   ring: ['cfbRing', 'cfbRingSrc', 'cfbCarrierKHz'],
-} as const satisfies Record<string, readonly (typeof MIXER_LOOP_KEYS)[number][]>
+} as const satisfies Opens
+
+export const MIXER_LOOP_KEYS = Object.values(MIXER_LOOP_OPENS).flat()
 
 export const CAMERA_LOOP_OPENS = {
   fader: ['fbMix', 'fbGain'],
@@ -88,27 +64,6 @@ export const TUBE_FACE_OPENS = {
 
 export const TUBE_FACE_KEYS = TUBE_FACE_OPENS.face
 
-export const DECODER_KEYS = [
-  'combMode',
-  'svideoBleed',
-  'demodMHz',
-  'chromaTail',
-  'chromaCoarse',
-  'chromaGain',
-  'tintDeg',
-  'burstLock',
-  'demodAxisDeg',
-  'scDetuneKHz',
-  'killThresh',
-  'accLagLines',
-  'afpcLagLines',
-  'vir',
-  'virLag',
-  'matrixClip',
-  'agc',
-  'encChromaMHz',
-] as const satisfies readonly ControlKey[]
-
 export const DECODER_OPENS = {
   input: ['encChromaMHz', 'agc'],
   split: ['combMode', 'svideoBleed'],
@@ -117,6 +72,8 @@ export const DECODER_OPENS = {
   acc: ['chromaGain', 'accLagLines', 'killThresh', 'vir', 'virLag'],
   matrix: ['matrixClip'],
 } as const satisfies Opens
+
+export const DECODER_KEYS = Object.values(DECODER_OPENS).flat()
 
 export const RECORDING_OPENS = {
   emphasis: [],
@@ -215,20 +172,6 @@ export const CAPTION_OPENS = {
   'data bus': [CC_BENDS.romData],
 } as const satisfies Opens
 
-export const DEFLECTION_KEYS = [
-  'bendUs',
-  'bendShape',
-  'bendPeriod',
-  'vSize',
-  'vLin',
-  'vFold',
-  'retraceLines',
-  'flybackLines',
-  'hvSagUs',
-  'hvRing',
-  'abl',
-] as const satisfies readonly ControlKey[]
-
 export const DEFLECTION_OPENS = {
   limiter: ['abl'],
   tank: ['hvSagUs', 'hvRing'],
@@ -237,14 +180,7 @@ export const DEFLECTION_OPENS = {
   flyback: ['flybackLines', 'retraceLines'],
 } as const satisfies Opens
 
-export const SYNC_KEYS = [
-  'hHold',
-  'syncSlicer',
-  'vHold',
-  'vFreqHz',
-  'syncBendUs',
-  'hDetuneHz',
-] as const satisfies readonly ControlKey[]
+export const DEFLECTION_KEYS = Object.values(DEFLECTION_OPENS).flat()
 
 export const SYNC_OPENS = {
   separator: ['syncSlicer'],
@@ -252,6 +188,8 @@ export const SYNC_OPENS = {
   hosc: ['hDetuneHz'],
   vosc: ['vFreqHz', 'vHold'],
 } as const satisfies Opens
+
+export const SYNC_KEYS = Object.values(SYNC_OPENS).flat()
 
 export const TIMEBASE_OPENS = {
   capstan: ['tbWowNs', 'tbJitterNs'],
