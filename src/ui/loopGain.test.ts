@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { FSC } from '../core/signal/constants'
-import { lapGain, peakLapGain, type MixerLoop } from './loopGain'
+import { boostFor, lapGain, peakLapGain, type MixerLoop } from './loopGain'
 
 const flat: MixerLoop = {
   mix: 0.6,
@@ -43,5 +43,19 @@ describe('mixer loop gain per lap', () => {
 
   it('is zero with the fader down', () => {
     expect(peakLapGain({ ...flat, mix: 0, filterMHz: 2 }).gain).toBe(0)
+  })
+})
+
+describe('the boost a drag on the peak asks for', () => {
+  it('lands the lap gain on the dragged height at every split', () => {
+    for (const split of [0, 1, 2]) {
+      const loop = { ...flat, split, filterMHz: 2 }
+      const boost = boostFor(loop, 2, 1.4)
+      expect(lapGain({ ...loop, filterBoost: boost }, 2)).toBeCloseTo(1.4, 6)
+    }
+  })
+
+  it('keeps the boost it has while the fader is down', () => {
+    expect(boostFor({ ...flat, mix: 0 }, 2, 1.4)).toBe(2)
   })
 })

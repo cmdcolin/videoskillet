@@ -107,3 +107,16 @@ export function peakLapGain(loop: MixerLoop) {
   })
   return { gain: gains[at]!, mhz: mhzs[at]! }
 }
+
+// The resonance boost that puts the lap gain at `gain` on its own centre
+// frequency, which is where a drag on the curve's peak asks for it. The filter
+// is unity there, so the boost adds straight onto the separator's real part.
+export function boostFor(loop: MixerLoop, mhz: number, gain: number) {
+  const scale = loop.mix * Math.abs(loop.gain)
+  if (scale === 0) return loop.filterBoost
+  const [bRe, bIm] = boxcarAt(mhz)
+  const re = loop.split === 1 ? 1 - bRe : loop.split === 2 ? bRe : 1
+  const im = loop.split === 1 ? -bIm : loop.split === 2 ? bIm : 0
+  const want = Math.max(gain / scale, Math.abs(im))
+  return Math.sqrt(want * want - im * im) - re
+}

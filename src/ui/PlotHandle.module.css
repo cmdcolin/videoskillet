@@ -1,0 +1,22 @@
+.hit {
+  fill: transparent;
+  cursor: grab;
+  touch-action: none;
+  outline: none;
+}
+
+.hit:active {
+  cursor: grabbing;
+}
+
+.knob {
+  fill: var(--accent);
+  stroke: var(--bg);
+  stroke-width: 1.5;
+  pointer-events: none;
+}
+
+.hit:hover + .knob,
+.hit:focus-visible + .knob {
+  stroke: var(--fg2);
+}

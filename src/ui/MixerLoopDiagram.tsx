@@ -1,6 +1,8 @@
-import { useId } from 'react'
+import { use, useId } from 'react'
 
 import { FSC } from '../core/signal/constants'
+import { sliderFor, snapToStep } from './controls'
+import { ControlStoreContext, useControlsApi } from './ControlsContext'
 import { useReadings, useSelectedBox, type BoxSpec } from './diagram'
 import styles from './Diagram.module.css'
 import {
@@ -14,8 +16,17 @@ import {
 import { loopSlice } from './hueKey'
 import { HueWheel, LevelBar, TurnDial } from './HueWheel'
 import { lapTurn, turnWords } from './lapTurn'
-import { BAND_MHZ, bandMHz, lapGains, type MixerLoop } from './loopGain'
+import {
+  BAND_MHZ,
+  bandMHz,
+  boostFor,
+  lapGain,
+  lapGains,
+  mixerLoopOf,
+  type MixerLoop,
+} from './loopGain'
 import own from './MixerLoopDiagram.module.css'
+import { PlotHandle } from './PlotHandle'
 import { PlotProbe } from './PlotProbe'
 import { MIXER_LOOP_KEYS, MIXER_LOOP_OPENS as OPENS } from './schematicKeys'
 
@@ -85,6 +96,8 @@ export function MixerLoopDiagram() {
   const r = useReadings(MIXER_LOOP_KEYS)
   const pick = useSelectedBox()
   const clip = useId()
+  const store = use(ControlStoreContext)
+  const { beginHand, writeControls } = useControlsApi()
   const v = r.value
   const loop: MixerLoop = {
     mix: v('cfbMix'),
@@ -122,6 +135,19 @@ export function MixerLoopDiagram() {
   const curve = trace(gains, right)
   // With the fader down, the lap at its full travel, where mix is 1.
   const upGains = off ? lapGains({ ...loop, mix: 1 }, CURVE_MHZ) : null
+
+  const hz = sliderFor('cfbFilterMHz')
+  const boost = sliderFor('cfbFilterBoost')
+  const peaked = !off && loop.filterMHz > 0 && loop.filterBoost !== 0
+  const setPeak = (mhz: number, gain: number) => {
+    const c = store.get()
+    const centre = Math.max(snapToStep(hz, mhz), hz.step)
+    writeControls({
+      ...c,
+      cfbFilterMHz: centre,
+      cfbFilterBoost: snapToStep(boost, boostFor(mixerLoopOf(c), centre, gain)),
+    })
+  }
 
   const box = (
     id: Part,
@@ -427,6 +453,28 @@ export function MixerLoopDiagram() {
                 }
               }}
             />
+            {peaked && (
+              <PlotHandle
+                x={x(loop.filterMHz)}
+                y={plotY(lapGain(loop, loop.filterMHz))}
+                label="loop resonance peak"
+                reading={`${loop.filterMHz.toFixed(2)} MHz, ${lapGain(loop, loop.filterMHz).toFixed(2)}×`}
+                onGrab={beginHand}
+                onMove={at =>
+                  setPeak(
+                    ((at.x - PLOT.left) / (right - PLOT.left)) * BAND_MHZ,
+                    ((PLOT.bottom - at.y) / (PLOT.bottom - PLOT.top)) *
+                      GAIN_TOP,
+                  )
+                }
+                onNudge={(dx, dy) =>
+                  setPeak(
+                    loop.filterMHz + dx * hz.step * 4,
+                    lapGain(loop, loop.filterMHz) + dy * 0.05,
+                  )
+                }
+              />
+            )}
           </>
         )}
       </Diagram>
