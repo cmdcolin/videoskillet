@@ -18,15 +18,17 @@ them off.
   selectable ids with no box.
 - **Key lists** (`206d00a1`): mixer loop, decoder, deflection and sync derive
   `*_KEYS` from `*_OPENS`. A throwaway test checked the sets matched first.
+- **Plot handles** (`4f215fed`): RF drags the `pic` marker (`rfMistuneMHz`),
+  Recording drags the luma filter's corner (`lumaMHz` across, `lumaPeak` up),
+  and Leak drags the echo span's far end (`ghostDelayUs`).
+  - Recording's gain scale steps between 2, 5 and 15× with the peaking, so the
+    diagram holds the scale from the first pointer move until the new
+    `PlotHandle.onDrop`.
+  - A harness drag on a `#set=` look needs a few seconds to settle first. The
+    look morphs in, and the morph overwrites the drag's writes.
 
 ## Next, in the order worth doing
 
-- **Drag handles on plots.** Only Decoder and Mixer loop have a `PlotHandle`.
-  Candidates, each a decision about which knob the plot moves:
-  - RF: the `pic` marker on the IF plot, a one-axis drag on `rfMistuneMHz`.
-  - Recording: the luma filter corner and peak (`lumaMHz`, `lumaPeak`), the same
-    shape as the mixer resonance peak.
-  - Leak: the echo span on the line plot, dragged to set `ghostDelayUs`.
 - **Rows land under the plot.** Pressing a box at the top puts its rows 110-145
   units lower, possibly below the fold. `scrollIntoView({block: 'nearest'})` on
   select is the obvious fix and is unmeasured. `nearest` on a tall rows block
