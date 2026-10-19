@@ -9,6 +9,22 @@ import styles from './Diagram.module.css'
 import type { ControlKey } from '../core/controls'
 
 // CROSS_REPO_SYNC(diagram-parts)
+// The drawing sets its words in caps; a unit keeps its own case.
+const UNIT =
+  /((?<![A-Za-z])(?:[kMG]?Hz|[µnm]s|dB|[mk]V|mA)(?![A-Za-z])|(?<=\d ?)[sk](?![A-Za-z]))/
+
+function Cased({ text }: { text: string }) {
+  return text.split(UNIT).map((part, i) =>
+    i % 2 ? (
+      <tspan key={i} className={styles.unit}>
+        {part}
+      </tspan>
+    ) : (
+      part
+    ),
+  )
+}
+
 // A group the pointer and keyboard press to pick a box.
 export function Pressable({
   name,
@@ -114,7 +130,7 @@ export function BoxView({
           textAnchor="middle"
           className={box.touched ? styles.nameOn : styles.name}
         >
-          {line}
+          <Cased text={line} />
         </text>
       ))}
     </Pressable>
@@ -178,7 +194,7 @@ export function Label({
       textAnchor={anchor ?? 'start'}
       className={on ? styles.noteOn : styles.note}
     >
-      {children}
+      <Cased text={children} />
     </text>
   )
   if (!pick) return text

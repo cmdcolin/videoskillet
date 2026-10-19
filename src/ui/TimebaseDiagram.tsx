@@ -19,9 +19,9 @@ const TOP_Y = 14
 const BOT_Y = 50
 const H = 20
 const COL = {
-  capstan: { x: 26, w: 56 },
+  capstan: { x: 26, w: 52 },
   shed: { x: 26, w: 78 },
-  drum: { x: 150, w: 68 },
+  drum: { x: 156, w: 68 },
   tbc: { x: 252, w: 36 },
 }
 const DRUM_MID = COL.drum.x + COL.drum.w / 2

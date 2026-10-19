@@ -45,7 +45,7 @@ const FOLD_DC_MHZ = 0.25
 const WIDE_RIGHT = WIDTH - 6
 const HEIGHT = PLOT.bottom + 14
 const SLICE_X = 298
-const WHEEL = { cx: SLICE_X, cy: 112, radius: 26 }
+const WHEEL = { cx: SLICE_X, cy: 114, radius: 24 }
 const GAIN_TOP = 2
 const FSC_MHZ = FSC / 1e6
 const MHZ_TICKS = [0, 2, 4, BAND_MHZ]
@@ -194,7 +194,7 @@ export function MixerLoopDiagram() {
     <>
       <Diagram width={WIDTH} height={HEIGHT} label="mixer feedback loop">
         {arrow => (
-          <g className={own.caps}>
+          <>
             <Label x={0} y={TOP_Y - 6}>
               program
             </Label>
@@ -256,16 +256,14 @@ export function MixerLoopDiagram() {
                 ))}
             </g>
 
-            <g className={own.names}>
-              {boxes.map(b => (
-                <BoxView
-                  key={b.id}
-                  box={b}
-                  selected={b.id === pick.selected}
-                  onSelect={pick.toggle}
-                />
-              ))}
-            </g>
+            {boxes.map(b => (
+              <BoxView
+                key={b.id}
+                box={b}
+                selected={b.id === pick.selected}
+                onSelect={pick.toggle}
+              />
+            ))}
 
             <Label x={PLOT.left + 4} y={PLOT.top - 8}>
               {pick.selected === 'ring'
@@ -301,18 +299,16 @@ export function MixerLoopDiagram() {
             <Label x={x(FSC_MHZ)} y={PLOT.top - 8} anchor="middle">
               fsc
             </Label>
-            <g className={own.units}>
-              {MHZ_TICKS.map(n => (
-                <Label
-                  key={n}
-                  x={x(n)}
-                  y={PLOT.bottom + 12}
-                  anchor={n === BAND_MHZ ? 'end' : 'middle'}
-                >
-                  {n === BAND_MHZ ? `${n} MHz` : String(n)}
-                </Label>
-              ))}
-            </g>
+            {MHZ_TICKS.map(n => (
+              <Label
+                key={n}
+                x={x(n)}
+                y={PLOT.bottom + 12}
+                anchor={n === BAND_MHZ ? 'end' : 'middle'}
+              >
+                {n === BAND_MHZ ? `${n} MHz` : String(n)}
+              </Label>
+            ))}
             <clipPath id={clip}>
               <rect
                 x={PLOT.left}
@@ -418,7 +414,7 @@ export function MixerLoopDiagram() {
                 strength={Math.min(Math.abs(key), 1)}
               />
             )}
-          </g>
+          </>
         )}
       </Diagram>
       <BoxRows keys={open} />

@@ -394,7 +394,7 @@ function CharGen({ cg }: { cg: boolean }) {
                 <Label x={0} y={KEY_R + 4}>
                   program
                 </Label>
-                <Wire arrow={arrow} d={`M44 ${KEY_R} H${MIX.x}`} />
+                <Wire arrow={arrow} d={`M48 ${KEY_R} H${MIX.x}`} />
                 <Wire
                   arrow={arrow}
                   d={`M${KEYER.x} ${KEY_R} H${MIX.x + MIX.w}`}

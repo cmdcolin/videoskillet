@@ -16,15 +16,28 @@
 }
 
 .name,
+.nameOn,
+.note,
+.noteOn {
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.name,
 .nameOn {
-  font-size: 11px;
+  font-size: 9.5px;
   fill: var(--fg2);
 }
 
 .note,
 .noteOn {
-  font-size: 10px;
+  font-size: 9px;
   fill: var(--fg3);
+}
+
+/* MHz, not MHZ. */
+.unit {
+  text-transform: none;
 }
 
 .nameOn,

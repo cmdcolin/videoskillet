@@ -5,7 +5,9 @@
 }
 
 .alarm {
-  font-size: 10px;
+  font-size: 9px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
   fill: var(--danger);
 }
 
