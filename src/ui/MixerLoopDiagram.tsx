@@ -268,7 +268,9 @@ export function MixerLoopDiagram() {
             </g>
 
             <Label x={PLOT.left + 4} y={PLOT.top - 8}>
-              loop gain per lap
+              {pick.selected === 'ring'
+                ? 'gain per lap and ring products'
+                : 'loop gain per lap'}
             </Label>
             <line
               x1={PLOT.left}
