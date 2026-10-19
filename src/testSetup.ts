@@ -24,3 +24,11 @@ Object.defineProperty(globalThis, 'localStorage', {
 beforeEach(() => {
   map.clear()
 })
+
+// jsdom lays nothing out and has no `scrollIntoView`, which BoxRows calls when
+// a press opens a box.
+if (
+  typeof Element !== 'undefined' &&
+  typeof Element.prototype.scrollIntoView !== 'function'
+)
+  Element.prototype.scrollIntoView = () => {}

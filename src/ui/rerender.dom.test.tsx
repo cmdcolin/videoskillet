@@ -564,4 +564,26 @@ describe('a stage in the panel', () => {
     }
     expect(drawing()).not.toBe(null)
   })
+
+  test('a schematic reopens on the box it left open', async () => {
+    const box = () =>
+      screen.queryByRole('button', { name: 'resonance controls' })
+    const head = (expanded: boolean) =>
+      screen.getByRole('button', {
+        name: /Mixer loop \(electrical\)$/,
+        expanded,
+      })
+    await act(async () => {
+      fireEvent.click(box()!)
+    })
+    expect(box()?.getAttribute('aria-pressed')).toBe('true')
+    await act(async () => {
+      fireEvent.click(head(true))
+    })
+    expect(box()).toBe(null)
+    await act(async () => {
+      fireEvent.click(head(false))
+    })
+    expect(box()?.getAttribute('aria-pressed')).toBe('true')
+  })
 })

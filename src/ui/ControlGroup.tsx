@@ -35,6 +35,7 @@ import { CrosspointDiagram } from './CrosspointDiagram'
 import { cx } from './cx'
 import { DecoderDiagram } from './DecoderDiagram'
 import { DeflectionDiagram } from './DeflectionDiagram'
+import { BoxScope } from './diagram'
 import { DRIFT_MODE_WORDS, DRIFT_SECONDS } from './drift'
 import { DubDiagram } from './DubDiagram'
 import { EnhancerDiagram } from './EnhancerDiagram'
@@ -724,7 +725,9 @@ export function ControlGroup(props: { group: Group; defaultOpen?: boolean }) {
       {chips.length === 0 ? null : <CardChips group={group} chips={chips} />}
       {frame === undefined ? null : (
         <>
-          <frame.Frame />
+          <BoxScope value={group.name}>
+            <frame.Frame />
+          </BoxScope>
           <button
             className={styles.sliderToggle}
             onClick={() => setShowFramed(!showFramed)}
