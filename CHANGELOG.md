@@ -2,6 +2,19 @@
 
 All notable changes to videoskillet are documented here.
 
+## [2.20.2](https://github.com/cmdcolin/videoskillet/compare/v2.20.1...v2.20.2) - 2026-10-19
+
+### Features
+- *(ui)* [`da8d042`](https://github.com/cmdcolin/videoskillet/commit/da8d042c1e04a7cbfb35299ff5c9c2b3ebae8ebd) shave 10-30 units off the tallest schematics and shorten four long group headers
+- *(ui)* [`c6eb96b`](https://github.com/cmdcolin/videoskillet/commit/c6eb96bdb307c415edecb53402b9dcec1e4497ee) read a plot's figure under the pointer
+- *(ui)* [`6378427`](https://github.com/cmdcolin/videoskillet/commit/63784271d3a9b10638f09231760667af433149d3) show an open box's help under its drawing
+- *(ui)* [`f0f16a5`](https://github.com/cmdcolin/videoskillet/commit/f0f16a5516980512f8e2865a2174d4bee48116cb) drag the mixer loop's resonance peak on its plot
+- *(ui)* [`63417d9`](https://github.com/cmdcolin/videoskillet/commit/63417d9a46af8df903fb84d0563156dc36657452) drag the decoder's chroma bandwidth on its response plot
+- *(ui)* [`e00046f`](https://github.com/cmdcolin/videoskillet/commit/e00046f898df24f114106fe0e73046795a345a22) read the Recording and Phosphor plots under the pointer
+
+### Refactor
+- *(ui)* [`62c7e9d`](https://github.com/cmdcolin/videoskillet/commit/62c7e9d842769d0eebee4e30e84e1a5f5644f79b) drop the header padding that changed nothing
+
 ## [2.20.1](https://github.com/cmdcolin/videoskillet/compare/v2.20.0...v2.20.1) - 2026-10-19
 
 ### Features
