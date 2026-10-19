@@ -30,13 +30,14 @@ them off.
   first 8rem to `nearest` when the open box changes, and leaves the panel where
   it is for a box open from the first render. On a 600px window, pressing a
   Recording box scrolled the panel 191px and showed the help line and both rows.
+- **Open box kept per group** (`cc6c5692`, bender `38936d5`): `ControlGroup`
+  wraps each schematic in a `BoxScope` named for its group, and
+  `useSelectedBox` keeps the open box per scope in module state. bender provides
+  no scope, so its drawings behave as before. `ControlGroup` holds `showFramed`
+  above the `Section`, so a fold keeps it and a stage switch resets it.
 
 ## Next, in the order worth doing
 
-- **Open box resets.** `Section` unmounts its children when a group folds, so
-  `useSelectedBox` and `showFramed` reset. Keeping the selection per group needs
-  a key in `useSelectedBox`, which sits in the shared `diagram-boxes` region, so
-  bender changes too.
 - **Flat plots at stock.** Several plots, Sync's line and frame shifts among
   them, are probably flat lines at stock and cost about 45 units each. Folding a
   plot away until a knob moves saves that height. The flat shape also shows what
