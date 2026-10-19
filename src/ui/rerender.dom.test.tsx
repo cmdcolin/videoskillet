@@ -15,6 +15,7 @@ import { Listeners } from '../core/listeners'
 import { AllSettingsSheet } from './AllSettingsSheet'
 import { ControlGroup, ControlRows, ControlSlider } from './ControlGroup'
 import { GROUPS, MIXER_LOOP_GROUP } from './controls'
+import { setSignalDiagrams } from './signalDiagrams'
 
 import type { ControlKey, Controls } from '../core/controls'
 import type { SliderDef } from './controls'
@@ -542,5 +543,25 @@ describe('a stage in the panel', () => {
       mounted: [],
       unmounted: [],
     })
+  })
+
+  test('switching the signal diagrams off leaves the rows and no schematic', async () => {
+    const key = 'cfbGain'
+    const drawing = () =>
+      screen.queryByRole('img', { name: 'mixer feedback loop' })
+    expect(drawing()).not.toBe(null)
+    await act(async () => {
+      setSignalDiagrams(false)
+    })
+    try {
+      expect(drawing()).toBe(null)
+      expect(screen.queryByRole('button', { name: /sliders$/ })).toBe(null)
+      expect(rowsUnder(ControlGroup)).toContain(key)
+    } finally {
+      await act(async () => {
+        setSignalDiagrams(true)
+      })
+    }
+    expect(drawing()).not.toBe(null)
   })
 })

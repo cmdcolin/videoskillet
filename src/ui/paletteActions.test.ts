@@ -47,6 +47,7 @@ const actions = () => {
     onFullscreen: noop,
     onSidebar: noop,
     onBench: noop,
+    onDiagrams: noop,
     onPopout: noop,
     onFilter: noop,
     onShowMoving: noop,

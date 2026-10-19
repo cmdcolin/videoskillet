@@ -59,6 +59,7 @@ import { rowClaim } from './rollMod'
 import { sameKeySet, sameList } from './sameList'
 import { SCHEMATICS, type SchematicGroup } from './schematicKeys'
 import { Section } from './Section'
+import { useSignalDiagrams } from './signalDiagrams'
 import { SIGNAL_TAPS, tapFor } from './signalTap'
 import { useSignalTapApi } from './SignalTapContext'
 import { Rack, Slider } from './Slider'
@@ -438,31 +439,37 @@ const FRAMES: {
   group: string
   keys: ReadonlySet<ControlKey>
   Frame: () => ReactElement
+  schematic: boolean
 }[] = [
   {
     group: 'Wipe (A/B)',
     keys: new Set<ControlKey>(['wipePos']),
     Frame: WipeControl,
+    schematic: false,
   },
   {
     group: 'PiP inset (source B)',
     keys: new Set<ControlKey>(['pipX', 'pipY', 'pipW', 'pipH']),
     Frame: PipControl,
+    schematic: false,
   },
   {
     group: 'Mask & convergence',
     keys: new Set<ControlKey>(['crtPurityX', 'crtPurityY', 'crtPuritySize']),
     Frame: PurityControl,
+    schematic: false,
   },
   {
     group: 'View',
     keys: new Set<ControlKey>(['crtZoomX', 'crtZoomY']),
     Frame: ZoomControl,
+    schematic: false,
   },
   ...SCHEMATICS.map(({ group, keys }) => ({
     group,
     keys: new Set<ControlKey>(keys),
     Frame: SCHEMATIC_FRAMES[group],
+    schematic: true,
   })),
 ]
 
@@ -627,7 +634,8 @@ export function ControlGroup(props: { group: Group; defaultOpen?: boolean }) {
     [],
   )
   // A live filter drops the miniature, so a search can reach the sliders it
-  // stands in for.
+  // stands in for, and so does switching the signal diagrams off. The wipe,
+  // PiP, mask and view miniatures are controls, and stay.
   const [showFramed, setShowFramed] = useState(false)
   const [showFine, setShowFine] = useState(false)
   // The group reads two primitives off the controls. This component builds
@@ -658,9 +666,12 @@ export function ControlGroup(props: { group: Group; defaultOpen?: boolean }) {
   const driftable = MUTATE_CIRCUIT_BY_GROUP.has(group.name)
   const drifting = driftingGroups.has(group.name)
   const driftWords = DRIFT_MODE_WORDS[driftMode]
-  const frame = filterActive(filter)
-    ? undefined
-    : FRAMES.find(f => f.group === group.name)
+  const diagrams = useSignalDiagrams()
+  const framed = FRAMES.find(f => f.group === group.name)
+  const frame =
+    filterActive(filter) || (framed?.schematic === true && !diagrams)
+      ? undefined
+      : framed
 
   // The card's own chips. Hidden under a live filter for the same reason the
   // miniature is: a search is asking for rows, and a chip is not one.

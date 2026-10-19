@@ -138,6 +138,7 @@ export function paletteActions(o: {
   onFullscreen: () => void
   onSidebar: () => void
   onBench: () => void
+  onDiagrams: () => void
   onPopout: () => void
   // The doors. `onShowMoving` is the one entry that can see a routing: the
   // palette indexes controls by their static definition, so it can no more see
@@ -387,6 +388,12 @@ export function paletteActions(o: {
       name: 'wide bench',
       blurb: 'spread the controls over two columns',
       run: o.onBench,
+    },
+    {
+      name: 'toggle signal diagrams',
+      blurb:
+        'draw each group as a schematic above its sliders, or as sliders alone',
+      run: o.onDiagrams,
     },
     {
       name: 'pop out controls',

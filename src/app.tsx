@@ -94,6 +94,7 @@ import { sameList } from './ui/sameList'
 import { SavedProfiles } from './ui/SavedProfiles'
 import { Section } from './ui/Section'
 import { ShareDialog } from './ui/ShareDialog'
+import { setSignalDiagrams, useSignalDiagrams } from './ui/signalDiagrams'
 import { SignalPath } from './ui/SignalPath'
 import { SignalTapContext } from './ui/SignalTapContext'
 import { Rack } from './ui/Slider'
@@ -443,6 +444,7 @@ export function App() {
   // 600px of sidebar has the room, and it is the panel's width that decides,
   // not the screen's.
   const [benchOn, setBenchOn] = usePersistedFlag('videoskillet_panel_bench')
+  const diagrams = useSignalDiagrams()
   const roomy = useMediaQuery('(min-width: 1280px)')
   const touch = useMediaQuery('(pointer: coarse)')
   const wideEnough = popout !== null || roomy || panelW >= BENCH_W
@@ -1232,6 +1234,7 @@ export function App() {
     onFullscreen: toggleFullscreen,
     onSidebar: toggleSidebar,
     onBench: toggleBench,
+    onDiagrams: () => setSignalDiagrams(!diagrams),
     onPopout: () => openPopout(benchOn),
     onFilter: revealText,
     onShowMoving: showMoving,
@@ -1503,6 +1506,8 @@ export function App() {
     bench: benchOn,
     canBench: wideEnough,
     onToggleBench: toggleBench,
+    diagrams,
+    onToggleDiagrams: () => setSignalDiagrams(!diagrams),
     sidebarHidden,
     onToggleSidebar: toggleSidebar,
     onPopout: () => openPopout(benchOn),

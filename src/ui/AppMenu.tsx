@@ -76,6 +76,8 @@ export function AppMenu(props: {
   sidebarHidden: boolean
   onToggleSidebar: () => void
   onPopout: () => void
+  diagrams: boolean
+  onToggleDiagrams: () => void
   showFps: boolean
   onToggleFps: () => void
   onShowPalette: () => void
@@ -211,6 +213,14 @@ export function AppMenu(props: {
               onClick={props.onToggleBench}
             />
           ) : null}
+          <MenuItem
+            icon="◫"
+            label={
+              props.diagrams ? 'hide signal diagrams' : 'show signal diagrams'
+            }
+            hint=""
+            onClick={props.onToggleDiagrams}
+          />
           <MenuItem
             icon="⧉"
             label={
