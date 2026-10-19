@@ -2,6 +2,94 @@
 
 All notable changes to videoskillet are documented here.
 
+## [2.20.1](https://github.com/cmdcolin/videoskillet/compare/v2.20.0...v2.20.1) - 2026-10-19
+
+### Features
+- *(ui)* [`e64c89d`](https://github.com/cmdcolin/videoskillet/commit/e64c89d7c7879d4a3c3d76006462424da681bb3f) add a turbo sync loss preset
+- *(rules)* [`6363204`](https://github.com/cmdcolin/videoskillet/commit/6363204a9918037bb0afc2cc74e59da3e1e4a390) let a bender user keep their setup beside their voices
+- *(ui)* [`9fd4c85`](https://github.com/cmdcolin/videoskillet/commit/9fd4c857c1e8c4c1cbbc90d022cd75067445f1cf) schematics for the mixer loop, decoder, chyron and captions panels
+- *(ui)* [`a44b735`](https://github.com/cmdcolin/videoskillet/commit/a44b7359fb18000a6d6d5f70c7fe3589c5dfcff4) draw the map's loop chips like its boxes
+- *(ui)* [`6bc8b49`](https://github.com/cmdcolin/videoskillet/commit/6bc8b495b20fc8fac156742e9ebebdbad8617c56) draw the mixer loop as one box per stage
+- *(ui)* [`ff2641f`](https://github.com/cmdcolin/videoskillet/commit/ff2641f4908f61e3300ac4d7c6dd8b6771dbf683) fold the mixer loop into two rows
+- *(ui)* [`22aa432`](https://github.com/cmdcolin/videoskillet/commit/22aa4325eb19bdc48ce783692a3b0a45e98314a1) schematic for the camera loop and the tube face it shoots
+- *(ui)* [`1e3206a`](https://github.com/cmdcolin/videoskillet/commit/1e3206a6f8259bbf9326e21f404bcdefea17bf2e) fold the decoder schematic into two rows
+- *(ui)* [`dce96a4`](https://github.com/cmdcolin/videoskillet/commit/dce96a47519afed53e4d957804d01f56731cd861) fold the chyron keyer into two boxes
+- *(ui)* [`175588e`](https://github.com/cmdcolin/videoskillet/commit/175588e30f7fa041c92b8a7ee603b5937882c973) run the receiver's scan recurrences on the CPU
+- *(ui)* [`ba17856`](https://github.com/cmdcolin/videoskillet/commit/ba17856fc5cc04d12c3e847a160f376973742c06) schematic for the receiver's deflection
+- *(ui)* [`00e9b48`](https://github.com/cmdcolin/videoskillet/commit/00e9b48a5955f20da7c9619329b4a283fdfcaa8d) schematic for the receiver's sync
+- *(ui)* [`09b36ff`](https://github.com/cmdcolin/videoskillet/commit/09b36ffb38696c8b420e42ebc504ee512098ad8a) an "All settings" sheet listing every control in signal order
+- *(ui)* [`c6b1bc9`](https://github.com/cmdcolin/videoskillet/commit/c6b1bc9b7cbfdc9d9b96b1e456307ca6a0a15372) schematics for the timebase and the VHS deck
+- *(ui)* [`c9f5f96`](https://github.com/cmdcolin/videoskillet/commit/c9f5f9656da8364d24c6981140cf61c40462ad2f) schematics for the enhancer and for ghosting & leakage
+- *(ui)* [`e19c51e`](https://github.com/cmdcolin/videoskillet/commit/e19c51eb98e78e2fbf8a7942d90bca6f416e0b19) schematic for the recording's luma and FM path
+- *(ui)* [`a919a67`](https://github.com/cmdcolin/videoskillet/commit/a919a67ccc5192b6b85dea2e950b31a7629549eb) show the fader-up lap on the loop plots while the fader is down
+- *(ui)* [`da8775e`](https://github.com/cmdcolin/videoskillet/commit/da8775e8a9ce979388e4bf488611da0248a2e277) schematics for the chroma keyer and the phosphor layer
+- *(ui)* [`49e15a5`](https://github.com/cmdcolin/videoskillet/commit/49e15a5f1c8add6cc6091fb0e19dc3f75f1e0509) hide and show the sidebar
+- *(ui)* [`d6fbca8`](https://github.com/cmdcolin/videoskillet/commit/d6fbca87e2fd981d0891d4579e3357f818ae10ca) hide-sidebar button in the masthead
+- *(ui)* [`44502f7`](https://github.com/cmdcolin/videoskillet/commit/44502f716731933937436f7231748b1bfbf7a7c4) draw the mixer loop keyer's slice beside the loop gain
+- *(ui)* [`79890af`](https://github.com/cmdcolin/videoskillet/commit/79890afacaaba74710fc5b387af5d018c4c61fb1) land the camera return in the back half of Source A
+- *(ui)* [`563ae44`](https://github.com/cmdcolin/videoskillet/commit/563ae44f8023417de29f2d4cce6e4a303a14b99f) put over-deviated white in the starter row
+- *(ui)* [`473ac93`](https://github.com/cmdcolin/videoskillet/commit/473ac93aa62bb4941f57f5185d34828e063a42a7) draw the noise and interference group as a schematic
+- *(ui)* [`2a5b7a7`](https://github.com/cmdcolin/videoskillet/commit/2a5b7a79b1a63e68b7840a13d0c163755a8e50fe) draw the cable and wiring group as a schematic
+- *(ui)* [`c03ac54`](https://github.com/cmdcolin/videoskillet/commit/c03ac54a6e31f2a5fbf6c495cc3199901621d38d) draw the feed A and B cable groups as schematics
+- *(ui)* [`8340f1d`](https://github.com/cmdcolin/videoskillet/commit/8340f1db4851623b08cc0bd89814ad9c31b38ab2) draw the audio routings as a patch schematic
+- *(ui)* [`75ef84a`](https://github.com/cmdcolin/videoskillet/commit/75ef84a21a2d3fbd411c5c3b6f99971258ee2a1a) fold an open box's gated rows into one line
+- *(ui)* [`c74ce7c`](https://github.com/cmdcolin/videoskillet/commit/c74ce7c3165b2d225afe8b85cd55b6ca25d1f0f9) draw the mixer loop's key slice only while it matters
+- *(ui)* [`8215023`](https://github.com/cmdcolin/videoskillet/commit/8215023182c581a4b5225c51e9e00d427ac012b6) draw the A/B mixer as a schematic
+- *(ui)* [`7df18a4`](https://github.com/cmdcolin/videoskillet/commit/7df18a49677edbaa14f1b637247ddc32c154196c) draw the video synth as a schematic
+- *(ui)* [`e8d8a6f`](https://github.com/cmdcolin/videoskillet/commit/e8d8a6fffdf9fe009b4280c0340ab75a03b40466) show the mixer loop's hue turn per lap with the store open
+- *(ui)* [`64344c3`](https://github.com/cmdcolin/videoskillet/commit/64344c3efac27e7fd18fc3e4c0264dd15de46069) set the mixer feedback schematic in caps with larger boxes
+- *(ui)* [`e8465d3`](https://github.com/cmdcolin/videoskillet/commit/e8465d33537c75954e75d3d488a2d5d42bed110e) draw the RF tuner as a schematic
+- *(ui)* [`dfca177`](https://github.com/cmdcolin/videoskillet/commit/dfca177866b6fe31c609b5f7c9f39564f69fc9ab) draw the dropouts and dubs group as a schematic
+- *(ui)* [`415e597`](https://github.com/cmdcolin/videoskillet/commit/415e59734e01837a753e3d1a26d868f5a98588c6) wire the mixer loop keyer's input and draw the ring's products
+- *(ui)* [`eb6e4d6`](https://github.com/cmdcolin/videoskillet/commit/eb6e4d63894ded3c607d94b9d19b5c5884f0e4b8) draw the beam group as a schematic
+- *(ui)* [`2ecbb28`](https://github.com/cmdcolin/videoskillet/commit/2ecbb28b45ce2f3eef11b146a94e1e85b81228e6) draw the crosspoint group as a schematic
+- *(ui)* [`a46b55c`](https://github.com/cmdcolin/videoskillet/commit/a46b55c2f8853da428dccf4c2f2bc47c86645b49) retitle the mixer loop plot while the ring arcs are on it
+- *(ui)* [`626f833`](https://github.com/cmdcolin/videoskillet/commit/626f833204c763eb04c71561e03dea7e5107d86d) set every schematic in caps
+
+### Fixes
+- *(ui)* [`df1dbb6`](https://github.com/cmdcolin/videoskillet/commit/df1dbb6e8dd392e458adc31536ba16ccaec831aa) judge the mixer loop by its peak gain across the band
+- *(ui)* [`e4318c9`](https://github.com/cmdcolin/videoskillet/commit/e4318c995576862bc828fad36210c3a44bd9b563) read the camera loop's verdict off its curve
+- *(signal)* [`8c9ca24`](https://github.com/cmdcolin/videoskillet/commit/8c9ca24056277c249afc3a4edf9cddc903b020e0) grow the demod kernel as its bandwidth narrows
+- *(signal)* [`c120000`](https://github.com/cmdcolin/videoskillet/commit/c120000c52317a0f79a93b950f8e0e2dd8e902b0) keep luma out of the chroma trail
+- *(ui)* [`879ebf9`](https://github.com/cmdcolin/videoskillet/commit/879ebf95230634647ba9521a1db924d84b0ff4d4) let the React compiler memoize the diagram parts
+- *(signal)* [`e3d0652`](https://github.com/cmdcolin/videoskillet/commit/e3d0652b1b93a442845a410c24f4806ce7ae8645) take comb luma from the comb's own chroma
+- *(deflection)* [`57e3ace`](https://github.com/cmdcolin/videoskillet/commit/57e3ace1e84499fb8d8723e9d0f63d7330949f77) measure the HV tank's load from black
+- *(ui)* [`06b52a8`](https://github.com/cmdcolin/videoskillet/commit/06b52a852f56da797edab5b31575836e49dd6185) let the React compiler memoize the hue wheel
+- *(signal)* [`5bfb60a`](https://github.com/cmdcolin/videoskillet/commit/5bfb60a64f58c4022a53da3a7e36721cccbc2851) fold FM over-deviation ahead of the playback luma filter
+- *(site)* [`57b9c6f`](https://github.com/cmdcolin/videoskillet/commit/57b9c6f8581814a05772f28d08d8f8affdc80467) set post meta in the body face to match bender
+- *(ui)* [`858fbff`](https://github.com/cmdcolin/videoskillet/commit/858fbffeadb053868fa55b771d6faf845f7c7c39) keep the new schematics' end labels clear of their boxes
+
+### Performance
+- *(ui)* [`a7f2601`](https://github.com/cmdcolin/videoskillet/commit/a7f260183156e89caaea1fa57e5036d7cbbcf8e6) keep the row verbs' identity across a control write
+- *(ui)* [`8bc89d7`](https://github.com/cmdcolin/videoskillet/commit/8bc89d7d2c86b7587a2238ead309fc1cb1abdc88) stop App re-rendering on a slider write
+
+### Refactor
+- *(ui)* [`c998045`](https://github.com/cmdcolin/videoskillet/commit/c998045473df66148ccf49f8070f9ee15ca63ad6) share the kernel frequency-response evaluator
+
+### Documentation
+- [`f112f22`](https://github.com/cmdcolin/videoskillet/commit/f112f225da8de32ae737be70004cc9a150c2c44d) add the turbo sync loss preset to the scrambled channel post
+- [`ca698c8`](https://github.com/cmdcolin/videoskillet/commit/ca698c88185cc734c0c72459e76d7b5a7d9b21ed) regenerate llms-full.txt
+- *(gpu)* [`09d0194`](https://github.com/cmdcolin/videoskillet/commit/09d01942f0a986fa70be4a78c71b368fbcbe1fb8) give the loop keyer's clip the bar levels on its bus
+- *(signal)* [`19190b8`](https://github.com/cmdcolin/videoskillet/commit/19190b801f0322a3bc493575f94fa1088a54e695) say what the flutter knob and the stick-slip output measure
+- *(ui)* [`f56d15e`](https://github.com/cmdcolin/videoskillet/commit/f56d15ebf99cc54c30f5934622dbccd6f9be0e9a) say the camera loop joins source A, not the A/B mix
+
+### Tests
+- *(ui)* [`1384114`](https://github.com/cmdcolin/videoskillet/commit/1384114c402bdc589d79fda5100b33186f3afd85) check each schematic opens exactly its registered keys
+- *(signal)* [`506945c`](https://github.com/cmdcolin/videoskillet/commit/506945cf05d5b3f59bf59cf5376c7570eb9e20ff) pin the stock trap's dot crawl
+- *(ui)* [`8424a8a`](https://github.com/cmdcolin/videoskillet/commit/8424a8a876a17b224c33ebd2c1d8427104193ee8) fail when a slider drag re-renders more than its row
+- *(ui)* [`97d34d2`](https://github.com/cmdcolin/videoskillet/commit/97d34d241069ab1de304467184bf1243717d99a9) fail when a mid-drag write re-renders anything but its row
+- [`ca2f242`](https://github.com/cmdcolin/videoskillet/commit/ca2f24254ad55473ac3c11c8e6f245537da69659) wait for a schematic panel to settle before shooting it
+
+### Chores
+- [`eb8392c`](https://github.com/cmdcolin/videoskillet/commit/eb8392c20ddb9b4f32684f207fd540cf6e5f881b) allow .ts import extensions, matching bender
+- [`d606c9b`](https://github.com/cmdcolin/videoskillet/commit/d606c9b4a0f2a4490bf51b44dc039d8d04d8aba9) serve and build every page through Astro, as bender does
+- [`3fc3dbb`](https://github.com/cmdcolin/videoskillet/commit/3fc3dbba2618b4069d4ba9a5452a007bfa5f47f5) share the app's vite plugins between the astro and vitest configs
+- [`771418c`](https://github.com/cmdcolin/videoskillet/commit/771418c3e54b259419e0ab0413215bbddbb93ce8) share the diagram kit with bender
+- [`1d2c0b1`](https://github.com/cmdcolin/videoskillet/commit/1d2c0b16d13d535bb9268d35707a17ead0ffba09) run *.dom.test.tsx files in jsdom
+
+### Other Changes
+- [`c948a38`](https://github.com/cmdcolin/videoskillet/commit/c948a386d4b2abffd77c0400fb628f959897a90c) plain words
+
 ## [2.20.0](https://github.com/cmdcolin/videoskillet/compare/v2.19.0...v2.20.0) - 2026-10-15
 
 ### Features
