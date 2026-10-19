@@ -86,7 +86,6 @@
   align-items: center;
   gap: var(--space-sm);
   margin-left: auto;
-  padding-left: var(--space-xs);
 }
 .sec:not(.secOpen) .helpSlot {
   display: none;
@@ -169,7 +168,6 @@
    (14px each), and only while their own stage is open. */
 .headTitle {
   min-width: 0;
-  padding-right: var(--space-xs);
 }
 /* A folded section's current setting, in the header. Quiet and in the panel's
    ordinary weight — it is a reading, not part of the heading, and at the
