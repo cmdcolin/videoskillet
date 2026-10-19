@@ -7,6 +7,7 @@ import {
   Wire,
   type WireLook,
 } from './DiagramParts'
+import { alongRange } from './plotAlong'
 import { SYNTH_KEYS, SYNTH_OPENS as OPENS } from './schematicKeys'
 import {
   colorizerOut,
@@ -202,6 +203,7 @@ export function SynthDiagram() {
               scale={{ lo: 0, hi: 1, ticks: [0, 1], reference: 0.5 }}
               format={unit}
               ends={['0', '1 cycle']}
+              along={alongRange(0, 1, 'cycle')}
               look={r.touched('synthShape', 'synthLevel') ? 'on' : 'plain'}
             />
 

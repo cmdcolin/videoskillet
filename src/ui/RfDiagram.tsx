@@ -8,6 +8,7 @@ import {
   Wire,
   type WireLook,
 } from './DiagramParts'
+import { alongRange } from './plotAlong'
 import styles from './RfDiagram.module.css'
 import { ifResponse, NEXT_CHANNEL_MHZ, snowByLevel, SOUND_MHZ } from './rfModel'
 import { RF_KEYS, RF_OPENS as OPENS } from './schematicKeys'
@@ -147,6 +148,7 @@ export function RfDiagram() {
               scale={{ lo: -100, hi: 160, ticks: [0, 100], reference: 0 }}
               format={ire}
               ends={[ire(IRE_SYNC), `${IRE_WHITE}`]}
+              along={alongRange(IRE_SYNC, IRE_WHITE, 'IRE in')}
               look={snow > 0 ? 'on' : 'plain'}
             />
 
@@ -157,6 +159,7 @@ export function RfDiagram() {
               scale={{ lo: 0, hi: 1.2, ticks: [0, 1], reference: 1 }}
               format={String}
               ends={[`${IF_MHZ.lo}`, `${IF_MHZ.hi}`]}
+              along={alongRange(IF_MHZ.lo, IF_MHZ.hi, 'MHz')}
               look={mistune !== 0 ? 'on' : 'plain'}
             />
             <Marker at={mistune} name="pic" on={mistune !== 0} />

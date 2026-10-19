@@ -9,6 +9,7 @@ import {
   dosePerSecond,
   FIELD_HZ,
 } from './phosphorModel'
+import { PlotProbe } from './PlotProbe'
 import { PHOSPHOR_KEYS, PHOSPHOR_OPENS as OPENS } from './schematicKeys'
 
 type Part = keyof typeof OPENS
@@ -80,6 +81,7 @@ function ChannelPlot({
   ticks,
   floor,
   on,
+  along,
 }: {
   left: number
   right: number
@@ -92,6 +94,8 @@ function ChannelPlot({
   /** A log axis from this up to 1, gridded by decade. */
   floor?: number
   on: boolean
+  /** Names the place a fraction of the way across the axis stands for. */
+  along: (fraction: number) => string
 }) {
   const x = (i: number, n: number) => left + ((right - left) * i) / (n - 1)
   const at = (v: number) =>
@@ -166,6 +170,21 @@ function ChannelPlot({
           {name}
         </Label>
       ))}
+      <PlotProbe
+        left={left}
+        right={right}
+        top={top}
+        bottom={bottom}
+        read={fraction => {
+          const i = Math.round(fraction * (series.length - 1))
+          const here = series[i]!
+          return {
+            x: x(i, series.length),
+            y: y(here[1]!),
+            text: `${along(i / (series.length - 1))} · g ${Number(here[1]!.toPrecision(2))}`,
+          }
+        }}
+      />
     </>
   )
 }
@@ -307,6 +326,7 @@ export function PhosphorDiagram() {
               ticks={fieldTicks(fields)}
               floor={GLOW_FLOOR}
               on={held}
+              along={f => `${Number((f * fields).toPrecision(2))} fields`}
             />
             <ChannelPlot
               {...RIGHT_PLOT}
@@ -315,6 +335,7 @@ export function PhosphorDiagram() {
               series={wear}
               ends={['new', rate > 0 ? span(DOSE_SPAN / rate) : 'no wear']}
               on={r.touched(...OPENS.burn)}
+              along={f => (rate > 0 ? span((f * DOSE_SPAN) / rate) : 'no wear')}
             />
           </>
         )}

@@ -5,6 +5,7 @@ import { IRE_WHITE, SAMPLE_RATE } from '../core/signal/constants'
 import { useReadings, useSelectedBox, type BoxSpec } from './diagram'
 import styles from './Diagram.module.css'
 import { BoxRows, BoxView, Diagram, Label, Wire } from './DiagramParts'
+import { PlotProbe } from './PlotProbe'
 import own from './RecordingDiagram.module.css'
 import { BAR, barLine, chromaOn, fmCeiling, playBack } from './recordModel'
 import { magnitude, response } from './response'
@@ -326,6 +327,34 @@ export function RecordingDiagram() {
             <Label x={RESPONSE_PLOT.right} y={PLOT.bottom + 11} anchor="end">
               6 MHz
             </Label>
+            <PlotProbe
+              {...BAR_PLOT}
+              {...PLOT}
+              read={along => {
+                const n = Math.min(
+                  Math.round(along * BAR.us * 1e-6 * SAMPLE_RATE),
+                  out.length - 1,
+                )
+                return {
+                  x: barX(n),
+                  y: ireY(out[n]!),
+                  text: `${((n / SAMPLE_RATE) * 1e6).toFixed(1)} µs · ${Math.round(emphasized[n]!)} → ${Math.round(out[n]!)}`,
+                }
+              }}
+            />
+            <PlotProbe
+              {...RESPONSE_PLOT}
+              {...PLOT}
+              read={along => {
+                const mhz = along * MHZ_MAX
+                const gain = magnitude(response(kernel, mhz * 1e6))
+                return {
+                  x: mhzX(mhz),
+                  y: gainY(gain),
+                  text: `${mhz.toFixed(2)} MHz · ${gain.toFixed(2)}×`,
+                }
+              }}
+            />
           </>
         )}
       </Diagram>

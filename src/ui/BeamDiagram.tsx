@@ -9,6 +9,7 @@ import {
   Wire,
   type WireLook,
 } from './DiagramParts'
+import { alongRange } from './plotAlong'
 import { BEAM_KEYS, BEAM_OPENS as OPENS } from './schematicKeys'
 import { TracePlot } from './TracePlot'
 
@@ -146,6 +147,7 @@ export function BeamDiagram() {
               scale={{ lo: 0, hi: 1.5, ticks: [0, 1], reference: 0 }}
               format={String}
               ends={[`${EDGE_PX.from}`, `${EDGE_PX.to}`]}
+              along={alongRange(EDGE_PX.from, EDGE_PX.to, 'px')}
               look={
                 r.touched('crtSpot', 'crtSvm', 'crtSvmWidth', 'crtSharp')
                   ? 'on'
@@ -160,6 +162,7 @@ export function BeamDiagram() {
               scale={{ lo: 0, hi: 1, ticks: [0, 1], reference: 1 }}
               format={String}
               ends={['−½ line', '½']}
+              along={alongRange(-0.5, 0.5, 'line')}
               look={r.touched('scanBeam', 'scanBloom') ? 'on' : 'plain'}
             />
             {v('scanBloom') > 0 && v('scanBeam') > 0 && (

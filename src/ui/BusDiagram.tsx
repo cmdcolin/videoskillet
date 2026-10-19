@@ -9,6 +9,7 @@ import {
   Wire,
   type WireLook,
 } from './DiagramParts'
+import { alongRange } from './plotAlong'
 import { BUS_KEYS, BUS_OPENS as OPENS } from './schematicKeys'
 import { TracePlot, type TraceLook, type TraceScale } from './TracePlot'
 
@@ -216,6 +217,7 @@ export function BusDiagram() {
               scale={OUT}
               format={ire}
               ends={[ire(IN_SPAN.lo), ire(IN_SPAN.hi)]}
+              along={alongRange(IN_SPAN.lo, IN_SPAN.hi, 'IRE in')}
               look={bus.busClip > 0 ? 'on' : 'plain'}
             />
             {!bus.genlock && (
@@ -238,6 +240,7 @@ export function BusDiagram() {
               scale={OUT}
               format={ire}
               ends={[times(-FADER_SPAN), times(FADER_SPAN)]}
+              along={alongRange(-FADER_SPAN, FADER_SPAN, '×')}
               look={faderLook}
             />
             <circle
