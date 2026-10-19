@@ -86,6 +86,7 @@
   align-items: center;
   gap: var(--space-sm);
   margin-left: auto;
+  padding-left: var(--space-xs);
 }
 .sec:not(.secOpen) .helpSlot {
   display: none;

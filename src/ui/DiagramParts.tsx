@@ -1,4 +1,4 @@
-import { Fragment, useId, type ReactNode } from 'react'
+import { Fragment, useId, useState, type ReactNode } from 'react'
 
 import { ControlSlider } from './ControlGroup'
 import { NEEDS, sliderFor, type SliderNeed } from './controls'
@@ -265,9 +265,12 @@ const NEED_OF = new Map<string, SliderNeed | undefined>(Object.entries(NEEDS))
 export function BoxRows({
   keys,
   note,
+  help,
 }: {
   keys: readonly ControlKey[] | undefined
   note?: string
+  /** What the open box does: two lines, and a press shows the rest. */
+  help?: string
 }) {
   const fold = useControlReading(c => boxFold(keys ?? [], c)).split(',')
   if (!keys) return null
@@ -285,6 +288,7 @@ export function BoxRows({
       .map(([need, n]) => <FoldLine key={need.hint} need={need} n={n} />)
   return (
     <div className={styles.rows}>
+      {help && <HelpLine key={help} text={help} />}
       {note && <p className={styles.noteLine}>{note}</p>}
       {under(undefined)}
       {shown.map(key => (
@@ -294,6 +298,19 @@ export function BoxRows({
         </Fragment>
       ))}
     </div>
+  )
+}
+
+function HelpLine({ text }: { text: string }) {
+  const [full, setFull] = useState(false)
+  return (
+    <button
+      className={full ? styles.helpFull : styles.help}
+      aria-expanded={full}
+      onClick={() => setFull(!full)}
+    >
+      {text}
+    </button>
   )
 }
 

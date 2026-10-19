@@ -253,7 +253,10 @@ export function BusDiagram() {
           </>
         )}
       </Diagram>
-      <BoxRows keys={open} />
+      <BoxRows
+        keys={open}
+        help={boxes.find(b => b.id === pick.selected)?.help}
+      />
     </>
   )
 }

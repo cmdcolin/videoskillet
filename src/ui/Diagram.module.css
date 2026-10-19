@@ -158,3 +158,23 @@
   stroke: var(--danger);
   stroke-width: 1.5;
 }
+
+/* What the open box does: two lines, and a press shows the rest. */
+.help {
+  composes: bare from './ui.module.css';
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  width: 100%;
+  margin: var(--space-2xs) 0;
+  text-align: left;
+  font-size: var(--fs-xs);
+  color: var(--fg3);
+}
+
+.helpFull {
+  composes: help;
+  -webkit-line-clamp: unset;
+  color: var(--fg2);
+}

@@ -464,7 +464,7 @@ export function VhsDiagram() {
           </>
         )}
       </Diagram>
-      <BoxRows keys={open?.keys} note={open?.note} />
+      <BoxRows keys={open?.keys} note={open?.note} help={open?.help} />
     </>
   )
 }

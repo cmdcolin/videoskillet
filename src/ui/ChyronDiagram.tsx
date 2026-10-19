@@ -440,7 +440,10 @@ function CharGen({ cg }: { cg: boolean }) {
           </g>
         )}
       </Diagram>
-      <BoxRows keys={open} />
+      <BoxRows
+        keys={open}
+        help={boxes.find(x => x.id === pick.selected)?.help}
+      />
     </>
   )
 }

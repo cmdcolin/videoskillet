@@ -430,7 +430,10 @@ export function MixerLoopDiagram() {
           </>
         )}
       </Diagram>
-      <BoxRows keys={open} />
+      <BoxRows
+        keys={open}
+        help={boxes.find(b => b.id === pick.selected)?.help}
+      />
     </>
   )
 }
