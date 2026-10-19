@@ -8,6 +8,7 @@ import {
   Wire,
   type WireLook,
 } from './DiagramParts'
+import { alongPicture, alongRange } from './plotAlong'
 import { ablDrive, beamIre, cardLoads, leftEdges, WHITE_BAR } from './scanModel'
 import { DEFLECTION_KEYS, DEFLECTION_OPENS as OPENS } from './schematicKeys'
 import { TracePlot } from './TracePlot'
@@ -192,6 +193,7 @@ export function DeflectionDiagram() {
               values={edges}
               scale={{ floor: 1 }}
               ends={['top', 'bottom']}
+              along={alongPicture}
               band={BAR_BAND}
               look={r.touched(...OPENS.tank, ...OPENS.bend) ? 'on' : 'plain'}
             />
@@ -210,6 +212,7 @@ export function DeflectionDiagram() {
               scale={{ lo: 0, hi: 1.2, ticks: [0, 1], reference: 1 }}
               format={String}
               ends={['cut', '2 s']}
+              along={alongRange(0, 2, 's')}
               look={pumps ? 'alarm' : ablOn ? 'on' : 'plain'}
             />
           </>

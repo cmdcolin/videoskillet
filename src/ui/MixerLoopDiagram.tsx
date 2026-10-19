@@ -16,6 +16,7 @@ import { HueWheel, LevelBar, TurnDial } from './HueWheel'
 import { lapTurn, turnWords } from './lapTurn'
 import { BAND_MHZ, bandMHz, lapGains, type MixerLoop } from './loopGain'
 import own from './MixerLoopDiagram.module.css'
+import { PlotProbe } from './PlotProbe'
 import { MIXER_LOOP_KEYS, MIXER_LOOP_OPENS as OPENS } from './schematicKeys'
 
 type Part = keyof typeof OPENS
@@ -414,6 +415,18 @@ export function MixerLoopDiagram() {
                 strength={Math.min(Math.abs(key), 1)}
               />
             )}
+            <PlotProbe
+              {...PLOT}
+              right={right}
+              read={along => {
+                const i = Math.round(along * (POINTS - 1))
+                return {
+                  x: x(CURVE_MHZ[i]!),
+                  y: plotY(gains[i]!),
+                  text: `${CURVE_MHZ[i]!.toFixed(1)} MHz · ${gains[i]!.toFixed(2)}×`,
+                }
+              }}
+            />
           </>
         )}
       </Diagram>

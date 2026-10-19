@@ -18,6 +18,7 @@ import {
   strikeSlab,
   type Mark,
 } from './noiseModel'
+import { alongRange } from './plotAlong'
 import { NOISE_KEYS, NOISE_OPENS as OPENS } from './schematicKeys'
 import { TracePlot } from './TracePlot'
 
@@ -153,6 +154,7 @@ export function NoiseDiagram() {
               scale={{ lo: 0, hi: 2, ticks: [0, 1, 2], reference: 1 }}
               format={times}
               ends={['0', `${BAND_MHZ} MHz`]}
+              along={alongRange(0, BAND_MHZ, 'MHz')}
               band={colourBand(BAND_MHZ * 1e6)}
               look={floorOn ? 'on' : 'plain'}
             />

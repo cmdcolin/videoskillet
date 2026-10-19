@@ -8,6 +8,7 @@ import {
   Wire,
   type WireLook,
 } from './DiagramParts'
+import { alongPicture, alongRange } from './plotAlong'
 import { frameShifts, hLocks, lineShifts, vLocks, type Hold } from './scanModel'
 import { SYNC_KEYS, SYNC_OPENS as OPENS } from './schematicKeys'
 import { TracePlot, type TraceScale } from './TracePlot'
@@ -179,6 +180,7 @@ export function SyncDiagram() {
               values={lines}
               scale={{ floor: 1 }}
               ends={['top', 'bottom']}
+              along={alongPicture}
               breakOver={20}
               look={
                 !hLock
@@ -195,6 +197,7 @@ export function SyncDiagram() {
               values={frames}
               scale={vLock ? { floor: 1 } : ROLLING}
               ends={['0', '1 s']}
+              along={alongRange(0, 1, 's')}
               breakOver={HALF_FRAME}
               look={
                 !vLock

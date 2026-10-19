@@ -10,6 +10,7 @@ import {
   Wire,
   type WireLook,
 } from './DiagramParts'
+import { alongPicture } from './plotAlong'
 import { CROSSPOINT_KEYS, CROSSPOINT_OPENS as OPENS } from './schematicKeys'
 import { TracePlot } from './TracePlot'
 
@@ -145,6 +146,7 @@ export function CrosspointDiagram() {
               }}
               format={signed}
               ends={['top', 'bottom']}
+              along={alongPicture}
               look={lost.length > 0 ? 'alarm' : reach > 0 ? 'on' : 'plain'}
             />
 

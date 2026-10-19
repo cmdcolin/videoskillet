@@ -10,6 +10,7 @@ import {
 } from './DiagramParts'
 import own from './LeakDiagram.module.css'
 import { channelLine, ghostGains, type Leak } from './leakModel'
+import { alongRange } from './plotAlong'
 import { LEAK_KEYS, LEAK_OPENS as OPENS } from './schematicKeys'
 import { BAR_US, LINE_US, PICTURE_BAND } from './testLine'
 import { TracePlot, type TraceScale } from './TracePlot'
@@ -210,6 +211,7 @@ export function LeakDiagram() {
               scale={IRE_SCALE}
               format={ire}
               ends={['0', `${LINE_US.toFixed(1)} µs`]}
+              along={alongRange(0, LINE_US, 'µs')}
               band={PICTURE_BAND}
               look={ghostOn || soundOn ? 'on' : 'plain'}
             />
@@ -252,6 +254,7 @@ export function LeakDiagram() {
               }}
               format={times}
               ends={['0', `${BAND_MHZ} MHz`]}
+              along={alongRange(0, BAND_MHZ, 'MHz')}
               look={ghostOn ? 'on' : 'plain'}
             />
             <line

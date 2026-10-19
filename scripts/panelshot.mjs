@@ -11,8 +11,10 @@ import { SEED, seedStorage } from './drive.mjs'
 
 const args = process.argv.slice(2)
 const dpr = args.find(a => a.startsWith('--dpr='))?.slice(6) ?? '1.0'
+// --hover=N puts the pointer 60% along the Nth plot's probe before the shot.
+const hover = args.find(a => a.startsWith('--hover='))?.slice(8)
 const [url, out, phase, group, ...clicks] = args.filter(
-  a => !a.startsWith('--dpr='),
+  a => !a.startsWith('--dpr=') && !a.startsWith('--hover='),
 )
 
 const browser = await puppeteer.launch({
@@ -100,6 +102,18 @@ try {
     clicks,
   )
   if (!rect) throw new Error(`no section for ${group}`)
+  if (hover !== undefined) {
+    const at = await page.evaluate(n => {
+      const r = document
+        .querySelectorAll('rect[class*="catch"]')
+        [n]?.getBoundingClientRect()
+      return r && { x: r.x + r.width * 0.6, y: r.y + r.height / 2 }
+    }, Number(hover))
+    if (!at) throw new Error(`no plot ${hover} to hover`)
+    await page.mouse.move(at.x, at.y)
+    await page.mouse.move(at.x + 2, at.y)
+    await new Promise(r => setTimeout(r, 300))
+  }
   await page.screenshot({ path: out, clip: rect, captureBeyondViewport: true })
   console.log(
     'wrote',

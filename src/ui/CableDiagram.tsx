@@ -16,6 +16,7 @@ import {
   Wire,
   type WireLook,
 } from './DiagramParts'
+import { alongRange } from './plotAlong'
 import { CABLE_KEYS, CABLE_OPENS as OPENS } from './schematicKeys'
 import { LINE_US, PICTURE_BAND } from './testLine'
 import { TracePlot } from './TracePlot'
@@ -184,6 +185,7 @@ export function CableDiagram() {
               scale={IRE_SCALE}
               format={ire}
               ends={['0', `${LINE_US.toFixed(1)} µs`]}
+              along={alongRange(0, LINE_US, 'µs')}
               band={PICTURE_BAND}
               look={lineOn ? 'on' : 'plain'}
             />

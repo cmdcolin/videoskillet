@@ -11,6 +11,7 @@ import local from './DecoderDiagram.module.css'
 import { useReadings, useSelectedBox, type BoxSpec } from './diagram'
 import styles from './Diagram.module.css'
 import { BoxRows, BoxView, Diagram, Label, Wire } from './DiagramParts'
+import { PlotProbe } from './PlotProbe'
 import { magnitude, response, type Complex } from './response'
 import { DECODER_KEYS, DECODER_OPENS as OPENS } from './schematicKeys'
 
@@ -399,6 +400,20 @@ export function DecoderDiagram() {
             <Label x={227} y={LEGEND_Y}>
               chroma left in Y
             </Label>
+            <PlotProbe
+              {...PLOT}
+              top={PLOT.ceiling}
+              bottom={PLOT.zero}
+              read={along => {
+                const i = Math.round(along * (POINTS - 1))
+                const { x, s } = at[i]!
+                return {
+                  x,
+                  y: plotY(s.luma),
+                  text: `${((MHZ_MAX * i) / (POINTS - 1)).toFixed(2)} MHz · Y ${s.luma.toFixed(2)} · C ${s.chroma.toFixed(2)}`,
+                }
+              }}
+            />
           </>
         )}
       </Diagram>

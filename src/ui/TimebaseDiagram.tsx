@@ -8,6 +8,7 @@ import {
   Wire,
   type WireLook,
 } from './DiagramParts'
+import { alongPicture, alongRange } from './plotAlong'
 import { TIMEBASE_KEYS, TIMEBASE_OPENS as OPENS } from './schematicKeys'
 import { lineTiming, MID_LINE } from './tapeModel'
 import { TracePlot } from './TracePlot'
@@ -172,6 +173,7 @@ export function TimebaseDiagram() {
               values={timing.field}
               scale={{ floor: 1 }}
               ends={['top', 'bottom']}
+              along={alongPicture}
               band={SWITCH_BAND}
               look={outLook === 'on' ? 'on' : 'plain'}
             />
@@ -193,6 +195,7 @@ export function TimebaseDiagram() {
               values={timing.over}
               scale={{ floor: 1 }}
               ends={['0', `${FRAMES / 60} s`]}
+              along={alongRange(0, FRAMES / 60, 's')}
               look={r.touched(...OPENS.capstan, ...OPENS.shed) ? 'on' : 'plain'}
             />
           </>

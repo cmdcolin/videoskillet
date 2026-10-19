@@ -12,6 +12,7 @@ import {
   Wire,
   type WireLook,
 } from './DiagramParts'
+import { PlotProbe } from './PlotProbe'
 import {
   CAMERA_LOOP_KEYS,
   CAMERA_LOOP_OPENS,
@@ -274,6 +275,17 @@ function CameraLoop({ initial }: { initial: Part | null }) {
               d={curve}
               className={styles.curveAlarm}
               clipPath={`url(#${clip})`}
+            />
+            <PlotProbe
+              {...PLOT}
+              read={along => {
+                const i = Math.round(along * (LEVELS.length - 1))
+                return {
+                  x: plotX(LEVELS[i]!),
+                  y: plotY(gains[i]!),
+                  text: `${Math.round(LEVELS[i]! * 100)}% · ${gains[i]!.toFixed(2)}×`,
+                }
+              }}
             />
           </>
         )}

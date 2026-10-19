@@ -1,5 +1,6 @@
 import styles from './Diagram.module.css'
 import { Label } from './DiagramParts'
+import { PlotProbe } from './PlotProbe'
 import own from './TracePlot.module.css'
 
 export type TraceLook = 'plain' | 'on' | 'alarm'
@@ -48,6 +49,7 @@ export function TracePlot({
   band,
   spread,
   breakOver,
+  along,
 }: {
   left: number
   right: number
@@ -68,6 +70,9 @@ export function TracePlot({
       area behind it. */
   spread?: readonly number[]
   breakOver?: number
+  /** Names the place a fraction of the way across the axis stands for, for the
+      reading under the pointer: "26.3 µs". Left off, the reading is the value. */
+  along?: (fraction: number) => string
 }) {
   const { lo, hi, ticks, reference } = axisOf(scale, values)
   const x = (i: number) =>
@@ -125,6 +130,24 @@ export function TracePlot({
       </Label>
       {area && <path d={area} className={own.spread} />}
       <path d={path} className={CURVE[look]} />
+      <PlotProbe
+        left={left}
+        right={right}
+        top={top}
+        bottom={bottom}
+        read={fraction => {
+          const i = Math.round(fraction * Math.max(values.length - 1, 0))
+          const value = Number(values[i]!.toPrecision(3))
+          const figure = (format ?? signed)(value)
+          return {
+            x: x(i),
+            y: y(values[i]!),
+            text: along
+              ? `${along(i / Math.max(values.length - 1, 1))} · ${figure}`
+              : figure,
+          }
+        }}
+      />
     </>
   )
 }

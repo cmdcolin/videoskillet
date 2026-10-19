@@ -18,6 +18,7 @@ import {
   peakingGains,
   type Enhancer,
 } from './enhancerModel'
+import { alongRange } from './plotAlong'
 import { ENHANCER_KEYS, ENHANCER_OPENS as OPENS } from './schematicKeys'
 import { LINE_US, PICTURE_BAND } from './testLine'
 import { TracePlot } from './TracePlot'
@@ -264,6 +265,7 @@ export function EnhancerDiagram() {
               scale={{ lo: -60, hi: 140, ticks: [0, 100], reference: 0 }}
               format={ire}
               ends={['', `${LINE_US.toFixed(1)} µs`]}
+              along={alongRange(0, LINE_US, 'µs')}
               band={PICTURE_BAND}
               look={
                 howl ? 'alarm' : r.touched(...ENHANCER_KEYS) ? 'on' : 'plain'

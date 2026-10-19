@@ -10,6 +10,7 @@ import {
   Wire,
   type WireLook,
 } from './DiagramParts'
+import { alongRange } from './plotAlong'
 import { FEED_CABLE_KEYS, FEED_CABLE_OPENS } from './schematicKeys'
 import { LINE_US, PICTURE_BAND } from './testLine'
 import { TracePlot } from './TracePlot'
@@ -165,6 +166,7 @@ function FeedCableDiagram({ feed }: { feed: Feed }) {
               scale={IRE_SCALE}
               format={ire}
               ends={['0', `${LINE_US.toFixed(1)} µs`]}
+              along={alongRange(0, LINE_US, 'µs')}
               band={PICTURE_BAND}
               look={flip !== 0 || load !== 0 ? 'on' : 'plain'}
             />

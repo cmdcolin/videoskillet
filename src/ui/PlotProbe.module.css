@@ -1,0 +1,29 @@
+/* A rect over the plot that takes the pointer and draws nothing. Sideways
+   drags read the plot; vertical ones still scroll the panel. */
+.catch {
+  fill: transparent;
+  touch-action: pan-y;
+  cursor: crosshair;
+}
+
+.cross {
+  stroke: var(--fg3);
+  stroke-width: 1;
+  pointer-events: none;
+}
+
+.dot {
+  fill: var(--accent);
+  pointer-events: none;
+}
+
+.reading {
+  pointer-events: none;
+}
+
+.reading text {
+  paint-order: stroke;
+  stroke: var(--bg);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}

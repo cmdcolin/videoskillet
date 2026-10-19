@@ -14,6 +14,7 @@ import {
   lumaAfterCopies,
   patchHueDegrees,
 } from './dubModel'
+import { alongRange } from './plotAlong'
 import { DUB_KEYS, DUB_OPENS as OPENS } from './schematicKeys'
 import { LINE_US } from './testLine'
 import { TracePlot } from './TracePlot'
@@ -154,6 +155,7 @@ export function DubDiagram() {
               scale={IRE_SCALE}
               format={ire}
               ends={['0', `${LINE_US.toFixed(1)} µs`]}
+              along={alongRange(0, LINE_US, 'µs')}
               band={hole}
               look={
                 rate > 0 && compensator === 0
@@ -177,6 +179,7 @@ export function DubDiagram() {
               scale={{ lo: -36, hi: 6, ticks: [0, -12, -24], reference: 0 }}
               format={ire}
               ends={['0', `${BAND_MHZ} MHz`]}
+              along={alongRange(0, BAND_MHZ, 'MHz')}
               look={gens > 1 ? 'on' : 'plain'}
             />
           </>

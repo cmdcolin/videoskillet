@@ -17,6 +17,7 @@ import {
   Wire,
   type WireLook,
 } from './DiagramParts'
+import { alongRange } from './plotAlong'
 import { VHS_KEYS, VHS_OPENS as OPENS } from './schematicKeys'
 import {
   lost,
@@ -448,6 +449,7 @@ export function VhsDiagram() {
               values={kick}
               scale={{ floor: 10 }}
               ends={['kick', `${FRAMES / 60} s`]}
+              along={alongRange(0, FRAMES / 60, 's')}
               look={rings(kick) ? 'alarm' : hunt > 0 ? 'on' : 'plain'}
             />
             {hunt === 0 && (
