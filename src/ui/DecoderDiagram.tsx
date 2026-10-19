@@ -7,10 +7,13 @@ import {
   takeoffBandpass,
   TAPS,
 } from '../core/signal/filters'
+import { sliderFor, snapToStep } from './controls'
+import { useControlsApi } from './ControlsContext'
 import local from './DecoderDiagram.module.css'
 import { useReadings, useSelectedBox, type BoxSpec } from './diagram'
 import styles from './Diagram.module.css'
 import { BoxRows, BoxView, Diagram, Label, Wire } from './DiagramParts'
+import { PlotHandle } from './PlotHandle'
 import { PlotProbe } from './PlotProbe'
 import { magnitude, response, type Complex } from './response'
 import { DECODER_KEYS, DECODER_OPENS as OPENS } from './schematicKeys'
@@ -136,6 +139,7 @@ const area = (pts: [number, number][]) =>
 export function DecoderDiagram() {
   const r = useReadings(READ)
   const pick = useSelectedBox()
+  const { beginHand, writeControl } = useControlsApi()
   const v = r.value
 
   const lock = v('burstLock')
@@ -229,6 +233,11 @@ export function DecoderDiagram() {
     at.map(({ x, s }): [number, number] => [x, plotY(f(s))])
 
   const open = boxes.find(b => b.id === pick.selected)
+  const bandwidth = sliderFor('demodMHz')
+  const corner = FSC / 1e6 + v('demodMHz')
+  const cornerAt = at[Math.round((corner / MHZ_MAX) * (POINTS - 1))]
+  const setBandwidth = (mhz: number) =>
+    writeControl('demodMHz', snapToStep(bandwidth, mhz))
   const top = TOP_Y - H / 2
   const under = TOP_Y + H / 2
   const lockLook = lock > 0 ? 'plain' : 'dash'
@@ -414,6 +423,23 @@ export function DecoderDiagram() {
                 }
               }}
             />
+            {cornerAt && (
+              <PlotHandle
+                x={cornerAt.x}
+                y={plotY(cornerAt.s.chroma)}
+                label="chroma bandwidth"
+                reading={`${v('demodMHz').toFixed(2)} MHz`}
+                onGrab={beginHand}
+                onMove={pointer =>
+                  setBandwidth(
+                    (MHZ_MAX * (pointer.x - PLOT.left)) /
+                      (PLOT.right - PLOT.left) -
+                      FSC / 1e6,
+                  )
+                }
+                onNudge={dx => setBandwidth(v('demodMHz') + dx * 0.1)}
+              />
+            )}
           </>
         )}
       </Diagram>
