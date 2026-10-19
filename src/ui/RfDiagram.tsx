@@ -1,4 +1,6 @@
 import { IRE_SYNC, IRE_WHITE } from '../core/signal/constants'
+import { sliderFor, snapToStep } from './controls'
+import { useControlsApi } from './ControlsContext'
 import { openBox, useReadings, useSelectedBox, type BoxSpec } from './diagram'
 import {
   BoxRows,
@@ -9,6 +11,7 @@ import {
   type WireLook,
 } from './DiagramParts'
 import { alongRange } from './plotAlong'
+import { PlotHandle } from './PlotHandle'
 import styles from './RfDiagram.module.css'
 import { ifResponse, NEXT_CHANNEL_MHZ, snowByLevel, SOUND_MHZ } from './rfModel'
 import { RF_KEYS, RF_OPENS as OPENS } from './schematicKeys'
@@ -34,12 +37,17 @@ const HEIGHT = PLOT.bottom + 14
 const LEVELS = 29
 const IF_MHZ = { lo: -2, hi: 9 }
 const IF_POINTS = 111
+const IF_TOP = 1.2
 
 const ire = (v: number) => (v < 0 ? `−${-v}` : String(v))
 const after = (id: Part) => COL[id].x + COL[id].w
 const look = (on: boolean): WireLook => (on ? 'on' : 'plain')
 const ifX = (mhz: number) =>
   IF.left + ((IF.right - IF.left) * (mhz - IF_MHZ.lo)) / (IF_MHZ.hi - IF_MHZ.lo)
+const ifMHz = (x: number) =>
+  IF_MHZ.lo + ((IF_MHZ.hi - IF_MHZ.lo) * (x - IF.left)) / (IF.right - IF.left)
+const ifY = (gain: number) =>
+  PLOT.bottom - ((PLOT.bottom - PLOT.top) * Math.min(gain, IF_TOP)) / IF_TOP
 
 function Marker({ at, name, on }: { at: number; name: string; on: boolean }) {
   return (
@@ -61,6 +69,7 @@ function Marker({ at, name, on }: { at: number; name: string; on: boolean }) {
 export function RfDiagram() {
   const r = useReadings(RF_KEYS)
   const pick = useSelectedBox()
+  const { beginHand, writeControl } = useControlsApi()
   const v = r.value
   const snow = v('rfSnow')
   const mistune = v('rfMistuneMHz')
@@ -70,6 +79,9 @@ export function RfDiagram() {
   const response = Array.from({ length: IF_POINTS }, (_, i) =>
     ifResponse(IF_MHZ.lo + ((IF_MHZ.hi - IF_MHZ.lo) * i) / (IF_POINTS - 1)),
   )
+  const tuning = sliderFor('rfMistuneMHz')
+  const setMistune = (mhz: number) =>
+    writeControl('rfMistuneMHz', snapToStep(tuning, mhz))
 
   const box = (id: Part, name: string, help: string): BoxSpec => ({
     id,
@@ -155,7 +167,7 @@ export function RfDiagram() {
               {...IF}
               title="IF, MHz (sketch)"
               values={response}
-              scale={{ lo: 0, hi: 1.2, ticks: [0, 1], reference: 1 }}
+              scale={{ lo: 0, hi: IF_TOP, ticks: [0, 1], reference: 1 }}
               format={String}
               ends={[`${IF_MHZ.lo}`, `${IF_MHZ.hi}`]}
               along={alongRange(IF_MHZ.lo, IF_MHZ.hi, 'MHz')}
@@ -182,6 +194,15 @@ export function RfDiagram() {
                 </Label>
               </>
             )}
+            <PlotHandle
+              x={ifX(mistune)}
+              y={ifY(ifResponse(mistune))}
+              label="fine tuning"
+              reading={`${mistune.toFixed(2)} MHz`}
+              onGrab={beginHand}
+              onMove={pointer => setMistune(ifMHz(pointer.x))}
+              onNudge={dx => setMistune(mistune + dx * tuning.step * 5)}
+            />
           </>
         )}
       </Diagram>

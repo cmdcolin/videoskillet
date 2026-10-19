@@ -10,7 +10,8 @@ const at = (e: PointerEvent<SVGCircleElement>) => {
 }
 
 // A point on a plot that the pointer drags. `onMove` gets the pointer in the
-// drawing's own units; the arrow keys call `onNudge` with the direction.
+// drawing's own units; the arrow keys call `onNudge` with the direction, and
+// the end of a drag calls `onDrop`.
 export function PlotHandle({
   x,
   y,
@@ -19,6 +20,7 @@ export function PlotHandle({
   onGrab,
   onMove,
   onNudge,
+  onDrop,
 }: {
   x: number
   y: number
@@ -27,6 +29,7 @@ export function PlotHandle({
   onGrab: () => void
   onMove: (at: { x: number; y: number }) => void
   onNudge: (dx: number, dy: number) => void
+  onDrop?: () => void
 }) {
   const key = (e: KeyboardEvent<SVGCircleElement>) => {
     const dx = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0
@@ -55,6 +58,7 @@ export function PlotHandle({
         onPointerMove={e => {
           if (e.currentTarget.hasPointerCapture(e.pointerId)) onMove(at(e))
         }}
+        onLostPointerCapture={onDrop}
         onKeyDown={key}
       >
         <title>{`${label} — drag, or use the arrow keys`}</title>

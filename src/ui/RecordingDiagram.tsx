@@ -1,10 +1,13 @@
-import { useId } from 'react'
+import { use, useId, useState } from 'react'
 
 import { lumaKernel } from '../core/gpu/filterbank'
 import { IRE_WHITE, SAMPLE_RATE } from '../core/signal/constants'
+import { sliderFor, snapToStep } from './controls'
+import { ControlStoreContext, useControlsApi } from './ControlsContext'
 import { openBox, useReadings, useSelectedBox, type BoxSpec } from './diagram'
 import styles from './Diagram.module.css'
 import { BoxRows, BoxView, Diagram, Label, Wire } from './DiagramParts'
+import { PlotHandle } from './PlotHandle'
 import { PlotProbe } from './PlotProbe'
 import own from './RecordingDiagram.module.css'
 import { BAR, barLine, chromaOn, fmCeiling, playBack } from './recordModel'
@@ -49,6 +52,11 @@ const ireY = (ire: number) =>
 const mhzX = (mhz: number) =>
   RESPONSE_PLOT.left +
   ((RESPONSE_PLOT.right - RESPONSE_PLOT.left) * mhz) / MHZ_MAX
+const xMHz = (x: number) =>
+  ((x - RESPONSE_PLOT.left) * MHZ_MAX) /
+  (RESPONSE_PLOT.right - RESPONSE_PLOT.left)
+const gainAt = (lumaMHz: number, lumaPeak: number) =>
+  magnitude(response(lumaKernel({ lumaMHz, lumaPeak }), lumaMHz * 1e6))
 const path = (pts: readonly (readonly [number, number])[]) =>
   pts
     .map(([x, y], i) => `${i === 0 ? 'M' : 'L'}${x.toFixed(1)} ${y.toFixed(1)}`)
@@ -67,7 +75,10 @@ const signed = (v: number) => {
 export function RecordingDiagram() {
   const r = useReadings(RECORDING_KEYS)
   const pick = useSelectedBox()
+  const store = use(ControlStoreContext)
+  const { beginHand, writeControls } = useControlsApi()
   const clip = useId()
+  const [held, setHeld] = useState<number | null>(null)
   const v = r.value
   const rec = {
     lumaMHz: v('lumaMHz'),
@@ -83,7 +94,8 @@ export function RecordingDiagram() {
     diffPhaseDeg: v('diffPhaseDeg'),
   })
   const kernel = lumaKernel(rec)
-  const top = GAIN_TOPS.find(t => t >= 1 + rec.lumaPeak) ?? GAIN_TOPS.at(-1)!
+  const top =
+    held ?? GAIN_TOPS.find(t => t >= 1 + rec.lumaPeak) ?? GAIN_TOPS.at(-1)!
   const gainY = (g: number) =>
     PLOT.bottom -
     ((PLOT.bottom - PLOT.top) * Math.min(Math.max(g, 0), top)) / top
@@ -91,6 +103,20 @@ export function RecordingDiagram() {
     const mhz = (MHZ_MAX * i) / (POINTS - 1)
     return [mhzX(mhz), gainY(magnitude(response(kernel, mhz * 1e6)))] as const
   })
+
+  const bandwidth = sliderFor('lumaMHz')
+  const peaking = sliderFor('lumaPeak')
+  // The gain at the corner is linear in the peaking, so the gains at peaking 0
+  // and 1 give the peaking for any gain.
+  const setCorner = (mhz: number, gain: number) => {
+    const lumaMHz = snapToStep(bandwidth, mhz)
+    const flat = gainAt(lumaMHz, 0)
+    const lumaPeak = snapToStep(
+      peaking,
+      (gain - flat) / (gainAt(lumaMHz, 1) - flat),
+    )
+    writeControls({ ...store.get(), lumaMHz, lumaPeak })
+  }
 
   const box = (id: Part, y: number, name: string, help: string): BoxSpec => ({
     id,
@@ -353,6 +379,31 @@ export function RecordingDiagram() {
                   text: `${mhz.toFixed(2)} MHz · ${gain.toFixed(2)}×`,
                 }
               }}
+            />
+            <PlotHandle
+              x={mhzX(rec.lumaMHz)}
+              y={gainY(gainAt(rec.lumaMHz, rec.lumaPeak))}
+              label="luma bandwidth and peaking"
+              reading={`${rec.lumaMHz.toFixed(2)} MHz, peaking ${rec.lumaPeak.toFixed(2)}`}
+              onGrab={beginHand}
+              onMove={pointer => {
+                setHeld(top)
+                setCorner(
+                  xMHz(pointer.x),
+                  Math.min(
+                    ((PLOT.bottom - pointer.y) / (PLOT.bottom - PLOT.top)) *
+                      top,
+                    top,
+                  ),
+                )
+              }}
+              onNudge={(dx, dy) =>
+                setCorner(
+                  rec.lumaMHz + dx * bandwidth.step * 2,
+                  gainAt(rec.lumaMHz, rec.lumaPeak) + dy * 0.1,
+                )
+              }
+              onDrop={() => setHeld(null)}
             />
           </>
         )}

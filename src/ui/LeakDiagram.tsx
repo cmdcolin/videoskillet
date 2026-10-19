@@ -1,4 +1,6 @@
 import { FSC, SAMPLE_RATE } from '../core/signal/constants'
+import { sliderFor, snapToStep } from './controls'
+import { useControlsApi } from './ControlsContext'
 import { openBox, useReadings, useSelectedBox, type BoxSpec } from './diagram'
 import {
   BoxRows,
@@ -11,6 +13,7 @@ import {
 import own from './LeakDiagram.module.css'
 import { channelLine, ghostGains, type Leak } from './leakModel'
 import { alongRange } from './plotAlong'
+import { PlotHandle } from './PlotHandle'
 import { LEAK_KEYS, LEAK_OPENS as OPENS } from './schematicKeys'
 import { BAR_US, LINE_US, PICTURE_BAND } from './testLine'
 import { TracePlot, type TraceScale } from './TracePlot'
@@ -50,6 +53,13 @@ const signed = (v: number) => (v < 0 ? `−${(-v).toFixed(2)}` : v.toFixed(2))
 const times = (v: number) => (v === 0 ? '0' : `${v}×`)
 const usX = (us: number) =>
   LINE.left + ((LINE.right - LINE.left) * (us % LINE_US)) / LINE_US
+// The delay that puts the bar's echo under `x`. Where that needs more than the
+// slider's maximum, the function returns 0 or the maximum, whichever is nearer.
+const delayAt = (x: number, max: number) => {
+  const us = ((x - LINE.left) / (LINE.right - LINE.left)) * LINE_US
+  const d = (((us - BAR_US[0]) % LINE_US) + LINE_US) % LINE_US
+  return d <= max ? d : d > (max + LINE_US) / 2 ? 0 : max
+}
 const lineLook = (on: boolean): WireLook => (on ? 'on' : 'plain')
 const after = (id: Part) => COL[id].x + COL[id].w
 
@@ -68,6 +78,7 @@ const combPoints = (delayUs: number) =>
 export function LeakDiagram() {
   const r = useReadings(LEAK_KEYS)
   const pick = useSelectedBox()
+  const { beginHand, writeControl } = useControlsApi()
   const v = r.value
   const l: Leak = {
     ghostDelayUs: v('ghostDelayUs'),
@@ -88,6 +99,9 @@ export function LeakDiagram() {
   const echoTo = usX(BAR_US[0] + l.ghostDelayUs)
   const echoY = LINE.top + 4
   const echoShown = ghostOn && l.ghostDelayUs * 1e-6 * SAMPLE_RATE >= 1
+  const delay = sliderFor('ghostDelayUs')
+  const setDelay = (us: number) =>
+    writeControl('ghostDelayUs', snapToStep(delay, us))
 
   const box = (id: Part, y: number, name: string, help: string): BoxSpec => ({
     id,
@@ -239,6 +253,17 @@ export function LeakDiagram() {
                   className={own.span}
                 />
               </>
+            )}
+            {ghostOn && (
+              <PlotHandle
+                x={echoTo}
+                y={echoY}
+                label="ghost delay"
+                reading={`${l.ghostDelayUs.toFixed(2)} µs`}
+                onGrab={beginHand}
+                onMove={pointer => setDelay(delayAt(pointer.x, delay.max))}
+                onNudge={dx => setDelay(l.ghostDelayUs + dx * delay.step * 10)}
+              />
             )}
 
             <TracePlot
