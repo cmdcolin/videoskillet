@@ -27,10 +27,10 @@ const WIDTH = 340
 const ROW_Y = 14
 const H = 20
 const COL = {
-  floor: { x: 30, w: 43 },
-  arcs: { x: 89, w: 37 },
-  ignition: { x: 142, w: 60 },
-  strikes: { x: 218, w: 55 },
+  floor: { x: 40, w: 43 },
+  arcs: { x: 99, w: 37 },
+  ignition: { x: 152, w: 60 },
+  strikes: { x: 228, w: 55 },
 } satisfies Record<Part, { x: number; w: number }>
 
 const PLOT = { top: 50, bottom: 98 }

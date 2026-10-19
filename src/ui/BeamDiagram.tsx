@@ -127,7 +127,7 @@ export function BeamDiagram() {
               look={look(live.some(Boolean))}
             />
             <Label x={WIDTH - 2} y={ROW_Y - 6} anchor="end">
-              to the glass
+              glass
             </Label>
 
             {boxes.map(b => (

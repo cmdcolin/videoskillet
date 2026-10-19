@@ -153,9 +153,6 @@ export function CableDiagram() {
       <Diagram width={WIDTH} height={HEIGHT} label="cable and wiring">
         {arrow => (
           <>
-            <Label x={0} y={ROW_Y - 6}>
-              video
-            </Label>
             <Wire arrow={arrow} d={`M0 ${ROW_Y} H${COL.guard.x}`} />
             {ORDER.slice(0, -1).map((id, i) => (
               <Wire

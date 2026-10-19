@@ -19,10 +19,10 @@ const WIDTH = 340
 const ROW_Y = 14
 const H = 20
 const COL = {
-  adjacent: { x: 30, w: 60 },
-  tuning: { x: 104, w: 49 },
-  snow: { x: 167, w: 37 },
-  ingress: { x: 218, w: 55 },
+  adjacent: { x: 40, w: 60 },
+  tuning: { x: 114, w: 49 },
+  snow: { x: 177, w: 37 },
+  ingress: { x: 228, w: 55 },
 } satisfies Record<Part, { x: number; w: number }>
 const ORDER = ['adjacent', 'tuning', 'snow', 'ingress'] as const
 
