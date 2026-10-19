@@ -17,3 +17,4 @@ the evidence under it.
 | 2026-09-03 | [The carousel that builds something](2026-09-03-the-carousel-that-builds-something.md)                   |
 | 2026-09-04 | [Screening a timeline, not a board](2026-09-04-screening-a-timeline-not-a-board.md)                      |
 | 2026-09-04 | [The reel on the edge of chaos](2026-09-04-the-reel-on-the-edge-of-chaos.md)                             |
+| 2026-10-19 | [Signal diagrams: what landed and what is next](2026-10-19-signal-diagrams-next.md)                      |
