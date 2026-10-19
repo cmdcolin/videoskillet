@@ -21,8 +21,8 @@ type Part = keyof typeof OPENS
 
 const WIDTH = 340
 const TOP_Y = 10
-const BOT_Y = 46
-const MAIN_Y = 28
+const BOT_Y = 54
+const MAIN_Y = 32
 const H = 16
 const COL = {
   luma: { x: 6, w: 37 },
@@ -36,7 +36,7 @@ const COL = {
 } satisfies Record<Part, { x: number; w: number }>
 const JOIN_X = 328
 
-const PLOT = { top: 76, bottom: 112 }
+const PLOT = { top: 84, bottom: 120 }
 const WAVE = { left: 24, right: 164, ...PLOT }
 const STRIP = { left: 200, right: 336, ...PLOT }
 const HEIGHT = PLOT.bottom + 14

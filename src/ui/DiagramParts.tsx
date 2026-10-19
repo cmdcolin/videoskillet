@@ -96,6 +96,11 @@ export function Plate({
   return <rect x={x} y={y} width={w} height={h} rx={3} className={look} />
 }
 
+// How far a pressable box takes presses above and below its frame. A box draws
+// about 20px tall, and the margin brings the target to the 24px a finger needs.
+const REACH = 3
+const REACH_STYLE = { fill: 'transparent', stroke: 'none' }
+
 // A stage drawn as a box with its name: accent when a knob inside is off stock,
 // grey when nothing passes through it. The title is the browser's own tooltip.
 export function BoxView({
@@ -129,6 +134,15 @@ export function BoxView({
         selected={selected}
         inert={!pick}
       />
+      {pick ? (
+        <rect
+          x={box.x}
+          y={box.y - REACH}
+          width={box.w}
+          height={h + 2 * REACH}
+          style={REACH_STYLE}
+        />
+      ) : null}
       {lines.map((line, i) => (
         <text
           key={line + i}
