@@ -99,9 +99,17 @@
 }
 
 .rows {
+  position: relative;
   margin: 0 0 var(--space-xs);
   padding-top: var(--space-2xs);
   border-top: 1px solid var(--border-quiet);
+}
+
+.rowsTop {
+  position: absolute;
+  inset: 0 0 auto;
+  height: min(100%, 8rem);
+  pointer-events: none;
 }
 
 .fold {

@@ -1,4 +1,11 @@
-import { Fragment, useId, useState, type ReactNode } from 'react'
+import {
+  Fragment,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react'
 
 import { ControlSlider } from './ControlGroup'
 import { NEEDS, sliderFor, type SliderNeed } from './controls'
@@ -261,7 +268,9 @@ const NEED_OF = new Map<string, SliderNeed | undefined>(Object.entries(NEEDS))
 // The rows of the box that is open: the same rows the panel draws anywhere
 // else, so a drag, a reset and a mod wire all work from here. Rows behind a shut
 // gate fold into one line that opens it, drawn under the gate's own row when the
-// box has it.
+// box has it. Pressing a box scrolls its first rows into view, because the
+// drawing puts them below its plots. A box open from the first render leaves
+// the panel where it is.
 export function BoxRows({
   keys,
   note,
@@ -273,6 +282,14 @@ export function BoxRows({
   help?: string
 }) {
   const fold = useControlReading(c => boxFold(keys ?? [], c)).split(',')
+  const top = useRef<HTMLSpanElement>(null)
+  const opened = keys?.join()
+  const was = useRef(opened)
+  useEffect(() => {
+    if (opened === was.current) return
+    was.current = opened
+    top.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+  }, [opened])
   if (!keys) return null
   const shown = keys.filter((_, i) => fold[i] === '')
   const folds = new Map<SliderNeed, number>()
@@ -288,6 +305,7 @@ export function BoxRows({
       .map(([need, n]) => <FoldLine key={need.hint} need={need} n={n} />)
   return (
     <div className={styles.rows}>
+      <span ref={top} className={styles.rowsTop} aria-hidden />
       {help && <HelpLine key={help} text={help} />}
       {note && <p className={styles.noteLine}>{note}</p>}
       {under(undefined)}
