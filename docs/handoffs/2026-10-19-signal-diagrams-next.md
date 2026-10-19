@@ -26,14 +26,13 @@ them off.
     `PlotHandle.onDrop`.
   - A harness drag on a `#set=` look needs a few seconds to settle first. The
     look morphs in, and the morph overwrites the drag's writes.
+- **Rows scroll into view** (`7f96ae98`): `BoxRows` scrolls an anchor over its
+  first 8rem to `nearest` when the open box changes, and leaves the panel where
+  it is for a box open from the first render. On a 600px window, pressing a
+  Recording box scrolled the panel 191px and showed the help line and both rows.
 
 ## Next, in the order worth doing
 
-- **Rows land under the plot.** Pressing a box at the top puts its rows 110-145
-  units lower, possibly below the fold. `scrollIntoView({block: 'nearest'})` on
-  select is the obvious fix and is unmeasured. `nearest` on a tall rows block
-  has edge cases, so scroll a small anchor, and skip the scroll on first mount
-  (Chyron and Camera loop open a box initially). Test on a short window.
 - **Open box resets.** `Section` unmounts its children when a group folds, so
   `useSelectedBox` and `showFramed` reset. Keeping the selection per group needs
   a key in `useSelectedBox`, which sits in the shared `diagram-boxes` region, so
