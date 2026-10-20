@@ -16,6 +16,7 @@
 // corner itself as the control point — so this is the same curve under a name,
 // and porting a call site moves nothing.
 
+// CROSS_REPO_SYNC(wire-route)
 export type Point = readonly [number, number]
 
 const round = (n: number) => Math.round(n * 1000) / 1000
@@ -82,3 +83,4 @@ export function arrowhead(
   const [px, py] = [(-dy / n) * half, (dx / n) * half]
   return `M${at([back[0] + px, back[1] + py])}L${at(tip)}L${at([back[0] - px, back[1] - py])}Z`
 }
+// CROSS_REPO_SYNC_END(wire-route)
