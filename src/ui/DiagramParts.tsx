@@ -10,7 +10,13 @@ import {
 import { ControlSlider } from './ControlGroup'
 import { NEEDS, sliderFor, type SliderNeed } from './controls'
 import { useControlReading, useControlsApi } from './ControlsContext'
-import { boxFold, boxHeight, LINE_H, type BoxSpec } from './diagram'
+import {
+  boxFold,
+  boxHeight,
+  LINE_H,
+  type BoxSpec,
+  type useSelectedBox,
+} from './diagram'
 import styles from './Diagram.module.css'
 
 import type { ControlKey } from '../core/controls'
@@ -273,6 +279,62 @@ export function Diagram({
       </defs>
       {children(arrow)}
     </svg>
+  )
+}
+
+// A part of a drawing that opens the rows of the box `opens`. `name` is what a
+// screen reader hears, where the box's own name would not say which part it is.
+export function PickPart({
+  opens,
+  name = opens,
+  pick,
+  className,
+  children,
+}: {
+  opens: string
+  name?: string
+  pick: ReturnType<typeof useSelectedBox>
+  className?: string
+  children: ReactNode
+}) {
+  return (
+    <Pressable
+      name={name}
+      selected={pick.selected === opens}
+      onSelect={() => pick.toggle(opens)}
+      className={className}
+    >
+      {children}
+    </Pressable>
+  )
+}
+
+// A wire and its name drawn as one button that opens the box holding the knob
+// the wire stands for. `hit` is the wire's path, drawn again as a wide
+// transparent stroke so a thin wire is easy to press.
+export function Bend({
+  name,
+  opens,
+  pick,
+  hit,
+  children,
+}: {
+  name: string
+  opens: string
+  pick: ReturnType<typeof useSelectedBox>
+  hit: string
+  children: ReactNode
+}) {
+  return (
+    <Pressable
+      name={name}
+      selected={pick.selected === opens}
+      onSelect={() => pick.toggle(opens)}
+      className={styles.bendPick}
+    >
+      <path d={hit} className={styles.wireHit} />
+      {children}
+    </Pressable>
   )
 }
 // CROSS_REPO_SYNC_END(diagram-parts)

@@ -11,6 +11,8 @@
      family draws them cell-filling, the way the card itself will. */
   --mono-blocks: 'DejaVu Sans Mono', 'Liberation Mono', var(--mono);
   --accent: #7fd0a0;
+  /* The colour the shared diagram rules give a wire pushed past its limit. */
+  --alarm: var(--danger);
   /* A rail down the left of a block that belongs to the thing above it: the
      open stage on the spine (SignalPath.module.css, which turns the same colour
      into a lid across the head) and the modulation editor that opens under a

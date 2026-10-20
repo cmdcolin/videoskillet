@@ -1,3 +1,4 @@
+/* CROSS_REPO_SYNC(diagram-core) */
 .diagram {
   display: block;
   width: 100%;
@@ -7,7 +8,7 @@
 
 .box {
   fill: none;
-  stroke: var(--border);
+  stroke: var(--border-hover);
 }
 
 .boxOn {
@@ -19,19 +20,17 @@
 .nameOn,
 .note,
 .noteOn {
+  font-size: 9px;
   letter-spacing: 0.02em;
   text-transform: uppercase;
 }
 
 .name,
 .nameOn {
-  font-size: 9.5px;
   fill: var(--fg2);
 }
 
-.note,
-.noteOn {
-  font-size: 9px;
+.note {
   fill: var(--fg3);
 }
 
@@ -40,7 +39,10 @@
   text-transform: none;
 }
 
-.nameOn,
+.nameOn {
+  fill: var(--fg);
+}
+
 .noteOn {
   fill: var(--accent);
 }
@@ -60,7 +62,7 @@
 }
 
 .wireAlarm {
-  stroke: var(--danger);
+  stroke: var(--alarm);
   stroke-width: 2;
   stroke-dasharray: 3 2;
 }
@@ -78,7 +80,7 @@
 }
 
 .headAlarm {
-  fill: var(--danger);
+  fill: var(--alarm);
 }
 
 /* A box you can press: the pointer says so, a hair of fill says which one is
@@ -97,6 +99,24 @@
   fill: var(--surface-raised);
   stroke-width: 1.5;
 }
+
+.box.selected {
+  stroke: var(--fg2);
+}
+
+/* A wire drawn again as a wide clear stroke, so a thin wire is easy to press. */
+.wireHit {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 12;
+  pointer-events: stroke;
+}
+
+.bendPick:hover path:not(.wireHit),
+.bendPick:focus-visible path:not(.wireHit) {
+  stroke: var(--fg);
+}
+/* CROSS_REPO_SYNC_END(diagram-core) */
 
 .rows {
   position: relative;
