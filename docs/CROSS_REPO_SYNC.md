@@ -6,11 +6,11 @@ videoskillet and bender are sibling apps by the same author. They share a design
 system, a site shape (a static landing page that becomes a signed-in home), one
 Firebase project and one way of saving work under a name. The products differ:
 videoskillet saves looks, bender saves voices, and each has its own accent
-colour and copy. Everything else aims to be the same code.
+colour and copy. The aim is for everything else to be the same code.
 
-Marked regions keep the shared code identical. `scripts/sync-check.mjs` compares
-every marked region in this repo with its counterpart in the sibling and fails
-when they differ.
+`scripts/sync-check.mjs` compares every marked region in this repo with its
+counterpart in the sibling and fails when they differ, so the shared code stays
+identical.
 
 ## Markers
 
@@ -23,7 +23,7 @@ Put a marker in whatever comment syntax the file uses.
 | `CROSS_REPO_SYNC_END(<id>)`  | …to the line before this one          |
 
 An id is lowercase letters, digits and hyphens, and appears once per repo. The
-file paths may differ between the repos: the id pairs the regions.
+checker pairs regions by id, so the file paths may differ between the repos.
 
 ## What the check ignores
 
@@ -57,7 +57,7 @@ existing regions show the pattern:
 
 ## Dev server and build
 
-Both repos run on Astro, shaped the same way:
+videoskillet and bender both run on Astro, set up the same way:
 
 - `astro dev` is the only dev server and `astro build` is the whole build.
 - Each app page is an `.astro` file holding a `client:only="react"` island, so
@@ -92,24 +92,24 @@ change.
 
 ## Not shared yet
 
-These have counterparts in both repos that still differ. Each one needs a
-decision about which side's version wins before it can be marked.
+The items below have counterparts in both repos that still differ. Marking one
+needs a decision about which side's version wins.
 
 - Design tokens: videoskillet's `site/styles/tokens.css` and `src/theme.css` use
   different names for the same roles, and bender's `src/theme.css` uses px where
   videoskillet uses rem.
 - Home and site-bar CSS: the same class names with different values.
 - The page shell: bender links its stylesheets where videoskillet inlines them.
-  Both carry the same canonical, Open Graph and theme-colour meta now, and the
+  Both carry the same canonical, Open Graph and theme-colour meta, and the
   unfurl tags themselves are shared as `social-meta`. The two landing pages hold
   different things either way.
 - Storage helpers: videoskillet's `src/ui/storage.ts` and bender's
   `src/ui/persist.ts`.
 - The current-session hook body, the saved-list hook and its popover, and the
   app menu.
-- The why-sign-in card's picture and its closing line: the two name different
-  files and say different amounts. The head of the card and its buttons are
-  `why-card-top` and `why-card-cta`.
+- The why-sign-in card's picture and its closing line: the two repos' copies
+  reference different files and state different amounts. The head of the card
+  and its buttons are `why-card-top` and `why-card-cta`.
 - The home script's `showFrame`, `showHome`, `showLanding`, `paint` and
   `failedSection`.
 - Tooling: formatters, lint, tsconfig, CI workflows, the release script and
