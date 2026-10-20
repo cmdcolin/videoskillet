@@ -124,7 +124,7 @@ export function BoxView({
       onSelect={pick ? () => onSelect(box.id!) : undefined}
       opacity={box.off ? 0.55 : 1}
     >
-      <title>{`${label} — ${box.help}`}</title>
+      {box.help && <title>{`${label} — ${box.help}`}</title>}
       <Plate
         x={box.x}
         y={box.y}
