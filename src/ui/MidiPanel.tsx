@@ -266,7 +266,7 @@ export function MidiPanel(props: {
   )
 }
 
-// CROSS_REPO_SYNC(midi-dialog)
+// CROSS_REPO_SYNC(midi-tab-note)
 function midiTabNote(status: MidiStatus, stranded: number): string | null {
   if (status === 'ready') return stranded > 0 ? `${stranded} waiting` : null
   if (status === 'unsupported') return 'n/a'
@@ -274,6 +274,7 @@ function midiTabNote(status: MidiStatus, stranded: number): string | null {
   if (status === 'requesting') return 'asking…'
   return null
 }
+// CROSS_REPO_SYNC_END(midi-tab-note)
 
 // Non-modal: every control binds from its own ⚟, in the panel behind this card,
 // so the panel has to stay reachable with the card up. A shown dialog gets no
@@ -335,4 +336,3 @@ function MidiDialog(props: {
     </dialog>
   )
 }
-// CROSS_REPO_SYNC_END(midi-dialog)
