@@ -14,8 +14,8 @@ import {
   boxFold,
   boxHeight,
   LINE_H,
+  type BoxPick,
   type BoxSpec,
-  type useSelectedBox,
 } from './diagram'
 import styles from './Diagram.module.css'
 
@@ -293,7 +293,7 @@ export function PickPart({
 }: {
   opens: string
   name?: string
-  pick: ReturnType<typeof useSelectedBox>
+  pick: BoxPick
   className?: string
   children: ReactNode
 }) {
@@ -321,20 +321,15 @@ export function Bend({
 }: {
   name: string
   opens: string
-  pick: ReturnType<typeof useSelectedBox>
+  pick: BoxPick
   hit: string
   children: ReactNode
 }) {
   return (
-    <Pressable
-      name={name}
-      selected={pick.selected === opens}
-      onSelect={() => pick.toggle(opens)}
-      className={styles.bendPick}
-    >
+    <PickPart opens={opens} name={name} pick={pick} className={styles.bendPick}>
       <path d={hit} className={styles.wireHit} />
       {children}
-    </Pressable>
+    </PickPart>
   )
 }
 // CROSS_REPO_SYNC_END(diagram-parts)
