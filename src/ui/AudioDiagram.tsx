@@ -1,7 +1,7 @@
 import styles from './AudioDiagram.module.css'
 import {
-  openBox,
   boxWidth,
+  openBox,
   useReadings,
   useSelectedBox,
   type BoxSpec,

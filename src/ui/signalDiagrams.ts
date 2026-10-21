@@ -1,25 +1,22 @@
 import { useSyncExternalStore } from 'react'
 
+import { Listeners } from '../core/listeners'
 import { storedFlag, writeString } from './storage'
 
 const STORE = 'videoskillet_signal_diagrams'
-const listeners = new Set<() => void>()
+const listeners = new Listeners()
 let on = storedFlag(STORE, true)
 
 export function setSignalDiagrams(next: boolean) {
   on = next
   writeString(STORE, next ? '1' : '0')
-  listeners.forEach(notify => {
-    notify()
-  })
+  listeners.emit()
 }
 
-const subscribe = (notify: () => void) => {
-  listeners.add(notify)
-  return () => listeners.delete(notify)
-}
+export const toggleSignalDiagrams = () => setSignalDiagrams(!on)
 
 // Whether each group draws its schematic above its sliders. One flag for the
 // whole panel, so every group, in the docked panel and the popout alike, flips
 // together.
-export const useSignalDiagrams = () => useSyncExternalStore(subscribe, () => on)
+export const useSignalDiagrams = () =>
+  useSyncExternalStore(listeners.subscribe, () => on)

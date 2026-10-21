@@ -440,37 +440,31 @@ const FRAMES: {
   group: string
   keys: ReadonlySet<ControlKey>
   Frame: () => ReactElement
-  schematic: boolean
 }[] = [
   {
     group: 'Wipe (A/B)',
     keys: new Set<ControlKey>(['wipePos']),
     Frame: WipeControl,
-    schematic: false,
   },
   {
     group: 'PiP inset (source B)',
     keys: new Set<ControlKey>(['pipX', 'pipY', 'pipW', 'pipH']),
     Frame: PipControl,
-    schematic: false,
   },
   {
     group: 'Mask & convergence',
     keys: new Set<ControlKey>(['crtPurityX', 'crtPurityY', 'crtPuritySize']),
     Frame: PurityControl,
-    schematic: false,
   },
   {
     group: 'View',
     keys: new Set<ControlKey>(['crtZoomX', 'crtZoomY']),
     Frame: ZoomControl,
-    schematic: false,
   },
   ...SCHEMATICS.map(({ group, keys }) => ({
     group,
     keys: new Set<ControlKey>(keys),
     Frame: SCHEMATIC_FRAMES[group],
-    schematic: true,
   })),
 ]
 
@@ -668,11 +662,11 @@ export function ControlGroup(props: { group: Group; defaultOpen?: boolean }) {
   const drifting = driftingGroups.has(group.name)
   const driftWords = DRIFT_MODE_WORDS[driftMode]
   const diagrams = useSignalDiagrams()
-  const framed = FRAMES.find(f => f.group === group.name)
   const frame =
-    filterActive(filter) || (framed?.schematic === true && !diagrams)
+    filterActive(filter) ||
+    (!diagrams && Object.hasOwn(SCHEMATIC_FRAMES, group.name))
       ? undefined
-      : framed
+      : FRAMES.find(f => f.group === group.name)
 
   // The card's own chips. Hidden under a live filter for the same reason the
   // miniature is: a search is asking for rows, and a chip is not one.

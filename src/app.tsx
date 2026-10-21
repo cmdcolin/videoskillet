@@ -94,7 +94,7 @@ import { sameList } from './ui/sameList'
 import { SavedProfiles } from './ui/SavedProfiles'
 import { Section } from './ui/Section'
 import { ShareDialog } from './ui/ShareDialog'
-import { setSignalDiagrams, useSignalDiagrams } from './ui/signalDiagrams'
+import { toggleSignalDiagrams, useSignalDiagrams } from './ui/signalDiagrams'
 import { SignalPath } from './ui/SignalPath'
 import { SignalTapContext } from './ui/SignalTapContext'
 import { Rack } from './ui/Slider'
@@ -1234,7 +1234,7 @@ export function App() {
     onFullscreen: toggleFullscreen,
     onSidebar: toggleSidebar,
     onBench: toggleBench,
-    onDiagrams: () => setSignalDiagrams(!diagrams),
+    onDiagrams: toggleSignalDiagrams,
     onPopout: () => openPopout(benchOn),
     onFilter: revealText,
     onShowMoving: showMoving,
@@ -1507,7 +1507,7 @@ export function App() {
     canBench: wideEnough,
     onToggleBench: toggleBench,
     diagrams,
-    onToggleDiagrams: () => setSignalDiagrams(!diagrams),
+    onToggleDiagrams: toggleSignalDiagrams,
     sidebarHidden,
     onToggleSidebar: toggleSidebar,
     onPopout: () => openPopout(benchOn),
