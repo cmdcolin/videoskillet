@@ -88,7 +88,7 @@ export function AppMenu(props: {
       session, which is what keeps the row out of a signed-in menu. */
   onWhySignIn?: () => void
   /** Opens the MIDI card. Defined only where the masthead leaves its midi
-      button out: a touch screen with the wire off. */
+      button out: while the wire is off. */
   onMidi?: () => void
   // Only the stage's copy has this: the bar being hidden is the one it is in,
   // and the masthead has no bar to hide.

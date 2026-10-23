@@ -446,7 +446,6 @@ export function App() {
   const [benchOn, setBenchOn] = usePersistedFlag('videoskillet_panel_bench')
   const diagrams = useSignalDiagrams()
   const roomy = useMediaQuery('(min-width: 1280px)')
-  const touch = useMediaQuery('(pointer: coarse)')
   const wideEnough = popout !== null || roomy || panelW >= BENCH_W
   const bench = benchOn && wideEnough
   // Switching it on asks the popout for the room the two columns need; the
@@ -1525,8 +1524,7 @@ export function App() {
         : () => {
             setWhy({ pending: null })
           },
-    onMidi:
-      touch && midiStatus === 'idle' ? () => setShowMidi(true) : undefined,
+    onMidi: midiStatus === 'idle' ? () => setShowMidi(true) : undefined,
   }
 
   const panelBody = (
