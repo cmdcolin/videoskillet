@@ -163,8 +163,11 @@ describe('css modules', () => {
   it('declares no token nothing reads', () => {
     // tokens.css is shared with bender and read by the site as well, so the
     // site's sheets and pages count as readers of it.
-    const theme = ['theme.css', 'tokens.css']
-      .map(name => readFileSync(join(SRC, name), 'utf8'))
+    const theme = [
+      join(SRC, 'theme.css'),
+      join(SRC, '..', 'node_modules/skillet-shared/dist/tokens.css'),
+    ]
+      .map(path => readFileSync(path, 'utf8'))
       .join('\n')
     const declared = [
       ...theme

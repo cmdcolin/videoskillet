@@ -32,10 +32,15 @@ import {
   useState,
   useSyncExternalStore,
 } from 'react'
+import {
+  EMPTY_HISTORY,
+  record,
+  stepBack,
+  stepForward,
+} from 'skillet-shared/history'
 
 import { Listeners } from '../core/listeners'
 import { randomSeed } from '../core/rng'
-import { EMPTY_HISTORY, record, stepBack, stepForward } from './history'
 import { MUTATE_AMOUNTS, mutate } from './mutate'
 import {
   STOPPED,
@@ -63,12 +68,12 @@ import type { Controls } from '../core/controls'
 import type { Rand } from '../core/rng'
 import type { PoolOrigin } from '../sources/pools'
 import type { SliderDef } from './controls'
-import type { History } from './history'
 import type { MutateAmount } from './mutate'
 import type { Clock, RowClip, Step, Strip, Walk } from './strip'
 import type { StripSink } from './stripRun'
 import type { TransitionName } from './transitions'
 import type { SessionParams } from './urlParams'
+import type { History } from 'skillet-shared/history'
 
 // The simulation's own rate. `signal/modstate.ts` is `const DT = 1 / 60` and
 // the artifacts clock off the frame counter, so this is not a preference — it

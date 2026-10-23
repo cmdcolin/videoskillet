@@ -1,3 +1,5 @@
+import { sinceWords } from 'skillet-shared/relative-time'
+
 // The signed-in home, rendered on top of the landing page at the same URL.
 //
 // `/` is static HTML and stays that way: the landing markup Astro emits is what
@@ -29,7 +31,6 @@ import {
   removeProfile,
   renameProfile,
 } from '../../src/ui/profileModel'
-import { sinceWords } from '../lib/relativeTime'
 import {
   el,
   fillStills,

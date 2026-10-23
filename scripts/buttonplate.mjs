@@ -59,7 +59,7 @@ const buttons = BUTTONS.filter(
 const sheet = args.sheet
 
 const css = [
-  'src/tokens.css',
+  'node_modules/skillet-shared/dist/tokens.css',
   'site/styles/tokens.css',
   'site/styles/site.css',
   'site/styles/landing.css',

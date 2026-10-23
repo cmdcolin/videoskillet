@@ -1,9 +1,14 @@
 import { useState, useSyncExternalStore } from 'react'
+import {
+  EMPTY_HISTORY,
+  record,
+  stepBack,
+  stepForward,
+} from 'skillet-shared/history'
 
 import { DEFAULT_CONTROLS } from '../core/controls'
 import { applyCardPreset } from './cardPresets'
 import { MUTATE_CIRCUITS, MUTATE_SLIDERS } from './controls'
-import { EMPTY_HISTORY, record, stepBack, stepForward } from './history'
 import { DEFAULT_STAB, sameBay, sameGate } from './modSlots'
 import { morphTo } from './morph'
 import {
@@ -30,11 +35,11 @@ import type { Provenance } from '../labels'
 import type { CardPreset } from './cardPresets'
 import type { Group, SliderDef } from './controls'
 import type { ControlStore } from './ControlsContext'
-import type { History } from './history'
 import type { Stab, UiSlot } from './modSlots'
 import type { ModSlotsApi } from './ModSlotsContext'
 import type { MutateAmount } from './mutate'
 import type { PresetWeights } from './presets'
+import type { History } from 'skillet-shared/history'
 
 // A whole look: where the controls rest, what is moving them, and the gate
 // cutting the board in and out. All three, because undoing a preset that started

@@ -2,7 +2,7 @@
    about a control. The neutrals, borders and type scale come from tokens.css,
    which bender shares. Imported once per entry, from main.tsx and the vote and
    stream pages. Retheme here and nowhere else. */
-@import './tokens.css';
+@import 'skillet-shared/tokens.css';
 
 :root {
   /* For text made of block characters — the teletype card and its palette.

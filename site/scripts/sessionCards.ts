@@ -1,3 +1,5 @@
+import { sinceWords } from 'skillet-shared/relative-time'
+
 // Session and look cards, shared between the signed-in home and the "All
 // sessions" page: the still a card shows, its link, and the copy/delete row
 // under it. Pulled out of home.ts so a second page can render the same cards
@@ -12,7 +14,6 @@ import {
   stillTag,
 } from '../../src/ui/cloud'
 import { handOffSession } from '../../src/ui/resumeHandoff'
-import { sinceWords } from '../lib/relativeTime'
 
 import type { HomeDoc, Still } from '../../src/ui/cloud'
 import type { RecentSession } from '../../src/ui/profileModel'
