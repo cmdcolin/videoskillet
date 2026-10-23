@@ -6,10 +6,10 @@ import {
   SOURCE_A_STAGE,
 } from './controls'
 import { fitCaption } from './patched'
-import { arrowhead, route } from './wire'
+import { arrowhead, route } from 'skillet-shared/wire-route'
 
 import type { LoopPlace } from './controls'
-import type { Point } from './wire'
+import type { Point } from 'skillet-shared/wire-route'
 
 // The chain map's arithmetic, with none of its markup (see ChainMap.tsx for the
 // drawing). Its own module because every bug it has shipped has been in this

@@ -21,11 +21,11 @@ import { groupOf, stageOf } from './placement'
 import { Slider } from './Slider'
 import { TempoRow } from './TempoRow'
 import ui from './ui.module.css'
-import { arrowhead, route } from './wire'
+import { arrowhead, route } from 'skillet-shared/wire-route'
 
 import type { ModTarget } from '../core/controls'
 import type { Tempo } from './useTempo'
-import type { Point } from './wire'
+import type { Point } from 'skillet-shared/wire-route'
 
 // The stab gate: the one thing in this section that is not a slot. It drives the
 // whole board rather than one control, so there is nothing to point at a target —

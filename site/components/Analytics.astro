@@ -1,12 +1,8 @@
 ---
-// The hit counter on the static pages. src/analytics.ts loads it, and the
-// app's own pages call it from their bundles too.
 ---
 
 <script>
-  import { startAnalytics } from '../../src/analytics'
+  import { startAnalytics } from 'skillet-shared/analytics'
 
-  // CROSS_REPO_SYNC(analytics-snippet)
   startAnalytics()
-  // CROSS_REPO_SYNC_END(analytics-snippet)
 </script>

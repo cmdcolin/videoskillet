@@ -1,3 +1,4 @@
+import { need } from 'skillet-shared/dom'
 import { sinceWords } from 'skillet-shared/relative-time'
 
 // The signed-in home, rendered on top of the landing page at the same URL.
@@ -47,14 +48,6 @@ import {
 import type { CloudUser, HomeDoc, Still } from '../../src/ui/cloud'
 import type { SavedProfile } from '../../src/ui/profileModel'
 import type { SessionEdits } from './sessionCards'
-
-// CROSS_REPO_SYNC(home-dom-helpers)
-const need = (id: string): HTMLElement => {
-  const node = document.getElementById(id)
-  if (node === null) throw new Error(`no #${id}`)
-  return node
-}
-// CROSS_REPO_SYNC_END(home-dom-helpers)
 
 const landing = need('landing')
 const home = need('home')

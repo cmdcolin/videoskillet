@@ -1,4 +1,4 @@
-import { startAnalytics } from '../analytics'
+import { startAnalytics } from 'skillet-shared/analytics'
 import { paramsOf } from '../core/gpu/env'
 import { registerServiceWorker } from '../registerSW'
 import '../theme.css'

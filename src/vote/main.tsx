@@ -1,4 +1,4 @@
-import { startAnalytics } from '../analytics'
+import { startAnalytics } from 'skillet-shared/analytics'
 import '../theme.css'
 import { VotePage } from './VotePage'
 

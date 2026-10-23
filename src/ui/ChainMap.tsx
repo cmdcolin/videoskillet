@@ -19,7 +19,7 @@ import {
 import styles from './ChainMap.module.css'
 import { cx } from './cx'
 import { MapBox, MapRun } from './MapBox'
-import { arrowhead } from './wire'
+import { arrowhead } from 'skillet-shared/wire-route'
 
 import type { WiredBranch } from './chainLayout'
 import type { LoopPlace, LoopsLive } from './controls'
