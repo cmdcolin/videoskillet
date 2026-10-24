@@ -31,6 +31,25 @@
 // this file is the storage-agnostic half — the list algebra and the name rules;
 // cloud.ts is what reads and writes it.
 
+import {
+  ITEM_MAX,
+  ITEM_NAME_MAX,
+  cleanItemName,
+  newItemId,
+  pushRecent as pushItemRecent,
+  readItems,
+  readRecent as readItemRecent,
+  removeItem,
+  renameItem,
+  suggestItemName,
+  upsertItem,
+} from 'skillet-shared/saved-list'
+
+import type {
+  RecentSession,
+  SavedItem as SavedProfile,
+} from 'skillet-shared/saved-list'
+
 // How many sessions one account keeps. The rules refuse a longer list. Kept
 // out of the region below: bender caps its own account's history separately.
 // A session's query is usually the packed form (tens to a few hundred bytes),
@@ -38,204 +57,34 @@
 // QUERY_MAX would not.
 export const RECENT_MAX = 1000
 
-// CROSS_REPO_SYNC(saved-list-model)
-export interface SavedProfile {
-  name: string
-  query: string
-  // What the home page reads a profile by. Optional because a profile written
-  // before these existed carries none; the next save fills them in. `id` keys
-  // the still in `users/{uid}/stills/{id}` and never changes once minted.
-  id?: string
-  savedAt?: number
-}
+export type {
+  CurrentSession,
+  RecentSession,
+  SavedItem as SavedProfile,
+} from 'skillet-shared/saved-list'
+export { QUERY_MAX, readCurrent, removeRecent } from 'skillet-shared/saved-list'
 
-// A board a signed-in user had open, written by the app as the address bar
-// changes. The query is the same packed string a profile holds.
-export interface CurrentSession {
-  query: string
-  at: number
-}
+export const PROFILE_MAX = ITEM_MAX
+export const PROFILE_NAME_MAX = ITEM_NAME_MAX
+export const newProfileId = newItemId
+export const cleanProfileName = cleanItemName
+export const readProfiles = readItems
+export const removeProfile = removeItem
+export const renameProfile = renameItem
+export const upsertProfile = upsertItem
 
-// One autosaved session, read by the home page's resume card and the row of
-// earlier sessions under it. `id` names the page load that wrote it, so a load
-// keeps rewriting its own entry and a later one adds the next.
-export interface RecentSession extends CurrentSession {
-  id: string
-}
+export const suggestProfileName = (
+  profiles: Parameters<typeof suggestItemName>[0],
+  base: string,
+) => suggestItemName(profiles, base, 'my look')
 
-// How many profiles one account has. The rules refuse a longer list.
-export const PROFILE_MAX = 200
+export const readRecent = (raw: unknown, legacy?: unknown) =>
+  readItemRecent(raw, RECENT_MAX, legacy)
 
-// The longest query the rules accept, which a packed board never approaches.
-export const QUERY_MAX = 8000
-
-// The longest name a row will hold before the popover starts wrapping. Trimmed
-// rather than refused: a paste of a whole sentence should become a name, not an
-// error message.
-export const PROFILE_NAME_MAX = 40
-
-export const newProfileId = (): string =>
-  Math.random().toString(36).slice(2, 10)
-
-const num = (v: unknown): number | undefined =>
-  typeof v === 'number' && Number.isFinite(v) ? v : undefined
-
-// Collapse the whitespace a paste brings with it, and cap the length. An empty
-// result means "no name given", which the caller declines to save.
-export const cleanProfileName = (raw: string): string =>
-  raw.replaceAll(/\s+/g, ' ').trim().slice(0, PROFILE_NAME_MAX).trim()
-
-// One stored entry, or undefined when it is not one. Both fields have to be
-// strings: the name is rendered and the query is handed to URLSearchParams, and
-// a stale-schema value of some other shape would throw at whichever came first.
-function readProfile(raw: unknown): SavedProfile | undefined {
-  if (typeof raw !== 'object' || raw === null) return undefined
-  const name = 'name' in raw ? raw.name : undefined
-  const query = 'query' in raw ? raw.query : undefined
-  if (typeof name !== 'string' || typeof query !== 'string') return undefined
-  if (query.length > QUERY_MAX) return undefined
-  const clean = cleanProfileName(name)
-  if (clean === '') return undefined
-  const id = 'id' in raw && typeof raw.id === 'string' ? raw.id : undefined
-  const savedAt = 'savedAt' in raw ? num(raw.savedAt) : undefined
-  return {
-    name: clean,
-    query,
-    ...(id === undefined ? {} : { id }),
-    ...(savedAt === undefined ? {} : { savedAt }),
-  }
-}
-
-export const readProfiles = (raw: unknown): SavedProfile[] =>
-  (Array.isArray(raw) ? raw : [])
-    .flatMap(item => {
-      const profile = readProfile(item)
-      return profile === undefined ? [] : [profile]
-    })
-    .slice(0, PROFILE_MAX)
-
-export function readCurrent(raw: unknown): CurrentSession | null {
-  if (typeof raw !== 'object' || raw === null) return null
-  const query = 'query' in raw ? raw.query : undefined
-  const at = 'at' in raw ? num(raw.at) : undefined
-  if (typeof query !== 'string' || query.length > QUERY_MAX) return null
-  return at === undefined ? null : { query, at }
-}
-
-// The stored list, newest first. An account written before the list existed
-// holds one `current` session, which reads as an entry with an empty id.
-export function readRecent(raw: unknown, legacy?: unknown): RecentSession[] {
-  if (!Array.isArray(raw)) {
-    const current = readCurrent(legacy)
-    return current === null ? [] : [{ id: '', ...current }]
-  }
-  const seen = new Set<string>()
-  return raw
-    .flatMap(item => {
-      const session = readCurrent(item)
-      const id =
-        typeof item === 'object' && item !== null && 'id' in item
-          ? item.id
-          : undefined
-      if (session === null || typeof id !== 'string' || seen.has(id)) return []
-      seen.add(id)
-      return [{ id, ...session }]
-    })
-    .slice(0, RECENT_MAX)
-}
-
-// Puts `entry` first. The entry with the same id is the same page load, and an
-// entry with the same query is the same board, so both give up their place to
-// it. `dropped` lists the ids no longer in the list.
-export function pushRecent(
+export const pushRecent = (
   recent: readonly RecentSession[],
   entry: RecentSession,
-): { recent: RecentSession[]; dropped: string[] } {
-  const next = [
-    entry,
-    ...recent.filter(s => s.id !== entry.id && s.query !== entry.query),
-  ].slice(0, RECENT_MAX)
-  const kept = new Set(next.map(s => s.id))
-  return {
-    recent: next,
-    dropped: recent.flatMap(s => (kept.has(s.id) ? [] : [s.id])),
-  }
-}
-
-export const removeRecent = (
-  recent: readonly RecentSession[],
-  id: string,
-): RecentSession[] => recent.filter(item => item.id !== id)
-
-// Save under a name, replacing any profile already using it **in place**. Order
-// is insertion order and a re-save does not disturb it: the list is read by eye
-// during a set, and a save that reshuffled everything above it would cost the
-// one thing a library is for. A list already at the cap drops its oldest entry.
-//
-// `at` stamps the save and mints an id for a profile that has none; an
-// overwrite keeps the id it already had. Without `at` the entry carries no
-// metadata, which is what a caller with no clock wants.
-export function upsertProfile(
-  profiles: readonly SavedProfile[],
-  name: string,
-  query: string,
-  at?: number,
-): SavedProfile[] {
-  const clean = cleanProfileName(name)
-  if (clean === '') return [...profiles]
-  const index = profiles.findIndex(item => item.name === clean)
-  const prior = index === -1 ? undefined : profiles[index]
-  const entry: SavedProfile = { name: clean, query }
-  if (prior?.id !== undefined) entry.id = prior.id
-  if (at !== undefined) {
-    entry.id ??= newProfileId()
-    entry.savedAt = at
-  }
-  if (index !== -1)
-    return profiles.map((item, i) => (i === index ? entry : item))
-  return [...profiles, entry].slice(-PROFILE_MAX)
-}
-
-export const removeProfile = (
-  profiles: readonly SavedProfile[],
-  name: string,
-): SavedProfile[] => profiles.filter(item => item.name !== name)
-
-// Rename in place: the entry keeps its position, its id and its stamps. A name
-// another entry already uses leaves the list as it was, so a rename can never
-// overwrite anything; the caller tells the two outcomes apart by whether `from`
-// is still in the list.
-export function renameProfile(
-  profiles: readonly SavedProfile[],
-  from: string,
-  to: string,
-): SavedProfile[] {
-  const clean = cleanProfileName(to)
-  if (clean === '' || profiles.some(item => item.name === clean))
-    return [...profiles]
-  return profiles.map(item =>
-    item.name === from ? { ...item, name: clean } : item,
-  )
-}
-
-// What the name box offers, so saving is type-nothing-and-press-save. `base` is
-// whatever the board is already called — the active preset, or the last one
-// edited — and the counter only appears once that name is taken, so the first
-// save off a preset is just its name.
-export function suggestProfileName(
-  profiles: readonly SavedProfile[],
-  base: string,
-): string {
-  const clean = cleanProfileName(base)
-  const stem = clean === '' ? 'my look' : clean
-  if (!profiles.some(item => item.name === stem)) return stem
-  for (let n = 2; n < 1000; n++) {
-    const candidate = `${stem} ${n}`
-    if (!profiles.some(item => item.name === candidate)) return candidate
-  }
-  return stem
-}
-// CROSS_REPO_SYNC_END(saved-list-model)
+) => pushItemRecent(recent, entry, RECENT_MAX)
 
 // How many profiles the number keys reach. The digits are the whole reason for
 // the bound: there is no key for a tenth.

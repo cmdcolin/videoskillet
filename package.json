@@ -96,7 +96,7 @@
     "firebase": "13.1.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
-    "skillet-shared": "^0.4.0"
+    "skillet-shared": "^0.5.0"
   },
   "devDependencies": {
     "@astrojs/markdown-remark": "^7.3.1",

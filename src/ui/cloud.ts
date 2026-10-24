@@ -1,32 +1,16 @@
-import {
-  PROFILE_MAX,
-  pushRecent,
-  readProfiles,
-  readRecent,
-  removeRecent,
-} from './profileModel'
+import { createCloud } from 'skillet-shared/cloud'
+
+import { RECENT_MAX } from './profileModel'
 import { readStored, removeStored, writeString } from './storage'
 
 import type { RatingRecord } from '../labels'
 import type { CandidateRecord, VoteRecord } from '../vote/votes'
 import type { RecentSession, SavedProfile } from './profileModel'
-import type { FirebaseApp } from 'firebase/app'
-import type { Auth, User } from 'firebase/auth'
-import type { Firestore } from 'firebase/firestore/lite'
 
-// The whole Firebase surface: sign-in, the one document a signed-in user keeps
-// their saved profiles and last session in, and the stills under it. Nothing
-// else in the app imports `firebase`.
-//
-// **Every firebase import in here is dynamic, and that is the point.** The three
-// entry points come to ~110kB gzipped, which is most of a WebGPU app's budget
-// before the first frame — and the overwhelming majority of sessions never sign
-// in at all. So the SDK is fetched on the first call that actually needs it: a
-// press on "sign in", or a page load that already knows this browser was signed
-// in (see SIGNED_IN_HINT). A session that never does either downloads none of it.
-//
-// Type-only imports above are free — they are erased before the bundler sees
-// them, so naming Auth or User here costs nothing at runtime.
+// The Firebase surface: sign-in, the one document a signed-in user keeps their
+// saved profiles and last session in, and the stills under it.
+// skillet-shared/cloud loads the SDK on first use, and nothing else in the app
+// imports `firebase`.
 //
 // The config is committed on purpose. A Firebase web config is a set of public
 // identifiers, not credentials: it ships inside the bundle of every Firebase web
@@ -68,232 +52,31 @@ export const SIGNED_IN_HINT = 'videoskillet_signed_in'
 // Outside the shared region because each site attests as itself.
 const APPCHECK_SITE_KEY = '6LfXUr8tAAAAAAWJh1jC0NfYTmhiAmdq-Nd8c9nQ'
 
-// Attest that a request comes from this app, before the first one goes.
-//
-// firestore.rules says who may write what, and it cannot say what is making the
-// request: the web config is public by design (docs/adr/0005), so anyone can
-// sign in with a Google account and write from a script. App Check is what
-// bounds that, and it started mattering when the project moved to a paid plan —
-// a loop of writes is a bill there, where on the free plan it stopped at the
-// day's quota. docs/adr/0011 has the rest, including why the rules do not try to
-// rate limit.
-//
-// Dynamic like every other firebase import here, and reached only when a key is
-// set, so a build without one fetches none of it.
-async function installAppCheck(app: FirebaseApp, siteKey: string) {
-  if (siteKey === '') return
-  const mod = await import('firebase/app-check')
-  mod.initializeAppCheck(app, {
-    provider: new mod.ReCaptchaEnterpriseProvider(siteKey),
-    isTokenAutoRefreshEnabled: true,
-  })
-}
-
-// CROSS_REPO_SYNC(firebase-auth)
-export const wasSignedIn = () => readStored(SIGNED_IN_HINT) === '1'
-
-// What the panel needs to know about who is signed in. Deliberately not the
-// firebase User: that object carries tokens and a dozen methods, and the only
-// things any component here shows are a name and an avatar.
-export interface CloudUser {
-  uid: string
-  name: string | null
-  photo: string | null
-}
-
-const asCloudUser = (user: User): CloudUser => ({
-  uid: user.uid,
-  name: user.displayName,
-  photo: user.photoURL,
+const cloud = createCloud({
+  config: CONFIG,
+  collection: COLLECTION,
+  listField: 'profiles',
+  signedInHint: SIGNED_IN_HINT,
+  appCheckSiteKey: APPCHECK_SITE_KEY,
+  recentMax: RECENT_MAX,
+  storage: { read: readStored, write: writeString, forget: removeStored },
 })
 
-interface Sdk {
-  app: FirebaseApp
-  auth: Auth
-  db: Firestore
-  fs: typeof import('firebase/firestore/lite')
-  authMod: typeof import('firebase/auth')
-}
+export type { CloudUser } from 'skillet-shared/cloud'
+export const { wasSignedIn, warmSignIn, watchAuth, signIn, signOut } = cloud
+export const { putSession, dropSession, loadSdk } = cloud
 
-// One SDK per page, and one *load* per page even when several callers race for
-// it: the promise is the singleton, not the resolved value. initializeApp throws
-// on a second call with the same name, and the auth instance has to be the same
-// object the sign-in popup resolved against.
-let sdk: Promise<Sdk> | null = null
-
-function loadSdk(): Promise<Sdk> {
-  if (sdk !== null) return sdk
-  const load = (async () => {
-    const [appMod, authMod, fs] = await Promise.all([
-      import('firebase/app'),
-      import('firebase/auth'),
-      // The `lite` build, as in both of the other projects here: it drops
-      // onSnapshot and the offline queue, which this app has no use for. A
-      // profile list is read once when a session signs in and written when the
-      // user presses save — there is no live document to subscribe to, and a
-      // second device's changes matter at the next load, not mid-set.
-      import('firebase/firestore/lite'),
-    ])
-    const app = appMod.initializeApp(CONFIG)
-    await installAppCheck(app, APPCHECK_SITE_KEY)
-    return {
-      app,
-      auth: authMod.getAuth(app),
-      db: fs.getFirestore(app),
-      fs,
-      authMod,
-    }
-  })()
-  sdk = load
-  // A download that failed, offline or on a flaky connection, is let go, so the
-  // next press tries again instead of failing until a reload.
-  load.catch(() => {
-    if (sdk === load) sdk = null
-  })
-  return load
-}
-
-// Starts the SDK downloading ahead of a sign-in. The popup can only open inside
-// the browser's allowance for the click that asked for it, and a first sign-in
-// on a slow connection spent that allowance on the download, so the browser
-// blocked the window. Pointing at a sign-in button is reason enough to fetch.
-export const warmSignIn = (): void => {
-  loadSdk().catch(() => undefined)
-}
-
-// Subscribe to who is signed in. Resolves to the unsubscribe once the SDK is up;
-// the callback fires immediately after that with the restored session (or null),
-// and again on every sign-in and sign-out.
-export async function watchAuth(
-  onUser: (user: CloudUser | null) => void,
-): Promise<() => void> {
-  const { auth, authMod } = await loadSdk()
-  return authMod.onAuthStateChanged(auth, user => {
-    if (user === null) removeStored(SIGNED_IN_HINT)
-    else writeString(SIGNED_IN_HINT, '1')
-    onUser(user === null ? null : asCloudUser(user))
-  })
-}
-
-// A popup rather than a redirect, like both of the other projects. A redirect
-// would take the tab away and come back to a cold page — which in this app means
-// tearing down a GPUDevice and building another one to sign in, and every device
-// this tab spends is one it does not get back (docs/adr/0004).
-export async function signIn(): Promise<CloudUser> {
-  const { auth, authMod } = await loadSdk()
-  const provider = new authMod.GoogleAuthProvider()
-  const result = await authMod.signInWithPopup(auth, provider)
-  writeString(SIGNED_IN_HINT, '1')
-  return asCloudUser(result.user)
-}
-
-export async function signOut(): Promise<void> {
-  const { auth } = await loadSdk()
-  removeStored(SIGNED_IN_HINT)
-  await auth.signOut()
-}
-// CROSS_REPO_SYNC_END(firebase-auth)
-
-// CROSS_REPO_SYNC(saved-list-cloud)
-// Everything the user document holds: the saved profiles and the sessions last
-// left open. Read through the same sanitizers the list has always used, because
-// a document is exactly as untrusted as a localStorage value was: it can carry a
-// shape written by an older version of this app, or by a hand-rolled request.
 export interface HomeDoc {
   profiles: SavedProfile[]
   recent: RecentSession[]
 }
 
 export async function fetchHome(uid: string): Promise<HomeDoc> {
-  const { db, fs } = await loadSdk()
-  const snap = await fs.getDoc(fs.doc(db, COLLECTION, uid))
-  if (!snap.exists()) return { profiles: [], recent: [] }
-  const data = snap.data()
-  return {
-    profiles: readProfiles(data.profiles),
-    recent: readRecent(data.recent, data.current),
-  }
+  const { items, recent } = await cloud.fetchHome(uid)
+  return { profiles: items, recent }
 }
 
-// Firestore refuses a field set to undefined, so an entry is built from the
-// fields it has.
-const profileEntry = (item: SavedProfile) => ({
-  name: item.name,
-  query: item.query,
-  ...(item.id === undefined ? {} : { id: item.id }),
-  ...(item.savedAt === undefined ? {} : { savedAt: item.savedAt }),
-})
-
-// Applies `edit` to the stored list and writes the result in one transaction.
-// Firestore reruns `edit` when another write lands between the read and the
-// write, so `edit` must be pure. A caller that builds the list from its own
-// copy drops whatever another tab, device or pending write added. Merged, so
-// the write keeps the sessions.
-export async function editProfiles(
-  uid: string,
-  edit: (profiles: SavedProfile[]) => SavedProfile[],
-): Promise<SavedProfile[]> {
-  const { db, fs } = await loadSdk()
-  const ref = fs.doc(db, COLLECTION, uid)
-  return fs.runTransaction(db, async tx => {
-    const snap = await tx.get(ref)
-    const stored = snap.exists() ? readProfiles(snap.data().profiles) : []
-    const next = edit(stored).slice(0, PROFILE_MAX)
-    tx.set(ref, { profiles: next.map(profileEntry) }, { merge: true })
-    return next
-  })
-}
-
-// Puts `entry` at the front of the recent sessions in one transaction, merged
-// for the same reason, and resolves to the ids that left the list. The write
-// removes `current`, the single session older builds kept, since the list read
-// it in.
-export async function putSession(
-  uid: string,
-  entry: RecentSession,
-): Promise<string[]> {
-  const { db, fs } = await loadSdk()
-  const ref = fs.doc(db, COLLECTION, uid)
-  return fs.runTransaction(db, async tx => {
-    const snap = await tx.get(ref)
-    const data = snap.exists() ? snap.data() : undefined
-    const { recent, dropped } = pushRecent(
-      readRecent(data?.recent, data?.current),
-      entry,
-    )
-    tx.set(
-      ref,
-      {
-        recent: recent.map(s => ({ id: s.id, query: s.query, at: s.at })),
-        current: fs.deleteField(),
-      },
-      { merge: true },
-    )
-    return dropped
-  })
-}
-
-// Removes one session in the same kind of transaction, and resolves to the
-// list that landed.
-export async function dropSession(
-  uid: string,
-  id: string,
-): Promise<RecentSession[]> {
-  const { db, fs } = await loadSdk()
-  const ref = fs.doc(db, COLLECTION, uid)
-  return fs.runTransaction(db, async tx => {
-    const snap = await tx.get(ref)
-    const data = snap.exists() ? snap.data() : undefined
-    const recent = removeRecent(readRecent(data?.recent, data?.current), id)
-    tx.set(
-      ref,
-      { recent: recent.map(s => ({ id: s.id, query: s.query, at: s.at })) },
-      { merge: true },
-    )
-    return recent
-  })
-}
-// CROSS_REPO_SYNC_END(saved-list-cloud)
+export const editProfiles = cloud.editItems
 
 // The saved profiles on this account, or [] for an account that has never saved
 // one.
