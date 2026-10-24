@@ -14,12 +14,13 @@
 // sheet goes last, so a page still overrides the shared rules the way it always
 // did.
 import Analytics from '../components/Analytics.astro'
-import Footer from '../components/Footer.astro'
-import SiteBar from '../components/SiteBar.astro'
+import Footer from 'skillet-shared/components/Footer.astro'
+import SiteBar from 'skillet-shared/components/SiteBar.astro'
 import designTokens from 'skillet-shared/tokens.css?raw'
-import footer from '../styles/footer.css?raw'
-import site from '../styles/site.css?raw'
+import footer from 'skillet-shared/footer.css?raw'
+import site from 'skillet-shared/site.css?raw'
 import tokens from '../styles/tokens.css?raw'
+import { SITE } from '../lib/site'
 
 interface Props {
   title: string
@@ -71,9 +72,9 @@ const {
     <Analytics />
   </head>
   <body id="top">
-    <SiteBar account={account} current={current} />
+    <SiteBar site={SITE} account={account} current={current} />
     <slot />
-    <Footer />
+    <Footer site={SITE} />
     {/* Scripts that want the page under them, which is why they follow it. */}
     <slot name="scripts" />
   </body>

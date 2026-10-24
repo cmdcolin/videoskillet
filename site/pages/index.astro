@@ -3,10 +3,11 @@ import Carousel from '../components/Carousel.astro'
 import Gallery from '../components/Gallery.astro'
 import Hero from '../components/Hero.astro'
 import HomeSkeleton from '../components/HomeSkeleton.astro'
-import SignedInHint from '../components/SignedInHint.astro'
-import SocialMeta from '../components/SocialMeta.astro'
+import SignedInHint from 'skillet-shared/components/SignedInHint.astro'
+import SocialMeta from 'skillet-shared/components/SocialMeta.astro'
 import WhySignInCard from '../components/WhySignInCard.astro'
 import Page from '../layouts/Page.astro'
+import { SIGNED_IN_HINT } from '../../src/ui/cloud.ts'
 import { ORIGIN } from '../lib/site'
 import script from '../scripts/landing.js?raw'
 import css from '../styles/landing.css?raw'
@@ -36,7 +37,7 @@ const SHARE_IMAGE_H = 630
   </Fragment>
 
   <Fragment slot="head">
-    <SignedInHint />
+    <SignedInHint hint={SIGNED_IN_HINT} />
   </Fragment>
 
   <!-- The signed-in home, filled by site/scripts/home.ts once Firebase has

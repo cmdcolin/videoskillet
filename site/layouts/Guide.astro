@@ -1,14 +1,15 @@
 ---
 import Analytics from '../components/Analytics.astro'
-import Footer from '../components/Footer.astro'
+import Footer from 'skillet-shared/components/Footer.astro'
 import Header from '../components/Header.astro'
 import spy from '../scripts/spy.js?raw'
 import tabs from '../scripts/tabs.js?raw'
 import video from '../scripts/video.js?raw'
 import css from '../styles/guide.css?raw'
 import designTokens from 'skillet-shared/tokens.css?raw'
-import footer from '../styles/footer.css?raw'
+import footer from 'skillet-shared/footer.css?raw'
 import tokens from '../styles/tokens.css?raw'
+import { SITE as SITE_INFO } from '../lib/site'
 
 import { href } from '../lib/pages.mjs'
 
@@ -103,7 +104,7 @@ const marked = spec.group.mark(spec)
         </nav>
       </main>
     </div>
-    <Footer />
+    <Footer site={SITE_INFO} />
     <script is:inline set:html={spy}></script>
     <script is:inline set:html={video}></script>
     <script is:inline set:html={tabs}></script>

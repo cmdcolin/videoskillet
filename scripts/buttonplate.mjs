@@ -61,7 +61,7 @@ const sheet = args.sheet
 const css = [
   'node_modules/skillet-shared/dist/tokens.css',
   'site/styles/tokens.css',
-  'site/styles/site.css',
+  'node_modules/skillet-shared/css/site.css',
   'site/styles/landing.css',
 ]
   .map(f => readFileSync(f, 'utf8'))
