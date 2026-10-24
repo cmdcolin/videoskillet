@@ -1,15 +1,15 @@
-import { describe, expect, it } from 'vitest'
-
-import { stillShows, stillTag } from './cloud'
 import {
   MIN_GAP_MS,
   SETTLE_MS,
   nextWriteAt,
   observe,
-} from './useCurrentSession'
+} from 'skillet-shared/session-gate'
+import { describe, expect, it } from 'vitest'
+
+import { stillShows, stillTag } from './cloud'
 
 import type { Still } from './cloud'
-import type { Opened } from './useCurrentSession'
+import type { Opened } from 'skillet-shared/session-gate'
 
 describe('the current-session write gate', () => {
   it('waits for the board to settle before the first write', () => {

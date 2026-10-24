@@ -21,8 +21,8 @@ importers:
         specifier: ^19.3.1
         version: 19.3.1(react@19.3.1)
       skillet-shared:
-        specifier: ^0.5.0
-        version: 0.5.0(astro@7.4.2(@astrojs/markdown-remark@7.3.1(supports-color@7.2.0))(@types/node@26.6.5)(esbuild@0.28.2)(yaml@2.9.1))(firebase@13.1.0)
+        specifier: ^0.6.0
+        version: 0.6.0(astro@7.4.2(@astrojs/markdown-remark@7.3.1(supports-color@7.2.0))(@types/node@26.6.5)(esbuild@0.28.2)(yaml@2.9.1))(firebase@13.1.0)
     devDependencies:
       '@astrojs/markdown-remark':
         specifier: ^7.3.1
@@ -5178,8 +5178,8 @@ packages:
   sisteransi@1.0.5:
     resolution: {integrity: sha512-bLGGlR1QxBcynn2d5YmDX4MGjlZvy2MRBDRNHLJ8VI6l6+9FUiyTFNJ0IveOSP0bcXgVDPRcfGqA0pjaqUpfVg==}
 
-  skillet-shared@0.5.0:
-    resolution: {integrity: sha512-y1C0HbTR21y/w2+frx2vsQdkIazbTS7f52Ynf54hA6AJazjjU4kvbo2pqdoiLr/VsZKROy8G6Ipr0O+0j8XK0w==}
+  skillet-shared@0.6.0:
+    resolution: {integrity: sha512-HsPO23rySyk+fFqJ+2lWUy7GJR8kN1WqgeGpDtCoERvLqivnp6Pp6oOjgbCurydxMlHs0Jy7VM8tmB04RVItYQ==}
     peerDependencies:
       astro: ^7.4.2
       firebase: ^13.1.0
@@ -11588,7 +11588,7 @@ snapshots:
 
   sisteransi@1.0.5: {}
 
-  skillet-shared@0.5.0(astro@7.4.2(@astrojs/markdown-remark@7.3.1(supports-color@7.2.0))(@types/node@26.6.5)(esbuild@0.28.2)(yaml@2.9.1))(firebase@13.1.0):
+  skillet-shared@0.6.0(astro@7.4.2(@astrojs/markdown-remark@7.3.1(supports-color@7.2.0))(@types/node@26.6.5)(esbuild@0.28.2)(yaml@2.9.1))(firebase@13.1.0):
     dependencies:
       astro: 7.4.2(@astrojs/markdown-remark@7.3.1(supports-color@7.2.0))(@types/node@26.6.5)(esbuild@0.28.2)(yaml@2.9.1)
       firebase: 13.1.0

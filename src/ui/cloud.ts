@@ -1,4 +1,5 @@
 import { createCloud } from 'skillet-shared/cloud'
+import { FIREBASE_CONFIG } from 'skillet-shared/firebase-config'
 
 import { RECENT_MAX } from './profileModel'
 import { readStored, removeStored, writeString } from './storage'
@@ -12,27 +13,6 @@ import type { RecentSession, SavedProfile } from './profileModel'
 // skillet-shared/cloud loads the SDK on first use, and nothing else in the app
 // imports `firebase`.
 //
-// The config is committed on purpose. A Firebase web config is a set of public
-// identifiers, not credentials: it ships inside the bundle of every Firebase web
-// app that has ever been deployed, and the apiKey only identifies the project to
-// Google's endpoints. What stops a stranger writing to the database is
-// firestore.rules, and what stops one using the project as their own auth backend
-// is the authorized-domains list. This is the same call phyloguessr makes, and it
-// is what lets the GitHub Pages workflow build with no secrets — ytshuffle2 reads
-// the config from VITE_ vars its CI does not set, so the bundle it deploys
-// carries `undefined` for all seven fields.
-// CROSS_REPO_SYNC(firebase-config)
-const CONFIG = {
-  apiKey: 'AIzaSyBHZnQdnaDc5BEYbqwKO8zs0t_wyzLaGFo',
-  authDomain: 'ntscjs-d4f56.firebaseapp.com',
-  projectId: 'ntscjs-d4f56',
-  storageBucket: 'ntscjs-d4f56.firebasestorage.app',
-  messagingSenderId: '881016589781',
-  appId: '1:881016589781:web:9eabd469a30d89b6d7815c',
-  measurementId: 'G-ZFH59EM495',
-}
-// CROSS_REPO_SYNC_END(firebase-config)
-
 const COLLECTION = 'users'
 
 // Whether this browser has been signed in before. Not a credential and not
@@ -53,7 +33,7 @@ export const SIGNED_IN_HINT = 'videoskillet_signed_in'
 const APPCHECK_SITE_KEY = '6LfXUr8tAAAAAAWJh1jC0NfYTmhiAmdq-Nd8c9nQ'
 
 const cloud = createCloud({
-  config: CONFIG,
+  config: FIREBASE_CONFIG,
   collection: COLLECTION,
   listField: 'profiles',
   signedInHint: SIGNED_IN_HINT,

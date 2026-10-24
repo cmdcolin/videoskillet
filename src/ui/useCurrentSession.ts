@@ -1,4 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
+import {
+  nextWriteAt,
+  observe,
+  type Opened,
+  type WriteGate,
+} from 'skillet-shared/session-gate'
 
 import {
   STILL_MAX,
@@ -30,47 +36,6 @@ import { takeSessionId } from './resumeHandoff'
 // drag therefore writes once every ten seconds while the address bar writes four
 // times a second. A query identical to the one already on the account writes
 // nothing at all.
-// CROSS_REPO_SYNC(current-session-gate)
-export const SETTLE_MS = 5000
-export const MIN_GAP_MS = 10000
-
-// The query last written to the account, and when it landed.
-export interface WriteGate {
-  query: string | null
-  at: number
-}
-
-// When a newly settled query may be written, or null when the account already
-// has it. The later of the two gates wins: the debounce measures from now, the
-// rate limit from the last write that landed.
-export function nextWriteAt(
-  gate: WriteGate,
-  query: string,
-  now: number,
-): number | null {
-  if (query === gate.query) return null
-  return Math.max(now + SETTLE_MS, gate.at + MIN_GAP_MS)
-}
-
-// The board this page opened on, and whether it has moved off it since.
-export interface Opened {
-  query: string | null
-  moved: boolean
-}
-
-// A bare load opens on bars, and a link — a gallery look, a look somebody sent,
-// the resume card itself — opens on a finished board. None of those is a
-// session the visitor made, and writing one put it over the session the account
-// held, so a gallery card opened from the home page took the resume card's
-// place. The first query the page shows is where it opened, and the session
-// starts when the board first differs from it.
-export function observe(opened: Opened, query: string | null): Opened {
-  if (query === null || opened.moved) return opened
-  if (opened.query === null) return { query, moved: false }
-  return query === opened.query ? opened : { ...opened, moved: true }
-}
-// CROSS_REPO_SYNC_END(current-session-gate)
-
 // `grabThumb` gives the session's card a picture. A write made while the tab is
 // hidden goes without one, because the grab waits for a frame and a hidden tab
 // draws none; the home page then shows no still rather than an older board's.

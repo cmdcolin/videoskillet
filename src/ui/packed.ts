@@ -1,3 +1,5 @@
+import { B64, fromBase64Url, toBase64Url } from 'skillet-shared/base64url'
+
 import { DEFAULT_CONTROLS } from '../core/controls'
 import { ALL_SLIDERS, SLIDER_BY_KEY, snapToStep } from './controls'
 
@@ -100,8 +102,6 @@ function putVarint(out: number[], n: number) {
   out.push(n)
 }
 
-const B64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_'
-
 // Two characters of checksum, a '.', then the bytes: `?p=9K.HZx5BFAEDCboAj_iAQ`.
 //
 // A packed link that loses its tail decodes to a shorter look, and one with a
@@ -127,58 +127,6 @@ function seal(bytes: readonly number[]): string {
   const n = (h ^ (h >>> 12) ^ (h >>> 24)) & 0xfff
   return `${B64[n >> 6]}${B64[n & 63]}`
 }
-
-// Written out rather than handed to btoa, which wants a binary string and then
-// wants three characters swapped out of its answer to be url-safe. The alphabet
-// above is already the one a query string carries as itself, which is half of
-// why the short form wins by more than the byte count says: `?set=` spends
-// three characters on every `:` and `,` once the browser has encoded it.
-//
-// Nothing pads: dropping the '=' costs the reader nothing, because n bytes
-// always come back out of ceil(n * 4 / 3) characters exactly.
-function toBase64Url(bytes: readonly number[]): string {
-  let out = ''
-  for (let i = 0; i < bytes.length; i += 3) {
-    const n =
-      ((bytes[i] ?? 0) << 16) | ((bytes[i + 1] ?? 0) << 8) | (bytes[i + 2] ?? 0)
-    const left = bytes.length - i
-    out += (B64[(n >> 18) & 63] ?? '') + (B64[(n >> 12) & 63] ?? '')
-    if (left > 1) out += B64[(n >> 6) & 63] ?? ''
-    if (left > 2) out += B64[n & 63] ?? ''
-  }
-  return out
-}
-
-// '+' and '/' are read as themselves because the plain alphabet is what most
-// encoders reach for. Everything else outside the alphabet ends the bytes
-// rather than voiding them — '=' from something that pads, and, the case this
-// is really for, whatever the link picked up on its way here. A full stop at
-// the end of the sentence it was pasted into, the bracket of a markdown link,
-// the next word autolinked along with it: a link that arrives with one
-// character too many has lost no more of itself than one whose tail a chat
-// window ate, and that one already opens the look it can still read.
-//
-// Under a seal that is a proposal rather than an answer, and the seal is what
-// judges it: trailing junk leaves the body whole and the seal matches, while a
-// character turned anywhere in it leaves a short body whose seal does not.
-// CROSS_REPO_SYNC(packed-base64)
-function fromBase64Url(text: string): number[] {
-  const bytes: number[] = []
-  let acc = 0
-  let bits = 0
-  for (const ch of text) {
-    const v = B64.indexOf(ch === '+' ? '-' : ch === '/' ? '_' : ch)
-    if (v < 0) break
-    acc = (acc << 6) | v
-    bits += 6
-    if (bits >= 8) {
-      bits -= 8
-      bytes.push((acc >> bits) & 0xff)
-    }
-  }
-  return bytes
-}
-// CROSS_REPO_SYNC_END(packed-base64)
 
 /** A look as bytes: every control off default, by its `id` in the table. */
 export function packControls(c: Partial<Controls>): string {
