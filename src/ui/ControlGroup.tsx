@@ -629,8 +629,8 @@ export function ControlGroup(props: { group: Group; defaultOpen?: boolean }) {
     [],
   )
   // A live filter drops the miniature, so a search can reach the sliders it
-  // stands in for, and so does switching the signal diagrams off. The wipe,
-  // PiP, mask and view miniatures are controls, and stay.
+  // stands in for, and so does a schematic left folded. The wipe, PiP, mask and
+  // view miniatures are controls, and stay.
   const [showFramed, setShowFramed] = useState(false)
   const [showFine, setShowFine] = useState(false)
   // The group reads two primitives off the controls. This component builds
@@ -661,10 +661,15 @@ export function ControlGroup(props: { group: Group; defaultOpen?: boolean }) {
   const driftable = MUTATE_CIRCUIT_BY_GROUP.has(group.name)
   const drifting = driftingGroups.has(group.name)
   const driftWords = DRIFT_MODE_WORDS[driftMode]
+  // The menu's switch sets every group's schematic; this group's own fold
+  // overrides it until the menu's switch moves again.
   const diagrams = useSignalDiagrams()
+  const [here, setHere] = useState<{ everywhere: boolean; drawn: boolean }>()
+  const drawn = here?.everywhere === diagrams ? here.drawn : diagrams
+  const schematic =
+    !filterActive(filter) && Object.hasOwn(SCHEMATIC_FRAMES, group.name)
   const frame =
-    filterActive(filter) ||
-    (!diagrams && Object.hasOwn(SCHEMATIC_FRAMES, group.name))
+    filterActive(filter) || (schematic && !drawn)
       ? undefined
       : FRAMES.find(f => f.group === group.name)
 
@@ -717,6 +722,15 @@ export function ControlGroup(props: { group: Group; defaultOpen?: boolean }) {
   const body = (
     <>
       {chips.length === 0 ? null : <CardChips group={group} chips={chips} />}
+      {schematic ? (
+        <button
+          className={styles.diagramToggle}
+          aria-expanded={drawn}
+          onClick={() => setHere({ everywhere: diagrams, drawn: !drawn })}
+        >
+          {`${drawn ? '▾' : '▸'} diagram`}
+        </button>
+      ) : null}
       {frame === undefined ? null : (
         <>
           <BoxScope value={group.name}>

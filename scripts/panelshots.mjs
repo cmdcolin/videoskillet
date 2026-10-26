@@ -255,17 +255,19 @@ try {
     // cleared on the way in rather than on the way out, where a state that
     // failed early would skip it.
     await page.goto(base, { waitUntil: 'load' })
-    // A bay the state wants standing before first paint. localStorage is per
-    // origin and not per document, so the first load is what makes the origin
-    // writable and the second is the one under test.
+    // A bay the state wants standing before first paint, and the schematics
+    // the baselines show, which a fresh profile starts without. localStorage is
+    // per origin and not per document, so the first load is what makes the
+    // origin writable and the second is the one under test.
     await page.evaluate(
-      v =>
-        v === null
-          ? localStorage.removeItem('video_feedback_mod')
-          : localStorage.setItem('video_feedback_mod', v),
+      v => {
+        localStorage.setItem('videoskillet_signal_diagrams', '1')
+        if (v === null) localStorage.removeItem('video_feedback_mod')
+        else localStorage.setItem('video_feedback_mod', v)
+      },
       state.seed === undefined ? null : JSON.stringify(state.seed),
     )
-    if (state.seed !== undefined) await page.goto(base, { waitUntil: 'load' })
+    await page.goto(base, { waitUntil: 'load' })
     await appUp(page, 3500)
     // Park the pointer clear of the panel. Headed Firefox puts the real cursor
     // wherever the WM left it, and over a preset chip that swaps the caption

@@ -31,10 +31,10 @@ them off.
   it is for a box open from the first render. On a 600px window, pressing a
   Recording box scrolled the panel 191px and showed the help line and both rows.
 - **Open box kept per group** (`cc6c5692`, bender `38936d5`): `ControlGroup`
-  wraps each schematic in a `BoxScope` named for its group, and
-  `useSelectedBox` keeps the open box per scope in module state. bender provides
-  no scope, so its drawings behave as before. `ControlGroup` holds `showFramed`
-  above the `Section`, so a fold keeps it and a stage switch resets it.
+  wraps each schematic in a `BoxScope` named for its group, and `useSelectedBox`
+  keeps the open box per scope in module state. bender provides no scope, so its
+  drawings behave as before. `ControlGroup` holds `showFramed` above the
+  `Section`, so a fold keeps it and a stage switch resets it.
 - **Touch targets** (`a78d0735`, bender `a39dd03`): `BoxView` draws a
   transparent rect 3 units above and below a pressable box, about 25px in all.
   - Two margins overlap where stacked boxes sit less than 6 units apart. Synth

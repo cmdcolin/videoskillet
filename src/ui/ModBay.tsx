@@ -1,3 +1,5 @@
+import { arrowhead, route } from 'skillet-shared/wire-route'
+
 import { isOneShot } from '../core/signal/modstate'
 import { cx } from './cx'
 import { SYNC_DIVISIONS } from './midi'
@@ -21,7 +23,6 @@ import { groupOf, stageOf } from './placement'
 import { Slider } from './Slider'
 import { TempoRow } from './TempoRow'
 import ui from './ui.module.css'
-import { arrowhead, route } from 'skillet-shared/wire-route'
 
 import type { ModTarget } from '../core/controls'
 import type { Tempo } from './useTempo'

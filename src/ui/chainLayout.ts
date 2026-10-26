@@ -1,3 +1,5 @@
+import { arrowhead, route } from 'skillet-shared/wire-route'
+
 import {
   CAMERA_LOOP_STAGE,
   LOOP_STAGES,
@@ -6,7 +8,6 @@ import {
   SOURCE_A_STAGE,
 } from './controls'
 import { fitCaption } from './patched'
-import { arrowhead, route } from 'skillet-shared/wire-route'
 
 import type { LoopPlace } from './controls'
 import type { Point } from 'skillet-shared/wire-route'

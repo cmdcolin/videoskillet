@@ -1,4 +1,5 @@
 import { startAnalytics } from 'skillet-shared/analytics'
+
 import { App } from './app'
 import { registerServiceWorker } from './registerSW'
 import './theme.css'

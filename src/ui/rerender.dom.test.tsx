@@ -486,7 +486,10 @@ async function openGroup(key: ControlKey, box: string) {
 }
 
 describe('a stage in the panel', () => {
-  beforeAll(mountApp)
+  beforeAll(async () => {
+    setSignalDiagrams(true)
+    await mountApp()
+  })
   afterAll(cleanup)
   afterEach(() =>
     act(async () => {
@@ -557,6 +560,30 @@ describe('a stage in the panel', () => {
       expect(drawing()).toBe(null)
       expect(screen.queryByRole('button', { name: /sliders$/ })).toBe(null)
       expect(rowsUnder(ControlGroup)).toContain(key)
+    } finally {
+      await act(async () => {
+        setSignalDiagrams(true)
+      })
+    }
+    expect(drawing()).not.toBe(null)
+  })
+
+  test('a group unfolds its own schematic with the rest switched off', async () => {
+    const drawing = () =>
+      screen.queryByRole('group', { name: 'mixer feedback loop' })
+    await act(async () => {
+      setSignalDiagrams(false)
+    })
+    try {
+      expect(drawing()).toBe(null)
+      const fold = screen.getByRole('button', { name: '▸ diagram' })
+      await act(async () => {
+        fireEvent.click(fold)
+      })
+      expect(drawing()).not.toBe(null)
+      expect(screen.getAllByRole('button', { name: '▾ diagram' })).toHaveLength(
+        1,
+      )
     } finally {
       await act(async () => {
         setSignalDiagrams(true)

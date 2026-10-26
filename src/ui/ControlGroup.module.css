@@ -107,6 +107,11 @@
   color: var(--fg);
 }
 
+.diagramToggle {
+  composes: sliderToggle;
+  margin: 0 0 var(--space-sm);
+}
+
 /* What line 21 is carrying. A textarea rather than an input because a caption
    is lines — each one rolls the page when it lands — and the wrap is what says
    how the 32 columns will break. Skinned for the same reason dialog.module.css
