@@ -1,6 +1,12 @@
 import { LINES } from '../core/signal/constants'
 import { RasterPanel } from './BandLane'
-import { openBox, stageBoxes, useReadings, useSelectedBox } from './diagram'
+import {
+  boxWidth,
+  openBox,
+  stageBoxes,
+  useReadings,
+  useSelectedBox,
+} from './diagram'
 import { Boxes, BoxRows, Chain, Diagram } from './DiagramParts'
 import own from './NoiseDiagram.module.css'
 import {
@@ -22,10 +28,10 @@ const WIDTH = 340
 const ROW_Y = 14
 const H = 20
 const COL = {
-  floor: { x: 40, w: 43 },
-  arcs: { x: 99, w: 37 },
-  ignition: { x: 152, w: 60 },
-  strikes: { x: 228, w: 55 },
+  floor: { x: 40, w: boxWidth('floor') },
+  arcs: { x: 99, w: boxWidth('arcs') },
+  ignition: { x: 152, w: boxWidth('ignition') },
+  strikes: { x: 228, w: boxWidth('strikes') },
 } satisfies Record<Part, { x: number; w: number }>
 
 const PLOT = { top: 50, bottom: 98 }

@@ -2,6 +2,7 @@ import { IRE_SYNC, IRE_WHITE } from '../core/signal/constants'
 import { sliderFor, snapToStep } from './controls'
 import { useControlsApi } from './ControlsContext'
 import {
+  boxWidth,
   ire,
   openBox,
   stageBoxes,
@@ -22,10 +23,10 @@ const WIDTH = 340
 const ROW_Y = 14
 const H = 20
 const COL = {
-  adjacent: { x: 40, w: 60 },
-  tuning: { x: 114, w: 49 },
-  snow: { x: 177, w: 37 },
-  ingress: { x: 228, w: 55 },
+  adjacent: { x: 40, w: boxWidth('adjacent') },
+  tuning: { x: 114, w: boxWidth('tuning') },
+  snow: { x: 177, w: boxWidth('snow') },
+  ingress: { x: 228, w: boxWidth('ingress') },
 } satisfies Record<Part, { x: number; w: number }>
 const ORDER = ['adjacent', 'tuning', 'snow', 'ingress'] as const
 

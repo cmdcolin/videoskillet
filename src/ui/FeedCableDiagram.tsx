@@ -2,6 +2,7 @@ import { RasterPanel } from './BandLane'
 import styles from './CableDiagram.module.css'
 import { cableLine, contactBands, humColumn } from './cableModel'
 import {
+  boxWidth,
   ire,
   openBox,
   polyline,
@@ -29,11 +30,11 @@ const ORDER = [
   'load',
 ] as const satisfies readonly Part[]
 const COL = {
-  snow: { x: 30, w: 37 },
-  hum: { x: 81, w: 31 },
-  plug: { x: 126, w: 37 },
-  flip: { x: 177, w: 37 },
-  load: { x: 228, w: 37 },
+  snow: { x: 30, w: boxWidth('snow') },
+  hum: { x: 81, w: boxWidth('hum') },
+  plug: { x: 126, w: boxWidth('plug') },
+  flip: { x: 177, w: boxWidth('flip') },
+  load: { x: 228, w: boxWidth('load') },
 } satisfies Record<Part, { x: number; w: number }>
 
 const PLOT = { top: 50, bottom: 98 }

@@ -2,6 +2,7 @@ import { RasterPanel } from './BandLane'
 import styles from './CableDiagram.module.css'
 import { cableLine, contactBands, GUARD_ROWS, stripeBands } from './cableModel'
 import {
+  boxWidth,
   ire,
   openBox,
   stageBoxes,
@@ -28,12 +29,12 @@ const ORDER = [
   'load',
 ] as const satisfies readonly Part[]
 const COL = {
-  guard: { x: 24, w: 43 },
-  scramble: { x: 77, w: 60 },
-  chroma: { x: 147, w: 49 },
-  plug: { x: 206, w: 37 },
-  flip: { x: 253, w: 37 },
-  load: { x: 300, w: 37 },
+  guard: { x: 24, w: boxWidth('guard') },
+  scramble: { x: 77, w: boxWidth('scramble') },
+  chroma: { x: 147, w: boxWidth('chroma') },
+  plug: { x: 206, w: boxWidth('plug') },
+  flip: { x: 253, w: boxWidth('flip') },
+  load: { x: 300, w: boxWidth('load') },
 } satisfies Record<Part, { x: number; w: number }>
 
 const PLOT = { top: 50, bottom: 98 }

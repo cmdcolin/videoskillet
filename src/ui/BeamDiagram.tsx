@@ -1,6 +1,7 @@
 import styles from './BeamDiagram.module.css'
 import { edgeProfile, lineProfile } from './beamModel'
 import {
+  boxWidth,
   openBox,
   polyline,
   stageBoxes,
@@ -18,11 +19,11 @@ const WIDTH = 340
 const ROW_Y = 14
 const H = 20
 const COL = {
-  strobe: { x: 30, w: 49 },
-  spot: { x: 93, w: 37 },
-  svm: { x: 144, w: 31 },
-  recon: { x: 189, w: 43 },
-  lines: { x: 246, w: 43 },
+  strobe: { x: 30, w: boxWidth('strobe') },
+  spot: { x: 93, w: boxWidth('spot') },
+  svm: { x: 144, w: boxWidth('svm') },
+  recon: { x: 189, w: boxWidth('recon') },
+  lines: { x: 246, w: boxWidth('lines') },
 } satisfies Record<Part, { x: number; w: number }>
 const ORDER = ['strobe', 'spot', 'svm', 'recon', 'lines'] as const
 

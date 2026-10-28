@@ -1,7 +1,13 @@
 import { RasterPanel } from './BandLane'
 import styles from './CrosspointDiagram.module.css'
 import { cutRows, driftAcrossFrame, lostRows } from './crosspointModel'
-import { openBox, stageBoxes, useReadings, useSelectedBox } from './diagram'
+import {
+  boxWidth,
+  openBox,
+  stageBoxes,
+  useReadings,
+  useSelectedBox,
+} from './diagram'
 import { Boxes, BoxRows, Chain, Diagram } from './DiagramParts'
 import { alongPicture } from './plotAlong'
 import { CROSSPOINT_KEYS, CROSSPOINT_OPENS as OPENS } from './schematicKeys'
@@ -15,10 +21,10 @@ const WIDTH = 340
 const ROW_Y = 14
 const H = 20
 const COL = {
-  wander: { x: 30, w: 49 },
-  capture: { x: 93, w: 55 },
-  leak: { x: 162, w: 37 },
-  cut: { x: 213, w: 32 },
+  wander: { x: 30, w: boxWidth('wander') },
+  capture: { x: 93, w: boxWidth('capture') },
+  leak: { x: 162, w: boxWidth('leak') },
+  cut: { x: 213, w: boxWidth('cut') },
 } satisfies Record<Part, { x: number; w: number }>
 const ORDER = ['wander', 'capture', 'leak', 'cut'] as const
 

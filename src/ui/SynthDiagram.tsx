@@ -1,4 +1,5 @@
 import {
+  boxWidth,
   lit,
   openBox,
   rightOf,
@@ -25,14 +26,14 @@ const BOT_Y = 54
 const MAIN_Y = 32
 const H = 16
 const COL = {
-  luma: { x: 6, w: 37 },
-  oscA: { x: 53, w: 43 },
-  oscB: { x: 53, w: 43 },
-  shape: { x: 110, w: 43 },
-  mix: { x: 167, w: 31 },
-  level: { x: 212, w: 43 },
-  colour: { x: 269, w: 49 },
-  over: { x: 269, w: 37 },
+  luma: { x: 6, w: boxWidth('luma') },
+  oscA: { x: 53, w: boxWidth('osc A') },
+  oscB: { x: 53, w: boxWidth('osc B') },
+  shape: { x: 110, w: boxWidth('shape') },
+  mix: { x: 167, w: boxWidth('mix') },
+  level: { x: 212, w: boxWidth('level') },
+  colour: { x: 269, w: boxWidth('colour') },
+  over: { x: 269, w: boxWidth('over') },
 } satisfies Record<Part, { x: number; w: number }>
 const JOIN_X = 328
 

@@ -1,4 +1,5 @@
 import {
+  boxWidth,
   ire,
   openBox,
   stageBoxes,
@@ -27,9 +28,9 @@ const ROW_Y = 14
 const LOOP_Y = 34
 const H = 20
 const COL = {
-  drops: { x: 30, w: 60 },
-  patch: { x: 104, w: 43 },
-  dub: { x: 161, w: 32 },
+  drops: { x: 30, w: boxWidth('dropouts') },
+  patch: { x: 104, w: boxWidth('patch') },
+  dub: { x: 161, w: boxWidth('dub') },
 } satisfies Record<Part, { x: number; w: number }>
 const TAP_X = 210
 const DROPS_MID = COL.drops.x + COL.drops.w / 2

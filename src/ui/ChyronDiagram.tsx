@@ -25,6 +25,7 @@ type Opens = Record<string, readonly ControlKey[]>
 
 const CAPTION_READS: readonly ControlKey[] = [...CAPTION_KEYS, 'cc']
 
+const WIDTH = 340
 const GAP = 3
 const SAMPLE_ROW = [0, 1, 1, 0, 0, 1, 1, 0]
 
@@ -252,7 +253,7 @@ function CharGen({ cg }: { cg: boolean }) {
   return (
     <>
       <Diagram
-        width={336}
+        width={WIDTH}
         height={cg ? KEY_R + 28 : CC_R + 18}
         label={
           cg ? 'character generator data path' : 'caption decoder data path'
