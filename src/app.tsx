@@ -780,7 +780,7 @@ export function App() {
   // What it holds is the controls, which is why it costs nothing but a patch:
   // the engine already keeps its own snapshot to restore from.
   const holdStock = (stage: string) => {
-    engineRef.current?.preview(stockIn(settledStore.get(), stage))
+    engineRef.current?.preview(stockIn(controlStore.get(), stage))
     setHeldStage(stage)
   }
   // Called by a pointer leaving the button as well as by one lifting off it, so
@@ -1478,7 +1478,7 @@ export function App() {
   const lens: Lens = { zoom: lensZoom, x: lensX, y: lensY }
   const setLens = (next: Lens) =>
     writeControls({
-      ...settledStore.get(),
+      ...controlStore.get(),
       crtZoom: next.zoom,
       crtZoomX: next.x,
       crtZoomY: next.y,
