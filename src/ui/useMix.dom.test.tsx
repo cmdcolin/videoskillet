@@ -5,7 +5,7 @@ import { DEFAULT_CONTROLS } from '../core/controls'
 import { Listeners } from '../core/listeners'
 import { Glide } from '../core/signal/glide'
 import { DEFAULT_STAB } from './modSlots'
-import { PRESET_BY_NAME } from './presets'
+import { PRESET_BY_NAME, blendPresets } from './presets'
 import { useMix } from './useMix'
 
 import type { ControlKey, Controls } from '../core/controls'
@@ -109,5 +109,23 @@ describe('useMix under a morph', () => {
     run(() => mix().applyPreset('bentDetailer', patchOf('bentDetailer')))
     land()
     expect(eng.getControls().hDetuneHz).toBe(7)
+  })
+
+  it('stacks a second preset clicked while the first is still arriving', () => {
+    const { eng, mix, run, land } = mount(4)
+    const click = (name: string) => {
+      run(() => mix().startMix())
+      run(() => mix().applyPreset(name, patchOf(name)))
+    }
+    click('bentDetailer')
+    run(() => eng.tick(1000))
+    click('noseAgainstTheGlass')
+    land()
+    const both = new Map([
+      ['bentDetailer', 1],
+      ['noseAgainstTheGlass', 1],
+    ])
+    expect(eng.getControls()).toEqual(blendPresets(DEFAULT_CONTROLS, both))
+    expect(mix().weights).toEqual(both)
   })
 })

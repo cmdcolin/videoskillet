@@ -193,9 +193,10 @@ export function useMix(args: {
 
   // The recipe a weight change layers onto: the mix while the board still
   // matches it, or the board as it stands with nothing on it once something
-  // else has moved it.
+  // else has moved it. Mid-morph the board is where the morph is going, the
+  // rule `banked` follows.
   const liveMix = () => {
-    const look = settledStore.get()
+    const look = getGlideTarget() ?? settledStore.get()
     return controlsEqual(look, mixed)
       ? mix
       : { base: look, weights: NO_WEIGHTS }
