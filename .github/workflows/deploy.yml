@@ -164,8 +164,35 @@ jobs:
         with:
           path: dist
 
+  # Renders a set of looks on Mesa's software Vulkan and compares them with
+  # scripts/render/golden/. Pinned to 24.04 so the driver version only moves
+  # when this line does.
+  render:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 11.11.0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - run: sudo apt-get update && sudo apt-get install -y mesa-vulkan-drivers
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm render:golden
+      - if: failure()
+        uses: actions/upload-artifact@v5
+        with:
+          name: golden-diff
+          path: scripts/render/golden/*.*.ppm
+          if-no-files-found: ignore
+
   deploy:
-    needs: [check, build]
+    needs: [check, build, render]
     runs-on: ubuntu-latest
     environment:
       name: github-pages

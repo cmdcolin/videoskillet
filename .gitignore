@@ -52,3 +52,7 @@ renders/
 
 # Cross-compiled renderer binaries (node scripts/render/compile.mjs --all).
 /dist-bin/
+
+# what scripts/render/golden.ts writes beside a reference when a frame drifts
+scripts/render/golden/*.actual.ppm
+scripts/render/golden/*.diff.ppm

@@ -69,6 +69,37 @@ If you are about to drive a browser at this app, read
 measure a performance change, read
 [Measuring performance](#measuring-performance) before believing a number.
 
+## Render check
+
+```
+pnpm render:golden                  # compare, exit 1 on a mismatch
+pnpm render:golden --update         # rewrite the references
+pnpm render:golden --only=vhs       # one case
+```
+
+CI runs this on every push to main, and it is the one check that executes the
+shaders.
+
+- **What it does:** `scripts/render/golden.ts` renders twelve looks for 30
+  frames each on the app's own engine bundle. It compares each final frame,
+  box-filtered to 125x80, with a reference in `scripts/render/golden/`.
+- **Where it renders:** on lavapipe, Mesa's software Vulkan driver
+  (`apt install mesa-vulkan-drivers`). A laptop and the runner therefore use the
+  same rasteriser. `GOLDEN_GPU=1` renders on the real GPU instead; that run
+  differs from the references by about 0.1 levels on average.
+- **What fails it:** a mean change over 0.4 levels, or more than 0.5% of pixels
+  moving by over 16. A 3.5% error in one YUV→RGB coefficient fails eight of the
+  twelve looks.
+- **What it also checks:** it renders the first look again and requires an
+  identical frame, so a `startTake` that stops resetting some state fails here.
+- **When it fails:** `<case>.actual.ppm` and `<case>.diff.ppm` land beside the
+  reference, and CI uploads them as the `golden-diff` artifact. A change that
+  meant to alter the picture reruns with `--update` and commits the new
+  references.
+- **What it cannot see:** the present pass (the view's zoom), source B, and
+  caption or chyron text. The headless engine has no `OffscreenCanvas` to draw
+  the font ROM with.
+
 ## Verification harness
 
 ```
@@ -79,12 +110,12 @@ pnpm harnesses 5199 --skip poolcheck   # …without the live one
 Fourteen harnesses, eight to eleven minutes — the spread is other work on the
 box, and the GPU-heavy arms are what stretch. Start here, because **none of the
 harnesses below runs in CI**: the workflow does lint, format, the compiler gate,
-typecheck, the unit suite and the build, and every browser check needs Firefox
-Nightly with WebGPU, which the runner has not got. So a harness can stop working
-and nothing says so — `poolcheck` spent an unknown number of commits failing all
-twenty-six of its checks, and `composecheck` spent them reading the chain map's
-zoom slider and reporting a CSS layer as broken that was fine. Both were found
-by accident.
+typecheck, the unit suite, the build and the render check, and every browser
+check needs Firefox Nightly with WebGPU, which the runner has not got. So a
+harness can stop working and nothing says so — `poolcheck` spent an unknown
+number of commits failing all twenty-six of its checks, and `composecheck` spent
+them reading the chain map's zoom slider and reporting a CSS layer as broken
+that was fine. Both were found by accident.
 
 It reports three outcomes rather than two — `ok`, `FAIL`, and `STALL` for a run
 whose window stopped being drawn. A stall measured nothing, so put the window in
