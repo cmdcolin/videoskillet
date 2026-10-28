@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import { wrapText } from '../core/signal/captionwrap'
 import {
   ATTRIBUTE_PALETTE,
   MAX_COLS,
@@ -20,7 +21,6 @@ import {
   patternRows,
   sextantRows,
   textToCells,
-  wrapText,
 } from './teletype'
 
 // Every 2x3 pattern, as the rows a cell is described by.

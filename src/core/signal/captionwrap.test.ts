@@ -27,6 +27,13 @@ describe('wrapCaption', () => {
     expect(rows).toEqual(['X'.repeat(CC_COLS), 'X'.repeat(5)])
   })
 
+  it('collapses runs of spaces in a line it has to re-flow', () => {
+    expect(wrapCaption(`a  b ${'y'.repeat(30)}`)).toEqual([
+      'a b',
+      'y'.repeat(30),
+    ])
+  })
+
   it('counts a character outside the BMP as one column', () => {
     const rows = wrapCaption('😀'.repeat(CC_COLS))
     expect(rows).toHaveLength(1)
