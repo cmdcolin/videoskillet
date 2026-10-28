@@ -576,6 +576,7 @@ function FineToggle(props: {
   return (
     <button
       className={styles.sliderToggle}
+      aria-expanded={props.open}
       onClick={props.onToggle}
       title="trims that shape an effect something else turns on"
     >
@@ -739,6 +740,7 @@ export function ControlGroup(props: { group: Group; defaultOpen?: boolean }) {
           </BoxScope>
           <button
             className={styles.sliderToggle}
+            aria-expanded={showFramed}
             onClick={() => setShowFramed(!showFramed)}
           >
             {`${showFramed ? '▾' : '▸'} ${frame.keys.size} ${frame.keys.size === 1 ? 'slider' : 'sliders'}`}
