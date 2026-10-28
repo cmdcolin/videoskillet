@@ -139,6 +139,9 @@ video cables together and posting tumblr gifs.
 - Scrambled channel
   https://videoskillet.com/app/#preset=scrambledChannel&iurl=https://upload.wikimedia.org/wikipedia/commons/f/f9/%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg
 
+- Turbo sync loss
+  https://videoskillet.com/app/#preset=turboSyncLoss&iurl=https://upload.wikimedia.org/wikipedia/commons/f/f9/%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg
+
 <!-- /generated:demos -->
 
 Send me more stuff you come up with

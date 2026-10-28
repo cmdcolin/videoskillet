@@ -129,5 +129,12 @@
     "gallery": true,
     "says": "A premium channel with its timing marks removed: the picture tears into slabs while the receiver misreads the colour reference and floods bands of colour.",
     "query": "#preset=scrambledChannel&iurl=https://upload.wikimedia.org/wikipedia/commons/f/f9/%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg"
+  },
+  {
+    "name": "Turbo sync loss",
+    "showcase": false,
+    "gallery": true,
+    "says": "The line oscillator swung tens of hertz either side of the line rate with loose horizontal and vertical hold, so bands of the picture slide sideways and wrap round the edge.",
+    "query": "#preset=turboSyncLoss&iurl=https://upload.wikimedia.org/wikipedia/commons/f/f9/%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg"
   }
 ]
