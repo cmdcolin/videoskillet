@@ -42,7 +42,6 @@ function Bus({
   prefix,
   hold,
   cross,
-  help,
   selected,
   onSelect,
 }: {
@@ -54,7 +53,6 @@ function Bus({
   prefix: string
   hold: Hold | null
   cross: number | null
-  help: string
   selected: boolean
   onSelect: (id: string) => void
 }) {
@@ -73,7 +71,7 @@ function Bus({
   }
   return (
     <Pressable name={id} selected={selected} onSelect={() => onSelect(id)}>
-      <title>{`${id} — ${help}`}</title>
+      <title>{`${id} — ${BUS_HELP[id]}`}</title>
       <rect
         x={x}
         y={top - 15}
@@ -142,6 +140,15 @@ const MIX = { x: 150, w: 40 }
 const CC_C2 = 120
 const CC_R = 140
 const CAPTION = { x: 120, w: 78 }
+
+const BUS_HELP: Record<string, string> = {
+  'page bus':
+    'Seven address lines into the page memory: A0–A4 the column, A5–A6 the row. A held line puts a character in a cell it was never written to.',
+  'address bus':
+    'Eleven address lines into the font ROM. The low lines carry the dot row and the high ones the character, so a bend low in the bus scrambles rows and a bend high in it swaps characters.',
+  'data bus':
+    'Eight data lines, one per dot across a row of the glyph. A held line stripes a column down every character.',
+}
 
 // The character generator's data path, from the page memory that holds the
 // text to the mixer that lays it on the picture, with each bend wired into the
@@ -330,7 +337,6 @@ function CharGen({ cg }: { cg: boolean }) {
               prefix="A"
               hold={held(b.pageAddr)}
               cross={null}
-              help="Seven address lines into the page memory: A0–A4 the column, A5–A6 the row. A held line puts a character in a cell it was never written to."
             />
             <Bus
               {...bus('address bus')}
@@ -341,7 +347,6 @@ function CharGen({ cg }: { cg: boolean }) {
               prefix="A"
               hold={held(b.romAddr)}
               cross={crossAt(b.romCross)}
-              help="Eleven address lines into the font ROM. The low lines carry the dot row and the high ones the character, so a bend low in the bus scrambles rows and a bend high in it swaps characters."
             />
             <Bus
               {...bus('data bus')}
@@ -352,7 +357,6 @@ function CharGen({ cg }: { cg: boolean }) {
               prefix="D"
               hold={dataHold}
               cross={null}
-              help="Eight data lines, one per dot across a row of the glyph. A held line stripes a column down every character."
             />
             <g>
               <title>
@@ -442,7 +446,10 @@ function CharGen({ cg }: { cg: boolean }) {
       </Diagram>
       <BoxRows
         keys={open}
-        help={boxes.find(x => x.id === pick.selected)?.help}
+        help={
+          boxes.find(x => x.id === pick.selected)?.help ??
+          BUS_HELP[pick.selected ?? '']
+        }
       />
     </>
   )
