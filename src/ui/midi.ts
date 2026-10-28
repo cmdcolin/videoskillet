@@ -461,6 +461,9 @@ export function createMidi(cb: MidiCallbacks): MidiManager {
   let armed: BindTarget | null = null
   let armedNote: ActionTarget | null = null
   let access: MIDIAccess | null = null
+  // A grant that arrives after `destroy`, as one asked for just before a hot
+  // update does, wires nothing up.
+  let destroyed = false
   let onStateChange: (() => void) | null = null
   // Active learn-in-order sweep: the spine of targets to fill, how far along we
   // are, and the knob sources already claimed (so one knob's stream of messages
@@ -710,7 +713,7 @@ export function createMidi(cb: MidiCallbacks): MidiManager {
             // behind before it can be pressed), which is exactly the kind of
             // thing that stops being true when a second surface grows an
             // enable of its own.
-            if (access !== null) return
+            if (access !== null || destroyed) return
             access = m
             writeString(ENABLED_KEY, '1')
             cb.onStatus('ready')
@@ -728,6 +731,7 @@ export function createMidi(cb: MidiCallbacks): MidiManager {
             }, 500)
           },
           () => {
+            if (destroyed) return
             removeStored(ENABLED_KEY)
             cb.onStatus('denied')
           },
@@ -822,9 +826,11 @@ export function createMidi(cb: MidiCallbacks): MidiManager {
       if (engaged.delete(key) && knob !== undefined) setPickup(key, knob)
     },
     destroy: () => {
+      destroyed = true
       if (tempoTimer !== null) clearInterval(tempoTimer)
       if (access) {
-        for (const input of access.inputs.values()) input.onmidimessage = null
+        for (const input of access.inputs.values())
+          if (input.onmidimessage === onMessage) input.onmidimessage = null
         if (onStateChange)
           access.removeEventListener('statechange', onStateChange)
       }

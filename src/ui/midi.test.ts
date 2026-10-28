@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { wasSignedIn } from './cloud'
 import { ALL_SLIDERS, sliderFor } from './controls'
@@ -267,5 +267,44 @@ describe('a browser with storage switched off', () => {
     } finally {
       restore()
     }
+  })
+})
+
+describe('a manager destroyed before its grant arrives', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('wires nothing up when the grant lands', async () => {
+    let grant: (m: unknown) => void = () => {}
+    vi.stubGlobal('navigator', {
+      requestMIDIAccess: () =>
+        new Promise(r => {
+          grant = r
+        }),
+    })
+    const statuses: string[] = []
+    const midi = createMidi({
+      onControl: () => {},
+      onStatus: s => statuses.push(s),
+      onBindings: () => {},
+      onArmed: () => {},
+      onPickup: () => {},
+      onAction: () => {},
+      onActionEnd: () => {},
+      onNotes: () => {},
+      onArmedNote: () => {},
+      onLearn: () => {},
+      onTempo: () => {},
+    })
+    midi.enable()
+    midi.destroy()
+    const input: { onmidimessage: unknown } = { onmidimessage: null }
+    const listen = vi.fn()
+    grant({ inputs: new Map([['in', input]]), addEventListener: listen })
+    await new Promise(r => setTimeout(r, 0))
+    expect(input.onmidimessage).toBe(null)
+    expect(listen).not.toHaveBeenCalled()
+    expect(statuses).toEqual(['requesting'])
   })
 })
