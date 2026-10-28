@@ -15,12 +15,17 @@ export function useVoteAuth() {
   useEffect(() => {
     if (!wasSignedIn()) return undefined
     let live = true
+    // The page stays signed out when the SDK cannot load, and the button
+    // still works.
     const stop = watchAuth(u => {
       if (live) setUser(u)
+    }).catch((e: unknown) => {
+      console.error('auth subscribe failed', e)
+      return null
     })
     return () => {
       live = false
-      void stop.then(off => off())
+      void stop.then(off => off?.())
     }
   }, [])
 
