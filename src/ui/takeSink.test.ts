@@ -208,6 +208,17 @@ describe('the file sink', () => {
     ])
   })
 
+  it('gathers the tail into as few writes as the picture', async () => {
+    const sink = await fileSink()
+    sink?.write(picture(3, 1))
+    const blob = await sink?.close(
+      streamedLayout(Array.from({ length: 1000 }, () => picture(400, 3))),
+    )
+    expect(blob?.size).toBe(STREAM_HEAD + 3 + 400_000)
+    // The head reserved at the start, the picture with the tail, the head.
+    expect(disk.streams[0]?.writes).toBe(3)
+  })
+
   it('refuses a layout whose head is not the size it reserved', async () => {
     const sink = await fileSink()
     await expect(

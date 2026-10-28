@@ -212,6 +212,12 @@ export async function fileSink(): Promise<TakeSink | null> {
     queue(batch)
   }
 
+  const gather = (data: Uint8Array<ArrayBuffer>) => {
+    pending.push(data)
+    pendingBytes += data.length
+    if (pendingBytes >= WRITE_BYTES) flush()
+  }
+
   return {
     streamed: true,
     backlog: () => backlog + pendingBytes,
@@ -220,9 +226,7 @@ export async function fileSink(): Promise<TakeSink | null> {
     write: data => {
       if (failure !== '') return
       written += data.length
-      pending.push(data)
-      pendingBytes += data.length
-      if (pendingBytes >= WRITE_BYTES) flush()
+      gather(data)
     },
     close: async ({ head, tail }) => {
       if (head.length !== STREAM_HEAD) {
@@ -230,8 +234,8 @@ export async function fileSink(): Promise<TakeSink | null> {
           `a streamed take reserved ${STREAM_HEAD} bytes and its layout wants ${head.length}`,
         )
       }
+      for (const piece of tail) gather(piece)
       flush()
-      for (const piece of tail) queue(piece)
       await chain
       if (failure === '') {
         try {
