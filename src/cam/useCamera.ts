@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 
 import { trace } from '../core/gpu/trace'
+import { reason } from '../ui/format'
 import { usePersistedString } from '../ui/storage'
 import { replay, useOnReturn } from './useReplay'
 
@@ -19,7 +20,7 @@ const say = (e: unknown): string => {
     if (e.name === 'NotReadableError')
       return 'The camera is in use by another app.'
   }
-  return e instanceof Error ? e.message : String(e)
+  return reason(e)
 }
 
 // The next camera after `current` in the device list, for a machine whose

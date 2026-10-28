@@ -141,6 +141,14 @@ export async function playLoop(url: string): Promise<HTMLVideoElement> {
   return video
 }
 
+// Stops a loop `playLoop` started and lets go of its `url`.
+export function dropLoop(video: HTMLVideoElement, url: string) {
+  video.pause()
+  video.removeAttribute('src')
+  video.load()
+  URL.revokeObjectURL(url)
+}
+
 export interface Relay {
   video: HTMLVideoElement
   stop: () => void

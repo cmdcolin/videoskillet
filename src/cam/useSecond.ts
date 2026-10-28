@@ -1,7 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 
+import { reason } from '../ui/format'
 import { usePersistedString } from '../ui/storage'
-import { TAPE_SECONDS, playLoop, recordTape, relayCamera } from './tape'
+import {
+  TAPE_SECONDS,
+  dropLoop,
+  playLoop,
+  recordTape,
+  relayCamera,
+} from './tape'
 import { stalled, stopAll } from './useCamera'
 import { replay, useOnReturn } from './useReplay'
 
@@ -22,8 +29,6 @@ type Second =
 // may take the first camera down to answer, so it is asked once.
 const DUAL_STORE = 'videoskillet_cam_dual'
 
-const reason = (e: unknown) => (e instanceof Error ? e.message : String(e))
-
 const unload = (b: Second) => {
   if (b.kind === 'live') {
     b.relay.stop()
@@ -32,10 +37,7 @@ const unload = (b: Second) => {
   }
   if (b.kind === 'pattern') return
   if (b.kind === 'clip') b.relay.stop()
-  b.video.pause()
-  b.video.removeAttribute('src')
-  b.video.load()
-  URL.revokeObjectURL(b.url)
+  dropLoop(b.video, b.url)
 }
 
 const videosOf = (b: Second | null): HTMLVideoElement[] => {

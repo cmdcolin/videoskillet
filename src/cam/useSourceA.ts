@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 
-import { playLoop } from './tape'
+import { reason } from '../ui/format'
+import { dropLoop, playLoop } from './tape'
 import { replay, useOnReturn } from './useReplay'
 
 import type { Pattern } from './patterns'
@@ -14,14 +15,7 @@ interface Clip {
   video: HTMLVideoElement
 }
 
-const reason = (e: unknown) => (e instanceof Error ? e.message : String(e))
-
-const release = (c: Clip) => {
-  c.video.pause()
-  c.video.removeAttribute('src')
-  c.video.load()
-  URL.revokeObjectURL(c.url)
-}
+const release = (c: Clip) => dropLoop(c.video, c.url)
 
 // Source A when it is not the camera. The caller lets the camera go once
 // something else is up, and `cameraShown` hears the camera come back on screen
