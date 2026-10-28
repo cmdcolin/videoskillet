@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 
 import { playLoop } from './tape'
-import { useReplayOnReturn } from './useReplay'
+import { replay, useOnReturn } from './useReplay'
 
 import type { Pattern } from './patterns'
 
@@ -48,7 +48,10 @@ export function useSourceA(
     [],
   )
 
-  useReplayOnReturn(() => (clip.current === null ? [] : [clip.current.video]))
+  useOnReturn(() => {
+    if (clip.current !== null) replay([clip.current.video])
+    return undefined
+  })
 
   const cameraShown = () => {
     drop()

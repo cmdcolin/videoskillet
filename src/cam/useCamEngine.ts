@@ -122,6 +122,7 @@ export function useCamEngine(
     sideways: opts.sideways,
   })
   const laid = useRef<Layout>('whole')
+  const [watched] = useState(() => new WeakSet<HTMLVideoElement>())
   const [first] = useState(opts.firstBoard)
   const board = useRef<Board>(first)
   const comparing = useRef(false)
@@ -152,7 +153,10 @@ export function useCamEngine(
     engineRef.current?.setSourceMirror(mirror)
     engineRef.current?.setVideoSource(video)
     turn(video)
-    video.addEventListener('resize', () => turn(video))
+    if (!watched.has(video)) {
+      watched.add(video)
+      video.addEventListener('resize', () => turn(video))
+    }
   }
 
   const showPattern = (pattern: Pattern) => {

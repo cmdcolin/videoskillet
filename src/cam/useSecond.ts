@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { usePersistedString } from '../ui/storage'
 import { TAPE_SECONDS, playLoop, recordTape, relayCamera } from './tape'
 import { stopAll } from './useCamera'
-import { useReplayOnReturn } from './useReplay'
+import { replay, useOnReturn } from './useReplay'
 
 import type { Pattern } from './patterns'
 import type { Camera, Layout, Relay } from './tape'
@@ -82,7 +82,10 @@ export function useSecond(
     [],
   )
 
-  useReplayOnReturn(() => videosOf(held.current))
+  useOnReturn(() => {
+    replay(videosOf(held.current))
+    return undefined
+  })
 
   const show = (next: Second | null) => {
     held.current = next

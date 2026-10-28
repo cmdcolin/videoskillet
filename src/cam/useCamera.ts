@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 
+import { trace } from '../core/gpu/trace'
 import { usePersistedString } from '../ui/storage'
+import { replay, useOnReturn } from './useReplay'
 
 export type Facing = 'user' | 'environment'
 export type CameraState = 'off' | 'starting' | 'on' | 'error'
@@ -40,13 +42,12 @@ export const stopAll = (stream: MediaStream | null) => {
 const delivering = (stream: MediaStream) =>
   stream.getVideoTracks().every(t => t.readyState === 'live' && !t.muted)
 
+// A camera back from the background that has not resumed, or whose track
+// ended a moment after the page returned.
+export const stalled = (o: Opened) => o.video.paused || !delivering(o.stream)
+
 // How long a second camera is given to take the first one down.
 const SETTLE_MS = 600
-
-// How long a camera back from the background is given to deliver again before
-// it is reopened. A track can also end a moment after the page returns, and
-// the same check catches that.
-const REVIVE_MS = 1500
 
 export interface Opened {
   stream: MediaStream
@@ -257,33 +258,24 @@ export function useCamera(
   // track muted, or pause the <video> it plays in, and any of the three
   // freezes the picture on its last frame. A muted track does not always
   // unmute by itself.
-  useEffect(() => {
-    const onVisible = () => {
-      const cur = held.current
-      if (document.visibilityState !== 'visible' || cur === null) return
-      const track = cur.stream.getVideoTracks()[0]
-      console.log(
-        `[camera] back: track ${track?.readyState ?? 'none'}` +
-          ` muted=${track?.muted} paused=${cur.video.paused}`,
-      )
-      if (track === undefined || track.readyState === 'ended') {
-        void open(cur.faces)
-        return
-      }
-      if (cur.video.paused) cur.video.play().catch(() => {})
-      const mine = ask.current
-      setTimeout(() => {
-        if (
-          mine === ask.current &&
-          held.current === cur &&
-          document.visibilityState === 'visible' &&
-          (cur.video.paused || !delivering(cur.stream))
-        )
-          void open(cur.faces)
-      }, REVIVE_MS)
+  useOnReturn(() => {
+    const cur = held.current
+    if (cur === null) return undefined
+    const track = cur.stream.getVideoTracks()[0]
+    trace.add(
+      'lifecycle',
+      `camera back: track ${track?.readyState ?? 'none'} muted=${track?.muted} paused=${cur.video.paused}`,
+    )
+    if (track === undefined || track.readyState === 'ended') {
+      void open(cur.faces)
+      return undefined
     }
-    document.addEventListener('visibilitychange', onVisible)
-    return () => document.removeEventListener('visibilitychange', onVisible)
+    replay([cur.video])
+    const mine = ask.current
+    return () => {
+      if (mine === ask.current && held.current === cur && stalled(cur))
+        void open(cur.faces)
+    }
   })
 
   return {
