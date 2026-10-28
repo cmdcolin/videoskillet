@@ -59,10 +59,10 @@ export function HueWheel({
   const region = (level: number) => {
     const c = sliceContour(slice, level, STEPS)
     if (!c) return ''
-    const inner = `M${c.edge.map(p => xy(p.angle, p.r)).join(' L')} Z`
-    if (c.whole) return `${disk} ${inner}`
+    const edge = c.edge.map(p => xy(p.angle, p.r)).join(' L')
+    if (c.whole) return `${disk} M${edge} Z`
     const outer = c.edge.toReversed().map(p => xy(p.angle, rim))
-    return `M${c.edge.map(p => xy(p.angle, p.r)).join(' L')} L${outer.join(' L')} Z`
+    return `M${edge} L${outer.join(' L')} Z`
   }
   const halfway = () => {
     const c = sliceContour(slice, 0.5, STEPS)
