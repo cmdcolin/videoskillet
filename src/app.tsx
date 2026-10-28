@@ -2238,7 +2238,7 @@ export function App() {
           carries the row. So the sidebar comes back for as long as the sheet is
           up, over the right edge of a picture that is otherwise the whole
           window. */}
-          {(fullscreen || dockedHidden) && sheet !== null ? (
+          {(fullscreen || dockedHidden) && popout === null && sheet !== null ? (
             <div
               className={cx(styles.panel, styles.panelSheet, styles.panelOver)}
             >
