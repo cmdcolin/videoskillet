@@ -151,7 +151,11 @@ export function AudioDiagram() {
           </>
         )}
       </Diagram>
-      <BoxRows {...openBox(boxes, pick.selected)} />
+      <BoxRows
+        {...(pick.selected === 'wave'
+          ? { keys: OPENS.wave }
+          : openBox(boxes, pick.selected))}
+      />
     </>
   )
 }
