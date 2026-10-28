@@ -3,12 +3,17 @@ import { describe, expect, it } from 'vitest'
 import {
   FETCH_START,
   MAX_SECONDS,
+  allowedHosts,
   contentType,
   fetchProgress,
+  isAllowedHost,
   isFetchable,
+  isSameOrigin,
   readFetchLine,
   seconds,
 } from './ytdlp'
+
+import { hostname } from 'node:os'
 
 // The endpoint shells out to yt-dlp, and yt-dlp reaches far past YouTube, so
 // the guard is the scheme rather than a host list: a web address is fair game,
@@ -127,5 +132,65 @@ describe('readFetchLine', () => {
         '',
       ]),
     ).toEqual({ loaded: 10, total: 20, stage: 'downloading' })
+  })
+})
+
+describe('isSameOrigin', () => {
+  const host = '127.0.0.1:8787'
+
+  it('accepts the app fetching from its own origin', () => {
+    expect(isSameOrigin(host, undefined, 'same-origin')).toBe(true)
+    expect(isSameOrigin(host, 'http://127.0.0.1:8787', 'same-origin')).toBe(
+      true,
+    )
+    expect(isSameOrigin(host, undefined, undefined)).toBe(true)
+  })
+
+  it('refuses a request another site sent', () => {
+    expect(isSameOrigin(host, undefined, 'cross-site')).toBe(false)
+    expect(isSameOrigin(host, undefined, 'same-site')).toBe(false)
+    expect(isSameOrigin(host, 'https://evil.example', undefined)).toBe(false)
+    expect(isSameOrigin(host, 'http://127.0.0.1:9000', 'same-origin')).toBe(
+      false,
+    )
+    expect(isSameOrigin(host, 'null', undefined)).toBe(false)
+  })
+})
+
+describe('isAllowedHost', () => {
+  it('accepts loopback names on any port', () => {
+    const hosts = allowedHosts('127.0.0.1')
+    for (const h of [
+      'localhost:8787',
+      '127.0.0.1:8787',
+      '[::1]:8787',
+      'LOCALHOST',
+    ]) {
+      expect(isAllowedHost(h, hosts)).toBe(true)
+    }
+  })
+
+  it('accepts the address the server was bound to', () => {
+    expect(
+      isAllowedHost('192.168.1.20:8787', allowedHosts('192.168.1.20')),
+    ).toBe(true)
+    expect(isAllowedHost('[fe80::1]:8787', allowedHosts('fe80::1'))).toBe(true)
+  })
+
+  it('refuses a name pointed at this machine from outside', () => {
+    const hosts = allowedHosts('127.0.0.1')
+    expect(isAllowedHost('rebind.evil.example:8787', hosts)).toBe(false)
+    expect(isAllowedHost('192.168.1.20:8787', hosts)).toBe(false)
+    expect(isAllowedHost(undefined, hosts)).toBe(false)
+  })
+
+  it('accepts this machine by hostname once bound to every interface', () => {
+    expect(isAllowedHost('127.0.0.1', allowedHosts('0.0.0.0'))).toBe(true)
+    expect(isAllowedHost(`${hostname()}:8787`, allowedHosts('0.0.0.0'))).toBe(
+      true,
+    )
+    expect(isAllowedHost('rebind.evil.example', allowedHosts('0.0.0.0'))).toBe(
+      false,
+    )
   })
 })

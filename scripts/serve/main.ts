@@ -25,13 +25,16 @@ import {
   withBridgeTag,
 } from './static.ts'
 import {
+  allowedHosts,
   cacheKey,
   contentType,
   fetchClip,
   fetching,
   fetchProgress,
   hasYtdlp,
+  isAllowedHost,
   isFetchable,
+  isSameOrigin,
   seconds,
 } from './ytdlp.ts'
 
@@ -118,7 +121,16 @@ const text = (body: string, status: number): Response =>
 // The bridge, in the shape Deno hands requests over in. The download, the
 // cache and the progress readings are `ytdlp.ts`'s and are the dev server's
 // too — only this transport is new.
-const bridge = async (url: URL): Promise<Response> => {
+const hosts = allowedHosts(hostname)
+
+const bridge = async (req: Request, url: URL): Promise<Response> => {
+  const header = (name: string) => req.headers.get(name) ?? undefined
+  if (
+    !isAllowedHost(header('host'), hosts) ||
+    !isSameOrigin(header('host'), header('origin'), header('sec-fetch-site'))
+  ) {
+    return text('the bridge answers only the app served from this host', 403)
+  }
   const target = url.searchParams.get('url') ?? ''
   const secs = seconds(url.searchParams.get('secs'))
   if (!bridged) return text('yt-dlp is not installed on this machine', 501)
@@ -221,7 +233,7 @@ const serveAsset = async (req: Request, url: URL): Promise<Response> => {
 const server = Deno.serve({ port, hostname, onListen: () => {} }, req => {
   const url = new URL(req.url)
   return url.pathname === '/yt' || url.pathname === '/yt/progress'
-    ? bridge(url)
+    ? bridge(req, url)
     : serveAsset(req, url)
 })
 

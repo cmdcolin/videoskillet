@@ -6,6 +6,7 @@ import {
   fetchProgress,
   hasYtdlp,
   isFetchable,
+  isSameOrigin,
   seconds,
 } from './scripts/serve/ytdlp.ts'
 
@@ -44,7 +45,21 @@ export function ytdlp(): Plugin {
         const asked = new URL(req.url ?? '', 'http://localhost')
         const target = asked.searchParams.get('url') ?? ''
         const secs = seconds(asked.searchParams.get('secs'))
-        if (!isFetchable(target)) {
+        const header = (name: string) => {
+          const v = req.headers[name]
+          return Array.isArray(v) ? v[0] : v
+        }
+        // Vite's `server.allowedHosts` has already checked the Host header.
+        if (
+          !isSameOrigin(
+            header('host'),
+            header('origin'),
+            header('sec-fetch-site'),
+          )
+        ) {
+          res.statusCode = 403
+          res.end('the bridge answers only the app served from this host')
+        } else if (!isFetchable(target)) {
           res.statusCode = 400
           res.end('not an http(s) URL')
         } else if (asked.pathname === '/progress') {

@@ -8,7 +8,7 @@ import {
   rmSync,
   statSync,
 } from 'node:fs'
-import { tmpdir } from 'node:os'
+import { hostname, networkInterfaces, tmpdir } from 'node:os'
 import { extname, join } from 'node:path'
 
 // The yt-dlp bridge: `/yt?url=<link>` shells out to yt-dlp, caches the clip in
@@ -147,6 +147,63 @@ export const isFetchable = (u: string): boolean => {
   }
 }
 
+// The bridge makes this machine fetch any address it is handed, so it answers
+// only the app's own page. A cross-site page can still send the request, since
+// a `<video src>` needs no CORS, and the browser marks it in `Sec-Fetch-Site`
+// and `Origin`.
+export const isSameOrigin = (
+  host: string | undefined,
+  origin: string | undefined,
+  fetchSite: string | undefined,
+): boolean => {
+  if (
+    fetchSite !== undefined &&
+    fetchSite !== 'same-origin' &&
+    fetchSite !== 'none'
+  ) {
+    return false
+  }
+  if (origin === undefined) return true
+  try {
+    return new URL(origin).host === host
+  } catch {
+    return false
+  }
+}
+
+const LOOPBACK = ['localhost', '127.0.0.1', '[::1]']
+const WILDCARD = new Set(['0.0.0.0', '::', '[::]'])
+
+const bracketed = (addr: string): string =>
+  addr.includes(':') && !addr.startsWith('[') ? `[${addr}]` : addr
+
+// The names a `Host` header may carry for a server bound to `bound`: loopback,
+// the bound name, and for a wildcard bind every address and the hostname of
+// this machine. Any other name points at this machine from outside, which is
+// how a DNS-rebinding page reads the replies.
+export const allowedHosts = (bound: string): Set<string> => {
+  const names = new Set([...LOOPBACK, bracketed(bound.toLowerCase())])
+  if (WILDCARD.has(bound)) {
+    for (const nets of Object.values(networkInterfaces())) {
+      for (const net of nets ?? []) names.add(bracketed(net.address))
+    }
+    const self = hostname().toLowerCase()
+    names.add(self)
+    names.add(`${self}.local`)
+  }
+  return names
+}
+
+export const isAllowedHost = (
+  host: string | undefined,
+  allowed: ReadonlySet<string>,
+): boolean => {
+  const name = host?.toLowerCase().replace(/:\d+$/, '').replace(/\.$/, '')
+  return (
+    name !== undefined && (allowed.has(name) || name.endsWith('.localhost'))
+  )
+}
+
 const clipsMatching = (match: (name: string) => boolean): string[] => {
   const names = existsSync(CACHE_DIR) ? readdirSync(CACHE_DIR) : []
   return names
@@ -208,6 +265,7 @@ const startFetch = (
         ...(secs === 0 ? [] : ['--download-sections', `*0-${secs}`]),
         '-o',
         join(CACHE_DIR, `${key}.tmp.%(ext)s`),
+        '--',
         url,
       ],
       { stdio: ['ignore', 'pipe', 'pipe'] },
