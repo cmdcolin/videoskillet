@@ -563,6 +563,16 @@ describe.skipIf(EMULATOR === undefined)('firestore.rules', () => {
       await assertFails(asStranger().doc('votes/v1').update({ choice: 'b' }))
     })
 
+    // putVotes writes each vote at an id of its own and reads a denied resend
+    // back to learn that it had already landed.
+    it('refuses a vote sent twice, and lets its author read the first', async () => {
+      const at = asOwner().doc('votes/owner-uid-21-1700000000000')
+      await assertSucceeds(at.set(vote()))
+      await assertFails(at.set(vote()))
+      await assertSucceeds(at.get())
+      await assertFails(asOwner().doc('votes/never-sent').get())
+    })
+
     it('shows a voter their own votes and nobody else theirs', async () => {
       await seedDoc('votes/mine', vote())
       await seedDoc('votes/theirs', vote({ by: STRANGER }))

@@ -46,6 +46,8 @@ export type { CloudUser } from 'skillet-shared/cloud'
 export const { wasSignedIn, warmSignIn, watchAuth, signIn, signOut } = cloud
 export const { putSession, dropSession, loadSdk } = cloud
 
+type Sdk = Awaited<ReturnType<typeof loadSdk>>
+
 export interface HomeDoc {
   profiles: SavedProfile[]
   recent: RecentSession[]
@@ -203,22 +205,48 @@ export async function putCandidate(
   }
 }
 
+// Writes one row at an id of its own, and says whether it is there. The rules
+// make a row create-only, so a resend of one that already landed is denied,
+// and reading it back tells that denial apart from a row the rules refuse.
+async function putOnce(
+  path: string,
+  id: string,
+  row: (fs: Sdk['fs']) => object,
+): Promise<boolean> {
+  const { db, fs } = await loadSdk()
+  const ref = fs.doc(db, path, id)
+  try {
+    await fs.setDoc(ref, row(fs))
+    return true
+  } catch (e) {
+    const denied =
+      e instanceof Error && 'code' in e && e.code === 'permission-denied'
+    if (!denied) return false
+    return await fs.getDoc(ref).then(
+      snap => snap.exists(),
+      () => false,
+    )
+  }
+}
+
 // The votes that landed, so the caller can clear exactly those from its queue.
 //
 // Sequential rather than a batch, and that is deliberate: a batch is atomic, so
 // one malformed row would reject the whole flush and a labeller's whole session
 // with it. Written one at a time, a bad row costs itself and the rest still
 // land. `by` and `sat` are added here because the rules pin them — a client
-// cannot forge who voted or when.
+// cannot forge who voted or when. A vote's id is its author, pair seed and
+// time, so sending one twice writes it once.
 export async function putVotes(
   uid: string,
   votes: readonly VoteRecord[],
 ): Promise<VoteRecord[]> {
-  const { db, fs } = await loadSdk()
   const sent: VoteRecord[] = []
   for (const vote of votes) {
-    try {
-      await fs.addDoc(fs.collection(db, 'votes'), {
+    const landed = await putOnce(
+      'votes',
+      `${uid}-${vote.seed}-${vote.at}`,
+      fs => ({
         v: vote.v,
         a: vote.a,
         b: vote.b,
@@ -229,13 +257,12 @@ export async function putVotes(
         at: vote.at,
         by: uid,
         sat: fs.serverTimestamp(),
-      })
-      sent.push(vote)
-    } catch {
-      // Keep going. The queue keeps whatever did not land and retries it on the
-      // next flush, so a transient failure costs nothing and a permanently
-      // rejected row does not block the ones behind it.
-    }
+      }),
+    ).catch(() => false)
+    // The queue keeps whatever did not land and retries it on the next flush,
+    // so a transient failure costs nothing and a permanently rejected row does
+    // not block the ones behind it.
+    if (landed) sent.push(vote)
   }
   return sent
 }
@@ -248,11 +275,12 @@ export async function putRatings(
   uid: string,
   ratings: readonly RatingRecord[],
 ): Promise<RatingRecord[]> {
-  const { db, fs } = await loadSdk()
   const sent: RatingRecord[] = []
   for (const rating of ratings) {
-    try {
-      await fs.addDoc(fs.collection(db, 'ratings'), {
+    const landed = await putOnce(
+      'ratings',
+      `${uid}-${rating.look}-${rating.at}`,
+      fs => ({
         v: rating.v,
         tagSet: rating.tagSet,
         look: rating.look,
@@ -267,11 +295,9 @@ export async function putRatings(
         at: rating.at,
         by: uid,
         sat: fs.serverTimestamp(),
-      })
-      sent.push(rating)
-    } catch {
-      // As above: one bad row costs itself and nothing behind it.
-    }
+      }),
+    ).catch(() => false)
+    if (landed) sent.push(rating)
   }
   return sent
 }

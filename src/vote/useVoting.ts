@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 
 import { randomSeed } from '../core/rng'
 import { putCandidate, putVotes } from '../ui/cloud'
+import { singleFlight } from '../ui/outbox'
 import { DEVELOP_MS, FLUSH_MS, flushEngines, showPair } from './prepare'
 import {
   candidateRecord,
@@ -85,16 +86,18 @@ export function useVoting(args: {
   // Anything queued that has not reached Firestore, sent one at a time so a bad
   // row cannot take a whole session with it — a write that failed on a flaky
   // connection, or a tab closed between filing and sending.
-  const flush = async (who: string | null) => {
-    if (who === null) return
-    // This author's rows only — a browser two people have signed into holds two
-    // outboxes, and one sign-in must not carry the other's votes.
-    const queued = readPendingVotes().filter(v => v.by === who)
-    if (queued.length === 0) return
-    const sent = await putVotes(who, queued)
-    clearQueued(sent)
-    countPending(who)
-  }
+  const [send] = useState(() =>
+    singleFlight(async who => {
+      // This author's rows only — a browser two people have signed into holds
+      // two outboxes, and one sign-in must not carry the other's votes.
+      const queued = readPendingVotes().filter(v => v.by === who)
+      if (queued.length === 0) return
+      const sent = await putVotes(who, queued)
+      clearQueued(sent)
+      countPending(who)
+    }),
+  )
+  const flush = (who: string | null) => (who === null ? undefined : send(who))
 
   useEffect(() => {
     void flush(uid)

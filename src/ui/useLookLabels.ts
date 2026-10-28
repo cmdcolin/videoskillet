@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 
 import { TAG_SET_VERSION, TAGS, lookId, readRating } from '../labels'
 import { putRatings } from './cloud'
-import { readArray, writeJSON } from './storage'
+import { dequeue, enqueue, readQueue, singleFlight } from './outbox'
 
 import type { Provenance, RatingRecord, TagName } from '../labels'
 
@@ -42,15 +42,10 @@ import type { Provenance, RatingRecord, TagName } from '../labels'
 // account.
 
 const PENDING_STORE = 'videoskillet_pending_ratings'
-const PENDING_MAX = 1000
 
 const stamp = (r: RatingRecord) => `${r.look}:${r.at}`
 
-const readPending = (): RatingRecord[] =>
-  readArray<unknown>(PENDING_STORE, []).flatMap(raw => {
-    const row = readRating(raw)
-    return row === undefined ? [] : [row]
-  })
+const readPending = (): RatingRecord[] => readQueue(PENDING_STORE, readRating)
 
 // What the app knows about the look on screen when it is rated. Passed in rather
 // than reached for, because everything here already exists at the call site and
@@ -88,20 +83,18 @@ export function useLookLabels(uid: string | null) {
     // oxlint-disable-next-line react-hooks/exhaustive-deps
   }, [uid])
 
-  const flush = async (who: string | null) => {
-    if (who === null) return
-    // This author's rows only. A queue shared across accounts on one browser must
-    // not let one person's sign-in carry another person's labels.
-    const queued = readPending().filter(r => r.by === who)
-    if (queued.length === 0) return
-    const sent = await putRatings(who, queued)
-    const gone = new Set(sent.map(stamp))
-    writeJSON(
-      PENDING_STORE,
-      readPending().filter(r => !gone.has(stamp(r))),
-    )
-    countPending(who)
-  }
+  const [send] = useState(() =>
+    singleFlight(async who => {
+      // This author's rows only. A queue shared across accounts on one browser
+      // must not let one person's sign-in carry another person's labels.
+      const queued = readPending().filter(r => r.by === who)
+      if (queued.length === 0) return
+      const sent = await putRatings(who, queued)
+      dequeue(PENDING_STORE, readRating, sent, stamp)
+      countPending(who)
+    }),
+  )
+  const flush = (who: string | null) => (who === null ? undefined : send(who))
 
   // Send anything a previous session left unsent — a write that failed on a flaky
   // connection, or a tab closed between filing and sending.
@@ -145,8 +138,7 @@ export function useLookLabels(uid: string | null) {
       at: Date.now(),
       by: uid,
     }
-    const next = [...readPending(), record].slice(-PENDING_MAX)
-    writeJSON(PENDING_STORE, next)
+    enqueue(PENDING_STORE, readRating, record)
     countPending(uid)
     setSaved(n => n + 1)
     setTags([])

@@ -1,5 +1,5 @@
 import { TELETYPE_DEFAULT } from '../sources/teletype'
-import { readArray, writeJSON } from '../ui/storage'
+import { dequeue, enqueue, readQueue } from '../ui/outbox'
 import {
   DRY_DEFAULT,
   REVERB_DEFAULT,
@@ -243,52 +243,9 @@ export function readVote(raw: unknown): VoteRecord | undefined {
 // flush empties it.
 const PENDING_STORE = 'videoskillet_pending_votes'
 
-// Past this the queue is someone who has never signed in and never will, and the
-// oldest records go rather than the newest — a 5MB localStorage quota is shared
-// with everything else the app keeps, and blowing it throws on write.
-const PENDING_MAX = 1000
-
-// Both queues are the same three operations over different row types, so they are
-// one implementation parameterised by the store and its sanitizer. `seed:at`
-// identifies a row for removal: a pair seed plus a millisecond is unique per
-// labeller, and neither queue is shared between people.
+// A pair seed plus a millisecond is unique per labeller, so `seed:at` names a
+// row for removal.
 const stamp = (row: { seed: number; at: number }) => `${row.seed}:${row.at}`
-
-function readQueue<T>(
-  store: string,
-  read: (raw: unknown) => T | undefined,
-): T[] {
-  return readArray<unknown>(store, []).flatMap(raw => {
-    const row = read(raw)
-    return row === undefined ? [] : [row]
-  })
-}
-
-function enqueue<T extends { seed: number; at: number }>(
-  store: string,
-  read: (raw: unknown) => T | undefined,
-  row: T,
-): T[] {
-  const next = [...readQueue(store, read), row].slice(-PENDING_MAX)
-  writeJSON(store, next)
-  return next
-}
-
-// Drop the rows that made it. Passed the ones to remove rather than clearing
-// outright, because a flush can partially succeed and the survivors have to stay
-// queued — and because a row written *during* an in-flight flush must not be
-// dropped by it.
-function dequeue<T extends { seed: number; at: number }>(
-  store: string,
-  read: (raw: unknown) => T | undefined,
-  sent: readonly T[],
-) {
-  const gone = new Set(sent.map(stamp))
-  writeJSON(
-    store,
-    readQueue(store, read).filter(row => !gone.has(stamp(row))),
-  )
-}
 
 export const readPendingVotes = (): VoteRecord[] =>
   readQueue(PENDING_STORE, readVote)
@@ -297,5 +254,5 @@ export const queueVote = (vote: VoteRecord): VoteRecord[] =>
   enqueue(PENDING_STORE, readVote, vote)
 
 export const clearQueued = (sent: readonly VoteRecord[]) => {
-  dequeue(PENDING_STORE, readVote, sent)
+  dequeue(PENDING_STORE, readVote, sent, stamp)
 }
