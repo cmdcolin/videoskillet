@@ -219,6 +219,22 @@ describe('the file sink', () => {
     expect(disk.streams[0]?.writes).toBe(3)
   })
 
+  it('refuses to start without room for a take', async () => {
+    disk.quota = 300 * 1024 * 1024
+    disk.usage = 0
+    await expect(fileSink()).rejects.toThrow(
+      'not enough storage to record (300 MB free)',
+    )
+    expect(disk.files.size).toBe(0)
+  })
+
+  it('spends what the browser grants less a reserve', async () => {
+    disk.quota = 2 * 1024 * 1024 * 1024
+    disk.usage = 1024 * 1024 * 1024
+    const sink = await fileSink()
+    expect(sink?.room()).toBe(768 * 1024 * 1024)
+  })
+
   it('refuses a layout whose head is not the size it reserved', async () => {
     const sink = await fileSink()
     await expect(

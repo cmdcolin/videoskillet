@@ -56,6 +56,10 @@ const BLOB_MAX = 3_900_000_000
 // shares.
 const STREAM_RESERVE = 256 * 1024 * 1024
 
+// The least room a file take starts with: eight seconds at the bitrate cap.
+// Below it the take would stop almost as soon as it began.
+const STREAM_MIN = 64 * 1024 * 1024
+
 // What a file take may reach where the browser will not say what it is allowed
 // to store. The same number the Blob sink stops at, for want of a better one.
 const STREAM_UNKNOWN = BLOB_MAX
@@ -128,23 +132,16 @@ const root = (): Promise<FileSystemDirectoryHandle | null> =>
     ? navigator.storage.getDirectory().catch(() => null)
     : Promise.resolve(null)
 
-// What the browser will let this origin store beyond what it already has.
-async function granted(): Promise<number> {
-  if (typeof navigator.storage?.estimate !== 'function') return STREAM_UNKNOWN
+// What the browser will let this origin store beyond what it already has, or
+// null where it will not say.
+async function available(): Promise<number | null> {
+  if (typeof navigator.storage?.estimate !== 'function') return null
   const { quota, usage } = await navigator.storage
     .estimate()
     .catch(() => ({ quota: undefined, usage: undefined }))
-  if (quota === undefined) return STREAM_UNKNOWN
-  return Math.max(0, quota - (usage ?? 0) - STREAM_RESERVE)
+  return quota === undefined ? null : Math.max(0, quota - (usage ?? 0))
 }
 
-// A sink that writes the take to a file as it is encoded, or null where this
-// browser has no file to write it to.
-//
-// The head is reserved rather than written: the `mdat` size it carries is only
-// known when the take is over, so `close` seeks back and patches it in. That
-// one positional write is the whole reason this needs `createWritable` and not
-// just the origin-private file system.
 // `?takesink=blob` holds a take in memory on a browser that has a file to
 // write it to. The fallback path is what every browser without
 // `createWritable` gets, and this is the only way to exercise it on one where
@@ -152,10 +149,25 @@ async function granted(): Promise<number> {
 export const blobForced = (search = location.search): boolean =>
   new URLSearchParams(search).get('takesink') === 'blob'
 
+// A sink that writes the take to a file as it is encoded, or null where this
+// browser has no file to write it to. Rejects when the browser grants too
+// little storage for a take.
+//
+// The head is reserved rather than written: the `mdat` size it carries is only
+// known when the take is over, so `close` seeks back and patches it in. That
+// one positional write is the whole reason this needs `createWritable` and not
+// just the origin-private file system.
+
 export async function fileSink(): Promise<TakeSink | null> {
   if (blobForced()) return null
   const base = await root()
   if (base === null) return null
+  const room = await available()
+  const free = room === null ? STREAM_UNKNOWN : room - STREAM_RESERVE
+  if (free < STREAM_MIN) {
+    const mb = Math.floor((room ?? 0) / (1024 * 1024))
+    throw new Error(`not enough storage to record (${mb} MB free)`)
+  }
   const name = `take-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.mp4`
   let dir: FileSystemDirectoryHandle
   let entry: FileSystemFileHandle
@@ -172,7 +184,6 @@ export async function fileSink(): Promise<TakeSink | null> {
     return null
   }
 
-  const free = await granted()
   let written = 0
   let backlog = 0
   let failure = ''
