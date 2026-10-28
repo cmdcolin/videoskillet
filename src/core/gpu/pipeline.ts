@@ -345,7 +345,7 @@ export class Engine implements EngineApi {
   // second, for as long as the metal is down (signal/clip.ts). Same shape as
   // the fault above and the same reason for living on the engine — it is
   // applied and undone inside one frame, so React never sees it.
-  private readonly clip = new ClipContact()
+  private clip = new ClipContact()
   private readonly clipLayer = new Overlay(this.controls, FILTER_KEYS, () => {
     this.filtersDirty = true
   })
@@ -1672,8 +1672,9 @@ export class Engine implements EngineApi {
     return [...this.stateBufs(), this.ccBuf, this.cgBuf]
   }
 
-  // The buffers `resetSignal` zeroes whole. The two caption buffers are left
-  // out, because each holds the font ROM baked at construction.
+  // The buffers `resetSignal` zeroes whole. The two caption buffers hold the
+  // font ROM baked at construction, so the reset clears only the decoder's
+  // page RAM, and leaves `cgBuf`'s page holding the text `setCaption` wrote.
   private stateBufs(): GPUBuffer[] {
     return [
       this.paramsBuf,
@@ -2068,6 +2069,7 @@ export class Engine implements EngineApi {
     const d = this.gpu.device
     const enc = d.createCommandEncoder()
     for (const b of this.stateBufs()) enc.clearBuffer(b)
+    enc.clearBuffer(this.ccBuf, CC_PAGE * 4)
     // A render pass whose only job is its `loadOp` — no shader and no bind
     // group, which is why the three textures carry RENDER_ATTACHMENT.
     for (const t of this.stateTexs()) {
@@ -2088,6 +2090,10 @@ export class Engine implements EngineApi {
 
     this.lineState = new LineState(this.rand)
     this.mixState = new MixState(this.rand)
+    const caption = this.captionState.text()
+    this.captionState = new CaptionState()
+    this.captionState.setText(caption)
+    this.clip = new ClipContact()
     this.modState = new ModState()
     this.bayDrive.clear()
     this.rfState = new RfState()
