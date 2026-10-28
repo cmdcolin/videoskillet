@@ -140,6 +140,14 @@ describe('Glide', () => {
     expect(live.crtZoom).toBe(4)
   })
 
+  it('heads for where a held key already is', () => {
+    const g = new Glide(COARSE)
+    const live = { ...DEFAULT_CONTROLS, crtZoom: 4 }
+    g.start(live, plan(set({ crtZoom: 1, noiseIre: 5 })), 0)
+    expect(g.target?.crtZoom).toBe(4)
+    expect(g.target?.noiseIre).toBe(5)
+  })
+
   it('steps an expensive key instead of moving it every frame', () => {
     // The five filter controls redesign the FIR bank on every change, so a morph
     // that moved them per frame would be sixty bank rebuilds a second. They move
@@ -219,7 +227,7 @@ describe('Glide', () => {
     const p = plan(set({ noiseIre: 4 }))
     g.start(live, p, 0)
     g.apply(live, 500)
-    expect(g.target).toBe(p.to)
+    expect(g.target).toEqual(p.to)
     g.stop()
     expect(g.target).toBeNull()
     g.start(live, p, 0)

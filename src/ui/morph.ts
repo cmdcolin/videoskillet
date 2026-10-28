@@ -74,10 +74,18 @@ const TRACKS: ReadonlyMap<ControlKey, Track> = new Map(
 // already use, deliberately — a morph to a look should touch exactly what
 // landing on that look would have touched, and get there the way the same
 // gesture by hand would.
-export const morphTo = (to: Controls, seconds: number): GlidePlan => ({
+//
+// `move` names the view keys a gesture is about: a reset or a jitter aimed at
+// the View group, a step back along the walk, or a preset that sets a zoom.
+// Those travel with everything else.
+export const morphTo = (
+  to: Controls,
+  seconds: number,
+  move: readonly ControlKey[] = [],
+): GlidePlan => ({
   to,
   seconds,
   switchKeys: ENUM_KEYS,
-  holdKeys: VIEW_KEYS,
+  holdKeys: new Set([...VIEW_KEYS].filter(k => !move.includes(k))),
   tracks: TRACKS,
 })

@@ -8,7 +8,7 @@ import {
 
 import { DEFAULT_CONTROLS } from '../core/controls'
 import { applyCardPreset } from './cardPresets'
-import { MUTATE_CIRCUITS, MUTATE_SLIDERS } from './controls'
+import { MUTATE_CIRCUITS, MUTATE_SLIDERS, VIEW_KEYS } from './controls'
 import { DEFAULT_STAB, sameBay, sameGate } from './modSlots'
 import { morphTo } from './morph'
 import {
@@ -86,6 +86,11 @@ const sameBoard = (a: Look, b: Look) =>
 
 // Stable empty weights, so a stale mix passes the same map every render.
 const NO_WEIGHTS: PresetWeights = new Map()
+
+const EVERY_VIEW_KEY = [...VIEW_KEYS]
+
+const keysOf = (sliders: readonly SliderDef[]): ControlKey[] =>
+  sliders.map(s => s.key)
 
 // `MUTATE_SLIDERS` — the signal path without the view — now lives in
 // controls.ts, since a strip row's shake has to draw on the same list this does.
@@ -235,9 +240,12 @@ export function useMix(args: {
   // with the recipe, which mid-flight they do, so a morph shows no recipe while
   // it travels and fills it in on arrival. That is the honest reading: halfway to
   // a stack of three presets is not 100% of any of them.
-  const land = (next: Controls) => {
+  //
+  // `move` is the view keys the gesture names (see `morphTo`). A cut writes
+  // them anyway, and a morph holds every other one where you are looking.
+  const land = (next: Controls, move: readonly ControlKey[] = []) => {
     if (morphSeconds <= 0) writeControls(next)
-    else startGlide(morphTo(next, morphSeconds))
+    else startGlide(morphTo(next, morphSeconds, move))
   }
 
   // Bank the look on the board, read now rather than when React gets round to
@@ -267,10 +275,14 @@ export function useMix(args: {
   // were all filed as `hand`, which is the one thing they are not. `mutate` was
   // in the vocabulary and nothing ever wrote it. A gesture knows what it is, so
   // it says so here rather than being guessed at afterwards.
-  const apply = (next: Controls, kind: Provenance) => {
+  const apply = (
+    next: Controls,
+    kind: Provenance,
+    move: readonly ControlKey[] = [],
+  ) => {
     bank(sameLook)
     setGesture({ kind, look: next })
-    land(next)
+    land(next, move)
   }
 
   // A rolled recipe onto the board: the look, the chips that explain it, and
@@ -332,7 +344,7 @@ export function useMix(args: {
     if (out !== null) {
       setHistory(out.history)
       setGesture({ kind: out.value.from, look: out.value.controls })
-      land(out.value.controls)
+      land(out.value.controls, EVERY_VIEW_KEY)
       mod.setSlots(out.value.slots)
       mod.setStab(out.value.stab)
     }
@@ -417,7 +429,10 @@ export function useMix(args: {
         const next = new Map(mix.weights).set(name, 1)
         const look = blendPresets(mix.base, next)
         setGesture({ kind: 'preset', look })
-        land(look)
+        land(
+          look,
+          EVERY_VIEW_KEY.filter(k => patch[k] !== undefined),
+        )
         setMix({ base: mix.base, weights: next })
         // Motion changes on a whole-preset apply only — this, surprise, and a
         // link. Dragging a chip is a partial statement about the controls, and
@@ -571,7 +586,7 @@ export function useMix(args: {
     // still under your hand and the old value is a pixel away — where a reset
     // is a press that leaves nothing on screen saying what it took.
     resetControl: (key: ControlKey) => {
-      apply({ ...getControls(), [key]: DEFAULT_CONTROLS[key] }, 'hand')
+      apply({ ...getControls(), [key]: DEFAULT_CONTROLS[key] }, 'hand', [key])
     },
     // One circuit back to stock, from its header. The row-level ↺ is the fine
     // move and "clean" is the whole board; between them sat the thing a session
@@ -581,13 +596,17 @@ export function useMix(args: {
     resetGroup: (sliders: readonly SliderDef[]) => {
       const next = { ...getControls() }
       for (const s of sliders) next[s.key] = DEFAULT_CONTROLS[s.key]
-      apply(next, 'hand')
+      apply(next, 'hand', keysOf(sliders))
     },
     // A chip on one card. Through `apply` and labelled 'hand' like the reset
     // above, because that is what it is: a gesture that moves this stage and
     // nothing else, and one ctrl+z takes it back.
     landCard: (preset: CardPreset, group: Group) => {
-      apply(applyCardPreset(preset, group, getControls()), 'hand')
+      apply(
+        applyCardPreset(preset, group, getControls()),
+        'hand',
+        keysOf(group.sliders),
+      )
     },
     // The same roll aimed at one group, from its header. Jittering all ~120
     // controls answers "give me something else"; this answers "keep this look
@@ -605,6 +624,7 @@ export function useMix(args: {
       apply(
         mutate(getControls(), sliders, MUTATE_AMOUNTS[amount], rand, 1),
         'mutate',
+        keysOf(sliders),
       )
       setLastPreset(null)
     },

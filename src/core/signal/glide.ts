@@ -128,15 +128,18 @@ export class Glide {
   // what makes rolls chain: hitting surprise again halfway through a morph sets
   // off from where the picture actually is, so a session can wander through look
   // space continuously instead of snapping back to the last resting look first.
+  //
+  // A held key stays where `from` has it, and `target` says so: a destination
+  // naming a zoom the board will never reach would bank that zoom on the walk.
   start(from: Controls, plan: GlidePlan, nowMs: number): void {
-    this.plan = plan
+    const to = { ...plan.to }
+    for (const k of plan.holdKeys) to[k] = from[k]
+    this.plan = { ...plan, to }
     this.from = { ...from }
     this.startMs = nowMs
     this.notch = -1
     this.t = 0
-    const moved = CONTROL_KEYS.filter(
-      k => !plan.holdKeys.has(k) && from[k] !== plan.to[k],
-    )
+    const moved = CONTROL_KEYS.filter(k => from[k] !== to[k])
     this.travel = moved.filter(
       k => !plan.switchKeys.has(k) && !this.coarseKeys.has(k),
     )
@@ -154,7 +157,7 @@ export class Glide {
                 k,
                 {
                   a: track.toTravel(from[k]),
-                  b: track.toTravel(plan.to[k]),
+                  b: track.toTravel(to[k]),
                   value: track.fromTravel,
                 },
               ] as const,

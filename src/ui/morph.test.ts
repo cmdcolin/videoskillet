@@ -41,4 +41,12 @@ describe('morphTo', () => {
   it('still crosses a linear control at half way', () => {
     expect(halfway({ noiseIre: 10 }).noiseIre).toBeCloseTo(5, 5)
   })
+
+  it('holds the view unless the gesture names a view key', () => {
+    const to = { ...DEFAULT_CONTROLS, crtZoom: 3, timeScale: 0.5 }
+    expect([...morphTo(to, 1).holdKeys]).toContain('crtZoom')
+    const plan = morphTo(to, 1, ['crtZoom', 'noiseIre'])
+    expect([...plan.holdKeys]).not.toContain('crtZoom')
+    expect([...plan.holdKeys]).toContain('timeScale')
+  })
 })
