@@ -191,6 +191,16 @@ export function useMix(args: {
   )
   const weights = onRecipe ? mix.weights : NO_WEIGHTS
 
+  // The recipe a weight change layers onto: the mix while the board still
+  // matches it, or the board as it stands with nothing on it once something
+  // else has moved it.
+  const liveMix = () => {
+    const look = settledStore.get()
+    return controlsEqual(look, mixed)
+      ? mix
+      : { base: look, weights: NO_WEIGHTS }
+  }
+
   // What a given board was arrived at by, gated the same way the fills are and
   // for the same reason: a gesture speaks only for the look it actually landed.
   // Drag a slider after a roll and the honest answer is that a person made this
@@ -426,14 +436,15 @@ export function useMix(args: {
       } else {
         // Clicking tops the preset up to full without clearing partials already
         // dialed in — the same as dragging its slider to 100%.
-        const next = new Map(mix.weights).set(name, 1)
-        const look = blendPresets(mix.base, next)
+        const from = liveMix()
+        const next = new Map(from.weights).set(name, 1)
+        const look = blendPresets(from.base, next)
         setGesture({ kind: 'preset', look })
         land(
           look,
           EVERY_VIEW_KEY.filter(k => patch[k] !== undefined),
         )
-        setMix({ base: mix.base, weights: next })
+        setMix({ base: from.base, weights: next })
         // Motion changes on a whole-preset apply only — this, surprise, and a
         // link. Dragging a chip is a partial statement about the controls, and
         // a bay is not partial: re-cabling it on every pointer step of a drag
@@ -448,29 +459,21 @@ export function useMix(args: {
     // the new baseline, so the next drag layers onto it instead of silently
     // reverting it.
     startMix: () => {
-      const controls = settledStore.get()
-      if (!controlsEqual(controls, mixed)) {
-        setMix({ base: controls, weights: new Map() })
-      }
+      const from = liveMix()
+      if (from !== mix) setMix(from)
       bank(sameLook)
     },
     setPresetWeight: (name: string, w: number) =>
       writeWeight(name, w, mix.base, mix.weights),
     // The same fader under a knob. A knob has no press to rebaseline on, so the
-    // drift check startMix does on pointer-down happens here instead, on
+    // drift check happens here instead, on
     // whichever message first finds the look moved out from under the mix — and
     // the walk is recorded only there, so a sweep banks one step to undo rather
     // than one per MIDI message.
     midiPresetWeight: (name: string, w: number) => {
-      const controls = settledStore.get()
-      const drifted = !controlsEqual(controls, mixed)
-      if (drifted) bank(sameLook)
-      writeWeight(
-        name,
-        w,
-        drifted ? controls : mix.base,
-        drifted ? NO_WEIGHTS : mix.weights,
-      )
+      const from = liveMix()
+      if (from !== mix) bank(sameLook)
+      writeWeight(name, w, from.base, from.weights)
     },
     // A fresh look from the authored presets: one full preset plus one or two
     // partial ones from other groups, over clean defaults. Built through the mix

@@ -102,4 +102,12 @@ describe('useMix under a morph', () => {
     land()
     expect(eng.getControls().crtZoom).toBe(4)
   })
+
+  it('keeps a hand edit under a preset applied without a press', () => {
+    const { eng, mix, run, land } = mount(0)
+    run(() => eng.setControl('hDetuneHz', 7))
+    run(() => mix().applyPreset('bentDetailer', patchOf('bentDetailer')))
+    land()
+    expect(eng.getControls().hDetuneHz).toBe(7)
+  })
 })
