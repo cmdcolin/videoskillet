@@ -1,32 +1,21 @@
-// A minimal MP4 (ISOBMFF) writer for one H.264 track, at a constant frame rate.
+// A minimal MP4 (ISOBMFF) writer: one H.264 track at a constant frame rate,
+// and an AAC or Opus track beside it when the take has sound.
 //
-// **Why this exists rather than a dependency.** The app had three runtime deps
-// (react, react-dom, firebase) and this is not worth being the fourth: what an
-// export of this needs is one video track, no audio, every sample the same
-// duration, and a single chunk — which is the simplest shape the format has.
-// The general-purpose muxers are general because they carry fragmented output
-// and multiple tracks, which this does without. It does carry B-frames and an
-// edit list for them: Firefox's H.264 encoder emits B-frames in both latency
-// modes, so its samples arrive in decode order.
-//
-// **Why MP4 and not WebM**, when the app has always written WebM. The point of
-// this half of the editor is "an export an NLE will conform"
-// (docs/EDITOR.md), and DaVinci Resolve does not import WebM at all while
-// Premiere needs a plugin for it. H.264 in MP4 is the one thing every editor
-// on the list opens. That the output format changes is the point, not a side
-// effect.
-//
-// **What makes it constant-framerate** is `stts`: one entry saying "N samples,
-// each `delta` long". There is no per-sample timing to drift, so an editor
-// reads one frame rate off the header and conforms to it — which is exactly
-// what `MediaRecorder` could not do, since it timestamps by wall clock and
-// writes whatever the tab managed. A live take that held a frame writes it as
-// one longer sample, still a whole number of frames, and is constant-framerate
-// everywhere else (docs/adr/0013).
-//
-// Layout is `ftyp` / `mdat` / `moov`, samples in a single chunk. One chunk is
-// what collapses `stsc` and `stco` to one entry each, and nothing here streams,
-// so there is no reason to have more.
+// - **Layout**: `ftyp` / `mdat` / `moov`. Each track's samples form one chunk
+//   in `mdat`, picture first, so `stsc` and `stco` (`co64` past 4 GiB) hold one
+//   entry each.
+// - **Streaming**: a take writes its picture to a file as it encodes.
+//   `mp4Layout` builds the boxes either side of that payload from the sample
+//   tables alone, and `takeSink.ts` patches the `mdat` header in at the end.
+// - **Constant frame rate**: `stts` is one entry, N samples each `delta` long,
+//   so an editor reads one frame rate off the header. A live take's held frame
+//   is one longer sample, still a whole number of frames (docs/adr/0013).
+// - **B-frames**: Firefox's H.264 encoder emits them in both latency modes, so
+//   samples arrive in decode order and carry `ctts` offsets and an edit list.
+// - **MP4**: DaVinci Resolve does not import WebM and Premiere needs a plugin
+//   for it, while every editor opens H.264 in MP4 (docs/EDITOR.md).
+// - **No dependency**: the general-purpose muxers exist for fragmented output
+//   and many tracks, which this does without.
 
 // Every box is a length, a four-character type, and a payload.
 const box = (
@@ -78,10 +67,10 @@ const u64 = (v: number): Uint8Array<ArrayBuffer> =>
   join([u32(Math.floor(v / 2 ** 32)), u32(v % 2 ** 32)])
 
 // A piece of the sample payload. A `Blob` is there for a take long enough that
-// holding its picture in the heap is what kills the tab: `record.ts` rolls the
-// encoded bytes into Blobs as they arrive, so by the time the file is laid out
-// the browser holds the payload already and this writer only places it.
-// Everything the writer builds itself is bytes.
+// holding its picture in the heap is what kills the tab: `blobSink` in
+// `takeSink.ts` rolls the encoded bytes into Blobs as they arrive, so by the
+// time the file is laid out the browser holds the payload already and this
+// writer only places it. Everything the writer builds itself is bytes.
 export type Payload = Uint8Array<ArrayBuffer> | Blob
 
 const sizeOf = (p: Payload): number => (p instanceof Blob ? p.size : p.length)
@@ -123,6 +112,10 @@ const MATRIX = join([
   u32(0x40000000),
 ])
 
+// Parameter sets as avcC lists them, each behind its two-byte length.
+const lengths = (list: { data: Uint8Array<ArrayBuffer> }[]) =>
+  list.flatMap(s => [u16(s.data.length), s.data])
+
 // Rebuild an `avcC` record from whatever the encoder handed over, because what
 // Firefox hands over is malformed and ffmpeg says so.
 //
@@ -148,11 +141,8 @@ const MATRIX = join([
 // with the reserved bits on. Detecting the duplicate rather than always
 // dropping a byte is what keeps this correct on a browser without the bug: a
 // real SPS's second byte is `profile_idc` (0x64 for the High profile
-// `record.ts` now asks for) and can never equal its own NAL header, so the two being identical is unambiguous.
-// Parameter sets as avcC lists them, each behind its two-byte length.
-const lengths = (list: { data: Uint8Array<ArrayBuffer> }[]) =>
-  list.flatMap(s => [u16(s.data.length), s.data])
-
+// `record.ts` asks for) and can never equal its own NAL header, so the two
+// being identical is unambiguous.
 export function normaliseAvcc(
   raw: Uint8Array<ArrayBuffer>,
 ): Uint8Array<ArrayBuffer> {
