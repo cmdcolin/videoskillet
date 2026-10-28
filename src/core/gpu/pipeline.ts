@@ -1666,13 +1666,15 @@ export class Engine implements EngineApi {
     })
   }
 
-  // Every GPU resource this engine owns, as one list each, because two callers
-  // want the whole set and for opposite reasons: `destroy` hands them back, and
-  // `resetSignal` clears them. Two hand-kept lists would drift the first time a
-  // buffer was added, and the failure that drift causes is silent in both
-  // directions — a leaked buffer per rebuild, or a take that carries a stale
-  // ring nobody thought to zero.
+  // Every buffer this engine owns, for `destroy` to hand back.
+  // `pipeline-bufs.test.ts` fails on a `GPUBuffer` field missing from it.
   private allBufs(): GPUBuffer[] {
+    return [...this.stateBufs(), this.ccBuf, this.cgBuf]
+  }
+
+  // The buffers `resetSignal` zeroes whole. The two caption buffers are left
+  // out, because each holds the font ROM baked at construction.
+  private stateBufs(): GPUBuffer[] {
     return [
       this.paramsBuf,
       this.genParamsBuf,
@@ -1682,6 +1684,7 @@ export class Engine implements EngineApi {
       this.filterBuf,
       this.uvfBBuf,
       this.compA,
+      this.progSnap,
       this.compB,
       this.bCompBuf,
       this.compPrev,
@@ -2064,7 +2067,7 @@ export class Engine implements EngineApi {
   private resetSignal(): void {
     const d = this.gpu.device
     const enc = d.createCommandEncoder()
-    for (const b of this.allBufs()) enc.clearBuffer(b)
+    for (const b of this.stateBufs()) enc.clearBuffer(b)
     // A render pass whose only job is its `loadOp` — no shader and no bind
     // group, which is why the three textures carry RENDER_ATTACHMENT.
     for (const t of this.stateTexs()) {
