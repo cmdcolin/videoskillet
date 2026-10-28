@@ -3,6 +3,7 @@ import puppeteer from 'puppeteer-core'
 import { CHROME, launchFirefox } from './browser.mjs'
 import { CLIPS, demos, S3_PREFIX } from './demos.mjs'
 import { installHelpers } from './drive.mjs'
+import { flag, sleep } from './harness.mjs'
 import { appUp } from './until.mjs'
 
 // Record the demos as short mp4 loops for the landing page.
@@ -52,10 +53,6 @@ import { join } from 'node:path'
 import { platform } from 'node:process'
 
 const argv = process.argv.slice(2)
-const flag = (name, fallback) => {
-  const hit = argv.find(a => a.startsWith(`--${name}=`))
-  return hit === undefined ? fallback : hit.slice(name.length + 3)
-}
 const base = flag('base', 'http://localhost:5199/app/')
 const outDir = flag('out', 'public/demos')
 // Chrome on macOS, Firefox Nightly elsewhere — the same split `appreel.mjs`
@@ -69,8 +66,6 @@ const keep = argv.includes('--keep')
 // stays local is not reachable from a card until it is uploaded by hand.
 const upload = !argv.includes('--no-upload')
 const only = argv.filter(a => !a.startsWith('--'))
-
-const sleep = ms => new Promise(r => setTimeout(r, ms))
 
 // A demo whose picture comes down off the network before it is a picture.
 const REMOTE = /ia-random|[iv]url=http/

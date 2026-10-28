@@ -17,6 +17,7 @@ import puppeteer from 'puppeteer-core'
 import { FIREFOX } from './browser.mjs'
 import { slug } from './demos.mjs'
 import { startDevServer } from './devserver.mjs'
+import { flag } from './harness.mjs'
 
 import { execFileSync } from 'node:child_process'
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
@@ -24,10 +25,6 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
 const argv = process.argv.slice(2)
-const flag = (name, fallback) => {
-  const hit = argv.find(a => a.startsWith(`--${name}=`))
-  return hit === undefined ? fallback : hit.slice(name.length + 3)
-}
 const out = flag('out', 'public/home-signed-in.webp')
 const keep = argv.includes('--keep')
 const PORT = 4396

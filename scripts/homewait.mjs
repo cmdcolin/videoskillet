@@ -16,6 +16,7 @@ import puppeteer from 'puppeteer-core'
 //
 // Run: node scripts/homewait.mjs [dir]  (default dist)
 import { FIREFOX } from './browser.mjs'
+import { sleep } from './harness.mjs'
 import { serveDist } from './static.mjs'
 
 import { existsSync } from 'node:fs'
@@ -37,8 +38,6 @@ const browser = await puppeteer.launch({
   executablePath: FIREFOX,
   headless: true,
 })
-
-const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 let bad = 0
 const check = (name, ok, seen) => {

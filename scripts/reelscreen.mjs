@@ -45,6 +45,7 @@ import puppeteer from 'puppeteer-core'
 
 import { CHROME, launchFirefox } from './browser.mjs'
 import { installHelpers, SEED, seedStorage, step } from './drive.mjs'
+import { sleep } from './harness.mjs'
 
 import { execFileSync } from 'node:child_process'
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
@@ -71,7 +72,6 @@ mkdirSync(outDir, { recursive: true })
 // ImageMagick on macOS has no default font for labels; Linux builds carry one.
 const FONT = '/System/Library/Fonts/Supplemental/Arial.ttf'
 const font = existsSync(FONT) ? ['-font', FONT] : []
-const sleep = ms => new Promise(r => setTimeout(r, ms))
 
 function installProbe() {
   const stageBox = name => {

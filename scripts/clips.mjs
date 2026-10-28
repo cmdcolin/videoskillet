@@ -1,4 +1,5 @@
 import { launchFirefox } from './browser.mjs'
+import { sleep } from './harness.mjs'
 
 // Capture the README's motion clips. Each shot is fully declarative: the URL
 // alone (?iurl / ?iurlb / ?preset / ?set) specifies the source image(s), preset,
@@ -12,7 +13,6 @@ import { mkdirSync, rmSync, statSync, writeFileSync } from 'node:fs'
 
 const outDir = process.argv[2] ?? 'clips'
 const base = process.argv[3] ?? 'http://localhost:5199/app/'
-const sleep = ms => new Promise(r => setTimeout(r, ms))
 const urlFor = params => base + '?' + new URLSearchParams(params).toString()
 
 const SHOTS = [

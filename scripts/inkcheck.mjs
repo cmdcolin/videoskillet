@@ -43,12 +43,12 @@
 import { launchFirefox } from './browser.mjs'
 // A headed window that gets covered stops being drawn — see frames.mjs.
 import { watchFrames } from './frames.mjs'
+import { sleep as settle } from './harness.mjs'
 // Boot waited for rather than slept through — see until.mjs.
 import { appUp } from './until.mjs'
 
 const url = new URL(process.argv[2] ?? 'http://localhost:5372/app/')
 const fails = []
-const settle = ms => new Promise(r => setTimeout(r, ms))
 
 // One browser per shell, and one WebGPU session per browser: a page driven
 // through a reload detaches its frame partway, and every evaluate after that

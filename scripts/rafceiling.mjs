@@ -1,4 +1,5 @@
 import { launchFirefox } from './browser.mjs'
+import { sleep as settle } from './harness.mjs'
 
 // How many times can one tab load a WebGPU page before Firefox stops giving it
 // animation frames?
@@ -75,7 +76,6 @@ const url =
 const t0 = Date.now()
 const at = () => ((Date.now() - t0) / 1000).toFixed(0).padStart(4)
 const log = m => console.log(`${at()}s ${m}`)
-const settle = ms => new Promise(r => setTimeout(r, ms))
 
 const browser = await launchFirefox()
 const page = await browser.newPage()

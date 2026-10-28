@@ -31,6 +31,7 @@
 // STALL_EXIT (75) as sweep.mjs expects.
 
 import { launchFirefox } from './browser.mjs'
+import { flag } from './harness.mjs'
 import { appUp } from './until.mjs'
 
 import { execFileSync, spawnSync } from 'node:child_process'
@@ -40,10 +41,6 @@ import { join } from 'node:path'
 import process from 'node:process'
 
 const argv = process.argv.slice(2)
-const flag = (name, fallback) => {
-  const hit = argv.find(a => a.startsWith(`--${name}=`))
-  return hit === undefined ? fallback : hit.slice(name.length + 3)
-}
 const port = argv.find(a => !a.startsWith('--')) ?? '5199'
 const SECONDS = Number(flag('seconds', '12'))
 const [VW, VH] = flag('size', '1280x800').split('x').map(Number)

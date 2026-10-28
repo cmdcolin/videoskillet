@@ -21,17 +21,13 @@
 
 import { launchFirefox } from './browser.mjs'
 import { startDevServer } from './devserver.mjs'
+import { flag, sleep as settle } from './harness.mjs'
 
 import { execFileSync } from 'node:child_process'
 import { mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
-const argv = process.argv.slice(2)
-const flag = (name, fallback) => {
-  const hit = argv.find(a => a.startsWith(`--${name}=`))
-  return hit === undefined ? fallback : hit.slice(name.length + 3)
-}
 const SECONDS = Number(flag('seconds', '20'))
 const ENCODE_FPS = Number(flag('encode-fps', '0'))
 
@@ -180,7 +176,6 @@ await page.evaluateOnNewDocument(encodeFps => {
   }
 }, ENCODE_FPS)
 
-const settle = ms => new Promise(r => setTimeout(r, ms))
 const clickText = async text => {
   const found = await page.evaluate(t => {
     const b = [...document.querySelectorAll('button')].find(

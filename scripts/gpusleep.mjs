@@ -1,4 +1,5 @@
 import { launchFirefox } from './browser.mjs'
+import { sleep as settle } from './harness.mjs'
 
 // Does the discrete card suspend underneath a live GPUDevice, and does coming
 // back out of that produce the hang the app now rebuilds through?
@@ -54,7 +55,6 @@ const status = card => {
 const t0 = Date.now()
 const at = () => ((Date.now() - t0) / 1000).toFixed(1).padStart(6)
 const log = m => console.log(`${at()}s ${m}`)
-const settle = ms => new Promise(r => setTimeout(r, ms))
 
 const transitions = []
 let phase = 'boot'

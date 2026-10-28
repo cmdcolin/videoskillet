@@ -15,6 +15,7 @@
 
 import { launchFirefox } from './browser.mjs'
 import { startDevServer } from './devserver.mjs'
+import { flag, sleep as settle } from './harness.mjs'
 
 import { execFileSync } from 'node:child_process'
 import { mkdtempSync, rmSync } from 'node:fs'
@@ -22,10 +23,6 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
 const argv = process.argv.slice(2)
-const flag = (name, fallback) => {
-  const hit = argv.find(a => a.startsWith(`--${name}=`))
-  return hit === undefined ? fallback : hit.slice(name.length + 3)
-}
 const out = flag('out', 'public/phone')
 const keep = argv.includes('--keep')
 const PORT = 5297
@@ -112,7 +109,6 @@ await page.evaluateOnNewDocument(src => {
   }
 }, `${APP}/sample.jpg`)
 
-const settle = ms => new Promise(r => setTimeout(r, ms))
 // Each shot keeps the bottom edge of every element a still is cropped to.
 const shots = new Map()
 const shoot = async name => {

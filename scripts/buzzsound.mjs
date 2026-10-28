@@ -27,6 +27,7 @@
 // Usage: node scripts/buzzsound.mjs [url]
 
 import { launchFirefox } from './browser.mjs'
+import { sleep as settle } from './harness.mjs'
 
 const base = process.argv[2] ?? 'http://localhost:5199/app/'
 
@@ -63,8 +64,6 @@ await page.evaluateOnNewDocument(() => {
 })
 
 await page.goto(`${base}?set=buzzLevel:0.9`, { waitUntil: 'networkidle0' })
-
-const settle = ms => new Promise(r => setTimeout(r, ms))
 
 // The app comes up silent whatever `?set=` asks for — a page that makes noise on
 // its own is one people close — so the switch the Sound stage owns is thrown

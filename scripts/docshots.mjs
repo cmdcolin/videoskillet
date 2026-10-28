@@ -26,6 +26,7 @@ import { SPECS } from './docshot-specs.mjs'
 // Seeding, element resolution and the actions live in drive.mjs — `appreel.mjs`
 // drives the same app to record its window, and neither harness owns that.
 import { installHelpers, runAction, SEED, seedStorage, step } from './drive.mjs'
+import { flag, sleep } from './harness.mjs'
 
 import { execFileSync, spawn } from 'node:child_process'
 import {
@@ -42,10 +43,6 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
 const argv = process.argv.slice(2)
-const flag = (name, fallback) => {
-  const hit = argv.find(a => a.startsWith(`--${name}=`))
-  return hit === undefined ? fallback : hit.slice(name.length + 3)
-}
 const force = argv.includes('--force')
 const upload = argv.includes('--upload')
 const freeze = argv.includes('--freeze')
@@ -71,7 +68,6 @@ const JPEG_WIDTH = 1800
 // picture is a live GPU render, so two runs of the same spec differ by a
 // sub-percent of dithered noise even when nothing changed.
 const DIFF_GATE = 0.01
-const sleep = ms => new Promise(r => setTimeout(r, ms))
 const pct = n => `${(n * 100).toFixed(2)}%`
 
 // Pixels that differ between two same-size images, as a fraction. null when the

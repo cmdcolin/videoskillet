@@ -44,6 +44,7 @@
 import puppeteer from 'puppeteer-core'
 
 import { CHROME } from './browser.mjs'
+import { flag, sleep } from './harness.mjs'
 import { appUp } from './until.mjs'
 
 import { spawn, spawnSync } from 'node:child_process'
@@ -59,10 +60,6 @@ import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 
 const argv = process.argv.slice(2)
-const flag = (name, fallback) => {
-  const hit = argv.find(a => a.startsWith(`--${name}=`))
-  return hit === undefined ? fallback : hit.slice(name.length + 3)
-}
 const base = flag('base', 'http://localhost:5199/app/?src=cat')
 // Where the clip lands and where its poster does. `clips/` is gitignored, the
 // same place `docshots.mjs` leaves its recordings — a 5MB mp4 belongs on S3
@@ -109,8 +106,6 @@ const GRAB_CRF = 18
 // nine-pixel text but left the picture's grain smeared, and grain is half of
 // what the app is. A minute at 1080p lands around 30MB.
 const FINAL_CRF = 24
-
-const sleep = ms => new Promise(r => setTimeout(r, ms))
 
 // The default task. A file via `--task=` replaces it, which is how a second
 // recording gets a different sentence without this file growing a list.

@@ -37,6 +37,7 @@
 import { launchFirefox } from './browser.mjs'
 // A headed window that gets covered stops being drawn — see frames.mjs.
 import { watchFrames } from './frames.mjs'
+import { sleep as settle } from './harness.mjs'
 import { appUp } from './until.mjs'
 
 const url = new URL(process.argv[2] ?? 'http://localhost:5401/app/')
@@ -44,7 +45,6 @@ const fails = []
 const check = (ok, msg) => {
   if (!ok) fails.push(msg)
 }
-const settle = ms => new Promise(r => setTimeout(r, ms))
 
 const browser = await launchFirefox({ media: true })
 

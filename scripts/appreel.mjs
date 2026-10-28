@@ -68,6 +68,7 @@ import puppeteer from 'puppeteer-core'
 
 import { CHROME, launchFirefox } from './browser.mjs'
 import { installHelpers, SEED, seedStorage, step } from './drive.mjs'
+import { flag, sleep } from './harness.mjs'
 import {
   beatSecs,
   CLIPS,
@@ -94,10 +95,6 @@ import { platform } from 'node:process'
 import { pathToFileURL } from 'node:url'
 
 const argv = process.argv.slice(2)
-const flag = (name, fallback) => {
-  const hit = argv.find(a => a.startsWith(`--${name}=`))
-  return hit === undefined ? fallback : hit.slice(name.length + 3)
-}
 const base = flag('base', 'http://localhost:5199/app/')
 // Which browser holds the window being recorded. Chrome on macOS, where its
 // Metal backend renders the signal path as faithfully as Firefox does and
@@ -161,7 +158,6 @@ const CRF = 34
 // has the app's type in it.
 const STILL_Q = 84
 
-const sleep = ms => new Promise(r => setTimeout(r, ms))
 // Cosine ease. A pointer that starts and stops abruptly reads as a jump cut
 // even at 24fps, and the whole point of drawing it is that it looks like a hand.
 const ease = t => 0.5 - Math.cos(Math.PI * Math.min(1, Math.max(0, t))) / 2

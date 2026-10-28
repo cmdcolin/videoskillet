@@ -14,6 +14,7 @@
 // Usage: node scripts/linkcheck.mjs [url]
 
 import { launchFirefox } from './browser.mjs'
+import { sleep as settle } from './harness.mjs'
 
 const base = process.argv[2] ?? 'http://localhost:5173/app/'
 
@@ -25,7 +26,6 @@ page.on('pageerror', err => {
   failure ||= `pageerror: ${String(err).slice(0, 200)}`
 })
 
-const settle = ms => new Promise(r => setTimeout(r, ms))
 const href = () => page.evaluate(() => location.href)
 // The look the bar is carrying, as `key:value` entries.
 const look = async () => {

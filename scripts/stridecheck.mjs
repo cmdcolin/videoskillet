@@ -24,15 +24,11 @@
 import puppeteer from 'puppeteer-core'
 
 import { CHROME, FIREFOX } from './browser.mjs'
+import { flag } from './harness.mjs'
 
 import { createServer } from 'node:http'
 import process from 'node:process'
 
-const argv = process.argv.slice(2)
-const flag = (name, fallback) => {
-  const hit = argv.find(a => a.startsWith(`--${name}=`))
-  return hit === undefined ? fallback : hit.slice(name.length + 3)
-}
 const which = flag('browser', 'firefox')
 const W = Number(flag('width', '1494'))
 const H = 902

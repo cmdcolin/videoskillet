@@ -41,6 +41,7 @@
 import puppeteer from 'puppeteer-core'
 
 import { CHROME } from './browser.mjs'
+import { sleep as settle } from './harness.mjs'
 
 const MIN = Number(process.argv[3] ?? 24)
 const browser = await puppeteer.launch({
@@ -66,7 +67,6 @@ await page.setViewport({
   isMobile: true,
 })
 await page.goto('http://localhost:5381/app/', { waitUntil: 'load' })
-const settle = ms => new Promise(r => setTimeout(r, ms))
 await settle(6000)
 
 const PROBE = `(() => {
