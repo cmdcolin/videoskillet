@@ -1,0 +1,45 @@
+.lead {
+  margin: 0 0 var(--space-md);
+  color: var(--fg);
+  line-height: var(--prose-lh);
+}
+
+.route {
+  margin: var(--space-lg) 0 var(--space-xs);
+  font-size: var(--fs-sm);
+  color: var(--fg);
+}
+
+.body {
+  margin: 0 0 var(--space-sm);
+  color: var(--fg2);
+  line-height: var(--prose-lh);
+}
+
+.code {
+  margin: 0 0 var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  overflow-x: auto;
+  font-size: var(--fs-xs);
+  background: var(--surface-raised);
+  border-radius: var(--ctl-radius);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin: var(--space-lg) 0 10px;
+}
+
+.go {
+  composes: btn from './ui.module.css';
+  composes: btnFlush from './ui.module.css';
+  border-color: var(--accent);
+}
+
+.alt {
+  composes: btn from './ui.module.css';
+  composes: btnFlush from './ui.module.css';
+  text-decoration: none;
+}

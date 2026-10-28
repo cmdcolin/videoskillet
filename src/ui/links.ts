@@ -8,6 +8,7 @@ const SITE = 'https://videoskillet.com/'
 
 export const HOME_URL = SITE
 export const GUIDE_URL = `${SITE}guide/`
+export const AI_GUIDE_URL = `${SITE}guide/ai/`
 // What GoatCounter and Firebase hold, linked from the why-sign-in card and
 // from the about card.
 export const PRIVACY_URL = `${SITE}privacy/`

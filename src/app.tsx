@@ -17,6 +17,7 @@ import { poolCaption } from './sources/pools'
 import { AboutDialog } from './ui/AboutDialog'
 import { Account } from './ui/Account'
 import { AdvancedDialog } from './ui/AdvancedDialog'
+import { AgentDialog } from './ui/AgentDialog'
 import { offStockKeys } from './ui/allSettings'
 import { AllSettingsSheet } from './ui/AllSettingsSheet'
 import { AppMenu, ShowMenuButton, ShowSidebarButton } from './ui/AppMenu'
@@ -461,6 +462,7 @@ export function App() {
   // shut, and `{ pending: null }` is the card opened from a menu with no save
   // behind it.
   const [why, setWhy] = useState<{ pending: string | null } | null>(null)
+  const [showAgent, setShowAgent] = useState(false)
   const [showShare, setShowShare] = useState(false)
   const [showBoardText, setShowBoardText] = useState(false)
   const [showPalette, setShowPalette] = useState(false)
@@ -1632,6 +1634,13 @@ export function App() {
             onToggle={() => setShowMidi(o => !o)}
             onClose={() => setShowMidi(false)}
           />
+          <Button
+            title="connect an AI agent to the app"
+            aria-label="connect an AI agent"
+            onClick={() => setShowAgent(true)}
+          >
+            agent
+          </Button>
           <Account
             user={profiles.user}
             status={profiles.status}
@@ -2378,6 +2387,9 @@ export function App() {
           )}
           {showAbout ? (
             <AboutDialog onClose={() => setShowAbout(false)} />
+          ) : null}
+          {showAgent ? (
+            <AgentDialog onClose={() => setShowAgent(false)} />
           ) : null}
           {/* Closing on the way to the popup leaves the Google window clear. The
           save the card was holding lands on the button in the masthead. */}

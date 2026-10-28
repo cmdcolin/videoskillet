@@ -154,6 +154,30 @@ On Linux, drive Firefox Nightly from a harness. Chrome's driver artifacts are
 harmless in the browser and unreadable in a log; `scripts/shot.mjs` already
 launches Firefox with the right prefs, so model a new harness on it.
 
+## Driving the engine from a harness
+
+A coding agent with a shell can launch a browser itself and call the engine in
+the page. `window.vf` is the live engine, and two of its methods cover most
+work:
+
+```js
+window.vf.applyControls({ bGain: 1, bGenlock: 1, bKey: 1, bKeyHueDeg: 241 })
+window.vf.getControls()
+```
+
+- `applyControls` takes any subset of control keys, the same keys `#set=` uses,
+  and leaves the others where they are. The app still writes the board into the
+  address bar, so the page's URL is the link to the look.
+- The link the page opens on sets the sources: `?src=webcam&vurlb=<url>` puts
+  the camera on A and a video file on B. The app shows its own camera dialog
+  first, so a harness clicks **Continue** to start the camera.
+- `window.vf` is the concrete `Engine`, and its methods can change between
+  releases. `src/core/gpu/engineapi.ts` at the deployed commit lists the methods
+  the page has, and the tooltip on the app's name shows that commit.
+
+The **agent** button in the sidebar's masthead shows the same routes in the app,
+and copies a prompt that hands an agent the current look.
+
 ## Changing the code
 
 Read these, in this order:
