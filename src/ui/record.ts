@@ -346,6 +346,8 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
   // The take's start on its clock, and the period the last placed frame took.
   let origin: number | null = null
   let last = -1
+  const busy = () =>
+    encoder.encodeQueueSize >= MAX_QUEUE || sink.backlog() >= MAX_BACKLOG
 
   return {
     codec,
@@ -361,8 +363,7 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
     configs: () => configs,
     error: () => (failure !== '' ? failure : sink.failure()),
     errorName: () => failureName,
-    busy: () =>
-      encoder.encodeQueueSize >= MAX_QUEUE || sink.backlog() >= MAX_BACKLOG,
+    busy,
     full: () => sink.room() <= 0,
     hold: () => {
       if (closed) return
@@ -381,7 +382,7 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
         sound?.origin(Math.round(t * sound.context.sampleRate))
       }
       const slot = Math.round((t - origin) * rate)
-      if (slot <= last || encoder.encodeQueueSize >= MAX_QUEUE) {
+      if (slot <= last || busy()) {
         frame.close()
         return
       }
