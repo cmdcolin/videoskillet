@@ -245,6 +245,14 @@ export function useCamera(
     // oxlint-disable-next-line react/exhaustive-deps
   }, [])
 
+  useEffect(
+    () => () => {
+      ++ask.current
+      stopAll(stream.current)
+    },
+    [],
+  )
+
   // A phone sending the page to the background can end the camera, leave its
   // track muted, or pause the <video> it plays in, and any of the three
   // freezes the picture on its last frame. A muted track does not always
