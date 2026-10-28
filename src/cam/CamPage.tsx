@@ -393,25 +393,23 @@ export function CamPage(props: { link: CamLink | null }) {
             onPointerCancel={gestures.release(true)}
             onContextMenu={e => e.preventDefault()}
           />
-          {on ? (
-            <SetSwitches
-              tilt={{
-                supported: tilt.supported,
-                on: tilt.on,
-                onToggle: flipTilt,
-              }}
-              side={{
-                shown: eng.layout !== 'whole',
-                on: sideways,
-                onToggle: () => {
-                  setSideways(!sideways)
-                  eng.standSideways(!sideways)
-                },
-              }}
-              sound={{ on: sound.on, onToggle: sound.toggle }}
-            />
-          ) : null}
-          {on ? <PanelSwitches panel={panel} onToggle={toggle} /> : null}
+          <SetSwitches
+            tilt={{
+              supported: tilt.supported,
+              on: tilt.on,
+              onToggle: flipTilt,
+            }}
+            side={{
+              shown: eng.layout !== 'whole',
+              on: sideways,
+              onToggle: () => {
+                setSideways(!sideways)
+                eng.standSideways(!sideways)
+              },
+            }}
+            sound={{ on: sound.on, onToggle: sound.toggle }}
+          />
+          <PanelSwitches panel={panel} onToggle={toggle} />
           <ClipInput attach={picks.attachB} onFile={picks.clipOnB} />
           <ClipInput attach={picks.attachA} onFile={picks.clipOnA} />
           {cameraUp && !showHelp ? (
