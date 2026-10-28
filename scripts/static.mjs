@@ -7,7 +7,7 @@
 
 import { existsSync, readFileSync, statSync } from 'node:fs'
 import { createServer } from 'node:http'
-import { extname, join } from 'node:path'
+import { extname, join, resolve, sep } from 'node:path'
 
 // Only what the site actually serves. An extension missing here arrives as
 // application/octet-stream, which a browser declines rather than renders — so a
@@ -26,10 +26,29 @@ const TYPES = {
   '.webp': 'image/webp',
 }
 
+// The file a request names under `root`, or null for a path that does not
+// decode or that resolves outside it.
+export const distFile = (root, pathname) => {
+  let decoded
+  try {
+    decoded = decodeURIComponent(pathname)
+  } catch {
+    return null
+  }
+  const base = resolve(root)
+  const file = join(base, decoded)
+  return file === base || file.startsWith(base + sep) ? file : null
+}
+
 export const serveDist = (root, port) => {
   const server = createServer((req, res) => {
     const asked = new URL(req.url ?? '/', 'http://dist')
-    let file = join(root, decodeURIComponent(asked.pathname))
+    let file = distFile(root, asked.pathname)
+    if (file === null) {
+      res.writeHead(400)
+      res.end(`bad path ${asked.pathname}`)
+      return
+    }
     if (existsSync(file) && statSync(file).isDirectory()) {
       file = join(file, 'index.html')
     }
@@ -43,5 +62,7 @@ export const serveDist = (root, port) => {
       res.end(`no ${asked.pathname} in ${root}`)
     }
   })
-  return new Promise(resolve => server.listen(port, () => resolve(server)))
+  return new Promise(done =>
+    server.listen(port, '127.0.0.1', () => done(server)),
+  )
 }
