@@ -31,6 +31,7 @@ import { backingStoreSize } from './canvasSize'
 import { CAPTION_SEED, wantsWords } from './captionSeed'
 import { openClipById } from './clipLibrary'
 import {
+  cueEntry,
   cueLooping,
   cueRegion,
   dropLoop,
@@ -864,11 +865,14 @@ export function useEngine(args: { rand: Rand }) {
   })
   // Claimed once, so that the *next* source change does not resurrect a cue the
   // link asked for two clips ago. Only a real element claims it: stopSlot's own
-  // `attach(null)` is the clearing half and must not consume anything.
-  const takePendingCue = (key: StashSlot) => {
+  // `attach(null)` is the clearing half and must not consume anything. The
+  // claim also seeks the clip to the in-point (see `cueEntry`).
+  const takePendingCue = (key: StashSlot, el: HTMLVideoElement) => {
     const want = pendingCue.current[key]
     if (want === null) return
     pendingCue.current[key] = null
+    const at = cueEntry(want, el.currentTime)
+    if (at !== null) jump(key, at)
     writeCue(key, want)
   }
 
@@ -932,7 +936,7 @@ export function useEngine(args: { rand: Rand }) {
       // to the barrier below: every load path opens by stopping the slot, so a
       // retire that counted as arriving would settle the wait it just started.
       if (el !== null) {
-        takePendingCue(id)
+        takePendingCue(id, el)
         arrived(id)
       }
     },

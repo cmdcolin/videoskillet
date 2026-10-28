@@ -146,6 +146,18 @@ export const dropLoop = (cue: Cue | null): Cue | null =>
 export const insideCue = (cue: Cue | null, time: number): boolean =>
   cueLooping(cue) && time >= cue.in && time <= cue.out
 
+// Where a clip that has just arrived under a link's cue should seek to, or null
+// to leave it playing where it is. A cued clip starts at its in-point, as a
+// strip row's preroll does. The pump wraps a loop only once the playhead
+// reaches the out-point, so without this seek a clip that loads at 0 under
+// `cuea=68,84` plays 84 s before the loop starts. A preroll parked at the
+// in-point has already passed it by the time it rolls, and gets no seek.
+export function cueEntry(cue: Cue, time: number): number | null {
+  if (time < cue.in) return cue.in
+  if (cueLooping(cue) && time >= cue.out) return cue.in
+  return null
+}
+
 // What the jump back is costing this loop, in ms, or null before there is a
 // reading. Measured by the pump off the `seeked` event (gpu/videopump.ts).
 //

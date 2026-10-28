@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  cueEntry,
   cueLooping,
   cueRegion,
   dropLoop,
@@ -118,6 +119,25 @@ describe('insideCue', () => {
 
   it('is false for a cue with no loop', () => {
     expect(insideCue({ in: 3, out: null }, 3)).toBe(false)
+  })
+})
+
+describe('cueEntry', () => {
+  it('sends a clip that loads at 0 to the in-point', () => {
+    expect(cueEntry({ in: 68, out: 84 }, 0)).toBe(68)
+    expect(cueEntry({ in: 68, out: null }, 0.2)).toBe(68)
+  })
+
+  it('leaves a clip already inside the loop alone', () => {
+    expect(cueEntry({ in: 68, out: 84 }, 68.3)).toBe(null)
+  })
+
+  it('brings a clip past the out-point back to the in-point', () => {
+    expect(cueEntry({ in: 3, out: 4 }, 9)).toBe(3)
+  })
+
+  it('leaves a clip past a cue with no loop alone', () => {
+    expect(cueEntry({ in: 3, out: null }, 9)).toBe(null)
   })
 })
 
