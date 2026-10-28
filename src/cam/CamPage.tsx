@@ -435,7 +435,7 @@ export function CamPage(props: { link: CamLink | null }) {
           {showHelp ? <Hints onClose={() => setHelp(false)} /> : null}
           <CameraNotice
             rebuilding={eng.rebuilding !== null}
-            frozen={eng.frozen !== null}
+            frozen={eng.frozen}
             state={cam.state}
             error={cam.error}
             onCamera={srcA.on === 'camera'}
