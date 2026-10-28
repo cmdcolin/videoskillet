@@ -95,6 +95,13 @@ export class Sources {
   private probe1: OffscreenCanvas | null = null
   private lastPixelA: number[] | null = null
 
+  // Whether a slot has shown a new picture since `takeFresh` last asked, which
+  // is what makes a held freeze grab again. A video slot counts once its first
+  // frame lands, so a clip still loading does not count.
+  private fresh = false
+  private awaitA = false
+  private awaitB = false
+
   constructor(host: SourcesHost) {
     this.host = host
     this.texA = this.createSlotTex(ACTIVE_WIDTH, ACTIVE_HEIGHT)
@@ -161,6 +168,7 @@ export class Sources {
     )
     this.samplePixel(f.bmp)
     f.bmp.close()
+    this.landedA()
   }
 
   // Same for B, which always arrives at raster size and pre-cropped.
@@ -171,6 +179,7 @@ export class Sources {
       [f.w, f.h],
     )
     f.bmp.close()
+    this.landedB()
   }
 
   // The direct path's half of pushA/pushB: settle the slot's geometry now (the
@@ -183,11 +192,38 @@ export class Sources {
     const [w, h] = fitSrc(el.videoWidth, el.videoHeight)
     this.ensureTexA(w, h, el.videoWidth / el.videoHeight)
     this.extA = el
+    this.landedA()
   }
 
   pushExtB(el: HTMLVideoElement): void {
     this.noiseB = 0
     this.extB = el
+    this.landedB()
+  }
+
+  // A video is now patched into the slot; its first frame is the new picture.
+  awaitVideoA(): void {
+    this.awaitA = true
+  }
+
+  awaitVideoB(): void {
+    this.awaitB = true
+  }
+
+  takeFresh(): boolean {
+    const was = this.fresh
+    this.fresh = false
+    return was
+  }
+
+  private landedA(): void {
+    if (this.awaitA) this.fresh = true
+    this.awaitA = false
+  }
+
+  private landedB(): void {
+    if (this.awaitB) this.fresh = true
+    this.awaitB = false
   }
 
   // What the engine drains once per frame: which slots have a fresh video
@@ -205,6 +241,8 @@ export class Sources {
   // Patterns are drawn on the signal raster (non-square pixels): aspect is 4:3.
   setImageSource(source: Drawable, aspect = 4 / 3): void {
     this.noiseA = 0
+    this.awaitA = false
+    this.fresh = true
     const [w, h] = fitSrc(source.width, source.height)
     this.ensureTexA(w, h, aspect)
     if (w === source.width && h === source.height) {
@@ -253,18 +291,29 @@ export class Sources {
   // clears this.
   setNoiseSource(kind: number): void {
     this.noiseA = kind
+    if (kind > 0) {
+      this.awaitA = false
+      this.fresh = true
+    }
   }
 
   setImageSourceB(source: Drawable): void {
     this.noiseB = 0
+    this.awaitB = false
+    this.fresh = true
     this.uploadB(source, source.width, source.height)
   }
 
   setNoiseSourceB(kind: number): void {
     this.noiseB = kind
+    if (kind > 0) {
+      this.awaitB = false
+      this.fresh = true
+    }
   }
 
   setSourceBEnabled(on: boolean): void {
+    if (on !== this.enabledB) this.fresh = true
     this.enabledB = on
   }
 

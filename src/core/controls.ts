@@ -349,7 +349,7 @@ export const DEFAULT_CONTROLS = {
   bKeySoft: 0.05, // comparator swing, in the same units and as a fraction of PI
   bKeySpill: 0,
   bKeyDelayUs: 0, // key-vs-fill registration; one sample is 70 ns
-  bKeyFill: 0, // 0 program A, 1 matte, 2 the mixer loop bus (genlocked path only)
+  bKeyFill: 0, // 0 program A, 1 matte, 2 the mixer loop bus, 3 a frozen frame of it (genlocked path only)
   bKeyMatteY: 0.5,
   bKeyMatteHueDeg: 0,
   bKeyMatteSat: 0,

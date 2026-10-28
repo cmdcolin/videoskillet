@@ -50,7 +50,7 @@ The keyer's **fill** setting can also put the mixer's frame store in the hole.
 The frame store holds the previous output frame, so a moving subject leaves
 copies of itself wherever it has been. With **strobe hold** at 5, the store
 records every sixth frame, and a turning sandwich sweeps out a disc:
-[the disc](/app/#vurl=https://upload.wikimedia.org/wikipedia/commons/transcoded/1/16/Earth_Illuminated-_ISS_Time-lapse_Photography.webm/Earth_Illuminated-_ISS_Time-lapse_Photography.webm.480p.vp9.webm&vurlb=https://upload.wikimedia.org/wikipedia/commons/transcoded/1/14/HD_video_of_a_Chicken_fillet_roll_-_rotating_green_screen_alan_butler.webm/HD_video_of_a_Chicken_fillet_roll_-_rotating_green_screen_alan_butler.webm.480p.vp9.webm&set=chromaGain:1.3,crtSat:1.2,bGain:1,bGenlock:1,bKey:1,bKeyAcceptDeg:45,bKeyClip:0.05,bKeySpill:0.6,cfbMix:0.001,cfbHold:5,bKeyFill:2&cuea=68,84).
+[the disc](/app/#vurl=https://upload.wikimedia.org/wikipedia/commons/transcoded/1/16/Earth_Illuminated-_ISS_Time-lapse_Photography.webm/Earth_Illuminated-_ISS_Time-lapse_Photography.webm.480p.vp9.webm&vurlb=https://upload.wikimedia.org/wikipedia/commons/transcoded/1/14/HD_video_of_a_Chicken_fillet_roll_-_rotating_green_screen_alan_butler.webm/HD_video_of_a_Chicken_fillet_roll_-_rotating_green_screen_alan_butler.webm.480p.vp9.webm&set=chromaGain:1.3,crtSat:1.2,bGain:1,bGenlock:1,bKey:1,bKeyAcceptDeg:45,bKeyClip:0.05,bKeySpill:0.6,cfbHold:5,bKeyFill:2&cuea=68,84).
 
 ![A chicken fillet roll turning over the space station's window, twice. On the left its copies form a gold disc behind it, and on the right the same disc is pale blue.](/blog/keyer-disc.webp)
 
@@ -62,15 +62,17 @@ so they come back in the complementary colour.
 ![Six seconds of the turning roll. Its disc of copies flashes gold and blue over a green and magenta aurora.](https://myloveydove.com/videoskillet/blog/keyer-disc-anim.webp)
 
 Without strobe hold, the copies blur into a fan:
-[the fan](/app/#vurl=https://upload.wikimedia.org/wikipedia/commons/transcoded/1/16/Earth_Illuminated-_ISS_Time-lapse_Photography.webm/Earth_Illuminated-_ISS_Time-lapse_Photography.webm.480p.vp9.webm&vurlb=https://upload.wikimedia.org/wikipedia/commons/transcoded/1/14/HD_video_of_a_Chicken_fillet_roll_-_rotating_green_screen_alan_butler.webm/HD_video_of_a_Chicken_fillet_roll_-_rotating_green_screen_alan_butler.webm.480p.vp9.webm&set=chromaGain:1.3,crtSat:1.2,bGain:1,bGenlock:1,bKey:1,bKeyAcceptDeg:45,bKeyClip:0.05,bKeySpill:0.6,cfbMix:0.001,cfbDelayUs:0,bKeyFill:2&cuea=68,84).
+[the fan](/app/#vurl=https://upload.wikimedia.org/wikipedia/commons/transcoded/1/16/Earth_Illuminated-_ISS_Time-lapse_Photography.webm/Earth_Illuminated-_ISS_Time-lapse_Photography.webm.480p.vp9.webm&vurlb=https://upload.wikimedia.org/wikipedia/commons/transcoded/1/14/HD_video_of_a_Chicken_fillet_roll_-_rotating_green_screen_alan_butler.webm/HD_video_of_a_Chicken_fillet_roll_-_rotating_green_screen_alan_butler.webm.480p.vp9.webm&set=chromaGain:1.3,crtSat:1.2,bGain:1,bGenlock:1,bKey:1,bKeyAcceptDeg:45,bKeyClip:0.05,bKeySpill:0.6,cfbDelayUs:0,bKeyFill:2&cuea=68,84).
 
 ![The roll lying flat over the aurora, with a pale grey fan of copies trailing below it.](/blog/keyer-fan.webp)
 
-The frame store records while the loop mix is above zero, so these looks set the
-loop mix to 0.001, which leaves the picture visibly unchanged. The store records
-the colour bars source A shows while the space footage loads, so the links open
-with the copies over colour bars. Set **fill** to **program A** for a moment to
-record the space footage, and switch it back to **loop bus** to hold it.
+The frame store records every frame while **fill** is set to **loop bus**. It
+records the colour bars source A shows while the space footage loads, so the
+links open with the copies over colour bars. To put the footage behind them, set
+**fill** to **program A**, then **freeze**, then back to **loop bus**. Freeze
+grabs the frame on screen, footage included. Back on loop bus, the store records
+a picture whose hole shows that frame, so the footage stays behind the new
+copies.
 
 ## The keyhole
 

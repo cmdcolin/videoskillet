@@ -33,7 +33,7 @@ const MIX_MID = COL.mix.x + COL.mix.w / 2
 const WHEEL = { cx: 254, cy: 70, radius: 56 }
 const RIM = 0.7
 const HEIGHT = 142
-const FILLS = ['program A', 'matte', 'loop bus']
+const FILLS = ['program A', 'matte', 'loop bus', 'freeze']
 const DEG = Math.PI / 180
 
 // The keyer across the mixer as mix_b.wgsl runs it. B's picture crosses the
@@ -89,7 +89,7 @@ export function ChromaKeyDiagram() {
       'fill',
       BOT_Y,
       'fill',
-      "The fill is what the mix shows where the key cuts B: program A, the box's own matte, or the mixer loop's last frame. It acts on the genlocked path only.",
+      "The fill is what the mix shows where the key cuts B: program A, the box's own matte, the mixer loop's frame store, or one frame frozen in that store. It acts on the genlocked path only.",
       !on || !genlock,
     ),
     box(

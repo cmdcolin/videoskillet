@@ -111,9 +111,10 @@ fn suppress(along: f32, n: u32, delta: f32) -> f32 {
 }
 
 // The keyer's fill input: what shows through the hole the key cut. A real keyer
-// has this as a connector on the back, and only two of the three things worth
-// patching into it are other pictures — the third is the box's own matte
-// generator, a flat field on the house carrier.
+// has this as a connector on the back. Program A and the loop bus are other
+// pictures, and the matte is the box's own generator, a flat field on the house
+// carrier. Freeze reads the same frame store as the loop bus; the engine stops
+// the store recording while freeze holds (framestore.ts).
 //
 // Genlocked path only, and that is mechanical rather than a shortcut: a fill is
 // what sits *behind* the foreground, which needs a crossfade to have a behind.

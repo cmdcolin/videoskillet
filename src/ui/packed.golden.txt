@@ -207,7 +207,7 @@
 219 bKeySoft step=0.005 default=0.05
 220 bKeySpill step=0.01 default=0
 221 bKeyDelayUs step=0.01 default=0
-222 bKeyFill step=1 default=0 choices=program A|matte|loop bus
+222 bKeyFill step=1 default=0 choices=program A|matte|loop bus|freeze
 223 bKeyMatteY step=0.01 default=0.5
 224 bKeyMatteHueDeg step=1 default=0
 225 bKeyMatteSat step=0.01 default=0

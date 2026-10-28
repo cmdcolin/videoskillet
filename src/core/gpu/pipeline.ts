@@ -34,6 +34,7 @@ import { aFeedOn, bFeedOn, bOn, bWaveOn, FEEDS } from './feedgates'
 import { designFilterBank, FILTER_KEYS } from './filterbank'
 import { AutoLock } from './framelock'
 import { FrameRead } from './frameread'
+import { FrameStore } from './framestore'
 import {
   GEN_OFFSET,
   PARAM_BYTES,
@@ -94,6 +95,7 @@ import type { Gpu, RenderTarget } from './context'
 import type { DestroyOptions, EngineApi } from './engineapi'
 import type { FeedSource } from './feedgates'
 import type { FrameSink } from './frameread'
+import type { StoreFrame } from './framestore'
 import type { ParamName } from './prelude'
 import type { FrozenKind } from './renderloop'
 import type { PullOpener, PumpedFrame, Relay, WrapHealth } from './videopump'
@@ -293,6 +295,8 @@ export class Engine implements EngineApi {
   // — a cut gun is a thing the set does — so it takes a row on the Beam stage
   // and travels in presets and links like every other fault.
   private strobeGate = new StrobeGate()
+  private frameStore = new FrameStore()
+  private store: StoreFrame = { records: false, fill: 0 }
   private osd = new OsdState()
   private osdStep: OsdStep = OSD_IDLE
   private modSlots: ModSlot[] = []
@@ -1112,12 +1116,11 @@ export class Engine implements EngineApi {
         ],
         perTile,
       ),
-      // frame-store capture of what the decoder saw; strobe holds by skipping.
-      // Trails force an even period so every capture shares one subcarrier
-      // frame parity — a mixed-parity store scrambles hue beyond what
-      // burst-lock can correct. An idle loop (cfbMix 0) skips entirely; the
-      // store goes stale, so the first frame after the fader comes up replays
-      // the old capture.
+      // Frame-store capture of what the decoder saw; framestore.ts decides
+      // which frames record. Trails force an even strobe period because a
+      // mixed-parity store scrambles hue beyond what burst-lock can correct.
+      // With nothing reading the store it goes stale, so the first frame after
+      // the fader comes up replays the old capture.
       pass(
         'storePrev',
         storePrevPl,
@@ -1127,13 +1130,7 @@ export class Engine implements EngineApi {
           { buffer: this.compPrev },
         ],
         perLine,
-        () => {
-          const period =
-            c.cfbTrail > 0
-              ? 2 * Math.ceil((c.cfbHold + 1) / 2)
-              : Math.round(c.cfbHold) + 1
-          return c.cfbMix !== 0 && this.frame % period === 0
-        },
+        () => this.store.records,
       ),
     ]
     this.presentBg = d.createBindGroup({
@@ -1489,7 +1486,10 @@ export class Engine implements EngineApi {
   }
 
   setVideoSource(el: HTMLVideoElement | null): void {
-    if (el !== null) this.sources.setNoiseSource(0)
+    if (el !== null) {
+      this.sources.setNoiseSource(0)
+      this.sources.awaitVideoA()
+    }
     this.servo.kick(0.6)
     this.pump.setA(el)
   }
@@ -1571,7 +1571,10 @@ export class Engine implements EngineApi {
   }
 
   setVideoSourceB(el: HTMLVideoElement | null): void {
-    if (el !== null) this.sources.setNoiseSourceB(0)
+    if (el !== null) {
+      this.sources.setNoiseSourceB(0)
+      this.sources.awaitVideoB()
+    }
     this.pump.setB(el)
   }
 
@@ -2117,6 +2120,7 @@ export class Engine implements EngineApi {
     this.simAcc = 0
     this.lockPhase = 0
     this.frame = 0
+    this.frameStore = new FrameStore()
     // Designed from a board that has not moved, but into a buffer that has just
     // been cleared with everything else.
     this.filtersDirty = true
@@ -2573,6 +2577,12 @@ export class Engine implements EngineApi {
     }
     if (this.filtersDirty) this.rebuildFilters()
     const c = this.controls
+    this.store = this.frameStore.step(
+      c,
+      this.sources.bEnabled,
+      this.frame,
+      this.sources.takeFresh(),
+    )
     this.advancePhases(c)
     this.advanceShuttle(c.shuttleX)
     if (c.aPause === 0) this.tapeFrame.a += 1
@@ -2621,6 +2631,7 @@ export class Engine implements EngineApi {
         synthBHz: c.synthBHz,
       }),
     )
+    vals.bKeyFill = this.store.fill
     packParams(vals, this.paramScratch)
     d.queue.writeBuffer(this.paramsBuf, 0, this.paramScratch)
     if (this.aFeedOn()) this.packFeed('a', vals, this.feedParamsA, mixU.decks.a)
