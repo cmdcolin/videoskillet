@@ -592,6 +592,31 @@ describe('a stage in the panel', () => {
     expect(drawing()).not.toBe(null)
   })
 
+  test("a group's own fold lasts until the menu's switch moves", async () => {
+    const drawing = () =>
+      screen.queryByRole('group', { name: 'mixer feedback loop' })
+    await act(async () => {
+      setSignalDiagrams(false)
+    })
+    try {
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: '▸ diagram' }))
+      })
+      expect(drawing()).not.toBe(null)
+      await act(async () => {
+        setSignalDiagrams(true)
+      })
+      await act(async () => {
+        setSignalDiagrams(false)
+      })
+      expect(drawing()).toBe(null)
+    } finally {
+      await act(async () => {
+        setSignalDiagrams(true)
+      })
+    }
+  })
+
   test('a schematic reopens on the box it left open', async () => {
     const box = () =>
       screen.queryByRole('button', { name: 'resonance controls' })

@@ -665,7 +665,8 @@ export function ControlGroup(props: { group: Group; defaultOpen?: boolean }) {
   // overrides it until the menu's switch moves again.
   const diagrams = useSignalDiagrams()
   const [here, setHere] = useState<{ everywhere: boolean; drawn: boolean }>()
-  const drawn = here?.everywhere === diagrams ? here.drawn : diagrams
+  if (here !== undefined && here.everywhere !== diagrams) setHere(undefined)
+  const drawn = here?.drawn ?? diagrams
   const schematic =
     !filterActive(filter) && Object.hasOwn(SCHEMATIC_FRAMES, group.name)
   const frame =
