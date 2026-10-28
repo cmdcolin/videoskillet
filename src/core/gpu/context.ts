@@ -279,7 +279,7 @@ export async function initGpu(
   // oxlint-disable-next-line typescript/no-unnecessary-condition
   if (!navigator.gpu) {
     throw new WebGpuUnavailableError(
-      'This browser has no WebGPU support. We do unfortunately require it we utilize WebGPU compute shaders to emulate the analog video signal. Try a recent Chrome, Edge, or Firefox, including their nightly builds, and/or look up how to enable it on your computer',
+      'This browser has no WebGPU support. videoskillet needs WebGPU, because it emulates the analog video signal in WebGPU compute shaders. Try a recent Chrome, Edge or Firefox (nightly builds included), or look up how to enable WebGPU on your computer.',
     )
   }
   // The cheapest device is the one this tab already has. An engine being replaced
