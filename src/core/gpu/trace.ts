@@ -163,12 +163,6 @@ function readSessions(): Session[] {
   }
 }
 
-// The trace the session immediately before this one left behind, or null if
-// there is none.
-export function previousTrace(): Session | null {
-  return trace.history().at(-1) ?? null
-}
-
 function isSession(v: unknown): v is Session {
   return (
     typeof v === 'object' &&

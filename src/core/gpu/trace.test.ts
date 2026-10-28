@@ -39,14 +39,14 @@ describe('trace', () => {
     const seed = JSON.stringify([session(1, 'a|x|'), session(2, 'b|y|')])
     const { mod } = await load(seed)
     expect(mod.trace.history().map(s => s.at)).toEqual([1, 2])
-    expect(mod.previousTrace()?.at).toBe(2)
+    expect(mod.trace.history().at(-1)?.at).toBe(2)
   })
 
   it('adopts a single session written by the one-slot version', async () => {
     // Otherwise upgrading the app throws away the recording of the freeze the
     // user is upgrading to diagnose.
     const { mod } = await load(JSON.stringify(session(7, 'a|stall|')))
-    expect(mod.previousTrace()?.at).toBe(7)
+    expect(mod.trace.history().at(-1)?.at).toBe(7)
   })
 
   it('never reads itself back as its own predecessor', async () => {
@@ -56,7 +56,7 @@ describe('trace', () => {
     mod.trace.add('stall', 'here')
     mod.trace.flush(true)
     expect(mod.trace.history().map(s => s.at)).toEqual([1])
-    expect(mod.previousTrace()?.at).toBe(1)
+    expect(mod.trace.history().at(-1)?.at).toBe(1)
   })
 
   it('appends this session to the stored history', async () => {
@@ -100,7 +100,6 @@ describe('trace', () => {
   it('survives a corrupt store rather than losing the session', async () => {
     const { mod } = await load('not json')
     expect(mod.trace.history()).toEqual([])
-    expect(mod.previousTrace()).toBeNull()
   })
 
   describe('frameless-start run', () => {
