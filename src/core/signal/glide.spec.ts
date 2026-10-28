@@ -140,6 +140,18 @@ describe('Glide', () => {
     expect(live.crtZoom).toBe(4)
   })
 
+  it('picks up where it was after a delay', () => {
+    const g = new Glide(COARSE)
+    const live = { ...DEFAULT_CONTROLS }
+    g.start(live, plan(set({ noiseIre: 10 })), 0)
+    g.apply(live, 500)
+    const mid = live.noiseIre
+    g.delay(2000)
+    g.apply(live, 2500)
+    expect(live.noiseIre).toBe(mid)
+    expect(g.running).toBe(true)
+  })
+
   it('heads for where a held key already is', () => {
     const g = new Glide(COARSE)
     const live = { ...DEFAULT_CONTROLS, crtZoom: 4 }

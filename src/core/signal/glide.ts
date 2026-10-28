@@ -174,6 +174,11 @@ export class Glide {
       : track.value(track.a + (track.b - track.a) * e)
   }
 
+  // Push the rest of the morph `ms` later, for a span the board spent elsewhere.
+  delay(ms: number): void {
+    this.startMs += ms
+  }
+
   stop(): void {
     this.plan = null
     this.from = null

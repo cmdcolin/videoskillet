@@ -1417,7 +1417,7 @@ export class Engine implements EngineApi {
   // value the board has left — and applyMod's restore puts back the glided
   // value, not the pre-morph one, because the glide has already written it.
   private advanceGlide(): void {
-    if (!this.glide.running) return
+    if (!this.glide.running || this.previewSince !== null) return
     const step = this.glide.apply(this.controls, this.now())
     if (step.coarseMoved) this.filtersDirty = true
     // Every frame, unthrottled — one button re-renders. The landing frame is
@@ -1454,7 +1454,16 @@ export class Engine implements EngineApi {
 
   // Hold-to-compare: push `next` to the render path without touching the React
   // snapshot (so the sliders stay put), then `preview(null)` restores from it.
+  // A morph pauses for the hold, since its next frame would write the preview
+  // into the snapshot.
+  private previewSince: number | null = null
+
   preview(next: Controls | null): void {
+    if (next !== null) this.previewSince ??= this.now()
+    else if (this.previewSince !== null) {
+      this.glide.delay(this.now() - this.previewSince)
+      this.previewSince = null
+    }
     const src = next ?? this.snapshot
     for (const k of CONTROL_KEYS) this.controls[k] = src[k]
     this.filtersDirty = true
