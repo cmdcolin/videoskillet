@@ -55,9 +55,7 @@
 // of ten costs one WebGPU session rather than ten. Every key any arm sets is
 // zeroed between arms, so an arm never measures the one before it.
 
-import puppeteer from 'puppeteer-core'
-
-import { FIREFOX } from './browser.mjs'
+import { launchFirefox } from './browser.mjs'
 
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -199,17 +197,7 @@ const STOCK = {
   fbMix: 0,
 }
 
-const browser = await puppeteer.launch({
-  browser: 'firefox',
-  executablePath: FIREFOX,
-  headless: false,
-  extraPrefsFirefox: {
-    'dom.webgpu.enabled': true,
-    'gfx.webgpu.ignore-blocklist': true,
-    'media.navigator.streams.fake': true,
-    'media.navigator.permission.disabled': true,
-  },
-})
+const browser = await launchFirefox({ media: true })
 const page = await browser.newPage()
 let failure = ''
 page.on('pageerror', err => {

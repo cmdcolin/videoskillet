@@ -14,25 +14,16 @@
 // two thirds of a fresh one, because the encoder's B-frames code it against
 // neighbours it does not match, so repeated samples cut a full-window take
 // from about 31 fresh frames a second to about 19.
-import puppeteer from 'puppeteer-core'
-
-import { FIREFOX } from './browser.mjs'
+import { launchFirefox } from './browser.mjs'
 import { appUp } from './until.mjs'
 
 import process from 'node:process'
 
 const port = process.argv[2] ?? '5311'
-const browser = await puppeteer.launch({
-  browser: 'firefox',
-  executablePath: FIREFOX,
-  headless: false,
+const browser = await launchFirefox({
   defaultViewport: null,
   protocolTimeout: 900000,
   args: ['--width=1920', '--height=1080'],
-  extraPrefsFirefox: {
-    'dom.webgpu.enabled': true,
-    'gfx.webgpu.ignore-blocklist': true,
-  },
 })
 try {
   const page = (await browser.pages())[0] ?? (await browser.newPage())

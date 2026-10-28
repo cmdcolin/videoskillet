@@ -15,9 +15,7 @@
 //
 // Secure-context only, so it runs against the app on localhost.
 
-import puppeteer from 'puppeteer-core'
-
-import { FIREFOX } from './browser.mjs'
+import { launchFirefox } from './browser.mjs'
 import { appUp } from './until.mjs'
 
 import process from 'node:process'
@@ -32,15 +30,7 @@ const check = (name, ok, detail = '') => {
   if (!ok) fail.push(name)
 }
 
-const browser = await puppeteer.launch({
-  browser: 'firefox',
-  executablePath: FIREFOX,
-  headless: false,
-  extraPrefsFirefox: {
-    'dom.webgpu.enabled': true,
-    'gfx.webgpu.ignore-blocklist': true,
-  },
-})
+const browser = await launchFirefox()
 const page = await browser.newPage()
 const errors = []
 page.on('pageerror', e => errors.push(String(e).slice(0, 200)))

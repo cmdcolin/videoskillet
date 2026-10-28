@@ -25,9 +25,7 @@
 // Read the output as three numbers per arm: `p50` is the cadence, `p95/p50` is
 // the regularity (1.0 is a metronome), and `renderMs.p95` is what a notify costs.
 
-import puppeteer from 'puppeteer-core'
-
-import { FIREFOX } from './browser.mjs'
+import { launchFirefox } from './browser.mjs'
 // A headed window that gets covered stops being drawn — see frames.mjs.
 import { watchFrames } from './frames.mjs'
 // Boot waited for rather than slept through — see until.mjs.
@@ -47,15 +45,7 @@ const pct = (xs, p) => {
 }
 const r2 = n => (n === null ? null : Math.round(n * 100) / 100)
 
-const browser = await puppeteer.launch({
-  browser: 'firefox',
-  executablePath: FIREFOX,
-  headless: false,
-  extraPrefsFirefox: {
-    'dom.webgpu.enabled': true,
-    'gfx.webgpu.ignore-blocklist': true,
-  },
-})
+const browser = await launchFirefox()
 
 const fails = []
 try {

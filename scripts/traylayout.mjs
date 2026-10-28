@@ -23,9 +23,7 @@
 // rundown is a fixture, and one written directly is both faster and the same
 // every run — which matters when what is being compared is pixel positions.
 
-import puppeteer from 'puppeteer-core'
-
-import { FIREFOX } from './browser.mjs'
+import { launchFirefox } from './browser.mjs'
 import { appUp } from './until.mjs'
 
 import process from 'node:process'
@@ -33,15 +31,7 @@ import process from 'node:process'
 const port = process.argv[2] ?? '5199'
 const url = `http://localhost:${port}/app/`
 
-const browser = await puppeteer.launch({
-  browser: 'firefox',
-  executablePath: FIREFOX,
-  headless: false,
-  extraPrefsFirefox: {
-    'dom.webgpu.enabled': true,
-    'gfx.webgpu.ignore-blocklist': true,
-  },
-})
+const browser = await launchFirefox()
 const page = await browser.newPage()
 await page.setViewport({ width: 1352, height: 900 })
 const errors = []

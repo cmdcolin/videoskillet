@@ -1,6 +1,6 @@
 import puppeteer from 'puppeteer-core'
 
-import { CHROME, FIREFOX } from './browser.mjs'
+import { CHROME, launchFirefox } from './browser.mjs'
 import { CLIPS, demos, S3_PREFIX } from './demos.mjs'
 import { installHelpers } from './drive.mjs'
 import { appUp } from './until.mjs'
@@ -130,17 +130,7 @@ async function record(demo, tmpDir) {
           '--use-fake-ui-for-media-stream',
         ],
       })
-    : puppeteer.launch({
-        browser: 'firefox',
-        executablePath: FIREFOX,
-        headless: false,
-        extraPrefsFirefox: {
-          'dom.webgpu.enabled': true,
-          'gfx.webgpu.ignore-blocklist': true,
-          'media.navigator.streams.fake': true,
-          'media.navigator.permission.disabled': true,
-        },
-      }))
+    : launchFirefox({ media: true }))
   try {
     const page = await browser.newPage()
     // Before `goto`, and never after it: a `setViewport` on a loaded page swaps

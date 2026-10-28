@@ -40,7 +40,7 @@
 
 import puppeteer from 'puppeteer-core'
 
-import { CHROME, FIREFOX } from './browser.mjs'
+import { CHROME, launchFirefox } from './browser.mjs'
 import { installHelpers, SEED, seedStorage, step } from './drive.mjs'
 
 import { writeFileSync } from 'node:fs'
@@ -176,15 +176,7 @@ const browser = await (engine === 'chrome'
         '--use-fake-ui-for-media-stream',
       ],
     })
-  : puppeteer.launch({
-      browser: 'firefox',
-      executablePath: FIREFOX,
-      headless: false,
-      extraPrefsFirefox: {
-        'dom.webgpu.enabled': true,
-        'gfx.webgpu.ignore-blocklist': true,
-      },
-    }))
+  : launchFirefox())
 console.log(`${variants.length} timelines → ${outDir}/`)
 for (const [name, beats] of variants) {
   // A page each, for the reason `appreel.mjs` takes a browser each: a WebGPU

@@ -40,9 +40,7 @@
 // recorder itself, which is the only piece here that has to work against a
 // frame counter the window manager is moving.
 
-import puppeteer from 'puppeteer-core'
-
-import { FIREFOX } from './browser.mjs'
+import { launchFirefox } from './browser.mjs'
 // Boot waited for rather than slept through — see until.mjs.
 import { appUp } from './until.mjs'
 
@@ -83,15 +81,8 @@ const check = (name, ok, detail = '') => {
 // browser took the screen mid-run, and it reports as a `ProtocolError` naming
 // no cause rather than as a slow run. On a shared box that is a harness that
 // fails for reasons that have nothing to do with the app.
-const browser = await puppeteer.launch({
-  browser: 'firefox',
-  executablePath: FIREFOX,
-  headless: false,
+const browser = await launchFirefox({
   protocolTimeout: 480_000,
-  extraPrefsFirefox: {
-    'dom.webgpu.enabled': true,
-    'gfx.webgpu.ignore-blocklist': true,
-  },
 })
 const page = await browser.newPage()
 await page.setViewport({ width: 1352, height: 900 })

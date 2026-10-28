@@ -10,24 +10,12 @@
 // which is why both device pixel ratios are in the list.
 // Usage: node scripts/bandcheck.mjs [port]
 
-import puppeteer from 'puppeteer-core'
-
-import { FIREFOX } from './browser.mjs'
+import { launchFirefox } from './browser.mjs'
 
 const port = process.argv[2] ?? '5199'
 const url = `http://localhost:${port}/app/#src=bars&set=scanBeam:1,scanBloom:0,maskAmt:0,crtZoom:1`
 
-const browser = await puppeteer.launch({
-  browser: 'firefox',
-  executablePath: FIREFOX,
-  headless: false,
-  extraPrefsFirefox: {
-    'dom.webgpu.enabled': true,
-    'gfx.webgpu.ignore-blocklist': true,
-    'media.navigator.streams.fake': true,
-    'media.navigator.permission.disabled': true,
-  },
-})
+const browser = await launchFirefox({ media: true })
 const page = await browser.newPage()
 page.on('pageerror', err =>
   console.log('[pageerror]', String(err).slice(0, 300)),

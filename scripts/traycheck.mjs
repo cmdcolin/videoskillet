@@ -27,9 +27,7 @@
 // the right behaviour and a property of clocking the walk on frames rather than
 // on the wall.
 
-import puppeteer from 'puppeteer-core'
-
-import { FIREFOX } from './browser.mjs'
+import { launchFirefox } from './browser.mjs'
 // A headed window that gets covered stops being drawn — see frames.mjs.
 import { watchFrames } from './frames.mjs'
 // Waiting for an answer rather than for a duration — `until.mjs` says which of
@@ -42,13 +40,8 @@ import process from 'node:process'
 const port = process.argv[2] ?? '5199'
 const url = `http://localhost:${port}/app/`
 
-const browser = await puppeteer.launch({
-  browser: 'firefox',
-  executablePath: FIREFOX,
-  headless: false,
-  extraPrefsFirefox: {
-    'dom.webgpu.enabled': true,
-    'gfx.webgpu.ignore-blocklist': true,
+const browser = await launchFirefox({
+  prefs: {
     // The music arm hands over a track through the file input rather than a
     // click, so there is no user gesture behind the play() that follows and
     // Firefox would refuse it.

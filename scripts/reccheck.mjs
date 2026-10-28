@@ -24,9 +24,7 @@
 //     reported `sps_id out of range` on every frame, which is the shape of
 //     failure a stricter demuxer would turn into a refusal.
 
-import puppeteer from 'puppeteer-core'
-
-import { FIREFOX } from './browser.mjs'
+import { launchFirefox } from './browser.mjs'
 // Boot waited for rather than slept through — see until.mjs.
 import { appUp } from './until.mjs'
 
@@ -51,15 +49,7 @@ const check = (name, ok, detail = '') => {
   if (!ok) fail.push(name)
 }
 
-const browser = await puppeteer.launch({
-  browser: 'firefox',
-  executablePath: FIREFOX,
-  headless: false,
-  extraPrefsFirefox: {
-    'dom.webgpu.enabled': true,
-    'gfx.webgpu.ignore-blocklist': true,
-  },
-})
+const browser = await launchFirefox()
 const page = await browser.newPage()
 await page.setViewport({ width: 1352, height: 900 })
 const errors = []

@@ -44,9 +44,7 @@
 // nothing about rAF and has to say so rather than report a stall — hence
 // `onscreenFraction` in the report, which is the first number to read.
 
-import puppeteer from 'puppeteer-core'
-
-import { FIREFOX } from './browser.mjs'
+import { launchFirefox } from './browser.mjs'
 
 import {
   copyFileSync,
@@ -90,15 +88,9 @@ const CYCLE_PERIOD_MS = 60_000
 const LOOK = 'fbMix:0.45,cfbMix:0.3,phosphor:0.6,crtGlow:0.7,dubGens:3'
 const target = `${url}?src=${src}&set=${LOOK}`
 
-const browser = await puppeteer.launch({
-  browser: 'firefox',
-  executablePath: FIREFOX,
-  headless: false,
-  extraPrefsFirefox: {
-    'dom.webgpu.enabled': true,
-    'gfx.webgpu.ignore-blocklist': true,
-    'media.autoplay.default': 0,
-    'media.autoplay.blocking_policy': 0,
+const browser = await launchFirefox({
+  autoplay: true,
+  prefs: {
     // A fake camera, so `--src=webcam` needs no hardware and no click on a
     // permission prompt — the same pair perf.mjs uses.
     'media.navigator.streams.fake': true,

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import puppeteer from 'puppeteer-core'
 
-import { CHROME, FIREFOX } from './browser.mjs'
+import { CHROME, launchFirefox } from './browser.mjs'
 import {
   BUTTONS,
   CANDIDATES,
@@ -123,15 +123,8 @@ const app = await startDevServer(5294, { path: '/app/' })
 // run, and takes the browser with it. Each button gets a browser of its own and
 // three goes, so one crash costs a retry rather than the run.
 const capture = async (b, box) => {
-  const firefox = await puppeteer.launch({
-    browser: 'firefox',
-    executablePath: FIREFOX,
-    headless: false,
+  const firefox = await launchFirefox({
     protocolTimeout: 480_000,
-    extraPrefsFirefox: {
-      'dom.webgpu.enabled': true,
-      'gfx.webgpu.ignore-blocklist': true,
-    },
   })
   try {
     const page = await firefox.newPage()

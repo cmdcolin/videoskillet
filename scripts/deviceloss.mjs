@@ -19,9 +19,7 @@
 // Modelled on shot.mjs — same browser, same prefs, same "a black frame is a
 // failure, not a pass" rule.
 
-import puppeteer from 'puppeteer-core'
-
-import { FIREFOX } from './browser.mjs'
+import { launchFirefox } from './browser.mjs'
 
 const [base, mode = 'restore', outDir] = process.argv.slice(2)
 if (!base) {
@@ -30,17 +28,7 @@ if (!base) {
 }
 
 const fails = []
-const browser = await puppeteer.launch({
-  browser: 'firefox',
-  executablePath: FIREFOX,
-  headless: false,
-  extraPrefsFirefox: {
-    'dom.webgpu.enabled': true,
-    'gfx.webgpu.ignore-blocklist': true,
-    'media.navigator.streams.fake': true,
-    'media.navigator.permission.disabled': true,
-  },
-})
+const browser = await launchFirefox({ media: true })
 const page = await browser.newPage()
 await page.setViewport({ width: 1352, height: 900 })
 // Only the lines worth reading. React's dev-mode component logging is thousands

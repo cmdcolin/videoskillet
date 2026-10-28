@@ -18,9 +18,7 @@
 // network failure reads as a failure — there is no useful "skipped" here, since
 // the whole subject is the network.
 
-import puppeteer from 'puppeteer-core'
-
-import { FIREFOX } from './browser.mjs'
+import { launchFirefox } from './browser.mjs'
 // A headed window that gets covered stops being drawn — see frames.mjs.
 import { watchFrames } from './frames.mjs'
 // Waiting on the archives rather than on a duration — see until.mjs.
@@ -34,15 +32,7 @@ const check = (ok, what, saw) => {
   if (!ok) failures.push(what)
 }
 
-const browser = await puppeteer.launch({
-  browser: 'firefox',
-  executablePath: FIREFOX,
-  headless: false,
-  extraPrefsFirefox: {
-    'dom.webgpu.enabled': true,
-    'gfx.webgpu.ignore-blocklist': true,
-  },
-})
+const browser = await launchFirefox()
 // Viewport before goto, never after: see the traps list in docs/DEVELOPMENT.md.
 const page = await browser.newPage()
 await page.setViewport({ width: 1352, height: 950 })

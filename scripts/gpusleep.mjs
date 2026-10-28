@@ -1,6 +1,4 @@
-import puppeteer from 'puppeteer-core'
-
-import { FIREFOX } from './browser.mjs'
+import { launchFirefox } from './browser.mjs'
 
 // Does the discrete card suspend underneath a live GPUDevice, and does coming
 // back out of that produce the hang the app now rebuilds through?
@@ -83,17 +81,7 @@ const poller = setInterval(() => {
   }
 }, 250)
 
-const browser = await puppeteer.launch({
-  browser: 'firefox',
-  executablePath: FIREFOX,
-  headless: false,
-  extraPrefsFirefox: {
-    'dom.webgpu.enabled': true,
-    'gfx.webgpu.ignore-blocklist': true,
-    'media.autoplay.default': 0,
-    'media.autoplay.blocking_policy': 0,
-  },
-})
+const browser = await launchFirefox({ autoplay: true })
 
 const page = await browser.newPage()
 await page.setViewport({ width: 1100, height: 760 })

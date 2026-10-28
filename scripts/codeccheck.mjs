@@ -64,9 +64,7 @@
 //     the route buys frame-exactness and not zero-copy — which is what
 //     docs/EDITOR.md predicted and asked to have re-checked.
 
-import puppeteer from 'puppeteer-core'
-
-import { FIREFOX } from './browser.mjs'
+import { launchFirefox } from './browser.mjs'
 
 import { createServer } from 'node:http'
 import process from 'node:process'
@@ -88,15 +86,8 @@ const server = createServer((_req, res) => {
 await new Promise(r => server.listen(0, '127.0.0.1', r))
 const port = server.address().port
 
-const browser = await puppeteer.launch({
-  browser: 'firefox',
-  executablePath: FIREFOX,
-  headless: false,
+const browser = await launchFirefox({
   protocolTimeout: 300_000,
-  extraPrefsFirefox: {
-    'dom.webgpu.enabled': true,
-    'gfx.webgpu.ignore-blocklist': true,
-  },
 })
 const page = await browser.newPage()
 await page.setViewport({ width: 900, height: 700 })

@@ -17,7 +17,7 @@
 
 import puppeteer from 'puppeteer-core'
 
-import { CHROME, FIREFOX } from './browser.mjs'
+import { CHROME, FIREFOX, launchFirefox } from './browser.mjs'
 
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
@@ -271,17 +271,9 @@ const launch = () =>
           '--use-fake-ui-for-media-stream',
         ],
       })
-    : puppeteer.launch({
-        browser: 'firefox',
-        executablePath: FIREFOX,
-        headless: false,
+    : launchFirefox({
         protocolTimeout: 600_000,
-        extraPrefsFirefox: {
-          'dom.webgpu.enabled': true,
-          'gfx.webgpu.ignore-blocklist': true,
-          'media.navigator.streams.fake': true,
-          'media.navigator.permission.disabled': true,
-        },
+        media: true,
       })
 
 // One browser does not survive a long batch: after a handful of WebGPU sessions

@@ -20,9 +20,7 @@
 // Deliberately not part of `pnpm test` — it needs a GPU, a display and ~40 s.
 // Usage: node scripts/pixelcheck.mjs [--url http://localhost:5199/app]
 
-import puppeteer from 'puppeteer-core'
-
-import { FIREFOX } from './browser.mjs'
+import { launchFirefox } from './browser.mjs'
 import { startDevServer } from './devserver.mjs'
 // Boot waited for rather than slept through — see until.mjs.
 import { appUp } from './until.mjs'
@@ -34,15 +32,7 @@ const PORT = 5197
 const server = baseUrl ? null : await startDevServer(PORT, { path: '/app/' })
 const base = baseUrl ?? `${server.url}/app`
 
-const browser = await puppeteer.launch({
-  browser: 'firefox',
-  executablePath: FIREFOX,
-  headless: false,
-  extraPrefsFirefox: {
-    'dom.webgpu.enabled': true,
-    'gfx.webgpu.ignore-blocklist': true,
-  },
-})
+const browser = await launchFirefox()
 
 // centres of the six 75% bars in canvas fractions (x), on the upper bars row
 const BAR_X = [0.2, 0.35, 0.5, 0.65, 0.8]

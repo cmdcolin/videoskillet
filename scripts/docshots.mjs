@@ -21,9 +21,7 @@
 // hosted instead: --upload copies them to S3 under the same prefix the README's
 // demo uses (needs the `colin` AWS profile).
 
-import puppeteer from 'puppeteer-core'
-
-import { FIREFOX } from './browser.mjs'
+import { launchFirefox } from './browser.mjs'
 import { SPECS } from './docshot-specs.mjs'
 // Seeding, element resolution and the actions live in drive.mjs — `appreel.mjs`
 // drives the same app to record its window, and neither harness owns that.
@@ -453,19 +451,13 @@ function writeManifest() {
 }
 
 const launchBrowser = () =>
-  puppeteer.launch({
-    browser: 'firefox',
-    executablePath: FIREFOX,
-    headless: false,
+  launchFirefox({
     // A clip that hangs page-side should fail its shot and retry rather than
     // sit forever; the ceiling has to clear the time a finished recording takes
     // to cross into node as a data url, which for a ten-second clip is seconds.
     protocolTimeout: 180_000,
-    extraPrefsFirefox: {
-      'dom.webgpu.enabled': true,
-      'gfx.webgpu.ignore-blocklist': true,
-      'media.navigator.streams.fake': true,
-      'media.navigator.permission.disabled': true,
+    media: true,
+    prefs: {
       // Keep the refresh driver on a timer at a fixed rate rather than on
       // vsync, and stop the timer budget throttling that a window which isn't
       // frontmost otherwise gets. Firefox has no requestFrame on a canvas

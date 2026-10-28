@@ -6,24 +6,14 @@
 //
 //   node scripts/composecheck.mjs [url]
 
-import puppeteer from 'puppeteer-core'
-
-import { FIREFOX } from './browser.mjs'
+import { launchFirefox } from './browser.mjs'
 // Boot waited for rather than slept through — see until.mjs.
 import { appUp } from './until.mjs'
 
 const url = process.argv[2] ?? 'http://localhost:5381/app/'
 const fails = []
 
-const browser = await puppeteer.launch({
-  browser: 'firefox',
-  executablePath: FIREFOX,
-  headless: false,
-  extraPrefsFirefox: {
-    'dom.webgpu.enabled': true,
-    'gfx.webgpu.ignore-blocklist': true,
-  },
-})
+const browser = await launchFirefox()
 try {
   const page = await browser.newPage()
   await page.setViewport({ width: 1352, height: 900 })

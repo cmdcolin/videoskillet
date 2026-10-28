@@ -42,9 +42,7 @@
 // `ProtocolError` naming no cause, which is why everything below is as few
 // stepped frames as the claims allow.
 
-import puppeteer from 'puppeteer-core'
-
-import { FIREFOX } from './browser.mjs'
+import { launchFirefox } from './browser.mjs'
 // Boot waited for rather than slept through — see until.mjs.
 import { appUp } from './until.mjs'
 
@@ -60,20 +58,13 @@ const check = (name, ok, detail = '') => {
   if (!ok) fail.push(name)
 }
 
-const browser = await puppeteer.launch({
-  browser: 'firefox',
-  executablePath: FIREFOX,
-  headless: false,
+const browser = await launchFirefox({
   // 480s, matching `rendercheck.mjs` and for the same reason: a run that takes
   // two minutes with the window in front takes far longer behind another one,
   // and it reports as a `ProtocolError` naming no cause rather than as a slow
   // run. On a shared box that is a harness that fails for reasons that have
   // nothing to do with the app.
   protocolTimeout: 480_000,
-  extraPrefsFirefox: {
-    'dom.webgpu.enabled': true,
-    'gfx.webgpu.ignore-blocklist': true,
-  },
 })
 const page = await browser.newPage()
 await page.setViewport({ width: 1352, height: 900 })

@@ -7,25 +7,13 @@
 //
 // Usage: node scripts/palettecheck.mjs [url]
 
-import puppeteer from 'puppeteer-core'
-
-import { FIREFOX } from './browser.mjs'
+import { launchFirefox } from './browser.mjs'
 
 // The address bar carries the look by name, so the check reads it straight
 // back — see scripts/linkcheck.mjs for the contract itself.
 const url = process.argv[2] ?? 'http://localhost:5173/app/'
 
-const browser = await puppeteer.launch({
-  browser: 'firefox',
-  executablePath: FIREFOX,
-  headless: false,
-  extraPrefsFirefox: {
-    'dom.webgpu.enabled': true,
-    'gfx.webgpu.ignore-blocklist': true,
-    'media.navigator.streams.fake': true,
-    'media.navigator.permission.disabled': true,
-  },
-})
+const browser = await launchFirefox({ media: true })
 const page = await browser.newPage()
 await page.setViewport({ width: 1352, height: 900 })
 let failure = ''

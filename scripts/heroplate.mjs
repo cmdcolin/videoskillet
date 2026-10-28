@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import puppeteer from 'puppeteer-core'
 
-import { CHROME, FIREFOX } from './browser.mjs'
+import { CHROME, launchFirefox } from './browser.mjs'
 import { startDevServer } from './devserver.mjs'
 import { PRESET, SET } from './herolook.mjs'
 
@@ -238,15 +238,7 @@ const platePort = plateServer.address().port
 // shared, and a server someone else is editing against reloads mid-capture.
 const app = await startDevServer(5293, { path: '/app/' })
 
-const firefox = await puppeteer.launch({
-  browser: 'firefox',
-  executablePath: FIREFOX,
-  headless: false,
-  extraPrefsFirefox: {
-    'dom.webgpu.enabled': true,
-    'gfx.webgpu.ignore-blocklist': true,
-  },
-})
+const firefox = await launchFirefox()
 const page = await firefox.newPage()
 await page.setViewport({ width: 1352, height: 900 })
 let failure = ''

@@ -49,9 +49,7 @@
 // - For A/B, alternate base and patched runs back to back; session-to-session
 //   GPU clock drift is several percent.
 
-import puppeteer from 'puppeteer-core'
-
-import { FIREFOX } from './browser.mjs'
+import { launchFirefox } from './browser.mjs'
 
 const args = process.argv.slice(2)
 const ablate = args.includes('--ablate')
@@ -79,17 +77,7 @@ const spread = ts =>
   ts.length < 2 ? 0 : (Math.max(...ts) - Math.min(...ts)) / Math.min(...ts)
 const disturbed = ts => spread(ts) > SPREAD_LIMIT
 
-const browser = await puppeteer.launch({
-  browser: 'firefox',
-  executablePath: FIREFOX,
-  headless: false,
-  extraPrefsFirefox: {
-    'dom.webgpu.enabled': true,
-    'gfx.webgpu.ignore-blocklist': true,
-    'media.navigator.streams.fake': true,
-    'media.navigator.permission.disabled': true,
-  },
-})
+const browser = await launchFirefox({ media: true })
 try {
   const page = await browser.newPage()
   page.on('pageerror', err =>

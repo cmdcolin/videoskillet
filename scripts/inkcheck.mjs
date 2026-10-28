@@ -40,9 +40,7 @@
 // been keyed on the row. Portrait is left out on purpose: it hands the panel the
 // whole 390px screen, so it is the roomiest of the four and cannot fail alone.
 
-import puppeteer from 'puppeteer-core'
-
-import { FIREFOX } from './browser.mjs'
+import { launchFirefox } from './browser.mjs'
 // A headed window that gets covered stops being drawn — see frames.mjs.
 import { watchFrames } from './frames.mjs'
 // Boot waited for rather than slept through — see until.mjs.
@@ -57,15 +55,7 @@ const settle = ms => new Promise(r => setTimeout(r, ms))
 // dies with "Attempted to use detached Frame" — which reads exactly like the
 // panel having crashed. Same reasoning as panelcheck's `phase`.
 const shell = async (name, viewport, body) => {
-  const browser = await puppeteer.launch({
-    browser: 'firefox',
-    executablePath: FIREFOX,
-    headless: false,
-    extraPrefsFirefox: {
-      'dom.webgpu.enabled': true,
-      'gfx.webgpu.ignore-blocklist': true,
-    },
-  })
+  const browser = await launchFirefox()
   try {
     const page = await browser.newPage()
     await page.setViewport(viewport)

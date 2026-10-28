@@ -20,9 +20,7 @@
 // meaningless. Each arm therefore uses its own url with a cache-busting query,
 // so the two are the same bytes and different cache entries.
 
-import puppeteer from 'puppeteer-core'
-
-import { FIREFOX } from './browser.mjs'
+import { launchFirefox } from './browser.mjs'
 // Boot waited for rather than slept through — see until.mjs.
 import { appUp } from './until.mjs'
 
@@ -38,15 +36,8 @@ const check = (name, ok, detail = '') => {
   if (!ok) fail.push(name)
 }
 
-const browser = await puppeteer.launch({
-  browser: 'firefox',
-  executablePath: FIREFOX,
-  headless: false,
+const browser = await launchFirefox({
   protocolTimeout: 240_000,
-  extraPrefsFirefox: {
-    'dom.webgpu.enabled': true,
-    'gfx.webgpu.ignore-blocklist': true,
-  },
 })
 const page = await browser.newPage()
 await page.setViewport({ width: 1352, height: 900 })

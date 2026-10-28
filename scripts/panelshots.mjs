@@ -24,9 +24,7 @@
 // somewhere else will differ everywhere at once; that reads as "regenerate",
 // not as a regression, and --update is how.
 
-import puppeteer from 'puppeteer-core'
-
-import { FIREFOX } from './browser.mjs'
+import { launchFirefox } from './browser.mjs'
 import { startDevServer } from './devserver.mjs'
 // Boot waited for rather than slept through — see until.mjs.
 import { appUp } from './until.mjs'
@@ -216,15 +214,7 @@ const fails = []
 const report = []
 let browser
 try {
-  browser = await puppeteer.launch({
-    browser: 'firefox',
-    executablePath: FIREFOX,
-    headless: false,
-    extraPrefsFirefox: {
-      'dom.webgpu.enabled': true,
-      'gfx.webgpu.ignore-blocklist': true,
-    },
-  })
+  browser = await launchFirefox()
   const page = await browser.newPage()
   // DPR 1 and a fixed viewport: the panel is a fixed 332px here, and a scaled
   // shot only adds resampling noise to the diff.

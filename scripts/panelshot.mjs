@@ -4,9 +4,7 @@
 // Each clickText presses the first element under the group whose aria-label or
 // text matches, so a diagram box can be opened before the shot.
 
-import puppeteer from 'puppeteer-core'
-
-import { FIREFOX } from './browser.mjs'
+import { launchFirefox } from './browser.mjs'
 import { SEED, seedStorage } from './drive.mjs'
 
 const args = process.argv.slice(2)
@@ -17,13 +15,8 @@ const [url, out, phase, group, ...clicks] = args.filter(
   a => !a.startsWith('--dpr=') && !a.startsWith('--hover='),
 )
 
-const browser = await puppeteer.launch({
-  browser: 'firefox',
-  executablePath: FIREFOX,
-  headless: false,
-  extraPrefsFirefox: {
-    'dom.webgpu.enabled': true,
-    'gfx.webgpu.ignore-blocklist': true,
+const browser = await launchFirefox({
+  prefs: {
     'layout.css.devPixelsPerPx': dpr,
   },
 })

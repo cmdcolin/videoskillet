@@ -12,24 +12,14 @@
 // panel, the unfolded preset catalog, the MIDI dialog) and fails when one
 // measures differently. A button that is meant to differ belongs in EXEMPT.
 
-import puppeteer from 'puppeteer-core'
-
-import { FIREFOX } from './browser.mjs'
+import { launchFirefox } from './browser.mjs'
 
 const url = process.argv[2] ?? 'http://localhost:5401/app/'
 const TOLERANCE = 0.5
 const CLASSES = ['_outline_', '_chromeBtn_', '_btn_', '_chip_', '_moreChip_']
 const EXEMPT = []
 
-const browser = await puppeteer.launch({
-  browser: 'firefox',
-  executablePath: FIREFOX,
-  headless: false,
-  extraPrefsFirefox: {
-    'dom.webgpu.enabled': true,
-    'gfx.webgpu.ignore-blocklist': true,
-  },
-})
+const browser = await launchFirefox()
 const page = await browser.newPage()
 await page.setViewport({ width: 1352, height: 900 })
 await page.goto(url, { waitUntil: 'domcontentloaded' })

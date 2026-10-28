@@ -34,9 +34,7 @@
 // OS leaves behind, and what is under test is whether the chip notices the hand
 // is empty.
 
-import puppeteer from 'puppeteer-core'
-
-import { FIREFOX } from './browser.mjs'
+import { launchFirefox } from './browser.mjs'
 // A headed window that gets covered stops being drawn — see frames.mjs.
 import { watchFrames } from './frames.mjs'
 import { appUp } from './until.mjs'
@@ -48,17 +46,7 @@ const check = (ok, msg) => {
 }
 const settle = ms => new Promise(r => setTimeout(r, ms))
 
-const browser = await puppeteer.launch({
-  browser: 'firefox',
-  executablePath: FIREFOX,
-  headless: false,
-  extraPrefsFirefox: {
-    'dom.webgpu.enabled': true,
-    'gfx.webgpu.ignore-blocklist': true,
-    'media.navigator.streams.fake': true,
-    'media.navigator.permission.disabled': true,
-  },
-})
+const browser = await launchFirefox({ media: true })
 
 try {
   const page = await browser.newPage()

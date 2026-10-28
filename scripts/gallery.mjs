@@ -3,9 +3,7 @@
 // (feedback looks need time to develop), and save the canvas.
 // Usage: node scripts/gallery.mjs [outDir=docs/gallery] [url=http://localhost:5199/app/]
 
-import puppeteer from 'puppeteer-core'
-
-import { FIREFOX } from './browser.mjs'
+import { launchFirefox } from './browser.mjs'
 // Boot waited for rather than slept through — see until.mjs.
 import { appUp } from './until.mjs'
 
@@ -22,15 +20,7 @@ const SHOTS = [
   { file: 'dirty-mix', preset: 'dirty mix', frames: 150, srcb: 'sweep' },
 ]
 
-const browser = await puppeteer.launch({
-  browser: 'firefox',
-  executablePath: FIREFOX,
-  headless: false,
-  extraPrefsFirefox: {
-    'dom.webgpu.enabled': true,
-    'gfx.webgpu.ignore-blocklist': true,
-  },
-})
+const browser = await launchFirefox()
 
 for (const shot of SHOTS) {
   const page = await browser.newPage()

@@ -43,7 +43,7 @@
 // bisection for `value` runs across evaluates rather than inside one.
 import puppeteer from 'puppeteer-core'
 
-import { CHROME, FIREFOX } from './browser.mjs'
+import { CHROME, launchFirefox } from './browser.mjs'
 import { installHelpers, SEED, seedStorage, step } from './drive.mjs'
 
 import { execFileSync } from 'node:child_process'
@@ -225,15 +225,7 @@ const browser = await (engine === 'chrome'
         '--use-fake-ui-for-media-stream',
       ],
     })
-  : puppeteer.launch({
-      browser: 'firefox',
-      executablePath: FIREFOX,
-      headless: false,
-      extraPrefsFirefox: {
-        'dom.webgpu.enabled': true,
-        'gfx.webgpu.ignore-blocklist': true,
-      },
-    }))
+  : launchFirefox())
 
 const stepping = async (page, ms) => {
   const until = Date.now() + ms

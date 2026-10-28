@@ -17,9 +17,7 @@
 // remounts the app and takes the bindings with it. Class names are hashed in a
 // build, so every selector below reaches for an id, a title or the text.
 
-import puppeteer from 'puppeteer-core'
-
-import { FIREFOX } from './browser.mjs'
+import { launchFirefox } from './browser.mjs'
 // A headed window that gets covered stops being drawn — see frames.mjs.
 import { watchFrames } from './frames.mjs'
 // Boot waited for rather than slept through — see until.mjs.
@@ -27,15 +25,7 @@ import { appUp } from './until.mjs'
 
 const url = process.argv[2] ?? 'http://localhost:5199/app/'
 
-const browser = await puppeteer.launch({
-  browser: 'firefox',
-  executablePath: FIREFOX,
-  headless: false,
-  extraPrefsFirefox: {
-    'dom.webgpu.enabled': true,
-    'gfx.webgpu.ignore-blocklist': true,
-  },
-})
+const browser = await launchFirefox()
 const page = await browser.newPage()
 await page.setViewport({ width: 1352, height: 1000 })
 const fails = []

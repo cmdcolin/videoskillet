@@ -55,9 +55,7 @@
 // (vSize, bendAmt, hvSag, crtSpot, crtConverge, crtSvm, crtPurity, maskAmt,
 // crtZoom). Those hold a floor of 0 together.
 
-import puppeteer from 'puppeteer-core'
-
-import { FIREFOX } from './browser.mjs'
+import { launchFirefox } from './browser.mjs'
 
 const [urlA, urlB, framesArg] = process.argv.slice(2)
 const frames = Number(framesArg ?? 300)
@@ -68,17 +66,7 @@ if (!urlA || !urlB) {
 }
 
 const grab = async url => {
-  const browser = await puppeteer.launch({
-    browser: 'firefox',
-    executablePath: FIREFOX,
-    headless: false,
-    extraPrefsFirefox: {
-      'dom.webgpu.enabled': true,
-      'gfx.webgpu.ignore-blocklist': true,
-      'media.navigator.streams.fake': true,
-      'media.navigator.permission.disabled': true,
-    },
-  })
+  const browser = await launchFirefox({ media: true })
   try {
     const page = await browser.newPage()
     page.on('pageerror', e =>

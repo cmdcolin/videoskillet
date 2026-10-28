@@ -39,9 +39,7 @@
 //    width, where the panel's `margin-inline: auto` cancels the stretch it took
 //    its width from, and a 340px popout laid the panel out 0px wide
 
-import puppeteer from 'puppeteer-core'
-
-import { FIREFOX } from './browser.mjs'
+import { launchFirefox } from './browser.mjs'
 // A headed window that gets covered stops being drawn — see frames.mjs.
 import { watchFrames } from './frames.mjs'
 // Boot waited for rather than slept through — see until.mjs.
@@ -58,17 +56,7 @@ const check = (ok, msg) => {
 // evaluate after that dies with "Attempted to use detached Frame", which reads
 // exactly like the panel having crashed.
 const phase = async (name, { seed = null, query = '' } = {}, body) => {
-  const browser = await puppeteer.launch({
-    browser: 'firefox',
-    executablePath: FIREFOX,
-    headless: false,
-    extraPrefsFirefox: {
-      'dom.webgpu.enabled': true,
-      'gfx.webgpu.ignore-blocklist': true,
-      'media.navigator.streams.fake': true,
-      'media.navigator.permission.disabled': true,
-    },
-  })
+  const browser = await launchFirefox({ media: true })
   try {
     const page = await browser.newPage()
     await page.setViewport({ width: 1352, height: 900 })

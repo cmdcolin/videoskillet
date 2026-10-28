@@ -31,9 +31,7 @@
 // unambiguous: `public/test.mp4` is 6s and loops on its own, so "the playhead
 // went backwards" cannot tell a cued wrap from the clip ending.
 
-import puppeteer from 'puppeteer-core'
-
-import { FIREFOX } from './browser.mjs'
+import { launchFirefox } from './browser.mjs'
 // A headed window that gets covered stops being drawn — see frames.mjs.
 import { watchFrames } from './frames.mjs'
 // Waiting on the clip's own playhead rather than on a duration — see until.mjs.
@@ -47,18 +45,13 @@ const OUT = 1.4
 const WATCH_MS = 6000
 
 const launch = () =>
-  puppeteer.launch({
-    browser: 'firefox',
-    executablePath: FIREFOX,
-    headless: false,
-    extraPrefsFirefox: {
-      'dom.webgpu.enabled': true,
-      'gfx.webgpu.ignore-blocklist': true,
+  launchFirefox({
+    protocolTimeout: 60000,
+    prefs: {
       // An occluded window has its rAF throttled to nothing, and this harness
       // reads a per-frame log. Same reason scripts/loopseek.mjs sets it.
       'layout.frame_rate': 60,
     },
-    protocolTimeout: 60000,
   })
 
 // A fresh browser per arm. A second presenting page in the same browser came back

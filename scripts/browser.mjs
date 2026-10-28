@@ -9,6 +9,8 @@
 // FIREFOX= and CHROME= override, for a build installed somewhere else or for
 // pinning a specific one while bisecting a browser regression.
 
+import puppeteer from 'puppeteer-core'
+
 import { existsSync } from 'node:fs'
 import { env, platform } from 'node:process'
 
@@ -40,3 +42,34 @@ export const CHROME = found(
       ],
   env.CHROME,
 )
+
+// Firefox with WebGPU on, which every harness here needs. `media` lets a page
+// open a fake camera and microphone without asking, `autoplay` lets a video
+// play with sound, `prefs` adds or overrides any other pref, and the rest goes
+// to `puppeteer.launch` as is.
+export const launchFirefox = ({
+  media = false,
+  autoplay = false,
+  headless = false,
+  prefs = {},
+  ...options
+} = {}) =>
+  puppeteer.launch({
+    browser: 'firefox',
+    executablePath: FIREFOX,
+    headless,
+    ...options,
+    extraPrefsFirefox: {
+      'dom.webgpu.enabled': true,
+      'gfx.webgpu.ignore-blocklist': true,
+      ...(media && {
+        'media.navigator.permission.disabled': true,
+        'media.navigator.streams.fake': true,
+      }),
+      ...(autoplay && {
+        'media.autoplay.default': 0,
+        'media.autoplay.blocking_policy': 0,
+      }),
+      ...prefs,
+    },
+  })

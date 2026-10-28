@@ -29,24 +29,14 @@
 // Says nothing about Safari, which is where the report that prompted this came
 // from. Run it there.
 
-import puppeteer from 'puppeteer-core'
-
-import { FIREFOX } from './browser.mjs'
+import { launchFirefox } from './browser.mjs'
 import { appUp } from './until.mjs'
 
 import process from 'node:process'
 
 const port = process.argv[2] ?? '5199'
 
-const browser = await puppeteer.launch({
-  browser: 'firefox',
-  executablePath: FIREFOX,
-  headless: false,
-  extraPrefsFirefox: {
-    'dom.webgpu.enabled': true,
-    'gfx.webgpu.ignore-blocklist': true,
-  },
-})
+const browser = await launchFirefox()
 const page = await browser.newPage()
 await page.goto(`http://localhost:${port}/app/`, {
   waitUntil: 'domcontentloaded',

@@ -2,24 +2,12 @@
 // server, wait real time for GPU frames, dump page console, save a screenshot.
 // Usage: node scripts/shot.mjs <url> <out.png> [waitMs]
 
-import puppeteer from 'puppeteer-core'
-
-import { FIREFOX } from './browser.mjs'
+import { launchFirefox } from './browser.mjs'
 
 const [url, out, waitMsArg] = process.argv.slice(2)
 const waitMs = Number(waitMsArg ?? 6000)
 
-const browser = await puppeteer.launch({
-  browser: 'firefox',
-  executablePath: FIREFOX,
-  headless: false,
-  extraPrefsFirefox: {
-    'dom.webgpu.enabled': true,
-    'gfx.webgpu.ignore-blocklist': true,
-    'media.navigator.streams.fake': true,
-    'media.navigator.permission.disabled': true,
-  },
-})
+const browser = await launchFirefox({ media: true })
 const page = await browser.newPage()
 await page.setViewport({ width: 1352, height: 900 })
 let failure = ''

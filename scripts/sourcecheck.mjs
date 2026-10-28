@@ -37,9 +37,7 @@
 //
 // Usage: node scripts/sourcecheck.mjs [baseUrl]
 
-import puppeteer from 'puppeteer-core'
-
-import { FIREFOX } from './browser.mjs'
+import { launchFirefox } from './browser.mjs'
 // Boot waited for rather than slept through — see until.mjs.
 import { appUp } from './until.mjs'
 
@@ -52,17 +50,7 @@ const base = `${origin}?srcb=none&set=bGain:1`
 // build wants to be wrong in the safe direction.
 const MOVED_MIN = 1
 
-const browser = await puppeteer.launch({
-  browser: 'firefox',
-  executablePath: FIREFOX,
-  headless: false,
-  extraPrefsFirefox: {
-    'dom.webgpu.enabled': true,
-    'gfx.webgpu.ignore-blocklist': true,
-    'media.navigator.streams.fake': true,
-    'media.navigator.permission.disabled': true,
-  },
-})
+const browser = await launchFirefox({ media: true })
 const page = await browser.newPage()
 // Before `goto`, never after: a viewport set after load swaps the realm and
 // every later evaluate sees `window.vf` as undefined, which reads exactly like

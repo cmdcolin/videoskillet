@@ -30,9 +30,7 @@
 // at 1 Hz. A window that stopped drawing measured nothing, so it exits
 // STALL_EXIT (75) as sweep.mjs expects.
 
-import puppeteer from 'puppeteer-core'
-
-import { FIREFOX } from './browser.mjs'
+import { launchFirefox } from './browser.mjs'
 import { appUp } from './until.mjs'
 
 import { execFileSync, spawnSync } from 'node:child_process'
@@ -108,19 +106,11 @@ if (!existsSync(CLIP)) {
   ])
 }
 
-const browser = await puppeteer.launch({
-  browser: 'firefox',
-  executablePath: FIREFOX,
-  headless: false,
+const browser = await launchFirefox({
   defaultViewport: null,
   protocolTimeout: 300000,
   args: [`--width=${VW}`, `--height=${VH}`],
-  extraPrefsFirefox: {
-    'dom.webgpu.enabled': true,
-    'gfx.webgpu.ignore-blocklist': true,
-    'media.autoplay.default': 0,
-    'media.autoplay.blocking_policy': 0,
-  },
+  autoplay: true,
 })
 const out = mkdtempSync(join(tmpdir(), 'rectakecheck-'))
 

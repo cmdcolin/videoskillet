@@ -26,19 +26,12 @@
 //
 // Usage: node scripts/buzzsound.mjs [url]
 
-import puppeteer from 'puppeteer-core'
-
-import { FIREFOX } from './browser.mjs'
+import { launchFirefox } from './browser.mjs'
 
 const base = process.argv[2] ?? 'http://localhost:5199/app/'
 
-const browser = await puppeteer.launch({
-  browser: 'firefox',
-  executablePath: FIREFOX,
-  headless: false,
-  extraPrefsFirefox: {
-    'dom.webgpu.enabled': true,
-    'gfx.webgpu.ignore-blocklist': true,
+const browser = await launchFirefox({
+  prefs: {
     // The context is built from a render-loop callback rather than a click, so
     // without this it stays suspended and every arm reads silence.
     'media.autoplay.default': 0,

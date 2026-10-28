@@ -103,9 +103,7 @@
 // chains `slot.attach` off that same promise, so a slot that never rolls is a
 // shape that can happen — unrelated to looping, but it is the same promise.
 
-import puppeteer from 'puppeteer-core'
-
-import { FIREFOX } from './browser.mjs'
+import { launchFirefox } from './browser.mjs'
 
 import { execFileSync } from 'node:child_process'
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
@@ -483,13 +481,11 @@ const analyse = ({ frames, shown, seeks, wraps, ticks }, inPoint, length) => {
 const ms = x => (Number.isNaN(x) ? '  --' : x.toFixed(0).padStart(4))
 const rows = []
 
-const browser = await puppeteer.launch({
-  browser: 'firefox',
-  executablePath: FIREFOX,
-  headless: false,
-  extraPrefsFirefox: {
-    'dom.webgpu.enabled': true,
-    'gfx.webgpu.ignore-blocklist': true,
+const browser = await launchFirefox({
+  // Comfortably past the in-page watchdog, so a stall is reported by the page as
+  // data rather than thrown by the transport as a timeout.
+  protocolTimeout: 60000,
+  prefs: {
     // Drive the refresh driver off a software timer at a fixed rate instead of
     // vsync. Two reasons, and the first one cost a whole run: an occluded or
     // unfocused window has its rAF throttled to nothing, which arrives as a run
@@ -499,9 +495,6 @@ const browser = await puppeteer.launch({
     // cadence, and 60 can.
     'layout.frame_rate': 60,
   },
-  // Comfortably past the in-page watchdog, so a stall is reported by the page as
-  // data rather than thrown by the transport as a timeout.
-  protocolTimeout: 60000,
 })
 try {
   const page = await browser.newPage()

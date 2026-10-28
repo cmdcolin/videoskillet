@@ -27,9 +27,7 @@
 // See docs/adr/0004. If a future Firefox makes the `destroy` variants survive,
 // this is the file that says so.
 
-import puppeteer from 'puppeteer-core'
-
-import { FIREFOX } from './browser.mjs'
+import { launchFirefox } from './browser.mjs'
 
 import { createServer } from 'node:http'
 
@@ -127,16 +125,7 @@ const port = server.address().port
 const wait = ms => new Promise(r => setTimeout(r, ms))
 const verdicts = []
 
-const launch = () =>
-  puppeteer.launch({
-    browser: 'firefox',
-    executablePath: FIREFOX,
-    headless: false,
-    extraPrefsFirefox: {
-      'dom.webgpu.enabled': true,
-      'gfx.webgpu.ignore-blocklist': true,
-    },
-  })
+const launch = () => launchFirefox()
 
 // rAF delivered over 1.5 s. Zero from a visible tab is the failure this whole
 // file is about: the page is fine, the browser has stopped scheduling it.

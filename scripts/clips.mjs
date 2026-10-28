@@ -1,6 +1,4 @@
-import puppeteer from 'puppeteer-core'
-
-import { FIREFOX } from './browser.mjs'
+import { launchFirefox } from './browser.mjs'
 
 // Capture the README's motion clips. Each shot is fully declarative: the URL
 // alone (?iurl / ?iurlb / ?preset / ?set) specifies the source image(s), preset,
@@ -85,15 +83,7 @@ const SHOTS = [
 // One browser per clip: captureStream stalls on an occluded window, so each
 // clip's window must be the sole focused one.
 async function record(shot) {
-  const browser = await puppeteer.launch({
-    browser: 'firefox',
-    executablePath: FIREFOX,
-    headless: false,
-    extraPrefsFirefox: {
-      'dom.webgpu.enabled': true,
-      'gfx.webgpu.ignore-blocklist': true,
-    },
-  })
+  const browser = await launchFirefox()
   try {
     const page = await browser.newPage()
     await page.setViewport({ width: 1100, height: 600 })

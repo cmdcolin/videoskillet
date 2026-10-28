@@ -66,7 +66,7 @@
 
 import puppeteer from 'puppeteer-core'
 
-import { CHROME, FIREFOX } from './browser.mjs'
+import { CHROME, launchFirefox } from './browser.mjs'
 import { installHelpers, SEED, seedStorage, step } from './drive.mjs'
 import {
   beatSecs,
@@ -1085,15 +1085,9 @@ for (const slide of wanted) {
               '--use-fake-ui-for-media-stream',
             ],
           })
-        : puppeteer.launch({
-            browser: 'firefox',
-            executablePath: FIREFOX,
-            headless: false,
-            extraPrefsFirefox: {
-              'dom.webgpu.enabled': true,
-              'gfx.webgpu.ignore-blocklist': true,
-              'media.navigator.streams.fake': true,
-              'media.navigator.permission.disabled': true,
+        : launchFirefox({
+            media: true,
+            prefs: {
               // Chrome says the same thing per page rather than per browser, in
               // `record` — the prefs are a browser-wide switch and there is no
               // Firefox equivalent of `emulateMediaFeatures` under BiDi.

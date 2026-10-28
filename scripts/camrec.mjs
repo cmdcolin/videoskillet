@@ -19,9 +19,7 @@
 // megabytes of picture that queue held, the file's size, and the browser's
 // peak resident memory.
 
-import puppeteer from 'puppeteer-core'
-
-import { FIREFOX } from './browser.mjs'
+import { launchFirefox } from './browser.mjs'
 import { startDevServer } from './devserver.mjs'
 
 import { execFileSync } from 'node:child_process'
@@ -51,13 +49,8 @@ const APP = `http://127.0.0.1:${PORT}`
 
 const server = await startDevServer(PORT, { path: '/cam/' })
 
-const browser = await puppeteer.launch({
-  browser: 'firefox',
-  executablePath: FIREFOX,
-  headless: false,
-  extraPrefsFirefox: {
-    'dom.webgpu.enabled': true,
-    'gfx.webgpu.ignore-blocklist': true,
+const browser = await launchFirefox({
+  prefs: {
     'media.navigator.permission.disabled': true,
   },
 })

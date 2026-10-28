@@ -1,6 +1,4 @@
-import puppeteer from 'puppeteer-core'
-
-import { FIREFOX } from './browser.mjs'
+import { launchFirefox } from './browser.mjs'
 
 // How many times can one tab load a WebGPU page before Firefox stops giving it
 // animation frames?
@@ -79,15 +77,7 @@ const at = () => ((Date.now() - t0) / 1000).toFixed(0).padStart(4)
 const log = m => console.log(`${at()}s ${m}`)
 const settle = ms => new Promise(r => setTimeout(r, ms))
 
-const browser = await puppeteer.launch({
-  browser: 'firefox',
-  executablePath: FIREFOX,
-  headless: false,
-  extraPrefsFirefox: {
-    'dom.webgpu.enabled': true,
-    'gfx.webgpu.ignore-blocklist': true,
-  },
-})
+const browser = await launchFirefox()
 const page = await browser.newPage()
 await page.setViewport({ width: 900, height: 640 })
 await page.goto(url, { waitUntil: 'domcontentloaded' })

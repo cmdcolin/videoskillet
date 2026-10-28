@@ -56,9 +56,7 @@
 // from the poll below makes the frame rate a known quantity — `render.ts` makes
 // the same move for the same reason.
 
-import puppeteer from 'puppeteer-core'
-
-import { FIREFOX } from './browser.mjs'
+import { launchFirefox } from './browser.mjs'
 import { appUp, until } from './until.mjs'
 
 import { execFileSync } from 'node:child_process'
@@ -212,20 +210,15 @@ await new Promise(r => server.listen(0, '127.0.0.1', r))
 const fixtures = `http://127.0.0.1:${server.address().port}`
 
 const launch = () =>
-  puppeteer.launch({
-    browser: 'firefox',
-    executablePath: FIREFOX,
-    headless: false,
-    extraPrefsFirefox: {
-      'dom.webgpu.enabled': true,
-      'gfx.webgpu.ignore-blocklist': true,
+  launchFirefox({
+    protocolTimeout: 90000,
+    prefs: {
       // No gesture is available to start an AudioContext from, and a suspended
       // one analyses digital silence — which is the reading this whole run is
       // about, arriving for the wrong reason. traycheck sets the same pair.
       'media.autoplay.default': 0,
       'media.autoplay.blocking_policy': 0,
     },
-    protocolTimeout: 90000,
   })
 
 // The listener. `currentTime` in here is the AudioContext's clock at the head of
