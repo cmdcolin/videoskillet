@@ -202,10 +202,13 @@ export function useCamEngine(
   }
 
   // The room's sound through the microphone, onto the set's supply. Rejects
-  // when the phone refuses the microphone.
+  // when the phone refuses the microphone or the set has not started.
   const hear = async (on: boolean) => {
     const audio = engineRef.current?.audioState
-    if (audio === undefined) return
+    if (audio === undefined) {
+      if (on) throw new Error('the set is still starting')
+      return
+    }
     if (on) await audio.enableMic()
     else audio.disconnect()
     heard.current = on
