@@ -341,7 +341,6 @@ export function CamPage(props: { link: CamLink | null }) {
   const on = srcA.on !== 'camera' || cam.state === 'on'
   const tweaked = Object.keys(scene.tweaks).length > 0
   const ownedMixer = mixerOwned(scene)
-  const stacked = Object.keys(scene.layers).length > 0
   const busy = second.left > 0 || second.opening || shutter.recording
   const showHelp = on && help
   const mixOpen = panel === 'mix' && eng.engine !== null
@@ -364,19 +363,15 @@ export function CamPage(props: { link: CamLink | null }) {
         help={help}
         onHelp={() => setHelp(!help)}
         onShare={share}
-        fullHref={
-          linked === null
-            ? instrumentHref(
-                stacked ? null : look,
-                cameraUp
-                  ? 'webcam'
-                  : srcA.on === 'camera' || srcA.on === 'clip'
-                    ? null
-                    : srcA.on,
-                second.pattern,
-              )
-            : `../app/#${writeLink(scene, second.pattern)}${cameraUp ? '&src=webcam' : ''}`
-        }
+        fullHref={instrumentHref(
+          scene,
+          cameraUp
+            ? 'webcam'
+            : srcA.on === 'camera' || srcA.on === 'clip'
+              ? null
+              : srcA.on,
+          second.pattern,
+        )}
       />
 
       <main className={styles.stage}>

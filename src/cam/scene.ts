@@ -1,6 +1,6 @@
 import { routingsToSlots, toEngineSlots } from '../ui/modSlots'
 import { aimKey } from './keyed'
-import { lookBoard, mixControls, mixesItself } from './looks'
+import { lookBoard, lookMod, mixControls, mixesItself } from './looks'
 import { SLICE } from './tape'
 
 import type { Controls } from '../core/controls'
@@ -61,6 +61,9 @@ export const boardOf = (s: Scene, slice: number) => {
   }
   return { ...board, controls: aimKey(controls, s.hue) }
 }
+
+export const routingsOf = (s: Scene): readonly ModRouting[] =>
+  s.base !== null && s.look === null ? s.base.mod : lookMod(s.look, s.layers)
 
 export const without = (layers: Layers, name: string): Layers =>
   Object.fromEntries(Object.entries(layers).filter(([n]) => n !== name))

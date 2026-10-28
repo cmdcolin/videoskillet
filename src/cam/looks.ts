@@ -20,6 +20,7 @@ import {
 
 import type { ControlKey, Controls, ModSlot } from '../core/controls'
 import type { SliderDef } from '../ui/controls'
+import type { ModRouting } from '../ui/modSlots'
 import type { PresetDef } from '../ui/presets'
 
 // How far a loop may move the picture each lap and still count as subtle: a
@@ -270,10 +271,7 @@ export function lookBoard(
   controls: Controls
   mod: ModSlot[]
 } {
-  const weights = new Map(
-    Object.entries(layers).filter(([name, w]) => w > 0 && name !== look?.name),
-  )
-  if (look !== null) weights.set(look.name, look.strength)
+  const weights = weightsOf(look, layers)
   if (weights.size === 0) return { controls: DEFAULT_CONTROLS, mod: [] }
   const controls = blendPresets(DEFAULT_CONTROLS, weights)
   const lightest = [...weights].toSorted((a, b) => a[1] - b[1])
@@ -291,12 +289,23 @@ export function lookBoard(
       }
     }
   }
-  const mod = blendMod(weights)
   return {
     controls,
-    mod: mod === null ? [] : toEngineSlots(routingsToSlots(mod)),
+    mod: toEngineSlots(routingsToSlots(lookMod(look, layers))),
   }
 }
+
+const weightsOf = (look: Look | null, layers: Layers) => {
+  const weights = new Map(
+    Object.entries(layers).filter(([name, w]) => w > 0 && name !== look?.name),
+  )
+  if (look !== null) weights.set(look.name, look.strength)
+  return weights
+}
+
+// The bay's routings `lookBoard` lands, as a link writes them.
+export const lookMod = (look: Look | null, layers: Layers = {}): ModRouting[] =>
+  blendMod(weightsOf(look, layers)) ?? []
 
 // Whether a board waits for a hit: a one-shot in its bay, which a tap on the
 // picture fires. Power on, channel change and degauss rest on their resting

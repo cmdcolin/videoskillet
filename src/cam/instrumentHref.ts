@@ -1,18 +1,24 @@
-import type { Look } from './looks'
-import type { Pattern } from './patterns'
+import { packControls } from '../ui/packed'
+import { modParam } from '../ui/urlParams'
+import { boardOf, routingsOf, sliceOf } from './scene'
 
-// The instrument, opened on the look this page is showing, asking for the
-// camera again or putting up the same patterns. A look at full strength is a
-// preset the link can name; a weaker one is a blend, which only the
-// instrument's own link format carries. A clip is a file the link cannot carry.
+import type { Pattern } from './patterns'
+import type { Scene } from './scene'
+
+// The instrument, opened on the board this page is showing, asking for the
+// camera again or putting up the same patterns. The mixer travels only with a
+// pattern on B, since a clip is a file the link cannot carry.
 export function instrumentHref(
-  look: Look | null,
+  scene: Scene,
   a: 'webcam' | Pattern | null,
   b: Pattern | null,
 ): string {
+  const shown = b === null ? { ...scene, mix: null } : scene
   const q = new URLSearchParams()
-  if (look !== null && look.strength === 1) q.set('preset', look.name)
+  q.set('p', packControls(boardOf(shown, sliceOf('whole')).controls))
+  const mod = routingsOf(scene)
+  if (mod.length > 0) q.set('mod', modParam(mod))
   if (a !== null) q.set('src', a)
   if (b !== null) q.set('srcb', b)
-  return q.size === 0 ? '../app/' : `../app/?${q}`
+  return `../app/?${q}`
 }
