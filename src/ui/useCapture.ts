@@ -116,6 +116,9 @@ export function useCapture(
 ) {
   const fps = opts.fps ?? FPS
   const recRef = useRef<Recorder | null>(null)
+  // A take between the click and its recorder, which a second toggle or an
+  // unmount calls off.
+  const startingRef = useRef<{ off: boolean } | null>(null)
   const rafRef = useRef(0)
   const noteRef = useRef<TakeNote | null>(null)
   const startRef = useRef(0)
@@ -170,6 +173,8 @@ export function useCapture(
       document.removeEventListener('visibilitychange', onHide)
       window.removeEventListener('pagehide', onLeave)
       cancelAnimationFrame(rafRef.current)
+      if (startingRef.current !== null) startingRef.current.off = true
+      startingRef.current = null
       detachRef.current?.()
       detachRef.current = null
       recRef.current?.abort()
@@ -249,6 +254,11 @@ export function useCapture(
       void stop()
       return
     }
+    if (startingRef.current !== null) {
+      startingRef.current.off = true
+      startingRef.current = null
+      return
+    }
     const canvas = canvasRef.current
     if (canvas === null) return
     if (!isSupported()) {
@@ -264,6 +274,8 @@ export function useCapture(
     const width = canvas.width
     const height = canvas.height
     const fromEngine = opts.engine !== undefined
+    const attempt = { off: false }
+    startingRef.current = attempt
     startRecording({
       width,
       height,
@@ -273,6 +285,11 @@ export function useCapture(
       live: fromEngine,
     }).then(
       rec => {
+        if (attempt.off) {
+          rec.abort()
+          return
+        }
+        startingRef.current = null
         recRef.current = rec
         setRecording(true)
         const start = performance.now()
@@ -366,6 +383,8 @@ export function useCapture(
         rafRef.current = requestAnimationFrame(pump)
       },
       (e: unknown) => {
+        if (attempt.off) return
+        startingRef.current = null
         const message = e instanceof Error ? e.message : String(e)
         reportTakeFailed(message, null)
         onError(`could not start recording: ${message}`)
