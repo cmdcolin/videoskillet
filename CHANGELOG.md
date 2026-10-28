@@ -2,6 +2,47 @@
 
 All notable changes to videoskillet are documented here.
 
+## [2.20.3](https://github.com/cmdcolin/videoskillet/compare/v2.20.2...v2.20.3) - 2026-10-28
+
+### Features
+- *(ui)* [`704be3b`](https://github.com/cmdcolin/videoskillet/commit/704be3bc59eac742a70a075133252b2eb7c03168) switch the signal diagrams off
+- *(ui)* [`4f215fe`](https://github.com/cmdcolin/videoskillet/commit/4f215fed1e82894c54eb38e618f9cdab02e25ab4) drag the RF, recording and leak plots
+- *(ui)* [`7f96ae9`](https://github.com/cmdcolin/videoskillet/commit/7f96ae9898767323d595e8ff140c6ef291758570) scroll an opened box's rows into view
+- *(ui)* [`cc6c569`](https://github.com/cmdcolin/videoskillet/commit/cc6c5692920746509417dc80b7e2f95041824bc5) reopen a schematic on the box it left open
+- *(ui)* [`a78d073`](https://github.com/cmdcolin/videoskillet/commit/a78d0735bbd3c47af2065b355fad789dcc37fa08) give a schematic box a 24px touch target
+- *(ui)* [`13c5ab8`](https://github.com/cmdcolin/videoskillet/commit/13c5ab836752f5125b49415ad091384862b65b93) the midi button waits in ☰ until the wire is on, on every screen
+- *(ui)* [`2622926`](https://github.com/cmdcolin/videoskillet/commit/262292623c31ad27a26187f0ca4dadddfe5abace) hide the signal diagrams by default, and let a group unfold its own
+
+### Fixes
+- *(ui)* [`08d82ee`](https://github.com/cmdcolin/videoskillet/commit/08d82ee9664166e265aee1511fa3c01a62926540) label a drawing as a group so its boxes reach screen readers
+- *(ui)* [`94397c1`](https://github.com/cmdcolin/videoskillet/commit/94397c1fded0826d74eb1db125bc1f7f127d7566) skip a schematic box's title when it has no help
+- *(ui)* [`ead3b9e`](https://github.com/cmdcolin/videoskillet/commit/ead3b9e520f148dcbca8f98de536a77e0309aaae) drop the PickPart default that the React Compiler cannot lower
+
+### Refactor
+- *(ui)* [`bc3ec36`](https://github.com/cmdcolin/videoskillet/commit/bc3ec36a397b02f3598b56e71fa2df3eba06df12) read the open box off the drawing's boxes
+- *(ui)* [`206d00a`](https://github.com/cmdcolin/videoskillet/commit/206d00a135add96eb2ea0d4cd3ff7abf18734a63) derive four schematics' key lists from their box tables
+- *(ui)* [`8cea86e`](https://github.com/cmdcolin/videoskillet/commit/8cea86ebf1d46403c3f93e605e78786af249f15e) share the diagram core CSS, PickPart and Bend with bender
+- *(ui)* [`5d08c8b`](https://github.com/cmdcolin/videoskillet/commit/5d08c8bdcff81d5b5e6491eb5336c0582569dd79) share wire routing with bender
+- [`80345fc`](https://github.com/cmdcolin/videoskillet/commit/80345fc01af99479fb8ef763a8de97dcbf547ee0) move CROSS_REPO_SYNC marker to midiTabNote only
+- *(ui)* [`e1941b1`](https://github.com/cmdcolin/videoskillet/commit/e1941b1e55118b94eeaa5a2ebd532ac5b4c6f652) toggle the signal diagrams through Listeners and SCHEMATIC_FRAMES
+- *(ui)* [`5e52077`](https://github.com/cmdcolin/videoskillet/commit/5e52077e7fd5fb9c2c26fb948ab672b2b1240752) build Bend on PickPart and share BoxPick with bender
+- [`dd50c7d`](https://github.com/cmdcolin/videoskillet/commit/dd50c7d1e9d6d3eee0b55b65aa0ba395639d6781) take history, relative time, posts and tokens from skillet-shared
+- [`671f270`](https://github.com/cmdcolin/videoskillet/commit/671f270db9c5069615f031d4d2492c4112ef7eb4) take analytics, wire routing and need() from skillet-shared
+- [`6a941ae`](https://github.com/cmdcolin/videoskillet/commit/6a941aeed9a7133fa8f2333191ce26e309455f25) take site bar, footer, social meta, signed-in hint and site CSS from skillet-shared
+- [`db1b41c`](https://github.com/cmdcolin/videoskillet/commit/db1b41c1c6bd9d02fbf2d93dc7f34cca8d401f89) take the saved-list model and Firebase cloud from skillet-shared
+- [`3179a72`](https://github.com/cmdcolin/videoskillet/commit/3179a726507704b4c945ee1b3f8478c7d1075467) take base64url, the session write gate and the Firebase config from skillet-shared
+
+### Documentation
+- *(docs)* [`2e43442`](https://github.com/cmdcolin/videoskillet/commit/2e434426964dfc03cbb5dd2770fb2cf4fe755a48) hand off the signal diagrams' next steps
+- *(docs)* [`691a377`](https://github.com/cmdcolin/videoskillet/commit/691a377789d7a4c81a9cebbedd5d8f9828f75cd4) mark the plot handles landed in the diagrams handoff
+- *(docs)* [`81a2283`](https://github.com/cmdcolin/videoskillet/commit/81a2283720a37ed7a784aab65013388f76a5270d) mark the rows scroll landed in the diagrams handoff
+- *(docs)* [`630dac7`](https://github.com/cmdcolin/videoskillet/commit/630dac74e61c01e4c4fedd5382bae5f949b93337) mark the per-group open box landed in the diagrams handoff
+- *(docs)* [`8999666`](https://github.com/cmdcolin/videoskillet/commit/899966633974314537a77abcaa788ba9719c3438) mark touch targets landed in the diagrams handoff
+- [`a4ea745`](https://github.com/cmdcolin/videoskillet/commit/a4ea7450608ee26e2fbe82e25525a01d53212158) sync CROSS_REPO_SYNC.md with bender
+
+### Chores
+- [`6f53042`](https://github.com/cmdcolin/videoskillet/commit/6f530428956e2e6f9dc8de34ed70ba69d5b61164) match bender's firebase 13 and toolchain versions
+
 ## [2.20.2](https://github.com/cmdcolin/videoskillet/compare/v2.20.1...v2.20.2) - 2026-10-19
 
 ### Features
