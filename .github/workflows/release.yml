@@ -94,10 +94,11 @@ jobs:
 
   # Both of the jobs that publish something are tag-only. A manual dispatch is
   # for rebuilding the binaries against a new Deno, and has no version to
-  # release under.
+  # release under. The release goes out with whichever targets built, so a
+  # failed one does not hold back the rest.
   release:
     needs: binaries
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: ${{ !cancelled() && needs.binaries.result != 'skipped' && startsWith(github.ref, 'refs/tags/v') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -129,8 +130,10 @@ jobs:
 
   # src/core, restaged so it resolves without Vite. The version comes from
   # package.json, which the same commit as this tag bumped, so the published
-  # version and the tag always agree.
+  # version and the tag always agree. It waits on `bundle` so that a tag whose
+  # build fails publishes nothing.
   jsr:
+    needs: bundle
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:

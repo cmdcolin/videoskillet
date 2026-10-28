@@ -112,6 +112,7 @@ for (const check of [
   'pnpm typecheck',
   'pnpm test',
   'pnpm build',
+  ...(releasing ? ['pnpm jsr:check'] : []),
 ]) {
   run(check)
 }
