@@ -80,25 +80,31 @@ pnpm render:golden --only=vhs       # one case
 CI runs this on every push to main, and it is the one check that executes the
 shaders.
 
-- **What it does:** `scripts/render/golden.ts` renders twelve looks for 30
-  frames each on the app's own engine bundle. It compares each final frame,
-  box-filtered to 125x80, with a reference in `scripts/render/golden/`.
+- **What it does:** `scripts/render/golden.ts` renders fourteen looks for 30
+  frames each, two of them with a caption on the app's own engine bundle. It
+  compares each final frame, box-filtered to 125x80, with a reference in
+  `scripts/render/golden/`.
 - **Where it renders:** on lavapipe, Mesa's software Vulkan driver
   (`apt install mesa-vulkan-drivers`). A laptop and the runner therefore use the
   same rasteriser. `GOLDEN_GPU=1` renders on the real GPU instead; that run
   differs from the references by about 0.1 levels on average.
 - **What fails it:** a mean change over 0.4 levels, or more than 0.5% of pixels
   moving by over 16. A 3.5% error in one YUV→RGB coefficient fails eight of the
-  twelve looks.
+  first twelve looks.
 - **What it also checks:** it renders the first look again and requires an
   identical frame, so a `startTake` that stops resetting some state fails here.
 - **When it fails:** `<case>.actual.ppm` and `<case>.diff.ppm` land beside the
   reference, and CI uploads them as the `golden-diff` artifact. A change that
   meant to alter the picture reruns with `--update` and commits the new
   references.
-- **What it cannot see:** the present pass (the view's zoom), source B, and
-  caption or chyron text. The headless engine has no `OffscreenCanvas` to draw
-  the font ROM with.
+- **What it cannot see:** the present pass (the view's zoom) and source B.
+
+## Caption font
+
+`src/core/gpu/captionfont.ts` holds the font ROM both caption boxes read: 11px
+DejaVu Sans Mono, thresholded to 8x12 dots. `node scripts/captionfont.mjs` draws
+it in Firefox and rewrites the file. The engine never draws the font itself, so
+every platform and the headless renderer get the same glyphs.
 
 ## Verification harness
 

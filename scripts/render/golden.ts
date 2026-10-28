@@ -28,6 +28,7 @@ interface Case {
   preset?: string
   set?: Partial<Controls>
   noise?: number
+  caption?: string
 }
 
 const CASES: Case[] = [
@@ -43,6 +44,12 @@ const CASES: Case[] = [
   { name: 'chromaRails', preset: 'chromaRails' },
   { name: 'mixerLoop', preset: 'mixerLoop' },
   { name: 'tvStatic', noise: 1 },
+  {
+    name: 'overmodulatedChyron',
+    preset: 'overmodulatedChyron',
+    caption: 'HELLO WORLD',
+  },
+  { name: 'bentFontRom', preset: 'bentFontRom', caption: 'HELLO WORLD' },
 ]
 
 const FRAMES = 30
@@ -144,6 +151,7 @@ const render = async (c: Case): Promise<Uint8Array> => {
       : presetControls(PRESET_BY_NAME.get(c.preset)!.patch)
   engine.setImagePixels(bars, ACTIVE_WIDTH, ACTIVE_HEIGHT)
   engine.setNoiseSource(c.noise ?? 0)
+  engine.setCaption(c.caption ?? '')
   engine.startTake({ fps: 60, seed: SEED })
   engine.applyControls({ ...base, ...c.set })
   for (let i = 0; i < FRAMES; i++) engine.step()

@@ -13,6 +13,7 @@
 // painter.
 
 import { CC_COLS, wrapCaption } from '../signal/captionwrap'
+import { CAPTION_FONT } from './captionfont'
 
 // Cells on the wire per line: seven of run-in, two blank, three start bits and
 // two eight-bit characters. Both ends index the same grid off this.
@@ -36,47 +37,16 @@ export const CC_PAGE = FONT_LEN // first cell of page RAM
 export const CC_CURSOR = CC_PAGE + CC_ROWS * CC_COLS
 export const CC_BUF_LEN = CC_CURSOR + 1
 
-// Same size, threshold and font stack the teletype card draws its dots at
-// (`sources/teletype.ts`), and for the same reason: a glyph rasterised clean
-// and scaled down is a picture of type, where one thresholded at dot
-// resolution is type. The two are not shared because core cannot import the
-// app — and because they want different things out of the same decision. The
-// card makes a picture; this makes a ROM.
-const CELL_PX = 11
-const INK = 96
-const FONT = `${CELL_PX}px "DejaVu Sans Mono", "Liberation Mono", "Courier New", monospace`
-
 // One u32 per glyph row, low bit leftmost. Wasteful against packing seven rows
 // into two words, and worth it: every read of this buffer is a row lookup, and
 // the packed form would put a shift and a mask in the painter's inner loop for
 // 2 KiB.
+//
+// The font is committed data (`captionfont.ts`), so a Linux tab, a Mac tab
+// and the headless renderer all decode the same glyphs.
 export function buildCaptionRom(): Uint32Array {
   const rom = new Uint32Array(CC_BUF_LEN)
-  // The headless profiler has a GPU and no DOM. A caption it cannot draw is
-  // better than a pass it cannot build, so the ROM comes back blank there and
-  // everything downstream still runs.
-  if (typeof OffscreenCanvas === 'undefined') return rom
-
-  const cell = new OffscreenCanvas(GLYPH_W, GLYPH_H)
-  const g = cell.getContext('2d')
-  if (!g) return rom
-  g.font = FONT
-  g.textAlign = 'center'
-  g.textBaseline = 'middle'
-
-  for (let i = 0; i < GLYPH_COUNT; i++) {
-    g.clearRect(0, 0, GLYPH_W, GLYPH_H)
-    g.fillStyle = '#fff'
-    g.fillText(String.fromCodePoint(GLYPH_FIRST + i), GLYPH_W / 2, GLYPH_H / 2)
-    const img = g.getImageData(0, 0, GLYPH_W, GLYPH_H)
-    for (let y = 0; y < GLYPH_H; y++) {
-      let bits = 0
-      for (let x = 0; x < GLYPH_W; x++) {
-        if (img.data[(y * GLYPH_W + x) * 4 + 3]! >= INK) bits |= 1 << x
-      }
-      rom[i * GLYPH_H + y] = bits
-    }
-  }
+  rom.set(CAPTION_FONT)
   return rom
 }
 
