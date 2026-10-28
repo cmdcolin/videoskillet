@@ -11,6 +11,7 @@ import {
 import styles from './Diagram.module.css'
 import {
   Boxes,
+  Chain,
   BoxRows,
   Diagram,
   Label,
@@ -69,9 +70,8 @@ const freqY = (g: number) =>
     Math.log2(GAIN_HI / GAIN_LO)
 const lineX = (s: number) =>
   LINE.left + ((LINE.right - LINE.left) * s) / (SAMPLES_PER_LINE - 1)
-const after = (id: Part) => rightOf(ROW[id])
 const LOOP_L = ROW.peaking.x + 12
-const LOOP_R = after('peaking') - 12
+const LOOP_R = rightOf(ROW.peaking) - 12
 
 // The bent enhancer as enhancer.wgsl runs it, one box per stage in the order a
 // line meets them: the clamp gate, the coupling capacitor that droops between
@@ -98,12 +98,6 @@ export function EnhancerDiagram() {
   const gate = lineX(gateSample(e))
   const curve = polyline(gains.map((g, i) => [freqX(CURVE_MHZ[i]!), freqY(g)]))
   const peakLook: WireLook = howl ? 'alarm' : peak ? 'on' : 'plain'
-  const looks: Record<Part, WireLook> = {
-    clamp: e.clampUs !== 0 ? 'on' : 'plain',
-    droop: e.droopUs > 0 ? 'on' : 'plain',
-    peaking: peakLook,
-    regen: e.sync > 0 ? 'on' : 'plain',
-  }
 
   const box = stageBoxes(OPENS, H, r)
   const boxes = [
@@ -142,33 +136,20 @@ export function EnhancerDiagram() {
       <Diagram width={WIDTH} height={HEIGHT} label="bent video enhancer">
         {arrow => (
           <>
-            <Label x={0} y={TOP_Y - 6}>
-              video
-            </Label>
-            <Wire arrow={arrow} d={`M0 ${TOP_Y} H${ROW.clamp.x}`} />
-            <Wire
+            <Chain
               arrow={arrow}
-              d={`M${after('clamp')} ${TOP_Y} H${ROW.droop.x}`}
-              look={looks.clamp}
+              y={TOP_Y}
+              from={0}
+              to={WIDTH - 2}
+              stages={[
+                { at: ROW.clamp, live: e.clampUs !== 0 },
+                { at: ROW.droop, live: e.droopUs > 0 },
+                { at: ROW.peaking, live: peak, alarm: howl },
+                { at: ROW.regen, live: e.sync > 0 },
+              ]}
+              input="video"
+              output="out"
             />
-            <Wire
-              arrow={arrow}
-              d={`M${after('droop')} ${TOP_Y} H${ROW.peaking.x}`}
-              look={looks.droop}
-            />
-            <Wire
-              arrow={arrow}
-              d={`M${after('peaking')} ${TOP_Y} H${ROW.regen.x}`}
-              look={looks.peaking}
-            />
-            <Wire
-              arrow={arrow}
-              d={`M${after('regen')} ${TOP_Y} H${WIDTH - 2}`}
-              look={looks.regen}
-            />
-            <Label x={WIDTH - 2} y={TOP_Y - 6} anchor="end">
-              out
-            </Label>
             <Wire
               arrow={arrow}
               d={`M${LOOP_R} ${TOP_Y + H / 2} V${LOOP_Y} H${LOOP_L} V${TOP_Y + H / 2}`}

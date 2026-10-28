@@ -338,8 +338,8 @@ export function Bend({
 // CROSS_REPO_SYNC_END(diagram-parts)
 
 // A row of stages wired in series from x = `from` to x = `to`. A wire lights
-// once any stage before it is live, because what that stage did to the signal
-// rides every wire after it.
+// once any stage before it is live, and turns to alarm once any is in alarm,
+// because what a stage did to the signal rides every wire after it.
 export function Chain({
   arrow,
   y,
@@ -353,13 +353,14 @@ export function Chain({
   y: number
   from: number
   to: number
-  stages: readonly { at: Column; live: boolean }[]
+  stages: readonly { at: Column; live: boolean; alarm?: boolean }[]
   input?: string
   output?: string
 }) {
-  const upstream = stages.map((_, i) =>
-    stages.slice(0, i + 1).some(s => s.live),
-  )
+  const upstream = stages.map((_, i): WireLook => {
+    const before = stages.slice(0, i + 1)
+    return before.some(s => s.alarm) ? 'alarm' : lit(before.some(s => s.live))
+  })
   return (
     <>
       {input && (
@@ -373,13 +374,13 @@ export function Chain({
           key={i}
           arrow={arrow}
           d={`M${rightOf(stages[i]!.at)} ${y} H${stage.at.x}`}
-          look={lit(upstream[i]!)}
+          look={upstream[i]}
         />
       ))}
       <Wire
         arrow={arrow}
         d={`M${rightOf(stages.at(-1)!.at)} ${y} H${to}`}
-        look={lit(upstream.at(-1)!)}
+        look={upstream.at(-1)}
       />
       {output && (
         <Label x={to} y={y - 6} anchor="end">

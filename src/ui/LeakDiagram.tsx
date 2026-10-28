@@ -164,12 +164,12 @@ export function LeakDiagram() {
             <Wire
               arrow={arrow}
               d={`M${after('hum')} ${TOP_Y} H${COL.sound.x}`}
-              look={lit(humOn)}
+              look={lit(ghostOn || humOn)}
             />
             <Wire
               arrow={arrow}
               d={`M${after('sound')} ${TOP_Y} H${WIDTH - 2}`}
-              look={lit(soundOn)}
+              look={lit(ghostOn || humOn || soundOn)}
             />
             <Label x={WIDTH - 2} y={TOP_Y - 6} anchor="end">
               to the set

@@ -69,6 +69,8 @@ export function BusDiagram() {
     genlock: v('bGenlock') > 0.5,
   }
   const live = (id: Part) => r.touched(...OPENS[id])
+  const bIn = live('timing') || live('lock') || live('gainB')
+  const summed = live('gainA') || bIn
   const transfer = Array.from({ length: POINTS }, (_, i) =>
     clipBus(
       IN_SPAN.lo + ((IN_SPAN.hi - IN_SPAN.lo) * i) / (POINTS - 1),
@@ -148,24 +150,19 @@ export function BusDiagram() {
             <Wire
               arrow={arrow}
               d={`M${SUM_X + SUM_R} ${A_Y} H${COL.ring.x}`}
-              look={lit(live('gainA') || live('gainB'))}
+              look={lit(summed)}
             />
             <Wire
               arrow={arrow}
               d={`M${after('ring')} ${A_Y} H${COL.clip.x}`}
-              look={lit(live('ring'))}
+              look={lit(summed || live('ring'))}
             />
             <Wire
               arrow={arrow}
               d={`M${after('clip')} ${A_Y} H${WIDTH - 2}`}
-              look={lit(live('clip'))}
+              look={lit(summed || live('ring') || live('clip'))}
             />
-            <SumNode
-              x={SUM_X}
-              y={A_Y}
-              r={SUM_R}
-              on={live('gainB') || live('gainA')}
-            />
+            <SumNode x={SUM_X} y={A_Y} r={SUM_R} on={summed} />
 
             <Label x={0} y={B_Y - 6}>
               B
@@ -184,7 +181,7 @@ export function BusDiagram() {
             <Wire
               arrow={arrow}
               d={`M${after('gainB')} ${B_Y} H${SUM_X} V${A_Y + SUM_R}`}
-              look={lit(live('gainB'))}
+              look={lit(bIn)}
             />
 
             <Boxes boxes={boxes} pick={pick} />
