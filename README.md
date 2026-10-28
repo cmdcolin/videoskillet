@@ -136,6 +136,9 @@ video cables together and posting tumblr gifs.
 - Tape in
   https://videoskillet.com/app/#set=lumaMHz:2.8,osd:1,osdHoldS:5,osdBlueS:1.5,lumaPeak:0.9,noiseIre:2,colorUnderMix:1,underJitterDeg:4,headSwitchNoise:0.4,headSwitchShiftUs:0.8,tbJitterNs:200,trackAmt:0.1,trackHunt:0.75,trackKick:0.9&mod=
 
+- Scrambled channel
+  https://videoskillet.com/app/#preset=scrambledChannel&iurl=https://upload.wikimedia.org/wikipedia/commons/f/f9/%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg
+
 <!-- /generated:demos -->
 
 Send me more stuff you come up with
