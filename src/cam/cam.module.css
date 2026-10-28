@@ -445,7 +445,7 @@
   color: #fff;
   color-scheme: dark;
   font: inherit;
-  font-size: var(--fs-sm);
+  font-size: 16px;
   font-weight: 400;
   letter-spacing: 0;
   text-transform: none;
@@ -520,6 +520,7 @@
   cursor: default;
 }
 .sheetClose {
+  position: relative;
   display: grid;
   place-items: center;
   width: 32px;
@@ -530,6 +531,11 @@
   background: #ffffff20;
   color: #fff;
   cursor: pointer;
+}
+.sheetClose::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
 }
 .knobs {
   display: flex;
@@ -572,6 +578,7 @@
   border-bottom: 1px solid #ffffff18;
 }
 .drop {
+  position: relative;
   display: grid;
   flex: none;
   place-items: center;
@@ -583,6 +590,11 @@
   background: #ffffff20;
   color: #fff;
   cursor: pointer;
+}
+.drop::after {
+  content: '';
+  position: absolute;
+  inset: -9px;
 }
 .knobName {
   flex: none;
@@ -601,12 +613,15 @@
   text-align: right;
 }
 .choices {
+  position: relative;
+  z-index: 0;
   display: flex;
   flex: 1;
   flex-wrap: wrap;
   gap: 4px;
 }
 .choice {
+  position: relative;
   padding: 4px 10px;
   border: 1px solid #ffffff30;
   border-radius: 999px;
@@ -615,6 +630,14 @@
   font: inherit;
   font-size: 12px;
   cursor: pointer;
+}
+/* Every press area sits under every button, so where the areas of two
+   wrapped rows overlap, a tap on a button still lands on that button. */
+.choice::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: -10px -2px;
 }
 .choiceOn {
   border-color: #fff;
