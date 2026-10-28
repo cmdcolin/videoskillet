@@ -28,7 +28,7 @@
 // wait before the clip appears.
 
 import { randomIndex } from '../core/rng'
-import { BROWSE_LIMIT, isRecord, num, rotate, str } from './pool'
+import { BROWSE_LIMIT, isRecord, num, rotate, str, timed } from './pool'
 
 import type { Rand } from '../core/rng'
 import type { BrowseHit, OnProgress, PoolPick } from './pool'
@@ -211,26 +211,6 @@ const READ_TIMEOUT_MS = 6_000
 // file finishes; short enough that a dead one gives up rather than leaving the
 // caption on `rolling…` for the length of a track.
 const DOWNLOAD_TIMEOUT_MS = 60_000
-
-// A timed fetch that says what timed out. `AbortSignal.timeout` rejects with a
-// bare "The operation was aborted", which reaches the error banner verbatim and
-// tells the user nothing about which of two very different waits gave up.
-const timed = async (
-  url: string,
-  timeoutMs: number,
-  what: string,
-): Promise<Response> => {
-  try {
-    return await fetch(url, { signal: AbortSignal.timeout(timeoutMs) })
-  } catch (e) {
-    if (e instanceof DOMException && e.name === 'TimeoutError')
-      throw new Error(
-        `${what} timed out after ${Math.round(timeoutMs / 1000)}s`,
-        { cause: e },
-      )
-    throw e
-  }
-}
 
 const request = async (
   url: string,

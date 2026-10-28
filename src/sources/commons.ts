@@ -28,7 +28,15 @@
 // is not.
 
 import { pickOne, randomIndex } from '../core/rng'
-import { BROWSE_LIMIT, isRecord, num, rotate, str } from './pool'
+import {
+  API_TIMEOUT_MS,
+  BROWSE_LIMIT,
+  isRecord,
+  num,
+  rotate,
+  str,
+  timed,
+} from './pool'
 
 import type { Rand } from '../core/rng'
 import type { BrowseHit, PickKind, PoolPick, PoolRef } from './pool'
@@ -185,17 +193,20 @@ const pagesOf = (body: unknown): Record<string, unknown>[] => {
 // YouTube source does not. Deliberately no custom request header: an
 // `Api-User-Agent` would turn every roll into a CORS preflight plus the real
 // request, and the browser's own User-Agent already identifies the caller.
-const query = (params: Record<string, string>): Promise<unknown> => {
+const query = async (params: Record<string, string>): Promise<unknown> => {
   const search = new URLSearchParams({
     action: 'query',
     format: 'json',
     origin: '*',
     ...params,
   })
-  return fetch(`${API}?${search.toString()}`).then(r => {
-    if (!r.ok) throw new Error(`commons ${r.status}`)
-    return r.json() as Promise<unknown>
-  })
+  const r = await timed(
+    `${API}?${search.toString()}`,
+    API_TIMEOUT_MS,
+    'Wikimedia Commons',
+  )
+  if (!r.ok) throw new Error(`commons ${r.status}`)
+  return r.json() as Promise<unknown>
 }
 
 // The head of a page, whichever prop it was asked for. `imageinfo` and

@@ -92,6 +92,35 @@ export const isRecord = (v: unknown): v is Record<string, unknown> =>
 export const str = (v: unknown): string | null =>
   typeof v === 'string' ? v : null
 
+// How long a Commons or Wikipedia API request may take. A healthy one answers
+// in well under a second.
+export const API_TIMEOUT_MS = 10_000
+
+// A timed fetch that says what timed out. `AbortSignal.timeout` rejects with a
+// bare "The operation was aborted", which reaches the error banner verbatim and
+// tells the user nothing about which request gave up. `signal` lets a caller
+// cancel the request before the deadline.
+export const timed = async (
+  url: string,
+  timeoutMs: number,
+  what: string,
+  signal?: AbortSignal,
+): Promise<Response> => {
+  const deadline = AbortSignal.timeout(timeoutMs)
+  try {
+    return await fetch(url, {
+      signal: signal ? AbortSignal.any([signal, deadline]) : deadline,
+    })
+  } catch (e) {
+    if (e instanceof DOMException && e.name === 'TimeoutError')
+      throw new Error(
+        `${what} timed out after ${Math.round(timeoutMs / 1000)}s`,
+        { cause: e },
+      )
+    throw e
+  }
+}
+
 // Tolerant of the string form on purpose. Commons answers with real numbers;
 // every numeric field in an archive.org file entry arrives as a *string* —
 // `"size": "3214809"`, `"length": "30.65"` — and `length` is sometimes a

@@ -12,7 +12,7 @@
 import { pickOne } from '../core/rng'
 import { archiveCaption } from './archive'
 import { commonsCaption } from './commons'
-import { isRecord, str } from './pool'
+import { API_TIMEOUT_MS, isRecord, str, timed } from './pool'
 
 import type { Rand } from '../core/rng'
 import type { PoolRef } from './pool'
@@ -32,9 +32,10 @@ export interface Passage {
   matched: boolean
 }
 
-const api = (
+const api = async (
   base: string,
   params: Record<string, string>,
+  signal?: AbortSignal,
 ): Promise<unknown> => {
   const search = new URLSearchParams({
     action: 'query',
@@ -43,10 +44,14 @@ const api = (
     origin: '*',
     ...params,
   })
-  return fetch(`${base}?${search.toString()}`).then(r => {
-    if (!r.ok) throw new Error(`wikipedia ${r.status}`)
-    return r.json() as Promise<unknown>
-  })
+  const r = await timed(
+    `${base}?${search.toString()}`,
+    API_TIMEOUT_MS,
+    'Wikipedia',
+    signal,
+  )
+  if (!r.ok) throw new Error(`wikipedia ${r.status}`)
+  return r.json() as Promise<unknown>
 }
 
 const pagesOf = (body: unknown): Record<string, unknown>[] => {
@@ -72,17 +77,24 @@ interface Level {
   articles: string[]
 }
 
-const categoriesOf = async (titles: string[]): Promise<Level> => {
+const categoriesOf = async (
+  titles: string[],
+  signal?: AbortSignal,
+): Promise<Level> => {
   const pages = pagesOf(
-    await api(COMMONS_API, {
-      titles: titles.slice(0, 50).join('|'),
-      generator: 'categories',
-      gclshow: '!hidden',
-      gcllimit: 'max',
-      prop: 'langlinks',
-      lllang: 'en',
-      lllimit: 'max',
-    }),
+    await api(
+      COMMONS_API,
+      {
+        titles: titles.slice(0, 50).join('|'),
+        generator: 'categories',
+        gclshow: '!hidden',
+        gcllimit: 'max',
+        prop: 'langlinks',
+        lllang: 'en',
+        lllimit: 'max',
+      },
+      signal,
+    ),
   )
   const categories: string[] = []
   const articles: string[] = []
@@ -112,16 +124,23 @@ export const searchPhrase = (name: string): string =>
     .replace(/\s+/g, ' ')
     .trim()
 
-const searchArticle = async (phrase: string): Promise<string | null> => {
+const searchArticle = async (
+  phrase: string,
+  signal?: AbortSignal,
+): Promise<string | null> => {
   if (phrase.length < 3) return null
-  const body = await api(WIKI_API, {
-    list: 'search',
-    srsearch: phrase,
-    srlimit: '1',
-    srnamespace: '0',
-    srinfo: '',
-    srprop: '',
-  })
+  const body = await api(
+    WIKI_API,
+    {
+      list: 'search',
+      srsearch: phrase,
+      srlimit: '1',
+      srnamespace: '0',
+      srinfo: '',
+      srprop: '',
+    },
+    signal,
+  )
   if (!isRecord(body) || !isRecord(body.query)) return null
   const hits = body.query.search
   if (!Array.isArray(hits)) return null
@@ -129,12 +148,12 @@ const searchArticle = async (phrase: string): Promise<string | null> => {
   return isRecord(first) ? str(first.title) : null
 }
 
-const randomArticle = async (): Promise<string> => {
-  const body = await api(WIKI_API, {
-    list: 'random',
-    rnnamespace: '0',
-    rnlimit: '1',
-  })
+const randomArticle = async (signal?: AbortSignal): Promise<string> => {
+  const body = await api(
+    WIKI_API,
+    { list: 'random', rnnamespace: '0', rnlimit: '1' },
+    signal,
+  )
   if (
     isRecord(body) &&
     isRecord(body.query) &&
@@ -150,23 +169,26 @@ const randomArticle = async (): Promise<string> => {
 // Candidate articles for a file, most specific first. Each level of the
 // category tree is one request, and search is one per phrase, so this stops at
 // the first step that finds anything.
-export async function articlesAbout(ref: PoolRef): Promise<string[]> {
+export async function articlesAbout(
+  ref: PoolRef,
+  signal?: AbortSignal,
+): Promise<string[]> {
   if (ref.origin === 'archive')
     return [
-      await searchArticle(searchPhrase(archiveCaption(ref.title))),
+      await searchArticle(searchPhrase(archiveCaption(ref.title)), signal),
     ].filter((t): t is string => t !== null)
 
-  const own = await categoriesOf([ref.title])
+  const own = await categoriesOf([ref.title], signal)
   if (own.articles.length > 0) return own.articles
   if (own.categories.length > 0) {
-    const parents = await categoriesOf(own.categories)
+    const parents = await categoriesOf(own.categories, signal)
     if (parents.articles.length > 0) return parents.articles
   }
   // Categories before the file's own name: Commons names categories in
   // English, and a file keeps whatever language its uploader wrote.
   const phrases = [...own.categories.slice(0, 2), commonsCaption(ref.title)]
   for (const name of phrases) {
-    const found = await searchArticle(searchPhrase(name))
+    const found = await searchArticle(searchPhrase(name), signal)
     if (found !== null) return [found]
   }
   return []
@@ -174,15 +196,20 @@ export async function articlesAbout(ref: PoolRef): Promise<string[]> {
 
 const extractOf = async (
   article: string,
+  signal?: AbortSignal,
 ): Promise<{ title: string; text: string }> => {
   const page = pagesOf(
-    await api(WIKI_API, {
-      titles: article,
-      redirects: '1',
-      prop: 'extracts',
-      explaintext: '1',
-      exsectionformat: 'plain',
-    }),
+    await api(
+      WIKI_API,
+      {
+        titles: article,
+        redirects: '1',
+        prop: 'extracts',
+        explaintext: '1',
+        exsectionformat: 'plain',
+      },
+      signal,
+    ),
   )[0]
   const text = page === undefined ? null : str(page.extract)
   if (page === undefined || text === null || text === '')
@@ -272,16 +299,20 @@ export function passageFrom(
 // A passage about what `ref` shows, or from a random article when `ref` is
 // null or nothing on Wikipedia could be matched to it. `avoid` names the
 // article the caption already came from, so asking again moves on when there
-// is somewhere to move.
+// is somewhere to move. Aborting `signal` cancels whichever request is in
+// flight.
 export async function passageAbout(
   ref: PoolRef | null,
   avoid = '',
-  rand: Rand = Math.random,
+  { rand = Math.random, signal }: { rand?: Rand; signal?: AbortSignal } = {},
 ): Promise<Passage> {
-  const found = ref === null ? [] : await articlesAbout(ref)
+  const found = ref === null ? [] : await articlesAbout(ref, signal)
   const fresh = found.filter(a => a !== avoid)
   const matched = pickOne(fresh.length > 0 ? fresh : found, rand)
-  const { title, text } = await extractOf(matched ?? (await randomArticle()))
+  const { title, text } = await extractOf(
+    matched ?? (await randomArticle(signal)),
+    signal,
+  )
   const passage = passageFrom(text, rand)
   if (passage === '') throw new Error(`no prose in ${title}`)
   return { article: title, text: passage, matched: matched !== null }

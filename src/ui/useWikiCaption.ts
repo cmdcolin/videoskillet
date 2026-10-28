@@ -29,12 +29,16 @@ export function useWikiCaption(
   const [passage, setPassage] = useState<Passage | null>(null)
   const [error, setError] = useState('')
   const seq = useRef(0)
+  const inFlight = useRef<AbortController | null>(null)
   const articleRef = useRef('')
 
   const fetchFor = (ref: PoolRef | null, avoid: string) => {
     seq.current += 1
     const mine = seq.current
-    passageAbout(ref, avoid).then(
+    inFlight.current?.abort()
+    const ctl = new AbortController()
+    inFlight.current = ctl
+    passageAbout(ref, avoid, { signal: ctl.signal }).then(
       found => {
         if (mine !== seq.current) return
         articleRef.current = found.article
