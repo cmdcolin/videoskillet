@@ -16,8 +16,9 @@ import puppeteer from 'puppeteer-core'
 
 import { FIREFOX } from './browser.mjs'
 import { slug } from './demos.mjs'
+import { startDevServer } from './devserver.mjs'
 
-import { execFileSync, spawn } from 'node:child_process'
+import { execFileSync } from 'node:child_process'
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -69,59 +70,27 @@ const SESSIONS = [{ ...demo('Rainborb'), ago: 35 * MINUTE }]
 
 const SAVED_AGO = [2 * HOUR, 20 * HOUR, 3 * DAY, 4 * DAY, 9 * DAY, 16 * DAY]
 
-// astro's own binary rather than `pnpm exec astro`, so the kill at the end
-// reaches the server: killing pnpm leaves its child holding the port, and the
-// next run finds the lock file and quietly attaches to the stale server.
-// `--ignore-lock` for the same reason a private port is: a dev server somebody
-// else is working against is none of this harness's business.
-const server = spawn(
-  'node',
-  [
-    'node_modules/astro/bin/astro.mjs',
-    'dev',
-    '--port',
-    String(PORT),
-    '--host',
-    '127.0.0.1',
-    '--ignore-lock',
-  ],
-  { stdio: ['ignore', 'pipe', 'inherit'] },
-)
-const ready = new Promise((resolve, reject) => {
-  let seen = ''
-  server.stdout.on('data', chunk => {
-    seen += chunk
-    if (seen.includes('localhost:') || seen.includes('127.0.0.1:')) resolve()
-  })
-  server.on('exit', code => {
-    reject(new Error(`astro dev exited (${code})`))
-  })
-  setTimeout(() => {
-    reject(new Error('astro dev never came up'))
-  }, 60000)
-})
-await ready
-
-const browser = await puppeteer.launch({
-  browser: 'firefox',
-  executablePath: FIREFOX,
-  headless: true,
-})
-const page = await browser.newPage()
-await page.setViewport({
-  width: WIDTH,
-  height: HEIGHT,
-  deviceScaleFactor: SCALE,
-})
-page.on('pageerror', err => {
-  console.log('[pageerror]', String(err).slice(0, 300))
-})
-
+const server = await startDevServer(PORT)
+let browser
 const dir = mkdtempSync(join(tmpdir(), 'homeshot-'))
 const raw = join(dir, 'home.png')
 let failed
 try {
-  await page.goto(`http://127.0.0.1:${PORT}/`, { waitUntil: 'networkidle0' })
+  browser = await puppeteer.launch({
+    browser: 'firefox',
+    executablePath: FIREFOX,
+    headless: true,
+  })
+  const page = await browser.newPage()
+  await page.setViewport({
+    width: WIDTH,
+    height: HEIGHT,
+    deviceScaleFactor: SCALE,
+  })
+  page.on('pageerror', err => {
+    console.log('[pageerror]', String(err).slice(0, 300))
+  })
+  await page.goto(`${server.url}/`, { waitUntil: 'networkidle0' })
 
   const drawn = await page.evaluate(
     async (saved, sessions, savedAgo) => {
@@ -218,8 +187,8 @@ try {
 } catch (e) {
   failed = e
 } finally {
-  await browser.close()
-  server.kill()
+  await browser?.close()
+  server.close()
 }
 if (failed !== undefined) throw failed
 

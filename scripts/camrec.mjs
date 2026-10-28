@@ -22,8 +22,9 @@
 import puppeteer from 'puppeteer-core'
 
 import { FIREFOX } from './browser.mjs'
+import { startDevServer } from './devserver.mjs'
 
-import { execFileSync, spawn } from 'node:child_process'
+import { execFileSync } from 'node:child_process'
 import { mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -48,27 +49,7 @@ if (phone === undefined) throw new Error(`phones: ${Object.keys(PHONES)}`)
 const PORT = 5298
 const APP = `http://127.0.0.1:${PORT}`
 
-const server = spawn(
-  'node',
-  [
-    'node_modules/vite/bin/vite.js',
-    '--port',
-    String(PORT),
-    '--strictPort',
-    '--host',
-    '127.0.0.1',
-  ],
-  { stdio: ['ignore', 'pipe', 'inherit'] },
-)
-await new Promise((resolve, reject) => {
-  let seen = ''
-  server.stdout.on('data', chunk => {
-    seen += chunk
-    if (seen.includes(`:${PORT}`)) resolve()
-  })
-  server.on('exit', code => reject(new Error(`vite exited (${code})`)))
-  setTimeout(() => reject(new Error('vite never came up')), 60000)
-})
+const server = await startDevServer(PORT, { path: '/cam/' })
 
 const browser = await puppeteer.launch({
   browser: 'firefox',
@@ -309,6 +290,6 @@ try {
   await page.screenshot({ path: flag('fail-shot', '/tmp/camrec-fail.png') })
 } finally {
   await browser.close()
-  server.kill()
+  server.close()
 }
 if (failed !== undefined) throw failed

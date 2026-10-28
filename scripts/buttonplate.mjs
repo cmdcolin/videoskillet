@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 import puppeteer from 'puppeteer-core'
-import { createServer as createVite } from 'vite'
 
 import { CHROME, FIREFOX } from './browser.mjs'
 import {
@@ -11,6 +10,7 @@ import {
   PAD_Y,
   SCALE,
 } from './buttonglitch.mjs'
+import { startDevServer } from './devserver.mjs'
 import { PRESET, SET } from './herolook.mjs'
 import { appUp } from './until.mjs'
 
@@ -117,9 +117,7 @@ const plateServer = createServer((_, res) => {
 await new Promise(r => plateServer.listen(0, r))
 const platePort = plateServer.address().port
 
-const vite = await createVite({ server: { port: 0 }, logLevel: 'warn' })
-await vite.listen()
-const appPort = vite.httpServer.address().port
+const app = await startDevServer(5294, { path: '/app/' })
 
 // Firefox Nightly's WebGPU process goes down now and then partway through a
 // run, and takes the browser with it. Each button gets a browser of its own and
@@ -147,7 +145,7 @@ const capture = async (b, box) => {
 const iurl = encodeURIComponent(`http://localhost:${platePort}/plate.png`)
 const shoot = async (page, b, box) => {
   await page.goto(
-    `http://localhost:${appPort}/app/?iurl=${iurl}&srcb=none&preset=${PRESET}&set=${SET},${BUTTON_LOOK},${Object.entries(
+    `${app.url}/app/?iurl=${iurl}&srcb=none&preset=${PRESET}&set=${SET},${BUTTON_LOOK},${Object.entries(
       b.set,
     )
       .map(([k, v]) => `${k}:${v}`)
@@ -284,7 +282,7 @@ for (const b of buttons) {
   console.log(`wrote ${target}`)
 }
 
-await vite.close()
+app.close()
 plateServer.close()
 rmSync(scratch, { recursive: true, force: true })
 

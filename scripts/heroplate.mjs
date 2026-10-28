@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 import puppeteer from 'puppeteer-core'
-import { createServer as createVite } from 'vite'
 
 import { CHROME, FIREFOX } from './browser.mjs'
+import { startDevServer } from './devserver.mjs'
 import { PRESET, SET } from './herolook.mjs'
 
 // Renders the landing page's headline as a title card that has been through the
@@ -236,9 +236,7 @@ const platePort = plateServer.address().port
 
 // The app's own dev server, started here rather than borrowed: this worktree is
 // shared, and a server someone else is editing against reloads mid-capture.
-const vite = await createVite({ server: { port: 0 }, logLevel: 'warn' })
-await vite.listen()
-const appPort = vite.httpServer.address().port
+const app = await startDevServer(5293, { path: '/app/' })
 
 const firefox = await puppeteer.launch({
   browser: 'firefox',
@@ -260,7 +258,7 @@ const iurl = encodeURIComponent(`http://localhost:${platePort}/plate.png`)
 const stale = []
 for (const render of RENDERS) {
   serving = plates.get(render.out)
-  const url = `http://localhost:${appPort}/app/?iurl=${iurl}&srcb=none&preset=${PRESET}&set=${SET}`
+  const url = `${app.url}/app/?iurl=${iurl}&srcb=none&preset=${PRESET}&set=${SET}`
   await page.goto(url, { waitUntil: 'networkidle0' })
   // Waited for rather than counted out. The device coming up and the plate
   // landing are both real time and how much of it varies — a cold dev server
@@ -372,7 +370,7 @@ for (const render of RENDERS) {
 }
 
 await firefox.close()
-await vite.close()
+app.close()
 plateServer.close()
 rmSync(scratch, { recursive: true, force: true })
 

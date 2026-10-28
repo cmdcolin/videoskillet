@@ -18,41 +18,21 @@
 // scrambler missed the sync tip on a third of the lines under a paused deck.
 //
 // Deliberately not part of `pnpm test` — it needs a GPU, a display and ~40 s.
-// Usage: node scripts/pixelcheck.mjs [--url http://localhost:5173/app]
+// Usage: node scripts/pixelcheck.mjs [--url http://localhost:5199/app]
 
 import puppeteer from 'puppeteer-core'
 
 import { FIREFOX } from './browser.mjs'
+import { startDevServer } from './devserver.mjs'
 // Boot waited for rather than slept through — see until.mjs.
 import { appUp } from './until.mjs'
-
-import { spawn } from 'node:child_process'
 
 const argUrl = process.argv.indexOf('--url')
 const baseUrl = argUrl > 0 ? process.argv[argUrl + 1] : null
 const PORT = 5197
 
-let vite = null
-let base = baseUrl
-if (!base) {
-  vite = spawn(
-    'node',
-    ['node_modules/vite/bin/vite.js', '--port', String(PORT), '--strictPort'],
-    {
-      stdio: 'ignore',
-    },
-  )
-  base = `http://localhost:${PORT}/app`
-  for (let i = 0; ; i++) {
-    try {
-      await fetch(base)
-      break
-    } catch {
-      if (i > 40) throw new Error('vite never came up')
-      await new Promise(r => setTimeout(r, 250))
-    }
-  }
-}
+const server = baseUrl ? null : await startDevServer(PORT, { path: '/app/' })
+const base = baseUrl ?? `${server.url}/app`
 
 const browser = await puppeteer.launch({
   browser: 'firefox',
@@ -289,5 +269,5 @@ const chroma = rgb => Math.max(...rgb) - Math.min(...rgb)
 }
 
 await browser.close()
-vite?.kill()
+server?.close()
 process.exit(failures === 0 ? 0 : 1)

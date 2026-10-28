@@ -4,7 +4,7 @@
 //   node scripts/panelshots.mjs            compare, exit 1 on drift
 //   node scripts/panelshots.mjs --update   rewrite the baselines
 //   node scripts/panelshots.mjs --only stage,input   just those states
-//   node scripts/panelshots.mjs --url http://localhost:5173/app/
+//   node scripts/panelshots.mjs --url http://localhost:5199/app/
 //
 // Why this exists. The panel is ~1000 CSS declarations across 27 modules, and
 // the refactors it invites — hoist a rule, drop one the UA already draws, share
@@ -27,10 +27,10 @@
 import puppeteer from 'puppeteer-core'
 
 import { FIREFOX } from './browser.mjs'
+import { startDevServer } from './devserver.mjs'
 // Boot waited for rather than slept through — see until.mjs.
 import { appUp } from './until.mjs'
 
-import { spawn } from 'node:child_process'
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 
@@ -209,39 +209,22 @@ const STATES = [
   },
 ]
 
-let vite = null
-let base = argUrl > 0 ? process.argv[argUrl + 1] : null
-if (base === null) {
-  vite = spawn(
-    'node',
-    ['node_modules/vite/bin/vite.js', '--port', String(PORT), '--strictPort'],
-    { stdio: 'ignore' },
-  )
-  base = `http://localhost:${PORT}/app/`
-  for (let i = 0; ; i++) {
-    try {
-      await fetch(base)
-      break
-    } catch {
-      if (i > 40) throw new Error('vite never came up')
-      await new Promise(r => setTimeout(r, 250))
-    }
-  }
-}
-
-const browser = await puppeteer.launch({
-  browser: 'firefox',
-  executablePath: FIREFOX,
-  headless: false,
-  extraPrefsFirefox: {
-    'dom.webgpu.enabled': true,
-    'gfx.webgpu.ignore-blocklist': true,
-  },
-})
+const server = argUrl > 0 ? null : await startDevServer(PORT, { path: '/app/' })
+const base = server === null ? process.argv[argUrl + 1] : `${server.url}/app/`
 
 const fails = []
 const report = []
+let browser
 try {
+  browser = await puppeteer.launch({
+    browser: 'firefox',
+    executablePath: FIREFOX,
+    headless: false,
+    extraPrefsFirefox: {
+      'dom.webgpu.enabled': true,
+      'gfx.webgpu.ignore-blocklist': true,
+    },
+  })
   const page = await browser.newPage()
   // DPR 1 and a fixed viewport: the panel is a fixed 332px here, and a scaled
   // shot only adds resampling noise to the diff.
@@ -462,8 +445,8 @@ try {
     }
   }
 } finally {
-  await browser.close()
-  vite?.kill()
+  await browser?.close()
+  server?.close()
 }
 
 console.log(report.join('\n'))
