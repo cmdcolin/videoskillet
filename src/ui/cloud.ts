@@ -60,11 +60,6 @@ export async function fetchHome(uid: string): Promise<HomeDoc> {
 
 export const editProfiles = cloud.editItems
 
-// The saved profiles on this account, or [] for an account that has never saved
-// one.
-export const fetchProfiles = async (uid: string): Promise<SavedProfile[]> =>
-  (await fetchHome(uid)).profiles
-
 // A profile's still: a small webp as base64, one document per profile under the
 // user, keyed by the profile's id. A subcollection rather than a field on the
 // entry because the user document is capped at 1 MiB and two hundred stills
