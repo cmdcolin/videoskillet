@@ -90,16 +90,21 @@ async function openCamera(want: Facing, deviceId?: string): Promise<Opened> {
   video.muted = true
   video.playsInline = true
   video.srcObject = stream
-  await video.play()
-  const settings = stream.getVideoTracks()[0]?.getSettings() ?? {}
-  // Labels and the full list arrive only after a grant.
-  const devices = await navigator.mediaDevices.enumerateDevices()
-  return {
-    stream,
-    video,
-    faces: settings.facingMode === 'environment' ? 'environment' : 'user',
-    sided: settings.facingMode !== undefined && settings.facingMode !== '',
-    cameras: devices.filter(d => d.kind === 'videoinput').length,
+  try {
+    await video.play()
+    const settings = stream.getVideoTracks()[0]?.getSettings() ?? {}
+    // Labels and the full list arrive only after a grant.
+    const devices = await navigator.mediaDevices.enumerateDevices()
+    return {
+      stream,
+      video,
+      faces: settings.facingMode === 'environment' ? 'environment' : 'user',
+      sided: settings.facingMode !== undefined && settings.facingMode !== '',
+      cameras: devices.filter(d => d.kind === 'videoinput').length,
+    }
+  } catch (e) {
+    stopAll(stream)
+    throw e
   }
 }
 
