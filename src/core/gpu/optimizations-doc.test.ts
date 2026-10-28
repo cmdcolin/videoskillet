@@ -1,6 +1,7 @@
 import { expect, test } from 'vitest'
 
 import { TAPS } from '../signal/filters'
+import { FILTER_KEYS } from './filterbank'
 import { PRELUDE, TILE_WG } from './prelude'
 
 import { readdirSync, readFileSync } from 'node:fs'
@@ -28,7 +29,6 @@ import { readdirSync, readFileSync } from 'node:fs'
 const flat = (text: string) => text.replaceAll(/\s+/g, ' ')
 const doc = flat(readFileSync('docs/OPTIMIZATIONS.md', 'utf8'))
 const architecture = readFileSync('docs/ARCHITECTURE.md', 'utf8')
-const pipeline = readFileSync('src/core/gpu/pipeline.ts', 'utf8')
 
 const SHADERS = 'src/core/gpu/shaders'
 const shader = (name: string) => readFileSync(`${SHADERS}/${name}`, 'utf8')
@@ -115,11 +115,7 @@ test('the doc quotes the tile width and the halo the kernels have to fit', () =>
 })
 
 test('the doc names exactly the controls that rebuild the filter bank', () => {
-  const keys = [
-    .../const FILTER_KEYS[^[]+\[([^\]]+)\]/
-      .exec(pipeline)![1]!
-      .matchAll(/'(\w+)'/g),
-  ].map(m => m[1])
+  const keys: string[] = [...FILTER_KEYS]
   const sentence = /Only (\w+) control keys touch it \(([^)]+)\)/.exec(doc)
   if (sentence === null) throw new Error('no filter-key sentence in the doc')
 

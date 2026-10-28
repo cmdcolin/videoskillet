@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { CONTROL_KEYS, DEFAULT_CONTROLS } from '../core/controls'
+import { FILTER_KEYS } from '../core/gpu/filterbank'
 import { SLIDER_BY_KEY, VIEW_KEYS } from './controls'
 import { RATE_MAX, RATE_MIN, modSource } from './modSlots'
 import {
@@ -288,16 +289,9 @@ describe('blendMod', () => {
   it('no authored routing drives a filter control', () => {
     // Modulating one of these rebuilds the whole FIR bank every frame. Fine as
     // a deliberate patch, not fine hanging off a chip someone clicked.
-    const FILTER_KEYS = [
-      'encChromaMHz',
-      'demodMHz',
-      'chromaTail',
-      'lumaMHz',
-      'lumaPeak',
-    ]
     for (const p of moving) {
       for (const m of p.mod ?? []) {
-        expect(FILTER_KEYS, p.name).not.toContain(m.target)
+        expect(FILTER_KEYS as readonly string[], p.name).not.toContain(m.target)
       }
     }
   })

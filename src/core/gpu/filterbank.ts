@@ -18,12 +18,17 @@ import {
   TAPS,
 } from '../signal/filters'
 
-import type { Controls } from '../controls'
+import type { ControlKey, Controls } from '../controls'
 
-export type FilterControls = Pick<
-  Controls,
-  'encChromaMHz' | 'demodMHz' | 'chromaTail' | 'lumaMHz' | 'lumaPeak'
->
+export const FILTER_KEYS = [
+  'encChromaMHz',
+  'demodMHz',
+  'chromaTail',
+  'lumaMHz',
+  'lumaPeak',
+] as const satisfies readonly ControlKey[]
+
+export type FilterControls = Pick<Controls, (typeof FILTER_KEYS)[number]>
 
 // The channel's luma section: the bandwidth lowpass, peaked from three quarters
 // of the bandwidth up.

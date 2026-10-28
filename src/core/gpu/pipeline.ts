@@ -31,7 +31,7 @@ import { buildCaptionRom, buildPage, CC_BUF_LEN, CC_PAGE } from './captionrom'
 import { gpuPowerFromSearch, initGpu, releaseGpu } from './context'
 import { debugOn, pageSearch } from './env'
 import { aFeedOn, bFeedOn, bOn, bWaveOn, FEEDS } from './feedgates'
-import { designFilterBank } from './filterbank'
+import { designFilterBank, FILTER_KEYS } from './filterbank'
 import { AutoLock } from './framelock'
 import { FrameRead } from './frameread'
 import {
@@ -117,13 +117,7 @@ const LOCK_AUTO = 4
 // was meant to buy. scripts/morphcheck.mjs is that measurement.
 const GLIDE_NOTIFY_MS = 100
 
-const FILTER_KEYS: ReadonlySet<ControlKey> = new Set<ControlKey>([
-  'encChromaMHz',
-  'demodMHz',
-  'chromaTail',
-  'lumaMHz',
-  'lumaPeak',
-])
+const FILTER_SET: ReadonlySet<ControlKey> = new Set(FILTER_KEYS)
 
 // One compute dispatch in the signal chain. `when` gates the dispatch on the
 // current controls; omitted means always. Bind groups are fixed except
@@ -280,7 +274,7 @@ export class Engine implements EngineApi {
   private mixState = new MixState(this.rand)
   private captionState = new CaptionState()
   private modState = new ModState()
-  private glide = new Glide(FILTER_KEYS)
+  private glide = new Glide(FILTER_SET)
   // When React is next due to hear where a morph has got to. A morph writes
   // every frame; telling React every frame would buy a full panel render per
   // frame (19ms with every row mounted), which is the morph paying for its own
@@ -311,7 +305,7 @@ export class Engine implements EngineApi {
   // The bay's layer over the board (savedBoard.ts › Overlay) — reused frame to
   // frame, because a patched bay runs on *every* frame, where the stab below
   // only lands on the clean ones.
-  private readonly modLayer = new Overlay(this.controls, FILTER_KEYS, () => {
+  private readonly modLayer = new Overlay(this.controls, FILTER_SET, () => {
     this.filtersDirty = true
   })
   // The stab gate: the whole look poked into a clean picture for a few tens of
@@ -334,7 +328,7 @@ export class Engine implements EngineApi {
   // `applyStab` marks the bank on the two edges of a cycle and on no frame in
   // between, because a layer that swaps the whole board and marked every filter
   // key in it would be a FIR redesign at the frame rate.
-  private readonly stabLayer = new Overlay(this.controls, FILTER_KEYS, NOOP)
+  private readonly stabLayer = new Overlay(this.controls, FILTER_SET, NOOP)
   // The transition in flight, or nothing — a few controls driven away from where
   // they rest and back, with one frame in the middle marked as the one to swap
   // the source on (signal/fault.ts). Written to and never read from, like the
@@ -346,10 +340,10 @@ export class Engine implements EngineApi {
   // the fault above and the same reason for living on the engine — it is
   // applied and undone inside one frame, so React never sees it.
   private clip = new ClipContact()
-  private readonly clipLayer = new Overlay(this.controls, FILTER_KEYS, () => {
+  private readonly clipLayer = new Overlay(this.controls, FILTER_SET, () => {
     this.filtersDirty = true
   })
-  private readonly faultLayer = new Overlay(this.controls, FILTER_KEYS, () => {
+  private readonly faultLayer = new Overlay(this.controls, FILTER_SET, () => {
     this.filtersDirty = true
   })
   // bent-crystal demod LO phase error, accumulated per frame (radians)
@@ -1196,7 +1190,7 @@ export class Engine implements EngineApi {
     // out from under the finger. Whoever grabbed a control has taken the wheel.
     this.endGlide()
     this.controls[key] = value
-    if (FILTER_KEYS.has(key)) this.filtersDirty = true
+    if (FILTER_SET.has(key)) this.filtersDirty = true
     this.emitControls()
   }
 
@@ -1209,7 +1203,7 @@ export class Engine implements EngineApi {
       const v = patch[k]
       if (v !== undefined) {
         this.controls[k] = v
-        if (FILTER_KEYS.has(k)) this.filtersDirty = true
+        if (FILTER_SET.has(k)) this.filtersDirty = true
       }
     }
     this.emitControls()
