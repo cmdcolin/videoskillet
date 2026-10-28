@@ -557,6 +557,9 @@ const SAG_MEAN = ${LINES * 2 + 15}u;
 // whole line. A flywheel coasts through a hum trough or an AGC dip; it only
 // starts hunting once the pulses have genuinely gone.
 const GATE_OPEN_FRAMES = 12.0;
+// Samples past the expected line start the locked separator's gate looks for
+// an edge, and how near an edge has to land for sync.wgsl to count it as home.
+const GATE_NARROW = 55;
 const VSYNC_FIRST = ${VSYNC_FIRST}u;
 const VSYNC_LAST = ${VSYNC_LAST}u;
 const HEAD_SWITCH_LINE = ${HEAD_SWITCH_LINE}u;

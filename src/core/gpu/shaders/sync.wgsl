@@ -207,7 +207,7 @@ fn main(@builtin(local_invocation_id) lid: vec3u) {
       minSum = minSum + select(min(IRE_SYNC, aux.x), aux.x, P.syncSlicer > 0.5);
       if (m.x > -999.0) {
         foundCount = foundCount + 1.0;
-        if (m.x <= 55.0) {
+        if (m.x <= f32(GATE_NARROW)) {
           nearCount = nearCount + 1.0;
         }
       }

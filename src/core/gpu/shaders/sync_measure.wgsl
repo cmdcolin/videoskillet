@@ -30,7 +30,6 @@
 @group(0) @binding(3) var<storage, read_write> measure: array<vec4f>;
 
 const SLICE = -20.0; // IRE slicing level on nominal sync
-const GATE_NARROW = 55; // samples past the expected start the locked gate looks
 
 // The separator taps video after the IF stage, inside the AGC loop — so the
 // receiver's gain reaches sync stability, not just brightness. A dim
