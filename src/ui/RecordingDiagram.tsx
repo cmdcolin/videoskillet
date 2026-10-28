@@ -385,6 +385,8 @@ export function RecordingDiagram() {
               y={gainY(gainAt(rec.lumaMHz, rec.lumaPeak))}
               label="luma bandwidth and peaking"
               reading={`${rec.lumaMHz.toFixed(2)} MHz, peaking ${rec.lumaPeak.toFixed(2)}`}
+              value={rec.lumaMHz}
+              range={bandwidth}
               onGrab={beginHand}
               onMove={pointer => {
                 setHeld(top)

@@ -458,6 +458,8 @@ export function MixerLoopDiagram() {
                 y={plotY(lapGain(loop, loop.filterMHz))}
                 label="loop resonance peak"
                 reading={`${loop.filterMHz.toFixed(2)} MHz, ${lapGain(loop, loop.filterMHz).toFixed(2)}×`}
+                value={loop.filterMHz}
+                range={hz}
                 onGrab={beginHand}
                 onMove={at =>
                   setPeak(

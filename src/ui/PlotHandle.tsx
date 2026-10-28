@@ -11,12 +11,15 @@ const at = (e: PointerEvent<SVGCircleElement>) => {
 
 // A point on a plot that the pointer drags. `onMove` gets the pointer in the
 // drawing's own units; the arrow keys call `onNudge` with the direction, and
-// the end of a drag calls `onDrop`.
+// the end of a drag calls `onDrop`. `value` and `range` are the control the
+// handle moves across the plot, which a screen reader announces.
 export function PlotHandle({
   x,
   y,
   label,
   reading,
+  value,
+  range,
   onGrab,
   onMove,
   onNudge,
@@ -26,6 +29,8 @@ export function PlotHandle({
   y: number
   label: string
   reading: string
+  value: number
+  range: { min: number; max: number }
   onGrab: () => void
   onMove: (at: { x: number; y: number }) => void
   onNudge: (dx: number, dy: number) => void
@@ -50,6 +55,9 @@ export function PlotHandle({
         tabIndex={0}
         aria-label={label}
         aria-valuetext={reading}
+        aria-valuenow={value}
+        aria-valuemin={range.min}
+        aria-valuemax={range.max}
         onPointerDown={e => {
           e.currentTarget.setPointerCapture(e.pointerId)
           onGrab()

@@ -428,6 +428,8 @@ export function DecoderDiagram() {
                 y={plotY(cornerAt.s.chroma)}
                 label="chroma bandwidth"
                 reading={`${v('demodMHz').toFixed(2)} MHz`}
+                value={v('demodMHz')}
+                range={bandwidth}
                 onGrab={beginHand}
                 onMove={pointer =>
                   setBandwidth(

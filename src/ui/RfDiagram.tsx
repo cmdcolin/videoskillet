@@ -199,6 +199,8 @@ export function RfDiagram() {
               y={ifY(ifResponse(mistune))}
               label="fine tuning"
               reading={`${mistune.toFixed(2)} MHz`}
+              value={mistune}
+              range={tuning}
               onGrab={beginHand}
               onMove={pointer => setMistune(ifMHz(pointer.x))}
               onNudge={dx => setMistune(mistune + dx * tuning.step * 5)}

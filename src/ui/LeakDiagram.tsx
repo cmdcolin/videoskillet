@@ -260,6 +260,8 @@ export function LeakDiagram() {
                 y={echoY}
                 label="ghost delay"
                 reading={`${l.ghostDelayUs.toFixed(2)} µs`}
+                value={l.ghostDelayUs}
+                range={delay}
                 onGrab={beginHand}
                 onMove={pointer => setDelay(delayAt(pointer.x, delay.max))}
                 onNudge={dx => setDelay(l.ghostDelayUs + dx * delay.step * 10)}
