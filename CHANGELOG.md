@@ -2,6 +2,100 @@
 
 All notable changes to videoskillet are documented here.
 
+## [2.21.0](https://github.com/cmdcolin/videoskillet/compare/v2.20.4...v2.21.0) - 2026-10-28
+
+### Features
+- *(ui)* [`b751042`](https://github.com/cmdcolin/videoskillet/commit/b751042699e63cb19d5a4ab09d3068862b6d20b0) add an agent button that shows how to connect an AI agent
+- *(signal)* [`30fbd27`](https://github.com/cmdcolin/videoskillet/commit/30fbd27615c27a97a6e811ec82d6546e20328967) record the frame store for a loop-bus fill, and add a freeze fill
+- *(ui)* [`0d9dac1`](https://github.com/cmdcolin/videoskillet/commit/0d9dac19632f432eefedb2163045735d52a66662) add the scrambled channel to the landing demos
+- *(signal)* [`9f04e6b`](https://github.com/cmdcolin/videoskillet/commit/9f04e6b51bc0111f322123108de53e8578e8bb37) hold a freeze through a source change
+- *(ui)* [`c5ef494`](https://github.com/cmdcolin/videoskillet/commit/c5ef494fb92377d268b36658292eb078c03875f7) add turbo sync loss to the landing demos
+
+### Fixes
+- *(ui)* [`e3cc360`](https://github.com/cmdcolin/videoskillet/commit/e3cc360e6ab763b903210cd7e7439cd2edc6ea12) move a view key under a morph when the gesture names it
+- *(ui)* [`2f3fd4c`](https://github.com/cmdcolin/videoskillet/commit/2f3fd4ce8a166e0d3002cdfac8f6ca7b3d2aec5f) rebase the mix in applyPreset when the board has drifted
+- *(ui)* [`5c8793f`](https://github.com/cmdcolin/videoskillet/commit/5c8793f75e2e6bbc28a20b3dbae857f54a8c670f) read the mix off a morph's destination while it travels
+- *(ui)* [`0b1b311`](https://github.com/cmdcolin/videoskillet/commit/0b1b311ac505a1e67812d2833df7ee9aa03feb72) aim the lens and hold a stage from the live board
+- *(gpu)* [`8616bfd`](https://github.com/cmdcolin/videoskillet/commit/8616bfdd9713847d0e16ceab8b99c62112a84586) pause a morph while compare is held
+- *(ui)* [`788f695`](https://github.com/cmdcolin/videoskillet/commit/788f695f7d3f397da353369560a8300d45bffac7) drop a group's diagram fold once the menu switch moves
+- *(ui)* [`38e0f10`](https://github.com/cmdcolin/videoskillet/commit/38e0f10042ecdc8625e0d87040ab8fc6ebe2ee64) mark the slider and fine-tier folds aria-expanded
+- *(ui)* [`e221db1`](https://github.com/cmdcolin/videoskillet/commit/e221db18bdb5a6542d783c71689e4e73a087a22a) mount one panel for a sheet in fullscreen with a popout
+- *(serve)* [`aa335cd`](https://github.com/cmdcolin/videoskillet/commit/aa335cdeadd5484493c47e4c9111bf7be28113a3) refuse a colon in an asset path and keep reads under the root
+- *(serve)* [`cd46674`](https://github.com/cmdcolin/videoskillet/commit/cd466747c93bf104d32a84f9fbe1b904f3dbe432) refuse yt-dlp bridge requests from other pages and unknown hosts
+- *(build)* [`d834a56`](https://github.com/cmdcolin/videoskillet/commit/d834a56632495dcdcb90ed063d84e316bdee5560) keep the dist server on loopback and inside its root
+- [`dcc0676`](https://github.com/cmdcolin/videoskillet/commit/dcc0676117716f48d9263afe8e3ec0a128066d3a) exit non-zero from the reel recorders when a take fails
+- *(ui)* [`a69d336`](https://github.com/cmdcolin/videoskillet/commit/a69d3365b55769ee70735eeb2894bd7af08e00e3) give blog images their dimensions so the page does not shift
+- [`79a09f2`](https://github.com/cmdcolin/videoskillet/commit/79a09f245fe9976aad531385e2c2ff05649764b0) start harness dev servers with astro, through one helper
+- *(gpu)* [`2afbcf0`](https://github.com/cmdcolin/videoskillet/commit/2afbcf0996c27b725d4cd345afcc0a9670b72961) release the caption buffers and progSnap on destroy
+- *(gpu)* [`150526f`](https://github.com/cmdcolin/videoskillet/commit/150526f939f03c864ab049c0dacb13070ff71b67) reset the caption decoder and the paperclip at the start of a take
+- *(ui)* [`38ec1eb`](https://github.com/cmdcolin/videoskillet/commit/38ec1eb97d90b41a2e9686057ef95a48a05bc523) time out Commons and Wikipedia requests, and cancel a superseded caption fetch
+- *(gpu)* [`2acc632`](https://github.com/cmdcolin/videoskillet/commit/2acc632a3a8939e896a093cf68b7f98a2824defb) rewrite the no-WebGPU message as plain sentences
+- *(ui)* [`1422e5b`](https://github.com/cmdcolin/videoskillet/commit/1422e5b448b3373e6718cc25b35816496ec26011) leave no file behind when a take fails to finish
+- *(ui)* [`0440ae8`](https://github.com/cmdcolin/videoskillet/commit/0440ae86618746e4c0eaa700789e60215cce18c8) stop a take as soon as its file stops taking writes
+- *(ui)* [`1887baf`](https://github.com/cmdcolin/videoskillet/commit/1887bafb326cc53875ecfebb318d67f8c8302d5e) drop a live frame when the file sink falls behind
+- *(ui)* [`ebac9e8`](https://github.com/cmdcolin/videoskillet/commit/ebac9e840e6ac85dff86c01c9485541384f5fc16) stop every kind of take at the sink's cap, and say why
+- *(ui)* [`e4f1874`](https://github.com/cmdcolin/videoskillet/commit/e4f1874feb2a85ff03007f3d09d6ec94056fa81a) refuse a take when storage is nearly full, and say how much is free
+- *(ui)* [`7015a31`](https://github.com/cmdcolin/videoskillet/commit/7015a317dc753687d3ae1ae1955a9589a0b73c72) start one take per toggle, and none after an unmount
+- *(ui)* [`0d8972f`](https://github.com/cmdcolin/videoskillet/commit/0d8972fa0b71e487f37487787ffa4fa8e574eec6) send each queued vote and rating once
+- *(midi)* [`2005fa5`](https://github.com/cmdcolin/videoskillet/commit/2005fa5ed4ec460478a9127a5433cc72f902492f) ignore a MIDI grant that arrives after destroy
+- *(ui)* [`f32e7bd`](https://github.com/cmdcolin/videoskillet/commit/f32e7bd0971423bbd20340689106929e5bd5bb76) catch a failed auth subscribe on the vote page
+- *(ui)* [`df22a17`](https://github.com/cmdcolin/videoskillet/commit/df22a17f8e8ea916f9cb77857f5d00a49756cd8c) leave another tab's live take alone
+- *(ui)* [`c0d3f33`](https://github.com/cmdcolin/videoskillet/commit/c0d3f33112ca0dd0c38978c891fa051207b24e85) tell /cam/ a cold tab needs a new tab, not a reload
+- *(ui)* [`2626571`](https://github.com/cmdcolin/videoskillet/commit/2626571153f9c253b5aa0c499a1b2a547a5e0ddf) keep /cam/'s switches up when the camera is off or refused
+- *(ui)* [`11b8ed3`](https://github.com/cmdcolin/videoskillet/commit/11b8ed36c245b8bb7ce20a36c062c8aae61b018e) stop a /cam/ camera that opened but failed to play
+- *(ui)* [`8861ae6`](https://github.com/cmdcolin/videoskillet/commit/8861ae66a4e7539a4d98031e2e4e6c1ce46b0c21) stop the B camera relay when its <video> fails to play
+- *(ui)* [`465d47d`](https://github.com/cmdcolin/videoskillet/commit/465d47d972ad42f8fce05742fa7c6c616b6f5221) stop the /cam/ camera when its hook unmounts
+- *(ui)* [`f68b685`](https://github.com/cmdcolin/videoskillet/commit/f68b685da563f9564801d0a52529467b910384d1) subscribe /cam/'s return-from-background checks once
+- *(ui)* [`d6d698d`](https://github.com/cmdcolin/videoskillet/commit/d6d698d2f1b63f73294a58f0aa3055b181bf2bc2) take a live B camera off when it has not resumed on return
+- *(ui)* [`07d9e02`](https://github.com/cmdcolin/videoskillet/commit/07d9e02c50d8fdb18937261a3165ff31b1354c97) keep /cam/'s sound switch off when no microphone opened
+- *(ui)* [`6d3931a`](https://github.com/cmdcolin/videoskillet/commit/6d3931a6ab0c03c8b62dd2ebb5947c239a52acff) give /cam/'s small buttons 44px press areas
+- *(ui)* [`833adcb`](https://github.com/cmdcolin/videoskillet/commit/833adcb5dd6cfa0586741a1166b71f3ed1e94e80) carry the whole /cam/ board in the full-app link
+- *(ui)* [`4330dc7`](https://github.com/cmdcolin/videoskillet/commit/4330dc7f5cd3d6490d8d000073f3af6185821e0c) start a clip or pattern on /cam/'s A at 1x
+- *(ui)* [`e9527d7`](https://github.com/cmdcolin/videoskillet/commit/e9527d7e3587a830046318cf813c4f3b76a80efd) show a chyron bus's help when it is open
+- *(ui)* [`8417cfd`](https://github.com/cmdcolin/videoskillet/commit/8417cfdfa3400174186451c5186b393384ef405a) glow a focused diagram box so focus shows on the open one
+- *(ui)* [`f1dceef`](https://github.com/cmdcolin/videoskillet/commit/f1dceef42f9dbfd2b051d1c3f850b8db57ab7f9d) give plot handles a value and range for screen readers
+- *(ui)* [`bcd6ad1`](https://github.com/cmdcolin/videoskillet/commit/bcd6ad1270938a4009946484e937f2088bce6de8) light every wire downstream of a live stage
+- *(ui)* [`b78d44e`](https://github.com/cmdcolin/videoskillet/commit/b78d44e83a0a39f155e633b09a0d32c6f7f5aa8b) size single-row diagram boxes by their names
+- *(ui)* [`483192b`](https://github.com/cmdcolin/videoskillet/commit/483192b2a0c2b14825b2277b55b814043172f12d) open the audio gain row from the wave tap again
+- *(signal)* [`5820487`](https://github.com/cmdcolin/videoskillet/commit/58204872a8d03d46c74c0ca3122e50b92becf7dd) ship the caption font ROM as data so headless renders draw text
+- *(ui)* [`be6bffe`](https://github.com/cmdcolin/videoskillet/commit/be6bffe53f64c9496c7f7413d39ae7409e3080be) start a link's cued clip at its in-point
+
+### Performance
+- *(signal)* [`383d8f5`](https://github.com/cmdcolin/videoskillet/commit/383d8f584ff88a9a13eac4ab3f6bef88aea3c125) skip staging the luma tile while the FM fold is on
+- *(ui)* [`ac346dd`](https://github.com/cmdcolin/videoskillet/commit/ac346ddbeeb43a709ec4096a0995a61987f9f245) decode a teletype page once per build
+- *(ui)* [`d091895`](https://github.com/cmdcolin/videoskillet/commit/d09189569c3b48e4dcbb9fa6bb8c7f7928a96b8a) write a streamed take's tail in batches
+- *(ui)* [`fee2b68`](https://github.com/cmdcolin/videoskillet/commit/fee2b68911ee396b980e13f84bb7abf710776cf7) copy a live B camera only when it delivers a new frame
+
+### Refactor
+- *(ui)* [`a84356b`](https://github.com/cmdcolin/videoskillet/commit/a84356bf88eaada03fc53b26b4fc627da7bd3e5b) share subscribeNever and drop a stray block statement
+- *(ui)* [`78c9d18`](https://github.com/cmdcolin/videoskillet/commit/78c9d182bb5cc0262f6927eae753f369f0f79f6d) build the hue wheel's contour edge once
+- [`6eef294`](https://github.com/cmdcolin/videoskillet/commit/6eef2942b579142f06f98581103cbb84fd1a7e13) launch the harnesses' Firefox through launchFirefox
+- [`a4c774c`](https://github.com/cmdcolin/videoskillet/commit/a4c774caa5bfe05580be4a4d7b03a76772f9b6aa) share the harnesses' flag and sleep helpers
+- *(gpu)* [`6451c8b`](https://github.com/cmdcolin/videoskillet/commit/6451c8b0f0fea64dd68c95d3eb06736c128ef1bf) derive the filter-bank control keys from one tuple
+- *(signal)* [`76b02da`](https://github.com/cmdcolin/videoskillet/commit/76b02dac1709b4f015d567fdf90f06a99fb0265e) share the receiver's YUV-to-RGB matrix as rgbOf
+- *(sync)* [`872ecbf`](https://github.com/cmdcolin/videoskillet/commit/872ecbf235f0075c0b24b9271f5bf31bf314e67a) move GATE_NARROW to the prelude so sync reads it too
+- *(signal)* [`15fb5a8`](https://github.com/cmdcolin/videoskillet/commit/15fb5a8bac9b51f688887e7b38a8d28e9c0ac19a) wrap captions with the teletype's wrapText
+- *(gpu)* [`18c9633`](https://github.com/cmdcolin/videoskillet/commit/18c9633e06b2ed4353004d045942fa5a6b316585) drop previousTrace, which only its test called
+- *(ui)* [`0673d36`](https://github.com/cmdcolin/videoskillet/commit/0673d36a2e54cb8e354317809faa19acf7bc028c) drop the unused fetchProfiles
+- *(gpu)* [`00a9fc0`](https://github.com/cmdcolin/videoskillet/commit/00a9fc093584599509898a0493084bd58ca21cf8) share one engine supervisor between the app and /cam/
+- *(ui)* [`d1b875a`](https://github.com/cmdcolin/videoskillet/commit/d1b875ac87628433cb268d810ddac35f06f71469) share reason and the clip-loop teardown across /cam/
+- *(ui)* [`42e0991`](https://github.com/cmdcolin/videoskillet/commit/42e09918fedbf229d267c0b692f2862aac0152ba) share the parts every signal diagram repeats
+- *(ui)* [`d313da2`](https://github.com/cmdcolin/videoskillet/commit/d313da2580cadb8c5cef8c9884b96ab334b74b3b) tidy small leftovers in the signal diagrams
+
+### Documentation
+- *(ui)* [`7825176`](https://github.com/cmdcolin/videoskillet/commit/782517671eac72497820ce374f12371cffe6459b) bring the muxer's comments up to date with sound and streaming
+- [`23b1893`](https://github.com/cmdcolin/videoskillet/commit/23b18934587ef16e084279c230c9e89c3e7ccd20) draft a blog post on chroma keying with frame-store ghosts
+- [`b325f5e`](https://github.com/cmdcolin/videoskillet/commit/b325f5ea4c4e25e827c7f39697d7d1473dde5eed) publish the chroma-keying ghosts post
+
+### Style
+- *(ci)* [`5e20425`](https://github.com/cmdcolin/videoskillet/commit/5e204256aa72db22c809bd631d8ec54372d6811f) format release.yml
+
+### Chores
+- [`af42053`](https://github.com/cmdcolin/videoskillet/commit/af42053860ac724926dc2440f8c1780f73781ca3) release the binaries that built, and gate jsr on the build
+- [`ed08f64`](https://github.com/cmdcolin/videoskillet/commit/ed08f6416de0c4e6d1b242d3fdec4b2e4985f3a6) build the site alongside the checks, and deploy after both
+- [`5d2fbf8`](https://github.com/cmdcolin/videoskillet/commit/5d2fbf8a4d21a4a88af92f6e128104d2cb5ddd18) delete screening inputs and harnesses that nothing references
+- [`37ee5f8`](https://github.com/cmdcolin/videoskillet/commit/37ee5f83ec309499f381efa9d50bae0c50c6a53a) render twelve looks on lavapipe and compare them with references
+
 ## [2.20.4](https://github.com/cmdcolin/videoskillet/compare/v2.20.3...v2.20.4) - 2026-10-28
 
 ### Chores
