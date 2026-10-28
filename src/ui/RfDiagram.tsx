@@ -1,15 +1,14 @@
 import { IRE_SYNC, IRE_WHITE } from '../core/signal/constants'
 import { sliderFor, snapToStep } from './controls'
 import { useControlsApi } from './ControlsContext'
-import { openBox, useReadings, useSelectedBox, type BoxSpec } from './diagram'
 import {
-  BoxRows,
-  BoxView,
-  Diagram,
-  Label,
-  Wire,
-  type WireLook,
-} from './DiagramParts'
+  ire,
+  openBox,
+  stageBoxes,
+  useReadings,
+  useSelectedBox,
+} from './diagram'
+import { Boxes, BoxRows, Chain, Diagram, Label } from './DiagramParts'
 import { alongRange } from './plotAlong'
 import { PlotHandle } from './PlotHandle'
 import styles from './RfDiagram.module.css'
@@ -39,9 +38,6 @@ const IF_MHZ = { lo: -2, hi: 9 }
 const IF_POINTS = 111
 const IF_TOP = 1.2
 
-const ire = (v: number) => (v < 0 ? `−${-v}` : String(v))
-const after = (id: Part) => COL[id].x + COL[id].w
-const look = (on: boolean): WireLook => (on ? 'on' : 'plain')
 const ifX = (mhz: number) =>
   IF.left + ((IF.right - IF.left) * (mhz - IF_MHZ.lo)) / (IF_MHZ.hi - IF_MHZ.lo)
 const ifMHz = (x: number) =>
@@ -83,35 +79,33 @@ export function RfDiagram() {
   const setMistune = (mhz: number) =>
     writeControl('rfMistuneMHz', snapToStep(tuning, mhz))
 
-  const box = (id: Part, name: string, help: string): BoxSpec => ({
-    id,
-    keys: OPENS[id],
-    x: COL[id].x,
-    y: ROW_Y - H / 2,
-    w: COL[id].w,
-    h: H,
-    name,
-    touched: r.touched(...OPENS[id]),
-    help,
-  })
+  const box = stageBoxes(OPENS, H, r)
   const boxes = [
     box(
       'adjacent',
+      COL.adjacent,
+      ROW_Y,
       'adjacent',
       "The next channel up the cable getting through the IF trap. The detector turns its carriers into beats: its sound carrier lays a 1.5 MHz weave over everything, and its raster's blanking crosses as slanted dark bars.",
     ),
     box(
       'tuning',
+      COL.tuning,
+      ROW_Y,
       'tuning',
       "The fine-tuning knob pulled off channel. Positive moves the 4.5 MHz sound carrier out of its trap, so it beats against the video and colour comes back as rainbow crawl. Negative slides the picture carrier down the IF's Nyquist slope until the colour killer cuts colour.",
     ),
     box(
       'snow',
+      COL.snow,
+      ROW_Y,
       'snow',
       'IF noise into the envelope detector. The picture rides a negative-modulation carrier, with sync at peak power and white at 12.5%, so whites sink into the noise first and sync goes last.',
     ),
     box(
       'ingress',
+      COL.ingress,
+      ROW_Y,
       'ingress',
       'A two-way radio getting into the cable through a cracked shield. The carrier is unrelated to any NTSC frequency, so its beat draws a herringbone at no fixed angle, and the program audio stands in for the speech.',
     ),
@@ -121,35 +115,17 @@ export function RfDiagram() {
       <Diagram width={WIDTH} height={HEIGHT} label="RF and tuner">
         {arrow => (
           <>
-            <Label x={0} y={ROW_Y - 6}>
-              cable
-            </Label>
-            <Wire arrow={arrow} d={`M0 ${ROW_Y} H${COL.adjacent.x}`} />
-            {ORDER.slice(0, -1).map((id, i) => (
-              <Wire
-                key={id}
-                arrow={arrow}
-                d={`M${after(id)} ${ROW_Y} H${COL[ORDER[i + 1]!].x}`}
-                look={look(live.slice(0, i + 1).some(Boolean))}
-              />
-            ))}
-            <Wire
+            <Chain
               arrow={arrow}
-              d={`M${after('ingress')} ${ROW_Y} H${WIDTH - 2}`}
-              look={look(live.some(Boolean))}
+              y={ROW_Y}
+              from={0}
+              to={WIDTH - 2}
+              stages={ORDER.map((id, i) => ({ at: COL[id], live: live[i]! }))}
+              input="cable"
+              output="to the set"
             />
-            <Label x={WIDTH - 2} y={ROW_Y - 6} anchor="end">
-              to the set
-            </Label>
 
-            {boxes.map(b => (
-              <BoxView
-                key={b.id}
-                box={b}
-                selected={b.id === pick.selected}
-                onSelect={pick.toggle}
-              />
-            ))}
+            <Boxes boxes={boxes} pick={pick} />
 
             <TracePlot
               {...SNOW}

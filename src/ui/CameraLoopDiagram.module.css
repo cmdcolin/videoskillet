@@ -3,11 +3,3 @@
 .light path {
   stroke-dasharray: 2 2;
 }
-
-/* The lap the loop would make with the fader up, drawn while it is down. */
-.faderUp {
-  fill: none;
-  stroke: var(--fg3);
-  stroke-width: 1;
-  stroke-dasharray: 2 2;
-}

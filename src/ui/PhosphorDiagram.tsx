@@ -1,6 +1,13 @@
-import { openBox, useReadings, useSelectedBox, type BoxSpec } from './diagram'
+import {
+  openBox,
+  useReadings,
+  useSelectedBox,
+  stageBoxes,
+  polyline,
+  rightOf,
+} from './diagram'
 import styles from './Diagram.module.css'
-import { BoxRows, BoxView, Diagram, Label, Wire } from './DiagramParts'
+import { BoxRows, Boxes, Diagram, Label, Wire } from './DiagramParts'
 import own from './PhosphorDiagram.module.css'
 import {
   afterglow,
@@ -11,8 +18,6 @@ import {
 } from './phosphorModel'
 import { PlotProbe } from './PlotProbe'
 import { PHOSPHOR_KEYS, PHOSPHOR_OPENS as OPENS } from './schematicKeys'
-
-type Part = keyof typeof OPENS
 
 const WIDTH = 340
 const TOP_Y = 14
@@ -110,12 +115,7 @@ function ChannelPlot({
       )
     : [0, 1]
   const curves = CHANNELS.map((_, c) =>
-    series
-      .map(
-        (p, i) =>
-          `${i === 0 ? 'M' : 'L'}${x(i, series.length).toFixed(1)} ${y(p[c]!).toFixed(1)}`,
-      )
-      .join(' '),
+    polyline(series.map((p, i) => [x(i, series.length), y(p[c]!)])),
   )
   const labelY = endLabels(
     CHANNELS.map((_, c) => y(series.at(-1)![c]!)),
@@ -212,44 +212,30 @@ export function PhosphorDiagram() {
     burnEfficiency(v('burnDepth'), (DOSE_SPAN * i) / (BURN_POINTS - 1)),
   )
 
-  const box = (
-    id: Part,
-    y: number,
-    name: string,
-    help: string,
-    off?: boolean,
-  ): BoxSpec => ({
-    id,
-    keys: OPENS[id],
-    x: COL[id].x,
-    y: y - H / 2,
-    w: COL[id].w,
-    h: H,
-    name,
-    off,
-    touched: r.touched(...OPENS[id]),
-    help,
-  })
-  const boxes: BoxSpec[] = [
+  const box = stageBoxes(OPENS, H, r)
+  const boxes = [
     box(
       'primaries',
+      COL.primaries,
       TOP_Y,
       'phosphors',
       'The phosphor set fixes the primaries, and the decoder converts its colour to them in linear light.',
     ),
     box(
       'persistence',
+      COL.persistence,
       TOP_Y,
       'afterglow',
       'The layer holds the light it emitted and gives back a share each field. The share falls as the square of what is left, and red and blue fall faster than green.',
-      !held,
+      { off: !held },
     ),
     box(
       'scatter',
+      COL.scatter,
       BOT_Y,
       'scatter',
       'Held light spreads sideways through the deposit into its neighbours each field, so the older light in a trail is wider.',
-      !held,
+      { off: !held },
     ),
     {
       x: COL.gun.x,
@@ -262,13 +248,14 @@ export function PhosphorDiagram() {
     },
     box(
       'burn',
+      COL.burn,
       TOP_Y,
       'burn',
       'Each field adds wear to the coating by the light it carried, and a worn patch gives back less light, blue least of all.',
     ),
   ]
   const at = (id: keyof typeof COL) => COL[id].x
-  const end = (id: keyof typeof COL) => COL[id].x + COL[id].w
+  const end = (id: keyof typeof COL) => rightOf(COL[id])
   const loopLook = held ? (r.touched('phosphorBleed') ? 'on' : 'plain') : 'dash'
 
   return (
@@ -307,14 +294,7 @@ export function PhosphorDiagram() {
               held light
             </Label>
 
-            {boxes.map(b => (
-              <BoxView
-                key={b.id ?? b.name}
-                box={b}
-                selected={b.id === pick.selected}
-                onSelect={pick.toggle}
-              />
-            ))}
+            <Boxes boxes={boxes} pick={pick} />
 
             <ChannelPlot
               {...LEFT_PLOT}

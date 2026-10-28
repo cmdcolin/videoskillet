@@ -1,9 +1,17 @@
 import { FSC, SAMPLES_PER_LINE } from '../core/signal/constants'
-import { openBox, useReadings, useSelectedBox, type BoxSpec } from './diagram'
+import {
+  ire,
+  openBox,
+  polyline,
+  rightOf,
+  stageBoxes,
+  useReadings,
+  useSelectedBox,
+} from './diagram'
 import styles from './Diagram.module.css'
 import {
+  Boxes,
   BoxRows,
-  BoxView,
   Diagram,
   Label,
   Wire,
@@ -61,10 +69,9 @@ const freqY = (g: number) =>
     Math.log2(GAIN_HI / GAIN_LO)
 const lineX = (s: number) =>
   LINE.left + ((LINE.right - LINE.left) * s) / (SAMPLES_PER_LINE - 1)
-const after = (id: Part) => ROW[id].x + ROW[id].w
+const after = (id: Part) => rightOf(ROW[id])
 const LOOP_L = ROW.peaking.x + 12
 const LOOP_R = after('peaking') - 12
-const ire = (v: number) => (v < 0 ? `−${-v}` : String(v))
 
 // The bent enhancer as enhancer.wgsl runs it, one box per stage in the order a
 // line meets them: the clamp gate, the coupling capacitor that droops between
@@ -89,12 +96,7 @@ export function EnhancerDiagram() {
   const gains = peakingGains(e, CURVE_MHZ)
   const line = enhancedLine(e)
   const gate = lineX(gateSample(e))
-  const curve = gains
-    .map(
-      (g, i) =>
-        `${i === 0 ? 'M' : 'L'}${freqX(CURVE_MHZ[i]!).toFixed(1)} ${freqY(g).toFixed(1)}`,
-    )
-    .join(' ')
+  const curve = polyline(gains.map((g, i) => [freqX(CURVE_MHZ[i]!), freqY(g)]))
   const peakLook: WireLook = howl ? 'alarm' : peak ? 'on' : 'plain'
   const looks: Record<Part, WireLook> = {
     clamp: e.clampUs !== 0 ? 'on' : 'plain',
@@ -103,35 +105,33 @@ export function EnhancerDiagram() {
     regen: e.sync > 0 ? 'on' : 'plain',
   }
 
-  const box = (id: Part, name: string, help: string): BoxSpec => ({
-    id,
-    keys: OPENS[id],
-    x: ROW[id].x,
-    y: TOP_Y - H / 2,
-    w: ROW[id].w,
-    h: H,
-    name,
-    touched: r.touched(...OPENS[id]),
-    help,
-  })
+  const box = stageBoxes(OPENS, H, r)
   const boxes = [
     box(
       'clamp',
+      ROW.clamp,
+      TOP_Y,
       'clamp',
       'The DC restorer. A gate pins one sample per line to blanking and the rest of the line rides on it. Slid into the picture, the gate pins picture content to blanking; slid onto the sync tip, it lifts the whole line.',
     ),
     box(
       'droop',
+      ROW.droop,
+      TOP_Y,
       'droop',
       'The coupling capacitor between gates. With a short time constant the level sags back toward blanking along the line, so a bright bar trails a dark streak.',
     ),
     box(
       'peaking',
+      ROW.peaking,
+      TOP_Y,
       'peaking',
       "A two-pole resonator at the detail frequency, mixed back into the video by the boost. The regeneration loop sets the pole radius: low rings briefly after each edge, and from 0.75 the ring grows by itself until it reaches the amplifier's ±120 IRE rails.",
     ),
     box(
       'regen',
+      ROW.regen,
+      TOP_Y,
       'sync regen',
       'The stabilizer: a lowpass separator slices the video at the slice level and stamps a 4.7 µs pulse at every crossing, everywhere except over burst. Above blanking, dark picture trips it mid-line.',
     ),
@@ -183,14 +183,7 @@ export function EnhancerDiagram() {
               regen
             </text>
 
-            {boxes.map(b => (
-              <BoxView
-                key={b.id}
-                box={b}
-                selected={b.id === pick.selected}
-                onSelect={pick.toggle}
-              />
-            ))}
+            <Boxes boxes={boxes} pick={pick} />
 
             <text
               x={FREQ.left}
@@ -226,7 +219,7 @@ export function EnhancerDiagram() {
               x2={freqX(FSC_MHZ)}
               y1={FREQ.top}
               y2={FREQ.bottom}
-              className={own.fsc}
+              className={styles.fsc}
             />
             <Label x={freqX(FSC_MHZ)} y={FREQ.top - 6} anchor="middle">
               fsc

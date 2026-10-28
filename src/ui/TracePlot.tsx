@@ -1,3 +1,4 @@
+import { signed } from './diagram'
 import styles from './Diagram.module.css'
 import { Label } from './DiagramParts'
 import { PlotProbe } from './PlotProbe'
@@ -29,8 +30,6 @@ function axisOf(scale: TraceScale, values: readonly number[]) {
   const span = niceSpan(Math.max(...values.map(Math.abs)), scale.floor)
   return { lo: -span, hi: span, ticks: [-span, 0, span], reference: 0 }
 }
-
-const signed = (v: number) => (v > 0 ? `+${v}` : v < 0 ? `−${-v}` : '0')
 
 // One trace against an evenly spaced axis, drawn into a Diagram. A jump larger
 // than `breakOver` between neighbours lifts the pen, which is where a wrapped

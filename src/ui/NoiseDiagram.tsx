@@ -1,13 +1,7 @@
 import { LINES } from '../core/signal/constants'
-import { openBox, useReadings, useSelectedBox, type BoxSpec } from './diagram'
-import {
-  BoxRows,
-  BoxView,
-  Diagram,
-  Label,
-  Wire,
-  type WireLook,
-} from './DiagramParts'
+import { RasterPanel } from './BandLane'
+import { openBox, stageBoxes, useReadings, useSelectedBox } from './diagram'
+import { Boxes, BoxRows, Chain, Diagram } from './DiagramParts'
 import own from './NoiseDiagram.module.css'
 import {
   arcMarks,
@@ -42,8 +36,6 @@ const BAND_MHZ = 6
 const POINTS = 61
 
 const times = (v: number) => (v === 0 ? '0' : `${v}×`)
-const look = (on: boolean): WireLook => (on ? 'on' : 'plain')
-const after = (id: Part) => COL[id].x + COL[id].w
 const rasterX = (x: number) => RASTER.left + (RASTER.right - RASTER.left) * x
 const rasterY = (row: number) =>
   RASTER.top + ((RASTER.bottom - RASTER.top) * row) / LINES
@@ -70,35 +62,33 @@ export function NoiseDiagram() {
   )
   const strike = strikeSlab(v('strikeRate'))
 
-  const box = (id: Part, name: string, help: string): BoxSpec => ({
-    id,
-    keys: OPENS[id],
-    x: COL[id].x,
-    y: ROW_Y - H / 2,
-    w: COL[id].w,
-    h: H,
-    name,
-    touched: r.touched(...OPENS[id]),
-    help,
-  })
+  const box = stageBoxes(OPENS, H, r)
   const boxes = [
     box(
       'floor',
+      COL.floor,
+      ROW_Y,
       'floor',
       "Gaussian snow added to the waveform. At 0 on the spectrum knob it is receiver noise through the IF filter, flat across the video band. At 1 it is the deck's FM demodulator, which differentiates the noise, so the floor rises into the chroma bandpass and decodes as coloured speckle.",
     ),
     box(
       'arcs',
+      COL.arcs,
+      ROW_Y,
       'arcs',
       'Sparse bright events from arcing thermostats and dying flybacks, from a few microseconds to a torn slab of hash. The dimmer lock bunches them into two bands per mains cycle that roll with the hum bar.',
     ),
     box(
       'ignition',
+      COL.ignition,
+      ROW_Y,
       'ignition',
       'A spark plug firing on a strict period. A period that is not a whole number of lines walks each hit sideways by the same step, which draws the drifting lattice of dashes.',
     ),
     box(
       'strikes',
+      COL.strikes,
+      ROW_Y,
       'strikes',
       'Lightning, a breaker arcing, a compressor kicking on: dozens of lines of dense hash that decays down the raster. It lands on sync tips, so the sync loop tears and the beam load spikes.',
     ),
@@ -109,42 +99,22 @@ export function NoiseDiagram() {
       <Diagram width={WIDTH} height={HEIGHT} label="noise and interference">
         {arrow => (
           <>
-            <Label x={0} y={ROW_Y - 6}>
-              video
-            </Label>
-            <Wire arrow={arrow} d={`M0 ${ROW_Y} H${COL.floor.x}`} />
-            <Wire
+            <Chain
               arrow={arrow}
-              d={`M${after('floor')} ${ROW_Y} H${COL.arcs.x}`}
-              look={look(floorOn)}
+              y={ROW_Y}
+              from={0}
+              to={WIDTH - 2}
+              stages={[
+                { at: COL.floor, live: floorOn },
+                { at: COL.arcs, live: arcsOn },
+                { at: COL.ignition, live: ignitionOn },
+                { at: COL.strikes, live: strikesOn },
+              ]}
+              input="video"
+              output="to the set"
             />
-            <Wire
-              arrow={arrow}
-              d={`M${after('arcs')} ${ROW_Y} H${COL.ignition.x}`}
-              look={look(floorOn || arcsOn)}
-            />
-            <Wire
-              arrow={arrow}
-              d={`M${after('ignition')} ${ROW_Y} H${COL.strikes.x}`}
-              look={look(floorOn || arcsOn || ignitionOn)}
-            />
-            <Wire
-              arrow={arrow}
-              d={`M${after('strikes')} ${ROW_Y} H${WIDTH - 2}`}
-              look={look(floorOn || arcsOn || ignitionOn || strikesOn)}
-            />
-            <Label x={WIDTH - 2} y={ROW_Y - 6} anchor="end">
-              to the set
-            </Label>
 
-            {boxes.map(b => (
-              <BoxView
-                key={b.id}
-                box={b}
-                selected={b.id === pick.selected}
-                onSelect={pick.toggle}
-              />
-            ))}
+            <Boxes boxes={boxes} pick={pick} />
 
             <TracePlot
               {...FLOOR}
@@ -158,32 +128,24 @@ export function NoiseDiagram() {
               look={floorOn ? 'on' : 'plain'}
             />
 
-            <Label x={RASTER.left} y={PLOT.top - 6}>
-              one frame, example
-            </Label>
-            <rect
-              x={RASTER.left}
-              y={RASTER.top}
-              width={RASTER.right - RASTER.left}
-              height={RASTER.bottom - RASTER.top}
-              className={own.frame}
-            />
-            {strike && (
-              <rect
-                x={RASTER.left}
-                y={rasterY(strike.row)}
-                width={RASTER.right - RASTER.left}
-                height={Math.max(rasterY(strike.rows) - rasterY(0), 1.5)}
-                className={own.slab}
+            <RasterPanel {...RASTER} title="one frame, example" lanes={[]}>
+              {strike && (
+                <rect
+                  x={RASTER.left}
+                  y={rasterY(strike.row)}
+                  width={RASTER.right - RASTER.left}
+                  height={Math.max(rasterY(strike.rows) - rasterY(0), 1.5)}
+                  className={own.slab}
+                />
+              )}
+              <path
+                d={marksPath([
+                  ...arcMarks(v('impulseRate'), v('impulseMains')),
+                  ...ignitionMarks(v('impulseHz')),
+                ])}
+                className={own.mark}
               />
-            )}
-            <path
-              d={marksPath([
-                ...arcMarks(v('impulseRate'), v('impulseMains')),
-                ...ignitionMarks(v('impulseHz')),
-              ])}
-              className={own.mark}
-            />
+            </RasterPanel>
           </>
         )}
       </Diagram>

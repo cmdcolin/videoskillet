@@ -4,17 +4,22 @@ import { lumaKernel } from '../core/gpu/filterbank'
 import { IRE_WHITE, SAMPLE_RATE } from '../core/signal/constants'
 import { sliderFor, snapToStep } from './controls'
 import { ControlStoreContext, useControlsApi } from './ControlsContext'
-import { openBox, useReadings, useSelectedBox, type BoxSpec } from './diagram'
+import {
+  openBox,
+  useReadings,
+  useSelectedBox,
+  stageBoxes,
+  polyline,
+  rightOf,
+} from './diagram'
 import styles from './Diagram.module.css'
-import { BoxRows, BoxView, Diagram, Label, Wire } from './DiagramParts'
+import { BoxRows, Boxes, Diagram, Label, Wire } from './DiagramParts'
 import { PlotHandle } from './PlotHandle'
 import { PlotProbe } from './PlotProbe'
 import own from './RecordingDiagram.module.css'
 import { BAR, barLine, chromaOn, fmCeiling, playBack } from './recordModel'
 import { magnitude, response } from './response'
 import { RECORDING_KEYS, RECORDING_OPENS as OPENS } from './schematicKeys'
-
-type Part = keyof typeof OPENS
 
 const WIDTH = 340
 const TOP_Y = 14
@@ -26,7 +31,6 @@ const ROW = {
   filter: { x: 195, w: 78 },
   differential: { x: 160, w: 101 },
 }
-const right = (s: { x: number; w: number }) => s.x + s.w
 const TAP_X = 284
 const KEY_X = 240
 const KEY_Y = 32
@@ -57,10 +61,6 @@ const xMHz = (x: number) =>
   (RESPONSE_PLOT.right - RESPONSE_PLOT.left)
 const gainAt = (lumaMHz: number, lumaPeak: number) =>
   magnitude(response(lumaKernel({ lumaMHz, lumaPeak }), lumaMHz * 1e6))
-const path = (pts: readonly (readonly [number, number])[]) =>
-  pts
-    .map(([x, y], i) => `${i === 0 ? 'M' : 'L'}${x.toFixed(1)} ${y.toFixed(1)}`)
-    .join(' ')
 
 const signed = (v: number) => {
   const n = Number(Math.abs(v).toFixed(1))
@@ -118,38 +118,32 @@ export function RecordingDiagram() {
     writeControls({ ...store.get(), lumaMHz, lumaPeak })
   }
 
-  const box = (id: Part, y: number, name: string, help: string): BoxSpec => ({
-    id,
-    keys: OPENS[id],
-    x: ROW[id].x,
-    y: y - H / 2,
-    w: ROW[id].w,
-    h: H,
-    name,
-    touched: r.touched(...OPENS[id]),
-    help,
-  })
+  const box = stageBoxes(OPENS, H, r)
   const boxes = [
     box(
       'emphasis',
+      ROW.emphasis,
       TOP_Y,
       'emphasis',
       'The record pre-emphasis: each sample plus 1.3 times its rise over the two samples before it. A hard edge from black to white leaves a spike more than twice the height of white in the signal the deck records. No control changes the boost.',
     ),
     box(
       'fm',
+      ROW.fm,
       TOP_Y,
       'FM deviation',
       'The FM modulator and the deviation the tape can carry. Where the emphasized signal passes the ceiling, the playback discriminator folds back and takes the excess off the luma, decaying through the deemphasis time constant into a dark streak after the edge. Over-deviation lowers the ceiling from 240 IRE to 112; inversion streak is the time constant.',
     ),
     box(
       'filter',
+      ROW.filter,
       TOP_Y,
       'luma filter',
       'The playback luma lowpass at the bandwidth, with the peaking boost from three quarters of the bandwidth up. Peaking overshoots every edge into a ringing outline.',
     ),
     box(
       'differential',
+      ROW.differential,
       BOT_Y,
       'diff gain/phase',
       'The video amplifier the chroma rides through. Its gain falls and its phase advances in step with the luma underneath, from nothing at black to the full setting at white. The burst sits at blanking, so the decoder reference keeps its phase.',
@@ -168,21 +162,21 @@ export function RecordingDiagram() {
             <Wire arrow={arrow} d={`M9 ${TOP_Y} H${ROW.emphasis.x}`} />
             <Wire
               arrow={arrow}
-              d={`M${right(ROW.emphasis)} ${TOP_Y} H${ROW.fm.x}`}
+              d={`M${rightOf(ROW.emphasis)} ${TOP_Y} H${ROW.fm.x}`}
             />
             <Wire
               arrow={arrow}
               look={folds ? 'alarm' : 'plain'}
-              d={`M${right(ROW.fm)} ${TOP_Y} H${ROW.filter.x}`}
+              d={`M${rightOf(ROW.fm)} ${TOP_Y} H${ROW.filter.x}`}
             />
             <Wire
               arrow={arrow}
-              d={`M${right(ROW.filter)} ${TOP_Y} H${WIDTH - 4}`}
+              d={`M${rightOf(ROW.filter)} ${TOP_Y} H${WIDTH - 4}`}
             />
             <Label x={WIDTH - 4} y={TOP_Y - 6} anchor="end">
               out
             </Label>
-            <circle cx={TAP_X} cy={TOP_Y} r={1.8} className={own.dot} />
+            <circle cx={TAP_X} cy={TOP_Y} r={1.8} className={styles.dot} />
             <Wire
               arrow={arrow}
               look={keyLook}
@@ -197,17 +191,10 @@ export function RecordingDiagram() {
             </Label>
             <Wire
               arrow={arrow}
-              d={`M${right(ROW.differential)} ${BOT_Y} H${SUM_X} V${TOP_Y + 2}`}
+              d={`M${rightOf(ROW.differential)} ${BOT_Y} H${SUM_X} V${TOP_Y + 2}`}
             />
-            <circle cx={SUM_X} cy={TOP_Y} r={1.8} className={own.dot} />
-            {boxes.map(b => (
-              <BoxView
-                key={b.id}
-                box={b}
-                selected={b.id === pick.selected}
-                onSelect={pick.toggle}
-              />
-            ))}
+            <circle cx={SUM_X} cy={TOP_Y} r={1.8} className={styles.dot} />
+            <Boxes boxes={boxes} pick={pick} />
 
             <Label x={BAR_PLOT.left} y={PLOT.top - 6}>
               white bar
@@ -279,16 +266,16 @@ export function RecordingDiagram() {
             </clipPath>
             <g clipPath={`url(#${clip}-plot)`}>
               <path
-                d={path(emphasized.map((e, n) => [barX(n), ireY(e)]))}
+                d={polyline(emphasized.map((e, n) => [barX(n), ireY(e)]))}
                 className={own.toTape}
               />
               <path
-                d={path(emphasized.map((e, n) => [barX(n), ireY(e)]))}
+                d={polyline(emphasized.map((e, n) => [barX(n), ireY(e)]))}
                 className={styles.curveAlarm}
                 clipPath={`url(#${clip}-over)`}
               />
               <path
-                d={path(out.map((o, n) => [barX(n), ireY(o)]))}
+                d={polyline(out.map((o, n) => [barX(n), ireY(o)]))}
                 className={
                   r.touched(...OPENS.fm, ...OPENS.filter)
                     ? styles.curveOn
@@ -341,7 +328,7 @@ export function RecordingDiagram() {
               </Label>
             ))}
             <path
-              d={path(gains)}
+              d={polyline(gains)}
               className={
                 r.touched(...OPENS.filter) ? styles.curveOn : styles.curve
               }

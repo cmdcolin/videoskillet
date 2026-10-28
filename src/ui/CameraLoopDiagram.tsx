@@ -1,17 +1,15 @@
-import { useId } from 'react'
-
 import { cameraLapGains, greyLevels, type CameraLoop } from './cameraLap'
 import own from './CameraLoopDiagram.module.css'
-import { openBox, useReadings, useSelectedBox, type BoxSpec } from './diagram'
-import styles from './Diagram.module.css'
+import { openBox, stageBoxes, useReadings, useSelectedBox } from './diagram'
 import {
+  Boxes,
   BoxRows,
-  BoxView,
   Diagram,
   Label,
   Wire,
   type WireLook,
 } from './DiagramParts'
+import { LapPlot } from './LapPlot'
 import { PlotProbe } from './PlotProbe'
 import {
   CAMERA_LOOP_KEYS,
@@ -50,13 +48,7 @@ const plotY = (g: number) =>
   PLOT.bottom -
   ((PLOT.bottom - PLOT.top) * Math.min(Math.max(g, 0), GAIN_TOP)) / GAIN_TOP
 
-const trace = (gains: readonly number[]) =>
-  gains
-    .map(
-      (g, i) =>
-        `${i === 0 ? 'M' : 'L'}${plotX(LEVELS[i]!).toFixed(1)} ${plotY(g).toFixed(1)}`,
-    )
-    .join(' ')
+const LEVEL_X = LEVELS.map(plotX)
 
 // The camera loop as compose.wgsl closes it, drawn as the mixer loop's sibling.
 // The program crosses the fader into the chain, which ends on the tube's face.
@@ -66,7 +58,6 @@ const trace = (gains: readonly number[]) =>
 function CameraLoop({ initial }: { initial: Part | null }) {
   const r = useReadings(READ)
   const pick = useSelectedBox(initial)
-  const clip = useId()
   const v = r.value
   const loop: CameraLoop = {
     mix: v('fbMix'),
@@ -84,27 +75,13 @@ function CameraLoop({ initial }: { initial: Part | null }) {
   const peak = Math.max(...gains)
   const look: WireLook = off ? 'dash' : peak > 1 ? 'alarm' : 'on'
   const irisLook: WireLook = v('fbIris') !== 0 && !off ? 'on' : 'dash'
-  const curve = trace(gains)
   // With the fader down, the lap at its full travel, where mix is 1.
   const upGains = off ? cameraLapGains({ ...loop, mix: 1 }, LEVELS) : null
 
-  const box = (
-    id: Part,
-    at: { x: number; w: number },
-    y: number,
-    name: string,
-    help: string,
-  ): BoxSpec => ({
-    id,
-    keys: OPENS[id],
-    x: at.x,
-    y: y - H / 2,
-    w: at.w,
-    h: H,
-    name,
+  const make = stageBoxes(OPENS, H, r)
+  const box: typeof make = (id, ...rest) => ({
+    ...make(id, ...rest),
     off: off && id !== 'fader' && id !== 'face',
-    touched: r.touched(...OPENS[id]),
-    help,
   })
   const boxes = [
     box(
@@ -189,91 +166,40 @@ function CameraLoop({ initial }: { initial: Part | null }) {
               />
             </g>
 
-            {boxes.map(b => (
-              <BoxView
-                key={b.id}
-                box={b}
-                selected={b.id === pick.selected}
-                onSelect={pick.toggle}
-              />
-            ))}
+            <Boxes boxes={boxes} pick={pick} />
 
-            <Label x={PLOT.left + 4} y={PLOT.top - 8}>
-              loop gain per lap, by level
-            </Label>
-            {[0, 2].map(g => (
-              <line
-                key={g}
-                x1={PLOT.left}
-                x2={PLOT.right}
-                y1={plotY(g)}
-                y2={plotY(g)}
-                className={styles.grid}
-              />
-            ))}
-            <line
-              x1={PLOT.left}
-              x2={PLOT.right}
-              y1={plotY(1)}
-              y2={plotY(1)}
-              className={styles.unity}
-            />
-            {[0, 1, 2].map(g => (
-              <Label key={g} x={PLOT.left - 4} y={plotY(g) + 3} anchor="end">
-                {g === 0 ? '0' : `${g}×`}
-              </Label>
-            ))}
-            <Label x={PLOT.left} y={PLOT.bottom + 12}>
-              black
-            </Label>
-            <Label x={plotX(0.5)} y={PLOT.bottom + 12} anchor="middle">
-              grey
-            </Label>
-            <Label x={PLOT.right} y={PLOT.bottom + 12} anchor="end">
-              white
-            </Label>
-            <clipPath id={clip}>
-              <rect
-                x={PLOT.left}
-                y={PLOT.top - 2}
-                width={PLOT.right - PLOT.left}
-                height={plotY(1) - PLOT.top + 2}
-              />
-            </clipPath>
-            <path
-              d={curve}
-              className={
-                r.touched(
-                  'fbMix',
-                  'fbGain',
-                  'fbBlack',
-                  'fbKnee',
-                  'crtCutoff',
-                  'crtGamma',
-                  'crtBloom',
-                  'crtHalation',
-                  'crtGlow',
-                )
-                  ? styles.curveOn
-                  : styles.curve
+            <LapPlot
+              {...PLOT}
+              title="loop gain per lap, by level"
+              grid={[0, 2]}
+              xs={LEVEL_X}
+              gains={gains}
+              upGains={upGains}
+              on={r.touched(
+                'fbMix',
+                'fbGain',
+                'fbBlack',
+                'fbKnee',
+                'crtCutoff',
+                'crtGamma',
+                'crtBloom',
+                'crtHalation',
+                'crtGlow',
+              )}
+              y={plotY}
+              axis={
+                <>
+                  <Label x={PLOT.left} y={PLOT.bottom + 12}>
+                    black
+                  </Label>
+                  <Label x={plotX(0.5)} y={PLOT.bottom + 12} anchor="middle">
+                    grey
+                  </Label>
+                  <Label x={PLOT.right} y={PLOT.bottom + 12} anchor="end">
+                    white
+                  </Label>
+                </>
               }
-            />
-            {upGains && (
-              <>
-                <path d={trace(upGains)} className={own.faderUp} />
-                <Label
-                  x={PLOT.right}
-                  y={Math.min(plotY(upGains.at(-1)!) + 11, PLOT.bottom - 4)}
-                  anchor="end"
-                >
-                  fader up
-                </Label>
-              </>
-            )}
-            <path
-              d={curve}
-              className={styles.curveAlarm}
-              clipPath={`url(#${clip})`}
             />
             <PlotProbe
               {...PLOT}

@@ -1,14 +1,13 @@
 import styles from './BeamDiagram.module.css'
 import { edgeProfile, lineProfile } from './beamModel'
-import { openBox, useReadings, useSelectedBox, type BoxSpec } from './diagram'
 import {
-  BoxRows,
-  BoxView,
-  Diagram,
-  Label,
-  Wire,
-  type WireLook,
-} from './DiagramParts'
+  openBox,
+  polyline,
+  stageBoxes,
+  useReadings,
+  useSelectedBox,
+} from './diagram'
+import { Boxes, BoxRows, Chain, Diagram } from './DiagramParts'
 import { alongRange } from './plotAlong'
 import { BEAM_KEYS, BEAM_OPENS as OPENS } from './schematicKeys'
 import { TracePlot } from './TracePlot'
@@ -37,9 +36,6 @@ const GAP_POINTS = 41
 const BRIGHT = 1
 const DARK = 0.1
 
-const after = (id: Part) => COL[id].x + COL[id].w
-const look = (on: boolean): WireLook => (on ? 'on' : 'plain')
-
 export function BeamDiagram() {
   const r = useReadings(BEAM_KEYS)
   const pick = useSelectedBox()
@@ -58,47 +54,47 @@ export function BeamDiagram() {
   )
   const bright = lineProfile(v('scanBeam'), v('scanBloom'), BRIGHT, GAP_POINTS)
   const dark = lineProfile(v('scanBeam'), v('scanBloom'), DARK, GAP_POINTS)
-  const darkPath = dark
-    .map(
-      (value, i) =>
-        `${i === 0 ? 'M' : 'L'}${(GAP.left + ((GAP.right - GAP.left) * i) / (GAP_POINTS - 1)).toFixed(1)} ${(GAP.bottom - (GAP.bottom - GAP.top) * value).toFixed(1)}`,
-    )
-    .join(' ')
+  const darkPath = polyline(
+    dark.map((value, i) => [
+      GAP.left + ((GAP.right - GAP.left) * i) / (GAP_POINTS - 1),
+      GAP.bottom - (GAP.bottom - GAP.top) * value,
+    ]),
+  )
 
-  const box = (id: Part, name: string, help: string): BoxSpec => ({
-    id,
-    keys: OPENS[id],
-    x: COL[id].x,
-    y: ROW_Y - H / 2,
-    w: COL[id].w,
-    h: H,
-    name,
-    touched: r.touched(...OPENS[id]),
-    help,
-  })
+  const box = stageBoxes(OPENS, H, r)
   const boxes = [
     box(
       'strobe',
+      COL.strobe,
+      ROW_Y,
       'strobe',
       'Holds the beam-blanking gate on, so the guns are cut for most of each cycle and let through in flashes. The gate sits one line above the phosphor, so light already on the glass decays through the dark, and a feedback loop pumps at the strobe rate.',
     ),
     box(
       'spot',
+      COL.spot,
+      ROW_Y,
       'spot',
       'How wide a spot the gun writes on the phosphor. The beam is a smooth blob, so light from one sample lands partly on its neighbours and every edge arrives as a ramp. The coating is a granular deposit, so its emission is mottled, strongest in the mid tones.',
     ),
     box(
       'svm',
+      COL.svm,
+      ROW_Y,
       'svm',
       'Scan velocity modulation: consumer sets patch differentiated luma into an extra deflection coil, slowing the beam through a dark-to-bright edge. Emission follows dwell time, so light is moved across the edge rather than added. Negative wires the coil backwards.',
     ),
     box(
       'recon',
+      COL.recon,
+      ROW_Y,
       'recon',
       'How the sampled line is reconstructed into continuous light. Toward 0 is linear interpolation, which loses high frequencies; toward 1 is a cubic that stays flat past the subcarrier and rings a little at an edge.',
     ),
     box(
       'lines',
+      COL.lines,
+      ROW_Y,
       'lines',
       'The beam is a spot of finite height, so it does not quite fill the gap between scan lines. The spot grows with beam current, so bright lines are fatter than dark ones: scanlines show in the shadows and close up in the highlights.',
     ),
@@ -109,35 +105,17 @@ export function BeamDiagram() {
       <Diagram width={WIDTH} height={HEIGHT} label="beam">
         {arrow => (
           <>
-            <Label x={0} y={ROW_Y - 6}>
-              gun
-            </Label>
-            <Wire arrow={arrow} d={`M0 ${ROW_Y} H${COL.strobe.x}`} />
-            {ORDER.slice(0, -1).map((id, i) => (
-              <Wire
-                key={id}
-                arrow={arrow}
-                d={`M${after(id)} ${ROW_Y} H${COL[ORDER[i + 1]!].x}`}
-                look={look(live.slice(0, i + 1).some(Boolean))}
-              />
-            ))}
-            <Wire
+            <Chain
               arrow={arrow}
-              d={`M${after('lines')} ${ROW_Y} H${WIDTH - 2}`}
-              look={look(live.some(Boolean))}
+              y={ROW_Y}
+              from={0}
+              to={WIDTH - 2}
+              stages={ORDER.map((id, i) => ({ at: COL[id], live: live[i]! }))}
+              input="gun"
+              output="glass"
             />
-            <Label x={WIDTH - 2} y={ROW_Y - 6} anchor="end">
-              glass
-            </Label>
 
-            {boxes.map(b => (
-              <BoxView
-                key={b.id}
-                box={b}
-                selected={b.id === pick.selected}
-                onSelect={pick.toggle}
-              />
-            ))}
+            <Boxes boxes={boxes} pick={pick} />
 
             <TracePlot
               {...EDGE}

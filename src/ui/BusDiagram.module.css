@@ -1,14 +1,3 @@
-.sum,
-.sumOn {
-  fill: none;
-  stroke: var(--fg4);
-  stroke-width: 1;
-}
-
-.sumOn {
-  stroke: var(--accent);
-}
-
 .dot {
   fill: var(--fg2);
 }

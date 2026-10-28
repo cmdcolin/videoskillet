@@ -1,12 +1,12 @@
-import { openBox, useReadings, useSelectedBox, type BoxSpec } from './diagram'
 import {
-  BoxRows,
-  BoxView,
-  Diagram,
-  Label,
-  Wire,
-  type WireLook,
-} from './DiagramParts'
+  lit,
+  openBox,
+  rightOf,
+  stageBoxes,
+  useReadings,
+  useSelectedBox,
+} from './diagram'
+import { Boxes, BoxRows, Diagram, Label, Wire } from './DiagramParts'
 import { alongRange } from './plotAlong'
 import { SYNTH_KEYS, SYNTH_OPENS as OPENS } from './schematicKeys'
 import {
@@ -43,8 +43,7 @@ const HEIGHT = PLOT.bottom + 14
 const WAVE_POINTS = 97
 const STRIP_CELLS = 34
 
-const after = (id: Part) => COL[id].x + COL[id].w
-const look = (on: boolean): WireLook => (on ? 'on' : 'plain')
+const after = (id: Part) => rightOf(COL[id])
 const unit = (v: number) => String(v)
 const rate = (cycles: number) => {
   const shown =
@@ -70,69 +69,61 @@ export function SynthDiagram() {
   )
   const cell = (STRIP.right - STRIP.left) / STRIP_CELLS
 
-  const box = (
-    id: Part,
-    y: number,
-    name: string,
-    help: string,
-    h = H,
-  ): BoxSpec => ({
-    id,
-    keys: OPENS[id],
-    x: COL[id].x,
-    y: y - h / 2,
-    w: COL[id].w,
-    h,
-    name,
-    touched: live(id),
-    help,
-  })
+  const box = stageBoxes(OPENS, H, r)
   const boxes = [
     box(
       'luma',
+      COL.luma,
       TOP_Y,
       'luma',
       "The picture's brightness into oscillator A's frequency input, so the wave runs faster through bright picture and the image draws itself as contour lines. The input reads the deck or the camera loop's return.",
     ),
     box(
       'oscA',
+      COL.oscA,
       TOP_Y,
       'osc A',
       'The first oscillator, read against the raster: one cycle per frame is a vertical gradient, the 15734 Hz line rate turns it sideways, a multiple paints standing bars, and 3579545 Hz lands on the subcarrier and returns flat colour.',
     ),
     box(
       'oscB',
+      COL.oscB,
       BOT_Y,
       'osc B',
       'The second oscillator, live once the combiner is off "osc A alone". It beats against the first, so a pair a few hertz apart draws a drifting moire.',
     ),
     box(
       'shape',
+      COL.shape,
       MAIN_Y,
       'shape',
       'The waveform for both oscillators. Ramp is a sawtooth, triangle folds it symmetric, sine passes the encoder without ringing, and pulse is a comparator output with the most bandwidth to distort.',
-      BOT_Y - TOP_Y + H,
+      { h: BOT_Y - TOP_Y + H },
     ),
     box(
       'mix',
+      COL.mix,
       MAIN_Y,
       'mix',
       "How the two oscillators combine: sum is a mixing amplifier driven into its rails, ring mod a balanced multiply leaving only sum and difference, comparator puts B on a slicer's reference.",
     ),
     box(
       'level',
+      COL.level,
       MAIN_Y,
       'level',
       'Output contrast around mid-video, ahead of the colorizer. Past 1 the waveform runs into its rails and squares off.',
     ),
     box(
       'colour',
+      COL.colour,
       MAIN_Y,
       'colour',
       'One signal into three guns through three phase shifts 120 degrees apart, or through three comparators that switch each gun fully on or off. The input filter softens what its slicers see, and the input is the oscillator or the picture.',
     ),
     box(
       'over',
+      COL.over,
       BOT_Y,
       'over',
       "Lays the synth over slot A's picture instead of replacing it. Source A only.",
@@ -147,51 +138,44 @@ export function SynthDiagram() {
             <Wire
               arrow={arrow}
               d={`M${after('luma')} ${TOP_Y} H${COL.oscA.x}`}
-              look={look(v('synthFm') > 0)}
+              look={lit(v('synthFm') > 0)}
             />
             <Wire
               arrow={arrow}
               d={`M${after('oscA')} ${TOP_Y} H${COL.shape.x}`}
-              look={look(live('oscA'))}
+              look={lit(live('oscA'))}
             />
             <Wire
               arrow={arrow}
               d={`M${after('oscB')} ${BOT_Y} H${COL.shape.x}`}
-              look={combined ? look(live('oscB')) : 'dash'}
+              look={combined ? lit(live('oscB')) : 'dash'}
             />
             <Wire
               arrow={arrow}
               d={`M${after('shape')} ${MAIN_Y} H${COL.mix.x}`}
-              look={look(live('shape'))}
+              look={lit(live('shape'))}
             />
             <Wire
               arrow={arrow}
               d={`M${after('mix')} ${MAIN_Y} H${COL.level.x}`}
-              look={look(live('mix'))}
+              look={lit(live('mix'))}
             />
             <Wire
               arrow={arrow}
               d={`M${after('level')} ${MAIN_Y} H${COL.colour.x}`}
-              look={look(live('level'))}
+              look={lit(live('level'))}
             />
             <Wire
               arrow={arrow}
               d={`M${after('colour')} ${MAIN_Y} H${WIDTH - 2}`}
-              look={look(live('colour') || v('synthColor') > 0)}
+              look={lit(live('colour') || v('synthColor') > 0)}
             />
             <Wire
               d={`M${after('over')} ${BOT_Y} H${JOIN_X} V${MAIN_Y}`}
-              look={look(v('synthOver') > 0)}
+              look={lit(v('synthOver') > 0)}
             />
 
-            {boxes.map(b => (
-              <BoxView
-                key={b.id}
-                box={b}
-                selected={b.id === pick.selected}
-                onSelect={pick.toggle}
-              />
-            ))}
+            <Boxes boxes={boxes} pick={pick} />
 
             <TracePlot
               {...WAVE}

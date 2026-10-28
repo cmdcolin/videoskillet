@@ -7,11 +7,11 @@ import {
   LINES,
   SAMPLE_RATE,
 } from '../core/signal/constants'
-import { openBox, useReadings, useSelectedBox, type BoxSpec } from './diagram'
+import { openBox, useReadings, useSelectedBox, stageBoxes } from './diagram'
 import styles from './Diagram.module.css'
 import {
   BoxRows,
-  BoxView,
+  Boxes,
   Diagram,
   Label,
   Wire,
@@ -92,25 +92,8 @@ export function VhsDiagram() {
   const clog = v('headClog')
   const hunt = v('trackHunt')
 
-  const box = (
-    id: Part,
-    y: number,
-    name: string,
-    help: string,
-    extra: Partial<BoxSpec> = {},
-  ): BoxSpec => ({
-    id,
-    keys: OPENS[id],
-    x: ROW[id].x,
-    y: y - H / 2,
-    w: ROW[id].w,
-    h: H,
-    name,
-    touched: r.touched(...OPENS[id]),
-    help,
-    ...extra,
-  })
-  const boxes: BoxSpec[] = [
+  const box = stageBoxes(OPENS, H, r)
+  const boxes = [
     {
       x: ROW.down.x,
       y: TOP_Y - H / 2,
@@ -123,6 +106,7 @@ export function VhsDiagram() {
     },
     box(
       'tape',
+      ROW.tape,
       TOP_Y,
       'tape',
       'The colour-under carrier as the head plays it back. It records under the luma FM with far less headroom, and its noise comes back through the narrow chroma bandpass as slow blotches of wrong hue.',
@@ -130,6 +114,7 @@ export function VhsDiagram() {
     ),
     box(
       'up',
+      ROW.up,
       TOP_Y,
       'up',
       'Playback heterodynes the carrier back up to 3.58 MHz and bandpasses it 0.6 MHz either side. The head never lands exactly where it wrote, so the phase of the conversion walks from line to line and hue wanders with it.',
@@ -137,36 +122,42 @@ export function VhsDiagram() {
     ),
     box(
       'mix',
+      ROW.mix,
       TOP_Y,
       'mix',
       'Crossfades the direct chroma with the chroma that went through colour-under. At 0 only the direct chroma reaches the output.',
     ),
     box(
       'delay',
+      ROW.delay,
       TOP_Y,
       'delay',
       'The group delay of the chroma path against the luma path, in whole samples. The burst takes the same delay, so colour slides off its edges and hue holds.',
     ),
     box(
       'tracking',
+      ROW.tracking,
       BOT_Y,
       'tracking',
       'How far the head strays from its track, and where down the sweep the servo is aiming. Off its track the head reads part of the neighbour, recorded at the other azimuth, so the RF fades and a band of lines turns to snow and tears sideways.',
     ),
     box(
       'servo',
+      ROW.servo,
       BOT_Y,
       'servo',
       'The auto-tracking servo reads the RF envelope and steers the capstan phase toward its peak, through a dead band and with less damping the higher hunt goes. A cut, a change of shuttle speed or a thump knocks it off the peak, and a loose servo overshoots and rings.',
     ),
     box(
       'capstan',
+      ROW.capstan,
       BOT_Y,
       'capstan',
       'Tape speed as a multiple of play. Off play speed each sweep of the head crosses tracks of the other azimuth, and the RF nulls into a noise bar at each one.',
     ),
     box(
       'heads',
+      ROW.heads,
       BOT_Y,
       'heads',
       'Two heads take alternate sweeps, head A over the A tracks and head B over the B tracks. A clogged head reads snow for its whole sweep, so picture and snow alternate at field rate.',
@@ -344,14 +335,7 @@ export function VhsDiagram() {
               RF
             </Label>
 
-            {boxes.map(b => (
-              <BoxView
-                key={b.name}
-                box={b}
-                selected={b.id === pick.selected}
-                onSelect={pick.toggle}
-              />
-            ))}
+            <Boxes boxes={boxes} pick={pick} />
 
             <Label x={FOOT.left} y={FOOT.top - 6}>
               tracks

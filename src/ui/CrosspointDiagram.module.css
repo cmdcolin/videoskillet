@@ -2,11 +2,6 @@
   fill: var(--surface-raised);
 }
 
-.frame {
-  fill: none;
-  stroke: var(--border);
-}
-
 .cut {
   fill: var(--accent);
   opacity: 0.5;

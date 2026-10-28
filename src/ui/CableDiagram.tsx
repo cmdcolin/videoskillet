@@ -1,21 +1,14 @@
-import { BandLane } from './BandLane'
+import { RasterPanel } from './BandLane'
 import styles from './CableDiagram.module.css'
+import { cableLine, contactBands, GUARD_ROWS, stripeBands } from './cableModel'
 import {
-  cableLine,
-  contactBands,
-  GUARD_ROWS,
-  stripeBands,
-  type Band,
-} from './cableModel'
-import { openBox, useReadings, useSelectedBox, type BoxSpec } from './diagram'
-import {
-  BoxRows,
-  BoxView,
-  Diagram,
-  Label,
-  Wire,
-  type WireLook,
-} from './DiagramParts'
+  ire,
+  openBox,
+  stageBoxes,
+  useReadings,
+  useSelectedBox,
+} from './diagram'
+import { Boxes, BoxRows, Chain, Diagram } from './DiagramParts'
 import { alongRange } from './plotAlong'
 import { CABLE_KEYS, CABLE_OPENS as OPENS } from './schematicKeys'
 import { LINE_US, PICTURE_BAND } from './testLine'
@@ -47,39 +40,7 @@ const PLOT = { top: 50, bottom: 98 }
 const LINE = { left: 24, right: 164, ...PLOT }
 const RASTER = { left: 208, right: 346, ...PLOT }
 const HEIGHT = PLOT.bottom + 14
-const LANES = {
-  pin: [0, 0.3],
-  shield: [0.35, 0.65],
-  stripe: [0.7, 1],
-} as const
 const IRE_SCALE = { lo: -110, hi: 210, ticks: [0, 100], reference: 0 }
-
-const ire = (v: number) => (v < 0 ? `−${-v}` : String(v))
-const after = (id: Part) => COL[id].x + COL[id].w
-const look = (on: boolean): WireLook => (on ? 'on' : 'plain')
-const laneX = (lane: keyof typeof LANES, at: 0 | 1) =>
-  RASTER.left + (RASTER.right - RASTER.left) * LANES[lane][at]
-
-function Lane({
-  lane,
-  bands,
-  className,
-}: {
-  lane: keyof typeof LANES
-  bands: readonly Band[]
-  className: string
-}) {
-  return (
-    <BandLane
-      x0={laneX(lane, 0)}
-      x1={laneX(lane, 1)}
-      top={RASTER.top}
-      bottom={RASTER.bottom}
-      bands={bands}
-      className={className}
-    />
-  )
-}
 
 export function CableDiagram() {
   const r = useReadings(CABLE_KEYS)
@@ -102,47 +63,48 @@ export function CableDiagram() {
   const guardOn = v('macrovision') > 0
   const contacts = contactBands(v('connectorGlitch'), v('connectorMode'))
   const stripes = stripeBands(v('mvStripeDeg'))
-  const live = ORDER.map(id => r.touched(...OPENS[id]))
 
-  const box = (id: Part, name: string, help: string): BoxSpec => ({
-    id,
-    keys: OPENS[id],
-    x: COL[id].x,
-    y: ROW_Y - H / 2,
-    w: COL[id].w,
-    h: H,
-    name,
-    touched: r.touched(...OPENS[id]),
-    help,
-  })
+  const box = stageBoxes(OPENS, H, r)
   const boxes = [
     box(
       'guard',
+      COL.guard,
+      ROW_Y,
       'guard',
       "Macrovision's gain-control lie, stamped on vertical-interval lines 12-19 where the receiver's AGC averages sync depth, and a colorstripe that rotates the burst on walking bands of lines. Both are aimed at recorders and are invisible in normal framing.",
     ),
     box(
       'scramble',
+      COL.scramble,
+      ROW_Y,
       'scramble',
       'Head-end scrambling: the sync tip lifted toward blanking until the set has no line start to lock to. Alternate scrambles every other line, and SSAVI adds a negative picture.',
     ),
     box(
       'chroma',
+      COL.chroma,
+      ROW_Y,
       'chroma',
       'Only the chroma pin of an S-video lead reaches the composite input: burst-locked colour with no luma and no sync tips.',
     ),
     box(
       'plug',
+      COL.plug,
+      ROW_Y,
       'plug',
       'A loose RCA plug making and breaking contact in bands of lines, re-rolled every frame. The centre pin opens the path and snow fills the band; the shield loses the ground reference and the line rides a mains pedestal.',
     ),
     box(
       'flip',
+      COL.flip,
+      ROW_Y,
       'flip',
       'Signal and ground swapped. The whole waveform negates, sync tips and burst included, so the separator latches onto the wrong level and the colours invert.',
     ),
     box(
       'load',
+      COL.load,
+      ROW_Y,
       'load',
       'One 75 Ω terminator is correct. Negative double-terminates and halves the signal; positive leaves the line open, so it runs hot and each edge rings with a short echo.',
     ),
@@ -153,29 +115,17 @@ export function CableDiagram() {
       <Diagram width={WIDTH} height={HEIGHT} label="cable and wiring">
         {arrow => (
           <>
-            <Wire arrow={arrow} d={`M0 ${ROW_Y} H${COL.guard.x}`} />
-            {ORDER.slice(0, -1).map((id, i) => (
-              <Wire
-                key={id}
-                arrow={arrow}
-                d={`M${after(id)} ${ROW_Y} H${COL[ORDER[i + 1]!].x}`}
-                look={look(live.slice(0, i + 1).some(Boolean))}
-              />
-            ))}
-            <Wire
+            <Chain
               arrow={arrow}
-              d={`M${after('load')} ${ROW_Y} H${WIDTH - 2}`}
-              look={look(live.some(Boolean))}
+              y={ROW_Y}
+              from={0}
+              to={WIDTH - 2}
+              stages={ORDER.map(id => ({
+                at: COL[id],
+                live: r.touched(...OPENS[id]),
+              }))}
             />
-
-            {boxes.map(b => (
-              <BoxView
-                key={b.id}
-                box={b}
-                selected={b.id === pick.selected}
-                onSelect={pick.toggle}
-              />
-            ))}
+            <Boxes boxes={boxes} pick={pick} />
 
             <TracePlot
               {...LINE}
@@ -189,41 +139,37 @@ export function CableDiagram() {
               look={lineOn ? 'on' : 'plain'}
             />
 
-            <Label x={RASTER.left} y={PLOT.top - 6}>
-              one frame, example
-            </Label>
-            <rect
-              x={RASTER.left}
-              y={RASTER.top}
-              width={RASTER.right - RASTER.left}
-              height={RASTER.bottom - RASTER.top}
-              className={styles.frame}
+            <RasterPanel
+              {...RASTER}
+              title="one frame, example"
+              lanes={[
+                {
+                  name: 'pin',
+                  span: [0, 0.3],
+                  on: plugOn,
+                  layers: [{ bands: contacts.pin, className: styles.pin! }],
+                },
+                {
+                  name: 'shield',
+                  span: [0.35, 0.65],
+                  on: plugOn,
+                  layers: [
+                    { bands: contacts.shield, className: styles.shield! },
+                  ],
+                },
+                {
+                  name: 'stripe',
+                  span: [0.7, 1],
+                  on: guardOn,
+                  layers: [
+                    { bands: stripes, className: styles.stripe! },
+                    ...(guardOn
+                      ? [{ bands: [GUARD_ROWS], className: styles.guard! }]
+                      : []),
+                  ],
+                },
+              ]}
             />
-            <Lane lane="pin" bands={contacts.pin} className={styles.pin!} />
-            <Lane
-              lane="shield"
-              bands={contacts.shield}
-              className={styles.shield!}
-            />
-            <Lane lane="stripe" bands={stripes} className={styles.stripe!} />
-            {guardOn && (
-              <Lane
-                lane="stripe"
-                bands={[GUARD_ROWS]}
-                className={styles.guard!}
-              />
-            )}
-            {(['pin', 'shield', 'stripe'] as const).map(lane => (
-              <Label
-                key={lane}
-                x={(laneX(lane, 0) + laneX(lane, 1)) / 2}
-                y={PLOT.bottom + 11}
-                anchor="middle"
-                on={lane === 'pin' || lane === 'shield' ? plugOn : guardOn}
-              >
-                {lane}
-              </Label>
-            ))}
           </>
         )}
       </Diagram>

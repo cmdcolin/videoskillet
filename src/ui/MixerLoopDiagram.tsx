@@ -1,13 +1,13 @@
-import { use, useId } from 'react'
+import { use } from 'react'
 
 import { FSC } from '../core/signal/constants'
 import { sliderFor, snapToStep } from './controls'
 import { ControlStoreContext, useControlsApi } from './ControlsContext'
-import { openBox, useReadings, useSelectedBox, type BoxSpec } from './diagram'
+import { openBox, useReadings, useSelectedBox, stageBoxes } from './diagram'
 import styles from './Diagram.module.css'
 import {
   BoxRows,
-  BoxView,
+  Boxes,
   Diagram,
   Label,
   Wire,
@@ -15,6 +15,7 @@ import {
 } from './DiagramParts'
 import { loopSlice } from './hueKey'
 import { HueWheel, LevelBar, TurnDial } from './HueWheel'
+import { LapPlot } from './LapPlot'
 import { lapTurn, turnWords } from './lapTurn'
 import {
   BAND_MHZ,
@@ -25,12 +26,9 @@ import {
   mixerLoopOf,
   type MixerLoop,
 } from './loopGain'
-import own from './MixerLoopDiagram.module.css'
 import { PlotHandle } from './PlotHandle'
 import { PlotProbe } from './PlotProbe'
 import { MIXER_LOOP_KEYS, MIXER_LOOP_OPENS as OPENS } from './schematicKeys'
-
-type Part = keyof typeof OPENS
 
 const WIDTH = 340
 const TOP_Y = 16
@@ -71,14 +69,6 @@ const plotY = (g: number) =>
   PLOT.bottom -
   ((PLOT.bottom - PLOT.top) * Math.min(Math.max(g, 0), GAIN_TOP)) / GAIN_TOP
 
-const trace = (gains: readonly number[], right: number) =>
-  gains
-    .map(
-      (g, i) =>
-        `${i === 0 ? 'M' : 'L'}${plotX(CURVE_MHZ[i]!, right).toFixed(1)} ${plotY(g).toFixed(1)}`,
-    )
-    .join(' ')
-
 // The mixer loop as fb_composite.wgsl runs it, one box per stage. The program
 // crosses the fader into the rest of the chain, the frame store captures what
 // came out and reads it back late, and the return runs back along the bottom
@@ -95,7 +85,6 @@ const trace = (gains: readonly number[], right: number) =>
 export function MixerLoopDiagram() {
   const r = useReadings(MIXER_LOOP_KEYS)
   const pick = useSelectedBox()
-  const clip = useId()
   const store = use(ControlStoreContext)
   const { beginHand, writeControls } = useControlsApi()
   const v = r.value
@@ -132,7 +121,6 @@ export function MixerLoopDiagram() {
   const byProgram = v('cfbKeyExt') > 0.5
   const ringLook: WireLook = v('cfbRing') > 0 && !off ? 'on' : 'dash'
   const byOscillator = v('cfbRingSrc') > 0.5
-  const curve = trace(gains, right)
   // With the fader down, the lap at its full travel, where mix is 1.
   const upGains = off ? lapGains({ ...loop, mix: 1 }, CURVE_MHZ) : null
 
@@ -149,23 +137,10 @@ export function MixerLoopDiagram() {
     })
   }
 
-  const box = (
-    id: Part,
-    at: { x: number; w: number },
-    y: number,
-    name: string,
-    help: string,
-  ): BoxSpec => ({
-    id,
-    keys: OPENS[id],
-    x: at.x,
-    y: y - H / 2,
-    w: at.w,
-    h: H,
-    name,
+  const make = stageBoxes(OPENS, H, r)
+  const box: typeof make = (id, ...rest) => ({
+    ...make(id, ...rest),
     off: off && id !== 'fader',
-    touched: r.touched(...OPENS[id]),
-    help,
   })
   const boxes = [
     box(
@@ -262,7 +237,7 @@ export function MixerLoopDiagram() {
                       cx={KEY_IN_X}
                       cy={TOP_Y}
                       r={1.8}
-                      className={own.dot}
+                      className={styles.dot}
                     />
                     <Wire
                       arrow={arrow}
@@ -272,7 +247,12 @@ export function MixerLoopDiagram() {
                   </>
                 ) : (
                   <>
-                    <circle cx={TAP_X} cy={BOT_Y} r={1.8} className={own.dot} />
+                    <circle
+                      cx={TAP_X}
+                      cy={BOT_Y}
+                      r={1.8}
+                      className={styles.dot}
+                    />
                     <Wire
                       arrow={arrow}
                       d={`M${TAP_X} ${BOT_Y} V${UNDER_Y} H${KEY_IN_X} V${BOT_Y + H / 2}`}
@@ -282,91 +262,51 @@ export function MixerLoopDiagram() {
                 ))}
             </g>
 
-            {boxes.map(b => (
-              <BoxView
-                key={b.id}
-                box={b}
-                selected={b.id === pick.selected}
-                onSelect={pick.toggle}
-              />
-            ))}
+            <Boxes boxes={boxes} pick={pick} />
 
-            <Label x={PLOT.left + 4} y={PLOT.top - 8}>
-              {pick.selected === 'ring'
-                ? 'gain per lap and ring products'
-                : 'loop gain per lap'}
-            </Label>
-            <line
-              x1={PLOT.left}
-              x2={right}
-              y1={plotY(0)}
-              y2={plotY(0)}
-              className={styles.grid}
-            />
-            <line
-              x1={PLOT.left}
-              x2={right}
-              y1={plotY(1)}
-              y2={plotY(1)}
-              className={styles.unity}
-            />
-            {[0, 1, 2].map(g => (
-              <Label key={g} x={PLOT.left - 4} y={plotY(g) + 3} anchor="end">
-                {g === 0 ? '0' : `${g}×`}
-              </Label>
-            ))}
-            <line
-              x1={x(FSC_MHZ)}
-              x2={x(FSC_MHZ)}
-              y1={PLOT.top}
-              y2={PLOT.bottom}
-              className={own.fsc}
-            />
-            <Label x={x(FSC_MHZ)} y={PLOT.top - 8} anchor="middle">
-              fsc
-            </Label>
-            {MHZ_TICKS.map(n => (
-              <Label
-                key={n}
-                x={x(n)}
-                y={PLOT.bottom + 12}
-                anchor={n === BAND_MHZ ? 'end' : 'middle'}
-              >
-                {n === BAND_MHZ ? `${n} MHz` : String(n)}
-              </Label>
-            ))}
-            <clipPath id={clip}>
-              <rect
-                x={PLOT.left}
-                y={PLOT.top - 2}
-                width={right - PLOT.left}
-                height={plotY(1) - PLOT.top + 2}
-              />
-            </clipPath>
-            <path
-              d={curve}
-              className={
-                r.touched('cfbMix', 'cfbGain', 'cfbReturn', ...OPENS.resonance)
-                  ? styles.curveOn
-                  : styles.curve
+            <LapPlot
+              {...PLOT}
+              right={right}
+              title={
+                pick.selected === 'ring'
+                  ? 'gain per lap and ring products'
+                  : 'loop gain per lap'
               }
-            />
-            {upGains && (
-              <>
-                <path d={trace(upGains, right)} className={own.faderUp} />
-                <Label
-                  x={right}
-                  y={Math.min(plotY(upGains.at(-1)!) + 11, PLOT.bottom - 4)}
-                  anchor="end"
-                >
-                  fader up
-                </Label>
-              </>
-            )}
-            <path
-              d={curve}
-              className={styles.curveAlarm}
-              clipPath={`url(#${clip})`}
+              grid={[0]}
+              xs={CURVE_MHZ.map(x)}
+              gains={gains}
+              upGains={upGains}
+              on={r.touched(
+                'cfbMix',
+                'cfbGain',
+                'cfbReturn',
+                ...OPENS.resonance,
+              )}
+              y={plotY}
+              axis={
+                <>
+                  <line
+                    x1={x(FSC_MHZ)}
+                    x2={x(FSC_MHZ)}
+                    y1={PLOT.top}
+                    y2={PLOT.bottom}
+                    className={styles.fsc}
+                  />
+                  <Label x={x(FSC_MHZ)} y={PLOT.top - 8} anchor="middle">
+                    fsc
+                  </Label>
+                  {MHZ_TICKS.map(n => (
+                    <Label
+                      key={n}
+                      x={x(n)}
+                      y={PLOT.bottom + 12}
+                      anchor={n === BAND_MHZ ? 'end' : 'middle'}
+                    >
+                      {n === BAND_MHZ ? `${n} MHz` : String(n)}
+                    </Label>
+                  ))}
+                </>
+              }
             />
 
             {pick.selected === 'ring' &&

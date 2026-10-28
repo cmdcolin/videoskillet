@@ -6,6 +6,7 @@ import { useControlReading } from './ControlsContext'
 import { readingOf } from './format'
 
 import type { ControlKey, Controls } from '../core/controls'
+import type { WireLook } from './DiagramParts'
 
 // CROSS_REPO_SYNC(diagram-boxes)
 export const LINE_H = 13
@@ -69,6 +70,64 @@ export function openBox(boxes: readonly BoxSpec[], selected: string | null) {
   const box = boxes.find(b => b.id === selected)
   return { keys: box?.keys, note: box?.note, help: box?.help }
 }
+
+export interface Column {
+  x: number
+  w: number
+}
+
+export const rightOf = (at: Column) => at.x + at.w
+
+export const lit = (on: boolean): WireLook => (on ? 'on' : 'plain')
+
+// Returns the maker for a drawing's boxes. `opens` maps each box id to the keys
+// the box opens. The maker centres each box on `mid` and draws it `h` tall, or
+// `extra.h`. Handed the readings, the maker lights a box when one of its keys
+// is off stock; handed a function, it lights the boxes the function names.
+export function stageBoxes<P extends string, K extends ControlKey>(
+  opens: Record<P, readonly K[]>,
+  h: number,
+  touched: ((id: P) => boolean) | { touched: (...keys: K[]) => boolean },
+) {
+  const isTouched =
+    typeof touched === 'function'
+      ? touched
+      : (id: P) => touched.touched(...opens[id])
+  return (
+    id: P,
+    at: Column,
+    mid: number,
+    name: string,
+    help: string,
+    extra?: Partial<BoxSpec>,
+  ): BoxSpec => {
+    const tall = extra?.h ?? h
+    return {
+      id,
+      keys: opens[id],
+      x: at.x,
+      y: mid - tall / 2,
+      w: at.w,
+      h: tall,
+      name,
+      touched: isTouched(id),
+      help,
+      ...extra,
+    }
+  }
+}
+
+// An IRE figure with a true minus sign.
+export const ire = (v: number) => (v < 0 ? `−${-v}` : String(v))
+
+// A figure with its sign spelled out, and a true minus sign.
+export const signed = (v: number) => (v > 0 ? `+${v}` : v < 0 ? `−${-v}` : '0')
+
+// An SVG path through `points` in order.
+export const polyline = (points: readonly (readonly [number, number])[]) =>
+  points
+    .map(([x, y], i) => `${i === 0 ? 'M' : 'L'}${x.toFixed(1)} ${y.toFixed(1)}`)
+    .join(' ')
 
 // The figures a drawing prints, read off the board as one string so the drawing
 // redraws only for a write that moved one of them.

@@ -1,15 +1,17 @@
 import { FSC, SAMPLE_RATE } from '../core/signal/constants'
 import { sliderFor, snapToStep } from './controls'
 import { useControlsApi } from './ControlsContext'
-import { openBox, useReadings, useSelectedBox, type BoxSpec } from './diagram'
 import {
-  BoxRows,
-  BoxView,
-  Diagram,
-  Label,
-  Wire,
-  type WireLook,
-} from './DiagramParts'
+  ire,
+  lit,
+  openBox,
+  rightOf,
+  stageBoxes,
+  useReadings,
+  useSelectedBox,
+} from './diagram'
+import styles from './Diagram.module.css'
+import { Boxes, BoxRows, Diagram, Label, SumNode, Wire } from './DiagramParts'
 import own from './LeakDiagram.module.css'
 import { channelLine, ghostGains, type Leak } from './leakModel'
 import { alongRange } from './plotAlong'
@@ -48,7 +50,6 @@ const IRE_SCALE: TraceScale = {
 const BAND_MHZ = 6
 const FSC_X = COMB.left + ((COMB.right - COMB.left) * FSC) / 1e6 / BAND_MHZ
 
-const ire = (v: number) => (v < 0 ? `−${-v}` : String(v))
 const signed = (v: number) => (v < 0 ? `−${(-v).toFixed(2)}` : v.toFixed(2))
 const times = (v: number) => (v === 0 ? '0' : `${v}×`)
 const usX = (us: number) =>
@@ -60,8 +61,7 @@ const delayAt = (x: number, max: number) => {
   const d = (((us - BAR_US[0]) % LINE_US) + LINE_US) % LINE_US
   return d <= max ? d : d > (max + LINE_US) / 2 ? 0 : max
 }
-const lineLook = (on: boolean): WireLook => (on ? 'on' : 'plain')
-const after = (id: Part) => COL[id].x + COL[id].w
+const after = (id: Part) => rightOf(COL[id])
 
 // A comb's teeth sit 1/τ apart, so a long delay needs points enough to draw
 // every one of them.
@@ -103,38 +103,32 @@ export function LeakDiagram() {
   const setDelay = (us: number) =>
     writeControl('ghostDelayUs', snapToStep(delay, us))
 
-  const box = (id: Part, y: number, name: string, help: string): BoxSpec => ({
-    id,
-    keys: OPENS[id],
-    x: COL[id].x,
-    y: y - H / 2,
-    w: COL[id].w,
-    h: H,
-    name,
-    touched: r.touched(...OPENS[id]),
-    help,
-  })
+  const box = stageBoxes(OPENS, H, r)
   const boxes = [
     box(
       'ghost',
+      COL.ghost,
       BOT_Y,
       'ghost',
       'Multipath: a reflection of the program arriving late and summed back in at its own gain. The reflection carries its subcarrier with it, so every 70 ns of delay turns its hue 90°. A negative gain arrives inverted and draws a dark outline.',
     ),
     box(
       'hum',
+      COL.hum,
       TOP_Y,
       'hum',
       "Mains hum. A ground loop adds 60 Hz to the signal; the ripple on an amplifier's supply multiplies the signal by it, sync included, mostly at 120 Hz.",
     ),
     box(
       'sound',
+      COL.sound,
       TOP_Y,
       'sound',
       'The 4.5 MHz intercarrier sound leaking past its trap: 286 cycles a line, so the weave stands still until the program audio moves it. It is strongest in the dark, where the vision carrier is strongest.',
     ),
     box(
       'buzz',
+      COL.buzz,
       BOT_Y,
       'buzz',
       "The same leak heard through the set's sound detector: the picture arrives on the audio line and plays out of the speakers.",
@@ -150,7 +144,7 @@ export function LeakDiagram() {
               video
             </Label>
             <Wire d={`M0 ${TOP_Y} H${SUM_X - SUM_R}`} />
-            <circle cx={SPLIT_X} cy={TOP_Y} r={2} className={own.dot} />
+            <circle cx={SPLIT_X} cy={TOP_Y} r={2} className={styles.dot} />
             <Wire
               arrow={arrow}
               d={`M${SPLIT_X} ${TOP_Y} V${BOT_Y} H${COL.ghost.x}`}
@@ -161,35 +155,26 @@ export function LeakDiagram() {
               d={`M${after('ghost')} ${BOT_Y} H${SUM_X} V${TOP_Y + SUM_R}`}
               look={ghostOn ? 'on' : 'dash'}
             />
-            <circle
-              cx={SUM_X}
-              cy={TOP_Y}
-              r={SUM_R}
-              className={ghostOn ? own.sumOn : own.sum}
-            />
-            <path
-              d={`M${SUM_X - 3} ${TOP_Y} H${SUM_X + 3} M${SUM_X} ${TOP_Y - 3} V${TOP_Y + 3}`}
-              className={ghostOn ? own.sumOn : own.sum}
-            />
+            <SumNode x={SUM_X} y={TOP_Y} r={SUM_R} on={ghostOn} />
             <Wire
               arrow={arrow}
               d={`M${SUM_X + SUM_R} ${TOP_Y} H${COL.hum.x}`}
-              look={lineLook(ghostOn)}
+              look={lit(ghostOn)}
             />
             <Wire
               arrow={arrow}
               d={`M${after('hum')} ${TOP_Y} H${COL.sound.x}`}
-              look={lineLook(humOn)}
+              look={lit(humOn)}
             />
             <Wire
               arrow={arrow}
               d={`M${after('sound')} ${TOP_Y} H${WIDTH - 2}`}
-              look={lineLook(soundOn)}
+              look={lit(soundOn)}
             />
             <Label x={WIDTH - 2} y={TOP_Y - 6} anchor="end">
               to the set
             </Label>
-            <circle cx={TAP_X} cy={TOP_Y} r={2} className={own.dot} />
+            <circle cx={TAP_X} cy={TOP_Y} r={2} className={styles.dot} />
             <Wire
               arrow={arrow}
               d={`M${TAP_X} ${TOP_Y} V${BOT_Y - H / 2}`}
@@ -204,14 +189,7 @@ export function LeakDiagram() {
               audio
             </Label>
 
-            {boxes.map(b => (
-              <BoxView
-                key={b.id}
-                box={b}
-                selected={b.id === pick.selected}
-                onSelect={pick.toggle}
-              />
-            ))}
+            <Boxes boxes={boxes} pick={pick} />
 
             <TracePlot
               {...LINE}
@@ -288,7 +266,7 @@ export function LeakDiagram() {
               x2={FSC_X}
               y1={PLOT.top}
               y2={PLOT.bottom}
-              className={own.fsc}
+              className={styles.fsc}
             />
             <Label x={FSC_X} y={PLOT.top - 6} anchor="middle">
               fsc

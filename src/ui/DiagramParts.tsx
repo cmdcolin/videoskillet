@@ -14,8 +14,11 @@ import {
   boxFold,
   boxHeight,
   LINE_H,
+  lit,
+  rightOf,
   type BoxPick,
   type BoxSpec,
+  type Column,
 } from './diagram'
 import styles from './Diagram.module.css'
 
@@ -333,6 +336,100 @@ export function Bend({
   )
 }
 // CROSS_REPO_SYNC_END(diagram-parts)
+
+// A row of stages wired in series from x = `from` to x = `to`. A wire lights
+// once any stage before it is live, because what that stage did to the signal
+// rides every wire after it.
+export function Chain({
+  arrow,
+  y,
+  from,
+  to,
+  stages,
+  input,
+  output,
+}: {
+  arrow: string
+  y: number
+  from: number
+  to: number
+  stages: readonly { at: Column; live: boolean }[]
+  input?: string
+  output?: string
+}) {
+  const upstream = stages.map((_, i) =>
+    stages.slice(0, i + 1).some(s => s.live),
+  )
+  return (
+    <>
+      {input && (
+        <Label x={from} y={y - 6}>
+          {input}
+        </Label>
+      )}
+      <Wire arrow={arrow} d={`M${from} ${y} H${stages[0]!.at.x}`} />
+      {stages.slice(1).map((stage, i) => (
+        <Wire
+          key={i}
+          arrow={arrow}
+          d={`M${rightOf(stages[i]!.at)} ${y} H${stage.at.x}`}
+          look={lit(upstream[i]!)}
+        />
+      ))}
+      <Wire
+        arrow={arrow}
+        d={`M${rightOf(stages.at(-1)!.at)} ${y} H${to}`}
+        look={lit(upstream.at(-1)!)}
+      />
+      {output && (
+        <Label x={to} y={y - 6} anchor="end">
+          {output}
+        </Label>
+      )}
+    </>
+  )
+}
+
+// Draws the summing node where two signals add, as a circle with a plus in it.
+export function SumNode({
+  x,
+  y,
+  r,
+  on,
+}: {
+  x: number
+  y: number
+  r: number
+  on: boolean
+}) {
+  const className = on ? styles.sumOn : styles.sum
+  return (
+    <>
+      <circle cx={x} cy={y} r={r} className={className} />
+      <path
+        d={`M${x - 3} ${y} H${x + 3} M${x} ${y - 3} V${y + 3}`}
+        className={className}
+      />
+    </>
+  )
+}
+
+export function Boxes({
+  boxes,
+  pick,
+}: {
+  boxes: readonly BoxSpec[]
+  pick: BoxPick
+}) {
+  return boxes.map(b => (
+    <BoxView
+      key={b.id ?? b.name}
+      box={b}
+      selected={b.id === pick.selected}
+      onSelect={pick.toggle}
+    />
+  ))
+}
 
 const NEED_OF = new Map<string, SliderNeed | undefined>(Object.entries(NEEDS))
 

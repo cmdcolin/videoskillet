@@ -1,7 +1,7 @@
-import { openBox, useReadings, useSelectedBox, type BoxSpec } from './diagram'
+import { openBox, useReadings, useSelectedBox, stageBoxes } from './diagram'
 import {
   BoxRows,
-  BoxView,
+  Boxes,
   Diagram,
   Label,
   Wire,
@@ -56,24 +56,14 @@ export function ChromaKeyDiagram() {
     bKeySoft: v('bKeySoft'),
   })
 
+  const make = stageBoxes(OPENS, H, r)
   const box = (
     id: Part,
     y: number,
     name: string,
     help: string,
     off?: boolean,
-  ): BoxSpec => ({
-    id,
-    keys: OPENS[id],
-    x: COL[id].x,
-    y: y - H / 2,
-    w: COL[id].w,
-    h: H,
-    name,
-    off: off ?? (!on && id !== 'mix'),
-    touched: r.touched(...OPENS[id]),
-    help,
-  })
+  ) => make(id, COL[id], y, name, help, { off: off ?? (!on && id !== 'mix') })
   const boxes = [
     box(
       'spill',
@@ -163,14 +153,7 @@ export function ChromaKeyDiagram() {
               to the channel
             </Label>
 
-            {boxes.map(b => (
-              <BoxView
-                key={b.id}
-                box={b}
-                selected={b.id === pick.selected}
-                onSelect={pick.toggle}
-              />
-            ))}
+            <Boxes boxes={boxes} pick={pick} />
 
             <HueWheel
               {...WHEEL}

@@ -1,9 +1,3 @@
-.fsc {
-  stroke: var(--border);
-  stroke-width: 1;
-  stroke-dasharray: 1 2;
-}
-
 .alarm {
   font-size: 9px;
   letter-spacing: 0.02em;

@@ -1,25 +1,4 @@
-.dot {
-  fill: var(--fg4);
-}
-
-.sum,
-.sumOn {
-  fill: none;
-  stroke: var(--fg4);
-  stroke-width: 1;
-}
-
-.sumOn {
-  stroke: var(--accent);
-}
-
 .span {
   stroke: var(--accent);
   stroke-width: 1;
-}
-
-.fsc {
-  stroke: var(--border);
-  stroke-width: 1;
-  stroke-dasharray: 1 2;
 }

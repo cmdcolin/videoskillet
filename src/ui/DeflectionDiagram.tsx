@@ -1,8 +1,8 @@
 import { ACTIVE_HEIGHT } from '../core/signal/constants'
-import { openBox, useReadings, useSelectedBox, type BoxSpec } from './diagram'
+import { openBox, useReadings, useSelectedBox, stageBoxes } from './diagram'
 import {
   BoxRows,
-  BoxView,
+  Boxes,
   Diagram,
   Label,
   Wire,
@@ -12,8 +12,6 @@ import { alongPicture, alongRange } from './plotAlong'
 import { ablDrive, beamIre, cardLoads, leftEdges, WHITE_BAR } from './scanModel'
 import { DEFLECTION_KEYS, DEFLECTION_OPENS as OPENS } from './schematicKeys'
 import { TracePlot } from './TracePlot'
-
-type Part = keyof typeof OPENS
 
 const WIDTH = 340
 const TOP_Y = 14
@@ -63,23 +61,7 @@ export function DeflectionDiagram() {
   const tail = drive.slice(-DRIVE_FRAMES / 4)
   const pumps = Math.max(...tail) - Math.min(...tail) > 0.05
 
-  const box = (
-    id: Part,
-    at: { x: number; w: number },
-    y: number,
-    name: string,
-    help: string,
-  ): BoxSpec => ({
-    id,
-    keys: OPENS[id],
-    x: at.x,
-    y: y - H / 2,
-    w: at.w,
-    h: H,
-    name,
-    touched: r.touched(...OPENS[id]),
-    help,
-  })
+  const box = stageBoxes(OPENS, H, r)
   const boxes = [
     box(
       'limiter',
@@ -176,14 +158,7 @@ export function DeflectionDiagram() {
               V yoke
             </Label>
 
-            {boxes.map(b => (
-              <BoxView
-                key={b.id}
-                box={b}
-                selected={b.id === pick.selected}
-                onSelect={pick.toggle}
-              />
-            ))}
+            <Boxes boxes={boxes} pick={pick} />
 
             <TracePlot
               {...LEFT_PLOT}

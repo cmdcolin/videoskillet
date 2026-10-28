@@ -210,3 +210,42 @@
   -webkit-line-clamp: unset;
   color: var(--fg2);
 }
+
+/* A frame of the picture, drawn round the lanes and marks on it. */
+.frame {
+  fill: none;
+  stroke: var(--border);
+}
+
+/* A junction where wires meet. */
+.dot {
+  fill: var(--fg4);
+}
+
+/* The colour subcarrier's place on a plot's frequency axis. */
+.fsc {
+  stroke: var(--border);
+  stroke-width: 1;
+  stroke-dasharray: 1 2;
+}
+
+/* A summing node, the circle where two signals add. */
+.sum,
+.sumOn {
+  fill: none;
+  stroke: var(--fg4);
+  stroke-width: 1;
+}
+
+.sumOn {
+  stroke: var(--accent);
+}
+
+/* The lap a feedback loop would make with the fader up, drawn while it is
+   down. */
+.faderUp {
+  fill: none;
+  stroke: var(--fg3);
+  stroke-width: 1;
+  stroke-dasharray: 2 2;
+}

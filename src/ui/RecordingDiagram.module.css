@@ -1,7 +1,3 @@
-.dot {
-  fill: var(--fg4);
-}
-
 .toTape {
   fill: none;
   stroke: var(--fg3);

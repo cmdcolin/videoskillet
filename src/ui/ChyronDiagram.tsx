@@ -1,9 +1,9 @@
 import own from './ChyronDiagram.module.css'
-import { useReadings, useSelectedBox, type BoxSpec } from './diagram'
+import { stageBoxes, useReadings, useSelectedBox } from './diagram'
 import styles from './Diagram.module.css'
 import {
+  Boxes,
   BoxRows,
-  BoxView,
   Diagram,
   Label,
   Plate,
@@ -20,6 +20,8 @@ import {
 } from './schematicKeys'
 
 import type { ControlKey } from '../core/controls'
+
+type Opens = Record<string, readonly ControlKey[]>
 
 const CAPTION_READS: readonly ControlKey[] = [...CAPTION_KEYS, 'cc']
 
@@ -160,26 +162,7 @@ function CharGen({ cg }: { cg: boolean }) {
   const r = useReadings<ControlKey>(cg ? CHYRON_KEYS : CAPTION_READS)
   const pick = useSelectedBox(cg ? 'mix' : null)
   const off = r.value(cg ? 'cgMix' : 'cc') <= 0
-  const box = (
-    id: string,
-    name: string,
-    x: number,
-    mid: number,
-    w: number,
-    h: number,
-    keys: readonly ControlKey[],
-    help: string,
-  ): BoxSpec => ({
-    id,
-    name,
-    x,
-    y: mid - h / 2,
-    w,
-    h,
-    keys,
-    touched: keys.length > 0 && r.touched(...keys),
-    help,
-  })
+  const box = stageBoxes(opens as Opens, TWO, r)
   const held = (key: ControlKey): Hold | null => {
     const v = Math.round(r.value(key))
     return v === 0 ? null : { bit: Math.abs(v) - 1, high: v > 0 }
@@ -190,57 +173,42 @@ function CharGen({ cg }: { cg: boolean }) {
   }
   const dataHold = held(b.romData)
 
-  const boxes: BoxSpec[] = [
+  const boxes = [
     box(
       'raster',
-      'raster',
-      0,
+      { x: 0, w: 50 },
       M1,
-      50,
-      TWO,
-      opens.raster,
+      'raster',
       cg
         ? 'Where the block starts on the picture and how many samples each font dot takes. The raster position drives both counters.'
         : 'The decoder paints on the set’s own raster, at a fixed place and size.',
     ),
     box(
       'page counter',
-      'page\ncounter',
-      62,
+      { x: 62, w: 56 },
       M1,
-      56,
-      TWO,
-      opens['page counter'],
+      'page\ncounter',
       'Walks the page memory as the raster crosses the block. A slipping counter walks the page through itself a cell at a time.',
     ),
     box(
       'page ram',
-      'page\nRAM',
-      176,
+      { x: 176, w: 46 },
       M1,
-      46,
-      TWO,
-      opens['page ram'],
+      'page\nRAM',
       'Four rows of thirty-two character codes.',
     ),
     box(
       'char counter',
-      'char\ncounter',
-      0,
+      { x: 0, w: 56 },
       M2,
-      56,
-      TWO,
-      opens['char counter'],
+      'char\ncounter',
       'Forms the font address: the character code times the cell-height strap, plus the dot row. Its count slips when a frame or line reset arrives late.',
     ),
     box(
       'font rom',
-      'font ROM\n2K×8',
-      136,
+      { x: 136, w: 62 },
       M2,
-      62,
-      TWO,
-      opens['font rom'],
+      'font ROM\n2K×8',
       'A 2 KiB EPROM: eleven address lines in, eight data lines out. Cells that have lost their charge read back as the erased state.',
     ),
   ]
@@ -248,42 +216,34 @@ function CharGen({ cg }: { cg: boolean }) {
     boxes.push(
       box(
         'keyer',
-        'keyer',
-        KEYER.x,
+        KEYER,
         KEY_R,
-        KEYER.w,
-        ONE,
-        CHYRON_OPENS.keyer,
+        'keyer',
         "Turns the dots into a key. The key-processing amplifier's bandwidth softens its edge, and the slicer cuts it at the clip level, which sets the stroke weight. Timing trims the key against the fill, so off zero the matte slides off the letters. Edge ORs in a copy of the key delayed by samples and lines, for the border and drop shadow. Invert cuts the key the other way, which leaves letter-shaped holes in a full-frame fill.",
+        { h: ONE },
       ),
       box(
         'mix',
-        'mix',
-        MIX.x,
+        MIX,
         KEY_R,
-        MIX.w,
-        ONE,
-        CHYRON_OPENS.mix,
+        'mix',
         'Lays the fill, the characters as video at the fill level, over program wherever the key is open.',
+        { h: ONE },
       ),
     )
   } else {
     boxes.push(
       box(
         'caption box',
-        'caption box',
-        CAPTION.x,
+        CAPTION,
         CC_R,
-        CAPTION.w,
-        ONE,
-        CAPTION_OPENS['caption box'],
+        'caption box',
         'A black box behind the cells the decoder received, and the characters in white over it.',
+        { h: ONE },
       ),
     )
   }
-  const open = (opens as Record<string, readonly ControlKey[]>)[
-    pick.selected ?? ''
-  ]
+  const open = (opens as Opens)[pick.selected ?? '']
   const bus = (id: string) => ({
     id,
     selected: pick.selected === id,
@@ -433,14 +393,7 @@ function CharGen({ cg }: { cg: boolean }) {
                 </Label>
               </>
             )}
-            {boxes.map(x => (
-              <BoxView
-                key={x.id}
-                box={x}
-                selected={x.id === pick.selected}
-                onSelect={pick.toggle}
-              />
-            ))}
+            <Boxes boxes={boxes} pick={pick} />
           </g>
         )}
       </Diagram>

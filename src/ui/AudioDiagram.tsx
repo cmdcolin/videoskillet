@@ -1,19 +1,14 @@
 import styles from './AudioDiagram.module.css'
 import {
   boxWidth,
+  lit,
   openBox,
   useReadings,
   useSelectedBox,
   type BoxSpec,
 } from './diagram'
-import {
-  BoxRows,
-  BoxView,
-  Diagram,
-  Label,
-  Wire,
-  type WireLook,
-} from './DiagramParts'
+import shared from './Diagram.module.css'
+import { Boxes, BoxRows, Diagram, Label, Wire } from './DiagramParts'
 import { AUDIO_KEYS, AUDIO_OPENS as OPENS } from './schematicKeys'
 
 type Dest = Exclude<keyof typeof OPENS, 'wave'>
@@ -80,7 +75,6 @@ for (const d of DESTS) {
 }
 
 const mid = (d: { x: number; w: number }) => d.x + d.w / 2
-const look = (on: boolean): WireLook => (on ? 'on' : 'plain')
 
 export function AudioDiagram() {
   const r = useReadings(AUDIO_KEYS)
@@ -122,20 +116,13 @@ export function AudioDiagram() {
               </g>
             ))}
 
-            {boxes.map(b => (
-              <BoxView
-                key={b.id}
-                box={b}
-                selected={b.id === pick.selected}
-                onSelect={pick.toggle}
-              />
-            ))}
+            <Boxes boxes={boxes} pick={pick} />
 
             {TAPS.map(tap => (
               <g key={tap}>
                 <Wire
                   d={`M${START_X - 4} ${TAP_Y[tap]} H${reach(tap)}`}
-                  look={look(placed.some(d => d.tap === tap && routed(d.id)))}
+                  look={lit(placed.some(d => d.tap === tap && routed(d.id)))}
                 />
                 <Label
                   x={0}
@@ -161,13 +148,13 @@ export function AudioDiagram() {
                 <Wire
                   arrow={arrow}
                   d={`M${mid(d)} ${TAP_Y[d.tap]} V${BOX_Y + BOX_H}`}
-                  look={look(routed(d.id))}
+                  look={lit(routed(d.id))}
                 />
                 <circle
                   cx={mid(d)}
                   cy={TAP_Y[d.tap]}
                   r={2}
-                  className={routed(d.id) ? styles.dotOn : styles.dot}
+                  className={routed(d.id) ? styles.dotOn : shared.dot}
                 />
               </g>
             ))}

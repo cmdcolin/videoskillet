@@ -1,8 +1,8 @@
 import { HEAD_SWITCH_LINE, LINES } from '../core/signal/constants'
-import { openBox, useReadings, useSelectedBox, type BoxSpec } from './diagram'
+import { openBox, useReadings, useSelectedBox, stageBoxes } from './diagram'
 import {
   BoxRows,
-  BoxView,
+  Boxes,
   Diagram,
   Label,
   Wire,
@@ -12,8 +12,6 @@ import { alongPicture, alongRange } from './plotAlong'
 import { TIMEBASE_KEYS, TIMEBASE_OPENS as OPENS } from './schematicKeys'
 import { lineTiming, MID_LINE } from './tapeModel'
 import { TracePlot } from './TracePlot'
-
-type Part = keyof typeof OPENS
 
 const WIDTH = 340
 const TOP_Y = 14
@@ -54,24 +52,8 @@ export function TimebaseDiagram() {
     FRAMES,
   )
 
-  const box = (
-    id: Part,
-    at: { x: number; w: number },
-    y: number,
-    name: string,
-    help: string,
-  ): BoxSpec => ({
-    id,
-    keys: OPENS[id],
-    x: at.x,
-    y: y - H / 2,
-    w: at.w,
-    h: H,
-    name,
-    touched: r.touched(...OPENS[id]),
-    help,
-  })
-  const boxes: BoxSpec[] = [
+  const box = stageBoxes(OPENS, H, r)
+  const boxes = [
     box(
       'capstan',
       COL.capstan,
@@ -156,14 +138,7 @@ export function TimebaseDiagram() {
               video
             </Label>
 
-            {boxes.map(b => (
-              <BoxView
-                key={b.name}
-                box={b}
-                selected={b.id === pick.selected}
-                onSelect={pick.toggle}
-              />
-            ))}
+            <Boxes boxes={boxes} pick={pick} />
 
             <TracePlot
               {...LEFT_PLOT}

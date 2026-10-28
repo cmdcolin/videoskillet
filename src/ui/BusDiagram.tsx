@@ -1,14 +1,15 @@
 import styles from './BusDiagram.module.css'
 import { clipBus, overloaded, sumBus, whiteAtFader, type Bus } from './busModel'
-import { openBox, useReadings, useSelectedBox, type BoxSpec } from './diagram'
 import {
-  BoxRows,
-  BoxView,
-  Diagram,
-  Label,
-  Wire,
-  type WireLook,
-} from './DiagramParts'
+  ire,
+  lit,
+  openBox,
+  rightOf,
+  stageBoxes,
+  useReadings,
+  useSelectedBox,
+} from './diagram'
+import { Boxes, BoxRows, Diagram, Label, SumNode, Wire } from './DiagramParts'
 import { alongRange } from './plotAlong'
 import { BUS_KEYS, BUS_OPENS as OPENS } from './schematicKeys'
 import { TracePlot, type TraceLook, type TraceScale } from './TracePlot'
@@ -44,10 +45,8 @@ const OUT: TraceScale = {
   reference: 0,
 }
 
-const ire = (v: number) => (v < 0 ? `−${-v}` : String(v))
 const times = (v: number) => (v < 0 ? `−${-v}×` : `${v}×`)
-const after = (id: Part) => COL[id].x + COL[id].w
-const look = (on: boolean): WireLook => (on ? 'on' : 'plain')
+const after = (id: Part) => rightOf(COL[id])
 
 const clamp = (v: number, lo: number, hi: number) =>
   Math.min(Math.max(v, lo), hi)
@@ -86,50 +85,46 @@ export function BusDiagram() {
       : 'plain'
   const whiteNow = bus.genlock ? 100 : sumBus(100, 100, bus)
 
-  const box = (id: Part, y: number, name: string, help: string): BoxSpec => ({
-    id,
-    keys: OPENS[id],
-    x: COL[id].x,
-    y: y - H / 2,
-    w: COL[id].w,
-    h: H,
-    name,
-    touched: live(id),
-    help,
-  })
+  const box = stageBoxes(OPENS, H, r)
   const boxes = [
     box(
       'gainA',
+      COL.gainA,
       A_Y,
       'A gain',
       "A's level on the summing bus, on the dirty sum only: the clean dissolve sets A to one minus B's fader. Negative inverts A into a difference key that cancels against B.",
     ),
     box(
       'ring',
+      COL.ring,
       A_Y,
       'ring',
       'Multiplies the two composite signals instead of adding them. Two subcarriers multiplied land at their sum and difference, so colour arrives that neither source carries.',
     ),
     box(
       'clip',
+      COL.clip,
       A_Y,
       'clip',
       'How little headroom the summing amplifier has. Its gain falls away toward the rail, and falling gain multiplies the two signals sharing the bus, so a detuned B beats against A into the chroma band.',
     ),
     box(
       'timing',
+      COL.timing,
       B_Y,
       'timing',
       "B's own clocks, free-running against A's: line offset skews B a little more each line, frame roll drifts it vertically, and the subcarrier detune cycles its hue because the decoder locks to A's burst.",
     ),
     box(
       'lock',
+      COL.lock,
       B_Y,
       'genlock',
       "Whether B is locked to the house reference. Off, B is summed into the composite, a wiring fault. On, B is re-encoded on A's raster and the combine is a clean dissolve.",
     ),
     box(
       'gainB',
+      COL.gainB,
       B_Y,
       'B gain',
       "How much of B reaches the composite. With genlock off it is the level B is summed in at, and negative inverts B's whole signal, sync tips included. With genlock on it is the crossfade fader.",
@@ -148,36 +143,28 @@ export function BusDiagram() {
             <Wire
               arrow={arrow}
               d={`M${after('gainA')} ${A_Y} H${SUM_X - SUM_R}`}
-              look={look(live('gainA'))}
+              look={lit(live('gainA'))}
             />
             <Wire
               arrow={arrow}
               d={`M${SUM_X + SUM_R} ${A_Y} H${COL.ring.x}`}
-              look={look(live('gainA') || live('gainB'))}
+              look={lit(live('gainA') || live('gainB'))}
             />
             <Wire
               arrow={arrow}
               d={`M${after('ring')} ${A_Y} H${COL.clip.x}`}
-              look={look(live('ring'))}
+              look={lit(live('ring'))}
             />
             <Wire
               arrow={arrow}
               d={`M${after('clip')} ${A_Y} H${WIDTH - 2}`}
-              look={look(live('clip'))}
+              look={lit(live('clip'))}
             />
-            <circle
-              cx={SUM_X}
-              cy={A_Y}
+            <SumNode
+              x={SUM_X}
+              y={A_Y}
               r={SUM_R}
-              className={
-                live('gainB') || live('gainA') ? styles.sumOn : styles.sum
-              }
-            />
-            <path
-              d={`M${SUM_X - 3} ${A_Y} H${SUM_X + 3} M${SUM_X} ${A_Y - 3} V${A_Y + 3}`}
-              className={
-                live('gainB') || live('gainA') ? styles.sumOn : styles.sum
-              }
+              on={live('gainB') || live('gainA')}
             />
 
             <Label x={0} y={B_Y - 6}>
@@ -187,27 +174,20 @@ export function BusDiagram() {
             <Wire
               arrow={arrow}
               d={`M${after('timing')} ${B_Y} H${COL.lock.x}`}
-              look={look(live('timing'))}
+              look={lit(live('timing'))}
             />
             <Wire
               arrow={arrow}
               d={`M${after('lock')} ${B_Y} H${COL.gainB.x}`}
-              look={look(live('timing') || live('lock'))}
+              look={lit(live('timing') || live('lock'))}
             />
             <Wire
               arrow={arrow}
               d={`M${after('gainB')} ${B_Y} H${SUM_X} V${A_Y + SUM_R}`}
-              look={look(live('gainB'))}
+              look={lit(live('gainB'))}
             />
 
-            {boxes.map(b => (
-              <BoxView
-                key={b.id}
-                box={b}
-                selected={b.id === pick.selected}
-                onSelect={pick.toggle}
-              />
-            ))}
+            <Boxes boxes={boxes} pick={pick} />
 
             <TracePlot
               {...IN_PLOT}

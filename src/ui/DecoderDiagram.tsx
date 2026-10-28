@@ -10,9 +10,17 @@ import {
 import { sliderFor, snapToStep } from './controls'
 import { useControlsApi } from './ControlsContext'
 import local from './DecoderDiagram.module.css'
-import { openBox, useReadings, useSelectedBox, type BoxSpec } from './diagram'
+import {
+  openBox,
+  useReadings,
+  useSelectedBox,
+  stageBoxes,
+  polyline,
+  rightOf,
+  type Column,
+} from './diagram'
 import styles from './Diagram.module.css'
-import { BoxRows, BoxView, Diagram, Label, Wire } from './DiagramParts'
+import { BoxRows, Boxes, Diagram, Label, Wire } from './DiagramParts'
 import { PlotHandle } from './PlotHandle'
 import { PlotProbe } from './PlotProbe'
 import { magnitude, response, type Complex } from './response'
@@ -22,12 +30,7 @@ const READ = [...DECODER_KEYS, 'lumaMHz', 'lumaPeak', 'vbi'] as const
 
 type Part = keyof typeof OPENS
 
-interface Span {
-  x: number
-  w: number
-}
-const right = (s: Span) => s.x + s.w
-const centre = (s: Span) => s.x + s.w / 2
+const centre = (s: Column) => s.x + s.w / 2
 
 const WIDTH = 340
 const LUMA_Y = 6
@@ -42,7 +45,7 @@ const ROW = {
   matrix: { x: 250, w: 46 },
   reference: { x: 100, w: 67 },
   acc: { x: 185, w: 72 },
-} satisfies Record<Part, Span>
+} satisfies Record<Part, Column>
 const REF_UP_X = 158
 const ACC_UP_X = 210
 
@@ -123,13 +126,8 @@ function split(
 
 const COMB_NAME = ['trap', '2-line comb', '3-line comb']
 
-const line = (pts: [number, number][]) =>
-  pts
-    .map(([x, y], i) => `${i === 0 ? 'M' : 'L'}${x.toFixed(1)} ${y.toFixed(1)}`)
-    .join(' ')
-
 const area = (pts: [number, number][]) =>
-  `${line(pts)} L${pts.at(-1)![0].toFixed(1)} ${PLOT.zero} L${pts[0]![0].toFixed(1)} ${PLOT.zero} Z`
+  `${polyline(pts)} L${pts.at(-1)![0].toFixed(1)} ${PLOT.zero} L${pts[0]![0].toFixed(1)} ${PLOT.zero} Z`
 
 // The receiver's colour decoder as decode.wgsl runs it. The composite splits
 // into luma, which runs over the top to the matrix, and chroma, which the
@@ -146,52 +144,40 @@ export function DecoderDiagram() {
   const comb = Math.round(v('combMode'))
   const bleed = v('svideoBleed')
 
-  const box = (
-    id: Part,
-    y: number,
-    name: string,
-    help: string,
-    extra: Partial<BoxSpec> = {},
-  ): BoxSpec => ({
-    id,
-    keys: OPENS[id],
-    x: ROW[id].x,
-    y: y - H / 2,
-    w: ROW[id].w,
-    h: H,
-    name,
-    touched: r.touched(...OPENS[id]),
-    help,
-    ...extra,
-  })
+  const box = stageBoxes(OPENS, H, r)
 
-  const boxes: BoxSpec[] = [
+  const boxes = [
     box(
       'input',
+      ROW.input,
       TOP_Y,
       'input',
       "The composite as it reaches the decoder. The encoder's colour bandwidth at the camera end sets how wide the chroma sidebands are; the receiver's AGC sets the IF gain off the sync tip, so luma, chroma and the burst all move together.",
     ),
     box(
       'split',
+      ROW.split,
       TOP_Y,
       'Y/C split',
       'What feeds the chroma demodulator. The trap passes the composite as it is, so still detail in the colour band decodes as colour. The 2-line and 3-line combs subtract the line above, or the lines above and below, so only what alternates line to line reaches it. Luma is the composite minus chroma: on the trap, the chroma the demodulator recovered, remodulated onto the subcarrier; on a comb, its line difference through a 1.5 MHz bandpass about the subcarrier. S-video bleed scales that subtraction down, and past 0.5 adds the chroma back.',
     ),
     box(
       'demod',
+      ROW.demod,
       TOP_Y,
       'demodulator',
       'Two synchronous detectors on the subcarrier, each followed by the chroma lowpass. Bandwidth and trail shape that lowpass; axis is the angle between the detectors; upsample error is how often the demodulator samples before interpolating.',
     ),
     box(
       'matrix',
+      ROW.matrix,
       TOP_Y,
       'matrix',
       'The YUV to RGB matrix and the three output amplifiers. Clip 0 fits the result into gamut without moving hue; clip 1 lets each gun hit its rail on its own.',
     ),
     box(
       'reference',
+      ROW.reference,
       BOT_Y,
       'reference',
       "The 3.58 MHz crystal oscillator the demodulator detects against, pulled toward the burst's phase by burst lock with the lag of its phase loop. Tint and the VIR hue trim turn it; detune pulls the crystal off frequency. Dim while it runs free at burst lock 0.",
@@ -199,6 +185,7 @@ export function DecoderDiagram() {
     ),
     box(
       'acc',
+      ROW.acc,
       BOT_Y,
       'ACC/killer',
       "Chroma gain: the burst's amplitude, weighted by burst lock, times the colour control. Its lag is the RC on the burst amplitude that both this gain and the colour killer read, and the killer zeroes the gain when that amplitude falls below its threshold. The VIR corrector reads the reference on line 19 and integrates a saturation trim into this gain and a hue trim into the reference. The code applies the gain after the demodulator, which gives the same product.",
@@ -251,14 +238,14 @@ export function DecoderDiagram() {
           <>
             <Wire
               arrow={arrow}
-              d={`M${right(ROW.input)} ${TOP_Y} H${ROW.split.x}`}
+              d={`M${rightOf(ROW.input)} ${TOP_Y} H${ROW.split.x}`}
             />
             <Wire
               arrow={arrow}
-              d={`M${right(ROW.split)} ${TOP_Y} H${ROW.demod.x}`}
+              d={`M${rightOf(ROW.split)} ${TOP_Y} H${ROW.demod.x}`}
             />
             <Label
-              x={(right(ROW.split) + ROW.demod.x) / 2}
+              x={(rightOf(ROW.split) + ROW.demod.x) / 2}
               y={TOP_Y - 4}
               anchor="middle"
             >
@@ -270,7 +257,7 @@ export function DecoderDiagram() {
               d={`M${centre(ROW.split)} ${top} V${LUMA_Y} H${centre(ROW.matrix)} V${top}`}
             />
             <Label
-              x={(right(ROW.demod) + ROW.matrix.x) / 2}
+              x={(rightOf(ROW.demod) + ROW.matrix.x) / 2}
               y={LUMA_Y + 11}
               anchor="middle"
             >
@@ -278,17 +265,17 @@ export function DecoderDiagram() {
             </Label>
             <Wire
               arrow={arrow}
-              d={`M${right(ROW.demod)} ${TOP_Y} H${ROW.matrix.x}`}
+              d={`M${rightOf(ROW.demod)} ${TOP_Y} H${ROW.matrix.x}`}
             />
             <Wire
               arrow={arrow}
-              d={`M${right(ROW.matrix)} ${TOP_Y} H${WIDTH - 26}`}
+              d={`M${rightOf(ROW.matrix)} ${TOP_Y} H${WIDTH - 26}`}
             />
             <Label x={WIDTH - 23} y={TOP_Y + 3}>
               RGB
             </Label>
 
-            <circle cx={TAP_X} cy={TOP_Y} r={1.8} className={local.dot} />
+            <circle cx={TAP_X} cy={TOP_Y} r={1.8} className={styles.dot} />
             <Wire
               arrow={arrow}
               look={lockLook}
@@ -301,17 +288,10 @@ export function DecoderDiagram() {
             <Wire
               arrow={arrow}
               look={lockLook}
-              d={`M${right(ROW.reference)} ${BOT_Y} H${ROW.acc.x}`}
+              d={`M${rightOf(ROW.reference)} ${BOT_Y} H${ROW.acc.x}`}
             />
             <Wire arrow={arrow} d={`M${ACC_UP_X} ${BOT_Y - H / 2} V${under}`} />
-            {boxes.map(b => (
-              <BoxView
-                key={b.id}
-                box={b}
-                selected={b.id === pick.selected}
-                onSelect={pick.toggle}
-              />
-            ))}
+            <Boxes boxes={boxes} pick={pick} />
 
             <Label x={PLOT.left} y={PLOT.ceiling - 6}>
               across the line
@@ -349,8 +329,8 @@ export function DecoderDiagram() {
               y2={PLOT.zero}
               className={local.fsc}
             />
-            <path d={line(trace(s => s.luma))} className={local.luma} />
-            <path d={line(trace(s => s.chroma))} className={local.chroma} />
+            <path d={polyline(trace(s => s.luma))} className={local.luma} />
+            <path d={polyline(trace(s => s.chroma))} className={local.chroma} />
             {[0, 2].map(mhz => (
               <Label
                 key={mhz}
