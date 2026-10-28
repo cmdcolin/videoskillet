@@ -84,7 +84,7 @@
 }
 
 /* A box you can press: the pointer says so, a hair of fill says which one is
-   open, and the focus ring is the browser's own on the group. */
+   open, and a glow round the frame or words says which one has focus. */
 .pick {
   cursor: pointer;
   outline: none;
@@ -93,6 +93,10 @@
 .pick:hover rect,
 .pick:focus-visible rect {
   stroke: var(--fg2);
+}
+
+.pick:focus-visible {
+  filter: drop-shadow(0 0 2px var(--fg));
 }
 
 .selected {
