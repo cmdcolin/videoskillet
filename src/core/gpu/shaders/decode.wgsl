@@ -553,11 +553,7 @@ fn decodeAt(row: u32, ry: u32, hoff: i32, toff: u32, tj: i32, col: i32) -> Decod
   // servo. Ahead of the gamut fit, since it is drive into the amplifiers, not
   // light out of them.
   let ablG = timing[ABL_GAIN];
-  let rgb = ablG * vec3f(
-    yn + 1.140 * vn,
-    yn - 0.395 * un - 0.581 * vn,
-    yn + 2.032 * un,
-  );
+  let rgb = ablG * rgbOf(vec3f(yn, un, vn));
   // Hue-preserving gamut fit instead of a per-channel clamp: saturated content
   // stays vivid at the clipping point rather than rotating hue toward whatever
   // channel didn't overflow. crt_face works in the headroom this leaves.
@@ -937,11 +933,7 @@ fn main(
       // amplitude: the same matrix at a fixed drive clips blue long before
       // yellow, and a clipped channel is a rotated hue — which on the one
       // instrument that exists to be read is the wrong thing to be wrong.
-      let drive = vec3f(
-        1.140 * cn.y,
-        -0.395 * cn.x - 0.581 * cn.y,
-        2.032 * cn.x,
-      );
+      let drive = rgbOf(vec3f(0.0, cn));
       let hue = vec3f(0.5)
         + 0.5 * drive / max(max(abs(drive.x), abs(drive.y)), abs(drive.z));
       let ire = scopeIre(f32(gid.y));

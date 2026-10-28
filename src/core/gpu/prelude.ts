@@ -1067,6 +1067,15 @@ fn yuvOf(rgb: vec3f) -> vec3f {
   return vec3f(y, 0.492 * (rgb.b - y), 0.877 * (rgb.r - y));
 }
 
+// YUV -> RGB, the receiver's matrix.
+fn rgbOf(yuv: vec3f) -> vec3f {
+  return vec3f(
+    yuv.x + 1.140 * yuv.z,
+    yuv.x - 0.395 * yuv.y - 0.581 * yuv.z,
+    yuv.x + 2.032 * yuv.y,
+  );
+}
+
 // Source B's texel, bob-deinterlaced when B's toggle is on: the same field
 // rebuild compose's pick() does for A, so an interlaced grabber combs on neither
 // deck. Off texel loads rather than a sampler tap, because B's texture *is* the
