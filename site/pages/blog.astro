@@ -3,6 +3,7 @@ import { getCollection } from 'astro:content'
 
 import Page from '../layouts/Page.astro'
 import { isoDay, longDate, newestFirst, published } from 'skillet-shared/posts'
+import { imageSize } from '../lib/imageSize'
 import { ORIGIN } from '../lib/site'
 import css from '../styles/landing.css?raw'
 
@@ -12,6 +13,9 @@ const changelogHref =
 const postHref = (id: string) => `/blog/${id}/`
 const assetHref = (path: string) => path
 const posts = newestFirst(await getCollection('posts', published))
+const imageSizes = await Promise.all(
+  posts.map(post => imageSize(post.data.image)),
+)
 ---
 
 <Page
@@ -30,12 +34,13 @@ const posts = newestFirst(await getCollection('posts', published))
       <a href={changelogHref}>changelog</a> lists every change.
     </p>
     {posts.length === 0 && <p>There are no posts yet.</p>}
-    {posts.map(post => (
+    {posts.map((post, i) => (
       <article class="postCard" id={post.id}>
         <a class="postCardImage" href={postHref(post.id)} tabindex="-1">
           <img
             src={assetHref(post.data.image)}
             alt={post.data.imageAlt}
+            {...imageSizes[i]}
             loading="lazy"
           />
         </a>
