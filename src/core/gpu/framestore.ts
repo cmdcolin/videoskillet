@@ -12,10 +12,13 @@
 //   loop fader and the strobe are set to. On that frame the keyer still shows
 //   the fill selected before, so going to freeze from the loop bus keeps the
 //   trails, and going from program A holds A with the subject keyed over it.
-// - A slot taking a new picture while freeze holds makes the store grab again,
-//   keyed over program A, once that picture has arrived. A page opened from a
-//   link with freeze set would otherwise hold its first frames, which show
-//   colour bars or black while a video is still loading.
+// - Until the page's own link has loaded, freeze holds nothing: the store
+//   records every frame keyed over program A. A page opened from a link with
+//   freeze set would otherwise hold its first frames, which show colour bars,
+//   or black while a cued clip seeks to its in-point. Once the link has
+//   settled, freeze holds the last frame recorded, and a source picked by hand
+//   leaves it alone, so a frozen picture can sit behind whatever is keyed in
+//   next.
 
 import { bOn } from './feedgates'
 
@@ -53,26 +56,51 @@ export interface StoreFrame {
   fill: number
 }
 
+// Frames a settled link must stay quiet before freeze holds: about a second,
+// which covers the frame a video has finished seeking to reaching the program.
+const QUIET_FRAMES = 60
+
 export class FrameStore {
   private frozen = false
   private before = 0
+  private settling = false
+  private quiet = 0
+  // Whether freeze still tracks the program: true until the page's link has
+  // settled. A reset keeps it.
+  loading: boolean
 
-  // Call once per frame. `fresh` says a source slot has shown a new picture
-  // since the last call.
+  constructor(loading = true) {
+    this.loading = loading
+  }
+
+  // The page's link has finished loading. A clip it named may still be waiting
+  // on its first frame or seeking to a cue, so freeze starts holding once
+  // `step` has been told neither is happening for `QUIET_FRAMES` in a row.
+  settle(): void {
+    this.settling = true
+  }
+
+  // Call once per frame. `busy` says a source slot is still waiting on its
+  // first frame or seeking.
   step(
     c: Controls,
     bEnabled: boolean,
     frame: number,
-    fresh: boolean,
+    busy = false,
   ): StoreFrame {
+    this.quiet = busy ? 0 : this.quiet + 1
+    if (this.settling && this.quiet >= QUIET_FRAMES) {
+      this.loading = false
+      this.settling = false
+    }
     const fill = keyFillOf(c, bEnabled)
     const entering = fill === 'freeze' && !this.frozen
     this.frozen = fill === 'freeze'
     if (this.frozen) {
-      const grab = entering || fresh
+      if (this.loading) return { records: true, fill: 0 }
       return {
-        records: grab,
-        fill: entering ? this.before : fresh ? 0 : FREEZE,
+        records: entering,
+        fill: entering ? this.before : FREEZE,
       }
     }
     this.before = Math.round(c.bKeyFill) === FREEZE ? 0 : c.bKeyFill

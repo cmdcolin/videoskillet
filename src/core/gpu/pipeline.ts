@@ -1715,6 +1715,10 @@ export class Engine implements EngineApi {
   // and the push alike, so a session with the sound off pays for none of it —
   // and never builds an AudioContext, since `pushBuzz` is the only caller that
   // would.
+  settleFreeze(): void {
+    this.frameStore.settle()
+  }
+
   setSoundOut(on: boolean): void {
     this.soundOut = on
   }
@@ -2120,7 +2124,7 @@ export class Engine implements EngineApi {
     this.simAcc = 0
     this.lockPhase = 0
     this.frame = 0
-    this.frameStore = new FrameStore()
+    this.frameStore = new FrameStore(this.frameStore.loading)
     // Designed from a board that has not moved, but into a buffer that has just
     // been cleared with everything else.
     this.filtersDirty = true
@@ -2581,7 +2585,7 @@ export class Engine implements EngineApi {
       c,
       this.sources.bEnabled,
       this.frame,
-      this.sources.takeFresh(),
+      this.sources.pending || this.pump.seeking(),
     )
     this.advancePhases(c)
     this.advanceShuttle(c.shuttleX)

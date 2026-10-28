@@ -2301,6 +2301,7 @@ export function useEngine(args: { rand: Rand }) {
     else if (reopen) reopenStashed('a')
     if (linkNamesB) dropFile('b')
     else if (reopen) reopenStashed('b')
+    void settleSources().then(() => eng.settleFreeze())
     debugLog('DEBUG engine ready')
   }
 

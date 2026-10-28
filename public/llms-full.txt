@@ -645,7 +645,7 @@ bKeyDelayUs  (key delay)
 
 bKeyFill  (fill)
   0=program A 1=matte 2=loop bus 3=freeze  default 0
-  What shows through the hole the key cut. Program A is the other input. Matte is the box's own generator, a flat colour encoded on the house carrier, so it dot-crawls like any other colour. Loop bus patches in the mixer's frame store, which records every frame, so a moving subject leaves trails. Freeze holds one frame in the store: the frame on screen when freeze is selected, or the first frame of a newly patched source. Copies of the subject in that frame stay in the background. Genlocked path only.
+  What shows through the hole the key cut. Program A is the other input. Matte is the box's own generator, a flat colour encoded on the house carrier, so it dot-crawls like any other colour. Loop bus patches in the mixer's frame store, which records every frame, so a moving subject leaves trails. Freeze holds the frame on screen when it is selected, and keeps holding it when a source changes, so a frozen picture can sit behind a new subject. A link opened with freeze holds its sources once they have loaded. Genlocked path only.
 
 bKeyMatteY  (matte level)
   0..1 step 0.01  default 0.5

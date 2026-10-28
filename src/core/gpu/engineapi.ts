@@ -75,6 +75,10 @@ export interface EngineApi {
   setSoundOut: (on: boolean) => void
   readonly soundOutOn: boolean
 
+  // The page's link has finished loading its sources. From then on a source
+  // picked by hand leaves a held freeze alone (gpu/framestore.ts).
+  settleFreeze: () => void
+
   // How an engine reports its own health. Four failures the app answers
   // differently, which is why they are four callbacks and not one: a lost device
   // rebuilds, a hang is fatal, a frozen tab is a banner that clears itself, and

@@ -95,10 +95,8 @@ export class Sources {
   private probe1: OffscreenCanvas | null = null
   private lastPixelA: number[] | null = null
 
-  // Whether a slot has shown a new picture since `takeFresh` last asked, which
-  // is what makes a held freeze grab again. A video slot counts once its first
-  // frame lands, so a clip still loading does not count.
-  private fresh = false
+  // Whether a video slot is waiting on its first frame, which keeps a freeze
+  // tracking the program while the page's link loads (gpu/framestore.ts).
   private awaitA = false
   private awaitB = false
 
@@ -168,7 +166,7 @@ export class Sources {
     )
     this.samplePixel(f.bmp)
     f.bmp.close()
-    this.landedA()
+    this.awaitA = false
   }
 
   // Same for B, which always arrives at raster size and pre-cropped.
@@ -179,7 +177,7 @@ export class Sources {
       [f.w, f.h],
     )
     f.bmp.close()
-    this.landedB()
+    this.awaitB = false
   }
 
   // The direct path's half of pushA/pushB: settle the slot's geometry now (the
@@ -192,16 +190,16 @@ export class Sources {
     const [w, h] = fitSrc(el.videoWidth, el.videoHeight)
     this.ensureTexA(w, h, el.videoWidth / el.videoHeight)
     this.extA = el
-    this.landedA()
+    this.awaitA = false
   }
 
   pushExtB(el: HTMLVideoElement): void {
     this.noiseB = 0
     this.extB = el
-    this.landedB()
+    this.awaitB = false
   }
 
-  // A video is now patched into the slot; its first frame is the new picture.
+  // A video is now patched into the slot, and its first frame has yet to land.
   awaitVideoA(): void {
     this.awaitA = true
   }
@@ -210,20 +208,9 @@ export class Sources {
     this.awaitB = true
   }
 
-  takeFresh(): boolean {
-    const was = this.fresh
-    this.fresh = false
-    return was
-  }
-
-  private landedA(): void {
-    if (this.awaitA) this.fresh = true
-    this.awaitA = false
-  }
-
-  private landedB(): void {
-    if (this.awaitB) this.fresh = true
-    this.awaitB = false
+  // Whether a video slot is still waiting on its first frame.
+  get pending(): boolean {
+    return this.awaitA || this.awaitB
   }
 
   // What the engine drains once per frame: which slots have a fresh video
@@ -242,7 +229,6 @@ export class Sources {
   setImageSource(source: Drawable, aspect = 4 / 3): void {
     this.noiseA = 0
     this.awaitA = false
-    this.fresh = true
     const [w, h] = fitSrc(source.width, source.height)
     this.ensureTexA(w, h, aspect)
     if (w === source.width && h === source.height) {
@@ -291,29 +277,21 @@ export class Sources {
   // clears this.
   setNoiseSource(kind: number): void {
     this.noiseA = kind
-    if (kind > 0) {
-      this.awaitA = false
-      this.fresh = true
-    }
+    if (kind > 0) this.awaitA = false
   }
 
   setImageSourceB(source: Drawable): void {
     this.noiseB = 0
     this.awaitB = false
-    this.fresh = true
     this.uploadB(source, source.width, source.height)
   }
 
   setNoiseSourceB(kind: number): void {
     this.noiseB = kind
-    if (kind > 0) {
-      this.awaitB = false
-      this.fresh = true
-    }
+    if (kind > 0) this.awaitB = false
   }
 
   setSourceBEnabled(on: boolean): void {
-    if (on !== this.enabledB) this.fresh = true
     this.enabledB = on
   }
 

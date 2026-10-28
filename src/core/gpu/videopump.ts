@@ -808,6 +808,12 @@ export class VideoPump {
     )
   }
 
+  // Whether either slot's element is still seeking, which is what a cued clip
+  // does on its way to the in-point.
+  seeking(): boolean {
+    return (this.a.el?.seeking ?? false) || (this.b.el?.seeking ?? false)
+  }
+
   // Dev-only, for the ?debug log: whether a slot holds a live video and how far
   // into it we are.
   info(): {

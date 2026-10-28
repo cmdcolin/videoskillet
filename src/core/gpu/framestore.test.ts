@@ -18,12 +18,13 @@ const run = (
   c: Controls,
   frames: number,
   from = 0,
-  fresh: (f: number) => boolean = () => false,
 ): boolean[] =>
   Array.from(
     { length: frames },
-    (_, i) => store.step(c, true, from + i, fresh(from + i)).records,
+    (_, i) => store.step(c, true, from + i).records,
   )
+
+const settled = () => new FrameStore(false)
 
 describe('keyFillOf', () => {
   it('names the fill only while the genlocked keyer cuts', () => {
@@ -63,7 +64,7 @@ describe('FrameStore', () => {
   })
 
   it('grabs one frame on selecting freeze and then holds it', () => {
-    const store = new FrameStore()
+    const store = settled()
     const freeze = keyed({ bKeyFill: 3, cfbMix: 0.6 })
     expect(run(store, keyed({ bKeyFill: 2 }), 2)).toEqual([true, true])
     expect(run(store, freeze, 4, 2)).toEqual([true, false, false, false])
@@ -71,24 +72,38 @@ describe('FrameStore', () => {
     expect(run(store, freeze, 2, 7)).toEqual([true, false])
   })
 
-  it('grabs again when a source shows a new picture during freeze', () => {
+  it('tracks program A under freeze while the link loads', () => {
+    const store = new FrameStore()
     const c = keyed({ bKeyFill: 3 })
-    expect(run(new FrameStore(), c, 5, 0, f => f === 3)).toEqual([
-      true,
-      false,
-      false,
-      true,
-      false,
-    ])
+    const frames = Array.from({ length: 3 }, () => store.step(c, true, 0))
+    expect(frames).toEqual(
+      Array.from({ length: 3 }, () => ({ records: true, fill: 0 })),
+    )
+  })
+
+  it('starts holding once the link has settled and no slot is busy', () => {
+    const store = new FrameStore()
+    const c = keyed({ bKeyFill: 3 })
+    store.step(c, true, 0)
+    store.settle()
+    expect(store.step(c, true, 0, true).records).toBe(true)
+    expect(run(store, c, 59).every(r => r)).toBe(true)
+    expect(run(store, c, 3)).toEqual([false, false, false])
+  })
+
+  it('carries a settled store through a reset', () => {
+    const store = new FrameStore()
+    store.settle()
+    run(store, keyed({ bKeyFill: 3 }), 60)
+    expect(new FrameStore(store.loading).loading).toBe(false)
   })
 
   it('shows the fill selected before on the frame freeze grabs', () => {
-    const store = new FrameStore()
-    const fills = (c: Controls, n: number, fresh = false) =>
-      Array.from({ length: n }, () => store.step(c, true, 0, fresh).fill)
+    const store = settled()
+    const fills = (c: Controls, n: number) =>
+      Array.from({ length: n }, () => store.step(c, true, 0).fill)
     expect(fills(keyed({ bKeyFill: 3 }), 2)).toEqual([0, 3])
     expect(fills(keyed({ bKeyFill: 2 }), 1)).toEqual([2])
     expect(fills(keyed({ bKeyFill: 3 }), 2)).toEqual([2, 3])
-    expect(fills(keyed({ bKeyFill: 3 }), 1, true)).toEqual([0])
   })
 })
