@@ -7,6 +7,7 @@ import {
   noteTake,
   reportLostTake,
   reportTakeFailed,
+  takeLive,
 } from './takeLog'
 import { sweepTakes } from './takeSink'
 
@@ -74,6 +75,7 @@ const jot = (ref: RefObject<TakeNote | null>, patch: Partial<TakeNote>) => {
 }
 
 const endNote = (ref: RefObject<TakeNote | null>) => {
+  if (ref.current === null) return
   ref.current = null
   clearTake()
 }
@@ -161,8 +163,8 @@ export function useCapture(
     reportLostTake()
     // A take streamed to a file leaves that file behind, because nothing tells
     // the page when the download has finished reading it. Whatever an earlier
-    // page left is this one's to clear.
-    void sweepTakes()
+    // page left is this one's to clear, once no tab is recording.
+    void takeLive().then(live => (live ? 0 : sweepTakes()))
     const onHide = () => {
       if (document.visibilityState === 'hidden') jot(noteRef, { hidden: true })
     }

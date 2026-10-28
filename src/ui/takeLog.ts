@@ -87,9 +87,39 @@ export interface TakeNote {
   hidden: boolean
 }
 
-export const noteTake = (note: TakeNote) => writeJSON(KEY, note)
+// A tab recording a take holds a lock named after the note's key, shared so
+// that two tabs can each record one. The browser drops the lock when the tab
+// closes or crashes, so a note found while some tab holds it belongs to a take
+// still being recorded.
+let release: (() => void) | null = null
 
-export const clearTake = () => removeStored(KEY)
+const holdLock = () => {
+  if (release !== null || typeof navigator.locks?.request !== 'function') return
+  const held = new Promise<void>(r => {
+    release = r
+  })
+  void navigator.locks
+    .request(KEY, { mode: 'shared' }, () => held)
+    .catch(() => {})
+}
+
+export const noteTake = (note: TakeNote) => {
+  writeJSON(KEY, note)
+  holdLock()
+}
+
+export const clearTake = () => {
+  removeStored(KEY)
+  release?.()
+  release = null
+}
+
+// Whether any open tab is recording a take.
+export async function takeLive(): Promise<boolean> {
+  if (typeof navigator.locks?.query !== 'function') return false
+  const { held } = await navigator.locks.query().catch(() => ({ held: [] }))
+  return held?.some(l => l.name === KEY) ?? false
+}
 
 interface HighEntropy {
   getHighEntropyValues: (hints: string[]) => Promise<{ model?: string }>
@@ -124,12 +154,20 @@ function send(kind: 'lost' | 'failed', params: Record<string, unknown>) {
   })
 }
 
-// Reports a note an earlier page left, and clears it either way.
+let checking = false
+
+// Reports a note a crashed page left, and clears it. A note another tab is
+// still writing stays.
 export function reportLostTake() {
-  if (readStored(KEY) === null) return
-  const note = readRecord<Partial<TakeNote>>(KEY, {})
-  clearTake()
-  send('lost', note)
+  if (checking || readStored(KEY) === null) return
+  checking = true
+  void takeLive().then(live => {
+    checking = false
+    if (live || readStored(KEY) === null) return
+    const note = readRecord<Partial<TakeNote>>(KEY, {})
+    removeStored(KEY)
+    send('lost', note)
+  })
 }
 
 export function reportTakeFailed(message: string, note: TakeNote | null) {

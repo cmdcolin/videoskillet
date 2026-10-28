@@ -42,6 +42,7 @@ describe('takeLog', () => {
     localStorage.clear()
   })
   afterEach(() => {
+    clearTake()
     vi.unstubAllGlobals()
   })
 
@@ -53,8 +54,9 @@ describe('takeLog', () => {
     expect(putTakeReport).not.toHaveBeenCalled()
   })
 
+  // A crashed page leaves its note and lets go of its lock.
   it('reports a take a crashed page left, once', async () => {
-    noteTake(NOTE)
+    localStorage.setItem('videoskillet_take', JSON.stringify(NOTE))
     reportLostTake()
     reportLostTake()
     await settle()
@@ -87,6 +89,55 @@ describe('takeLog', () => {
     reportLostTake()
     await settle()
     expect(putTakeReport).not.toHaveBeenCalled()
+  })
+
+  describe('with another tab recording', () => {
+    const locks = (names: string[]) => {
+      const requested: { name: string; mode?: string; done: Promise<void> }[] =
+        []
+      vi.stubGlobal('navigator', {
+        locks: {
+          request: (
+            name: string,
+            opts: { mode?: string },
+            body: () => Promise<void>,
+          ) => {
+            const done = body()
+            requested.push({ name, mode: opts.mode, done })
+            return done
+          },
+          query: () => Promise.resolve({ held: names.map(name => ({ name })) }),
+        },
+      })
+      return requested
+    }
+
+    it('leaves the note that tab is writing', async () => {
+      locks(['videoskillet_take'])
+      noteTake(NOTE)
+      reportLostTake()
+      await settle()
+      expect(putTakeReport).not.toHaveBeenCalled()
+      expect(localStorage.getItem('videoskillet_take')).not.toBeNull()
+    })
+
+    it('holds a shared lock while recording and lets go when done', async () => {
+      const requested = locks([])
+      noteTake(NOTE)
+      noteTake(NOTE)
+      expect(requested).toHaveLength(1)
+      expect(requested[0]).toMatchObject({
+        name: 'videoskillet_take',
+        mode: 'shared',
+      })
+      let released = false
+      void requested[0]!.done.then(() => {
+        released = true
+      })
+      clearTake()
+      await settle()
+      expect(released).toBe(true)
+    })
   })
 
   it('cuts a failure message to what the rule admits', async () => {
