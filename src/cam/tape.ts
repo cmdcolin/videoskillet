@@ -176,13 +176,16 @@ export async function relayCamera(
   video.muted = true
   video.playsInline = true
   video.srcObject = stream
-  await video.play()
-  return {
-    video,
-    stop: () => {
-      cancelAnimationFrame(raf)
-      for (const t of stream.getTracks()) t.stop()
-      video.srcObject = null
-    },
+  const stop = () => {
+    cancelAnimationFrame(raf)
+    for (const t of stream.getTracks()) t.stop()
+    video.srcObject = null
   }
+  try {
+    await video.play()
+  } catch (e) {
+    stop()
+    throw e
+  }
+  return { video, stop }
 }
