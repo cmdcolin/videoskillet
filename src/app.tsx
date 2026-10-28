@@ -120,7 +120,7 @@ import { useClipLibrary } from './ui/useClipLibrary'
 import { useClockSync } from './ui/useClockSync'
 import { useCurrentSession } from './ui/useCurrentSession'
 import { useDrift } from './ui/useDrift'
-import { useEngine } from './ui/useEngine'
+import { subscribeNever, useEngine } from './ui/useEngine'
 import { useFavorites } from './ui/useFavorites'
 import { useLookLabels } from './ui/useLookLabels'
 import { useMediaQuery } from './ui/useMediaQuery'
@@ -186,9 +186,6 @@ const ALL_OFF_ONLY_STORE = 'videoskillet_all_settings_off_stock'
 // time it opens the app.
 const PANEL_W_STORE = 'videoskillet_panel_width'
 
-// useSyncExternalStore fallbacks for the window before the async engine exists.
-const subscribeNever = () => () => {}
-
 // A reading of the board: one primitive answering one question, such as which
 // controls are off stock or which preset the board matches. App reads the board
 // only through these, so a write re-renders App only when an answer changes,
@@ -207,6 +204,8 @@ function useReading<T extends string | number | boolean>(
 ): T {
   return useSyncExternalStore(store.subscribe, () => read(store.get()))
 }
+
+// The morph store's reading before the async engine exists.
 const getNoMorph = (): number | null => null
 
 // What the look moves off stock: the keys, for the map's counts, and the rows,
@@ -2039,11 +2038,8 @@ export function App() {
       }
     />
   )
-  {
-    /* Not in fullscreen: that state is the picture and nothing else, and a
-      shelf of cards over a projector feed is the one place this must not
-      appear. */
-  }
+  // Not in fullscreen: that state is the picture and nothing else, and a shelf
+  // of cards over a projector feed is the one place this must not appear.
   const tray = fullscreen ? null : (
     <StripContext value={strip}>
       {/* The same name the save box offers, for the same reason: the

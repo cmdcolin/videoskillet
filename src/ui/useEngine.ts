@@ -261,7 +261,7 @@ export type StatsStore = Store<FrameStats>
 // reference every call — build the object inside the getter and React sees a new
 // value on every read and re-renders forever.
 const NO_STATS: FrameStats = { fps: 0, lock: 1 }
-const subscribeNever = () => () => {}
+export const subscribeNever = () => () => {}
 const getNoStats = (): FrameStats => NO_STATS
 
 // Keep what lets a slot reopen its file after a reload (fileStash.ts). Never a
