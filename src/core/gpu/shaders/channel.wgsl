@@ -142,9 +142,14 @@ fn main(
 ) {
   let row = wid.y;
   let base = i32(row * SPL + wid.x * TILE_WG) - i32(HALO);
-  for (var i = lid.x; i < TILE; i = i + TILE_WG) {
-    let ci = clampIdx(base + i32(i));
-    tileLc[i] = comp[ci] - chroma[ci];
+  // The fold stages the same samples into tileFmSrc and the luma FIR reads
+  // tileFm, so tileLc is only staged while the fold is off.
+  let fm = P.fmOverdev > 0.0;
+  if (!fm) {
+    for (var i = lid.x; i < TILE; i = i + TILE_WG) {
+      let ci = clampIdx(base + i32(i));
+      tileLc[i] = comp[ci] - chroma[ci];
+    }
   }
   // The chroma path's group delay (ycDelay) is one offset for the whole
   // dispatch, so the colour-under tile is staged that far back and the
@@ -256,13 +261,15 @@ fn main(
   let ml = LUMA_REACH;
   let cl = lid.x + HALO;
   let cf = lid.x + LUMA_REACH;
-  let fm = P.fmOverdev > 0.0;
-  var luma = filters[SEC_LUMA * FILTER_STRIDE + ml] * select(tileLc[cl], tileFm[cf], fm);
+  let mid = filters[SEC_LUMA * FILTER_STRIDE + ml];
+  var luma = 0.0;
   if (fm) {
+    luma = mid * tileFm[cf];
     for (var k = 0u; k < ml; k = k + 1u) {
       luma = luma + filters[SEC_LUMA * FILTER_STRIDE + k] * (tileFm[cf + k - ml] + tileFm[cf + ml - k]);
     }
   } else {
+    luma = mid * tileLc[cl];
     for (var k = 0u; k < ml; k = k + 1u) {
       luma = luma + filters[SEC_LUMA * FILTER_STRIDE + k] * (tileLc[cl + k - ml] + tileLc[cl + ml - k]);
     }
