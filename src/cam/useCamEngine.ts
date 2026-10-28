@@ -1,15 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
 
 import { DEFAULT_CONTROLS } from '../core/controls'
-import { Engine } from '../core/gpu/pipeline'
 import { smpteBars, sweep } from '../sources/pattern'
 import { backingStoreSize } from '../ui/canvasSize'
-import { RebuildPolicy } from '../ui/rebuildPolicy'
+import { superviseEngine } from '../ui/engineSupervisor'
 import { sounded } from './sound'
 import { SLICE } from './tape'
 import { steered } from './tilt'
 
 import type { Controls, ModSlot } from '../core/controls'
+import type { Engine } from '../core/gpu/pipeline'
+import type { FrozenKind } from '../core/gpu/renderloop'
+import type { GpuFault } from '../ui/engineSupervisor'
 import type { Fatal } from '../ui/FatalScreen'
 import type { Pattern } from './patterns'
 import type { Camera, Layout } from './tape'
@@ -91,12 +93,9 @@ function putB(engine: Engine, second: Shown['second']) {
   engine.setSourceBEnabled(second !== null)
 }
 
-const reason = (e: unknown) => (e instanceof Error ? e.message : String(e))
-
 // The camera page's engine runs one canvas, a camera on A and a second picture
-// on B. It keeps the two rules `useEngine` is built around: it never destroys a
-// device (docs/adr/0004), and it replaces a lost one in place. It leaves out
-// the instrument's links and its cue points.
+// on B. `superviseEngine` boots it and replaces it in place, as it does for
+// `useEngine`. It leaves out the instrument's links and its cue points.
 // `sideways` is where the set stands to begin with, and `onLayout` hears each
 // change of layout once it has reached the engine.
 export function useCamEngine(
@@ -111,8 +110,8 @@ export function useCamEngine(
   const engineRef = useRef<Engine | null>(null)
   const [engine, setEngine] = useState<Engine | null>(null)
   const [fatal, setFatal] = useState<Fatal | null>(null)
-  const [rebuilding, setRebuilding] = useState(false)
-  const [frozen, setFrozen] = useState(false)
+  const [rebuilding, setRebuilding] = useState<GpuFault | null>(null)
+  const [frozen, setFrozen] = useState<FrozenKind | null>(null)
   const [layout, setLayout] = useState<Layout>('whole')
   const shown = useRef<Shown>({
     video: null,
@@ -235,74 +234,22 @@ export function useCamEngine(
     const ro = new ResizeObserver(size)
     ro.observe(canvas)
 
-    // On the way out the engine stops its loop and lets go of the device.
-    // Destroying a presenting device ends the tab's rendering step
-    // (docs/adr/0004).
-    let disposed = false
-    const onPageHide = () => {
-      disposed = true
-      engineRef.current?.destroy()
-    }
-    window.addEventListener('pagehide', onPageHide)
-
-    const losses = new RebuildPolicy()
-    const create = (onFail: (e: unknown) => void, dead?: Engine) =>
-      Engine.create(canvas, { audio: dead?.audioState }).then(created => {
-        if (disposed) {
-          created.destroy()
-          return
-        }
+    const unsupervise = superviseEngine(canvas, {
+      adopt: created => {
         dress(created, shown.current, board.current, heard.current)
         engineRef.current = created
         setEngine(created)
         window.vf = created
-        created.onDeviceLost = () => replace(created)
-        created.onHang = () => replace(created)
-        created.onFrozen = f => setFrozen(f !== null)
         created.onGpuError = m => console.warn(`gpu: ${m}`)
-      }, onFail)
-
-    // The page is still intact when a device goes away, so the engine is
-    // replaced on the same canvas and dressed with the same picture.
-    const replace = (dead: Engine) => {
-      if (disposed || engineRef.current !== dead) return
-      if (losses.record(performance.now()) === 'give-up') {
-        setFatal({
-          title: 'WebGPU device lost',
-          body: `The GPU device was replaced ${losses.limit} times and kept going away, so the page stopped trying.`,
-          kind: 'lost',
-        })
-        return
-      }
-      setRebuilding(true)
-      dead.destroy({ keepAudio: true })
-      // The replacement takes over the audio graph, and with it a live mic.
-      void create(
-        e =>
-          setFatal({
-            title: 'WebGPU device lost',
-            body: `The GPU device went away and could not be replaced: ${reason(e)}`,
-            kind: 'lost',
-          }),
-        dead,
-      ).finally(() => setRebuilding(false))
-    }
-
-    void create(e =>
-      setFatal({
-        title: 'WebGPU unavailable',
-        body: reason(e),
-        kind: 'unavailable',
-      }),
-    )
+      },
+      onRebuilding: setRebuilding,
+      onFrozen: setFrozen,
+      onFatal: setFatal,
+    })
 
     return () => {
-      disposed = true
       ro.disconnect()
-      window.removeEventListener('pagehide', onPageHide)
-      // A remount or a hot update, neither of them the device's fault: the
-      // next engine adopts it.
-      engineRef.current?.destroy({ keepDevice: true })
+      unsupervise()
       engineRef.current = null
     }
   }, [canvasRef])

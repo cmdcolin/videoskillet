@@ -8,7 +8,7 @@ import {
   outOfGpuBudget,
 } from '../core/gpu/context'
 import { debugLog, pageSearch } from '../core/gpu/env'
-import { Engine, EngineBuildError } from '../core/gpu/pipeline'
+import { Engine } from '../core/gpu/pipeline'
 import { MAX_SRC_EDGE } from '../core/gpu/sources'
 import { reportPreviousTrace, trace } from '../core/gpu/trace'
 import { publicUrl } from '../publicUrl'
@@ -39,6 +39,7 @@ import {
   wrapCostMs,
   tapCue,
 } from './cue'
+import { superviseEngine } from './engineSupervisor'
 import {
   clearStash,
   readStash,
@@ -51,7 +52,6 @@ import { openPullFromUrl } from './framePull'
 import { canPickHandle, pickHandle } from './fsAccess'
 import { morphTo } from './morph'
 import { randomPresetMix, rollControls } from './presets'
-import { RebuildPolicy } from './rebuildPolicy'
 import { snowPlan } from './snow'
 import { usePersistedFlag } from './storage'
 import { printCard } from './teletypeSlot'
@@ -96,6 +96,7 @@ import type {
 } from '../sources/pools'
 import type { TeletypeCard } from '../sources/teletype'
 import type { Cue, CueEdge } from './cue'
+import type { GpuFault } from './engineSupervisor'
 import type { Fatal } from './FatalScreen'
 import type { FeedItem, ListMode } from './feed'
 import type { StashSlot, Stashed } from './fileStash'
@@ -190,35 +191,6 @@ const samePlayhead = (a: Playhead, b: Playhead): boolean =>
   a.time === b.time && a.duration === b.duration && a.paused === b.paused
 
 const SOUND_OUT_KEY = 'videoskillet_sound_out'
-
-// Tries per rebuild, and the wait between them. requestAdapter can fail outright
-// in the moments after a driver reset — the GPU stack is still coming back — so
-// a failed create is worth re-asking before calling the session over.
-const CREATE_TRIES = 3
-const CREATE_RETRY_MS = 700
-
-// The two ways the GPU half of a session ends, and the reason they are handled
-// by one path rather than two.
-//
-// `lost` is a device that said so — driver reset, sleep/wake, a compositor that
-// took it back. `hung` is a device that said nothing and stopped completing
-// submitted work, which used to go straight to a fatal screen on the grounds
-// that a wedged GPU process outlives the page and a fresh device would land on
-// the same one. That is one cause of a hang and, on Linux, not the common one.
-// The common one is a discrete card that runtime-suspended underneath a live
-// device — a hidden tab submits nothing, the card's autosuspend delay expires
-// (5 s on the dev box), and coming back re-initialises a card the device was
-// still open on. Nothing is wedged there; the device is simply stale, and a
-// replacement works.
-//
-// The two are indistinguishable at the moment of the fault, so the rebuild
-// decides it by trying: a hang gets a fresh device like a loss does, and the
-// verdict the old code reached immediately is reached only after `RebuildPolicy`
-// has spent its fresh devices on one that never completed any work — which is
-// the wedged process, and nothing else. The cost of guessing wrong is now one
-// rebuild instead of the session, which is also what makes it safe to probe on
-// every lifecycle transition rather than only on the watchdog's beat.
-type GpuFault = 'lost' | 'hung'
 
 // Hand a slot's picture to a freshly-built engine. The element check comes first
 // and on purpose: a clip, a webcam, a screen share and a YouTube blob all survive
@@ -2408,51 +2380,9 @@ export function useEngine(args: { rand: Rand }) {
       // the window enters fullscreen, so the picture never stretches.
       const ro = new ResizeObserver(applyCanvasSize)
       ro.observe(canvas)
-      // Stop the loop on the way out of the document, and — this part is the
-      // correction — *do not destroy the device*. `destroy()` without `keepDevice`
-      // now means "let go of it", not "hand it back to the driver" (releaseGpu in
-      // gpu/context.ts).
-      //
-      // This handler used to call `device.destroy()` here on the reasoning that a
-      // reload abandons the device and carries a wedged GPU into the next page, so
-      // releasing it first would start the reload clean. Measured, that is
-      // backwards and it was the bug: the same page reloaded four times in one tab
-      // survives every load when the device is merely abandoned, and dies from load
-      // 2 onward — permanently, exactly the reported freeze — when a `pagehide`
-      // handler destroys it. Destroying a device that has been presenting is what
-      // ends a tab's rendering step.
-      //
-      // The teardown is still worth doing for everything that is not the device:
-      // the loop stops, the audio graph closes, the mic light goes out.
-      //
-      // `disposed` is latched here too: pagehide can land while Engine.create is
-      // still in flight, when there is no engine to tear down yet but a device has
-      // already been handed out. The create callback below then lets go of it
-      // rather than leaving it to the page teardown.
-      let disposed = false
-      const onPageHide = () => {
-        disposed = true
-        engineRef.current?.destroy()
-      }
-      window.addEventListener('pagehide', onPageHide)
-
-      // Whether to keep replacing a device that keeps going away (rebuildPolicy),
-      // whether a replacement is in flight, and the retry timer one may be
-      // waiting on. Locals rather than state: the guard has to be true the
-      // instant it is set, and nothing renders any of them.
-      // Two counts, not one, because the two faults escalate on different
-      // evidence and must not spend each other's budget: a run of losses should
-      // not be forgiven by a hang that proved a device had worked, and a run of
-      // hangs should not inherit a count left by losses.
-      const losses = new RebuildPolicy()
-      const hangs = new RebuildPolicy()
-      let busy = false
-      let retryId = 0
-
       // Everything a new engine needs before it is allowed to be the live one:
-      // the callbacks that report its health, and the refs the rest of the hook
-      // writes through. Shared by the boot path and the rebuild, so a replacement
-      // engine is watched exactly as closely as the first one.
+      // the refs the rest of the hook writes through, and the callbacks that
+      // report on it. Shared by the boot and the rebuild.
       const wire = (created: Engine) => {
         engineRef.current = created
         setEngine(created)
@@ -2470,21 +2400,11 @@ export function useEngine(args: { rand: Rand }) {
           trace.flush(true)
           setError(`gpu: ${m}`)
         }
-        // Bound to the engine that lost its device, not to whatever is live when
-        // the promise settles: `lost` can resolve late, and a stale one must not
-        // be able to tear down the successor that replaced it.
-        created.onDeviceLost = m => rebuild(created, 'lost', m)
-        // Not a lost device — it never reported anything, it just stopped
-        // completing submitted work — but answered the same way, and see
-        // GpuFault for why that is the right guess to make first.
-        created.onHang = () =>
-          rebuild(created, 'hung', 'submitted work stopped completing')
-        created.onFrozen = f => setFrozen(f)
         // Where each slot's second read head is offered from. Set here rather
         // than beside the region, so a rebuilt engine gets one too: the elements
         // played straight through the device loss — they are the browser's, not
         // the GPU's — so a loop that was running keeps its head along with its
-        // region two dozen lines below.
+        // region in `succeed` below.
         created.setVideoRelay((start, end) => promoteHead(slotA, start, end))
         created.setVideoRelayB((start, end) => promoteHead(slotB, start, end))
         // Where a take's frames come from. One opener for both decks, because
@@ -2497,257 +2417,85 @@ export function useEngine(args: { rand: Rand }) {
         // Every one of those leaves that deck on the wall-rate element, exactly
         // as it was before the pull existed.
         created.setVideoPullOpener(url => openPullFromUrl(url))
-        // Both belong to the engine being replaced: a gpu fault it reported on
-        // its way out, and a paint stall latched against its loop. The new loop
-        // only reports edges, so a stale `frozen` would never clear itself.
+        // A gpu fault the outgoing engine reported on its way out.
         setError('')
-        setFrozen(null)
+      }
+
+      const boot = (created: Engine) => {
+        wire(created)
+        // The engine read `?dbg=` for itself; pick it up so the stage badge
+        // says which tap a link arrived on rather than claiming the picture.
+        setTap(created.getDbgView())
+        // Through the slots rather than straight at the engine, so the
+        // landing bars are recorded like every other source and a device
+        // lost before the user has touched anything still comes back on
+        // them.
+        showGenerated(slotA, 'bars', beginLoad('a'))
+        showGenerated(slotB, 'bars', beginLoad('b'))
+        created.setSourceBEnabled(true) // B defaults to bars; ?srcb=none to opt out
+        // The stored answer, which is what this render read the flag as:
+        // the effect is mount-once, so nothing has moved it yet.
+        created.setSoundOut(soundOut)
+        applySession(created, parseSessionParams(pageSearch()))
       }
 
       // A lost device is not the end of the session. The page is intact — what
-      // went away is the GPU-side half — so build a new engine and hand it back
+      // went away is the GPU-side half — so the new engine is handed back
       // everything the user chose: the controls as the panel has them at the
-      // moment of the swap (writes during the gap land on the outgoing engine
-      // and are copied across), the debug tap, whether B is summing, and each
-      // slot's source. The audio graph moves over rather than being rebuilt, so
-      // the music does not stop and the clips stay adoptable.
-      //
-      // What cannot come back is the content of VRAM. The phosphor state and
-      // the frame store start empty, so a feedback look takes a second or two
-      // to build back up — which is what a real set does after the power
-      // blinks.
-      const rebuild = (
-        dead: Engine,
-        fault: GpuFault,
-        message: string,
-      ): void => {
-        trace.add(
-          fault === 'hung' ? 'deviceHung' : 'deviceLost',
-          message.slice(0, 120),
-        )
-        trace.flush(true)
-        if (disposed || busy || engineRef.current !== dead) return
-        const policy = fault === 'hung' ? hangs : losses
-        // The device that just hung had completed work before it stopped
-        // answering, so replacing it was the right move and it worked — this is
-        // a fresh one-off, not a step toward giving up.
-        //
-        // It matters because the fault feeding this path is a card that
-        // suspends five seconds into a hidden tab, so the interval between two
-        // hangs is how long the user spent in another tab. Counting those
-        // toward a limit ends the session on the fourth alt-tab of a minute
-        // with "three fresh devices did the same", when all three worked. Only
-        // a device that never completed anything — a replacement born onto a
-        // wedged GPU process — leaves this untouched and escalates.
-        if (fault === 'hung' && dead.gpuConfirmed) policy.reset()
-        if (policy.record(performance.now()) === 'give-up') {
-          // Only here does a hang become the verdict the old code reached
-          // immediately: fresh devices were tried and never completed a thing,
-          // so what is wedged is behind them — the GPU process, which is shared
-          // across tabs and outlives this page. That is the one case where
-          // "close the tab" is really the advice, and it is now earned.
-          setFatal(
-            fault === 'hung'
-              ? {
-                  title: 'The GPU stopped responding',
-                  body: `Submitted work stopped completing, and ${policy.limit} fresh devices never completed any, so the fault is behind them rather than in this session.`,
-                  kind: 'hung',
-                }
-              : {
-                  title: 'WebGPU device lost',
-                  body: `The GPU device was replaced ${policy.limit} times and kept going away${message === '' ? '' : ` (${message})`}, so the session stopped trying.`,
-                  kind: 'lost',
-                },
-          )
-          return
-        }
-        busy = true
-        setRebuilding(fault)
-        console.warn(
-          fault === 'hung'
-            ? `GPU work stopped completing (${message}); replacing the device (${policy.attempt}/${policy.limit})`
-            : `WebGPU device lost (${message || 'no reason given'}); rebuilding on a fresh device (${policy.attempt}/${policy.limit})`,
-        )
-        // Release what the fault left behind. The audio graph is the exception:
-        // the replacement adopts it, because a <video> binds to one AudioContext
-        // for life and a fresh one could never re-adopt the clips still playing.
-        //
-        // For a hang this is also the part doing the work. `destroy()` is keyed
-        // off its own flag rather than `loop.running` precisely so a loop the
-        // hang watchdog already stopped still releases its device — which is
-        // what hands the stale one back before another is asked for.
-        dead.destroy({ keepAudio: true })
-        // The device that just failed is gone for good — a lost one already was,
-        // and a hung one must not be handed to the replacement — so this rebuild
-        // has to buy a new one. Cheap in itself (0004), so the only thing that
-        // stops it here is a tab already living on borrowed frames, and this is
-        // the last moment where declining still leaves a page that can say why.
-        // `busy` stays set, so nothing tries again behind the screen.
-        //
-        // How many devices this page has already built is deliberately not part of
-        // the question. A card that suspends under a hidden tab produces exactly
-        // this path once per alt-tab, every one of them a rebuild that worked, and
-        // counting them ended long sessions that were fine.
-        if (outOfGpuBudget()) {
-          setRebuilding(null)
-          declineDevice(
-            `${fault === 'hung' ? 'The GPU stopped completing work' : 'The GPU device was lost'}, and replacing it needs another WebGPU device — but this tab has already destroyed ${gpuReleases()} that had been presenting, which is what stops a browser painting a tab at all. Rather than spend a device on a tab the browser may already have given up on, this session stops here. Open this URL in a new tab instead: it starts clean, on the look you have now.`,
-            () => replace(dead, fault, CREATE_TRIES),
-          )
-          return
-        }
-        replace(dead, fault, CREATE_TRIES)
+      // moment of the swap, the debug tap, whether B is summing, and each
+      // slot's source. The audio graph moves over, so the music does not stop
+      // and the clips stay adoptable. The phosphor state and the frame store
+      // start empty, which is what a real set does after the power blinks.
+      const succeed = (created: Engine, dead: Engine) => {
+        // Configured before it goes live, so the first frame it presents is
+        // already the user's look.
+        created.applyControls(dead.getControls())
+        created.setDbgView(dead.getDbgView())
+        created.setCaption(dead.getCaption())
+        created.setSourceBEnabled(dead.sourceBOn)
+        created.setSoundOut(dead.soundOutOn)
+        wire(created)
+        // Sources last: they write through engineRef, which `wire` just
+        // moved. The modulation bay needs nothing here — it lives in React
+        // and its effect re-pushes on the new engine's identity.
+        restoreSlot(slotA, lastSrc.current.a)
+        restoreSlot(slotB, lastSrc.current.b)
+        // The elements played straight through the device loss, so the cues
+        // are still valid and only the fresh pump needs telling.
+        created.setVideoRegion(cueRegion(cueRef.current.a))
+        created.setVideoRegionB(cueRegion(cueRef.current.b))
       }
 
-      // One attempt at standing a new engine up in the old one's place. `dead` is
-      // still the store React is reading and every write path is pointed at, so
-      // it stays authoritative until the moment `wire` moves them across.
-      const replace = (dead: Engine, fault: GpuFault, tries: number): void => {
-        Engine.create(canvas, { audio: dead.audioState }).then(
-          created => {
-            busy = false
-            setRebuilding(null)
-            if (disposed) {
-              created.destroy()
-              return
-            }
-            // Configured before it goes live, so nothing writes to a
-            // half-restored engine and the first frame it presents is already
-            // the user's look rather than the defaults.
-            created.applyControls(dead.getControls())
-            created.setDbgView(dead.getDbgView())
-            created.setCaption(dead.getCaption())
-            created.setSourceBEnabled(dead.sourceBOn)
-            created.setSoundOut(dead.soundOutOn)
-            wire(created)
-            // Sources last: they write through engineRef, which `wire` just
-            // moved. The modulation bay needs nothing here — it lives in React
-            // and its effect re-pushes on the new engine's identity — and MIDI
-            // writes through engineRef too.
-            restoreSlot(slotA, lastSrc.current.a)
-            restoreSlot(slotB, lastSrc.current.b)
-            // And the loops they were running. The elements played straight
-            // through the device loss — they are the browser's, not the GPU's —
-            // so the cue is still valid and only the fresh pump needs telling.
-            // Read off the ref, since this closure was made at mount.
-            created.setVideoRegion(cueRegion(cueRef.current.a))
-            created.setVideoRegionB(cueRegion(cueRef.current.b))
-            // Forced, like the loss that caused it: if the replacement wedges
-            // too, the next session's trace has to show that this one already
-            // came back from a loss rather than starting clean.
-            trace.add(
-              'rebuilt',
-              `attempt ${fault === 'hung' ? hangs.attempt : losses.attempt}`,
-            )
-            trace.flush(true)
-            console.warn('engine rebuilt on a fresh device')
-          },
-          (e: unknown) => {
-            if (!disposed) {
-              if (tries > 1) {
-                // The GPU stack can still be coming back up right after a reset,
-                // and requestAdapter fails outright while it is. Ask again before
-                // calling the session over.
-                console.warn(
-                  `rebuild failed (${reason(e)}); retrying in ${CREATE_RETRY_MS}ms`,
-                )
-                retryId = window.setTimeout(
-                  () => replace(dead, fault, tries - 1),
-                  CREATE_RETRY_MS,
-                )
-              } else {
-                busy = false
-                setRebuilding(null)
-                // A device that cannot be created at all is the same dead end
-                // whichever fault sent us here, so this one screen covers both —
-                // but it still has to say which, or a hang reads as a loss that
-                // never happened.
-                setFatal({
-                  title:
-                    fault === 'hung'
-                      ? 'The GPU stopped responding'
-                      : 'WebGPU device lost',
-                  body: `${fault === 'hung' ? 'Submitted work stopped completing' : 'The GPU device went away'} and could not be replaced: ${reason(e)}`,
-                  kind: fault,
-                })
-              }
-            }
-          },
-        )
-      }
-
-      const boot = () => {
-        Engine.create(canvas).then(
-          created => {
-            if (disposed) {
-              created.destroy()
-            } else {
-              wire(created)
-              // The engine read `?dbg=` for itself; pick it up so the stage badge
-              // says which tap a link arrived on rather than claiming the picture.
-              setTap(created.getDbgView())
-              // Through the slots rather than straight at the engine, so the
-              // landing bars are recorded like every other source and a device
-              // lost before the user has touched anything still comes back on
-              // them.
-              showGenerated(slotA, 'bars', beginLoad('a'))
-              showGenerated(slotB, 'bars', beginLoad('b'))
-              created.setSourceBEnabled(true) // B defaults to bars; ?srcb=none to opt out
-              // The stored answer, which is what this render read the flag as:
-              // the effect is mount-once, so nothing has moved it yet.
-              created.setSoundOut(soundOut)
-              applySession(created, parseSessionParams(pageSearch()))
-            }
-          },
-          (e: unknown) =>
-            setFatal(
-              e instanceof EngineBuildError
-                ? {
-                    title: 'The signal path failed to build',
-                    body: e.message,
-                    kind: 'build',
-                  }
-                : {
-                    title: 'WebGPU unavailable',
-                    body: e instanceof Error ? e.message : String(e),
-                    kind: 'unavailable',
-                  },
-            ),
-        )
-      }
-
-      // Asked before booting, because a tab that arrives here already damaged is a
-      // tab whose next device is the one that kills it, and saying so beforehand
-      // leaves a page that can still be read.
-      //
-      // What can actually be true at this point is worth being precise about, since
-      // this used to fire on an ordinary refresh. The only way past the gate is
-      // `gpuReleases()`, tab-scoped exactly because that damage is what survives a
-      // reload — and reachable only under `?gpudestroy=1`. So on a normal load this
-      // cannot fire at all, and the reader it is left here for is whoever re-ran
-      // the destructive A/B and then reloaded into the hole it makes. Reloading is
-      // free, having destroyed a device once is not: 0004 as a boot condition.
-      if (outOfGpuBudget()) {
+      // A device is cheap (0004), so the only thing that refuses one is a tab
+      // already living on borrowed frames, reachable only after
+      // `?gpudestroy=1`. How many devices this page has built is deliberately
+      // not part of the question: a card that suspends under a hidden tab
+      // rebuilds once per alt-tab, and every one of those works.
+      const declines = (fault: GpuFault | null, spend: () => void) => {
+        if (!outOfGpuBudget()) return false
         declineDevice(
-          `This tab has destroyed ${gpuReleases()} WebGPU device${gpuReleases() === 1 ? '' : 's'} that had been presenting. That stops the browser giving this tab animation frames — nothing drawn reaches the screen, and reloading lands in the same place. Open this URL in a new tab: it starts clean and on the same look.`,
-          boot,
+          fault === null
+            ? `This tab has destroyed ${gpuReleases()} WebGPU device${gpuReleases() === 1 ? '' : 's'} that had been presenting. That stops the browser giving this tab animation frames — nothing drawn reaches the screen, and reloading lands in the same place. Open this URL in a new tab: it starts clean and on the same look.`
+            : `${fault === 'hung' ? 'The GPU stopped completing work' : 'The GPU device was lost'}, and replacing it needs another WebGPU device — but this tab has already destroyed ${gpuReleases()} that had been presenting, which is what stops a browser painting a tab at all. Rather than spend a device on a tab the browser may already have given up on, this session stops here. Open this URL in a new tab instead: it starts clean, on the look you have now.`,
+          spend,
         )
-      } else {
-        boot()
+        return true
       }
+
+      const unsupervise = superviseEngine(canvas, {
+        adopt: (created, dead) =>
+          dead === null ? boot(created) : succeed(created, dead),
+        onRebuilding: setRebuilding,
+        onFrozen: setFrozen,
+        onFatal: setFatal,
+        declines,
+      })
+
       return () => {
-        disposed = true
         ro.disconnect()
-        clearTimeout(retryId)
-        window.removeEventListener('pagehide', onPageHide)
         stopVideo()
         stopVideoB()
-        // The device stays open. This cleanup runs on a remount and on a Vite hot
-        // update — neither of which is the device's fault, and both of which are
-        // immediately followed by an engine that would otherwise spend one of the
-        // two this tab has. A real page teardown goes through `pagehide` above,
-        // which releases it properly so the next load starts GPU-clean.
-        engineRef.current?.destroy({ keepDevice: true })
+        unsupervise()
         engineRef.current = null
       }
     }
