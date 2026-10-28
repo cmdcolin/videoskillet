@@ -280,6 +280,7 @@ const wanted = demos.filter(d => !only.length || only.includes(d.file))
 mkdirSync(outDir, { recursive: true })
 console.log(`${wanted.length} demos → ${outDir}/ (${engine}, ${FPS}fps)`)
 
+let failed = 0
 for (const demo of wanted) {
   const tmpDir = mkdtempSync(join(tmpdir(), `demoreel-${demo.file}-`))
   try {
@@ -369,6 +370,7 @@ for (const demo of wanted) {
     console.log(`    ↑ ${CLIPS}${demo.file}.mp4`)
   } catch (e) {
     console.log(`  FAIL ${demo.file}: ${String(e).slice(0, 200)}`)
+    failed++
   } finally {
     if (keep) {
       console.log(`    frames kept in ${tmpDir}`)
@@ -376,4 +378,9 @@ for (const demo of wanted) {
       rmSync(tmpDir, { recursive: true, force: true })
     }
   }
+}
+
+if (failed > 0) {
+  console.log(`${failed} of ${wanted.length} demos failed`)
+  process.exitCode = 1
 }

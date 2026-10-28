@@ -1064,6 +1064,7 @@ const takes = slide =>
       takesWanted === 'both' || takesWanted === ['wide', 'narrow'][i],
   )
 
+let failed = 0
 for (const slide of wanted) {
   for (const take of takes(slide)) {
     const tmpDir = mkdtempSync(join(tmpdir(), `reel-${take.name}-`))
@@ -1194,6 +1195,7 @@ for (const slide of wanted) {
       }
     } catch (e) {
       console.log(`  FAIL ${take.name}: ${String(e).slice(0, 200)}`)
+      failed++
     } finally {
       if (keep) {
         console.log(`    frames kept in ${tmpDir}`)
@@ -1207,4 +1209,9 @@ for (const slide of wanted) {
 // A screen of variants is not the reel, and must not date it.
 if (slidesPath === null) {
   writeFileSync(MANIFEST, `${JSON.stringify(taken, null, 2)}\n`)
+}
+
+if (failed > 0) {
+  console.log(`${failed} take${failed === 1 ? '' : 's'} failed`)
+  process.exitCode = 1
 }
