@@ -182,8 +182,8 @@ export interface Recorder {
   // Decoder configs the encoder has emitted. More than one means it was
   // rebuilt mid-take.
   configs: () => number
-  // The last error the encoder reported, or ''. Encoding failures arrive on a
-  // callback rather than as a rejected call, so they have nowhere else to go.
+  // The last error the encoder or the sink reported, or ''. Both arrive after
+  // the call that caused them returned, so they have nowhere else to go.
   error: () => string
   // The error's DOMException name, or ''. Chrome's message for a failed
   // platform encode is always "Encoding error.", so the name is most of what
@@ -359,7 +359,7 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
     streamed: () => sink.streamed,
     coded: () => coded,
     configs: () => configs,
-    error: () => failure,
+    error: () => (failure !== '' ? failure : sink.failure()),
     errorName: () => failureName,
     busy: () =>
       encoder.encodeQueueSize >= MAX_QUEUE || sink.backlog() >= MAX_BACKLOG,

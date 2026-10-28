@@ -32,6 +32,8 @@ export interface TakeSink {
   backlog: () => number
   // How many more bytes this sink will take.
   room: () => number
+  // Why a write failed, or ''. A failed sink takes no more picture.
+  failure: () => string
   // The finished file, with the layout's tail placed after the picture and its
   // head at the front.
   close: (layout: Mp4Layout) => Promise<Blob>
@@ -95,6 +97,7 @@ export function blobSink(): TakeSink {
     streamed: false,
     backlog: () => 0,
     room: () => BLOB_MAX - written,
+    failure: () => '',
     write: data => {
       written += data.length
       pending.push(data)
@@ -187,7 +190,8 @@ export async function fileSink(): Promise<TakeSink | null> {
       try {
         await stream.write(data)
       } catch (e) {
-        if (failure === '') failure = messageOf(e)
+        if (failure === '')
+          failure = `could not write the take: ${messageOf(e)}`
       }
       backlog -= data.length
     })
@@ -212,6 +216,7 @@ export async function fileSink(): Promise<TakeSink | null> {
     streamed: true,
     backlog: () => backlog + pendingBytes,
     room: () => free - written,
+    failure: () => failure,
     write: data => {
       if (failure !== '') return
       written += data.length

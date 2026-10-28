@@ -226,6 +226,17 @@ describe('the file sink', () => {
     expect(disk.streams[0]?.state).toBe('aborted')
   })
 
+  it('says so as soon as a write fails', async () => {
+    disk.limit = STREAM_HEAD
+    const sink = await fileSink()
+    expect(sink?.failure()).toBe('')
+    sink?.write(picture(4 * 1024 * 1024, 1))
+    await settle()
+    expect(sink?.failure()).toMatch(
+      /could not write the take: the disk is full/,
+    )
+  })
+
   it('leaves no file behind when given up on', async () => {
     const sink = await fileSink()
     sink?.write(picture(3, 1))
