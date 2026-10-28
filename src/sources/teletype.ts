@@ -826,15 +826,16 @@ const SHADE_LIT: number[][] = SHADE_DOTS.map(dots => {
 // The offset moves a cell's dots and leaves its background where it was, so a
 // boiled glyph can cross into the colour next to it, as a redrawn one would.
 //
-// `flashOff` is the dark half of the flash cycle.
+// `flashOff` is the dark half of the flash cycle. `decoded` is `rows` through
+// `decodePage`, for a caller that already has it.
 export function dotGrid(
   rows: string[][],
   cols: number,
   cursor = true,
   boil: Int8Array | null = null,
   flashOff = false,
+  decoded = decodePage(rows),
 ): OffscreenCanvas {
-  const decoded = decodePage(rows)
   const w = cols * CELL_W
   const h = rows.length * CELL_H
   const grid = new OffscreenCanvas(w, h)
@@ -961,12 +962,14 @@ export function buildTeletype(
   // One spare column for the cursor, so a line that fills the row still has
   // somewhere to put it.
   const cols = clamp(widest + 1, MIN_COLS, MAX_COLS + 1)
+  const decoded = decodePage(rows)
   const grid = dotGrid(
     rows,
     cols,
     true,
     boilPhase === null ? null : boilOffsets(cols, rows.length, boilPhase),
     flashOff,
+    decoded,
   )
 
   // Whole dots only. A fractional scale would make some dots a pixel wider
@@ -985,7 +988,7 @@ export function buildTeletype(
     zoom,
     w: grid.width * zoom,
     h: grid.height * zoom,
-    flashes: decodePage(rows).some(row => row.cells.some(c => c.flash)),
+    flashes: decoded.some(row => row.cells.some(c => c.flash)),
   }
 }
 
