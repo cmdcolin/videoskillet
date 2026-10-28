@@ -37,7 +37,8 @@ export const mimeFor = (path: string): string => {
 // segment is checked, so a traversal is refused wherever in the path it sits
 // rather than only at the front. A backslash is refused outright: it separates
 // directories on Windows, where the binary also runs, and nothing the app asks
-// for contains one.
+// for contains one. So is a colon, which turns a segment into a URL scheme
+// (`file:/etc/passwd`) or a drive letter once the path is resolved.
 export const assetPath = (pathname: string): string | null => {
   let decoded: string
   try {
@@ -45,7 +46,7 @@ export const assetPath = (pathname: string): string | null => {
   } catch {
     return null
   }
-  if (decoded.includes('\\') || decoded.includes('\0')) return null
+  if (/[\\\0:]/.test(decoded)) return null
   const parts = decoded.split('/').filter(p => p !== '' && p !== '.')
   if (parts.some(p => p === '..')) return null
   // A directory is its index page, which is how `/app/` reaches the instrument
@@ -53,6 +54,13 @@ export const assetPath = (pathname: string): string | null => {
   return decoded.endsWith('/') || parts.length === 0
     ? [...parts, 'index.html'].join('/')
     : parts.join('/')
+}
+
+// The file a relative asset path names under `root`, or null when it resolves
+// anywhere else.
+export const assetUrl = (rel: string, root: URL): URL | null => {
+  const url = new URL(rel, root)
+  return url.href.startsWith(root.href) ? url : null
 }
 
 // What the app is told the server can do. The video-URL source is backed by

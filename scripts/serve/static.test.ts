@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
-import { assetPath, byteRange, mimeFor, withBridgeTag } from './static'
+import {
+  assetPath,
+  assetUrl,
+  byteRange,
+  mimeFor,
+  withBridgeTag,
+} from './static'
 
 // The server hands back whatever this maps a request onto, so what it refuses
 // is the whole of the file-system guard.
@@ -33,9 +39,32 @@ describe('assetPath', () => {
     expect(assetPath('/%zz')).toBeNull()
   })
 
+  it('refuses a segment that would resolve as a URL scheme', () => {
+    expect(assetPath('/file:/etc/passwd')).toBeNull()
+    expect(assetPath('/%66ile:/etc/passwd')).toBeNull()
+    expect(assetPath('/app/file%3a/etc/passwd')).toBeNull()
+    expect(assetPath('/C:/Windows/win.ini')).toBeNull()
+  })
+
   it('keeps a name that merely contains dots', () => {
     expect(assetPath('/app/..well-known.txt')).toBe('app/..well-known.txt')
     expect(assetPath('/demo-v2.mp4')).toBe('demo-v2.mp4')
+  })
+})
+
+describe('assetUrl', () => {
+  const root = new URL('file:///srv/dist/')
+
+  it('resolves a path under the root', () => {
+    expect(assetUrl('app/index.html', root)?.href).toBe(
+      'file:///srv/dist/app/index.html',
+    )
+  })
+
+  it('refuses a path that resolves outside the root', () => {
+    expect(assetUrl('file:/etc/passwd', root)).toBeNull()
+    expect(assetUrl('../secret', root)).toBeNull()
+    expect(assetUrl('//host/share', root)).toBeNull()
   })
 })
 

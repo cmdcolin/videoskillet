@@ -17,7 +17,13 @@
 // what it needs is yt-dlp on PATH, and it says so at startup when there is
 // none. Everything else the app does, it already did offline.
 
-import { assetPath, byteRange, mimeFor, withBridgeTag } from './static.ts'
+import {
+  assetPath,
+  assetUrl,
+  byteRange,
+  mimeFor,
+  withBridgeTag,
+} from './static.ts'
 import {
   cacheKey,
   contentType,
@@ -80,8 +86,10 @@ const root =
 const readAsset = async (
   rel: string,
 ): Promise<Uint8Array<ArrayBuffer> | null> => {
+  const file = assetUrl(rel, root)
+  if (file === null) return null
   try {
-    return (await Deno.readFile(new URL(rel, root))) as Uint8Array<ArrayBuffer>
+    return (await Deno.readFile(file)) as Uint8Array<ArrayBuffer>
   } catch {
     return null
   }
