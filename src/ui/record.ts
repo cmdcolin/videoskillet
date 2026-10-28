@@ -147,7 +147,8 @@ export interface Recorder {
   // whose period is taken, or that finds the encoder `busy`, is dropped. The
   // recorder closes the frame.
   place: (frame: VideoFrame, renderedAt: number) => void
-  // Whether the file has reached the size this muxer can write.
+  // Whether the sink has run out of room: the storage the browser grants a
+  // file take, or the memory cap on a Blob one.
   full: () => boolean
   // Whether the encoder is too far behind to take another frame.
   busy: () => boolean

@@ -330,12 +330,17 @@ export function useCapture(
             void stop()
             return
           }
+          if (r.full()) {
+            onError(
+              r.streamed()
+                ? 'recording stopped: storage is full'
+                : 'recording stopped: the take reached its size limit',
+            )
+            void stop()
+            return
+          }
           if (fromEngine) {
             attach()
-            if (r.full()) {
-              void stop()
-              return
-            }
           } else if (opts.clock === true) {
             const due =
               Math.floor(
