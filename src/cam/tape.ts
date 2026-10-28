@@ -160,7 +160,8 @@ export async function relayCamera(
     `${cam.video.videoWidth}x${cam.video.videoHeight}:${layout()}`
   let draw = lay(canvas, g, cam, layout())
   let seen = state()
-  let raf = 0
+  const perFrame = 'requestVideoFrameCallback' in cam.video
+  let pending = 0
   const tick = () => {
     const now = state()
     if (now !== seen) {
@@ -168,7 +169,9 @@ export async function relayCamera(
       draw = lay(canvas, g, cam, layout())
     }
     draw()
-    raf = requestAnimationFrame(tick)
+    pending = perFrame
+      ? cam.video.requestVideoFrameCallback(tick)
+      : requestAnimationFrame(tick)
   }
   tick()
   const stream = canvas.captureStream(FPS)
@@ -177,7 +180,8 @@ export async function relayCamera(
   video.playsInline = true
   video.srcObject = stream
   const stop = () => {
-    cancelAnimationFrame(raf)
+    if (perFrame) cam.video.cancelVideoFrameCallback(pending)
+    else cancelAnimationFrame(pending)
     for (const t of stream.getTracks()) t.stop()
     video.srcObject = null
   }
