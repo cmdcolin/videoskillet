@@ -2,6 +2,11 @@
 
 All notable changes to videoskillet are documented here.
 
+## [2.20.4](https://github.com/cmdcolin/videoskillet/compare/v2.20.3...v2.20.4) - 2026-10-28
+
+### Chores
+- [`c816948`](https://github.com/cmdcolin/videoskillet/commit/c8169485115716db1fd94eb657f51b18b98e48b2) build on Node 24, since Astro now refuses Node 22.23.3
+
 ## [2.20.3](https://github.com/cmdcolin/videoskillet/compare/v2.20.2...v2.20.3) - 2026-10-28
 
 ### Features
