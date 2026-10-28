@@ -1,7 +1,7 @@
 ---
 title: Chroma keying with ghosts
 date: 2026-10-28
-draft: true
+draft: false
 summary:
   Claude Code drove the chroma keyer from a script and found a fireball that
   blooms in rainbow rings over the aurora, and a sandwich that sweeps out a disc
