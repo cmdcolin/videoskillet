@@ -208,8 +208,13 @@ export async function startAudio(
         node.port.postMessage('stop', [])
         setTimeout(done, 500)
       })
-      if (encoder.state === 'configured') await encoder.flush()
-      release()
+      try {
+        if (encoder.state === 'configured') await encoder.flush()
+      } catch (e) {
+        failure = e instanceof Error ? e.message : String(e)
+      } finally {
+        release()
+      }
       if (failure !== '' || samples.length === 0) return null
       if (chosen.codec === 'aac' && config === null) return null
       return {

@@ -1,6 +1,7 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { blobForced, blobSink } from './takeSink'
+import { STREAM_HEAD } from './mp4'
+import { blobForced, blobSink, fileSink } from './takeSink'
 
 import type { Mp4Layout } from './mp4'
 
@@ -52,8 +53,7 @@ describe('the Blob sink', () => {
   })
 
   // What every browser without `createWritable` gets, and `?takesink=blob`
-  // is the only way to reach it on one that has it. The file sink itself is
-  // browser semantics all the way down — `scripts/sinkcheck.mjs` has it.
+  // is the only way to reach it on one that has it.
   it('is what the flag asks for', () => {
     expect(blobForced('?takesink=blob')).toBe(true)
     expect(blobForced('?takesink=file')).toBe(false)
@@ -65,5 +65,173 @@ describe('the Blob sink', () => {
     sink.write(picture(4, 9))
     sink.discard()
     expect((await sink.close(layout())).size).toBe(7)
+  })
+})
+
+// The file sink against a stand-in for the origin-private file system: the
+// head patched in at the end, a failed write, and a take given up on. What the
+// browser's own file system does is `scripts/sinkcheck.mjs`'s to measure.
+type Chunk =
+  | Uint8Array<ArrayBuffer>
+  | { type: 'write'; position: number; data: Uint8Array<ArrayBuffer> }
+
+class FakeWritable {
+  bytes = new Uint8Array(0)
+  writes = 0
+  state: 'open' | 'closed' | 'aborted' = 'open'
+
+  constructor(
+    private readonly onClose: (written: Uint8Array<ArrayBuffer>) => void,
+    private readonly limit: number,
+  ) {}
+
+  write(chunk: Chunk): Promise<void> {
+    if (this.state !== 'open') return Promise.reject(new TypeError('closed'))
+    this.writes++
+    const { position, data } =
+      chunk instanceof Uint8Array
+        ? { position: this.bytes.length, data: chunk }
+        : chunk
+    const end = Math.max(this.bytes.length, position + data.length)
+    if (end > this.limit)
+      return Promise.reject(
+        new DOMException('the disk is full', 'QuotaExceededError'),
+      )
+    const next = new Uint8Array(end)
+    next.set(this.bytes)
+    next.set(data, position)
+    this.bytes = next
+    return Promise.resolve()
+  }
+
+  close(): Promise<void> {
+    if (this.state !== 'open') return Promise.reject(new TypeError('closed'))
+    this.state = 'closed'
+    this.onClose(this.bytes)
+    return Promise.resolve()
+  }
+
+  abort(): Promise<void> {
+    this.state = 'aborted'
+    return Promise.resolve()
+  }
+}
+
+class FakeDisk {
+  files = new Map<string, Uint8Array<ArrayBuffer>>()
+  streams: FakeWritable[] = []
+  limit = Infinity
+  quota: number | undefined = 10 * 1024 * 1024 * 1024
+  usage = 0
+
+  directory() {
+    const files = this.files
+    const streams = this.streams
+    const limit = () => this.limit
+    return {
+      getFileHandle: (name: string) => {
+        if (!files.has(name)) files.set(name, new Uint8Array(0))
+        return Promise.resolve({
+          kind: 'file',
+          createWritable: () => {
+            const stream = new FakeWritable(
+              written => files.set(name, written),
+              limit(),
+            )
+            streams.push(stream)
+            return Promise.resolve(stream)
+          },
+          getFile: () =>
+            Promise.resolve(
+              new File([files.get(name) ?? new Uint8Array()], name),
+            ),
+        })
+      },
+      removeEntry: (name: string) => {
+        files.delete(name)
+        return Promise.resolve()
+      },
+    }
+  }
+
+  install() {
+    const dir = this.directory()
+    vi.stubGlobal('location', { search: '' })
+    vi.stubGlobal('navigator', {
+      storage: {
+        getDirectory: () =>
+          Promise.resolve({ getDirectoryHandle: () => Promise.resolve(dir) }),
+        estimate: () =>
+          Promise.resolve({ quota: this.quota, usage: this.usage }),
+      },
+    })
+  }
+}
+
+const streamedLayout = (tail: Uint8Array<ArrayBuffer>[] = []): Mp4Layout => ({
+  head: picture(STREAM_HEAD, 0xaa),
+  tail,
+})
+
+const settle = () => new Promise(r => setTimeout(r, 0))
+
+describe('the file sink', () => {
+  let disk: FakeDisk
+
+  beforeEach(() => {
+    disk = new FakeDisk()
+    disk.install()
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('patches the head in front of the picture and the tail after it', async () => {
+    const sink = await fileSink()
+    expect(sink?.streamed).toBe(true)
+    sink?.write(picture(3, 1))
+    sink?.write(picture(2, 2))
+    const blob = await sink?.close(streamedLayout([picture(4, 3)]))
+    expect(blob?.type).toBe('video/mp4')
+    expect(Array.from(blob === undefined ? [] : await bytes(blob))).toEqual([
+      ...Array<number>(STREAM_HEAD).fill(0xaa),
+      1,
+      1,
+      1,
+      2,
+      2,
+      3,
+      3,
+      3,
+      3,
+    ])
+  })
+
+  it('refuses a layout whose head is not the size it reserved', async () => {
+    const sink = await fileSink()
+    await expect(
+      sink?.close({ head: picture(8, 0), tail: [] }),
+    ).rejects.toThrow(/reserved/)
+  })
+
+  it('leaves no file behind when the last write fails', async () => {
+    disk.limit = STREAM_HEAD + 4
+    const sink = await fileSink()
+    sink?.write(picture(3, 1))
+    await expect(sink?.close(streamedLayout([picture(4, 3)]))).rejects.toThrow(
+      /full/,
+    )
+    expect(disk.files.size).toBe(0)
+    expect(disk.streams[0]?.state).toBe('aborted')
+  })
+
+  it('leaves no file behind when given up on', async () => {
+    const sink = await fileSink()
+    sink?.write(picture(3, 1))
+    sink?.discard()
+    await settle()
+    expect(disk.files.size).toBe(0)
+    expect(disk.streams[0]?.state).toBe('aborted')
   })
 })

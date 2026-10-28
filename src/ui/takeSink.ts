@@ -115,6 +115,9 @@ export function blobSink(): TakeSink {
   }
 }
 
+const messageOf = (e: unknown): string =>
+  e instanceof Error ? e.message : String(e)
+
 // The origin's own directory, or null in a browser that has none and in a
 // private window, where asking for one throws.
 const root = (): Promise<FileSystemDirectoryHandle | null> =>
@@ -184,7 +187,7 @@ export async function fileSink(): Promise<TakeSink | null> {
       try {
         await stream.write(data)
       } catch (e) {
-        if (failure === '') failure = e instanceof Error ? e.message : String(e)
+        if (failure === '') failure = messageOf(e)
       }
       backlog -= data.length
     })
@@ -229,11 +232,21 @@ export async function fileSink(): Promise<TakeSink | null> {
         try {
           await stream.write({ type: 'write', position: 0, data: head })
         } catch (e) {
-          failure = e instanceof Error ? e.message : String(e)
+          failure = messageOf(e)
         }
       }
-      await stream.close().catch(() => {})
-      if (failure !== '') throw new Error(failure)
+      if (failure === '') {
+        try {
+          await stream.close()
+        } catch (e) {
+          failure = messageOf(e)
+        }
+      }
+      if (failure !== '') {
+        await stream.abort().catch(() => {})
+        await dir.removeEntry(name).catch(() => {})
+        throw new Error(failure)
+      }
       const file = await entry.getFile()
       // Sliced rather than wrapped: it names the type without copying a
       // gigabyte, which `new Blob([file])` would.

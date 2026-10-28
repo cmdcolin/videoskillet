@@ -154,7 +154,8 @@ export interface Recorder {
   // Keep the last frame up for one more frame period without encoding
   // anything. The file stops being constant-framerate where this is used.
   hold: () => void
-  // Flush the encoder and mux. Rejects if nothing was recorded.
+  // Flush the encoder and mux. Rejects if nothing was recorded, and leaves no
+  // file behind when it does.
   finish: () => Promise<Blob>
   // Give up without producing a file: an encoder is an OS resource, and a
   // recording abandoned by a device loss or an unmount has to let it go.
@@ -215,9 +216,6 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
   const height = even(spec.height)
   const rate = fps.num / fps.den
   const samples: Sample[] = []
-  // Where the picture goes as it is encoded: a file where the browser has one
-  // to write, and a Blob where it does not.
-  const sink = (await fileSink()) ?? blobSink()
   let avcc: Uint8Array<ArrayBuffer> | null = null
   let bytes = 0
   let count = 0
@@ -275,6 +273,9 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
     () => null,
   )
 
+  // Where the picture goes as it is encoded: a file where the browser has one
+  // to write, and a Blob where it does not.
+  const sink = (await fileSink()) ?? blobSink()
   const encoder = new VideoEncoder({
     output: (chunk, meta) => {
       // The parameter sets arrive once, on the first chunk. Kept rather than
@@ -451,29 +452,38 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
             )
       // The sound stops with the last frame, before the picture's flush, which
       // takes long enough to leave the sound half a second over.
-      const heard = sound === null ? Promise.resolve(null) : sound.finish()
-      if (encoder.state === 'configured') await encoder.flush()
-      if (encoder.state !== 'closed') encoder.close()
-      if (failure !== '') throw new Error(failure)
-      if (samples.length === 0) throw new Error('nothing was recorded')
-      if (avcc === null) {
-        throw new Error('the encoder produced no parameter sets')
+      const heard =
+        sound === null
+          ? Promise.resolve(null)
+          : sound.finish().catch(() => null)
+      try {
+        if (encoder.state === 'configured') await encoder.flush()
+        if (encoder.state !== 'closed') encoder.close()
+        if (failure !== '') throw new Error(failure)
+        if (samples.length === 0) throw new Error('nothing was recorded')
+        if (avcc === null) {
+          throw new Error('the encoder produced no parameter sets')
+        }
+        const audio = await heard
+        // The sink has had the picture all along; what it is given now is the
+        // layout either side of it. Nothing here holds or copies the take.
+        return await sink.close(
+          mp4Layout({
+            width,
+            height,
+            fps,
+            avcc,
+            samples,
+            end,
+            streamed: sink.streamed,
+            ...(audio === null ? {} : { audio }),
+          }),
+        )
+      } catch (e) {
+        if (encoder.state !== 'closed') encoder.close()
+        sink.discard()
+        throw e
       }
-      const audio = await heard
-      // The sink has had the picture all along; what it is given now is the
-      // layout either side of it. Nothing here holds or copies the take.
-      return await sink.close(
-        mp4Layout({
-          width,
-          height,
-          fps,
-          avcc,
-          samples,
-          end,
-          streamed: sink.streamed,
-          ...(audio === null ? {} : { audio }),
-        }),
-      )
     },
   }
 }
