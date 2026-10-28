@@ -103,7 +103,19 @@ export function CamPage(props: { link: CamLink | null }) {
   })
   const zoom = useZoom(() => trackOf(eng.camera()?.video), eng.zoomA)
   const [error, setError] = useState('')
-  const srcA = useSourceA(eng, setError)
+  const srcA = useSourceA(
+    {
+      showVideo: (video, mirror) => {
+        eng.showVideo(video, mirror)
+        zoom.reset()
+      },
+      showPattern: pattern => {
+        eng.showPattern(pattern)
+        zoom.reset()
+      },
+    },
+    setError,
+  )
   const cam = useCamera((video, mirror) => {
     eng.showVideo(video, mirror)
     zoom.reset()
