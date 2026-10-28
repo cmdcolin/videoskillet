@@ -286,7 +286,7 @@ export function Diagram({
 // screen reader hears, where the box's own name would not say which part it is.
 export function PickPart({
   opens,
-  name = opens,
+  name,
   pick,
   className,
   children,
@@ -299,7 +299,7 @@ export function PickPart({
 }) {
   return (
     <Pressable
-      name={name}
+      name={name ?? opens}
       selected={pick.selected === opens}
       onSelect={() => pick.toggle(opens)}
       className={className}
