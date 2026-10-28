@@ -106,11 +106,7 @@ export function ablDrive(abl: number, beam: number, frames: number) {
 
 // The sag tank down the raster, in its normalized units, settled over enough
 // frames that the state the flyback hands on has stopped changing.
-export function sagLines(
-  ring: number,
-  ablHeld: number,
-  loads: readonly number[],
-) {
+function sagLines(ring: number, ablHeld: number, loads: readonly number[]) {
   const r = clamp(ring, 0, 1)
   const w = mix(0.35, 0.08, r)
   const damp = mix(0.55, 0.015, r)

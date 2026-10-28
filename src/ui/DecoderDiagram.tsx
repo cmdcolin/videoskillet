@@ -55,6 +55,7 @@ const HEIGHT = LEGEND_Y + 4
 const MHZ_MAX = 6
 const POINTS = 241
 const TAKEOFF = takeoffBandpass()
+const CHANNEL_CHROMA = bandpass(FSC, 0.6e6, TAPS.chromaBp)
 
 const plotX = (hz: number) =>
   PLOT.left + ((PLOT.right - PLOT.left) * hz) / (MHZ_MAX * 1e6)
@@ -203,13 +204,12 @@ export function DecoderDiagram() {
     lumaMHz: v('lumaMHz'),
     lumaPeak: v('lumaPeak'),
   })
-  const channelChroma = bandpass(FSC, 0.6e6, TAPS.chromaBp)
   const encoder = lowpass(v('encChromaMHz') * 1e6, TAPS.encChroma)
   const at = Array.from({ length: POINTS }, (_, i) => {
     const hz = (MHZ_MAX * 1e6 * i) / (POINTS - 1)
     return {
       x: plotX(hz),
-      s: split(hz, demod, TAKEOFF, channelLuma, channelChroma, encoder, {
+      s: split(hz, demod, TAKEOFF, channelLuma, CHANNEL_CHROMA, encoder, {
         step: Math.round(v('chromaCoarse')),
         bleed,
         trap: comb === 0,
@@ -418,7 +418,9 @@ export function DecoderDiagram() {
                       FSC / 1e6,
                   )
                 }
-                onNudge={dx => setBandwidth(v('demodMHz') + dx * 0.1)}
+                onNudge={dx =>
+                  setBandwidth(v('demodMHz') + dx * bandwidth.step * 10)
+                }
               />
             )}
           </>

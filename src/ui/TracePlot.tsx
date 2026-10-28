@@ -14,7 +14,7 @@ const CURVE: Record<TraceLook, string> = {
 
 /** A fixed axis, or one symmetric about 0 that grows to hold the trace. */
 export type TraceScale =
-  | { lo: number; hi: number; ticks: readonly number[]; reference: number }
+  | { lo: number; hi: number; ticks: readonly number[]; reference?: number }
   | { floor: number }
 
 // The smallest of 1, 2 or 5 times a power of ten that holds `v`, and never

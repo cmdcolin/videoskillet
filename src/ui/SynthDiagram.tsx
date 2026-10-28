@@ -184,7 +184,7 @@ export function SynthDiagram() {
                 hz === 0 ? 'osc A off' : `osc A, ${rate(cyclesPerLine(hz))}`
               }
               values={wave}
-              scale={{ lo: 0, hi: 1, ticks: [0, 1], reference: 0.5 }}
+              scale={{ lo: 0, hi: 1, ticks: [0, 1] }}
               format={unit}
               ends={['0', '1 cycle']}
               along={alongRange(0, 1, 'cycle')}

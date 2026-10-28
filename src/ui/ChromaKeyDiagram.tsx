@@ -11,6 +11,8 @@ import { mixerSlice } from './hueKey'
 import { HueWheel } from './HueWheel'
 import { CHROMA_KEY_KEYS, CHROMA_KEY_OPENS as OPENS } from './schematicKeys'
 
+const READ = [...CHROMA_KEY_KEYS, 'bGenlock'] as const
+
 type Part = keyof typeof OPENS
 
 const WIDTH = 340
@@ -41,8 +43,8 @@ const DEG = Math.PI / 180
 // boxes, the keyer's slice on the U/V plane: the shaded part of the wheel is
 // the chroma it cuts.
 export function ChromaKeyDiagram() {
-  const r = useReadings(CHROMA_KEY_KEYS)
-  const genlock = useReadings(['bGenlock']).value('bGenlock') > 0.5
+  const r = useReadings(READ)
+  const genlock = r.value('bGenlock') > 0.5
   const pick = useSelectedBox()
   const v = r.value
   const key = v('bKey')

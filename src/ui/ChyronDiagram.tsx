@@ -160,7 +160,7 @@ const BUS_HELP: Record<string, string> = {
 function CharGen({ cg }: { cg: boolean }) {
   const b = cg ? CG_BENDS : CC_BENDS
   const opens = cg ? CHYRON_OPENS : CAPTION_OPENS
-  const r = useReadings<ControlKey>(cg ? CHYRON_KEYS : CAPTION_READS)
+  const r = useReadings(cg ? CHYRON_KEYS : CAPTION_READS)
   const pick = useSelectedBox(cg ? 'mix' : null)
   const off = r.value(cg ? 'cgMix' : 'cc') <= 0
   const box = stageBoxes(opens as Opens, TWO, r)

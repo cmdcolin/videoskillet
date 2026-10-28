@@ -46,16 +46,6 @@ const HELP = {
   hue: "The audio waveform driven into the colour demodulator's reference oscillator, the same wire the tint control sits on.",
 } satisfies Record<Dest, string>
 
-const NAME: Record<Dest, string> = {
-  video: 'video',
-  roll: 'roll',
-  tear: 'tear',
-  sag: 'sag',
-  tank: 'tank',
-  bend: 'bend',
-  hue: 'hue',
-}
-
 interface Placed {
   id: Dest
   tap: Tap
@@ -71,7 +61,7 @@ for (const d of DESTS) {
     before === undefined
       ? START_X
       : before.x + before.w + (before.domain === d.domain ? GAP : DOMAIN_GAP)
-  placed.push({ ...d, x, w: boxWidth(NAME[d.id]) })
+  placed.push({ ...d, x, w: boxWidth(d.id) })
 }
 
 const mid = (d: { x: number; w: number }) => d.x + d.w / 2
@@ -88,7 +78,7 @@ export function AudioDiagram() {
     y: BOX_Y,
     w: d.w,
     h: BOX_H,
-    name: NAME[d.id],
+    name: d.id,
     touched: routed(d.id),
     help: HELP[d.id],
   }))
