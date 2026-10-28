@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 
 import { usePersistedString } from '../ui/storage'
 import { TAPE_SECONDS, playLoop, recordTape, relayCamera } from './tape'
-import { stopAll } from './useCamera'
+import { stalled, stopAll } from './useCamera'
 import { replay, useOnReturn } from './useReplay'
 
 import type { Pattern } from './patterns'
@@ -82,11 +82,6 @@ export function useSecond(
     [],
   )
 
-  useOnReturn(() => {
-    replay(videosOf(held.current))
-    return undefined
-  })
-
   const show = (next: Second | null) => {
     held.current = next
     setSecond(next)
@@ -107,8 +102,17 @@ export function useSecond(
     if (b !== null) unload(b)
   }
 
-  // A live camera on B, taken off when the phone ends it: in the background,
-  // or when another app takes it.
+  // A live camera on B, taken off when the phone ends it, when another app
+  // takes it, or when it has not resumed after the page comes back.
+  useOnReturn(() => {
+    const b = held.current
+    replay(videosOf(b))
+    if (b?.kind !== 'live') return undefined
+    return () => {
+      if (held.current === b && stalled(b.cam)) eject()
+    }
+  })
+
   const goLive = async (o: Opened) => {
     const relay = await relayCamera(
       { video: o.video, mirror: o.faces === 'user' },
