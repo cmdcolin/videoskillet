@@ -2,6 +2,21 @@
 
 All notable changes to videoskillet are documented here.
 
+## [2.21.2](https://github.com/cmdcolin/videoskillet/compare/v2.21.1...v2.21.2) - 2026-10-29
+
+### Documentation
+- [`b3da38d`](https://github.com/cmdcolin/videoskillet/commit/b3da38de33d156ddcbb7e000a63a7d7014b4020e) explain the keyer ghosts mechanism before the sandwich
+- [`c9e7736`](https://github.com/cmdcolin/videoskillet/commit/c9e77369576d62712f3b304b7c7605acf6c5d72c) tighten the keyer ghosts post against the writing checklist
+- [`6a8ebc8`](https://github.com/cmdcolin/videoskillet/commit/6a8ebc8a5bfe6cee14087b902048bf80e53812a1) say what strobe hold counts in the keyer ghosts post
+- [`f8cde7b`](https://github.com/cmdcolin/videoskillet/commit/f8cde7b6caba6dd2dcaf812fe517ce31416ce637) drop 'look' from the keyer ghosts post
+- [`2c4d6e1`](https://github.com/cmdcolin/videoskillet/commit/2c4d6e1a4ddcfcdece5d8fb2c4154b5709e3d93b) plan retiring 'look' as a noun
+
+### Chores
+- [`dcb3fc0`](https://github.com/cmdcolin/videoskillet/commit/dcb3fc0711502867504e537bd40637881158e75a) release matches bender's gates
+
+### Other Changes
+- [`9f05eb4`](https://github.com/cmdcolin/videoskillet/commit/9f05eb4974905170f99438f1c9cd0541e2fed92f) [skip ci] build: release waits for render too, CI uses local pnpm
+
 ## [2.21.1](https://github.com/cmdcolin/videoskillet/compare/v2.21.0...v2.21.1) - 2026-10-29
 
 ### Documentation
