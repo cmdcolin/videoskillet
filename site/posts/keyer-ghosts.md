@@ -20,7 +20,7 @@ earlier recordings, so anything that moves in front of the green screen leaves a
 trail of copies.
 
 **Strobe hold** sets how many frames the frame store skips between recordings.
-This look skips 5, so each copy is six frames behind the one before it and the
+With strobe hold at 5, each copy is six frames behind the one before it, so the
 copies stay distinct. The sandwich in this clip turns about its centre, so the
 copies form a disc around it.
 
@@ -38,9 +38,9 @@ Two variations:
 - [The keyhole](/app/#vurlb=https://upload.wikimedia.org/wikipedia/commons/transcoded/1/14/HD_video_of_a_Chicken_fillet_roll_-_rotating_green_screen_alan_butler.webm/HD_video_of_a_Chicken_fillet_roll_-_rotating_green_screen_alan_butler.webm.480p.vp9.webm&set=chromaGain:1.3,crtSat:1.2,bGain:1,bGenlock:1,bKey:-1,bKeyAcceptDeg:45,bKeyClip:0.05,bKeySpill:0.6)
   inverts the key and cuts out the sandwich.
 
-Claude Code found this look by driving the app from a script. The new **agent**
-button in the sidebar opens a prompt to paste into your own agent, so that it
-can drive the app the same way.
+Claude Code found these settings by driving the app from a script. The new
+**agent** button in the sidebar opens a prompt to paste into your own agent, so
+that it can drive the app the same way.
 
 _Footage from Wikimedia Commons:
 [HD video of a Chicken fillet roll](https://commons.wikimedia.org/wiki/File:HD_video_of_a_Chicken_fillet_roll_-_rotating_green_screen_alan_butler.webm)
