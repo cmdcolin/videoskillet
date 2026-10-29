@@ -135,9 +135,10 @@ try {
 }
 
 // The local run cannot see the runner's environment, so release only what CI
-// has passed. wait-for-ci pushes HEAD before it waits.
+// has passed. wait-for-ci pushes HEAD before it waits. `render` gates the
+// deploy, so a red one after the tag would leave the site a release behind.
 if (releasing) {
-  run('node scripts/wait-for-ci.mjs --job check')
+  run('node scripts/wait-for-ci.mjs --job check --job render')
   // `pnpm version` bumps package.json, commits it, and creates a `v<x.y.z>` tag.
   run(`pnpm version ${bump} -m "Release v%s"`)
   run('git push --follow-tags')

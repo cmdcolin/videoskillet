@@ -1227,6 +1227,27 @@ open on it, so the discrete card never autosuspends while the app is up; and
 when something looks driver-shaped, "does it still happen on the other GPU"
 wants answering without a rebuild.
 
+## Releases
+
+`scripts/push.mjs` cuts every release and every push to `main`.
+
+- `pnpm pat`, `pnpm min` and `pnpm maj` bump the version, tag it and push.
+  `pnpm ship` pushes the commits on `main` without a bump; Pages deploys on
+  every push.
+- Before anything slow, the script refuses a dirty tree, a branch other than
+  `main`, a checkout behind origin, and a version at or below origin's highest
+  tag.
+- It then runs lint, `sync:check --strict`, format, the compiler check,
+  typecheck, the tests, the build and, for a release, `jsr:check`. A
+  `docshots:check` failure only warns.
+- A release pushes the work and waits for CI's `check` and `render` jobs before
+  it bumps the version. After the final push, the script waits for every
+  workflow on the commit, which for a release includes `release.yml`.
+- `scripts/wait-for-ci.mjs` does the waiting, and is shared with bender.
+  `CI_WAIT_MINUTES` bounds it (default 45).
+- `release.yml` leaves the GitHub release as a draft; publish it from the
+  Releases page.
+
 ## Further reading
 
 - [`ARCHITECTURE.md`](ARCHITECTURE.md) — pass graph, buffer layouts, adding a

@@ -1,11 +1,11 @@
 // CROSS_REPO_SYNC_FILE(wait-for-ci)
 //
 // Pushes HEAD if origin lacks it, then blocks until CI finishes on that commit.
-// Usage: node scripts/wait-for-ci.mjs [--job <name>]
+// Usage: node scripts/wait-for-ci.mjs [--job <name>]...
 // Without --job, waits for every workflow run on the commit, so a release tag
-// waits on its own workflow as well as the deploy. With --job, waits for that
-// job only (the release gate waits for `check` and leaves the rest to finish on
-// their own). Exits 1 on a red run. CI_WAIT_MINUTES bounds the wait (default 45).
+// waits on its own workflow as well as the deploy. With --job, waits for the
+// named jobs only and leaves the rest to finish on their own. Exits 1 on the
+// first red one. CI_WAIT_MINUTES bounds the wait (default 45).
 
 import { execFileSync } from 'node:child_process'
 import { setTimeout as sleep } from 'node:timers/promises'
@@ -14,8 +14,9 @@ const POLL_MS = 15_000
 const APPEAR_MS = 5 * 60_000
 const WAIT_MS = Number(process.env.CI_WAIT_MINUTES ?? 45) * 60_000
 
-const jobFlag = process.argv.indexOf('--job')
-const job = jobFlag === -1 ? undefined : process.argv[jobFlag + 1]
+const jobs = process.argv.flatMap((arg, i, all) =>
+  arg === '--job' ? [all[i + 1]] : [],
+)
 
 const out = (cmd, args) => execFileSync(cmd, args, { encoding: 'utf8' }).trim()
 const api = path => JSON.parse(out('gh', ['api', path]))
@@ -44,13 +45,15 @@ function latestRuns() {
   )
 }
 
-function findJob(runs) {
-  for (const run of runs) {
-    const found = api(
-      `repos/:owner/:repo/actions/runs/${run.id}/jobs`,
-    ).jobs.find(j => j.name === job)
-    if (found) return { ...found, name: job, html_url: run.html_url }
-  }
+function findJobs(runs) {
+  const found = runs.flatMap(run =>
+    api(`repos/:owner/:repo/actions/runs/${run.id}/jobs`)
+      .jobs.filter(j => jobs.includes(j.name))
+      .map(j => ({ ...j, html_url: run.html_url })),
+  )
+  return jobs.map(
+    name => found.find(j => j.name === name) ?? { name, status: 'not started' },
+  )
 }
 
 const started = Date.now()
@@ -65,10 +68,12 @@ for (;;) {
     }
   }
 
-  const watched = job ? [findJob(runs)].filter(Boolean) : runs
+  const watched = jobs.length > 0 ? findJobs(runs) : runs
+  const red = watched.find(
+    w => w.status === 'completed' && w.conclusion !== 'success',
+  )
+  if (red) fail(`${red.name} ${red.conclusion}: ${red.html_url}`)
   if (watched.length > 0 && watched.every(w => w.status === 'completed')) {
-    const red = watched.find(w => w.conclusion !== 'success')
-    if (red) fail(`${red.name} ${red.conclusion}: ${red.html_url}`)
     console.log(`${watched.map(w => w.name).join(', ')} green on ${short}`)
     break
   }
