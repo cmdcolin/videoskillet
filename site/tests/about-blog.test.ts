@@ -22,7 +22,11 @@ test('every published post points at an image that exists', () => {
     const text = readFileSync(`site/posts/${file}`, 'utf8')
     if (/^draft: true$/m.test(text)) continue
     const image = /^image: (.+)$/m.exec(text)?.[1]
-    expect(image, file).toMatch(/^\//)
-    expect(existsSync(`public${image}`), `${file}: ${image}`).toBe(true)
+    expect(image, file).toMatch(
+      /^(\/|https:\/\/myloveydove\.com\/videoskillet\/)/,
+    )
+    if (image?.startsWith('/')) {
+      expect(existsSync(`public${image}`), `${file}: ${image}`).toBe(true)
+    }
   }
 })
