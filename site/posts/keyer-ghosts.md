@@ -14,21 +14,22 @@ look: '#vurlb=https://upload.wikimedia.org/wikipedia/commons/transcoded/1/14/HD_
 
 A chroma keyer replaces every pixel of the key colour with a fill picture. With
 **fill** set to **loop bus**, the keyer takes the fill from the frame store,
-which holds the keyer's output from a few frames earlier. Where the camera saw
-green screen, the viewer sees that older output, with the subject where it stood
-then. Each recording of the frame store contains the copies from the recordings
-before it, so anything that moves in front of the green screen leaves a growing
+which holds the keyer's output from a few frames earlier, with the subject where
+it stood then. Each frame the store records already contains the copies from
+earlier recordings, so anything that moves in front of the green screen leaves a
 trail of copies.
 
-**Strobe hold** sets how often the frame store records. At 5 it records every
-sixth frame, so the copies are six frames apart and stay distinct. The sandwich
-in this clip turns about its centre, so the copies form a disc around it.
+**Strobe hold** sets how many frames the frame store skips between recordings.
+This look skips 5, so each copy is six frames behind the one before it and the
+copies stay distinct. The sandwich in this clip turns about its centre, so the
+copies form a disc around it.
 
 The copies flash between complementary colours because NTSC encodes hue as the
 phase of a colour subcarrier, and that phase inverts on each frame. The frame
-store records the composite signal, subcarrier included, so on every other frame
-the TV decodes a stored copy against the opposite phase and turns each hue in it
-to its complement, such as gold to pale blue.
+store records the composite signal, subcarrier included. On every other frame,
+the TV decodes a stored copy against the opposite phase, which turns each hue in
+it to its complement, such as gold to pale blue. The live subject keeps its
+colours, because the TV decodes it against the phase it was encoded with.
 
 Two variations:
 
