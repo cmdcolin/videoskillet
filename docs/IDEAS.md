@@ -711,6 +711,33 @@ by a harness in the way `scripts/camshots.mjs` renders the tour's stills, and
 shown on the chip. A live preview of each look on the camera would need a render
 per chip per frame.
 
+## Retire "look" as a noun
+
+The app and the docs call three different things a "look", and the word reads
+badly in a sentence ("this look skips 5"). A rough grep finds about 560 lines in
+`site/`, `src/ui/` and `docs/` that use it as a noun. Give each meaning its own
+word:
+
+- [ ] **The live state of every control** becomes **the board**, which
+      `LookBar.tsx` already uses ("put the whole board back to stock", "a link
+      to the board on screen"). Rewrite "the look on screen" and "every control
+      this look moves off stock" in `LookBar.tsx` and `LookPopover.tsx`.
+- [ ] **A stored set of settings**, built in or saved by the user, becomes a
+      **preset**. `presets.ts` already names the built-in ones that way. Covers
+      "saved looks", "bank the look", "a rolled look" and `useLookLabels.ts`.
+- [ ] **A shared URL** becomes a **link**: "open this link", "a link to the
+      board".
+- [ ] **Running prose** names the control and its value ("with strobe hold at
+      5"), or says "these settings".
+- [ ] Sweep the help text, the user guide, `docs/` and `site/posts/`.
+- [ ] Rename identifiers separately, after the strings: `LookBar`,
+      `LookPopover`, `useLookLabels`, and the `look:` frontmatter field in
+      posts, which the site build reads.
+
+Words considered and set aside: **patch** already means signal routing here;
+**snapshot** fits a stored state and not the live one; **scene** suggests the
+picture's content; **E-MEM**, the vision-mixer term, is too obscure.
+
 ## Not worth building
 
 - **Cochannel interference.** Already reachable: source B's dirty-sum path is a
