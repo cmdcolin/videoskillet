@@ -2,6 +2,15 @@
 
 All notable changes to videoskillet are documented here.
 
+## [2.21.1](https://github.com/cmdcolin/videoskillet/compare/v2.21.0...v2.21.1) - 2026-10-29
+
+### Documentation
+- [`b1fb862`](https://github.com/cmdcolin/videoskillet/commit/b1fb862147456c98fc72b19a82f503758fce995a) rebuild the keyer ghosts post around one sandwich animation
+- [`e240bf6`](https://github.com/cmdcolin/videoskillet/commit/e240bf60c670f415424a2acb9d0ba2164c6541f9) lead the keyer ghosts post with one looping animation
+
+### Tests
+- [`6705265`](https://github.com/cmdcolin/videoskillet/commit/670526593ac14f31146a43298d47f92607b4aeff) accept a post image on the bucket
+
 ## [2.21.0](https://github.com/cmdcolin/videoskillet/compare/v2.20.4...v2.21.0) - 2026-10-28
 
 ### Features
