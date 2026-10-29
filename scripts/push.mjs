@@ -41,6 +41,10 @@ if (read('git status --porcelain')) {
 // Everything below asks the remote rather than the local refs, and runs before
 // the slow checks — a release cut from a stale checkout should fail in a second
 // rather than after a full test run.
+if (read('git rev-parse --abbrev-ref HEAD') !== 'main') {
+  refuse('releases are cut from main — switch to it first')
+}
+
 // --force so a local tag that has drifted from origin's (e.g. an old release
 // re-tagged upstream) gets synced rather than rejected as a clobber.
 run('git fetch --tags --force --quiet origin main')
@@ -106,7 +110,7 @@ if (releasing) {
 // Catch what CI would catch, before it's a remote failure blocking the release.
 for (const check of [
   'pnpm lint',
-  'pnpm sync:check',
+  'pnpm sync:check --strict',
   'pnpm format:check',
   'pnpm compiler',
   'pnpm typecheck',
@@ -130,10 +134,14 @@ try {
   )
 }
 
+// The local run cannot see the runner's environment, so release only what CI
+// has passed. wait-for-ci pushes HEAD before it waits.
 if (releasing) {
+  run('node scripts/wait-for-ci.mjs --job check')
   // `pnpm version` bumps package.json, commits it, and creates a `v<x.y.z>` tag.
   run(`pnpm version ${bump} -m "Release v%s"`)
   run('git push --follow-tags')
 } else {
   run('git push')
 }
+run('node scripts/wait-for-ci.mjs')
