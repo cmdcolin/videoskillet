@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useEffectEvent, useRef, useState } from 'react'
 
 import {
   STILL_MAX,
@@ -71,6 +71,11 @@ export type SaveOutcome = 'saving' | 'needs-auth' | 'too-long'
 const errorCode = (e: unknown): unknown =>
   typeof e === 'object' && e !== null && 'code' in e ? e.code : undefined
 
+// What went wrong, kept as the error itself; the words are made where it shows.
+export type LibraryError =
+  | { during: 'save' | 'load' | 'connect' | 'sign-in'; cause: unknown }
+  | { during: 'too-long'; length: number }
+
 const saveError = (e: unknown): string => {
   switch (errorCode(e)) {
     case 'unavailable':
@@ -85,6 +90,23 @@ const saveError = (e: unknown): string => {
       return 'could not save — too many saves, try again in a minute'
     default:
       return 'could not save — try again'
+  }
+}
+
+export function libraryErrorText(error: LibraryError) {
+  switch (error.during) {
+    case 'save':
+      return saveError(error.cause)
+    case 'load':
+      return 'could not load your saved profiles'
+    case 'connect':
+      return 'could not reach the sign-in service'
+    case 'sign-in':
+      return errorCode(error.cause) === 'auth/popup-blocked'
+        ? 'the browser blocked the sign-in window — allow pop-ups for this site and try again'
+        : 'sign-in failed — try again'
+    default:
+      return `could not save — this look is ${error.length} characters long, and the limit is ${QUERY_MAX}`
   }
 }
 
@@ -125,7 +147,7 @@ export function useSavedProfiles(
   const [status, setStatus] = useState<CloudStatus>(() =>
     wasSignedIn() ? 'loading' : 'signed-out',
   )
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<LibraryError | null>(null)
   const [lastName, setLastName] = useState<string | null>(null)
   const [flash, setFlash] = useState<ProfileFlash | null>(null)
 
@@ -170,6 +192,48 @@ export function useSavedProfiles(
   // this line existed.
   const [wantAuth, setWantAuth] = useState(wasSignedIn)
 
+  // The list updates after Firestore accepts the write, so a row on screen is a
+  // saved row. Each write sends an edit, and editProfiles applies it to the
+  // stored list: two saves in quick succession both land.
+  const commit = (
+    owner: string,
+    edit: (list: SavedProfile[]) => SavedProfile[],
+    landed?: () => string,
+    still?: Promise<string | null>,
+  ) => {
+    const mine = landed === undefined ? named.current : ++named.current
+    editProfiles(owner, edit)
+      .then(next => {
+        if (uid.current !== owner) return
+        setProfiles(next)
+        setError(null)
+        if (landed !== undefined) {
+          const name = landed()
+          if (named.current === mine) setLastName(name)
+          showFlash({ kind: 'saved', name })
+          saveStill(owner, next.find(p => p.name === name)?.id, still)
+        }
+      })
+      .catch((e: unknown) => {
+        console.error('saving profiles failed', e)
+        if (uid.current !== owner) return
+        setError({ during: 'save', cause: e })
+        // The half that was missing: the message above lands inside the popover,
+        // and a ctrl+S is made with the popover shut. Without this the write went
+        // to the network, failed, and the app looked exactly as it does after a
+        // save that worked.
+        showFlash({ kind: 'failed' })
+      })
+  }
+
+  const write = (
+    edit: (list: SavedProfile[]) => SavedProfile[],
+    landed?: () => string,
+    still?: Promise<string | null>,
+  ) => {
+    if (user !== null) commit(user.uid, edit, landed, still)
+  }
+
   // Signing in, signing out and the restore-on-load all arrive here from the
   // subscription, so there is one path that fetches the list rather than one per
   // way in. Declared before the effect that installs it.
@@ -197,7 +261,7 @@ export function useSavedProfiles(
         console.error('loading saved profiles failed', e)
         if (uid.current !== next.uid) return
         setStatus('error')
-        setError('could not load your saved profiles')
+        setError({ during: 'load', cause: e })
       })
   }
 
@@ -221,6 +285,8 @@ export function useSavedProfiles(
     )
   }
 
+  const onAuth = useEffectEvent((next: CloudUser | null) => applyUser(next))
+
   // One subscription, and only for a browser that has signed in before — which is
   // what makes the SDK free for everyone else. Firebase resolves the unsubscribe
   // asynchronously, so teardown has to cover both the window before it exists and
@@ -230,7 +296,7 @@ export function useSavedProfiles(
     let cancelled = false
     let stop: (() => void) | undefined
     watchAuth(next => {
-      if (!cancelled) applyUser(next)
+      if (!cancelled) onAuth(next)
     })
       .then(unsub => {
         stop = unsub
@@ -242,59 +308,14 @@ export function useSavedProfiles(
           // A later sign-in press subscribes again.
           setWantAuth(false)
           setStatus('error')
-          setError('could not reach the sign-in service')
+          setError({ during: 'connect', cause: e })
         }
       })
     return () => {
       cancelled = true
       stop?.()
     }
-    // Only on the transition into wanting auth: the callback reads setters, which
-    // React keeps stable, so nothing else here needs to re-subscribe.
-    // oxlint-disable-next-line react-hooks/exhaustive-deps
   }, [wantAuth])
-
-  // The list updates after Firestore accepts the write, so a row on screen is a
-  // saved row. Each write sends an edit, and editProfiles applies it to the
-  // stored list: two saves in quick succession both land.
-  const commit = (
-    owner: string,
-    edit: (list: SavedProfile[]) => SavedProfile[],
-    landed?: () => string,
-    still?: Promise<string | null>,
-  ) => {
-    const mine = landed === undefined ? named.current : ++named.current
-    editProfiles(owner, edit)
-      .then(next => {
-        if (uid.current !== owner) return
-        setProfiles(next)
-        setError(null)
-        if (landed !== undefined) {
-          const name = landed()
-          if (named.current === mine) setLastName(name)
-          showFlash({ kind: 'saved', name })
-          saveStill(owner, next.find(p => p.name === name)?.id, still)
-        }
-      })
-      .catch((e: unknown) => {
-        console.error('saving profiles failed', e)
-        if (uid.current !== owner) return
-        setError(saveError(e))
-        // The half that was missing: the message above lands inside the popover,
-        // and a ctrl+S is made with the popover shut. Without this the write went
-        // to the network, failed, and the app looked exactly as it does after a
-        // save that worked.
-        showFlash({ kind: 'failed' })
-      })
-  }
-
-  const write = (
-    edit: (list: SavedProfile[]) => SavedProfile[],
-    landed?: () => string,
-    still?: Promise<string | null>,
-  ) => {
-    if (user !== null) commit(user.uid, edit, landed, still)
-  }
 
   return {
     profiles,
@@ -308,9 +329,7 @@ export function useSavedProfiles(
     canSave: status === 'ready',
     saveProfile: (name: string, query: string): SaveOutcome => {
       if (query.length > QUERY_MAX) {
-        setError(
-          `could not save — this look is ${query.length} characters long, and the limit is ${QUERY_MAX}`,
-        )
+        setError({ during: 'too-long', length: query.length })
         showFlash({ kind: 'failed' })
         return 'too-long'
       }
@@ -386,11 +405,7 @@ export function useSavedProfiles(
         } else {
           console.error('sign-in failed', e)
           setStatus('error')
-          setError(
-            code === 'auth/popup-blocked'
-              ? 'the browser blocked the sign-in window — allow pop-ups for this site and try again'
-              : 'sign-in failed — try again',
-          )
+          setError({ during: 'sign-in', cause: e })
         }
       })
     },

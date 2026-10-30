@@ -1,9 +1,8 @@
-import { useState } from 'react'
-
 import { publicUrl } from '../publicUrl'
 import { Dialog } from './Dialog'
 import { PRIVACY_URL } from './links'
 import ui from './ui.module.css'
+import { useFlash } from './useFlash'
 import {
   FREE_WITHOUT,
   PITCH,
@@ -27,12 +26,11 @@ export function WhySignInDialog(props: {
   /** The name a waiting save will land under, or null when none is waiting. */
   pendingName: string | null
 }) {
-  const [copied, setCopied] = useState(false)
+  const { shown: copied, flash: flashCopied } = useFlash<true>(1600)
   const copy = () => {
     void props.onCopyLink().then(ok => {
       if (!ok) return
-      setCopied(true)
-      setTimeout(() => setCopied(false), 1600)
+      flashCopied(true)
     })
   }
   return (

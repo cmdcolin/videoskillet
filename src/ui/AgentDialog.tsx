@@ -1,8 +1,7 @@
-import { useState } from 'react'
-
 import styles from './AgentDialog.module.css'
 import { Dialog } from './Dialog'
 import { AI_GUIDE_URL, URL_API_URL } from './links'
+import { useFlash } from './useFlash'
 
 const agentPrompt = (look: string) =>
   [
@@ -15,15 +14,14 @@ const agentPrompt = (look: string) =>
   ].join('\n')
 
 export function AgentDialog(props: { onClose: () => void }) {
-  const [copied, setCopied] = useState<boolean | null>(null)
+  const { shown: copied, flash: flashCopied } = useFlash<boolean>(1600)
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(agentPrompt(location.href))
-      setCopied(true)
+      flashCopied(true)
     } catch {
-      setCopied(false)
+      flashCopied(false)
     }
-    setTimeout(() => setCopied(null), 1600)
   }
   return (
     <Dialog title="connect an AI agent" size="prose" onClose={props.onClose}>

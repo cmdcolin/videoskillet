@@ -9,9 +9,15 @@ import {
 } from './profileModel'
 import styles from './SavedProfiles.module.css'
 import ui from './ui.module.css'
+import { useFlash } from './useFlash'
+import { libraryErrorText } from './useSavedProfiles'
 
 import type { SavedProfile } from './profileModel'
-import type { CloudStatus, ProfileFlash } from './useSavedProfiles'
+import type {
+  CloudStatus,
+  LibraryError,
+  ProfileFlash,
+} from './useSavedProfiles'
 
 // The profile library: a button in the Presets header, beside `all`. A synth's
 // save and recall: presets are the app's catalog, and this list is yours.
@@ -47,7 +53,7 @@ export function SavedProfiles(props: {
   // Firestore is the only store — so `status` decides whether this menu shows a
   // name box or a sign-in button.
   status: CloudStatus
-  error: string | null
+  error: LibraryError | null
   onSignIn: () => void
   /** Opens the why-sign-in card, which the ⋮ menu and a signed-out save open
       too. The pane here gives the one-sentence version. */
@@ -58,7 +64,7 @@ export function SavedProfiles(props: {
   const nameRef = useRef<HTMLInputElement>(null)
   // Which row's link just went to the clipboard. A copy is otherwise silent —
   // nothing on screen changes — so the glyph answers for a second.
-  const [copied, setCopied] = useState<string | null>(null)
+  const { shown: copied, flash: flashCopied } = useFlash<string>(1200)
   // The row whose × has been pressed once. A delete removes the profile from
   // the account for good, so it takes a second press within three seconds.
   const [arming, setArming] = useState<string | null>(null)
@@ -85,8 +91,7 @@ export function SavedProfiles(props: {
       // A refusal has already put itself on the stage banner; what matters here
       // is that the row does not also claim success.
       if (!ok) return
-      setCopied(profile.name)
-      setTimeout(() => setCopied(null), 1200)
+      flashCopied(profile.name)
     })
   }
 
@@ -260,7 +265,9 @@ export function SavedProfiles(props: {
                 </>
               )}
               {props.error === null ? null : (
-                <div className={cx(ui.hint, ui.err)}>{props.error}</div>
+                <div className={cx(ui.hint, ui.err)}>
+                  {libraryErrorText(props.error)}
+                </div>
               )}
             </>
           )}
@@ -275,7 +282,7 @@ export function SavedProfiles(props: {
 // account. `why sign in?` opens the long answer for anyone who wants it.
 function SignInPane(props: {
   status: CloudStatus
-  error: string | null
+  error: LibraryError | null
   onSignIn: () => void
   onWhy: () => void
 }) {
@@ -305,7 +312,9 @@ function SignInPane(props: {
         </button>
       </div>
       {props.error === null ? null : (
-        <div className={cx(ui.hint, ui.err)}>{props.error}</div>
+        <div className={cx(ui.hint, ui.err)}>
+          {libraryErrorText(props.error)}
+        </div>
       )}
     </div>
   )
