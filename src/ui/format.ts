@@ -43,6 +43,11 @@ export const formatFine = (value: number, step: number) =>
 // readout column be sized once and stay that size through every number the
 // control passes through. See .reading in Slider.module.css for why that
 // matters, and Rack in Slider.tsx for how a group shares one.
+// A word unit reads after a space ("3.00 IRE"); a symbol stays on the number
+// ("50%", "2/frame", "1.5x").
+export const unitSuffix = (unit: string) =>
+  unit !== 'x' && /^[A-Za-zµ]/.test(unit) ? ` ${unit}` : unit
+
 export const readingChars = (
   min: number,
   max: number,
@@ -50,7 +55,7 @@ export const readingChars = (
   unit: string,
 ) =>
   Math.max(formatValue(min, step).length, formatValue(max, step).length) +
-  unit.length
+  unitSuffix(unit).length
 
 // One character of the panel's mono at --fs-xs, in px. Measured against the
 // theme's own --mono stack in Firefox rather than assumed off an em ratio. `ch`

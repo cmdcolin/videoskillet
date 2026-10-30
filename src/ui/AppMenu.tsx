@@ -84,6 +84,7 @@ export function AppMenu(props: {
   onShowAllSettings: () => void
   onShowAdvanced: () => void
   onShowAbout: () => void
+  onShowAgent: () => void
   /** Opens the why-sign-in card. Undefined once there is an account behind the
       session, which is what keeps the row out of a signed-in menu. */
   onWhySignIn?: () => void
@@ -290,6 +291,14 @@ export function AppMenu(props: {
             title="every query-string parameter, and every control's key — for scripting the app, or for an agent driving it"
             closes={id}
             onClick={() => openUrlApi()}
+          />
+          <MenuItem
+            icon="⇄"
+            label="connect an AI agent"
+            hint=""
+            title="a prompt to copy that points an AI agent at this look and the docs it needs to drive the app"
+            closes={id}
+            onClick={() => props.onShowAgent()}
           />
           {props.onWhySignIn === undefined ? null : (
             <MenuItem

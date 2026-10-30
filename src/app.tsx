@@ -60,6 +60,7 @@ import { barCut, deckLoad } from './ui/deckModel'
 import { DRIFT_BOARD, DRIFT_WAKE } from './ui/drift'
 import { FatalScreen } from './ui/FatalScreen'
 import { FilterContext, filterActive, sliderMatches } from './ui/filter'
+import { FilterBox } from './ui/FilterBox'
 import { FpsMonitor } from './ui/FpsMonitor'
 import { LookBar } from './ui/LookBar'
 import { LookPopover } from './ui/LookPopover'
@@ -1336,15 +1337,12 @@ export function App() {
         // controls that live nowhere else — the deck's are all borrowed from
         // stages already in the results. See `freeMatches`.
         keywords: MOD_KEYWORDS,
-        // What the modulation bay is holding, for the two drawings that mark
-        // it: the map's floating box and the full diagram's. Read once, so the
-        // miniature and the card cannot disagree about a bay neither of them
-        // can count for itself.
+        // What the modulation bay is holding, for its button on the path's
+        // heading to count.
         load: bayLoad(modApi.slots, modApi.stab),
         body: modBay,
       },
-      // And what the deck is holding, for the same two drawings and the same
-      // reason.
+      // And what the deck is holding, for the same reason.
       {
         name: DECK_STAGE,
         blurb: DECK_BLURB,
@@ -1517,6 +1515,7 @@ export function App() {
     onShowAllSettings: openAll,
     onShowAdvanced: () => setShowAdvanced(true),
     onShowAbout: () => setShowAbout(true),
+    onShowAgent: () => setShowAgent(true),
     // Only offered with nobody signed in; a signed-in reader has the answer
     // already, which AppMenu decides from this being undefined.
     onWhySignIn:
@@ -1560,62 +1559,22 @@ export function App() {
           />
         ) : null}
         {searching ? (
-          <div className={styles.filterBox}>
-            {/* The mode, standing in the box beside the words rather than
-                pretending to be one of them. It is where a filter you did not
-                type has to appear: pressing the Modulation section's count narrows the whole
-                panel, and before this the only trace of it was a glyph in the
-                text — which said something had happened without saying that the
-                button was what said it, and could not be taken off without
-                clearing a search you had also typed. */}
-            {query.moving ? (
-              <button
-                className={styles.filterChip}
-                title="showing only what the bay is driving — click to drop it"
-                onClick={toggleMoving}
-              >
-                mod only ×
-              </button>
-            ) : null}
-            {query.look === null ? null : (
-              <button
-                className={styles.filterChip}
-                title="showing only what this look moves off stock — click to drop it"
-                onClick={toggleLook}
-              >
-                this look ×
-              </button>
-            )}
-            <input
-              ref={filterBox}
-              className={styles.filter}
-              type="search"
-              // Mounted by the ⌕, so the press that opened it is also the press
-              // that should have landed in the box. On mount and only there: an
-              // inline `ref={el => el?.focus()}` is a new function every render,
-              // which React reattaches — and the fps counter re-renders this
-              // component four times a second, so the box took focus back off
-              // whatever you had just clicked, four times a second. Not when
-              // the look bar's phone toggle mounted it, where focus would put a
-              // keyboard over the rows it just asked for.
-              autoFocus={lookKeys === null}
-              placeholder="rainbow, ghost, tear…"
-              title="matches names and descriptions, so artifact words work: rainbow, ghost, dot crawl, tear, roll… — the count on the modulation row narrows whatever is up here to the controls the bay is driving"
-              value={filter}
-              onChange={e => setFilter(e.target.value)}
-            />
-            <button
-              className={styles.filterClear}
-              title="clear the filter (esc)"
-              aria-label="clear the filter"
-              onClick={() => {
-                clearFilter()
-                setSearchOpen(false)
-              }}
-            >
-              ×
-            </button>
-          </div>
+          <FilterBox
+            inputRef={filterBox}
+            text={filter}
+            moving={query.moving}
+            look={query.look !== null}
+            // Not when the look bar's phone toggle opened it, where focus would
+            // put a keyboard over the rows it just asked for.
+            autoFocus={lookKeys === null}
+            onText={setFilter}
+            onToggleMoving={toggleMoving}
+            onToggleLook={toggleLook}
+            onClear={() => {
+              clearFilter()
+              setSearchOpen(false)
+            }}
+          />
         ) : null}
         <div className={styles.chrome}>
           {searching ? null : (
@@ -1634,29 +1593,12 @@ export function App() {
             onToggle={() => setShowMidi(o => !o)}
             onClose={() => setShowMidi(false)}
           />
-          <Button
-            title="connect an AI agent to the app"
-            aria-label="connect an AI agent"
-            onClick={() => setShowAgent(true)}
-          >
-            agent
-          </Button>
           <Account
             user={profiles.user}
             status={profiles.status}
             onSignIn={profiles.signIn}
             onSignOut={profiles.signOut}
           />
-          {fullscreen || popout !== null ? null : (
-            <Button
-              variant="icon"
-              title="hide the sidebar (b)"
-              aria-label="hide the sidebar"
-              onClick={toggleSidebar}
-            >
-              ◧
-            </Button>
-          )}
           <AppMenu variant="masthead" {...menuProps} />
         </div>
       </div>
@@ -1755,33 +1697,6 @@ export function App() {
         />
       )}
 
-      {/* The three source pickers used to be a section here, above the map — which drew a box for each of the same three
-          sources. They head their own stages now (see `stageTop`), so the box
-          that carries the name is the one that opens the picker.
-
-          Their hidden <input type=file>s stay out here, outside every fold. All
-          three are fired programmatically — picking 'file' calls .click() on the
-          ref — and a stage folded away has unmounted its subtree, which would
-          leave the ref null and the choice silently doing nothing. A and B's
-          were already parked outside the old section for exactly this; the
-          sound's used to sit inside AudioInput, which was safe only because
-          nothing could reach its picker while it was folded. */}
-      <HiddenFilePicker
-        inputRef={eng.fileInputRef}
-        accept="video/*,image/*"
-        onFile={eng.a.onFile}
-      />
-      <HiddenFilePicker
-        inputRef={eng.fileInputBRef}
-        accept="video/*,image/*"
-        onFile={eng.b.onFile}
-      />
-      <HiddenFilePicker
-        inputRef={audio.fileInputRef}
-        accept="audio/*,video/*"
-        onFile={audio.onFile}
-      />
-
       {/* Pinned controls, gathered from wherever they live in the chain into one
           spot near the front door. Shown only once something is starred, so it
           costs nothing until used; ordered by the signal path, not pin order, so
@@ -1794,20 +1709,6 @@ export function App() {
         </Section>
       )}
 
-      {/* The deck used to be a section here, immediately above the map: the
-          other index into the same controls, folded shut by default, which put
-          the performance surface behind a fold in the one part of the panel a
-          performance never scrolls to. It is a box on the map now, beside the
-          modulation bay on the row of things nothing is wired to — see
-          DECK_STAGE for why those two belong together. */}
-
-      {/* The signal-path map is the panel's trunk, so it sits high — right under
-          the source and preset front door — and the filter that acts on it heads
-          it. MIDI is an occasional tool and drops below it. The audio routings
-          used to be down there with it, in a section of their own, because the
-          map had no vocabulary for a second thing joining the trunk — they are
-          the Sound branch now, under the receiver they feed, and modulation is
-          a box on the same map for the same kind of reason. */}
       <ModSection
         moving={query.moving}
         onToggleMoving={toggleMoving}
@@ -1862,13 +1763,6 @@ export function App() {
                 : `nothing matches “${filter.trim()}” — try an artifact: rainbow, ghost, tear`}
         </div>
       )}
-
-      {/* Modulation used to be a section here, between the map and MIDI: on
-          screen in every session, folded shut in most of them, and found by
-          scrolling past the map rather than by looking at it. It is a box on
-          the map now — floating, wired to nothing, because what it is patched
-          into is the controls — so it costs the resting panel nothing and is
-          where you go looking for something to open. See MOD_STAGE. */}
     </>
   )
   // The palette and the board dump take the sidebar over rather than floating
@@ -2169,6 +2063,28 @@ export function App() {
       />
     </StripContext>
   )
+  // Outside the panel, because the tray's track button fires one while the
+  // sidebar is hidden or a sheet has replaced the panel. In the popout's
+  // document while there is one, so a pick made there opens from that window.
+  const filePickers = (
+    <>
+      <HiddenFilePicker
+        inputRef={eng.fileInputRef}
+        accept="video/*,image/*"
+        onFile={eng.a.onFile}
+      />
+      <HiddenFilePicker
+        inputRef={eng.fileInputBRef}
+        accept="video/*,image/*"
+        onFile={eng.b.onFile}
+      />
+      <HiddenFilePicker
+        inputRef={audio.fileInputRef}
+        accept="audio/*,video/*"
+        onFile={audio.onFile}
+      />
+    </>
+  )
   const resizer = (
     <PanelResizer
       className={styles.resizer!}
@@ -2202,6 +2118,7 @@ export function App() {
             {stage}
             {tray}
           </div>
+          {popout === null ? filePickers : null}
           {fullscreen || popout !== null || sidebarHidden ? null : (
             <>
               {/* Between the two panes, so the edge a drag moves is the edge under
@@ -2235,6 +2152,7 @@ export function App() {
                   >
                     {panel}
                   </div>
+                  {filePickers}
                 </div>,
                 popout.document.body,
               )}

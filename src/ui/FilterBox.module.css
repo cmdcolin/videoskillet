@@ -1,0 +1,66 @@
+/* The ⌕, the pointer tool and the ⋮ are `ui.chromeBtn`, and `midi` and
+   `sign in` are `ui.outline`.
+
+   The control filter, in the masthead rather than in a row of its own.
+   It used to be a 25px input plus a 12px margin sitting above the chain map,
+   permanently, for a feature most sessions never use — and the masthead beside
+   it was two thirds empty. Opened from the ⌕, it takes the width the wordmark
+   was holding: the brand steps aside for as long as a query is live, which is
+   the one time nobody is reading it.
+   Not a popover, though that is the obvious shape for something an icon opens:
+   this filter's whole job is to change what is underneath it, and a popover
+   would float over exactly the result set it is narrowing. */
+.box {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+.input {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  background: var(--surface);
+  color: var(--fg);
+  border: 1px solid var(--border-quiet);
+  border-radius: var(--ctl-radius);
+  padding: 1px 7px;
+  font: inherit;
+  font-size: var(--fs-sm);
+}
+.input::placeholder {
+  color: var(--fg4);
+}
+/* the ring is the UA's — with color-scheme: dark it draws the right one, and a
+   border-colour shift on its own was never a focus indicator */
+.input:focus {
+  border-color: var(--fg4);
+}
+/* The motion filter, sitting in the box as a token rather than as text. It
+   wears the mod green because that is the system it belongs to — the same green
+   the Modulation section's count and every routed row's badge wear — and it carries its own
+   × because a
+   filter set by a button somewhere else has to be removable from where it shows
+   up. Held to its own width so the text beside it keeps the rest of the row. */
+.chip {
+  composes: bare from './ui.module.css';
+  flex-shrink: 0;
+  padding: 0 5px;
+  border-radius: var(--ctl-radius);
+  background: color-mix(in srgb, var(--mod) 18%, transparent);
+  color: var(--mod);
+  font-size: var(--fs-xs);
+  line-height: 1.6;
+  white-space: nowrap;
+}
+.chip:hover {
+  background: color-mix(in srgb, var(--mod) 30%, transparent);
+}
+
+/* Clears the query and hands the row back to the wordmark. Escape does both
+   too (useShortcuts), but the × is the only one of the two that is visible. */
+.clear {
+  composes: outline from './ui.module.css';
+  padding: 0 var(--space-xs);
+}

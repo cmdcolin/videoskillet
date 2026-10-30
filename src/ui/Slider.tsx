@@ -7,6 +7,7 @@ import {
   formatFine,
   formatValue,
   readingChars,
+  unitSuffix,
 } from './format'
 import { HelpProse } from './HelpProse'
 import { MenuItem, Popover } from './Popover'
@@ -350,11 +351,13 @@ function Vernier(props: {
   const offset =
     span === undefined
       ? `${card.at > 0 ? '+' : ''}${card.at}¢`
-      : `${signed(formatValue(card.at * win.step, win.step))}${props.unit}`
+      : `${signed(formatValue(card.at * win.step, win.step))}${unitSuffix(props.unit)}`
   const offsetChars =
     span === undefined
       ? 4
-      : formatValue(reach * win.step, win.step).length + props.unit.length + 1
+      : formatValue(reach * win.step, win.step).length +
+        unitSuffix(props.unit).length +
+        1
   const fill: CSSProperties & Record<'--lo' | '--hi' | '--def', string> =
     cardFill(card.lo, card.hi, card.at)
   return (
@@ -372,7 +375,7 @@ function Vernier(props: {
       <span className={styles.vernierHead}>
         <span>minor adjustment</span>
         <span className={styles.vernierExact}>
-          {`${card.exact}${props.unit}`}
+          {`${card.exact}${unitSuffix(props.unit)}`}
         </span>
         <button
           type="button"
@@ -618,7 +621,7 @@ export function Slider(props: {
                 ? 'hide the minor adjustment'
                 : vernier === true
                   ? `minor adjustment — trim ${props.label} in hundredths of a step`
-                  : `minor adjustment — ${props.label} across ${formatValue(vernier.span, vernier.step ?? props.step)}${props.unit} in steps of ${formatValue(vernier.step ?? props.step, vernier.step ?? props.step)}${props.unit}`
+                  : `minor adjustment — ${props.label} across ${formatValue(vernier.span, vernier.step ?? props.step)}${unitSuffix(props.unit)} in steps of ${formatValue(vernier.step ?? props.step, vernier.step ?? props.step)}${unitSuffix(props.unit)}`
             }
             className={cx(styles.what, showVernier && styles.whatOn)}
             aria-expanded={showVernier}
@@ -633,7 +636,7 @@ export function Slider(props: {
   const reading = (v: number) =>
     choices
       ? (choices[v] ?? String(v))
-      : `${formatValue(v, props.step)}${props.unit}`
+      : `${formatValue(v, props.step)}${unitSuffix(props.unit)}`
   // How much room the number gets: the widest this rack's rows can need, with
   // the row's own width as the floor so a stray row outside a Rack still holds
   // its own shape. A *stacked* mode switch opts out — it reads on the label's

@@ -84,115 +84,115 @@ export function LookBar(props: {
   morphStore: MorphStore
   onStopMorph: () => void
   // The tags menu, passed in rather than built here: it owns a popover, and this
-  // row's job is to seat it among the other whole-board verbs. It goes after the
-  // two that produce a look worth describing — roll something up with the
-  // segmented pair, then tag it — and before the buttons that walk the history,
-  // which stay the row's tail.
+  // row's job is to seat it among the other whole-board verbs.
   tags: ReactNode
   // The look's own rows, as a menu. First in the row: it is what the board is,
   // and everything after it is something done to it.
   look: ReactNode
-  // The whole board back to stock. Among the take-back verbs rather than beside
-  // `compare` — which is the other button in this row about the clean signal —
-  // because what it has in common with undo is what a hand reaching for it
-  // wants: out of here. Compare is a look at stock with your finger down, and
-  // seating a wipe next to a preview is how a held gesture becomes a lost look.
+  // The whole board back to stock, after the rolls: it is one more way to a
+  // new board, and it keeps clear of compare, whose held press shows stock
+  // without wiping anything.
   onReset: () => void
-  // The look on its way out of the app. Beside reset rather than in the menu:
-  // it is a thing done *to the board on screen*, which is what every other
-  // button in this row has in common, and it is reached at the moment a look is
-  // finished rather than while looking for a setting.
+  // The look on its way out of the app, beside the other verbs about the look
+  // as it stands.
   onShare: () => void
   canUndo: boolean
   onUndo: () => void
   canRedo: boolean
   onRedo: () => void
 }) {
+  // Groups that each wrap as a unit: the look as it stands, then undo and redo
+  // at the first line's right end, then what makes a new one. Undo and redo are
+  // both always drawn, so pressing one never reflows the row under the pointer.
   return (
     <div className={styles.bar}>
-      {props.look}
-      {/* Held, not clicked, so it stays a gesture: press and the picture goes
-          to stock, release and it comes back. The label says which state you
-          are in, since the button is under your finger while it happens. */}
-      <button
-        className={cx(styles.btn, props.comparing && styles.btnOn)}
-        aria-pressed={props.comparing}
-        onPointerDown={props.onStartCompare}
-        onPointerUp={props.onEndCompare}
-        onPointerLeave={props.onEndCompare}
-        onKeyDown={e => {
-          if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) {
-            e.preventDefault()
-            props.onStartCompare()
-          }
-        }}
-        onKeyUp={e => {
-          if (e.key === ' ' || e.key === 'Enter') props.onEndCompare()
-        }}
-        onBlur={() => props.comparing && props.onEndCompare()}
-        title="hold to preview the clean signal, release to return (or hold C)"
-      >
-        {props.comparing ? 'showing clean…' : 'compare'}
-      </button>
-      <Rolls
-        onSurprise={props.onSurprise}
-        onMutate={props.onMutate}
-        onRollMotion={props.onRollMotion}
-        onSurpriseOne={props.onSurpriseOne}
-        onSpike={props.onSpike}
-        onCross={props.onCross}
-      />
-      {/* Next to the rolls, because that is what it is: the gentlest of them,
-          on a timer, forever. Nothing else in the app plays itself. */}
-      <Drifts
-        drifting={props.drifting}
-        onToggle={props.onToggleDrift}
-        mode={props.driftMode}
-        onPick={props.onPickDriftMode}
-        gated={props.gated}
-        onToggleGate={props.onToggleStab}
-      />
-      <MorphControl
-        morphSeconds={props.morphSeconds}
-        onSetMorph={props.onSetMorph}
-        store={props.morphStore}
-        onStop={props.onStopMorph}
-      />
-      {props.tags}
-      <button
-        className={styles.btn}
-        onClick={props.onReset}
-        title="put the whole board back to stock: every control, the modulation bay and the stab gate — the same as the “clean” chip. Your sources and where you are looking stay as they are, and ctrl+z takes the look back"
-      >
-        reset
-      </button>
-      <button
-        className={styles.btn}
-        onClick={props.onShare}
-        title="a link to the board on screen — a short one to send, and the readable one the address bar is carrying"
-      >
-        share
-      </button>
-      <button
-        className={cx(styles.btn, !props.canUndo && styles.btnOff)}
-        onClick={props.onUndo}
-        disabled={!props.canUndo}
-        title="step back through the looks you have been through (ctrl+z). It arrives however morph says looks arrive, so at a long one the way back is a transition too"
-      >
-        undo
-      </button>
-      {/* Only once there is a walk to step forward into: a permanently greyed
-          redo would cost a slot in the row on every session that never undid
-          anything, and this row has one line to fit in. */}
-      {props.canRedo ? (
+      <div className={styles.group}>
+        {props.look}
+        {/* Held, not clicked, so it stays a gesture: press and the picture goes
+            to stock, release and it comes back. The label says which state you
+            are in, since the button is under your finger while it happens. */}
+        <button
+          className={cx(styles.btn, props.comparing && styles.btnOn)}
+          aria-pressed={props.comparing}
+          onPointerDown={props.onStartCompare}
+          onPointerUp={props.onEndCompare}
+          onPointerLeave={props.onEndCompare}
+          onKeyDown={e => {
+            if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) {
+              e.preventDefault()
+              props.onStartCompare()
+            }
+          }}
+          onKeyUp={e => {
+            if (e.key === ' ' || e.key === 'Enter') props.onEndCompare()
+          }}
+          onBlur={() => props.comparing && props.onEndCompare()}
+          title="hold to preview the clean signal, release to return (or hold C)"
+        >
+          {props.comparing ? 'showing clean…' : 'compare'}
+        </button>
+        {props.tags}
         <button
           className={styles.btn}
-          onClick={props.onRedo}
-          title="step forward again (ctrl+shift+z)"
+          onClick={props.onShare}
+          title="a link to the board on screen — a short one to send, and the readable one the address bar is carrying"
         >
-          redo
+          share
         </button>
-      ) : null}
+      </div>
+      <div className={cx(styles.group, styles.history)}>
+        <button
+          className={cx(styles.btn, !props.canUndo && styles.btnOff)}
+          onClick={() => props.onUndo()}
+          disabled={!props.canUndo}
+          aria-label="undo"
+          title="undo (ctrl+z): step back through the looks you have been through. It arrives however morph says looks arrive, so at a long one the way back is a transition too"
+        >
+          ↶
+        </button>
+        <button
+          className={cx(styles.btn, !props.canRedo && styles.btnOff)}
+          onClick={() => props.onRedo()}
+          disabled={!props.canRedo}
+          aria-label="redo"
+          title="redo (ctrl+shift+z)"
+        >
+          ↷
+        </button>
+      </div>
+      <div className={styles.group}>
+        <Rolls
+          onSurprise={props.onSurprise}
+          onMutate={props.onMutate}
+          onRollMotion={props.onRollMotion}
+          onSurpriseOne={props.onSurpriseOne}
+          onSpike={props.onSpike}
+          onCross={props.onCross}
+        />
+        {/* Next to the rolls, because that is what it is: the gentlest of them,
+            on a timer, forever. Nothing else in the app plays itself. */}
+        <Drifts
+          drifting={props.drifting}
+          onToggle={props.onToggleDrift}
+          mode={props.driftMode}
+          onPick={props.onPickDriftMode}
+          gated={props.gated}
+          onToggleGate={props.onToggleStab}
+        />
+        <MorphControl
+          morphSeconds={props.morphSeconds}
+          onSetMorph={props.onSetMorph}
+          store={props.morphStore}
+          onStop={props.onStopMorph}
+        />
+        <button
+          className={styles.btn}
+          onClick={() => props.onReset()}
+          title="put the whole board back to stock: every control, the modulation bay and the stab gate — the same as the “clean” chip. Your sources and where you are looking stay as they are, and ctrl+z takes the look back"
+        >
+          reset
+        </button>
+      </div>
     </div>
   )
 }

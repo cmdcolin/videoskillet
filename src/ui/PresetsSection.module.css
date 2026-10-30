@@ -105,23 +105,3 @@ button.allBtnOn {
   border-radius: 50%;
   background: var(--edit);
 }
-
-.moreChip {
-  margin: var(--space-2xs) 3px var(--space-2xs) 0;
-  padding: var(--btn-pad-y) var(--space-md);
-  border: 1px dashed var(--border-hover);
-  border-radius: var(--ctl-radius);
-  background: transparent;
-  color: var(--fg3);
-  font: inherit;
-  line-height: var(--btn-lh);
-}
-.moreChip:hover {
-  border-color: var(--fg4);
-  color: var(--fg);
-}
-@media (pointer: coarse) {
-  .moreChip {
-    padding: var(--space-md) 11px;
-  }
-}

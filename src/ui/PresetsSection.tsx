@@ -50,8 +50,8 @@ const ALL_STORE = 'video_feedback_presets_expanded'
 // The shortlist a first visit opens on. Recents displace these as they
 // accumulate, and `useRecentPresets` keeps eight — so this row is what a
 // stranger sees and almost nobody sees twice. It is picked as a first
-// impression rather than as a map of the catalog: the `+ N more…` chip and the
-// grouped catalog behind it are what span the families.
+// impression rather than as a map of the catalog: the grouped catalog behind
+// the header's `all` is what spans the families.
 //
 // Chosen off contact sheets of the whole shortlist question rendered on both
 // the source the app boots on and a photograph (scripts/contact.mjs, the
@@ -310,7 +310,6 @@ function PresetCatalog(props: {
   lastPreset: string | null
   weights: PresetWeights
   showAll: boolean
-  onShowAll: () => void
   onApplyPreset: (name: string, patch: Partial<Controls>) => void
   onMixStart: () => void
   onMix: (name: string, w: number) => void
@@ -367,14 +366,10 @@ function PresetCatalog(props: {
     : props.active
       ? props.active.blurb
       : props.lastPreset === null
-        ? // One line, not two. The caption's job is describing the chip under the
-          // pointer; this is only what it says when there is no chip to describe,
-          // and it was spending two lines of the panel's most expensive space on
-          // a fact the ? beside the title covers in full and the control count on
-          // every hover teaches by itself.
-          // Short enough to hold one line at the panel's docked width, which is
-          // the whole point of the rewrite: at two lines it saved nothing.
-          `a bank of controls at once — ${click} one`
+        ? hintDismissed
+          ? // Idle, and blank while the drag tip is the line above it.
+            `a bank of controls at once — ${click} one`
+          : ''
         : `modified from "${presetLabelFor(props.lastPreset)}"`
   // The count rides the caption whenever the caption is describing a particular
   // preset, so browsing the chips teaches the thing the chips cannot say: this
@@ -435,13 +430,6 @@ function PresetCatalog(props: {
           onPointerLeave={() => setPinned(null)}
         >
           {shortlist.map(renderButton)}
-          <button
-            className={styles.moreChip}
-            title="every preset, grouped by the kind of fault it models"
-            onClick={() => props.onShowAll()}
-          >
-            + {PRESETS.length - shortlist.length} more…
-          </button>
         </div>
       )}
       {props.showAll
@@ -570,7 +558,6 @@ export function PresetsSection(props: {
           lastPreset={props.lastPreset}
           weights={props.weights}
           showAll={showAll}
-          onShowAll={() => setShowAll(true)}
           onApplyPreset={props.onApplyPreset}
           onMixStart={props.onMixStart}
           onMix={props.onMix}

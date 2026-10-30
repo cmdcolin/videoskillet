@@ -7,7 +7,19 @@ import {
   formatClock,
   formatValue,
   readingChars,
+  unitSuffix,
 } from './format'
+
+describe('unitSuffix', () => {
+  it('spaces a word unit off the number and keeps a symbol on it', () => {
+    expect(unitSuffix('IRE')).toBe(' IRE')
+    expect(unitSuffix('µs')).toBe(' µs')
+    expect(unitSuffix('%')).toBe('%')
+    expect(unitSuffix('/frame')).toBe('/frame')
+    expect(unitSuffix('x')).toBe('x')
+    expect(unitSuffix('')).toBe('')
+  })
+})
 
 describe('formatValue', () => {
   it('scales decimals to the step: finer steps show more places', () => {
