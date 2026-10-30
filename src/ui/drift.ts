@@ -118,11 +118,18 @@ export const sameDrift = (
 // where it set off from.
 //
 // The pull is applied in travel rather than in value, so a curved control comes
-// home the way its slider would bring it home, and through `snapToStep` so a
-// mode control lands on a mode. It can only ever move a control toward a value
-// the anchor already holds, which is what keeps it inside the rule every roll
-// obeys — a drift starts no strobe a hand did not start (`ROLL_NEVER_STARTS`),
+// home the way its slider would bring it home, and lands on a step so a mode
+// control lands on a mode. It can only ever move a control toward a value the
+// anchor already holds, which is what keeps it inside the rule every roll obeys
+// — a drift starts no strobe a hand did not start (`ROLL_NEVER_STARTS`),
 // including by pulling one back up off its floor.
+//
+// The landing rounds at random between the two steps either side, in
+// proportion to how near each is. A fiftieth of the distance is under half a
+// step on any control whose step is over 4% of its track, so rounding to the
+// nearest step put every such control back where the jitter left it, and
+// `osdBlueS` walked the full width of its track under a tether that never
+// held it.
 export function driftLeg(
   from: Controls,
   anchor: Controls,
@@ -132,12 +139,20 @@ export function driftLeg(
 ): Controls {
   const next = mutate(from, sliders, DRIFT_AMOUNT, rand, wake)
   for (const s of sliders) {
+    const r = rand()
     if (ROLL_NEVER_STARTS.has(s.key) && from[s.key] === 0) continue
     const t = toTravel(s, next[s.key])
     const home = toTravel(s, anchor[s.key])
-    next[s.key] = snapToStep(s, fromTravel(s, t + (home - t) * DRIFT_PULL))
+    next[s.key] = snapAtRandom(s, fromTravel(s, t + (home - t) * DRIFT_PULL), r)
   }
   return next
+}
+
+function snapAtRandom(s: SliderDef, value: number, r: number): number {
+  if (s.step <= 0) return snapToStep(s, value)
+  const steps = (value - s.min) / s.step
+  const below = Math.floor(steps)
+  return snapToStep(s, s.min + (below + (r < steps - below ? 1 : 0)) * s.step)
 }
 
 // Which of the three shapes a scope is moving in.
