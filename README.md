@@ -139,8 +139,8 @@ video cables together and posting tumblr gifs.
 - Scrambled channel
   https://videoskillet.com/app/#preset=scrambledChannel&iurl=https://upload.wikimedia.org/wikipedia/commons/f/f9/%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg
 
-- Skeleton in the ballroom
-  https://videoskillet.com/app/#iurl=https://thumb.wikimedia.org/wikipedia/commons/thumb/d/de/Abandoned_grand_piano_-_Abandoned_Ballroom_%286%29.jpg/1280px-Abandoned_grand_piano_-_Abandoned_Ballroom_%286%29.jpg&vurlb=https://myloveydove.com/videoskillet/sources/creatures-for-chroma-key-death.webm&set=chromaGain:1.3,crtSat:1.2,bGain:1,bGenlock:1,bKey:1,bKeyAcceptDeg:45,bKeyClip:0.05,bKeySpill:0.6,bKeyFill:2,cfbHold:3,bKeyFillMixA:0.15
+- Skeleton in the graveyard
+  https://videoskillet.com/app/#iurl=https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fc/Temple_Hill_Graveyard_%28Cork%29_at_night_01.JPG/1280px-Temple_Hill_Graveyard_%28Cork%29_at_night_01.JPG&vurlb=https://myloveydove.com/videoskillet/sources/creatures-for-chroma-key-death.webm&set=chromaGain:1.3,crtSat:1.2,bGain:1,bGenlock:1,bKey:1,bKeyAcceptDeg:45,bKeyClip:0.05,bKeySpill:0.6,bKeyFill:2,cfbHold:3,bKeyFillMixA:0.15,bKeyFillFraming:1
 
 <!-- /generated:demos -->
 
