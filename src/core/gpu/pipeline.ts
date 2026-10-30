@@ -1799,9 +1799,11 @@ export class Engine implements EngineApi {
   // occluded windows). Forces a full sim step regardless of timeScale and the
   // frame lock so stepping stays deterministic.
   step(): void {
-    this.simAcc = 1
-    this.lockPhase = -1
-    this.render()
+    if (!this.destroyed) {
+      this.simAcc = 1
+      this.lockPhase = -1
+      this.render()
+    }
   }
 
   private rebuildFilters(): void {
@@ -1934,14 +1936,15 @@ export class Engine implements EngineApi {
 
   // Hand each frame this engine renders to a live take, at the take's size, or
   // stop with null. A frame the lock skips sends nothing, and neither does a
-  // held present once the take has a frame.
+  // held present once the take has a frame. A destroyed engine leaves the
+  // canvas configuration to its successor.
   setFrameSink(
     sink: FrameSink | null,
     size: { width: number; height: number },
   ): void {
     this.frameRead?.destroy()
     this.frameRead =
-      sink === null
+      sink === null || this.destroyed
         ? null
         : new FrameRead(
             this.gpu.device,
@@ -1950,7 +1953,7 @@ export class Engine implements EngineApi {
             this.gpu.format,
             sink,
           )
-    this.configureSurface()
+    if (!this.destroyed) this.configureSurface()
   }
 
   // Frame counter, for the diagnostic recorder and the verification harness.
@@ -2154,8 +2157,10 @@ export class Engine implements EngineApi {
     return was
   }
 
+  // A destroyed engine stays stopped: a render that outlived a hot update or a
+  // rebuild would otherwise restart it beside its successor on the same canvas.
   resumeLoop(): void {
-    if (!this.loop.running) this.loop.start()
+    if (!this.loop.running && !this.destroyed) this.loop.start()
   }
 
   // The frame-counted clock without a take, for a harness that has paused the
