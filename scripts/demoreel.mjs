@@ -104,6 +104,10 @@ const FPS = 30
 // demo like `My lord`, parked at `timeScale:0.45` so it crawls, was recording
 // at full rate and playing back over twice its real speed.
 const STEPS = 2
+// The rate a reference tick stands for: 60, the app's own. The virtual clock
+// and the pump's take clock both count ticks at it, so tick N of the recording
+// is N / 60 seconds into the look and into its source clip.
+const TICK_FPS = FPS * STEPS
 
 // Recorded well above what is shipped: the clip is scaled down afterwards, and
 // a downscale is what hides the compression the capture itself put in. `dpr`
@@ -169,9 +173,7 @@ async function record(demo, tmpDir) {
     // Not `startTake`: its `resetSignal` reaches a real pipeline bug on any
     // demo with the caption decoder on (`cc:1`, as `My lord` is) — a texture
     // it clears comes back missing `RENDER_ATTACHMENT` and the next pass into
-    // it throws. `pauseLoop` alone doesn't touch that path, and a `<video>`
-    // source keeps decoding at wall rate whether or not the sim loop is
-    // paused, so nothing here needs `pullVideo` either.
+    // it throws. `pauseLoop` alone doesn't touch that path.
     //
     // The two-rAF wait is `faultcheck.mjs`'s, not a fixed sleep: `pauseLoop`
     // drops a flag rather than cancelling the chains (`renderloop.ts`), so up
@@ -183,21 +185,87 @@ async function record(demo, tmpDir) {
         new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))),
     )
 
-    // One reference tick: bank `timeScale` (mirrors `simAcc` in
-    // `pipeline.ts`'s `render()`) and only step the engine once the bank
-    // reaches 1 — an unstepped tick reproduces `presentHeld()`, the frame
-    // just sits. `__demoAcc` lives on the page across calls and starts fresh
-    // with it, one page per demo.
-    await page.evaluate(n => {
-      for (let i = 0; i < n; i++) {
-        const timeScale = window.vf?.getControls().timeScale ?? 1
-        window.__demoAcc = (window.__demoAcc ?? 0) + timeScale
-        if (window.__demoAcc >= 1) {
-          window.__demoAcc -= 1
-          window.vf?.step()
+    // **A `<video>` source is pulled a frame at a time.** Its element decodes
+    // at wall rate, and a capture runs several times slower than real time.
+    // Left to the element, `Wonkitize me`'s source advanced 0.113s per output
+    // frame against a real 0.033s, and a frame store recording every N frames
+    // spaced its strobed copies far wider than they are live.
+    //
+    // `vf.pump.setTakeFps` is the video half of `startTake`, and this calls it
+    // on its own, reaching `vf.pump` the way `rendercheck.mjs` does. Under it
+    // the pump draws each deck's picture from the tick passed to `pullVideo`,
+    // as `ui/render.ts` does. The warm-up runs on the same clock, so the history
+    // it builds and the clip share one source timeline.
+    //
+    // `openPullFromUrl` demuxes MP4 only, and declines a webm `vurl=` like
+    // `Wonkitize me`'s. For those decks the opener below seeks a second
+    // element to each wanted time, at about 70ms a seek on that clip.
+    await page.evaluate(fps => {
+      const vf = window.vf
+      const app = vf.pump.opener
+      const seekPull = async url => {
+        const el = document.createElement('video')
+        el.muted = true
+        el.preload = 'auto'
+        el.crossOrigin = 'anonymous'
+        el.src = url
+        const ok = await new Promise(r => {
+          el.addEventListener('loadeddata', () => r(true), { once: true })
+          el.addEventListener('error', () => r(false), { once: true })
+        })
+        if (!ok) return null
+        return {
+          duration: el.duration,
+          codedWidth: el.videoWidth,
+          codedHeight: el.videoHeight,
+          frameAt: async t => {
+            if (el.currentTime !== t) {
+              const seeked = new Promise(r =>
+                el.addEventListener('seeked', r, { once: true }),
+              )
+              el.currentTime = t
+              await seeked
+            }
+            return new VideoFrame(el, { timestamp: Math.round(t * 1e6) })
+          },
+          close: () => el.removeAttribute('src'),
         }
       }
-    }, WARM)
+      vf.setVideoPullOpener(
+        async url => (await app?.(url)) ?? (await seekPull(url)),
+      )
+      vf.pump.setTakeFps(fps)
+    }, TICK_FPS)
+
+    // Each reference tick banks `timeScale` (mirroring `simAcc` in
+    // `pipeline.ts`'s `render()`) and steps the engine only once the bank
+    // reaches 1. An unstepped tick reproduces `presentHeld()`, where the frame
+    // just sits. The source is pulled at the tick and not at the step, because
+    // live a deck plays at wall rate whatever `timeScale` does to the sim. The
+    // warm-up and the clip share one tick counter, which lives on the page and
+    // starts fresh with it.
+    await page.evaluate(() => {
+      let acc = 0
+      let tick = 0
+      window.__demoTicks = async n => {
+        for (let i = 0; i < n; i++, tick++) {
+          acc += window.vf.getControls().timeScale
+          if (acc < 1) continue
+          acc -= 1
+          await window.vf.pullVideo(tick)
+          window.vf.step()
+        }
+      }
+    })
+    // The warm-up goes in one-second calls. On a webm deck it is 500 seeks,
+    // and as one call a clip with sparser keyframes than `Wonkitize me`'s
+    // would run past puppeteer's 180s protocol timeout.
+    for (let t = 0; t < WARM; t += TICK_FPS) {
+      await page.evaluate(
+        n => window.__demoTicks(n),
+        Math.min(TICK_FPS, WARM - t),
+      )
+    }
 
     // A dead capture is worth catching here rather than in the encode: a clip
     // of a stage that threw is eight seconds of black, and the poster drawn
@@ -215,21 +283,14 @@ async function record(demo, tmpDir) {
     // warm-up is for the look to settle, and the deck display and the tracking
     // kick it arms should start with the first frame of the clip, not eight
     // seconds earlier. Switching restarts whatever the wall clock had armed.
-    await page.evaluate(() => window.vf?.setVirtualClock(60))
+    await page.evaluate(fps => window.vf?.setVirtualClock(fps), TICK_FPS)
 
     const canvas = await page.$('canvas')
     const box = await canvas.boundingBox()
     const frames = SECS * FPS
     for (let n = 0; n < frames; n++) {
       await page.evaluate(async k => {
-        for (let i = 0; i < k; i++) {
-          const timeScale = window.vf?.getControls().timeScale ?? 1
-          window.__demoAcc = (window.__demoAcc ?? 0) + timeScale
-          if (window.__demoAcc >= 1) {
-            window.__demoAcc -= 1
-            window.vf?.step()
-          }
-        }
+        await window.__demoTicks(k)
         await new Promise(r => setTimeout(r, 4))
       }, STEPS)
       // JPEG rather than PNG for the intermediates, which is not a quality
@@ -245,6 +306,7 @@ async function record(demo, tmpDir) {
     // Left as found: the loop goes back to rAF, the same contract
     // `ui/render.ts` keeps after a take.
     await page.evaluate(() => window.vf?.setVirtualClock(null))
+    await page.evaluate(() => window.vf?.pump.setTakeFps(null))
     await page.evaluate(() => window.vf?.resumeLoop())
     return { frames, box }
   } finally {
