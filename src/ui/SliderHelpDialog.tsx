@@ -1,5 +1,5 @@
 import { Dialog } from './Dialog'
-import { formatValue } from './format'
+import { readingOf } from './format'
 import { HelpProse } from './HelpProse'
 import ui from './ui.module.css'
 
@@ -16,8 +16,7 @@ export function SliderHelpDialog(props: {
   unit: string
   onClose: () => void
 }) {
-  const fmt = (v: number) =>
-    `${formatValue(v, props.step)}${props.unit === '' ? '' : ` ${props.unit}`}`
+  const fmt = (v: number) => readingOf(v, props.step, props.unit)
   return (
     <Dialog title={props.label} size="prose" onClose={props.onClose}>
       <HelpProse className={ui.helpText} text={props.help} />

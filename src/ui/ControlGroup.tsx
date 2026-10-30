@@ -42,6 +42,7 @@ import { DubDiagram } from './DubDiagram'
 import { EnhancerDiagram } from './EnhancerDiagram'
 import { FeedACableDiagram, FeedBCableDiagram } from './FeedCableDiagram'
 import { filterActive, matchedSliders, useFilter } from './filter'
+import { unitSuffix } from './format'
 import { LeakDiagram } from './LeakDiagram'
 import { LoopTrip } from './LoopTrip'
 import { MagnifierFrame } from './MagnifierFrame'
@@ -196,7 +197,7 @@ function needsNote(need: SliderNeed, api: ControlsApi) {
   const prereq = sliderFor(need.key)
   return {
     hint: need.hint,
-    title: `does nothing until "${prereq.label}" moves — click to set it to ${need.fix}${prereq.unit}`,
+    title: `does nothing until "${prereq.label}" moves — click to set it to ${need.fix}${unitSuffix(prereq.unit)}`,
     onFix: () => api.writeControl(need.key, need.fix),
   }
 }
@@ -755,7 +756,7 @@ export function ControlGroup(props: { group: Group; defaultOpen?: boolean }) {
         <button
           key={need.key}
           className={styles.groupNeeds}
-          title={`click to set "${sliderFor(need.key).label}" to ${need.fix}${sliderFor(need.key).unit}`}
+          title={`click to set "${sliderFor(need.key).label}" to ${need.fix}${unitSuffix(sliderFor(need.key).unit)}`}
           onClick={() => writeControl(need.key, need.fix)}
         >
           {n} controls here are inert — needs {need.hint} · click to set

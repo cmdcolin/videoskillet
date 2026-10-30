@@ -21,6 +21,7 @@ import {
   type Column,
 } from './diagram'
 import styles from './Diagram.module.css'
+import { unitSuffix } from './format'
 
 import type { ControlKey } from '../core/controls'
 
@@ -507,7 +508,7 @@ function FoldLine({ need, n }: { need: SliderNeed; n: number }) {
   return (
     <button
       className={styles.fold}
-      title={`click to set "${gate.label}" to ${need.fix}${gate.unit}`}
+      title={`click to set "${gate.label}" to ${need.fix}${unitSuffix(gate.unit)}`}
       onClick={() => writeControl(need.key, need.fix)}
     >
       {n === 1 ? '1 more control needs' : `${n} more controls need`} {need.hint}{' '}

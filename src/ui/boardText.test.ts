@@ -29,10 +29,10 @@ describe('boardControls', () => {
     expect(rows[0]).toMatchObject({
       key: 'noiseIre',
       label: def.label,
-      value: `9.00${def.unit}`,
+      value: `9.00 ${def.unit}`,
     })
     expect(rows[0]!.group).not.toBe('')
-    expect(rows[0]!.stock).toBe(`0.00${def.unit}`)
+    expect(rows[0]!.stock).toBe(`0.00 ${def.unit}`)
   })
 
   // The palette's list, the slider's readout and this all read a mode switch

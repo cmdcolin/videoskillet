@@ -7,6 +7,7 @@ import {
   formatFine,
   formatValue,
   readingChars,
+  readingOf,
   unitSuffix,
 } from './format'
 import { HelpProse } from './HelpProse'
@@ -633,10 +634,7 @@ export function Slider(props: {
       </span>
     </span>
   )
-  const reading = (v: number) =>
-    choices
-      ? (choices[v] ?? String(v))
-      : `${formatValue(v, props.step)}${unitSuffix(props.unit)}`
+  const reading = (v: number) => readingOf(v, props.step, props.unit, choices)
   // How much room the number gets: the widest this rack's rows can need, with
   // the row's own width as the floor so a stray row outside a Rack still holds
   // its own shape. A *stacked* mode switch opts out — it reads on the label's

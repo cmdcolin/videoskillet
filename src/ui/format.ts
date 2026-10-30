@@ -4,10 +4,14 @@
 const placesFor = (step: number) => (step < 0.01 ? 3 : step < 1 ? 2 : 0)
 
 // A control's value rounded to a sensible number of decimals for its step:
-// finer steps show more places. Shared by the slider readout and its help card
-// so both round identically (they differ only in how they append the unit).
+// finer steps show more places.
 export const formatValue = (value: number, step: number) =>
   value.toFixed(placesFor(step))
+
+// A word unit reads after a space ("3.00 IRE"); a symbol stays on the number
+// ("50%", "2/frame", "1.5x").
+export const unitSuffix = (unit: string) =>
+  unit !== 'x' && /^[A-Za-zµ]/.test(unit) ? ` ${unit}` : unit
 
 // A control's value as its row says it: the option's name on a mode switch, and
 // the number with its unit everywhere else.
@@ -22,7 +26,7 @@ export const readingOf = (
   choices?: readonly string[],
 ): string =>
   choices === undefined
-    ? `${formatValue(value, step)}${unit}`
+    ? `${formatValue(value, step)}${unitSuffix(unit)}`
     : (choices[Math.round(value)] ?? String(value))
 
 // The same value read to the cent — two places further, which is exactly what a
@@ -43,11 +47,6 @@ export const formatFine = (value: number, step: number) =>
 // readout column be sized once and stay that size through every number the
 // control passes through. See .reading in Slider.module.css for why that
 // matters, and Rack in Slider.tsx for how a group shares one.
-// A word unit reads after a space ("3.00 IRE"); a symbol stays on the number
-// ("50%", "2/frame", "1.5x").
-export const unitSuffix = (unit: string) =>
-  unit !== 'x' && /^[A-Za-zµ]/.test(unit) ? ` ${unit}` : unit
-
 export const readingChars = (
   min: number,
   max: number,
