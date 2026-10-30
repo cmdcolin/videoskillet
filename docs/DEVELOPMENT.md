@@ -1228,6 +1228,38 @@ open on it, so the discrete card never autosuspends while the app is up; and
 when something looks driver-shaped, "does it still happen on the other GPU"
 wants answering without a rebuild.
 
+## Pre-commit hook
+
+`.husky/pre-commit` runs lint-staged with check-only tasks: `oxlint`,
+`oxfmt --check` and `prettier --check` on the staged files. A commit that fails
+a check is refused and the files are left as they were. Run `pnpm lint:fix` and
+`pnpm format`, then commit again.
+
+The hook passes `--no-stash --no-hide-partially-staged --fail-on-changes`,
+because several agents commit from one worktree and one index. lint-staged's
+defaults act on the whole tree. Measured with lint-staged 17.6 on a commit made
+with `git commit -- src/ui/format.ts`, while a task appended a line to
+`docs/WRITING.md` to stand in for another agent saving a file:
+
+- With the defaults, the commit took `docs/WRITING.md` as well. After the tasks,
+  lint-staged runs `git add` on every file whose unstaged diff changed while
+  they ran, and it adds to the default index as well as the commit's.
+- With the defaults and a failing task, lint-staged ran `git reset --hard HEAD`
+  and applied its backup stash. The line appended during the run was gone.
+- The backup is a real entry in `refs/stash`, which every worktree of the
+  repository shares, and lint-staged drops it by its position in the list.
+- With the flags and check-only tasks, the same commit was refused with "Tasks
+  modified files and --fail-on-changes was used!". The appended line stayed in
+  the working tree, unstaged.
+
+With these flags lint-staged writes nothing to the working tree, the index or
+`refs/stash`. Each commit prints a warning that skipping the backup "might
+result in data loss". The backup protects files that tasks rewrite, and these
+tasks rewrite none. The message after a `--fail-on-changes` refusal mentions
+restoring from a stash. No stash was made, and nothing needs restoring: commit
+again once the other edit has landed. A partially staged file is checked as it
+is on disk, including its unstaged lines.
+
 ## Releases
 
 `scripts/push.mjs` cuts every release and every push to `main`.

@@ -1,4 +1,7 @@
-pnpm exec lint-staged
+# Check-only tasks with no backup stash: several agents share this worktree and
+# its index, and lint-staged's stash, its reset on failure and its re-staging
+# all act on the whole tree. docs/DEVELOPMENT.md has the measurements.
+pnpm exec lint-staged --no-stash --no-hide-partially-staged --fail-on-changes
 
 # CROSS_REPO_SYNC(pre-commit-sync-warning)
 # A warning only: the sibling may be mid-port. The release preflight blocks.

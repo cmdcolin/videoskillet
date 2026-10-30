@@ -85,11 +85,11 @@
   },
   "lint-staged": {
     "*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}": [
-      "oxlint --fix --no-error-on-unmatched-pattern",
-      "oxfmt"
+      "oxlint --no-error-on-unmatched-pattern",
+      "oxfmt --check"
     ],
     "*.astro": [
-      "prettier --write"
+      "prettier --check"
     ]
   },
   "dependencies": {
