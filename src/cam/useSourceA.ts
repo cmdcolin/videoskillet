@@ -19,7 +19,8 @@ const release = (c: Clip) => dropLoop(c.video, c.url)
 
 // Source A when it is not the camera. The caller lets the camera go once
 // something else is up, and `cameraShown` hears the camera come back on screen
-// by any route, a flip or a swap included.
+// by any route, a flip or a swap included. The latest pick on A wins, and
+// `cameraPicked` hears the camera picked.
 export function useSourceA(
   eng: {
     showVideo: (video: HTMLVideoElement, mirror: boolean) => void
@@ -29,6 +30,10 @@ export function useSourceA(
 ) {
   const [on, setOn] = useState<ASource>('camera')
   const clip = useRef<Clip | null>(null)
+  // Which pick on A is the latest. A clip that finishes loading after a later
+  // pick lets go of itself. A camera that comes back on screen by itself, as
+  // one does after the file picker, is no pick.
+  const turn = useRef(0)
 
   const drop = () => {
     if (clip.current !== null) release(clip.current)
@@ -37,6 +42,7 @@ export function useSourceA(
 
   useEffect(
     () => () => {
+      ++turn.current
       if (clip.current !== null) release(clip.current)
     },
     [],
@@ -52,28 +58,38 @@ export function useSourceA(
     setOn('camera')
   }
 
+  const cameraPicked = () => {
+    ++turn.current
+  }
+
   const toPattern = (pattern: Pattern) => {
+    ++turn.current
     eng.showPattern(pattern)
     drop()
     setOn(pattern)
   }
 
-  const toClip = async (file: File): Promise<boolean> => {
+  const toClip = async (file: File) => {
+    const mine = ++turn.current
     const url = URL.createObjectURL(file)
-    let video: HTMLVideoElement
+    let loaded: Clip | null = null
     try {
-      video = await playLoop(url)
+      loaded = { url, video: await playLoop(url) }
     } catch (e) {
       URL.revokeObjectURL(url)
-      onError(`clip: ${reason(e)}`)
-      return false
+      if (mine === turn.current) onError(`clip: ${reason(e)}`)
     }
-    eng.showVideo(video, false)
-    drop()
-    clip.current = { url, video }
-    setOn('clip')
-    return true
+    const latest = mine === turn.current
+    if (loaded !== null) {
+      if (latest) {
+        eng.showVideo(loaded.video, false)
+        drop()
+        clip.current = loaded
+        setOn('clip')
+      } else release(loaded)
+    }
+    return loaded !== null && latest
   }
 
-  return { on, cameraShown, toPattern, toClip }
+  return { on, cameraShown, cameraPicked, toPattern, toClip }
 }

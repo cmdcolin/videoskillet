@@ -3,7 +3,7 @@ import { useRef, useState } from 'react'
 import type { Pattern } from './patterns'
 import type { BSource } from './sources'
 import type { Facing, useCamera } from './useCamera'
-import type { useSecond } from './useSecond'
+import type { Landing, useSecond } from './useSecond'
 import type { ASource, useSourceA } from './useSourceA'
 
 // Putting a picture on source A or B from the mixer's lists. `onMixing` hears
@@ -31,6 +31,11 @@ export function useSourcePicks(opts: {
     second.eject()
     opts.onTakeOff()
   }
+  // A pick that a later one superseded leaves B and the panels to that one.
+  const landed = (got: Landing, from: BSource) => {
+    if (got === 'shown') mixing(from)
+    else if (got === 'failed') takeOff()
+  }
 
   // The camera leaving A takes its copy off B with it.
   const stopCamera = () => {
@@ -42,6 +47,7 @@ export function useSourcePicks(opts: {
     onError('')
     if (key === 'clip') clipA.current?.click()
     else if (key === 'user' || key === 'environment') {
+      srcA.cameraPicked()
       if (srcA.on !== 'camera') cam.start(key)
       else if (second.live) void second.swap()
       else cam.flip()
@@ -58,29 +64,31 @@ export function useSourcePicks(opts: {
     second.eject()
     onError('')
     void second.load().then(got => {
-      if (got === null) {
-        takeOff()
-        return
+      if (got === 'failed') takeOff()
+      else if (got !== 'superseded') {
+        if (got === 'tape' && cam.canFlip) cam.flip()
+        mixing('camera')
       }
-      if (got === 'tape' && cam.canFlip) cam.flip()
-      mixing('camera')
     })
   }
   const putTape = () => {
     second.eject()
     onError('')
-    void second.record().then(ok => (ok ? mixing('record') : takeOff()))
+    void second.record().then(got => landed(got, 'record'))
   }
   // The camera on B as well as A, for the chroma keyer, which leaves the panels
   // where they are.
-  const keySame = async (): Promise<boolean> => {
+  const keySame = async () => {
     onError('')
-    const ok = await second.loadSame()
-    if (ok) setPicked('same')
-    return ok
+    const got = await second.loadSame()
+    if (got === 'shown') setPicked('same')
+    return got
   }
   const putSame = () =>
-    void keySame().then(ok => (ok ? opts.onMixing() : takeOff()))
+    void keySame().then(got => {
+      if (got === 'shown') opts.onMixing()
+      else if (got === 'failed') takeOff()
+    })
   const putPattern = (p: Pattern) => {
     onError('')
     second.loadPattern(p)
@@ -100,7 +108,7 @@ export function useSourcePicks(opts: {
   const clipOnB = (file: File) => {
     second.eject()
     onError('')
-    void second.loadClip(file).then(ok => (ok ? mixing('clip') : takeOff()))
+    void second.loadClip(file).then(got => landed(got, 'clip'))
   }
 
   return {
@@ -114,7 +122,7 @@ export function useSourcePicks(opts: {
     onB: second.kind === null ? 'none' : picked,
     putOnA,
     putOnB,
-    keySame,
+    keySame: async () => (await keySame()) === 'shown',
     clipOnA,
     clipOnB,
   }

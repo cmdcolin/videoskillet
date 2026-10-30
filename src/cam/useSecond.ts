@@ -49,6 +49,10 @@ const unload = (b: Second) => {
   dropLoop(b.video, b.url)
 }
 
+// How a pick on B ended. A superseded pick leaves B to the later one.
+export type Landing = 'shown' | 'failed' | 'superseded'
+type Loaded = 'live' | 'tape' | 'failed' | 'superseded'
+
 const videosOf = (b: Second | null): HTMLVideoElement[] => {
   if (b === null || b.kind === 'pattern') return []
   if (b.kind === 'live') return [b.cam.video, b.relay.video]
@@ -62,8 +66,8 @@ const videosOf = (b: Second | null): HTMLVideoElement[] => {
 // records a tape of the camera on screen, and the caller flips to the other
 // one. `record` tapes the camera on screen and leaves it there, `loadClip` puts
 // a video file on B, `loadSame` whichever camera is on A and `loadPattern` one
-// of the set's own patterns. `left` counts down a tape's seconds; `opening`
-// covers the ask for the second camera.
+// of the set's own patterns. The latest pick on B wins. `left` counts down a
+// tape's seconds; `opening` covers the ask for the second camera.
 export function useSecond(
   eng: {
     camera: () => Camera | null
@@ -87,16 +91,22 @@ export function useSecond(
   // camera between A and B, so B is unloaded by hand where it changes and
   // never by an effect that cannot tell a moved camera from a dropped one.
   const held = useRef<Second | null>(second)
+  // Which pick on B is the latest. Every pick and every change to B moves it
+  // on, and a pick that finishes loading after a later one lets go of what it
+  // loaded.
+  const turn = useRef(0)
   const laying = useRef(false)
 
   useEffect(
     () => () => {
+      ++turn.current
       if (held.current !== null) unload(held.current)
     },
     [],
   )
 
   const show = (next: Second | null) => {
+    ++turn.current
     held.current = next
     setSecond(next)
     eng.showSecond(
@@ -108,6 +118,19 @@ export function useSecond(
             ? next.video
             : next.relay.video,
     )
+  }
+
+  const land = (mine: number, next: Second): Landing => {
+    const latest = mine === turn.current
+    if (latest) show(next)
+    else unload(next)
+    return latest ? 'shown' : 'superseded'
+  }
+
+  const failed = (mine: number, message: string): Exclude<Landing, 'shown'> => {
+    const latest = mine === turn.current
+    if (latest) onError(message)
+    return latest ? 'failed' : 'superseded'
   }
 
   const eject = () => {
@@ -127,7 +150,7 @@ export function useSecond(
     }
   })
 
-  const goLive = async (o: Opened) => {
+  const goLive = async (o: Opened): Promise<Second> => {
     const relay = await relayCamera(
       { video: o.video, mirror: o.faces === 'user', crop: 1 },
       eng.layoutNow,
@@ -136,97 +159,105 @@ export function useSecond(
       const b = held.current
       if (b !== null && b.kind === 'live' && b.cam === o) eject()
     })
-    show({ kind: 'live', cam: o, relay })
+    return { kind: 'live', cam: o, relay }
   }
 
-  const tape = async (): Promise<boolean> => {
+  const tape = async (mine: number): Promise<Landing> => {
     const c = eng.camera()
-    if (c === null) return false
+    if (mine !== turn.current) return 'superseded'
+    if (c === null) return 'failed'
     setLeft(TAPE_SECONDS)
-    let loaded: Second | null = null
+    let landing: Landing
     try {
       const url = URL.createObjectURL(
         await recordTape(c, eng.layoutNow(), setLeft),
       )
-      loaded = { kind: 'tape', url, video: await playLoop(url) }
+      landing = land(mine, { kind: 'tape', url, video: await playLoop(url) })
     } catch (e) {
-      onError(`tape: ${reason(e)}`)
+      landing = failed(mine, `tape: ${reason(e)}`)
     }
     setLeft(0)
-    if (loaded === null) return false
-    show(loaded)
-    return true
+    return landing
   }
 
-  const load = async (): Promise<'live' | 'tape' | null> => {
-    if (held.current !== null || left > 0 || opening) return null
+  // The other camera goes on A and the one that was there on B, live.
+  const putLive = async (mine: number, other: Opened): Promise<Loaded> => {
+    if (mine !== turn.current) {
+      stopAll(other.stream)
+      return 'superseded'
+    }
+    const prev = cam.adopt(other)
+    if (prev === null) return 'failed'
+    let landing: Landing
+    try {
+      landing = land(mine, await goLive(prev))
+    } catch (e) {
+      stopAll(prev.stream)
+      landing = failed(mine, `second camera: ${reason(e)}`)
+    }
+    return landing === 'shown' ? 'live' : landing
+  }
+
+  const load = async (): Promise<Loaded> => {
+    if (held.current !== null || left > 0 || opening) return 'failed'
+    const mine = ++turn.current
+    let live: Loaded | null = null
     if (dual !== 'no') {
       setOpening(true)
       const answer = await cam.openOther()
       setDual(dualAfter(answer.kind, dual))
-      const prev = answer.kind === 'ok' ? cam.adopt(answer.other) : null
-      let ok = false
-      if (prev !== null) {
-        try {
-          await goLive(prev)
-          ok = true
-        } catch (e) {
-          stopAll(prev.stream)
-          onError(`second camera: ${reason(e)}`)
-        }
-      }
+      live = answer.kind === 'ok' ? await putLive(mine, answer.other) : null
       setOpening(false)
-      if (ok) return 'live'
-      if (prev !== null) return null
     }
-    return (await tape()) ? 'tape' : null
+    if (live !== null) return live
+    const taped = await tape(mine)
+    return taped === 'shown' ? 'tape' : taped
   }
 
-  const loadClip = async (file: File): Promise<boolean> => {
-    if (held.current !== null || left > 0 || opening) return false
+  const loadClip = async (file: File): Promise<Landing> => {
+    if (held.current !== null || left > 0 || opening) return 'failed'
+    const mine = ++turn.current
     const url = URL.createObjectURL(file)
+    let video: HTMLVideoElement | null = null
     try {
-      const video = await playLoop(url)
+      video = await playLoop(url)
       const relay = await relayCamera(
         { video, mirror: false, crop: 1 },
         eng.layoutNow,
       )
-      show({ kind: 'clip', url, video, relay })
-      return true
+      return land(mine, { kind: 'clip', url, video, relay })
     } catch (e) {
-      URL.revokeObjectURL(url)
-      onError(`clip: ${reason(e)}`)
-      return false
+      if (video === null) URL.revokeObjectURL(url)
+      else dropLoop(video, url)
+      return failed(mine, `clip: ${reason(e)}`)
     }
   }
 
   // A tape of the camera on screen, which stays on screen.
-  const record = async (): Promise<boolean> => {
-    if (held.current !== null || left > 0 || opening) return false
-    return tape()
-  }
+  const record = async (): Promise<Landing> =>
+    held.current !== null || left > 0 || opening
+      ? 'failed'
+      : tape(++turn.current)
 
-  // A second press while the relay is still being laid is turned away, and a
-  // pick that lands on B in the meantime wins over the relay.
-  const loadSame = async (): Promise<boolean> => {
-    if (eng.camera() === null || left > 0 || opening || laying.current)
-      return false
+  // A second press while the relay is still being laid is turned away and
+  // leaves B to the first.
+  const loadSame = async (): Promise<Landing> => {
+    if (eng.camera() === null || left > 0 || opening) return 'failed'
+    if (laying.current) return 'superseded'
     eject()
+    const mine = ++turn.current
     laying.current = true
-    const relay = await relayCamera(eng.camera, eng.layoutNow).catch(
-      (e: unknown) => {
-        onError(`camera on B: ${reason(e)}`)
-        return null
-      },
-    )
-    laying.current = false
-    if (relay === null) return false
-    if (held.current !== null) {
-      relay.stop()
-      return false
+    let landing: Landing
+    try {
+      landing = land(mine, {
+        kind: 'same',
+        relay: await relayCamera(eng.camera, eng.layoutNow),
+      })
+    } catch (e) {
+      landing = failed(mine, `camera on B: ${reason(e)}`)
     }
-    show({ kind: 'same', relay })
-    return true
+    laying.current = false
+    return landing
   }
 
   const loadPattern = (pattern: Pattern) => {
@@ -234,22 +265,25 @@ export function useSecond(
     show({ kind: 'pattern', pattern })
   }
 
-  // With both cameras live, the flip trades them between A and B.
+  // With both cameras live, the flip trades them between A and B. The camera
+  // that was on B is on A from the start of the swap, so nothing that changes
+  // B in the meantime may stop it.
   const swap = async () => {
     const b = held.current
     if (b === null || b.kind !== 'live') return
     const back = cam.adopt(b.cam)
     b.relay.stop()
-    if (back === null) {
-      show(null)
-      return
-    }
-    try {
-      await goLive(back)
-    } catch (e) {
-      show(null)
-      stopAll(back.stream)
-      onError(`second camera: ${reason(e)}`)
+    const mine = ++turn.current
+    held.current = null
+    if (back === null) show(null)
+    else {
+      try {
+        land(mine, await goLive(back))
+      } catch (e) {
+        if (mine === turn.current) show(null)
+        stopAll(back.stream)
+        onError(`second camera: ${reason(e)}`)
+      }
     }
   }
 
