@@ -198,17 +198,20 @@ fn fs(in: VOut) -> @location(0) vec4f {
   // own mean, so the picture keeps the brightness the scanlines cost it and
   // loses only the structure it was never able to show; a tall window, where a
   // line is several pixels, sees the profile it always did.
-  let ly = tuv.y * f32(ACTIVE_H);
-  let dy = 1.0 / max(pxPerLine, 1e-3);
-  let shown = 1.0 - smoothstep(0.45, 0.5, dy);
-  let fw = mix(1.0, dy, shown);
-  var gap = 0.0;
-  for (var k = 0u; k < 8u; k++) {
-    let fr = fract(ly + fw * ((f32(k) + 0.5) * 0.125 - 0.5)) - 0.5;
-    gap += 1.0 - exp(-fr * fr * 10.0 / spot);
+  // At scanBeam 0 the profile scales by exactly 1, so it is not integrated.
+  if (P.scanBeam != 0.0) {
+    let ly = tuv.y * f32(ACTIVE_H);
+    let dy = 1.0 / max(pxPerLine, 1e-3);
+    let shown = 1.0 - smoothstep(0.45, 0.5, dy);
+    let fw = mix(1.0, dy, shown);
+    var gap = 0.0;
+    for (var k = 0u; k < 8u; k++) {
+      let fr = fract(ly + fw * ((f32(k) + 0.5) * 0.125 - 0.5)) - 0.5;
+      gap += 1.0 - exp(-fr * fr * 10.0 / spot);
+    }
+    let beam = 1.0 - P.scanBeam * gap * 0.125;
+    col = col * beam;
   }
-  let beam = 1.0 - P.scanBeam * gap * 0.125;
-  col = col * beam;
   // Aperture grille: vertical RGB phosphor stripes, gain-compensated for the
   // mean transmission loss so mids hold while bright areas clip toward white —
   // the highlight desaturation a real tube's bloom gives.
