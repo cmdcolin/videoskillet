@@ -53,7 +53,7 @@ describe('FrameStore', () => {
 
   it('keeps the strobe period for a loop-bus fill', () => {
     const c = keyed({ bKeyFill: 2, cfbHold: 2 })
-    expect(run(new FrameStore(), c, 6)).toEqual([
+    expect(run(settled(), c, 6)).toEqual([
       true,
       false,
       false,
@@ -79,6 +79,17 @@ describe('FrameStore', () => {
     expect(frames).toEqual(
       Array.from({ length: 3 }, () => ({ records: true, fill: 0 })),
     )
+  })
+
+  it('tracks program A under a loop-bus fill while the link loads', () => {
+    const store = new FrameStore()
+    const c = keyed({ bKeyFill: 2, cfbHold: 2 })
+    expect(Array.from({ length: 3 }, (_, i) => store.step(c, true, i))).toEqual(
+      Array.from({ length: 3 }, () => ({ records: true, fill: 0 })),
+    )
+    store.settle()
+    run(store, c, 60, 3)
+    expect(store.step(c, true, 64)).toEqual({ records: false, fill: 2 })
   })
 
   it('starts holding once the link has settled and no slot is busy', () => {

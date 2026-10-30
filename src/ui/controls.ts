@@ -2083,7 +2083,7 @@ export const GROUPS: Group[] = [
         step: 1,
         unit: '',
         choices: ['program A', 'matte', 'loop bus', 'freeze'],
-        help: "What shows through the hole the key cut. Program A is the other input. Matte is the box's own generator, a flat colour encoded on the house carrier, so it dot-crawls like any other colour. Loop bus patches in the mixer's frame store, which records every frame, so a moving subject leaves trails. Freeze holds the frame on screen when it is selected, and keeps holding it when a source changes, so a frozen picture can sit behind a new subject. A link opened with freeze holds its sources once they have loaded. Genlocked path only.",
+        help: "What shows through the hole the key cut. Program A is the other input. Matte is the box's own generator, a flat colour encoded on the house carrier, so it dot-crawls like any other colour. Loop bus patches in the mixer's frame store, which records every frame, so a moving subject leaves trails. Freeze holds the frame on screen when it is selected, and keeps holding it when a source changes, so a frozen picture can sit behind a new subject. A link opened with freeze or the loop bus starts holding once its sources have loaded. Genlocked path only.",
       },
       {
         key: 'bKeyMatteY',

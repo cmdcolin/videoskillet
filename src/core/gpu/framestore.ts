@@ -12,13 +12,13 @@
 //   loop fader and the strobe are set to. On that frame the keyer still shows
 //   the fill selected before, so going to freeze from the loop bus keeps the
 //   trails, and going from program A holds A with the subject keyed over it.
-// - Until the page's own link has loaded, freeze holds nothing: the store
-//   records every frame keyed over program A. A page opened from a link with
-//   freeze set would otherwise hold its first frames, which show colour bars,
-//   or black while a cued clip seeks to its in-point. Once the link has
-//   settled, freeze holds the last frame recorded, and a source picked by hand
-//   leaves it alone, so a frozen picture can sit behind whatever is keyed in
-//   next.
+// - Until the page's own link has loaded, freeze and the loop bus hold
+//   nothing: the store records every frame keyed over program A. A page opened
+//   from a link with either set would otherwise hold its first frames, which
+//   show colour bars, or black while a cued clip seeks to its in-point. Once
+//   the link has settled, freeze holds the last frame recorded and the loop bus
+//   builds its trails over it, and a source picked by hand leaves it alone, so
+//   a frozen picture can sit behind whatever is keyed in next.
 
 import { bOn } from './feedgates'
 
@@ -65,7 +65,7 @@ export class FrameStore {
   private before = 0
   private settling = false
   private quiet = 0
-  // Whether freeze still tracks the program: true until the page's link has
+  // Whether freeze and the loop bus still track the program: true until the page's link has
   // settled. A reset keeps it.
   loading: boolean
 
@@ -104,6 +104,7 @@ export class FrameStore {
       }
     }
     this.before = Math.round(c.bKeyFill) === FREEZE ? 0 : c.bKeyFill
+    if (this.loading && fill === 'loop') return { records: true, fill: 0 }
     return {
       records:
         (c.cfbMix !== 0 || fill === 'loop') && frame % strobePeriod(c) === 0,
