@@ -2072,8 +2072,8 @@ export function useEngine(args: { rand: Rand }) {
 
   // Put a parsed link on an engine. The parsing itself is pure and tested
   // (urlParams.ts); what is left here is only the applying, in the one order
-  // that matters: the vaporwave settings land before any clip loads, since a
-  // new element reads its playback rate off vaporRef at creation.
+  // that matters: the speeds land before any clip loads, since a new element
+  // reads its playback rate off vaporRef at creation.
   //
   // Two callers, and the difference between them is `boot`. A link arriving at
   // page load is one; a **strip row firing** is the other, and it is why this is
@@ -2165,6 +2165,11 @@ export function useEngine(args: { rand: Rand }) {
     // goes on to start (see takePendingCue). A link that names no clip leaves
     // these sitting unclaimed, which is correct: there is nothing to cue.
     pendingCue.current = { a: params.cueA, b: params.cueB }
+    // Before any clip loads, because `playUrl` makes its element synchronously
+    // and the element reads its rate off vaporRef as it is made. Through
+    // `changeSpeed`, so a deck the link leaves alone takes the speed too.
+    changeSpeed('a', params.vapor.speedA)
+    changeSpeed('b', params.vapor.speedB)
     // Before either source is shown: the teletype card is typed out of the
     // slot's own text, so the link's text has to be on the slot by then.
     if (params.card !== null) slotA.setCard(params.card)
@@ -2249,17 +2254,12 @@ export function useEngine(args: { rand: Rand }) {
     // Audio is left off however the link arrived: browsers block unmuted
     // autoplay without a gesture, so a restored clip must load muted and the
     // user re-enables sound with one click on the panel toggle.
-    const restored = {
-      a: params.vapor.speedA,
-      b: params.vapor.speedB,
-    }
     vaporRef.current = {
-      speed: restored,
+      speed: vaporRef.current.speed,
       reverb: params.vapor.reverb,
       dry: params.vapor.dry,
       playAudio: false,
     }
-    setSpeed(restored)
     setReverb(params.vapor.reverb)
     setDry(params.vapor.dry)
     if (params.caption !== '') {
