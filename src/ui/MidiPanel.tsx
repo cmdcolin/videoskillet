@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 import { Button } from './Button'
 import { ALL_SLIDERS } from './controls'
@@ -278,7 +278,8 @@ function midiTabNote(status: MidiStatus, stranded: number): string | null {
 
 // Non-modal: every control binds from its own ⚟, in the panel behind this card,
 // so the panel has to stay reachable with the card up. A shown dialog gets no
-// `cancel` event, so Escape is bound by hand.
+// `cancel` event, so Escape is the app's global shortcut (useShortcuts'
+// onEscape), which also covers the popout.
 function MidiDialog(props: {
   status: MidiStatus
   onEnable: () => void
@@ -286,15 +287,6 @@ function MidiDialog(props: {
   children: ReactNode
 }) {
   const { onClose } = props
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
-
   return (
     <dialog
       ref={el => {
@@ -307,7 +299,7 @@ function MidiDialog(props: {
         <span className={styles.cardTitle}>midi</span>
         <button
           className={styles.close}
-          onClick={onClose}
+          onClick={() => onClose()}
           aria-label="close midi"
         >
           ×
