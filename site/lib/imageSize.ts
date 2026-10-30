@@ -4,9 +4,18 @@ import { imageMetadata } from 'astro/assets/utils'
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 
-const bytesOf = async (path: string) =>
+const fetched = async (url: string) => {
+  const res = await fetch(url)
+  if (!res.ok)
+    throw new Error(
+      `fetching ${url} for its size: ${res.status} ${res.statusText}`,
+    )
+  return new Uint8Array(await res.arrayBuffer())
+}
+
+const bytesOf = (path: string) =>
   /^https?:/.test(path)
-    ? new Uint8Array(await (await fetch(path)).arrayBuffer())
+    ? fetched(path)
     : readFile(join(process.cwd(), 'public', path))
 
 // The width and height of an image under `public/`, or at a URL for an
