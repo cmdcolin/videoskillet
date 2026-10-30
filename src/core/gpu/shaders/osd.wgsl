@@ -138,8 +138,12 @@ fn main(
   // A workgroup covers part of one row, so `wid.y` and `gid.y` agree, but only
   // `wid.y` lets Chrome's uniformity analysis prove this return uniform, which
   // the barriers below need. Naga skips that check, so Firefox accepts either.
+  // A workgroup whose span holds no active sample draws nothing, so it skips
+  // the burst measurement too.
   let row = wid.y;
-  if (row < ACTIVE_TOP || row >= ACTIVE_TOP + ACTIVE_H) {
+  let first = wid.x * 64u;
+  if (row < ACTIVE_TOP || row >= ACTIVE_TOP + ACTIVE_H
+      || first + 64u <= ACTIVE_START || first >= ACTIVE_START + ACTIVE_W) {
     return;
   }
   let y = f32(row - ACTIVE_TOP) - P.osdY * f32(ACTIVE_H);
