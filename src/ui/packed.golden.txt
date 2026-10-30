@@ -303,6 +303,7 @@
 315 afpcLagLines step=1 default=0
 316 syncSlicer step=1 default=0 choices=fixed|peak
 317 bKeyFillHueDeg step=1 default=0
+318 bKeyFillMixA step=0.01 default=0
 
 # ?mod= sources, by name
 sine

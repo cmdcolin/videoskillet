@@ -2128,6 +2128,16 @@ export const GROUPS: Group[] = [
         unit: 'deg',
         help: "The hue trim on the frame store's output, which feeds the keyer on loop bus and freeze. The store records the keyer's output, so on the loop bus each generation of copies passes through the trim again and turns this far round the wheel past the one before it. The frozen background turns too, and the picture holds still.",
       },
+      {
+        key: 'bKeyFillMixA',
+        id: 318,
+        label: 'program A in fill',
+        min: 0,
+        max: 0.5,
+        step: 0.01,
+        unit: '',
+        help: "A crossfader ahead of the keyer's fill that mixes program A in with the frame store. On the loop bus every recording keeps the rest of the copies it held, so each copy fades into program A over the generations that follow: at 0.1 a copy is half gone after seven recordings. A still in A brings the room back where the copies were. Strobe hold at an odd count keeps the colour; at an even one, alternate recordings land on opposite subcarrier phases from A's, and the mix cancels toward grey.",
+      },
     ],
   },
   {
@@ -4169,6 +4179,12 @@ const keyed: SliderNeed = {
 }
 // The matte generator's three trims only address anything while the fill
 // selector is actually pointed at it.
+const storeFill: SliderNeed = {
+  key: 'bKeyFill',
+  ok: (v: number) => v > 1.5,
+  fix: 2,
+  hint: 'the fill set to "loop bus" or "freeze"',
+}
 const matteFill: SliderNeed = {
   key: 'bKeyFill',
   ok: (v: number) => v > 0.5 && v < 1.5,
@@ -4343,12 +4359,8 @@ export const NEEDS: Partial<Record<ControlKey, SliderNeed>> = {
   bKeyMatteY: matteFill,
   bKeyMatteHueDeg: matteFill,
   bKeyMatteSat: matteFill,
-  bKeyFillHueDeg: {
-    key: 'bKeyFill',
-    ok: (v: number) => v > 1.5,
-    fix: 2,
-    hint: 'the fill set to "loop bus" or "freeze"',
-  },
+  bKeyFillHueDeg: storeFill,
+  bKeyFillMixA: storeFill,
   synthFm: {
     key: 'synthOver',
     ok: above0,

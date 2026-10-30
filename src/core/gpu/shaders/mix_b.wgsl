@@ -160,7 +160,7 @@ fn storeOut(n: u32) -> f32 {
 // the key gates B's contribution and the program is simply always present.
 fn keyFill(program: f32, n: u32) -> f32 {
   if (P.bKeyFill > 1.5) {
-    return storeOut(n);
+    return mix(storeOut(n), program, P.bKeyFillMixA);
   }
   if (P.bKeyFill > 0.5) {
     // Matte generator: flat luma plus quadrature chroma on the house carrier, so

@@ -663,6 +663,10 @@ bKeyFillHueDeg  (store hue)
   -180..180 step 1 deg  default 0
   The hue trim on the frame store's output, which feeds the keyer on loop bus and freeze. The store records the keyer's output, so on the loop bus each generation of copies passes through the trim again and turns this far round the wheel past the one before it. The frozen background turns too, and the picture holds still.
 
+bKeyFillMixA  (program A in fill)
+  0..0.5 step 0.01  default 0
+  A crossfader ahead of the keyer's fill that mixes program A in with the frame store. On the loop bus every recording keeps the rest of the copies it held, so each copy fades into program A over the generations that follow: at 0.1 a copy is half gone after seven recordings. A still in A brings the room back where the copies were. Strobe hold at an odd count keeps the colour; at an even one, alternate recordings land on opposite subcarrier phases from A's, and the mix cancels toward grey.
+
 ## Recording (luma & FM)
 
 lumaMHz  (luma bandwidth)

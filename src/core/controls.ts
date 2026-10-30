@@ -354,6 +354,7 @@ export const DEFAULT_CONTROLS = {
   bKeyMatteHueDeg: 0,
   bKeyMatteSat: 0,
   bKeyFillHueDeg: 0,
+  bKeyFillMixA: 0,
   // VHS tracking error
   trackAmt: 0,
   trackPos: 0.85,
