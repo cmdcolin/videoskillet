@@ -6,6 +6,7 @@ import {
   gpuDestroyAllowed,
   gpuPowerFromSearch,
   outOfGpuBudget,
+  underErrorScopes,
 } from './context'
 
 describe('gpuPowerFromSearch', () => {
@@ -184,5 +185,59 @@ describe('gpuAtRisk', () => {
     tabHavingSpent(1, 1)
     pageHavingBuilt(0)
     expect(gpuAtRisk()).toBe(true)
+  })
+})
+
+// The error scope stack as a device keeps it, with the errors that `raise`
+// files into whichever scope of that kind is innermost.
+function scopedDevice() {
+  const stack: { filter: GPUErrorFilter; error: GPUError | null }[] = []
+  return {
+    depth: () => stack.length,
+    raise: (filter: GPUErrorFilter, message: string) => {
+      const scope = stack.findLast(s => s.filter === filter)
+      if (scope !== undefined) scope.error = { message }
+    },
+    device: {
+      pushErrorScope: (filter: GPUErrorFilter) =>
+        void stack.push({ filter, error: null }),
+      popErrorScope: async () => {
+        const scope = stack.pop()
+        if (scope === undefined) throw new Error('error scope stack is empty')
+        return scope.error
+      },
+    },
+  }
+}
+
+describe('underErrorScopes', () => {
+  it('reports an internal error as well as a validation one', async () => {
+    const d = scopedDevice()
+    const internal = await underErrorScopes(d.device, () => {
+      d.raise('internal', 'shader failed to compile in the backend')
+      return 1
+    })
+    expect(internal.error?.message).toBe(
+      'shader failed to compile in the backend',
+    )
+    const validation = await underErrorScopes(d.device, () => {
+      d.raise('validation', 'bad bind group')
+      return 2
+    })
+    expect(validation).toEqual({
+      built: 2,
+      error: { message: 'bad bind group' },
+    })
+    expect(d.depth()).toBe(0)
+  })
+
+  it('takes both scopes off a device when construction throws', async () => {
+    const d = scopedDevice()
+    await expect(
+      underErrorScopes(d.device, () => {
+        throw new Error('constructor threw')
+      }),
+    ).rejects.toThrow('constructor threw')
+    expect(d.depth()).toBe(0)
   })
 })

@@ -201,6 +201,32 @@ export function releaseGpu(device: GPUDevice): void {
   }
 }
 
+// Runs `make` under a validation and an internal error scope and hands back the
+// first error either caught. A backend shader compile failure is an internal
+// error, not a validation one. Both scopes come off when `make` throws too,
+// because the device outlives this engine and an unpopped scope would swallow
+// its successor's errors.
+export async function underErrorScopes<T>(
+  device: Pick<GPUDevice, 'pushErrorScope' | 'popErrorScope'>,
+  make: () => T,
+) {
+  device.pushErrorScope('validation')
+  device.pushErrorScope('internal')
+  const popBoth = async () => {
+    const internal = await device.popErrorScope()
+    const validation = await device.popErrorScope()
+    return internal ?? validation
+  }
+  let built: T
+  try {
+    built = make()
+  } catch (e) {
+    await popBoth()
+    throw e
+  }
+  return { built, error: await popBoth() }
+}
+
 // Point a canvas at a device. Separate from creating one because the reuse path
 // needs exactly this and nothing else: the swapchain belongs to the canvas, and
 // a remount brings a new canvas to the same device.

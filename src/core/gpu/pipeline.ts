@@ -28,7 +28,12 @@ import { StrobeGate } from '../signal/strobe'
 import { SynthState } from '../signal/synthstate'
 import { BuzzRead } from './buzzread'
 import { buildCaptionRom, buildPage, CC_BUF_LEN, CC_PAGE } from './captionrom'
-import { gpuPowerFromSearch, initGpu, releaseGpu } from './context'
+import {
+  gpuPowerFromSearch,
+  initGpu,
+  releaseGpu,
+  underErrorScopes,
+} from './context'
 import { debugOn, pageSearch } from './env'
 import { aFeedOn, bFeedOn, bOn, bWaveOn, FEEDS } from './feedgates'
 import { designFilterBank, FILTER_KEYS } from './filterbank'
@@ -481,10 +486,11 @@ export class Engine implements EngineApi {
     opts: EngineOptions = {},
   ): Promise<Engine> {
     const gpu = await initGpu(canvas, gpuPowerFromSearch(pageSearch()))
-    gpu.device.pushErrorScope('validation')
-    const engine = new Engine(gpu, canvas, opts.audio ?? new AudioState())
-    const error = await gpu.device.popErrorScope()
-    if (error) {
+    const { built: engine, error } = await underErrorScopes(
+      gpu.device,
+      () => new Engine(gpu, canvas, opts.audio ?? new AudioState()),
+    )
+    if (error !== null) {
       engine.destroy({ keepDevice: true })
       throw new EngineBuildError(error.message)
     }
