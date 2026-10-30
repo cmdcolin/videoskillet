@@ -17,8 +17,20 @@ const PASSWORD = defineSecret('GMAIL_APP_PASSWORD')
 
 initializeApp()
 
+// A failed run is retried, so one Gmail error does not lose that hour's
+// report. The window is the hour before `event.scheduleTime`, which Cloud
+// Scheduler sends unchanged on every attempt at the same run, so a retry
+// mails the same reports. The backoff goes 1, 2 and 4 minutes, and every
+// retry lands well before the next hour's run.
 export const takeDigest = onSchedule(
-  { schedule: 'every 60 minutes', secrets: [PASSWORD], timeoutSeconds: 120 },
+  {
+    schedule: 'every 60 minutes',
+    secrets: [PASSWORD],
+    timeoutSeconds: 120,
+    retryCount: 3,
+    minBackoffSeconds: 60,
+    maxBackoffSeconds: 600,
+  },
   async event => {
     const { reports, total } = await gather(
       getFirestore(),
