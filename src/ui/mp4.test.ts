@@ -329,6 +329,36 @@ describe('writeMp4', () => {
       expect([...normaliseAvcc(good)]).toEqual([...good])
     })
 
+    // ISO 14496-15 gives High four more bytes after the PPS list: six reserved
+    // ones and chroma_format, five and bit_depth_luma_minus8, five and
+    // bit_depth_chroma_minus8, then numOfSequenceParameterSetExt.
+    describe('for High', () => {
+      const high = [
+        0x01, 0x64, 0x00, 0x33, 0xff, 0xe1, 0x00, 0x04, 0x67, 0x64, 0x00, 0x33,
+        0x01, 0x00, 0x02, 0x68, 0xeb,
+      ]
+
+      it('writes 4:2:0 at 8 bits when the browser gave no tail', () => {
+        const fixed = normaliseAvcc(Uint8Array.from(high))
+        expect([...fixed]).toEqual([...high, 0xfd, 0xf8, 0xf8, 0x00])
+      })
+
+      it('keeps the browser’s tail, with the reserved bits set', () => {
+        const tail = [0x01, 0x02, 0x02, 0x01, 0x00, 0x02, 0x6d, 0x01]
+        const fixed = normaliseAvcc(Uint8Array.from([...high, ...tail]))
+        expect(Array.from(fixed.slice(high.length))).toEqual([
+          0xfd, 0xfa, 0xfa, 0x01, 0x00, 0x02, 0x6d, 0x01,
+        ])
+      })
+
+      it('adds no tail to Main', () => {
+        const main = [...high]
+        main[1] = 0x4d
+        main[9] = 0x4d
+        expect([...normaliseAvcc(Uint8Array.from(main))]).toEqual(main)
+      })
+    })
+
     it('hands back anything too short to be a record rather than inventing one', () => {
       const stub = Uint8Array.from([1, 2, 3])
       expect([...normaliseAvcc(stub)]).toEqual([1, 2, 3])

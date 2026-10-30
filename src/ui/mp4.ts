@@ -116,6 +116,30 @@ const MATRIX = join([
 const lengths = (list: { data: Uint8Array<ArrayBuffer> }[]) =>
   list.flatMap(s => [u16(s.data.length), s.data])
 
+// The profiles ISO 14496-15 gives four more bytes after the PPS list: chroma
+// format, luma and chroma bit depth, and the SPS extensions.
+const HIGH_PROFILES = new Set([100, 110, 122, 144])
+
+// Those bytes: the browser's own with their reserved bits set, as for the
+// header. Without them, High (100) is 4:2:0 at 8 bits, the only format that
+// profile gives a WebCodecs encoder; the other three carry bit depths this
+// cannot guess, so they go without.
+const highTail = (profile: number, tail: Uint8Array<ArrayBuffer> | null) =>
+  !HIGH_PROFILES.has(profile)
+    ? new Uint8Array(0)
+    : tail !== null
+      ? join([
+          u8(
+            0xfc | (tail[0]! & 0x03),
+            0xf8 | (tail[1]! & 0x07),
+            0xf8 | (tail[2]! & 0x07),
+          ),
+          tail.slice(3),
+        ])
+      : profile === 100
+        ? u8(0xfd, 0xf8, 0xf8, 0x00)
+        : new Uint8Array(0)
+
 // Rebuild an `avcC` record from whatever the encoder handed over, because what
 // Firefox hands over is malformed and ffmpeg says so.
 //
@@ -152,11 +176,13 @@ export function normaliseAvcc(
 
   const sets: { type: number; data: Uint8Array<ArrayBuffer> }[] = []
   let at = 6
+  let whole = true
   const take = (count: number, expect: number) => {
-    for (let i = 0; i < count && at + 2 <= raw.length; i++) {
-      const len = (raw[at]! << 8) | raw[at + 1]!
+    for (let i = 0; i < count && whole; i++) {
+      const len = at + 2 <= raw.length ? (raw[at]! << 8) | raw[at + 1]! : 0
       at += 2
-      if (len === 0 || at + len > raw.length) return
+      whole = len > 0 && at + len <= raw.length
+      if (!whole) return
       let data = raw.slice(at, at + len)
       at += len
       // The duplicate, if this browser writes one.
@@ -177,19 +203,21 @@ export function normaliseAvcc(
   const pps = sets.filter(s => s.type === 8)
   const first = sps[0]
   if (first === undefined) return raw
+  const profile = first.data[1] ?? 0
 
   return join([
     // Version, and the profile/compat/level triplet, which are the first three
     // bytes of the SPS itself and are taken from there rather than from the
     // header — a browser that got the header wrong has not earned the benefit
     // of the doubt about these.
-    u8(1, first.data[1] ?? 0, first.data[2] ?? 0, first.data[3] ?? 0),
+    u8(1, profile, first.data[2] ?? 0, first.data[3] ?? 0),
     // Reserved bits set, and a four-byte NAL length, which is what `record.ts`
     // configures the encoder for.
     u8(0xff, 0xe0 | sps.length),
     ...lengths(sps),
     u8(pps.length),
     ...lengths(pps),
+    highTail(profile, whole && raw.length - at >= 4 ? raw.slice(at) : null),
   ])
 }
 
