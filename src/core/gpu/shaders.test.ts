@@ -89,6 +89,17 @@ const hasNaga = ((): boolean => {
 
 const dir = hasNaga ? mkdtempSync(join(tmpdir(), 'wgsl-')) : ''
 
+// Comments would otherwise count as uses and mask the very thing the binding
+// checks look for — a dead binding's own explanatory comment names it.
+const stripComments = (text: string) =>
+  text.replaceAll(/\/\*[\s\S]*?\*\//g, '').replaceAll(/\/\/[^\n]*/g, '')
+
+// WebGPU's default per-stage limits. initGpu asks for no more than these.
+const STAGE_LIMITS = [
+  { what: 'storage buffers', decl: /var<storage\b/g, limit: 8 },
+  { what: 'storage textures', decl: /:\s*texture_storage_/g, limit: 4 },
+]
+
 describe('WGSL shaders pass naga validation', () => {
   it('naga must be installed under CI', () => {
     // Locally naga is optional and the per-shader checks below skip without it.
@@ -116,10 +127,6 @@ describe('WGSL shaders pass naga validation', () => {
   // pipeline produced. That surfaces at runtime as "BindGroup with '' label is
   // invalid" on set_bind_group, nowhere near the shader that caused it.
   it('declares no binding it does not read', () => {
-    // Comments would otherwise count as uses and mask the very thing this
-    // looks for — the dead binding's own explanatory comment names it.
-    const stripComments = (text: string) =>
-      text.replaceAll(/\/\*[\s\S]*?\*\//g, '').replaceAll(/\/\/[^\n]*/g, '')
     for (const [name, src] of Object.entries(SHADERS)) {
       const body = stripComments(src)
       const decls = [
@@ -136,6 +143,22 @@ describe('WGSL shaders pass naga validation', () => {
           uses?.length ?? 0,
           `${name}: binding \`${binding}\` is never read`,
         ).toBeGreaterThan(0)
+      }
+    }
+  })
+
+  // Naga does not check limits, and the Chrome suite below that does only runs
+  // where Chrome is installed. decode.wgsl sits at the storage buffer limit.
+  // Counted per module, so a module whose entry points use different subsets
+  // is held to the sum of them.
+  it('stays within the default per-stage binding limits', () => {
+    for (const [name, src] of Object.entries(SHADERS)) {
+      const body = stripComments(src)
+      for (const { what, decl, limit } of STAGE_LIMITS) {
+        expect(
+          body.match(decl)?.length ?? 0,
+          `${name}: ${what}`,
+        ).toBeLessThanOrEqual(limit)
       }
     }
   })
