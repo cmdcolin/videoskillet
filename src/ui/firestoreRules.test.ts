@@ -364,6 +364,13 @@ describe.skipIf(EMULATOR === undefined)('firestore.rules', () => {
     await assertFails(asOwner().doc(`users/${OWNER}/extra/doc`).set({ x: 1 }))
   })
 
+  it('refuses the retired labelling collections, read and write', async () => {
+    for (const name of ['candidates', 'votes', 'ratings']) {
+      await assertFails(asOwner().doc(`${name}/anything`).get())
+      await assertFails(asOwner().collection(name).add({ by: OWNER }))
+    }
+  })
+
   // bender's document: the /users shape under another name, on the same
   // project. One test per guard that differs from nothing above, and one that
   // the two collections stay apart.
