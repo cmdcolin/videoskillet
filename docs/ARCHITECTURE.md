@@ -94,11 +94,13 @@ Two dispatches sit deliberately outside those arrays, because they are not the
 signal path. The grain bake (`grain_bake.wgsl`) runs once at engine
 construction: the phosphor mottle is fixed to the glass, so `crtFace` reads it
 as a texel instead of hashing it per frame. The other is the direct video blit
-(`blit_ext.wgsl`), which is input staging — where the device has
-`importExternalTexture` (Chrome, feature-detected), a slot's fresh video frame
-is sampled straight off the browser's decoder into the slot texture at the top
-of the frame, replacing the bitmap path's per-frame CPU decode/resize/upload.
-Firefox has no such API and stays on `VideoPump`'s bitmap path unchanged.
+(`blit_ext.wgsl`), which is input staging — where `directVideoPath` in `env.ts`
+picks `importExternalTexture`, a slot's fresh video frame is sampled straight
+off the browser's decoder into the slot texture at the top of the frame,
+replacing the bitmap path's per-frame CPU decode/resize/upload. The device has
+to have the method, and the browser must not be Firefox. Firefox stays on
+`VideoPump`'s bitmap path, which is the path measured there, unless the session
+carries `#vidext`.
 
 The split matters: **encode** builds the waveform, **channel/timebase** damage
 it, **enhancer/sync/decode** is the receiver trying to make sense of the damage.

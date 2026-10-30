@@ -635,9 +635,18 @@ picture while `frameNo()` advances. Validate functionally instead, by reading a
 texture back over `copyTextureToBuffer` (the app's textures don't carry
 `COPY_SRC`, so patch `GPUDevice.prototype.createTexture` at page init), and
 treat ANGLE's texture-allocation reports as the driver artifact `CLAUDE.md`
-describes. Chrome is also the only browser with `importExternalTexture`, so the
-zero-copy video path only runs there — `#vidbitmap` forces the bitmap path when
-the two need comparing in one browser.
+describes. Chrome is also the only browser on this box that takes the zero-copy
+video path by default. `#vidbitmap` forces the bitmap path when the two need
+comparing in one browser.
+
+Firefox has `importExternalTexture` on Windows and macOS from 144, and Nightly
+has it on Linux behind `dom.webgpu.external-texture.enabled`. The app keeps
+Firefox on the bitmap path anyway (`directVideoPath` in `src/core/gpu/env.ts`),
+and `#vidext` overrides that. On this box, Nightly 151 with the pref on and
+`#vidext` set rejects `blit_ext` with "Capability TEXTURE_EXTERNAL is required"
+and never paints a frame. Re-run that pair when a Nightly lands the Linux import
+(bug 2008705); `launchFirefox({ prefs })` in `scripts/browser.mjs` sets the
+pref.
 
 ## Documentation screenshots
 
@@ -1188,6 +1197,7 @@ for `hashchange` and reloads — which is what the query used to do for free.
 | `#seed=n`            | put every roll this session makes on that seed         |
 | `#gpu=low-power`     | run on the integrated GPU instead of the discrete one  |
 | `#vidbitmap`         | force the bitmap video path where zero-copy exists     |
+| `#vidext`            | use the zero-copy video path in Firefox too            |
 
 Example: `/app/#iurl=/sample.jpg&preset=dirty%20mix`. Either half of the bar is
 read, so every one of these also works spelled `?`, which is what the harnesses

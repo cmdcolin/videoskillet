@@ -459,12 +459,22 @@ a 30 fps clip under a faster loop is decoded once per source frame rather than
 once per render.
 
 **Zero copy where the browser allows it.** Where the device has
-`importExternalTexture` (Chrome, feature-detected), `blit_ext.wgsl` samples a
-slot's fresh video frame straight off the browser's decoder into the slot
-texture, replacing the bitmap path's per-frame CPU decode/resize/upload. The
-import happens inside the frame that submits it, because an external texture
-expires with the task that imported it — the pump only parks the elements.
-Firefox has no such API and stays on the bitmap path unchanged.
+`importExternalTexture`, `blit_ext.wgsl` samples a slot's fresh video frame
+straight off the browser's decoder into the slot texture, replacing the bitmap
+path's per-frame CPU decode/resize/upload. The import happens inside the frame
+that submits it, because an external texture expires with the task that imported
+it — the pump only parks the elements. The 230-290 ms of script per second that
+two clips cost on the bitmap path, and the 37 ms/s they cost here, were measured
+in Chrome.
+
+Firefox stays on the bitmap path, which `directVideoPath` in `env.ts` decides
+from the user agent. Firefox 144 ships the method on Windows and macOS, and
+Nightly has it on Linux behind `dom.webgpu.external-texture.enabled`. With that
+pref on, Nightly 151 on Linux exposes the method and then rejects
+`texture_external` in `blit_ext` ("Capability TEXTURE_EXTERNAL is required"), so
+the engine never paints. `#vidext` puts a Firefox session on the direct path for
+measuring it, and a measured gain on a platform is what would justify letting
+that platform on by default.
 
 ## Pacing is a separate problem from throughput
 
