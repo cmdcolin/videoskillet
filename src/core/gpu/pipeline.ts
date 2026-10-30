@@ -34,7 +34,7 @@ import {
   releaseGpu,
   underErrorScopes,
 } from './context'
-import { debugOn, pageSearch } from './env'
+import { debugOn, directVideoPath, pageSearch, userAgent } from './env'
 import { aFeedOn, bFeedOn, bOn, bWaveOn, FEEDS } from './feedgates'
 import { designFilterBank, FILTER_KEYS } from './filterbank'
 import { AutoLock } from './framelock'
@@ -460,11 +460,11 @@ export class Engine implements EngineApi {
   // Owns the <video> elements and turns them into bitmaps. Main-thread only by
   // nature, which is exactly why it is not part of Sources.
   private pump: VideoPump
-  // The direct video path's two blits (A fit, B cover-crop), or null where the
-  // device has no importExternalTexture — Firefox — in which case the pump
-  // stays on its bitmap path and none of this exists. Guarded rather than
-  // created unconditionally because a browser without the API has no reason to
-  // accept `texture_external` in a shader module either.
+  // The direct video path's two blits (A fit, B cover-crop), or null where
+  // `directVideoPath` turns it down, in which case the pump stays on its bitmap
+  // path and none of this exists. Guarded because a browser can have
+  // importExternalTexture and still reject `texture_external` in a shader
+  // module: Firefox Nightly on Linux does, with its pref on.
   private blitFitPl: GPUComputePipeline | null = null
   private blitCropPl: GPUComputePipeline | null = null
   private sources: Sources
@@ -687,13 +687,15 @@ export class Engine implements EngineApi {
     const osdPl = compute('osd', osdSrc)
     const crtFacePl = compute('crt_face', crtFaceSrc)
 
-    // Zero-copy video: where the device can import the decoder's own frame
-    // (Chrome), the pump skips createImageBitmap entirely and blit_ext samples
-    // the frame straight into the slot texture. ?vidbitmap forces the bitmap
-    // path so a harness can A/B the two on the same browser.
-    const directVideo =
-      typeof d.importExternalTexture === 'function' &&
-      !pageSearch().includes('vidbitmap')
+    // Zero-copy video: where the device can import the decoder's own frame,
+    // the pump skips createImageBitmap entirely and blit_ext samples the frame
+    // straight into the slot texture. `directVideoPath` keeps Firefox off it
+    // and reads the ?vidbitmap and ?vidext overrides.
+    const directVideo = directVideoPath(
+      typeof d.importExternalTexture === 'function',
+      userAgent(),
+      pageSearch(),
+    )
     if (directVideo) {
       const blitModule = module('blit_ext', blitExtSrc)
       const blit = (entryPoint: string) =>

@@ -3,8 +3,8 @@
 // time per frame — createImageBitmap decodes and resizes on CPU, then the
 // queue copies the result up — and that cost is what two playing clips charge
 // against the frame budget. Where the browser can hand WebGPU the decoder's
-// own frame (importExternalTexture — feature-detected in pipeline.ts; Chrome
-// today, Firefox has no such API), this one dispatch replaces the whole trip.
+// own frame (importExternalTexture, chosen by `directVideoPath` in env.ts),
+// this one dispatch replaces the whole trip.
 //
 // Two entry points because the two slots want different geometry, the same
 // split sources.ts makes for the bitmap path: A keeps its own aspect (the

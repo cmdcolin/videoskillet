@@ -65,6 +65,32 @@ export const debugLog = (...args: unknown[]): void => {
   if (debugOn()) console.log(...args)
 }
 
+export const userAgent = () =>
+  typeof navigator === 'undefined' ? '' : navigator.userAgent
+
+// Whether the engine samples video through `importExternalTexture`
+// (blit_ext.wgsl) or through VideoPump's bitmaps. Having the method is
+// necessary and not sufficient, so Firefox stays on the bitmap path, which is
+// the path that has been measured there. Firefox ships the method on Windows and
+// macOS from 144 and has it behind `dom.webgpu.external-texture.enabled` on
+// Linux. Nightly 151 on Linux with that pref on exposes the method and then
+// rejects `texture_external` in blit_ext ("Capability TEXTURE_EXTERNAL is
+// required"), and the engine never paints a frame. The method alone cannot tell
+// that browser apart from one where the import works.
+//
+// `vidext` opts a session onto the direct path, for measuring a browser before
+// it is let on by default. `vidbitmap` forces the bitmap path anywhere and wins
+// over `vidext`.
+export const directVideoPath = (
+  canImport: boolean,
+  agent: string,
+  search: string,
+) => {
+  const q = new URLSearchParams(search)
+  const firefox = agent.includes('Firefox/')
+  return canImport && !q.has('vidbitmap') && (q.has('vidext') || !firefox)
+}
+
 // Whether the tab is on screen, and whether it has focus. The render loop uses
 // both to decide if a missing rAF callback is a stall worth bridging. With no
 // document there is no refresh driver to describe, so both report the state in

@@ -51,10 +51,10 @@ export const coverFit43 = (
 
 // Anything that can be drawn into a 2D canvas or copied straight to a texture.
 // Notably not an HTMLVideoElement: Firefox rejects one outright, which is what
-// sends video through VideoPump and arrives back here as a bitmap. Where the
-// device has importExternalTexture instead (Chrome), the pump hands the
-// element itself to pushExtA/pushExtB and the engine blits the decoder's own
-// frame on the GPU — see blit_ext.wgsl.
+// sends video through VideoPump and arrives back here as a bitmap. Where
+// `directVideoPath` (env.ts) picks importExternalTexture instead, the pump
+// hands the element itself to pushExtA/pushExtB and the engine blits the
+// decoder's own frame on the GPU — see blit_ext.wgsl.
 type Drawable = OffscreenCanvas | ImageBitmap
 
 interface SourcesHost {

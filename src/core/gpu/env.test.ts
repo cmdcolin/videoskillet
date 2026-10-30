@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import {
+  directVideoPath,
   isFocused,
   isFullscreen,
   isVisible,
@@ -72,6 +73,40 @@ describe('env', () => {
         hash: '#set=noiseIre:9',
       })
       expect(pageSearch()).toBe('?set=noiseIre:9')
+    })
+  })
+
+  describe('directVideoPath', () => {
+    const chrome =
+      'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36'
+    const firefox =
+      'Mozilla/5.0 (X11; Linux x86_64; rv:151.0) Gecko/20100101 Firefox/151.0'
+
+    it('takes the direct path where the device can import and the browser is not Firefox', () => {
+      expect(directVideoPath(true, chrome, '')).toBe(true)
+    })
+
+    it('stays on the bitmap path where the device cannot import', () => {
+      expect(directVideoPath(false, chrome, '')).toBe(false)
+      expect(directVideoPath(false, firefox, '?vidext')).toBe(false)
+    })
+
+    it('keeps Firefox on the bitmap path even where it has the method', () => {
+      expect(directVideoPath(true, firefox, '')).toBe(false)
+    })
+
+    it('lets vidext put Firefox on the direct path', () => {
+      expect(directVideoPath(true, firefox, '?vidext')).toBe(true)
+    })
+
+    it('lets vidbitmap force the bitmap path, over vidext too', () => {
+      expect(directVideoPath(true, chrome, '?vidbitmap')).toBe(false)
+      expect(directVideoPath(true, firefox, '?vidext&vidbitmap')).toBe(false)
+    })
+
+    it('matches parameter names, not substrings of values', () => {
+      expect(directVideoPath(true, chrome, '?caption=vidbitmap')).toBe(true)
+      expect(directVideoPath(true, firefox, '?caption=vidext')).toBe(false)
     })
   })
 })
