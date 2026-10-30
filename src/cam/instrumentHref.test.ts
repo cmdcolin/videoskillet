@@ -34,6 +34,7 @@ describe('the full-app link', () => {
       layers: { [plain]: 0.7 },
       tweaks: { fbMix: 0.3 },
       mix: { mode: 'dissolve', fader: 0.25 },
+      keyHue: null,
     }
     const { q, params, controls } = opened(
       instrumentHref(scene, 'webcam', 'bars'),
@@ -46,11 +47,12 @@ describe('the full-app link', () => {
     expect(q.get('srcb')).toBe('bars')
   })
 
-  it('leaves the mixer behind when B holds nothing a link can carry', () => {
+  it('leaves the mixer and the keyer behind when B holds nothing a link can carry', () => {
     const scene: Scene = {
       ...CLEAN,
       look: null,
       mix: { mode: 'dissolve', fader: 0.25 },
+      keyHue: 120,
     }
     const { q, params, controls } = opened(instrumentHref(scene, null, null))
     expect(params.damaged).toBe(false)

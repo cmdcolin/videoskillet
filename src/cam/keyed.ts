@@ -1,4 +1,4 @@
-import type { Controls } from '../core/controls'
+import type { ControlKey, Controls } from '../core/controls'
 
 // The hue the encoder gives an RGB colour, in degrees: the angle of its (U, V)
 // chroma, atan2(V, U), which is the angle the loop's hue keyer slices. Null
@@ -17,6 +17,51 @@ export const keysOnHue = (c: Controls): boolean =>
 
 export const aimKey = (c: Controls, hue: number | null): Controls =>
   hue === null || !keysOnHue(c) ? c : { ...c, cfbKeyHueDeg: Math.round(hue) }
+
+// The chroma keyer across the mixer, cutting the camera on B where it shows
+// the key hue and filling the hole from the frame store. These are the
+// settings a sweep over a still on A found best, and a knob turned by hand
+// overrides them. Strobe hold stays odd: at an even count the fill's fade
+// cancels A's colour toward grey.
+const KEYER: Partial<Controls> = {
+  bKeyAcceptDeg: 45,
+  bKeyClip: 0.05,
+  bKeySpill: 0.6,
+  bKeyFill: 2,
+  bKeyFillMixA: 0.15,
+  cfbHold: 3,
+}
+
+// The switches that make the mixer a keyer, which no knob overrides. A's deck
+// is paused, which holds one frame of the camera on A for the fill to fade
+// the stored copies into.
+const KEYER_SWITCHES: Partial<Controls> = {
+  aPause: 0.01,
+  bGain: 1,
+  bGenlock: 1,
+  bKey: 1,
+  wipeMode: 0,
+  pipMix: 0,
+  pipKey: 0,
+}
+
+// The keyer knobs the loops sheet shows, its main ones first.
+export const KEYER_KNOBS = {
+  main: ['bKeyAcceptDeg', 'bKeyFill', 'bKeyFillMixA', 'bKeyFillHueDeg'],
+  more: ['bKeyClip', 'bKeySoft', 'bKeySpill', 'bKeyDelayUs'],
+} as const satisfies Record<string, readonly ControlKey[]>
+
+export const keyOn = (
+  c: Controls,
+  tweaks: Partial<Controls>,
+  hue: number,
+): Controls => ({
+  ...c,
+  ...KEYER,
+  ...tweaks,
+  bKeyHueDeg: Math.round(hue),
+  ...KEYER_SWITCHES,
+})
 
 // Where a point on the picture lands on the camera's own frame, both in 0..1.
 // The picture is the camera cropped by the zoom and cover-fitted into the

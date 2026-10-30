@@ -4,7 +4,7 @@ import type { Pattern } from './patterns'
 import type { Facing } from './useCamera'
 import type { ASource } from './useSourceA'
 
-export type BSource = 'none' | 'camera' | 'record' | 'clip' | Pattern
+export type BSource = 'none' | 'camera' | 'same' | 'record' | 'clip' | Pattern
 
 interface Option<K> {
   key: K
@@ -51,6 +51,11 @@ export function bOptions(canFlip: boolean): Option<BSource>[] {
           },
         ]
       : []),
+    {
+      key: 'same',
+      label: 'same camera',
+      title: 'the camera on A, live on B as well',
+    },
     {
       key: 'record',
       label: 'record 4 s',

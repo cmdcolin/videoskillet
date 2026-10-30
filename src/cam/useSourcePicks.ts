@@ -32,6 +32,12 @@ export function useSourcePicks(opts: {
     opts.onTakeOff()
   }
 
+  // The camera leaving A takes its copy off B with it.
+  const stopCamera = () => {
+    cam.stop()
+    if (second.kind === 'same') takeOff()
+  }
+
   const putOnA = (key: Facing | ASource) => {
     onError('')
     if (key === 'clip') clipA.current?.click()
@@ -41,7 +47,7 @@ export function useSourcePicks(opts: {
       else cam.flip()
     } else if (key !== 'camera') {
       srcA.toPattern(key)
-      cam.stop()
+      stopCamera()
     }
   }
 
@@ -65,6 +71,16 @@ export function useSourcePicks(opts: {
     onError('')
     void second.record().then(ok => (ok ? mixing('record') : takeOff()))
   }
+  // The camera on B as well as A, for the chroma keyer, which leaves the panels
+  // where they are.
+  const keySame = async (): Promise<boolean> => {
+    onError('')
+    const ok = await second.loadSame()
+    if (ok) setPicked('same')
+    return ok
+  }
+  const putSame = () =>
+    void keySame().then(ok => (ok ? opts.onMixing() : takeOff()))
   const putPattern = (p: Pattern) => {
     onError('')
     second.loadPattern(p)
@@ -73,13 +89,14 @@ export function useSourcePicks(opts: {
   const putOnB = (key: BSource) => {
     if (key === 'none') takeOff()
     else if (key === 'camera') putCamera()
+    else if (key === 'same') putSame()
     else if (key === 'record') putTape()
     else if (key === 'clip') clipB.current?.click()
     else putPattern(key)
   }
 
   const clipOnA = (file: File) =>
-    void srcA.toClip(file).then(ok => ok && cam.stop())
+    void srcA.toClip(file).then(ok => ok && stopCamera())
   const clipOnB = (file: File) => {
     second.eject()
     onError('')
@@ -97,6 +114,7 @@ export function useSourcePicks(opts: {
     onB: second.kind === null ? 'none' : picked,
     putOnA,
     putOnB,
+    keySame,
     clipOnA,
     clipOnB,
   }

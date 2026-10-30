@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
 import { DEFAULT_CONTROLS } from '../core/controls'
-import { aimKey, chromaHue, keysOnHue, sourcePoint } from './keyed'
+import { aimKey, chromaHue, keyOn, keysOnHue, sourcePoint } from './keyed'
+import { CLEAN, boardOf } from './scene'
+
+import type { Scene } from './scene'
 
 describe('chromaHue', () => {
   // The keyer's own reference points, from the comments beside its controls.
@@ -38,6 +41,60 @@ describe('aimKey', () => {
     const luma = { ...keyed, cfbKeyAcceptDeg: 0 }
     expect(aimKey(luma, 200)).toBe(luma)
     expect(aimKey(DEFAULT_CONTROLS, 200)).toBe(DEFAULT_CONTROLS)
+  })
+})
+
+describe('keyOn', () => {
+  it('keys B on the hue over a held A and fills from the loop bus', () => {
+    const c = keyOn(DEFAULT_CONTROLS, {}, 123.4)
+    expect(c).toMatchObject({
+      bGain: 1,
+      bGenlock: 1,
+      bKey: 1,
+      bKeyHueDeg: 123,
+      bKeyFill: 2,
+      bKeyFillMixA: 0.15,
+    })
+    expect(c.aPause).toBeGreaterThan(0)
+  })
+
+  it('holds strobe hold odd, where the fade keeps the colour', () => {
+    expect(keyOn(DEFAULT_CONTROLS, {}, 0).cfbHold % 2).toBe(1)
+  })
+
+  it('lets a knob turned by hand win over its settings', () => {
+    const c = keyOn(DEFAULT_CONTROLS, { bKeyAcceptDeg: 20, cfbHold: 5 }, 0)
+    expect(c.bKeyAcceptDeg).toBe(20)
+    expect(c.cfbHold).toBe(5)
+  })
+
+  it('holds the switches that make the mixer a keyer', () => {
+    const c = keyOn(
+      DEFAULT_CONTROLS,
+      { bGain: 0.3, bKey: 0, aPause: 0, pipMix: 1, bKeyHueDeg: 10 },
+      200,
+    )
+    expect(c).toMatchObject({ bGain: 1, bKey: 1, pipMix: 0, bKeyHueDeg: 200 })
+    expect(c.aPause).toBeGreaterThan(0)
+  })
+})
+
+describe('a scene with the keyer on', () => {
+  const scene: Scene = {
+    ...CLEAN,
+    look: null,
+    mix: { mode: 'wipe', fader: 0.3 },
+    keyHue: 241,
+  }
+
+  it('sets the mixer over whatever mode it was in', () => {
+    const c = boardOf(scene, 1).controls
+    expect(c).toMatchObject({ bKey: 1, bGain: 1, wipeMode: 0, bKeyHueDeg: 241 })
+  })
+
+  it('leaves the mixer to its mode once off', () => {
+    const c = boardOf({ ...scene, keyHue: null }, 1).controls
+    expect(c).toMatchObject({ bKey: 0, wipeMode: 1, aPause: 0 })
   })
 })
 

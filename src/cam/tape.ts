@@ -157,29 +157,39 @@ export interface Relay {
 // A live picture for source B, laid down each frame the way a tape is
 // recorded, in whatever layout the set has now. A phone turned in the hand
 // changes the camera's frame size and the set's layout, and the canvas is laid
-// again to follow them.
+// again to follow them. Handed a function, the relay asks it for the camera
+// every frame, so it follows the camera on A through a flip. That relay runs
+// on the display's frames, since a camera it has left stops calling back.
 export async function relayCamera(
-  cam: Camera,
+  source: Camera | (() => Camera | null),
   layout: () => Layout,
 ): Promise<Relay> {
   const canvas = document.createElement('canvas')
   const g = context(canvas)
-  const state = () =>
-    `${cam.video.videoWidth}x${cam.video.videoHeight}:${layout()}`
-  let draw = lay(canvas, g, cam, layout())
-  let seen = state()
-  const perFrame = 'requestVideoFrameCallback' in cam.video
+  const camera = typeof source === 'function' ? source : () => source
+  const clock =
+    typeof source !== 'function' && 'requestVideoFrameCallback' in source.video
+      ? source.video
+      : null
+  let laid: HTMLVideoElement | null = null
+  let seen = ''
+  let draw: (() => void) | null = null
   let pending = 0
   const tick = () => {
-    const now = state()
-    if (now !== seen) {
-      seen = now
-      draw = lay(canvas, g, cam, layout())
+    const cam = camera()
+    if (cam !== null && cam.video.videoWidth > 0) {
+      const now = `${cam.video.videoWidth}x${cam.video.videoHeight}:${cam.mirror}:${layout()}`
+      if (now !== seen || cam.video !== laid) {
+        seen = now
+        laid = cam.video
+        draw = lay(canvas, g, cam, layout())
+      }
+      draw?.()
     }
-    draw()
-    pending = perFrame
-      ? cam.video.requestVideoFrameCallback(tick)
-      : requestAnimationFrame(tick)
+    pending =
+      clock !== null
+        ? clock.requestVideoFrameCallback(tick)
+        : requestAnimationFrame(tick)
   }
   tick()
   const stream = canvas.captureStream(FPS)
@@ -188,7 +198,7 @@ export async function relayCamera(
   video.playsInline = true
   video.srcObject = stream
   const stop = () => {
-    if (perFrame) cam.video.cancelVideoFrameCallback(pending)
+    if (clock !== null) clock.cancelVideoFrameCallback(pending)
     else cancelAnimationFrame(pending)
     for (const t of stream.getTracks()) t.stop()
     video.srcObject = null

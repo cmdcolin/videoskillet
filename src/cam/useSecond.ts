@@ -17,11 +17,13 @@ import type { Camera, Layout, Relay } from './tape'
 import type { Shown } from './useCamEngine'
 import type { Opened } from './useCamera'
 
-// What is on source B: a tape of one camera, the other camera live, a clip
-// from the phone's library, or a pattern the set makes itself.
+// What is on source B: a tape of one camera, the other camera live, the camera
+// on A live, a clip from the phone's library, or a pattern the set makes
+// itself.
 type Second =
   | { kind: 'tape'; url: string; video: HTMLVideoElement }
   | { kind: 'live'; cam: Opened; relay: Relay }
+  | { kind: 'same'; relay: Relay }
   | { kind: 'clip'; url: string; video: HTMLVideoElement; relay: Relay }
   | { kind: 'pattern'; pattern: Pattern }
 
@@ -36,6 +38,10 @@ const unload = (b: Second) => {
     return
   }
   if (b.kind === 'pattern') return
+  if (b.kind === 'same') {
+    b.relay.stop()
+    return
+  }
   if (b.kind === 'clip') b.relay.stop()
   dropLoop(b.video, b.url)
 }
@@ -44,6 +50,7 @@ const videosOf = (b: Second | null): HTMLVideoElement[] => {
   if (b === null || b.kind === 'pattern') return []
   if (b.kind === 'live') return [b.cam.video, b.relay.video]
   if (b.kind === 'clip') return [b.video, b.relay.video]
+  if (b.kind === 'same') return [b.relay.video]
   return [b.video]
 }
 
@@ -51,8 +58,9 @@ const videosOf = (b: Second | null): HTMLVideoElement[] => {
 // the phone runs both cameras at once, and moves the screen to it; elsewhere it
 // records a tape of the camera on screen, and the caller flips to the other
 // one. `record` tapes the camera on screen and leaves it there, `loadClip` puts
-// a video file on B and `loadPattern` one of the set's own patterns. `left`
-// counts down a tape's seconds; `opening` covers the ask for the second camera.
+// a video file on B, `loadSame` whichever camera is on A and `loadPattern` one
+// of the set's own patterns. `left` counts down a tape's seconds; `opening`
+// covers the ask for the second camera.
 export function useSecond(
   eng: {
     camera: () => Camera | null
@@ -191,6 +199,19 @@ export function useSecond(
     return tape()
   }
 
+  const loadSame = async (): Promise<boolean> => {
+    if (eng.camera() === null || left > 0 || opening) return false
+    eject()
+    try {
+      const relay = await relayCamera(eng.camera, eng.layoutNow)
+      show({ kind: 'same', relay })
+      return true
+    } catch (e) {
+      onError(`camera on B: ${reason(e)}`)
+      return false
+    }
+  }
+
   const loadPattern = (pattern: Pattern) => {
     eject()
     show({ kind: 'pattern', pattern })
@@ -224,6 +245,7 @@ export function useSecond(
     opening,
     load,
     loadClip,
+    loadSame,
     loadPattern,
     record,
     eject,

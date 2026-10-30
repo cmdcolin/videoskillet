@@ -8,7 +8,8 @@ import type { BSource } from './sources'
 import type { Facing } from './useCamera'
 import type { ASource } from './useSourceA'
 
-// What is on each source and, once B has a picture, how the two meet.
+// What is on each source and, once B has a picture, how the two meet. `owner`
+// names what is working the mixer in place of its own modes.
 export function Mixer(props: {
   canFlip: boolean
   sided: boolean
@@ -18,7 +19,7 @@ export function Mixer(props: {
   busy: boolean
   cameraUp: boolean
   hasB: boolean
-  ownedByLook: boolean
+  owner: string | null
   mix: Mix
   onPutA: (key: Facing | ASource) => void
   onPutB: (key: BSource) => void
@@ -44,7 +45,10 @@ export function Mixer(props: {
           options={bOptions(props.canFlip).map(src => ({
             ...src,
             disabled:
-              !props.cameraUp && (src.key === 'camera' || src.key === 'record'),
+              !props.cameraUp &&
+              (src.key === 'camera' ||
+                src.key === 'same' ||
+                src.key === 'record'),
           }))}
           onChange={props.onPutB}
         />
@@ -53,14 +57,17 @@ export function Mixer(props: {
         <div className={styles.mixRow}>
           <Pick
             name="Mix"
-            value={props.ownedByLook ? '' : mix.mode}
-            placeholder={props.ownedByLook ? 'by the look' : undefined}
+            value={props.owner === null ? mix.mode : ''}
+            placeholder={
+              props.owner === null ? undefined : `by the ${props.owner}`
+            }
             options={MIX_MODES.map(m => ({ key: m, label: m }))}
             onChange={m => props.onMix({ mode: m, fader: mix.fader })}
           />
-          {props.ownedByLook ? (
+          {props.owner !== null ? (
             <p className={styles.mixNote}>
-              The look is working the mixer. Pick a mode to take it back.
+              The {props.owner} is working the mixer. Pick a mode to take it
+              back.
             </p>
           ) : (
             <label className={styles.fader}>

@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 
+import { DEFAULT_CONTROLS } from '../core/controls'
 import { cx } from '../ui/cx'
 import { FatalScreen } from '../ui/FatalScreen'
 import { usePersistedFlag } from '../ui/storage'
@@ -77,7 +78,7 @@ const SIDEWAYS_STORE = 'videoskillet_cam_sideways'
 // a strong look.
 const firstScene = (link: CamLink | null): Scene =>
   link === null
-    ? { ...CLEAN, look: openingLook(), mix: null }
+    ? { ...CLEAN, look: openingLook(), mix: null, keyHue: null }
     : {
         ...CLEAN,
         base: link.base,
@@ -85,6 +86,7 @@ const firstScene = (link: CamLink | null): Scene =>
         layers: link.layers,
         tweaks: link.tweaks,
         mix: link.mix,
+        keyHue: null,
       }
 
 export function CamPage(props: { link: CamLink | null }) {
@@ -232,9 +234,14 @@ export function CamPage(props: { link: CamLink | null }) {
   const turnKnob = (key: ControlKey, value: number) =>
     paint({ tweaks: { ...sceneRef.current.tweaks, [key]: value } })
 
-  // The mixer's own modes take the mixer back from a look that set it.
+  // The mixer's own modes take the mixer back from a look that set it, and
+  // from the chroma keyer.
   const mixWith = (mix: Mix) =>
-    paint(mixerOwned(sceneRef.current) ? { ...CLEAN, mix } : { mix })
+    paint(
+      mixerOwned(sceneRef.current)
+        ? { ...CLEAN, mix, keyHue: null }
+        : { mix, keyHue: null },
+    )
 
   // A pad breaks the picture and lets it heal, and a held pad keeps it broken.
   // With a second picture on B, the cut lands on the frame the picture is least
@@ -265,13 +272,28 @@ export function CamPage(props: { link: CamLink | null }) {
     onMixing: () => {
       setShelfName(MIX_SHELF.name)
       setPanel('mix')
-      paint({ mix: sceneRef.current.mix ?? FIRST_MIX })
+      paint({ mix: sceneRef.current.mix ?? FIRST_MIX, keyHue: null })
     },
     onTakeOff: () =>
       paint(
-        mixerOwned(sceneRef.current) ? { ...CLEAN, mix: null } : { mix: null },
+        mixerOwned(sceneRef.current)
+          ? { ...CLEAN, mix: null, keyHue: null }
+          : { mix: null, keyHue: null },
       ),
   })
+
+  // The chroma keyer puts the camera on B as well as A and keys it, starting
+  // on a green backing until a tap picks the colour. Off takes B away.
+  const switchKeyer = (on: boolean) => {
+    if (on === (sceneRef.current.keyHue !== null)) return
+    if (!on) {
+      picks.putOnB('none')
+      return
+    }
+    void picks
+      .keySame()
+      .then(ok => ok && paint({ keyHue: DEFAULT_CONTROLS.bKeyHueDeg }))
+  }
 
   const share = () => {
     const url = new URL(location.pathname, location.origin)
@@ -312,11 +334,15 @@ export function CamPage(props: { link: CamLink | null }) {
       })
   }
 
+  // B carries the camera without A's crop, so a tap keying B reads it uncropped.
   const keyTap = useKeyTap({
     camera: eng.camera,
-    crop: zoom.crop,
-    keyed: () => keysOnHue(lookBoard(look, scene.layers).controls),
-    onAim: hue => paint({ hue }),
+    crop: scene.keyHue === null ? zoom.crop : 1,
+    keyed: () =>
+      sceneRef.current.keyHue !== null ||
+      keysOnHue(lookBoard(look, scene.layers).controls),
+    onAim: hue =>
+      paint({ hue, keyHue: sceneRef.current.keyHue === null ? null : hue }),
     onMiss: announce,
   })
 
@@ -463,7 +489,13 @@ export function CamPage(props: { link: CamLink | null }) {
               busy={busy}
               cameraUp={cameraUp}
               hasB={scene.mix !== null && second.loaded}
-              ownedByLook={ownedMixer}
+              owner={
+                scene.keyHue !== null
+                  ? 'colour key'
+                  : ownedMixer
+                    ? 'look'
+                    : null
+              }
               mix={scene.mix ?? FIRST_MIX}
               onPutA={picks.putOnA}
               onPutB={picks.putOnB}
@@ -510,6 +542,11 @@ export function CamPage(props: { link: CamLink | null }) {
         {panel === 'loops' ? (
           <Loops
             controls={controls()}
+            keyer={{
+              on: scene.keyHue !== null,
+              disabled: !cameraUp || busy,
+              onSwitch: switchKeyer,
+            }}
             tweaked={Object.keys(scene.tweaks).some(k => LOOP_KEYS.has(k))}
             onKnob={turnKnob}
             onReset={() =>

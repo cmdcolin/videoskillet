@@ -1,5 +1,5 @@
 import { routingsToSlots, toEngineSlots } from '../ui/modSlots'
-import { aimKey } from './keyed'
+import { aimKey, keyOn } from './keyed'
 import { lookBoard, lookMod, mixControls, mixesItself } from './looks'
 import { SLICE } from './tape'
 
@@ -16,8 +16,9 @@ export interface Base {
 }
 
 // Everything the board is built from: a linked board or the look, the presets
-// dragged in partway on top of the look, the knobs moved off both, the mixer while B has a picture, and
-// where a tap has aimed the look's keyer.
+// dragged in partway on top of the look, the knobs moved off both, the mixer
+// while B has a picture, where a tap has aimed the look's keyer, and the hue
+// the chroma keyer cuts while it keys the camera on B.
 export interface Scene {
   base: Base | null
   look: Look | null
@@ -25,6 +26,7 @@ export interface Scene {
   tweaks: Partial<Controls>
   mix: Mix | null
   hue: number | null
+  keyHue: number | null
 }
 
 export const CLEAN = {
@@ -54,11 +56,14 @@ export const boardOf = (s: Scene, slice: number) => {
           mod: toEngineSlots(routingsToSlots(s.base.mod)),
         }
       : lookBoard(s.look, s.layers)
-  const controls = {
-    ...board.controls,
-    ...s.tweaks,
-    ...(s.mix === null || mixerOwned(s) ? {} : mixControls(s.mix, slice)),
-  }
+  const controls =
+    s.keyHue !== null
+      ? keyOn(board.controls, s.tweaks, s.keyHue)
+      : {
+          ...board.controls,
+          ...s.tweaks,
+          ...(s.mix === null || mixerOwned(s) ? {} : mixControls(s.mix, slice)),
+        }
   return { ...board, controls: aimKey(controls, s.hue) }
 }
 

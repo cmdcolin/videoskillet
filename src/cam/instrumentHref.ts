@@ -13,7 +13,7 @@ export function instrumentHref(
   a: 'webcam' | Pattern | null,
   b: Pattern | null,
 ): string {
-  const shown = b === null ? { ...scene, mix: null } : scene
+  const shown = b === null ? { ...scene, mix: null, keyHue: null } : scene
   const q = new URLSearchParams()
   q.set('p', packControls(boardOf(shown, sliceOf('whole')).controls))
   const mod = routingsOf(scene)
