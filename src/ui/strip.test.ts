@@ -434,6 +434,38 @@ describe('advance', () => {
     expect(step?.effects).toEqual([])
   })
 
+  // 140bpm at 60fps makes a four-bar row 411.43 frames. Rounded row by row, the
+  // walk lands each row on 411 and a 32-row rundown ends 14 frames early.
+  it('keeps to the beat over a long run of rows', () => {
+    const rows = Array.from({ length: 32 }, (_, i) => row({ id: `r${i}` }))
+    const s = strip(rows, { loop: false })
+    const at = (frame: number): Clock => ({ frame, bpm: 140, fps: 60 })
+    const fired: number[] = []
+    let walk = start(s, at(0)).walk
+    for (let frame = 1; walking(walk); frame++) {
+      const step = advance(s, walk, at(frame))
+      if (step !== null) {
+        fired.push(frame)
+        walk = step.walk
+      }
+    }
+    const span = (16 * 60 * 60) / 140
+    expect(fired).toEqual(
+      Array.from({ length: 32 }, (_, i) => Math.round((i + 1) * span)),
+    )
+    expect(stripSeconds(s, { bpm: 140, fps: 60 })).toBe(fired.at(-1)! / 60)
+  })
+
+  it('starts a late row late, keeping only the part of a frame', () => {
+    const rows = [row(), row({ id: 'r2' })]
+    const s = strip(rows)
+    const at = (frame: number): Clock => ({ frame, bpm: 140, fps: 60 })
+    const { walk } = start(s, at(0))
+    const step = advance(s, walk, at(1000))
+    const span = (16 * 60 * 60) / 140
+    expect(step?.walk.since).toBeCloseTo(1000 + span - Math.round(span))
+  })
+
   // The list is editable under a running walk, so the row a walk is on can stop
   // existing between two ticks.
   it('recovers when the strip shrank out from under the walk', () => {
@@ -642,8 +674,10 @@ describe('how long a rundown runs', () => {
   // length that will play, and reseeding moves both together.
   it('is the length the walk will actually draw', () => {
     const s = strip([row({ hold: { bars: 4, drift: MAX_DRIFT } })])
-    const walked = start(s, CLOCK(0))
-    expect(stripSeconds(s, TEMPO)).toBe((walked.walk.frames ?? 0) / 60)
+    const first = start(s, CLOCK(0))
+    let frame = 1
+    while (advance(s, first.walk, CLOCK(frame)) === null) frame++
+    expect(stripSeconds(s, TEMPO)).toBe(frame / 60)
     expect(stripSeconds({ ...s, seed: 7 }, TEMPO)).not.toBe(
       stripSeconds({ ...s, seed: 99 }, TEMPO),
     )

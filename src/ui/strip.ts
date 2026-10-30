@@ -209,9 +209,12 @@ export interface Walk {
   // How many times round. Part of the seed derivation below, so lap two rolls
   // differently from lap one — and does so reproducibly, which is the point.
   lap: number
-  // The frame the current row fired on.
+  // The frame the current row began on. Fractional, as `frames` is, so a run
+  // of holds that do not divide into whole frames does not gain or lose a
+  // frame at every row.
   since: number
-  // How long it holds, in frames, or null to wait for a hand.
+  // How long it holds, in frames, or null to wait for a hand. The row ends on
+  // the nearest whole frame to `since + frames`.
   //
   // Resolved once, when the row fires, rather than recomputed per tick. Drift
   // is rolled per fire, so a hold recomputed every tick would be a boundary
@@ -346,6 +349,19 @@ export function holdFrames(
   hold: Hold,
   clock: Clock,
   seed: number,
+  runtime = 0,
+): number | null {
+  const span = holdSpan(hold, clock, seed, runtime)
+  return span === null ? null : Math.round(span)
+}
+
+// The same length before rounding to whole frames, which is what the walk
+// keeps: 140bpm at 60fps makes a four-bar row 411.43 frames, and rounding each
+// row on its own puts a 32-row rundown 14 frames ahead of the beat.
+function holdSpan(
+  hold: Hold,
+  clock: Clock,
+  seed: number,
   // How many seconds of picture the row has, when it knows: an in/out pair's
   // span, or the clip's own length. Only `'clip'` reads it, and a row that
   // cannot answer falls back to the default bar count rather than to "wait for
@@ -356,8 +372,8 @@ export function holdFrames(
   if (hold.bars === null) return null
   if (hold.bars === 'clip') {
     return runtime > 0
-      ? Math.max(1, Math.round(runtime * clock.fps))
-      : holdFrames({ ...hold, bars: DEFAULT_HOLD_BARS }, clock, seed)
+      ? Math.max(1, runtime * clock.fps)
+      : holdSpan({ ...hold, bars: DEFAULT_HOLD_BARS }, clock, seed)
   }
   const beats = hold.bars * 4
   const seconds = (beats * 60) / clock.bpm
@@ -366,7 +382,7 @@ export function holdFrames(
   // same lap drifts by the same amount however it was reached.
   const drift = clamp(hold.drift, 0, MAX_DRIFT)
   const spread = drift === 0 ? 0 : (rngFor(seed)() * 2 - 1) * drift
-  return Math.max(1, Math.round(seconds * (1 + spread) * clock.fps))
+  return Math.max(1, seconds * (1 + spread) * clock.fps)
 }
 
 // What a row does, in the order it does it, with no regard for *when*.
@@ -498,7 +514,13 @@ export interface Step {
 // Land on a row: the one place a Walk is built, so every way of getting to a
 // row — starting, running on, a hand jumping — resolves its hold and draws its
 // seed identically.
-function land(strip: Strip, index: number, lap: number, clock: Clock): Step {
+function land(
+  strip: Strip,
+  index: number,
+  lap: number,
+  clock: Clock,
+  since = clock.frame,
+): Step {
   const row = strip.rows[index]!
   const seed = seedFor(strip.seed, index, lap)
   // The lookahead, and *which clip* it is belongs here rather than in
@@ -519,8 +541,8 @@ function land(strip: Strip, index: number, lap: number, clock: Clock): Step {
     walk: {
       row: index,
       lap,
-      since: clock.frame,
-      frames: holdFrames(row.hold, clock, seed, rowRuntime(row)),
+      since,
+      frames: holdSpan(row.hold, clock, seed, rowRuntime(row)),
     },
     effects: fireEffects(row, seed, ahead === null ? null : prerollFor(ahead)),
   }
@@ -559,20 +581,27 @@ export function fire(
 // saw. Late means the next row is late, not that the strip skips.
 export function advance(strip: Strip, walk: Walk, clock: Clock): Step | null {
   if (!walking(walk) || walk.frames === null) return null
-  if (clock.frame - walk.since < walk.frames) return null
+  const due = walk.since + walk.frames
+  if (clock.frame < Math.round(due)) return null
+  // The next row starts from this tick, carrying the part of a frame the
+  // rounding took: on time that is exactly `due`, and late it is late without
+  // the rows after it trying to catch up.
+  const since = clock.frame + due - Math.round(due)
   // A row that outlived its strip — the list was edited under a running walk —
   // is the same case as running off the end.
   const next = walk.row + 1
-  if (next < strip.rows.length) return land(strip, next, walk.lap, clock)
+  if (next < strip.rows.length) {
+    return land(strip, next, walk.lap, clock, since)
+  }
   if (!strip.loop || strip.rows.length === 0) {
     return { walk: STOPPED, effects: [] }
   }
-  return land(strip, 0, walk.lap + 1, clock)
+  return land(strip, 0, walk.lap + 1, clock, since)
 }
 
 // How long one lap of the rundown runs, in seconds, or 0 for "cannot say".
 //
-// Lap zero's numbers exactly: the same `seedFor` and the same `holdFrames` that
+// Lap zero's numbers exactly: the same `seedFor` and the same `holdSpan` that
 // `land` will draw when the walk gets there, so this is the length the take
 // *will* be rather than an estimate of it. A drifted hold therefore reads the
 // same here as it plays, and reseeding changes both together.
@@ -592,7 +621,7 @@ export function stripSeconds(
   let frames = 0
   for (const [i, row] of strip.rows.entries()) {
     const clock = { frame: 0, bpm: tempo.bpm, fps: tempo.fps }
-    const held = holdFrames(
+    const held = holdSpan(
       row.hold,
       clock,
       seedFor(strip.seed, i, 0),
@@ -601,7 +630,7 @@ export function stripSeconds(
     if (held === null) return 0
     frames += held
   }
-  return frames / tempo.fps
+  return Math.round(frames) / tempo.fps
 }
 
 // Tell every row holding this clip how long it runs.
