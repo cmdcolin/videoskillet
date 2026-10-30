@@ -24,7 +24,7 @@ export function PanelSwitches(props: {
       <Switch
         on={panel === 'loops'}
         label="feedback"
-        title="every knob on the camera loop and the mixer loop"
+        title="every knob on the camera loop and the mixer loop, and the colour key"
         onClick={() => onToggle('loops')}
       >
         <LoopIcon />

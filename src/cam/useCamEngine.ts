@@ -26,9 +26,11 @@ const NOISE: Record<Exclude<Pattern, 'bars' | 'sweep'>, number> = {
 
 // What the picture is made of: the camera or a clip on A, a pattern there
 // instead, or bars before there is either; a second picture or a pattern on B
-// when there is one; and the look over them.
+// when there is one; and the look over them. `still` is one frame of the video,
+// held on A in its place.
 export interface Shown {
   video: HTMLVideoElement | null
+  still: ImageBitmap | null
   pattern: Pattern | null
   mirror: boolean
   second: HTMLVideoElement | Pattern | null
@@ -72,6 +74,7 @@ function dress(engine: Engine, shown: Shown, board: Board, sound: boolean) {
   lay(engine, layoutOf(shown))
   engine.setSourceZoom(shown.zoom)
   if (shown.pattern !== null) putA(engine, shown.pattern)
+  else if (shown.still !== null) putStill(engine, shown.still)
   else if (shown.video === null) engine.setImageSource(smpteBars())
   else engine.setVideoSource(shown.video)
 }
@@ -83,6 +86,9 @@ function putA(engine: Engine, pattern: Pattern) {
   else if (pattern === 'sweep') engine.setImageSource(sweep())
   else engine.setNoiseSource(NOISE[pattern])
 }
+
+const putStill = (engine: Engine, still: ImageBitmap) =>
+  engine.setImageSource(still, still.width / still.height)
 
 function putB(engine: Engine, second: Shown['second']) {
   if (second === null || second instanceof HTMLVideoElement)
@@ -115,6 +121,7 @@ export function useCamEngine(
   const [layout, setLayout] = useState<Layout>('whole')
   const shown = useRef<Shown>({
     video: null,
+    still: null,
     pattern: null,
     mirror: false,
     second: opts.firstB,
@@ -122,6 +129,7 @@ export function useCamEngine(
     sideways: opts.sideways,
   })
   const laid = useRef<Layout>('whole')
+  const holds = useRef(0)
   const [watched] = useState(() => new WeakSet<HTMLVideoElement>())
   const [first] = useState(opts.firstBoard)
   const board = useRef<Board>(first)
@@ -146,9 +154,15 @@ export function useCamEngine(
     relay()
   }
 
+  const letGo = () => {
+    shown.current.still?.close()
+    shown.current = { ...shown.current, still: null }
+  }
+
   // A phone turned in the hand keeps the same camera and hands over frames the
   // other way up, which the <video> announces as a resize.
   const showVideo = (video: HTMLVideoElement, mirror: boolean) => {
+    letGo()
     shown.current = { ...shown.current, video, pattern: null, mirror }
     engineRef.current?.setSourceMirror(mirror)
     engineRef.current?.setVideoSource(video)
@@ -160,6 +174,7 @@ export function useCamEngine(
   }
 
   const showPattern = (pattern: Pattern) => {
+    letGo()
     shown.current = { ...shown.current, video: null, pattern, mirror: false }
     if (engineRef.current !== null) {
       engineRef.current.setSourceMirror(false)
@@ -171,6 +186,33 @@ export function useCamEngine(
   const showSecond = (second: Shown['second']) => {
     shown.current = { ...shown.current, second }
     if (engineRef.current !== null) putB(engineRef.current, second)
+  }
+
+  // Holds the frame the video on A is showing now, or plays the video again. A
+  // video with no frame to grab yet stays playing, and so does one asked to
+  // play again while its frame was being grabbed.
+  const holdA = async (on: boolean) => {
+    const mine = ++holds.current
+    const { video, still: was } = shown.current
+    letGo()
+    if (video === null) return
+    if (!on) {
+      if (was !== null) engineRef.current?.setVideoSource(video)
+      return
+    }
+    let still: ImageBitmap
+    try {
+      still = await createImageBitmap(video)
+    } catch {
+      return
+    }
+    if (mine !== holds.current || shown.current.video !== video) {
+      still.close()
+      return
+    }
+    letGo()
+    shown.current = { ...shown.current, still }
+    if (engineRef.current !== null) putStill(engineRef.current, still)
   }
 
   const zoomA = (zoom: number) => {
@@ -270,6 +312,7 @@ export function useCamEngine(
     showVideo,
     showPattern,
     showSecond,
+    holdA,
     zoomA,
     layoutNow,
     standSideways,

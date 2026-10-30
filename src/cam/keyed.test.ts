@@ -45,7 +45,7 @@ describe('aimKey', () => {
 })
 
 describe('keyOn', () => {
-  it('keys B on the hue over a held A and fills from the loop bus', () => {
+  it('keys B on the hue and fills from the loop bus', () => {
     const c = keyOn(DEFAULT_CONTROLS, {}, 123.4)
     expect(c).toMatchObject({
       bGain: 1,
@@ -55,7 +55,6 @@ describe('keyOn', () => {
       bKeyFill: 2,
       bKeyFillMixA: 0.15,
     })
-    expect(c.aPause).toBeGreaterThan(0)
   })
 
   it('holds strobe hold odd, where the fade keeps the colour', () => {
@@ -71,11 +70,10 @@ describe('keyOn', () => {
   it('holds the switches that make the mixer a keyer', () => {
     const c = keyOn(
       DEFAULT_CONTROLS,
-      { bGain: 0.3, bKey: 0, aPause: 0, pipMix: 1, bKeyHueDeg: 10 },
+      { bGain: 0.3, bKey: 0, pipMix: 1, bKeyHueDeg: 10 },
       200,
     )
     expect(c).toMatchObject({ bGain: 1, bKey: 1, pipMix: 0, bKeyHueDeg: 200 })
-    expect(c.aPause).toBeGreaterThan(0)
   })
 })
 
@@ -94,7 +92,7 @@ describe('a scene with the keyer on', () => {
 
   it('leaves the mixer to its mode once off', () => {
     const c = boardOf({ ...scene, keyHue: null }, 1).controls
-    expect(c).toMatchObject({ bKey: 0, wipeMode: 1, aPause: 0 })
+    expect(c).toMatchObject({ bKey: 0, wipeMode: 1 })
   })
 })
 

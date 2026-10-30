@@ -122,6 +122,7 @@ export function CamPage(props: { link: CamLink | null }) {
     eng.showVideo(video, mirror)
     zoom.reset()
     srcA.cameraShown()
+    if (sceneRef.current.keyHue !== null) void eng.holdA(true)
   })
   const tilt = useTilt(eng.steer)
   const sound = useSound(eng.hear, setError)
@@ -150,11 +151,15 @@ export function CamPage(props: { link: CamLink | null }) {
 
   useWakeLock(eng.engine !== null)
 
+  // The chroma keyer's fill fades its copies into a still of the camera, so A
+  // holds a frame for as long as the keyer is on.
   const paint = (next: Partial<Scene>) => {
+    const keyed = sceneRef.current.keyHue !== null
     const s = { ...sceneRef.current, ...next }
     sceneRef.current = s
     setScene(s)
     eng.showBoard(boardOf(s, sliceOf(eng.layoutNow())))
+    if (keyed !== (s.keyHue !== null)) void eng.holdA(!keyed)
   }
 
   // A tap's aim and the knobs moved off a look last while that look stays up,
@@ -283,7 +288,8 @@ export function CamPage(props: { link: CamLink | null }) {
   })
 
   // The chroma keyer puts the camera on B as well as A and keys it, starting
-  // on a green backing until a tap picks the colour. Off takes B away.
+  // on a green backing until a tap picks the colour. Switching it off takes the
+  // camera off B.
   const switchKeyer = (on: boolean) => {
     if (on === (sceneRef.current.keyHue !== null)) return
     if (!on) {
@@ -334,7 +340,8 @@ export function CamPage(props: { link: CamLink | null }) {
       })
   }
 
-  // B carries the camera without A's crop, so a tap keying B reads it uncropped.
+  // The relay puts the camera on B without A's crop, so a tap that keys B
+  // samples the uncropped camera.
   const keyTap = useKeyTap({
     camera: eng.camera,
     crop: scene.keyHue === null ? zoom.crop : 1,
@@ -488,7 +495,9 @@ export function CamPage(props: { link: CamLink | null }) {
               onB={picks.onB}
               busy={busy}
               cameraUp={cameraUp}
-              hasB={scene.mix !== null && second.loaded}
+              hasB={
+                (scene.mix !== null || scene.keyHue !== null) && second.loaded
+              }
               owner={
                 scene.keyHue !== null
                   ? 'colour key'

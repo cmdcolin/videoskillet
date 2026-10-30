@@ -32,11 +32,8 @@ const KEYER: Partial<Controls> = {
   cfbHold: 3,
 }
 
-// The switches that make the mixer a keyer, which no knob overrides. A's deck
-// is paused, which holds one frame of the camera on A for the fill to fade
-// the stored copies into.
+// The switches that make the mixer a keyer, which no knob overrides.
 const KEYER_SWITCHES: Partial<Controls> = {
-  aPause: 0.01,
   bGain: 1,
   bGenlock: 1,
   bKey: 1,
