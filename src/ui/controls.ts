@@ -2118,6 +2118,16 @@ export const GROUPS: Group[] = [
         fine: true,
         help: 'How much chroma the matte generator puts on the carrier. At 0 there is no subcarrier at all, which is how to get a black or white fill.',
       },
+      {
+        key: 'bKeyFillHueDeg',
+        id: 317,
+        label: 'store hue',
+        min: -180,
+        max: 180,
+        step: 1,
+        unit: 'deg',
+        help: "The hue trim on the frame store's output, which feeds the keyer on loop bus and freeze. The store records the keyer's output, so on the loop bus each generation of copies passes through the trim again and turns this far round the wheel past the one before it. The frozen background turns too, and the picture holds still.",
+      },
     ],
   },
   {
@@ -4333,6 +4343,12 @@ export const NEEDS: Partial<Record<ControlKey, SliderNeed>> = {
   bKeyMatteY: matteFill,
   bKeyMatteHueDeg: matteFill,
   bKeyMatteSat: matteFill,
+  bKeyFillHueDeg: {
+    key: 'bKeyFill',
+    ok: (v: number) => v > 1.5,
+    fix: 2,
+    hint: 'the fill set to "loop bus" or "freeze"',
+  },
   synthFm: {
     key: 'synthOver',
     ok: above0,

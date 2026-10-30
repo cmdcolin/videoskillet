@@ -355,7 +355,13 @@ export const CHROMA_KEY_OPENS = {
   spill: ['bKeySpill'],
   delay: ['bKeyDelayUs'],
   keyer: ['bKeyHueDeg', 'bKeyAcceptDeg', 'bKeyClip', 'bKeySoft'],
-  fill: ['bKeyFill', 'bKeyMatteY', 'bKeyMatteHueDeg', 'bKeyMatteSat'],
+  fill: [
+    'bKeyFill',
+    'bKeyMatteY',
+    'bKeyMatteHueDeg',
+    'bKeyMatteSat',
+    'bKeyFillHueDeg',
+  ],
   mix: ['bKey'],
 } as const satisfies Opens
 

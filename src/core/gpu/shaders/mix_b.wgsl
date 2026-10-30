@@ -110,6 +110,44 @@ fn suppress(along: f32, n: u32, delta: f32) -> f32 {
   return VIDEO_RANGE * P.bKeySpill * along * dot(kdir, carrierRot(n, P.frame, delta)) * P.bVidGain;
 }
 
+// The store's output through a bandpass at fsc along the line: x[i] less the
+// mean of the samples a half cycle either side, which passes sin^2 of the
+// frequency, 1 at fsc and 0 at DC.
+fn storeBand(i: i32) -> f32 {
+  return 0.5 * loopBus[clampIdx(i)]
+    - 0.25 * (loopBus[clampIdx(i - 2)] + loopBus[clampIdx(i + 2)]);
+}
+
+// The chroma at sample i, separated the way a frame sync's comb filter does it.
+// The subcarrier inverts from one line to the next, so the band less the mean
+// of the lines above and below keeps chroma whole and cancels luma that does
+// not change down the picture, so fine horizontal detail survives a trim
+// applied every generation.
+fn storeChroma(i: i32) -> f32 {
+  let line = i32(SPL);
+  return 0.5 * storeBand(i)
+    - 0.25 * (storeBand(i - line) + storeBand(i + line));
+}
+
+// The frame store's output proc amp, as on any frame synchronizer, feeding the
+// keyer's fill. Its hue trim is a phase shifter on the chroma band. At 4x fsc
+// the quadrature is the band's difference across a sample either side, exact in
+// phase at every frequency, so the trim turns the colour without moving the
+// picture. The store records the keyer's output, so on the loop bus every
+// generation of copies passes through the trim once more and turns a step
+// further round the wheel, the frozen background with them. Neither the band
+// nor the quadrature gains above 1 anywhere, so a fill that goes round the
+// store hundreds of times only softens.
+fn storeOut(n: u32) -> f32 {
+  if (P.bKeyFillHue == 0.0) {
+    return loopBus[n];
+  }
+  let i = i32(n);
+  let c = storeChroma(i);
+  let q = 0.5 * (storeChroma(i - 1) - storeChroma(i + 1));
+  return loopBus[n] + (cos(P.bKeyFillHue) - 1.0) * c + sin(P.bKeyFillHue) * q;
+}
+
 // The keyer's fill input: what shows through the hole the key cut. A real keyer
 // has this as a connector on the back. Program A and the loop bus are other
 // pictures, and the matte is the box's own generator, a flat field on the house
@@ -122,7 +160,7 @@ fn suppress(along: f32, n: u32, delta: f32) -> f32 {
 // the key gates B's contribution and the program is simply always present.
 fn keyFill(program: f32, n: u32) -> f32 {
   if (P.bKeyFill > 1.5) {
-    return loopBus[n];
+    return storeOut(n);
   }
   if (P.bKeyFill > 0.5) {
     // Matte generator: flat luma plus quadrature chroma on the house carrier, so

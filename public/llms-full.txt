@@ -659,6 +659,10 @@ bKeyMatteSat  (matte saturation)
   0..0.6 step 0.01  default 0
   How much chroma the matte generator puts on the carrier. At 0 there is no subcarrier at all, which is how to get a black or white fill.
 
+bKeyFillHueDeg  (store hue)
+  -180..180 step 1 deg  default 0
+  The hue trim on the frame store's output, which feeds the keyer on loop bus and freeze. The store records the keyer's output, so on the loop bus each generation of copies passes through the trim again and turns this far round the wheel past the one before it. The frozen background turns too, and the picture holds still.
+
 ## Recording (luma & FM)
 
 lumaMHz  (luma bandwidth)

@@ -335,6 +335,7 @@ export function uniformValues(c: Controls, env: UniformEnv) {
     bKeyMatteY: c.bKeyMatteY,
     bKeyMatteHue: (c.bKeyMatteHueDeg * Math.PI) / 180,
     bKeyMatteSat: c.bKeyMatteSat,
+    bKeyFillHue: (c.bKeyFillHueDeg * Math.PI) / 180,
     trackAmt: env.trackAmt,
     trackPos: env.trackPos,
     shuttleBars: c.shuttleX - 1,

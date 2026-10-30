@@ -176,6 +176,7 @@ export const PARAM_DEFS = [
   ['bKeyMatteY', 'f32'], // matte luma, 0..1
   ['bKeyMatteHue', 'f32'], // matte chroma phase, radians
   ['bKeyMatteSat', 'f32'], // matte chroma amplitude, chroma units
+  ['bKeyFillHue', 'f32'], // frame store output's hue trim, radians
   // VHS tracking error: a mistracked head produces a noise band that tears and
   // bends the picture at an adjustable height (the "tracking" knob).
   ['trackAmt', 'f32'], // severity, 0 locked
