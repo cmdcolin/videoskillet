@@ -214,14 +214,46 @@ async function record(demo, tmpDir) {
           el.addEventListener('error', () => r(false), { once: true })
         })
         if (!ok) return null
+        // The clip's frame length, learnt from the steps; a guess until then.
+        let frame = 1 / 30
         return {
           duration: el.duration,
           codedWidth: el.videoWidth,
           codedHeight: el.videoHeight,
+          // A tick moves the playhead a fraction of a frame, and a seek on a
+          // file with sparse keyframes decodes from the last one: seeking every
+          // tick ran a `Wonkitize me` warm-up past puppeteer's protocol
+          // timeout. So the element stays on its frame until the playhead
+          // reaches the next, steps forward with Firefox's `seekToNextFrame`,
+          // and seeks only to go back or jump.
           frameAt: async t => {
-            if (el.currentTime !== t) {
-              const seeked = new Promise(r =>
-                el.addEventListener('seeked', r, { once: true }),
+            const within = (promise, what) => {
+              let timer
+              return Promise.race([
+                promise,
+                new Promise((_, reject) => {
+                  timer = setTimeout(
+                    () => reject(new Error(`${what} timed out at ${t}s`)),
+                    10000,
+                  )
+                }),
+              ]).finally(() => clearTimeout(timer))
+            }
+            const stepping = typeof el.seekToNextFrame === 'function'
+            const ahead = t - el.currentTime
+            if (stepping && ahead > -1e-3 && ahead < 1) {
+              while (t - el.currentTime >= frame / 2) {
+                const was = el.currentTime
+                await within(el.seekToNextFrame(), 'seekToNextFrame')
+                if (el.currentTime <= was) break
+                frame = Math.min(0.1, Math.max(1 / 120, el.currentTime - was))
+              }
+            } else if (Math.abs(ahead) >= frame / 2) {
+              const seeked = within(
+                new Promise(r =>
+                  el.addEventListener('seeked', r, { once: true }),
+                ),
+                'seek',
               )
               el.currentTime = t
               await seeked
