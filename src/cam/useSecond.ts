@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 
 import { reason } from '../ui/format'
 import { usePersistedString } from '../ui/storage'
+import { dualAfter } from './dual'
 import {
   TAPE_SECONDS,
   dropLoop,
@@ -12,6 +13,7 @@ import {
 import { stalled, stopAll } from './useCamera'
 import { replay, useOnReturn } from './useReplay'
 
+import type { OtherAnswer } from './dual'
 import type { Pattern } from './patterns'
 import type { Camera, Layout, Relay } from './tape'
 import type { Shown } from './useCamEngine'
@@ -28,7 +30,8 @@ type Second =
   | { kind: 'pattern'; pattern: Pattern }
 
 // Whether this phone ran both cameras at once when asked. A phone that cannot
-// may take the first camera down to answer, so it is asked once.
+// may take the first camera down to answer, so once it has, it is not asked
+// again.
 const DUAL_STORE = 'videoskillet_cam_dual'
 
 const unload = (b: Second) => {
@@ -68,7 +71,7 @@ export function useSecond(
     layoutNow: () => Layout
   },
   cam: {
-    openOther: () => Promise<Opened | null>
+    openOther: () => Promise<OtherAnswer<Opened>>
     adopt: (next: Opened) => Opened | null
   },
   onError: (message: string) => void,
@@ -159,8 +162,9 @@ export function useSecond(
     if (held.current !== null || left > 0 || opening) return null
     if (dual !== 'no') {
       setOpening(true)
-      const other = await cam.openOther()
-      const prev = other === null ? null : cam.adopt(other)
+      const answer = await cam.openOther()
+      setDual(dualAfter(answer.kind, dual))
+      const prev = answer.kind === 'ok' ? cam.adopt(answer.other) : null
       let ok = false
       if (prev !== null) {
         try {
@@ -172,7 +176,6 @@ export function useSecond(
         }
       }
       setOpening(false)
-      setDual(ok ? 'yes' : 'no')
       if (ok) return 'live'
       if (prev !== null) return null
     }

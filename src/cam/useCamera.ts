@@ -3,7 +3,10 @@ import { useEffect, useRef, useState } from 'react'
 import { trace } from '../core/gpu/trace'
 import { reason } from '../ui/format'
 import { usePersistedString } from '../ui/storage'
+import { answerOf } from './dual'
 import { replay, useOnReturn } from './useReplay'
+
+import type { OtherAnswer } from './dual'
 
 export type Facing = 'user' | 'environment'
 export type CameraState = 'off' | 'starting' | 'on' | 'error'
@@ -182,30 +185,30 @@ export function useCamera(
     return prev
   }
 
-  // The other camera, opened beside the one on screen, or null where the phone
-  // cannot run both. A refusal is the plain answer; a phone that mutes or ends
-  // the first camera instead gets it back, reopened.
-  const openOther = async (): Promise<Opened | null> => {
+  // The other camera, opened beside the one on screen. A phone that mutes or
+  // ends the first camera instead gets it back, reopened.
+  const openOther = async (): Promise<OtherAnswer<Opened>> => {
     const cur = held.current
-    if (cur === null) return null
+    if (cur === null) return { kind: 'refused' }
     const mine = ++ask.current
     const settings = cur.stream.getVideoTracks()[0]?.getSettings() ?? {}
     const other = await askOther(settings, facing)
     await new Promise(r => setTimeout(r, SETTLE_MS))
-    const same =
-      other?.stream.getVideoTracks()[0]?.getSettings().deviceId ===
-      settings.deviceId
-    if (
-      other !== null &&
-      mine === ask.current &&
-      !same &&
-      delivering(cur.stream) &&
-      delivering(other.stream)
-    )
-      return other
-    stopAll(other?.stream ?? null)
-    if (mine === ask.current && !delivering(cur.stream)) await open(facing)
-    return null
+    const firstLive = delivering(cur.stream)
+    const answer = answerOf({
+      other,
+      latest: mine === ask.current,
+      same:
+        other !== null &&
+        other.stream.getVideoTracks()[0]?.getSettings().deviceId ===
+          settings.deviceId,
+      firstLive,
+      otherLive: other !== null && delivering(other.stream),
+    })
+    trace.add('lifecycle', `second camera: ${answer.kind}`)
+    if (answer.kind !== 'ok' && other !== null) stopAll(other.stream)
+    if (answer.kind === 'oneAtATime' && !firstLive) await open(facing)
+    return answer
   }
 
   const start = (want: Facing = facing) => void open(want)
