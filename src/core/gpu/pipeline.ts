@@ -1170,8 +1170,10 @@ export class Engine implements EngineApi {
 
     // reason 'destroyed' is our own destroy(); anything else is a real loss
     // (driver reset, sleep/wake, GPU hang) — stop and surface it.
+    // Keyed off `destroyed`, because an offline render pauses the loop and a
+    // loss during one still has to reach the supervisor.
     void this.gpu.device.lost.then(info => {
-      if (this.loop.running && info.reason !== 'destroyed') {
+      if (!this.destroyed && info.reason !== 'destroyed') {
         this.loop.stop()
         console.error(`WebGPU device lost (${info.reason}): ${info.message}`)
         this.onDeviceLost(info.message)
