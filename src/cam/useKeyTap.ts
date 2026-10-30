@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 
 import { chromaHue, colourAt, sourcePoint } from './keyed'
 
+import type { HueSlice } from '../ui/hueKey'
 import type { Camera } from './tape'
 import type { PointerEvent } from 'react'
 
@@ -16,6 +17,7 @@ interface Ring {
 export function useKeyTap(opts: {
   camera: () => Camera | null
   keyed: () => boolean
+  slice: () => HueSlice
   onAim: (hue: number) => void
   onMiss: (text: string) => void
 }) {
@@ -40,7 +42,7 @@ export function useKeyTap(opts: {
       }),
     )
     if (rgb === null) return
-    const hue = chromaHue(...rgb)
+    const hue = chromaHue(...rgb, opts.slice())
     if (hue === null) {
       opts.onMiss('no colour there to key on')
       return

@@ -1,14 +1,17 @@
+import { chromaOf, satGate, type HueSlice } from '../ui/hueKey'
+
 import type { ControlKey, Controls } from '../core/controls'
 
+const wrapDeg = (deg: number) => ((deg % 360) + 360) % 360
+
 // The hue the encoder gives an RGB colour, in degrees: the angle of its (U, V)
-// chroma, atan2(V, U), which is the angle the loop's hue keyer slices. Null
-// for a colour too close to grey to have a hue worth keying on.
-export function chromaHue(r: number, g: number, b: number): number | null {
-  const y = 0.299 * r + 0.587 * g + 0.114 * b
-  const u = 0.492 * (b - y)
-  const v = 0.877 * (r - y)
-  if (Math.hypot(u, v) < 0.035) return null
-  return ((Math.atan2(v, u) * 180) / Math.PI + 360) % 360
+// chroma, atan2(V, U), which is the angle the hue keyers slice. Null for a
+// colour too close to grey for `slice` to act on even half way.
+export function chromaHue(r: number, g: number, b: number, slice: HueSlice) {
+  const { u, v } = chromaOf(r, g, b)
+  return satGate(slice, Math.hypot(u, v)) < 0.5
+    ? null
+    : wrapDeg((Math.atan2(v, u) * 180) / Math.PI)
 }
 
 // Whether the look's mixer loop keys on hue, which is what a tap can re-aim.
@@ -48,17 +51,12 @@ export const KEYER_KNOBS = {
   more: ['bKeyClip', 'bKeySoft', 'bKeySpill', 'bKeyDelayUs'],
 } as const satisfies Record<string, readonly ControlKey[]>
 
-export const keyOn = (
-  c: Controls,
-  tweaks: Partial<Controls>,
-  hue: number,
-): Controls => ({
-  ...c,
-  ...KEYER,
-  ...tweaks,
-  bKeyHueDeg: Math.round(hue),
-  ...KEYER_SWITCHES,
-})
+// The keyer sees B's colour after B's hue trim, so the camera's hue is moved
+// round by it to land on the backing.
+export function keyOn(c: Controls, tweaks: Partial<Controls>, hue: number) {
+  const keyed = { ...c, ...KEYER, ...tweaks, ...KEYER_SWITCHES }
+  return { ...keyed, bKeyHueDeg: Math.round(wrapDeg(hue + keyed.bHueDeg)) }
+}
 
 // Where a point on the picture lands on the camera's own frame, both in 0..1.
 // The picture is the camera cropped by the zoom and cover-fitted into the

@@ -33,6 +33,8 @@ const DEG = Math.PI / 180
 
 // mix_b.wgsl chromaKey: the gain knob widens the hue edge by soft·π and the
 // saturation edge by soft, and uniforms.ts hands both angles over in radians.
+// The shader turns B's chroma by B's carrier phase before slicing, so the hue
+// here is on the house wheel, which B's hue trim moves B's colours round.
 export function mixerSlice(
   c: Pick<Controls, 'bKeyHueDeg' | 'bKeyAcceptDeg' | 'bKeyClip' | 'bKeySoft'>,
 ): HueSlice {
@@ -64,6 +66,7 @@ export function loopSlice(
   }
 }
 
+// prelude.ts hueGate, with the hue already subtracted.
 export const hueGate = (s: HueSlice, w: number) =>
   1 - smoothstep(s.accept - s.edge, s.accept + s.edge, Math.abs(wrapPi(w)))
 
@@ -109,8 +112,14 @@ export function sliceContour(
   return { whole, edge }
 }
 
-// Where the 75% colour bars sit on the wheel: yuvOf in prelude.ts, on the
-// Rec. 601 luma, for each bar's RGB at 0.75.
+// An RGB colour's chroma as the encoder makes it: yuvOf in prelude.ts, on the
+// Rec. 601 luma.
+export function chromaOf(r: number, g: number, b: number) {
+  const y = 0.299 * r + 0.587 * g + 0.114 * b
+  return { u: 0.492 * (b - y), v: 0.877 * (r - y) }
+}
+
+// Where the 75% colour bars sit on the wheel, for each bar's RGB at 0.75.
 const BAR_RGB = {
   yel: [1, 1, 0],
   cyan: [0, 1, 1],
@@ -121,10 +130,8 @@ const BAR_RGB = {
 } as const
 
 export const BARS = Object.entries(BAR_RGB).map(([name, [r, g, b]]) => {
-  const y = 0.299 * r + 0.587 * g + 0.114 * b
-  const u = 0.75 * 0.492 * (b - y)
-  const v = 0.75 * 0.877 * (r - y)
-  return { name, angle: Math.atan2(v, u), r: Math.hypot(u, v) }
+  const { u, v } = chromaOf(r, g, b)
+  return { name, angle: Math.atan2(v, u), r: 0.75 * Math.hypot(u, v) }
 })
 
 /** The burst sits on −U. */

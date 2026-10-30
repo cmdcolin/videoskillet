@@ -33,7 +33,6 @@ const MIX_MID = COL.mix.x + COL.mix.w / 2
 const WHEEL = { cx: 254, cy: 70, radius: 56 }
 const RIM = 0.7
 const HEIGHT = 142
-const FILLS = ['program A', 'matte', 'loop bus', 'freeze']
 const DEG = Math.PI / 180
 
 // The keyer across the mixer as mix_b.wgsl runs it. B's picture crosses the
@@ -148,7 +147,7 @@ export function ChromaKeyDiagram() {
               anchor="middle"
               on={on && genlock}
             >
-              {FILLS[fill] ?? FILLS[0]!}
+              {r.read('bKeyFill')}
             </Label>
             <Wire arrow={arrow} d={`M${MIX_MID} ${TOP_Y - H / 2} V12`} />
             <Label x={MIX_MID} y={8} anchor="middle">

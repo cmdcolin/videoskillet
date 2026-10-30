@@ -3,6 +3,7 @@ import { useRef, useState } from 'react'
 import { DEFAULT_CONTROLS } from '../core/controls'
 import { cx } from '../ui/cx'
 import { FatalScreen } from '../ui/FatalScreen'
+import { loopSlice, mixerSlice } from '../ui/hueKey'
 import { usePersistedFlag } from '../ui/storage'
 import { faultPlan } from '../ui/transitions'
 import { useWakeLock } from '../ui/useWakeLock'
@@ -362,6 +363,10 @@ export function CamPage(props: { link: CamLink | null }) {
     keyed: () =>
       sceneRef.current.keyHue !== null ||
       keysOnHue(lookBoard(look, scene.layers).controls),
+    slice: () =>
+      sceneRef.current.keyHue === null
+        ? loopSlice(lookBoard(look, scene.layers).controls)
+        : mixerSlice(boardOf(sceneRef.current, sliceOf(eng.layout)).controls),
     onAim: hue =>
       paint({ hue, keyHue: sceneRef.current.keyHue === null ? null : hue }),
     onMiss: announce,

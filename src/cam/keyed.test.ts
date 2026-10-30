@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { DEFAULT_CONTROLS } from '../core/controls'
 import { coverFit43 } from '../core/gpu/sources'
+import { loopSlice, mixerSlice } from '../ui/hueKey'
 import { aimKey, chromaHue, keyOn, keysOnHue, sourcePoint } from './keyed'
 import { CLEAN, boardOf } from './scene'
 import { cropRect } from './zoom'
@@ -9,19 +10,26 @@ import { cropRect } from './zoom'
 import type { Scene } from './scene'
 
 describe('chromaHue', () => {
+  const mixer = mixerSlice(DEFAULT_CONTROLS)
+
   // The keyer's own reference points, from the comments beside its controls.
   it('puts the primaries where the encoder does', () => {
-    expect(chromaHue(0, 1, 0)).toBeCloseTo(240.7, 0)
-    expect(chromaHue(1, 0, 0)).toBeCloseTo(103.4, 0)
+    expect(chromaHue(0, 1, 0, mixer)).toBeCloseTo(240.7, 0)
+    expect(chromaHue(1, 0, 0, mixer)).toBeCloseTo(103.4, 0)
   })
 
   it('puts skin on the I axis', () => {
-    const hue = chromaHue(0.87, 0.67, 0.53) ?? 0
+    const hue = chromaHue(0.87, 0.67, 0.53, mixer) ?? 0
     expect(Math.abs(hue - 123)).toBeLessThan(6)
   })
 
   it('has no hue for grey', () => {
-    expect(chromaHue(0.5, 0.5, 0.5)).toBeNull()
+    expect(chromaHue(0.5, 0.5, 0.5, mixer)).toBeNull()
+  })
+
+  it('has no hue for a colour too pale for the keyer it aims', () => {
+    expect(chromaHue(0.6, 0.5, 0.5, mixer)).toBeNull()
+    expect(chromaHue(0.6, 0.5, 0.5, loopSlice(DEFAULT_CONTROLS))).not.toBeNull()
   })
 })
 
@@ -57,6 +65,12 @@ describe('keyOn', () => {
       bKeyFill: 2,
       bKeyFillMixA: 0.15,
     })
+  })
+
+  it("moves the backing round by B's hue trim, as the keyer sees it", () => {
+    const c = { ...DEFAULT_CONTROLS, bHueDeg: 150 }
+    expect(keyOn(c, {}, 241).bKeyHueDeg).toBe(31)
+    expect(keyOn({ ...c, bHueDeg: -150 }, {}, 100).bKeyHueDeg).toBe(310)
   })
 
   it('holds strobe hold odd, where the fade keeps the colour', () => {
