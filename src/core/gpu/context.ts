@@ -206,6 +206,12 @@ export function releaseGpu(device: GPUDevice): void {
 // error, not a validation one. Both scopes come off when `make` throws too,
 // because the device outlives this engine and an unpopped scope would swallow
 // its successor's errors.
+//
+// Both pops are issued before either is awaited. The first one resolves only
+// once the device has finished compiling every pipeline `make` created, and the
+// engine's render loop is already running by then, so a validation scope left
+// on the stack across that wait would catch errors from the frames it renders
+// meanwhile and fail the build with them.
 export async function underErrorScopes<T>(
   device: Pick<GPUDevice, 'pushErrorScope' | 'popErrorScope'>,
   make: () => T,
@@ -213,8 +219,10 @@ export async function underErrorScopes<T>(
   device.pushErrorScope('validation')
   device.pushErrorScope('internal')
   const popBoth = async () => {
-    const internal = await device.popErrorScope()
-    const validation = await device.popErrorScope()
+    const [internal, validation] = await Promise.all([
+      device.popErrorScope(),
+      device.popErrorScope(),
+    ])
     return internal ?? validation
   }
   let built: T

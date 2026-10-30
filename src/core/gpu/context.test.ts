@@ -231,6 +231,14 @@ describe('underErrorScopes', () => {
     expect(d.depth()).toBe(0)
   })
 
+  it('leaves no scope open for the first frames to raise into', async () => {
+    const d = scopedDevice()
+    const scoped = underErrorScopes(d.device, () => 3)
+    expect(d.depth()).toBe(0)
+    d.raise('validation', 'first frame')
+    expect(await scoped).toEqual({ built: 3, error: null })
+  })
+
   it('takes both scopes off a device when construction throws', async () => {
     const d = scopedDevice()
     await expect(
