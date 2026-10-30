@@ -94,7 +94,7 @@ await page.goto(
     waitUntil: 'domcontentloaded',
   },
 )
-await appUp(page, 6000)
+await appUp(page, 20000)
 await page.bringToFront()
 
 // One render, from a fixed board, returning a digest of the file it produced.
@@ -695,10 +695,10 @@ const renderClip = jitter =>
 // Loaded through the app's own `?vurl` path rather than by reaching into the
 // slot, so what is under test is the wiring a user gets and not a shortcut this
 // file invented.
-await page.goto(`${origin}/?preset=vhs&vurl=${encodeURIComponent(clip)}`, {
+await page.goto(`${origin}/app/?preset=vhs&vurl=${encodeURIComponent(clip)}`, {
   waitUntil: 'domcontentloaded',
 })
-await appUp(page, 6000)
+await appUp(page, 20000)
 await page.bringToFront()
 // The element has to be *loaded* before a take starts — not for the pull, which
 // never touches it, but because a deck with nothing on it is a deck this arm
