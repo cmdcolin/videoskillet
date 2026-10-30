@@ -16,3 +16,12 @@ document.body.style.margin = '0'
 startAnalytics()
 
 export default VotePage
+
+// A hot update hands the device on to the next engines; see src/app.tsx.
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => {
+    window.vfs?.forEach(engine => engine.destroy({ keepDevice: true }))
+    window.vfs = undefined
+    window.vf = undefined
+  })
+}

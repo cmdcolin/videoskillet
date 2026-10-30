@@ -81,43 +81,54 @@ export function useStream(args: {
     holdTimer.current = null
   }
 
+  // `engine` is null while it is down, which takes the look off and holds the
+  // stream out of 'ready'. A replaced engine starts a fresh look.
   useEffect(() => {
-    if (engine === null) return undefined
     setPhase('flushing')
     setRecipe(null)
-    flushEngines([engine])
-    const seed = randomSeed()
-    const toShow = setTimeout(() => {
-      engine.setImageSource(VOTE_SOURCES[source]())
-      const next = sampleOne(seed)
-      show(engine, next)
-      setRecipe(next)
-      setPhase('developing')
-      // The rating's `ms` counts from here — the same clock the app's menu
-      // starts when it opens.
-      labels.reset()
-    }, FLUSH_MS)
-    const toArm = setTimeout(() => {
-      setPhase('ready')
-      holdTimer.current = setTimeout(() => {
-        unanswered.current += 1
-        if (unanswered.current >= IDLE_AFTER) {
-          setPhase('idle')
-        } else {
-          setRound(n => n + 1)
-        }
-      }, HOLD_MS)
-    }, FLUSH_MS + DEVELOP_MS)
+    const roll = (live: EngineApi) => {
+      flushEngines([live])
+      const seed = randomSeed()
+      return [
+        setTimeout(() => {
+          live.setImageSource(VOTE_SOURCES[source]())
+          const next = sampleOne(seed)
+          show(live, next)
+          setRecipe(next)
+          setPhase('developing')
+          // The rating's `ms` counts from here — the same clock the app's menu
+          // starts when it opens.
+          labels.reset()
+        }, FLUSH_MS),
+        setTimeout(() => {
+          setPhase('ready')
+          holdTimer.current = setTimeout(() => {
+            unanswered.current += 1
+            if (unanswered.current >= IDLE_AFTER) {
+              setPhase('idle')
+            } else {
+              setRound(n => n + 1)
+            }
+          }, HOLD_MS)
+        }, FLUSH_MS + DEVELOP_MS),
+      ]
+    }
+    const timers = engine === null ? [] : roll(engine)
     return () => {
-      clearTimeout(toShow)
-      clearTimeout(toArm)
+      for (const timer of timers) clearTimeout(timer)
       clearHold()
     }
     // `labels.reset` is recreated every render and reads nothing that changes.
     // oxlint-disable-next-line react-hooks/exhaustive-deps
   }, [engine, source, round])
 
-  const judgeable = recipe !== null && (phase === 'ready' || phase === 'held')
+  // Checked against `engine` as well as the phase: the render in which the
+  // engine goes down still has the phase it had before the effect above clears
+  // it.
+  const judgeable =
+    engine !== null &&
+    recipe !== null &&
+    (phase === 'ready' || phase === 'held')
 
   const rate = (cool: number) => {
     if (!judgeable || recipe === null || uid === null) return
@@ -130,7 +141,7 @@ export function useStream(args: {
 
   // Keep this one on screen: no auto-advance until a key says otherwise.
   const hold = () => {
-    if (phase !== 'ready') return
+    if (engine === null || phase !== 'ready') return
     clearHold()
     setPhase('held')
   }

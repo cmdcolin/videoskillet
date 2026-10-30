@@ -1,9 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import { Engine } from '../core/gpu/pipeline'
 import { AudioState } from '../core/signal/audiostate'
+import { superviseEngine } from '../ui/engineSupervisor'
+import { BOOTING, haltsOf, liveEngines } from './halt'
 
 import type { EngineApi } from '../core/gpu/engineapi'
+import type { Side } from './halt'
 import type { RefObject } from 'react'
 
 // One engine per canvas — two for the vote page's pair, one for the stream —
@@ -26,17 +29,17 @@ import type { RefObject } from 'react'
 // stashes the device it creates on `globalThis` and hands it to the next caller
 // that asks, so the second `Engine.create` configures a second canvas against the
 // device the first one made: one device, two swapchains, `gpuBuilds()` still 1.
-// Which means none of this touches the budget that docs/adr/0004 is about — there
-// is no second device to account for.
 //
-// That reuse is why the two creates are **sequential and not concurrent**. Run in
+// That reuse is why the creates are **sequential and not concurrent**. Run in
 // parallel, both would race past the "is there a live device stashed?" check
 // before either had stashed one, and the page would quietly cost two devices
-// instead of one.
+// instead of one. `oneAtATime` holds that for the rebuilds too: a lost device
+// takes both engines with it, and the second replacement adopts the device the
+// first one made.
 //
-// Everything else follows useEngine's one rule: nothing here ever destroys a
-// device. No pagehide handler, no cleanup that releases. See adr/0004 for what
-// the tidier-looking line costs a tab.
+// Each engine runs under `superviseEngine`, as the app's and /cam/'s do, so a
+// lost or hung device is replaced in place. The supervisor never destroys a
+// device (docs/adr/0004): its pagehide handler and its teardown let go of one.
 
 // Fixed, and not scaled by devicePixelRatio.
 //
@@ -51,63 +54,101 @@ import type { RefObject } from 'react'
 // texture was scaled away is a vote about its gross shape only.
 const VOTE_CANVAS = { width: 640, height: 480 }
 
+declare global {
+  interface Window {
+    // Every engine on a vote page, in canvas order, for the hot-update dispose
+    // in main.tsx and stream.tsx. `vf` is the first of them.
+    vfs?: Engine[]
+  }
+}
+
 // Engines in the order of their canvases, as a tuple the caller's ref tuple
 // already spells: two refs in, `[EngineApi, EngineApi]` out.
 export type EnginesFor<R extends readonly unknown[]> = {
   readonly [K in keyof R]: EngineApi
 }
 
+// Starts each call once the previous one has settled, whether it resolved or
+// rejected.
+export function oneAtATime<A extends unknown[], T>(
+  make: (...args: A) => Promise<T>,
+) {
+  let last: Promise<unknown> = Promise.resolve()
+  return (...args: A) => {
+    const next = last.then(() => make(...args))
+    last = next.catch(() => undefined)
+    return next
+  }
+}
+
 export function useVoteEngines<
   const R extends readonly RefObject<HTMLCanvasElement | null>[],
 >(refs: R) {
-  const [engines, setEngines] = useState<EnginesFor<R> | null>(null)
-  const [error, setError] = useState<unknown>(null)
+  const [sides, setSides] = useState<readonly Side<Engine>[]>(() =>
+    refs.map(() => BOOTING),
+  )
 
   useEffect(() => {
-    const canvases = refs.map(ref => ref.current)
-    if (canvases.some(c => c === null)) return undefined
-    for (const canvas of canvases) {
-      if (canvas === null) continue
-      canvas.width = VOTE_CANVAS.width
-      canvas.height = VOTE_CANVAS.height
-    }
-    let live = true
+    const report = <K extends keyof Side<Engine>>(
+      i: number,
+      key: K,
+      value: Side<Engine>[K],
+    ) =>
+      setSides(all =>
+        all[i]?.[key] === value
+          ? all
+          : all.map((side, j) => (j === i ? { ...side, [key]: value } : side)),
+      )
     // One AudioState for all. Nothing on this page listens to anything, and the
     // constructor builds no AudioContext until something asks it to — but each
     // engine defaults to one of its own, and sharing says out loud that there is
     // only ever one audio graph in this document.
     const audio = new AudioState()
-    const boot = async () => {
-      const made: Engine[] = []
-      for (const canvas of canvases) {
-        if (canvas === null) continue
-        // Sequential on purpose — see the header. By the second create the
-        // device the first made is in the stash, so it adopts it rather than
-        // asking the tab for another.
-        made.push(await Engine.create(canvas, { audio }))
-      }
-      if (live) {
-        // One engine per ref, in ref order, is exactly what the mapped tuple
-        // says; the assertion is the only place that fact crosses into the type.
-        // oxlint-disable-next-line typescript/no-unsafe-type-assertion
-        setEngines(made as unknown as EnginesFor<R>)
-        // The first engine, so the console and the screenshot harnesses have the
-        // same handle they have on the app. Only one can hold the global; the
-        // rest are reachable through the page's own state.
-        window.vf = made[0]
-      }
-      // Deliberately no destroy() when `live` is false. A page that unmounted
-      // mid-boot lets go of its engines instead.
+    const create = oneAtATime(
+      (canvas: HTMLCanvasElement, adopted: AudioState = audio) =>
+        Engine.create(canvas, { audio: adopted }),
+    )
+    const held: Engine[] = []
+    window.vfs = held
+    const supervise = (canvas: HTMLCanvasElement, i: number) => {
+      canvas.width = VOTE_CANVAS.width
+      canvas.height = VOTE_CANVAS.height
+      return superviseEngine(canvas, {
+        adopt: created => {
+          held[i] = created
+          // The console and the screenshot harnesses get the same handle they
+          // have on the app.
+          if (i === 0) window.vf = created
+          report(i, 'engine', created)
+        },
+        onRebuilding: fault => report(i, 'rebuilding', fault),
+        onFrozen: frozen => report(i, 'frozen', frozen),
+        onFatal: fatal => report(i, 'fatal', fatal),
+        create,
+      })
     }
-    boot().catch((e: unknown) => {
-      setError(e)
-    })
+    const stops = refs.map((ref, i) =>
+      ref.current === null ? () => undefined : supervise(ref.current, i),
+    )
     return () => {
-      live = false
+      for (const stop of stops) stop()
     }
     // The refs are a literal tuple the page never rebuilds.
     // oxlint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  return { engines, error }
+  // A new tuple whenever an engine is replaced or comes back from a halt, so
+  // whatever is rolled onto it starts again on the picture now showing.
+  const engines = useMemo(() => {
+    const live = liveEngines(sides)
+    // One engine per ref, in ref order, is exactly what the mapped tuple says;
+    // the assertion is the only place that fact crosses into the type.
+    // oxlint-disable-next-line typescript/no-unsafe-type-assertion
+    return live === null ? null : (live as unknown as EnginesFor<R>)
+  }, [sides])
+
+  // The worst of them when more than one side is down: a lost device takes both
+  // with it, and one sentence covers the pair.
+  const [halt] = haltsOf(sides)
+  return { engines, halt }
 }

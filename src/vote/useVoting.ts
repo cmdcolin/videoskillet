@@ -63,25 +63,37 @@ export function useVoting(args: {
   // one device run at roughly half the rate one does, and a fixed frame count
   // would stretch the wait in proportion to how busy the GPU is. Both sides get
   // the same seconds either way, which is what the comparison needs.
+  //
+  // `engines` is null while any of them is down, which takes the pair off and
+  // holds the page out of 'ready'. A replaced engine is a new tuple, so the pair
+  // is rolled again on the picture that is actually showing.
   useEffect(() => {
-    if (engines === null) return undefined
     setPhase('flushing')
     setPair(null)
-    flushEngines(engines)
-    const seed = randomSeed()
-    const toShow = setTimeout(() => {
-      setPair(showPair(engines, seed, source))
-      setPhase('developing')
-      shownAt.current = performance.now()
-    }, FLUSH_MS)
-    const toArm = setTimeout(() => {
-      setPhase('ready')
-    }, FLUSH_MS + DEVELOP_MS)
+    const roll = (live: readonly [EngineApi, EngineApi]) => {
+      flushEngines(live)
+      const seed = randomSeed()
+      return [
+        setTimeout(() => {
+          setPair(showPair(live, seed, source))
+          setPhase('developing')
+          shownAt.current = performance.now()
+        }, FLUSH_MS),
+        setTimeout(() => {
+          setPhase('ready')
+        }, FLUSH_MS + DEVELOP_MS),
+      ]
+    }
+    const timers = engines === null ? [] : roll(engines)
     return () => {
-      clearTimeout(toShow)
-      clearTimeout(toArm)
+      for (const timer of timers) clearTimeout(timer)
     }
   }, [engines, source, round])
+
+  // Checked against `engines` as well as the phase: the render in which an
+  // engine goes down still has the phase it had before the effect above clears
+  // it.
+  const judgeable = engines !== null && pair !== null && phase === 'ready'
 
   // Anything queued that has not reached Firestore, sent one at a time so a bad
   // row cannot take a whole session with it — a write that failed on a flaky
@@ -109,7 +121,7 @@ export function useVoting(args: {
   const vote = (choice: Choice) => {
     // Held until the pair has had its develop window: an answer at frame three is
     // an answer about two looks that had not arrived yet.
-    if (pair === null || phase !== 'ready') return
+    if (!judgeable || pair === null) return
     // Nothing to file without an author. A vote nobody can be identified for would
     // either rot in this browser unsent or be filed under whoever signed in next;
     // the page asks for an account instead.
@@ -146,5 +158,5 @@ export function useVoting(args: {
     setRound(n => n + 1)
   }
 
-  return { pair, phase, vote, reroll, cast, pending }
+  return { pair, phase, judgeable, vote, reroll, cast, pending }
 }

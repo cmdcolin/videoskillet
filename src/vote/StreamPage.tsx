@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 
 import { COOL_KEYS } from '../labels'
-import { reason } from '../ui/format'
+import { haltText } from './halt'
 import { VOTE_SOURCE_NAMES } from './prepare'
 import { useStream } from './useStream'
 import { useVoteAuth } from './useVoteAuth'
@@ -21,7 +21,7 @@ const HOLD_HINT =
 export function StreamPage() {
   const canvas = useRef<HTMLCanvasElement>(null)
   const [source, setSource] = useState<VoteSource>('bars')
-  const { engines, error } = useVoteEngines([canvas])
+  const { engines, halt } = useVoteEngines([canvas])
   const auth = useVoteAuth()
   const stream = useStream({
     engine: engines?.[0] ?? null,
@@ -113,10 +113,9 @@ export function StreamPage() {
         stops and waits. A 1 is as useful as a 5 — the model needs both.
       </p>
 
-      {error !== null && (
-        <p className={styles.error}>
-          WebGPU did not start: {reason(error)}. On Linux this page wants
-          Firefox Nightly.
+      {halt !== undefined && (
+        <p className={styles.error} role="status">
+          {haltText(halt)}
         </p>
       )}
 
@@ -186,6 +185,10 @@ export function StreamPage() {
           <span className={styles.notice}>
             Watch as long as you like — sign in above when you want the ratings
             counted.
+          </span>
+        ) : halt !== undefined ? (
+          <span className={styles.notice}>
+            rating is held until the picture is back
           </span>
         ) : stream.phase === 'idle' ? (
           <span className={styles.notice}>any key continues</span>

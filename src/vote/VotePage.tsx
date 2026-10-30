@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 
-import { reason } from '../ui/format'
+import { haltText } from './halt'
 import { VOTE_SOURCE_NAMES } from './prepare'
 import { useVoteAuth } from './useVoteAuth'
 import { useVoteEngines } from './useVoteEngines'
@@ -61,10 +61,10 @@ export function VotePage() {
   const leftCanvas = useRef<HTMLCanvasElement>(null)
   const rightCanvas = useRef<HTMLCanvasElement>(null)
   const [source, setSource] = useState<VoteSource>('bars')
-  const { engines, error } = useVoteEngines([leftCanvas, rightCanvas])
+  const { engines, halt } = useVoteEngines([leftCanvas, rightCanvas])
   const auth = useVoteAuth()
   const rates = useEngineFps(engines)
-  const { pair, phase, vote, reroll, cast, pending } = useVoting({
+  const { phase, judgeable, vote, reroll, cast, pending } = useVoting({
     engines,
     source,
     uid: auth.user?.uid ?? null,
@@ -72,7 +72,7 @@ export function VotePage() {
   // Signed in as well as developed: a vote nobody can be attributed to is one
   // that would rot unsent, so the page asks for an account at the point somebody
   // has shown they want to contribute rather than in front of the first pair.
-  const armed = phase === 'ready' && pair !== null && auth.user !== null
+  const armed = judgeable && auth.user !== null
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -169,10 +169,9 @@ export function VotePage() {
         meantime.
       </p>
 
-      {error !== null && (
-        <p className={styles.error}>
-          WebGPU did not start: {reason(error)}. On Linux this page wants
-          Firefox Nightly.
+      {halt !== undefined && (
+        <p className={styles.error} role="status">
+          {haltText(halt)}
         </p>
       )}
 
@@ -238,16 +237,18 @@ export function VotePage() {
               both bad
             </button>
           </>
-        ) : auth.user === null && phase === 'ready' ? (
+        ) : auth.user === null && judgeable ? (
           <span className={styles.notice}>
             Watch as long as you like — an account is what gives a vote
             somewhere to go, so sign in above when you want them counted.
           </span>
         ) : (
           <span className={styles.notice}>
-            {phase === 'flushing'
-              ? 'clearing the last pair out of the feedback loops…'
-              : 'letting both looks develop — feedback and tape faults take a few seconds to arrive…'}
+            {halt !== undefined
+              ? 'voting is held until the picture is back'
+              : phase === 'flushing'
+                ? 'clearing the last pair out of the feedback loops…'
+                : 'letting both looks develop — feedback and tape faults take a few seconds to arrive…'}
           </span>
         )}
       </div>
