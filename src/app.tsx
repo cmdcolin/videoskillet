@@ -1455,7 +1455,7 @@ export function App() {
           mode={audio.mode}
           name={audio.name}
           audioState={audio.audioState}
-          time={audio.time}
+          readTime={audio.readTime}
           duration={audio.duration}
           reverb={eng.reverb}
           onReverb={eng.changeReverb}

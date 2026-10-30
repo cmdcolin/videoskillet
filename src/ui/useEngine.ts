@@ -172,7 +172,6 @@ type SlotSource =
 // a duration of Infinity or NaN and cannot be seeked at all. The bar renders on
 // a non-zero duration alone, so that one number is the whole gate.
 interface Playhead {
-  time: number
   duration: number
   // Whether the element is stopped. Read off the element beside the position
   // rather than mirrored from the button that stopped it, because the element
@@ -181,15 +180,21 @@ interface Playhead {
   // later.
   paused: boolean
 }
-const NO_CLIP: Playhead = { time: 0, duration: 0, paused: true }
+const NO_CLIP: Playhead = { duration: 0, paused: true }
+
+const hasTimeline = (el: HTMLVideoElement | null): el is HTMLVideoElement =>
+  el !== null && Number.isFinite(el.duration) && el.duration !== 0
 
 const readPlayhead = (el: HTMLVideoElement | null): Playhead =>
-  el === null || !Number.isFinite(el.duration) || el.duration === 0
-    ? NO_CLIP
-    : { time: el.currentTime, duration: el.duration, paused: el.paused }
+  hasTimeline(el) ? { duration: el.duration, paused: el.paused } : NO_CLIP
+
+// The position is read by the seek bar itself every frame (ui/Scrub.tsx), so it
+// stays out of state and a playing clip does not re-render the app.
+const readTime = (el: HTMLVideoElement | null) =>
+  hasTimeline(el) ? el.currentTime : 0
 
 const samePlayhead = (a: Playhead, b: Playhead): boolean =>
-  a.time === b.time && a.duration === b.duration && a.paused === b.paused
+  a.duration === b.duration && a.paused === b.paused
 
 const SOUND_OUT_KEY = 'videoskillet_sound_out'
 
@@ -508,12 +513,11 @@ export function useEngine(args: { rand: Rand }) {
   // off the mode, because the mode lags the picture by however long the image
   // takes to decode and the address bar is rewritten in the meantime.
   const [imgUrl, setImgUrl] = useState({ a: '', b: '' })
-  // Where each slot's playhead is, for the seek bars. Polled rather than driven
-  // off `timeupdate` for the same reason the audio file's is: the readout ticks
-  // in tenths, and a slot slowed to 0.25× fires timeupdate on its own schedule
-  // while a paused one fires nothing at all. duration stays 0 until metadata
-  // lands and for anything without a finite timeline, which is what keeps the
-  // bar off a webcam or a screen share.
+  // Each slot's length and whether it is held, for the seek bars and the play
+  // button. Polled, because a blocked `play()` changes nothing a listener would
+  // hear in time. duration stays 0 until metadata lands and for anything
+  // without a finite timeline, which is what keeps the bar off a webcam or a
+  // screen share. The position itself is not here: see `readTime`.
   const [transport, setTransport] = useState({ a: NO_CLIP, b: NO_CLIP })
   // Each slot's cue point, and the loop hanging off it if there is one. Both a
   // ref and state, for the reason vaporRef below is: the rebuild-after-loss path
@@ -684,10 +688,9 @@ export function useEngine(args: { rand: Rand }) {
     changeDry(VAPORWAVE_DRY)
   }
 
-  // Follow both playheads while either slot holds a clip. 10 Hz, like the audio
-  // file's transport and for the same reason: a clock reading in tenths does
-  // not need a re-render per frame. The tick writes state only when a number
-  // actually moved, so a slot paused on the deck costs nothing.
+  // Follow both decks' length and held state while either slot holds a clip, at
+  // 10 Hz. The tick writes state only when one of them actually changed, so a
+  // playing clip costs no render.
   const clipA = live.a === 'clip'
   const clipB = live.b === 'clip'
   useEffect(() => {
@@ -713,15 +716,12 @@ export function useEngine(args: { rand: Rand }) {
     return () => clearInterval(id)
   }, [clipA, clipB])
 
-  // Move a playhead, and move its readout with it so the thumb doesn't snap back
-  // and wait out the poll interval. Held on the deck (`aPause`/`bPause`) the
-  // picture won't follow until the deck rolls again — the pump is frozen — which
-  // is what holding a deck means.
+  // Move a playhead. Held on the deck (`aPause`/`bPause`) the picture won't
+  // follow until the deck rolls again — the pump is frozen — which is what
+  // holding a deck means.
   const jump = (key: StashSlot, time: number) => {
     const v = (key === 'a' ? videoRef : videoBRef).current
-    if (v === null) return
-    v.currentTime = time
-    setTransport(p => ({ ...p, [key]: { ...p[key], time } }))
+    if (v !== null) v.currentTime = time
   }
 
   // Stop the clip on a deck where it stands, or roll it on again. The element's
@@ -2538,9 +2538,8 @@ export function useEngine(args: { rand: Rand }) {
     a: {
       key: 'a',
       tag: 'A',
-      time: transport.a.time,
       duration: transport.a.duration,
-      readTime: () => readPlayhead(videoRef.current).time,
+      readTime: () => readTime(videoRef.current),
       seek: t => seekOut('a', t),
       playing: live.a === 'clip' ? !transport.a.paused : null,
       togglePlay: () => togglePlayOn('a'),
@@ -2582,9 +2581,8 @@ export function useEngine(args: { rand: Rand }) {
     b: {
       key: 'b',
       tag: 'B',
-      time: transport.b.time,
       duration: transport.b.duration,
-      readTime: () => readPlayhead(videoBRef.current).time,
+      readTime: () => readTime(videoBRef.current),
       seek: t => seekOut('b', t),
       playing: live.b === 'clip' ? !transport.b.paused : null,
       togglePlay: () => togglePlayOn('b'),

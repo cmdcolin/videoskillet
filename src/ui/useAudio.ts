@@ -29,9 +29,9 @@ const isAbort = (e: unknown): boolean =>
 
 // Audio input state for the UI. The per-line waveform goes straight to the GPU
 // each frame without touching React, and so does the level: the meter reads
-// engine.audioState itself every animation frame. Only the transport readout
-// comes back through state, polled at 10 Hz — a clock ticking in tenths does not
-// need a re-render per frame, an onset envelope does.
+// engine.audioState itself every animation frame, and the seek bar reads the
+// element's position the same way. Only the file's duration comes back through
+// state, polled at 10 Hz until metadata lands and unchanged after that.
 //
 // One source at a time, which is what makes this a picker rather than a set of
 // switches: the clip's own sound track is a mode here (routeVideo, into the same
@@ -45,8 +45,8 @@ export function useAudio(
   const [mode, setMode] = useState<AudioMode>('off')
   const [name, setName] = useState('')
   const [error, setError] = useState<string | null>(null)
-  // Transport readout for a file source; duration stays 0 until metadata lands.
-  const [play, setPlay] = useState({ time: 0, duration: 0 })
+  // A file source's length; 0 until metadata lands.
+  const [duration, setDuration] = useState(0)
   const fileInputRef = useRef<HTMLInputElement>(null)
   // The playing file, held to pause it and free its blob URL on the next pick.
   const elRef = useRef<HTMLAudioElement | null>(null)
@@ -57,10 +57,7 @@ export function useAudio(
       id = window.setInterval(() => {
         const el = elRef.current
         if (el !== null) {
-          setPlay({
-            time: el.currentTime,
-            duration: Number.isFinite(el.duration) ? el.duration : 0,
-          })
+          setDuration(Number.isFinite(el.duration) ? el.duration : 0)
         }
       }, 100)
     }
@@ -81,7 +78,7 @@ export function useAudio(
     engine?.audioState.disconnect()
     setMode('off')
     setName('')
-    setPlay({ time: 0, duration: 0 })
+    setDuration(0)
   }
 
   const enableMic = () => {
@@ -166,19 +163,17 @@ export function useAudio(
     },
     audioState: engine === null ? null : engine.audioState,
     error,
-    time: play.time,
-    duration: play.duration,
+    readTime: () => {
+      const el = elRef.current
+      return el === null ? 0 : el.currentTime
+    },
+    duration,
     active: mode !== 'off',
     fileInputRef,
     onFile: playFile,
-    // Scrubbing moves the readout at once, so the thumb doesn't snap back and
-    // wait out the poll interval.
     seek: (time: number) => {
       const el = elRef.current
-      if (el !== null) {
-        el.currentTime = time
-        setPlay(p => ({ ...p, time }))
-      }
+      if (el !== null) el.currentTime = time
     },
     // Picking 'file' only opens the dialog; state moves once a file is actually
     // chosen, so cancelling leaves whatever is playing alone.

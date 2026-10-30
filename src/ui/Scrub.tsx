@@ -11,17 +11,22 @@ import type { CSSProperties, ReactNode } from 'react'
 const clock = (s: number) =>
   `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`
 
+const share = (t: number, duration: number) =>
+  `${((t / duration) * 100).toFixed(1)}%`
+
 // Transport for a source with a timeline — the audio file, and either video
-// slot holding a clip: drag to seek. The position polls at 10 Hz alongside the
-// meter, so the thumb follows playback without a re-render per frame.
+// slot holding a clip: drag to seek. The thumb, the fill and the clock read the
+// element every frame and are written to the DOM, as LoopScrub's are, so a
+// playing clip never re-renders the panel it sits in.
 //
 // Shared rather than per-caller because the fill is the point: the track paints
 // in accent up to the playhead, which is what tells a seek bar apart from the
 // knobs stacked above it. Two copies of that would be two things to keep
 // looking alike.
 export function Scrub(props: {
-  time: number
   duration: number
+  // The element's position when called.
+  readTime: () => number
   // The cue point, and the loop hanging off it, drawn on the track. Marked over
   // the bar rather than described in a readout beside it: "a little section of
   // this clip" is a shape, and the whole reason to draw it is so you can see
@@ -30,20 +35,44 @@ export function Scrub(props: {
   meter?: ReactNode
   onSeek: (time: number) => void
 }) {
-  const pc = (t: number) => `${((t / props.duration) * 100).toFixed(1)}%`
-  const fill: CSSProperties & Record<'--p', string> = { '--p': pc(props.time) }
+  const { duration } = props
+  const pc = (t: number) => share(t, duration)
   const cue = props.cue ?? null
+  const inputRef = useRef<HTMLInputElement>(null)
+  const clockRef = useRef<HTMLSpanElement>(null)
+  const readTime = useEffectEvent(() => props.readTime())
+
+  useEffect(() => {
+    let id = 0
+    const tick = () => {
+      const t = Math.min(readTime(), duration)
+      const input = inputRef.current
+      if (input !== null) {
+        input.value = String(t)
+        input.style.setProperty('--p', share(t, duration))
+      }
+      const text = clock(t)
+      const shown = clockRef.current
+      if (shown !== null && shown.textContent !== text) shown.textContent = text
+      id = requestAnimationFrame(tick)
+    }
+    tick()
+    return () => cancelAnimationFrame(id)
+  }, [duration])
+
+  const fill: CSSProperties & Record<'--p', string> = { '--p': '0%' }
   return (
     <div className={styles.scrubRow}>
       <span className={styles.scrubTrack}>
         <input
+          ref={inputRef}
           type="range"
           className={styles.scrub}
           style={fill}
           min={0}
-          max={props.duration}
+          max={duration}
           step={0.01}
-          value={Math.min(props.time, props.duration)}
+          defaultValue={0}
           onChange={e => props.onSeek(Number(e.target.value))}
         />
         {/* Behind the thumb and ignoring pointers, so marking a loop never costs
@@ -61,7 +90,7 @@ export function Scrub(props: {
       </span>
       {props.meter}
       <span className={styles.scrubTime}>
-        {clock(props.time)} / {clock(props.duration)}
+        <span ref={clockRef} /> / {clock(duration)}
       </span>
     </div>
   )
@@ -91,8 +120,7 @@ interface EdgeGrab {
 // can be dragged, or focused and nudged with the arrow keys. The bar keeps its
 // scale for the length of a grab and re-centres on the loop at the let-go.
 //
-// The thumb reads the element every frame, as Meter does: the 10 Hz poll
-// scatters it on a short loop.
+// The thumb reads the element every frame, as Meter and Scrub do.
 export function LoopScrub(props: {
   cue: LoopingCue
   duration: number

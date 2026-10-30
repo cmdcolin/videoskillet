@@ -82,7 +82,6 @@ export interface SlotView<T extends SourceMode | SourceBMode> {
 
   // The transport. A duration of 0 is "this source has no timeline" — a pattern,
   // a still, a webcam — and everything below is off in that state.
-  time: number
   duration: number
   // The element's position when called, for a readout that moves every frame.
   readTime: () => number

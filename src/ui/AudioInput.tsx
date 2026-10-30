@@ -34,7 +34,7 @@ export function AudioInput(props: {
   mode: AudioMode
   name: string
   audioState: AudioState | null
-  time: number
+  readTime: () => number
   duration: number
   // How much tail is added to the clips, shown only while they are the input.
   // A send: the dry stays where it was and this only ever adds, so winding it up
@@ -72,7 +72,7 @@ export function AudioInput(props: {
         )
       ) : (
         <Scrub
-          time={props.time}
+          readTime={props.readTime}
           duration={props.duration}
           meter={live === null ? null : <Meter audio={live} orient="v" />}
           onSeek={props.onSeek}

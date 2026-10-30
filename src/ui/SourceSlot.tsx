@@ -219,8 +219,8 @@ export function SourceSlot<T extends SourceMode | SourceBMode>(props: {
       {slot.duration === 0 ? null : (
         <>
           <Scrub
-            time={slot.time}
             duration={slot.duration}
+            readTime={slot.readTime}
             cue={slot.cue}
             onSeek={slot.seek}
           />
