@@ -24,6 +24,8 @@
 //   - **Content encodings** (compression or encryption of the blocks). Null.
 //   - **Audio.** The render's sound does not come from here.
 
+import { av1Codec } from './mp4demux'
+
 import type { DemuxedTrack } from './mp4demux'
 
 const SEGMENT = 0x18538067
@@ -244,15 +246,8 @@ function codecString(track: VideoTrack, firstKey: Uint8Array | null) {
   }
   if (track.codecId === 'V_AV1') {
     const c = track.codecPrivate
-    if (c === null || c.length < 4) return null
-    const profile = c[1]! >> 5
-    const level = c[1]! & 0x1f
-    const tier = (c[2]! & 0x80) !== 0 ? 'H' : 'M'
-    const depth = (c[2]! & 0x40) === 0 ? 8 : (c[2]! & 0x20) === 0 ? 10 : 12
-    return {
-      codec: `av01.${profile}.${two(level)}${tier}.${two(depth)}`,
-      description: c,
-    }
+    const codec = c === null ? null : av1Codec(c)
+    return codec === null ? null : { codec, description: c }
   }
   return null
 }

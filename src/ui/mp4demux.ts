@@ -157,6 +157,19 @@ const seek = (view: DataView, from: Box, ...path: string[]): Box | null => {
 
 const hex2 = (n: number): string => n.toString(16).padStart(2, '0')
 
+// AV1's codec string, out of its `av1C` record: the profile and level share
+// the second byte, and the third opens with the tier, `high_bitdepth` and
+// `twelve_bit`. Both containers carry the same record.
+export function av1Codec(av1C: Uint8Array) {
+  if (av1C.length < 4) return null
+  const profile = av1C[1]! >> 5
+  const level = String(av1C[1]! & 0x1f).padStart(2, '0')
+  const tier = (av1C[2]! & 0x80) !== 0 ? 'H' : 'M'
+  const depth =
+    (av1C[2]! & 0x40) === 0 ? '08' : (av1C[2]! & 0x20) === 0 ? '10' : '12'
+  return `av01.${profile}.${level}${tier}.${depth}`
+}
+
 // The `codec` string `VideoDecoder.configure` wants, built from the sample
 // entry's own configuration record rather than from the box type alone —
 // `avc1` on its own is not a codec a decoder will accept, and the three bytes
@@ -179,12 +192,7 @@ function codecString(
     return `vp09.${String(profile).padStart(2, '0')}.${String(level).padStart(2, '0')}.${String(depth).padStart(2, '0')}`
   }
   if (entryType === 'av01') {
-    if (description === null || description.length < 4) return null
-    const profile = description[1]! >> 5
-    const level = description[1]! & 0x1f
-    const tier = (description[2]! >> 7) & 1
-    const depth = (description[2]! >> 6) & 1 ? 10 : 8
-    return `av01.${profile}.${String(level).padStart(2, '0')}${tier === 1 ? 'H' : 'M'}.${String(depth).padStart(2, '0')}`
+    return description === null ? null : av1Codec(description)
   }
   // hvc1/hev1 and the rest: the string needs the whole general_profile_space /
   // compatibility-flags dance, and nothing this app produces or loads is HEVC.
@@ -301,6 +309,12 @@ function readEdit(
   return { shift: 0, unsupported: true }
 }
 
+// Whether a full box has room for `count` entries of `stride` bytes after a
+// `header` of fixed fields. Each table's count is the file's word, and a count
+// past what its box holds reads the boxes after it as samples.
+const holds = (b: Box, header: number, count: number, stride: number) =>
+  b.start + header + count * stride <= b.end
+
 // (count, value) run-length pairs, which is the shape `stts` and `ctts` share.
 const readRuns = (
   view: DataView,
@@ -367,8 +381,18 @@ export function demuxMp4(bytes: Uint8Array): DemuxedTrack | null {
     // --- sizes ---
     const stsz = find(view, stbl, 'stsz')
     if (stsz === null) return null
+    if (!holds(stsz, 12, 0, 0)) return null
     const uniform = view.getUint32(stsz.start + 4)
     const count = view.getUint32(stsz.start + 8)
+    // A size for every sample, or one size every sample has; either way the
+    // samples have to fit, in the table or in the file.
+    if (
+      uniform === 0
+        ? !holds(stsz, 12, count, 4)
+        : count * uniform > bytes.byteLength
+    ) {
+      return null
+    }
     const sizes: number[] = []
     for (let i = 0; i < count; i++) {
       // A single size for every sample is legal and means the table is absent.
@@ -385,7 +409,15 @@ export function demuxMp4(bytes: Uint8Array): DemuxedTrack | null {
     const stco = find(view, stbl, 'stco') ?? find(view, stbl, 'co64')
     if (stsc === null || stco === null) return null
     const wide = find(view, stbl, 'stco') === null
+    if (!holds(stco, 8, 0, 0) || !holds(stsc, 8, 0, 0)) return null
     const chunkCount = view.getUint32(stco.start + 4)
+    const stscEntries = view.getUint32(stsc.start + 4)
+    if (
+      !holds(stco, 8, chunkCount, wide ? 8 : 4) ||
+      !holds(stsc, 8, stscEntries, 12)
+    ) {
+      return null
+    }
     const chunkOffsets: number[] = []
     for (let i = 0; i < chunkCount; i++) {
       const at = stco.start + 8 + i * (wide ? 8 : 4)
@@ -394,7 +426,6 @@ export function demuxMp4(bytes: Uint8Array): DemuxedTrack | null {
       )
     }
     const chunkRuns: { first: number; per: number }[] = []
-    const stscEntries = view.getUint32(stsc.start + 4)
     for (let i = 0; i < stscEntries; i++) {
       const at = stsc.start + 8 + i * 12
       chunkRuns.push({ first: view.getUint32(at), per: view.getUint32(at + 4) })
@@ -452,7 +483,9 @@ export function demuxMp4(bytes: Uint8Array): DemuxedTrack | null {
     const stss = find(view, stbl, 'stss')
     const keys = new Set<number>()
     if (stss !== null) {
+      if (!holds(stss, 8, 0, 0)) return null
       const n = view.getUint32(stss.start + 4)
+      if (!holds(stss, 8, n, 4)) return null
       for (let i = 0; i < n; i++) {
         // 1-based in the file, 0-based here.
         keys.add(view.getUint32(stss.start + 8 + i * 4) - 1)

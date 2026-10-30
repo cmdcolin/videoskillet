@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { writeMp4 } from './mp4'
-import { demuxMp4 } from './mp4demux'
+import { av1Codec, demuxMp4 } from './mp4demux'
 
 // **The muxer is the fixture generator**, which is the whole reason this is a
 // vitest file and not a third browser harness. `writeMp4` already produces the
@@ -285,11 +285,11 @@ describe('demuxMp4, on what writeMp4 never writes', () => {
       stsd,
       full('stts', 0, u32(1), u32(5), u32(50)),
       full('stsc', 0, u32(2), u32(1), u32(1), u32(1), u32(2), u32(2), u32(1)),
-      full('stsz', 0, u32(100), u32(5)),
+      full('stsz', 0, u32(10), u32(5)),
       full('stco', 0, u32(3), u32(10), u32(200), u32(400)),
     ])
     expect(demuxMp4(bytes)?.samples.map(s => s.offset)).toEqual([
-      10, 200, 300, 400, 500,
+      10, 200, 210, 400, 410,
     ])
   })
 
@@ -408,6 +408,54 @@ describe('demuxMp4, on what writeMp4 never writes', () => {
 })
 
 describe('demuxMp4, on files it should decline', () => {
+  // Each table's count is the file's word. A count past what its box can hold
+  // reads whatever follows as entries, and a uniform stsz has no table at all,
+  // so 0xFFFFFFFF there was four billion iterations.
+  describe('a table count its box cannot hold', () => {
+    const file = writeMp4({
+      width: 64,
+      height: 64,
+      fps: { num: 30, den: 1 },
+      avcc,
+      ...laid([sample(8, true), sample(8, false)]),
+    })
+    const at = (type: string) => {
+      const tag = Array.from({ length: 4 }, (_, i) => type.charCodeAt(i))
+      return file.findIndex((_, i) => tag.every((b, k) => file[i + k] === b))
+    }
+    const patched = (type: string, field: number, value: number) => {
+      const copy = file.slice()
+      new DataView(copy.buffer).setUint32(at(type) + 4 + field, value)
+      return copy
+    }
+
+    it('reads the unpatched file', () => {
+      expect(demuxMp4(file)?.samples).toHaveLength(2)
+    })
+
+    it('declines a uniform stsz whose samples outrun the file', () => {
+      const copy = patched('stsz', 4, 8)
+      new DataView(copy.buffer).setUint32(at('stsz') + 4 + 8, 0xffffffff)
+      expect(demuxMp4(copy)).toBeNull()
+    })
+
+    it('declines an stsz table longer than its box', () => {
+      expect(demuxMp4(patched('stsz', 8, 1000))).toBeNull()
+    })
+
+    it('declines an stco longer than its box', () => {
+      expect(demuxMp4(patched('stco', 4, 1000))).toBeNull()
+    })
+
+    it('declines an stsc longer than its box', () => {
+      expect(demuxMp4(patched('stsc', 4, 1000))).toBeNull()
+    })
+
+    it('declines an stss longer than its box', () => {
+      expect(demuxMp4(patched('stss', 4, 1000))).toBeNull()
+    })
+  })
+
   it('returns null rather than throwing on bytes that are not an MP4', () => {
     expect(demuxMp4(Uint8Array.from([1, 2, 3, 4, 5, 6, 7, 8]))).toBeNull()
     expect(demuxMp4(new Uint8Array(0))).toBeNull()
@@ -422,5 +470,24 @@ describe('demuxMp4, on files it should decline', () => {
       ...laid([sample(8, true)]),
     })
     expect(demuxMp4(file.slice(0, file.length - 40))).toBeNull()
+  })
+})
+
+describe('av1Codec', () => {
+  // Third byte: seq_tier_0, high_bitdepth, twelve_bit, then the chroma fields.
+  it('reads the bit depth off high_bitdepth and twelve_bit', () => {
+    expect(av1Codec(Uint8Array.from([0x81, 0x08, 0x00, 0x00]))).toBe(
+      'av01.0.08M.08',
+    )
+    expect(av1Codec(Uint8Array.from([0x81, 0x08, 0x40, 0x00]))).toBe(
+      'av01.0.08M.10',
+    )
+    expect(av1Codec(Uint8Array.from([0x81, 0x48, 0xe0, 0x00]))).toBe(
+      'av01.2.08H.12',
+    )
+  })
+
+  it('declines a record too short to say', () => {
+    expect(av1Codec(Uint8Array.from([0x81, 0x08, 0x40]))).toBeNull()
   })
 })
