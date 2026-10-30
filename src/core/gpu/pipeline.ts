@@ -491,7 +491,8 @@ export class Engine implements EngineApi {
       () => new Engine(gpu, canvas, opts.audio ?? new AudioState()),
     )
     if (error !== null) {
-      engine.destroy({ keepDevice: true })
+      // An adopted graph goes back to the caller, which retries with it.
+      engine.destroy({ keepDevice: true, keepAudio: opts.audio !== undefined })
       throw new EngineBuildError(error.message)
     }
     return engine
