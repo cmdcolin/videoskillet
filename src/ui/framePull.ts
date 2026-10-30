@@ -405,6 +405,7 @@ function makePull(
         return take()
       }
       await arrival()
+      if (closed) break
     }
     return null
   }
@@ -424,6 +425,9 @@ function makePull(
         // left to do about it.
       }
       decoder = null
+      // Closing a decoder fires neither `output` nor `error`, so a `frameAt`
+      // waiting on an arrival would otherwise wait forever.
+      wake()
     },
   }
 }

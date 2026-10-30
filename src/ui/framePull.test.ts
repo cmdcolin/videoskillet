@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { openPullFromUrl } from './framePull'
+import { openPull, openPullFromUrl } from './framePull'
+import { writeMp4 } from './mp4'
 
 // What a puller does when it declines, which is most of what there is to test
 // without a decoder. The interesting half of `framePull.ts` needs a real
@@ -113,5 +114,57 @@ describe('openPullFromUrl', () => {
     const s = stubFetch(okResponse(Uint8Array.from([0, 0, 0, 0])))
     await expect(openPullFromUrl('http://x/clip.mp4')).resolves.toBeNull()
     expect(s.fetch).toHaveBeenCalledTimes(1)
+  })
+})
+
+// A decoder holding everything for reordering: it takes chunks, reports them
+// queued, and never outputs. Closing it fires no callback, which is what a real
+// `VideoDecoder` does too.
+class SilentDecoder {
+  static isConfigSupported = () => Promise.resolve({ supported: true })
+  decodeQueueSize = 0
+  configure = vi.fn()
+  close = vi.fn()
+  addEventListener = vi.fn()
+  decode() {
+    this.decodeQueueSize++
+  }
+}
+
+class StubChunk {
+  readonly init: object
+  constructor(init: object) {
+    this.init = init
+  }
+}
+
+describe('a pull closed mid-walk', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('settles the frameAt that was waiting on the decoder', async () => {
+    vi.stubGlobal('VideoDecoder', SilentDecoder)
+    vi.stubGlobal('EncodedVideoChunk', StubChunk)
+    const frames = Array.from({ length: 20 }, (_, i) =>
+      Uint8Array.from([i, i, i, i]),
+    )
+    const file = writeMp4({
+      width: 64,
+      height: 48,
+      fps: { num: 30, den: 1 },
+      avcc: Uint8Array.from([
+        1, 0x42, 0xc0, 0x1e, 0xff, 0xe1, 0, 4, 0x67, 0x42, 0xc0, 0x1e, 1, 0, 2,
+        0x68, 0xcb,
+      ]),
+      samples: frames.map((f, i) => ({ size: f.length, key: i === 0 })),
+      video: frames,
+    })
+    const pull = await openPull(file)
+    expect(pull).not.toBeNull()
+    const pending = pull?.frameAt(0.3)
+    await new Promise(resolve => setTimeout(resolve, 0))
+    pull?.close()
+    await expect(pending).resolves.toBeNull()
   })
 })
