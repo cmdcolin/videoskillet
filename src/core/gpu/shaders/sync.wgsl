@@ -12,7 +12,8 @@
 // side by side — one lane walking both loops in turn is latency on a single
 // lane, and this halves it whenever the sag is on. Both lanes read the
 // carried state before the barrier, because lane 0 rewrites it on its way
-// out and lane 64 must never see that. Same arithmetic in the same order, so
+// out and lane 64 must never see that. The state is in storage, and only
+// storageBarrier orders storage memory. Same arithmetic in the same order, so
 // the output is bit-identical.
 //
 // timing[0..524]      per-line horizontal offset the deflection actually used
@@ -121,7 +122,7 @@ fn main(@builtin(local_invocation_id) lid: vec3u) {
   var ablV = timing[ABL_VEL];
   var irisG = timing[IRIS_GAIN];
   var irisV = timing[IRIS_VEL];
-  workgroupBarrier();
+  storageBarrier();
 
   if (lid.x == SAG_LANE) {
     if (P.hvSag != 0.0) {
