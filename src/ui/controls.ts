@@ -2021,7 +2021,7 @@ export const GROUPS: Group[] = [
         max: 360,
         step: 1,
         unit: 'deg',
-        help: 'Which chroma phase counts as the backing. 241 is a pure green screen, 347 a blue one. These are angles on the wheel the subcarrier carries, so anything sharing a hue with the backing goes too.',
+        help: "Which chroma phase counts as the backing. 241 is a pure green screen, 347 a blue one. These are angles on the wheel the subcarrier carries, so anything sharing a hue with the backing goes too. The keyer reads B off the bus, so B's hue trim turns the backing round the wheel and the key hue has to follow it.",
       },
       {
         key: 'bKeyAcceptDeg',
@@ -2062,7 +2062,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: "Cancels the backing colour reflecting off the subject. Luma and chroma are the same wire, so the box reinjects the backing's own subcarrier in antiphase. It nulls fully on the genlocked path; on the dirty path B's carrier drifts, so the cancellation runs late and leaves a residue.",
+        help: "Cancels the backing colour reflecting off the subject. Luma and chroma are the same wire, so the box reinjects the backing's own subcarrier in antiphase. It nulls fully on the genlocked path. On the dirty path B's carrier drifts against the house reference, so part of the backing turns off the phase the canceller nulls and survives as a residue that moves with the drift.",
       },
       {
         key: 'bKeyDelayUs',

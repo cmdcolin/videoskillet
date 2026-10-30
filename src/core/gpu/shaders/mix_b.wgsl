@@ -56,22 +56,49 @@ fn encodeBHouse(houseN: u32, bIdx: u32) -> f32 {
 // and no RGB keyer can produce. Nothing draws it, and narrowing the encoder's
 // chroma widens it, because it is the same filter doing both jobs.
 //
-// It follows that the keyer is only as steady as B's colour is. On the dirty
-// path B's subcarrier is detuned, so its chroma phase walks per line and per
-// frame: the backing drifts out of the acceptance wedge and back, and the key
-// breathes and tears line-wise instead of holding. That is what a keyer fed a
-// non-genlocked source did, and it is why they were genlocked.
+// The box demodulates that chroma against the house reference, so it sees B's
+// colour as the bus carries it: turned by B's hue trim and by wherever B's
+// carrier stands against house, scaled by B's video gain and flipped by its
+// inversion. On the dirty path B's subcarrier is detuned, so its chroma phase
+// walks per line and per frame: the backing drifts out of the acceptance wedge
+// and back, and the key breathes and tears line-wise instead of holding. That
+// is what a keyer fed a non-genlocked source did, and it is why they were
+// genlocked.
+//
+// The keyer's Y/C separation is perfect. Demodulating the composite itself
+// would turn every luma edge in B into a spike of false chroma.
 struct KeySlice {
   // 1 where B is kept, 0 where the backing has been cut away.
   gate: f32,
-  // How much of this sample's chroma points at the backing colour, for the
-  // suppressor below — the spill the keyer decided was not enough to cut.
-  along: f32,
+  // The part of this sample's chroma that points at the backing colour, for
+  // the suppressor below — the spill the keyer decided was not enough to cut.
+  spill: vec2f,
 }
 
-fn chromaKey(idx: u32) -> KeySlice {
-  let uv = uvfB[idx];
-  let kdir = vec2f(cos(P.bKeyHue), sin(P.bKeyHue));
+// The angle B's carrier stands at against the house carrier, at B's raster
+// index `at` and `frac` of the way to the next sample. The carrier turns a
+// quarter cycle per sample, so the lattice offset is reduced in integers
+// before it becomes an angle. `delta` is the phase B was encoded with.
+fn busPhase(at: i32, n: u32, frac: f32, delta: f32) -> f32 {
+  return (f32((at - i32(n)) & 3) + frac) * 0.5 * PI + delta;
+}
+
+// `at` is where B's picture is for this output sample, on B's own raster, and
+// `phase` is busPhase there.
+fn chromaKey(at: i32, phase: f32) -> KeySlice {
+  // Where the keyer looks, against where the fill it is gating comes from. A
+  // real keyer trims this because the key path and the video path are
+  // different lengths of circuit, and a mis-set one lays the key beside the
+  // subject instead of over it: one edge keeps a rim of backing colour and the
+  // other eats a rim of subject. The trim is continuous, so the chroma is read
+  // between the two samples either side of it.
+  let d = floor(P.bKeyDelay);
+  let i = at + i32(d);
+  let enc = mix(uvfB[clampIdx(i)], uvfB[clampIdx(i + 1)], P.bKeyDelay - d);
+  let c = cos(phase);
+  let s = sin(phase);
+  let uv = vec2f(enc.x * c - enc.y * s, enc.x * s + enc.y * c)
+    * P.bVidGain * (1.0 - 2.0 * P.bInv);
   let soft = max(P.bKeySoft, 1e-4);
   // Below the clip there is no hue to slice: a demodulator handed an
   // unsaturated sample reports an essentially arbitrary phase, so greys, blacks
@@ -79,35 +106,23 @@ fn chromaKey(idx: u32) -> KeySlice {
   // to the key. This is the "clip" knob, and it is why a keyer cannot hold a
   // dark subject against a dark backing.
   let satg = smoothstep(P.bKeyClip, P.bKeyClip + soft, length(uv));
-  let w = wrapPi(atan2(uv.y, uv.x) - P.bKeyHue);
-  let ang = 1.0 - smoothstep(P.bKeyAccept - soft * PI, P.bKeyAccept + soft * PI, abs(w));
-  var g = 1.0 - ang * satg;
+  var g = 1.0 - hueGate(uv, P.bKeyHue, P.bKeyAccept, soft * PI) * satg;
   if (P.bKey < 0.0) {
     // The invert button: keep the backing and cut the subject out of it.
     g = 1.0 - g;
   }
-  return KeySlice(mix(1.0, g, min(abs(P.bKey), 1.0)), max(dot(uv, kdir), 0.0) * satg);
-}
-
-// Where the keyer looks, against where the fill it is gating comes from. A real
-// keyer trims this because the key path and the video path are different
-// lengths of circuit, and a mis-set one lays the key beside the subject instead
-// of over it: one edge keeps a rim of backing colour and the other eats a rim
-// of subject.
-fn keyIdx(i: i32) -> u32 {
-  return clampIdx(i + i32(round(P.bKeyDelay)));
+  let kdir = vec2f(cos(P.bKeyHue), sin(P.bKeyHue));
+  return KeySlice(mix(1.0, g, min(abs(P.bKey), 1.0)), kdir * max(dot(uv, kdir), 0.0) * satg);
 }
 
 // Spill suppression, as the hardware did it: a chroma canceller. You cannot
 // lift the green off a composite sample — luma and chroma are the same wire —
-// so the box reinjects the backing's own subcarrier in antiphase and nulls the
-// component lying along the phase the keyer already found. Everything it has
-// guessed wrong about that phase survives, which is why a source whose carrier
-// is slipping keeps a residue that breathes with the slip rather than
-// cancelling flat.
-fn suppress(along: f32, n: u32, delta: f32) -> f32 {
-  let kdir = vec2f(cos(P.bKeyHue), sin(P.bKeyHue));
-  return VIDEO_RANGE * P.bKeySpill * along * dot(kdir, carrierRot(n, P.frame, delta)) * P.bVidGain;
+// so the box reinjects the backing colour on the house carrier in antiphase
+// and nulls the component of B's chroma lying along the key hue. Whatever part
+// of the backing has drifted off that phase survives, which is why a source
+// whose carrier is slipping keeps a residue that breathes with the slip.
+fn suppress(spill: vec2f, n: u32) -> f32 {
+  return VIDEO_RANGE * P.bKeySpill * dot(spill, carrier(n, P.frame));
 }
 
 // The store's output through a bandpass at fsc along the line: x[i] less the
@@ -245,6 +260,10 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
     if (inActive) {
       var g = gate;
       var fill = bComp[n];
+      // Where B's picture is for this sample, on B's raster, which the keyer
+      // reads from as well as the fill.
+      var at = i32(n);
+      var frac = 0.0;
       // The genlock's capture range. B's own clock wanders, and the lock pulls
       // it back onto the house raster only while the error is inside the range
       // — a TBC has a window, not infinite reach. Where the error is past it
@@ -258,11 +277,12 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
         let e = mix(P.bWanderTop, P.bWanderBottom, v);
         if (abs(e) > P.bCapture) {
           let spl = f32(SPL);
-          let at = f32(s) - e;
-          let su = at - floor(at / spl) * spl;
+          let sp = f32(s) - e;
+          let su = sp - floor(sp / spl) * spl;
           let si = u32(su);
-          let np = i32(row * SPL + si);
-          fill = catmull(bComp[clampIdx(np - 1)], bComp[clampIdx(np)], bComp[clampIdx(np + 1)], bComp[clampIdx(np + 2)], su - f32(si));
+          at = i32(row * SPL + si);
+          frac = su - f32(si);
+          fill = catmull(bComp[clampIdx(at - 1)], bComp[clampIdx(at)], bComp[clampIdx(at + 1)], bComp[clampIdx(at + 2)], frac);
         }
       }
       // What sits behind B. Program A unless the keyer is actually cutting, and
@@ -274,14 +294,14 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
       // unloaded keyer able to take A off the bus entirely.
       var behind = a;
       if (P.bKey != 0.0) {
-        // Genlocked, B sits on the house raster, so the keyer reads its chroma
-        // at the output sample and B's carrier carries only the proc-amp hue
-        // trim — the one path where the suppressor knows the backing's phase
-        // exactly and can null it flat.
-        let k = chromaKey(keyIdx(i32(n)));
+        // Genlocked and held, B sits on the house raster and its carrier
+        // carries only the proc-amp hue trim, so the backing holds still and
+        // the suppressor can null it flat. On a line that has lost lock the key
+        // tears sideways with the picture.
+        let k = chromaKey(at, busPhase(at, n, frac, P.bHue));
         g = g * k.gate;
         if (P.bKeySpill > 0.0) {
-          fill = fill - suppress(k.along, n, P.bHue);
+          fill = fill - suppress(k.spill, n);
         }
         behind = keyFill(a, n);
       }
@@ -323,14 +343,14 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
       // roll, instead of the subject rolling out from under a hole parked on
       // the output. (The three domains, in one line: this displacement is in
       // the signal, so the key moves with it.)
-      let k = chromaKey(keyIdx(np));
+      //
+      // B's carrier here is the one encode_composite_b baked in, its detune
+      // walked per line, and the fractional slip turns it further against the
+      // house lattice.
+      let k = chromaKey(np, busPhase(np, n, frac, P.bHue + P.bPhase0 + P.bPhaseLine * f32(srow)));
       g = g * k.gate;
       if (P.bKeySpill > 0.0) {
-        // B's carrier here is the one encode_composite_b baked in — its detune
-        // walked per line. The fractional slip rotates it further between
-        // samples, which the suppressor has no way to follow, so the null is
-        // imperfect by exactly the amount B is running away.
-        fill = fill - suppress(k.along, clampIdx(np), P.bHue + P.bPhase0 + P.bPhaseLine * f32(srow));
+        fill = fill - suppress(k.spill, n);
       }
     }
     // Sum at the composite level; A rides its own bus fader (signed, so a

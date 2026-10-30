@@ -95,9 +95,7 @@ fn keyGate(tap: KeyTap) -> f32 {
   // regenerates until its own return has spun out of the wedge, stops, and
   // whatever has spun in takes the territory over. The softness knob is in IRE
   // of a 100 IRE slice, so it carries over as the same fraction of PI.
-  let w = wrapPi(atan2(tap.uv.y, tap.uv.x) - P.cfbKeyHue);
-  let soft = P.cfbKeySoft * 0.01 * PI;
-  let ang = 1.0 - smoothstep(P.cfbKeyAccept - soft, P.cfbKeyAccept + soft, abs(w));
+  let ang = hueGate(tap.uv, P.cfbKeyHue, P.cfbKeyAccept, P.cfbKeySoft * 0.01 * PI);
   return ang * smoothstep(KEY_CLIP, 2.0 * KEY_CLIP, length(tap.uv));
 }
 

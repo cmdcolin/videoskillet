@@ -679,6 +679,14 @@ fn wrapPi(a: f32) -> f32 {
   return a - 2.0 * PI * round(a / (2.0 * PI));
 }
 
+// A hue keyer's wedge on the U/V plane: 1 within accept of hue, eased to 0
+// over edge either side. Both chroma keyers slice with it, and hueKey.ts
+// hueGate draws it.
+fn hueGate(uv: vec2f, hue: f32, accept: f32, edge: f32) -> f32 {
+  let w = wrapPi(atan2(uv.y, uv.x) - hue);
+  return 1.0 - smoothstep(accept - edge, accept + edge, abs(w));
+}
+
 // One NTSC line's blanking-interval structure — equalizing pulses, serrated
 // vsync, sync tip, breezeway/back porch, and 9-cycle colorburst — shared by
 // every composite generator so the raster timing lives in exactly one place.

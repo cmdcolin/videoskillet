@@ -1997,6 +1997,8 @@ export const PRESETS: PresetDef[] = [
       bGain: 1,
       bHueDeg: 150,
       bKey: 1,
+      // Green's 241 on B's own wheel, turned 150 by B's hue trim on the bus.
+      bKeyHueDeg: 31,
       bKeyAcceptDeg: 34,
       bKeyClip: 0.06,
       bKeySoft: 0.04,
@@ -2070,6 +2072,7 @@ export const PRESETS: PresetDef[] = [
       bGain: 1,
       bHueDeg: 150,
       bKey: 1,
+      bKeyHueDeg: 31,
       bKeyAcceptDeg: 40,
       bKeySpill: 0.4,
       bKeyFill: 2,
