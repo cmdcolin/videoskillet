@@ -22,8 +22,6 @@
 //     `vf.sources`, `vf.audioState`). `window.vf` therefore stays typed as the
 //     concrete `Engine`, which is the honest statement of the constraint rather
 //     than a gap.
-//   - `pushFrameA`/`pushFrameB`. Internal to how an engine gets fed, not
-//     something the app does.
 //   - `Engine.create`. Construction is the one place the app has to name the
 //     implementation, and it does.
 //   - **Recovering from a lost device.** `useEngine` stands a fresh `Engine` up

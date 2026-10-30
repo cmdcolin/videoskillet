@@ -9,8 +9,8 @@ export interface Gpu {
 
 class WebGpuUnavailableError extends Error {}
 
-// Either kind of canvas. An OffscreenCanvas is what a worker-owned engine
-// presents to; on the main thread this is always an HTMLCanvasElement.
+// Either kind of canvas. The app presents to an HTMLCanvasElement; the headless
+// renders in scripts/render present to an OffscreenCanvas.
 export type RenderTarget = HTMLCanvasElement | OffscreenCanvas
 
 type GpuPower = 'high-performance' | 'low-power'

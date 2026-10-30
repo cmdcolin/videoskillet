@@ -103,7 +103,7 @@ import type { FrameSink } from './frameread'
 import type { StoreFrame } from './framestore'
 import type { ParamName } from './prelude'
 import type { FrozenKind } from './renderloop'
-import type { PullOpener, PumpedFrame, Relay, WrapHealth } from './videopump'
+import type { PullOpener, Relay, WrapHealth } from './videopump'
 
 const N = SAMPLES_PER_LINE * LINES
 const driftPhase = (phase: number, detuneKHz: number) =>
@@ -1527,32 +1527,6 @@ export class Engine implements EngineApi {
     this.pump.setRelayA(relay)
   }
 
-  // A GPU-generated noise field (1 TV static, 2 VHS static); 0 restores the
-  // texture path. Any real image/video source clears it.
-  // A video frame decoded somewhere else. On the main thread the pump feeds
-  // Sources directly; a worker-owned engine has no elements to pump, so frames
-  // arrive here instead. Ownership of the bitmap passes in — Sources closes it.
-  pushFrameA(f: PumpedFrame): void {
-    // Same deal as pushFrameB below: a worker-owned engine has frames pushed
-    // from outside, so A's pause gate lives here as well as in the pump.
-    if (this.controls.aPause > 0) {
-      f.bmp.close()
-      return
-    }
-    this.sources.pushA(f)
-  }
-
-  pushFrameB(f: PumpedFrame): void {
-    // A worker-owned engine has frames pushed from outside, so the B deck's
-    // pause gate lives here as well as in the pump. Dropped frames must close
-    // their bitmap — ownership arrived with the push.
-    if (this.controls.bPause > 0) {
-      f.bmp.close()
-      return
-    }
-    this.sources.pushB(f)
-  }
-
   // What the caption encoder has to say. Text rather than a control because it
   // is not a quantity — it rides line 21 as characters, and the board carries
   // the decoder's switch, not its words.
@@ -1569,6 +1543,8 @@ export class Engine implements EngineApi {
     return this.captionState.text()
   }
 
+  // A GPU-generated noise field (1 TV static, 2 VHS static); 0 restores the
+  // texture path. Any real image/video source clears it.
   setNoiseSource(kind: number): void {
     this.pump.setA(null)
     this.sources.setNoiseSource(kind)
