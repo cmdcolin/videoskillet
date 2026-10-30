@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 
 import { COOL_KEYS } from '../labels'
+import { reason } from '../ui/format'
 import { VOTE_SOURCE_NAMES } from './prepare'
 import { useStream } from './useStream'
 import { useVoteAuth } from './useVoteAuth'
@@ -112,10 +113,10 @@ export function StreamPage() {
         stops and waits. A 1 is as useful as a 5 — the model needs both.
       </p>
 
-      {error !== '' && (
+      {error !== null && (
         <p className={styles.error}>
-          WebGPU did not start: {error}. On Linux this page wants Firefox
-          Nightly.
+          WebGPU did not start: {reason(error)}. On Linux this page wants
+          Firefox Nightly.
         </p>
       )}
 
@@ -124,7 +125,7 @@ export function StreamPage() {
         {stream.phase === 'idle' && (
           <div className={styles.idle}>
             <span>stopped — nobody rated the last few</span>
-            <button className={styles.pick} onClick={stream.resume}>
+            <button className={styles.pick} onClick={() => stream.resume()}>
               keep going
             </button>
           </div>

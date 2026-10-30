@@ -18,7 +18,7 @@ export function TopBar(props: {
         <button
           className={styles.help}
           aria-label="share a link to this look"
-          onClick={props.onShare}
+          onClick={() => props.onShare()}
         >
           <ShareIcon />
         </button>
@@ -26,7 +26,7 @@ export function TopBar(props: {
           className={styles.help}
           aria-label="how to use the camera"
           aria-pressed={props.help}
-          onClick={props.onHelp}
+          onClick={() => props.onHelp()}
         >
           ?
         </button>

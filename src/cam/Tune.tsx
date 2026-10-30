@@ -70,6 +70,7 @@ function Weight(props: {
   onDrop?: () => void
 }) {
   const pct = Math.round(props.weight * 100)
+  const { onDrop } = props
   return (
     <label className={cx(styles.knob, styles.strength)}>
       <span className={styles.knobName}>{props.name}</span>
@@ -82,11 +83,11 @@ function Weight(props: {
         onChange={e => props.onWeigh(Number(e.target.value) / 100)}
       />
       <span className={styles.knobValue}>{pct}</span>
-      {props.onDrop === undefined ? null : (
+      {onDrop === undefined ? null : (
         <button
           className={styles.drop}
           aria-label={`take ${props.name} off`}
-          onClick={props.onDrop}
+          onClick={() => onDrop()}
         >
           <CloseIcon />
         </button>
@@ -120,14 +121,14 @@ export function Tune(props: {
         <button
           className={styles.sheetButton}
           disabled={!props.tweaked}
-          onClick={props.onReset}
+          onClick={() => props.onReset()}
         >
           reset
         </button>
         <button
           className={styles.sheetClose}
           aria-label="close"
-          onClick={props.onClose}
+          onClick={() => props.onClose()}
         >
           <CloseIcon />
         </button>

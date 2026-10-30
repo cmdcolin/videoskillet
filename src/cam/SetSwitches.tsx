@@ -30,7 +30,7 @@ export function SetSwitches(props: {
           on={tilt.on}
           label="tilt"
           title="steer the loop by tilting the phone"
-          onClick={tilt.onToggle}
+          onClick={() => tilt.onToggle()}
         >
           <TiltIcon />
         </Switch>
@@ -40,7 +40,7 @@ export function SetSwitches(props: {
           on={side.on}
           label="on side"
           title="stand the set on its side, so the scan runs down the picture"
-          onClick={side.onToggle}
+          onClick={() => side.onToggle()}
         >
           <SideIcon />
         </Switch>
@@ -50,7 +50,7 @@ export function SetSwitches(props: {
           on={sound.on}
           label="sound"
           title="let the room's sound shake the set"
-          onClick={sound.onToggle}
+          onClick={() => sound.onToggle()}
         >
           <MicIcon />
         </Switch>

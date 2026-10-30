@@ -52,7 +52,7 @@ export function LookStrip(props: {
           role="tab"
           aria-selected={faults}
           className={cx(styles.tab, styles.faultsTab, faults && styles.tabOn)}
-          onClick={props.onFaults}
+          onClick={() => props.onFaults()}
         >
           faults
         </button>
@@ -74,7 +74,7 @@ export function LookStrip(props: {
                 look?.rolled === true && styles.chipOn,
               )}
               title="scramble the picture"
-              onClick={props.onRoll}
+              onClick={() => props.onRoll()}
             >
               <ShuffleIcon />
               random
@@ -83,7 +83,7 @@ export function LookStrip(props: {
           <button
             className={cx(styles.chip, props.normal && styles.chipOn)}
             data-look="normal"
-            onClick={props.onNormal}
+            onClick={() => props.onNormal()}
           >
             normal
           </button>

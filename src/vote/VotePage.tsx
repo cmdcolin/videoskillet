@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 
+import { reason } from '../ui/format'
 import { VOTE_SOURCE_NAMES } from './prepare'
 import { useVoteAuth } from './useVoteAuth'
 import { useVoteEngines } from './useVoteEngines'
@@ -168,10 +169,10 @@ export function VotePage() {
         meantime.
       </p>
 
-      {error !== '' && (
+      {error !== null && (
         <p className={styles.error}>
-          WebGPU did not start: {error}. On Linux this page wants Firefox
-          Nightly.
+          WebGPU did not start: {reason(error)}. On Linux this page wants
+          Firefox Nightly.
         </p>
       )}
 

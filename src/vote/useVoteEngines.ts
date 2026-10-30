@@ -61,7 +61,7 @@ export function useVoteEngines<
   const R extends readonly RefObject<HTMLCanvasElement | null>[],
 >(refs: R) {
   const [engines, setEngines] = useState<EnginesFor<R> | null>(null)
-  const [error, setError] = useState('')
+  const [error, setError] = useState<unknown>(null)
 
   useEffect(() => {
     const canvases = refs.map(ref => ref.current)
@@ -100,7 +100,7 @@ export function useVoteEngines<
       // mid-boot lets go of its engines instead.
     }
     boot().catch((e: unknown) => {
-      setError(e instanceof Error ? e.message : String(e))
+      setError(e)
     })
     return () => {
       live = false

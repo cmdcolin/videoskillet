@@ -18,7 +18,7 @@ export function Switch(props: {
       aria-pressed={props.on}
       title={props.title}
       disabled={props.disabled}
-      onClick={props.onClick}
+      onClick={() => props.onClick()}
     >
       <span className={cx(styles.switchDot, props.on && styles.on)}>
         {props.children}

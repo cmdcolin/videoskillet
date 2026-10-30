@@ -81,14 +81,14 @@ export function Loops(props: {
         <button
           className={styles.sheetButton}
           disabled={!props.tweaked}
-          onClick={props.onReset}
+          onClick={() => props.onReset()}
         >
           reset
         </button>
         <button
           className={styles.sheetClose}
           aria-label="close"
-          onClick={props.onClose}
+          onClick={() => props.onClose()}
         >
           <CloseIcon />
         </button>

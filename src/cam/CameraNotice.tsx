@@ -1,4 +1,5 @@
 import styles from './cam.module.css'
+import { cameraMessage } from './useCamera'
 
 import type { FrozenKind } from '../core/gpu/renderloop'
 import type { CameraState } from './useCamera'
@@ -9,7 +10,7 @@ export function CameraNotice(props: {
   rebuilding: boolean
   frozen: FrozenKind | null
   state: CameraState
-  error: string
+  error: unknown
   onCamera: boolean
   onStart: () => void
 }) {
@@ -41,7 +42,7 @@ export function CameraNotice(props: {
     )
   if (props.state === 'off' && props.onCamera)
     return (
-      <button className={styles.start} onClick={props.onStart}>
+      <button className={styles.start} onClick={() => props.onStart()}>
         Start camera
       </button>
     )
@@ -50,8 +51,8 @@ export function CameraNotice(props: {
   if (props.state === 'error')
     return (
       <div className={styles.notice}>
-        <p>{props.error}</p>
-        <button className={styles.start} onClick={props.onStart}>
+        <p>{cameraMessage(props.error)}</p>
+        <button className={styles.start} onClick={() => props.onStart()}>
           Try again
         </button>
       </div>

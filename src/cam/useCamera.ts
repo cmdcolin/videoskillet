@@ -15,7 +15,7 @@ const FACING_STORE = 'videoskillet_cam_facing'
 
 const opposite = (f: Facing): Facing => (f === 'user' ? 'environment' : 'user')
 
-const say = (e: unknown): string => {
+export const cameraMessage = (e: unknown): string => {
   if (e instanceof DOMException) {
     if (e.name === 'NotAllowedError')
       return 'Camera access was turned down. Allow it in the browser’s site settings and try again.'
@@ -125,7 +125,7 @@ export function useCamera(
   const [stored, setStored] = usePersistedString(FACING_STORE)
   const facing: Facing = stored === 'environment' ? 'environment' : 'user'
   const [state, setState] = useState<CameraState>('off')
-  const [error, setError] = useState('')
+  const [error, setError] = useState<unknown>(null)
   const [cameras, setCameras] = useState(0)
   const [sided, setSided] = useState(false)
   const stream = useRef<MediaStream | null>(null)
@@ -153,7 +153,7 @@ export function useCamera(
   const open = async (want: Facing, deviceId?: string) => {
     const mine = ++ask.current
     setState('starting')
-    setError('')
+    setError(null)
     // Most phones cannot hold both cameras open at once, so the one on screen
     // has to go before the other can be asked for.
     stopAll(stream.current)
@@ -165,7 +165,7 @@ export function useCamera(
     } catch (e) {
       if (mine === ask.current) {
         setState('error')
-        setError(say(e))
+        setError(e)
       }
       return
     }

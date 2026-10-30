@@ -36,7 +36,7 @@ export function Shutter(props: {
               ? 'stop recording'
               : 'start recording'
         }
-        onClick={props.onShutter}
+        onClick={() => props.onShutter()}
       />
       {flip === null ? (
         <span className={styles.thumbSlot} />
@@ -44,7 +44,7 @@ export function Shutter(props: {
         <button
           className={styles.flip}
           aria-label={flip.label}
-          onClick={flip.onClick}
+          onClick={() => flip.onClick()}
         >
           <FlipIcon />
         </button>
