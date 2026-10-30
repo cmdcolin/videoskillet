@@ -96,9 +96,10 @@ const W16 = 6.912818;
 // writes its own slightly displaced raster, and blurring a shared sample would
 // average the landing error away instead of leaving it as a fringe. The tap
 // count still scales with the spot: a sub-pixel gaussian reaching the glass
-// through the bilinear sampler is fully captured by a few taps.
-fn spotAt(uv: vec2f, dim: vec2f) -> vec3f {
-  var acc = textureSampleLevel(srcTex, samp, uv, 0.0).rgb;
+// through the bilinear sampler is fully captured by a few taps. `centre` is the
+// sample at uv itself.
+fn spotAt(uv: vec2f, centre: vec3f, dim: vec2f) -> vec3f {
+  var acc = centre;
   var w = 1.0;
   if (P.crtSpot > 0.0) {
     if (P.crtSpot <= 0.8) {
@@ -144,10 +145,7 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
   // rolling or settling picture glides instead of stepping line by line.
   // Identity when locked — the oscillator phase rests at exactly 0.
   let uv = (vec2f(gid.xy) + vec2f(0.5, 0.5 + fract(timing[V_PHASE]))) / dim;
-  // Saturate → gamut-fit is the rest of the emissive stage: put it here so the
-  // feedback camera photographs phosphor light, not decoder voltages.
-  let center = beam(textureSampleLevel(srcTex, samp, uv, 0.0).rgb);
-  var col = gamutFit(center);
+  let centre = textureSampleLevel(srcTex, samp, uv, 0.0).rgb;
 
   // Identity copy when the light behaviour is disabled: keeps a clean signal
   // clean and skips the tap work.
@@ -157,7 +155,7 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
   // SVM coil are as real as the nominal polarity.
   if (P.crtSpot + P.crtGrain + P.crtBloom + P.crtHalation + P.crtGlow
       + abs(P.crtConverge) + abs(P.crtPurity) + abs(P.crtSvm) <= 0.0) {
-    textureStore(faceTex, vec2i(gid.xy), vec4f(toDrive(col), 1.0));
+    textureStore(faceTex, vec2i(gid.xy), vec4f(toDrive(gamutFit(beam(centre))), 1.0));
     return;
   }
 
@@ -171,7 +169,7 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
   // bloom this is not thresholded — dim picture bleeds too, which is why a
   // real tube never resolves into a grid of hard pixels.
   let px = vec2f(gid.xy) + vec2f(0.5, 0.5);
-  var direct = spotAt(uv, dim);
+  var direct = spotAt(uv, centre, dim);
 
   // Convergence: three guns firing through one mask from three positions can
   // only be registered over part of the screen. The error is nulled at the
@@ -186,8 +184,8 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
     let rr = clamp(dot(q, q), 0.0, 2.0);
     let dir = d / max(length(d), 1e-6);
     let off = dir * (P.crtConverge * rr) / dim;
-    let cr = spotAt(uv + off, dim);
-    let cb = spotAt(uv - off, dim);
+    let cr = spotAt(uv + off, textureSampleLevel(srcTex, samp, uv + off, 0.0).rgb, dim);
+    let cb = spotAt(uv - off, textureSampleLevel(srcTex, samp, uv - off, 0.0).rgb, dim);
     direct = vec3f(cr.r, direct.g, cb.b);
   }
 
@@ -256,7 +254,10 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
   // top of the direct emission, and a tinted faceplate is a lower control. The
   // coefficients are small because they are light: a few percent of a white
   // next to black is a visible glow there and nothing on a mid grey.
-  col = gamutFit(direct);
+  //
+  // Saturate → gamut-fit is the rest of the emissive stage: it is here so the
+  // feedback camera photographs phosphor light, not decoder voltages.
+  var col = gamutFit(direct);
   let rb = 3.5;
   if (P.crtBloom > 0.0) {
     // Tap count tiered on strength, the way spotAt tiers it on radius. The disk
