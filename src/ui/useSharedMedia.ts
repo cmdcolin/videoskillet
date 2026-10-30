@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useEffectEvent } from 'react'
 
 import { publicUrl } from '../publicUrl'
 
@@ -18,17 +18,20 @@ export function useSharedMedia(
   onFile: (file: File) => void,
   onError: (message: string) => void,
 ) {
+  const deliver = useEffectEvent((file: File) => onFile(file))
+  const fail = useEffectEvent((message: string) => onError(message))
   useEffect(() => {
     if (ready && new URLSearchParams(location.search).has(PARAM)) {
       const at = publicUrl(SHARE_KEY)
       const take = async () => {
         const cache = await caches.open(SHARE_CACHE)
         const parked = await cache.match(at)
-        if (parked) {
-          await cache.delete(at)
+        // The delete is the claim: two takes in flight can both match the
+        // parked file, and only the one whose delete removed it delivers.
+        if (parked !== undefined && (await cache.delete(at))) {
           const named = parked.headers.get('x-share-name')
           const blob = await parked.blob()
-          onFile(
+          deliver(
             new File(
               [blob],
               named === null ? 'shared' : decodeURIComponent(named),
@@ -43,8 +46,8 @@ export function useSharedMedia(
         history.replaceState(null, '', address)
       }
       take().catch((err: unknown) => {
-        onError(`shared file: ${String(err)}`)
+        fail(`shared file: ${String(err)}`)
       })
     }
-  }, [ready, onFile, onError])
+  }, [ready])
 }
