@@ -29,6 +29,16 @@ export interface FrameSink {
   frame: (frame: VideoFrame, renderedAt: number) => void
 }
 
+type ReadDevice = Pick<
+  GPUDevice,
+  | 'createBuffer'
+  | 'createTexture'
+  | 'createShaderModule'
+  | 'createRenderPipeline'
+  | 'createSampler'
+  | 'createBindGroup'
+>
+
 export class FrameRead {
   private readonly staging: GPUBuffer[]
   private free: GPUBuffer[]
@@ -43,7 +53,7 @@ export class FrameRead {
   private sampler: GPUSampler | null = null
 
   constructor(
-    private readonly device: GPUDevice,
+    private readonly device: ReadDevice,
     readonly width: number,
     readonly height: number,
     private readonly format: GPUTextureFormat,
@@ -63,7 +73,10 @@ export class FrameRead {
 
   // Encode this frame's copy if a buffer is spare. The buffer goes to `flush`
   // after the submit; null is a skipped frame.
-  copy(enc: GPUCommandEncoder, presented: GPUTexture): GPUBuffer | null {
+  copy(
+    enc: Pick<GPUCommandEncoder, 'copyTextureToBuffer' | 'beginRenderPass'>,
+    presented: GPUTexture,
+  ): GPUBuffer | null {
     const buf = this.free.pop()
     if (buf === undefined) return null
     this.copied = true
@@ -82,23 +95,35 @@ export class FrameRead {
   }
 
   flush(buf: GPUBuffer, renderedAt: number): void {
-    void buf.mapAsync(GPUMapMode.READ).then(
-      () => {
-        if (this.closed) return
-        const frame = new VideoFrame(this.tight(buf), {
-          format: this.format === 'bgra8unorm' ? 'BGRX' : 'RGBX',
-          codedWidth: this.width,
-          codedHeight: this.height,
-          timestamp: 0,
-        })
-        buf.unmap()
-        this.free.push(buf)
-        this.sink.frame(frame, renderedAt)
-      },
-      // A destroyed buffer or a lost device rejects the map, and both mean the
-      // recording is going away.
-      () => {},
-    )
+    void buf
+      .mapAsync(GPUMapMode.READ)
+      .then(
+        () => {
+          if (!this.closed) this.sink.frame(this.frameOf(buf), renderedAt)
+        },
+        // A destroyed buffer or a lost device rejects the map, and both mean the
+        // recording is going away.
+        () => {},
+      )
+      .catch((e: unknown) => {
+        console.error('frame readback failed', e)
+      })
+  }
+
+  // The buffer goes back to the pool whether or not the frame could be built,
+  // or one failed VideoFrame would take a third of the pool with it for good.
+  private frameOf(buf: GPUBuffer) {
+    try {
+      return new VideoFrame(this.tight(buf), {
+        format: this.format === 'bgra8unorm' ? 'BGRX' : 'RGBX',
+        codedWidth: this.width,
+        codedHeight: this.height,
+        timestamp: 0,
+      })
+    } finally {
+      buf.unmap()
+      this.free.push(buf)
+    }
   }
 
   private tight(buf: GPUBuffer): Uint8Array {
@@ -113,7 +138,10 @@ export class FrameRead {
     return packed
   }
 
-  private scaled(enc: GPUCommandEncoder, presented: GPUTexture): GPUTexture {
+  private scaled(
+    enc: Pick<GPUCommandEncoder, 'beginRenderPass'>,
+    presented: GPUTexture,
+  ): GPUTexture {
     const d = this.device
     this.target ??= d.createTexture({
       size: [this.width, this.height],

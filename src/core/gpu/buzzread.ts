@@ -21,7 +21,7 @@ export class BuzzRead {
   private closed = false
 
   constructor(
-    device: GPUDevice,
+    device: Pick<GPUDevice, 'createBuffer'>,
     private readonly bytes: number,
   ) {
     this.staging = Array.from({ length: POOL }, () =>
@@ -34,7 +34,10 @@ export class BuzzRead {
   }
 
   // Encode this frame's copy, if a staging buffer is going spare.
-  copy(enc: GPUCommandEncoder, src: GPUBuffer): void {
+  copy(
+    enc: Pick<GPUCommandEncoder, 'copyBufferToBuffer'>,
+    src: GPUBuffer,
+  ): void {
     const buf = this.free.pop()
     if (buf !== undefined) {
       enc.copyBufferToBuffer(src, 0, buf, 0, this.bytes)
@@ -47,19 +50,27 @@ export class BuzzRead {
   // it, and holding on to it past that reads a detached buffer.
   flush(sink: (samples: Float32Array) => void): void {
     for (const buf of this.queued) {
-      void buf.mapAsync(GPUMapMode.READ).then(
-        () => {
-          if (!this.closed) {
-            sink(new Float32Array(buf.getMappedRange()))
-            buf.unmap()
-            this.free.push(buf)
-          }
-        },
-        // A destroyed buffer or a lost device rejects the map. Both mean the
-        // engine is going away, so there is nothing to report and nothing to
-        // return to the pool.
-        () => {},
-      )
+      void buf
+        .mapAsync(GPUMapMode.READ)
+        .then(
+          () => {
+            if (!this.closed) {
+              try {
+                sink(new Float32Array(buf.getMappedRange()))
+              } finally {
+                buf.unmap()
+                this.free.push(buf)
+              }
+            }
+          },
+          // A destroyed buffer or a lost device rejects the map. Both mean the
+          // engine is going away, so there is nothing to report and nothing to
+          // return to the pool.
+          () => {},
+        )
+        .catch((e: unknown) => {
+          console.error('buzz readback sink failed', e)
+        })
     }
     this.queued.length = 0
   }
