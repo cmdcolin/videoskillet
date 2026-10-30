@@ -280,9 +280,10 @@ export function useSecond(
       try {
         land(mine, await goLive(back))
       } catch (e) {
-        if (mine === turn.current) show(null)
         stopAll(back.stream)
-        onError(`second camera: ${reason(e)}`)
+        if (failed(mine, `second camera: ${reason(e)}`) === 'failed') {
+          show(null)
+        }
       }
     }
   }
