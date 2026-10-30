@@ -518,8 +518,9 @@ export function createMidi(cb: MidiCallbacks): MidiManager {
     }
   }
 
-  const onPulse = () => {
-    const now = performance.now()
+  // Timed by the event's own stamp, on the same clock as `performance.now()`,
+  // so ticks that queue behind a busy main thread keep their spacing.
+  const onPulse = (now: number) => {
     pulses.push(now)
     if (pulses.length > 25) pulses.shift() // ~one beat of history
     lastPulse = now
@@ -642,7 +643,7 @@ export function createMidi(cb: MidiCallbacks): MidiManager {
     const data = e.data
     // System real-time is a single status byte: 0xF8 clock tick, 0xFC stop.
     if (data?.length === 1) {
-      if (data[0] === 0xf8) onPulse()
+      if (data[0] === 0xf8) onPulse(e.timeStamp)
       else if (data[0] === 0xfc) stopClock()
     }
     // A Note Off goes to the action its note is bound to, which lets a held

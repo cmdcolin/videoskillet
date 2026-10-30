@@ -308,3 +308,52 @@ describe('a manager destroyed before its grant arrives', () => {
     expect(statuses).toEqual(['requesting'])
   })
 })
+
+describe('the MIDI clock', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  // A main thread that stalls delivers the queued ticks in a burst, all handled
+  // at one `performance.now()`. The tempo has to come off when each tick
+  // arrived, which is the event's own stamp.
+  it('reads tempo off the ticks’ own stamps, not when they were handled', async () => {
+    const input: { onmidimessage: ((e: unknown) => void) | null } = {
+      onmidimessage: null,
+    }
+    vi.stubGlobal('navigator', {
+      requestMIDIAccess: () =>
+        Promise.resolve({
+          inputs: new Map([['in', input]]),
+          addEventListener: vi.fn(),
+          removeEventListener: vi.fn(),
+        }),
+    })
+    vi.stubGlobal('performance', { now: () => 5000 })
+    const tempos: (number | null)[] = []
+    const midi = createMidi({
+      onControl: () => {},
+      onStatus: () => {},
+      onBindings: () => {},
+      onArmed: () => {},
+      onPickup: () => {},
+      onAction: () => {},
+      onActionEnd: () => {},
+      onNotes: () => {},
+      onArmedNote: () => {},
+      onLearn: () => {},
+      onTempo: bpm => tempos.push(bpm),
+    })
+    midi.enable()
+    await new Promise(r => setTimeout(r, 0))
+    const perPulse = 60000 / (120 * 24)
+    for (let i = 0; i < 12; i++) {
+      input.onmidimessage?.({
+        data: Uint8Array.from([0xf8]),
+        timeStamp: 1000 + i * perPulse,
+      })
+    }
+    midi.destroy()
+    expect(tempos).toEqual([120])
+  })
+})
