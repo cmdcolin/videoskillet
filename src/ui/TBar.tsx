@@ -111,6 +111,7 @@ export function TBar() {
     ]).get(e.key)
     if (to !== undefined) {
       e.preventDefault()
+      stopTake()
       throwTo(to)
     }
   }
