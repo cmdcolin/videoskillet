@@ -58,11 +58,24 @@ export function superviseEngine(
   const losses = new RebuildPolicy()
   const hangs = new RebuildPolicy()
   let busy = false
+  // Set once the fatal screen is up. A hung engine left behind it usually loses
+  // its device later, and a rebuild there would spend a device on a session the
+  // user has been told is over, adopting an audio graph already closed.
+  let gaveUp = false
   let retryId: ReturnType<typeof setTimeout> | undefined
+
+  // While a rebuild is pending, `live` is the dead engine, already destroyed
+  // with its audio graph kept for the replacement. Nothing owns that graph until
+  // a replacement goes live, so ending the session closes it here, or a live
+  // microphone outlasts the page that opened it.
+  const closePendingAudio = () => {
+    if (busy) live?.audioState.close()
+  }
 
   const onPageHide = () => {
     disposed = true
     live?.destroy()
+    closePendingAudio()
   }
   window.addEventListener('pagehide', onPageHide)
 
@@ -86,13 +99,16 @@ export function superviseEngine(
       message.slice(0, 120),
     )
     trace.flush(true)
-    if (disposed || busy || live !== dead) return
+    if (disposed || gaveUp || busy || live !== dead) return
     const policy = fault === 'hung' ? hangs : losses
     // A device that completed work before it hung was worth replacing, and the
     // gap between two such hangs is time spent in another tab. Only a device
     // that never completed anything counts toward giving up.
     if (fault === 'hung' && dead.gpuConfirmed) policy.reset()
     if (policy.record(performance.now()) === 'give-up') {
+      // Nothing will adopt the graph after the fatal screen.
+      gaveUp = true
+      dead.audioState.close()
       s.onFatal(
         fault === 'hung'
           ? {
@@ -156,7 +172,9 @@ export function superviseEngine(
           return
         }
         busy = false
+        gaveUp = true
         s.onRebuilding(null)
+        dead.audioState.close()
         s.onFatal({
           title:
             fault === 'hung'
@@ -199,6 +217,7 @@ export function superviseEngine(
     clearTimeout(retryId)
     window.removeEventListener('pagehide', onPageHide)
     live?.destroy({ keepDevice: true })
+    closePendingAudio()
     live = null
   }
 }

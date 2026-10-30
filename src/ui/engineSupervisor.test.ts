@@ -24,7 +24,7 @@ interface Fake {
   onHang: () => void
   onFrozen: (f: unknown) => void
   gpuConfirmed: boolean
-  audioState: object
+  audioState: { close: ReturnType<typeof vi.fn> }
   destroy: ReturnType<typeof vi.fn>
 }
 
@@ -33,7 +33,7 @@ const fake = (gpuConfirmed = true): Fake => ({
   onHang: () => {},
   onFrozen: () => {},
   gpuConfirmed,
-  audioState: {},
+  audioState: { close: vi.fn() },
   destroy: vi.fn(),
 })
 
@@ -78,6 +78,7 @@ describe('superviseEngine', () => {
     expect(s.adopt).toHaveBeenLastCalledWith(live[1], live[0])
     expect(s.onRebuilding).toHaveBeenLastCalledWith(null)
     expect(s.onFrozen).toHaveBeenLastCalledWith(null)
+    expect(live[0]!.audioState.close).not.toHaveBeenCalled()
   })
 
   it('ignores a late fault from an engine already replaced', async () => {
@@ -110,6 +111,22 @@ describe('superviseEngine', () => {
     expect(s.onFatal).toHaveBeenCalledWith(
       expect.objectContaining({ kind: 'hung' }),
     )
+    expect(live.at(-1)!.audioState.close).toHaveBeenCalled()
+  })
+
+  it('starts no rebuild behind the fatal screen', async () => {
+    const made = Array.from({ length: MAX_REBUILDS + 2 }, () => fake(false))
+    const { s, live } = harness(made)
+    await flush()
+    for (let i = 0; i <= MAX_REBUILDS; i++) {
+      live.at(-1)!.onHang()
+      await flush()
+    }
+    const builds = s.create.mock.calls.length
+    live.at(-1)!.onDeviceLost('gone')
+    await flush()
+    expect(s.create).toHaveBeenCalledTimes(builds)
+    expect(live.at(-1)!.destroy).not.toHaveBeenCalled()
   })
 
   it('retries a failed create before giving up', async () => {
@@ -126,6 +143,20 @@ describe('superviseEngine', () => {
     expect(s.onFatal).toHaveBeenCalledWith(
       expect.objectContaining({ kind: 'lost' }),
     )
+    expect(live[0]!.audioState.close).toHaveBeenCalled()
+  })
+
+  it('closes the kept audio graph when torn down mid-rebuild', async () => {
+    vi.useFakeTimers()
+    const { s, live, stop } = harness([fake(), new Error('no adapter')])
+    await vi.advanceTimersByTimeAsync(0)
+    live[0]!.onDeviceLost('')
+    await vi.advanceTimersByTimeAsync(0)
+    expect(live[0]!.audioState.close).not.toHaveBeenCalled()
+    stop()
+    expect(live[0]!.audioState.close).toHaveBeenCalled()
+    await vi.advanceTimersByTimeAsync(CREATE_RETRY_MS * CREATE_TRIES)
+    expect(s.create).toHaveBeenCalledTimes(2)
   })
 
   it('names a pipeline the browser rejects', async () => {
