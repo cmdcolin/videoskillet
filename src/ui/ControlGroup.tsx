@@ -504,24 +504,23 @@ function needsOf(group: Group): readonly SliderNeed[] {
   return needs
 }
 
-// Every gate the rows on screen sit behind, and how many of them sit behind
-// each — which is a fact about the rows, not about where the controls are.
+// Every control the rows on screen are gated on, and how many of those rows are
+// shut — which is a fact about the rows, not about where the controls are. Two
+// rows gated on one control can differ on whether a second path opens them, so
+// each row counts by its own need, and the banner speaks for the plain one.
 function gatesBehind(
   onScreen: readonly SliderDef[],
+  isShut: (need: SliderNeed) => boolean,
 ): { need: SliderNeed; n: number }[] {
-  // A gate with a second path is its own entry: its rows can be live while the
-  // rest behind the same key are not.
-  const gates = new Map<
-    ControlKey | SliderNeed,
-    { need: SliderNeed; n: number }
-  >()
+  const gates = new Map<ControlKey, { need: SliderNeed; n: number }>()
   for (const s of onScreen) {
     const need = NEEDS[s.key]
-    if (need !== undefined) {
-      const at = need.also === undefined ? need.key : need
-      const seen = gates.get(at)
-      if (seen === undefined) gates.set(at, { need, n: 1 })
-      else seen.n += 1
+    if (need === undefined || !isShut(need)) continue
+    const seen = gates.get(need.key)
+    if (seen === undefined) gates.set(need.key, { need, n: 1 })
+    else {
+      seen.n += 1
+      if (seen.need.also !== undefined) seen.need = need
     }
   }
   return [...gates.values()]
@@ -714,14 +713,13 @@ export function ControlGroup(props: { group: Group; defaultOpen?: boolean }) {
   // behind loop mix), one banner beats a stack of identical per-row notes; the
   // notes stay only for the odd ones out.
   //
-  // How many rows sit behind each gate is a property of which rows are showing,
-  // so it is counted here, off the controls entirely; where the controls come in
-  // is only *which* of those gates are shut, and that is `shut` above.
-  const behind = gatesBehind(onScreen)
+  // How many rows a gate shuts depends on which rows are showing, so it is
+  // counted here; the controls come in only through `shut` above.
   const needs = needsOf(group)
-  const banners = behind.filter(
-    g => g.n >= 3 && shut[needs.indexOf(g.need)] === 'x',
-  )
+  const banners = gatesBehind(
+    onScreen,
+    need => shut[needs.indexOf(need)] === 'x',
+  ).filter(g => g.n >= 3)
   // Through sameKeySet, not `new Set(...)`: this is a prop on every row in the
   // group, and a fresh Set on each write would be enough on its own to re-render
   // all of them.

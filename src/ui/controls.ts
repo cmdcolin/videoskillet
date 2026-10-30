@@ -1,3 +1,4 @@
+import { keyFillOf } from '../core/gpu/framestore'
 import { clamp } from '../core/math'
 
 import type { Controls, ControlKey } from '../core/controls'
@@ -4108,15 +4109,12 @@ const cfb: SliderNeed = {
   hint: 'loop mix above 0',
 }
 // The frame store records for the loop fader and for the keyer filling from the
-// loop bus, so its strobe and trails act with the fader down.
+// loop bus, so its strobe and trails act with the fader down. The board cannot
+// say whether B has a source, so the keyer's half assumes it has.
 const storeRecords: SliderNeed = {
   ...cfb,
   hint: 'loop mix above 0, or the keyer filling from the loop bus',
-  also: c =>
-    c.bGenlock > 0.5 &&
-    c.bGain > 0 &&
-    c.bKey !== 0 &&
-    Math.round(c.bKeyFill) === 2,
+  also: c => keyFillOf(c, true) === 'loop',
 }
 const cfbKeyed: SliderNeed = {
   key: 'cfbKey',
