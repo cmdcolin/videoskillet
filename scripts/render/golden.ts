@@ -26,6 +26,7 @@ const CASES: Case[] = [
   { name: 'scrambledChannel', preset: 'scrambledChannel' },
   { name: 'chromaRails', preset: 'chromaRails' },
   { name: 'mixerLoop', preset: 'mixerLoop' },
+  { name: 'railSlam', preset: 'railSlam' },
   { name: 'tvStatic', noise: 1 },
   {
     name: 'overmodulatedChyron',
