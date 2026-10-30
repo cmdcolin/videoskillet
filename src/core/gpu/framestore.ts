@@ -80,6 +80,15 @@ export class FrameStore {
     this.settling = true
   }
 
+  // A fresh store for a reset, which keeps whether the link has loaded and a
+  // settle still counting down. Dropping the second left a reset in that window
+  // tracking the program until the page reloaded.
+  restart(): FrameStore {
+    const next = new FrameStore(this.loading)
+    next.settling = this.settling
+    return next
+  }
+
   // Call once per frame. `busy` says a source slot is still waiting on its
   // first frame or seeking.
   step(
@@ -104,7 +113,10 @@ export class FrameStore {
       }
     }
     this.before = Math.round(c.bKeyFill) === FREEZE ? 0 : c.bKeyFill
-    if (this.loading && fill === 'loop') return { records: true, fill: 0 }
+    // On the strobe period while loading as well, so trails peak-hold captures of
+    // one subcarrier parity from the start.
+    if (this.loading && fill === 'loop')
+      return { records: frame % strobePeriod(c) === 0, fill: 0 }
     return {
       records:
         (c.cfbMix !== 0 || fill === 'loop') && frame % strobePeriod(c) === 0,

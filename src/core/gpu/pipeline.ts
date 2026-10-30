@@ -2124,7 +2124,7 @@ export class Engine implements EngineApi {
     this.simAcc = 0
     this.lockPhase = 0
     this.frame = 0
-    this.frameStore = new FrameStore(this.frameStore.loading)
+    this.frameStore = this.frameStore.restart()
     // Designed from a board that has not moved, but into a buffer that has just
     // been cleared with everything else.
     this.filtersDirty = true

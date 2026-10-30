@@ -85,7 +85,11 @@ describe('FrameStore', () => {
     const store = new FrameStore()
     const c = keyed({ bKeyFill: 2, cfbHold: 2 })
     expect(Array.from({ length: 3 }, (_, i) => store.step(c, true, i))).toEqual(
-      Array.from({ length: 3 }, () => ({ records: true, fill: 0 })),
+      [
+        { records: true, fill: 0 },
+        { records: false, fill: 0 },
+        { records: false, fill: 0 },
+      ],
     )
     store.settle()
     run(store, c, 60, 3)
@@ -100,6 +104,15 @@ describe('FrameStore', () => {
     expect(store.step(c, true, 0, true).records).toBe(true)
     expect(run(store, c, 59).every(r => r)).toBe(true)
     expect(run(store, c, 3)).toEqual([false, false, false])
+  })
+
+  it('keeps a pending settle through a reset', () => {
+    const store = new FrameStore()
+    store.settle()
+    run(store, keyed({ bKeyFill: 2 }), 30)
+    const reset = store.restart()
+    run(reset, keyed({ bKeyFill: 2 }), 60)
+    expect(reset.loading).toBe(false)
   })
 
   it('carries a settled store through a reset', () => {
