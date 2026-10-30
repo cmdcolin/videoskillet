@@ -1,4 +1,4 @@
-import { createContext, use, useEffect, useId, useState } from 'react'
+import { createContext, use, useId, useState } from 'react'
 
 import { snapToStep } from './controls'
 import { cx } from './cx'
@@ -84,20 +84,27 @@ function IconButton(props: {
   title: string
   className: string
   expanded?: boolean
-  onClick: () => void
-  onMouseEnter?: () => void
+  onClick: (el: HTMLButtonElement) => void
+  onMouseEnter?: (el: HTMLButtonElement) => void
   onMouseLeave?: () => void
   children: ReactNode
 }) {
+  const { onMouseEnter, onMouseLeave } = props
   return (
     <button
       type="button"
       title={props.title}
       className={props.className}
       aria-expanded={props.expanded}
-      onMouseEnter={props.onMouseEnter}
-      onMouseLeave={props.onMouseLeave}
-      onClick={() => props.onClick()}
+      onMouseEnter={
+        onMouseEnter === undefined
+          ? undefined
+          : e => onMouseEnter(e.currentTarget)
+      }
+      onMouseLeave={
+        onMouseLeave === undefined ? undefined : () => onMouseLeave()
+      }
+      onClick={e => props.onClick(e.currentTarget)}
     >
       {props.children}
     </button>
@@ -508,13 +515,12 @@ export function Slider(props: {
   const vernierAnchor = `--vernier-${vernierId.replaceAll(/\W/g, '')}`
   // Both hang off the same edge of the same row; the ? card wins because it is
   // asked for after the vernier already was and there is only room for one.
-  // The vernier is a native popover now, so closing it from here means asking
-  // the element itself rather than an unmount.
-  useEffect(() => {
-    if (showVernier && (hoverHelp || showHelp)) {
-      document.getElementById(vernierId)?.hidePopover()
-    }
-  }, [showVernier, hoverHelp, showHelp, vernierId])
+  // The vernier is a native popover, so it is closed by asking the element,
+  // found off the ? button's own document since the row may be living in the
+  // popped-out window.
+  const yieldVernier = (from: Element) => {
+    if (showVernier) from.ownerDocument.getElementById(vernierId)?.hidePopover()
+  }
   const midi = props.midi
   const sync = props.sync
   const needs = props.needs
@@ -585,8 +591,14 @@ export function Slider(props: {
           <IconButton
             title="what does this do?"
             className={styles.what!}
-            onClick={() => setShowHelp(true)}
-            onMouseEnter={() => setHoverHelp(true)}
+            onClick={el => {
+              yieldVernier(el)
+              setShowHelp(true)
+            }}
+            onMouseEnter={el => {
+              yieldVernier(el)
+              setHoverHelp(true)
+            }}
             onMouseLeave={() => setHoverHelp(false)}
           >
             ?
@@ -666,7 +678,7 @@ export function Slider(props: {
         <IconButton
           title="listening for a knob — click to cancel"
           className={cx(styles.badge, styles.iconOn)}
-          onClick={midi.onArm}
+          onClick={() => midi.onArm()}
         >
           learn…
         </IconButton>
