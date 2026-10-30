@@ -3,6 +3,7 @@ import { useEffect, useEffectEvent, useRef, useState } from 'react'
 import { clamp } from '../core/math'
 import { loopWindow } from './cue'
 import { cx } from './cx'
+import { everyFrame } from './everyFrame'
 import styles from './Scrub.module.css'
 
 import type { Cue, CueEdge, LoopingCue } from './cue'
@@ -43,7 +44,6 @@ export function Scrub(props: {
   const readTime = useEffectEvent(() => props.readTime())
 
   useEffect(() => {
-    let id = 0
     const tick = () => {
       const t = Math.min(readTime(), duration)
       const input = inputRef.current
@@ -54,10 +54,10 @@ export function Scrub(props: {
       const text = clock(t)
       const shown = clockRef.current
       if (shown !== null && shown.textContent !== text) shown.textContent = text
-      id = requestAnimationFrame(tick)
     }
     tick()
-    return () => cancelAnimationFrame(id)
+    const input = inputRef.current
+    return input === null ? undefined : everyFrame(input, tick)
   }, [duration])
 
   const fill: CSSProperties & Record<'--p', string> = { '--p': '0%' }
@@ -141,7 +141,6 @@ export function LoopScrub(props: {
   const len = (cue.out - cue.in).toFixed(2)
 
   useEffect(() => {
-    let id = 0
     const tick = () => {
       const t = clamp(readTime(), from, to)
       const input = inputRef.current
@@ -157,10 +156,9 @@ export function LoopScrub(props: {
         pos.textContent = (clamp(t, cue.in, cue.out) - cue.in)
           .toFixed(2)
           .padStart(len.length)
-      id = requestAnimationFrame(tick)
     }
-    id = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(id)
+    const input = inputRef.current
+    return input === null ? undefined : everyFrame(input, tick)
   }, [from, to, cue.in, cue.out, len])
 
   const move = (edge: CueEdge, time: number) => {

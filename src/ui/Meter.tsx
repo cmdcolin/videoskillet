@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 
 import { clamp01 } from '../core/math'
 import { cx } from './cx'
+import { everyFrame } from './everyFrame'
 import styles from './Meter.module.css'
 
 import type { AudioState } from '../core/signal/audiostate'
@@ -25,7 +26,6 @@ export function Meter({
   const unlitRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    let id = 0
     const tick = () => {
       const el = unlitRef.current
       if (el !== null) {
@@ -37,10 +37,9 @@ export function Meter({
           el.style.height = unlit
         }
       }
-      id = requestAnimationFrame(tick)
     }
-    id = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(id)
+    const mask = unlitRef.current
+    return mask === null ? undefined : everyFrame(mask, tick)
   }, [audio, orient])
 
   const h = orient === 'h'
