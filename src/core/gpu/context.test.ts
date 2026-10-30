@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import {
+  adapterLabel,
   gpuAtRisk,
   gpuBudgetEnforced,
   gpuDestroyAllowed,
@@ -247,5 +248,46 @@ describe('underErrorScopes', () => {
       }),
     ).rejects.toThrow('constructor threw')
     expect(d.depth()).toBe(0)
+  })
+})
+
+describe('adapterLabel', () => {
+  const info = {
+    vendor: 'nvidia',
+    architecture: 'ampere',
+    device: '0x2206',
+    description: 'NVIDIA GeForce RTX 3080',
+  }
+
+  it('names the GPU a session ran on', () => {
+    // The gpuSession trace line carries this, so a frozen session's black box
+    // says which GPU it froze on.
+    expect(adapterLabel(info)).toBe(
+      'vendor=nvidia arch=ampere device=0x2206 desc=NVIDIA GeForce RTX 3080',
+    )
+  })
+
+  it('leaves out what the browser withholds', () => {
+    expect(adapterLabel({ ...info, device: '', description: '' })).toBe(
+      'vendor=nvidia arch=ampere',
+    )
+    expect(
+      adapterLabel({
+        vendor: '',
+        architecture: '',
+        device: '',
+        description: '',
+      }),
+    ).toBe('adapter unnamed')
+  })
+
+  it('keeps to one trace line and its fields', () => {
+    const label = adapterLabel({
+      ...info,
+      description: `a|b\nc${'x'.repeat(400)}`,
+    })
+    expect(label).not.toMatch(/[|\n]/)
+    expect(label).toContain('desc=a/b/c')
+    expect(label.length).toBeLessThanOrEqual(160)
   })
 })

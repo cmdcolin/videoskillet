@@ -305,6 +305,32 @@ function recordGpuSession(): { builds: number; sessions: number } {
 
 const recordGpuRelease = (): number => bump(GPU_RELEASE_KEY, gpuReleases())
 
+// A bound on the free-form string a driver writes into every session's trace.
+const ADAPTER_CHARS = 160
+
+// Which GPU a session ran on, for its trace line. A field the browser withholds
+// is empty, and is left out. `|` separates a trace line's fields and a newline
+// separates lines, so neither may come through.
+export function adapterLabel(
+  info: Pick<
+    GPUAdapterInfo,
+    'vendor' | 'architecture' | 'device' | 'description'
+  >,
+) {
+  const fields: [string, string][] = [
+    ['vendor', info.vendor],
+    ['arch', info.architecture],
+    ['device', info.device],
+    ['desc', info.description],
+  ]
+  const label = fields
+    .filter(([, value]) => value !== '')
+    .map(([key, value]) => `${key}=${value.replaceAll(/[|\r\n]/g, '/')}`)
+    .join(' ')
+    .slice(0, ADAPTER_CHARS)
+  return label === '' ? 'adapter unnamed' : label
+}
+
 export async function initGpu(
   canvas: RenderTarget,
   power: GpuPower = 'high-performance',
@@ -365,7 +391,12 @@ export async function initGpu(
       `This page has now created ${builds} WebGPU devices. That is more than one session needs; each is an engine rebuild, and rebuilds are where a tab's rendering step gets spent. (scripts/devicetear.mjs)`,
     )
   }
-  trace.add('gpuSession', `${builds} in this page, ${sessions} in this tab`)
+  const adapterInfo =
+    'info' in adapter ? adapterLabel(adapter.info) : 'adapter info absent'
+  trace.add(
+    'gpuSession',
+    `${builds} in this page, ${sessions} in this tab, ${adapterInfo}`,
+  )
   const format = navigator.gpu.getPreferredCanvasFormat()
   const stash: HeldGpu = { device, format, live: true }
   gpuGlobals.ntscGpu = stash
