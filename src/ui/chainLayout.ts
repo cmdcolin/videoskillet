@@ -49,15 +49,10 @@ import type { Point } from 'skillet-shared/wire-route'
 // they say.
 export const W = 304
 // The band above the trunk holds the loops, 44 units deep so each run carries
-// a chip with its name at a size that reads beside the boxes.
-//
-// Under the branches is the free row, which left the drawing for a while and is
-// back — see FREE_Y. It went out to buy the trunk and branch rows a hittable
-// box height (16 units to 22), and what paid for it the second time is that the
-// row of html chips it became cost the panel about as much height as the row
-// costs the svg, while being the one thing in the map's own picture set to the
-// panel's type rather than the map's. One drawing, one scale.
-export const H = 146
+// a chip with its name at a size that reads beside the boxes. The drawing ends
+// under the branch row: the stages nothing is wired to are buttons on the
+// path's heading (see FreeBox).
+export const H = 112
 // Gap between boxes — the run each wire has to cross — and how far one opens
 // when a filter leaves the row with room to spare.
 export const GAP = 10
@@ -70,15 +65,9 @@ export const MID_Y = 57
 // The branch row, under the trunk: input B at its head and the sound under the
 // receiver, both joining from below.
 export const BRANCH_Y = 95
-// The free row, under the branches: the boxes nothing is wired to. Same 34
-// units below its neighbour that the branch row sits below the trunk, so the
-// three rows are one rhythm and the gap under the last wire is not read as the
-// drawing having ended. Nothing is drawn to these boxes and nothing needs to
-// be: on a row of their own with no wire on it, the emptiness is the row.
-export const FREE_Y = 129
 // 26 units, which is 28px at the sidebar's 332: a 24px target with room for a
 // 10px name over an 8px caption. The trunk's top edge sits at 44, under the
-// runs at 9 and 27; MID_Y, BRANCH_Y and FREE_Y move together to keep that.
+// runs at 9 and 27; MID_Y and BRANCH_Y move together to keep that.
 export const BOX_H = 26
 // Half-width of a wire's arrowhead.
 export const HEAD = 2.5
@@ -322,37 +311,19 @@ export interface WiredBranch {
 // meant "park under this one", which is a placement dressed up as a connection —
 // the kind of field the next reader has to be told twice is a lie.
 //
-// Parking one in the gaps of the branch row is what does not work: there, a box
-// with no wire has to be read against every wire around it, and the gap has to
-// be wide enough to be convincingly deliberate. On a row of its own the
-// emptiness is the row, which is why `freeRow` below places them there and why
-// the full card does the same.
+// None of them is drawn on the map. Parking one in the gaps of the branch row
+// reads it against every wire around it, and a row of their own under the
+// branches read as a third and fourth input. They are buttons on the path's
+// heading, beside the other way at every control, `all settings`.
 export interface FreeBox {
   name: string
   free: true
 }
 
 // What the panel can hang under the trunk: something wired to a stage, or
-// something wired to nothing. Both reach the map — the wired ones through
-// `chainLayout`, which has wires to route, and the free ones through `freeRow`,
-// which has none.
+// something wired to nothing. The wired ones reach the map through
+// `chainLayout`; the free ones are the path heading's.
 export type BranchSpec = WiredBranch | FreeBox
-
-// The free row: boxes wide enough for their labels, left to right from the
-// trunk's own left edge, with the row's gap between them. No fit pass and no
-// stretching — this row is two short boxes in a 304-unit width, so the crowding
-// the trunk has to be scaled out of cannot arise here. If it ever does (a third
-// box, a longer name), it overflows visibly rather than silently, which is the
-// failure worth having.
-export const freeRow = (names: string[]): ChainBox[] => {
-  let x = LEAD
-  return names.map(name => {
-    const w = boxWidth(name)
-    const box = { name, x: x + w / 2, w }
-    x += w + GAP
-    return box
-  })
-}
 
 // A branch's box and the run out of it. Same routing vocabulary as the returns —
 // orthogonal with a rounded corner — so the wires that come from below read as

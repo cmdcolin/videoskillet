@@ -7,8 +7,6 @@ import {
   branchPath,
   chainLayout,
   fitSub,
-  FREE_Y,
-  freeRow,
   H,
   HEAD,
   MID_Y,
@@ -111,12 +109,6 @@ export function ChainMap(props: {
   // saying that input exists at all. A live filter can leave one with nothing
   // to show, and it drops out.
   branches: ChainBranchStage[]
-  // The boxes nothing is wired to, on their own row under the branches. They
-  // are stages of the panel rather than of the chain — the modulation bay and
-  // the deck — so they take the same box, the same states and the same press as
-  // everything else here, and say what they are by the row being empty of wires
-  // rather than by being drawn in some other register.
-  free: ChainStage[]
   // The loops, drawn over the trunk. Each is a stage in its own right and the
   // run is its only door, so a loop the filter has left nothing to show simply
   // is not in here and its run is not drawn.
@@ -282,8 +274,8 @@ export function ChainMap(props: {
            the only thing that differs between an input and the view, and it is
            the whole statement: one is fed into the chain, the other out of it.
 
-           Every box on *this* row has all of that. The two that are wired to
-           nothing have none of it, which is what the free row below is for. */
+           Every box on this row has all of that. The stages wired to nothing
+           are buttons on the path's heading. */
         <g
           key={branch.name}
           className={cx(
@@ -322,23 +314,6 @@ export function ChainMap(props: {
           folds={props.folds}
           onOpen={props.onOpen}
         />
-      ))}
-      {freeRow(props.free.map(f => f.name)).map((box, i) => (
-        /* Dotted, which is the card's mark for the same box and a different
-           statement from the dashed one an inert branch wears: dashed is a box
-           drawn absent, dotted is a box nothing arrives at — and this one is as
-           pressable as any on the trunk. */
-        <g key={box.name} className={styles.mapFree}>
-          <Node
-            stage={props.free[i]!}
-            x={box.x}
-            y={FREE_Y}
-            boxW={box.w}
-            open={props.open === props.free[i]!.name}
-            folds={props.folds}
-            onOpen={props.onOpen}
-          />
-        </g>
       ))}
     </svg>
   )

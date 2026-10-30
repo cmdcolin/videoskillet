@@ -2,24 +2,13 @@
    the map is not a decoration between two of them, it is the way to nearly
    every control in the app. Same shape as a Section's, from the same rule, so
    "same rank" is a fact rather than two files agreeing; what it does not take
-   is the fold, because nothing here folds. Baseline rather than centre: the
-   hint beside the title is smaller type, and centred it sat high. */
+   is the fold, because nothing here folds. */
 .pathHead {
   composes: head from './ui.module.css';
-  align-items: baseline;
   margin-bottom: 0;
 }
 .pathTitle {
   flex-shrink: 0;
-}
-/* The standing instruction, in the panel's ordinary prose colour so it reads
-   as a caption on the heading rather than as a second thing to press. */
-.pathHint {
-  color: var(--fg3);
-  font-size: var(--fs-sm);
-  font-weight: 400;
-  letter-spacing: normal;
-  text-transform: none;
 }
 
 /* The stage the map has open: its name (click to fold), what it does, then its
@@ -234,6 +223,38 @@
   font-weight: 400;
   letter-spacing: normal;
   text-transform: none;
+}
+.pathTools {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+.pathTools .pathAll {
+  margin-left: 0;
+}
+.pathFree {
+  composes: stageStock;
+  margin-left: 0;
+  font-weight: 400;
+  letter-spacing: normal;
+  text-transform: none;
+}
+.pathFreeTouched {
+  border-color: var(--edit);
+  color: var(--edit);
+}
+.pathFreeOn {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--accent);
+}
+.pathFreeDim {
+  opacity: 0.45;
+}
+.pathFreeCount {
+  margin-left: 4px;
+  font-variant-numeric: tabular-nums;
 }
 
 .stageClose {

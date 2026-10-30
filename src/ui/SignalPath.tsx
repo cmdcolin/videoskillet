@@ -2,13 +2,13 @@ import { Fragment, useEffect, useRef } from 'react'
 
 import { ChainMap } from './ChainMap'
 import { ControlGroup } from './ControlGroup'
+import { countSay } from './countSay'
 import { cx } from './cx'
 import { sameGroups } from './sameList'
 import { Accordion, NestedSections } from './Section'
 import styles from './SignalPath.module.css'
 import { hasBody, stageBody } from './stageBody'
 import { holdable } from './stageStock'
-import { useClickWord } from './useMediaQuery'
 
 import type { BranchSpec, FreeBox, WiredBranch } from './chainLayout'
 import type { ChainStage } from './ChainMap'
@@ -45,17 +45,10 @@ export type BranchNode = PathNode & BranchSpec
 // One stage as the map takes it — the panel's node with that answer stamped on.
 type MapNode<T extends PathNode> = T & { opens: boolean }
 
-// Which of the two kinds a branch node is. Both are drawn by the map — the
-// wired ones on the branch row with their wires, the rest on the free row under
-// it — but they reach it as separate props, because one kind has a wire to route
-// and the other has the absence of one to state. The split is made once, here,
-// rather than by each drawing asking. Two predicates rather than one and a
-// negation, because a negated predicate narrows nothing.
-//
-// The free boxes spent a while as html chips beneath the svg: the statement was
-// structural, and a chip got a real target where a 16-unit box could not. They
-// came back when the boxes grew to 22 units and the chips were the one thing in
-// the map's own picture set to the panel's type rather than the map's.
+// Which of the two kinds a branch node is. The map draws the wired ones on the
+// branch row with their wires, and the path's heading carries the rest as
+// buttons (see PathHead). The split is made once, here. Two predicates rather
+// than one and a negation, because a negated predicate narrows nothing.
 type WiredNode = MapNode<PathNode & WiredBranch>
 type FreeNode = MapNode<PathNode & FreeBox>
 const isWired = (n: MapNode<BranchNode>): n is WiredNode => n.free !== true
@@ -229,33 +222,71 @@ function StageHead(props: {
 // sections while holding the route to 96% of the controls — the line of prose
 // under it was doing a heading's work, and only until a stage was open.
 //
-// It carries the standing instruction for the same reason. "Click a stage" used
-// to live only in the empty state under the map, which meant it was below the
-// graphic it was about and gone for good after the first click — and the open
-// stage is persisted, so a returning session never saw it at all. Here it costs
-// no row of its own and it is still there on the visit where you have forgotten.
-function PathHead(props: { onShowAll: () => void }) {
-  const click = useClickWord()
+// It also carries the two stages nothing on the map is wired to, Modulation
+// and Deck, as buttons beside "all settings". On their own row under the map
+// they read as a third and fourth input. There is no "click a stage" hint: at
+// the sidebar's width it pushed the buttons onto a second line, and the map's
+// boxes look pressable without it.
+function PathHead(props: {
+  free: FreeNode[]
+  open: string | null
+  folds: boolean
+  onOpen: (name: string) => void
+  onShowAll: () => void
+}) {
   return (
     <div className={styles.pathHead}>
       <span className={styles.pathTitle}>Signal path</span>
-      {/* Unconditional, because the map is. This used to be asked of the trunk —
-          a query could narrow the panel to a loop or a branch, the map needs a
-          trunk to place every wire and box off, so it dropped out and the
-          standing instruction would have been pointing at nothing. A query dims
-          the trunk now instead of emptying it, so there is always a map under
-          this line and always a stage to click. */}
-      <span className={styles.pathHint}>{click} a stage</span>
-      {/* The map opens one stage at a time, and this button on its heading
-          lists every stage at once. */}
-      <button
-        className={styles.pathAll}
-        title="every control in every stage on one page, with nothing folded — or only the ones off stock"
-        onClick={props.onShowAll}
-      >
-        all settings
-      </button>
+      <span className={styles.pathTools}>
+        {props.free.map(node => (
+          <FreeButton
+            key={node.name}
+            node={node}
+            open={props.open === node.name}
+            folds={props.folds}
+            onOpen={() => props.onOpen(node.name)}
+          />
+        ))}
+        <button
+          className={styles.pathAll}
+          title="every control in every stage on one page, with nothing folded — or only the ones off stock"
+          onClick={() => props.onShowAll()}
+        >
+          all settings
+        </button>
+      </span>
     </div>
+  )
+}
+
+// A stage that is not part of the chain, on the path's heading. It wears the
+// map's states: amber with its count once edited, the accent while open, and
+// faint when a filter missed it, where a press drops the filter as a box does.
+function FreeButton(props: {
+  node: FreeNode
+  open: boolean
+  folds: boolean
+  onOpen: () => void
+}) {
+  const { node } = props
+  const dim = node.dim === true
+  return (
+    <button
+      className={cx(
+        styles.pathFree,
+        !dim && node.touched > 0 && styles.pathFreeTouched,
+        !dim && props.open && styles.pathFreeOn,
+        dim && styles.pathFreeDim,
+      )}
+      title={`${node.name} — ${node.blurb}${countSay(node.touched, node.touchedSay)}`}
+      aria-expanded={props.folds && !dim ? props.open : undefined}
+      onClick={() => props.onOpen()}
+    >
+      {node.name.toLowerCase()}
+      {node.touched > 0 && !dim ? (
+        <span className={styles.pathFreeCount}>{node.touched}</span>
+      ) : null}
+    </button>
   )
 }
 
@@ -353,8 +384,7 @@ export function SignalPath(props: {
   const nodes = props.nodes.map(opensOn)
   const branches = props.branches.map(opensOn)
   const loops = props.loops.map(opensOn)
-  // Both kinds go to the drawing: the wired ones onto the trunk's rows, the
-  // rest onto the free row under them.
+  // The wired ones go to the drawing, the rest to the heading.
   const wired = branches.filter(isWired)
   const free = branches.filter(isFree)
   // No caret from the open stage's block up to the box it came from, though the
@@ -456,11 +486,16 @@ export function SignalPath(props: {
   // them.
   return (
     <>
-      <PathHead onShowAll={props.onShowAll} />
+      <PathHead
+        free={free}
+        open={props.open}
+        folds={!props.expandAll}
+        onOpen={openStage}
+        onShowAll={props.onShowAll}
+      />
       <ChainMap
         stages={nodes}
         branches={wired}
-        free={free}
         loops={loops}
         open={props.open}
         // The map is the fold here — except under a live filter, where a stage
@@ -475,8 +510,7 @@ export function SignalPath(props: {
           which was two lines of the resting panel's scarcest space spent saying
           what the map above it already draws — the boxes are in signal order and
           B visibly joins at the mixer. A total like "205 controls" is a number
-          nobody acts on, and the standing instruction ("click a stage") lives on
-          the header line, where it costs no row and survives the first click. */}
+          nobody acts on. */}
       <div className={styles.stages}>
         {shown.map(({ node, body }) => (
           <StageRow
@@ -644,11 +678,16 @@ function Bench(props: {
   }
   return (
     <>
-      <PathHead onShowAll={props.onShowAll} />
+      <PathHead
+        free={props.free}
+        open={props.open}
+        folds={false}
+        onOpen={jump}
+        onShowAll={props.onShowAll}
+      />
       <ChainMap
         stages={props.nodes}
         branches={props.wired}
-        free={props.free}
         loops={props.loops}
         open={props.open}
         // Nothing folds on the bench: a click marks the stage and scrolls to it.

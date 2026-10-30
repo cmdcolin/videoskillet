@@ -1,3 +1,5 @@
+import { countSay } from './countSay'
+
 import type { ReactNode } from 'react'
 
 // What a target on the chain map *is to a hand*: whether it is a button, what
@@ -163,8 +165,3 @@ export function MapRun(props: {
     </MapPress>
   )
 }
-
-// The bracketed clause both kinds of target end on, and neither draws when
-// there is nothing in it.
-const countSay = (touched: number, say?: string) =>
-  touched === 0 ? '' : ` (${say ?? `${touched} off stock`})`

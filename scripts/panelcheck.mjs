@@ -112,12 +112,11 @@ const HELPERS = `
   // for the checks that assert on the sentence rather than on the count at the
   // head of it.
   const stripText = () => strip()?.textContent ?? null
-  // A box on the chain map, by the name it opens. Every box is in the drawing
-  // again, the two no wire reaches included: they spent a while as chips under
-  // it and this needed a fallback to find them, without which every check that
-  // opened the bay silently pressed nothing.
+  // A box on the chain map, by the name it opens. The two stages no wire
+  // reaches are buttons on the path's heading, found by their title (\`free\`).
   const stage = name => [...document.querySelectorAll('svg[aria-label="signal chain"] g[role=button]')]
     .find(g => (g.getAttribute('aria-label') ?? '').startsWith(name))
+  const free = name => byTitle(name + ' — ')
   // A slider row by its visible label — the row's own <label for>, which is the
   // one handle on it that isn't a hashed class name.
   const rowFor = name => [...document.querySelectorAll('input[type=range]')]
@@ -175,17 +174,18 @@ await phase('filter', { seed: OLD_BAY }, async page => {
       nan: svg === null ? [] : [...svg.querySelectorAll('*')].flatMap(el =>
         [...el.attributes].filter(a => a.value.includes('NaN'))
           .map(a => el.tagName + '.' + a.name)),
-      door: document.body.innerText.includes('click a stage'),
+      door: free('Modulation') !== undefined && free('Deck') !== undefined,
       saidSo: document.body.innerText.includes('nothing matches'),
     }`)
   // The map stays under a query that reaches nothing, and dims rather than
   // empties. That is the reshaping the NaN bug below was patched around twice:
   // an empty spine drew wires between boxes that were not there, so the fix was
-  // to remove the map — and the fix to *that* was to stop it emptying, which is
-  // what makes the standing "click a stage" line true at all times.
+  // to remove the map — and the fix to *that* was to stop it emptying. The
+  // heading's two stage buttons stay with it, dimmed, so the bay is still one
+  // press away from a query that missed it.
   check(empty.chain, 'the map dropped out under a query that matched nothing')
   check(empty.nan.length === 0, `NaN attributes on the map: ${empty.nan}`)
-  check(empty.door, 'the "click a stage" cue went missing over a live map')
+  check(empty.door, 'the heading lost Modulation or Deck under a live query')
   check(empty.saidSo, 'nothing said the query matched nothing')
 
   // The filter box takes focus on mount and must never take it again: with the
@@ -229,28 +229,28 @@ await phase('filter', { seed: OLD_BAY }, async page => {
       .map(g => g.getAttribute('aria-label') ?? '')
       .filter(l => !l.endsWith('open its controls'))
       .map(l => l.split(' — ')[0]),
-    free: ['Modulation', 'Deck'].filter(n => stage(n) !== undefined),
+    free: ['Modulation', 'Deck'].filter(n => free(n) !== undefined),
   }`)
   check(
     cleared.chain,
     'the chain map did not come back when the filter cleared',
   )
-  // Ten boxes that open: the five trunk stages, the three that hang under them
-  // — input B, the sound and the view, none of which is a Phase — and the two
-  // on the free row, which are back in the drawing. B is on out of the box so
-  // the mixer opens too; the sound is *not* picked and its box still opens,
+  // Eight boxes that open: the five trunk stages and the three that hang under
+  // them — input B, the sound and the view, none of which is a Phase. B is on
+  // out of the box so the mixer opens too; the sound is *not* picked and its box
+  // still opens,
   // because its picker is the first thing inside it and patching one in is the
   // whole reason to press it. Mix is the one box that can stop opening — with B
   // off it holds nothing but controls that cannot act and there is no picker for
-  // "a second signal" — and then this count drops to nine.
+  // "a second signal" — and then this count drops to seven.
   //
   // This count has been wrong twice, both times by describing a picture the map
   // had moved on from: six trunk stages and nine boxes after the FEEDBACK box
   // came off the trunk, then ten while the bay and the deck were chips outside
-  // the drawing. It is ten again for the opposite reason, so check what the map
-  // draws rather than adjusting the number.
+  // the drawing. It is eight now the bay and the deck are on the heading, so
+  // check what the map draws rather than adjusting the number.
   check(
-    cleared.stages.length === 10,
+    cleared.stages.length === 8,
     `the map came back with ${cleared.stages.length} stages: ${cleared.stages}`,
   )
   // The two inputs are peers on the map, and the mixer is a box of its own. All
@@ -260,25 +260,25 @@ await phase('filter', { seed: OLD_BAY }, async page => {
       cleared.stages.includes(name),
       `${name} is missing from the map: ${cleared.stages}`,
     )
-  // The two nothing is wired to are doors like any other box — the panel's most
+  // The two nothing is wired to are doors on the heading — the panel's most
   // reached-for stage among them.
-  check(cleared.free.length === 2, `the free row came back as ${cleared.free}`)
+  check(cleared.free.length === 2, `the heading came back with ${cleared.free}`)
 
   // An open stage's head paints the panel's ground above itself, so a strip
   // pinned to the top of the scroller doesn't leave a window onto the rows
   // sliding behind it. That band is drawn at rest too, where there is nothing
   // to hide and something to hit: at 14px over an 8px margin it reached 6px up
-  // into the map, and the free row clears the bottom of the drawing by 4 — so
-  // opening any stage cut the bottom edge off MODULATION and DECK. The lid and
-  // the gap are one value now (SignalPath.module.css --stage-lid), and this is
-  // the measurement that says so.
-  await run(`press(stage('Modulation')); return 0`)
+  // into the map, and the bottom row clears the bottom of the drawing by 4 — so
+  // opening any stage cut the bottom edge off the boxes there. The lid and the
+  // gap are one value now (SignalPath.module.css --stage-lid), and this is the
+  // measurement that says so.
+  await run(`press(free('Modulation')); return 0`)
   await settle(400)
   const lid = await run(`
     const head = [...document.querySelectorAll('div')]
       .find(d => getComputedStyle(d).position === 'sticky')
-    const box = stage('Modulation')?.querySelector('rect')
-    if (head === undefined || box == null) return null
+    const boxes = [...(chain()?.querySelectorAll('rect') ?? [])]
+    if (head === undefined || boxes.length === 0) return null
     const px = getComputedStyle(head).boxShadow.split(' ').filter(t => t.endsWith('px'))
     const dy = parseFloat(px[1] ?? 'NaN')
     const cs = getComputedStyle(head)
@@ -288,11 +288,11 @@ await phase('filter', { seed: OLD_BAY }, async page => {
     return {
       dy,
       lid: r.top + dy,
-      box: box.getBoundingClientRect().bottom,
+      box: Math.max(...boxes.map(b => b.getBoundingClientRect().bottom)),
       over: name.top - r.top - pad('border-top-width') - pad('padding-top'),
       under: r.bottom - pad('padding-bottom') - name.bottom,
     }`)
-  check(lid !== null, 'pressing MODULATION on the map opened no stage')
+  check(lid !== null, 'pressing modulation on the heading opened no stage')
   if (lid !== null) {
     check(
       lid.dy < 0,
@@ -300,7 +300,7 @@ await phase('filter', { seed: OLD_BAY }, async page => {
     )
     check(
       lid.lid >= lid.box - 0.5,
-      `the open stage's lid reaches ${(lid.box - lid.lid).toFixed(1)}px over the map's free row`,
+      `the open stage's lid reaches ${(lid.box - lid.lid).toFixed(1)}px over the map's bottom row`,
     )
     // And the name sits in the middle of the strip. The row is as tall as the ×
     // at the end of it, and while the row itself aligned on the baseline every
@@ -555,7 +555,7 @@ await phase('fps stat', {}, async page => {
 // probe in it, not for the one that checks what the panel renders.
 await phase('stab', {}, async page => {
   const { run, settle } = runner(page)
-  await run(`press(stage('Modulation')); return 0`)
+  await run(`press(free('Modulation')); return 0`)
   await settle(700)
 
   const gate = () =>
@@ -720,7 +720,7 @@ await phase('reset', {}, async page => {
   await settle(300)
   await run(`press(byPart('random motion')); return 0`)
   await settle(300)
-  await run(`press(stage('Modulation')); return 0`)
+  await run(`press(free('Modulation')); return 0`)
   await settle(700)
   await run(`setRange(rowFor('stabs'), 4); return 0`)
   await settle(400)

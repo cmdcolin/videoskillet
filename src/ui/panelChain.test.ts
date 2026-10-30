@@ -92,8 +92,8 @@ describe('the boxes on the map', () => {
     const c = chain()
     expect(names(c.nodes)).toEqual([...PHASE_ORDER])
     expect(c.loops).toHaveLength(2)
-    // The three wired branches, then the two boxes wired to nothing — the order
-    // the map reads in from the top, branch row before free row.
+    // The three wired branches, then the two stages wired to nothing, which
+    // the path's heading carries as buttons.
     expect(names(c.branches)).toEqual([
       SOURCE_B_STAGE,
       SOUND_STAGE,
