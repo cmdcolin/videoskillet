@@ -122,7 +122,7 @@ export function useSourcePicks(opts: {
     onB: second.kind === null ? 'none' : picked,
     putOnA,
     putOnB,
-    keySame: async () => (await keySame()) === 'shown',
+    keySame,
     clipOnA,
     clipOnB,
   }

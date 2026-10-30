@@ -308,11 +308,10 @@ export function CamPage(props: { link: CamLink | null }) {
     setKeying(true)
     void picks
       .keySame()
-      .then(ok =>
-        ok
-          ? paint({ keyHue: DEFAULT_CONTROLS.bKeyHueDeg })
-          : picks.putOnB('none'),
-      )
+      .then(got => {
+        if (got === 'shown') paint({ keyHue: DEFAULT_CONTROLS.bKeyHueDeg })
+        else if (got === 'failed') picks.putOnB('none')
+      })
       .finally(() => {
         keyingRef.current = false
         setKeying(false)
