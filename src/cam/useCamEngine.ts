@@ -284,8 +284,11 @@ export function useCamEngine(
     ro.observe(canvas)
 
     const unsupervise = superviseEngine(canvas, {
+      // The page has no link to wait on, so the frame store holds for a
+      // loop-bus or freeze fill once the sources have been quiet a second.
       adopt: created => {
         dress(created, shown.current, board.current, heard.current)
+        created.settleFreeze()
         engineRef.current = created
         setEngine(created)
         window.vf = created
