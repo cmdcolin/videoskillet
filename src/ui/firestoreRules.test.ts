@@ -6,6 +6,8 @@ import {
 import { deleteField, documentId, serverTimestamp } from 'firebase/firestore'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
+import { recipeId, sampleOne, samplePair } from '../vote/candidates'
+
 import type { RulesTestEnvironment } from '@firebase/rules-unit-testing'
 
 import { readFileSync } from 'node:fs'
@@ -770,6 +772,87 @@ describe.skipIf(EMULATOR === undefined)('firestore.rules', () => {
         asOwner()
           .collection('ratings')
           .add(rating({ extra: 'field' })),
+      )
+    })
+
+    it('accepts the weightings the vote page actually rolls', async () => {
+      const recipes = new Map(
+        Array.from({ length: 40 }, (_, n) => [sampleOne(n), ...samplePair(n)])
+          .flat()
+          .map(r => [recipeId(r), r]),
+      )
+      for (const [id, r] of recipes) {
+        await assertSucceeds(
+          asOwner()
+            .doc(`candidates/${id}`)
+            .set(
+              candidate({ id, seed: r.seed, kind: r.kind, weights: r.weights }),
+            ),
+        )
+      }
+    })
+
+    it('accepts eight presets at the ends of the weight range', async () => {
+      const eight = Object.fromEntries(
+        Array.from({ length: 8 }, (_, i) => [`${'p'.repeat(60)} ${i}`, i % 2]),
+      )
+      await assertSucceeds(
+        asOwner()
+          .doc('candidates/eight')
+          .set(candidate({ id: 'eight', weights: eight })),
+      )
+    })
+
+    // Each entry is checked by its position, so a bad entry is tried at the
+    // first position and the last.
+    it('refuses a weighting with a bad entry in any position', async () => {
+      const withEntry = (bad: [string, unknown], at: number) => {
+        const entries: [string, unknown][] = Array.from(
+          { length: 7 },
+          (_, i) => [`preset ${i}`, 0.5],
+        )
+        entries.splice(at, 0, bad)
+        return Object.fromEntries(entries)
+      }
+      const bads: [string, unknown][] = [
+        ['vhs', 1.01],
+        ['vhs', -0.01],
+        ['vhs', '1'],
+        ['vhs', null],
+        ['vhs', { w: 1 }],
+        ['vhs', ['x'.repeat(10_000)]],
+        ['x'.repeat(65), 1],
+      ]
+      for (const bad of bads) {
+        for (const at of [0, 7]) {
+          const weights = withEntry(bad, at)
+          await assertFails(
+            asOwner()
+              .doc('candidates/zzz')
+              .set(candidate({ id: 'zzz', weights })),
+          )
+          await assertFails(
+            asOwner().collection('ratings').add(rating({ weights })),
+          )
+        }
+      }
+    })
+
+    it('caps the preset a rating names', async () => {
+      await assertSucceeds(
+        asOwner()
+          .collection('ratings')
+          .add(rating({ preset: 'p'.repeat(64) })),
+      )
+      await assertFails(
+        asOwner()
+          .collection('ratings')
+          .add(rating({ preset: 'p'.repeat(65) })),
+      )
+      await assertFails(
+        asOwner()
+          .collection('ratings')
+          .add(rating({ preset: 4 })),
       )
     })
 

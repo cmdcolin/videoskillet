@@ -1,14 +1,17 @@
 rules_version = '2';
 
 // Four things live in this project: one document per signed-in user holding
-// that user's saved profiles, the vote page's training data — candidates and
-// the pairwise comparisons between them — bender's saved voices, a second app
-// that shares the project, and reports of recordings that failed. `deploy.yml` sends this file when a push to main
-// changes it; `pnpm firebase-deploy` sends it by hand.
+// that user's saved profiles and their stills; the training data that the vote
+// page, the stream and the app's tags menu write, which is candidates, the
+// pairwise votes between them, and ratings; bender's saved voices, from a second
+// app that shares the project; and reports of recordings that failed.
+// `deploy.yml` sends this file when a push to main changes it;
+// `pnpm firebase-deploy` sends it by hand.
 //
-// Default deny: this file grants access to exactly one path, so every other
-// collection in the project — including any added later without a rule of its
-// own — is denied.
+// Default deny: this file grants access to the paths matched below and no
+// others. Those are `users/{uid}` and its `stills`, `benderUsers/{uid}`,
+// `candidates`, `votes`, `ratings` and `takeReports`. Every other collection in
+// the project, including any added later without a rule of its own, is denied.
 //
 // Private, unlike the presence collection in phyloguessr: a saved profile is a
 // look somebody dialed in, and nobody but its author has any business reading
@@ -179,6 +182,34 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    // A preset weighting, as a candidate and a rating both carry it: preset
+    // names to weights. Rules cannot iterate a map, but they can index the
+    // lists its keys() and values() return, so each of the at most 8 entries is
+    // checked by position. A roll names two or three presets. Every weight the
+    // app writes is 0 to 1: a roll's are rounded fractions of 1, and the
+    // panel's fader and a MIDI knob are both clamped to that range. Preset
+    // names are under 30 characters, and 64 leaves room to rename one.
+    function isWeightEntry(keys, values, i) {
+      return keys.size() <= i
+             || (keys[i].size() <= 64
+                 && values[i] is number
+                 && values[i] >= 0
+                 && values[i] <= 1);
+    }
+
+    function isValidWeights(w) {
+      return w is map
+             && w.keys().size() <= 8
+             && isWeightEntry(w.keys(), w.values(), 0)
+             && isWeightEntry(w.keys(), w.values(), 1)
+             && isWeightEntry(w.keys(), w.values(), 2)
+             && isWeightEntry(w.keys(), w.values(), 3)
+             && isWeightEntry(w.keys(), w.values(), 4)
+             && isWeightEntry(w.keys(), w.values(), 5)
+             && isWeightEntry(w.keys(), w.values(), 6)
+             && isWeightEntry(w.keys(), w.values(), 7);
+    }
+
     // A candidate is a *recipe*: a sparse weighting of the authored presets that
     // expands into a full board (src/vote/candidates.ts). The document id is a
     // hash of that weighting, so the id determines the contents — which is what
@@ -187,9 +218,7 @@ service cloud.firestore {
     // client swallows that, since the existing document already says the right
     // thing.
     //
-    // `weights` is a map, and rules cannot iterate one — so the entries' types
-    // are not checked here, only that there are few of them. A roll names two or
-    // three presets; 8 is the cap that stops an unbounded map.
+    // `weights` is checked by isValidWeights above.
     // `cid` is passed in rather than read from the match: a function declared
     // out here cannot see a wildcard bound inside a `match` block, and reaching
     // for one evaluates to null — which fails the whole rule with a null-value
@@ -203,8 +232,7 @@ service cloud.firestore {
              && request.resource.data.id == cid
              && request.resource.data.seed is number
              && request.resource.data.kind in ['mix', 'anchor']
-             && request.resource.data.weights is map
-             && request.resource.data.weights.keys().size() <= 8
+             && isValidWeights(request.resource.data.weights)
              && request.resource.data.query is string
              && request.resource.data.query.size() <= 8000
              && request.resource.data.by == request.auth.uid
@@ -275,10 +303,10 @@ service cloud.firestore {
              && request.resource.data.look.size() <= 64
              && request.resource.data.query is string
              && request.resource.data.query.size() <= 8000
-             && request.resource.data.weights is map
-             && request.resource.data.weights.keys().size() <= 8
+             && isValidWeights(request.resource.data.weights)
              && (request.resource.data.preset == null
-                 || request.resource.data.preset is string)
+                 || (request.resource.data.preset is string
+                     && request.resource.data.preset.size() <= 64))
              && request.resource.data.provenance in
                   ['surprise', 'preset', 'mutate', 'hand', 'compare', 'stream']
              && request.resource.data.tags is list
