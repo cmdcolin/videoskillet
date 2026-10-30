@@ -6,7 +6,7 @@ summary:
   The chroma keyer's copies can now fade back into the room behind them, turn
   further round the colour wheel with every generation, and build over the
   picture in program A when a link opens.
-image: /demos/skeleton-in-the-ballroom.webp
+image: https://myloveydove.com/videoskillet/blog/keyer-fade-skeleton.webp
 imageAlt:
   A skeleton dancing beside a grand piano in an abandoned ballroom, trailed by a
   row of fainter copies of itself.
@@ -41,8 +41,10 @@ copies turns that far round the wheel past the one before, and the frozen
 background turns with them. A comb filter separates the chroma before the trim,
 so the background keeps its fine detail through hundreds of recordings, though
 its colour edges soften.
-[The sandwich at 30 degrees](/app/#src=cat&vurlb=https://upload.wikimedia.org/wikipedia/commons/transcoded/1/14/HD_video_of_a_Chicken_fillet_roll_-_rotating_green_screen_alan_butler.webm/HD_video_of_a_Chicken_fillet_roll_-_rotating_green_screen_alan_butler.webm.480p.vp9.webm&set=chromaGain:1.3,crtSat:1.2,bGain:1,bGenlock:1,bKey:1,bKeyAcceptDeg:45,bKeyClip:0.05,bKeySpill:0.6,bKeyFill:2,cfbHold:5,bKeyFillHueDeg:30)
-spreads its copies into rainbow bands.
+[The sandwich at 30 degrees](/app/#iurl=https://thumb.wikimedia.org/wikipedia/commons/thumb/d/de/Abandoned_grand_piano_-_Abandoned_Ballroom_%286%29.jpg/1280px-Abandoned_grand_piano_-_Abandoned_Ballroom_%286%29.jpg&vurlb=https://upload.wikimedia.org/wikipedia/commons/transcoded/1/14/HD_video_of_a_Chicken_fillet_roll_-_rotating_green_screen_alan_butler.webm/HD_video_of_a_Chicken_fillet_roll_-_rotating_green_screen_alan_butler.webm.480p.vp9.webm&set=chromaGain:1.3,crtSat:1.2,bGain:1,bGenlock:1,bKey:1,bKeyAcceptDeg:45,bKeyClip:0.05,bKeySpill:0.6,bKeyFill:2,cfbHold:5,bKeyFillHueDeg:30)
+spreads its copies into rainbow bands while the ballroom behind it changes tint.
+
+![The chicken fillet roll turning over the abandoned ballroom. Behind it a disc of its copies runs through bands of every hue, and the room shifts between purple, green and blue.](https://myloveydove.com/videoskillet/blog/keyer-fade-sandwich-hue.webp)
 
 A link with the fill on the loop bus now shows program A until its sources have
 loaded, so the copies build over the picture in A. Before, the store held the
