@@ -7,7 +7,7 @@ import { CueRow, LoopScrub, PlayRow, Scrub } from './Scrub'
 import { Slider } from './Slider'
 import { TeletypeRow } from './TeletypeRow'
 import ui from './ui.module.css'
-import { SPEED_DEFAULT } from './urlParams'
+import { SPEED_DEFAULT, SPEED_MAX, SPEED_MIN } from './urlParams'
 
 import type { SourceBMode, SourceMode } from '../sources/modes'
 import type { PoolOrigin } from '../sources/pools'
@@ -256,8 +256,8 @@ export function SourceSlot<T extends SourceMode | SourceBMode>(props: {
           <Slider
             label="speed"
             unit="×"
-            min={0.25}
-            max={1.5}
+            min={SPEED_MIN}
+            max={SPEED_MAX}
             step={0.01}
             value={slot.speed}
             defaultValue={SPEED_DEFAULT}
