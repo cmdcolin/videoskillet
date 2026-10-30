@@ -89,9 +89,13 @@ falls back to Main or Baseline rather than failing the take.
 
 ## Consequences
 
-- **The muxer needed no change and must not grow one for this.** `normaliseAvcc`
-  takes the profile/compat/level triplet from the SPS itself rather than from
-  the `avcC` header, so it follows the encoder wherever the profile goes. Its
+- **The muxer needed one change: the High profile's `avcC` tail.** ISO 14496-15
+  gives profiles 100, 110, 122 and 144 four bytes after the PPS list (chroma
+  format, the two bit depths, the SPS extension count). `normaliseAvcc` keeps
+  the browser's own tail and writes 4:2:0 at 8 bits for High when there is
+  none. It takes the profile/compat/level triplet from the SPS itself rather
+  than from the `avcC` header, so it follows the encoder wherever the profile
+  goes. Its
   duplicate-NAL-header check compares a set's second byte against its own NAL
   type, which is safe for every profile byte in use (0x64, 0x4d, 0x42 against
   0x67/0x68) — but it is a check about byte values, so a future profile byte of
