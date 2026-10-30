@@ -441,6 +441,9 @@ export class Engine implements EngineApi {
   // out of one and writes the new state into the other, so its lateral scatter
   // sees settled neighbours rather than a buffer mid-overwrite.
   private persistBufs: [GPUBuffer, GPUBuffer]
+  // Which of `decodeBgs` the next decode runs, turned over at each submitted
+  // decode. Kept apart from `frame`, which a take rewinds on the way out.
+  private phosphorSide: 0 | 1 = 0
   private targetBuf: GPUBuffer
   // The two encoders carry a bind-group pair like decode's: the second targets
   // the compB scratch so an engaged feed pass can damage the waveform into its
@@ -2128,6 +2131,7 @@ export class Engine implements EngineApi {
     this.simAcc = 0
     this.lockPhase = 0
     this.frame = 0
+    this.phosphorSide = 0
     this.frameStore = this.frameStore.restart()
     // Designed from a board that has not moved, but into a buffer that has just
     // been cleared with everything else.
@@ -2773,9 +2777,7 @@ export class Engine implements EngineApi {
         PARAM_BYTES,
       )
     }
-    // One decode dispatch per rendered frame, so frame parity is what alternates
-    // the phosphor state buffers.
-    this.decodePass.bg = this.decodeBgs[this.frame % 2]!
+    this.decodePass.bg = this.decodeBgs[this.phosphorSide]
     for (const p of this.postPasses) {
       if (p === this.storePrevPass && this.store.records && c.cfbTrail > 0) {
         enc.copyBufferToBuffer(this.compPrev, 0, this.prevSnap, 0, N * 4)
@@ -2794,6 +2796,7 @@ export class Engine implements EngineApi {
       d.pushErrorScope('internal')
     }
     d.queue.submit([enc.finish()])
+    this.phosphorSide = this.phosphorSide === 0 ? 1 : 0
     if (grab !== null) this.frameRead?.flush(grab, performance.now())
     // After the submit that carries the copy, and never awaited: the map lands
     // a frame or two from now and the audio ring is built to glide over the
