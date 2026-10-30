@@ -419,6 +419,11 @@ export class Engine implements EngineApi {
   // path resamples this rather than synthesizing B analytically.
   private bCompBuf: GPUBuffer
   private compPrev: GPUBuffer
+  // The store as it stood before this frame's write, for the trail keyer's
+  // neighbour reads. storePrev writes compPrev in place, so a lane reading its
+  // neighbours straight off compPrev would see some of them already rewritten,
+  // depending on dispatch order. Copied only on the frames the trail is on.
+  private prevSnap: GPUBuffer
   private chromaBuf: GPUBuffer
   private underBuf: GPUBuffer
   private lineInfoBuf: GPUBuffer
@@ -442,6 +447,7 @@ export class Engine implements EngineApi {
   // real destination. renderFrame swaps them off the same predicates that gate
   // the feed passes, so the routing and the gating cannot disagree.
   private fbCompositePass: Pass
+  private storePrevPass: Pass
   private encodeCompositePass: Pass
   private encodeCompositeBgs: [GPUBindGroup, GPUBindGroup]
   private encodeCompositeBPass: Pass
@@ -545,7 +551,8 @@ export class Engine implements EngineApi {
     this.compA = storage(N * 4, GPUBufferUsage.COPY_SRC)
     this.compB = storage(N * 4)
     this.bCompBuf = storage(N * 4)
-    this.compPrev = storage(N * 4)
+    this.compPrev = storage(N * 4, GPUBufferUsage.COPY_SRC)
+    this.prevSnap = storage(N * 4)
     // Program as it stood before the loop's crossfade touched it, for the
     // loop keyer's external key input. fbComposite writes compA in place, so
     // a keyer reading its 4-sample aperture straight off compA would read
@@ -1135,11 +1142,13 @@ export class Engine implements EngineApi {
           { buffer: this.paramsBuf },
           { buffer: this.compA },
           { buffer: this.compPrev },
+          { buffer: this.prevSnap },
         ],
         perLine,
         () => this.store.records,
       ),
     ]
+    this.storePrevPass = byLabel(this.postPasses, 'storePrev')
     this.presentBg = d.createBindGroup({
       label: 'present',
       layout: this.presentPl.getBindGroupLayout(0),
@@ -1671,6 +1680,7 @@ export class Engine implements EngineApi {
       this.compB,
       this.bCompBuf,
       this.compPrev,
+      this.prevSnap,
       this.chromaBuf,
       this.underBuf,
       this.lineInfoBuf,
@@ -2760,7 +2770,12 @@ export class Engine implements EngineApi {
     // One decode dispatch per rendered frame, so frame parity is what alternates
     // the phosphor state buffers.
     this.decodePass.bg = this.decodeBgs[this.frame % 2]!
-    for (const p of this.postPasses) run(p)
+    for (const p of this.postPasses) {
+      if (p === this.storePrevPass && this.store.records && c.cfbTrail > 0) {
+        enc.copyBufferToBuffer(this.compPrev, 0, this.prevSnap, 0, N * 4)
+      }
+      run(p)
+    }
     const buzz = this.buzzDrive()
     if (buzz > 0) this.buzzRead.copy(enc, this.buzzBuf)
 
