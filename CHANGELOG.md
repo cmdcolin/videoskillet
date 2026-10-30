@@ -2,6 +2,45 @@
 
 All notable changes to videoskillet are documented here.
 
+## [2.22.0](https://github.com/cmdcolin/videoskillet/compare/v2.21.2...v2.22.0) - 2026-10-30
+
+### Features
+- *(signal)* [`50aae2a`](https://github.com/cmdcolin/videoskillet/commit/50aae2aedd3c41b8bb41d5e0fec94d6d79dc65e8) a hue trim on the frame store's output to the keyer
+- *(signal)* [`3e4dfac`](https://github.com/cmdcolin/videoskillet/commit/3e4dfac848bcd3c1f569100a0923a83fac6c1b00) crossfade program A into the keyer's store fill
+- *(ui)* [`ea8623a`](https://github.com/cmdcolin/videoskillet/commit/ea8623af8c0d0f298685b2850bd79190463b13e7) add Skeleton in the ballroom to the gallery
+- *(ui)* [`d6fcddb`](https://github.com/cmdcolin/videoskillet/commit/d6fcddb09777320fb74fea84590b8edd7497dfac) key a tapped colour on /cam/ into the frame store
+- *(signal)* [`a6d3b8f`](https://github.com/cmdcolin/videoskillet/commit/a6d3b8fe53a05794aa151d3eb10062001ca9fa73) colour framing on the frame store's output to the keyer
+- *(ui)* [`863b0ed`](https://github.com/cmdcolin/videoskillet/commit/863b0ed3715a6642043a5690f6a483fd1ae76087) pull WebM sources frame-exact through WebCodecs
+
+### Fixes
+- *(ui)* [`27e2727`](https://github.com/cmdcolin/videoskillet/commit/27e272721f527eea32248cc1bb49f00735d7dbc9) seed the keyer's loop-bus fill from program A while a link loads
+- *(ui)* [`d62f5cb`](https://github.com/cmdcolin/videoskillet/commit/d62f5cbc24014868cab53751f8a3baf0b25dc894) let the drift's tether hold coarse-step controls
+- *(ui)* [`515cd10`](https://github.com/cmdcolin/videoskillet/commit/515cd10a2277a2dc3faf875d355475460dacc8bf) strobe hold and trails are live under a loop-bus key fill
+- *(ui)* [`d98739c`](https://github.com/cmdcolin/videoskillet/commit/d98739cf9b4c0181b985215a7569a6f7a4088df0) hold a still of the camera on A under the /cam/ colour key
+- *(ui)* [`fbabaa2`](https://github.com/cmdcolin/videoskillet/commit/fbabaa221a104d9c70435c4c9460837118961480) settle the /cam/ frame store so loop-bus and freeze fills hold
+- *(ui)* [`bfa0f78`](https://github.com/cmdcolin/videoskillet/commit/bfa0f78220af6c33c334eea9a10f50ef3ac1afd5) demoreel pulls video sources a frame at a time
+- *(ui)* [`cf69896`](https://github.com/cmdcolin/videoskillet/commit/cf698965c663b3402b7feb6943c926d4309dc092) one relay per /cam/ colour key, and a way out when it fails
+- *(signal)* [`1bf09ec`](https://github.com/cmdcolin/videoskillet/commit/1bf09ec936f250c22e0970b753c73aa5f8b4f3b9) a reset keeps the frame store's pending settle
+- *(ui)* [`09cdb29`](https://github.com/cmdcolin/videoskillet/commit/09cdb29b4e4bec40b550304fef701b8d3ec253aa) match the store strobe's gate to when the store records
+- *(signal)* [`072c981`](https://github.com/cmdcolin/videoskillet/commit/072c9814857fb66279724ac5d3437bd8ed777241) store hue turns the same way as B's hue trim
+- *(ui)* [`ca12cf6`](https://github.com/cmdcolin/videoskillet/commit/ca12cf62de80841d36a9ea2fba6dd1500101d64f) play a link's ?vurl at its ?speeda
+- *(ui)* [`e394d96`](https://github.com/cmdcolin/videoskillet/commit/e394d960f2ea6f49a7be1a7e3bb7bc8375a40137) keep the /cam/ colour key's still lined up with B
+- *(ui)* [`da6abe2`](https://github.com/cmdcolin/videoskillet/commit/da6abe2b2a5fe97d46fd3ec3f4908228ad874de6) demoreel steps a webm source forward instead of seeking each tick
+- *(ui)* [`f836015`](https://github.com/cmdcolin/videoskillet/commit/f8360158103198300fc43dfed5e7916b22d5a762) WebM pulls keep display aspect, true length and VP9 depth
+
+### Documentation
+- [`621ccfe`](https://github.com/cmdcolin/videoskillet/commit/621ccfef738d7449ad1b727df4def4f03dc5653f) draft a follow-up post on fading keyer ghosts
+- [`e79514b`](https://github.com/cmdcolin/videoskillet/commit/e79514b990cb953a43e2a1ab21772662c2e7b845) re-record Skeleton in the ballroom with frame-exact video
+- [`1811319`](https://github.com/cmdcolin/videoskillet/commit/181131922799c0cc0a84db943511d27071898fd7) hero animations for the fading keyer ghosts draft
+- [`e9d4225`](https://github.com/cmdcolin/videoskillet/commit/e9d42251738d2c886f193a3bf18db4d089b33594) colour framing in the fading keyer ghosts draft
+- [`ec67ad3`](https://github.com/cmdcolin/videoskillet/commit/ec67ad323460a0f74e58ab26fd2d3fa6d91f8c9c) re-record Wonkitize me at its link's speed
+
+### Tests
+- *(ui)* [`28187d1`](https://github.com/cmdcolin/videoskillet/commit/28187d131c52236da201960903984490d2c0a38e) a truncated WebM keeps its complete clusters
+
+### Other Changes
+- [`8089160`](https://github.com/cmdcolin/videoskillet/commit/808916054a13f7f575031af88e9bb5fc39c27275) Rm turbo
+
 ## [2.21.2](https://github.com/cmdcolin/videoskillet/compare/v2.21.1...v2.21.2) - 2026-10-29
 
 ### Documentation
