@@ -6,11 +6,10 @@ preset that is not worth clicking is also a preset dragging every `surprise`
 toward mush. Same question one level down for the 285 controls — which are
 looks, and which are trims that belong behind `fine: true`.
 
-Most of this is a working record rather than a conclusion. The screening
-harness, its blind spots, what the surveys found and what the eye added are the
-live half. A labelling system was also built to answer the same question with a
-model; it has barely been used, and the last section is what it would take to
-pick that up.
+Most of this is a working record rather than a conclusion: the screening
+harness, its blind spots, what the surveys found and what the eye added. The
+last section records the labelling system that was built for the same question
+and then removed.
 
 ## Measuring: the survey harness
 
@@ -725,126 +724,16 @@ seconds, with the contrast intact. The iris closes as the picture brightens,
 which puts its own gain inside the round trip. The test now lets a loop past
 unity when an iris meters it.
 
-## Labelling: the collectors
+## Labelling, removed
 
-**Barely used, and kept as reference.** The idea was to answer "which settings
-are cool" with a model rather than with `surprise`'s uniform roll, which needs
-labels. Three collectors were built and the dataset never got past a few
-sessions, so nothing here has been fitted. What follows is enough to pick it
-back up or to delete it on purpose.
+A labelling system was built to answer "which settings are cool" with a model
+trained on ratings. It had three collectors: a tags menu in the look bar, the
+`/stream/` page that rated one look at a time, and the `/vote/` page that
+compared two. They wrote to the `candidates`, `votes` and `ratings` collections,
+and `scripts/labels.mjs` and `scripts/affinity.mjs` exported and fitted the
+result. The dataset never got past a few sessions and nothing was fitted.
 
-- **The tags menu** (`src/ui/TagsPopover.tsx`), a button in the look bar beside
-  `saved`: ten perceptual tags and a 1-5 rating over whatever is on screen,
-  filed in one click. It lives in the app because a separate page only collects
-  from someone who set out to label.
-- **The stream** (`/stream/`, `src/vote/StreamPage.tsx`): one look on one
-  engine, the `z`–`b` 1-5 keys, the next one. Built for rate — the pair page
-  yields one comparison per ~4 s of two engines.
-- **The comparison page** (`/vote/`, its own vite entry so `index.html` never
-  downloads a byte of it): a pair of candidates on two engines side by side,
-  `←`/`→` to pick. Absolute ratings drift between sessions where pairwise
-  comparisons are scale-free, so this was the calibration and the blind holdout
-  rather than the volume.
-
-All three write into one dataset with a `provenance` field, so a fit reads them
-together and can slice any of them back out. Nothing leaves the browser until
-somebody signs in; a signed-out session queues to `localStorage`.
-
-**Four rules that would still apply to any replacement.**
-
-- **Rating must be cheaper than moving on.** If scoring a bad roll costs more
-  than rolling again, nobody scores the bad ones and the dataset is all
-  positives — the one shape a preference model cannot be fitted from. Hence one
-  click to commit, and a stream where a key advances at once and waiting
-  advances in 5 s.
-- **Silence is never a label.** A ready look waits `HOLD_MS` and moves on
-  unanswered; after `IDLE_AFTER` of those the stream stops and says so. A row is
-  a claim somebody looked, and a page left running over lunch would otherwise
-  file a hundred 1s.
-- **The vocabulary avoids mechanism**
-  (`calm violent warm cold geometric organic legible destroyed rhythmic dreamy`
-  — no `vhs`, no `feedback`). The record stores the preset weights and the
-  resolved board, so a model can read the mechanism off the parameters; what it
-  cannot read is how the result feels, which is the only thing a human adds.
-- **The stimulus has to be controlled on the pair page and deliberately is not
-  in the app.** On `/vote/`: nothing on screen names a preset or a seed,
-  identical boxes, the same synthetic source at a pinned 640×480, the same
-  wall-clock develop window on both sides (`FLUSH_MS` 600 then `DEVELOP_MS` 3000
-  — frame counts were the first instinct and stretched the wait in proportion to
-  how busy the GPU was), an engine each so neither develops in the other's
-  leftovers, ~15% authored anchors, and a per-side fps readout because a stutter
-  on one side only would collect a vote about the stutter. In the app, judging
-  looks over your own content is the deployment condition.
-
-**The search space is a recipe**, not a board: a sparse weighting over the ~70
-authored presets that `blendPresets` expands into the full ~215 controls — the
-same space `randomPresetMix` samples. That is what makes it tractable, since no
-preference model fits 215 free dimensions from a few hundred votes. Sampling is
-seeded, so a label can be re-rendered.
-
-**Two collections**, the shape a Bradley–Terry fit wants:
-
-```
-/candidates/{id}   { v, id, seed, kind: 'mix'|'anchor', weights, query, by, sat }
-/votes/{auto}      { v, a, b, choice: 'a'|'b'|'skip'|'neither', ms, seed, source, at, by, sat }
-/ratings/{auto}    { v, tagSet, look, query, weights, preset, provenance, tags, cool, ms, source, at, by, sat }
-```
-
-`look` is a hash of the resolved board rather than of a recipe, because a look
-dialled in by hand has no recipe and both collectors have to land in one key
-space. `query` is the packed `#p=` form, so prefixing the origin makes any row
-openable in the instrument. `a`/`b` are in the order they were on screen, so a
-left-hand bias is measurable after the fact; `ms` is deliberation time; `by` and
-`sat` are pinned by the rules, so a client cannot forge who voted or when.
-
-**Export is an admin job**, because the rules allow `get` and not `list` — no
-signed-in client can enumerate these collections.
-
-```
-node scripts/labels.mjs [outDir=labels]
-```
-
-It writes the three collections as JSONL plus `ratings.csv` (tags as one-hot
-columns) and `ratings_weights.csv` (long form, one row per rating × preset ×
-weight — the design matrix that separates "worn tape is dreamy" from "the look
-it happened to appear in was dreamy"). It authenticates from
-`GOOGLE_APPLICATION_CREDENTIALS` or from whatever `firebase login` left on this
-machine, and `FIRESTORE_EMULATOR_HOST` points it at the emulator, which is how
-the flattening is tested. `pnpm test:rules` exercises the rules boundary.
-
-**How many labels would be enough**, from `node scripts/affinity.mjs simulate` —
-it generates ratings from a known affinity, fits, and measures how much came
-back:
-
-```
-ratings   tag r    cool r
-    100    0.23     0.65
-    200    0.25     0.80
-    400    0.39     0.87
-    800    0.49     0.92
-   1600    0.66     0.96
-```
-
-**`cool` is usable at ~200 ratings; the tags need something like 1600**, because
-`cool` is 1-5 and every rating carries it where a tag is one noisy bit that is
-mostly absent. An earlier estimate of "about 150 for everything" was wrong by
-roughly 10x for the tags. So `surprise: cooler` is an evening or two of rating
-away and `random → dreamy` is a much longer haul, and a small, high-prevalence
-tag vocabulary is worth more than a broad one. Coverage binds before volume:
-each roll names 2-3 presets, so ~150 rolls gets each of the ~70 presets seen
-about five times.
-
-The fitter is verified — against a noiseless target it returns r = 1.000 at
-every sample size, so those numbers measure noise rather than bias — and that
-check is what caught its one bug: it centered the target but not the columns of
-the design, leaving no intercept to absorb the base rate. It did not look like a
-bug; it looked like a hard problem needing more data.
-
-**If anyone picks this up**, the shape it was aimed at: a heuristic viability
-filter on image statistics (black, blown out, frozen, flat) as the baseline the
-learned model has to beat and the pre-filter that stops humans voting on
-garbage; a warm start with no votes at all, since the 70 authored presets are
-"cool" by construction and turbo-mutate rolls mostly are not; a Bradley–Terry
-head over the preset-weight vector plus frozen vision features; active learning
-on the pairs the model is least sure about; and CMA-ES over preset weights with
-the model as fitness, which would be the new `surprise` button.
+All of it was removed in October 2026, and the rules now deny those three
+collections. The last commit that has the code is `e93f4650`, and the version of
+this section written then has the record shapes, the sample-size simulation and
+the plan that was never carried out.

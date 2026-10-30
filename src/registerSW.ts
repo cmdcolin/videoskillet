@@ -6,7 +6,7 @@ import { publicUrl } from './publicUrl'
 export function registerServiceWorker() {
   if (import.meta.env.PROD && 'serviceWorker' in navigator) {
     // The script's own directory becomes the scope, so the worker covers the
-    // landing page and the labelling tools as well as the instrument, wherever
+    // landing page and the camera page as well as the instrument, wherever
     // the build is served from.
     navigator.serviceWorker
       .register(publicUrl('sw.js'))

@@ -2,7 +2,7 @@
 
 ```
 pnpm install
-pnpm dev        # astro on :5199: site, guide and the app pages (/app/, /cam/, /vote/, /stream/)
+pnpm dev        # astro on :5199: site, guide and the app pages (/app/, /cam/)
 pnpm build      # tsc -b + docgen/demogen checks + astro build
 pnpm lint --fix # oxlint
 pnpm test       # vitest
@@ -971,12 +971,11 @@ as a content collection. To add a page, add it to `GUIDE` or `NOTES` in
 handoffs are read off their own directories, so one of those is a page as soon
 as it is a file.
 
-Astro builds everything in `dist/`: the site, the guide and the four app pages
-(`site/pages/{app,cam,vote,stream}/`). Each app page is an `.astro` shell around
-a `client:only="react"` island (`src/main.tsx`, `src/cam/main.tsx`,
-`src/vote/main.tsx`, `src/vote/stream.tsx`), the same shape bender uses.
-`vite.config.ts` stays for vitest and `scripts/docgen.mjs`; Astro's own config
-carries the same plugins for the dev server and the build.
+Astro builds everything in `dist/`: the site, the guide and the two app pages
+(`site/pages/{app,cam}/`). Each app page is an `.astro` shell around a
+`client:only="react"` island (`src/main.tsx`, `src/cam/main.tsx`), the same
+shape bender uses. `vite.config.ts` stays for vitest and `scripts/docgen.mjs`;
+Astro's own config carries the same plugins for the dev server and the build.
 
 **One dev server.** `pnpm dev` runs Astro on 5199, so the harnesses that drive
 `/app/` need no change. `build.assets` is `assets`, which is the directory

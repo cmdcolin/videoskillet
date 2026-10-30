@@ -733,15 +733,14 @@ word:
       this look moves off stock" in `LookBar.tsx` and `LookPopover.tsx`.
 - [ ] **A stored set of settings**, built in or saved by the user, becomes a
       **preset**. `presets.ts` already names the built-in ones that way. Covers
-      "saved looks", "bank the look", "a rolled look" and `useLookLabels.ts`.
+      "saved looks", "bank the look" and "a rolled look".
 - [ ] **A shared URL** becomes a **link**: "open this link", "a link to the
       board".
 - [ ] **Running prose** names the control and its value ("with strobe hold at
       5"), or says "these settings".
 - [ ] Sweep the help text, the user guide, `docs/` and `site/posts/`.
-- [ ] Rename identifiers separately, after the strings: `LookBar`,
-      `LookPopover`, `useLookLabels`, and the `look:` frontmatter field in
-      posts, which the site build reads.
+- [ ] Rename identifiers separately, after the strings: `LookBar`, `LookPopover`
+      and the `look:` frontmatter field in posts, which the site build reads.
 
 Words considered and set aside: **patch** already means signal routing here;
 **snapshot** fits a stored state and not the live one; **scene** suggests the

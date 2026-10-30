@@ -6,7 +6,7 @@ Everything past [Getting started](GETTING-STARTED.md).
 
 Click a preset to jump to it. Drag it sideways to blend it part-way in.
 
-![The head of the panel: a row of whole-board buttons (compare, random look and its ▾, drift, morph) over tags, reset and undo, then the Presets shortlist of chips and the dashed handle to the rest](img/presets.png)
+![The head of the panel: a row of whole-board buttons (compare, random look and its ▾, drift, morph) over reset and undo, then the Presets shortlist of chips and the dashed handle to the rest](img/presets.png)
 
 - **random nudge** keeps your look and moves it a little: everything already
   doing something, plus a few controls that weren't. `shift` for wilder, `alt`
@@ -93,9 +93,9 @@ motion happens around, which is why a preset or a link still holds the look.
 
 **edit in the bay** opens the modulation bay, the stage that **modulation** on
 the map's header opens. The bay has the full editor under each routing and the
-tempo at its top. Type or tap a BPM there,
-then tie any rate to it with **♩ lock to beat**. MIDI clock takes over whenever
-something sends it. See [MIDI.md](MIDI.md).
+tempo at its top. Type or tap a BPM there, then tie any rate to it with **♩ lock
+to beat**. MIDI clock takes over whenever something sends it. See
+[MIDI.md](MIDI.md).
 
 **stabs** flip the board back to clean in bursts, 60ms by default and anywhere
 from 8 to 400, so the look cuts into a clean picture. Phosphor and both feedback
