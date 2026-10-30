@@ -116,6 +116,15 @@ export async function openPull(bytes: Uint8Array): Promise<FramePull | null> {
     codedWidth: track.codedWidth,
     codedHeight: track.codedHeight,
     ...(track.description === null ? {} : { description: track.description }),
+    ...(track.displayWidth === undefined ||
+    track.displayHeight === undefined ||
+    track.displayWidth * track.codedHeight ===
+      track.displayHeight * track.codedWidth
+      ? {}
+      : {
+          displayAspectWidth: track.displayWidth,
+          displayAspectHeight: track.displayHeight,
+        }),
     // Ask for frames as they become decodable rather than when the decoder
     // feels like it. A walk wants each frame before it can step, so latency
     // here is the render's wall time.

@@ -126,15 +126,64 @@ describe('demuxWebm', () => {
     ).toBeNull()
   })
 
-  it('reads the VP9 profile off the first keyframe', () => {
-    // Frame marker 0b10, then profile_low_bit and profile_high_bit.
-    const vp9 = (first: number) =>
-      demuxWebm(
-        file(track('V_VP9'), [cluster(0, [simple(0, true, [first, 0])])]),
-      )!.codec
-    expect(vp9(0b1000_0000)).toBe('vp09.00.41.08')
-    expect(vp9(0b1010_0000)).toBe('vp09.01.41.08')
-    expect(vp9(0b1001_0000)).toBe('vp09.02.41.10')
+  it('reads the VP9 profile and bit depth off the first keyframe', () => {
+    // An uncompressed header: frame marker 0b10, profile low then high bit, a
+    // reserved bit in profile 3, four flags (a shown keyframe), the sync code,
+    // and from profile 2 the ten_or_twelve_bit flag.
+    const header = (profile: number, twelve = false) => {
+      const bits = [1, 0, profile & 1, profile >> 1]
+      if (profile === 3) bits.push(0)
+      bits.push(0, 0, 1, 0)
+      for (const b of [0x49, 0x83, 0x42])
+        for (let i = 7; i >= 0; i--) bits.push((b >> i) & 1)
+      if (profile >= 2) bits.push(twelve ? 1 : 0)
+      while (bits.length % 8 !== 0) bits.push(0)
+      return Array.from({ length: bits.length / 8 }, (_, i) =>
+        bits.slice(i * 8, i * 8 + 8).reduce((v, b) => (v << 1) | b, 0),
+      )
+    }
+    const vp9 = (frame: number[]) =>
+      demuxWebm(file(track('V_VP9'), [cluster(0, [simple(0, true, frame)])]))!
+        .codec
+    expect(vp9(header(0))).toBe('vp09.00.41.08')
+    expect(vp9(header(1))).toBe('vp09.01.41.08')
+    expect(vp9(header(2))).toBe('vp09.02.41.10')
+    expect(vp9(header(2, true))).toBe('vp09.02.41.12')
+    expect(vp9(header(3, true))).toBe('vp09.03.41.12')
+  })
+
+  it('reports a display size apart from the coded one', () => {
+    const t = demuxWebm(
+      file(
+        track('V_VP8', [
+          ...el(
+            [0xe0],
+            [...uint([0x54, 0xb0], 853), ...uint([0x54, 0xba], 480)],
+          ),
+        ]),
+        [cluster(0, [simple(0, true, [1])])],
+      ),
+    )!
+    expect([t.displayWidth, t.displayHeight]).toEqual([853, 480])
+  })
+
+  it('ends a clip with no Duration one frame after its last start', () => {
+    const t = demuxWebm(
+      file(track('V_VP8'), [
+        cluster(0, [
+          simple(0, true, [1]),
+          simple(40, false, [2]),
+          simple(80, false, [3]),
+        ]),
+      ]),
+    )!
+    expect(t.duration).toBe(120)
+  })
+
+  it('declines a track whose first block is not a keyframe', () => {
+    expect(
+      demuxWebm(file(track('V_VP8'), [cluster(0, [simple(0, false, [1])])])),
+    ).toBeNull()
   })
 
   it('spells AV1 out of its av1C record', () => {

@@ -73,6 +73,10 @@ export interface DemuxedTrack {
   description: Uint8Array | null
   codedWidth: number
   codedHeight: number
+  // The picture's shape on screen when its pixels are not square, which only a
+  // WebM reports here: VP8 and VP9 carry no aspect in the stream.
+  displayWidth?: number
+  displayHeight?: number
   // Ticks per second on this track's own clock. Sample times divide by it.
   timescale: number
   duration: number
