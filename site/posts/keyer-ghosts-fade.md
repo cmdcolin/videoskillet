@@ -22,7 +22,7 @@ twenty seconds.
 **Program A in fill** is a crossfader ahead of the keyer's fill. It mixes
 program A in with the frame store, and the store records the result, so each
 recording keeps a little less of every copy. At 0.15 a copy is half gone after
-four recordings. With a still of a room in A, the copies fade back into the
+about four recordings. With a still of a room in A, the copies fade back into the
 room.
 
 - [The skeleton in the ballroom](/app/#iurl=https://thumb.wikimedia.org/wikipedia/commons/thumb/d/de/Abandoned_grand_piano_-_Abandoned_Ballroom_%286%29.jpg/1280px-Abandoned_grand_piano_-_Abandoned_Ballroom_%286%29.jpg&vurlb=https://myloveydove.com/videoskillet/sources/creatures-for-chroma-key-death.webm&set=chromaGain:1.3,crtSat:1.2,bGain:1,bGenlock:1,bKey:1,bKeyAcceptDeg:45,bKeyClip:0.05,bKeySpill:0.6,bKeyFill:2,cfbHold:3,bKeyFillMixA:0.15)
@@ -39,7 +39,8 @@ phase from program A, and the mix cancels the background's colour toward grey.
 frame synchronizer has. The keyer records through it, so each generation of
 copies turns that far round the wheel past the one before, and the frozen
 background turns with them. A comb filter separates the chroma before the trim,
-so the background keeps its detail through hundreds of recordings.
+so the background keeps its fine detail through hundreds of recordings, though
+its colour edges soften.
 [The sandwich at 30 degrees](/app/#src=cat&vurlb=https://upload.wikimedia.org/wikipedia/commons/transcoded/1/14/HD_video_of_a_Chicken_fillet_roll_-_rotating_green_screen_alan_butler.webm/HD_video_of_a_Chicken_fillet_roll_-_rotating_green_screen_alan_butler.webm.480p.vp9.webm&set=chromaGain:1.3,crtSat:1.2,bGain:1,bGenlock:1,bKey:1,bKeyAcceptDeg:45,bKeyClip:0.05,bKeySpill:0.6,bKeyFill:2,cfbHold:5,bKeyFillHueDeg:30)
 spreads its copies into rainbow bands.
 

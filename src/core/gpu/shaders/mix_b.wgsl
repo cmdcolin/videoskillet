@@ -145,7 +145,7 @@ fn storeOut(n: u32) -> f32 {
   let i = i32(n);
   let c = storeChroma(i);
   let q = 0.5 * (storeChroma(i - 1) - storeChroma(i + 1));
-  return loopBus[n] + (cos(P.bKeyFillHue) - 1.0) * c + sin(P.bKeyFillHue) * q;
+  return loopBus[n] + (cos(P.bKeyFillHue) - 1.0) * c - sin(P.bKeyFillHue) * q;
 }
 
 // The keyer's fill input: what shows through the hole the key cut. A real keyer

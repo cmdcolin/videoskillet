@@ -105,8 +105,8 @@ const FPS = 30
 // at full rate and playing back over twice its real speed.
 const STEPS = 2
 // The rate a reference tick stands for: 60, the app's own. The virtual clock
-// and the pump's take clock both count ticks at it, so tick N of the recording
-// is N / 60 seconds into the look and into its source clip.
+// and the pump's take clock both count ticks at it, so tick N, counted from the
+// start of the warm-up, is N / 60 seconds into the source clip.
 const TICK_FPS = FPS * STEPS
 
 // Recorded well above what is shipped: the clip is scaled down afterwards, and
