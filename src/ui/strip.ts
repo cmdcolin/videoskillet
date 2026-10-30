@@ -329,7 +329,6 @@ export type Effect =
 // running cursor, which is what makes the walk replayable from any point: state
 // is four plain numbers, and re-entering row 3 on lap 2 asks the same question
 // whether it was reached by playing from the top or by a hand jumping there.
-// The vote page derives its pair seeds the same way and for the same reason.
 //
 // Mixed rather than added, so (seed 1, row 2) and (seed 2, row 1) are not the
 // same draw. The constants are the odd multipliers Knuth-style mixing uses;

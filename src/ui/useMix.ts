@@ -31,7 +31,6 @@ import { rollBay } from './rollMod'
 import type { ControlKey, Controls } from '../core/controls'
 import type { Rand } from '../core/rng'
 import type { GlidePlan } from '../core/signal/glide'
-import type { Provenance } from '../labels'
 import type { CardPreset } from './cardPresets'
 import type { Group, SliderDef } from './controls'
 import type { ControlStore } from './ControlsContext'
@@ -50,11 +49,6 @@ interface Look {
   controls: Controls
   slots: readonly UiSlot[]
   stab: Stab
-  // How this look was arrived at, carried along the walk so a step back does not
-  // turn a roll into something a person appears to have dialed in. Deliberately
-  // not part of any of the comparators below: two identical boards are the same
-  // look whether one was rolled and the other typed into a link.
-  from: Provenance
 }
 
 // Two looks are the same look when the controls match. The bay is deliberately
@@ -165,17 +159,6 @@ export function useMix(args: {
   const [mix, setMix] = useState<{ base: Controls; weights: PresetWeights }>(
     () => ({ base: DEFAULT_CONTROLS, weights: new Map() }),
   )
-  // The last gesture that put a whole look on the board, with the look it put
-  // there. Both halves, because the claim only holds while nothing has moved
-  // since: a slider dragged after a roll makes the look a hand-made one, and a
-  // rating that still said `surprise` would be a row claiming to be an untouched
-  // sample of a distribution it is no longer in. Same rule the preset fills
-  // follow, and for the same reason — see `weights` below.
-  const [gesture, setGesture] = useState<{
-    kind: Provenance
-    look: Controls
-  } | null>(null)
-
   // The weights only describe the look while nothing else has moved it. Once a
   // randomize, slider, MIDI or saved-look recall changes the controls, "how much of
   // preset X is in this" is unrecoverable — blendPresets sums each preset's
@@ -202,20 +185,6 @@ export function useMix(args: {
       : { base: look, weights: NO_WEIGHTS }
   }
 
-  // What a given board was arrived at by, gated the same way the fills are and
-  // for the same reason: a gesture speaks only for the look it actually landed.
-  // Drag a slider after a roll and the honest answer is that a person made this
-  // one.
-  const kindOf = (look: Controls): Provenance =>
-    gesture !== null && controlsEqual(look, gesture.look)
-      ? gesture.kind
-      : 'hand'
-
-  // The live board's, which is what a rating files with.
-  const provenance = useSyncExternalStore(settledStore.subscribe, () =>
-    kindOf(settledStore.get()),
-  )
-
   // The look to bank: where the board has settled, or where a morph in flight is
   // taking it. The two differ only mid-morph, and there the destination is the
   // honest answer for everything the walk does — a tween is a frame, not a look.
@@ -234,11 +203,6 @@ export function useMix(args: {
       controls: settled,
       slots: mod.slots,
       stab: mod.stab,
-      // Against the banked look rather than the live one, which is the same
-      // answer everywhere but mid-morph — and there it is the better one: a roll
-      // still travelling banks as the roll it is, not as `hand` because the
-      // picture has not caught up with it yet.
-      from: kindOf(settled),
     }
   }
 
@@ -278,21 +242,8 @@ export function useMix(args: {
   }
 
   // Every destructive path goes through here, so the walk covers all of them.
-  //
-  // `kind` is what the look on screen was arrived at by, for the label a rating
-  // files with (labels.ts › Provenance). App used to infer it from what was left
-  // behind — a preset name, or a non-empty recipe — and the inference was wrong
-  // for every roll that clears both: the nudge, and now the fault and the cross
-  // were all filed as `hand`, which is the one thing they are not. `mutate` was
-  // in the vocabulary and nothing ever wrote it. A gesture knows what it is, so
-  // it says so here rather than being guessed at afterwards.
-  const apply = (
-    next: Controls,
-    kind: Provenance,
-    move: readonly ControlKey[] = [],
-  ) => {
+  const apply = (next: Controls, move: readonly ControlKey[] = []) => {
     bank(sameLook)
-    setGesture({ kind, look: next })
     land(next, move)
   }
 
@@ -307,12 +258,8 @@ export function useMix(args: {
   // 'across the room' (since removed) pulled the picture back into a little set
   // in a dark room. Either reads as the app having done something wrong rather
   // than as a new look.
-  const landRecipe = (
-    next: PresetWeights,
-    preset: string | null,
-    kind: Provenance,
-  ) => {
-    apply(rollControls(next, getControls()), kind)
+  const landRecipe = (next: PresetWeights, preset: string | null) => {
+    apply(rollControls(next, getControls()))
     setMix({ base: DEFAULT_CONTROLS, weights: next })
     // A roll is a whole look, motion included — and a roll that lands on a
     // preset with no opinion about motion leaves what was patched running,
@@ -354,7 +301,6 @@ export function useMix(args: {
   const goto = (out: { history: History<Look>; value: Look } | null) => {
     if (out !== null) {
       setHistory(out.history)
-      setGesture({ kind: out.value.from, look: out.value.controls })
       land(out.value.controls, EVERY_VIEW_KEY)
       mod.setSlots(out.value.slots)
       mod.setStab(out.value.stab)
@@ -383,7 +329,6 @@ export function useMix(args: {
     // back (`morphTo`) — so what the button did to your view depended on a
     // setting about how long looks take to arrive.
     const stock = rollControls(NO_WEIGHTS, getControls())
-    setGesture({ kind: 'preset', look: stock })
     land(stock)
     setMix({ base: DEFAULT_CONTROLS, weights: new Map() })
     mod.setRoutings([])
@@ -394,7 +339,6 @@ export function useMix(args: {
   return {
     weights,
     lastPreset,
-    provenance,
     // Handed out so a saved-look recall arrives the same way a preset does — it
     // is the same gesture (a whole board, at once), and the number keys over the
     // library are where a live set actually does it from. It records nothing: a recall
@@ -406,10 +350,8 @@ export function useMix(args: {
     // walk anybody can step back through; it travels for a span the drift names
     // rather than the one the look bar does, since the setting is about what
     // your hands do and a drift at `morph: cut` would be a slideshow; and it
-    // files as `mutate`, because that is what a leg is — the recipe goes with
-    // it for the same reason a nudge clears it.
+    // clears the recipe, for the same reason a nudge does.
     landDrift: (to: Controls, seconds: number) => {
-      setGesture({ kind: 'mutate', look: to })
       startGlide(morphTo(to, seconds))
       setLastPreset(null)
     },
@@ -440,7 +382,6 @@ export function useMix(args: {
         const from = liveMix()
         const next = new Map(from.weights).set(name, 1)
         const look = blendPresets(from.base, next)
-        setGesture({ kind: 'preset', look })
         land(
           look,
           EVERY_VIEW_KEY.filter(k => patch[k] !== undefined),
@@ -487,7 +428,7 @@ export function useMix(args: {
     // button down at 8s and the look wanders continuously through the space
     // between the authored presets, which is where the ones worth keeping are.
     surprise: () => {
-      landRecipe(randomPresetMix(sourceBOn, rand), null, 'surprise')
+      landRecipe(randomPresetMix(sourceBOn, rand), null)
     },
     // The same landing, one authored preset in it. `lastPreset` is the name
     // rather than null because here it is true: the board *is* that preset, so
@@ -495,19 +436,11 @@ export function useMix(args: {
     // looking at — which is most of what this roll is for.
     surpriseOne: () => {
       const next = randomSinglePreset(sourceBOn, rand, lastPreset)
-      // `preset` rather than `surprise`, and the distinction matters to the one
-      // slice the label vocabulary exists for: `surprise` means a look drawn
-      // from the same distribution the labelling page samples, and this draws
-      // from a different one. The board is exactly an authored preset, which is
-      // what a chip click files as.
-      landRecipe(next, next.keys().next().value ?? null, 'preset')
+      landRecipe(next, next.keys().next().value ?? null)
     },
     // Sparse and hard, where `mutateLook` is dense and soft. See `spike`.
     spikeLook: (amount: MutateAmount = 'normal') => {
-      apply(
-        spike(getControls(), MUTATE_SLIDERS, SPIKE_TARGETS[amount], rand),
-        'mutate',
-      )
+      apply(spike(getControls(), MUTATE_SLIDERS, SPIKE_TARGETS[amount], rand))
       setLastPreset(null)
     },
     // The look on the board crossed with a fresh roll, circuit by circuit.
@@ -521,17 +454,11 @@ export function useMix(args: {
     crossLook: () => {
       const recipe = randomPresetMix(sourceBOn, rand)
       const from = getControls()
-      apply(
-        crossover(from, rollControls(recipe, from), MUTATE_CIRCUITS, rand),
-        'mutate',
-      )
+      apply(crossover(from, rollControls(recipe, from), MUTATE_CIRCUITS, rand))
       setLastPreset(null)
     },
     mutateLook: (amount: MutateAmount = 'normal') => {
-      apply(
-        mutate(getControls(), MUTATE_SLIDERS, MUTATE_AMOUNTS[amount], rand),
-        'mutate',
-      )
+      apply(mutate(getControls(), MUTATE_SLIDERS, MUTATE_AMOUNTS[amount], rand))
       setLastPreset(null)
     },
     // The third roll: what is *moving*, rather than where the board rests. See
@@ -590,7 +517,7 @@ export function useMix(args: {
     // still under your hand and the old value is a pixel away — where a reset
     // is a press that leaves nothing on screen saying what it took.
     resetControl: (key: ControlKey) => {
-      apply({ ...getControls(), [key]: DEFAULT_CONTROLS[key] }, 'hand', [key])
+      apply({ ...getControls(), [key]: DEFAULT_CONTROLS[key] }, [key])
     },
     // One circuit back to stock, from its header. The row-level ↺ is the fine
     // move and "clean" is the whole board; between them sat the thing a session
@@ -600,15 +527,14 @@ export function useMix(args: {
     resetGroup: (sliders: readonly SliderDef[]) => {
       const next = { ...getControls() }
       for (const s of sliders) next[s.key] = DEFAULT_CONTROLS[s.key]
-      apply(next, 'hand', keysOf(sliders))
+      apply(next, keysOf(sliders))
     },
-    // A chip on one card. Through `apply` and labelled 'hand' like the reset
-    // above, because that is what it is: a gesture that moves this stage and
-    // nothing else, and one ctrl+z takes it back.
+    // A chip on one card. Through `apply` like the reset above, because that is
+    // what it is: a gesture that moves this stage and nothing else, and one
+    // ctrl+z takes it back.
     landCard: (preset: CardPreset, group: Group) => {
       apply(
         applyCardPreset(preset, group, getControls()),
-        'hand',
         keysOf(group.sliders),
       )
     },
@@ -627,7 +553,6 @@ export function useMix(args: {
     ) => {
       apply(
         mutate(getControls(), sliders, MUTATE_AMOUNTS[amount], rand, 1),
-        'mutate',
         keysOf(sliders),
       )
       setLastPreset(null)

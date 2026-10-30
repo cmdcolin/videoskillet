@@ -34,8 +34,6 @@ const PAGES = [
   '/guide/features/',
   '/app/',
   '/cam/',
-  '/vote/',
-  '/stream/',
 ]
 
 if (!existsSync(join(root, 'index.html'))) {

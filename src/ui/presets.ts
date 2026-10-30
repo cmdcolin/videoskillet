@@ -3479,10 +3479,8 @@ export function matchPreset(values: Controls): PresetDef | undefined {
 // where they sit in this file. Somebody rolling and rolling and getting tape
 // again was reading the sort comparator, not the presets.
 //
-// `rand` rather than `Math.random` inside, which is what lets `vote/candidates.ts`
-// sample the same space from a recorded seed: a dataset labelling looks nobody
-// can render again is worth nothing, and it calls straight through to
-// `randomPresetMix` rather than keeping a second copy of the roll.
+// `rand` rather than `Math.random` inside, so a roll drawn from a recorded seed
+// draws the same presets again.
 function shuffled<T>(items: readonly T[], rand: () => number): T[] {
   const out = [...items]
   for (let i = out.length - 1; i > 0; i--) {

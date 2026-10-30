@@ -20,9 +20,9 @@
       // **`src/core` is the signal path, and it does not know the app exists.**
       // Everything under it — the pass graph, the WGSL, the per-frame CPU state,
       // the control schema — runs against a canvas and a `Controls` object, which
-      // is why `src/vote` and `src/cam` can stand up their own engines without
-      // touching a line of the panel. This rule is what keeps that true: an import reaching back out
-      // is how the boundary would go, one convenience at a time.
+      // is why `src/cam` can stand up its own engines without touching a line of
+      // the panel. This rule is what keeps that true: an import reaching back
+      // out is how the boundary would go, one convenience at a time.
       //
       // Type-only imports are restricted too, deliberately. The one violation
       // this rule was written over was `import type { FramePull }` in
@@ -43,14 +43,10 @@
                   "../../ui/*",
                   "../sources/*",
                   "../../sources/*",
-                  "../vote/*",
-                  "../../vote/*",
                   "../cam/*",
                   "../../cam/*",
                   "../app",
                   "../../app",
-                  "../labels",
-                  "../../labels",
                   "../version",
                   "../../version",
                   "react",

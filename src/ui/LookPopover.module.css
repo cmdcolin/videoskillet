@@ -1,4 +1,4 @@
-/* The trigger wears the look bar's own button, like `tags` beside it. */
+/* The trigger wears the look bar's own button. */
 .trigger {
   composes: btn from './LookBar.module.css';
 }

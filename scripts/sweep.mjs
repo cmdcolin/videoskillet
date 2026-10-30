@@ -40,8 +40,8 @@
 //     `pnpm homewait` is the same kind: it loads `/` from `dist/` with and
 //     without the signed-in hint and checks the skeleton never gives way to a
 //     landing page that is then swapped for the home.
-//   - `perf`, `loopseek`, `pullstep`, `codeccheck`, `pixdiff` and `affinity`
-//     are measurements. They report numbers a human reads; there is no pass to
+//   - `perf`, `loopseek`, `pullstep`, `codeccheck` and `pixdiff` are
+//     measurements. They report numbers a human reads; there is no pass to
 //     report. The two newest are why the frame-exact pull is built the way it
 //     is — one closed the seek route and one opened the decoder route — and
 //     both are worth re-running deliberately against a new browser build rather

@@ -4,8 +4,6 @@ import { FIREBASE_CONFIG } from 'skillet-shared/firebase-config'
 import { RECENT_MAX } from './profileModel'
 import { readStored, removeStored, writeString } from './storage'
 
-import type { RatingRecord } from '../labels'
-import type { CandidateRecord, VoteRecord } from '../vote/votes'
 import type { RecentSession, SavedProfile } from './profileModel'
 
 // The Firebase surface: sign-in, the one document a signed-in user keeps their
@@ -45,8 +43,6 @@ const cloud = createCloud({
 export type { CloudUser } from 'skillet-shared/cloud'
 export const { wasSignedIn, warmSignIn, watchAuth, signIn, signOut } = cloud
 export const { putSession, dropSession, loadSdk } = cloud
-
-type Sdk = Awaited<ReturnType<typeof loadSdk>>
 
 export interface HomeDoc {
   profiles: SavedProfile[]
@@ -157,144 +153,6 @@ export async function fetchStill(
   const { db, fs } = await loadSdk()
   const snap = await fs.getDoc(fs.doc(db, COLLECTION, uid, 'stills', id))
   return readStill(snap.data())
-}
-
-// --- the vote page's training data (src/vote) ---
-//
-// These live here rather than in src/vote for one reason: `loadSdk` above is a
-// singleton promise, and it has to stay the *same* one — initializeApp throws on
-// a second call and the auth instance has to be the object the sign-in popup
-// resolved against. Exporting it so the vote page could build its own writer
-// would also break the claim at the top of this file, which is worth keeping
-// true: nothing else in the app imports firebase. The record types come in
-// type-only, so this direction of dependency costs nothing at runtime.
-
-// One candidate, keyed by the hash of its recipe.
-//
-// Create-only by rule, so writing one that already exists is denied — and that
-// is the expected case, not an error: two people rolling the same look write the
-// same id, and the document already there says exactly what this one would.
-// Swallowed for that reason. A genuine failure (offline, rules rejected the
-// shape) is swallowed too, which is the right call for this specific write: a
-// candidate is a convenience row for the training export, the vote itself
-// carries the pair seed that regenerates both sides, and failing a vote because
-// its candidate row did not land would lose the label that actually matters.
-export async function putCandidate(
-  uid: string,
-  candidate: CandidateRecord,
-): Promise<void> {
-  try {
-    const { db, fs } = await loadSdk()
-    await fs.setDoc(fs.doc(db, 'candidates', candidate.id), {
-      v: candidate.v,
-      id: candidate.id,
-      seed: candidate.seed,
-      kind: candidate.kind,
-      weights: candidate.weights,
-      query: candidate.query,
-      by: uid,
-      sat: fs.serverTimestamp(),
-    })
-  } catch {
-    // See above: already-there is the common case and nothing here is load-bearing.
-  }
-}
-
-// Writes one row at an id of its own, and says whether it is there. The rules
-// make a row create-only, so a resend of one that already landed is denied,
-// and reading it back tells that denial apart from a row the rules refuse.
-async function putOnce(
-  path: string,
-  id: string,
-  row: (fs: Sdk['fs']) => object,
-): Promise<boolean> {
-  const { db, fs } = await loadSdk()
-  const ref = fs.doc(db, path, id)
-  try {
-    await fs.setDoc(ref, row(fs))
-    return true
-  } catch (e) {
-    const denied =
-      e instanceof Error && 'code' in e && e.code === 'permission-denied'
-    if (!denied) return false
-    return await fs.getDoc(ref).then(
-      snap => snap.exists(),
-      () => false,
-    )
-  }
-}
-
-// The votes that landed, so the caller can clear exactly those from its queue.
-//
-// Sequential rather than a batch, and that is deliberate: a batch is atomic, so
-// one malformed row would reject the whole flush and a labeller's whole session
-// with it. Written one at a time, a bad row costs itself and the rest still
-// land. `by` and `sat` are added here because the rules pin them — a client
-// cannot forge who voted or when. A vote's id is its author, pair seed and
-// time, so sending one twice writes it once.
-export async function putVotes(
-  uid: string,
-  votes: readonly VoteRecord[],
-): Promise<VoteRecord[]> {
-  const sent: VoteRecord[] = []
-  for (const vote of votes) {
-    const landed = await putOnce(
-      'votes',
-      `${uid}-${vote.seed}-${vote.at}`,
-      fs => ({
-        v: vote.v,
-        a: vote.a,
-        b: vote.b,
-        choice: vote.choice,
-        ms: vote.ms,
-        seed: vote.seed,
-        source: vote.source,
-        at: vote.at,
-        by: uid,
-        sat: fs.serverTimestamp(),
-      }),
-    ).catch(() => false)
-    // The queue keeps whatever did not land and retries it on the next flush,
-    // so a transient failure costs nothing and a permanently rejected row does
-    // not block the ones behind it.
-    if (landed) sent.push(vote)
-  }
-  return sent
-}
-
-// The same, for rated single views. A separate collection rather than a `votes`
-// row with half its fields null: a rating is an observation about one candidate
-// and a vote is one about a pair, and merging them would make every query over
-// either have to filter the other out.
-export async function putRatings(
-  uid: string,
-  ratings: readonly RatingRecord[],
-): Promise<RatingRecord[]> {
-  const sent: RatingRecord[] = []
-  for (const rating of ratings) {
-    const landed = await putOnce(
-      'ratings',
-      `${uid}-${rating.look}-${rating.at}`,
-      fs => ({
-        v: rating.v,
-        tagSet: rating.tagSet,
-        look: rating.look,
-        query: rating.query,
-        weights: rating.weights,
-        preset: rating.preset,
-        provenance: rating.provenance,
-        tags: rating.tags,
-        cool: rating.cool,
-        ms: rating.ms,
-        source: rating.source,
-        at: rating.at,
-        by: uid,
-        sat: fs.serverTimestamp(),
-      }),
-    ).catch(() => false)
-    if (landed) sent.push(rating)
-  }
-  return sent
 }
 
 // --- reports of recordings that failed (src/ui/takeLog.ts) ---

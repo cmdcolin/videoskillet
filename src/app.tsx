@@ -110,7 +110,6 @@ import {
 } from './ui/storage'
 import { StripContext } from './ui/StripContext'
 import { StripTray } from './ui/StripTray'
-import { TagsPopover } from './ui/TagsPopover'
 import { TeletypeDialog } from './ui/TeletypeDialog'
 import { faultPlan, transitionOf } from './ui/transitions'
 import ui from './ui/ui.module.css'
@@ -124,7 +123,6 @@ import { useCurrentSession } from './ui/useCurrentSession'
 import { useDrift } from './ui/useDrift'
 import { subscribeNever, useEngine } from './ui/useEngine'
 import { useFavorites } from './ui/useFavorites'
-import { useLookLabels } from './ui/useLookLabels'
 import { useMediaQuery } from './ui/useMediaQuery'
 import { useMidi } from './ui/useMidi'
 import { useMix } from './ui/useMix'
@@ -170,7 +168,6 @@ import type { AnySlotView } from './ui/slotView'
 import type { PickSlot } from './ui/SourceSlot'
 import type { RenderFrom } from './ui/StripTray'
 import type { TransitionName } from './ui/transitions'
-import type { LookContext } from './ui/useLookLabels'
 import type { SourcePrompt } from './ui/useSourcePrompt'
 import type { CSSProperties, ReactNode } from 'react'
 
@@ -1002,31 +999,6 @@ export function App() {
 
   const profiles = useSavedProfiles(capture.grabThumb)
 
-  // Labelling the live look — the tags menu in the look bar. Nothing leaves the
-  // browser until somebody signs in, so this is opt-in by construction.
-  const labels = useLookLabels(profiles.user?.uid ?? null)
-
-  // Read at the instant a rating is clicked rather than held in the popover: the
-  // board can move under an open menu (a slider, a knob, an LFO), and the row has
-  // to describe what was on screen when the button went down.
-  //
-  // `provenance` is a best-effort hint, and deliberately not the thing analysis
-  // should trust for the question that matters. The one that matters is "was this
-  // an untouched roll", because `surprise` samples the same distribution the
-  // labelling page does and that subset is an unbiased sample inside a biased
-  // collection. The exact test for it is offline and needs nothing from here:
-  // `weights` and `query` are both stored, so a row whose query is what those
-  // weights serialize to *is* an untouched recipe, whatever this string says.
-  const readLook = (): LookContext => ({
-    query: profileQuery(),
-    weights: Object.fromEntries(mix.weights),
-    preset: mix.lastPreset,
-    // Read off the gesture that put this look on the board rather than inferred
-    // from what it left behind — see useMix. The inference here filed every
-    // roll that clears the recipe (the nudge, the fault, the cross) as `hand`.
-    provenance: mix.provenance,
-    source: eng.a.mode,
-  })
   // `landLook` rather than a plain write: a recall is the same gesture as a
   // preset click — a whole board at once — so it arrives however the look bar
   // says looks arrive, cut or morph. It used to cut unconditionally while the
@@ -1639,21 +1611,6 @@ export function App() {
         onSetMorph={s => setMorphStored(String(s))}
         morphStore={morphStore}
         onStopMorph={stopMorph}
-        tags={
-          <TagsPopover
-            tags={labels.tags}
-            vocabulary={labels.vocabulary}
-            onToggle={labels.toggle}
-            onOpen={labels.reset}
-            onRate={labels.rate}
-            readLook={readLook}
-            saved={labels.saved}
-            pending={labels.pending}
-            status={profiles.status}
-            error={profiles.error}
-            onSignIn={profiles.signIn}
-          />
-        }
         onReset={mix.reset}
         canUndo={mix.canUndo}
         onUndo={mix.undo}

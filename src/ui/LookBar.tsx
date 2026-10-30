@@ -83,9 +83,6 @@ export function LookBar(props: {
   // it down here. Subscribed to by the one button that draws it.
   morphStore: MorphStore
   onStopMorph: () => void
-  // The tags menu, passed in rather than built here: it owns a popover, and this
-  // row's job is to seat it among the other whole-board verbs.
-  tags: ReactNode
   // The look's own rows, as a menu. First in the row: it is what the board is,
   // and everything after it is something done to it.
   look: ReactNode
@@ -131,7 +128,6 @@ export function LookBar(props: {
         >
           {props.comparing ? 'showing clean…' : 'compare'}
         </button>
-        {props.tags}
         <button
           className={styles.btn}
           onClick={props.onShare}

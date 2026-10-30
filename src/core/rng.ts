@@ -24,10 +24,7 @@
 export type Rand = () => number
 
 // mulberry32, spelled out rather than pulled in: 32 bits of state, no
-// dependency, and the same sequence everywhere. Written here rather than in
-// `vote/candidates.ts`, where it used to live and where the vote page still
-// needs it — the dataset's whole claim is that a recorded seed re-renders the
-// look it labelled, which is this module's claim with a different noun.
+// dependency, and the same sequence everywhere.
 export function rngFor(seed: number): Rand {
   let a = seed >>> 0
   return () => {
@@ -39,7 +36,7 @@ export function rngFor(seed: number): Rand {
   }
 }
 
-// A seed to start something reproducible from — a vote pair, a strip's rolls.
+// A seed to start something reproducible from, such as a strip's rolls.
 //
 // The one draw in this file that is deliberately *not* reproducible, which is
 // not a contradiction: its whole job is to be the thing everything downstream

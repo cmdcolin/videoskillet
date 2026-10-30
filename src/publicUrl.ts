@@ -1,6 +1,6 @@
 // Where the files in `public/` are, from a page that is not at the root.
 //
-// Every page is one directory below the root (`site/pages/{app,cam,vote,stream}`),
+// Every page is one directory below the root (`site/pages/{app,cam}`),
 // and everything in `public/` is at the root, so the root is `../` from whichever
 // page is asking. That holds on a dev server, on videoskillet.com and on a
 // preview, none of which this has to tell apart.

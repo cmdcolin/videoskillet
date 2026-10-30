@@ -4,8 +4,8 @@ import { pickOne, randomIndex, rngFor } from './rng'
 
 describe('rngFor', () => {
   // The whole contract in one assertion: this is what a recorded seed is worth,
-  // and if it ever stops holding, every take and every vote in the dataset
-  // silently stops meaning what it said.
+  // and if it ever stops holding, every take silently stops meaning what it
+  // said.
   it('gives the same sequence for the same seed', () => {
     const a = rngFor(12345)
     const b = rngFor(12345)

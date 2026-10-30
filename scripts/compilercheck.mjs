@@ -37,15 +37,12 @@ const verbose = process.argv.includes('--verbose')
 // which is a choice somebody made rather than a fault.
 const FAILURES = new Set(['CompileError', 'PipelineError'])
 
-// Bailouts the gate tolerates. useVoteAuth uses `try/finally`, which the
-// compiler does not lower yet; that one is upstream, so re-check it on a
-// compiler upgrade.
+// Bailouts the gate tolerates, as [file, reason] pairs. Empty: every component
+// compiles.
 //
 // Delete a line the moment its component compiles — the check says so when a
 // recorded bailout stops happening.
-const KNOWN = [
-  ['src/vote/useVoteAuth.ts', 'Handle TryStatement with a finalizer'],
-]
+const KNOWN = []
 
 async function sources(dir) {
   const out = []

@@ -428,7 +428,7 @@ describe('randomPresetMix', () => {
   })
 
   // Threading the generator is what lets a roll be written down and rolled
-  // again — the seeded sampler in vote/candidates.ts wants this shape.
+  // again.
   it('is reproducible from its generator', () => {
     const draw = () => randomPresetMix(true, seq([0.11, 0.42, 0.73, 0.28, 0.9]))
     expect([...draw().entries()]).toEqual([...draw().entries()])
