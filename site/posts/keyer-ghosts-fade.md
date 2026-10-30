@@ -31,9 +31,13 @@ room.
   leaves a long trail and patches a one-shot in the modulation bay to the fade.
   Each fire wipes the copies back to the room, and the trail builds again.
 
-Keep strobe hold at an odd count while the fade is up. The subcarrier inverts
-on every frame, so with an even count alternate recordings sit on the opposite
-phase from program A, and the mix cancels the background's colour toward grey.
+Keep strobe hold at an odd count while the fade is up, or turn on **colour
+framing**. The subcarrier inverts on every frame, so with an even count
+alternate recordings sit on the opposite phase from program A, and the mix
+cancels the background's colour toward grey. With colour framing on, the store
+inverts its chroma on frames of the other phase, as a frame synchronizer does,
+so the copies and the room keep their own colours at any count and stop
+flashing between complementary colours.
 
 **Store hue** is the hue trim on the frame store's output, the proc amp every
 frame synchronizer has. The keyer records through it, so each generation of
