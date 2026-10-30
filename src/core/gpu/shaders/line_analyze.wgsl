@@ -93,7 +93,14 @@ fn main(
   if (row >= NLINES) {
     return;
   }
-  let uv = burstUV(row);
+  // The staged tile already holds this row's own burst, in slot WG - 1 - lid.
+  let ti = WG - 1u - lid.x;
+  var uv: vec2f;
+  if (lagging || pulling) {
+    uv = uvTile[ti];
+  } else {
+    uv = burstUV(row);
+  }
   let amp = length(uv);
   // Exponential memory over the bursts above, re-measured per line rather than
   // carried serially — the bounded-FIR shape ARCHITECTURE.md asks recurrences
@@ -101,7 +108,6 @@ fn main(
   var lag = amp;
   var held = uv;
   if (lagging || pulling) {
-    let ti = WG - 1u - lid.x;
     var asum = 0.0;
     var wsum = 0.0;
     var vsum = vec2f(0.0);
