@@ -24,6 +24,8 @@ fn yuvAt(s: i32, row: u32) -> vec3f {
 }
 
 var<workgroup> tileUV: array<vec2f, TILE>;
+// Luma is not filtered, so only the workgroup's own samples are kept.
+var<workgroup> tileY: array<f32, TILE_WG>;
 
 @compute @workgroup_size(TILE_WG, 1, 1)
 fn main(
@@ -34,7 +36,11 @@ fn main(
   let row = wid.y;
   let base = i32(wid.x * TILE_WG) - i32(HALO);
   for (var i = lid.x; i < TILE; i = i + TILE_WG) {
-    tileUV[i] = yuvAt(base + i32(i), row).yz;
+    let yuv = yuvAt(base + i32(i), row);
+    tileUV[i] = yuv.yz;
+    if (i >= HALO && i < HALO + TILE_WG) {
+      tileY[i - HALO] = yuv.x;
+    }
   }
   workgroupBarrier();
 
@@ -56,7 +62,7 @@ fn main(
     for (var k = 0u; k < m; k = k + 1u) {
       uv = uv + filters[SEC_ENC_CHROMA * FILTER_STRIDE + k] * (tileUV[c + k - m] + tileUV[c + m - k]);
     }
-    out = activeComposite(yuvAt(i32(s), row).x, uv.x, uv.y, carrier(n, P.frame), 1.0, P.invert);
+    out = activeComposite(tileY[lid.x], uv.x, uv.y, carrier(n, P.frame), 1.0, P.invert);
   }
 
   // What broadcasters actually parked in the vertical interval: test and
