@@ -665,7 +665,11 @@ bKeyFillHueDeg  (store hue)
 
 bKeyFillMixA  (program A in fill)
   0..0.5 step 0.01  default 0
-  A crossfader ahead of the keyer's fill that mixes program A in with the frame store. On the loop bus every recording keeps the rest of the copies it held, so each copy fades into program A over the generations that follow: at 0.1 a copy is half gone after about seven recordings. A still in A brings the room back where the copies were. Strobe hold at an odd count keeps the colour; at an even one, alternate recordings land on opposite subcarrier phases from A's, and the mix cancels toward grey.
+  A crossfader ahead of the keyer's fill that mixes program A in with the frame store. On the loop bus every recording keeps the rest of the copies it held, so each copy fades into program A over the generations that follow: at 0.1 a copy is half gone after about seven recordings. A still in A brings the room back where the copies were. Strobe hold at an odd count keeps the colour; at an even one, alternate recordings land on opposite subcarrier phases from A's, and the mix cancels toward grey, unless colour framing is on.
+
+bKeyFillFraming  (colour framing)
+  0=off 1=on  default 0
+  Whether the frame store keeps colour framing on its output to the keyer. The subcarrier inverts on every frame, so a stored frame read out on the other phase decodes in complementary colours. On, the store inverts its chroma on those frames: copies and a frozen background keep their own colours, and the fade into program A keeps its colour at any strobe hold.
 
 ## Recording (luma & FM)
 

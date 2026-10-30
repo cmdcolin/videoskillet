@@ -296,7 +296,7 @@ export class Engine implements EngineApi {
   // and travels in presets and links like every other fault.
   private strobeGate = new StrobeGate()
   private frameStore = new FrameStore()
-  private store: StoreFrame = { records: false, fill: 0 }
+  private store: StoreFrame = { records: false, fill: 0, flip: false }
   private osd = new OsdState()
   private osdStep: OsdStep = OSD_IDLE
   private modSlots: ModSlot[] = []
@@ -2636,6 +2636,7 @@ export class Engine implements EngineApi {
       }),
     )
     vals.bKeyFill = this.store.fill
+    vals.bKeyFillFlip = this.store.flip ? 1 : 0
     packParams(vals, this.paramScratch)
     d.queue.writeBuffer(this.paramsBuf, 0, this.paramScratch)
     if (this.aFeedOn()) this.packFeed('a', vals, this.feedParamsA, mixU.decks.a)

@@ -178,6 +178,7 @@ export const PARAM_DEFS = [
   ['bKeyMatteSat', 'f32'], // matte chroma amplitude, chroma units
   ['bKeyFillHue', 'f32'], // frame store output's hue trim, radians
   ['bKeyFillMixA', 'f32'], // program A crossfaded into a store fill, 0..1
+  ['bKeyFillFlip', 'f32'], // 1 when colour framing inverts the store's chroma this frame
   // VHS tracking error: a mistracked head produces a noise band that tears and
   // bends the picture at an adjustable height (the "tracking" knob).
   ['trackAmt', 'f32'], // severity, 0 locked

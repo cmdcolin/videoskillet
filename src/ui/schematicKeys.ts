@@ -362,6 +362,7 @@ export const CHROMA_KEY_OPENS = {
     'bKeyMatteSat',
     'bKeyFillHueDeg',
     'bKeyFillMixA',
+    'bKeyFillFraming',
   ],
   mix: ['bKey'],
 } as const satisfies Opens

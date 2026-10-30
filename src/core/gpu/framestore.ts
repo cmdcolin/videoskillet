@@ -54,6 +54,9 @@ export interface StoreFrame {
   records: boolean
   // The `bKeyFill` value mix_b reads this frame.
   fill: number
+  // Whether colour framing inverts the store's chroma this frame: it is on, and
+  // the store was last written on the other subcarrier phase.
+  flip: boolean
 }
 
 // Frames a settled link must stay quiet before freeze holds: about a second,
@@ -65,6 +68,7 @@ export class FrameStore {
   private before = 0
   private settling = false
   private quiet = 0
+  private writtenAt = 0
   // Whether freeze and the loop bus still track the program: true until the page's link has
   // settled. A reset keeps it.
   loading: boolean
@@ -97,6 +101,21 @@ export class FrameStore {
     frame: number,
     busy = false,
   ): StoreFrame {
+    const at = this.decide(c, bEnabled, frame, busy)
+    const flip =
+      c.bKeyFillFraming > 0.5 &&
+      at.fill > 1.5 &&
+      (frame - this.writtenAt) % 2 !== 0
+    if (at.records) this.writtenAt = frame
+    return { ...at, flip }
+  }
+
+  private decide(
+    c: Controls,
+    bEnabled: boolean,
+    frame: number,
+    busy: boolean,
+  ): Omit<StoreFrame, 'flip'> {
     this.quiet = busy ? 0 : this.quiet + 1
     if (this.settling && this.quiet >= QUIET_FRAMES) {
       this.loading = false

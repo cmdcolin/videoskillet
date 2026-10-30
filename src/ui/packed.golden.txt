@@ -304,6 +304,7 @@
 316 syncSlicer step=1 default=0 choices=fixed|peak
 317 bKeyFillHueDeg step=1 default=0
 318 bKeyFillMixA step=0.01 default=0
+319 bKeyFillFraming step=1 default=0 choices=off|on
 
 # ?mod= sources, by name
 sine

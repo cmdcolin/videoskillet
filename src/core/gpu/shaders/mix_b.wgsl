@@ -138,14 +138,20 @@ fn storeChroma(i: i32) -> f32 {
 // further round the wheel, the frozen background with them. Neither the band
 // nor the quadrature gains above 1 anywhere, so a fill that goes round the
 // store hundreds of times only softens.
+//
+// Colour framing is the sync's other job: a frame read out on the other
+// subcarrier phase from the one it was written on gets its chroma inverted, so
+// what leaves the store is in step with the frame it joins. That is a half turn
+// added to the trim on those frames.
 fn storeOut(n: u32) -> f32 {
-  if (P.bKeyFillHue == 0.0) {
+  let turn = P.bKeyFillHue + PI * P.bKeyFillFlip;
+  if (turn == 0.0) {
     return loopBus[n];
   }
   let i = i32(n);
   let c = storeChroma(i);
   let q = 0.5 * (storeChroma(i - 1) - storeChroma(i + 1));
-  return loopBus[n] + (cos(P.bKeyFillHue) - 1.0) * c - sin(P.bKeyFillHue) * q;
+  return loopBus[n] + (cos(turn) - 1.0) * c - sin(turn) * q;
 }
 
 // The keyer's fill input: what shows through the hole the key cut. A real keyer

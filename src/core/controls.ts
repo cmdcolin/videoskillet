@@ -355,6 +355,7 @@ export const DEFAULT_CONTROLS = {
   bKeyMatteSat: 0,
   bKeyFillHueDeg: 0,
   bKeyFillMixA: 0,
+  bKeyFillFraming: 0, // 0 off, 1 the store's output keeps colour framing
   // VHS tracking error
   trackAmt: 0,
   trackPos: 0.85,

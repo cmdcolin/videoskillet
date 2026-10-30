@@ -77,7 +77,11 @@ describe('FrameStore', () => {
     const c = keyed({ bKeyFill: 3 })
     const frames = Array.from({ length: 3 }, () => store.step(c, true, 0))
     expect(frames).toEqual(
-      Array.from({ length: 3 }, () => ({ records: true, fill: 0 })),
+      Array.from({ length: 3 }, () => ({
+        records: true,
+        fill: 0,
+        flip: false,
+      })),
     )
   })
 
@@ -86,14 +90,18 @@ describe('FrameStore', () => {
     const c = keyed({ bKeyFill: 2, cfbHold: 2 })
     expect(Array.from({ length: 3 }, (_, i) => store.step(c, true, i))).toEqual(
       [
-        { records: true, fill: 0 },
-        { records: false, fill: 0 },
-        { records: false, fill: 0 },
+        { records: true, fill: 0, flip: false },
+        { records: false, fill: 0, flip: false },
+        { records: false, fill: 0, flip: false },
       ],
     )
     store.settle()
     run(store, c, 60, 3)
-    expect(store.step(c, true, 64)).toEqual({ records: false, fill: 2 })
+    expect(store.step(c, true, 64)).toEqual({
+      records: false,
+      fill: 2,
+      flip: false,
+    })
   })
 
   it('starts holding once the link has settled and no slot is busy', () => {
@@ -120,6 +128,34 @@ describe('FrameStore', () => {
     store.settle()
     run(store, keyed({ bKeyFill: 3 }), 60)
     expect(new FrameStore(store.loading).loading).toBe(false)
+  })
+
+  it('flips the store on frames of the other phase from its last write', () => {
+    const flips = (patch: Partial<Controls>) => {
+      const store = settled()
+      const c = keyed({ bKeyFill: 2, ...patch })
+      return Array.from({ length: 7 }, (_, i) => store.step(c, true, i).flip)
+    }
+    expect(flips({ cfbHold: 3, bKeyFillFraming: 1 })).toEqual([
+      false,
+      true,
+      false,
+      true,
+      false,
+      true,
+      false,
+    ])
+    expect(flips({ cfbHold: 4, bKeyFillFraming: 1 })).toEqual([
+      false,
+      true,
+      false,
+      true,
+      false,
+      true,
+      true,
+    ])
+    expect(flips({ cfbHold: 3 }).some(f => f)).toBe(false)
+    expect(flips({ bKeyFill: 0, bKeyFillFraming: 1 }).some(f => f)).toBe(false)
   })
 
   it('shows the fill selected before on the frame freeze grabs', () => {
