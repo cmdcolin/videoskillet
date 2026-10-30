@@ -52,8 +52,8 @@ export interface ChainStage {
   name: string
   blurb: string
   touched: number
-  // What the count counts, where "controls off stock" is the wrong noun for it —
-  // see MapBox.touchedSay. Only the modulation bay sets it.
+  // What the count counts, where "controls off stock" is the wrong noun for it.
+  // Only the modulation bay sets it, for its button on the path's heading.
   touchedSay?: string
   // What is standing in this stage, captioned under its name — the three boxes
   // with a picker, and only while something is in them (patched.ts). A stage of
@@ -122,9 +122,7 @@ export function ChainMap(props: {
   // on the open stage's heading only answers that question once you are in.
   folds: boolean
   // Which returns are carrying signal, so the map can show a running loop
-  // rather than only the three that exist in principle. The same shape the full
-  // diagram takes, which is what stops the two drawings disagreeing about which
-  // of three machines is on.
+  // rather than only the loops that exist in principle.
   live: LoopsLive
   // Opens a stage by name — a box or a run, because both are stages now.
   onOpen: (name: string) => void
@@ -205,8 +203,7 @@ export function ChainMap(props: {
              of the three has a box on the trunk, because none of them is a stage
              the picture passes through. What being that button *is* — the role,
              the tab stop, Enter and Space, the sentence it announces — lives in
-             MapRun, with the box's copy of the same rule and for the same
-             reason: the card draws these three runs too. */
+             MapRun, beside the box's copy of the same rule. */
           <MapRun
             key={r.loop}
             name={node.name}
@@ -357,10 +354,7 @@ function Node(props: {
       off={off}
       opens={stage.opens}
       touched={stage.touched}
-      touchedSay={stage.touchedSay}
-      // The miniature's own addition to the hover text, and the only part of it
-      // the card has no equivalent for: whether pressing again folds the stage
-      // back up.
+      // Whether pressing again folds the stage back up.
       foldHint={
         dim
           ? ' — outside the filter: click to drop it and open this stage'

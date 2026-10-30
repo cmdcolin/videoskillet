@@ -47,17 +47,14 @@ export const soundPatched = (
 ): string | undefined =>
   mode === 'off' ? undefined : name === '' ? head(AUDIO_DESC[mode]) : name
 
-// A caption cut to the box it goes in. **It never widens one**: both drawings
-// lay their rows out off the stage names, so a source called
+// A caption cut to the box it goes in. **It never widens one**: the map lays
+// its rows out off the stage names, so a source called
 // `sunset-final-final2.mp4` would otherwise walk the head of the chain across
 // the picture every time someone loaded one. The box is the budget and the
 // caption is what fits, with an ellipsis where the rest went.
 //
-// The rule lives here and the numbers come from the caller, which is the split
-// MapBox makes for a press: what the two drawings must agree on is one copy,
-// and the geometry stays with each drawing. The miniature is 7px text in a
-// 50-unit box and the card is 8.5px in 92, so neither `room` nor `perChar` is a
-// fact this file could know.
+// The rule lives here and the numbers come from the caller, which owns the
+// geometry: neither `room` nor `perChar` is a fact this file could know.
 //
 // `perChar` carries a doubling of m and w on top, for the reason a run's label
 // does: a caption is a filename as often as it is a word, so the spread between

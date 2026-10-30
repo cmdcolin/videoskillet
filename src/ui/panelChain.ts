@@ -83,8 +83,7 @@ interface PanelChain {
 // source branch does, on the strength of the picker at its head, and SignalPath
 // works that out from the pickers themselves.
 //
-// The hint is looked up rather than passed: OFF_HINT is the one table, because
-// the full diagram draws these same dead boxes and the two copies had drifted.
+// The hint is looked up rather than passed: OFF_HINT is the one table.
 const inert = (node: PathNode): PathNode => ({
   ...node,
   touched: 0,

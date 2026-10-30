@@ -126,9 +126,9 @@ export const boxWidth = (name: string) =>
 // unit of slack here is a character of someone's filename that goes missing.
 const SUB_CHAR = 4.1
 
-// A caption cut to this map's boxes. The cutting is `fitCaption` (patched.ts),
-// which the card shares; what is the miniature's own is the two numbers — its
-// box padding and the size its captions are set at.
+// A caption cut to this map's boxes. The cutting is `fitCaption` (patched.ts);
+// this map supplies the two numbers — its box padding and the size its
+// captions are set at.
 export const fitSub = (text: string, boxW: number) =>
   fitCaption(text, boxW - PAD, SUB_CHAR)
 
@@ -230,9 +230,9 @@ const RETURNS: readonly ReturnSpec[] = [
 
 // What each run carries, off the one loop table, so the map cannot name a loop
 // something the panel does not call it. `short` rather than the stage's whole
-// name: the miniature is 304 units wide with the runs stacked over the chain,
-// and each is named for its own machine — so the machine is the word that tells
-// them apart and the rest is what the band they ride already says. The card has room for the whole name and uses it.
+// name: the map is 304 units wide with the runs stacked over the chain, and
+// each is named for its own machine — so the machine is the word that tells
+// them apart and the rest is what the band they ride already says.
 //
 // Drawn in lowercase, which is a CSS rule (.mapLoopLabel) rather than a second
 // spelling here — the boxes have upper-cased their names the same way since the

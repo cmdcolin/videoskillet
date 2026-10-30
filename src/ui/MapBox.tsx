@@ -71,26 +71,16 @@ export function MapBox(props: {
   offHint: string
   off: boolean
   opens: boolean
-  // How many of this stage's controls sit off stock, for the hover text. A
-  // number rather than a finished clause: both drawings phrased it identically
-  // and both wrote it out, which is one more thing that had no reason to be
-  // said twice.
+  // How many of this stage's controls sit off stock, for the hover text.
   touched: number
-  // What that number counts, where "off stock" is the wrong noun for it. One
-  // box needs this — the modulation bay, which counts patched slots and a gate
-  // rather than controls moved off their resting value — and it arrives as a
-  // finished clause because only the caller knows whether the gate is in the
-  // count (see bayLoad). Absent, both drawings say "N off stock" as before.
-  touchedSay?: string
-  // What is standing in this box, on the three that can hold something. Both
-  // drawings caption it under the name in their own type, and it is said here
-  // so the sentence a reader hears is the one a reader sees: the stage, what is
-  // in it, then what the stage does. Never the truncated caption — the drawing
-  // cuts its own text to its own boxes, and a screen reader has no box.
+  // What is standing in this box, on the three that can hold something. The
+  // map captions it under the name, and it is said here so the sentence a
+  // reader hears is the one a reader sees: the stage, what is in it, then what
+  // the stage does. Never the truncated caption — the map cuts its text to its
+  // boxes, and a screen reader has no box.
   patched?: string
-  // What the miniature adds on the end when a press will fold the stage back up
-  // again. The only part of the hover text the two drawings genuinely differ on,
-  // and the card passes nothing because it has no fold to describe.
+  // What the hover text adds on the end when a press will fold the stage back
+  // up again.
   foldHint?: string
   className: string
   expanded?: boolean
@@ -110,7 +100,7 @@ export function MapBox(props: {
   // The hover text is that same sentence with the counts on it, and an inert box
   // has no counts worth reading — nothing in it is reaching the picture, which
   // is the whole of what its hint says.
-  const count = countSay(props.touched, props.touchedSay)
+  const count = countSay(props.touched)
   return (
     <MapPress
       opens={props.opens}
@@ -139,8 +129,7 @@ export function MapRun(props: {
   // the count of what you have touched in it.
   live: boolean
   touched: number
-  // What a press does, spelled out at the end of the hover text. The miniature
-  // folds and the card does not, and that is the whole difference between them.
+  // What a press does, spelled out at the end of the hover text.
   pressHint: string
   // Whether pressing it opens anything. Defaults to true, which is every case
   // but one: a run the live filter did not reach is drawn as context and has no
