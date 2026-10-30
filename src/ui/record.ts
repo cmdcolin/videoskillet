@@ -409,20 +409,15 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
       // Microseconds, off the count and never off a clock. A frame that took
       // 200ms to render still lands exactly one frame after its predecessor,
       // which is the property the whole file is for.
-      const timestamp = Math.round((count * 1e6 * fps.den) / fps.num)
-      const duration = Math.round((1e6 * fps.den) / fps.num)
       const frame = new VideoFrame(source, {
-        timestamp,
-        duration,
+        timestamp: Math.round(count * period),
+        duration: Math.round(period),
         // Cropped to the even size the encoder was configured with — see
         // `even` above. A frame whose size disagrees with the configuration is
         // the other way to fail this encoder asynchronously.
         visibleRect: { x: 0, y: 0, width, height },
       })
-      encoder.encode(frame, {
-        keyFrame:
-          count % Math.max(1, Math.round(rate * KEYFRAME_SECONDS)) === 0,
-      })
+      encoder.encode(frame, { keyFrame: count % keyEvery === 0 })
       encoded++
       deepest = Math.max(deepest, encoder.encodeQueueSize)
       // Closed at once rather than left to the collector: a VideoFrame holds a

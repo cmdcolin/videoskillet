@@ -357,39 +357,25 @@ function soundEntry(a: Mp4Audio, bitrate: number): Uint8Array<ArrayBuffer> {
   )
 }
 
-// A time-to-sample table, one entry per run of equal durations. AAC is one
-// run, since every block is 1024 periods; Opus varies with its frame size.
-function timeToSample(durations: readonly number[]): Uint8Array<ArrayBuffer> {
-  const runs: [number, number][] = []
-  for (const d of durations) {
-    const last = runs.at(-1)
-    if (last !== undefined && last[1] === d) last[0]++
-    else runs.push([1, d])
-  }
-  return fullBox(
-    'stts',
-    0,
-    0,
-    u32(runs.length),
-    join(runs.flatMap(([count, d]) => [u32(count), u32(d)])),
-  )
-}
-
-function compositionOffsets(
-  offsets: readonly number[],
+// A run-length table, one entry per run of equal values: `stts` over the
+// durations and `ctts` over the composition offsets. AAC's `stts` is one run,
+// since every block is 1024 periods; Opus varies with its frame size.
+function runTable(
+  type: 'stts' | 'ctts',
+  values: readonly number[],
 ): Uint8Array<ArrayBuffer> {
   const runs: [number, number][] = []
-  for (const o of offsets) {
+  for (const v of values) {
     const last = runs.at(-1)
-    if (last !== undefined && last[1] === o) last[0]++
-    else runs.push([1, o])
+    if (last !== undefined && last[1] === v) last[0]++
+    else runs.push([1, v])
   }
   return fullBox(
-    'ctts',
+    type,
     0,
     0,
     u32(runs.length),
-    join(runs.flatMap(([count, o]) => [u32(count), u32(o)])),
+    join(runs.flatMap(([count, v]) => [u32(count), u32(v)])),
   )
 }
 
@@ -491,7 +477,10 @@ function soundTrak(
         box(
           'stbl',
           fullBox('stsd', 0, 0, u32(1), soundEntry(a, bitrate)),
-          timeToSample(a.samples.map(s => s.frames)),
+          runTable(
+            'stts',
+            a.samples.map(s => s.frames),
+          ),
           ...oneChunk(
             a.samples.map(s => s.data.length),
             offset,
@@ -650,8 +639,8 @@ export function mp4Layout(spec: Mp4Tables): Mp4Layout {
     fullBox('stsd', 0, 0, u32(1), avc1),
     // One entry for every run of equal durations, so a take with no frame held
     // is one entry, which is what makes the file constant.
-    timeToSample(durations),
-    ...(offsets.some(o => o !== 0) ? [compositionOffsets(offsets)] : []),
+    runTable('stts', durations),
+    ...(offsets.some(o => o !== 0) ? [runTable('ctts', offsets)] : []),
     // Which frames an editor may cut on. Omitted entirely when every frame is
     // one — that is what the format's absence means, and writing it out would
     // be a table the size of the movie saying nothing.
