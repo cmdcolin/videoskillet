@@ -185,7 +185,6 @@
   color: #000;
 }
 
-/* What the mix switch can put on B. */
 /* The lens stops, where a phone camera keeps them: over the bottom of the
    picture. */
 .zoom {
@@ -226,10 +225,12 @@
   color: #fc3;
 }
 
-/* The gestures and switches, named over the picture. */
+/* The gestures and switches, named over the picture and over the switches
+   too, since a tap anywhere closes it. */
 .hints {
   position: absolute;
   inset: 0;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -271,11 +272,20 @@
   font-size: var(--fs-sm);
 }
 
-.badge {
+/* The badges stack down from the top of the picture, so a tape counting down
+   and a take recording both show. */
+.badges {
   position: absolute;
   top: 12px;
   left: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
   transform: translateX(-50%);
+  pointer-events: none;
+}
+.badge {
   padding: 3px 10px;
   border-radius: 999px;
   background: #000000b0;
@@ -283,7 +293,6 @@
   font-size: var(--fs-sm);
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  pointer-events: none;
 }
 /* The look a swipe landed on, named over the picture for a moment. */
 .flash {
@@ -453,10 +462,15 @@
 .pickSelect:disabled {
   opacity: 0.4;
 }
+/* The mode picker beside the fader is as wide as its longest mode. */
+.mixRow:has(.fader, .mixNote) .pick {
+  flex: none;
+}
 .fader {
   display: flex;
   flex: 2;
   align-items: center;
+  min-width: 0;
   gap: 10px;
   color: var(--fg2);
   font-size: var(--fs-sm);
@@ -606,7 +620,8 @@
 }
 .knobValue {
   flex: none;
-  width: 4.5em;
+  min-width: 6em;
+  white-space: nowrap;
   color: #fff;
   font-family: var(--mono);
   font-size: 12px;
@@ -719,13 +734,15 @@
 }
 
 /* The looks sit in one row that scrolls sideways. A chip snaps to the right
-   of random, which stays pinned over the row's start. */
+   of random, which stays pinned over the row's start at a fixed width so the
+   snap lands just past it. */
 .strip {
+  --roll: 8.5rem;
   display: flex;
   gap: 8px;
   overflow-x: auto;
   padding: 0 16px 0 0;
-  scroll-padding: 0 16px 0 9.5rem;
+  scroll-padding: 0 16px 0 calc(var(--roll) + 8px);
   scroll-snap-type: x proximity;
   scrollbar-width: none;
   overscroll-behavior-x: contain;
@@ -759,7 +776,9 @@
   left: 0;
   z-index: 1;
   flex: none;
+  box-sizing: border-box;
   display: flex;
+  min-width: var(--roll);
   padding: 0 12px 0 16px;
   background: #000;
 }
@@ -935,6 +954,7 @@
   .top {
     grid-column: 2;
     grid-row: 1;
+    padding: 0 10px;
   }
   .stage {
     grid-column: 1;
@@ -975,14 +995,12 @@
     flex-wrap: wrap;
     gap: 4px;
   }
-  .pick {
-    flex-basis: 100%;
+  .pick,
+  .mixRow:has(.fader, .mixNote) .pick {
+    flex: 1 1 100%;
   }
   .tabs {
     flex-wrap: wrap;
-  }
-  .top {
-    padding: 0 10px;
   }
   .brandName {
     display: none;

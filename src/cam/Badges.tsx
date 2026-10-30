@@ -11,7 +11,7 @@ export function Badges(props: {
   recSince: number
 }) {
   return (
-    <>
+    <div className={styles.badges}>
       {props.tapeLeft > 0 ? (
         <span className={cx(styles.badge, styles.rec)}>
           tape {props.tapeLeft}
@@ -28,6 +28,6 @@ export function Badges(props: {
       ) : props.waiting && props.tapeLeft === 0 && !props.opening ? (
         <span className={styles.badge}>tap to fire</span>
       ) : null}
-    </>
+    </div>
   )
 }

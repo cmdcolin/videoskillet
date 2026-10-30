@@ -245,7 +245,7 @@ export function CamPage(props: { link: CamLink | null }) {
 
   // The mixer's own modes take the mixer back from a look that set it, and
   // from the chroma keyer.
-  const mixWith = (mix: Mix) =>
+  const mixWith = (mix: Mix | null) =>
     paint(
       mixerOwned(sceneRef.current)
         ? { ...CLEAN, mix, keyHue: null }
@@ -280,15 +280,11 @@ export function CamPage(props: { link: CamLink | null }) {
     onError: setError,
     onMixing: () => {
       setShelfName(MIX_SHELF.name)
+      setFaults(false)
       setPanel('mix')
       paint({ mix: sceneRef.current.mix ?? FIRST_MIX, keyHue: null })
     },
-    onTakeOff: () =>
-      paint(
-        mixerOwned(sceneRef.current)
-          ? { ...CLEAN, mix: null, keyHue: null }
-          : { mix: null, keyHue: null },
-      ),
+    onTakeOff: () => mixWith(null),
   })
 
   // The chroma keyer puts the camera on B as well as A and keys it, starting

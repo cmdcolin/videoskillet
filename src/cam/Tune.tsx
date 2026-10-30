@@ -31,6 +31,7 @@ export function Knob(props: {
                 styles.choice,
                 Math.round(value) === i && styles.choiceOn,
               )}
+              aria-pressed={Math.round(value) === i}
               onClick={() => props.onChange(i)}
             >
               {c}
