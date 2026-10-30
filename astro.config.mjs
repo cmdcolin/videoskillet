@@ -3,6 +3,7 @@ import react from '@astrojs/react'
 import { defineConfig } from 'astro/config'
 import rehypeRaw from 'rehype-raw'
 
+import { stampDist } from './scripts/swstamp.mjs'
 import { rehypeGuide } from './site/lib/rehype-guide.mjs'
 import { remarkGuide } from './site/lib/remark-guide.mjs'
 import { appDefine, appPlugins, reactCompiler } from './vite.shared.ts'
@@ -58,6 +59,17 @@ const figures = () => ({
   },
 })
 
+// public/sw.js names its cache after the build, so the copy in dist gets the
+// build's id once every asset has been written.
+const serviceWorker = () => ({
+  name: 'sw-stamp',
+  hooks: {
+    'astro:build:done': ({ dir, logger }) => {
+      logger.info(`sw.js stamped with build ${stampDist(fileURLToPath(dir))}`)
+    },
+  },
+})
+
 export default defineConfig({
   site: 'https://videoskillet.com',
   srcDir: './site',
@@ -79,7 +91,11 @@ export default defineConfig({
   // collapses the newline to the one space that was written; the bytes it
   // costs are nothing against a handful of static pages.
   compressHTML: false,
-  integrations: [figures(), react({ compiler: reactCompiler })],
+  integrations: [
+    figures(),
+    serviceWorker(),
+    react({ compiler: reactCompiler }),
+  ],
   server: { port: 5199 },
   vite: {
     plugins: appPlugins(),

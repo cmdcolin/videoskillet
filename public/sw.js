@@ -2,11 +2,18 @@
 // open when the network does not, and Chrome will not offer to install one
 // without a fetch handler here.
 //
-// Not generated and not bundled — a plain file in public/, so its URL is stable
-// and its scope is the deploy root. src/registerSW.ts registers it relative to
-// the page (src/publicUrl.ts), so the scope follows wherever the pages are.
+// Not bundled — a plain file in public/, so its URL is stable and its scope is
+// the deploy root. src/registerSW.ts registers it relative to the page
+// (src/publicUrl.ts), so the scope follows wherever the pages are.
+//
+// The build writes a hash of its asset names into BUILD (scripts/swstamp.mjs),
+// which changes this file's bytes whenever the assets change. The browser then
+// installs the new worker, and the new worker fills a cache of its own. Every
+// file under assets/ is content-hashed, so one cache name kept for every
+// release would hold every release's assets forever.
 
-const CACHE = 'videoskillet-v1'
+const BUILD = 'dev'
+const CACHE = `videoskillet-${BUILD}`
 // Where a file arriving from the OS share sheet is parked. Its own cache rather
 // than a key in the one above, so clearing the app's assets on an upgrade never
 // takes a file someone is in the middle of sending with it.
@@ -39,17 +46,19 @@ self.addEventListener('install', event => {
   )
 })
 
+// Keeps this build's cache, the share cache, and the most recent generation
+// before this one. A tab opened before the deploy is still running the
+// previous build's chunks, and the previous cache is where it finds the ones it
+// has not loaded yet. `caches.keys()` lists caches in the order they were
+// created, so the last of the others is the previous generation.
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches
       .keys()
-      .then(keys =>
-        Promise.all(
-          keys
-            .filter(k => k !== CACHE && k !== SHARE)
-            .map(k => caches.delete(k)),
-        ),
-      )
+      .then(keys => {
+        const older = keys.filter(k => k !== CACHE && k !== SHARE)
+        return Promise.all(older.slice(0, -1).map(k => caches.delete(k)))
+      })
       .then(() => self.clients.claim()),
   )
 })
@@ -81,12 +90,12 @@ const receiveShare = async request => {
   return Response.redirect(shellUrl('app/?shared=1'), 303)
 }
 
-const putIfOk = (request, response) => {
+const putIfOk = (key, response) => {
   if (response.ok && response.type === 'basic') {
     const copy = response.clone()
     caches
       .open(CACHE)
-      .then(cache => cache.put(request, copy))
+      .then(cache => cache.put(key, copy))
       .catch(err => {
         console.warn('[sw] cache put failed', err)
       })
@@ -94,29 +103,52 @@ const putIfOk = (request, response) => {
   return response
 }
 
+// This build's cache first. `caches.match` searches every cache in the order
+// they were created, so on its own it answers from the previous generation
+// before this one.
+const lookup = async (key, options) =>
+  (await (await caches.open(CACHE)).match(key, options)) ??
+  (await caches.match(key, options))
+
+// A page is stored under its address without the query. Every page is the same
+// document whatever the query says, and an old `?p=` link would otherwise add
+// an entry of its own.
+const pageKey = url => {
+  const { origin, pathname } = new URL(url)
+  return origin + pathname
+}
+
 // Fresh page, cached page if the network is gone, and the app's own shell if
 // the address asked for was never visited — the shape every offline launch of
 // an installed app takes. The camera installs as an app of its own, so an
-// address under it falls back to the camera.
+// address under it falls back to the camera. `ignoreSearch` finds the pages a
+// worker before pageKey stored under their full address.
 const navigate = async request => {
+  const page = pageKey(request.url)
   try {
-    return putIfOk(request, await fetch(request))
+    return putIfOk(page, await fetch(request))
   } catch (err) {
-    const hit = await caches.match(request, { ignoreSearch: true })
-    const home = request.url.startsWith(shellUrl('cam/')) ? 'cam/' : 'app/'
-    return hit ?? (await caches.match(shellUrl(home))) ?? Promise.reject(err)
+    const hit = await lookup(page, { ignoreSearch: true })
+    const home = page.startsWith(shellUrl('cam/')) ? 'cam/' : 'app/'
+    return hit ?? (await lookup(shellUrl(home))) ?? Promise.reject(err)
   }
 }
 
-// Everything under assets/ is content-hashed, so a hit is the file that was
-// asked for and can be served without a revalidation round-trip.
+// Everything under assets/ is content-hashed, so a hit in any generation is
+// the file that was asked for and can be served without a revalidation
+// round-trip. A hit from an older generation is copied into this one, because a
+// chunk that survives a deploy unchanged keeps its name, and its only copy
+// would go when the older cache does.
 const immutable = async request => {
-  const hit = await caches.match(request)
-  return hit ?? putIfOk(request, await fetch(request))
+  const own = await (await caches.open(CACHE)).match(request)
+  return (
+    own ??
+    putIfOk(request, (await caches.match(request)) ?? (await fetch(request)))
+  )
 }
 
 const revalidating = async request => {
-  const hit = await caches.match(request)
+  const hit = await lookup(request)
   const live = fetch(request)
     .then(response => putIfOk(request, response))
     .catch(err => hit ?? Promise.reject(err))
