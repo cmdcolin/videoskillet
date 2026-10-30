@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useEffectEvent, useRef, useState } from 'react'
 
 import {
   ATTRIBUTE_PALETTE,
@@ -60,12 +60,9 @@ export function TeletypeDialog(props: {
     const was = undo.current.pop()
     if (was !== undefined) edit({ text: was })
   }
-  // Read through a ref so the listener below is attached once per mode rather
+  // An effect event, so the listener below is attached once per mode rather
   // than re-attached on every stroke, and still sees the current text.
-  const latest = useRef(undoStroke)
-  useEffect(() => {
-    latest.current = undoStroke
-  })
+  const undoLatest = useEffectEvent(() => undoStroke())
 
   // ⌘/ctrl+Z while drawing. On the window and in the capture phase, ahead of
   // the app's own undo (useShortcuts), which is bound the same way and means
@@ -83,7 +80,7 @@ export function TeletypeDialog(props: {
       ) {
         e.preventDefault()
         e.stopPropagation()
-        latest.current()
+        undoLatest()
       }
     }
     window.addEventListener('keydown', onKey, true)

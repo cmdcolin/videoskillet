@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useEffectEvent } from 'react'
 
 import { TRANSITIONS } from './transitions'
 
@@ -176,15 +176,13 @@ interface Handlers {
 }
 
 // Global keyboard shortcuts, bound wherever the panel lives (main window and the
-// popout). Handlers are read through a ref, so the listeners re-subscribe only
-// when the popout appears or goes away, never on every render — and always see
-// the latest closures without capturing stale ones. Letter keys match
-// case-insensitively so the hints work whether or not Shift/Caps is down.
+// popout). Handlers are read through an effect event, so the listeners
+// re-subscribe only when the popout appears or goes away, never on every render
+// — and always see the latest closures without capturing stale ones. Letter
+// keys match case-insensitively so the hints work whether or not Shift/Caps is
+// down.
 export function useShortcuts(popout: Window | null, handlers: Handlers) {
-  const ref = useRef(handlers)
-  useEffect(() => {
-    ref.current = handlers
-  })
+  const latest = useEffectEvent(() => handlers)
 
   useEffect(() => {
     const held = new Map<string, () => void>()
@@ -193,7 +191,7 @@ export function useShortcuts(popout: Window | null, handlers: Handlers) {
       held.delete(key)
     }
     const onKey = (e: KeyboardEvent) => {
-      const h = ref.current
+      const h = latest()
       const hit = resolveShortcut({
         key: e.key,
         code: e.code,
@@ -289,7 +287,7 @@ export function useShortcuts(popout: Window | null, handlers: Handlers) {
     const onKeyUp = (e: KeyboardEvent) => {
       const key = e.key.toLowerCase()
       release(key)
-      if (!isTextEntry(e.target) && key === 'c') ref.current.onEndCompare()
+      if (!isTextEntry(e.target) && key === 'c') latest().onEndCompare()
     }
     // Compare is a hold, and a window that loses focus mid-hold never delivers
     // the keyup: alt-tab away with `c` down and the engine stays previewing the
@@ -297,7 +295,7 @@ export function useShortcuts(popout: Window | null, handlers: Handlers) {
     // ending a compare that never started is already harmless. A held fault
     // heals on blur for the same reason.
     const onBlur = () => {
-      ref.current.onEndCompare()
+      latest().onEndCompare()
       for (const r of held.values()) r()
       held.clear()
     }
