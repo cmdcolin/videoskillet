@@ -13,7 +13,7 @@ TLDR go here! https://videoskillet.com/
 nearly every control in the app is behind one of its boxes — click a stage and
 that stage's controls open underneath it.
 
-![The app window with the signal path map boxed in red at the head of the sidebar and enlarged over the picture: SOURCE A and SOURCE B into MIX, then CHANNEL, RECEIVER and SCREEN, with camera and mixer returns arching back over the trunk, SOUND and VIEW hanging below, and MODULATION and DECK on a row of their own with no wire reaching them](docs/img/signal-path-callout.jpg)
+![The app window with the signal path map boxed in red at the head of the sidebar and enlarged over the picture: SOURCE A and SOURCE B into MIX, then CHANNEL, RECEIVER and SCREEN, with camera and mixer returns arching back over the trunk, and SOUND and VIEW hanging below](docs/img/signal-path-callout.jpg)
 
 Details in [How it works](docs/FAQ.md#how-does-it-actually-work), fault by fault
 in [Features](docs/FEATURES.md).

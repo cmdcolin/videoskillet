@@ -46,11 +46,16 @@ Amber marks a stage you've moved something in. The wires arcing over the trunk
 are the feedback loops (camera, mixer), and the chip on each one is that loop's
 button.
 
-![The same map at readable size, its header reading Signal path · click a stage: SOURCE A and SOURCE B into MIX, then CHANNEL, RECEIVER and SCREEN in amber, the camera and mixer returns arching back over the trunk, SOUND dashed and inert under RECEIVER, VIEW under SCREEN, and MODULATION and DECK on a row of their own with no wire reaching them](img/signal-path.png)
+![The same map at readable size, its header reading Signal path with modulation, deck and all settings buttons at the right: SOURCE A and SOURCE B into MIX, then CHANNEL, RECEIVER and SCREEN in amber, the camera and mixer returns arching back over the trunk, SOUND dashed and inert under RECEIVER, and VIEW under SCREEN](img/signal-path.png)
 
 **at stock**, on the tinted strip carrying a stage's name, holds that one stage
 at stock while the rest of the look stays where it is, so you can find which of
 several faults is making the artifact.
+
+**modulation** and **deck**, on the map's header, open the two stages that no
+wire on the map reaches. The modulation bay drives controls, and the deck
+gathers the controls you play by hand: the transition lever, the DVE inset, the
+tape transport and the frame hold.
 
 **all settings**, at the right of the map's header, lists every control in every
 stage on one page, in signal order, with nothing folded. Its **off stock only**
@@ -86,8 +91,9 @@ editor where you pick the source and dial the rate and depth. Depth is a
 fraction of the control's range, and the slider stays put as the centre the
 motion happens around, which is why a preset or a link still holds the look.
 
-**edit in the bay** opens the **MODULATION** box on the map, which has the full
-editor under each routing and the tempo at its top. Type or tap a BPM there,
+**edit in the bay** opens the modulation bay, the stage that **modulation** on
+the map's header opens. The bay has the full editor under each routing and the
+tempo at its top. Type or tap a BPM there,
 then tie any rate to it with **♩ lock to beat**. MIDI clock takes over whenever
 something sends it. See [MIDI.md](MIDI.md).
 
