@@ -21,7 +21,7 @@
 
 import { DEFAULT_CONTROLS } from '../core/controls'
 import { clamp } from '../core/math'
-import { NEEDS, VIEW_KEYS } from './controls'
+import { NEEDS, VIEW_KEYS, needMet } from './controls'
 import { isBayKey, EMPTY_SLOT, N_SLOTS, RATE_MAX, RATE_MIN } from './modSlots'
 import { MUTATE_AMOUNTS, ROLL_NEVER_STARTS } from './mutate'
 import { PRESETS } from './presets'
@@ -238,7 +238,7 @@ function weightFor(def: SliderDef, controls: Controls, enums: boolean): number {
   // First, and above the turbo exemption below it: a wreck is still a wreck you
   // can see, and a mode stepped behind a shut gate is not.
   const need = NEEDS[def.key]
-  if (need !== undefined && !need.ok(controls[need.key])) return 0
+  if (need !== undefined && !needMet(need, controls)) return 0
   if (def.choices !== undefined) return enums ? 0.5 : 0
   if (ROLL_NEVER_STARTS.has(def.key) && controls[def.key] === 0) return 0
   const authored = AUTHORED_DEPTH.has(def.key) ? 6 : 1

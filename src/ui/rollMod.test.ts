@@ -6,6 +6,7 @@ import {
   ALL_SLIDERS,
   MUTATE_SLIDERS,
   NEEDS,
+  needMet,
   SLIDER_BY_KEY,
   VIEW_KEYS,
   sliderFor,
@@ -192,7 +193,7 @@ describe('rollBay', () => {
       for (const bay of rolls(200, { amount: 'turbo', controls })) {
         for (const s of patched(bay)) {
           const need = NEEDS[s.target]
-          if (need !== undefined) expect(need.ok(controls[need.key])).toBe(true)
+          if (need !== undefined) expect(needMet(need, controls)).toBe(true)
         }
       }
   })

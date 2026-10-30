@@ -1,7 +1,7 @@
 import { createContext, use, useState } from 'react'
 
 import { atRest } from '../core/controls'
-import { NEEDS, sliderFor } from './controls'
+import { NEEDS, needMet, sliderFor } from './controls'
 import { useControlReading } from './ControlsContext'
 import { readingOf } from './format'
 
@@ -151,7 +151,7 @@ export function useReadings<K extends ControlKey>(keys: readonly K[]) {
 export function shutBy(key: ControlKey, c: Controls): ControlKey | undefined {
   let owner: ControlKey | undefined
   for (let k = key, need = NEEDS[k]; need; k = need.key, need = NEEDS[k])
-    if (!need.ok(c[need.key])) owner = k
+    if (!needMet(need, c)) owner = k
   return owner
 }
 

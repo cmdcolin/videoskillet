@@ -22,6 +22,7 @@ import {
   MIXER_LOOP_STAGE,
   MIX_STAGE,
   NEEDS,
+  needMet,
   PHASE_ORDER,
   SLIDER_BY_KEY,
   sliderFor,
@@ -51,6 +52,21 @@ describe('control tables', () => {
   it('gates controls on controls that exist', () => {
     for (const need of Object.values(NEEDS))
       expect(SLIDER_BY_KEY.has(need.key)).toBe(true)
+  })
+
+  it('opens the store strobe to the keyer filling from the loop bus', () => {
+    const keyed = {
+      ...DEFAULT_CONTROLS,
+      bGenlock: 1,
+      bGain: 1,
+      bKey: 1,
+      bKeyFill: 2,
+    }
+    expect(needMet(NEEDS.cfbHold!, DEFAULT_CONTROLS)).toBe(false)
+    expect(needMet(NEEDS.cfbHold!, keyed)).toBe(true)
+    expect(needMet(NEEDS.cfbTrail!, keyed)).toBe(true)
+    expect(needMet(NEEDS.cfbDelayUs!, keyed)).toBe(false)
+    expect(needMet(NEEDS.cfbHold!, { ...keyed, bKeyFill: 3 })).toBe(false)
   })
 
   it('names every group once', () => {

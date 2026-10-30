@@ -21,6 +21,7 @@ import {
   MIXER_LOOP_GROUP,
   MUTATE_CIRCUIT_BY_GROUP,
   NEEDS,
+  needMet,
   sliderFor,
   SYNTH_GROUP,
   TUBE_FACE_GROUP,
@@ -92,16 +93,15 @@ export function ControlSlider(props: {
   const s = props.slider
   const modOpen = mod.editing.has(s.key)
   const need = NEEDS[s.key]
-  // Two subscriptions, and the row re-renders when either number moves and at
-  // no other time. The gate falls back to this row's own key so the hook count
-  // doesn't depend on whether the control has a gate at all.
+  // Two subscriptions, and the row re-renders when either changes and at no
+  // other time.
   const value = useControlValue(s.key)
-  const gate = useControlValue(need === undefined ? s.key : need.key)
   // Whether the gate is closed at all, as opposed to whether this row is the
   // one that says so: a banner-muted row is still inert, and offering to
   // modulate a control whose path is shut would start an LFO nothing can show.
-  const inert = need !== undefined && !need.ok(gate)
-  const unmet = inert && props.muted?.has(need.key) !== true
+  const inert = useControlReading(c => need !== undefined && !needMet(need, c))
+  const unmet =
+    need !== undefined && inert && props.muted?.has(need.key) !== true
   const slot = mod.modFor(s.key)
   // What this row would patch if asked, and null on a row that may not ask —
   // the view controls, and a strobe that is not already running. rollMod owns
@@ -509,12 +509,18 @@ function needsOf(group: Group): readonly SliderNeed[] {
 function gatesBehind(
   onScreen: readonly SliderDef[],
 ): { need: SliderNeed; n: number }[] {
-  const gates = new Map<ControlKey, { need: SliderNeed; n: number }>()
+  // A gate with a second path is its own entry: its rows can be live while the
+  // rest behind the same key are not.
+  const gates = new Map<
+    ControlKey | SliderNeed,
+    { need: SliderNeed; n: number }
+  >()
   for (const s of onScreen) {
     const need = NEEDS[s.key]
     if (need !== undefined) {
-      const seen = gates.get(need.key)
-      if (seen === undefined) gates.set(need.key, { need, n: 1 })
+      const at = need.also === undefined ? need.key : need
+      const seen = gates.get(at)
+      if (seen === undefined) gates.set(at, { need, n: 1 })
       else seen.n += 1
     }
   }
@@ -653,7 +659,7 @@ export function ControlGroup(props: { group: Group; defaultOpen?: boolean }) {
   // on which rows are showing; `banners` below narrows it to the rows on screen.
   const shut = useControlReading(c =>
     needsOf(group)
-      .map(need => (need.ok(c[need.key]) ? '-' : 'x'))
+      .map(need => (needMet(need, c) ? '-' : 'x'))
       .join(''),
   )
   // Below the readings for the reason they sit above everything else: the

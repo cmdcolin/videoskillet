@@ -4083,7 +4083,13 @@ export interface SliderNeed {
   ok: (v: number) => boolean
   fix: number
   hint: string
+  // A second path that opens the control without `key`, for a control that
+  // more than one circuit reads.
+  also?: (c: Controls) => boolean
 }
+
+export const needMet = (need: SliderNeed, c: Controls): boolean =>
+  need.ok(c[need.key]) || need.also?.(c) === true
 
 const above0 = (v: number) => v > 0
 const below1 = (v: number) => v < 1
@@ -4100,6 +4106,17 @@ const cfb: SliderNeed = {
   ok: above0,
   fix: 0.5,
   hint: 'loop mix above 0',
+}
+// The frame store records for the loop fader and for the keyer filling from the
+// loop bus, so its strobe and trails act with the fader down.
+const storeRecords: SliderNeed = {
+  ...cfb,
+  hint: 'loop mix above 0, or the keyer filling from the loop bus',
+  also: c =>
+    c.bGenlock > 0.5 &&
+    c.bGain > 0 &&
+    c.bKey !== 0 &&
+    Math.round(c.bKeyFill) === 2,
 }
 const cfbKeyed: SliderNeed = {
   key: 'cfbKey',
@@ -4273,8 +4290,8 @@ export const NEEDS: Partial<Record<ControlKey, SliderNeed>> = {
   cfbDelayUs: cfb,
   cfbLines: cfb,
   cfbKey: cfb,
-  cfbHold: cfb,
-  cfbTrail: cfb,
+  cfbHold: storeRecords,
+  cfbTrail: storeRecords,
   cfbFilterMHz: cfb,
   cfbKeyLevel: cfbKeyed,
   cfbKeySoft: cfbKeyed,
