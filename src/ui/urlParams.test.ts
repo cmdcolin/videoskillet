@@ -12,6 +12,8 @@ import {
   DRY_DEFAULT,
   REVERB_DEFAULT,
   SPEED_DEFAULT,
+  SPEED_MAX,
+  SPEED_MIN,
   parseSessionParams,
   urlName,
   writeProfileParams,
@@ -153,6 +155,32 @@ describe('session params', () => {
       reverb: 0.8,
       dry: DRY_DEFAULT,
     })
+  })
+
+  it('clamps hand-edited playback numbers to their sliders', () => {
+    const p = parseSessionParams('?speeda=-1&speedb=100&reverb=7&dry=-2')
+    expect(p.vapor).toEqual({
+      speedA: SPEED_MIN,
+      speedB: SPEED_MAX,
+      reverb: 1,
+      dry: 0,
+    })
+  })
+
+  it('reads an empty playback number as absent', () => {
+    const p = parseSessionParams('?speeda=&speedb=&reverb=&dry=')
+    expect(p.vapor).toEqual({
+      speedA: SPEED_DEFAULT,
+      speedB: SPEED_DEFAULT,
+      reverb: REVERB_DEFAULT,
+      dry: DRY_DEFAULT,
+    })
+  })
+
+  it('drops an empty ?set value', () => {
+    expect(parseSessionParams('?set=noiseIre:').controls).not.toHaveProperty(
+      'noiseIre',
+    )
   })
 
   it('carries the source urls through untouched', () => {

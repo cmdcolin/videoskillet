@@ -43,6 +43,8 @@ import type { ModRouting } from './modSlots'
 // VAPORWAVE_SPEED and VAPORWAVE_DRY are the one-click look, run from the
 // command palette — slowed, and heard from the doorway.
 export const SPEED_DEFAULT = 1
+export const SPEED_MIN = 0.25
+export const SPEED_MAX = 1.5
 export const REVERB_DEFAULT = 0.3
 export const DRY_DEFAULT = 1
 export const VAPORWAVE_SPEED = 0.66
@@ -218,7 +220,7 @@ export function parseSet(raw: string): Partial<Controls> {
   const patch: Partial<Controls> = {}
   for (const pair of raw.split(',')) {
     const [k, v] = pair.split(':')
-    const n = Number(v)
+    const n = v === '' ? NaN : Number(v)
     const key = CONTROL_KEYS.find(c => c === k)
     if (key !== undefined && Number.isFinite(n)) {
       const def = SLIDER_BY_KEY.get(key)
@@ -266,10 +268,10 @@ function parseMod(raw: string): ModRouting[] {
 
 export function parseSessionParams(search: string): SessionParams {
   const q = new URLSearchParams(search)
-  const num = (key: string, fallback: number): number => {
+  const num = (key: string, fallback: number, min: number, max: number) => {
     const raw = q.get(key)
-    const n = raw === null ? fallback : Number(raw)
-    return Number.isFinite(n) ? n : fallback
+    const n = raw === null || raw === '' ? fallback : Number(raw)
+    return Number.isFinite(n) ? clamp(n, min, max) : fallback
   }
   const one = <T extends string>(
     key: string,
@@ -336,10 +338,10 @@ export function parseSessionParams(search: string): SessionParams {
     cardb: card('textb', 'crawlb', 'boilb', 'garbleb'),
     caption: clampCardText(q.get('caption') ?? ''),
     vapor: {
-      speedA: num('speeda', SPEED_DEFAULT),
-      speedB: num('speedb', SPEED_DEFAULT),
-      reverb: num('reverb', REVERB_DEFAULT),
-      dry: num('dry', DRY_DEFAULT),
+      speedA: num('speeda', SPEED_DEFAULT, SPEED_MIN, SPEED_MAX),
+      speedB: num('speedb', SPEED_DEFAULT, SPEED_MIN, SPEED_MAX),
+      reverb: num('reverb', REVERB_DEFAULT, 0, 1),
+      dry: num('dry', DRY_DEFAULT, 0, 1),
     },
     cueA: parseCue(q.get('cuea')),
     cueB: parseCue(q.get('cueb')),
