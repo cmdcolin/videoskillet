@@ -129,5 +129,24 @@
     "gallery": true,
     "says": "A premium channel with its timing marks removed: the picture tears into slabs while the receiver misreads the colour reference and floods bands of colour.",
     "query": "#preset=scrambledChannel&iurl=https://upload.wikimedia.org/wikipedia/commons/f/f9/%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg"
+  },
+  {
+    "name": "Skeleton in the ballroom",
+    "showcase": false,
+    "gallery": true,
+    "says": "A chroma keyer that fills the green from its own frame store, recording every fourth frame, so a dancing skeleton leaves copies that fade back into a still of an abandoned ballroom. Skeleton by Eva Vikström (CC BY 3.0), ballroom by Jan Bommes (CC BY 2.0).",
+    "query": "#iurl=https://thumb.wikimedia.org/wikipedia/commons/thumb/d/de/Abandoned_grand_piano_-_Abandoned_Ballroom_%286%29.jpg/1280px-Abandoned_grand_piano_-_Abandoned_Ballroom_%286%29.jpg&vurlb=https://myloveydove.com/videoskillet/sources/creatures-for-chroma-key-death.webm&set=chromaGain:1.3,crtSat:1.2,bGain:1,bGenlock:1,bKey:1,bKeyAcceptDeg:45,bKeyClip:0.05,bKeySpill:0.6,bKeyFill:2,cfbHold:3,bKeyFillMixA:0.15",
+    "riffs": [
+      {
+        "name": "Clear on a press",
+        "says": "A long trail, and a one-shot in the modulation bay on \"program A in fill\": each fire wipes the copies back to the room.",
+        "query": "#iurl=https://thumb.wikimedia.org/wikipedia/commons/thumb/d/de/Abandoned_grand_piano_-_Abandoned_Ballroom_%286%29.jpg/1280px-Abandoned_grand_piano_-_Abandoned_Ballroom_%286%29.jpg&vurlb=https://myloveydove.com/videoskillet/sources/creatures-for-chroma-key-death.webm&mod=bKeyFillMixA:trig:1:1&set=chromaGain:1.3,crtSat:1.2,bGain:1,bGenlock:1,bKey:1,bKeyAcceptDeg:45,bKeyClip:0.05,bKeySpill:0.6,bKeyFill:2,cfbHold:3,bKeyFillMixA:0.03"
+      },
+      {
+        "name": "No fade",
+        "says": "Same board with the fade at 0, so the copies bury the room.",
+        "query": "#iurl=https://thumb.wikimedia.org/wikipedia/commons/thumb/d/de/Abandoned_grand_piano_-_Abandoned_Ballroom_%286%29.jpg/1280px-Abandoned_grand_piano_-_Abandoned_Ballroom_%286%29.jpg&vurlb=https://myloveydove.com/videoskillet/sources/creatures-for-chroma-key-death.webm&set=chromaGain:1.3,crtSat:1.2,bGain:1,bGenlock:1,bKey:1,bKeyAcceptDeg:45,bKeyClip:0.05,bKeySpill:0.6,bKeyFill:2,cfbHold:3,bKeyFillMixA:0"
+      }
+    ]
   }
 ]
