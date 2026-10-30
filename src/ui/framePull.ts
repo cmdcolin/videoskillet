@@ -21,8 +21,9 @@
 // a frame and **flat in the keyframe spacing**, because nothing here ever seeks:
 // the decoder is fed forward, in its own order, exactly once per frame.
 //
-// So the shape is: demux once (`mp4demux.ts`), hold a `VideoDecoder`, and walk
-// it. Three things follow that are worth knowing before reading the code.
+// So the shape is: demux once (`mp4demux.ts` or `webmdemux.ts`), hold a
+// `VideoDecoder`, and walk it. Three things follow that are worth knowing
+// before reading the code.
 //
 //   - **A frame is asked for by time, not by index.** The caller has a clip
 //     position — a cue in-point, a row's `start`, `frame / fps` past it — and
@@ -50,6 +51,7 @@
 // about browsers.
 
 import { demuxMp4 } from './mp4demux'
+import { demuxWebm } from './webmdemux'
 
 import type { FramePull } from '../core/gpu/videopump'
 import type { DemuxedTrack } from './mp4demux'
@@ -99,13 +101,13 @@ const FEED_DEPTH = 8
 const MAX_PULL_BYTES = 192 * 1024 * 1024
 
 // Open a clip for stepping. Null when the file is one this cannot pull from —
-// not an MP4, a codec with no config string, an edit list that is not a shift,
+// neither an MP4 nor a WebM, a codec with no config string, an edit list that is not a shift,
 // or a decoder that will not take the track. **Every one of those is a fallback
 // rather than a failure**: the caller keeps the wall-rate element it already
 // has, and the take is exactly as reproducible as it was before this existed.
 export async function openPull(bytes: Uint8Array): Promise<FramePull | null> {
   if (typeof VideoDecoder === 'undefined') return null
-  const track = demuxMp4(bytes)
+  const track = demuxMp4(bytes) ?? demuxWebm(bytes)
   if (track === null || track.unsupportedEdit || track.samples.length === 0) {
     return null
   }

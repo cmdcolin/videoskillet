@@ -529,8 +529,9 @@ the all-intra arm `createImageBitmap` handed back the pre-seek frame about half
 the time.
 
 **Hence the demuxer route.** `ui/mp4demux.ts` is the demuxer — not mp4box.js,
-for the argument `mp4.ts` already makes in the other direction — checked against
-ffprobe on real files by `scripts/demuxcheck.mjs`. `ui/framePull.ts` walks a
+for the argument `mp4.ts` already makes in the other direction — and
+`ui/webmdemux.ts` reads WebM, which is what Commons transcodes arrive as. Both
+are checked against ffprobe on real files by `scripts/demuxcheck.mjs`. `ui/framePull.ts` walks a
 `VideoDecoder`: ask for a clip time, get the frame a viewer would see there, at
 **0.85 ms a frame and flat in the keyframe spacing**, because nothing seeks.
 `VideoPump` has a take mode that asks it instead of the element, `startTake`

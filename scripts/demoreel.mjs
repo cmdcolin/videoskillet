@@ -197,9 +197,9 @@ async function record(demo, tmpDir) {
     // as `ui/render.ts` does. The warm-up runs on the same clock, so the history
     // it builds and the clip share one source timeline.
     //
-    // `openPullFromUrl` demuxes MP4 only, and declines a webm `vurl=` like
-    // `Wonkitize me`'s. For those decks the opener below seeks a second
-    // element to each wanted time, at about 70ms a seek on that clip.
+    // `openPullFromUrl` demuxes MP4 and WebM, and declines anything else, such
+    // as an ogv off archive.org. For those decks the opener below steps a
+    // second element to each wanted time.
     await page.evaluate(fps => {
       const vf = window.vf
       const app = vf.pump.opener

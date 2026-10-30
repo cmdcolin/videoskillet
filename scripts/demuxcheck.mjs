@@ -30,6 +30,7 @@ const vite = await createServer({
   logLevel: 'error',
 })
 const { demuxMp4 } = await vite.ssrLoadModule('/src/ui/mp4demux.ts')
+const { demuxWebm } = await vite.ssrLoadModule('/src/ui/webmdemux.ts')
 
 const files =
   process.argv.slice(2).length > 0
@@ -47,7 +48,8 @@ const check = (name, ok, detail = '') => {
 for (const path of files) {
   console.log(`\n${path}`)
   const bytes = new Uint8Array(readFileSync(path))
-  const track = demuxMp4(bytes)
+  const mp4 = demuxMp4(bytes)
+  const track = mp4 ?? demuxWebm(bytes)
   if (track === null) {
     check('demuxed at all', false, 'returned null')
     continue
@@ -81,8 +83,14 @@ for (const path of files) {
   let sizes = 0
   let ptsBad = 0
   let dtsBad = 0
+  // In a WebM, ffprobe's `pos` is the start of the block: the track number as a
+  // variable-length integer, a 16-bit timecode and a flags byte, ahead of the
+  // frame the demuxer points at.
+  const blockHead = pos =>
+    mp4 === null ? 3 + (8 - Math.floor(Math.log2(bytes[pos]))) : 0
   for (let i = 0; i < n; i++) {
-    if (track.samples[i].offset !== Number(probe[i].pos)) offsets++
+    const pos = Number(probe[i].pos)
+    if (track.samples[i].offset !== pos + blockHead(pos)) offsets++
     if (track.samples[i].size !== Number(probe[i].size)) sizes++
     if (track.samples[i].cts !== Number(probe[i].pts)) ptsBad++
     if (track.samples[i].dts !== Number(probe[i].dts)) dtsBad++
