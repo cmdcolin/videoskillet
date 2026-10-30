@@ -23,7 +23,12 @@ const isSpan = (v: unknown): v is Span =>
 
 // The camera's own zoom range, where the track reports one. DOM's types do not
 // list `zoom` among a track's capabilities yet.
-export function lensSpan(track: MediaStreamTrack | null): Span | null {
+export type Lens = Pick<
+  MediaStreamTrack,
+  'applyConstraints' | 'getCapabilities'
+>
+
+export function lensSpan(track: Lens | null): Span | null {
   if (track === null || typeof track.getCapabilities !== 'function') return null
   const z: unknown = Reflect.get(track.getCapabilities(), 'zoom')
   return isSpan(z) && z.max > z.min ? { min: z.min, max: z.max } : null
