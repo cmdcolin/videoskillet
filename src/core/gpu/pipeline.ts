@@ -1905,7 +1905,7 @@ export class Engine implements EngineApi {
     return this.loop.confirmedWork
   }
 
-  get isDestroyed() {
+  get isDestroyed(): boolean {
     return this.destroyed
   }
 

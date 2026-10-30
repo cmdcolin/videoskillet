@@ -1,10 +1,12 @@
 import { publicUrl } from '../publicUrl'
 import styles from './cam.module.css'
-import { ShareIcon } from './icons'
+import { ShareIcon, UndoIcon } from './icons'
 
 export function TopBar(props: {
   help: boolean
+  canUndo: boolean
   fullHref: string
+  onUndo: () => void
   onHelp: () => void
   onShare: () => void
 }) {
@@ -15,6 +17,14 @@ export function TopBar(props: {
         <span className={styles.brandName}>videoskillet</span>
       </a>
       <span className={styles.topRight}>
+        <button
+          className={styles.help}
+          aria-label="undo the last change to the look"
+          disabled={!props.canUndo}
+          onClick={() => props.onUndo()}
+        >
+          <UndoIcon />
+        </button>
         <button
           className={styles.help}
           aria-label="share a link to this look"

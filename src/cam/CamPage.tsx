@@ -49,6 +49,7 @@ import { SetSwitches } from './SetSwitches'
 import { Shutter } from './Shutter'
 import { TopBar } from './TopBar'
 import { Tune } from './Tune'
+import { banked, changesStep } from './undo'
 import { useCamEngine } from './useCamEngine'
 import { useCamera } from './useCamera'
 import { useFlash } from './useFlash'
@@ -70,10 +71,18 @@ import type { Look, Mix } from './looks'
 import type { Panel } from './PanelSwitches'
 import type { Roll } from './roll'
 import type { Scene } from './scene'
+import type { Step } from './undo'
 import type { PointerEvent } from 'react'
 
 const HINT_STORE = 'videoskillet_cam_hint_seen'
 const SIDEWAYS_STORE = 'videoskillet_cam_sideways'
+
+const scrollToChip = (name: string) =>
+  document.querySelector(`[data-look="${name}"]`)?.scrollIntoView({
+    inline: 'center',
+    block: 'nearest',
+    behavior: 'smooth',
+  })
 
 // A link opens on what it names, with its pattern on B. Anything else opens on
 // a strong look.
@@ -96,6 +105,8 @@ export function CamPage(props: { link: CamLink | null }) {
   const [sideways, setSideways] = usePersistedFlag(SIDEWAYS_STORE)
   const [scene, setScene] = useState(() => firstScene(props.link))
   const sceneRef = useRef(scene)
+  const [past, setPast] = useState<readonly Step[]>([])
+  const lastChangeRef = useRef(0)
   // The wipe and the inset are laid out across the glass on show, so a new
   // layout lays the board again.
   const eng = useCamEngine(canvasRef, {
@@ -157,13 +168,45 @@ export function CamPage(props: { link: CamLink | null }) {
 
   // The chroma keyer's fill fades its copies into a still of the camera, so A
   // holds a frame for as long as the keyer is on.
-  const paint = (next: Partial<Scene>) => {
+  const show = (next: Partial<Scene>) => {
     const keyed = sceneRef.current.keyHue !== null
     const s = { ...sceneRef.current, ...next }
     sceneRef.current = s
     setScene(s)
     eng.showBoard(boardOf(s, sliceOf(eng.layoutNow())))
     if (keyed !== (s.keyHue !== null)) void eng.holdA(!keyed)
+  }
+
+  const paint = (next: Partial<Scene>) => {
+    const before = sceneRef.current
+    show(next)
+    if (changesStep(before, sceneRef.current)) {
+      const now = performance.now()
+      const sinceLast = now - lastChangeRef.current
+      lastChangeRef.current = now
+      setPast(p => banked(p, before, sinceLast))
+    }
+  }
+
+  const undo = () => {
+    const step = past.at(-1)
+    if (step !== undefined) {
+      lastChangeRef.current = 0
+      setPast(past.slice(0, -1))
+      show(step)
+      announce(
+        step.look === null && step.base !== null
+          ? step.base.name
+          : stackLabel(step.look, step.layers),
+      )
+      const chip =
+        step.look === null || step.look.rolled ? null : step.look.name
+      if (chip !== null) {
+        const home = shelves.find(sh => sh.looks.includes(chip))
+        if (home !== undefined && home !== shelf) setShelfName(home.name)
+        else scrollToChip(chip)
+      }
+    }
   }
 
   // A tap's aim and the knobs moved off a look last while that look stays up,
@@ -344,13 +387,7 @@ export function CamPage(props: { link: CamLink | null }) {
         ? 'normal'
         : lookLabel({ name, strength: 1, rolled: false }),
     )
-    document
-      .querySelector(`[data-look="${name ?? 'normal'}"]`)
-      ?.scrollIntoView({
-        inline: 'center',
-        block: 'nearest',
-        behavior: 'smooth',
-      })
+    scrollToChip(name ?? 'normal')
   }
 
   const keyTap = useKeyTap({
@@ -420,6 +457,8 @@ export function CamPage(props: { link: CamLink | null }) {
     <div className={styles.page}>
       <TopBar
         help={help}
+        canUndo={past.length > 0}
+        onUndo={undo}
         onHelp={() => setHelp(!help)}
         onShare={share}
         fullHref={instrumentHref(
