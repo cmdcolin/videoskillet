@@ -79,6 +79,20 @@ export class RenderCancelled extends Error {
   }
 }
 
+// A hot update or a lost-device rebuild destroys the engine a render holds and
+// puts a successor on the canvas. A destroyed engine steps nothing, so the take
+// would fill with the successor's picture or with the last frame drawn. The
+// successor starts from a fresh signal state, so the frames already encoded
+// cannot be continued on it either, and the take is abandoned.
+export class RenderEngineReplaced extends Error {
+  constructor() {
+    super(
+      'the GPU engine was replaced partway through (a hot update or a lost device), so the take was not saved. Render it again.',
+    )
+    this.name = 'RenderEngineReplaced'
+  }
+}
+
 // Two animation frames, or `ms` — whichever lands first. See the call site for
 // what the two frames are for and why they have to be given up on.
 const twoFramesOr = (ms: number): Promise<void> =>
@@ -96,7 +110,16 @@ const twoFramesOr = (ms: number): Promise<void> =>
 // here that is not a finished file is a way somebody wants their picture back:
 // a cancel, an encoder failure, a lost device mid-render.
 export async function renderTake(
-  engine: EngineApi,
+  engine: Pick<
+    EngineApi,
+    | 'pauseLoop'
+    | 'resumeLoop'
+    | 'startTake'
+    | 'endTake'
+    | 'pullVideo'
+    | 'step'
+    | 'isDestroyed'
+  >,
   canvas: HTMLCanvasElement,
   spec: RenderSpec,
 ): Promise<Blob> {
@@ -131,6 +154,9 @@ export async function renderTake(
   // tab (2 frames at 1Hz is 2s) and short enough that a render never looks
   // hung before it has started.
   if (wasRunning) await twoFramesOr(3000)
+  // Before `startTake`, which writes every buffer: on a destroyed engine those
+  // writes raise errors on a device its successor may have adopted.
+  if (engine.isDestroyed) throw new RenderEngineReplaced()
   // After the two frames above, not before: those strays are the live loop's
   // last, and stepping them through a freshly-cleared signal path would put two
   // frames of someone else's take at the front of this one.
@@ -159,6 +185,9 @@ export async function renderTake(
       // deck for this frame, and a pull issued before the row fired would be a
       // frame of the outgoing clip.
       await engine.pullVideo(i)
+      // After the last await of the frame: a replacement lands between tasks,
+      // and `step` and `frame` below run in one.
+      if (engine.isDestroyed) throw new RenderEngineReplaced()
       // Step, then take what it drew: `step()` renders synchronously, so the
       // canvas holds frame `i` by the time this returns. Taking the frame first
       // would record the state *before* the render and shift the whole take one

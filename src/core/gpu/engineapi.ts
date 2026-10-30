@@ -293,4 +293,8 @@ export interface EngineApi {
   // switch is a pixel.
   clockMs: () => number
   destroy: (opts?: DestroyOptions) => void
+  // True once `destroy` has run. A hot update or a lost-device rebuild destroys
+  // an engine while something that holds it, such as an offline render, may
+  // still be running.
+  readonly isDestroyed: boolean
 }

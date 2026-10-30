@@ -1902,6 +1902,10 @@ export class Engine implements EngineApi {
     return this.loop.confirmedWork
   }
 
+  get isDestroyed() {
+    return this.destroyed
+  }
+
   // Rebuild the swapchain when the loop has run out of gentler options. A tab
   // that comes back from a long hidden stretch can be left holding a surface
   // the compositor no longer paints, and re-requesting rAF cannot fix that —
