@@ -289,24 +289,44 @@ export async function fileSink(): Promise<TakeSink | null> {
 // download has long since finished. A take's file is nobody's to delete while
 // the page that made it is still open, so this runs at startup and clears what
 // an earlier page left.
+//
+// Each file is removed on its own. One that will not go, such as a take
+// another tab is still writing, leaves the rest to be cleared.
 export async function sweepTakes(now = Date.now()): Promise<number> {
   const base = await root()
-  if (base === null) return 0
+  const dir =
+    base === null
+      ? null
+      : await base.getDirectoryHandle(DIR, { create: false }).catch(() => null)
+  let removed = 0
+  if (dir !== null) {
+    for (const name of await staleTakes(dir, now)) {
+      const gone = await dir
+        .removeEntry(name)
+        .then(() => true)
+        .catch(() => false)
+      if (gone) removed++
+    }
+  }
+  return removed
+}
+
+// Collected before anything is removed: a directory being iterated is not a
+// directory to delete out of.
+async function staleTakes(dir: FileSystemDirectoryHandle, now: number) {
   const stale: string[] = []
   try {
-    const dir = await base.getDirectoryHandle(DIR, { create: false })
-    // Collected before anything is removed: a directory being iterated is not
-    // a directory to delete out of.
     for await (const [name, handle] of dir.entries()) {
-      if (handle.kind !== 'file') continue
-      const file = await handle.getFile()
-      if (now - file.lastModified > KEEP_MS) stale.push(name)
+      if (handle.kind === 'file') {
+        const file = await handle.getFile().catch(() => null)
+        if (file !== null && now - file.lastModified > KEEP_MS) {
+          stale.push(name)
+        }
+      }
     }
-    for (const name of stale) await dir.removeEntry(name)
   } catch {
-    // No directory, or a browser that will not iterate one. Either way there
-    // is nothing here this can clear.
-    return 0
+    // A browser that will not iterate the directory. What was collected before
+    // it stopped is still stale.
   }
-  return stale.length
+  return stale
 }

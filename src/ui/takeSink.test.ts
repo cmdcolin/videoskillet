@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { STREAM_HEAD } from './mp4'
-import { blobForced, blobSink, fileSink } from './takeSink'
+import { blobForced, blobSink, fileSink, sweepTakes } from './takeSink'
 
 import type { Mp4Layout } from './mp4'
 
@@ -124,11 +124,28 @@ class FakeDisk {
   quota: number | undefined = 10 * 1024 * 1024 * 1024
   usage = 0
 
+  locked = new Set<string>()
+
   directory() {
     const files = this.files
     const streams = this.streams
+    const locked = this.locked
     const limit = () => this.limit
     return {
+      entries: async function* () {
+        for (const name of files.keys()) {
+          yield [
+            name,
+            {
+              kind: 'file',
+              getFile: () =>
+                Promise.resolve(
+                  new File([files.get(name) ?? new Uint8Array()], name),
+                ),
+            },
+          ] as const
+        }
+      },
       getFileHandle: (name: string) => {
         if (!files.has(name)) files.set(name, new Uint8Array(0))
         return Promise.resolve({
@@ -148,6 +165,11 @@ class FakeDisk {
         })
       },
       removeEntry: (name: string) => {
+        if (locked.has(name)) {
+          return Promise.reject(
+            new DOMException('', 'NoModificationAllowedError'),
+          )
+        }
         files.delete(name)
         return Promise.resolve()
       },
@@ -271,5 +293,44 @@ describe('the file sink', () => {
     await settle()
     expect(disk.files.size).toBe(0)
     expect(disk.streams[0]?.state).toBe('aborted')
+  })
+})
+
+describe('sweeping old takes', () => {
+  let disk: FakeDisk
+
+  beforeEach(() => {
+    disk = new FakeDisk()
+    disk.install()
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  const later = () => Date.now() + 60 * 60 * 1000
+
+  it('clears takes past their keep', async () => {
+    disk.files.set('a.mp4', picture(1, 1))
+    disk.files.set('b.mp4', picture(1, 2))
+    expect(await sweepTakes(later())).toBe(2)
+    expect(disk.files.size).toBe(0)
+  })
+
+  it('leaves a fresh take alone', async () => {
+    disk.files.set('a.mp4', picture(1, 1))
+    expect(await sweepTakes()).toBe(0)
+    expect(disk.files.size).toBe(1)
+  })
+
+  // Another tab still writing a take holds its file open, and the browser
+  // refuses to remove it. The older takes behind it still go.
+  it('clears the rest when one file will not go', async () => {
+    disk.files.set('a.mp4', picture(1, 1))
+    disk.files.set('busy.mp4', picture(1, 2))
+    disk.files.set('c.mp4', picture(1, 3))
+    disk.locked.add('busy.mp4')
+    expect(await sweepTakes(later())).toBe(2)
+    expect([...disk.files.keys()]).toEqual(['busy.mp4'])
   })
 })
