@@ -22,8 +22,8 @@ twenty seconds.
 **Program A in fill** is a crossfader ahead of the keyer's fill. It mixes
 program A in with the frame store, and the store records the result, so each
 recording keeps a little less of every copy. At 0.15 a copy is half gone after
-about four recordings. With a still of a room in A, the copies fade back into the
-room.
+about four recordings. With a still of a room in A, the copies fade back into
+the room.
 
 - [The skeleton in the ballroom](/app/#iurl=https://thumb.wikimedia.org/wikipedia/commons/thumb/d/de/Abandoned_grand_piano_-_Abandoned_Ballroom_%286%29.jpg/1280px-Abandoned_grand_piano_-_Abandoned_Ballroom_%286%29.jpg&vurlb=https://myloveydove.com/videoskillet/sources/creatures-for-chroma-key-death.webm&set=chromaGain:1.3,crtSat:1.2,bGain:1,bGenlock:1,bKey:1,bKeyAcceptDeg:45,bKeyClip:0.05,bKeySpill:0.6,bKeyFill:2,cfbHold:3,bKeyFillMixA:0.15)
   records every fourth frame and fades each copy at 0.15.
@@ -36,8 +36,8 @@ framing**. The subcarrier inverts on every frame, so with an even count
 alternate recordings sit on the opposite phase from program A, and the mix
 cancels the background's colour toward grey. With colour framing on, the store
 inverts its chroma on frames of the other phase, as a frame synchronizer does,
-so the copies and the room keep their own colours at any count and stop
-flashing between complementary colours.
+so the copies and the room keep their own colours at any count and stop flashing
+between complementary colours.
 
 **Store hue** is the hue trim on the frame store's output, the proc amp every
 frame synchronizer has. The keyer records through it, so each generation of
@@ -57,5 +57,5 @@ link's first frames, which are colour bars.
 _Footage: the skeleton is from
 [Creatures For Chroma Key](https://archive.org/details/EvaVikstromCreaturesForChromaKey)
 by Eva Vikström, under CC BY 3.0. The ballroom is
-[Abandoned grand piano](https://commons.wikimedia.org/wiki/File:Abandoned_grand_piano_-_Abandoned_Ballroom_(6).jpg)
+[Abandoned grand piano](<https://commons.wikimedia.org/wiki/File:Abandoned_grand_piano_-_Abandoned_Ballroom_(6).jpg>)
 by Jan Bommes, under CC BY 2.0. The sandwich is by Alan Butler, under CC0._

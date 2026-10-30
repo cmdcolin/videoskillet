@@ -298,10 +298,11 @@ Byte-identity is within one browser build: the H.264 encoder is Firefox's.
 frame, promptly, forever, and no timing column shows it — so each fixture frame
 carries its own index as ten binary cells in the picture. It has a
 two-thirds-B-frame arm as the control on presentation order, and asserts the
-fixture really has them. `demuxcheck` is the outside check on `ui/mp4demux.ts` and `ui/webmdemux.ts`,
-because hand-built fixtures can be self-consistently wrong where ffprobe cannot
-be wrong in the same direction; it is what found that both clips in `public/`
-carry edit lists, turning a "decline these" design into an "apply these" one.
+fixture really has them. `demuxcheck` is the outside check on `ui/mp4demux.ts`
+and `ui/webmdemux.ts`, because hand-built fixtures can be self-consistently
+wrong where ffprobe cannot be wrong in the same direction; it is what found that
+both clips in `public/` carry edit lists, turning a "decline these" design into
+an "apply these" one.
 
 `enccheck` is the working-out behind
 [`adr/0008`](adr/0008-record-h264-high-and-mind-the-chroma.md) and prints

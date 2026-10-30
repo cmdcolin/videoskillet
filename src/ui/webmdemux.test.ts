@@ -180,6 +180,15 @@ describe('demuxWebm', () => {
     expect(t.duration).toBe(120)
   })
 
+  it('keeps the clusters a truncated file still holds', () => {
+    const whole = file(track('V_VP8'), [
+      cluster(0, [simple(0, true, [1])]),
+      cluster(500, [simple(0, false, [2, 3, 4, 5])]),
+    ])
+    const t = demuxWebm(whole.subarray(0, whole.length - 3))!
+    expect(t.samples.map(s => s.cts)).toEqual([0])
+  })
+
   it('declines a track whose first block is not a keyframe', () => {
     expect(
       demuxWebm(file(track('V_VP8'), [cluster(0, [simple(0, false, [1])])])),
