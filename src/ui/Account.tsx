@@ -61,7 +61,8 @@ export function Account(props: {
           title={`signed in as ${name} — click to sign out`}
           aria-label={name}
         >
-          {photo === undefined || photo === null || broken ? (
+          {/* CROSS_REPO_SYNC(account-avatar) */}
+          {photo === null || broken ? (
             <span className={styles.initial} aria-hidden>
               {(name.trim()[0] ?? '?').toUpperCase()}
             </span>
@@ -76,6 +77,7 @@ export function Account(props: {
               onError={() => setBroken(true)}
             />
           )}
+          {/* CROSS_REPO_SYNC_END(account-avatar) */}
         </button>
       )}
     >
