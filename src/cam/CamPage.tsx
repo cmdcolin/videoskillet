@@ -290,15 +290,29 @@ export function CamPage(props: { link: CamLink | null }) {
   // The chroma keyer puts the camera on B as well as A and keys it, starting
   // on a green backing until a tap picks the colour. Switching it off takes the
   // camera off B.
+  // A ref for the guard, since two taps can land before a render, and state for
+  // the switch that shows it.
+  const keyingRef = useRef(false)
+  const [keying, setKeying] = useState(false)
   const switchKeyer = (on: boolean) => {
-    if (on === (sceneRef.current.keyHue !== null)) return
+    if (keyingRef.current || on === (sceneRef.current.keyHue !== null)) return
     if (!on) {
       picks.putOnB('none')
       return
     }
+    keyingRef.current = true
+    setKeying(true)
     void picks
       .keySame()
-      .then(ok => ok && paint({ keyHue: DEFAULT_CONTROLS.bKeyHueDeg }))
+      .then(ok =>
+        ok
+          ? paint({ keyHue: DEFAULT_CONTROLS.bKeyHueDeg })
+          : picks.putOnB('none'),
+      )
+      .finally(() => {
+        keyingRef.current = false
+        setKeying(false)
+      })
   }
 
   const share = () => {
@@ -553,7 +567,7 @@ export function CamPage(props: { link: CamLink | null }) {
             controls={controls()}
             keyer={{
               on: scene.keyHue !== null,
-              disabled: !cameraUp || busy,
+              disabled: keying || busy || (!cameraUp && scene.keyHue === null),
               onSwitch: switchKeyer,
             }}
             tweaked={Object.keys(scene.tweaks).some(k => LOOP_KEYS.has(k))}

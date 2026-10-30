@@ -84,6 +84,7 @@ export function useSecond(
   // camera between A and B, so B is unloaded by hand where it changes and
   // never by an effect that cannot tell a moved camera from a dropped one.
   const held = useRef<Second | null>(second)
+  const laying = useRef(false)
 
   useEffect(
     () => () => {
@@ -199,17 +200,27 @@ export function useSecond(
     return tape()
   }
 
+  // A second press while the relay is still being laid is turned away, and a
+  // pick that lands on B in the meantime wins over the relay.
   const loadSame = async (): Promise<boolean> => {
-    if (eng.camera() === null || left > 0 || opening) return false
+    if (eng.camera() === null || left > 0 || opening || laying.current)
+      return false
     eject()
-    try {
-      const relay = await relayCamera(eng.camera, eng.layoutNow)
-      show({ kind: 'same', relay })
-      return true
-    } catch (e) {
-      onError(`camera on B: ${reason(e)}`)
+    laying.current = true
+    const relay = await relayCamera(eng.camera, eng.layoutNow).catch(
+      (e: unknown) => {
+        onError(`camera on B: ${reason(e)}`)
+        return null
+      },
+    )
+    laying.current = false
+    if (relay === null) return false
+    if (held.current !== null) {
+      relay.stop()
       return false
     }
+    show({ kind: 'same', relay })
+    return true
   }
 
   const loadPattern = (pattern: Pattern) => {
