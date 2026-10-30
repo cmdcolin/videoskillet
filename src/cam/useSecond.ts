@@ -126,7 +126,7 @@ export function useSecond(
 
   const goLive = async (o: Opened) => {
     const relay = await relayCamera(
-      { video: o.video, mirror: o.faces === 'user' },
+      { video: o.video, mirror: o.faces === 'user', crop: 1 },
       eng.layoutNow,
     )
     o.stream.getVideoTracks()[0]?.addEventListener('ended', () => {
@@ -184,7 +184,10 @@ export function useSecond(
     const url = URL.createObjectURL(file)
     try {
       const video = await playLoop(url)
-      const relay = await relayCamera({ video, mirror: false }, eng.layoutNow)
+      const relay = await relayCamera(
+        { video, mirror: false, crop: 1 },
+        eng.layoutNow,
+      )
       show({ kind: 'clip', url, video, relay })
       return true
     } catch (e) {

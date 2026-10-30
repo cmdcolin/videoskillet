@@ -9,12 +9,14 @@ export const trackOf = (video: HTMLVideoElement | undefined) =>
     ? (video.srcObject.getVideoTracks()[0] ?? null)
     : null
 
-// The zoom of the camera on A. `track` is that camera's track and `crop` the
-// engine's crop of A. A pinch asks for a new zoom every frame, and a camera
-// takes a while to answer each one, so only the latest ask waits its turn.
+// The zoom of the camera on A. `track` is that camera's track, `crop` the
+// engine's crop of A, and `onLens` hears the lens settle after a zoom. A pinch
+// asks for a new zoom every frame, and a camera takes a while to answer each
+// one, so only the latest ask waits its turn.
 export function useZoom(
   track: () => MediaStreamTrack | null,
   crop: (zoom: number) => void,
+  onLens: () => void,
 ) {
   const [zoom, setZoom] = useState(1)
   const [lens, setLens] = useState<Span | null>(null)
@@ -37,6 +39,7 @@ export function useZoom(
       }
     }
     busy.current = false
+    onLens()
   }
 
   const set = (z: number) => {
@@ -62,7 +65,6 @@ export function useZoom(
 
   return {
     zoom,
-    crop: zoomSplit(zoom, lens).crop,
     stops: zoomStops(lens),
     set,
     reset,

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   CROP_MAX,
+  cropRect,
   stopAt,
   zoomLabel,
   zoomSpan,
@@ -43,5 +44,11 @@ describe('the zoom', () => {
     expect(zoomLabel(1)).toBe('1')
     expect(zoomLabel(0.5)).toBe('0.5')
     expect(zoomLabel(1.4321)).toBe('1.4')
+  })
+
+  it('crops the middle of the frame by the zoom on each axis', () => {
+    expect(cropRect(640, 480, 1)).toEqual([0, 0, 640, 480])
+    expect(cropRect(640, 480, 2)).toEqual([160, 120, 320, 240])
+    expect(cropRect(1280, 720, 4)).toEqual([480, 270, 320, 180])
   })
 })

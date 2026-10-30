@@ -129,6 +129,7 @@ export function useCamEngine(
     sideways: opts.sideways,
   })
   const laid = useRef<Layout>('whole')
+  const held = useRef(false)
   const holds = useRef(0)
   const [watched] = useState(() => new WeakSet<HTMLVideoElement>())
   const [first] = useState(opts.firstBoard)
@@ -145,8 +146,15 @@ export function useCamEngine(
     if (engineRef.current !== null) lay(engineRef.current, next)
     opts.onLayout(next)
   }
+  // A held still is grabbed again whenever the camera's frame changes, so it
+  // stays lined up with the camera on B.
+  const grabAgain = () => {
+    if (held.current) void holdA(true)
+  }
   const turn = (video: HTMLVideoElement) => {
-    if (shown.current.video === video) relay()
+    if (shown.current.video !== video) return
+    relay()
+    grabAgain()
   }
 
   const standSideways = (sideways: boolean) => {
@@ -189,14 +197,16 @@ export function useCamEngine(
   }
 
   // Holds the frame the video on A is showing now, or plays the video again. A
-  // video with no frame to grab yet stays playing, and so does one asked to
-  // play again while its frame was being grabbed.
+  // still stays up until the next one is grabbed. A video with no frame yet
+  // plays until its first frame arrives, and a video put on A while held is
+  // held in turn.
   const holdA = async (on: boolean) => {
+    held.current = on
     const mine = ++holds.current
     const { video, still: was } = shown.current
-    letGo()
     if (video === null) return
     if (!on) {
+      letGo()
       if (was !== null) engineRef.current?.setVideoSource(video)
       return
     }
@@ -224,8 +234,8 @@ export function useCamEngine(
 
   // The camera as it is on A, for recording a tape of it.
   const camera = (): Camera | null => {
-    const { video, mirror } = shown.current
-    return video === null ? null : { video, mirror }
+    const { video, mirror, zoom } = shown.current
+    return video === null ? null : { video, mirror, crop: zoom }
   }
 
   const showBoard = (next: Board) => {
@@ -303,6 +313,8 @@ export function useCamEngine(
       ro.disconnect()
       unsupervise()
       engineRef.current = null
+      shown.current.still?.close()
+      shown.current = { ...shown.current, still: null }
     }
   }, [canvasRef])
 
@@ -316,6 +328,7 @@ export function useCamEngine(
     showPattern,
     showSecond,
     holdA,
+    grabAgain,
     zoomA,
     layoutNow,
     standSideways,

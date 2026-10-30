@@ -58,3 +58,16 @@ export function stopAt(zoom: number, stops: readonly number[]): number {
 }
 
 export const zoomLabel = (z: number): string => String(Number(z.toFixed(1)))
+
+// The middle of a w x h frame that a crop of `crop` keeps, as [sx, sy, sw, sh]
+// in the frame's pixels: 1/crop of each axis, about the centre, which is how
+// compose.wgsl crops A.
+export const cropRect = (
+  w: number,
+  h: number,
+  crop: number,
+): [number, number, number, number] => {
+  const sw = w / crop
+  const sh = h / crop
+  return [(w - sw) / 2, (h - sh) / 2, sw, sh]
+}

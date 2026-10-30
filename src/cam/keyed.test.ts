@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
 import { DEFAULT_CONTROLS } from '../core/controls'
+import { coverFit43 } from '../core/gpu/sources'
 import { aimKey, chromaHue, keyOn, keysOnHue, sourcePoint } from './keyed'
 import { CLEAN, boardOf } from './scene'
+import { cropRect } from './zoom'
 
 import type { Scene } from './scene'
 
@@ -138,5 +140,47 @@ describe('sourcePoint', () => {
     )
     expect(p.x).toBeCloseTo(0.25)
     expect(p.y).toBeCloseTo(0.75)
+  })
+})
+
+// Where a point on the camera's frame shows on the picture when the relay puts
+// that camera on B: the relay draws the zoom's crop of the frame across its
+// whole canvas, and the engine cover-fits the canvas into the 4:3 raster.
+function onB(
+  p: { x: number; y: number },
+  cam: { width: number; height: number; crop: number },
+) {
+  const { width: w, height: h } = cam
+  const [sx, sy, sw, sh] = cropRect(w, h, cam.crop)
+  const cx = ((p.x * w - sx) / sw) * w
+  const cy = ((p.y * h - sy) / sh) * h
+  const [fx, fy, fw, fh] = coverFit43(w, h)
+  return { x: (cx - fx) / fw, y: (cy - fy) / fh }
+}
+
+describe('a tap on a zoomed colour key', () => {
+  const view = { width: 400, height: 300 }
+
+  it('reads the camera where B shows it', () => {
+    for (const [width, height] of [
+      [640, 480],
+      [1280, 720],
+    ] as const)
+      for (const crop of [1, 1.5, 3])
+        for (const at of [
+          { x: 0.1, y: 0.2 },
+          { x: 0.5, y: 0.5 },
+          { x: 0.9, y: 0.7 },
+        ]) {
+          const p = sourcePoint(at, view, {
+            width,
+            height,
+            mirror: false,
+            crop,
+          })
+          const shown = onB(p, { width, height, crop })
+          expect(shown.x).toBeCloseTo(at.x)
+          expect(shown.y).toBeCloseTo(at.y)
+        }
   })
 })

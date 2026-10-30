@@ -103,7 +103,11 @@ export function CamPage(props: { link: CamLink | null }) {
     firstB,
     onLayout: () => paint({}),
   })
-  const zoom = useZoom(() => trackOf(eng.camera()?.video), eng.zoomA)
+  const zoom = useZoom(
+    () => trackOf(eng.camera()?.video),
+    eng.zoomA,
+    eng.grabAgain,
+  )
   const [error, setError] = useState('')
   const srcA = useSourceA(
     {
@@ -122,7 +126,6 @@ export function CamPage(props: { link: CamLink | null }) {
     eng.showVideo(video, mirror)
     zoom.reset()
     srcA.cameraShown()
-    if (sceneRef.current.keyHue !== null) void eng.holdA(true)
   })
   const tilt = useTilt(eng.steer)
   const sound = useSound(eng.hear, setError)
@@ -354,11 +357,8 @@ export function CamPage(props: { link: CamLink | null }) {
       })
   }
 
-  // The relay puts the camera on B without A's crop, so a tap that keys B
-  // samples the uncropped camera.
   const keyTap = useKeyTap({
     camera: eng.camera,
-    crop: scene.keyHue === null ? zoom.crop : 1,
     keyed: () =>
       sceneRef.current.keyHue !== null ||
       keysOnHue(lookBoard(look, scene.layers).controls),

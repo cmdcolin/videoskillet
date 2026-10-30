@@ -1,4 +1,5 @@
 import { startRecording } from '../ui/record'
+import { cropRect } from './zoom'
 
 // How long a tape runs before it loops, and the rate it is written at.
 export const TAPE_SECONDS = 4
@@ -15,23 +16,25 @@ export type Layout = 'whole' | 'turned' | 'slice'
 // of a 4:3 one.
 export const SLICE = 3 / 4 / (4 / 3)
 
+// `crop` is the zoom's crop of A, 1 for the whole frame.
 export interface Camera {
   video: HTMLVideoElement
   mirror: boolean
+  crop: number
 }
 
 // Sizes `canvas` for the picture's current frame and returns what lays each
-// frame down the way compose.wgsl lays A. The engine turns, slices and mirrors
-// only A, so whatever goes to B is turned, sliced and mirrored here instead:
-// mirrored if the camera faced its subject, turned to lie across a set on its
-// side, and fitted into the middle of the raster with black either side for a
-// slice.
+// frame down the way compose.wgsl lays A. The engine turns, slices, mirrors and
+// crops only A, so this lays B the same way by hand: mirrored if the camera
+// faced its subject, turned to lie across a set on its side, fitted into the
+// middle of the raster with black either side for a slice, and cropped by the
+// zoom.
 function lay(
   canvas: HTMLCanvasElement,
   g: CanvasRenderingContext2D,
   cam: Camera,
   layout: Layout,
-): () => void {
+): (crop: number) => void {
   const vw = cam.video.videoWidth
   const vh = cam.video.videoHeight
   g.resetTransform()
@@ -41,21 +44,32 @@ function lay(
     const h = canvas.height
     const w = Math.round(LONG_SIDE * SLICE)
     const x0 = (LONG_SIDE - w) / 2
-    const s = Math.max(w / vw, h / vh)
-    const dw = vw * s
-    const dh = vh * s
     if (cam.mirror) {
       g.translate(LONG_SIDE, 0)
       g.scale(-1, 1)
     }
-    return () => {
+    return crop => {
+      const [sx, sy, sw, sh] = cropRect(vw, vh, crop)
+      const s = Math.max(w / sw, h / sh)
+      const dw = sw * s
+      const dh = sh * s
       g.fillStyle = '#000'
       g.fillRect(0, 0, LONG_SIDE, h)
       g.save()
       g.beginPath()
       g.rect(x0, 0, w, h)
       g.clip()
-      g.drawImage(cam.video, x0 + (w - dw) / 2, (h - dh) / 2, dw, dh)
+      g.drawImage(
+        cam.video,
+        sx,
+        sy,
+        sw,
+        sh,
+        x0 + (w - dw) / 2,
+        (h - dh) / 2,
+        dw,
+        dh,
+      )
       g.restore()
     }
   }
@@ -75,7 +89,7 @@ function lay(
     g.translate(dw, 0)
     g.scale(-1, 1)
   }
-  return () => g.drawImage(cam.video, 0, 0, dw, dh)
+  return crop => g.drawImage(cam.video, ...cropRect(vw, vh, crop), 0, 0, dw, dh)
 }
 
 const context = (canvas: HTMLCanvasElement) => {
@@ -111,7 +125,7 @@ export async function recordTape(
       if (rec.frames() < due) {
         if (rec.busy()) rec.hold()
         else {
-          draw()
+          draw(cam.crop)
           rec.frame(canvas)
         }
       }
@@ -173,7 +187,7 @@ export async function relayCamera(
       : null
   let laid: HTMLVideoElement | null = null
   let seen = ''
-  let draw: (() => void) | null = null
+  let draw: ((crop: number) => void) | null = null
   let pending = 0
   const tick = () => {
     const cam = camera()
@@ -184,7 +198,7 @@ export async function relayCamera(
         laid = cam.video
         draw = lay(canvas, g, cam, layout())
       }
-      draw?.()
+      draw?.(cam.crop)
     }
     pending =
       clock !== null

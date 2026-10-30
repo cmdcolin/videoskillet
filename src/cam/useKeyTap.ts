@@ -15,7 +15,6 @@ interface Ring {
 // colour under the finger, and a ring shows the colour it took.
 export function useKeyTap(opts: {
   camera: () => Camera | null
-  crop: number
   keyed: () => boolean
   onAim: (hue: number) => void
   onMiss: (text: string) => void
@@ -37,7 +36,7 @@ export function useKeyTap(opts: {
         width: c.video.videoWidth,
         height: c.video.videoHeight,
         mirror: c.mirror,
-        crop: opts.crop,
+        crop: c.crop,
       }),
     )
     if (rgb === null) return
