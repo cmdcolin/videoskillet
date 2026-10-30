@@ -43,14 +43,24 @@ export function useSourcePicks(opts: {
     if (second.kind === 'same') takeOff()
   }
 
+  // Starting the camera or turning it round by hand is a pick on A, so a clip
+  // still loading there lets go of itself when it arrives.
+  const startCamera = (want?: Facing) => {
+    srcA.cameraPicked()
+    cam.start(want)
+  }
+  const flipCamera = () => {
+    srcA.cameraPicked()
+    if (second.live) void second.swap()
+    else cam.flip()
+  }
+
   const putOnA = (key: Facing | ASource) => {
     onError('')
     if (key === 'clip') clipA.current?.click()
     else if (key === 'user' || key === 'environment') {
-      srcA.cameraPicked()
-      if (srcA.on !== 'camera') cam.start(key)
-      else if (second.live) void second.swap()
-      else cam.flip()
+      if (srcA.on !== 'camera') startCamera(key)
+      else flipCamera()
     } else if (key !== 'camera') {
       srcA.toPattern(key)
       stopCamera()
@@ -120,6 +130,8 @@ export function useSourcePicks(opts: {
     },
     onA: srcA.on === 'camera' ? cam.facing : srcA.on,
     onB: second.kind === null ? 'none' : picked,
+    startCamera: () => startCamera(),
+    flipCamera,
     putOnA,
     putOnB,
     keySame,

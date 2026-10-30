@@ -416,7 +416,7 @@ export function CamPage(props: { link: CamLink | null }) {
             : cam.facing === 'user'
               ? 'switch to the back camera'
               : 'switch to the front camera',
-          onClick: second.live ? () => void second.swap() : cam.flip,
+          onClick: () => picks.flipCamera(),
         }
       : null
 
@@ -495,7 +495,7 @@ export function CamPage(props: { link: CamLink | null }) {
             state={cam.state}
             error={cam.error}
             onCamera={srcA.on === 'camera'}
-            onStart={() => cam.start()}
+            onStart={() => picks.startCamera()}
           />
         </div>
       </main>

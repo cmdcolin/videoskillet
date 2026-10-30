@@ -2,9 +2,19 @@ import { act, renderHook } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { dropLoop, playLoop } from './tape'
+import { useSecond } from './useSecond'
 import { useSourceA } from './useSourceA'
+import { useSourcePicks } from './useSourcePicks'
 
-vi.mock('./tape', () => ({ dropLoop: vi.fn(), playLoop: vi.fn() }))
+import type { useCamera } from './useCamera'
+
+vi.mock('./tape', () => ({
+  TAPE_SECONDS: 3,
+  dropLoop: vi.fn(),
+  playLoop: vi.fn(),
+  recordTape: vi.fn(),
+  relayCamera: vi.fn(),
+}))
 
 // A promise the test settles by hand.
 const deferred = <T,>() => {
@@ -81,5 +91,71 @@ describe('picks on A that overlap', () => {
     expect(await act(() => clip)).toBe(true)
     expect(showVideo).toHaveBeenCalled()
     expect(srcA().on).toBe('clip')
+  })
+})
+
+// The page's own camera buttons, Start camera and Try again on the notice and
+// the flip beside the shutter, are picks on A as much as the mixer's list is.
+const mountPage = () => {
+  const showVideo = vi.fn()
+  const cam: ReturnType<typeof useCamera> = {
+    state: 'on',
+    error: null,
+    facing: 'user',
+    canFlip: true,
+    sided: true,
+    start: vi.fn(),
+    stop: vi.fn(),
+    flip: vi.fn(),
+    adopt: () => null,
+    openOther: () => Promise.resolve({ kind: 'refused' }),
+  }
+  const { result } = renderHook(() => {
+    const srcA = useSourceA({ showVideo, showPattern: vi.fn() }, vi.fn())
+    const second = useSecond(
+      { camera: () => null, showSecond: vi.fn(), layoutNow: () => 'whole' },
+      cam,
+      vi.fn(),
+      null,
+    )
+    const picks = useSourcePicks({
+      cam,
+      srcA,
+      second,
+      firstB: null,
+      onError: vi.fn(),
+      onMixing: vi.fn(),
+      onTakeOff: vi.fn(),
+    })
+    return { srcA, picks }
+  })
+  return { cam, showVideo, page: () => result.current }
+}
+
+describe('the camera buttons on the page', () => {
+  it('lets go of a clip that loads after the camera was started', async () => {
+    const arrive = slowClip()
+    const { cam, showVideo, page } = mountPage()
+    const clip = page().srcA.toClip(new File([''], 'a.mp4'))
+    act(() => page().picks.startCamera())
+    act(() => page().srcA.cameraShown())
+    arrive()
+    expect(await act(() => clip)).toBe(false)
+    expect(cam.start).toHaveBeenCalled()
+    expect(showVideo).not.toHaveBeenCalled()
+    expect(page().srcA.on).toBe('camera')
+  })
+
+  it('lets go of a clip that loads after the camera was flipped', async () => {
+    const arrive = slowClip()
+    const { cam, showVideo, page } = mountPage()
+    const clip = page().srcA.toClip(new File([''], 'a.mp4'))
+    act(() => page().picks.flipCamera())
+    act(() => page().srcA.cameraShown())
+    arrive()
+    expect(await act(() => clip)).toBe(false)
+    expect(cam.flip).toHaveBeenCalled()
+    expect(showVideo).not.toHaveBeenCalled()
+    expect(page().srcA.on).toBe('camera')
   })
 })
