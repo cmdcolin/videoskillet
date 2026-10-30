@@ -765,6 +765,28 @@ describe('RenderLoop', () => {
     expect(h.outstandingWork()).toBe(1)
   })
 
+  it('retires a hang probe left outstanding across a restart', async () => {
+    const h = harness()
+    h.loop.start()
+    h.loop.kick()
+    await vi.advanceTimersByTimeAsync(1000)
+    // An offline render pauses and resumes the loop while a probe is out.
+    h.loop.stop()
+    h.loop.start()
+    h.loop.kick()
+
+    // The orphan's deadline passes before the live probe's. It must neither
+    // score a strike against the new run nor free the live probe's slot.
+    await vi.advanceTimersByTimeAsync(HANG_MS - 1000 + 1)
+    const strikes = vi
+      .mocked(console.error)
+      .mock.calls.filter(([m]) => String(m).includes('strike'))
+    expect(strikes).toEqual([])
+    const armed = h.outstandingWork()
+    h.loop.kick()
+    expect(h.outstandingWork()).toBe(armed)
+  })
+
   it('does not carry presented frames across a restart', () => {
     const h = harness()
     h.loop.start()

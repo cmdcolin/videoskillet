@@ -149,6 +149,9 @@ export class RenderLoop {
   private watchdogId = 0
   private hangStrikes = 0
   private probing = false
+  // Retires a hang probe outstanding across a stop/start, as `drainGen` does
+  // for the drain probe, so it cannot score a strike against the next run.
+  private hangGen = 0
   // Whether this device has ever completed submitted work, latched for the
   // lifetime of the loop rather than reset per run. It answers one question the
   // owner cannot answer for itself — "was there ever a working device here, or
@@ -237,6 +240,7 @@ export class RenderLoop {
     this.stallSince = 0
     this.setGaveUp(false)
     this.probing = false
+    this.hangGen += 1
     this.rafTicks = 0
     this.lastRafTicks = 0
     this.lastBeatRaf = 0
@@ -753,9 +757,10 @@ export class RenderLoop {
     if (this.probing || !this.live) return
     this.probing = true
     let settled = false
+    const gen = this.hangGen
     const probeStart = performance.now()
     const strike = () => {
-      if (!settled) {
+      if (!settled && gen === this.hangGen) {
         settled = true
         // Also on the rejection path, which reaches here without the deadline
         // having fired — a device that rejects the probe outright left its
@@ -828,7 +833,7 @@ export class RenderLoop {
         // after the deadline already scored a strike still proves the device
         // completed work, and that is the whole content of the claim.
         this.everConfirmed = true
-        if (!settled) {
+        if (!settled && gen === this.hangGen) {
           settled = true
           clearTimeout(timer)
           this.probing = false
