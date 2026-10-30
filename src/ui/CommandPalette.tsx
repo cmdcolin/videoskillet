@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 
 import styles from './CommandPalette.module.css'
 import { GROUPS, snapToStep } from './controls'
@@ -88,12 +88,6 @@ export function CommandPalette(props: {
   onRevealControl: (label: string) => void
   onClose: () => void
 }) {
-  // A sheet is an ordinary region rather than a modal <dialog>, so nothing moves
-  // focus into it for us. The box is what the ⌘K press was aimed at.
-  const box = useRef<HTMLInputElement>(null)
-  useEffect(() => {
-    box.current?.focus()
-  }, [])
   const [query, setQuery] = useState('')
   const [cursor, setCursor] = useState(0)
 
@@ -187,8 +181,10 @@ export function CommandPalette(props: {
       onClose={props.onClose}
     >
       <div className={styles.paletteBody} onKeyDown={onKeyDown}>
+        {/* A sheet is an ordinary region, not a modal <dialog>, so nothing moves
+            focus into it for us. The box is what the ⌘K press was aimed at. */}
         <input
-          ref={box}
+          autoFocus
           className={styles.paletteInput}
           type="text"
           placeholder="a preset, control, or action…"
