@@ -99,6 +99,40 @@ shaders.
   references.
 - **What it cannot see:** the present pass (the view's zoom) and source B.
 
+## Determinism check
+
+```
+pnpm render:determinism                   # stock and the 73 loop presets, ~4 min
+pnpm render:determinism --all             # stock and every preset, ~13 min
+pnpm render:determinism --only=railSlam   # named cases, comma-separated
+pnpm render:determinism --runs=3          # a third run at a third pool size
+```
+
+The golden check compares one take of each case with a reference, within a
+tolerance. A data race inside a pass makes the same take render differently from
+one run to the next, and the golden check misses it whenever the case is not in
+its list or the difference stays under the tolerance. The trail keyer's race in
+`store_prev.wgsl` (fixed in 9fa43843) went unnoticed this way.
+
+- **What it does:** `scripts/render/determinism.ts` renders every case in two
+  Deno processes at once, through the same take as the golden check, with each
+  preset's modulation routings applied. It hashes frames 10, 20 and 30 with
+  SHA-256 and fails on any case whose hashes differ between the processes.
+- **How it finds a race:** lavapipe runs a dispatch's workgroups on a pool of
+  `LP_NUM_THREADS` threads, and the order they run in depends on the pool size.
+  The first process gets every core and the second gets half of them. With the
+  store_prev race put back, railSlam came out different between 16 and 8 threads
+  on every attempt, and between two takes at 16 threads on about one in three. A
+  race-free pass renders bit-identically at every pool size, so the check needs
+  no references.
+- **What the default covers:** stock, and the presets that switch on `fbMix`,
+  `cfbMix` or `strobeHz`. Those run the passes that carry a picture from one
+  frame to the next. Run `--all` after changing a pass that only other presets
+  reach.
+- **When it fails:** each failing case prints the frames that differ and the
+  hashes from each pool size. `--only=<case>` reruns that case alone.
+- **Where it runs:** locally. CI does not run it.
+
 ## Caption font
 
 `src/core/gpu/captionfont.ts` holds the font ROM both caption boxes read: 11px

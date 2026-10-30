@@ -10,26 +10,9 @@
 // float noise between driver versions and keeps each file to 30 KB. A failure
 // writes `<case>.actual.ppm` and `<case>.diff.ppm` beside the reference.
 
-import './runtime.ts'
-import type { Controls } from '../../src/core/controls.ts'
+import { ACTIVE_HEIGHT, ACTIVE_WIDTH, openStage } from './take.ts'
 
-const {
-  ACTIVE_HEIGHT,
-  ACTIVE_WIDTH,
-  DEFAULT_CONTROLS,
-  Engine,
-  PRESET_BY_NAME,
-  presetControls,
-  smpteBarsPixels,
-} = await import('./build/engine.js')
-
-interface Case {
-  name: string
-  preset?: string
-  set?: Partial<Controls>
-  noise?: number
-  caption?: string
-}
+import type { Case } from './take.ts'
 
 const CASES: Case[] = [
   { name: 'stock' },
@@ -53,7 +36,6 @@ const CASES: Case[] = [
 ]
 
 const FRAMES = 30
-const SEED = 1
 const SCALE = 6
 const W = Math.floor(ACTIVE_WIDTH / SCALE)
 const H = Math.floor(ACTIVE_HEIGHT / SCALE)
@@ -136,27 +118,8 @@ const compare = (a: Uint8Array, b: Uint8Array) => {
   }
 }
 
-const canvas = new OffscreenCanvas(ACTIVE_WIDTH, ACTIVE_HEIGHT)
-const engine = await Engine.create(canvas as never)
-engine.pauseLoop()
-const bars = new Uint8Array(smpteBarsPixels().buffer.slice(0))
-
-const render = async (c: Case): Promise<Uint8Array> => {
-  if (c.preset !== undefined && !PRESET_BY_NAME.has(c.preset)) {
-    throw new Error(`no preset named ${c.preset}`)
-  }
-  const base =
-    c.preset === undefined
-      ? { ...DEFAULT_CONTROLS }
-      : presetControls(PRESET_BY_NAME.get(c.preset)!.patch)
-  engine.setImagePixels(bars, ACTIVE_WIDTH, ACTIVE_HEIGHT)
-  engine.setNoiseSource(c.noise ?? 0)
-  engine.setCaption(c.caption ?? '')
-  engine.startTake({ fps: 60, seed: SEED })
-  engine.applyControls({ ...base, ...c.set })
-  for (let i = 0; i < FRAMES; i++) engine.step()
-  return await engine.readFrame()
-}
+const shoot = await openStage()
+const render = async (c: Case) => (await shoot(c, [FRAMES]))[0]
 
 const cases = CASES.filter(c => only === undefined || c.name === only)
 if (cases.length === 0) {
