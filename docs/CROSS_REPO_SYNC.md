@@ -107,6 +107,9 @@ needs a decision about which side's version wins.
   `src/ui/persist.ts`.
 - The current-session hook body, the saved-list hook and its popover, and the
   app menu.
+- The account control around its avatar: videoskillet opens sign-out from a
+  `Popover` and labels with `title`, and bender uses `Menu` and `Tip`. The
+  avatar itself is `account-avatar`.
 - The why-sign-in card's picture and its closing line: the two repos' copies
   reference different files and state different amounts. The head of the card
   and its buttons are `why-card-top` and `why-card-cta`.
