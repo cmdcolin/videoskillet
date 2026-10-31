@@ -6,6 +6,7 @@ import { useSecond } from './useSecond'
 import { useSourceA } from './useSourceA'
 import { useSourcePicks } from './useSourcePicks'
 
+import type { Loop } from './tape'
 import type { useCamera } from './useCamera'
 
 vi.mock('./tape', () => ({
@@ -40,10 +41,15 @@ const mount = () => {
   return { showVideo, srcA: () => result.current }
 }
 
+const loop = (): Loop => ({
+  url: 'blob:clip',
+  video: document.createElement('video'),
+})
+
 const slowClip = () => {
-  const video = deferred<HTMLVideoElement>()
+  const video = deferred<Loop>()
   vi.mocked(playLoop).mockReturnValueOnce(video.promise)
-  return () => video.resolve(document.createElement('video'))
+  return () => video.resolve(loop())
 }
 
 describe('picks on A that overlap', () => {

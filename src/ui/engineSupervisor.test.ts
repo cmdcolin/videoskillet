@@ -187,6 +187,16 @@ describe('superviseEngine', () => {
     expect(late.destroy).toHaveBeenCalledWith({ keepDevice: true })
   })
 
+  it('hands on the device of a rebuild that lands after the teardown', async () => {
+    const late = fake()
+    const { live, stop } = harness([fake(), late])
+    await flush()
+    live[0]!.onDeviceLost('reset')
+    stop()
+    await flush()
+    expect(late.destroy).toHaveBeenCalledWith({ keepDevice: true })
+  })
+
   it('lets go of the device of an engine created after pagehide', async () => {
     const late = fake()
     harness([late])

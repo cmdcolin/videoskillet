@@ -144,19 +144,31 @@ export async function recordTape(
   return rec.finish()
 }
 
-// A tape or a clip playing on a loop, muted, ready for the engine's B slot.
-export async function playLoop(url: string): Promise<HTMLVideoElement> {
+export interface Loop {
+  url: string
+  video: HTMLVideoElement
+}
+
+// A tape or a clip playing on a loop, muted, ready for the engine's B slot. A
+// loop that will not play lets go of its URL.
+export async function playLoop(media: Blob): Promise<Loop> {
+  const url = URL.createObjectURL(media)
   const video = document.createElement('video')
   video.muted = true
   video.playsInline = true
   video.loop = true
   video.src = url
-  await video.play()
-  return video
+  try {
+    await video.play()
+  } catch (e) {
+    URL.revokeObjectURL(url)
+    throw e
+  }
+  return { url, video }
 }
 
 // Stops a loop `playLoop` started and lets go of its `url`.
-export function dropLoop(video: HTMLVideoElement, url: string) {
+export function dropLoop({ video, url }: Loop) {
   video.pause()
   video.removeAttribute('src')
   video.load()

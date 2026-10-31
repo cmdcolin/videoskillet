@@ -15,7 +15,7 @@ import { replay, useOnReturn } from './useReplay'
 
 import type { OtherAnswer } from './dual'
 import type { Pattern } from './patterns'
-import type { Camera, Layout, Relay } from './tape'
+import type { Camera, Layout, Loop, Relay } from './tape'
 import type { Shown } from './useCamEngine'
 import type { Opened } from './useCamera'
 
@@ -46,7 +46,7 @@ const unload = (b: Second) => {
     return
   }
   if (b.kind === 'clip') b.relay.stop()
-  dropLoop(b.video, b.url)
+  dropLoop(b)
 }
 
 // How a pick on B ended. A superseded pick leaves B to the later one.
@@ -168,12 +168,10 @@ export function useSecond(
     if (c === null) return 'failed'
     setLeft(TAPE_SECONDS)
     let landing: Landing
-    let url: string | null = null
     try {
-      url = URL.createObjectURL(await recordTape(c, eng.layoutNow(), setLeft))
-      landing = land(mine, { kind: 'tape', url, video: await playLoop(url) })
+      const loop = await playLoop(await recordTape(c, eng.layoutNow(), setLeft))
+      landing = land(mine, { kind: 'tape', ...loop })
     } catch (e) {
-      if (url !== null) URL.revokeObjectURL(url)
       landing = failed(mine, `tape: ${reason(e)}`)
     }
     setLeft(0)
@@ -210,7 +208,9 @@ export function useSecond(
         answer.kind === 'ok'
           ? await putLive(mine, answer.other)
           : answer.kind === 'superseded'
-            ? 'superseded'
+            ? mine === turn.current
+              ? 'failed'
+              : 'superseded'
             : null
       setOpening(false)
     }
@@ -222,18 +222,16 @@ export function useSecond(
   const loadClip = async (file: File): Promise<Landing> => {
     if (held.current !== null || left > 0 || opening) return 'failed'
     const mine = ++turn.current
-    const url = URL.createObjectURL(file)
-    let video: HTMLVideoElement | null = null
+    let loop: Loop | null = null
     try {
-      video = await playLoop(url)
+      loop = await playLoop(file)
       const relay = await relayCamera(
-        { video, mirror: false, crop: 1 },
+        { video: loop.video, mirror: false, crop: 1 },
         eng.layoutNow,
       )
-      return land(mine, { kind: 'clip', url, video, relay })
+      return land(mine, { kind: 'clip', ...loop, relay })
     } catch (e) {
-      if (video === null) URL.revokeObjectURL(url)
-      else dropLoop(video, url)
+      if (loop !== null) dropLoop(loop)
       return failed(mine, `clip: ${reason(e)}`)
     }
   }

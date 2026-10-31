@@ -5,7 +5,7 @@ import { dropLoop, playLoop, recordTape, relayCamera } from './tape'
 import { useSecond } from './useSecond'
 
 import type { OtherAnswer } from './dual'
-import type { Relay } from './tape'
+import type { Loop, Relay } from './tape'
 import type { Opened } from './useCamera'
 
 vi.mock('./tape', () => ({
@@ -24,6 +24,11 @@ const relay = (): Relay => ({
 })
 
 const file = () => new File([''], 'clip.mp4')
+
+const loop = (): Loop => ({
+  url: 'blob:clip',
+  video: document.createElement('video'),
+})
 
 const mount = (answer: OtherAnswer<Opened> = { kind: 'refused' }) => {
   const openOther = vi.fn(() => Promise.resolve(answer))
@@ -64,6 +69,10 @@ beforeEach(() => {
 })
 
 describe('the second camera on B', () => {
+  beforeEach(() => {
+    vi.mocked(recordTape).mockRejectedValue(new Error('no camera to tape'))
+  })
+
   it('asks again after a refusal that left the first camera running', async () => {
     const { openOther, second } = mount({ kind: 'refused' })
     await act(() => second().load())
@@ -82,17 +91,8 @@ describe('the second camera on B', () => {
 
   it('tapes nothing when the camera ask was superseded', async () => {
     const { second } = mount({ kind: 'superseded' })
-    expect(await act(() => second().load())).toBe('superseded')
-    expect(recordTape).not.toHaveBeenCalled()
-  })
-
-  it('lets go of a tape whose loop fails to play', async () => {
-    const revoke = vi.spyOn(URL, 'revokeObjectURL')
-    vi.mocked(recordTape).mockResolvedValueOnce(new Blob())
-    vi.mocked(playLoop).mockRejectedValueOnce(new Error('no play'))
-    const { second } = mount({ kind: 'refused' })
     expect(await act(() => second().load())).toBe('failed')
-    expect(revoke).toHaveBeenCalledTimes(1)
+    expect(recordTape).not.toHaveBeenCalled()
   })
 
   it('stops asking a phone that runs one camera at a time', async () => {
@@ -106,7 +106,7 @@ describe('the second camera on B', () => {
 
 describe('picks on B that overlap', () => {
   it('lets go of a clip that loads after the camera went on B', async () => {
-    const video = deferred<HTMLVideoElement>()
+    const video = deferred<Loop>()
     const clipRelay = relay()
     const sameRelay = relay()
     vi.mocked(playLoop).mockReturnValueOnce(video.promise)
@@ -117,7 +117,7 @@ describe('picks on B that overlap', () => {
 
     const clip = second().loadClip(file())
     expect(await act(() => second().loadSame())).toBe('shown')
-    video.resolve(document.createElement('video'))
+    video.resolve(loop())
     expect(await act(() => clip)).toBe('superseded')
 
     expect(second().kind).toBe('same')
@@ -127,7 +127,7 @@ describe('picks on B that overlap', () => {
   })
 
   it('keeps a pattern picked while a clip was loading', async () => {
-    const video = deferred<HTMLVideoElement>()
+    const video = deferred<Loop>()
     const clipRelay = relay()
     vi.mocked(playLoop).mockReturnValueOnce(video.promise)
     vi.mocked(relayCamera).mockResolvedValueOnce(clipRelay)
@@ -135,7 +135,7 @@ describe('picks on B that overlap', () => {
 
     const clip = second().loadClip(file())
     act(() => second().loadPattern('bars'))
-    video.resolve(document.createElement('video'))
+    video.resolve(loop())
     expect(await act(() => clip)).toBe('superseded')
 
     expect(second().pattern).toBe('bars')
@@ -143,7 +143,7 @@ describe('picks on B that overlap', () => {
   })
 
   it('says nothing of a superseded clip that fails', async () => {
-    const video = deferred<HTMLVideoElement>()
+    const video = deferred<Loop>()
     vi.mocked(playLoop).mockReturnValueOnce(video.promise)
     const { second, onError } = mount()
 

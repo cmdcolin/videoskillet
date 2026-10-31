@@ -5,17 +5,11 @@ import { dropLoop, playLoop } from './tape'
 import { replay, useOnReturn } from './useReplay'
 
 import type { Pattern } from './patterns'
+import type { Loop } from './tape'
 
 // What is on source A: the camera, a clip of yours, or one of the set's own
 // patterns.
 export type ASource = 'camera' | 'clip' | Pattern
-
-interface Clip {
-  url: string
-  video: HTMLVideoElement
-}
-
-const release = (c: Clip) => dropLoop(c.video, c.url)
 
 // Source A when it is not the camera. The caller lets the camera go once
 // something else is up, and `cameraShown` hears the camera come back on screen
@@ -29,21 +23,21 @@ export function useSourceA(
   onError: (message: string) => void,
 ) {
   const [on, setOn] = useState<ASource>('camera')
-  const clip = useRef<Clip | null>(null)
+  const clip = useRef<Loop | null>(null)
   // Which pick on A is the latest. A clip that finishes loading after a later
   // pick lets go of itself. A camera that comes back on screen by itself, as
   // one does after the file picker, is no pick.
   const turn = useRef(0)
 
   const drop = () => {
-    if (clip.current !== null) release(clip.current)
+    if (clip.current !== null) dropLoop(clip.current)
     clip.current = null
   }
 
   useEffect(
     () => () => {
       ++turn.current
-      if (clip.current !== null) release(clip.current)
+      if (clip.current !== null) dropLoop(clip.current)
     },
     [],
   )
@@ -71,12 +65,10 @@ export function useSourceA(
 
   const toClip = async (file: File) => {
     const mine = ++turn.current
-    const url = URL.createObjectURL(file)
-    let loaded: Clip | null = null
+    let loaded: Loop | null = null
     try {
-      loaded = { url, video: await playLoop(url) }
+      loaded = await playLoop(file)
     } catch (e) {
-      URL.revokeObjectURL(url)
       if (mine === turn.current) onError(`clip: ${reason(e)}`)
     }
     const latest = mine === turn.current
@@ -86,7 +78,7 @@ export function useSourceA(
         drop()
         clip.current = loaded
         setOn('clip')
-      } else release(loaded)
+      } else dropLoop(loaded)
     }
     return loaded !== null && latest
   }
