@@ -97,9 +97,9 @@ as a texel instead of hashing it per frame. The other is the direct video blit
 picks `importExternalTexture`, a slot's fresh video frame is sampled straight
 off the browser's decoder into the slot texture at the top of the frame,
 replacing the bitmap path's per-frame CPU decode/resize/upload. The device has
-to have the method, and the browser must not be Firefox. Firefox stays on
-`VideoPump`'s bitmap path, which is the path measured there, unless the session
-carries `#vidext`.
+to have the method, the session must not carry `#vidbitmap`, and the browser
+must not be Firefox. Firefox stays on `VideoPump`'s bitmap path, which is the
+path measured there, unless the session carries `#vidext`.
 
 The split matters: **encode** builds the waveform, **channel/timebase** damage
 it, **enhancer/sync/decode** is the receiver trying to make sense of the damage.

@@ -80,7 +80,7 @@ pnpm render:golden --only=vhs       # one case
 CI runs this on every push to main, and it is the one check that executes the
 shaders.
 
-- **What it does:** `scripts/render/golden.ts` renders fifteen looks for 30
+- **What it does:** `scripts/render/golden.ts` renders fifteen cases for 30
   frames each, two of them with a caption on the app's own engine bundle. It
   compares each final frame, box-filtered to 125x80, with a reference in
   `scripts/render/golden/`.
@@ -131,7 +131,7 @@ its list or the difference stays under the tolerance. The trail keyer's race in
   reach.
 - **When it fails:** each failing case prints the frames that differ and the
   hashes from each pool size. `--only=<case>` reruns that case alone.
-- **Where it runs:** locally. CI does not run it.
+- **Where it runs:** it runs locally, and CI does not run it.
 
 ## Caption font
 

@@ -75,13 +75,12 @@ thousand lines of source loading, plus the bay, the tempo and the MIDI wiring.
 Two copies of one contract drift, which is the argument `slotView.ts` already
 makes about a much smaller duplication.
 
-**`/cam/` is the counter-example, and it states the test.** A second app page
-exists on an explicit condition: nothing in it should cost the app a byte, so a
-visitor to the app never downloads it. The camera page meets it. It shares
-`Engine`, the presets and a few helpers from `ui/`, builds its own engines, and
-needs no part of the panel. The strip fails that test from both ends. It wants
-nearly all of the panel, and a visitor to the strip page would download the app
-entire.
+**`/cam/` is the counter-example.** A second app page exists on an explicit
+condition: nothing in it should cost the app a byte, so a visitor to the app
+never downloads it. The camera page meets it. It shares `Engine`, the presets
+and a few helpers from `ui/`, builds its own engines, and needs no part of the
+panel. The strip fails that test from both ends. It wants nearly all of the
+panel, and a visitor to the strip page would download the whole app.
 
 **The offline half is pinned here regardless.** An offline render must adopt the
 live device rather than create one

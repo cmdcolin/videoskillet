@@ -473,8 +473,8 @@ Nightly has it on Linux behind `dom.webgpu.external-texture.enabled`. With that
 pref on, Nightly 151 on Linux exposes the method and then rejects
 `texture_external` in `blit_ext` ("Capability TEXTURE_EXTERNAL is required"), so
 the engine never paints. `#vidext` puts a Firefox session on the direct path for
-measuring it, and a measured gain on a platform is what would justify letting
-that platform on by default.
+measuring it. Firefox should take the direct path by default on a platform only
+after a measurement there shows a gain.
 
 ## Pacing is a separate problem from throughput
 

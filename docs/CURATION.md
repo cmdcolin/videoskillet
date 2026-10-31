@@ -6,10 +6,9 @@ preset that is not worth clicking is also a preset dragging every `surprise`
 toward mush. Same question one level down for the 285 controls — which are
 looks, and which are trims that belong behind `fine: true`.
 
-Most of this is a working record rather than a conclusion: the screening
-harness, its blind spots, what the surveys found and what the eye added. The
-last section records the labelling system that was built for the same question
-and then removed.
+Most of this is a working record of the screening harness, its blind spots, what
+the surveys found and what the eye added. The last section records the labelling
+system that was built for the same question and then removed.
 
 ## Measuring: the survey harness
 
@@ -724,11 +723,11 @@ seconds, with the contrast intact. The iris closes as the picture brightens,
 which puts its own gain inside the round trip. The test now lets a loop past
 unity when an iris meters it.
 
-## Labelling, removed
+## The labelling system
 
 A labelling system was built to answer "which settings are cool" with a model
 trained on ratings. It had three collectors: a tags menu in the look bar, the
-`/stream/` page that rated one look at a time, and the `/vote/` page that
+`/stream/` page that rated one preset mix at a time, and the `/vote/` page that
 compared two. They wrote to the `candidates`, `votes` and `ratings` collections,
 and `scripts/labels.mjs` and `scripts/affinity.mjs` exported and fitted the
 result. The dataset never got past a few sessions and nothing was fitted.

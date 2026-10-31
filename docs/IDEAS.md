@@ -309,14 +309,14 @@ in identical places, which is the invariant this whole split exists to keep.
 
 The keyer slices `uvfB` — B's chroma after the encoder's bandlimit — turned by
 the angle B's carrier stands at against the house reference (`busPhase` in
-`mix_b.wgsl`). So the soft-across/sharp-down composite edge is the filter doing
-it, and the per-line breathing on the dirty path is the detune doing it, not
-anything drawn. B's hue trim, video gain and inversion reach the key the same
-way. Reading `uvfB` gives the keyer a perfect Y/C separation, and that is
-deliberate: demodulating the composite through a four-sample aperture, as the
-loop's keyer does, turns a full-range luma step into about 0.7 of false chroma,
-more than a saturated primary carries, and speckles every outline the key cuts.
-Two things it taught.
+`mix_b.wgsl`). The encoder's filter makes the soft-across/sharp-down composite
+edge, and the detune makes the per-line breathing on the dirty path. B's hue
+trim, video gain and inversion reach the key the same way. Reading `uvfB` gives
+the keyer a perfect Y/C separation, and that is deliberate: demodulating the
+composite through a four-sample aperture, as the loop's keyer does, turns a
+full-range luma step into about 0.7 of false chroma, more than a saturated
+primary carries, and speckles every outline the key cuts. The keyer showed two
+things.
 
 The keyer had to read B's chroma at **B's own raster index** on the dirty path,
 the same index the fill is resampled from. Keying at the output sample instead
@@ -331,10 +331,11 @@ house carrier and follows B's carrier wherever it has slipped. What it cannot
 null is the part of the backing that has drifted off the key hue. On the
 genlocked path nothing drifts and the null is flat; on the dirty path the detune
 walks the backing round the wheel, and the part off the key hue survives as a
-residue that breathes with the walk. That asymmetry is the mechanism, not a gap
-to close. The same shape of limit governs the fill selector: a fill is only
-meaningful on the genlocked path, because a fill is what sits _behind_ the
-foreground and only a crossfade has a behind. The row is gated on genlock.
+residue that breathes with the walk. That asymmetry is the mechanism, and the
+suppressor keeps it on purpose. The same shape of limit governs the fill
+selector: a fill is only meaningful on the genlocked path, because a fill is
+what sits _behind_ the foreground and only a crossfade has a behind. The row is
+gated on genlock.
 
 What is left:
 
