@@ -156,19 +156,19 @@ const seek = (view: DataView, from: Box, ...path: string[]): Box | null => {
 }
 
 const hex2 = (n: number): string => n.toString(16).padStart(2, '0')
+export const dec2 = (n: number) => String(n).padStart(2, '0')
 
 // AV1's codec string, out of its `av1C` record: the profile and level share
 // the second byte, and the third opens with the tier, `high_bitdepth` and
 // `twelve_bit`. Both containers carry the same record.
-export function av1Codec(av1C: Uint8Array) {
-  if (av1C.length < 4) return null
-  const profile = av1C[1]! >> 5
-  const level = String(av1C[1]! & 0x1f).padStart(2, '0')
-  const tier = (av1C[2]! & 0x80) !== 0 ? 'H' : 'M'
-  const depth =
-    (av1C[2]! & 0x40) === 0 ? '08' : (av1C[2]! & 0x20) === 0 ? '10' : '12'
-  return `av01.${profile}.${level}${tier}.${depth}`
+function av1String(profileLevel: number, flags: number) {
+  const tier = (flags & 0x80) !== 0 ? 'H' : 'M'
+  const depth = (flags & 0x40) === 0 ? '08' : (flags & 0x20) === 0 ? '10' : '12'
+  return `av01.${profileLevel >> 5}.${dec2(profileLevel & 0x1f)}${tier}.${depth}`
 }
+
+export const av1Codec = (av1C: Uint8Array) =>
+  av1C.length < 4 ? null : av1String(av1C[1]!, av1C[2]!)
 
 // The `codec` string `VideoDecoder.configure` wants, built from the sample
 // entry's own configuration record rather than from the box type alone —
@@ -189,7 +189,7 @@ function codecString(
     const profile = description[4]!
     const level = description[5]!
     const depth = description[6]! >> 4
-    return `vp09.${String(profile).padStart(2, '0')}.${String(level).padStart(2, '0')}.${String(depth).padStart(2, '0')}`
+    return `vp09.${dec2(profile)}.${dec2(level)}.${dec2(depth)}`
   }
   if (entryType === 'av01') {
     return description === null ? null : av1Codec(description)
@@ -315,22 +315,31 @@ function readEdit(
 const holds = (b: Box, header: number, count: number, stride: number) =>
   b.start + header + count * stride <= b.end
 
+// A table's entry count, which is the last of its header's fields, or null
+// when the header or the entries it counts run past the box.
+const entriesIn = (view: DataView, b: Box, header: number, stride: number) =>
+  holds(b, header, 0, 0)
+    ? ((n: number) => (holds(b, header, n, stride) ? n : null))(
+        view.getUint32(b.start + header - 4),
+      )
+    : null
+
 // (count, value) run-length pairs, which is the shape `stts` and `ctts` share.
 const readRuns = (
   view: DataView,
   b: Box,
   signed: boolean,
-): { count: number; value: number }[] => {
-  const runs: { count: number; value: number }[] = []
-  const entries = view.getUint32(b.start + 4)
-  let at = b.start + 8
-  for (let i = 0; i < entries && at + 8 <= b.end; i++, at += 8) {
-    runs.push({
-      count: view.getUint32(at),
-      value: signed ? view.getInt32(at + 4) : view.getUint32(at + 4),
-    })
-  }
-  return runs
+): { count: number; value: number }[] | null => {
+  const entries = entriesIn(view, b, 8, 8)
+  return entries === null
+    ? null
+    : Array.from({ length: entries }, (_, i) => {
+        const at = b.start + 8 + i * 8
+        return {
+          count: view.getUint32(at),
+          value: signed ? view.getInt32(at + 4) : view.getUint32(at + 4),
+        }
+      })
 }
 
 export function demuxMp4(bytes: Uint8Array): DemuxedTrack | null {
@@ -409,15 +418,9 @@ export function demuxMp4(bytes: Uint8Array): DemuxedTrack | null {
     const stco = find(view, stbl, 'stco') ?? find(view, stbl, 'co64')
     if (stsc === null || stco === null) return null
     const wide = find(view, stbl, 'stco') === null
-    if (!holds(stco, 8, 0, 0) || !holds(stsc, 8, 0, 0)) return null
-    const chunkCount = view.getUint32(stco.start + 4)
-    const stscEntries = view.getUint32(stsc.start + 4)
-    if (
-      !holds(stco, 8, chunkCount, wide ? 8 : 4) ||
-      !holds(stsc, 8, stscEntries, 12)
-    ) {
-      return null
-    }
+    const chunkCount = entriesIn(view, stco, 8, wide ? 8 : 4)
+    const stscEntries = entriesIn(view, stsc, 8, 12)
+    if (chunkCount === null || stscEntries === null) return null
     const chunkOffsets: number[] = []
     for (let i = 0; i < chunkCount; i++) {
       const at = stco.start + 8 + i * (wide ? 8 : 4)
@@ -454,9 +457,11 @@ export function demuxMp4(bytes: Uint8Array): DemuxedTrack | null {
     // --- when each sample is decoded, and when it is shown ---
     const sttsBox = find(view, stbl, 'stts')
     if (sttsBox === null) return null
+    const sttsRuns = readRuns(view, sttsBox, false)
+    if (sttsRuns === null) return null
     const dts: number[] = []
     let t = 0
-    for (const run of readRuns(view, sttsBox, false)) {
+    for (const run of sttsRuns) {
       for (let i = 0; i < run.count && dts.length < count; i++) {
         dts.push(t)
         t += run.value
@@ -468,14 +473,20 @@ export function demuxMp4(bytes: Uint8Array): DemuxedTrack | null {
     // makes them signed, which is how a file expresses a negative offset
     // without an edit list to shift the whole track.
     const cttsBox = find(view, stbl, 'ctts')
+    const cttsRuns =
+      cttsBox === null
+        ? []
+        : readRuns(
+            view,
+            cttsBox,
+            holds(cttsBox, 1, 0, 0) && view.getUint8(cttsBox.start) === 1,
+          )
+    if (cttsRuns === null) return null
     const cts = dts.slice()
-    if (cttsBox !== null) {
-      const signed = view.getUint8(cttsBox.start) === 1
-      let i = 0
-      for (const run of readRuns(view, cttsBox, signed)) {
-        for (let k = 0; k < run.count && i < count; k++, i++) {
-          cts[i] = dts[i]! + run.value
-        }
+    let shifted = 0
+    for (const run of cttsRuns) {
+      for (let k = 0; k < run.count && shifted < count; k++, shifted++) {
+        cts[shifted] = dts[shifted]! + run.value
       }
     }
 
@@ -483,9 +494,8 @@ export function demuxMp4(bytes: Uint8Array): DemuxedTrack | null {
     const stss = find(view, stbl, 'stss')
     const keys = new Set<number>()
     if (stss !== null) {
-      if (!holds(stss, 8, 0, 0)) return null
-      const n = view.getUint32(stss.start + 4)
-      if (!holds(stss, 8, n, 4)) return null
+      const n = entriesIn(view, stss, 8, 4)
+      if (n === null) return null
       for (let i = 0; i < n; i++) {
         // 1-based in the file, 0-based here.
         keys.add(view.getUint32(stss.start + 8 + i * 4) - 1)

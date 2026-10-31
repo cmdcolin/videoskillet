@@ -182,18 +182,14 @@ export function normaliseAvcc(
       const len = at + 2 <= raw.length ? (raw[at]! << 8) | raw[at + 1]! : 0
       at += 2
       whole = len > 0 && at + len <= raw.length
-      if (!whole) return
-      let data = raw.slice(at, at + len)
-      at += len
-      // The duplicate, if this browser writes one.
-      if (
-        data.length > 2 &&
-        data[0] === data[1] &&
-        (data[0]! & 0x1f) === expect
-      ) {
-        data = data.slice(1)
+      if (whole) {
+        const data = raw.slice(at, at + len)
+        at += len
+        // The duplicate, if this browser writes one.
+        const doubled =
+          data.length > 2 && data[0] === data[1] && (data[0]! & 0x1f) === expect
+        sets.push({ type: expect, data: doubled ? data.slice(1) : data })
       }
-      sets.push({ type: expect, data })
     }
   }
   take(raw[5]! & 0x1f, 7)

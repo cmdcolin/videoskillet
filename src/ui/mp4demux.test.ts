@@ -454,6 +454,10 @@ describe('demuxMp4, on files it should decline', () => {
     it('declines an stss longer than its box', () => {
       expect(demuxMp4(patched('stss', 4, 1000))).toBeNull()
     })
+
+    it('declines an stts longer than its box', () => {
+      expect(demuxMp4(patched('stts', 4, 1000))).toBeNull()
+    })
   })
 
   it('returns null rather than throwing on bytes that are not an MP4', () => {

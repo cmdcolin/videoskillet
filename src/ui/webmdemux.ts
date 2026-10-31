@@ -24,7 +24,7 @@
 //   - **Content encodings** (compression or encryption of the blocks). Null.
 //   - **Audio.** The render's sound does not come from here.
 
-import { av1Codec } from './mp4demux'
+import { av1Codec, dec2 } from './mp4demux'
 
 import type { DemuxedTrack } from './mp4demux'
 
@@ -209,8 +209,6 @@ function readTrack(bytes: Uint8Array, entry: Element): VideoTrack | null {
     : null
 }
 
-const two = (n: number) => String(n).padStart(2, '0')
-
 // A VP9 keyframe's profile and bit depth, off its uncompressed header: the
 // two-bit frame marker, the profile's low then high bit, a reserved bit in
 // profile 3, four flags, the 24-bit sync code, and then, from profile 2, whether
@@ -242,7 +240,10 @@ function codecString(track: VideoTrack, firstKey: Uint8Array | null) {
   if (track.codecId === 'V_VP8') return { codec: 'vp8', description: null }
   if (track.codecId === 'V_VP9') {
     const { profile, depth } = vp9Format(firstKey)
-    return { codec: `vp09.${two(profile)}.41.${two(depth)}`, description: null }
+    return {
+      codec: `vp09.${dec2(profile)}.41.${dec2(depth)}`,
+      description: null,
+    }
   }
   if (track.codecId === 'V_AV1') {
     const c = track.codecPrivate
