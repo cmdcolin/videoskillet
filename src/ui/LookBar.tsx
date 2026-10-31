@@ -111,9 +111,9 @@ export function LookBar(props: {
         <button
           className={cx(styles.btn, props.comparing && styles.btnOn)}
           aria-pressed={props.comparing}
-          onPointerDown={props.onStartCompare}
-          onPointerUp={props.onEndCompare}
-          onPointerLeave={props.onEndCompare}
+          onPointerDown={() => props.onStartCompare()}
+          onPointerUp={() => props.onEndCompare()}
+          onPointerLeave={() => props.onEndCompare()}
           onKeyDown={e => {
             if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) {
               e.preventDefault()

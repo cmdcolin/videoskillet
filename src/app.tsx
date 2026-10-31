@@ -1107,7 +1107,7 @@ export function App() {
     onRecallSlot: recallSlot,
     // ctrl+S keeps the board under the name the menu would have offered. The
     // library sits above this call for that reason: a handler here is read
-    // through a ref every render, but the object it lives in is built now.
+    // through an effect event, but the object it lives in is built now.
     //
     // Signed out there is nowhere for it to go, and a keystroke that does
     // nothing is worse than one that refuses: the library button goes amber

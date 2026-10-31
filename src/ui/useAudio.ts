@@ -31,7 +31,8 @@ const isAbort = (e: unknown): boolean =>
 // each frame without touching React, and so does the level: the meter reads
 // engine.audioState itself every animation frame, and the seek bar reads the
 // element's position the same way. Only the file's duration comes back through
-// state, polled at 10 Hz until metadata lands and unchanged after that.
+// state, polled at 10 Hz while a source is on; an unchanged value does not
+// re-render.
 //
 // One source at a time, which is what makes this a picker rather than a set of
 // switches: the clip's own sound track is a mode here (routeVideo, into the same
