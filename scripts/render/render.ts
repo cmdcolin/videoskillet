@@ -36,7 +36,6 @@ import {
   rawSource,
 } from './ffmpeg.ts'
 import { pattern } from './pattern.ts'
-import { bayFor } from './take.ts'
 
 // From the source rather than from the bundle: a bundle is JavaScript, so the
 // types do not survive it, and `controls.ts` is plain TypeScript that Deno
@@ -284,6 +283,7 @@ const bpm: number | null =
   flag('bpm') === undefined ? null : Number(flag('bpm'))
 const routings = link.mod ?? []
 if (routings.length > 0) {
+  const { bayFor } = await import('./take.ts')
   engine.setModSlots(bayFor(routings, Number(flag('motion') ?? 1), bpm))
 }
 

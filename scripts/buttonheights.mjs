@@ -16,7 +16,7 @@ import { launchFirefox } from './browser.mjs'
 
 const url = process.argv[2] ?? 'http://localhost:5401/app/'
 const TOLERANCE = 0.5
-const CLASSES = ['_outline_', '_chromeBtn_', '_btn_', '_chip_', '_moreChip_']
+const CLASSES = ['_outline_', '_chromeBtn_', '_btn_', '_chip_']
 const EXEMPT = []
 
 const browser = await launchFirefox()

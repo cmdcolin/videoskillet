@@ -94,7 +94,7 @@ await page.goto(
     waitUntil: 'domcontentloaded',
   },
 )
-await appUp(page, 20000)
+check('the app came up', await appUp(page, 20000))
 await page.bringToFront()
 
 // One render, from a fixed board, returning a digest of the file it produced.
@@ -698,7 +698,7 @@ const renderClip = jitter =>
 await page.goto(`${origin}/app/?preset=vhs&vurl=${encodeURIComponent(clip)}`, {
   waitUntil: 'domcontentloaded',
 })
-await appUp(page, 20000)
+check('the app came up', await appUp(page, 20000))
 await page.bringToFront()
 // The element has to be *loaded* before a take starts — not for the pull, which
 // never touches it, but because a deck with nothing on it is a deck this arm

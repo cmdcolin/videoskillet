@@ -12,10 +12,11 @@
 // threads. A pass whose lanes read memory that lanes in another workgroup
 // write in the same dispatch therefore depends on which workgroup ran first,
 // and that order changes with the size of the pool. Each run gets a different
-// pool size where there are cores enough to give one. With the store_prev race of 9fa43843 put back, railSlam differed
-// between 16 and 8 threads on every attempt, and between two takes at 16
-// threads on about one in three. A race-free pass is bit-identical at every
-// pool size, so this check needs no reference images.
+// pool size where there are cores enough to give one. With the store_prev race
+// of 9fa43843 put back, railSlam differed between 16 and 8 threads on every
+// attempt, and between two takes at 16 threads on about one in three. A
+// race-free pass is bit-identical at every pool size, so this check needs no
+// reference images.
 //
 // The golden check renders each case once and compares it with a reference
 // within a tolerance, so it cannot tell a race from a change in the picture.

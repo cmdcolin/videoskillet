@@ -28,7 +28,7 @@
 //     is not something to do to a machine on the way past — and adr/0004 is
 //     about what one of them costs a tab. Run those on purpose.
 //   - the generators (`docshots`, `panelshots`, `gallery`, `logo`, `diagrams`,
-//     `clips`, `labels`, `contact`) write files rather than judging anything.
+//     `clips`, `contact`) write files rather than judging anything.
 //   - `compilercheck` needs no server and already runs in CI as `pnpm compiler`.
 //   - `guidecheck` and `distcheck` want a build to look at rather than the dev
 //     server this file starts, so neither belongs in the list below. Both drive
@@ -42,9 +42,9 @@
 //     landing page that is then swapped for the home.
 //   - `perf`, `loopseek`, `pullstep`, `codeccheck` and `pixdiff` are
 //     measurements. They report numbers a human reads; there is no pass to
-//     report. The two newest are why the frame-exact pull is built the way it
-//     is — one closed the seek route and one opened the decoder route — and
-//     both are worth re-running deliberately against a new browser build rather
+//     report. `loopseek` and `pullstep` are why the frame-exact pull is built the
+//     way it is — one closed the seek route and one opened the decoder route —
+//     and both are worth re-running deliberately against a new browser build rather
 //     than on the way past.
 //
 // **Two entries bring their own server**, which is a departure worth naming:

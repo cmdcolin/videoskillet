@@ -239,9 +239,10 @@ await phase('filter', { seed: OLD_BAY }, async page => {
   // them — input B, the sound and the view, none of which is a Phase. B is on
   // out of the box so the mixer opens too; the sound is *not* picked and its box
   // still opens, because its picker is the first thing inside it and patching
-  // one in is the whole reason to press it. Mix is the one box that can stop opening — with B
-  // off it holds nothing but controls that cannot act and there is no picker for
-  // "a second signal" — and then this count drops to seven.
+  // one in is the whole reason to press it. Mix is the one box that can stop
+  // opening — with B off it holds nothing but controls that cannot act and
+  // there is no picker for "a second signal" — and then this count drops to
+  // seven.
   //
   // This count has been wrong twice, both times by describing a picture the map
   // had moved on from: six trunk stages and nine boxes after the FEEDBACK box
