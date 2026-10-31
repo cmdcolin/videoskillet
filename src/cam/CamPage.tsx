@@ -6,6 +6,7 @@ import { FatalScreen } from '../ui/FatalScreen'
 import { loopSlice, mixerSlice } from '../ui/hueKey'
 import { usePersistedFlag } from '../ui/storage'
 import { faultPlan } from '../ui/transitions'
+import { useFlash } from '../ui/useFlash'
 import { useWakeLock } from '../ui/useWakeLock'
 import { Badges } from './Badges'
 import styles from './cam.module.css'
@@ -52,7 +53,6 @@ import { Tune } from './Tune'
 import { banked, changesStep, restored } from './undo'
 import { useCamEngine } from './useCamEngine'
 import { useCamera } from './useCamera'
-import { useFlash } from './useFlash'
 import { useGestures } from './useGestures'
 import { useKeyTap } from './useKeyTap'
 import { useSecond } from './useSecond'
@@ -147,7 +147,7 @@ export function CamPage(props: { link: CamLink | null }) {
   const tilt = useTilt(eng.steer)
   const sound = useSound(eng.hear, setError)
   const second = useSecond(eng, cam, setError, firstB)
-  const { flash, announce } = useFlash()
+  const { shown: flash, flash: announce } = useFlash<string>(900)
   const [shelfName, setShelfName] = useState(() => shelfOf(scene.look).name)
   const [faults, setFaults] = useState(false)
   const [panel, setPanel] = useState<Panel | null>(null)
@@ -517,7 +517,9 @@ export function CamPage(props: { link: CamLink | null }) {
             recording={shutter.recording}
             recSince={shutter.recSince}
           />
-          {flash === '' ? null : <span className={styles.flash}>{flash}</span>}
+          {flash === null ? null : (
+            <span className={styles.flash}>{flash}</span>
+          )}
           {on && !hintSeen && !showHelp ? (
             <span className={styles.firstHint}>
               swipe for looks · hold for the original

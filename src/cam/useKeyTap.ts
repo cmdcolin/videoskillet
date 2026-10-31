@@ -1,5 +1,4 @@
-import { useRef, useState } from 'react'
-
+import { useFlash } from '../ui/useFlash'
 import { chromaHue, colourAt, sourcePoint } from './keyed'
 
 import type { HueSlice } from '../ui/hueKey'
@@ -21,8 +20,7 @@ export function useKeyTap(opts: {
   onAim: (hue: number) => void
   onMiss: (text: string) => void
 }) {
-  const [ring, setRing] = useState<Ring | null>(null)
-  const timer = useRef(0)
+  const { shown: ring, flash: showRing } = useFlash<Ring>(800)
 
   const tap = (e: PointerEvent<HTMLCanvasElement>) => {
     const c = opts.camera()
@@ -48,12 +46,10 @@ export function useKeyTap(opts: {
       return
     }
     opts.onAim(hue)
-    setRing({
+    showRing({
       ...at,
       rgb: `rgb(${rgb.map(v => Math.round(v * 255)).join(' ')})`,
     })
-    window.clearTimeout(timer.current)
-    timer.current = window.setTimeout(() => setRing(null), 800)
   }
 
   return { ring, tap }
