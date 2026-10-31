@@ -267,6 +267,28 @@ export const CARD_PRESETS: CardPreset[] = [
     patch: { cgMix: 1, cgFill: 120, cgScale: 4 },
   },
   {
+    group: 'Character generator (chyron)',
+    name: 'font crawl',
+    blurb:
+      'the cell strap out, two address lines crossed and both counter resets slipping: every scan line reads a different part of the font',
+    patch: {
+      cgMix: 1,
+      cgScale: 5,
+      cgRomStride: 3,
+      cgRomCross: 4,
+      cgRomSlip: 0.6,
+      cgRomLineSlip: 0.04,
+      cgRomRot: 0.12,
+    },
+  },
+  {
+    group: 'Character generator (chyron)',
+    name: 'page shuffle',
+    blurb:
+      'a page-memory counter line held and slipping: legible characters read from the wrong cells, so the words repeat and walk',
+    patch: { cgMix: 1, cgScale: 5, cgPageAddr: 3, cgPageSlip: 0.25 },
+  },
+  {
     group: 'PiP inset (source B)',
     name: 'corner inset',
     blurb:
