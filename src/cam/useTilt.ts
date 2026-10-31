@@ -17,6 +17,18 @@ const canTilt = () =>
   typeof DeviceMotionEvent !== 'undefined' &&
   matchMedia('(pointer: coarse)').matches
 
+// False when the phone turned the request down. Call it from inside a tap.
+export async function allowMotion(): Promise<boolean> {
+  if (asks(DeviceMotionEvent)) {
+    try {
+      return (await DeviceMotionEvent.requestPermission()) === 'granted'
+    } catch {
+      return false
+    }
+  }
+  return true
+}
+
 // The phone's gyro, while it is switched on, handed to `onTilt` as a Tilt on
 // every motion event, and a level Tilt when it is switched off.
 export function useTilt(onTilt: (t: Tilt) => void) {
@@ -54,16 +66,9 @@ export function useTilt(onTilt: (t: Tilt) => void) {
       setOn(false)
       return true
     }
-    if (asks(DeviceMotionEvent)) {
-      try {
-        if ((await DeviceMotionEvent.requestPermission()) !== 'granted')
-          return false
-      } catch {
-        return false
-      }
-    }
-    setOn(true)
-    return true
+    const allowed = await allowMotion()
+    if (allowed) setOn(true)
+    return allowed
   }
 
   return { on, supported, toggle }
