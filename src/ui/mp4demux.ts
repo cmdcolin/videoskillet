@@ -46,6 +46,8 @@
 //     source comes back null.
 //   - **Audio.** The render's sound does not come from here.
 
+import { pad2 } from './format'
+
 // One encoded frame, located in the file rather than copied out of it. Byte
 // ranges rather than slices because a whole clip's samples is the whole clip,
 // and the caller already holds those bytes.
@@ -156,7 +158,6 @@ const seek = (view: DataView, from: Box, ...path: string[]): Box | null => {
 }
 
 const hex2 = (n: number): string => n.toString(16).padStart(2, '0')
-export const dec2 = (n: number) => String(n).padStart(2, '0')
 
 // AV1's codec string, out of its `av1C` record: the profile and level share
 // the second byte, and the third opens with the tier, `high_bitdepth` and
@@ -164,7 +165,7 @@ export const dec2 = (n: number) => String(n).padStart(2, '0')
 function av1String(profileLevel: number, flags: number) {
   const tier = (flags & 0x80) !== 0 ? 'H' : 'M'
   const depth = (flags & 0x40) === 0 ? '08' : (flags & 0x20) === 0 ? '10' : '12'
-  return `av01.${profileLevel >> 5}.${dec2(profileLevel & 0x1f)}${tier}.${depth}`
+  return `av01.${profileLevel >> 5}.${pad2(profileLevel & 0x1f)}${tier}.${depth}`
 }
 
 export const av1Codec = (av1C: Uint8Array) =>
@@ -189,7 +190,7 @@ function codecString(
     const profile = description[4]!
     const level = description[5]!
     const depth = description[6]! >> 4
-    return `vp09.${dec2(profile)}.${dec2(level)}.${dec2(depth)}`
+    return `vp09.${pad2(profile)}.${pad2(level)}.${pad2(depth)}`
   }
   if (entryType === 'av01') {
     return description === null ? null : av1Codec(description)

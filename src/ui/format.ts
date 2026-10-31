@@ -127,9 +127,13 @@ export const formatBytes = (bytes: number): string => {
   return `${mb < 100 ? mb.toFixed(1) : Math.round(mb)} MB`
 }
 
+export const pad2 = (n: number) => String(n).padStart(2, '0')
+
+// Whole seconds as m:ss.
+export const clockOf = (whole: number) =>
+  `${Math.floor(whole / 60)}:${pad2(whole % 60)}`
+
 // A duration, as the transport already writes one (ui/Scrub.tsx). Rounded up so
 // a clip is never announced as shorter than it is, and never `0:00`.
-export const formatClock = (seconds: number): string => {
-  const whole = Math.max(1, Math.ceil(seconds))
-  return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, '0')}`
-}
+export const formatClock = (seconds: number): string =>
+  clockOf(Math.max(1, Math.ceil(seconds)))

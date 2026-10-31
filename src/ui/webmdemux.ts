@@ -24,7 +24,8 @@
 //   - **Content encodings** (compression or encryption of the blocks). Null.
 //   - **Audio.** The render's sound does not come from here.
 
-import { av1Codec, dec2 } from './mp4demux'
+import { pad2 } from './format'
+import { av1Codec } from './mp4demux'
 
 import type { DemuxedTrack } from './mp4demux'
 
@@ -241,7 +242,7 @@ function codecString(track: VideoTrack, firstKey: Uint8Array | null) {
   if (track.codecId === 'V_VP9') {
     const { profile, depth } = vp9Format(firstKey)
     return {
-      codec: `vp09.${dec2(profile)}.41.${dec2(depth)}`,
+      codec: `vp09.${pad2(profile)}.41.${pad2(depth)}`,
       description: null,
     }
   }

@@ -4,7 +4,7 @@
 // render (`useRender`) — and they have to agree on the name, because a folder
 // holding both is a folder somebody is trying to sort by time.
 
-const pad2 = (n: number) => String(n).padStart(2, '0')
+import { pad2 } from './format'
 
 // yyyymmdd-hhmmss, so saved files sort chronologically and never collide.
 function stamp(): string {

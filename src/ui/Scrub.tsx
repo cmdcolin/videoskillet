@@ -4,13 +4,13 @@ import { clamp } from '../core/math'
 import { loopWindow } from './cue'
 import { cx } from './cx'
 import { everyFrame } from './everyFrame'
+import { clockOf } from './format'
 import styles from './Scrub.module.css'
 
 import type { Cue, CueEdge, LoopingCue } from './cue'
 import type { ReactNode } from 'react'
 
-const clock = (s: number) =>
-  `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`
+const clock = (s: number) => clockOf(Math.floor(s))
 
 const share = (t: number, duration: number) =>
   `${((t / duration) * 100).toFixed(1)}%`
