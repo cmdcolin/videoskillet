@@ -253,6 +253,13 @@
 .brand:hover .wordmark {
   color: #fff;
 }
+.brandVersion {
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  color: #ffffff70;
+  align-self: flex-end;
+}
 
 /* The masthead's right end: the pointer tool, the ⌕, the account and the ⋮,
    held together against the edge whether or not the fps readout is up between

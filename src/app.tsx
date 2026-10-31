@@ -1521,6 +1521,7 @@ export function App() {
               alt=""
             />
             <span className={styles.wordmark}>videoskillet</span>
+            <span className={styles.brandVersion}>{versionLabel}</span>
           </button>
         )}
         {/* Sits in the masthead rather than over the bottom-left of the

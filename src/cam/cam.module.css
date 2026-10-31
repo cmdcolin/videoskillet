@@ -47,6 +47,14 @@
   letter-spacing: 0.06em;
   text-decoration: none;
 }
+.brandVersion {
+  align-self: flex-end;
+  margin-left: -2px;
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  color: #ffffff70;
+}
 .mark {
   width: 20px;
   height: 20px;
@@ -933,7 +941,8 @@
 /* On the narrowest phones the mark stands for the name, so the top bar's
    buttons fit. */
 @media (max-width: 350px) {
-  .brandName {
+  .brandName,
+  .brandVersion {
     display: none;
   }
 }
@@ -1014,7 +1023,8 @@
   .tabs {
     flex-wrap: wrap;
   }
-  .brandName {
+  .brandName,
+  .brandVersion {
     display: none;
   }
   /* The column is too narrow for a row of knobs, so the sheet comes in over

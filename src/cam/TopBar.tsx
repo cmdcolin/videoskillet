@@ -1,4 +1,5 @@
 import { publicUrl } from '../publicUrl'
+import { versionLabel } from '../version'
 import styles from './cam.module.css'
 import { ShareIcon, UndoIcon } from './icons'
 
@@ -15,6 +16,7 @@ export function TopBar(props: {
       <a className={styles.brand} href="../" aria-label="videoskillet home">
         <img className={styles.mark} src={publicUrl('favicon.svg')} alt="" />
         <span className={styles.brandName}>videoskillet</span>
+        <span className={styles.brandVersion}>{versionLabel}</span>
       </a>
       <span className={styles.topRight}>
         <button
