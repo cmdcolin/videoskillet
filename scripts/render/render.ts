@@ -36,6 +36,7 @@ import {
   rawSource,
 } from './ffmpeg.ts'
 import { pattern } from './pattern.ts'
+import { bayFor } from './take.ts'
 
 // From the source rather than from the bundle: a bundle is JavaScript, so the
 // types do not survive it, and `controls.ts` is plain TypeScript that Deno
@@ -111,7 +112,6 @@ const {
   DEFAULT_CONTROLS,
   dcState,
   detect,
-  EMPTY_SLOT,
   Engine,
   LINES,
   parseSessionParams,
@@ -119,7 +119,6 @@ const {
   presetControls,
   smpteBarsPixels,
   sweepPixels,
-  toEngineSlots,
 } = await import('./build/engine.js')
 
 // Everything a link says, read by the app's own parser.
@@ -285,21 +284,7 @@ const bpm: number | null =
   flag('bpm') === undefined ? null : Number(flag('bpm'))
 const routings = link.mod ?? []
 if (routings.length > 0) {
-  // Retyped at the boundary because the bundle is JavaScript: TypeScript infers
-  // `bpm` from its `= null` default and decides the parameter is `null`. The
-  // real signature is `modSlots.ts`'s, which takes the tempo or nothing.
-  const slotsFor = toEngineSlots as unknown as (
-    slots: readonly unknown[],
-    master: number,
-    bpm: number | null,
-  ) => never[]
-  engine.setModSlots(
-    slotsFor(
-      routings.map(r => ({ ...EMPTY_SLOT, ...r, on: true })),
-      Number(flag('motion') ?? 1),
-      bpm,
-    ),
-  )
+  engine.setModSlots(bayFor(routings, Number(flag('motion') ?? 1), bpm))
 }
 
 // What the link put on the deck, for the sources that need nothing fetched.

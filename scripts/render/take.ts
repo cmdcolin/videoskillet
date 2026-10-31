@@ -31,19 +31,26 @@ export interface Case {
 
 const SEED = 1
 
-// Retyped at the boundary for the reason `render.ts` gives: the bundle is
-// JavaScript, and TypeScript reads the `= null` default as the parameter type.
+// Retyped at the boundary because the bundle is JavaScript: TypeScript infers
+// `bpm` from its `= null` default and decides the parameter is `null`. The real
+// signature is `modSlots.ts`'s, which takes the tempo or nothing.
 const slotsFor = toEngineSlots as unknown as (
   slots: readonly unknown[],
   master: number,
   bpm: number | null,
 ) => never[]
 
-const bayFor = (routings: readonly object[]) =>
+// The modulation bay for a list of routings, each switched on, the way
+// `useModSlots` builds it.
+export const bayFor = (
+  routings: readonly object[],
+  master = 1,
+  bpm: number | null = null,
+) =>
   slotsFor(
     routings.map(r => ({ ...EMPTY_SLOT, ...r, on: true })),
-    1,
-    null,
+    master,
+    bpm,
   )
 
 // Boots one engine and returns a function that renders a case on it, reading

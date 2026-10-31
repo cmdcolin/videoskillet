@@ -12,7 +12,7 @@
 // threads. A pass whose lanes read memory that lanes in another workgroup
 // write in the same dispatch therefore depends on which workgroup ran first,
 // and that order changes with the size of the pool. Each run gets a different
-// pool size. With the store_prev race of 9fa43843 put back, railSlam differed
+// pool size where there are cores enough to give one. With the store_prev race of 9fa43843 put back, railSlam differed
 // between 16 and 8 threads on every attempt, and between two takes at 16
 // threads on about one in three. A race-free pass is bit-identical at every
 // pool size, so this check needs no reference images.
@@ -133,8 +133,14 @@ async function compareRuns() {
     if (code !== 0) failures.push(`run ${r + 1} exited with code ${code}`)
   }
 
+  const pools = Array.from({ length: runs }, (_, r) => poolFor(r))
+  if (new Set(pools).size < runs) {
+    console.warn(
+      `${navigator.hardwareConcurrency} cores give ${runs} runs only ${new Set(pools).size} pool sizes, so runs that share one compare takes and not pool sizes`,
+    )
+  }
   console.log(
-    `${cases.length} cases, ${runs} runs on ${Array.from({ length: runs }, (_, r) => poolFor(r)).join(', ')} threads, frames ${at.join(', ')}\n`,
+    `${cases.length} cases, ${runs} runs on ${pools.join(', ')} threads, frames ${at.join(', ')}\n`,
   )
   await Promise.all(Array.from({ length: runs }, (_, r) => run(r)))
   const unjudged = cases.filter(
