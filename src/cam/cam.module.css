@@ -930,8 +930,6 @@
   cursor: default;
 }
 
-/* A desktop window has the width for every look at once, and a mouse has no
-   easy way to scroll a row sideways. */
 /* On the narrowest phones the mark stands for the name, so the top bar's
    buttons fit. */
 @media (max-width: 350px) {
@@ -939,6 +937,9 @@
     display: none;
   }
 }
+
+/* A desktop window has the width for every look at once, and a mouse has no
+   easy way to scroll a row sideways. */
 @media (min-width: 1000px) and (min-height: 561px) {
   .tray {
     min-height: 107px;

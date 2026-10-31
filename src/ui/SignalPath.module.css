@@ -209,10 +209,11 @@
 .stageStock + .stageAll {
   margin-left: var(--space-xs);
 }
-/* The stage heading's chip (.stageStock above), at the far end of the map's heading. */
+/* The stage heading's chip (.stageStock above), in the tools at the far end
+   of the map's heading. */
 .pathAll {
   composes: stageStock;
-  align-self: center;
+  margin-left: 0;
   font-weight: 400;
   letter-spacing: normal;
   text-transform: none;
@@ -223,15 +224,8 @@
   align-items: center;
   gap: var(--space-xs);
 }
-.pathTools .pathAll {
-  margin-left: 0;
-}
 .pathFree {
-  composes: stageStock;
-  margin-left: 0;
-  font-weight: 400;
-  letter-spacing: normal;
-  text-transform: none;
+  composes: pathAll;
 }
 .pathFreeTouched {
   border-color: var(--edit);
