@@ -81,7 +81,6 @@ export interface EngineApi {
   // differently, which is why they are four callbacks and not one: a lost device
   // rebuilds, a hang is fatal, a frozen tab is a banner that clears itself, and
   // a GPU error is a banner that does not.
-  onStats: (stats: FrameStats) => void
   onDeviceLost: (message: string) => void
   onHang: () => void
   onFrozen: (frozen: FrozenKind | null) => void
@@ -111,7 +110,6 @@ export interface EngineApi {
   readonly getGlide: () => number | null
   // The frame rate as a store, so the readout that draws it subscribes on its
   // own rather than the app holding a value that moves four times a second.
-  // Complements `onStats` above rather than replacing it — see pipeline.ts.
   readonly subscribeStats: (fn: () => void) => () => void
   readonly getStats: () => FrameStats
   // useSyncExternalStore's pair. Both are fields rather than methods so they are

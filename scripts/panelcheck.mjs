@@ -238,9 +238,8 @@ await phase('filter', { seed: OLD_BAY }, async page => {
   // Eight boxes that open: the five trunk stages and the three that hang under
   // them — input B, the sound and the view, none of which is a Phase. B is on
   // out of the box so the mixer opens too; the sound is *not* picked and its box
-  // still opens,
-  // because its picker is the first thing inside it and patching one in is the
-  // whole reason to press it. Mix is the one box that can stop opening — with B
+  // still opens, because its picker is the first thing inside it and patching
+  // one in is the whole reason to press it. Mix is the one box that can stop opening — with B
   // off it holds nothing but controls that cannot act and there is no picker for
   // "a second signal" — and then this count drops to seven.
   //
@@ -482,16 +481,10 @@ await phase('full bay', { seed: FULL_BAY }, async page => {
 // times a second for a readout that is off by default and not persisted — the
 // monitor perturbing the very thing it exists to measure.
 //
-// This phase used to prove that by reading `window.vf.onStats` and asserting the
-// app swapped a real handler in when the readout opened. It no longer can, and
-// the assertion sat failing for exactly that reason: the readout was moved onto
-// a store (`subscribeStats` / `getStats` — pipeline.ts), and `onStats` is now
-// the vote page's alone. A store is *subscribed by nobody* when nothing is
-// mounted, so the invariant is no longer a handler swap to catch — it is the
-// mount itself, and `FpsMonitor` calling `useSyncExternalStore` is the whole of
-// it. So the checks below are the mount, plus the inverted form of the old one:
-// `onStats` must stay a no-op even with the readout open, because going back to
-// the callback is the regression that caused the problem in the first place.
+// The readout reads a store (`subscribeStats` / `getStats` — pipeline.ts),
+// which is subscribed by nobody when nothing is mounted, so the invariant is
+// the mount itself. The engine also has no `onStats` callback, because going
+// back to one is the regression that caused the problem in the first place.
 //
 // Deliberately *not* asserting the readout reaches a number above zero: rAF is
 // throttled in an occluded window and `vf.step()` renders directly rather than
@@ -499,8 +492,6 @@ await phase('full bay', { seed: FULL_BAY }, async page => {
 // healthy the wiring.
 await phase('fps stat', {}, async page => {
   const { run, settle } = runner(page)
-  const handler = () => page.evaluate(() => String(window.vf.onStats))
-  const noop = s => s.replace(/\s/g, '') === '()=>{}'
   // The readout, which carries the rate and — under a frame lock — a ·½ marker
   // after it, so this matches the number and lets the rest be.
   const readout = () =>
@@ -513,10 +504,9 @@ await phase('fps stat', {}, async page => {
     (await readout()) === null,
     'the fps readout drew before it was asked for',
   )
-  const off = await handler()
   check(
-    noop(off),
-    `frame stats are wired with the readout closed: ${off.slice(0, 60)}`,
+    !(await page.evaluate(() => 'onStats' in window.vf)),
+    'the engine has an onStats callback again, which re-renders the whole panel four times a second',
   )
 
   await run(`press(byTitle('menu (s: still')); return 0`)
@@ -526,11 +516,6 @@ await phase('fps stat', {}, async page => {
   check(
     (await readout()) !== null,
     'the fps readout did not appear from the ☰ menu',
-  )
-  const on = await handler()
-  check(
-    noop(on),
-    `the readout is back on the onStats callback, which re-renders the whole panel four times a second: ${on.slice(0, 60)}`,
   )
 
   await run(`press(byTitle('hide the fps monitor')); return 0`)

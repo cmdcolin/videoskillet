@@ -207,7 +207,6 @@ export class Engine implements EngineApi {
   // was written after this frame's leading one. See emitControls.
   private notifyFrame = 0
   private notifyMissed = false
-  onStats: (stats: FrameStats) => void = () => {}
   // Two different failures, deliberately kept apart because they call for
   // opposite advice: the device told us it was lost (driver reset, sleep/wake —
   // a reload usually recovers), versus submitted work that never completes
@@ -1170,7 +1169,6 @@ export class Engine implements EngineApi {
       onStats: s => {
         this.statsSnapshot = s
         this.statsListeners.emit()
-        this.onStats(s)
       },
       lockDiv: () => this.lockDivLive,
       onHang: () => this.onHang(),
@@ -1406,12 +1404,6 @@ export class Engine implements EngineApi {
   // report reconciles the whole panel, so the monitor perturbs the very thing it
   // exists to measure. Subscribed by nobody when it is closed, and then the
   // notify below is a walk over an empty set.
-  //
-  // `onStats` survives alongside this and is not superseded by it: panelcheck.mjs
-  // reads the field off `window.vf` to prove the readout is not on it. A store
-  // answers "what is the rate now", a callback answers "tell me when"; the vote
-  // page reads both engines through the store for the same reason the masthead
-  // does.
   readonly subscribeStats: (fn: () => void) => () => void =
     this.statsListeners.subscribe
 
@@ -1760,7 +1752,6 @@ export class Engine implements EngineApi {
       // for a replacement would otherwise put "Buffer with '' label has been
       // destroyed" on the banner of the session that succeeded it. Nothing this
       // object has left to say is news to anyone.
-      this.onStats = NOOP
       this.onGpuError = NOOP
       this.onDeviceLost = NOOP
       this.onHang = NOOP
