@@ -19,6 +19,7 @@ import {
 import styles from './ChainMap.module.css'
 import { cx } from './cx'
 import { MapBox, MapRun } from './MapBox'
+import { pressHint } from './pressHint'
 
 import type { WiredBranch } from './chainLayout'
 import type { LoopPlace, LoopsLive } from './controls'
@@ -52,9 +53,6 @@ export interface ChainStage {
   name: string
   blurb: string
   touched: number
-  // What the count counts, where "controls off stock" is the wrong noun for it.
-  // Only the modulation bay sets it, for its button on the path's heading.
-  touchedSay?: string
   // What is standing in this stage, captioned under its name — the three boxes
   // with a picker, and only while something is in them (patched.ts). A stage of
   // the rig has nothing to say here: there is no picker for "the receiver", and
@@ -354,16 +352,7 @@ function Node(props: {
       off={off}
       opens={stage.opens}
       touched={stage.touched}
-      // Whether pressing again folds the stage back up.
-      foldHint={
-        dim
-          ? ' — outside the filter: click to drop it and open this stage'
-          : fold
-            ? props.open
-              ? ' — click to close'
-              : ' — click to open'
-            : undefined
-      }
+      pressHint={pressHint(dim, fold, props.open)}
       className={cx(
         // Dim replaces the idle rule rather than layering over it: it is not a
         // shade of the three states below, it is the box saying the query went

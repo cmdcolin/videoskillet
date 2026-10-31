@@ -40,8 +40,7 @@
   /* How far the head below paints the panel's ground above itself, and the gap
      kept clear for it to land in. One value, because a lid taller than the gap
      covers whatever the panel drew above the stage: at 14px over an 8px margin
-     it reached 6px into the map, and the free row's boxes — which clear the
-     bottom of the drawing by 4 — lost their bottom edge to it. */
+     it reached 6px into the map. */
   --stage-lid: 14px;
   margin: var(--stage-lid) 0 10px;
   padding: 0 0 var(--space-sm) var(--space-md);
@@ -170,12 +169,6 @@
 .phaseDot:hover {
   color: var(--edit-hi);
 }
-/* The way back to the map alone, at the far end of the stage's own heading row
-   so it reads as "close this" rather than as another control of the stage.
-   margin-left: auto is what puts it there — the name and its count stay together on the left. Boxed, like the search box's clear button (app.module.css .filterClear) and for the same reason: a bare glyph in the panel's dim prose colour is a mark on the heading, not a thing to press, and at hint size it was also a target you had to aim at. The border is what makes it a button; the fixed square is
-   what makes it hittable without aiming. Bigger than .filterClear's because
-   that one sits inside a field that already draws its own box, while this one
-   stands alone on a heading row with nothing around it to say where it ends. */
 /* Hold-to-compare for this stage alone: what the picture would be with nothing
    in here touched. It sits before the ×, and `margin-left: auto` on this one is
    what pushes the pair to the far end — the name and its count keep the left.
@@ -257,6 +250,17 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* The way back to the map alone, at the far end of the stage's own heading row
+   so it reads as "close this" rather than as another control of the stage.
+   margin-left: auto is what puts it there — the name and its count stay
+   together on the left. Boxed, like the search box's clear button
+   (FilterBox.module.css .clear) and for the same reason: a bare glyph in the
+   panel's dim prose colour is a mark on the heading, not a thing to press, and
+   at hint size it was also a target you had to aim at. The border is what
+   makes it a button; the fixed square is what makes it hittable without
+   aiming. Bigger than .clear's because that one sits inside a field that
+   already draws its own box, while this one stands alone on a heading row with
+   nothing around it to say where it ends. */
 .stageClose {
   composes: bare tap from './ui.module.css';
   margin-left: auto;

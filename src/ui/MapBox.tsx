@@ -79,9 +79,8 @@ export function MapBox(props: {
   // the stage does. Never the truncated caption — the map cuts its text to its
   // boxes, and a screen reader has no box.
   patched?: string
-  // What the hover text adds on the end when a press will fold the stage back
-  // up again.
-  foldHint?: string
+  // What the hover text adds on the end about a press (`pressHint`).
+  pressHint: string
   className: string
   expanded?: boolean
   onOpen: () => void
@@ -105,7 +104,7 @@ export function MapBox(props: {
     <MapPress
       opens={props.opens}
       label={said}
-      title={off ? said : `${said}${count}${props.foldHint ?? ''}`}
+      title={off ? said : `${said}${count}${props.pressHint}`}
       className={props.className}
       expanded={props.expanded}
       onOpen={props.onOpen}

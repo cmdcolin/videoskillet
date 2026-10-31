@@ -4,6 +4,7 @@ import { ChainMap } from './ChainMap'
 import { ControlGroup } from './ControlGroup'
 import { countSay } from './countSay'
 import { cx } from './cx'
+import { pressHint } from './pressHint'
 import { sameGroups } from './sameList'
 import { Accordion, NestedSections } from './Section'
 import styles from './SignalPath.module.css'
@@ -26,6 +27,9 @@ import type { ReactNode, RefObject } from 'react'
 // patched in is inert and still worth opening, because the picker is the thing
 // that ends that state.
 export interface PathNode extends Omit<ChainStage, 'opens'> {
+  // What the count counts, where "controls off stock" is the wrong noun for it.
+  // Only the modulation bay sets it, for its button on the path's heading.
+  touchedSay?: string
   // Opens the stage at its first touched group. Absent on a stage that has no
   // groups to open — see StageHead, where the count is then a readout rather
   // than a button that would do nothing.
@@ -71,7 +75,7 @@ export interface LoopNode extends PathNode {
 // What the count on a stage's heading counts. "Controls off stock" is right for
 // every stage of the rig and wrong for the modulation bay, which counts patched
 // slots and a gate — so the bay hands over its own clause (PathNode.touchedSay,
-// built by bayLoad) and the map's boxes read the same one.
+// built by bayLoad).
 const counted = (node: PathNode): string =>
   node.touchedSay ??
   `${node.touched} control${node.touched === 1 ? '' : 's'} in this stage off stock`
@@ -270,6 +274,7 @@ function FreeButton(props: {
 }) {
   const { node } = props
   const dim = node.dim === true
+  const fold = props.folds && node.opens && !dim
   return (
     <button
       className={cx(
@@ -278,8 +283,8 @@ function FreeButton(props: {
         !dim && props.open && styles.pathFreeOn,
         dim && styles.pathFreeDim,
       )}
-      title={`${node.name} — ${node.blurb}${countSay(node.touched, node.touchedSay)}`}
-      aria-expanded={props.folds && !dim ? props.open : undefined}
+      title={`${node.name} — ${node.blurb}${countSay(node.touched, node.touchedSay)}${pressHint(dim, fold, props.open)}`}
+      aria-expanded={fold ? props.open : undefined}
       onClick={() => props.onOpen()}
     >
       {node.name.toLowerCase()}
