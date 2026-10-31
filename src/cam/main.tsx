@@ -4,7 +4,7 @@ import { paramsOf } from '../core/gpu/env'
 import { registerServiceWorker } from '../registerSW'
 import '../theme.css'
 import { CamPage } from './CamPage'
-import { boopThreshold, wantsCostume } from './costume'
+import { costumeSettings, wantsCostume } from './costume'
 import { CostumePage } from './CostumePage'
 import { readLink } from './link'
 
@@ -19,7 +19,7 @@ startAnalytics()
 export default function Cam() {
   const search = paramsOf(location)
   return wantsCostume(search) ? (
-    <CostumePage threshold={boopThreshold(search)} />
+    <CostumePage settings={costumeSettings(search)} />
   ) : (
     <CamPage link={readLink(search)} />
   )

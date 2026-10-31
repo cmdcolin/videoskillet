@@ -3,9 +3,12 @@ import { describe, expect, it } from 'vitest'
 import { DEFAULT_CONTROLS } from '../core/controls'
 import { PRESET_BY_NAME, needsSourceB } from '../ui/presets'
 import {
+  AUTO_S,
   BOOP_JOLT,
   COSTUME_POOL,
-  boopThreshold,
+  DEFAULT_SAY,
+  autoGapMs,
+  costumeSettings,
   joltOf,
   roused,
   rollBoop,
@@ -28,12 +31,27 @@ describe('costume mode', () => {
       expect(rollBoop(current).look.name).not.toBe(current.name)
   })
 
-  it('reads the threshold off the link', () => {
-    expect(boopThreshold('?costume&boop=4')).toBe(4)
-    expect(boopThreshold('?costume')).toBe(BOOP_JOLT)
-    expect(boopThreshold('?costume&boop=-2')).toBe(BOOP_JOLT)
+  it('reads its settings off the link', () => {
+    expect(costumeSettings('?costume')).toEqual({
+      threshold: BOOP_JOLT,
+      say: DEFAULT_SAY,
+      autoS: AUTO_S,
+    })
+    expect(
+      costumeSettings('?costume&boop=4&say=we come in peace&auto=0'),
+    ).toEqual({ threshold: 4, say: 'WE COME IN PEACE', autoS: 0 })
+    expect(costumeSettings('?costume&boop=-2&say=%20&auto=x')).toEqual({
+      threshold: BOOP_JOLT,
+      say: DEFAULT_SAY,
+      autoS: AUTO_S,
+    })
     expect(wantsCostume('?costume')).toBe(true)
     expect(wantsCostume('?look=x')).toBe(false)
+  })
+
+  it('waits between two fifths of the longest wait and all of it', () => {
+    expect(autoGapMs(40, () => 0)).toBe(16000)
+    expect(autoGapMs(40, () => 1)).toBe(40000)
   })
 
   it('measures a jolt as the change between samples', () => {

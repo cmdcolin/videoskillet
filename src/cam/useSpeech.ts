@@ -36,48 +36,96 @@ export const canHear = () => recognizerClass() !== undefined
 // Enough for the chyron's four rows several times over.
 const KEEP = 400
 
+// How long the chyron keeps the last words after people stop talking.
+const QUIET_MS = 20000
+
+// How long a session that ended waits before listening again, so a browser
+// that ends every session at once is not asked again in a tight loop.
+const AGAIN_MS = 1000
+
 // Errors after which listening again would only fail the same way.
 const FINAL = new Set(['not-allowed', 'service-not-allowed', 'audio-capture'])
 
-// What people near the phone say, as it is recognised, handed to `onText` as
-// the latest few hundred characters. The browser ends a session after a pause
-// or a minute, so a session that ends is started again while `on` holds.
-export function useSpeech(on: boolean, onText: (text: string) => void) {
-  const report = useEffectEvent(onText)
+// The chyron's words: `fallback` while it is quiet, and what people near the
+// phone say, in capitals the way a caption set them, while they talk. Each
+// finished phrase is handed to `onPhrase`. The browser ends a session after a
+// pause or a minute, so a session that ends is started again while `on` holds.
+// A browser with no recognition keeps `fallback` up.
+export function useSpeech(
+  on: boolean,
+  opts: {
+    fallback: string
+    onText: (text: string) => void
+    onPhrase: (words: string) => void
+  },
+) {
+  const report = useEffectEvent(opts.onText)
+  const phrase = useEffectEvent(opts.onPhrase)
+  const { fallback } = opts
 
   useEffect(() => {
-    const Recognition = recognizerClass()
-    if (on && Recognition !== undefined) {
+    if (on) {
+      const Recognition = recognizerClass()
       let heard = ''
       let live = true
-      const rec = new Recognition()
-      rec.continuous = true
-      rec.interimResults = true
-      rec.lang = navigator.language
-      rec.addEventListener('result', e => {
-        let interim = ''
-        for (let i = e.resultIndex; i < e.results.length; i++) {
-          const result = e.results[i]!
-          const words = result[0]?.transcript.trim() ?? ''
-          if (result.isFinal) heard = `${heard} ${words}`.trim().slice(-KEEP)
-          else interim = `${interim} ${words}`
+      let quiet = 0
+      let again = 0
+      const hush = () => {
+        window.clearTimeout(quiet)
+        quiet = window.setTimeout(() => {
+          debugLog('speech quiet, back to the fallback')
+          heard = ''
+          report(fallback)
+        }, QUIET_MS)
+      }
+      report(fallback)
+      const rec = Recognition === undefined ? null : new Recognition()
+      if (rec !== null) {
+        const listen = () => {
+          try {
+            rec.start()
+          } catch (e) {
+            debugLog('speech start failed', e)
+          }
         }
-        report(`${heard} ${interim.trim()}`.trim().slice(-KEEP))
-      })
-      rec.addEventListener('error', e => {
-        debugLog(`speech error: ${e.error} ${e.message}`)
-        if (FINAL.has(e.error)) live = false
-      })
-      rec.addEventListener('end', () => {
-        debugLog(`speech ended, again: ${live}`)
-        if (live) rec.start()
-      })
-      rec.start()
+        rec.continuous = true
+        rec.interimResults = true
+        rec.lang = navigator.language
+        rec.addEventListener('result', e => {
+          let interim = ''
+          for (let i = e.resultIndex; i < e.results.length; i++) {
+            const result = e.results[i]!
+            const words = result[0]?.transcript.trim() ?? ''
+            if (result.isFinal && words !== '') {
+              heard = `${heard} ${words}`.trim().slice(-KEEP)
+              phrase(words)
+            } else {
+              interim = `${interim} ${words}`
+            }
+          }
+          const text = `${heard} ${interim.trim()}`.trim()
+          if (text !== '') {
+            report(text.slice(-KEEP).toUpperCase())
+            hush()
+          }
+        })
+        rec.addEventListener('error', e => {
+          debugLog(`speech error: ${e.error} ${e.message}`)
+          if (FINAL.has(e.error)) live = false
+        })
+        rec.addEventListener('end', () => {
+          debugLog(`speech ended, again: ${live}`)
+          if (live) again = window.setTimeout(listen, AGAIN_MS)
+        })
+        listen()
+      }
       return () => {
         live = false
-        rec.abort()
+        window.clearTimeout(quiet)
+        window.clearTimeout(again)
+        rec?.abort()
       }
     }
     return undefined
-  }, [on])
+  }, [on, fallback])
 }

@@ -1,13 +1,14 @@
 import { useEffect, useEffectEvent } from 'react'
 
 import { debugLog } from '../core/gpu/env'
-import { SOUND_BOOP_HIT, SOUND_REST_MS, joltOf } from './costume'
+import { SOUND_BOOP_HIT, SOUND_REST_MS, autoGapMs, joltOf } from './costume'
 
 import type { Accel } from './costume'
 
-export type BoopSource = 'tap' | 'motion' | 'key' | 'sound'
+export type BoopSource = 'tap' | 'motion' | 'key' | 'sound' | 'voice' | 'auto'
 
 const SOUND_POLL_MS = 50
+const AUTO_POLL_MS = 1000
 
 const accelOf = (e: DeviceMotionEvent): Accel | null => {
   const a = e.accelerationIncludingGravity
@@ -15,17 +16,36 @@ const accelOf = (e: DeviceMotionEvent): Accel | null => {
 }
 
 // A knock on the phone while `motion` is on, a loud onset while `sound` is
-// on, and any key, which is what a Bluetooth camera remote sends.
+// on, any key, which is what a Bluetooth camera remote sends, and a boop by
+// itself once `idle` has run past a random wait under `autoS` seconds.
 export function useBoops(opts: {
   motion: boolean
   threshold: number
   sound: boolean
   hit: () => number
+  autoS: number
+  idle: () => number
   onBoop: (source: BoopSource) => void
 }) {
   const boop = useEffectEvent(opts.onBoop)
   const hitNow = useEffectEvent(opts.hit)
-  const { motion, threshold, sound } = opts
+  const idleNow = useEffectEvent(opts.idle)
+  const { motion, threshold, sound, autoS } = opts
+
+  useEffect(() => {
+    if (autoS > 0) {
+      let gap = autoGapMs(autoS)
+      const id = window.setInterval(() => {
+        if (idleNow() >= gap) {
+          debugLog(`boop auto after ${Math.round(gap / 1000)}s`)
+          gap = autoGapMs(autoS)
+          boop('auto')
+        }
+      }, AUTO_POLL_MS)
+      return () => window.clearInterval(id)
+    }
+    return undefined
+  }, [autoS])
 
   useEffect(() => {
     if (sound) {

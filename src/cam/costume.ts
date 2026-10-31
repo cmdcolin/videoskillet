@@ -35,11 +35,44 @@ export interface Accel {
 export const joltOf = (a: Accel, b: Accel) =>
   Math.hypot(a.x - b.x, a.y - b.y, a.z - b.z)
 
-// The threshold a link asks for with `boop=`, or the default.
-export function boopThreshold(search: string) {
-  const n = Number(new URLSearchParams(search).get('boop'))
-  return Number.isFinite(n) && n > 0 ? n : BOOP_JOLT
+// What the chyron says while nobody is talking.
+export const DEFAULT_SAY = 'TAKE ME TO YOUR LEADER'
+
+// The longest the picture holds one look with no boop, in seconds. Each wait is
+// drawn between AUTO_SHORTEST of this and all of it.
+export const AUTO_S = 40
+const AUTO_SHORTEST = 0.4
+
+export interface CostumeSettings {
+  // `boop=`: the knock threshold, m/s².
+  threshold: number
+  // `say=`: the chyron's words while it is quiet.
+  say: string
+  // `auto=`: the longest wait for a boop by itself, in seconds; 0 switches it
+  // off.
+  autoS: number
 }
+
+const positive = (raw: string | null, fallback: number) => {
+  const n = Number(raw)
+  return raw !== null && raw !== '' && Number.isFinite(n) && n >= 0
+    ? n
+    : fallback
+}
+
+export function costumeSettings(search: string): CostumeSettings {
+  const q = new URLSearchParams(search)
+  const say = (q.get('say') ?? '').trim()
+  const threshold = positive(q.get('boop'), BOOP_JOLT)
+  return {
+    threshold: threshold > 0 ? threshold : BOOP_JOLT,
+    say: say === '' ? DEFAULT_SAY : say.toUpperCase(),
+    autoS: positive(q.get('auto'), AUTO_S),
+  }
+}
+
+export const autoGapMs = (autoS: number, rand: Rand = Math.random) =>
+  autoS * 1000 * (AUTO_SHORTEST + rand() * (1 - AUTO_SHORTEST))
 
 export const wantsCostume = (search: string) =>
   new URLSearchParams(search).has('costume')

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 
+import { debugLog } from '../core/gpu/env'
 import { trace } from '../core/gpu/trace'
 import { reason } from '../ui/format'
 import { usePersistedString } from '../ui/storage'
@@ -141,6 +142,7 @@ export function useCamera(
     // Another app taking the camera, or the phone ending it in the background,
     // leaves the last frame standing unless something says so.
     got.getVideoTracks()[0]?.addEventListener('ended', () => {
+      debugLog(`camera track ended, current: ${stream.current === got}`)
       if (stream.current === got) setState('off')
     })
     show(opened.video, opened.faces === 'user')
@@ -152,6 +154,7 @@ export function useCamera(
 
   const open = async (want: Facing, deviceId?: string) => {
     const mine = ++ask.current
+    debugLog(`camera open #${mine}: ${want}`)
     setState('starting')
     setError(null)
     // Most phones cannot hold both cameras open at once, so the one on screen
@@ -163,6 +166,7 @@ export function useCamera(
     try {
       opened = await openCamera(want, deviceId)
     } catch (e) {
+      debugLog(`camera open #${mine} failed, latest #${ask.current}`, e)
       if (mine === ask.current) {
         setState('error')
         setError(e)
@@ -170,9 +174,11 @@ export function useCamera(
       return
     }
     if (mine !== ask.current) {
+      debugLog(`camera open #${mine} superseded by #${ask.current}`)
       stopAll(opened.stream)
       return
     }
+    debugLog(`camera open #${mine} on screen`)
     take(opened)
   }
 

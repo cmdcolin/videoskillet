@@ -17,6 +17,7 @@ import { useCamera } from './useCamera'
 import { canHear, useSpeech } from './useSpeech'
 import { allowMotion } from './useTilt'
 
+import type { CostumeSettings } from './costume'
 import type { Scene } from './scene'
 import type { BoopSource } from './useBoops'
 import type { Facing } from './useCamera'
@@ -24,7 +25,8 @@ import type { Facing } from './useCamera'
 // The camera page with nothing on it but the picture, for wearing. Each boop
 // breaks the picture with a fault from the deck and lands a random look under
 // it.
-export function CostumePage(props: { threshold: number }) {
+export function CostumePage(props: { settings: CostumeSettings }) {
+  const { settings } = props
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const scene = useRef<Scene>({
     ...CLEAN,
@@ -33,6 +35,7 @@ export function CostumePage(props: { threshold: number }) {
     keyHue: null,
   })
   const restUntil = useRef(0)
+  const lastBoop = useRef(0)
   const boardNow = (slice: number) => {
     const board = boardOf(scene.current, slice)
     return { ...board, controls: roused(board.controls) }
@@ -48,7 +51,7 @@ export function CostumePage(props: { threshold: number }) {
   const [started, setStarted] = useState(false)
   const [motion, setMotion] = useState(false)
   const [sound, setSound] = useState(false)
-  const [talk, setTalk] = useState(false)
+  const [talk, setTalk] = useState(true)
   const [captioning, setCaptioning] = useState(false)
 
   useWakeLock(eng.engine !== null)
@@ -58,6 +61,7 @@ export function CostumePage(props: { threshold: number }) {
     if (eng.engine !== null && now >= restUntil.current) {
       const next = rollBoop(scene.current.look)
       restUntil.current = now + next.fault.seconds * 1000 + BOOP_REST_MS
+      lastBoop.current = now
       debugLog(
         `boop ${source}: ${next.fault.name} to ${[next.look.name, ...Object.keys(next.layers)].join('+')}`,
       )
@@ -74,13 +78,19 @@ export function CostumePage(props: { threshold: number }) {
     }
   }
 
-  useSpeech(captioning, text => eng.engine?.setCaption(text))
+  useSpeech(captioning, {
+    fallback: settings.say,
+    onText: text => eng.engine?.setCaption(text),
+    onPhrase: () => boop('voice'),
+  })
 
   useBoops({
     motion,
-    threshold: props.threshold,
+    threshold: settings.threshold,
     sound,
     hit: () => eng.engine?.audioState.hit ?? 0,
+    autoS: started ? settings.autoS : 0,
+    idle: () => performance.now() - lastBoop.current,
     onBoop: boop,
   })
 
@@ -95,6 +105,7 @@ export function CostumePage(props: { threshold: number }) {
       (e: unknown) => debugLog('costume sound refused', e),
     )
     cam.start(facing)
+    lastBoop.current = performance.now()
     if (talk) {
       scene.current = { ...scene.current, tweaks: { cgMix: 1 } }
       show()
@@ -128,20 +139,20 @@ export function CostumePage(props: { threshold: number }) {
         ) : (
           <div className={camStyles.notice}>
             <p>
-              Tap the screen, knock on the phone, press a button on a Bluetooth
-              remote or make a loud noise for a new picture. Sound in the room
-              knocks the picture out of hold.
+              Tap the screen, knock on the phone, talk, make a loud noise or
+              press a button on a Bluetooth remote for a new picture. It also
+              changes by itself every so often.
             </p>
-            {canHear() ? (
-              <label className={styles.talk}>
-                <input
-                  type="checkbox"
-                  checked={talk}
-                  onChange={e => setTalk(e.target.checked)}
-                />
-                Put what people say on the picture
-              </label>
-            ) : null}
+            <label className={styles.talk}>
+              <input
+                type="checkbox"
+                checked={talk}
+                onChange={e => setTalk(e.target.checked)}
+              />
+              {canHear()
+                ? `Show what people say, and “${settings.say}” when it is quiet`
+                : `Show “${settings.say}”`}
+            </label>
             <div className={styles.starts}>
               <button className={camStyles.start} onClick={() => start('user')}>
                 Screen-side camera
