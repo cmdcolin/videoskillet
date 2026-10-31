@@ -15,11 +15,13 @@
 //
 // It writes into the program composite in place, which is safe because every
 // thread reads and writes its own sample — the key's neighbourhood is read out
-// of the font ROM, not out of the signal.
+// of the font ROM, and the fill's out of the frame store, never out of the
+// signal being written.
 
 @group(0) @binding(0) var<uniform> P: Params;
 @group(0) @binding(1) var<storage, read_write> comp: array<f32>;
 @group(0) @binding(2) var<storage, read> cg: array<u32>;
+@group(0) @binding(3) var<storage, read> loopBus: array<f32>;
 
 // This box's own font ROM, with its own pins held on it. The caption decoder in
 // the set has a chip of its own and bends of its own — two boxes, so bending
@@ -87,6 +89,49 @@ fn cgKeyAt(x: f32, y: f32) -> f32 {
   return acc / 7.0;
 }
 
+// The store's chroma, separated by the same comb as mix_b's `storeChroma`: a
+// bandpass at fsc along the line, less the mean of the lines above and below,
+// where the subcarrier has inverted.
+fn storeBand(i: i32) -> f32 {
+  return 0.5 * loopBus[clampIdx(i)]
+    - 0.25 * (loopBus[clampIdx(i - 2)] + loopBus[clampIdx(i + 2)]);
+}
+
+fn storeChroma(i: i32) -> f32 {
+  let line = i32(SPL);
+  return 0.5 * storeBand(i)
+    - 0.25 * (storeBand(i - line) + storeBand(i + line));
+}
+
+// The fill input patched to the mixer loop's frame store. The store records
+// the program at the end of every frame, this box included, so letters filled
+// from it hold whatever was inside them the frame before: a still that only
+// changes where the loop or the store's strobe changes it. Inverted, the
+// raster is the store and program shows through the letters.
+//
+// Colour framed: a frame read out on the other subcarrier phase from the one
+// it was written on gets its chroma inverted, which is a half turn of the
+// mix_b trim. Until the page's link has loaded the store is tracking program,
+// so the fill is program too.
+fn busFill(n: u32, program: f32) -> f32 {
+  if (P.cgBus < 1.5) {
+    return program;
+  }
+  if (P.cgFlip > 0.5) {
+    return loopBus[n] - 2.0 * storeChroma(i32(n));
+  }
+  return loopBus[n];
+}
+
+// The box's own characters as video, at the fill level and in the colour its
+// generator lays them in: luma plus quadrature chroma on the house carrier, so
+// coloured type dot-crawls and is decoded like any other colour.
+fn charFill(n: u32, ink: f32) -> f32 {
+  let sc = carrier(n, P.frame);
+  let chroma = VIDEO_RANGE * P.cgSat * (cos(P.cgHue) * sc.x + sin(P.cgHue) * sc.y);
+  return mix(IRE_BLACK, P.cgFill + chroma, ink);
+}
+
 // The comparator the processed key is sliced at. On a photograph this is where
 // a matte's edge lands; on type it is stroke weight — down, and thin strokes
 // fuse and the line grows a halo; up, and stems drop out of the middle of
@@ -112,15 +157,7 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
   let x = f32(s - ACTIVE_START);
   let y = f32(row - ACTIVE_TOP);
 
-  // The fill wire: the characters as *video*, black where they are not. This is
-  // the half that makes the box a keyer rather than an overlay, and it is why
-  // the trim below has anything to do.
-  //
-  // The fill is authored in IRE and can be pushed past peak white, which is not
-  // a guard rail left off: type at full swing is the harshest thing a composite
-  // path ever carries, and everything downstream that reacts to level — the
-  // AGC, the tape, the sound detector's limiter — reacts to it here.
-  let fill = mix(IRE_BLACK, P.cgFill, cgSlice(cgKeyAt(x, y)));
+  let n = row * SPL + s;
 
   // The key wire, read at its own position. The key path and the video path are
   // different lengths of circuit and a real box trims the difference out; what
@@ -131,7 +168,8 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
   // and the two shapes stop overlapping at all, which leaves an outline with
   // nothing inside it.
   let kx = x + P.cgKeyDelay;
-  var matte = cgSlice(cgKeyAt(kx, y));
+  let body = cgSlice(cgKeyAt(kx, y));
+  var matte = body;
 
   // The edge generator, OR-ed into the key rather than drawn separately —
   // which is how the box made a border out of one extra tap. The matte widens
@@ -141,6 +179,23 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
   if (P.cgEdgeX != 0.0 || P.cgEdgeY != 0.0) {
     matte = max(matte, cgSlice(cgKeyAt(kx - P.cgEdgeX, y - P.cgEdgeY)));
   }
+
+  // The fill wire. From the box itself it is the characters as *video*, black
+  // where they are not. This is the half that makes the box a keyer rather
+  // than an overlay, and it is why the trim above has anything to do.
+  //
+  // The fill is authored in IRE and can be pushed past peak white, which is not
+  // a guard rail left off: type at full swing is the harshest thing a composite
+  // path ever carries, and everything downstream that reacts to level — the
+  // AGC, the tape, the sound detector's limiter — reacts to it here.
+  //
+  // From the loop bus the fill is a whole picture, so the trim only moves the
+  // cut. The edge generator still fills its border with its own black, which is
+  // what keeps a drop shadow under type filled from another picture.
+  var fill = charFill(n, cgSlice(cgKeyAt(x, y)));
+  if (P.cgBus > 0.5) {
+    fill = mix(busFill(n, comp[n]), IRE_BLACK, matte - body);
+  }
   if (P.cgInvert > 0.5) {
     // A downstream keyer inverted cuts letter-shaped holes in a full-frame
     // fill, and it does that across the whole raster rather than inside the
@@ -148,6 +203,5 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
     matte = 1.0 - matte;
   }
 
-  let n = row * SPL + s;
   comp[n] = mix(comp[n], fill, P.cgMix * matte);
 }

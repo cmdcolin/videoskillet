@@ -8,7 +8,7 @@ clamped, not refused.
 Modulation sources for #mod=: sine, triangle, walk, smooth, hold, lorenz, level, hit, trig, pull.
 Up to 8 routings, rate 0.02..10 Hz, depth 0..1.
 
-Presets for #preset=: clean, vhs, protectedTape, wornTape, pictureSearch, stuckTape, trackingBand, servoHunt, hueRidesTheLight, overDeviatedWhite, oneLineBack, broadcast, mistunedRf, fringeReception, ignitionStorm, deadChannel, dimmerHash, scrambledChannel, turboSyncLoss, almostDecoded, ssavi, verticalHoldGone, bentScan, supplyChaos, fullCollapse, bassSmack, lineNineteen, collapsedAxes, mixerLoop, strobeTrails, keyLoop, fbBloom, woundSpiral, shadowLadder, ladderClimb, subcarrierSiren, huntingServos, meltdown, zoomBloom, aimedAHairOff, turnedAHair, theIrisHoldsTheEdge, tunnelOut, spiral, subcarrierComb, ringLoop, ringLadder, ringStorm, ringOnTheBeat, invertedRungs, ringInTheHighlights, ringInTheShadows, warpInTheHighlights, warpInTheShadows, rungsInTheLight, ringingInTheHighlights, chasingItsOwnColour, carvedByTheLivePicture, theHoleTheSubjectKeeps, itOnlyEatsTheRed, theFaceStaysOutOfIt, theWrongClock, clockAndCrystal, colourInTheDark, greyUnderTheColour, noColourToTrade, theLightIsALapBehind, lightBecomesHue, theSecondCrystal, keyedOnWhatItMade, layeredByBrightness, intermodLoop, whereTheProductsLand, shearedAndStacked, servoWarp, bothLoops, runaway, syncInTheLoop, lorenzLoop, strobeBloom, beamBendsItsOwnScan, flagOnEveryLap, colourKeepsWalking, shearedEveryGeneration, encoderWiredBackwards, wheelBehindTheSubject, handOnTheChassis, cleanDissolve, dirtyMix, ringMix, outOfVolts, pauseFight, relayMidFrame, leakingFader, genlockLosesGrip, pirateFeed, negativeDrifter, houseDeckHeld, differenceKey, greenScreen, matteFlood, keySweep, keyIntoTheLoop, wipeFight, negative, signalAndGroundSwapped, sVideoMiswire, noTerminator, daisyChained, looseConnector, bentEnhancer, contourLines, pouredColour, silkscreen, falseColour, blockColour, litAtTheEdges, contoursOnContours, ringPlaid, twoMultipliers, punchIn, rainbowStorm, neonTube, strobedTube, roundTube, burnedIn, degauss, greenTerminal, radarTube, noseAgainstTheGlass, bentDetailer, howlroundLoom, falseSync, paperclipChroma, blackRestore, magnetised, misconverged, transmissionFault, nightMonitor, everyColourButOne, pastTheYoke, arcStorm, railSlam, chromaRails, outOfHeadroom, soundAtTheRails, lightThatStays, servicePosition, foldover, powerOff, powerOn, channelChange, splitPhase, wiggledPlugs, threeServos, cometTails, nightTube, hairOffTheCrystal, clampInThePicture, colourAStepRight, aimedAtTheVcr, oneHeadPacked, tapeIn, tintInASlowHand, overmodulatedChyron, bentFontRom, scrambledCharacterRom, thePictureInTheType, scrambledIdent, typeEcho, fontCrawl, pageShuffle, wanderingInset.
+Presets for #preset=: clean, vhs, protectedTape, wornTape, pictureSearch, stuckTape, trackingBand, servoHunt, hueRidesTheLight, overDeviatedWhite, oneLineBack, broadcast, mistunedRf, fringeReception, ignitionStorm, deadChannel, dimmerHash, scrambledChannel, turboSyncLoss, almostDecoded, ssavi, verticalHoldGone, bentScan, supplyChaos, fullCollapse, bassSmack, lineNineteen, collapsedAxes, mixerLoop, strobeTrails, keyLoop, fbBloom, woundSpiral, shadowLadder, ladderClimb, subcarrierSiren, huntingServos, meltdown, zoomBloom, aimedAHairOff, turnedAHair, theIrisHoldsTheEdge, tunnelOut, spiral, subcarrierComb, ringLoop, ringLadder, ringStorm, ringOnTheBeat, invertedRungs, ringInTheHighlights, ringInTheShadows, warpInTheHighlights, warpInTheShadows, rungsInTheLight, ringingInTheHighlights, chasingItsOwnColour, carvedByTheLivePicture, theHoleTheSubjectKeeps, itOnlyEatsTheRed, theFaceStaysOutOfIt, theWrongClock, clockAndCrystal, colourInTheDark, greyUnderTheColour, noColourToTrade, theLightIsALapBehind, lightBecomesHue, theSecondCrystal, keyedOnWhatItMade, layeredByBrightness, intermodLoop, whereTheProductsLand, shearedAndStacked, servoWarp, bothLoops, runaway, syncInTheLoop, lorenzLoop, strobeBloom, beamBendsItsOwnScan, flagOnEveryLap, colourKeepsWalking, shearedEveryGeneration, encoderWiredBackwards, wheelBehindTheSubject, handOnTheChassis, cleanDissolve, dirtyMix, ringMix, outOfVolts, pauseFight, relayMidFrame, leakingFader, genlockLosesGrip, pirateFeed, negativeDrifter, houseDeckHeld, differenceKey, greenScreen, matteFlood, keySweep, keyIntoTheLoop, wipeFight, negative, signalAndGroundSwapped, sVideoMiswire, noTerminator, daisyChained, looseConnector, bentEnhancer, contourLines, pouredColour, silkscreen, falseColour, blockColour, litAtTheEdges, contoursOnContours, ringPlaid, twoMultipliers, punchIn, rainbowStorm, neonTube, strobedTube, roundTube, burnedIn, degauss, greenTerminal, radarTube, noseAgainstTheGlass, bentDetailer, howlroundLoom, falseSync, paperclipChroma, blackRestore, magnetised, misconverged, transmissionFault, nightMonitor, everyColourButOne, pastTheYoke, arcStorm, railSlam, chromaRails, outOfHeadroom, soundAtTheRails, lightThatStays, servicePosition, foldover, powerOff, powerOn, channelChange, splitPhase, wiggledPlugs, threeServos, cometTails, nightTube, hairOffTheCrystal, clampInThePicture, colourAStepRight, aimedAtTheVcr, oneHeadPacked, tapeIn, tintInASlowHand, overmodulatedChyron, bentFontRom, scrambledCharacterRom, thePictureInTheType, scrambledIdent, typeEcho, fontCrawl, heldRaster, pageShuffle, wanderingInset.
 
 ## Signal (source A)
 
@@ -474,6 +474,27 @@ cgKeyMHz  (key bandwidth)
 cgInvert  (key invert)
   0=normal 1=inverted  default 0
   Which side of the key is cut. Inverted, the box fills the raster and the letters are holes in it.
+
+cgFillFrom  (fill)
+  0=characters 1=loop bus  default 0
+  What the key lets through. **Characters** is the box's own fill
+          wire: the type as video, black around it.
+
+          **Loop bus** patches the mixer loop's frame store into the fill input.
+          The store records the picture at the end of every frame, this box's
+          output included, so the letters hold whatever was inside them the
+          frame before: a still that changes only where the mixer loop changes
+          it. With the key inverted the whole raster is the held frame, and the
+          live picture shows through the letters. The edge generator still
+          fills the drop shadow with black.
+
+cgHueDeg  (character hue)
+  0..360 step 1 deg  default 0
+  The colour the box lays its characters in, as a phase on the subcarrier. The type is encoded colour, so a decoder that has lost its lock or a tape that smears chroma treats it like any other colour in the picture.
+
+cgSat  (character saturation)
+  0..0.6 step 0.01  default 0
+  How strongly coloured the characters are. At 0 they are white. The colour rides on the fill level, so near 100 IRE its peaks run past peak white, clip, and the type reads almost white. Bring the fill level down to 50 or 60 for a strong colour.
 
 cgEdgeX  (edge offset x)
   -24..24 step 1 smp  default 0

@@ -319,6 +319,10 @@ export const PARAM_DEFS = [
   ['cgEdgeX', 'f32'], // edge generator's horizontal delay, samples
   ['cgEdgeY', 'f32'], // edge generator's vertical delay, lines
   ['cgFill', 'f32'], // fill level, IRE (past 100 it overmodulates)
+  ['cgHue', 'f32'], // the characters' colour, radians on the subcarrier
+  ['cgSat', 'f32'], // and its saturation, 0 white
+  ['cgBus', 'f32'], // fill from the frame store: 0 off, 1 the store tracks program, 2 the store holds
+  ['cgFlip', 'f32'], // 1 when the store was written on the other subcarrier phase
   ['cgInvert', 'f32'], // cut the other way: letter-shaped holes in a full fill
   ['cgRomAddr', 'f32'], // this box's own font ROM, address line held high
   ['cgRomData', 'f32'], // and its data line; negative holds it low

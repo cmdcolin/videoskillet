@@ -1,10 +1,11 @@
 // When the mixer loop's frame store (`compPrev`, written by `storePrev`)
 // records, and which fill the keyer reads. The store is a frame synchronizer:
-// the loop fader reads it, and so does the keyer when its fill is patched to
-// the loop bus or to freeze.
+// the loop fader reads it, and so do the keyer and the character generator when
+// their fill is patched to the loop bus (the keyer also to freeze).
 //
 // - Plain recording runs while something reads a live store: the loop fader up,
-//   or the keyer cutting with the loop bus as its fill. `cfbHold` strobes both
+//   or the keyer or the character generator cutting with the loop bus as its
+//   fill. `cfbHold` strobes both
 //   by skipping frames, and trails force an even period so every capture shares
 //   one subcarrier frame parity.
 // - Freeze is the synchronizer's freeze button. The store records the program
@@ -19,6 +20,9 @@
 //   the link has settled, freeze holds the last frame recorded and the loop bus
 //   builds its trails over it, and a source picked by hand leaves it alone, so
 //   a frozen picture can sit behind whatever is keyed in next.
+// - The character generator's bus fill is always colour framed. Its fill input
+//   is a switcher input, and a frame sync that fed one out of colour frame
+//   could not be timed into the switcher at all.
 
 import { bOn } from './feedgates'
 
@@ -43,6 +47,8 @@ export function keyFillOf(c: Controls, bEnabled: boolean): KeyFill | null {
   return KEY_FILLS[Math.round(c.bKeyFill)] ?? 'program'
 }
 
+const chyronReadsBus = (c: Controls) => c.cgMix > 0 && c.cgFillFrom > 0.5
+
 export function strobePeriod(c: Controls): number {
   return c.cfbTrail > 0
     ? 2 * Math.ceil((c.cfbHold + 1) / 2)
@@ -57,6 +63,11 @@ export interface StoreFrame {
   // Whether colour framing inverts the store's chroma this frame: it is on, and
   // the store was last written on the other subcarrier phase.
   flip: boolean
+  // The `cgBus` value chyron reads: 0 its own characters, 1 the bus while the
+  // store still tracks program, 2 the bus once the store holds.
+  cgBus: number
+  // The character generator's colour framing, which is always on.
+  cgFlip: boolean
 }
 
 // Frames a settled link must stay quiet before freeze holds: about a second,
@@ -102,12 +113,16 @@ export class FrameStore {
     busy = false,
   ): StoreFrame {
     const at = this.decide(c, bEnabled, frame, busy)
-    const flip =
-      c.bKeyFillFraming > 0.5 &&
-      at.fill > 1.5 &&
-      (frame - this.writtenAt) % 2 !== 0
+    const otherPhase = (frame - this.writtenAt) % 2 !== 0
+    const flip = c.bKeyFillFraming > 0.5 && at.fill > 1.5 && otherPhase
+    const bus = chyronReadsBus(c)
     if (at.records) this.writtenAt = frame
-    return { ...at, flip }
+    return {
+      ...at,
+      flip,
+      cgBus: bus ? (this.loading ? 1 : 2) : 0,
+      cgFlip: bus && otherPhase,
+    }
   }
 
   private decide(
@@ -115,7 +130,7 @@ export class FrameStore {
     bEnabled: boolean,
     frame: number,
     busy: boolean,
-  ): Omit<StoreFrame, 'flip'> {
+  ): Pick<StoreFrame, 'records' | 'fill'> {
     this.quiet = busy ? 0 : this.quiet + 1
     if (this.settling && this.quiet >= QUIET_FRAMES) {
       this.loading = false
@@ -138,7 +153,8 @@ export class FrameStore {
       return { records: frame % strobePeriod(c) === 0, fill: 0 }
     return {
       records:
-        (c.cfbMix !== 0 || fill === 'loop') && frame % strobePeriod(c) === 0,
+        (c.cfbMix !== 0 || fill === 'loop' || chyronReadsBus(c)) &&
+        frame % strobePeriod(c) === 0,
       fill: c.bKeyFill,
     }
   }

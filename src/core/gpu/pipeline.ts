@@ -300,7 +300,13 @@ export class Engine implements EngineApi {
   // and travels in presets and links like every other fault.
   private strobeGate = new StrobeGate()
   private frameStore = new FrameStore()
-  private store: StoreFrame = { records: false, fill: 0, flip: false }
+  private store: StoreFrame = {
+    records: false,
+    fill: 0,
+    flip: false,
+    cgBus: 0,
+    cgFlip: false,
+  }
   private osd = new OsdState()
   private osdStep: OsdStep = OSD_IDLE
   private modSlots: ModSlot[] = []
@@ -892,6 +898,8 @@ export class Engine implements EngineApi {
           { buffer: this.paramsBuf },
           { buffer: this.compA },
           { buffer: this.cgBuf },
+          // the mixer loop's bus, for the fill input
+          { buffer: this.compPrev },
         ],
         perLine,
         () => c.cgMix > 0,
@@ -2638,6 +2646,8 @@ export class Engine implements EngineApi {
     )
     vals.bKeyFill = this.store.fill
     vals.bKeyFillFlip = this.store.flip ? 1 : 0
+    vals.cgBus = this.store.cgBus
+    vals.cgFlip = this.store.cgFlip ? 1 : 0
     packParams(vals, this.paramScratch)
     d.queue.writeBuffer(this.paramsBuf, 0, this.paramScratch)
     if (this.aFeedOn()) this.packFeed('a', vals, this.feedParamsA, mixU.decks.a)

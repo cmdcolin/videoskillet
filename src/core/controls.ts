@@ -142,6 +142,9 @@ export const DEFAULT_CONTROLS = {
   cgEdgeX: 0, // edge generator's horizontal delay, samples (0 = no edge)
   cgEdgeY: 0, // edge generator's vertical delay, lines
   cgFill: 100, // fill level, IRE
+  cgHueDeg: 0, // the characters' colour, a phase on the subcarrier
+  cgSat: 0, // and its saturation (0 = white characters)
+  cgFillFrom: 0, // 0 its own characters, 1 the mixer loop bus
   cgInvert: 0, // cut the other way: letter-shaped holes in a full-frame fill
   cgRomAddr: 0, // a pin held on this box's font ROM, address bus
   cgRomData: 0, // and on its data bus

@@ -289,6 +289,27 @@ export const CARD_PRESETS: CardPreset[] = [
     patch: { cgMix: 1, cgScale: 5, cgPageAddr: 3, cgPageSlip: 0.25 },
   },
   {
+    group: 'Character generator (chyron)',
+    name: 'coloured type',
+    blurb:
+      'the characters laid in green at 55 IRE, low enough that the colour does not clip at peak white',
+    patch: { cgMix: 1, cgScale: 5, cgFill: 55, cgSat: 0.4, cgHueDeg: 200 },
+  },
+  {
+    group: 'Character generator (chyron)',
+    name: 'held in the letters',
+    blurb:
+      'the fill patched to the loop bus: the letters hold the frame before, so on a moving picture they show a still',
+    patch: { cgMix: 1, cgScale: 6, cgFillFrom: 1, cgEdgeX: 4, cgEdgeY: 3 },
+  },
+  {
+    group: 'Character generator (chyron)',
+    name: 'live through the letters',
+    blurb:
+      'the loop bus fill with the key inverted: the raster holds a frame and the moving picture shows only through the type',
+    patch: { cgMix: 1, cgScale: 6, cgFillFrom: 1, cgInvert: 1 },
+  },
+  {
     group: 'PiP inset (source B)',
     name: 'corner inset',
     blurb:

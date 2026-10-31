@@ -1628,6 +1628,46 @@ export const GROUPS: Group[] = [
         help: 'Which side of the key is cut. Inverted, the box fills the raster and the letters are holes in it.',
       },
       {
+        key: 'cgFillFrom',
+        id: 320,
+        label: 'fill',
+        min: 0,
+        max: 1,
+        step: 1,
+        unit: '',
+        choices: ['characters', 'loop bus'],
+        help: `What the key lets through. **Characters** is the box's own fill
+          wire: the type as video, black around it.
+
+          **Loop bus** patches the mixer loop's frame store into the fill input.
+          The store records the picture at the end of every frame, this box's
+          output included, so the letters hold whatever was inside them the
+          frame before: a still that changes only where the mixer loop changes
+          it. With the key inverted the whole raster is the held frame, and the
+          live picture shows through the letters. The edge generator still
+          fills the drop shadow with black.`,
+      },
+      {
+        key: 'cgHueDeg',
+        id: 321,
+        label: 'character hue',
+        min: 0,
+        max: 360,
+        step: 1,
+        unit: 'deg',
+        help: 'The colour the box lays its characters in, as a phase on the subcarrier. The type is encoded colour, so a decoder that has lost its lock or a tape that smears chroma treats it like any other colour in the picture.',
+      },
+      {
+        key: 'cgSat',
+        id: 322,
+        label: 'character saturation',
+        min: 0,
+        max: 0.6,
+        step: 0.01,
+        unit: '',
+        help: 'How strongly coloured the characters are. At 0 they are white. The colour rides on the fill level, so near 100 IRE its peaks run past peak white, clip, and the type reads almost white. Bring the fill level down to 50 or 60 for a strong colour.',
+      },
+      {
         key: 'cgEdgeX',
         id: 258,
         label: 'edge offset x',
@@ -4159,6 +4199,12 @@ const chyroning: SliderNeed = {
   fix: 0.9,
   hint: 'the cg faded up',
 }
+const ownFill: SliderNeed = {
+  key: 'cgFillFrom',
+  ok: (v: number) => v < 0.5,
+  fix: 0,
+  hint: 'the fill set to "characters"',
+}
 const displaying: SliderNeed = {
   key: 'osd',
   ok: above0,
@@ -4281,6 +4327,9 @@ export const NEEDS: Partial<Record<ControlKey, SliderNeed>> = {
   cgEdgeY: chyroning,
   cgFill: chyroning,
   cgInvert: chyroning,
+  cgFillFrom: chyroning,
+  cgHueDeg: ownFill,
+  cgSat: ownFill,
   cgRomAddr: chyroning,
   cgRomData: chyroning,
   cgRomCross: chyroning,

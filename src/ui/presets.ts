@@ -3441,6 +3441,21 @@ export const PRESETS: PresetDef[] = [
     ],
   },
   {
+    name: 'heldRaster',
+    displayName: 'held raster',
+    group: 'Switcher',
+    blurb:
+      "The chyron's fill patched to the mixer loop's frame store and its key inverted. The store records every frame with the chyron in it, so everywhere outside the letters keeps the frame it held when the page loaded, and the moving picture shows only through the type, six samples to the dot. A still picture looks unchanged, because the held frame and the live one are the same; it needs a clip, a camera or a generator that moves.",
+    patch: {
+      cgMix: 1,
+      cgFillFrom: 1,
+      cgInvert: 1,
+      cgScale: 6,
+      cgX: 0.02,
+      cgY: 0.2,
+    },
+  },
+  {
     name: 'pageShuffle',
     displayName: 'page shuffle',
     group: 'Switcher',

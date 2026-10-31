@@ -282,14 +282,22 @@ same shapes separately. And **the edge generator is OR-ed into the key, not
 drawn**: widening the matte to the shadow's shape puts the fill's own black out
 there for free, which is how one extra tap bought a border.
 
+The fill input takes the box's own characters or the mixer loop bus
+(`cgFillFrom`). The bus is a whole picture, so it is fed in unshaped: the key
+does all the cutting, and the edge generator fills its border with black. The
+store records every frame with the chyron in it, so letters filled from it hold
+the frame before, and an inverted key holds the whole raster with the live
+picture showing through the letters. That fill is always colour framed, since
+a frame sync feeding a switcher input has to be. The characters themselves can
+be coloured (`cgHueDeg`, `cgSat`) as luma plus chroma on the house carrier, at
+the fill level, so a saturated colour at 100 IRE runs past peak white.
+
 What it does not do:
 
-- **The fill is the box's own characters and nothing else.** `keyFill`'s trick
-  on the chroma keyer — program A, a matte generator, or the mixer loop bus —
-  would make an inverted key a window onto the feedback bus rather than onto
-  program, which is the one obviously good thing left here.
-- **Monochrome.** A CG with a colour matte generator is `bKeyMatte*` pointed at
-  this instead, plus the same attribute work the teletype card wants.
+- **Freeze as the fill.** It would fit the same input, but the store has one
+  freeze button, and the keyer and this box would both be pressing it.
+- **Per-character attributes.** The colour is the whole page's, which is the
+  same attribute work the teletype card wants.
 
 The generator has its own font ROM and its own set of pins to hold (`cgRomAddr`,
 `cgRomData`, `cgRomCross`, `cgRomStride`, `cgRomRot`, `cgPageAddr`) and its own

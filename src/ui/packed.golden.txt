@@ -305,6 +305,9 @@
 317 bKeyFillHueDeg step=1 default=0
 318 bKeyFillMixA step=0.01 default=0
 319 bKeyFillFraming step=1 default=0 choices=off|on
+320 cgFillFrom step=1 default=0 choices=characters|loop bus
+321 cgHueDeg step=1 default=0
+322 cgSat step=0.01 default=0
 
 # ?mod= sources, by name
 sine

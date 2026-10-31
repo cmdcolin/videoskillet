@@ -81,6 +81,8 @@ describe('FrameStore', () => {
         records: true,
         fill: 0,
         flip: false,
+        cgBus: 0,
+        cgFlip: false,
       })),
     )
   })
@@ -90,9 +92,9 @@ describe('FrameStore', () => {
     const c = keyed({ bKeyFill: 2, cfbHold: 2 })
     expect(Array.from({ length: 3 }, (_, i) => store.step(c, true, i))).toEqual(
       [
-        { records: true, fill: 0, flip: false },
-        { records: false, fill: 0, flip: false },
-        { records: false, fill: 0, flip: false },
+        { records: true, fill: 0, flip: false, cgBus: 0, cgFlip: false },
+        { records: false, fill: 0, flip: false, cgBus: 0, cgFlip: false },
+        { records: false, fill: 0, flip: false, cgBus: 0, cgFlip: false },
       ],
     )
     store.settle()
@@ -101,6 +103,8 @@ describe('FrameStore', () => {
       records: false,
       fill: 2,
       flip: false,
+      cgBus: 0,
+      cgFlip: false,
     })
   })
 
@@ -165,5 +169,26 @@ describe('FrameStore', () => {
     expect(fills(keyed({ bKeyFill: 3 }), 2)).toEqual([0, 3])
     expect(fills(keyed({ bKeyFill: 2 }), 1)).toEqual([2])
     expect(fills(keyed({ bKeyFill: 3 }), 2)).toEqual([2, 3])
+  })
+
+  it('records for a chyron filled from the loop bus, colour framed', () => {
+    const c = { ...DEFAULT_CONTROLS, cgMix: 1, cgFillFrom: 1 }
+    const store = settled()
+    const frames = Array.from({ length: 3 }, (_, i) => store.step(c, true, i))
+    expect(frames.map(f => f.records)).toEqual([true, true, true])
+    expect(frames.map(f => f.cgBus)).toEqual([2, 2, 2])
+    expect(frames.map(f => f.cgFlip)).toEqual([false, true, true])
+  })
+
+  it('leaves the chyron on program while the link loads', () => {
+    const c = { ...DEFAULT_CONTROLS, cgMix: 1, cgFillFrom: 1 }
+    expect(new FrameStore().step(c, true, 0).cgBus).toBe(1)
+  })
+
+  it('leaves the chyron on its own characters with the fill on them', () => {
+    const c = { ...DEFAULT_CONTROLS, cgMix: 1 }
+    const step = settled().step(c, true, 0)
+    expect(step.records).toBe(false)
+    expect(step.cgBus).toBe(0)
   })
 })
