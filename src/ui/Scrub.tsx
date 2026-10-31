@@ -7,7 +7,7 @@ import { everyFrame } from './everyFrame'
 import styles from './Scrub.module.css'
 
 import type { Cue, CueEdge, LoopingCue } from './cue'
-import type { CSSProperties, ReactNode } from 'react'
+import type { ReactNode } from 'react'
 
 const clock = (s: number) =>
   `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`
@@ -60,7 +60,6 @@ export function Scrub(props: {
     return input === null ? undefined : everyFrame(input, tick)
   }, [duration])
 
-  const fill: CSSProperties & Record<'--p', string> = { '--p': '0%' }
   return (
     <div className={styles.scrubRow}>
       <span className={styles.scrubTrack}>
@@ -68,7 +67,6 @@ export function Scrub(props: {
           ref={inputRef}
           type="range"
           className={styles.scrub}
-          style={fill}
           min={0}
           max={duration}
           step={0.01}
@@ -157,6 +155,7 @@ export function LoopScrub(props: {
           .toFixed(2)
           .padStart(len.length)
     }
+    tick()
     const input = inputRef.current
     return input === null ? undefined : everyFrame(input, tick)
   }, [from, to, cue.in, cue.out, len])
@@ -172,7 +171,6 @@ export function LoopScrub(props: {
   const timeAt = (x: number, box: DOMRect) =>
     from + ((x - box.left) / box.width) * span
 
-  const fill: CSSProperties & Record<'--p', string> = { '--p': '0%' }
   return (
     <div className={styles.scrubRow}>
       <span ref={trackRef} className={styles.scrubTrack}>
@@ -180,7 +178,6 @@ export function LoopScrub(props: {
           ref={inputRef}
           type="range"
           className={styles.scrub}
-          style={fill}
           min={from}
           max={to}
           step="any"

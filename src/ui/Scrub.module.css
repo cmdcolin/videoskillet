@@ -151,9 +151,10 @@
 }
 /* The track and thumb rules are `ui.range`'s — this is a control row's slider
    with a different fill, not a different kind of control. --p (progress) is set
-   inline by the component. */
+   inline by the component every frame. */
 .scrub {
   composes: range from './ui.module.css';
+  --p: 0%;
   --track-bg: linear-gradient(
     to right,
     var(--accent) var(--p),
