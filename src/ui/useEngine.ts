@@ -1161,6 +1161,9 @@ export function useEngine(args: { rand: Rand }) {
     // than being a flag each caller sets: every source but 'none' means B is
     // summing, and 'none' is the one that means it is not.
     engineRef.current?.setSourceBEnabled(mode !== 'none')
+    // Nothing is coming for 'none', so the wait the commit opened is answered
+    // here. Left open, it held every settle that followed until its deadline.
+    if (mode === 'none') arrived('b')
     return fresh
   }
 
@@ -1211,6 +1214,7 @@ export function useEngine(args: { rand: Rand }) {
       )
     else if (isClipId(mode)) playUrl(slot, clipUrl(mode))
     else if (isPoolMode(mode)) feeds.begin(slot.id, mode)
+    else if (mode === 'none') arrived(slot.id)
   }
 
   // A pool pick onto a slot: the caption, the subject of the ★, and then the
