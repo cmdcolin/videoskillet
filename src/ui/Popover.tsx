@@ -1,6 +1,5 @@
 import { useId } from 'react'
 
-import { cx } from './cx'
 import styles from './Popover.module.css'
 
 import type { CSSProperties, ReactNode } from 'react'
@@ -76,9 +75,6 @@ export function Popover(props: {
   // knows the menu just appeared. React's `autoFocus` cannot do it — the field is
   // mounted once, while hidden, and never mounts again.
   onOpen?: () => void
-  // The heading of the full-width sheet this menu opens as on a stacked phone
-  // layout. For a menu too wide to hang off a trigger in the panel's left half.
-  sheet?: string
 }) {
   const id = useId()
   const anchorName = `--pop-${id.replaceAll(/\W/g, '')}`
@@ -89,25 +85,12 @@ export function Popover(props: {
       <div
         id={id}
         popover="auto"
-        className={cx(styles.menu, props.sheet !== undefined && styles.sheet)}
+        className={styles.menu}
         style={{ positionAnchor: anchorName }}
         onToggle={e => {
           if (e.newState === 'open') onOpen?.()
         }}
       >
-        {props.sheet === undefined ? null : (
-          <div className={styles.sheetHead}>
-            {props.sheet}
-            <button
-              className={styles.sheetClose}
-              aria-label="close"
-              popoverTarget={id}
-              popoverTargetAction="hide"
-            >
-              ×
-            </button>
-          </div>
-        )}
         {props.children(id)}
       </div>
     </>
