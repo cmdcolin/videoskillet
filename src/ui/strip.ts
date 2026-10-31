@@ -343,21 +343,11 @@ export const seedFor = (seed: number, row: number, lap: number): number =>
 //
 // Four beats to the bar, which is the assumption `useTempo` already makes
 // everywhere else. Floored at one frame: a hold of zero would fire every row in
-// the strip on one tick, which reads as the strip having emptied itself.
-export function holdFrames(
-  hold: Hold,
-  clock: Clock,
-  seed: number,
-  runtime = 0,
-): number | null {
-  const span = holdSpan(hold, clock, seed, runtime)
-  return span === null ? null : Math.round(span)
-}
-
-// The same length before rounding to whole frames, which is what the walk
-// keeps: 140bpm at 60fps makes a four-bar row 411.43 frames, and rounding each
-// row on its own puts a 32-row rundown 14 frames ahead of the beat.
-function holdSpan(
+// the strip on one tick, which reads as the strip having emptied itself. Not
+// rounded to whole frames, because the walk keeps the fraction: 140bpm at 60fps
+// makes a four-bar row 411.43 frames, and rounding each row on its own puts a
+// 32-row rundown 14 frames ahead of the beat.
+export function holdSpan(
   hold: Hold,
   clock: Clock,
   seed: number,
@@ -769,7 +759,7 @@ export function holdLabel(hold: Hold): string {
 // means: an in/out pair says which stretch plays, so a clip trimmed to three
 // seconds is on screen for three seconds however long the file is. Without a
 // cue it is the clip's own length, and 0 — no cue and an unmeasured clip — is
-// "cannot say", which `holdFrames` answers with a bar count.
+// "cannot say", which `holdSpan` answers with a bar count.
 export function rowRuntime(row: Row): number {
   const cue = parseCue(new URLSearchParams(row.session).get('cuea'))
   // `out` is null for a cue that was marked and never closed — the playhead
@@ -1079,7 +1069,7 @@ function readClip(raw: unknown): RowClip | null {
     id,
     name: typeof name === 'string' ? name : '',
     // Finite and positive or nothing: `duration` reads NaN before metadata
-    // lands and Infinity on a stream, and either one through `holdFrames`
+    // lands and Infinity on a stream, and either one through `holdSpan`
     // would be a row that never ends.
     seconds:
       typeof seconds === 'number' && Number.isFinite(seconds) && seconds > 0

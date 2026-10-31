@@ -548,7 +548,7 @@ describe('how long a clip runs', () => {
   })
 
   // `duration` reads NaN before metadata lands and Infinity on a stream, and
-  // either one through `holdFrames` is a row that never ends.
+  // either one through `holdSpan` is a row that never ends.
   it('refuses anything that is not a real length', () => {
     for (const bad of [0, -3, 'ages', null, Infinity, NaN])
       expect(stored(bad).seconds).toBe(0)

@@ -583,7 +583,7 @@ function readClip(raw: unknown): Clip | undefined {
   // No fallback and no rejection: an entry written before this field existed is
   // an ordinary shelf entry that nobody has measured, which is the same state a
   // fresh one is in. Finite and positive or nothing, for `RowClip.seconds`'
-  // reason — a `duration` of NaN or Infinity through `holdFrames` is a row that
+  // reason — a `duration` of NaN or Infinity through `holdSpan` is a row that
   // never ends.
   const stored = 'seconds' in raw ? raw.seconds : undefined
   const seconds =

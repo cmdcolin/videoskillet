@@ -21,7 +21,7 @@ import {
   duplicateRow,
   fire,
   fireEffects,
-  holdFrames,
+  holdSpan,
   holdLabel,
   holdProgress,
   learnClipSeconds,
@@ -100,17 +100,17 @@ describe('seedFor', () => {
   })
 })
 
-describe('holdFrames', () => {
+describe('holdSpan', () => {
   it('turns bars into frames at the tempo', () => {
-    expect(holdFrames({ bars: 4, drift: 0 }, CLOCK(0), 1)).toBe(480)
-    expect(holdFrames({ bars: 1, drift: 0 }, CLOCK(0), 1)).toBe(120)
+    expect(holdSpan({ bars: 4, drift: 0 }, CLOCK(0), 1)).toBe(480)
+    expect(holdSpan({ bars: 1, drift: 0 }, CLOCK(0), 1)).toBe(120)
     expect(
-      holdFrames({ bars: 4, drift: 0 }, { frame: 0, bpm: 60, fps: 60 }, 1),
+      holdSpan({ bars: 4, drift: 0 }, { frame: 0, bpm: 60, fps: 60 }, 1),
     ).toBe(960)
   })
 
   it('waits for a hand when there are no bars', () => {
-    expect(holdFrames({ bars: null, drift: 0.5 }, CLOCK(0), 1)).toBeNull()
+    expect(holdSpan({ bars: null, drift: 0.5 }, CLOCK(0), 1)).toBeNull()
   })
 
   // The taste call, as a testable statement: a drifted hold lands somewhere
@@ -118,7 +118,7 @@ describe('holdFrames', () => {
   it('drifts inside the fraction asked for, and no further', () => {
     const lengths = new Set<number>()
     for (let seed = 1; seed < 60; seed++) {
-      const n = holdFrames({ bars: 4, drift: 0.25 }, CLOCK(0), seed)
+      const n = holdSpan({ bars: 4, drift: 0.25 }, CLOCK(0), seed)
       expect(n).not.toBeNull()
       expect(n).toBeGreaterThanOrEqual(360)
       expect(n).toBeLessThanOrEqual(600)
@@ -129,20 +129,20 @@ describe('holdFrames', () => {
 
   it('is exact at zero drift, which is the per-row beat-lock', () => {
     for (let seed = 1; seed < 20; seed++) {
-      expect(holdFrames({ bars: 2, drift: 0 }, CLOCK(0), seed)).toBe(240)
+      expect(holdSpan({ bars: 2, drift: 0 }, CLOCK(0), seed)).toBe(240)
     }
   })
 
   it('clamps a drift past the maximum rather than honouring it', () => {
-    const wild = holdFrames({ bars: 4, drift: 9 }, CLOCK(0), 7)
-    const capped = holdFrames({ bars: 4, drift: MAX_DRIFT }, CLOCK(0), 7)
+    const wild = holdSpan({ bars: 4, drift: 9 }, CLOCK(0), 7)
+    const capped = holdSpan({ bars: 4, drift: MAX_DRIFT }, CLOCK(0), 7)
     expect(wild).toBe(capped)
   })
 
   // A hold of zero frames would fire every row in the strip on one tick, which
   // reads as the strip having emptied itself rather than as a fast hold.
   it('never resolves to nothing at a tempo fast enough to round to zero', () => {
-    const n = holdFrames(
+    const n = holdSpan(
       { bars: 0.001, drift: 0 },
       { frame: 0, bpm: 300, fps: 60 },
       1,
@@ -557,7 +557,7 @@ describe("a hold of 'clip'", () => {
       hold: { bars: 'clip', drift: 0 },
       clip: { id: 'c1', name: 'a.mp4', seconds: 3 },
     })
-    expect(holdFrames(r.hold, CLOCK(0), 1, rowRuntime(r))).toBe(180)
+    expect(holdSpan(r.hold, CLOCK(0), 1, rowRuntime(r))).toBe(180)
   })
 
   // The trim wins, which is the whole of what an in/out pair means: it says
@@ -569,7 +569,7 @@ describe("a hold of 'clip'", () => {
       clip: { id: 'c1', name: 'a.mp4', seconds: 30 },
     })
     expect(rowRuntime(r)).toBe(3)
-    expect(holdFrames(r.hold, CLOCK(0), 1, rowRuntime(r))).toBe(180)
+    expect(holdSpan(r.hold, CLOCK(0), 1, rowRuntime(r))).toBe(180)
   })
 
   // A cue marked and never closed has no span — the playhead runs on past it —
@@ -586,12 +586,12 @@ describe("a hold of 'clip'", () => {
   // as a broken transport, so an unknown runtime holds for bars instead.
   it('falls back to a bar count when nothing knows the length', () => {
     const r = row({ hold: { bars: 'clip', drift: 0 }, clip: null })
-    expect(holdFrames(r.hold, CLOCK(0), 1, rowRuntime(r))).toBe(480)
+    expect(holdSpan(r.hold, CLOCK(0), 1, rowRuntime(r))).toBe(480)
   })
 
   it('never waits for a hand, which is a different setting', () => {
     const r = row({ hold: { bars: 'clip', drift: 0 } })
-    expect(holdFrames(r.hold, CLOCK(0), 1, 0)).not.toBeNull()
+    expect(holdSpan(r.hold, CLOCK(0), 1, 0)).not.toBeNull()
   })
 
   it('says how long rather than what it is counting', () => {
