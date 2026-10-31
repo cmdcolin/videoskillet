@@ -6,7 +6,7 @@ Everything past [Getting started](GETTING-STARTED.md).
 
 Click a preset to jump to it. Drag it sideways to blend it part-way in.
 
-![The head of the panel: a row of whole-board buttons (compare, random look and its ▾, drift, morph) over reset and undo, then the Presets shortlist of chips and the dashed handle to the rest](img/presets.png)
+![The head of the panel: this look, compare, share, undo and redo over random look, drift, morph and reset, then the Presets heading with its saved and all buttons over the shortlist of preset chips](img/presets.png)
 
 - **random nudge** keeps your look and moves it a little: everything already
   doing something, plus a few controls that weren't. `shift` for wilder, `alt`
