@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { dropLoop, playLoop, relayCamera } from './tape'
+import { dropLoop, playLoop, recordTape, relayCamera } from './tape'
 import { useSecond } from './useSecond'
 
 import type { OtherAnswer } from './dual'
@@ -78,6 +78,21 @@ describe('the second camera on B', () => {
     await act(() => second().load())
     expect(openOther).toHaveBeenCalledTimes(2)
     expect(localStorage.getItem(DUAL_STORE)).toBeNull()
+  })
+
+  it('tapes nothing when the camera ask was superseded', async () => {
+    const { second } = mount({ kind: 'superseded' })
+    expect(await act(() => second().load())).toBe('superseded')
+    expect(recordTape).not.toHaveBeenCalled()
+  })
+
+  it('lets go of a tape whose loop fails to play', async () => {
+    const revoke = vi.spyOn(URL, 'revokeObjectURL')
+    vi.mocked(recordTape).mockResolvedValueOnce(new Blob())
+    vi.mocked(playLoop).mockRejectedValueOnce(new Error('no play'))
+    const { second } = mount({ kind: 'refused' })
+    expect(await act(() => second().load())).toBe('failed')
+    expect(revoke).toHaveBeenCalledTimes(1)
   })
 
   it('stops asking a phone that runs one camera at a time', async () => {

@@ -168,12 +168,12 @@ export function useSecond(
     if (c === null) return 'failed'
     setLeft(TAPE_SECONDS)
     let landing: Landing
+    let url: string | null = null
     try {
-      const url = URL.createObjectURL(
-        await recordTape(c, eng.layoutNow(), setLeft),
-      )
+      url = URL.createObjectURL(await recordTape(c, eng.layoutNow(), setLeft))
       landing = land(mine, { kind: 'tape', url, video: await playLoop(url) })
     } catch (e) {
+      if (url !== null) URL.revokeObjectURL(url)
       landing = failed(mine, `tape: ${reason(e)}`)
     }
     setLeft(0)
@@ -206,7 +206,12 @@ export function useSecond(
       setOpening(true)
       const answer = await cam.openOther()
       setDual(dualAfter(answer.kind, dual))
-      live = answer.kind === 'ok' ? await putLive(mine, answer.other) : null
+      live =
+        answer.kind === 'ok'
+          ? await putLive(mine, answer.other)
+          : answer.kind === 'superseded'
+            ? 'superseded'
+            : null
       setOpening(false)
     }
     if (live !== null) return live
@@ -293,6 +298,8 @@ export function useSecond(
     pattern: second?.kind === 'pattern' ? second.pattern : null,
     loaded: second !== null,
     live: second?.kind === 'live',
+    // What B holds now, for a caller that has awaited since its render.
+    holds: () => (held.current === null ? null : held.current.kind),
     left,
     opening,
     load,

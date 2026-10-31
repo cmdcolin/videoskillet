@@ -40,7 +40,7 @@ export function useSourcePicks(opts: {
   // The camera leaving A takes its copy off B with it.
   const stopCamera = () => {
     cam.stop()
-    if (second.kind === 'same') takeOff()
+    if (second.holds() === 'same') takeOff()
   }
 
   // Starting the camera or turning it round by hand is a pick on A, so a clip
