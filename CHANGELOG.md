@@ -2,6 +2,14 @@
 
 All notable changes to videoskillet are documented here.
 
+## [2.24.1](https://github.com/cmdcolin/videoskillet/compare/v2.24.0...v2.24.1) - 2026-10-31
+
+### Features
+- *(ui)* [`b76d67a`](https://github.com/cmdcolin/videoskillet/commit/b76d67a41fa276e40daba15d777aee8db7e49c73) show the version beside the wordmark
+
+### Tests
+- *(ui)* [`850be89`](https://github.com/cmdcolin/videoskillet/commit/850be895494b74dac3027a2b06caa234110ad528) wait for the shared file instead of a fixed 20ms
+
 ## [2.24.0](https://github.com/cmdcolin/videoskillet/compare/v2.23.0...v2.24.0) - 2026-10-31
 
 ### Features
