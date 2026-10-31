@@ -2,6 +2,21 @@
 
 All notable changes to videoskillet are documented here.
 
+## [2.24.0](https://github.com/cmdcolin/videoskillet/compare/v2.23.0...v2.24.0) - 2026-10-31
+
+### Features
+- *(ui)* [`611b9d7`](https://github.com/cmdcolin/videoskillet/commit/611b9d713d44793b9805dbc256a054e4b6bd43ca) four chyron presets and two chyron card chips
+- *(ui)* [`a050425`](https://github.com/cmdcolin/videoskillet/commit/a0504259dbb716bb243bf0105ad58933b1cf55d7) costume mode on the camera page
+- *(signal)* [`8c5092d`](https://github.com/cmdcolin/videoskillet/commit/8c5092d65665641a6ace8793ffeedbdd02484fba) chyron fill from the loop bus, and coloured characters
+- *(ui)* [`85eb25b`](https://github.com/cmdcolin/videoskillet/commit/85eb25bda6c4c0785947a550221999b6db33c8e2) costume mode talks, listens and changes by itself
+- *(ui)* [`95d3c9b`](https://github.com/cmdcolin/videoskillet/commit/95d3c9befab5f5b568068bd4314f6d668b1b11e4) leave the phosphor and CRT looks out of costume mode
+- *(ui)* [`79e1afd`](https://github.com/cmdcolin/videoskillet/commit/79e1afd8ffc53612c896f04a37e458454b7c207a) the camera page's dice never rolls the phosphor looks
+
+### Fixes
+- *(ui)* [`a2f3851`](https://github.com/cmdcolin/videoskillet/commit/a2f3851437d89bbe3e62b644963aa33168bc066c) open the chyron without a source B, and give it a text box
+- *(ui)* [`36962a9`](https://github.com/cmdcolin/videoskillet/commit/36962a9c90237d4fa524cadb97d16a823bc03ec6) bring the caption when a row turns the chyron up
+- *(ui)* [`3bca753`](https://github.com/cmdcolin/videoskillet/commit/3bca7536f6c2489e18c9bd3d3762de1fa2d75d9d) answer a deck's load wait when B is switched off
+
 ## [2.23.0](https://github.com/cmdcolin/videoskillet/compare/v2.22.0...v2.23.0) - 2026-10-31
 
 ### Features
