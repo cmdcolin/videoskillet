@@ -123,7 +123,7 @@ function StageHead(props: {
   // more than one group.
   all?: { on: boolean; onToggle: () => void }
 }) {
-  const { node } = props
+  const { node, onClose } = props
   const stock = props.stock
   return (
     <>
@@ -139,7 +139,7 @@ function StageHead(props: {
             // because it is open, so it is a disclosure that is always expanded.
             // On the bench and under a filter it is a heading, and claiming an
             // expanded state there would announce a fold that isn't there.
-            aria-expanded={props.onClose === undefined ? undefined : true}
+            aria-expanded={onClose === undefined ? undefined : true}
             onClick={props.onName}
           >
             {node.name}
@@ -201,12 +201,12 @@ function StageHead(props: {
             all
           </button>
         )}
-        {props.onClose === undefined ? null : (
+        {onClose === undefined ? null : (
           <button
             className={styles.stageClose}
             title={`close ${node.name} — the map stays`}
             aria-label={`close ${node.name}`}
-            onClick={props.onClose}
+            onClick={() => onClose()}
           >
             ×
           </button>

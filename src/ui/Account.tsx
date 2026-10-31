@@ -40,9 +40,9 @@ export function Account(props: {
         // that asked for it, and a first sign-in that spent it downloading the
         // SDK got the window blocked. Pointing at the button is reason enough
         // to fetch.
-        onPointerEnter={warmSignIn}
-        onFocus={warmSignIn}
-        onClick={props.onSignIn}
+        onPointerEnter={() => warmSignIn()}
+        onFocus={() => warmSignIn()}
+        onClick={() => props.onSignIn()}
       >
         {checking ? '…' : 'sign in'}
       </Button>

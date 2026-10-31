@@ -71,12 +71,12 @@ export function WhySignInDialog(props: {
         </a>
       </p>
       <div className={styles.row}>
-        <button className={styles.go} onClick={props.onSignIn}>
+        <button className={styles.go} onClick={() => props.onSignIn()}>
           sign in with Google
         </button>
         {/* The other way to keep a look, for anyone who would rather not have
             an account: every look is already a link. */}
-        <button className={styles.alt} onClick={copy}>
+        <button className={styles.alt} onClick={() => copy()}>
           {copied ? 'link copied ✓' : 'copy this look as a link'}
         </button>
       </div>

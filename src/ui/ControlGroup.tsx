@@ -362,7 +362,7 @@ function WikiCaptionRow() {
           className={styles.cardChip}
           disabled={wiki.busy}
           title="A few sentences from the Wikipedia article on what the picture shows, or from a random article when the deck has nothing off Commons or archive.org on it"
-          onClick={wiki.roll}
+          onClick={() => wiki.roll()}
         >
           {wiki.busy ? 'Fetching…' : 'From Wikipedia'}
         </button>
