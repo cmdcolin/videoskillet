@@ -15,5 +15,6 @@ export function useFlash<T>(ms: number) {
   return {
     shown: shown === null ? null : shown.value,
     flash: (value: T) => setShown({ value }),
+    clear: () => setShown(null),
   }
 }

@@ -67,7 +67,7 @@ export function SavedProfiles(props: {
   const { shown: copied, flash: flashCopied } = useFlash<string>(1200)
   // The row whose × has been pressed once. A delete removes the profile from
   // the account for good, so it takes a second press within three seconds.
-  const [arming, setArming] = useState<string | null>(null)
+  const { shown: arming, flash: arm, clear: disarm } = useFlash<string>(3000)
 
   // Typing nothing saves under the suggestion, which is what the placeholder is
   // already showing. That is the whole "easy" of this: open, press save, done.
@@ -79,12 +79,11 @@ export function SavedProfiles(props: {
   }
   const remove = (target: string) => {
     if (arming === target) {
-      setArming(null)
+      disarm()
       props.onDelete(target)
-      return
+    } else {
+      arm(target)
     }
-    setArming(target)
-    setTimeout(() => setArming(cur => (cur === target ? null : cur)), 3000)
   }
   const copy = (profile: SavedProfile) => {
     void props.onCopyLink(profile).then(ok => {

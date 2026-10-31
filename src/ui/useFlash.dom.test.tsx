@@ -38,3 +38,10 @@ test('the same mark flashed again starts its clock over', () => {
   wait(900)
   expect(result.current.shown).toBeNull()
 })
+
+test('a cleared mark goes at once', () => {
+  const { result } = renderHook(() => useFlash<string>(1200))
+  act(() => result.current.flash('copied'))
+  act(() => result.current.clear())
+  expect(result.current.shown).toBeNull()
+})
