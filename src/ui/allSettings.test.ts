@@ -114,19 +114,22 @@ describe('opensInPanel', () => {
 
   it('opens a group in a stage that opens', () => {
     const g = groupNamed('Signal (source A)')
-    expect(opensInPanel(SOURCE_A_STAGE, g, open, idle)).toBe(true)
+    expect(opensInPanel(g, open, idle)).toBe(true)
   })
 
   it('does not open a stage with nothing patched in', () => {
     const g = GROUPS.find(x => stageOf(x) === MIX_STAGE)!
-    expect(opensInPanel(MIX_STAGE, g, open, idle)).toBe(false)
+    expect(opensInPanel(g, open, idle)).toBe(false)
+  })
+
+  it('opens the chyron with nothing patched into B', () => {
+    const g = groupNamed('Character generator (chyron)')
+    expect(opensInPanel(g, open, idle)).toBe(true)
   })
 
   it('opens a generator group only while it runs', () => {
     const g = groupNamed(SYNTH_GROUP)
-    expect(opensInPanel(SOURCE_A_STAGE, g, open, idle)).toBe(false)
-    expect(
-      opensInPanel(SOURCE_A_STAGE, g, open, { ...idle, synth: true }),
-    ).toBe(true)
+    expect(opensInPanel(g, open, idle)).toBe(false)
+    expect(opensInPanel(g, open, { ...idle, synth: true })).toBe(true)
   })
 })

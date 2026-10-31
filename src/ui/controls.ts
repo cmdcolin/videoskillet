@@ -141,9 +141,9 @@ export type LoopPlace = (typeof LOOP_PLACES)[number]
 // source. A control that still bites with B switched off — anything on input
 // A's own feed, say — belongs on the spine, or a preset or a randomize can set
 // it with no row anywhere to put it back. The Mix stage answers to the same
-// rule from the other side: it is a Phase, so it is always drawn, but with
-// nothing patched into B every control in it is inert and it opens onto
-// nothing — see PathNode.off.
+// rule from the other side: it is a Phase, so it is always drawn, and with
+// nothing patched into B it lists only its `withoutB` groups. With none of
+// those to show it opens onto nothing — see PathNode.off.
 type Placement = Phase | 'b' | 'audio' | 'view' | LoopPlace
 
 export interface Group {
@@ -154,6 +154,9 @@ export interface Group {
   // Listed only while something is actually running that generator — see
   // `generatorsLive` below and the gate in panelChain.ts.
   generator?: GeneratorKind
+  // A Mix group that acts on program A alone, so it is listed while nothing is
+  // patched into B.
+  withoutB?: true
 }
 
 // The two generators either slot can be showing. They are not sources in the
@@ -1566,6 +1569,7 @@ export const GROUPS: Group[] = [
     // picture instead of being laid over a finished frame.
     name: 'Character generator (chyron)',
     place: 'Mix',
+    withoutB: true,
     sliders: [
       {
         key: 'cgMix',
@@ -4511,7 +4515,7 @@ export const NEEDS: Partial<Record<ControlKey, SliderNeed>> = {
 const PHASE_BLURBS: Record<Phase, string> = {
   'Source A':
     'input A becoming a composite waveform: the encoder, the static generator, and the deck and cable this one signal arrives on',
-  Mix: 'where the two signals meet: the mixer that combines them, the wipe and the PiP inset. Needs a source B to do anything',
+  Mix: 'where the two signals meet: the mixer that combines them, the wipe and the PiP inset, and the character generator keying text over the program. Everything but the character generator needs a source B',
   Channel:
     'everything between the encoder and the aerial socket: the tape it was recorded on, the tuner it came through, and the cable it came down',
   Receiver:

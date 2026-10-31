@@ -245,10 +245,11 @@ export function panelChain(o: {
     }
   }
 
-  // The trunk. Mix is the one stage on it that can go inert: every one of its
-  // controls needs a second signal, and unlike a branch there is no picker for
-  // "a second signal" to offer — so its box is a statement about the chain
-  // rather than a door (see PICKER_STAGES).
+  // The trunk. Mix is the one stage on it that can go inert: its controls need
+  // a second signal, except for the `withoutB` groups, and unlike a branch there
+  // is no picker for "a second signal" to offer. With B unpatched it lists only
+  // those groups, and when the query reached none of them its box is a
+  // statement about the chain rather than a door (see PICKER_STAGES).
   // Every phase, every time: the trunk is what the whole drawing is placed off,
   // and it used to be re-laid-out around whatever a query left standing. A stage
   // the query missed is dimmed in place instead.
@@ -263,7 +264,12 @@ export function panelChain(o: {
       patched: o.patched[phase.name],
     }
     const shown = miss ? dimmed(n) : n
-    return phase.name === MIX_STAGE && !o.bOn ? inert(shown) : shown
+    const withoutB = groups.filter(g => g.withoutB === true)
+    return phase.name !== MIX_STAGE || o.bOn
+      ? shown
+      : withoutB.length === 0
+        ? inert(shown)
+        : { ...n, ...node(phase.name, phase.blurb, withoutB) }
   })
 
   // The three loops, drawn over the trunk. Never inert: there is nothing to

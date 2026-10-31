@@ -18,7 +18,7 @@ import {
   targetLabel,
 } from './modSlots'
 import { useModSlotsApi } from './ModSlotsContext'
-import { groupOf, stageOf } from './placement'
+import { groupOf, groupOpens, stageOf } from './placement'
 import { Section } from './Section'
 import { useHold } from './useHold'
 
@@ -266,7 +266,7 @@ function RoutingList(props: {
           <li key={i} className={cx(styles.item, off && styles.itemOff)}>
             {group !== undefined &&
             stage !== null &&
-            props.openStages.has(stage) ? (
+            groupOpens(group, props.openStages) ? (
               <button
                 className={styles.target}
                 title={`open ${group.name} in ${stage}, with this routing's editor unfolded under ${name}`}

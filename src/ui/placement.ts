@@ -51,3 +51,8 @@ const OFF_SPINE_STAGE: Partial<Record<Group['place'], string>> = {
 export function stageOf(group: Group): string {
   return OFF_SPINE_STAGE[group.place] ?? group.place
 }
+
+// Whether a jump to this group lands on it. A stage outside `openStages` still
+// lists its `withoutB` groups: Mix keeps the chyron with nothing patched into B.
+export const groupOpens = (group: Group, openStages: ReadonlySet<string>) =>
+  openStages.has(stageOf(group)) || group.withoutB === true

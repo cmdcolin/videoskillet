@@ -4,7 +4,7 @@ import { ControlSlider } from './ControlGroup'
 import { cx } from './cx'
 import barStyles from './LookBar.module.css'
 import styles from './LookPopover.module.css'
-import { groupOf, stageOf } from './placement'
+import { groupOf, groupOpens, stageOf } from './placement'
 import { Popover } from './Popover'
 import { Rack } from './Slider'
 import { useStacked } from './useStacked'
@@ -123,7 +123,7 @@ function GroupCaption(props: {
   const group = props.group
   if (group === undefined) return null
   const stage = stageOf(group)
-  return props.openStages.has(stage) ? (
+  return groupOpens(group, props.openStages) ? (
     <button
       className={styles.from}
       title={`open ${group.name} in the ${stage} stage`}

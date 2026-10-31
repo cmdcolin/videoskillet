@@ -316,16 +316,39 @@ function SignalTapControl() {
   )
 }
 
-// The caption's own group, found by its control the way the tap's host is.
-const CAPTION_HOST_GROUP = GROUPS.find(g =>
-  g.sliders.some(s => s.key === 'cc'),
-)?.name
+const groupWith = (key: ControlKey) =>
+  GROUPS.find(g => g.sliders.some(s => s.key === key))?.name
+
+interface WordsField {
+  label: string
+  note: string
+}
+
+// The caption's words, shown in both groups that use them, each found by its
+// own control the way the tap's host is. The chyron keys the same text the
+// decoder receives, so a chyron with an empty caption puts nothing on screen.
+const WORDS_FIELDS = new Map<string | undefined, WordsField>([
+  [
+    groupWith('cc'),
+    {
+      label: 'what line 21 is carrying',
+      note: 'Sent as data, a character at a time. What arrives is whatever survived the chain.',
+    },
+  ],
+  [
+    groupWith('cgMix'),
+    {
+      label: 'what the character generator keys in',
+      note: 'The same words as the caption. The generator keys them into the picture, so everything downstream damages them.',
+    },
+  ],
+])
 
 // What the encoder is sending on line 21. Not a control — it is words, not a
 // quantity, so it reads its own context and no preset or random nudge touches
 // it. A textarea because a caption is lines: each one rolls the page as it
 // lands, and the wrap is a preview of how thirty-two columns will break.
-function CaptionControl() {
+function CaptionControl({ field }: { field: WordsField }) {
   const { caption, onCaption } = useCaptionApi()
   return (
     <>
@@ -333,21 +356,18 @@ function CaptionControl() {
         className={styles.captionField}
         rows={2}
         value={caption}
-        placeholder="what line 21 is carrying"
+        placeholder={field.label}
         // The same words as the placeholder, because a placeholder is not a
         // name: it is the weakest thing an assistive technology will fall back
         // to, and it is gone the moment there is a caption to read. Every other
         // field in the panel says what it is (TeletypeRow's carries a title);
         // this one and the editor's were the two that said nothing.
-        aria-label="what line 21 is carrying"
+        aria-label={field.label}
         spellCheck={false}
         onChange={e => onCaption(clampCardText(e.target.value))}
       />
       <WikiCaptionRow />
-      <p className={styles.captionNote}>
-        Sent as data, a character at a time. What arrives is whatever survived
-        the chain.
-      </p>
+      <p className={styles.captionNote}>{field.note}</p>
     </>
   )
 }
@@ -725,6 +745,7 @@ export function ControlGroup(props: { group: Group; defaultOpen?: boolean }) {
   // group, and a fresh Set on each write would be enough on its own to re-render
   // all of them.
   const muted = sameKeySet(banners.map(e => e.need.key))
+  const wordsField = WORDS_FIELDS.get(group.name)
 
   const body = (
     <>
@@ -768,7 +789,9 @@ export function ControlGroup(props: { group: Group; defaultOpen?: boolean }) {
       <Rack sliders={group.sliders}>
         <ControlRows sliders={shown} muted={muted} />
         {group.name === TAP_HOST_GROUP ? <SignalTapControl /> : null}
-        {group.name === CAPTION_HOST_GROUP ? <CaptionControl /> : null}
+        {wordsField === undefined ? null : (
+          <CaptionControl field={wordsField} />
+        )}
         <LoopTrip group={group.name} />
         {fine.length === 0 ? null : (
           <>

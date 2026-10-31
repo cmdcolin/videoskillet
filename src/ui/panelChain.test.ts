@@ -195,15 +195,30 @@ describe('the boxes on the map', () => {
 })
 
 describe('a stage with nothing patched into it', () => {
-  it('draws Source B and the mixer inert with no second signal', () => {
+  it('draws Source B inert with no second signal', () => {
     const c = chain({ bOn: false })
     const b = c.branches.find(n => n.name === SOURCE_B_STAGE)
-    const mix = c.nodes.find(n => n.name === MIX_STAGE)
     expect(b?.off).toBe(true)
-    expect(mix?.off).toBe(true)
-    // The hint comes off OFF_HINT, and the two boxes get different ones: you
-    // press SOURCE B to end the state, and there is nothing to press on Mix.
     expect(b?.offHint).toMatch(/click to pick one/)
+  })
+
+  it('keeps the mixer open onto the chyron alone with no second signal', () => {
+    const edited: Controls = { ...DEFAULT_CONTROLS, cgMix: 1, wipeMode: 2 }
+    const mix = chain({ controls: edited, bOn: false }).nodes.find(
+      n => n.name === MIX_STAGE,
+    )
+    expect(mix?.off).toBeUndefined()
+    expect(mix?.groups.map(g => g.name)).toEqual([
+      'Character generator (chyron)',
+    ])
+    expect(mix?.touched).toBe(1)
+  })
+
+  it('draws the mixer inert when the query reached only what B feeds', () => {
+    const c = chain({ query: 'blended border along the wipe edge', bOn: false })
+    const mix = c.nodes.find(n => n.name === MIX_STAGE)
+    expect(mix?.off).toBe(true)
+    // You press SOURCE B to end the state, and there is nothing to press on Mix.
     expect(mix?.offHint).toMatch(/pick a source B/)
   })
 

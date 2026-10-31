@@ -282,7 +282,8 @@ function CurrentSession(props: {
 const TRUNK_STAGES = PHASES.map(p => p.name)
 const stageSet = (b: boolean, sound: boolean): ReadonlySet<string> =>
   new Set([
-    // Mix needs a second signal for any of its controls to reach the picture.
+    // Mix needs a second signal for all but its `withoutB` groups, which
+    // `groupOpens` lets through on their own.
     ...TRUNK_STAGES.filter(name => b || name !== MIX_STAGE),
     ...(b ? [SOURCE_B_STAGE] : []),
     ...(sound ? [SOUND_STAGE] : []),

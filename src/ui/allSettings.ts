@@ -11,6 +11,7 @@ import {
   stageGroups,
   VIEW_STAGE,
 } from './controls'
+import { groupOpens } from './placement'
 
 import type { Controls } from '../core/controls'
 import type { GeneratorsLive, Group, SliderDef } from './controls'
@@ -65,16 +66,15 @@ export function settingsIndex(only: ReadonlySet<string> | null): StageRows[] {
   })).filter(stage => stage.groups.length > 0)
 }
 
-// Whether a group's heading can open it in the panel. The stage has to open (a
-// stage with nothing patched in opens onto its picker or onto nothing), and a
-// generator's group is listed only while that generator runs.
+// Whether a group's heading can open it in the panel. The group has to open (a
+// stage with nothing patched in opens onto its picker, its `withoutB` groups or
+// nothing), and a generator's group is listed only while that generator runs.
 export const opensInPanel = (
-  stage: string,
   group: Group,
   openStages: ReadonlySet<string>,
   generators: GeneratorsLive,
 ): boolean =>
-  openStages.has(stage) &&
+  groupOpens(group, openStages) &&
   (group.generator === undefined || generators[group.generator])
 
 // Every control off stock, as one string so a reading of it is a primitive

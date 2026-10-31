@@ -129,7 +129,6 @@ function SettingsList(props: {
                 rows={sameList(g.rows)}
                 fine={sameList(g.fine)}
                 reach={opensInPanel(
-                  stage.name,
                   g.group,
                   props.openStages,
                   props.generators,
