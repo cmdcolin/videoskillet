@@ -327,6 +327,10 @@ export const ROLL_POOL: readonly string[] = PRESETS.filter(
 const showsPicture = (p: PresetDef): boolean =>
   presetControls(p.patch).vSize >= 0.1
 
+// Families a tab can list that the dice never rolls. The tube's phosphor looks
+// stay on the scan tab's strip for picking by hand.
+export const UNROLLED_GROUPS: ReadonlySet<string> = new Set(['Phosphor / CRT'])
+
 // What the dice rolls on a tab: every preset in the tab's families that shows
 // the picture, so the dice reaches the looks the tab does not list. Only the
 // mix tab rolls looks that need B.
@@ -336,6 +340,7 @@ export function rollPool(shelf: Shelf): readonly string[] {
   return PRESETS.filter(
     p =>
       shelf.groups.includes(p.group) &&
+      !UNROLLED_GROUPS.has(p.group) &&
       needsSourceB(p) === mix &&
       showsPicture(p),
   ).map(p => p.name)

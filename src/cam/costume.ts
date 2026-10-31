@@ -1,5 +1,4 @@
 import { pickOne } from '../core/rng'
-import { PRESET_BY_NAME } from '../ui/presets'
 import { TRANSITIONS } from '../ui/transitions'
 import { OPENERS, SHELVES, rollLook, rollPool } from './looks'
 import { rollStack } from './roll'
@@ -9,18 +8,10 @@ import type { Rand } from '../core/rng'
 import type { Transition } from '../ui/transitions'
 import type { Layers, Look } from './looks'
 
-export const LEFT_OUT_GROUPS: ReadonlySet<string> = new Set(['Phosphor / CRT'])
-
-const keeps = (name: string) => {
-  const def = PRESET_BY_NAME.get(name)
-  return def !== undefined && !LEFT_OUT_GROUPS.has(def.group)
-}
-
-// Every look the camera page's dice reaches on any tab, with the openers,
-// leaving out the tube's phosphor and CRT looks.
+// Every look the camera page's dice reaches on any tab, with the openers.
 export const COSTUME_POOL: readonly string[] = [
   ...new Set([...OPENERS, ...SHELVES.flatMap(rollPool)]),
-].filter(keeps)
+]
 
 // A change of acceleration between two motion samples, in m/s², that counts as
 // a boop. A knock on the phone or its mount is a sharp spike, and walking or

@@ -287,10 +287,10 @@ The fill input takes the box's own characters or the mixer loop bus
 does all the cutting, and the edge generator fills its border with black. The
 store records every frame with the chyron in it, so letters filled from it hold
 the frame before, and an inverted key holds the whole raster with the live
-picture showing through the letters. That fill is always colour framed, since
-a frame sync feeding a switcher input has to be. The characters themselves can
-be coloured (`cgHueDeg`, `cgSat`) as luma plus chroma on the house carrier, at
-the fill level, so a saturated colour at 100 IRE runs past peak white.
+picture showing through the letters. That fill is always colour framed, since a
+frame sync feeding a switcher input has to be. The characters themselves can be
+coloured (`cgHueDeg`, `cgSat`) as luma plus chroma on the house carrier, at the
+fill level, so a saturated colour at 100 IRE runs past peak white.
 
 What it does not do:
 

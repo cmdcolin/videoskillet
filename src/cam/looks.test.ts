@@ -121,6 +121,12 @@ it('never rolls a look that rests on one line', () => {
   for (const shelf of SHELVES) expect(rollPool(shelf)).not.toContain('powerOff')
 })
 
+it('never rolls the phosphor looks', () => {
+  for (const shelf of [...SHELVES, MIX_SHELF])
+    for (const name of rollPool(shelf))
+      expect(PRESET_BY_NAME.get(name)?.group, name).not.toBe('Phosphor / CRT')
+})
+
 describe('firesOnTap', () => {
   const fires = (name: string, layers: Layers = {}) =>
     firesOnTap(lookBoard({ name, strength: 1, rolled: false }, layers).mod)

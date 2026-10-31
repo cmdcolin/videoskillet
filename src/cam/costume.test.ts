@@ -7,7 +7,6 @@ import {
   BOOP_JOLT,
   COSTUME_POOL,
   DEFAULT_SAY,
-  LEFT_OUT_GROUPS,
   autoGapMs,
   costumeSettings,
   joltOf,
@@ -15,7 +14,7 @@ import {
   rollBoop,
   wantsCostume,
 } from './costume'
-import { OPENERS } from './looks'
+import { OPENERS, UNROLLED_GROUPS } from './looks'
 
 describe('costume mode', () => {
   it('rolls only looks the camera can run alone', () => {
@@ -24,7 +23,7 @@ describe('costume mode', () => {
       const def = PRESET_BY_NAME.get(name)
       expect(def, name).toBeDefined()
       expect(needsSourceB(def!), name).toBe(false)
-      expect(LEFT_OUT_GROUPS.has(def!.group), name).toBe(false)
+      expect(UNROLLED_GROUPS.has(def!.group), name).toBe(false)
     }
   })
 
