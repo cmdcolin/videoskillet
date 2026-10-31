@@ -53,6 +53,9 @@ export function superviseEngine(
   let live: Engine | null = null
   // Latched by pagehide too, which can land while a create is in flight.
   let disposed = false
+  // Set by the teardown, which hands the device on to the successor. An engine
+  // created after the teardown hands its device on the same way.
+  let handOn = false
   // Separate counts, so a run of losses is not forgiven by a hang that proved
   // a device had worked, and a run of hangs does not inherit a count of losses.
   const losses = new RebuildPolicy()
@@ -148,7 +151,7 @@ export function superviseEngine(
         busy = false
         s.onRebuilding(null)
         if (disposed) {
-          created.destroy()
+          created.destroy({ keepDevice: handOn })
           return
         }
         goLive(created, dead)
@@ -190,7 +193,7 @@ export function superviseEngine(
   const boot = () => {
     create(canvas).then(
       created => {
-        if (disposed) created.destroy()
+        if (disposed) created.destroy({ keepDevice: handOn })
         else goLive(created, null)
       },
       (e: unknown) =>
@@ -214,6 +217,7 @@ export function superviseEngine(
 
   return () => {
     disposed = true
+    handOn = true
     clearTimeout(retryId)
     window.removeEventListener('pagehide', onPageHide)
     live?.destroy({ keepDevice: true })

@@ -178,4 +178,20 @@ describe('superviseEngine', () => {
     window.dispatchEvent(new Event('pagehide'))
     expect(b.live[0]!.destroy).toHaveBeenCalledWith()
   })
+
+  it('hands on the device of an engine created after the teardown', async () => {
+    const late = fake()
+    const { stop } = harness([late])
+    stop()
+    await flush()
+    expect(late.destroy).toHaveBeenCalledWith({ keepDevice: true })
+  })
+
+  it('lets go of the device of an engine created after pagehide', async () => {
+    const late = fake()
+    harness([late])
+    window.dispatchEvent(new Event('pagehide'))
+    await flush()
+    expect(late.destroy).toHaveBeenCalledWith({ keepDevice: false })
+  })
 })
