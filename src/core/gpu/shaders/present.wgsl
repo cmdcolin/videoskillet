@@ -183,11 +183,6 @@ fn fs(in: VOut) -> @location(0) vec4f {
   // past the sampling limit. The beam below carries its own, stricter limit.
   let pxPerLine = 3.0 * scale * zoom / f32(ACTIVE_H);
   let resolved = smoothstep(0.6, 1.4, pxPerLine);
-  // Finite beam spot between scanlines. The spot is space-charge limited, so it
-  // grows with beam current: at scanBloom > 0 bright lines fatten until the gaps
-  // close in the whites while dim picture keeps thin, separated lines — the
-  // signature that makes real scanline structure read as a beam, not an overlay.
-  let spot = 1.0 + 3.0 * P.scanBloom * luma(col);
   // The profile is integrated over the window an output pixel covers rather than
   // read at its centre, and that window opens to a whole line once the structure
   // passes what the raster can carry. A line period needs two output pixels to
@@ -200,6 +195,12 @@ fn fs(in: VOut) -> @location(0) vec4f {
   // line is several pixels, sees the profile it always did.
   // At scanBeam 0 the profile scales by exactly 1, so it is not integrated.
   if (P.scanBeam != 0.0) {
+    // Finite beam spot between scanlines. The spot is space-charge limited, so
+    // it grows with beam current: at scanBloom > 0 bright lines fatten until
+    // the gaps close in the whites while dim picture keeps thin, separated
+    // lines — the signature that makes real scanline structure read as a beam,
+    // not an overlay.
+    let spot = 1.0 + 3.0 * P.scanBloom * luma(col);
     let ly = tuv.y * f32(ACTIVE_H);
     let dy = 1.0 / max(pxPerLine, 1e-3);
     let shown = 1.0 - smoothstep(0.45, 0.5, dy);
