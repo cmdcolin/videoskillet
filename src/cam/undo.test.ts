@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest'
 
 import { CLEAN } from './scene'
-import { MAX_STEPS, STEP_GAP_MS, banked, changesStep, stepOf } from './undo'
+import {
+  MAX_STEPS,
+  STEP_GAP_MS,
+  banked,
+  changesStep,
+  restored,
+  stepOf,
+} from './undo'
 
 import type { Scene } from './scene'
 
@@ -24,6 +31,35 @@ describe('changesStep', () => {
     expect(changesStep(scene, { ...scene, tweaks: { bKeyHueDeg: 90 } })).toBe(
       true,
     )
+  })
+})
+
+describe('the chroma keyer in a step', () => {
+  const keyed: Scene = { ...scene, keyHue: 120, hue: 120 }
+
+  it('sees a tap that re-aims the keyer', () => {
+    expect(changesStep(keyed, { ...keyed, keyHue: 200 })).toBe(true)
+  })
+
+  it('ignores the keyer switched on or off', () => {
+    expect(changesStep(scene, { ...scene, keyHue: 120 })).toBe(false)
+    expect(changesStep(keyed, { ...keyed, keyHue: null })).toBe(false)
+  })
+
+  it('puts back where a tap aimed the keyer', () => {
+    const now = { ...keyed, keyHue: 200, hue: 200 }
+    expect(restored(now, stepOf(keyed))).toMatchObject({
+      hue: 120,
+      keyHue: 120,
+    })
+  })
+
+  it('leaves the keyer off when it was switched off since', () => {
+    expect(restored(scene, stepOf(keyed)).keyHue).toBeNull()
+  })
+
+  it('leaves the keyer on when it was switched on since', () => {
+    expect(restored(keyed, stepOf(scene)).keyHue).toBe(120)
   })
 })
 

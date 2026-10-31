@@ -49,7 +49,7 @@ import { SetSwitches } from './SetSwitches'
 import { Shutter } from './Shutter'
 import { TopBar } from './TopBar'
 import { Tune } from './Tune'
-import { banked, changesStep } from './undo'
+import { banked, changesStep, restored } from './undo'
 import { useCamEngine } from './useCamEngine'
 import { useCamera } from './useCamera'
 import { useFlash } from './useFlash'
@@ -98,6 +98,11 @@ const firstScene = (link: CamLink | null): Scene =>
         mix: link.mix,
         keyHue: null,
       }
+
+const labelOf = (s: Step) =>
+  s.look === null && s.base !== null
+    ? s.base.name
+    : stackLabel(s.look, s.layers)
 
 export function CamPage(props: { link: CamLink | null }) {
   const firstB = props.link?.b ?? null
@@ -152,7 +157,7 @@ export function CamPage(props: { link: CamLink | null }) {
   const [firedOn, setFiredOn] = useState<string | null>(null)
   const { look } = scene
   const linked = look === null ? scene.base : null
-  const label = linked === null ? stackLabel(look, scene.layers) : linked.name
+  const label = labelOf(scene)
   // The mix tab opens while B has a picture to mix.
   const shelves = second.loaded ? [...SHELVES, MIX_SHELF] : SHELVES
   const shelf = shelves.find(s => s.name === shelfName) ?? SHELVES[0]!
@@ -193,12 +198,8 @@ export function CamPage(props: { link: CamLink | null }) {
     if (step !== undefined) {
       lastChangeRef.current = 0
       setPast(past.slice(0, -1))
-      show(step)
-      announce(
-        step.look === null && step.base !== null
-          ? step.base.name
-          : stackLabel(step.look, step.layers),
-      )
+      show(restored(sceneRef.current, step))
+      announce(labelOf(step))
       const chip =
         step.look === null || step.look.rolled ? null : step.look.name
       if (chip !== null) {
