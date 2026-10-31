@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { DEFAULT_CONTROLS } from '../core/controls'
 import {
@@ -81,7 +81,7 @@ import {
   stopTyping,
 } from './videoSlot'
 
-import type { FrameStats } from '../core/controls'
+import type { Controls, FrameStats } from '../core/controls'
 import type { EngineApi } from '../core/gpu/engineapi'
 import type { FrozenKind } from '../core/gpu/renderloop'
 import type { Store } from '../core/listeners'
@@ -607,10 +607,22 @@ export function useEngine(args: { rand: Rand }) {
     setTap(v)
   }
 
-  const changeCaption = (v: string) => {
+  const changeCaption = useCallback((v: string) => {
     engineRef.current?.setCaption(v)
     setCaption(v)
-  }
+  }, [])
+
+  // A write that turns on the caption decoder or the chyron has nothing to show
+  // until line 21 carries words, so it brings some when the caption is blank.
+  // Still useCallback, and read off the engine, because every row's write goes
+  // through it: a fresh identity would re-render the whole panel on each one.
+  const bringWords = useCallback(
+    (patch: Partial<Controls>) => {
+      if (wantsWords(patch) && engineRef.current?.getCaption() === '')
+        changeCaption(CAPTION_SEED)
+    },
+    [changeCaption],
+  )
 
   // Adopt the live video slots into the audio graph (or none, muting them all,
   // when off) at whatever levels the mirror holds. Off the mirror rather than
@@ -2693,6 +2705,7 @@ export function useEngine(args: { rand: Rand }) {
     rollable: isPoolMode(sourceMode.a) || isPoolMode(sourceMode.b),
     caption,
     changeCaption,
+    bringWords,
     reverb,
     dry,
     soundOut,

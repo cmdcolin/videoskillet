@@ -26,7 +26,6 @@ import { boardControls } from './ui/boardText'
 import { BoardTextSheet } from './ui/BoardTextSheet'
 import { Button } from './ui/Button'
 import { CaptionContext } from './ui/CaptionContext'
-import { CAPTION_SEED, wantsWords } from './ui/captionSeed'
 import { ClipLibraryDialog } from './ui/ClipLibraryDialog'
 import { ClipPicker } from './ui/ClipPicker'
 import { CommandPalette } from './ui/CommandPalette'
@@ -630,11 +629,10 @@ export function App() {
     },
   }
 
-  // A chip that turns on the caption decoder or the chyron has nothing to show
-  // until line 21 carries words, so it brings some when the caption is blank.
+  const { bringWords } = eng
   const applyPreset = (name: string, patch: Partial<Controls>) => {
     applyMixPreset(name, patch)
-    if (wantsWords(patch) && eng.caption === '') eng.changeCaption(CAPTION_SEED)
+    bringWords(patch)
   }
 
   // The board — or one stage of it — wandering by itself (ui/drift.ts). The
@@ -1130,7 +1128,10 @@ export function App() {
   // themselves rather than threaded down through each group.
   const controlsApi: ControlsApi = {
     lockedValue,
-    writeControl,
+    writeControl: (key, value) => {
+      bringWords({ [key]: value })
+      writeControl(key, value)
+    },
     writeControls,
     favorites,
     toggleFavorite,
