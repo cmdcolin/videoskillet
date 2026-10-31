@@ -1,4 +1,4 @@
-import { act, cleanup, renderHook } from '@testing-library/react'
+import { cleanup, renderHook, waitFor } from '@testing-library/react'
 import { afterEach, expect, test, vi } from 'vitest'
 
 import { useSharedMedia } from './useSharedMedia'
@@ -31,11 +31,6 @@ afterEach(() => {
   history.replaceState(null, '', '/')
 })
 
-const settle = () =>
-  act(async () => {
-    await new Promise(r => setTimeout(r, 20))
-  })
-
 test('a new onFile while the take is in flight does not load the file twice', async () => {
   parkOne()
   history.replaceState(null, '', '/?shared')
@@ -50,8 +45,7 @@ test('a new onFile while the take is in flight does not load the file twice', as
   rerender({ ready: true, onFile: f => void got.push(f.name) })
   rerender({ ready: false, onFile: f => void got.push(f.name) })
   rerender({ ready: true, onFile: f => void got.push(f.name) })
-  await settle()
-  expect(got).toEqual(['a.mp4'])
+  await waitFor(() => expect(got).toEqual(['a.mp4']))
+  await waitFor(() => expect(location.search).toBe(''))
   expect(onError).not.toHaveBeenCalled()
-  expect(location.search).toBe('')
 })
