@@ -56,3 +56,13 @@
   stroke: var(--accent);
   stroke-width: 1.5;
 }
+
+.level,
+.levelOff {
+  fill: var(--accent);
+  stroke: none;
+}
+
+.levelOff {
+  fill: var(--fg3);
+}

@@ -90,6 +90,61 @@ export interface PolarPoint {
   r: number
 }
 
+export interface AdditiveMatte {
+  /** Radians, on atan2(V, U). */
+  hue: number
+  accept: number
+  /** The backing's chroma at full light, where the matte reaches 1. */
+  level: number
+}
+
+export function additiveMatte(
+  c: Pick<Controls, 'bKeyHueDeg' | 'bKeyAcceptDeg' | 'bKeyLevel'>,
+): AdditiveMatte {
+  return {
+    hue: c.bKeyHueDeg * DEG,
+    accept: c.bKeyAcceptDeg * DEG,
+    level: c.bKeyLevel,
+  }
+}
+
+// The weight mix_b.wgsl chromaKey puts on chroma across the key hue, which
+// balances chroma along it at the edge of the wedge. Past 90° it stops at 0, so
+// a wider acceptance keys the same half plane.
+const acrossWeight = (accept: number) =>
+  Math.max(Math.cos(accept), 0) / Math.max(Math.sin(accept), 1e-3)
+
+// mix_b.wgsl chromaKey's `level`: how much backing a sample holds.
+export function backingLevel(m: AdditiveMatte, u: number, v: number) {
+  const kx = Math.cos(m.hue)
+  const ky = Math.sin(m.hue)
+  return u * kx + v * ky - acrossWeight(m.accept) * Math.abs(u * ky - v * kx)
+}
+
+// mix_b.wgsl backingShare as the matte takes it, capped at 1: the share of the
+// fill laid under B, or of B kept when the key is inverted.
+export const additiveShare = (m: AdditiveMatte, u: number, v: number) =>
+  Math.min(Math.max(backingLevel(m, u, v) / Math.max(m.level, 1e-3), 0), 1)
+
+// Where the additive matte reaches `share`, out to a rim of chroma `rim`: a
+// chevron with its apex `share` of the backing level along the key hue and its
+// arms parallel to the wedge's edges. Null when the apex is past the rim.
+export function shareContour(m: AdditiveMatte, share: number, rim: number) {
+  const apex = share * Math.max(m.level, 1e-3)
+  const half = Math.atan2(1, acrossWeight(m.accept))
+  const toRim =
+    -apex * Math.cos(half) + Math.sqrt(rim * rim - (apex * Math.sin(half)) ** 2)
+  const arm = (side: number): PolarPoint => {
+    const a = m.hue + side * half
+    const u = apex * Math.cos(m.hue) + toRim * Math.cos(a)
+    const v = apex * Math.sin(m.hue) + toRim * Math.sin(a)
+    return { angle: Math.atan2(v, u), r: Math.hypot(u, v) }
+  }
+  return apex < rim
+    ? { from: arm(1), apex: { angle: m.hue, r: apex }, to: arm(-1) }
+    : null
+}
+
 // Where the slice reaches `level`, as the inner edge of the region inside it:
 // for each hue in the wedge, the least saturation at which it gets there.
 // `whole` is a region that wraps the full turn. Null is a level the slice

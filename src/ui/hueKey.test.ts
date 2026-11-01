@@ -2,12 +2,16 @@ import { describe, expect, it } from 'vitest'
 
 import { IRE_VIDEO_RANGE } from '../core/signal/constants'
 import {
+  additiveMatte,
+  additiveShare,
   BARS,
+  backingLevel,
   loopSlice,
   mixerGate,
   mixerSlice,
   satGate,
   sliceAt,
+  shareContour,
   sliceContour,
   smoothstep,
   unsmooth,
@@ -108,5 +112,98 @@ describe('hue key slice', () => {
     expect(s.edge).toBeCloseTo(0.1 * Math.PI, 9)
     expect(satGate(s, 3 / IRE_VIDEO_RANGE)).toBe(0)
     expect(satGate(s, 6 / IRE_VIDEO_RANGE)).toBe(1)
+  })
+})
+
+// mix_b.wgsl chromaKey's level, written out as the shader has it.
+function shaderLevel(hueDeg: number, acceptDeg: number, u: number, v: number) {
+  const hue = hueDeg * DEG
+  const accept = acceptDeg * DEG
+  const [kx, ky] = [Math.cos(hue), Math.sin(hue)]
+  const across =
+    Math.max(Math.cos(accept), 0) / Math.max(Math.sin(accept), 1e-3)
+  return u * kx + v * ky - across * Math.abs(u * ky - v * kx)
+}
+
+describe('additive key matte', () => {
+  const green = additiveMatte({
+    bKeyHueDeg: 241,
+    bKeyAcceptDeg: 40,
+    bKeyLevel: 0.3,
+  })
+
+  it('measures backing as the shader does', () => {
+    for (const acceptDeg of [0, 10, 40, 89, 90, 135, 180]) {
+      const m = additiveMatte({
+        bKeyHueDeg: 241,
+        bKeyAcceptDeg: acceptDeg,
+        bKeyLevel: 0.3,
+      })
+      for (const [deg, r] of [
+        [241, 0.2],
+        [260, 0.4],
+        [200, 0.1],
+        [103, 0.5],
+        [0, 0],
+      ] as const) {
+        const uv = at(deg, r)
+        expect(backingLevel(m, ...uv)).toBeCloseTo(
+          shaderLevel(241, acceptDeg, ...uv),
+          9,
+        )
+      }
+    }
+  })
+
+  it('rises along the key hue to 1 at the backing level and is 0 on the wedge edges', () => {
+    expect(additiveShare(green, ...at(241, 0.15))).toBeCloseTo(0.5, 9)
+    expect(additiveShare(green, ...at(241, 0.3))).toBeCloseTo(1, 9)
+    expect(additiveShare(green, ...at(241, 0.6))).toBe(1)
+    expect(additiveShare(green, ...at(281, 0.5))).toBeCloseTo(0, 9)
+    expect(additiveShare(green, ...at(201, 0.5))).toBeCloseTo(0, 9)
+    expect(additiveShare(green, ...at(103, 0.5))).toBe(0)
+  })
+
+  it('keys a half plane once the acceptance passes 90°', () => {
+    const wide = additiveMatte({
+      bKeyHueDeg: 0,
+      bKeyAcceptDeg: 120,
+      bKeyLevel: 0.2,
+    })
+    expect(additiveShare(wide, 0.1, 0.5)).toBeCloseTo(0.5, 9)
+    expect(additiveShare(wide, 0.1, -0.5)).toBeCloseTo(0.5, 9)
+    expect(additiveShare(wide, -0.01, 0.5)).toBe(0)
+  })
+
+  it('draws contours on which the matte is at their share', () => {
+    const rim = 0.7
+    for (const acceptDeg of [5, 40, 90, 150]) {
+      const m = additiveMatte({
+        bKeyHueDeg: 300,
+        bKeyAcceptDeg: acceptDeg,
+        bKeyLevel: 0.4,
+      })
+      for (const share of [0.25, 0.5, 1]) {
+        const { from, apex, to } = shareContour(m, share, rim)!
+        expect(from.r).toBeCloseTo(rim, 9)
+        expect(to.r).toBeCloseTo(rim, 9)
+        expect(apex.r).toBeCloseTo(share * 0.4, 9)
+        for (const end of [from, to]) {
+          for (const t of [0.1, 0.5, 0.9]) {
+            const u =
+              apex.r * Math.cos(apex.angle) * (1 - t) +
+              end.r * Math.cos(end.angle) * t
+            const v =
+              apex.r * Math.sin(apex.angle) * (1 - t) +
+              end.r * Math.sin(end.angle) * t
+            expect(backingLevel(m, u, v) / 0.4).toBeCloseTo(share, 6)
+          }
+        }
+      }
+    }
+  })
+
+  it('has no contour past the rim', () => {
+    expect(shareContour(green, 1, 0.2)).toBeNull()
   })
 })

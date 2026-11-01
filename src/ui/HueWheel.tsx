@@ -3,8 +3,10 @@ import { Label, Wire } from './DiagramParts'
 import {
   BARS,
   BURST_ANGLE,
+  shareContour,
   sliceContour,
   unsmooth,
+  type AdditiveMatte,
   type HueSlice,
   type PolarPoint,
 } from './hueKey'
@@ -12,19 +14,23 @@ import own from './HueWheel.module.css'
 import { SPREAD_MIN, type LapTurn } from './lapTurn'
 
 const LEVELS = [0.06, 0.18, 0.3, 0.42, 0.54, 0.66, 0.78, 0.9]
+const SHARES = [0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1]
 const STEPS = 96
 const LABEL_GAP = 7
 
 // A hue keyer's slice drawn on the U/V plane, vectorscope way up: +U to the
 // right, +V up, the 75% bars and the burst marked round the rim. Each band is
 // a level the slice reaches, so the stack shades it from its edges in, and the
-// line is where it is half way.
+// line is where it is half way. An additive keyer's matte is shaded the same
+// way from its share: the dashed lines are the wedge where it starts, the solid
+// one where it reaches 1, and the dot the backing level on the key hue.
 export function HueWheel({
   cx,
   cy,
   radius,
   rim,
   slice,
+  matte,
   invert,
   on,
   strength,
@@ -37,6 +43,8 @@ export function HueWheel({
   /** The chroma the rim stands for, in the slice's own units. */
   rim: number
   slice: HueSlice
+  /** Shades the additive keyer's matte in place of the slice. */
+  matte?: AdditiveMatte
   /** Shades outside the slice. */
   invert?: boolean
   on: boolean
@@ -73,8 +81,18 @@ export function HueWheel({
     const last = c.edge.at(-1)!.angle
     return `M${xy(first, rim)} L${line} L${xy(last, rim)}`
   }
+  const chevron = (m: AdditiveMatte, share: number, close: boolean) => {
+    const c = shareContour(m, share, rim)
+    const from = c && xy(c.from.angle, c.from.r)
+    const line = c
+      ? `M${from} L${xy(c.apex.angle, c.apex.r)} L${xy(c.to.angle, c.to.r)}`
+      : ''
+    return c && close ? `${line} A${radius} ${radius} 0 0 0 ${from} Z` : line
+  }
+  const reach = (level: number) =>
+    matte ? chevron(matte, level, true) : region(level)
   const band = (level: number) =>
-    invert ? `${disk} ${region(1 - level)}` : region(level)
+    invert ? `${disk} ${reach(1 - level)}` : reach(level)
   const ring = (angle: number) => {
     const c = Math.cos(angle)
     const s = Math.sin(angle)
@@ -88,6 +106,7 @@ export function HueWheel({
   const burst = ring(BURST_ANGLE)
   const hueEnd = xy(slice.hue, rim)
   const dotAt = dot && point(dot.angle, dot.r)
+  const levelAt = matte && point(matte.hue, matte.level)
 
   return (
     <>
@@ -107,7 +126,7 @@ export function HueWheel({
         className={styles.grid}
       />
       <g opacity={on ? 0.35 + 0.65 * (strength ?? 1) : 1}>
-        {LEVELS.map(level => (
+        {(matte ? SHARES : LEVELS).map(level => (
           <path
             key={level}
             d={band(level)}
@@ -115,14 +134,21 @@ export function HueWheel({
             className={on ? own.band : own.bandOff}
           />
         ))}
-        <path d={halfway()} className={on ? own.edge : own.edgeOff} />
+        <path
+          d={matte ? chevron(matte, 1, false) : halfway()}
+          className={on ? own.edge : own.edgeOff}
+        />
       </g>
-      <circle
-        cx={cx}
-        cy={cy}
-        r={Math.min(slice.clip, rim) * k}
-        className={own.clip}
-      />
+      {matte ? (
+        <path d={chevron(matte, 0, false)} className={own.clip} />
+      ) : (
+        <circle
+          cx={cx}
+          cy={cy}
+          r={Math.min(slice.clip, rim) * k}
+          className={own.clip}
+        />
+      )}
       <path
         d={`M${cx} ${cy} L${hueEnd}`}
         className={on ? own.hueOn : own.hue}
@@ -152,6 +178,14 @@ export function HueWheel({
         <Label x={burst.x - 2} y={burst.y} anchor="end">
           burst
         </Label>
+      )}
+      {matte && levelAt && (
+        <circle
+          cx={levelAt[0]}
+          cy={levelAt[1]}
+          r={2.2}
+          className={on ? own.level : own.levelOff}
+        />
       )}
       {dotAt && dot && (
         <>

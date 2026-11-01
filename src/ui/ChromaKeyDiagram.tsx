@@ -7,7 +7,7 @@ import {
   Wire,
   type WireLook,
 } from './DiagramParts'
-import { mixerSlice } from './hueKey'
+import { additiveMatte, mixerSlice } from './hueKey'
 import { HueWheel } from './HueWheel'
 import { CHROMA_KEY_KEYS, CHROMA_KEY_OPENS as OPENS } from './schematicKeys'
 
@@ -21,11 +21,11 @@ const TOP_Y = 36
 const BOT_Y = 84
 const TRUNK_X = 4
 const COL = {
-  spill: { x: 14, w: 44 },
-  delay: { x: 14, w: 44 },
-  keyer: { x: 66, w: 44 },
+  spill: { x: 14, w: 40 },
+  delay: { x: 14, w: 40 },
+  keyer: { x: 62, w: 52 },
   mix: { x: 92, w: 62 },
-  fill: { x: 118, w: 36 },
+  fill: { x: 120, w: 34 },
 }
 const GATE_X = 100
 const FILL_X = COL.fill.x + COL.fill.w / 2
@@ -40,7 +40,8 @@ const DEG = Math.PI / 180
 // through the registration delay into the keyer, whose gate sets how much of B
 // the mix keeps; the fill is what the mix shows where B is cut. Beside the
 // boxes, the keyer's slice on the U/V plane: the shaded part of the wheel is
-// the chroma it cuts.
+// the chroma it cuts, or for the additive keyer the share of backing it
+// measures.
 export function ChromaKeyDiagram() {
   const r = useReadings(READ)
   const genlock = r.value('bGenlock') > 0.5
@@ -49,6 +50,7 @@ export function ChromaKeyDiagram() {
   const key = v('bKey')
   const on = key !== 0
   const fill = Math.round(v('bKeyFill'))
+  const additive = v('bKeyAdditive') > 0.5
   const keyLook: WireLook = on ? 'on' : 'dash'
   const slice = mixerSlice({
     bKeyHueDeg: v('bKeyHueDeg'),
@@ -70,7 +72,10 @@ export function ChromaKeyDiagram() {
       'spill',
       TOP_Y,
       'spill',
-      "The spill canceller reinjects B's own subcarrier in antiphase along the backing's phase, so backing colour reflected off the subject cancels.",
+      additive
+        ? 'The additive keyer subtracts spill along with the backing, so the canceller is out of the path.'
+        : "The spill canceller reinjects B's own subcarrier in antiphase along the backing's phase, so backing colour reflected off the subject cancels.",
+      !on || additive,
     ),
     box(
       'delay',
@@ -81,8 +86,10 @@ export function ChromaKeyDiagram() {
     box(
       'keyer',
       BOT_Y,
-      'keyer',
-      "Slices B's chroma by hue and saturation: a wedge either side of the backing hue, above the clip, eased by the gain knob.",
+      additive ? 'additive' : 'keyer',
+      additive
+        ? "Measures how much backing each sample holds: B's chroma along the backing hue, less its chroma across it, against the backing level. That share of the backing comes off B and the same share of the fill goes under it."
+        : "Slices B's chroma by hue and saturation: a wedge either side of the backing hue, above the clip, eased by the gain knob.",
     ),
     box(
       'fill',
@@ -125,7 +132,7 @@ export function ChromaKeyDiagram() {
             <Wire
               arrow={arrow}
               d={`M${COL.spill.x + COL.spill.w} ${TOP_Y} H${COL.mix.x}`}
-              look={on && v('bKeySpill') > 0 ? 'on' : 'plain'}
+              look={on && !additive && v('bKeySpill') > 0 ? 'on' : 'plain'}
             />
             <Wire
               arrow={arrow}
@@ -160,6 +167,15 @@ export function ChromaKeyDiagram() {
               {...WHEEL}
               rim={RIM}
               slice={slice}
+              matte={
+                additive
+                  ? additiveMatte({
+                      bKeyHueDeg: v('bKeyHueDeg'),
+                      bKeyAcceptDeg: v('bKeyAcceptDeg'),
+                      bKeyLevel: v('bKeyLevel'),
+                    })
+                  : undefined
+              }
               invert={key < 0}
               on={on}
               strength={Math.min(Math.abs(key), 1)}
