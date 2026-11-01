@@ -67,6 +67,7 @@
 import puppeteer from 'puppeteer-core'
 
 import { CHROME, launchFirefox } from './browser.mjs'
+import { publish } from './bucket.mjs'
 import { installHelpers, SEED, seedStorage, step } from './drive.mjs'
 import { flag, sleep } from './harness.mjs'
 import {
@@ -1168,19 +1169,7 @@ for (const slide of wanted) {
         `  ✓ ${take.name} — ${frames} frames, ${kb(mp4)}K mp4, ${kb(still)}K still`,
       )
       if (slidesPath === null) {
-        execFileSync(
-          'aws',
-          [
-            's3',
-            'cp',
-            mp4,
-            S3_PREFIX,
-            '--profile',
-            'colin',
-            '--only-show-errors',
-          ],
-          { stdio: 'inherit' },
-        )
+        publish(mp4, S3_PREFIX)
         console.log(`    ↑ ${CLIPS}${take.name}.mp4`)
       }
     } catch (e) {

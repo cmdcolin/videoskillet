@@ -22,6 +22,7 @@
 // demo uses (needs the `colin` AWS profile).
 
 import { launchFirefox } from './browser.mjs'
+import { publish } from './bucket.mjs'
 import { SPECS } from './docshot-specs.mjs'
 // Seeding, element resolution and the actions live in drive.mjs — `appreel.mjs`
 // drives the same app to record its window, and neither harness owns that.
@@ -242,11 +243,7 @@ async function captureVideo(page, spec) {
     `  ✓ ${spec.name}.mp4 (${(statSync(mp4).size / 1e6).toFixed(1)} MB, ${rate.toFixed(0)} fps)`,
   )
   if (upload) {
-    execFileSync(
-      'aws',
-      ['s3', 'cp', mp4, `${S3_PREFIX}${spec.name}.mp4`, '--profile', 'colin'],
-      { stdio: 'inherit' },
-    )
+    publish(mp4, `${S3_PREFIX}${spec.name}.mp4`)
     console.log(`  ↑ ${CLIP_BASE}${spec.name}.mp4`)
   }
 }

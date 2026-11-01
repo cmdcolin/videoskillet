@@ -125,11 +125,13 @@ which is what every browser without `createWritable` gets.
 
 Every mp4 this project records — the carousel's slides (`scripts/appreel.mjs`)
 and the gallery's demo loops (`scripts/demoreel.mjs`) — goes to
-`s3://myloveydove.com/videoskillet/` under a prefix of its own, with
-`aws s3 cp --profile colin`. Both recorders upload at the end of a take, and
-both `public/reel/*.mp4` and `public/demos/*.mp4` are gitignored. The **stills
-stay** in the repo: a card has to show something before its clip is fetched, and
-a webp is kilobytes.
+`s3://myloveydove.com/videoskillet/` under a prefix of its own, through
+`publish` in `scripts/bucket.mjs`, which copies the file with
+`aws s3 cp --profile colin` and then invalidates its path on CloudFront, which
+otherwise serves a re-recorded clip's old bytes until its cache expires. Both
+recorders upload at the end of a take, and both `public/reel/*.mp4` and
+`public/demos/*.mp4` are gitignored. The **stills stay** in the repo: a card has
+to show something before its clip is fetched, and a webp is kilobytes.
 
 A recording is rewritten whenever its look is re-recorded, so a tracked one puts
 every version of a megabyte-scale binary in the history forever. `demos.mjs` and

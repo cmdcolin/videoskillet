@@ -1,6 +1,7 @@
 import puppeteer from 'puppeteer-core'
 
 import { CHROME, launchFirefox } from './browser.mjs'
+import { publish } from './bucket.mjs'
 import { CLIPS, demos, S3_PREFIX } from './demos.mjs'
 import { installHelpers } from './drive.mjs'
 import { flag, sleep } from './harness.mjs'
@@ -433,19 +434,7 @@ for (const demo of wanted) {
     // on disk and in the history; the mp4 is on the bucket and gitignored, so
     // this is not an extra step at the end of a take but the step that makes
     // the recording reachable at all.
-    execFileSync(
-      'aws',
-      [
-        's3',
-        'cp',
-        `${outDir}/${demo.file}.mp4`,
-        S3_PREFIX,
-        '--profile',
-        'colin',
-        '--only-show-errors',
-      ],
-      { stdio: 'inherit' },
-    )
+    publish(`${outDir}/${demo.file}.mp4`, S3_PREFIX)
     console.log(`    ↑ ${CLIPS}${demo.file}.mp4`)
   } catch (e) {
     console.log(`  FAIL ${demo.file}: ${String(e).slice(0, 200)}`)

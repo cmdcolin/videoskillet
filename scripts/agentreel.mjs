@@ -44,6 +44,7 @@
 import puppeteer from 'puppeteer-core'
 
 import { CHROME } from './browser.mjs'
+import { publish } from './bucket.mjs'
 import { flag, sleep } from './harness.mjs'
 import { appUp } from './until.mjs'
 
@@ -512,8 +513,11 @@ console.log(`agentreel: ${mp4} (${(statSync(mp4).size / 1e6).toFixed(0)}MB)`)
 console.log(`agentreel: ${poster}`)
 if (upload) {
   console.log('agentreel: uploading')
-  const up = spawnSync(uploadCmd[0], uploadCmd.slice(1), { stdio: 'inherit' })
-  if (up.status !== 0) die('the upload failed — the clip is still on disk')
+  try {
+    publish(mp4, S3_PREFIX)
+  } catch {
+    die('the upload failed — the clip is still on disk')
+  }
   console.log(`agentreel: ${CLIP_URL}`)
 } else {
   console.log(`agentreel: upload with ${uploadCmd.join(' ')}`)
