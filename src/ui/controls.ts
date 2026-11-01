@@ -2177,7 +2177,7 @@ export const GROUPS: Group[] = [
         step: 1,
         unit: '',
         choices: ['off', 'border', 'drop shadow', 'extrude'],
-        help: "The switcher's edge generator. It delays the key by a few samples and lines, combines the copies, and fills wherever they reach past the subject with a matte of its own. Border grows a rim all round, drop shadow lays one copy down and to the right, and extrude stacks a run of copies along that diagonal into a slab. The edge is the key moved, so it has the key's softness and its steps. Genlocked path only.",
+        help: "The switcher's edge generator. It delays the key by a few samples and lines, combines the copies, and fills wherever they reach past the subject with a matte of its own. Border grows a rim all round, drop shadow lays one copy down and to the right, and extrude stacks a run of copies along that diagonal into a slab, each copy's matte dimmer the further it is delayed. The edge is the key moved, so it has the key's softness and its steps. Genlocked path only.",
       },
       {
         key: 'bKeyEdgeUs',

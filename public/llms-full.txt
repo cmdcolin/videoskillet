@@ -678,7 +678,7 @@ bKeyBackY  (backing luma)
 
 bKeyEdge  (key edge)
   0=off 1=border 2=drop shadow 3=extrude  default 0
-  The switcher's edge generator. It delays the key by a few samples and lines, combines the copies, and fills wherever they reach past the subject with a matte of its own. Border grows a rim all round, drop shadow lays one copy down and to the right, and extrude stacks a run of copies along that diagonal into a slab. The edge is the key moved, so it has the key's softness and its steps. Genlocked path only.
+  The switcher's edge generator. It delays the key by a few samples and lines, combines the copies, and fills wherever they reach past the subject with a matte of its own. Border grows a rim all round, drop shadow lays one copy down and to the right, and extrude stacks a run of copies along that diagonal into a slab, each copy's matte dimmer the further it is delayed. The edge is the key moved, so it has the key's softness and its steps. Genlocked path only.
 
 bKeyEdgeUs  (edge size)
   0.05..4 step 0.01 µs  default 0.5

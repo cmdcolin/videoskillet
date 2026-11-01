@@ -2141,7 +2141,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'extruded ribbons',
     group: 'A/B mixing',
     blurb:
-      "The keyer's edge generator set to extrude, over the video synth's colorizer bands. Best with the synth in slot B. The key cuts the green band out of B so A shows through, and the edge generator runs the key through a chain of sample and line delays down and to the right and fills behind every copy with a dark navy matte. Each band left standing sits on a slab of its own outline, a 3D look built from delay lines. The slab's ends step where the copies part, and its edges have the key's soft-across, sharp-down composite edge, because the slab is the key moved.",
+      "The keyer's edge generator set to extrude, over the video synth's colorizer bands. Best with the synth in slot B. The key cuts the green band out of B so A shows through, and the edge generator runs the key through a chain of sample and line delays down and to the right and fills behind every copy with a copper matte, dimmer the further the copy is delayed. Each band left standing sits on a slab of its own outline, lit where it meets the band and falling into shadow, a 3D look built from delay lines. The slab steps where the copies part, and its edges have the key's soft-across, sharp-down composite edge, because the slab is the key moved.",
     patch: {
       bGenlock: 1,
       bGain: 1,
@@ -2151,10 +2151,10 @@ export const PRESETS: PresetDef[] = [
       bKeyClip: 0.05,
       bKeySoft: 0.04,
       bKeyEdge: 3,
-      bKeyEdgeUs: 2,
-      bKeyEdgeY: 0.12,
-      bKeyEdgeSat: 0.25,
-      bKeyEdgeHueDeg: 300,
+      bKeyEdgeUs: 2.5,
+      bKeyEdgeY: 0.6,
+      bKeyEdgeSat: 0.3,
+      bKeyEdgeHueDeg: 120,
       synthShape: 2,
       synthMix: 1,
       synthColor: 1,

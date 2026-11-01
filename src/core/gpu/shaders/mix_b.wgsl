@@ -239,14 +239,23 @@ fn edgeTap(at: i32, dx: i32, dy: i32, phase: f32) -> f32 {
 //
 // Every tap is another pass through the keyer at that position, so border
 // costs eight and extrude eight; it is evaluated only while switched on.
-fn keyEdge(at: i32, phase: f32) -> f32 {
+//
+// Extrude gives each copy its own matte level, falling with the delay, the way
+// a shaded extrusion was built: the copy nearest the subject sets the colour,
+// so the slab is lit where it meets the subject and runs down into shadow at
+// its far end. The result is the edge's coverage and the level its matte runs
+// at there.
+fn keyEdge(at: i32, phase: f32) -> vec2f {
   let h = P.bKeyEdgeH;
   let v = P.bKeyEdgeV;
   var e = 0.0;
+  var lit = 0.0;
   if (P.bKeyEdge > 2.5) {
     for (var i = 1; i <= 8; i++) {
       let t = f32(i) / 8.0;
-      e = max(e, edgeTap(at, -i32(round(h * t)), -i32(round(v * t)), phase));
+      let copy = edgeTap(at, -i32(round(h * t)), -i32(round(v * t)), phase);
+      e = max(e, copy);
+      lit = max(lit, copy * mix(1.0, 0.35, f32(i - 1) / 7.0));
     }
   } else if (P.bKeyEdge > 1.5) {
     e = edgeTap(at, -i32(round(h)), -i32(round(v)), phase);
@@ -260,7 +269,10 @@ fn keyEdge(at: i32, phase: f32) -> f32 {
     e = max(e, max(max(edgeTap(at, hd, vd, phase), edgeTap(at, -hd, vd, phase)),
       max(edgeTap(at, hd, -vd, phase), edgeTap(at, -hd, -vd, phase))));
   }
-  return e;
+  if (P.bKeyEdge < 2.5) {
+    lit = e;
+  }
+  return vec2f(e, lit / max(e, 1e-4));
 }
 
 // A flat field from one of the box's matte generators: luma plus quadrature
@@ -442,7 +454,9 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
         let k = chromaKey(at, phase, true);
         behind = keyFill(a, n);
         if (P.bKeyEdge > 0.5) {
-          behind = mix(behind, matteOf(n, P.bKeyEdgeY, P.bKeyEdgeHue, P.bKeyEdgeSat), keyEdge(at, phase));
+          let edge = keyEdge(at, phase);
+          let edgeMatte = matteOf(n, P.bKeyEdgeY * edge.y, P.bKeyEdgeHue, P.bKeyEdgeSat * edge.y);
+          behind = mix(behind, edgeMatte, edge.x);
         }
         if (P.bKeyAdditive > 0.5) {
           if (P.bKey > 0.0) {
