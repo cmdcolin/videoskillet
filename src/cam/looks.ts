@@ -19,6 +19,7 @@ import {
 } from '../ui/presets'
 
 import type { ControlKey, Controls, ModSlot } from '../core/controls'
+import type { Rand } from '../core/rng'
 import type { SliderDef } from '../ui/controls'
 import type { ModRouting } from '../ui/modSlots'
 import type { PresetDef } from '../ui/presets'
@@ -357,9 +358,14 @@ export function rollPool(shelf: Shelf): readonly string[] {
 export function rollLook(
   current: Look | null,
   pool: readonly string[] = ROLL_POOL,
+  rand: Rand = Math.random,
 ): Look {
   const rest = pool.filter(name => name !== current?.name)
-  return { name: rest[randomIndex(rest.length)]!, strength: 1, rolled: true }
+  return {
+    name: rest[randomIndex(rest.length, rand)]!,
+    strength: 1,
+    rolled: true,
+  }
 }
 
 // How the mixer puts B with A. Each is a switcher's own tool: a genlocked

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { DEFAULT_CONTROLS } from '../core/controls'
+import { rngFor } from '../core/rng'
 import {
   PRESET_BY_NAME,
   blendPresets,
@@ -262,6 +263,18 @@ describe('rollLook', () => {
       expect(next.rolled).toBe(true)
       look = next
     }
+  })
+
+  it('rolls the same look again from the same seed', () => {
+    const names = (seed: number) => {
+      const rand = rngFor(seed)
+      return Array.from(
+        { length: 8 },
+        () => rollLook(null, undefined, rand).name,
+      )
+    }
+    expect(names(7)).toEqual(names(7))
+    expect(new Set(names(7)).size).toBeGreaterThan(1)
   })
 
   it('has a couple of dozen loops to roll', () => {
