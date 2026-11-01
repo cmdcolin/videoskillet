@@ -168,6 +168,9 @@ export const PARAM_DEFS = [
   ['bKeySoft', 'f32'], // comparator swing: edge softness in both angle and saturation
   ['bKeySpill', 'f32'], // chroma canceller: backing subcarrier reinjected antiphase
   ['bKeyDelay', 'f32'], // key-vs-fill horizontal registration, samples
+  ['bKeyAdditive', 'f32'], // 0 comparator, 1 additive: backing subtracted, fill added under a proportional matte
+  ['bKeyLevel', 'f32'], // additive: the backing's chroma at full light, chroma units
+  ['bKeyBackY', 'f32'], // additive: the backing's luma at that level, 0..1
   // The keyer's fill input — what shows through the hole. Genlocked path only,
   // because only a crossfade has a "behind" for a fill to be: the dirty sum has
   // no layers, so there the key gates B's contribution and A is simply always

@@ -308,6 +308,9 @@
 320 cgFillFrom step=1 default=0 choices=characters|loop bus
 321 cgHueDeg step=1 default=0
 322 cgSat step=0.01 default=0
+323 bKeyAdditive step=1 default=0 choices=comparator|additive
+324 bKeyLevel step=0.005 default=0.44
+325 bKeyBackY step=0.01 default=0.44
 
 # ?mod= sources, by name
 sine

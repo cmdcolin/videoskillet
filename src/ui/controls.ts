@@ -2120,6 +2120,39 @@ export const GROUPS: Group[] = [
         help: 'The registration trim, because the key path and the video path are different lengths of circuit. Off zero the matte lies beside the subject: one edge keeps a rim of backing colour, the other removes a rim of subject.',
       },
       {
+        key: 'bKeyAdditive',
+        id: 323,
+        label: 'keyer',
+        min: 0,
+        max: 1,
+        step: 1,
+        unit: '',
+        choices: ['comparator', 'additive'],
+        help: 'How the box makes its matte. The comparator cuts or keeps each sample by hue and saturation. The additive keyer works like an Ultimatte: it measures how much backing a sample holds, subtracts that much backing from B and adds that much fill underneath. A shadow on the backing becomes a shadow on the fill, fine hair keys part way, and spill goes with the backing. Set the backing level and luma to the lit backing; clip, gain and spill kill do nothing here. On the dirty path it only takes the backing down to black.',
+      },
+      {
+        key: 'bKeyLevel',
+        id: 324,
+        label: 'backing level',
+        min: 0.05,
+        max: 0.6,
+        step: 0.005,
+        unit: '',
+        fine: true,
+        help: "The backing's saturation where it is fully lit, in chroma units, for the additive keyer. A sample holding this much backing passes the fill at full strength and less light lets less through. Set too high, the whole fill comes up dimmed. Set too low, shadows fill in and the brightest backing stays lifted.",
+      },
+      {
+        key: 'bKeyBackY',
+        id: 325,
+        label: 'backing luma',
+        min: 0,
+        max: 1,
+        step: 0.01,
+        unit: '',
+        fine: true,
+        help: "The backing's brightness at that level, for the additive keyer, which subtracts it along with the colour. Too low leaves a grey veil over the fill. Too high crushes the backing to black and eats into dark edges of the subject.",
+      },
+      {
         key: 'bKeyFill',
         id: 222,
         label: 'fill',
@@ -4253,6 +4286,12 @@ const keyed: SliderNeed = {
   fix: 1,
   hint: 'the chroma key nonzero',
 }
+const additive: SliderNeed = {
+  key: 'bKeyAdditive',
+  ok: above0,
+  fix: 1,
+  hint: 'the keyer on "additive"',
+}
 // The matte generator's three trims only address anything while the fill
 // selector is actually pointed at it.
 const storeFill: SliderNeed = {
@@ -4427,6 +4466,9 @@ export const NEEDS: Partial<Record<ControlKey, SliderNeed>> = {
   bKeySoft: keyed,
   bKeySpill: keyed,
   bKeyDelayUs: keyed,
+  bKeyAdditive: keyed,
+  bKeyLevel: additive,
+  bKeyBackY: additive,
   // Genlocked as well as keyed: on the dirty sum there is no layer behind the
   // foreground for a fill to be, so the selector addresses nothing there.
   bKeyFill: {

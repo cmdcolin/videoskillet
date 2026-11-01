@@ -664,6 +664,18 @@ bKeyDelayUs  (key delay)
   -1.5..1.5 step 0.01 µs  default 0
   The registration trim, because the key path and the video path are different lengths of circuit. Off zero the matte lies beside the subject: one edge keeps a rim of backing colour, the other removes a rim of subject.
 
+bKeyAdditive  (keyer)
+  0=comparator 1=additive  default 0
+  How the box makes its matte. The comparator cuts or keeps each sample by hue and saturation. The additive keyer works like an Ultimatte: it measures how much backing a sample holds, subtracts that much backing from B and adds that much fill underneath. A shadow on the backing becomes a shadow on the fill, fine hair keys part way, and spill goes with the backing. Set the backing level and luma to the lit backing; clip, gain and spill kill do nothing here. On the dirty path it only takes the backing down to black.
+
+bKeyLevel  (backing level)
+  0.05..0.6 step 0.005  default 0.44
+  The backing's saturation where it is fully lit, in chroma units, for the additive keyer. A sample holding this much backing passes the fill at full strength and less light lets less through. Set too high, the whole fill comes up dimmed. Set too low, shadows fill in and the brightest backing stays lifted.
+
+bKeyBackY  (backing luma)
+  0..1 step 0.01  default 0.44
+  The backing's brightness at that level, for the additive keyer, which subtracts it along with the colour. Too low leaves a grey veil over the fill. Too high crushes the backing to black and eats into dark edges of the subject.
+
 bKeyFill  (fill)
   0=program A 1=matte 2=loop bus 3=freeze  default 0
   What shows through the hole the key cut. Program A is the other input. Matte is the box's own generator, a flat colour encoded on the house carrier, so it dot-crawls like any other colour. Loop bus patches in the mixer's frame store, which records every frame, so a moving subject leaves trails. Freeze holds the frame on screen when it is selected, and keeps holding it when a source changes, so a frozen picture can sit behind a new subject. A link opened with freeze or the loop bus starts holding once its sources have loaded. Genlocked path only.

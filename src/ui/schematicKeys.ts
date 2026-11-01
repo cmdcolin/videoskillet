@@ -354,7 +354,15 @@ export const CROSSPOINT_KEYS = Object.values(CROSSPOINT_OPENS).flat()
 export const CHROMA_KEY_OPENS = {
   spill: ['bKeySpill'],
   delay: ['bKeyDelayUs'],
-  keyer: ['bKeyHueDeg', 'bKeyAcceptDeg', 'bKeyClip', 'bKeySoft'],
+  keyer: [
+    'bKeyHueDeg',
+    'bKeyAcceptDeg',
+    'bKeyClip',
+    'bKeySoft',
+    'bKeyAdditive',
+    'bKeyLevel',
+    'bKeyBackY',
+  ],
   fill: [
     'bKeyFill',
     'bKeyMatteY',

@@ -73,6 +73,11 @@ struct KeySlice {
   // The part of this sample's chroma that points at the backing colour, for
   // the suppressor below — the spill the keyer decided was not enough to cut.
   spill: vec2f,
+  // How much backing colour the sample holds, for the additive keyer: its
+  // chroma along the key hue, less its chroma across it scaled so the two
+  // balance at the edge of the acceptance wedge. Zero or below on anything the
+  // wedge leaves out, and proportional to the light on the backing inside it.
+  level: f32,
 }
 
 // The angle B's carrier stands at against the house carrier, at B's raster
@@ -100,6 +105,9 @@ fn chromaKey(at: i32, phase: f32) -> KeySlice {
   let uv = vec2f(enc.x * c - enc.y * s, enc.x * s + enc.y * c)
     * P.bVidGain * (1.0 - 2.0 * P.bInv);
   let soft = max(P.bKeySoft, 1e-4);
+  let kdir = vec2f(cos(P.bKeyHue), sin(P.bKeyHue));
+  let across = max(cos(P.bKeyAccept), 0.0) / max(sin(P.bKeyAccept), 1e-3);
+  let level = dot(uv, kdir) - across * abs(uv.x * kdir.y - uv.y * kdir.x);
   // Below the clip there is no hue to slice: a demodulator handed an
   // unsaturated sample reports an essentially arbitrary phase, so greys, blacks
   // and the backing's own shadows stay opaque however close their angle lands
@@ -111,8 +119,7 @@ fn chromaKey(at: i32, phase: f32) -> KeySlice {
     // The invert button: keep the backing and cut the subject out of it.
     g = 1.0 - g;
   }
-  let kdir = vec2f(cos(P.bKeyHue), sin(P.bKeyHue));
-  return KeySlice(mix(1.0, g, min(abs(P.bKey), 1.0)), kdir * max(dot(uv, kdir), 0.0) * satg);
+  return KeySlice(mix(1.0, g, min(abs(P.bKey), 1.0)), kdir * max(dot(uv, kdir), 0.0) * satg, level);
 }
 
 // Spill suppression, as the hardware did it: a chroma canceller. You cannot
@@ -123,6 +130,39 @@ fn chromaKey(at: i32, phase: f32) -> KeySlice {
 // whose carrier is slipping keeps a residue that breathes with the slip.
 fn suppress(spill: vec2f, n: u32) -> f32 {
   return VIDEO_RANGE * P.bKeySpill * dot(spill, carrier(n, P.frame));
+}
+
+// The additive keyer: the Ultimatte's design, on the bus. The comparator above
+// decides keep or cut. This box measures how much backing a sample holds,
+// against the backing's level at full light, and that share is a matte
+// proportional to the light falling on the backing. It subtracts that share of
+// the backing from B, luma and chroma both, and adds the same share of the fill
+// under what is left. A shadow on the backing is a sample holding less backing,
+// so it comes out as a shadow on the fill. A strand finer than the chroma band
+// holds a little backing and keys part way. Spill is backing too and goes with
+// the same subtraction, so colours off the key hue are never touched.
+//
+// The share runs past 1 for the subtraction, so a patch of backing lit brighter
+// than the calibration is still removed, up to half as bright again. Past that
+// it keeps a lifted residue, which is what a backing level set too low does.
+fn backingShare(k: KeySlice) -> f32 {
+  return clamp(k.level / max(P.bKeyLevel, 1e-3), 0.0, 1.5);
+}
+
+// B with its backing subtracted. The box clips the luma it takes away at B's
+// own luma, so a calibration set too bright drives the backing to black and no
+// further, where it would otherwise dig down toward sync.
+fn subtractBacking(fill: f32, k: KeySlice, at: i32, n: u32) -> f32 {
+  let share = backingShare(k) * min(abs(P.bKey), 1.0);
+  let kdir = vec2f(cos(P.bKeyHue), sin(P.bKeyHue));
+  let y = min(share * P.bKeyBackY, lumaBAt(clampIdx(at)));
+  return fill - VIDEO_RANGE * (y + share * P.bKeyLevel * dot(kdir, carrier(n, P.frame)));
+}
+
+// The additive keyer's gate when inverted: the backing is kept in proportion
+// to how much of it there is and the subject is cut out of it.
+fn keepBacking(k: KeySlice) -> f32 {
+  return mix(1.0, min(backingShare(k), 1.0), min(abs(P.bKey), 1.0));
 }
 
 // The store's output through a bandpass at fsc along the line: x[i] less the
@@ -299,11 +339,20 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
         // the suppressor can null it flat. On a line that has lost lock the key
         // tears sideways with the picture.
         let k = chromaKey(at, busPhase(at, n, frac, P.bHue));
-        g = g * k.gate;
-        if (P.bKeySpill > 0.0) {
-          fill = fill - suppress(k.spill, n);
-        }
         behind = keyFill(a, n);
+        if (P.bKeyAdditive > 0.5) {
+          if (P.bKey > 0.0) {
+            let share = min(backingShare(k), 1.0) * min(P.bKey, 1.0);
+            fill = subtractBacking(fill, k, at, n) + share * (behind - IRE_BLACK);
+          } else {
+            g = g * keepBacking(k);
+          }
+        } else {
+          g = g * k.gate;
+          if (P.bKeySpill > 0.0) {
+            fill = fill - suppress(k.spill, n);
+          }
+        }
       }
       comp[n] = mix(behind, fill, clamp(g * P.bGain, 0.0, 1.0));
     }
@@ -347,10 +396,22 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
       // B's carrier here is the one encode_composite_b baked in, its detune
       // walked per line, and the fractional slip turns it further against the
       // house lattice.
+      //
+      // The additive keyer has no layer to add a fill under here either, so on
+      // this path it only subtracts: B's backing goes to black, shadows
+      // included, and the sum is A wherever the backing was.
       let k = chromaKey(np, busPhase(np, n, frac, P.bHue + P.bPhase0 + P.bPhaseLine * f32(srow)));
-      g = g * k.gate;
-      if (P.bKeySpill > 0.0) {
-        fill = fill - suppress(k.spill, n);
+      if (P.bKeyAdditive > 0.5) {
+        if (P.bKey > 0.0) {
+          fill = subtractBacking(fill, k, np, n);
+        } else {
+          g = g * keepBacking(k);
+        }
+      } else {
+        g = g * k.gate;
+        if (P.bKeySpill > 0.0) {
+          fill = fill - suppress(k.spill, n);
+        }
       }
     }
     // Sum at the composite level; A rides its own bus fader (signed, so a
