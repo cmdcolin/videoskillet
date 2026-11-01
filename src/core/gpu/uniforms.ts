@@ -5,6 +5,7 @@
 
 import { clamp01 } from '../math'
 import {
+  ACTIVE_HEIGHT,
   ACTIVE_WIDTH,
   F_H,
   IRE_VIDEO_RANGE,
@@ -17,6 +18,11 @@ import { valueNoise } from '../signal/noise'
 
 import type { Controls } from '../controls'
 import type { OsdStep } from '../signal/osdstate'
+
+// Lines down the picture that match one microsecond across it on a 4:3 screen,
+// so the key edge generator's border comes out the same width all round.
+const LINES_PER_US =
+  (ACTIVE_HEIGHT * 4 * SAMPLE_RATE * 1e-6) / (3 * ACTIVE_WIDTH)
 
 // Bent-crystal demod LO: how fast a detuned 3.58 MHz oscillator's phase error
 // grows, per composite sample.
@@ -338,6 +344,12 @@ export function uniformValues(c: Controls, env: UniformEnv) {
     bKeyAdditive: c.bKeyAdditive,
     bKeyLevel: c.bKeyLevel,
     bKeyBackY: c.bKeyBackY,
+    bKeyEdge: c.bKeyEdge,
+    bKeyEdgeH: c.bKeyEdgeUs * 1e-6 * SAMPLE_RATE,
+    bKeyEdgeV: c.bKeyEdgeUs * LINES_PER_US,
+    bKeyEdgeY: c.bKeyEdgeY,
+    bKeyEdgeHue: (c.bKeyEdgeHueDeg * Math.PI) / 180,
+    bKeyEdgeSat: c.bKeyEdgeSat,
     bKeyFill: c.bKeyFill,
     bKeyMatteY: c.bKeyMatteY,
     bKeyMatteHue: (c.bKeyMatteHueDeg * Math.PI) / 180,

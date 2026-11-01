@@ -165,6 +165,76 @@ fn keepBacking(k: KeySlice) -> f32 {
   return mix(1.0, min(backingShare(k), 1.0), min(abs(P.bKey), 1.0));
 }
 
+// How much of B the key keeps at a sample, whichever keyer is cutting.
+fn keptBy(k: KeySlice) -> f32 {
+  var kept = k.gate;
+  if (P.bKeyAdditive > 0.5) {
+    kept = select(keepBacking(k), 1.0 - min(backingShare(k), 1.0) * min(P.bKey, 1.0), P.bKey > 0.0);
+  }
+  return kept;
+}
+
+// The key signal a delay of dx samples and dy lines away, sliced. The edge
+// generator has a comparator of its own on the key, so a part key, a shadow
+// left on the fill or a strand keyed part way, reads as backing and grows no
+// edge. The keyer blanks its key outside the active picture, so a tap that
+// lands in blanking reads as backing too and the frame's own edges never grow
+// a border.
+fn edgeTap(at: i32, dx: i32, dy: i32, phase: f32) -> f32 {
+  let idx = at + dx + dy * i32(SPL);
+  let u = clampIdx(idx);
+  let s = u % SPL;
+  let row = u / SPL;
+  var kept = 0.0;
+  if (s >= ACTIVE_START && s < ACTIVE_START + ACTIVE_W && row >= ACTIVE_TOP && row < ACTIVE_TOP + ACTIVE_H) {
+    kept = smoothstep(0.7, 0.9, keptBy(chromaKey(idx, phase)));
+  }
+  return kept;
+}
+
+// A switcher's key edge generator. The key is run through sample and line
+// delays and the delayed copies are combined with it, and wherever a copy
+// reaches past the subject the generator's own matte goes in behind it. Border
+// takes the key delayed both ways along and down the picture, so the subject
+// grows a rim all round. Drop shadow takes one copy, delayed down and to the
+// right. Extrude takes a run of copies along that diagonal, so the subject sits
+// on a solid slab. The edge inherits the key's softness and its steps, since
+// it is the same signal moved.
+//
+// Every tap is another pass through the keyer at that position, so border
+// costs eight and extrude eight; it is evaluated only while switched on.
+fn keyEdge(at: i32, phase: f32) -> f32 {
+  let h = P.bKeyEdgeH;
+  let v = P.bKeyEdgeV;
+  var e = 0.0;
+  if (P.bKeyEdge > 2.5) {
+    for (var i = 1; i <= 8; i++) {
+      let t = f32(i) / 8.0;
+      e = max(e, edgeTap(at, -i32(round(h * t)), -i32(round(v * t)), phase));
+    }
+  } else if (P.bKeyEdge > 1.5) {
+    e = edgeTap(at, -i32(round(h)), -i32(round(v)), phase);
+  } else {
+    let hx = i32(round(h));
+    let vy = i32(round(v));
+    let hd = i32(round(h * 0.71));
+    let vd = i32(round(v * 0.71));
+    e = max(max(edgeTap(at, hx, 0, phase), edgeTap(at, -hx, 0, phase)),
+      max(edgeTap(at, 0, vy, phase), edgeTap(at, 0, -vy, phase)));
+    e = max(e, max(max(edgeTap(at, hd, vd, phase), edgeTap(at, -hd, vd, phase)),
+      max(edgeTap(at, hd, -vd, phase), edgeTap(at, -hd, -vd, phase))));
+  }
+  return e;
+}
+
+// A flat field from one of the box's matte generators: luma plus quadrature
+// chroma on the house carrier, so it is a real encoded colour that dot-crawls
+// and gets demodulated like any other.
+fn matteOf(n: u32, y: f32, hue: f32, sat: f32) -> f32 {
+  let sc = carrier(n, P.frame);
+  return IRE_BLACK + VIDEO_RANGE * (y + sat * (cos(hue) * sc.x + sin(hue) * sc.y));
+}
+
 // The store's output through a bandpass at fsc along the line: x[i] less the
 // mean of the samples a half cycle either side, which passes sin^2 of the
 // frequency, 1 at fsc and 0 at DC.
@@ -224,13 +294,7 @@ fn keyFill(program: f32, n: u32) -> f32 {
     return mix(storeOut(n), program, P.bKeyFillMixA);
   }
   if (P.bKeyFill > 0.5) {
-    // Matte generator: flat luma plus quadrature chroma on the house carrier, so
-    // the matte is a real encoded colour that dot-crawls and gets demodulated
-    // like any other — not an RGB value pasted onto the output.
-    let sc = carrier(n, P.frame);
-    let u = P.bKeyMatteSat * cos(P.bKeyMatteHue);
-    let v = P.bKeyMatteSat * sin(P.bKeyMatteHue);
-    return IRE_BLACK + VIDEO_RANGE * (P.bKeyMatteY + u * sc.x + v * sc.y);
+    return matteOf(n, P.bKeyMatteY, P.bKeyMatteHue, P.bKeyMatteSat);
   }
   return program;
 }
@@ -338,8 +402,12 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
         // carries only the proc-amp hue trim, so the backing holds still and
         // the suppressor can null it flat. On a line that has lost lock the key
         // tears sideways with the picture.
-        let k = chromaKey(at, busPhase(at, n, frac, P.bHue));
+        let phase = busPhase(at, n, frac, P.bHue);
+        let k = chromaKey(at, phase);
         behind = keyFill(a, n);
+        if (P.bKeyEdge > 0.5) {
+          behind = mix(behind, matteOf(n, P.bKeyEdgeY, P.bKeyEdgeHue, P.bKeyEdgeSat), keyEdge(at, phase));
+        }
         if (P.bKeyAdditive > 0.5) {
           if (P.bKey > 0.0) {
             let share = min(backingShare(k), 1.0) * min(P.bKey, 1.0);

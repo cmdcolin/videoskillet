@@ -311,6 +311,11 @@
 323 bKeyAdditive step=1 default=0 choices=comparator|additive
 324 bKeyLevel step=0.005 default=0.44
 325 bKeyBackY step=0.01 default=0.44
+326 bKeyEdge step=1 default=0 choices=off|border|drop shadow|extrude
+327 bKeyEdgeUs step=0.01 default=0.5
+328 bKeyEdgeY step=0.01 default=0
+329 bKeyEdgeHueDeg step=1 default=0
+330 bKeyEdgeSat step=0.01 default=0
 
 # ?mod= sources, by name
 sine

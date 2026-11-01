@@ -676,6 +676,26 @@ bKeyBackY  (backing luma)
   0..1 step 0.01  default 0.44
   The backing's brightness at that level, for the additive keyer, which subtracts it along with the colour. Too low leaves a grey veil over the fill. Too high crushes the backing to black and eats into dark edges of the subject.
 
+bKeyEdge  (key edge)
+  0=off 1=border 2=drop shadow 3=extrude  default 0
+  The switcher's edge generator. It delays the key by a few samples and lines, combines the copies, and fills wherever they reach past the subject with a matte of its own. Border grows a rim all round, drop shadow lays one copy down and to the right, and extrude stacks a run of copies along that diagonal into a slab. The edge is the key moved, so it has the key's softness and its steps. Genlocked path only.
+
+bKeyEdgeUs  (edge size)
+  0.05..4 step 0.01 µs  default 0.5
+  How far the edge generator delays the key, across the picture in microseconds and down it in the lines that match on a 4:3 screen. One microsecond is about a fiftieth of the picture width.
+
+bKeyEdgeY  (edge level)
+  0..1 step 0.01  default 0
+  How bright the edge generator's matte sits. 0 with no saturation is a black edge, the usual drop shadow.
+
+bKeyEdgeHueDeg  (edge hue)
+  0..360 step 1 deg  default 0
+  The edge matte's colour, as a phase on the subcarrier, off the same wheel as the backing hue.
+
+bKeyEdgeSat  (edge saturation)
+  0..0.6 step 0.01  default 0
+  How much chroma the edge matte puts on the carrier. At 0 the edge is grey, from black to white with the level.
+
 bKeyFill  (fill)
   0=program A 1=matte 2=loop bus 3=freeze  default 0
   What shows through the hole the key cut. Program A is the other input. Matte is the box's own generator, a flat colour encoded on the house carrier, so it dot-crawls like any other colour. Loop bus patches in the mixer's frame store, which records every frame, so a moving subject leaves trails. Freeze holds the frame on screen when it is selected, and keeps holding it when a source changes, so a frozen picture can sit behind a new subject. A link opened with freeze or the loop bus starts holding once its sources have loaded. Genlocked path only.

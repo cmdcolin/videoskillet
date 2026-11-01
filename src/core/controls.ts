@@ -357,6 +357,14 @@ export const DEFAULT_CONTROLS = {
   bKeyAdditive: 0,
   bKeyLevel: 0.44,
   bKeyBackY: 0.44,
+  // The key edge generator: the key delayed and combined with itself, and the
+  // ring that leaves filled with a matte of its own. 0 off, 1 border, 2 drop
+  // shadow, 3 extrude.
+  bKeyEdge: 0,
+  bKeyEdgeUs: 0.5,
+  bKeyEdgeY: 0,
+  bKeyEdgeHueDeg: 0,
+  bKeyEdgeSat: 0,
   bKeyFill: 0, // 0 program A, 1 matte, 2 the mixer loop bus, 3 a frozen frame of it (genlocked path only)
   bKeyMatteY: 0.5,
   bKeyMatteHueDeg: 0,
