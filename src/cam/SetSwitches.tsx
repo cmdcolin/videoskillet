@@ -2,7 +2,7 @@ import { useState } from 'react'
 
 import { cx } from '../ui/cx'
 import styles from './cam.module.css'
-import { MicIcon, MoreIcon, SideIcon, TiltIcon } from './icons'
+import { CaptionIcon, MicIcon, MoreIcon, SideIcon, TiltIcon } from './icons'
 import { Switch } from './Switch'
 
 // The switches on the set itself, folded under more down the picture's left
@@ -12,15 +12,16 @@ export function SetSwitches(props: {
   tilt: { supported: boolean; on: boolean; onToggle: () => void }
   side: { shown: boolean; on: boolean; onToggle: () => void }
   sound: { on: boolean; onToggle: () => void }
+  captions: { shown: boolean; on: boolean; onToggle: () => void }
 }) {
-  const { tilt, side, sound } = props
+  const { tilt, side, sound, captions } = props
   const [open, setOpen] = useState(false)
   return (
     <div className={cx(styles.switches, styles.left)}>
       <Switch
         on={open}
         label="more"
-        title="tilt, on side and sound"
+        title="tilt, on side, sound and captions"
         onClick={() => setOpen(!open)}
       >
         <MoreIcon />
@@ -53,6 +54,16 @@ export function SetSwitches(props: {
           onClick={() => sound.onToggle()}
         >
           <MicIcon />
+        </Switch>
+      ) : null}
+      {captions.shown && (open || captions.on) ? (
+        <Switch
+          on={captions.on}
+          label="captions"
+          title="key what people near the phone say into the picture"
+          onClick={() => captions.onToggle()}
+        >
+          <CaptionIcon />
         </Switch>
       ) : null}
     </div>

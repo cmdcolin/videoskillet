@@ -4,6 +4,8 @@ import { DEFAULT_CONTROLS } from '../core/controls'
 import { smpteBars, sweep } from '../sources/pattern'
 import { backingStoreSize } from '../ui/canvasSize'
 import { superviseEngine } from '../ui/engineSupervisor'
+import { captioned, chyronText } from './chyron'
+import { sliceOf } from './scene'
 import { sounded } from './sound'
 import { SLICE } from './tape'
 import { steered } from './tilt'
@@ -57,6 +59,19 @@ const tall = (video: HTMLVideoElement | null) =>
 export const layoutOf = (shown: Shown): Layout =>
   !tall(shown.video) ? 'whole' : shown.sideways ? 'turned' : 'slice'
 
+// The set's switches over the board.
+interface Switches {
+  sound: boolean
+  captions: boolean
+}
+
+const sliceShown = (shown: Shown) => sliceOf(layoutOf(shown))
+
+const switched = (c: Controls, on: Switches, shown: Shown): Controls => {
+  const loud = on.sound ? sounded(c) : c
+  return on.captions ? captioned(loud, sliceShown(shown)) : loud
+}
+
 const lay = (engine: Engine, layout: Layout) => {
   engine.setTubeTurned(layout === 'turned')
   engine.setViewSlice(layout === 'slice' ? SLICE : 1)
@@ -66,9 +81,16 @@ const lay = (engine: Engine, layout: Layout) => {
 // here, so an engine replacing a lost one comes up on the same camera and look.
 // A <video> belongs to the browser and plays straight through a device loss, so
 // it only needs attaching again; the bars lived in a texture and are re-issued.
-function dress(engine: Engine, shown: Shown, board: Board, sound: boolean) {
-  engine.applyControls(sound ? sounded(board.controls) : board.controls)
+function dress(
+  engine: Engine,
+  shown: Shown,
+  board: Board,
+  on: Switches,
+  words: string,
+) {
+  engine.applyControls(switched(board.controls, on, shown))
   engine.setModSlots(board.mod)
+  engine.setCaption(chyronText(words, sliceShown(shown)))
   putB(engine, shown.second)
   engine.setSourceMirror(shown.mirror)
   lay(engine, layoutOf(shown))
@@ -135,15 +157,19 @@ export function useCamEngine(
   const [first] = useState(opts.firstBoard)
   const board = useRef<Board>(first)
   const comparing = useRef(false)
-  const heard = useRef(false)
-  const onSet = (c: Controls) => (heard.current ? sounded(c) : c)
+  const switches = useRef<Switches>({ sound: false, captions: false })
+  const words = useRef('')
+  const onSet = (c: Controls) => switched(c, switches.current, shown.current)
 
   const relay = () => {
     const next = layoutOf(shown.current)
     if (next === laid.current) return
     laid.current = next
     setLayout(next)
-    if (engineRef.current !== null) lay(engineRef.current, next)
+    if (engineRef.current !== null) {
+      lay(engineRef.current, next)
+      engineRef.current.setCaption(chyronText(words.current, sliceOf(next)))
+    }
     opts.onLayout(next)
   }
   // A held still is grabbed again whenever the camera's frame changes, so it
@@ -263,8 +289,21 @@ export function useCamEngine(
     }
     if (on) await audio.enableMic()
     else audio.disconnect()
-    heard.current = on
+    switches.current = { ...switches.current, sound: on }
     engineRef.current?.applyControls(onSet(board.current.controls))
+  }
+
+  // Captions key what `say` was last handed into the picture. Turned off,
+  // they clear the words too.
+  const caption = (on: boolean) => {
+    switches.current = { ...switches.current, captions: on }
+    if (!on) say('')
+    engineRef.current?.applyControls(onSet(board.current.controls))
+  }
+
+  const say = (text: string) => {
+    words.current = text
+    engineRef.current?.setCaption(chyronText(text, sliceShown(shown.current)))
   }
 
   // Hold to see the camera clean, the way a photo app shows the original.
@@ -296,9 +335,14 @@ export function useCamEngine(
     const unsupervise = superviseEngine(canvas, {
       // The page has no link to wait on, so the frame store holds for a
       // loop-bus or freeze fill once the sources have been quiet a second.
-      adopt: (created, dead) => {
-        dress(created, shown.current, board.current, heard.current)
-        if (dead !== null) created.setCaption(dead.getCaption())
+      adopt: created => {
+        dress(
+          created,
+          shown.current,
+          board.current,
+          switches.current,
+          words.current,
+        )
         created.settleFreeze()
         engineRef.current = created
         setEngine(created)
@@ -336,6 +380,8 @@ export function useCamEngine(
     camera,
     showBoard,
     hear,
+    caption,
+    say,
     steer,
     compare,
   }

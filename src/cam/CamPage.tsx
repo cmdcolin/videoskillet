@@ -60,6 +60,7 @@ import { useShutter } from './useShutter'
 import { useSound } from './useSound'
 import { useSourceA } from './useSourceA'
 import { useSourcePicks } from './useSourcePicks'
+import { canHear, useSpeech } from './useSpeech'
 import { useTilt } from './useTilt'
 import { trackOf, useZoom } from './useZoom'
 import { ZoomStops } from './ZoomStops'
@@ -146,6 +147,7 @@ export function CamPage(props: { link: CamLink | null }) {
   })
   const tilt = useTilt(eng.steer)
   const sound = useSound(eng.hear, setError)
+  const [captions, setCaptions] = useState(false)
   const second = useSecond(eng, cam, setError, firstB)
   const { shown: flash, flash: announce } = useFlash<string>(900)
   const [shelfName, setShelfName] = useState(() => shelfOf(scene.look).name)
@@ -170,6 +172,25 @@ export function CamPage(props: { link: CamLink | null }) {
   )
 
   useWakeLock(eng.engine !== null)
+
+  const caption = (on: boolean) => {
+    setCaptions(on)
+    eng.caption(on)
+  }
+
+  useSpeech(captions, {
+    fallback: '',
+    onText: text => eng.say(text),
+    onPhrase: () => {},
+    onFail: e => {
+      caption(false)
+      setError(
+        e === 'not-allowed'
+          ? 'Captions need the microphone. Allow it in the browser’s site settings and try again.'
+          : `captions: ${e}`,
+      )
+    },
+  })
 
   // The chroma keyer's fill fades its copies into a still of the camera, so A
   // holds a frame for as long as the keyer is on.
@@ -502,6 +523,11 @@ export function CamPage(props: { link: CamLink | null }) {
               },
             }}
             sound={{ on: sound.on, onToggle: sound.toggle }}
+            captions={{
+              shown: canHear(),
+              on: captions,
+              onToggle: () => caption(!captions),
+            }}
           />
           <PanelSwitches panel={panel} onToggle={toggle} />
           <ClipInput attach={picks.attachB} onFile={picks.clipOnB} />

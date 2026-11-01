@@ -50,17 +50,20 @@ const FINAL = new Set(['not-allowed', 'service-not-allowed', 'audio-capture'])
 // phone say, in capitals the way a caption set them, while they talk. Each
 // finished phrase is handed to `onPhrase`. The browser ends a session after a
 // pause or a minute, so a session that ends is started again while `on` holds.
-// A browser with no recognition keeps `fallback` up.
+// A browser with no recognition keeps `fallback` up. An error that listening
+// again would only repeat stops it for good and goes to `onFail`.
 export function useSpeech(
   on: boolean,
   opts: {
     fallback: string
     onText: (text: string) => void
     onPhrase: (words: string) => void
+    onFail: (error: string) => void
   },
 ) {
   const report = useEffectEvent(opts.onText)
   const phrase = useEffectEvent(opts.onPhrase)
+  const fail = useEffectEvent(opts.onFail)
   const { fallback } = opts
 
   useEffect(() => {
@@ -111,7 +114,10 @@ export function useSpeech(
         })
         rec.addEventListener('error', e => {
           debugLog(`speech error: ${e.error} ${e.message}`)
-          if (FINAL.has(e.error)) live = false
+          if (FINAL.has(e.error)) {
+            live = false
+            fail(e.error)
+          }
         })
         rec.addEventListener('end', () => {
           debugLog(`speech ended, again: ${live}`)

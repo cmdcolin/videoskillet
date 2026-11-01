@@ -80,8 +80,9 @@ export function CostumePage(props: { settings: CostumeSettings }) {
 
   useSpeech(captioning, {
     fallback: settings.say,
-    onText: text => eng.engine?.setCaption(text),
+    onText: text => eng.say(text),
     onPhrase: () => boop('voice'),
+    onFail: () => {},
   })
 
   useBoops({
