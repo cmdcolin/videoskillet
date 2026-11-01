@@ -579,7 +579,11 @@ const GATE_OPEN_FRAMES = 12.0;
 const GATE_NARROW = 55;
 const VSYNC_FIRST = ${VSYNC_FIRST}u;
 const VSYNC_LAST = ${VSYNC_LAST}u;
+// The first line past the post-equalizing pulses: full-width sync and burst.
+const FIRST_BURST_LINE = VSYNC_LAST + 4u;
 const HEAD_SWITCH_LINE = ${HEAD_SWITCH_LINE}u;
+// The VIR reference the encoder stamps and vir.wgsl measures.
+const VIR_LINE = 19u;
 // The caption channel. Layout comes from captionrom.ts, which is also what
 // bakes the font, so the ROM the CPU writes and the page the shaders index
 // cannot drift apart.
@@ -693,11 +697,21 @@ fn wrapPi(a: f32) -> f32 {
   return a - 2.0 * PI * round(a / (2.0 * PI));
 }
 
+// A line's burst phase measured about the expected 180 degrees, from the
+// lineAnalyze record. Negating the components keeps the angle near zero, so a
+// partial burstLock scales a continuous error. Zero where the killer has the
+// line, or where there is no burst vector to take an angle of.
+fn burstPhase(li: vec4f, killThresh: f32) -> f32 {
+  let measured = li.w > killThresh && dot(li.xy, li.xy) > 1e-12;
+  return select(0.0, atan2(-li.y, -li.x), measured);
+}
+
 // A hue keyer's wedge on the U/V plane: 1 within accept of hue, eased to 0
 // over edge either side. Both chroma keyers slice with it, and hueKey.ts
 // hueGate draws it.
+// No chroma has no hue, and atan2(0, 0) is undefined, so it sits opposite.
 fn hueGate(uv: vec2f, hue: f32, accept: f32, edge: f32) -> f32 {
-  let w = wrapPi(atan2(uv.y, uv.x) - hue);
+  let w = select(PI, wrapPi(atan2(uv.y, uv.x) - hue), dot(uv, uv) > 1e-12);
   return 1.0 - smoothstep(accept - edge, accept + edge, abs(w));
 }
 
@@ -714,7 +728,7 @@ struct LineSlot {
 
 fn ntscLineSlot(row: u32, s: u32, n: u32, frame: u32, delta: f32) -> LineSlot {
   var slot = LineSlot(IRE_BLANK, false);
-  if (row < VSYNC_FIRST || (row > VSYNC_LAST && row < 12u)) {
+  if (row < VSYNC_FIRST || (row > VSYNC_LAST && row < FIRST_BURST_LINE)) {
     // equalizing pulses: narrow half-line-rate pulses flanking vsync
     slot.value = select(IRE_BLANK, IRE_SYNC, (s % 455u) < 33u);
   } else if (row >= VSYNC_FIRST && row <= VSYNC_LAST) {
@@ -831,8 +845,10 @@ fn scrambleAt(v: f32, row: u32, s: u32, depth: f32, mode: f32, frame: u32) -> f3
 // building's mains, and two bars drifting at different rates would say they were
 // not. A triac dimmer's firing angle is on the same mains, so it asks in
 // fractional lines (where its event landed), which is why the row is f32.
+// The frame count wraps every 10000 frames, which is a whole 37 cycles of the
+// creep, so the phase stays small enough for sin to be accurate on a long run.
 fn humPhase(row: f32, frame: u32) -> f32 {
-  return 2.0 * PI * (row / f32(NLINES) + f32(frame) * 0.0037);
+  return 2.0 * PI * (row / f32(NLINES) + f32(frame % 10000u) * 0.0037);
 }
 
 // A loose plug at the input jack. This takes a mode rather than a depth alone
@@ -893,6 +909,17 @@ fn terminate(v: f32, term: f32, echo: f32) -> f32 {
 
 fn clampIdx(i: i32) -> u32 {
   return u32(clamp(i, 0, i32(BUF_LEN) - 1));
+}
+
+// A frame store read N lines back lands in the previous frame's last lines.
+fn wrapIdx(i: i32) -> u32 {
+  return u32(((i % i32(BUF_LEN)) + i32(BUF_LEN)) % i32(BUF_LEN));
+}
+
+// The receiver's IF gain from the AGC servo's state. A zero state has never
+// run, and reads as unity.
+fn ifGain(state: f32, agc: f32) -> f32 {
+  return mix(1.0, select(state, 1.0, state == 0.0), agc);
 }
 
 // Raster row wrap that survives negative offsets: vertical roll runs both ways
@@ -1275,8 +1302,10 @@ fn noiseFrame(frame: u32, hold: f32) -> u32 {
 // both. Deliberately monochrome: neither source carries a subcarrier, so any
 // colour on screen is the receiver's decoder failing on noise, which is the
 // killer's and the comb's business rather than something to paint in here.
-fn snowSource(mode: f32, xy: vec2u, frame: u32, grain: f32, lineShare: f32, level: f32) -> vec3f {
-  let sd = pcg(frame * 2654435761u);
+// slot keeps A's and B's snow apart: their frame counters run within one of
+// each other, so a seed off the frame alone hands both sources the same field.
+fn snowSource(slot: u32, mode: f32, xy: vec2u, frame: u32, grain: f32, lineShare: f32, level: f32) -> vec3f {
+  let sd = pcg(frame * 2654435761u + slot * 0x68e31da4u);
   let x = f32(xy.x);
   var v: f32;
   if (mode < 1.5) {

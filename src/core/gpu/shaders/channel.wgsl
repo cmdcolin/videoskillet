@@ -368,10 +368,9 @@ fn main(
 
   // multipath ghost of the pre-channel signal
   if (P.ghostGain != 0.0) {
-    let gpos = f32(n) - P.ghostDelay;
-    let g0 = i32(floor(gpos));
+    let g0 = i32(n) + i32(floor(-P.ghostDelay));
     out = out + P.ghostGain
-      * catmull(comp[clampIdx(g0 - 1)], comp[clampIdx(g0)], comp[clampIdx(g0 + 1)], comp[clampIdx(g0 + 2)], fract(gpos));
+      * catmull(comp[clampIdx(g0 - 1)], comp[clampIdx(g0)], comp[clampIdx(g0 + 1)], comp[clampIdx(g0 + 2)], fract(-P.ghostDelay));
   }
 
   // Additive noise (snow), through one of two paths with the same deviates.

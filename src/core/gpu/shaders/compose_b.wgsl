@@ -17,6 +17,7 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
     v = videoSynth(gid.xy, synthPatch(P), 0.0, 0.0);
   } else {
     v = snowSource(
+      1u,
       P.srcNoiseB,
       gid.xy,
       noiseFrame(P.frame, P.srcNoiseHold),

@@ -56,8 +56,8 @@ struct KeyTap {
   uv: vec2f,
 }
 
-fn keyTap(pos: f32, n: u32, ext: bool) -> KeyTap {
-  let i0 = select(i32(floor(pos)) - 1, i32(n) - 1, ext);
+fn keyTap(at: i32, n: u32, ext: bool) -> KeyTap {
+  let i0 = select(at, i32(n), ext) - 1;
   var y = 0.0;
   var uv = vec2f(0.0);
   for (var k = 0u; k < 4u; k = k + 1u) {
@@ -65,7 +65,7 @@ fn keyTap(pos: f32, n: u32, ext: bool) -> KeyTap {
     if (ext) {
       v = prog[clampIdx(i0 + i32(k))];
     } else {
-      v = prev[clampIdx(i0 + i32(k))];
+      v = prev[wrapIdx(i0 + i32(k))];
     }
     y = y + v;
     uv = uv + v * carrier(n + k + 3u, P.frame);
@@ -131,13 +131,29 @@ const RES_TAPS = 2 * RES_M + 1;
 var<workgroup> resK: array<f32, RES_TAPS>;
 var<workgroup> resNorm: f32;
 
-fn loopResonance(pos: f32) -> f32 {
-  let c0 = i32(round(pos));
+fn loopResonance(c0: i32) -> f32 {
   var acc = 0.0;
   for (var i = 0; i < RES_TAPS; i = i + 1) {
-    acc = acc + resK[i] * prev[clampIdx(c0 + i - RES_M)];
+    acc = acc + resK[i] * prev[wrapIdx(c0 + i - RES_M)];
   }
   return acc / resNorm;
+}
+
+// Where the store is read: a whole sample index and the fraction past it. Kept
+// apart because the index runs to the size of the frame, where an f32 resolves
+// a 32nd of a sample, which is 3 degrees of subcarrier a lap.
+struct StoreRead {
+  at: i32,
+  frac: f32,
+}
+
+fn storeRead(base: i32, off: f32) -> StoreRead {
+  let whole = floor(off);
+  return StoreRead(base + i32(whole), off - whole);
+}
+
+fn nearest(r: StoreRead) -> i32 {
+  return r.at + select(0, 1, r.frac >= 0.5);
 }
 
 @compute @workgroup_size(64, 1, 1)
@@ -183,10 +199,12 @@ fn main(
   // sits — and the next lap re-clocks what this one wrote, so the fan of hue
   // opens further every generation. A lens cannot do this; only a clock can.
   // Run past the end of the line the read walks into the store's next line,
-  // which is what a store read too slowly actually hands back.
-  let pos0 = f32(row * SPL) + f32(s) * (1.0 + P.cfbClock)
-    - P.cfbDelay - P.cfbLines * f32(SPL);
-  var pos = pos0;
+  // which is what a store read too slowly actually hands back. Off the top of
+  // the frame it reads the bottom of the one before.
+  let back = P.cfbLines * f32(SPL);
+  let base = i32(n) - i32(floor(back));
+  let off0 = f32(s) * P.cfbClock - P.cfbDelay - fract(back);
+  var pos = storeRead(base, off0);
   if (P.cfbServo != 0.0) {
     // The loop's delay trimmer replaced by a varactor hanging off the video
     // bus: the fed-back waveform tunes the very delay it is riding through.
@@ -200,14 +218,14 @@ fn main(
     // here repeats: the displacement field is the picture, and the picture is
     // the displacement field one lap later.
     var lvl = 0.0;
-    let c0 = i32(round(pos0));
+    let c0 = nearest(pos);
     for (var k = -8; k <= 7; k = k + 1) {
-      lvl = lvl + prev[clampIdx(c0 + k * 2)];
+      lvl = lvl + prev[wrapIdx(c0 + k * 2)];
     }
-    pos = pos0 - P.cfbServo * (lvl / 16.0 - BUS_MID) / 100.0;
+    pos = storeRead(base, off0 - P.cfbServo * (lvl / 16.0 - BUS_MID) / 100.0);
   }
-  let i0 = i32(floor(pos));
-  var fb = catmull(prev[clampIdx(i0 - 1)], prev[clampIdx(i0)], prev[clampIdx(i0 + 1)], prev[clampIdx(i0 + 2)], fract(pos));
+  let i0 = pos.at;
+  var fb = catmull(prev[wrapIdx(i0 - 1)], prev[wrapIdx(i0)], prev[wrapIdx(i0 + 1)], prev[wrapIdx(i0 + 2)], pos.frac);
   if (P.cfbReturn > 0.5) {
     // A Y/C separator on the return and a recombiner after it, so one wire
     // comes from the loop and the other from the live picture. Four
@@ -236,10 +254,10 @@ fn main(
     // whenever either of them is patched in.
     var ry = 0.0;
     var py = 0.0;
-    let c0 = i32(round(pos)) - 2;
+    let c0 = nearest(pos) - 2;
     let p0 = i32(n) - 2;
     for (var k = 0; k < 4; k = k + 1) {
-      ry = ry + prev[clampIdx(c0 + k)];
+      ry = ry + prev[wrapIdx(c0 + k)];
       py = py + prog[clampIdx(p0 + k)];
     }
     ry = ry * 0.25;
@@ -253,7 +271,7 @@ fn main(
     fb = fb + P.cfbNoise * gauss(n ^ pcg(P.frame * 2654435761u + 0x5eedu));
   }
   if (resonating) {
-    fb = fb + P.cfbFilterBoost * loopResonance(pos);
+    fb = fb + P.cfbFilterBoost * loopResonance(nearest(pos));
   }
   if (P.cfbRing != 0.0) {
     // The loop bus into a doubly-balanced bridge: both inputs referenced to
@@ -309,7 +327,7 @@ fn main(
     }
   }
   if (P.cfbKey != 0.0) {
-    var gate = keyGate(keyTap(pos, n, P.cfbKeyExt > 0.5));
+    var gate = keyGate(keyTap(pos.at, n, P.cfbKeyExt > 0.5));
     if (P.cfbKey < 0.0) {
       gate = 1.0 - gate;
     }

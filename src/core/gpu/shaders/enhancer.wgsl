@@ -43,7 +43,7 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
   // holds. Taking that as the settled charge is what keeps a clamp fault a
   // brightness fault: gate the broad pulses instead and every setting clamps
   // them up to blanking, turning the whole control into a vertical-lock fault.
-  let clamping = (P.enhClampOff != 0.0 || P.enhDroop > 0.0) && row >= 12u;
+  let clamping = (P.enhClampOff != 0.0 || P.enhDroop > 0.0) && row >= FIRST_BURST_LINE;
   let key = u32(clamp(CLAMP_KEY + P.enhClampOff, 0.0, f32(SPL - 1u)));
   // The charge the gate leaves on the coupling capacitor is what the rest of
   // the line rides on. Physically it holds until the *next* gate, i.e. into the
@@ -63,6 +63,8 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
 
   var sep = IRE_BLANK;
   var pulse = 0u;
+  // Armed coming out of the previous line, so the line's own tip fires it.
+  var armed = true;
 
   for (var s = 0u; s < SPL; s = s + 1u) {
     let n = base + s;
@@ -88,17 +90,24 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
     }
 
     // Sync regenerator. The separator slices its own lowpassed copy, so burst
-    // and detail cannot trip it; every crossing stamps one fixed-width pulse on
-    // top of the video the box passes through. At the standard slice the stamp
-    // lands on the real tip and nothing moves. Raise it into picture territory
-    // and dark content mints pulses of its own, mid-line, and the set's PLL is
-    // handed a line rate the image is writing.
+    // and detail cannot trip it; every falling crossing fires a one-shot that
+    // stamps one fixed-width pulse on top of the video the box passes through.
+    // The one-shot re-arms only once the separator climbs back over the slice,
+    // so a level still under it when the pulse ends does not fire again. At
+    // the standard slice the stamp lands on the real tip and nothing moves.
+    // Raise it into picture territory and dark content mints pulses of its
+    // own, mid-line, and the set's PLL is handed a line rate the image is
+    // writing.
     if (P.enhSync > 0.0) {
       sep = sep + (y - sep) * SEP_ALPHA;
       if (pulse > 0u) {
         pulse = pulse - 1u;
-      } else if (sep < P.enhSlice) {
-        pulse = SYNC_LEN;
+      }
+      if (sep >= P.enhSlice) {
+        armed = true;
+      } else if (armed) {
+        armed = false;
+        pulse = select(pulse, SYNC_LEN, pulse == 0u);
       }
       // Burst survives the stamp: the box gates it out of the video, rebuilds
       // the pulse train, and re-inserts it, the way any proc-amp does. Without

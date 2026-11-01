@@ -19,7 +19,12 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
   }
   let n = row * SPL + s;
   var cap = comp[n];
-  if (P.cfbTrail > 0.0) {
+  // Only the picture is held. Sync and burst sit below black, where scaling
+  // toward zero brightens instead of fading, and a held sync tip would decay
+  // to blanking within a few frames.
+  let picture = s >= ACTIVE_START && s < ACTIVE_START + ACTIVE_W
+    && row >= ACTIVE_TOP && row < ACTIVE_TOP + ACTIVE_H;
+  if (P.cfbTrail > 0.0 && picture) {
     var lc = 0.0;
     var lp = 0.0;
     for (var k = -1; k <= 2; k = k + 1) {

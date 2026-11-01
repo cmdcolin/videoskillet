@@ -27,11 +27,14 @@
 // regenerates inside the keyed shape.
 @group(0) @binding(5) var<storage, read> loopBus: array<f32>;
 
-// B's luma at a raster index inside its active picture, off the texel.
+// B's luma at a raster index, off the texel; none outside its active picture,
+// where a textureLoad past the edge returns whatever the backend chooses.
 fn lumaBAt(idx: u32) -> f32 {
   let x = i32(idx % SPL) - i32(ACTIVE_START);
   let y = i32(idx / SPL) - i32(ACTIVE_TOP);
-  return luma(srcTexelB(inputTexB, x, y, P.deintB));
+  let inside = x >= 0 && x < i32(ACTIVE_W) && y >= 0 && y < i32(ACTIVE_H);
+  let texel = srcTexelB(inputTexB, clamp(x, 0, i32(ACTIVE_W) - 1), clamp(y, 0, i32(ACTIVE_H) - 1), P.deintB);
+  return select(0.0, luma(texel), inside);
 }
 
 // B re-encoded on the house carrier: chroma at bIdx modulated onto the

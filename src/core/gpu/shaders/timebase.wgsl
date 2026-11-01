@@ -23,7 +23,9 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
   let n = row * SPL + s;
   let sm = lineParams[row * 2u + 1u].x;
   let smNext = lineParams[min(row + 1u, NLINES - 1u) * 2u + 1u].x;
-  let pos = f32(n) + lineParams[row * 2u].x + (smNext - sm) * f32(s) / f32(SPL);
-  let i0 = i32(floor(pos));
-  dst[n] = catmull(src[clampIdx(i0 - 1)], src[clampIdx(i0)], src[clampIdx(i0 + 1)], src[clampIdx(i0 + 2)], fract(pos));
+  // The offset is kept apart from n: past the middle of the frame an f32 index
+  // resolves only a 32nd of a sample, a step in hue down the picture.
+  let off = lineParams[row * 2u].x + (smNext - sm) * f32(s) / f32(SPL);
+  let i0 = i32(n) + i32(floor(off));
+  dst[n] = catmull(src[clampIdx(i0 - 1)], src[clampIdx(i0)], src[clampIdx(i0 + 1)], src[clampIdx(i0 + 2)], fract(off));
 }

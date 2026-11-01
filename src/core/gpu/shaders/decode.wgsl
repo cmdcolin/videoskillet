@@ -157,8 +157,15 @@ fn loPhaseErr(n: u32, row: u32) -> f32 {
 const COARSE_MAX = 8;
 const DEMOD_HALO = (DEMOD_TAPS - 1u) / 2u + u32(COARSE_MAX);
 const DEMOD_TILE = TILE_WG + 2u * DEMOD_HALO;
-const DEMOD_SHORT_HALO = (DEMOD_SHORT_TAPS - 1u) / 2u + u32(COARSE_MAX);
+const DEMOD_SHORT_REACH = (DEMOD_SHORT_TAPS - 1u) / 2u;
+const DEMOD_SHORT_HALO = DEMOD_SHORT_REACH + u32(COARSE_MAX);
 var<workgroup> tile: array<f32, DEMOD_TILE * 2u>;
+
+// Whether the demod's reach fits the short kernel. The span decode stages and
+// the taps demodAt reads both follow this, so they cannot disagree.
+fn shortDemod() -> bool {
+  return P.demodReach <= DEMOD_SHORT_REACH;
+}
 
 // Synchronous chroma demod centered on tile index ti / global sample n0, in
 // the half of the tile `toff` names.
@@ -201,8 +208,8 @@ fn demodBuckets(ti: i32, toff: u32, k0: i32, taps: i32) -> vec4f {
 
 fn demodAt(ti: i32, n0: i32, toff: u32) -> vec2f {
   let m = i32((DEMOD_TAPS - 1u) / 2u);
-  let short = P.demodReach <= (DEMOD_SHORT_TAPS - 1u) / 2u;
-  let k0 = select(0, m - i32((DEMOD_SHORT_TAPS - 1u) / 2u), short);
+  let short = shortDemod();
+  let k0 = select(0, m - i32(DEMOD_SHORT_REACH), short);
   var q: vec4f;
   if (short) {
     q = demodBuckets(ti, toff, k0, i32(DEMOD_SHORT_TAPS));
@@ -332,6 +339,31 @@ fn sweepInv(y: f32, lo0: f32, hi0: f32) -> f32 {
     }
   }
   return 0.5 * (lo + hi);
+}
+
+// The raster line past which a folded sweep runs back up the screen; the last
+// line when the sweep never reaches the knee.
+fn foldSplit() -> f32 {
+  let last = f32(NLINES) - 1.0;
+  var split = last;
+  if (P.vFold > 0.0) {
+    let peak = foldAt() + FOLD_W * log((1.0 + FOLD_K) / FOLD_K);
+    if (ramp(last) > peak) {
+      split = rampInv(peak);
+    }
+  }
+  return split;
+}
+
+// The raster line the downward sweep puts on screen row y.
+fn screenRowF(y: f32, plain: bool, split: f32) -> f32 {
+  var r = 0.0;
+  if (plain) {
+    r = rasterRowF(y);
+  } else {
+    r = sweepInv(y, 0.0, split);
+  }
+  return r;
 }
 
 // How many raster lines land on the screen row line r is on: the slower the
@@ -476,7 +508,7 @@ fn decodeAt(row: u32, ry: u32, hoff: i32, toff: u32, tj: i32, col: i32) -> Decod
   var vs = uvd.y;
   // receiver AGC: IF gain ahead of the demod, so luma, chroma, and black
   // level all pump together when sync depth is mismeasured
-  let gif = mix(1.0, timing[AGC_GAIN], P.agc);
+  let gif = ifGain(timing[AGC_GAIN], P.agc);
   us = us * 2.0 * gif;
   vs = vs * 2.0 * gif;
 
@@ -505,10 +537,7 @@ fn decodeAt(row: u32, ry: u32, hoff: i32, toff: u32, tj: i32, col: i32) -> Decod
   // marginal burst makes the killer chatter in bands
   let li = lineInfo[row];
   let locked = li.w > P.killThresh;
-  // phase error measured about the expected 180 degrees: negating the burst
-  // components keeps the angle wrapped near zero, so a partial burstLock
-  // scales a continuous error instead of jumping a 2*pi branch on noise
-  let e = select(0.0, atan2(-li.y, -li.x), locked) * P.burstLock;
+  let e = burstPhase(li, P.killThresh) * P.burstLock;
   let acc = select(0.0, clamp(BURST_AMP / max(li.w, 0.5), 0.0, 4.0), locked);
   // The VIR corrector's saturation trim, on top of the burst-derived ACC. It is
   // a second loop with a much longer memory, so it answers what the reference
@@ -632,37 +661,95 @@ const RETRACE_START = 6u;
 // swing, fast out of the bottom and slowing in. A supply with its damping
 // stripped (hvRing) lets the swing overshoot the top edge and come back down
 // into the picture, so the last lines of the trip cross the first ones.
+fn flybackDamping() -> f32 {
+  return mix(3.0, 0.8, clamp(P.hvRing, 0.0, 1.0));
+}
+
 fn flybackSwing(p: f32) -> f32 {
-  let a = mix(3.0, 0.8, clamp(P.hvRing, 0.0, 1.0));
+  let a = flybackDamping();
   return 1.0 - exp(-a * p) * (cos(PI * p) + (a / PI) * sin(PI * p));
+}
+
+// The most the swing's slope can turn per unit of the trip:
+// |swing''| = (a^2 + pi^2)/pi * exp(-a p) |pi cos(pi p) - a sin(pi p)|.
+fn flybackBend() -> f32 {
+  let a = flybackDamping();
+  return pow(a * a + PI * PI, 1.5) / PI;
+}
+
+fn flybackTime() -> f32 {
+  return clamp(P.flyback, 1.0, 30.0);
+}
+
+// A ringing swing overshoots, so the trip runs past the flyback time.
+fn flybackCount() -> u32 {
+  return u32(ceil(flybackTime() * (1.0 + 0.8 * clamp(P.hvRing, 0.0, 1.0))));
+}
+
+// One line of the trip as a screen row sees it. Everything but where along the
+// line the beam is depends on the row alone, so a workgroup, which is one row,
+// works the trip out once ahead of its barrier.
+struct FlybackLine {
+  row: u32,
+  hoff: i32,
+  scan: f32,
+  light: f32,
+  near: u32,
+}
+
+const FLYBACK_MAX = 54u;
+var<workgroup> flybackLines: array<FlybackLine, FLYBACK_MAX>;
+
+// Whether a line can reach row y is settled here too, so the pixels skip the
+// swing for every line that passes far above or below them. Across one line
+// the beam's height stays within the chord between the line's two ends plus
+// the most the swing can bow over that span, and a pixel only takes light
+// from a line within a row of it.
+fn stageFlyback(lane: u32, y: f32, vroll: f32) {
+  let flyback = flybackTime();
+  let yBot = sweep(f32(NLINES) - 1.0);
+  let yTop = sweep(f32(RETRACE_START) + flyback);
+  for (var i = lane; i < flybackCount(); i = i + TILE_WG) {
+    let r = RETRACE_START + i;
+    let row = wrapRow(i32(r) + i32(floor(vroll)));
+    let e = lineEht(r);
+    let hoff = lineOffset(row, r, y);
+    let p0 = (f32(i) + (f32(ACTIVE_START) + f32(hoff) - 1.0) / f32(SPL)) / flyback;
+    let p1 = (f32(i) + (f32(ACTIVE_START + ACTIVE_W) + f32(hoff) + 1.0) / f32(SPL)) / flyback;
+    let y0 = mix(yBot, yTop, flybackSwing(p0));
+    let y1 = mix(yBot, yTop, flybackSwing(p1));
+    let bow = abs(yTop - yBot) * flybackBend() * (p1 - p0) * (p1 - p0) / 8.0;
+    let near = y > min(y0, y1) - bow - 2.0 && y < max(y0, y1) + bow + 2.0;
+    flybackLines[i] = FlybackLine(row, hoff, ehtScan(e), ehtLight(e), select(0u, 1u, near));
+  }
 }
 
 // Light the flyback lays on screen pixel (x, y), as emitted light. Each line
 // of the trip is a candidate at its own height, and a row or so of spot
 // decides which of them lands here. The beam is bent, sagged and kicked on the
 // way exactly as it is for the picture, so a rippled scan ripples its retrace.
-fn retraceLight(x: u32, y: f32, vroll: f32) -> vec3f {
+fn retraceLight(x: u32, y: f32) -> vec3f {
+  let flyback = flybackTime();
   let yBot = sweep(f32(NLINES) - 1.0);
-  let yTop = sweep(f32(RETRACE_START) + P.flyback);
-  let span = 1.0 + 0.8 * clamp(P.hvRing, 0.0, 1.0);
-  let lines = u32(ceil(clamp(P.flyback, 1.0, 30.0) * span));
+  let yTop = sweep(f32(RETRACE_START) + flyback);
   var acc = 0.0;
-  for (var r = RETRACE_START; r < RETRACE_START + lines; r = r + 1u) {
-    let row = wrapRow(i32(r) + i32(floor(vroll)));
-    let hoff = lineOffset(row, r, y);
-    let e = lineEht(r);
-    let s = i32(ACTIVE_START) + i32(round(SCAN_MID + (f32(x) - SCAN_MID) * ehtScan(e)));
-    let t = f32(s + hoff) / f32(SPL);
-    let p = (f32(r - RETRACE_START) + t) / P.flyback;
+  for (var i = 0u; i < flybackCount(); i = i + 1u) {
+    let line = flybackLines[i];
+    if (line.near == 0u) {
+      continue;
+    }
+    let s = i32(ACTIVE_START) + i32(round(SCAN_MID + (f32(x) - SCAN_MID) * line.scan));
+    let t = f32(s + line.hoff) / f32(SPL);
+    let p = (f32(i) + t) / flyback;
     let w = max(0.0, 1.0 - abs(mix(yBot, yTop, flybackSwing(p)) - y));
     if (w > 0.0) {
-      let n0 = i32(row * SPL) + s + hoff;
+      let n0 = i32(line.row * SPL) + s + line.hoff;
       // one subcarrier cycle averaged, so chroma cancels and the line's luma
       // is what draws
       let v = 0.25 * (comp[clampIdx(n0)] + comp[clampIdx(n0 + 1)]
         + comp[clampIdx(n0 + 2)] + comp[clampIdx(n0 + 3)]);
       let drive = max((v - IRE_BLACK) / VIDEO_RANGE, 0.0) + P.retrace * RETRACE_LEVEL;
-      acc = acc + w * toLight(vec3f(drive * timing[ABL_GAIN])).x * ehtLight(e);
+      acc = acc + w * toLight(vec3f(drive * timing[ABL_GAIN])).x * line.light;
     }
   }
   return vec3f(acc);
@@ -686,42 +773,31 @@ fn main(
   // numerically, and past the knee a second line lands on the same row on its
   // way back up, from the far side of the knee.
   let plain = P.vLin == 0.0 && P.vFold <= 0.0;
-  var rrF = 0.0;
+  let split = foldSplit();
+  let rrF = screenRowF(y, plain, split);
   var rrFB = -1.0;
-  var densA = 1.0;
+  var densA = max(vSizeC, 1.0) / vAmp;
   var densB = 0.0;
-  if (plain) {
-    rrF = rasterRowF(y);
-    densA = max(vSizeC, 1.0) / vAmp;
-  } else {
-    var split = last;
-    if (P.vFold > 0.0) {
-      let peak = foldAt() + FOLD_W * log((1.0 + FOLD_K) / FOLD_K);
-      if (ramp(last) > peak) {
-        split = rampInv(peak);
-      }
-    }
-    rrF = sweepInv(y, 0.0, split);
+  if (!plain) {
+    densA = density(rrF);
     if (split < last) {
       rrFB = sweepInv(y, split, last);
+      densB = density(rrFB);
     }
-    densA = density(rrF);
-    densB = density(rrFB);
   }
   let offRaster = rrF < 0.0 || rrF > last;
   let twice = rrFB >= 0.0;
   let rr = u32(clamp(rrF, 0.0, last));
   let row = wrapRow(i32(rr) + i32(floor(vroll)));
-  let ry = rr;
-  let hoff = lineOffset(row, ry, y);
+  let hoff = lineOffset(row, rr, y);
   let x0 = f32(wid.x * TILE_WG);
-  let ehtA = lineEht(ry);
+  let ehtA = lineEht(rr);
   let scanA = ehtScan(ehtA);
   let s0A = SCAN_MID + (x0 - SCAN_MID) * scanA;
   let b0A = i32(round(s0A));
   densA = densA * ehtLight(ehtA);
   let base = i32(row * SPL + ACTIVE_START) + b0A + hoff - i32(DEMOD_HALO);
-  let skip = select(0u, DEMOD_HALO - DEMOD_SHORT_HALO, P.demodReach <= (DEMOD_SHORT_TAPS - 1u) / 2u);
+  let skip = select(0u, DEMOD_HALO - DEMOD_SHORT_HALO, shortDemod());
   for (var i = lid.x + skip; i < DEMOD_TILE - skip; i = i + TILE_WG) {
     tile[i] = csrc(clampIdx(base + i32(i)));
   }
@@ -747,13 +823,16 @@ fn main(
       tile[DEMOD_TILE + i] = csrc(clampIdx(baseB + i32(i)));
     }
   }
+  if (P.retrace > 0.0) {
+    stageFlyback(lid.x, y, vroll);
+  }
   workgroupBarrier();
 
   if (gid.x >= ACTIVE_W || gid.y >= ACTIVE_H) {
     return;
   }
   let tjA = i32(round(s0A + f32(lid.x) * scanA)) - b0A;
-  let d = decodeAt(row, ry, hoff, 0u, tjA, b0A + tjA);
+  let d = decodeAt(row, rr, hoff, 0u, tjA, b0A + tjA);
   var outc = d.rgb;
   if (offRaster) {
     // past the vertical retrace the beam never scans: no light, though the
@@ -795,7 +874,7 @@ fn main(
     outc = gamutFit(toDrive(emitted));
   }
   if (P.retrace > 0.0) {
-    emitted = emitted + retraceLight(gid.x, y, vroll) * (1.0 - P.beamBlank);
+    emitted = emitted + retraceLight(gid.x, y) * (1.0 - P.beamBlank);
     outc = gamutFit(toDrive(emitted));
   }
   if (P.phosphor > 0.0) {
@@ -868,7 +947,7 @@ fn main(
       // The line under the cursor, found the way the picture finds its row, so
       // vertical size and roll carry the trace along with the content it is of.
       let srow = wrapRow(
-        i32(u32(clamp(rasterRowF(f32(SCOPE_Y)), 0.0, f32(NLINES) - 1.0)))
+        i32(u32(clamp(screenRowF(f32(SCOPE_Y), plain, split), 0.0, last)))
           + i32(floor(vroll)),
       );
       // Triggered on sync the way a monitor's timebase is, off the same offset
@@ -919,9 +998,7 @@ fn main(
         cu = cu + 0.5 * d * sc.x;
         cv = cv + 0.5 * d * sc.y;
       }
-      let sli = lineInfo[srow];
-      let sth = select(0.0, atan2(-sli.y, -sli.x), sli.w > P.killThresh)
-        * P.burstLock + P.tint;
+      let sth = burstPhase(lineInfo[srow], P.killThresh) * P.burstLock + P.tint;
       let sce = cos(sth);
       let sse = sin(sth);
       let camp = length(vec2f(cu, cv));

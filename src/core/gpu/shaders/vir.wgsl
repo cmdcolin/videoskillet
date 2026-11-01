@@ -23,7 +23,6 @@
 @group(0) @binding(2) var<storage, read> lineInfo: array<vec4f>;
 @group(0) @binding(3) var<storage, read_write> timing: array<f32>;
 
-const VIR_LINE = 19u;
 // Inside the reference's own 380 samples, clear of the transition at either
 // end — a real gate sits off the edges for the same reason.
 const VIR_FIRST = 40u;
@@ -59,15 +58,17 @@ fn main() {
     sv = sv + v * sc.y;
     cnt = cnt + 1.0;
   }
-  let uv = 2.0 * vec2f(su, sv) / cnt;
+  // Behind the same IF gain line_analyze measured burst through, so the ACC
+  // below divides it back out of the reference the way decode does from chroma.
+  let uv = 2.0 * vec2f(su, sv) / cnt * ifGain(timing[AGC_GAIN], P.agc);
 
   // What the burst loop already took out of this line, on this line's own
   // burst. Both angles are measured about the expected 180 degrees the way
   // decode measures its own, so subtracting them is honest.
   let li = lineInfo[line];
   let locked = li.w > P.killThresh;
-  let phBurst = select(0.0, atan2(-li.y, -li.x), locked);
-  let resid = wrapPi(atan2(-uv.y, -uv.x) - phBurst * P.burstLock);
+  let phBurst = burstPhase(li, P.killThresh);
+  let resid = select(0.0, wrapPi(atan2(-uv.y, -uv.x) - phBurst * P.burstLock), dot(uv, uv) > 1e-12);
 
   // Saturation, against the gain the chroma ACC has already applied. A
   // reference that comes back weak makes the set turn colour *up* — which is

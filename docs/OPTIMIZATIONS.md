@@ -32,11 +32,13 @@ In order of what actually moves the number:
   measured by deleting both loops outright. See _Tiering_ below for why tap
   count is the only lever on it.
 - **Per-source feed snow** ~0.9 ms per engaged feed.
-- **The deck display** (`osd`) ~0.04 ms with its word up, and ~0.31 ms during
-  the blue background, which writes the whole active picture. Deleting the burst
-  measurement leaves 0.07 ms, so that measurement is the cost. It started as one
-  lane per sample walking 36 loads (0.86 ms), then one lane per workgroup (0.37
-  ms), and now splits the loads across the workgroup's lanes.
+- **The deck display** (`osd`) ~0.04 ms with its word up, and ~0.07 ms during
+  the blue background, which writes the whole active picture. The burst
+  measurement was the cost. It started as one lane per sample walking 36 loads
+  (0.86 ms), then one lane per workgroup (0.37 ms), then split the loads across
+  the workgroup's lanes (0.25 ms). It now runs once per line: one workgroup per
+  line, its lanes striding across the active picture (0.074 ms, gpuprof,
+  November 2026).
 - **The true-waveform B chain** (`encodeChromaB → encodeCompositeB → mixB`)
   totals ~0.9 ms engaged, and dispatches nothing idle.
 
@@ -256,8 +258,18 @@ return**, since every invocation in the workgroup has to reach the barrier and
 910 samples do not divide by 64.
 
 `channel` tables the FM fold's 31-tap decay the same way. `osd` measures each
-line's 36-sample burst once per workgroup, the lanes loading one sample apiece,
-because every sample of the line wants the same rotation.
+line's 36-sample burst once, the lanes loading one sample apiece, because every
+sample of the line wants the same rotation.
+
+`decode`'s vertical retrace tables its flyback lines per row. Each of up to 54
+candidate lines needs a bend, an EHT and three or four timing loads that depend
+on the row alone, and each pixel recomputed all of them. The workgroup now
+stages them ahead of the barrier it already has, and marks the lines whose
+height cannot come within a row of this one: the chord between a line's two ends
+plus the most the swing can bow over that span, from the bound on its second
+derivative. Pixels skip the swing's `exp`, `cos` and `sin` for every marked
+line. With `retraceLines` up, `decode` went 1.73 → 0.90 ms in gpuprof,
+pixel-exact across ringing, folded and bent scans.
 
 `crt_face`'s disk taps are the same move made at compile time: golden-angle
 direction × radius plus the beam gaussian weight, tabulated as constants.

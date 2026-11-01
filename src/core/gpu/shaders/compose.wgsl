@@ -239,6 +239,7 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
     // crawl was on the tape — composeB freezes the same way by skipping, but
     // this pass must keep running for the feedback camera below.
     src = snowSource(
+      0u,
       P.srcNoise,
       gid.xy,
       noiseFrame(P.srcFrame, P.srcNoiseHold),

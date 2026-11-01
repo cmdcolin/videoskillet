@@ -115,6 +115,8 @@ export class Graph {
   // raster still has a line start on it.
   readonly syncMeasureBuf: GPUBuffer
   private readonly progSnap: GPUBuffer
+  private readonly compPrev: GPUBuffer
+  private readonly prevSnap: GPUBuffer
   private readonly paramsBuf: GPUBuffer
   private readonly genParamsBuf: GPUBuffer
   private readonly genLineParamsBuf: GPUBuffer
@@ -192,7 +194,12 @@ export class Graph {
     const uvfBBuf = storage(N * 8)
     const compB = storage(N * 4)
     const bCompBuf = storage(N * 4)
-    const compPrev = storage(N * 4)
+    const compPrev = storage(N * 4, GPUBufferUsage.COPY_SRC)
+    this.compPrev = compPrev
+    // The store as it stood before storePrev rewrites it, which the trail
+    // keyer compares against. Copied in `encode` the way the app does.
+    const prevSnap = storage(N * 4)
+    this.prevSnap = prevSnap
     // Program as the mixer had it, which two things in the loop read: the
     // keyer's external key input and the Y/C recombiner. Filled by a copy in
     // `encode` on the frames either is patched in, exactly as the app does it.
@@ -325,7 +332,7 @@ export class Graph {
         label: 'feedA',
         shader: 'feed',
         variants: one({ P: this.feedParamsA, src: compB, dst: this.compA }),
-        dispatch: perLine,
+        dispatch: perLineT,
         when: () => aFeedOn(c),
       },
       {
@@ -372,7 +379,7 @@ export class Graph {
         label: 'feedB',
         shader: 'feed',
         variants: one({ P: this.feedParamsB, src: compB, dst: bCompBuf }),
-        dispatch: perLine,
+        dispatch: perLineT,
         when: () => bFeedOn(c, this.bEnabled),
       },
       {
@@ -443,7 +450,7 @@ export class Graph {
         label: 'osd',
         shader: 'osd',
         variants: one({ P, comp: this.compA, font: ccBuf }),
-        dispatch: perLine,
+        dispatch: [1, LINES],
         when: () => c.osd > 0,
       },
       {
@@ -540,7 +547,7 @@ export class Graph {
       {
         label: 'storePrev',
         shader: 'store_prev',
-        variants: one({ P, comp: this.compA, prev: compPrev }),
+        variants: one({ P, comp: this.compA, prev: compPrev, held: prevSnap }),
         dispatch: perLine,
         when: () => {
           const period =
@@ -751,6 +758,7 @@ export class Graph {
       ...this.captionState.update({ vbi: c.vbi }),
       ...this.synthState.update({ synthAHz: c.synthAHz, synthBHz: c.synthBHz }),
     }
+    vals.bKeyFeed = bFeedOn(c, this.bEnabled) ? 1 : 0
     packParams(vals, this.paramScratch)
     d.queue.writeBuffer(this.paramsBuf, 0, this.paramScratch)
     if (aFeedOn(c)) this.packFeed('a', vals, this.feedParamsA, mixU.decks.a)
@@ -813,6 +821,7 @@ export class Graph {
     for (const p of this.prePasses) {
       if (
         p.label === 'fbComposite' &&
+        (p.when === undefined || p.when()) &&
         ((this.c.cfbKey !== 0 && this.c.cfbKeyExt > 0) || this.c.cfbReturn > 0)
       ) {
         enc.copyBufferToBuffer(this.compA, 0, this.progSnap, 0, N * 4)
@@ -846,7 +855,16 @@ export class Graph {
         0,
         PARAM_BYTES,
       )
-    for (const p of this.postPasses) run(p)
+    for (const p of this.postPasses) {
+      if (
+        p.label === 'storePrev' &&
+        this.c.cfbTrail > 0 &&
+        (p.when === undefined || p.when())
+      ) {
+        enc.copyBufferToBuffer(this.compPrev, 0, this.prevSnap, 0, N * 4)
+      }
+      run(p)
+    }
     this.frame += 1
   }
 }

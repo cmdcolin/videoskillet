@@ -37,7 +37,7 @@ fn burstUV(row: u32) -> vec2f {
     sv = sv + comp[n] * sc.y;
     cnt = cnt + 1.0;
   }
-  return vec2f(2.0 * su / cnt, 2.0 * sv / cnt) * mix(1.0, timing[AGC_GAIN], P.agc);
+  return vec2f(2.0 * su / cnt, 2.0 * sv / cnt) * ifGain(timing[AGC_GAIN], P.agc);
 }
 
 const WG = 64u;
@@ -115,7 +115,7 @@ fn main(
     for (var k = 0u; k <= span; k = k + 1u) {
       let r = wrapRow(i32(row) - i32(k));
       // only lines that carry burst charge the RC; through the VBI it holds
-      if (r > VSYNC_LAST + 1u) {
+      if (r >= FIRST_BURST_LINE) {
         let b = uvTile[ti + k];
         if (k <= spanA) {
           let w = lagW[k];

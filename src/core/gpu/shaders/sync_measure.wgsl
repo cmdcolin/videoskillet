@@ -38,8 +38,8 @@ const SLICE = -20.0; // IRE slicing level on nominal sync
 // double-terminated feed relocks as the gain ramps; hum-mod gain pumping
 // genuinely breathes the horizontal lock. Last frame's gain, which is the lag
 // a real AGC's time constant gives; identity while the agc control is 0.
-fn ifGain() -> f32 {
-  return mix(1.0, timing[AGC_GAIN], P.agc);
+fn separatorGain() -> f32 {
+  return ifGain(timing[AGC_GAIN], P.agc);
 }
 
 fn levelAt(n: i32) -> f32 {
@@ -48,7 +48,7 @@ fn levelAt(n: i32) -> f32 {
   for (var k = -2; k <= 2; k = k + 1) {
     acc = acc + comp[clampIdx(n + k)];
   }
-  return acc / 5.0 * ifGain();
+  return acc / 5.0 * separatorGain();
 }
 
 @compute @workgroup_size(64, 1, 1)
@@ -111,7 +111,7 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
   for (var k = 0; k < 24; k = k + 1) {
     load = load + comp[clampIdx(base + i32(ACTIVE_START) + k * step)];
   }
-  load = load * ifGain();
+  load = load * separatorGain();
 
   let broad = select(0.0, 1.0, levelAt(base + 200) < SLICE);
   measure[row * 2u] = vec4f(edge, depth, load / 24.0, broad);

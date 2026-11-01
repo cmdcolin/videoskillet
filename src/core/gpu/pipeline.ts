@@ -140,6 +140,8 @@ interface Pass {
 
 const NOOP = () => {}
 
+const live = (p: Pass) => p.when === undefined || p.when()
+
 // Look a pass up in an array by its label. The graph test parses the pass
 // arrays as literals, so a pass that needs its bind group swapped at render
 // time still has to be constructed inline and found again afterwards.
@@ -821,7 +823,7 @@ export class Engine implements EngineApi {
           { buffer: this.compB },
           { buffer: this.compA },
         ],
-        perLine,
+        perLineT,
         this.aFeedOn,
       ),
       pass(
@@ -868,7 +870,7 @@ export class Engine implements EngineApi {
           { buffer: this.compB },
           { buffer: this.bCompBuf },
         ],
-        perLine,
+        perLineT,
         this.bFeedOn,
       ),
       pass(
@@ -1033,7 +1035,7 @@ export class Engine implements EngineApi {
           { buffer: this.compA },
           { buffer: this.cgBuf },
         ],
-        perLine,
+        [1, LINES],
         () => this.osdStep.visible,
       ),
       // The enhancer is an outboard box between the deck and the set, so it
@@ -2701,7 +2703,7 @@ export class Engine implements EngineApi {
 
     const enc = d.createCommandEncoder()
     const run = (p: Pass) => {
-      if (p.when === undefined || p.when()) {
+      if (live(p)) {
         const cp = enc.beginComputePass()
         cp.setPipeline(p.pl)
         cp.setBindGroup(0, p.bg)
@@ -2740,6 +2742,7 @@ export class Engine implements EngineApi {
       // takes whichever wire the return is not carrying from the live picture.
       if (
         p === this.fbCompositePass &&
+        live(p) &&
         ((c.cfbKey !== 0 && c.cfbKeyExt > 0) || c.cfbReturn > 0)
       ) {
         enc.copyBufferToBuffer(this.compA, 0, this.progSnap, 0, N * 4)

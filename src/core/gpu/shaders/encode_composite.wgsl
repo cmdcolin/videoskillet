@@ -72,7 +72,7 @@ fn main(
   // colours it; the modulated staircase on 18 is the DG/DP instrument line;
   // 19 is a VIR-shaped reference; 21 is the caption channel, carrying real
   // characters for the receiver's decoder to get wrong.
-  if (P.vbi > 0.5 && row >= 17u && row <= 21u && row != 20u
+  if (P.vbi > 0.5 && row >= 17u && row <= CC_LINE && row != 20u
       && s >= ACTIVE_START && s < ACTIVE_START + ACTIVE_W) {
     let x = s - ACTIVE_START;
     if (row == 17u) {
@@ -98,7 +98,7 @@ fn main(
       // five-step staircase with the subcarrier riding every step
       let stair = f32(min(x / 151u, 4u));
       out = 10.0 + 20.0 * stair + 10.0 * carrier(n, P.frame).y;
-    } else if (row == 19u) {
+    } else if (row == VIR_LINE) {
       // VIR: chroma reference at burst phase on 70 IRE, then luma and black
       if (x < 380u) {
         out = 70.0 - 20.0 * carrierRot(n, P.frame, 0.0).x;
@@ -156,8 +156,8 @@ fn main(
   // settle), which is why the picture breathes instead of sitting dim. In
   // normal framing all of this is invisible; roll the picture and the
   // flashing bar rides the vertical interval into view.
-  if (P.mvAgcIre > 0.0 && row >= 12u && row < 20u) {
-    let cyc = 0.5 + 0.5 * cos(2.0 * PI * fract(f32(P.frame) / 400.0));
+  if (P.mvAgcIre > 0.0 && row >= FIRST_BURST_LINE && row < 20u) {
+    let cyc = 0.5 + 0.5 * cos(2.0 * PI * f32(P.frame % 400u) / 400.0);
     let env = ceil((0.2 + 0.8 * cyc) * 4.0) * 0.25;
     let lvl = P.mvAgcIre * env;
     let a = lvl / 160.0; // pseudo-sync depth tracks the pulse level

@@ -208,7 +208,7 @@ fn main(@builtin(local_invocation_id) lid: vec3u) {
     let m = measure[row * 2u];
     let aux = measure[row * 2u + 1u];
     // beam current is drawn whether or not this line's sync was findable
-    if (row > VSYNC_LAST + 3u) {
+    if (row >= FIRST_BURST_LINE) {
       loadSum = loadSum + m.z;
       loadCount = loadCount + 1.0;
       minSum = minSum + select(min(IRE_SYNC, aux.x), aux.x, P.syncSlicer > 0.5);
@@ -225,7 +225,7 @@ fn main(@builtin(local_invocation_id) lid: vec3u) {
       pll = pll + clamp(P.hHold * (m.x - pll), -auth, auth);
       lockAge = 0.0;
       // gated AGC depth on picture lines
-      if (row > VSYNC_LAST + 3u) {
+      if (row >= FIRST_BURST_LINE) {
         depthSum = depthSum + m.y;
         depthCount = depthCount + 1.0;
       }

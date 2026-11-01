@@ -129,30 +129,28 @@ const BOX_COLS = 7u;
 // One burst measurement per line, shared by the workgroup that draws it.
 var<workgroup> lineBurst: vec2f;
 
-@compute @workgroup_size(64, 1, 1)
+const OSD_WG = 64u;
+
+// One workgroup per line, its lanes striding across the active picture, so the
+// line's burst is measured once rather than once for every 64 samples of it.
+@compute @workgroup_size(OSD_WG, 1, 1)
 fn main(
-  @builtin(global_invocation_id) gid: vec3u,
   @builtin(workgroup_id) wid: vec3u,
   @builtin(local_invocation_index) lid: u32,
 ) {
-  // A workgroup covers part of one row, so `wid.y` and `gid.y` agree, but only
-  // `wid.y` lets Chrome's uniformity analysis prove this return uniform, which
-  // the barriers below need. Naga skips that check, so Firefox accepts either.
-  // A workgroup whose span holds no active sample draws nothing, so it skips
-  // the burst measurement too.
+  // Only `wid.y` lets Chrome's uniformity analysis prove this return uniform,
+  // which the barriers below need. Naga skips that check.
   let row = wid.y;
-  let first = wid.x * 64u;
-  if (row < ACTIVE_TOP || row >= ACTIVE_TOP + ACTIVE_H
-      || first + 64u <= ACTIVE_START || first >= ACTIVE_START + ACTIVE_W) {
+  if (row < ACTIVE_TOP || row >= ACTIVE_TOP + ACTIVE_H) {
     return;
   }
   let y = f32(row - ACTIVE_TOP) - P.osdY * f32(ACTIVE_H);
   let dy = i32(floor(y / (DOT_Y * P.osdScale)));
   let inBand = dy >= -1 && dy <= i32(GLYPH_H);
   let muted = P.osdBlue > 0.5;
-  // The row and the uniform buffer alone decide this, so every lane of every
-  // workgroup takes the same path through the barriers. Letters need the burst
-  // only on the rows they are drawn on.
+  // The row and the uniform buffer alone decide this, so every lane takes the
+  // same path through the barriers. Letters need the burst only on the rows
+  // they are drawn on.
   if (muted || (inBand && P.osdColour > 0.5)) {
     if (lid < BURST_LEN) {
       let nb = row * SPL + BURST_START + lid;
@@ -169,11 +167,12 @@ fn main(
     }
     workgroupBarrier();
   }
-
-  let s = gid.x;
-  if (s < ACTIVE_START || s >= ACTIVE_START + ACTIVE_W) {
-    return;
+  for (var s = ACTIVE_START + lid; s < ACTIVE_START + ACTIVE_W; s = s + OSD_WG) {
+    drawSample(row, s, dy, inBand, muted);
   }
+}
+
+fn drawSample(row: u32, s: u32, dy: i32, inBand: bool, muted: bool) {
   let x = f32(s - ACTIVE_START) - P.osdX * f32(ACTIVE_W);
   let dx = i32(floor(x / (DOT_X * P.osdScale)));
   let inBox = inBand && dx >= -1 && dx <= i32(BOX_COLS * GLYPH_W);
