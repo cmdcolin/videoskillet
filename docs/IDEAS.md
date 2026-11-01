@@ -345,6 +345,46 @@ selector: a fill is only meaningful on the genlocked path, because a fill is
 what sits _behind_ the foreground and only a crossfade has a behind. The row is
 gated on genlock.
 
+Four things landed after that, and each turned on a choice worth recording.
+
+**The additive keyer** (`bKeyAdditive`) is the Ultimatte's design on the bus.
+The comparator cannot key a shadow: a shadowed backing falls under the clip and
+stays as a green veil over the fill, and raising the clip turns the veil
+opaque. The additive box measures how much backing a sample holds against the
+backing's lit level (`bKeyLevel`, `bKeyBackY`), subtracts that share of the
+backing and adds the same share of the fill, so a shadow becomes a shadow on the
+fill and a strand finer than the chroma band keys part way. The share is the
+chroma along the key hue less the chroma across it, weighted so the two balance
+at the acceptance edge. That keeps the wedge meaning what it means for the
+comparator and leaves colours off the key hue untouched, which spill kill does
+not: at 0.8 it turned a teal near the key hue blue. The calibration wants to sit
+a little under the lit backing, because a backing is never lit evenly; the
+camera tap stores the sampled backing and sets 0.8 of it.
+
+**The keyer slices B's feed damage**, so the key chatters on a noisy source.
+Demodulating B's whole composite would bring back the luma-edge speckle above.
+What it demodulates is B's waveform less B as the encoder wrote it, so B's own
+luma cancels and only the damage is left. It runs only while `bFeedOn`, passed
+as the per-frame `bKeyFeed`, so an undamaged B keys exactly as before.
+
+**The key edge generator** (`bKeyEdge`: border, drop shadow, extrude) runs the
+key through sample and line delays and fills where the copies reach past the
+subject. It slices the key with a comparator of its own. Without that, the
+comparator's part-kept shadow grew a speckled border, and under the additive
+keyer every shadow did. Its taps read the clean key. With B damaged, the four
+damage taps multiplied across nine key evaluations took `mix_b` from 0.62 to
+1.56 ms on extrude on a WX 3200, and the edge comparator hides the chatter
+anyway. Extrude shades each copy's matte down with its delay, so the slab is lit
+where it meets the subject.
+
+**Freeze flashes by design.** With colour framing off, a frozen frame or a
+loop-bus copy read out on the other subcarrier phase decodes in complementary
+colours, so the held picture alternates every frame. The user likes the
+flashing, and colour framing is the switch for anyone who does not.
+
+A field freeze, the store read line-doubled, was tried and is barely visible on
+real pictures. It is not worth a control.
+
 What is left:
 
 - **The PiP inset keeps its luma key alone.** Wiring the chroma key into the
@@ -358,6 +398,11 @@ What is left:
   short boxcar over `uvfB` would make edge softness a control of its own rather
   than a side effect of `encChromaMHz` — at four more storage taps per active
   sample, which is why it is not there.
+- **The key edge row is gated on genlock alone.** With the key at 0 it reads
+  as live and does nothing, the same as the fill row. A gate cannot name two
+  conditions yet.
+- **The 0.8 calibration has only met synthetic backings.** A real room on
+  `/cam/` is the test it still needs.
 
 ## Video synth follow-ons
 
