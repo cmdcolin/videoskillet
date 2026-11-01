@@ -179,9 +179,7 @@ export function CamPage(props: { link: CamLink | null }) {
   }
 
   useSpeech(captions, {
-    fallback: '',
     onText: text => eng.say(text),
-    onPhrase: () => {},
     onFail: e => {
       caption(false)
       setError(

@@ -46,25 +46,20 @@ const AGAIN_MS = 1000
 // Errors after which listening again would only fail the same way.
 const FINAL = new Set(['not-allowed', 'service-not-allowed', 'audio-capture'])
 
-// The chyron's words: `fallback` while it is quiet, and what people near the
-// phone say, in capitals the way a caption set them, while they talk. Each
-// finished phrase is handed to `onPhrase`. The browser ends a session after a
-// pause or a minute, so a session that ends is started again while `on` holds.
-// A browser with no recognition keeps `fallback` up. An error that listening
-// again would only repeat stops it for good and goes to `onFail`.
+// The chyron's words: what people near the phone say, in capitals the way a
+// caption set them, while they talk, and nothing once it has been quiet a
+// while. The browser ends a session after a pause or a minute, so a session
+// that ends is started again while `on` holds. An error that listening again
+// would only repeat stops it for good and goes to `onFail`.
 export function useSpeech(
   on: boolean,
   opts: {
-    fallback: string
     onText: (text: string) => void
-    onPhrase: (words: string) => void
     onFail: (error: string) => void
   },
 ) {
   const report = useEffectEvent(opts.onText)
-  const phrase = useEffectEvent(opts.onPhrase)
   const fail = useEffectEvent(opts.onFail)
-  const { fallback } = opts
 
   useEffect(() => {
     if (on) {
@@ -76,12 +71,12 @@ export function useSpeech(
       const hush = () => {
         window.clearTimeout(quiet)
         quiet = window.setTimeout(() => {
-          debugLog('speech quiet, back to the fallback')
+          debugLog('speech quiet, clearing the words')
           heard = ''
-          report(fallback)
+          report('')
         }, QUIET_MS)
       }
-      report(fallback)
+      report('')
       const rec = Recognition === undefined ? null : new Recognition()
       if (rec !== null) {
         const listen = () => {
@@ -101,7 +96,6 @@ export function useSpeech(
             const words = result[0]?.transcript.trim() ?? ''
             if (result.isFinal && words !== '') {
               heard = `${heard} ${words}`.trim().slice(-KEEP)
-              phrase(words)
             } else {
               interim = `${interim} ${words}`
             }
@@ -133,5 +127,5 @@ export function useSpeech(
       }
     }
     return undefined
-  }, [on, fallback])
+  }, [on])
 }

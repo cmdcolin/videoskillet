@@ -4,8 +4,6 @@ import { paramsOf } from '../core/gpu/env'
 import { registerServiceWorker } from '../registerSW'
 import '../theme.css'
 import { CamPage } from './CamPage'
-import { costumeSettings, wantsCostume } from './costume'
-import { CostumePage } from './CostumePage'
 import { readLink } from './link'
 
 // The camera page's entry. The camera is a page of its own because a phone
@@ -17,12 +15,7 @@ registerServiceWorker()
 startAnalytics()
 
 export default function Cam() {
-  const search = paramsOf(location)
-  return wantsCostume(search) ? (
-    <CostumePage settings={costumeSettings(search)} />
-  ) : (
-    <CamPage link={readLink(search)} />
-  )
+  return <CamPage link={readLink(paramsOf(location))} />
 }
 
 // A hot update hands the device on to the next engine; see src/app.tsx.
