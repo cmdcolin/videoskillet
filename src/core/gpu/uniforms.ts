@@ -344,6 +344,7 @@ export function uniformValues(c: Controls, env: UniformEnv) {
     bKeyAdditive: c.bKeyAdditive,
     bKeyLevel: c.bKeyLevel,
     bKeyBackY: c.bKeyBackY,
+    bKeyFeed: 0,
     bKeyEdge: c.bKeyEdge,
     bKeyEdgeH: c.bKeyEdgeUs * 1e-6 * SAMPLE_RATE,
     bKeyEdgeV: c.bKeyEdgeUs * LINES_PER_US,

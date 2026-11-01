@@ -2646,6 +2646,7 @@ export class Engine implements EngineApi {
     )
     vals.bKeyFill = this.store.fill
     vals.bKeyFillFlip = this.store.flip ? 1 : 0
+    vals.bKeyFeed = this.bFeedOn() ? 1 : 0
     vals.cgBus = this.store.cgBus
     vals.cgFlip = this.store.cgFlip ? 1 : 0
     packParams(vals, this.paramScratch)

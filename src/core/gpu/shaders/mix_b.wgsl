@@ -88,6 +88,31 @@ fn busPhase(at: i32, n: u32, frac: f32, delta: f32) -> f32 {
   return (f32((at - i32(n)) & 3) + frac) * 0.5 * PI + delta;
 }
 
+// What B's feed did to B's chroma around raster index i, in the same axes as
+// uvfB. The keyer is a box on the bus, so the snow, ghosts and ringing B picked
+// up on its way are in what it slices, and a sample near the edge of the slice
+// is pushed across it and back from one frame to the next: the key chatters.
+// Only the damage is demodulated. It is B's waveform less B as the encoder
+// wrote it, so B's own luma cancels and its edges do not turn into false
+// chroma, which is what demodulating the whole composite would do. One
+// subcarrier cycle of it is summed against B's own carrier, which is the
+// shortest window that separates U from V.
+fn feedChroma(i: i32) -> vec2f {
+  var delta = P.bHue;
+  if (P.bGenlock < 0.5) {
+    delta = delta + P.bPhase0 + P.bPhaseLine * f32(clampIdx(i) / SPL);
+  }
+  var acc = vec2f(0.0);
+  for (var j = -1; j <= 2; j++) {
+    let idx = clampIdx(i + j);
+    let sc = carrierRot(idx, P.frame, delta);
+    let uv = uvfB[idx];
+    let clean = activeComposite(lumaBAt(idx), uv.x, uv.y, sc, P.bVidGain, P.bInv);
+    acc = acc + (bComp[idx] - clean) * sc;
+  }
+  return acc / (2.0 * VIDEO_RANGE);
+}
+
 // `at` is where B's picture is for this output sample, on B's own raster, and
 // `phase` is busPhase there.
 fn chromaKey(at: i32, phase: f32) -> KeySlice {
@@ -102,8 +127,12 @@ fn chromaKey(at: i32, phase: f32) -> KeySlice {
   let enc = mix(uvfB[clampIdx(i)], uvfB[clampIdx(i + 1)], P.bKeyDelay - d);
   let c = cos(phase);
   let s = sin(phase);
-  let uv = vec2f(enc.x * c - enc.y * s, enc.x * s + enc.y * c)
+  var uv = vec2f(enc.x * c - enc.y * s, enc.x * s + enc.y * c)
     * P.bVidGain * (1.0 - 2.0 * P.bInv);
+  if (P.bKeyFeed > 0.5) {
+    let dmg = feedChroma(i);
+    uv = uv + vec2f(dmg.x * c - dmg.y * s, dmg.x * s + dmg.y * c);
+  }
   let soft = max(P.bKeySoft, 1e-4);
   let kdir = vec2f(cos(P.bKeyHue), sin(P.bKeyHue));
   let across = max(cos(P.bKeyAccept), 0.0) / max(sin(P.bKeyAccept), 1e-3);

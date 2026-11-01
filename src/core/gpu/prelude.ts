@@ -171,6 +171,7 @@ export const PARAM_DEFS = [
   ['bKeyAdditive', 'f32'], // 0 comparator, 1 additive: backing subtracted, fill added under a proportional matte
   ['bKeyLevel', 'f32'], // additive: the backing's chroma at full light, chroma units
   ['bKeyBackY', 'f32'], // additive: the backing's luma at that level, 0..1
+  ['bKeyFeed', 'f32'], // 1 while B's feed is damaging its waveform, so the keyer demodulates the damage
   ['bKeyEdge', 'f32'], // key edge generator: 0 off, 1 border, 2 drop shadow, 3 extrude
   ['bKeyEdgeH', 'f32'], // its horizontal delay, samples
   ['bKeyEdgeV', 'f32'], // its vertical delay, lines
