@@ -117,8 +117,8 @@ fn feedChroma(i: i32) -> vec2f {
 }
 
 // `at` is where B's picture is for this output sample, on B's own raster, and
-// `phase` is busPhase there.
-fn chromaKey(at: i32, phase: f32) -> KeySlice {
+// `phase` is busPhase there. `damaged` adds what B's feed did to the chroma.
+fn chromaKey(at: i32, phase: f32, damaged: bool) -> KeySlice {
   // Where the keyer looks, against where the fill it is gating comes from. A
   // real keyer trims this because the key path and the video path are
   // different lengths of circuit, and a mis-set one lays the key beside the
@@ -132,7 +132,7 @@ fn chromaKey(at: i32, phase: f32) -> KeySlice {
   let s = sin(phase);
   var uv = vec2f(enc.x * c - enc.y * s, enc.x * s + enc.y * c)
     * P.bVidGain * (1.0 - 2.0 * P.bInv);
-  if (P.bKeyFeed > 0.5) {
+  if (damaged && P.bKeyFeed > 0.5) {
     let dmg = feedChroma(i);
     uv = uv + vec2f(dmg.x * c - dmg.y * s, dmg.x * s + dmg.y * c);
   }
@@ -212,6 +212,10 @@ fn keptBy(k: KeySlice) -> f32 {
 // edge. The keyer blanks its key outside the active picture, so a tap that
 // lands in blanking reads as backing too and the frame's own edges never grow
 // a border.
+//
+// The taps read the key without B's feed damage. The comparator above slices
+// it hard enough that chatter would barely reach the edge, and demodulating
+// the damage at every tap measured about 0.9 ms on extrude.
 fn edgeTap(at: i32, dx: i32, dy: i32, phase: f32) -> f32 {
   let idx = at + dx + dy * i32(SPL);
   let u = clampIdx(idx);
@@ -219,7 +223,7 @@ fn edgeTap(at: i32, dx: i32, dy: i32, phase: f32) -> f32 {
   let row = u / SPL;
   var kept = 0.0;
   if (s >= ACTIVE_START && s < ACTIVE_START + ACTIVE_W && row >= ACTIVE_TOP && row < ACTIVE_TOP + ACTIVE_H) {
-    kept = smoothstep(0.7, 0.9, keptBy(chromaKey(idx, phase)));
+    kept = smoothstep(0.7, 0.9, keptBy(chromaKey(idx, phase, false)));
   }
   return kept;
 }
@@ -435,7 +439,7 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
         // the suppressor can null it flat. On a line that has lost lock the key
         // tears sideways with the picture.
         let phase = busPhase(at, n, frac, P.bHue);
-        let k = chromaKey(at, phase);
+        let k = chromaKey(at, phase, true);
         behind = keyFill(a, n);
         if (P.bKeyEdge > 0.5) {
           behind = mix(behind, matteOf(n, P.bKeyEdgeY, P.bKeyEdgeHue, P.bKeyEdgeSat), keyEdge(at, phase));
@@ -500,7 +504,7 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
       // The additive keyer has no layer to add a fill under here either, so on
       // this path it only subtracts: B's backing goes to black, shadows
       // included, and the sum is A wherever the backing was.
-      let k = chromaKey(np, busPhase(np, n, frac, P.bHue + P.bPhase0 + P.bPhaseLine * f32(srow)));
+      let k = chromaKey(np, busPhase(np, n, frac, P.bHue + P.bPhase0 + P.bPhaseLine * f32(srow)), true);
       if (P.bKeyAdditive > 0.5) {
         if (P.bKey > 0.0) {
           fill = subtractBacking(fill, k, np, n);
