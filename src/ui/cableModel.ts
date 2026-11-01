@@ -35,6 +35,13 @@ const inBurst = (s: number) => s >= BURST_START && s < BURST_START + BURST_LEN
 const inPicture = (s: number) =>
   s >= ACTIVE_START && s < ACTIVE_START + ACTIVE_WIDTH
 
+// The carrier map is channel.wgsl's, sync -40 to white 100 onto 1 to 0.125, and
+// full depth is 10 dB.
+const carrierAttenuated = (ire: number, depth: number) => {
+  const carrier = Math.max(1 - 0.00625 * (ire + 40), 0)
+  return (1 - 10 ** (-0.5 * depth) * carrier) / 0.00625 - 40
+}
+
 // An even line through channel.wgsl's cable stages, in the shader's order: the
 // chroma pin, the head-end scrambler, the polarity swap, the termination. The
 // echo reads the line as it was before the channel, five samples back.
@@ -43,10 +50,14 @@ export function cableLine(c: Cable, line = TEST_LINE): number[] {
     const chroma = inBurst(s) ? v - IRE_BLANK : 0
     let out = (v - chroma) * (1 - c.chromaPinOnly) + chroma
     if (c.scramble > 0) {
-      if (s < SYNC_LEN) out += (IRE_BLANK - out) * c.scramble
-      if (c.scrambleMode > 1.5 && inPicture(s)) {
-        const negative = 2 * IRE_BLACK + IRE_VIDEO_RANGE - out
-        out += (negative - out) * c.scramble
+      const system = Math.round(c.scrambleMode)
+      if (system === 3) {
+        if (!inPicture(s)) out = carrierAttenuated(out, c.scramble)
+      } else {
+        if (s < SYNC_LEN) out += (IRE_BLANK - out) * c.scramble
+        if (system === 2 && inPicture(s)) {
+          out = 2 * IRE_BLACK + IRE_VIDEO_RANGE - out
+        }
       }
     }
     out *= 1 - 2 * c.polarityFlip

@@ -282,7 +282,7 @@ export const PARAM_DEFS = [
   ['connectorGlitch', 'f32'], // loose connector: intermittent contact drops bands to snow
   ['connectorMode', 'f32'], // which contact: 0 centre pin (signal + sync go), 1 shell (ground lifts, hum injects), 2 both
   ['scramble', 'f32'], // head-end sync suppression depth: sync tip lifted toward blanking
-  ['scrambleMode', 'f32'], // 0 gated, 1 line-alternate, 2 SSAVI (suppression + video inversion)
+  ['scrambleMode', 'f32'], // 0 gated, 1 line-alternate, 2 SSAVI (suppression + video inversion), 3 carrier (RF attenuation over H blanking)
   // copy protection authored onto the source tape's vertical interval
   ['mvAgcIre', 'f32'], // Macrovision AGC-pulse level at full cycle, IRE (0 = unprotected)
   ['mvStripe', 'f32'], // colorstripe burst rotation on walking line bands, radians
@@ -750,24 +750,44 @@ fn activeComposite(y: f32, uf: f32, vf: f32, sc: vec2f, vidGain: f32, inv: f32) 
 //
 // mode 1 scrambles alternate lines; mode 2 is SSAVI, which suppressed sync *and*
 // inverted the video, so the picture that leaks through is a negative as well as
-// an unstable one. Burst sits in the back porch and is left alone, so hue
-// survives the inversion.
+// an unstable one. A line is inverted or it is not, so depth sets only the sync
+// suppression: a blend toward the negative cancels the picture to flat grey at
+// half depth. Burst sits in the back porch and is left alone, so hue survives
+// the inversion.
+//
+// mode 3 is the scrambler as the RF stage builds it: the carrier is attenuated
+// by up to 10 dB for the whole horizontal blanking interval, so sync, both
+// porches and the burst all go with it. Negative modulation puts sync at full
+// carrier, so an attenuated blanking interval detects as grey (6 dB: tip +40
+// IRE, porch +60) or near white (10 dB: +69 and +82). The tip then sits above
+// picture black, so the darkest thing on a line is picture content, and the
+// burst is weaker by the same factor, so the ACC turns the chroma up to match.
+// The carrier map is channel.wgsl's: sync -40 to white 100 onto 1 to 0.125.
 //
 // One definition for the program bus (channel) and the per-source feeds, which
 // scramble one input alone — a premium channel is scrambled per channel, not
 // per set, so the two differ only in what they are handed.
 fn scrambleAt(v: f32, row: u32, s: u32, depth: f32, mode: f32) -> f32 {
-  if (depth <= 0.0 || (mode >= 0.5 && mode <= 1.5 && (row & 1u) == 1u)) {
-    return v;
-  }
+  let system = u32(mode + 0.5);
+  let skipped = depth <= 0.0 || (system == 1u && (row & 1u) == 1u);
+  let blanking = s < ACTIVE_START || s >= ACTIVE_START + ACTIVE_W;
+  let picture = !blanking && row >= ACTIVE_TOP && row < ACTIVE_TOP + ACTIVE_H;
   var out = v;
-  if (s < SYNC_LEN) {
-    out = mix(out, IRE_BLANK, depth);
-  }
-  let picture = s >= ACTIVE_START && s < ACTIVE_START + ACTIVE_W
-    && row >= ACTIVE_TOP && row < ACTIVE_TOP + ACTIVE_H;
-  if (mode > 1.5 && picture) {
-    out = mix(out, 2.0 * IRE_BLACK + VIDEO_RANGE - out, depth);
+  if (!skipped) {
+    if (system == 3u) {
+      if (blanking) {
+        let carrier = max(1.0 - 0.00625 * (v + 40.0), 0.0);
+        let gain = pow(10.0, -0.5 * depth);
+        out = (1.0 - gain * carrier) / 0.00625 - 40.0;
+      }
+    } else {
+      if (s < SYNC_LEN) {
+        out = mix(out, IRE_BLANK, depth);
+      }
+      if (system == 2u && picture) {
+        out = 2.0 * IRE_BLACK + VIDEO_RANGE - out;
+      }
+    }
   }
   return out;
 }

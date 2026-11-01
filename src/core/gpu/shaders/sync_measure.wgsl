@@ -20,7 +20,9 @@
 // the slice follows them down into the picture, where the set then finds its
 // "sync". The peak slicer (syncSlicer 1) has no floor and charges to the whole
 // line, sync interval included, so it follows a tip a scrambler has lifted
-// toward blanking and locks to it.
+// toward blanking and locks to it. The carrier scrambler lifts the tip above
+// picture black, so the deepest thing on a line is dark picture and the slice
+// lands there: the flywheel follows the outlines of dark content.
 // Its gate is the narrow window round the expected line start while the
 // flywheel is locked, and the whole line once it has lost the pulses.
 

@@ -79,7 +79,7 @@ export function CableDiagram() {
       COL.scramble,
       ROW_Y,
       'scramble',
-      'Head-end scrambling: the sync tip lifted toward blanking until the set has no line start to lock to. Alternate scrambles every other line, and SSAVI adds a negative picture.',
+      'Head-end scrambling: the sync tip lifted toward blanking until the set has no line start to lock to. Alternate scrambles every other line, SSAVI adds a negative picture, and carrier attenuates the whole blanking interval, burst included.',
     ),
     box(
       'chroma',

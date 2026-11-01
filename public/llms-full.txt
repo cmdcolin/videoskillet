@@ -8,7 +8,7 @@ clamped, not refused.
 Modulation sources for #mod=: sine, triangle, walk, smooth, hold, lorenz, level, hit, trig, pull.
 Up to 8 routings, rate 0.02..10 Hz, depth 0..1.
 
-Presets for #preset=: clean, vhs, protectedTape, wornTape, pictureSearch, stuckTape, trackingBand, servoHunt, hueRidesTheLight, overDeviatedWhite, oneLineBack, broadcast, mistunedRf, fringeReception, ignitionStorm, deadChannel, dimmerHash, scrambledChannel, turboSyncLoss, almostDecoded, ssavi, verticalHoldGone, bentScan, supplyChaos, fullCollapse, bassSmack, lineNineteen, collapsedAxes, mixerLoop, strobeTrails, keyLoop, fbBloom, woundSpiral, shadowLadder, ladderClimb, subcarrierSiren, huntingServos, meltdown, zoomBloom, aimedAHairOff, turnedAHair, theIrisHoldsTheEdge, tunnelOut, spiral, subcarrierComb, ringLoop, ringLadder, ringStorm, ringOnTheBeat, invertedRungs, ringInTheHighlights, ringInTheShadows, warpInTheHighlights, warpInTheShadows, rungsInTheLight, ringingInTheHighlights, chasingItsOwnColour, carvedByTheLivePicture, theHoleTheSubjectKeeps, itOnlyEatsTheRed, theFaceStaysOutOfIt, theWrongClock, clockAndCrystal, colourInTheDark, greyUnderTheColour, noColourToTrade, theLightIsALapBehind, lightBecomesHue, theSecondCrystal, keyedOnWhatItMade, layeredByBrightness, intermodLoop, whereTheProductsLand, shearedAndStacked, servoWarp, bothLoops, runaway, syncInTheLoop, lorenzLoop, strobeBloom, beamBendsItsOwnScan, flagOnEveryLap, colourKeepsWalking, shearedEveryGeneration, encoderWiredBackwards, wheelBehindTheSubject, handOnTheChassis, cleanDissolve, dirtyMix, ringMix, outOfVolts, pauseFight, relayMidFrame, leakingFader, genlockLosesGrip, pirateFeed, negativeDrifter, houseDeckHeld, differenceKey, greenScreen, matteFlood, keySweep, keyIntoTheLoop, wipeFight, negative, signalAndGroundSwapped, sVideoMiswire, noTerminator, daisyChained, looseConnector, bentEnhancer, contourLines, pouredColour, silkscreen, falseColour, blockColour, litAtTheEdges, contoursOnContours, ringPlaid, twoMultipliers, punchIn, rainbowStorm, neonTube, strobedTube, roundTube, burnedIn, degauss, greenTerminal, radarTube, noseAgainstTheGlass, bentDetailer, howlroundLoom, falseSync, paperclipChroma, blackRestore, magnetised, misconverged, transmissionFault, nightMonitor, everyColourButOne, pastTheYoke, arcStorm, railSlam, chromaRails, outOfHeadroom, soundAtTheRails, lightThatStays, servicePosition, foldover, powerOff, powerOn, channelChange, splitPhase, wiggledPlugs, threeServos, cometTails, nightTube, hairOffTheCrystal, clampInThePicture, colourAStepRight, aimedAtTheVcr, oneHeadPacked, tapeIn, tintInASlowHand, overmodulatedChyron, bentFontRom, scrambledCharacterRom, thePictureInTheType, scrambledIdent, typeEcho, fontCrawl, heldRaster, pageShuffle, wanderingInset.
+Presets for #preset=: clean, vhs, protectedTape, wornTape, pictureSearch, stuckTape, trackingBand, servoHunt, hueRidesTheLight, overDeviatedWhite, oneLineBack, broadcast, mistunedRf, fringeReception, ignitionStorm, deadChannel, dimmerHash, scrambledChannel, turboSyncLoss, almostDecoded, ssavi, scrambledCarrier, triModeScrambler, verticalHoldGone, bentScan, supplyChaos, fullCollapse, bassSmack, lineNineteen, collapsedAxes, mixerLoop, strobeTrails, keyLoop, fbBloom, woundSpiral, shadowLadder, ladderClimb, subcarrierSiren, huntingServos, meltdown, zoomBloom, aimedAHairOff, turnedAHair, theIrisHoldsTheEdge, tunnelOut, spiral, subcarrierComb, ringLoop, ringLadder, ringStorm, ringOnTheBeat, invertedRungs, ringInTheHighlights, ringInTheShadows, warpInTheHighlights, warpInTheShadows, rungsInTheLight, ringingInTheHighlights, chasingItsOwnColour, carvedByTheLivePicture, theHoleTheSubjectKeeps, itOnlyEatsTheRed, theFaceStaysOutOfIt, theWrongClock, clockAndCrystal, colourInTheDark, greyUnderTheColour, noColourToTrade, theLightIsALapBehind, lightBecomesHue, theSecondCrystal, keyedOnWhatItMade, layeredByBrightness, intermodLoop, whereTheProductsLand, shearedAndStacked, servoWarp, bothLoops, runaway, syncInTheLoop, lorenzLoop, strobeBloom, beamBendsItsOwnScan, flagOnEveryLap, colourKeepsWalking, shearedEveryGeneration, encoderWiredBackwards, wheelBehindTheSubject, handOnTheChassis, cleanDissolve, dirtyMix, ringMix, outOfVolts, pauseFight, relayMidFrame, leakingFader, genlockLosesGrip, pirateFeed, negativeDrifter, houseDeckHeld, differenceKey, greenScreen, matteFlood, keySweep, keyIntoTheLoop, wipeFight, negative, signalAndGroundSwapped, sVideoMiswire, noTerminator, daisyChained, looseConnector, bentEnhancer, contourLines, pouredColour, silkscreen, falseColour, blockColour, litAtTheEdges, contoursOnContours, ringPlaid, twoMultipliers, punchIn, rainbowStorm, neonTube, strobedTube, roundTube, burnedIn, degauss, greenTerminal, radarTube, noseAgainstTheGlass, bentDetailer, howlroundLoom, falseSync, paperclipChroma, blackRestore, magnetised, misconverged, transmissionFault, nightMonitor, everyColourButOne, pastTheYoke, arcStorm, railSlam, chromaRails, outOfHeadroom, soundAtTheRails, lightThatStays, servicePosition, foldover, powerOff, powerOn, channelChange, splitPhase, wiggledPlugs, threeServos, cometTails, nightTube, hairOffTheCrystal, clampInThePicture, colourAStepRight, aimedAtTheVcr, oneHeadPacked, tapeIn, tintInASlowHand, overmodulatedChyron, bentFontRom, scrambledCharacterRom, thePictureInTheType, scrambledIdent, typeEcho, fontCrawl, heldRaster, pageShuffle, wanderingInset.
 
 ## Signal (source A)
 
@@ -141,8 +141,8 @@ aScramble  (A sync suppression)
   Head-end scrambling on input A alone: A's sync tips are lifted toward blanking before the mix, so the receiver must choose between A's pulses and B's.
 
 aScrambleMode  (A system)
-  0=gated 1=alternate 2=ssavi  default 0
-  Which scrambling system A's channel uses. Gated suppresses every line, alternate every other line, and SSAVI also inverts the active video.
+  0=gated 1=alternate 2=ssavi 3=carrier  default 0
+  Which scrambling system A's channel uses. Gated suppresses every line, alternate every other line, and SSAVI also inverts the active video. Carrier attenuates the RF carrier for the whole blanking interval, burst included.
 
 ## Feed A · cable
 
@@ -419,8 +419,8 @@ bScramble  (B sync suppression)
   Head-end scrambling on input B alone: B's sync tips are lifted toward blanking before it is summed in, so B stops contributing to the sync contest.
 
 bScrambleMode  (B system)
-  0=gated 1=alternate 2=ssavi  default 0
-  Which scrambling system B's channel uses. Gated suppresses every line, alternate every other line, and SSAVI also inverts B's active video.
+  0=gated 1=alternate 2=ssavi 3=carrier  default 0
+  Which scrambling system B's channel uses. Gated suppresses every line, alternate every other line, and SSAVI also inverts B's active video. Carrier attenuates the RF carrier for the whole blanking interval, burst included.
 
 ## Feed B · cable
 
@@ -840,11 +840,11 @@ connectorMode  (bad contact)
 
 scramble  (sync suppression)
   0..1 step 0.01  default 0
-  How hard the head-end suppresses sync on a premium channel. The scrambler lifts the carrier during each sync pulse, so a set without a decoder box finds a shallow tip or none. Under about half depth the AGC washes the picture out bright; past that the line oscillator free-runs. The broad field pulses are wider than the line-rate gate, so the frame shears instead of tumbling.
+  How hard the head-end suppresses sync on a premium channel. The scrambler lifts the carrier during each sync pulse, so a set without a decoder box finds a shallow tip or none. Under about half depth the AGC washes the picture out bright; past that the line oscillator free-runs. The broad field pulses are wider than the line-rate gate, so the frame shears instead of tumbling. On the carrier system, full depth is 10 dB of attenuation.
 
 scrambleMode  (system)
-  0=gated 1=alternate 2=ssavi  default 0
-  Which scrambling system. Gated suppresses every line, so the oscillator free-runs all the way down. Alternate suppresses every other line, so the flywheel is pulled back half the time and the drift shows as a ragged line-pair zigzag. SSAVI is Zenith's: suppression plus inversion of the active video, with the burst untouched in the back porch, so hue survives.
+  0=gated 1=alternate 2=ssavi 3=carrier  default 0
+  Which scrambling system. Gated suppresses every line, so the oscillator free-runs all the way down. Alternate suppresses every other line, so the flywheel is pulled back half the time and the drift shows as a ragged line-pair zigzag. SSAVI is Zenith's: suppression plus inversion of the active video, with the burst untouched in the back porch, so hue survives. Carrier drops the RF carrier by up to 10 dB for the whole blanking interval: the bar detects as grey, the weak burst makes the ACC oversaturate the colour, and a peak slicer finds its sync in dark picture.
 
 macrovision  (agc pulses (macrovision))
   0..1 step 0.01  default 0

@@ -55,6 +55,19 @@ describe('cableLine', () => {
     expect(line[BAR]).toBeLessThan(IRE_WHITE / 2)
   })
 
+  it('inverts the whole picture under SSAVI at any depth', () => {
+    const half = cableLine({ ...STOCK, scramble: 0.5, scrambleMode: 2 })
+    const full = cableLine({ ...STOCK, scramble: 1, scrambleMode: 2 })
+    expect(half[BAR]).toBe(full[BAR])
+  })
+
+  it('lifts the blanking interval above picture black on the carrier system', () => {
+    const line = cableLine({ ...STOCK, scramble: 0.6, scrambleMode: 3 })
+    expect(line[SYNC]).toBeCloseTo(40, 0)
+    expect(line[PORCH]).toBeCloseTo(60, 0)
+    expect(line[BAR]).toBe(IRE_WHITE)
+  })
+
   it('keeps only the burst on the chroma pin', () => {
     const line = cableLine({ ...STOCK, chromaPinOnly: 1 })
     expect(line[SYNC]).toBe(0)
