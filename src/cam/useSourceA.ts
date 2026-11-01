@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 
-import { reason } from '../ui/format'
 import { dropLoop, playLoop } from './tape'
 import { replay, useOnReturn } from './useReplay'
 
+import type { Failure } from './failure'
 import type { Pattern } from './patterns'
 import type { Loop } from './tape'
 
@@ -20,7 +20,7 @@ export function useSourceA(
     showVideo: (video: HTMLVideoElement, mirror: boolean) => void
     showPattern: (pattern: Pattern) => void
   },
-  onError: (message: string) => void,
+  onError: (failure: Failure) => void,
 ) {
   const [on, setOn] = useState<ASource>('camera')
   const clip = useRef<Loop | null>(null)
@@ -69,7 +69,7 @@ export function useSourceA(
     try {
       loaded = await playLoop(file)
     } catch (e) {
-      if (mine === turn.current) onError(`clip: ${reason(e)}`)
+      if (mine === turn.current) onError({ during: 'clip', error: e })
     }
     const latest = mine === turn.current
     if (loaded !== null) {

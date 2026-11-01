@@ -1,24 +1,19 @@
 import { useState } from 'react'
 
-import { reason } from '../ui/format'
+import type { Failure } from './failure'
 
 // Whether the room's sound drives the set, which asks for the microphone.
 export function useSound(
   hear: (on: boolean) => Promise<unknown>,
-  onError: (message: string) => void,
+  onError: (failure: Failure | null) => void,
 ) {
   const [on, setOn] = useState(false)
   const toggle = () => {
-    onError('')
+    onError(null)
     const next = !on
     hear(next).then(
       () => setOn(next),
-      (e: unknown) =>
-        onError(
-          e instanceof DOMException && e.name === 'NotAllowedError'
-            ? 'Microphone access was turned down. Allow it in the browser’s site settings and try again.'
-            : `sound: ${reason(e)}`,
-        ),
+      (e: unknown) => onError({ during: 'sound', error: e }),
     )
   }
   return { on, toggle }

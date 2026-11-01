@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 
+import type { Failure } from './failure'
 import type { Pattern } from './patterns'
 import type { BSource } from './sources'
 import type { Facing, useCamera } from './useCamera'
@@ -14,7 +15,7 @@ export function useSourcePicks(opts: {
   srcA: ReturnType<typeof useSourceA>
   second: ReturnType<typeof useSecond>
   firstB: Pattern | null
-  onError: (message: string) => void
+  onError: (failure: Failure | null) => void
   onMixing: () => void
   onTakeOff: () => void
 }) {
@@ -56,7 +57,7 @@ export function useSourcePicks(opts: {
   }
 
   const putOnA = (key: Facing | ASource) => {
-    onError('')
+    onError(null)
     if (key === 'clip') clipA.current?.click()
     else if (key === 'user' || key === 'environment') {
       if (srcA.on !== 'camera') startCamera(key)
@@ -72,7 +73,7 @@ export function useSourcePicks(opts: {
   // the picture.
   const putCamera = () => {
     second.eject()
-    onError('')
+    onError(null)
     void second.load().then(got => {
       if (got === 'failed') takeOff()
       else if (got !== 'superseded') {
@@ -83,13 +84,13 @@ export function useSourcePicks(opts: {
   }
   const putTape = () => {
     second.eject()
-    onError('')
+    onError(null)
     void second.record().then(got => landed(got, 'record'))
   }
   // The camera on B as well as A, for the chroma keyer, which leaves the panels
   // where they are.
   const keySame = async () => {
-    onError('')
+    onError(null)
     const got = await second.loadSame()
     if (got === 'shown') setPicked('same')
     return got
@@ -100,7 +101,7 @@ export function useSourcePicks(opts: {
       else if (got === 'failed') takeOff()
     })
   const putPattern = (p: Pattern) => {
-    onError('')
+    onError(null)
     second.loadPattern(p)
     mixing(p)
   }
@@ -117,7 +118,7 @@ export function useSourcePicks(opts: {
     void srcA.toClip(file).then(ok => ok && stopCamera())
   const clipOnB = (file: File) => {
     second.eject()
-    onError('')
+    onError(null)
     void second.loadClip(file).then(got => landed(got, 'clip'))
   }
 

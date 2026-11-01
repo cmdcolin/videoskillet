@@ -14,6 +14,7 @@ import { CameraNotice } from './CameraNotice'
 import { ClipInput } from './ClipInput'
 import { Deck } from './Deck'
 import { shareLink } from './deliver'
+import { failureMessage } from './failure'
 import { Hints } from './Hints'
 import { instrumentHref } from './instrumentHref'
 import { keysOnHue } from './keyed'
@@ -56,6 +57,7 @@ import { trackOf, useZoom } from './useZoom'
 import { ZoomStops } from './ZoomStops'
 
 import type { Transition } from '../ui/transitions'
+import type { Failure } from './failure'
 import type { CamLink } from './link'
 import type { Panel } from './PanelSwitches'
 import type { Scene } from './scene'
@@ -116,7 +118,7 @@ export function CamPage(props: { link: CamLink | null }) {
     eng.zoomA,
     eng.grabAgain,
   )
-  const [error, setError] = useState('')
+  const [failure, setFailure] = useState<Failure | null>(null)
   const srcA = useSourceA(
     {
       showVideo: (video, mirror) => {
@@ -128,7 +130,7 @@ export function CamPage(props: { link: CamLink | null }) {
         zoom.reset()
       },
     },
-    setError,
+    setFailure,
   )
   const cam = useCamera((video, mirror) => {
     eng.showVideo(video, mirror)
@@ -136,9 +138,9 @@ export function CamPage(props: { link: CamLink | null }) {
     srcA.cameraShown()
   })
   const tilt = useTilt(eng.steer)
-  const sound = useSound(eng.hear, setError)
+  const sound = useSound(eng.hear, setFailure)
   const [captions, setCaptions] = useState(false)
-  const second = useSecond(eng, cam, setError, firstB)
+  const second = useSecond(eng, cam, setFailure, firstB)
   const { shown: flash, flash: announce } = useFlash<string>(900)
   const [shelfName, setShelfName] = useState(() => shelfOf(scene.look).name)
   const [faults, setFaults] = useState(false)
@@ -157,7 +159,7 @@ export function CamPage(props: { link: CamLink | null }) {
   const shutter = useShutter(
     canvasRef,
     label,
-    setError,
+    setFailure,
     () => eng.engine?.audioState.tap() ?? null,
   )
 
@@ -172,11 +174,7 @@ export function CamPage(props: { link: CamLink | null }) {
     onText: text => eng.say(text),
     onFail: e => {
       caption(false)
-      setError(
-        e === 'not-allowed'
-          ? 'Captions need the microphone. Allow it in the browser’s site settings and try again.'
-          : `captions: ${e}`,
-      )
+      setFailure({ during: 'captions', error: e })
     },
   })
 
@@ -219,7 +217,7 @@ export function CamPage(props: { link: CamLink | null }) {
     cam,
     srcA,
     second,
-    onError: setError,
+    onError: setFailure,
     onMixing: () => {
       setShelfName(MIX_SHELF.name)
       setFaults(false)
@@ -264,12 +262,9 @@ export function CamPage(props: { link: CamLink | null }) {
   }
 
   const flipTilt = () => {
-    setError('')
+    setFailure(null)
     void tilt.toggle().then(ok => {
-      if (!ok)
-        setError(
-          'Motion access was turned down. Allow it in the browser’s site settings and try again.',
-        )
+      if (!ok) setFailure({ during: 'tilt', error: null })
     })
   }
 
@@ -446,7 +441,9 @@ export function CamPage(props: { link: CamLink | null }) {
       </main>
 
       <section className={styles.controls}>
-        {error === '' ? null : <p className={styles.error}>{error}</p>}
+        {failure === null ? null : (
+          <p className={styles.error}>{failureMessage(failure)}</p>
+        )}
 
         <div className={styles.tray}>
           {mixOpen ? (

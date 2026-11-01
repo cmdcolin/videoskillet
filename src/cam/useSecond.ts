@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
 
-import { reason } from '../ui/format'
 import { usePersistedString } from '../ui/storage'
 import { dualAfter } from './dual'
 import {
@@ -14,6 +13,7 @@ import { stalled, stopAll } from './useCamera'
 import { replay, useOnReturn } from './useReplay'
 
 import type { OtherAnswer } from './dual'
+import type { During, Failure } from './failure'
 import type { Pattern } from './patterns'
 import type { Camera, Layout, Loop, Relay } from './tape'
 import type { Shown } from './useCamEngine'
@@ -78,7 +78,7 @@ export function useSecond(
     openOther: () => Promise<OtherAnswer<Opened>>
     adopt: (next: Opened) => Opened | null
   },
-  onError: (message: string) => void,
+  onError: (failure: Failure) => void,
   first: Pattern | null,
 ) {
   const [second, setSecond] = useState<Second | null>(
@@ -127,9 +127,13 @@ export function useSecond(
     return latest ? 'shown' : 'superseded'
   }
 
-  const failed = (mine: number, message: string): Exclude<Landing, 'shown'> => {
+  const failed = (
+    mine: number,
+    during: During,
+    error: unknown,
+  ): Exclude<Landing, 'shown'> => {
     const latest = mine === turn.current
-    if (latest) onError(message)
+    if (latest) onError({ during, error })
     return latest ? 'failed' : 'superseded'
   }
 
@@ -172,7 +176,7 @@ export function useSecond(
       const loop = await playLoop(await recordTape(c, eng.layoutNow(), setLeft))
       landing = land(mine, { kind: 'tape', ...loop })
     } catch (e) {
-      landing = failed(mine, `tape: ${reason(e)}`)
+      landing = failed(mine, 'tape', e)
     }
     setLeft(0)
     return landing
@@ -191,7 +195,7 @@ export function useSecond(
       landing = land(mine, await goLive(prev))
     } catch (e) {
       stopAll(prev.stream)
-      landing = failed(mine, `second camera: ${reason(e)}`)
+      landing = failed(mine, 'second camera', e)
     }
     return landing === 'shown' ? 'live' : landing
   }
@@ -232,7 +236,7 @@ export function useSecond(
       return land(mine, { kind: 'clip', ...loop, relay })
     } catch (e) {
       if (loop !== null) dropLoop(loop)
-      return failed(mine, `clip: ${reason(e)}`)
+      return failed(mine, 'clip', e)
     }
   }
 
@@ -257,7 +261,7 @@ export function useSecond(
         relay: await relayCamera(eng.camera, eng.layoutNow),
       })
     } catch (e) {
-      landing = failed(mine, `camera on B: ${reason(e)}`)
+      landing = failed(mine, 'camera on B', e)
     }
     laying.current = false
     return landing
@@ -284,7 +288,7 @@ export function useSecond(
         land(mine, await goLive(back))
       } catch (e) {
         stopAll(back.stream)
-        if (failed(mine, `second camera: ${reason(e)}`) === 'failed') {
+        if (failed(mine, 'second camera', e) === 'failed') {
           show(null)
         }
       }

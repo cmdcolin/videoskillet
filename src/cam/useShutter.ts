@@ -4,6 +4,7 @@ import { useCapture } from '../ui/useCapture'
 
 import type { InputTap } from '../core/signal/audiostate'
 import type { Shot } from './deliver'
+import type { Failure } from './failure'
 import type { Mode } from './Modes'
 import type { RefObject } from 'react'
 
@@ -11,7 +12,7 @@ import type { RefObject } from 'react'
 export function useShutter(
   canvasRef: RefObject<HTMLCanvasElement | null>,
   name: string,
-  onError: (message: string) => void,
+  onError: (failure: Failure | null) => void,
   audio: () => InputTap | null,
 ) {
   const [mode, setMode] = useState<Mode>('photo')
@@ -21,7 +22,7 @@ export function useShutter(
   const capture = useCapture(
     canvasRef,
     name,
-    onError,
+    message => onError({ during: 'shutter', error: message }),
     (blob, file) =>
       setShot({
         blob,
@@ -41,7 +42,7 @@ export function useShutter(
   }, [shot])
 
   const press = () => {
-    onError('')
+    onError(null)
     if (mode === 'photo') {
       capture.grabStill()
     } else {
