@@ -289,10 +289,7 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
     // frame late (sync.wgsl runs the servo after this pass; see the loop it
     // closes there). Fresh state — zeros before the first sync — means no
     // correction yet, not a closed aperture.
-    var iris = timing[IRIS_GAIN];
-    if (iris < 0.05) {
-      iris = 1.0;
-    }
+    let iris = servoGain(timing[IRIS_GAIN]);
     fb = cam(fuv) * P.fbGain * iris;
     // lens vignette, in sensor coordinates
     fb = fb * max(1.0 - P.fbVign * 1.45 * dot(rel0, rel0), 0.0);

@@ -192,9 +192,15 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
   // From the loop bus the fill is a whole picture, so the trim only moves the
   // cut. The edge generator still fills its border with its own black, which is
   // what keeps a drop shadow under type filled from another picture.
-  var fill = charFill(n, cgSlice(cgKeyAt(x, y)));
+  // A trimmed box reads its fill at the key's own position, so the key already
+  // sliced above is the fill's ink.
+  var fill = 0.0;
   if (P.cgBus > 0.5) {
     fill = mix(busFill(n, comp[n]), IRE_BLACK, matte - body);
+  } else if (P.cgKeyDelay == 0.0) {
+    fill = charFill(n, body);
+  } else {
+    fill = charFill(n, cgSlice(cgKeyAt(x, y)));
   }
   if (P.cgInvert > 0.5) {
     // A downstream keyer inverted cuts letter-shaped holes in a full-frame

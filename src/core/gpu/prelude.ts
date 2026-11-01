@@ -462,6 +462,13 @@ export type ParamName = (typeof PARAM_DEFS)[number][0]
 // than sixty times a second.
 const badParams = new Set<string>()
 
+function reportNonFinite(name: string, v: number): void {
+  if (!Number.isFinite(v) && !badParams.has(name)) {
+    badParams.add(name)
+    console.error(`packParams: ${name} is ${String(v)} — uniform will be NaN`)
+  }
+}
+
 export function packParams(
   values: Record<ParamName, number>,
   out: ArrayBuffer,
@@ -478,10 +485,7 @@ export function packParams(
     // That cost four presets a silent black frame in a survey. Reported rather
     // than thrown, because the render loop is the wrong place to die and the
     // picture says the rest.
-    if (!Number.isFinite(v) && !badParams.has(name)) {
-      badParams.add(name)
-      console.error(`packParams: ${name} is ${String(v)} — uniform will be NaN`)
-    }
+    reportNonFinite(name, v)
     if (type === 'u32') dv.setUint32(i * 4, v >>> 0, true)
     else dv.setFloat32(i * 4, v, true)
   })
@@ -513,6 +517,7 @@ export function patchParams(
   for (const [name, v] of Object.entries(over)) {
     const slot = PARAM_SLOT.get(name)
     if (slot !== undefined && v !== undefined) {
+      reportNonFinite(name, v)
       if (slot.u32) dv.setUint32(slot.offset, v >>> 0, true)
       else dv.setFloat32(slot.offset, v, true)
     }
@@ -830,11 +835,20 @@ fn triModeLevel(frame: u32) -> f32 {
   return select(select(1.0, 0.6, r < 0.6), 0.0, r < 0.2);
 }
 
-// Attenuate the RF carrier by db decibels and detect again, through channel.wgsl's
-// carrier map.
+// Negative modulation's carrier map, as a fraction of peak power: the sync tip
+// at -40 IRE is full carrier and peak white at 100 IRE is an eighth of it.
+fn carrierOf(ire: f32) -> f32 {
+  return 1.0 - 0.00625 * (ire + 40.0);
+}
+
+// What an envelope detector hands back for a carrier level.
+fn ireOf(carrier: f32) -> f32 {
+  return 160.0 * (1.0 - carrier) - 40.0;
+}
+
+// Attenuate the RF carrier by db decibels and detect again.
 fn carrierScaled(v: f32, db: f32) -> f32 {
-  let carrier = max(1.0 - 0.00625 * (v + 40.0), 0.0);
-  return (1.0 - pow(10.0, -db / 20.0) * carrier) / 0.00625 - 40.0;
+  return ireOf(pow(10.0, -db / 20.0) * max(carrierOf(v), 0.0));
 }
 
 fn scrambleAt(v: f32, row: u32, s: u32, depth: f32, mode: f32, frame: u32) -> f32 {
@@ -947,10 +961,16 @@ fn wrapIdx(i: i32) -> u32 {
   return u32(((i % i32(BUF_LEN)) + i32(BUF_LEN)) % i32(BUF_LEN));
 }
 
-// The receiver's IF gain from the AGC servo's state. A zero state has never
-// run, and reads as unity.
+// A gain servo's state in the timing buffer. Zeroed state means the servo has
+// not run yet, which is no correction, so it reads as unity. The servos never
+// write a gain under 0.05.
+fn servoGain(state: f32) -> f32 {
+  return select(state, 1.0, state < 0.05);
+}
+
+// The receiver's IF gain from the AGC servo's state.
 fn ifGain(state: f32, agc: f32) -> f32 {
-  return mix(1.0, select(state, 1.0, state == 0.0), agc);
+  return mix(1.0, servoGain(state), agc);
 }
 
 // Raster row wrap that survives negative offsets: vertical roll runs both ways

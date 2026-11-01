@@ -173,9 +173,9 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
 
   // Convergence: three guns firing through one mask from three positions can
   // only be registered over part of the screen. The error is nulled at the
-  // centre and grows toward the corners, so red lands outward and blue inward
-  // of green, and edges pick up colour fringes that get worse the further out
-  // they are. Only the direct emission is converged — the scatter below
+  // centre and grows toward the corners, so red and blue land either side of
+  // green (a positive amount pulls red inward and pushes blue outward), and
+  // edges pick up colour fringes that get worse the further out they are. Only the direct emission is converged — the scatter below
   // integrates over a patch of glass far wider than any landing error, so it
   // comes back out registered no matter where the beams went in.
   if (P.crtConverge != 0.0) {

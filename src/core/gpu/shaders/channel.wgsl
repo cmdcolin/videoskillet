@@ -209,6 +209,7 @@ fn main(
   // folds: the deviation floor under sync has margin, the response cliff
   // above white does not. The playback luma filter comes after the
   // discriminator, so it softens and rings the fold's edges like any other.
+  let fseed = pcg(P.frame * 48271u + P.gen * 2246822519u + 0x0f37u);
   if (P.fmOverdev > 0.0) {
     // Ceiling of the emphasized signal, IRE: slides from beyond any real
     // edge down toward the picture as the knob advances — but never below
@@ -217,7 +218,6 @@ fn main(
     // overrun it. At full knob a 10 IRE edge is enough to fold; flat fields
     // of any brightness never do.
     let ceilIre = mix(240.0, 112.0, P.fmOverdev);
-    let fseed = pcg(P.frame * 48271u + P.gen * 2246822519u + 0x0f37u);
     let srcStart = n0 - LUMA_REACH - FM_BACK;
     for (var i = lid.x + 2u; i < FM_SRC; i = i + TILE_WG) {
       // record-side pre-emphasis: the edge boost that makes overshoot
@@ -230,7 +230,6 @@ fn main(
   }
   workgroupBarrier();
   if (P.fmOverdev > 0.0) {
-    let fseed = pcg(P.frame * 48271u + P.gen * 2246822519u + 0x0f37u);
     for (var j = lid.x; j < TILE_WG + 2u * LUMA_REACH; j = j + TILE_WG) {
       let k = j + FM_BACK;
       let g = n0 + j - LUMA_REACH;
@@ -520,7 +519,7 @@ fn main(
   if (P.soundIre > 0.0) {
     let ph = f32((11u * s) % 35u) / 35.0;
     let buzz = 2.2 * audio[row];
-    let vis = max(1.0 - 0.00625 * (out + 40.0), 0.12) / 0.75;
+    let vis = max(carrierOf(out), 0.12) / 0.75;
     out = out + P.soundIre * vis * sin(2.0 * PI * ph + buzz);
   }
 
@@ -575,7 +574,7 @@ fn main(
     let phS = 2.0 * PI * f32((11u * n) % 105u) / 105.0 + P.rfAdjPhaseS;
     // our own carrier at this sample: negative modulation maps sync -40 ..
     // white 100 onto 1 .. 0.125 of peak power
-    let a = max(1.0 - 0.00625 * (out + 40.0), 0.12);
+    let a = max(carrierOf(out), 0.12);
     out = out + b * sin(phV) + 0.45 * P.rfAdjIre * sin(phS)
       - min(b * b / (200.0 * a), 25.0);
   }
@@ -594,9 +593,9 @@ fn main(
     let cn = lid.x + 1u;
     let nI = sig * 0.4082 * (tileNs[cn - 1u] + 2.0 * tileNs[cn] + tileNs[cn + 1u]);
     let nQ = sig * 0.4082 * (tileNq[cn - 1u] + 2.0 * tileNq[cn] + tileNq[cn + 1u]);
-    let a = max(1.0 - 0.00625 * (out + 40.0), 0.0);
+    let a = max(carrierOf(out), 0.0);
     let e = sqrt((a + nI) * (a + nI) + nQ * nQ);
-    out = 160.0 * (1.0 - e) - 40.0;
+    out = ireOf(e);
   }
 
   // Ingress: a two-way radio into a cracked shield. An unrelated carrier at

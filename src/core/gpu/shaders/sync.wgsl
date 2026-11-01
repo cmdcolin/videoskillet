@@ -115,18 +115,15 @@ fn main(@builtin(local_invocation_id) lid: vec3u) {
   // current is what loads the supply — so a limiter clamping down relieves the
   // very sag the bright content caused, one field late. Fresh state (zeros)
   // means no correction yet, not zero drive.
-  var ablHeld = timing[ABL_GAIN];
-  if (ablHeld < 0.05) {
-    ablHeld = 1.0;
-  }
+  let ablHeld = servoGain(timing[ABL_GAIN]);
   // Last frame's DC restorer offset, which sets the level the guns cut off at.
   let blackHeld = timing[BLACK_SHIFT];
   var pll = timing[PLL_STATE];
   var lockAge = timing[LOCK_AGE];
-  var agc = timing[AGC_GAIN];
-  var ablG = timing[ABL_GAIN];
+  var agc = servoGain(timing[AGC_GAIN]);
+  var ablG = ablHeld;
   var ablV = timing[ABL_VEL];
-  var irisG = timing[IRIS_GAIN];
+  var irisG = servoGain(timing[IRIS_GAIN]);
   var irisV = timing[IRIS_VEL];
   storageBarrier();
 
@@ -250,16 +247,13 @@ fn main(@builtin(local_invocation_id) lid: vec3u) {
     timing[row] = pll;
   }
 
-  if (agc < 0.05) {
-    agc = 1.0;
-  }
   if (depthCount > 0.0) {
     // sync_measure reports depth post-IF-gain (the separator sits inside the
     // AGC loop), so divide out the gain that was actually applied before
     // recomputing the wanted one — otherwise the servo squares its own
-    // correction. mix() is the same expression sync_measure applied, so at
+    // correction. ifGain is the same expression sync_measure applied, so at
     // agc = 0 this degenerates to exactly the open-loop update.
-    let applied = mix(1.0, agc, P.agc);
+    let applied = ifGain(agc, P.agc);
     let want = applied * 40.0 / clamp(depthSum / depthCount, 5.0, 160.0);
     agc = agc + 0.25 * (want - agc);
   }
@@ -301,7 +295,7 @@ fn main(@builtin(local_invocation_id) lid: vec3u) {
   // Mean beam current over the picture, in IRE — the sense input for both gain
   // servos below. Post-IF, because the guns are driven by the gain-corrected
   // video: a pumping AGC feeds its pumping straight into both loops.
-  let beamIre = clamp(loadSum / max(loadCount, 1.0), 0.0, 160.0);
+  let beamIre = clamp(loadSum / lines, 0.0, 160.0);
 
   // Automatic beam limiter. The flyback can only source so much average beam
   // current; past that the set pulls video drive down to protect it. The sense
@@ -315,9 +309,6 @@ fn main(@builtin(local_invocation_id) lid: vec3u) {
   // Hz — a rhythm set by nothing on screen. Feed either feedback loop and the
   // drive term is inside the loop, so the servo and the loop beat against
   // each other instead of settling.
-  if (ablG < 0.05) {
-    ablG = 1.0;
-  }
   if (P.abl > 0.0) {
     // what the supply can sustain: the knob shrinks the flyback
     let ceilIre = mix(85.0, 28.0, P.abl);
@@ -341,9 +332,6 @@ fn main(@builtin(local_invocation_id) lid: vec3u) {
   // clamps, the loop starves, the iris reopens, and round again. Its natural
   // frequency is deliberately unequal to the beam limiter's, so when both hunt
   // the two rhythms beat.
-  if (irisG < 0.05) {
-    irisG = 1.0;
-  }
   if (P.fbIris > 0.0) {
     let light = max(beamIre, 4.0) / 50.0 * ablG;
     let want = clamp(1.0 / light, 0.08, 4.0);

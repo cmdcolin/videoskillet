@@ -51,8 +51,9 @@ fn main(
   let n = row * SPL + s;
 
   // This feed's deck paused (bPause/bPauseBar/bShift0/bRowOff carry whichever
-  // deck's values pipeline.ts packed — A's servo state for feedA; zeros for
-  // feedB, whose pause still lives on the mix_b resample). The drum re-reads
+  // deck's values pipeline.ts packed — A's servo state for feedA, B's for
+  // feedB on the dirty path, and zeros for feedB genlocked, where the TBC
+  // strips B's timing damage). The drum re-reads
   // one track with the capstan servo defeated: each line's timing scatters on
   // its own around the slow wander, the whole raster hops vertically when the
   // servo hunts, and the head loses the track approaching the mistrack stripe
