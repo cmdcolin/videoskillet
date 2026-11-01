@@ -230,7 +230,7 @@ export const lookLabel = (look: Look | null): string =>
 // The name a still or a take is saved under: the look, and how many more are
 // stacked on it.
 export function stackLabel(look: Look | null, layers: Layers): string {
-  const more = Object.keys(layers).filter(n => n !== look?.name).length
+  const more = stacked(layers).filter(n => n !== look?.name).length
   return more === 0 ? lookLabel(look) : `${lookLabel(look)} + ${more}`
 }
 
@@ -252,6 +252,13 @@ const MIX_FLOOR = 0.6
 
 // Presets dragged in partway on top of the look, each at its own weight.
 export type Layers = Readonly<Record<string, number>>
+
+// The layers that reach the picture. The tune sheet keeps a layer dragged to
+// zero so its row stays put under the finger.
+export const stacked = (layers: Layers) =>
+  Object.entries(layers)
+    .filter(([, w]) => w > 0)
+    .map(([name]) => name)
 
 // The board and the modulation bay a look lands as, with any layers stacked on
 // it. Strength and a layer's weight are both the preset mixer's weights, so a

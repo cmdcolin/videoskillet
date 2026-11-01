@@ -185,6 +185,7 @@ describe('lookBoard with looks stacked on it', () => {
     expect(stackLabel(look, { looseConnector: 0.4, wornTape: 0.2 })).toBe(
       'picture search + 2',
     )
+    expect(stackLabel(look, { looseConnector: 0 })).toBe('picture search')
   })
 })
 

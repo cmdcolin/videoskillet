@@ -1,6 +1,6 @@
 import { routingsToSlots, toEngineSlots } from '../ui/modSlots'
 import { aimKey, keyOn } from './keyed'
-import { lookBoard, lookMod, mixControls, mixesItself } from './looks'
+import { lookBoard, lookMod, mixControls, mixesItself, stacked } from './looks'
 import { SLICE } from './tape'
 
 import type { Controls } from '../core/controls'
@@ -44,7 +44,7 @@ export const sliceOf = (layout: Layout) => (layout === 'slice' ? SLICE : 1)
 // A look that sets the mixer itself keeps it; the mixer's own modes run under
 // every other look.
 export const mixerOwned = (s: Scene) =>
-  [...(s.look === null ? [] : [s.look.name]), ...Object.keys(s.layers)].some(
+  [...(s.look === null ? [] : [s.look.name]), ...stacked(s.layers)].some(
     mixesItself,
   )
 

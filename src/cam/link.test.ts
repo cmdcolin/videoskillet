@@ -47,6 +47,18 @@ describe('a camera link', () => {
     expect(readLink(`?look=${mixLook}&srcb=bars`)?.look?.name).toBe(mixLook)
   })
 
+  it('carries a stack with no look under it', () => {
+    const mixLook = MIX_SHELF.looks[0]
+    const opened = readLink(`?look=${mixLook}&stack=runaway`)
+    expect(opened?.look).toBeNull()
+    expect(opened?.layers).toEqual({ runaway: 1 })
+    expect(roundTrip({ ...BLANK, layers: { runaway: 0.5 }, b: null })).toEqual({
+      ...BLANK,
+      layers: { runaway: 0.5 },
+      b: null,
+    })
+  })
+
   it('opens every gallery demo as a board, with its pattern on B', () => {
     const demos: { name: string; query: string; gallery: boolean }[] =
       JSON.parse(readFileSync('demos.json', 'utf8'))

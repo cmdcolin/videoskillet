@@ -42,7 +42,7 @@ export function readLink(search: string): CamLink | null {
   const usable = (name: string) =>
     PRESET_BY_NAME.has(name) && (b !== null || !mixesItself(name))
   const named = q.get('look')
-  if (named !== null || q.has('tweak')) {
+  if (named !== null || q.has('tweak') || q.has('stack')) {
     const layers: Record<string, number> = {}
     for (const pair of (q.get('stack') ?? '').split(',')) {
       const [name = '', w = null] = pair.split(':')
