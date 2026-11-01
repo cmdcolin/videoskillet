@@ -48,14 +48,62 @@ const KEYER_SWITCHES: Partial<Controls> = {
 // The keyer knobs the loops sheet shows, its main ones first.
 export const KEYER_KNOBS = {
   main: ['bKeyAcceptDeg', 'bKeyFill', 'bKeyFillMixA', 'bKeyFillHueDeg'],
-  more: ['bKeyClip', 'bKeySoft', 'bKeySpill', 'bKeyDelayUs'],
+  more: [
+    'bKeyClip',
+    'bKeySoft',
+    'bKeySpill',
+    'bKeyDelayUs',
+    'bKeyAdditive',
+    'bKeyLevel',
+    'bKeyBackY',
+  ],
 } as const satisfies Record<string, readonly ControlKey[]>
+
+// The backing as a tap measured it on the camera: its chroma magnitude, which
+// lies along the key hue the same tap aimed, and its luma.
+export interface Backing {
+  level: number
+  luma: number
+}
+
+// The colour key on B. Switched on without a tap there is no backing measured,
+// and the additive keyer keeps the board's own calibration.
+export interface Keyer {
+  hue: number
+  backing: Backing | null
+}
+
+export function backingOf(r: number, g: number, b: number): Backing {
+  const { u, v } = chromaOf(r, g, b)
+  return {
+    level: Math.hypot(u, v),
+    luma: 0.299 * r + 0.587 * g + 0.114 * b,
+  }
+}
+
+// A backing is never lit evenly and the additive keyer subtracts up to 1.5x
+// its level, so calibrating under the tapped spot lets the dimmer parts still
+// pass the fill at full strength while the brighter parts are still removed.
+const BACKING_UNDER = 0.8
+
+// The keyer sees B after B's video gain, which scales chroma and luma alike.
+export const calibrated = (b: Backing, gain: number) => ({
+  bKeyLevel: BACKING_UNDER * b.level * gain,
+  bKeyBackY: BACKING_UNDER * b.luma * gain,
+})
 
 // The keyer sees B's colour after B's hue trim, so the camera's hue is moved
 // round by it to land on the backing.
-export function keyOn(c: Controls, tweaks: Partial<Controls>, hue: number) {
-  const keyed = { ...c, ...KEYER, ...tweaks, ...KEYER_SWITCHES }
-  return { ...keyed, bKeyHueDeg: Math.round(wrapDeg(hue + keyed.bHueDeg)) }
+export function keyOn(c: Controls, tweaks: Partial<Controls>, keyer: Keyer) {
+  const backing =
+    keyer.backing === null
+      ? {}
+      : calibrated(keyer.backing, { ...c, ...tweaks }.bVidGain)
+  const keyed = { ...c, ...KEYER, ...backing, ...tweaks, ...KEYER_SWITCHES }
+  return {
+    ...keyed,
+    bKeyHueDeg: Math.round(wrapDeg(keyer.hue + keyed.bHueDeg)),
+  }
 }
 
 // Where a point on the picture lands on the camera's own frame, both in 0..1.

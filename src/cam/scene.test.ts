@@ -10,7 +10,7 @@ const scene: Scene = {
   ...CLEAN,
   look: { name: 'pictureSearch', strength: 1, rolled: false },
   mix: FIRST_MIX,
-  keyHue: null,
+  keyer: null,
 }
 
 describe('the mixer', () => {

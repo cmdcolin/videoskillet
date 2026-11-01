@@ -5,6 +5,7 @@ import { SLICE } from './tape'
 
 import type { Controls } from '../core/controls'
 import type { ModRouting } from '../ui/modSlots'
+import type { Keyer } from './keyed'
 import type { Layers, Look, Mix } from './looks'
 import type { Layout } from './tape'
 
@@ -17,8 +18,8 @@ export interface Base {
 
 // Everything the board is built from: a linked board or the look, the presets
 // dragged in partway on top of the look, the knobs moved off both, the mixer
-// while B has a picture, where a tap has aimed the look's keyer, and the hue
-// the chroma keyer cuts while it keys the camera on B.
+// while B has a picture, where a tap has aimed the look's keyer, and the
+// chroma keyer while it keys the camera on B.
 export interface Scene {
   base: Base | null
   look: Look | null
@@ -26,7 +27,7 @@ export interface Scene {
   tweaks: Partial<Controls>
   mix: Mix | null
   hue: number | null
-  keyHue: number | null
+  keyer: Keyer | null
 }
 
 export const CLEAN = {
@@ -57,8 +58,8 @@ export const boardOf = (s: Scene, slice: number) => {
         }
       : lookBoard(s.look, s.layers)
   const controls =
-    s.keyHue !== null
-      ? keyOn(board.controls, s.tweaks, s.keyHue)
+    s.keyer !== null
+      ? keyOn(board.controls, s.tweaks, s.keyer)
       : {
           ...board.controls,
           ...s.tweaks,

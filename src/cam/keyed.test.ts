@@ -3,7 +3,15 @@ import { describe, expect, it } from 'vitest'
 import { DEFAULT_CONTROLS } from '../core/controls'
 import { coverFit43 } from '../core/gpu/sources'
 import { loopSlice, mixerSlice } from '../ui/hueKey'
-import { aimKey, chromaHue, keyOn, keysOnHue, sourcePoint } from './keyed'
+import {
+  aimKey,
+  backingOf,
+  calibrated,
+  chromaHue,
+  keyOn,
+  keysOnHue,
+  sourcePoint,
+} from './keyed'
 import { CLEAN, boardOf } from './scene'
 import { cropRect } from './zoom'
 
@@ -54,9 +62,39 @@ describe('aimKey', () => {
   })
 })
 
+const aimed = (hue: number) => ({ hue, backing: null })
+
+describe('backingOf', () => {
+  it('measures a backing as its chroma magnitude and its luma', () => {
+    const green = backingOf(0, 1, 0)
+    expect(green.luma).toBeCloseTo(0.587)
+    expect(green.level).toBeCloseTo(Math.hypot(0.492 * 0.587, 0.877 * 0.587))
+  })
+
+  it('finds no backing in grey', () => {
+    expect(backingOf(0.5, 0.5, 0.5)).toEqual({
+      level: expect.closeTo(0),
+      luma: expect.closeTo(0.5),
+    })
+  })
+})
+
+describe('calibrated', () => {
+  it("sets the additive keyer a little under the tapped backing, after B's gain", () => {
+    expect(calibrated({ level: 0.4, luma: 0.5 }, 1)).toEqual({
+      bKeyLevel: expect.closeTo(0.32),
+      bKeyBackY: expect.closeTo(0.4),
+    })
+    expect(calibrated({ level: 0.4, luma: 0.5 }, 1.5)).toEqual({
+      bKeyLevel: expect.closeTo(0.48),
+      bKeyBackY: expect.closeTo(0.6),
+    })
+  })
+})
+
 describe('keyOn', () => {
   it('keys B on the hue and fills from the loop bus', () => {
-    const c = keyOn(DEFAULT_CONTROLS, {}, 123.4)
+    const c = keyOn(DEFAULT_CONTROLS, {}, aimed(123.4))
     expect(c).toMatchObject({
       bGain: 1,
       bGenlock: 1,
@@ -69,25 +107,71 @@ describe('keyOn', () => {
 
   it("moves the backing round by B's hue trim, as the keyer sees it", () => {
     const c = { ...DEFAULT_CONTROLS, bHueDeg: 150 }
-    expect(keyOn(c, {}, 241).bKeyHueDeg).toBe(31)
-    expect(keyOn({ ...c, bHueDeg: -150 }, {}, 100).bKeyHueDeg).toBe(310)
+    expect(keyOn(c, {}, aimed(241)).bKeyHueDeg).toBe(31)
+    expect(keyOn({ ...c, bHueDeg: -150 }, {}, aimed(100)).bKeyHueDeg).toBe(310)
   })
 
   it('holds strobe hold odd, where the fade keeps the colour', () => {
-    expect(keyOn(DEFAULT_CONTROLS, {}, 0).cfbHold % 2).toBe(1)
+    expect(keyOn(DEFAULT_CONTROLS, {}, aimed(0)).cfbHold % 2).toBe(1)
   })
 
   it('lets a knob turned by hand win over its settings', () => {
-    const c = keyOn(DEFAULT_CONTROLS, { bKeyAcceptDeg: 20, cfbHold: 5 }, 0)
+    const c = keyOn(
+      DEFAULT_CONTROLS,
+      { bKeyAcceptDeg: 20, cfbHold: 5 },
+      aimed(0),
+    )
     expect(c.bKeyAcceptDeg).toBe(20)
     expect(c.cfbHold).toBe(5)
+  })
+
+  it('keeps the comparator, with the additive keyer calibrated by the tap', () => {
+    const c = keyOn(
+      DEFAULT_CONTROLS,
+      {},
+      {
+        hue: 241,
+        backing: { level: 0.4, luma: 0.5 },
+      },
+    )
+    expect(c.bKeyAdditive).toBe(0)
+    expect(c.bKeyLevel).toBeCloseTo(0.32)
+    expect(c.bKeyBackY).toBeCloseTo(0.4)
+  })
+
+  it("calibrates against B's video gain as turned", () => {
+    const keyer = { hue: 241, backing: { level: 0.4, luma: 0.5 } }
+    const c = keyOn(
+      { ...DEFAULT_CONTROLS, bVidGain: 1.2 },
+      { bVidGain: 1.5 },
+      keyer,
+    )
+    expect(c.bKeyLevel).toBeCloseTo(0.48)
+    expect(c.bKeyBackY).toBeCloseTo(0.6)
+  })
+
+  it('leaves the calibration to the board when no tap measured a backing', () => {
+    const c = keyOn(DEFAULT_CONTROLS, {}, aimed(241))
+    expect(c.bKeyLevel).toBe(DEFAULT_CONTROLS.bKeyLevel)
+    expect(c.bKeyBackY).toBe(DEFAULT_CONTROLS.bKeyBackY)
+  })
+
+  it('lets a calibration turned by hand win over the tap', () => {
+    const c = keyOn(
+      DEFAULT_CONTROLS,
+      { bKeyAdditive: 1, bKeyLevel: 0.2 },
+      { hue: 241, backing: { level: 0.4, luma: 0.5 } },
+    )
+    expect(c.bKeyAdditive).toBe(1)
+    expect(c.bKeyLevel).toBe(0.2)
+    expect(c.bKeyBackY).toBeCloseTo(0.4)
   })
 
   it('holds the switches that make the mixer a keyer', () => {
     const c = keyOn(
       DEFAULT_CONTROLS,
       { bGain: 0.3, bKey: 0, pipMix: 1, bKeyHueDeg: 10 },
-      200,
+      aimed(200),
     )
     expect(c).toMatchObject({ bGain: 1, bKey: 1, pipMix: 0, bKeyHueDeg: 200 })
   })
@@ -98,7 +182,7 @@ describe('a scene with the keyer on', () => {
     ...CLEAN,
     look: null,
     mix: { mode: 'wipe', fader: 0.3 },
-    keyHue: 241,
+    keyer: { hue: 241, backing: backingOf(0.1, 0.8, 0.2) },
   }
 
   it('sets the mixer over whatever mode it was in', () => {
@@ -106,8 +190,14 @@ describe('a scene with the keyer on', () => {
     expect(c).toMatchObject({ bKey: 1, bGain: 1, wipeMode: 0, bKeyHueDeg: 241 })
   })
 
+  it('calibrates the additive keyer to the backing the tap measured', () => {
+    const c = boardOf(scene, 1).controls
+    expect(c.bKeyLevel).toBeCloseTo(0.8 * backingOf(0.1, 0.8, 0.2).level)
+    expect(c.bKeyBackY).toBeCloseTo(0.8 * backingOf(0.1, 0.8, 0.2).luma)
+  })
+
   it('leaves the mixer to its mode once off', () => {
-    const c = boardOf({ ...scene, keyHue: null }, 1).controls
+    const c = boardOf({ ...scene, keyer: null }, 1).controls
     expect(c).toMatchObject({ bKey: 0, wipeMode: 1 })
   })
 })

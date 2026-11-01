@@ -1,3 +1,4 @@
+import type { Keyer } from './keyed'
 import type { Scene } from './scene'
 
 // Undo takes back the look, the knobs and where a tap aimed. The mixer, and
@@ -5,7 +6,7 @@ import type { Scene } from './scene'
 // also changes what is on B.
 export type Step = Pick<
   Scene,
-  'base' | 'look' | 'layers' | 'tweaks' | 'hue' | 'keyHue'
+  'base' | 'look' | 'layers' | 'tweaks' | 'hue' | 'keyer'
 >
 
 // Changes closer together than this are one step, so a drag undoes whole.
@@ -18,10 +19,10 @@ export const stepOf = (s: Scene): Step => ({
   layers: s.layers,
   tweaks: s.tweaks,
   hue: s.hue,
-  keyHue: s.keyHue,
+  keyer: s.keyer,
 })
 
-const reaimed = (before: number | null, after: number | null) =>
+const reaimed = (before: Keyer | null, after: Keyer | null) =>
   before !== null && after !== null && before !== after
 
 export const changesStep = (before: Scene, after: Scene) =>
@@ -30,13 +31,12 @@ export const changesStep = (before: Scene, after: Scene) =>
   before.layers !== after.layers ||
   before.tweaks !== after.tweaks ||
   before.hue !== after.hue ||
-  reaimed(before.keyHue, after.keyHue)
+  reaimed(before.keyer, after.keyer)
 
 // The step put back over `now`, keeping the keyer on or off as it is now.
 export const restored = (now: Scene, step: Step): Partial<Scene> => ({
   ...step,
-  keyHue:
-    now.keyHue !== null && step.keyHue !== null ? step.keyHue : now.keyHue,
+  keyer: now.keyer !== null && step.keyer !== null ? step.keyer : now.keyer,
 })
 
 export const banked = (

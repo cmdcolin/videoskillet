@@ -1,7 +1,8 @@
 import { useFlash } from '../ui/useFlash'
-import { chromaHue, colourAt, sourcePoint } from './keyed'
+import { backingOf, chromaHue, colourAt, sourcePoint } from './keyed'
 
 import type { HueSlice } from '../ui/hueKey'
+import type { Backing } from './keyed'
 import type { Camera } from './tape'
 import type { PointerEvent } from 'react'
 
@@ -12,12 +13,13 @@ interface Ring {
 }
 
 // A tap on a look that keys its loop by hue moves the key to the camera's
-// colour under the finger, and a ring shows the colour it took.
+// colour under the finger, and a ring shows the colour it took. The colour is
+// measured as a backing too, for the additive keyer on B.
 export function useKeyTap(opts: {
   camera: () => Camera | null
   keyed: () => boolean
   slice: () => HueSlice
-  onAim: (hue: number) => void
+  onAim: (hue: number, backing: Backing) => void
   onMiss: (text: string) => void
 }) {
   const { shown: ring, flash: showRing } = useFlash<Ring>(800)
@@ -45,7 +47,7 @@ export function useKeyTap(opts: {
       opts.onMiss('no colour there to key on')
       return
     }
-    opts.onAim(hue)
+    opts.onAim(hue, backingOf(...rgb))
     showRing({
       ...at,
       rgb: `rgb(${rgb.map(v => Math.round(v * 255)).join(' ')})`,

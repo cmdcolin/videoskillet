@@ -78,7 +78,7 @@ const scrollToChip = (name: string) =>
 // a strong look.
 const firstScene = (link: CamLink | null): Scene =>
   link === null
-    ? { ...CLEAN, look: openingLook(), mix: null, keyHue: null }
+    ? { ...CLEAN, look: openingLook(), mix: null, keyer: null }
     : {
         ...CLEAN,
         base: link.base,
@@ -86,7 +86,7 @@ const firstScene = (link: CamLink | null): Scene =>
         layers: link.layers,
         tweaks: link.tweaks,
         mix: link.mix,
-        keyHue: null,
+        keyer: null,
       }
 
 const labelOf = (s: Step) =>
@@ -222,7 +222,7 @@ export function CamPage(props: { link: CamLink | null }) {
       setShelfName(MIX_SHELF.name)
       setFaults(false)
       setPanel('mix')
-      sc.paint({ mix: sc.now().mix ?? FIRST_MIX, keyHue: null })
+      sc.paint({ mix: sc.now().mix ?? FIRST_MIX, keyer: null })
     },
     onTakeOff: () => sc.mixWith(null),
   })
@@ -235,7 +235,7 @@ export function CamPage(props: { link: CamLink | null }) {
   const keyingRef = useRef(false)
   const [keying, setKeying] = useState(false)
   const switchKeyer = (on: boolean) => {
-    const settled = keyingRef.current || on === (sc.now().keyHue !== null)
+    const settled = keyingRef.current || on === (sc.now().keyer !== null)
     if (!settled && !on) picks.putOnB('none')
     else if (!settled) {
       keyingRef.current = true
@@ -243,8 +243,11 @@ export function CamPage(props: { link: CamLink | null }) {
       void picks
         .keySame()
         .then(got => {
-          if (got === 'shown') sc.paint({ keyHue: DEFAULT_CONTROLS.bKeyHueDeg })
-          else if (got === 'failed') picks.putOnB('none')
+          if (got === 'shown') {
+            sc.paint({
+              keyer: { hue: DEFAULT_CONTROLS.bKeyHueDeg, backing: null },
+            })
+          } else if (got === 'failed') picks.putOnB('none')
         })
         .finally(() => {
           keyingRef.current = false
@@ -287,18 +290,19 @@ export function CamPage(props: { link: CamLink | null }) {
     camera: eng.camera,
     keyed: () => {
       const s = sc.now()
-      return (
-        s.keyHue !== null || keysOnHue(lookBoard(s.look, s.layers).controls)
-      )
+      return s.keyer !== null || keysOnHue(lookBoard(s.look, s.layers).controls)
     },
     slice: () => {
       const s = sc.now()
-      return s.keyHue === null
+      return s.keyer === null
         ? loopSlice(lookBoard(s.look, s.layers).controls)
         : mixerSlice(boardOf(s, sliceOf(eng.layoutNow())).controls)
     },
-    onAim: hue =>
-      sc.paint({ hue, keyHue: sc.now().keyHue === null ? null : hue }),
+    onAim: (hue, backing) =>
+      sc.paint({
+        hue,
+        keyer: sc.now().keyer === null ? null : { hue, backing },
+      }),
     onMiss: announce,
   })
 
@@ -456,14 +460,10 @@ export function CamPage(props: { link: CamLink | null }) {
               busy={busy}
               cameraUp={cameraUp}
               hasB={
-                (scene.mix !== null || scene.keyHue !== null) && second.loaded
+                (scene.mix !== null || scene.keyer !== null) && second.loaded
               }
               owner={
-                scene.keyHue !== null
-                  ? 'colour key'
-                  : ownedMixer
-                    ? 'look'
-                    : null
+                scene.keyer !== null ? 'colour key' : ownedMixer ? 'look' : null
               }
               mix={scene.mix ?? FIRST_MIX}
               onPutA={picks.putOnA}
@@ -512,8 +512,8 @@ export function CamPage(props: { link: CamLink | null }) {
           <Loops
             controls={controls()}
             keyer={{
-              on: scene.keyHue !== null,
-              disabled: keying || busy || (!cameraUp && scene.keyHue === null),
+              on: scene.keyer !== null,
+              disabled: keying || busy || (!cameraUp && scene.keyer === null),
               onSwitch: switchKeyer,
             }}
             tweaked={Object.keys(scene.tweaks).some(k => LOOP_KEYS.has(k))}

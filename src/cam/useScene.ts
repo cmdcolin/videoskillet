@@ -39,12 +39,12 @@ export function useScene(
   // The chroma keyer's fill fades its copies into a still of the camera, so A
   // holds a frame for as long as the keyer is on.
   const show = (next: Partial<Scene>) => {
-    const keyed = ref.current.keyHue !== null
+    const keyed = ref.current.keyer !== null
     const s = { ...ref.current, ...next }
     ref.current = s
     setScene(s)
     out.showBoard(boardOf(s, out.slice()))
-    if (keyed !== (s.keyHue !== null)) out.holdA(!keyed)
+    if (keyed !== (s.keyer !== null)) out.holdA(!keyed)
   }
 
   const paint = (next: Partial<Scene>) => {
@@ -157,8 +157,8 @@ export function useScene(
   const mixWith = (mix: Mix | null) =>
     paint(
       mixerOwned(ref.current)
-        ? { ...CLEAN, mix, keyHue: null }
-        : { mix, keyHue: null },
+        ? { ...CLEAN, mix, keyer: null }
+        : { mix, keyer: null },
     )
 
   // Throws the fader to the other end, while the mixer is the page's own.

@@ -34,7 +34,7 @@ describe('the full-app link', () => {
       layers: { [plain]: 0.7 },
       tweaks: { fbMix: 0.3 },
       mix: { mode: 'dissolve', fader: 0.25 },
-      keyHue: null,
+      keyer: null,
     }
     const { q, params, controls } = opened(
       instrumentHref(scene, 'webcam', 'bars'),
@@ -47,12 +47,26 @@ describe('the full-app link', () => {
     expect(q.get('srcb')).toBe('bars')
   })
 
+  it("carries the keyer's calibration from a tap with a pattern on B", () => {
+    const scene: Scene = {
+      ...CLEAN,
+      look: null,
+      mix: null,
+      keyer: { hue: 241, backing: { level: 0.42, luma: 0.55 } },
+    }
+    const { controls } = opened(instrumentHref(scene, 'webcam', 'bars'))
+    const want = boardOf(scene, 1).controls
+    expect(controls.bKeyLevel).toBeCloseTo(want.bKeyLevel, 3)
+    expect(controls.bKeyBackY).toBeCloseTo(want.bKeyBackY, 3)
+    expect(want.bKeyLevel).not.toBe(DEFAULT_CONTROLS.bKeyLevel)
+  })
+
   it('leaves the mixer and the keyer behind when B holds nothing a link can carry', () => {
     const scene: Scene = {
       ...CLEAN,
       look: null,
       mix: { mode: 'dissolve', fader: 0.25 },
-      keyHue: 120,
+      keyer: { hue: 120, backing: null },
     }
     const { q, params, controls } = opened(instrumentHref(scene, null, null))
     expect(params.damaged).toBe(false)

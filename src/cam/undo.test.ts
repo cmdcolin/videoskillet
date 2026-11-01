@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { CLEAN } from './scene'
+import { CLEAN, boardOf } from './scene'
 import {
   MAX_STEPS,
   STEP_GAP_MS,
@@ -16,9 +16,9 @@ const scene: Scene = {
   ...CLEAN,
   look: { name: 'vhs', strength: 1, rolled: false },
   mix: null,
-  keyHue: null,
+  keyer: null,
 }
-const CLEAN_SCENE: Scene = { ...CLEAN, mix: null, keyHue: null }
+const CLEAN_SCENE: Scene = { ...CLEAN, mix: null, keyer: null }
 
 describe('changesStep', () => {
   it('ignores a change to the mixer alone', () => {
@@ -35,31 +35,48 @@ describe('changesStep', () => {
 })
 
 describe('the chroma keyer in a step', () => {
-  const keyed: Scene = { ...scene, keyHue: 120, hue: 120 }
+  const green = { level: 0.3, luma: 0.5 }
+  const blue = { level: 0.25, luma: 0.2 }
+  const keyed: Scene = {
+    ...scene,
+    keyer: { hue: 120, backing: green },
+    hue: 120,
+  }
+  const retapped = { ...keyed, keyer: { hue: 200, backing: blue }, hue: 200 }
 
   it('sees a tap that re-aims the keyer', () => {
-    expect(changesStep(keyed, { ...keyed, keyHue: 200 })).toBe(true)
+    expect(changesStep(keyed, retapped)).toBe(true)
   })
 
   it('ignores the keyer switched on or off', () => {
-    expect(changesStep(scene, { ...scene, keyHue: 120 })).toBe(false)
-    expect(changesStep(keyed, { ...keyed, keyHue: null })).toBe(false)
+    expect(changesStep(scene, { ...scene, keyer: keyed.keyer })).toBe(false)
+    expect(changesStep(keyed, { ...keyed, keyer: null })).toBe(false)
   })
 
-  it('puts back where a tap aimed the keyer', () => {
-    const now = { ...keyed, keyHue: 200, hue: 200 }
-    expect(restored(now, stepOf(keyed))).toMatchObject({
+  it('puts back where a tap aimed the keyer and the backing it measured', () => {
+    expect(restored(retapped, stepOf(keyed))).toMatchObject({
       hue: 120,
-      keyHue: 120,
+      keyer: { hue: 120, backing: green },
     })
   })
 
+  it('puts back the additive calibration a tap made', () => {
+    const before = boardOf(keyed, 1).controls
+    const after = boardOf(
+      { ...retapped, ...restored(retapped, stepOf(keyed)) },
+      1,
+    ).controls
+    expect(after.bKeyLevel).toBe(before.bKeyLevel)
+    expect(after.bKeyBackY).toBe(before.bKeyBackY)
+    expect(boardOf(retapped, 1).controls.bKeyLevel).not.toBe(before.bKeyLevel)
+  })
+
   it('leaves the keyer off when it was switched off since', () => {
-    expect(restored(scene, stepOf(keyed)).keyHue).toBeNull()
+    expect(restored(scene, stepOf(keyed)).keyer).toBeNull()
   })
 
   it('leaves the keyer on when it was switched on since', () => {
-    expect(restored(keyed, stepOf(scene)).keyHue).toBe(120)
+    expect(restored(keyed, stepOf(scene)).keyer).toBe(keyed.keyer)
   })
 })
 

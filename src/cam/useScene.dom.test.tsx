@@ -14,7 +14,7 @@ const FIRST: Scene = {
   ...CLEAN,
   look: { name: 'pictureSearch', strength: 1, rolled: false },
   mix: null,
-  keyHue: null,
+  keyer: null,
 }
 
 let clock = 0
@@ -94,8 +94,8 @@ describe('the camera scene', () => {
 
   it('holds A while the chroma keyer is on', () => {
     const { hook, holdA } = mount()
-    act(() => hook.result.current.paint({ keyHue: 120 }))
-    act(() => hook.result.current.paint({ keyHue: 200 }))
+    act(() => hook.result.current.paint({ keyer: { hue: 120, backing: null } }))
+    act(() => hook.result.current.paint({ keyer: { hue: 200, backing: null } }))
     act(() => hook.result.current.mixWith(null))
     expect(holdA.mock.calls).toEqual([[true], [false]])
   })
