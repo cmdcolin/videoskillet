@@ -296,8 +296,9 @@ export function useCamEngine(
     const unsupervise = superviseEngine(canvas, {
       // The page has no link to wait on, so the frame store holds for a
       // loop-bus or freeze fill once the sources have been quiet a second.
-      adopt: created => {
+      adopt: (created, dead) => {
         dress(created, shown.current, board.current, heard.current)
+        if (dead !== null) created.setCaption(dead.getCaption())
         created.settleFreeze()
         engineRef.current = created
         setEngine(created)

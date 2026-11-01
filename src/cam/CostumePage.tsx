@@ -154,11 +154,16 @@ export function CostumePage(props: { settings: CostumeSettings }) {
                 : `Show “${settings.say}”`}
             </label>
             <div className={styles.starts}>
-              <button className={camStyles.start} onClick={() => start('user')}>
+              <button
+                className={camStyles.start}
+                disabled={eng.engine === null}
+                onClick={() => start('user')}
+              >
                 Screen-side camera
               </button>
               <button
                 className={camStyles.start}
+                disabled={eng.engine === null}
                 onClick={() => start('environment')}
               >
                 Back camera
