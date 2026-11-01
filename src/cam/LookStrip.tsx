@@ -74,6 +74,7 @@ export function LookStrip(props: {
                 look?.rolled === true && styles.chipOn,
               )}
               title="scramble the picture"
+              aria-pressed={look?.rolled === true}
               onClick={() => props.onRoll()}
             >
               <ShuffleIcon />
@@ -83,6 +84,7 @@ export function LookStrip(props: {
           <button
             className={cx(styles.chip, props.normal && styles.chipOn)}
             data-look="normal"
+            aria-pressed={props.normal}
             onClick={() => props.onNormal()}
           >
             normal

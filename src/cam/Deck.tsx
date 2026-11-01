@@ -11,7 +11,7 @@ export function Deck(props: {
 }) {
   const pad = usePadHold()
   return (
-    <div className={styles.hits} aria-label="Faults">
+    <div className={styles.hits} role="group" aria-label="Faults">
       {TRANSITIONS.map(t => (
         <button
           key={t.name}

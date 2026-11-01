@@ -27,7 +27,7 @@ export function Mixer(props: {
 }) {
   const { mix } = props
   return (
-    <div className={styles.mixer} aria-label="Mixer">
+    <div className={styles.mixer} role="group" aria-label="Mixer">
       <div className={styles.mixRow}>
         <Pick
           label="A"

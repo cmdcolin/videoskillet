@@ -15,6 +15,7 @@ export function ZoomStops(props: {
           key={s}
           className={cx(styles.zoomStop, s === stop && styles.zoomOn)}
           aria-label={`zoom ${zoomLabel(s)}×`}
+          aria-pressed={s === stop}
           onClick={() => props.onZoom(s)}
         >
           {s === stop ? `${zoomLabel(props.zoom)}×` : zoomLabel(s)}

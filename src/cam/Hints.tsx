@@ -13,7 +13,7 @@ const HINTS: [string, string][] = [
 
 export function Hints(props: { onClose: () => void }) {
   return (
-    <button className={styles.hints} onClick={() => props.onClose()}>
+    <div className={styles.hints} onClick={() => props.onClose()}>
       <dl>
         {HINTS.map(([k, v]) => (
           <div key={k}>
@@ -22,7 +22,9 @@ export function Hints(props: { onClose: () => void }) {
           </div>
         ))}
       </dl>
-      <span className={styles.hintsClose}>tap to close</span>
-    </button>
+      <button className={styles.hintsClose} onClick={() => props.onClose()}>
+        tap to close
+      </button>
+    </div>
   )
 }

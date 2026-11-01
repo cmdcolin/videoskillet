@@ -1,3 +1,5 @@
+import { useId } from 'react'
+
 import { snapToStep } from '../ui/controls'
 import { cx } from '../ui/cx'
 import { readingOf } from '../ui/format'
@@ -51,6 +53,7 @@ export function Knob(props: {
         min={0}
         max={TRAVEL}
         value={t}
+        aria-valuetext={readingOf(value, def.step, def.unit)}
         onChange={e =>
           props.onChange(
             snapToStep(def, fromTravel(def, Number(e.target.value) / TRAVEL)),
@@ -72,10 +75,14 @@ function Weight(props: {
 }) {
   const pct = Math.round(props.weight * 100)
   const { onDrop } = props
+  const id = useId()
   return (
-    <label className={cx(styles.knob, styles.strength)}>
-      <span className={styles.knobName}>{props.name}</span>
+    <div className={cx(styles.knob, styles.strength)}>
+      <label htmlFor={id} className={styles.knobName}>
+        {props.name}
+      </label>
       <input
+        id={id}
         className={styles.slider}
         type="range"
         min={0}
@@ -93,7 +100,7 @@ function Weight(props: {
           <CloseIcon />
         </button>
       )}
-    </label>
+    </div>
   )
 }
 
@@ -139,7 +146,7 @@ export function Tune(props: {
           <Weight
             name={Object.keys(layers).length > 0 ? lookLabel(look) : 'strength'}
             weight={look.strength}
-            onWeigh={props.onStrength}
+            onWeigh={s => props.onStrength(s)}
           />
         )}
         {Object.entries(layers).map(([name, weight]) => (
