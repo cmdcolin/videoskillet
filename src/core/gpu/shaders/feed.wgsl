@@ -137,7 +137,7 @@ fn main(
   // the program-bus copy in channel.wgsl. On the tape position, because the
   // head-end scrambled this before the deck ever recorded it: the sync gate has
   // to follow the sync tip when a held deck displaces it.
-  out = scrambleAt(out, srcRow, srcS, P.scramble, P.scrambleMode);
+  out = scrambleAt(out, srcRow, srcS, P.scramble, P.scrambleMode, P.srcFrame);
 
   // Additive noise (snow), 1-2-1 band-limited. Deliberately not the program
   // bus's tilted floor: the tilt is an FM discriminator's triangular noise,

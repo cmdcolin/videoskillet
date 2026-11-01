@@ -9,7 +9,9 @@ import {
   IRE_BLANK,
   IRE_VIDEO_RANGE,
   LINES,
+  SAMPLES_PER_LINE,
   SYNC_LEN,
+  usToSamples,
 } from '../core/signal/constants'
 import { TEST_LINE } from './testLine'
 
@@ -35,6 +37,12 @@ const inBurst = (s: number) => s >= BURST_START && s < BURST_START + BURST_LEN
 const inPicture = (s: number) =>
   s >= ACTIVE_START && s < ACTIVE_START + ACTIVE_WIDTH
 
+// The carrier scrambler's gate, from 2.44 us before the sync edge to 10.56 us
+// after it. A tri-mode line is drawn at its deepest step.
+const inCarrierGate = (s: number) =>
+  s < Math.round(usToSamples(10.56)) ||
+  s >= SAMPLES_PER_LINE - Math.round(usToSamples(2.44))
+
 // The carrier map is channel.wgsl's, sync -40 to white 100 onto 1 to 0.125, and
 // full depth is 10 dB.
 const carrierAttenuated = (ire: number, depth: number) => {
@@ -51,8 +59,8 @@ export function cableLine(c: Cable, line = TEST_LINE): number[] {
     let out = (v - chroma) * (1 - c.chromaPinOnly) + chroma
     if (c.scramble > 0) {
       const system = Math.round(c.scrambleMode)
-      if (system === 3) {
-        if (!inPicture(s)) out = carrierAttenuated(out, c.scramble)
+      if (system >= 3) {
+        if (inCarrierGate(s)) out = carrierAttenuated(out, c.scramble)
       } else {
         if (s < SYNC_LEN) out += (IRE_BLANK - out) * c.scramble
         if (system === 2 && inPicture(s)) {

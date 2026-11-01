@@ -752,11 +752,11 @@ fn activeComposite(y: f32, uf: f32, vf: f32, sc: vec2f, vidGain: f32, inv: f32) 
 // nothing left to slice a line start out of. Past half depth the tip clears the
 // separator's -20 IRE level entirely and horizontal lock is gone.
 //
-// Only the line-rate gate is modelled, which is why the frame stays roughly
-// framed: the broad vertical pulses are far wider than the gate, so their bodies
-// still read as sync level mid-line and the vertical oscillator keeps
-// triggering. An unauthorized premium channel sheared and pumped rather than
-// tumbling, and that is the mechanism behind it.
+// Modes 0 to 2 gate the line-rate sync alone, which is why their frame stays
+// roughly framed: the broad vertical pulses are far wider than the gate, so
+// their bodies still read as sync level mid-line and the vertical oscillator
+// keeps triggering. The carrier modes below take the vertical interval as well,
+// and roll.
 //
 // mode 1 scrambles alternate lines; mode 2 is SSAVI, which suppressed sync *and*
 // inverted the video, so the picture that leaks through is a negative as well as
@@ -765,29 +765,51 @@ fn activeComposite(y: f32, uf: f32, vf: f32, sc: vec2f, vidGain: f32, inv: f32) 
 // half depth. Burst sits in the back porch and is left alone, so hue survives
 // the inversion.
 //
-// mode 3 is the scrambler as the RF stage builds it: the carrier is attenuated
-// by up to 10 dB for the whole horizontal blanking interval, so sync, both
-// porches and the burst all go with it. Negative modulation puts sync at full
-// carrier, so an attenuated blanking interval detects as grey (6 dB: tip +40
-// IRE, porch +60) or near white (10 dB: +69 and +82). The tip then sits above
-// picture black, so the darkest thing on a line is picture content, and the
-// burst is weaker by the same factor, so the ACC turns the chroma up to match.
-// The carrier map is channel.wgsl's: sync -40 to white 100 onto 1 to 0.125.
+// mode 3 is the scrambler as the RF stage builds it (GI/Jerrold): the carrier
+// is attenuated by up to 10 dB through a 13 us gate around each line start, from
+// 2.44 us before the sync edge to 10.56 us after it, and through the whole
+// vertical blanking interval. Sync, both porches and the burst go with it, and
+// the gate overruns the picture by about a microsecond either side. Negative
+// modulation puts sync at full carrier, so the attenuated interval detects as
+// grey (6 dB: tip +40 IRE, porch +60) or near white (10 dB: +69 and +82). The
+// tip then sits above picture black, so the darkest thing on a line is picture
+// content; the broad pulses go the same way, so the vertical oscillator loses
+// its trigger; and the burst is weaker by the same factor, so the ACC turns the
+// chroma up to match. The carrier map is channel.wgsl's: sync -40 to white 100
+// onto 1 to 0.125.
+//
+// mode 4 is tri-mode, the same gate keyed between clear, 6 dB and 10 dB. The
+// head-end changes level at a field boundary on a pseudo-random schedule and
+// sends the level to its own decoders in the vertical interval, so a set with
+// no decoder holds lock for a stretch and loses it on the next step. Depth
+// scales both attenuated levels.
 //
 // One definition for the program bus (channel) and the per-source feeds, which
 // scramble one input alone — a premium channel is scrambled per channel, not
-// per set, so the two differ only in what they are handed.
-fn scrambleAt(v: f32, row: u32, s: u32, depth: f32, mode: f32) -> f32 {
+// per set, so the two differ only in what they are handed. frame is the field
+// the head-end sent, which a feed reads off its deck's tape position.
+const SCRAMBLE_GATE_LEAD = 35u;
+const SCRAMBLE_GATE_END = 151u;
+const TRI_MODE_FIELDS = 20u;
+
+fn triModeLevel(frame: u32) -> f32 {
+  let r = rand01(pcg((frame / TRI_MODE_FIELDS) * 2654435761u + 0x7e1du));
+  return select(select(1.0, 0.6, r < 0.6), 0.0, r < 0.2);
+}
+
+fn scrambleAt(v: f32, row: u32, s: u32, depth: f32, mode: f32, frame: u32) -> f32 {
   let system = u32(mode + 0.5);
   let skipped = depth <= 0.0 || (system == 1u && (row & 1u) == 1u);
   let blanking = s < ACTIVE_START || s >= ACTIVE_START + ACTIVE_W;
   let picture = !blanking && row >= ACTIVE_TOP && row < ACTIVE_TOP + ACTIVE_H;
   var out = v;
   if (!skipped) {
-    if (system == 3u) {
-      if (blanking) {
+    if (system >= 3u) {
+      let gated = row < ACTIVE_TOP || s < SCRAMBLE_GATE_END || s >= SPL - SCRAMBLE_GATE_LEAD;
+      if (gated) {
+        let level = select(depth, depth * triModeLevel(frame), system == 4u);
         let carrier = max(1.0 - 0.00625 * (v + 40.0), 0.0);
-        let gain = pow(10.0, -0.5 * depth);
+        let gain = pow(10.0, -0.5 * level);
         out = (1.0 - gain * carrier) / 0.00625 - 40.0;
       }
     } else {

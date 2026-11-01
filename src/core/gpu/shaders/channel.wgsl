@@ -364,7 +364,7 @@ fn main(
   // head-end so everything below it in this file is damage the cable adds on
   // top. The mechanism itself lives in the prelude, shared with the per-source
   // feeds, which scramble one input alone.
-  out = scrambleAt(out, row, s, P.scramble, P.scrambleMode);
+  out = scrambleAt(out, row, s, P.scramble, P.scrambleMode, P.frame);
 
   // multipath ghost of the pre-channel signal
   if (P.ghostGain != 0.0) {

@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
-import { IRE_BLANK, IRE_SYNC, IRE_WHITE } from '../core/signal/constants'
+import {
+  ACTIVE_START,
+  IRE_BLANK,
+  IRE_SYNC,
+  IRE_WHITE,
+} from '../core/signal/constants'
 import {
   cableLine,
   contactBands,
@@ -66,6 +71,13 @@ describe('cableLine', () => {
     expect(line[SYNC]).toBeCloseTo(40, 0)
     expect(line[PORCH]).toBeCloseTo(60, 0)
     expect(line[BAR]).toBe(IRE_WHITE)
+  })
+
+  it('runs the carrier gate a microsecond into the picture', () => {
+    const stock = cableLine(STOCK)
+    const line = cableLine({ ...STOCK, scramble: 1, scrambleMode: 3 })
+    expect(line[ACTIVE_START + 10]).not.toBe(stock[ACTIVE_START + 10])
+    expect(line[ACTIVE_START + 30]).toBe(stock[ACTIVE_START + 30])
   })
 
   it('keeps only the burst on the chroma pin', () => {

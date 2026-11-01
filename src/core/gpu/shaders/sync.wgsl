@@ -61,6 +61,8 @@ fn wrapLines(v: f32) -> f32 {
 }
 
 const SAG_LANE = 64u;
+// lines per field an untriggered vertical oscillator gains: about 58.6 Hz
+const V_FREE_RUN_LINES = 12.0;
 
 @compute @workgroup_size(128, 1, 1)
 fn main(@builtin(local_invocation_id) lid: vec3u) {
@@ -78,8 +80,12 @@ fn main(@builtin(local_invocation_id) lid: vec3u) {
   // therefore drifts the raster start by vRollRate lines every frame.
   vroll = wrapLines(vroll + P.vRollRate);
   if (vscore < 3.0) {
-    // no recognizable vsync in the waveform: nothing triggers the oscillator
-    vroll = wrapLines(vroll + 3.0 + 40.0 * rand01(pcg(P.frame * 719u)));
+    // No recognizable vsync in the waveform, so nothing triggers the
+    // oscillator and it runs at its own frequency. A triggered oscillator is
+    // set to free-run below the field rate, because a trigger can only fire it
+    // early, so an untriggered raster rolls steadily at a little over one
+    // picture a second.
+    vroll = wrapLines(vroll + V_FREE_RUN_LINES + 1.5 * (rand01(pcg(P.frame * 719u)) - 0.5));
   } else {
     // Triggered pull-in, limited by the hold control's authority. Inside the
     // range a steady detune settles at a steady vertical *offset* (pull

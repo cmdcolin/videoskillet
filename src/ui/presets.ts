@@ -490,11 +490,10 @@ export const PRESETS: PresetDef[] = [
     displayName: 'scrambled carrier',
     group: 'RF / Broadcast',
     blurb:
-      "The scrambled channel as the head-end hardware made it: the carrier drops 6 dB for the whole blanking interval, so the bar detects as grey with the weakened burst riding on it as a stripe of colour. The ACC turns the chroma up to match the weak burst and the colour floods. The set's sync separator follows the deepest level on each line, which is now dark picture, so the picture tears along the outlines of whatever is darkest.",
+      "The scrambled channel as the head-end hardware made it: the carrier drops 6 dB through each line's blanking and through the whole vertical interval. The blanking detects as grey, so a grey bar with the weakened burst riding on it as a stripe of colour wanders across the picture while a grey band rolls up through it. The vertical oscillator has nothing to trigger on and rolls, and the ACC turns the chroma up to match the weak burst, so the colour floods.",
     patch: {
       scramble: 0.6,
       scrambleMode: 3,
-      syncSlicer: 1,
       hDetuneHz: 4,
       agc: 0.4,
       hHold: 0.3,
@@ -518,11 +517,10 @@ export const PRESETS: PresetDef[] = [
     displayName: 'tri-mode scrambler',
     group: 'RF / Broadcast',
     blurb:
-      'A head-end that switches its suppression depth on a key, so a set without the decoder never settles. Where the depth drops to almost nothing the picture snaps into lock for a moment, and the next step tears it away again.',
+      "Jerrold's tri-mode: the head-end steps the carrier attenuation between clear, 6 dB and 10 dB every third of a second or so, on a schedule only its own decoders are told. A set without one locks for the clear stretches and tears and rolls through the rest, with the blanking bar turning grey or near white at each step.",
     patch: {
-      scramble: 0.5,
-      scrambleMode: 3,
-      syncSlicer: 1,
+      scramble: 1,
+      scrambleMode: 4,
       hDetuneHz: 4,
       agc: 0.4,
       hHold: 0.3,
@@ -537,7 +535,6 @@ export const PRESETS: PresetDef[] = [
       noiseIre: 2,
     },
     mod: [
-      { target: 'scramble', source: 'hold', rateHz: 0.8, depth: 0.6 },
       { target: 'scDetuneKHz', source: 'lorenz', rateHz: 0.2, depth: 0.00005 },
     ],
   },
