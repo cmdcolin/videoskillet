@@ -113,7 +113,20 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
   }
   load = load * separatorGain();
 
-  let broad = select(0.0, 1.0, levelAt(base + 200) < SLICE);
+  // The vertical integrator: an RC on the separated sync charges for as long as
+  // the line sits below the slice, so it fires on a line that spends a good
+  // part of its length there. A broad pulse holds sync for 85% of the line and
+  // an equalizing pulse or a line sync for 7%; a fifth separates them, and
+  // keeps a broad pulse that a sine-wave scrambler has lifted near the line
+  // start but left at full depth mid-line.
+  // Only the field-sync lines are scored, so only they are integrated.
+  var below = 0.0;
+  if (row >= VSYNC_FIRST && row <= VSYNC_LAST) {
+    for (var k = 0; k < 32; k = k + 1) {
+      below = below + select(0.0, 1.0, levelAt(base + k * i32(SPL / 32u)) < SLICE);
+    }
+  }
+  let broad = select(0.0, 1.0, below > 5.0);
   measure[row * 2u] = vec4f(edge, depth, load / 24.0, broad);
   measure[row * 2u + 1u] = vec4f(activeMin, 0.0, 0.0, 0.0);
 }

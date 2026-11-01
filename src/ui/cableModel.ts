@@ -38,16 +38,20 @@ const inPicture = (s: number) =>
   s >= ACTIVE_START && s < ACTIVE_START + ACTIVE_WIDTH
 
 // The carrier scrambler's gate, from 2.44 us before the sync edge to 10.56 us
-// after it. A tri-mode line is drawn at its deepest step.
+// after it. A tri-mode line is drawn at its deepest step, and a keyed SSAVI
+// line suppressed and inverted.
 const inCarrierGate = (s: number) =>
   s < Math.round(usToSamples(10.56)) ||
   s >= SAMPLES_PER_LINE - Math.round(usToSamples(2.44))
 
-// The carrier map is channel.wgsl's, sync -40 to white 100 onto 1 to 0.125, and
-// full depth is 10 dB.
-const carrierAttenuated = (ire: number, depth: number) => {
+// The sine-wave scrambler's shape: 1 on the sync tip, 0 mid-line.
+const towardTip = (s: number) =>
+  0.5 + 0.5 * Math.cos((2 * Math.PI * (s - SYNC_LEN / 2)) / SAMPLES_PER_LINE)
+
+// The carrier map is channel.wgsl's, sync -40 to white 100 onto 1 to 0.125.
+const carrierScaled = (ire: number, db: number) => {
   const carrier = Math.max(1 - 0.00625 * (ire + 40), 0)
-  return (1 - 10 ** (-0.5 * depth) * carrier) / 0.00625 - 40
+  return (1 - 10 ** (-db / 20) * carrier) / 0.00625 - 40
 }
 
 // An even line through channel.wgsl's cable stages, in the shader's order: the
@@ -59,11 +63,13 @@ export function cableLine(c: Cable, line = TEST_LINE): number[] {
     let out = (v - chroma) * (1 - c.chromaPinOnly) + chroma
     if (c.scramble > 0) {
       const system = Math.round(c.scrambleMode)
-      if (system >= 3) {
-        if (inCarrierGate(s)) out = carrierAttenuated(out, c.scramble)
+      if (system === 3 || system === 4) {
+        if (inCarrierGate(s)) out = carrierScaled(out, 10 * c.scramble)
+      } else if (system === 5) {
+        out = carrierScaled(out, 6.5 * c.scramble * towardTip(s))
       } else {
         if (s < SYNC_LEN) out += (IRE_BLANK - out) * c.scramble
-        if (system === 2 && inPicture(s)) {
+        if ((system === 2 || system === 6) && inPicture(s)) {
           out = 2 * IRE_BLACK + IRE_VIDEO_RANGE - out
         }
       }

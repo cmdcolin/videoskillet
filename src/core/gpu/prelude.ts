@@ -292,7 +292,7 @@ export const PARAM_DEFS = [
   ['connectorGlitch', 'f32'], // loose connector: intermittent contact drops bands to snow
   ['connectorMode', 'f32'], // which contact: 0 centre pin (signal + sync go), 1 shell (ground lifts, hum injects), 2 both
   ['scramble', 'f32'], // head-end sync suppression depth: sync tip lifted toward blanking
-  ['scrambleMode', 'f32'], // 0 gated, 1 line-alternate, 2 SSAVI (suppression + video inversion), 3 carrier (RF attenuation over H blanking)
+  ['scrambleMode', 'f32'], // 0 gated, 1 line-alternate, 2 SSAVI (suppression + video inversion), 3 carrier (RF attenuation over H blanking + VBI), 4 tri-mode, 5 sine, 6 keyed SSAVI
   // copy protection authored onto the source tape's vertical interval
   ['mvAgcIre', 'f32'], // Macrovision AGC-pulse level at full cycle, IRE (0 = unprotected)
   ['mvStripe', 'f32'], // colorstripe burst rotation on walking line bands, radians
@@ -798,17 +798,43 @@ fn activeComposite(y: f32, uf: f32, vf: f32, sc: vec2f, vidGain: f32, inv: f32) 
 // no decoder holds lock for a stretch and loses it on the next step. Depth
 // scales both attenuated levels.
 //
+// mode 5 is sine-wave suppression (early Oak and Pioneer): the carrier is
+// multiplied by a line-rate sine phase-locked to sync, lowest at the sync tip
+// and highest mid-line, 6.5 dB peak to trough at full depth. It never stops, so
+// it runs through the vertical interval too and the broad pulses keep their
+// bodies at sync level: the frame stays put while the line start is lost. The
+// tip detects as grey and the picture edges either side of it lift toward
+// white, while the middle of the line keeps its full carrier.
+//
+// mode 6 is SSAVI as Zenith ran it, keyed between its four modes: sync
+// suppressed or not, video inverted or not. The mode changes at a field
+// boundary on a schedule sent in the vertical interval, and the line sync
+// inside the vertical interval is never suppressed, because the decoder's PLL
+// rebuilds the missing pulses from it.
+//
 // One definition for the program bus (channel) and the per-source feeds, which
 // scramble one input alone — a premium channel is scrambled per channel, not
 // per set, so the two differ only in what they are handed. frame is the field
 // the head-end sent, which a feed reads off its deck's tape position.
 const SCRAMBLE_GATE_LEAD = 35u;
 const SCRAMBLE_GATE_END = 151u;
-const TRI_MODE_FIELDS = 20u;
+const SCRAMBLE_KEY_FIELDS = 20u;
+const SINE_SUPPRESSION_DB = 6.5;
+
+fn scrambleKey(frame: u32, seed: u32) -> f32 {
+  return rand01(pcg((frame / SCRAMBLE_KEY_FIELDS) * 2654435761u + seed));
+}
 
 fn triModeLevel(frame: u32) -> f32 {
-  let r = rand01(pcg((frame / TRI_MODE_FIELDS) * 2654435761u + 0x7e1du));
+  let r = scrambleKey(frame, 0x7e1du);
   return select(select(1.0, 0.6, r < 0.6), 0.0, r < 0.2);
+}
+
+// Attenuate the RF carrier by db decibels and detect again, through channel.wgsl's
+// carrier map.
+fn carrierScaled(v: f32, db: f32) -> f32 {
+  let carrier = max(1.0 - 0.00625 * (v + 40.0), 0.0);
+  return (1.0 - pow(10.0, -db / 20.0) * carrier) / 0.00625 - 40.0;
 }
 
 fn scrambleAt(v: f32, row: u32, s: u32, depth: f32, mode: f32, frame: u32) -> f32 {
@@ -816,21 +842,26 @@ fn scrambleAt(v: f32, row: u32, s: u32, depth: f32, mode: f32, frame: u32) -> f3
   let skipped = depth <= 0.0 || (system == 1u && (row & 1u) == 1u);
   let blanking = s < ACTIVE_START || s >= ACTIVE_START + ACTIVE_W;
   let picture = !blanking && row >= ACTIVE_TOP && row < ACTIVE_TOP + ACTIVE_H;
+  let ssaviKey = scrambleKey(frame, 0x55a1u);
+  let suppress = system != 6u || (ssaviKey < 0.5 && row >= ACTIVE_TOP);
+  let invert = system == 2u || (system == 6u && fract(ssaviKey * 2.0) < 0.5);
   var out = v;
   if (!skipped) {
-    if (system >= 3u) {
+    if (system == 3u || system == 4u) {
       let gated = row < ACTIVE_TOP || s < SCRAMBLE_GATE_END || s >= SPL - SCRAMBLE_GATE_LEAD;
       if (gated) {
         let level = select(depth, depth * triModeLevel(frame), system == 4u);
-        let carrier = max(1.0 - 0.00625 * (v + 40.0), 0.0);
-        let gain = pow(10.0, -0.5 * level);
-        out = (1.0 - gain * carrier) / 0.00625 - 40.0;
+        out = carrierScaled(v, 10.0 * level);
       }
+    } else if (system == 5u) {
+      let tipCentre = f32(SYNC_LEN) * 0.5;
+      let toTip = 0.5 + 0.5 * cos(2.0 * PI * (f32(s) - tipCentre) / f32(SPL));
+      out = carrierScaled(v, SINE_SUPPRESSION_DB * depth * toTip);
     } else {
-      if (s < SYNC_LEN) {
+      if (s < SYNC_LEN && suppress) {
         out = mix(out, IRE_BLANK, depth);
       }
-      if (system == 2u && picture) {
+      if (invert && picture) {
         out = 2.0 * IRE_BLACK + VIDEO_RANGE - out;
       }
     }

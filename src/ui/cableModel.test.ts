@@ -80,6 +80,12 @@ describe('cableLine', () => {
     expect(line[ACTIVE_START + 30]).toBe(stock[ACTIVE_START + 30])
   })
 
+  it('lifts the tip and leaves mid-line alone on the sine system', () => {
+    const line = cableLine({ ...STOCK, scramble: 1, scrambleMode: 5 })
+    expect(line[SYNC]).toBeGreaterThan(IRE_BLANK)
+    expect(line[455]).toBeCloseTo(cableLine(STOCK)[455]!, 0)
+  })
+
   it('keeps only the burst on the chroma pin', () => {
     const line = cableLine({ ...STOCK, chromaPinOnly: 1 })
     expect(line[SYNC]).toBe(0)

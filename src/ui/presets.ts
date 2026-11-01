@@ -381,9 +381,10 @@ export const PRESETS: PresetDef[] = [
     displayName: 'scrambled channel',
     group: 'RF / Broadcast',
     blurb:
-      'Premium channel with no decoder box, on a set with slow colour loops, a drifting colour crystal and a fine tuner that will not settle. Sync is suppressed at the head-end, so the blanking bar drifts into the picture. The burst gate rides the lost flyback and catches burst on some lines and picture on others, so the APC barely pulls the crystal and its error winds rainbow bands down the screen. The tuner wanders either side of the channel: on one side the burst sinks under the killer and colour drops out in bands, on the other the sound carrier beats against the chroma.',
+      "Premium channel with no decoder box. The head-end drops the carrier 6 dB through each line's blanking and through the vertical interval, so the blanking detects as grey: a grey bar carrying the weakened burst as a stripe of colour wanders across the picture, and with no field sync left the picture rolls behind a grey band. The ACC turns the chroma up to match the weak burst and the colour floods. The set has slow colour loops, a drifting colour crystal and a fine tuner that will not settle, so rainbow bands wind down the screen and the colour drops out in places.",
     patch: {
-      scramble: 0.7,
+      scramble: 0.6,
+      scrambleMode: 3,
       hDetuneHz: 4,
       agc: 0.4,
       hHold: 0.3,
@@ -392,7 +393,6 @@ export const PRESETS: PresetDef[] = [
       killThresh: 8,
       accLagLines: 30,
       afpcLagLines: 40,
-      chromaGain: 1.8,
       matrixClip: 1,
       scDetuneKHz: 0.06,
       burstLock: 0.3,
@@ -410,7 +410,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'turbo sync loss',
     group: 'RF / Broadcast',
     blurb:
-      'The scrambled channel on a set whose horizontal oscillator has almost given up. The line oscillator sways far either side of the line rate, so slabs of picture slide across the screen and wrap round the edge, and the vertical hold lets the frame creep and jump.',
+      'A sync-suppressed channel on a set whose horizontal oscillator has almost given up. The line oscillator sways far either side of the line rate, so slabs of picture slide across the screen and wrap round the edge, and the vertical hold lets the frame creep and jump.',
     patch: {
       scramble: 0.7,
       hDetuneHz: 0,
@@ -441,7 +441,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'almost decoded',
     group: 'RF / Broadcast',
     blurb:
-      'The scrambled channel on a set with an adaptive sync separator. The separator follows the lifted pulses down and locks the picture, and the AGC turns the gain up to chase them, so the picture holds still, blown out to pastel, while the colour keeps fighting.',
+      'A sync-suppressed channel on a set with an adaptive sync separator. The separator follows the lifted pulses down and locks the picture, and the AGC turns the gain up to chase them, so the picture holds still, blown out to pastel, while the colour keeps fighting.',
     patch: {
       scramble: 0.7,
       hDetuneHz: 4,
@@ -486,33 +486,6 @@ export const PRESETS: PresetDef[] = [
     },
   },
   {
-    name: 'scrambledCarrier',
-    displayName: 'scrambled carrier',
-    group: 'RF / Broadcast',
-    blurb:
-      "The scrambled channel as the head-end hardware made it: the carrier drops 6 dB through each line's blanking and through the whole vertical interval. The blanking detects as grey, so a grey bar with the weakened burst riding on it as a stripe of colour wanders across the picture while a grey band rolls up through it. The vertical oscillator has nothing to trigger on and rolls, and the ACC turns the chroma up to match the weak burst, so the colour floods.",
-    patch: {
-      scramble: 0.6,
-      scrambleMode: 3,
-      hDetuneHz: 4,
-      agc: 0.4,
-      hHold: 0.3,
-      hvSagUs: 14,
-      hvRing: 0.2,
-      killThresh: 8,
-      accLagLines: 30,
-      afpcLagLines: 40,
-      matrixClip: 1,
-      scDetuneKHz: 0.06,
-      burstLock: 0.3,
-      noiseIre: 2,
-    },
-    mod: [
-      { target: 'scDetuneKHz', source: 'lorenz', rateHz: 0.2, depth: 0.00005 },
-      { target: 'rfMistuneMHz', source: 'lorenz', rateHz: 0.3, depth: 0.1 },
-    ],
-  },
-  {
     name: 'triModeScrambler',
     displayName: 'tri-mode scrambler',
     group: 'RF / Broadcast',
@@ -537,6 +510,55 @@ export const PRESETS: PresetDef[] = [
     mod: [
       { target: 'scDetuneKHz', source: 'lorenz', rateHz: 0.2, depth: 0.00005 },
     ],
+  },
+  {
+    name: 'sineWaveScrambler',
+    displayName: 'sine-wave scrambler',
+    group: 'RF / Broadcast',
+    blurb:
+      'Early Oak sine-wave scrambling: the head-end multiplies the carrier by a sine at the line rate, lowest on the sync tip and highest mid-line. The broad field pulses keep their bodies at sync level, so the frame holds still, but the line start is gone. A dark bar with lighter strips either side, the lifted sync and the picture edges round it, wiggles down the screen.',
+    patch: {
+      scramble: 1,
+      scrambleMode: 5,
+      hDetuneHz: 4,
+      agc: 0.4,
+      hHold: 0.3,
+      hvSagUs: 14,
+      hvRing: 0.2,
+      killThresh: 8,
+      accLagLines: 30,
+      afpcLagLines: 40,
+      matrixClip: 1,
+      scDetuneKHz: 0.06,
+      burstLock: 0.3,
+      noiseIre: 2,
+    },
+    mod: [
+      { target: 'scDetuneKHz', source: 'lorenz', rateHz: 0.2, depth: 0.00005 },
+      { target: 'rfMistuneMHz', source: 'lorenz', rateHz: 0.3, depth: 0.1 },
+    ],
+  },
+  {
+    name: 'keyedSsavi',
+    displayName: 'keyed SSAVI',
+    group: 'RF / Broadcast',
+    blurb:
+      "Zenith's SSAVI as the head-end ran it, switching field by field between its four modes: sync suppressed or not, picture inverted or not. The line sync in the vertical interval is always there, so the set relocks at the top of every field. Where sync is suppressed it drifts down the picture into a diagonal shear, and where sync is back the picture snaps upright, as a negative or not.",
+    patch: {
+      scramble: 1,
+      scrambleMode: 6,
+      hDetuneHz: 12,
+      agc: 0.6,
+      hHold: 0.25,
+      hvSagUs: 14,
+      hvRing: 0.2,
+      killThresh: 0,
+      accLagLines: 30,
+      afpcLagLines: 40,
+      chromaGain: 1.8,
+      matrixClip: 1,
+      noiseIre: 2,
+    },
   },
   {
     name: 'verticalHoldGone',
