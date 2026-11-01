@@ -116,26 +116,38 @@ export async function recordTape(
   })
   const total = TAPE_SECONDS * FPS
   const start = performance.now()
-  await new Promise<void>(done => {
+  // A frame that fails to draw or encode ends the tape, which otherwise would
+  // wait on a tick that never comes back.
+  const rolled = new Promise<void>((done, fail) => {
     const tick = () => {
-      const due = Math.min(
-        total,
-        Math.floor(((performance.now() - start) / 1000) * FPS) + 1,
-      )
-      if (rec.frames() < due) {
-        if (rec.busy()) rec.hold()
-        else {
-          draw(cam.crop)
-          rec.frame(canvas)
+      try {
+        const due = Math.min(
+          total,
+          Math.floor(((performance.now() - start) / 1000) * FPS) + 1,
+        )
+        if (rec.frames() < due) {
+          if (rec.busy()) rec.hold()
+          else {
+            draw(cam.crop)
+            rec.frame(canvas)
+          }
         }
+        while (rec.frames() < due) rec.hold()
+        onSecond(Math.ceil(TAPE_SECONDS - rec.frames() / FPS))
+        if (rec.frames() < total) requestAnimationFrame(tick)
+        else done()
+      } catch (e) {
+        fail(e)
       }
-      while (rec.frames() < due) rec.hold()
-      onSecond(Math.ceil(TAPE_SECONDS - rec.frames() / FPS))
-      if (rec.frames() < total) requestAnimationFrame(tick)
-      else done()
     }
     requestAnimationFrame(tick)
   })
+  try {
+    await rolled
+  } catch (e) {
+    rec.abort()
+    throw e
+  }
   const failure = rec.error()
   if (failure !== '') {
     rec.abort()
