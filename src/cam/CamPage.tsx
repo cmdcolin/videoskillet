@@ -24,10 +24,8 @@ import {
   SHELVES,
   firesOnTap,
   lookBoard,
-  lookKnobs,
   lookLabel,
   openingLook,
-  rollLook,
   rollPool,
   shelfOf,
   stackLabel,
@@ -37,24 +35,16 @@ import { LOOP_KEYS, Loops } from './Loops'
 import { Mixer } from './Mixer'
 import { Modes } from './Modes'
 import { PanelSwitches } from './PanelSwitches'
-import { pickRoll, rollStack, rollTweaks } from './roll'
-import {
-  CLEAN,
-  FIRST_MIX,
-  boardOf,
-  mixerOwned,
-  sliceOf,
-  without,
-} from './scene'
+import { CLEAN, FIRST_MIX, boardOf, mixerOwned, sliceOf } from './scene'
 import { SetSwitches } from './SetSwitches'
 import { Shutter } from './Shutter'
 import { TopBar } from './TopBar'
 import { Tune } from './Tune'
-import { banked, changesStep, restored } from './undo'
 import { useCamEngine } from './useCamEngine'
 import { useCamera } from './useCamera'
 import { useGestures } from './useGestures'
 import { useKeyTap } from './useKeyTap'
+import { useScene } from './useScene'
 import { useSecond } from './useSecond'
 import { useShutter } from './useShutter'
 import { useSound } from './useSound'
@@ -65,12 +55,9 @@ import { useTilt } from './useTilt'
 import { trackOf, useZoom } from './useZoom'
 import { ZoomStops } from './ZoomStops'
 
-import type { ControlKey } from '../core/controls'
 import type { Transition } from '../ui/transitions'
 import type { CamLink } from './link'
-import type { Look, Mix } from './looks'
 import type { Panel } from './PanelSwitches'
-import type { Roll } from './roll'
 import type { Scene } from './scene'
 import type { Step } from './undo'
 import type { PointerEvent } from 'react'
@@ -109,18 +96,21 @@ export function CamPage(props: { link: CamLink | null }) {
   const firstB = props.link?.b ?? null
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [sideways, setSideways] = usePersistedFlag(SIDEWAYS_STORE)
-  const [scene, setScene] = useState(() => firstScene(props.link))
-  const sceneRef = useRef(scene)
-  const [past, setPast] = useState<readonly Step[]>([])
-  const lastChangeRef = useRef(0)
+  const [opening] = useState(() => firstScene(props.link))
   // The wipe and the inset are laid out across the glass on show, so a new
   // layout lays the board again.
   const eng = useCamEngine(canvasRef, {
     sideways,
-    firstBoard: () => boardOf(scene, sliceOf('whole')),
+    firstBoard: () => boardOf(opening, sliceOf('whole')),
     firstB,
-    onLayout: () => paint({}),
+    onLayout: () => sc.paint({}),
   })
+  const sc = useScene(() => opening, {
+    showBoard: board => eng.showBoard(board),
+    slice: () => sliceOf(eng.layoutNow()),
+    holdA: on => void eng.holdA(on),
+  })
+  const { scene } = sc
   const zoom = useZoom(
     () => trackOf(eng.camera()?.video),
     eng.zoomA,
@@ -190,34 +180,9 @@ export function CamPage(props: { link: CamLink | null }) {
     },
   })
 
-  // The chroma keyer's fill fades its copies into a still of the camera, so A
-  // holds a frame for as long as the keyer is on.
-  const show = (next: Partial<Scene>) => {
-    const keyed = sceneRef.current.keyHue !== null
-    const s = { ...sceneRef.current, ...next }
-    sceneRef.current = s
-    setScene(s)
-    eng.showBoard(boardOf(s, sliceOf(eng.layoutNow())))
-    if (keyed !== (s.keyHue !== null)) void eng.holdA(!keyed)
-  }
-
-  const paint = (next: Partial<Scene>) => {
-    const before = sceneRef.current
-    show(next)
-    if (changesStep(before, sceneRef.current)) {
-      const now = performance.now()
-      const sinceLast = now - lastChangeRef.current
-      lastChangeRef.current = now
-      setPast(p => banked(p, before, sinceLast))
-    }
-  }
-
   const undo = () => {
-    const step = past.at(-1)
+    const step = sc.undo()
     if (step !== undefined) {
-      lastChangeRef.current = 0
-      setPast(past.slice(0, -1))
-      show(restored(sceneRef.current, step))
       announce(labelOf(step))
       const chip =
         step.look === null || step.look.rolled ? null : step.look.name
@@ -229,108 +194,22 @@ export function CamPage(props: { link: CamLink | null }) {
     }
   }
 
-  // A tap's aim and the knobs moved off a look last while that look stays up,
-  // through a change of strength. A new look goes under whatever is stacked on
-  // the old one; normal takes the stack off too.
-  const land = (next: Look | null) => {
-    const cur = sceneRef.current
-    if (next === null) {
-      paint(CLEAN)
-      return
-    }
-    const same = cur.look !== null && next.name === cur.look.name
-    paint({
-      base: null,
-      look: next,
-      layers: without(cur.layers, next.name),
-      hue: same ? cur.hue : null,
-      tweaks: same ? cur.tweaks : {},
-    })
-  }
-
   // One panel is open at a time: opening one closes the one before it.
   const toggle = (p: Panel) => setPanel(panel === p ? null : p)
 
   // A tap puts a look up outright, the way a photo app's filter does, and a
   // second tap on the look already up opens its knobs.
   const pick = (name: string) => {
-    if (look !== null && look.name === name && !look.rolled) {
-      toggle('tune')
-      return
-    }
-    paint({ ...CLEAN, look: { name, strength: 1, rolled: false } })
+    if (look !== null && look.name === name && !look.rolled) toggle('tune')
+    else sc.pick(name)
   }
-
-  // A chip dragged up mixes its preset in partway: as the look when nothing
-  // is up, as the look's strength when it is the look, and stacked on the look
-  // otherwise.
-  const weigh = (name: string, w: number) => {
-    const cur = sceneRef.current
-    if (cur.look === null) {
-      paint({ ...CLEAN, look: { name, strength: w, rolled: false } })
-    } else if (cur.look.name === name) {
-      paint({ look: { ...cur.look, strength: w } })
-    } else {
-      const rest = without(cur.layers, name)
-      paint({ layers: w > 0 ? { ...rest, [name]: w } : rest })
-    }
-  }
-
-  const roll = () => {
-    const cur = sceneRef.current
-    const kind: Roll = pickRoll(cur.look !== null)
-    const pool = rollPool(shelf)
-    if (kind === 'look') {
-      land(rollLook(cur.look, pool))
-    } else if (kind === 'stack') {
-      paint({
-        ...rollStack(cur.look, pool, 'normal'),
-        base: null,
-        tweaks: {},
-        hue: null,
-      })
-    } else {
-      const board = boardOf(cur, sliceOf(eng.layoutNow())).controls
-      paint({
-        tweaks: rollTweaks(
-          board,
-          cur.tweaks,
-          lookKnobs(cur.look, cur.layers),
-          kind,
-          'normal',
-        ),
-      })
-    }
-  }
-
-  const turnKnob = (key: ControlKey, value: number) =>
-    paint({ tweaks: { ...sceneRef.current.tweaks, [key]: value } })
-
-  // The mixer's own modes take the mixer back from a look that set it, and
-  // from the chroma keyer.
-  const mixWith = (mix: Mix | null) =>
-    paint(
-      mixerOwned(sceneRef.current)
-        ? { ...CLEAN, mix, keyHue: null }
-        : { mix, keyHue: null },
-    )
 
   // A pad breaks the picture and lets it heal, and a held pad keeps it broken.
   // With a second picture on B, the cut lands on the frame the picture is least
   // legible and throws the fader to the other end, so the fault carries the
   // change of picture.
   const hit = (t: Transition, held: boolean) =>
-    eng.engine?.startFault(
-      faultPlan(
-        t,
-        () => {
-          const s = sceneRef.current
-          if (s.mix !== null && !mixerOwned(s))
-            paint({ mix: { ...s.mix, fader: s.mix.fader < 0.5 ? 1 : 0 } })
-        },
-        held,
-      ),
-    )
+    eng.engine?.startFault(faultPlan(t, () => sc.throwFader(), held))
 
   // A second picture opens the mix tab and the mixer, and dissolves halfway to
   // it under the look that is up. A change of picture on B keeps the mixer
@@ -345,9 +224,9 @@ export function CamPage(props: { link: CamLink | null }) {
       setShelfName(MIX_SHELF.name)
       setFaults(false)
       setPanel('mix')
-      paint({ mix: sceneRef.current.mix ?? FIRST_MIX, keyHue: null })
+      sc.paint({ mix: sc.now().mix ?? FIRST_MIX, keyHue: null })
     },
-    onTakeOff: () => mixWith(null),
+    onTakeOff: () => sc.mixWith(null),
   })
 
   // The chroma keyer puts the camera on B as well as A and keys it, starting
@@ -358,28 +237,27 @@ export function CamPage(props: { link: CamLink | null }) {
   const keyingRef = useRef(false)
   const [keying, setKeying] = useState(false)
   const switchKeyer = (on: boolean) => {
-    if (keyingRef.current || on === (sceneRef.current.keyHue !== null)) return
-    if (!on) {
-      picks.putOnB('none')
-      return
+    const settled = keyingRef.current || on === (sc.now().keyHue !== null)
+    if (!settled && !on) picks.putOnB('none')
+    else if (!settled) {
+      keyingRef.current = true
+      setKeying(true)
+      void picks
+        .keySame()
+        .then(got => {
+          if (got === 'shown') sc.paint({ keyHue: DEFAULT_CONTROLS.bKeyHueDeg })
+          else if (got === 'failed') picks.putOnB('none')
+        })
+        .finally(() => {
+          keyingRef.current = false
+          setKeying(false)
+        })
     }
-    keyingRef.current = true
-    setKeying(true)
-    void picks
-      .keySame()
-      .then(got => {
-        if (got === 'shown') paint({ keyHue: DEFAULT_CONTROLS.bKeyHueDeg })
-        else if (got === 'failed') picks.putOnB('none')
-      })
-      .finally(() => {
-        keyingRef.current = false
-        setKeying(false)
-      })
   }
 
   const share = () => {
     const url = new URL(location.pathname, location.origin)
-    url.hash = writeLink(sceneRef.current, second.pattern).toString()
+    url.hash = writeLink(sc.now(), second.pattern).toString()
     void shareLink(url.href, `videoskillet: ${label}`).then(
       word => word !== '' && announce(word),
     )
@@ -401,7 +279,7 @@ export function CamPage(props: { link: CamLink | null }) {
     const order: (string | null)[] = [null, ...shelf.looks]
     const at = look === null || look.rolled ? 0 : order.indexOf(look.name)
     const name = order[(Math.max(at, 0) + dir + order.length) % order.length]!
-    land(name === null ? null : { name, strength: 1, rolled: false })
+    sc.land(name === null ? null : { name, strength: 1, rolled: false })
     announce(
       name === null
         ? 'normal'
@@ -412,15 +290,20 @@ export function CamPage(props: { link: CamLink | null }) {
 
   const keyTap = useKeyTap({
     camera: eng.camera,
-    keyed: () =>
-      sceneRef.current.keyHue !== null ||
-      keysOnHue(lookBoard(look, scene.layers).controls),
-    slice: () =>
-      sceneRef.current.keyHue === null
-        ? loopSlice(lookBoard(look, scene.layers).controls)
-        : mixerSlice(boardOf(sceneRef.current, sliceOf(eng.layout)).controls),
+    keyed: () => {
+      const s = sc.now()
+      return (
+        s.keyHue !== null || keysOnHue(lookBoard(s.look, s.layers).controls)
+      )
+    },
+    slice: () => {
+      const s = sc.now()
+      return s.keyHue === null
+        ? loopSlice(lookBoard(s.look, s.layers).controls)
+        : mixerSlice(boardOf(s, sliceOf(eng.layoutNow())).controls)
+    },
     onAim: hue =>
-      paint({ hue, keyHue: sceneRef.current.keyHue === null ? null : hue }),
+      sc.paint({ hue, keyHue: sc.now().keyHue === null ? null : hue }),
     onMiss: announce,
   })
 
@@ -477,8 +360,8 @@ export function CamPage(props: { link: CamLink | null }) {
     <div className={styles.page}>
       <TopBar
         help={help}
-        canUndo={past.length > 0}
-        onUndo={undo}
+        canUndo={sc.canUndo}
+        onUndo={() => undo()}
         onHelp={() => setHelp(!help)}
         onShare={share}
         fullHref={instrumentHref(
@@ -588,7 +471,7 @@ export function CamPage(props: { link: CamLink | null }) {
               mix={scene.mix ?? FIRST_MIX}
               onPutA={picks.putOnA}
               onPutB={picks.putOnB}
-              onMix={mixWith}
+              onMix={mix => sc.mixWith(mix)}
             />
           ) : (
             <LookStrip
@@ -604,10 +487,10 @@ export function CamPage(props: { link: CamLink | null }) {
                 setFaults(false)
               }}
               onFaults={() => setFaults(true)}
-              onRoll={roll}
-              onNormal={() => land(null)}
-              onPick={pick}
-              onWeigh={weigh}
+              onRoll={() => sc.roll(rollPool(shelf))}
+              onNormal={() => sc.land(null)}
+              onPick={name => pick(name)}
+              onWeigh={(name, w) => sc.weigh(name, w)}
             >
               <Deck onHit={hit} />
             </LookStrip>
@@ -637,16 +520,8 @@ export function CamPage(props: { link: CamLink | null }) {
               onSwitch: switchKeyer,
             }}
             tweaked={Object.keys(scene.tweaks).some(k => LOOP_KEYS.has(k))}
-            onKnob={turnKnob}
-            onReset={() =>
-              paint({
-                tweaks: Object.fromEntries(
-                  Object.entries(sceneRef.current.tweaks).filter(
-                    ([k]) => !LOOP_KEYS.has(k),
-                  ),
-                ),
-              })
-            }
+            onKnob={(key, v) => sc.turnKnob(key, v)}
+            onReset={() => sc.resetKnobs(k => !LOOP_KEYS.has(k))}
             onClose={() => setPanel(null)}
           />
         ) : null}
@@ -657,15 +532,11 @@ export function CamPage(props: { link: CamLink | null }) {
             layers={scene.layers}
             controls={controls()}
             tweaked={tweaked}
-            onStrength={s => look !== null && land({ ...look, strength: s })}
-            onLayer={(name, w) =>
-              paint({ layers: { ...sceneRef.current.layers, [name]: w } })
-            }
-            onDrop={name =>
-              paint({ layers: without(sceneRef.current.layers, name) })
-            }
-            onKnob={turnKnob}
-            onReset={() => paint({ tweaks: {} })}
+            onStrength={s => look !== null && sc.land({ ...look, strength: s })}
+            onLayer={(name, w) => sc.layer(name, w)}
+            onDrop={name => sc.drop(name)}
+            onKnob={(key, v) => sc.turnKnob(key, v)}
+            onReset={() => sc.paint({ tweaks: {} })}
             onClose={() => setPanel(null)}
           />
         ) : null}
