@@ -349,17 +349,17 @@ Four things landed after that, and each turned on a choice worth recording.
 
 **The additive keyer** (`bKeyAdditive`) is the Ultimatte's design on the bus.
 The comparator cannot key a shadow: a shadowed backing falls under the clip and
-stays as a green veil over the fill, and raising the clip turns the veil
-opaque. The additive box measures how much backing a sample holds against the
-backing's lit level (`bKeyLevel`, `bKeyBackY`), subtracts that share of the
-backing and adds the same share of the fill, so a shadow becomes a shadow on the
-fill and a strand finer than the chroma band keys part way. The share is the
-chroma along the key hue less the chroma across it, weighted so the two balance
-at the acceptance edge. That keeps the wedge meaning what it means for the
-comparator and leaves colours off the key hue untouched, which spill kill does
-not: at 0.8 it turned a teal near the key hue blue. The calibration wants to sit
-a little under the lit backing, because a backing is never lit evenly; the
-camera tap stores the sampled backing and sets 0.8 of it.
+stays as a green veil over the fill, and raising the clip turns the veil opaque.
+The additive box measures how much backing a sample holds against the backing's
+lit level (`bKeyLevel`, `bKeyBackY`), subtracts that share of the backing and
+adds the same share of the fill, so a shadow becomes a shadow on the fill and a
+strand finer than the chroma band keys part way. The share is the chroma along
+the key hue less the chroma across it, weighted so the two balance at the
+acceptance edge. That keeps the wedge meaning what it means for the comparator
+and leaves colours off the key hue untouched, which spill kill does not: at 0.8
+it turned a teal near the key hue blue. The calibration wants to sit a little
+under the lit backing, because a backing is never lit evenly; the camera tap
+stores the sampled backing and sets 0.8 of it.
 
 **The keyer slices B's feed damage**, so the key chatters on a noisy source.
 Demodulating B's whole composite would bring back the luma-edge speckle above.
@@ -398,8 +398,8 @@ What is left:
   short boxcar over `uvfB` would make edge softness a control of its own rather
   than a side effect of `encChromaMHz` — at four more storage taps per active
   sample, which is why it is not there.
-- **The key edge row is gated on genlock alone.** With the key at 0 it reads
-  as live and does nothing, the same as the fill row. A gate cannot name two
+- **The key edge row is gated on genlock alone.** With the key at 0 it reads as
+  live and does nothing, the same as the fill row. A gate cannot name two
   conditions yet.
 - **The 0.8 calibration has only met synthetic backings.** A real room on
   `/cam/` is the test it still needs.
@@ -800,8 +800,88 @@ Words considered and set aside: **patch** already means signal routing here;
 **snapshot** fits a stored state and not the live one; **scene** suggests the
 picture's content; **E-MEM**, the vision-mixer term, is too obscure.
 
+## Agent interface: a stable `window.vs`
+
+`AgentDialog` and [`AI-USAGE.md`](AI-USAGE.md) send a coding agent to
+`window.vf.applyControls`. That route has three problems, and the sibling repo
+`~/src/jbrowse-components` has already solved the shape of the fix (`window.jb`,
+in `packages/app-core/src/JbApi/`, with its evals in `scripts/agent-evals/`).
+
+- **`applyControls` and `setControl` do not validate** (`pipeline.ts`). Neither
+  clamps or rejects `NaN`, and `applyControls` skips unknown keys without a
+  word. `frameLock: NaN` freezes the picture on frame 0, and the result reads as
+  `STEP-DEAD`: the `Math.max(1, …)` floor on the lock divisor catches a negative
+  lock and passes `NaN` through. The palette and `#set=` do clamp, so the docs'
+  "out of range clamps" holds for them alone. `#set=` also drops unknown and
+  non-finite keys silently, and the CLI's `--set` rejects them without clamping.
+- **`window.vf` is replaced on every device-loss rebuild and hot update**
+  (`useEngine.ts`, `cam/useCamEngine.ts`). An agent that kept the old object is
+  talking to a destroyed engine.
+- **It is the concrete `Engine`**, typed and documented as unstable, and about a
+  dozen harnesses reach into its internals. It stays for them.
+
+The proposal is a second global, `window.vs`, built in the app layer.
+
+- **It resolves the engine on every call**, as `jb` does.
+- **`help` is the whole contract**, because a browsing agent has no docs tool.
+  It tells the agent to orient with `board()`, search with `find`, and check
+  with `health()`. A discovery meta tag and a console line on the app page point
+  at it.
+- **`find(query)`** reuses `score()` from `paletteQuery.ts`, since about 357
+  controls are too many to browse. **`describe(key)`** answers range, step,
+  choices and the help text.
+- **`board()` and `link()`** return the `Board` from `boardText.ts` and the
+  current link.
+- **`set(patch)`** validates with the rules `parseSet` uses, writes through the
+  app's path (`onWriteControl` / `onMixStart`, as the palette does) so `ctrl+z`
+  sees it, and returns `{applied, clamped, unknown, rejected}`.
+- **`health()` / `waitReady(frames)`** watch the live `frameNo()` advance and
+  report the freeze, device-loss, hang and GPU-error callbacks plus a running
+  morph. It never calls `step()`, which draws past the frame lock and would
+  report a healthy picture over a frozen tab. It also reads `timingBuf` for the
+  PLL, AGC and sync-separator lock, which answers "is it locked, is it rolling"
+  better than picture statistics.
+
+**An eval comes with it**, built on `scripts/agentreel.mjs`, which already runs
+a real `claude` against a Chrome it launched and has a stop condition. What it
+lacks is a grader.
+
+- Tasks are graded on control values and receiver state after the session, and
+  never on the transcript.
+- Each task carries a `solution` that `selfCheck` runs, and the grader must fail
+  the untouched board and pass the solution, as in jbrowse's
+  `scripts/agent-evals/selfCheck.ts`.
+- A held-out set is phrased apart from the docs and is never tuned against.
+  `--runs N` reports passes per task.
+- Negative tasks pass by declining. "Set the flux capacitor control" passes when
+  the agent reports an unknown control.
+- Pixel grading re-renders the agent's end link deterministically on lavapipe
+  (`scripts/render/take.ts`, `openStage`) and checks only that the frame is not
+  black and not frozen.
+
+**Left out until the eval shows an agent needs them:**
+
+- A pixel `capture()` with statistics. Claude in Chrome has a screenshot tool,
+  its JS tool returns text so a PNG arrives as base64, and counting dropouts
+  from pixels detects the artifact where the repo models the mechanism.
+- `vs.load(link)`. The reload in `useUrlState.ts` was chosen to avoid a second
+  copy of the mount path, and ADR 0004 makes a reload cheap.
+- CLI `--frame=N out.png` and `controls --json`. `llms-full.txt` lists every
+  key, and `videoskillet in out -` already writes raw frames to a pipe.
+
+**Smallest useful step:** make `AgentDialog`'s `applyControls` route safe by
+clamping in the engine's write path, then add `vs` with `set`, `find`, `board`
+and `health`.
+
 ## Not worth building
 
+- **WebMCP tools for the app.** An agent with a page-reading browser or a shell
+  already evaluates JavaScript on the page. jbrowse-components uses MCP only on
+  Desktop, where no page exists, and there it is four tools around
+  `run_javascript`. A WebMCP layer would add a surface to keep in step with
+  `controls.ts` and cover only agents that cannot run JavaScript, which the
+  palette, `board as text` and `#set=` links already serve. If it is ever
+  wanted, it is a shim over `window.vs`.
 - **Cochannel interference.** Already reachable: source B's dirty-sum path is a
   second non-genlocked composite beating against A, with its own line and
   subcarrier detune. That _is_ cochannel. (Adjacent-channel is not — that
