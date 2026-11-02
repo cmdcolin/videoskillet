@@ -1,11 +1,13 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import { STAB_HZ_MAX } from '../core/signal/stab'
 import { wasSignedIn } from './cloud'
 import { ALL_SLIDERS, sliderFor } from './controls'
 import {
   ACTIONS,
   AUTOMAP_TARGETS,
   MOTION,
+  STAB,
   actionLabel,
   controlOf,
   createMidi,
@@ -60,9 +62,11 @@ describe('hasCaught', () => {
 // the one place a stale or hand-edited storage key can turn into a binding that
 // drives the wrong thing — or into a crash at the call site that indexes it.
 describe('bind targets', () => {
-  it('tells the three kinds apart', () => {
+  it('tells the kinds apart', () => {
     expect(controlOf('fbMix')).toBe('fbMix')
     expect(controlOf(MOTION)).toBe(null)
+    expect(controlOf(STAB)).toBe(null)
+    expect(presetOf(STAB)).toBe(null)
     expect(controlOf(presetTarget('vhs'))).toBe(null)
 
     expect(presetOf(presetTarget('vhs'))).toBe('vhs')
@@ -71,7 +75,7 @@ describe('bind targets', () => {
   })
 
   it('round-trips every kind through storage', () => {
-    for (const t of ['fbMix', MOTION, presetTarget('rainbowStorm')])
+    for (const t of ['fbMix', MOTION, STAB, presetTarget('rainbowStorm')])
       expect(parseTarget(t)).toBe(t)
   })
 
@@ -100,9 +104,14 @@ describe('bind targets', () => {
     expect(spanFor(presetTarget('vhs'))).toEqual({ min: 0, max: 1, step: 0.01 })
   })
 
+  it('sweeps the stab gate across its whole rate row', () => {
+    expect(spanFor(STAB)).toEqual({ min: 0, max: STAB_HZ_MAX, step: 0.1 })
+  })
+
   it('names each kind for the panel', () => {
     expect(targetLabel('fbMix')).toBe(sliderFor('fbMix').label)
     expect(targetLabel(MOTION)).toBe('motion amount')
+    expect(targetLabel(STAB)).toBe('stabs per second')
     expect(targetLabel(presetTarget('vhs'))).toBe('vhs · preset')
   })
 })

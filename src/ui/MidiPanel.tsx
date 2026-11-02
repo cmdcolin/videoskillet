@@ -8,6 +8,7 @@ import {
   AUTOMAP_TARGETS,
   DEVICE_PROFILES,
   MOTION,
+  STAB,
   actionLabel,
   controlOf,
   parseAction,
@@ -39,6 +40,7 @@ function Wired({ midi }: { midi: Midi }) {
   // A fixed order, so a row stays under the pointer as bindings come and go.
   const bound: BindTarget[] = [
     MOTION,
+    STAB,
     ...MIXABLE.map(p => presetTarget(p.name)),
     ...ALL_SLIDERS.map(s => s.key),
   ].filter(t => bindings[t] !== undefined)

@@ -10,6 +10,7 @@
 import { CONTROL_KEYS, DEFAULT_CONTROLS } from '../core/controls'
 import { clamp } from '../core/math'
 import { PASS_THROUGH, PULLS, UNIPOLAR } from '../core/signal/modstate'
+import { STAB_HZ_MAX } from '../core/signal/stab'
 import { SLIDER_BY_KEY, sliderFor } from './controls'
 import { SYNC_DIVISIONS } from './midi'
 
@@ -321,8 +322,6 @@ export interface Stab {
 // of the clean picture behind it, short enough that the clean side is what you
 // are looking at.
 export const DEFAULT_STAB: Stab = { hz: 0, ms: 60 }
-
-export const STAB_HZ_MAX = 12
 
 // The rate a switch brings the gate on at, for the two surfaces that offer it
 // without a slider — the look bar's menu and the ⌘K palette. Both exist because

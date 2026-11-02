@@ -33,17 +33,18 @@ first.
 A CC drives one control at a time. Binding a knob that was already driving
 something moves it to the new control.
 
-## The motion amount and preset weights
+## The motion amount, the stab rate and preset weights
 
 The **amount** fader in the Modulation section scales every modulation routing
-at once and has the same **⚟** button.
+at once and has the same **⚟** button. So does the stab gate's **stabs** row:
+a knob on it sweeps the rate from 0, which is off, to 12 a second.
 
 Every preset is a fader too. Choose one in the midi card's preset picker, click
 **⚟ preset mix** and move a knob, and that knob moves everything the preset
 touches. Preset weights bound to different knobs layer on top of one another.
 
-The motion amount and a preset weight do no soft takeover, and both take effect
-on the first message. A weight also resets once anything else moves the board,
+The motion amount, the stab rate and a preset weight do no soft takeover, and
+all three take effect on the first message. A weight also resets once anything else moves the board,
 so the next turn starts a fresh mix from what is on screen.
 
 ## Pads and keys

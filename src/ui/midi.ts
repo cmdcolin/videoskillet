@@ -1,5 +1,6 @@
 import { CONTROL_KEYS } from '../core/controls'
 import { clamp } from '../core/math'
+import { STAB_HZ_MAX } from '../core/signal/stab'
 import { AUTOMAP_KEYS, SLIDER_BY_KEY, sliderFor, snapToStep } from './controls'
 import { PRESET_BY_NAME, presetLabel } from './presets'
 import {
@@ -28,9 +29,11 @@ interface MidiBinding {
 // scales every routing at once, and a preset's weight, which is already a macro
 // over everything that preset touches. So a binding names something *bindable*
 // rather than something in the control store, and the string is the storage key.
-export type BindTarget = ControlKey | 'motion' | `preset:${string}`
+export type BindTarget = ControlKey | 'motion' | 'stab' | `preset:${string}`
 
 export const MOTION: BindTarget = 'motion'
+// The stab gate's rate, which is bay state and not a control.
+export const STAB: BindTarget = 'stab'
 const PRESET_PREFIX = 'preset:'
 
 // Taking a target apart again, without a cast anywhere: `find` narrows to
@@ -52,6 +55,7 @@ export const controlOf = (t: BindTarget): ControlKey | null =>
 // and its knob could only be freed by clearing every binding.
 export function parseTarget(s: string): BindTarget | null {
   if (s === MOTION) return MOTION
+  if (s === STAB) return STAB
   if (!s.startsWith(PRESET_PREFIX))
     return CONTROL_KEYS.find(k => k === s) ?? null
   const name = s.slice(PRESET_PREFIX.length)
@@ -220,9 +224,15 @@ type BindSpan = Pick<SliderDef, 'min' | 'max' | 'step' | 'curve'>
 
 const UNIT_SPAN: BindSpan = { min: 0, max: 1, step: 0.01 }
 
+const STAB_SPAN: BindSpan = { min: 0, max: STAB_HZ_MAX, step: 0.1 }
+
 export function spanFor(t: BindTarget): BindSpan | null {
   const key = controlOf(t)
-  return key === null ? UNIT_SPAN : (SLIDER_BY_KEY.get(key) ?? null)
+  return key !== null
+    ? (SLIDER_BY_KEY.get(key) ?? null)
+    : t === STAB
+      ? STAB_SPAN
+      : UNIT_SPAN
 }
 
 // How a bound target is named in the MIDI panel.
@@ -230,7 +240,7 @@ export function targetLabel(t: BindTarget): string {
   const key = controlOf(t)
   if (key !== null) return sliderFor(key).label
   const preset = presetOf(t)
-  if (preset === null) return 'motion amount'
+  if (preset === null) return t === STAB ? 'stabs per second' : 'motion amount'
   const def = PRESET_BY_NAME.get(preset)
   return `${def === undefined ? preset : presetLabel(def)} · preset`
 }

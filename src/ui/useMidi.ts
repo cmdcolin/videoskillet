@@ -9,6 +9,7 @@ import {
   fireSlotOf,
   jumpDeckOf,
   presetOf,
+  STAB,
 } from './midi'
 
 import type { ControlKey, Controls } from '../core/controls'
@@ -35,6 +36,7 @@ import type { RefObject } from 'react'
 // a knob or a pad that arrives before they are is dropped rather than queued.
 interface MidiSinks {
   setMotion: (v: number) => void
+  setStabHz: (hz: number) => void
   setPresetWeight: (name: string, w: number) => void
   // The three verbs a pad can fire, split by verb rather than handed over as an
   // action id: this hook owns the decoding, the same way it decodes a knob
@@ -56,6 +58,7 @@ interface MidiSinks {
 
 const NO_SINKS: MidiSinks = {
   setMotion: () => {},
+  setStabHz: () => {},
   setPresetWeight: () => {},
   fire: () => {},
   tapCue: () => {},
@@ -105,8 +108,9 @@ export function useMidi(
           return
         }
         const preset = presetOf(target)
-        if (preset === null) sinksRef.current.setMotion(v)
-        else sinksRef.current.setPresetWeight(preset, v)
+        if (preset !== null) sinksRef.current.setPresetWeight(preset, v)
+        else if (target === STAB) sinksRef.current.setStabHz(v)
+        else sinksRef.current.setMotion(v)
       },
       // The action families in the order they narrow. A bay slot arrives
       // 1-based, as the panel numbers it, and goes to the sink 0-based, as the

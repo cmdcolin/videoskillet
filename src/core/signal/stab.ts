@@ -51,6 +51,9 @@ import type { PulsePlan } from './pulsegate'
 // it is still one frame) are stated on PulsePlan, which the strobe shares.
 export type StabPlan = PulsePlan
 
+// The fastest the gate is asked to cut, from the rate row and from a knob alike.
+export const STAB_HZ_MAX = 12
+
 interface StabStep {
   // Whether this frame renders the gate's far board rather than the look.
   // Called `far` rather than `clean` because stock is only its default end: with

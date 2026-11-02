@@ -741,6 +741,7 @@ export function App() {
   useEffect(() => {
     setSinks({
       setMotion: modApi.setMaster,
+      setStabHz: hz => modApi.setStab({ ...modApi.stab, hz }),
       setPresetWeight: mix.midiPresetWeight,
       // The bay is React's, so this is the only route a note has to it.
       fire: (slot, v) => {

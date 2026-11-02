@@ -1,8 +1,10 @@
 import { arrowhead, route } from 'skillet-shared/wire-route'
 
 import { isOneShot } from '../core/signal/modstate'
+import { STAB_HZ_MAX } from '../core/signal/stab'
+import { useControlsApi } from './ControlsContext'
 import { cx } from './cx'
-import { SYNC_DIVISIONS } from './midi'
+import { STAB, SYNC_DIVISIONS } from './midi'
 import styles from './ModBay.module.css'
 import { ModRowEditor } from './ModRowEditor'
 import {
@@ -12,7 +14,6 @@ import {
   DEFAULT_STAB,
   DUTY_MAX,
   DUTY_MIN,
-  STAB_HZ_MAX,
   STAB_MS_MAX,
   STAB_MS_MIN,
   gateFlips,
@@ -45,6 +46,7 @@ import type { Point } from 'skillet-shared/wire-route'
 function StabRows() {
   const { stab, stabHz, setStab, cycleStabSync, holdLook, dropLook, bpm } =
     useModSlotsApi()
+  const api = useControlsApi()
   const flips = gateFlips(stab)
   return (
     <>
@@ -62,6 +64,15 @@ function StabRows() {
           flips
             ? 'Cuts the whole board between the look you are dialing and the one you held, this many times a second. 0 is off. It does not fade. Each side arrives as a hard cut, which is the only version of this the signal path can afford: a fade would rebuild the filter bank every frame, where a flip does it twice a cycle. Everything with memory runs straight through the flip, so the phosphor trail and the feedback each side leaves are still there when the other one lands. Lock it to the beat with ♩.'
             : 'Cuts the whole look out and back in, this many times a second: a clean picture with the fault stabbed into it, rather than the fault running continuously. 0 is off. It does not fade. Each stab is a hard cut to stock and back, so the picture between them is the clean signal, still carrying the phosphor trail and the feedback the last stab left. The look itself is untouched. Every slider stays where you left it, and so does the view. Lock it to the beat with ♩.'
+        }
+        midi={
+          api.midiReady
+            ? {
+                label: api.bindLabel(STAB),
+                armed: api.armed === STAB,
+                onArm: () => api.toggleArm(STAB),
+              }
+            : undefined
         }
         sync={{
           label:

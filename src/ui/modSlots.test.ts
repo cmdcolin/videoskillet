@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { DEFAULT_CONTROLS } from '../core/controls'
+import { STAB_HZ_MAX } from '../core/signal/stab'
 import { SLIDER_BY_KEY } from './controls'
 import { SYNC_DIVISIONS } from './midi'
 import {
@@ -10,7 +11,6 @@ import {
   EMPTY_SLOT,
   N_SLOTS,
   RATE_MAX,
-  STAB_HZ_MAX,
   STAB_MS_MAX,
   bayLoad,
   gateFlips,

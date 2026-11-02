@@ -687,7 +687,7 @@ pad lifts the blanket.
 
 ### The stab gate
 
-Two gaps, both surfaced by pulling on "the stabs slider does not work":
+Surfaced by pulling on "the stabs slider does not work":
 
 - **It does not travel with the look.** The gate lives in `localStorage` and
   nowhere else: not in `#mod=`, not in a preset's routings, not in a saved look.
@@ -697,12 +697,9 @@ Two gaps, both surfaced by pulling on "the stabs slider does not work":
   whole second board, so store it as a diff against stock the way the strip
   does, rather than as a preset name, since the look you hold is usually one you
   dialed.
-- **No knob can reach it.** The row passes `sync` but no `midi`, so the kill
-  switch a bender keeps a thumb on is mouse-only while the motion fader beside
-  it is a `BindTarget`. It wants a `'stab'` target beside `'motion'` in
-  `ui/midi.ts` and a sink in `app.tsx`. Inserting it into `AUTOMAP_TARGETS`
-  shifts every knob for anyone who re-runs the auto-map, which is the open
-  question.
+- **The auto-map leaves it out.** The rate row is a `'stab'` bind target, but
+  inserting it into `AUTOMAP_TARGETS` shifts every knob for anyone who re-runs
+  the auto-map, so it is bound by hand.
 
 A hard flip between two looks is the affordable gesture and a crossfade is not,
 since the filter bank is redesigned whenever a filter control moves. That is
