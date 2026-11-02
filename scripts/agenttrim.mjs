@@ -1,7 +1,8 @@
 // Cut the waiting out of an agentreel.mjs recording.
 //
 // Usage: node scripts/agenttrim.mjs <in.mp4> <out.mp4> [--speed=1.25]
-//        [--from=SECONDS|auto] [--to=SECONDS]
+//        [--from=SECONDS|auto] [--to=SECONDS] [--split=1300]
+//        [--layout=full|split]
 //   needs ffmpeg.
 //
 // A recorded session is mostly a model thinking: the terminal shows a spinner
@@ -21,9 +22,13 @@
 // Claude Code starting up before it, the banner and the empty pane, is cut.
 //
 // Both halves of the frame are cut together, so the picture and the text
-// beside it stay in step. The layout is agentreel.mjs's: the app on the left,
-// its picture in the top 936 pixels of the window's width, and the terminal
-// from x 1300 to the right edge.
+// beside it stay in step. The layout is agentreel.mjs's: the app on the left
+// and the terminal from x `--split` to the right edge, which is the take's
+// `--chrome-width`. The picture's box is found from the frames themselves.
+//
+// `--layout=split` keeps only the picture and the terminal beside it, without
+// the browser's chrome and the app's panel, so the text is as large as it can
+// be when the clip is shown in a page column.
 
 import { flag } from './harness.mjs'
 
@@ -41,10 +46,89 @@ const speed = Number(flag('speed', '1.25'))
 const fromFlag = flag('from', 'auto')
 const to = Number(flag('to', 'Infinity'))
 
+const median = xs => xs.toSorted((a, b) => a - b)[Math.floor(xs.length / 2)]
+const split = Number(flag('split', '1300'))
+const layout = flag('layout', 'full')
+
 const RATE = 10
+const WIDTH = 1920
+const HEIGHT = 1080
+// The app's panel, at the right of the browser window, and the browser's own
+// tab strip and toolbar above the page. Neither is part of the picture.
+const PANEL = 370
+const BROWSER_TOP = 110
+const PAGE_BOTTOM = 1020
+
+// The picture's box: the median of the lit area in a dozen frames across the
+// take, left of the panel and inside the page. The canvas letterboxes the 4:3
+// raster in black, so a frame's lit area is the raster. A median, because one
+// frame can light something else, such as a sheet or a flash, and a dark frame
+// lights nothing.
+const pictureBox = () => {
+  const q = 4
+  const [w, h] = [WIDTH / q, HEIGHT / q]
+  const duration = Number(
+    spawnSync('ffprobe', [
+      ...['-v', 'error', '-show_entries', 'format=duration'],
+      ...['-of', 'csv=p=0', input],
+    ]).stdout,
+  )
+  const boxes = []
+  for (let i = 1; i <= 12; i++) {
+    const frame = spawnSync(
+      'ffmpeg',
+      [
+        ...[
+          '-v',
+          'error',
+          '-ss',
+          ((duration * i) / 13).toFixed(2),
+          '-i',
+          input,
+        ],
+        ...['-frames:v', '1', '-vf', `scale=${w}:${h},format=gray`],
+        ...['-f', 'rawvideo', '-'],
+      ],
+      { maxBuffer: 1 << 24 },
+    ).stdout
+    let [x0, y0, x1, y1] = [w, h, -1, -1]
+    for (let y = Math.ceil(BROWSER_TOP / q); y < PAGE_BOTTOM / q; y++) {
+      for (let x = 0; x < (split - PANEL) / q; x++) {
+        if (frame[y * w + x] > 24) {
+          x0 = Math.min(x0, x)
+          x1 = Math.max(x1, x)
+          y0 = Math.min(y0, y)
+          y1 = Math.max(y1, y)
+        }
+      }
+    }
+    if (x1 >= 0) boxes.push([x0, y0, x1, y1])
+  }
+  const [x0, y0, x1, y1] = [0, 1, 2, 3].map(i => median(boxes.map(b => b[i])))
+  const even = n => 2 * Math.round(n / 2)
+  return {
+    x: even(x0 * q),
+    y: even(y0 * q),
+    w: even((x1 - x0 + 1) * q),
+    h: even((y1 - y0 + 1) * q),
+  }
+}
+
+const pic = pictureBox()
+const termW = WIDTH - split
+// The newest lines are at the bottom of the terminal, so its slice is the
+// bottom of the pane, as tall as the picture beside it.
+const term = { x: split, y: HEIGHT - pic.h, w: termW, h: pic.h }
+console.log(
+  `agenttrim: picture ${pic.w}x${pic.h}+${pic.x}+${pic.y}, terminal ${term.w}x${term.h}+${term.x}+${term.y}`,
+)
 const PANES = {
-  terminal: { crop: '620:600:1300:378', w: 155, h: 150 },
-  picture: { crop: '936:702:0:216', w: 94, h: 70 },
+  terminal: {
+    crop: `${termW}:600:${split}:${HEIGHT - 702}`,
+    w: Math.round(termW / 4),
+    h: 150,
+  },
+  picture: { crop: `${pic.w}:${pic.h}:${pic.x}:${pic.y}`, w: 94, h: 70 },
 }
 // Mean absolute change per pixel, on 0–255 grey, between consecutive samples.
 // A new paragraph measured 9 to 20 on the takes this was written against, and
@@ -85,8 +169,6 @@ const diffs = pane => {
   }
   return out
 }
-
-const median = xs => xs.toSorted((a, b) => a - b)[Math.floor(xs.length / 2)]
 
 const text = diffs('terminal')
 const picture = diffs('picture')
@@ -135,6 +217,17 @@ const windows = inRange
     return merged
   }, [])
 
+const timing = `setpts=PTS/${speed},fps=30`
+const frameFilter =
+  layout === 'split'
+    ? [
+        `[0]split[a][b]`,
+        `[a]crop=${pic.w}:${pic.h}:${pic.x}:${pic.y}[p]`,
+        `[b]crop=${term.w}:${term.h}:${term.x}:${term.y},pad=${term.w + 12}:${term.h}:12:0:color=0x16161a[t]`,
+        `[p][t]hstack,${timing}`,
+      ].join(';')
+    : timing
+
 const scratch = mkdtempSync(join(tmpdir(), 'agenttrim-'))
 const parts = windows.map(([a, b], i) => {
   const part = join(scratch, `${String(i).padStart(3, '0')}.mp4`)
@@ -142,7 +235,7 @@ const parts = windows.map(([a, b], i) => {
     'ffmpeg',
     [
       ...['-v', 'error', '-y', '-ss', a.toFixed(2), '-t', (b - a).toFixed(2)],
-      ...['-i', input, '-vf', `setpts=PTS/${speed},fps=30`, '-an'],
+      ...['-i', input, '-filter_complex', frameFilter, '-an'],
       ...['-c:v', 'libx264', '-crf', '14', '-preset', 'fast'],
       ...['-pix_fmt', 'yuv420p', part],
     ],

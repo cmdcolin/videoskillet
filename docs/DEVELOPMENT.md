@@ -777,11 +777,17 @@ gallery look on its plain photo, one stage at a time. The task is a request a
 person would type, so the take ends when the terminal goes quiet:
 
 ```
-pnpm agentreel --model=sonnet --until=quiet \
+pnpm agentreel --model=sonnet --until=quiet --chrome-width=1100 --font=18 \
   --base="$(cat scripts/agenttasks/build-purplady.base)" \
   --task=scripts/agenttasks/build-purplady.txt
-node scripts/agenttrim.mjs clips/agent-drive.mp4 clips/agent-build.mp4
+node scripts/agenttrim.mjs clips/agent-drive.mp4 clips/agent-build.mp4 \
+  --split=1100 --layout=split
 ```
+
+The post's column is 45rem wide, so the take gives the terminal more of the
+frame and an 18-point font, and the split layout keeps only the picture and the
+terminal beside it. At the default 11 points the text came out about 6 pixels
+tall in the column.
 
 `agenttrim.mjs` cuts the thinking out of the recording. It keeps a window around
 each new paragraph in the terminal and each step in the picture, and plays them

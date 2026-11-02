@@ -3,7 +3,7 @@
 //
 // Usage: node scripts/agentreel.mjs [--base=URL] [--out=DIR] [--model=sonnet]
 //        [--task=FILE] [--seconds=N] [--display=:99] [--until=board|quiet]
-//        [--upload] [--keep]
+//        [--chrome-width=1300] [--font=11] [--upload] [--keep]
 //   needs the dev server (pnpm dev), Xvfb, xterm, xdotool, ffmpeg, google-chrome,
 //   and a logged-in `claude` on PATH.
 //
@@ -91,8 +91,11 @@ const WIDTH = 1920
 const HEIGHT = 1080
 // Chrome takes the left, the terminal the right. The panel is 360px of the
 // app's own width, so this leaves the picture about 1000px — wide enough that a
-// tear reads at half size on a page.
-const CHROME_W = 1300
+// tear reads at half size on a page. A take meant for a narrow page column
+// gives the terminal more of the frame and a bigger font, so its text survives
+// being scaled down: agenttrim.mjs's split layout is built for that.
+const CHROME_W = Number(flag('chrome-width', '1300'))
+const FONT_PT = flag('font', '11')
 // What is left for the terminal, which `xdotool` then holds it to. xterm is
 // sized in *cells* and its `-fs` is in points, so a geometry picked in
 // characters lands wherever the font server rounds it to — the first take ran 60
@@ -356,7 +359,7 @@ spawnKid(
     '-fa',
     'DejaVu Sans Mono',
     '-fs',
-    '11',
+    FONT_PT,
     '-bg',
     '#16161a',
     '-fg',
