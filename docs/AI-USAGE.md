@@ -10,10 +10,12 @@ knobs.
   poster="img/agent-drive-poster.jpg"
   src="https://myloveydove.com/videoskillet/agent-drive.mp4"></video>
 
-The video shows Claude Sonnet on the right and the app in Chrome on the left,
-with nothing scripted between them. The model types five controls into the
-command palette, checks each row before committing it, and reads the board back
-at the end.
+The video shows Claude Sonnet on the right and the app in Chrome on the left.
+The prompt asks for a scrambled premium cable channel with the cat still
+recognizable, and leaves the choice of controls to the model. The model applies
+the scrambled channel preset, lowers sync suppression until the cat reads again,
+backs noise off after it buries the picture, and reads the board back at the
+end.
 
 ## Automate a running instance with Claude Code
 
