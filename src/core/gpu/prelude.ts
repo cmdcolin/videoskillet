@@ -129,8 +129,10 @@ export const PARAM_DEFS = [
   ['synthShapeY', 'f32'],
   ['synthShapeSize', 'f32'], // the ramps' gain: level 1 lands this far in from the edge
   ['synthShapeFold', 'f32'], // wavefolder after the shape generator: 1 passes it straight
+  ['synthDirt', 'f32'], // how far the synth's circuits are from ideal, 0..1
   ['synthDelay', 'f32'], // the synth's output into a delay line on A's cable: samples of delay at full level
   ['synthVca', 'f32'], // the synth's output into a VCA on A's cable: gain lost at full level
+  ['synthSync', 'f32'], // the synth's output subtracted from A's cable: IRE pulled down at full level
   // dirty mixer: source B is a second, non-genlocked composite signal
   ['srcNoiseB', 'f32'], // GPU-generated source B: 0 texture, 1 TV static, 2 VHS blank-tape static
   ['aGain', 'f32'], // A level on the summing bus, signed (negative inverts A)
@@ -1609,6 +1611,7 @@ struct SynthPatch {
   shapeY: f32,
   shapeSize: f32,
   shapeFold: f32,
+  dirt: f32,
 }
 
 // Gathering the patch off the uniform block, once. The prelude may not name a
@@ -1624,7 +1627,7 @@ fn synthPatch(p: Params) -> SynthPatch {
     p.synthFm, p.synthColorSrc, p.synthColorMode,
     p.synthJitA, p.synthJitB, p.frame,
     p.synthBSrc, p.synthShapeX, p.synthShapeY, p.synthShapeSize,
-    p.synthShapeFold,
+    p.synthShapeFold, p.synthDirt,
   );
 }
 
@@ -1643,6 +1646,82 @@ fn synthWave(cyc: f32, shape: f32) -> f32 {
     return 0.5 + 0.5 * sin(2.0 * PI * p);
   }
   return select(0.0, 1.0, p < 0.5);
+}
+
+// The same four shapes from a worn discrete oscillator, dirt of the way from
+// the ideal circuit. The ramp is a capacitor charged through a resistor, so it
+// bows over near the top, and its reset transistor takes a while to dump the
+// charge. The triangle's two currents are mismatched, so its peak leans. The
+// sine comes off a diode shaper and keeps some of the triangle's lean. The
+// square's buffer is slew-limited and its tops droop through the output
+// capacitor. Every fast edge then rings in the cable, which leaves a few faint
+// echoes of the edge beside it.
+fn dirtyWave(cyc: f32, shape: f32, samplesPerCycle: f32, dirt: f32) -> f32 {
+  let p = fract(cyc);
+  let len = max(samplesPerCycle, 4.0);
+  var w = 0.0;
+  var sinceEdge = 1e4;
+  var edgeStep = 0.0;
+  if (shape < 0.5) {
+    let resetFrac = min((2.0 + 30.0 * dirt) / len, 0.5);
+    let k = 2.5 * dirt;
+    if (p < 1.0 - resetFrac) {
+      w = (1.0 - exp(-k * p / (1.0 - resetFrac))) / (1.0 - exp(-k));
+    } else {
+      let into = (p - (1.0 - resetFrac)) / resetFrac;
+      w = exp(-4.0 * into) * (1.0 - into);
+    }
+    sinceEdge = p * len;
+    edgeStep = -1.0;
+  } else if (shape < 1.5) {
+    let peak = 0.5 + 0.15 * dirt;
+    let lin = select((1.0 - p) / (1.0 - peak), p / peak, p < peak);
+    let k = 1.5 * dirt;
+    w = (1.0 - exp(-k * lin)) / (1.0 - exp(-k));
+  } else if (shape < 2.5) {
+    let bent = 2.0 * PI * p + 0.5 * dirt * sin(2.0 * PI * p);
+    w = 0.5 + 0.5 * sin(bent);
+  } else {
+    let duty = 0.5 + 0.08 * dirt;
+    let rise = 1.0 + 8.0 * dirt;
+    let high = p < duty;
+    let t = select((p - duty) * len, p * len, high);
+    let half = select((1.0 - duty) * len, duty * len, high);
+    let droop = 0.3 * dirt * t / half;
+    let settled = select(droop, 1.0 - droop, high);
+    let before = select(1.0, 0.0, high);
+    w = mix(before, settled, smoothstep(0.0, rise, t));
+    sinceEdge = t;
+    edgeStep = select(-1.0, 1.0, high);
+  }
+  let ring = 0.35 * dirt * edgeStep * exp(-sinceEdge / 7.0) * sin(2.0 * PI * sinceEdge / 11.0);
+  return w + ring;
+}
+
+// The noise of a worn circuit, band-limited to about a megahertz along the
+// line, fresh every line and every frame, so a comparator that chatters on it
+// tears short streaks out of its edge.
+fn circuitNoise(rowU: u32, s: f32, frame: u32, seed: u32) -> f32 {
+  let cell = floor(s / 10.0);
+  let u = s / 10.0 - cell;
+  let base = pcg((rowU * 7919u) ^ (frame * 2654435761u) ^ seed);
+  let lo = rand01(pcg(base ^ u32(cell)));
+  let hi = rand01(pcg(base ^ u32(cell + 1.0)));
+  return mix(lo, hi, u * u * (3.0 - 2.0 * u)) * 2.0 - 1.0;
+}
+
+// The synth's supply ripple: the rectifier's 120 Hz, which the field rate does
+// not divide, so it crawls slowly up the raster.
+fn supplyRipple(row: f32, frame: u32) -> f32 {
+  return sin(2.0 * humPhase(row, frame));
+}
+
+// One oscillator through its waveform selector, clean or worn.
+fn oscWave(cyc: f32, shape: f32, perSample: f32, dirt: f32) -> f32 {
+  if (dirt > 0.0) {
+    return dirtyWave(cyc, shape, 1.0 / max(abs(perSample), 1e-6), dirt);
+  }
+  return synthWave(cyc, shape);
 }
 
 // A free-running oscillator's timing error, in units of rms. Its phase noise
@@ -1668,9 +1747,22 @@ fn oscJitter(line: u32, seed: u32) -> f32 {
 // diamond, squaring and adding them makes a circle, and a non-additive mixer
 // passing whichever is larger makes a rectangle. The horizontal ramp is scaled
 // to the 4:3 picture so the shapes come out round.
+//
+// Worn, each drive ramp is an RC charge that bows, and the supply ripple rides
+// on the horizontal one, so the shape comes out lopsided and its outline
+// wobbles with the mains. A wavefolder's diodes turn over gradually, so the
+// folds round off.
 fn shapeGen(x: f32, y: f32, sp: SynthPatch) -> f32 {
-  let h = abs(2.0 * (x + 0.5) / f32(ACTIVE_W) - 1.0 - sp.shapeX) * (4.0 / 3.0);
-  let v = abs(2.0 * (y + 0.5) / f32(ACTIVE_H) - 1.0 - sp.shapeY);
+  var hr = 2.0 * (x + 0.5) / f32(ACTIVE_W);
+  var vr = 2.0 * (y + 0.5) / f32(ACTIVE_H);
+  if (sp.dirt > 0.0) {
+    let k = 0.8 * sp.dirt;
+    hr = 2.0 * (1.0 - exp(-k * hr * 0.5)) / (1.0 - exp(-k));
+    vr = 2.0 * (1.0 - exp(-k * vr * 0.5)) / (1.0 - exp(-k));
+    hr = hr + 0.03 * sp.dirt * supplyRipple(y + f32(ACTIVE_TOP), sp.frame);
+  }
+  let h = abs(hr - 1.0 - sp.shapeX) * (4.0 / 3.0);
+  let v = abs(vr - 1.0 - sp.shapeY);
   var level = max(h * 0.75, v);
   if (sp.bSrc < 1.5) {
     level = (h + v) * 0.5;
@@ -1680,7 +1772,8 @@ fn shapeGen(x: f32, y: f32, sp: SynthPatch) -> f32 {
   // A wavefolder: past each rail the level turns back the way it came, so a
   // cone folded N times comes out as N concentric rings.
   let t = clamp(level * sp.shapeSize, 0.0, 1.0) * sp.shapeFold;
-  return 1.0 - abs(2.0 * fract(t * 0.5) - 1.0);
+  let folded = 1.0 - abs(2.0 * fract(t * 0.5) - 1.0);
+  return mix(folded, 0.5 - 0.5 * cos(PI * t), sp.dirt);
 }
 
 // The synth's output level before the colorizer, at one raster position
@@ -1702,12 +1795,24 @@ fn synthOut(rowU: u32, sU: u32, sp: SynthPatch, pic: f32, audio: vec2f) -> f32 {
     slipA = sp.jitA * oscJitter(line, 0x51a3u);
     slipB = sp.jitB * oscJitter(line, 0xb07cu);
   }
-  let a = synthWave(sp.phaseA + slipA + audio.x + sp.perLineA * row + (sp.perSampleA + sp.fm * pic + audio.y) * s, sp.shape);
+  // A worn synth's supply ripple pulls both timing capacitors' charge current,
+  // so the frequency wobbles at 120 Hz, and it rides on the output level too.
+  var ripple = 0.0;
+  if (sp.dirt > 0.0) {
+    ripple = supplyRipple(row, sp.frame);
+  }
+  let fmA = sp.perSampleA * (1.0 + 0.012 * sp.dirt * ripple);
+  let fmB = sp.perSampleB * (1.0 + 0.012 * sp.dirt * ripple);
+  var a = oscWave(sp.phaseA + slipA + audio.x + sp.perLineA * row + (fmA + sp.fm * pic + audio.y) * s, sp.shape, sp.perSampleA, sp.dirt);
   var b = 0.0;
   if (sp.bSrc > 0.5) {
     b = shapeGen(s - f32(ACTIVE_START), row - f32(ACTIVE_TOP), sp);
   } else {
-    b = synthWave(sp.phaseB + slipB + sp.perLineB * row + sp.perSampleB * s, sp.shape);
+    b = oscWave(sp.phaseB + slipB + sp.perLineB * row + fmB * s, sp.shape, sp.perSampleB, sp.dirt);
+  }
+  if (sp.dirt > 0.0) {
+    a = a + 0.06 * sp.dirt * circuitNoise(rowU, s, sp.frame, 0x2a17u);
+    b = b + 0.06 * sp.dirt * circuitNoise(rowU, s, sp.frame, 0x7c31u);
   }
   var g = a;
   if (sp.combine > 0.5 && sp.combine < 1.5) {
@@ -1726,9 +1831,12 @@ fn synthOut(rowU: u32, sU: u32, sp: SynthPatch, pic: f32, audio: vec2f) -> f32 {
     // A comparator with the second oscillator on its reference input: hard
     // two-level output, and the threshold is itself a moving waveform, so the
     // duty cycle is modulated everywhere the two patterns cross.
-    g = select(0.0, 1.0, a > b);
+    // Worn, its gain is finite, so the edge is a short ramp, and the noise on
+    // both inputs makes it chatter back and forth across that ramp.
+    g = select(select(0.0, 1.0, a > b), clamp(0.5 + (a - b) / (0.06 * sp.dirt), 0.0, 1.0), sp.dirt > 0.0);
   }
-  return clamp(0.5 + sp.level * (g - 0.5), 0.0, 1.0);
+  let level = sp.level * (1.0 + 0.08 * sp.dirt * ripple);
+  return clamp(0.5 + level * (g - 0.5), 0.0, 1.0);
 }
 
 // A video synthesizer patched into a slot: two oscillators, a combiner and a

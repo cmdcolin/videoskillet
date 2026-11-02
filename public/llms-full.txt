@@ -86,6 +86,10 @@ synthJitterUs  (osc jitter)
   0..40 step 0.01 µs  default 0
   Timing noise in the oscillators. It accumulates from line to line, so a bar's edge wanders down the screen and the whole pattern shimmies. It is a time error, so it scrambles fine bars long before it moves a slow ramp.
 
+synthDirt  (circuit dirt)
+  0..1 step 0.01  default 0
+  How far the synth's circuits are from ideal. Ramps charge along a curve and take time to reset, square edges slew and ring, flat tops droop, and the supply's 120 Hz ripple wobbles every oscillator's frequency and level. Noise on the comparator's inputs makes its edges chatter, the shape generator's ramps bow so its shapes come out lopsided, and the wavefolder's folds round off.
+
 synthBSrc  (combiner's second input)
   0=osc B 1=diamond 2=circle 3=rectangle  default 0
   What the combiner takes in place of oscillator B. The shapes come from a ramp generator reset by H and V drive, so they hold still on the raster: the two ramps rectified and added make a diamond, squared and added a circle, and passed through a non-additive mixer a rectangle.
@@ -161,6 +165,10 @@ synthDelayUs  (synth → delay line on A)
 synthVca  (synth → level on A)
   0..1 step 0.01  default 0
   The synth's output on a VCA in input A's cable. It turns the whole signal down where the synth is high, sync pulses included, so the picture dims along the synth's pattern. Deep enough, the sync falls short of the set's slicer, the picture tears and rolls, and the set's AGC pumps the level trying to follow.
+
+synthSyncIre  (synth → sync on A)
+  0..80 step 0.1 IRE  default 0
+  The synth's output subtracted from input A's cable, pulling the signal down past black where the synth is high. Dark picture there drops below the set's slicer and arrives as extra sync, so the false sync follows both the synth and the picture. The line oscillator's flywheel carries each pull down the raster, so the picture bends and hooks in smooth curves, and the hue follows the burst gate.
 
 ## Feed A · deck
 

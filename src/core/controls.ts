@@ -40,6 +40,8 @@ export const DEFAULT_CONTROLS = {
   synthAudioFm: 0, // the audio into osc A's frequency, Hz per unit of audio
   synthDelayUs: 0, // the synth's output sweeping a delay line on A's cable, µs at full level
   synthVca: 0, // the synth's output on a VCA in A's cable: share of the level lost at full output
+  synthDirt: 0, // how worn the synth's circuits are, 0 ideal to 1
+  synthSyncIre: 0, // the synth's output subtracted from A's cable, IRE at full output
   synthShape: 2, // 0 ramp, 1 triangle, 2 sine, 3 pulse
   synthMix: 0, // 0 osc A alone, 1 sum, 2 ring mod, 3 comparator
   synthLevel: 1,

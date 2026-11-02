@@ -106,7 +106,8 @@ export function aFeedOn(c: Controls): boolean {
     feedFaults(c, 'a') ||
     c[FEEDS.a.pause] > 0 ||
     c.synthDelayUs > 0 ||
-    c.synthVca > 0
+    c.synthVca > 0 ||
+    c.synthSyncIre > 0
   )
 }
 

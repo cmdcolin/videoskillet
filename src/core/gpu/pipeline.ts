@@ -1929,6 +1929,7 @@ export class Engine implements EngineApi {
       bRowOff: deck.row,
       synthDelay: src === 'a' ? c.synthDelayUs * 1e-6 * SAMPLE_RATE : 0,
       synthVca: src === 'a' ? c.synthVca : 0,
+      synthSync: src === 'a' ? c.synthSyncIre : 0,
     })
     this.gpu.device.queue.writeBuffer(buf, 0, this.feedScratch)
   }

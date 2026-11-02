@@ -78,7 +78,7 @@ fn main(
   var echoBase = i32(n);
   var out: f32;
   var cv = 0.0;
-  if (P.synthDelay > 0.0 || P.synthVca > 0.0) {
+  if (P.synthDelay > 0.0 || P.synthVca > 0.0 || P.synthSync > 0.0) {
     cv = synthOut(row, s, synthPatch(P), 0.0, synthLine[row]);
   }
   if (P.bPause > 0.0) {
@@ -127,6 +127,12 @@ fn main(
   // slicer the set loses lock, and its AGC chases the level up and down.
   if (P.synthVca > 0.0) {
     out = IRE_BLANK + (out - IRE_BLANK) * (1.0 - P.synthVca * cv);
+  }
+  // The synth's output summed into A's cable upside down, with nothing to clip
+  // it at black. Dark picture where the synth is high goes below the set's
+  // slicer and arrives as sync.
+  if (P.synthSync > 0.0) {
+    out = out - P.synthSync * cv;
   }
   let srcN = srcRow * SPL + srcS;
 
