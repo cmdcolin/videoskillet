@@ -75,3 +75,38 @@ unrelated to where the set was drawing.
   one float.
 - The other carrier-family presets still use the fixed slicer. Each needs its
   own hold setting and a look before it switches.
+
+## Amendment: the keyed clamp and the carrier AGC
+
+An independent review of the first version found the grey bar moved but not
+changed. It was still the same flat mid-grey, now swinging in smooth curves, and
+the extra saturation came mostly from the AGC sitting at its limit and blowing
+the picture out to cream and white. The AGC keyed `porch - tip` on picture,
+which averages to about zero, so the gain could only pin.
+
+Two circuits were added to the AC-coupled set, both keyed by its own flyback:
+
+- **A keyed black clamp** in `decode`. It samples one subcarrier cycle where the
+  oscillator expects the back porch, and black is set from the last 24 such
+  samples weighted with an eight-line time constant. On a locked line it reads
+  the real porch and nothing changes. On an unlocked line it reads picture, so
+  the lines after it go dark or light by however bright that picture was, and
+  the bar comes up black, white or grey with the content. A clamp that settled
+  in one or two lines pulled about half of the picture to black in hard streaks.
+- **A carrier AGC.** The gate measures the detected level ahead of the IF gain
+  and the AGC wants full carrier there, where a tip belongs. It holds unity on a
+  clean line. On the scrambled channel it settles between about 1.9 and 2.2 and
+  moves with what passes under the key. The preset's `agc` went to 1.
+
+The picture is darker. Mean HSL lightness on carnival fell from 49% to 28%,
+because the key mostly lands on average picture and the clamp pulls that to
+black; saturation rose to 62%, though HSL saturation inflates in dark pixels.
+The set has no brightness control to raise the clamp's reference, which is how a
+viewer would have answered it.
+
+The review's two bugs are fixed as well. A drifted oscillator offset under -999
+read as "no edge" at the AGC key, and switching away from the AC-coupled
+separator carried its loop filter and a tip reference above blanking into one
+frame of the other separators. Every other preset still renders bit-identical
+frames. The clamp's taps are staged once per decode workgroup, and decode on the
+scrambled channel went from 0.454 to 0.500 ms (gpuprof, best of runs).

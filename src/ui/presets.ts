@@ -381,12 +381,12 @@ export const PRESETS: PresetDef[] = [
     displayName: 'scrambled channel',
     group: 'RF / Broadcast',
     blurb:
-      "Premium channel with no decoder box. The head-end drops the carrier 6 dB through each line's blanking, so the blanking detects as grey and the darkest thing on a line is the picture's own shadows. The set's separator is capacitor-coupled, so it passes those shadows as sync, and its phase comparator drags the line oscillator toward them. The blanking, a grey band carrying the weakened burst as a stripe of colour, bends and tears around the dark shapes in the picture, and the oscillator swings past each one and back. The AGC is keyed off the flyback, so it reads picture where it expects sync and turns the gain up. The frame holds, because the field pulses are left alone. The ACC turns the chroma up to match the weak burst and the colour floods, and slow colour loops and a drifting crystal wind rainbow bands down the screen. The set's colour killer is turned down, so it keeps colour on through the weak burst.",
+      "Premium channel with no decoder box. The head-end drops the carrier 6 dB through each line's blanking, so the blanking detects as grey and the darkest thing on a line is the picture's own shadows. The set's separator is capacitor-coupled, so it passes those shadows as sync, and its phase comparator drags the line oscillator toward them. The blanking, a grey band carrying the weakened burst as a stripe of colour, bends and tears around the dark shapes in the picture, and the oscillator swings past each one and back. The set's AGC and black clamp are both keyed off its own flyback, so they read picture where they expect sync: the gain pumps with how much carrier passes under the key, and black is set from whatever the key lands on, so the picture and the bar go light and dark in bands and the bar comes up black, white or grey. The frame holds, because the field pulses are left alone. The ACC turns the chroma up to match the weak burst and the colour floods, and slow colour loops and a drifting crystal wind rainbow bands down the screen. The set's colour killer is turned down, so it keeps colour on through the weak burst.",
     patch: {
       scramble: 0.6,
       scrambleMode: 3,
       hDetuneHz: 4,
-      agc: 0.4,
+      agc: 1,
       hHold: 0.08,
       syncSlicer: 2,
       hvSagUs: 14,

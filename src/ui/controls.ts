@@ -3297,7 +3297,7 @@ export const GROUPS: Group[] = [
         step: 1,
         unit: '',
         choices: ['fixed', 'peak', 'AC'],
-        help: "How the separator decides where sync is. Fixed slices at -20 IRE, so a pulse a scrambler has lifted above that level is never found. Peak slices halfway to the deepest level on each line: it finds a lifted pulse and locks, and the AGC turns the gain up to chase it. AC is capacitor-coupled into a phase comparator. It passes whatever is deepest on the line, so on a scrambled channel the picture's shadows pull the line oscillator and the picture tears along them, and an AGC keyed off the flyback reads picture and turns the gain up.",
+        help: "How the separator decides where sync is. Fixed slices at -20 IRE, so a pulse a scrambler has lifted above that level is never found. Peak slices halfway to the deepest level on each line: it finds a lifted pulse and locks, and the AGC turns the gain up to chase it. AC passes whatever is deepest on the line to a phase comparator, so on a scrambled channel the picture's shadows pull the line oscillator and the picture tears along them. Its AGC and black clamp are keyed off the flyback, so on an unlocked line they read picture.",
       },
       {
         key: 'vHold',

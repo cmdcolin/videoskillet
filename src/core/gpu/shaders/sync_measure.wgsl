@@ -6,7 +6,8 @@
 //
 // Two vec4 per line:
 // measure[2*row]     = (edge sample or -1000 if not found, porch - tip depth
-//                       at the AGC's key,
+//                       at the found edge, or for the AC-coupled separator
+//                       the level ahead of the IF gain at the AGC's key,
 //                       mean active-picture level (beam load), 1 if mid-line
 //                       sits at sync level)
 // measure[2*row + 1] = (deepest excursion inside active video, separated
@@ -17,7 +18,7 @@
 //                       phase comparator integrates
 //
 // The slicer sits halfway down to the peak the separator has been charging to,
-// the way a capacitor-coupled separator's does, rather than at a fixed level.
+// the way a peak-detecting separator's does, rather than at a fixed level.
 // With the fixed slicer, nominal sync is the floor of that peak, so on any line
 // whose picture stays above blanking the slice is the -20 IRE it always was. A
 // line arriving negated has its old peak whites as the deepest thing on it, and
@@ -32,7 +33,7 @@
 // The AC-coupled separator (syncSlicer 2) clips a fixed 10 IRE above the level
 // its coupling capacitor has charged to, with no ceiling on that level, so it
 // slices at -30 IRE on a clean line. Its edge hunt only counts pulses for the
-// gate and the DC restorer. What moves the oscillator is the flywheel's phase
+// gate. What moves the oscillator is the flywheel's phase
 // comparator, which multiplies the whole separated line by a reference at the
 // oscillator's phase, so a pulse anywhere on the line pulls according to how
 // far it sits from the oscillator. The comparator's reference is a sinusoid at
@@ -82,12 +83,15 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
   // The peak detector's reference: the tip level the separator has been
   // measuring (or the deepest excursions it can find, once it has lost lock).
   // Fresh state reads as nominal sync.
+  let peak = P.syncSlicer > 0.5;
+  let acCoupled = P.syncSlicer > 1.5;
+  // Only the AC-coupled separator's reference rises above blanking, and the
+  // other two must not inherit one on the frame after a switch away from it.
   var tipRef = timing[TIP_LEVEL];
   if (tipRef == 0.0) {
     tipRef = IRE_SYNC;
   }
-  let peak = P.syncSlicer > 0.5;
-  let acCoupled = P.syncSlicer > 1.5;
+  tipRef = select(min(tipRef, -1.0), tipRef, acCoupled);
   let slice = select(select(min(0.5 * tipRef, SLICE), 0.5 * tipRef, peak), tipRef + AC_SLICE_ABOVE_PEAK, acCoupled);
   let gateEnd = select(GATE_NARROW, i32(SPL) - 40, timing[GATE_WIDE] >= GATE_OPEN_FRAMES);
 
@@ -104,16 +108,20 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
     prev = cur;
   }
 
-  // gated depth: sample mid-tip and back porch relative to the found edge. The
-  // AC-coupled set keys its AGC off its own flyback, which is wherever the
-  // oscillator drew this line last frame, so on a line it has not locked it
-  // samples picture as though it were tip and porch.
-  let keyAt = select(edge, round(timing[row]), acCoupled);
+  // gated depth: sample mid-tip and back porch relative to the found edge
   var depth = 0.0;
-  if (keyAt > -999.0) {
-    let tip = levelAt(base + i32(keyAt) + 20);
-    let porch = levelAt(base + i32(keyAt) + i32(SYNC_LEN) + 8);
+  if (edge > -999.0) {
+    let tip = levelAt(base + i32(edge) + 20);
+    let porch = levelAt(base + i32(edge) + i32(SYNC_LEN) + 8);
     depth = porch - tip;
+  }
+  // The AC-coupled set's AGC is keyed by its own flyback, which is wherever the
+  // oscillator drew this line last frame, and it measures the carrier inside
+  // the key, where a tip should be. That is the detected level ahead of the IF
+  // gain, so on a line the set has not locked the AGC reads the picture's
+  // carrier and sets its gain from that.
+  if (acCoupled) {
+    depth = levelAt(base + i32(round(timing[row])) + 20) / separatorGain();
   }
 
   // The deepest excursion the peak detector charges to: inside active video for

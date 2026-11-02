@@ -470,6 +470,60 @@ fn captionAt(x: u32, y: u32) -> vec2f {
   return vec2f(f32((romRead(cell & 0xffu, gy, y) >> gx) & 1u), 1.0);
 }
 
+// The AC-coupled set's keyed clamp. The flyback keys it, so it samples what
+// the line oscillator takes for the back porch, between the end of its pulse
+// and the burst, and pulls that level to blanking. Four samples are one cycle
+// of subcarrier, so a burst or picture chroma under the key averages out. The
+// clamp's capacitor charges a little at each key and holds between them, so
+// the level a line is clamped to is the keyed samples of the lines before it,
+// weighted by how long ago, with a time constant of CLAMP_TC lines. On a
+// locked line the key lands on the real porch and black stays nominal. On an
+// unlocked line it lands on picture, and the lines after it are pulled down by
+// however bright that picture was, so the picture and the blanking bar go
+// light and dark in bands with whatever the flyback passes over.
+//
+// A clamp that settled in a line or two pulled about half the picture to black
+// in venetian-blind streaks. At eight lines the bands are soft and the picture
+// stays readable.
+const CLAMP_KEY = SYNC_LEN + 4u;
+const CLAMP_TC = 8.0;
+const CLAMP_SPAN = 24u;
+// one weighted tap per lane, for the line the workgroup decodes and for the
+// folded-back line
+var<workgroup> clampTaps: array<f32, 2u * (CLAMP_SPAN + 1u)>;
+
+fn keyedSample(row: u32) -> f32 {
+  let at = i32(row * SPL + CLAMP_KEY) + i32(round(timing[row]));
+  var acc = 0.0;
+  for (var k = 0; k < 4; k = k + 1) {
+    acc = acc + comp[clampIdx(at + k)];
+  }
+  return 0.25 * acc;
+}
+
+fn clampWeight(back: u32) -> f32 {
+  return exp(-f32(back) / CLAMP_TC);
+}
+
+// Lane `lane` stages one tap: lines back from `row`, in the half of the array
+// that `half` picks.
+fn stageClampTap(lane: u32, row: u32, half: u32) {
+  if (lane <= CLAMP_SPAN) {
+    clampTaps[half * (CLAMP_SPAN + 1u) + lane] =
+      clampWeight(lane) * keyedSample(wrapRow(i32(row) - i32(lane)));
+  }
+}
+
+// The taps' weights form a geometric series, summed here in closed form.
+fn clampLevel(half: u32) -> f32 {
+  var acc = 0.0;
+  for (var k = 0u; k <= CLAMP_SPAN; k = k + 1u) {
+    acc = acc + clampTaps[half * (CLAMP_SPAN + 1u) + k];
+  }
+  let ratio = clampWeight(1u);
+  return acc * (1.0 - ratio) / (1.0 - clampWeight(CLAMP_SPAN + 1u));
+}
+
 struct Decoded {
   rgb: vec3f,
   lum: f32,
@@ -486,7 +540,7 @@ struct Decoded {
 // of the tile holds its samples, `col` the picture sample the pixel lands on
 // and `tj` where that sample sits in the staged span. The extra fields feed the
 // debug views.
-fn decodeAt(row: u32, ry: u32, hoff: i32, toff: u32, tj: i32, col: i32) -> Decoded {
+fn decodeAt(row: u32, ry: u32, hoff: i32, toff: u32, tj: i32, col: i32, keyed: f32) -> Decoded {
   let n = clampIdx(i32(row * SPL + ACTIVE_START) + col + hoff);
 
   // Chroma reconstruction lattice: at coarse > 1 the demod runs only at every
@@ -571,8 +625,10 @@ fn decodeAt(row: u32, ry: u32, hoff: i32, toff: u32, tj: i32, col: i32) -> Decod
   // Black is where the restorer put it (sync.wgsl), which is nominal for as
   // long as the separator is finding pulses and the porch behind them sits at
   // blanking. A line the set can find no sync in is decoded around whatever
-  // the coupling settled on instead.
-  let yn = (lum - IRE_BLACK - timing[BLACK_SHIFT]) / VIDEO_RANGE;
+  // the coupling settled on instead. The AC-coupled set has a keyed clamp
+  // instead, which takes blanking off each line at its own flyback.
+  let blanking = select(timing[BLACK_SHIFT], keyed * gif, P.syncSlicer > 1.5);
+  let yn = (lum - IRE_BLACK - blanking) / VIDEO_RANGE;
   let un = ur / VIDEO_RANGE;
   let vn = vr / VIDEO_RANGE;
 
@@ -826,13 +882,24 @@ fn main(
   if (P.retrace > 0.0) {
     stageFlyback(lid.x, y, vroll);
   }
+  let keyedClamp = P.syncSlicer > 1.5;
+  if (keyedClamp) {
+    stageClampTap(lid.x, row, 0u);
+    if (twice) {
+      stageClampTap(lid.x, rowB, 1u);
+    }
+  }
   workgroupBarrier();
 
   if (gid.x >= ACTIVE_W || gid.y >= ACTIVE_H) {
     return;
   }
   let tjA = i32(round(s0A + f32(lid.x) * scanA)) - b0A;
-  let d = decodeAt(row, rr, hoff, 0u, tjA, b0A + tjA);
+  var keyedA = 0.0;
+  if (keyedClamp) {
+    keyedA = clampLevel(0u);
+  }
+  let d = decodeAt(row, rr, hoff, 0u, tjA, b0A + tjA, keyedA);
   var outc = d.rgb;
   if (offRaster) {
     // past the vertical retrace the beam never scans: no light, though the
@@ -868,7 +935,11 @@ fn main(
     emitted = emitted * densA;
     if (twice) {
       let tjB = i32(round(s0B + f32(lid.x) * scanB)) - b0B;
-      let dB = decodeAt(rowB, ryB, hoffB, DEMOD_TILE, tjB, b0B + tjB);
+      var keyedB = 0.0;
+      if (keyedClamp) {
+        keyedB = clampLevel(1u);
+      }
+      let dB = decodeAt(rowB, ryB, hoffB, DEMOD_TILE, tjB, b0B + tjB, keyedB);
       emitted = emitted + toLight(dB.rgb * (1.0 - P.beamBlank)) * densB;
     }
     outc = gamutFit(toDrive(emitted));

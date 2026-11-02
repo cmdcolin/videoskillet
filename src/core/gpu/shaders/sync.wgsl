@@ -151,7 +151,9 @@ fn main(@builtin(local_invocation_id) lid: vec3u) {
   let blackHeld = timing[BLACK_SHIFT];
   var pll = timing[PLL_STATE];
   var lockAge = timing[LOCK_AGE];
-  var afcVel = timing[AFC_VEL];
+  // A switch from the AC-coupled separator leaves its loop filter charged for
+  // one frame; the other separators move phase alone.
+  var afcVel = select(0.0, timing[AFC_VEL], P.syncSlicer > 1.5);
   var agc = servoGain(timing[AGC_GAIN]);
   var ablG = ablHeld;
   var ablV = timing[ABL_VEL];
@@ -283,10 +285,10 @@ fn main(@builtin(local_invocation_id) lid: vec3u) {
         pll = pll + (rand01(h ^ 0x2545f491u) - 0.5) * 30.0 * P.hHold;
       }
     }
-    // gated AGC depth on picture lines, keyed by a found edge, or by the
-    // AC-coupled set's flyback on every line whether it is locked or not
+    // gated AGC depth on picture lines, keyed by a found edge, or the
+    // AC-coupled set's keyed carrier on every line whether it is locked or not
     if (row >= FIRST_BURST_LINE && (m.x > -999.0 || acCoupled)) {
-      depthSum = depthSum + m.y;
+      depthSum = depthSum + select(m.y, carrierOf(m.y), acCoupled);
       depthCount = depthCount + 1.0;
     }
     timing[row] = pll;
@@ -298,9 +300,15 @@ fn main(@builtin(local_invocation_id) lid: vec3u) {
     // recomputing the wanted one — otherwise the servo squares its own
     // correction. ifGain is the same expression sync_measure applied, so at
     // agc = 0 this degenerates to exactly the open-loop update.
+    // The AC-coupled set's keyed AGC averages the carrier inside its key and
+    // wants that at full carrier, where a sync tip sits. On a clean line it
+    // reads the tip and holds unity; on picture it reads less carrier and
+    // turns the gain up by however much less, so it moves with what passes
+    // under the flyback.
     let applied = ifGain(agc, P.agc);
-    let want = applied * 40.0 / clamp(depthSum / depthCount, 5.0, 160.0);
-    agc = agc + 0.25 * (want - agc);
+    let tipWant = applied * 40.0 / clamp(depthSum / depthCount, 5.0, 160.0);
+    let carrierWant = 1.0 / clamp(depthSum / depthCount, 0.25, 1.0);
+    agc = agc + 0.25 * (select(tipWant, carrierWant, acCoupled) - agc);
   }
 
   // The separator's peak detector and the DC restorer behind it. The detector

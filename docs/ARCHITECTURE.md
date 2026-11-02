@@ -208,7 +208,8 @@ fault through `timing[]` will spin hue that should have stayed put.
   all post-IF-gain. `sync` reads `.x` as what its peak detector charges to (ADR
   0009), and the other three as the input to the AC-coupled separator's phase
   comparator (ADR 0015). The edge and depth in the first are the hunt's and the
-  AGC key's; with the AC-coupled separator the key is the set's flyback.
+  AGC key's; with the AC-coupled separator the depth slot holds the level ahead
+  of the IF gain under the set's flyback-keyed AGC gate.
 - **`audioBuf`** — one float per line, the audio waveform at line rate.
 - **`buzzBuf`** — one `vec2f` per line from `buzz_tap`: the line's mean
   composite level and the RMS of its within-line deviation, both IRE. It runs
