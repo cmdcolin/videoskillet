@@ -72,7 +72,6 @@ fetch — on the fly. `pnpm dev` has it, and so does `videoskillet serve` from t
 
 - [Main docs website](https://videoskillet.com/guide/)
 - [Getting started](docs/GETTING-STARTED.md)
-- [User guide](docs/USER-GUIDE.md)
 - [Features](docs/FEATURES.md)
 - [Effects](docs/EFFECTS.md) — every control, generated
 - [CLI](docs/CLI.md) — the offline renderer, which takes a link and a file and

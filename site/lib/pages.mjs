@@ -4,7 +4,6 @@ import { readFileSync, readdirSync } from 'node:fs'
 // the header nav across the top of every page in the group.
 const GUIDE = [
   { file: 'docs/GETTING-STARTED.md', slug: '', nav: 'Getting started' },
-  { file: 'docs/USER-GUIDE.md', slug: 'guide', nav: 'User guide' },
   { file: 'docs/FEATURES.md', slug: 'features', nav: 'Features' },
   { file: 'docs/EFFECTS.md', slug: 'effects', nav: 'Effects' },
   { file: 'docs/MIDI.md', slug: 'midi', nav: 'MIDI' },

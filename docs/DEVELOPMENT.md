@@ -684,9 +684,8 @@ pref.
 
 ## Documentation screenshots
 
-Every figure in [`GETTING-STARTED.md`](GETTING-STARTED.md) and
-[`USER-GUIDE.md`](USER-GUIDE.md), plus the two shots behind the README's
-signal-path figure, is captured from the running app:
+Every figure in [`GETTING-STARTED.md`](GETTING-STARTED.md), plus the two shots
+behind the README's signal-path figure, is captured from the running app:
 
 ```
 pnpm docshots                    # all of them, into docs/img/

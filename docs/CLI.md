@@ -248,5 +248,5 @@ link naming the synth — renders ten seconds by default.
 
 ---
 
-[Editor](EDITOR.md): how the export half is built · [User guide](USER-GUIDE.md):
-driving the app · [Effects](EFFECTS.md): every control
+[Editor](EDITOR.md): how the export half is built · [Effects](EFFECTS.md): every
+control

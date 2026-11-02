@@ -135,5 +135,5 @@ preset or a shared link can raise either level control.
 
 ---
 
-[Effects](EFFECTS.md): every control · [User guide](USER-GUIDE.md): how to drive
-it · [How it works](FAQ.md#how-does-it-actually-work): the code
+[Effects](EFFECTS.md): every control ·
+[How it works](FAQ.md#how-does-it-actually-work): the code

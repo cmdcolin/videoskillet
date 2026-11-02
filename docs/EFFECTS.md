@@ -574,5 +574,5 @@ Hangs off Screen. Viewing conditions: nothing here is in the signal path.
 
 ---
 
-[Features](FEATURES.md) — the tour · [User guide](USER-GUIDE.md) — driving it ·
+[Features](FEATURES.md) — the tour ·
 [How it works](FAQ.md#how-does-it-actually-work) — the code

@@ -116,9 +116,8 @@ OpenFX builds.
 ## Then how do I get a result into an edit?
 
 Render a file: **⎙ render** in the strip tray writes a constant-framerate MP4
-that Resolve and Premiere import directly.
-[Getting it out](USER-GUIDE.md#getting-it-out) covers it, along with the ProRes
-render for when the colour matters.
+that Resolve and Premiere import directly. When the colour matters,
+`pnpm render` writes ProRes 4444; [CLI](CLI.md) covers it.
 
 ## Can I feed it a real composite signal off a yellow RCA cable?
 

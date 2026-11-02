@@ -195,7 +195,7 @@ const lines = [
   '',
   '---',
   '',
-  '[Features](FEATURES.md) — the tour · [User guide](USER-GUIDE.md) — driving it ·',
+  '[Features](FEATURES.md) — the tour ·',
   '[How it works](FAQ.md#how-does-it-actually-work) — the code',
   '',
 ]
@@ -354,7 +354,8 @@ const llms = [
   '- [Every control, with its key](https://videoskillet.com/llms-full.txt)',
   '- [Effects](https://videoskillet.com/guide/effects/) — the fault each',
   '  control models',
-  '- [User guide](https://videoskillet.com/guide/guide/) — driving it',
+  '- [Agentic AI usage](https://videoskillet.com/guide/ai/) — Claude Code',
+  '  driving a running tab through window.vf',
   '- [CLI](https://videoskillet.com/guide/cli/) — `pnpm render`,',
   '  which takes one of these links and writes a file, with no browser open',
   '- [Architecture](https://github.com/cmdcolin/videoskillet/blob/main/docs/ARCHITECTURE.md)',

@@ -31,7 +31,6 @@ underneath. Every control is in there, sources included.
 
 ## Where next
 
-- [User guide](USER-GUIDE.md): sources, feedback, modulation, saving, scopes
 - [Features](FEATURES.md): a tour of everything it can break
 - [Effects](EFFECTS.md): every control, generated from the app's own table
 - [MIDI](MIDI.md): setting up a controller
