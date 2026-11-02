@@ -189,9 +189,11 @@ fault through `timing[]` will spin hue that should have stayed put.
   whether the separator's gate is open to the whole line — `sync` updates them,
   `sync_measure` slices against the first and hunts as far as the third says,
   `decode` subtracts the second (see ADR 0009). Indices 525–532, the two VIR
-  slots and those three are persistent across frames; treat them as state. A
-  zeroed `VIR_GAIN` means the servo has never run, which is what lets
-  `resetSignal` clear the whole buffer and still hand the loop a sane start.
+  slots and those three are persistent across frames; treat them as state. Every
+  index past 524 is a named constant in the prelude, because a literal index
+  would not move if `LINES` did. A zeroed `VIR_GAIN` means the servo has never
+  run, which is what lets `resetSignal` clear the whole buffer and still hand
+  the loop a sane start.
 - **`lineParamsBuf`** — two `vec4f` per line from `LineState`. The first is
   `(tbOffsetSamples, underBasePhase, underJitterPhase, seed)`; the second holds
   the smooth part of the first and third, which `timebase` and `channel` ramp
@@ -206,12 +208,9 @@ fault through `timing[]` will spin hue that should have stayed put.
 - **`audioBuf`** — one float per line, the audio waveform at line rate.
 - **`buzzBuf`** — one `vec2f` per line from `buzz_tap`: the line's mean
   composite level and the RMS of its within-line deviation, both IRE. It runs
-  GPU→CPU, and it is the app's **only steady-state readback in that direction**.
-  `gpu/buzzread.ts` maps it through a pool of three staging buffers and skips
-  the frame when none is free, because the sound side can glide over a gap and
-  the render loop cannot afford to wait. Gated on the buzz being audible — the
-  level the controls ask for, and the Sound stage's switch saying anyone is
-  listening — so an idle listener pays nothing.
+  GPU→CPU, and it is the app's **only steady-state readback in that direction**
+  (`gpu/buzzread.ts`; [`OPTIMIZATIONS.md`](OPTIMIZATIONS.md) › The one readback
+  has why it never blocks).
 - **`persistBufs`** — phosphor state (the light still on the glass), two `u32`
   per pixel holding three `f16` of linear light, ping-ponged by frame parity:
   `decode` reads one and writes the other, because its lateral scatter reads
@@ -349,33 +348,17 @@ information a static border carries. Measure with `page.metrics()` deltas
 (`RecalcStyleDuration`, `ScriptDuration`) rather than fps: the loop is
 vsync-capped, so fps stays at 60 until the budget is already gone.
 
-## Performance shape
+## Performance
 
-[`OPTIMIZATIONS.md`](OPTIMIZATIONS.md) is the long form — why the path is gated,
-tiled, tiered and packed the way it is, what measured each one, and what was
-tried and reverted. Two things from it belong in an orientation.
+[`OPTIMIZATIONS.md`](OPTIMIZATIONS.md) has why the path is gated, tiled, tiered
+and packed the way it is, the rule to ablate before optimizing, and how live
+frame rate differs from batch GPU throughput. Almost every pass is parallel,
+with two exceptions:
 
-**Ablate before you optimize.** Three ALU micro-optimizations measured exactly
-zero here (the FIR passes are not ALU-bound), and the constructor's 22 blocking
-`createComputePipeline` calls are worth 9 ms in total against an async path that
-measured far slower. Delete the thing and measure the frame without it first.
-
-**Live frame rate is a different budget from batch GPU throughput.** Video
-decode and upload land on the rAF loop, and the display steps it in jumps rather
-than sliding. `frameLock` renders every Nth refresh and submits nothing in
-between (a held re-present made Firefox's scheduler slow rAF delivery itself),
-trading rate the display was stepping anyway for a cadence that holds still;
-`auto` engages it from the loop's own interval spread and probes back on a
-backoff.
-
-Almost everything is comfortably parallel. Two exceptions:
-
-- **`sync.wgsl` is two lanes in two waves** — the PLL flywheel and the HV sag
-  are each a 525-iteration loop on one lane, running side by side. They must be
-  serial: each line's value depends on the previous line's. It is latency on a
-  lane rather than GPU throughput and it measures fine at 60 fps, but it is the
-  one pass that cannot scale. Another per-line recurrence should be a parallel
-  prefix scan instead of a third loop here.
+- **`sync.wgsl` is two serial 525-iteration loops**, the PLL flywheel and the HV
+  sag, each on one lane. It is the one pass that cannot scale, so another
+  per-line recurrence should be a parallel prefix scan
+  ([The one serial pass](OPTIMIZATIONS.md#the-one-serial-pass)).
 - **`decode` stages a shared tile per row.** A workgroup covers 64 pixels of one
   raster row and stages a contiguous span with a halo as wide as the demod
   kernel needs (`DEMOD_HALO`), so the demod FIR reads workgroup memory.
@@ -539,10 +522,9 @@ sliders all keep showing the resting look. Two consequences before touching it:
   seed by the slot's index, so a stale routing must be blanked in place rather
   than filtered out; compacting hands one slot's running phase to another and
   restarts everything below it.
-- **Modulating one of the five filter controls** (`encChromaMHz`, `demodMHz`,
-  `chromaTail`, `lumaMHz`, `lumaPeak`) rebuilds the FIR bank every frame. Fine
-  as a deliberate patch, which is why the UI allows it; not fine hanging off an
-  authored preset, which is why `presets.test.ts` forbids it there.
+- **Modulating one of the five filter controls** rebuilds the FIR bank every
+  frame. The UI allows it and `presets.test.ts` forbids it in an authored preset
+  ([Filters](OPTIMIZATIONS.md#filters-are-designed-on-the-cpu-and-rebuilt-as-rarely-as-possible)).
 
 ### Morphing walks the resting values
 
@@ -562,14 +544,12 @@ Three things it has to get right, and together they are why it is not a
   regardless, because the destination is a look scenes, links and the recipe
   chips all have to agree on.
 
-  A duration and not a frame count, which it was until `scripts/morphcheck.mjs`
-  measured what that cost. `advanceGlide` runs _after_ the frame lock's early
-  return, so six frames meant six rendered frames: the panel updated at 4.75 Hz
-  under a 1/2 lock and 8.5 Hz under none. The gate carries its remainder because
-  a `>=` test against a 16.7 ms frame alternates between six frames and seven,
-  and that beat is what a morph looks chunky as.
+  The gate is a duration because `advanceGlide` runs _after_ the frame lock's
+  early return: `scripts/morphcheck.mjs` measured a six-frame gate updating the
+  panel at 4.75 Hz under a 1/2 lock and 8.5 Hz under none. It carries its
+  remainder because a `>=` test against a 16.7 ms frame alternates between six
+  frames and seven, and that beat makes a morph look chunky.
 
-  What the panel _does_ with a notify matters as much as how often it gets one.
   App reads the settled board, so the sidebar's structure, the walk over every
   slider and the state URL all sit out a flight the rows are travelling through.
   It reads that board only through readings, one primitive per question (which
@@ -580,9 +560,8 @@ Three things it has to get right, and together they are why it is not a
 - **The landing frame assigns the destination** rather than evaluating the path
   at `t=1`: `from + (to - from) * 1` is not bit-identical to `to`, and
   `controlsEqual`/`matchPreset` compare exactly.
-- **The filter five are stepped, not swept** (`COARSE_STEPS`), since a morph
-  moves all of them at once and would otherwise be the cheapest way to buy sixty
-  bank rebuilds a second.
+- **The filter five are stepped** (`COARSE_STEPS`), so a morph does not rebuild
+  the FIR bank every frame.
 
 Which controls may travel is decided in the UI layer (`ui/morph.ts`) and passed
 in, because it needs the slider schema: modes (`choices`) cut at the half-way
@@ -606,10 +585,8 @@ to get right:
   magnifier and rechooses the frame lock several times a second — which
   hold-to-compare gets away with because it happens once, under your finger.
 - **`filtersDirty` is set on the two edges of a cycle and on no frame in
-  between.** Every frame inside one half holds the same values, so the bank
-  designed on the way in is still the right bank. Marking every frame dirty
-  would redesign the FIR at the frame rate. At 2Hz the edges cost four rebuilds
-  a second, the same as `COARSE_STEPS` spends on a morph.
+  between**, so a 2Hz gate costs four FIR bank rebuilds a second
+  ([Filters](OPTIMIZATIONS.md#filters-are-designed-on-the-cpu-and-rebuilt-as-rarely-as-possible)).
 - **The rate is read off the wall clock**, not off a frame count. `ModState`
   advances on a fixed `1/60`, so a 2Hz LFO is 1Hz on a 30fps machine; a train
   you count along with — and lock to a beat — cannot afford that. The length is
@@ -654,11 +631,11 @@ they have hit and the performance protocol are in
 comments explain _why_ — the physical mechanism being modelled — not _what_.
 
 **Comment the shaders as freely as the TypeScript.** A `.wgsl` file arrives in
-the bundle as a string, so its prose used to ship — 62.5 kB gzipped, a quarter
-of the chunk every page loads. `vite-plugin-wgsl.ts` blanks those comments on
-the way in, leaving the line in place so `createShaderModule`'s error rows still
-name the line you would count to in the file. It runs in dev too, so the browser
-compiles the same text either way.
+the bundle as a string, so without the plugin its comments ship: 62.5 kB
+gzipped, a quarter of the chunk every page loads. `vite-plugin-wgsl.ts` blanks
+those comments on the way in, leaving the line in place so
+`createShaderModule`'s error rows still name the line you would count to in the
+file. It runs in dev too, so the browser compiles the same text either way.
 
 The one thing that has to survive is the `/* wgsl */` tag on `PRELUDE` — the
 prelude is WGSL living in a `.ts` file, so the tag is how the plugin finds it,

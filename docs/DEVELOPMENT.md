@@ -151,11 +151,9 @@ Fourteen harnesses, eight to eleven minutes — the spread is other work on the
 box, and the GPU-heavy arms are what stretch. Start here, because **none of the
 harnesses below runs in CI**: the workflow does lint, format, the compiler gate,
 typecheck, the unit suite, the build and the render check, and every browser
-check needs Firefox Nightly with WebGPU, which the runner has not got. So a
-harness can stop working and nothing says so — `poolcheck` spent an unknown
-number of commits failing all twenty-six of its checks, and `composecheck` spent
-them reading the chain map's zoom slider and reporting a CSS layer as broken
-that was fine. Both were found by accident.
+check needs Firefox Nightly with WebGPU, which the runner has not got. A harness
+can therefore stop working with no report; the last trap under
+[Browser harness traps](#browser-harness-traps) is how two of them did.
 
 It reports three outcomes rather than two — `ok`, `FAIL`, and `STALL` for a run
 whose window stopped being drawn. A stall measured nothing, so put the window in
@@ -421,9 +419,8 @@ Every bullet cost a real afternoon.
   cannot. A harness that does not need a specific size should ask for none.
 - **One Firefox does not survive a long WebGPU batch.** After a dozen or so
   sessions it detaches the frame and every later page dies with "Target closed",
-  so a batch recycles browsers. Note the axis: a count of _sessions_, not
-  elapsed time — it was once restated as a twelve-minute limit and stood as a
-  browser property until two runs held a session past twenty minutes.
+  so a batch recycles browsers. The limit is a count of _sessions_; two runs
+  have held one session past twenty minutes.
 - **"Target closed" is three different failures wearing one error.** The frame
   detached, the browser crashed, or something outside killed it, and from Node
   they are indistinguishable. A crash leaves `<profile>/minidumps/*.extra`
@@ -590,14 +587,12 @@ and get marked SHAKY, and a pass cheaper than the noise can come out negative.
 worktree, whole frames, best-of, interleaved. That held to 0.001 ms over three
 rounds on a change the ablate delta could not resolve at all.
 
-**Batch throughput is not live frame rate.** The batch number is the GPU
-saturated; what a user sees is the rAF loop, paced by the display, carrying
-costs the batch never meets — video decode and upload land there, and on the dev
-box every present crosses PCIe. Two playing clips cost more live frame rate than
-the heaviest preset does. Measure live rate via `vf.frameNo()` deltas over
-multi-second windows with video sources attached, and note the app's own fps
-readout reports loop cadence, which vsync steps down in jumps (48 → 24 on the
-dev panel) rather than sliding.
+**Batch throughput is not live frame rate**
+([`OPTIMIZATIONS.md`](OPTIMIZATIONS.md#pacing-is-a-separate-problem-from-throughput)).
+The live loop carries video decode and upload, and on the dev box every present
+crosses PCIe. Measure live rate via `vf.frameNo()` deltas over multi-second
+windows with video sources attached. The app's own fps readout reports loop
+cadence, which vsync steps down in jumps.
 
 **The main thread is the third measurement, and the two above cannot see it.**
 `scripts/cpuprof.mjs` samples it under Chrome — deliberately not Firefox,
@@ -633,27 +628,9 @@ convincing, wrong number:
   not only a harness problem — two renders of a look with a polarity flip in it
   are not the same file.
 
-Measure an ablation upper bound before building any optimization here: three
-were built, measured dead flat and reverted
-([ADR 0007](adr/0007-the-fir-passes-are-not-alu-bound.md)). The same rule caught
-a startup one before it was written. The `Engine` constructor makes 22 blocking
-`createComputePipeline` calls, which looks like an obvious
-`createComputePipelineAsync` job. Timed in place first:
-
-```
-PLBUILD n=22 sync=9.0ms syncWarm=2.0ms asyncParallel=396.0ms
-```
-
-**9 ms is the entire upper bound**, and the refactor would have meant splitting
-construction in two, because the constructor consumes the pipelines to build the
-pass graph. The async arm is the more interesting half and wants its caveat: 396
-ms is not 44× the _work_ — that arm ran after boot against a live render loop,
-and 396/22 ≈ 18 ms a pipeline is suspiciously close to one frame, so most of it
-is each promise settling a turn of the event loop later. At startup there is no
-loop yet. But `syncWarm` ran under identical conditions and took 2 ms, so
-whatever the async path waits for, the synchronous one does not. Worth
-re-running if a future browser build changes how it schedules; the scaffold is
-four lines of `performance.now()`.
+Measure an ablation upper bound before building any optimization here
+([`OPTIMIZATIONS.md`](OPTIMIZATIONS.md#the-rule-ablate-before-you-optimize) has
+the arms it settled).
 
 ### Chrome
 
@@ -673,14 +650,11 @@ describes. Chrome is also the only browser on this box that takes the zero-copy
 video path by default. `#vidbitmap` forces the bitmap path when the two need
 comparing in one browser.
 
-Firefox has `importExternalTexture` on Windows and macOS from 144, and Nightly
-has it on Linux behind `dom.webgpu.external-texture.enabled`. The app keeps
-Firefox on the bitmap path anyway (`directVideoPath` in `src/core/gpu/env.ts`),
-and `#vidext` overrides that. On this box, Nightly 151 with the pref on and
-`#vidext` set rejects `blit_ext` with "Capability TEXTURE_EXTERNAL is required"
-and never paints a frame. Re-run that pair when a Nightly lands the Linux import
-(bug 2008705); `launchFirefox({ prefs })` in `scripts/browser.mjs` sets the
-pref.
+Firefox stays on the bitmap path for the reason
+[`OPTIMIZATIONS.md`](OPTIMIZATIONS.md#getting-pictures-in) gives. Re-run its
+`#vidext` arm with `dom.webgpu.external-texture.enabled` when a Nightly lands
+the Linux import (bug 2008705); `launchFirefox({ prefs })` in
+`scripts/browser.mjs` sets the pref.
 
 ## Documentation screenshots
 
@@ -726,14 +700,12 @@ which is what puts the "open this in the app" link under every figure on the
 docs site — read back from the live session rather than rebuilt from the spec,
 so it holds even for a shot whose look the app rolled itself.
 
-**The bar for adding a figure is high, and it used to be lower.** Twelve UI
-shots, each a full window with a red box round a 300px strip, stacked down a
-page were 15,000 pixels of screenshot saying what the prose already said. What
-remains carries something a sentence cannot: `overview` labels the four regions
-at once, `chain` shows a map you would not guess the shape of, `slider-help` is
-the guide's own argument for why there is no per-control reference in it, and
-`strip` draws a row card. Reach for a tight crop of the region rather than
-another boxed window.
+**The bar for adding a figure is high.** A full window with a red box round a
+300px strip says what the prose already says. Each figure that remains shows
+something a sentence cannot: `overview` labels the four regions at once, `chain`
+shows a map you would not guess the shape of, `slider-help` is the guide's own
+argument for why there is no per-control reference in it, and `strip` draws a
+row card. Reach for a tight crop of the region rather than another boxed window.
 
 The `look-*` gallery shots are one named mechanism each, pushed well past where
 its preset stops. What a tile has to have is structure the chain made rather
@@ -881,11 +853,10 @@ each timeline is in
 
 Both harnesses want the dev server, ffmpeg and cwebp, and a browser — Chrome on
 macOS, Firefox Nightly elsewhere. Both take `--keep` to leave the JPEG frames on
-disk, which is what makes an encode knob worth trying more than once without
-driving the browser again. The carousel's mp4s do not live in the repo:
-`pnpm reel` uploads each to `s3://myloveydove.com/videoskillet/reel/`, and only
-the stills land in `public/reel`. Staleness works the way the docshots' does —
-each run stamps the version and commit into `scripts/reel-taken.json`. Element
+disk, so an encode setting can be retried without driving the browser again. The
+mp4s go to the bucket (`CLAUDE.md` › _Clips live on the bucket_) and only the
+stills land in `public/reel`. Staleness works the way the docshots' does — each
+run stamps the version and commit into `scripts/reel-taken.json`. Element
 resolution, seeding and the actions are shared with the documentation
 screenshots ([`../scripts/drive.mjs`](../scripts/drive.mjs)).
 
@@ -921,12 +892,11 @@ nothing like each other.
 ### What the page costs
 
 Above the fold a first visit fetches **8K of media**, the header's still, which
-is a gallery card's own frame. It used to be 382K, because the header ran a
-clip. The stage is under the fold and costs nothing until scrolled to; reaching
-it fetches `roll`'s still (242K) and its clip (1.9M), and walking the other two
-adds 5.6M on a desktop, 1.5M on a phone. `build` is 2.4M of that and it is not
-an oversight: sixteen seconds of full-frame moving rainbow is what building a
-look from a clean board looks like.
+is a gallery card's own frame. The stage is under the fold and costs nothing
+until scrolled to; reaching it fetches `roll`'s still (242K) and its clip
+(1.9M), and walking the other two adds 5.6M on a desktop, 1.5M on a phone.
+`build` is 2.4M of that and it is not an oversight: sixteen seconds of
+full-frame moving rainbow is what building a look from a clean board looks like.
 
 - **crf 36, not 30.** The panel half of the frame is static, so h264 codes it
   once and raising the quantizer spends its losses almost entirely on the
@@ -941,8 +911,7 @@ look from a clean board looks like.
   nothing: CRF is normalized against time.
 - **Nothing is fetched for a slide nobody is looking at**, stills included.
   `loading="lazy"` does not defer those, so they arrive on a `data-src` the page
-  sets when their slide comes up — 195K that used to be spent before anybody had
-  touched a tab.
+  sets when their slide comes up, which keeps 195K off the first load.
 
 **Both the stage and the gallery open the clip before it is wanted.** Opening a
 clip is not the same as being able to show one, and that gap made the page feel
@@ -1001,9 +970,7 @@ markup, [`../site/scripts/tabs.js`](../site/scripts/tabs.js) switches it). The
 panel takes the heading's id, so `#from-a-clone` still lands on that section and
 opens its tab, and the heading stays in the markup so the noscript fallback can
 put it back. Write each route so that it stands on its own, since the reader
-sees one of them. The install section used to say "this adds Node, pnpm and Deno
-to the two programs above", and a reader who took the binary route had never
-read about those two programs.
+sees one of them.
 
 The build fails when a marker is misspelled. GitHub and the site both render an
 HTML comment as nothing at all, so a typo would otherwise leave the subsections
@@ -1138,14 +1105,13 @@ node scripts/poolcheck.mjs http://localhost:5199/app
 
 `poolcheck` runs its checks over one browser session and a handful of live
 requests. Run it when touching either source module, or when a pick starts
-coming back empty.
-Four things it watches are outside this project and invisible to the test suite:
-Commons changing its mind about `descriptionurl` or `gsrsort=random`, its
-transcode ladder being rebuilt, archive.org's `sort[]=random` ceasing to be
-stably seeded (which is what `PAGE_SPAN` exists for), and
-`archive.org/services/img/` going away — that last is what lets the browser show
-a clip without downloading it, and its loss would turn the grid into a page of
-empty boxes with nothing else complaining.
+coming back empty. Four things it watches are outside this project and invisible
+to the test suite: Commons changing its mind about `descriptionurl` or
+`gsrsort=random`, its transcode ladder being rebuilt, archive.org's
+`sort[]=random` ceasing to be stably seeded (which is what `PAGE_SPAN` exists
+for), and `archive.org/services/img/` going away — that last is what lets the
+browser show a clip without downloading it, and its loss would turn the grid
+into a page of empty boxes with nothing else complaining.
 
 **Why archive.org picks are downloaded whole rather than streamed.**
 `/metadata/` and `advancedsearch.php` both send
@@ -1214,7 +1180,7 @@ is no longer its own cache key. Every link written before this carries `?` and
 still opens: `pageSearch()` reads the hash when there is one and the query
 otherwise, and the first write of such a session moves it across. The catch is
 that a hash change on an open page does not reload it, so `useUrlState` listens
-for `hashchange` and reloads — which is what the query used to do for free.
+for `hashchange` and reloads.
 
 | Param                | Meaning                                                |
 | -------------------- | ------------------------------------------------------ |
@@ -1333,8 +1299,8 @@ is on disk, including its unstaged lines.
   editor can conform
 - [`CURATION.md`](CURATION.md) — screening presets, and what the eye added to
   the numbers
-- [`adr/`](adr/) — the decisions where the obvious thing is wrong for a
-  non-obvious reason, and [`handoffs/`](handoffs/) for the evidence under them
+- [`adr/`](adr/) — the decision records, and [`handoffs/`](handoffs/) for the
+  evidence under them
 - [`EFFECTS.md`](EFFECTS.md) — every control, **generated** by
   `scripts/docgen.mjs`. Edit `src/ui/controls.ts`, then run `pnpm docgen`;
   `pnpm build` runs `--check` and fails on a stale copy

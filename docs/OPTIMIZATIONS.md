@@ -28,17 +28,14 @@ In order of what actually moves the number:
 - **The CRT beam spot's wide tiers** cost ~1.8 ms on the presets that push
   `crtSpot` past a pixel; at the 0.6 px default the tap table is small and the
   pass costs ~0.2 ms.
-- **`crt_face`'s bloom + halation gather** is ~0.30 ms of a 4.90 ms frame, 6%,
-  measured by deleting both loops outright. See _Tiering_ below for why tap
-  count is the only lever on it.
+- **`crt_face`'s bloom + halation gather** is ~0.30 ms of a 4.90 ms frame
+  ([Tiering](#tiering-because-tap-count-is-the-only-lever)).
 - **Per-source feed snow** ~0.9 ms per engaged feed.
 - **The deck display** (`osd`) ~0.04 ms with its word up, and ~0.07 ms during
   the blue background, which writes the whole active picture. The burst
-  measurement was the cost. It started as one lane per sample walking 36 loads
-  (0.86 ms), then one lane per workgroup (0.37 ms), then split the loads across
-  the workgroup's lanes (0.25 ms). It now runs once per line: one workgroup per
-  line, its lanes striding across the active picture (0.074 ms, gpuprof,
-  November 2026).
+  measurement is the cost: one workgroup per line measures it once, its lanes
+  striding across the active picture (0.074 ms in gpuprof, November 2026,
+  against 0.86 ms for one lane per sample walking 36 loads).
 - **The true-waveform B chain** (`encodeChromaB → encodeCompositeB → mixB`)
   totals ~0.9 ms engaged, and dispatches nothing idle.
 
@@ -63,9 +60,28 @@ rides in idle slots — which is not knowable from reading the shader, hence
 
 The grain bake has since been re-measured and landed: per-pass timestamps put
 the hashing at 0.115 ms of a 2.29 ms stock frame, a tenth of a millisecond
-whole-frame wall clock could not separate from its own bimodal noise. The
-verdict stands where it was drawn, inside the FIR loops; `crt_face` is a
-per-pixel ALU pass, and there the arithmetic was the cost.
+whole-frame wall clock could not separate from its own bimodal noise. The mottle
+is fixed to the glass, so `grain_bake.wgsl` writes it once at engine
+construction into an r32float texture and `crt_face` reads a texel. The verdict
+stands where it was drawn, inside the FIR loops; `crt_face` is a per-pixel ALU
+pass, and there the arithmetic was the cost.
+
+The same rule settled a startup optimization before it was written. The `Engine`
+constructor makes 22 blocking `createComputePipeline` calls, which looks like a
+`createComputePipelineAsync` job. Timed in place first:
+
+```
+PLBUILD n=22 sync=9.0ms syncWarm=2.0ms asyncParallel=396.0ms
+```
+
+**9 ms is the entire upper bound**, and the refactor would have split
+construction in two, because the constructor consumes the pipelines to build the
+pass graph. The async arm ran after boot against a live render loop, and 396/22
+≈ 18 ms a pipeline is close to one frame, so most of it is each promise settling
+a turn of the event loop later. `syncWarm` ran under the same conditions and
+took 2 ms, so the async path waits for something the synchronous one does not.
+Re-run it when a browser build changes how it schedules; the scaffold is four
+lines of `performance.now()`.
 
 ## What per-pass timestamps found
 
@@ -120,7 +136,7 @@ The sRGB byte has since become the screen's one format
 light the same way, and `present` and `compose` read it through the same kind of
 view, so the whole screen stage works in light at 8-bit bandwidth.
 
-Three arms were reverted, and all three are worth knowing.
+Three arms were reverted.
 
 - **Spreading the per-line serial passes one lane to a workgroup**, so the
   scheduler could interleave 525 of them across every SIMD, was **twice as
@@ -134,10 +150,7 @@ Three arms were reverted, and all three are worth knowing.
   source sample overruns its threshold, hash included. That table measured 0.311
   → 0.305 ms at stock, so whatever cost 0.2 ms did not come back.
 - **Staging `sync.wgsl` into workgroup memory** was 0.174 → 0.166 ms, bit exact
-  and not worth the shared memory, and prefetching the next line's measurement
-  did nothing either. That pass is bound by the issue latency of one lane
-  running a dependent recurrence, about 300 ns a line, and no arrangement of its
-  memory changes that.
+  and not worth the shared memory ([The one serial pass](#the-one-serial-pass)).
 
 ## Skipping dispatches is the largest optimization here
 
@@ -146,37 +159,26 @@ Every optional pass carries a `when()` predicate over the controls, and
 when it returns false. An idle feature costs nothing rather than costing a
 uniform multiply by zero.
 
-What that is worth, measured against the parent revision with two dev servers
-alternating: the chroma keyer, the video synth and the blanking strobe together
-land **4.52 ms on both sides at stock** — no separable difference at all. The
-true-waveform B chain (`encodeChromaB → encodeCompositeB → mixB`) totals ~0.9 ms
-engaged and dispatches nothing idle. The intercarrier-buzz readback is gated on
-the buzz being audible — which now takes a switch as well as a level, since the
-sound is off until asked for — so a listener who never touches it pays neither
-the copy nor the map.
+[What a frame costs](#what-a-frame-costs) has what the gates are worth.
 
 Gating inside a shader gets the same treatment when a pass is already running.
-`crt_face`'s bloom and halation used to share one gate and one loop body, so
-either control being up ran both radii — a look with bloom up and halation down
-paid a sixteen-tap gather over a 15-pixel disk for a result immediately
-multiplied by zero. Splitting them into a loop each, gated separately, is worth
-0.12 ms of a 4.87 ms frame. `compose` had the same shape with the feedback
-camera: the seven-tap lens gather, the vignette and the sensor curve ran for
-every pixel and were mixed in at `fbMix` 0 — gated, 0.124 → 0.071 ms at stock.
+`crt_face`'s bloom and halation each have a loop and a gate of their own, so a
+look with bloom up and halation down skips the sixteen-tap gather over the
+15-pixel disk; one shared gate cost 0.12 ms of a 4.87 ms frame. `compose` had
+the same shape with the feedback camera: the seven-tap lens gather, the vignette
+and the sensor curve ran for every pixel and were mixed in at `fbMix` 0 — gated,
+0.124 → 0.071 ms at stock.
 
-The largest single one was a pass that only existed to hand a buffer to the next
-pass. `encode_yuv` wrote a vec4 per sample (7.6 MB a frame) that
-`encode_composite` read one dispatch later; the texel it came from is a quarter
-the bytes and already what the FIR's staging loop wanted, so `encodeComposite`
-now reads the picture itself — 0.35 ms of a 2.29 ms stock frame for the pass and
-the read it fed, bit-exact. Source B's three consumers (`encodeChromaB`,
-`encodeCompositeB`, `mixB`) read B's texel the same way, so `encode_yuv.wgsl` is
-gone altogether.
+The largest single saving was deleting a pass that only handed a buffer on.
+`encodeComposite` and B's three consumers read the source texel, a quarter the
+bytes of the vec4-per-sample buffer `encode_yuv` wrote, and the first table in
+[What per-pass timestamps found](#what-per-pass-timestamps-found) has what it
+saved.
 
-The cost of this design is that a gate can be forgotten. `feedgates.spec.ts`
-exists because a per-source fault whose gate does not know about it dispatches
-no pass, so its slider does nothing until some unrelated fault on the same input
-comes up — a failure that looks like a shader bug and is a table entry.
+The cost of this design is that a gate can be forgotten. A per-source fault the
+gate does not know about dispatches no pass and looks like a shader bug;
+`feedgates.spec.ts` catches it ([`ARCHITECTURE.md`](ARCHITECTURE.md) › Pass
+order).
 
 ## The raster is the data structure
 
@@ -225,13 +227,8 @@ but 64 and 128 land within noise of each other and **256 is ~8% slower**. The
 halo traffic is not the bottleneck, so the width stays where scheduling
 granularity likes it.
 
-**This is where the row-uniform invariant comes from.** `decode` stages a
-contiguous span of one raster row, so a horizontal offset applies to the whole
-workgroup or it reads outside the halo. A width that is uniform across the row
-and only ever widens fits too, since the span it reads shrinks; that is how
-`lineEht` breathes the raster. Per-pixel horizontal scaling (linearity,
-pincushion) needs the staging restructured first, and no amount of care in the
-shader gets around it.
+`decode`'s tile is where the row-uniform invariant comes from
+([`ARCHITECTURE.md`](ARCHITECTURE.md) › Performance).
 
 **Sharing a deviate that is expensive to draw.** Snow is one Gaussian deviate
 per sample, and the 1-2-1 band-limit over it reads each neighbour's deviate —
@@ -322,12 +319,7 @@ per frame has a rule about them:
 
 ## Uniforms are generated, packed once, and copied on the GPU timeline
 
-`PARAM_DEFS` in `src/core/gpu/prelude.ts` is the single source of truth for the
-`Params` struct, and **field order there is the GPU memory layout**. It
-generates the WGSL struct and a typed `Record` that `packParams` consumes, so a
-field added without being supplied in `uniformValues()` is a TypeScript error
-rather than a uniform that silently reads zero.
-
+[`ARCHITECTURE.md`](ARCHITECTURE.md) › Params are generated covers `PARAM_DEFS`.
 Packing writes into one reused `ArrayBuffer` scratch and issues one
 `writeBuffer` per frame.
 
@@ -340,28 +332,10 @@ inside the same command encoder, rather than re-encoding or waiting. Only one
 in slot 0 and get copied back before the receiver runs, because the loop
 otherwise leaves every pass below reading `gen = gens - 1`.
 
-The per-source feeds reuse the same trick sideways. `packFeed` spreads the
-program-bus pack and overrides only the fields a feed names, so each source's
-deck-and-cable faults are a second `Params` buffer bound to the same shader
-rather than a second set of fields — the mechanism is written once in
-`feed.wgsl` and costs no `PARAM_DEFS` growth. The trap that creates is in
-`ARCHITECTURE.md`, and it is worth reading before adding a fault: every field a
-feed does **not** override still holds the program bus's value.
-
-## State that lives in buffers between frames
-
-Anything the signal path has to remember stays on the GPU.
-
-**`timingBuf`** carries the sync flywheel's persistent scalars just above the
-per-line offsets — vertical phase, PLL state, AGC gain, two second-order gain
-servos with their velocities, and the separator's lock age. They are named
-constants in the prelude rather than literal indices at the eight sites that
-touch them, because the raster is a constant here and a literal index is the one
-thing in this buffer that would not move if `LINES` did.
-
-**`persistBufs`** ping-pong on frame parity. `decode`'s lateral scatter reads
-neighbouring pixels, so a single buffer would hand it values the same dispatch
-is part way through overwriting.
+The per-source feeds reuse the same trick sideways: each source's faults are a
+second `Params` buffer bound to the same shader, so the mechanism is written
+once in `feed.wgsl`. Read the `packFeed` trap in
+[`ARCHITECTURE.md`](ARCHITECTURE.md) before adding a fault.
 
 ## Tiering, because tap count is the only lever
 
@@ -409,11 +383,6 @@ All four thresholds are hard steps, so sweeping the control through one pops the
 result by that difference. That is the trade, written down beside the step that
 makes it.
 
-`crt_face`'s grain is the other kind of saving: the mottle is fixed to the
-glass, so sixteen hashes a pixel were reproducing the same field every frame.
-`grain_bake.wgsl` writes it once at engine construction into an r32float texture
-and the pass reads a texel — bit-exact, 0.115 ms.
-
 ## The one serial pass
 
 `sync.wgsl` runs two 525-iteration loops, the PLL flywheel and the HV sag, each
@@ -424,22 +393,19 @@ independent of each other, so a workgroup of 128 puts them in different waves
 and the scheduler runs them side by side: 0.31 → 0.14 ms on a look with the sag
 up, stock unchanged.
 
-It is latency on one thread rather than GPU throughput, and it measures fine at
-60 fps, but it is the one pass in the app that cannot scale. A third per-line
-recurrence should be a parallel prefix scan rather than another loop here.
-
-The latency is now known, and it is the lane's own. Staging the measurements
-into workgroup memory and prefetching the next line both measured within 5% of
-the plain loop (0.17 ms at stock), so the cost is a single lane issuing a
-dependent recurrence at roughly 300 ns a line, not the memory it reads.
-Shortening the serial path is the only lever.
+It measures fine at 60 fps, but it is the one pass in the app that cannot scale.
+Staging the measurements into workgroup memory and prefetching the next line
+both measured within 5% of the plain loop (0.17 ms at stock), so the cost is a
+single lane issuing a dependent recurrence at roughly 300 ns a line. Shortening
+the serial path is the only way to make it cheaper, and a third per-line
+recurrence should be a parallel prefix scan.
 
 ## The one readback
 
 `buzz_tap` leaves 525 measurement pairs on the GPU per frame and the sound
 detector needs them on the CPU. That is the app's only steady-state GPU→CPU
-readback, and the reason it can exist without costing the render loop anything
-is that it never blocks.
+readback. It never blocks, and it runs only while the buzz is audible, which
+takes the Sound stage's switch as well as a level.
 
 `mapAsync` resolves a frame or two after submit, so a buffer copied into cannot
 be mapped, read and reused within one frame — hence a pool of three. **When
@@ -481,13 +447,14 @@ two clips cost on the bitmap path, and the 37 ms/s they cost here, were measured
 in Chrome.
 
 Firefox stays on the bitmap path, which `directVideoPath` in `env.ts` decides
-from the user agent. Firefox 144 ships the method on Windows and macOS, and
-Nightly has it on Linux behind `dom.webgpu.external-texture.enabled`. With that
-pref on, Nightly 151 on Linux exposes the method and then rejects
-`texture_external` in `blit_ext` ("Capability TEXTURE_EXTERNAL is required"), so
-the engine never paints. `#vidext` puts a Firefox session on the direct path for
-measuring it. Firefox should take the direct path by default on a platform only
-after a measurement there shows a gain.
+from the user agent, and `#vidbitmap` forces it anywhere. Firefox 144 ships the
+method on Windows and macOS, and Nightly has it on Linux behind
+`dom.webgpu.external-texture.enabled`. With that pref on, Nightly 151 on Linux
+exposes the method and then rejects `texture_external` in `blit_ext`
+("Capability TEXTURE_EXTERNAL is required"), so the engine never paints.
+`#vidext` puts a Firefox session on the direct path for measuring it. Firefox
+should take the direct path by default on a platform only after a measurement
+there shows a gain.
 
 ## Pacing is a separate problem from throughput
 
@@ -533,10 +500,7 @@ loop is vsync-capped.
 Everything that has cost frame rate here has been other work on the same thread
 — a render-loop probe spinning at 8 kHz, a per-frame object copy, and a
 21,420-read preset scan inside a render body. The design that keeps React out of
-the way is [`ARCHITECTURE.md`](ARCHITECTURE.md) › _The React layer_; two of its
-numbers came from here, that notifying per frame is a full panel render per
-frame (19 ms with every row mounted) and that a decorative pulse in a miniature
-measured 7 ms of style recalc per 3 s.
+the way is [`ARCHITECTURE.md`](ARCHITECTURE.md) › _The React layer_.
 
 Anything else per-frame on this thread competes with the render loop too, so the
 per-frame path avoids allocating and the drag paths coalesce their writes.
@@ -639,21 +603,9 @@ cost 756 µs/frame, with `applyMod` not appearing in the profile at all.
 
 ## Devices are created freely and never destroyed
 
-The expensive resource is not the `GPUDevice`. Four created and four held open,
-all presenting, cost a tab nothing — while **one `device.destroy()` on a device
-that has been presenting ends the tab's rendering step**, and the next document
-loaded in that tab inherits the damage.
-
-So the app abandons devices instead of destroying them, and hands the live one
-to the next engine. HMR is the cheap path: a hot update recreates the engine,
-but the engine hands its device on alive and the successor adopts it from a
-stash that lives on `globalThis` — precisely so that editing `gpu/context.ts`
-itself does not throw it away with the module. An editing session costs one
-device however many saves it takes.
-
-The runs, the three arms, and everything this forbids are in
-[ADR 0004](adr/0004-never-destroy-a-presenting-device.md). Read it before
-touching anything that creates, releases or tears down a device.
+Creating a `GPUDevice` is cheap and destroying one that has presented ends the
+tab's rendering step, so the app never calls `device.destroy()`.
+[ADR 0004](adr/0004-never-destroy-a-presenting-device.md) has the runs.
 
 ## What is left
 
@@ -669,17 +621,3 @@ What this page owns is the other direction: what has already been measured and
 is **not** worth revisiting without new hardware or a new browser build — the
 two FIR-side micro-optimizations at the top, 256-wide FIR workgroups,
 asynchronous pipeline creation, and rearranging `sync.wgsl`'s memory.
-
-One constraint rather than an idea, since nothing is asking for it yet: a third
-per-line recurrence wants a parallel prefix scan, not a third loop in the one
-serial pass.
-
-## Further reading
-
-- [`ARCHITECTURE.md`](ARCHITECTURE.md) — the pass graph, the three domains,
-  buffer layouts, adding a control end to end
-- [`DEVELOPMENT.md`](DEVELOPMENT.md) — the harnesses, the traps they have hit,
-  and the performance-measurement protocol these numbers come from
-- [ADR 0007](adr/0007-the-fir-passes-are-not-alu-bound.md) — why the rule at the
-  top of this page is a rule, and [`adr/`](adr/) for the rest of the decisions
-  where the obvious thing is wrong for a non-obvious reason
