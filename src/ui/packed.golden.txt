@@ -301,7 +301,7 @@
 313 retraceLines step=0.01 default=0
 314 flybackLines step=1 default=16
 315 afpcLagLines step=1 default=0
-316 syncSlicer step=1 default=0 choices=fixed|peak
+316 syncSlicer step=1 default=0 choices=fixed|peak|AC
 317 bKeyFillHueDeg step=1 default=0
 318 bKeyFillMixA step=0.01 default=0
 319 bKeyFillFraming step=1 default=0 choices=off|on

@@ -171,7 +171,7 @@ fault through `timing[]` will spin hue that should have stayed put.
 
 ## Buffer layouts worth knowing
 
-- **`timingBuf`** (`(LINES * 2 + 16)` floats) — `[0..524]` per-line horizontal
+- **`timingBuf`** (`(LINES * 2 + 17)` floats) — `[0..524]` per-line horizontal
   offset; `[525]` vertical oscillator phase, signed and fractional; `[526]` PLL
   state; `[527]` AGC gain; `[528..531]` the two second-order gain servos (beam
   limiter and camera auto-iris, gain + velocity each — `sync` updates them,
@@ -188,8 +188,10 @@ fault through `timing[]` will spin hue that should have stayed put.
   peak-detector reference, the DC restorer's offset from nominal black, and
   whether the separator's gate is open to the whole line — `sync` updates them,
   `sync_measure` slices against the first and hunts as far as the third says,
-  `decode` subtracts the second (see ADR 0009). Indices 525–532, the two VIR
-  slots and those three are persistent across frames; treat them as state. Every
+  `decode` subtracts the second (see ADR 0009); `[AFC_VEL]` last, the line
+  oscillator's frequency offset as the AC-coupled separator's phase comparator
+  has charged its loop filter (ADR 0015). Indices 525–532, the two VIR slots and
+  the four after them are persistent across frames; treat them as state. Every
   index past 524 is a named constant in the prelude, because a literal index
   would not move if `LINES` did. A zeroed `VIR_GAIN` means the servo has never
   run, which is what lets `resetSignal` clear the whole buffer and still hand
@@ -202,9 +204,11 @@ fault through `timing[]` will spin hue that should have stayed put.
   spare.
 - **`syncMeasureBuf`** — two `vec4f` per line from `sync_measure`, interleaved:
   `(sync edge or −1000, sync depth, mean beam load, broad-pulse flag)` then
-  `(the line's deepest excursion inside active video, 0, 0, 0)`, all
-  post-IF-gain. Three slots of the second one are spare; `sync` reads `.x` as
-  what its peak detector charges to (ADR 0009).
+  `(the line's deepest excursion inside active video, the separated line's first harmonic as two floats, the separated width)`,
+  all post-IF-gain. `sync` reads `.x` as what its peak detector charges to (ADR
+  0009), and the other three as the input to the AC-coupled separator's phase
+  comparator (ADR 0015). The edge and depth in the first are the hunt's and the
+  AGC key's; with the AC-coupled separator the key is the set's flyback.
 - **`audioBuf`** — one float per line, the audio waveform at line rate.
 - **`buzzBuf`** — one `vec2f` per line from `buzz_tap`: the line's mean
   composite level and the RMS of its within-line deviation, both IRE. It runs

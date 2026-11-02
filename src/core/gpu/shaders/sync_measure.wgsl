@@ -5,12 +5,16 @@
 // measurements; only that tiny recurrence stays serial.
 //
 // Two vec4 per line:
-// measure[2*row]     = (edge sample or -1000 if not found, porch - tip depth,
+// measure[2*row]     = (edge sample or -1000 if not found, porch - tip depth
+//                       at the AGC's key,
 //                       mean active-picture level (beam load), 1 if mid-line
 //                       sits at sync level)
-// measure[2*row + 1] = (deepest excursion inside active video, 0, 0, 0) —
+// measure[2*row + 1] = (deepest excursion inside active video, separated
+//                       sync's first harmonic re and im, separated sync's
+//                       total width in samples) — the first is
 //                       what the peak detector in sync.wgsl charges to,
-//                       post-IF-gain
+//                       post-IF-gain, and the harmonic is what the flywheel's
+//                       phase comparator integrates
 //
 // The slicer sits halfway down to the peak the separator has been charging to,
 // the way a capacitor-coupled separator's does, rather than at a fixed level.
@@ -20,11 +24,23 @@
 // the slice follows them down into the picture, where the set then finds its
 // "sync". The peak slicer (syncSlicer 1) has no floor and charges to the whole
 // line, sync interval included, so it follows a tip a scrambler has lifted
-// toward blanking and locks to it. The carrier scrambler lifts the tip above
-// picture black, so the deepest thing on a line is dark picture and the slice
-// lands there: the flywheel follows the outlines of dark content.
-// Its gate is the narrow window round the expected line start while the
+// toward blanking and locks to it. Its reference never rises above blanking,
+// so a tip the carrier scrambler has lifted above picture black is out of its
+// reach. Its gate is the narrow window round the expected line start while the
 // flywheel is locked, and the whole line once it has lost the pulses.
+//
+// The AC-coupled separator (syncSlicer 2) clips a fixed 10 IRE above the level
+// its coupling capacitor has charged to, with no ceiling on that level, so it
+// slices at -30 IRE on a clean line. Its edge hunt only counts pulses for the
+// gate and the DC restorer. What moves the oscillator is the flywheel's phase
+// comparator, which multiplies the whole separated line by a reference at the
+// oscillator's phase, so a pulse anywhere on the line pulls according to how
+// far it sits from the oscillator. The comparator's reference is a sinusoid at
+// line rate, so all it needs from a line is the first harmonic of the
+// separated waveform and its width. On a carrier-scrambled line the deepest
+// thing is dark picture, so the separator passes the picture's dark areas and
+// the oscillator is dragged toward them. 20 IRE above the charged level passed
+// every shadow on the carnival clip and tore the picture past recognition.
 
 @group(0) @binding(0) var<uniform> P: Params;
 @group(0) @binding(1) var<storage, read> comp: array<f32>;
@@ -32,6 +48,10 @@
 @group(0) @binding(3) var<storage, read_write> measure: array<vec4f>;
 
 const SLICE = -20.0; // IRE slicing level on nominal sync
+const AC_SLICE_ABOVE_PEAK = 10.0;
+// half the clipped transistor's turn-on, in IRE, so noise on a dark area
+// dithers the separated output instead of flipping it
+const AC_SLICE_SOFT = 3.0;
 
 // The separator taps video after the IF stage, inside the AGC loop — so the
 // receiver's gain reaches sync stability, not just brightness. A dim
@@ -67,7 +87,8 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
     tipRef = IRE_SYNC;
   }
   let peak = P.syncSlicer > 0.5;
-  let slice = select(min(0.5 * tipRef, SLICE), 0.5 * tipRef, peak);
+  let acCoupled = P.syncSlicer > 1.5;
+  let slice = select(select(min(0.5 * tipRef, SLICE), 0.5 * tipRef, peak), tipRef + AC_SLICE_ABOVE_PEAK, acCoupled);
   let gateEnd = select(GATE_NARROW, i32(SPL) - 40, timing[GATE_WIDE] >= GATE_OPEN_FRAMES);
 
   // hunt for the falling edge through the slice, from just ahead of the
@@ -83,11 +104,15 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
     prev = cur;
   }
 
-  // gated depth: sample mid-tip and back porch relative to the found edge
+  // gated depth: sample mid-tip and back porch relative to the found edge. The
+  // AC-coupled set keys its AGC off its own flyback, which is wherever the
+  // oscillator drew this line last frame, so on a line it has not locked it
+  // samples picture as though it were tip and porch.
+  let keyAt = select(edge, round(timing[row]), acCoupled);
   var depth = 0.0;
-  if (edge > -999.0) {
-    let tip = levelAt(base + i32(edge) + 20);
-    let porch = levelAt(base + i32(edge) + i32(SYNC_LEN) + 8);
+  if (keyAt > -999.0) {
+    let tip = levelAt(base + i32(keyAt) + 20);
+    let porch = levelAt(base + i32(keyAt) + i32(SYNC_LEN) + 8);
     depth = porch - tip;
   }
 
@@ -98,8 +123,17 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
   let lineFrom = select(i32(ACTIVE_START), 0, peak);
   let span = select(i32(ACTIVE_W), i32(SPL), peak);
   var activeMin = 1000.0;
+  var harmonic = vec2f(0.0);
+  var separatedWidth = 0.0;
   for (var k = 0; k < span; k = k + 4) {
-    activeMin = min(activeMin, levelAt(base + lineFrom + k));
+    let level = levelAt(base + lineFrom + k);
+    activeMin = min(activeMin, level);
+    if (acCoupled) {
+      let separated = clamp(0.5 + (slice - level) / (2.0 * AC_SLICE_SOFT), 0.0, 1.0);
+      let theta = 2.0 * PI * f32(lineFrom + k) / f32(SPL);
+      harmonic = harmonic + 4.0 * separated * vec2f(cos(theta), sin(theta));
+      separatedWidth = separatedWidth + 4.0 * separated;
+    }
   }
 
   // Beam load: mean active-picture level on this line, i.e. how much current
@@ -130,5 +164,5 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
   // broad pulse at 13, so 9 leaves four taps of margin either side.
   let broad = select(0.0, 1.0, below > 8.0);
   measure[row * 2u] = vec4f(edge, depth, load / 24.0, broad);
-  measure[row * 2u + 1u] = vec4f(activeMin, 0.0, 0.0, 0.0);
+  measure[row * 2u + 1u] = vec4f(activeMin, harmonic, separatedWidth);
 }

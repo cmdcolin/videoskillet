@@ -211,7 +211,7 @@ export class Graph {
     // The same length as pipeline.ts: the last slot is SAG_MEAN in the
     // prelude. A buffer short of a slot drops that write silently, and the
     // stage that reads it does nothing here and everything in the app.
-    const timingBuf = storage((LINES * 2 + 16) * 4, GPUBufferUsage.COPY_SRC)
+    const timingBuf = storage((LINES * 2 + 17) * 4, GPUBufferUsage.COPY_SRC)
     this.timingBuf = timingBuf
     const syncMeasureBuf = storage(LINES * 32, GPUBufferUsage.COPY_SRC)
     this.syncMeasureBuf = syncMeasureBuf

@@ -203,7 +203,7 @@ export const PARAM_DEFS = [
   // decoder
   ['combMode', 'f32'], // 0 chroma trap, 1 two-line comb, 2 three-line comb
   ['hHold', 'f32'], // sync PLL gain (horizontal hold)
-  ['syncSlicer', 'f32'], // 0 fixed slice, 1 peak-following slice
+  ['syncSlicer', 'f32'], // 0 fixed slice, 1 peak-following slice, 2 AC-coupled phase comparator
   ['vHold', 'f32'], // vertical oscillator pull-in gain (vertical hold lock strength)
   ['vRollRate', 'f32'], // free-run roll velocity, lines/frame, from the v-osc detune
   ['syncBend', 'f32'], // PLL kick at the vertical seam, samples (flagging)
@@ -586,6 +586,10 @@ const SAG_VEL = ${LINES * 2 + 14}u;
 // The sag averaged over the frame just walked, which sets the EHT the vertical
 // scan sees: the reservoir is far too slow to follow one line.
 const SAG_MEAN = ${LINES * 2 + 15}u;
+// The line oscillator's frequency offset, samples per line, as the AC-coupled
+// separator's phase comparator has charged its loop filter. Zero for the other
+// separators, whose flywheel moves phase alone.
+const AFC_VEL = ${LINES * 2 + 16}u;
 // Frames the separator must go without pulses before its gate opens to the
 // whole line. A flywheel coasts through a hum trough or an AGC dip; it only
 // starts hunting once the pulses have genuinely gone.

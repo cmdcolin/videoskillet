@@ -8,7 +8,7 @@ clamped, not refused.
 Modulation sources for #mod=: sine, triangle, walk, smooth, hold, lorenz, level, hit, trig, pull.
 Up to 8 routings, rate 0.02..10 Hz, depth 0..1.
 
-Presets for #preset=: clean, vhs, protectedTape, wornTape, pictureSearch, stuckTape, trackingBand, servoHunt, hueRidesTheLight, overDeviatedWhite, oneLineBack, broadcast, mistunedRf, fringeReception, ignitionStorm, deadChannel, dimmerHash, scrambledChannel, turboSyncLoss, almostDecoded, ssavi, triModeScrambler, sixDbBox, sineWaveScrambler, keyedSsavi, lineDelay, verticalHoldGone, bentScan, supplyChaos, fullCollapse, bassSmack, lineNineteen, collapsedAxes, mixerLoop, strobeTrails, keyLoop, fbBloom, woundSpiral, shadowLadder, ladderClimb, subcarrierSiren, huntingServos, meltdown, zoomBloom, aimedAHairOff, turnedAHair, theIrisHoldsTheEdge, tunnelOut, spiral, subcarrierComb, ringLoop, ringLadder, ringStorm, ringOnTheBeat, invertedRungs, ringInTheHighlights, ringInTheShadows, warpInTheHighlights, warpInTheShadows, rungsInTheLight, ringingInTheHighlights, chasingItsOwnColour, carvedByTheLivePicture, theHoleTheSubjectKeeps, itOnlyEatsTheRed, theFaceStaysOutOfIt, theWrongClock, clockAndCrystal, colourInTheDark, greyUnderTheColour, noColourToTrade, theLightIsALapBehind, lightBecomesHue, theSecondCrystal, keyedOnWhatItMade, layeredByBrightness, intermodLoop, whereTheProductsLand, shearedAndStacked, servoWarp, bothLoops, runaway, syncInTheLoop, lorenzLoop, strobeBloom, beamBendsItsOwnScan, flagOnEveryLap, colourKeepsWalking, shearedEveryGeneration, encoderWiredBackwards, wheelBehindTheSubject, handOnTheChassis, cleanDissolve, dirtyMix, ringMix, outOfVolts, pauseFight, relayMidFrame, leakingFader, genlockLosesGrip, pirateFeed, negativeDrifter, houseDeckHeld, differenceKey, greenScreen, matteFlood, keySweep, extrudedRibbons, keyOffADub, keyIntoTheLoop, wipeFight, negative, signalAndGroundSwapped, sVideoMiswire, noTerminator, daisyChained, looseConnector, bentEnhancer, contourLines, pouredColour, silkscreen, falseColour, blockColour, litAtTheEdges, contoursOnContours, ringPlaid, twoMultipliers, punchIn, rainbowStorm, neonTube, strobedTube, roundTube, burnedIn, degauss, greenTerminal, radarTube, noseAgainstTheGlass, bentDetailer, latchedEnhancer, latchedCameraLoop, howlroundLoom, falseSync, paperclipChroma, blackRestore, magnetised, misconverged, transmissionFault, nightMonitor, everyColourButOne, pastTheYoke, arcStorm, railSlam, chromaRails, outOfHeadroom, soundAtTheRails, lightThatStays, servicePosition, foldover, powerOff, powerOn, channelChange, splitPhase, wiggledPlugs, threeServos, cometTails, nightTube, hairOffTheCrystal, clampInThePicture, colourAStepRight, aimedAtTheVcr, oneHeadPacked, tapeIn, tintInASlowHand, overmodulatedChyron, bentFontRom, scrambledCharacterRom, thePictureInTheType, scrambledIdent, typeEcho, fontCrawl, heldRaster, pageShuffle, wanderingInset.
+Presets for #preset=: clean, vhs, protectedTape, wornTape, pictureSearch, stuckTape, trackingBand, servoHunt, hueRidesTheLight, overDeviatedWhite, oneLineBack, broadcast, mistunedRf, fringeReception, ignitionStorm, deadChannel, dimmerHash, scrambledChannel, turboSyncLoss, almostDecoded, ssavi, triModeScrambler, sixDbBox, sineWaveScrambler, keyedSsavi, lineDelay, verticalHoldGone, bentScan, supplyChaos, fullCollapse, bassSmack, lineNineteen, collapsedAxes, mixerLoop, strobeTrails, keyLoop, fbBloom, woundSpiral, shadowLadder, ladderClimb, subcarrierSiren, huntingServos, meltdown, zoomBloom, aimedAHairOff, turnedAHair, theIrisHoldsTheEdge, tunnelOut, spiral, subcarrierComb, ringLoop, ringLadder, ringStorm, ringOnTheBeat, invertedRungs, ringInTheHighlights, ringInTheShadows, warpInTheHighlights, warpInTheShadows, rungsInTheLight, ringingInTheHighlights, chasingItsOwnColour, carvedByTheLivePicture, theHoleTheSubjectKeeps, itOnlyEatsTheRed, theFaceStaysOutOfIt, theWrongClock, clockAndCrystal, colourInTheDark, greyUnderTheColour, noColourToTrade, theLightIsALapBehind, lightBecomesHue, theSecondCrystal, keyedOnWhatItMade, layeredByBrightness, intermodLoop, whereTheProductsLand, shearedAndStacked, servoWarp, bothLoops, runaway, syncInTheLoop, lorenzLoop, strobeBloom, beamBendsItsOwnScan, flagOnEveryLap, colourKeepsWalking, shearedEveryGeneration, encoderWiredBackwards, wheelBehindTheSubject, handOnTheChassis, cleanDissolve, dirtyMix, ringMix, outOfVolts, pauseFight, relayMidFrame, leakingFader, genlockLosesGrip, pirateFeed, negativeDrifter, houseDeckHeld, differenceKey, greenScreen, matteFlood, keySweep, extrudedRibbons, keyOffADub, keyIntoTheLoop, wipeFight, negative, signalAndGroundSwapped, sVideoMiswire, noTerminator, daisyChained, looseConnector, bentEnhancer, contourLines, pouredColour, silkscreen, falseColour, blockColour, litAtTheEdges, contoursOnContours, ringPlaid, twoMultipliers, punchIn, rainbowStorm, neonTube, strobedTube, roundTube, burnedIn, degauss, greenTerminal, radarTube, noseAgainstTheGlass, bentDetailer, latchedEnhancer, latchedCameraLoop, howlroundLoom, falseSync, paperclipChroma, blackRestore, magnetised, misconverged, transmissionFault, nightMonitor, everyColourButOne, pastTheYoke, arcStorm, railSlam, chromaRails, outOfHeadroom, soundAtTheRails, lightThatStays, servicePosition, foldover, powerOff, powerOn, channelChange, splitPhase, potMixer, partsDrawer, wiggledPlugs, threeServos, cometTails, nightTube, hairOffTheCrystal, clampInThePicture, colourAStepRight, aimedAtTheVcr, oneHeadPacked, tapeIn, tintInASlowHand, overmodulatedChyron, bentFontRom, scrambledCharacterRom, thePictureInTheType, scrambledIdent, typeEcho, fontCrawl, heldRaster, pageShuffle, wanderingInset.
 
 ## Signal (source A)
 
@@ -153,6 +153,14 @@ aConnector  (A loose connector)
 aConnectorMode  (A bad contact)
   0=pin 1=shield 2=both  default 0
   Which of A's two contacts is intermittent. The centre pin breaks the signal path, so bad bands collapse to noise and lose A's sync; the shell breaks the ground, so hum lands on them instead. Both is a wiggled plug.
+
+aPotOhms  (A dirty pot)
+  0..3000 step 1 Ω  default 0
+  A dirty 10 kΩ pot clipped in series with input A's cable. Against the 75 Ω source and the 75 Ω terminator it divides sync, burst and picture together, so the receiver loses colour and then lock as it turns up. Its wiper loses contact in bursts while the knob turns. The track stops at 3 kΩ because the rest of a real pot's travel is black.
+
+aPotFiddle  (A hand on pot)
+  0..1 step 0.01  default 0
+  A hand working the pot's knob: quick twists either side of where it is set. The twists move the wiper, and a moving wiper is what makes a dirty track crackle. Near zero ohms a twist can bottom the pot out to full level.
 
 aHumIre  (A ground loop)
   -40..40 step 0.5 IRE  default 0
@@ -382,6 +390,20 @@ bRollLps  (frame roll)
   -30..30 step 0.01 l/f  default 0.1
   B's vertical drift in lines per frame, from its field rate not matching A's.
 
+## Pot crossfader
+
+mixPot  (mixed by)
+  0=bus 1=pot  default 0
+  Whether the dirty sum goes through the bus faders or through one dirty 1 kΩ pot with A on one end, B on the other and the wiper out to the bus. Nothing buffers the two sources, so both syncs and both bursts reach the receiver in whatever ratio the wiper splits them. Dirty sum only.
+
+mixPotPos  (crossfade)
+  0..1 step 0.001  default 0.5
+  Where the crossfader's wiper sits: 0 is all A, 1 all B. Through the middle both sources load each other and the level dips. The sync of whichever source is stronger wins the receiver.
+
+mixPotHand  (hand on crossfader)
+  0..1 step 0.01  default 0
+  A hand throwing the crossfader either side of where it is set. The moving wiper crackles on the dirty track, and a finger lifting off it changes the A:B ratio partway along a line, so the line's burst and its picture come from different mixtures and its hue goes wrong.
+
 ## Signal (source B)
 
 bHueDeg  (B hue)
@@ -431,6 +453,14 @@ bConnector  (B loose connector)
 bConnectorMode  (B bad contact)
   0=pin 1=shield 2=both  default 0
   Which of B's two contacts is intermittent. The centre pin breaks the signal path, so bad bands of B collapse to noise and stop pushing sync. The shell breaks the ground, so hum lands on those bands instead. Both is a wiggled plug.
+
+bPotOhms  (B dirty pot)
+  0..3000 step 1 Ω  default 0
+  A dirty 10 kΩ pot clipped in series with input B's cable. Against the 75 Ω source and the 75 Ω terminator it divides sync, burst and picture together, so the receiver loses colour and then lock as it turns up. Its wiper loses contact in bursts while the knob turns. The track stops at 3 kΩ because the rest of a real pot's travel is black.
+
+bPotFiddle  (B hand on pot)
+  0..1 step 0.01  default 0
+  A hand working the pot's knob: quick twists either side of where it is set. The twists move the wiper, and a moving wiper is what makes a dirty track crackle. Near zero ohms a twist can bottom the pot out to full level.
 
 bHumIre  (B ground loop)
   -40..40 step 0.5 IRE  default 0
@@ -561,6 +591,10 @@ cgPageSlip  (cg page counter slip)
 busCut  (bus cut)
   0..1 step 0.001  default 0
   A relay that switches the whole bus to B for this fraction of each frame, counted back from the bottom. Sync and burst switch with the picture, so the receiver meets two signals in one frame and has to find lock across the seam. The seam sits at a point in raster time and can land half way along a line.
+
+busBounce  (cut bounce)
+  0..1 step 0.01  default 0
+  How worn the cut relay's contacts are. A worn contact bounces as it makes, so for up to forty lines after the seam the bus chatters between A, B and nothing at all before it settles on B. A stretch of B that lands on a line whose burst came from A decodes against A's burst, so its colours come out at the wrong hue.
 
 bLeak  (crosspoint leak)
   0..0.3 step 0.001  default 0
@@ -1042,8 +1076,8 @@ hHold  (horizontal hold)
   How hard the receiver's horizontal PLL pulls toward each sync pulse it finds. Low is a loose flywheel that ignores noise but drifts and skews; high snaps to every edge including the false ones. The PLL works in the sync domain, so the burst gate moves with it.
 
 syncSlicer  (sync slicer)
-  0=fixed 1=peak  default 0
-  How the separator decides where sync is. Fixed slices at -20 IRE, so a pulse a scrambler has lifted above that level is never found and the line oscillator drifts. Peak follows the deepest level on each line and slices halfway to it, the way an adaptive separator does: it finds a lifted pulse and locks, and the AGC then turns the gain up to chase the weak pulse and washes the picture out.
+  0=fixed 1=peak 2=AC  default 0
+  How the separator decides where sync is. Fixed slices at -20 IRE, so a pulse a scrambler has lifted above that level is never found. Peak slices halfway to the deepest level on each line: it finds a lifted pulse and locks, and the AGC turns the gain up to chase it. AC is capacitor-coupled into a phase comparator. It passes whatever is deepest on the line, so on a scrambled channel the picture's shadows pull the line oscillator and the picture tears along them, and an AGC keyed off the flyback reads picture and turns the gain up.
 
 vHold  (vertical hold)
   0..1 step 0.01  default 1

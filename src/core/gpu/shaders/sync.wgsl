@@ -60,6 +60,37 @@ fn wrapLines(v: f32) -> f32 {
   return v - n * floor(v / n + 0.5);
 }
 
+// The phase comparator's error, in samples, for an oscillator at `pll`: the
+// separated line times a sinusoid centred where the oscillator expects the
+// middle of its pulse, held on a capacitor that the pulses charge. A nominal
+// pulse gives its own offset from there, as the edge flywheel does. Anything
+// wider charges the capacitor to the reference's average across it, so a broad
+// dark area pulls toward its middle no harder than a pulse would, and one half
+// a line away pushes the oscillator off. Anything narrower than a pulse only
+// part charges it.
+fn comparatorError(harmonic: vec2f, width: f32, pll: f32) -> f32 {
+  let phase = 2.0 * PI * (pll + 0.5 * f32(SYNC_LEN)) / f32(SPL);
+  let pull = harmonic.y * cos(phase) - harmonic.x * sin(phase);
+  return pull * f32(SPL) / (2.0 * PI * max(width, f32(SYNC_LEN)));
+}
+
+// The comparator drives the oscillator's frequency through the anti-hunt
+// network, a proportional path and an integrating capacitor, so the oscillator
+// carries momentum from line to line and swings past a pulse it was pulled
+// toward. At a hold of 0.08 the loop rings over about 190 lines at 0.4 of
+// critical damping, so a tear curves. A loop that moved phase alone drew
+// straight diagonals at the pull-in limit.
+const AFC_PROPORTIONAL = 0.33;
+const AFC_INTEGRAL = 0.17;
+// The capacitor's leak toward the free-running frequency on lines with nothing
+// to compare.
+const AFC_LEAK = 0.98;
+
+// A line whose separated output carries less than a third of a pulse's worth
+// of first harmonic gives the comparator nothing to act on, and the oscillator
+// runs free through it.
+const COMPARATOR_FLOOR = 0.33 * f32(SYNC_LEN);
+
 const SAG_LANE = 64u;
 // lines per field an untriggered vertical oscillator gains: about 58.6 Hz
 const V_FREE_RUN_LINES = 12.0;
@@ -120,6 +151,7 @@ fn main(@builtin(local_invocation_id) lid: vec3u) {
   let blackHeld = timing[BLACK_SHIFT];
   var pll = timing[PLL_STATE];
   var lockAge = timing[LOCK_AGE];
+  var afcVel = timing[AFC_VEL];
   var agc = servoGain(timing[AGC_GAIN]);
   var ablG = ablHeld;
   var ablV = timing[ABL_VEL];
@@ -181,6 +213,7 @@ fn main(@builtin(local_invocation_id) lid: vec3u) {
   var foundCount = 0.0;
   var nearCount = 0.0;
   var minSum = 0.0;
+  let acCoupled = P.syncSlicer > 1.5;
   // How long the separator has gone without a real edge, carried across
   // frames: a flywheel keeps an unlocked oscillator honest for a while, but
   // not forever, and the decay below is scaled by this.
@@ -216,16 +249,21 @@ fn main(@builtin(local_invocation_id) lid: vec3u) {
         }
       }
     }
-    if (m.x > -999.0) {
+    let pulled = select(m.x > -999.0, length(aux.yz) > COMPARATOR_FLOOR, acCoupled);
+    let auth = P.hHold * H_PULL_MAX;
+    if (acCoupled) {
+      afcVel = afcVel * select(AFC_LEAK, 1.0, pulled);
+    }
+    if (pulled) {
       // flywheel: blend measurement in at the hold gain, within pull-in range
-      let auth = P.hHold * H_PULL_MAX;
-      pll = pll + clamp(P.hHold * (m.x - pll), -auth, auth);
-      lockAge = 0.0;
-      // gated AGC depth on picture lines
-      if (row >= FIRST_BURST_LINE) {
-        depthSum = depthSum + m.y;
-        depthCount = depthCount + 1.0;
+      if (acCoupled) {
+        let err = comparatorError(aux.yz, aux.w, pll);
+        afcVel = clamp(afcVel + AFC_INTEGRAL * P.hHold * P.hHold * err, -auth, auth);
+        pll = pll + clamp(AFC_PROPORTIONAL * P.hHold * err, -auth, auth) + afcVel;
+      } else {
+        pll = pll + clamp(P.hHold * (m.x - pll), -auth, auth);
       }
+      lockAge = 0.0;
     } else {
       // Free-run. A line oscillator with no reference does not coast on a
       // perfect raster: its phase noise accumulates, and the longer since the
@@ -236,6 +274,7 @@ fn main(@builtin(local_invocation_id) lid: vec3u) {
       // triggers on garbage: a phantom edge the flywheel chases as hard as
       // the hold control says to chase anything.
       lockAge = min(lockAge + 1.0, 5000.0);
+      pll = pll + afcVel;
       let coast = min(lockAge / 600.0, 1.0);
       let sigma = 0.15 + 2.2 * coast;
       let h = pcg(row * 7919u + P.frame * 104729u);
@@ -243,6 +282,12 @@ fn main(@builtin(local_invocation_id) lid: vec3u) {
       if (rand01(h ^ 0x5bd1e995u) < 0.02 * coast) {
         pll = pll + (rand01(h ^ 0x2545f491u) - 0.5) * 30.0 * P.hHold;
       }
+    }
+    // gated AGC depth on picture lines, keyed by a found edge, or by the
+    // AC-coupled set's flyback on every line whether it is locked or not
+    if (row >= FIRST_BURST_LINE && (m.x > -999.0 || acCoupled)) {
+      depthSum = depthSum + m.y;
+      depthCount = depthCount + 1.0;
     }
     timing[row] = pll;
   }
@@ -357,7 +402,10 @@ fn main(@builtin(local_invocation_id) lid: vec3u) {
   timing[IRIS_GAIN] = irisG;
   timing[IRIS_VEL] = irisV;
   timing[LOCK_AGE] = lockAge;
-  timing[TIP_LEVEL] = clamp(tipRef, -150.0, -1.0);
+  timing[AFC_VEL] = select(0.0, afcVel, acCoupled);
+  // An AC-coupled separator's capacitor charges to whatever is deepest, so its
+  // reference follows a lifted tip or dark picture above blanking.
+  timing[TIP_LEVEL] = clamp(tipRef, -150.0, select(-1.0, 90.0, acCoupled));
   timing[BLACK_SHIFT] = blackShift;
   timing[GATE_WIDE] = starved;
 }
