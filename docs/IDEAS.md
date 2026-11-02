@@ -164,47 +164,30 @@ character generator goes wrong.
   sections below.
 
 - **Bending the card's own ROM.** Shipped for both character generators
-  (`romAddr` / `romData` / `pageAddr` in `prelude.ts`, called from `decode.wgsl`
-  and `chyron.wgsl`) and not for the card, because the caption's font is a ROM
-  in a buffer where the card's is a canvas raster — two lines there and a
-  rebuild of `dotGrid` here. What the shipped ones taught: holding a pin is a
-  _range_ of effects rather than one, and the range comes out of the wiring. The
-  address bus carries the character code in its high lines and the row inside
-  the cell in its low ones, so one knob sweeps from every glyph growing a seam
-  to the whole font substituting. And the pin is held _high_ rather than
-  switched, so a glyph whose bit was already set is untouched and the damage is
-  uneven the way a jumper's is.
+  (`romAddr` / `romData` / `pageAddr` / `counterSlip` in `prelude.ts`, called
+  from `decode.wgsl` and `chyron.wgsl`) and not for the card, because the
+  caption's font is a ROM in a buffer where the card's is a canvas raster: two
+  lines there against a rebuild of `dotGrid` here. What the shipped ones taught:
 
-  Five faults live on that wiring now and each answers a different question the
-  bus is being asked. `romStride` is the cell-height strap, so the address walks
-  out of the cell the raster is drawing and a line of text shears diagonally
-  through the whole font. `romCross` transposes two adjacent address lines, the
-  way a socket seated a pin over does. `romAddr` holds one high. `romRot` decays
-  a fraction of the array to its erased state, which is a fixed pattern in the
-  die. `romData` holds a data line. The page-address counter is bent separately
-  by `ccPageAddr` / `cgPageAddr`, and that one is the odd member: every
-  character stays correctly spelled and lands somewhere else.
-
-  All five are what separates a bend from `garbleRows`, which models a bad
-  _transmission_ — random hits on bytes in flight. A bend is deterministic: the
-  same text comes out wrong the same way every time, because the machine is
-  wrong rather than the wire.
-
-  **The counters are the exception, and they had to be a sixth thing rather than
-  a rate on the other five.** `romSlip` and `pageSlip` are a counter losing or
-  gaining counts instead of holding them, so the address is further out every
-  frame and nothing puts it back. That is the whole of what moves here. Putting
-  a clock on a held pin would have said something false — a jumper does not
-  flicker — where a counter that will not hold its count is dynamic by
-  construction, and it is what the page bend was described as in the first
-  place: it walks the entire page diagonally through itself, a few cells a
-  field.
-
-  The part all of it is wired around is a 2 KiB EPROM on eleven address lines
-  holding a 1152-byte font, so 896 bytes of it were never programmed. `romAddr`
-  masks to the bus and the callers answer anything above the font from
-  `ROM_ERASED`, which is why a high line held or a large strap error returns
-  solid characters rather than wrapping onto a glyph that happens to be there.
+  - The address bus carries the character code in its high lines and the row
+    inside the cell in its low ones, so one held pin sweeps from every glyph
+    growing a seam to the whole font substituting.
+  - A pin is held _high_, not switched, so a glyph whose bit was already set is
+    untouched and the damage is uneven the way a jumper's is.
+  - A bend is deterministic, which separates it from `garbleRows`: the same text
+    comes out wrong the same way every time, because the machine is wrong and
+    the wire is fine.
+  - The five held faults (`romStride`, `romCross`, `romAddr`, `romRot`,
+    `romData`), and the page-address bend (`ccPageAddr` / `cgPageAddr`, which
+    keeps every character spelled right and lands it somewhere else), are
+    static, so motion needed another kind. `romSlip` and `pageSlip` are counters
+    that lose or gain counts, so the address drifts further every frame. A clock
+    on a held pin would have modelled a jumper that flickers, which no jumper
+    does.
+  - The part is a 2 KiB EPROM on eleven address lines holding a 1152-byte font,
+    so 896 bytes were never programmed. `romAddr` masks to the bus and the
+    callers answer anything above the font from `ROM_ERASED`, which is why a
+    high line held returns solid characters instead of another glyph.
 
 - **A drawing that moves on its own.** `draw` paints on the card and the card
   then sits still, so `boil` is the only thing keeping it alive. Two shapes
@@ -437,17 +420,9 @@ speckle. Low fringe proves flatness; high fringe does not prove fringing.
 
 ## The mixer's hardware, and what is left of it
 
-`mix_b.wgsl` began as arithmetic — `aGain * a + gate * (bGain * b + ...)` — and
-three mechanisms moved it toward a switcher, all in the Crosspoint group:
-
-- **Bus cut** (`busCut`) switches the whole bus, sync included, to B from a
-  point in raster time to the end of the frame. The seam can land mid-line.
-- **Crosspoint leak** (`bLeak`) passes B's derivative past a closed fader, so
-  only its subcarrier and edges get through.
-- **Genlock capture range** (`bWanderUs`, `bCaptureUs`). B's own clock wanders
-  and the lock holds it only inside the window; lines past it read B displaced.
-
-What none of them do:
+The Crosspoint group models three switcher mechanisms in `mix_b.wgsl`: the bus
+cut (`busCut`), crosspoint leak (`bLeak`) and the genlock capture range
+(`bWanderUs`, `bCaptureUs`). What none of them do:
 
 - **The cut is a position and not an event.** A real relay fires at a press and
   leaves the bus on B afterwards, so one frame carries the seam. A slider holds
@@ -803,25 +778,18 @@ picture's content; **E-MEM**, the vision-mixer term, is too obscure.
 ## Agent interface: `window.vf` first, an eval before anything more
 
 `AgentDialog` and [`AI-USAGE.md`](AI-USAGE.md) send a coding agent to
-`window.vf.applyControls`. The sibling repo `~/src/jbrowse-components` gives
+`window.vf.applyControls`, whose writes are checked and reported as
+`AI-USAGE.md` describes. The sibling repo `~/src/jbrowse-components` gives
 agents a separate facade, `window.jb` (`packages/app-core/src/JbApi/`), with
-evals in `scripts/agent-evals/`. A second global here, `window.vs`, was
-considered and set aside for now.
-
-The reasons it was proposed, weighed against the code:
+evals in `scripts/agent-evals/`. A second global here, `window.vs`, was set
+aside for two reasons:
 
 - **`window.vf` is replaced on every device-loss rebuild and hot update**
-  (`useEngine.ts`, `cam/useCamEngine.ts`). This only affects code that holds a
-  reference across a rebuild. A browsing agent evaluates `window.vf.…` afresh on
-  each call and always reaches the live engine.
+  (`useEngine.ts`, `cam/useCamEngine.ts`), which matters only to code that holds
+  a reference across a rebuild. A browsing agent evaluates `window.vf.…` afresh
+  on each call and always reaches the live engine.
 - **It is the concrete `Engine`**, typed as unstable. That is a documentation
   problem, and a second global does not change it.
-- **Writes were unchecked.** `applyControls` and `setControl` now go through
-  `checkControls` (`core/controls.ts`): a value clamps to its slider range,
-  which the app passes to `Engine.create`, a non-finite value or non-number is
-  rejected, and an unknown key is reported. `applyControls` returns
-  `{applied, clamped, rejected, unknown}`. This closes the `frameLock: NaN`
-  freeze and the silent miss on a misspelled key.
 
 What `window.vf` still lacks, all of which needs the app layer:
 

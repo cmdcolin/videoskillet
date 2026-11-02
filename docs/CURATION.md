@@ -7,8 +7,7 @@ toward mush. Same question one level down for the 285 controls — which are
 looks, and which are trims that belong behind `fine: true`.
 
 Most of this is a working record of the screening harness, its blind spots, what
-the surveys found and what the eye added. The last section records the labelling
-system that was built for the same question and then removed.
+the surveys found and what the eye added.
 
 ## Measuring: the survey harness
 
@@ -627,9 +626,8 @@ What was cut, and why, since these are the near misses:
   `mean` 127.
 - `guns drifting apart` (`crtConverge`) — measured well (`grow` 80, `csd` 49)
   and rendered as the generic starburst. Cut on form, not on numbers.
-- `crystalInTheOpticalLoop` (`scDetuneKHz`) — shipped, then cut: 0.022 from
-  `spiral` once its chroma trim came off, which is the closest pair in the
-  table. The mechanism is real and the look it makes is one the library has.
+- `crystalInTheOpticalLoop` (`scDetuneKHz`) — shipped, then cut as a duplicate
+  of `spiral` (above).
 - `generation loss` — the same loop at zoom 1.0, so nothing accumulates except
   the encode/decode round trip. Real cross-colour breeding and it reads as
   bands. Worth another look when the DVE in `IDEAS.md` gives it a second raster
@@ -662,23 +660,14 @@ merely accumulates. Nine arms tried to find more of that.
   pixel: it lives in `present.wgsl`, downstream of `crt_face` and therefore
   outside the loop, so it cannot compound. Checked before rendering.
 
-What shipped, and was later retired (below), is `supplyWiredBackwards`: the same
-tank with `hvSagUs` negated. The sag is a horizontal displacement per raster
-line, so the sign flip mirrors the field, which on a still picture is the same
-bend reflected. In a loop it changes what the field does to what it built — the
-structure changes axis, from horizontal ribbons to a curtain of vertical
-columns, at `loop` 92.7 against the forward bend's 83.4. The columns need the
-depth: at `hvSagUs` -42 they dissolve into soft horizontal bands, so the light
-it loses is bought back with gain (1.36 against the sibling's 1.28) rather than
-with a shallower bend.
+The one that shipped was `supplyWiredBackwards`, the same tank with `hvSagUs`
+negated, which turned the ribbons into a curtain of vertical columns (`loop`
+92.7). Both self-bending loops were revisited once the sag learned to breathe
+(`lineEht` in decode widens, dims and lengthens the raster with the same tank):
 
-**Both self-bending loops were revisited once the sag learned to breathe**
-(`lineEht` in decode widens, dims and lengthens the raster with the same tank).
-The backwards loop read as a sine-wave filter on review, and stills on the
-haunted-house clip agreed:
-
-- **`supplyWiredBackwards` is retired.** Its curtain of columns is the tank's
-  own resonance: with the sign reversed the loop is negative feedback around a
+- **`supplyWiredBackwards` is retired.** It read as a sine-wave filter on review
+  and on stills of the haunted-house clip. The columns are the tank's own
+  resonance: with the sign reversed the loop is negative feedback around a
   resonant tank, which oscillates at the tank's frequency. Every arm from -55 to
   -12 µs, at gain 1.28 to 1.45 and `hvRing` 0.2, still rippled at that period.
 - **`beamBendsItsOwnScan` moved from 45 to 25 µs.** At 45 the bend throws a line
@@ -725,14 +714,8 @@ unity when an iris meters it.
 
 ## The labelling system
 
-A labelling system was built to answer "which settings are cool" with a model
-trained on ratings. It had three collectors: a tags menu in the look bar, the
-`/stream/` page that rated one preset mix at a time, and the `/vote/` page that
-compared two. They wrote to the `candidates`, `votes` and `ratings` collections,
-and `scripts/labels.mjs` and `scripts/affinity.mjs` exported and fitted the
-result. The dataset never got past a few sessions and nothing was fitted.
-
-All of it was removed in October 2026, and the rules now deny those three
-collections. The last commit that has the code is `e93f4650`, and the version of
-this section written then has the record shapes, the sample-size simulation and
-the plan that was never carried out.
+A ratings-based labelling system (the `/stream/` and `/vote/` pages, and the
+`candidates`, `votes` and `ratings` collections) was built for the same question
+and removed in October 2026 before its dataset got past a few sessions. The
+rules now deny those collections. Commit `e93f4650` has the last copy of the
+code and of this section's full record.

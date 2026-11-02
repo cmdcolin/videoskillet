@@ -490,11 +490,10 @@ The variety they used to have was the hold chip being three characters wider on
 some rows, and that width difference is the shift itself. Cards that say
 something by their width want the _hold_ to set it.
 
-Two harness lessons came out of the same work, and both generalise.
-`element.click()` does no hit-testing, so it reaches a button a hand cannot —
-the tray harness now _measures_ that every control on a card is inside the card.
-Reaching a card's chips positionally meant that adding one chip silently shifted
-three unrelated buttons; they carry `data-act` names now.
+The tray harness measures that every control on a card is inside the card,
+because `element.click()` does no hit-testing, and it finds chips by their
+`data-act` names; [`DEVELOPMENT.md`](DEVELOPMENT.md#browser-harness-traps) lists
+both traps.
 
 ## Fixed-framerate export
 
@@ -530,7 +529,9 @@ the time.
 **Hence the demuxer route.** `ui/mp4demux.ts` is the demuxer — not mp4box.js,
 for the argument `mp4.ts` already makes in the other direction — and
 `ui/webmdemux.ts` reads WebM, which is what Commons transcodes arrive as. Both
-are checked against ffprobe on real files by `scripts/demuxcheck.mjs`.
+are checked against ffprobe by `scripts/demuxcheck.mjs`, and the frames they
+yield by `scripts/pullcheck.mjs`
+([`DEVELOPMENT.md`](DEVELOPMENT.md#the-harnesses) describes both).
 `ui/framePull.ts` walks a `VideoDecoder`: ask for a clip time, get the frame a
 viewer would see there, at **0.85 ms a frame and flat in the keyframe spacing**,
 because nothing seeks. `VideoPump` has a take mode that asks it instead of the
@@ -546,14 +547,12 @@ step.
   presentation order on any clip with B-frames, which is most real footage and
   none of what `mp4.ts` writes, so a puller indexing by `dts` is correct on
   every fixture this repo can generate for itself and scrambles the first clip
-  anybody imports. `pullcheck.mjs` carries a two-thirds-B-frame arm and asserts
-  the fixture really has them.
-- **A frame's identity has to be checkable.** The failure mode of a puller is
-  returning _some_ frame, promptly, forever, and no timing column shows it. Each
-  fixture frame carries its own index as ten binary cells in the picture. Three
-  bugs came out of that which nothing else would have found: a cache evicting
-  the frame being waited for, a cache emptied by handing a frame out, and a feed
-  loop awaiting a microtask where a decoder's output is a task.
+  anybody imports. `pullcheck` carries a B-frame arm for that reason.
+- **A frame's identity has to be checkable**, which is why `pullcheck`'s fixture
+  frames carry their own index in the picture. Three bugs came out of that which
+  nothing else would have found: a cache evicting the frame being waited for, a
+  cache emptied by handing a frame out, and a feed loop awaiting a microtask
+  where a decoder's output is a task.
 - **The playhead is computed from the frame, not accumulated.** A clip arriving
   mid-take starts at its own beginning — `(frame - whenThisClipArrived) / fps` —
   so asking twice gives the same answer. A looped region wraps by modulo and
@@ -731,17 +730,14 @@ Three things measurement corrected, and three browser faults:
   [`adr/0008`](adr/0008-record-h264-high-and-mind-the-chroma.md).
 
 `scripts/rendercheck.mjs` is the guard over all of it: two renders of one take
-come back with the same SHA-256, with 25 ms of real time injected at every yield
-of the second and the live loop running in between. One unseeded `Math.random`
-in a per-frame modulator, or one buffer left out of the reset, and it fails.
-Byte-identity is within one browser build — the H.264 encoder is Firefox's, and
-nothing asserts across versions of it.
+must come back with the same SHA-256, within one browser build.
+[`DEVELOPMENT.md`](DEVELOPMENT.md#the-harnesses) describes its arms.
 
 ### The Firefox constraint
 
-Measured on Nightly and re-measured on Nightly 151 by `scripts/codeccheck.mjs`:
-`importExternalTexture` is `undefined`
-([bug 1827116](https://bugzilla.mozilla.org/show_bug.cgi?id=1827116)), and
+Firefox stays on the bitmap video path (`directVideoPath` in `core/gpu/env.ts`;
+[`DEVELOPMENT.md`](DEVELOPMENT.md) has the state of `importExternalTexture`
+there), and `scripts/codeccheck.mjs` measured on Nightly 151 that
 `copyExternalImageToTexture` refuses a WebCodecs `VideoFrame` outright,
 accepting only `ImageBitmap`, `HTMLImageElement`, `HTMLCanvasElement` and
 `OffscreenCanvas`. So the clean decoder path — pull a `VideoFrame`, hand it to
@@ -765,12 +761,9 @@ loop that only listens for output.
 runs identically in the web app, so an Electron decision is not on the critical
 path. Where a shell earns its keep is the boundary either side:
 
-- **Writing the file.** Done, in the browser: a take streams to a file as it
-  encodes and the sample tables carry 64-bit offsets, so what caps one is the
-  storage the browser grants rather than the format or the heap. What a shell
-  would still buy is the user choosing where the file lands, since
-  `showSaveFilePicker` is the one part of File System Access that is
-  Chromium-only (`scripts/fsacheck.mjs`).
+- **Choosing where the file lands.** A take already streams to a file in the
+  browser (above); `showSaveFilePicker` is the one part of File System Access
+  that is Chromium-only (`scripts/fsacheck.mjs`).
 - **Codecs.** A bundled ffmpeg gets ProRes / DNxHR and audio mux. The sharpest
   form of the cost is chroma: the H.264 WebCodecs offers is 4:2:0 only, which
   scores 15.54 dB against a one-pixel chroma source where AV1 4:4:4 scores 43.38
@@ -921,32 +914,20 @@ the command line.
 
 ### The same binary hosts the app
 
-`videoskillet serve` puts the instrument on a local address out of the same
-executable, and it is here for one source. The **Video URL…** option shells out
-to yt-dlp, so a page served from a CDN can never offer it — until now it existed
-only behind a clone, a pnpm install and a vite plugin. A server on the machine
-is what that source needs, and the binary is already on the machine.
+`videoskillet serve` hosts the app from the same executable so that the **Video
+URL…** source, which shells out to yt-dlp, works without a clone.
+[`CLI.md`](CLI.md#serving-the-app) covers using it, and
+[`DEVELOPMENT.md`](DEVELOPMENT.md#video-url-source-a-server-on-the-machine)
+covers the bridge and the `videoskillet-bridge` meta tag. Two facts about the
+build are recorded only here:
 
-Three pieces, and the third is the one that had to be designed:
-
-- **The bridge left the vite plugin.** The download, the cache and the progress
-  readings are `scripts/serve/ytdlp.ts`, which reaches for node builtins Deno
-  implements too, so one file runs under both servers. `vite-plugin-ytdlp.ts`
-  and `scripts/serve/main.ts` each write their own transport — connect on one
-  side, `Deno.serve` on the other — and share everything else.
-- **The app rides inside the executable.** `deno compile --include` carries
-  `dist/app`, `dist/assets` and the files in `public/` the app fetches: about 3
-  MB against a 100 MB runtime. The landing page, the guide and the demo reel are
-  the website's and stay out, which is 12 of dist's 15 MB, so `/` goes to
-  `/app/` instead of a page this program was never asked for.
-- **The picker asks the server what it can do.** A server with yt-dlp on PATH
-  writes `<meta name="videoskillet-bridge" content="ytdlp">` into the document
-  it serves, and `sources/bridge.ts` reads that while `modes.ts` evaluates. This
-  was `import.meta.env.DEV`, which cannot answer the question any more: the same
-  production bundle is the website, which has no bridge, and what `serve` hands
-  out, which does. A tag rather than an endpoint to poll, because a module
-  script runs after the head is parsed — so the answer is already in the
-  document and the source lists stay plain constants.
+- `deno compile --include` carries `dist/app`, `dist/assets` and the files in
+  `public/` the app fetches: about 3 MB against a 100 MB runtime. The landing
+  page and the demo reel stay out, which is 12 of dist's 15 MB, so `/` redirects
+  to `/app/`.
+- The server answers with a tag in the document. A polled endpoint would come
+  too late: a module script runs after the head is parsed, so the tag is already
+  there when `modes.ts` evaluates and the source lists stay plain constants.
 
 ## What is left
 
@@ -986,27 +967,17 @@ Three pieces, and the third is the one that had to be designed:
   project whose premise is modelling the mechanism. `scripts/clips.mjs` shells
   out to native ffmpeg offline, which is where it belongs.
 
-Trim handles used to be on this list, ruled out as a lot of UI for a storyboard.
-That reasoning was about a strip whose rows were looks; once a row can be a
-clip, the in/out pair becomes the row's own length. The rest of the section
-stands — this buys a trim, not a timeline.
+Trim handles are not on this list: once a row can be a clip, its in/out pair is
+the row's length, which gives a trim and no timeline.
 
 ## What the build order missed
 
-The build order was a list of hard problems: a deterministic clock, a demuxer, a
-frame-exact puller, an encoder an editor will conform. All of them shipped, and
-three ordinary gaps survived the whole list. Each turned up by laying out eight
-clips and pressing play.
-
-- A row recorded the look and dropped the clip, so a rundown of footage played
-  as a rundown of effects over whatever was on the deck.
-- A clip added off the shelf had never been measured, so a hold set to
-  `whole clip` ran for four bars.
-- Preroll resolved a `#vurl` and a bundled clip id and skipped shelf clips,
-  which is what an ordinary rundown is made of, so every cut in one paid the
-  cold price and every transition in one had a single live picture.
-
-Each is a missing field rather than a contradiction, which is why reading the
-code found none of them: a design that specifies a type and a shipped thing that
-omits it read the same from the inside. The lesson is to test the gesture the
+The build order listed the hard problems: a deterministic clock, a demuxer, a
+frame-exact puller, and an encoder an editor will conform. All of them shipped.
+Three ordinary gaps survived the list and turned up when eight clips were laid
+out and played: a row dropped its clip (_A row is a session plus two fields_), a
+shelf clip had no measured length, so a `whole clip` hold ran four bars, and
+preroll skipped shelf clips (_Preroll depth 1_). Each was a missing field, and
+reading the code found none of them, because a design that specifies a type and
+a build that omits it look the same from the inside. Test the gesture the
 document opens by asking for.
