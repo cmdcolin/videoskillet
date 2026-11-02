@@ -1239,6 +1239,10 @@ abl  (beam limiter)
   0..1 step 0.01  default 0
   The automatic beam limiter. The flyback can only source so much average beam current, so past a threshold the set pulls video drive down, and the sense loop's time constant lands the dimming after the bright content that caused it. The knob undersizes the flyback and strips the damping, so the correction overshoots and the picture pumps.
 
+ehtArc  (flyback arcing)
+  0..1 step 0.01  default 0
+  A flaw in the high-voltage circuit, such as a cracked anode cap, that breaks down above some voltage. The regulator lets the voltage rise when the beam draws little, so dark pictures arc. Each arc collapses the supply, so the raster swells and dims while it recharges, the line oscillator is thrown, and the spark radiates a burst of hash into the set's video. The path an arc burns breaks down more easily for a while, so arcs come in clusters. The knob sets how close the supply runs to breakdown.
+
 ## Decoder
 
 combMode  (Y/C comb)

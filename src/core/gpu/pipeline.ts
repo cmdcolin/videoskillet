@@ -53,12 +53,14 @@ import {
   PARAM_BYTES,
   PRELUDE,
   TILE_WG,
+  TIMING_LEN,
   packParams,
   patchParams,
   wgslLine,
 } from './prelude'
 import { RenderLoop } from './renderloop'
 import { Overlay } from './savedBoard'
+import arcSrc from './shaders/arc.wgsl?raw'
 import blitExtSrc from './shaders/blit_ext.wgsl?raw'
 import buzzTapSrc from './shaders/buzz_tap.wgsl?raw'
 import captionSrc from './shaders/caption.wgsl?raw'
@@ -633,7 +635,7 @@ export class Engine implements EngineApi {
     // VIR corrector's two integrators
     // Readable back through window.vf, so a harness can watch the receiver's
     // sync and restorer state settle instead of inferring it from the picture.
-    this.timingBuf = storage((LINES * 2 + 17) * 4, GPUBufferUsage.COPY_SRC)
+    this.timingBuf = storage(TIMING_LEN * 4, GPUBufferUsage.COPY_SRC)
     this.syncMeasureBuf = storage(LINES * 32, GPUBufferUsage.COPY_SRC)
     // one audio sample per line, uploaded each frame
     this.audioBuf = storage(LINES * 4)
@@ -744,6 +746,7 @@ export class Engine implements EngineApi {
     const syncMeasurePl = compute('sync_measure', syncMeasureSrc)
     const buzzTapPl = compute('buzz_tap', buzzTapSrc)
     const syncPl = compute('sync', syncSrc)
+    const arcPl = compute('arc', arcSrc)
     const lineAnalyzePl = compute('line_analyze', lineAnalyzeSrc)
     const virPl = compute('vir', virSrc)
     const decodePl = compute('decode', decodeSrc)
@@ -1166,6 +1169,20 @@ export class Engine implements EngineApi {
           { buffer: this.audioBuf },
         ],
         [1, 1],
+      ),
+      // The set's own flyback arcing, radiated into its video stages. sync
+      // decides when it strikes, and this lays the burst on the line before
+      // anything measures the burst or decodes.
+      pass(
+        'arc',
+        arcPl,
+        [
+          { buffer: this.paramsBuf },
+          { buffer: this.compA },
+          { buffer: this.timingBuf },
+        ],
+        perLine,
+        () => c.ehtArc > 0,
       ),
       pass(
         'lineAnalyze',

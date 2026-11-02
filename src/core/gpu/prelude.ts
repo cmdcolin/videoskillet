@@ -220,6 +220,7 @@ export const PARAM_DEFS = [
   ['hvSag', 'f32'], // beam-current deflection sag amplitude, samples
   ['hvRing', 'f32'], // supply damping: 0 smooth droop .. 1 ringing / chaotic
   ['hRate', 'f32'], // horizontal oscillator free-run drift, samples/line
+  ['ehtArc', 'f32'], // how near the unloaded EHT sits to a flaw's breakdown voltage, 0 = never arcs
   // audio patched into the receiver, one sample per line
   ['audioBend', 'f32'], // direct horizontal displacement, samples
   ['audioLoad', 'f32'], // audio driven into the HV tank alongside beam current
@@ -476,6 +477,10 @@ export const PARAM_DEFS = [
 // from the same number so the WGSL and the dispatch cannot drift apart.
 export const TILE_WG = 64
 
+// Floats in the timing buffer: everything up to AFC_VEL, then the arc's four
+// scalars and its three per-line arrays (prelude WGSL constants above).
+export const TIMING_LEN = LINES * 5 + 21
+
 export const PARAM_BYTES = Math.ceil((PARAM_DEFS.length * 4) / 16) * 16
 export const GEN_OFFSET = PARAM_DEFS.findIndex(([n]) => n === 'gen') * 4
 
@@ -605,6 +610,20 @@ const SAG_MEAN = ${LINES * 2 + 15}u;
 // separator's phase comparator has charged its loop filter. Zero for the other
 // separators, whose flywheel moves phase alone.
 const AFC_VEL = ${LINES * 2 + 16}u;
+// Flyback arcing (sync.wgsl). The supply's voltage with no arc and the dip the
+// arcs left, both relative to nominal; the ionisation an arc leaves in its
+// path, which lowers the next breakdown; and the frame's mean dip, which sets
+// the EHT of the vertical scan the way SAG_MEAN does.
+const ARC_FREE = ${LINES * 2 + 17}u;
+const ARC_DIP = ${LINES * 2 + 18}u;
+const ARC_ION = ${LINES * 2 + 19}u;
+const ARC_MEAN = ${LINES * 2 + 20}u;
+// Per raster line, the EHT dip the arcs have left; per source row, how hard
+// an arc's radiated burst hits the video on that row, and the sample it starts
+// at.
+const ARC_EHT = ${LINES * 2 + 21}u;
+const ARC_BURST = ${LINES * 3 + 21}u;
+const ARC_ONSET = ${LINES * 4 + 21}u;
 // Frames the separator must go without pulses before its gate opens to the
 // whole line. A flywheel coasts through a hum trough or an AGC dip; it only
 // starts hunting once the pulses have genuinely gone.

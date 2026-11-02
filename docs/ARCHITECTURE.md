@@ -70,7 +70,7 @@ One frame, driven by `Engine.render()` in `src/core/gpu/pipeline.ts`:
 ```
 prePasses    compose → encodeComposite → [feedA] → [composeB → encodeChromaB → encodeCompositeB → feedB → mixB] → [chyron] → [fbComposite]
 loopPasses   chromaExtract → [underDown] → channel → timebase     (× dubGens, ≤ 4)
-postPasses   [osd] → [nrDetect] → [noiseReducer] → [enhancer] → [buzzTap] → syncMeasure → sync → lineAnalyze → [vir] → [caption] → decode → crtFace → [storePrev]
+postPasses   [osd] → [nrDetect] → [noiseReducer] → [enhancer] → [buzzTap] → syncMeasure → sync → [arc] → lineAnalyze → [vir] → [caption] → decode → crtFace → [storePrev]
 present      render pass to the swap chain
 ```
 
@@ -171,14 +171,14 @@ fault through `timing[]` will spin hue that should have stayed put.
 
 ## Buffer layouts worth knowing
 
-- **`timingBuf`** (`(LINES * 2 + 17)` floats) — `[0..524]` per-line horizontal
-  offset; `[525]` vertical oscillator phase, signed and fractional; `[526]` PLL
-  state; `[527]` AGC gain; `[528..531]` the two second-order gain servos (beam
-  limiter and camera auto-iris, gain + velocity each — `sync` updates them,
-  `decode` applies the ABL drive, `compose` applies the iris a frame late);
-  `[532]` the sync separator's lock age, lines since the last real edge, which
-  scales the free-running H-osc's phase noise so lock decays instead of
-  coasting; `[SAG_BASE..]` normalized deflection sag per raster line, with
+- **`timingBuf`** (`TIMING_LEN` = `LINES * 5 + 21` floats) — `[0..524]` per-line
+  horizontal offset; `[525]` vertical oscillator phase, signed and fractional;
+  `[526]` PLL state; `[527]` AGC gain; `[528..531]` the two second-order gain
+  servos (beam limiter and camera auto-iris, gain + velocity each — `sync`
+  updates them, `decode` applies the ABL drive, `compose` applies the iris a
+  frame late); `[532]` the sync separator's lock age, lines since the last real
+  edge, which scales the free-running H-osc's phase noise so lock decays instead
+  of coasting; `[SAG_BASE..]` normalized deflection sag per raster line, with
   `[SAG_HOLD]` and `[SAG_VEL]` past everything else carrying the tank's state
   through the flyback and `[SAG_MEAN]` its average over the frame, which sets
   the vertical scan's EHT; `[VIR_HUE]` and `[VIR_GAIN]`, past the sag region,
@@ -188,14 +188,19 @@ fault through `timing[]` will spin hue that should have stayed put.
   peak-detector reference, the DC restorer's offset from nominal black, and
   whether the separator's gate is open to the whole line — `sync` updates them,
   `sync_measure` slices against the first and hunts as far as the third says,
-  `decode` subtracts the second (see ADR 0009); `[AFC_VEL]` last, the line
+  `decode` subtracts the second (see ADR 0009); `[AFC_VEL]`, the line
   oscillator's frequency offset as the AC-coupled separator's phase comparator
-  has charged its loop filter (ADR 0015). Indices 525–532, the two VIR slots and
-  the four after them are persistent across frames; treat them as state. Every
-  index past 524 is a named constant in the prelude, because a literal index
-  would not move if `LINES` did. A zeroed `VIR_GAIN` means the servo has never
-  run, which is what lets `resetSignal` clear the whole buffer and still hand
-  the loop a sane start.
+  has charged its loop filter (ADR 0015); and last the flyback arc: four scalars
+  from `[ARC_FREE]` (the supply's voltage, the dip arcs left in it, the ionised
+  path and the frame's mean dip), then three per-line arrays, the dip per raster
+  line at `[ARC_EHT..]` that `decode` widens and dims by, and the radiated
+  burst's level and onset per source row at `[ARC_BURST..]` and `[ARC_ONSET..]`
+  that `arc` lays on the signal. Indices 525–532, the two VIR slots, the four
+  after them and the arc's first three scalars are persistent across frames;
+  treat them as state. Every index past 524 is a named constant in the prelude,
+  because a literal index would not move if `LINES` did. A zeroed `VIR_GAIN`
+  means the servo has never run, which is what lets `resetSignal` clear the
+  whole buffer and still hand the loop a sane start.
 - **`lineParamsBuf`** — two `vec4f` per line from `LineState`. The first is
   `(tbOffsetSamples, underBasePhase, underJitterPhase, seed)`; the second holds
   the smooth part of the first and third, which `timebase` and `channel` ramp

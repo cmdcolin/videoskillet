@@ -10,6 +10,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { CHROME } from '../../../scripts/browser.mjs'
 import { PRELUDE } from './prelude'
+import arc from './shaders/arc.wgsl?raw'
 import blitExt from './shaders/blit_ext.wgsl?raw'
 import buzzTap from './shaders/buzz_tap.wgsl?raw'
 import caption from './shaders/caption.wgsl?raw'
@@ -50,6 +51,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
 const SHADERS: Record<string, string> = {
+  arc,
   blit_ext: blitExt,
   buzz_tap: buzzTap,
   caption,

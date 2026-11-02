@@ -79,6 +79,7 @@ export const DEFAULT_CONTROLS = {
   flybackLines: 16, // line times the vertical flyback takes
   hvSagUs: 0, // beam-current deflection sag: bright content bends the scan
   hvRing: 0.5, // supply damping: 0 smooth droop .. 1 ringing / chaotic
+  ehtArc: 0, // how near the unloaded EHT runs to a flaw's breakdown: dark pictures arc
   abl: 0, // beam limiter: 0 generous flyback .. 1 undersized and underdamped (pumps)
   hDetuneHz: 0, // horizontal oscillator detune off nominal line rate
   // A paperclip held against a point inside the set (signal/clip.ts). None of

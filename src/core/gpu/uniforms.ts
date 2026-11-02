@@ -172,6 +172,7 @@ export function uniformValues(c: Controls, env: UniformEnv) {
     flyback: c.flybackLines,
     hvSag: (c.hvSagUs + c.audioSagUs * env.audioHit) * 1e-6 * SAMPLE_RATE,
     hvRing: c.hvRing,
+    ehtArc: c.ehtArc,
     // beat between the free-running H-osc and the incoming line rate, in
     // samples of phase gained per line
     hRate:

@@ -333,6 +333,7 @@
 345 rfFade step=0.01 default=0
 346 rfFadeHz step=0.01 default=0.3
 347 eraseHead step=0.01 default=0
+360 ehtArc step=0.01 default=0
 380 nrAmount step=0.01 default=0
 381 nrThreshIre step=0.1 default=6
 382 nrBits step=1 default=8

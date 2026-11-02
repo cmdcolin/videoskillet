@@ -21,6 +21,7 @@ import {
   PARAM_BYTES,
   PRELUDE,
   TILE_WG,
+  TIMING_LEN,
 } from '../../src/core/gpu/prelude'
 import { reflectBindings } from '../../src/core/gpu/reflect'
 import { loRadPerSample, uniformValues } from '../../src/core/gpu/uniforms'
@@ -215,10 +216,9 @@ export class Graph {
     const underBuf = storage(N * 4)
     const underOldBuf = storage(N * 4)
     const lineInfoBuf = storage(LINES * 16)
-    // The same length as pipeline.ts: the last slot is SAG_MEAN in the
-    // prelude. A buffer short of a slot drops that write silently, and the
+    // The same length as pipeline.ts, off the same constant. A buffer short of a slot drops that write silently, and the
     // stage that reads it does nothing here and everything in the app.
-    const timingBuf = storage((LINES * 2 + 17) * 4, GPUBufferUsage.COPY_SRC)
+    const timingBuf = storage(TIMING_LEN * 4, GPUBufferUsage.COPY_SRC)
     this.timingBuf = timingBuf
     const syncMeasureBuf = storage(LINES * 32, GPUBufferUsage.COPY_SRC)
     this.syncMeasureBuf = syncMeasureBuf
@@ -519,6 +519,13 @@ export class Graph {
         shader: 'sync',
         variants: one({ P, measure: syncMeasureBuf, timing: timingBuf, audio }),
         dispatch: [1, 1],
+      },
+      {
+        label: 'arc',
+        shader: 'arc',
+        variants: one({ P, comp: this.compA, timing: timingBuf }),
+        dispatch: perLine,
+        when: () => c.ehtArc > 0,
       },
       {
         label: 'lineAnalyze',

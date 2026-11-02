@@ -128,6 +128,10 @@ digraph ntsc_js {
     // the PLL over all of them in a single thread.
     sync        [passes="syncMeasure,sync" fillcolor="@RX2@"
                  label="syncMeasure → sync\nrecover H/V timing\n525 lines each, then 1 thread total"];
+    // The set's own flyback arcing: sync decides when it strikes, and this
+    // lays the radiated burst on the lines it hits.
+    arc         [passes="arc" fillcolor="@RX2@" style="rounded,filled,dashed"
+                 label="arc\nflyback arc burst\n525 lines × 910 samples"];
     lineAnalyze [passes="lineAnalyze" fillcolor="@RX2@"
                  label="lineAnalyze\nper-line burst phase & lock\n525 lines, one thread each"];
     // The VIR corrector: line 19's reference measured against what burst
@@ -184,6 +188,8 @@ digraph ntsc_js {
   noiseReducer -> enhancer [label="  compA"];
   enhancer -> sync [label="  compA" lhead=cluster_rx];
   sync -> lineAnalyze [label="  timing[]"];
+  sync -> arc [label="  timing[] arcs"];
+  arc -> lineAnalyze [label="  compA"];
   lineAnalyze -> decode [label="  lineInfo[]"];
   lineAnalyze -> vir [label="  lineInfo[]"];
   vir -> decode [label="  timing[] hue & gain trim\l"];
