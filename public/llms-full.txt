@@ -814,6 +814,18 @@ impulseMains  (dimmer lock)
   0..1 step 0.01  default 0
   A triac dimmer fires twice per mains cycle at its set angle, so the random hits concentrate into two bands of hash that roll with the hum bar.
 
+popcornIre  (popcorn noise)
+  0..30 step 0.1 IRE  default 0
+  A defect in a transistor in the deck's video amplifier traps and releases single charge carriers, so its current switches between fixed values at random moments. Two traps give four levels. Each switch moves the whole line, sync included, and changes the stage's gain, so the picture clunks between brightnesses and the receiver's AGC chases every step. A switch lands partway down a field and leaves a horizontal edge for one frame.
+
+popcornHz  (popcorn rate)
+  0.05..8 step 0.01 /s  default 1
+  How often the traps switch. One trap mostly sits at its lower level and jumps up briefly; the other is slower and holds either level for longer.
+
+flickerIre  (flicker noise (1/f))
+  0..20 step 0.1 IRE  default 0
+  The same transistor's flicker noise, which has more power the slower it is. Black level and gain wander over seconds and never settle, and the receiver's AGC and colour killer react to the level that arrives.
+
 ## Ghosting & leakage
 
 ghostDelayUs  (ghost delay)

@@ -277,6 +277,10 @@ export const PARAM_DEFS = [
   ['ghostGain', 'f32'],
   ['humAmp', 'f32'], // IRE
   ['humMod', 'f32'], // supply-ripple gain modulation depth (multiplies, sync included)
+  ['ampLvl0', 'f32'], // deck amplifier's popcorn + flicker level at the top of the frame, IRE
+  ['ampLvl1', 'f32'], // the flicker part's level at the bottom, IRE (ramped between)
+  ['ampStep', 'f32'], // a popcorn switch this frame: the level step, IRE
+  ['ampStepRow', 'f32'], // the fractional line the switch lands on (NLINES = none)
   ['colorUnderMix', 'f32'], // 0 direct chroma .. 1 full VHS color-under path
   ['chromaNoise', 'f32'], // noise injected into the color-under signal, IRE rms
   ['dropoutRate', 'f32'], // expected dropout events per frame

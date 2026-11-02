@@ -39,6 +39,9 @@
 // rest is how the colour-under path arrives at that after the resample.
 const UNDER_RATIO = 1.0 - 4.0 * DOWN_PER_SAMPLE;
 
+// How much the defective amplifier's gain moves per IRE its bias shifts.
+const AMP_GAIN_PER_IRE = 0.006;
+
 fn upPhasor(row: u32, s: f32) -> vec2f {
   let lp = lineParams[row * 2u];
   let sm = lineParams[row * 2u + 1u];
@@ -495,6 +498,18 @@ fn main(
     // Sync scales along with the picture, so depth breathes and the receiver's
     // AGC and horizontal hold pump with the brightness rather than ignoring it.
     out = out * (1.0 + P.humMod * (0.6 * sin(2.0 * ph) + 0.4 * sin(ph)));
+  }
+
+  // The deck's video amplifier with a defective transistor: popcorn and
+  // flicker noise move its bias point, which shifts the whole line, sync
+  // included, and changes the stage's gain with it. The receiver's AGC sees
+  // the sync depth change and chases each clunk. One amplifier, in the deck
+  // the tape is played on, so the first generation only.
+  if (P.gen == 0u && (P.ampLvl0 != 0.0 || P.ampLvl1 != 0.0 || P.ampStep != 0.0)) {
+    let at = f32(row) + f32(s) / f32(SPL);
+    let lvl = mix(P.ampLvl0, P.ampLvl1, at / f32(NLINES))
+      + select(0.0, P.ampStep, at >= P.ampStepRow);
+    out = out * (1.0 + AMP_GAIN_PER_IRE * lvl) + lvl;
   }
 
   // The descrambler box (prelude `descrambleAt`), on the subscriber's side of

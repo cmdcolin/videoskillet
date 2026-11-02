@@ -26,6 +26,7 @@ import { reflectBindings } from '../../src/core/gpu/reflect'
 import { loRadPerSample, uniformValues } from '../../src/core/gpu/uniforms'
 import { wrap } from '../../src/core/math'
 import { rngFor } from '../../src/core/rng'
+import { AmpNoise } from '../../src/core/signal/ampnoise'
 import { CaptionState } from '../../src/core/signal/captionstate'
 import {
   ACTIVE_HEIGHT,
@@ -132,6 +133,7 @@ export class Graph {
   private readonly lineState = new LineState(this.rand)
   private readonly mixState = new MixState(this.rand)
   private readonly rfState = new RfState()
+  private readonly ampNoise = new AmpNoise()
   private readonly synthState = new SynthState()
   private readonly strobeGate = new StrobeGate()
   // The tracking servo the app runs (signal/servo.ts). Not an ornament here:
@@ -779,6 +781,7 @@ export class Graph {
       }),
       ...mixU,
       ...this.rfState.update(this.frame),
+      ...this.ampNoise.update(this.frame, c),
       // A sibling of uniformValues, not one of its env fields: these two are
       // packed uniforms in their own right, the way the app assembles them.
       ...this.captionState.update({ vbi: c.vbi }),

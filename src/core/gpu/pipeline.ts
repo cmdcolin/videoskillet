@@ -7,6 +7,7 @@ import {
 import { Listeners } from '../listeners'
 import { clamp, wrap } from '../math'
 import { rngFor } from '../rng'
+import { AmpNoise } from '../signal/ampnoise'
 import { AudioState } from '../signal/audiostate'
 import { CaptionState } from '../signal/captionstate'
 import { ClipContact, clipPointAt } from '../signal/clip'
@@ -323,6 +324,7 @@ export class Engine implements EngineApi {
   // looks chunky *as*: the measured jitter was p95/p50 = 1.55 before this.
   private glideNotifyAt = 0
   private rfState = new RfState()
+  private ampNoise = new AmpNoise()
   private synthState = new SynthState()
   // The blanking gate. Unlike the stab gate beside it this is a plain control
   // pair rather than part of the modulation bay, because it damages the picture
@@ -2207,6 +2209,7 @@ export class Engine implements EngineApi {
     this.modState = new ModState()
     this.bayDrive.clear()
     this.rfState = new RfState()
+    this.ampNoise = new AmpNoise()
     this.synthState = new SynthState()
     this.autoLock = new AutoLock()
     // A morph in flight is state stamped on the wall clock, and the take is
@@ -2734,6 +2737,7 @@ export class Engine implements EngineApi {
       mixU,
       // the adjacent channel's raster slip and beat phases, walked per frame
       this.rfState.update(this.frame),
+      this.ampNoise.update(this.frame, c),
       // the two characters line 21 carries this frame; nulls on most of them,
       // because a caption is written far faster than it is read
       this.captionState.update({ vbi: c.vbi }),

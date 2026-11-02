@@ -70,14 +70,6 @@ What is left, in rough payoff order:
   own, breeding grain into structure with nothing drawing it; and gain noise
   coupled to the camera's own auto-gain, so noise pumps against the iris hunt at
   a third rhythm alongside the beam limiter.
-- **Flicker (1/f) and popcorn noise in the video amplifier.** Everything
-  aperiodic in the chain is per-sample and everything slow is periodic (hum).
-  Missing: a random-walk level, so black level and brightness breathe sub-Hz,
-  and **burst/RTS noise** — a defective junction switching the DC between two
-  discrete states at random intervals, so the picture level _clunks_ rather than
-  drifts. CPU-side out of `signal/noise.ts` (an OU term, and a two-state Markov
-  chain for the popcorn) into one DC uniform; the AGC, the clamp and the killer
-  then react to it for free.
 - **A wandering spurious carrier (switching-supply birdie).** Every periodic
   interference here is locked to line rate (`soundIre`, `rfAdjacent`) or to
   mains (`humAmp`). A switch-mode supply or a nearby computer sits at some

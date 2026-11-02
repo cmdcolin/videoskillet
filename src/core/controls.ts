@@ -204,6 +204,9 @@ export const DEFAULT_CONTROLS = {
   ghostGain: 0,
   humAmp: 0,
   humMod: 0, // mains ripple inside a line amp's supply: hum that multiplies, not adds
+  popcornIre: 0, // a trap in the deck amp's transistor: level clunks between discrete states
+  popcornHz: 1, // how often the traps switch, per second
+  flickerIre: 0, // the same transistor's 1/f noise: black level wanders over seconds
   colorUnderMix: 0,
   chromaNoiseIre: 0, // noise inside the color-under path, before up-conversion
   underJitterDeg: 0,
