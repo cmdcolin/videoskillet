@@ -1,0 +1,42 @@
+<!-- CROSS_REPO_SYNC_FILE(video-overlay) -->
+<script>
+  document.addEventListener('click', event => {
+    const target = event.target
+    if (target instanceof Element) {
+      const trigger = target.closest('.video-play-overlay')
+      const frame = trigger?.closest('.video-frame')
+      const video = frame?.querySelector('video')
+      if (frame instanceof HTMLElement && video instanceof HTMLVideoElement) {
+        frame.classList.add('is-playing')
+        void video.play()
+      }
+    }
+  })
+
+  document.addEventListener(
+    'ended',
+    event => {
+      const video = event.target
+      if (video instanceof HTMLVideoElement) {
+        const frame = video.closest('.video-frame')
+        const trigger = frame?.querySelector('.video-play-overlay')
+        if (frame instanceof HTMLElement && trigger instanceof HTMLElement) {
+          frame.classList.remove('is-playing')
+          trigger.setAttribute('aria-label', 'Replay video')
+        }
+      }
+    },
+    true,
+  )
+
+  document.addEventListener(
+    'play',
+    event => {
+      const video = event.target
+      if (video instanceof HTMLVideoElement) {
+        video.closest('.video-frame')?.classList.add('is-playing')
+      }
+    },
+    true,
+  )
+</script>

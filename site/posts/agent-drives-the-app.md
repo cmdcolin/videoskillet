@@ -15,11 +15,13 @@ An AI agent can drive videoskillet while it runs. Ask Claude Code or Claude in
 Chrome for a look in plain words, and the agent sets the controls, reads the
 board back and gives you the link.
 
+<div class="video-frame" style="--video-aspect: 1564 / 552">
 <video
   controls muted loop playsinline preload="none"
   poster="/blog/agent-build-poster.webp"
-  style="width: 100%; height: auto"
   src="https://myloveydove.com/videoskillet/agent-build.mp4"></video>
+<button type="button" class="video-play-overlay" aria-label="Play video"><span class="video-play-icon" aria-hidden="true"></span></button>
+</div>
 
 In the recording, Claude Sonnet is given the Purplady look from the gallery and
 asked to build it up from the plain photo one stage at a time. It reads the

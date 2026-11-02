@@ -1,11 +1,13 @@
 ---
 import { getCollection, render } from 'astro:content'
 
+import VideoOverlay from '../../components/VideoOverlay.astro'
 import Page from '../../layouts/Page.astro'
 import { isoDay, longDate, published } from 'skillet-shared/posts'
 import { imageSize } from '../../lib/imageSize'
 import { ORIGIN } from '../../lib/site'
 import css from '../../styles/landing.css?raw'
+import video from '../../styles/video.css?raw'
 
 export async function getStaticPaths() {
   const posts = await getCollection('posts', published)
@@ -25,7 +27,7 @@ const heroSize = await imageSize(post.data.image)
 <Page
   title={`${post.data.title} — videoskillet`}
   description={post.data.summary}
-  css={css}
+  css={css + video}
   canonical={`${ORIGIN}blog/${post.id}/`}
   account={false}
   current="/blog/"
@@ -62,4 +64,5 @@ const heroSize = await imageSize(post.data.image)
     </article>
     <!-- CROSS_REPO_SYNC_END(blog-post) -->
   </main>
+  <VideoOverlay />
 </Page>
