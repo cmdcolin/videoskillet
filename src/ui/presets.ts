@@ -2508,14 +2508,14 @@ export const PRESETS: PresetDef[] = [
     displayName: 'jittery ring mod',
     group: 'Circuit bent',
     blurb:
-      "Two unstable synth oscillators through a ring modulator, and the product drives a delay line in input A's cable. The ring modulator's output swings either side of its midpoint, so the picture is pushed back and forth along a ragged moire, and the subcarrier rides the same delay, so colour fringes follow every swing. The soundtrack is patched into the first oscillator's frequency input as well, so a bass note bends the moire into a wave down the field.",
+      "Two unstable synth oscillators through a ring modulator, and the product drives a delay line in input A's cable. The level is turned up until the product runs into its rails, so the delay steps between two values and the picture splits into patches shifted sideways, each in its own hue where the subcarrier slid against the burst. A ring modulator left unclipped sweeps the delay smoothly instead, and the hue then turns several times along each line and averages to grey. The soundtrack is patched into the first oscillator's frequency input as well, so a bass note bends the patches into a wave down the field.",
     patch: {
-      synthDelayUs: 0.8,
+      synthDelayUs: 1.2,
       synthAHz: 15900,
       synthBHz: 140,
       synthShape: 2,
       synthMix: 2,
-      synthLevel: 1.6,
+      synthLevel: 4,
       synthJitterUs: 10,
       synthDriftPct: 4,
       synthAudioFm: 1500,
