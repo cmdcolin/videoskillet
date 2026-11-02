@@ -244,6 +244,10 @@ export const DEFAULT_CONTROLS = {
   fbKnee: 0.35,
   fbLag: 0, // pickup-tube lag: dim detail is read out over several fields
   fbComet: 0, // pickup-tube comet tails: highlights charge the target past what one field reads
+  fbNoise: 0, // sensor shot and read noise
+  fbPattern: 0, // fixed-pattern noise: per-photosite gain and offset, column amplifiers
+  fbHot: 0, // hot pixels: sparse photosites with runaway dark current
+  fbGainUpDb: 0, // most electronic gain the camera's AGC adds in the dark
   // CRT faceplate (what the feedback camera and display photograph)
   crtCutoff: 0, // beam cutoff, 0 = off (identity, no black crush)
   crtGamma: 1, // gun gamma, 1 = linear passthrough

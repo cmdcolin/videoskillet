@@ -337,6 +337,10 @@
 361 cathodeWear step=0.01 default=0
 362 weakGun step=1 default=0 choices=red|green|blue
 363 heaterLeak step=0.01 default=0
+370 fbGainUpDb step=1 default=0
+371 fbNoise step=0.01 default=0
+372 fbPattern step=0.01 default=0
+373 fbHot step=0.01 default=0
 380 nrAmount step=0.01 default=0
 381 nrThreshIre step=0.1 default=6
 382 nrBits step=1 default=8

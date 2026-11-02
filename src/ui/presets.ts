@@ -3497,6 +3497,27 @@ export const PRESETS: PresetDef[] = [
     },
   },
   {
+    name: 'darkCurrent',
+    displayName: 'dark current',
+    group: 'Feedback loops',
+    blurb:
+      "A camera pointed at its own monitor in a dark room, with nothing else patched in. Its AGC has wound the gain all the way up, so what it sees is its own sensor: a few hundred hot photosites, each glowing in one primary, and a fizz of shot noise. Every lap zooms and turns the last lap's dots and lays the hot pixels down again at the same places, so each one draws a dotted arm and the arms wind into a galaxy. The blinking ones flicker their arms on and off.",
+    patch: {
+      fbMix: 1,
+      fbGain: 0.6,
+      fbZoom: 0.97,
+      fbRotateDeg: 1.5,
+      fbFocus: 0.3,
+      fbKnee: 0.5,
+      fbBlack: 0.01,
+      fbGainUpDb: 9,
+      hHold: 1.2,
+      fbHot: 1,
+      fbNoise: 0.12,
+      fbPattern: 0.2,
+    },
+  },
+  {
     name: 'hairOffTheCrystal',
     displayName: 'a hair off the crystal',
     group: 'Circuit bent',

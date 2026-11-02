@@ -171,7 +171,7 @@ fault through `timing[]` will spin hue that should have stayed put.
 
 ## Buffer layouts worth knowing
 
-- **`timingBuf`** (`TIMING_LEN` = `LINES * 5 + 21` floats) — `[0..524]` per-line
+- **`timingBuf`** (`TIMING_LEN` = `LINES * 5 + 22` floats) — `[0..524]` per-line
   horizontal offset; `[525]` vertical oscillator phase, signed and fractional;
   `[526]` PLL state; `[527]` AGC gain; `[528..531]` the two second-order gain
   servos (beam limiter and camera auto-iris, gain + velocity each — `sync`
@@ -195,8 +195,9 @@ fault through `timing[]` will spin hue that should have stayed put.
   path and the frame's mean dip), then three per-line arrays, the dip per raster
   line at `[ARC_EHT..]` that `decode` widens and dims by, and the radiated
   burst's level and onset per source row at `[ARC_BURST..]` and `[ARC_ONSET..]`
-  that `arc` lays on the signal. Indices 525–532, the two VIR slots, the four
-  after them and the arc's first three scalars are persistent across frames;
+  that `arc` lays on the signal; then `[CAM_GAIN]`, the feedback camera's
+  AGC gain-up, which `sync` updates and `compose` applies a frame late. Indices 525–532, the two VIR slots, the four
+  after them and the arc's first three scalars and `CAM_GAIN` are persistent across frames;
   treat them as state. Every index past 524 is a named constant in the prelude,
   because a literal index would not move if `LINES` did. A zeroed `VIR_GAIN`
   means the servo has never run, which is what lets `resetSignal` clear the

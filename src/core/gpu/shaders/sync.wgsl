@@ -193,6 +193,7 @@ fn main(@builtin(local_invocation_id) lid: vec3u) {
   var arcFree = timing[ARC_FREE];
   var arcDip = timing[ARC_DIP];
   var arcIon = timing[ARC_ION];
+  var camG = servoGain(timing[CAM_GAIN]);
   storageBarrier();
 
   if (lid.x == SAG_LANE) {
@@ -464,6 +465,18 @@ fn main(@builtin(local_invocation_id) lid: vec3u) {
     irisV = 0.0;
   }
 
+  // The camera's video AGC, after the iris. Once the light reaching the
+  // sensor is too dim for mid-grey it adds electronic gain, up to its limit,
+  // and that gain lifts the sensor's noise with the picture. It sits inside the
+  // loop like the iris: the gain brightens the screen it meters and backs off.
+  if (P.fbMix > 0.0 && P.fbGainUpMax > 1.0) {
+    let seen = max(beamIre, 1.0) / 50.0 * ablG * irisG * P.fbGain;
+    let want = clamp(pow(1.0 / seen, 2.2), 1.0, P.fbGainUpMax);
+    camG = clamp(camG + 0.1 * (want - camG), 1.0, P.fbGainUpMax);
+  } else {
+    camG = 1.0;
+  }
+
   timing[V_PHASE] = vroll;
   // A detuned H-osc ramps the phase every line without ever relocking, so the
   // carried-over state has to wrap or it grows without bound. One full line of
@@ -476,6 +489,7 @@ fn main(@builtin(local_invocation_id) lid: vec3u) {
   timing[ABL_VEL] = ablV;
   timing[IRIS_GAIN] = irisG;
   timing[IRIS_VEL] = irisV;
+  timing[CAM_GAIN] = camG;
   timing[LOCK_AGE] = lockAge;
   timing[AFC_VEL] = select(0.0, afcVel, acCoupled);
   // An AC-coupled separator's capacitor charges to whatever is deepest, so its

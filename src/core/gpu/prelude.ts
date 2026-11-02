@@ -401,6 +401,13 @@ export const PARAM_DEFS = [
   ['fbIris', 'f32'], // camera auto-iris: 0 manual exposure .. 1 underdamped servo (hunts)
   ['fbLag', 'f32'], // pickup-tube lag: the reading beam leaves charge behind on a dim target
   ['fbComet', 'f32'], // pickup-tube comet tails: beam current cap, highlights drain over several fields
+  // The camera's sensor in low light, keyed to its own photosites: shot and
+  // read noise, fixed-pattern gain and offset, hot pixels, and the electronic
+  // gain its AGC adds once the picture is too dark (linear, 1 = no gain-up).
+  ['fbNoise', 'f32'],
+  ['fbPattern', 'f32'],
+  ['fbHot', 'f32'],
+  ['fbGainUpMax', 'f32'],
   // CRT faceplate: the emissive screen the camera photographs (and the display
   // shows). Sits between the decoded signal and the camera/lens model above.
   ['crtCutoff', 'f32'], // beam cutoff: drive below the knee emits no light (true black background)
@@ -481,8 +488,9 @@ export const PARAM_DEFS = [
 export const TILE_WG = 64
 
 // Floats in the timing buffer: everything up to AFC_VEL, then the arc's four
-// scalars and its three per-line arrays (prelude WGSL constants above).
-export const TIMING_LEN = LINES * 5 + 21
+// scalars and its three per-line arrays, then the camera's gain-up (prelude WGSL
+// constants above).
+export const TIMING_LEN = LINES * 5 + 22
 
 export const PARAM_BYTES = Math.ceil((PARAM_DEFS.length * 4) / 16) * 16
 export const GEN_OFFSET = PARAM_DEFS.findIndex(([n]) => n === 'gen') * 4
@@ -627,6 +635,9 @@ const ARC_MEAN = ${LINES * 2 + 20}u;
 const ARC_EHT = ${LINES * 2 + 21}u;
 const ARC_BURST = ${LINES * 3 + 21}u;
 const ARC_ONSET = ${LINES * 4 + 21}u;
+// The feedback camera's AGC gain-up, as the servo in sync.wgsl left it. Zero
+// means never run, which reads as unity.
+const CAM_GAIN = ${LINES * 5 + 21}u;
 // Frames the separator must go without pulses before its gate opens to the
 // whole line. A flywheel coasts through a hum trough or an AGC dip; it only
 // starts hunting once the pulses have genuinely gone.
