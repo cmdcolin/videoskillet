@@ -73,8 +73,11 @@ unrelated to where the set was drawing.
   `afcVel`, which is held at zero for them.
 - `syncMeasureBuf`'s second `vec4f` has no spare slots left. `timingBuf` grew by
   one float.
-- The other carrier-family presets still use the fixed slicer. Each needs its
-  own hold setting and a look before it switches.
+- `triModeScrambler` and `sixDbBox` moved to it as well, at the same hold, after
+  six-second sheets showed both still locking whole on their clear (or restored)
+  fields. `sineWaveScrambler` and `keyedSsavi` stay on the fixed slicer: the
+  sine-wave look is its dark wiggling bar, and on keyed SSAVI's inverted fields
+  the separator follows the old whites and washes the picture out.
 
 ## Amendment: the keyed clamp and the carrier AGC
 
