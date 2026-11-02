@@ -318,6 +318,9 @@ export const DEFAULT_CONTROLS = {
   aGain: 1, // A level on the summing bus, signed (negative inverts A)
   bGain: 0, // defaults are the clean baseline; the landing look adds B on top
   bRing: 0,
+  mixPot: 0, // dirty sum through a passive pot crossfader instead of the bus faders
+  mixPotPos: 0.5, // that crossfader's wiper: 0 all A, 1 all B
+  mixPotHand: 0, // a hand working the crossfader
   busClip: 0, // headroom of the mixer's summing amplifier (0 = it never sees its rails)
   busCut: 0, // fraction of the frame, from the bottom, the bus is switched to B for
   bLeak: 0, // high-pass crosstalk of B onto the program bus past a closed fader

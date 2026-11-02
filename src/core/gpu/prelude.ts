@@ -34,6 +34,7 @@ import {
   TAPS,
 } from '../signal/filters'
 import { DOWN_PER_SAMPLE } from '../signal/linestate'
+import { MIX_POT_OHMS, POT_OHMS } from '../signal/pot'
 import {
   CC_BLOCK,
   CC_CELLS,
@@ -294,6 +295,9 @@ export const PARAM_DEFS = [
   ['connectorMode', 'f32'], // which contact: 0 centre pin (signal + sync go), 1 shell (ground lifts, hum injects), 2 both
   ['potOhms', 'f32'], // a feed's series pot: the wiper's resistance this frame, ohms (feeds only)
   ['potSpeed', 'f32'], // how fast the wiper is moving, travel per second (feeds only)
+  ['mixPot', 'f32'], // dirty sum through a passive pot crossfader: 0 the bus faders, 1 the pot
+  ['mixPotTravel', 'f32'], // the crossfader wiper this frame, 0 all A .. 1 all B
+  ['mixPotSpeed', 'f32'], // how fast that wiper is moving, travel per second
   ['scramble', 'f32'], // head-end sync suppression depth: sync tip lifted toward blanking
   ['decoderDb', 'f32'], // descrambler box gain inside the carrier gate, dB
   ['scrambleMode', 'f32'], // 0 gated, 1 line-alternate, 2 SSAVI (suppression + video inversion), 3 carrier (RF attenuation over H blanking + VBI), 4 tri-mode, 5 sine, 6 keyed SSAVI
@@ -1033,11 +1037,12 @@ fn terminate(v: f32, term: f32, echo: f32) -> f32 {
 //
 // The dirt on the carbon track makes the wiper lose contact. Each break lasts
 // from a few microseconds to a few lines, which is far shorter than a field, so
-// one field catches the pot at many resistances. Breaks arrive in clusters,
+// one field catches the pot at many settings. Breaks arrive in clusters,
 // because the dirt sits in patches along the track, and their rate follows the
-// wiper's speed, with a few left over at rest. A break is either an open, where
-// the input sees only its own terminator, or extra contact resistance on top
-// of the wiper's.
+// wiper's speed, with a few left over at rest. A break is one of three things:
+// an open, where the input sees only its own terminator; extra contact
+// resistance in series with the wiper; or a finger of the wiper lifting off,
+// which moves the point where it touches the track.
 //
 // Breaks are placed on a line clock that runs across frames, so a cluster that
 // starts at the bottom of one field carries on into the top of the next.
@@ -1046,6 +1051,9 @@ const POT_REACH = 4u;
 const POT_CLUSTER_LINES = 24u;
 const POT_BREAKS_PER_LINE = 0.15;
 const POT_REST = 0.03;
+const POT_FINGER = 0.12;
+const POT_OHMS = ${POT_OHMS}.0;
+const MIX_POT_OHMS = ${MIX_POT_OHMS}.0;
 
 fn potCluster(line: u32, gen: u32) -> f32 {
   let cell = line / POT_CLUSTER_LINES;
@@ -1056,10 +1064,17 @@ fn potCluster(line: u32, gen: u32) -> f32 {
   return 3.0 * c * c * c;
 }
 
-// Contact resistance the wiper adds at this sample, ohms; negative is an open.
-fn potContact(row: u32, s: u32, frame: u32, gen: u32, speed: f32) -> f32 {
+// What the wiper's contact is doing at this sample: series ohms (negative for
+// an open) and how far a lifted finger has moved the contact point, as a
+// fraction of the travel.
+struct PotContact {
+  ohms: f32,
+  shift: f32,
+}
+
+fn potContact(row: u32, s: u32, frame: u32, gen: u32, speed: f32) -> PotContact {
   let motion = POT_REST + min(speed * 2.0, 1.0);
-  var worst = 0.0;
+  var c = PotContact(0.0, 0.0);
   for (var k = 0u; k <= POT_REACH; k = k + 1u) {
     let line = frame * NLINES + row - k;
     let h = pcg((line * 2654435761u) ^ (gen * 40503u + 0x9e37u));
@@ -1070,17 +1085,46 @@ fn potContact(row: u32, s: u32, frame: u32, gen: u32, speed: f32) -> f32 {
       let d = f32(k * SPL + s) - start;
       if (d >= 0.0 && d < len) {
         let r = rand01(pcg(h ^ 0x7f4a7c15u));
-        worst = select(max(worst, 100.0 * exp(6.7 * (r - 0.4))), -1.0, r < 0.4 || worst < 0.0);
+        if (r < 0.35 || c.ohms < 0.0) {
+          c.ohms = -1.0;
+        } else if (r < 0.65) {
+          c.shift = POT_FINGER * (2.0 * rand01(pcg(h ^ 0x3c6ef372u)) - 1.0);
+        } else {
+          c.ohms = max(c.ohms, 100.0 * exp(6.7 * (r - 0.65) / 0.35 * 0.6));
+        }
       }
     }
   }
-  return worst;
+  return c;
+}
+
+// The input's own noise floor, which is all an open leaves it.
+fn potOpen(n: u32, frame: u32, gen: u32) -> f32 {
+  return 2.0 * gauss(n ^ pcg(frame * 7717u + gen * 31u));
 }
 
 fn potAt(v: f32, row: u32, s: u32, n: u32, frame: u32, gen: u32, ohms: f32, speed: f32) -> f32 {
-  let contact = potContact(row, s, frame, gen, speed);
-  let open = 2.0 * gauss(n ^ pcg(frame * 7717u + gen * 31u));
-  return select(v * POT_LOAD / (POT_LOAD + ohms + contact), open, contact < 0.0);
+  let c = potContact(row, s, frame, gen, speed);
+  let r = max(ohms + c.shift * POT_OHMS, 0.0) + c.ohms;
+  return select(v * POT_LOAD / (POT_LOAD + r), potOpen(n, frame, gen), c.ohms < 0.0);
+}
+
+// The pot as a passive crossfader: A's 75-ohm output on one end of the track,
+// B's on the other, and the wiper through its contact into the bus's 75-ohm
+// terminator. Nothing buffers either source, so both syncs and both bursts are
+// on the wire in whatever ratio the wiper splits them, and a finger lifting
+// mid-line changes that ratio partway along it. The line's burst then belongs
+// to one mixture and its picture to another, and the receiver decodes the
+// picture against the wrong burst. Scaled so a wiper at either end passes that
+// source at unity.
+fn potCrossfade(a: f32, b: f32, row: u32, s: u32, n: u32, frame: u32, gen: u32, travel: f32, speed: f32) -> f32 {
+  let c = potContact(row, s, frame, gen, speed);
+  let x = clamp(travel + c.shift, 0.0, 1.0);
+  let ga = 1.0 / (75.0 + x * MIX_POT_OHMS);
+  let gb = 1.0 / (75.0 + (1.0 - x) * MIX_POT_OHMS);
+  let rl = 75.0 + max(c.ohms, 0.0);
+  let wiper = (a * ga + b * gb) / (ga + gb + 1.0 / rl);
+  return select(2.0 * wiper * 75.0 / rl, potOpen(n, frame, gen), c.ohms < 0.0);
 }
 
 fn clampIdx(i: i32) -> u32 {

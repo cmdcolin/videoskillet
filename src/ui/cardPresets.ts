@@ -239,6 +239,13 @@ export const CARD_PRESETS: CardPreset[] = [
     patch: { bConnector: 0.35, bConnectorMode: 0 },
   },
   {
+    group: 'Pot crossfader',
+    name: 'thrown by hand',
+    blurb:
+      'A and B on the two ends of one dirty pot, thrown back and forth: the weight of the two syncs swings with the wiper, so the picture tears between them, with crackle as the wiper moves',
+    patch: { mixPot: 1, mixPotPos: 0.4, mixPotHand: 1 },
+  },
+  {
     group: 'Character generator (chyron)',
     name: 'mis-timed key',
     blurb:

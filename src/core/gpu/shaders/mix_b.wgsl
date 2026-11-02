@@ -553,6 +553,13 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
     // every saved board carrying bRing — and not because a mixer's ring mod is
     // unbalanced anywhere but here.
     var summed = P.aGain * a + g * (P.bGain * fill + P.bRing * a * fill * 0.01);
+    // A passive pot crossfader in place of the bus faders (prelude
+    // `potCrossfade`). The wipe pattern and the keyer still decide where B is
+    // on the wire, so they gate B into the pot's far end.
+    if (P.mixPot > 0.5) {
+      summed = potCrossfade(a, g * fill, row, s, n, P.frame, 103u, P.mixPotTravel, P.mixPotSpeed)
+        + g * P.bRing * a * fill * 0.01;
+    }
     // The summing amplifier's own supply. Two full composites added is twice
     // the amplitude a single one was designed to carry, and until this the sum
     // went into the channel unclipped — arithmetic where the board has a

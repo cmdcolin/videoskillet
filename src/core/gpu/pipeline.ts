@@ -26,7 +26,7 @@ import { MixState } from '../signal/mixstate'
 import { driveAt, driveSlots, ModState } from '../signal/modstate'
 import { valueNoise } from '../signal/noise'
 import { OSD_IDLE, OsdState } from '../signal/osdstate'
-import { PotHand } from '../signal/pot'
+import { MIX_POT_HAND_REACH, POT_OHMS, PotHand } from '../signal/pot'
 import { RfState } from '../signal/rfstate'
 import { TrackingServo } from '../signal/servo'
 import { StabGate } from '../signal/stab'
@@ -305,7 +305,7 @@ export class Engine implements EngineApi {
   // graph, so ownership arrives through the constructor. See EngineOptions.
   readonly audioState: AudioState
   private mixState = new MixState(this.rand)
-  private potHands = { a: new PotHand(this.rand), b: new PotHand(this.rand) }
+  private potHands = this.newPotHands()
   private captionState = new CaptionState()
   private modState = new ModState()
   private glide = new Glide(FILTER_SET)
@@ -1866,6 +1866,14 @@ export class Engine implements EngineApi {
   // once and reads whichever source it was bound to. The paused deck rides the
   // bPause* fields the same way — they name B only because B's deck got the
   // button first; a feed reads them as "this deck's servo state".
+  private newPotHands() {
+    return {
+      a: new PotHand(this.rand),
+      b: new PotHand(this.rand),
+      mix: new PotHand(this.rand, MIX_POT_HAND_REACH),
+    }
+  }
+
   private packFeed(
     src: FeedSource,
     vals: Record<ParamName, number>,
@@ -1875,7 +1883,7 @@ export class Engine implements EngineApi {
     const c = this.controls
     const f = FEEDS[src]
     const wiper = this.potHands[src].update(
-      c[f.potOhms],
+      c[f.potOhms] / POT_OHMS,
       c[f.potFiddle],
       1 / 60,
     )
@@ -1900,7 +1908,7 @@ export class Engine implements EngineApi {
       humAmp: c[f.hum],
       connectorGlitch: c[f.connector],
       connectorMode: c[f.connectorMode],
-      potOhms: wiper.ohms,
+      potOhms: wiper.travel * POT_OHMS,
       potSpeed: wiper.speed,
       dropoutRate: c[f.dropoutRate],
       dropoutLen: c[f.dropoutLen] * 1e-6 * SAMPLE_RATE,
@@ -2153,7 +2161,7 @@ export class Engine implements EngineApi {
 
     this.lineState = new LineState(this.rand)
     this.mixState = new MixState(this.rand)
-    this.potHands = { a: new PotHand(this.rand), b: new PotHand(this.rand) }
+    this.potHands = this.newPotHands()
     const caption = this.captionState.text()
     this.captionState = new CaptionState()
     this.captionState.setText(caption)
@@ -2702,6 +2710,11 @@ export class Engine implements EngineApi {
         synthBHz: c.synthBHz,
       }),
     )
+    if (c.mixPot > 0) {
+      const wiper = this.potHands.mix.update(c.mixPotPos, c.mixPotHand, 1 / 60)
+      vals.mixPotTravel = wiper.travel
+      vals.mixPotSpeed = wiper.speed
+    }
     vals.bKeyFill = this.store.fill
     vals.bKeyFillFlip = this.store.flip ? 1 : 0
     vals.bKeyFeed = this.bFeedOn() ? 1 : 0

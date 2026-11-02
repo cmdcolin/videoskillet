@@ -3272,6 +3272,19 @@ export const PRESETS: PresetDef[] = [
     },
   },
   {
+    name: 'potMixer',
+    displayName: 'pot mixer',
+    group: 'A/B mixing',
+    blurb:
+      "Two unlocked sources on the ends of one dirty 1 kΩ pot, and a hand throwing it. Nothing buffers either source, so the wiper sets how much of each sync reaches the set, and the picture tears between the two as the weight swings. The receiver's AGC chases the level the pot loses through the middle of its throw, and the dirty track crackles while the wiper moves.",
+    patch: {
+      mixPot: 1,
+      mixPotPos: 0.4,
+      mixPotHand: 1,
+      agc: 1,
+    },
+  },
+  {
     name: 'wiggledPlugs',
     displayName: 'wiggled plugs',
     group: 'A/B mixing',

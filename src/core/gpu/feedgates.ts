@@ -117,7 +117,9 @@ export function bWaveOn(c: Controls, bEnabled: boolean): boolean {
     bEnabled &&
     (c.busCut > 0 ||
       c.bLeak > 0 ||
-      (c.bGenlock < 0.5 ? c.bGain !== 0 || c.bRing !== 0 : c.bGain > 0))
+      (c.bGenlock < 0.5
+        ? c.bGain !== 0 || c.bRing !== 0 || c.mixPot > 0
+        : c.bGain > 0))
   )
 }
 
@@ -145,7 +147,7 @@ export function bOn(c: Controls, bEnabled: boolean): boolean {
       c.busCut > 0 ||
       c.bLeak > 0 ||
       (c.bGenlock < 0.5
-        ? c.bGain !== 0 || c.bRing !== 0 || c.aGain !== 1
+        ? c.bGain !== 0 || c.bRing !== 0 || c.aGain !== 1 || c.mixPot > 0
         : c.bGain > 0))
   )
 }

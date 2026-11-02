@@ -1394,6 +1394,45 @@ export const GROUPS: Group[] = [
       },
     ],
   },
+  // The bus faders' passive stand-in: one pot with a source on each end, the
+  // way a mixer gets built out of a parts drawer.
+  {
+    name: 'Pot crossfader',
+    place: 'Mix',
+    sliders: [
+      {
+        key: 'mixPot',
+        id: 338,
+        label: 'mixed by',
+        min: 0,
+        max: 1,
+        step: 1,
+        unit: '',
+        choices: ['bus', 'pot'],
+        help: 'Whether the dirty sum goes through the bus faders or through one dirty 1 kΩ pot with A on one end, B on the other and the wiper out to the bus. Nothing buffers the two sources, so both syncs and both bursts reach the receiver in whatever ratio the wiper splits them. Dirty sum only.',
+      },
+      {
+        key: 'mixPotPos',
+        id: 339,
+        label: 'crossfade',
+        min: 0,
+        max: 1,
+        step: 0.001,
+        unit: '',
+        help: "Where the crossfader's wiper sits: 0 is all A, 1 all B. Through the middle both sources load each other and the level dips. The sync of whichever source is stronger wins the receiver.",
+      },
+      {
+        key: 'mixPotHand',
+        id: 340,
+        label: 'hand on crossfader',
+        min: 0,
+        max: 1,
+        step: 0.01,
+        unit: '',
+        help: "A hand throwing the crossfader either side of where it is set. The moving wiper crackles on the dirty track, and a finger lifting off it changes the A:B ratio partway along a line, so the line's burst and its picture come from different mixtures and its hue goes wrong.",
+      },
+    ],
+  },
   // What B *is*, as against what the mixer does with it — the mirror of Signal
   // (source A) at the head of the trunk, and the reason the two inputs finally
   // read as one kind of thing. These three rode in the mixer group because the
@@ -4402,6 +4441,12 @@ const carrying: SliderNeed = {
   fix: 1,
   hint: 'vbi test signals on, which is what puts line 21 on the wire',
 }
+const potMixing: SliderNeed = {
+  key: 'mixPot',
+  ok: above0,
+  fix: 1,
+  hint: 'the dirty sum mixed by the pot',
+}
 const captioned: SliderNeed = {
   key: 'cc',
   ok: above0,
@@ -4484,6 +4529,8 @@ const magnified: SliderNeed = {
 }
 
 export const NEEDS: Partial<Record<ControlKey, SliderNeed>> = {
+  mixPotPos: potMixing,
+  mixPotHand: potMixing,
   cc: carrying,
   vir: {
     key: 'vbi',

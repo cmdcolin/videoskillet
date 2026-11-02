@@ -323,6 +323,9 @@
 335 aPotFiddle step=0.01 default=0
 336 bPotOhms step=1 default=0
 337 bPotFiddle step=0.01 default=0
+338 mixPot step=1 default=0 choices=bus|pot
+339 mixPotPos step=0.001 default=0.5
+340 mixPotHand step=0.01 default=0
 
 # ?mod= sources, by name
 sine
