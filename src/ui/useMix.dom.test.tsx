@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
-import { DEFAULT_CONTROLS } from '../core/controls'
+import { DEFAULT_CONTROLS, LANDING_LOOK } from '../core/controls'
 import { Listeners } from '../core/listeners'
 import { Glide } from '../core/signal/glide'
 import { DEFAULT_STAB } from './modSlots'
@@ -101,6 +101,22 @@ describe('useMix under a morph', () => {
     expect(eng.getGlideTarget()?.crtZoom).toBe(4)
     land()
     expect(eng.getControls().crtZoom).toBe(4)
+  })
+
+  it('drops the landing look under a preset that never asked for B', () => {
+    const { eng, mix, run, land } = mount(0)
+    run(() => eng.writeControls({ ...DEFAULT_CONTROLS, ...LANDING_LOOK }))
+    run(() => mix().applyPreset('tornCircle', patchOf('tornCircle')))
+    land()
+    expect(eng.getControls().bGain).toBe(DEFAULT_CONTROLS.bGain)
+  })
+
+  it('keeps a B gain someone dialled in under a preset', () => {
+    const { eng, mix, run, land } = mount(0)
+    run(() => eng.setControl('bGain', 0.4))
+    run(() => mix().applyPreset('tornCircle', patchOf('tornCircle')))
+    land()
+    expect(eng.getControls().bGain).toBe(0.4)
   })
 
   it('keeps a hand edit under a preset applied without a press', () => {

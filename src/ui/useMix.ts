@@ -6,7 +6,7 @@ import {
   stepForward,
 } from 'skillet-shared/history'
 
-import { DEFAULT_CONTROLS } from '../core/controls'
+import { DEFAULT_CONTROLS, LANDING_LOOK } from '../core/controls'
 import { applyCardPreset } from './cardPresets'
 import { MUTATE_CIRCUITS, MUTATE_SLIDERS, VIEW_KEYS } from './controls'
 import { DEFAULT_STAB, sameBay, sameGate } from './modSlots'
@@ -99,6 +99,8 @@ const keysOf = (sliders: readonly SliderDef[]): ControlKey[] =>
 // controls, which are version-stable, whereas a recipe binds to preset names and
 // patches that drift as presets are retuned. A recalled look can still be
 // re-mixed — startMix rebaselines from whatever is live.
+const LANDING_BOARD: Controls = { ...DEFAULT_CONTROLS, ...LANDING_LOOK }
+
 export function useMix(args: {
   // The settled board. The hook reads two answers off it, whether the board
   // still matches the recipe and what put it there, so a slider write
@@ -177,12 +179,14 @@ export function useMix(args: {
   // The recipe a weight change layers onto: the mix while the board still
   // matches it, or the board as it stands with nothing on it once something
   // else has moved it. Mid-morph the board is where the morph is going, the
-  // rule `banked` follows.
+  // rule `banked` follows. A board still on the landing look holds nothing
+  // anyone chose, so a preset lands on stock from there, as a `?preset=` link
+  // does. Kept, the landing look's whisper of B crawled its blanking bar
+  // across every preset that never asked for B.
   const liveMix = () => {
     const look = getGlideTarget() ?? settledStore.get()
-    return controlsEqual(look, mixed)
-      ? mix
-      : { base: look, weights: NO_WEIGHTS }
+    const base = controlsEqual(look, LANDING_BOARD) ? DEFAULT_CONTROLS : look
+    return controlsEqual(look, mixed) ? mix : { base, weights: NO_WEIGHTS }
   }
 
   // The look to bank: where the board has settled, or where a morph in flight is

@@ -150,7 +150,14 @@ function session() {
     console.error(`no preset named ${preset}`)
     Deno.exit(2)
   }
-  const parsed = parseSessionParams(search)
+  // The preset rides in the query as well, so the parse does not take a
+  // `--preset` with no `--look` for a bare load and lay the landing look's
+  // whisper of B over it. A `?preset=` link carries none.
+  const parsed = parseSessionParams(
+    preset === undefined
+      ? search
+      : `${search === '' ? '?' : `${search}&`}preset=${preset}`,
+  )
   // A `--preset` under a `--look`, so naming both layers the way a link
   // carrying `?preset=` under its own `?set=` does.
   const base =
