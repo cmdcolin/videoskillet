@@ -774,11 +774,15 @@ fn activeComposite(y: f32, uf: f32, vf: f32, sc: vec2f, vidGain: f32, inv: f32) 
 // nothing left to slice a line start out of. Past half depth the tip clears the
 // separator's -20 IRE level entirely and horizontal lock is gone.
 //
-// Modes 0 to 2 gate the line-rate sync alone, which is why their frame stays
-// roughly framed: the broad vertical pulses are far wider than the gate, so
-// their bodies still read as sync level mid-line and the vertical oscillator
-// keeps triggering. The carrier modes below take the vertical interval as well,
-// and roll.
+// Every mode gates the line-rate sync alone, which is why the frame stays
+// framed: the broad vertical pulses are far wider than the gate, so their
+// bodies still read as sync level mid-line and the vertical oscillator keeps
+// triggering. Radio-Electronics (Feb 1987) says of Jerrold's tri-mode that the
+// vertical pulses "are not altered during scrambling", and Grossblatt's
+// Unscrambling Descrambling that the undecoded screen "always shows a full
+// frame". The tearing is horizontal: a line oscillator free-running near the
+// line rate puts the blanking interval at about the same place on every line,
+// a curved bar down the screen with the picture's halves either side of it.
 //
 // mode 1 scrambles alternate lines; mode 2 is SSAVI, which suppressed sync *and*
 // inverted the video, so the picture that leaks through is a negative as well as
@@ -789,14 +793,13 @@ fn activeComposite(y: f32, uf: f32, vf: f32, sc: vec2f, vidGain: f32, inv: f32) 
 //
 // mode 3 is the scrambler as the RF stage builds it (GI/Jerrold): the carrier
 // is attenuated by up to 10 dB through a 13 us gate around each line start, from
-// 2.44 us before the sync edge to 10.56 us after it, and through the whole
-// vertical blanking interval. Sync, both porches and the burst go with it, and
+// 2.44 us before the sync edge to 10.56 us after it. Sync, both porches and the
+// burst go with it, and
 // the gate overruns the picture by about a microsecond either side. Negative
 // modulation puts sync at full carrier, so the attenuated interval detects as
 // grey (6 dB: tip +40 IRE, porch +60) or near white (10 dB: +69 and +82). The
 // tip then sits above picture black, so the darkest thing on a line is picture
-// content; the broad pulses go the same way, so the vertical oscillator loses
-// its trigger; and the burst is weaker by the same factor, so the ACC turns the
+// content, and the burst is weaker by the same factor, so the ACC turns the
 // chroma up to match. The carrier map is channel.wgsl's: sync -40 to white 100
 // onto 1 to 0.125.
 //
@@ -851,9 +854,9 @@ fn scrambleKey(frame: u32, seed: u32) -> f32 {
 }
 
 // The carrier scramblers' gate: 2.44 us before the sync edge to 10.56 us after
-// it on every line, and the whole vertical blanking interval.
-fn inCarrierGate(row: u32, s: u32) -> bool {
-  return row < ACTIVE_TOP || s < SCRAMBLE_GATE_END || s >= SPL - SCRAMBLE_GATE_LEAD;
+// it, on every line.
+fn inCarrierGate(s: u32) -> bool {
+  return s < SCRAMBLE_GATE_END || s >= SPL - SCRAMBLE_GATE_LEAD;
 }
 
 fn triModeLevel(frame: u32) -> f32 {
@@ -885,7 +888,7 @@ fn scrambleAt(v: f32, row: u32, s: u32, depth: f32, mode: f32, frame: u32) -> f3
   var out = v;
   if (!skipped) {
     if (system == 3u || system == 4u) {
-      if (inCarrierGate(row, s)) {
+      if (inCarrierGate(s)) {
         var level = depth;
         if (system == 4u) {
           level = depth * triModeLevel(frame);
@@ -925,7 +928,7 @@ fn scrambleAt(v: f32, row: u32, s: u32, depth: f32, mode: f32, frame: u32) -> f3
 fn descrambleAt(v: f32, row: u32, s: u32, depth: f32, mode: f32, frame: u32, boxDb: f32) -> f32 {
   let system = u32(mode + 0.5);
   var out = v;
-  if (boxDb > 0.0 && depth > 0.0 && (system == 3u || system == 4u) && inCarrierGate(row, s)) {
+  if (boxDb > 0.0 && depth > 0.0 && (system == 3u || system == 4u) && inCarrierGate(s)) {
     var level = depth;
     if (system == 4u) {
       level = depth * triModeLevel(frame);

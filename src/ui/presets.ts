@@ -381,7 +381,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'scrambled channel',
     group: 'RF / Broadcast',
     blurb:
-      "Premium channel with no decoder box. The head-end drops the carrier 6 dB through each line's blanking and through the vertical interval, so the blanking detects as grey: a grey bar carrying the weakened burst as a stripe of colour wanders across the picture, and with no field sync left the picture rolls behind a grey band. The ACC turns the chroma up to match the weak burst and the colour floods. The set has slow colour loops, a drifting colour crystal and a fine tuner that will not settle, so rainbow bands wind down the screen and the colour drops out in places.",
+      "Premium channel with no decoder box. The head-end drops the carrier 6 dB through each line's blanking, so the blanking detects as grey. The set's line oscillator runs near the line rate with nothing to lock to, so the blanking lands at about the same place on every line: a grey bar, carrying the weakened burst as a stripe of colour, wanders down the screen with the picture's halves swapped either side of it. The frame holds, because the field pulses are left alone. The ACC turns the chroma up to match the weak burst and the colour floods, and slow colour loops, a drifting crystal and a fine tuner that will not settle wind rainbow bands down the screen.",
     patch: {
       scramble: 0.6,
       scrambleMode: 3,
@@ -490,7 +490,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'tri-mode scrambler',
     group: 'RF / Broadcast',
     blurb:
-      "Jerrold's tri-mode: the head-end steps the carrier attenuation between clear, 6 dB and 10 dB at random intervals of a quarter second to two seconds, on a schedule only its own decoders are told. A set without one locks for the clear stretches and tears and rolls through the rest, with the blanking bar turning grey or near white at each step.",
+      "Jerrold's tri-mode: the head-end steps the carrier attenuation between clear, 6 dB and 10 dB at random intervals of a quarter second to two seconds, on a schedule only its own decoders are told. A set without one locks for the clear stretches and tears through the rest, with the blanking bar turning grey or near white at each step.",
     patch: {
       scramble: 1,
       scrambleMode: 4,
@@ -516,7 +516,7 @@ export const PRESETS: PresetDef[] = [
     displayName: '6 dB box on tri-mode',
     group: 'RF / Broadcast',
     blurb:
-      'A cheap descrambler built for 6 dB and clear, on a tri-mode channel. It reads the key, so the clear and 6 dB fields come back clean. On the 10 dB fields it restores 6 and leaves 4, and the picture tears and rolls until the next step.',
+      'A cheap descrambler built for 6 dB and clear, on a tri-mode channel. It reads the key, so the clear and 6 dB fields come back clean. On the 10 dB fields it restores 6 and leaves 4, and the picture tears until the next step.',
     patch: {
       scramble: 1,
       scrambleMode: 4,
@@ -2034,7 +2034,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'pirate feed',
     group: 'A/B mixing',
     blurb:
-      'A premium channel on input A, its carrier cut 10 dB through every blanking interval at the head-end, and a pirate box summing a little clean B in as substitute sync. The receiver locks to the borrowed pulses and holds the picture still while the grey blanking bar of A drifts through it, which is how the real boxes worked. Pull B gain to zero and the picture rolls and tears.',
+      'A premium channel on input A, its carrier cut 10 dB through every blanking interval at the head-end, and a pirate box summing a little clean B in as substitute sync. The receiver locks to the borrowed pulses and holds the picture still while the grey blanking bar of A drifts through it, which is how the real boxes worked. Pull B gain to zero and the picture tears.',
     patch: {
       aScramble: 1,
       aScrambleMode: 3,

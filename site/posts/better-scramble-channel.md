@@ -56,9 +56,9 @@ TV's colour timing wander slowly, which keeps the bands moving.
 ## Update, 1 November 2026
 
 The scrambled channel preset now models the RF gate that GI and Jerrold
-head-ends used. The carrier is cut 6 dB through every blanking interval,
-including the vertical one, so the picture rolls behind a grey band and a grey
-bar crosses it. The links above open the version this post describes.
+head-ends used. The carrier is cut 6 dB through every horizontal blanking
+interval, so the blanking shows as a grey bar and the colour floods to match the
+weakened burst. The links above open the version this post describes.
 [Open the new one](/app/#preset=scrambledChannel&iurl=https://upload.wikimedia.org/wikipedia/commons/f/f9/%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg).
 
 _Photos from Wikimedia Commons under CC BY-SA 3.0, and the stills here are under
