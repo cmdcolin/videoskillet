@@ -833,6 +833,20 @@ engine. Also left out until then:
 - CLI `--frame=N out.png` and `controls --json`. `llms-full.txt` lists every
   key, and `videoskillet in out -` already writes raw frames to a pipe.
 
+## Signal diagrams
+
+- **Fold away a plot that is flat at stock.** Several plots, such as Sync's
+  line and frame shifts, are probably flat lines at stock and take about 45
+  units of height each. Folding one away until a knob moves saves that height,
+  but the flat line also shows what the plot measures, and folding conflicts
+  with drawing plots side by side. Ask before building it.
+- **One list of group names.** The names repeat in `schematicKeys.ts`,
+  `SCHEMATIC_FRAMES` and `HEADING`. The `Record<SchematicGroup, ...>` type
+  already catches a missing entry, so this is low value.
+- A shared `box()` factory for the diagrams was tried and dropped: the 22
+  closures take five different signatures, so a helper needs as many options as
+  it saves lines.
+
 ## Not worth building
 
 - **WebMCP tools for the app.** An agent with a page-reading browser or a shell

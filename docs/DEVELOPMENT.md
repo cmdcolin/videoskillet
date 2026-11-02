@@ -1269,6 +1269,20 @@ restoring from a stash. No stash was made, and nothing needs restoring: commit
 again once the other edit has landed. A partially staged file is checked as it
 is on disk, including its unstaged lines.
 
+`pnpm sync:check` compares the shared regions against the sibling repo's
+primary checkout. A change to a shared region therefore fails its pre-commit
+warning until both repos have landed it.
+
+## Unit test traps
+
+- `src/ui/rerender.dom.test.tsx` mounts the App once per `describe`, so its
+  tests share the open stage. `openGroup` clicks the stage button, and a test
+  that opens a stage another test left open closes it. Add new cases after the
+  existing ones.
+- `src/ui/signalDiagrams.ts` reads its flag from storage at import and keeps
+  the value in module state. A test that turns the diagrams off has to turn
+  them back on.
+
 ## Releases
 
 `scripts/push.mjs` cuts every release and every push to `main`.
