@@ -9,6 +9,7 @@ const GUIDE = [
   { file: 'docs/EFFECTS.md', slug: 'effects', nav: 'Effects' },
   { file: 'docs/MIDI.md', slug: 'midi', nav: 'MIDI' },
   { file: 'docs/CLI.md', slug: 'cli', nav: 'CLI' },
+  { file: 'docs/AI-USAGE.md', slug: 'ai', nav: 'Agentic AI usage' },
   { file: 'docs/COMPARISON.md', slug: 'comparison', nav: 'Comparison' },
   { file: 'docs/FAQ.md', slug: 'faq', nav: 'FAQ' },
 ]
@@ -23,7 +24,6 @@ const NOTES = [
     nav: 'Optimizations',
   },
   { file: 'docs/DEVELOPMENT.md', slug: 'development', nav: 'Development' },
-  { file: 'docs/AI-USAGE.md', slug: 'ai', nav: 'AI' },
   { file: 'docs/EDITOR.md', slug: 'editor', nav: 'Editor' },
   { file: 'docs/IDEAS.md', slug: 'ideas', nav: 'Ideas' },
   { file: 'docs/CURATION.md', slug: 'curation', nav: 'Curation' },

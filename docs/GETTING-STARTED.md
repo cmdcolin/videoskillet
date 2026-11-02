@@ -36,4 +36,5 @@ underneath. Every control is in there, sources included.
 - [Effects](EFFECTS.md): every control, generated from the app's own table
 - [MIDI](MIDI.md): setting up a controller
 - [CLI](CLI.md): getting a look onto a file, running locally
+- [Agentic AI usage](AI-USAGE.md): letting Claude Code drive the app
 - [FAQ](FAQ.md): how it works, what runs it, how a take gets into an edit

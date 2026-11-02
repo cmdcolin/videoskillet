@@ -10,7 +10,7 @@ const agentPrompt = (look: string) =>
     '',
     `- Every control key, its range, and the link parameters: ${URL_API_URL}`,
     `- How an agent drives the app: ${AI_GUIDE_URL}`,
-    '- From a browser harness, window.vf.applyControls({...}) sets controls and window.vf.getControls() reads them back.',
+    '- In the videoskillet tab, window.vf.applyControls({...}) sets controls and window.vf.getControls() reads them back.',
   ].join('\n')
 
 export function AgentDialog(props: { onClose: () => void }) {
@@ -26,32 +26,31 @@ export function AgentDialog(props: { onClose: () => void }) {
   return (
     <Dialog title="connect an AI agent" size="prose" onClose={props.onClose}>
       <p className={styles.lead}>
-        An AI agent can play this app. The route it takes depends on what the
-        agent can reach.
+        An AI agent such as Claude Code can play this app while it runs. The
+        route it takes depends on what the agent can reach.
       </p>
 
-      <h3 className={styles.route}>An agent in a browser</h3>
+      <h3 className={styles.route}>Claude Code, driving this tab</h3>
       <p className={styles.body}>
-        Claude in Chrome and other browsing agents work in this tab. Ctrl+K
-        opens the command palette, which sets a control from its name and a
-        value in one line, such as <code>head switch 9</code>. The{' '}
-        <b>board as text</b> section lists every control that is off stock, with
-        its key.
-      </p>
-
-      <h3 className={styles.route}>A coding agent with a shell</h3>
-      <p className={styles.body}>
-        Claude Code and similar agents launch a browser with Puppeteer or
-        Playwright, open this page, and call the engine from it:
+        Run <code>claude --chrome</code> and ask for a look in plain words.
+        Claude Code works in this tab and calls the engine directly:
       </p>
       <pre className={styles.code}>
         {`window.vf.applyControls({ bKey: 1, bKeyHueDeg: 241 })
 window.vf.getControls()`}
       </pre>
       <p className={styles.body}>
-        A link sets the sources: <code>?src=webcam&amp;vurlb=…</code> puts the
-        camera on A and a video file on B. Keep the window visible, because a
-        minimized window stops drawing frames.
+        Keep the tab in front, because a hidden tab stops drawing frames. A
+        coding agent can also open its own browser with Playwright and call the
+        same methods.
+      </p>
+
+      <h3 className={styles.route}>Any browsing agent</h3>
+      <p className={styles.body}>
+        Claude in Chrome and other browsing agents use the command palette.
+        Ctrl+K opens it, and it sets a control from its name and a value in one
+        line, such as <code>head switch 9</code>. The <b>board as text</b>{' '}
+        section lists every control that is off stock, with its key.
       </p>
 
       <h3 className={styles.route}>An agent that reads links</h3>

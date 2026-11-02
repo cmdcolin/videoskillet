@@ -1,284 +1,122 @@
-# AI usage
+# Agentic AI usage
 
-Agents wrote most of this codebase, and the app is built to be played by an
-agent as well as by a person. Three jobs bring an agent here, and each wants a
-different part of this page: **operating the panel** from inside a browser,
-**driving the board by link**, and **changing the code**.
-
-Here is one doing it. Claude Sonnet on the right, the app in a Chrome on the
-left, and nothing between them scripted — the recording is `pnpm agentreel`,
-which sets the two windows down side by side, hands a real Claude Code session
-the task, and stops when it lands:
+An AI agent can play videoskillet. Claude Code, or any agent that can reach a
+browser, can open the app, set controls, read the board back and hand you the
+link to what it built. You describe a look in words and the agent turns the
+knobs.
 
 <video
   controls muted loop playsinline
   poster="img/agent-drive-poster.jpg"
   src="https://myloveydove.com/videoskillet/agent-drive.mp4"></video>
 
-Every press in it comes from the model. It types five controls into the palette
-in turn — sync suppression, subcarrier detune, chroma gain, HV sag, supply ring
-— checking each row before committing it, and each one lands on what the last
-one did: a photograph scrambles into inverted bands, the hue barber-poles down
-the frame, the whole thing goes rainbow, and the geometry bends it into waves.
-Then it reads the board back. `DEVELOPMENT.md` §
-[Recording an agent driving the app](DEVELOPMENT.md#recording-an-agent-driving-the-app)
-is how to run it.
+Claude Sonnet on the right, the app in Chrome on the left, and nothing scripted
+between them. The model types five controls into the command palette, checks
+each row before committing it, and reads the board back at the end.
 
-## Operating the panel from inside a browser
+## Automate a running instance with Claude Code
 
-An agent that can see a page and type into it — Claude in Chrome, or anything
-else browsing on a person's behalf — reaches this app the way a person does, at
-[videoskillet.com/app/](https://videoskillet.com/app/). The app needs WebGPU,
-which Chrome ships on desktop; an older Linux build may still want it switched
-on at `chrome://flags`.
-
-**The command palette is the surface built for exactly this.** `ctrl+k` (`⌘k`)
-puts a region labelled `command palette` in the sidebar, holding one text input,
-and the input takes a control's name and the value to set it to in one string:
+Open [videoskillet.com/app/](https://videoskillet.com/app/) in Chrome, then
+start Claude Code with its Chrome integration:
 
 ```
-head switch 9      the head-switch tear, pulled to 9 µs
-noise 12           luma noise to 12 IRE
-synth mix ring     a mode switch, by a prefix of the option's name
-vhs                a preset by name, applied whole
-still              a verb — the palette indexes actions too
+claude --chrome
 ```
 
-Enter commits. The reason the box takes a value at all is written in
-`src/ui/paletteQuery.ts`: **an agent cannot aim at a slider track**, and nudging
-0 to 9 IRE with an arrow key is thirty presses. Naming the control and the
-number is the one gesture that is faster from outside the app than from inside
-it.
-
-**Read the board back off the list, not off the picture.** Every palette row is
-a button carrying, as text, the name, the control's current reading, the kind
-and the group — and the row under the cursor shows `current → target` before
-Enter is pressed, so an agent can check what a press is about to do. Typing
-`head switch 9` puts this on the first row:
+Claude Code now works in your browser, including the tab the app is already
+running in. Ask for a look in plain words:
 
 ```
-head switch | 0.80us → 9.00us | CONTROL | Timebase
+In the videoskillet tab, put the color bars through a VHS deck with a bad head
+switch, then slowly detune the subcarrier until the hue rolls. Give me the link
+when it looks right.
 ```
 
-The picture is a `<canvas>`: a screenshot says what the fault looks like and
-never what a control is set to.
+The app's **agent** button, in the sidebar's masthead, copies a prompt that
+starts the agent from the look on screen.
 
-**`board as text` answers the same question in one read.** The palette's list
-answers one query at a time, and the address bar's wire keys carry no units, so
-`board as text` puts the whole state in one readable block: the look, both
-decks, every control off stock with its reading and its stock value, every
-routing the modulation bay is driving, and the link. It sits in the sidebar, in
-a region labelled `board as text`:
+The agent has two ways to drive the tab:
 
-```
-look      modified from “vhs”
-source A  Color bars
-source B  nothing patched in
+- **The engine.** `window.vf` is the live engine, and two methods cover most
+  work:
 
-11 controls off stock
-  Timebase
-    head switch   headSwitchShiftUs  9.00us  stock 0.00us
-    wow           tbWowNs            300ns   stock 0ns
-  …
-```
+  ```js
+  window.vf.applyControls({ bGain: 1, bGenlock: 1, bKey: 1, bKeyHueDeg: 241 })
+  window.vf.getControls()
+  ```
 
-Each row carries the control's wire key beside its label, so a board read this
-way is a `#set=` link you can write without looking anything up. The text is on
-the page rather than only on the clipboard, because the page is where a browsing
-agent reads; the copy button beside the heading is for the other reader.
+  `applyControls` takes any subset of control keys and leaves the others where
+  they are. A value out of range clamps to the slider's range, and a key the app
+  does not have is left out. It returns `{applied, clamped, rejected, unknown}`,
+  so the agent can tell whether a write landed.
 
-**Every button says what it does in words.** `src/ui/buttonNames.test.ts` fails
-the build on a button whose whole content is a glyph, because a screen reader
-and a browsing agent reach for the same thing — the accessible name. So clicking
-by name works across the panel, not only in the palette.
+- **The command palette.** `ctrl+k` (`⌘k`) opens a text box that takes a
+  control's name and a value in one line, such as `head switch 9` or `noise 12`,
+  and a preset or action by name, such as `vhs` or `still`. Each row shows
+  `current → target` before Enter commits it.
 
-Single keys are verbs while the palette is closed: `f` fullscreen, `b` sidebar,
-`c` hold-to-compare, `r` record, `s` still, `t` fire, `d` drift, `i` cue, `/`
-search, `ctrl+z` undo.
+Either way the app writes the board into the address bar, so the page's URL is
+always the link to the current look.
 
-Three things to know before trusting what comes back:
+### Scripted runs
 
-- **A backgrounded or covered tab throttles rAF to about 1 Hz.** The app goes on
-  reporting `visible`, so a screenshot of a tab that was clicked away shows a
-  picture that is seconds stale rather than an error. Keep the tab in front.
-- **A value out of range clamps rather than failing**, the same as dragging past
-  the end of the track. `head switch 9000` lands on the ceiling and reports it.
-- **On Linux, Chrome logs texture-allocation errors that are ANGLE/Vulkan driver
-  artifacts.** They are noise, not a broken app.
-
-A worked sequence, all of it inside the browser: open the app, `ctrl+k`, type
-`vhs`, Enter. `ctrl+k` again, `head switch 9`, Enter. Take a screenshot, and the
-tear is there in the bars. The panel's preset chip now reads
-`modified from "vhs"`, and the address bar carries every control the preset
-moved with the edit folded in —
-`#set=demodMHz:0.5,lumaMHz:2.8,…,headSwitchShiftUs:9,…`. Handing that link back
-is how an agent reports what it built, and pasting it into another tab rebuilds
-it exactly.
-
-## Driving the board by link
-
-The address bar carries the board both ways: navigating to a link puts that look
-on screen, and turning a knob writes the change back into the bar. An agent that
-can navigate but cannot see the page still drives the whole instrument this way.
-
-[`public/llms.txt`](../public/llms.txt) is the contract — every parameter, with
-an example — and [`public/llms-full.txt`](../public/llms-full.txt) names every
-control key, its range and the fault it models. Both are published
-(`videoskillet.com/llms.txt`), and both are **generated** by
-`scripts/docgen.mjs` from `src/ui/controls.ts`; a hand edit to either dies at
-the next `pnpm docgen`.
-
-One command takes a picture of a link, for an agent working from a shell rather
-than a browser:
+A coding agent with a shell can also launch its own browser with Playwright or
+Puppeteer and call `window.vf` the same way. Use this for batch work, such as
+rendering a still for each of twenty looks:
 
 ```
 node scripts/shot.mjs 'http://localhost:5199/app/#preset=vhs&set=headSwitchShiftUs:9' out.png 6000
 ```
 
-Four ways a link looks like it worked and did not:
+The link the page opens on sets the sources: `?src=webcam&vurlb=<url>` puts the
+camera on A and a video file on B. On Linux, drive Firefox Nightly from a
+harness; `scripts/shot.mjs` launches it with the right prefs.
 
-- **`#set=` drops a key the schema does not know**, silently. A typo renders a
-  full frame that comes back merely uninteresting rather than wrong. Read the
-  bar back and compare.
-- **A hash-only change does not reload a page.** The app watches for that and
-  reloads itself, so a link pasted into an open tab does land — after a moment.
-  Give it one before sampling.
-- **A feedback look opens black without `#snow`.** The reader's frame store
-  starts empty and a loop needs something to amplify; the burst heals off and
-  leaves the board the rest of the link describes.
-- **An occluded window throttles rAF**, so a shot of a backgrounded tab is a
-  shot of a picture that never rendered. Step frames with `window.vf.step()`
-  from Node rather than waiting on wall clock.
+## Reading the board back
 
-On Linux, drive Firefox Nightly from a harness. Chrome's driver artifacts are
-harmless in the browser and unreadable in a log; `scripts/shot.mjs` already
-launches Firefox with the right prefs, so model a new harness on it.
+The picture is a `<canvas>`, so a screenshot shows what a fault looks like and
+never what a control is set to. Read state as text:
 
-## Driving the engine from a harness
+- `window.vf.getControls()` returns every control's value.
+- The **board as text** section of the sidebar lists the look, both sources,
+  every control off stock with its key, reading and stock value, every
+  modulation routing, and the link.
+- Every palette row is a button whose text carries the control's name, reading,
+  kind and group.
 
-A coding agent with a shell can launch a browser itself and call the engine in
-the page. `window.vf` is the live engine, and two of its methods cover most
-work:
+## Driving it by link
 
-```js
-window.vf.applyControls({ bGain: 1, bGenlock: 1, bKey: 1, bKeyHueDeg: 241 })
-window.vf.getControls()
-```
+Every look is a link, so an agent that can only navigate still drives the whole
+instrument. `#set=key:value,…` sets controls by key, `#preset=` applies a
+preset, and `#mod=` sets modulation routings.
+[`llms.txt`](https://videoskillet.com/llms.txt) is the contract, with an example
+for every parameter, and
+[`llms-full.txt`](https://videoskillet.com/llms-full.txt) lists every control
+key, its range and the fault it models. Both are generated from
+`src/ui/controls.ts`.
 
-- `applyControls` takes any subset of control keys, the same keys `#set=` uses,
-  and leaves the others where they are. The app still writes the board into the
-  address bar, so the page's URL is the link to the look.
-- A value out of range clamps to the slider's range. A key the app does not
-  have, or a value that is not a finite number, is left out. `applyControls`
-  returns `{applied, clamped, rejected, unknown}`, so check it.
-- The link the page opens on sets the sources: `?src=webcam&vurlb=<url>` puts
-  the camera on A and a video file on B. The app shows its own camera dialog
-  first, so a harness clicks **Continue** to start the camera.
-- `window.vf` is the concrete `Engine`, and its methods can change between
-  releases. `src/core/gpu/engineapi.ts` at the deployed commit lists the methods
-  the page has, and the tooltip on the app's name shows that commit.
+## Things that trip agents up
 
-The **agent** button in the sidebar's masthead shows the same routes in the app,
-and copies a prompt that hands an agent the current look.
+- **A backgrounded or minimized tab draws about one frame a second.** It still
+  reports `visible`, so a screenshot of it is seconds stale. Keep the tab in
+  front, or step frames with `window.vf.step()`.
+- **`#set=` drops a key it does not know** without an error. Read the address
+  bar or `getControls()` back after writing.
+- **A feedback look opens black without `#snow`.** The loop needs something to
+  amplify, and `#snow` seeds it with a burst of noise.
+- **A hash-only change does not reload the page.** The app notices and reloads
+  itself after a moment, so wait before sampling.
+- **`window.vf` is the concrete `Engine`**, and its methods can change between
+  releases. `src/core/gpu/engineapi.ts` at the deployed commit lists them, and
+  the tooltip on the app's name shows that commit.
+- **On Linux, Chrome logs texture-allocation errors.** They come from the
+  ANGLE/Vulkan driver and do not mean the app is broken.
 
 ## Changing the code
 
-Read these, in this order:
-
-| file                                 | what it answers                                          |
-| ------------------------------------ | -------------------------------------------------------- |
-| [`CLAUDE.md`](../CLAUDE.md)          | the rules of this repo, short enough to read in full     |
-| [`ARCHITECTURE.md`](ARCHITECTURE.md) | the premise, the pass graph, adding a control end to end |
-| [`adr/`](adr/)                       | the decisions where the obvious change is wrong          |
-| [`DEVELOPMENT.md`](DEVELOPMENT.md)   | every harness, and what each one cost to get right       |
-
-Two sections earn a read before you touch anything they cover:
-[the browser harness traps](DEVELOPMENT.md#browser-harness-traps), before
-driving a browser at the app, and
-[Measuring performance](DEVELOPMENT.md#measuring-performance), before believing
-a number that came off this box.
-
-**Model the mechanism, not the artifact.** There is no "VHS filter" here: dot
-crawl, tearing and hue drift emerge from a simulated signal path, so mechanisms
-interact with no code linking them together. A shader that draws the look of a
-fault matches one screenshot and loses every interaction.
-
-**Pick the domain before writing the effect.** A horizontal displacement means
-one thing in the signal domain, another in sync, another in deflection, and
-routing a geometry fault through sync spins hue that should have stayed put.
-`ARCHITECTURE.md` maps the three.
-
-**`decode` stages a shared tile per row**, so a horizontal offset has to be
-row-uniform. Per-pixel horizontal scaling needs that staging restructured first.
-
-**Never call `device.destroy()` on a device that has been presenting.** Doing so
-ends the tab's rendering step, the tab still reports `visible`, nothing is
-logged, and the next document loaded there inherits the damage. The app lets go
-of devices instead and hands the live one on.
-[ADR 0004](adr/0004-never-destroy-a-presenting-device.md) has the runs. A freeze
-showing `frame 0` / `STEP-DEAD` / `clock +0ms` is that fault, not a bug in the
-signal path.
-
-**A control added to `src/ui/controls.ts` reaches every agent with no extra
-work** — the palette indexes it by name and by its help prose, `#set=` takes its
-key, and `pnpm docgen` writes it into `llms-full.txt`. The schema is one table,
-so nothing else needs teaching about the control.
-
-Several files in the tree are generated, and an edit to one survives until the
-next build:
-
-| generated                                                                  | source                | command       |
-| -------------------------------------------------------------------------- | --------------------- | ------------- |
-| `EFFECTS.md`, `llms.txt`, `llms-full.txt`, the loop block in `FEATURES.md` | `src/ui/controls.ts`  | `pnpm docgen` |
-| `img/*-dark.svg`, `img/*-light.svg`                                        | `docs/graphviz/*.dot` | `pnpm docs`   |
-| the demo bullets in `README.md`                                            | `demos.json`          | `pnpm demos`  |
-
-The gates, cheapest first: `pnpm lint`, `pnpm typecheck`, `pnpm test`, then
-`pnpm harnesses 5199` for the browser sweep (six to nine minutes). CI deploys on
-lint and test.
-
-## Long runs belong in your own worktree
-
-This repo is worked in by several agents at once, and a dev server here serves
-whatever the tree currently says. Two consequences:
-
-- **Your own `src/` write is an HMR reload.** A save mid-run resets the engine
-  under whatever you were measuring, and so does somebody else's. Serve a long
-  or repeated browser run from a `git worktree add --detach` copy with its own
-  vite server on its own port — `DEVELOPMENT.md` carries the two workarounds
-  that takes.
-- **Do not edit a tracked file to configure a run.** `scripts/colourcheck.mjs`
-  takes `--arms-file=` for exactly this reason: an uncommitted edit does not
-  reliably survive another session's commit.
-
-`pnpm test` excludes `.claude/`, where those worktrees live. Removing the
-exclude collects every worktree's suite into your run, so a half-finished branch
-somebody else is working on fails your tests, in files you have never opened, at
-paths that look like yours.
-
-## Leave the record where the next agent reads it
-
-An agent's context ends with its session, and the docs are what survives. A
-measurement that lives only in a transcript has to be made again.
-
-- **Commits** follow Conventional Commits, scope from the domains in
-  `ARCHITECTURE.md` (`signal`, `sync`, `deflection`, `gpu`, `ui`, `midi`,
-  `audio`, `docs`). `cliff.toml` builds the changelog from them.
-- **An [ADR](adr/)** records a decision where the obvious thing is wrong for a
-  non-obvious reason — usually a measured constraint the code cannot state for
-  itself. Most changes need none.
-- **A [handoff](handoffs/)** holds the working-out behind a day: what was
-  measured, what was tried and dropped, what was still open. Dated, and left as
-  it was written.
-
-## What the AI actually did here
-
-Agents wrote most of the code, most of these docs, and the harnesses under
-`scripts/`. [Fable](https://claude.com/) one-shotted the initial signal-path
-design, including the signal-level premise the whole simulator rests on.
-
-A person still picks the work, judges the picture — no harness can say whether a
-look is worth keeping — and owns the box the measurements come off. Every
-constraint on this page came out of something breaking on that box, which is why
-the docs read as a list of warnings: they are the part an agent cannot rederive
-from the source.
+Agents wrote most of this codebase. An agent working on it starts at
+[`CLAUDE.md`](../CLAUDE.md), which carries the repo's rules and points at
+[`ARCHITECTURE.md`](ARCHITECTURE.md), the [ADRs](adr/) and
+[`DEVELOPMENT.md`](DEVELOPMENT.md). A control added to `src/ui/controls.ts`
+reaches every agent route above with no extra work: the palette indexes it,
+`#set=` takes its key, and `pnpm docgen` writes it into `llms-full.txt`.

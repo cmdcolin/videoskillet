@@ -18,6 +18,20 @@ that stage's controls open underneath it.
 Details in [How it works](docs/FAQ.md#how-does-it-actually-work), fault by fault
 in [Features](docs/FEATURES.md).
 
+## Automate it with an AI agent
+
+Claude Code can drive the app running in your browser. Open
+https://videoskillet.com/app/, run `claude --chrome`, and describe a look:
+
+```
+In the videoskillet tab, put the color bars through a VHS deck with a bad head
+switch, then slowly detune the subcarrier until the hue rolls. Give me the link.
+```
+
+The agent sets controls with `window.vf.applyControls({...})` or the `ctrl+k`
+command palette, reads them back with `window.vf.getControls()`, and every look
+it builds is a link. [Agentic AI usage](docs/AI-USAGE.md) has the details.
+
 ## Features
 
 - True composite signal emulation in WebGPU compute shaders. This is the
@@ -69,7 +83,7 @@ fetch — on the fly. `pnpm dev` has it, and so does `videoskillet serve` from t
   of the docs leave out. Published at
   [videoskillet.com/llms.txt](https://videoskillet.com/llms.txt) for anything
   scripting the app.
-- [AI usage](docs/AI-USAGE.md) — building and driving it with agents
+- [Agentic AI usage](docs/AI-USAGE.md) — automating the app with Claude Code
 - [MIDI](docs/MIDI.md)
 - [Comparison with other tools](docs/COMPARISON.md)
 - [FAQ](docs/FAQ.md) — how it works, what runs it, installing it
