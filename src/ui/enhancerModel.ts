@@ -1,5 +1,6 @@
 import {
   ACTIVE_START,
+  ACTIVE_WIDTH,
   BURST_LEN,
   BURST_START,
   IRE_BLANK,
@@ -23,16 +24,38 @@ export interface Enhancer {
   peakBoost: number
   sync: number
   sliceIre: number
+  loopGain: number
+  loopUs: number
 }
 
 const SPL = SAMPLES_PER_LINE
 const RAIL = 120
 const SEP_ALPHA = 0.123
+const LOOP_HI = 115
+const LOOP_LO = -8
+const LOOP_BW = 0.73
 /** The sample the clamp gate keys on at stock, on the back porch. */
 export const CLAMP_KEY = (BURST_START + BURST_LEN + ACTIVE_START) * 0.5
 
 const clamp = (v: number, lo: number, hi: number) =>
   Math.min(Math.max(v, lo), hi)
+
+// prelude.wgsl softRail.
+function softRail(
+  v: number,
+  hi: number,
+  hiSoft: number,
+  lo: number,
+  loSoft: number,
+) {
+  const over = (v - hi) / hiSoft
+  const under = (lo - v) / loSoft
+  return v > hi
+    ? hi + (hiSoft * over) / (1 + over)
+    : v < lo
+      ? lo - (loSoft * under) / (1 + under)
+      : v
+}
 
 // uniforms.ts, enhClampOff through enhSlice.
 function uniforms(e: Enhancer) {
@@ -42,6 +65,7 @@ function uniforms(e: Enhancer) {
       e.droopUs > 0 ? 1 - Math.exp(-1 / (e.droopUs * 1e-6 * SAMPLE_RATE)) : 0,
     fc: (e.peakMHz * 1e6) / SAMPLE_RATE,
     r: 0.85 + 0.2 * e.peakQ,
+    loopHold: Math.exp(-1 / (e.loopUs * 1e-6 * SAMPLE_RATE)),
   }
 }
 
@@ -50,6 +74,11 @@ export const gateSample = (e: Enhancer) =>
   Math.trunc(clamp(CLAMP_KEY + uniforms(e).clampOff, 0, SPL - 1))
 
 export const peaking = (e: Enhancer) => e.peakMHz > 0 && e.peakBoost > 0
+
+export const looping = (e: Enhancer) => e.loopGain > 0
+
+/** From about unity the feedback loop latches between its rails. */
+export const latches = (e: Enhancer) => e.loopGain >= 0.9
 
 /** Past a pole radius of 1 the resonator climbs to the rails on its own. */
 export const howls = (e: Enhancer) => peaking(e) && uniforms(e).r >= 1 - 1e-6
@@ -73,6 +102,10 @@ export function enhancedLine(e: Enhancer, line = TEST_LINE): number[] {
   const { a1, a2, drive } = resonator(e)
   let z1 = 0
   let z2 = 0
+  const loop = looping(e)
+  let loopLp = 0
+  let loopLpPrev = 0
+  let loopHp = 0
   let sep = IRE_BLANK
   let pulse = 0
   return line.map((x, s) => {
@@ -85,11 +118,19 @@ export function enhancedLine(e: Enhancer, line = TEST_LINE): number[] {
       }
       vcap += (y - IRE_BLANK) * u.droop
     }
+    const inLoop = loop && s >= ACTIVE_START && s < ACTIVE_START + ACTIVE_WIDTH
+    if (inLoop) y += e.loopGain * loopHp
     if (peak) {
       const v = clamp(drive * y + a1 * z1 + a2 * z2, -RAIL, RAIL)
       z2 = z1
       z1 = v
       y += e.peakBoost * v
+    }
+    if (inLoop) {
+      y = softRail(y, LOOP_HI, 15, LOOP_LO, 4)
+      loopLp += (y - loopLp) * LOOP_BW
+      loopHp = u.loopHold * (loopHp + loopLp - loopLpPrev)
+      loopLpPrev = loopLp
     }
     if (e.sync > 0) {
       sep += (y - sep) * SEP_ALPHA

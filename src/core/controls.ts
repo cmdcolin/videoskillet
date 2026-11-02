@@ -175,6 +175,8 @@ export const DEFAULT_CONTROLS = {
   enhPeakBoost: 0, // resonator mixed back into the video
   enhSync: 0, // sync regenerator mix (0 = box bypassed)
   enhSliceIre: -20, // regenerator slice level
+  enhLoopGain: 0, // output fed back around both stages (0 = loop open)
+  enhLoopUs: 2, // time constant of the capacitor in the feedback path
   lumaPeak: 0,
   noiseIre: 0,
   noiseTilt: 0, // where the floor comes from: 0 IF-limited RF, 1 FM discriminator (triangular)

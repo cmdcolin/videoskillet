@@ -216,6 +216,7 @@ export const ENHANCER_OPENS = {
   clamp: ['enhClampUs'],
   droop: ['enhDroopUs'],
   peaking: ['enhPeakMHz', 'enhPeakQ', 'enhPeakBoost'],
+  loop: ['enhLoopGain', 'enhLoopUs'],
   regen: ['enhSync', 'enhSliceIre'],
 } as const satisfies Opens
 

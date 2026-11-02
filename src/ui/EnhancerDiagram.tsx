@@ -23,6 +23,8 @@ import {
   enhancedLine,
   gateSample,
   howls,
+  latches,
+  looping,
   peaking,
   peakingGains,
   type Enhancer,
@@ -38,10 +40,12 @@ const WIDTH = 340
 const TOP_Y = 14
 const H = 20
 const LOOP_Y = 38
+const OUTER_Y = 62
 const ROW = {
   clamp: { x: 34, w: 46 },
   droop: { x: 98, w: 46 },
   peaking: { x: 162, w: 60 },
+  loop: { x: 162, w: 60 },
   regen: { x: 244, w: 72 },
 } satisfies Record<Part, { x: number; w: number }>
 
@@ -51,7 +55,7 @@ const CURVE_MHZ = Array.from(
   { length: POINTS },
   (_, i) => (BAND_MHZ * i) / (POINTS - 1),
 )
-const PLOT = { top: 78, bottom: 122 }
+const PLOT = { top: 86, bottom: 130 }
 const FREQ = { left: 24, right: 164, ...PLOT }
 const GAIN_LO = 0.25
 const GAIN_HI = 32
@@ -72,11 +76,13 @@ const lineX = (s: number) =>
   LINE.left + ((LINE.right - LINE.left) * s) / (SAMPLES_PER_LINE - 1)
 const LOOP_L = ROW.peaking.x + 12
 const LOOP_R = rightOf(ROW.peaking) - 12
+const OUTER_L = ROW.peaking.x - 9
+const OUTER_R = rightOf(ROW.peaking) + 11
 
 // The bent enhancer as enhancer.wgsl runs it, one box per stage in the order a
 // line meets them: the clamp gate, the coupling capacitor that droops between
-// gates, the peaking resonator with its regeneration loop, and the sync
-// regenerator. Under the drawing, the peaking stage's gain at each frequency,
+// gates, the peaking resonator with its regeneration loop, the feedback jumper
+// from the output back around the amplifiers, and the sync regenerator. Under the drawing, the peaking stage's gain at each frequency,
 // and one line of a black picture with a white bar as it leaves the box.
 export function EnhancerDiagram() {
   const r = useReadings(ENHANCER_KEYS)
@@ -90,9 +96,13 @@ export function EnhancerDiagram() {
     peakBoost: v('enhPeakBoost'),
     sync: v('enhSync'),
     sliceIre: v('enhSliceIre'),
+    loopGain: v('enhLoopGain'),
+    loopUs: v('enhLoopUs'),
   }
   const peak = peaking(e)
   const howl = howls(e)
+  const loop = looping(e)
+  const latch = latches(e)
   const gains = peakingGains(e, CURVE_MHZ)
   const line = enhancedLine(e)
   const gate = lineX(gateSample(e))
@@ -121,6 +131,13 @@ export function EnhancerDiagram() {
       TOP_Y,
       'peaking',
       "A two-pole resonator at the detail frequency, mixed back into the video by the boost. The regeneration loop sets the pole radius: low rings briefly after each edge, and from 0.75 the ring grows by itself until it reaches the amplifier's ±120 IRE rails.",
+    ),
+    box(
+      'loop',
+      ROW.loop,
+      OUTER_Y,
+      'loop',
+      'A jumper from the output back to the first stage, through a coupling capacitor. Both stages invert, so the loop is positive feedback. Below 1 an edge drags a tail of its own polarity; near 1 the pair latches to black or white wherever the picture crosses its threshold, until the capacitor lets go; past 1 it oscillates on its own. It works on active picture only, between −8 and 115 IRE.',
     ),
     box(
       'regen',
@@ -154,6 +171,11 @@ export function EnhancerDiagram() {
               arrow={arrow}
               d={`M${LOOP_R} ${TOP_Y + H / 2} V${LOOP_Y} H${LOOP_L} V${TOP_Y + H / 2}`}
               look={peak ? peakLook : 'dash'}
+            />
+            <Wire
+              arrow={arrow}
+              d={`M${OUTER_R} ${TOP_Y + H / 2} V${OUTER_Y} H${OUTER_L} V${TOP_Y + H / 2}`}
+              look={latch ? 'alarm' : loop ? 'on' : 'dash'}
             />
             <text
               x={(LOOP_L + LOOP_R) / 2}
@@ -241,7 +263,11 @@ export function EnhancerDiagram() {
               along={alongRange(0, LINE_US, 'µs')}
               band={PICTURE_BAND}
               look={
-                howl ? 'alarm' : r.touched(...ENHANCER_KEYS) ? 'on' : 'plain'
+                howl || latch
+                  ? 'alarm'
+                  : r.touched(...ENHANCER_KEYS)
+                    ? 'on'
+                    : 'plain'
               }
             />
             <line

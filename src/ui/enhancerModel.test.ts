@@ -12,6 +12,7 @@ import {
   enhancedLine,
   gateSample,
   howls,
+  latches,
   peakingGains,
   type Enhancer,
 } from './enhancerModel'
@@ -25,6 +26,8 @@ const stock: Enhancer = {
   peakBoost: 0,
   sync: 0,
   sliceIre: -20,
+  loopGain: 0,
+  loopUs: 2,
 }
 
 const barStart = Math.round(usToSamples(BAR_US[0]))
@@ -82,5 +85,24 @@ describe('bent enhancer', () => {
   it('mints pulses in black picture with the slice above it', () => {
     const out = enhancedLine({ ...stock, sync: 1, sliceIre: 10 })
     expect(out.slice(ACTIVE_START, barStart).includes(IRE_SYNC)).toBe(true)
+  })
+
+  it("drags a tail of each edge's own polarity below unity loop gain", () => {
+    const e = { ...stock, loopGain: 0.6 }
+    const out = enhancedLine(e)
+    expect(latches(e)).toBe(false)
+    expect(out[barStart + 10]!).toBeGreaterThan(TEST_LINE[barStart + 10]! + 10)
+    expect(out[barEnd + 10]!).toBeLessThan(TEST_LINE[barEnd + 10]! - 10)
+  })
+
+  it('latches between its rails near unity and leaves blanking alone', () => {
+    const e = { ...stock, loopGain: 1, loopUs: 10 }
+    const out = enhancedLine(e)
+    expect(latches(e)).toBe(true)
+    expect(out.slice(0, ACTIVE_START)).toEqual(TEST_LINE.slice(0, ACTIVE_START))
+    expect(out[barStart + 20]!).toBeGreaterThan(110)
+    expect(out[barEnd + 20]!).toBeLessThan(-5)
+    expect(Math.min(...out.slice(ACTIVE_START))).toBeGreaterThan(-12)
+    expect(Math.max(...out)).toBeLessThan(130)
   })
 })

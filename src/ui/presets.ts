@@ -2759,6 +2759,18 @@ export const PRESETS: PresetDef[] = [
     },
   },
   {
+    name: 'latchedEnhancer',
+    displayName: 'latched enhancer',
+    group: 'Circuit bent',
+    blurb:
+      "Jumper from the enhancer's output back to its first stage. The two inverting stages make the loop positive feedback, so the picture snaps to black or white wherever it crosses the threshold and holds until the coupling capacitor lets go. Colour survives only on the transitions.",
+    patch: {
+      enhLoopGain: 0.92,
+      enhLoopUs: 7,
+      noiseIre: 1.5,
+    },
+  },
+  {
     name: 'howlroundLoom',
     displayName: 'howlround loom',
     group: 'Circuit bent',

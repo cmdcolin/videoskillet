@@ -361,6 +361,8 @@ export const PARAM_DEFS = [
   ['enhPeakBoost', 'f32'], // resonator output mixed back into the video, IRE per IRE
   ['enhSync', 'f32'], // sync regenerator mix, 0 bypassed
   ['enhSlice', 'f32'], // regenerator slice level, IRE
+  ['enhLoopGain', 'f32'], // output fed back to the first stage's input, 0 open
+  ['enhLoopHold', 'f32'], // feedback coupling capacitor's hold per sample
   // feedback (camera-at-monitor)
   ['fbMix', 'f32'],
   ['fbZoom', 'f32'],

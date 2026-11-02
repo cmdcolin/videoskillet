@@ -8,6 +8,14 @@
 //   peaking  the detail coil with the bend's own feedback wrapped around it: a
 //            real two-pole resonator that rings after every edge and, past
 //            unity, howls into the amplifier's rails until content knocks it.
+//   loop     a jumper from the output back to the first stage's input, through
+//            a coupling capacitor. Both stages invert, so the loop is positive
+//            feedback on everything the capacitor passes: below unity an edge
+//            drags a long tail of its own polarity; near unity the pair is a
+//            Schmitt trigger that snaps between rails wherever the picture
+//            crosses its threshold, and the capacitor discharging lets it snap
+//            back; past unity it is an astable multivibrator the picture
+//            modulates.
 //   regen    the stabilizer's sync separator re-stamping the pulse train from a
 //            slice level that no longer sits safely under blanking.
 //
@@ -29,6 +37,14 @@ const RAIL = 120.0;
 // The sync separator's integrator: ~300 kHz, so a 4.7 us pulse gets through
 // and 3.58 MHz burst (attenuated ~30x) never trips the slicer.
 const SEP_ALPHA = 0.123;
+// The loop's swing. The box gates its detail stages to active picture and
+// mixes sync back in afterwards, so a loop latched low sits just under black
+// and does not hand the set pulses of its own.
+const LOOP_HI = 115.0;
+const LOOP_LO = -8.0;
+// The pair's bandwidth: a one-pole lowpass at ~3 MHz inside the loop. Without
+// it the one-sample loop delay sets the oscillation at the sample rate.
+const LOOP_BW = 0.73;
 
 @compute @workgroup_size(64, 1, 1)
 fn main(@builtin(global_invocation_id) gid: vec3u) {
@@ -61,6 +77,11 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
   var z1 = 0.0;
   var z2 = 0.0;
 
+  let looping = P.enhLoopGain > 0.0;
+  var loopLp = 0.0;
+  var loopLpPrev = 0.0;
+  var loopHp = 0.0;
+
   var sep = IRE_BLANK;
   var pulse = 0u;
   // Armed coming out of the previous line, so the line's own tip fires it.
@@ -82,11 +103,23 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
       vcap = vcap + (y - IRE_BLANK) * P.enhDroop;
     }
 
+    let inLoop = looping && s >= ACTIVE_START && s < ACTIVE_START + ACTIVE_W;
+    if (inLoop) {
+      y = y + P.enhLoopGain * loopHp;
+    }
+
     if (peaking) {
       let v = clamp(drive * y + a1 * z1 + a2 * z2, -RAIL, RAIL);
       z2 = z1;
       z1 = v;
       y = y + P.enhPeakBoost * v;
+    }
+
+    if (inLoop) {
+      y = softRail(y, LOOP_HI, 15.0, LOOP_LO, 4.0);
+      loopLp = loopLp + (y - loopLp) * LOOP_BW;
+      loopHp = P.enhLoopHold * (loopHp + loopLp - loopLpPrev);
+      loopLpPrev = loopLp;
     }
 
     // Sync regenerator. The separator slices its own lowpassed copy, so burst

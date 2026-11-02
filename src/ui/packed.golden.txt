@@ -317,6 +317,8 @@
 329 bKeyEdgeHueDeg step=1 default=0
 330 bKeyEdgeSat step=0.01 default=0
 331 decoderDb step=0.5 default=0
+332 enhLoopGain step=0.01 default=0
+333 enhLoopUs step=0.1 default=2
 
 # ?mod= sources, by name
 sine

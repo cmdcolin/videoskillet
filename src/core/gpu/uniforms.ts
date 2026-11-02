@@ -278,6 +278,8 @@ export function uniformValues(c: Controls, env: UniformEnv) {
     enhPeakBoost: c.enhPeakBoost,
     enhSync: c.enhSync,
     enhSlice: c.enhSliceIre,
+    enhLoopGain: c.enhLoopGain,
+    enhLoopHold: Math.exp(-1 / (c.enhLoopUs * 1e-6 * SAMPLE_RATE)),
     fbMix: c.fbMix,
     fbZoom: c.fbZoom,
     fbRotate: (c.fbRotateDeg * Math.PI) / 180,

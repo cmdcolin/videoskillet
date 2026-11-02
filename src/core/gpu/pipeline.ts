@@ -1085,7 +1085,8 @@ export class Engine implements EngineApi {
           c.enhClampUs !== 0 ||
           c.enhDroopUs > 0 ||
           (c.enhPeakMHz > 0 && c.enhPeakBoost > 0) ||
-          c.enhSync > 0,
+          c.enhSync > 0 ||
+          c.enhLoopGain > 0,
       ),
       // The sound detector's tap, reading the same waveform sync is about to
       // lock to. Gated hard: it is the app's only steady-state readback, so a
