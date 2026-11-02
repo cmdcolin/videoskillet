@@ -22,10 +22,12 @@ board back and gives you the link.
   src="https://myloveydove.com/videoskillet/agent-build.mp4"></video>
 
 In the recording, Claude Sonnet is given the Purplady look from the gallery and
-asked to build it up from the plain photo one stage at a time. The decoder stage
-turns the picture purple, three generations of tape make it smear and wobble,
-and the chroma feedback loop turns the face into violet streaks. Claude says
-what each stage did as it goes. The waits between stages are cut out.
+asked to build it up from the plain photo one stage at a time. It reads the
+look's settings, puts the plain photo back, and applies the stages in signal
+order, taking a screenshot after each one and saying what changed. Tape noise
+buries the face in snow, the decoder turns the frame violet, and the chroma
+feedback loop goes black, then breaks into violet ribbons and bands. The waits
+between stages are cut out.
 
 An agent can also land a whole look in one step: `window.vfBoard.apply(link)`
 applies a link, and `window.vfBoard.read()` returns the board as text.
