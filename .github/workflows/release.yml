@@ -9,16 +9,16 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
-  id-token: write
+  contents: read
 
 jobs:
   # Two builds are inputs to every binary below, and both need node and the
   # app's dependencies: the engine bundle the renderer runs, and the app that
   # `videoskillet serve` hosts out of the executable. Built once here so the
-  # compile job can be a matrix over targets with only Deno installed.
+  # compile job can be a matrix over targets without the dependencies.
   bundle:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
@@ -46,6 +46,7 @@ jobs:
           - x86_64-apple-darwin
           - aarch64-apple-darwin
           - x86_64-pc-windows-msvc
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -102,6 +103,9 @@ jobs:
       ${{ !cancelled() && needs.binaries.result != 'skipped' &&
       startsWith(github.ref, 'refs/tags/v') }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
       - uses: actions/download-artifact@v6
@@ -113,7 +117,7 @@ jobs:
         run: cd dist-bin && sha256sum * > SHA256SUMS
       # Draft, so a release goes out when someone has looked at it. The tag is
       # already public by this point; the binaries are not.
-      - uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
         with:
           draft: true
           generate_release_notes: true
@@ -138,6 +142,10 @@ jobs:
     needs: bundle
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
