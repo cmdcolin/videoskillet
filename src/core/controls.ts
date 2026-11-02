@@ -18,6 +18,8 @@ export const DEFAULT_CONTROLS = {
   capYcDelayNs: 0, // chroma late (+) or early (-) behind luma in the file
   capNoiseIre: 0, // luma grain the file carries, IRE rms
   capChromaNoiseIre: 0, // chroma-carrier noise, IRE rms, through the chroma band
+  capAdcBit: 0, // a bit of the card's luma converter held high (+) or low (-), 1 = LSB
+  capAdcWeight: 0, // how far the converter's bit weights sit off binary
   // the generated no-signal sources (TV static, blank tape), as statistics of
   // the path the noise arrived through rather than as two fixed looks
   srcNoiseBwMHz: 4.2, // bandwidth of that path: sets the grain's correlation length

@@ -3518,6 +3518,21 @@ export const PRESETS: PresetDef[] = [
     },
   },
   {
+    name: 'deadBit',
+    displayName: 'dead bit',
+    group: 'Circuit bent',
+    blurb:
+      "A tape dubbed through a cheap capture card whose luma converter has a bit stuck low and bit weights that are not quite binary. Every level that needed the dead bit falls by its weight, so the brightness folds back on itself and highlights sink into mid-grey. The deck's grain rides into the converter and flips pixels across each fold from frame to frame, so bright areas boil while the shadows stay clean.",
+    patch: {
+      capLumaMHz: 3,
+      capChromaMHz: 0.5,
+      capNoiseIre: 4,
+      capChromaNoiseIre: 12,
+      capAdcWeight: 0.8,
+      capAdcBit: -7,
+    },
+  },
+  {
     name: 'hairOffTheCrystal',
     displayName: 'a hair off the crystal',
     group: 'Circuit bent',

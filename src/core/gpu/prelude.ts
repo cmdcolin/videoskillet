@@ -93,6 +93,10 @@ export const PARAM_DEFS = [
   ['capYcDelay', 'f32'],
   ['capNoise', 'f32'],
   ['capChromaNoise', 'f32'],
+  // The capture card's luma converter: a bit held (signed, 1-based, + high,
+  // - low, 0 none) and how far its bit weights sit off binary.
+  ['capAdcBit', 'f32'],
+  ['capAdcWeight', 'f32'],
   // Video synth: a bench oscillator patched into a slot instead of a picture
   // (mode 3 of the same srcNoise selector). Each oscillator's phase is carried
   // as cycles at frame start plus its walk per line and per sample, rather than

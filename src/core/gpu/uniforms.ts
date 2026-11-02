@@ -123,6 +123,8 @@ export function uniformValues(c: Controls, env: UniformEnv) {
     capYcDelay: c.capYcDelayNs * 1e-9 * SAMPLE_RATE,
     capNoise: c.capNoiseIre / IRE_VIDEO_RANGE,
     capChromaNoise: c.capChromaNoiseIre / IRE_VIDEO_RANGE,
+    capAdcBit: c.capAdcBit,
+    capAdcWeight: c.capAdcWeight,
     synthShape: c.synthShape,
     synthMix: c.synthMix,
     synthLevel: c.synthLevel,
