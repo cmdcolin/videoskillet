@@ -198,6 +198,8 @@ export const DEFAULT_CONTROLS = {
   rfAdjacent: 0, // adjacent-channel leak through the IF trap (carrier beats, not a picture)
   rfMistuneMHz: 0, // fine tuning error: + frees the sound carrier, - slides down the Nyquist slope
   rfSnow: 0, // weak signal into the envelope detector: Rician snow, whites boil first
+  rfFade: 0, // multipath and tropospheric fading: the AGC gains up into snow at each null
+  rfFadeHz: 0.3, // how fast the two paths' phase difference drifts
   ingress: 0, // CB/ham through a cracked shield: a keyed carrier's sweeping herringbone
   agc: 0,
   ghostDelayUs: 0,

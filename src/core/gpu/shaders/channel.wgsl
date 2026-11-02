@@ -181,13 +181,14 @@ fn main(
       tileFmSrc[i] = comp[ci] - chroma[ci];
     }
   }
-  if (P.noiseSigma > 0.0 || P.rfSnow > 0.0) {
+  let rfNoise = P.rfSnow + P.rfFloor;
+  if (P.noiseSigma > 0.0 || rfNoise > 0.0) {
     let ns = pcg(P.frame * 2654435761u + P.gen * 2246822519u);
     // slot 1 is this workgroup's first sample, so slot i is global index n0+i-1
     for (var i = lid.x; i < TILE_WG + 2u; i = i + TILE_WG) {
       tileNs[i] = gauss((n0 + i - 1u) ^ ns);
     }
-    if (P.rfSnow > 0.0) {
+    if (rfNoise > 0.0) {
       let nq = pcg(P.frame * 1717986917u + P.gen * 374761393u + 40503u);
       for (var i = lid.x; i < TILE_WG + 2u; i = i + TILE_WG) {
         tileNq[i] = gauss((n0 + i - 1u) ^ nq);
@@ -589,7 +590,9 @@ fn main(
     } else if (tPh < 0.147) {
       env = 0.75; // their blanking
     }
-    let b = P.rfAdjIre * env;
+    // the tuner's AGC turns the neighbour up with everything else while our
+    // own carrier fades
+    let b = P.rfAdjIre * env * P.rfFadeG / P.rfFadeK;
     let phV = 2.0 * PI * f32((44u * n) % 105u) / 105.0 + P.rfAdjPhase;
     let phS = 2.0 * PI * f32((11u * n) % 105u) / 105.0 + P.rfAdjPhaseS;
     // our own carrier at this sample: negative modulation maps sync -40 ..
@@ -608,12 +611,16 @@ fn main(
   // reception reads as a picture fighting through instead of the flat grey
   // fuzz the additive noiseSigma above lays down. Same carrier map as the
   // adjacent-channel term: they are the same detector.
-  if (P.rfSnow > 0.0) {
-    let sig = 0.28 * P.rfSnow;
+  //
+  // A fading carrier comes through the tuner's AGC: rfFadeK is what is left
+  // of it after the IF gain, and the gain itself, rfFadeG, scales the noise
+  // the receiver adds ahead of it.
+  if (rfNoise > 0.0) {
+    let sig = 0.28 * rfNoise * P.rfFadeG;
     let cn = lid.x + 1u;
     let nI = sig * 0.4082 * (tileNs[cn - 1u] + 2.0 * tileNs[cn] + tileNs[cn + 1u]);
     let nQ = sig * 0.4082 * (tileNq[cn - 1u] + 2.0 * tileNq[cn] + tileNq[cn + 1u]);
-    let a = max(carrierOf(out), 0.0);
+    let a = max(carrierOf(out), 0.0) * P.rfFadeK;
     let e = sqrt((a + nI) * (a + nI) + nQ * nQ);
     out = ireOf(e);
   }
@@ -627,7 +634,7 @@ fn main(
   if (P.ingressIre * P.ingressKey > 0.0) {
     let ph = 2.0 * PI * (fract(P.ingressCps * f32(s)) + fract(P.ingressRowCyc * f32(row)))
       + P.ingressPhase;
-    out = out + P.ingressIre * P.ingressKey * (0.6 + abs(audio[row]))
+    out = out + P.ingressIre * P.ingressKey * P.rfFadeG * (0.6 + abs(audio[row]))
       * sin(ph + 5.0 * audio[row]);
   }
 

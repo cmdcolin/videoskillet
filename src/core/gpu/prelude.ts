@@ -253,6 +253,9 @@ export const PARAM_DEFS = [
   ['rfAdjPhase', 'f32'], // their vision-carrier beat phase at frame start, radians (accumulated)
   ['rfAdjPhaseS', 'f32'], // their sound-carrier beat phase, radians (their audio FM rides here)
   ['rfSnow', 'f32'], // weak signal: IF noise into the envelope detector (Rician, whites first)
+  ['rfFadeK', 'f32'], // the fading carrier after the tuner AGC, against nominal (1 = held)
+  ['rfFadeG', 'f32'], // the tuner AGC's IF gain, which scales the noise floor and interferers
+  ['rfFloor', 'f32'], // the receiver's own noise floor, live while the signal fades
   ['ingressIre', 'f32'], // shield ingress: the radio's carrier amplitude, IRE
   ['ingressKey', 'f32'], // whether the mic is keyed right now, 0..1 (CPU-walked stretches)
   ['ingressCps', 'f32'], // its visible beat frequency, cycles/sample (wanders)

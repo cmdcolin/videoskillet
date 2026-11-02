@@ -6,13 +6,36 @@
 // head-end oscillators drift against each other, they do not oscillate — and
 // it crosses zero, which is where the wiper bars hang, flatten, and reverse.
 // Everything is a function of the frame count, so harness runs reproduce.
+//
+// The same state carries our own station's fading. The wanted carrier arrives
+// by two paths whose difference wanders, so it nulls deeply and briefly and
+// peaks broadly, on top of a slow tropospheric loss. The tuner's AGC turns its
+// IF gain up to hold the carrier level, which turns up the receiver's own
+// noise floor and every interferer with it: snow surges at the bottom of each
+// fade, and past the AGC's range the carrier itself sinks and sync goes.
 
-import { wrap } from '../math'
+import { clamp, wrap } from '../math'
 import { LINES, SAMPLES_PER_LINE } from './constants'
 import { valueNoise } from './noise'
 
 const N = SAMPLES_PER_LINE * LINES
 const TAU = 2 * Math.PI
+
+// The tuner AGC's range: past this the carrier itself falls.
+const IF_GAIN_MAX = 20
+// The receiver's own noise referred to its input, against a nominal carrier.
+const FADE_FLOOR = 0.08
+// The AGC detector's filter: gain comes down within a frame or two and goes
+// back up over a fifth of a second.
+const AGC_ATTACK = 0.5
+const AGC_RELEASE = 0.08
+// The IF stage overloads a little past nominal on a gain left high.
+const IF_OVERLOAD = 1.3
+
+export interface RfControls {
+  rfFade: number
+  rfFadeHz: number
+}
 
 interface RfUniforms {
   rfAdjEps: number
@@ -23,6 +46,9 @@ interface RfUniforms {
   ingressRowCyc: number
   ingressPhase: number
   ingressKey: number
+  rfFadeK: number
+  rfFadeG: number
+  rfFloor: number
 }
 
 export class RfState {
@@ -30,8 +56,10 @@ export class RfState {
   private phV = 0
   private phS = 0
   private phI = 0
+  private pathPhase = 0
+  private ifGain = 1
 
-  update(frame: number): RfUniforms {
+  update(frame: number, c: RfControls): RfUniforms {
     const t = frame / 60
     // Their line rate off ours, as a fraction. Biased off zero — a neighbour's
     // crystal has some fixed error — with a wander wide enough to swing
@@ -81,6 +109,33 @@ export class RfState {
         SAMPLES_PER_LINE * cps - Math.floor(SAMPLES_PER_LINE * cps),
       ingressPhase: this.phI,
       ingressKey: key,
+      ...this.fade(t, c),
     }
+  }
+
+  private fade(t: number, c: RfControls) {
+    // The two paths' phase difference drifts at a rate that wanders and now
+    // and then reverses, so a null can hang for a second or sweep past.
+    const cps = c.rfFadeHz * (0.9 + 1.2 * valueNoise(t * c.rfFadeHz * 0.7, 51))
+    this.pathPhase = wrap(this.pathPhase + (TAU * cps) / 60, TAU)
+    const r = c.rfFade * (0.8 + 0.2 * valueNoise(t * 0.35, 52))
+    const paths =
+      Math.hypot(
+        1 + r * Math.cos(this.pathPhase),
+        r * Math.sin(this.pathPhase),
+      ) /
+      (1 + r)
+    const tropoDb = 18 * c.rfFade * Math.max(0, valueNoise(t * 0.06, 53) + 0.35)
+    const carrier = paths * 10 ** (-tropoDb / 20)
+    const want = clamp(1 / Math.max(carrier, 1e-6), 1, IF_GAIN_MAX)
+    this.ifGain +=
+      (want - this.ifGain) * (want < this.ifGain ? AGC_ATTACK : AGC_RELEASE)
+    return c.rfFade > 0
+      ? {
+          rfFadeK: clamp(this.ifGain * carrier, 0.01, IF_OVERLOAD),
+          rfFadeG: this.ifGain,
+          rfFloor: FADE_FLOOR,
+        }
+      : { rfFadeK: 1, rfFadeG: 1, rfFloor: 0 }
   }
 }

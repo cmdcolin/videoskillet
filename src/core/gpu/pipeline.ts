@@ -2736,7 +2736,7 @@ export class Engine implements EngineApi {
       this.uniformValues(),
       mixU,
       // the adjacent channel's raster slip and beat phases, walked per frame
-      this.rfState.update(this.frame),
+      this.rfState.update(this.frame, c),
       this.ampNoise.update(this.frame, c),
       // the two characters line 21 carries this frame; nulls on most of them,
       // because a caption is written far faster than it is read

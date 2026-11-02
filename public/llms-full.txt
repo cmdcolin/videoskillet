@@ -884,6 +884,14 @@ rfSnow  (weak signal (snow))
   0..1 step 0.01  default 0
   IF noise into the envelope detector, the source of weak-signal snow. The picture rides a negative-modulation carrier, with sync at peak power and white at 12.5%, so the noise lands unevenly: whites boil first, blacks stay quiet longest, and sync goes last.
 
+rfFade  (signal fading)
+  0..1 step 0.01  default 0
+  A distant station arriving by two paths, a direct one and one bent by the atmosphere or reflected off an aircraft. Their phase difference drifts, so the carrier nulls deeply and briefly and peaks broadly, and a slow tropospheric loss rides under that. The tuner's AGC raises its gain to hold the carrier level, and that gain raises the receiver's own noise and the adjacent channel and CB ingress with it, so snow surges at the bottom of each fade. Past the AGC's range the carrier itself sinks, so the picture washes out and sync goes. The AGC lowers its gain faster than it raises it, so a carrier that returns quickly overdrives the IF for a frame or two and the picture comes back dark.
+
+rfFadeHz  (fade rate)
+  0.02..3 step 0.01 Hz  default 0.3
+  How fast the two paths drift against each other, which sets how often the nulls come. The drift wanders and sometimes reverses, so a null can hang for a second or sweep straight past.
+
 ingress  (CB ingress)
   0..1 step 0.01  default 0
   A two-way radio getting into the cable through a cracked shield or corroded fitting. The carrier is unrelated to any NTSC frequency, so its beat draws a herringbone at no fixed angle. It arrives in transmissions, and the program audio stands in for the speech.

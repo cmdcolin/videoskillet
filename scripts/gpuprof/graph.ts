@@ -780,7 +780,7 @@ export class Graph {
         dbgView: this.dbgView,
       }),
       ...mixU,
-      ...this.rfState.update(this.frame),
+      ...this.rfState.update(this.frame, c),
       ...this.ampNoise.update(this.frame, c),
       // A sibling of uniformValues, not one of its env fields: these two are
       // packed uniforms in their own right, the way the app assembles them.

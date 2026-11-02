@@ -89,7 +89,9 @@ What is left, in rough payoff order:
   band (tracking, head clog, shuttle, head switch). If the preamp's floor were
   fixed and the _RF level_ varied, noise would appear wherever signal is weak
   from any one mechanism, and the four blocks would collapse into it. The honest
-  version, and it would delete code; also the largest of these.
+  version, and it would delete code; also the largest of these. Signal fading
+  (`rfFade`) already works this way for its own term: a fixed floor that the
+  tuner AGC's gain scales, in `rfstate.ts`, and it is the place to start.
 
 ## Per-input feeds — what is still on the program bus
 
