@@ -68,7 +68,7 @@ rendering a still for each of twenty looks:
 node scripts/shot.mjs 'http://localhost:5199/app/#preset=vhs&set=headSwitchShiftUs:9' out.png 6000
 ```
 
-The link the page opens on sets the sources: `?src=webcam&vurlb=<url>` puts the
+The link the page opens on sets the sources: `#src=webcam&vurlb=<url>` puts the
 camera on A and a video file on B. On Linux, drive Firefox Nightly from a
 harness; `scripts/shot.mjs` launches it with the right prefs.
 

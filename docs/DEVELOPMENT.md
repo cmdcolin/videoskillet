@@ -1136,8 +1136,9 @@ The layering:
 node scripts/poolcheck.mjs http://localhost:5199/app
 ```
 
-Eighteen checks over one browser session and a handful of live requests. Run it
-when touching either source module, or when a pick starts coming back empty.
+`poolcheck` runs its checks over one browser session and a handful of live
+requests. Run it when touching either source module, or when a pick starts
+coming back empty.
 Four things it watches are outside this project and invisible to the test suite:
 Commons changing its mind about `descriptionurl` or `gsrsort=random`, its
 transcode ladder being rebuilt, archive.org's `sort[]=random` ceasing to be

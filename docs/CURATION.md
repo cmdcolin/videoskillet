@@ -260,7 +260,7 @@ One retirement: `dirtyDissolve` was `dirtyMix` with A pulled halfway down, and
 0.076 distance from `vhs` — the distance under-weights `shuttleX`'s range, and
 cueing at 5x is a different mechanism rather than a retune.
 
-## Six findings that generalise
+## Seven findings that generalise
 
 ### Ring modulation does not make rainbows
 

@@ -607,10 +607,9 @@ to get right:
   hold-to-compare gets away with because it happens once, under your finger.
 - **`filtersDirty` is set on the two edges of a cycle and on no frame in
   between.** Every frame inside one half holds the same values, so the bank
-  designed on the way in is still the right bank. Marking each clean frame
-  instead is a FIR redesign at the frame rate, which is the whole cost of this
-  landing in the wrong place; at 2Hz the edges cost four rebuilds a second,
-  which is what `COARSE_STEPS` already spends on a morph.
+  designed on the way in is still the right bank. Marking every frame dirty
+  would redesign the FIR at the frame rate. At 2Hz the edges cost four rebuilds
+  a second, the same as `COARSE_STEPS` spends on a morph.
 - **The rate is read off the wall clock**, not off a frame count. `ModState`
   advances on a fixed `1/60`, so a 2Hz LFO is 1Hz on a 30fps machine; a train
   you count along with — and lock to a beat — cannot afford that. The length is

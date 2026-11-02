@@ -355,13 +355,12 @@ const llms = [
   '- [Effects](https://videoskillet.com/guide/effects/) — the fault each',
   '  control models',
   '- [Agentic AI usage](https://videoskillet.com/guide/ai/) — Claude Code',
-  '  driving a running tab through window.vf',
+  '  driving a running tab through window.vf, and working on this codebase',
+  '  with an agent',
   '- [CLI](https://videoskillet.com/guide/cli/) — `pnpm render`,',
   '  which takes one of these links and writes a file, with no browser open',
   '- [Architecture](https://github.com/cmdcolin/videoskillet/blob/main/docs/ARCHITECTURE.md)',
   '  — the signal path pass by pass, for changing it',
-  '- [AI usage](https://videoskillet.com/guide/ai/) — working on this',
-  '  codebase with an agent',
   '',
 ].join('\n')
 

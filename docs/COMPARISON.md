@@ -68,13 +68,14 @@ as compute shaders, so a control change costs one uniform-buffer write. Every
 stage of the path gets a control, any of them can be driven by an LFO, live
 audio or a MIDI knob, and two feedback loops run inside the model: a camera
 aimed at the monitor it feeds, and a mixer patched into itself at signal level.
-A take renders offline to constant-framerate H.264, and a link carries the look.
+The app renders a take to a constant-framerate H.264 MP4 and `pnpm render` to
+ProRes 4444, and a link holds the look.
 [The features](FEATURES.md) list the rest.
 
 ### Limitations
 
-- **No plugin, and no timeline.** Clips line up in a rundown, and a rendered
-  take carries no audio track ([the editor](EDITOR.md)).
+- **No plugin, and no timeline.** Clips line up in a rundown
+  ([the editor](EDITOR.md)).
 - **The raster is fixed** at 910×525 samples, 754×480 active, so a 4K source is
   sampled down to NTSC resolution.
 - **A take is only reproducible from clips.** Offline renders of one take come

@@ -1,7 +1,8 @@
 # Getting started
 
 videoskillet simulates the analog video signal in WebGPU shaders. It needs a
-recent browser with WebGPU: Firefox Nightly or Chrome Canary.
+browser with WebGPU: current Chrome or Edge, or on Linux, Firefox Nightly or
+Chrome with WebGPU enabled. [The FAQ](FAQ.md) lists phones and tablets.
 
 Visit https://videoskillet.com/app/
 

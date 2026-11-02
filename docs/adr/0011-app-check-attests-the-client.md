@@ -2,6 +2,11 @@
 
 **Status:** accepted, 2026-09-16.
 
+**Amended 2026-11-01:** the labelling system was removed in October 2026,
+and the rules now deny the `candidates`, `votes` and `ratings` collections
+([CURATION.md](../CURATION.md)). The App Check decision stands for the
+collections that remain.
+
 ## Context
 
 The project moved from the free Spark plan to Blaze, and that changes what an

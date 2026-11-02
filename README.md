@@ -77,7 +77,7 @@ fetch — on the fly. `pnpm dev` has it, and so does `videoskillet serve` from t
 - [CLI](docs/CLI.md) — the offline renderer, which takes a link and a file and
   writes ProRes 4444, and `videoskillet serve`, which hosts the app on your own
   machine
-- [Drive it by URL](public/llms.txt) — the query string is a complete remote
+- [Drive it by URL](public/llms.txt) — the part of the URL after `#` sets every
   control, and [every control's key](public/llms-full.txt) lists what the rest
   of the docs leave out. Published at
   [videoskillet.com/llms.txt](https://videoskillet.com/llms.txt) for anything

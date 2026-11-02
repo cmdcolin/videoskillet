@@ -2,6 +2,11 @@
 
 **Status:** accepted, 2026-08-07.
 
+**Amended 2026-11-01:** the freeze explanation under _Context_ is 0002's
+device budget, which [0004](0004-never-destroy-a-presenting-device.md)
+disproved: the freeze came from destroying a presenting device. The worker
+engine stays deleted.
+
 ## Context
 
 Three commits (`c67fc3e`, `a12c55e`, `2eef17e`) built a second engine that runs

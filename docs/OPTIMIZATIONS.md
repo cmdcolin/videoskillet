@@ -83,8 +83,9 @@ pass over the stock frame, GPU ms:
 Confirmed in the app with `perf.mjs`: stock went **4.17 → 2.88 ms/frame**
 best-of. That is more than the profiler's 0.63 ms of GPU time, which says the
 7.6 MB buffer round trip cost the browser's queue more than it cost the card.
-The first three are bit-exact; the fourth is the bloom bargain, below. Every one
-is of the form _do less_ — a pass not dispatched, a buffer not written, a gather
+The first three are bit-exact. The fourth changes a pixel by at most 3/255, as
+[Tiering](#tiering-because-tap-count-is-the-only-lever) measures. Every one is
+of the form _do less_ — a pass not dispatched, a buffer not written, a gather
 not run, a fetch not made.
 
 A second pass went after the looks rather than the floor, ranking the hot passes

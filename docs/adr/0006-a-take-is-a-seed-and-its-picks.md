@@ -2,6 +2,12 @@
 
 **Status:** accepted, 2026-08-11.
 
+**Amended 2026-11-01:** the strip's offline walk (`offlineWalk` in
+`ui/stripRun.ts`) and frame-exact pull (`ui/framePull.ts`) have both been built
+since; [EDITOR.md](../EDITOR.md) describes them. `vote/candidates.ts` was
+removed with the labelling system in October 2026
+([CURATION.md](../CURATION.md)).
+
 ## Context
 
 The premise of the offline render ([`../EDITOR.md`](../EDITOR.md) ›

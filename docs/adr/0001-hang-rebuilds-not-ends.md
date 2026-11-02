@@ -2,6 +2,12 @@
 
 **Status:** accepted, 2026-08-07.
 
+**Amended 2026-11-01:** the "Do not raise the replacement limit" consequence
+argues from 0002's budget of about two devices per tab, which
+[0004](0004-never-destroy-a-presenting-device.md) disproved. Creating devices
+leaves a tab rendering, and destroying a presenting one ends its rendering. The
+replacement limit has not been re-measured against that.
+
 ## Context
 
 The render loop can tell that submitted work has stopped completing — it races
