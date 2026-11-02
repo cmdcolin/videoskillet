@@ -2466,7 +2466,9 @@ export function useEngine(args: { rand: Rand }) {
       // moment of the swap, the debug tap, whether B is summing, and each
       // slot's source. The audio graph moves over, so the music does not stop
       // and the clips stay adoptable. The phosphor state and the frame store
-      // start empty, which is what a real set does after the power blinks.
+      // start empty, which is what a real set does after the power blinks. The
+      // store is settled as boot settles it, or freeze and the loop bus track
+      // program A until the page reloads.
       const succeed = (created: Engine, dead: Engine) => {
         // Configured before it goes live, so the first frame it presents is
         // already the user's look.
@@ -2485,6 +2487,7 @@ export function useEngine(args: { rand: Rand }) {
         // are still valid and only the fresh pump needs telling.
         created.setVideoRegion(cueRegion(cueRef.current.a))
         created.setVideoRegionB(cueRegion(cueRef.current.b))
+        created.settleFreeze()
       }
 
       // A device is cheap (0004), so the only thing that refuses one is a tab
