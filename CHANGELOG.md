@@ -2,6 +2,111 @@
 
 All notable changes to videoskillet are documented here.
 
+## [2.25.0](https://github.com/cmdcolin/videoskillet/compare/v2.24.1...v2.25.0) - 2026-11-02
+
+### Features
+- *(ui)* [`ecfa41b`](https://github.com/cmdcolin/videoskillet/commit/ecfa41b817da4348fae2e9a6318c40e727630062) captions switch keys what people say into the camera picture
+- *(signal)* [`c711b00`](https://github.com/cmdcolin/videoskillet/commit/c711b00d31d69cd412c03f2a9d97b73db4bd9c4f) a carrier scrambler that attenuates the whole blanking interval, and SSAVI inverts outright
+- *(signal)* [`dd640d5`](https://github.com/cmdcolin/videoskillet/commit/dd640d55fe20378edd7fbd372e27442744e9c893) an additive keyer beside the comparator
+- *(signal)* [`d71787c`](https://github.com/cmdcolin/videoskillet/commit/d71787cb9ec5f8f49566fbe971367d05fb80bd0a) a key edge generator with border, drop shadow and extrude
+- *(signal)* [`2597cc6`](https://github.com/cmdcolin/videoskillet/commit/2597cc6dd6ef4755938e8c8dbc5ea55f32980894) the mixer keyer slices B's feed damage with its chroma
+- *(signal)* [`646c4ba`](https://github.com/cmdcolin/videoskillet/commit/646c4ba45c584301aaea6c7c2c766adb6a27e0a1) the carrier scrambler gates the vertical interval and rolls, and tri-mode steps it
+- *(ui)* [`2329f4e`](https://github.com/cmdcolin/videoskillet/commit/2329f4e2a079429dd3062f4ab440196c5d2bddd6) extruded ribbons and key off a dub presets
+- *(ui)* [`80a3fb4`](https://github.com/cmdcolin/videoskillet/commit/80a3fb409e73177b9c249a1d59f88b92514e57ee) a tap on the camera keyer calibrates the additive keyer to the backing
+- *(ui)* [`b2c3e17`](https://github.com/cmdcolin/videoskillet/commit/b2c3e1792e3db2afe480033ab937649c3b36fa2e) the chroma key diagram draws the additive keyer's matte
+- *(signal)* [`4804554`](https://github.com/cmdcolin/videoskillet/commit/480455487ad4ec4bd0e25133d85587097c256676) sine-wave and keyed SSAVI scramblers, and the scrambled channel moves to the carrier gate
+- *(signal)* [`470e15f`](https://github.com/cmdcolin/videoskillet/commit/470e15f2a3efd0493f11abc45a2503e84ea622a9) extrude shades its slab copy by copy
+- *(ui)* [`4161d56`](https://github.com/cmdcolin/videoskillet/commit/4161d56d7f63972d9659c4e7ca90cbd35b2e291d) re-record the scrambled channel demo on the carrier gate
+- *(signal)* [`6f7c397`](https://github.com/cmdcolin/videoskillet/commit/6f7c397a5c415da75f65f826af4925fbe917674d) aperiodic scrambler keys, a descrambler box, and pirate feed on the carrier gate
+- *(signal)* [`b40a4bc`](https://github.com/cmdcolin/videoskillet/commit/b40a4bc17223803d557a3d7f6ce72cc29194ba66) a feedback jumper around the enhancer's two stages
+- *(signal)* [`aca385a`](https://github.com/cmdcolin/videoskillet/commit/aca385ac1c73897a98f7422187061df6984d8b50) a latched camera loop preset
+- *(ui)* [`213cdf8`](https://github.com/cmdcolin/videoskillet/commit/213cdf8c47f0f6a28c6c0d8076f85a98cbbc461d) the shuttle moves the clip at its tape speed
+- *(midi)* [`1f19f39`](https://github.com/cmdcolin/videoskillet/commit/1f19f393539f18603b1a00b6ff8ad31e8340bb33) bind a knob to the stab gate's rate
+- *(ui)* [`fe939d7`](https://github.com/cmdcolin/videoskillet/commit/fe939d785261350db8d4ecfb0b0efbf04f745e61) the carrier scramble presets keep their colour
+- *(signal)* [`a573d15`](https://github.com/cmdcolin/videoskillet/commit/a573d15c109acb92bdc04397fa7e49a2bfce5dd7) line-delay scrambling on the input feeds, and a line delay preset
+- *(signal)* [`ff956e4`](https://github.com/cmdcolin/videoskillet/commit/ff956e41e4f4b95d6ad2927dd3525c4d678a0584) a dirty pot in series with each source's cable
+- *(signal)* [`2759efc`](https://github.com/cmdcolin/videoskillet/commit/2759efc14fb3f54ffa24de9ece30e2b9a3dd8d3f) a passive pot crossfader for the dirty sum
+- *(signal)* [`c50f9d7`](https://github.com/cmdcolin/videoskillet/commit/c50f9d7b91ef00b8f3c58f5678fcdf0717d6d9d9) the bus cut relay's contacts bounce as they make
+- *(ui)* [`bbb2ddb`](https://github.com/cmdcolin/videoskillet/commit/bbb2ddb68eba0e9d45e1d0f7af93984ea44c6f87) re-record the scrambled channel demo with the frame held and the colour kept
+- *(ui)* [`b15a167`](https://github.com/cmdcolin/videoskillet/commit/b15a167e4618aaf847091ed86b7d2f812488b0e9) a parts-drawer mixer preset
+- *(sync)* [`1989846`](https://github.com/cmdcolin/videoskillet/commit/198984679189ea3fe066553149af2f68af990449) an AC-coupled sync separator whose phase comparator tears the scrambled channel along its shadows
+- *(signal)* [`ae66625`](https://github.com/cmdcolin/videoskillet/commit/ae66625a8d9162745bfc6bcda539b2f6adac064e) the AC-coupled set keys its black clamp and a carrier AGC off its own flyback
+- *(ui)* [`3d19d86`](https://github.com/cmdcolin/videoskillet/commit/3d19d86cab00076bb3c083d7514d01da3f7c6c92) re-record the scrambled channel demo with the shadow tearing and the keyed clamp
+- *(signal)* [`b82ebcf`](https://github.com/cmdcolin/videoskillet/commit/b82ebcfc962a08ed2de394a93886d8f7e8508742) a frame-recursive noise reducer whose motion gate and short memory freeze grain into plateaus
+- *(ui)* [`0675ebf`](https://github.com/cmdcolin/videoskillet/commit/0675ebf88085024035fbbab8c3016f8d9ec03f11) a power-cycle transition whose scan collapses before the gun goes dark
+- *(ui)* [`a15495d`](https://github.com/cmdcolin/videoskillet/commit/a15495d933a01f074a4a05a78bdec2373e8fe31e) a gated scramble preset that keeps the old scrambled channel look
+- *(signal)* [`397a062`](https://github.com/cmdcolin/videoskillet/commit/397a062d56d799d59c4f25ad28cad1f5627c5b41) popcorn and flicker noise in the deck's video amplifier
+- *(signal)* [`3627bc7`](https://github.com/cmdcolin/videoskillet/commit/3627bc7e488bd760b0a607f812f03ca8958ad232) multipath and tropospheric fading through the tuner AGC
+- *(signal)* [`c65a1a6`](https://github.com/cmdcolin/videoskillet/commit/c65a1a6523be9e9f55799b85e5a5b2b4a55c0392) a dead full-erase head leaves the old recording's colour under the new
+- *(ui)* [`5788ca5`](https://github.com/cmdcolin/videoskillet/commit/5788ca525d3eaa50009801d149d17e4a887eeda8) distant station and taped over presets
+- *(deflection)* [`44db6dc`](https://github.com/cmdcolin/videoskillet/commit/44db6dcd442734999c98065edb6796913c9c73d8) flyback arcing that strikes on dark pictures
+- *(ui)* [`05d4e96`](https://github.com/cmdcolin/videoskillet/commit/05d4e969b66843e634dddfabcc66e130dd5b65f1) the tri-mode scrambler and the 6 dB box use the AC-coupled set
+- *(gpu)* [`8c3b775`](https://github.com/cmdcolin/videoskillet/commit/8c3b775be5399aa08c1071a4c1b65e5494f56337) worn cathodes and a heater leak on the picture tube
+- *(signal)* [`90b717c`](https://github.com/cmdcolin/videoskillet/commit/90b717c24ea1b6d546ab0edd59d5817948b09b37) low-light sensor noise and AGC gain-up in the feedback camera
+- *(signal)* [`5d7b5fc`](https://github.com/cmdcolin/videoskillet/commit/5d7b5fca836d65dd5e087f0152156d6cf202467c) a capture card luma converter with off-binary bit weights and a stuck bit
+- *(signal)* [`d338b6e`](https://github.com/cmdcolin/videoskillet/commit/d338b6e5964b98c5d9ad09ab63439a66066c77ce) the capture card's converter digitises the composite, so a dead bit folds colour too
+
+### Fixes
+- *(ui)* [`0d2f373`](https://github.com/cmdcolin/videoskillet/commit/0d2f3735a4c22230c37b3a1cd3355651258b9f6f) costume mode waits for the set before Start, and a rebuild keeps the caption
+- *(ui)* [`f2ecf14`](https://github.com/cmdcolin/videoskillet/commit/f2ecf14e91ae391ada83fbe554dc26fbc96ca64d) a layer at zero weight no longer owns the mixer, and a stack-only link opens
+- *(ui)* [`da42d47`](https://github.com/cmdcolin/videoskillet/commit/da42d47fb3f8e0fc7323911c93c77732375ed8ea) rollLook takes a seeded random source like every other roller
+- *(ui)* [`de6668d`](https://github.com/cmdcolin/videoskillet/commit/de6668d9f8342742e15e4572a2f59acac74dc01f) a tape whose frame fails to draw or encode ends with an error
+- *(ui)* [`2c98e8b`](https://github.com/cmdcolin/videoskillet/commit/2c98e8bb6525f19688727deec7b4ca66ec04d522) camera page accessibility
+- *(signal)* [`7707b34`](https://github.com/cmdcolin/videoskillet/commit/7707b343c2e9d2b476c607d6c5172835323ed78e) receiver, loop and keyer bugs from a shader review, and faster retrace and OSD
+- *(ui)* [`4280aeb`](https://github.com/cmdcolin/videoskillet/commit/4280aeb82af162af8e7531aab867fa4e0251d939) publish invalidates only the CloudFront-fronted bucket
+- *(ui)* [`42a20c7`](https://github.com/cmdcolin/videoskillet/commit/42a20c700163338a3440896ee0fcec36119444d3) a Wikipedia caption skips articles with no prose
+- *(gpu)* [`c55dff8`](https://github.com/cmdcolin/videoskillet/commit/c55dff807d899f028cad31f5117eca9c1da48c97) the engine drops non-finite control writes
+- *(gpu)* [`7b5a906`](https://github.com/cmdcolin/videoskillet/commit/7b5a906b535205d02f38f377c2f32b504830181e) engine control writes clamp to the slider ranges and report what they did
+- *(ui)* [`551102c`](https://github.com/cmdcolin/videoskillet/commit/551102c34aacba5cc2d3a82bfdea7151525845f4) the enhancer schematic stamps sync on the falling crossing, as the shader does
+- *(signal)* [`f26d4ec`](https://github.com/cmdcolin/videoskillet/commit/f26d4ec5c5b23438a90c885d08b2862270c8ade9) the carrier scrambler leaves the vertical interval alone, so the frame holds
+- *(ui)* [`b21995e`](https://github.com/cmdcolin/videoskillet/commit/b21995e3bf1613851978c8977c2e0e6e245d9b0e) scramble presets stop wandering the fine tuner
+- *(deflection)* [`68fb26b`](https://github.com/cmdcolin/videoskillet/commit/68fb26be6d4077a90498cb72ccec38c349bc9f36) a flyback arc recovers in milliseconds, so it snaps instead of zooming
+- *(ui)* [`4680552`](https://github.com/cmdcolin/videoskillet/commit/4680552da92872bc604e4102643a536ecff133d0) the distant station snows in colour, and the tired tube preset goes
+
+### Performance
+- *(signal)* [`277bc96`](https://github.com/cmdcolin/videoskillet/commit/277bc96678f4a7d29e9f816c9c2ac9f1dda20949) the key edge generator reads the key without B's damage
+
+### Refactor
+- *(ui)* [`7958f16`](https://github.com/cmdcolin/videoskillet/commit/7958f164447970323968ff93c63a096db797e3cf) remove costume mode
+- *(ui)* [`676d5dc`](https://github.com/cmdcolin/videoskillet/commit/676d5dc2ab60b4c32d73d6296eb2d97edd8a99bd) the camera page's scene and undo move into useScene
+- *(ui)* [`bb6874a`](https://github.com/cmdcolin/videoskillet/commit/bb6874a9279b571584af9f5b26172b7bd6c8d1eb) the camera page keeps a failure's error and words it where it is shown
+- *(gpu)* [`51c2799`](https://github.com/cmdcolin/videoskillet/commit/51c2799f2a704d0c119b138fa310f013d1e7d597) shared helpers for servo state and the carrier map, and a fill the chyron no longer discards
+
+### Documentation
+- [`4588e98`](https://github.com/cmdcolin/videoskillet/commit/4588e9816f6c8b7d7a271c19b13718a685f19406) record the keyer's additive mode, damage slicing, edge generator and flashing freeze
+- [`d0d205e`](https://github.com/cmdcolin/videoskillet/commit/d0d205e0df3caacc1d1682f02f653a01a0c05f81) the scrambled channel post links the look it describes, and notes the new one
+- [`b1f0c89`](https://github.com/cmdcolin/videoskillet/commit/b1f0c89cde88293cff78d96bf93317996a259cb9) compare against Yurenaki
+- [`49a0801`](https://github.com/cmdcolin/videoskillet/commit/49a080141fa734fea86d243540e0e4cd90489d33) propose a stable window.vs agent API and set WebMCP aside
+- [`a072a4f`](https://github.com/cmdcolin/videoskillet/commit/a072a4fb3b58e56d7cf0b12b9343a05f09ba151b) keep agents on window.vf and build the eval before a facade
+- [`5d1ad69`](https://github.com/cmdcolin/videoskillet/commit/5d1ad69bcc401a55dce2e4a1243aab5d0322e277) lead the AI page with automating a running instance from Claude Code
+- [`112489c`](https://github.com/cmdcolin/videoskillet/commit/112489cbede987eff82168b2a830d723abb596b9) delete the user guide
+- [`24785ec`](https://github.com/cmdcolin/videoskillet/commit/24785ec0d9c1e950c444511139a42b85405dde83) regenerate the effects reference for the enhancer loop
+- [`6a1852b`](https://github.com/cmdcolin/videoskillet/commit/6a1852b9caac35c02a7256a789d9b46592556080) rewrite WRITING.md and CLAUDE.md to follow their own rules
+- [`fd79e1e`](https://github.com/cmdcolin/videoskillet/commit/fd79e1ea45f7cce2a73d96c461afc23af551e5bf) correct facts a prose audit found out of date or inconsistent
+- [`1ebf2b5`](https://github.com/cmdcolin/videoskillet/commit/1ebf2b55701fa8ad2c4359e8fcefe166416c48ae) the sync doc lists commit scopes, not conventions, as unshared
+- *(ui)* [`16f7f3b`](https://github.com/cmdcolin/videoskillet/commit/16f7f3bf6e512911ed8f26db0a7743301bdfb019) plain wording in control help and generated docs
+- [`3baa5fe`](https://github.com/cmdcolin/videoskillet/commit/3baa5fec84b915237bbd7eb9b7de651134e27e9f) state links and browser support once, and cut restated passages
+- [`1ab5700`](https://github.com/cmdcolin/videoskillet/commit/1ab57001a1c62e6e295f70d982900e717e1ff25a) state each performance fact once across the three developer docs
+- [`f1b193e`](https://github.com/cmdcolin/videoskillet/commit/f1b193e5edfc98a2746cd32e18285e7772965989) cut restated and retired passages from EDITOR, CURATION and IDEAS
+- [`739d0c2`](https://github.com/cmdcolin/videoskillet/commit/739d0c203cce99bb367be79346702a89311ac917) point code comments at EDITOR.md headings that exist
+- [`6194e33`](https://github.com/cmdcolin/videoskillet/commit/6194e332e87778875620103cc04ef2cc898a1e94) delete four finished handoffs nothing cites
+- [`50a2775`](https://github.com/cmdcolin/videoskillet/commit/50a277580733cf49d24384953246f32cb65abe0d) draft a post on driving the app with an AI agent, and reshoot its clip
+- [`446486a`](https://github.com/cmdcolin/videoskillet/commit/446486a017cbaa54f9d320af062b9a3e860485e9) scrambler help no longer promises a roll
+
+### Tests
+- *(signal)* [`7b2ab4b`](https://github.com/cmdcolin/videoskillet/commit/7b2ab4b7d93675b865e6de2bbd0b3632c719eb0a) refresh the scrambledChannel golden for the carrier tearing
+
+### Chores
+- [`a1957f0`](https://github.com/cmdcolin/videoskillet/commit/a1957f026d5ed511409bc31569a62e3e189ff450) recorders invalidate CloudFront after uploading a clip
+- [`5947d90`](https://github.com/cmdcolin/videoskillet/commit/5947d9052914cf0518c2bfa9c47b812fc14f756a) share one setup action across jobs, pin node in binaries
+- [`b77e6cd`](https://github.com/cmdcolin/videoskillet/commit/b77e6cda3eeac7f87954458779190a265791eba6) pnpm 12, job timeouts, permissions scoped to the jobs that publish
+- [`c73cc0e`](https://github.com/cmdcolin/videoskillet/commit/c73cc0ef7e0b05bb049ab2b737b88c1216879064) action-gh-release v3.0.3
+- [`1f896af`](https://github.com/cmdcolin/videoskillet/commit/1f896afb52953f67193abe46ec0c163145de64c6) agentreel waits for the grab to exit and reports the encode's result
+
+### Reverts
+- *(signal)* [`59bd402`](https://github.com/cmdcolin/videoskillet/commit/59bd402f78fbe738e76a6fc6e71637bf491cfe99) remove the frame-recursive noise reducer
+- [`08fdb0d`](https://github.com/cmdcolin/videoskillet/commit/08fdb0d1d84d195d4f452eecb213438d1e4fbc86) move the dark-noise effects off main to a worktree
+
 ## [2.24.1](https://github.com/cmdcolin/videoskillet/compare/v2.24.0...v2.24.1) - 2026-10-31
 
 ### Features
