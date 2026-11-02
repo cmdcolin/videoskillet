@@ -1697,7 +1697,9 @@ fn shapeGen(xy: vec2u, sp: SynthPatch) -> f32 {
 // oscillator does not stop for the retrace — the picture is a window onto a
 // wave that was already running, and that offset is part of where the pattern
 // lands.
-fn videoSynth(xy: vec2u, sp: SynthPatch, pic: f32, colorPic: f32) -> vec3f {
+// audio is this line's entry from SynthState.audioLines: the phase the audio
+// input has added before the line starts, and its extra walk per sample.
+fn videoSynth(xy: vec2u, sp: SynthPatch, pic: f32, colorPic: f32, audio: vec2f) -> vec3f {
   let row = f32(ACTIVE_TOP + xy.y);
   let s = f32(ACTIVE_START + xy.x);
   // The FM term multiplies the sample index, not the phase, because pulling an
@@ -1714,7 +1716,7 @@ fn videoSynth(xy: vec2u, sp: SynthPatch, pic: f32, colorPic: f32) -> vec3f {
     slipA = sp.jitA * oscJitter(line, 0x51a3u);
     slipB = sp.jitB * oscJitter(line, 0xb07cu);
   }
-  let a = synthWave(sp.phaseA + slipA + sp.perLineA * row + (sp.perSampleA + sp.fm * pic) * s, sp.shape);
+  let a = synthWave(sp.phaseA + slipA + audio.x + sp.perLineA * row + (sp.perSampleA + sp.fm * pic + audio.y) * s, sp.shape);
   var b = 0.0;
   if (sp.bSrc > 0.5) {
     b = shapeGen(xy, sp);

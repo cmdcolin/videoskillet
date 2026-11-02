@@ -17,6 +17,7 @@
 // field, as linear light, two f16 per pixel pair like the phosphor store in
 // decode. Read and written at the same pixel only, so one buffer serves.
 @group(0) @binding(6) var<storage, read_write> tube: array<u32>;
+@group(0) @binding(7) var<storage, read> synthLine: array<vec2f>;
 
 // A vidicon reads its picture off a photoconductive target by scanning it with
 // an electron beam that discharges each element to cathode potential. The beam
@@ -233,7 +234,7 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
     // srcFrame. Its phase comes in already advanced for this frame. Patched
     // instead of a picture there is nothing to FM it with, so the modulation
     // input is grounded.
-    src = videoSynth(gid.xy, synthPatch(P), 0.0, 0.0);
+    src = videoSynth(gid.xy, synthPatch(P), 0.0, 0.0, synthLine[ACTIVE_TOP + gid.y]);
   } else if (P.srcNoise > 0.5) {
     // srcFrame rather than frame: a paused A deck holds its picture, and the
     // crawl was on the tape — composeB freezes the same way by skipping, but
@@ -267,7 +268,7 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
   if (synthOn && P.synthFmSrc < 0.5) {
     src = mix(
       src,
-      videoSynth(gid.xy, synthPatch(P), luma(src), colorPic),
+      videoSynth(gid.xy, synthPatch(P), luma(src), colorPic, synthLine[ACTIVE_TOP + gid.y]),
       P.synthOver,
     );
   }
@@ -343,7 +344,7 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
   if (synthOn && P.synthFmSrc >= 0.5) {
     outc = mix(
       outc,
-      videoSynth(gid.xy, synthPatch(P), luma(outc), colorPic),
+      videoSynth(gid.xy, synthPatch(P), luma(outc), colorPic, synthLine[ACTIVE_TOP + gid.y]),
       P.synthOver,
     );
   }

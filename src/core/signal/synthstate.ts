@@ -57,6 +57,7 @@ export class SynthState {
   private phaseA = 0
   private phaseB = 0
   private frames = 0
+  private readonly lines = new Float32Array(LINES * 2)
 
   update(c: SynthControls): SynthUniforms {
     const t = this.frames / 60
@@ -81,5 +82,22 @@ export class SynthState {
       synthJitA: hzA * jitterS,
       synthJitB: hzB * jitterS,
     }
+  }
+
+  // The audio patched into osc A's frequency input, integrated the way a VCO
+  // integrates its control voltage: each line's offset in hertz adds to the
+  // phase every line after it. Per line, the phase gained before the line
+  // starts and the extra walk per sample within it. The frame's total carries
+  // into the next frame's starting phase.
+  audioLines(audio: Float32Array, hzPerUnit: number) {
+    let gained = 0
+    for (const [row, level] of audio.entries()) {
+      const hz = hzPerUnit * level
+      this.lines[2 * row] = fract(gained)
+      this.lines[2 * row + 1] = hz / SAMPLE_RATE
+      gained += (hz * SAMPLES_PER_LINE) / SAMPLE_RATE
+    }
+    this.phaseA = fract(this.phaseA + gained)
+    return this.lines
   }
 }

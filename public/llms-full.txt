@@ -146,6 +146,10 @@ synthFmSrc  (that input, patched to)
   0=the deck 1=the loop  default 0
   Which picture the frequency input reads. The deck redraws the contours every frame; the loop reads the camera's return, so they trace the last generation's and go round again.
 
+synthAudioFm  (audio → osc A)
+  0..20000 step 1 Hz  default 0
+  The sound into oscillator A's frequency input. The oscillator integrates it, so each line's pitch error adds to every line below it: a low note bends the bars into a wave that follows the waveform down the field, and a loud passage swings their lean across the screen. Past a few kilohertz the bars shred.
+
 ## Feed A · deck
 
 aPause  (A pause (deck held))

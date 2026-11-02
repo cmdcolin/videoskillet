@@ -125,6 +125,7 @@ export class Graph {
   private readonly lineParamsBuf: GPUBuffer
   private readonly filterBuf: GPUBuffer
   private readonly audioBuf: GPUBuffer
+  private readonly synthLineBuf: GPUBuffer
   private readonly paramScratch = new ArrayBuffer(PARAM_BYTES)
   private readonly feedScratch = new ArrayBuffer(PARAM_BYTES)
 
@@ -190,6 +191,7 @@ export class Graph {
     this.filterBuf = storage(NUM_SECTIONS * FILTER_STRIDE * 4)
     this.lineParamsBuf = storage(LINE_PARAM_BYTES)
     this.audioBuf = storage(LINES * 4)
+    this.synthLineBuf = storage(LINES * 8)
     this.compA = storage(N * 4, GPUBufferUsage.COPY_SRC)
     const uvfBBuf = storage(N * 8)
     const compB = storage(N * 4)
@@ -268,6 +270,7 @@ export class Graph {
     upload(srcTexB, opts.sourceB)
     d.queue.writeBuffer(this.filterBuf, 0, designFilterBank(this.c))
     d.queue.writeBuffer(this.audioBuf, 0, new Float32Array(LINES))
+    d.queue.writeBuffer(this.synthLineBuf, 0, new Float32Array(LINES * 2))
 
     const c = this.c
     const perLine = [Math.ceil(SAMPLES_PER_LINE / 64), LINES] as const
@@ -310,6 +313,7 @@ export class Graph {
           inputTex: inputTex.createView(),
           timing: timingBuf,
           tube,
+          synthLine: this.synthLineBuf,
         }),
         dispatch: perTile,
       },
@@ -338,7 +342,11 @@ export class Graph {
       {
         label: 'composeB',
         shader: 'compose_b',
-        variants: one({ P, srcTexB: srcTexB.createView() }),
+        variants: one({
+          P,
+          srcTexB: srcTexB.createView(),
+          synthLine: this.synthLineBuf,
+        }),
         dispatch: perTile,
         when: () => false,
       },

@@ -103,6 +103,25 @@ describe('SynthState', () => {
     expect(fast.synthJitA).toBeCloseTo(6, 9)
   })
 
+  it('integrates the audio input down the field', () => {
+    const s = new SynthState()
+    const lines = s.audioLines(new Float32Array(LINES).fill(0.5), 1000)
+    const perLine = (500 * SAMPLES_PER_LINE) / SAMPLE_RATE
+    expect(lines[0]).toBe(0)
+    expect(lines[2 * 10]).toBeCloseTo((10 * perLine) % 1, 5)
+    expect(lines[2 * 10 + 1]).toBeCloseTo(500 / SAMPLE_RATE, 9)
+  })
+
+  it('carries the frame of audio into the next starting phase', () => {
+    const quiet = new SynthState()
+    const loud = new SynthState()
+    loud.audioLines(new Float32Array(LINES).fill(0.25), 1000)
+    const gained = (250 * SAMPLES_PER_LINE * LINES) / SAMPLE_RATE
+    const a = step(quiet, { synthAHz: F_H }, 1).synthPhaseA
+    const b = step(loud, { synthAHz: F_H }, 1).synthPhaseA
+    expect((b - a - (gained % 1) + 2) % 1).toBeCloseTo(0, 5)
+  })
+
   it('runs the two oscillators independently', () => {
     const out = step(new SynthState(), { synthAHz: F_H, synthBHz: 60 }, 5)
     expect(out.synthPerSampleA).not.toBe(out.synthPerSampleB)

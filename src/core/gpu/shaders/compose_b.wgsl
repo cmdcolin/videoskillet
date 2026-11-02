@@ -4,6 +4,7 @@
 
 @group(0) @binding(0) var<uniform> P: Params;
 @group(0) @binding(1) var srcTexB: texture_storage_2d<rgba8unorm, write>;
+@group(0) @binding(2) var<storage, read> synthLine: array<vec2f>;
 
 @compute @workgroup_size(8, 8, 1)
 fn main(@builtin(global_invocation_id) gid: vec3u) {
@@ -14,7 +15,7 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
   if (P.srcNoiseB > 2.5) {
     // No picture on this side to modulate with: compose_b writes srcTexB, it
     // does not read one, so B gets the synth as a source and nothing else.
-    v = videoSynth(gid.xy, synthPatch(P), 0.0, 0.0);
+    v = videoSynth(gid.xy, synthPatch(P), 0.0, 0.0, synthLine[ACTIVE_TOP + gid.y]);
   } else {
     v = snowSource(
       1u,

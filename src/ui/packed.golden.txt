@@ -333,6 +333,7 @@
 345 synthShapeX step=0.001 default=0
 346 synthShapeY step=0.001 default=0
 347 synthShapeSize step=0.01 default=1
+348 synthAudioFm step=1 default=0
 
 # ?mod= sources, by name
 sine

@@ -464,6 +464,7 @@ export class Engine implements EngineApi {
   private timingBuf: GPUBuffer
   private syncMeasureBuf: GPUBuffer
   private audioBuf: GPUBuffer
+  private synthLineBuf: GPUBuffer
   private ccBuf: GPUBuffer
   private cgBuf: GPUBuffer
   private buzzBuf: GPUBuffer
@@ -621,6 +622,8 @@ export class Engine implements EngineApi {
     this.syncMeasureBuf = storage(LINES * 32, GPUBufferUsage.COPY_SRC)
     // one audio sample per line, uploaded each frame
     this.audioBuf = storage(LINES * 4)
+    // that audio integrated into osc A's phase, two floats per line
+    this.synthLineBuf = storage(LINES * 8)
     // The caption decoder's font ROM and page RAM in one buffer, the ROM half
     // written once here (see captionrom.ts for why they share a binding).
     this.ccBuf = storage(CC_BUF_LEN * 4, GPUBufferUsage.COPY_DST)
@@ -866,7 +869,11 @@ export class Engine implements EngineApi {
       pass(
         'composeB',
         composeBPl,
-        [{ buffer: this.paramsBuf }, this.sources.viewB()],
+        [
+          { buffer: this.paramsBuf },
+          this.sources.viewB(),
+          { buffer: this.synthLineBuf },
+        ],
         perTile,
         // a paused B deck holds its frame, so the snow generator freezes too —
         // the crawl was on the tape, and the tape has stopped
@@ -1707,6 +1714,7 @@ export class Engine implements EngineApi {
         { binding: 4, resource: this.inputTex.createView() },
         { binding: 5, resource: { buffer: this.timingBuf } },
         { binding: 6, resource: { buffer: this.targetBuf } },
+        { binding: 7, resource: { buffer: this.synthLineBuf } },
       ],
     })
   }
@@ -1742,6 +1750,7 @@ export class Engine implements EngineApi {
       this.timingBuf,
       this.syncMeasureBuf,
       this.audioBuf,
+      this.synthLineBuf,
       this.buzzBuf,
       ...this.persistBufs,
       this.targetBuf,
@@ -2753,7 +2762,13 @@ export class Engine implements EngineApi {
     // the upload while the input is off leaves the last frame's samples in
     // audioBuf, and audioBend/audioHue go on reading them — a bend and a hue
     // shift frozen into the picture after the audio is gone.
-    d.queue.writeBuffer(this.audioBuf, 0, this.audioState.update(c.audioGain))
+    const audio = this.audioState.update(c.audioGain)
+    d.queue.writeBuffer(this.audioBuf, 0, audio)
+    d.queue.writeBuffer(
+      this.synthLineBuf,
+      0,
+      this.synthState.audioLines(audio, c.synthAudioFm),
+    )
     // Each extra dub generation is an independent playback pass: its own gen
     // seed (decorrelating noise and dropouts) and a fresh time-base/phase
     // walk, staged now and copied over the live buffers between generations.

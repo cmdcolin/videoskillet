@@ -666,6 +666,18 @@ export const GROUPS: Group[] = [
         unit: '',
         help: "Which picture the frequency input reads. The deck redraws the contours every frame; the loop reads the camera's return, so they trace the last generation's and go round again.",
       },
+      {
+        key: 'synthAudioFm',
+        id: 348,
+        label: 'audio → osc A',
+        min: 0,
+        max: 20000,
+        step: 1,
+        redline: [0, 3000],
+        unit: 'Hz',
+        fine: true,
+        help: "The sound into oscillator A's frequency input. The oscillator integrates it, so each line's pitch error adds to every line below it: a low note bends the bars into a wave that follows the waveform down the field, and a loud passage swings their lean across the screen. Past a few kilohertz the bars shred.",
+      },
     ],
   },
   // Input A's own deck, cable and head-end, ahead of the mixer. The same faults
