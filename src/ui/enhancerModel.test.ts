@@ -82,9 +82,15 @@ describe('bent enhancer', () => {
     expect(out.slice(ACTIVE_START).includes(IRE_SYNC)).toBe(false)
   })
 
-  it('mints pulses in black picture with the slice above it', () => {
+  it('mints one pulse where the picture falls through a raised slice', () => {
     const out = enhancedLine({ ...stock, sync: 1, sliceIre: 10 })
-    expect(out.slice(ACTIVE_START, barStart).includes(IRE_SYNC)).toBe(true)
+    const starts = out
+      .map((y, s) => (y === IRE_SYNC && out[s - 1] !== IRE_SYNC ? s : -1))
+      .filter(s => s >= 0)
+    expect(starts).toHaveLength(2)
+    expect(starts[0]).toBe(0)
+    expect(starts[1]!).toBeGreaterThan(barEnd)
+    expect(starts[1]!).toBeLessThan(barEnd + 40)
   })
 
   it("drags a tail of each edge's own polarity below unity loop gain", () => {

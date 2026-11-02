@@ -108,6 +108,7 @@ export function enhancedLine(e: Enhancer, line = TEST_LINE): number[] {
   let loopHp = 0
   let sep = IRE_BLANK
   let pulse = 0
+  let armed = true
   return line.map((x, s) => {
     let y = x
     if (clamping) {
@@ -135,7 +136,11 @@ export function enhancedLine(e: Enhancer, line = TEST_LINE): number[] {
     if (e.sync > 0) {
       sep += (y - sep) * SEP_ALPHA
       if (pulse > 0) pulse--
-      else if (sep < e.sliceIre) pulse = SYNC_LEN
+      if (sep >= e.sliceIre) armed = true
+      else if (armed) {
+        armed = false
+        pulse = pulse === 0 ? SYNC_LEN : pulse
+      }
       const onBurst = s >= BURST_START && s < BURST_START + BURST_LEN
       if (pulse > 0 && !onBurst) y += (IRE_SYNC - y) * e.sync
     }
