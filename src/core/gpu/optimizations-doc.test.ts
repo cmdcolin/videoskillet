@@ -49,6 +49,15 @@ const WORDS = [
   'eight',
   'nine',
   'ten',
+  'eleven',
+  'twelve',
+  'thirteen',
+  'fourteen',
+  'fifteen',
+  'sixteen',
+  'seventeen',
+  'eighteen',
+  'nineteen',
 ]
 const TENS = ['', '', 'twenty', 'thirty']
 const word = (n: number): string => {

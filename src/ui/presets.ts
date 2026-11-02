@@ -2981,11 +2981,38 @@ export const PRESETS: PresetDef[] = [
       crtGamma: 2.2,
     },
   },
+  {
+    name: 'tiredTube',
+    displayName: 'tired tube',
+    group: 'Phosphor / CRT',
+    blurb:
+      'An old picture tube whose cathodes have lost most of their emission. Highlights flatten to a dull plateau and fade along each line, so every bright area is brightest at its left edge. The blue gun is the most worn, which warms the highlights, and its heater leaks mains onto its bias, so a dim blue band rises out of the blacks and rolls slowly through the picture.',
+    patch: {
+      cathodeWear: 0.6,
+      weakGun: 2,
+      heaterLeak: 0.35,
+    },
+  },
   // Stacks rather than single mechanisms: several stages misbehaving at once,
   // interfering with each other. The rest of the table is deliberately one
   // fault per preset — it is what makes a chip teachable — but the looks people
   // actually keep are usually three of them at the same time, and nothing here
   // reached that on its own.
+  {
+    name: 'dyingSet',
+    displayName: 'dying set',
+    group: 'Full board',
+    blurb:
+      'A set near the end of its life, best on a dark picture. The flyback arcs whenever the picture goes dark, so the raster swells, dims and tears in clusters of snaps. The cathodes are worn, so highlights go dull and warm, and the blue heater leak lifts a band of navy out of the blacks. The beam limiter pumps the drive behind the bright scenes.',
+    patch: {
+      ehtArc: 0.85,
+      cathodeWear: 0.55,
+      weakGun: 2,
+      heaterLeak: 0.3,
+      abl: 0.5,
+      hvSagUs: 6,
+    },
+  },
   {
     name: 'transmissionFault',
     displayName: 'transmission fault',
@@ -3333,6 +3360,17 @@ export const PRESETS: PresetDef[] = [
       { target: 'vHold', source: 'pull', rateHz: 1.2, depth: 0.85 },
       { target: 'hHold', source: 'pull', rateHz: 2, depth: 0.16 },
     ],
+  },
+  {
+    name: 'arcingFlyback',
+    displayName: 'arcing flyback',
+    group: 'Sync / Deflection',
+    blurb:
+      'A flyback that arcs whenever the picture goes dark. Each arc collapses the high voltage, so the raster swells and dims from the line it struck on and takes a frame or two to come back, the lines below it tear, and the spark lays a burst of hash across the picture. Arcs come in clusters, and a bright scene stops them.',
+    patch: {
+      ehtArc: 0.9,
+      hHold: 0.25,
+    },
   },
   {
     name: 'splitPhase',

@@ -64,6 +64,7 @@ import arcSrc from './shaders/arc.wgsl?raw'
 import blitExtSrc from './shaders/blit_ext.wgsl?raw'
 import buzzTapSrc from './shaders/buzz_tap.wgsl?raw'
 import captionSrc from './shaders/caption.wgsl?raw'
+import cathodeSrc from './shaders/cathode.wgsl?raw'
 import channelSrc from './shaders/channel.wgsl?raw'
 import chromaExtractSrc from './shaders/chroma_extract.wgsl?raw'
 import chyronSrc from './shaders/chyron.wgsl?raw'
@@ -505,6 +506,10 @@ export class Engine implements EngineApi {
   private encodeCompositeBBgs: [GPUBindGroup, GPUBindGroup]
   private decodePass: Pass
   private decodeBgs: [GPUBindGroup, GPUBindGroup]
+  // crt_face reads decode's screen directly, or the worn cathodes' copy of it
+  // when that pass runs: [direct, through the cathodes].
+  private crtFacePass: Pass
+  private crtFaceBgs: [GPUBindGroup, GPUBindGroup]
 
   // The two input slots: staging, capping, aspect and the noise generators all
   // live in there, so the chain below only sees two texture views.
@@ -521,6 +526,8 @@ export class Engine implements EngineApi {
   private sources: Sources
   private inputTex: GPUTexture
   private outTex: GPUTexture
+  // decode's screen with the worn cathodes' limit applied (cathode.wgsl).
+  private cathodeTex: GPUTexture
   // The decoded frame rendered as a glowing CRT face (bloom/halation/glow).
   // Both the display and the feedback camera sample this, not the raw signal.
   private faceTex: GPUTexture
@@ -690,6 +697,7 @@ export class Engine implements EngineApi {
     // (docs/adr/0014). Each pass that samples one of these binds `lightView`,
     // so the sampler decodes the byte and the gathers pay no pow per tap.
     this.outTex = stateTex(['rgba8unorm-srgb'])
+    this.cathodeTex = stateTex(['rgba8unorm-srgb'])
     // `COPY_SRC` on this one alone, because this is the finished tube face —
     // what `present` samples, and so the only texture here that is the picture
     // rather than a stage on the way to it. It is what `readFrame` copies out,
@@ -754,6 +762,7 @@ export class Engine implements EngineApi {
     const chyronPl = compute('chyron', chyronSrc)
     const osdPl = compute('osd', osdSrc)
     const crtFacePl = compute('crt_face', crtFaceSrc)
+    const cathodePl = compute('cathode', cathodeSrc)
 
     // Zero-copy video: where the device can import the decoder's own frame,
     // the pump skips createImageBitmap entirely and blit_ext samples the frame
@@ -1070,6 +1079,14 @@ export class Engine implements EngineApi {
       { buffer: this.ccBuf },
     ]
     const [pA, pB] = this.persistBufs
+    const crtFaceRes = (screen: GPUTexture): GPUBindingResource[] => [
+      { buffer: this.paramsBuf },
+      lightView(screen),
+      this.linearSamp,
+      this.faceTex.createView(),
+      { buffer: this.timingBuf },
+      this.grainTex.createView(),
+    ]
     this.decodeBgs = [
       bindGroup(decodePl, decodeRes(pA, pB)),
       bindGroup(decodePl, decodeRes(pB, pA)),
@@ -1228,22 +1245,23 @@ export class Engine implements EngineApi {
         () => c.cc > 0,
       ),
       this.decodePass,
-      // Photograph the decoded signal as a glowing CRT face; both the display
-      // and next frame's feedback camera sample faceTex, so the loop
-      // re-photographs an emissive screen rather than the raw signal buffer.
+      // Worn cathodes: a walk along each screen row, which decode's tiles
+      // cannot do. crtFace reads its output instead of decode's while it runs.
       pass(
-        'crtFace',
-        crtFacePl,
+        'cathode',
+        cathodePl,
         [
           { buffer: this.paramsBuf },
           lightView(this.outTex),
-          this.linearSamp,
-          this.faceTex.createView(),
-          { buffer: this.timingBuf },
-          this.grainTex.createView(),
+          this.cathodeTex.createView(),
         ],
-        perTile,
+        [1, ACTIVE_HEIGHT],
+        () => this.cathodeOn(),
       ),
+      // Photograph the decoded signal as a glowing CRT face; both the display
+      // and next frame's feedback camera sample faceTex, so the loop
+      // re-photographs an emissive screen rather than the raw signal buffer.
+      pass('crtFace', crtFacePl, crtFaceRes(this.outTex), perTile),
       // Frame-store capture of what the decoder saw; framestore.ts decides
       // which frames record. Trails force an even strobe period because a
       // mixed-parity store scrambles hue beyond what burst-lock can correct.
@@ -1263,6 +1281,11 @@ export class Engine implements EngineApi {
       ),
     ]
     this.storePrevPass = byLabel(this.postPasses, 'storePrev')
+    this.crtFacePass = byLabel(this.postPasses, 'crtFace')
+    this.crtFaceBgs = [
+      this.crtFacePass.bg,
+      bindGroup(crtFacePl, crtFaceRes(this.cathodeTex)),
+    ]
     this.presentBg = d.createBindGroup({
       label: 'present',
       layout: this.presentPl.getBindGroupLayout(0),
@@ -1983,6 +2006,10 @@ export class Engine implements EngineApi {
       bRowOff: deck.row,
     })
     this.gpu.device.queue.writeBuffer(buf, 0, this.feedScratch)
+  }
+
+  private cathodeOn() {
+    return this.controls.cathodeWear > 0 || this.controls.heaterLeak > 0
   }
 
   private uniformValues() {
@@ -2927,6 +2954,7 @@ export class Engine implements EngineApi {
       )
     }
     this.decodePass.bg = this.decodeBgs[this.phosphorSide]
+    this.crtFacePass.bg = this.crtFaceBgs[this.cathodeOn() ? 1 : 0]
     for (const p of this.postPasses) {
       if (p === this.storePrevPass && this.store.records && c.cfbTrail > 0) {
         enc.copyBufferToBuffer(this.compPrev, 0, this.prevSnap, 0, N * 4)

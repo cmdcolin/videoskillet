@@ -14,6 +14,7 @@ import arc from './shaders/arc.wgsl?raw'
 import blitExt from './shaders/blit_ext.wgsl?raw'
 import buzzTap from './shaders/buzz_tap.wgsl?raw'
 import caption from './shaders/caption.wgsl?raw'
+import cathode from './shaders/cathode.wgsl?raw'
 import channel from './shaders/channel.wgsl?raw'
 import chromaExtract from './shaders/chroma_extract.wgsl?raw'
 import chyron from './shaders/chyron.wgsl?raw'
@@ -55,6 +56,7 @@ const SHADERS: Record<string, string> = {
   blit_ext: blitExt,
   buzz_tap: buzzTap,
   caption,
+  cathode,
   channel,
   chroma_extract: chromaExtract,
   chyron,

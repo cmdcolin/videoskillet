@@ -268,6 +268,11 @@ export const DEFAULT_CONTROLS = {
   crtHaloKey: 0.8,
   crtSvm: 0, // scan velocity modulation depth, signed (coil polarity)
   crtSvmWidth: 1.2, // SVM differentiator aperture, active px
+  // A worn picture tube (cathode.wgsl): emission lost off the cathodes, which
+  // gun is the most worn, and its heater leaking mains onto its bias.
+  cathodeWear: 0,
+  weakGun: 0, // 0 red, 1 green, 2 blue
+  heaterLeak: 0,
   crtConverge: 0, // gun misconvergence at the picture edge, active px
   crtPurity: 0, // magnetised mask patch depth
   crtPurityX: 0.3, // blotch centre on the glass

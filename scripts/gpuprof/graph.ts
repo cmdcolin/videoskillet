@@ -250,6 +250,8 @@ export class Graph {
     const inputTex = tex()
     this.outTex = tex(['rgba8unorm-srgb'])
     const faceTex = tex(['rgba8unorm-srgb'])
+    const cathodeTex = tex(['rgba8unorm-srgb'])
+    const cathodeOn = () => this.c.cathodeWear > 0 || this.c.heaterLeak > 0
     this.faceTex = faceTex
     // The screen holds light as sRGB bytes (docs/adr/0014); the passes that
     // sample it read through this view.
@@ -571,16 +573,38 @@ export class Graph {
         dispatch: perPixelT,
       },
       {
-        label: 'crtFace',
-        shader: 'crt_face',
+        label: 'cathode',
+        shader: 'cathode',
         variants: one({
           P,
           srcTex: lightView(this.outTex),
-          samp,
-          faceTex: faceTex.createView(),
-          timing: timingBuf,
-          grainTex: grainTex.createView(),
+          dstTex: cathodeTex.createView(),
         }),
+        dispatch: [1, ACTIVE_HEIGHT],
+        when: cathodeOn,
+      },
+      {
+        label: 'crtFace',
+        shader: 'crt_face',
+        variants: {
+          direct: {
+            P,
+            srcTex: lightView(this.outTex),
+            samp,
+            faceTex: faceTex.createView(),
+            timing: timingBuf,
+            grainTex: grainTex.createView(),
+          },
+          cathode: {
+            P,
+            srcTex: lightView(cathodeTex),
+            samp,
+            faceTex: faceTex.createView(),
+            timing: timingBuf,
+            grainTex: grainTex.createView(),
+          },
+        },
+        pick: () => (cathodeOn() ? 'cathode' : 'direct'),
         dispatch: perTile,
       },
       {

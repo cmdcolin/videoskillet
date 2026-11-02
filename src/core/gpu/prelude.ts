@@ -467,6 +467,9 @@ export const PARAM_DEFS = [
   ['crtSharp', 'f32'], // horizontal Catmull-Rom reconstruction blend (0 bilinear)
   ['maskAmt', 'f32'], // aperture grille strength
   ['maskPitch', 'f32'], // grille triad pitch, canvas pixels
+  ['cathodeWear', 'f32'], // emission lost off the weakest cathode, 0 new .. 1 spent
+  ['weakGun', 'f32'], // which gun's cathode is the most worn: 0 red, 1 green, 2 blue
+  ['heaterLeak', 'f32'], // heater-cathode leakage on the weak gun, 0 none .. 1 full
   ['crtZoom', 'f32'], // magnification of the glass (1 = whole screen)
   ['crtZoomX', 'f32'], // point on the glass held under the magnifier, 0..1
   ['crtZoomY', 'f32'],
