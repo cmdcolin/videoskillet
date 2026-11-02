@@ -25,9 +25,9 @@ In the recording, Claude Sonnet is given the Purplady look from the gallery and
 asked to build it up from the plain photo one stage at a time. It reads the
 look's settings, puts the plain photo back, and applies the stages in signal
 order, taking a screenshot after each one and saying what changed. Tape noise
-buries the face in snow, the decoder turns the frame violet, and the chroma
-feedback loop goes black, then breaks into violet ribbons and bands. The waits
-between stages are cut out.
+turns the fur to grain, the timebase makes the face wobble, the decoder turns
+the frame violet, and the chroma feedback loop takes the picture over in violet
+bands. The waits between stages are cut out.
 
 An agent can also land a whole look in one step: `window.vfBoard.apply(link)`
 applies a link, and `window.vfBoard.read()` returns the board as text.

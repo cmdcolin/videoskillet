@@ -10,13 +10,13 @@ knobs.
   poster="img/agent-build-poster.jpg"
   src="https://myloveydove.com/videoskillet/agent-build.mp4"></video>
 
-The video shows Claude Sonnet on the right and the app in Chrome on the left.
-The prompt is the one the **agent** button copies, followed by a request to
-rebuild the Purplady gallery look from its plain photo one stage at a time. The
-model reads the look's settings, puts the plain photo back, and applies the
-stages in signal order, taking a screenshot after each one and saying what
-changed: tape noise, then the decoder's violet, then the chroma feedback loop.
-The waits between stages are cut out.
+The video shows the app's picture on the left and Claude Sonnet in Claude Code
+on the right. The prompt is the one the **agent** button copies, followed by a
+request to rebuild the Purplady gallery look from its plain photo one stage at a
+time. The model reads the look's settings, puts the plain photo back, and
+applies the stages in signal order, taking a screenshot after each one and
+saying what changed: tape grain, timebase wobble, the decoder's violet, then the
+chroma feedback loop. The waits between stages are cut out.
 
 ## Automate a running instance with Claude Code
 
