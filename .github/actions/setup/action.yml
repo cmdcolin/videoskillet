@@ -1,0 +1,15 @@
+# CROSS_REPO_SYNC_FILE(ci-setup)
+name: Setup
+description: pnpm, node 24 and the locked dependencies
+runs:
+  using: composite
+  steps:
+    - uses: pnpm/action-setup@v6
+      with:
+        version: 11.20.0
+    - uses: actions/setup-node@v7
+      with:
+        node-version: 24
+        cache: pnpm
+    - run: pnpm install --frozen-lockfile
+      shell: bash

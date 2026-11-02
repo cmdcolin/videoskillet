@@ -21,14 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: pnpm/action-setup@v6
-        with:
-          version: 11.20.0
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 24
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
+      - uses: ./.github/actions/setup
       - run: pnpm render:build
       - run: pnpm build
       - uses: actions/upload-artifact@v5
@@ -55,6 +48,9 @@ jobs:
           - x86_64-pc-windows-msvc
     steps:
       - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
@@ -71,21 +67,25 @@ jobs:
       # baked into the executable is written once (scripts/render/compile.mjs);
       # `--no-bundle` skips the vite step, since the bundle arrived above.
       - name: Compile
-        run: |
-          node scripts/render/compile.mjs --no-bundle \
-            --target=${{ matrix.target }} --out=dist-bin
+        env:
+          TARGET: ${{ matrix.target }}
+        run:
+          node scripts/render/compile.mjs --no-bundle --target="$TARGET"
+          --out=dist-bin
       # A tarball for the platforms whose shells keep the executable bit, a zip
       # for the one that does not.
       - name: Package
         id: package
+        env:
+          NAME: videoskillet-${{ matrix.target }}
+        working-directory: dist-bin
         run: |
-          cd dist-bin
-          if [ -f videoskillet-${{ matrix.target }}.exe ]; then
-            zip -q videoskillet-${{ matrix.target }}.zip videoskillet-${{ matrix.target }}.exe
-            echo "asset=videoskillet-${{ matrix.target }}.zip" >> "$GITHUB_OUTPUT"
+          if [ -f "$NAME.exe" ]; then
+            zip -q "$NAME.zip" "$NAME.exe"
+            echo "asset=$NAME.zip" >> "$GITHUB_OUTPUT"
           else
-            tar czf videoskillet-${{ matrix.target }}.tar.gz videoskillet-${{ matrix.target }}
-            echo "asset=videoskillet-${{ matrix.target }}.tar.gz" >> "$GITHUB_OUTPUT"
+            tar czf "$NAME.tar.gz" "$NAME"
+            echo "asset=$NAME.tar.gz" >> "$GITHUB_OUTPUT"
           fi
       - uses: actions/upload-artifact@v5
         with:

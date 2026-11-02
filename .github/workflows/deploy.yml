@@ -22,14 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: pnpm/action-setup@v6
-        with:
-          version: 11.20.0
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 24
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
+      - uses: ./.github/actions/setup
       - run: pnpm lint
       # Nothing was checking this, so twelve files had quietly drifted — most of
       # docs/ among them. `pnpm format` fixes whatever this reports.
@@ -119,16 +112,7 @@ jobs:
           else
             echo 'firestore.rules is unchanged in this push; nothing to deploy.'
           fi
-      - uses: pnpm/action-setup@v6
-        if: steps.changed.outputs.rules == 'true'
-        with:
-          version: 11.20.0
-      - uses: actions/setup-node@v7
-        if: steps.changed.outputs.rules == 'true'
-        with:
-          node-version: 24
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
+      - uses: ./.github/actions/setup
         if: steps.changed.outputs.rules == 'true'
       # The service account needs the Firebase Rules Admin role and nothing
       # else. `firebase deploy` reads it from GOOGLE_APPLICATION_CREDENTIALS, so
@@ -151,14 +135,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: pnpm/action-setup@v6
-        with:
-          version: 11.20.0
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 24
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
+      - uses: ./.github/actions/setup
       - run: pnpm build
       # From v4 this leaves dotfiles out of the artifact. Nothing in dist/ is
       # hidden, so there is nothing to add back with `include-hidden-files`;
@@ -174,18 +151,11 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
-      - uses: pnpm/action-setup@v6
-        with:
-          version: 11.20.0
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 24
-          cache: pnpm
+      - uses: ./.github/actions/setup
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
       - run: sudo apt-get update && sudo apt-get install -y mesa-vulkan-drivers
-      - run: pnpm install --frozen-lockfile
       - run: pnpm render:golden
       - if: failure()
         uses: actions/upload-artifact@v5
