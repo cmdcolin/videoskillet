@@ -329,6 +329,10 @@
 341 busBounce step=0.01 default=0
 342 synthDriftPct step=0.01 default=0
 343 synthJitterUs step=0.01 default=0
+344 synthBSrc step=1 default=0 choices=osc B|diamond|circle|rectangle
+345 synthShapeX step=0.001 default=0
+346 synthShapeY step=0.001 default=0
+347 synthShapeSize step=0.01 default=1
 
 # ?mod= sources, by name
 sine

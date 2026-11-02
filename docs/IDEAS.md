@@ -412,11 +412,13 @@ speckle. Low fringe proves flatness; high fringe does not prove fringing.
 
 - **One waveform selector serves both oscillators.** Hardware would have one per
   VCO; a ramp beating against a pulse is a patch this cannot express.
-- **No ramp reset off drive.** Real ramp generators are reset by H and V drive,
-  which is why they hold still; here a "ramp" is an oscillator that happens to
-  be at drive rate, so it is only ever as steady as the number typed in. Exact
-  is reachable (`synthAHz` = 15734 lands within a hertz), but a genuine
-  drive-locked mode would give a gradient that cannot creep at all.
+- **Drive-locked ramps reach the combiner only through the shape generator.**
+  `synthBSrc` puts a diamond, circle or rectangle built from H- and V-drive
+  ramps on the combiner's second input. Oscillator A is still free-running, so a
+  plain gradient on A is only as steady as the number typed in.
+- **No wavefolder after the shape generator.** Concentric rings come from the
+  comparator colorizer's three thresholds, so there are at most four. A folder
+  on the shape's level would give as many as its gain allows.
 
 ## The mixer's hardware, and what is left of it
 

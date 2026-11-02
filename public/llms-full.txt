@@ -79,12 +79,28 @@ synthBHz  (osc B)
   The second oscillator, live once the combiner is off "osc A alone". It beats against the first, so a pair a few hertz apart draws a drifting moire.
 
 synthDriftPct  (osc drift)
-  0..2 step 0.01 %  default 0
+  0..10 step 0.01 %  default 0
   How far each oscillator's frequency wanders with temperature, as a share of its setting. The two wander independently, so leaning bars stall, lurch and reverse, and a pair set in step slides in and out of it.
 
 synthJitterUs  (osc jitter)
-  0..8 step 0.01 µs  default 0
+  0..40 step 0.01 µs  default 0
   Timing noise in the oscillators. It accumulates from line to line, so a bar's edge wanders down the screen and the whole pattern shimmies. It is a time error, so it scrambles fine bars long before it moves a slow ramp.
+
+synthBSrc  (combiner's second input)
+  0=osc B 1=diamond 2=circle 3=rectangle  default 0
+  What the combiner takes in place of oscillator B. The shapes come from a ramp generator reset by H and V drive, so they hold still on the raster: the two ramps rectified and added make a diamond, squared and added a circle, and passed through a non-additive mixer a rectangle.
+
+synthShapeX  (shape position H)
+  -1..1 step 0.001  default 0
+  Offsets the horizontal ramp, which slides the shape's centre across the picture.
+
+synthShapeY  (shape position V)
+  -1..1 step 0.001  default 0
+  Offsets the vertical ramp, which slides the shape's centre up and down the picture.
+
+synthShapeSize  (shape gain)
+  0.1..8 step 0.01 x  default 1
+  The ramps' gain. Higher gain reaches the rails closer to the centre, so the shape shrinks, and a comparator against it draws a smaller outline.
 
 synthShape  (waveform)
   0=ramp 1=triangle 2=sine 3=pulse  default 2

@@ -124,6 +124,10 @@ export const PARAM_DEFS = [
   ['synthColorSoft', 'f32'], // the box's own lowpass ahead of the slicer, output pixels
   ['synthJitA', 'f32'], // osc A timing jitter as cycles of its own phase per unit of noise
   ['synthJitB', 'f32'],
+  ['synthBSrc', 'f32'], // the combiner's second input: 0 osc B, 1 diamond, 2 circle, 3 rectangle
+  ['synthShapeX', 'f32'], // the shape's centre, -1..1 across the picture
+  ['synthShapeY', 'f32'],
+  ['synthShapeSize', 'f32'], // the ramps' gain: level 1 lands this far in from the edge
   // dirty mixer: source B is a second, non-genlocked composite signal
   ['srcNoiseB', 'f32'], // GPU-generated source B: 0 texture, 1 TV static, 2 VHS blank-tape static
   ['aGain', 'f32'], // A level on the summing bus, signed (negative inverts A)
@@ -1597,6 +1601,10 @@ struct SynthPatch {
   jitA: f32,
   jitB: f32,
   frame: u32,
+  bSrc: f32,
+  shapeX: f32,
+  shapeY: f32,
+  shapeSize: f32,
 }
 
 // Gathering the patch off the uniform block, once. The prelude may not name a
@@ -1611,6 +1619,7 @@ fn synthPatch(p: Params) -> SynthPatch {
     p.synthShape, p.synthMix, p.synthLevel, p.synthColor, p.synthHue,
     p.synthFm, p.synthColorSrc, p.synthColorMode,
     p.synthJitA, p.synthJitB, p.frame,
+    p.synthBSrc, p.synthShapeX, p.synthShapeY, p.synthShapeSize,
   );
 }
 
@@ -1646,6 +1655,24 @@ fn oscJitter(line: u32, seed: u32) -> f32 {
     sum += v * pow(f32(1u << k) / 1024.0, 0.38);
   }
   return sum * 1.62;
+}
+
+// A shape generator: a horizontal ramp reset by H drive and a vertical one
+// reset by V drive, so it holds still on the raster. Each ramp is offset by a
+// position knob and full-wave rectified into a V. Adding the two Vs makes a
+// diamond, squaring and adding them makes a circle, and a non-additive mixer
+// passing whichever is larger makes a rectangle. The horizontal ramp is scaled
+// to the 4:3 picture so the shapes come out round.
+fn shapeGen(xy: vec2u, sp: SynthPatch) -> f32 {
+  let h = abs(2.0 * (f32(xy.x) + 0.5) / f32(ACTIVE_W) - 1.0 - sp.shapeX) * (4.0 / 3.0);
+  let v = abs(2.0 * (f32(xy.y) + 0.5) / f32(ACTIVE_H) - 1.0 - sp.shapeY);
+  var level = max(h * 0.75, v);
+  if (sp.bSrc < 1.5) {
+    level = (h + v) * 0.5;
+  } else if (sp.bSrc < 2.5) {
+    level = (h * h + v * v) * 0.5;
+  }
+  return clamp(level * sp.shapeSize, 0.0, 1.0);
 }
 
 // A video synthesizer patched into a slot: two oscillators, a combiner and a
@@ -1688,7 +1715,12 @@ fn videoSynth(xy: vec2u, sp: SynthPatch, pic: f32, colorPic: f32) -> vec3f {
     slipB = sp.jitB * oscJitter(line, 0xb07cu);
   }
   let a = synthWave(sp.phaseA + slipA + sp.perLineA * row + (sp.perSampleA + sp.fm * pic) * s, sp.shape);
-  let b = synthWave(sp.phaseB + slipB + sp.perLineB * row + sp.perSampleB * s, sp.shape);
+  var b = 0.0;
+  if (sp.bSrc > 0.5) {
+    b = shapeGen(xy, sp);
+  } else {
+    b = synthWave(sp.phaseB + slipB + sp.perLineB * row + sp.perSampleB * s, sp.shape);
+  }
   var g = a;
   if (sp.combine > 0.5 && sp.combine < 1.5) {
     // A summing amplifier, referenced to mid-video: two signals added run into

@@ -300,7 +300,13 @@ export const BUS_KEYS = Object.values(BUS_OPENS).flat()
 export const SYNTH_OPENS = {
   luma: ['synthFm', 'synthFmSrc'],
   oscA: ['synthAHz', 'synthDriftPct', 'synthJitterUs'],
-  oscB: ['synthBHz'],
+  oscB: [
+    'synthBHz',
+    'synthBSrc',
+    'synthShapeX',
+    'synthShapeY',
+    'synthShapeSize',
+  ],
   shape: ['synthShape'],
   mix: ['synthMix'],
   level: ['synthLevel'],

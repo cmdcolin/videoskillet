@@ -32,6 +32,10 @@ export const DEFAULT_CONTROLS = {
   synthBHz: 60, // one cycle down the frame: a vertical ramp under them
   synthDriftPct: 0,
   synthJitterUs: 0,
+  synthBSrc: 0, // the combiner's second input: 0 osc B, 1 diamond, 2 circle, 3 rectangle
+  synthShapeX: 0,
+  synthShapeY: 0,
+  synthShapeSize: 1,
   synthShape: 2, // 0 ramp, 1 triangle, 2 sine, 3 pulse
   synthMix: 0, // 0 osc A alone, 1 sum, 2 ring mod, 3 comparator
   synthLevel: 1,
