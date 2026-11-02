@@ -449,14 +449,28 @@ if (landed) {
 // the moment it arrived.
 await sleep(2000)
 
+// ffmpeg writes the mp4's index only when it exits, so the encode below waits
+// for the exit. One take behind the old fixed two-second wait left a grab with
+// no `moov` atom. The next take stopped in 0.1s, so the wait is not proven to
+// be what lost it, and the logging below stays until a failure is explained.
+const stopAsked = Date.now()
+const grabExit = new Promise(done => {
+  rec.once('exit', (code, signal) => done({ code, signal }))
+})
 rec.kill('SIGINT')
-await sleep(2000)
+const grabEnd = await Promise.race([grabExit, sleep(120000).then(() => null)])
+console.log(
+  grabEnd === null
+    ? 'agentreel: the grab did not stop within 120s'
+    : `agentreel: the grab stopped after ${((Date.now() - stopAsked) / 1000).toFixed(1)}s (code ${grabEnd.code}, signal ${grabEnd.signal})`,
+)
 
 // The file that ships. Kept at the display's own size: at 1080p the terminal's
 // text is nine pixels tall, and every scale that saves bytes spends them on the
 // half of the frame the recording exists to prove.
 console.log('agentreel: encoding')
-spawnSync('ffmpeg', [
+const encodeStart = Date.now()
+const encode = spawnSync('ffmpeg', [
   '-y',
   '-v',
   'error',
@@ -474,6 +488,12 @@ spawnSync('ffmpeg', [
   '+faststart',
   mp4,
 ])
+console.log(
+  `agentreel: the encode took ${((Date.now() - encodeStart) / 1000).toFixed(0)}s (status ${encode.status}, signal ${encode.signal}, error ${encode.error?.message ?? 'none'})`,
+)
+if (encode.status !== 0) {
+  die(`the encode failed: ${encode.stderr?.toString().slice(-2000)}`)
+}
 
 // The poster: the frame just before the board sheet opens.
 //
