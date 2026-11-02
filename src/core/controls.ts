@@ -3,6 +3,8 @@
 // (which converts it to GPU uniforms). It deliberately depends on neither, so
 // importing a control's type doesn't drag in the GPUDevice.
 
+import { clamp } from './math'
+
 import type { ModWave } from './signal/modstate'
 
 // All user-facing controls, in physical units.
@@ -415,6 +417,54 @@ export type ControlKey = keyof Controls
 // `Object.keys` widens to string, so this is the one place that narrows it.
 // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- see comment above
 export const CONTROL_KEYS = Object.keys(DEFAULT_CONTROLS) as ControlKey[]
+
+export interface ControlRange {
+  min: number
+  max: number
+}
+
+export type ControlRanges = ReadonlyMap<ControlKey, ControlRange>
+
+// What a write to the engine did with each key it was handed. `clamped` keys
+// are also in `applied`.
+export interface ControlWrite {
+  applied: ControlKey[]
+  clamped: ControlKey[]
+  rejected: ControlKey[]
+  unknown: string[]
+}
+
+const isControlKey = (key: string): key is ControlKey =>
+  Object.hasOwn(DEFAULT_CONTROLS, key)
+
+// A patch from outside TypeScript can hold anything, so every key and value is
+// checked. A key with no range in `ranges` is written unclamped.
+export function checkControls(
+  patch: Readonly<Record<string, unknown>>,
+  ranges: ControlRanges,
+) {
+  const values: Partial<Controls> = {}
+  const write: ControlWrite = {
+    applied: [],
+    clamped: [],
+    rejected: [],
+    unknown: [],
+  }
+  for (const [key, value] of Object.entries(patch)) {
+    if (!isControlKey(key)) write.unknown.push(key)
+    else if (typeof value !== 'number' || !Number.isFinite(value))
+      write.rejected.push(key)
+    else {
+      const range = ranges.get(key)
+      const checked =
+        range === undefined ? value : clamp(value, range.min, range.max)
+      values[key] = checked
+      write.applied.push(key)
+      if (checked !== value) write.clamped.push(key)
+    }
+  }
+  return { values, write }
+}
 
 // What a bare load lands on, layered over the defaults: a whisper of source B
 // summed into the composite, so the mixer is visibly doing something on

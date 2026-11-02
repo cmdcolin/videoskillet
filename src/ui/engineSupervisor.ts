@@ -1,5 +1,6 @@
 import { Engine, EngineBuildError } from '../core/gpu/pipeline'
 import { trace } from '../core/gpu/trace'
+import { SLIDER_BY_KEY } from './controls'
 import { reason } from './format'
 import { RebuildPolicy } from './rebuildPolicy'
 
@@ -39,7 +40,7 @@ export interface Supervision {
 }
 
 const engineOn = (canvas: HTMLCanvasElement, audio?: AudioState) =>
-  Engine.create(canvas, { audio })
+  Engine.create(canvas, { audio, ranges: SLIDER_BY_KEY })
 
 // Boots an engine on `canvas` and replaces it in place each time its device is
 // lost or hangs. It never destroys a device (docs/adr/0004): `pagehide` lets go

@@ -1,4 +1,9 @@
-import { CONTROL_KEYS, DEFAULT_CONTROLS, STOCK_HOLD } from '../controls'
+import {
+  checkControls,
+  CONTROL_KEYS,
+  DEFAULT_CONTROLS,
+  STOCK_HOLD,
+} from '../controls'
 import { Listeners } from '../listeners'
 import { clamp, wrap } from '../math'
 import { rngFor } from '../rng'
@@ -84,7 +89,9 @@ import { VideoPump } from './videopump'
 
 import type {
   ControlKey,
+  ControlRanges,
   Controls,
+  ControlWrite,
   FrameStats,
   ModLive,
   ModSlot,
@@ -116,9 +123,16 @@ const MAX_GENS = 4
 const LOCK_AUTO = 4
 
 // A NaN or infinite control reaches the shaders as a NaN uniform, and on
-// frameLock it stops every frame from rendering, so the write is dropped.
-const warnNonFinite = (dropped: Partial<Controls>) => {
-  console.warn('engine: dropped non-finite control values', dropped)
+// frameLock it stops every frame from rendering, so checkControls drops it.
+const warnDropped = (
+  patch: Readonly<Record<string, unknown>>,
+  write: ControlWrite,
+) => {
+  if (write.rejected.length > 0 || write.unknown.length > 0)
+    console.warn('engine: dropped control writes', {
+      rejected: Object.fromEntries(write.rejected.map(k => [k, patch[k]])),
+      unknown: write.unknown,
+    })
 }
 
 // How often React is told where a morph has got to, in milliseconds of wall
@@ -184,6 +198,10 @@ interface EngineOptions {
   // never re-adopt them, and createMediaElementSource would throw on the first
   // routeMedia. See the device-loss rebuild in useEngine.
   audio?: AudioState
+  // Each control's slider range, which writes are clamped to. The ranges live
+  // in ui/controls.ts, which core does not import. Without them a write is
+  // checked for finiteness only.
+  ranges?: ControlRanges
 }
 
 // A shader or pipeline this browser's WebGPU rejects. The device works, so the
@@ -510,7 +528,13 @@ export class Engine implements EngineApi {
     const gpu = await initGpu(canvas, gpuPowerFromSearch(pageSearch()))
     const { built: engine, error } = await underErrorScopes(
       gpu.device,
-      () => new Engine(gpu, canvas, opts.audio ?? new AudioState()),
+      () =>
+        new Engine(
+          gpu,
+          canvas,
+          opts.audio ?? new AudioState(),
+          opts.ranges ?? new Map(),
+        ),
     )
     if (error !== null) {
       // An adopted graph goes back to the caller, which retries with it.
@@ -520,7 +544,12 @@ export class Engine implements EngineApi {
     return engine
   }
 
-  private constructor(gpu: Gpu, canvas: RenderTarget, audio: AudioState) {
+  private constructor(
+    gpu: Gpu,
+    canvas: RenderTarget,
+    audio: AudioState,
+    private readonly ranges: ControlRanges,
+  ) {
     this.gpu = gpu
     this.canvas = canvas
     this.audioState = audio
@@ -1222,29 +1251,34 @@ export class Engine implements EngineApi {
     // the glide only writes the keys it is moving — but because they would fight
     // over that key for the rest of the flight, and the slider would crawl back
     // out from under the finger. Whoever grabbed a control has taken the wheel.
-    if (Number.isFinite(value)) {
+    const patch = { [key]: value }
+    const { values, write } = checkControls(patch, this.ranges)
+    const checked = values[key]
+    if (checked !== undefined) {
       this.endGlide()
-      this.controls[key] = value
+      this.controls[key] = checked
       if (FILTER_SET.has(key)) this.filtersDirty = true
       this.emitControls()
-    } else warnNonFinite({ [key]: value })
+    }
+    warnDropped(patch, write)
   }
 
-  applyControls(patch: Partial<Controls>): void {
+  applyControls(patch: Partial<Controls>): ControlWrite {
     // Same rule as setControl: an outright write of a look supersedes a morph
     // towards one. (startGlide does not come through here — it hands over a
     // destination, not a patch.)
     this.endGlide()
-    const nonFinite: Partial<Controls> = {}
+    const { values, write } = checkControls(patch, this.ranges)
     for (const k of CONTROL_KEYS) {
-      const v = patch[k]
-      if (v !== undefined && Number.isFinite(v)) {
+      const v = values[k]
+      if (v !== undefined) {
         this.controls[k] = v
         if (FILTER_SET.has(k)) this.filtersDirty = true
-      } else if (v !== undefined) nonFinite[k] = v
+      }
     }
-    if (Object.keys(nonFinite).length > 0) warnNonFinite(nonFinite)
+    warnDropped(patch, write)
     this.emitControls()
+    return write
   }
 
   // useSyncExternalStore wiring: a single write path keeps React and the render

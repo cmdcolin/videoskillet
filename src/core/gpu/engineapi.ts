@@ -32,6 +32,7 @@
 import type {
   ControlKey,
   Controls,
+  ControlWrite,
   FrameStats,
   ModLive,
   ModSlot,
@@ -89,7 +90,7 @@ export interface EngineApi {
   // --- controls ---
 
   setControl: (key: ControlKey, value: number) => void
-  applyControls: (patch: Partial<Controls>) => void
+  applyControls: (patch: Partial<Controls>) => ControlWrite
   // Hold-to-compare: push a look to the render path without touching the
   // snapshot React renders from, so the sliders stay where they are. `null`
   // restores from the snapshot.
