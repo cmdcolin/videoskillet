@@ -116,4 +116,5 @@ needs a decision about which side's version wins.
 - The home script's `showFrame`, `showHome`, `showLanding`, `paint` and
   `failedSection`.
 - Tooling: formatters, lint, tsconfig, CI workflows, the release script and
-  commit message conventions.
+  the commit scopes. The rest of the commit conventions is the
+  `commit-conventions` region.
