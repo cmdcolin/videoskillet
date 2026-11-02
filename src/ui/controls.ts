@@ -552,6 +552,17 @@ export const GROUPS: Group[] = [
         help: "The ramps' gain. Higher gain reaches the rails closer to the centre, so the shape shrinks, and a comparator against it draws a smaller outline.",
       },
       {
+        key: 'synthShapeFold',
+        id: 351,
+        label: 'shape folds',
+        min: 1,
+        max: 16,
+        step: 0.01,
+        unit: 'x',
+        fine: true,
+        help: "A wavefolder after the shape generator. Each time the shape's level reaches a rail it turns back, so a circle folded four times becomes four concentric rings, and anything the synth drives sees a ripple.",
+      },
+      {
         key: 'synthShape',
         id: 12,
         label: 'waveform',
@@ -4867,6 +4878,7 @@ export const NEEDS: Partial<Record<ControlKey, SliderNeed>> = {
   synthShapeX: shaped,
   synthShapeY: shaped,
   synthShapeSize: shaped,
+  synthShapeFold: shaped,
   synthHueDeg: {
     key: 'synthColor',
     ok: above0,

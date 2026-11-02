@@ -306,6 +306,7 @@ export const SYNTH_OPENS = {
     'synthShapeX',
     'synthShapeY',
     'synthShapeSize',
+    'synthShapeFold',
   ],
   shape: ['synthShape'],
   mix: ['synthMix'],

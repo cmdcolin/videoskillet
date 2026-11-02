@@ -102,6 +102,10 @@ synthShapeSize  (shape gain)
   0.1..8 step 0.01 x  default 1
   The ramps' gain. Higher gain reaches the rails closer to the centre, so the shape shrinks, and a comparator against it draws a smaller outline.
 
+synthShapeFold  (shape folds)
+  1..16 step 0.01 x  default 1
+  A wavefolder after the shape generator. Each time the shape's level reaches a rail it turns back, so a circle folded four times becomes four concentric rings, and anything the synth drives sees a ripple.
+
 synthShape  (waveform)
   0=ramp 1=triangle 2=sine 3=pulse  default 2
   The waveform for both oscillators. Ramp is a sawtooth, triangle folds it symmetric, sine passes the encoder without ringing, pulse is a comparator output with the most bandwidth to distort.

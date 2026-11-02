@@ -336,6 +336,7 @@
 348 synthAudioFm step=1 default=0
 349 synthDelayUs step=0.01 default=0
 350 synthVca step=0.01 default=0
+351 synthShapeFold step=0.01 default=1
 
 # ?mod= sources, by name
 sine

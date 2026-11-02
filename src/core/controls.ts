@@ -36,6 +36,7 @@ export const DEFAULT_CONTROLS = {
   synthShapeX: 0,
   synthShapeY: 0,
   synthShapeSize: 1,
+  synthShapeFold: 1, // wavefolder after the shape generator: 1 is no folding
   synthAudioFm: 0, // the audio into osc A's frequency, Hz per unit of audio
   synthDelayUs: 0, // the synth's output sweeping a delay line on A's cable, µs at full level
   synthVca: 0, // the synth's output on a VCA in A's cable: share of the level lost at full output

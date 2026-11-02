@@ -128,6 +128,7 @@ export const PARAM_DEFS = [
   ['synthShapeX', 'f32'], // the shape's centre, -1..1 across the picture
   ['synthShapeY', 'f32'],
   ['synthShapeSize', 'f32'], // the ramps' gain: level 1 lands this far in from the edge
+  ['synthShapeFold', 'f32'], // wavefolder after the shape generator: 1 passes it straight
   ['synthDelay', 'f32'], // the synth's output into a delay line on A's cable: samples of delay at full level
   ['synthVca', 'f32'], // the synth's output into a VCA on A's cable: gain lost at full level
   // dirty mixer: source B is a second, non-genlocked composite signal
@@ -1607,6 +1608,7 @@ struct SynthPatch {
   shapeX: f32,
   shapeY: f32,
   shapeSize: f32,
+  shapeFold: f32,
 }
 
 // Gathering the patch off the uniform block, once. The prelude may not name a
@@ -1622,6 +1624,7 @@ fn synthPatch(p: Params) -> SynthPatch {
     p.synthFm, p.synthColorSrc, p.synthColorMode,
     p.synthJitA, p.synthJitB, p.frame,
     p.synthBSrc, p.synthShapeX, p.synthShapeY, p.synthShapeSize,
+    p.synthShapeFold,
   );
 }
 
@@ -1674,7 +1677,10 @@ fn shapeGen(x: f32, y: f32, sp: SynthPatch) -> f32 {
   } else if (sp.bSrc < 2.5) {
     level = (h * h + v * v) * 0.5;
   }
-  return clamp(level * sp.shapeSize, 0.0, 1.0);
+  // A wavefolder: past each rail the level turns back the way it came, so a
+  // cone folded N times comes out as N concentric rings.
+  let t = clamp(level * sp.shapeSize, 0.0, 1.0) * sp.shapeFold;
+  return 1.0 - abs(2.0 * fract(t * 0.5) - 1.0);
 }
 
 // The synth's output level before the colorizer, at one raster position
