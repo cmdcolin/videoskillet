@@ -40,3 +40,4 @@ readable without it.
 | [0013](0013-a-live-take-runs-on-the-wall-clock.md)   | A live take runs on the wall clock, and its frames come off the GPU                 |
 | [0014](0014-the-screen-is-light-in-srgb-bytes.md)    | The screen is linear light, held as sRGB bytes                                      |
 | [0015](0015-the-flywheel-compares-phase.md)          | The AC-coupled separator drives a phase comparator                                  |
+| [0016](0016-no-rutt-etra-scan-processor.md)          | No Rutt/Etra scan processor, because it looks too digital                           |

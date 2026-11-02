@@ -537,12 +537,6 @@ generation stops being uniform.)
   plateaus and the picture goes plasticky; above it, motion drags a soft trail
   with a hard edge where the gate trips. Put the threshold in the noise floor
   and the grain drives the detector, so still areas breathe.
-- **Rutt/Etra scan deflection.** The source's own luma patched into the vertical
-  deflection amplifier: the raster becomes a relief map of the picture, and the
-  brightness comes free from line bunching (line density _is_ luminance). Fits
-  the deflection domain exactly — geometry detonates while hue stays put. The
-  catch is that it is a per-pixel _vertical_ gather, so it wants `crt_face` over
-  the decoded image with a bounded column search, not `decode`.
 - **Setup mismatch** — a 0 IRE deck into a 7.5 IRE set and back, for crushed or
   milky blacks. The last of the smaller trims.
 
@@ -868,3 +862,9 @@ engine. Also left out until then:
   with the zoom under 1, because the off-axis shift carries most of the picture
   out of frame each lap and the gain has nothing to compound. Two tunings tried;
   neither held a picture.
+- **A Rutt/Etra scan processor.** A spike patched the picture's level into the
+  vertical deflection and drew every Nth line as a beam trace. On still
+  portraits, alone and layered with the subcarrier comb, ghosts, hum and the
+  scrambler, it looked too digital.
+  [ADR 0016](adr/0016-no-rutt-etra-scan-processor.md) has the renders and where
+  the spike is parked.
