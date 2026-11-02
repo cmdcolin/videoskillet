@@ -14,6 +14,7 @@
 @group(0) @binding(5) var<storage, read> lineParams: array<vec4f>;
 @group(0) @binding(6) var<storage, read_write> outBuf: array<f32>;
 @group(0) @binding(7) var<storage, read> audio: array<f32>;
+@group(0) @binding(8) var<storage, read> underOld: array<f32>;
 
 // Up-convert and re-bandpass in one folded pass. The bandpass is linear-phase,
 // so a tap d either side of centre shares one coefficient, and the heterodyne
@@ -64,6 +65,19 @@ fn underAt(ci: u32) -> f32 {
     v = v + P.chromaNoise * gauss(ci ^ cns);
   }
   return v;
+}
+
+// The previous recording's colour-under at global index ci, where the dead
+// erase head left it: off along the track by the old machine's slip, which
+// grows down the field with its line-rate error. Played back through the same
+// up-converter as the new recording, so a sample of slip is a turn of hue.
+fn oldUnderAt(ci: u32) -> f32 {
+  let row = f32(ci / SPL);
+  let at = f32(ci) - P.eraseSlip - P.eraseSlope * (row - 0.5 * f32(NLINES));
+  let i0 = floor(at);
+  let a = underOld[wrapIdx(i32(i0))];
+  let b = underOld[wrapIdx(i32(i0) + 1)];
+  return P.eraseOld * mix(a, b, at - i0);
 }
 
 // Is this sample inside a dropout — shed oxide, so for a moment the head reads
@@ -166,8 +180,14 @@ fn main(
     // the two have nothing like the same SNR — and this noise still has to come
     // back through the narrow chroma bandpass, which turns it into slow
     // blotches of wrong hue instead of the fine grain luma gets.
+    let old = P.eraseOld > 0.0 && P.gen == 0u;
     for (var i = lid.x; i < TILE; i = i + TILE_WG) {
-      tileUn[i] = underAt(clampIdx(base - ycd + i32(i)));
+      let ci = clampIdx(base - ycd + i32(i));
+      var v = underAt(ci);
+      if (old) {
+        v = v + oldUnderAt(ci);
+      }
+      tileUn[i] = v;
     }
   }
   let n0 = row * SPL + wid.x * TILE_WG;

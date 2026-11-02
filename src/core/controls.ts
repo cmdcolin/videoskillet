@@ -210,6 +210,7 @@ export const DEFAULT_CONTROLS = {
   popcornHz: 1, // how often the traps switch, per second
   flickerIre: 0, // the same transistor's 1/f noise: black level wanders over seconds
   colorUnderMix: 0,
+  eraseHead: 0, // full-erase head dead: the old recording's colour-under survives under the new
   chromaNoiseIre: 0, // noise inside the color-under path, before up-conversion
   underJitterDeg: 0,
   dropoutRate: 0,

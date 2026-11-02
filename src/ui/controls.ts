@@ -2771,7 +2771,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: "A distant station arriving by two paths, a direct one and one bent by the atmosphere or reflected off an aircraft. Their phase difference drifts, so the carrier nulls deeply and briefly and peaks broadly, and a slow tropospheric loss rides under that. The tuner's AGC raises its gain to hold the carrier level, and that gain raises the receiver's own noise and the adjacent channel and CB ingress with it, so snow surges at the bottom of each fade. Past the AGC's range the carrier itself sinks, so the picture washes out and sync goes. The AGC lowers its gain faster than it raises it, so a carrier that returns quickly overdrives the IF for a frame or two and the picture comes back dark.",
+        help: "A distant station arriving by two paths whose phase difference drifts, so the carrier nulls deeply and briefly over a slow tropospheric loss. The tuner's AGC raises its gain to hold the carrier, which raises the receiver's own noise and any adjacent channel or CB ingress with it: snow surges at each null. Past the AGC's range the carrier sinks, the picture washes out and sync goes.",
       },
       {
         key: 'rfFadeHz',
@@ -2781,7 +2781,6 @@ export const GROUPS: Group[] = [
         max: 3,
         step: 0.01,
         unit: 'Hz',
-        fine: true,
         help: 'How fast the two paths drift against each other, which sets how often the nulls come. The drift wanders and sometimes reverses, so a null can hang for a second or sweep straight past.',
       },
       {
@@ -2980,6 +2979,16 @@ export const GROUPS: Group[] = [
         // for. Takes the merged group from eight rows on show to six.
         fine: true,
         help: 'Per-line phase error in that down/up conversion, so hue wanders line to line and the picture picks up a coloured venetian-blind texture. Needs colour-under raised.',
+      },
+      {
+        key: 'eraseHead',
+        id: 347,
+        label: 'dead erase head',
+        min: 0,
+        max: 1,
+        step: 0.01,
+        unit: '',
+        help: "How much of the tape's previous recording survives under this one. Colour-under sits deep in the oxide, and only the full-erase head clears it, so with that head dead the old programme's colour plays back under the new picture. The old tracks wander along this deck's, so their hue crawls in bands down the field, and where the old burst lands on the new one the new picture's hue moves too. Needs colour-under raised.",
       },
       {
         key: 'ycDelayNs',

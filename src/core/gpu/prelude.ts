@@ -285,6 +285,9 @@ export const PARAM_DEFS = [
   ['ampStep', 'f32'], // a popcorn switch this frame: the level step, IRE
   ['ampStepRow', 'f32'], // the fractional line the switch lands on (NLINES = none)
   ['colorUnderMix', 'f32'], // 0 direct chroma .. 1 full VHS color-under path
+  ['eraseOld', 'f32'], // how much of the previous recording's colour-under survives (0 = erased)
+  ['eraseSlip', 'f32'], // where the old tracks sit along this deck's at mid-field, samples
+  ['eraseSlope', 'f32'], // how far that offset grows per line, samples
   ['chromaNoise', 'f32'], // noise injected into the color-under signal, IRE rms
   ['dropoutRate', 'f32'], // expected dropout events per frame
   ['dropoutLen', 'f32'], // mean dropout length, samples

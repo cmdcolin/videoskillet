@@ -19,6 +19,7 @@ import {
   SAMPLE_RATE,
 } from '../signal/constants'
 import { advanceCrossings } from '../signal/crossings'
+import { OldRecording } from '../signal/erasestate'
 import { Fault } from '../signal/fault'
 import { FILTER_STRIDE, NUM_SECTIONS } from '../signal/filters'
 import { Glide } from '../signal/glide'
@@ -325,6 +326,7 @@ export class Engine implements EngineApi {
   private glideNotifyAt = 0
   private rfState = new RfState()
   private ampNoise = new AmpNoise()
+  private oldRecording = new OldRecording()
   private synthState = new SynthState()
   // The blanking gate. Unlike the stab gate beside it this is a plain control
   // pair rather than part of the modulation bay, because it damages the picture
@@ -467,6 +469,9 @@ export class Engine implements EngineApi {
   private nrMotion: GPUBuffer
   private chromaBuf: GPUBuffer
   private underBuf: GPUBuffer
+  // The previous recording's colour-under track, on a tape whose erase head
+  // has died: a copy of underBuf from earlier in the take.
+  private underOldBuf: GPUBuffer
   private lineInfoBuf: GPUBuffer
   private lineParamsBuf: GPUBuffer
   private timingBuf: GPUBuffer
@@ -618,7 +623,8 @@ export class Engine implements EngineApi {
     // the frames the external key is patched in.
     this.progSnap = storage(N * 4)
     this.chromaBuf = storage(N * 4)
-    this.underBuf = storage(N * 4)
+    this.underBuf = storage(N * 4, GPUBufferUsage.COPY_SRC)
+    this.underOldBuf = storage(N * 4)
     this.lineInfoBuf = storage(LINES * 16)
     this.lineParamsBuf = storage(LINE_PARAM_BYTES)
     // per-line hoff + 8 persistent scalars (v-osc, PLL, AGC, the two
@@ -1028,6 +1034,7 @@ export class Engine implements EngineApi {
           { buffer: this.lineParamsBuf },
           { buffer: this.compB },
           { buffer: this.audioBuf },
+          { buffer: this.underOldBuf },
         ],
         perLineT,
       ),
@@ -1777,6 +1784,7 @@ export class Engine implements EngineApi {
       this.nrMotion,
       this.chromaBuf,
       this.underBuf,
+      this.underOldBuf,
       this.lineInfoBuf,
       this.lineParamsBuf,
       this.timingBuf,
@@ -2210,6 +2218,7 @@ export class Engine implements EngineApi {
     this.bayDrive.clear()
     this.rfState = new RfState()
     this.ampNoise = new AmpNoise()
+    this.oldRecording = new OldRecording()
     this.synthState = new SynthState()
     this.autoLock = new AutoLock()
     // A morph in flight is state stamped on the wall clock, and the take is
@@ -2732,12 +2741,18 @@ export class Engine implements EngineApi {
     // read 234 names back out of it. 51 us a frame for a copy nobody wanted:
     // the four state updates below have to end up beside the controls either
     // way, and this is the object they end up in.
+    const old = this.oldRecording.update(
+      this.frame,
+      c.eraseHead,
+      c.colorUnderMix > 0,
+    )
     const vals = Object.assign(
       this.uniformValues(),
       mixU,
       // the adjacent channel's raster slip and beat phases, walked per frame
       this.rfState.update(this.frame, c),
       this.ampNoise.update(this.frame, c),
+      old.uniforms,
       // the two characters line 21 carries this frame; nulls on most of them,
       // because a caption is written far faster than it is read
       this.captionState.update({ vbi: c.vbi }),
@@ -2876,6 +2891,9 @@ export class Engine implements EngineApi {
         )
       }
       for (const p of this.loopPasses) run(p)
+    }
+    if (old.capture) {
+      enc.copyBufferToBuffer(this.underBuf, 0, this.underOldBuf, 0, N * 4)
     }
     // Put the frame's own params back. The loop above leaves `paramsBuf` holding
     // the LAST generation's copy, so every pass below would read gen = gens-1 —

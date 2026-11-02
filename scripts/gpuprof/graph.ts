@@ -36,6 +36,7 @@ import {
   SAMPLES_PER_LINE,
 } from '../../src/core/signal/constants'
 import { advanceCrossings } from '../../src/core/signal/crossings'
+import { OldRecording } from '../../src/core/signal/erasestate'
 import { FILTER_STRIDE, NUM_SECTIONS } from '../../src/core/signal/filters'
 import { LineState } from '../../src/core/signal/linestate'
 import { MixState } from '../../src/core/signal/mixstate'
@@ -134,6 +135,7 @@ export class Graph {
   private readonly mixState = new MixState(this.rand)
   private readonly rfState = new RfState()
   private readonly ampNoise = new AmpNoise()
+  private readonly oldRecording = new OldRecording()
   private readonly synthState = new SynthState()
   private readonly strobeGate = new StrobeGate()
   // The tracking servo the app runs (signal/servo.ts). Not an ornament here:
@@ -211,6 +213,7 @@ export class Graph {
     const nrMotion = storage(N * 4)
     const chromaBuf = storage(N * 4)
     const underBuf = storage(N * 4)
+    const underOldBuf = storage(N * 4)
     const lineInfoBuf = storage(LINES * 16)
     // The same length as pipeline.ts: the last slot is SAG_MEAN in the
     // prelude. A buffer short of a slot drops that write silently, and the
@@ -439,6 +442,7 @@ export class Graph {
           lineParams,
           outBuf: compB,
           audio,
+          underOld: underOldBuf,
         }),
         dispatch: perLineT,
       },
@@ -782,6 +786,8 @@ export class Graph {
       ...mixU,
       ...this.rfState.update(this.frame, c),
       ...this.ampNoise.update(this.frame, c),
+      ...this.oldRecording.update(this.frame, c.eraseHead, c.colorUnderMix > 0)
+        .uniforms,
       // A sibling of uniformValues, not one of its env fields: these two are
       // packed uniforms in their own right, the way the app assembles them.
       ...this.captionState.update({ vbi: c.vbi }),
