@@ -239,6 +239,13 @@ export const CARD_PRESETS: CardPreset[] = [
     patch: { bConnector: 0.35, bConnectorMode: 0 },
   },
   {
+    group: 'Crosspoint',
+    name: 'worn relay',
+    blurb:
+      'the bus cut on a relay whose contacts bounce as they make, so forty lines under the seam chatter between A, B and nothing, fresh every frame',
+    patch: { busCut: 0.5, busBounce: 1 },
+  },
+  {
     group: 'Pot crossfader',
     name: 'thrown by hand',
     blurb:

@@ -319,6 +319,7 @@ export function uniformValues(c: Controls, env: UniformEnv) {
     bRing: c.bRing,
     busClip: c.busClip,
     busCut: c.busCut,
+    busBounce: c.busBounce,
     bLeak: c.bLeak,
     bCapture: c.bCaptureUs * 1e-6 * SAMPLE_RATE,
     bHue: (c.bHueDeg * Math.PI) / 180,

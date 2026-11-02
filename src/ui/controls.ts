@@ -1947,6 +1947,16 @@ export const GROUPS: Group[] = [
         help: 'A relay that switches the whole bus to B for this fraction of each frame, counted back from the bottom. Sync and burst switch with the picture, so the receiver meets two signals in one frame and has to find lock across the seam. The seam sits at a point in raster time and can land half way along a line.',
       },
       {
+        key: 'busBounce',
+        id: 341,
+        label: 'cut bounce',
+        min: 0,
+        max: 1,
+        step: 0.01,
+        unit: '',
+        help: "How worn the cut relay's contacts are. A worn contact bounces as it makes, so for up to forty lines after the seam the bus chatters between A, B and nothing at all before it settles on B. A stretch of B that lands on a line whose burst came from A decodes against A's burst, so its colours come out at the wrong hue.",
+      },
+      {
         key: 'bLeak',
         id: 301,
         label: 'crosspoint leak',

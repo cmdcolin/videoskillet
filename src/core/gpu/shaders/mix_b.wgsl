@@ -354,6 +354,34 @@ fn leakOf(now: f32, prev: f32) -> f32 {
   return P.bLeak * 0.5 * (now - prev);
 }
 
+// Which source the cut relay is passing at this sample. A worn relay's
+// contacts bounce as they make: for a while after the seam the bus chatters
+// between A, B and neither, in runs a few microseconds to a line long, and the
+// runs settle onto B as the bounce dies away. The relay throws every frame, so
+// it bounces every frame, with fresh runs each time.
+const XP_A = 0u;
+const XP_B = 1u;
+const XP_OPEN = 2u;
+const BOUNCE_LINES = 40.0;
+
+fn crosspoint(n: u32, row: u32, s: u32, cutN: u32) -> u32 {
+  var xp = XP_A;
+  if (P.busCut > 0.0 && n >= cutN) {
+    xp = XP_B;
+    let q = f32(n - cutN) / max(P.busBounce * BOUNCE_LINES * f32(SPL), 1.0);
+    if (q < 1.0) {
+      let lh = pcg(row * 2246822519u + P.frame * 3266489917u + 0xb0u);
+      let run = 8u + pcg(lh) % 160u;
+      let seg = (s + pcg(lh ^ 0x55u) % run) / run;
+      let r = rand01(pcg(lh ^ (seg * 668265263u)));
+      let toB = 0.4 + 0.6 * q;
+      let open = 0.2 * (1.0 - q);
+      xp = select(select(XP_A, XP_B, r < toB), XP_OPEN, r > 1.0 - open);
+    }
+  }
+  return xp;
+}
+
 @compute @workgroup_size(64, 1, 1)
 fn main(@builtin(global_invocation_id) gid: vec3u) {
   let s = gid.x;
@@ -370,7 +398,9 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
   // is a position in raster time on the output, not in the picture, which is
   // why it can land half way along a line.
   let cutN = u32(round((1.0 - clamp(P.busCut, 0.0, 1.0)) * f32(SPL * NLINES)));
-  let taken = P.busCut > 0.0 && n >= cutN;
+  let xp = crosspoint(n, row, s, cutN);
+  let taken = xp == XP_B;
+  let opened = xp == XP_OPEN;
 
   let a = comp[n];
   let inActive = s >= ACTIVE_START && s < ACTIVE_START + ACTIVE_W &&
@@ -477,6 +507,8 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
     // Genlocked, B is on the house raster, so the relay takes it as it stands.
     if (taken) {
       comp[n] = bComp[n];
+    } else if (opened) {
+      comp[n] = openInput(n, P.frame, 104u);
     } else if (P.bLeak > 0.0) {
       comp[n] += leakOf(bComp[n], bComp[clampIdx(i32(n) - 1)]);
     }
@@ -585,6 +617,8 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
     }
     if (taken) {
       summed = b;
+    } else if (opened) {
+      summed = openInput(n, P.frame, 104u);
     } else if (P.bLeak > 0.0) {
       let before = catmull(
         bComp[clampIdx(np - 2)],

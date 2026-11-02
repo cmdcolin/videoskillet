@@ -322,6 +322,7 @@ export const DEFAULT_CONTROLS = {
   mixPotPos: 0.5, // that crossfader's wiper: 0 all A, 1 all B
   mixPotHand: 0, // a hand working the crossfader
   busClip: 0, // headroom of the mixer's summing amplifier (0 = it never sees its rails)
+  busBounce: 0, // the cut relay's contacts chattering between A and B as they make
   busCut: 0, // fraction of the frame, from the bottom, the bus is switched to B for
   bLeak: 0, // high-pass crosstalk of B onto the program bus past a closed fader
   bWanderUs: 0, // how far B's own clock wanders, so genlock has something to hold

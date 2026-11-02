@@ -129,6 +129,7 @@ export const PARAM_DEFS = [
   ['bRing', 'f32'], // ring modulation amount
   ['busClip', 'f32'], // how little headroom the summing amplifier has, 0 = plenty
   ['busCut', 'f32'], // the bus is switched to B for this fraction of the frame, from the bottom
+  ['busBounce', 'f32'], // how worn the relay's contacts are: 0 a clean make, 1 forty lines of chatter
   ['bLeak', 'f32'], // stray-capacitance leak of B onto the bus, whatever the fader says
   ['bWanderTop', 'f32'], // B's own clock error at the top of the frame, samples
   ['bWanderBottom', 'f32'], // and at the bottom, samples
@@ -1098,15 +1099,15 @@ fn potContact(row: u32, s: u32, frame: u32, gen: u32, speed: f32) -> PotContact 
   return c;
 }
 
-// The input's own noise floor, which is all an open leaves it.
-fn potOpen(n: u32, frame: u32, gen: u32) -> f32 {
+// An input's own noise floor, which is all an open contact leaves it.
+fn openInput(n: u32, frame: u32, gen: u32) -> f32 {
   return 2.0 * gauss(n ^ pcg(frame * 7717u + gen * 31u));
 }
 
 fn potAt(v: f32, row: u32, s: u32, n: u32, frame: u32, gen: u32, ohms: f32, speed: f32) -> f32 {
   let c = potContact(row, s, frame, gen, speed);
   let r = max(ohms + c.shift * POT_OHMS, 0.0) + c.ohms;
-  return select(v * POT_LOAD / (POT_LOAD + r), potOpen(n, frame, gen), c.ohms < 0.0);
+  return select(v * POT_LOAD / (POT_LOAD + r), openInput(n, frame, gen), c.ohms < 0.0);
 }
 
 // The pot as a passive crossfader: A's 75-ohm output on one end of the track,
@@ -1124,7 +1125,7 @@ fn potCrossfade(a: f32, b: f32, row: u32, s: u32, n: u32, frame: u32, gen: u32, 
   let gb = 1.0 / (75.0 + (1.0 - x) * MIX_POT_OHMS);
   let rl = 75.0 + max(c.ohms, 0.0);
   let wiper = (a * ga + b * gb) / (ga + gb + 1.0 / rl);
-  return select(2.0 * wiper * 75.0 / rl, potOpen(n, frame, gen), c.ohms < 0.0);
+  return select(2.0 * wiper * 75.0 / rl, openInput(n, frame, gen), c.ohms < 0.0);
 }
 
 fn clampIdx(i: i32) -> u32 {

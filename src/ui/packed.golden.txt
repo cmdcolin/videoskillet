@@ -326,6 +326,7 @@
 338 mixPot step=1 default=0 choices=bus|pot
 339 mixPotPos step=0.001 default=0.5
 340 mixPotHand step=0.01 default=0
+341 busBounce step=0.01 default=0
 
 # ?mod= sources, by name
 sine
