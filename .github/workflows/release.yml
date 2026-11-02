@@ -117,7 +117,7 @@ jobs:
         run: cd dist-bin && sha256sum * > SHA256SUMS
       # Draft, so a release goes out when someone has looked at it. The tag is
       # already public by this point; the binaries are not.
-      - uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
+      - uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
           draft: true
           generate_release_notes: true
