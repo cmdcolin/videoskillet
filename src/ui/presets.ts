@@ -2771,6 +2771,20 @@ export const PRESETS: PresetDef[] = [
     },
   },
   {
+    name: 'latchedCameraLoop',
+    displayName: 'latched camera loop',
+    group: 'Circuit bent',
+    blurb:
+      "A camera pointed at the set, with a latching enhancer inline between them. The enhancer snaps each line to black or white, the camera feeds that back a little zoomed, and the next pass latches on the stripes the last one drew. The stripes grow outward from the subject's edges and keep moving with it.",
+    patch: {
+      enhLoopGain: 0.9,
+      enhLoopUs: 7,
+      fbMix: 0.35,
+      fbZoom: 1.03,
+      noiseIre: 1.5,
+    },
+  },
+  {
     name: 'howlroundLoom',
     displayName: 'howlround loom',
     group: 'Circuit bent',
