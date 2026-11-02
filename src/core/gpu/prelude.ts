@@ -386,11 +386,6 @@ export const PARAM_DEFS = [
   ['enhSlice', 'f32'], // regenerator slice level, IRE
   ['enhLoopGain', 'f32'], // output fed back to the first stage's input, 0 open
   ['enhLoopHold', 'f32'], // feedback coupling capacitor's hold per sample
-  // frame-recursive noise reducer, outboard between the deck and the enhancer
-  ['nrK', 'f32'], // the store's share of a still sample, 0 bypassed
-  ['nrThresh', 'f32'], // motion detector trip level, IRE
-  ['nrStep', 'f32'], // the frame memory's quantum, IRE per code
-  ['nrLag', 'f32'], // frames from write to read: 2 colour framed, 1 not
   // feedback (camera-at-monitor)
   ['fbMix', 'f32'],
   ['fbZoom', 'f32'],
@@ -732,11 +727,6 @@ fn ccBit(b: u32, code: u32) -> u32 {
     return (code >> b) & 1u;
   }
   return ccParity(code);
-}
-
-// The noise reducer's frame stores, one per frame parity, laid end to end.
-fn nrSlot(frame: u32) -> u32 {
-  return (frame & 1u) * BUF_LEN;
 }
 
 // Subcarrier (sin, cos) at global sample index n. Sampling at exactly 4x fsc

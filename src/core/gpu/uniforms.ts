@@ -288,11 +288,6 @@ export function uniformValues(c: Controls, env: UniformEnv) {
     enhSlice: c.enhSliceIre,
     enhLoopGain: c.enhLoopGain,
     enhLoopHold: Math.exp(-1 / (c.enhLoopUs * 1e-6 * SAMPLE_RATE)),
-    nrK: c.nrAmount,
-    nrThresh: c.nrThreshIre,
-    // The converter spans sync tip to past peak white, 160 IRE.
-    nrStep: 160 / 2 ** c.nrBits,
-    nrLag: c.nrStore === 1 ? 1 : 2,
     fbMix: c.fbMix,
     fbZoom: c.fbZoom,
     fbRotate: (c.fbRotateDeg * Math.PI) / 180,

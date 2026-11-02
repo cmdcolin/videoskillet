@@ -343,10 +343,6 @@
 371 fbNoise step=0.01 default=0
 372 fbPattern step=0.01 default=0
 373 fbHot step=0.01 default=0
-380 nrAmount step=0.01 default=0
-381 nrThreshIre step=0.1 default=6
-382 nrBits step=1 default=8
-383 nrStore step=1 default=0 choices=2 frames|1 frame
 
 # ?mod= sources, by name
 sine

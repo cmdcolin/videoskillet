@@ -820,11 +820,11 @@ engine. Also left out until then:
 
 ## Signal diagrams
 
-- **Fold away a plot that is flat at stock.** Several plots, such as Sync's line
-  and frame shifts, are probably flat lines at stock and take about 45 units of
-  height each. Folding one away until a knob moves saves that height, but the
-  flat line also shows what the plot measures, and folding conflicts with
-  drawing plots side by side. Ask before building it.
+- **Fold away a plot that is flat at stock.** Several plots, such as Sync's
+  line and frame shifts, are probably flat lines at stock and take about 45
+  units of height each. Folding one away until a knob moves saves that height,
+  but the flat line also shows what the plot measures, and folding conflicts
+  with drawing plots side by side. Ask before building it.
 - **One list of group names.** The names repeat in `schematicKeys.ts`,
   `SCHEMATIC_FRAMES` and `HEADING`. The `Record<SchematicGroup, ...>` type
   already catches a missing entry, so this is low value.
@@ -834,6 +834,13 @@ engine. Also left out until then:
 
 ## Not worth building
 
+- **A frame-recursive noise reducer.** Built and removed on 2026-11-01 (commit
+  b82ebcfc). A motion-gated frame average with a short memory word, as an
+  outboard box ahead of the enhancer. Its failure looks were frozen grain
+  plateaus with trails behind motion, which read as phosphor persistence, and a
+  one-frame store that cancels chroma on still areas, which leaves most of the
+  picture grey. Neither looks like a fault in an analog signal, and the box cost
+  two passes and a frame store.
 - **WebMCP tools for the app.** An agent with a page-reading browser or a shell
   already evaluates JavaScript on the page. jbrowse-components uses MCP only on
   Desktop, where no page exists, and there it is four tools around

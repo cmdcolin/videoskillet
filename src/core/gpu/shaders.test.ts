@@ -31,8 +31,6 @@ import feed from './shaders/feed.wgsl?raw'
 import grainBake from './shaders/grain_bake.wgsl?raw'
 import lineAnalyze from './shaders/line_analyze.wgsl?raw'
 import mixB from './shaders/mix_b.wgsl?raw'
-import noiseReducer from './shaders/noise_reducer.wgsl?raw'
-import nrDetect from './shaders/nr_detect.wgsl?raw'
 import osd from './shaders/osd.wgsl?raw'
 import present from './shaders/present.wgsl?raw'
 import rescale from './shaders/rescale.wgsl?raw'
@@ -73,8 +71,6 @@ const SHADERS: Record<string, string> = {
   grain_bake: grainBake,
   line_analyze: lineAnalyze,
   mix_b: mixB,
-  noise_reducer: noiseReducer,
-  nr_detect: nrDetect,
   osd,
   present,
   rescale,

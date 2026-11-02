@@ -180,10 +180,6 @@ export const DEFAULT_CONTROLS = {
   enhSliceIre: -20, // regenerator slice level
   enhLoopGain: 0, // output fed back around both stages (0 = loop open)
   enhLoopUs: 2, // time constant of the capacitor in the feedback path
-  nrAmount: 0, // frame-recursive noise reducer: the store's share of a still sample (0 = bypassed)
-  nrThreshIre: 6, // its motion detector's trip level
-  nrBits: 8, // its frame memory's word length
-  nrStore: 0, // 0 = two-frame store (colour framed), 1 = one frame
   lumaPeak: 0,
   noiseIre: 0,
   noiseTilt: 0, // where the floor comes from: 0 IF-limited RF, 1 FM discriminator (triangular)

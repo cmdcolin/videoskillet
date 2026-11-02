@@ -102,11 +102,6 @@ digraph ntsc_js {
   osd [passes="osd" fillcolor="@OUT@" style="rounded,filled,dashed"
        label="osd — deck display\nPLAY · PAUSE · SLOW · FF · REW\n525 lines × 910 samples"];
 
-  // The first box after the deck: a frame-recursive noise reducer, which keeps
-  // a frame memory of its own and reads it back into still picture.
-  noiseReducer [passes="nrDetect,noiseReducer" fillcolor="@OUT@" style="rounded,filled,dashed"
-                label="noise reducer — outboard box\nmotion detector · frame-recursive average\n525 lines × 910 samples"];
-
   // Outboard, so it is neither channel nor receiver: it runs after the last dub
   // and before anything measures sync, so the pulses it stamps are the pulses
   // the set has to lock to.
@@ -187,8 +182,7 @@ digraph ntsc_js {
                              color="@DUB@" fontcolor="@DUB@" constraint=false];
 
   timebase -> osd [label="  compA"];
-  osd -> noiseReducer [label="  compA"];
-  noiseReducer -> enhancer [label="  compA"];
+  osd -> enhancer [label="  compA"];
   enhancer -> sync [label="  compA" lhead=cluster_rx];
   sync -> lineAnalyze [label="  timing[]"];
   sync -> arc [label="  timing[] arcs"];

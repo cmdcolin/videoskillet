@@ -210,8 +210,6 @@ export class Graph {
     // `encode` on the frames either is patched in, exactly as the app does it.
     const progSnap = storage(N * 4, GPUBufferUsage.COPY_DST)
     this.progSnap = progSnap
-    const nrStore = storage(N * 8)
-    const nrMotion = storage(N * 4)
     const chromaBuf = storage(N * 4)
     const underBuf = storage(N * 4)
     const underOldBuf = storage(N * 4)
@@ -462,30 +460,6 @@ export class Graph {
         variants: one({ P, comp: this.compA, font: ccBuf }),
         dispatch: [1, LINES],
         when: () => c.osd > 0,
-      },
-      {
-        label: 'nrDetect',
-        shader: 'nr_detect',
-        variants: one({
-          P,
-          comp: this.compA,
-          store: nrStore,
-          motion: nrMotion,
-        }),
-        dispatch: perLine,
-        when: () => c.nrAmount > 0,
-      },
-      {
-        label: 'noiseReducer',
-        shader: 'noise_reducer',
-        variants: one({
-          P,
-          comp: this.compA,
-          store: nrStore,
-          motion: nrMotion,
-        }),
-        dispatch: perLine,
-        when: () => c.nrAmount > 0,
       },
       {
         label: 'enhancer',
