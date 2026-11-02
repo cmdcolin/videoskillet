@@ -371,7 +371,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: "How far the capture card's luma converter's bit weights sit off binary. Each high bit's carry leaves a jump at a fixed level, so gradients break into contours there. Capture grain flips pixels either side of each jump from frame to frame, so the contours shimmer.",
+        help: "How far the bit weights of the capture card's composite converter sit off binary. Each high bit's carry leaves a jump at a fixed level, so gradients break into contours there and the colour riding across each jump is thrown. Capture grain flips pixels either side of each jump from frame to frame, so the contours shimmer.",
       },
       {
         key: 'capAdcBit',
@@ -381,7 +381,7 @@ export const GROUPS: Group[] = [
         max: 8,
         step: 1,
         unit: '',
-        help: "A bit of the capture card's luma converter held high (+) or low (-), counted from the least significant. Every code that had the bit the other way moves by its weight, so the tonal range tears into repeating ramps. High bits fold the picture; low ones leave a fine grain of steps.",
+        help: "A bit of the capture card's composite converter held high (+) or low (-), counted from the least significant. Every code that had the bit the other way moves by its weight, so the picture folds into repeating ramps, and where a fold reverses the colour subcarrier the hue on it comes back complementary. A bit held high lifts the sync tips, so the picture tears and rolls.",
       },
       {
         key: 'capYcDelayNs',

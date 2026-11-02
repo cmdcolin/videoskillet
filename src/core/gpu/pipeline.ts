@@ -1962,6 +1962,8 @@ export class Engine implements EngineApi {
       potSpeed: wiper.speed,
       dropoutRate: c[f.dropoutRate],
       dropoutLen: c[f.dropoutLen] * 1e-6 * SAMPLE_RATE,
+      capAdcBit: src === 'a' ? c.capAdcBit : 0,
+      capAdcWeight: src === 'a' ? c.capAdcWeight : 0,
       bPause: deck.pause,
       bPauseBar: deck.bar,
       bShift0: deck.shift,

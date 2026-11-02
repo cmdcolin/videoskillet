@@ -38,11 +38,11 @@ capChromaNoiseIre  (capture chroma noise)
 
 capAdcWeight  (capture adc bit weights)
   0..1 step 0.01  default 0
-  How far the capture card's luma converter's bit weights sit off binary. Each high bit's carry leaves a jump at a fixed level, so gradients break into contours there. Capture grain flips pixels either side of each jump from frame to frame, so the contours shimmer.
+  How far the bit weights of the capture card's composite converter sit off binary. Each high bit's carry leaves a jump at a fixed level, so gradients break into contours there and the colour riding across each jump is thrown. Capture grain flips pixels either side of each jump from frame to frame, so the contours shimmer.
 
 capAdcBit  (capture adc stuck bit)
   -8..8 step 1  default 0
-  A bit of the capture card's luma converter held high (+) or low (-), counted from the least significant. Every code that had the bit the other way moves by its weight, so the tonal range tears into repeating ramps. High bits fold the picture; low ones leave a fine grain of steps.
+  A bit of the capture card's composite converter held high (+) or low (-), counted from the least significant. Every code that had the bit the other way moves by its weight, so the picture folds into repeating ramps, and where a fold reverses the colour subcarrier the hue on it comes back complementary. A bit held high lifts the sync tips, so the picture tears and rolls.
 
 capYcDelayNs  (capture y/c delay)
   -500..500 step 10 ns  default 0

@@ -157,32 +157,6 @@ fn tapSpan(sigma: f32) -> vec2f {
   return vec2f(4.0, sigma * 0.75);
 }
 
-// The capture card's luma converter, at studio levels: black on code 16 and
-// white on 235. A successive-approximation converter weighs the input against
-// eight binary steps, and steps that are not quite binary leave a jump at
-// every code where a high bit carries: missing codes on one side, a fold back
-// on the other. The jumps sit at fixed levels, so a gradient breaks into
-// contours there, and grain riding in front of the converter flips pixels
-// either side of each jump from frame to frame, so the contours shimmer. A
-// held bit adds or removes its weight from every code that had it the other
-// way, which tears the tonal range into repeating ramps.
-const ADC_SKEW = array<f32, 8>(0.0, 0.1, -0.15, 0.25, -0.35, 0.3, -0.22, 0.15);
-
-fn adc(y: f32) -> f32 {
-  var code = u32(clamp(round(y * 219.0 + 16.0), 0.0, 255.0));
-  if (P.capAdcBit != 0.0) {
-    let bit = 1u << (u32(abs(P.capAdcBit)) - 1u);
-    code = select(code & ~bit, code | bit, P.capAdcBit > 0.0);
-  }
-  var out = 0.0;
-  for (var b = 0u; b < 8u; b = b + 1u) {
-    if ((code & (1u << b)) != 0u) {
-      out = out + f32(1u << b) * (1.0 + ADC_SKEW[b] * P.capAdcWeight);
-    }
-  }
-  return (out - 16.0) / 219.0;
-}
-
 fn capture(suv: vec2f, sx: f32, xy: vec2u) -> vec3f {
   let seed = P.srcFrame * 2654435761u + xy.y * 40961u;
   let ls = tapSpan(P.capLumaSigma);
@@ -214,11 +188,7 @@ fn capture(suv: vec2f, sx: f32, xy: vec2u) -> vec3f {
     smoothstep(0.0, 1.0, fract(cell)),
   );
   let grain = gauss(pcg(seed + xy.x * 613u + 0x9E3779B9u)) * P.capNoise;
-  var luma = y / wy + grain;
-  if (P.capAdcBit != 0.0 || P.capAdcWeight > 0.0) {
-    luma = adc(luma);
-  }
-  return vec3f(luma) + c / wc + (n.x * I_DIR + n.y * Q_DIR) * P.capChromaNoise;
+  return vec3f(y / wy + grain) + c / wc + (n.x * I_DIR + n.y * Q_DIR) * P.capChromaNoise;
 }
 
 // The colorizer's own input filter — the lowpass a colorizer box has ahead of
@@ -288,7 +258,7 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
   // there, and a picture torn or shifted sideways brings black in with it.
   let outside = suv.x < 0.0 || suv.x > 1.0;
   let captured = P.capLumaSigma > 0.0 || P.capChromaSigma > 0.0 || P.capYcDelay != 0.0
-    || P.capNoise > 0.0 || P.capChromaNoise > 0.0 || P.capAdcBit != 0.0 || P.capAdcWeight > 0.0;
+    || P.capNoise > 0.0 || P.capChromaNoise > 0.0;
   var src: vec3f;
   if (P.srcNoise < 0.5 && outside) {
     src = vec3f(0.0);

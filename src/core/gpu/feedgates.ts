@@ -100,9 +100,15 @@ export function feedFaults(c: Controls, src: FeedSource): boolean {
 }
 
 // A's feed runs on its own account: A is the program bus, so a fault on its
-// cable bites whether or not anything is patched into the other input.
+// cable bites whether or not anything is patched into the other input. A's
+// capture card converter runs here too, because it digitises the composite.
 export function aFeedOn(c: Controls): boolean {
-  return feedFaults(c, 'a') || c[FEEDS.a.pause] > 0
+  return (
+    feedFaults(c, 'a') ||
+    c[FEEDS.a.pause] > 0 ||
+    c.capAdcBit !== 0 ||
+    c.capAdcWeight > 0
+  )
 }
 
 // Who consumes B's materialized waveform: the dirty sum resamples it, and the
