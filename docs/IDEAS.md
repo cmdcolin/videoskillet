@@ -800,52 +800,45 @@ Words considered and set aside: **patch** already means signal routing here;
 **snapshot** fits a stored state and not the live one; **scene** suggests the
 picture's content; **E-MEM**, the vision-mixer term, is too obscure.
 
-## Agent interface: a stable `window.vs`
+## Agent interface: `window.vf` first, an eval before anything more
 
 `AgentDialog` and [`AI-USAGE.md`](AI-USAGE.md) send a coding agent to
-`window.vf.applyControls`. That route has three problems, and the sibling repo
-`~/src/jbrowse-components` has already solved the shape of the fix (`window.jb`,
-in `packages/app-core/src/JbApi/`, with its evals in `scripts/agent-evals/`).
+`window.vf.applyControls`. The sibling repo `~/src/jbrowse-components` gives
+agents a separate facade, `window.jb` (`packages/app-core/src/JbApi/`), with
+evals in `scripts/agent-evals/`. A second global here, `window.vs`, was
+considered and set aside for now.
 
-- **`applyControls` and `setControl` validate only finiteness** (`pipeline.ts`).
-  They drop a non-finite value with a console warning, which stops
-  `frameLock: NaN` from freezing the picture on frame 0, but they do not clamp,
-  and `applyControls` skips unknown keys without a word. The engine cannot
-  clamp, because the ranges live in `ui/controls.ts`. The palette and `#set=` do
-  clamp, so the docs' "out of range clamps" holds for them alone. `#set=` also
-  drops unknown and non-finite keys silently, and the CLI's `--set` rejects them
-  without clamping.
+The reasons it was proposed, weighed against the code:
+
 - **`window.vf` is replaced on every device-loss rebuild and hot update**
-  (`useEngine.ts`, `cam/useCamEngine.ts`). An agent that kept the old object is
-  talking to a destroyed engine.
-- **It is the concrete `Engine`**, typed and documented as unstable, and about a
-  dozen harnesses reach into its internals. It stays for them.
+  (`useEngine.ts`, `cam/useCamEngine.ts`). This only affects code that holds a
+  reference across a rebuild. A browsing agent evaluates `window.vf.…` afresh on
+  each call and always reaches the live engine.
+- **It is the concrete `Engine`**, typed as unstable. That is a documentation
+  problem, and a second global does not change it.
+- **Writes were unchecked.** `applyControls` and `setControl` now go through
+  `checkControls` (`core/controls.ts`): a value clamps to its slider range,
+  which the app passes to `Engine.create`, a non-finite value or non-number is
+  rejected, and an unknown key is reported. `applyControls` returns
+  `{applied, clamped, rejected, unknown}`. This closes the `frameLock: NaN`
+  freeze and the silent miss on a misspelled key.
 
-The proposal is a second global, `window.vs`, built in the app layer.
+What `window.vf` still lacks, all of which needs the app layer:
 
-- **It resolves the engine on every call**, as `jb` does.
-- **`help` is the whole contract**, because a browsing agent has no docs tool.
-  It tells the agent to orient with `board()`, search with `find`, and check
-  with `health()`. A discovery meta tag and a console line on the app page point
-  at it.
-- **`find(query)`** reuses `score()` from `paletteQuery.ts`, since about 357
-  controls are too many to browse. **`describe(key)`** answers range, step,
-  choices and the help text.
-- **`board()` and `link()`** return the `Board` from `boardText.ts` and the
-  current link.
-- **`set(patch)`** validates with the rules `parseSet` uses, writes through the
-  app's path (`onWriteControl` / `onMixStart`, as the palette does) so `ctrl+z`
-  sees it, and returns `{applied, clamped, unknown, rejected}`.
-- **`health()` / `waitReady(frames)`** watch the live `frameNo()` advance and
-  report the freeze, device-loss, hang and GPU-error callbacks plus a running
-  morph. It never calls `step()`, which draws past the frame lock and would
-  report a healthy picture over a frozen tab. It also reads `timingBuf` for the
-  PLL, AGC and sync-separator lock, which answers "is it locked, is it rolling"
-  better than picture statistics.
+- **Undo.** The ctrl+z walk banks the app's own gestures (`beginHand`,
+  `landCard` in `ControlsContext.ts`), so an engine write is probably not one
+  step on it. Unverified.
+- **Discovery.** There is no `find` or `describe`; an agent reads
+  `llms-full.txt`. `find` would reuse `score()` from `paletteQuery.ts`.
+- **Health.** There is no single call that says the picture is advancing. It
+  would watch `frameNo()` advance and report the freeze, device-loss, hang and
+  GPU-error callbacks, and never call `step()`, which draws past the frame lock
+  and reports a healthy picture over a frozen tab. `timingBuf` holds the PLL,
+  AGC and sync-separator lock.
 
-**An eval comes with it**, built on `scripts/agentreel.mjs`, which already runs
-a real `claude` against a Chrome it launched and has a stop condition. What it
-lacks is a grader.
+**The eval comes first**, built on `scripts/agentreel.mjs`, which already runs a
+real `claude` against a Chrome it launched and has a stop condition. It lacks a
+grader.
 
 - Tasks are graded on control values and receiver state after the session, and
   never on the transcript.
@@ -860,18 +853,17 @@ lacks is a grader.
   (`scripts/render/take.ts`, `openStage`) and checks only that the frame is not
   black and not frozen.
 
-**Left out until the eval shows an agent needs them:**
+Undo, discovery and health get built when the eval shows agents failing for want
+of them, as methods on `window.vf` or as a facade if they cannot live on the
+engine. Also left out until then:
 
 - A pixel `capture()` with statistics. Claude in Chrome has a screenshot tool,
   its JS tool returns text so a PNG arrives as base64, and counting dropouts
   from pixels detects the artifact where the repo models the mechanism.
-- `vs.load(link)`. The reload in `useUrlState.ts` was chosen to avoid a second
+- A `load(link)`. The reload in `useUrlState.ts` was chosen to avoid a second
   copy of the mount path, and ADR 0004 makes a reload cheap.
 - CLI `--frame=N out.png` and `controls --json`. `llms-full.txt` lists every
   key, and `videoskillet in out -` already writes raw frames to a pipe.
-
-**Smallest useful step:** add `vs` with `set`, `find`, `board` and `health`, and
-point `AgentDialog` at `vs.set`.
 
 ## Not worth building
 
@@ -881,7 +873,7 @@ point `AgentDialog` at `vs.set`.
   `run_javascript`. A WebMCP layer would add a surface to keep in step with
   `controls.ts` and cover only agents that cannot run JavaScript, which the
   palette, `board as text` and `#set=` links already serve. If it is ever
-  wanted, it is a shim over `window.vs`.
+  wanted, it is a shim over `window.vf`.
 - **Cochannel interference.** Already reachable: source B's dirty-sum path is a
   second non-genlocked composite beating against A, with its own line and
   subcarrier detune. That _is_ cochannel. (Adjacent-channel is not — that

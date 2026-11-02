@@ -168,6 +168,9 @@ window.vf.getControls()
 - `applyControls` takes any subset of control keys, the same keys `#set=` uses,
   and leaves the others where they are. The app still writes the board into the
   address bar, so the page's URL is the link to the look.
+- A value out of range clamps to the slider's range. A key the app does not
+  have, or a value that is not a finite number, is left out. `applyControls`
+  returns `{applied, clamped, rejected, unknown}`, so check it.
 - The link the page opens on sets the sources: `?src=webcam&vurlb=<url>` puts
   the camera on A and a video file on B. The app shows its own camera dialog
   first, so a harness clicks **Continue** to start the camera.
