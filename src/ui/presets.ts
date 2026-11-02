@@ -408,6 +408,36 @@ export const PRESETS: PresetDef[] = [
     ],
   },
   {
+    name: 'gatedScramble',
+    displayName: 'gated scramble',
+    group: 'RF / Broadcast',
+    blurb:
+      "Premium channel with no decoder box, scrambled by the older gated system, which lifts each sync tip to blanking and leaves the rest of the line alone. The set's line oscillator drifts with nothing to lock to, so the blanking bar drifts into the picture as a black band, and the picture slides sideways behind it. The set has slow colour loops, a drifting colour crystal and a fine tuner that will not settle. The burst gate rides the lost flyback and catches burst on some lines and picture on others, so the APC barely pulls the crystal and its error winds rainbow bands down the screen. The tuner wanders either side of the channel: on one side the burst sinks under the killer and colour drops out in bands, on the other the sound carrier beats against the chroma. This was the scrambled channel preset before the carrier scrambler.",
+    patch: {
+      scramble: 0.7,
+      scrambleMode: 0,
+      hDetuneHz: 4,
+      agc: 0.4,
+      hHold: 0.3,
+      hvSagUs: 14,
+      hvRing: 0.2,
+      killThresh: 8,
+      accLagLines: 30,
+      afpcLagLines: 40,
+      chromaGain: 1.8,
+      matrixClip: 1,
+      scDetuneKHz: 0.06,
+      burstLock: 0.3,
+      noiseIre: 2,
+    },
+    // Both wander on the attractor: a crystal and a tuner drift with heat and
+    // never repeat, and a steady roll reads as a filter laid over the picture.
+    mod: [
+      { target: 'scDetuneKHz', source: 'lorenz', rateHz: 0.2, depth: 0.00005 },
+      { target: 'rfMistuneMHz', source: 'lorenz', rateHz: 0.3, depth: 0.1 },
+    ],
+  },
+  {
     name: 'turboSyncLoss',
     displayName: 'turbo sync loss',
     group: 'RF / Broadcast',
