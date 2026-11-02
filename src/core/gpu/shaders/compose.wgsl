@@ -57,46 +57,6 @@ fn tubeRead(pi: u32, light: vec3f) -> vec3f {
   return d;
 }
 
-// The camera's sensor in low light. Everything here is keyed to the
-// photosite, so each lap photographs the last lap's pattern zoomed and turned
-// on the glass and lays its own fixed pattern over it at the same place.
-//
-// Shot noise grows as the square root of the light, so highlights are the
-// noisiest part of the frame. Fixed-pattern noise is each photosite's own gain
-// and dark offset. A hot pixel is a
-// photosite with runaway dark current: one chip of a three-chip camera, so it
-// glows in one primary, and some of them switch between two levels as a
-// trapped charge comes and goes. The AGC gain-up multiplies all of it with the
-// picture.
-fn sensor(drive: vec3f, xy: vec2u) -> vec3f {
-  var s = pow(max(drive, vec3f(0.0)), vec3f(2.2));
-  let site = (xy.y * ACTIVE_W + xy.x) * 3u;
-  if (P.fbPattern > 0.0) {
-    let prnu = vec3f(gauss(pcg(site ^ 0x5BD1E995u)), gauss(pcg((site + 1u) ^ 0x5BD1E995u)), gauss(pcg((site + 2u) ^ 0x5BD1E995u)));
-    let dark = vec3f(rand01(pcg(site ^ 0x27D4EB2Fu)), rand01(pcg((site + 1u) ^ 0x27D4EB2Fu)), rand01(pcg((site + 2u) ^ 0x27D4EB2Fu)));
-    s = s * (1.0 + 0.1 * P.fbPattern * prnu) + 0.003 * P.fbPattern * dark * dark;
-  }
-  if (P.fbHot > 0.0) {
-    let h = pcg(site ^ 0x9E3779B9u);
-    if (rand01(h) < 0.0006 * P.fbHot) {
-      let level = 0.6 - 1.2 * log(max(rand01(pcg(h)), 1e-4));
-      let period = 6u + (pcg(h ^ 0x85EBCA6Bu) % 90u);
-      let blinker = (h & 3u) == 0u;
-      let lit = !blinker || (pcg(h ^ (P.frame / period)) & 1u) == 1u;
-      let chip = (h >> 8u) % 3u;
-      let primary = mix(vec3f(0.35), vec3f(f32(chip == 0u), f32(chip == 1u), f32(chip == 2u)), 0.55);
-      s = s + primary * select(level * 0.15, level, lit) * P.fbHot;
-    }
-  }
-  if (P.fbNoise > 0.0) {
-    let seed = site * 2654435761u + P.frame * 40503u;
-    let n = vec3f(gauss(pcg(seed)), gauss(pcg(seed ^ 0x68E31DA4u)), gauss(pcg(seed ^ 0xB5297A4Du)));
-    s = s + n * P.fbNoise * (0.05 * sqrt(max(s, vec3f(0.0))) + 0.002);
-  }
-  s = s * servoGain(timing[CAM_GAIN]);
-  return pow(max(s, vec3f(0.0)), vec3f(1.0 / 2.2));
-}
-
 // The slot's picture as the file holds it. Bob-deinterlace: a capture card
 // weaves NTSC's two time-staggered fields into one raster, so motion combs.
 // Rebuild the whole frame from the even field alone by interpolating between
@@ -346,12 +306,7 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
     tube[pi * 2u] = 0u;
     tube[pi * 2u + 1u] = 0u;
   }
-  let sensorOn = P.fbMix > 0.0
-    && (P.fbNoise > 0.0 || P.fbPattern > 0.0 || P.fbHot > 0.0 || P.fbGainUpMax > 1.0);
-  if (sensorOn) {
-    fb = sensor(fb, gid.xy);
-  }
-  if (inside || tubeOn || sensorOn) {
+  if (inside || tubeOn) {
     // sensor black cut, then full-well saturation
     fb = max(fb - vec3f(P.fbBlack), vec3f(0.0)) / (1.0 - P.fbBlack);
     // A photosite has a finite well: highlights roll into a shoulder and

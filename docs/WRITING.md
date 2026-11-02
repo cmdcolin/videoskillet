@@ -3,12 +3,13 @@
 `CLAUDE.md` › _Writing_ states the rule: plain technical English, in ordinary
 declarative sentences. This file lists the habits that produced prose this repo
 has had to rewrite, each with a before-and-after pair to copy. It covers source
-comments too, because they record the measurement behind a decision and are
-read the way a page of the guide is. One fragment reads as a choice, and a page
-of fragments reads as generated, because the sentences stop connecting and the
+comments too, because they record the measurement behind a decision and are read
+the way a page of the guide is. One fragment reads as a choice, and a page of
+fragments reads as generated, because the sentences stop connecting and the
 reader supplies the joins.
 
-The [anti-ai-writing-tropes](https://github.com/cmdcolin/claudish/blob/main/skills/anti-ai-writing-tropes/SKILL.md)
+The
+[anti-ai-writing-tropes](https://github.com/cmdcolin/claudish/blob/main/skills/anti-ai-writing-tropes/SKILL.md)
 skill holds the full checklist and a `scan.sh` that finds most of these habits.
 
 ## Common habits
@@ -41,8 +42,8 @@ left out. Write what the program does and name it.
 > A row that scrolls hides the choice it exists to offer. → A reader who has to
 > scroll the row sideways cannot see every option in it.
 
-**Contrastive framing where the positive half says it.** This covers "X, not
-Y", "rather than" and "instead of". Keep one only where the reader needs the
+**Contrastive framing where the positive half says it.** This covers "X, not Y",
+"rather than" and "instead of". Keep one only where the reader needs the
 distinction to choose correctly: an ADR naming the option it turned down, a
 fault that resembles another one, or a mechanism that multiplies rather than
 adds.
@@ -59,15 +60,15 @@ subject can perform it.
 **A figure where a literal word exists.** Ask what literal word a verb or noun
 stands for, and write that word.
 
-| Figure | Literal |
-|---|---|
-| carries (a value, a field, a reason) | has, holds, contains, records |
-| lives in, lands in | is defined in, is stored in |
-| for free, costs nothing | with no extra code, adds no work |
-| buys, earns its keep | gives, allows, is needed |
-| load-bearing | required, depended on |
-| the shape (of data) | the structure, the format |
-| a lever, a knob (for a setting) | a parameter, an option |
+| Figure                               | Literal                          |
+| ------------------------------------ | -------------------------------- |
+| carries (a value, a field, a reason) | has, holds, contains, records    |
+| lives in, lands in                   | is defined in, is stored in      |
+| for free, costs nothing              | with no extra code, adds no work |
+| buys, earns its keep                 | gives, allows, is needed         |
+| load-bearing                         | required, depended on            |
+| the shape (of data)                  | the structure, the format        |
+| a lever, a knob (for a setting)      | a parameter, an option           |
 
 "Carrier" in the radio sense is a domain term and stays.
 
@@ -91,8 +92,7 @@ with no antecedent. Name the actor: the renderer, the command, the panel.
 > It runs the app's own engine. → The renderer runs the same engine as the app.
 
 **A mannered inversion or a dropped subject.** This fronts the complement, or
-opens on "So", "And" or "Hence" and leaves the subject in the previous
-sentence.
+opens on "So", "And" or "Hence" and leaves the subject in the previous sentence.
 
 > Which latency is now known: the lane's own. → The number reports the lane's
 > latency.
@@ -118,10 +118,9 @@ and then reaches another one, because the reader loses the second conclusion.
 > screen. → …so a runtime with no bundler can load them. A look therefore
 > renders here the way it renders on screen.
 
-**Em-dash asides doing the work of clauses.** One in a paragraph is
-punctuation, and three means the writer is avoiding sentence boundaries.
-Promote one to its own sentence, demote one to a comma, and keep the one that
-is parenthetical.
+**Em-dash asides doing the work of clauses.** One in a paragraph is punctuation,
+and three means the writer is avoiding sentence boundaries. Promote one to its
+own sentence, demote one to a comma, and keep the one that is parenthetical.
 
 ## Voice, register and terminology
 
@@ -146,9 +145,9 @@ reader without the word they meet in the manual. Fix the sentence around it.
 > of backbone segments entered in opposite orientations
 
 **An informalism in a formal register.** A word can be right in a tutorial and
-wrong in a manuscript, so judge it against the document it is in. An
-intensifier with no number behind it is the same slip in a document that
-quantifies everything else: `dramatically simpler`, `greatly reduced`.
+wrong in a manuscript, so judge it against the document it is in. An intensifier
+with no number behind it is the same slip in a document that quantifies
+everything else: `dramatically simpler`, `greatly reduced`.
 
 > uploading to the graphics card is slow → uploading to the GPU is slow
 
@@ -156,20 +155,20 @@ quantifies everything else: `dramatically simpler`, `greatly reduced`.
 
 `website/docs/tutorials/CLAUDE.md` in the JBrowse repository opens with "No
 em-dashes anywhere, including code comments", in a sentence that contained one,
-and the file held fifteen more. Agents imitate a rule's prose, so a rule
-written with a violation teaches the violation.
+and the file held fifteen more. Agents imitate a rule's prose, so a rule written
+with a violation teaches the violation.
 
 ## Habits from Wikipedia's list of signs of AI writing
 
 [Wikipedia's signs of AI writing](https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing)
-lists habits this repo has not had, and each is easy to grep for in text
-written outside the repo: promotional adjectives (`vibrant`, `groundbreaking`,
+lists habits this repo has not had, and each is easy to grep for in text written
+outside the repo: promotional adjectives (`vibrant`, `groundbreaking`,
 `boasts`), vague attribution (`industry reports`, `observers have cited`),
 present-participle synthesis (`highlighting the importance of`,
-`underscoring its role`), the `Challenges and Future Prospects` section, and
-the cluster around `delve`, `tapestry`, `testament`, `showcase` and `pivotal`.
-In `…, highlighting how the two stages interact`, the participle makes a claim
-with nobody making it, so write the claim as its own sentence or drop it.
+`underscoring its role`), the `Challenges and Future Prospects` section, and the
+cluster around `delve`, `tapestry`, `testament`, `showcase` and `pivotal`. In
+`…, highlighting how the two stages interact`, the participle makes a claim with
+nobody making it, so write the claim as its own sentence or drop it.
 
 ## What a prose pass keeps
 

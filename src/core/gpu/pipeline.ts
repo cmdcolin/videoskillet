@@ -7,7 +7,6 @@ import {
 import { Listeners } from '../listeners'
 import { clamp, wrap } from '../math'
 import { rngFor } from '../rng'
-import { AmpNoise } from '../signal/ampnoise'
 import { AudioState } from '../signal/audiostate'
 import { CaptionState } from '../signal/captionstate'
 import { ClipContact, clipPointAt } from '../signal/clip'
@@ -19,7 +18,6 @@ import {
   SAMPLE_RATE,
 } from '../signal/constants'
 import { advanceCrossings } from '../signal/crossings'
-import { OldRecording } from '../signal/erasestate'
 import { Fault } from '../signal/fault'
 import { FILTER_STRIDE, NUM_SECTIONS } from '../signal/filters'
 import { Glide } from '../signal/glide'
@@ -53,18 +51,15 @@ import {
   PARAM_BYTES,
   PRELUDE,
   TILE_WG,
-  TIMING_LEN,
   packParams,
   patchParams,
   wgslLine,
 } from './prelude'
 import { RenderLoop } from './renderloop'
 import { Overlay } from './savedBoard'
-import arcSrc from './shaders/arc.wgsl?raw'
 import blitExtSrc from './shaders/blit_ext.wgsl?raw'
 import buzzTapSrc from './shaders/buzz_tap.wgsl?raw'
 import captionSrc from './shaders/caption.wgsl?raw'
-import cathodeSrc from './shaders/cathode.wgsl?raw'
 import channelSrc from './shaders/channel.wgsl?raw'
 import chromaExtractSrc from './shaders/chroma_extract.wgsl?raw'
 import chyronSrc from './shaders/chyron.wgsl?raw'
@@ -326,8 +321,6 @@ export class Engine implements EngineApi {
   // looks chunky *as*: the measured jitter was p95/p50 = 1.55 before this.
   private glideNotifyAt = 0
   private rfState = new RfState()
-  private ampNoise = new AmpNoise()
-  private oldRecording = new OldRecording()
   private synthState = new SynthState()
   // The blanking gate. Unlike the stab gate beside it this is a plain control
   // pair rather than part of the modulation bay, because it damages the picture
@@ -466,9 +459,6 @@ export class Engine implements EngineApi {
   private prevSnap: GPUBuffer
   private chromaBuf: GPUBuffer
   private underBuf: GPUBuffer
-  // The previous recording's colour-under track, on a tape whose erase head
-  // has died: a copy of underBuf from earlier in the take.
-  private underOldBuf: GPUBuffer
   private lineInfoBuf: GPUBuffer
   private lineParamsBuf: GPUBuffer
   private timingBuf: GPUBuffer
@@ -500,10 +490,6 @@ export class Engine implements EngineApi {
   private encodeCompositeBBgs: [GPUBindGroup, GPUBindGroup]
   private decodePass: Pass
   private decodeBgs: [GPUBindGroup, GPUBindGroup]
-  // crt_face reads decode's screen directly, or the worn cathodes' copy of it
-  // when that pass runs: [direct, through the cathodes].
-  private crtFacePass: Pass
-  private crtFaceBgs: [GPUBindGroup, GPUBindGroup]
 
   // The two input slots: staging, capping, aspect and the noise generators all
   // live in there, so the chain below only sees two texture views.
@@ -520,8 +506,6 @@ export class Engine implements EngineApi {
   private sources: Sources
   private inputTex: GPUTexture
   private outTex: GPUTexture
-  // decode's screen with the worn cathodes' limit applied (cathode.wgsl).
-  private cathodeTex: GPUTexture
   // The decoded frame rendered as a glowing CRT face (bloom/halation/glow).
   // Both the display and the feedback camera sample this, not the raw signal.
   private faceTex: GPUTexture
@@ -624,8 +608,7 @@ export class Engine implements EngineApi {
     // the frames the external key is patched in.
     this.progSnap = storage(N * 4)
     this.chromaBuf = storage(N * 4)
-    this.underBuf = storage(N * 4, GPUBufferUsage.COPY_SRC)
-    this.underOldBuf = storage(N * 4)
+    this.underBuf = storage(N * 4)
     this.lineInfoBuf = storage(LINES * 16)
     this.lineParamsBuf = storage(LINE_PARAM_BYTES)
     // per-line hoff + 8 persistent scalars (v-osc, PLL, AGC, the two
@@ -634,7 +617,7 @@ export class Engine implements EngineApi {
     // VIR corrector's two integrators
     // Readable back through window.vf, so a harness can watch the receiver's
     // sync and restorer state settle instead of inferring it from the picture.
-    this.timingBuf = storage(TIMING_LEN * 4, GPUBufferUsage.COPY_SRC)
+    this.timingBuf = storage((LINES * 2 + 17) * 4, GPUBufferUsage.COPY_SRC)
     this.syncMeasureBuf = storage(LINES * 32, GPUBufferUsage.COPY_SRC)
     // one audio sample per line, uploaded each frame
     this.audioBuf = storage(LINES * 4)
@@ -689,7 +672,6 @@ export class Engine implements EngineApi {
     // (docs/adr/0014). Each pass that samples one of these binds `lightView`,
     // so the sampler decodes the byte and the gathers pay no pow per tap.
     this.outTex = stateTex(['rgba8unorm-srgb'])
-    this.cathodeTex = stateTex(['rgba8unorm-srgb'])
     // `COPY_SRC` on this one alone, because this is the finished tube face —
     // what `present` samples, and so the only texture here that is the picture
     // rather than a stage on the way to it. It is what `readFrame` copies out,
@@ -744,7 +726,6 @@ export class Engine implements EngineApi {
     const syncMeasurePl = compute('sync_measure', syncMeasureSrc)
     const buzzTapPl = compute('buzz_tap', buzzTapSrc)
     const syncPl = compute('sync', syncSrc)
-    const arcPl = compute('arc', arcSrc)
     const lineAnalyzePl = compute('line_analyze', lineAnalyzeSrc)
     const virPl = compute('vir', virSrc)
     const decodePl = compute('decode', decodeSrc)
@@ -752,7 +733,6 @@ export class Engine implements EngineApi {
     const chyronPl = compute('chyron', chyronSrc)
     const osdPl = compute('osd', osdSrc)
     const crtFacePl = compute('crt_face', crtFaceSrc)
-    const cathodePl = compute('cathode', cathodeSrc)
 
     // Zero-copy video: where the device can import the decoder's own frame,
     // the pump skips createImageBitmap entirely and blit_ext samples the frame
@@ -1036,7 +1016,6 @@ export class Engine implements EngineApi {
           { buffer: this.lineParamsBuf },
           { buffer: this.compB },
           { buffer: this.audioBuf },
-          { buffer: this.underOldBuf },
         ],
         perLineT,
       ),
@@ -1069,14 +1048,6 @@ export class Engine implements EngineApi {
       { buffer: this.ccBuf },
     ]
     const [pA, pB] = this.persistBufs
-    const crtFaceRes = (screen: GPUTexture): GPUBindingResource[] => [
-      { buffer: this.paramsBuf },
-      lightView(screen),
-      this.linearSamp,
-      this.faceTex.createView(),
-      { buffer: this.timingBuf },
-      this.grainTex.createView(),
-    ]
     this.decodeBgs = [
       bindGroup(decodePl, decodeRes(pA, pB)),
       bindGroup(decodePl, decodeRes(pB, pA)),
@@ -1151,20 +1122,6 @@ export class Engine implements EngineApi {
         ],
         [1, 1],
       ),
-      // The set's own flyback arcing, radiated into its video stages. sync
-      // decides when it strikes, and this lays the burst on the line before
-      // anything measures the burst or decodes.
-      pass(
-        'arc',
-        arcPl,
-        [
-          { buffer: this.paramsBuf },
-          { buffer: this.compA },
-          { buffer: this.timingBuf },
-        ],
-        perLine,
-        () => c.ehtArc > 0,
-      ),
       pass(
         'lineAnalyze',
         lineAnalyzePl,
@@ -1209,23 +1166,22 @@ export class Engine implements EngineApi {
         () => c.cc > 0,
       ),
       this.decodePass,
-      // Worn cathodes: a walk along each screen row, which decode's tiles
-      // cannot do. crtFace reads its output instead of decode's while it runs.
-      pass(
-        'cathode',
-        cathodePl,
-        [
-          { buffer: this.paramsBuf },
-          lightView(this.outTex),
-          this.cathodeTex.createView(),
-        ],
-        [1, ACTIVE_HEIGHT],
-        () => this.cathodeOn(),
-      ),
       // Photograph the decoded signal as a glowing CRT face; both the display
       // and next frame's feedback camera sample faceTex, so the loop
       // re-photographs an emissive screen rather than the raw signal buffer.
-      pass('crtFace', crtFacePl, crtFaceRes(this.outTex), perTile),
+      pass(
+        'crtFace',
+        crtFacePl,
+        [
+          { buffer: this.paramsBuf },
+          lightView(this.outTex),
+          this.linearSamp,
+          this.faceTex.createView(),
+          { buffer: this.timingBuf },
+          this.grainTex.createView(),
+        ],
+        perTile,
+      ),
       // Frame-store capture of what the decoder saw; framestore.ts decides
       // which frames record. Trails force an even strobe period because a
       // mixed-parity store scrambles hue beyond what burst-lock can correct.
@@ -1245,11 +1201,6 @@ export class Engine implements EngineApi {
       ),
     ]
     this.storePrevPass = byLabel(this.postPasses, 'storePrev')
-    this.crtFacePass = byLabel(this.postPasses, 'crtFace')
-    this.crtFaceBgs = [
-      this.crtFacePass.bg,
-      bindGroup(crtFacePl, crtFaceRes(this.cathodeTex)),
-    ]
     this.presentBg = d.createBindGroup({
       label: 'present',
       layout: this.presentPl.getBindGroupLayout(0),
@@ -1786,7 +1737,6 @@ export class Engine implements EngineApi {
       this.prevSnap,
       this.chromaBuf,
       this.underBuf,
-      this.underOldBuf,
       this.lineInfoBuf,
       this.lineParamsBuf,
       this.timingBuf,
@@ -1962,18 +1912,12 @@ export class Engine implements EngineApi {
       potSpeed: wiper.speed,
       dropoutRate: c[f.dropoutRate],
       dropoutLen: c[f.dropoutLen] * 1e-6 * SAMPLE_RATE,
-      capAdcBit: src === 'a' ? c.capAdcBit : 0,
-      capAdcWeight: src === 'a' ? c.capAdcWeight : 0,
       bPause: deck.pause,
       bPauseBar: deck.bar,
       bShift0: deck.shift,
       bRowOff: deck.row,
     })
     this.gpu.device.queue.writeBuffer(buf, 0, this.feedScratch)
-  }
-
-  private cathodeOn() {
-    return this.controls.cathodeWear > 0 || this.controls.heaterLeak > 0
   }
 
   private uniformValues() {
@@ -2225,8 +2169,6 @@ export class Engine implements EngineApi {
     this.modState = new ModState()
     this.bayDrive.clear()
     this.rfState = new RfState()
-    this.ampNoise = new AmpNoise()
-    this.oldRecording = new OldRecording()
     this.synthState = new SynthState()
     this.autoLock = new AutoLock()
     // A morph in flight is state stamped on the wall clock, and the take is
@@ -2495,9 +2437,11 @@ export class Engine implements EngineApi {
     const step = this.fault.step()
     this.faultLayer.begin()
     if (step === null) return NOOP
-    for (const m of step.moves) {
-      const from = this.controls[m.key]
-      this.faultLayer.write(m.key, from + (m.to - from) * m.depth)
+    for (const k of CONTROL_KEYS) {
+      const to = step.peak[k]
+      if (to === undefined) continue
+      const from = this.controls[k]
+      this.faultLayer.write(k, from + (to - from) * step.depth)
     }
     return this.faultLayer.seal()
   }
@@ -2749,18 +2693,11 @@ export class Engine implements EngineApi {
     // read 234 names back out of it. 51 us a frame for a copy nobody wanted:
     // the four state updates below have to end up beside the controls either
     // way, and this is the object they end up in.
-    const old = this.oldRecording.update(
-      this.frame,
-      c.eraseHead,
-      c.colorUnderMix > 0,
-    )
     const vals = Object.assign(
       this.uniformValues(),
       mixU,
       // the adjacent channel's raster slip and beat phases, walked per frame
-      this.rfState.update(this.frame, c),
-      this.ampNoise.update(this.frame, c),
-      old.uniforms,
+      this.rfState.update(this.frame),
       // the two characters line 21 carries this frame; nulls on most of them,
       // because a caption is written far faster than it is read
       this.captionState.update({ vbi: c.vbi }),
@@ -2900,9 +2837,6 @@ export class Engine implements EngineApi {
       }
       for (const p of this.loopPasses) run(p)
     }
-    if (old.capture) {
-      enc.copyBufferToBuffer(this.underBuf, 0, this.underOldBuf, 0, N * 4)
-    }
     // Put the frame's own params back. The loop above leaves `paramsBuf` holding
     // the LAST generation's copy, so every pass below would read gen = gens-1 —
     // harmless only for as long as nothing down here touches `P.gen`, which is
@@ -2918,7 +2852,6 @@ export class Engine implements EngineApi {
       )
     }
     this.decodePass.bg = this.decodeBgs[this.phosphorSide]
-    this.crtFacePass.bg = this.crtFaceBgs[this.cathodeOn() ? 1 : 0]
     for (const p of this.postPasses) {
       if (p === this.storePrevPass && this.store.records && c.cfbTrail > 0) {
         enc.copyBufferToBuffer(this.compPrev, 0, this.prevSnap, 0, N * 4)

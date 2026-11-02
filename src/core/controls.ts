@@ -18,8 +18,6 @@ export const DEFAULT_CONTROLS = {
   capYcDelayNs: 0, // chroma late (+) or early (-) behind luma in the file
   capNoiseIre: 0, // luma grain the file carries, IRE rms
   capChromaNoiseIre: 0, // chroma-carrier noise, IRE rms, through the chroma band
-  capAdcBit: 0, // a bit of the card's composite converter held high (+) or low (-), 1 = LSB
-  capAdcWeight: 0, // how far the converter's bit weights sit off binary
   // the generated no-signal sources (TV static, blank tape), as statistics of
   // the path the noise arrived through rather than as two fixed looks
   srcNoiseBwMHz: 4.2, // bandwidth of that path: sets the grain's correlation length
@@ -81,7 +79,6 @@ export const DEFAULT_CONTROLS = {
   flybackLines: 16, // line times the vertical flyback takes
   hvSagUs: 0, // beam-current deflection sag: bright content bends the scan
   hvRing: 0.5, // supply damping: 0 smooth droop .. 1 ringing / chaotic
-  ehtArc: 0, // how near the unloaded EHT runs to a flaw's breakdown: dark pictures arc
   abl: 0, // beam limiter: 0 generous flyback .. 1 undersized and underdamped (pumps)
   hDetuneHz: 0, // horizontal oscillator detune off nominal line rate
   // A paperclip held against a point inside the set (signal/clip.ts). None of
@@ -197,19 +194,13 @@ export const DEFAULT_CONTROLS = {
   rfAdjacent: 0, // adjacent-channel leak through the IF trap (carrier beats, not a picture)
   rfMistuneMHz: 0, // fine tuning error: + frees the sound carrier, - slides down the Nyquist slope
   rfSnow: 0, // weak signal into the envelope detector: Rician snow, whites boil first
-  rfFade: 0, // multipath and tropospheric fading: the AGC gains up into snow at each null
-  rfFadeHz: 0.3, // how fast the two paths' phase difference drifts
   ingress: 0, // CB/ham through a cracked shield: a keyed carrier's sweeping herringbone
   agc: 0,
   ghostDelayUs: 0,
   ghostGain: 0,
   humAmp: 0,
   humMod: 0, // mains ripple inside a line amp's supply: hum that multiplies, not adds
-  popcornIre: 0, // a trap in the deck amp's transistor: level clunks between discrete states
-  popcornHz: 1, // how often the traps switch, per second
-  flickerIre: 0, // the same transistor's 1/f noise: black level wanders over seconds
   colorUnderMix: 0,
-  eraseHead: 0, // full-erase head dead: the old recording's colour-under survives under the new
   chromaNoiseIre: 0, // noise inside the color-under path, before up-conversion
   underJitterDeg: 0,
   dropoutRate: 0,
@@ -242,10 +233,6 @@ export const DEFAULT_CONTROLS = {
   fbKnee: 0.35,
   fbLag: 0, // pickup-tube lag: dim detail is read out over several fields
   fbComet: 0, // pickup-tube comet tails: highlights charge the target past what one field reads
-  fbNoise: 0, // sensor shot and read noise
-  fbPattern: 0, // fixed-pattern noise: per-photosite gain and offset, column amplifiers
-  fbHot: 0, // hot pixels: sparse photosites with runaway dark current
-  fbGainUpDb: 0, // most electronic gain the camera's AGC adds in the dark
   // CRT faceplate (what the feedback camera and display photograph)
   crtCutoff: 0, // beam cutoff, 0 = off (identity, no black crush)
   crtGamma: 1, // gun gamma, 1 = linear passthrough
@@ -270,11 +257,6 @@ export const DEFAULT_CONTROLS = {
   crtHaloKey: 0.8,
   crtSvm: 0, // scan velocity modulation depth, signed (coil polarity)
   crtSvmWidth: 1.2, // SVM differentiator aperture, active px
-  // A worn picture tube (cathode.wgsl): emission lost off the cathodes, which
-  // gun is the most worn, and its heater leaking mains onto its bias.
-  cathodeWear: 0,
-  weakGun: 0, // 0 red, 1 green, 2 blue
-  heaterLeak: 0,
   crtConverge: 0, // gun misconvergence at the picture edge, active px
   crtPurity: 0, // magnetised mask patch depth
   crtPurityX: 0.3, // blotch centre on the glass

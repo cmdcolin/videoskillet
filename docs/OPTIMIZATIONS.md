@@ -4,7 +4,7 @@ Why the render path looks the way it does. [`ARCHITECTURE.md`](ARCHITECTURE.md)
 draws the path itself, and [the FAQ](FAQ.md#how-does-it-actually-work) is the
 one-page version of what a pass is.
 
-One frame is 477,750 f32 samples (910 × 525) through up to twenty-seven compute
+One frame is 477,750 f32 samples (910 × 525) through up to twenty-five compute
 dispatches, sixty times a second, and six of those passes are FIR filters 33 to
 63 taps wide. That budget is the reason for everything below. Every built-in
 preset lands **3.3–5.4 ms** against a 3.3 ms always-on floor, and the headroom
@@ -207,11 +207,11 @@ subcarrier, so at 4x fsc every odd tap is zero, and the loop reads eleven
 samples against six coefficients. It adds 0.02 ms to `decode` in either comb
 mode (0.39 to 0.41 ms on the WX 3200) and nothing on the trap.
 
-## Workgroup memory does five different jobs here
+## Workgroup memory does four different jobs here
 
-Eleven shaders stage something in `var<workgroup>` before they barrier, and it
-is worth knowing which of five things each one is doing, because the reason
-decides what may change.
+Ten shaders stage something in `var<workgroup>` before they barrier, and it is
+worth knowing which of four things each one is doing, because the reason decides
+what may change.
 
 **Halo tiling, so a FIR reads storage once per sample rather than once per
 tap.** Six passes filter the waveform (`encode_composite`, `encode_chroma_b`,
@@ -229,11 +229,6 @@ granularity likes it.
 
 `decode`'s tile is where the row-uniform invariant comes from
 ([`ARCHITECTURE.md`](ARCHITECTURE.md) › Performance).
-
-**Holding a row for a serial walk.** `cathode` models emission that a bright run
-draws down and that recovers along the scan, so each pixel depends on every
-pixel to its left. The workgroup loads one screen row, three lanes walk it one
-gun apiece out of shared memory, and every lane writes the row back.
 
 **Sharing a deviate that is expensive to draw.** Snow is one Gaussian deviate
 per sample, and the 1-2-1 band-limit over it reads each neighbour's deviate —

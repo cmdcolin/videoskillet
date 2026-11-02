@@ -21,13 +21,11 @@ import {
   PARAM_BYTES,
   PRELUDE,
   TILE_WG,
-  TIMING_LEN,
 } from '../../src/core/gpu/prelude'
 import { reflectBindings } from '../../src/core/gpu/reflect'
 import { loRadPerSample, uniformValues } from '../../src/core/gpu/uniforms'
 import { wrap } from '../../src/core/math'
 import { rngFor } from '../../src/core/rng'
-import { AmpNoise } from '../../src/core/signal/ampnoise'
 import { CaptionState } from '../../src/core/signal/captionstate'
 import {
   ACTIVE_HEIGHT,
@@ -37,7 +35,6 @@ import {
   SAMPLES_PER_LINE,
 } from '../../src/core/signal/constants'
 import { advanceCrossings } from '../../src/core/signal/crossings'
-import { OldRecording } from '../../src/core/signal/erasestate'
 import { FILTER_STRIDE, NUM_SECTIONS } from '../../src/core/signal/filters'
 import { LineState } from '../../src/core/signal/linestate'
 import { MixState } from '../../src/core/signal/mixstate'
@@ -135,8 +132,6 @@ export class Graph {
   private readonly lineState = new LineState(this.rand)
   private readonly mixState = new MixState(this.rand)
   private readonly rfState = new RfState()
-  private readonly ampNoise = new AmpNoise()
-  private readonly oldRecording = new OldRecording()
   private readonly synthState = new SynthState()
   private readonly strobeGate = new StrobeGate()
   // The tracking servo the app runs (signal/servo.ts). Not an ornament here:
@@ -212,11 +207,11 @@ export class Graph {
     this.progSnap = progSnap
     const chromaBuf = storage(N * 4)
     const underBuf = storage(N * 4)
-    const underOldBuf = storage(N * 4)
     const lineInfoBuf = storage(LINES * 16)
-    // The same length as pipeline.ts, off the same constant. A buffer short of a slot drops that write silently, and the
+    // The same length as pipeline.ts: the last slot is SAG_MEAN in the
+    // prelude. A buffer short of a slot drops that write silently, and the
     // stage that reads it does nothing here and everything in the app.
-    const timingBuf = storage(TIMING_LEN * 4, GPUBufferUsage.COPY_SRC)
+    const timingBuf = storage((LINES * 2 + 17) * 4, GPUBufferUsage.COPY_SRC)
     this.timingBuf = timingBuf
     const syncMeasureBuf = storage(LINES * 32, GPUBufferUsage.COPY_SRC)
     this.syncMeasureBuf = syncMeasureBuf
@@ -248,8 +243,6 @@ export class Graph {
     const inputTex = tex()
     this.outTex = tex(['rgba8unorm-srgb'])
     const faceTex = tex(['rgba8unorm-srgb'])
-    const cathodeTex = tex(['rgba8unorm-srgb'])
-    const cathodeOn = () => this.c.cathodeWear > 0 || this.c.heaterLeak > 0
     this.faceTex = faceTex
     // The screen holds light as sRGB bytes (docs/adr/0014); the passes that
     // sample it read through this view.
@@ -442,7 +435,6 @@ export class Graph {
           lineParams,
           outBuf: compB,
           audio,
-          underOld: underOldBuf,
         }),
         dispatch: perLineT,
       },
@@ -497,13 +489,6 @@ export class Graph {
         dispatch: [1, 1],
       },
       {
-        label: 'arc',
-        shader: 'arc',
-        variants: one({ P, comp: this.compA, timing: timingBuf }),
-        dispatch: perLine,
-        when: () => c.ehtArc > 0,
-      },
-      {
         label: 'lineAnalyze',
         shader: 'line_analyze',
         variants: one({
@@ -547,38 +532,16 @@ export class Graph {
         dispatch: perPixelT,
       },
       {
-        label: 'cathode',
-        shader: 'cathode',
+        label: 'crtFace',
+        shader: 'crt_face',
         variants: one({
           P,
           srcTex: lightView(this.outTex),
-          dstTex: cathodeTex.createView(),
+          samp,
+          faceTex: faceTex.createView(),
+          timing: timingBuf,
+          grainTex: grainTex.createView(),
         }),
-        dispatch: [1, ACTIVE_HEIGHT],
-        when: cathodeOn,
-      },
-      {
-        label: 'crtFace',
-        shader: 'crt_face',
-        variants: {
-          direct: {
-            P,
-            srcTex: lightView(this.outTex),
-            samp,
-            faceTex: faceTex.createView(),
-            timing: timingBuf,
-            grainTex: grainTex.createView(),
-          },
-          cathode: {
-            P,
-            srcTex: lightView(cathodeTex),
-            samp,
-            faceTex: faceTex.createView(),
-            timing: timingBuf,
-            grainTex: grainTex.createView(),
-          },
-        },
-        pick: () => (cathodeOn() ? 'cathode' : 'direct'),
         dispatch: perTile,
       },
       {
@@ -789,10 +752,7 @@ export class Graph {
         dbgView: this.dbgView,
       }),
       ...mixU,
-      ...this.rfState.update(this.frame, c),
-      ...this.ampNoise.update(this.frame, c),
-      ...this.oldRecording.update(this.frame, c.eraseHead, c.colorUnderMix > 0)
-        .uniforms,
+      ...this.rfState.update(this.frame),
       // A sibling of uniformValues, not one of its env fields: these two are
       // packed uniforms in their own right, the way the app assembles them.
       ...this.captionState.update({ vbi: c.vbi }),

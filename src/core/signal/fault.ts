@@ -27,19 +27,9 @@
 // they are *now* towards its peak. The look walks while the fault cuts, which is
 // the pairing _Transitions_ asks for.
 
-import { CONTROL_KEYS } from '../controls'
 import { clamp01 } from '../math'
 
-import type { ControlKey, Controls } from '../controls'
-
-// The stretch of each half of the span over which one control makes its move,
-// as fractions of that half. A power cycle needs this: the scan collapses at
-// the start of the switch-off and the gun goes dark after it, and on the way
-// back the scan is open before the gun has warmed.
-export interface FaultStage {
-  rise: readonly [number, number]
-  fall: readonly [number, number]
-}
+import type { Controls } from '../controls'
 
 export interface FaultPlan {
   // The fault at full depth. Read as a destination the board travels to, not as
@@ -64,18 +54,12 @@ export interface FaultPlan {
   // called: a pad held down keeps the picture broken, and lifting it heals.
   // Released before the peak, it runs the whole span as if tapped.
   held?: boolean
-  // Controls that move over part of a half rather than all of it. A control
-  // with no stage follows the whole curve.
-  stages?: Partial<Record<ControlKey, FaultStage>>
 }
 
 interface FaultStep {
   peak: Partial<Controls>
   // 0..1. How far towards `peak` the board is this frame.
   depth: number
-  // Each control in `peak`, with how far towards it that control is after its
-  // stage.
-  moves: { key: ControlKey; to: number; depth: number }[]
 }
 
 // Smoothstep. A linear ramp reads as a machine moving a slider; the ease-in is
@@ -110,30 +94,6 @@ export function faultDepth(
   const last = frames - 1
   if (frame < cutFrame) return ease(frame / cutFrame)
   return cutFrame === last ? 1 : ease((last - frame) / (last - cutFrame))
-}
-
-const within = (t: number, [from, to]: readonly [number, number]): number =>
-  clamp01((t - from) / (to - from))
-
-// `faultDepth` for one control that moves over a stage of each half. Still 0 at
-// both ends and exactly 1 on the cut frame, so a staged control starts and
-// finishes untouched and sits at its peak while a held fault waits.
-export function stagedDepth(
-  frame: number,
-  frames: number,
-  cutFrame: number,
-  stage: FaultStage,
-): number {
-  const last = frames - 1
-  return frame < 0 || frame >= frames
-    ? 0
-    : frame === cutFrame
-      ? 1
-      : frame < cutFrame
-        ? ease(within(frame / cutFrame, stage.rise))
-        : cutFrame === last
-          ? 1
-          : 1 - ease(within((frame - cutFrame) / (last - cutFrame), stage.fall))
 }
 
 // Which frame the swap lands on. Rounded to a frame at the start rather than
@@ -202,23 +162,9 @@ export class Fault {
       this.cut = true
       plan.onCut()
     }
-    const depth = faultDepth(frame, plan.frames, this.cutFrame)
-    const moves = CONTROL_KEYS.flatMap(key => {
-      const to = plan.peak[key]
-      const stage = plan.stages?.[key]
-      return to === undefined
-        ? []
-        : [
-            {
-              key,
-              to,
-              depth:
-                stage === undefined
-                  ? depth
-                  : stagedDepth(frame, plan.frames, this.cutFrame, stage),
-            },
-          ]
-    })
-    return { peak: plan.peak, depth, moves }
+    return {
+      peak: plan.peak,
+      depth: faultDepth(frame, plan.frames, this.cutFrame),
+    }
   }
 }

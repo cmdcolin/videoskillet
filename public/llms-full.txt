@@ -8,7 +8,7 @@ clamped, not refused.
 Modulation sources for #mod=: sine, triangle, walk, smooth, hold, lorenz, level, hit, trig, pull.
 Up to 8 routings, rate 0.02..10 Hz, depth 0..1.
 
-Presets for #preset=: clean, vhs, tapedOver, protectedTape, wornTape, pictureSearch, stuckTape, trackingBand, servoHunt, hueRidesTheLight, overDeviatedWhite, oneLineBack, broadcast, mistunedRf, fringeReception, distantStation, ignitionStorm, deadChannel, dimmerHash, scrambledChannel, gatedScramble, turboSyncLoss, almostDecoded, ssavi, triModeScrambler, sixDbBox, sineWaveScrambler, keyedSsavi, lineDelay, verticalHoldGone, bentScan, supplyChaos, fullCollapse, bassSmack, lineNineteen, collapsedAxes, mixerLoop, strobeTrails, keyLoop, fbBloom, woundSpiral, shadowLadder, ladderClimb, subcarrierSiren, huntingServos, meltdown, zoomBloom, aimedAHairOff, turnedAHair, theIrisHoldsTheEdge, tunnelOut, spiral, subcarrierComb, ringLoop, ringLadder, ringStorm, ringOnTheBeat, invertedRungs, ringInTheHighlights, ringInTheShadows, warpInTheHighlights, warpInTheShadows, rungsInTheLight, ringingInTheHighlights, chasingItsOwnColour, carvedByTheLivePicture, theHoleTheSubjectKeeps, itOnlyEatsTheRed, theFaceStaysOutOfIt, theWrongClock, clockAndCrystal, colourInTheDark, greyUnderTheColour, noColourToTrade, theLightIsALapBehind, lightBecomesHue, theSecondCrystal, keyedOnWhatItMade, layeredByBrightness, intermodLoop, whereTheProductsLand, shearedAndStacked, servoWarp, bothLoops, runaway, syncInTheLoop, lorenzLoop, strobeBloom, beamBendsItsOwnScan, flagOnEveryLap, colourKeepsWalking, shearedEveryGeneration, encoderWiredBackwards, wheelBehindTheSubject, handOnTheChassis, cleanDissolve, dirtyMix, ringMix, outOfVolts, pauseFight, relayMidFrame, leakingFader, genlockLosesGrip, pirateFeed, negativeDrifter, houseDeckHeld, differenceKey, greenScreen, matteFlood, keySweep, extrudedRibbons, keyOffADub, keyIntoTheLoop, wipeFight, negative, signalAndGroundSwapped, sVideoMiswire, noTerminator, daisyChained, looseConnector, bentEnhancer, contourLines, pouredColour, silkscreen, falseColour, blockColour, litAtTheEdges, contoursOnContours, ringPlaid, twoMultipliers, punchIn, rainbowStorm, neonTube, strobedTube, roundTube, burnedIn, degauss, greenTerminal, radarTube, noseAgainstTheGlass, bentDetailer, latchedEnhancer, latchedCameraLoop, howlroundLoom, falseSync, paperclipChroma, blackRestore, magnetised, misconverged, dyingSet, transmissionFault, nightMonitor, everyColourButOne, pastTheYoke, arcStorm, railSlam, chromaRails, outOfHeadroom, soundAtTheRails, lightThatStays, servicePosition, foldover, powerOff, powerOn, channelChange, arcingFlyback, splitPhase, potMixer, partsDrawer, wiggledPlugs, threeServos, cometTails, nightTube, darkCurrent, deadBit, hairOffTheCrystal, clampInThePicture, colourAStepRight, aimedAtTheVcr, oneHeadPacked, tapeIn, tintInASlowHand, overmodulatedChyron, bentFontRom, scrambledCharacterRom, thePictureInTheType, scrambledIdent, typeEcho, fontCrawl, heldRaster, pageShuffle, wanderingInset.
+Presets for #preset=: clean, vhs, protectedTape, wornTape, pictureSearch, stuckTape, trackingBand, servoHunt, hueRidesTheLight, overDeviatedWhite, oneLineBack, broadcast, mistunedRf, fringeReception, ignitionStorm, deadChannel, dimmerHash, scrambledChannel, gatedScramble, turboSyncLoss, almostDecoded, ssavi, triModeScrambler, sixDbBox, sineWaveScrambler, keyedSsavi, lineDelay, verticalHoldGone, bentScan, supplyChaos, fullCollapse, bassSmack, lineNineteen, collapsedAxes, mixerLoop, strobeTrails, keyLoop, fbBloom, woundSpiral, shadowLadder, ladderClimb, subcarrierSiren, huntingServos, meltdown, zoomBloom, aimedAHairOff, turnedAHair, theIrisHoldsTheEdge, tunnelOut, spiral, subcarrierComb, ringLoop, ringLadder, ringStorm, ringOnTheBeat, invertedRungs, ringInTheHighlights, ringInTheShadows, warpInTheHighlights, warpInTheShadows, rungsInTheLight, ringingInTheHighlights, chasingItsOwnColour, carvedByTheLivePicture, theHoleTheSubjectKeeps, itOnlyEatsTheRed, theFaceStaysOutOfIt, theWrongClock, clockAndCrystal, colourInTheDark, greyUnderTheColour, noColourToTrade, theLightIsALapBehind, lightBecomesHue, theSecondCrystal, keyedOnWhatItMade, layeredByBrightness, intermodLoop, whereTheProductsLand, shearedAndStacked, servoWarp, bothLoops, runaway, syncInTheLoop, lorenzLoop, strobeBloom, beamBendsItsOwnScan, flagOnEveryLap, colourKeepsWalking, shearedEveryGeneration, encoderWiredBackwards, wheelBehindTheSubject, handOnTheChassis, cleanDissolve, dirtyMix, ringMix, outOfVolts, pauseFight, relayMidFrame, leakingFader, genlockLosesGrip, pirateFeed, negativeDrifter, houseDeckHeld, differenceKey, greenScreen, matteFlood, keySweep, extrudedRibbons, keyOffADub, keyIntoTheLoop, wipeFight, negative, signalAndGroundSwapped, sVideoMiswire, noTerminator, daisyChained, looseConnector, bentEnhancer, contourLines, pouredColour, silkscreen, falseColour, blockColour, litAtTheEdges, contoursOnContours, ringPlaid, twoMultipliers, punchIn, rainbowStorm, neonTube, strobedTube, roundTube, burnedIn, degauss, greenTerminal, radarTube, noseAgainstTheGlass, bentDetailer, latchedEnhancer, latchedCameraLoop, howlroundLoom, falseSync, paperclipChroma, blackRestore, magnetised, misconverged, transmissionFault, nightMonitor, everyColourButOne, pastTheYoke, arcStorm, railSlam, chromaRails, outOfHeadroom, soundAtTheRails, lightThatStays, servicePosition, foldover, powerOff, powerOn, channelChange, splitPhase, potMixer, partsDrawer, wiggledPlugs, threeServos, cometTails, nightTube, hairOffTheCrystal, clampInThePicture, colourAStepRight, aimedAtTheVcr, oneHeadPacked, tapeIn, tintInASlowHand, overmodulatedChyron, bentFontRom, scrambledCharacterRom, thePictureInTheType, scrambledIdent, typeEcho, fontCrawl, heldRaster, pageShuffle, wanderingInset.
 
 ## Signal (source A)
 
@@ -35,14 +35,6 @@ capNoiseIre  (capture grain)
 capChromaNoiseIre  (capture chroma noise)
   0..60 step 1 IRE  default 0
   Noise on the deck's colour-under carrier, which had far less headroom than luma, smeared by the narrow chroma band into blotches of wrong hue.
-
-capAdcWeight  (capture adc bit weights)
-  0..1 step 0.01  default 0
-  How far the bit weights of the capture card's composite converter sit off binary. Each high bit's carry leaves a jump at a fixed level, so gradients break into contours there and the colour riding across each jump is thrown. Capture grain flips pixels either side of each jump from frame to frame, so the contours shimmer.
-
-capAdcBit  (capture adc stuck bit)
-  -8..8 step 1  default 0
-  A bit of the capture card's composite converter held high (+) or low (-), counted from the least significant. Every code that had the bit the other way moves by its weight, so the picture folds into repeating ramps, and where a fold reverses the colour subcarrier the hue on it comes back complementary. A bit held high lifts the sync tips, so the picture tears and rolls.
 
 capYcDelayNs  (capture y/c delay)
   -500..500 step 10 ns  default 0
@@ -239,22 +231,6 @@ fbLag  (tube lag)
 fbComet  (comet tails)
   0..1 step 0.01  default 0
   The reading beam carries only so much current per field. A highlight charges the target past that, so it drains over several fields, and a moving light leaves a trail that holds the cap's brightness and then collapses. Low values catch the loop's own hot spots; high values catch the picture's highlights too.
-
-fbGainUpDb  (gain up (agc))
-  0..24 step 1 dB  default 0
-  The most electronic gain the camera's AGC adds once the screen it is pointed at is too dark for mid-grey. The gain lifts the sensor's noise with the picture, so a dimming loop turns to grain, and it backs off as the loop brightens the screen it meters.
-
-fbNoise  (sensor noise)
-  0..1 step 0.01  default 0
-  Shot noise and read noise on the camera sensor, fresh every frame. Shot noise grows as the square root of the light, so the highlights are noisiest, which is how a photographed screen differs from tape grain.
-
-fbPattern  (fixed pattern)
-  0..1 step 0.01  default 0
-  Each photosite's own gain and dark offset. The pattern is fixed to the sensor, so each lap zooms and turns the last lap's pattern and lays a fresh copy over it.
-
-fbHot  (hot pixels)
-  0..1 step 0.01  default 0
-  Sparse photosites with runaway dark current, each on one chip of a three-chip camera, so each glows in one primary whatever the light. A quarter of them blink between two levels. The loop grows the dots into trails and spirals.
 
 ## Tube face (what the camera shoots)
 
@@ -838,18 +814,6 @@ impulseMains  (dimmer lock)
   0..1 step 0.01  default 0
   A triac dimmer fires twice per mains cycle at its set angle, so the random hits concentrate into two bands of hash that roll with the hum bar.
 
-popcornIre  (popcorn noise)
-  0..30 step 0.1 IRE  default 0
-  A defect in a transistor in the deck's video amplifier traps and releases single charge carriers, so its current switches between fixed values at random moments. Two traps give four levels. Each switch moves the whole line, sync included, and changes the stage's gain, so the picture clunks between brightnesses and the receiver's AGC chases every step. A switch lands partway down a field and leaves a horizontal edge for one frame.
-
-popcornHz  (popcorn rate)
-  0.05..8 step 0.01 /s  default 1
-  How often the traps switch. One trap mostly sits at its lower level and jumps up briefly; the other is slower and holds either level for longer.
-
-flickerIre  (flicker noise (1/f))
-  0..20 step 0.1 IRE  default 0
-  The same transistor's flicker noise, which has more power the slower it is. Black level and gain wander over seconds and never settle, and the receiver's AGC and colour killer react to the level that arrives.
-
 ## Ghosting & leakage
 
 ghostDelayUs  (ghost delay)
@@ -907,14 +871,6 @@ rfMistuneMHz  (fine tuning)
 rfSnow  (weak signal (snow))
   0..1 step 0.01  default 0
   IF noise into the envelope detector, the source of weak-signal snow. The picture rides a negative-modulation carrier, with sync at peak power and white at 12.5%, so the noise lands unevenly: whites boil first, blacks stay quiet longest, and sync goes last.
-
-rfFade  (signal fading)
-  0..1 step 0.01  default 0
-  A distant station arriving by two paths whose phase difference drifts, so the carrier nulls deeply and briefly over a slow tropospheric loss. The tuner's AGC raises its gain to hold the carrier, which raises the receiver's own noise and any adjacent channel or CB ingress with it: snow surges at each null. Past the AGC's range the carrier sinks, the picture washes out and sync goes.
-
-rfFadeHz  (fade rate)
-  0.02..3 step 0.01 Hz  default 0.3
-  How fast the two paths drift against each other, which sets how often the nulls come. The drift wanders and sometimes reverses, so a null can hang for a second or sweep straight past.
 
 ingress  (CB ingress)
   0..1 step 0.01  default 0
@@ -981,10 +937,6 @@ chromaNoiseIre  (chroma noise)
 underJitterDeg  (phase jitter)
   0..180 step 0.1 deg/line  default 0
   Per-line phase error in that down/up conversion, so hue wanders line to line and the picture picks up a coloured venetian-blind texture. Needs colour-under raised.
-
-eraseHead  (dead erase head)
-  0..1 step 0.01  default 0
-  How much of the tape's previous recording survives under this one. Colour-under sits deep in the oxide, and only the full-erase head clears it, so with that head dead the old programme's colour plays back under the new picture. The old tracks wander along this deck's, so their hue crawls in bands down the field, and where the old burst lands on the new one the new picture's hue moves too. Needs colour-under raised.
 
 ycDelayNs  (Y/C delay)
   -3360..3360 step 70 ns  default 0
@@ -1245,10 +1197,6 @@ abl  (beam limiter)
   0..1 step 0.01  default 0
   The automatic beam limiter. The flyback can only source so much average beam current, so past a threshold the set pulls video drive down, and the sense loop's time constant lands the dimming after the bright content that caused it. The knob undersizes the flyback and strips the damping, so the correction overshoots and the picture pumps.
 
-ehtArc  (flyback arcing)
-  0..1 step 0.01  default 0
-  A flaw in the high-voltage circuit, such as a cracked anode cap, that breaks down above some voltage. The regulator lets the voltage rise when the beam draws little, so dark pictures arc. Each arc collapses the supply, so the lines below it swell and dim for the few milliseconds the flyback takes to recharge, the line oscillator is thrown, and the spark radiates a burst of hash into the set's video. The path an arc burns breaks down more easily for a while, so arcs come in clusters. The knob sets how close the supply runs to breakdown.
-
 ## Decoder
 
 combMode  (Y/C comb)
@@ -1428,18 +1376,6 @@ crtSvm  (scan velocity mod)
 crtSvmWidth  (svm aperture)
   0.25..24 step 0.05 px  default 1.2
   How wide a span the differentiator looks across. Narrow gives a tight edge-liner; wide reaches past the detail and shades whole objects.
-
-cathodeWear  (cathode wear)
-  0..1 step 0.01  default 0
-  How much emission an old tube's cathodes have lost. Each gun can deliver only so much beam current, so highlights flatten to a dull plateau, and a bright run draws the cathode down for microseconds, so the picture to the right of a highlight is dimmed. The weak gun runs out first and tints the highlights toward the other two.
-
-weakGun  (weak gun)
-  0=red 1=green 2=blue  default 0
-  Which of the three cathodes is the most worn. The other two have worn three quarters as far. The heater leak below is on this gun too.
-
-heaterLeak  (heater leak)
-  0..1 step 0.01  default 0
-  Leakage between the weak gun's heater and its cathode. The heater runs on mains and the insulation conducts only near the peak of one half of the cycle, so a band of that gun's colour rises out of the blacks once a field and rolls slowly through the picture.
 
 ## Phosphor
 

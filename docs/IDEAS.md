@@ -70,6 +70,14 @@ What is left, in rough payoff order:
   own, breeding grain into structure with nothing drawing it; and gain noise
   coupled to the camera's own auto-gain, so noise pumps against the iris hunt at
   a third rhythm alongside the beam limiter.
+- **Flicker (1/f) and popcorn noise in the video amplifier.** Everything
+  aperiodic in the chain is per-sample and everything slow is periodic (hum).
+  Missing: a random-walk level, so black level and brightness breathe sub-Hz,
+  and **burst/RTS noise** — a defective junction switching the DC between two
+  discrete states at random intervals, so the picture level _clunks_ rather than
+  drifts. CPU-side out of `signal/noise.ts` (an OU term, and a two-state Markov
+  chain for the popcorn) into one DC uniform; the AGC, the clamp and the killer
+  then react to it for free.
 - **A wandering spurious carrier (switching-supply birdie).** Every periodic
   interference here is locked to line rate (`soundIre`, `rfAdjacent`) or to
   mains (`humAmp`). A switch-mode supply or a nearby computer sits at some
@@ -89,9 +97,7 @@ What is left, in rough payoff order:
   band (tracking, head clog, shuttle, head switch). If the preamp's floor were
   fixed and the _RF level_ varied, noise would appear wherever signal is weak
   from any one mechanism, and the four blocks would collapse into it. The honest
-  version, and it would delete code; also the largest of these. Signal fading
-  (`rfFade`) already works this way for its own term: a fixed floor that the
-  tuner AGC's gain scales, in `rfstate.ts`, and it is the place to start.
+  version, and it would delete code; also the largest of these.
 
 ## Per-input feeds — what is still on the program bus
 
@@ -525,6 +531,12 @@ generation stops being uniform.)
   exists the consumer digital-effects buttons follow as one mechanism each —
   mosaic and multi-image are decimation with no prefilter, so the tiles alias
   and the subsample pattern beats against the mask.
+- **Frame-recursive noise reducer.** A corrective box whose failure mode is the
+  effect, which is why it is more interesting than the TBC declined below. Frame
+  averaging gated on a motion threshold: below it, noise freezes into fixed
+  plateaus and the picture goes plasticky; above it, motion drags a soft trail
+  with a hard edge where the gate trips. Put the threshold in the noise floor
+  and the grain drives the detector, so still areas breathe.
 - **Rutt/Etra scan deflection.** The source's own luma patched into the vertical
   deflection amplifier: the raster becomes a relief map of the picture, and the
   brightness comes free from line bunching (line density _is_ luminance). Fits
@@ -820,11 +832,11 @@ engine. Also left out until then:
 
 ## Signal diagrams
 
-- **Fold away a plot that is flat at stock.** Several plots, such as Sync's
-  line and frame shifts, are probably flat lines at stock and take about 45
-  units of height each. Folding one away until a knob moves saves that height,
-  but the flat line also shows what the plot measures, and folding conflicts
-  with drawing plots side by side. Ask before building it.
+- **Fold away a plot that is flat at stock.** Several plots, such as Sync's line
+  and frame shifts, are probably flat lines at stock and take about 45 units of
+  height each. Folding one away until a knob moves saves that height, but the
+  flat line also shows what the plot measures, and folding conflicts with
+  drawing plots side by side. Ask before building it.
 - **One list of group names.** The names repeat in `schematicKeys.ts`,
   `SCHEMATIC_FRAMES` and `HEADING`. The `Record<SchematicGroup, ...>` type
   already catches a missing entry, so this is low value.
@@ -834,13 +846,6 @@ engine. Also left out until then:
 
 ## Not worth building
 
-- **A frame-recursive noise reducer.** Built and removed on 2026-11-01 (commit
-  b82ebcfc). A motion-gated frame average with a short memory word, as an
-  outboard box ahead of the enhancer. Its failure looks were frozen grain
-  plateaus with trails behind motion, which read as phosphor persistence, and a
-  one-frame store that cancels chroma on still areas, which leaves most of the
-  picture grey. Neither looks like a fault in an analog signal, and the box cost
-  two passes and a frame store.
 - **WebMCP tools for the app.** An agent with a page-reading browser or a shell
   already evaluates JavaScript on the page. jbrowse-components uses MCP only on
   Desktop, where no page exists, and there it is four tools around

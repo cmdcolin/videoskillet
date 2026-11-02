@@ -681,18 +681,8 @@ fn ehtOf(sag: f32) -> f32 {
   return clamp(EHT_MAX * tanh(abs(P.hvSag) / EHT_KNEE) * sag, 0.0, 0.25);
 }
 
-// An arc (sync.wgsl) drops the EHT outright, and the raster swells and dims
-// while the supply recharges. A collapse goes far deeper than any load can
-// pull the regulated supply, so it has its own ceiling.
-const ARC_EHT_SCALE = 0.5;
-const EHT_FLOOR = 0.6;
-
-fn arcEht(dip: f32) -> f32 {
-  return select(0.0, ARC_EHT_SCALE * dip, P.ehtArc > 0.0);
-}
-
 fn lineEht(ry: u32) -> f32 {
-  return min(ehtOf(timing[SAG_BASE + ry]) + arcEht(timing[ARC_EHT + ry]), EHT_FLOOR);
+  return ehtOf(timing[SAG_BASE + ry]);
 }
 
 // Picture samples per screen pixel: the deflection angle goes as 1/sqrt(EHT).
@@ -831,7 +821,7 @@ fn main(
   // classic rolling black bar instead of the picture wrapping seamlessly
   let vroll = timing[V_PHASE];
   let vSizeC = clamp(P.vSize, 0.01, 4.0);
-  vAmp = vSizeC / ehtScan(min(ehtOf(timing[SAG_MEAN]) + arcEht(timing[ARC_MEAN]), EHT_FLOOR));
+  vAmp = vSizeC / ehtScan(ehtOf(timing[SAG_MEAN]));
   let y = f32(gid.y);
   let last = f32(NLINES) - 1.0;
   // Which raster line the yoke puts on this screen row. The plain scan is one

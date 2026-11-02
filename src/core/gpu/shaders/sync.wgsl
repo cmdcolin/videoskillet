@@ -91,39 +91,6 @@ const AFC_LEAK = 0.98;
 // runs free through it.
 const COMPARATOR_FLOOR = 0.33 * f32(SYNC_LEN);
 
-// Flyback arcing. A flaw in the EHT circuit (a cracked anode cap, dust on the
-// flyback's winding) breaks down above some voltage, and the supply only rises
-// toward it when the beam draws little: the regulator holds the voltage up
-// against a light load, so a dark picture is what arcs. A gap does not break
-// down at one exact voltage. Its chance of firing climbs steeply through a
-// band around it, so the arcs land at random and come faster the further the
-// supply is pushed. Each arc collapses the supply, which then recharges, and
-// the path it burns stays ionised for a while and breaks down lower, so arcs
-// come in clusters and stop once the path has cleared.
-//
-// Voltages are relative to nominal. ehtArc lifts the unloaded voltage toward
-// the breakdown; full white pulls it down by ARC_REGULATION.
-const ARC_HEADROOM = 0.12;
-const ARC_REGULATION = 0.12;
-const ARC_BREAK = 1.06;
-const ARC_ION_DROP = 0.03;
-// Chance per line of breaking down at the breakdown voltage, and the
-// overvoltage that multiplies it by e. The flyback recharges the tube within
-// a few lines of an arc, so the voltage is back over the breakdown almost at
-// once, and only a low rate keeps a dark scene to a few arcs a second.
-const ARC_RATE = 6.0e-6;
-const ARC_SOFT = 0.02;
-// Per-line factors: the reservoir follows the load over about two frames, the
-// flyback recharges the tube's capacitance after an arc within about 30 lines
-// (2 ms), and the ionised path clears over about five frames.
-const ARC_FOLLOW = 1.0 / 900.0;
-const ARC_DIP_KEEP = 0.97;
-const ARC_ION_KEEP = 0.9995;
-// How far one arc throws the line oscillator, samples per unit of collapse.
-const ARC_KICK = 120.0;
-// The radiated burst rings down over about fifteen lines.
-const ARC_BURST_KEEP = 0.93;
-
 const SAG_LANE = 64u;
 // lines per field an untriggered vertical oscillator gains: about 58.6 Hz
 const V_FREE_RUN_LINES = 12.0;
@@ -192,10 +159,6 @@ fn main(@builtin(local_invocation_id) lid: vec3u) {
   var ablV = timing[ABL_VEL];
   var irisG = servoGain(timing[IRIS_GAIN]);
   var irisV = timing[IRIS_VEL];
-  var arcFree = timing[ARC_FREE];
-  var arcDip = timing[ARC_DIP];
-  var arcIon = timing[ARC_ION];
-  var camG = servoGain(timing[CAM_GAIN]);
   storageBarrier();
 
   if (lid.x == SAG_LANE) {
@@ -253,11 +216,6 @@ fn main(@builtin(local_invocation_id) lid: vec3u) {
   var nearCount = 0.0;
   var minSum = 0.0;
   let acCoupled = P.syncSlicer > 1.5;
-  let arcing = P.ehtArc > 0.0;
-  let roll = i32(floor(vroll));
-  arcFree = select(arcFree, 1.0, arcFree == 0.0);
-  var arcBurst = 0.0;
-  var arcSum = 0.0;
   // How long the separator has gone without a real edge, carried across
   // frames: a flywheel keeps an unlocked oscillator honest for a while, but
   // not forever, and the decay below is scaled by this.
@@ -280,34 +238,6 @@ fn main(@builtin(local_invocation_id) lid: vec3u) {
     // more every line and the raster shears into diagonal bars.
     pll = pll + P.hRate;
     let m = measure[row * 2u];
-    if (arcing) {
-      var ry = i32(row) - roll;
-      ry = select(ry, ry + i32(NLINES), ry < 0);
-      ry = select(ry, ry - i32(NLINES), ry >= i32(NLINES));
-      let beam = max(m.z - IRE_BLACK - blackHeld, 0.0) / VIDEO_RANGE * ablHeld;
-      let supply = 1.0 + ARC_HEADROOM * P.ehtArc - ARC_REGULATION * beam;
-      arcFree = arcFree + ARC_FOLLOW * (supply - arcFree);
-      arcDip = arcDip * ARC_DIP_KEEP;
-      arcIon = arcIon * ARC_ION_KEEP;
-      arcBurst = arcBurst * ARC_BURST_KEEP;
-      let over = arcFree - arcDip - (ARC_BREAK - ARC_ION_DROP * arcIon);
-      let h = pcg(row * 6151u + P.frame * 92821u + 0xa5c3u);
-      var onset = 0.0;
-      if (rand01(h) < ARC_RATE * exp(clamp(over / ARC_SOFT, -30.0, 10.0))) {
-        let u = rand01(h ^ 0x1u);
-        let collapse = 0.12 + 0.6 * u * u;
-        arcDip = arcDip + collapse;
-        arcIon = 1.0;
-        arcBurst = collapse;
-        onset = floor(rand01(h ^ 0x4u) * f32(SPL));
-        let side = select(-1.0, 1.0, rand01(h ^ 0x3u) < 0.5);
-        pll = pll + side * ARC_KICK * collapse * (0.5 + rand01(h ^ 0x5u));
-      }
-      timing[ARC_EHT + u32(ry)] = arcDip;
-      timing[ARC_BURST + row] = arcBurst;
-      timing[ARC_ONSET + row] = onset;
-      arcSum = arcSum + arcDip;
-    }
     let aux = measure[row * 2u + 1u];
     // beam current is drawn whether or not this line's sync was findable
     if (row >= FIRST_BURST_LINE) {
@@ -467,18 +397,6 @@ fn main(@builtin(local_invocation_id) lid: vec3u) {
     irisV = 0.0;
   }
 
-  // The camera's video AGC, after the iris. Once the light reaching the
-  // sensor is too dim for mid-grey it adds electronic gain, up to its limit,
-  // and that gain lifts the sensor's noise with the picture. It sits inside the
-  // loop like the iris: the gain brightens the screen it meters and backs off.
-  if (P.fbMix > 0.0 && P.fbGainUpMax > 1.0) {
-    let seen = max(beamIre, 1.0) / 50.0 * ablG * irisG * P.fbGain;
-    let want = clamp(pow(1.0 / seen, 2.2), 1.0, P.fbGainUpMax);
-    camG = clamp(camG + 0.1 * (want - camG), 1.0, P.fbGainUpMax);
-  } else {
-    camG = 1.0;
-  }
-
   timing[V_PHASE] = vroll;
   // A detuned H-osc ramps the phase every line without ever relocking, so the
   // carried-over state has to wrap or it grows without bound. One full line of
@@ -491,7 +409,6 @@ fn main(@builtin(local_invocation_id) lid: vec3u) {
   timing[ABL_VEL] = ablV;
   timing[IRIS_GAIN] = irisG;
   timing[IRIS_VEL] = irisV;
-  timing[CAM_GAIN] = camG;
   timing[LOCK_AGE] = lockAge;
   timing[AFC_VEL] = select(0.0, afcVel, acCoupled);
   // An AC-coupled separator's capacitor charges to whatever is deepest, so its
@@ -499,8 +416,4 @@ fn main(@builtin(local_invocation_id) lid: vec3u) {
   timing[TIP_LEVEL] = clamp(tipRef, -150.0, select(-1.0, 90.0, acCoupled));
   timing[BLACK_SHIFT] = blackShift;
   timing[GATE_WIDE] = starved;
-  timing[ARC_FREE] = select(0.0, arcFree, arcing);
-  timing[ARC_DIP] = select(0.0, arcDip, arcing);
-  timing[ARC_ION] = select(0.0, arcIon, arcing);
-  timing[ARC_MEAN] = select(0.0, arcSum / f32(NLINES), arcing);
 }

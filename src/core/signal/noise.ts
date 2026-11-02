@@ -21,21 +21,6 @@ function hashNoise(i: number, seed: number): number {
   return (h >>> 0) / 0x80000000 - 1
 }
 
-// One uniform deviate in [0, 1) per (i, seed), for decisions that have to be
-// reproducible from the frame count alone.
-export function hash01(i: number, seed: number): number {
-  return 0.5 * (hashNoise(i, seed) + 1)
-}
-
-// A unit Gaussian from two of those, by Box-Muller.
-export function hashGauss(i: number, seed: number): number {
-  const u = Math.max(hash01(i, seed), 1e-9)
-  return (
-    Math.sqrt(-2 * Math.log(u)) *
-    Math.cos(2 * Math.PI * hash01(i, seed ^ 0x5bd1))
-  )
-}
-
 // Lorenz attractor, forward-Euler with internal substepping for stability. A
 // bounded strange attractor: aperiodic but structured — it dwells near two lobes
 // and switches between them chaotically, never white noise and never periodic.

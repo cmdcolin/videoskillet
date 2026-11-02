@@ -93,10 +93,6 @@ export const PARAM_DEFS = [
   ['capYcDelay', 'f32'],
   ['capNoise', 'f32'],
   ['capChromaNoise', 'f32'],
-  // The capture card's luma converter: a bit held (signed, 1-based, + high,
-  // - low, 0 none) and how far its bit weights sit off binary.
-  ['capAdcBit', 'f32'],
-  ['capAdcWeight', 'f32'],
   // Video synth: a bench oscillator patched into a slot instead of a picture
   // (mode 3 of the same srcNoise selector). Each oscillator's phase is carried
   // as cycles at frame start plus its walk per line and per sample, rather than
@@ -224,7 +220,6 @@ export const PARAM_DEFS = [
   ['hvSag', 'f32'], // beam-current deflection sag amplitude, samples
   ['hvRing', 'f32'], // supply damping: 0 smooth droop .. 1 ringing / chaotic
   ['hRate', 'f32'], // horizontal oscillator free-run drift, samples/line
-  ['ehtArc', 'f32'], // how near the unloaded EHT sits to a flaw's breakdown voltage, 0 = never arcs
   // audio patched into the receiver, one sample per line
   ['audioBend', 'f32'], // direct horizontal displacement, samples
   ['audioLoad', 'f32'], // audio driven into the HV tank alongside beam current
@@ -258,9 +253,6 @@ export const PARAM_DEFS = [
   ['rfAdjPhase', 'f32'], // their vision-carrier beat phase at frame start, radians (accumulated)
   ['rfAdjPhaseS', 'f32'], // their sound-carrier beat phase, radians (their audio FM rides here)
   ['rfSnow', 'f32'], // weak signal: IF noise into the envelope detector (Rician, whites first)
-  ['rfFadeK', 'f32'], // the fading carrier after the tuner AGC, against nominal (1 = held)
-  ['rfFadeG', 'f32'], // the tuner AGC's IF gain, which scales the noise floor and interferers
-  ['rfFloor', 'f32'], // the receiver's own noise floor, live while the signal fades
   ['ingressIre', 'f32'], // shield ingress: the radio's carrier amplitude, IRE
   ['ingressKey', 'f32'], // whether the mic is keyed right now, 0..1 (CPU-walked stretches)
   ['ingressCps', 'f32'], // its visible beat frequency, cycles/sample (wanders)
@@ -285,14 +277,7 @@ export const PARAM_DEFS = [
   ['ghostGain', 'f32'],
   ['humAmp', 'f32'], // IRE
   ['humMod', 'f32'], // supply-ripple gain modulation depth (multiplies, sync included)
-  ['ampLvl0', 'f32'], // deck amplifier's popcorn + flicker level at the top of the frame, IRE
-  ['ampLvl1', 'f32'], // the flicker part's level at the bottom, IRE (ramped between)
-  ['ampStep', 'f32'], // a popcorn switch this frame: the level step, IRE
-  ['ampStepRow', 'f32'], // the fractional line the switch lands on (NLINES = none)
   ['colorUnderMix', 'f32'], // 0 direct chroma .. 1 full VHS color-under path
-  ['eraseOld', 'f32'], // how much of the previous recording's colour-under survives (0 = erased)
-  ['eraseSlip', 'f32'], // where the old tracks sit along this deck's at mid-field, samples
-  ['eraseSlope', 'f32'], // how far that offset grows per line, samples
   ['chromaNoise', 'f32'], // noise injected into the color-under signal, IRE rms
   ['dropoutRate', 'f32'], // expected dropout events per frame
   ['dropoutLen', 'f32'], // mean dropout length, samples
@@ -400,13 +385,6 @@ export const PARAM_DEFS = [
   ['fbIris', 'f32'], // camera auto-iris: 0 manual exposure .. 1 underdamped servo (hunts)
   ['fbLag', 'f32'], // pickup-tube lag: the reading beam leaves charge behind on a dim target
   ['fbComet', 'f32'], // pickup-tube comet tails: beam current cap, highlights drain over several fields
-  // The camera's sensor in low light, keyed to its own photosites: shot and
-  // read noise, fixed-pattern gain and offset, hot pixels, and the electronic
-  // gain its AGC adds once the picture is too dark (linear, 1 = no gain-up).
-  ['fbNoise', 'f32'],
-  ['fbPattern', 'f32'],
-  ['fbHot', 'f32'],
-  ['fbGainUpMax', 'f32'],
   // CRT faceplate: the emissive screen the camera photographs (and the display
   // shows). Sits between the decoded signal and the camera/lens model above.
   ['crtCutoff', 'f32'], // beam cutoff: drive below the knee emits no light (true black background)
@@ -473,9 +451,6 @@ export const PARAM_DEFS = [
   ['crtSharp', 'f32'], // horizontal Catmull-Rom reconstruction blend (0 bilinear)
   ['maskAmt', 'f32'], // aperture grille strength
   ['maskPitch', 'f32'], // grille triad pitch, canvas pixels
-  ['cathodeWear', 'f32'], // emission lost off the weakest cathode, 0 new .. 1 spent
-  ['weakGun', 'f32'], // which gun's cathode is the most worn: 0 red, 1 green, 2 blue
-  ['heaterLeak', 'f32'], // heater-cathode leakage on the weak gun, 0 none .. 1 full
   ['crtZoom', 'f32'], // magnification of the glass (1 = whole screen)
   ['crtZoomX', 'f32'], // point on the glass held under the magnifier, 0..1
   ['crtZoomY', 'f32'],
@@ -485,11 +460,6 @@ export const PARAM_DEFS = [
 // Workgroup width of the tiled-FIR passes; pipeline.ts sizes their dispatches
 // from the same number so the WGSL and the dispatch cannot drift apart.
 export const TILE_WG = 64
-
-// Floats in the timing buffer: everything up to AFC_VEL, then the arc's four
-// scalars and its three per-line arrays, then the camera's gain-up (prelude WGSL
-// constants above).
-export const TIMING_LEN = LINES * 5 + 22
 
 export const PARAM_BYTES = Math.ceil((PARAM_DEFS.length * 4) / 16) * 16
 export const GEN_OFFSET = PARAM_DEFS.findIndex(([n]) => n === 'gen') * 4
@@ -620,23 +590,6 @@ const SAG_MEAN = ${LINES * 2 + 15}u;
 // separator's phase comparator has charged its loop filter. Zero for the other
 // separators, whose flywheel moves phase alone.
 const AFC_VEL = ${LINES * 2 + 16}u;
-// Flyback arcing (sync.wgsl). The supply's voltage with no arc and the dip the
-// arcs left, both relative to nominal; the ionisation an arc leaves in its
-// path, which lowers the next breakdown; and the frame's mean dip, which sets
-// the EHT of the vertical scan the way SAG_MEAN does.
-const ARC_FREE = ${LINES * 2 + 17}u;
-const ARC_DIP = ${LINES * 2 + 18}u;
-const ARC_ION = ${LINES * 2 + 19}u;
-const ARC_MEAN = ${LINES * 2 + 20}u;
-// Per raster line, the EHT dip the arcs have left; per source row, how hard
-// an arc's radiated burst hits the video on that row, and the sample it starts
-// at.
-const ARC_EHT = ${LINES * 2 + 21}u;
-const ARC_BURST = ${LINES * 3 + 21}u;
-const ARC_ONSET = ${LINES * 4 + 21}u;
-// The feedback camera's AGC gain-up, as the servo in sync.wgsl left it. Zero
-// means never run, which reads as unity.
-const CAM_GAIN = ${LINES * 5 + 21}u;
 // Frames the separator must go without pulses before its gate opens to the
 // whole line. A flywheel coasts through a hum trough or an AGC dip; it only
 // starts hunting once the pulses have genuinely gone.

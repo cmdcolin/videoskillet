@@ -27,36 +27,6 @@
 // channel.wgsl stages away.
 var<workgroup> tileNs: array<f32, TILE_WG + 2u>;
 
-// The capture card's converter, digitising the composite at four times the
-// subcarrier: sync tip on code 4, blanking on 60, white on 200. A
-// successive-approximation converter weighs the input against eight binary
-// steps, and steps that are not quite binary leave a jump at every code where
-// a high bit carries. A held bit adds or removes its weight from every code
-// that had it the other way. The subcarrier rides on the picture into the
-// converter, so where a fold reverses the waveform the colour on it comes back
-// at the opposite phase, the complementary hue, and the steps a fold cuts into
-// a gradient are sharp enough to decode as chroma themselves. Burst and sync
-// tips pass through the same codes, so a bit that cuts them throws the
-// receiver's hue and lock as well.
-const ADC_SKEW = array<f32, 8>(0.0, 0.1, -0.15, 0.25, -0.35, 0.3, -0.22, 0.15);
-const ADC_BLANK = 60.0;
-const ADC_PER_IRE = 1.4;
-
-fn adc(ire: f32) -> f32 {
-  var code = u32(clamp(round(ADC_BLANK + ire * ADC_PER_IRE), 0.0, 255.0));
-  if (P.capAdcBit != 0.0) {
-    let bit = 1u << (u32(abs(P.capAdcBit)) - 1u);
-    code = select(code & ~bit, code | bit, P.capAdcBit > 0.0);
-  }
-  var level = 0.0;
-  for (var b = 0u; b < 8u; b = b + 1u) {
-    if ((code & (1u << b)) != 0u) {
-      level = level + f32(1u << b) * (1.0 + ADC_SKEW[b] * P.capAdcWeight);
-    }
-  }
-  return (level - ADC_BLANK) / ADC_PER_IRE;
-}
-
 @compute @workgroup_size(TILE_WG, 1, 1)
 fn main(
   @builtin(global_invocation_id) gid: vec3u,
@@ -185,12 +155,6 @@ fn main(
   // head-end scrambled this before the deck ever recorded it: the sync gate has
   // to follow the sync tip when a held deck displaces it.
   out = scrambleAt(out, srcRow, srcS, P.scramble, P.scrambleMode, P.srcFrame);
-
-  // Source A's capture card digitises what the deck plays, ahead of the cable
-  // to the mixer. packFeed zeroes both fields on B's feed.
-  if (P.capAdcBit != 0.0 || P.capAdcWeight > 0.0) {
-    out = adc(out);
-  }
 
   // Additive noise (snow), 1-2-1 band-limited. Deliberately not the program
   // bus's tilted floor: the tilt is an FM discriminator's triangular noise,

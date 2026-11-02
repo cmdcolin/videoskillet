@@ -14,7 +14,6 @@
 @group(0) @binding(5) var<storage, read> lineParams: array<vec4f>;
 @group(0) @binding(6) var<storage, read_write> outBuf: array<f32>;
 @group(0) @binding(7) var<storage, read> audio: array<f32>;
-@group(0) @binding(8) var<storage, read> underOld: array<f32>;
 
 // Up-convert and re-bandpass in one folded pass. The bandpass is linear-phase,
 // so a tap d either side of centre shares one coefficient, and the heterodyne
@@ -40,9 +39,6 @@
 // rest is how the colour-under path arrives at that after the resample.
 const UNDER_RATIO = 1.0 - 4.0 * DOWN_PER_SAMPLE;
 
-// How much the defective amplifier's gain moves per IRE its bias shifts.
-const AMP_GAIN_PER_IRE = 0.006;
-
 fn upPhasor(row: u32, s: f32) -> vec2f {
   let lp = lineParams[row * 2u];
   let sm = lineParams[row * 2u + 1u];
@@ -65,19 +61,6 @@ fn underAt(ci: u32) -> f32 {
     v = v + P.chromaNoise * gauss(ci ^ cns);
   }
   return v;
-}
-
-// The previous recording's colour-under at global index ci, where the dead
-// erase head left it: off along the track by the old machine's slip, which
-// grows down the field with its line-rate error. Played back through the same
-// up-converter as the new recording, so a sample of slip is a turn of hue.
-fn oldUnderAt(ci: u32) -> f32 {
-  let row = f32(ci / SPL);
-  let at = f32(ci) - P.eraseSlip - P.eraseSlope * (row - 0.5 * f32(NLINES));
-  let i0 = floor(at);
-  let a = underOld[wrapIdx(i32(i0))];
-  let b = underOld[wrapIdx(i32(i0) + 1)];
-  return P.eraseOld * mix(a, b, at - i0);
 }
 
 // Is this sample inside a dropout — shed oxide, so for a moment the head reads
@@ -180,14 +163,8 @@ fn main(
     // the two have nothing like the same SNR — and this noise still has to come
     // back through the narrow chroma bandpass, which turns it into slow
     // blotches of wrong hue instead of the fine grain luma gets.
-    let old = P.eraseOld > 0.0 && P.gen == 0u;
     for (var i = lid.x; i < TILE; i = i + TILE_WG) {
-      let ci = clampIdx(base - ycd + i32(i));
-      var v = underAt(ci);
-      if (old) {
-        v = v + oldUnderAt(ci);
-      }
-      tileUn[i] = v;
+      tileUn[i] = underAt(clampIdx(base - ycd + i32(i)));
     }
   }
   let n0 = row * SPL + wid.x * TILE_WG;
@@ -201,14 +178,13 @@ fn main(
       tileFmSrc[i] = comp[ci] - chroma[ci];
     }
   }
-  let rfNoise = P.rfSnow + P.rfFloor;
-  if (P.noiseSigma > 0.0 || rfNoise > 0.0) {
+  if (P.noiseSigma > 0.0 || P.rfSnow > 0.0) {
     let ns = pcg(P.frame * 2654435761u + P.gen * 2246822519u);
     // slot 1 is this workgroup's first sample, so slot i is global index n0+i-1
     for (var i = lid.x; i < TILE_WG + 2u; i = i + TILE_WG) {
       tileNs[i] = gauss((n0 + i - 1u) ^ ns);
     }
-    if (rfNoise > 0.0) {
+    if (P.rfSnow > 0.0) {
       let nq = pcg(P.frame * 1717986917u + P.gen * 374761393u + 40503u);
       for (var i = lid.x; i < TILE_WG + 2u; i = i + TILE_WG) {
         tileNq[i] = gauss((n0 + i - 1u) ^ nq);
@@ -521,18 +497,6 @@ fn main(
     out = out * (1.0 + P.humMod * (0.6 * sin(2.0 * ph) + 0.4 * sin(ph)));
   }
 
-  // The deck's video amplifier with a defective transistor: popcorn and
-  // flicker noise move its bias point, which shifts the whole line, sync
-  // included, and changes the stage's gain with it. The receiver's AGC sees
-  // the sync depth change and chases each clunk. One amplifier, in the deck
-  // the tape is played on, so the first generation only.
-  if (P.gen == 0u && (P.ampLvl0 != 0.0 || P.ampLvl1 != 0.0 || P.ampStep != 0.0)) {
-    let at = f32(row) + f32(s) / f32(SPL);
-    let lvl = mix(P.ampLvl0, P.ampLvl1, at / f32(NLINES))
-      + select(0.0, P.ampStep, at >= P.ampStepRow);
-    out = out * (1.0 + AMP_GAIN_PER_IRE * lvl) + lvl;
-  }
-
   // The descrambler box (prelude `descrambleAt`), on the subscriber's side of
   // everything the cable did above, so it raises the cable's noise in its gate
   // along with the carrier.
@@ -610,9 +574,7 @@ fn main(
     } else if (tPh < 0.147) {
       env = 0.75; // their blanking
     }
-    // the tuner's AGC turns the neighbour up with everything else while our
-    // own carrier fades
-    let b = P.rfAdjIre * env * P.rfFadeG / P.rfFadeK;
+    let b = P.rfAdjIre * env;
     let phV = 2.0 * PI * f32((44u * n) % 105u) / 105.0 + P.rfAdjPhase;
     let phS = 2.0 * PI * f32((11u * n) % 105u) / 105.0 + P.rfAdjPhaseS;
     // our own carrier at this sample: negative modulation maps sync -40 ..
@@ -631,16 +593,12 @@ fn main(
   // reception reads as a picture fighting through instead of the flat grey
   // fuzz the additive noiseSigma above lays down. Same carrier map as the
   // adjacent-channel term: they are the same detector.
-  //
-  // A fading carrier comes through the tuner's AGC: rfFadeK is what is left
-  // of it after the IF gain, and the gain itself, rfFadeG, scales the noise
-  // the receiver adds ahead of it.
-  if (rfNoise > 0.0) {
-    let sig = 0.28 * rfNoise * P.rfFadeG;
+  if (P.rfSnow > 0.0) {
+    let sig = 0.28 * P.rfSnow;
     let cn = lid.x + 1u;
     let nI = sig * 0.4082 * (tileNs[cn - 1u] + 2.0 * tileNs[cn] + tileNs[cn + 1u]);
     let nQ = sig * 0.4082 * (tileNq[cn - 1u] + 2.0 * tileNq[cn] + tileNq[cn + 1u]);
-    let a = max(carrierOf(out), 0.0) * P.rfFadeK;
+    let a = max(carrierOf(out), 0.0);
     let e = sqrt((a + nI) * (a + nI) + nQ * nQ);
     out = ireOf(e);
   }
@@ -654,7 +612,7 @@ fn main(
   if (P.ingressIre * P.ingressKey > 0.0) {
     let ph = 2.0 * PI * (fract(P.ingressCps * f32(s)) + fract(P.ingressRowCyc * f32(row)))
       + P.ingressPhase;
-    out = out + P.ingressIre * P.ingressKey * P.rfFadeG * (0.6 + abs(audio[row]))
+    out = out + P.ingressIre * P.ingressKey * (0.6 + abs(audio[row]))
       * sin(ph + 5.0 * audio[row]);
   }
 

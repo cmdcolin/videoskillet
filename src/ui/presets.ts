@@ -91,32 +91,6 @@ export const PRESETS: PresetDef[] = [
     },
   },
   {
-    name: 'tapedOver',
-    displayName: 'taped over',
-    group: 'Tape wear',
-    blurb:
-      "Home VHS recorded over an old tape on a deck whose erase head has died, so the old programme's colour drifts under the new one and pulls the burst with it, played back through an amplifier whose bad transistor makes the level clunk.",
-    patch: {
-      lumaMHz: 2.8,
-      lumaPeak: 0.8,
-      noiseIre: 3,
-      colorUnderMix: 1,
-      underJitterDeg: 4,
-      tbJitterNs: 150,
-      tbWowNs: 300,
-      headSwitchShiftUs: 0.8,
-      headSwitchNoise: 0.4,
-      dropoutRate: 6,
-      demodMHz: 0.5,
-      eraseHead: 0.55,
-      chromaNoiseIre: 6,
-      popcornIre: 6,
-      popcornHz: 0.5,
-      flickerIre: 3,
-      agc: 0.5,
-    },
-  },
-  {
     name: 'protectedTape',
     displayName: 'protected tape',
     group: 'Tape wear',
@@ -346,23 +320,6 @@ export const PRESETS: PresetDef[] = [
       ghostGain: 0.14,
       rfMistuneMHz: 0.1,
       hHold: 0.3,
-    },
-  },
-  {
-    name: 'distantStation',
-    displayName: 'distant station',
-    group: 'RF / Broadcast',
-    blurb:
-      "A station from past the horizon, arriving by two paths that drift against each other. The tuner's AGC turns up into coloured snow at every null, sync slips and the frame rolls, and the station surfaces again between fades.",
-    patch: {
-      rfFade: 0.75,
-      rfFadeHz: 0.4,
-      rfSnow: 0.08,
-      rfAdjacent: 0.3,
-      agc: 0.15,
-      hHold: 0.3,
-      ghostDelayUs: 5,
-      ghostGain: 0.1,
     },
   },
   {
@@ -2986,21 +2943,6 @@ export const PRESETS: PresetDef[] = [
   // actually keep are usually three of them at the same time, and nothing here
   // reached that on its own.
   {
-    name: 'dyingSet',
-    displayName: 'dying set',
-    group: 'Full board',
-    blurb:
-      'A set near the end of its life, best on a dark picture. The flyback arcs whenever the picture goes dark, and each snap swells, dims and tears the lines below it. The cathodes are worn, so highlights go dull and warm, and the blue heater leak lifts a band of navy out of the blacks. The beam limiter pumps the drive behind the bright scenes.',
-    patch: {
-      ehtArc: 0.85,
-      cathodeWear: 0.55,
-      weakGun: 2,
-      heaterLeak: 0.3,
-      abl: 0.5,
-      hvSagUs: 6,
-    },
-  },
-  {
     name: 'transmissionFault',
     displayName: 'transmission fault',
     group: 'Full board',
@@ -3349,17 +3291,6 @@ export const PRESETS: PresetDef[] = [
     ],
   },
   {
-    name: 'arcingFlyback',
-    displayName: 'arcing flyback',
-    group: 'Sync / Deflection',
-    blurb:
-      'A flyback that arcs whenever the picture goes dark. Each arc collapses the high voltage, so the lines below the strike swell and dim for the couple of milliseconds the flyback takes to recharge, they tear sideways, and the spark lays a burst of hash across the picture. Arcs come in clusters, and a bright scene stops them.',
-    patch: {
-      ehtArc: 0.9,
-      hHold: 0.25,
-    },
-  },
-  {
     name: 'splitPhase',
     displayName: 'split phase',
     group: 'A/B mixing',
@@ -3481,42 +3412,6 @@ export const PRESETS: PresetDef[] = [
       crtBloom: 0.9,
       crtHalation: 0.6,
       crtGlow: 0.04,
-    },
-  },
-  {
-    name: 'darkCurrent',
-    displayName: 'dark current',
-    group: 'Feedback loops',
-    blurb:
-      "A camera pointed at its own monitor in a dark room, with nothing else patched in. Its AGC has wound the gain all the way up, so what it sees is its own sensor: a few hundred hot photosites, each glowing in one primary, and a fizz of shot noise. Every lap zooms and turns the last lap's dots and lays the hot pixels down again at the same places, so each one draws a dotted arm and the arms wind into a galaxy. The blinking ones flicker their arms on and off.",
-    patch: {
-      fbMix: 1,
-      fbGain: 0.6,
-      fbZoom: 0.97,
-      fbRotateDeg: 1.5,
-      fbFocus: 0.3,
-      fbKnee: 0.5,
-      fbBlack: 0.01,
-      fbGainUpDb: 9,
-      hHold: 1.2,
-      fbHot: 1,
-      fbNoise: 0.12,
-      fbPattern: 0.2,
-    },
-  },
-  {
-    name: 'deadBit',
-    displayName: 'dead bit',
-    group: 'Circuit bent',
-    blurb:
-      "A tape dubbed through a cheap capture card whose composite converter has a bit stuck low and bit weights that are not quite binary. Every level that needed the dead bit falls by its weight, so the highlights fold back on themselves. The colour subcarrier folds with them, so the hue on each fold comes back complementary and the fold edges decode as rainbow. The deck's grain flips pixels across each fold from frame to frame, so bright areas boil in false colour while the shadows stay clean.",
-    patch: {
-      capLumaMHz: 3,
-      capChromaMHz: 0.5,
-      capNoiseIre: 4,
-      capChromaNoiseIre: 12,
-      capAdcWeight: 0.8,
-      capAdcBit: -7,
     },
   },
   {

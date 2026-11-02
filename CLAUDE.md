@@ -53,23 +53,24 @@ is why reloading a frozen tab never recovered it. Creating devices is cheap by
 comparison: a tab with four created and four held open, all presenting, kept
 rendering.
 
-Because of this measurement, the app **never calls `device.destroy()`**. It lets go of
-devices instead, and hands the live one to the next engine. `docs/adr/0004` has
-the runs; [0002](docs/adr/0002-webgpu-sessions-are-scarce.md) is the superseded
-budget model that fitted the same data for the wrong reason.
+Because of this measurement, the app **never calls `device.destroy()`**. It lets
+go of devices instead, and hands the live one to the next engine.
+`docs/adr/0004` has the runs;
+[0002](docs/adr/0002-webgpu-sessions-are-scarce.md) is the superseded budget
+model that fitted the same data for the wrong reason.
 
 Rules for code that handles a device:
 
 - **Do not "release" a device on the way out.** This applies to `pagehide`
   handlers, unload handlers and any cleanup that looks untidy without it. That
-  one call made refreshing unsafe: the same page reloaded four times survives every load
-  when the device is merely abandoned and dies from load 2 onward when a
-  `pagehide` handler destroys it. The comment in `useEngine`'s handler records
-  the measurement.
+  one call made refreshing unsafe: the same page reloaded four times survives
+  every load when the device is merely abandoned and dies from load 2 onward
+  when a `pagehide` handler destroys it. The comment in `useEngine`'s handler
+  records the measurement.
 - **Reloading the app in one tab is safe.** `rafceiling.mjs --page=app` runs 8
-  loads in one tab at 69-81 rAF/1.5s (`firstDeadSession: null`). Treat that harness as a regression test for
-  this: if its app arm starts dying again, something has started destroying
-  devices.
+  loads in one tab at 69-81 rAF/1.5s (`firstDeadSession: null`). Treat that
+  harness as a regression test for this: if its app arm starts dying again,
+  something has started destroying devices.
 - **HMR reuses one device.** A hot update recreates the engine, but the engine
   hands its device on alive (`destroy({keepDevice: true})`) and the successor
   adopts it from the stash in `core/gpu/context.ts`, so an editing session costs
@@ -95,8 +96,8 @@ Rules for code that handles a device:
 Long or repeated browser runs belong on a `git worktree add --detach` copy with
 its own vite server. This worktree is shared with other agents, and **your own
 edits trigger HMR**: an `src/` write mid-run reloads the page and resets the
-engine under whatever you were measuring. See the traps list in `docs/DEVELOPMENT.md`;
-every one of them cost real time.
+engine under whatever you were measuring. See the traps list in
+`docs/DEVELOPMENT.md`; every one of them cost real time.
 
 ## A take streams to the origin-private file system
 
@@ -112,12 +113,12 @@ things follow:
   the file is eight bytes short, so `close` refuses to write the file.
 - **The storage the browser grants caps a take's size**, read off
   `navigator.storage.estimate()`. It is far past the old 3.9 GB on a machine
-  with a disk and under it on a full one. It measured 1.4 GB on a disk 98%
-  full, where a fixed 3.9 GB cap would have exceeded the space available.
+  with a disk and under it on a full one. It measured 1.4 GB on a disk 98% full,
+  where a fixed 3.9 GB cap would have exceeded the space available.
 - **Do not write once per frame.** Writing once per frame cost a quarter of the
-  engine's frames.
-  The sink gathers 4 MB and writes that; `scripts/rectakecheck.mjs` with
-  `--flags=takesink%3Dblob` is the arm that catches a regression here.
+  engine's frames. The sink gathers 4 MB and writes that;
+  `scripts/rectakecheck.mjs` with `--flags=takesink%3Dblob` is the arm that
+  catches a regression here.
 
 `?takesink=blob` takes the Blob path on a browser that would have streamed,
 which is what every browser without `createWritable` gets.
@@ -137,8 +138,8 @@ to show something before its clip is fetched, and a webp is kilobytes.
 A recording is rewritten whenever its look is re-recorded, so a tracked one puts
 every version of a megabyte-scale binary in the history forever. `demos.mjs` and
 `reel.mjs` each export the pair of constants that holds the clips' location,
-`S3_PREFIX` to write and `CLIPS` to read, and the page takes the URL straight off
-`data-src`, so an absolute one is fine there.
+`S3_PREFIX` to write and `CLIPS` to read, and the page takes the URL straight
+off `data-src`, so an absolute one is fine there.
 
 ## Writing
 

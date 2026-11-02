@@ -123,8 +123,6 @@ export function uniformValues(c: Controls, env: UniformEnv) {
     capYcDelay: c.capYcDelayNs * 1e-9 * SAMPLE_RATE,
     capNoise: c.capNoiseIre / IRE_VIDEO_RANGE,
     capChromaNoise: c.capChromaNoiseIre / IRE_VIDEO_RANGE,
-    capAdcBit: c.capAdcBit,
-    capAdcWeight: c.capAdcWeight,
     synthShape: c.synthShape,
     synthMix: c.synthMix,
     synthLevel: c.synthLevel,
@@ -174,7 +172,6 @@ export function uniformValues(c: Controls, env: UniformEnv) {
     flyback: c.flybackLines,
     hvSag: (c.hvSagUs + c.audioSagUs * env.audioHit) * 1e-6 * SAMPLE_RATE,
     hvRing: c.hvRing,
-    ehtArc: c.ehtArc,
     // beat between the free-running H-osc and the incoming line rate, in
     // samples of phase gained per line
     hRate:
@@ -301,10 +298,6 @@ export function uniformValues(c: Controls, env: UniformEnv) {
     fbIris: c.fbIris,
     fbLag: c.fbLag,
     fbComet: c.fbComet,
-    fbNoise: c.fbNoise,
-    fbPattern: c.fbPattern,
-    fbHot: c.fbHot,
-    fbGainUpMax: 10 ** (c.fbGainUpDb / 20),
     crtCutoff: c.crtCutoff,
     crtGamma: c.crtGamma,
     crtSat: c.crtSat,
@@ -316,9 +309,6 @@ export function uniformValues(c: Controls, env: UniformEnv) {
     crtHaloKey: c.crtHaloKey,
     crtSvm: c.crtSvm,
     crtSvmWidth: c.crtSvmWidth,
-    cathodeWear: c.cathodeWear,
-    weakGun: c.weakGun,
-    heaterLeak: c.heaterLeak,
     crtConverge: c.crtConverge,
     crtPurity: c.crtPurity,
     crtPurityX: c.crtPurityX,

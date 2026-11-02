@@ -115,6 +115,6 @@ needs a decision about which side's version wins.
   and its buttons are `why-card-top` and `why-card-cta`.
 - The home script's `showFrame`, `showHome`, `showLanding`, `paint` and
   `failedSection`.
-- Tooling: formatters, lint, tsconfig, CI workflows, the release script and
-  the commit scopes. The rest of the commit conventions is the
-  `commit-conventions` region.
+- Tooling: formatters, lint, tsconfig, CI workflows, the release script and the
+  commit scopes. The rest of the commit conventions is the `commit-conventions`
+  region.

@@ -123,10 +123,6 @@ digraph ntsc_js {
     // the PLL over all of them in a single thread.
     sync        [passes="syncMeasure,sync" fillcolor="@RX2@"
                  label="syncMeasure → sync\nrecover H/V timing\n525 lines each, then 1 thread total"];
-    // The set's own flyback arcing: sync decides when it strikes, and this
-    // lays the radiated burst on the lines it hits.
-    arc         [passes="arc" fillcolor="@RX2@" style="rounded,filled,dashed"
-                 label="arc\nflyback arc burst\n525 lines × 910 samples"];
     lineAnalyze [passes="lineAnalyze" fillcolor="@RX2@"
                  label="lineAnalyze\nper-line burst phase & lock\n525 lines, one thread each"];
     // The VIR corrector: line 19's reference measured against what burst
@@ -143,9 +139,6 @@ digraph ntsc_js {
 
   storePrev [passes="storePrev" fillcolor="@STORE@" style="rounded,filled,dashed"
              label="storePrev\nframe store · strobe hold\n525 lines × 910 samples"];
-  // The worn cathodes walk each screen row, which decode's tiles cannot.
-  cathode   [passes="cathode" fillcolor="@DSP@" style="rounded,filled,dashed"
-             label="cathode\nworn-cathode emission · heater leak\n480 rows, one walk per gun"];
   crtFace   [passes="crtFace" fillcolor="@DSP@"
              label="crtFace\nglowing tube face\nbloom · halation · gamma\n754 × 480 px, 8×8 tiles"];
   present   [fillcolor="@DSP@"
@@ -185,16 +178,12 @@ digraph ntsc_js {
   osd -> enhancer [label="  compA"];
   enhancer -> sync [label="  compA" lhead=cluster_rx];
   sync -> lineAnalyze [label="  timing[]"];
-  sync -> arc [label="  timing[] arcs"];
-  arc -> lineAnalyze [label="  compA"];
   lineAnalyze -> decode [label="  lineInfo[]"];
   lineAnalyze -> vir [label="  lineInfo[]"];
   vir -> decode [label="  timing[] hue & gain trim\l"];
   sync -> caption [label="  timing[]"];
   caption -> decode [label="  ccBuf[]"];
   decode -> crtFace [label="  outTex"];
-  decode -> cathode [label="  outTex"];
-  cathode -> crtFace [label="  cathodeTex"];
   crtFace -> present [label="  faceTex"];
   enhancer -> storePrev [label="  compA — the same waveform\l  the receiver locked to\l"];
   enhancer -> buzzTap [label="  compA" constraint=false];
