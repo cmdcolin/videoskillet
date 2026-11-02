@@ -807,13 +807,14 @@ picture's content; **E-MEM**, the vision-mixer term, is too obscure.
 `~/src/jbrowse-components` has already solved the shape of the fix (`window.jb`,
 in `packages/app-core/src/JbApi/`, with its evals in `scripts/agent-evals/`).
 
-- **`applyControls` and `setControl` do not validate** (`pipeline.ts`). Neither
-  clamps or rejects `NaN`, and `applyControls` skips unknown keys without a
-  word. `frameLock: NaN` freezes the picture on frame 0, and the result reads as
-  `STEP-DEAD`: the `Math.max(1, …)` floor on the lock divisor catches a negative
-  lock and passes `NaN` through. The palette and `#set=` do clamp, so the docs'
-  "out of range clamps" holds for them alone. `#set=` also drops unknown and
-  non-finite keys silently, and the CLI's `--set` rejects them without clamping.
+- **`applyControls` and `setControl` validate only finiteness** (`pipeline.ts`).
+  They drop a non-finite value with a console warning, which stops
+  `frameLock: NaN` from freezing the picture on frame 0, but they do not clamp,
+  and `applyControls` skips unknown keys without a word. The engine cannot
+  clamp, because the ranges live in `ui/controls.ts`. The palette and `#set=` do
+  clamp, so the docs' "out of range clamps" holds for them alone. `#set=` also
+  drops unknown and non-finite keys silently, and the CLI's `--set` rejects them
+  without clamping.
 - **`window.vf` is replaced on every device-loss rebuild and hot update**
   (`useEngine.ts`, `cam/useCamEngine.ts`). An agent that kept the old object is
   talking to a destroyed engine.
@@ -869,9 +870,8 @@ lacks is a grader.
 - CLI `--frame=N out.png` and `controls --json`. `llms-full.txt` lists every
   key, and `videoskillet in out -` already writes raw frames to a pipe.
 
-**Smallest useful step:** make `AgentDialog`'s `applyControls` route safe by
-clamping in the engine's write path, then add `vs` with `set`, `find`, `board`
-and `health`.
+**Smallest useful step:** add `vs` with `set`, `find`, `board` and `health`, and
+point `AgentDialog` at `vs.set`.
 
 ## Not worth building
 

@@ -115,6 +115,12 @@ const MAX_GENS = 4
 // the state machine that does the picking lives in framelock.ts.
 const LOCK_AUTO = 4
 
+// A NaN or infinite control reaches the shaders as a NaN uniform, and on
+// frameLock it stops every frame from rendering, so the write is dropped.
+const warnNonFinite = (dropped: Partial<Controls>) => {
+  console.warn('engine: dropped non-finite control values', dropped)
+}
+
 // How often React is told where a morph has got to, in milliseconds of wall
 // clock. Deliberately a duration and not a frame count: `advanceGlide` runs
 // after the frame lock's early return in `render`, so a count of frames is a
@@ -1216,10 +1222,12 @@ export class Engine implements EngineApi {
     // the glide only writes the keys it is moving — but because they would fight
     // over that key for the rest of the flight, and the slider would crawl back
     // out from under the finger. Whoever grabbed a control has taken the wheel.
-    this.endGlide()
-    this.controls[key] = value
-    if (FILTER_SET.has(key)) this.filtersDirty = true
-    this.emitControls()
+    if (Number.isFinite(value)) {
+      this.endGlide()
+      this.controls[key] = value
+      if (FILTER_SET.has(key)) this.filtersDirty = true
+      this.emitControls()
+    } else warnNonFinite({ [key]: value })
   }
 
   applyControls(patch: Partial<Controls>): void {
@@ -1227,13 +1235,15 @@ export class Engine implements EngineApi {
     // towards one. (startGlide does not come through here — it hands over a
     // destination, not a patch.)
     this.endGlide()
+    const nonFinite: Partial<Controls> = {}
     for (const k of CONTROL_KEYS) {
       const v = patch[k]
-      if (v !== undefined) {
+      if (v !== undefined && Number.isFinite(v)) {
         this.controls[k] = v
         if (FILTER_SET.has(k)) this.filtersDirty = true
-      }
+      } else if (v !== undefined) nonFinite[k] = v
     }
+    if (Object.keys(nonFinite).length > 0) warnNonFinite(nonFinite)
     this.emitControls()
   }
 
