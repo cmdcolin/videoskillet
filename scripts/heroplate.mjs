@@ -13,6 +13,11 @@ import { PRESET, SET } from './herolook.mjs'
 //
 //   node scripts/heroplate.mjs        # public/hero-title.webp, -narrow.webp
 //   node scripts/heroplate.mjs --check
+//   node scripts/heroplate.mjs --text='videoskillet<br>+ AI' --out=card.webp
+//                                      [--no-brand]
+//
+// `--text` renders one 4:3 card instead, such as a blog post's hero, and
+// `--no-brand` leaves the mark and the wordmark off it.
 //
 // Two renders because an image cannot rewrap. Both break the headline in the
 // same two lines — the type is what changes: the narrow one is set small enough
@@ -103,6 +108,25 @@ const RENDERS = [
 ]
 
 const check = process.argv.includes('--check')
+const arg = name =>
+  process.argv.find(a => a.startsWith(`--${name}=`))?.slice(name.length + 3)
+const cardText = arg('text')
+const renders =
+  cardText === undefined
+    ? RENDERS
+    : [
+        {
+          out: arg('out') ?? 'card.webp',
+          text: cardText,
+          size: 170,
+          brand: process.argv.includes('--no-brand')
+            ? null
+            : { word: 66, mark: 110, gap: 60 },
+          aspect: 4 / 3,
+          width: 1600,
+          anchor: 'center',
+        },
+      ]
 
 // The site's own mark, drawn onto the plate rather than laid over the picture
 // afterwards, so it arrives at the decoder as video like everything else. Its
@@ -124,7 +148,7 @@ const plateHtml = ({ text, size, brand }) => `<!doctype html><style>
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: ${brand.gap}px;
+    gap: ${brand?.gap ?? 0}px;
   }
   p {
     margin: 0;
@@ -143,11 +167,11 @@ const plateHtml = ({ text, size, brand }) => `<!doctype html><style>
     /* Off the wordmark rather than off the gap above: the space between a mark
        and the word it stands with belongs to the type's size, and the space
        above belongs to the crop. */
-    gap: ${Math.round(brand.word * 0.4)}px;
+    gap: ${Math.round((brand?.word ?? 0) * 0.4)}px;
     color: #fff;
     font-family: ${FAMILY};
     font-weight: 700;
-    font-size: ${brand.word}px;
+    font-size: ${brand?.word ?? 0}px;
     letter-spacing: -0.01em;
   }
   /* Bigger than the wordmark's cap height, which a mark beside a word usually
@@ -161,13 +185,17 @@ const plateHtml = ({ text, size, brand }) => `<!doctype html><style>
      rim and the handle clip to white, the wall's lower half comes up with them
      and the wisps keep their hue. */
   .lockup img {
-    width: ${brand.mark}px;
-    height: ${brand.mark}px;
+    width: ${brand?.mark ?? 0}px;
+    height: ${brand?.mark ?? 0}px;
     filter: brightness(2.4) saturate(1.3);
   }
-</style><div class="card"><p>${text}</p><div class="lockup">
+</style><div class="card"><p>${text}</p>${
+  brand === null
+    ? ''
+    : `<div class="lockup">
     <img src="data:image/svg+xml;base64,${FAVICON}" />videoskillet
-  </div></div>`
+  </div>`
+}</div>`
 
 const scratch = mkdtempSync(join(tmpdir(), 'heroplate-'))
 
@@ -196,7 +224,7 @@ const white = png => {
   )
 }
 const plates = new Map()
-for (const render of RENDERS) {
+for (const render of renders) {
   let png = null
   for (
     let tries = 0;
@@ -248,7 +276,7 @@ page.on('pageerror', err => {
 
 const iurl = encodeURIComponent(`http://localhost:${platePort}/plate.png`)
 const stale = []
-for (const render of RENDERS) {
+for (const render of renders) {
   serving = plates.get(render.out)
   const url = `${app.url}/app/?iurl=${iurl}&srcb=none&preset=${PRESET}&set=${SET}`
   await page.goto(url, { waitUntil: 'networkidle0' })
@@ -379,5 +407,5 @@ if (stale.length > 0) {
 console.log(
   check
     ? 'heroplate: up to date'
-    : RENDERS.map(r => `wrote ${r.out}`).join('\n'),
+    : renders.map(r => `wrote ${r.out}`).join('\n'),
 )

@@ -2,7 +2,8 @@
 // windows in frame.
 //
 // Usage: node scripts/agentreel.mjs [--base=URL] [--out=DIR] [--model=sonnet]
-//        [--task=FILE] [--seconds=N] [--display=:99] [--upload] [--keep]
+//        [--task=FILE] [--seconds=N] [--display=:99] [--until=board|quiet]
+//        [--upload] [--keep]
 //   needs the dev server (pnpm dev), Xvfb, xterm, xdotool, ffmpeg, google-chrome,
 //   and a logged-in `claude` on PATH.
 //
@@ -71,6 +72,10 @@ const posterDir = flag('posters', 'docs/img')
 const model = flag('model', 'sonnet')
 const display = flag('display', ':99')
 const capSecs = Number(flag('seconds', '240'))
+// What ends the take. `board` waits for the board-as-text sheet, which the
+// default task ends on. `quiet` waits for the terminal to stop drawing, for a
+// task written the way a person would ask, which names no last step.
+const until = flag('until', 'board')
 const keep = argv.includes('--keep')
 // Sending the clip where the docs point. Off by default: a recording is worth
 // looking at before it is published, and every take but the last one is a take
@@ -167,7 +172,11 @@ const tmp = mkdtempSync(join(tmpdir(), 'agentreel-'))
 mkdirSync(outDir, { recursive: true })
 const mp4 = resolve(outDir, 'agent-drive.mp4')
 const poster = resolve(posterDir, 'agent-drive-poster.jpg')
-const grab = join(tmp, 'grab.mp4')
+// Matroska, so a grab that ffmpeg is killed out of is still readable: an mp4
+// keeps its index at the end, and a noisy look (static, tape grain) grabs at
+// several MB a second, which left a 1.1 GB grab still flushing when the 120 s
+// stop budget ran out and no index was ever written.
+const grab = join(tmp, 'grab.mkv')
 // Where the clip is served from. Its own bucket rather than the one the guide's
 // other clips are in: those are seconds of canvas and this is minutes of a whole
 // window, and the size a good take costs is not a reason to make a worse one.
@@ -403,20 +412,37 @@ if (termId === undefined || termId === '') {
 // off or hold on a finished screen for a minute. The cap is the fallback for a
 // session that never gets there.
 const deadline = Date.now() + capSecs * 1000
+const sizeOf = () => (existsSync(termLog) ? statSync(termLog).size : 0)
 let landed = false
 let landedAt = 0
+let termSize = sizeOf()
+let termQuietSince = Date.now()
 while (Date.now() < deadline) {
   await sleep(2000)
-  landed = await page
-    // By accessible name, which is the one handle on this app that is held
-    // still on purpose (`buttonNames.test.ts`, PanelSheet's `label`). Asked for
-    // as a `<dialog>` this broke silently the week the sheets moved into the
-    // sidebar, and a broken stop condition looks exactly like a model that never
-    // finished.
-    .evaluate(
-      () => document.querySelector('[aria-label="board as text"] pre') !== null,
-    )
-    .catch(() => false)
+  const size = sizeOf()
+  if (size !== termSize) {
+    termSize = size
+    termQuietSince = Date.now()
+  }
+  // Claude Code redraws its spinner every few hundred milliseconds while it
+  // works, so twelve seconds without a byte is a session back at its prompt.
+  const sessionIdle =
+    Date.now() - recStart > 30000 && Date.now() - termQuietSince > 12000
+  landed =
+    until === 'quiet'
+      ? sessionIdle
+      : await page
+          // By accessible name, which is the one handle on this app that is held
+          // still on purpose (`buttonNames.test.ts`, PanelSheet's `label`). Asked for
+          // as a `<dialog>` this broke silently the week the sheets moved into the
+          // sidebar, and a broken stop condition looks exactly like a model that never
+          // finished.
+          .evaluate(
+            () =>
+              document.querySelector('[aria-label="board as text"] pre') !==
+              null,
+          )
+          .catch(() => false)
   if (landed) {
     landedAt = Date.now()
     break
@@ -432,7 +458,6 @@ console.log(
 // the tail waits on the terminal going quiet — xterm is logging every byte it
 // draws, and a session that has stopped writing has stopped working.
 if (landed) {
-  const sizeOf = () => (existsSync(termLog) ? statSync(termLog).size : 0)
   let quietSince = Date.now()
   let last = sizeOf()
   const tailUntil = Date.now() + 90000

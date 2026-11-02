@@ -770,6 +770,32 @@ is half a column of text. No GIF: this recording as one is 45MB against an mp4
 at five, since 1920 pixels of live analog grain is the worst case a
 palette-indexed format has.
 
+### The blog post's take
+
+The post on driving the app with an agent shows Claude building the Purplady
+gallery look on its plain photo, one stage at a time. The task is a request a
+person would type, so the take ends when the terminal goes quiet:
+
+```
+pnpm agentreel --model=sonnet --until=quiet \
+  --base="$(cat scripts/agenttasks/build-purplady.base)" \
+  --task=scripts/agenttasks/build-purplady.txt
+node scripts/agenttrim.mjs clips/agent-drive.mp4 clips/agent-build.mp4 --from=13
+```
+
+`agenttrim.mjs` cuts the thinking out of the recording. It keeps a window around
+each new paragraph in the terminal and each step in the picture, and plays them
+at 1.25×. `--from` skips Claude Code starting up. The trimmed clip goes to
+`https://myloveydove.com/videoskillet/agent-build.mp4`.
+
+A look built on static or a feedback loop grabs at several MB a second, so the
+grab is Matroska, which stays readable if ffmpeg is stopped before it finishes
+writing. Point `TMPDIR` at a disk with room: a five-minute grab of Rainbow
+snakes was 2 GB.
+
+The post's card is
+`node scripts/heroplate.mjs '--text=videoskillet<br>+ AI' --no-brand --out=public/blog/agent-ai-card.webp`.
+
 ## The landing page
 
 [`../site/pages/index.astro`](../site/pages/index.astro), built by Astro with
