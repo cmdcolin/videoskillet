@@ -211,6 +211,13 @@ export const CARD_PRESETS: CardPreset[] = [
     patch: { aNoiseIre: 40 },
   },
   {
+    group: FEED_A_CABLE_GROUP,
+    name: 'dirty pot',
+    blurb:
+      'a junk-drawer pot clipped into A’s cable and twisted by hand: crackle while it sits near full level, and a lost lock whenever a twist runs it up a few hundred ohms',
+    patch: { aPotOhms: 40, aPotFiddle: 1 },
+  },
+  {
     group: FEED_B_CABLE_GROUP,
     name: 'ground loop, other leg',
     blurb:

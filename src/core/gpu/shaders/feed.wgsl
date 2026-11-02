@@ -192,6 +192,12 @@ fn main(
   // is at the far end of the cable, downstream of everything the deck did.
   out = connectorAt(out, row, n, P.frame, P.gen, P.connectorGlitch, P.connectorMode);
 
+  // A dirty pot clipped into this cable (prelude `potAt`), between the plug
+  // and the input's terminator.
+  if (P.potOhms > 0.0 || P.potSpeed > 0.0) {
+    out = potAt(out, row, s, n, P.frame, P.gen, P.potOhms, P.potSpeed);
+  }
+
   // Hard polarity flip on this feed's connector: whole waveform negated, sync
   // and burst included. Unlike a negative bus gain this holds regardless of
   // what the mixer is doing — the fault is in the cable, not the fader.

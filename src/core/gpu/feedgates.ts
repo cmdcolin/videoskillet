@@ -34,6 +34,8 @@ export const FEEDS = {
     hum: 'aHumIre',
     connector: 'aConnector',
     connectorMode: 'aConnectorMode',
+    potOhms: 'aPotOhms',
+    potFiddle: 'aPotFiddle',
     dropoutRate: 'aDropoutRate',
     dropoutLen: 'aDropoutLenUs',
     pause: 'aPause',
@@ -48,6 +50,8 @@ export const FEEDS = {
     hum: 'bHumIre',
     connector: 'bConnector',
     connectorMode: 'bConnectorMode',
+    potOhms: 'bPotOhms',
+    potFiddle: 'bPotFiddle',
     dropoutRate: 'bDropoutRate',
     dropoutLen: 'bDropoutLenUs',
     pause: 'bPause',
@@ -63,6 +67,8 @@ export const FEEDS = {
     | 'hum'
     | 'connector'
     | 'connectorMode'
+    | 'potOhms'
+    | 'potFiddle'
     | 'dropoutRate'
     | 'dropoutLen'
     | 'pause',
@@ -87,6 +93,8 @@ export function feedFaults(c: Controls, src: FeedSource): boolean {
     c[f.polarity] > 0 ||
     c[f.hum] !== 0 ||
     c[f.connector] > 0 ||
+    c[f.potOhms] > 0 ||
+    c[f.potFiddle] > 0 ||
     c[f.dropoutRate] > 0
   )
 }

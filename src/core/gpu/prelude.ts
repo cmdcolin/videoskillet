@@ -292,6 +292,8 @@ export const PARAM_DEFS = [
   ['chromaPinOnly', 'f32'], // only the chroma pin fed to composite: color, no luma, no sync
   ['connectorGlitch', 'f32'], // loose connector: intermittent contact drops bands to snow
   ['connectorMode', 'f32'], // which contact: 0 centre pin (signal + sync go), 1 shell (ground lifts, hum injects), 2 both
+  ['potOhms', 'f32'], // a feed's series pot: the wiper's resistance this frame, ohms (feeds only)
+  ['potSpeed', 'f32'], // how fast the wiper is moving, travel per second (feeds only)
   ['scramble', 'f32'], // head-end sync suppression depth: sync tip lifted toward blanking
   ['decoderDb', 'f32'], // descrambler box gain inside the carrier gate, dB
   ['scrambleMode', 'f32'], // 0 gated, 1 line-alternate, 2 SSAVI (suppression + video inversion), 3 carrier (RF attenuation over H blanking + VBI), 4 tri-mode, 5 sine, 6 keyed SSAVI
@@ -1022,6 +1024,63 @@ fn connectorAt(v: f32, row: u32, n: u32, frame: u32, gen: u32, amt: f32, mode: f
 // Callers guard on a non-zero term, so a correct line costs no tap.
 fn terminate(v: f32, term: f32, echo: f32) -> f32 {
   return v * pow(2.0, term) + max(term, 0.0) * 0.6 * echo;
+}
+
+// A dirty pot in series with a source's cable, into the mixer input's 75-ohm
+// terminator. With the source's own 75 ohms the divider is 150 / (150 + R), so
+// sync, burst and picture all shrink together, and the receiver's separator,
+// AGC and colour killer react to the level that arrives.
+//
+// The dirt on the carbon track makes the wiper lose contact. Each break lasts
+// from a few microseconds to a few lines, which is far shorter than a field, so
+// one field catches the pot at many resistances. Breaks arrive in clusters,
+// because the dirt sits in patches along the track, and their rate follows the
+// wiper's speed, with a few left over at rest. A break is either an open, where
+// the input sees only its own terminator, or extra contact resistance on top
+// of the wiper's.
+//
+// Breaks are placed on a line clock that runs across frames, so a cluster that
+// starts at the bottom of one field carries on into the top of the next.
+const POT_LOAD = 150.0;
+const POT_REACH = 4u;
+const POT_CLUSTER_LINES = 24u;
+const POT_BREAKS_PER_LINE = 0.15;
+const POT_REST = 0.03;
+
+fn potCluster(line: u32, gen: u32) -> f32 {
+  let cell = line / POT_CLUSTER_LINES;
+  let f = f32(line % POT_CLUSTER_LINES) / f32(POT_CLUSTER_LINES);
+  let a = rand01(pcg(cell * 3266489917u + gen * 668265263u));
+  let b = rand01(pcg((cell + 1u) * 3266489917u + gen * 668265263u));
+  let c = mix(a, b, smoothstep(0.0, 1.0, f));
+  return 3.0 * c * c * c;
+}
+
+// Contact resistance the wiper adds at this sample, ohms; negative is an open.
+fn potContact(row: u32, s: u32, frame: u32, gen: u32, speed: f32) -> f32 {
+  let motion = POT_REST + min(speed * 2.0, 1.0);
+  var worst = 0.0;
+  for (var k = 0u; k <= POT_REACH; k = k + 1u) {
+    let line = frame * NLINES + row - k;
+    let h = pcg((line * 2654435761u) ^ (gen * 40503u + 0x9e37u));
+    let p = min(POT_BREAKS_PER_LINE * motion * potCluster(line, gen), 0.9);
+    if (rand01(h) < p) {
+      let start = rand01(pcg(h ^ 0x51ed270bu)) * f32(SPL);
+      let len = 0.5 * f32(SPL) * -log(1.0 - 0.998 * rand01(pcg(h ^ 0x2c1b3c6du)));
+      let d = f32(k * SPL + s) - start;
+      if (d >= 0.0 && d < len) {
+        let r = rand01(pcg(h ^ 0x7f4a7c15u));
+        worst = select(max(worst, 100.0 * exp(6.7 * (r - 0.4))), -1.0, r < 0.4 || worst < 0.0);
+      }
+    }
+  }
+  return worst;
+}
+
+fn potAt(v: f32, row: u32, s: u32, n: u32, frame: u32, gen: u32, ohms: f32, speed: f32) -> f32 {
+  let contact = potContact(row, s, frame, gen, speed);
+  let open = 2.0 * gauss(n ^ pcg(frame * 7717u + gen * 31u));
+  return select(v * POT_LOAD / (POT_LOAD + ohms + contact), open, contact < 0.0);
 }
 
 fn clampIdx(i: i32) -> u32 {

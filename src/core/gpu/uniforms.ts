@@ -213,6 +213,8 @@ export function uniformValues(c: Controls, env: UniformEnv) {
     chromaPinOnly: c.chromaPinOnly,
     connectorGlitch: c.connectorGlitch,
     connectorMode: c.connectorMode,
+    potOhms: 0,
+    potSpeed: 0,
     scramble: c.scramble,
     scrambleMode: c.scrambleMode,
     decoderDb: c.decoderDb,

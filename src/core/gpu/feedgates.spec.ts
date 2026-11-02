@@ -161,6 +161,8 @@ describe('feed gates', () => {
     ['hum', [12, -12]],
     ['connector', [0.5]],
     ['dropoutRate', [10]],
+    ['potOhms', [300]],
+    ['potFiddle', [0.5]],
   ]
 
   it('classifies every field of the feed table', () => {

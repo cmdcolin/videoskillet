@@ -319,6 +319,10 @@
 331 decoderDb step=0.5 default=0
 332 enhLoopGain step=0.01 default=0
 333 enhLoopUs step=0.1 default=2
+334 aPotOhms step=1 default=0
+335 aPotFiddle step=0.01 default=0
+336 bPotOhms step=1 default=0
+337 bPotFiddle step=0.01 default=0
 
 # ?mod= sources, by name
 sine

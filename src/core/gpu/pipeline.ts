@@ -26,6 +26,7 @@ import { MixState } from '../signal/mixstate'
 import { driveAt, driveSlots, ModState } from '../signal/modstate'
 import { valueNoise } from '../signal/noise'
 import { OSD_IDLE, OsdState } from '../signal/osdstate'
+import { PotHand } from '../signal/pot'
 import { RfState } from '../signal/rfstate'
 import { TrackingServo } from '../signal/servo'
 import { StabGate } from '../signal/stab'
@@ -304,6 +305,7 @@ export class Engine implements EngineApi {
   // graph, so ownership arrives through the constructor. See EngineOptions.
   readonly audioState: AudioState
   private mixState = new MixState(this.rand)
+  private potHands = { a: new PotHand(this.rand), b: new PotHand(this.rand) }
   private captionState = new CaptionState()
   private modState = new ModState()
   private glide = new Glide(FILTER_SET)
@@ -1872,6 +1874,11 @@ export class Engine implements EngineApi {
   ): void {
     const c = this.controls
     const f = FEEDS[src]
+    const wiper = this.potHands[src].update(
+      c[f.potOhms],
+      c[f.potFiddle],
+      1 / 60,
+    )
     // The bus's own values, then this feed's on top of them — rather than a
     // merged object to pack from. `{...vals, …}` copied 222 fields into a
     // fresh object, landed it in dictionary mode and then read 234 names back
@@ -1893,6 +1900,8 @@ export class Engine implements EngineApi {
       humAmp: c[f.hum],
       connectorGlitch: c[f.connector],
       connectorMode: c[f.connectorMode],
+      potOhms: wiper.ohms,
+      potSpeed: wiper.speed,
       dropoutRate: c[f.dropoutRate],
       dropoutLen: c[f.dropoutLen] * 1e-6 * SAMPLE_RATE,
       bPause: deck.pause,
@@ -2144,6 +2153,7 @@ export class Engine implements EngineApi {
 
     this.lineState = new LineState(this.rand)
     this.mixState = new MixState(this.rand)
+    this.potHands = { a: new PotHand(this.rand), b: new PotHand(this.rand) }
     const caption = this.captionState.text()
     this.captionState = new CaptionState()
     this.captionState.setText(caption)

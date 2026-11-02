@@ -297,6 +297,8 @@ export const DEFAULT_CONTROLS = {
   aHumIre: 0, // ground loop on A's cable alone, IRE (sign = which mains leg)
   aConnector: 0, // A's plug intermittent: bands of bad contact, re-rolled per frame
   aConnectorMode: 0, // which of A's contacts: 0 centre pin, 1 shell, 2 both
+  aPotOhms: 0, // a dirty pot in series with A's cable, ohms
+  aPotFiddle: 0, // a hand working that pot's knob
   aPause: 0, // A deck's pause button: held frame, defeated servo, mistrack stripe
   aDropoutRate: 0, // dropout events per frame on A's own tape
   aDropoutLenUs: 5, // mean dropout length on A's feed
@@ -308,6 +310,8 @@ export const DEFAULT_CONTROLS = {
   bHumIre: 0, // ground loop on B's cable alone, IRE (sign = which mains leg)
   bConnector: 0, // B's plug intermittent: bands of bad contact, re-rolled per frame
   bConnectorMode: 0, // which of B's contacts: 0 centre pin, 1 shell, 2 both
+  bPotOhms: 0, // a dirty pot in series with B's cable, ohms
+  bPotFiddle: 0, // a hand working that pot's knob
   bDropoutRate: 0, // dropout events per frame on B's own tape
   bDropoutLenUs: 5, // mean dropout length on B's feed
   // dirty mixer (source B, non-genlocked)
