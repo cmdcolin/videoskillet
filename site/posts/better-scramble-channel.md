@@ -9,11 +9,11 @@ imageAlt:
   A 1984 swimwear catalogue cover through the scrambled channel. The model and
   the grid of swimsuit photos beside her are torn into wavy slabs, with her arms
   acid green, her face violet and her legs magenta.
-look: '#preset=scrambledChannel&iurl=https://upload.wikimedia.org/wikipedia/commons/f/f9/%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg'
+look: '#preset=scrambledChannel&set=scramble:0.7,scrambleMode:0,chromaGain:1.8&iurl=https://upload.wikimedia.org/wikipedia/commons/f/f9/%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg'
 ---
 
 Try it:
-[scrambled channel](/app/#preset=scrambledChannel&iurl=https://upload.wikimedia.org/wikipedia/commons/f/f9/%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg).
+[scrambled channel](/app/#preset=scrambledChannel&set=scramble:0.7,scrambleMode:0,chromaGain:1.8&iurl=https://upload.wikimedia.org/wikipedia/commons/f/f9/%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg).
 
 ![A 1980 swimwear model in a zebra-print swimsuit and a white cape, arms spread against wood panelling, clean apart from noise and a soft cast.](/blog/scramble-before.webp)
 
@@ -52,6 +52,14 @@ spot. It averages that reference over dozens of lines, so one wrong reading
 tints a whole band of the picture. Once the simulated TV could make that
 mistake, the bands showed up with no code written to draw them. We also made the
 TV's colour timing wander slowly, which keeps the bands moving.
+
+## Update, 1 November 2026
+
+The scrambled channel preset now models the RF gate that GI and Jerrold
+head-ends used. The carrier is cut 6 dB through every blanking interval,
+including the vertical one, so the picture rolls behind a grey band and a grey
+bar crosses it. The links above open the version this post describes.
+[Open the new one](/app/#preset=scrambledChannel&iurl=https://upload.wikimedia.org/wikipedia/commons/f/f9/%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg).
 
 _Photos from Wikimedia Commons under CC BY-SA 3.0, and the stills here are under
 the same licence: LIZ fashion's
