@@ -38,7 +38,7 @@ when it looks right.
 The app's **agent** button, in the sidebar's masthead, copies a prompt that
 starts the agent from the look on screen.
 
-The agent has two ways to drive the tab:
+The agent has three ways to drive the tab:
 
 - **The engine.** `window.vf` is the live engine, and two methods cover most
   work:
@@ -52,6 +52,20 @@ The agent has two ways to drive the tab:
   they are. A value out of range clamps to the slider's range, and a key the app
   does not have is left out. It returns `{applied, clamped, rejected, unknown}`,
   so the agent can tell which values were applied.
+
+- **A whole board.** `window.vfBoard` applies and reads the board in one call:
+
+  ```js
+  window.vfBoard.apply('#preset=vhs&set=noiseIre:9&mod=')
+  window.vfBoard.read()
+  ```
+
+  `apply` takes a link, a bare query such as `preset=vhs&set=noiseIre:9`, or a
+  whole board text, and lands the sources, the controls and the modulation bay
+  in one step that `ctrl+z` undoes. Every control the link does not name goes
+  back to stock, and a link with no `mod=` stops all motion. It returns
+  `{unknown, damaged}`: the `set=` keys that are not controls, and whether a
+  packed `p=` look failed its check. `read` returns the board as text.
 
 - **The command palette.** `ctrl+k` (`⌘k`) opens a text box that takes a
   control's name and a value in one line, such as `head switch 9` or `noise 12`,
@@ -78,9 +92,12 @@ The picture is a `<canvas>`, so a screenshot shows what a fault looks like and
 never what a control is set to. Read state as text:
 
 - `window.vf.getControls()` returns every control's value.
+- `window.vfBoard.read()` returns the board as text, the same block the sidebar
+  shows.
 - The **board as text** section of the sidebar lists the look, both sources,
   every control off stock with its key, reading and stock value, every
-  modulation routing, and the link.
+  modulation routing, and the link. A link or a board pasted into the box under
+  it is applied when **apply** is pressed.
 - Every palette row is a button whose text contains the control's name, reading,
   kind and group.
 - The address bar holds the link to the current look.
@@ -102,7 +119,8 @@ key, its range and the fault it models. Both are generated from
   reports `visible`, so a screenshot of it is seconds stale. Keep the tab in
   front, or step frames with `window.vf.step()`.
 - **`#set=` ignores an unrecognized key** and reports no error. Read the address
-  bar or `getControls()` back after writing.
+  bar or `getControls()` back after writing, or apply the link with
+  `window.vfBoard.apply`, which returns the keys it left out as `unknown`.
 - **A feedback look opens black without `#snow`.** The loop needs something to
   amplify, and `#snow` seeds it with a burst of noise.
 - **A hash-only change does not reload the page.** The app notices and reloads

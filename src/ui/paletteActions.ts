@@ -354,7 +354,7 @@ export function paletteActions(o: {
     {
       name: 'board as text',
       blurb:
-        'read the whole board back: the look, both decks, every control off stock with its reading, what the bay is driving, and the link',
+        'read the whole board back: the look, both decks, every control off stock with its reading, what the bay is driving, and the link. Paste a link or a board into the box under it to apply one',
       run: o.onBoardText,
     },
     {

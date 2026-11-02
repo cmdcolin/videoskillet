@@ -1,4 +1,5 @@
 import { DEFAULT_CONTROLS, atRest } from '../core/controls'
+import { paramsOf } from '../core/gpu/env'
 import { ALL_SLIDERS } from './controls'
 import { readingOf } from './format'
 import { groupOf } from './placement'
@@ -44,6 +45,20 @@ export interface BoardMotion {
   // is part of the look, and dropping it would make the dump disagree with the
   // link, which carries it.
   still: boolean
+}
+
+// What a pasted board did. `unknown` lists the `set=` keys that named no
+// control and were left out; a damaged packed look is reported on the banner.
+export interface BoardApplied {
+  unknown: string[]
+  damaged: boolean
+}
+
+// The board for a script in the page: `window.vfBoard.apply(link)` lands a whole
+// board in one undoable step and `read()` is the board text.
+export interface BoardApi {
+  apply: (text: string) => BoardApplied
+  read: () => string
 }
 
 export interface Board {
@@ -132,4 +147,14 @@ export function boardText(board: Board): string {
     'link',
     `  ${board.link}`,
   ].join('\n')
+}
+
+// The query a pasted board stands for: the last link in the text, or the text
+// itself when it is a bare query such as `preset=vhs&set=noiseIre:9`. The board
+// text ends on its link, so pasting the whole block back lands on that link.
+export function boardQuery(text: string): string {
+  const link = text.match(/\S*[?#]\S*/g)?.at(-1)
+  return link === undefined
+    ? `?${text.trim()}`
+    : paramsOf(new URL(link, 'https://videoskillet.invalid/app/'))
 }

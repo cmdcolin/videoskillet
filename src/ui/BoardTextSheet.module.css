@@ -22,3 +22,23 @@
   white-space: pre;
   tab-size: 2;
 }
+
+.apply {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: stretch;
+  margin-top: var(--space-sm);
+}
+
+.paste {
+  flex: 1;
+  min-width: 0;
+  resize: vertical;
+  padding: 6px 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--fg);
+  font-family: var(--mono);
+  font-size: var(--fs-sm);
+}

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { DEFAULT_CONTROLS } from '../core/controls'
-import { boardControls, boardText } from './boardText'
+import { boardControls, boardQuery, boardText } from './boardText'
 import { sliderFor } from './controls'
 
 import type { Board } from './boardText'
@@ -154,5 +154,31 @@ describe('boardText', () => {
     expect(out).toContain('2 controls moving')
     expect(out).toContain('Sine at 0.35Hz')
     expect(out).toContain('held still')
+  })
+})
+
+describe('boardQuery', () => {
+  it('reads the link off the end of the board text', () => {
+    const text = boardText({
+      ...EMPTY,
+      link: 'http://localhost:5199/app/#preset=vhs&set=noiseIre:9',
+    })
+    expect(boardQuery(text)).toBe('?preset=vhs&set=noiseIre:9')
+  })
+
+  it('takes a query-form link, a bare hash and a bare query', () => {
+    expect(boardQuery('https://videoskillet.com/app/?p=ab.CD&mod=')).toBe(
+      '?p=ab.CD&mod=',
+    )
+    expect(boardQuery('  #set=noiseIre:9\n')).toBe('?set=noiseIre:9')
+    expect(boardQuery('preset=vhs&set=noiseIre:9')).toBe(
+      '?preset=vhs&set=noiseIre:9',
+    )
+  })
+
+  it('prefers the hash when a link carries both halves', () => {
+    expect(boardQuery('/app/?set=noiseIre:1#set=noiseIre:9')).toBe(
+      '?set=noiseIre:9',
+    )
   })
 })

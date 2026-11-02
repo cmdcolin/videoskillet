@@ -230,6 +230,14 @@ export function parseSet(raw: string): Partial<Controls> {
   return patch
 }
 
+// The keys in a `set=` that name no control. `parseSet` drops them, so a link
+// with a misspelt key lands without it and nothing on screen says so.
+export const unknownSetKeys = (raw: string): string[] =>
+  raw
+    .split(',')
+    .map(pair => pair.split(':')[0] ?? '')
+    .filter(key => key !== '' && !CONTROL_KEYS.some(c => c === key))
+
 // `target:source:rateHz:depth` pairs, same separator family as ?set=, with a
 // fifth `:division` on a routing whose rate is locked to the beat. Every field
 // is checked against the live schema and the numbers are clamped, so a link

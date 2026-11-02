@@ -22,7 +22,7 @@ import { offStockKeys } from './ui/allSettings'
 import { AllSettingsSheet } from './ui/AllSettingsSheet'
 import { AppMenu, ShowMenuButton, ShowSidebarButton } from './ui/AppMenu'
 import { AudioHint, AudioInput, SoundOut } from './ui/AudioInput'
-import { boardControls } from './ui/boardText'
+import { boardControls, boardQuery, boardText } from './ui/boardText'
 import { BoardTextSheet } from './ui/BoardTextSheet'
 import { Button } from './ui/Button'
 import { CaptionContext } from './ui/CaptionContext'
@@ -112,7 +112,7 @@ import { StripTray } from './ui/StripTray'
 import { TeletypeDialog } from './ui/TeletypeDialog'
 import { faultPlan, transitionOf } from './ui/transitions'
 import ui from './ui/ui.module.css'
-import { parseSessionParams } from './ui/urlParams'
+import { parseSessionParams, unknownSetKeys } from './ui/urlParams'
 import { useAudio } from './ui/useAudio'
 import { useAutomation } from './ui/useAutomation'
 import { useCapture } from './ui/useCapture'
@@ -150,6 +150,7 @@ import type { ControlKey, Controls } from './core/controls'
 import type { FaultPlan } from './core/signal/fault'
 import type { GlidePlan } from './core/signal/glide'
 import type { SourceBMode, SourceMode } from './sources/modes'
+import type { Board, BoardApi, BoardApplied } from './ui/boardText'
 import type {
   GeneratorsLive,
   Group,
@@ -325,6 +326,12 @@ const boardScope = (mode: DriftMode): DriftScope => ({
   wake: DRIFT_WAKE,
   mode,
 })
+
+declare global {
+  interface Window {
+    vfBoard?: BoardApi
+  }
+}
 
 export function App() {
   // Off every session, and not persisted: a counter that moves every frame pulls
@@ -1010,6 +1017,27 @@ export function App() {
     landLook(presetControls(session.controls))
     if (session.mod !== null) modApi.setRoutings(session.mod)
     profiles.markRecalled(profile.name)
+  }
+
+  // A whole board from a link, a bare query or a pasted board text: the sources
+  // the link names, every control over stock, and the bay. A link with no `mod=`
+  // is a board with nothing moving. `land` is how the controls arrive — the
+  // paste box follows the look bar like a recall, and a script gets a cut so
+  // that what it reads back next is the board it sent.
+  const applyBoard = (
+    text: string,
+    land: (next: Controls) => void,
+  ): BoardApplied => {
+    const link = boardQuery(text)
+    const session = parseSessionParams(link)
+    snapshotForUndo()
+    eng.showSession({ ...session, controls: {} }, 0)
+    land(presetControls(session.controls))
+    modApi.setRoutings(session.mod ?? [])
+    return {
+      unknown: unknownSetKeys(new URLSearchParams(link).get('set') ?? ''),
+      damaged: session.damaged,
+    }
   }
 
   // The 1–9 keys, over the library rather than a separate bank of nine. Recall
@@ -1752,45 +1780,67 @@ export function App() {
       )}
     </WithBoard>
   )
+  // The look line is worked out from `controls` rather than read off this
+  // render's `activePreset`, so a script reading the board straight after a
+  // write gets the board it wrote.
+  const boardOf = (controls: Controls): Board => {
+    const matching = matchPreset(controls)?.name ?? null
+    const name = matching ?? mix.lastPreset
+    const label = name === null ? '' : presetLabelFor(name)
+    return {
+      look:
+        matching !== null
+          ? `“${label}”`
+          : name === null
+            ? 'dialed in from stock — no preset behind it'
+            : `modified from “${label}”`,
+      sources: [eng.a, eng.b].map(slot => ({
+        tag: slot.tag,
+        what: slotPatched(slot) ?? 'nothing patched in',
+      })),
+      controls: boardControls(controls),
+      // Every slot holding a target, parked ones included: the link
+      // carries a patch whether or not it is running, so a dump that
+      // dropped the parked ones would describe a different board from
+      // the one the link rebuilds.
+      motion: modApi.slots.flatMap(slot =>
+        slot.target === ''
+          ? []
+          : [
+              {
+                target: targetLabel(slot.target),
+                detail: modDetail(slot, modApi.bpm),
+                still: !slot.on,
+              },
+            ],
+      ),
+      link: stateUrl(controls),
+    }
+  }
   const boardSheet = (
     <WithBoard store={settledStore}>
       {board => (
         <BoardTextSheet
-          board={{
-            look:
-              activePreset !== undefined
-                ? `“${lookLabel}”`
-                : lookName === null
-                  ? 'dialed in from stock — no preset behind it'
-                  : `modified from “${lookLabel}”`,
-            sources: [eng.a, eng.b].map(slot => ({
-              tag: slot.tag,
-              what: slotPatched(slot) ?? 'nothing patched in',
-            })),
-            controls: boardControls(board),
-            // Every slot holding a target, parked ones included: the link
-            // carries a patch whether or not it is running, so a dump that
-            // dropped the parked ones would describe a different board from
-            // the one the link rebuilds.
-            motion: modApi.slots.flatMap(slot =>
-              slot.target === ''
-                ? []
-                : [
-                    {
-                      target: targetLabel(slot.target),
-                      detail: modDetail(slot, modApi.bpm),
-                      still: !slot.on,
-                    },
-                  ],
-            ),
-            link: stateUrl(board),
-          }}
+          board={boardOf(board)}
           onCopy={copyUrl}
+          onApply={text => applyBoard(text, next => landLook(next))}
           onClose={() => setShowBoardText(false)}
         />
       )}
     </WithBoard>
   )
+  // The same board for a script running in the page, beside `window.vf`. No dep
+  // array, like the MIDI sinks above: both verbs close over this render.
+  useEffect(() => {
+    const api: BoardApi = {
+      apply: text => applyBoard(text, next => writeControls(next)),
+      read: () => boardText(boardOf(controlStore.get())),
+    }
+    window.vfBoard = api
+    return () => {
+      window.vfBoard = undefined
+    }
+  })
   const allSheet = (
     <AllSettingsSheet
       offOnly={allOffOnly}

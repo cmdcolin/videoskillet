@@ -15,6 +15,7 @@ import {
   SPEED_MAX,
   SPEED_MIN,
   parseSessionParams,
+  unknownSetKeys,
   urlName,
   writeProfileParams,
   writeSessionParams,
@@ -791,5 +792,19 @@ describe('motion on a link', () => {
     expect(
       parseSessionParams(`?preset=${name}&mod=fbZoom:sine:0.5:0.2`).mod,
     ).toEqual([mod[0]])
+  })
+})
+
+describe('unknownSetKeys', () => {
+  it('names the keys that are not controls', () => {
+    expect(unknownSetKeys('noiseIre:9,noiseIRE:3,tint:30')).toEqual([
+      'noiseIRE',
+      'tint',
+    ])
+  })
+
+  it('finds nothing in a set of real keys or an empty one', () => {
+    expect(unknownSetKeys('noiseIre:9,chromaGain:1.6')).toEqual([])
+    expect(unknownSetKeys('')).toEqual([])
   })
 })

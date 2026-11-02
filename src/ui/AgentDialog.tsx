@@ -11,6 +11,7 @@ const agentPrompt = (look: string) =>
     `- Every control key, its range, and the link parameters: ${URL_API_URL}`,
     `- How an agent drives the app: ${AI_GUIDE_URL}`,
     '- In the videoskillet tab, window.vf.applyControls({...}) sets controls and window.vf.getControls() reads them back.',
+    '- window.vfBoard.apply(link) lands a whole board (sources, controls, motion) in one undoable step, and window.vfBoard.read() returns it as text.',
   ].join('\n')
 
 export function AgentDialog(props: { onClose: () => void }) {
@@ -37,7 +38,9 @@ export function AgentDialog(props: { onClose: () => void }) {
       </p>
       <pre className={styles.code}>
         {`window.vf.applyControls({ bKey: 1, bKeyHueDeg: 241 })
-window.vf.getControls()`}
+window.vf.getControls()
+window.vfBoard.apply('#preset=vhs&set=noiseIre:9')
+window.vfBoard.read()`}
       </pre>
       <p className={styles.body}>
         Keep the tab in front, because a hidden tab stops drawing frames. A
@@ -50,7 +53,8 @@ window.vf.getControls()`}
         Claude in Chrome and other browsing agents use the command palette.
         Ctrl+K opens it, and it sets a control from its name and a value in one
         line, such as <code>head switch 9</code>. The <b>board as text</b>{' '}
-        section lists every control that is off stock, with its key.
+        section lists every control that is off stock, with its key, and a link
+        or board pasted into the box under it is applied in one step.
       </p>
 
       <h3 className={styles.route}>An agent that reads links</h3>
