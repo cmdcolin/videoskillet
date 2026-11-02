@@ -22,6 +22,8 @@ const changelogHref =
 const assetHref = (path: string) => path
 const lookHref = (look: string) => `/app/${look}`
 const heroSize = await imageSize(post.data.image)
+const opensWithVideo =
+  post.body?.trimStart().startsWith('<div class="video-frame"') === true
 ---
 
 <Page
@@ -42,12 +44,14 @@ const heroSize = await imageSize(post.data.image)
         </time>
       </p>
       <h1>{post.data.title}</h1>
-      <img
-        class="postHero"
-        src={assetHref(post.data.image)}
-        alt={post.data.imageAlt}
-        {...heroSize}
-      />
+      {!opensWithVideo && (
+        <img
+          class="postHero"
+          src={assetHref(post.data.image)}
+          alt={post.data.imageAlt}
+          {...heroSize}
+        />
+      )}
       {post.data.look && (
         <p>
           <a class="postLook" href={lookHref(post.data.look)}>

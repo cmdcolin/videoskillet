@@ -11,10 +11,6 @@ imageAlt:
 look: '#set=capLumaMHz:4.2,demodMHz:3.43,chromaGain:13.62,vir:0.86,lumaMHz:6,noiseIre:9.2,colorUnderMix:0.38,underJitterDeg:1.5,headSwitchNoise:0.15,headSwitchShiftUs:0.3,diffGain:1,diffPhaseDeg:49,tbJitterNs:300,tbWowNs:110,dubGens:3,cfbMix:1,cfbGain:-1.08,cfbDelayUs:2.233,cfbLines:59,cfbKey:0.98,cfbKeyLevel:48,cfbServoUs:0.07,cfbRing:0.89,cfbGenlock:1&mod=&iurlb=https:%2F%2Fthumb.wikimedia.org%2Fwikipedia%2Fcommons%2Fthumb%2Fa%2Fa5%2FMinho_for_Marie_Claire_Magazine_August_Issue_2021_02.png%2F1280px-Minho_for_Marie_Claire_Magazine_August_Issue_2021_02.png%3Futm_source%3Dcommons.wikimedia.org%26utm_campaign%3Dimageinfo%26utm_content%3Dthumbnail&iurl=https:%2F%2Fupload.wikimedia.org%2Fwikipedia%2Fcommons%2Ff%2Ff1%2FJill_St._John_-_Tony_Rome%252C_1967.jpg%3Futm_source%3Dcommons.wikimedia.org%26utm_campaign%3Dimageinfo%26utm_content%3Dthumbnail_unscaled'
 ---
 
-An AI agent can drive videoskillet while it runs. Ask Claude Code or Claude in
-Chrome for a look in plain words, and the agent sets the controls, reads the
-board back and gives you the link.
-
 <div class="video-frame" style="--video-aspect: 1564 / 552">
 <video
   controls muted loop playsinline preload="none"
@@ -22,6 +18,10 @@ board back and gives you the link.
   src="https://myloveydove.com/videoskillet/agent-build.mp4"></video>
 <button type="button" class="video-play-overlay" aria-label="Play video"><span class="video-play-icon" aria-hidden="true"></span></button>
 </div>
+
+An AI agent can drive videoskillet while it runs. Ask Claude Code or Claude in
+Chrome for a look in plain words, and the agent sets the controls, reads the
+board back and gives you the link.
 
 In the recording, Claude Sonnet is given the Purplady look from the gallery and
 asked to build it up from the plain photo one stage at a time. It reads the
