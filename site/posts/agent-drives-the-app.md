@@ -1,7 +1,6 @@
 ---
 title: Letting an AI agent drive the app
 date: 2026-11-01
-draft: true
 summary:
   Claude Code and other AI agents can drive videoskillet from a description of a
   look.
