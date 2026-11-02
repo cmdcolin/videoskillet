@@ -150,6 +150,10 @@ synthAudioFm  (audio → osc A)
   0..20000 step 1 Hz  default 0
   The sound into oscillator A's frequency input. The oscillator integrates it, so each line's pitch error adds to every line below it: a low note bends the bars into a wave that follows the waveform down the field, and a loud passage swings their lean across the screen. Past a few kilohertz the bars shred.
 
+synthDelayUs  (osc A → delay line on A)
+  0..20 step 0.01 µs  default 0
+  Oscillator A sweeping a delay line in input A's cable. The picture comes out late by an amount that follows the wave, so it stretches and tears sideways along the oscillator's pattern, and every 0.28 µs of change slides the subcarrier a full turn against the burst, so the hue spins wherever the delay moves. The synth does not have to be on screen for this.
+
 ## Feed A · deck
 
 aPause  (A pause (deck held))

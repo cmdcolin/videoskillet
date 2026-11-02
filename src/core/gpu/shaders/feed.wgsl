@@ -104,6 +104,18 @@ fn main(
       // while the tape is parked, unlike the dropouts below
       out = rfNull(out, edge * 1.6 * P.bPause, n ^ pcg(P.frame * 15187u + row * 5u));
     }
+  } else if (P.synthDelay > 0.0) {
+    // The synth's osc A driving a delay line in A's cable: the whole
+    // composite, sync and burst too, comes out late by an amount that follows
+    // the oscillator. Where the delay changes along a line the picture is
+    // stretched or squeezed, and the subcarrier slides against the burst, so
+    // the hue turns wherever the delay moves. The same oscillator videoSynth
+    // draws, timing noise included.
+    let slip = P.synthJitA * oscJitter(P.frame * NLINES + row, 0x51a3u);
+    let w = synthWave(P.synthPhaseA + slip + P.synthPerLineA * f32(row) + P.synthPerSampleA * f32(s), P.synthShape);
+    let at = f32(n) - P.synthDelay * w;
+    let a0 = i32(floor(at));
+    out = catmull(src[clampIdx(a0 - 1)], src[clampIdx(a0)], src[clampIdx(a0 + 1)], src[clampIdx(a0 + 2)], at - f32(a0));
   } else {
     out = src[n];
   }

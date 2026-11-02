@@ -128,6 +128,7 @@ export const PARAM_DEFS = [
   ['synthShapeX', 'f32'], // the shape's centre, -1..1 across the picture
   ['synthShapeY', 'f32'],
   ['synthShapeSize', 'f32'], // the ramps' gain: level 1 lands this far in from the edge
+  ['synthDelay', 'f32'], // osc A into a delay line on A's cable: samples of delay at the wave's top
   // dirty mixer: source B is a second, non-genlocked composite signal
   ['srcNoiseB', 'f32'], // GPU-generated source B: 0 texture, 1 TV static, 2 VHS blank-tape static
   ['aGain', 'f32'], // A level on the summing bus, signed (negative inverts A)

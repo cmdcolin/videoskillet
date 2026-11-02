@@ -207,7 +207,11 @@ export const generatorsLive = (
   controls: Controls,
 ): GeneratorsLive => ({
   noise: runsNoise(a) || runsNoise(b),
-  synth: a === 'synth' || b === 'synth' || controls.synthOver > 0,
+  synth:
+    a === 'synth' ||
+    b === 'synth' ||
+    controls.synthOver > 0 ||
+    controls.synthDelayUs > 0,
 })
 
 // Each carries its stage's name plus the physics that closes it, which is the
@@ -677,6 +681,18 @@ export const GROUPS: Group[] = [
         unit: 'Hz',
         fine: true,
         help: "The sound into oscillator A's frequency input. The oscillator integrates it, so each line's pitch error adds to every line below it: a low note bends the bars into a wave that follows the waveform down the field, and a loud passage swings their lean across the screen. Past a few kilohertz the bars shred.",
+      },
+      {
+        key: 'synthDelayUs',
+        id: 349,
+        label: 'osc A → delay line on A',
+        min: 0,
+        max: 20,
+        step: 0.01,
+        redline: [0, 6],
+        unit: 'µs',
+        fine: true,
+        help: "Oscillator A sweeping a delay line in input A's cable. The picture comes out late by an amount that follows the wave, so it stretches and tears sideways along the oscillator's pattern, and every 0.28 µs of change slides the subcarrier a full turn against the burst, so the hue spins wherever the delay moves. The synth does not have to be on screen for this.",
       },
     ],
   },

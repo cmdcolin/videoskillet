@@ -141,6 +141,7 @@ export function uniformValues(c: Controls, env: UniformEnv) {
     synthShapeX: c.synthShapeX,
     synthShapeY: c.synthShapeY,
     synthShapeSize: c.synthShapeSize,
+    synthDelay: c.synthDelayUs * 1e-6 * SAMPLE_RATE,
     beamBlank: env.beamBlank,
     chromaGain: c.chromaGain,
     burstLock: c.burstLock,

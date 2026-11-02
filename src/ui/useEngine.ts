@@ -1919,6 +1919,11 @@ export function useEngine(args: { rand: Rand }) {
         commitB(mode)
       } else {
         showGenerated(slotOf(key), mode, commitOn(key, mode))
+        // B's stock bars sum their blanking and their stripes straight into
+        // the synth's flat patterns, so picking the synth takes them off.
+        if (key === 'a' && mode === 'synth' && sourceMode.b === 'bars') {
+          commitB('none')
+        }
       }
     }
   }

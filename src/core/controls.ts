@@ -37,6 +37,7 @@ export const DEFAULT_CONTROLS = {
   synthShapeY: 0,
   synthShapeSize: 1,
   synthAudioFm: 0, // the audio into osc A's frequency, Hz per unit of audio
+  synthDelayUs: 0, // osc A sweeping a delay line on A's cable, µs at the top of its wave
   synthShape: 2, // 0 ramp, 1 triangle, 2 sine, 3 pulse
   synthMix: 0, // 0 osc A alone, 1 sum, 2 ring mod, 3 comparator
   synthLevel: 1,
