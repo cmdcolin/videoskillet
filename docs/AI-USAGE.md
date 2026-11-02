@@ -10,9 +10,10 @@ knobs.
   poster="img/agent-drive-poster.jpg"
   src="https://myloveydove.com/videoskillet/agent-drive.mp4"></video>
 
-Claude Sonnet on the right, the app in Chrome on the left, and nothing scripted
-between them. The model types five controls into the command palette, checks
-each row before committing it, and reads the board back at the end.
+The video shows Claude Sonnet on the right and the app in Chrome on the left,
+with nothing scripted between them. The model types five controls into the
+command palette, checks each row before committing it, and reads the board back
+at the end.
 
 ## Automate a running instance with Claude Code
 
@@ -48,15 +49,12 @@ The agent has two ways to drive the tab:
   `applyControls` takes any subset of control keys and leaves the others where
   they are. A value out of range clamps to the slider's range, and a key the app
   does not have is left out. It returns `{applied, clamped, rejected, unknown}`,
-  so the agent can tell whether a write landed.
+  so the agent can tell which values were applied.
 
 - **The command palette.** `ctrl+k` (`⌘k`) opens a text box that takes a
   control's name and a value in one line, such as `head switch 9` or `noise 12`,
   and a preset or action by name, such as `vhs` or `still`. Each row shows
   `current → target` before Enter commits it.
-
-Either way the app writes the board into the address bar, so the page's URL is
-always the link to the current look.
 
 ### Scripted runs
 
@@ -81,16 +79,17 @@ never what a control is set to. Read state as text:
 - The **board as text** section of the sidebar lists the look, both sources,
   every control off stock with its key, reading and stock value, every
   modulation routing, and the link.
-- Every palette row is a button whose text carries the control's name, reading,
+- Every palette row is a button whose text contains the control's name, reading,
   kind and group.
+- The address bar holds the link to the current look.
 
 ## Driving it by link
 
-Every look is a link, so an agent that can only navigate still drives the whole
-instrument. `#set=key:value,…` sets controls by key, `#preset=` applies a
-preset, and `#mod=` sets modulation routings.
-[`llms.txt`](https://videoskillet.com/llms.txt) is the contract, with an example
-for every parameter, and
+An agent that can only navigate can still set every control through
+[the link](GETTING-STARTED.md#sharing-a-look). `#set=key:value,…` sets controls
+by key, `#preset=` applies a preset, and `#mod=` sets modulation routings.
+[`llms.txt`](https://videoskillet.com/llms.txt) is the reference, with an
+example for every parameter, and
 [`llms-full.txt`](https://videoskillet.com/llms-full.txt) lists every control
 key, its range and the fault it models. Both are generated from
 `src/ui/controls.ts`.
@@ -100,7 +99,7 @@ key, its range and the fault it models. Both are generated from
 - **A backgrounded or minimized tab draws about one frame a second.** It still
   reports `visible`, so a screenshot of it is seconds stale. Keep the tab in
   front, or step frames with `window.vf.step()`.
-- **`#set=` drops a key it does not know** without an error. Read the address
+- **`#set=` ignores an unrecognized key** and reports no error. Read the address
   bar or `getControls()` back after writing.
 - **A feedback look opens black without `#snow`.** The loop needs something to
   amplify, and `#snow` seeds it with a burst of noise.
@@ -115,8 +114,8 @@ key, its range and the fault it models. Both are generated from
 ## Changing the code
 
 Agents wrote most of this codebase. An agent working on it starts at
-[`CLAUDE.md`](../CLAUDE.md), which carries the repo's rules and points at
+[`CLAUDE.md`](../CLAUDE.md), which points at
 [`ARCHITECTURE.md`](ARCHITECTURE.md), the [ADRs](adr/) and
 [`DEVELOPMENT.md`](DEVELOPMENT.md). A control added to `src/ui/controls.ts`
-reaches every agent route above with no extra work: the palette indexes it,
+works with every method above with no extra code: the palette indexes it,
 `#set=` takes its key, and `pnpm docgen` writes it into `llms-full.txt`.

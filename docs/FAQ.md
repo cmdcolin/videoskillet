@@ -1,8 +1,5 @@
 # FAQ
 
-[Where it sits](COMPARISON.md) has the longer comparison with other tools; this
-page is the short version.
-
 ## How does it actually work?
 
 The whole program is one array of numbers and a chain of small GPU programs that
@@ -57,7 +54,8 @@ The signal path runs in WebGPU compute shaders with no fallback renderer, so a
 browser without WebGPU gets the "this browser cannot run it" screen.
 
 - **Desktop** — Chrome, Edge, or Firefox with WebGPU enabled, on any OS with
-  working hardware acceleration.
+  working hardware acceleration. On Linux, use Firefox Nightly, or Chrome with
+  WebGPU enabled.
 - **Android** — Chrome 121 and up on Android 12 and up, where WebGPU is on by
   default.
 - **iPhone and iPad** — iOS/iPadOS 18.2 and up, where Safari shipped WebGPU on
@@ -70,28 +68,29 @@ wide comb) run, at a lower resolution and frame rate than a laptop holds.
 ## Can I install it on a phone or a desktop?
 
 Yes. A manifest, an icon set and a service worker ship with the build, so the
-browser can put it on a home screen or dock and open it with no chrome around
-the picture. Chrome and Edge offer the install from the address bar, and Safari
-on iOS from Share → _Add to Home Screen_, the only install of this kind iOS has.
-Firefox on Android and Safari on macOS have no install.
+browser can put it on a home screen or dock and open it with no browser toolbar
+around the picture. Chrome and Edge offer the install from the address bar, and
+Safari on iOS from Share → _Add to Home Screen_, the only install of this kind
+iOS has. Firefox on Android and Safari on macOS have no install.
 
 An installed copy starts offline, since the shell and bundle are cached; the
-sample clips and anything saved to the cloud still need a network. It also gets
-its own storage, so a clip shelf built up in the browser tab is not in the
-installed copy — saved looks arrive once you sign in there, but the clip library
-is per-device.
+sample clips and anything saved to the cloud still need a network. An installed
+copy also has separate storage, so a clip shelf built up in the browser tab is
+not in the installed copy. Saved looks appear once you sign in on the installed
+copy, but the clip library stays on each device.
 
 ## What does signing in give me?
 
-A library, and a way back into it. Saved profiles live on the account, so a look
-named on a laptop is there on a phone. The app also autosaves the session you
-are running, so videoskillet.com opens on a home page with a card that resumes
-it and a still of each look you saved.
+Saved profiles are stored on the account, so a look named on a laptop is there
+on a phone. The app also autosaves the session you are running, so
+videoskillet.com opens on a home page with a card that resumes it and a still of
+each look you saved.
 
 Everything else works signed out and offline: presets, scenes, pinned sliders,
-the rundown, recording, and the URL that carries the whole look. The clip
-library, the rundown and the pinned sliders stay on the machine that made them.
-[ADR 0010](adr/0010-the-account-holds-the-session.md) has the reasoning.
+the rundown, recording, and [sharing a link](GETTING-STARTED.md#sharing-a-look).
+The clip library, the rundown and the pinned sliders stay on the machine that
+made them. [ADR 0010](adr/0010-the-account-holds-the-session.md) has the
+reasoning.
 
 ## Is there a resolume plugin?
 
@@ -100,18 +99,15 @@ https://hzrdarchive.com/pages/skillet#skillet-ui
 
 ## Will there be a plugin for After Effects, Premiere or Resolve?
 
-Not yet, and it is a bigger job than moving the shaders across. The shaders are
-about a third of the simulator; the rest is per-frame CPU state in
-`src/core/signal/` and the pass graph and stateful buffers in `src/core/gpu/`.
-No plugin API renders through WebGPU today — OFX and Adobe's SDK render through
-CUDA, OpenCL or Metal — so every frame would cross into a WebGPU island and
-back. Feedback then makes each frame depend on every frame before it, while a
-host expects to scrub, play from the middle and preview before the clip has been
-rendered from the top.
+Not yet. The shaders are about a third of the simulator; the rest is per-frame
+CPU state in `src/core/signal/` and the pass graph and stateful buffers in
+`src/core/gpu/`. OFX and Adobe's SDK render through CUDA, OpenCL or Metal, so
+every frame would be copied into WebGPU and back. Feedback also makes each frame
+depend on every frame before it, while a host expects to scrub and play from the
+middle.
 
-[ntsc-rs](https://github.com/ntsc-rs/ntsc-rs) covers much of the need today:
-same premise, multithreaded Rust on the CPU, with After Effects, Premiere and
-OpenFX builds.
+[ntsc-rs](COMPARISON.md#ntsc-rs) has After Effects, Premiere and OpenFX builds
+today.
 
 ## Then how do I get a result into an edit?
 
@@ -121,23 +117,22 @@ that Resolve and Premiere import directly. When the colour matters,
 
 ## Can I feed it a real composite signal off a yellow RCA cable?
 
-Through a USB capture dongle, yes. The cable carries a baseband composite
-waveform at about 1 Vpp, something has to sample that voltage, and nothing in a
-browser can. Plug the cable into an RCA/composite grabber and the OS presents it
-as a camera: pick **Webcam / USB device** on a source deck, choose the grabber,
-and it lands in a slot like any other source, with the whole signal, sync and
-deflection chain over it. Each deck takes a separate device, so a camera in A
-and a grabber in B is a rig the app expects.
+Through a USB capture dongle, yes. The cable has a baseband composite waveform
+at about 1 Vpp, and a browser has no way to sample that voltage. An
+RCA/composite grabber does, and the OS presents it as a camera: pick **Webcam /
+USB device** on a source deck and choose the grabber, and the whole signal, sync
+and deflection chain runs over it. Each deck takes a separate device, so a
+camera in A and a grabber in B work at the same time.
 
 The grabber demodulates in hardware and hands over decoded 720×480 frames, so
 what a consumer dongle does — luma cut to around 2.4 MHz, colour-under chroma,
 chroma a few samples late — has already happened and cannot be undone. The
-`capture card` preset models that decode, so a captured feed carries one pass of
-it for real and whatever you dial in on top.
+`capture card` preset models that decode, so a captured feed has already been
+through one real pass of it before anything you dial in.
 
 A dongle delivers 480/60i, so the app turns bob deinterlace on per deck when a
-device connects. PAL grabbers (720×576/50i) are not handled yet; the pipeline is
-NTSC-shaped at 525/60.
+device connects. PAL grabbers (720×576/50i) are not handled, because the
+pipeline is fixed to NTSC at 525/60.
 
 ## Can I patch it into Max/MSP, Jitter, TouchDesigner or VJ software?
 
@@ -154,7 +149,6 @@ Most of this already works, with no code on either side:
   through a Syphon → virtual-camera bridge.
 - **Video out** — point an OBS browser source at the page.
 
-OSC is not built. Browsers cannot speak UDP, so it needs a small local bridge in
-the middle. NDI or WebRTC output is on the same list. Running the app inside a
-patch, through Max's `jweb` for instance, depends on that web view getting
-WebGPU.
+OSC, NDI and WebRTC output are not built; browsers cannot send UDP, so OSC would
+need a small local bridge. Running the app inside a patch, through Max's `jweb`
+for instance, depends on that web view having WebGPU.

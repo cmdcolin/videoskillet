@@ -11,8 +11,7 @@ live, so every fault lands on the same waveform.
 [ntsc-rs](https://github.com/ntsc-rs/ntsc-rs) shares the premise of simulating
 the path rather than drawing the look. It ships standalone, in a browser, and as
 AE / Premiere / OpenFX plugins, and its multithreaded SIMD Rust runs in real
-time well above NTSC resolution. videoskillet is fixed to the NTSC raster and
-has no plugin yet ([the FAQ](FAQ.md)).
+time well above NTSC resolution.
 
 ### Yurenaki
 
@@ -63,24 +62,23 @@ glow.
 
 ## What videoskillet does
 
-videoskillet is a **live instrument**. The signal path stays resident on the GPU
-as compute shaders, so a control change costs one uniform-buffer write. Every
-stage of the path gets a control, any of them can be driven by an LFO, live
-audio or a MIDI knob, and two feedback loops run inside the model: a camera
-aimed at the monitor it feeds, and a mixer patched into itself at signal level.
-The app renders a take to a constant-framerate H.264 MP4 and `pnpm render` to
-ProRes 4444, and a link holds the look.
-[The features](FEATURES.md) list the rest.
+videoskillet runs live. Every stage of the path has controls, any of them can be
+driven by an LFO, live audio or a MIDI knob, and two feedback loops run inside
+the model: a camera aimed at the monitor it feeds, and a mixer patched into
+itself at signal level. The app records a take to an MP4, and `pnpm render`
+writes ProRes 4444. [The features](FEATURES.md) list the rest.
 
 ### Limitations
 
-- **No plugin, and no timeline.** Clips line up in a rundown
-  ([the editor](EDITOR.md)).
+- **No plugin, and no timeline.**
+  [The FAQ](FAQ.md#will-there-be-a-plugin-for-after-effects-premiere-or-resolve)
+  says why. Clips line up in a rundown ([the editor](EDITOR.md)).
 - **The raster is fixed** at 910×525 samples, 754×480 active, so a 4K source is
   sampled down to NTSC resolution.
 - **A take is only reproducible from clips.** Offline renders of one take come
   out identical; a camera, a screen share or the mic is live capture.
-- **It needs a WebGPU browser**. On Linux, Firefox Nightly or Chrome.
+- **It needs a WebGPU browser.** [The FAQ](FAQ.md#what-does-it-need-to-run)
+  lists them.
 - **The model is progressive** 525/60 rather than interlaced at field rate, the
   largest remaining authenticity gap ([the architecture](ARCHITECTURE.md)).
 

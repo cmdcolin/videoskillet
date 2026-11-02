@@ -1,8 +1,8 @@
 # Getting started
 
-videoskillet simulates the analog video signal in WebGPU shaders. It needs a
-browser with WebGPU: current Chrome or Edge, or on Linux, Firefox Nightly or
-Chrome with WebGPU enabled. [The FAQ](FAQ.md) lists phones and tablets.
+videoskillet simulates the analog video signal in WebGPU shaders, so it needs a
+browser with WebGPU. [The FAQ](FAQ.md#what-does-it-need-to-run) lists which
+ones, phones and tablets included.
 
 Visit https://videoskillet.com/app/
 
@@ -30,11 +30,19 @@ underneath. Every control is in there, sources included.
 - **mixer loop** patches the composite into itself past unity, so the loop's
   output builds on itself.
 
+## Sharing a look
+
+The address bar holds every control, so the page's URL is always a link to the
+look on screen, and whoever opens it gets the same board. `ctrl+k` → "share this
+look" gives a shorter link to send. A clip opened from your own disk is not in
+the link.
+
 ## Where next
 
 - [Features](FEATURES.md): a tour of everything it can break
-- [Effects](EFFECTS.md): every control, generated from the app's own table
+- [Effects](EFFECTS.md): every control
 - [MIDI](MIDI.md): setting up a controller
 - [CLI](CLI.md): getting a look onto a file, running locally
 - [Agentic AI usage](AI-USAGE.md): letting Claude Code drive the app
-- [FAQ](FAQ.md): how it works, what runs it, how a take gets into an edit
+- [FAQ](FAQ.md): how it works, what runs it, how to bring a recording into a
+  video editor

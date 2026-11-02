@@ -1,6 +1,7 @@
 # Using a MIDI controller
 
-A box of knobs gives you both hands and lets you stop looking at the panel.
+A MIDI controller lets you move several controls at once with both hands and
+without looking at the panel.
 
 ## Requirements
 
@@ -18,9 +19,9 @@ connect once and the app reconnects on later visits.
 The card is not modal, so you can bind the controls behind it while it is up.
 
 The **midi** button lights green once connected, and shows **3 waiting** in
-amber when knobs have lost their catch (see [Soft takeover](#soft-takeover)).
-**n/a** means no Web MIDI in this browser, and **refused** means the browser
-denied access.
+amber when knobs are waiting to pick up their control's value (see
+[Soft takeover](#soft-takeover)). **n/a** means no Web MIDI in this browser, and
+**refused** means the browser denied access.
 
 ## Binding one knob
 
@@ -29,31 +30,30 @@ reads **CC7**; `Esc` cancels. **×** in the midi card unbinds, and clicking
 **CC7** re-learns, so a control can move to another knob without unbinding
 first.
 
-One knob drives one thing. Bind a knob that was already driving something and it
-moves to the new control, and two controls moving together means both are on the
-same CC.
+A CC drives one control at a time. Binding a knob that was already driving
+something moves it to the new control.
 
 ## The motion amount and preset weights
 
 The **amount** fader in the Modulation section scales every modulation routing
-at once and carries the same **⚟**.
+at once and has the same **⚟** button.
 
 Every preset is a fader too. Choose one in the midi card's preset picker, click
 **⚟ preset mix** and move a knob, and that knob moves everything the preset
-touches. Weights layer across knobs.
+touches. Preset weights bound to different knobs layer on top of one another.
 
-The motion amount and a preset weight do no soft takeover, and both grab on the
-first message. A weight also resets once anything else moves the board, so the
-next turn starts a fresh mix from what is on screen.
+The motion amount and a preset weight do no soft takeover, and both take effect
+on the first message. A weight also resets once anything else moves the board,
+so the next turn starts a fresh mix from what is on screen.
 
 ## Pads and keys
 
 A gesture goes on a pad or a key: pick one in the midi card's gesture picker,
 click **⚟ pad**, hit the pad. The picker lists the modulation bay's one-shot
 envelopes, all at once or a slot at a time; the source cue and the jump back to
-it that `i` and `o` do from the keyboard; and the transitions. Velocity carries,
-so a soft hit is a small envelope, and pads do no soft takeover, since there is
-no value to catch up to.
+it that `i` and `o` do from the keyboard; and the transitions. The app passes
+velocity through, so a soft hit gives a small envelope. Pads do no soft
+takeover, since there is no value to catch up to.
 
 A pad bound to a transition holds the fault while it is down and heals it on the
 note off, the same as a held fault key. A pad that sends its note off at once
@@ -71,9 +71,9 @@ no confirmation. Pads are left alone, and **clear all bindings** takes both.
   motion amount first and the rest in signal-path order, to CC 0–63 on channel 1
   across all four banks.
 - **learn in order** works with anything: sweep your knobs one at a time and
-  each takes the next control down the same list. A knob bumped by accident is
-  consumed with no going back a step. **stop learning** or `Esc` keeps what you
-  have bound.
+  each takes the next control down the same list. A knob bumped by accident
+  takes the next control, and there is no way to step back. **stop learning** or
+  `Esc` keeps what you have bound.
 
 There are more controls than most controllers have knobs, so some stay
 mouse-only.
@@ -110,13 +110,13 @@ rate stops at 10 Hz, which 1/16 reaches at 150 BPM.
 
 Knob bindings, pad bindings, the hand-set tempo and the clock locks are saved in
 this browser. They are **not** in presets, saved looks or the URL, and there is
-no way to export a mapping. A modulation slot's lock is the exception, and
-travels with the link.
+no way to export a mapping. A modulation slot's clock lock is the exception: the
+link stores it.
 
 ## Limitations
 
 - **CC and notes only**: pitch bend, program change and aftertouch do nothing,
-  and a note is an on/off with a velocity, with no note-off handling.
+  and a note is an on/off with a velocity.
 - **Absolute knobs only**: endless encoders in relative mode will jump around.
 - **No LED feedback**: nothing is sent back to the device.
 - **No device picker**: everything plugged in drives the app at once.

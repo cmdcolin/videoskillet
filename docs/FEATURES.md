@@ -4,8 +4,9 @@ Each control misadjusts or breaks one part of the signal path. Dot crawl,
 rainbows, tearing and hue drift come out of that model, so any two controls
 interact.
 
-[Effects](EFFECTS.md) lists every control, generated from the app's own control
-table. The headings below are the boxes on the app's chain map.
+[Effects](EFFECTS.md) lists every control, and
+[How it works](FAQ.md#how-does-it-actually-work) covers the code. The headings
+below are the boxes on the app's chain map.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="img/pipeline-simple-dark.svg">
@@ -25,9 +26,6 @@ and the receiver locks to the other, and the geometry changes between the two
 pictures.
 
 ## Feedback loops
-
-The camera loop carries light. The mixer loop carries the composite signal,
-subcarrier included.
 
 <!-- generated:loops — from LOOP_STAGES in src/ui/controls.ts, via scripts/docgen.mjs -->
 
@@ -131,14 +129,9 @@ preset or a shared link can raise either level control.
 - **Rundown**: the strip tray plays a list of looks in sequence. A row holds for
   a number of bars, arrives as a cut, a morph or a fault, and can pick a source
   from a pool.
-- **Sharing and capture**: the control state mirrors to the URL, so a link
-  carries a patch. The strip's ⎙ render steps the engine on its own clock, so a
-  take comes back at 60 fps whatever rate the tab ran at.
-- **Rendering offline**: `pnpm render` takes a link and a file and writes ProRes
-  4444 with no browser open, which keeps the colour artifacts a browser's 4:2:0
-  encode loses. See [CLI](CLI.md).
-
----
-
-[Effects](EFFECTS.md): every control ·
-[How it works](FAQ.md#how-does-it-actually-work): the code
+- **Recording**: the ⎙ render button in the strip steps the engine on a fixed
+  clock, so the recording is 60 fps whatever frame rate the tab ran at.
+  [Sharing a look](GETTING-STARTED.md#sharing-a-look) covers links.
+- **Rendering offline**: `pnpm render` writes ProRes 4444 with no browser open,
+  which keeps the colour artifacts a browser's 4:2:0 encode loses. See
+  [CLI](CLI.md).

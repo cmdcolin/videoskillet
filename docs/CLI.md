@@ -12,20 +12,20 @@ videoskillet photo.jpg out.mov --preset=wornTape --seconds=8
 videoskillet out.mov --look='<a link that names its own source>'
 ```
 
-**It hosts the app.** `videoskillet serve` puts the instrument on a local
-address, with one source the hosted copy at videoskillet.com cannot offer: the
-video-URL option, which fetches a clip with yt-dlp. See
+**It hosts the app.** `videoskillet serve` serves the app at a local address,
+with one source the hosted copy at videoskillet.com cannot offer: the video-URL
+option, which fetches a clip with yt-dlp. See
 [Serving the app](#serving-the-app).
 
-Every release carries both as a single executable, so neither needs a checkout
+Each release packages both in a single executable, so neither needs a checkout
 or a toolchain. From a clone the same program is `pnpm render`, which takes the
 same arguments. Substitute it for `videoskillet` in the examples on this page.
 
-The renderer bundles the app's own engine, so a look renders here the way it
-renders on screen. [The editor](EDITOR.md) covers how that bundle is built, and
-what a browser's encoder does to the chroma artifacts ffmpeg keeps. The app's
-**⎙ render** button in the strip tray writes a file from the tab, and it is the
-one to use while performing.
+The renderer bundles the same engine the app runs, so a look renders here the
+way it renders on screen. [The editor](EDITOR.md) covers how that bundle is
+built, and what a browser's encoder does to the chroma artifacts ffmpeg keeps.
+The app's **⎙ render** button in the strip tray writes a file from the tab, and
+it is the one to use while performing.
 
 ## Installing
 
@@ -33,15 +33,15 @@ Take the binary, or run it from a clone. A render needs ffmpeg on PATH to decode
 and encode, ffprobe to read the input's length, and a GPU that Deno can reach,
 since the shaders execute on Deno's own WebGPU.
 
-`serve` needs none of that. It wants [yt-dlp](https://github.com/yt-dlp/yt-dlp)
+`serve` needs none of that. It needs [yt-dlp](https://github.com/yt-dlp/yt-dlp)
 on PATH for the video-URL source, and nothing at all for the rest of the app.
 
 <!-- tabs: How to install -->
 
 ### The binary
 
-The [releases page](https://github.com/cmdcolin/videoskillet/releases) carries
-one executable per platform, each holding the renderer, the engine and a Deno
+The [releases page](https://github.com/cmdcolin/videoskillet/releases) has one
+executable per platform, each holding the renderer, the engine and a Deno
 runtime:
 
 ```
@@ -68,8 +68,8 @@ Node and pnpm build the engine bundle and [Deno](https://deno.com/) runs it.
 `pnpm render` rebuilds the bundle on every run, so the first one takes a few
 seconds longer.
 
-Render from a clone to test an edit you are making. A binary carries the engine
-it was built with.
+A binary contains the engine it was built with, so render from a clone to test
+an edit you are making.
 
 #### Building a binary
 
@@ -88,9 +88,9 @@ videoskillet serve
 videoskillet serve --port=9000 --open
 ```
 
-`serve` hosts the instrument at `http://127.0.0.1:8787/app/` and prints the
-address. It serves the production build carried inside the executable, so it
-needs no network.
+`serve` serves the app at `http://127.0.0.1:8787/app/` and prints the address.
+It serves the production build embedded in the executable, so it needs no
+network.
 
 The video-URL source fetches a clip from any site yt-dlp has an extractor for.
 It appears when `yt-dlp` is on PATH, and `serve` reports a missing one at
@@ -122,8 +122,7 @@ wrote to `dist/`.
 ## Example renders
 
 `pnpm render:docs` regenerates the figures below, grabbing a frame late in each
-take. It keeps the still and discards the clip, which is the repo's rule for
-megabyte-scale binaries; `pnpm render:docs:keep` also writes the clips to
+take and discarding the clip. `pnpm render:docs:keep` also writes the clips to
 `renders/`, which is gitignored.
 
 ### A published link
@@ -137,7 +136,7 @@ videoskillet out.mov --look='https://videoskillet.com/app/?p=je.CoDoBwEEAbAEAKwC
 The figure is the README's **Wiggity** demo, rendered from the link as it is
 published. The command passes no input, because the link names the sources
 itself. The bend across the frame comes from the modulation bay, which the
-renderer reads out of `?mod=` with the app's own parser.
+renderer reads out of `?mod=` with the parser the app uses.
 
 ### A photograph down a tape path
 
@@ -161,7 +160,8 @@ videoskillet out.mov --pattern=sweep --preset=vhs --seconds=2
 
 The sweep pattern stacks gratings at 0.5, 1, 2, 3, 4.2 and 5 MHz. Through a VHS
 deck the bottom two survive at full contrast, the middle two fade, and the top
-two wash out to flat grey, which is the deck's luma bandwidth.
+two wash out to flat grey, because those frequencies are above the deck's luma
+bandwidth.
 
 ## Render options
 
@@ -181,8 +181,8 @@ two wash out to flat grey, which is the deck's luma bandwidth.
 | `--audio-file=<p>` | the track driving the artifacts, when not the input |
 | `--quiet`          | no progress line                                    |
 
-`--look` reads the link with the app's own parser, so the board, the modulation
-bay, the source mode, the caption and the seed all arrive together. Every
+`--look` reads the link with the parser the app uses, so one link sets the
+board, the modulation bay, the source mode, the caption and the seed. Every
 control name is in [Effects](EFFECTS.md).
 
 `prores` is the default and the codec to cut with. `h264` writes High 4:4:4
@@ -196,7 +196,7 @@ The artifacts move with the input's sound, so the same look renders differently
 over silence. [Features](FEATURES.md) lists which band drives what.
 
 `--audio=auto` is the default: the input's track goes in, and the set's
-intercarrier buzz comes back out beside it when the look asks for one.
+intercarrier buzz is written beside it when the look turns the buzz up.
 
 Two renders of one take produce the same file, sound included. `--seed` fixes
 the random sequence, the render supplies its own clock, and each audio window is
@@ -218,15 +218,16 @@ alone: `videoskillet in.mp4 -` decodes normally and writes frames out, and
 `videoskillet - out.mov` takes frames in and encodes as usual.
 
 Raw video carries no header, so `-s 754x480 -pix_fmt rgba` on both ffmpeg
-commands is the whole contract, and the renderer reports a stream that does not
-match it. A raw stdin has no length to ask ffprobe for either, so the render
-runs until the stream ends; `--seconds` still cuts it short. The progress line
-and the summary go to stderr, because stdout may be carrying the picture.
+commands is the only description of the stream, and the renderer reports a
+stream that does not match it. A raw stdin has no length to ask ffprobe for
+either, so the render runs until the stream ends; `--seconds` still cuts it
+short. The progress line and the summary go to stderr, because stdout may be
+carrying the picture.
 
-A pipe carries no sound. A raw stdin has none, and a raw stdout has no container
-to put a track in, so a render that ends in a pipe writes the picture alone.
-`--audio-file` still drives the artifacts from the same clip ffmpeg is reading;
-mux the sound back on in the last ffmpeg if you want it in the file.
+A render through a pipe has no sound, because a raw stdin has none and a raw
+stdout has no container to put a track in. `--audio-file` still drives the
+artifacts from the same clip ffmpeg is reading; mux the sound back on in the
+last ffmpeg if you want it in the file.
 
 ## Output
 
@@ -245,8 +246,3 @@ link naming the synth — renders ten seconds by default.
 - **Local sources only.** The renderer reads its source from disk and fetches
   nothing, so a link naming a clip or an archive pick renders over whatever file
   the command line passed.
-
----
-
-[Editor](EDITOR.md): how the export half is built · [Effects](EFFECTS.md): every
-control

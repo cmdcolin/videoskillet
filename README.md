@@ -20,17 +20,10 @@ in [Features](docs/FEATURES.md).
 
 ## Automate it with an AI agent
 
-Claude Code can drive the app running in your browser. Open
-https://videoskillet.com/app/, run `claude --chrome`, and describe a look:
-
-```
-In the videoskillet tab, put the color bars through a VHS deck with a bad head
-switch, then slowly detune the subcarrier until the hue rolls. Give me the link.
-```
-
-The agent sets controls with `window.vf.applyControls({...})` or the `ctrl+k`
-command palette, reads them back with `window.vf.getControls()`, and every look
-it builds is a link. [Agentic AI usage](docs/AI-USAGE.md) has the details.
+Claude Code can drive the app running in your browser: open
+https://videoskillet.com/app/, run `claude --chrome`, and describe a look.
+[Agentic AI usage](docs/AI-USAGE.md) has an example prompt and the API the agent
+calls.
 
 ## Features
 
@@ -63,10 +56,9 @@ pnpm install
 pnpm dev
 ```
 
-Fun bonus: a server on your own machine adds a **Video URL…** source that works
-with yt-dlp and lets you video mix with YouTube — or anything else yt-dlp can
-fetch — on the fly. `pnpm dev` has it, and so does `videoskillet serve` from the
-[released binary](docs/CLI.md#serving-the-app), which needs no clone.
+Fun bonus: `pnpm dev` adds a **Video URL…** source that mixes in YouTube, or
+anything else yt-dlp can fetch, on the fly. `videoskillet serve` from the
+[released binary](docs/CLI.md#serving-the-app) has it too, with no clone.
 
 ## Docs
 
@@ -77,11 +69,9 @@ fetch — on the fly. `pnpm dev` has it, and so does `videoskillet serve` from t
 - [CLI](docs/CLI.md) — the offline renderer, which takes a link and a file and
   writes ProRes 4444, and `videoskillet serve`, which hosts the app on your own
   machine
-- [Drive it by URL](public/llms.txt) — the part of the URL after `#` sets every
-  control, and [every control's key](public/llms-full.txt) lists what the rest
-  of the docs leave out. Published at
-  [videoskillet.com/llms.txt](https://videoskillet.com/llms.txt) for anything
-  scripting the app.
+- [Drive it by URL](public/llms.txt) — every URL parameter, and
+  [every control's key](public/llms-full.txt), also published at
+  [videoskillet.com/llms.txt](https://videoskillet.com/llms.txt)
 - [Agentic AI usage](docs/AI-USAGE.md) — automating the app with Claude Code
 - [MIDI](docs/MIDI.md)
 - [Comparison with other tools](docs/COMPARISON.md)
