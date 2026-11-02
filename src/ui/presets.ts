@@ -353,7 +353,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'distant station',
     group: 'RF / Broadcast',
     blurb:
-      "A station from past the horizon, arriving by two paths that drift against each other. The tuner's AGC turns up into snow at every null, the colour killer drops the picture to grey, sync slips and the frame rolls, and the station surfaces again between fades.",
+      "A station from past the horizon, arriving by two paths that drift against each other. The tuner's AGC turns up into coloured snow at every null, sync slips and the frame rolls, and the station surfaces again between fades.",
     patch: {
       rfFade: 0.75,
       rfFadeHz: 0.4,
@@ -363,7 +363,6 @@ export const PRESETS: PresetDef[] = [
       hHold: 0.3,
       ghostDelayUs: 5,
       ghostGain: 0.1,
-      killThresh: 12,
     },
   },
   {
@@ -2981,18 +2980,6 @@ export const PRESETS: PresetDef[] = [
       crtGamma: 2.2,
     },
   },
-  {
-    name: 'tiredTube',
-    displayName: 'tired tube',
-    group: 'Phosphor / CRT',
-    blurb:
-      'An old picture tube whose cathodes have lost most of their emission. Highlights flatten to a dull plateau and fade along each line, so every bright area is brightest at its left edge. The blue gun is the most worn, which warms the highlights, and its heater leaks mains onto its bias, so a dim blue band rises out of the blacks and rolls slowly through the picture.',
-    patch: {
-      cathodeWear: 0.6,
-      weakGun: 2,
-      heaterLeak: 0.35,
-    },
-  },
   // Stacks rather than single mechanisms: several stages misbehaving at once,
   // interfering with each other. The rest of the table is deliberately one
   // fault per preset — it is what makes a chip teachable — but the looks people
@@ -3003,7 +2990,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'dying set',
     group: 'Full board',
     blurb:
-      'A set near the end of its life, best on a dark picture. The flyback arcs whenever the picture goes dark, so the raster swells, dims and tears in clusters of snaps. The cathodes are worn, so highlights go dull and warm, and the blue heater leak lifts a band of navy out of the blacks. The beam limiter pumps the drive behind the bright scenes.',
+      'A set near the end of its life, best on a dark picture. The flyback arcs whenever the picture goes dark, and each snap swells, dims and tears the lines below it. The cathodes are worn, so highlights go dull and warm, and the blue heater leak lifts a band of navy out of the blacks. The beam limiter pumps the drive behind the bright scenes.',
     patch: {
       ehtArc: 0.85,
       cathodeWear: 0.55,
