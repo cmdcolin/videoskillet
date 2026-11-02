@@ -14,14 +14,30 @@ AE / Premiere / OpenFX plugins, and its multithreaded SIMD Rust runs in real
 time well above NTSC resolution. videoskillet is fixed to the NTSC raster and
 has no plugin yet ([the FAQ](FAQ.md)).
 
+### Yurenaki
+
+[Yurenaki](https://oopsyte.com/) shares the most of videoskillet's model. It is
+a paid OpenFX plugin for DaVinci Resolve on Windows that encodes footage to a
+composite signal and passes it through four stages: an enhancer with feedback, a
+sync mixer that takes the picture from locked through rolling, white, snow and
+black, a television that tries to lock to the result, and a camera filming the
+screen and feeding it back in. Each frame depends on the frames before it, so
+its stripes and tears keep moving on a still picture. It runs on the CPU at a
+768×480 raster, renders the same range to the same file every time, and every
+control except camera position takes Resolve keyframes.
+
+videoskillet has each of those four stages, together with tape, the tuner, a
+second source and a signal-level mixer loop, and runs them live in a browser.
+Yurenaki has the timeline and the editor integration that videoskillet lacks.
+
 ### BENDR
 
-[BENDR](https://github.com/clickysteve/bendr) is the closest neighbour: a live
-browser tool with four channels, a reorderable chain on each, three mix buses,
-keys and wipes, all in one HTML file a phone will run. Each fault — chroma
-bleed, rainbow fringing, dot crawl, ringing, line-by-line sync tears — is a
-slider drawn onto the picture, independent of the others, so the stages reorder
-freely.
+[BENDR](https://github.com/clickysteve/bendr) is the closest browser neighbour:
+a live browser tool with four channels, a reorderable chain on each, three mix
+buses, keys and wipes, all in one HTML file a phone will run. Each fault —
+chroma bleed, rainbow fringing, dot crawl, ringing, line-by-line sync tears — is
+a slider drawn onto the picture, independent of the others, so the stages
+reorder freely.
 
 videoskillet builds the signal: a picture becomes a composite waveform, the
 model damages that waveform, and a model of a TV decodes it back. Dot crawl and
@@ -67,6 +83,6 @@ A take renders offline to constant-framerate H.264, and a link carries the look.
 - **The model is progressive** 525/60 rather than interlaced at field rate, the
   largest remaining authenticity gap ([the architecture](ARCHITECTURE.md)).
 
-<sub>All free and open source. Written from the other projects' own
-documentation and source, not from benchmarks run here. If something is out of
-date or unfair, please open an issue.</sub>
+<sub>All free and open source except Yurenaki. Written from the other projects'
+own documentation, source and product pages, not from benchmarks run here. If
+something is out of date or unfair, please open an issue.</sub>
