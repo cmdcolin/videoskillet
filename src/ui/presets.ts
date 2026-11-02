@@ -3285,6 +3285,22 @@ export const PRESETS: PresetDef[] = [
     },
   },
   {
+    name: 'partsDrawer',
+    displayName: 'parts drawer',
+    group: 'A/B mixing',
+    blurb:
+      "A mixer built from a parts drawer. A dirty pot thrown by hand crossfades two unlocked sources, a diode across the bus multiplies them, and a worn relay cuts the bottom of every frame to B. Below the cut the relay chatters between A, B and nothing for forty lines, and the stretches of B that land on lines carrying A's burst come out at the wrong hue.",
+    patch: {
+      mixPot: 1,
+      mixPotPos: 0.45,
+      mixPotHand: 1,
+      bRing: 0.5,
+      busCut: 0.35,
+      busBounce: 1,
+      agc: 1,
+    },
+  },
+  {
     name: 'wiggledPlugs',
     displayName: 'wiggled plugs',
     group: 'A/B mixing',
