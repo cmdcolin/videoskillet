@@ -212,9 +212,10 @@ const extractOf = async (
     ),
   )[0]
   const text = page === undefined ? null : str(page.extract)
-  if (page === undefined || text === null || text === '')
-    throw new Error(`wikipedia has no text for ${article}`)
-  return { title: str(page.title) ?? article, text }
+  return {
+    title: (page === undefined ? null : str(page.title)) ?? article,
+    text: text ?? '',
+  }
 }
 
 // The caption encoder is seven-bit and turns anything else into a space, so
@@ -296,24 +297,44 @@ export function passageFrom(
   return `${first.slice(0, limit).replace(/\s+\S*$/, '')}...`
 }
 
+// Stubs, disambiguation pages and lists come back with no prose a passage
+// could be cut from, so a few other articles are tried before giving up. Each
+// attempt is a request of up to API_TIMEOUT_MS, made one after another.
+const MATCHED_ATTEMPTS = 4
+const RANDOM_ATTEMPTS = 6
+
 // A passage about what `ref` shows, or from a random article when `ref` is
 // null or nothing on Wikipedia could be matched to it. `avoid` names the
 // article the caption already came from, so asking again moves on when there
-// is somewhere to move. Aborting `signal` cancels whichever request is in
-// flight.
+// is somewhere to move. An article with no usable prose is skipped for the
+// next candidate. Aborting `signal` cancels whichever request is in flight.
 export async function passageAbout(
   ref: PoolRef | null,
   avoid = '',
   { rand = Math.random, signal }: { rand?: Rand; signal?: AbortSignal } = {},
 ): Promise<Passage> {
   const found = ref === null ? [] : await articlesAbout(ref, signal)
-  const fresh = found.filter(a => a !== avoid)
-  const matched = pickOne(fresh.length > 0 ? fresh : found, rand)
-  const { title, text } = await extractOf(
-    matched ?? (await randomArticle(signal)),
-    signal,
-  )
-  const passage = passageFrom(text, rand)
-  if (passage === '') throw new Error(`no prose in ${title}`)
-  return { article: title, text: passage, matched: matched !== null }
+  const unique = [...new Set(found)]
+  const fresh = unique.filter(a => a !== avoid)
+  const first = pickOne(fresh.length > 0 ? fresh : unique, rand)
+  const candidates =
+    first === null
+      ? []
+      : [...new Set([first, ...fresh, ...unique])].slice(0, MATCHED_ATTEMPTS)
+
+  const tryArticle = async (article: string, matched: boolean) => {
+    const { title, text } = await extractOf(article, signal)
+    const passage = passageFrom(text, rand)
+    return passage === '' ? null : { article: title, text: passage, matched }
+  }
+
+  let result: Passage | null = null
+  for (const article of candidates) {
+    if (result === null) result = await tryArticle(article, true)
+  }
+  for (let i = 0; result === null && i < RANDOM_ATTEMPTS; i++)
+    result = await tryArticle(await randomArticle(signal), false)
+
+  if (result === null) throw new Error('no prose found on Wikipedia')
+  return result
 }
