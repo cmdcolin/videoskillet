@@ -3366,7 +3366,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'arcing flyback',
     group: 'Sync / Deflection',
     blurb:
-      'A flyback that arcs whenever the picture goes dark. Each arc collapses the high voltage, so the raster swells and dims from the line it struck on and takes a frame or two to come back, the lines below it tear, and the spark lays a burst of hash across the picture. Arcs come in clusters, and a bright scene stops them.',
+      'A flyback that arcs whenever the picture goes dark. Each arc collapses the high voltage, so the lines below the strike swell and dim for the couple of milliseconds the flyback takes to recharge, they tear sideways, and the spark lays a burst of hash across the picture. Arcs come in clusters, and a bright scene stops them.',
     patch: {
       ehtArc: 0.9,
       hHold: 0.25,

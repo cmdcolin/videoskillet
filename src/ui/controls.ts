@@ -3774,7 +3774,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: "A flaw in the high-voltage circuit, such as a cracked anode cap, that breaks down above some voltage. The regulator lets the voltage rise when the beam draws little, so dark pictures arc. Each arc collapses the supply, so the raster swells and dims while it recharges, the line oscillator is thrown, and the spark radiates a burst of hash into the set's video. The path an arc burns breaks down more easily for a while, so arcs come in clusters. The knob sets how close the supply runs to breakdown.",
+        help: "A flaw in the high-voltage circuit, such as a cracked anode cap, that breaks down above some voltage. The regulator lets the voltage rise when the beam draws little, so dark pictures arc. Each arc collapses the supply, so the lines below it swell and dim for the few milliseconds the flyback takes to recharge, the line oscillator is thrown, and the spark radiates a burst of hash into the set's video. The path an arc burns breaks down more easily for a while, so arcs come in clusters. The knob sets how close the supply runs to breakdown.",
       },
     ],
   },

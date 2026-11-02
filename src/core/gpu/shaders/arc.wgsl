@@ -25,7 +25,7 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
       let n = row * SPL + s;
       let h = pcg(n ^ (P.frame * 0x9E3779B9u));
       // Fades along the line at the rate sync.wgsl fades it from line to line.
-      let env = amp * pow(0.85, f32(s) / f32(SPL));
+      let env = amp * pow(0.93, f32(s) / f32(SPL));
       let spike = select(0.0, 1.0, rand01(h ^ 0x51u) < 0.12);
       let hash = 0.35 + 0.9 * (rand01(h) - 0.4) + 0.8 * spike;
       comp[n] = comp[n] + ARC_IRE * env * hash;

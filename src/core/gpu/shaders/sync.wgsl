@@ -107,20 +107,22 @@ const ARC_HEADROOM = 0.12;
 const ARC_REGULATION = 0.12;
 const ARC_BREAK = 1.06;
 const ARC_ION_DROP = 0.03;
-// Chance per line of breaking down at the breakdown voltage (about two arcs a
-// second), and the overvoltage that multiplies it by e.
-const ARC_RATE = 6.0e-5;
-const ARC_SOFT = 0.01;
-// Per-line factors: the reservoir follows the load over about two frames, an
-// arc's collapse recovers over about two, and the ionised path clears over
-// about five.
+// Chance per line of breaking down at the breakdown voltage, and the
+// overvoltage that multiplies it by e. The flyback recharges the tube within
+// a few lines of an arc, so the voltage is back over the breakdown almost at
+// once, and only a low rate keeps a dark scene to a few arcs a second.
+const ARC_RATE = 6.0e-6;
+const ARC_SOFT = 0.02;
+// Per-line factors: the reservoir follows the load over about two frames, the
+// flyback recharges the tube's capacitance after an arc within about 30 lines
+// (2 ms), and the ionised path clears over about five frames.
 const ARC_FOLLOW = 1.0 / 900.0;
-const ARC_DIP_KEEP = 0.999;
+const ARC_DIP_KEEP = 0.97;
 const ARC_ION_KEEP = 0.9995;
 // How far one arc throws the line oscillator, samples per unit of collapse.
 const ARC_KICK = 120.0;
-// The radiated burst rings down over about ten lines.
-const ARC_BURST_KEEP = 0.85;
+// The radiated burst rings down over about fifteen lines.
+const ARC_BURST_KEEP = 0.93;
 
 const SAG_LANE = 64u;
 // lines per field an untriggered vertical oscillator gains: about 58.6 Hz

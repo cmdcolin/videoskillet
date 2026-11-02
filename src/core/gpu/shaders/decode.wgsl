@@ -684,7 +684,7 @@ fn ehtOf(sag: f32) -> f32 {
 // An arc (sync.wgsl) drops the EHT outright, and the raster swells and dims
 // while the supply recharges. A collapse goes far deeper than any load can
 // pull the regulated supply, so it has its own ceiling.
-const ARC_EHT_SCALE = 0.8;
+const ARC_EHT_SCALE = 0.5;
 const EHT_FLOOR = 0.6;
 
 fn arcEht(dip: f32) -> f32 {
