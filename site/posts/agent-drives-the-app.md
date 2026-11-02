@@ -13,6 +13,7 @@ look: '#set=capLumaMHz:4.2,demodMHz:3.43,chromaGain:13.62,vir:0.86,lumaMHz:6,noi
 
 <div class="video-frame" style="--video-aspect: 1564 / 552">
 <video
+  aria-label="Recording of Claude Code in a terminal building a look in videoskillet one stage at a time, with the purple, tape-warped portrait on the left."
   controls muted loop playsinline preload="none"
   poster="/blog/agent-build-poster.webp"
   src="https://myloveydove.com/videoskillet/agent-build.mp4"></video>
