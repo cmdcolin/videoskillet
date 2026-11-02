@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { Fault, cutFrameOf, faultDepth } from './fault'
+import { Fault, cutFrameOf, faultDepth, stagedDepth } from './fault'
 
 // Every frame of a span, so a shape can be asserted as a shape rather than as
 // three sampled points.
@@ -79,12 +79,50 @@ describe('faultDepth', () => {
   })
 })
 
+describe('stagedDepth', () => {
+  const frames = 41
+  const at = cutFrameOf(frames, 0.5)
+  const staged = (rise: [number, number], fall: [number, number]) =>
+    Array.from({ length: frames }, (_, f) =>
+      stagedDepth(f, frames, at, { rise, fall }),
+    )
+
+  it('is the whole curve when the stage is each whole half', () => {
+    const whole = run(frames, 0.5)
+    for (const [f, v] of staged([0, 1], [0, 1]).entries())
+      expect(v).toBeCloseTo(whole[f]!, 12)
+  })
+
+  it('holds still outside its stretch, and still peaks on the cut', () => {
+    const d = staged([0.5, 1], [0, 0.25])
+    expect(d.slice(0, at / 2 + 1).every(v => v === 0)).toBe(true)
+    expect(d[at]).toBe(1)
+    expect(d.slice(at + 6).every(v => v === 0)).toBe(true)
+    expect(d[frames - 1]).toBe(0)
+  })
+})
+
 describe('Fault', () => {
   const plan = (frames: number, cut: number, onCut = () => {}) => ({
     peak: { vSize: 0.2 },
     frames,
     cut,
     onCut,
+  })
+
+  it('moves a staged control on its own stretch of the span', () => {
+    const f = new Fault()
+    f.start({
+      ...plan(21, 0.5),
+      peak: { vSize: 0.2, crtCutoff: 0.9 },
+      stages: { crtCutoff: { rise: [0.5, 1], fall: [0, 1] } },
+    })
+    f.step()
+    f.step()
+    const step = f.step()
+    const depthOf = (key: string) => step?.moves.find(m => m.key === key)?.depth
+    expect(depthOf('vSize')).toBeGreaterThan(0)
+    expect(depthOf('crtCutoff')).toBe(0)
   })
 
   it('runs for exactly its span and then stops', () => {

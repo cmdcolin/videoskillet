@@ -2475,11 +2475,9 @@ export class Engine implements EngineApi {
     const step = this.fault.step()
     this.faultLayer.begin()
     if (step === null) return NOOP
-    for (const k of CONTROL_KEYS) {
-      const to = step.peak[k]
-      if (to === undefined) continue
-      const from = this.controls[k]
-      this.faultLayer.write(k, from + (to - from) * step.depth)
+    for (const m of step.moves) {
+      const from = this.controls[m.key]
+      this.faultLayer.write(m.key, from + (m.to - from) * m.depth)
     }
     return this.faultLayer.seal()
   }

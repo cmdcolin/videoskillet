@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { DEFAULT_CONTROLS } from '../core/controls'
+import { cutFrameOf, stagedDepth } from '../core/signal/fault'
 import { sliderFor } from './controls'
 import {
   TRANSITION_NAMES,
@@ -64,6 +65,37 @@ describe('the shelf', () => {
       expect(t.seconds, t.name).toBeGreaterThanOrEqual(0.5)
       expect(t.seconds, t.name).toBeLessThanOrEqual(4)
     }
+  })
+
+  it('stages only controls it drives, inside each half', () => {
+    for (const t of TRANSITIONS) {
+      for (const [key, stage] of Object.entries(t.stages ?? {})) {
+        expect(Object.keys(t.peak), `${t.name}.${key}`).toContain(key)
+        for (const [from, to] of [stage.rise, stage.fall]) {
+          expect(from, `${t.name}.${key}`).toBeGreaterThanOrEqual(0)
+          expect(to, `${t.name}.${key}`).toBeGreaterThan(from)
+          expect(to, `${t.name}.${key}`).toBeLessThanOrEqual(1)
+        }
+      }
+    }
+  })
+
+  // The order is the mechanism: switching off, the scan collapses while the
+  // gun is still lit, and switching on, the scan is open before the gun warms.
+  it('collapses the scan before the gun goes dark, and opens it before the picture returns', () => {
+    const power = transitionOf('power')!
+    const plan = faultPlan(power, () => {})
+    const depths = Array.from({ length: plan.frames }, (_, f) => {
+      const at = cutFrameOf(plan.frames, plan.cut)
+      const of = (key: 'vSize' | 'crtCutoff') =>
+        stagedDepth(f, plan.frames, at, power.stages![key]!)
+      return { scan: of('vSize'), gun: of('crtCutoff') }
+    })
+    const lit = depths.find(d => d.scan === 1 && d.gun < 0.1)
+    expect(lit).toBeDefined()
+    const cut = cutFrameOf(plan.frames, plan.cut)
+    const open = depths.slice(cut).find(d => d.scan === 0)
+    expect(open?.gun).toBeGreaterThan(0.9)
   })
 
   it('reads a name back, and answers nothing for one it does not have', () => {

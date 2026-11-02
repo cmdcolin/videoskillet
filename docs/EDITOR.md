@@ -375,10 +375,10 @@ ship that, because its transitions are composited over two finished pictures and
 these are a receiver genuinely losing and regaining its grip.
 
 `signal/fault.ts` is the envelope, `ui/transitions.ts` the shelf, and
-`Engine.startFault` the one verb between them. Five entries — `track`, `roll`,
-`collapse`, `shuttle`, `dub` — under the T-bar in the deck, each bindable to a
-MIDI pad, and a row's `arrive.transition` picks from the same table. No new
-uniforms, no new pass, no shader work at all.
+`Engine.startFault` the one verb between them. Six entries — `track`, `roll`,
+`collapse`, `shuttle`, `dub`, `power` — under the T-bar in the deck, each
+bindable to a MIDI pad, and a row's `arrive.transition` picks from the same
+table. No new uniforms, no new pass, no shader work at all.
 
 **A transition is two curves and a cut point, where a morph is one walk.** The
 fault ramps up on the outgoing clip and down on the incoming one, and the source
@@ -392,8 +392,15 @@ startFault(plan: {
   cut: number              // where the source swap lands, 0..1
   onCut: () => void        // fired once, on the peak frame
   held?: boolean           // wait at the peak until released
+  stages?: Partial<Record<ControlKey, FaultStage>>
 }): () => void             // the release
 ```
+
+A stage moves one control over part of each half, given as fractions of that
+half. `power` needs it because a power cycle is a sequence: switching off, the
+vertical scan collapses while the gun is still lit, and switching on, the scan
+is open before the cathodes have warmed. One curve over every control would
+bring the picture back before the raster.
 
 A held plan is a pad under a finger: the fault climbs to its peak and stays
 there until the release is called, then heals over the rest of its span. A

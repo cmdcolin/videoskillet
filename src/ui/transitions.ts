@@ -6,8 +6,8 @@
 // clip.** `signal/fault.ts` is the envelope that does the breaking; this is the
 // list of what to break, which is the part with taste in it.
 //
-// **The domain decides what a transition reads as**, which is why the five
-// below are five different things rather than one effect at five intensities.
+// **The domain decides what a transition reads as**, which is why the entries
+// below are different things rather than one effect at several intensities.
 // The three-way split is [`ARCHITECTURE.md`](../../docs/ARCHITECTURE.md)'s —
 // signal, sync, deflection — and the two tape entries come free because the
 // deck's own damage is already a set of controls.
@@ -18,8 +18,8 @@
 // fault big enough to be unpleasant at the wrong duration — so the peaks below
 // are chosen to be worth pressing rather than to show the range.
 
-import type { Controls } from '../core/controls'
-import type { FaultPlan } from '../core/signal/fault'
+import type { ControlKey, Controls } from '../core/controls'
+import type { FaultPlan, FaultStage } from '../core/signal/fault'
 
 export const TRANSITION_NAMES = [
   'tracking',
@@ -27,6 +27,7 @@ export const TRANSITION_NAMES = [
   'collapse',
   'shuttle',
   'dub',
+  'power',
 ] as const
 export type TransitionName = (typeof TRANSITION_NAMES)[number]
 
@@ -47,8 +48,8 @@ export interface Transition {
   // filling as one glyph with the words in the `title` — and this is that glyph.
   // One character each, so stepping the ring cannot move the chips beside it.
   glyph: string
-  // The key that holds it, on the full app's keyboard. The five sit together
-  // on the home row so a hand can play them like pads.
+  // The key that holds it, on the full app's keyboard. The first five sit
+  // together on the home row so a hand can play them like pads.
   key: string
   // What it does, in the words the mechanism's own slider uses — this is a
   // title attribute, and the point of it is that somebody who has met the
@@ -57,6 +58,9 @@ export interface Transition {
   // The board at full depth. Only the controls the fault drives; everything
   // else stays wherever the hand and the bay left it.
   peak: Partial<Controls>
+  // Controls that move over part of each half rather than all of it. See
+  // `FaultStage`.
+  stages?: Partial<Record<ControlKey, FaultStage>>
   // Where the swap lands, 0..1. See `FaultPlan.cut`.
   cut: number
   // How long it runs. **Per entry, not a rate control**, and that is the taste
@@ -195,6 +199,36 @@ export const TRANSITIONS: readonly Transition[] = [
     // either half to register.
     seconds: 2.5,
   },
+  {
+    name: 'power',
+    label: 'power',
+    glyph: '◉',
+    key: 'p',
+    title:
+      'the set switched off and on — the scan collapses to one bright line, the clip changes as the line goes out, and the picture warms up out of black',
+    // Switching off, the vertical scan dies first and the beam stays lit, so
+    // the whole picture's current lands on one line, which blooms and goes
+    // soft. Switching on, the scan comes up at once and the cathodes take their
+    // time, so the full raster is there before the picture is: the brightest
+    // colours come through first, dim and soft, and the rest follows.
+    peak: {
+      vSize: 0.01,
+      crtBloom: 3,
+      phosphor: 0.3,
+      crtCutoff: 0.95,
+      crtSpot: 6,
+    },
+    stages: {
+      vSize: { rise: [0, 0.06], fall: [0, 0.04] },
+      crtBloom: { rise: [0, 0.3], fall: [0, 0.3] },
+      phosphor: { rise: [0, 0.1], fall: [0, 0.3] },
+      crtCutoff: { rise: [0.3, 1], fall: [0.1, 0.85] },
+      crtSpot: { rise: [0.3, 1], fall: [0.35, 1] },
+    },
+    cut: 0.3,
+    // Long, because the warm-up is the part worth watching.
+    seconds: 2.5,
+  },
 ]
 
 // The plan a press hands the engine. Here rather than in the component because
@@ -214,6 +248,7 @@ export const faultPlan = (
   // The sim's own rate, which is what `FaultPlan.frames` counts in.
   frames: Math.round(t.seconds * 60),
   cut: t.cut,
+  stages: t.stages,
   onCut,
   held,
 })
