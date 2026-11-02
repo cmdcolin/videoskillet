@@ -584,6 +584,18 @@ export const PRESETS: PresetDef[] = [
     },
   },
   {
+    name: 'lineDelay',
+    displayName: 'line delay',
+    group: 'RF / Broadcast',
+    blurb:
+      "Canal+'s Discret 11 on an NTSC set. The head-end delays the picture on each line by 0, 902 or 1804 ns, chosen by a key that changes every line and every field, and leaves sync and burst alone. The set locks and the frame stands still, but every edge breaks into three-step jaggies, and because the burst did not move, each delayed line reaches the decoder 82 or 165 degrees round the colour wheel.",
+    patch: {
+      aScramble: 1,
+      aScrambleMode: 7,
+      noiseIre: 2,
+    },
+  },
+  {
     name: 'verticalHoldGone',
     displayName: 'vertical hold gone',
     group: 'Sync / Deflection',

@@ -109,6 +109,22 @@ fn main(
   }
   let srcN = srcRow * SPL + srcS;
 
+  // Line-delay scrambling (prelude `discretDelay`) reads this line's picture
+  // from earlier on the tape line; sync, blanking and burst keep their place.
+  let inPicture = srcS >= ACTIVE_START && srcS < ACTIVE_START + ACTIVE_W
+    && srcRow >= ACTIVE_TOP && srcRow < ACTIVE_TOP + ACTIVE_H;
+  if (u32(P.scrambleMode + 0.5) == 7u && P.scramble > 0.0 && inPicture) {
+    // The line's start comes out of the delay as the blanking that went in
+    // ahead of the picture.
+    let at = f32(srcN) - discretDelay(srcRow, P.srcFrame, P.scramble);
+    let a0 = i32(floor(at));
+    out = select(
+      catmull(src[clampIdx(a0 - 1)], src[clampIdx(a0)], src[clampIdx(a0 + 1)], src[clampIdx(a0 + 2)], at - f32(a0)),
+      IRE_BLANK,
+      at < f32(srcRow * SPL + ACTIVE_START),
+    );
+  }
+
   // Dropouts on this deck's own tape: shed oxide, so for a moment the head
   // reads nothing and the detector hands back snow. Same event model as the
   // program-bus copy in channel.wgsl, but seeded inline (this pass has no

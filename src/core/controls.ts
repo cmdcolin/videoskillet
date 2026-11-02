@@ -290,7 +290,7 @@ export const DEFAULT_CONTROLS = {
   // a fault here damages one signal alone, unlike the program-bus channel
   // controls above which damage the mixed output
   aScramble: 0, // sync suppression on A's feed alone
-  aScrambleMode: 0, // 0 gated, 1 line-alternate, 2 SSAVI (+ video inversion), 3 carrier, 4 tri-mode, 5 sine, 6 keyed SSAVI
+  aScrambleMode: 0, // 0 gated, 1 line-alternate, 2 SSAVI (+ video inversion), 3 carrier, 4 tri-mode, 5 sine, 6 keyed SSAVI, 7 line delay
   aTermination: 0, // A's cable termination (<0 double-terminated, >0 open)
   aNoiseIre: 0, // snow on A's feed alone, IRE rms
   aPolarity: 0, // hard polarity flip on A's connector, sync included

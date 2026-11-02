@@ -21,6 +21,7 @@ import {
   SYNC_LEN,
   VSYNC_FIRST,
   VSYNC_LAST,
+  usToSamples,
 } from '../signal/constants'
 import {
   FILTER_STRIDE,
@@ -882,7 +883,7 @@ fn carrierScaled(v: f32, db: f32) -> f32 {
 
 fn scrambleAt(v: f32, row: u32, s: u32, depth: f32, mode: f32, frame: u32) -> f32 {
   let system = u32(mode + 0.5);
-  let skipped = depth <= 0.0 || (system == 1u && (row & 1u) == 1u);
+  let skipped = depth <= 0.0 || (system == 1u && (row & 1u) == 1u) || system == 7u;
   let blanking = s < ACTIVE_START || s >= ACTIVE_START + ACTIVE_W;
   let picture = !blanking && row >= ACTIVE_TOP && row < ACTIVE_TOP + ACTIVE_H;
   var out = v;
@@ -936,6 +937,22 @@ fn descrambleAt(v: f32, row: u32, s: u32, depth: f32, mode: f32, frame: u32, box
     out = carrierScaled(v, -min(10.0 * level, boxDb));
   }
   return out;
+}
+
+// mode 7 is line-delay scrambling, as Canal+ ran it with Discret 11: the
+// picture part of each line is delayed by 0, 902 or 1804 ns, picked per line
+// and per field by the key, and sync, blanking and burst stay where they were.
+// The set locks, and the picture comes out in three-step jaggies. In NTSC the
+// colour goes too: 902 ns is 3.23 cycles of subcarrier, so a delayed line
+// reaches the decoder 82 degrees off the burst it is measured against, and the
+// 1804 ns lines 165 degrees off. It needs the source at an earlier sample, so
+// it runs where a whole line can be read: the per-source feeds. The return is
+// the delay in samples, scaled by depth.
+const DISCRET_STEP = ${usToSamples(0.902)};
+
+fn discretDelay(row: u32, frame: u32, depth: f32) -> f32 {
+  let step = f32(pcg(row * 2246822519u + frame * 3266489917u + 0xd11u) % 3u);
+  return step * DISCRET_STEP * depth;
 }
 
 // Mains phase at this line. One cycle per field, creeping against field rate
