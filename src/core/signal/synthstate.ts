@@ -16,6 +16,7 @@
 // number the shader multiplies by the row is the number a reader can point at.
 
 import { LINES, SAMPLE_RATE, SAMPLES_PER_LINE } from './constants'
+import { valueNoise } from './noise'
 
 const FRAME_SAMPLES = SAMPLES_PER_LINE * LINES
 
@@ -24,6 +25,8 @@ const fract = (x: number) => x - Math.floor(x)
 export interface SynthControls {
   synthAHz: number // oscillator A frequency
   synthBHz: number // oscillator B frequency
+  synthDriftPct: number
+  synthJitterUs: number
 }
 
 interface SynthUniforms {
@@ -33,6 +36,8 @@ interface SynthUniforms {
   synthPhaseB: number
   synthPerLineB: number
   synthPerSampleB: number
+  synthJitA: number
+  synthJitB: number
 }
 
 // One oscillator's three uniforms from its frequency and its running phase.
@@ -42,21 +47,30 @@ const walk = (hz: number, phase: number) => ({
   perSample: hz / SAMPLE_RATE,
 })
 
+// A free-running VCO's tempco: its frequency wanders with temperature as a
+// fraction of where it is set, so a fast oscillator moves by more hertz than a
+// slow one. Two rates of wander, so the creep stalls and lurches.
+const wander = (t: number, seed: number) =>
+  0.7 * valueNoise(t * 0.13, seed) + 0.3 * valueNoise(t * 0.8, seed + 1)
+
 export class SynthState {
   private phaseA = 0
   private phaseB = 0
+  private frames = 0
 
   update(c: SynthControls): SynthUniforms {
+    const t = this.frames / 60
+    this.frames++
+    const drift = c.synthDriftPct / 100
+    const hzA = c.synthAHz * (1 + drift * wander(t, 41))
+    const hzB = c.synthBHz * (1 + drift * wander(t, 43))
     // Advance by a whole frame of samples, in f64 where the product is exact,
     // and hand the shader only the wrapped remainder.
-    this.phaseA = fract(
-      this.phaseA + (c.synthAHz * FRAME_SAMPLES) / SAMPLE_RATE,
-    )
-    this.phaseB = fract(
-      this.phaseB + (c.synthBHz * FRAME_SAMPLES) / SAMPLE_RATE,
-    )
-    const a = walk(c.synthAHz, this.phaseA)
-    const b = walk(c.synthBHz, this.phaseB)
+    this.phaseA = fract(this.phaseA + (hzA * FRAME_SAMPLES) / SAMPLE_RATE)
+    this.phaseB = fract(this.phaseB + (hzB * FRAME_SAMPLES) / SAMPLE_RATE)
+    const a = walk(hzA, this.phaseA)
+    const b = walk(hzB, this.phaseB)
+    const jitterS = c.synthJitterUs * 1e-6
     return {
       synthPhaseA: a.phase,
       synthPerLineA: a.perLine,
@@ -64,6 +78,8 @@ export class SynthState {
       synthPhaseB: b.phase,
       synthPerLineB: b.perLine,
       synthPerSampleB: b.perSample,
+      synthJitA: hzA * jitterS,
+      synthJitB: hzB * jitterS,
     }
   }
 }

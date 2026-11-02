@@ -30,6 +30,8 @@ export const DEFAULT_CONTROLS = {
   // a still frame that reads like a texture.
   synthAHz: 15834, // ~100 Hz above line rate: bars that lean and creep
   synthBHz: 60, // one cycle down the frame: a vertical ramp under them
+  synthDriftPct: 0,
+  synthJitterUs: 0,
   synthShape: 2, // 0 ramp, 1 triangle, 2 sine, 3 pulse
   synthMix: 0, // 0 osc A alone, 1 sum, 2 ring mod, 3 comparator
   synthLevel: 1,

@@ -78,6 +78,14 @@ synthBHz  (osc B)
   0..8000000 step 1 Hz  default 60
   The second oscillator, live once the combiner is off "osc A alone". It beats against the first, so a pair a few hertz apart draws a drifting moire.
 
+synthDriftPct  (osc drift)
+  0..2 step 0.01 %  default 0
+  How far each oscillator's frequency wanders with temperature, as a share of its setting. The two wander independently, so leaning bars stall, lurch and reverse, and a pair set in step slides in and out of it.
+
+synthJitterUs  (osc jitter)
+  0..8 step 0.01 µs  default 0
+  Timing noise in the oscillators. It accumulates from line to line, so a bar's edge wanders down the screen and the whole pattern shimmies. It is a time error, so it scrambles fine bars long before it moves a slow ramp.
+
 synthShape  (waveform)
   0=ramp 1=triangle 2=sine 3=pulse  default 2
   The waveform for both oscillators. Ramp is a sawtooth, triangle folds it symmetric, sine passes the encoder without ringing, pulse is a comparator output with the most bandwidth to distort.

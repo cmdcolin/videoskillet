@@ -756,7 +756,12 @@ export class Graph {
       // A sibling of uniformValues, not one of its env fields: these two are
       // packed uniforms in their own right, the way the app assembles them.
       ...this.captionState.update({ vbi: c.vbi }),
-      ...this.synthState.update({ synthAHz: c.synthAHz, synthBHz: c.synthBHz }),
+      ...this.synthState.update({
+        synthAHz: c.synthAHz,
+        synthBHz: c.synthBHz,
+        synthDriftPct: c.synthDriftPct,
+        synthJitterUs: c.synthJitterUs,
+      }),
     }
     vals.bKeyFeed = bFeedOn(c, this.bEnabled) ? 1 : 0
     packParams(vals, this.paramScratch)

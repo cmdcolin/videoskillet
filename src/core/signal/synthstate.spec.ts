@@ -5,7 +5,12 @@ import { SynthState } from './synthstate'
 
 import type { SynthControls } from './synthstate'
 
-const STILL: SynthControls = { synthAHz: 0, synthBHz: 0 }
+const STILL: SynthControls = {
+  synthAHz: 0,
+  synthBHz: 0,
+  synthDriftPct: 0,
+  synthJitterUs: 0,
+}
 
 const step = (s: SynthState, c: Partial<SynthControls>, n: number) => {
   let out = s.update({ ...STILL, ...c })
@@ -71,6 +76,31 @@ describe('SynthState', () => {
       out.synthPhaseA + (hz * (row * SAMPLES_PER_LINE + s)) / SAMPLE_RATE
     const got = phaseAt(out, row, s)
     expect((got - truth) % 1).toBeCloseTo(0, 6)
+  })
+
+  it('holds the frequency exact with no drift', () => {
+    const s = new SynthState()
+    const first = step(s, { synthAHz: F_H + 100 }, 1).synthPerSampleA
+    const later = step(s, { synthAHz: F_H + 100 }, 300).synthPerSampleA
+    expect(later).toBe(first)
+  })
+
+  it('wanders the frequency within its share of the setting', () => {
+    const s = new SynthState()
+    const hz = 1e6
+    const walks = Array.from(
+      { length: 600 },
+      () => step(s, { synthAHz: hz, synthDriftPct: 1 }, 1).synthPerSampleA,
+    ).map(w => (w * SAMPLE_RATE) / hz - 1)
+    expect(Math.max(...walks.map(Math.abs))).toBeLessThanOrEqual(0.01)
+    expect(Math.max(...walks) - Math.min(...walks)).toBeGreaterThan(0.002)
+  })
+
+  it('states jitter as a time error, so it scales with frequency', () => {
+    const slow = step(new SynthState(), { synthAHz: 60, synthJitterUs: 1 }, 1)
+    const fast = step(new SynthState(), { synthAHz: 6e6, synthJitterUs: 1 }, 1)
+    expect(slow.synthJitA).toBeCloseTo(6e-5, 12)
+    expect(fast.synthJitA).toBeCloseTo(6, 9)
   })
 
   it('runs the two oscillators independently', () => {

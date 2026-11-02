@@ -122,6 +122,8 @@ export const PARAM_DEFS = [
   ['synthColorSrc', 'f32'], // what the colorizer slices: 0 its oscillator, 1 the picture
   ['synthColorMode', 'f32'], // how: 0 three phase shifts, 1 three comparators
   ['synthColorSoft', 'f32'], // the box's own lowpass ahead of the slicer, output pixels
+  ['synthJitA', 'f32'], // osc A timing jitter as cycles of its own phase per unit of noise
+  ['synthJitB', 'f32'],
   // dirty mixer: source B is a second, non-genlocked composite signal
   ['srcNoiseB', 'f32'], // GPU-generated source B: 0 texture, 1 TV static, 2 VHS blank-tape static
   ['aGain', 'f32'], // A level on the summing bus, signed (negative inverts A)
@@ -1592,6 +1594,9 @@ struct SynthPatch {
   // picture) and how (0 the phase rotator, 1 three comparators).
   colorSrc: f32,
   colorMode: f32,
+  jitA: f32,
+  jitB: f32,
+  frame: u32,
 }
 
 // Gathering the patch off the uniform block, once. The prelude may not name a
@@ -1605,6 +1610,7 @@ fn synthPatch(p: Params) -> SynthPatch {
     p.synthPhaseB, p.synthPerLineB, p.synthPerSampleB,
     p.synthShape, p.synthMix, p.synthLevel, p.synthColor, p.synthHue,
     p.synthFm, p.synthColorSrc, p.synthColorMode,
+    p.synthJitA, p.synthJitB, p.frame,
   );
 }
 
@@ -1623,6 +1629,23 @@ fn synthWave(cyc: f32, shape: f32) -> f32 {
     return 0.5 + 0.5 * sin(2.0 * PI * p);
   }
   return select(0.0, 1.0, p < 0.5);
+}
+
+// A free-running oscillator's timing error, in units of rms. Its phase noise
+// accumulates, so the error is weighted toward slow wander: octaves of value
+// noise over the line count since power-on, the longer periods stronger. Indexed
+// by the absolute line so the wander carries across frames.
+fn oscJitter(line: u32, seed: u32) -> f32 {
+  var sum = 0.0;
+  for (var k = 2u; k <= 10u; k += 2u) {
+    let cell = line >> k;
+    let u = f32(line & ((1u << k) - 1u)) / f32(1u << k);
+    let lo = rand01(pcg(cell ^ seed ^ (k * 0x9E3779B9u)));
+    let hi = rand01(pcg((cell + 1u) ^ seed ^ (k * 0x9E3779B9u)));
+    let v = mix(lo, hi, u * u * (3.0 - 2.0 * u)) * 2.0 - 1.0;
+    sum += v * pow(f32(1u << k) / 1024.0, 0.38);
+  }
+  return sum * 1.62;
 }
 
 // A video synthesizer patched into a slot: two oscillators, a combiner and a
@@ -1657,8 +1680,15 @@ fn videoSynth(xy: vec2u, sp: SynthPatch, pic: f32, colorPic: f32) -> vec3f {
   // spacing of the bars is the brightness. It reads the picture at this pixel
   // alone — a control line has no memory of where it has been — which is why
   // the contours land on the picture rather than trailing it.
-  let a = synthWave(sp.phaseA + sp.perLineA * row + (sp.perSampleA + sp.fm * pic) * s, sp.shape);
-  let b = synthWave(sp.phaseB + sp.perLineB * row + sp.perSampleB * s, sp.shape);
+  let line = sp.frame * NLINES + ACTIVE_TOP + xy.y;
+  var slipA = 0.0;
+  var slipB = 0.0;
+  if (sp.jitA != 0.0 || sp.jitB != 0.0) {
+    slipA = sp.jitA * oscJitter(line, 0x51a3u);
+    slipB = sp.jitB * oscJitter(line, 0xb07cu);
+  }
+  let a = synthWave(sp.phaseA + slipA + sp.perLineA * row + (sp.perSampleA + sp.fm * pic) * s, sp.shape);
+  let b = synthWave(sp.phaseB + slipB + sp.perLineB * row + sp.perSampleB * s, sp.shape);
   var g = a;
   if (sp.combine > 0.5 && sp.combine < 1.5) {
     // A summing amplifier, referenced to mid-video: two signals added run into

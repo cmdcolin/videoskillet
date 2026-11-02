@@ -2708,6 +2708,8 @@ export class Engine implements EngineApi {
       this.synthState.update({
         synthAHz: c.synthAHz,
         synthBHz: c.synthBHz,
+        synthDriftPct: c.synthDriftPct,
+        synthJitterUs: c.synthJitterUs,
       }),
     )
     if (c.mixPot > 0) {
