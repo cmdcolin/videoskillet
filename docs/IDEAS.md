@@ -531,12 +531,6 @@ generation stops being uniform.)
   exists the consumer digital-effects buttons follow as one mechanism each —
   mosaic and multi-image are decimation with no prefilter, so the tiles alias
   and the subsample pattern beats against the mask.
-- **Frame-recursive noise reducer.** A corrective box whose failure mode is the
-  effect, which is why it is more interesting than the TBC declined below. Frame
-  averaging gated on a motion threshold: below it, noise freezes into fixed
-  plateaus and the picture goes plasticky; above it, motion drags a soft trail
-  with a hard edge where the gate trips. Put the threshold in the noise floor
-  and the grain drives the detector, so still areas breathe.
 - **Rutt/Etra scan deflection.** The source's own luma patched into the vertical
   deflection amplifier: the raster becomes a relief map of the picture, and the
   brightness comes free from line bunching (line density _is_ luminance). Fits
@@ -832,11 +826,11 @@ engine. Also left out until then:
 
 ## Signal diagrams
 
-- **Fold away a plot that is flat at stock.** Several plots, such as Sync's
-  line and frame shifts, are probably flat lines at stock and take about 45
-  units of height each. Folding one away until a knob moves saves that height,
-  but the flat line also shows what the plot measures, and folding conflicts
-  with drawing plots side by side. Ask before building it.
+- **Fold away a plot that is flat at stock.** Several plots, such as Sync's line
+  and frame shifts, are probably flat lines at stock and take about 45 units of
+  height each. Folding one away until a knob moves saves that height, but the
+  flat line also shows what the plot measures, and folding conflicts with
+  drawing plots side by side. Ask before building it.
 - **One list of group names.** The names repeat in `schematicKeys.ts`,
   `SCHEMATIC_FRAMES` and `HEADING`. The `Record<SchematicGroup, ...>` type
   already catches a missing entry, so this is low value.

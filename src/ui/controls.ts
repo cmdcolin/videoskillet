@@ -3170,6 +3170,53 @@ export const GROUPS: Group[] = [
     ],
   },
   {
+    name: 'Noise reducer',
+    place: 'Channel',
+    sliders: [
+      {
+        key: 'nrAmount',
+        id: 380,
+        label: 'noise reduction',
+        min: 0,
+        max: 0.97,
+        step: 0.01,
+        unit: '',
+        help: "A frame-recursive noise reducer between the deck and the set. Where its motion detector sees no change, each sample is mixed with the box's frame memory, and this is the memory's share. Noise averages away on still picture, and the picture goes flat and waxy. Anything moving below the detector's threshold leaves a trail of the frame before.",
+      },
+      {
+        key: 'nrThreshIre',
+        id: 381,
+        label: 'motion threshold',
+        min: 0,
+        max: 40,
+        step: 0.1,
+        unit: 'IRE',
+        help: 'The change the motion detector calls motion, measured over a short window on three lines. Above it the box passes the picture through untouched, so a moving edge drags a trail that stops dead where the detector trips. Set near the noise floor and the noise trips the detector at random, so still areas flicker between averaged and raw.',
+      },
+      {
+        key: 'nrBits',
+        id: 382,
+        label: 'memory bits',
+        min: 3,
+        max: 10,
+        step: 1,
+        unit: 'bit',
+        help: "The frame memory's word length. A still sample moves only part of the way toward the input each frame, and a move under half a code rounds back to where it was, so the memory sticks. Short words freeze grain and slow gradients into flat plateaus that only motion breaks up.",
+      },
+      {
+        key: 'nrStore',
+        id: 383,
+        label: 'frame store',
+        min: 0,
+        max: 1,
+        step: 1,
+        unit: '',
+        choices: ['2 frames', '1 frame'],
+        help: 'How far back the memory reads. The colour subcarrier inverts every frame, so a box built for composite reads two frames back, where chroma has the phase it is mixed with. Reading one frame back mixes every chroma cycle with its own inverse, so colour drains out of still picture and stays only on what moves.',
+      },
+    ],
+  },
+  {
     name: 'Enhancer (bent)',
     place: 'Channel',
     sliders: [
@@ -4475,6 +4522,12 @@ const pip: SliderNeed = {
   fix: 0.7,
   hint: 'inset key above 0',
 }
+const reducing: SliderNeed = {
+  key: 'nrAmount',
+  ok: above0,
+  fix: 0.85,
+  hint: 'noise reduction above 0',
+}
 const enhPeaking: SliderNeed = {
   key: 'enhPeakMHz',
   ok: above0,
@@ -4647,6 +4700,9 @@ export const NEEDS: Partial<Record<ControlKey, SliderNeed>> = {
     fix: 3.58,
     hint: 'resonance freq above 0',
   },
+  nrThreshIre: reducing,
+  nrBits: reducing,
+  nrStore: reducing,
   enhPeakQ: enhPeaking,
   enhPeakBoost: enhPeaking,
   enhLoopUs: {

@@ -76,6 +76,8 @@ import feedSrc from './shaders/feed.wgsl?raw'
 import grainBakeSrc from './shaders/grain_bake.wgsl?raw'
 import lineAnalyzeSrc from './shaders/line_analyze.wgsl?raw'
 import mixBSrc from './shaders/mix_b.wgsl?raw'
+import noiseReducerSrc from './shaders/noise_reducer.wgsl?raw'
+import nrDetectSrc from './shaders/nr_detect.wgsl?raw'
 import osdSrc from './shaders/osd.wgsl?raw'
 import presentSrc from './shaders/present.wgsl?raw'
 import storePrevSrc from './shaders/store_prev.wgsl?raw'
@@ -457,6 +459,10 @@ export class Engine implements EngineApi {
   // neighbours straight off compPrev would see some of them already rewritten,
   // depending on dispatch order. Copied only on the frames the trail is on.
   private prevSnap: GPUBuffer
+  // The noise reducer's frame memory, one store per frame parity, and its
+  // motion detector's map of the frame.
+  private nrStore: GPUBuffer
+  private nrMotion: GPUBuffer
   private chromaBuf: GPUBuffer
   private underBuf: GPUBuffer
   private lineInfoBuf: GPUBuffer
@@ -600,6 +606,8 @@ export class Engine implements EngineApi {
     this.bCompBuf = storage(N * 4)
     this.compPrev = storage(N * 4, GPUBufferUsage.COPY_SRC)
     this.prevSnap = storage(N * 4)
+    this.nrStore = storage(N * 8)
+    this.nrMotion = storage(N * 4)
     // Program as it stood before the loop's crossfade touched it, for the
     // loop keyer's external key input. fbComposite writes compA in place, so
     // a keyer reading its 4-sample aperture straight off compA would read
@@ -722,6 +730,8 @@ export class Engine implements EngineApi {
     const underDownPl = compute('under_down', underDownSrc)
     const channelPl = compute('channel', channelSrc)
     const timebasePl = compute('timebase', timebaseSrc)
+    const nrDetectPl = compute('nr_detect', nrDetectSrc)
+    const noiseReducerPl = compute('noise_reducer', noiseReducerSrc)
     const enhancerPl = compute('enhancer', enhancerSrc)
     const syncMeasurePl = compute('sync_measure', syncMeasureSrc)
     const buzzTapPl = compute('buzz_tap', buzzTapSrc)
@@ -1074,6 +1084,32 @@ export class Engine implements EngineApi {
         ],
         [1, LINES],
         () => this.osdStep.visible,
+      ),
+      // The noise reducer is the first box after the deck: it averages the
+      // tape's noise against its frame memory before the enhancer sharpens it.
+      pass(
+        'nrDetect',
+        nrDetectPl,
+        [
+          { buffer: this.paramsBuf },
+          { buffer: this.compA },
+          { buffer: this.nrStore },
+          { buffer: this.nrMotion },
+        ],
+        perLine,
+        () => c.nrAmount > 0,
+      ),
+      pass(
+        'noiseReducer',
+        noiseReducerPl,
+        [
+          { buffer: this.paramsBuf },
+          { buffer: this.compA },
+          { buffer: this.nrStore },
+          { buffer: this.nrMotion },
+        ],
+        perLine,
+        () => c.nrAmount > 0,
       ),
       // The enhancer is an outboard box between the deck and the set, so it
       // sits after the last dub generation and before the receiver measures
@@ -1735,6 +1771,8 @@ export class Engine implements EngineApi {
       this.bCompBuf,
       this.compPrev,
       this.prevSnap,
+      this.nrStore,
+      this.nrMotion,
       this.chromaBuf,
       this.underBuf,
       this.lineInfoBuf,

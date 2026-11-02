@@ -3418,6 +3418,20 @@ export const PRESETS: PresetDef[] = [
     },
   },
   {
+    name: 'colourOnMotion',
+    displayName: 'colour on motion',
+    group: 'Circuit bent',
+    blurb:
+      'A noise reducer whose frame memory reads back one frame instead of two. The colour subcarrier inverts every frame, so each still chroma cycle is averaged with its own inverse and the colour drains out of everything that holds still. Whatever moves trips the motion detector and passes through with its colour, so a crowd stands in grey while the dancers in front of it stay red and green.',
+    patch: {
+      noiseIre: 4,
+      nrAmount: 0.92,
+      nrThreshIre: 12,
+      nrBits: 7,
+      nrStore: 1,
+    },
+  },
+  {
     name: 'colourAStepRight',
     displayName: 'colour a step to the right',
     group: 'Tape wear',
@@ -3456,6 +3470,22 @@ export const PRESETS: PresetDef[] = [
       colorUnderMix: 0.8,
       chromaNoiseIre: 8,
       hHold: 0.4,
+    },
+  },
+  {
+    name: 'frozenGrain',
+    displayName: 'frozen grain',
+    group: 'Tape wear',
+    blurb:
+      "A worn tape through a frame-recursive noise reducer whose motion threshold sits inside the tape's noise. Where the noise stays under the threshold the box averages it into flat, waxy plateaus held in a six-bit memory. Where the noise crosses it the raw picture shows through, so still areas glitter with grain, and anything that moves drags a smear of the frame before it.",
+    patch: {
+      noiseIre: 7,
+      lumaMHz: 2.8,
+      colorUnderMix: 1,
+      chromaNoiseIre: 10,
+      nrAmount: 0.9,
+      nrThreshIre: 18,
+      nrBits: 6,
     },
   },
   {
