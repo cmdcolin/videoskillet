@@ -17,8 +17,9 @@ two invariants that are easiest to violate:
   row-uniform. Per-pixel horizontal scaling needs the staging restructured
   first.
 
-Prefer modelling the mechanism that causes an artifact over drawing the artifact
-— that is the whole premise, and it is why mechanisms here interact for free.
+Prefer modelling the mechanism that causes an artifact over drawing the
+artifact. The whole app is built on this, and it is why two mechanisms interact
+with no code written for the pair.
 
 **`docs/adr/`** holds the decisions where the obvious thing is wrong for a
 non-obvious reason. Read
@@ -29,9 +30,9 @@ anything that creates, releases or tears down a `GPUDevice` — see below for wh
 
 ## Cross-repo sync
 
-videoskillet and bender share a design system, a site shape and most of their
-account code. Regions marked `CROSS_REPO_SYNC` must stay identical across the
-two repos; [`docs/CROSS_REPO_SYNC.md`](docs/CROSS_REPO_SYNC.md) covers the
+videoskillet and bender share a design system, a site structure and most of
+their account code. Regions marked `CROSS_REPO_SYNC` must stay identical across
+the two repos; [`docs/CROSS_REPO_SYNC.md`](docs/CROSS_REPO_SYNC.md) covers the
 markers and the workflow.
 
 - Before editing a marked region, port the same change to the sibling repo
@@ -47,35 +48,34 @@ markers and the workflow.
 Measured on Firefox Nightly / Linux (`scripts/devicetear.mjs`): handing a
 presenting `GPUDevice` back with `device.destroy()` **ends the tab's rendering
 step**. The tab still reports `visible`, the browser stays responsive, nothing
-is logged, and the next document loaded in that tab inherits the damage — which
-is what "reloading lands in the same hole" always was. Creating devices is cheap
-by comparison: four created and four held open, all presenting, cost a tab
-nothing.
+is logged, and the next document loaded in that tab stops rendering too, which
+is why reloading a frozen tab never recovered it. Creating devices is cheap by
+comparison: a tab with four created and four held open, all presenting, kept
+rendering.
 
-This is why the app now **never calls `device.destroy()`**. It lets go of
+Because of this measurement, the app **never calls `device.destroy()`**. It lets go of
 devices instead, and hands the live one to the next engine. `docs/adr/0004` has
 the runs; [0002](docs/adr/0002-webgpu-sessions-are-scarce.md) is the superseded
 budget model that fitted the same data for the wrong reason.
 
-What follows for anyone working here:
+Rules for code that handles a device:
 
-- **Do not "release" a device on the way out.** Not on `pagehide`, not on
-  unload, not in a cleanup that looks untidy without it. That one line is what
-  made refreshing unsafe: the same page reloaded four times survives every load
+- **Do not "release" a device on the way out.** This applies to `pagehide`
+  handlers, unload handlers and any cleanup that looks untidy without it. That
+  one call made refreshing unsafe: the same page reloaded four times survives every load
   when the device is merely abandoned and dies from load 2 onward when a
-  `pagehide` handler destroys it. The comment in `useEngine`'s handler carries
+  `pagehide` handler destroys it. The comment in `useEngine`'s handler records
   the measurement.
-- **Reloading the app in one tab is fine again.** `rafceiling.mjs --page=app`
-  now runs 8 loads in one tab at 69-81 rAF/1.5s (`firstDeadSession: null`),
-  where it used to die at session 2. Treat that harness as a regression test for
+- **Reloading the app in one tab is safe.** `rafceiling.mjs --page=app` runs 8
+  loads in one tab at 69-81 rAF/1.5s (`firstDeadSession: null`). Treat that harness as a regression test for
   this: if its app arm starts dying again, something has started destroying
   devices.
-- **HMR is the cheap path.** A hot update recreates the engine, but the engine
+- **HMR reuses one device.** A hot update recreates the engine, but the engine
   hands its device on alive (`destroy({keepDevice: true})`) and the successor
   adopts it from the stash in `core/gpu/context.ts`, so an editing session costs
-  one device however many saves it takes — the stash lives on `globalThis`
-  precisely so that editing `core/gpu/context.ts` itself does not throw it away
-  with the module. Disabling HMR is the wrong instinct.
+  one device however many saves it takes. The stash is stored on `globalThis` so
+  that editing `core/gpu/context.ts` itself keeps it when the module reloads. Do
+  not disable HMR.
 - **`?gpudestroy=1` puts the destroy back**, for re-measuring the fault against
   a new browser build. It will kill the tab. `?gpubudget=ignore` switches off
   the gate that declines a device to a tab that has already destroyed one — the
@@ -84,8 +84,8 @@ What follows for anyone working here:
   harnesses that spend them on purpose (`rafceiling.mjs`, `deviceloss.mjs`) pass
   the flag anyway, so what they measure is the browser and never app policy.
 - **Do not add `<StrictMode>`.** It doubles device creation per mount and wraps
-  a WebGPU canvas in a mount/unmount/mount cycle. `src/main.tsx` carries the
-  reason.
+  a WebGPU canvas in a mount/unmount/mount cycle. A comment in `src/main.tsx`
+  gives the reason.
 - A freeze with `frame 0` / `STEP-DEAD` / `clock +0ms` in the console or the
   recorder is a tab that has lost its rendering step, not a bug in the signal
   path.
@@ -94,11 +94,11 @@ What follows for anyone working here:
 
 Long or repeated browser runs belong on a `git worktree add --detach` copy with
 its own vite server. This worktree is shared with other agents, and **your own
-edits are HMR** — an `src/` write mid-run reloads the page and resets the engine
-under whatever you were measuring. See the traps list in `docs/DEVELOPMENT.md`;
+edits trigger HMR**: an `src/` write mid-run reloads the page and resets the
+engine under whatever you were measuring. See the traps list in `docs/DEVELOPMENT.md`;
 every one of them cost real time.
 
-## A take is written to a file, not held in memory
+## A take streams to the origin-private file system
 
 `ui/takeSink.ts` streams a take to the origin-private file system as it encodes,
 and `ui/mp4.ts` splits into `mp4Layout` (the boxes either side of the payload)
@@ -107,21 +107,22 @@ things follow:
 
 - **The `mdat` header is patched in at the end**, because its size is unknown
   when the file is opened. A streamed take therefore reserves `STREAM_HEAD`
-  bytes and uses the 64-bit `mdat` form whatever it weighs. A layout that
-  disagrees with what the sink reserved points eight bytes short of every frame
-  in the file, so `close` refuses rather than writing one.
-- **What caps a take is the storage the browser grants**, read off
+  bytes and uses the 64-bit `mdat` form whatever its size. If the layout's
+  header size differs from the bytes the sink reserved, every frame offset in
+  the file is eight bytes short, so `close` refuses to write the file.
+- **The storage the browser grants caps a take's size**, read off
   `navigator.storage.estimate()`. It is far past the old 3.9 GB on a machine
-  with a disk and under it on a full one — measured at 1.4 GB on a disk 98%
-  full, where writing 3.9 GB would have been the worse answer.
-- **Do not write once per frame.** It measured a quarter of the engine's frames.
+  with a disk and under it on a full one. It measured 1.4 GB on a disk 98%
+  full, where a fixed 3.9 GB cap would have exceeded the space available.
+- **Do not write once per frame.** Writing once per frame cost a quarter of the
+  engine's frames.
   The sink gathers 4 MB and writes that; `scripts/rectakecheck.mjs` with
   `--flags=takesink%3Dblob` is the arm that catches a regression here.
 
 `?takesink=blob` takes the Blob path on a browser that would have streamed,
 which is what every browser without `createWritable` gets.
 
-## Clips live on the bucket, not in the history
+## Recorded clips are stored on S3
 
 Every mp4 this project records — the carousel's slides (`scripts/appreel.mjs`)
 and the gallery's demo loops (`scripts/demoreel.mjs`) — goes to
@@ -135,8 +136,8 @@ to show something before its clip is fetched, and a webp is kilobytes.
 
 A recording is rewritten whenever its look is re-recorded, so a tracked one puts
 every version of a megabyte-scale binary in the history forever. `demos.mjs` and
-`reel.mjs` each export the pair of constants that says where the clips are —
-`S3_PREFIX` to write, `CLIPS` to read — and the page takes the URL straight off
+`reel.mjs` each export the pair of constants that holds the clips' location,
+`S3_PREFIX` to write and `CLIPS` to read, and the page takes the URL straight off
 `data-src`, so an absolute one is fine there.
 
 ## Writing
@@ -155,8 +156,8 @@ Two habits to avoid:
 
 Keep a contrast only where the reader needs the distinction to choose correctly:
 an ADR naming the option it turned down, or a fault that resembles another one.
-A physical mechanism often needs one — "it multiplies rather than adds" is the
-fact, not a flourish.
+A physical mechanism often needs one: "it multiplies rather than adds" states
+the mechanism.
 
 [`docs/WRITING.md`](docs/WRITING.md) is the checklist under this: the specific
 habits that produced the prose this repo has rewritten, each with a before and
