@@ -127,7 +127,7 @@
     "name": "Scrambled channel",
     "showcase": false,
     "gallery": true,
-    "says": "A premium channel with its sync interval cut 6 dB at the head-end: the frame holds while a grey blanking bar wanders down the picture, and the colour floods to make up for the weakened burst.",
+    "says": "A premium channel with its sync interval cut 6 dB at the head-end. The set takes the picture's shadows for sync, so the picture tears along them, and its clamp sets black from whatever its flyback lands on, so the blanking bar comes up black, white or grey. The frame holds, and the colour floods to make up for the weakened burst.",
     "query": "#preset=scrambledChannel&iurl=https://upload.wikimedia.org/wikipedia/commons/f/f9/%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg"
   },
   {
