@@ -111,6 +111,7 @@ export const DEFAULT_CONTROLS = {
   // analog premium-channel scrambling, applied at the head-end
   scramble: 0, // sync-tip suppression depth (0 = in the clear)
   scrambleMode: 0, // 0 gated (every line), 1 line-alternate, 2 SSAVI (+ video inversion), 3 carrier (RF attenuation), 4 tri-mode, 5 sine, 6 keyed SSAVI
+  decoderDb: 0, // descrambler box at the set: gain inside the carrier gate, dB
   // copy protection authored onto the source's vertical interval
   macrovision: 0, // Macrovision pseudo-sync/AGC pulse depth on VBI lines 12-19
   mvStripeDeg: 0, // colorstripe: burst rotation on walking line bands, degrees

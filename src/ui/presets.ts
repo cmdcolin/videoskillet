@@ -490,7 +490,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'tri-mode scrambler',
     group: 'RF / Broadcast',
     blurb:
-      "Jerrold's tri-mode: the head-end steps the carrier attenuation between clear, 6 dB and 10 dB every third of a second or so, on a schedule only its own decoders are told. A set without one locks for the clear stretches and tears and rolls through the rest, with the blanking bar turning grey or near white at each step.",
+      "Jerrold's tri-mode: the head-end steps the carrier attenuation between clear, 6 dB and 10 dB at random intervals of a quarter second to two seconds, on a schedule only its own decoders are told. A set without one locks for the clear stretches and tears and rolls through the rest, with the blanking bar turning grey or near white at each step.",
     patch: {
       scramble: 1,
       scrambleMode: 4,
@@ -510,6 +510,30 @@ export const PRESETS: PresetDef[] = [
     mod: [
       { target: 'scDetuneKHz', source: 'lorenz', rateHz: 0.2, depth: 0.00005 },
     ],
+  },
+  {
+    name: 'sixDbBox',
+    displayName: '6 dB box on tri-mode',
+    group: 'RF / Broadcast',
+    blurb:
+      'A cheap descrambler built for 6 dB and clear, on a tri-mode channel. It reads the key, so the clear and 6 dB fields come back clean. On the 10 dB fields it restores 6 and leaves 4, and the picture tears and rolls until the next step.',
+    patch: {
+      scramble: 1,
+      scrambleMode: 4,
+      decoderDb: 6,
+      hDetuneHz: 4,
+      agc: 0.6,
+      hHold: 0.3,
+      hvSagUs: 14,
+      hvRing: 0.2,
+      killThresh: 8,
+      accLagLines: 30,
+      afpcLagLines: 40,
+      matrixClip: 1,
+      scDetuneKHz: 0.06,
+      burstLock: 0.3,
+      noiseIre: 2,
+    },
   },
   {
     name: 'sineWaveScrambler',
@@ -543,7 +567,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'keyed SSAVI',
     group: 'RF / Broadcast',
     blurb:
-      "Zenith's SSAVI as the head-end ran it, switching field by field between its four modes: sync suppressed or not, picture inverted or not. The line sync in the vertical interval is always there, so the set relocks at the top of every field. Where sync is suppressed it drifts down the picture into a diagonal shear, and where sync is back the picture snaps upright, as a negative or not.",
+      "Zenith's SSAVI as the head-end ran it, switching at random intervals between its four modes: sync suppressed or not, picture inverted or not. The line sync in the vertical interval is always there, so the set relocks at the top of every field. Where sync is suppressed it drifts down the picture into a diagonal shear, and where sync is back the picture snaps upright, as a negative or not.",
     patch: {
       scramble: 1,
       scrambleMode: 6,
@@ -2010,9 +2034,10 @@ export const PRESETS: PresetDef[] = [
     displayName: 'pirate feed',
     group: 'A/B mixing',
     blurb:
-      'A scrambled premium channel on input A, with sync suppressed at the head-end, and a pirate box summing a little clean B in as substitute sync. The receiver almost recovers the picture around the borrowed pulses, which is exactly how the real boxes worked. Pull B gain to zero to watch it collapse into shear.',
+      'A premium channel on input A, its carrier cut 10 dB through every blanking interval at the head-end, and a pirate box summing a little clean B in as substitute sync. The receiver locks to the borrowed pulses and holds the picture still while the grey blanking bar of A drifts through it, which is how the real boxes worked. Pull B gain to zero and the picture rolls and tears.',
     patch: {
       aScramble: 1,
+      aScrambleMode: 3,
       bGain: 0.22,
       bLineHz: 0.05,
       bDetuneHz: 15,

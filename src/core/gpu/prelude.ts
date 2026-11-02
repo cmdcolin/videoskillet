@@ -292,6 +292,7 @@ export const PARAM_DEFS = [
   ['connectorGlitch', 'f32'], // loose connector: intermittent contact drops bands to snow
   ['connectorMode', 'f32'], // which contact: 0 centre pin (signal + sync go), 1 shell (ground lifts, hum injects), 2 both
   ['scramble', 'f32'], // head-end sync suppression depth: sync tip lifted toward blanking
+  ['decoderDb', 'f32'], // descrambler box gain inside the carrier gate, dB
   ['scrambleMode', 'f32'], // 0 gated, 1 line-alternate, 2 SSAVI (suppression + video inversion), 3 carrier (RF attenuation over H blanking + VBI), 4 tri-mode, 5 sine, 6 keyed SSAVI
   // copy protection authored onto the source tape's vertical interval
   ['mvAgcIre', 'f32'], // Macrovision AGC-pulse level at full cycle, IRE (0 = unprotected)
@@ -823,11 +824,34 @@ fn activeComposite(y: f32, uf: f32, vf: f32, sc: vec2f, vidGain: f32, inv: f32) 
 // the head-end sent, which a feed reads off its deck's tape position.
 const SCRAMBLE_GATE_LEAD = 35u;
 const SCRAMBLE_GATE_END = 151u;
-const SCRAMBLE_KEY_FIELDS = 20u;
+const SCRAMBLE_KEY_FIELDS = 16u;
+const SCRAMBLE_KEY_REACH = 8u;
 const SINE_SUPPRESSION_DB = 6.5;
 
+// The head-end's mode key. A mode can change only on a 16-field boundary, and
+// it changes on about a third of them, with a change forced every eighth so the
+// search back stays bounded. A mode therefore holds for a random 16 to 128
+// fields, and the value returned is fixed for the hold.
 fn scrambleKey(frame: u32, seed: u32) -> f32 {
-  return rand01(pcg((frame / SCRAMBLE_KEY_FIELDS) * 2654435761u + seed));
+  let cell = frame / SCRAMBLE_KEY_FIELDS;
+  var held = cell;
+  var found = false;
+  for (var back = 0u; back < SCRAMBLE_KEY_REACH && back <= cell; back = back + 1u) {
+    let c = cell - back;
+    let changes = c % SCRAMBLE_KEY_REACH == 0u
+      || rand01(pcg(c * 2246822519u + (seed ^ 0x9e37u))) < 0.35;
+    if (!found && changes) {
+      held = c;
+      found = true;
+    }
+  }
+  return rand01(pcg(held * 2654435761u + seed));
+}
+
+// The carrier scramblers' gate: 2.44 us before the sync edge to 10.56 us after
+// it on every line, and the whole vertical blanking interval.
+fn inCarrierGate(row: u32, s: u32) -> bool {
+  return row < ACTIVE_TOP || s < SCRAMBLE_GATE_END || s >= SPL - SCRAMBLE_GATE_LEAD;
 }
 
 fn triModeLevel(frame: u32) -> f32 {
@@ -835,7 +859,7 @@ fn triModeLevel(frame: u32) -> f32 {
   return select(select(1.0, 0.6, r < 0.6), 0.0, r < 0.2);
 }
 
-// Negative modulation's carrier map, as a fraction of peak power: the sync tip
+// Negative modulation's carrier map, as a fraction of peak amplitude: the sync tip
 // at -40 IRE is full carrier and peak white at 100 IRE is an eighth of it.
 fn carrierOf(ire: f32) -> f32 {
   return 1.0 - 0.00625 * (ire + 40.0);
@@ -856,15 +880,14 @@ fn scrambleAt(v: f32, row: u32, s: u32, depth: f32, mode: f32, frame: u32) -> f3
   let skipped = depth <= 0.0 || (system == 1u && (row & 1u) == 1u);
   let blanking = s < ACTIVE_START || s >= ACTIVE_START + ACTIVE_W;
   let picture = !blanking && row >= ACTIVE_TOP && row < ACTIVE_TOP + ACTIVE_H;
-  let ssaviKey = scrambleKey(frame, 0x55a1u);
-  let suppress = system != 6u || (ssaviKey < 0.5 && row >= ACTIVE_TOP);
-  let invert = system == 2u || (system == 6u && fract(ssaviKey * 2.0) < 0.5);
   var out = v;
   if (!skipped) {
     if (system == 3u || system == 4u) {
-      let gated = row < ACTIVE_TOP || s < SCRAMBLE_GATE_END || s >= SPL - SCRAMBLE_GATE_LEAD;
-      if (gated) {
-        let level = select(depth, depth * triModeLevel(frame), system == 4u);
+      if (inCarrierGate(row, s)) {
+        var level = depth;
+        if (system == 4u) {
+          level = depth * triModeLevel(frame);
+        }
         out = carrierScaled(v, 10.0 * level);
       }
     } else if (system == 5u) {
@@ -872,6 +895,13 @@ fn scrambleAt(v: f32, row: u32, s: u32, depth: f32, mode: f32, frame: u32) -> f3
       let toTip = 0.5 + 0.5 * cos(2.0 * PI * (f32(s) - tipCentre) / f32(SPL));
       out = carrierScaled(v, SINE_SUPPRESSION_DB * depth * toTip);
     } else {
+      var suppress = true;
+      var invert = system == 2u;
+      if (system == 6u) {
+        let key = scrambleKey(frame, 0x55a1u);
+        suppress = key < 0.5 && row >= ACTIVE_TOP;
+        invert = fract(key * 2.0) < 0.5;
+      }
       if (s < SYNC_LEN && suppress) {
         out = mix(out, IRE_BLANK, depth);
       }
@@ -879,6 +909,26 @@ fn scrambleAt(v: f32, row: u32, s: u32, depth: f32, mode: f32, frame: u32) -> f3
         out = 2.0 * IRE_BLACK + VIDEO_RANGE - out;
       }
     }
+  }
+  return out;
+}
+
+// A descrambler box at the end of the drop cable, ahead of the set's tuner. It
+// reads the head-end's key, so its gate is the carrier scramblers' gate and it
+// knows how many dB each field was sent with, and it raises the carrier there
+// by that much, up to what it was built for. The cheap boxes handled 6 dB and
+// clear: on a tri-mode channel a 6 dB box restores the clear and 6 dB fields
+// and leaves 4 dB on the 10 dB fields. The other systems need other boxes, so
+// this one passes them through.
+fn descrambleAt(v: f32, row: u32, s: u32, depth: f32, mode: f32, frame: u32, boxDb: f32) -> f32 {
+  let system = u32(mode + 0.5);
+  var out = v;
+  if (boxDb > 0.0 && depth > 0.0 && (system == 3u || system == 4u) && inCarrierGate(row, s)) {
+    var level = depth;
+    if (system == 4u) {
+      level = depth * triModeLevel(frame);
+    }
+    out = carrierScaled(v, -min(10.0 * level, boxDb));
   }
   return out;
 }

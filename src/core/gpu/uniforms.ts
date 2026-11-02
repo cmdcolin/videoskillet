@@ -215,6 +215,7 @@ export function uniformValues(c: Controls, env: UniformEnv) {
     connectorMode: c.connectorMode,
     scramble: c.scramble,
     scrambleMode: c.scrambleMode,
+    decoderDb: c.decoderDb,
     mvAgcIre: 160 * c.macrovision,
     mvStripe: (c.mvStripeDeg * Math.PI) / 180,
     vbi: c.vbi,

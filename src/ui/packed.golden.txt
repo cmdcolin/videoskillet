@@ -316,6 +316,7 @@
 328 bKeyEdgeY step=0.01 default=0
 329 bKeyEdgeHueDeg step=1 default=0
 330 bKeyEdgeSat step=0.01 default=0
+331 decoderDb step=0.5 default=0
 
 # ?mod= sources, by name
 sine
