@@ -102,7 +102,12 @@ export function feedFaults(c: Controls, src: FeedSource): boolean {
 // A's feed runs on its own account: A is the program bus, so a fault on its
 // cable bites whether or not anything is patched into the other input.
 export function aFeedOn(c: Controls): boolean {
-  return feedFaults(c, 'a') || c[FEEDS.a.pause] > 0 || c.synthDelayUs > 0
+  return (
+    feedFaults(c, 'a') ||
+    c[FEEDS.a.pause] > 0 ||
+    c.synthDelayUs > 0 ||
+    c.synthVca > 0
+  )
 }
 
 // Who consumes B's materialized waveform: the dirty sum resamples it, and the

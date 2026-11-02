@@ -862,6 +862,7 @@ export class Engine implements EngineApi {
           { buffer: this.feedParamsA },
           { buffer: this.compB },
           { buffer: this.compA },
+          { buffer: this.synthLineBuf },
         ],
         perLineT,
         this.aFeedOn,
@@ -913,6 +914,7 @@ export class Engine implements EngineApi {
           { buffer: this.feedParamsB },
           { buffer: this.compB },
           { buffer: this.bCompBuf },
+          { buffer: this.synthLineBuf },
         ],
         perLineT,
         this.bFeedOn,
@@ -1926,6 +1928,7 @@ export class Engine implements EngineApi {
       bShift0: deck.shift,
       bRowOff: deck.row,
       synthDelay: src === 'a' ? c.synthDelayUs * 1e-6 * SAMPLE_RATE : 0,
+      synthVca: src === 'a' ? c.synthVca : 0,
     })
     this.gpu.device.queue.writeBuffer(buf, 0, this.feedScratch)
   }

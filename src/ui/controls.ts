@@ -211,7 +211,8 @@ export const generatorsLive = (
     a === 'synth' ||
     b === 'synth' ||
     controls.synthOver > 0 ||
-    controls.synthDelayUs > 0,
+    controls.synthDelayUs > 0 ||
+    controls.synthVca > 0,
 })
 
 // Each carries its stage's name plus the physics that closes it, which is the
@@ -685,14 +686,24 @@ export const GROUPS: Group[] = [
       {
         key: 'synthDelayUs',
         id: 349,
-        label: 'osc A → delay line on A',
+        label: 'synth → delay line on A',
         min: 0,
         max: 20,
         step: 0.01,
         redline: [0, 6],
         unit: 'µs',
         fine: true,
-        help: "Oscillator A sweeping a delay line in input A's cable. The picture comes out late by an amount that follows the wave, so it stretches and tears sideways along the oscillator's pattern, and every 0.28 µs of change slides the subcarrier a full turn against the burst, so the hue spins wherever the delay moves. The synth does not have to be on screen for this.",
+        help: "The synth's output sweeping a delay line in input A's cable, after the combiner, so the comparator, the ring modulator and the shape generator all shape it. The picture comes out late by an amount that follows the synth's level, so it stretches and tears sideways along the oscillator's pattern, and every 0.28 µs of change slides the subcarrier a full turn against the burst, so the hue spins wherever the delay moves. The synth does not have to be on screen for this.",
+      },
+      {
+        key: 'synthVca',
+        id: 350,
+        label: 'synth → level on A',
+        min: 0,
+        max: 1,
+        step: 0.01,
+        unit: '',
+        help: "The synth's output on a VCA in input A's cable. It turns the whole signal down where the synth is high, sync pulses included, so the picture dims along the synth's pattern. Deep enough, the sync falls short of the set's slicer, the picture tears and rolls, and the set's AGC pumps the level trying to follow.",
       },
     ],
   },

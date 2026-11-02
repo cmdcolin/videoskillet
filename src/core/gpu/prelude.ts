@@ -128,7 +128,8 @@ export const PARAM_DEFS = [
   ['synthShapeX', 'f32'], // the shape's centre, -1..1 across the picture
   ['synthShapeY', 'f32'],
   ['synthShapeSize', 'f32'], // the ramps' gain: level 1 lands this far in from the edge
-  ['synthDelay', 'f32'], // osc A into a delay line on A's cable: samples of delay at the wave's top
+  ['synthDelay', 'f32'], // the synth's output into a delay line on A's cable: samples of delay at full level
+  ['synthVca', 'f32'], // the synth's output into a VCA on A's cable: gain lost at full level
   // dirty mixer: source B is a second, non-genlocked composite signal
   ['srcNoiseB', 'f32'], // GPU-generated source B: 0 texture, 1 TV static, 2 VHS blank-tape static
   ['aGain', 'f32'], // A level on the summing bus, signed (negative inverts A)
@@ -1664,9 +1665,9 @@ fn oscJitter(line: u32, seed: u32) -> f32 {
 // diamond, squaring and adding them makes a circle, and a non-additive mixer
 // passing whichever is larger makes a rectangle. The horizontal ramp is scaled
 // to the 4:3 picture so the shapes come out round.
-fn shapeGen(xy: vec2u, sp: SynthPatch) -> f32 {
-  let h = abs(2.0 * (f32(xy.x) + 0.5) / f32(ACTIVE_W) - 1.0 - sp.shapeX) * (4.0 / 3.0);
-  let v = abs(2.0 * (f32(xy.y) + 0.5) / f32(ACTIVE_H) - 1.0 - sp.shapeY);
+fn shapeGen(x: f32, y: f32, sp: SynthPatch) -> f32 {
+  let h = abs(2.0 * (x + 0.5) / f32(ACTIVE_W) - 1.0 - sp.shapeX) * (4.0 / 3.0);
+  let v = abs(2.0 * (y + 0.5) / f32(ACTIVE_H) - 1.0 - sp.shapeY);
   var level = max(h * 0.75, v);
   if (sp.bSrc < 1.5) {
     level = (h + v) * 0.5;
@@ -1674,6 +1675,54 @@ fn shapeGen(xy: vec2u, sp: SynthPatch) -> f32 {
     level = (h * h + v * v) * 0.5;
   }
   return clamp(level * sp.shapeSize, 0.0, 1.0);
+}
+
+// The synth's output level before the colorizer, at one raster position
+// (blanking included, so the delay line in feed.wgsl can read it under sync).
+fn synthOut(rowU: u32, sU: u32, sp: SynthPatch, pic: f32, audio: vec2f) -> f32 {
+  let row = f32(rowU);
+  let s = f32(sU);
+  // The FM term multiplies the sample index, not the phase, because pulling an
+  // oscillator's frequency is not the same as offsetting its phase: phase
+  // modulation would slide the pattern about, where this makes the wave
+  // genuinely run faster through bright picture and slower through dark, so the
+  // spacing of the bars is the brightness. It reads the picture at this pixel
+  // alone — a control line has no memory of where it has been — which is why
+  // the contours land on the picture rather than trailing it.
+  let line = sp.frame * NLINES + rowU;
+  var slipA = 0.0;
+  var slipB = 0.0;
+  if (sp.jitA != 0.0 || sp.jitB != 0.0) {
+    slipA = sp.jitA * oscJitter(line, 0x51a3u);
+    slipB = sp.jitB * oscJitter(line, 0xb07cu);
+  }
+  let a = synthWave(sp.phaseA + slipA + audio.x + sp.perLineA * row + (sp.perSampleA + sp.fm * pic + audio.y) * s, sp.shape);
+  var b = 0.0;
+  if (sp.bSrc > 0.5) {
+    b = shapeGen(s - f32(ACTIVE_START), row - f32(ACTIVE_TOP), sp);
+  } else {
+    b = synthWave(sp.phaseB + slipB + sp.perLineB * row + sp.perSampleB * s, sp.shape);
+  }
+  var g = a;
+  if (sp.combine > 0.5 && sp.combine < 1.5) {
+    // A summing amplifier, referenced to mid-video: two signals added run into
+    // the rails rather than wrapping, which is what makes a sum read as two
+    // patterns lying over each other instead of a third pattern.
+    g = clamp(a + b - 0.5, 0.0, 1.0);
+  } else if (sp.combine > 1.5 && sp.combine < 2.5) {
+    // Doubly-balanced multiply, both inputs referenced to mid so both carriers
+    // are suppressed and only the sum and difference survive (the same bridge
+    // the mixer loop's ring mod uses). Two free-running oscillators beating
+    // against each other draw a moire whose own beat rate is the difference of
+    // two frequency errors, so it breathes at a rate neither knob names.
+    g = clamp(0.5 + 2.0 * (a - 0.5) * (b - 0.5), 0.0, 1.0);
+  } else if (sp.combine > 2.5) {
+    // A comparator with the second oscillator on its reference input: hard
+    // two-level output, and the threshold is itself a moving waveform, so the
+    // duty cycle is modulated everywhere the two patterns cross.
+    g = select(0.0, 1.0, a > b);
+  }
+  return clamp(0.5 + sp.level * (g - 0.5), 0.0, 1.0);
 }
 
 // A video synthesizer patched into a slot: two oscillators, a combiner and a
@@ -1701,49 +1750,7 @@ fn shapeGen(xy: vec2u, sp: SynthPatch) -> f32 {
 // audio is this line's entry from SynthState.audioLines: the phase the audio
 // input has added before the line starts, and its extra walk per sample.
 fn videoSynth(xy: vec2u, sp: SynthPatch, pic: f32, colorPic: f32, audio: vec2f) -> vec3f {
-  let row = f32(ACTIVE_TOP + xy.y);
-  let s = f32(ACTIVE_START + xy.x);
-  // The FM term multiplies the sample index, not the phase, because pulling an
-  // oscillator's frequency is not the same as offsetting its phase: phase
-  // modulation would slide the pattern about, where this makes the wave
-  // genuinely run faster through bright picture and slower through dark, so the
-  // spacing of the bars is the brightness. It reads the picture at this pixel
-  // alone — a control line has no memory of where it has been — which is why
-  // the contours land on the picture rather than trailing it.
-  let line = sp.frame * NLINES + ACTIVE_TOP + xy.y;
-  var slipA = 0.0;
-  var slipB = 0.0;
-  if (sp.jitA != 0.0 || sp.jitB != 0.0) {
-    slipA = sp.jitA * oscJitter(line, 0x51a3u);
-    slipB = sp.jitB * oscJitter(line, 0xb07cu);
-  }
-  let a = synthWave(sp.phaseA + slipA + audio.x + sp.perLineA * row + (sp.perSampleA + sp.fm * pic + audio.y) * s, sp.shape);
-  var b = 0.0;
-  if (sp.bSrc > 0.5) {
-    b = shapeGen(xy, sp);
-  } else {
-    b = synthWave(sp.phaseB + slipB + sp.perLineB * row + sp.perSampleB * s, sp.shape);
-  }
-  var g = a;
-  if (sp.combine > 0.5 && sp.combine < 1.5) {
-    // A summing amplifier, referenced to mid-video: two signals added run into
-    // the rails rather than wrapping, which is what makes a sum read as two
-    // patterns lying over each other instead of a third pattern.
-    g = clamp(a + b - 0.5, 0.0, 1.0);
-  } else if (sp.combine > 1.5 && sp.combine < 2.5) {
-    // Doubly-balanced multiply, both inputs referenced to mid so both carriers
-    // are suppressed and only the sum and difference survive (the same bridge
-    // the mixer loop's ring mod uses). Two free-running oscillators beating
-    // against each other draw a moire whose own beat rate is the difference of
-    // two frequency errors, so it breathes at a rate neither knob names.
-    g = clamp(0.5 + 2.0 * (a - 0.5) * (b - 0.5), 0.0, 1.0);
-  } else if (sp.combine > 2.5) {
-    // A comparator with the second oscillator on its reference input: hard
-    // two-level output, and the threshold is itself a moving waveform, so the
-    // duty cycle is modulated everywhere the two patterns cross.
-    g = select(0.0, 1.0, a > b);
-  }
-  let lvl = clamp(0.5 + sp.level * (g - 0.5), 0.0, 1.0);
+  let lvl = synthOut(ACTIVE_TOP + xy.y, ACTIVE_START + xy.x, sp, pic, audio);
   // What the colorizer is slicing. Its own oscillator is one connector and the
   // picture is the other, and the second is the arrangement a colorizer was
   // actually sold as: video in, colour out, the oscillators out of circuit.

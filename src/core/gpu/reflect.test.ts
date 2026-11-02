@@ -36,7 +36,12 @@ describe('reflectBindings', () => {
       'audio:storage',
       'cc:storage',
     ])
-    expect(reflectBindings(feed).map(b => b.name)).toEqual(['P', 'src', 'dst'])
+    expect(reflectBindings(feed).map(b => b.name)).toEqual([
+      'P',
+      'src',
+      'dst',
+      'synthLine',
+    ])
   })
 
   it('ignores declarations inside comments', () => {

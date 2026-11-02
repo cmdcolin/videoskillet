@@ -21,6 +21,7 @@
 @group(0) @binding(0) var<uniform> P: Params;
 @group(0) @binding(1) var<storage, read> src: array<f32>;
 @group(0) @binding(2) var<storage, read_write> dst: array<f32>;
+@group(0) @binding(3) var<storage, read> synthLine: array<vec2f>;
 
 // Snow deviates staged once per workgroup: the 1-2-1 band-limit below reads
 // each neighbour's deviate, and gauss() is Box-Muller — the same redundancy
@@ -76,6 +77,10 @@ fn main(
   var srcRow = row;
   var echoBase = i32(n);
   var out: f32;
+  var cv = 0.0;
+  if (P.synthDelay > 0.0 || P.synthVca > 0.0) {
+    cv = synthOut(row, s, synthPatch(P), 0.0, synthLine[row]);
+  }
   if (P.bPause > 0.0) {
     let dr = abs(f32(row) - P.bPauseBar);
     let dBar = min(dr, f32(NLINES) - dr);
@@ -105,19 +110,23 @@ fn main(
       out = rfNull(out, edge * 1.6 * P.bPause, n ^ pcg(P.frame * 15187u + row * 5u));
     }
   } else if (P.synthDelay > 0.0) {
-    // The synth's osc A driving a delay line in A's cable: the whole
+    // The synth's output driving a delay line in A's cable: the whole
     // composite, sync and burst too, comes out late by an amount that follows
-    // the oscillator. Where the delay changes along a line the picture is
+    // the synth's level. Where the delay changes along a line the picture is
     // stretched or squeezed, and the subcarrier slides against the burst, so
-    // the hue turns wherever the delay moves. The same oscillator videoSynth
-    // draws, timing noise included.
-    let slip = P.synthJitA * oscJitter(P.frame * NLINES + row, 0x51a3u);
-    let w = synthWave(P.synthPhaseA + slip + P.synthPerLineA * f32(row) + P.synthPerSampleA * f32(s), P.synthShape);
-    let at = f32(n) - P.synthDelay * w;
+    // the hue turns wherever the delay moves.
+    let at = f32(n) - P.synthDelay * cv;
     let a0 = i32(floor(at));
     out = catmull(src[clampIdx(a0 - 1)], src[clampIdx(a0)], src[clampIdx(a0 + 1)], src[clampIdx(a0 + 2)], at - f32(a0));
   } else {
     out = src[n];
+  }
+  // The synth's output on a VCA in A's cable, after the delay line. It scales
+  // the whole waveform about blanking, so where the synth is high the picture
+  // dims and its sync tips shrink with it. Once they fall short of the set's
+  // slicer the set loses lock, and its AGC chases the level up and down.
+  if (P.synthVca > 0.0) {
+    out = IRE_BLANK + (out - IRE_BLANK) * (1.0 - P.synthVca * cv);
   }
   let srcN = srcRow * SPL + srcS;
 

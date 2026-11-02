@@ -335,7 +335,12 @@ export class Graph {
       {
         label: 'feedA',
         shader: 'feed',
-        variants: one({ P: this.feedParamsA, src: compB, dst: this.compA }),
+        variants: one({
+          P: this.feedParamsA,
+          src: compB,
+          dst: this.compA,
+          synthLine: this.synthLineBuf,
+        }),
         dispatch: perLineT,
         when: () => aFeedOn(c),
       },
@@ -386,7 +391,12 @@ export class Graph {
       {
         label: 'feedB',
         shader: 'feed',
-        variants: one({ P: this.feedParamsB, src: compB, dst: bCompBuf }),
+        variants: one({
+          P: this.feedParamsB,
+          src: compB,
+          dst: bCompBuf,
+          synthLine: this.synthLineBuf,
+        }),
         dispatch: perLineT,
         when: () => bFeedOn(c, this.bEnabled),
       },
