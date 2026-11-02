@@ -128,7 +128,7 @@ export const SOURCE_KIND_LABEL: Record<SourceKind, string | null> = {
   // different file on every pick, so its name cannot say what arrives. The
   // curated pools are the browser's preset buttons, and the ★ beside the caption
   // puts a roll on the clip shelf with your own footage.
-  pool: 'Public archives — fetched live, and never the same twice',
+  pool: 'Public archives — fetched live, a different file each time',
   yours: 'Your own — opens a picker',
   live: 'Live — asks the browser',
 }

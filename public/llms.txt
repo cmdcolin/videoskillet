@@ -9,26 +9,26 @@ The app is at https://videoskillet.com/app/ — the root page is a landing page
 with an "Open the app" link. It needs WebGPU; on Linux that means Firefox
 Nightly or Chrome with WebGPU enabled.
 
-## The address bar is the remote control
+## Controlling the app from the URL
 
 Every control, source and routing is reachable from the address bar, and the
-app mirrors the live board back into it, so the URL says what is on screen and
-navigating to one puts it there. One link sets 200+ controls at once, whether
-the hand writing it is a person’s or an agent’s.
+app mirrors the live board back into it, so the URL records what is on screen,
+and opening a URL loads that board. One link sets 200+ controls at once, and a
+person or an agent can write it.
 
-The parameters live after the `#`. Two shapes of link exist and both open the
-same board: the readable one the bar carries, and the packed `#p=…` the share
+The parameters follow the `#`. There are two link formats, and both open the
+same board: the readable one the bar shows, and the packed `#p=…` the share
 button writes, which is that look in a couple of hundred characters and opaque
 to everything but the app. The readable one is both what to read and what to
-write; the packed one is for sending. Every link published before this carries
-its parameters on the `?` query instead and still opens.
+write; the packed one is for sending. Older links put their parameters on the
+`?` query, and they still open.
 
 - `#preset=NAME` — a whole look. It resets what it does not name.
 - `#set=key:value,key:value` — controls by key, layered on top of any preset.
   Out-of-range values clamp. This is the form to write, and the form the bar
-  shows: reading it back is how to check what a change actually did.
+  shows: read it back to check what a change did.
 - `#p=…` — the packed form the share button writes. Opaque; use `#set=`.
-- `#mod=target:source:rateHz:depth[:division]` — what is moving, comma-
+- `#mod=target:source:rateHz:depth[:division]` — modulation routings, comma-
   separated. `target` is a control key, `source` one of the modulation
   sources, up to 8 of them.
 - `#src=` / `#srcb=` — what each deck is fed: bars, sweep, tv static, vhs static, synth, cat, clip-test, wiki-random, ia-random, browse, teletype, file, library, url, webcam, screen.
@@ -42,7 +42,7 @@ its parameters on the `?` query instead and still opens.
 - `#snow` — open on a burst of snow, `#snow=3` for three seconds of it. A
   feedback look needs something to amplify and the reader's frame store
   starts empty, so a board built on the loops opens black without it. The
-  burst heals off completely: the look is what the rest of the link says.
+  burst fades out completely, leaving the look the rest of the link sets.
 
 Example — VHS with the head-switch tear pulled wide and the tint drifting:
 

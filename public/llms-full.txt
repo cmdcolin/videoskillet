@@ -92,7 +92,7 @@ synthLevel  (level)
 
 synthColor  (colorizer)
   0..1 step 0.01  default 0
-  One signal into three guns through three phase shifts 120 degrees apart, which is all a colorizer ever was.
+  One signal drives the three guns through three phase shifts 120 degrees apart.
 
 synthHueDeg  (colorizer phase)
   0..360 step 1 deg  default 0
@@ -198,7 +198,7 @@ fbGain  (gain)
 
 fbIris  (auto-iris hunt)
   0..1 step 0.01  default 0
-  Puts the camera's exposure on an auto-iris servo metering the monitor it feeds. The loop brightens, the iris clamps a beat late, the loop starves, the iris reopens. Turned up it never settles.
+  Puts the camera's exposure on an auto-iris servo metering the monitor it feeds. As the loop brightens, the iris closes a beat late, the loop darkens, and the iris reopens. Turned up, the servo never settles.
 
 fbFocus  (defocus)
   0..12 step 0.05 px  default 0.7
@@ -258,7 +258,7 @@ crtGlow  (phosphor glow)
 
 cfbMix  (loop mix)
   0..1 step 0.01  default 0
-  The crossfader position toward the loop bus, where the mixer patches the previous frame's composite back in. The subcarrier goes round too, so the loop shifts hue as well as geometry. All the way over the loop feeds only on itself.
+  The crossfader position toward the loop bus, where the mixer patches the previous frame's composite back in. The subcarrier goes round too, so the loop shifts hue as well as geometry. With the crossfader all the way over, the loop bus is the mixer's only input.
 
 cfbGain  (loop gain)
   -3..3 step 0.01 x  default 1
@@ -322,7 +322,7 @@ cfbFilterBoost  (loop resonance boost)
 
 cfbRing  (loop ring mod)
   0..1 step 0.01  default 0
-  The loop bus multiplied instead of summed: a ring modulator with one input patched to the machine's own past, so the spectrum folds over itself every lap.
+  The loop bus multiplied instead of summed: a ring modulator with one input patched to the previous frame, so the spectrum folds over itself every lap.
 
 cfbClockPct  (read clock error)
   -2..2 step 0.001 %  default 0
@@ -416,7 +416,7 @@ bDropoutLenUs  (B dropout len)
 
 bScramble  (B sync suppression)
   0..1 step 0.01  default 0
-  Head-end scrambling on input B alone: B's sync tips are lifted toward blanking before it is summed in, so B stops contributing to the sync contest.
+  Head-end scrambling on input B alone: B's sync tips are lifted toward blanking before it is summed in, so B's pulses weaken in the summed sync the receiver locks to.
 
 bScrambleMode  (B system)
   0=gated 1=alternate 2=ssavi 3=carrier 4=tri-mode 5=sine 6=keyed ssavi  default 0
@@ -434,7 +434,7 @@ bConnectorMode  (B bad contact)
 
 bHumIre  (B ground loop)
   -40..40 step 0.5 IRE  default 0
-  A ground loop on input B's cable alone. The bar rides B's own raster, so it slips and rolls with B's picture, and it lifts B's sync tips, so how hard B fights for the line start varies at 60 Hz.
+  A ground loop on input B's cable alone. The bar rides B's own raster, so it slips and rolls with B's picture, and it lifts B's sync tips, so the weight of B's pulses in the summed sync varies at 60 Hz.
 
 bNoiseIre  (B noise)
   0..150 step 0.1 IRE  default 0
@@ -442,7 +442,7 @@ bNoiseIre  (B noise)
 
 bTermination  (B termination (-1 daisy, +1 open))
   -1..1 step 0.01  default 0
-  Termination fault on B's cable alone: negative halves B into a dim ghost under A, positive runs B hot and ringing so its sync pushes harder.
+  Termination fault on B's cable alone: negative halves B into a dim ghost under A, positive runs B hot and ringing, so its sync weighs more in the sum.
 
 bPolarity  (B polarity (flips sync))
   0..1 step 0.01  default 0
@@ -469,7 +469,7 @@ cgClip  (key clip)
 
 cgKeyMHz  (key bandwidth)
   0.3..8 step 0.1 MHz  default 3
-  The key-processing amplifier ahead of the slicer, narrower than the video path, which is the only reason a key has a soft edge. Horizontal only: there is no vertical neighbour on the wire.
+  The key-processing amplifier ahead of the slicer, narrower than the video path, which is the only reason a key has a soft edge. The softening is horizontal only, because the signal on a wire has no vertical neighbour.
 
 cgInvert  (key invert)
   0=normal 1=inverted  default 0
@@ -718,7 +718,7 @@ bKeyFillHueDeg  (store hue)
 
 bKeyFillMixA  (program A in fill)
   0..0.5 step 0.01  default 0
-  A crossfader ahead of the keyer's fill that mixes program A in with the frame store. On the loop bus every recording keeps the rest of the copies it held, so each copy fades into program A over the generations that follow: at 0.1 a copy is half gone after about seven recordings. A still in A brings the room back where the copies were. Strobe hold at an odd count keeps the colour; at an even one, alternate recordings land on opposite subcarrier phases from A's, and the mix cancels toward grey, unless colour framing is on.
+  A crossfader ahead of the keyer's fill that mixes program A in with the frame store. On the loop bus every recording keeps the rest of the copies it held, so each copy fades into program A over the generations that follow: at 0.1 a copy is half gone after about seven recordings. With a still in A, the copies fade back to that still. Strobe hold at an odd count keeps the colour; at an even one, alternate recordings land on opposite subcarrier phases from A's, and the mix cancels toward grey, unless colour framing is on.
 
 bKeyFillFraming  (colour framing)
   0=off 1=on  default 0
@@ -770,7 +770,7 @@ impulseHz  (ignition train)
 
 strikeRate  (big strikes)
   0..20 step 0.05 /s  default 0
-  Millisecond-scale events: lightning, an arcing breaker, a compressor starting. Dozens of full lines of dense hash with a DC lift. A strike spans whole lines, so it lands on sync tips and the beam-load measurement and the whole rig reacts.
+  Millisecond-scale events: lightning, an arcing breaker, a compressor starting. Each event is dozens of full lines of dense hash with a DC lift. A strike spans whole lines, so it lands on sync tips and the beam-load measurement and the whole rig reacts.
 
 impulseIre  (impulse strength)
   20..400 step 1 IRE  default 90
@@ -796,7 +796,7 @@ humAmp  (hum)
 
 humMod  (hum modulation)
   0..1 step 0.01  default 0
-  The same mains ripple in the supply of an amplifier the signal passes through, so it moves that stage's gain instead of adding to its output. Sync is scaled too, so its depth varies and the receiver's AGC and hold chase the hum. Mostly 120 Hz, from the rectified supply.
+  The same mains ripple in the supply of an amplifier the signal passes through, so it moves that stage's gain instead of adding to its output. Sync is scaled too, so its depth varies and the receiver's AGC and hold chase the hum. The ripple is mostly at 120 Hz, from the rectified supply.
 
 soundIre  (sound carrier)
   0..40 step 0.1 IRE  default 0
@@ -804,7 +804,7 @@ soundIre  (sound carrier)
 
 buzzLevel  (sound buzz)
   0..1 step 0.01  default 0
-  The same leak, as audio out of your speakers. The sound detector recovers the 4.5 MHz beat between the picture and sound carriers, and a limiter that cannot keep the picture off it passes video through as audio: the vertical interval buzzes at 60 Hz, line structure whines, snow hisses. Silent until the Sound stage is switched to buzz out loud.
+  The same leak, as audio out of your speakers. The sound detector recovers the 4.5 MHz beat between the picture and sound carriers, and a limiter that cannot keep the picture off it passes video through as audio: the vertical interval buzzes at 60 Hz, line structure whines, snow hisses. The buzz stays silent until the Sound stage is switched to buzz out loud.
 
 ## Dropouts & dubs
 
@@ -836,7 +836,7 @@ rfMistuneMHz  (fine tuning)
 
 rfSnow  (weak signal (snow))
   0..1 step 0.01  default 0
-  IF noise into the envelope detector, which is what weak-signal snow is. The picture rides a negative-modulation carrier, with sync at peak power and white at 12.5%, so the noise lands unevenly: whites boil first, blacks stay quiet longest, and sync goes last.
+  IF noise into the envelope detector, the source of weak-signal snow. The picture rides a negative-modulation carrier, with sync at peak power and white at 12.5%, so the noise lands unevenly: whites boil first, blacks stay quiet longest, and sync goes last.
 
 ingress  (CB ingress)
   0..1 step 0.01  default 0
@@ -936,7 +936,7 @@ shuttleX  (shuttle (1 = play))
 
 tbJitterNs  (flutter)
   0..4000 step 5 ns  default 0
-  Fast timebase error from capstan flutter: each line starts a slightly different moment late, so edges shimmer. Signal-domain, so the burst moves with it and hue wobbles too.
+  Fast timebase error from capstan flutter: each line starts a slightly different moment late, so edges shimmer. This is a signal-domain fault, so the burst moves with it and hue wobbles too.
 
 tbWowNs  (wow)
   0..10000 step 10 ns  default 0
@@ -1033,13 +1033,13 @@ enhSync  (sync regen)
 
 enhSliceIre  (sync slice)
   -40..60 step 0.5 IRE  default -20
-  The level the separator calls sync, in IRE. Blanking is 0 and the real tip is -40, so anything under about -10 only finds real pulses. Raise it into picture territory and dark content produces pulses of its own, so the set is given a line rate the image is writing. It slices a lowpassed copy, so only sustained dark areas trip it.
+  The level the separator calls sync, in IRE. Blanking is 0 and the real tip is -40, so anything under about -10 only finds real pulses. Raise it into picture territory and dark content produces pulses of its own, so the picture content supplies a line rate to the set. It slices a lowpassed copy, so only sustained dark areas trip it.
 
 ## Sync
 
 hHold  (horizontal hold)
   0.02..2 step 0.01  default 0.35
-  How hard the receiver's horizontal PLL pulls toward each sync pulse it finds. Low is a loose flywheel that ignores noise but drifts and skews; high snaps to every edge including the false ones. Sync-domain, so the burst gate moves with it.
+  How hard the receiver's horizontal PLL pulls toward each sync pulse it finds. Low is a loose flywheel that ignores noise but drifts and skews; high snaps to every edge including the false ones. The PLL works in the sync domain, so the burst gate moves with it.
 
 syncSlicer  (sync slicer)
   0=fixed 1=peak  default 0
@@ -1047,11 +1047,11 @@ syncSlicer  (sync slicer)
 
 vHold  (vertical hold)
   0..1 step 0.01  default 1
-  How much authority the incoming vertical sync has over the receiver's own field oscillator. At 1 the picture locks solid; as it falls the oscillator wins and the frame rolls.
+  How much authority the incoming vertical sync has over the receiver's own field oscillator. At 1 the picture locks solid; as it falls the set's own oscillator takes over and the frame rolls.
 
 vFreqHz  (vertical osc (60 = locked))
   10..180 step 0.05 Hz  default 60
-  The free-running frequency of the receiver's vertical oscillator. At 60 Hz it agrees with the signal; detuned, the frame rolls at the difference. Only bites once vertical hold is loose. With no field sync to trigger it at all, the oscillator also runs about 1.4 Hz slow, the margin a set builds in so a trigger can always fire it early, and this detune adds to that.
+  The free-running frequency of the receiver's vertical oscillator. At 60 Hz it agrees with the signal; detuned, the frame rolls at the difference. It has an effect only once vertical hold is loose. With no field sync to trigger it at all, the oscillator also runs about 1.4 Hz slow, the margin a set builds in so a trigger can always fire it early, and this detune adds to that.
 
 syncBendUs  (retrace flag)
   0..60 step 0.05 µs  default 0
@@ -1077,7 +1077,7 @@ clipBite  (bite)
 
 clipDwellMs  (dwell)
   8..800 step 4 ms  default 90
-  How long one contact lasts. How fast the damage arrives and clears is the receiver's, not the clip's: a bite lands over two or three frames and takes five or six to let go, because the flywheel has to find sync again. Under about 40 ms the contact is gone before the picture has reacted.
+  How long one contact lasts. The receiver sets how fast the damage appears and clears: a bite takes two or three frames to show and five or six to clear, because the flywheel has to find sync again. Under about 40 ms the contact is gone before the picture has reacted.
 
 clipChatter  (chatter)
   0..1 step 0.01  default 0.35
@@ -1087,7 +1087,7 @@ clipChatter  (chatter)
 
 audioRoll  (bass → vertical hold)
   0..32 step 0.05 Hz  default 0
-  Bass energy detunes the vertical oscillator, so kick drums shove the frame vertically and it settles back. The field rate itself is moving.
+  Bass energy detunes the vertical oscillator, which moves the field rate, so kick drums push the frame vertically and it settles back.
 
 audioTear  (level → horizontal hold)
   -3000..3000 step 1 Hz  default 0
@@ -1099,7 +1099,7 @@ audioSagUs  (bass → HV sag)
 
 audioBendUs  (waveform into deflection)
   -80..80 step 0.1 µs  default 0
-  The audio waveform patched into the horizontal deflection, one sample per scan line. Deflection-domain, so hue stays put while the glass bends.
+  The audio waveform patched into the horizontal deflection, one sample per scan line. This patch works in the deflection domain, so hue stays put while the geometry bends.
 
 audioLoad  (audio into HV tank)
   0..12 step 0.01  default 0
@@ -1107,7 +1107,7 @@ audioLoad  (audio into HV tank)
 
 audioIre  (audio into video in)
   0..150 step 0.5 IRE  default 0
-  The audio patched straight into the video input, in IRE. Loud passages land on the sync tips and the burst as well as the picture: the classic wrong-cable result.
+  The audio patched straight into the video input, in IRE. Loud passages land on the sync tips and the burst as well as the picture: the result of plugging audio into a video input.
 
 audioHueDeg  (waveform into hue)
   -180..180 step 1 deg  default 0
@@ -1121,7 +1121,7 @@ audioGain  (input trim)
 
 bendUs  (bend amount)
   -120..120 step 0.1 µs  default 0
-  How far the tube's own scan is displaced sideways, in microseconds of line time. Deflection-domain: the beam bends after decoding, so geometry warps while hue stays put.
+  How far the tube's own scan is displaced sideways, in microseconds of line time. This is a deflection-domain fault: the beam bends after decoding, so geometry warps while hue stays put.
 
 bendShape  (shape)
   0=flag 1=skew 2=bow 3=ripple  default 0
@@ -1201,15 +1201,15 @@ tintDeg  (tint)
 
 burstLock  (burst lock)
   0..1 step 0.01  default 1
-  How much the decoder trusts the colour burst it measured. At 1 it follows the burst, so phase errors in the signal are corrected out. At 0 it runs on its own crystal, so any subcarrier error shows as drifting hue.
+  How closely the decoder follows the colour burst it measured. At 1 it follows the burst, so phase errors in the signal are corrected out. At 0 it runs on its own crystal, so any subcarrier error shows as drifting hue.
 
 demodAxisDeg  (demod axis)
   0..180 step 0.5 deg  default 90
-  The angle between the set's two synchronous colour demodulators, 90° apart only because the reference network says so. Cheap sets used non-quadrature X/Z axes deliberately. It shears the colour wheel: hues that were opposite stop being opposite, so the picture keeps some of its colours and loses others.
+  The angle between the set's two synchronous colour demodulators, 90° apart only because the reference network sets them that way. Cheap sets used non-quadrature X/Z axes deliberately. It shears the colour wheel: hues that were opposite stop being opposite, so the picture keeps some of its colours and loses others.
 
 scDetuneKHz  (subcarrier detune)
   -200..200 step 0.001 kHz  default 0
-  The decoder's reference crystal pulled off 3.579545 MHz, the classic circuit-bend. The demodulation axis rotates continuously against the incoming colour, so hue sweeps the whole wheel. Turn burst lock down to let it run.
+  The decoder's reference crystal pulled off 3.579545 MHz, a common circuit-bend. The demodulation axis rotates continuously against the incoming colour, so hue sweeps the whole wheel. Turn burst lock down to let it run.
 
 killThresh  (color killer)
   0..100 step 0.1 IRE  default 2
@@ -1225,7 +1225,7 @@ afpcLagLines  (burst lock lag)
 
 vir  (VIR correction)
   0..1 step 0.01  default 0
-  How far the set trusts the reference stamped on line 19. A VIR receiver decoded that line, compared it against what it knew was sent, and trimmed its own hue and saturation until the two agreed — a closed loop only as accurate as the reference arriving. A weak reference makes the set turn colour up. Needs the VBI test signals on.
+  How closely the set follows the reference stamped on line 19. A VIR receiver decoded that line, compared it against what it knew was sent, and trimmed its own hue and saturation until the two agreed — a closed loop only as accurate as the reference arriving. A weak reference makes the set turn colour up. Needs the VBI test signals on.
 
 virLag  (VIR lag)
   1..240 step 1 frames  default 45
@@ -1309,11 +1309,11 @@ ccPageSlip  (page counter slip)
 
 strobeHz  (blanking strobe)
   0..20 step 0.1 Hz  default 0
-  Holds the beam-blanking gate on, so the guns are cut for most of each cycle and let through in flashes. The gate sits one line above the phosphor, so light already on the glass keeps decaying through the dark. Everything downstream with memory sees the dark frames too, so a feedback loop pumps at the strobe rate. Lock it to the beat with ♩.
+  Holds the beam-blanking gate on, so the guns are cut for most of each cycle and let through in flashes. The gate sits one line above the phosphor, so light already on the glass keeps decaying through the dark. Every downstream stage with memory receives the dark frames too, so a feedback loop pumps at the strobe rate. Lock it to the beat with ♩.
 
 strobeMs  (flash length)
   1..200 step 1 ms  default 40
-  How long the beam is let through each cycle. An absolute length, so speeding the strobe up does not shorten the flash. Under one frame it is one frame.
+  How long the beam is let through each cycle. The length is absolute, so speeding the strobe up does not shorten the flash. Under one frame it is one frame.
 
 scanBeam  (beam profile)
   0..1 step 0.01  default 0.55
@@ -1329,7 +1329,7 @@ crtSpot  (beam spot)
 
 crtGrain  (phosphor grain)
   0..1 step 0.01  default 0.07
-  The coating is a granular deposit of crystallites, so its emission is mottled. Fixed on the glass, and strongest in the mid tones.
+  The coating is a granular deposit of crystallites, so its emission is mottled. The mottling is fixed on the glass and strongest in the mid tones.
 
 crtSharp  (reconstruction (bilinear→cubic))
   0..1 step 0.01  default 0
@@ -1369,7 +1369,7 @@ phosphorBleed  (trail scatter)
 
 burnRate  (burn-in rate)
   0..1 step 0.01  default 0
-  Beam current wears the phosphor, and the blue phosphor wears fastest, so whatever sits still on the glass etches itself in as a dark yellow-brown ghost that stays when the picture moves on. Years of wear per second of running. At 0 the wear stays where it is, through every preset and every source: nothing in a tube undoes it.
+  Beam current wears the phosphor, and the blue phosphor wears fastest, so whatever sits still on the glass etches itself in as a dark yellow-brown ghost that stays when the picture moves on. Each second of running adds years of wear. At 0 the wear stays where it is, through every preset and every source, because a tube has no way to undo it.
 
 burnDepth  (burn-in depth)
   0..2 step 0.01  default 1
@@ -1387,11 +1387,11 @@ maskPitch  (grille pitch)
 
 crtConverge  (convergence error)
   -12..12 step 0.05 px  default 0
-  Three guns fire through one mask from three different positions, so they can only be registered over part of the screen. Nulled in the middle and worsening toward the corners, which is why an old tube fringes red and blue at the edges.
+  Three guns fire through one mask from three different positions, so they can only be registered over part of the screen. The error is nulled in the middle and worsens toward the corners, which is why an old tube fringes red and blue at the edges.
 
 crtPurity  (purity (magnetised patch))
   -3..3 step 0.01  default 0
-  A patch of the shadow mask left magnetised by a speaker set too close. The field bends all three beams together, but a triad is three dots 120° apart, so the same nudge over-excites the dot it moves toward and starves the one opposite. Fixed on the glass, so a rolling picture travels through it.
+  A patch of the shadow mask left magnetised by a speaker set too close. The field bends all three beams together, but a triad is three dots 120° apart, so the same nudge over-excites the dot it moves toward and starves the one opposite. The patch is fixed on the glass, so a rolling picture travels through it.
 
 crtPurityX  (patch x)
   0..1 step 0.01  default 0.3
@@ -1409,7 +1409,7 @@ crtPuritySize  (patch size)
 
 crtZoom  (magnifier)
   0.25..12 step 0.01 ×  default 1
-  Where your eye is, up against the glass. Everything that lives on the screen rather than in the image magnifies with it: scanline structure, the beam spot, phosphor grain, the grille triads.
+  Where your eye is, up against the glass. Everything on the screen surface rather than in the image is magnified with it: scanline structure, the beam spot, phosphor grain, the grille triads.
 
 crtZoomX  (magnifier x)
   0..1 step 0.005  default 0.5
@@ -1421,7 +1421,7 @@ crtZoomY  (magnifier y)
 
 timeScale  (slow motion (1 = realtime))
   0..1 step 0.01 x  default 1
-  Steps the whole simulation at a fraction of display rate. Noise, rolls, sweeps, feedback loops and phosphor all slow together, and 0 freezes the frame. Modulation stays live, so an LFO here warps time itself.
+  Steps the whole simulation at a fraction of display rate. Noise, rolls, sweeps, feedback loops and phosphor all slow together, and 0 freezes the frame. Modulation stays live, so an LFO on this control varies the simulation speed.
 
 frameLock  (frame rate lock)
   0=off 1=1/2 rate 2=1/3 rate 3=1/4 rate 4=auto  default 4
