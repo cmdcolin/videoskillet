@@ -71,10 +71,10 @@ A consumer picture enhancer with its jumpers moved, between deck and set. Its
 sync regenerator restamps pulses wherever its slicer crosses, so a slice level
 raised into picture content lets dark content generate sync.
 
-A jumper from its output back to its first stage closes a positive feedback
-loop around both amplifiers. Near unity gain the picture latches to black or
-white wherever it crosses the loop's threshold and holds until the coupling
-capacitor discharges.
+A jumper from its output back to its first stage closes a positive feedback loop
+around both amplifiers. Near unity gain the picture latches to black or white
+wherever it crosses the loop's threshold and holds until the coupling capacitor
+discharges.
 
 ## Receiver
 
