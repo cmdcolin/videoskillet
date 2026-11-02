@@ -7,15 +7,15 @@ knobs.
 
 <video
   controls muted loop playsinline
-  poster="img/agent-drive-poster.jpg"
-  src="https://myloveydove.com/videoskillet/agent-drive.mp4"></video>
+  poster="img/agent-build-poster.jpg"
+  src="https://myloveydove.com/videoskillet/agent-build.mp4"></video>
 
 The video shows Claude Sonnet on the right and the app in Chrome on the left.
-The prompt asks for a scrambled premium cable channel with the cat still
-recognizable, and leaves the choice of controls to the model. The model applies
-the scrambled channel preset, lowers sync suppression until the cat reads again,
-backs noise off after it buries the picture, and reads the board back at the
-end.
+The prompt is the one the **agent** button copies, followed by a request to
+rebuild the Purplady gallery look from its plain photo one stage at a time. The
+model sets the decoder, which turns the picture purple, then three generations
+of tape, then the chroma feedback loop that turns the face into violet streaks,
+and says what each stage did. The waits between stages are cut out.
 
 ## Automate a running instance with Claude Code
 
