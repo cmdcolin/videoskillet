@@ -2912,7 +2912,7 @@ export const GROUPS: Group[] = [
         curve: 'shuttle',
         redline: [-8, 8],
         unit: 'x',
-        help: 'Tape speed as a multiple of play: cue past 1, pause at 0, review negative. Off play speed the head no longer follows one recorded track — each sweep crosses several, the RF nulls at every crossing, and that many noise bars sweep the frame. Each strip between bars carries its own timing and colour-under phase.',
+        help: 'Tape speed as a multiple of play: cue past 1, pause at 0, review negative. A clip runs at this multiple of its own speed, up to 16x, and stops on review because a browser cannot play a video backwards. Off play speed the head no longer follows one recorded track — each sweep crosses several, the RF nulls at every crossing, and that many noise bars sweep the frame. Each strip between bars carries its own timing and colour-under phase.',
       },
     ],
   },

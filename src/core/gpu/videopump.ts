@@ -191,6 +191,17 @@ export interface FramePull {
 // elements owns what is behind them.
 export type PullOpener = (url: string) => Promise<FramePull | null>
 
+// The rate a clip plays at with the deck's transport at `shuttleX` times play,
+// over the slot's own speed. Browsers refuse rates outside 1/16..16 and refuse
+// negative ones outright, so cue saturates at 16x and review stops the tape:
+// an element cannot play backwards. Stopped is 0, which every browser takes.
+export const MIN_RATE = 1 / 16
+export const MAX_RATE = 16
+export const tapeRate = (speed: number, shuttleX: number) => {
+  const r = speed * shuttleX
+  return r <= 0 ? 0 : Math.min(Math.max(r, MIN_RATE), MAX_RATE)
+}
+
 interface Slot {
   el: HTMLVideoElement | null
   inFlight: boolean
@@ -221,11 +232,12 @@ interface Slot {
   // it was worth nothing until the thing on the other side was frame exact.
   pull: FramePull | null
   pullPending: Promise<FramePull | null> | null
-  // The take frame this slot's current source went on. What makes the clip
-  // position a function of the take frame *and of when this clip arrived*, so a
-  // row firing at frame 300 starts its clip at its in-point rather than five
+  // Clip seconds run since this slot's current source went on, and the take
+  // frame they were run to. Starting both when the clip arrives is what makes a
+  // row firing at frame 300 start its clip at its in-point rather than five
   // seconds in.
-  takeFrom: number
+  tapeAt: number
+  tapeFrame: number
 }
 
 const emptySlot = (): Slot => ({
@@ -241,7 +253,8 @@ const emptySlot = (): Slot => ({
   gen: 0,
   pull: null,
   pullPending: null,
-  takeFrom: 0,
+  tapeAt: 0,
+  tapeFrame: 0,
 })
 
 const median = (xs: readonly number[]): number => {
@@ -275,6 +288,9 @@ export class VideoPump {
   private takeFps: number | null = null
   private takeFrame = 0
   private opener: PullOpener | null = null
+  // The deck's tape speed as a multiple of play (`shuttleX`), applied over each
+  // clip's own speed. See `tapeRate`.
+  private transport = 1
 
   // Direct mode: the device can sample the decoder's own frame
   // (importExternalTexture), so the pump never makes a bitmap — it just says
@@ -319,6 +335,10 @@ export class VideoPump {
     this.b.relay = relay
   }
 
+  setTransport(shuttleX: number): void {
+    this.transport = shuttleX
+  }
+
   // Where a take's frames are opened from. Set once at engine creation, like
   // the relay: the answer belongs to whoever owns the elements.
   setPullOpener(open: PullOpener | null): void {
@@ -340,7 +360,7 @@ export class VideoPump {
     this.takeFrame = 0
     for (const slot of [this.a, this.b]) {
       this.closePull(slot)
-      slot.takeFrom = 0
+      this.startTape(slot, 0)
       if (fps !== null) this.openPull(slot)
     }
   }
@@ -416,10 +436,11 @@ export class VideoPump {
 
   // One slot's picture for one take frame.
   //
-  // **The clip position is computed from the frame, not accumulated.** An
-  // accumulated head would drift with every rounding, and worse, would make the
-  // picture depend on how many times this was called rather than on which frame
-  // it was called for — which is the property the whole take rests on.
+  // **The clip position advances by frame delta.** The transport can change
+  // speed mid-take, so the position is the sum of each frame's travel, and
+  // stepping by the delta keeps it a function of which frames were pulled: a
+  // frame pulled twice adds nothing and a skipped frame adds its share. That is
+  // the property the whole take rests on.
   private async pullSlot(
     slot: Slot,
     frame: number,
@@ -432,11 +453,13 @@ export class VideoPump {
     const pull = slot.pull
     const fps = this.takeFps
     if (pull === null || fps === null) return
-    // The deck's own speed, which is a setting rather than a position — so
-    // reading it off the element keeps a slowed clip slowed without putting the
-    // element's playhead back in the loop.
-    const rate = slot.el?.playbackRate ?? 1
-    const elapsed = ((frame - slot.takeFrom) / fps) * rate
+    // The slot's own speed is `defaultPlaybackRate`, a setting rather than a
+    // position, so reading it off the element keeps a slowed clip slowed
+    // without putting the element's playhead back in the loop.
+    const rate = tapeRate(slot.el?.defaultPlaybackRate ?? 1, this.transport)
+    slot.tapeAt += ((frame - slot.tapeFrame) / fps) * rate
+    slot.tapeFrame = frame
+    const elapsed = slot.tapeAt
     const r = slot.region
     const looped = r !== null && r.end > r.start
     const base = looped ? r.start : 0
@@ -498,7 +521,7 @@ export class VideoPump {
     // far into the take it happens to be, which is what makes a row that fires
     // at frame 300 begin its clip at the top.
     this.closePull(slot)
-    slot.takeFrom = this.takeFrame
+    this.startTape(slot, this.takeFrame)
     this.openPull(slot)
     // A region belongs to the clip it was marked on, not to the slot: carried
     // over to the next source it would clamp a new timeline against positions
@@ -522,6 +545,8 @@ export class VideoPump {
     // loop that stopped wrapping while the button was down would come back off it
     // somewhere else entirely — and the region is a property of playback, which
     // is exactly what freezing a deck does not touch.
+    this.drive(this.a)
+    this.drive(this.b)
     this.wrap(this.a)
     this.wrap(this.b)
     // **A pulling slot takes the bitmap path even in direct mode.** Direct means
@@ -638,6 +663,22 @@ export class VideoPump {
 
   health(): { a: WrapHealth; b: WrapHealth } {
     return { a: wrapHealth(this.a), b: wrapHealth(this.b) }
+  }
+
+  private startTape(slot: Slot, frame: number): void {
+    slot.tapeAt = 0
+    slot.tapeFrame = frame
+  }
+
+  // The transport moving the tape under the head. Only a clip has a tape: a
+  // webcam or a share reports an infinite duration and ignores the rate, and a
+  // pulling slot's position is arithmetic in `pullSlot`.
+  private drive(slot: Slot): void {
+    const el = slot.el
+    if (el !== null && !this.pulling(slot) && Number.isFinite(el.duration)) {
+      const rate = tapeRate(el.defaultPlaybackRate, this.transport)
+      if (el.playbackRate !== rate) el.playbackRate = rate
+    }
   }
 
   private wrap(slot: Slot): void {

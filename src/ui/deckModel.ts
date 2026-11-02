@@ -118,16 +118,19 @@ export const B_ON_AIR = 1
 // is the one the ring springs back to, and it is the only one of the four that
 // is not an artifact — off it the head crosses tracks and the noise bars start.
 //
-// Labelled as speeds and not as `◀◀ ❚❚ ▶ ▶▶`, which is what they were. The
-// glyphs made this row a media transport, and it is not one: shuttleX is a
-// signal control, the sweep rate of the spinning head, and what it produces off
-// 1 is noise bars (`shuttleBars` in gpu/pipeline.ts). Nothing here plays or
-// pauses anything. The damage was that `▶` sat lit in every fresh session —
-// shuttleX rests at 1 — beside a source with no timeline at all, while the real
-// playhead (Scrub/CueRow, under the source picker) looked less like a transport
-// than this did. A number cannot make that claim: `1x` reads as the speed it is.
+// Labelled as speeds and not as `◀◀ ❚❚ ▶ ▶▶`, which is what they were.
+// shuttleX is the tape speed: off 1 it draws noise bars (`shuttleBars` in
+// gpu/pipeline.ts), and it moves a clip at that multiple of the slot's own speed
+// (`tapeRate` in gpu/videopump.ts). A webcam or a share has no tape, so over one
+// it only draws the bars, and `▶` lit there in every fresh session claimed a
+// transport that was not there. A number reads as the speed it is.
 export const SHUTTLE_STOPS = [
-  { value: -2, label: '-2x', title: 'review — twice play speed, backwards' },
+  {
+    value: -2,
+    label: '-2x',
+    title:
+      'review — twice play speed backwards; a clip holds still, since it cannot play in reverse',
+  },
   { value: 0, label: '0', title: 'stopped — the head re-reads one sweep' },
   {
     value: 1,

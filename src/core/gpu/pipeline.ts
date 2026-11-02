@@ -2624,6 +2624,7 @@ export class Engine implements EngineApi {
 
   private renderFrame(): void {
     const d = this.gpu.device
+    this.pump.setTransport(this.controls.shuttleX)
     this.pump.pump(
       this.sources,
       this.controls.aPause > 0,

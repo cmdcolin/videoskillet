@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { ACTIVE_HEIGHT, ACTIVE_WIDTH } from '../signal/constants'
-import { VideoPump } from './videopump'
+import { tapeRate, VideoPump } from './videopump'
 
 import type { PumpedFrame } from './videopump'
 
@@ -25,6 +25,8 @@ const videoEl = (over: Partial<HTMLVideoElement> = {}): FakeVideo => {
     // with a timeline, so a stream arm overrides this with Infinity.
     duration: 30,
     paused: false,
+    defaultPlaybackRate: 1,
+    playbackRate: 1,
     addEventListener: (
       type: string,
       fn: EventListenerOrEventListenerObject,
@@ -697,6 +699,47 @@ describe('VideoPump', () => {
   // whole of what makes a rendered clip a function of N. Tested here rather
   // than in a browser for the reason `cue.ts` and `deck.ts` already are: it is
   // pure, and a browser is an expensive place to find an off-by-one in it.
+  describe('transport', () => {
+    it('plays a clip at its own speed times the shuttle', () => {
+      stubBitmaps()
+      const pump = new VideoPump()
+      const el = videoEl({ defaultPlaybackRate: 0.5 })
+      pump.setA(el)
+      pump.setTransport(4)
+      pump.pump(sink())
+      expect(el.playbackRate).toBe(2)
+      pump.setTransport(1)
+      pump.pump(sink())
+      expect(el.playbackRate).toBe(0.5)
+    })
+
+    it('stops the tape on review, since an element cannot play backwards', () => {
+      stubBitmaps()
+      const pump = new VideoPump()
+      const el = videoEl()
+      pump.setA(el)
+      pump.setTransport(-2)
+      pump.pump(sink())
+      expect(el.playbackRate).toBe(0)
+    })
+
+    it('leaves a live source alone', () => {
+      stubBitmaps()
+      const pump = new VideoPump()
+      const el = videoEl({ duration: Infinity })
+      pump.setA(el)
+      pump.setTransport(4)
+      pump.pump(sink())
+      expect(el.playbackRate).toBe(1)
+    })
+
+    it('keeps the rate inside what browsers accept', () => {
+      expect(tapeRate(1, 32)).toBe(16)
+      expect(tapeRate(0.5, 0.05)).toBe(1 / 16)
+      expect(tapeRate(1, 0)).toBe(0)
+    })
+  })
+
   describe('take', () => {
     // A `FramePull` as far as the pump is concerned: it asks for a time and
     // gets something with a display size. Recording the times is the point —
@@ -781,12 +824,22 @@ describe('VideoPump', () => {
     })
 
     it('scales the position by the deck speed, so a slowed clip renders slowed', async () => {
-      const { pump, fake } = await taking(60, { playbackRate: 0.5 })
+      const { pump, fake } = await taking(60, { defaultPlaybackRate: 0.5 })
       await pump.pullFrames(120)
       // Two seconds of take at half speed is one second of clip. The rate is a
       // setting rather than a position, which is why reading it off the element
       // does not put the element's playhead back in the loop.
       expect(fake.asked.at(-1)).toBe(1)
+    })
+
+    it('runs the tape at the transport speed, summed across a change', async () => {
+      const { pump, fake } = await taking(60)
+      await pump.pullFrames(60)
+      pump.setTransport(4)
+      await pump.pullFrames(120)
+      pump.setTransport(0)
+      await pump.pullFrames(180)
+      expect(fake.asked).toEqual([0, 1, 5, 5])
     })
 
     it('does not seek the element, which is the whole point', async () => {
