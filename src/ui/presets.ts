@@ -381,7 +381,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'scrambled channel',
     group: 'RF / Broadcast',
     blurb:
-      "Premium channel with no decoder box. The head-end drops the carrier 6 dB through each line's blanking, so the blanking detects as grey. The set's line oscillator runs near the line rate with nothing to lock to, so the blanking lands at about the same place on every line: a grey bar, carrying the weakened burst as a stripe of colour, wanders down the screen with the picture's halves swapped either side of it. The frame holds, because the field pulses are left alone. The ACC turns the chroma up to match the weak burst and the colour floods, and slow colour loops, a drifting crystal and a fine tuner that will not settle wind rainbow bands down the screen. The set's colour killer is turned down, so it keeps colour on through the weak burst.",
+      "Premium channel with no decoder box. The head-end drops the carrier 6 dB through each line's blanking, so the blanking detects as grey. The set's line oscillator runs near the line rate with nothing to lock to, so the blanking lands at about the same place on every line: a grey bar, carrying the weakened burst as a stripe of colour, wanders down the screen with the picture's halves swapped either side of it. The frame holds, because the field pulses are left alone. The ACC turns the chroma up to match the weak burst and the colour floods, and slow colour loops and a drifting crystal wind rainbow bands down the screen. The set's colour killer is turned down, so it keeps colour on through the weak burst.",
     patch: {
       scramble: 0.6,
       scrambleMode: 3,
@@ -398,11 +398,12 @@ export const PRESETS: PresetDef[] = [
       burstLock: 0.3,
       noiseIre: 2,
     },
-    // Both wander on the attractor: a crystal and a tuner drift with heat and
-    // never repeat, and a steady roll reads as a filter laid over the picture.
+    // The crystal wanders on the attractor: it drifts with heat and never
+    // repeats, and a steady roll reads as a filter laid over the picture. The
+    // fine tuner is left still, because its wander took the burst under the
+    // killer and greyed the picture out in passing.
     mod: [
       { target: 'scDetuneKHz', source: 'lorenz', rateHz: 0.2, depth: 0.00005 },
-      { target: 'rfMistuneMHz', source: 'lorenz', rateHz: 0.3, depth: 0.1 },
     ],
   },
   {
@@ -433,7 +434,6 @@ export const PRESETS: PresetDef[] = [
     mod: [
       { target: 'hDetuneHz', source: 'lorenz', rateHz: 0.4, depth: 0.005 },
       { target: 'scDetuneKHz', source: 'lorenz', rateHz: 0.2, depth: 0.00005 },
-      { target: 'rfMistuneMHz', source: 'lorenz', rateHz: 0.3, depth: 0.1 },
     ],
   },
   {
@@ -461,7 +461,6 @@ export const PRESETS: PresetDef[] = [
     },
     mod: [
       { target: 'scDetuneKHz', source: 'lorenz', rateHz: 0.2, depth: 0.00005 },
-      { target: 'rfMistuneMHz', source: 'lorenz', rateHz: 0.3, depth: 0.1 },
     ],
   },
   {
@@ -560,7 +559,6 @@ export const PRESETS: PresetDef[] = [
     },
     mod: [
       { target: 'scDetuneKHz', source: 'lorenz', rateHz: 0.2, depth: 0.00005 },
-      { target: 'rfMistuneMHz', source: 'lorenz', rateHz: 0.3, depth: 0.1 },
     ],
   },
   {
@@ -3562,7 +3560,6 @@ export const PRESETS: PresetDef[] = [
     },
     mod: [
       { target: 'scDetuneKHz', source: 'lorenz', rateHz: 0.2, depth: 0.00005 },
-      { target: 'rfMistuneMHz', source: 'lorenz', rateHz: 0.3, depth: 0.1 },
     ],
   },
   {
