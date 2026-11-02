@@ -516,11 +516,15 @@ if (upload) {
   try {
     publish(mp4, S3_PREFIX)
   } catch {
-    die('the upload failed — the clip is still on disk')
+    die(
+      'the upload or the CloudFront invalidation failed — the clip is still on disk',
+    )
   }
   console.log(`agentreel: ${CLIP_URL}`)
 } else {
-  console.log(`agentreel: upload with ${uploadCmd.join(' ')}`)
+  console.log(
+    `agentreel: upload with ${uploadCmd.join(' ')}, then invalidate /videoskillet/agent-drive.mp4 on CloudFront`,
+  )
 }
 if (keep) console.log(`agentreel: kept ${tmp} (terminal log, chrome profile)`)
 if (!landed) process.exit(1)
