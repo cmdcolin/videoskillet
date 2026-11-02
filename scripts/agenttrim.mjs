@@ -1,7 +1,7 @@
 // Cut the waiting out of an agentreel.mjs recording.
 //
 // Usage: node scripts/agenttrim.mjs <in.mp4> <out.mp4> [--speed=1.25]
-//        [--from=SECONDS] [--to=SECONDS]
+//        [--from=SECONDS|auto] [--to=SECONDS]
 //   needs ffmpeg.
 //
 // A recorded session is mostly a model thinking: the terminal shows a spinner
@@ -16,6 +16,9 @@
 //   every frame, so a fixed threshold would keep all of it. The change is
 //   compared with the median of the second before it, and only a jump well
 //   above that counts.
+//
+// The take starts where the prompt lands, which `--from=auto` finds on its own.
+// Claude Code starting up before it, the banner and the empty pane, is cut.
 //
 // Both halves of the frame are cut together, so the picture and the text
 // beside it stay in step. The layout is agentreel.mjs's: the app on the left,
@@ -35,7 +38,7 @@ if (input === undefined || output === undefined) {
   process.exit(1)
 }
 const speed = Number(flag('speed', '1.25'))
-const from = Number(flag('from', '0'))
+const fromFlag = flag('from', 'auto')
 const to = Number(flag('to', 'Infinity'))
 
 const RATE = 10
@@ -99,6 +102,19 @@ for (let f = 1; f < text.length; f++) {
     events.push({ t, keep: PICTURE_KEEP })
   }
 }
+const firstPicture = events.find(e => e.keep === PICTURE_KEEP)?.t ?? Infinity
+// The prompt is the text the model then sits thinking about, so it is the last
+// text before the longest quiet stretch ahead of the first picture change.
+const early = events.filter(e => e.keep === TEXT_KEEP && e.t < firstPicture)
+const prompt = early.reduce(
+  (best, e, i) => {
+    const gap = (early[i + 1]?.t ?? firstPicture) - e.t
+    return gap > best.gap ? { t: e.t, gap } : best
+  },
+  { t: TEXT_KEEP[0], gap: 0 },
+)
+const from = fromFlag === 'auto' ? prompt.t - TEXT_KEEP[0] : Number(fromFlag)
+console.log(`agenttrim: from ${from.toFixed(1)}s`)
 const inRange = events.filter(e => e.t >= from && e.t <= to)
 if (inRange.length === 0) {
   console.error('agenttrim: nothing happens in that range')

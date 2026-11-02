@@ -780,12 +780,13 @@ person would type, so the take ends when the terminal goes quiet:
 pnpm agentreel --model=sonnet --until=quiet \
   --base="$(cat scripts/agenttasks/build-purplady.base)" \
   --task=scripts/agenttasks/build-purplady.txt
-node scripts/agenttrim.mjs clips/agent-drive.mp4 clips/agent-build.mp4 --from=13
+node scripts/agenttrim.mjs clips/agent-drive.mp4 clips/agent-build.mp4
 ```
 
 `agenttrim.mjs` cuts the thinking out of the recording. It keeps a window around
 each new paragraph in the terminal and each step in the picture, and plays them
-at 1.25×. `--from` skips Claude Code starting up. The trimmed clip goes to
+at 1.25×. It starts at the prompt, which is the last text before the model's
+first long pause, so Claude Code starting up is cut. The trimmed clip goes to
 `https://myloveydove.com/videoskillet/agent-build.mp4`.
 
 A look built on static or a feedback loop grabs at several MB a second, so the
