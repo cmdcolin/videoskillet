@@ -31,7 +31,8 @@ export function pattern(
   const px = name === 'bars' ? bars() : name === 'sweep' ? sweep() : null
   // Black rather than nothing for `none`, so a deck the link left empty holds a
   // picture the chain can damage instead of whatever the texture came up with.
-  // A GPU-generated source bypasses it either way.
+  // Uploading it switches slot A to a picture, so `render.ts` switches a
+  // GPU-generated source back on after every upload.
   const frame =
     px === null
       ? black(ACTIVE_WIDTH, ACTIVE_HEIGHT)

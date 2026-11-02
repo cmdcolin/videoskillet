@@ -297,9 +297,8 @@ const NOISE: Record<string, number> = {
 }
 const linkPattern =
   link.src === 'bars' ? 'bars' : link.src === 'sweep' ? 'sweep' : null
-if (link.src !== null && link.src in NOISE) {
-  engine.setNoiseSource(NOISE[link.src])
-}
+const generator = link.src !== null && link.src in NOISE ? NOISE[link.src] : 0
+if (generator !== 0) engine.setNoiseSource(generator)
 if (link.srcb !== null) {
   if (link.srcb === 'none') engine.setSourceBEnabled(false)
   else if (link.srcb in NOISE) engine.setNoiseSourceB(NOISE[link.srcb])
@@ -390,6 +389,7 @@ try {
     }
     if (frame !== null) {
       engine.setImagePixels(frame, ACTIVE_WIDTH, ACTIVE_HEIGHT)
+      if (generator !== 0) engine.setNoiseSource(generator)
     }
     // Before the step, because the step is what reads it. The window the
     // analyser hands over ends at this frame's position in the track, so the
