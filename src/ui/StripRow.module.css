@@ -18,7 +18,7 @@
    was not the names — it was the hold chip being three characters wider on some
    rows than others, which is the shift rather than the feature. Cards that
    actually say something by their width want the *hold* to set it, which is
-   docs/EDITOR.md › _Seeing the shape_ and a different piece of work. */
+   docs/EDITOR.md › _A card must not move because its own text changed_ and a different piece of work. */
 .card {
   flex: none;
   min-width: 108px;

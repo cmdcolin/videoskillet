@@ -326,7 +326,7 @@ export class VideoPump {
   }
 
   // **The take's clock reaching the video**, which is the last place in the
-  // engine it did not (docs/EDITOR.md › _Take state_). `fps` puts every slot on
+  // engine it did not (docs/EDITOR.md › _The clock, the automation, and the take's starting state_). `fps` puts every slot on
   // a playhead the pump computes from the frame number; `null` gives them back
   // to their elements.
   //

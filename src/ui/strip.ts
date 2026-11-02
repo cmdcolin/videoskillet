@@ -172,7 +172,7 @@ export interface Row {
   //
   // `seconds` is how the *look* arrives: a morph over the resting board, or 0
   // to cut. `transition` is how the *source* arrives: a named fault off the
-  // shelf (EDITOR.md › _Transitions_) that breaks the picture, swaps the row in
+  // shelf (EDITOR.md › _Transitions are faults that resolve_) that breaks the picture, swaps the row in
   // on the frame it is least legible, and heals onto it — or null for the plain
   // cut, which is what every row had before the shelf was reachable from one
   // and is still the default.
@@ -293,7 +293,7 @@ type PlainEffect =
   | { kind: 'prerollClip'; id: string; start: number }
 
 // What the driver is handed. Either a row's step outright, or that same step
-// behind a named fault (EDITOR.md › _Transitions_): break the picture, and do
+// behind a named fault (EDITOR.md › _Transitions are faults that resolve_): break the picture, and do
 // all of it on the frame the picture is least legible.
 //
 // **The fault carries the whole step, not only the session**, and that is the

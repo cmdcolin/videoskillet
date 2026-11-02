@@ -2055,7 +2055,7 @@ export class Engine implements EngineApi {
     return out
   }
 
-  // Everything a take needs held still (docs/EDITOR.md › _Take state_): time
+  // Everything a take needs held still (docs/EDITOR.md › _The clock, the automation, and the take's starting state_): time
   // counted in frames at `fps`, dice drawn from `seed`, and a signal path
   // starting where a fresh engine's does.
   //
@@ -2284,7 +2284,7 @@ export class Engine implements EngineApi {
 
   // Run a transition: break the controls a recipe names, fire `onCut` on the
   // frame the picture is least legible, and heal (signal/fault.ts, and
-  // docs/EDITOR.md › _Transitions_ for what a transition is here).
+  // docs/EDITOR.md › _Transitions are faults that resolve_ for what a transition is here).
   //
   // A plan handed over once rather than a curve React draws, which is the same
   // contract `setStab` and the bay already keep and for a sharper reason: the

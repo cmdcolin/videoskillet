@@ -13,7 +13,7 @@ import type { MutateAmount } from './mutate'
 // Under it rather than in the panel because a strip is what a hand works during
 // a take, and the panel is where a circuit gets dialed in — and because 332px
 // does not hold a rundown. Shut, it is one line: the app is what it was before
-// the strip existed, which is the property docs/EDITOR.md › _a second page_
+// the strip existed, which is the property docs/EDITOR.md › _Why the strip stays in the app_
 // promises in exchange for the strip not being one.
 //
 // **The drag lives here, not on the card.** Reordering needs every card's
@@ -24,7 +24,7 @@ import type { MutateAmount } from './mutate'
 //
 // Pointer events rather than HTML5 drag-and-drop, like every other drag in this
 // app: `dataTransfer` has no touch support and a drag image that fights
-// styling. See the list in docs/EDITOR.md › _Interaction_.
+// styling.
 
 interface Drag {
   from: number
@@ -92,7 +92,7 @@ export function StripTray(props: {
     start: () => void
     cancel: () => void
   }
-  // The automation tape (docs/EDITOR.md › _Live input has no offline meaning_).
+  // The automation tape (docs/EDITOR.md › _The clock, the automation, and the take's starting state_).
   // ● starts the walk with the tape rolling, ■ seals it, and ⎙ replays it into
   // the render — so a performance made at whatever rate the tab managed comes
   // back as a file at 60.

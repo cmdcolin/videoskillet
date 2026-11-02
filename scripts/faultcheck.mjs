@@ -4,7 +4,7 @@
 //   node scripts/faultcheck.mjs [port]
 //
 // The shelf is a table of recipes over controls that already exist
-// (docs/EDITOR.md › _Transitions_), so what needs checking is not the values —
+// (docs/EDITOR.md › _Transitions are faults that resolve_), so what needs checking is not the values —
 // `ui/transitions.test.ts` holds those against the slider ranges — but the three
 // claims the engine makes about running one:
 //

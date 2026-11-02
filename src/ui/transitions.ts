@@ -1,6 +1,6 @@
 // The shelf: named transitions, as recipes over controls that already exist.
 //
-// The design is [`docs/EDITOR.md`](../../docs/EDITOR.md) › _Transitions_, and
+// The design is [`docs/EDITOR.md`](../../docs/EDITOR.md) › _Transitions are faults that resolve_, and
 // the premise is the whole project's: **you do not draw a wipe over the cut —
 // you break something, cut while it is broken, and let it heal onto the new
 // clip.** `signal/fault.ts` is the envelope that does the breaking; this is the

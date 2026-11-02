@@ -352,7 +352,7 @@ export function App() {
   // too.
   const { setError } = eng
   // The automation tape, built before the write path because the write path
-  // taps it (docs/EDITOR.md › _Live input has no offline meaning_). It is inert
+  // taps it (docs/EDITOR.md › _The clock, the automation, and the take's starting state_). It is inert
   // until ● is pressed: every verb on the tap checks whether anything is
   // rolling first, so the app's ordinary write path costs one null test.
   const auto = useAutomation(engineRef)
@@ -1919,7 +1919,7 @@ export function App() {
             // name, and a shelf clip is one of them. Without this a row
             // captured over a clip recorded the look and nothing about
             // the picture, which is why a rundown could not be a sequence
-            // of clips (docs/EDITOR.md › _A row names its clip_).
+            // of clips (docs/EDITOR.md › _A row is a session plus two fields_).
             clip: eng.deckClipA,
             // A shake row departs from whatever is live rather than
             // landing on the board it was captured from, so the look's

@@ -2094,7 +2094,7 @@ export function useEngine(args: { rand: Rand }) {
   // Two callers, and the difference between them is `boot`. A link arriving at
   // page load is one; a **strip row firing** is the other, and it is why this is
   // a function of an engine rather than boot code inline — a row is a query
-  // string (docs/EDITOR.md › _A row is a thing that already exists_), so "fire
+  // string (docs/EDITOR.md › _A row is a session plus two fields_), so "fire
   // row 3" and "open this link" have to mean the same thing or the strip is a
   // second, worse implementation of the share contract.
   //

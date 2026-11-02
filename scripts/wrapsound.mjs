@@ -14,7 +14,7 @@
 // `seeked`, and an element that is seeking is not playing. That is sound
 // reasoning about a seek and still not the same thing as having listened. It
 // says so itself — "measure before building" — because the fix (a second read
-// head, docs/EDITOR.md › _Performance_) costs a policy decision about the one
+// head, docs/EDITOR.md › _Preroll depth 1_) costs a policy decision about the one
 // preroll slot per deck, and that is not a price worth paying for an inference.
 //
 // So this listens, on the app's own audio path.

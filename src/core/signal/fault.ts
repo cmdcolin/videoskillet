@@ -6,7 +6,7 @@
 // pictures — it has both and it draws between them. This has a receiver, and
 // what it can do instead is lose its grip and get it back: the frame where the
 // picture is least legible is the frame that hides the edit, so the cut goes
-// there and the healing does the rest. See docs/EDITOR.md › _Transitions_.
+// there and the healing does the rest. See docs/EDITOR.md › _Transitions are faults that resolve_.
 //
 // Fourth sibling of glide, modstate and stab, and the distinction between the
 // four is the thing to hold on to:
@@ -38,7 +38,7 @@ export interface FaultPlan {
   peak: Partial<Controls>
   // How long it lasts, in rendered frames. Frames rather than milliseconds
   // because the whole point is that this is right under an offline render's
-  // virtual clock without a second code path (docs/EDITOR.md › _Take state_).
+  // virtual clock without a second code path (docs/EDITOR.md › _The clock, the automation, and the take's starting state_).
   frames: number
   // Where the source swap lands, 0..1 of the span. Usually 0.5 — the peak — but
   // not always: a transition whose damage should ride the *incoming* clip cuts

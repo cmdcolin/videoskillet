@@ -175,7 +175,7 @@ export function makeAutomationRunner(): AutomationRunner {
 // mjs` drives a take from outside React, and a harness that re-implements the
 // app's wiring inside itself measures the engine correctly and the app not at
 // all — which is exactly how a transition's stale-cut bug survived a browser
-// check that was passing (docs/EDITOR.md › _Landed: between rows_). This is the
+// check that was passing (docs/EDITOR.md › _Transitions are faults that resolve_). This is the
 // seam that keeps the two the same code.
 //
 // Takes a getter rather than an engine so the app can read through its ref at

@@ -98,9 +98,8 @@ function ClipRow(props: {
           **A button and not a drag**, which is a substitution worth naming: the
           shelf is a modal dialog, so there is nothing to drag *to* — the tray is
           behind it and covered. A drag would also be the one way to reach this,
-          which is the rule docs/EDITOR.md › _Interaction_ sets against: a drag
-          is unreachable on a touchscreen and this app routes its verbs through
-          things you can press.
+          and this app avoids that: a drag is unreachable on a touchscreen, so
+          the app routes its verbs through things you can press.
 
           It is the better gesture here anyway. Building a rundown of eight
           clips means opening the shelf once and pressing this eight times,

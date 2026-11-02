@@ -15,7 +15,7 @@
 // 3% apart in size. `startTake` is what closed it — every buffer back to what
 // the device handed over, every CPU modulator rebuilt, and the dice seeded — so
 // the thing this file used to explain it could not check is now the headline
-// check (docs/EDITOR.md › _Take state_).
+// check (docs/EDITOR.md › _The clock, the automation, and the take's starting state_).
 //
 // **The clip exclusion is gone**, and it was the older of two. This file used
 // to say a take over a `<video>` could not be reproducible because the pump
@@ -445,7 +445,7 @@ check(
 
 // --- a recorded take is a take you can ask for twice --------------------------
 //
-// docs/EDITOR.md › _Live input has no offline meaning_, measured: what a hand
+// docs/EDITOR.md › _The clock, the automation, and the take's starting state_, measured: what a hand
 // did while the take rolled, replayed onto the frames it did it on.
 const t1 = await renderAuto(true)
 const t2 = await renderAuto(true)

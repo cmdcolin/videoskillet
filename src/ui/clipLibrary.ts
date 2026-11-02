@@ -103,7 +103,7 @@ export interface Clip {
   // runs, and a clip added straight off the shelf has never been on a deck for
   // anything to have read `duration` off. Without this the hold fell back to a
   // bar count, so eight clips of eight different lengths played for eight
-  // identical bars — docs/EDITOR.md › _What to do next_ § 8.
+  // identical bars.
   seconds: number
 }
 

@@ -13,7 +13,7 @@ import { usePadHold } from './usePadHold'
 // pictures the receiver is perfectly happy about. These are the other kind, the
 // one only this project can offer: a fault that happens to resolve. You do not
 // draw a wipe over the cut, you break something, cut while it is broken, and let
-// it heal onto the new source (docs/EDITOR.md › _Transitions_). So the two rows
+// it heal onto the new source (docs/EDITOR.md › _Transitions are faults that resolve_). So the two rows
 // are two different verbs and they read as two rows.
 //
 // A tap is one gesture and the whole transition: the engine runs the fault on

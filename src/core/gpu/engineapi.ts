@@ -222,7 +222,7 @@ export interface EngineApi {
   setStabBoard: (board: Controls | null) => void
   // A transition, as a fault that resolves: break what the recipe names, swap
   // the source on the frame the picture is least legible, and heal onto it
-  // (signal/fault.ts; docs/EDITOR.md › _Transitions_). Same contract as the two
+  // (signal/fault.ts; docs/EDITOR.md › _Transitions are faults that resolve_). Same contract as the two
   // above — handed over once, applied and undone inside each frame, never read
   // back — and frame-clocked, so it is already right under a take's clock.
   // Returns the release for a held plan (`FaultPlan.held`).
@@ -247,7 +247,7 @@ export interface EngineApi {
     size: { width: number; height: number },
   ) => void
   // Everything a take needs held still, in one switch, and `endTake` to put it
-  // all back (docs/EDITOR.md › _Take state_):
+  // all back (docs/EDITOR.md › _The clock, the automation, and the take's starting state_):
   //
   //   - time is counted in frames at `fps` rather than off the wall clock,
   //     which is what turns the five rate-driven readers in the signal path —
