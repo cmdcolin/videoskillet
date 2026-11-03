@@ -470,7 +470,7 @@ export const GROUPS: Group[] = [
         step: 1,
         curve: 'synth',
         unit: 'Hz',
-        vernier: { span: 200 },
+        vernier: { span: 200, step: 0.2 },
         help: "The first oscillator's frequency, read against the raster: one cycle per frame at 60 Hz is a vertical gradient, the 15734 Hz line rate turns it sideways, and a multiple paints standing bars. At 3579545 Hz it lands on the subcarrier and the encoder returns flat colour.",
       },
       {

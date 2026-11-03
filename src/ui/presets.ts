@@ -7,8 +7,10 @@ import {
   ROLL_STAYS_UNDER,
   rollLanding,
 } from './mutate'
+import { CENTS_PER_STEP } from './vernier'
 
 import type { ControlKey, Controls } from '../core/controls'
+import type { SliderDef } from './controls'
 import type { ModRouting } from './modSlots'
 
 export interface PresetDef {
@@ -2484,12 +2486,12 @@ export const PRESETS: PresetDef[] = [
     displayName: 'torn circle',
     group: 'Circuit bent',
     blurb:
-      "The synth's shape generator builds a circle out of two ramps locked to H and V drive. Its worn circuits bow the ramps, so the circle comes out lopsided, and noise on the comparator frays its edge. A slow ramp on the comparator's other input opens the circle and resets it once a second. The comparator's output is subtracted from input A's cable, so the dark picture inside the circle drops below the set's slicer and arrives as sync. The set's line oscillator is pulled toward it, so lines tear and flag colour where the circle crosses the picture. The circle drifts around the frame, and the soundtrack's loudness deepens the false sync.",
+      "The synth's shape generator builds a circle out of two ramps locked to H and V drive. Its worn circuits bow the ramps, so the circle comes out lopsided, and noise on the comparator frays its edge. A slow ramp on the comparator's other input opens the circle and resets it every two and a half seconds. The comparator's output is subtracted from input A's cable, so the dark picture inside the circle drops below the set's slicer and arrives as sync. The set's line oscillator is pulled toward it, so lines tear and flag colour where the circle crosses the picture. The circle drifts around the frame, and the soundtrack's loudness deepens the false sync.",
     patch: {
       synthSyncIre: 45,
       syncSlicer: 2,
       synthDirt: 1,
-      synthAHz: 1,
+      synthAHz: 0.4,
       synthShape: 0,
       synthBSrc: 2,
       synthMix: 3,
@@ -4112,12 +4114,21 @@ const HOLD_KEYS: ReadonlySet<ControlKey> = new Set<ControlKey>(
     .map(s => s.key),
 )
 
-// Snap a summed value back onto its slider's range and grid, so a mix lands on
-// values the UI can actually show and `matchPreset` can compare exactly.
+// Snap a summed value back onto its slider's range and finest grid, so a mix
+// lands on values the UI can actually show and `matchPreset` can compare
+// exactly. A control with a vernier card shows the card's grid, so a preset
+// can sit between the row's notches, as `torn circle`'s sub-hertz ramp does.
 function quantize(key: ControlKey, v: number): number {
   const s = SLIDER_BY_KEY.get(key)
-  return s === undefined ? v : snapToStep(s, v)
+  return s === undefined ? v : snapToStep({ ...s, step: finestStep(s) }, v)
 }
+
+const finestStep = (s: SliderDef) =>
+  s.vernier === undefined
+    ? s.step
+    : s.vernier === true
+      ? s.step / CENTS_PER_STEP
+      : (s.vernier.step ?? s.step)
 
 // What a recipe says about motion: the heaviest preset that carries routings
 // wins outright, its depths scaled by how much of it is in.
