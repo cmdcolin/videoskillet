@@ -4,7 +4,6 @@ date: 2026-11-02
 summary:
   The chroma keyer can fill the hole it cuts with its own earlier output, so a
   skeleton dancing in front of the green screen leaves a trail of fading copies
-  in an abandoned ballroom.
 image: https://myloveydove.com/videoskillet/blog/keyer-fade-skeleton.webp
 imageAlt:
   A skeleton dancing beside a grand piano in an abandoned ballroom, trailed by a

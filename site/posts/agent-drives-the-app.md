@@ -1,9 +1,7 @@
 ---
 title: Letting an AI agent drive the app
 date: 2026-11-01
-summary:
-  Claude Code and other AI agents can drive videoskillet from a description of a
-  look.
+summary: Claude Code and other AI agents can drive videoskillet.
 image: /blog/agent-ai-card.webp
 imageAlt:
   The words "videoskillet + AI" in white type on black, fringed in violet and
@@ -24,13 +22,7 @@ An AI agent can drive videoskillet while it runs. Ask Claude Code or Claude in
 Chrome for a look in plain words, and the agent sets the controls, reads the
 board back and gives you the link.
 
-In the recording, Claude Sonnet is given the Purplady look from the gallery and
-asked to build it up from the plain photo one stage at a time. It reads the
-look's settings, puts the plain photo back, and applies the stages in signal
-order, taking a screenshot after each one and saying what changed. Tape noise
-turns the fur to grain, the timebase makes the face wobble, the decoder turns
-the frame violet, and the chroma feedback loop takes the picture over in violet
-bands. The waits between stages are cut out.
+In the recording, Claude Sonnet recreates the Purplady demo step-by-step
 
 An agent can also land a whole look in one step: `window.vfBoard.apply(link)`
 applies a link, and `window.vfBoard.read()` returns the board as text.
