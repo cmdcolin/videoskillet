@@ -2484,17 +2484,17 @@ export const PRESETS: PresetDef[] = [
     displayName: 'torn circle',
     group: 'Circuit bent',
     blurb:
-      "The synth's shape generator builds a circle out of two ramps locked to H and V drive, and a worn ramp oscillator near line rate is compared against it. The comparator's output is subtracted from input A's cable, so the dark picture inside its pattern drops below the set's slicer and arrives as sync. The oscillator drifts 10 % and carries 20 µs of timing noise, so the false sync never sits still, and the set's line oscillator keeps chasing it: the picture bends and hooks in curves, the burst gate goes with it, and the colour lands somewhere new on every tear. The circle drifts around the frame, and the soundtrack's loudness deepens the false sync.",
+      "The synth's shape generator builds a circle out of two ramps locked to H and V drive. Its worn circuits bow the ramps, so the circle comes out lopsided, and noise on the comparator frays its edge. A slow ramp on the comparator's other input opens the circle and resets it once a second. The comparator's output is subtracted from input A's cable, so the dark picture inside the circle drops below the set's slicer and arrives as sync. The set's line oscillator is pulled toward it, so lines tear and flag colour where the circle crosses the picture. The circle drifts around the frame, and the soundtrack's loudness deepens the false sync.",
     patch: {
       synthSyncIre: 45,
       syncSlicer: 2,
       synthDirt: 1,
-      synthAHz: 15800,
+      synthAHz: 1,
       synthShape: 0,
       synthBSrc: 2,
       synthMix: 3,
-      synthJitterUs: 20,
-      synthDriftPct: 10,
+      synthJitterUs: 3,
+      synthDriftPct: 6,
       synthShapeSize: 1.4,
     },
     mod: [
