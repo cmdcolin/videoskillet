@@ -2,6 +2,49 @@
 
 All notable changes to videoskillet are documented here.
 
+## [2.25.1](https://github.com/cmdcolin/videoskillet/compare/v2.25.0...v2.25.1) - 2026-11-03
+
+### Features
+- *(ui)* [`1354b7e`](https://github.com/cmdcolin/videoskillet/commit/1354b7ec8be21c133bd2069cf1f5626255d50108) apply a whole board from a link or a pasted board text
+- *(signal)* [`a0e0893`](https://github.com/cmdcolin/videoskillet/commit/a0e0893b741baba8347b6c7869f29a8866949a8b) the synth's oscillators drift and jitter
+- *(signal)* [`6d9c23d`](https://github.com/cmdcolin/videoskillet/commit/6d9c23dc986fc35f7dd253b9319c0c06e0354b19) a shape generator on the synth combiner's second input
+- *(ui)* [`68e6050`](https://github.com/cmdcolin/videoskillet/commit/68e6050d6a0367bdcc5e3736fa4a2edd9bce7d86) torn bands, torn circle and jittery ring mod presets
+- *(signal)* [`5476770`](https://github.com/cmdcolin/videoskillet/commit/5476770d7a9aae552415ebe83e4f961348639a34) the sound into the synth's osc A frequency input
+- *(signal)* [`761277a`](https://github.com/cmdcolin/videoskillet/commit/761277ac297d7f7f6bdc1e852bf91ca8880cb357) the synth's osc A can sweep a delay line in A's cable
+- *(signal)* [`265d2b0`](https://github.com/cmdcolin/videoskillet/commit/265d2b0de41dfe54b13b5851dcb9429f19e701b6) the synth's whole output drives A's delay line and a VCA
+- *(signal)* [`a157a1d`](https://github.com/cmdcolin/videoskillet/commit/a157a1dd8a289afbc43c8500539326a585d82922) a wavefolder after the synth's shape generator, and a wilder torn circle
+- *(signal)* [`79043c9`](https://github.com/cmdcolin/videoskillet/commit/79043c936bb590239175723650dc9ac77cb31b6e) circuit dirt for the synth's oscillators, and the synth into A's sync
+- *(site)* [`99d9dd4`](https://github.com/cmdcolin/videoskillet/commit/99d9dd4e5939784003625da197fad9017e21d09c) play-button overlay on blog videos
+- *(site)* [`15df746`](https://github.com/cmdcolin/videoskillet/commit/15df746dc2d80e40c99995fc1c191b83648ed82b) a post that opens with a video drops the hero image
+- *(ui)* [`ba2de23`](https://github.com/cmdcolin/videoskillet/commit/ba2de23b1ffa8da77b2b4ee1c3e6e7d8610c75bb) torn circle drives false sync into A from a worn synth
+
+### Fixes
+- *(gpu)* [`ee672eb`](https://github.com/cmdcolin/videoskillet/commit/ee672eb96b3b625e7a58121524da9f904e263613) the renderer keeps a link's generated source on after the first frame
+- *(ui)* [`370c3a0`](https://github.com/cmdcolin/videoskillet/commit/370c3a0181b18818824a5b6b3e2468e78916cd76) settle the frame store of an engine rebuilt after a device loss
+- *(ui)* [`43c188a`](https://github.com/cmdcolin/videoskillet/commit/43c188ae6b669a0d67b9e77e9e1d715ae863bd90) jittery ring mod clips the product so its delay steps
+- *(ui)* [`d9dc053`](https://github.com/cmdcolin/videoskillet/commit/d9dc05393ae6ada5202b0d7dc3d3e760f8c852ae) a preset lands on stock from the landing look, as a ?preset= link does
+- *(ui)* [`217cd08`](https://github.com/cmdcolin/videoskillet/commit/217cd085ea4c3050f5278169976711953a51868b) torn circle is a slow iris of false sync
+- *(ui)* [`4a82988`](https://github.com/cmdcolin/videoskillet/commit/4a82988c378f22518127823209ac639608162a81) torn circle's iris back at 0.4 Hz, on osc A's vernier grid
+
+### Documentation
+- [`37d1bc4`](https://github.com/cmdcolin/videoskillet/commit/37d1bc44a1eae2c5acf44e31d1711b03cda624ff) record why the Rutt/Etra scan processor stays off main
+- [`612e709`](https://github.com/cmdcolin/videoskillet/commit/612e709322b54ec60b35f8fd866f49eca732aacf) the agent post shows Claude building Purplady from its plain photo
+- [`2cf439c`](https://github.com/cmdcolin/videoskillet/commit/2cf439c4698d40c7660344a25b1995e05089623f) the agent post's take looks at every stage it builds
+- [`89dd956`](https://github.com/cmdcolin/videoskillet/commit/89dd9562343cfaea0ea6ee1894f0ad495e4f5f39) the agent post's take is cut for the page column
+- [`4242885`](https://github.com/cmdcolin/videoskillet/commit/4242885aa303fe94706a8726ff5e99788e76d934) the keyer post leads with freeze, its flashing and edged ghosts
+- [`54836e9`](https://github.com/cmdcolin/videoskillet/commit/54836e997e857938c5b1d6302eb19a967309bccc) fold the freeze draft into the keyer ghosts post
+- *(site)* [`868d415`](https://github.com/cmdcolin/videoskillet/commit/868d4153811bbc25f8b00006211f070f725c497b) label the agent video for screen readers
+- [`b4a9176`](https://github.com/cmdcolin/videoskillet/commit/b4a91763314c34a7177e3720ade3252059401436) the keyer ghosts post shows one look, the skeleton's fading trail
+- [`094871f`](https://github.com/cmdcolin/videoskillet/commit/094871fa56de6e4958b2448459ff138625f77430) the keyer ghosts post adds the violet slabs still
+- [`cf978bc`](https://github.com/cmdcolin/videoskillet/commit/cf978bc1ab1f6bc64d8c7e6505ec976974ed76bb) the keyer ghosts post is setup bullets, a panel shot and a prompt
+- [`82cdcac`](https://github.com/cmdcolin/videoskillet/commit/82cdcac2e4a06c117612818faf274ca7371c14a5) the keyer ghosts post is two setup bullets and its pictures
+- [`9dd0187`](https://github.com/cmdcolin/videoskillet/commit/9dd0187d53a8728350f63f375427000f6b45173b) the keyer ghosts post shows the whole app with the fill rows zoomed
+
+### Chores
+- [`96a056c`](https://github.com/cmdcolin/videoskillet/commit/96a056c8c53a193b48c33a77d91893615b3fc5d3) record, trim and title the agent post's take reproducibly
+- [`a99a8a4`](https://github.com/cmdcolin/videoskillet/commit/a99a8a42f4f3c92d8276277eab38571614e915c7) agenttrim finds the prompt, and the post's task asks for a look at each stage
+- [`8a80c7a`](https://github.com/cmdcolin/videoskillet/commit/8a80c7ab41c60a50c7c7176090bb77b797f7b48c) a split layout for agent takes shown in a page column
+
 ## [2.25.0](https://github.com/cmdcolin/videoskillet/compare/v2.24.1...v2.25.0) - 2026-11-02
 
 ### Features
