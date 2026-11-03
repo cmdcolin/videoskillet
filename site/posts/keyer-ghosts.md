@@ -22,6 +22,12 @@ leaves a trail of itself as it dances.
 **Program A in fill** at 0.15 mixes a little of the room into each recording, so
 every copy fades back into the ballroom.
 
+![The skeleton dancing in the ballroom with a trail of copies behind it. The live skeleton and every copy stand on a thick violet slab that runs down and to the right from each bone.](https://myloveydove.com/videoskillet/blog/keyer-loop-extrude.webp)
+
+[Violet slabs](/app/#iurl=https://thumb.wikimedia.org/wikipedia/commons/thumb/d/de/Abandoned_grand_piano_-_Abandoned_Ballroom_%286%29.jpg/1280px-Abandoned_grand_piano_-_Abandoned_Ballroom_%286%29.jpg&vurlb=https://myloveydove.com/videoskillet/sources/creatures-for-chroma-key-death.webm&set=chromaGain:1.3,crtSat:1.2,bGain:1,bGenlock:1,bKey:1,bKeyAcceptDeg:45,bKeyClip:0.05,bKeySpill:0.6,bKeyFill:2,cfbHold:5,bKeyFillMixA:0.1,bKeyEdge:3,bKeyEdgeUs:1.5,bKeyEdgeY:0.5,bKeyEdgeSat:0.35,bKeyEdgeHueDeg:30)
+turns on the keyer's **extrude** edge, and the frame store records each copy
+with the slab it had.
+
 _Footage: the skeleton is from
 [Creatures For Chroma Key](https://archive.org/details/EvaVikstromCreaturesForChromaKey)
 by Eva Vikström, under CC BY 3.0. The ballroom is
