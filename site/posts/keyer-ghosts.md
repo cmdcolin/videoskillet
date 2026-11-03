@@ -15,7 +15,7 @@ look: '#iurl=https://thumb.wikimedia.org/wikipedia/commons/thumb/d/de/Abandoned_
 - Chroma key: fill to loop bus, program A in fill to 0.15
 - Mixer feedback: strobe hold to 3
 
-![The Chroma key panel with fill on loop bus and program A in fill at 0.15.](/blog/keyer-ghosts-panel.webp)
+![The app with the skeleton's trail in the ballroom and the Chroma key panel open beside it. The fill and program A in fill rows are boxed in red and shown enlarged over the picture: fill on loop bus, program A in fill at 0.15.](/blog/keyer-ghosts-panel.webp)
 
 ![The skeleton dancing in the ballroom with a trail of copies behind it. The live skeleton and every copy stand on a thick violet slab that runs down and to the right from each bone.](https://myloveydove.com/videoskillet/blog/keyer-loop-extrude.webp)
 
