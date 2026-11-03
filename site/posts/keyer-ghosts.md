@@ -12,25 +12,14 @@ imageAlt:
 look: '#iurl=https://thumb.wikimedia.org/wikipedia/commons/thumb/d/de/Abandoned_grand_piano_-_Abandoned_Ballroom_%286%29.jpg/1280px-Abandoned_grand_piano_-_Abandoned_Ballroom_%286%29.jpg&vurlb=https://myloveydove.com/videoskillet/sources/creatures-for-chroma-key-death.webm&set=chromaGain:1.3,crtSat:1.2,bGain:1,bGenlock:1,bKey:1,bKeyAcceptDeg:45,bKeyClip:0.05,bKeySpill:0.6,bKeyFill:2,cfbHold:3,bKeyFillMixA:0.15'
 ---
 
-The skeleton dances on a green screen in source B, and the ballroom is a photo
-in source A. The keyer fills the green with whatever was on screen a few frames
-ago, so every move the skeleton makes is left behind as a copy.
-
-To set it up:
-
-- In the Chroma key panel, set fill to loop bus.
-- Set program A in fill to 0.15. Older copies fade back into the room.
-- In Mixer feedback, set strobe hold to 3. The copies come out spaced apart, one
-  for every fourth frame.
+- Chroma key: fill to loop bus, program A in fill to 0.15
+- Mixer feedback: strobe hold to 3
 
 ![The Chroma key panel with fill on loop bus and program A in fill at 0.15.](/blog/keyer-ghosts-panel.webp)
 
-Or ask Claude in Chrome, with the app open: "Key the skeleton over the ballroom
-with the fill on the loop bus, program A in fill at 0.15 and strobe hold at 3."
-
 ![The skeleton dancing in the ballroom with a trail of copies behind it. The live skeleton and every copy stand on a thick violet slab that runs down and to the right from each bone.](https://myloveydove.com/videoskillet/blog/keyer-loop-extrude.webp)
 
-Set key edge to extrude and every copy gets a violet slab:
+Key edge on extrude:
 [violet slabs](/app/#iurl=https://thumb.wikimedia.org/wikipedia/commons/thumb/d/de/Abandoned_grand_piano_-_Abandoned_Ballroom_%286%29.jpg/1280px-Abandoned_grand_piano_-_Abandoned_Ballroom_%286%29.jpg&vurlb=https://myloveydove.com/videoskillet/sources/creatures-for-chroma-key-death.webm&set=chromaGain:1.3,crtSat:1.2,bGain:1,bGenlock:1,bKey:1,bKeyAcceptDeg:45,bKeyClip:0.05,bKeySpill:0.6,bKeyFill:2,cfbHold:5,bKeyFillMixA:0.1,bKeyEdge:3,bKeyEdgeUs:1.5,bKeyEdgeY:0.5,bKeyEdgeSat:0.35,bKeyEdgeHueDeg:30).
 
 _Footage: the skeleton is from
