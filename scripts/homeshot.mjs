@@ -55,7 +55,7 @@ const SAVED = [
   'Ridiculous rainbow',
   'Laser duck',
   'Messed up clouds',
-  'Dark zone',
+  'Wiggity',
   'Ponderorb',
   'Collecting dust',
 ].map(demo)
