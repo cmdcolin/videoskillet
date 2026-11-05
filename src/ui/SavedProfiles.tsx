@@ -22,7 +22,7 @@ import type {
 // The profile library: a button in the Presets header, beside `all`. A synth's
 // save and recall: presets are the app's catalog, and this list is yours.
 //
-// The button says `saved` in every state. `Account` in the masthead holds the
+// The button says `save` in every state. `Account` in the masthead holds the
 // sign-in, and this popover offers one too, because a save needs somewhere to go.
 //
 // A popover keeps it out of the panel's height: saving takes two seconds and
@@ -127,12 +127,9 @@ export function SavedProfiles(props: {
               : 'the looks you keep under a name — an account holds the list, so this opens onto what an account is for'
           }
         >
-          {/* A count and a glyph, never the name, so the header beside it
-              does not shift on every save. */}
-          saved
-          {signedIn && props.profiles.length > 0
-            ? ` ${props.profiles.length}`
-            : ''}
+          {/* A glyph, never the name, so the header beside it does not shift
+              on every save. */}
+          save
           {props.flash?.kind === 'saved' ? ' ✓' : ''}
           {props.flash?.kind === 'failed' ? ' ✕' : ''}
         </button>

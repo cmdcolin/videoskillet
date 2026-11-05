@@ -27,7 +27,7 @@ project `ntscjs-d4f56`, one document per user at `users/{uid}`.
 in.** There is no local copy and no offline queue: signed out, the save box is
 replaced by a sign-in button, `ctrl+S` refuses out loud (the button goes amber
 and reads `sign in`), and the ⌘K row says why. (Since 2026-09-16 the library
-button reads `saved` in every state, and the account sits in a control beside
+button reads `save` in every state, and the account sits in a control beside
 it, so the refusal still turns that button amber under a label that no longer
 changes. Splitting them was a legibility fix, and it leaves this decision as it
 is.)
