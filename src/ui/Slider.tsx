@@ -456,6 +456,9 @@ export function Slider(props: {
   // physically inert until another control opens its path. Clicking the note
   // sets the prerequisite.
   needs?: { hint: string; title: string; onFix: () => void }
+  // Inert with the note left to a banner above the row: the track still dims,
+  // so the banner's count can be matched to its rows.
+  inert?: boolean
   midi?: {
     label: string | null
     armed: boolean
@@ -883,7 +886,10 @@ export function Slider(props: {
       <input
         id={inputId}
         type="range"
-        className={cx(styles.range, needs && styles.rangeInert)}
+        className={cx(
+          styles.range,
+          (needs !== undefined || props.inert === true) && styles.rangeInert,
+        )}
         style={fill}
         min={curved ? 0 : props.min}
         max={curved ? 1 : props.max}

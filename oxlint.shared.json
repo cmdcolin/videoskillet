@@ -17,6 +17,9 @@
     "react/only-export-components": ["warn", { "allowConstantExport": true }],
     // Vite's automatic JSX runtime never needs React in scope.
     "react/react-in-jsx-scope": "off",
+    // An effect's own `let` (a frame handle, a debounce flag) is reassigned by
+    // the callbacks the effect registers; that is not a render-time mutation.
+    "react/immutability": "off",
     // Render-prop callbacks (e.g. Popover's `trigger`) are values, not components.
     "react/no-unstable-nested-components": ["error", { "allowAsProps": true }],
     "typescript/restrict-template-expressions": [

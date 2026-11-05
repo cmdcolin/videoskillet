@@ -127,6 +127,7 @@ export function ControlSlider(props: {
       vernier={s.vernier}
       help={s.help}
       needs={unmet ? needsNote(need, api) : undefined}
+      inert={inert}
       favorite={{
         on: api.favorites.has(s.key),
         onToggle: () => api.toggleFavorite(s.key),
