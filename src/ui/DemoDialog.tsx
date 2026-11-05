@@ -1,15 +1,6 @@
-import demos from '../../demos.json'
-import { publicUrl } from '../publicUrl'
 import styles from './DemoDialog.module.css'
+import { DEMOS } from './demos'
 import { Dialog } from './Dialog'
-
-const slug = (name: string) =>
-  name
-    .toLowerCase()
-    .replaceAll(/[^a-z0-9]+/g, '-')
-    .replaceAll(/^-|-$/g, '')
-
-const GALLERY = demos.filter(d => d.gallery)
 
 export function DemoDialog(props: {
   onOpen: (query: string) => void
@@ -18,19 +9,19 @@ export function DemoDialog(props: {
   return (
     <Dialog title="Demos" size="paint" onClose={() => props.onClose()}>
       <div className={styles.grid}>
-        {GALLERY.map(demo => (
+        {DEMOS.map(demo => (
           <button
             key={demo.name}
             className={styles.card}
             title={demo.says}
             onClick={() => {
-              props.onOpen(demo.query)
+              props.onOpen(demo.link)
               props.onClose()
             }}
           >
             <img
               className={styles.still}
-              src={publicUrl(`demos/${slug(demo.name)}.webp`)}
+              src={demo.still}
               alt=""
               loading="lazy"
               decoding="async"
