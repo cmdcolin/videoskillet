@@ -225,12 +225,14 @@
   min-width: 0;
 }
 
+/* CROSS_REPO_SYNC(masthead-title-row) */
 .titleRow {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin: var(--space-2xs) 0 var(--space-xs);
 }
+/* CROSS_REPO_SYNC_END(masthead-title-row) */
 /* color-bars glyph + wordmark + version, doubling as the help trigger */
 .brand {
   composes: bare from './ui/ui.module.css';
@@ -244,6 +246,7 @@
   width: 20px;
   height: 20px;
 }
+/* CROSS_REPO_SYNC(masthead-brand) */
 .wordmark {
   font-size: var(--fs);
   font-weight: 700;
@@ -271,3 +274,4 @@
   gap: 5px;
   margin-left: auto;
 }
+/* CROSS_REPO_SYNC_END(masthead-brand) */

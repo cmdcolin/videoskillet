@@ -456,12 +456,12 @@ Every bullet cost a real afternoon.
   the pre-commit hook runs `pnpm exec lint-staged`: it fails with
   `ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY`. Commit with
   `pnpm_config_verify_deps_before_run=false` set, which keeps the hook running.
-- **Any `evaluateOnNewDocument` puts `Permission denied to access property
-  "length"` on `pageerror`.** It comes from puppeteer's preload script under
-  BiDi. A one-line script with no arguments raises it on the home page, and the
-  script still runs. So the `seedStorage` harnesses log it on every load. A
-  harness that fails on page errors installs its hooks after load, as
-  `rectakecheck.mjs` does.
+- **Any `evaluateOnNewDocument` puts
+  `Permission denied to access property "length"` on `pageerror`.** It comes
+  from puppeteer's preload script under BiDi. A one-line script with no
+  arguments raises it on the home page, and the script still runs. So the
+  `seedStorage` harnesses log it on every load. A harness that fails on page
+  errors installs its hooks after load, as `rectakecheck.mjs` does.
 - **A `file://` image taints the canvas it is drawn on**, so frames are passed
   into the page as `data:` URIs.
 - **`load` and `document.fonts.ready` both resolve before Chrome composites a
