@@ -589,7 +589,7 @@
 
 /* a gated control whose prerequisite is unmet: the track dims and the note
    below names the gate; clicking the note sets the prerequisite */
-.rangeInert {
+.inert :is(.naming, .value, .trackCell) {
   opacity: 0.4;
 }
 .needs {

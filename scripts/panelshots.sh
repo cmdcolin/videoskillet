@@ -52,6 +52,7 @@ pair() {
 }
 
 pair camera "$CAM" 'Camera feedback' 'Camera feedback (optical)'
+shot camera-dissolve "$U#set=$CAM,bGenlock:1,bGain:0.5" 'Camera feedback' 'Camera feedback (optical)' '▸ diagram'
 pair tube "$CAM" 'Camera feedback' 'Tube face (what the camera shoots)'
 pair mixer "$MIX" 'Mixer feedback' 'Mixer feedback (electrical)'
 shot mixer-open "$U#set=$MIX" 'Mixer feedback' 'Mixer feedback (electrical)' 'resonance'
@@ -63,6 +64,7 @@ pair noise "$NOISE" 'Channel' 'Noise & interference'
 pair cable "$CABLE" 'Channel' 'Cable / Wiring'
 pair feedcable "$FEEDA" 'Source A' 'Feed A · cable'
 pair bus "$BUS" 'Mix' 'A/B Mixer'
+shot bus-dissolve "$U#set=bGenlock:1,bGain:0.5,aGain:0.6" 'Mix' 'A/B Mixer'
 pair crosspoint "$XP" 'Mix' 'Crosspoint'
 shot synth-stock "$U?src=synth" 'Source A' 'Video synth (source)'
 shot synth-bent "$U?src=synth&set=$SYNTH" 'Source A' 'Video synth (source)'

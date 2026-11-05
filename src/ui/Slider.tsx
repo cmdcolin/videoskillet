@@ -886,10 +886,7 @@ export function Slider(props: {
       <input
         id={inputId}
         type="range"
-        className={cx(
-          styles.range,
-          (needs !== undefined || props.inert === true) && styles.rangeInert,
-        )}
+        className={styles.range}
         style={fill}
         min={curved ? 0 : props.min}
         max={curved ? 1 : props.max}
@@ -986,7 +983,13 @@ export function Slider(props: {
   )
 
   return (
-    <div className={styles.slider} style={{ anchorName: vernierAnchor }}>
+    <div
+      className={cx(
+        styles.slider,
+        (needs !== undefined || props.inert === true) && styles.inert,
+      )}
+      style={{ anchorName: vernierAnchor }}
+    >
       {/* One line for a plain slider — name, track, readout — and two for a
           mode switch whose options are words ("alternate", "ssavi") and cannot
           be squeezed into a third of a sidebar. A switch that *does* fit there
