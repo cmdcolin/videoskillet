@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 
 import { clamp01 } from '../core/math'
 import { cx } from './cx'
+import { DemoDialog } from './DemoDialog'
 import { Dialog } from './Dialog'
 import { BulbIcon } from './icons'
 import {
@@ -525,9 +526,11 @@ export function PresetsSection(props: {
   onApplyPreset: (name: string, patch: Partial<Controls>) => void
   onMixStart: () => void
   onMix: (name: string, w: number) => void
+  onOpenDemo: (query: string) => void
   saved: ReactNode
 }) {
   const [showHelp, setShowHelp] = useState(false)
+  const [showDemos, setShowDemos] = useState(false)
   const [showAll, setShowAll] = usePersistedFlag(ALL_STORE)
   const { active } = props
 
@@ -569,6 +572,13 @@ export function PresetsSection(props: {
               <span className={styles.allCount}>{PRESETS.length}</span>
             </button>
             <button
+              className={styles.allBtn}
+              title="whole boards from the gallery, sources included"
+              onClick={() => setShowDemos(true)}
+            >
+              demos
+            </button>
+            <button
               className={styles.helpBtn}
               title="what are presets?"
               onClick={() => setShowHelp(true)}
@@ -602,6 +612,12 @@ export function PresetsSection(props: {
           appeared on its own. */}
       {showHelp ? (
         <PresetsHelpDialog onClose={() => setShowHelp(false)} />
+      ) : null}
+      {showDemos ? (
+        <DemoDialog
+          onOpen={query => props.onOpenDemo(query)}
+          onClose={() => setShowDemos(false)}
+        />
       ) : null}
     </>
   )

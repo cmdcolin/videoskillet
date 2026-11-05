@@ -1667,6 +1667,7 @@ export function App() {
           onApplyPreset={(name, patch) => applyPreset(name, patch)}
           onMixStart={mix.startMix}
           onMix={mix.setPresetWeight}
+          onOpenDemo={link => applyBoard(link, next => landLook(next))}
           saved={
             <SavedProfiles
               profiles={profiles.profiles}
