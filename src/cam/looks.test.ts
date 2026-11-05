@@ -9,6 +9,7 @@ import {
   needsSourceB,
   presetControls,
 } from '../ui/presets'
+import { subtleLoop } from '../ui/subtleLoop'
 import {
   MIX_MODES,
   MIX_SHELF,
@@ -26,7 +27,6 @@ import {
   rollPool,
   shelfOf,
   stackLabel,
-  subtleLoop,
 } from './looks'
 
 import type { Layers, Mix } from './looks'

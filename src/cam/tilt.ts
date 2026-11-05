@@ -1,4 +1,4 @@
-import { SUBTLE } from './looks'
+import { SUBTLE } from '../ui/subtleLoop'
 
 import type { Controls } from '../core/controls'
 

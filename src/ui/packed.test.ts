@@ -141,15 +141,16 @@ describe('a look as bytes', () => {
 
   it('is several times shorter than the same look by name', () => {
     // Against the bare names, before a query string has spent three characters
-    // on each separator. Measured over these rolls the margin runs 3.2 to 4.9,
-    // mean 3.8; the assertion sits under the worst of them rather than at a
-    // round number it would pass by luck.
-    for (const look of rolls(20, 4242)) {
+    // on each separator. Measured over 2000 rolls the margin averages 3.5 and
+    // its worst roll is 2.1.
+    const ratios = rolls(20, 4242).map(look => {
       const named = CONTROL_KEYS.filter(k => look[k] !== DEFAULT_CONTROLS[k])
         .map(k => `${k}:${look[k]}`)
         .join(',')
-      expect(packControls(look).length * 2.8).toBeLessThan(named.length)
-    }
+      return named.length / packControls(look).length
+    })
+    for (const r of ratios) expect(r).toBeGreaterThan(2)
+    expect(ratios.reduce((a, b) => a + b, 0) / ratios.length).toBeGreaterThan(3)
   })
 
   it('spends only characters a query string carries as themselves', () => {

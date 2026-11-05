@@ -7,6 +7,7 @@ import {
   ROLL_STAYS_UNDER,
   rollLanding,
 } from './mutate'
+import { subtleLoop } from './subtleLoop'
 import { CENTS_PER_STEP } from './vernier'
 
 import type { ControlKey, Controls } from '../core/controls'
@@ -3971,6 +3972,40 @@ function shuffled<T>(items: readonly T[], rand: () => number): T[] {
 // zero, because a control moved by exactly one preset cannot exceed it.
 const MAX_TREAD = 0
 
+// Families the random rolls never draw from. Their presets stay on the chips
+// for picking by hand.
+export const UNROLLED_GROUPS: ReadonlySet<string> = new Set(['Phosphor / CRT'])
+
+// The share of rolls that lead with a subtle feedback loop, the app's
+// strongest results. Drawn family by family, the loops led one roll in
+// thirteen.
+const LOOP_LEAD_SHARE = 0.4
+
+const rollable = (sourceBOn: boolean, avoid: string | null) =>
+  PRESETS.filter(
+    p =>
+      p.group !== 'Clean' &&
+      !UNROLLED_GROUPS.has(p.group) &&
+      p.name !== avoid &&
+      (sourceBOn || !needsSourceB(p)),
+  )
+
+// The family is drawn first and the preset out of it second, because the
+// families are very different sizes and a flat draw would mostly land in the
+// largest one.
+function rollLead(pool: readonly PresetDef[], rand: () => number) {
+  const loops = pool.filter(
+    p => p.group === 'Feedback loops' && subtleLoop(fullControls(p)),
+  )
+  const rest = pool.filter(p => p.group !== 'Feedback loops')
+  const group = shuffled([...new Set(rest.map(p => p.group))], rand)[0]
+  const from =
+    loops.length > 0 && rand() < LOOP_LEAD_SHARE
+      ? loops
+      : rest.filter(p => p.group === group)
+  return from[randomIndex(from.length, rand)]!
+}
+
 // A fresh recipe: one full preset plus one or two partial ones from other
 // groups, so a roll crosses families instead of deepening one. Shared by the
 // "random look" button and by `?surprise` on a link, which is how the docs
@@ -3993,19 +4028,19 @@ export function randomPresetMix(
   sourceBOn: boolean,
   rand: () => number = Math.random,
 ): PresetWeights {
-  const pool = PRESETS.filter(
-    p => p.group !== 'Clean' && (sourceBOn || !needsSourceB(p)),
+  const pool = rollable(sourceBOn, null)
+  const first = rollLead(pool, rand)
+  const groups = shuffled(
+    [...new Set(pool.map(p => p.group))].filter(g => g !== first.group),
+    rand,
   )
-  const groups = shuffled([...new Set(pool.map(p => p.group))], rand)
   // Two most of the time. Three whole authored looks at once — which is what a
   // 50/50 split was rolling — is a lot of picture to ask one frame to hold, and
   // the third is the one most likely to be the fault that tipped it over.
   const wanted = rand() < 0.3 ? 3 : 2
-  const lead = pool.filter(p => p.group === groups[0])
-  const first = lead[randomIndex(lead.length, rand)]!
   const weights = new Map<string, number>([[first.name, 1]])
   const claimed = new Set(PRESET_KEYS.get(first.name))
-  for (const g of groups.slice(1)) {
+  for (const g of groups) {
     if (weights.size >= wanted) break
     // 'Full board' presets are complete looks in themselves — as a lead that is
     // the point of them, on top of one it is a second whole board.
@@ -4055,30 +4090,16 @@ export function randomPresetMix(
 // nobody scrolls to — seventy of them behind a fold, and a session reaches for
 // the same six.
 //
-// The group is drawn first and the preset out of it second, which is not the
-// same as drawing uniformly from the presets: the families are wildly different
-// sizes, and a flat draw would spend most of a session inside whichever one has
-// the most entries this month.
-// `avoid` is the preset already on the board, dropped from the draw: with nine
-// families a repeat comes up often enough to read as the button not having
-// fired, and this is the one roll where you can tell — the chip that lights up
-// is the same one that was lit. Dropped before the group is picked, so a family
-// of one that is the excluded preset takes itself out of the draw rather than
-// leaving an empty group to be picked from.
+// `avoid` is the preset already on the board, dropped from the draw: a repeat
+// reads as the button not having fired, because the chip that lights up is the
+// one that was lit. Dropped before the family is picked, so a family of one
+// that is the excluded preset takes itself out of the draw.
 export function randomSinglePreset(
   sourceBOn: boolean,
   rand: () => number = Math.random,
   avoid: string | null = null,
 ): PresetWeights {
-  const pool = PRESETS.filter(
-    p =>
-      p.group !== 'Clean' &&
-      p.name !== avoid &&
-      (sourceBOn || !needsSourceB(p)),
-  )
-  const group = shuffled([...new Set(pool.map(p => p.group))], rand)[0]
-  const lead = pool.filter(p => p.group === group)
-  return new Map([[lead[randomIndex(lead.length, rand)]!.name, 1]])
+  return new Map([[rollLead(rollable(sourceBOn, avoid), rand).name, 1]])
 }
 
 // Controls holding a mode rather than a quantity: halfway between phosphor 0

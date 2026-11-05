@@ -6,6 +6,7 @@ import { SLIDER_BY_KEY, VIEW_KEYS } from './controls'
 import { RATE_MAX, RATE_MIN, modSource } from './modSlots'
 import {
   PRESETS,
+  UNROLLED_GROUPS,
   blendMod,
   blendPresets,
   controlsEqual,
@@ -16,6 +17,7 @@ import {
   randomSinglePreset,
   rollControls,
 } from './presets'
+import { subtleLoop } from './subtleLoop'
 
 import type { ControlKey, Controls } from '../core/controls'
 
@@ -483,6 +485,43 @@ describe('randomSinglePreset', () => {
       const roll = randomSinglePreset(true, Math.random, p.name)
       expect(roll.size, p.name).toBe(1)
       expect([...roll.values()], p.name).toEqual([1])
+    }
+  })
+})
+
+describe('what the random rolls lead with', () => {
+  const leads = (roll: () => ReadonlyMap<string, number>) =>
+    Array.from({ length: 2000 }, () => {
+      const name = [...roll().keys()][0]
+      return PRESETS.find(p => p.name === name)!
+    })
+
+  it('leads with a subtle feedback loop on a large share of rolls', () => {
+    for (const roll of [
+      () => randomPresetMix(true),
+      () => randomSinglePreset(true),
+    ]) {
+      const drawn = leads(roll)
+      const loops = drawn.filter(p => p.group === 'Feedback loops')
+      expect(loops.length / drawn.length).toBeGreaterThan(0.3)
+      for (const p of loops)
+        expect(subtleLoop(presetControls(p.patch)), p.name).toBe(true)
+    }
+  })
+
+  it('never draws from the unrolled families', () => {
+    for (const roll of [
+      () => randomPresetMix(true),
+      () => randomSinglePreset(true),
+    ]) {
+      for (const p of leads(roll))
+        expect(UNROLLED_GROUPS.has(p.group), p.name).toBe(false)
+    }
+    for (let s = 0; s < 500; s++) {
+      for (const name of randomPresetMix(true).keys()) {
+        const p = PRESETS.find(d => d.name === name)!
+        expect(UNROLLED_GROUPS.has(p.group), p.name).toBe(false)
+      }
     }
   })
 })

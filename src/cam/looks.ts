@@ -11,53 +11,20 @@ import { routingsToSlots, toEngineSlots } from '../ui/modSlots'
 import {
   PRESETS,
   PRESET_BY_NAME,
+  UNROLLED_GROUPS,
   blendMod,
   blendPresets,
   needsSourceB,
   presetControls,
   presetLabelFor,
 } from '../ui/presets'
+import { subtleLoop } from '../ui/subtleLoop'
 
 import type { ControlKey, Controls, ModSlot } from '../core/controls'
 import type { Rand } from '../core/rng'
 import type { SliderDef } from '../ui/controls'
 import type { ModRouting } from '../ui/modSlots'
 import type { PresetDef } from '../ui/presets'
-
-// How far a loop may move the picture each lap and still count as subtle: a
-// camera within 4.5% of unity zoom, turning at most a degree and shifting at
-// most 2% of the frame, or a mixer loop at most 1.2 us and four lines late
-// whose delay the video does not pull far. Feedback looks best on a camera
-// with that little movement per lap. Big zooms, spins and delays read as
-// cheesy.
-//
-// A subtle loop cannot be made out of a dramatic one by scaling its geometry
-// down. The preset's gain is tuned to how far its geometry spreads each lap,
-// and at a quarter of the zoom and turn the same gain stacks the picture onto
-// itself and walls out to white.
-export const SUBTLE = {
-  zoom: 0.045,
-  rotateDeg: 1,
-  shift: 0.02,
-  delayUs: 1.2,
-  lines: 4,
-  servoUs: 5,
-}
-
-export function subtleLoop(c: Controls): boolean {
-  const camera =
-    c.fbMix === 0 ||
-    (Math.abs(c.fbZoom - 1) <= SUBTLE.zoom &&
-      Math.abs(c.fbRotateDeg) <= SUBTLE.rotateDeg &&
-      Math.abs(c.fbShiftX) <= SUBTLE.shift &&
-      Math.abs(c.fbShiftY) <= SUBTLE.shift)
-  const mixer =
-    c.cfbMix === 0 ||
-    (c.cfbDelayUs <= SUBTLE.delayUs &&
-      Math.abs(c.cfbLines) <= SUBTLE.lines &&
-      Math.abs(c.cfbServoUs) <= SUBTLE.servoUs)
-  return camera && mixer
-}
 
 // A tab of the camera's strip: the looks one part of the signal path makes.
 export interface Shelf {
@@ -334,10 +301,6 @@ export const ROLL_POOL: readonly string[] = PRESETS.filter(
 // the raster to one line until a hit opens it.
 const showsPicture = (p: PresetDef): boolean =>
   presetControls(p.patch).vSize >= 0.1
-
-// Families a tab can list that the dice never rolls. The tube's phosphor looks
-// stay on the scan tab's strip for picking by hand.
-export const UNROLLED_GROUPS: ReadonlySet<string> = new Set(['Phosphor / CRT'])
 
 // What the dice rolls on a tab: every preset in the tab's families that shows
 // the picture, so the dice reaches the looks the tab does not list. Only the

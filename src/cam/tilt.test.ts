@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
 import { DEFAULT_CONTROLS } from '../core/controls'
-import { lookBoard, SUBTLE } from './looks'
+import { SUBTLE } from '../ui/subtleLoop'
+import { lookBoard } from './looks'
 import { integrate, LEVEL, steered } from './tilt'
 
 import type { Controls } from '../core/controls'
