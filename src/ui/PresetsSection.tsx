@@ -4,10 +4,17 @@ import { clamp01 } from '../core/math'
 import { cx } from './cx'
 import { Dialog } from './Dialog'
 import { BulbIcon } from './icons'
-import { PRESETS, presetLabel, presetLabelFor } from './presets'
+import {
+  PRESETS,
+  UNROLLED_GROUPS,
+  presetControls,
+  presetLabel,
+  presetLabelFor,
+} from './presets'
 import styles from './PresetsSection.module.css'
 import { Section } from './Section'
 import { usePersistedFlag } from './storage'
+import { subtleLoop } from './subtleLoop'
 import ui from './ui.module.css'
 import { useClickWord } from './useMediaQuery'
 import { useRecentPresets } from './useRecentPresets'
@@ -18,7 +25,23 @@ import type { CSSProperties, ReactNode } from 'react'
 
 // Presets grouped under their labeled headers. Derived purely from the static
 // PRESETS table, so it's computed once at module load, not every render.
-const PRESET_GROUPS = PRESETS.reduce<{ name: string; defs: typeof PRESETS }[]>(
+const LOOP_GROUP = 'Feedback loops'
+
+const groupRank = (name: string) =>
+  name === 'Clean'
+    ? 0
+    : name === LOOP_GROUP
+      ? 1
+      : UNROLLED_GROUPS.has(name)
+        ? 3
+        : 2
+
+const bigGeometry = (p: PresetDef) =>
+  subtleLoop(presetControls(p.patch)) ? 0 : 1
+
+// The loops lead the catalog, the subtle ones first, and the families the
+// random rolls skip go last.
+const PRESET_GROUPS = PRESETS.reduce<{ name: string; defs: PresetDef[] }[]>(
   (acc, p) => {
     const g = acc.find(x => x.name === p.group)
     if (g === undefined) acc.push({ name: p.group, defs: [p] })
@@ -27,6 +50,15 @@ const PRESET_GROUPS = PRESETS.reduce<{ name: string; defs: typeof PRESETS }[]>(
   },
   [],
 )
+  .toSorted((a, b) => groupRank(a.name) - groupRank(b.name))
+  .map(g =>
+    g.name === LOOP_GROUP
+      ? {
+          ...g,
+          defs: g.defs.toSorted((a, b) => bigGeometry(a) - bigGeometry(b)),
+        }
+      : g,
+  )
 
 // Click applies the preset outright; dragging sideways past a few pixels turns
 // the button into a weight slider, mixing that preset onto the current look.
