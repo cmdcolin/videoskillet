@@ -230,7 +230,7 @@ aPolarity  (A polarity (flips sync))
 
 fbMix  (mix)
   0..1 step 0.01  default 0
-  How much of the camera-pointed-at-the-monitor image returns to the input. The fader and the exposure multiply, so raise both until the product passes unity.
+  How much of the camera-pointed-at-the-monitor image returns to the input. The fader and the exposure multiply, so raise both until the product passes unity. The camera joins source A, so the A/B mixer level for A multiplies the loop as well.
 
 fbZoom  (zoom)
   0.2..4 step 0.001 x  default 1.05
@@ -412,31 +412,31 @@ bGenlock  (genlock)
 
 aGain  (A gain)
   -3..3 step 0.01 x  default 1
-  A's level on the summing bus, on the dirty sum only: the clean dissolve sets A to (1 − B gain). Negative inverts A into a difference key that cancels against B.
+  A's level on the summing bus. It acts on the dirty sum only: the clean dissolve ignores it and sets A to (1 − B gain). Negative inverts A into a difference key that cancels against B.
 
 bGain  (B gain)
   -3..3 step 0.01 x  default 0
-  How much of source B reaches the composite line. With genlock off it is the level B is summed in at, and negative inverts B's whole signal, sync tips included. With genlock on it is the crossfade fader.
+  How much of source B reaches the composite line. With genlock off it is the level B is summed in at, and negative inverts B's whole signal, sync tips included. With genlock on it is the crossfade fader, and it acts between 0 and 1 only.
 
 bRing  (ring mod)
   0..1 step 0.01  default 0
-  Multiplies the two composite signals instead of adding them. Two subcarriers multiplied land at their sum and difference, so colour arrives that neither source carries.
+  Multiplies the two composite signals instead of adding them. Two subcarriers multiplied land at their sum and difference, so colour arrives that neither source carries. It acts on the dirty sum only: the clean dissolve crossfades the two.
 
 busClip  (bus overload)
   0..1 step 0.01  default 0
-  How little headroom the summing amplifier has. At 0 the sum is pure arithmetic. Open it and the stage runs out of volts: gain falls away toward the rail, and falling gain multiplies the two signals sharing the bus, so a detuned B beats against A into the chroma band.
+  How little headroom the summing amplifier has. At 0 the sum is pure arithmetic. Open it and the stage runs out of volts: gain falls away toward the rail, and falling gain multiplies the two signals sharing the bus, so a detuned B beats against A into the chroma band. It acts on the dirty sum only: the clean dissolve crossfades the two and never adds them.
 
 bLineHz  (line offset)
   -60..60 step 0.01 Hz  default 0.15
-  How far B's line rate sits from A's. The two horizontal oscillators are unlocked, so B skews a little more on each line and slides sideways.
+  How far B's line rate sits from A's. The two horizontal oscillators are unlocked, so B skews a little more on each line and slides sideways. Genlock locks B's lines to A's, so this acts on the dirty sum only.
 
 bDetuneHz  (sc detune)
   -3000..3000 step 0.01 Hz  default 40
-  How far B's colour subcarrier sits from A's 3.579545 MHz. The decoder locks to A's burst, so B's hue cycles continuously: the rainbow crawl of a non-genlocked source.
+  How far B's colour subcarrier sits from A's 3.579545 MHz. The decoder locks to A's burst, so B's hue cycles continuously: the rainbow crawl of a non-genlocked source. Genlock locks B's subcarrier to A's, so this acts on the dirty sum only.
 
 bRollLps  (frame roll)
   -30..30 step 0.01 l/f  default 0.1
-  B's vertical drift in lines per frame, from its field rate not matching A's.
+  B's vertical drift in lines per frame, from its field rate not matching A's. Genlock locks B's fields to A's, so this acts on the dirty sum only.
 
 ## Pot crossfader
 

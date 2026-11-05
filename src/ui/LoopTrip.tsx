@@ -1,4 +1,4 @@
-import { cameraLapReading, cameraLoopOf } from './cameraLap'
+import { cameraBusShare, cameraLapReading, cameraLoopOf } from './cameraLap'
 import { CAMERA_LOOP_GROUP, MIXER_LOOP_GROUP } from './controls'
 import { useControlReading } from './ControlsContext'
 import { mixerLoopOf, peakLapGain } from './loopGain'
@@ -25,12 +25,13 @@ const LOOPS: Record<string, { mix: ControlKey; gain: ControlKey }> = {
 
 export function LoopTrip({ group }: { group: string }) {
   const loop = LOOPS[group]
+  const mixer = group === MIXER_LOOP_GROUP
+  // Read unconditionally — a hook cannot be skipped.
+  const bus = useControlReading(c => (mixer ? 1 : cameraBusShare(c)))
   const trip = useControlReading(c =>
     loop === undefined ? 0 : c[loop.mix] * c[loop.gain],
   )
-  // Read unconditionally — a hook cannot be skipped.
   const camZoom = useControlReading(c => c.fbZoom)
-  const mixer = group === MIXER_LOOP_GROUP
   // The peak as one string, so a write that does not move it does not redraw.
   const peak = useControlReading(c => {
     if (loop === undefined) return ''
@@ -48,7 +49,7 @@ export function LoopTrip({ group }: { group: string }) {
   const says = mixer
     ? mixerLoopSays(trip, { gain: Number(a), mhz: Number(b) })
     : cameraLoopSays(
-        trip,
+        trip * bus,
         {
           gain: Number(a),
           level: Number(b),
@@ -61,7 +62,10 @@ export function LoopTrip({ group }: { group: string }) {
       className={styles.trip}
       title="the fader and the trim multiply: what one lap of the loop makes back of what it was handed"
     >
-      {`round trip ${trip.toFixed(2)}× · ${says}`}
+      {`round trip ${(trip * bus).toFixed(2)}× · ${says}`}
+      {bus === 1 ? null : (
+        <div>{`the A/B mixer passes source A, and the camera with it, at ${bus.toFixed(2)}×`}</div>
+      )}
     </div>
   )
 }

@@ -1,5 +1,11 @@
-import { cameraLapGains, greyLevels, type CameraLoop } from './cameraLap'
+import {
+  cameraBusShare,
+  cameraLapGains,
+  greyLevels,
+  type CameraLoop,
+} from './cameraLap'
 import own from './CameraLoopDiagram.module.css'
+import { useControlReading } from './ControlsContext'
 import { openBox, stageBoxes, useReadings, useSelectedBox } from './diagram'
 import {
   Boxes,
@@ -59,6 +65,7 @@ function CameraLoop({ initial }: { initial: Part | null }) {
   const r = useReadings(READ)
   const pick = useSelectedBox(initial)
   const v = r.value
+  const bus = useControlReading(c => cameraBusShare(c))
   const loop: CameraLoop = {
     mix: v('fbMix'),
     gain: v('fbGain'),
@@ -69,6 +76,7 @@ function CameraLoop({ initial }: { initial: Part | null }) {
     bloom: v('crtBloom'),
     halation: v('crtHalation'),
     glow: v('crtGlow'),
+    bus,
   }
   const off = loop.mix === 0
   const gains = cameraLapGains(loop, LEVELS)
@@ -139,7 +147,9 @@ function CameraLoop({ initial }: { initial: Part | null }) {
               d={`M${FADER.x + FADER.w} ${TOP_Y} H${DROP_X} V${bottom}`}
             />
             <Label x={DROP_X - 6} y={TOP_Y - 6} anchor="end">
-              through the chain
+              {bus === 1
+                ? 'through the chain'
+                : `through the A/B mixer at ${bus.toFixed(2)}×`}
             </Label>
 
             <g opacity={off ? 0.55 : 1}>

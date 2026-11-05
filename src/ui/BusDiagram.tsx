@@ -45,6 +45,10 @@ const OUT: TraceScale = {
   reference: 0,
 }
 
+// The genlocked path crossfades A and B on B's fader alone, so these stages
+// are skipped there (mix_b.wgsl).
+const DIRTY_ONLY = new Set<Part>(['gainA', 'timing', 'ring', 'clip'])
+
 const times = (v: number) => (v < 0 ? `−${-v}×` : `${v}×`)
 const after = (id: Part) => rightOf(COL[id])
 
@@ -68,7 +72,8 @@ export function BusDiagram() {
     busClip: v('busClip'),
     genlock: v('bGenlock') > 0.5,
   }
-  const live = (id: Part) => r.touched(...OPENS[id])
+  const live = (id: Part) =>
+    (!bus.genlock || !DIRTY_ONLY.has(id)) && r.touched(...OPENS[id])
   const bIn = live('timing') || live('lock') || live('gainB')
   const summed = live('gainA') || bIn
   const transfer = Array.from({ length: POINTS }, (_, i) =>
@@ -87,35 +92,39 @@ export function BusDiagram() {
       : 'plain'
   const whiteNow = bus.genlock ? 100 : sumBus(100, 100, bus)
 
-  const box = stageBoxes(OPENS, H, r)
+  const make = stageBoxes(OPENS, H, r)
+  const box: typeof make = (id, ...rest) => ({
+    ...make(id, ...rest),
+    off: bus.genlock && DIRTY_ONLY.has(id),
+  })
   const boxes = [
     box(
       'gainA',
       COL.gainA,
       A_Y,
       'A gain',
-      "A's level on the summing bus, on the dirty sum only: the clean dissolve sets A to one minus B's fader. Negative inverts A into a difference key that cancels against B.",
+      "A's level on the summing bus. It acts on the dirty sum only: the clean dissolve ignores it and sets A to one minus B's fader. Negative inverts A into a difference key that cancels against B.",
     ),
     box(
       'ring',
       COL.ring,
       A_Y,
       'ring',
-      'Multiplies the two composite signals instead of adding them. Two subcarriers multiplied land at their sum and difference, so colour arrives that neither source carries.',
+      'Multiplies the two composite signals instead of adding them. Two subcarriers multiplied land at their sum and difference, so colour arrives that neither source carries. It acts on the dirty sum only.',
     ),
     box(
       'clip',
       COL.clip,
       A_Y,
       'clip',
-      'How little headroom the summing amplifier has. Its gain falls away toward the rail, and falling gain multiplies the two signals sharing the bus, so a detuned B beats against A into the chroma band.',
+      'How little headroom the summing amplifier has. Its gain falls away toward the rail, and falling gain multiplies the two signals sharing the bus, so a detuned B beats against A into the chroma band. It acts on the dirty sum only.',
     ),
     box(
       'timing',
       COL.timing,
       B_Y,
       'timing',
-      "B's own clocks, free-running against A's: line offset skews B a little more each line, frame roll drifts it vertically, and the subcarrier detune cycles its hue because the decoder locks to A's burst.",
+      "B's own clocks, free-running against A's: line offset skews B a little more each line, frame roll drifts it vertically, and the subcarrier detune cycles its hue because the decoder locks to A's burst. Genlock locks all three, so these act on the dirty sum only.",
     ),
     box(
       'lock',
@@ -129,7 +138,7 @@ export function BusDiagram() {
       COL.gainB,
       B_Y,
       'B gain',
-      "How much of B reaches the composite. With genlock off it is the level B is summed in at, and negative inverts B's whole signal, sync tips included. With genlock on it is the crossfade fader.",
+      "How much of B reaches the composite. With genlock off it is the level B is summed in at, and negative inverts B's whole signal, sync tips included. With genlock on it is the crossfade fader, and it acts between 0 and 1 only.",
     ),
   ]
 

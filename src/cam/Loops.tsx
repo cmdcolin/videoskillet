@@ -1,5 +1,6 @@
 import { useState } from 'react'
 
+import { cameraBusShare } from '../ui/cameraLap'
 import { SLIDER_BY_KEY, loopGroups } from '../ui/controls'
 import { cx } from '../ui/cx'
 import styles from './cam.module.css'
@@ -37,6 +38,11 @@ const LOOPS: { place: LoopPlace; name: string; about: string }[] = [
   },
 ]
 
+const cameraBusNote = (share: number) =>
+  share === 0
+    ? 'the A/B mix keeps the camera off the screen, so this loop has nothing to go round'
+    : `the A/B mix shows the camera at ${Math.round(Math.abs(share) * 100)}%, which scales every lap of this loop; raise the gain to make it back`
+
 const sliders = (place: LoopPlace, more: boolean) => {
   const all = loopGroups(place).flatMap(g => g.sliders)
   const main = MAIN[place].flatMap(k => all.filter(s => s.key === k))
@@ -67,6 +73,7 @@ export function Loops(props: {
   onClose: () => void
 }) {
   const [more, setMore] = useState(false)
+  const camBus = cameraBusShare(props.controls)
   return (
     <section className={styles.sheet} aria-label="Feedback loops">
       <header className={styles.sheetHead}>
@@ -99,6 +106,9 @@ export function Loops(props: {
             <h3 className={styles.loopName}>
               {loop.name}
               <small>{loop.about}</small>
+              {loop.place === 'camera' && camBus !== 1 ? (
+                <small>{cameraBusNote(camBus)}</small>
+              ) : null}
             </h3>
             {sliders(loop.place, more).map(def => (
               <Knob

@@ -4,6 +4,7 @@ import { DEFAULT_CONTROLS } from '../core/controls'
 import {
   cameraLap,
   cameraLapGains,
+  cameraBusShare,
   cameraLapReading,
   cameraLoopOf,
   type CameraLoop,
@@ -19,6 +20,7 @@ const bare: CameraLoop = {
   bloom: 0,
   halation: 0,
   glow: 0,
+  bus: 1,
 }
 
 describe('camera loop gain per lap', () => {
@@ -67,6 +69,27 @@ describe('camera loop gain per lap', () => {
 
   it('finds no settling level for a hard clip with the fader full up', () => {
     expect(cameraLapReading({ ...bare, mix: 1, gain: 1.5 }).settle).toBeNull()
+  })
+
+  it('scales by the A/B mixer level, since the return joins source A', () => {
+    expect(cameraLapGains({ ...bare, bus: 0.5 }, [0.4])).toEqual([
+      expect.closeTo(0.48, 6),
+    ])
+  })
+
+  it('reads the level A gets on the bus', () => {
+    const dissolve = { ...DEFAULT_CONTROLS, bGenlock: 1, bGain: 0.3 }
+    expect(cameraBusShare(dissolve)).toBeCloseTo(0.7)
+    expect(cameraBusShare({ ...dissolve, bGain: 1.8 })).toBe(0)
+    expect(cameraBusShare({ ...dissolve, wipeMode: 1 })).toBe(1)
+    const keyed = { ...dissolve, bKey: 1 }
+    expect(cameraBusShare(keyed)).toBe(1)
+    expect(cameraBusShare({ ...keyed, bKeyFill: 1 })).toBe(0)
+    expect(
+      cameraBusShare({ ...keyed, bKeyFill: 2, bKeyFillMixA: 0.4 }),
+    ).toBeCloseTo(0.4)
+    expect(cameraBusShare({ ...DEFAULT_CONTROLS, bGain: 0.3 })).toBe(1)
+    expect(cameraBusShare({ ...DEFAULT_CONTROLS, aGain: -0.5 })).toBe(-0.5)
   })
 
   it('reads the gamma-heavy look as under unity everywhere', () => {

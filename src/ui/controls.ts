@@ -286,7 +286,7 @@ export const LOOP_STAGES: readonly LoopStage[] = [
     short: 'Camera',
     blurb:
       'optical: a camera pointed at the tube, its picture mixed into source A ahead of the encoder, plus the gun and glass it is looking at',
-    what: 'an optical loop. A camera points at the tube and its picture is mixed into source A once the source is picked, ahead of the encoder. The camera return does not reach source B or the A/B mixer, so wherever B covers A, B covers the camera too. The camera itself can only do what a lens does — zoom, shift, defocus, black level — but the return re-enters ahead of the encoder, so a lap is a whole encode/decode generation and every fault between there and the glass is inside it, applied once per generation. Above unity gain the loop builds structure from its own output',
+    what: 'an optical loop. A camera points at the tube and its picture is mixed into source A once the source is picked, ahead of the encoder. The camera return reaches the A/B mixer as part of source A, so the mixer level for A scales every lap: a dissolve toward B weakens the loop and removes it with B at full level, and wherever a wipe or key puts B, B covers the camera too. The camera itself can only do what a lens does — zoom, shift, defocus, black level — but the return re-enters ahead of the encoder, so a lap is a whole encode/decode generation and every fault between there and the glass is inside it, applied once per generation. Above unity gain the loop builds structure from its own output',
     mix: 'fbMix',
   },
   {
@@ -931,7 +931,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: 'How much of the camera-pointed-at-the-monitor image returns to the input. The fader and the exposure multiply, so raise both until the product passes unity.',
+        help: 'How much of the camera-pointed-at-the-monitor image returns to the input. The fader and the exposure multiply, so raise both until the product passes unity. The camera joins source A, so the A/B mixer level for A multiplies the loop as well.',
       },
       {
         key: 'fbZoom',
@@ -1461,7 +1461,7 @@ export const GROUPS: Group[] = [
         unit: 'x',
         // Not a trim: it is one of the two faders this stage exists to be, and
         // the disclosure it was folded into is gone with B's proc-amp trio.
-        help: "A's level on the summing bus, on the dirty sum only: the clean dissolve sets A to (1 − B gain). Negative inverts A into a difference key that cancels against B.",
+        help: "A's level on the summing bus. It acts on the dirty sum only: the clean dissolve ignores it and sets A to (1 − B gain). Negative inverts A into a difference key that cancels against B.",
       },
       {
         key: 'bGain',
@@ -1472,7 +1472,7 @@ export const GROUPS: Group[] = [
         step: 0.01,
         redline: [-1.2, 1.2],
         unit: 'x',
-        help: "How much of source B reaches the composite line. With genlock off it is the level B is summed in at, and negative inverts B's whole signal, sync tips included. With genlock on it is the crossfade fader.",
+        help: "How much of source B reaches the composite line. With genlock off it is the level B is summed in at, and negative inverts B's whole signal, sync tips included. With genlock on it is the crossfade fader, and it acts between 0 and 1 only.",
       },
       {
         key: 'bRing',
@@ -1482,7 +1482,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: 'Multiplies the two composite signals instead of adding them. Two subcarriers multiplied land at their sum and difference, so colour arrives that neither source carries.',
+        help: 'Multiplies the two composite signals instead of adding them. Two subcarriers multiplied land at their sum and difference, so colour arrives that neither source carries. It acts on the dirty sum only: the clean dissolve crossfades the two.',
       },
       {
         key: 'busClip',
@@ -1492,7 +1492,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: 'How little headroom the summing amplifier has. At 0 the sum is pure arithmetic. Open it and the stage runs out of volts: gain falls away toward the rail, and falling gain multiplies the two signals sharing the bus, so a detuned B beats against A into the chroma band.',
+        help: 'How little headroom the summing amplifier has. At 0 the sum is pure arithmetic. Open it and the stage runs out of volts: gain falls away toward the rail, and falling gain multiplies the two signals sharing the bus, so a detuned B beats against A into the chroma band. It acts on the dirty sum only: the clean dissolve crossfades the two and never adds them.',
       },
       {
         key: 'bLineHz',
@@ -1504,7 +1504,7 @@ export const GROUPS: Group[] = [
         curve: 'zero',
         redline: [-8, 8],
         unit: 'Hz',
-        help: "How far B's line rate sits from A's. The two horizontal oscillators are unlocked, so B skews a little more on each line and slides sideways.",
+        help: "How far B's line rate sits from A's. The two horizontal oscillators are unlocked, so B skews a little more on each line and slides sideways. Genlock locks B's lines to A's, so this acts on the dirty sum only.",
       },
       {
         key: 'bDetuneHz',
@@ -1516,7 +1516,7 @@ export const GROUPS: Group[] = [
         curve: 'zero',
         redline: [-400, 400],
         unit: 'Hz',
-        help: "How far B's colour subcarrier sits from A's 3.579545 MHz. The decoder locks to A's burst, so B's hue cycles continuously: the rainbow crawl of a non-genlocked source.",
+        help: "How far B's colour subcarrier sits from A's 3.579545 MHz. The decoder locks to A's burst, so B's hue cycles continuously: the rainbow crawl of a non-genlocked source. Genlock locks B's subcarrier to A's, so this acts on the dirty sum only.",
       },
       {
         key: 'bRollLps',
@@ -1528,7 +1528,7 @@ export const GROUPS: Group[] = [
         curve: 'zero',
         redline: [-3, 3],
         unit: 'l/f',
-        help: "B's vertical drift in lines per frame, from its field rate not matching A's.",
+        help: "B's vertical drift in lines per frame, from its field rate not matching A's. Genlock locks B's fields to A's, so this acts on the dirty sum only.",
       },
     ],
   },

@@ -1,3 +1,5 @@
+import { keyFillOf, type KeyFill } from '../core/gpu/framestore'
+
 import type { Controls } from '../core/controls'
 
 // What one lap of the camera loop hands back of a large grey patch at each
@@ -8,6 +10,9 @@ import type { Controls } from '../core/controls'
 // through. Lens blur, vignette, zoom and the pickup tube's lag move light about
 // or across fields and leave a steady flat patch where it was, so they are left
 // out, and so are the auto-iris and the comet cap.
+//
+// The camera's picture joins source A, so the A/B mixer's level for A scales
+// every lap: `bus` is that level where A shows, from `cameraBusShare`.
 
 export interface CameraLoop {
   mix: number
@@ -19,6 +24,32 @@ export interface CameraLoop {
   bloom: number
   halation: number
   glow: number
+  bus: number
+}
+
+// How much of source A, and so of the camera, the A/B mixer puts on screen
+// where A shows. The clean dissolve gives A 1 − B gain, except that a wipe
+// confines B to its own region, which leaves A's region at full level. A keyer
+// puts its fill behind B: program A keeps the camera at full level in the hole,
+// the matte replaces it everywhere, and the frame store mixes A in at
+// bKeyFillMixA. The dirty sum gives A its own gain, and a negative gain returns
+// each lap inverted at the same size.
+const FILL_SHARE: Record<KeyFill, (c: Controls) => number> = {
+  program: () => 1,
+  matte: () => 0,
+  loop: c => c.bKeyFillMixA,
+  freeze: c => c.bKeyFillMixA,
+}
+
+export function cameraBusShare(c: Controls) {
+  const fill = keyFillOf(c, true)
+  return c.bGenlock <= 0.5
+    ? c.aGain
+    : fill !== null
+      ? FILL_SHARE[fill](c)
+      : c.wipeMode > 0
+        ? 1
+        : 1 - Math.min(Math.max(c.bGain, 0), 1)
 }
 
 export const cameraLoopOf = (c: Controls): CameraLoop => ({
@@ -31,6 +62,7 @@ export const cameraLoopOf = (c: Controls): CameraLoop => ({
   bloom: c.crtBloom,
   halation: c.crtHalation,
   glow: c.crtGlow,
+  bus: cameraBusShare(c),
 })
 
 // The luma of crt_face's WARM tint, which halation and glow add in.
@@ -66,6 +98,7 @@ export function cameraLap(loop: CameraLoop, level: number): number {
   const over = Math.max(cut - knee, 0)
   return (
     loop.mix *
+    Math.abs(loop.bus) *
     (Math.min(cut, knee) + (head * over) / Math.max(head + over, 1e-6))
   )
 }
