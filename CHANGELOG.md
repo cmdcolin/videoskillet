@@ -2,6 +2,29 @@
 
 All notable changes to videoskillet are documented here.
 
+## [2.25.2](https://github.com/cmdcolin/videoskillet/compare/v2.25.1...v2.25.2) - 2026-11-05
+
+### Features
+- *(ui)* [`efe569a`](https://github.com/cmdcolin/videoskillet/commit/efe569a91fec75fa775b69fcd03da78c24125855) drop the Dark zone demo
+- *(ui)* [`d0fb9d5`](https://github.com/cmdcolin/videoskillet/commit/d0fb9d5f6cd2ba07052bdbb18abbe74785fb8729) random look leads with a subtle feedback loop and skips Phosphor
+- *(ui)* [`c22d92e`](https://github.com/cmdcolin/videoskillet/commit/c22d92eb918d0212209704379fda7e27eb4e7cc4) the all-presets catalog opens on the subtle feedback loops
+- *(ui)* [`bd55cf1`](https://github.com/cmdcolin/videoskillet/commit/bd55cf13fe2d25c30c315c3a86000dd84ea16206) a demos button on Presets opens the gallery's boards in a dialog
+- *(ui)* [`5bd3611`](https://github.com/cmdcolin/videoskillet/commit/5bd361139d9ad5732da04f982711b459dcb8b5e6) the demos dialog leads with the showcase demos
+- *(ui)* [`26f9d28`](https://github.com/cmdcolin/videoskillet/commit/26f9d2890a94198c2c15b3209e9333d845a500db) window.vfBoard.demos() lists the gallery demos for an agent
+
+### Fixes
+- *(ui)* [`5e7a393`](https://github.com/cmdcolin/videoskillet/commit/5e7a3939b5206eb8d2d7969527bb9e38824e12db) the profile library button reads save
+- *(ui)* [`eeec8f1`](https://github.com/cmdcolin/videoskillet/commit/eeec8f15088178925773860999be833fad2ddc51) show what the A/B mixer does to the camera loop
+- *(ui)* [`4a1632c`](https://github.com/cmdcolin/videoskillet/commit/4a1632ce25fd95c4908bd5776e7f55964f328a37) dim inert rows under a group's gate banner
+- *(ui)* [`c5463ad`](https://github.com/cmdcolin/videoskillet/commit/c5463ad538712981b2cd53238945324ae3d2b04a) dim an inert row's label and reading as well as its track
+
+### Documentation
+- [`824dba0`](https://github.com/cmdcolin/videoskillet/commit/824dba07feda7490691aff4a2b42238eee67b1e2) every evaluateOnNewDocument logs a permission error under BiDi
+
+### Other Changes
+- [`5d59b00`](https://github.com/cmdcolin/videoskillet/commit/5d59b00c986c38914cb47dd027bc717ba14fc27d) Words
+- [`9b07135`](https://github.com/cmdcolin/videoskillet/commit/9b0713590dcc154fde55abcdac8ed5c03966af4f) SYNC
+
 ## [2.25.1](https://github.com/cmdcolin/videoskillet/compare/v2.25.0...v2.25.1) - 2026-11-03
 
 ### Features
