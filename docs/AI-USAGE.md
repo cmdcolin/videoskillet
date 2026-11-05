@@ -67,6 +67,8 @@ The agent has three ways to drive the tab:
   back to stock, and a link with no `mod=` stops all motion. It returns
   `{unknown, damaged}`: the `set=` keys that are not controls, and whether a
   packed `p=` look failed its check. `read` returns the board as text.
+  `window.vfBoard.demos()` lists the gallery's demos as `{name, says, link}`,
+  and `apply(link)` lands one, sources included.
 
 - **The command palette.** `ctrl+k` (`⌘k`) opens a text box that takes a
   control's name and a value in one line, such as `head switch 9` or `noise 12`,

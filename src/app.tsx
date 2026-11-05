@@ -56,6 +56,7 @@ import {
 import { cx } from './ui/cx'
 import { Deck } from './ui/Deck'
 import { barCut, deckLoad } from './ui/deckModel'
+import { DEMOS } from './ui/demos'
 import { DRIFT_BOARD, DRIFT_WAKE } from './ui/drift'
 import { FatalScreen } from './ui/FatalScreen'
 import { FilterContext, filterActive, sliderMatches } from './ui/filter'
@@ -1836,6 +1837,8 @@ export function App() {
     const api: BoardApi = {
       apply: text => applyBoard(text, next => writeControls(next)),
       read: () => boardText(boardOf(controlStore.get())),
+      demos: () =>
+        DEMOS.map(d => ({ name: d.name, says: d.says, link: d.link })),
     }
     window.vfBoard = api
     return () => {

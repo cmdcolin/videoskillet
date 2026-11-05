@@ -55,10 +55,12 @@ export interface BoardApplied {
 }
 
 // The board for a script in the page: `window.vfBoard.apply(link)` lands a whole
-// board in one undoable step and `read()` is the board text.
+// board in one undoable step, `read()` is the board text, and `demos()` lists
+// the gallery's boards with a link each for `apply`.
 export interface BoardApi {
   apply: (text: string) => BoardApplied
   read: () => string
+  demos: () => { name: string; says: string; link: string }[]
 }
 
 export interface Board {

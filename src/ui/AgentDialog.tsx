@@ -12,6 +12,7 @@ const agentPrompt = (look: string) =>
     `- How an agent drives the app: ${AI_GUIDE_URL}`,
     '- In the videoskillet tab, window.vf.applyControls({...}) sets controls and window.vf.getControls() reads them back.',
     '- window.vfBoard.apply(link) lands a whole board (sources, controls, motion) in one undoable step, and window.vfBoard.read() returns it as text.',
+    '- window.vfBoard.demos() lists the gallery demos with a link each to pass to apply.',
   ].join('\n')
 
 export function AgentDialog(props: { onClose: () => void }) {
