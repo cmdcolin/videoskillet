@@ -24,7 +24,7 @@
   "type": "module",
   "scripts": {
     "dev": "astro dev",
-    "build": "tsc -b && node scripts/docgen.mjs --check && node scripts/demogen.mjs --check && astro build",
+    "build": "tsc -b && node scripts/docgen.mjs --check && astro build",
     "preview": "astro preview",
     "format": "oxfmt && prettier --write \"site/**/*.astro\"",
     "format:check": "oxfmt --check && prettier --check \"site/**/*.astro\"",
@@ -64,8 +64,6 @@
     "blog:draft": "node scripts/blogdraft.mjs",
     "docgen": "node scripts/docgen.mjs",
     "docgen:check": "node scripts/docgen.mjs --check",
-    "demos": "node scripts/demogen.mjs",
-    "demos:check": "node scripts/demogen.mjs --check",
     "demoreel": "node scripts/demoreel.mjs",
     "reel": "node scripts/appreel.mjs",
     "reel:check": "node scripts/appreel.mjs --check",

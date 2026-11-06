@@ -7,6 +7,8 @@ consequence of NTSC signal, not an effect drawn on the picture.
 
 TLDR go here! https://videoskillet.com/
 
+and it works on mobile! tested on Google Pixel with Chrome
+
 ## The signal path
 
 **This is the thing to click.** The map sits at the top of the sidebar, and
@@ -17,13 +19,6 @@ that stage's controls open underneath it.
 
 Details in [How it works](docs/FAQ.md#how-does-it-actually-work), fault by fault
 in [Features](docs/FEATURES.md).
-
-## Automate it with an AI agent
-
-Claude Code can drive the app running in your browser: open
-https://videoskillet.com/app/, run `claude --chrome`, and describe a look.
-[Agentic AI usage](docs/AI-USAGE.md) has an example prompt and the API the agent
-calls.
 
 ## Features
 
@@ -40,108 +35,44 @@ calls.
   smooth transitions
 - Has the spirit of [video toaster](https://en.wikipedia.org/wiki/Video_Toaster)
   inside of it, being related to kitchen appliances
-- Mix your own videos,webcam, static,NTSC color bars,or random archive.org/wiki
-  commons videos
+- Mix your own videos, webcam, static, NTSC color bars, or random
+  archive.org/wiki commons videos
 - Supports live youtube mixing, but you have to download our
   [command line](docs/CLI.md) tool with yt-dlp
 - Also renders videos entirely offline via [command line](docs/CLI.md)
 - ...[much more](docs/FEATURES.md)
 
-and it works on mobile! tested on Google Pixel with Chrome
+## Automate it with an AI agent
 
-## Run
+Claude Code can drive the app running in your browser: open
+https://videoskillet.com/app/, run `claude --chrome`, and just say what you want
+the app to do, plain english.
 
-```
-pnpm install
-pnpm dev
-```
-
-Fun bonus: `pnpm dev` adds a **Video URL…** source that mixes in YouTube, or
-anything else yt-dlp can fetch, on the fly. `videoskillet serve` from the
-[released binary](docs/CLI.md#serving-the-app) has it too, with no clone.
+See https://videoskillet.com/blog/agent-drives-the-app/
 
 ## Docs
 
-- [Main docs website](https://videoskillet.com/guide/)
-- [Getting started](docs/GETTING-STARTED.md)
-- [Features](docs/FEATURES.md)
-- [Effects](docs/EFFECTS.md) — every control, generated
-- [CLI](docs/CLI.md) — the offline renderer, which takes a link and a file and
-  writes ProRes 4444, and `videoskillet serve`, which hosts the app on your own
-  machine
-- [Drive it by URL](public/llms.txt) — every URL parameter, and
-  [every control's key](public/llms-full.txt), also published at
-  [videoskillet.com/llms.txt](https://videoskillet.com/llms.txt)
-- [Agentic AI usage](docs/AI-USAGE.md) — automating the app with Claude Code
-- [MIDI](docs/MIDI.md)
-- [Comparison with other tools](docs/COMPARISON.md)
-- [FAQ](docs/FAQ.md) — how it works, what runs it, installing it
+Using videoskillet:
 
----
+- [Getting started](docs/GETTING-STARTED.md)
+- [Main docs website](https://videoskillet.com/guide/)
+- [Features](docs/FEATURES.md)
+- [Effects](docs/EFFECTS.md)
+- [MIDI](docs/MIDI.md)
+- [FAQ](docs/FAQ.md)
+- [Comparison with other tools](docs/COMPARISON.md)
+- [URL params](public/llms.txt)
+
+Offline rendering/CLI:
+
+- [CLI](docs/CLI.md) — takes a link and a file and writes ProRes 4444. Also has
+  `videoskillet serve`, which hosts the app on your own machine instead of from
+  website, and has yt-dlp integration to let you paste youtube on the fly (live
+  webapp doesn't have yt-dlp concept...running pnpm dev server also has yt-dlp
+  integration)
+
+## About
 
 Note: this project is extensively vibecoded. The initial signal-path design was
 one-shotted by [Fable](https://claude.com/), which nailed the "signal level"
 idea behind the glitches.
-
-I also had a hard time coming up with a name for this project. I hope you enjoy.
-This app is inspired by my old 2010s-era experiments alligator clipping analog
-video cables together and posting tumblr gifs.
-
-## Cool demos
-
-<!-- generated:demos -->
-
-- Chaos black and white feedback
-  https://videoskillet.com/app/?p=Nj.FJADAMACAuQDNVAImAIAUALIARaQAwoUAIABANQDApQBAHgARAniAQECCVQk5gMAqAEAqAYAgJ9JA8gB&mod=&srcb=tv+static
-
-- Wonkitize me
-  https://videoskillet.com/app/?p=A7.BGgTjAk1NCPEAQCQIACkBgBMAZwhAVwAkAEAHADMARCQAwDQAwDAWwAMAJADANgDAIABAkAA0AEAiAEAwIkBAJADJEAIBCKgnAEfBACgAwCcAQmQAw&mod=&vurl=https://upload.wikimedia.org/wikipedia/commons/6/6b/Gillette_Super-Speed_TV_commercial_with_Pee_Wee_Reese_circa_1956.webm&srcb=tv+static&speeda=0.39
-
-- I can't believe it's not analog butter
-  https://videoskillet.com/app/?p=3t.GKwxE4gDRYQDAMQfANADAqwiFZADALgDAJg1AAwAkAMAtAQAfAXQbwC0AiRACAQirGwroAE&mod=&srcb=none
-
-- Wiggity
-  https://videoskillet.com/app/?p=je.CoDoBwEEAbAEAKwCAfABAKCZAgXgAw2IIwSIAyFYBrAKEjwGmAEEuB4ZVADsBgr4OiSMCQDEAQDgAgAkAUQEBAAQA9wCAMXBAgCJngIAlf4DAI3tAw&mod=bendUs:lorenz:0.390279:0.27759,hvRing:sine:0.037599:0.090209&srcb=synth&src=sweep
-
-- Laser duck
-  https://videoskillet.com/app/?p=pa.KsgBFDQOGAGgAQDgAwJ4BvABIaQBBdAMOngsgJMC&mod=&srcb=ia-random&iurl=https:%2F%2Fthumb.wikimedia.org%2Fwikipedia%2Fcommons%2Fthumb%2Fb%2Fb4%2F20250724_mallard_duckling_wethersfield_cove_PD201227.jpg%2F1280px-20250724_mallard_duckling_wethersfield_cove_PD201227.jpg%3Futm_source%3Dcommons.wikimedia.org%26utm_campaign%3Dimageinfo%26utm_content%3Dthumbnail
-
-- Rainborb
-  https://videoskillet.com/app/?p=zD.GNADE4QCRYQDAJgfANYEAvAlAOQBFNwBAdAFL0AIBCKcvgE&mod=&srcb=none
-
-- Ridiculous rainbow
-  https://videoskillet.com/app/?p=T2.GKAEE4QCRYQDAMQfAJ8FAowfFYwDAfAMAWAA8AIARAZgJEAIBCKcvgErYA&mod=&srcb=none
-
-- Collecting dust
-  https://videoskillet.com/app/?p=R2.cqQCAKAfAHoAOgAoAKggACwAYABEABAAmAEQ0AIAoAMw-AIArAICjBAEBEjgLgCoAQ&mod=&srcb=vhs+static
-
-- Fuzzy color bars feedback
-  https://videoskillet.com/app/?p=1w.cqQCAKAfAHoAOgAoAKggACwAYABEABAAmAEQ0AIA1AIwsAEIBA&mod=&srcb=vhs+static
-
-- Ponderorb
-  https://videoskillet.com/app/?p=8A.GIgECaABABwAtCUpNCOQAwCsHACACgKUJQK0ARLEAQGcBwAEAIQCAJQDAEwCbACkAgCkAVKA2QE&mod=
-
-- Messed up clouds
-  https://videoskillet.com/app/?p=Y5.GIgFEVQA9AEAYA6AAhHAAQBkDEgEkAMIGAKgAgC0AQToAgKcAQH4IQEoAIwBACAAkAMFXGioFAe5vgMAocQB&mod=vFreqHz:smooth:0.08:0.0049,fbGain:smooth:0.24:0.06&src=vhs+static
-
-- My lord
-  https://videoskillet.com/app/#src=cat&set=chromaGain:2.62,cc:1,ccBox:0.85,ccRomAddr:1,ccRomData:-3,cgMix:0.48,cgY:0.28,cgScale:2.5,cgRomAddr:5,noiseIre:5.9,rfMistuneMHz:0.39,fbMix:0.61,fbZoom:1.028,fbGain:1.096,fbBlack:0.045,cfbMix:1,cfbGain:-1.22,cfbDelayUs:2.357,cfbLines:60,cfbKey:1,cfbKeyLevel:53,cfbKeySoft:10,cfbKeyExt:1,cfbRing:1,cfbGenlock:1,phosphor:0.1603,timeScale:0.45&mod=
-
-- Purplady
-  https://videoskillet.com/app/#set=capLumaMHz:4.2,demodMHz:3.43,chromaGain:13.62,vir:0.86,lumaMHz:6,noiseIre:9.2,colorUnderMix:0.38,underJitterDeg:1.5,headSwitchNoise:0.15,headSwitchShiftUs:0.3,diffGain:1,diffPhaseDeg:49,tbJitterNs:300,tbWowNs:110,dubGens:3,cfbMix:1,cfbGain:-1.08,cfbDelayUs:2.233,cfbLines:59,cfbKey:0.98,cfbKeyLevel:48,cfbServoUs:0.07,cfbRing:0.89,cfbGenlock:1&mod=&iurlb=https:%2F%2Fthumb.wikimedia.org%2Fwikipedia%2Fcommons%2Fthumb%2Fa%2Fa5%2FMinho_for_Marie_Claire_Magazine_August_Issue_2021_02.png%2F1280px-Minho_for_Marie_Claire_Magazine_August_Issue_2021_02.png%3Futm_source%3Dcommons.wikimedia.org%26utm_campaign%3Dimageinfo%26utm_content%3Dthumbnail&iurl=https:%2F%2Fupload.wikimedia.org%2Fwikipedia%2Fcommons%2Ff%2Ff1%2FJill_St._John_-_Tony_Rome%252C_1967.jpg%3Futm_source%3Dcommons.wikimedia.org%26utm_campaign%3Dimageinfo%26utm_content%3Dthumbnail_unscaled
-
-- Rainbow snakes
-  https://videoskillet.com/app/#mod=fbGain:smooth:0.02:0.64&src=vhs+static&set=chromaGain:1.62,hvSagUs:2.1,hvRing:0.61,abl:0.24,lumaMHz:3.2,lumaPeak:2.4,noiseIre:2.5,agc:0.18,colorUnderMix:1,ycDelayNs:420,fmOverdev:0.72,fmStreakUs:0.45,fbMix:0.93,fbRotateDeg:0.11,fbShiftX:-0.003,fbShiftY:0.035,fbIris:0.43,fbVign:0.188604,fbBlack:0.035,fbKnee:1,crtBloom:0.23,cfbMix:0.9,cfbGain:0.56,cfbDelayUs:0.027,cfbKeySoft:16.5,cfbFilterMHz:1,cfbFilterBoost:2.35,cfbRing:1,cfbRingSrc:1,cfbCarrierKHz:0.09,cfbClockPct:-0.02328,cfbGenlock:1,aGain:0.99,phosphor:0.065,crtZoomX:0.7143,crtZoomY:0.314
-
-- Tape in
-  https://videoskillet.com/app/#set=lumaMHz:2.8,osd:1,osdHoldS:5,osdBlueS:1.5,lumaPeak:0.9,noiseIre:2,colorUnderMix:1,underJitterDeg:4,headSwitchNoise:0.4,headSwitchShiftUs:0.8,tbJitterNs:200,trackAmt:0.1,trackHunt:0.75,trackKick:0.9&mod=
-
-- Scrambled channel
-  https://videoskillet.com/app/#preset=scrambledChannel&iurl=https://upload.wikimedia.org/wikipedia/commons/f/f9/%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg
-
-- Skeledance
-  https://videoskillet.com/app/#iurl=https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fc/Temple_Hill_Graveyard_%28Cork%29_at_night_01.JPG/1280px-Temple_Hill_Graveyard_%28Cork%29_at_night_01.JPG&vurlb=https://myloveydove.com/videoskillet/sources/creatures-for-chroma-key-death.webm&set=chromaGain:1.3,crtSat:1.2,bGain:1,bGenlock:1,bKey:1,bKeyAcceptDeg:45,bKeyClip:0.05,bKeySpill:0.6,bKeyFill:2,cfbHold:3,bKeyFillMixA:0.15,bKeyFillFraming:1
-
-<!-- /generated:demos -->
-
-Send me more stuff you come up with
