@@ -30,16 +30,14 @@ import { readFileSync } from 'node:fs'
 // bar arrives under `?` before the app owns the bar and under `#` after. A
 // pattern that took only `?p=` read a `#src=` demo as absent, which the count
 // below would have called a demo missing from the README.
-const links = (path: string): string[] =>
-  [
-    ...readFileSync(path, 'utf8').matchAll(/https:\/\/\S*?[?#](\S+?)[)\s]/g),
-  ].map(m => m[1]!)
+const links = (text: string): string[] =>
+  [...text.matchAll(/https:\/\/\S*?[?#](\S+?)[)\s]/g)].map(m => m[1]!)
 
-const readme = links('README.md')
+const readme = demos.flatMap(demo => links(`${demo.url} `))
 
 const published = [
-  ...readme.map(q => ['README.md', q] as const),
-  ...links('docs/GETTING-STARTED.md').map(
+  ...readme.map(q => ['demos.json', q] as const),
+  ...links(readFileSync('docs/GETTING-STARTED.md', 'utf8')).map(
     q => ['docs/GETTING-STARTED.md', q] as const,
   ),
 ]

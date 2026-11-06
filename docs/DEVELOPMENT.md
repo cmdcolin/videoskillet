@@ -3,7 +3,7 @@
 ```
 pnpm install
 pnpm dev        # astro on :5199: site, guide and the app pages (/app/, /cam/)
-pnpm build      # tsc -b + docgen/demogen checks + astro build
+pnpm build      # tsc -b + docgen check + astro build
 pnpm lint --fix # oxlint
 pnpm test       # vitest
 ```
@@ -821,15 +821,13 @@ pnpm demoreel                    # the gallery's clips (the canvas alone)
 pnpm reel                        # the carousel's clips (the whole window, both frames)
 pnpm reel orb                    # just this slide
 pnpm reel:check                  # which slides show an older app
-pnpm demos                       # rewrite the README's generated demo bullets
-pnpm demos:check                 # fail if the checked-in copy is stale
 ```
 
-[`../demos.json`](../demos.json) is the looks — the README's bullets and the
-gallery of cards, each opening the exact board its clip is a recording of.
-Entries carry flags: `showcase` is the ones the carousel may play; `gallery` is
-whether it gets a card; `says` is the clause under the name. The header and the
-link preview no longer use a demo's still:
+[`../demos.json`](../demos.json) is the looks — the gallery of cards, each
+opening the exact board its clip is a recording of. Entries carry flags:
+`showcase` is the ones the carousel may play; `gallery` is whether it gets a
+card; `says` is the clause under the name. The header and the link preview no
+longer use a demo's still:
 [`../scripts/heroplate.mjs`](../scripts/heroplate.mjs) sets the headline in the
 h1's own typeface, photographs it, runs the plate through the app and reads the
 canvas back, so the words on the page are a picture of what the program does to
