@@ -89,7 +89,7 @@ test.each(slides)('$name reaches the stage', slide => {
 })
 
 const total = (act: { secs?: number }[]) =>
-  act.reduce((sum, beat) => sum + beatSecs(beat), 0)
+  act.reduce((sum, beat) => sum + Number(beatSecs(beat)), 0)
 
 test.each(slides)('$name is held for its own length', slide => {
   const at = (attr: string) =>
@@ -109,12 +109,12 @@ test('one still is fetched, and the rest wait for their slide', () => {
 
 test('the narrow breakpoint is written down once, where the page reads it', () => {
   expect(/<source\s+media="([^"]+)"/.exec(stage)?.[1]).toBe(NARROW.at)
-  expect(stage).toContain(`srcset="${slides[0].narrowPoster}"`)
+  expect(stage).toContain(`srcset="${slides[0]!.narrowPoster}"`)
 })
 
 test('the stage opens on the first slide, and every slide is in it once', () => {
   expect(/class="slide on"\s+data-name="([^"]+)"/.exec(stage)?.[1]).toBe(
-    slides[0].name,
+    slides[0]!.name,
   )
   expect([...stage.matchAll(/class="slide[^"]*"\s+data-name=/g)]).toHaveLength(
     slides.length,

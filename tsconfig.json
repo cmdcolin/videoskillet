@@ -32,6 +32,5 @@
   // this file, so it has to cover the tests: a file outside it gets checked with
   // default options. tsconfig.app.json checks the app again without node.
   "include": ["src", "site/**/*.ts"],
-  "exclude": ["site/**/*.test.ts"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

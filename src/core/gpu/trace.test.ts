@@ -23,6 +23,9 @@ async function load(seed: string | null = null, onWrite?: (v: string) => void) {
   return { mod: await import('./trace'), stored: () => cell.value }
 }
 
+const reread = async (stored: string | null) =>
+  (await load(stored)).mod.trace.history()
+
 let counters: Record<string, string | undefined> = {}
 
 const session = (at: number, ...lines: string[]) => ({ at, ua: 'old', lines })
@@ -63,7 +66,7 @@ describe('trace', () => {
     const { mod, stored } = await load(JSON.stringify([session(1, 'a|x|')]))
     mod.trace.add('stall', 'here')
     mod.trace.flush(true)
-    const written: { lines: string[] }[] = JSON.parse(stored() ?? '[]')
+    const written = await reread(stored())
     expect(written).toHaveLength(2)
     expect(written[1]?.lines.some(l => l.includes('|stall|here'))).toBe(true)
   })
@@ -73,7 +76,7 @@ describe('trace', () => {
     const { mod, stored } = await load(seed)
     mod.trace.add('stall')
     mod.trace.flush(true)
-    const written: { at: number }[] = JSON.parse(stored() ?? '[]')
+    const written = await reread(stored())
     expect(written).toHaveLength(5)
     // The oldest went; the four most recent past sessions and this one remain.
     expect(written.slice(0, 4).map(s => s.at)).toEqual([2, 3, 4, 5])
@@ -92,7 +95,7 @@ describe('trace', () => {
     })
     mod.trace.add('stall', 'here')
     mod.trace.flush(true)
-    const written: { lines: string[] }[] = JSON.parse(stored() ?? '[]')
+    const written = await reread(stored())
     expect(written).toHaveLength(1)
     expect(written[0]?.lines.some(l => l.includes('|stall|here'))).toBe(true)
   })

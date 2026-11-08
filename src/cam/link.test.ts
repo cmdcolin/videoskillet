@@ -1,12 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
+import demos from '../../demos.json'
 import { DEFAULT_CONTROLS } from '../core/controls'
 import { readLink, writeLink } from './link'
 import { MIX_SHELF } from './looks'
 
 import type { CamLink } from './link'
-
-import { readFileSync } from 'node:fs'
 
 const BLANK = { base: null, look: null, layers: {}, tweaks: {}, mix: null }
 const roundTrip = (link: CamLink) =>
@@ -60,8 +59,6 @@ describe('a camera link', () => {
   })
 
   it('opens every gallery demo as a board, with its pattern on B', () => {
-    const demos: { name: string; query: string; gallery: boolean }[] =
-      JSON.parse(readFileSync('demos.json', 'utf8'))
     for (const demo of demos.filter(d => d.gallery)) {
       const got = readLink(`?${demo.query.slice(1)}&name=x`)
       expect(got?.base, demo.name).not.toBeNull()

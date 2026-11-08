@@ -181,7 +181,8 @@ describe('WGSL shaders pass naga validation', () => {
   }
 })
 
-const hasChrome = existsSync(CHROME)
+const chrome = String(CHROME)
+const hasChrome = existsSync(chrome)
 
 // Tint runs a uniformity analysis that naga skips: a `workgroupBarrier` after an
 // early return keyed on `global_invocation_id` passes naga, and in Chrome it
@@ -191,7 +192,7 @@ const hasChrome = existsSync(CHROME)
 describe('WGSL shaders compile in Chrome', () => {
   it('Chrome must be installed under CI', () => {
     if (process.env.CI !== undefined)
-      expect(hasChrome, `Chrome not found at ${CHROME} in CI`).toBe(true)
+      expect(hasChrome, `Chrome not found at ${chrome} in CI`).toBe(true)
   })
 
   let browser: Browser | undefined
@@ -204,7 +205,7 @@ describe('WGSL shaders compile in Chrome', () => {
     await new Promise<void>(resolve => server?.listen(0, '127.0.0.1', resolve))
     const { port } = server.address() as AddressInfo
     browser = await puppeteer.launch({
-      executablePath: CHROME,
+      executablePath: chrome,
       headless: true,
       args: [
         '--enable-unsafe-webgpu',

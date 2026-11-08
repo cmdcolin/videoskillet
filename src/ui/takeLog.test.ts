@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-const putTakeReport = vi.hoisted(() => vi.fn())
+const putTakeReport = vi.hoisted(() => vi.fn<typeof put>())
 vi.mock('./cloud', () => ({ putTakeReport }))
 
 import {
@@ -10,6 +10,7 @@ import {
   reportTakeFailed,
 } from './takeLog'
 
+import type { putTakeReport as put } from './cloud'
 import type { TakeNote } from './takeLog'
 
 const NOTE: TakeNote = {

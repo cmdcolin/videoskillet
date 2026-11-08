@@ -26,9 +26,7 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
-type Head = { level: number; id: string; text: string }
-
-let render: (md: string) => Promise<{ html: string; outline: Head[] }>
+let render: (md: string) => Promise<{ html: string; outline: unknown }>
 
 beforeAll(async () => {
   const processor = await createMarkdownProcessor({
@@ -101,7 +99,7 @@ test('the panel takes the section id, and nothing else claims it', async () => {
 
 test('a tabbed section stays out of the page outline', async () => {
   const { outline } = await render(PAGE)
-  expect(outline.map(head => head.id)).toEqual(['installing', 'limitations'])
+  expect(outline).toMatchObject([{ id: 'installing' }, { id: 'limitations' }])
 })
 
 // Every panel is in the markup, so a reader with scripting off can see all of
@@ -117,7 +115,7 @@ test('the fallback puts every route back', async () => {
 test('markdown with no markers in it is left alone', async () => {
   const { html, outline } = await render('## Installing\n\n### The binary\n')
   expect(html).not.toContain('tablist')
-  expect(outline.map(head => head.id)).toEqual(['installing', 'the-binary'])
+  expect(outline).toMatchObject([{ id: 'installing' }, { id: 'the-binary' }])
 })
 
 test('an unclosed block fails the build', async () => {

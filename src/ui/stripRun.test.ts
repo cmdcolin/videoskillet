@@ -11,6 +11,7 @@ import type { Row, Strip } from './strip'
 import type { StripSink } from './stripRun'
 import type { TransitionName } from './transitions'
 import type { SessionParams } from './urlParams'
+import type { StripDeps } from './useStrip'
 
 // A sink that writes down what it was asked for. The whole reason `advance`
 // returns effects instead of calling the engine: "row 2 rolled the wrong pool"
@@ -168,18 +169,18 @@ describe('makeStripRunner', () => {
   function harness(rows: Row[], opts: { loop?: boolean } = {}) {
     const runner = makeStripRunner()
     let frame = 0
-    const showSession = vi.fn()
-    const faultTo = vi.fn()
-    const rollOn = vi.fn()
-    const prerollOn = vi.fn()
-    const prerollClipOn = vi.fn()
-    const dropPreroll = vi.fn()
-    const clipOn = vi.fn()
+    const showSession = vi.fn<StripDeps['showSession']>()
+    const faultTo = vi.fn<StripDeps['faultTo']>()
+    const rollOn = vi.fn<StripDeps['rollOn']>()
+    const prerollOn = vi.fn<StripDeps['prerollOn']>()
+    const prerollClipOn = vi.fn<StripDeps['prerollClipOn']>()
+    const dropPreroll = vi.fn<StripDeps['dropPreroll']>()
+    const clipOn = vi.fn<StripDeps['clipOn']>()
     // Resolved, and counted: what the offline walk waits on. A live walk must
     // never reach it, which is one of the assertions below.
     const settleSources = vi.fn(() => Promise.resolve())
-    const writeControls = vi.fn()
-    const ensureTempo = vi.fn()
+    const writeControls = vi.fn<StripDeps['writeControls']>()
+    const ensureTempo = vi.fn<StripDeps['ensureTempo']>()
     const track = { loaded: true, restart: vi.fn(), pause: vi.fn() }
     runner.setDeps({
       showSession,

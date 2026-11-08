@@ -72,23 +72,20 @@ describe('backingOf', () => {
   })
 
   it('finds no backing in grey', () => {
-    expect(backingOf(0.5, 0.5, 0.5)).toEqual({
-      level: expect.closeTo(0),
-      luma: expect.closeTo(0.5),
-    })
+    const grey = backingOf(0.5, 0.5, 0.5)
+    expect(grey.level).toBeCloseTo(0)
+    expect(grey.luma).toBeCloseTo(0.5)
   })
 })
 
 describe('calibrated', () => {
   it("sets the additive keyer a little under the tapped backing, after B's gain", () => {
-    expect(calibrated({ level: 0.4, luma: 0.5 }, 1)).toEqual({
-      bKeyLevel: expect.closeTo(0.32),
-      bKeyBackY: expect.closeTo(0.4),
-    })
-    expect(calibrated({ level: 0.4, luma: 0.5 }, 1.5)).toEqual({
-      bKeyLevel: expect.closeTo(0.48),
-      bKeyBackY: expect.closeTo(0.6),
-    })
+    const flat = calibrated({ level: 0.4, luma: 0.5 }, 1)
+    expect(flat.bKeyLevel).toBeCloseTo(0.32)
+    expect(flat.bKeyBackY).toBeCloseTo(0.4)
+    const gained = calibrated({ level: 0.4, luma: 0.5 }, 1.5)
+    expect(gained.bKeyLevel).toBeCloseTo(0.48)
+    expect(gained.bKeyBackY).toBeCloseTo(0.6)
   })
 })
 

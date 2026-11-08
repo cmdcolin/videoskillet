@@ -16,14 +16,14 @@ let into: string[] = []
 beforeAll(async () => {
   const container = await experimental_AstroContainer.create()
   const page = await container.renderToString(Landing)
-  into = [...page.matchAll(/(?:href|src)="\/guide\/([^"]*)"/g)].map(m => m[1])
+  into = [...page.matchAll(/(?:href|src)="\/guide\/([^"]*)"/g)].map(m => m[1]!)
 })
 
-const headings = (file: string) =>
+const headings = (file: string): unknown[] =>
   readFileSync(file, 'utf8')
     .split('\n')
     .filter(line => /^###? /.test(line))
-    .map(line => slug(line.replace(/^#+ /, '')))
+    .map((line): unknown => slug(line.replace(/^#+ /, '')))
 
 test('the landing page links into the guide at all', () => {
   expect(into.length).toBeGreaterThan(0)
@@ -31,7 +31,7 @@ test('the landing page links into the guide at all', () => {
 
 test('every page the landing page links to is a page the guide renders', () => {
   for (const link of into) {
-    const [path] = link.split('#')
+    const [path = ''] = link.split('#')
     if (path !== '' && !path.startsWith('img/')) {
       expect(
         ALL.map(spec => href(spec.slug)),

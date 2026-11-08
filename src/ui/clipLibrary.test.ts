@@ -223,11 +223,8 @@ describe('libraryGroups', () => {
   })
 
   it('offers no loose group when there is nothing loose', () => {
-    expect(libraryGroups(shelf([{ name: 'rips', files: ['a.mp4'] }]))).toEqual([
-      expect.objectContaining({
-        folder: expect.objectContaining({ name: 'rips' }),
-      }),
-    ])
+    const groups = libraryGroups(shelf([{ name: 'rips', files: ['a.mp4'] }]))
+    expect(groups.map(g => g.folder?.name)).toEqual(['rips'])
   })
 
   it('shows a clip whose folder has gone rather than losing it', () => {

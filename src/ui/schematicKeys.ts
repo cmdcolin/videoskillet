@@ -84,7 +84,7 @@ export const RECORDING_OPENS = {
 
 export const RECORDING_KEYS = Object.values(RECORDING_OPENS).flat()
 
-export interface Bends {
+export type Bends = {
   romAddr: ControlKey
   romData: ControlKey
   romCross: ControlKey

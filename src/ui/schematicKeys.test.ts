@@ -4,7 +4,8 @@ import { GROUPS } from './controls'
 import { SCHEMATICS } from './schematicKeys'
 
 describe.each(SCHEMATICS)('schematic for $group', schematic => {
-  const boxed: string[] = Object.values(schematic.opens).flat()
+  const opens: Record<string, readonly string[]> = schematic.opens
+  const boxed = Object.values(opens).flat()
 
   it('registers a group that exists', () => {
     expect(GROUPS.map(g => g.name)).toContain(schematic.group)
