@@ -36,7 +36,7 @@ button.tabIdle {
   z-index: 10;
   margin: 0;
   max-width: min(440px, calc(100vw - 24px));
-  max-height: calc(100vh - 88px);
+  max-height: calc(100dvh - 88px);
   overflow-y: auto;
   padding: var(--space-md);
   background: var(--surface);
@@ -61,6 +61,7 @@ button.tabIdle {
 }
 
 .close {
+  font: inherit;
   background: none;
   border: none;
   color: var(--fg3);
