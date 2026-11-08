@@ -43,7 +43,7 @@ button.tabIdle {
   color: var(--fg2);
   border: 1px solid var(--border-hover);
   border-radius: 5px;
-  box-shadow: 0 8px 28px #000a;
+  box-shadow: var(--shadow-pop);
 }
 
 .cardHead {

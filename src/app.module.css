@@ -45,6 +45,7 @@
    opens on a laptop. */
 .panel {
   width: clamp(300px, var(--panel-w, 332px), 70vw);
+  box-sizing: content-box;
   /* Named container, so the panel's contents can ask how much room *the panel*
      has rather than how wide the screen is — the popout window is sized by
      whoever dragged its edge, and a viewport query would read that as a phone.
@@ -259,7 +260,7 @@
 .brandVersion {
   font-size: 9px;
   font-weight: 400;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--caps-track);
   color: #ffffff70;
   align-self: flex-end;
 }

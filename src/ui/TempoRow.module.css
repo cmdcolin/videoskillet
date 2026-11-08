@@ -13,7 +13,6 @@
    the section's most important control, which it is not. */
 .bpm {
   width: 4.5em;
-  box-sizing: border-box;
   background: var(--surface);
   color: var(--fg);
   border: 1px solid var(--border-quiet);

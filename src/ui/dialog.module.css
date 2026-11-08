@@ -14,12 +14,9 @@
   max-height: 100dvh;
 }
 .modal::backdrop {
-  background: rgba(0, 0, 0, 0.6);
+  background: var(--scrim);
 }
 .card {
-  /* border-box so the max-* below bound the card as drawn — content-box lets
-     the 24px padding and the border push it back past the viewport edge */
-  box-sizing: border-box;
   width: 360px;
   max-width: 90vw;
   /* the help card is taller than a phone screen; scroll the card rather than
@@ -30,6 +27,7 @@
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 8px;
+  box-shadow: var(--shadow-modal);
   padding: 20px var(--space-2xl);
   line-height: var(--prose-lh);
 }
@@ -79,7 +77,6 @@
    gave up its skin and came out identical but tighter; this was tried the same
    way and had to be put back. */
 .textArea {
-  box-sizing: border-box;
   width: 100%;
   margin-bottom: var(--space-md);
   padding: var(--space-sm) var(--space-md);

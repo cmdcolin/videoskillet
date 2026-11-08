@@ -635,7 +635,6 @@
   inset: auto;
   top: anchor(bottom);
   left: anchor(left);
-  box-sizing: border-box;
   width: anchor-size(width);
   margin-top: var(--space-2xs);
   max-width: 34rem;

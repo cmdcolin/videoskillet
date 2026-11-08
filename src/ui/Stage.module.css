@@ -141,7 +141,6 @@
 /* the region being chosen by a drag on the picture */
 .marquee {
   position: absolute;
-  box-sizing: border-box;
   border: 1px solid var(--accent);
   background: color-mix(in srgb, var(--accent) 12%, transparent);
   pointer-events: none;

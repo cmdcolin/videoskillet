@@ -119,7 +119,6 @@
   background: color-mix(in srgb, var(--cue) 22%, transparent);
   border-left: 2px solid var(--cue);
   border-right: 2px solid var(--cue);
-  box-sizing: border-box;
 }
 /* A grip over each end of the loop on the zoom bar, wider than the 2px edge
    under it so a finger can find it. It lights on hover, focus and while held. */

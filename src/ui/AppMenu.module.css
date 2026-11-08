@@ -13,7 +13,6 @@
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-  box-sizing: border-box;
   height: var(--ctl-h);
   background: var(--ctl-bg);
   color: var(--fg);

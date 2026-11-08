@@ -6,7 +6,6 @@
   width: 100vw;
   height: 100vh;
   padding: 20px;
-  box-sizing: border-box;
   background: #0a0a0c;
   color: var(--fg);
   font-family: var(--font);

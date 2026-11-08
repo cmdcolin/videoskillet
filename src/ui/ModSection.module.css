@@ -8,7 +8,7 @@
 .label {
   font-size: var(--fs-sm);
   color: var(--fg3);
-  letter-spacing: 0.04em;
+  letter-spacing: var(--caps-track);
 }
 
 /* accent-color fills the track up to the thumb, so at the resting value of 1

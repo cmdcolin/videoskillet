@@ -26,7 +26,6 @@
 }
 .window {
   position: absolute;
-  box-sizing: border-box;
   border: 1px solid var(--accent);
   background: color-mix(in srgb, var(--accent) 14%, transparent);
   cursor: move;
@@ -42,7 +41,6 @@
   width: 9px;
   height: 9px;
   margin: -5px 0 0 -5px;
-  box-sizing: border-box;
   border: 1px solid #0c0c10;
   background: var(--accent);
   border-radius: 1px;
@@ -51,7 +49,6 @@
 /* wipe: the B region, shaped by the pattern the generator runs */
 .region {
   position: absolute;
-  box-sizing: border-box;
   border: 1px solid var(--accent);
   background: color-mix(in srgb, var(--accent) 14%, transparent);
   pointer-events: none;
@@ -68,7 +65,6 @@
    view being asked for rather than the one the lens is already showing */
 .marquee {
   position: absolute;
-  box-sizing: border-box;
   border: 1px dashed var(--accent);
   background: color-mix(in srgb, var(--accent) 12%, transparent);
   pointer-events: none;

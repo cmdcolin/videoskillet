@@ -44,7 +44,7 @@
   gap: 5px;
   font-size: var(--fs-sm);
   color: var(--fg2);
-  letter-spacing: 0.04em;
+  letter-spacing: var(--caps-track);
   padding: var(--space-2xs) var(--space-xs);
 }
 .disclose:hover {

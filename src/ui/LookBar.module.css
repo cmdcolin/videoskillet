@@ -100,7 +100,6 @@ button.btnOff {
 }
 .morphSlot > * {
   grid-area: 1 / 1;
-  box-sizing: border-box;
 }
 /* CROSS_REPO_SYNC_END(morph-slot) */
 .morphSizer {

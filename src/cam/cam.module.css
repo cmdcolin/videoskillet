@@ -52,7 +52,7 @@
   margin-left: -2px;
   font-size: 9px;
   font-weight: 400;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--caps-track);
   color: #ffffff70;
 }
 .mark {
@@ -99,7 +99,7 @@
   position: relative;
   padding: 5px 12px;
   border: 1px solid #ffffff50;
-  border-radius: 999px;
+  border-radius: var(--pill-radius);
   color: #fff;
   font-size: var(--fs-sm);
   font-weight: 700;
@@ -189,7 +189,7 @@
 .switchLabel {
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--caps-track);
   text-shadow: 0 1px 3px #000;
 }
 .on {
@@ -206,7 +206,7 @@
   display: flex;
   gap: 4px;
   padding: 4px;
-  border-radius: 999px;
+  border-radius: var(--pill-radius);
   background: #0008;
   transform: translateX(-50%);
 }
@@ -218,7 +218,7 @@
   height: 32px;
   padding: 0 6px;
   border: 0;
-  border-radius: 999px;
+  border-radius: var(--pill-radius);
   background: #ffffff20;
   color: #fff;
   font: inherit;
@@ -302,7 +302,7 @@
 }
 .badge {
   padding: 3px 10px;
-  border-radius: 999px;
+  border-radius: var(--pill-radius);
   background: #000000b0;
   color: #fff;
   font-size: var(--fs-sm);
@@ -331,7 +331,7 @@
   left: 50%;
   transform: translateX(-50%);
   padding: 8px 14px;
-  border-radius: 999px;
+  border-radius: var(--pill-radius);
   background: #000000b0;
   color: #fff;
   font-size: var(--fs-sm);
@@ -385,7 +385,7 @@
   display: inline-block;
   padding: 14px 26px;
   border: 0;
-  border-radius: 999px;
+  border-radius: var(--pill-radius);
   background: #fff;
   color: #000;
   font: inherit;
@@ -436,7 +436,6 @@
 }
 .mixer,
 .hits {
-  box-sizing: border-box;
   align-self: center;
   width: 100%;
   max-width: 560px;
@@ -464,7 +463,7 @@
   min-width: 0;
   padding: 8px 12px;
   border: 0;
-  border-radius: 999px;
+  border-radius: var(--pill-radius);
   background: #ffffff14;
   color: #fff;
   color-scheme: dark;
@@ -515,7 +514,6 @@
 }
 .sheetHead,
 .knobs {
-  box-sizing: border-box;
   width: 100%;
   max-width: 560px;
 }
@@ -537,7 +535,7 @@
 .sheetButton {
   padding: 5px 12px;
   border: 1px solid #ffffff40;
-  border-radius: 999px;
+  border-radius: var(--pill-radius);
   background: none;
   color: #fff;
   font: inherit;
@@ -654,7 +652,7 @@
   position: relative;
   padding: 4px 10px;
   border: 1px solid #ffffff30;
-  border-radius: 999px;
+  border-radius: var(--pill-radius);
   background: none;
   color: var(--fg2);
   font: inherit;
@@ -772,7 +770,7 @@
   gap: 6px;
   padding: 8px 14px;
   border: 1px solid #ffffff38;
-  border-radius: 999px;
+  border-radius: var(--pill-radius);
   background: transparent;
   color: var(--fg2);
   font: inherit;
@@ -791,7 +789,6 @@
   left: 0;
   z-index: 1;
   flex: none;
-  box-sizing: border-box;
   display: flex;
   min-width: var(--roll);
   padding: 0 12px 0 16px;

@@ -112,7 +112,7 @@ button.stageName:hover {
   composes: bare from './ui.module.css';
   min-width: 0;
   text-align: left;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--caps-track);
   text-transform: uppercase;
   color: var(--fg2);
 }

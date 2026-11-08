@@ -125,7 +125,6 @@
    is already there, and a field between them reads as a third way in. */
 .find {
   width: 100%;
-  box-sizing: border-box;
   margin-bottom: var(--space-sm);
   background: var(--surface);
   color: var(--fg);

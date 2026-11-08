@@ -25,7 +25,6 @@
   display: block;
   flex: none;
   width: 100%;
-  box-sizing: border-box;
   padding: var(--space-md) var(--space-lg);
   border: 0;
   border-bottom: 1px solid var(--border);

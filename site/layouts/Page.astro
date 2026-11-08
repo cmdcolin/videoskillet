@@ -16,6 +16,7 @@
 import Analytics from '../components/Analytics.astro'
 import Footer from 'skillet-shared/components/Footer.astro'
 import SiteBar from 'skillet-shared/components/SiteBar.astro'
+import base from 'skillet-shared/base.css?raw'
 import designTokens from 'skillet-shared/tokens.css?raw'
 import footer from 'skillet-shared/footer.css?raw'
 import site from 'skillet-shared/site.css?raw'
@@ -66,7 +67,7 @@ const {
     <slot name="meta" />
     <style
       is:inline
-      set:html={designTokens + tokens + site + footer + pageShell + css}
+      set:html={designTokens + base + tokens + site + footer + pageShell + css}
     ></style>
     {/* Anything the page needs before analytics: its own head scripts. */}
     <slot name="head" />
