@@ -120,7 +120,7 @@
     "markdown-it": "^15.0.2",
     "oxc-transform-react": "^0.154.0",
     "oxfmt": "^0.74.0",
-    "oxlint": "^1.89.0",
+    "oxlint": "^1.92.0",
     "prettier": "^3.9.10",
     "prettier-plugin-astro": "^1.1.1",
     "puppeteer-core": "^25.12.0",
