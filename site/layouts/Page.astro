@@ -19,6 +19,7 @@ import SiteBar from 'skillet-shared/components/SiteBar.astro'
 import designTokens from 'skillet-shared/tokens.css?raw'
 import footer from 'skillet-shared/footer.css?raw'
 import site from 'skillet-shared/site.css?raw'
+import pageShell from '../styles/page-shell.css?raw'
 import tokens from '../styles/tokens.css?raw'
 import { SITE } from '../lib/site'
 
@@ -65,7 +66,7 @@ const {
     <slot name="meta" />
     <style
       is:inline
-      set:html={designTokens + tokens + site + footer + css}
+      set:html={designTokens + tokens + site + footer + pageShell + css}
     ></style>
     {/* Anything the page needs before analytics: its own head scripts. */}
     <slot name="head" />
@@ -73,7 +74,9 @@ const {
   </head>
   <body id="top">
     <SiteBar site={SITE} account={account} current={current} />
-    <slot />
+    <div class="page">
+      <slot />
+    </div>
     <Footer site={SITE} />
     {/* Scripts that want the page under them, which is why they follow it. */}
     <slot name="scripts" />

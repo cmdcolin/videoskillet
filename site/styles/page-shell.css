@@ -1,0 +1,13 @@
+/* CROSS_REPO_SYNC_FILE(page-shell-css) */
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+.page {
+  flex: 1 0 auto;
+}
+.footIn {
+  max-width: 72rem;
+  padding-inline: max(1.25rem, env(safe-area-inset-left));
+}
