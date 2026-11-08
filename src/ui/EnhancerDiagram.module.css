@@ -1,5 +1,5 @@
 .alarm {
-  font-size: 9px;
+  font-size: var(--fs-2xs);
   letter-spacing: 0.02em;
   text-transform: uppercase;
   fill: var(--danger);

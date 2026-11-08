@@ -50,7 +50,7 @@
 .brandVersion {
   align-self: flex-end;
   margin-left: -2px;
-  font-size: 9px;
+  font-size: var(--fs-2xs);
   font-weight: 400;
   letter-spacing: var(--caps-track);
   color: #ffffff70;

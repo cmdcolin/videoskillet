@@ -258,7 +258,7 @@
   color: #fff;
 }
 .brandVersion {
-  font-size: 9px;
+  font-size: var(--fs-2xs);
   font-weight: 400;
   letter-spacing: var(--caps-track);
   color: #ffffff70;
