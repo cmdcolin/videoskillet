@@ -3,7 +3,7 @@
 ```
 pnpm install
 pnpm dev        # astro on :5199: site, guide and the app pages (/app/, /cam/)
-pnpm build      # tsc -b + docgen check + astro build
+pnpm build      # tsrs -b + docgen check + astro build
 pnpm lint --fix # oxlint
 pnpm test       # vitest
 ```
