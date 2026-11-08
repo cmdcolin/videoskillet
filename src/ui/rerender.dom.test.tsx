@@ -256,11 +256,15 @@ function cost(
 const brief = (keys: string[]) =>
   keys.length <= 8 ? keys : [...keys.slice(0, 8), `and ${keys.length - 8} more`]
 
+const inAsyncAct = (run: () => unknown) =>
+  act(() => {
+    run()
+    return Promise.resolve()
+  })
+
 async function gesture(run: () => void): Promise<Commit[]> {
   hook.commits.length = 0
-  await act(async () => {
-    run()
-  })
+  await inAsyncAct(run)
   return [...hook.commits]
 }
 
@@ -375,14 +379,14 @@ const GROUP_CROSSING = { ControlGroup: 1, Section: 1 }
 describe('All settings', () => {
   beforeAll(async () => {
     await mountApp()
-    await act(async () => {
+    await inAsyncAct(() => {
       fireEvent.click(screen.getByText('all settings', { selector: 'button' }))
     })
     await settle()
   })
   afterAll(cleanup)
   afterEach(() =>
-    act(async () => {
+    inAsyncAct(() => {
       engine().applyControls(DEFAULT_CONTROLS)
     }),
   )
@@ -434,10 +438,10 @@ describe('All settings', () => {
 
   test('off stock only keeps every row mounted through a write', async () => {
     const key = 'noiseIre'
-    await act(async () =>
+    await inAsyncAct(() =>
       engine().applyControls({ noiseIre: 9, rfAdjacent: 0.5, cfbGain: 1.2 }),
     )
-    await act(async () => {
+    await inAsyncAct(() => {
       fireEvent.click(screen.getByRole('button', { name: 'off stock only' }))
     })
     await settle()
@@ -466,7 +470,7 @@ describe('All settings', () => {
 async function openGroup(key: ControlKey, box: string) {
   if (rowsUnder(ControlGroup).includes(key)) return
   const group = groupOf(key)
-  await act(async () => {
+  await inAsyncAct(() => {
     fireEvent.click(
       screen.getByRole('button', { name: new RegExp(`^${box} —`) }),
     )
@@ -478,7 +482,7 @@ async function openGroup(key: ControlKey, box: string) {
     expanded: false,
   })
   if (head !== null) {
-    await act(async () => {
+    await inAsyncAct(() => {
       fireEvent.click(head)
     })
   }
@@ -492,7 +496,7 @@ describe('a stage in the panel', () => {
   })
   afterAll(cleanup)
   afterEach(() =>
-    act(async () => {
+    inAsyncAct(() => {
       engine().applyControls(DEFAULT_CONTROLS)
     }),
   )
@@ -534,7 +538,7 @@ describe('a stage in the panel', () => {
     const key = 'cfbGain'
     expect(groupOf(key).name).toBe(MIXER_LOOP_GROUP)
     await openGroup(key, 'Mixer feedback')
-    await act(async () => {
+    await inAsyncAct(() => {
       fireEvent.click(screen.getByRole('button', { name: /^▸ \d+ sliders$/ }))
     })
     await drag(key, ControlGroup, [1])
@@ -553,7 +557,7 @@ describe('a stage in the panel', () => {
     const drawing = () =>
       screen.queryByRole('group', { name: 'mixer feedback loop' })
     expect(drawing()).not.toBe(null)
-    await act(async () => {
+    await inAsyncAct(() => {
       setSignalDiagrams(false)
     })
     try {
@@ -561,7 +565,7 @@ describe('a stage in the panel', () => {
       expect(screen.queryByRole('button', { name: /sliders$/ })).toBe(null)
       expect(rowsUnder(ControlGroup)).toContain(key)
     } finally {
-      await act(async () => {
+      await inAsyncAct(() => {
         setSignalDiagrams(true)
       })
     }
@@ -571,13 +575,13 @@ describe('a stage in the panel', () => {
   test('a group unfolds its own schematic with the rest switched off', async () => {
     const drawing = () =>
       screen.queryByRole('group', { name: 'mixer feedback loop' })
-    await act(async () => {
+    await inAsyncAct(() => {
       setSignalDiagrams(false)
     })
     try {
       expect(drawing()).toBe(null)
       const fold = screen.getByRole('button', { name: '▸ diagram' })
-      await act(async () => {
+      await inAsyncAct(() => {
         fireEvent.click(fold)
       })
       expect(drawing()).not.toBe(null)
@@ -585,7 +589,7 @@ describe('a stage in the panel', () => {
         1,
       )
     } finally {
-      await act(async () => {
+      await inAsyncAct(() => {
         setSignalDiagrams(true)
       })
     }
@@ -595,23 +599,23 @@ describe('a stage in the panel', () => {
   test("a group's own fold lasts until the menu's switch moves", async () => {
     const drawing = () =>
       screen.queryByRole('group', { name: 'mixer feedback loop' })
-    await act(async () => {
+    await inAsyncAct(() => {
       setSignalDiagrams(false)
     })
     try {
-      await act(async () => {
+      await inAsyncAct(() => {
         fireEvent.click(screen.getByRole('button', { name: '▸ diagram' }))
       })
       expect(drawing()).not.toBe(null)
-      await act(async () => {
+      await inAsyncAct(() => {
         setSignalDiagrams(true)
       })
-      await act(async () => {
+      await inAsyncAct(() => {
         setSignalDiagrams(false)
       })
       expect(drawing()).toBe(null)
     } finally {
-      await act(async () => {
+      await inAsyncAct(() => {
         setSignalDiagrams(true)
       })
     }
@@ -625,15 +629,15 @@ describe('a stage in the panel', () => {
         name: /Mixer loop \(electrical\)$/,
         expanded,
       })
-    await act(async () => {
+    await inAsyncAct(() => {
       fireEvent.click(box()!)
     })
     expect(box()?.getAttribute('aria-pressed')).toBe('true')
-    await act(async () => {
+    await inAsyncAct(() => {
       fireEvent.click(head(true))
     })
     expect(box()).toBe(null)
-    await act(async () => {
+    await inAsyncAct(() => {
       fireEvent.click(head(false))
     })
     expect(box()?.getAttribute('aria-pressed')).toBe('true')

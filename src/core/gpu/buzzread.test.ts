@@ -14,10 +14,12 @@ function stagingBuffer(size: number) {
     get mapState() {
       return mapState
     },
-    mapAsync: async () => {
-      if (mapState !== 'unmapped') throw new Error('buffer is already mapped')
-      mapState = 'mapped'
-      return undefined
+    mapAsync: () => {
+      const free = mapState === 'unmapped'
+      if (free) mapState = 'mapped'
+      return free
+        ? Promise.resolve(undefined)
+        : Promise.reject(new Error('buffer is already mapped'))
     },
     getMappedRange: () => new ArrayBuffer(size),
     unmap: () => {

@@ -432,7 +432,7 @@ describe('RenderLoop', () => {
     expect(h.recoveries()).toBe(1)
   })
 
-  it('keeps the liveness probe on its own chain', async () => {
+  it('keeps the liveness probe on its own chain', () => {
     const h = harness()
     h.loop.start()
     // One render chain plus one probe chain.
@@ -463,7 +463,7 @@ describe('RenderLoop', () => {
     expect(h.frames()).toBe(3)
   })
 
-  it('probes the device on a kick, not only on the watchdog beat', async () => {
+  it('probes the device on a kick, not only on the watchdog beat', () => {
     const h = harness()
     h.loop.start()
     // Just the backpressure gate's standing probe. The hang probe waits for the
@@ -685,7 +685,7 @@ describe('RenderLoop', () => {
     expect(h.frames()).toBeGreaterThan(capped + 5)
   })
 
-  it('does not read a blocked main thread as a queue that is behind', async () => {
+  it('does not read a blocked main thread as a queue that is behind', () => {
     const h = harness()
     h.loop.start()
 

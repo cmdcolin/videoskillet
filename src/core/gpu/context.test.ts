@@ -202,10 +202,11 @@ function scopedDevice() {
     device: {
       pushErrorScope: (filter: GPUErrorFilter) =>
         void stack.push({ filter, error: null }),
-      popErrorScope: async () => {
+      popErrorScope: () => {
         const scope = stack.pop()
-        if (scope === undefined) throw new Error('error scope stack is empty')
-        return scope.error
+        return scope === undefined
+          ? Promise.reject(new Error('error scope stack is empty'))
+          : Promise.resolve(scope.error)
       },
     },
   }

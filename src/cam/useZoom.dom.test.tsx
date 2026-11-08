@@ -20,7 +20,7 @@ const camera = () => {
   return { lens, applyConstraints, answer: () => answer() }
 }
 
-const zoomOf = (c: MediaTrackConstraints | undefined) =>
+const zoomOf = (c: MediaTrackConstraints | undefined): unknown =>
   Reflect.get(c?.advanced?.[0] ?? {}, 'zoom')
 
 describe('the lens zoom across a flip', () => {
@@ -37,7 +37,10 @@ describe('the lens zoom across a flip', () => {
     on = after
     act(() => result.current.reset())
     act(() => result.current.set(3))
-    await act(async () => before.answer())
+    await act(() => {
+      before.answer()
+      return Promise.resolve()
+    })
 
     expect(before.applyConstraints).toHaveBeenCalledTimes(1)
     expect(after.applyConstraints).toHaveBeenCalledTimes(1)
@@ -56,7 +59,10 @@ describe('the lens zoom across a flip', () => {
     act(() => result.current.set(4))
     on = after
     act(() => result.current.reset())
-    await act(async () => before.answer())
+    await act(() => {
+      before.answer()
+      return Promise.resolve()
+    })
 
     expect(after.applyConstraints).not.toHaveBeenCalled()
     expect(result.current.zoom).toBe(1)

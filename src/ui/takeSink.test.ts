@@ -132,7 +132,7 @@ class FakeDisk {
     const locked = this.locked
     const limit = () => this.limit
     return {
-      entries: async function* () {
+      entries: function* () {
         for (const name of files.keys()) {
           yield [
             name,
