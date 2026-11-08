@@ -2,6 +2,10 @@
 # Every schematic panel at 2x, at stock and bent, from the dev server given as
 # $1, into the directory given as $2. Name a few looks after those to shoot
 # only the ones whose file names start with them: panelshots.sh <url> <dir> vhs sync
+# Sound has no shot: its stage mounts only once an audio input is patched, which
+# neither the URL nor storage can do, so panelshot.mjs would wait out its 20 s
+# for the header and write nothing. Shoot it with `soundOn` forced true in
+# src/app.tsx for the run.
 set -u
 U=${1:-http://localhost:5301}/app/
 S=${2:-$HOME/.cache/vs-spike/shots/final}

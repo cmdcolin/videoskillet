@@ -604,6 +604,22 @@ from further away, which on fine horizontal detail is a different artifact.
   anywhere upstream shows up as a misspelling, and the number says how bad
   rather than only that something moved.
 
+## Scrambler follow-ons
+
+The eight systems in `scrambleMode` follow the sources: the GI timing at
+https://www.philpem.me.uk/hacktv/analogcable/gi_scrambling, the Oak sine look
+from the rec.video.cable-tv FAQ, and tri-mode's frame holds from
+Radio-Electronics (February 1987) and Grossblatt's _Unscrambling Descrambling_
+(the worldradiohistory Gernsback bookshelf). Not built:
+
+- VideoCrypt's cut-and-rotate.
+- A misaligned decoder box.
+- Scrambling inside a feedback loop.
+- Oak Sigma's inversion at scene cuts.
+- Pixel checks for the scrambler.
+- For the AC-coupled separator (ADR 0015): a per-line charging slice, sawtooth
+  harmonics in the phase comparator, and a fast loop on lost lock.
+
 ## Digital cable tier
 
 Macroblocking, DCT ringing, frozen last-good-blocks, motion-vector smear. Large

@@ -420,7 +420,9 @@ Every bullet cost a real afternoon.
 - **One Firefox does not survive a long WebGPU batch.** After a dozen or so
   sessions it detaches the frame and every later page dies with "Target closed",
   so a batch recycles browsers. The limit is a count of _sessions_; two runs
-  have held one session past twenty minutes.
+  have held one session past twenty minutes. Pages wedge sooner: the fourth to
+  sixth page opened in one browser has hung on `evaluate` for the whole protocol
+  timeout, so a comparison opens a fresh browser per arm.
 - **"Target closed" is three different failures wearing one error.** The frame
   detached, the browser crashed, or something outside killed it, and from Node
   they are indistinguishable. A crash leaves `<profile>/minidumps/*.extra`
@@ -448,14 +450,21 @@ Every bullet cost a real afternoon.
   not enough.
 - **Serve from a `git worktree add --detach` copy** (or a production build) when
   anything else might be editing the tree. An HMR reload mid-run resets the
-  engine under the frame counter. Two workarounds: symlink `node_modules` in and
-  run `node_modules/.bin/vite` directly, because `pnpm dev` sees the symlink as
-  a modules dir to purge and aborts; and point `cacheDir` somewhere of its own,
-  or the worktree and the main checkout re-optimize each other's deps out from
-  under a running server. The symlink breaks `git commit` the same way, since
-  the pre-commit hook runs `pnpm exec lint-staged`: it fails with
-  `ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY`. Commit with
-  `pnpm_config_verify_deps_before_run=false` set, which keeps the hook running.
+  engine under the frame counter. The primary checkout is no baseline for the
+  same reason: serve each arm of a before/after pair from its own copy at the
+  commit it stands for, and compare numbers on a still, since a clip plays
+  during load and lands on a different frame in each arm.
+- **Give each worktree its own `pnpm install --offline --frozen-lockfile`.**
+  Under a symlinked `node_modules`, `astro dev` serves pages whose modules are
+  blocked by MIME type under `/@fs/`, so a harness finds no canvas. Every `pnpm`
+  script also sees the symlink as a modules dir to purge, the pre-commit hook's
+  `pnpm exec lint-staged` included, which fails with
+  `ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY`;
+  `pnpm_config_verify_deps_before_run=false` keeps the hook running.
+- **Run by an agent, `astro dev` starts in the background** and the command
+  returns at once. Poll `/app/` until it answers before driving it, and end it
+  with `astro dev stop`. `scripts/devserver.mjs` passes `--ignore-lock`, which
+  keeps a harness's own server in the foreground.
 - **Any `evaluateOnNewDocument` puts
   `Permission denied to access property "length"` on `pageerror`.** It comes
   from puppeteer's preload script under BiDi. A one-line script with no

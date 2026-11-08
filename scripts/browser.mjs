@@ -46,7 +46,8 @@ export const CHROME = found(
 // Firefox with WebGPU on, which every harness here needs. `media` lets a page
 // open a fake camera and microphone without asking, `autoplay` lets a video
 // play with sound, `prefs` adds or overrides any other pref, and the rest goes
-// to `puppeteer.launch` as is.
+// to `puppeteer.launch` as is. Headed, because headless Firefox draws WebGPU at
+// a different level (centre pixel 155 against 83 headed).
 export const launchFirefox = ({
   media = false,
   autoplay = false,

@@ -410,6 +410,15 @@ rotating at all.
 against an end, naming the base and the range. It catches `bDetuneHz` based at
 1500 in a ±3000 span as well, at 28%. None of the 23 presets trip it.
 
+Two Feedback loops presets clamp this way. `subcarrierComb` routes depth 0.1
+onto `cfbDelayUs`, which swings ±6.3 µs about 0.14 in a 0–63 range and sits at 0
+for about 46% of each cycle; depth 0.002 is the fraction of a sample its comment
+describes. `servoWarp` swings ±36 µs about 34 on `cfbServoUs` and pins at +60
+for about a quarter of the run; base 28 with depth 0.26 stays inside. A
+2026-09-10 screening of camera-loop presets on the edge of chaos found both, and
+its report holds nine unshipped presets as paste-ready patches:
+https://claude.ai/code/artifact/fb375ee4-395f-4262-a579-29720d8d1c42
+
 ### The two failures of a feedback look
 
 "Not dramatic enough" and "too chaotic" were reported about the same family

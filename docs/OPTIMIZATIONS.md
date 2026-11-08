@@ -435,7 +435,8 @@ filter apart.
 
 **Don't decode a frame that isn't there.** The pump dedups on `currentTime`, so
 a 30 fps clip under a faster loop is decoded once per source frame rather than
-once per render.
+once per render. Firefox advances `currentTime` about 23 times a second on a 30
+fps clip, so about 23 of its pictures a second reach the engine.
 
 **Zero copy where the browser allows it.** Where the device has
 `importExternalTexture`, `blit_ext.wgsl` samples a slot's fresh video frame
@@ -483,6 +484,14 @@ window, because Firefox re-paces rAF between vsync and a ~60 Hz software tick
 depending on whether refreshes present, and the handover would otherwise score
 phantom misses against the mode that just started. Failed probes back off to a
 minute.
+
+**A discrete GPU presenting through the integrated one paces unevenly by
+itself.** The dev laptop is PRIME: the UHD 630 drives the 47.89 Hz panel. With
+Firefox presenting WebGPU from the WX 3200, a bare clear-screen page ran a p99
+interval of 57 ms, where the same page on the UHD 630 held vsync, and `auto`
+reads that spread as load and locks down even on static bars at 10% GPU. The
+app's own stalls over 70 ms are a separate cost, still unlocated: the bare page
+never ran an interval that long (measured 2026-09-17).
 
 ## The main thread
 
@@ -621,3 +630,16 @@ What this page owns is the other direction: what has already been measured and
 is **not** worth revisiting without new hardware or a new browser build — the
 two FIR-side micro-optimizations at the top, 256-wide FIR workgroups,
 asynchronous pipeline creation, and rearranging `sync.wgsl`'s memory.
+
+One measured win is waiting on its plumbing: **specializing a pass on its zero
+uniforms.** Baking every uniform that is exactly zero, a switched-off feature,
+into the pipeline as a constant is bit-exact and cut the frame about 20% on the
+UHD 630 (stock 7.94 → 6.37 ms) and 9-10% on the WX 3200, with `channel` and
+`mixB` gaining most. ADR 0007's verdict therefore holds on the WX 3200 only; on
+the integrated GPU the FIR passes are the cost, and `channel` is the top pass in
+almost every preset over 12 ms there. Baking every constant value gains a little
+more, but only to within 1/255, and it regresses `crtFace` at full halation. A
+cold compile of a specialized variant costs 160-820 ms per shader, so shipping
+it needs a pipeline cache keyed by each pass's zero mask, with the generic
+pipeline drawing while a specialized one compiles. The `gpuprof` arm that
+measured it (2026-09-17) was never landed.
