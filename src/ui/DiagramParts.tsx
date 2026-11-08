@@ -72,7 +72,7 @@ export function Pressable({
           ? e => {
               if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault()
-                onSelect()
+                if (!e.repeat) onSelect()
               }
             }
           : undefined
