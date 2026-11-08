@@ -79,7 +79,8 @@
      Padding alone can't hold a row level — a control with an <input> in it, or
      one wrapped for positioning, measures differently — so anything on the
      overlay bar sets this height outright rather than hoping its box matches. */
-  --ctl-h: 1.625rem; /* 26px */
+  --overlay-h: 1.625rem; /* 26px */
+  --ctl-h: 22px;
   /* The panel's button box. Padding and line-height together give 21.6px at the
      13px base type; every outlined, filled and chip button takes both, so the
      rows they share stay level. */
@@ -89,11 +90,12 @@
   --ctl-bg-hover: rgba(40, 40, 48, 0.85);
 }
 
-/* Touch: --ctl-h sets every overlay pill at once. The panel's own buttons and
+/* Touch: --overlay-h sets every overlay pill at once. The panel's own buttons and
    sliders grow beside their own rules, in ui.module.css and Slider.module.css;
    its selects and text fields are the UA's now and size themselves. */
 @media (pointer: coarse) {
   :root {
-    --ctl-h: 2.125rem; /* 34px */
+    --overlay-h: 2.125rem; /* 34px */
+    --ctl-h: 30px;
   }
 }

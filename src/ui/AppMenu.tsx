@@ -103,7 +103,7 @@ export function AppMenu(props: {
       trigger={attrs => (
         <button
           className={cx(
-            stage ? styles.stageTrigger : ui.chromeBtn,
+            stage ? styles.stageTrigger : ui.outlineIcon,
             !stage &&
               (zoomed || props.tap !== 0 || props.recording) &&
               styles.badged,

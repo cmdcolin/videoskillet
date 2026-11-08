@@ -196,35 +196,47 @@
     cursor: default;
   }
 
-  /* The outlined button: the masthead, the look bar, the section handles.
-     `.chromeBtn` below squares it for a glyph. */
+  /* CROSS_REPO_SYNC(outline-kind) */
   .outline {
-    flex-shrink: 0;
     display: inline-flex;
+    flex-shrink: 0;
     align-items: center;
+    justify-content: center;
     gap: var(--space-xs);
-    padding: var(--btn-pad-y) 7px;
-    border: 1px solid var(--border-quiet);
-    border-radius: var(--ctl-radius);
-    background: var(--surface);
-    color: var(--fg3);
+    min-height: var(--ctl-h);
+    padding: 0 7px;
     font: inherit;
     font-size: var(--fs);
     font-weight: 400;
+    line-height: 1.2;
     letter-spacing: normal;
     text-transform: none;
-    line-height: var(--btn-lh);
     white-space: nowrap;
+    background: var(--surface);
+    color: var(--fg3);
+    border: 1px solid var(--border-quiet);
+    border-radius: var(--ctl-radius);
   }
-  .outline:hover:not(:disabled) {
-    border-color: var(--fg4);
-    color: var(--fg);
+
+  .outline:disabled {
+    color: #55555f;
+    border-color: var(--border-faint);
+    cursor: default;
   }
-  @media (pointer: coarse) {
-    .outline {
-      padding: 5px 9px;
+
+  @media (hover: hover) {
+    .outline:hover:not(:disabled) {
+      color: var(--fg);
+      border-color: var(--fg4);
     }
   }
+
+  @media (pointer: coarse) {
+    .outline {
+      padding: 0 9px;
+    }
+  }
+  /* CROSS_REPO_SYNC_END(outline-kind) */
 }
 
 button.filledOn {
@@ -273,21 +285,26 @@ button.filledOn {
   cursor: ew-resize;
 }
 
-.chromeBtn {
+/* CROSS_REPO_SYNC(outline-states) */
+.outlineOn {
   composes: outline;
-  display: inline-block;
-  width: 22px;
-  padding: var(--btn-pad-y) 0;
+  color: var(--accent);
+  border-color: var(--accent);
 }
-.chromeBtn svg {
-  vertical-align: middle;
-}
-@media (pointer: coarse) {
-  .chromeBtn {
-    width: 30px;
-    padding: 5px 0;
+
+@media (hover: hover) {
+  .outlineOn:hover:not(:disabled) {
+    color: var(--accent);
+    border-color: var(--accent);
   }
 }
+
+.outlineIcon {
+  composes: outline;
+  width: var(--ctl-h);
+  padding: 0;
+}
+/* CROSS_REPO_SYNC_END(outline-states) */
 /* Structure only. The dark box this used to draw by hand — a fill, a border, a
    radius, a padding and a hover — is what the UA already draws now that :root
    carries color-scheme: dark, and it draws it a platform at a time rather than
@@ -398,7 +415,7 @@ button.filledOn {
 
 /* Touch: .btn was sized for a cursor. The select is not here any more — it has
    no padding of ours left to grow, and a UA that has been told the pointer is
-   coarse already sizes its own widgets for one. --ctl-h in theme.css covers the
+   coarse already sizes its own widgets for one. --overlay-h in theme.css covers the
    stage overlay; this covers the panel. */
 @media (pointer: coarse) {
   .btn {

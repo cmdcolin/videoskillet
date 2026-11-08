@@ -3,17 +3,17 @@
    items.
 
    The menu box itself is Popover.module.css and the masthead trigger's box is
-   `ui.chromeBtn` — the same square as the ⌕ and the pointer tool beside it.
+   `ui.outlineIcon` — the same square as the ⌕ and the pointer tool beside it.
    What is here is everything neither of those has an opinion about. */
 
 /* Over the picture: fullscreen and the popout, where the masthead is off this
-   window's screen. One --ctl-h-tall pill that does not size itself off its
+   window's screen. One --overlay-h-tall pill that does not size itself off its
    content, so the bar stays the same height as the badges come and go. */
 .stageTrigger {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-  height: var(--ctl-h);
+  height: var(--overlay-h);
   background: var(--ctl-bg);
   color: var(--fg);
   border: 1px solid var(--border);
@@ -33,11 +33,11 @@
   opacity: 1;
 }
 
-/* The masthead trigger once it has a badge to carry. `ui.chromeBtn` is a 22px
+/* The masthead trigger once it has a badge to carry. `ui.outlineIcon` is a 22px
    square, and that fixed width is what makes the three chrome buttons read as
    one row, so a badge has to buy the width back here.
 
-   The selector carries the element on purpose: .chromeBtn is unlayered, so one
+   The selector carries the element on purpose: .outlineIcon is unlayered, so one
    class against one class would be settled by whichever stylesheet the bundler
    emitted second — the tie @layer prim exists to avoid for the primitives that
    have one. */

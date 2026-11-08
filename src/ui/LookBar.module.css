@@ -18,9 +18,8 @@
 .btn {
   composes: outline from './ui.module.css';
 }
-button.btnOn {
-  border-color: var(--accent);
-  color: var(--accent);
+.btnOn {
+  composes: outlineOn from './ui.module.css';
 }
 button.btnOff {
   color: #55555f;

@@ -14,7 +14,7 @@ export function Button(
   return (
     <button
       {...rest}
-      className={cx(variant === 'icon' ? ui.chromeBtn : ui.outline, className)}
+      className={cx(variant === 'icon' ? ui.outlineIcon : ui.outline, className)}
     />
   )
 }
