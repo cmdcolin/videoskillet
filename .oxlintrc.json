@@ -17,6 +17,18 @@
   // Rules only videoskillet needs. Everything shared is in oxlint.shared.json.
   "overrides": [
     {
+      "files": ["**/*.js"],
+      "rules": {
+        "typescript/no-unsafe-argument": "off",
+        "typescript/no-unsafe-assignment": "off",
+        "typescript/no-unsafe-call": "off",
+        "typescript/no-unsafe-member-access": "off",
+        "typescript/no-unsafe-return": "off",
+        "typescript/prefer-nullish-coalescing": "off",
+        "typescript/use-unknown-in-catch-callback-variable": "off"
+      }
+    },
+    {
       // **`src/core` is the signal path, and it does not know the app exists.**
       // Everything under it — the pass graph, the WGSL, the per-frame CPU state,
       // the control schema — runs against a canvas and a `Controls` object, which
