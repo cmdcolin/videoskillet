@@ -1,30 +1,47 @@
 # videoskillet
 
-Real-time NTSC signal-path simulator rendered entirely in WebGPU compute
-shaders.
+Real-time NTSC signal-path simulator in WebGPU compute shaders. Read
+`docs/ARCHITECTURE.md` before any non-trivial change; `docs/adr/` holds the
+decisions where the obvious thing is wrong.
 
-## Read first
+- Before touching code that creates, releases or tears down a `GPUDevice`, or
+  when a tab freezes: `agent-docs/reference/gpu-device-lifetime.md`.
+- Before writing a commit message: `agent-docs/reference/commits.md`.
 
-**`docs/ARCHITECTURE.md`** — read it before changing anything non-trivial. It
-covers the pass graph, buffer layouts, how to add a control end to end, and the
-two invariants that are easiest to violate:
+## Traps
 
-- **Which domain an effect belongs to.** A horizontal displacement means
-  something different in the signal, sync, and deflection domains — they are not
-  interchangeable, and routing a geometry fault through the sync path will spin
-  hue that should have stayed put.
-- **`decode` stages a shared tile per row**, so horizontal offsets must be
-  row-uniform. Per-pixel horizontal scaling needs the staging restructured
-  first.
+- **Model the mechanism that causes an artifact**, never a drawing of the
+  artifact, and put a displacement in the domain that causes it (signal, sync or
+  deflection; `docs/ARCHITECTURE.md` › The three domains). A geometry fault
+  routed through sync spins hue that should stay put.
+- **Keep horizontal offsets row-uniform**: `decode` stages a shared tile per
+  row, so per-pixel horizontal scaling needs that staging restructured first.
+- **Let go of a presenting `GPUDevice` and hand the live one on**, in `pagehide`
+  and unload cleanup too. `device.destroy()` silently ends the tab's rendering
+  step, and the next page loaded in that tab stops rendering as well (ADR 0004).
+- **Write plain declarative English** in docs, comments and app copy, with no
+  inversions, fragments or aphorisms, and state the positive half of a contrast
+  unless the reader needs the distinction to choose. `docs/WRITING.md` is the
+  checklist for a prose pass.
 
-Prefer modelling the mechanism that causes an artifact over drawing the
-artifact. The whole app is built on this, and it is why two mechanisms interact
-with no code written for the pair.
+## Testing WebGPU
 
-**`docs/adr/`** holds the decisions where the obvious thing is wrong for a
-non-obvious reason. Read
-[0004](docs/adr/0004-never-destroy-a-presenting-device.md) before touching
-anything that creates, releases or tears down a `GPUDevice` — see below for why.
+- **Test WebGPU on Linux in Firefox Nightly** (`scripts/browser.mjs` launches
+  it). Chrome's ANGLE/Vulkan backend there reports texture-allocation errors
+  that are driver artifacts.
+- **Run long or repeated browser measurements from a `git worktree add --detach`
+  copy with its own vite server.** Other agents share this checkout, and any
+  `src/` write, your own included, hot-reloads the page and resets the engine
+  mid-run. `docs/DEVELOPMENT.md` › Browser harness traps lists the rest.
+
+## Recorded clips
+
+- **`appreel`, `demoreel` and `agentreel --upload` publish to a public bucket**:
+  each mp4 goes to `s3://myloveydove.com/videoskillet/` under `--profile colin`
+  at the end of a take, and CloudFront is invalidated. `demoreel --no-upload`
+  keeps a trial local.
+- **Store a new kind of recording through `publish` in `scripts/bucket.mjs`**
+  and commit only its still.
 
 <!-- CROSS_REPO_SYNC(agent-sync-rules) -->
 
@@ -42,146 +59,3 @@ markers and the workflow.
 - Keep product-specific values in constants outside a region.
 
 <!-- CROSS_REPO_SYNC_END(agent-sync-rules) -->
-
-## Never destroy a GPUDevice that has been presenting
-
-Measured on Firefox Nightly / Linux (`scripts/devicetear.mjs`): handing a
-presenting `GPUDevice` back with `device.destroy()` **ends the tab's rendering
-step**. The tab still reports `visible`, the browser stays responsive, nothing
-is logged, and the next document loaded in that tab stops rendering too, which
-is why reloading a frozen tab never recovered it. Creating devices is cheap by
-comparison: a tab with four created and four held open, all presenting, kept
-rendering.
-
-Because of this measurement, the app **never calls `device.destroy()`**. It lets
-go of devices instead, and hands the live one to the next engine.
-`docs/adr/0004` has the runs;
-[0002](docs/adr/0002-webgpu-sessions-are-scarce.md) is the superseded budget
-model that fitted the same data for the wrong reason.
-
-Rules for code that handles a device:
-
-- **Do not "release" a device on the way out.** This applies to `pagehide`
-  handlers, unload handlers and any cleanup that looks untidy without it. That
-  one call made refreshing unsafe: the same page reloaded four times survives
-  every load when the device is merely abandoned and dies from load 2 onward
-  when a `pagehide` handler destroys it. The comment in `useEngine`'s handler
-  records the measurement.
-- **Reloading the app in one tab is safe.** `rafceiling.mjs --page=app` runs 8
-  loads in one tab at 69-81 rAF/1.5s (`firstDeadSession: null`). Treat that
-  harness as a regression test for this: if its app arm starts dying again,
-  something has started destroying devices.
-- **HMR reuses one device.** A hot update recreates the engine, but the engine
-  hands its device on alive (`destroy({keepDevice: true})`) and the successor
-  adopts it from the stash in `core/gpu/context.ts`, so an editing session costs
-  one device however many saves it takes. The stash is stored on `globalThis` so
-  that editing `core/gpu/context.ts` itself keeps it when the module reloads. Do
-  not disable HMR.
-- **`?gpudestroy=1` puts the destroy back**, for re-measuring the fault against
-  a new browser build. It will kill the tab. `?gpubudget=ignore` switches off
-  the gate that declines a device to a tab that has already destroyed one — the
-  only thing left that can refuse a session, and reachable only after
-  `?gpudestroy=1`. Creating devices is not counted against anything; the
-  harnesses that spend them on purpose (`rafceiling.mjs`, `deviceloss.mjs`) pass
-  the flag anyway, so what they measure is the browser and never app policy.
-- **Do not add `<StrictMode>`.** It doubles device creation per mount and wraps
-  a WebGPU canvas in a mount/unmount/mount cycle. A comment in `src/main.tsx`
-  gives the reason.
-- A freeze with `frame 0` / `STEP-DEAD` / `clock +0ms` in the console or the
-  recorder is a tab that has lost its rendering step, not a bug in the signal
-  path.
-
-## Testing changes for real
-
-Long or repeated browser runs belong on a `git worktree add --detach` copy with
-its own vite server. This worktree is shared with other agents, and **your own
-edits trigger HMR**: an `src/` write mid-run reloads the page and resets the
-engine under whatever you were measuring. See the traps list in
-`docs/DEVELOPMENT.md`; every one of them cost real time.
-
-## A take streams to the origin-private file system
-
-`ui/takeSink.ts` streams a take to the origin-private file system as it encodes,
-and `ui/mp4.ts` splits into `mp4Layout` (the boxes either side of the payload)
-and `mp4Parts` (that, with the payload between them) so that it can. Three
-things follow:
-
-- **The `mdat` header is patched in at the end**, because its size is unknown
-  when the file is opened. A streamed take therefore reserves `STREAM_HEAD`
-  bytes and uses the 64-bit `mdat` form whatever its size. If the layout's
-  header size differs from the bytes the sink reserved, every frame offset in
-  the file is eight bytes short, so `close` refuses to write the file.
-- **The storage the browser grants caps a take's size**, read off
-  `navigator.storage.estimate()`. It is far past the old 3.9 GB on a machine
-  with a disk and under it on a full one. It measured 1.4 GB on a disk 98% full,
-  where a fixed 3.9 GB cap would have exceeded the space available.
-- **Do not write once per frame.** Writing once per frame cost a quarter of the
-  engine's frames. The sink gathers 4 MB and writes that;
-  `scripts/rectakecheck.mjs` with `--flags=takesink%3Dblob` is the arm that
-  catches a regression here.
-
-`?takesink=blob` takes the Blob path on a browser that would have streamed,
-which is what every browser without `createWritable` gets.
-
-## Recorded clips are stored on S3
-
-Every mp4 this project records — the carousel's slides (`scripts/appreel.mjs`)
-and the gallery's demo loops (`scripts/demoreel.mjs`) — goes to
-`s3://myloveydove.com/videoskillet/` under a prefix of its own, through
-`publish` in `scripts/bucket.mjs`, which copies the file with
-`aws s3 cp --profile colin` and then invalidates its path on CloudFront, which
-otherwise serves a re-recorded clip's old bytes until its cache expires. Both
-recorders upload at the end of a take, and both `public/reel/*.mp4` and
-`public/demos/*.mp4` are gitignored. The **stills stay** in the repo: a card has
-to show something before its clip is fetched, and a webp is kilobytes.
-
-A recording is rewritten whenever its look is re-recorded, so a tracked one puts
-every version of a megabyte-scale binary in the history forever. `demos.mjs` and
-`reel.mjs` each export the pair of constants that holds the clips' location,
-`S3_PREFIX` to write and `CLIPS` to read, and the page takes the URL straight
-off `data-src`, so an absolute one is fine there.
-
-## Writing
-
-Write plain technical English in the docs and in the app. State what a thing is
-and what it does, in ordinary declarative sentences.
-
-Two habits to avoid:
-
-- **Mannered phrasing**: inversions, dropped verbs, sentence fragments, and
-  aphorisms. "Light rather than wire" and "the only effect you listen to" are
-  the house style this replaces; "an optical loop" and "sound buzz is an audio
-  output" are what to write instead.
-- **Contrastive phrasing**: "X rather than Y", "not A but B", "instead of".
-  State the positive half and stop.
-
-Keep a contrast only where the reader needs the distinction to choose correctly:
-an ADR naming the option it turned down, or a fault that resembles another one.
-A physical mechanism often needs one: "it multiplies rather than adds" states
-the mechanism.
-
-[`docs/WRITING.md`](docs/WRITING.md) is the checklist under this: the specific
-habits that produced the prose this repo has rewritten, each with a before and
-after, and what a prose pass must leave alone.
-
-<!-- CROSS_REPO_SYNC(commit-conventions) -->
-
-## Commits
-
-Use Conventional Commits (`type(scope): description`). `cliff.toml` groups the
-changelog by type and renders the scope inline. `Release vX.Y.Z` commits come
-from `scripts/push.mjs` and stay out of the changelog.
-
-<!-- CROSS_REPO_SYNC_END(commit-conventions) -->
-
-Scope is optional; when used, pick from the domains in `docs/ARCHITECTURE.md`:
-`signal`, `sync`, `deflection`, `gpu`, `ui`, `midi`, `audio`, `docs`.
-
-## Testing WebGPU (Linux)
-
-On Linux, test WebGPU with **Firefox Nightly** (`/usr/bin/firefox-nightly`), not
-Chrome. Chrome's ANGLE/Vulkan backend on Linux reports spurious
-texture-allocation errors (e.g. "Requested allocation size … is smaller than the
-image requires") that are driver artifacts, not app bugs. The `scripts/shot.mjs`
-harness already launches Firefox Nightly with the right prefs — model new
-harnesses on it.

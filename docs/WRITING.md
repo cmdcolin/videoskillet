@@ -1,6 +1,6 @@
 # Writing patterns to fix
 
-`CLAUDE.md` › _Writing_ states the rule: plain technical English, in ordinary
+`CLAUDE.md` › _Traps_ states the rule: plain technical English, in ordinary
 declarative sentences. This file lists the habits that produced prose this repo
 has had to rewrite, each with a before-and-after pair to copy. It covers source
 comments too, because they record the measurement behind a decision and are read

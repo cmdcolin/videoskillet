@@ -7,11 +7,11 @@
 //
 // **The signal has to be rAF delivery, not a visibility event.** An occluded
 // window — one simply covered by another — goes on reporting
-// `visibilityState: 'visible'` on Linux, which is the same fact `CLAUDE.md`
-// records about a tab that has lost its rendering step. `pagehide` and
-// `visibilitychange` catch a minimise, a tab switch or a navigation, and they
-// are worth listening for because they are instant; they do not catch the
-// common case. Counting frames does, because ~1 Hz against an expected 60 is
+// `visibilityState: 'visible'` on Linux, which is the same fact
+// `agent-docs/reference/gpu-device-lifetime.md` records about a tab that has
+// lost its rendering step. `pagehide` and `visibilitychange` catch a minimise,
+// a tab switch or a navigation, and they are worth listening for because they
+// are instant; they do not catch the common case. Counting frames does, because ~1 Hz against an expected 60 is
 // unmistakable.
 //
 // **An occluded window is not a failing test**, and conflating the two is the

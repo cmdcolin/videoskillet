@@ -891,11 +891,11 @@ each timeline is in
 Both harnesses want the dev server, ffmpeg and cwebp, and a browser — Chrome on
 macOS, Firefox Nightly elsewhere. Both take `--keep` to leave the JPEG frames on
 disk, so an encode setting can be retried without driving the browser again. The
-mp4s go to the bucket (`CLAUDE.md` › _Clips live on the bucket_) and only the
-stills land in `public/reel`. Staleness works the way the docshots' does — each
-run stamps the version and commit into `scripts/reel-taken.json`. Element
-resolution, seeding and the actions are shared with the documentation
-screenshots ([`../scripts/drive.mjs`](../scripts/drive.mjs)).
+mp4s go to the bucket (`CLAUDE.md` › _Recorded clips_) and only the stills land
+in `public/reel`. Staleness works the way the docshots' does — each run stamps
+the version and commit into `scripts/reel-taken.json`. Element resolution,
+seeding and the actions are shared with the documentation screenshots
+([`../scripts/drive.mjs`](../scripts/drive.mjs)).
 
 ### The picture in "why sign in?"
 
